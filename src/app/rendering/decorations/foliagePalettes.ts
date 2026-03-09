@@ -177,3 +177,52 @@ export const HEDGE_FLOWER_PALETTES = [
   ["#ffb74d", "#ffe082", "#ffffff", "#fff3e0", "#e8f5e9"],
   ["#ef9a9a", "#ffffff", "#ffcdd2", "#fce4ec", "#e8f5e9"],
 ];
+
+export interface PinePalette {
+  greens: [string, string, string, string];
+  dark: string;
+  trunk: string;
+  trunkDark: string;
+  snowWhite: string;
+  snowBlue: string;
+}
+
+export const PINE_PALETTES: PinePalette[] = [
+  { greens: ["#1a4a3a", "#2a5a4a", "#3a6a5a", "#4a7a6a"], dark: "#0a2a1a", trunk: "#4a3728", trunkDark: "#2a1708", snowWhite: "#f8f9fa", snowBlue: "#e3f2fd" },
+  { greens: ["#1a3a4a", "#2a4a5a", "#3a5a6a", "#4a6a7a"], dark: "#0a1a2a", trunk: "#3a3028", trunkDark: "#1a1008", snowWhite: "#f0f4f8", snowBlue: "#dce8f4" },
+  { greens: ["#0a3a2a", "#1a4a3a", "#2a5a4a", "#3a6a5a"], dark: "#051a10", trunk: "#3a2818", trunkDark: "#200e05", snowWhite: "#f5f5f5", snowBlue: "#e0eaef" },
+  { greens: ["#2a4a4a", "#3a5a5a", "#4a6a6a", "#5a7a7a"], dark: "#1a2a2a", trunk: "#5a4838", trunkDark: "#3a2818", snowWhite: "#ffffff", snowBlue: "#e8f0f8" },
+];
+
+export interface CharredTreePalette {
+  black: string;
+  dark: string;
+  mid: string;
+  light: string;
+  emberOrange: string;
+  emberYellow: string;
+  emberRed: string;
+}
+
+export const CHARRED_TREE_PALETTES: CharredTreePalette[] = [
+  { black: "#0a0a0a", dark: "#1a1a1a", mid: "#2a2a2a", light: "#3a3a3a", emberOrange: "#ff6600", emberYellow: "#ffaa00", emberRed: "#ff3300" },
+  { black: "#0a0505", dark: "#1a0f0f", mid: "#2a1515", light: "#3a2020", emberOrange: "#ff4400", emberYellow: "#ff8800", emberRed: "#ff2200" },
+  { black: "#0a0a0c", dark: "#1a1a1e", mid: "#2a2a30", light: "#3a3a42", emberOrange: "#ff7722", emberYellow: "#ffbb33", emberRed: "#ff4411" },
+];
+
+export interface SwampTreePalette {
+  trunkDark: string;
+  trunkMid: string;
+  trunkLight: string;
+  mossLight: string;
+  mossDark: string;
+  foliage: [string, string, string, string];
+  fireflyColor: string;
+}
+
+export const SWAMP_TREE_PALETTES: SwampTreePalette[] = [
+  { trunkDark: "#1a1208", trunkMid: "#2a2218", trunkLight: "#3a3228", mossLight: "#5a7a4a", mossDark: "#3a5a2a", foliage: ["#1a3a1a", "#2a4a2a", "#1a2a1a", "#2a3a2a"], fireflyColor: "180,255,180" },
+  { trunkDark: "#12100a", trunkMid: "#221e14", trunkLight: "#322e22", mossLight: "#4a6a3a", mossDark: "#2a4a1a", foliage: ["#0a2a0a", "#1a3a1a", "#0a1a0a", "#1a2a1a"], fireflyColor: "150,230,150" },
+  { trunkDark: "#1a1410", trunkMid: "#2a2420", trunkLight: "#3a3430", mossLight: "#6a8a5a", mossDark: "#4a6a3a", foliage: ["#2a4a2a", "#3a5a3a", "#2a3a2a", "#3a4a3a"], fireflyColor: "200,255,200" },
+  { trunkDark: "#0e0c06", trunkMid: "#1e1c12", trunkLight: "#2e2c20", mossLight: "#4a6040", mossDark: "#2a4020", foliage: ["#1a2a10", "#2a3a20", "#1a2010", "#2a3020"], fireflyColor: "160,240,160" },
+];

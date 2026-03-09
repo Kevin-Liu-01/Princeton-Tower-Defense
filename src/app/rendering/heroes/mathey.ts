@@ -822,6 +822,12 @@ export function drawMatheyKnightHero(
 
   drawFrostSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, gemPulse);
 
+  // === FUR MANTLE ABOVE SHOULDERS (behind head) ===
+  drawFurMantle(ctx, x, y, size, time, zoom);
+
+  // === FUR COLLAR BEHIND HELMET ===
+  drawFurCollar(ctx, x, y, size, time, zoom);
+
   // === COLOSSAL SHOULDER PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
     const pauldronX = x + side * size * 0.62;
@@ -893,12 +899,6 @@ export function drawMatheyKnightHero(
     ctx.fill();
     ctx.shadowBlur = 0;
   }
-
-  // === FUR MANTLE ABOVE SHOULDERS (behind head) ===
-  drawFurMantle(ctx, x, y, size, time, zoom);
-
-  // === FUR COLLAR BEHIND HELMET ===
-  drawFurCollar(ctx, x, y, size, time, zoom);
 
   // === HEAVY BARREL HELM ===
   // Different from Captain's - this is a brutal bucket helm

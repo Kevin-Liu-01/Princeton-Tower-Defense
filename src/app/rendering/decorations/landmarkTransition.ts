@@ -193,6 +193,7 @@ function drawTransitionBlob(
   seedX: number,
   seedY: number,
   selectedMap: string,
+  decorScale: number = 1,
 ): void {
   const palette = GROUND_TRANSITION_PALETTES[mapTheme];
   const regionTheme = REGION_THEMES[mapTheme];
@@ -200,7 +201,7 @@ function drawTransitionBlob(
   const { outerW, outerH, midW, midH, innerW, innerH } = radii;
 
   const cx = screenPos.x;
-  const cy = screenPos.y + 8 * zoom;
+  const cy = screenPos.y + 8 * zoom / decorScale;
 
   const blobSeed = selectedMap.charCodeAt(0) + seedX * 59 + seedY * 113;
   const detailScale = Math.max(
@@ -544,6 +545,7 @@ export function renderDecorationTransitions(
       deco.pos.x,
       deco.pos.y,
       selectedMap,
+      resolvedPlacement.scale,
     );
   }
 }

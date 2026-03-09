@@ -368,14 +368,8 @@ const QUALITY_DPR_CAP: Record<RenderQuality, number> = {
 
 const QUALITY_DECORATION_MARGIN_PX: Record<RenderQuality, number> = {
   high: 260,
-  medium: 190,
-  low: 140,
-};
-
-const QUALITY_ANIMATED_DECORATION_STRIDE: Record<RenderQuality, number> = {
-  high: 1,
-  medium: 2,
-  low: 3,
+  medium: 260,
+  low: 260,
 };
 
 const QUALITY_SHADOW_MULTIPLIER: Record<RenderQuality, number> = {
@@ -391,22 +385,84 @@ const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
 const FRIENDLY_SEPARATION_MULT = 0.18;
 
 
-// Only keep high-value effects live; everything else is baked into static decoration layer.
+// All decoration types that use decorTime for animation.  At high quality they
+// animate live; at lower quality the stride-based freeze bakes them into the
+// static decoration canvas so they stay visible but stop animating.
 const RUNTIME_ANIMATED_DECORATION_TYPES = new Set<string>([
+  // Fire / light
   "torch",
   "fire",
   "fire_pit",
   "campfire",
+  "lamppost",
+  "ember",
+  "ember_rock",
+  "fire_crystal",
+  "charred_tree",
+  // Water / liquid
   "fountain",
   "lava_pool",
   "lava_fall",
   "deep_water",
   "poison_pool",
-  "glowing_runes",
-  "tentacle",
   "lake",
   "algae_pool",
   "fishing_spot",
+  "frozen_pond",
+  "frozen_waterfall",
+  "sunken_pillar",
+  "dock",
+  "lily_pad",
+  // Ice / snow
+  "ice_crystal",
+  "snow_pile",
+  "glacier",
+  "ice_fortress",
+  "ice_spire",
+  "ice_throne",
+  "icicles",
+  "frozen_soldier",
+  "aurora_crystal",
+  "snow_lantern",
+  "snowman",
+  "ice_bridge",
+  "frost_citadel",
+  // Volcanic / dark
+  "volcano_rim",
+  "obsidian_castle",
+  "dark_barracks",
+  "dark_throne",
+  "dark_spire",
+  "obsidian_pillar",
+  "skull_throne",
+  "infernal_gate",
+  // Swamp / nature
+  "swamp_tree",
+  "mushroom",
+  "fog_wisp",
+  "cauldron",
+  "tentacle",
+  "reeds",
+  // Desert / exotic
+  "cobra_statue",
+  "pyramid",
+  "obelisk",
+  "dune",
+  // Structures / misc
+  "hut",
+  "tent",
+  "signpost",
+  "treasure_chest",
+  "hanging_cage",
+  "statue",
+  "idol_statue",
+  "war_monument",
+  "bone_altar",
+  "sun_obelisk",
+  "glowing_runes",
+  // Flora (common – will freeze first under stride)
+  "grass",
+  "flowers",
 ]);
 
 // Landmark/hero decorations that should never pop in and out due stride throttling.
@@ -2541,15 +2597,15 @@ export function usePrincetonTowerDefenseRuntime() {
             prev.map((entry) =>
               entry.id === enemy.id
                 ? {
-                    ...entry,
-                    inCombat: true,
-                    lastTroopAttack: now,
-                    facingRight: getFacingRightFromDelta(
-                      vaultImpactPos.x - enemyPos.x,
-                      vaultImpactPos.y - enemyPos.y,
-                      entry.facingRight,
-                    ),
-                  }
+                  ...entry,
+                  inCombat: true,
+                  lastTroopAttack: now,
+                  facingRight: getFacingRightFromDelta(
+                    vaultImpactPos.x - enemyPos.x,
+                    vaultImpactPos.y - enemyPos.y,
+                    entry.facingRight,
+                  ),
+                }
                 : entry
             )
           );
@@ -7389,19 +7445,17 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      const animatedDecorationStride =
-        QUALITY_ANIMATED_DECORATION_STRIDE[renderQuality];
+      const shouldFreezeAnimations = renderQuality !== "high";
       const liveAnimatedDecorations: CachedVisibleDecoration[] = [];
-      if (animatedDecorationStride <= 1) {
+      if (!shouldFreezeAnimations) {
         liveAnimatedDecorations.push(...animatedDecorations);
       } else {
-        for (let i = 0; i < animatedDecorations.length; i++) {
-          const entry = animatedDecorations[i];
-          const alwaysAnimate =
+        for (const entry of animatedDecorations) {
+          if (
             NON_THROTTLED_ANIMATED_DECORATION_TYPES.has(
               entry.decoration.type
-            );
-          if (alwaysAnimate || i % animatedDecorationStride === 0) {
+            )
+          ) {
             liveAnimatedDecorations.push(entry);
           } else {
             staticDecorations.push(entry);
@@ -11280,6 +11334,16 @@ export function usePrincetonTowerDefenseRuntime() {
     setTowers,
     setTroops,
   ]);
+
+  // Auto-trigger hero ability when HP drops below 25%
+  const AUTO_ABILITY_HP_THRESHOLD = 0.25;
+  useEffect(() => {
+    if (!hero || hero.dead || !hero.abilityReady || hero.hp <= 0) return;
+    if (hero.hp < hero.maxHp * AUTO_ABILITY_HP_THRESHOLD) {
+      triggerHeroAbility();
+    }
+  }, [hero?.hp, hero?.maxHp, hero?.abilityReady, hero?.dead, triggerHeroAbility]);
+
   const performBattleReset = useCallback(
     ({
       targetGameState,

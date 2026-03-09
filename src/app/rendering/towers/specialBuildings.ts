@@ -2155,55 +2155,317 @@ export function renderSpecialBuilding(
         specHp === 0 ||
         (specHp !== undefined && specialTowerHp === null)
       ) {
-        ctx.fillStyle = "#3D3D3D";
+        const dBaseH = 8 * s2;
+        const stubH = h * 0.38;
+        const rStubH = h * 0.22;
+
+        // Scorched ground base with radial burn
+        const rubbleGrad = ctx.createRadialGradient(
+          0,
+          -w * tanAngle * 0.5,
+          0,
+          0,
+          -w * tanAngle * 0.5,
+          w * 1.4,
+        );
+        rubbleGrad.addColorStop(0, "#2A1F15");
+        rubbleGrad.addColorStop(0.6, "#3D3228");
+        rubbleGrad.addColorStop(1, "#4A4035");
+        ctx.fillStyle = rubbleGrad;
         ctx.beginPath();
-        ctx.moveTo(-w - 5 * s2, 0);
+        ctx.moveTo(-w - 6 * s2, 0);
         ctx.lineTo(0, 10 * s2);
         ctx.lineTo(w + 8 * s2, 2 * s2);
-        ctx.lineTo(0, -10 * s2);
+        ctx.lineTo(0, -w * tanAngle * 2 - 4 * s2);
+        ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = "#1a1a1a";
+        // Scorch marks on ground
+        ctx.fillStyle = "rgba(15, 10, 5, 0.35)";
         ctx.beginPath();
-        ctx.moveTo(-w * 0.8, -h * 0.2);
-        ctx.lineTo(w * 0.9, -h * 0.1);
-        ctx.lineTo(w * 0.9, -h - roofOffset * 0.8);
-        ctx.lineTo(-w * 0.8, -h - roofOffset * 0.6);
+        ctx.ellipse(-5 * s2, -4 * s2, 14 * s2, 7 * s2, -0.3, 0, Math.PI * 2);
         ctx.fill();
-
-        ctx.fillStyle = "#4A4A4A";
         ctx.beginPath();
-        ctx.moveTo(0, 5 * s2);
-        ctx.lineTo(-w, -w * tanAngle + 2 * s2);
-        ctx.lineTo(-w * 0.9, -h * 0.5);
-        ctx.lineTo(-w * 1.1, -h - roofOffset * 0.5);
-        ctx.lineTo(0, -h - 5 * s2);
+        ctx.ellipse(8 * s2, -7 * s2, 11 * s2, 5 * s2, 0.5, 0, Math.PI * 2);
         ctx.fill();
 
+        // Broken left wall stub with jagged top
+        const lWallGrad = ctx.createLinearGradient(
+          -w,
+          -dBaseH - w * tanAngle,
+          0,
+          -dBaseH,
+        );
+        lWallGrad.addColorStop(0, "#4A3A2A");
+        lWallGrad.addColorStop(1, "#6B5B4B");
+        ctx.fillStyle = lWallGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, -dBaseH);
+        ctx.lineTo(-w, -dBaseH - w * tanAngle);
+        ctx.lineTo(-w, -dBaseH - w * tanAngle - stubH);
+        ctx.lineTo(-w * 0.78, -dBaseH - w * tanAngle * 0.78 - stubH - 4 * s2);
+        ctx.lineTo(-w * 0.55, -dBaseH - w * tanAngle * 0.55 - stubH + 3 * s2);
+        ctx.lineTo(-w * 0.3, -dBaseH - w * tanAngle * 0.3 - stubH - 2 * s2);
+        ctx.lineTo(0, -dBaseH - stubH + 6 * s2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner wall thickness visible on jagged edge
+        ctx.fillStyle = "#3D2E20";
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.78, -dBaseH - w * tanAngle * 0.78 - stubH - 4 * s2);
+        ctx.lineTo(-w * 0.78, -dBaseH - w * tanAngle * 0.78 - stubH - 1 * s2);
+        ctx.lineTo(-w * 0.55, -dBaseH - w * tanAngle * 0.55 - stubH + 6 * s2);
+        ctx.lineTo(-w * 0.55, -dBaseH - w * tanAngle * 0.55 - stubH + 3 * s2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#352A1E";
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.3, -dBaseH - w * tanAngle * 0.3 - stubH - 2 * s2);
+        ctx.lineTo(-w * 0.3, -dBaseH - w * tanAngle * 0.3 - stubH + 1 * s2);
+        ctx.lineTo(0, -dBaseH - stubH + 9 * s2);
+        ctx.lineTo(0, -dBaseH - stubH + 6 * s2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone course lines on left wall stub
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.7 * s2;
+        for (let row = 0; row < 3; row++) {
+          const frac = 0.15 + row * 0.28;
+          const ry = -dBaseH - stubH * frac;
+          ctx.beginPath();
+          ctx.moveTo(-w + 3 * s2, ry - (w - 3 * s2) * tanAngle);
+          ctx.lineTo(-3 * s2, ry);
+          ctx.stroke();
+        }
+
+        // Cracks on left wall
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = 1 * s2;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.85, -dBaseH - w * tanAngle * 0.85 - stubH * 0.2);
+        ctx.lineTo(-w * 0.6, -dBaseH - w * tanAngle * 0.6 - stubH * 0.5);
+        ctx.lineTo(-w * 0.45, -dBaseH - w * tanAngle * 0.45 - stubH * 0.3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.4, -dBaseH - w * tanAngle * 0.4);
+        ctx.lineTo(-w * 0.25, -dBaseH - w * tanAngle * 0.25 - stubH * 0.35);
+        ctx.stroke();
+
+        // Shorter right wall fragment
+        const rWallGrad = ctx.createLinearGradient(
+          0,
+          -dBaseH,
+          w,
+          -dBaseH - w * tanAngle,
+        );
+        rWallGrad.addColorStop(0, "#8A7A65");
+        rWallGrad.addColorStop(1, "#6B5B48");
+        ctx.fillStyle = rWallGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, -dBaseH);
+        ctx.lineTo(w, -dBaseH - w * tanAngle);
+        ctx.lineTo(w, -dBaseH - w * tanAngle - rStubH);
+        ctx.lineTo(w * 0.65, -dBaseH - w * tanAngle * 0.65 - rStubH + 2 * s2);
+        ctx.lineTo(w * 0.35, -dBaseH - w * tanAngle * 0.35 - rStubH - 3 * s2);
+        ctx.lineTo(0, -dBaseH - rStubH + 3 * s2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner wall edge on right stub
+        ctx.fillStyle = "#5A4A38";
+        ctx.beginPath();
+        ctx.moveTo(w * 0.65, -dBaseH - w * tanAngle * 0.65 - rStubH + 2 * s2);
+        ctx.lineTo(w * 0.65, -dBaseH - w * tanAngle * 0.65 - rStubH + 5 * s2);
+        ctx.lineTo(w * 0.35, -dBaseH - w * tanAngle * 0.35 - rStubH);
+        ctx.lineTo(w * 0.35, -dBaseH - w * tanAngle * 0.35 - rStubH - 3 * s2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Scattered rubble blocks with highlights/shadows
+        const rubble = [
+          { x: w * 0.55, y: -3 * s2, bw: 8, bh: 5, rot: 0.3, c: "#6B5D4D" },
+          { x: w * 0.25, y: 4 * s2, bw: 10, bh: 6, rot: -0.5, c: "#5A4A3A" },
+          { x: -w * 0.45, y: 5 * s2, bw: 7, bh: 4, rot: 0.8, c: "#7A6A55" },
+          { x: -w * 0.85, y: -1 * s2, bw: 9, bh: 5, rot: -0.2, c: "#6B5D4D" },
+          { x: w * 0.8, y: -5 * s2, bw: 6, bh: 4, rot: 1.1, c: "#5A4A3A" },
+          { x: -2 * s2, y: 7 * s2, bw: 11, bh: 6, rot: -0.35, c: "#8B7355" },
+          { x: -w * 0.6, y: 4 * s2, bw: 5, bh: 3, rot: 0.6, c: "#4A3A2A" },
+          { x: w * 0.45, y: -8 * s2, bw: 7, bh: 4, rot: -0.7, c: "#6B5D4D" },
+          { x: -w * 0.15, y: -10 * s2, bw: 6, bh: 4, rot: 0.4, c: "#5A4A3A" },
+          { x: w * 0.1, y: 2 * s2, bw: 5, bh: 3, rot: -0.9, c: "#7A6A55" },
+        ];
+        rubble.forEach((b) => {
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.rotate(b.rot);
+          ctx.fillStyle = b.c;
+          ctx.fillRect(
+            (-b.bw / 2) * s2,
+            (-b.bh / 2) * s2,
+            b.bw * s2,
+            b.bh * s2,
+          );
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.fillRect((-b.bw / 2) * s2, (-b.bh / 2) * s2, b.bw * s2, 1.5 * s2);
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          ctx.fillRect(
+            (-b.bw / 2) * s2,
+            (b.bh / 2 - 1.5) * s2,
+            b.bw * s2,
+            1.5 * s2,
+          );
+          ctx.restore();
+        });
+
+        // Fallen vault door lying cracked among rubble
         ctx.save();
-        ctx.translate(w * 0.8, -h * 0.4);
-        ctx.rotate(Math.PI / 8);
-        ctx.fillStyle = "#5A5A5A";
-        ctx.fillRect(-12 * s2, -18 * s2, 24 * s2, 36 * s2);
-        ctx.fillStyle = "#2D2D2D";
-        ctx.beginPath();
-        ctx.arc(0, -5 * s2, 6 * s2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        ctx.translate(w * 0.3, -2 * s2);
+        ctx.rotate(0.12);
 
-        ctx.fillStyle = "rgba(80, 80, 80, 0.4)";
-        for (let i = 0; i < 3; i++) {
-          const smokeOffset = (time * 2 + i * 1.5) % 4;
-          const smokeX = Math.sin(time + i) * 10 * s2;
+        ctx.fillStyle = "#3A3025";
+        ctx.strokeStyle = "#2A1F15";
+        ctx.lineWidth = 2 * s2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 13 * s2, 10 * s2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Bolt ring
+        ctx.strokeStyle = "#2D2520";
+        ctx.lineWidth = 1 * s2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 11 * s2, 8.5 * s2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let bolt = 0; bolt < 8; bolt++) {
+          const ba = (bolt * Math.PI * 2) / 8;
+          ctx.fillStyle = "#352D25";
           ctx.beginPath();
           ctx.arc(
-            smokeX,
-            -h - roofOffset - smokeOffset * 15 * s2,
-            (5 + smokeOffset * 3) * s2,
+            Math.cos(ba) * 11 * s2,
+            Math.sin(ba) * 8.5 * s2,
+            1.2 * s2,
             0,
             Math.PI * 2,
           );
           ctx.fill();
+        }
+
+        // Inner ring
+        ctx.fillStyle = "#4A4035";
+        ctx.strokeStyle = "#35302A";
+        ctx.lineWidth = 1 * s2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 9 * s2, 7 * s2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Dial face
+        ctx.fillStyle = "#55504A";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 5.5 * s2, 4.2 * s2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Broken spokes
+        ctx.strokeStyle = "#2A2018";
+        ctx.lineWidth = 1.3 * s2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(4.5 * s2, -2.8 * s2);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-3.5 * s2, 3 * s2);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-2 * s2, -3.5 * s2);
+        ctx.stroke();
+
+        // Crack across the door
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 1.2 * s2;
+        ctx.beginPath();
+        ctx.moveTo(-11 * s2, -3 * s2);
+        ctx.lineTo(-4 * s2, 1 * s2);
+        ctx.lineTo(3 * s2, -2 * s2);
+        ctx.lineTo(12 * s2, 1 * s2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Bent handle bar nearby
+        ctx.save();
+        ctx.translate(w * 0.7, -6 * s2);
+        ctx.rotate(-0.4);
+        ctx.fillStyle = "#3A3025";
+        ctx.fillRect(-1.5 * s2, -6 * s2, 3 * s2, 12 * s2);
+        ctx.fillStyle = "#4A4035";
+        ctx.beginPath();
+        ctx.arc(0, -6 * s2, 2.5 * s2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Warm ember glow from within the ruins
+        const emberGlow = ctx.createRadialGradient(
+          -w * 0.15,
+          -dBaseH - stubH * 0.3,
+          0,
+          -w * 0.15,
+          -dBaseH - stubH * 0.3,
+          22 * s2,
+        );
+        emberGlow.addColorStop(
+          0,
+          `rgba(255, 110, 35, ${0.08 + Math.sin(time * 2) * 0.03})`,
+        );
+        emberGlow.addColorStop(0.4, "rgba(255, 70, 15, 0.04)");
+        emberGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = emberGlow;
+        ctx.beginPath();
+        ctx.arc(-w * 0.15, -dBaseH - stubH * 0.3, 22 * s2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Smoke wisps rising from multiple points
+        for (let i = 0; i < 5; i++) {
+          const sp = (time * 0.7 + i * 1.3) % 5;
+          const sa = Math.max(0, 0.25 - sp * 0.05);
+          const sx = Math.sin(time * 0.4 + i * 2.2) * 7 * s2 + (i - 2) * 5 * s2;
+          const sy = -dBaseH - stubH * 0.4 - sp * 14 * s2;
+          const sr = (3 + sp * 2.8) * s2;
+          ctx.fillStyle = `rgba(55, 50, 45, ${sa})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Floating ember particles
+        for (let i = 0; i < 4; i++) {
+          const ep = (time * 1.3 + i * 1.7) % 3;
+          const ea = Math.max(0, 0.7 - ep * 0.25);
+          const ex = Math.sin(time * 1.1 + i * 2.8) * 14 * s2;
+          const ey = -dBaseH - stubH * 0.2 - ep * 20 * s2;
+          const hueVal = 140 + Math.sin(time * 4 + i) * 70;
+          ctx.fillStyle = `rgba(255, ${Math.round(hueVal)}, 25, ${ea})`;
+          ctx.beginPath();
+          ctx.arc(
+            ex,
+            ey,
+            (0.8 + Math.sin(time * 3 + i) * 0.4) * s2,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+
+        // Dust motes drifting
+        for (let i = 0; i < 3; i++) {
+          const dp = (time * 0.4 + i * 2.5) % 4;
+          const da = 0.15 - dp * 0.035;
+          if (da > 0) {
+            const dx = Math.sin(time * 0.3 + i * 4) * w * 0.6;
+            const dy = -w * tanAngle - dp * 8 * s2;
+            ctx.fillStyle = `rgba(180, 170, 150, ${da})`;
+            ctx.beginPath();
+            ctx.arc(dx, dy, (2 + dp) * s2, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
         break;
       }
@@ -2223,72 +2485,121 @@ export function renderSpecialBuilding(
             glow: "#FF6B6B",
           }
         : {
-            baseLight: "#5D5D5D",
-            baseDark: "#3D3D3D",
-            wallLeft: "#6B5D4D",
-            wallRight: "#8B7355",
-            wallTop: "#9D8B73",
-            frame: "#5C4A3A",
-            trim: "#786048",
-            dark: "#2D2420",
-            accent: "#A08060",
-            glow: "#5A9080",
+            baseLight: "#686868",
+            baseDark: "#424242",
+            wallLeft: "#7E6B52",
+            wallRight: "#9C8464",
+            wallTop: "#B09A7A",
+            frame: "#6E5540",
+            trim: "#90704E",
+            dark: "#2D2118",
+            accent: "#C8A860",
+            glow: "#4CB898",
           };
 
       // Stone Foundation Base
-      const baseH = 8 * s2;
+      const baseH = 10 * s2;
+      const bw = w + 4 * s2;
+      const bTan = tanAngle;
 
-      const baseGradL = ctx.createLinearGradient(-w - 4 * s2, 0, 0, 0);
-      baseGradL.addColorStop(0, "#2D2D2D");
-      baseGradL.addColorStop(1, "#3D3D3D");
+      // Left face
+      const baseGradL = ctx.createLinearGradient(-bw, 0, 0, 0);
+      baseGradL.addColorStop(0, "#262626");
+      baseGradL.addColorStop(0.5, c.baseDark);
+      baseGradL.addColorStop(1, "#4A4A4A");
       ctx.fillStyle = baseGradL;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(-w - 4 * s2, -w * tanAngle - 2 * s2);
-      ctx.lineTo(-w - 4 * s2, -w * tanAngle - 2 * s2 - baseH);
+      ctx.lineTo(-bw, -bw * bTan);
+      ctx.lineTo(-bw, -bw * bTan - baseH);
       ctx.lineTo(0, -baseH);
       ctx.fill();
 
-      const baseGradR = ctx.createLinearGradient(0, 0, w + 4 * s2, 0);
-      baseGradR.addColorStop(0, "#4D4D4D");
-      baseGradR.addColorStop(1, "#3D3D3D");
+      // Right face
+      const baseGradR = ctx.createLinearGradient(0, 0, bw, 0);
+      baseGradR.addColorStop(0, "#585858");
+      baseGradR.addColorStop(0.5, c.baseLight);
+      baseGradR.addColorStop(1, "#4A4A4A");
       ctx.fillStyle = baseGradR;
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.lineTo(w + 4 * s2, -w * tanAngle - 2 * s2);
-      ctx.lineTo(w + 4 * s2, -w * tanAngle - 2 * s2 - baseH);
+      ctx.lineTo(bw, -bw * bTan);
+      ctx.lineTo(bw, -bw * bTan - baseH);
       ctx.lineTo(0, -baseH);
       ctx.fill();
 
-      ctx.fillStyle = "#454545";
+      // Top face
+      const baseTopGrad = ctx.createLinearGradient(
+        -bw,
+        -bw * bTan - baseH,
+        bw,
+        -bw * bTan - baseH,
+      );
+      baseTopGrad.addColorStop(0, "#484848");
+      baseTopGrad.addColorStop(0.5, "#555555");
+      baseTopGrad.addColorStop(1, "#4A4A4A");
+      ctx.fillStyle = baseTopGrad;
       ctx.beginPath();
       ctx.moveTo(0, -baseH);
-      ctx.lineTo(-w - 4 * s2, -w * tanAngle - 2 * s2 - baseH);
-      ctx.lineTo(0, -w * tanAngle * 2 - 4 * s2 - baseH);
-      ctx.lineTo(w + 4 * s2, -w * tanAngle - 2 * s2 - baseH);
+      ctx.lineTo(-bw, -bw * bTan - baseH);
+      ctx.lineTo(0, -bw * bTan * 2 - baseH);
+      ctx.lineTo(bw, -bw * bTan - baseH);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      // Iron banding — horizontal bands across foundation
+      ctx.strokeStyle = "rgba(0,0,0,0.22)";
+      ctx.lineWidth = 1.2 * s2;
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH * 0.45);
+      ctx.lineTo(-bw, -bw * bTan - baseH * 0.45);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH * 0.45);
+      ctx.lineTo(bw, -bw * bTan - baseH * 0.45);
+      ctx.stroke();
+
+      // Highlight edge on top of foundation
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1 * s2;
       ctx.beginPath();
-      ctx.moveTo(-w * 0.5 - 2 * s2, -w * tanAngle * 0.5 - 1 * s2 - baseH * 0.5);
-      ctx.lineTo(0, -baseH * 0.5);
-      ctx.lineTo(w * 0.5 + 2 * s2, -w * tanAngle * 0.5 - 1 * s2 - baseH * 0.5);
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(-bw, -bw * bTan - baseH);
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(bw, -bw * bTan - baseH);
       ctx.stroke();
+
+      // Corner rivets on foundation
+      const foundRivets = [
+        { x: 0, y: -baseH * 0.45 },
+        { x: -bw * 0.5, y: -bw * bTan * 0.5 - baseH * 0.45 },
+        { x: bw * 0.5, y: -bw * bTan * 0.5 - baseH * 0.45 },
+      ];
+      foundRivets.forEach((rv) => {
+        ctx.fillStyle = "#383838";
+        ctx.beginPath();
+        ctx.arc(rv.x, rv.y, 2 * s2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.beginPath();
+        ctx.arc(rv.x - 0.4 * s2, rv.y - 0.4 * s2, 0.8 * s2, 0, Math.PI * 2);
+        ctx.fill();
+      });
 
       // Main Vault Body
       const bodyY = -baseH;
 
+      // Left wall
       const wallGradL = ctx.createLinearGradient(
         -w,
         bodyY - w * tanAngle,
         0,
         bodyY,
       );
-      wallGradL.addColorStop(0, "#5A4A3A");
-      wallGradL.addColorStop(0.5, c.wallLeft);
-      wallGradL.addColorStop(1, "#7A6A5A");
+      wallGradL.addColorStop(0, "#4E4030");
+      wallGradL.addColorStop(0.3, c.wallLeft);
+      wallGradL.addColorStop(0.8, "#6E5E4E");
+      wallGradL.addColorStop(1, "#5A4A3A");
       ctx.fillStyle = wallGradL;
       ctx.beginPath();
       ctx.moveTo(0, bodyY);
@@ -2298,14 +2609,16 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
+      // Right wall
       const wallGradR = ctx.createLinearGradient(
         0,
         bodyY,
         w,
         bodyY - w * tanAngle,
       );
-      wallGradR.addColorStop(0, "#9A8A75");
-      wallGradR.addColorStop(0.5, c.wallRight);
+      wallGradR.addColorStop(0, "#A89474");
+      wallGradR.addColorStop(0.3, c.wallRight);
+      wallGradR.addColorStop(0.8, "#8A7A64");
       wallGradR.addColorStop(1, "#7A6A55");
       ctx.fillStyle = wallGradR;
       ctx.beginPath();
@@ -2316,6 +2629,7 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
+      // Top face
       const topGrad = ctx.createLinearGradient(
         0,
         bodyY - h - roofOffset,
@@ -2323,7 +2637,8 @@ export function renderSpecialBuilding(
         bodyY - h,
       );
       topGrad.addColorStop(0, "#A89878");
-      topGrad.addColorStop(1, c.wallTop);
+      topGrad.addColorStop(0.5, c.wallTop);
+      topGrad.addColorStop(1, "#9A8A70");
       ctx.fillStyle = topGrad;
       ctx.beginPath();
       ctx.moveTo(0, bodyY - h);
@@ -2333,7 +2648,106 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
-      // Decorative Wall Panels
+      // Wall edge highlights for 3D definition
+      ctx.strokeStyle = "rgba(255,255,255,0.10)";
+      ctx.lineWidth = 1 * s2;
+      // Top edge of left wall
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY - h);
+      ctx.lineTo(-w, bodyY - w * tanAngle - h);
+      ctx.stroke();
+      // Front edge
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY);
+      ctx.lineTo(0, bodyY - h);
+      ctx.stroke();
+
+      // Base molding strip at bottom of walls
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY);
+      ctx.lineTo(-w, bodyY - w * tanAngle);
+      ctx.lineTo(-w, bodyY - w * tanAngle - 3 * s2);
+      ctx.lineTo(0, bodyY - 3 * s2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY);
+      ctx.lineTo(w, bodyY - w * tanAngle);
+      ctx.lineTo(w, bodyY - w * tanAngle - 3 * s2);
+      ctx.lineTo(0, bodyY - 3 * s2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone course lines on left wall
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY);
+      ctx.lineTo(-w, bodyY - w * tanAngle);
+      ctx.lineTo(-w, bodyY - w * tanAngle - h);
+      ctx.lineTo(0, bodyY - h);
+      ctx.closePath();
+      ctx.clip();
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.6 * s2;
+      const courseCount = 6;
+      for (let row = 1; row < courseCount; row++) {
+        const frac = row / courseCount;
+        const ly = bodyY - h * frac;
+        ctx.beginPath();
+        ctx.moveTo(0, ly);
+        ctx.lineTo(-w, ly - w * tanAngle);
+        ctx.stroke();
+        const jointCount = 3;
+        for (let j = 0; j < jointCount; j++) {
+          const jfrac = (j + (row % 2 === 0 ? 0.5 : 0)) / jointCount;
+          const jx = -w * jfrac;
+          const jyTop = ly - w * tanAngle * jfrac;
+          const jyBot =
+            bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
+          ctx.beginPath();
+          ctx.moveTo(jx, jyTop);
+          ctx.lineTo(jx, jyBot);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Stone course lines on right wall
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, bodyY);
+      ctx.lineTo(w, bodyY - w * tanAngle);
+      ctx.lineTo(w, bodyY - w * tanAngle - h);
+      ctx.lineTo(0, bodyY - h);
+      ctx.closePath();
+      ctx.clip();
+      ctx.strokeStyle = "rgba(0,0,0,0.06)";
+      ctx.lineWidth = 0.6 * s2;
+      for (let row = 1; row < courseCount; row++) {
+        const frac = row / courseCount;
+        const ry = bodyY - h * frac;
+        ctx.beginPath();
+        ctx.moveTo(0, ry);
+        ctx.lineTo(w, ry - w * tanAngle);
+        ctx.stroke();
+        const jointCount = 3;
+        for (let j = 0; j < jointCount; j++) {
+          const jfrac = (j + (row % 2 === 0 ? 0.5 : 0)) / jointCount;
+          const jx = w * jfrac;
+          const jyTop = ry - w * tanAngle * jfrac;
+          const jyBot =
+            bodyY - h * ((row - 1) / courseCount) - w * tanAngle * jfrac;
+          ctx.beginPath();
+          ctx.moveTo(jx, jyTop);
+          ctx.lineTo(jx, jyBot);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Decorative Wall Panels (recessed)
       ctx.fillStyle = "rgba(0,0,0,0.15)";
       ctx.beginPath();
       ctx.moveTo(-3 * s2, bodyY - h * 0.15);
@@ -2342,6 +2756,13 @@ export function renderSpecialBuilding(
       ctx.lineTo(-3 * s2, bodyY - h + 5 * s2);
       ctx.closePath();
       ctx.fill();
+      // Panel highlight edge (top)
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 0.8 * s2;
+      ctx.beginPath();
+      ctx.moveTo(-3 * s2, bodyY - h + 5 * s2);
+      ctx.lineTo(-w + 5 * s2, bodyY - w * tanAngle - h + 5 * s2);
+      ctx.stroke();
 
       ctx.fillStyle = "rgba(0,0,0,0.1)";
       ctx.beginPath();
@@ -2351,6 +2772,13 @@ export function renderSpecialBuilding(
       ctx.lineTo(3 * s2, bodyY - h + 5 * s2);
       ctx.closePath();
       ctx.fill();
+      // Panel highlight edge (top)
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 0.8 * s2;
+      ctx.beginPath();
+      ctx.moveTo(3 * s2, bodyY - h + 5 * s2);
+      ctx.lineTo(w - 5 * s2, bodyY - w * tanAngle - h + 5 * s2);
+      ctx.stroke();
 
       // Corner Pilasters
       ctx.fillStyle = c.frame;
@@ -2380,10 +2808,19 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
-      // Cornice/Crown Molding
-      const corniceH = 5 * s2;
+      // Cornice/Crown Molding with dentil detail
+      const corniceH = 6 * s2;
 
-      ctx.fillStyle = c.trim;
+      // Left cornice face
+      const corGradL = ctx.createLinearGradient(
+        -w - 2 * s2,
+        bodyY - w * tanAngle - h,
+        0,
+        bodyY - h,
+      );
+      corGradL.addColorStop(0, "#6A5840");
+      corGradL.addColorStop(1, c.trim);
+      ctx.fillStyle = corGradL;
       ctx.beginPath();
       ctx.moveTo(0, bodyY - h);
       ctx.lineTo(-w - 2 * s2, bodyY - w * tanAngle - h - 1 * s2);
@@ -2392,7 +2829,16 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = c.accent;
+      // Right cornice face
+      const corGradR = ctx.createLinearGradient(
+        0,
+        bodyY - h,
+        w + 2 * s2,
+        bodyY - w * tanAngle - h,
+      );
+      corGradR.addColorStop(0, c.accent);
+      corGradR.addColorStop(1, "#A08850");
+      ctx.fillStyle = corGradR;
       ctx.beginPath();
       ctx.moveTo(0, bodyY - h);
       ctx.lineTo(w + 2 * s2, bodyY - w * tanAngle - h - 1 * s2);
@@ -2401,12 +2847,49 @@ export function renderSpecialBuilding(
       ctx.closePath();
       ctx.fill();
 
+      // Dentil blocks along left cornice
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      const dentilCount = 5;
+      for (let d = 0; d < dentilCount; d++) {
+        const dfrac = (d + 0.5) / (dentilCount + 1);
+        const dx = -w * dfrac - 2 * s2 * dfrac;
+        const dy = bodyY - w * tanAngle * dfrac - h - 1 * s2 * dfrac;
+        ctx.fillRect(
+          dx - 1.5 * s2,
+          dy - corniceH + 1 * s2,
+          2.5 * s2,
+          corniceH - 2 * s2,
+        );
+      }
+      // Dentil blocks along right cornice
+      for (let d = 0; d < dentilCount; d++) {
+        const dfrac = (d + 0.5) / (dentilCount + 1);
+        const dx = w * dfrac + 2 * s2 * dfrac;
+        const dy = bodyY - w * tanAngle * dfrac - h - 1 * s2 * dfrac;
+        ctx.fillRect(
+          dx - 1.5 * s2,
+          dy - corniceH + 1 * s2,
+          2.5 * s2,
+          corniceH - 2 * s2,
+        );
+      }
+
+      // Top edge line
       ctx.strokeStyle = c.dark;
       ctx.lineWidth = 1.5 * s2;
       ctx.beginPath();
       ctx.moveTo(-w - 2 * s2, bodyY - w * tanAngle - h - corniceH);
       ctx.lineTo(0, bodyY - h - corniceH + 2 * s2);
       ctx.lineTo(w + 2 * s2, bodyY - w * tanAngle - h - corniceH);
+      ctx.stroke();
+
+      // Highlight under cornice top
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 0.8 * s2;
+      ctx.beginPath();
+      ctx.moveTo(-w - 2 * s2, bodyY - w * tanAngle - h - corniceH + 1.5 * s2);
+      ctx.lineTo(0, bodyY - h - corniceH + 3.5 * s2);
+      ctx.lineTo(w + 2 * s2, bodyY - w * tanAngle - h - corniceH + 1.5 * s2);
       ctx.stroke();
 
       // Rivets
@@ -2435,117 +2918,211 @@ export function renderSpecialBuilding(
         }
       });
 
-      // Central Crest/Emblem
+      // Central Crest — shield with keyhole emblem, flush on left wall
       ctx.save();
       ctx.translate(-w * 0.5, bodyY - w * tanAngle * 0.5 - h * 0.5);
+      // Skew to match the left wall's isometric slope
+      ctx.transform(1, tanAngle, 0, 1, 0, 0);
 
+      // Shield outer border
       ctx.fillStyle = c.dark;
       ctx.beginPath();
-      ctx.moveTo(0, -10 * s2);
-      ctx.lineTo(-8 * s2, -6 * s2);
-      ctx.lineTo(-8 * s2, 6 * s2);
-      ctx.quadraticCurveTo(0, 14 * s2, 8 * s2, 6 * s2);
-      ctx.lineTo(8 * s2, -6 * s2);
+      ctx.moveTo(0, -11 * s2);
+      ctx.lineTo(-9 * s2, -7 * s2);
+      ctx.lineTo(-9 * s2, 4 * s2);
+      ctx.quadraticCurveTo(-9 * s2, 10 * s2, 0, 15 * s2);
+      ctx.quadraticCurveTo(9 * s2, 10 * s2, 9 * s2, 4 * s2);
+      ctx.lineTo(9 * s2, -7 * s2);
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = c.trim;
+      // Shield inner field
+      const shieldGrad = ctx.createLinearGradient(0, -9 * s2, 0, 12 * s2);
+      shieldGrad.addColorStop(0, c.trim);
+      shieldGrad.addColorStop(0.5, c.accent);
+      shieldGrad.addColorStop(1, c.trim);
+      ctx.fillStyle = shieldGrad;
       ctx.beginPath();
-      ctx.moveTo(0, -7 * s2);
-      ctx.lineTo(-5 * s2, -4 * s2);
-      ctx.lineTo(-5 * s2, 4 * s2);
-      ctx.quadraticCurveTo(0, 10 * s2, 5 * s2, 4 * s2);
-      ctx.lineTo(5 * s2, -4 * s2);
+      ctx.moveTo(0, -8 * s2);
+      ctx.lineTo(-6 * s2, -5 * s2);
+      ctx.lineTo(-6 * s2, 3 * s2);
+      ctx.quadraticCurveTo(-6 * s2, 8 * s2, 0, 12 * s2);
+      ctx.quadraticCurveTo(6 * s2, 8 * s2, 6 * s2, 3 * s2);
+      ctx.lineTo(6 * s2, -5 * s2);
       ctx.closePath();
       ctx.fill();
 
+      // Keyhole circle
+      ctx.fillStyle = c.dark;
+      ctx.beginPath();
+      ctx.arc(0, -2 * s2, 3.5 * s2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Keyhole slot
+      ctx.beginPath();
+      ctx.moveTo(-2 * s2, 0);
+      ctx.lineTo(-1.2 * s2, 8 * s2);
+      ctx.lineTo(1.2 * s2, 8 * s2);
+      ctx.lineTo(2 * s2, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Keyhole inner highlight
+      ctx.fillStyle = isFlashing ? c.glow : "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.arc(0, -2 * s2, 1.8 * s2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Shield border line
       ctx.strokeStyle = c.dark;
-      ctx.lineWidth = 2 * s2;
+      ctx.lineWidth = 1.5 * s2;
       ctx.beginPath();
-      ctx.arc(0, 0, 3 * s2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(0, -5 * s2);
-      ctx.lineTo(0, 5 * s2);
+      ctx.moveTo(0, -8 * s2);
+      ctx.lineTo(-6 * s2, -5 * s2);
+      ctx.lineTo(-6 * s2, 3 * s2);
+      ctx.quadraticCurveTo(-6 * s2, 8 * s2, 0, 12 * s2);
+      ctx.quadraticCurveTo(6 * s2, 8 * s2, 6 * s2, 3 * s2);
+      ctx.lineTo(6 * s2, -5 * s2);
+      ctx.closePath();
       ctx.stroke();
       ctx.restore();
 
-      // The Grand Vault Door
+      // The Grand Vault Door — flush with right wall
       ctx.save();
       const doorCenterX = w * 0.5;
       const doorCenterY = bodyY - h * 0.5 - w * tanAngle * 0.5;
       ctx.translate(doorCenterX, doorCenterY);
+      // Skew everything to match the right wall's iso slope
+      ctx.transform(1, -tanAngle, 0, 1, 0, 0);
 
-      ctx.fillStyle = c.frame;
+      // Door frame — heavy reinforced border (simple rect, transform handles skew)
+      const dfGrad = ctx.createLinearGradient(-11 * s2, 0, 15 * s2, 0);
+      dfGrad.addColorStop(0, "#4A3A2A");
+      dfGrad.addColorStop(0.5, c.frame);
+      dfGrad.addColorStop(1, "#5A4A38");
+      ctx.fillStyle = dfGrad;
       ctx.strokeStyle = c.dark;
-      ctx.lineWidth = 2 * s2;
-      ctx.beginPath();
-      ctx.moveTo(-10 * s2, -14 * s2);
-      ctx.lineTo(14 * s2, -14 * s2 + 14 * tanAngle);
-      ctx.lineTo(14 * s2, 16 * s2 + 14 * tanAngle);
-      ctx.lineTo(-10 * s2, 16 * s2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.lineWidth = 2.5 * s2;
+      ctx.fillRect(-11 * s2, -15 * s2, 26 * s2, 32 * s2);
+      ctx.strokeRect(-11 * s2, -15 * s2, 26 * s2, 32 * s2);
 
-      ctx.fillStyle = c.trim;
-      ctx.beginPath();
-      ctx.moveTo(-7 * s2, -11 * s2);
-      ctx.lineTo(11 * s2, -11 * s2 + 11 * tanAngle);
-      ctx.lineTo(11 * s2, 13 * s2 + 11 * tanAngle);
-      ctx.lineTo(-7 * s2, 13 * s2);
-      ctx.closePath();
-      ctx.fill();
+      // Door inner plate
+      const dpGrad = ctx.createLinearGradient(
+        -8 * s2,
+        -12 * s2,
+        12 * s2,
+        14 * s2,
+      );
+      dpGrad.addColorStop(0, "#5C4C3C");
+      dpGrad.addColorStop(0.4, c.trim);
+      dpGrad.addColorStop(0.6, c.trim);
+      dpGrad.addColorStop(1, "#685848");
+      ctx.fillStyle = dpGrad;
+      ctx.fillRect(-8 * s2, -12 * s2, 20 * s2, 26 * s2);
 
+      // Reinforcement bands
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillRect(-9 * s2, -6 * s2, 22 * s2, 2.5 * s2);
+      ctx.fillRect(-9 * s2, 5 * s2, 22 * s2, 2.5 * s2);
+
+      // Hinge plates on left side
       ctx.fillStyle = c.dark;
-      ctx.fillRect(-8 * s2, -5 * s2, 20 * s2, 2 * s2);
-      ctx.fillRect(-8 * s2, 5 * s2, 20 * s2, 2 * s2);
-
-      ctx.fillStyle = "#2D2420";
-      ctx.fillRect(-9 * s2, -12 * s2, 3 * s2, 6 * s2);
-      ctx.fillRect(-9 * s2, 8 * s2, 3 * s2, 6 * s2);
-
-      ctx.fillStyle = c.dark;
-      ctx.beginPath();
-      ctx.arc(2 * s2, 1 * s2, 11 * s2, 0, Math.PI * 2);
-      ctx.fill();
-
+      ctx.fillRect(-10 * s2, -13 * s2, 4 * s2, 7 * s2);
+      ctx.fillRect(-10 * s2, 7 * s2, 4 * s2, 7 * s2);
       ctx.fillStyle = c.frame;
+      ctx.beginPath();
+      ctx.arc(-8 * s2, -10 * s2, 1.5 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-8 * s2, 11 * s2, 1.5 * s2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer dial ring
+      ctx.fillStyle = c.dark;
+      ctx.beginPath();
+      ctx.arc(2 * s2, 1 * s2, 12 * s2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dial face — metallic gradient
+      const dialGrad = ctx.createRadialGradient(
+        1 * s2,
+        -0.5 * s2,
+        0,
+        2 * s2,
+        1 * s2,
+        10 * s2,
+      );
+      dialGrad.addColorStop(0, "#9A8A78");
+      dialGrad.addColorStop(0.3, c.frame);
+      dialGrad.addColorStop(0.7, "#5A4A38");
+      dialGrad.addColorStop(1, c.dark);
+      ctx.fillStyle = dialGrad;
+      ctx.beginPath();
+      ctx.arc(2 * s2, 1 * s2, 10 * s2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Notch ring
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 0.5 * s2;
       ctx.beginPath();
       ctx.arc(2 * s2, 1 * s2, 9 * s2, 0, Math.PI * 2);
-      ctx.fill();
-
+      ctx.stroke();
       ctx.fillStyle = c.dark;
       for (let n = 0; n < 12; n++) {
         const notchAngle = (n * Math.PI * 2) / 12;
-        const nx = 2 * s2 + Math.cos(notchAngle) * 8 * s2;
-        const ny = 1 * s2 + Math.sin(notchAngle) * 8 * s2;
+        const nx = 2 * s2 + Math.cos(notchAngle) * 9 * s2;
+        const ny = 1 * s2 + Math.sin(notchAngle) * 9 * s2;
         ctx.beginPath();
-        ctx.arc(nx, ny, 1 * s2, 0, Math.PI * 2);
+        ctx.arc(nx, ny, 1.2 * s2, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      ctx.fillStyle = c.trim;
+      // Inner dial plate
+      const innerGrad = ctx.createRadialGradient(
+        1.5 * s2,
+        0,
+        0,
+        2 * s2,
+        1 * s2,
+        7 * s2,
+      );
+      innerGrad.addColorStop(0, c.accent);
+      innerGrad.addColorStop(0.5, c.trim);
+      innerGrad.addColorStop(1, c.frame);
+      ctx.fillStyle = innerGrad;
       ctx.beginPath();
-      ctx.arc(2 * s2, 1 * s2, 6 * s2, 0, Math.PI * 2);
+      ctx.arc(2 * s2, 1 * s2, 6.5 * s2, 0, Math.PI * 2);
       ctx.fill();
 
+      // Concentric groove ring
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.5 * s2;
+      ctx.beginPath();
+      ctx.arc(2 * s2, 1 * s2, 5 * s2, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Rotating wheel spokes
       const dialSpeed = time * 1.2;
       ctx.save();
       ctx.translate(2 * s2, 1 * s2);
       ctx.rotate(dialSpeed);
 
+      // Hub
       ctx.fillStyle = c.accent;
       ctx.beginPath();
       ctx.arc(0, 0, 4.5 * s2, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 0.5 * s2;
+      ctx.stroke();
 
+      // 4-spoke wheel
       ctx.strokeStyle = c.dark;
-      ctx.lineWidth = 1.5 * s2;
-      for (let spoke = 0; spoke < 3; spoke++) {
+      ctx.lineWidth = 2 * s2;
+      for (let spoke = 0; spoke < 4; spoke++) {
+        const spokeAngle = (spoke * Math.PI * 2) / 4;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        const spokeAngle = (spoke * Math.PI * 2) / 3;
         ctx.lineTo(
           Math.cos(spokeAngle) * 4 * s2,
           Math.sin(spokeAngle) * 4 * s2,
@@ -2553,142 +3130,646 @@ export function renderSpecialBuilding(
         ctx.stroke();
       }
 
+      // Spoke end caps
+      ctx.fillStyle = c.trim;
+      for (let spoke = 0; spoke < 4; spoke++) {
+        const spokeAngle = (spoke * Math.PI * 2) / 4;
+        ctx.beginPath();
+        ctx.arc(
+          Math.cos(spokeAngle) * 3.8 * s2,
+          Math.sin(spokeAngle) * 3.8 * s2,
+          1.2 * s2,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Center glow gem
       ctx.shadowColor = c.glow;
-      ctx.shadowBlur = isFlashing ? 25 : 12;
+      ctx.shadowBlur = isFlashing ? 30 : 14;
       ctx.fillStyle = isFlashing ? "#FFF" : c.glow;
       ctx.beginPath();
-      ctx.arc(0, 0, 2 * s2, 0, Math.PI * 2);
+      ctx.arc(0, 0, 2.2 * s2, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
       ctx.beginPath();
-      ctx.moveTo(0, 1 * s2);
-      ctx.lineTo(-1.5 * s2, 4 * s2);
-      ctx.lineTo(1.5 * s2, 4 * s2);
-      ctx.closePath();
+      ctx.arc(-0.5 * s2, -0.5 * s2, 1 * s2, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-
-      ctx.restore();
       ctx.restore();
 
-      // Handle/Lever
+      // Handle/Lever (inside the wall-flush transform)
       ctx.save();
-      ctx.translate(doorCenterX + 12 * s2, doorCenterY + 8 * s2);
+      ctx.translate(13 * s2, 7 * s2);
       ctx.fillStyle = c.dark;
-      ctx.fillRect(-2 * s2, -8 * s2, 4 * s2, 16 * s2);
-      ctx.fillStyle = c.frame;
-      ctx.beginPath();
-      ctx.arc(0, -8 * s2, 3 * s2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 8 * s2, 3 * s2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Roof Ornament
-      const roofPeakY = bodyY - h - roofOffset;
-
-      ctx.fillStyle = c.dark;
-      ctx.beginPath();
-      ctx.moveTo(-6 * s2, roofPeakY + 3 * s2);
-      ctx.lineTo(0, roofPeakY - 2 * s2);
-      ctx.lineTo(6 * s2, roofPeakY + 3 * s2);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = c.trim;
-      ctx.beginPath();
-      ctx.moveTo(-4 * s2, roofPeakY + 2 * s2);
-      ctx.lineTo(0, roofPeakY - 1 * s2);
-      ctx.lineTo(4 * s2, roofPeakY + 2 * s2);
-      ctx.closePath();
-      ctx.fill();
-
+      ctx.fillRect(-3.5 * s2, -2 * s2, 7 * s2, 4 * s2);
+      ctx.fillStyle = "#3A3028";
+      ctx.fillRect(-2 * s2, -9 * s2, 4 * s2, 18 * s2);
       ctx.fillStyle = c.accent;
       ctx.beginPath();
-      ctx.arc(0, roofPeakY - 5 * s2, 3 * s2, 0, Math.PI * 2);
+      ctx.arc(0, -9 * s2, 3 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.arc(-0.5 * s2, -9.5 * s2, 1.2 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = c.accent;
+      ctx.beginPath();
+      ctx.arc(0, 9 * s2, 3 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.arc(-0.5 * s2, 8.5 * s2, 1.2 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+
+      // Roof Parapet — raised edge all around the iso diamond
+      const roofPeakY = bodyY - h - roofOffset;
+      const parH = 3.5 * s2;
+
+      // Roof diamond outer vertices (top of walls)
+      const rf = { x: 0, y: bodyY - h };
+      const rl = { x: -w, y: bodyY - w * tanAngle - h };
+      const rb = { x: 0, y: roofPeakY };
+      const rr = { x: w, y: bodyY - w * tanAngle - h };
+
+      // Roof diamond center
+      const rcx = 0;
+      const rcy = bodyY - h - w * tanAngle;
+
+      // Inner diamond vertices (inset for parapet thickness)
+      const pi = 0.78;
+      const rfi = { x: rcx + (rf.x - rcx) * pi, y: rcy + (rf.y - rcy) * pi };
+      const rli = { x: rcx + (rl.x - rcx) * pi, y: rcy + (rl.y - rcy) * pi };
+      const rbi = { x: rcx + (rb.x - rcx) * pi, y: rcy + (rb.y - rcy) * pi };
+      const rri = { x: rcx + (rr.x - rcx) * pi, y: rcy + (rr.y - rcy) * pi };
+
+      // Front-left parapet outer face (darker, facing viewer)
+      const parGradL = ctx.createLinearGradient(rl.x, rl.y, rf.x, rf.y);
+      parGradL.addColorStop(0, "#5A4A38");
+      parGradL.addColorStop(1, c.trim);
+      ctx.fillStyle = parGradL;
+      ctx.beginPath();
+      ctx.moveTo(rf.x, rf.y);
+      ctx.lineTo(rl.x, rl.y);
+      ctx.lineTo(rl.x, rl.y - parH);
+      ctx.lineTo(rf.x, rf.y - parH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front-right parapet outer face (lighter, facing viewer)
+      const parGradR = ctx.createLinearGradient(rf.x, rf.y, rr.x, rr.y);
+      parGradR.addColorStop(0, c.accent);
+      parGradR.addColorStop(1, "#A08850");
+      ctx.fillStyle = parGradR;
+      ctx.beginPath();
+      ctx.moveTo(rr.x, rr.y);
+      ctx.lineTo(rf.x, rf.y);
+      ctx.lineTo(rf.x, rf.y - parH);
+      ctx.lineTo(rr.x, rr.y - parH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Parapet top ledge strips (all 4 edges)
+      ctx.fillStyle = c.wallTop;
+      // Front-left strip
+      ctx.beginPath();
+      ctx.moveTo(rf.x, rf.y - parH);
+      ctx.lineTo(rl.x, rl.y - parH);
+      ctx.lineTo(rli.x, rli.y - parH);
+      ctx.lineTo(rfi.x, rfi.y - parH);
+      ctx.closePath();
+      ctx.fill();
+      // Back-left strip
+      ctx.beginPath();
+      ctx.moveTo(rl.x, rl.y - parH);
+      ctx.lineTo(rb.x, rb.y - parH);
+      ctx.lineTo(rbi.x, rbi.y - parH);
+      ctx.lineTo(rli.x, rli.y - parH);
+      ctx.closePath();
+      ctx.fill();
+      // Back-right strip
+      ctx.fillStyle = "#B8A882";
+      ctx.beginPath();
+      ctx.moveTo(rb.x, rb.y - parH);
+      ctx.lineTo(rr.x, rr.y - parH);
+      ctx.lineTo(rri.x, rri.y - parH);
+      ctx.lineTo(rbi.x, rbi.y - parH);
+      ctx.closePath();
+      ctx.fill();
+      // Front-right strip
+      ctx.beginPath();
+      ctx.moveTo(rr.x, rr.y - parH);
+      ctx.lineTo(rf.x, rf.y - parH);
+      ctx.lineTo(rfi.x, rfi.y - parH);
+      ctx.lineTo(rri.x, rri.y - parH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner roof floor visible through parapet (slightly darker)
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      ctx.beginPath();
+      ctx.moveTo(rfi.x, rfi.y - parH);
+      ctx.lineTo(rli.x, rli.y - parH);
+      ctx.lineTo(rbi.x, rbi.y - parH);
+      ctx.lineTo(rri.x, rri.y - parH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Parapet outer edge highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 0.8 * s2;
+      ctx.beginPath();
+      ctx.moveTo(rl.x, rl.y - parH);
+      ctx.lineTo(rf.x, rf.y - parH);
+      ctx.lineTo(rr.x, rr.y - parH);
+      ctx.stroke();
+
+      // Inner parapet shadow line
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.lineWidth = 0.6 * s2;
+      ctx.beginPath();
+      ctx.moveTo(rli.x, rli.y - parH);
+      ctx.lineTo(rfi.x, rfi.y - parH);
+      ctx.lineTo(rri.x, rri.y - parH);
+      ctx.stroke();
+
+      // Center Ornament — small iso box sitting on the roof floor center
+      const dcW = w * 0.18;
+      const dcH = 3.5 * s2;
+      // Left face
+      ctx.fillStyle = c.frame;
+      ctx.beginPath();
+      ctx.moveTo(rcx, rcy - parH);
+      ctx.lineTo(rcx - dcW, rcy - dcW * tanAngle - parH);
+      ctx.lineTo(rcx - dcW, rcy - dcW * tanAngle - parH - dcH);
+      ctx.lineTo(rcx, rcy - parH - dcH);
+      ctx.closePath();
+      ctx.fill();
+      // Right face
+      ctx.fillStyle = c.trim;
+      ctx.beginPath();
+      ctx.moveTo(rcx, rcy - parH);
+      ctx.lineTo(rcx + dcW, rcy - dcW * tanAngle - parH);
+      ctx.lineTo(rcx + dcW, rcy - dcW * tanAngle - parH - dcH);
+      ctx.lineTo(rcx, rcy - parH - dcH);
+      ctx.closePath();
+      ctx.fill();
+      // Top face (tiny iso diamond)
+      ctx.fillStyle = c.accent;
+      ctx.beginPath();
+      ctx.moveTo(rcx, rcy - parH - dcH);
+      ctx.lineTo(rcx - dcW, rcy - dcW * tanAngle - parH - dcH);
+      ctx.lineTo(rcx, rcy - dcW * tanAngle * 2 - parH - dcH);
+      ctx.lineTo(rcx + dcW, rcy - dcW * tanAngle - parH - dcH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Orb on center ornament
+      const orbY = rcy - parH - dcH - dcW * tanAngle - 2.5 * s2;
+      ctx.fillStyle = c.dark;
+      ctx.fillRect(-1 * s2, orbY + 1 * s2, 2 * s2, 2.5 * s2);
+      const orbGrad = ctx.createRadialGradient(
+        -0.5 * s2,
+        orbY - 0.6 * s2,
+        0,
+        0,
+        orbY,
+        2.8 * s2,
+      );
+      orbGrad.addColorStop(0, "#E8D8A0");
+      orbGrad.addColorStop(0.5, c.accent);
+      orbGrad.addColorStop(1, c.trim);
+      ctx.fillStyle = orbGrad;
+      ctx.beginPath();
+      ctx.arc(0, orbY, 2.8 * s2, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "rgba(255,255,255,0.3)";
       ctx.beginPath();
-      ctx.arc(-1 * s2, roofPeakY - 6 * s2, 1.2 * s2, 0, Math.PI * 2);
+      ctx.arc(-0.7 * s2, orbY - 0.7 * s2, 1 * s2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ambient Glow
-      if (!isFlashing) {
-        const ambientGlow = ctx.createRadialGradient(
-          doorCenterX,
-          doorCenterY,
-          0,
-          doorCenterX,
-          doorCenterY,
-          25 * s2,
-        );
-        ambientGlow.addColorStop(0, "rgba(90, 144, 128, 0.15)");
+      // Ambient Glow — pulsing
+      const glowPulse = 0.12 + Math.sin(time * 2.5) * 0.04;
+      const ambientGlow = ctx.createRadialGradient(
+        doorCenterX,
+        doorCenterY,
+        0,
+        doorCenterX,
+        doorCenterY,
+        28 * s2,
+      );
+      if (isFlashing) {
+        ambientGlow.addColorStop(0, "rgba(255, 100, 100, 0.25)");
+        ambientGlow.addColorStop(0.5, "rgba(255, 100, 100, 0.08)");
         ambientGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = ambientGlow;
-        ctx.beginPath();
-        ctx.arc(doorCenterX, doorCenterY, 25 * s2, 0, Math.PI * 2);
-        ctx.fill();
+      } else {
+        ambientGlow.addColorStop(0, `rgba(76, 184, 152, ${glowPulse})`);
+        ambientGlow.addColorStop(0.5, `rgba(76, 184, 152, ${glowPulse * 0.4})`);
+        ambientGlow.addColorStop(1, "transparent");
       }
+      ctx.fillStyle = ambientGlow;
+      ctx.beginPath();
+      ctx.arc(doorCenterX, doorCenterY, 28 * s2, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Damage Effects
-      if (hpPct < 0.75) {
-        ctx.strokeStyle = "rgba(0,0,0,0.5)";
-        ctx.lineWidth = 1 * s2;
+      // ── Damage Effects ──
+      // Helper: point on left wall at fractional position (fx across, fy up)
+      const lWallPt = (fx: number, fy: number) => ({
+        x: -w * fx,
+        y: bodyY - w * tanAngle * fx - h * fy,
+      });
+      // Helper: point on right wall
+      const rWallPt = (fx: number, fy: number) => ({
+        x: w * fx,
+        y: bodyY - w * tanAngle * fx - h * fy,
+      });
+
+      if (hpPct < 0.85) {
+        const dmg = Math.min(1, (0.85 - hpPct) / 0.85);
+
+        // Progressive wall darkening — clipped to each wall face
+        const sootAlpha = 0.04 + dmg * 0.12;
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(-w * 0.7, bodyY - h * 0.3);
-        ctx.lineTo(-w * 0.3, bodyY - h * 0.5);
-        ctx.moveTo(-w * 0.6, bodyY - h * 0.7);
-        ctx.lineTo(-w * 0.2, bodyY - h * 0.6);
-        ctx.moveTo(w * 0.3, bodyY - w * tanAngle - h * 0.4);
-        ctx.lineTo(w * 0.6, bodyY - w * tanAngle - h * 0.6);
-        ctx.stroke();
-      }
-
-      if (hpPct < 0.4) {
-        const flicker = Math.sin(time * 20) > 0;
-
-        ctx.strokeStyle = flicker ? "#FFEB3B" : "#FF5722";
-        ctx.shadowColor = "#FF5722";
-        ctx.shadowBlur = 15 * s2;
-        ctx.lineWidth = 2.5 * s2;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.2, bodyY);
-        ctx.lineTo(-w * 0.5, bodyY - h * 0.3);
-        ctx.lineTo(-w * 0.3, bodyY - h * 0.7);
+        ctx.moveTo(0, bodyY);
+        ctx.lineTo(-w, bodyY - w * tanAngle);
+        ctx.lineTo(-w, bodyY - w * tanAngle - h);
         ctx.lineTo(0, bodyY - h);
-        ctx.lineTo(w * 0.2, bodyY - h - roofOffset * 0.5);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        const beaconY = roofPeakY - 12 * s2;
-        ctx.fillStyle = c.dark;
-        ctx.fillRect(-3 * s2, beaconY, 6 * s2, 6 * s2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = `rgba(20, 15, 8, ${sootAlpha})`;
+        ctx.fillRect(
+          -w - 2 * s2,
+          bodyY - w * tanAngle - h - 2 * s2,
+          w + 4 * s2,
+          h + w * tanAngle + 4 * s2,
+        );
+        ctx.restore();
 
         ctx.save();
-        ctx.translate(0, beaconY);
-        ctx.fillStyle = flicker ? "#FF0000" : "#B71C1C";
-        ctx.shadowColor = "#FF0000";
-        ctx.shadowBlur = 25;
         ctx.beginPath();
-        ctx.arc(0, 0, 4 * s2, Math.PI, Math.PI * 2);
-        ctx.fill();
-        ctx.rotate(time * 6);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.moveTo(0, bodyY);
+        ctx.lineTo(w, bodyY - w * tanAngle);
+        ctx.lineTo(w, bodyY - w * tanAngle - h);
+        ctx.lineTo(0, bodyY - h);
+        ctx.closePath();
+        ctx.clip();
+        ctx.fillStyle = `rgba(20, 15, 8, ${sootAlpha * 0.7})`;
+        ctx.fillRect(
+          -2 * s2,
+          bodyY - w * tanAngle - h - 2 * s2,
+          w + 4 * s2,
+          h + w * tanAngle + 4 * s2,
+        );
+        ctx.restore();
+
+        // Tier 1: Cracks on left wall (clipped, iso-aligned)
+        const crAlpha = 0.25 + dmg * 0.35;
+        const crW = (0.7 + dmg * 1.5) * s2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, bodyY);
+        ctx.lineTo(-w, bodyY - w * tanAngle);
+        ctx.lineTo(-w, bodyY - w * tanAngle - h);
+        ctx.lineTo(0, bodyY - h);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.strokeStyle = `rgba(15, 10, 5, ${crAlpha})`;
+        ctx.lineWidth = crW;
+        ctx.lineCap = "round";
+        // Main crack with branches
+        let p = lWallPt(0.82, 0.18);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        p = lWallPt(0.65, 0.35);
+        ctx.lineTo(p.x, p.y);
+        p = lWallPt(0.48, 0.28);
+        ctx.lineTo(p.x, p.y);
+        p = lWallPt(0.3, 0.42);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        // Branch 1
+        ctx.lineWidth = crW * 0.6;
+        p = lWallPt(0.65, 0.35);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        p = lWallPt(0.55, 0.48);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        // Branch 2
+        p = lWallPt(0.48, 0.28);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        p = lWallPt(0.42, 0.15);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        ctx.restore();
+
+        // Tier 2: More cracks + scorch marks (< 60%)
+        if (hpPct < 0.6) {
+          // Additional crack on left wall upper area
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, bodyY);
+          ctx.lineTo(-w, bodyY - w * tanAngle);
+          ctx.lineTo(-w, bodyY - w * tanAngle - h);
+          ctx.lineTo(0, bodyY - h);
+          ctx.closePath();
+          ctx.clip();
+          ctx.strokeStyle = `rgba(15, 10, 5, ${crAlpha})`;
+          ctx.lineWidth = crW;
+          ctx.lineCap = "round";
+          p = lWallPt(0.7, 0.62);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          p = lWallPt(0.5, 0.72);
+          ctx.lineTo(p.x, p.y);
+          p = lWallPt(0.25, 0.65);
+          ctx.lineTo(p.x, p.y);
+          p = lWallPt(0.1, 0.8);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          // Scorch mark overlay
+          ctx.fillStyle = "rgba(30, 18, 5, 0.12)";
+          ctx.beginPath();
+          const sc = lWallPt(0.55, 0.4);
+          ctx.ellipse(sc.x, sc.y, 10 * s2, 14 * s2, -0.25, 0, Math.PI * 2);
+          ctx.fill();
+          // Missing stone void
+          ctx.fillStyle = "rgba(10, 8, 5, 0.35)";
+          const mv = lWallPt(0.45, 0.3);
+          ctx.fillRect(mv.x - 3 * s2, mv.y - 2 * s2, 6 * s2, 4 * s2);
+          ctx.restore();
+
+          // Cracks on right wall (clipped)
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, bodyY);
+          ctx.lineTo(w, bodyY - w * tanAngle);
+          ctx.lineTo(w, bodyY - w * tanAngle - h);
+          ctx.lineTo(0, bodyY - h);
+          ctx.closePath();
+          ctx.clip();
+          ctx.strokeStyle = `rgba(15, 10, 5, ${crAlpha * 0.8})`;
+          ctx.lineWidth = crW * 0.9;
+          ctx.lineCap = "round";
+          let rp = rWallPt(0.4, 0.3);
+          ctx.beginPath();
+          ctx.moveTo(rp.x, rp.y);
+          rp = rWallPt(0.58, 0.48);
+          ctx.lineTo(rp.x, rp.y);
+          rp = rWallPt(0.72, 0.38);
+          ctx.lineTo(rp.x, rp.y);
+          ctx.stroke();
+          // Branch
+          ctx.lineWidth = crW * 0.5;
+          rp = rWallPt(0.58, 0.48);
+          ctx.beginPath();
+          ctx.moveTo(rp.x, rp.y);
+          rp = rWallPt(0.65, 0.62);
+          ctx.lineTo(rp.x, rp.y);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Tier 3: Fallen debris + missing blocks + deep fractures (< 45%)
+        if (hpPct < 0.45) {
+          // Missing stone voids on left wall
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, bodyY);
+          ctx.lineTo(-w, bodyY - w * tanAngle);
+          ctx.lineTo(-w, bodyY - w * tanAngle - h);
+          ctx.lineTo(0, bodyY - h);
+          ctx.closePath();
+          ctx.clip();
+          ctx.fillStyle = "rgba(8, 5, 2, 0.4)";
+          const v1 = lWallPt(0.7, 0.55);
+          ctx.fillRect(v1.x - 4 * s2, v1.y - 3 * s2, 8 * s2, 6 * s2);
+          const v2 = lWallPt(0.35, 0.7);
+          ctx.fillRect(v2.x - 3 * s2, v2.y - 2 * s2, 6 * s2, 5 * s2);
+          ctx.restore();
+
+          // Missing block on right wall
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, bodyY);
+          ctx.lineTo(w, bodyY - w * tanAngle);
+          ctx.lineTo(w, bodyY - w * tanAngle - h);
+          ctx.lineTo(0, bodyY - h);
+          ctx.closePath();
+          ctx.clip();
+          ctx.fillStyle = "rgba(8, 5, 2, 0.35)";
+          const v3 = rWallPt(0.55, 0.45);
+          ctx.fillRect(v3.x - 3 * s2, v3.y - 2.5 * s2, 7 * s2, 5 * s2);
+          ctx.restore();
+
+          // Fallen stone debris at base (rotated rectangles)
+          const deb = [
+            {
+              x: -w * 0.25,
+              y: bodyY + 2.5 * s2,
+              bw: 6,
+              bh: 3.5,
+              rot: 0.35,
+              c: "#6B5B4B",
+            },
+            {
+              x: -w * 0.08,
+              y: bodyY + 1.5 * s2,
+              bw: 4.5,
+              bh: 2.5,
+              rot: -0.5,
+              c: "#5A4A3A",
+            },
+            {
+              x: w * 0.35,
+              y: bodyY - w * tanAngle * 0.35 + 2 * s2,
+              bw: 5.5,
+              bh: 3,
+              rot: 0.7,
+              c: "#7A6A55",
+            },
+            {
+              x: -w * 0.5,
+              y: bodyY - w * tanAngle * 0.5 + 1.5 * s2,
+              bw: 4,
+              bh: 2.5,
+              rot: -0.3,
+              c: "#5A4A3A",
+            },
+            {
+              x: w * 0.55,
+              y: bodyY - w * tanAngle * 0.55 + 1 * s2,
+              bw: 3.5,
+              bh: 2,
+              rot: 0.9,
+              c: "#6B5B4B",
+            },
+          ];
+          deb.forEach((d) => {
+            ctx.save();
+            ctx.translate(d.x, d.y);
+            ctx.rotate(d.rot);
+            ctx.fillStyle = d.c;
+            ctx.fillRect(
+              (-d.bw / 2) * s2,
+              (-d.bh / 2) * s2,
+              d.bw * s2,
+              d.bh * s2,
+            );
+            ctx.fillStyle = "rgba(255,255,255,0.06)";
+            ctx.fillRect((-d.bw / 2) * s2, (-d.bh / 2) * s2, d.bw * s2, 1 * s2);
+            ctx.restore();
+          });
+
+          // Deep structural fracture across left wall
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, bodyY);
+          ctx.lineTo(-w, bodyY - w * tanAngle);
+          ctx.lineTo(-w, bodyY - w * tanAngle - h);
+          ctx.lineTo(0, bodyY - h);
+          ctx.closePath();
+          ctx.clip();
+          ctx.strokeStyle = "rgba(30, 15, 0, 0.5)";
+          ctx.lineWidth = 2.2 * s2;
+          ctx.lineCap = "round";
+          p = lWallPt(0.92, 0.05);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          p = lWallPt(0.6, 0.45);
+          ctx.lineTo(p.x, p.y);
+          p = lWallPt(0.35, 0.35);
+          ctx.lineTo(p.x, p.y);
+          p = lWallPt(0.1, 0.75);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Tier 4: Critical — fires, smoke, beacon (< 35%)
+      if (hpPct < 0.35 && hpPct > 0) {
+        const flk1 = Math.sin(time * 20) > 0;
+        const flk2 = Math.sin(time * 15 + 1) > 0;
+
+        // Fire sources at crack intersection points
+        const fires = [
+          { ...lWallPt(0.6, 0.45), sz: 1 },
+          { ...lWallPt(0.3, 0.7), sz: 0.75 },
+          { ...rWallPt(0.55, 0.48), sz: 0.85 },
+        ];
+        fires.forEach((fp, idx) => {
+          const flk = idx % 2 === 0 ? flk1 : flk2;
+          ctx.save();
+          ctx.translate(fp.x, fp.y);
+          // Warm glow
+          const fg = ctx.createRadialGradient(0, 0, 0, 0, 0, 12 * s2 * fp.sz);
+          fg.addColorStop(0, `rgba(255, 140, 30, ${flk ? 0.22 : 0.12})`);
+          fg.addColorStop(1, "transparent");
+          ctx.fillStyle = fg;
+          ctx.beginPath();
+          ctx.arc(0, 0, 12 * s2 * fp.sz, 0, Math.PI * 2);
+          ctx.fill();
+          // Layered flame tongues
+          for (let f = 2; f >= 0; f--) {
+            const fh = (5 + f * 3.5) * s2 * fp.sz;
+            const fw = (1.5 + f * 0.8) * s2 * fp.sz;
+            const fx = Math.sin(time * (10 + f * 4) + idx * 2 + f) * 2.5 * s2;
+            const colors = [
+              [flk ? "#FFF8E1" : "#FFECB3"],
+              [flk ? "#FFB74D" : "#FF9800"],
+              [flk ? "#F44336" : "#D32F2F"],
+            ];
+            ctx.fillStyle = colors[f][0];
+            ctx.beginPath();
+            ctx.moveTo(fx - fw, 0);
+            ctx.quadraticCurveTo(fx - fw * 0.4, -fh * 0.5, fx, -fh);
+            ctx.quadraticCurveTo(fx + fw * 0.4, -fh * 0.5, fx + fw, 0);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        });
+
+        // Smoke columns from fire points
+        fires.forEach((fp, idx) => {
+          for (let i = 0; i < 3; i++) {
+            const sp = (time * 0.8 + i * 1.2 + idx * 0.7) % 4.5;
+            const sa = Math.max(0, 0.2 - sp * 0.04);
+            const sx = fp.x + Math.sin(time * 0.5 + i + idx) * 4 * s2;
+            const sy = fp.y - sp * 14 * s2;
+            const sr = (2.5 + sp * 2.5) * s2;
+            ctx.fillStyle = `rgba(40, 35, 30, ${sa})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+
+        // Glowing fracture on left wall (clipped)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, bodyY);
+        ctx.lineTo(-w, bodyY - w * tanAngle);
+        ctx.lineTo(-w, bodyY - w * tanAngle - h);
+        ctx.lineTo(0, bodyY - h);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = flk1 ? "#FFEB3B" : "#FF9800";
+        ctx.shadowColor = "#FF5722";
+        ctx.shadowBlur = 10 * s2;
+        ctx.lineWidth = 2.5 * s2;
+        ctx.lineCap = "round";
+        let gp = lWallPt(0.92, 0.05);
+        ctx.beginPath();
+        ctx.moveTo(gp.x, gp.y);
+        gp = lWallPt(0.6, 0.45);
+        ctx.lineTo(gp.x, gp.y);
+        gp = lWallPt(0.35, 0.35);
+        ctx.lineTo(gp.x, gp.y);
+        gp = lWallPt(0.1, 0.75);
+        ctx.lineTo(gp.x, gp.y);
+        ctx.stroke();
         ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // Alarm beacon on center roof ornament
+        const bY = rcy - parH - 3.5 * s2 - w * 0.18 * tanAngle - 6 * s2;
+        ctx.save();
+        ctx.translate(0, bY);
+        ctx.fillStyle = flk1 ? "#FF1744" : "#B71C1C";
+        ctx.shadowColor = "#FF1744";
+        ctx.shadowBlur = 18 * s2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 4 * s2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.rotate(time * 5);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + (flk2 ? 0.25 : 0)})`;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(5 * s2, -3 * s2);
-        ctx.lineTo(5 * s2, 3 * s2);
+        ctx.lineTo(7 * s2, -3 * s2);
+        ctx.lineTo(7 * s2, 3 * s2);
         ctx.fill();
         ctx.restore();
 
-        if (Math.random() > 0.85) {
-          ctx.fillStyle = "#FFF";
-          ctx.beginPath();
-          const sparkX = (Math.random() - 0.5) * w;
-          const sparkY = bodyY - h * 0.5 + (Math.random() - 0.5) * h;
-          ctx.arc(sparkX, sparkY, 2 * s2, 0, Math.PI * 2);
-          ctx.fill();
+        // Sparks near fires
+        if (Math.random() > 0.78) {
+          fires.forEach((fp) => {
+            const sx = fp.x + (Math.random() - 0.5) * 10 * s2;
+            const sy = fp.y - Math.random() * 15 * s2;
+            ctx.fillStyle = `rgba(255, ${200 + Math.round(Math.random() * 55)}, ${80 + Math.round(Math.random() * 80)}, 0.9)`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (0.8 + Math.random() * 0.8) * s2, 0, Math.PI * 2);
+            ctx.fill();
+          });
         }
       }
 
@@ -3198,417 +4279,13 @@ export function renderSpecialBuilding(
       const isPreparing = spawnCycle > 10500;
 
       const w = 34 * s;
-      const h = 48 * s;
+      const h = 36 * s;
       const tanA = ISO_TAN;
 
       // Center the iso diamond on the tile (bottom vertex was at origin)
       ctx.translate(0, w * tanA);
 
-      // Foundation Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.beginPath();
-      ctx.ellipse(0, -w * tanA, 44 * s, 22 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stone Foundation/Base Platform
-      const baseH = 6 * s;
-      ctx.fillStyle = "#37474F";
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(-w - 3 * s, -w * tanA - 2 * s);
-      ctx.lineTo(-w - 3 * s, -w * tanA - 2 * s - baseH);
-      ctx.lineTo(0, -baseH);
-      ctx.fill();
-
-      ctx.fillStyle = "#546E7A";
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(w + 3 * s, -w * tanA - 2 * s);
-      ctx.lineTo(w + 3 * s, -w * tanA - 2 * s - baseH);
-      ctx.lineTo(0, -baseH);
-      ctx.fill();
-
-      ctx.fillStyle = "#4E5D63";
-      ctx.beginPath();
-      ctx.moveTo(0, -baseH);
-      ctx.lineTo(-w - 3 * s, -w * tanA - 2 * s - baseH);
-      ctx.lineTo(0, -w * tanA * 2 - 4 * s - baseH);
-      ctx.lineTo(w + 3 * s, -w * tanA - 2 * s - baseH);
-      ctx.closePath();
-      ctx.fill();
-
-      // Main Building Faces
-      const wallGradL = ctx.createLinearGradient(
-        -w,
-        -w * tanA - baseH,
-        0,
-        -baseH,
-      );
-      wallGradL.addColorStop(0, "#3D4F59");
-      wallGradL.addColorStop(0.5, "#455A64");
-      wallGradL.addColorStop(1, "#4A6270");
-      ctx.fillStyle = wallGradL;
-      ctx.beginPath();
-      ctx.moveTo(0, -baseH);
-      ctx.lineTo(-w, -w * tanA - baseH);
-      ctx.lineTo(-w, -w * tanA - h - baseH);
-      ctx.lineTo(0, -h - baseH);
-      ctx.fill();
-
-      const wallGradR = ctx.createLinearGradient(
-        0,
-        -baseH,
-        w,
-        -w * tanA - baseH,
-      );
-      wallGradR.addColorStop(0, "#6B8794");
-      wallGradR.addColorStop(0.5, "#607D8B");
-      wallGradR.addColorStop(1, "#546E7A");
-      ctx.fillStyle = wallGradR;
-      ctx.beginPath();
-      ctx.moveTo(0, -baseH);
-      ctx.lineTo(w, -w * tanA - baseH);
-      ctx.lineTo(w, -w * tanA - h - baseH);
-      ctx.lineTo(0, -h - baseH);
-      ctx.fill();
-
-      // Masonry Detail
-      ctx.strokeStyle = "rgba(0,0,0,0.15)";
-      ctx.lineWidth = 1 * s;
-      for (let row = 1; row < 5; row++) {
-        const yOff = -(h / 5) * row - baseH;
-        ctx.beginPath();
-        ctx.moveTo(-w, -w * tanA + yOff);
-        ctx.lineTo(0, yOff);
-        ctx.lineTo(w, -w * tanA + yOff);
-        ctx.stroke();
-
-        const offset = row % 2 === 0 ? 8 * s : 0;
-        for (let col = 1; col < 3; col++) {
-          const xLeft = (-w / 3) * col + offset * 0.3;
-          const xRight = (w / 3) * col - offset * 0.3;
-          ctx.beginPath();
-          ctx.moveTo(xLeft, yOff - (h / 5) * 0.5 + Math.abs(xLeft) * tanA);
-          ctx.lineTo(xLeft, yOff + Math.abs(xLeft) * tanA);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(xRight, yOff - (h / 5) * 0.5 + Math.abs(xRight) * tanA);
-          ctx.lineTo(xRight, yOff + Math.abs(xRight) * tanA);
-          ctx.stroke();
-        }
-      }
-
-      // Corner Stone Accents
-      ctx.fillStyle = "#37474F";
-      for (let i = 0; i < 4; i++) {
-        const cornerY = -baseH - 10 * s - i * 12 * s;
-        ctx.fillRect(-w - 2 * s, -w * tanA + cornerY - 1 * s, 6 * s, 10 * s);
-        ctx.fillRect(w - 4 * s, -w * tanA + cornerY - 1 * s, 6 * s, 10 * s);
-      }
-
-      // Arrow Slit Windows — isometric flush with wall faces
-      {
-        const slitCY = -w * tanA * 0.5 - h * 0.65 - baseH - 1 * s;
-        drawIsoFlushSlit(ctx, -w * 0.5, slitCY, 2.5, 10, "left", s, {
-          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
-          glowAlpha: 0.4,
-        });
-        drawIsoFlushSlit(ctx, w * 0.5, slitCY, 2.5, 10, "right", s, {
-          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
-          glowAlpha: 0.4,
-        });
-      }
-
-      // The Grand Archway Door
-      const doorY = -baseH - 8 * s;
-      ctx.save();
-      if (isPreparing || isSpawning) {
-        ctx.shadowBlur = 20 * s;
-        ctx.shadowColor = "#4FC3F7";
-      }
-
-      ctx.fillStyle = "#37474F";
-      ctx.beginPath();
-      ctx.moveTo(-14 * s, doorY);
-      ctx.lineTo(-14 * s, doorY - 28 * s);
-      ctx.quadraticCurveTo(0, doorY - 42 * s, 14 * s, doorY - 28 * s);
-      ctx.lineTo(14 * s, doorY);
-      ctx.lineTo(11 * s, doorY);
-      ctx.lineTo(11 * s, doorY - 26 * s);
-      ctx.quadraticCurveTo(0, doorY - 38 * s, -11 * s, doorY - 26 * s);
-      ctx.lineTo(-11 * s, doorY);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#4E342E";
-      ctx.beginPath();
-      ctx.moveTo(-4 * s, doorY - 34 * s);
-      ctx.lineTo(0, doorY - 38 * s);
-      ctx.lineTo(4 * s, doorY - 34 * s);
-      ctx.lineTo(2 * s, doorY - 30 * s);
-      ctx.lineTo(-2 * s, doorY - 30 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      const archGrad = ctx.createLinearGradient(0, doorY - 30 * s, 0, doorY);
-      archGrad.addColorStop(0, "#0a0a12");
-      archGrad.addColorStop(0.7, isPreparing ? "#0D47A1" : "#1a1a2e");
-      archGrad.addColorStop(1, isPreparing ? "#1565C0" : "#263238");
-      ctx.fillStyle = archGrad;
-
-      ctx.beginPath();
-      ctx.moveTo(-10 * s, doorY);
-      ctx.lineTo(-10 * s, doorY - 25 * s);
-      ctx.quadraticCurveTo(0, doorY - 36 * s, 10 * s, doorY - 25 * s);
-      ctx.lineTo(10 * s, doorY);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(78, 52, 46, 0.3)";
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(0, doorY);
-      ctx.lineTo(0, doorY - 32 * s);
-      ctx.stroke();
-      ctx.restore();
-
-      // Wall-mounted Torches
-      const torchFlicker = Math.sin(time * 8) * 0.15 + 0.85;
-      ctx.save();
-      ctx.translate(-18 * s, doorY - 20 * s);
-      ctx.fillStyle = "#3E2723";
-      ctx.fillRect(-1 * s, 0, 3 * s, 8 * s);
-      ctx.fillRect(-3 * s, 6 * s, 7 * s, 3 * s);
-      ctx.shadowBlur = 12 * s;
-      ctx.shadowColor = `rgba(255, 150, 50, ${torchFlicker})`;
-      ctx.fillStyle = `rgba(255, 180, 50, ${torchFlicker})`;
-      ctx.beginPath();
-      ctx.ellipse(0.5 * s, -2 * s, 3 * s, 5 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(255, 220, 100, ${torchFlicker})`;
-      ctx.beginPath();
-      ctx.ellipse(0.5 * s, -3 * s, 2 * s, 3 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(18 * s, doorY - 20 * s);
-      ctx.fillStyle = "#3E2723";
-      ctx.fillRect(-1 * s, 0, 3 * s, 8 * s);
-      ctx.fillRect(-3 * s, 6 * s, 7 * s, 3 * s);
-      ctx.shadowBlur = 12 * s;
-      ctx.shadowColor = `rgba(255, 150, 50, ${torchFlicker})`;
-      ctx.fillStyle = `rgba(255, 180, 50, ${torchFlicker})`;
-      ctx.beginPath();
-      ctx.ellipse(0.5 * s, -2 * s, 3 * s, 5 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(255, 220, 100, ${torchFlicker})`;
-      ctx.beginPath();
-      ctx.ellipse(0.5 * s, -3 * s, 2 * s, 3 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // The Roof
-      const roofH = 30 * s;
-      const roofOverhang = 8 * s;
-      const roofBase = -h - baseH;
-
-      ctx.fillStyle = "#1a1a2e";
-      ctx.beginPath();
-      ctx.moveTo(-w - roofOverhang, -w * tanA + roofBase + 4 * s);
-      ctx.lineTo(0, roofBase + 4 * s);
-      ctx.lineTo(w + roofOverhang, -w * tanA + roofBase + 4 * s);
-      ctx.lineTo(w + roofOverhang, -w * tanA + roofBase);
-      ctx.lineTo(0, roofBase);
-      ctx.lineTo(-w - roofOverhang, -w * tanA + roofBase);
-      ctx.closePath();
-      ctx.fill();
-
-      const roofGradL = ctx.createLinearGradient(
-        -w - roofOverhang,
-        -w * tanA + roofBase,
-        0,
-        roofBase - roofH,
-      );
-      roofGradL.addColorStop(0, "#1B2631");
-      roofGradL.addColorStop(0.4, "#212F3C");
-      roofGradL.addColorStop(1, "#283747");
-      ctx.fillStyle = roofGradL;
-      ctx.beginPath();
-      ctx.moveTo(0, roofBase);
-      ctx.lineTo(-w - roofOverhang, -w * tanA + roofBase);
-      ctx.lineTo(0, roofBase - roofH);
-      ctx.fill();
-
-      const roofGradR = ctx.createLinearGradient(
-        0,
-        roofBase - roofH,
-        w + roofOverhang,
-        -w * tanA + roofBase,
-      );
-      roofGradR.addColorStop(0, "#34495E");
-      roofGradR.addColorStop(0.6, "#2C3E50");
-      roofGradR.addColorStop(1, "#273746");
-      ctx.fillStyle = roofGradR;
-      ctx.beginPath();
-      ctx.moveTo(0, roofBase);
-      ctx.lineTo(w + roofOverhang, -w * tanA + roofBase);
-      ctx.lineTo(0, roofBase - roofH);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(0,0,0,0.2)";
-      ctx.lineWidth = 1 * s;
-      for (let i = 1; i < 5; i++) {
-        const t = i / 5;
-        const startX = -w * t - roofOverhang * t;
-        const startY = -w * tanA * t + roofBase;
-        const endX = 0;
-        const endY = roofBase - roofH * t;
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX + (startX - endX) * 0.1, endY + (startY - endY) * 0.1);
-        ctx.stroke();
-      }
-
-      for (let i = 1; i < 5; i++) {
-        const t = i / 5;
-        const startX = w * t + roofOverhang * t;
-        const startY = -w * tanA * t + roofBase;
-        const endX = 0;
-        const endY = roofBase - roofH * t;
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX + (startX - endX) * 0.1, endY + (startY - endY) * 0.1);
-        ctx.stroke();
-      }
-
-      ctx.strokeStyle = "#4E342E";
-      ctx.lineWidth = 4 * s;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(-w - roofOverhang, -w * tanA + roofBase);
-      ctx.lineTo(0, roofBase - roofH);
-      ctx.lineTo(w + roofOverhang, -w * tanA + roofBase);
-      ctx.stroke();
-
-      ctx.fillStyle = "#FFD700";
-      ctx.beginPath();
-      ctx.moveTo(0, roofBase - roofH - 8 * s);
-      ctx.lineTo(-4 * s, roofBase - roofH);
-      ctx.lineTo(4 * s, roofBase - roofH);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#FFA000";
-      ctx.beginPath();
-      ctx.arc(0, roofBase - roofH - 4 * s, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Waving Banner
-      ctx.save();
-      const poleX = -w * 0.7;
-      const poleY = -w * tanA - h * 0.9 - baseH;
-      ctx.translate(poleX, poleY);
-
-      ctx.fillStyle = "#5D4037";
-      ctx.fillRect(-2 * s, 0, 4 * s, -50 * s);
-      ctx.fillStyle = "#795548";
-      ctx.fillRect(-1.5 * s, 0, 3 * s, -50 * s);
-      ctx.fillStyle = "#FFD700";
-      ctx.fillRect(-2.5 * s, -10 * s, 5 * s, 2 * s);
-      ctx.fillRect(-2.5 * s, -25 * s, 5 * s, 2 * s);
-      ctx.beginPath();
-      ctx.moveTo(0, -50 * s);
-      ctx.lineTo(-4 * s, -54 * s);
-      ctx.lineTo(0, -60 * s);
-      ctx.lineTo(4 * s, -54 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      const bannerTime = time * 3;
-      ctx.translate(0, -45 * s);
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
-      ctx.beginPath();
-      ctx.moveTo(2 * s, 2 * s);
-      for (let i = 0; i <= 25 * s; i += s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i + 2 * s, wave + 2 * s);
-      }
-      ctx.lineTo(27 * s, 18 * s + Math.sin(bannerTime + 25 * s * 0.18) * 5 * s);
-      for (let i = 25 * s; i >= 0; i -= s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i + 2 * s, 18 * s + wave + 2 * s);
-      }
-      ctx.fill();
-
-      ctx.fillStyle = "#8B0000";
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      for (let i = 0; i <= 25 * s; i += s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i, wave);
-      }
-      ctx.lineTo(25 * s, 18 * s + Math.sin(bannerTime + 25 * s * 0.18) * 5 * s);
-      for (let i = 25 * s; i >= 0; i -= s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i, 18 * s + wave);
-      }
-      ctx.fill();
-
-      ctx.fillStyle = "#B71C1C";
-      ctx.beginPath();
-      ctx.moveTo(2 * s, 2 * s);
-      for (let i = 2 * s; i <= 23 * s; i += s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i, wave + 1 * s);
-      }
-      ctx.lineTo(23 * s, 16 * s + Math.sin(bannerTime + 23 * s * 0.18) * 5 * s);
-      for (let i = 23 * s; i >= 2 * s; i -= s) {
-        const wave = Math.sin(bannerTime + i * 0.18) * 5 * s;
-        ctx.lineTo(i, 16 * s + wave + 1 * s);
-      }
-      ctx.fill();
-
-      ctx.fillStyle = "#f97316";
-      const crestX = 10 * s + Math.sin(bannerTime + 10 * s * 0.18) * 2 * s;
-      ctx.beginPath();
-      ctx.moveTo(crestX, 5 * s);
-      ctx.lineTo(crestX - 5 * s, 7 * s);
-      ctx.lineTo(crestX - 5 * s, 12 * s);
-      ctx.lineTo(crestX, 15 * s);
-      ctx.lineTo(crestX + 5 * s, 12 * s);
-      ctx.lineTo(crestX + 5 * s, 7 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      // Shield Emblem on Wall
-      ctx.save();
-      ctx.translate(0, doorY - 44 * s);
-      ctx.fillStyle = "#37474F";
-      ctx.beginPath();
-      ctx.moveTo(0, -10 * s);
-      ctx.lineTo(-8 * s, -6 * s);
-      ctx.lineTo(-8 * s, 4 * s);
-      ctx.quadraticCurveTo(0, 12 * s, 8 * s, 4 * s);
-      ctx.lineTo(8 * s, -6 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#f97316";
-      ctx.beginPath();
-      ctx.moveTo(0, -7 * s);
-      ctx.lineTo(-5 * s, -4 * s);
-      ctx.lineTo(-5 * s, 2 * s);
-      ctx.quadraticCurveTo(0, 8 * s, 5 * s, 2 * s);
-      ctx.lineTo(5 * s, -4 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#1a1a2e";
-      ctx.font = `bold ${8 * s}px serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("P", 0, 0);
-      ctx.restore();
-
-      // Spawn Effect
+      // Spawn Effect — ground circles (drawn under building)
       if (isSpawning) {
         const spawnCircleY = -w * tanA * 2;
         ctx.save();
@@ -3627,8 +4304,1775 @@ export function renderSpecialBuilding(
         ctx.beginPath();
         ctx.arc(0, 0, 30 * s, 0, Math.PI * 2);
         ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      // Foundation Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.beginPath();
+      ctx.ellipse(0, -w * tanA, 44 * s, 22 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stone Foundation/Base Platform
+      const baseH = 10 * s;
+      const bw = w + 3 * s;
+      const bTanOff = bw * tanA + 2 * s;
+      // Left face
+      const baseGradL = ctx.createLinearGradient(-bw, -bTanOff, 0, 0);
+      baseGradL.addColorStop(0, "#2B3940");
+      baseGradL.addColorStop(0.5, "#37474F");
+      baseGradL.addColorStop(1, "#3D5058");
+      ctx.fillStyle = baseGradL;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-bw, -bTanOff);
+      ctx.lineTo(-bw, -bTanOff - baseH);
+      ctx.lineTo(0, -baseH);
+      ctx.fill();
+      // Right face
+      const baseGradR = ctx.createLinearGradient(0, 0, bw, -bTanOff);
+      baseGradR.addColorStop(0, "#4A6270");
+      baseGradR.addColorStop(0.5, "#546E7A");
+      baseGradR.addColorStop(1, "#4E6672");
+      ctx.fillStyle = baseGradR;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(bw, -bTanOff);
+      ctx.lineTo(bw, -bTanOff - baseH);
+      ctx.lineTo(0, -baseH);
+      ctx.fill();
+      // Top face
+      ctx.fillStyle = "#4E5D63";
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(-bw, -bTanOff - baseH);
+      ctx.lineTo(0, -bTanOff * 2 - baseH + 2 * s);
+      ctx.lineTo(bw, -bTanOff - baseH);
+      ctx.closePath();
+      ctx.fill();
+      // Iron banding across foundation
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.lineWidth = 1.2 * s;
+      for (let band = 0; band < 2; band++) {
+        const by = -baseH * (0.35 + band * 0.4);
+        ctx.beginPath();
+        ctx.moveTo(-bw, -bTanOff + by);
+        ctx.lineTo(0, by);
+        ctx.lineTo(bw, -bTanOff + by);
+        ctx.stroke();
+      }
+      // Foundation top edge highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(-bw, -bTanOff - baseH);
+      ctx.lineTo(0, -baseH);
+      ctx.lineTo(bw, -bTanOff - baseH);
+      ctx.stroke();
+      // Corner rivets
+      const rivetR = 1.5 * s;
+      ctx.fillStyle = "#2B3940";
+      ctx.beginPath();
+      ctx.arc(0, -baseH * 0.5, rivetR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-bw * 0.5, -bTanOff * 0.5 - baseH * 0.5, rivetR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bw * 0.5, -bTanOff * 0.5 - baseH * 0.5, rivetR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Foundation Stone Courses — horizontal mortar lines ──
+      ctx.strokeStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 0.6 * s;
+      for (let row = 0; row < 3; row++) {
+        const fy = -baseH * ((row + 1) / 4);
+        ctx.beginPath();
+        ctx.moveTo(-bw, -bTanOff + fy);
+        ctx.lineTo(0, fy);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, fy);
+        ctx.lineTo(bw, -bTanOff + fy);
+        ctx.stroke();
+      }
+      // Vertical mortar joints on left face
+      for (let row = 0; row < 3; row++) {
+        const fy1 = -baseH * (row / 4);
+        const fy2 = -baseH * ((row + 1) / 4);
+        const offset = row % 2 === 0 ? 0.33 : 0.66;
+        for (let j = 1; j <= 2; j++) {
+          const jt = j * offset;
+          const jx = -bw * jt;
+          const jyBase = -bTanOff * jt;
+          ctx.beginPath();
+          ctx.moveTo(jx, jyBase + fy1);
+          ctx.lineTo(jx, jyBase + fy2);
+          ctx.stroke();
+        }
+      }
+      // Vertical mortar joints on right face
+      for (let row = 0; row < 3; row++) {
+        const fy1 = -baseH * (row / 4);
+        const fy2 = -baseH * ((row + 1) / 4);
+        const offset = row % 2 === 0 ? 0.33 : 0.66;
+        for (let j = 1; j <= 2; j++) {
+          const jt = j * offset;
+          const jx = bw * jt;
+          const jyBase = -bTanOff * jt;
+          ctx.beginPath();
+          ctx.moveTo(jx, jyBase + fy1);
+          ctx.lineTo(jx, jyBase + fy2);
+          ctx.stroke();
+        }
+      }
+
+      // ── Foundation Stepped Plinth — wider base course ──
+      {
+        const plinthH = 3 * s;
+        const plinthExt = 3 * s;
+        const pw = bw + plinthExt;
+        const pTanOff = pw * tanA + 2 * s;
+        ctx.fillStyle = "#283338";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-pw, -pTanOff);
+        ctx.lineTo(-pw, -pTanOff - plinthH);
+        ctx.lineTo(0, -plinthH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#37474F";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(pw, -pTanOff);
+        ctx.lineTo(pw, -pTanOff - plinthH);
+        ctx.lineTo(0, -plinthH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#3D4F59";
+        ctx.beginPath();
+        ctx.moveTo(0, -plinthH);
+        ctx.lineTo(-pw, -pTanOff - plinthH);
+        ctx.lineTo(0, -pTanOff * 2 - plinthH + 2 * s);
+        ctx.lineTo(pw, -pTanOff - plinthH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.06)";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(-pw, -pTanOff - plinthH);
+        ctx.lineTo(0, -plinthH);
+        ctx.lineTo(pw, -pTanOff - plinthH);
+        ctx.stroke();
+      }
+
+      // ── Foundation Drain Grates — small dark rectangles at base ──
+      {
+        const gratePositions = [
+          { x: -bw * 0.4, yOff: -bTanOff * 0.4, wall: "left" as const },
+          { x: bw * 0.6, yOff: -bTanOff * 0.6, wall: "right" as const },
+        ];
+        gratePositions.forEach((gp) => {
+          ctx.save();
+          ctx.translate(gp.x, gp.yOff - baseH * 0.15);
+          if (gp.wall === "left") {
+            ctx.transform(1, tanA, 0, 1, 0, 0);
+          } else {
+            ctx.transform(1, -tanA, 0, 1, 0, 0);
+          }
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(-3 * s, -2 * s, 6 * s, 4 * s);
+          ctx.strokeStyle = "#2B3940";
+          ctx.lineWidth = 0.8 * s;
+          for (let gi = 0; gi < 3; gi++) {
+            const gx = -2 * s + gi * 2 * s;
+            ctx.beginPath();
+            ctx.moveTo(gx, -2 * s);
+            ctx.lineTo(gx, 2 * s);
+            ctx.stroke();
+          }
+          ctx.restore();
+        });
+      }
+
+      // Main Building Faces
+      const wallGradL = ctx.createLinearGradient(
+        -w,
+        -w * tanA - baseH,
+        0,
+        -baseH,
+      );
+      wallGradL.addColorStop(0, "#344550");
+      wallGradL.addColorStop(0.3, "#3D4F59");
+      wallGradL.addColorStop(0.7, "#455A64");
+      wallGradL.addColorStop(1, "#4A6270");
+      ctx.fillStyle = wallGradL;
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(-w, -w * tanA - baseH);
+      ctx.lineTo(-w, -w * tanA - h - baseH);
+      ctx.lineTo(0, -h - baseH);
+      ctx.fill();
+
+      const wallGradR = ctx.createLinearGradient(
+        0,
+        -baseH,
+        w,
+        -w * tanA - baseH,
+      );
+      wallGradR.addColorStop(0, "#6B8794");
+      wallGradR.addColorStop(0.3, "#607D8B");
+      wallGradR.addColorStop(0.7, "#546E7A");
+      wallGradR.addColorStop(1, "#4C6470");
+      ctx.fillStyle = wallGradR;
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(w, -w * tanA - baseH);
+      ctx.lineTo(w, -w * tanA - h - baseH);
+      ctx.lineTo(0, -h - baseH);
+      ctx.fill();
+
+      // Wall edge highlights for 3D definition
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(0, -h - baseH);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.beginPath();
+      ctx.moveTo(-w, -w * tanA - baseH);
+      ctx.lineTo(-w, -w * tanA - h - baseH);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(w, -w * tanA - baseH);
+      ctx.lineTo(w, -w * tanA - h - baseH);
+      ctx.stroke();
+
+      // Base molding strip
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(-w, -w * tanA - baseH);
+      ctx.lineTo(-w, -w * tanA - baseH - 3 * s);
+      ctx.lineTo(0, -baseH - 3 * s);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(w, -w * tanA - baseH);
+      ctx.lineTo(w, -w * tanA - baseH - 3 * s);
+      ctx.lineTo(0, -baseH - 3 * s);
+      ctx.fill();
+
+      // Masonry Detail — clipped to each wall for precision
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(-w, -w * tanA - baseH);
+      ctx.lineTo(-w, -w * tanA - h - baseH);
+      ctx.lineTo(0, -h - baseH);
+      ctx.closePath();
+      ctx.clip();
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.lineWidth = 0.7 * s;
+      for (let row = 1; row < 6; row++) {
+        const yOff = -(h / 6) * row - baseH;
+        ctx.beginPath();
+        ctx.moveTo(-w - 1 * s, -w * tanA + yOff);
+        ctx.lineTo(1 * s, yOff);
+        ctx.stroke();
+        const off = row % 2 === 0 ? 5 * s : 0;
+        for (let col = 1; col < 4; col++) {
+          const xL = (-w / 4) * col + off * 0.2;
+          ctx.beginPath();
+          ctx.moveTo(xL, yOff - h / 6 + Math.abs(xL) * tanA);
+          ctx.lineTo(xL, yOff + Math.abs(xL) * tanA);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, -baseH);
+      ctx.lineTo(w, -w * tanA - baseH);
+      ctx.lineTo(w, -w * tanA - h - baseH);
+      ctx.lineTo(0, -h - baseH);
+      ctx.closePath();
+      ctx.clip();
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.7 * s;
+      for (let row = 1; row < 6; row++) {
+        const yOff = -(h / 6) * row - baseH;
+        ctx.beginPath();
+        ctx.moveTo(-1 * s, yOff);
+        ctx.lineTo(w + 1 * s, -w * tanA + yOff);
+        ctx.stroke();
+        const off = row % 2 === 0 ? 5 * s : 0;
+        for (let col = 1; col < 4; col++) {
+          const xR = (w / 4) * col - off * 0.2;
+          ctx.beginPath();
+          ctx.moveTo(xR, yOff - h / 6 + xR * tanA);
+          ctx.lineTo(xR, yOff + xR * tanA);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Corner Quoin Stones — iso-aligned blocks along front edge
+      ctx.save();
+      for (let i = 0; i < 5; i++) {
+        const qy = -baseH - 4 * s - i * (h / 5.5);
+        const qh = 8 * s;
+        const qw = 5 * s;
+        // Left quoin (iso-aligned to left wall)
+        ctx.fillStyle = i % 2 === 0 ? "#37474F" : "#3D5058";
+        ctx.beginPath();
+        ctx.moveTo(0, qy);
+        ctx.lineTo(-qw, qy - qw * tanA);
+        ctx.lineTo(-qw, qy - qw * tanA - qh);
+        ctx.lineTo(0, qy - qh);
+        ctx.closePath();
+        ctx.fill();
+        // Right quoin (iso-aligned to right wall)
+        ctx.fillStyle = i % 2 === 0 ? "#546E7A" : "#4E6672";
+        ctx.beginPath();
+        ctx.moveTo(0, qy);
+        ctx.lineTo(qw, qy - qw * tanA);
+        ctx.lineTo(qw, qy - qw * tanA - qh);
+        ctx.lineTo(0, qy - qh);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Cornice molding at wall-roof junction
+      const corniceH = 5 * s;
+      const corniceY = -h - baseH;
+      const cornGradL = ctx.createLinearGradient(
+        -w,
+        -w * tanA + corniceY,
+        0,
+        corniceY,
+      );
+      cornGradL.addColorStop(0, "#2B3940");
+      cornGradL.addColorStop(1, "#37474F");
+      ctx.fillStyle = cornGradL;
+      ctx.beginPath();
+      ctx.moveTo(0, corniceY);
+      ctx.lineTo(-w - 2 * s, -w * tanA + corniceY - 1 * s);
+      ctx.lineTo(-w - 2 * s, -(w + 2 * s) * tanA + corniceY - 1 * s - corniceH);
+      ctx.lineTo(0, corniceY - corniceH);
+      ctx.closePath();
+      ctx.fill();
+      const cornGradR = ctx.createLinearGradient(
+        0,
+        corniceY,
+        w,
+        -w * tanA + corniceY,
+      );
+      cornGradR.addColorStop(0, "#4A6270");
+      cornGradR.addColorStop(1, "#3D5058");
+      ctx.fillStyle = cornGradR;
+      ctx.beginPath();
+      ctx.moveTo(0, corniceY);
+      ctx.lineTo(w + 2 * s, -w * tanA + corniceY - 1 * s);
+      ctx.lineTo(w + 2 * s, -(w + 2 * s) * tanA + corniceY - 1 * s - corniceH);
+      ctx.lineTo(0, corniceY - corniceH);
+      ctx.closePath();
+      ctx.fill();
+      // Cornice top highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(-w - 2 * s, -(w + 2 * s) * tanA + corniceY - 1 * s - corniceH);
+      ctx.lineTo(0, corniceY - corniceH);
+      ctx.lineTo(w + 2 * s, -(w + 2 * s) * tanA + corniceY - 1 * s - corniceH);
+      ctx.stroke();
+      // Dentil blocks along cornice
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      const dentilCount = 6;
+      for (let i = 0; i < dentilCount; i++) {
+        const t = (i + 0.5) / dentilCount;
+        const dx = -w * t;
+        const dy = -w * tanA * t + corniceY - corniceH * 0.3;
+        ctx.fillRect(dx - 1.5 * s, dy - 2 * s, 3 * s, 3.5 * s);
+        const drx = w * t;
+        const dry = -w * tanA * t + corniceY - corniceH * 0.3;
+        ctx.fillRect(drx - 1.5 * s, dry - 2 * s, 3 * s, 3.5 * s);
+      }
+
+      // (Battlements are drawn on the roof faces below)
+
+      // Arrow Slit Windows — isometric flush with wall faces (two rows)
+      {
+        const slitHighY = -w * tanA * 0.5 - h * 0.7 - baseH;
+        drawIsoFlushSlit(ctx, -w * 0.5, slitHighY, 2.5, 9, "left", s, {
+          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+          glowAlpha: 0.4,
+        });
+        drawIsoFlushSlit(ctx, w * 0.5, slitHighY, 2.5, 9, "right", s, {
+          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+          glowAlpha: 0.4,
+        });
+        // Second row — flanking slits further out
+        const slitLowY = -w * tanA * 0.3 - h * 0.38 - baseH;
+        drawIsoFlushSlit(ctx, -w * 0.75, slitLowY, 2, 7, "left", s, {});
+        drawIsoFlushSlit(ctx, w * 0.75, slitLowY, 2, 7, "right", s, {});
+        drawIsoFlushSlit(
+          ctx,
+          -w * 0.25,
+          slitLowY + w * tanA * 0.25,
+          2,
+          7,
+          "left",
+          s,
+          {},
+        );
+        drawIsoFlushSlit(
+          ctx,
+          w * 0.25,
+          slitLowY + w * tanA * 0.25,
+          2,
+          7,
+          "right",
+          s,
+          {},
+        );
+      }
+
+      // The Grand Archway Door
+      const doorY = -baseH - 6 * s;
+      ctx.save();
+      if (isPreparing || isSpawning) {
+        ctx.shadowBlur = 20 * s;
+        ctx.shadowColor = "#4FC3F7";
+      }
+
+      // Archway stone surround (voussoirs)
+      ctx.fillStyle = "#37474F";
+      ctx.beginPath();
+      ctx.moveTo(-12 * s, doorY);
+      ctx.lineTo(-12 * s, doorY - 18 * s);
+      ctx.quadraticCurveTo(0, doorY - 30 * s, 12 * s, doorY - 18 * s);
+      ctx.lineTo(12 * s, doorY);
+      ctx.lineTo(9.5 * s, doorY);
+      ctx.lineTo(9.5 * s, doorY - 17 * s);
+      ctx.quadraticCurveTo(0, doorY - 27 * s, -9.5 * s, doorY - 17 * s);
+      ctx.lineTo(-9.5 * s, doorY);
+      ctx.closePath();
+      ctx.fill();
+      // Voussoir lines
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.8 * s;
+      for (let vi = 0; vi < 7; vi++) {
+        const angle = -Math.PI + (Math.PI / 8) * (vi + 1);
+        const ix = Math.cos(angle) * 9.5 * s;
+        const iy = doorY - 18 * s + Math.sin(angle) * 9.5 * s;
+        const ox = Math.cos(angle) * 12 * s;
+        const oy = doorY - 18 * s + Math.sin(angle) * 12 * s;
+        ctx.beginPath();
+        ctx.moveTo(ix, iy);
+        ctx.lineTo(ox, oy);
+        ctx.stroke();
+      }
+
+      // Keystone at arch apex
+      ctx.fillStyle = "#4E342E";
+      ctx.beginPath();
+      ctx.moveTo(-3.5 * s, doorY - 24 * s);
+      ctx.lineTo(0, doorY - 28 * s);
+      ctx.lineTo(3.5 * s, doorY - 24 * s);
+      ctx.lineTo(2.5 * s, doorY - 21 * s);
+      ctx.lineTo(-2.5 * s, doorY - 21 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.beginPath();
+      ctx.moveTo(-1.5 * s, doorY - 23 * s);
+      ctx.lineTo(0, doorY - 26 * s);
+      ctx.lineTo(1.5 * s, doorY - 23 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Door interior
+      const archGrad = ctx.createLinearGradient(0, doorY - 22 * s, 0, doorY);
+      archGrad.addColorStop(0, "#0a0a12");
+      archGrad.addColorStop(0.5, isPreparing ? "#0D47A1" : "#1a1a2e");
+      archGrad.addColorStop(1, isPreparing ? "#1565C0" : "#263238");
+      ctx.fillStyle = archGrad;
+      ctx.beginPath();
+      ctx.moveTo(-8.5 * s, doorY);
+      ctx.lineTo(-8.5 * s, doorY - 16 * s);
+      ctx.quadraticCurveTo(0, doorY - 25 * s, 8.5 * s, doorY - 16 * s);
+      ctx.lineTo(8.5 * s, doorY);
+      ctx.fill();
+
+      // Iron portcullis bars
+      ctx.strokeStyle = "rgba(80, 70, 60, 0.55)";
+      ctx.lineWidth = 1.2 * s;
+      for (let pi = -2; pi <= 2; pi++) {
+        const px = pi * 3.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(px, doorY);
+        ctx.lineTo(px, doorY - 16 * s - (8.5 * s - Math.abs(px)) * 0.6);
+        ctx.stroke();
+      }
+      // Horizontal portcullis crossbars
+      ctx.lineWidth = 1 * s;
+      for (let phi = 0; phi < 3; phi++) {
+        const pby = doorY - 4 * s - phi * 6 * s;
+        ctx.beginPath();
+        ctx.moveTo(-8 * s, pby);
+        ctx.lineTo(8 * s, pby);
+        ctx.stroke();
+      }
+
+      // Door plank line (center seam)
+      ctx.strokeStyle = "rgba(78, 52, 46, 0.2)";
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(0, doorY);
+      ctx.lineTo(0, doorY - 22 * s);
+      ctx.stroke();
+
+      // Iron reinforcement straps across the door
+      ctx.strokeStyle = "rgba(40, 30, 20, 0.5)";
+      ctx.lineWidth = 2 * s;
+      for (let si = 0; si < 2; si++) {
+        const sy = doorY - 5 * s - si * 8 * s;
+        const halfW = 8 * s;
+        ctx.beginPath();
+        ctx.moveTo(-halfW, sy);
+        ctx.lineTo(halfW, sy);
+        ctx.stroke();
+        ctx.fillStyle = "#3E2723";
+        ctx.beginPath();
+        ctx.arc(-halfW + 2 * s, sy, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(halfW - 2 * s, sy, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Door handle/ring knocker
+      ctx.strokeStyle = "#5D4037";
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.arc(3.5 * s, doorY - 9 * s, 2 * s, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#4E342E";
+      ctx.beginPath();
+      ctx.arc(3.5 * s, doorY - 11 * s, 1 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Wall-mounted Torches with iron brackets
+      const torchFlicker = Math.sin(time * 8) * 0.15 + 0.85;
+      const torchFlicker2 = Math.sin(time * 11 + 1.5) * 0.12 + 0.88;
+      const torchPositions = [
+        { x: -16 * s, y: doorY - 14 * s, flk: torchFlicker },
+        { x: 16 * s, y: doorY - 14 * s, flk: torchFlicker2 },
+      ];
+      torchPositions.forEach((tp) => {
+        ctx.save();
+        ctx.translate(tp.x, tp.y);
+        // Iron bracket arm
+        ctx.strokeStyle = "#3E2723";
+        ctx.lineWidth = 2 * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, 8 * s);
+        ctx.lineTo(0, 3 * s);
+        ctx.lineTo(tp.x < 0 ? 3 * s : -3 * s, 0);
+        ctx.stroke();
+        // Torch body
+        ctx.fillStyle = "#5D4037";
+        ctx.fillRect(-1.5 * s, -1 * s, 3 * s, 7 * s);
+        ctx.fillStyle = "#4E342E";
+        ctx.fillRect(-2.5 * s, 4 * s, 5 * s, 2.5 * s);
+        // Warm glow on wall
+        const glow = ctx.createRadialGradient(0, -3 * s, 0, 0, -3 * s, 16 * s);
+        glow.addColorStop(0, `rgba(255, 150, 50, ${tp.flk * 0.15})`);
+        glow.addColorStop(1, "transparent");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(0, -3 * s, 16 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Flame — 3 layers
+        ctx.shadowBlur = 10 * s;
+        ctx.shadowColor = `rgba(255, 120, 30, ${tp.flk})`;
+        const flameOff = Math.sin(time * 12 + (tp.x < 0 ? 0 : 2)) * 1.5 * s;
+        ctx.fillStyle = `rgba(255, 80, 20, ${tp.flk * 0.7})`;
+        ctx.beginPath();
+        ctx.ellipse(flameOff * 0.5, -3 * s, 3.5 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 180, 50, ${tp.flk})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          flameOff * 0.3,
+          -4 * s,
+          2.5 * s,
+          4.5 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 240, 120, ${tp.flk})`;
+        ctx.beginPath();
+        ctx.ellipse(0, -4.5 * s, 1.2 * s, 2.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      });
+
+      // ── Crossed Spears — flush with right wall ──
+      ctx.save();
+      ctx.translate(w * 0.55, -w * tanA * 0.55 - h * 0.55 - baseH);
+      ctx.transform(1, -tanA, 0, 1, 0, 0);
+      ctx.strokeStyle = "#5D4037";
+      ctx.lineWidth = 1.8 * s;
+      ctx.lineCap = "round";
+      // Spear shaft 1 (diagonal)
+      ctx.beginPath();
+      ctx.moveTo(-8 * s, 10 * s);
+      ctx.lineTo(8 * s, -10 * s);
+      ctx.stroke();
+      // Spear shaft 2 (crossed)
+      ctx.beginPath();
+      ctx.moveTo(8 * s, 10 * s);
+      ctx.lineTo(-8 * s, -10 * s);
+      ctx.stroke();
+      // Spearheads (triangular tips)
+      ctx.fillStyle = "#78909C";
+      ctx.beginPath();
+      ctx.moveTo(8 * s, -10 * s);
+      ctx.lineTo(6.5 * s, -13.5 * s);
+      ctx.lineTo(10 * s, -13.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-8 * s, -10 * s);
+      ctx.lineTo(-9.5 * s, -13.5 * s);
+      ctx.lineTo(-6.5 * s, -13.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Central binding wrap
+      ctx.fillStyle = "#8D6E63";
+      ctx.fillRect(-2 * s, -2 * s, 4 * s, 4 * s);
+      ctx.strokeStyle = "#6D4C41";
+      ctx.lineWidth = 0.8 * s;
+      ctx.strokeRect(-2 * s, -2 * s, 4 * s, 4 * s);
+      ctx.restore();
+
+      // ── Weapon Rack — flush with left wall ──
+      ctx.save();
+      ctx.translate(-w * 0.55, -w * tanA * 0.55 - h * 0.32 - baseH);
+      ctx.transform(1, tanA, 0, 1, 0, 0);
+      // Rack frame (horizontal bar + 2 uprights)
+      ctx.strokeStyle = "#5D4037";
+      ctx.lineWidth = 2 * s;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-9 * s, 0);
+      ctx.lineTo(9 * s, 0);
+      ctx.stroke();
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(-8 * s, -1 * s);
+      ctx.lineTo(-8 * s, 10 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(8 * s, -1 * s);
+      ctx.lineTo(8 * s, 10 * s);
+      ctx.stroke();
+      // Swords hanging from rack
+      const swordXs = [-5, 0, 5];
+      swordXs.forEach((sx) => {
+        // Blade
+        ctx.strokeStyle = "#90A4AE";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(sx * s, 1 * s);
+        ctx.lineTo(sx * s, 12 * s);
+        ctx.stroke();
+        // Hilt crossguard
+        ctx.strokeStyle = "#8D6E63";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo((sx - 2) * s, 1 * s);
+        ctx.lineTo((sx + 2) * s, 1 * s);
+        ctx.stroke();
+        // Pommel
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.arc(sx * s, -0.5 * s, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // ── Supply Crates — iso boxes at building base ──
+      {
+        const crates = [
+          {
+            x: w * 0.65,
+            y: -w * tanA * 0.65,
+            bw: 8,
+            bh: 7,
+            bd: 6,
+            c1: "#5D4037",
+            c2: "#795548",
+            c3: "#6D4C41",
+          },
+          {
+            x: w * 0.85,
+            y: -w * tanA * 0.85 - 2 * s,
+            bw: 7,
+            bh: 6,
+            bd: 5,
+            c1: "#4E342E",
+            c2: "#6D4C41",
+            c3: "#5D4037",
+          },
+          {
+            x: w * 0.72,
+            y: -w * tanA * 0.72 - 7 * s,
+            bw: 6,
+            bh: 5,
+            bd: 5,
+            c1: "#5D4037",
+            c2: "#795548",
+            c3: "#6D4C41",
+          },
+        ];
+        crates.forEach((cr) => {
+          const cbw = cr.bw * s;
+          const cbh = cr.bh * s;
+          const cbd = cr.bd * s;
+          const cx = cr.x;
+          const cy = cr.y;
+          // Left face
+          ctx.fillStyle = cr.c1;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx - cbw * 0.5, cy - cbw * tanA * 0.5);
+          ctx.lineTo(cx - cbw * 0.5, cy - cbw * tanA * 0.5 - cbh);
+          ctx.lineTo(cx, cy - cbh);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle = cr.c2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + cbd * 0.5, cy - cbd * tanA * 0.5);
+          ctx.lineTo(cx + cbd * 0.5, cy - cbd * tanA * 0.5 - cbh);
+          ctx.lineTo(cx, cy - cbh);
+          ctx.closePath();
+          ctx.fill();
+          // Top face
+          ctx.fillStyle = cr.c3;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - cbh);
+          ctx.lineTo(cx - cbw * 0.5, cy - cbw * tanA * 0.5 - cbh);
+          ctx.lineTo(
+            cx - cbw * 0.5 + cbd * 0.5,
+            cy - cbw * tanA * 0.5 - cbd * tanA * 0.5 - cbh,
+          );
+          ctx.lineTo(cx + cbd * 0.5, cy - cbd * tanA * 0.5 - cbh);
+          ctx.closePath();
+          ctx.fill();
+          // Iron strap across front face
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(cx - cbw * 0.5, cy - cbw * tanA * 0.5 - cbh * 0.5);
+          ctx.lineTo(cx, cy - cbh * 0.5);
+          ctx.lineTo(cx + cbd * 0.5, cy - cbd * tanA * 0.5 - cbh * 0.5);
+          ctx.stroke();
+        });
+      }
+
+      // ── Sandbag Barricade — iso-aligned bags in front of door ──
+      {
+        const bagW = 7 * s;
+        const bagD = 4 * s;
+        const bagH = 3 * s;
+        const drawIsoBag = (bx: number, by: number, shade: number) => {
+          const cL = shade > 0 ? "#8D7B5A" : "#7D6B4A";
+          const cR = shade > 0 ? "#A08E6A" : "#9B8B6A";
+          const cT = shade > 0 ? "#B09E78" : "#A08E6A";
+          // Left face
+          ctx.fillStyle = cL;
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx - bagW * 0.5, by - bagW * tanA * 0.5);
+          ctx.lineTo(bx - bagW * 0.5, by - bagW * tanA * 0.5 - bagH);
+          ctx.lineTo(bx, by - bagH);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle = cR;
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx + bagD * 0.5, by - bagD * tanA * 0.5);
+          ctx.lineTo(bx + bagD * 0.5, by - bagD * tanA * 0.5 - bagH);
+          ctx.lineTo(bx, by - bagH);
+          ctx.closePath();
+          ctx.fill();
+          // Top face (slightly puffy)
+          ctx.fillStyle = cT;
+          ctx.beginPath();
+          ctx.moveTo(bx, by - bagH);
+          ctx.lineTo(bx - bagW * 0.5, by - bagW * tanA * 0.5 - bagH);
+          ctx.lineTo(
+            bx - bagW * 0.5 + bagD * 0.5,
+            by - bagW * tanA * 0.5 - bagD * tanA * 0.5 - bagH,
+          );
+          ctx.lineTo(bx + bagD * 0.5, by - bagD * tanA * 0.5 - bagH);
+          ctx.closePath();
+          ctx.fill();
+          // Tie line
+          ctx.strokeStyle = "rgba(60,45,25,0.25)";
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          ctx.moveTo(bx - bagW * 0.25, by - bagW * tanA * 0.25 - bagH);
+          ctx.lineTo(
+            bx - bagW * 0.25 + bagD * 0.5,
+            by - bagW * tanA * 0.25 - bagD * tanA * 0.5 - bagH,
+          );
+          ctx.stroke();
+        };
+        // Bottom row (3 bags)
+        drawIsoBag(-8 * s, 1 * s, 0);
+        drawIsoBag(-1 * s, 1 * s, 1);
+        drawIsoBag(6 * s, 1 * s, 0);
+        // Top row (2 bags stacked, offset)
+        drawIsoBag(-5 * s, 1 * s - bagH, 1);
+        drawIsoBag(2 * s, 1 * s - bagH, 0);
+      }
+
+      // ── Training Dummy — iso-aligned near left side ──
+      ctx.save();
+      ctx.translate(-w * 0.85, -w * tanA * 0.85 + 2 * s);
+      {
+        // Iso pole (small iso box)
+        const pW = 1.5 * s;
+        ctx.fillStyle = "#5D4037";
+        ctx.beginPath();
+        ctx.moveTo(-pW, -pW * tanA);
+        ctx.lineTo(-pW, -pW * tanA - 18 * s);
+        ctx.lineTo(0, -18 * s);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#795548";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(pW, -pW * tanA);
+        ctx.lineTo(pW, -pW * tanA - 18 * s);
+        ctx.lineTo(0, -18 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Cross-arm (iso-aligned horizontal bar)
+        ctx.fillStyle = "#5D4037";
+        ctx.beginPath();
+        ctx.moveTo(-5 * s, -14 * s - 5 * s * tanA);
+        ctx.lineTo(5 * s, -14 * s - 5 * s * tanA);
+        ctx.lineTo(5 * s, -15.5 * s - 5 * s * tanA);
+        ctx.lineTo(-5 * s, -15.5 * s - 5 * s * tanA);
+        ctx.closePath();
+        ctx.fill();
+        // Straw body — iso diamond torso
+        const torsoW = 4 * s;
+        const torsoH = 8 * s;
+        const torsoY = -7 * s;
+        ctx.fillStyle = "#C8B480";
+        ctx.beginPath();
+        ctx.moveTo(0, torsoY - torsoH);
+        ctx.lineTo(-torsoW, torsoY - torsoH * 0.5);
+        ctx.lineTo(0, torsoY);
+        ctx.lineTo(torsoW, torsoY - torsoH * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Lighter inner diamond
+        ctx.fillStyle = "#B8A470";
+        ctx.beginPath();
+        ctx.moveTo(0, torsoY - torsoH + 2 * s);
+        ctx.lineTo(-torsoW + 1 * s, torsoY - torsoH * 0.5);
+        ctx.lineTo(0, torsoY - 2 * s);
+        ctx.lineTo(torsoW - 1 * s, torsoY - torsoH * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Target rings painted on torso
+        ctx.strokeStyle = "rgba(180, 30, 30, 0.5)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(0, torsoY - torsoH * 0.5 - 2 * s);
+        ctx.lineTo(-2 * s, torsoY - torsoH * 0.5);
+        ctx.lineTo(0, torsoY - torsoH * 0.5 + 2 * s);
+        ctx.lineTo(2 * s, torsoY - torsoH * 0.5);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(180, 30, 30, 0.35)";
+        ctx.beginPath();
+        ctx.arc(0, torsoY - torsoH * 0.5, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Head (small iso diamond)
+        ctx.fillStyle = "#C8B480";
+        ctx.beginPath();
+        ctx.moveTo(0, -16.5 * s);
+        ctx.lineTo(-2 * s, -15 * s);
+        ctx.lineTo(0, -13.5 * s);
+        ctx.lineTo(2 * s, -15 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // (Barrels drawn after building for front layering)
+
+      // (Corner turrets drawn after roof for proper layering)
+
+      // ── The Roof — Isometric Hip Pyramid ──
+      const roofH = 28 * s;
+      const roofOH = 7 * s;
+      const roofBase = -h - baseH;
+      const roofCY = roofBase - w * tanA;
+      const ow = w + roofOH;
+
+      // Roof base diamond vertices (with overhang)
+      const rF = { x: 0, y: roofCY + ow * tanA };
+      const rL = { x: -ow, y: roofCY };
+      const rB = { x: 0, y: roofCY - ow * tanA };
+      const rR = { x: ow, y: roofCY };
+      const peak = { x: 0, y: roofCY - roofH };
+
+      // Eave band — visible front-left and front-right strips
+      const eaveH = 4 * s;
+      ctx.fillStyle = "#1a1a28";
+      ctx.beginPath();
+      ctx.moveTo(rF.x, rF.y);
+      ctx.lineTo(rL.x, rL.y);
+      ctx.lineTo(rL.x, rL.y - eaveH);
+      ctx.lineTo(rF.x, rF.y - eaveH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#252538";
+      ctx.beginPath();
+      ctx.moveTo(rR.x, rR.y);
+      ctx.lineTo(rF.x, rF.y);
+      ctx.lineTo(rF.x, rF.y - eaveH);
+      ctx.lineTo(rR.x, rR.y - eaveH);
+      ctx.closePath();
+      ctx.fill();
+      // Eave bottom highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(rL.x, rL.y);
+      ctx.lineTo(rF.x, rF.y);
+      ctx.lineTo(rR.x, rR.y);
+      ctx.stroke();
+
+      // ── Back Parapet & Merlons (drawn before roof faces so they appear behind) ──
+      {
+        const parH = 5 * s;
+        // Back-left parapet wall (rL → rB)
+        ctx.fillStyle = "#2D3B42";
+        ctx.beginPath();
+        ctx.moveTo(rL.x, rL.y - eaveH);
+        ctx.lineTo(rB.x, rB.y - eaveH);
+        ctx.lineTo(rB.x, rB.y - eaveH - parH);
+        ctx.lineTo(rL.x, rL.y - eaveH - parH);
+        ctx.closePath();
+        ctx.fill();
+        // Back-right parapet wall (rB → rR)
+        ctx.fillStyle = "#344550";
+        ctx.beginPath();
+        ctx.moveTo(rB.x, rB.y - eaveH);
+        ctx.lineTo(rR.x, rR.y - eaveH);
+        ctx.lineTo(rR.x, rR.y - eaveH - parH);
+        ctx.lineTo(rB.x, rB.y - eaveH - parH);
+        ctx.closePath();
+        ctx.fill();
+        const mH = 5 * s;
+        const mHW = 3 * s;
+        const mCount = 5;
+        // Merlons along back-left eave edge (rL → rB)
+        for (let mi = 0; mi < mCount; mi++) {
+          const t = (mi + 0.5) / (mCount + 0.5);
+          const mx = rL.x * (1 - t) + rB.x * t;
+          const my =
+            (rL.y - eaveH - parH) * (1 - t) + (rB.y - eaveH - parH) * t;
+          const edx = rB.x - rL.x;
+          const edy = (rB.y - eaveH) - (rL.y - eaveH);
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? "#2D3B42" : "#263238";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny);
+          ctx.lineTo(mx + nx, my + ny);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx - nx, my - ny - mH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#3A4A52";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny - mH);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx + nx - 2 * s, my + ny - mH - 1 * s);
+          ctx.lineTo(mx - nx - 2 * s, my - ny - mH - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Merlons along back-right eave edge (rB → rR)
+        for (let mi = 0; mi < mCount; mi++) {
+          const t = (mi + 0.5) / (mCount + 0.5);
+          const mx = rB.x * (1 - t) + rR.x * t;
+          const my =
+            (rB.y - eaveH - parH) * (1 - t) + (rR.y - eaveH - parH) * t;
+          const edx = rR.x - rB.x;
+          const edy = (rR.y - eaveH) - (rB.y - eaveH);
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? "#344550" : "#2D3B42";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny);
+          ctx.lineTo(mx + nx, my + ny);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx - nx, my - ny - mH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#3A4A52";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny - mH);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx + nx + 2 * s, my + ny - mH - 1 * s);
+          ctx.lineTo(mx - nx + 2 * s, my - ny - mH - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Back corner cap at rB
+        ctx.fillStyle = "#344550";
+        ctx.beginPath();
+        ctx.moveTo(rB.x - 3 * s, rB.y - eaveH - parH);
+        ctx.lineTo(rB.x + 3 * s, rB.y - eaveH - parH);
+        ctx.lineTo(rB.x + 3 * s, rB.y - eaveH - parH - 6 * s);
+        ctx.lineTo(rB.x - 3 * s, rB.y - eaveH - parH - 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#3A4A52";
+        ctx.fillRect(rB.x - 3.5 * s, rB.y - eaveH - parH - 6 * s - 1.5 * s, 7 * s, 1.5 * s);
+        ctx.fillStyle = "#1a1a2e";
+        ctx.fillRect(rB.x - 0.8 * s, rB.y - eaveH - parH - 4.5 * s, 1.6 * s, 3 * s);
+      }
+
+      // Pyramid faces — back pair first, then front pair
+      // Back-left face
+      ctx.fillStyle = "#1E2D3D";
+      ctx.beginPath();
+      ctx.moveTo(rL.x, rL.y - eaveH);
+      ctx.lineTo(rB.x, rB.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.closePath();
+      ctx.fill();
+      // Back-right face
+      ctx.fillStyle = "#243444";
+      ctx.beginPath();
+      ctx.moveTo(rB.x, rB.y - eaveH);
+      ctx.lineTo(rR.x, rR.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front-left face (most visible, darker — light from right)
+      const roofGradFL = ctx.createLinearGradient(rL.x, rL.y, peak.x, peak.y);
+      roofGradFL.addColorStop(0, "#1B2631");
+      roofGradFL.addColorStop(0.4, "#212F3C");
+      roofGradFL.addColorStop(1, "#283747");
+      ctx.fillStyle = roofGradFL;
+      ctx.beginPath();
+      ctx.moveTo(rF.x, rF.y - eaveH);
+      ctx.lineTo(rL.x, rL.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front-right face (lighter — catches light)
+      const roofGradFR = ctx.createLinearGradient(rR.x, rR.y, peak.x, peak.y);
+      roofGradFR.addColorStop(0, "#2C3E50");
+      roofGradFR.addColorStop(0.5, "#34495E");
+      roofGradFR.addColorStop(1, "#3A5068");
+      ctx.fillStyle = roofGradFR;
+      ctx.beginPath();
+      ctx.moveTo(rR.x, rR.y - eaveH);
+      ctx.lineTo(rF.x, rF.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tile course lines — front-left face
+      ctx.strokeStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 0.8 * s;
+      for (let i = 1; i < 6; i++) {
+        const t = i / 6;
+        const ax = rF.x * (1 - t) + peak.x * t;
+        const ay = (rF.y - eaveH) * (1 - t) + peak.y * t;
+        const bx = rL.x * (1 - t) + peak.x * t;
+        const by = (rL.y - eaveH) * (1 - t) + peak.y * t;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+      }
+      // Tile course lines — front-right face
+      for (let i = 1; i < 6; i++) {
+        const t = i / 6;
+        const ax = rR.x * (1 - t) + peak.x * t;
+        const ay = (rR.y - eaveH) * (1 - t) + peak.y * t;
+        const bx = rF.x * (1 - t) + peak.x * t;
+        const by = (rF.y - eaveH) * (1 - t) + peak.y * t;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+      }
+
+      // ── Roof Parapet — stone battlement wall along eave edges ──
+      {
+        const parH = 5 * s;
+        ctx.fillStyle = "#4A5C65";
+        ctx.beginPath();
+        ctx.moveTo(rF.x, rF.y - eaveH);
+        ctx.lineTo(rL.x, rL.y - eaveH);
+        ctx.lineTo(rL.x, rL.y - eaveH - parH);
+        ctx.lineTo(rF.x, rF.y - eaveH - parH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#566D78";
+        ctx.beginPath();
+        ctx.moveTo(rR.x, rR.y - eaveH);
+        ctx.lineTo(rF.x, rF.y - eaveH);
+        ctx.lineTo(rF.x, rF.y - eaveH - parH);
+        ctx.lineTo(rR.x, rR.y - eaveH - parH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(rL.x, rL.y - eaveH - parH);
+        ctx.lineTo(rF.x, rF.y - eaveH - parH);
+        ctx.lineTo(rR.x, rR.y - eaveH - parH);
+        ctx.stroke();
+
+        // (Merlons and corner caps drawn after turrets for front layering)
+      }
+
+      // Ridge lines (visible edges)
+      ctx.strokeStyle = "#4E342E";
+      ctx.lineWidth = 3 * s;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(rL.x, rL.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rF.x, rF.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rR.x, rR.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.stroke();
+      // Ridge highlight (front edges only)
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(rF.x, rF.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rR.x, rR.y - eaveH);
+      ctx.lineTo(peak.x, peak.y);
+      ctx.stroke();
+
+      // Peak finial — golden spearhead
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.moveTo(peak.x, peak.y - 10 * s);
+      ctx.lineTo(peak.x - 3.5 * s, peak.y - 1 * s);
+      ctx.lineTo(peak.x + 3.5 * s, peak.y - 1 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#FFA000";
+      ctx.beginPath();
+      ctx.arc(peak.x, peak.y - 4 * s, 3 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // Finial highlight
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.beginPath();
+      ctx.arc(peak.x - 1 * s, peak.y - 5 * s, 1.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ── Corner Watchtower Turrets (drawn after roof for layering) ──
+      {
+        const turretR = 7 * s;
+        const turretH = 14 * s;
+        const turretCapH = 8 * s;
+        const tBaseY = corniceY - corniceH;
+        const turrets = [
+          { x: -w, y: -w * tanA + tBaseY, side: "left" as const },
+          { x: w, y: -w * tanA + tBaseY, side: "right" as const },
+        ];
+        turrets.forEach((tt) => {
+          ctx.save();
+          ctx.translate(tt.x, tt.y);
+          const tLc = tt.side === "left" ? "#344550" : "#3D4F59";
+          ctx.fillStyle = tLc;
+          ctx.beginPath();
+          ctx.moveTo(-turretR, 0);
+          ctx.lineTo(-turretR, -turretH);
+          ctx.lineTo(0, -turretH);
+          ctx.lineTo(0, 0);
+          ctx.closePath();
+          ctx.fill();
+          const tRc = tt.side === "left" ? "#546E7A" : "#607D8B";
+          ctx.fillStyle = tRc;
+          ctx.beginPath();
+          ctx.moveTo(turretR, 0);
+          ctx.lineTo(turretR, -turretH);
+          ctx.lineTo(0, -turretH);
+          ctx.lineTo(0, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#4E5D63";
+          ctx.beginPath();
+          ctx.moveTo(0, -turretH + turretR * tanA);
+          ctx.lineTo(-turretR, -turretH);
+          ctx.lineTo(0, -turretH - turretR * tanA);
+          ctx.lineTo(turretR, -turretH);
+          ctx.closePath();
+          ctx.fill();
+          const tmH = 3.5 * s;
+          const tmW = 2.5 * s;
+          for (let mi = 0; mi < 2; mi++) {
+            const tmx = -turretR + (mi + 0.5) * (turretR / 1.5);
+            ctx.fillStyle = tLc;
+            ctx.fillRect(tmx - tmW * 0.5, -turretH - tmH, tmW, tmH);
+            ctx.fillStyle = "rgba(255,255,255,0.05)";
+            ctx.fillRect(tmx - tmW * 0.5, -turretH - tmH, tmW, 1 * s);
+          }
+          for (let mi = 0; mi < 2; mi++) {
+            const tmx = (mi + 0.5) * (turretR / 1.5);
+            ctx.fillStyle = tRc;
+            ctx.fillRect(tmx - tmW * 0.5, -turretH - tmH, tmW, tmH);
+            ctx.fillStyle = "rgba(255,255,255,0.05)";
+            ctx.fillRect(tmx - tmW * 0.5, -turretH - tmH, tmW, 1 * s);
+          }
+          ctx.fillStyle = "#1a1a2e";
+          ctx.fillRect(-1 * s, -turretH * 0.7, 2 * s, 5 * s);
+          ctx.fillRect(-2 * s, -turretH * 0.5, 4 * s, 1.5 * s);
+          ctx.fillStyle = "#1B2631";
+          ctx.beginPath();
+          ctx.moveTo(0, -turretH - tmH - turretCapH);
+          ctx.lineTo(-turretR - 1 * s, -turretH - tmH);
+          ctx.lineTo(0, -turretH - tmH + turretR * tanA);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#283747";
+          ctx.beginPath();
+          ctx.moveTo(0, -turretH - tmH - turretCapH);
+          ctx.lineTo(turretR + 1 * s, -turretH - tmH);
+          ctx.lineTo(0, -turretH - tmH + turretR * tanA);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.06)";
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(0, -turretH - tmH - turretCapH);
+          ctx.lineTo(0, -turretH - tmH + turretR * tanA);
+          ctx.stroke();
+          ctx.fillStyle = "#8B0000";
+          ctx.beginPath();
+          ctx.moveTo(0, -turretH - tmH - turretCapH);
+          ctx.lineTo(5 * s, -turretH - tmH - turretCapH - 2 * s);
+          ctx.lineTo(5 * s, -turretH - tmH - turretCapH + 3 * s);
+          ctx.lineTo(0, -turretH - tmH - turretCapH + 1 * s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      // ── Merlons & Corner Caps (drawn after turrets for front layering) ──
+      {
+        const parH = 5 * s;
+        const mH = 5 * s;
+        const mHW = 3 * s;
+        const mCount = 5;
+        // Merlons along front-left eave edge
+        for (let mi = 0; mi < mCount; mi++) {
+          const t = (mi + 0.5) / (mCount + 0.5);
+          const mx = rF.x * (1 - t) + rL.x * t;
+          const my =
+            (rF.y - eaveH - parH) * (1 - t) + (rL.y - eaveH - parH) * t;
+          const edx = rL.x - rF.x;
+          const edy = rL.y - eaveH - (rF.y - eaveH);
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? "#4A5C65" : "#3F5159";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny);
+          ctx.lineTo(mx + nx, my + ny);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx - nx, my - ny - mH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#5C6F78";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny - mH);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx + nx + 2 * s, my + ny - mH - 1 * s);
+          ctx.lineTo(mx - nx + 2 * s, my - ny - mH - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Merlons along front-right eave edge
+        for (let mi = 0; mi < mCount; mi++) {
+          const t = (mi + 0.5) / (mCount + 0.5);
+          const mx = rR.x * (1 - t) + rF.x * t;
+          const my =
+            (rR.y - eaveH - parH) * (1 - t) + (rF.y - eaveH - parH) * t;
+          const edx = rF.x - rR.x;
+          const edy = rF.y - eaveH - (rR.y - eaveH);
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? "#566D78" : "#4D636D";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny);
+          ctx.lineTo(mx + nx, my + ny);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx - nx, my - ny - mH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#5C6F78";
+          ctx.beginPath();
+          ctx.moveTo(mx - nx, my - ny - mH);
+          ctx.lineTo(mx + nx, my + ny - mH);
+          ctx.lineTo(mx + nx - 2 * s, my + ny - mH - 1 * s);
+          ctx.lineTo(mx - nx - 2 * s, my - ny - mH - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Corner merlon caps at rF, rL, rR
+        const cornerPts = [
+          { x: rF.x, y: rF.y - eaveH - parH },
+          { x: rL.x, y: rL.y - eaveH - parH },
+          { x: rR.x, y: rR.y - eaveH - parH },
+        ];
+        cornerPts.forEach((cp) => {
+          ctx.fillStyle = "#4E5D63";
+          ctx.beginPath();
+          ctx.moveTo(cp.x - 3 * s, cp.y);
+          ctx.lineTo(cp.x + 3 * s, cp.y);
+          ctx.lineTo(cp.x + 3 * s, cp.y - 6 * s);
+          ctx.lineTo(cp.x - 3 * s, cp.y - 6 * s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#5C6F78";
+          ctx.fillRect(cp.x - 3.5 * s, cp.y - 6 * s - 1.5 * s, 7 * s, 1.5 * s);
+          ctx.fillStyle = "#1a1a2e";
+          ctx.fillRect(cp.x - 0.8 * s, cp.y - 4.5 * s, 1.6 * s, 3 * s);
+        });
+      }
+
+      // Waving Banner — medieval gonfalon style
+      ctx.save();
+      {
+        const poleX = -w * 0.45;
+        const poleY = -w * tanA * 0.35 - h - baseH - 22 * s;
+        ctx.translate(poleX, poleY);
+        const poleH = 35 * s;
+
+        // Pole shadow
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.fillRect(-1 * s, 2 * s, 4 * s, -poleH);
+
+        // Pole body — tapered wood with grain gradient
+        const poleGrad = ctx.createLinearGradient(-2 * s, 0, 2 * s, 0);
+        poleGrad.addColorStop(0, "#4E342E");
+        poleGrad.addColorStop(0.3, "#795548");
+        poleGrad.addColorStop(0.6, "#8D6E63");
+        poleGrad.addColorStop(1, "#5D4037");
+        ctx.fillStyle = poleGrad;
+        ctx.beginPath();
+        ctx.moveTo(-2 * s, 0);
+        ctx.lineTo(-1.5 * s, -poleH);
+        ctx.lineTo(1.5 * s, -poleH);
+        ctx.lineTo(2 * s, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pole highlight edge
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(-0.5 * s, 0);
+        ctx.lineTo(-0.3 * s, -poleH);
+        ctx.stroke();
+
+        // Iron bands on pole
+        const bandColor = "#37474F";
+        const bandPositions = [0.15, 0.4, 0.65, 0.85];
+        bandPositions.forEach((bp) => {
+          const by = -poleH * bp;
+          ctx.fillStyle = bandColor;
+          ctx.fillRect(-2.5 * s, by - 1 * s, 5 * s, 2 * s);
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(-2.5 * s, by - 1 * s);
+          ctx.lineTo(2.5 * s, by - 1 * s);
+          ctx.stroke();
+        });
+
+        // Iron crossbar for hanging banner
+        const crossY = -poleH * 0.88;
+        const crossLen = 15 * s;
+        ctx.fillStyle = "#455A64";
+        ctx.fillRect(0, crossY - 1 * s, crossLen, 2.5 * s);
+        ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(0, crossY - 1 * s);
+        ctx.lineTo(crossLen, crossY - 1 * s);
+        ctx.stroke();
+        // Crossbar end finial (small ball)
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.arc(crossLen, crossY + 0.25 * s, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.beginPath();
+        ctx.arc(crossLen - 0.5 * s, crossY - 0.5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pole top finial — golden spearhead
+        const finY = -poleH;
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.moveTo(0, finY - 8 * s);
+        ctx.lineTo(-2.5 * s, finY - 1.5 * s);
+        ctx.lineTo(2.5 * s, finY - 1.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#FFC107";
+        ctx.beginPath();
+        ctx.moveTo(0, finY - 6.5 * s);
+        ctx.lineTo(-1.2 * s, finY - 2 * s);
+        ctx.lineTo(1.2 * s, finY - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#FFA000";
+        ctx.beginPath();
+        ctx.ellipse(0, finY - 1 * s, 3 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.beginPath();
+        ctx.arc(-0.6 * s, finY - 5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Banner cloth — hangs from crossbar
+        const bannerTime = time * 2.5;
+        const bW = 13 * s;
+        const bH = 18 * s;
+        const bStartX = 1 * s;
+        const bStartY = crossY + 1.5 * s;
+
+        // Drop shadow
+        ctx.save();
+        ctx.translate(2 * s, 2 * s);
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.moveTo(bStartX, bStartY);
+        for (let i = 0; i <= bW; i += s) {
+          const t = i / bW;
+          const wave = Math.sin(bannerTime + t * 6) * 3 * s * t;
+          ctx.lineTo(bStartX + i, bStartY + wave);
+        }
+        const tailWaveR = Math.sin(bannerTime + 6) * 3 * s;
+        ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR);
+        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        ctx.lineTo(bStartX, bStartY + bH * 0.7);
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
 
+        // Main banner — dark crimson base
+        ctx.fillStyle = "#7B1818";
+        ctx.beginPath();
+        ctx.moveTo(bStartX, bStartY);
+        for (let i = 0; i <= bW; i += s) {
+          const t = i / bW;
+          const wave = Math.sin(bannerTime + t * 6) * 3 * s * t;
+          ctx.lineTo(bStartX + i, bStartY + wave);
+        }
+        const tailWaveR2 = Math.sin(bannerTime + 6) * 3 * s;
+        ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR2);
+        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        ctx.lineTo(bStartX, bStartY + bH * 0.7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Banner overlay — richer crimson with wave-driven shading
+        ctx.save();
+        ctx.clip();
+        const banGrad = ctx.createLinearGradient(bStartX, bStartY, bStartX, bStartY + bH);
+        banGrad.addColorStop(0, "#C62828");
+        banGrad.addColorStop(0.3, "#B71C1C");
+        banGrad.addColorStop(0.6, "#8B0000");
+        banGrad.addColorStop(1, "#6A0000");
+        ctx.fillStyle = banGrad;
+        ctx.fillRect(bStartX, bStartY - 5 * s, bW + 2 * s, bH + 10 * s);
+
+        // Vertical wave-based light/dark stripes for cloth folds
+        for (let i = 0; i <= bW; i += s) {
+          const t = i / bW;
+          const wave = Math.sin(bannerTime + t * 6);
+          const alpha = wave > 0 ? wave * 0.12 : -wave * 0.15;
+          ctx.fillStyle = wave > 0
+            ? `rgba(255,200,150,${alpha})`
+            : `rgba(0,0,0,${alpha})`;
+          const wy = Math.sin(bannerTime + t * 6) * 3 * s * t;
+          ctx.fillRect(bStartX + i, bStartY + wy - 2 * s, s, bH);
+        }
+        ctx.restore();
+
+        // Gold trim border — top edge
+        ctx.strokeStyle = "#FFD700";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(bStartX, bStartY);
+        for (let i = 0; i <= bW; i += s) {
+          const t = i / bW;
+          const wave = Math.sin(bannerTime + t * 6) * 3 * s * t;
+          ctx.lineTo(bStartX + i, bStartY + wave);
+        }
+        ctx.stroke();
+
+        // Gold trim border — left & right edges + swallowtail
+        ctx.beginPath();
+        ctx.moveTo(bStartX, bStartY);
+        ctx.lineTo(bStartX, bStartY + bH * 0.7);
+        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        const tailWaveR3 = Math.sin(bannerTime + 6) * 3 * s;
+        ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR3);
+        ctx.stroke();
+
+        // Central crest — Princeton shield
+        const cX = bStartX + bW * 0.5 + Math.sin(bannerTime + 3) * 1.5 * s;
+        const cY = bStartY + bH * 0.32 + Math.sin(bannerTime + 3) * 1 * s;
+        const cR = 5.5 * s;
+
+        // Shield outline
+        ctx.fillStyle = "#1a1a2e";
+        ctx.beginPath();
+        ctx.moveTo(cX, cY - cR * 1.1);
+        ctx.lineTo(cX - cR, cY - cR * 0.3);
+        ctx.lineTo(cX - cR, cY + cR * 0.3);
+        ctx.quadraticCurveTo(cX, cY + cR * 1.2, cX + cR, cY + cR * 0.3);
+        ctx.lineTo(cX + cR, cY - cR * 0.3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shield field — orange
+        const shieldGrad = ctx.createLinearGradient(cX, cY - cR, cX, cY + cR);
+        shieldGrad.addColorStop(0, "#FF9800");
+        shieldGrad.addColorStop(0.5, "#f97316");
+        shieldGrad.addColorStop(1, "#E65100");
+        ctx.fillStyle = shieldGrad;
+        const si = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(cX, cY - cR * 1.1 * si);
+        ctx.lineTo(cX - cR * si, cY - cR * 0.3 * si);
+        ctx.lineTo(cX - cR * si, cY + cR * 0.3 * si);
+        ctx.quadraticCurveTo(cX, cY + cR * 1.2 * si, cX + cR * si, cY + cR * 0.3 * si);
+        ctx.lineTo(cX + cR * si, cY - cR * 0.3 * si);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shield chevron
+        ctx.strokeStyle = "#1a1a2e";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(cX - cR * 0.6, cY);
+        ctx.lineTo(cX, cY - cR * 0.5);
+        ctx.lineTo(cX + cR * 0.6, cY);
+        ctx.stroke();
+
+        // Shield highlight
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        ctx.moveTo(cX, cY - cR * 0.8);
+        ctx.lineTo(cX - cR * 0.5, cY - cR * 0.15);
+        ctx.lineTo(cX, cY + cR * 0.1);
+        ctx.lineTo(cX + cR * 0.5, cY - cR * 0.15);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gold fringe tassels along bottom swallowtail edges
+        ctx.fillStyle = "#FFD700";
+        const fringeCount = 6;
+        for (let fi = 0; fi < fringeCount; fi++) {
+          const ft = (fi + 0.5) / fringeCount;
+          // Left tail edge
+          const flx = bStartX + (bW * 0.5) * ft;
+          const fly = bStartY + bH * 0.7 * (1 - ft) + (bH + Math.sin(bannerTime + 3) * 2 * s) * ft;
+          ctx.beginPath();
+          ctx.arc(flx, fly + 1 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Right tail edge
+          const frx = bStartX + bW * 0.5 + (bW * 0.5) * (1 - ft);
+          const frt = 1 - ft;
+          const fry = (bStartY + bH + Math.sin(bannerTime + 3) * 2 * s) * (1 - frt) +
+            (bStartY + bH * 0.7 + tailWaveR3) * frt;
+          ctx.beginPath();
+          ctx.arc(frx, fry + 1 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Iron ring mounts (banner hangs from crossbar)
+        ctx.fillStyle = "#546E7A";
+        for (let ri = 0; ri < 4; ri++) {
+          const rx = bStartX + (bW / 3) * ri;
+          const ry = bStartY - 1 * s + Math.sin(bannerTime + (ri / 3) * 6) * 1 * s;
+          ctx.beginPath();
+          ctx.arc(rx, ry, 1.2 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // Shield Emblem — flush with left wall face
+      ctx.save();
+      ctx.translate(-w * 0.5, -w * tanA * 0.5 - h * 0.72 - baseH);
+      ctx.transform(1, tanA, 0, 1, 0, 0);
+      // Outer shield border
+      const shR = 9 * s;
+      ctx.fillStyle = "#2B3940";
+      ctx.beginPath();
+      ctx.moveTo(0, -shR);
+      ctx.lineTo(-shR * 0.9, -shR * 0.4);
+      ctx.lineTo(-shR * 0.9, shR * 0.3);
+      ctx.quadraticCurveTo(0, shR * 1.1, shR * 0.9, shR * 0.3);
+      ctx.lineTo(shR * 0.9, -shR * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      // Inner shield field
+      const shGrad = ctx.createLinearGradient(0, -shR * 0.7, 0, shR * 0.7);
+      shGrad.addColorStop(0, "#FF8C00");
+      shGrad.addColorStop(0.5, "#f97316");
+      shGrad.addColorStop(1, "#E65100");
+      ctx.fillStyle = shGrad;
+      const sI = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(0, -shR * sI);
+      ctx.lineTo(-shR * 0.9 * sI, -shR * 0.4 * sI);
+      ctx.lineTo(-shR * 0.9 * sI, shR * 0.3 * sI);
+      ctx.quadraticCurveTo(0, shR * 1.1 * sI, shR * 0.9 * sI, shR * 0.3 * sI);
+      ctx.lineTo(shR * 0.9 * sI, -shR * 0.4 * sI);
+      ctx.closePath();
+      ctx.fill();
+      // Crossed swords icon
+      ctx.strokeStyle = "#1a1a2e";
+      ctx.lineWidth = 1.8 * s;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-4 * s, -3 * s);
+      ctx.lineTo(4 * s, 5 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(4 * s, -3 * s);
+      ctx.lineTo(-4 * s, 5 * s);
+      ctx.stroke();
+      // Sword hilts
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.moveTo(-5.5 * s, -2 * s);
+      ctx.lineTo(-2.5 * s, -4 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(5.5 * s, -2 * s);
+      ctx.lineTo(2.5 * s, -4 * s);
+      ctx.stroke();
+      // Shield highlight
+      ctx.fillStyle = "rgba(255,255,255,0.1)";
+      ctx.beginPath();
+      ctx.moveTo(0, -shR * sI);
+      ctx.lineTo(-shR * 0.4 * sI, -shR * 0.15 * sI);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(shR * 0.4 * sI, -shR * 0.15 * sI);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // ── Barrel cluster — front of building ──
+      {
+        const barrels = [
+          { x: w * 0.45, y: -w * tanA * 0.45 + 8 * s },
+          { x: w * 0.65, y: -w * tanA * 0.65 + 8 * s },
+        ];
+        barrels.forEach((br) => {
+          const barH = 9 * s;
+          const barRx = 4 * s;
+          const barRy = 2 * s;
+          ctx.fillStyle = "#6D4C41";
+          ctx.beginPath();
+          ctx.ellipse(br.x, br.y, barRx, barRy, 0, 0, Math.PI);
+          ctx.lineTo(br.x - barRx, br.y - barH);
+          ctx.ellipse(br.x, br.y - barH, barRx, barRy, 0, Math.PI, 0, true);
+          ctx.lineTo(br.x + barRx, br.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#5D4037";
+          ctx.beginPath();
+          ctx.ellipse(br.x, br.y - barH, barRx, barRy, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "rgba(0,0,0,0.25)";
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.ellipse(
+            br.x,
+            br.y - barH * 0.25,
+            barRx,
+            barRy * 0.9,
+            0,
+            0,
+            Math.PI,
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(
+            br.x,
+            br.y - barH * 0.75,
+            barRx,
+            barRy * 0.9,
+            0,
+            0,
+            Math.PI,
+          );
+          ctx.stroke();
+        });
+      }
+
+      // Spawn Effect — beam and particles (drawn on top)
+      if (isSpawning) {
         const beamAlpha = 0.6 * (1 - spawnCycle / 1500);
         const beamGrad = ctx.createLinearGradient(0, doorY, 0, -120 * s);
         beamGrad.addColorStop(0, `rgba(79, 195, 247, ${beamAlpha})`);

@@ -4367,24 +4367,157 @@ export function renderMortarStandardBarrel(
     }
   }
 
-  // ===== L1: targeting stake planted in ground (front-facing) =====
-  if (level === 1 && cosR + 0.5 * sinR > -0.3) {
-    const stakeX = cosR * tiers[0].r * 1.6;
-    const stakeY = sinR * tiers[0].r * ISO_Y_RATIO * 1.6 + 4 * zoom;
-    ctx.strokeStyle = "#6a5a4a";
-    ctx.lineWidth = 1.5 * zoom;
+  // ===== ISOMETRIC SCOPE mounted on barrel =====
+  {
+    const scopeFrac = level >= 3 ? 0.7 : level >= 2 ? 0.65 : 0.6;
+    const scopeRecoil = tierRecoils[0] + tierRecoils[1] * (scopeFrac - 0.3);
+    const scopeAnchor = posAtFrac(scopeFrac, scopeRecoil);
+    const sideOff = nearSide;
+    const mountX = scopeAnchor.x + sideOff * bNx * tiers[1].r * 1.1;
+    const mountY = scopeAnchor.y + sideOff * bNy * tiers[1].r * 1.1;
+
+    // Scope bracket (connects barrel to scope body)
+    const bracketW = (level >= 3 ? 2.2 : 1.8) * zoom;
+    ctx.strokeStyle = level >= 3 ? "#5a5a64" : "#4a4a54";
+    ctx.lineWidth = bracketW;
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(stakeX, stakeY + 2 * zoom);
-    ctx.lineTo(stakeX, stakeY - 6 * zoom);
+    ctx.moveTo(scopeAnchor.x, scopeAnchor.y);
+    ctx.lineTo(mountX, mountY);
     ctx.stroke();
-    // Flag
-    ctx.fillStyle = "#cc4400";
+    ctx.lineCap = "butt";
+
+    // Bracket clamp ring on barrel
+    ctx.fillStyle = level >= 3 ? "#4a4a52" : "#3a3a44";
     ctx.beginPath();
-    ctx.moveTo(stakeX, stakeY - 6 * zoom);
-    ctx.lineTo(stakeX + 3 * zoom, stakeY - 5 * zoom);
-    ctx.lineTo(stakeX, stakeY - 4 * zoom);
+    ctx.ellipse(scopeAnchor.x, scopeAnchor.y, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.stroke();
+
+    // Scope tube body (cylinder along barrel axis)
+    const tubeLen = (level >= 3 ? 14 : level >= 2 ? 12 : 10) * zoom;
+    const tubeR = (level >= 3 ? 2.8 : level >= 2 ? 2.4 : 2.0) * zoom;
+    const tubeStartX = mountX - bAx * tubeLen * 0.4;
+    const tubeStartY = mountY - bAy * tubeLen * 0.4;
+    const tubeEndX = mountX + bAx * tubeLen * 0.6;
+    const tubeEndY = mountY + bAy * tubeLen * 0.6;
+
+    // Tube body gradient (cylindrical shading perpendicular to barrel axis)
+    const tubeGrad = ctx.createLinearGradient(
+      mountX + bNx * tubeR, mountY + bNy * tubeR,
+      mountX - bNx * tubeR, mountY - bNy * tubeR,
+    );
+    tubeGrad.addColorStop(0, level >= 3 ? "#2a2a34" : "#222230");
+    tubeGrad.addColorStop(0.3, level >= 3 ? "#4a4a58" : "#3a3a4a");
+    tubeGrad.addColorStop(0.5, level >= 3 ? "#5a5a68" : "#4a4a5a");
+    tubeGrad.addColorStop(0.7, level >= 3 ? "#3a3a48" : "#303040");
+    tubeGrad.addColorStop(1, level >= 3 ? "#1a1a24" : "#181820");
+
+    ctx.fillStyle = tubeGrad;
+    ctx.beginPath();
+    ctx.moveTo(tubeStartX + bNx * tubeR, tubeStartY + bNy * tubeR);
+    ctx.lineTo(tubeEndX + bNx * tubeR, tubeEndY + bNy * tubeR);
+    ctx.lineTo(tubeEndX - bNx * tubeR, tubeEndY - bNy * tubeR);
+    ctx.lineTo(tubeStartX - bNx * tubeR, tubeStartY - bNy * tubeR);
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Objective lens (front end ellipse)
+    const lensR = tubeR * (level >= 3 ? 1.35 : 1.25);
+    ctx.fillStyle = level >= 3 ? "#3a3a48" : "#2a2a3a";
+    ctx.beginPath();
+    ctx.ellipse(
+      tubeEndX, tubeEndY,
+      lensR, lensR * Math.abs(bAx * 0.5 + 0.5),
+      Math.atan2(bAy, bAx), 0, Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.strokeStyle = level >= 3 ? "#6a6a78" : "#5a5a68";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+
+    // Lens glint
+    const glintPulse = 0.35 + Math.sin(time * 2) * 0.15;
+    const lensGlint = ctx.createRadialGradient(
+      tubeEndX, tubeEndY, 0,
+      tubeEndX, tubeEndY, lensR,
+    );
+    lensGlint.addColorStop(0, `rgba(140,180,255,${glintPulse})`);
+    lensGlint.addColorStop(0.4, `rgba(80,120,200,${glintPulse * 0.5})`);
+    lensGlint.addColorStop(1, "rgba(40,60,120,0)");
+    ctx.fillStyle = lensGlint;
+    ctx.beginPath();
+    ctx.ellipse(
+      tubeEndX, tubeEndY,
+      lensR * 0.85, lensR * 0.85 * Math.abs(bAx * 0.5 + 0.5),
+      Math.atan2(bAy, bAx), 0, Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Crosshair inside lens
+    ctx.strokeStyle = `rgba(140,200,255,${glintPulse * 0.6})`;
+    ctx.lineWidth = 0.3 * zoom;
+    const chR = lensR * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(tubeEndX - bNx * chR, tubeEndY - bNy * chR);
+    ctx.lineTo(tubeEndX + bNx * chR, tubeEndY + bNy * chR);
+    ctx.moveTo(tubeEndX - bAx * chR, tubeEndY - bAy * chR);
+    ctx.lineTo(tubeEndX + bAx * chR, tubeEndY + bAy * chR);
+    ctx.stroke();
+
+    // Eyepiece (rear end)
+    const epR = tubeR * 1.15;
+    ctx.fillStyle = level >= 3 ? "#3a3a44" : "#2a2a38";
+    ctx.beginPath();
+    ctx.ellipse(
+      tubeStartX, tubeStartY,
+      epR, epR * Math.abs(bAx * 0.5 + 0.5),
+      Math.atan2(bAy, bAx), 0, Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.stroke();
+
+    // Adjustment turret knobs (windage/elevation)
+    if (level >= 2) {
+      const knobX = mountX - bNx * tubeR * 0.3;
+      const knobY = mountY - bNy * tubeR * 0.3 - tubeR * 1.4;
+      ctx.fillStyle = level >= 3 ? "#5a5a64" : "#4a4a54";
+      ctx.beginPath();
+      ctx.ellipse(knobX, knobY, 1.5 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = level >= 3 ? "#7a7a88" : "#6a6a78";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      // Knurled grip lines
+      for (let k = 0; k < 4; k++) {
+        const ky = knobY - 1.4 * zoom + k * 0.7 * zoom;
+        ctx.strokeStyle = `rgba(255,255,255,${0.08 + k * 0.02})`;
+        ctx.lineWidth = 0.25 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(knobX - 1 * zoom, ky);
+        ctx.lineTo(knobX + 1 * zoom, ky);
+        ctx.stroke();
+      }
+    }
+
+    // Scope ring bands
+    for (const rf of [0.2, 0.55, 0.85]) {
+      const rx = tubeStartX + (tubeEndX - tubeStartX) * rf;
+      const ry = tubeStartY + (tubeEndY - tubeStartY) * rf;
+      ctx.strokeStyle = level >= 3 ? "#6a6a74" : "#5a5a64";
+      ctx.lineWidth = (level >= 3 ? 1.2 : 0.9) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(rx + bNx * tubeR * 1.05, ry + bNy * tubeR * 1.05);
+      ctx.lineTo(rx - bNx * tubeR * 1.05, ry - bNy * tubeR * 1.05);
+      ctx.stroke();
+    }
   }
 
   // ===== L2: instrument panel mounted on leg — iso projected =====

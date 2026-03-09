@@ -7,6 +7,9 @@ import {
   TREE_ACCENT_PALETTES,
   BUSH_ACCENT_PALETTES,
   HEDGE_FLOWER_PALETTES,
+  PINE_PALETTES,
+  CHARRED_TREE_PALETTES,
+  SWAMP_TREE_PALETTES,
 } from "./foliagePalettes";
 
 function traceOrganicEllipse(
@@ -1000,6 +1003,552 @@ export function drawHedge(
     ctx.fillStyle = "#111";
     ctx.beginPath();
     ctx.arc(bx + 2.5 * s, by - 1.3 * s, 0.4 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+export function drawPine(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  variant: number,
+  decorX: number,
+  decorY: number,
+): void {
+  const pp = PINE_PALETTES[variant % PINE_PALETTES.length];
+  const pSeed = decorX * 67 + decorY * 43;
+
+  const heightMul = 1.0 + Math.sin(pSeed * 0.11) * 0.15;
+  const widthMul = 1.0 + Math.cos(pSeed * 0.13) * 0.1;
+  const lean = Math.sin(pSeed * 0.19) * 1.5;
+
+  drawDirectionalShadow(ctx, x, y + 5 * s, s, 18 * widthMul * s, 10 * s, 50 * heightMul * s, 0.28);
+
+  // Snow mound at base
+  ctx.fillStyle = pp.snowBlue;
+  traceOrganicEllipse(ctx, x, y + 5 * s, 12 * s, 5 * s, pSeed, 0.08);
+  ctx.fill();
+  ctx.fillStyle = pp.snowWhite;
+  traceOrganicEllipse(ctx, x - 2 * s, y + 3 * s, 8 * s, 3 * s, pSeed * 1.3, 0.1, -0.2);
+  ctx.fill();
+
+  // Trunk
+  const trunkTop = y - 10 * heightMul * s;
+  const topX = x + lean * s;
+  ctx.fillStyle = pp.trunkDark;
+  ctx.beginPath();
+  ctx.moveTo(x - 5 * s, y + 3 * s);
+  ctx.lineTo(topX - 4 * s, trunkTop);
+  ctx.lineTo(topX, trunkTop - 2 * s);
+  ctx.lineTo(x, y + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = pp.trunk;
+  ctx.beginPath();
+  ctx.moveTo(x + 5 * s, y + 3 * s);
+  ctx.lineTo(topX + 4 * s, trunkTop);
+  ctx.lineTo(topX, trunkTop - 2 * s);
+  ctx.lineTo(x, y + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pine layers with organic edges
+  const layerCount = 4 + (Math.abs(pSeed) % 2);
+  for (let idx = 0; idx < layerCount; idx++) {
+    const frac = idx / (layerCount - 1);
+    const layerY = y + (-8 - frac * 46 * heightMul) * s;
+    const layerW = (26 - frac * 16) * widthMul * s;
+    const layerH = (20 - frac * 6) * heightMul * s;
+    const layerLean = lean * (0.3 + frac * 0.7) * s;
+
+    const sizeVar = 1 + Math.sin(pSeed + idx * 3.7) * 0.08;
+    const lw = layerW * sizeVar;
+    const lh = layerH * sizeVar;
+
+    // Back shadow
+    ctx.fillStyle = pp.dark;
+    ctx.beginPath();
+    ctx.moveTo(x + layerLean - lw * 0.9, layerY + 2 * s);
+    ctx.lineTo(x + layerLean, layerY - lh + 2 * s);
+    ctx.lineTo(x + layerLean + lw * 0.9, layerY + 2 * s);
+    ctx.closePath();
+    ctx.fill();
+
+    // Left face (darker) with organic edge
+    ctx.fillStyle = pp.greens[0];
+    ctx.beginPath();
+    ctx.moveTo(x + layerLean, layerY + 5 * s);
+    ctx.lineTo(x + layerLean, layerY - lh);
+    const leftPts = 6;
+    for (let i = 0; i <= leftPts; i++) {
+      const t = i / leftPts;
+      const edgeX = x + layerLean - lw * (1 - t);
+      const edgeY = layerY + 5 * s * (1 - t) + (-lh) * t;
+      const bump = Math.sin(pSeed + idx * 5 + i * 3.1) * 2 * s;
+      ctx.lineTo(edgeX + bump, edgeY);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Right face (lighter) with organic edge
+    ctx.fillStyle = pp.greens[1 + (idx % 2)];
+    ctx.beginPath();
+    ctx.moveTo(x + layerLean, layerY + 5 * s);
+    ctx.lineTo(x + layerLean, layerY - lh);
+    for (let i = 0; i <= leftPts; i++) {
+      const t = i / leftPts;
+      const edgeX = x + layerLean + lw * (1 - t);
+      const edgeY = layerY + 5 * s * (1 - t) + (-lh) * t;
+      const bump = Math.sin(pSeed + idx * 7 + i * 2.7) * 2 * s;
+      ctx.lineTo(edgeX + bump, edgeY);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // Needle texture on faces
+    ctx.strokeStyle = pp.greens[3];
+    ctx.lineWidth = 0.5 * s;
+    ctx.globalAlpha = 0.4;
+    const needleCount = 3 + (Math.abs(pSeed + idx) % 3);
+    for (let ni = 0; ni < needleCount; ni++) {
+      const nFrac = (ni + 0.5) / needleCount;
+      const nx = x + layerLean + (-lw * 0.6 + lw * 1.2 * nFrac) * (1 - nFrac * 0.3);
+      const ny = layerY + 4 * s * (1 - nFrac) + (-lh * 0.5) * nFrac;
+      ctx.beginPath();
+      ctx.moveTo(nx, ny);
+      ctx.lineTo(nx + Math.sin(pSeed + ni * 2.3) * 3 * s, ny - 3 * s);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Snow cap with organic shape
+    ctx.fillStyle = pp.snowWhite;
+    ctx.beginPath();
+    const snowPts = 8;
+    ctx.moveTo(x + layerLean - lw * 0.7, layerY - lh * 0.2);
+    for (let i = 0; i <= snowPts; i++) {
+      const t = i / snowPts;
+      const sx = x + layerLean + (-lw * 0.7 + lw * 1.2 * t);
+      const sBaseY = layerY - lh * (0.2 + t * 0.7);
+      const snowBump = Math.sin(pSeed + idx * 9 + i * 2.1) * 1.5 * s;
+      const snowHeight = (2 + Math.sin(pSeed + idx * 3 + i * 1.7) * 1.5) * s;
+      ctx.lineTo(sx, sBaseY - snowHeight + snowBump);
+    }
+    ctx.lineTo(x + layerLean + lw * 0.5, layerY - lh * 0.3);
+    ctx.quadraticCurveTo(
+      x + layerLean + lw * 0.2, layerY - lh * 0.15,
+      x + layerLean - lw * 0.2, layerY - lh * 0.1,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Snow blue tint on shadow side
+    ctx.fillStyle = pp.snowBlue;
+    ctx.globalAlpha = 0.4;
+    ctx.beginPath();
+    ctx.moveTo(x + layerLean - lw * 0.6, layerY - lh * 0.15);
+    ctx.quadraticCurveTo(
+      x + layerLean - lw * 0.3, layerY - lh * 0.4,
+      x + layerLean, layerY - lh * 0.8,
+    );
+    ctx.lineTo(x + layerLean - lw * 0.1, layerY - lh * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Snow clumps hanging from branch tips
+    if (idx < layerCount - 1) {
+      ctx.fillStyle = pp.snowWhite;
+      const clumpX1 = x + layerLean - lw * (0.5 + Math.sin(pSeed + idx * 4) * 0.1);
+      const clumpX2 = x + layerLean + lw * (0.4 + Math.cos(pSeed + idx * 5) * 0.1);
+      traceOrganicEllipse(ctx, clumpX1, layerY + 2 * s, 4 * s, 2.5 * s, pSeed + idx * 13, 0.12, 0.3);
+      ctx.fill();
+      traceOrganicEllipse(ctx, clumpX2, layerY + 1 * s, 3.5 * s, 2 * s, pSeed + idx * 17, 0.12, -0.2);
+      ctx.fill();
+    }
+  }
+
+  // Top snow cap
+  ctx.fillStyle = pp.snowWhite;
+  const topY = y + (-8 - 46 * heightMul) * s;
+  traceOrganicEllipse(ctx, x + lean * s, topY - 4 * s, 3 * s, 2 * s, pSeed * 2.1, 0.15);
+  ctx.fill();
+
+  // Sparkle effects (seed-positioned)
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
+  const sparkleCount = 3 + (Math.abs(pSeed) % 3);
+  for (let si = 0; si < sparkleCount; si++) {
+    const spX = x + Math.sin(pSeed + si * 4.3) * 12 * widthMul * s;
+    const spY = y + (-15 - si * 12 * heightMul + Math.cos(pSeed + si * 2.7) * 5) * s;
+    ctx.beginPath();
+    ctx.arc(spX, spY, 0.9 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+export function drawCharredTree(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  variant: number,
+  decorX: number,
+  decorY: number,
+  decorTime: number,
+): void {
+  const cp = CHARRED_TREE_PALETTES[variant % CHARRED_TREE_PALETTES.length];
+  const cSeed = decorX * 71 + decorY * 47;
+
+  const trunkH = 35 + (Math.abs(cSeed * 7) % 8);
+  const trunkW = 6.5 + (Math.abs(cSeed * 13) % 2);
+  const lean = Math.sin(cSeed * 0.19) * 2;
+  const brokenTopH = trunkH + 3 + (Math.abs(cSeed) % 5);
+
+  drawDirectionalShadow(ctx, x, y + 4 * s, s, 16 * s, 8 * s, 40 * s, 0.35);
+
+  // Ash pile at base
+  ctx.fillStyle = cp.mid;
+  drawOrganicBlobAt(ctx, x, y + 4 * s, 10 * s, 4 * s, cSeed * 1.7, 0.1);
+  ctx.fill();
+  ctx.fillStyle = cp.light;
+  traceOrganicEllipse(ctx, x - 2 * s, y + 3 * s, 6 * s, 2.5 * s, cSeed * 2.1, 0.12, -0.2);
+  ctx.fill();
+
+  const topX = x + lean * s;
+
+  // Burnt trunk left face
+  ctx.fillStyle = cp.black;
+  ctx.beginPath();
+  ctx.moveTo(x - trunkW * s, y + 3 * s);
+  ctx.lineTo(topX - (trunkW - 1) * s, y - (trunkH - 6) * s);
+  ctx.lineTo(topX - (trunkW - 3) * s, y - trunkH * s);
+  ctx.lineTo(topX, y - (trunkH - 2) * s);
+  ctx.lineTo(x, y + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Burnt trunk right face
+  const tGrad = ctx.createLinearGradient(x, y - 20 * s, x + 8 * s, y - 10 * s);
+  tGrad.addColorStop(0, cp.dark);
+  tGrad.addColorStop(0.5, cp.mid);
+  tGrad.addColorStop(1, cp.dark);
+  ctx.fillStyle = tGrad;
+  ctx.beginPath();
+  ctx.moveTo(x + trunkW * s, y + 3 * s);
+  ctx.lineTo(topX + (trunkW - 2) * s, y - (trunkH - 5) * s);
+  ctx.lineTo(topX + (trunkW - 4) * s, y - (trunkH - 1) * s);
+  ctx.lineTo(topX, y - (trunkH - 2) * s);
+  ctx.lineTo(x, y + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Jagged broken top — procedural
+  ctx.fillStyle = cp.dark;
+  ctx.beginPath();
+  ctx.moveTo(topX - (trunkW - 3) * s, y - trunkH * s);
+  const jagCount = 3 + (Math.abs(cSeed) % 2);
+  for (let ji = 0; ji < jagCount; ji++) {
+    const jFrac = ji / jagCount;
+    const jx = topX + (-trunkW + 3 + (trunkW * 2 - 4) * jFrac) * s;
+    const jy = y - (brokenTopH + Math.sin(cSeed + ji * 3.7) * 3) * s;
+    ctx.lineTo(jx, jy);
+    if (ji < jagCount - 1) {
+      const dip = y - (trunkH - 1 + Math.cos(cSeed + ji * 2.1) * 2) * s;
+      ctx.lineTo(jx + 2 * s, dip);
+    }
+  }
+  ctx.lineTo(topX + (trunkW - 4) * s, y - (trunkH - 1) * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Broken branches — procedural angles and lengths
+  ctx.strokeStyle = cp.dark;
+  ctx.lineCap = "round";
+  const branches = [
+    { startFrac: 0.55, angle: -2.5, len: 16, width: 4, sub: true },
+    { startFrac: 0.4, angle: 0.3, len: 13, width: 3, sub: false },
+    { startFrac: 0.75, angle: -2.8, len: 10, width: 2.5, sub: false },
+  ];
+  branches.forEach((br, bi) => {
+    const bAngle = br.angle + Math.sin(cSeed + bi * 5.1) * 0.3;
+    const bLen = (br.len + Math.sin(cSeed + bi * 3.3) * 3) * s;
+    const bStartX = topX + (bi % 2 === 0 ? -2 : 2) * s;
+    const bStartY = y - trunkH * br.startFrac * s;
+    ctx.lineWidth = br.width * s;
+    ctx.beginPath();
+    ctx.moveTo(bStartX, bStartY);
+    ctx.lineTo(bStartX + Math.cos(bAngle) * bLen, bStartY + Math.sin(bAngle) * bLen);
+    ctx.stroke();
+    if (br.sub) {
+      const midX = bStartX + Math.cos(bAngle) * bLen * 0.6;
+      const midY = bStartY + Math.sin(bAngle) * bLen * 0.6;
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(midX, midY);
+      ctx.lineTo(midX + Math.cos(bAngle - 0.5) * 6 * s, midY + Math.sin(bAngle - 0.5) * 6 * s);
+      ctx.stroke();
+    }
+  });
+
+  // Crack lines on trunk
+  ctx.strokeStyle = cp.mid;
+  ctx.lineWidth = 1 * s;
+  const crackCount = 2 + (Math.abs(cSeed) % 2);
+  for (let ci = 0; ci < crackCount; ci++) {
+    const cx = x + (ci === 0 ? -3 : 2 + ci) * s;
+    const startY = y - 5 * s - ci * 3 * s;
+    const endY = y - trunkH * (0.4 + ci * 0.2) * s;
+    ctx.beginPath();
+    ctx.moveTo(cx, startY);
+    ctx.quadraticCurveTo(
+      cx + Math.sin(cSeed + ci * 3) * 2 * s,
+      (startY + endY) / 2,
+      cx + Math.sin(cSeed + ci * 5) * 3 * s,
+      endY,
+    );
+    ctx.stroke();
+  }
+
+  // Glowing embers — procedural positions
+  const emberCount = 5 + (Math.abs(cSeed) % 3);
+  for (let ei = 0; ei < emberCount; ei++) {
+    const eAngle = (ei / emberCount) * Math.PI * 2 + cSeed * 0.1;
+    const eDist = 5 + Math.sin(cSeed + ei * 2.7) * 10;
+    const ex = topX + Math.cos(eAngle) * eDist * s;
+    const ey = y - trunkH * (0.3 + (ei / emberCount) * 0.5) * s;
+    const er = (1.5 + Math.sin(cSeed + ei * 3.1) * 0.8) * s;
+    const pulse = 0.4 + Math.sin(decorTime * (2.5 + ei * 0.3) + cSeed + ei) * 0.4;
+
+    const glow = ctx.createRadialGradient(ex, ey, 0, ex, ey, er * 3);
+    glow.addColorStop(0, `rgba(255,150,50,${(pulse * 0.6).toFixed(3)})`);
+    glow.addColorStop(0.5, `rgba(255,80,0,${(pulse * 0.3).toFixed(3)})`);
+    glow.addColorStop(1, "rgba(255,50,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(ex, ey, er * 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    const core = ctx.createRadialGradient(ex, ey, 0, ex, ey, er);
+    core.addColorStop(0, pulse > 0.6 ? cp.emberYellow : cp.emberOrange);
+    core.addColorStop(0.5, cp.emberOrange);
+    core.addColorStop(1, cp.emberRed);
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.arc(ex, ey, er, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Smoke wisps
+  ctx.fillStyle = "rgba(60,60,60,0.2)";
+  for (let sm = 0; sm < 4; sm++) {
+    const smokeTime = (decorTime * 15 + sm * 12) % 35;
+    const smokeY = y - brokenTopH * s - smokeTime * s;
+    const smokeX = x + lean * s + Math.sin(decorTime * 1.5 + sm + cSeed * 0.01) * 5 * s;
+    const smokeSize = (2 + smokeTime * 0.15) * s;
+    const smokeAlpha = Math.max(0, 0.25 - smokeTime * 0.007);
+    ctx.fillStyle = `rgba(50,50,50,${smokeAlpha.toFixed(3)})`;
+    ctx.beginPath();
+    ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Floating ash particles
+  ctx.fillStyle = "rgba(80,80,80,0.4)";
+  for (let ash = 0; ash < 5; ash++) {
+    const ashTime = (decorTime * 8 + ash * 15) % 50;
+    const ashY = y + 5 * s - ashTime * s;
+    const ashX = x + Math.sin(decorTime * 0.8 + ash * 2 + cSeed * 0.01) * 15 * s;
+    ctx.beginPath();
+    ctx.arc(ashX, ashY, 0.8 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+export function drawSwampTree(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  variant: number,
+  decorX: number,
+  decorY: number,
+  decorTime: number,
+): void {
+  const sp = SWAMP_TREE_PALETTES[variant % SWAMP_TREE_PALETTES.length];
+  const sSeed = decorX * 79 + decorY * 53;
+
+  const heightMul = 1.0 + Math.sin(sSeed * 0.11) * 0.12;
+  const widthMul = 1.0 + Math.cos(sSeed * 0.13) * 0.08;
+  const twistDir = Math.sin(sSeed * 0.17) > 0 ? 1 : -1;
+
+  drawDirectionalShadow(ctx, x, y + 5 * s, s, 20 * widthMul * s, 10 * s, 45 * heightMul * s, 0.35, "10,20,10");
+
+  // Exposed roots in water — procedural
+  ctx.strokeStyle = sp.trunkDark;
+  ctx.lineWidth = 3 * s;
+  const rootCount = 3 + (Math.abs(sSeed) % 3);
+  for (let r = 0; r < rootCount; r++) {
+    const rootAngle = -0.8 + r * (1.6 / rootCount) + Math.sin(sSeed + r * 3.7) * 0.2;
+    const rootLen = (12 + r * 3 + Math.sin(sSeed + r * 2.3) * 3) * widthMul;
+    ctx.beginPath();
+    ctx.moveTo(x + (r - rootCount / 2) * 4 * s, y + 4 * s);
+    ctx.quadraticCurveTo(
+      x + Math.cos(rootAngle) * rootLen * 0.5 * s,
+      y + 6 * s,
+      x + Math.cos(rootAngle) * rootLen * s,
+      y + 8 * s,
+    );
+    ctx.stroke();
+  }
+
+  // Gnarled trunk left side
+  const twistAmt = 4 * twistDir;
+  ctx.fillStyle = sp.trunkDark;
+  ctx.beginPath();
+  ctx.moveTo(x - 10 * widthMul * s, y + 4 * s);
+  ctx.bezierCurveTo(
+    x - (14 + twistAmt) * widthMul * s, y - 10 * heightMul * s,
+    x - (8 - twistAmt) * widthMul * s, y - 25 * heightMul * s,
+    x - 6 * widthMul * s, y - 38 * heightMul * s,
+  );
+  ctx.lineTo(x - 2 * s, y - 40 * heightMul * s);
+  ctx.bezierCurveTo(
+    x - 4 * s, y - 20 * heightMul * s,
+    x - 6 * s, y - 5 * heightMul * s,
+    x - 2 * s, y + 2 * s,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Gnarled trunk right side
+  const tGrad = ctx.createLinearGradient(x, y, x + 12 * widthMul * s, y - 20 * heightMul * s);
+  tGrad.addColorStop(0, sp.trunkMid);
+  tGrad.addColorStop(0.5, sp.trunkLight);
+  tGrad.addColorStop(1, sp.trunkMid);
+  ctx.fillStyle = tGrad;
+  ctx.beginPath();
+  ctx.moveTo(x + 10 * widthMul * s, y + 4 * s);
+  ctx.bezierCurveTo(
+    x + (12 - twistAmt) * widthMul * s, y - 8 * heightMul * s,
+    x + (6 + twistAmt) * widthMul * s, y - 22 * heightMul * s,
+    x + 4 * widthMul * s, y - 38 * heightMul * s,
+  );
+  ctx.lineTo(x - 2 * s, y - 40 * heightMul * s);
+  ctx.bezierCurveTo(
+    x + 2 * s, y - 18 * heightMul * s,
+    x + 4 * s, y - 5 * heightMul * s,
+    x + 2 * s, y + 2 * s,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Bark texture knots — procedural
+  ctx.fillStyle = sp.trunkDark;
+  const knotCount = 2 + (Math.abs(sSeed) % 2);
+  for (let ki = 0; ki < knotCount; ki++) {
+    const kFrac = 0.3 + ki * 0.25;
+    const kx = x + (twistDir * (-3 + ki * 5) + Math.sin(sSeed + ki * 3) * 2) * s;
+    const ky = y - kFrac * 40 * heightMul * s;
+    ctx.beginPath();
+    ctx.ellipse(kx, ky, (2.5 + Math.sin(sSeed + ki) * 0.5) * s, (3.5 + Math.cos(sSeed + ki) * 0.5) * s, 0.3 * twistDir, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dead branches — procedural
+  ctx.strokeStyle = sp.trunkMid;
+  const branchCount = 2 + (Math.abs(sSeed) % 2);
+  for (let bi = 0; bi < branchCount; bi++) {
+    const bFrac = 0.6 + bi * 0.15;
+    const bSide = bi % 2 === 0 ? 1 : -1;
+    const bAngle = bSide * (0.2 + Math.sin(sSeed + bi * 4.1) * 0.3);
+    const bLen = (14 + Math.sin(sSeed + bi * 2.7) * 4) * widthMul;
+    const bx = x + bSide * 3 * s;
+    const by = y - bFrac * 40 * heightMul * s;
+    ctx.lineWidth = (2.5 - bi * 0.3) * s;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx + Math.cos(bAngle) * bLen * s, by + Math.sin(bAngle) * bLen * s - 4 * s);
+    ctx.stroke();
+  }
+
+  // Dark sparse foliage canopy — organic blobs
+  const canopyCount = 3 + (Math.abs(sSeed) % 2);
+  for (let ci = 0; ci < canopyCount; ci++) {
+    const cAngle = (ci / canopyCount) * Math.PI * 1.5 - Math.PI * 0.25 + Math.sin(sSeed + ci * 3) * 0.3;
+    const cDist = 6 + Math.sin(sSeed + ci * 2.7) * 4;
+    const ccx = x + Math.cos(cAngle) * cDist * widthMul * s;
+    const ccy = y + (-44 + Math.sin(cAngle) * 6) * heightMul * s;
+    const crx = (13 - ci * 1.5 + Math.sin(sSeed + ci * 3.1) * 2) * widthMul;
+    const cry = (8 - ci + Math.cos(sSeed + ci * 2.3) * 1.5) * heightMul;
+
+    const cGrad = ctx.createRadialGradient(
+      ccx - 3 * s, ccy - 3 * s, 0,
+      ccx, ccy, crx * s,
+    );
+    cGrad.addColorStop(0, sp.foliage[2]);
+    cGrad.addColorStop(0.5, sp.foliage[ci % 4]);
+    cGrad.addColorStop(1, sp.foliage[0]);
+    ctx.fillStyle = cGrad;
+    traceOrganicEllipse(ctx, ccx, ccy, crx * s, cry * s, sSeed + ci * 11, 0.14);
+    ctx.fill();
+  }
+
+  // Leaf texture on canopy
+  ctx.globalAlpha = 0.4;
+  for (let li = 0; li < 8; li++) {
+    const lAng = (li / 8) * Math.PI * 2 + sSeed * 0.05;
+    const lDist = 5 + Math.sin(sSeed + li * 2.1) * 6;
+    const lx = x + Math.cos(lAng) * lDist * widthMul * s;
+    const ly = y + (-44 + Math.sin(lAng) * 5) * heightMul * s;
+    ctx.fillStyle = sp.foliage[li % 4];
+    drawLeafMark(ctx, lx, ly, 1.2 * s, lAng + sSeed * 0.01);
+  }
+  ctx.globalAlpha = 1;
+
+  // Hanging Spanish moss strands — seed-positioned
+  const mossCount = 6 + (Math.abs(sSeed) % 4);
+  for (let m = 0; m < mossCount; m++) {
+    const mossX = x + (-16 + m * (32 / mossCount) + Math.sin(sSeed + m * 2.3) * 3) * widthMul * s;
+    const mossStartY = y + (-35 - Math.sin(sSeed + m * 1.7) * 10) * heightMul * s;
+    const mossLen = (15 + Math.sin(sSeed + m * 1.5) * 8) * heightMul;
+    const sway = Math.sin(decorTime * 0.8 + m * 0.7 + sSeed * 0.01) * 4 * s;
+
+    const mGrad = ctx.createLinearGradient(mossX, mossStartY, mossX + sway, mossStartY + mossLen * s);
+    mGrad.addColorStop(0, sp.mossDark);
+    mGrad.addColorStop(0.5, sp.mossLight);
+    mGrad.addColorStop(1, sp.mossDark);
+
+    ctx.strokeStyle = mGrad;
+    ctx.lineWidth = (1.5 + Math.sin(sSeed + m) * 0.5) * s;
+    ctx.beginPath();
+    ctx.moveTo(mossX, mossStartY);
+    ctx.bezierCurveTo(
+      mossX + sway * 0.3, mossStartY + mossLen * 0.3 * s,
+      mossX + sway * 0.7, mossStartY + mossLen * 0.6 * s,
+      mossX + sway, mossStartY + mossLen * s,
+    );
+    ctx.stroke();
+
+    if (m % 2 === 0) {
+      ctx.strokeStyle = sp.mossDark;
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(mossX + sway * 0.5, mossStartY + mossLen * 0.5 * s);
+      ctx.lineTo(mossX + sway * 0.5 + 4 * s, mossStartY + mossLen * 0.7 * s);
+      ctx.stroke();
+    }
+  }
+
+  // Fireflies/wisps
+  const flyAlpha = 0.4 + Math.sin(decorTime * 2 + sSeed * 0.01) * 0.3;
+  ctx.fillStyle = `rgba(${sp.fireflyColor},${flyAlpha.toFixed(3)})`;
+  const flyCount = 2 + (Math.abs(sSeed) % 3);
+  for (let f = 0; f < flyCount; f++) {
+    const flyX = x + Math.sin(decorTime + f * 2 + sSeed * 0.01) * 15 * widthMul * s;
+    const flyY = y - 25 * heightMul * s + Math.cos(decorTime * 1.3 + f + sSeed * 0.01) * 10 * s;
+    ctx.beginPath();
+    ctx.arc(flyX, flyY, 1.5 * s, 0, Math.PI * 2);
     ctx.fill();
   }
 }

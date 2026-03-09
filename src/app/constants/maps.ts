@@ -617,6 +617,7 @@ export const LEVEL_DATA: Record<
     theme: "grassland",
     difficulty: 1,
     startingPawPoints: 350, // Easy tutorial level - generous starting funds
+    heroSpawn: { x: 16, y: 18 },
     previewImage: "/images/previews/poe.png",
     decorations: [
       // Trees around the expanded path area (path: y:8-18, x:-2 to 32)
@@ -668,6 +669,7 @@ export const LEVEL_DATA: Record<
     theme: "grassland",
     difficulty: 2,
     startingPawPoints: 400, // Medium difficulty - more waves
+    heroSpawn: { x: 15, y: 20 },
     decorations: [
       // Lake feature near path center (path: x:9-26, y:-2 to 32)
       { type: "deep_water", pos: { x: 9, y: 17 }, variant: 0, size: 2 },
@@ -721,6 +723,7 @@ export const LEVEL_DATA: Record<
     theme: "grassland",
     difficulty: 3,
     startingPawPoints: 500, // Hard level with beacon - need more towers
+    heroSpawn: { x: 21, y: 13 },
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",
@@ -731,7 +734,7 @@ export const LEVEL_DATA: Record<
       { type: "statue", pos: { x: 7, y: 7.5 }, variant: 7 },
       { type: "statue", pos: { x: 21, y: 2 }, variant: 4 },
       { type: "statue", pos: { x: 17, y: 17 }, variant: 5 },
-      { type: "statue", pos: { x: 25, y: 17 }, variant: 6 },
+      { type: "statue", pos: { x: 23, y: 17 }, variant: 6 },
       { type: "fountain", pos: { x: 22.75, y: 7 }, variant: 0 },
       // Trees around the expanded area
       { type: "tree", pos: { x: 4, y: 4 }, variant: 1 },
@@ -775,6 +778,7 @@ export const LEVEL_DATA: Record<
     theme: "swamp",
     difficulty: 1,
     startingPawPoints: 400, // Swamp intro - hexers require strategy
+    heroSpawn: { x: 18, y: 12 },
     hazards: [{ type: "poison_fog", pos: { x: 17.5, y: 15.5 }, radius: 1.5 }],
     decorations: [
       // Swamp trees around expanded path (path: x:-2 to 32, y:12 to 20)
@@ -812,8 +816,9 @@ export const LEVEL_DATA: Record<
     theme: "swamp",
     difficulty: 2,
     startingPawPoints: 475, // Shrine helps with healing - medium funds
+    heroSpawn: { x: 15, y: 16 },
     specialTower: {
-      pos: { x: 10.5, y: 15 },
+      pos: { x: 10, y: 14 },
       type: "shrine",
     },
     decorations: [
@@ -864,26 +869,27 @@ export const LEVEL_DATA: Record<
     theme: "swamp",
     difficulty: 3,
     startingPawPoints: 600, // Dual path + vault defense - need strong setup
+    heroSpawn: { x: 18, y: 16 },
     dualPath: true,
     secondaryPath: "sunken_temple_b",
     specialTower: {
-      pos: { x: 20, y: 16 },
+      pos: { x: 20, y: 15.5 },
       type: "vault",
       hp: 800,
     },
     decorations: [
       // Grand ruined temple near path center (variant 6 = grand temple)
-      { type: "ruined_temple", pos: { x: 16, y: 6 }, variant: 6, size: 3 },
+      { type: "ruined_temple", pos: { x: 16, y: 4 }, variant: 6, size: 3 },
       { type: "sunken_pillar", pos: { x: 4, y: 6 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 8, y: 12 }, variant: 1 },
       { type: "sunken_pillar", pos: { x: 26, y: 12 }, variant: 2 },
       { type: "sunken_pillar", pos: { x: 28, y: 20 }, variant: 0 },
       // Water and creatures
       // Main abyss pool: three emergent tentacles
-      { type: "deep_water", pos: { x: 18, y: 8 }, variant: 1, size: 4 },
-      { type: "tentacle", pos: { x: 16.9, y: 9.1 }, variant: 0, size: 1.3 },
-      { type: "tentacle", pos: { x: 18.2, y: 9.35 }, variant: 0, size: 1.0 },
-      { type: "tentacle", pos: { x: 19.3, y: 8.15 }, variant: 0, size: 1.55 },
+      { type: "deep_water", pos: { x: 18, y: 6 }, variant: 1, size: 4 },
+      { type: "tentacle", pos: { x: 16.9, y: 7.1 }, variant: 0, size: 1.3 },
+      { type: "tentacle", pos: { x: 18.2, y: 7.35 }, variant: 0, size: 1.0 },
+      { type: "tentacle", pos: { x: 19.3, y: 6.15 }, variant: 0, size: 1.55 },
 
       { type: "deep_water", pos: { x: 27, y: 11 }, variant: 1, size: 2.5 },
       { type: "deep_water", pos: { x: 2, y: 18 }, variant: 0, size: 2 },
@@ -920,6 +926,7 @@ export const LEVEL_DATA: Record<
     theme: "desert",
     difficulty: 1,
     startingPawPoints: 425, // Beacon boost helps - ranged enemies require planning
+    heroSpawn: { x: 15, y: 11 },
     specialTower: {
       pos: { x: 22, y: 9.5 },
       type: "beacon",
@@ -972,10 +979,11 @@ export const LEVEL_DATA: Record<
     theme: "desert",
     difficulty: 2,
     startingPawPoints: 525, // Dual path requires coverage on both sides
+    heroSpawn: { x: 15, y: 24 },
     dualPath: true,
     secondaryPath: "pyramid_b",
     specialTower: {
-      pos: { x: 21, y: 15 },
+      pos: { x: 20, y: 15 },
       type: "barracks",
     },
     decorations: [
@@ -1036,8 +1044,9 @@ export const LEVEL_DATA: Record<
     theme: "desert",
     difficulty: 3,
     startingPawPoints: 575, // Challenging boss waves with quicksand hazard
+    heroSpawn: { x: 16, y: 15 },
     specialTower: {
-      pos: { x: 24, y: 14.5 },
+      pos: { x: 23, y: 14.5 },
       type: "shrine",
     },
     decorations: [
@@ -1100,10 +1109,17 @@ export const LEVEL_DATA: Record<
     theme: "winter",
     difficulty: 1,
     startingPawPoints: 475, // Winter intro - varied enemy types
-    specialTower: {
-      pos: { x: 9, y: 18.5 },
-      type: "beacon",
-    },
+    heroSpawn: { x: 18, y: 20 },
+    specialTowers: [
+      {
+        pos: { x: 9, y: 17 },
+        type: "beacon",
+      },
+      {
+        pos: { x: 20, y: 20 },
+        type: "chrono_relay",
+      },
+    ],
     decorations: [
       // Pine trees scattered around the glacier path
       { type: "pine_tree", pos: { x: 4, y: 4 }, variant: 0 },
@@ -1167,8 +1183,9 @@ export const LEVEL_DATA: Record<
     theme: "winter",
     difficulty: 2,
     startingPawPoints: 550, // Barracks helps - ice sheet hazard speeds enemies
+    heroSpawn: { x: 18, y: 19 },
     specialTower: {
-      pos: { x: 14, y: 17 },
+      pos: { x: 13, y: 16 },
       type: "barracks",
     },
     decorations: [
@@ -1245,12 +1262,23 @@ export const LEVEL_DATA: Record<
     theme: "winter",
     difficulty: 3,
     startingPawPoints: 650, // Dual path + bosses - need maximum coverage
+    heroSpawn: { x: 20, y: 20 },
     dualPath: true,
     secondaryPath: "peak_b",
-    specialTower: {
-      pos: { x: 16, y: 19 },
-      type: "shrine",
-    },
+    specialTowers: [
+      {
+        pos: { x: 15, y: 18 },
+        type: "shrine",
+      },
+      {
+        pos: { x: 15.5, y: 9.5 },
+        type: "chrono_relay",
+      },
+      {
+        pos: { x: 25, y: 9 },
+        type: "beacon",
+      },
+    ],
     decorations: [
       // Grand ice throne centerpiece - the summit crown
       { type: "ice_throne", pos: { x: 10, y: 7 }, variant: 0, size: 2.5 },
@@ -1331,11 +1359,12 @@ export const LEVEL_DATA: Record<
     theme: "volcanic",
     difficulty: 2,
     startingPawPoints: 550, // Volcanic intro - lava geyser hazard
+    heroSpawn: { x: 18, y: 14 },
     decorations: [
       // Lava pools and castles (path: x:-2 to 32, y:10 to 20)
       { type: "lava_pool", pos: { x: 2, y: 16 }, variant: 0, size: 2 },
       { type: "lava_pool", pos: { x: 26, y: 14 }, variant: 1, size: 2 },
-      { type: "dark_barracks", pos: { x: 4, y: 4 }, variant: 0 },
+      { type: "dark_barracks", pos: { x: 3, y: 4 }, variant: 0 },
       { type: "dark_barracks", pos: { x: 22, y: 4 }, variant: 1 },
       { type: "dark_barracks", pos: { x: 14, y: 22 }, variant: 2 },
       // Charred trees around
@@ -1345,7 +1374,7 @@ export const LEVEL_DATA: Record<
       { type: "charred_tree", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "charred_tree", pos: { x: 26, y: 22 }, variant: 1 },
       // Dark thrones and spires
-      { type: "dark_barracks", pos: { x: 10, y: 14 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 9, y: 14 }, variant: 0 },
       { type: "dark_spire", pos: { x: 20, y: 16 }, variant: 1 },
       { type: "dark_spire", pos: { x: 8, y: 8 }, variant: 0 },
       // Fire pits and embers
@@ -1360,11 +1389,13 @@ export const LEVEL_DATA: Record<
       { type: "ember_rock", pos: { x: 22, y: 8 }, variant: 0 },
       { type: "ember_rock", pos: { x: 10, y: 20 }, variant: 1 },
       { type: "fire_crystal", pos: { x: 16, y: 18 }, variant: 0 },
-      { type: "obsidian_pillar", pos: { x: 30, y: 12 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 30, y: 11 }, variant: 0 },
       { type: "volcano_rim", pos: { x: 20, y: 24 }, variant: 0 },
+      { type: "volcano_rim", pos: { x: 2, y: 10 }, variant: 0, size: 1 },
+
       // Demon statues flanking the lava fields
       { type: "demon_statue", pos: { x: 8, y: 8 }, variant: 1 },
-      { type: "demon_statue", pos: { x: 24, y: 20 }, variant: 3 },
+      { type: "demon_statue", pos: { x: 26, y: 20 }, variant: 3 },
     ],
     hazards: [{ type: "lava_geyser", pos: { x: 14, y: 14 }, radius: 2.5 }],
     previewImage: "/images/previews/lava_fields.png",
@@ -1379,16 +1410,23 @@ export const LEVEL_DATA: Record<
     theme: "volcanic",
     difficulty: 3,
     startingPawPoints: 675, // Vault defense - many tough enemies
-    specialTower: {
-      pos: { x: 18, y: 10 },
-      type: "vault",
-      hp: 1000,
-    },
+    heroSpawn: { x: 21, y: 18 },
+    specialTowers: [
+      {
+        pos: { x: 18, y: 9.5 },
+        type: "vault",
+        hp: 1000,
+      },
+      {
+        pos: { x: 9, y: 20.5 },
+        type: "sentinel_nexus",
+      },
+    ],
     decorations: [
       // Dark throne and castles (path: x:10-26, y:-2 to 32)
       { type: "obsidian_castle", pos: { x: 26, y: 2 }, variant: 0, size: 2 },
       { type: "dark_spire", pos: { x: 4, y: 8 }, variant: 0 },
-      { type: "dark_barracks", pos: { x: 24, y: 8 }, variant: 1 },
+      { type: "dark_barracks", pos: { x: 24, y: 6 }, variant: 1 },
       { type: "dark_barracks", pos: { x: 4, y: 20 }, variant: 2 },
       { type: "dark_spire", pos: { x: 26, y: 22 }, variant: 0 },
       // Lava pools
@@ -1407,7 +1445,7 @@ export const LEVEL_DATA: Record<
       // Decorations
       { type: "fire_pit", pos: { x: 10, y: 12 }, variant: 0 },
       { type: "fire_pit", pos: { x: 22, y: 20 }, variant: 1 },
-      { type: "demon_statue", pos: { x: 6, y: 18 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 5, y: 17 }, variant: 1 },
       { type: "demon_statue", pos: { x: 24, y: 14 }, variant: 3 },
       { type: "ember", pos: { x: 16, y: 10 }, variant: 0 },
       { type: "ember", pos: { x: 12, y: 20 }, variant: 1 },
@@ -1434,6 +1472,7 @@ export const LEVEL_DATA: Record<
     theme: "volcanic",
     difficulty: 3,
     startingPawPoints: 750, // Final level - 20 brutal waves require full arsenal
+    heroSpawn: { x: 14, y: 10 },
     dualPath: true,
     secondaryPath: "throne_b",
     specialTower: {
@@ -1443,18 +1482,27 @@ export const LEVEL_DATA: Record<
     hazards: [{ type: "lava_geyser", pos: { x: 18, y: 14 }, radius: 2 }],
     decorations: [
       // Obsidian castle and dark throne center (paths: x:-2 to 32, y:8 to 20)
-      { type: "obsidian_castle", pos: { x: 14, y: 0 }, variant: 0, size: 4 },
-      { type: "dark_throne", pos: { x: 16, y: 2 }, variant: 0 },
+      { type: "obsidian_castle", pos: { x: 15, y: -1 }, variant: 0, size: 4 },
+      { type: "dark_throne", pos: { x: 15, y: 1 }, variant: 0 },
       // Castles and barracks around the map
-      { type: "dark_barracks", pos: { x: 4, y: 6 }, variant: 1 },
+      { type: "dark_barracks", pos: { x: 4, y: 1 }, variant: 1 },
       { type: "dark_barracks", pos: { x: 26, y: 6 }, variant: 2 },
       { type: "dark_barracks", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "dark_barracks", pos: { x: 26, y: 22 }, variant: 1 },
       // Demon statues (diverse hero & troop figures)
       { type: "demon_statue", pos: { x: 7, y: 10 }, variant: 1 },
       { type: "demon_statue", pos: { x: 24, y: 8 }, variant: 4 },
-      { type: "demon_statue", pos: { x: 10, y: 18 }, variant: 7 },
+      { type: "demon_statue", pos: { x: 8, y: 18 }, variant: 7 },
       { type: "demon_statue", pos: { x: 20, y: 16 }, variant: 3 },
+      // Line of status in front of castle
+      { type: "demon_statue", pos: { x: 9, y: 3 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 11, y: 3 }, variant: 2 },
+      { type: "demon_statue", pos: { x: 13, y: 3 }, variant: 3 },
+      { type: "demon_statue", pos: { x: 15, y: 3 }, variant: 4 },
+      { type: "demon_statue", pos: { x: 17, y: 3 }, variant: 5 },
+      { type: "demon_statue", pos: { x: 19, y: 3 }, variant: 6 },
+      { type: "demon_statue", pos: { x: 21, y: 3 }, variant: 7 },
+
       // Lava pools
       { type: "lava_pool", pos: { x: 2, y: 14 }, variant: 0, size: 1 },
       { type: "lava_pool", pos: { x: 27, y: 11.5 }, variant: 1, size: 2 },
@@ -1465,7 +1513,7 @@ export const LEVEL_DATA: Record<
       { type: "fire_pit", pos: { x: 22, y: 4 }, variant: 1 },
       { type: "fire_pit", pos: { x: 16, y: 20 }, variant: 0 },
       // Dark thrones and spires along paths
-      { type: "dark_spire", pos: { x: 8, y: 16 }, variant: 1 },
+      { type: "dark_spire", pos: { x: 8, y: 13 }, variant: 1 },
       { type: "dark_spire", pos: { x: 22, y: 16 }, variant: 2 },
       { type: "dark_spire", pos: { x: 10, y: 4 }, variant: 0 },
       { type: "dark_spire", pos: { x: 20, y: 24 }, variant: 1 },
@@ -1482,7 +1530,7 @@ export const LEVEL_DATA: Record<
       { type: "lava_fall", pos: { x: 2, y: 4 }, variant: 0 },
       { type: "lava_fall", pos: { x: 28, y: 4 }, variant: 1 },
       { type: "skull_throne", pos: { x: 14, y: 26 }, variant: 0 },
-      { type: "obsidian_pillar", pos: { x: 6, y: 14 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 6, y: 13 }, variant: 0 },
       { type: "obsidian_pillar", pos: { x: 24, y: 14 }, variant: 1 },
       { type: "fire_crystal", pos: { x: 16, y: 14 }, variant: 0 },
       { type: "fire_crystal", pos: { x: 12, y: 24 }, variant: 1 },
@@ -1502,22 +1550,25 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 640,
+    heroSpawn: { x: 20, y: 11 },
     dualPath: true,
     secondaryPath: "ivy_crossroads_b",
     specialTowers: [
-      { pos: { x: 11, y: 12 }, type: "beacon" },
-      { pos: { x: 23, y: 18 }, type: "beacon" },
-      { pos: { x: 17, y: 16 }, type: "vault", hp: 850 },
+      { pos: { x: 7.25, y: 19.25 }, type: "chrono_relay" },
+      { pos: { x: 15, y: 8 }, type: "chrono_relay" },
+      { pos: { x: 24, y: 18 }, type: "chrono_relay" },
+      { pos: { x: 17, y: 16 }, type: "sentinel_nexus" },
     ],
     hazards: [
-      { type: "poison_fog", pos: { x: 16, y: 14 }, radius: 1.8 },
-      { type: "quicksand", pos: { x: 23, y: 15 }, radius: 2.1 },
+      { type: "storm_field", pos: { x: 7.25, y: 19.25 } },
+      { type: "maelstrom", pos: { x: 15, y: 8 }, radius: 1.8 },
+      { type: "maelstrom", pos: { x: 24, y: 18 }, radius: 2.1 },
     ],
     decorations: [
-      { type: "war_monument", pos: { x: 15, y: 2 }, variant: 0, size: 2.2 },
-      { type: "statue", pos: { x: 10, y: 10 }, variant: 6 },
-      { type: "statue", pos: { x: 24, y: 20 }, variant: 4 },
-      { type: "statue", pos: { x: 20, y: 6 }, variant: 7 },
+      { type: "war_monument", pos: { x: 15, y: 4 }, variant: 0, size: 1.7 },
+      { type: "statue", pos: { x: 9, y: 10 }, variant: 6 },
+      { type: "statue", pos: { x: 16, y: 20 }, variant: 4 },
+      { type: "statue", pos: { x: 20, y: 3 }, variant: 7 },
       { type: "fountain", pos: { x: 17, y: 16 }, variant: 0 },
       { type: "tree", pos: { x: 4, y: 4 }, variant: 1 },
       { type: "tree", pos: { x: 28, y: 4 }, variant: 2 },
@@ -1541,6 +1592,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 700,
+    heroSpawn: { x: 17, y: 13 },
     dualPath: true,
     secondaryPath: "blight_basin_b",
     specialTowers: [
@@ -1581,21 +1633,22 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 730,
+    heroSpawn: { x: 16, y: 15 },
     dualPath: true,
     secondaryPath: "sunscorch_labyrinth_b",
     specialTowers: [
-      { pos: { x: 8, y: 14 }, type: "vault", hp: 420 },
-      { pos: { x: 25, y: 16 }, type: "vault", hp: 420 },
-      { pos: { x: 16, y: 21 }, type: "beacon" },
-      { pos: { x: 16, y: 9 }, type: "chrono_relay" },
+      { pos: { x: 8, y: 14 }, type: "beacon", hp: 420 },
+      { pos: { x: 21, y: 22 }, type: "sunforge_orrery" },
+      { pos: { x: 15, y: 21 }, type: "chrono_relay" },
+      { pos: { x: 12.5, y: 8 }, type: "sunforge_orrery" },
     ],
     hazards: [
-      { type: "quicksand", pos: { x: 14, y: 15 }, radius: 2.4 },
+      { type: "quicksand", pos: { x: 14, y: 15 }, radius: 2 },
       { type: "quicksand", pos: { x: 23, y: 12 }, radius: 2.2 },
-      { type: "poison_fog", pos: { x: 20, y: 20 }, radius: 1.6 },
+      { type: "quicksand", pos: { x: 18.5, y: 13 }, radius: 2.4 },
     ],
     decorations: [
-      { type: "sun_obelisk", pos: { x: 16, y: 3 }, variant: 0, size: 2 },
+      { type: "sun_obelisk", pos: { x: 16, y: 3 }, variant: 0, size: 1.5 },
       { type: "pyramid", pos: { x: 4, y: 4 }, variant: 0, size: 1.4 },
       { type: "pyramid", pos: { x: 27, y: 6 }, variant: 1, size: 1.6 },
       { type: "obelisk", pos: { x: 11, y: 10 }, variant: 0 },
@@ -1624,6 +1677,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 770,
+    heroSpawn: { x: 19, y: 14 },
     dualPath: true,
     secondaryPath: "whiteout_pass_b",
     specialTowers: [
@@ -1672,6 +1726,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 840,
+    heroSpawn: { x: 16, y: 14 },
     dualPath: true,
     secondaryPath: "ashen_spiral_b",
     specialTowers: [
@@ -1717,20 +1772,26 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 980,
+    heroSpawn: { x: 20, y: 16 },
     allowedTowers: ["cannon"],
     dualPath: true,
     secondaryPath: "cannon_crest_b",
     specialTowers: [
-      { pos: { x: 10, y: 11 }, type: "beacon" },
-      { pos: { x: 23, y: 18 }, type: "beacon" },
-      { pos: { x: 17, y: 15 }, type: "vault", hp: 1000 },
+      { pos: { x: 16, y: 21 }, type: "beacon" },
+      { pos: { x: 14, y: 11 }, type: "chrono_relay" },
+      { pos: { x: 16, y: 18 }, type: "chrono_relay" },
+      { pos: { x: 14, y: 8 }, type: "beacon" },
+      { pos: { x: 14, y: 3.5 }, type: "sentinel_nexus" },
+      { pos: { x: 20.5, y: 5 }, type: "sentinel_nexus" },
+      { pos: { x: 14, y: 5 }, type: "sentinel_nexus" },
+      { pos: { x: 20.5, y: 3.5 }, type: "sentinel_nexus" },
     ],
     hazards: [
       { type: "quicksand", pos: { x: 14, y: 13 }, radius: 1.9 },
       { type: "poison_fog", pos: { x: 25, y: 14 }, radius: 1.6 },
     ],
     decorations: [
-      { type: "war_monument", pos: { x: 16, y: 3 }, variant: 1, size: 2 },
+      { type: "war_monument", pos: { x: 16, y: 2 }, variant: 1, size: 2 },
       { type: "building", pos: { x: 5, y: 8 }, variant: 0 },
       { type: "building", pos: { x: 27, y: 9 }, variant: 1 },
       { type: "tree", pos: { x: 3, y: 4 }, variant: 0 },
@@ -1757,6 +1818,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 920,
+    heroSpawn: { x: 18, y: 12 },
     allowedTowers: ["station", "library", "club"],
     dualPath: true,
     secondaryPath: "triad_keep_b",
@@ -1798,6 +1860,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     levelKind: "challenge",
     startingPawPoints: 880,
+    heroSpawn: { x: 18, y: 13 },
     allowedTowers: ["station"],
     dualPath: true,
     secondaryPath: "frontier_outpost_b",

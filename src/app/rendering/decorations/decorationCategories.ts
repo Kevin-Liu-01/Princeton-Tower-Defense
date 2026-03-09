@@ -37,7 +37,13 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
     case "volcanic":
       return {
         trees: ["charred_tree"],
-        structures: ["obsidian_spike", "fire_pit", "torch", "fire_crystal", "ruins"],
+        structures: [
+          "obsidian_spike",
+          "fire_pit",
+          "torch",
+          "fire_crystal",
+          "ruins",
+        ],
         terrain: ["rock", "lava_pool", "ember_rock", "ember"],
         scattered: ["skeleton", "bones", "skeleton_pile", "sword", "arrow"],
       };
@@ -65,10 +71,10 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           "barrel",
           "bench",
           "cart",
-          "fountain",
           "dock",
           "campfire",
           "ruins",
+          // "fountain",
         ],
         terrain: ["rock", "grass", "flowers", "reeds", "fishing_spot"],
         scattered: [

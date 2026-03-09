@@ -237,12 +237,7 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
     const baseX = Math.floor(spec.pos.x);
     const baseY = Math.floor(spec.pos.y);
 
-    // Block a 3x3 area around special buildings
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = -1; dy <= 1; dy++) {
-        blocked.add(`${baseX + dx},${baseY + dy}`);
-      }
-    }
+    blocked.add(`${baseX},${baseY}`);
   }
 
   return blocked;

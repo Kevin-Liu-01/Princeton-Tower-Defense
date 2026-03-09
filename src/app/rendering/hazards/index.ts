@@ -347,6 +347,110 @@ function drawPoisonFogHazard(
 // LAVA GEYSER HAZARD
 // ============================================================================
 
+interface LavaGeyserLayout {
+  crackAngles: number[];
+  crackLengths: number[];
+  crackJitter: number[];
+  backRocks: { angle: number; offset: number; h: number; w: number; taper: number }[];
+  frontRocks: { angle: number; offset: number; h: number; w: number; taper: number }[];
+  lavaFlows: { angle: number; length: number; width: number; curvature: number }[];
+  secondaryPools: { angle: number; dist: number; size: number }[];
+}
+
+const lavaGeyserLayoutCache = new Map<string, LavaGeyserLayout>();
+
+function getLavaGeyserLayout(pos: Position): LavaGeyserLayout {
+  const cacheKey = `lg:${(pos.x || 0).toFixed(2)}:${(pos.y || 0).toFixed(2)}`;
+  const cached = lavaGeyserLayoutCache.get(cacheKey);
+  if (cached) return cached;
+
+  const seed = (pos.x || 0) * 13.7 + (pos.y || 0) * 29.3;
+
+  const crackAngles: number[] = [];
+  const crackLengths: number[] = [];
+  const crackJitter: number[] = [];
+  for (let i = 0; i < 16; i++) {
+    crackAngles.push((i / 16) * Math.PI * 2 + (seededNoise(seed + i * 3.7) - 0.5) * 0.35);
+    crackLengths.push(0.35 + seededNoise(seed + i * 5.1) * 0.55);
+    crackJitter.push(seededNoise(seed + i * 8.3) - 0.5);
+  }
+
+  const backRocks: LavaGeyserLayout["backRocks"] = [];
+  for (let r = 0; r < 7; r++) {
+    backRocks.push({
+      angle: Math.PI + (r / 7) * Math.PI + (seededNoise(seed + r * 4.1) - 0.5) * 0.2,
+      offset: seededNoise(seed + r * 3.0) * 0.18,
+      h: 14 + seededNoise(seed + r * 6.2) * 18,
+      w: 5 + seededNoise(seed + r * 2.1) * 5,
+      taper: 0.55 + seededNoise(seed + r * 9.3) * 0.2,
+    });
+  }
+
+  const frontRocks: LavaGeyserLayout["frontRocks"] = [];
+  for (let r = 0; r < 7; r++) {
+    frontRocks.push({
+      angle: (r / 7) * Math.PI + (seededNoise(seed + r * 5.5) - 0.5) * 0.15,
+      offset: seededNoise(seed + r * 7.1) * 0.18,
+      h: 10 + seededNoise(seed + r * 4.7) * 14,
+      w: 4 + seededNoise(seed + r * 3.3) * 4,
+      taper: 0.5 + seededNoise(seed + r * 11.1) * 0.25,
+    });
+  }
+
+  const lavaFlows: LavaGeyserLayout["lavaFlows"] = [];
+  for (let f = 0; f < 4; f++) {
+    lavaFlows.push({
+      angle: (f / 4) * Math.PI * 2 + seededNoise(seed + f * 12.7) * 0.6,
+      length: 0.4 + seededNoise(seed + f * 7.9) * 0.5,
+      width: 0.03 + seededNoise(seed + f * 14.3) * 0.04,
+      curvature: (seededNoise(seed + f * 19.1) - 0.5) * 0.4,
+    });
+  }
+
+  const secondaryPools: LavaGeyserLayout["secondaryPools"] = [];
+  for (let p = 0; p < 3; p++) {
+    secondaryPools.push({
+      angle: (p / 3) * Math.PI * 2 + seededNoise(seed + p * 21.3) * 0.8,
+      dist: 0.55 + seededNoise(seed + p * 16.7) * 0.35,
+      size: 0.08 + seededNoise(seed + p * 23.1) * 0.07,
+    });
+  }
+
+  const layout: LavaGeyserLayout = {
+    crackAngles, crackLengths, crackJitter,
+    backRocks, frontRocks, lavaFlows, secondaryPools,
+  };
+  lavaGeyserLayoutCache.set(cacheKey, layout);
+
+  if (lavaGeyserLayoutCache.size > 120) {
+    const oldestKey = lavaGeyserLayoutCache.keys().next().value;
+    if (oldestKey) lavaGeyserLayoutCache.delete(oldestKey);
+  }
+
+  return layout;
+}
+
+interface LavaGeyserCycleState {
+  cycleTime: number;
+  isErupting: boolean;
+  buildUp: boolean;
+  eruptionIntensity: number;
+  dormantGlow: number;
+}
+
+function getLavaGeyserCycleState(seed: number, time: number): LavaGeyserCycleState {
+  const cycleDuration = 5;
+  const phaseOffset = ((seed * 0.037) % cycleDuration + cycleDuration) % cycleDuration;
+  const cycleTime = (time + phaseOffset) % cycleDuration;
+  const isErupting = cycleTime < 1.4;
+  const buildUp = cycleTime > 3.8;
+  const eruptionIntensity = isErupting ? Math.sin((cycleTime / 1.4) * Math.PI) : 0;
+  const dormantGlow = (!isErupting && !buildUp)
+    ? 0.3 + Math.sin(time * 1.5 + seed * 0.1) * 0.1
+    : 0;
+  return { cycleTime, isErupting, buildUp, eruptionIntensity, dormantGlow };
+}
+
 function drawLavaGeyserHazard(
   ctx: CanvasRenderingContext2D,
   sRad: number,
@@ -356,210 +460,621 @@ function drawLavaGeyserHazard(
   cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 13.7 + (pos.y || 0) * 29.3;
-  const cycleTime = time % 5;
-  const isErupting = cycleTime < 1.2;
-  const buildUp = cycleTime > 4.0;
-  const eruptionIntensity = isErupting ? Math.sin((cycleTime / 1.2) * Math.PI) : 0;
-
-  // Stretched isometric ratio for proper volcanic appearance
-  const lavaIsoRatio = ISO_Y_RATIO * 0.95;
-
-  // 1. Scorched earth ring around vent (organic shape)
-  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 1.4);
-  scorchGrad.addColorStop(0, "rgba(60, 30, 15, 0.9)");
-  scorchGrad.addColorStop(0.4, "rgba(40, 20, 10, 0.7)");
-  scorchGrad.addColorStop(0.7, "rgba(30, 15, 8, 0.4)");
-  scorchGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = scorchGrad;
-  drawOrganicBlob(ctx, sRad * 1.4, sRad * 1.4 * lavaIsoRatio, hazSeed, 0.2);
-  ctx.fill();
-
-  // Radial cracks in scorched ground
-  ctx.strokeStyle = "rgba(255, 100, 0, 0.4)";
-  ctx.lineWidth = 2 * cameraZoom;
-  for (let c = 0; c < 12; c++) {
-    const crackAngle = (c / 12) * Math.PI * 2 + Math.sin(hazSeed + c * 2) * 0.2;
-    const crackLen = sRad * (0.4 + Math.sin(c * 3 + hazSeed) * 0.3);
-    ctx.beginPath();
-    ctx.moveTo(
-      Math.cos(crackAngle) * sRad * 0.35,
-      Math.sin(crackAngle) * sRad * 0.35 * lavaIsoRatio
-    );
-    // Jagged crack path
-    const midAngle = crackAngle + Math.sin(hazSeed + c) * 0.15;
-    ctx.quadraticCurveTo(
-      Math.cos(midAngle) * crackLen * 0.6,
-      Math.sin(midAngle) * crackLen * 0.6 * lavaIsoRatio,
-      Math.cos(crackAngle) * crackLen,
-      Math.sin(crackAngle) * crackLen * lavaIsoRatio
-    );
-    ctx.stroke();
-  }
-
-  // 2. Isometric rock vent structure
+  const layout = getLavaGeyserLayout(pos);
+  const cycle = getLavaGeyserCycleState(hazSeed, time);
+  const lavaIso = ISO_Y_RATIO;
   const ventWidth = sRad * 0.8;
 
-  // Back rocks (behind magma)
-  ctx.fillStyle = "#1a1a1a";
-  for (let r = 0; r < 5; r++) {
-    const rockAngle = Math.PI + (r / 5) * Math.PI;
-    const rockOffset = Math.sin(hazSeed + r * 3) * 0.15;
-    const rockX = Math.cos(rockAngle) * ventWidth * (0.5 + rockOffset);
-    const rockY = Math.sin(rockAngle) * ventWidth * (0.3 + rockOffset * 0.5) * lavaIsoRatio;
-    const rockH = (12 + r * 4 + Math.sin(hazSeed + r) * 5) * cameraZoom;
-    const rockW = (6 + Math.sin(hazSeed + r * 2) * 2) * cameraZoom;
+  drawLavaGeyserScorchedEarth(ctx, sRad, lavaIso, hazSeed, cycle, cameraZoom);
+  drawLavaGeyserCracks(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
+  drawLavaGeyserFlows(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
+  drawLavaGeyserSecondaryPools(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
+  drawLavaGeyserBackRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
+  drawLavaGeyserMagmaPool(ctx, ventWidth, lavaIso, hazSeed, time, cycle, cameraZoom);
+  drawLavaGeyserFrontRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
+  drawLavaGeyserEruption(ctx, sRad, ventWidth, lavaIso, time, cycle, cameraZoom);
+  drawLavaGeyserSmoke(ctx, sRad, lavaIso, hazSeed, time, cycle, cameraZoom);
+  drawLavaGeyserEmbers(ctx, sRad, hazSeed, time, cycle, cameraZoom);
+  drawLavaGeyserHeatShimmer(ctx, sRad, lavaIso, time, cycle, cameraZoom);
+}
 
-    ctx.beginPath();
-    ctx.moveTo(rockX - rockW, rockY);
-    ctx.lineTo(rockX - rockW * 0.7, rockY - rockH);
-    ctx.lineTo(rockX + rockW * 0.7, rockY - rockH);
-    ctx.lineTo(rockX + rockW, rockY);
-    ctx.closePath();
-    ctx.fill();
+function drawLavaGeyserScorchedEarth(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  hazSeed: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const glowBoost = cycle.buildUp ? 0.12 : cycle.eruptionIntensity * 0.15;
 
-    // Rock highlight
-    ctx.fillStyle = "#2d2d2d";
-    ctx.beginPath();
-    ctx.moveTo(rockX + rockW * 0.3, rockY - 2 * cameraZoom);
-    ctx.lineTo(rockX + rockW * 0.5, rockY - rockH + 2 * cameraZoom);
-    ctx.lineTo(rockX + rockW * 0.7, rockY - rockH);
-    ctx.lineTo(rockX + rockW, rockY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#1a1a1a";
-  }
-
-  // 3. Magma pool in center (organic shape with proper stretching)
-  const magmaGrad = ctx.createRadialGradient(0, -5 * cameraZoom, 0, 0, -5 * cameraZoom, ventWidth * 0.5);
-  const magmaIntensity = buildUp ? 1.3 : (isErupting ? 1.5 : 1);
-  magmaGrad.addColorStop(0, `rgba(255, 255, ${buildUp ? 200 : 100}, ${magmaIntensity})`);
-  magmaGrad.addColorStop(0.3, "#ff6600");
-  magmaGrad.addColorStop(0.6, "#cc3300");
-  magmaGrad.addColorStop(1, "#661100");
-
-  ctx.save();
-  ctx.translate(0, -5 * cameraZoom);
-  if (buildUp || isErupting) {
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = (20 + eruptionIntensity * 30) * cameraZoom;
-  }
-  ctx.fillStyle = magmaGrad;
-  drawOrganicBlob(ctx, ventWidth * 0.45, ventWidth * 0.25 * lavaIsoRatio, hazSeed + 100, 0.12);
+  // Outer heat stain
+  const heatStain = ctx.createRadialGradient(0, 0, sRad * 0.6, 0, 0, sRad * 1.6);
+  heatStain.addColorStop(0, `rgba(80, 30, 10, ${0.35 + glowBoost})`);
+  heatStain.addColorStop(0.5, `rgba(50, 18, 6, ${0.22 + glowBoost * 0.5})`);
+  heatStain.addColorStop(1, "transparent");
+  ctx.fillStyle = heatStain;
+  drawOrganicBlob(ctx, sRad * 1.55, sRad * 1.45 * lavaIso, hazSeed + 200, 0.24);
   ctx.fill();
-  ctx.restore();
 
-  // Magma surface animation (convection currents)
-  ctx.strokeStyle = "rgba(255, 200, 50, 0.6)";
-  ctx.lineWidth = 2 * cameraZoom;
-  for (let conv = 0; conv < 3; conv++) {
-    const convAngle = time * 0.5 + conv * 2;
-    const convR = ventWidth * 0.2 * (1 + conv * 0.2);
+  // Core scorched earth
+  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.2, 0, 0, sRad * 1.3);
+  scorchGrad.addColorStop(0, `rgba(70, 32, 12, ${0.95 + glowBoost})`);
+  scorchGrad.addColorStop(0.3, "rgba(55, 25, 10, 0.88)");
+  scorchGrad.addColorStop(0.6, "rgba(40, 18, 8, 0.65)");
+  scorchGrad.addColorStop(0.85, "rgba(28, 12, 5, 0.35)");
+  scorchGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = scorchGrad;
+  drawOrganicBlob(ctx, sRad * 1.35, sRad * 1.3 * lavaIso, hazSeed, 0.2);
+  ctx.fill();
+
+  // Charred texture spots
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2 + seededNoise(hazSeed + i * 11) * 0.4;
+    const dist = sRad * (0.5 + seededNoise(hazSeed + i * 7) * 0.5);
+    const sx = Math.cos(angle) * dist;
+    const sy = Math.sin(angle) * dist * lavaIso;
+    const spotR = (4 + seededNoise(hazSeed + i * 13) * 6) * cameraZoom;
+
+    ctx.fillStyle = `rgba(25, 10, 4, ${0.3 + seededNoise(hazSeed + i * 9) * 0.25})`;
+    drawOrganicBlobAt(ctx, sx, sy, spotR, spotR * lavaIso, hazSeed + i * 17, 0.2);
+    ctx.fill();
+  }
+}
+
+function drawLavaGeyserCracks(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  layout: LavaGeyserLayout,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const glowPulse = 0.35 + Math.sin(time * 2.2) * 0.1 +
+    cycle.eruptionIntensity * 0.35 +
+    (cycle.buildUp ? 0.2 : 0) +
+    cycle.dormantGlow * 0.15;
+
+  for (let c = 0; c < layout.crackAngles.length; c++) {
+    const angle = layout.crackAngles[c];
+    const len = sRad * layout.crackLengths[c];
+    const jitter = layout.crackJitter[c];
+
+    // Dark crack line
+    ctx.strokeStyle = `rgba(30, 8, 2, 0.55)`;
+    ctx.lineWidth = 2.5 * cameraZoom;
     ctx.beginPath();
-    ctx.arc(
-      Math.cos(convAngle) * convR * 0.3,
-      -5 * cameraZoom + Math.sin(convAngle) * convR * 0.15 * lavaIsoRatio,
-      convR * 0.3,
-      0, Math.PI * 1.5
+    ctx.moveTo(
+      Math.cos(angle) * sRad * 0.3,
+      Math.sin(angle) * sRad * 0.3 * lavaIso,
+    );
+    const midAngle = angle + jitter * 0.2;
+    ctx.quadraticCurveTo(
+      Math.cos(midAngle) * len * 0.55,
+      Math.sin(midAngle) * len * 0.55 * lavaIso,
+      Math.cos(angle + jitter * 0.08) * len,
+      Math.sin(angle + jitter * 0.08) * len * lavaIso,
     );
     ctx.stroke();
-  }
 
-  // 4. Front rocks (in front of magma)
-  for (let r = 0; r < 5; r++) {
-    const rockAngle = (r / 5) * Math.PI;
-    const rockOffset = Math.sin(hazSeed + r * 5) * 0.15;
-    const rockX = Math.cos(rockAngle) * ventWidth * (0.5 + rockOffset);
-    const rockY = Math.sin(rockAngle) * ventWidth * (0.3 + rockOffset * 0.5) * lavaIsoRatio;
-    const rockH = (10 + (r % 2) * 6 + Math.sin(hazSeed + r * 3) * 4) * cameraZoom;
-    const rockW = (5 + Math.sin(hazSeed + r * 4) * 2) * cameraZoom;
-
-    ctx.fillStyle = "#222";
-    ctx.beginPath();
-    ctx.moveTo(rockX - rockW, rockY);
-    ctx.lineTo(rockX - rockW * 0.6, rockY - rockH);
-    ctx.lineTo(rockX + rockW * 0.6, rockY - rockH);
-    ctx.lineTo(rockX + rockW, rockY);
-    ctx.closePath();
-    ctx.fill();
-
-    // Hot edge glow from magma
-    ctx.strokeStyle = `rgba(255, 100, 0, ${0.3 + eruptionIntensity * 0.4})`;
-    ctx.lineWidth = 2 * cameraZoom;
-    ctx.beginPath();
-    ctx.moveTo(rockX - rockW, rockY);
-    ctx.lineTo(rockX - rockW * 0.6, rockY - rockH);
+    // Inner lava glow
+    ctx.strokeStyle = `rgba(255, 120, 20, ${glowPulse})`;
+    ctx.lineWidth = 1.4 * cameraZoom;
     ctx.stroke();
   }
+}
 
-  // 5. Eruption effects
-  if (isErupting) {
-    const columnHeight = eruptionIntensity * 120 * cameraZoom;
-    const columnGrad = ctx.createLinearGradient(0, 0, 0, -columnHeight);
-    columnGrad.addColorStop(0, "#ffcc00");
-    columnGrad.addColorStop(0.2, "#ff8800");
-    columnGrad.addColorStop(0.5, "#ff4400");
-    columnGrad.addColorStop(0.8, "rgba(255, 68, 0, 0.5)");
-    columnGrad.addColorStop(1, "transparent");
+function drawLavaGeyserFlows(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  layout: LavaGeyserLayout,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const flowPulse = 0.6 + Math.sin(time * 1.8) * 0.15 + cycle.eruptionIntensity * 0.25;
+
+  for (const flow of layout.lavaFlows) {
+    const startR = sRad * 0.32;
+    const endR = sRad * flow.length;
+    const angle = flow.angle;
+    const midAngle = angle + flow.curvature;
+    const flowWidth = sRad * flow.width;
+    const animOffset = Math.sin(time * 1.2 + flow.angle * 3) * 2 * cameraZoom;
+
+    const sx = Math.cos(angle) * startR;
+    const sy = Math.sin(angle) * startR * lavaIso;
+    const midX = Math.cos(midAngle) * (startR + endR) * 0.5;
+    const midY = Math.sin(midAngle) * (startR + endR) * 0.5 * lavaIso + animOffset;
+    const ex = Math.cos(angle + flow.curvature * 0.5) * endR;
+    const ey = Math.sin(angle + flow.curvature * 0.5) * endR * lavaIso;
+
+    // Dark channel beneath
+    ctx.strokeStyle = `rgba(35, 12, 4, 0.6)`;
+    ctx.lineWidth = (flowWidth * 2 + 3) * cameraZoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(midX, midY, ex, ey);
+    ctx.stroke();
+
+    // Bright lava stream
+    const flowGrad = ctx.createLinearGradient(sx, sy, ex, ey);
+    flowGrad.addColorStop(0, `rgba(255, 180, 40, ${flowPulse})`);
+    flowGrad.addColorStop(0.4, `rgba(255, 110, 15, ${flowPulse * 0.9})`);
+    flowGrad.addColorStop(1, `rgba(180, 50, 5, ${flowPulse * 0.5})`);
+    ctx.strokeStyle = flowGrad;
+    ctx.lineWidth = flowWidth * 2 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(midX, midY, ex, ey);
+    ctx.stroke();
+
+    // Hot centerline
+    ctx.strokeStyle = `rgba(255, 240, 140, ${flowPulse * 0.55})`;
+    ctx.lineWidth = flowWidth * 0.7 * cameraZoom;
+    ctx.stroke();
+    ctx.lineCap = "butt";
+  }
+}
+
+function drawLavaGeyserSecondaryPools(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  layout: LavaGeyserLayout,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const poolGlow = 0.7 + Math.sin(time * 1.4) * 0.1 + cycle.eruptionIntensity * 0.2;
+
+  for (const pool of layout.secondaryPools) {
+    const px = Math.cos(pool.angle) * sRad * pool.dist;
+    const py = Math.sin(pool.angle) * sRad * pool.dist * lavaIso;
+    const pr = sRad * pool.size;
 
     ctx.save();
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 30 * cameraZoom;
-    ctx.fillStyle = columnGrad;
-    ctx.beginPath();
-    ctx.moveTo(-15 * cameraZoom * eruptionIntensity, -10 * cameraZoom);
-    ctx.quadraticCurveTo(
-      -5 * cameraZoom + Math.sin(time * 20) * 8 * cameraZoom,
-      -columnHeight * 0.5,
-      0,
-      -columnHeight
-    );
-    ctx.quadraticCurveTo(
-      5 * cameraZoom + Math.sin(time * 20 + 1) * 8 * cameraZoom,
-      -columnHeight * 0.5,
-      15 * cameraZoom * eruptionIntensity,
-      -10 * cameraZoom
-    );
+    ctx.translate(px, py);
+
+    // Dark rim
+    ctx.fillStyle = "rgba(30, 12, 4, 0.7)";
+    drawOrganicBlob(ctx, pr * 1.3, pr * 1.3 * lavaIso, pool.angle * 100, 0.2);
     ctx.fill();
+
+    // Molten pool
+    const poolGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, pr);
+    poolGrad.addColorStop(0, `rgba(255, 200, 60, ${poolGlow})`);
+    poolGrad.addColorStop(0.5, `rgba(255, 120, 20, ${poolGlow * 0.85})`);
+    poolGrad.addColorStop(1, `rgba(160, 40, 5, ${poolGlow * 0.5})`);
+    ctx.fillStyle = poolGrad;
+    drawOrganicBlob(ctx, pr, pr * lavaIso, pool.angle * 50, 0.15);
+    ctx.fill();
+
+    // Bubble
+    const bubblePhase = (time * 1.5 + pool.angle) % 1.8;
+    if (bubblePhase < 0.4) {
+      const bSize = pr * 0.3 * Math.sin((bubblePhase / 0.4) * Math.PI);
+      ctx.fillStyle = `rgba(255, 240, 150, ${0.6 * (1 - bubblePhase / 0.4)})`;
+      ctx.beginPath();
+      ctx.arc(pr * 0.2, -pr * 0.1, bSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore();
+  }
+}
 
-    // Lava bombs
-    for (let bomb = 0; bomb < 8; bomb++) {
-      const bombPhase = (cycleTime + bomb * 0.1) % 1.2;
-      const bombAngle = (bomb / 8) * Math.PI * 2 + time;
-      const bombDist = bombPhase * sRad * 1.5;
-      const bombHeight = Math.sin(bombPhase * Math.PI) * 80 * cameraZoom;
-      const bombX = Math.cos(bombAngle) * bombDist;
-      const bombY = Math.sin(bombAngle) * bombDist * lavaIsoRatio - bombHeight;
-      const bombSize = (6 - bombPhase * 3) * cameraZoom;
+function drawLavaGeyserVentRock(
+  ctx: CanvasRenderingContext2D,
+  rockX: number,
+  rockY: number,
+  rockW: number,
+  rockH: number,
+  taper: number,
+  glowAlpha: number,
+  cameraZoom: number,
+  isFront: boolean,
+): void {
+  const baseColor = isFront ? 28 : 22;
+  const highlightColor = isFront ? 42 : 36;
 
-      if (bombPhase < 1) {
-        ctx.save();
-        ctx.shadowColor = "#ff6600";
-        ctx.shadowBlur = 10 * cameraZoom;
-        const bombGrad = ctx.createRadialGradient(bombX, bombY, 0, bombX, bombY, bombSize);
-        bombGrad.addColorStop(0, "#ffcc00");
-        bombGrad.addColorStop(0.5, "#ff6600");
-        bombGrad.addColorStop(1, "#cc3300");
-        ctx.fillStyle = bombGrad;
-        ctx.beginPath();
-        ctx.arc(bombX, bombY, bombSize, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+  // Main body
+  ctx.fillStyle = `rgb(${baseColor}, ${baseColor - 4}, ${baseColor - 8})`;
+  ctx.beginPath();
+  ctx.moveTo(rockX - rockW, rockY);
+  ctx.lineTo(rockX - rockW * taper, rockY - rockH);
+  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
+  ctx.lineTo(rockX + rockW, rockY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lit face (right side highlight)
+  ctx.fillStyle = `rgb(${highlightColor}, ${highlightColor - 6}, ${highlightColor - 12})`;
+  ctx.beginPath();
+  ctx.moveTo(rockX + rockW * 0.2, rockY - 2 * cameraZoom);
+  ctx.lineTo(rockX + rockW * taper * 0.5, rockY - rockH + 1 * cameraZoom);
+  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
+  ctx.lineTo(rockX + rockW, rockY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Inner edge glow from magma heat
+  ctx.strokeStyle = `rgba(255, 80, 10, ${glowAlpha})`;
+  ctx.lineWidth = 1.8 * cameraZoom;
+  ctx.beginPath();
+  ctx.moveTo(rockX - rockW, rockY);
+  ctx.lineTo(rockX - rockW * taper, rockY - rockH);
+  ctx.stroke();
+
+  // Top edge hot rim
+  ctx.strokeStyle = `rgba(255, 140, 40, ${glowAlpha * 0.6})`;
+  ctx.lineWidth = 1.2 * cameraZoom;
+  ctx.beginPath();
+  ctx.moveTo(rockX - rockW * taper, rockY - rockH);
+  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
+  ctx.stroke();
+}
+
+function drawLavaGeyserBackRocks(
+  ctx: CanvasRenderingContext2D,
+  ventWidth: number,
+  lavaIso: number,
+  layout: LavaGeyserLayout,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const glowAlpha = 0.25 + cycle.eruptionIntensity * 0.4 + (cycle.buildUp ? 0.15 : 0) + cycle.dormantGlow * 0.1;
+
+  for (const rock of layout.backRocks) {
+    const rx = Math.cos(rock.angle) * ventWidth * (0.5 + rock.offset);
+    const ry = Math.sin(rock.angle) * ventWidth * (0.3 + rock.offset * 0.5) * lavaIso;
+    drawLavaGeyserVentRock(
+      ctx, rx, ry,
+      rock.w * cameraZoom, rock.h * cameraZoom,
+      rock.taper, glowAlpha, cameraZoom, false,
+    );
+  }
+}
+
+function drawLavaGeyserMagmaPool(
+  ctx: CanvasRenderingContext2D,
+  ventWidth: number,
+  lavaIso: number,
+  hazSeed: number,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const poolY = -6 * cameraZoom;
+  const poolRx = ventWidth * 0.48;
+  const poolRy = ventWidth * 0.27 * lavaIso;
+  const intensity = cycle.buildUp ? 1.35 : (cycle.isErupting ? 1.5 : 1);
+  const whiteHot = cycle.buildUp ? 220 : (cycle.isErupting ? 250 : 120);
+
+  ctx.save();
+  ctx.translate(0, poolY);
+
+  // Depth shadow beneath magma
+  ctx.fillStyle = "rgba(20, 5, 0, 0.6)";
+  drawOrganicBlobAt(ctx, 0, 4 * cameraZoom, poolRx * 1.05, poolRy * 0.9, hazSeed + 110, 0.08);
+  ctx.fill();
+
+  // Main magma body
+  if (cycle.buildUp || cycle.isErupting) {
+    ctx.shadowColor = "#ff4400";
+    ctx.shadowBlur = (22 + cycle.eruptionIntensity * 35) * cameraZoom;
+  }
+  const magmaGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, poolRx);
+  magmaGrad.addColorStop(0, `rgba(255, 255, ${whiteHot}, ${intensity})`);
+  magmaGrad.addColorStop(0.25, `rgba(255, 180, 40, ${intensity * 0.95})`);
+  magmaGrad.addColorStop(0.55, "#ee5500");
+  magmaGrad.addColorStop(0.8, "#aa2800");
+  magmaGrad.addColorStop(1, "#661100");
+  ctx.fillStyle = magmaGrad;
+  drawOrganicBlob(ctx, poolRx, poolRy, hazSeed + 100, 0.1);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Cooling crust patches that drift
+  for (let crust = 0; crust < 5; crust++) {
+    const crustAngle = time * 0.25 + crust * 1.26 + hazSeed * 0.01;
+    const crustDist = poolRx * (0.2 + crust * 0.1);
+    const cx = Math.cos(crustAngle) * crustDist * 0.7;
+    const cy = Math.sin(crustAngle) * crustDist * 0.35 * lavaIso;
+    const crustSize = (3 + seededNoise(hazSeed + crust * 5) * 4) * cameraZoom;
+
+    ctx.fillStyle = `rgba(50, 20, 8, ${0.35 + Math.sin(time + crust) * 0.1})`;
+    drawOrganicBlobAt(ctx, cx, cy, crustSize, crustSize * lavaIso, hazSeed + crust * 19, 0.25);
+    ctx.fill();
+  }
+
+  // Convection current lines
+  ctx.lineWidth = 1.5 * cameraZoom;
+  for (let conv = 0; conv < 4; conv++) {
+    const convAngle = time * 0.4 + conv * 1.57;
+    const convR = poolRx * (0.15 + conv * 0.08);
+    const convAlpha = 0.45 + Math.sin(time * 2 + conv) * 0.15;
+    ctx.strokeStyle = `rgba(255, 210, 70, ${convAlpha})`;
+    ctx.beginPath();
+    ctx.arc(
+      Math.cos(convAngle) * convR * 0.35,
+      Math.sin(convAngle) * convR * 0.18 * lavaIso,
+      convR * 0.28,
+      0, Math.PI * 1.4,
+    );
+    ctx.stroke();
+  }
+
+  // Magma bubbles
+  for (let b = 0; b < 4; b++) {
+    const bPhase = (time * 2.0 + b * 0.55 + hazSeed * 0.01) % 1.2;
+    if (bPhase < 0.5) {
+      const bProgress = bPhase / 0.5;
+      const bAngle = b * 1.6 + hazSeed * 0.05;
+      const bx = Math.cos(bAngle) * poolRx * 0.35;
+      const by = Math.sin(bAngle) * poolRy * 0.35;
+      const bSize = (2.5 + b) * cameraZoom * Math.sin(bProgress * Math.PI);
+      ctx.fillStyle = `rgba(255, 255, 160, ${0.65 * (1 - bProgress)})`;
+      ctx.beginPath();
+      ctx.arc(bx, by - bProgress * 4 * cameraZoom, bSize, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
-  // 6. Ambient embers
-  for (let ember = 0; ember < 6; ember++) {
-    const emberPhase = (time * 0.7 + ember * 0.4) % 2;
-    const emberX = Math.sin(ember * 2.3 + time * 0.5) * sRad * 0.4;
-    const emberY = -emberPhase * 40 * cameraZoom;
-    const emberSize = (2 + Math.sin(ember)) * cameraZoom * (1 - emberPhase / 2);
+  ctx.restore();
+}
 
-    ctx.fillStyle = `rgba(255, ${150 + ember * 10}, 0, ${0.8 * (1 - emberPhase / 2)})`;
+function drawLavaGeyserFrontRocks(
+  ctx: CanvasRenderingContext2D,
+  ventWidth: number,
+  lavaIso: number,
+  layout: LavaGeyserLayout,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const glowAlpha = 0.3 + cycle.eruptionIntensity * 0.45 + (cycle.buildUp ? 0.2 : 0) + cycle.dormantGlow * 0.15;
+
+  for (const rock of layout.frontRocks) {
+    const rx = Math.cos(rock.angle) * ventWidth * (0.5 + rock.offset);
+    const ry = Math.sin(rock.angle) * ventWidth * (0.3 + rock.offset * 0.5) * lavaIso;
+    drawLavaGeyserVentRock(
+      ctx, rx, ry,
+      rock.w * cameraZoom, rock.h * cameraZoom,
+      rock.taper, glowAlpha, cameraZoom, true,
+    );
+  }
+}
+
+function drawLavaGeyserEruption(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  ventWidth: number,
+  lavaIso: number,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  // Build-up ground pulse
+  if (cycle.buildUp) {
+    const pulsePhase = ((cycle.cycleTime - 3.8) / 1.2);
+    const pulseAlpha = 0.08 + pulsePhase * 0.12;
+    const pulseRx = sRad * (1 + pulsePhase * 0.15);
+    ctx.fillStyle = `rgba(255, 100, 20, ${pulseAlpha})`;
+    drawOrganicBlob(ctx, pulseRx, pulseRx * lavaIso, 307, 0.15);
+    ctx.fill();
+  }
+
+  if (!cycle.isErupting) return;
+
+  const ei = cycle.eruptionIntensity;
+  const columnHeight = ei * 140 * cameraZoom;
+  const columnBaseWidth = 18 * cameraZoom * ei;
+
+  // Eruption glow on ground
+  ctx.save();
+  ctx.fillStyle = `rgba(255, 140, 30, ${ei * 0.2})`;
+  drawOrganicBlob(ctx, sRad * 1.2, sRad * 1.2 * lavaIso, 419, 0.12);
+  ctx.fill();
+
+  // Main lava column (wider, more organic)
+  ctx.shadowColor = "#ff4400";
+  ctx.shadowBlur = 35 * cameraZoom;
+  const columnGrad = ctx.createLinearGradient(0, -8 * cameraZoom, 0, -columnHeight);
+  columnGrad.addColorStop(0, "rgba(255, 240, 120, 1)");
+  columnGrad.addColorStop(0.12, "#ffaa00");
+  columnGrad.addColorStop(0.3, "#ff6600");
+  columnGrad.addColorStop(0.55, "#ee3300");
+  columnGrad.addColorStop(0.8, "rgba(200, 40, 0, 0.45)");
+  columnGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = columnGrad;
+
+  const wobble1 = Math.sin(time * 18) * 6 * cameraZoom;
+  const wobble2 = Math.sin(time * 18 + 1.5) * 6 * cameraZoom;
+  const wobble3 = Math.sin(time * 22 + 0.7) * 4 * cameraZoom;
+
+  ctx.beginPath();
+  ctx.moveTo(-columnBaseWidth, -8 * cameraZoom);
+  ctx.bezierCurveTo(
+    -columnBaseWidth * 0.8 + wobble1, -columnHeight * 0.3,
+    -columnBaseWidth * 0.3 + wobble3, -columnHeight * 0.65,
+    wobble1 * 0.3, -columnHeight,
+  );
+  ctx.bezierCurveTo(
+    columnBaseWidth * 0.3 + wobble2, -columnHeight * 0.65,
+    columnBaseWidth * 0.8 + wobble2, -columnHeight * 0.3,
+    columnBaseWidth, -8 * cameraZoom,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Inner bright core of column
+  ctx.shadowBlur = 0;
+  const coreGrad = ctx.createLinearGradient(0, -8 * cameraZoom, 0, -columnHeight * 0.7);
+  coreGrad.addColorStop(0, "rgba(255, 255, 200, 0.8)");
+  coreGrad.addColorStop(0.3, "rgba(255, 220, 100, 0.5)");
+  coreGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.moveTo(-columnBaseWidth * 0.35, -8 * cameraZoom);
+  ctx.quadraticCurveTo(
+    wobble3 * 0.3, -columnHeight * 0.4,
+    wobble1 * 0.15, -columnHeight * 0.7,
+  );
+  ctx.quadraticCurveTo(
+    wobble2 * 0.3, -columnHeight * 0.4,
+    columnBaseWidth * 0.35, -8 * cameraZoom,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Lava bombs with trails
+  for (let bomb = 0; bomb < 12; bomb++) {
+    const bombPhase = (cycle.cycleTime + bomb * 0.09) % 1.4;
+    if (bombPhase >= 1.2) continue;
+    const bombAngle = (bomb / 12) * Math.PI * 2 + time * 0.5 + bomb * 0.37;
+    const bombDist = bombPhase * sRad * 1.6;
+    const bombGravity = bombPhase * bombPhase * 50 * cameraZoom;
+    const bombHeight = Math.sin(bombPhase / 1.2 * Math.PI) * 95 * cameraZoom - bombGravity * 0.3;
+    const bombX = Math.cos(bombAngle) * bombDist;
+    const bombY = Math.sin(bombAngle) * bombDist * lavaIso - bombHeight;
+    const bombSize = (5.5 - bombPhase * 2.5) * cameraZoom;
+    const bombAlpha = 1 - (bombPhase / 1.2);
+
+    // Bomb trail
+    ctx.strokeStyle = `rgba(255, 140, 20, ${bombAlpha * 0.35})`;
+    ctx.lineWidth = bombSize * 0.6;
+    ctx.beginPath();
+    const prevPhase = Math.max(0, bombPhase - 0.08);
+    const prevDist = prevPhase * sRad * 1.6;
+    const prevHeight = Math.sin(prevPhase / 1.2 * Math.PI) * 95 * cameraZoom - prevPhase * prevPhase * 50 * cameraZoom * 0.3;
+    ctx.moveTo(
+      Math.cos(bombAngle) * prevDist,
+      Math.sin(bombAngle) * prevDist * lavaIso - prevHeight,
+    );
+    ctx.lineTo(bombX, bombY);
+    ctx.stroke();
+
+    // Bomb body
+    ctx.save();
+    ctx.shadowColor = "#ff6600";
+    ctx.shadowBlur = 8 * cameraZoom;
+    const bGrad = ctx.createRadialGradient(bombX, bombY, 0, bombX, bombY, bombSize);
+    bGrad.addColorStop(0, `rgba(255, 240, 120, ${bombAlpha})`);
+    bGrad.addColorStop(0.4, `rgba(255, 140, 20, ${bombAlpha * 0.9})`);
+    bGrad.addColorStop(1, `rgba(180, 40, 0, ${bombAlpha * 0.5})`);
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.arc(bombX, bombY, bombSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Sparks shower at eruption peak
+  if (ei > 0.4) {
+    for (let spark = 0; spark < 16; spark++) {
+      const sparkPhase = (cycle.cycleTime * 3 + spark * 0.17) % 1;
+      const sparkAngle = spark * 0.94 + time * 8;
+      const sparkDist = sparkPhase * sRad * 0.9;
+      const sparkHeight = (1 - sparkPhase) * 60 * cameraZoom * ei + 10 * cameraZoom;
+      const sx = Math.cos(sparkAngle) * sparkDist;
+      const sy = Math.sin(sparkAngle) * sparkDist * lavaIso - sparkHeight;
+      const sparkSize = (1.2 + (spark % 3) * 0.4) * cameraZoom * (1 - sparkPhase);
+
+      ctx.fillStyle = `rgba(255, ${200 + spark * 3}, ${80 + spark * 8}, ${(1 - sparkPhase) * ei * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawLavaGeyserSmoke(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  hazSeed: number,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const smokeCount = cycle.isErupting ? 8 : 4;
+  for (let s = 0; s < smokeCount; s++) {
+    const smokePhase = (time * 0.4 + s * 0.45 + seededNoise(hazSeed + s * 3) * 2) % 3.5;
+    const smokeAngle = s * 1.1 + hazSeed * 0.02;
+    const driftX = Math.sin(time * 0.3 + s) * sRad * 0.15;
+    const smokeX = Math.cos(smokeAngle) * sRad * 0.12 + driftX;
+    const smokeY = -smokePhase * 45 * cameraZoom - 10 * cameraZoom;
+    const smokeSize = (4 + smokePhase * 6 + s * 1.5) * cameraZoom;
+    const smokeAlpha = (0.22 + cycle.eruptionIntensity * 0.15) * (1 - smokePhase / 3.5);
+
+    const smokeGrad = ctx.createRadialGradient(smokeX, smokeY, 0, smokeX, smokeY, smokeSize);
+    smokeGrad.addColorStop(0, `rgba(60, 48, 38, ${smokeAlpha})`);
+    smokeGrad.addColorStop(0.6, `rgba(45, 35, 28, ${smokeAlpha * 0.6})`);
+    smokeGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = smokeGrad;
+    drawOrganicBlobAt(ctx, smokeX, smokeY, smokeSize, smokeSize * lavaIso, hazSeed + s * 31.7, 0.18);
+    ctx.fill();
+  }
+}
+
+function drawLavaGeyserEmbers(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  hazSeed: number,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const emberCount = cycle.isErupting ? 14 : 8;
+  for (let ember = 0; ember < emberCount; ember++) {
+    const emberSeed = hazSeed + ember * 4.7;
+    const emberPhase = (time * 0.6 + ember * 0.32 + seededNoise(emberSeed) * 2) % 2.5;
+    const emberAngle = ember * 0.81 + hazSeed * 0.01;
+    const drift = Math.sin(time * 0.8 + ember * 1.3) * sRad * 0.12;
+    const emberX = Math.cos(emberAngle) * sRad * 0.2 + drift;
+    const emberY = -emberPhase * 50 * cameraZoom - 5 * cameraZoom;
+    const emberSize = (1.5 + (ember % 3) * 0.7) * cameraZoom * (1 - emberPhase / 2.5);
+    const fadeAlpha = (1 - emberPhase / 2.5);
+
+    const r = 255;
+    const g = 140 + Math.floor(seededNoise(emberSeed + 1) * 80);
+    const b = Math.floor(seededNoise(emberSeed + 2) * 40);
+
+    ctx.save();
+    ctx.shadowColor = `rgba(${r}, ${g}, 0, 0.7)`;
+    ctx.shadowBlur = 5 * cameraZoom;
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${fadeAlpha * 0.85})`;
     ctx.beginPath();
     ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawLavaGeyserHeatShimmer(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  lavaIso: number,
+  time: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const shimmerAlpha = 0.06 + (cycle.buildUp ? 0.08 : 0) + cycle.eruptionIntensity * 0.1 + cycle.dormantGlow * 0.04;
+
+  for (let ring = 0; ring < 3; ring++) {
+    const ringPhase = (time * 0.6 + ring * 0.8) % 2.4;
+    const ringProgress = ringPhase / 2.4;
+    const ringR = sRad * (0.5 + ringProgress * 0.7);
+    const ringAlpha = shimmerAlpha * (1 - ringProgress);
+
+    ctx.strokeStyle = `rgba(255, 160, 50, ${ringAlpha})`;
+    ctx.lineWidth = (2.5 - ringProgress * 1.5) * cameraZoom;
+    drawOrganicBlob(ctx, ringR, ringR * lavaIso, ring * 41.3, 0.1);
+    ctx.stroke();
   }
 }
 
