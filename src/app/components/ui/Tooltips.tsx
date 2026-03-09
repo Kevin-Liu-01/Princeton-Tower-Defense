@@ -30,6 +30,8 @@ import {
   Diamond,
   Fence,
   Skull,
+  Crosshair,
+  Rocket,
 } from "lucide-react";
 import type { Tower, TowerType, Position, SpellType } from "../../types";
 import { TOWER_DATA } from "../../constants";
@@ -440,6 +442,56 @@ export const TargetingSpellIndicator: React.FC<{ spellType: SpellType }> = ({ sp
         {config.icon}
         <span className={config.color}>{config.label}</span>
         <Target size={14} className="text-stone-400" />
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// MISSILE BATTERY TARGETING INDICATOR
+// =============================================================================
+
+export const MissileTargetingIndicator: React.FC = () => {
+  return (
+    <div
+      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
+      style={{
+        zIndex: 150,
+        background: "linear-gradient(135deg, rgba(120,55,0,0.94), rgba(60,28,0,0.9))",
+        border: "1.5px solid rgba(255,140,0,0.6)",
+        boxShadow: "0 0 24px rgba(255,100,0,0.35), inset 0 0 12px rgba(255,140,0,0.08)",
+      }}
+    >
+      <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
+        <Rocket size={16} className="text-orange-400" />
+        <span className="text-orange-100">Select Strike Zone</span>
+        <span className="text-orange-400/70 text-[10px] font-medium ml-1">Click to confirm target</span>
+        <Crosshair size={14} className="text-orange-500/60" />
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// SENTINEL NEXUS TARGETING INDICATOR
+// =============================================================================
+
+export const SentinelTargetingIndicator: React.FC = () => {
+  return (
+    <div
+      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
+      style={{
+        zIndex: 150,
+        background: "linear-gradient(135deg, rgba(100,10,30,0.94), rgba(55,5,15,0.9))",
+        border: "1.5px solid rgba(251,113,133,0.6)",
+        boxShadow: "0 0 24px rgba(244,63,94,0.35), inset 0 0 12px rgba(251,113,133,0.08)",
+      }}
+    >
+      <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
+        <Target size={16} className="text-rose-400" />
+        <span className="text-rose-100">Lock Sentinel Strike Point</span>
+        <span className="text-rose-400/70 text-[10px] font-medium ml-1">Click to set coordinates</span>
+        <Crosshair size={14} className="text-rose-500/60" />
       </div>
     </div>
   );

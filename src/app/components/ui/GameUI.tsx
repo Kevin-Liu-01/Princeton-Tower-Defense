@@ -25,6 +25,8 @@ export {
   BuildTowerTooltip,
   PlacingTroopIndicator,
   TargetingSpellIndicator,
+  MissileTargetingIndicator,
+  SentinelTargetingIndicator,
   SpecialBuildingTooltip,
   LandmarkTooltip,
   HazardTooltip,

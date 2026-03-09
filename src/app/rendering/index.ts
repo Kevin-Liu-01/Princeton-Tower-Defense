@@ -2,6 +2,7 @@ import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
 import { drawOrganicBlobAt } from "./helpers";
+import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 
 // Performance utilities - critical for Firefox
 export {
@@ -3378,68 +3379,25 @@ export function renderEffect(
 }
 
 // ============================================================================
-// MISSILE TARGET RETICLE
+// MISSILE TARGET RETICLE — delegates to centralized reticle system
 // ============================================================================
+export { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
+
 export function renderMissileTargetReticle(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,
   zoom: number,
   timeSeconds: number
 ): void {
-  const pulse = 0.6 + Math.sin(timeSeconds * 3) * 0.4;
-  const rotAngle = timeSeconds * 0.8;
-  const outerRadius = 48 * zoom;
-  const innerRadius = 14 * zoom;
-
-  ctx.save();
-  ctx.translate(screenPos.x, screenPos.y);
-
-  // Everything inside isometric scale
-  ctx.save();
-  ctx.scale(1, ISO_Y_RATIO);
-
-  // Outer pulsing ring
-  ctx.strokeStyle = `rgba(255, 80, 0, ${0.35 + pulse * 0.25})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([6 * zoom, 4 * zoom]);
-  ctx.lineDashOffset = -timeSeconds * 40;
-  ctx.beginPath();
-  ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Inner filled glow
-  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, innerRadius * 2);
-  glow.addColorStop(0, `rgba(255, 100, 0, ${0.25 * pulse})`);
-  glow.addColorStop(1, "rgba(255, 60, 0, 0)");
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(0, 0, innerRadius * 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Rotating crosshair lines (isometric-correct)
-  ctx.rotate(rotAngle);
-  ctx.strokeStyle = `rgba(255, 140, 0, ${0.5 + pulse * 0.3})`;
-  ctx.lineWidth = 1.5 * zoom;
-  for (let i = 0; i < 4; i++) {
-    const a = (i * Math.PI) / 2;
-    const cos = Math.cos(a);
-    const sin = Math.sin(a);
-    ctx.beginPath();
-    ctx.moveTo(cos * innerRadius, sin * innerRadius);
-    ctx.lineTo(cos * outerRadius * 0.7, sin * outerRadius * 0.7);
-    ctx.stroke();
-  }
-
-  // Center dot
-  ctx.fillStyle = `rgba(255, 200, 100, ${0.7 + pulse * 0.3})`;
-  ctx.beginPath();
-  ctx.arc(0, 0, 2.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-
-  ctx.restore();
+  renderTargetingReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom,
+    time: timeSeconds,
+    color: RETICLE_COLORS.orange,
+    glowColor: { r: 255, g: 80, b: 0 },
+    radius: 48,
+  });
 }
 
 // Particle rendering — delegated to dedicated particles module

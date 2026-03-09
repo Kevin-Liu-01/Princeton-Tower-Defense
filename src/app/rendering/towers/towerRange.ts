@@ -9,6 +9,7 @@ import {
   darkenColor,
 } from "../../utils";
 import { drawIsometricPrism, drawGroundTransition } from "./towerHelpers";
+import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,
@@ -19,7 +20,6 @@ export function renderStationRange(
   cameraOffset?: Position,
   cameraZoom?: number,
 ) {
-  // Only show spawn range when station is hovered or selected
   if (!tower.isHovered && !tower.selected) return;
 
   const baseRange = tower.spawnRange || 180;
@@ -35,38 +35,16 @@ export function renderStationRange(
     cameraOffset,
     cameraZoom,
   );
-  const zoom = cameraZoom || 1;
 
-  // Use cyan tint when boosted by beacon, otherwise orange
-  ctx.strokeStyle = isBoosted
-    ? tower.isHovered
-      ? "rgba(0, 229, 255, 0.5)"
-      : "rgba(0, 229, 255, 0.7)"
-    : tower.isHovered
-      ? "rgba(255, 180, 100, 0.4)"
-      : "rgba(255, 180, 100, 0.6)";
-  ctx.fillStyle = isBoosted
-    ? tower.isHovered
-      ? "rgba(0, 229, 255, 0.08)"
-      : "rgba(0, 229, 255, 0.15)"
-    : tower.isHovered
-      ? "rgba(255, 180, 100, 0.08)"
-      : "rgba(255, 180, 100, 0.15)";
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([8 * zoom, 4 * zoom]);
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y,
-    range * zoom * 0.7,
-    range * zoom * 0.35,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.stroke();
-  ctx.setLineDash([]);
+  renderRangeReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    range,
+    zoom: cameraZoom || 1,
+    state: tower.isHovered ? "hovered" : "normal",
+    color: isBoosted ? RETICLE_COLORS.cyan : RETICLE_COLORS.orange,
+    dashed: true,
+  });
 }
 
 export function renderTowerRange(
@@ -89,7 +67,6 @@ export function renderTowerRange(
     cameraOffset,
     cameraZoom,
   );
-  const zoom = cameraZoom || 1;
 
   let range = tData.range;
   if (tower.level === 2) range *= 1.15;
@@ -97,24 +74,19 @@ export function renderTowerRange(
     if (tower.type === "library" && tower.upgrade === "B") range *= 1.5;
     else range *= 1.25;
   }
-  // Level 4 uses the range from TOWER_STATS upgrade paths
   if (tower.level >= 4 && tower.upgrade) {
     const towerStats = TOWER_STATS[tower.type];
     const upgradeRange = towerStats?.upgrades?.[tower.upgrade]?.stats?.range;
     if (upgradeRange !== undefined) {
       range = upgradeRange;
     } else {
-      // Fallback: 1.5x base range if no specific range defined
       range = tData.range * 1.5;
     }
   }
-  // Apply external range buff (from beacons etc)
   range *= tower.rangeBoost || 1;
 
-  // Check for range buff
   const hasRangeBuff = (tower.rangeBoost || 1) > 1;
 
-  // Calculate range debuff from active 'blind' debuffs
   let rangeMod = 1.0;
   let hasRangeDebuff = false;
   const now = Date.now();
@@ -127,48 +99,23 @@ export function renderTowerRange(
       }
     }
   }
-  // Apply range debuff
   range *= rangeMod;
 
-  // Use different colors based on buff/debuff/hover state
-  if (hasRangeDebuff) {
-    // Purple/violet color when range is debuffed (blinded)
-    if (tower.isHovered) {
-      ctx.strokeStyle = "rgba(160, 100, 200, 0.4)";
-      ctx.fillStyle = "rgba(160, 100, 200, 0.08)";
-    } else {
-      ctx.strokeStyle = "rgba(160, 100, 200, 0.6)";
-      ctx.fillStyle = "rgba(160, 100, 200, 0.15)";
-    }
-  } else if (hasRangeBuff) {
-    // Cyan/teal color when range is buffed (from beacons etc)
-    if (tower.isHovered) {
-      ctx.strokeStyle = "rgba(0, 230, 200, 0.4)";
-      ctx.fillStyle = "rgba(0, 230, 200, 0.08)";
-    } else {
-      ctx.strokeStyle = "rgba(0, 230, 200, 0.6)";
-      ctx.fillStyle = "rgba(0, 230, 200, 0.15)";
-    }
-  } else if (tower.isHovered) {
-    ctx.strokeStyle = "rgba(100, 200, 255, 0.3)";
-    ctx.fillStyle = "rgba(100, 200, 255, 0.05)";
-  } else {
-    ctx.strokeStyle = "rgba(100, 200, 255, 0.5)";
-    ctx.fillStyle = "rgba(100, 200, 255, 0.1)";
-  }
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y,
-    range * zoom * 0.7,
-    range * zoom * 0.35,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.stroke();
+  const state = hasRangeDebuff
+    ? "debuffed" as const
+    : hasRangeBuff
+      ? "buffed" as const
+      : tower.isHovered
+        ? "hovered" as const
+        : "normal" as const;
+
+  renderRangeReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    range,
+    zoom: cameraZoom || 1,
+    state,
+  });
 }
 // ============================================================================
 // TOWER PREVIEW
@@ -352,43 +299,31 @@ export function renderTowerPreview(
   // Range preview - show level 1 base range when placing
   const tData = TOWER_DATA[dragging.type];
   if (tData.range > 0) {
-    ctx.strokeStyle = isValid
-      ? "rgba(100, 200, 255, 0.6)"
-      : "rgba(255, 100, 100, 0.6)";
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([8 * zoom, 6 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y,
-      tData.range * zoom * 0.7,
-      tData.range * zoom * 0.35,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
+    renderRangeReticle(ctx, {
+      x: screenPos.x,
+      y: screenPos.y,
+      range: tData.range,
+      zoom,
+      state: "preview",
+      color: isValid ? RETICLE_COLORS.blue : RETICLE_COLORS.red,
+      fillAlpha: 0,
+      strokeAlpha: 0.6,
+      dashed: true,
+    });
   }
 
   if (dragging.type === "station" && tData.spawnRange) {
-    ctx.strokeStyle = isValid
-      ? "rgba(255, 200, 100, 0.5)"
-      : "rgba(255, 100, 100, 0.5)";
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([6 * zoom, 4 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y,
-      tData.spawnRange * zoom * 0.7,
-      tData.spawnRange * zoom * 0.35,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
+    renderRangeReticle(ctx, {
+      x: screenPos.x,
+      y: screenPos.y,
+      range: tData.spawnRange,
+      zoom,
+      state: "preview",
+      color: isValid ? RETICLE_COLORS.gold : RETICLE_COLORS.red,
+      fillAlpha: 0,
+      strokeAlpha: 0.5,
+      dashed: true,
+    });
   }
 }
 

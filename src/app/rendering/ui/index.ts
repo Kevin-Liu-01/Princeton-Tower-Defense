@@ -5,6 +5,12 @@ import type { Position, Tower, Hero } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
 import { drawFloatingText, colorWithAlpha } from "../helpers";
 import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
+import {
+  renderRelocationReticle,
+  renderSelectionReticle,
+  hexToReticleColor,
+  RETICLE_COLORS,
+} from "./reticles";
 
 // ============================================================================
 // FLOATING DAMAGE TEXT
@@ -147,32 +153,19 @@ export function renderTowerSelectionUI(
     cameraOffset,
     cameraZoom,
   );
-  const zoom = cameraZoom || 1;
-  const time = Date.now() / 1000;
 
-  ctx.save();
-
-  // Pulsing selection ring
-  const pulse = 0.5 + Math.sin(time * 4) * 0.3;
-  ctx.strokeStyle = `rgba(255, 215, 0, ${pulse})`;
-  ctx.lineWidth = 3 * zoom;
-  ctx.setLineDash([8, 4]);
-  ctx.lineDashOffset = -time * 30;
-
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y,
-    45 * zoom,
-    22 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-  ctx.restore();
+  renderSelectionReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom: cameraZoom || 1,
+    time: Date.now() / 1000,
+    color: RETICLE_COLORS.gold,
+    radius: 45,
+    dashPattern: [8, 4],
+    dashSpeed: 30,
+    pulseSpeed: 4,
+    lineWidth: 3,
+  });
 }
 
 // ============================================================================
@@ -199,29 +192,19 @@ export function renderHeroSelectionUI(
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
   const hData = HERO_DATA[hero.type];
+  const heroColor = hexToReticleColor(hData.color);
 
-  ctx.save();
-
-  // Hero selection indicator - uses hero's theme color
-  const pulse = 0.6 + Math.sin(time * 3) * 0.4;
-  ctx.strokeStyle = colorWithAlpha(hData.color, pulse);
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([6, 3]);
-  ctx.lineDashOffset = -time * 20;
-
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y,
-    35 * zoom,
-    17 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  ctx.setLineDash([]);
+  renderSelectionReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom,
+    time,
+    color: heroColor,
+    radius: 35,
+    dashPattern: [6, 3],
+    dashSpeed: 20,
+    pulseSpeed: 3,
+  });
 
   // Move indicator arrow if hero has target
   if (hero.targetPos) {
@@ -233,17 +216,18 @@ export function renderHeroSelectionUI(
       cameraOffset,
       cameraZoom,
     );
+    const pulse = 0.6 + Math.sin(time * 3) * 0.4;
+
+    ctx.save();
 
     ctx.strokeStyle = colorWithAlpha(hData.color, pulse * 0.5);
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([5, 5]);
-
     ctx.beginPath();
     ctx.moveTo(screenPos.x, screenPos.y);
     ctx.lineTo(targetScreen.x, targetScreen.y);
     ctx.stroke();
 
-    // Arrow head - uses hero's theme color
     ctx.setLineDash([]);
     ctx.fillStyle = colorWithAlpha(hData.color, pulse);
     const angle = Math.atan2(
@@ -262,9 +246,9 @@ export function renderHeroSelectionUI(
     );
     ctx.closePath();
     ctx.fill();
-  }
 
-  ctx.restore();
+    ctx.restore();
+  }
 }
 
 // ============================================================================
@@ -606,8 +590,8 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 }
 
 /**
- * Renders a target indicator on the path showing where the unit will move
- * Uses isometric projection for proper visual consistency with the game
+ * Renders a target indicator on the path showing where the unit will move.
+ * Delegates to the centralized relocation reticle.
  */
 export function renderPathTargetIndicator(
   ctx: CanvasRenderingContext2D,
@@ -634,145 +618,23 @@ export function renderPathTargetIndicator(
     cameraOffset,
     cameraZoom,
   );
-  const zoom = cameraZoom || 1;
-  const time = Date.now() / 1000;
 
-  ctx.save();
-
-  // Color scheme - use theme color if provided, otherwise fallback to type-based colors
-  const baseColor = config.themeColor
-    ? hexToRgb(config.themeColor)
+  const color = config.themeColor
+    ? hexToReticleColor(config.themeColor)
     : config.isHero
-      ? { r: 100, g: 200, b: 255 } // Blue for hero (fallback)
-      : { r: 255, g: 200, b: 100 }; // Orange/gold for troops (fallback)
+      ? { r: 100, g: 200, b: 255 }
+      : RETICLE_COLORS.gold;
 
-  const validityMultiplier = config.isValid ? 1 : 0.4;
-  const pulse = 0.85 + Math.sin(time * 3) * 0.15;
-
-  // Draw dotted line from unit to target (marching ants toward target)
-  ctx.strokeStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.35 * validityMultiplier})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([6, 6]);
-  ctx.lineDashOffset = time * 35; // Animated movement toward target
-  ctx.beginPath();
-  ctx.moveTo(unitScreen.x, unitScreen.y);
-  ctx.lineTo(targetScreen.x, targetScreen.y);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Draw ISOMETRIC target indicator (ellipse instead of circle)
-  const outerRadiusX = 16 * zoom * pulse;
-  const outerRadiusY = outerRadiusX * ISO_Y_RATIO;
-
-  // Outer isometric ring
-  ctx.strokeStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.65 * validityMultiplier})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    targetScreen.x,
-    targetScreen.y,
-    outerRadiusX,
-    outerRadiusY,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Inner isometric ellipse (filled)
-  const innerRadiusX = 5 * zoom;
-  const innerRadiusY = innerRadiusX * ISO_Y_RATIO;
-  ctx.fillStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.8 * validityMultiplier})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    targetScreen.x,
-    targetScreen.y,
-    innerRadiusX,
-    innerRadiusY,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Isometric crosshair lines (adjusted for isometric view)
-  const crossLengthX = 7 * zoom;
-  const crossLengthY = crossLengthX * ISO_Y_RATIO;
-  const gapX = 4 * zoom;
-  const gapY = gapX * ISO_Y_RATIO;
-
-  ctx.strokeStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.5 * validityMultiplier})`;
-  ctx.lineWidth = 1.5 * zoom;
-
-  ctx.beginPath();
-  // Top line (shorter due to isometric compression)
-  ctx.moveTo(targetScreen.x, targetScreen.y - outerRadiusY - gapY);
-  ctx.lineTo(
-    targetScreen.x,
-    targetScreen.y - outerRadiusY - gapY - crossLengthY,
-  );
-  // Bottom line
-  ctx.moveTo(targetScreen.x, targetScreen.y + outerRadiusY + gapY);
-  ctx.lineTo(
-    targetScreen.x,
-    targetScreen.y + outerRadiusY + gapY + crossLengthY,
-  );
-  // Left line
-  ctx.moveTo(targetScreen.x - outerRadiusX - gapX, targetScreen.y);
-  ctx.lineTo(
-    targetScreen.x - outerRadiusX - gapX - crossLengthX,
-    targetScreen.y,
-  );
-  // Right line
-  ctx.moveTo(targetScreen.x + outerRadiusX + gapX, targetScreen.y);
-  ctx.lineTo(
-    targetScreen.x + outerRadiusX + gapX + crossLengthX,
-    targetScreen.y,
-  );
-  ctx.stroke();
-
-  // Draw small direction indicator (subtle arrow along the path line)
-  const angle = Math.atan2(
-    targetScreen.y - unitScreen.y,
-    targetScreen.x - unitScreen.x,
-  );
-  const arrowDist = outerRadiusX + 14 * zoom;
-  const arrowX = targetScreen.x - Math.cos(angle) * arrowDist;
-  const arrowY = targetScreen.y - Math.sin(angle) * arrowDist * ISO_Y_RATIO;
-
-  ctx.fillStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.7 * validityMultiplier * pulse})`;
-  ctx.beginPath();
-  const arrowSize = 6 * zoom;
-  ctx.moveTo(
-    arrowX + Math.cos(angle) * arrowSize,
-    arrowY + Math.sin(angle) * arrowSize * ISO_Y_RATIO,
-  );
-  ctx.lineTo(
-    arrowX + Math.cos(angle - 2.3) * arrowSize * 0.7,
-    arrowY + Math.sin(angle - 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
-  );
-  ctx.lineTo(
-    arrowX + Math.cos(angle + 2.3) * arrowSize * 0.7,
-    arrowY + Math.sin(angle + 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Invalid indicator (isometric X mark) if not valid
-  if (!config.isValid) {
-    ctx.strokeStyle = "rgba(255, 80, 80, 0.75)";
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    const xSizeX = 8 * zoom;
-    const xSizeY = xSizeX * ISO_Y_RATIO;
-    ctx.moveTo(targetScreen.x - xSizeX, targetScreen.y - xSizeY);
-    ctx.lineTo(targetScreen.x + xSizeX, targetScreen.y + xSizeY);
-    ctx.moveTo(targetScreen.x + xSizeX, targetScreen.y - xSizeY);
-    ctx.lineTo(targetScreen.x - xSizeX, targetScreen.y + xSizeY);
-    ctx.stroke();
-  }
-
-  ctx.restore();
+  renderRelocationReticle(ctx, {
+    targetX: targetScreen.x,
+    targetY: targetScreen.y,
+    unitX: unitScreen.x,
+    unitY: unitScreen.y,
+    zoom: cameraZoom || 1,
+    time: Date.now() / 1000,
+    color,
+    isValid: config.isValid,
+  });
 }
 
 // ============================================================================
@@ -780,7 +642,8 @@ export function renderPathTargetIndicator(
 // ============================================================================
 
 /**
- * Renders a selection indicator around a selected troop
+ * Renders a selection indicator around a selected troop.
+ * Delegates to centralized selection reticle.
  */
 export function renderTroopSelectionUI(
   ctx: CanvasRenderingContext2D,
@@ -799,30 +662,16 @@ export function renderTroopSelectionUI(
     cameraOffset,
     cameraZoom,
   );
-  const zoom = cameraZoom || 1;
-  const time = Date.now() / 1000;
 
-  ctx.save();
-
-  // Pulsing selection ring
-  const pulse = 0.6 + Math.sin(time * 4) * 0.4;
-  ctx.strokeStyle = `rgba(255, 200, 100, ${pulse})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([5, 3]);
-  ctx.lineDashOffset = -time * 25;
-
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y,
-    28 * zoom,
-    14 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-  ctx.restore();
+  renderSelectionReticle(ctx, {
+    x: screenPos.x,
+    y: screenPos.y,
+    zoom: cameraZoom || 1,
+    time: Date.now() / 1000,
+    color: RETICLE_COLORS.gold,
+    radius: 28,
+    dashPattern: [5, 3],
+    dashSpeed: 25,
+    pulseSpeed: 4,
+  });
 }

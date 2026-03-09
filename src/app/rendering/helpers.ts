@@ -810,6 +810,9 @@ export function drawSelectionIndicator(
   ctx.setLineDash([]);
 }
 
+/**
+ * @deprecated Use `renderRangeReticle` from `rendering/ui/reticles` instead.
+ */
 export function drawRangeIndicator(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1046,6 +1049,8 @@ export function drawIceShimmer(
 // TEXT HELPERS
 // ============================================================================
 
+export const GAME_FONT_FAMILY = '"bc-novatica-cyr", "inter", sans-serif';
+
 export function drawOutlinedText(
   ctx: CanvasRenderingContext2D,
   text: string,
@@ -1056,7 +1061,7 @@ export function drawOutlinedText(
   outlineColor: string = "#000000",
   outlineWidth: number = 2
 ): void {
-  ctx.font = `bold ${fontSize}px Arial`;
+  ctx.font = `bold ${fontSize}px ${GAME_FONT_FAMILY}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 

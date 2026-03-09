@@ -219,6 +219,8 @@ import {
 // Hazard game logic
 import { calculateHazardEffects, applyHazardEffect } from "../game/hazards";
 import { getEnemyDamageTaken } from "../game/combat";
+import { renderSpellReticle, renderTargetingReticle, RETICLE_COLORS, type SpellReticleVariant } from "../rendering/ui/reticles";
+import { emitDamageNumber, renderDamageNumbers, clearDamageNumbers } from "../rendering/ui/damageNumbers";
 import {
   TROOP_RESPAWN_TIME,
   TROOP_SEPARATION_DIST,
@@ -270,6 +272,8 @@ import {
   TowerHoverTooltip,
   PlacingTroopIndicator,
   TargetingSpellIndicator,
+  MissileTargetingIndicator,
+  SentinelTargetingIndicator,
   SpecialBuildingTooltip,
   LandmarkTooltip,
   HazardTooltip,
@@ -754,6 +758,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const [missileMortarTargetingId, setMissileMortarTargetingId] = useState<
     string | null
   >(null);
+  const missileMortarTargetingIdRef = useRef<string | null>(null);
   const [sentinelTargets, setSentinelTargets] = useState<
     Record<string, Position>
   >({});
@@ -1544,6 +1549,7 @@ export function usePrincetonTowerDefenseRuntime() {
       clearTroops();
       clearProjectiles();
       clearEffects();
+      clearDamageNumbers();
       clearParticlePool();
       setSelectedTower(null);
       setBuildingTower(null);
@@ -4952,7 +4958,9 @@ export function usePrincetonTowerDefenseRuntime() {
               if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
               if (isFlamethrower) damage *= 0.3; // DoT damage
               queueTowerEnemyMutation(target.id, (enemy) => {
-                const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
+                const actualDmg = getEnemyDamageTaken(enemy, damage);
+                emitDamageNumber(targetPos, actualDmg, "tower");
+                const newHp = enemy.hp - actualDmg;
                 if (newHp <= 0) {
                   onEnemyKill(enemy, targetPos, 12, isFlamethrower ? "fire" : "default");
                   return null;
@@ -5247,7 +5255,16 @@ export function usePrincetonTowerDefenseRuntime() {
             if (tower.level >= 3) damage *= 2;
 
             // Missile Battery: defaults to auto-aim; manual uses stored position
-            if (isMissileBattery && tower.mortarAutoAim === false && tower.mortarTarget) {
+            if (isMissileBattery && missileMortarTargetingIdRef.current === tower.id) {
+              const cursorScreen = mousePosRef.current;
+              if (cursorScreen.x > 0 && cursorScreen.y > 0) {
+                const { width: cW, height: cH, dpr: cDpr } = getCanvasDimensions();
+                const cursorWorld = screenToWorld(cursorScreen, cW, cH, cDpr, cameraOffset, cameraZoom);
+                const cDx = cursorWorld.x - towerWorldPos.x;
+                const cDy = cursorWorld.y - towerWorldPos.y;
+                queueTowerPatch(tower.id, { rotation: Math.atan2(cDx + cDy, cDx - cDy) });
+              }
+            } else if (isMissileBattery && tower.mortarAutoAim === false && tower.mortarTarget) {
               const missileTarget = tower.mortarTarget;
               const tDx = missileTarget.x - towerWorldPos.x;
               const tDy = missileTarget.y - towerWorldPos.y;
@@ -5558,7 +5575,9 @@ export function usePrincetonTowerDefenseRuntime() {
                 updatedEnemies = updatedEnemies.map((e) => {
                   if (!e) return e;
                   if (e.id === attackTarget.id) {
-                    const newHp = e.hp - getEnemyDamageTaken(e, heroData.damage);
+                    const actualDmg = getEnemyDamageTaken(e, heroData.damage);
+                    emitDamageNumber(attackTargetPos, actualDmg, "hero");
+                    const newHp = e.hp - actualDmg;
                     if (newHp <= 0) {
                       killedEnemyIds.push(e.id);
                       onEnemyKill(e, attackTargetPos, 10);
@@ -5763,7 +5782,9 @@ export function usePrincetonTowerDefenseRuntime() {
                 (troop.visualTier ?? 0) >= 5;
               // Apply damage immediately (projectile is just visual)
               queueTroopEnemyMutation(target.id, (enemy) => {
-                const newHp = enemy.hp - getEnemyDamageTaken(enemy, troopDamage);
+                const actualDmg = getEnemyDamageTaken(enemy, troopDamage);
+                emitDamageNumber(targetPos, actualDmg, "troop");
+                const newHp = enemy.hp - actualDmg;
                 if (newHp <= 0) {
                   onEnemyKill(enemy, targetPos);
                   return null;
@@ -6099,6 +6120,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   nextEnemies.push(enemy);
                   continue;
                 }
+                emitDamageNumber(enemyPos, totalDamage, "aoe");
                 const newHp = enemy.hp - totalDamage;
                 if (newHp <= 0) {
                   onEnemyKill(enemy, enemyPos, 12, shouldBurn ? "fire" : "default");
@@ -7568,39 +7590,24 @@ export function usePrincetonTowerDefenseRuntime() {
         isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
       });
     });
+    // Collect range reticle data (rendered in consolidated reticle pass, not depth-sorted with entities)
+    const pendingRangeReticles: Array<{ kind: "station" | "tower"; tower: Tower & { isHovered?: boolean } }> = [];
     towers.forEach((tower) => {
       if (tower.type === "station" && tower.spawnRange) {
-        const worldPos = gridToWorld(tower.pos);
         const isHovered = hoveredTower === tower.id;
-        renderables.push({
-          type: "station-range",
-          data: { ...tower, isHovered },
-          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 1000,
-        });
+        pendingRangeReticles.push({ kind: "station", tower: { ...tower, isHovered } });
       }
     });
-    // Show range for selected tower
     if (selectedTower) {
       const tower = towers.find((t) => t.id === selectedTower);
       if (tower && TOWER_DATA[tower.type].range > 0) {
-        const worldPos = gridToWorld(tower.pos);
-        renderables.push({
-          type: "tower-range",
-          data: tower,
-          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 999,
-        });
+        pendingRangeReticles.push({ kind: "tower", tower });
       }
     }
-    // Show range for hovered tower (if different from selected)
     if (hoveredTower && hoveredTower !== selectedTower) {
       const tower = towers.find((t) => t.id === hoveredTower);
       if (tower && TOWER_DATA[tower.type].range > 0) {
-        const worldPos = gridToWorld(tower.pos);
-        renderables.push({
-          type: "tower-range",
-          data: { ...tower, isHovered: true },
-          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 998,
-        });
+        pendingRangeReticles.push({ kind: "tower", tower: { ...tower, isHovered: true } });
       }
     }
     enemies.forEach((enemy) => {
@@ -7908,59 +7915,55 @@ export function usePrincetonTowerDefenseRuntime() {
       }
     }
 
-    // Sentinel nexus targeting overlays (persistent lock lines + strike zone marker).
+    // Sentinel nexus targeting overlays — uses centralized targeting reticle with laser line.
+    // When actively retargeting, the overlay follows the cursor instead of the stored position.
     const sentinelStrikeRadiusWorld = 140;
+    const sentinelCursorPos = mousePosRef.current;
     levelSpecialTowersForRenderable.forEach((spec) => {
       if (spec.type !== "sentinel_nexus") return;
       const key = getSpecialTowerKey(spec);
       const targetPos = sentinelTargets[key];
       if (!targetPos) return;
       const sourceScreenPos = toScreen(gridToWorld(spec.pos));
-      const targetScreenPos = toScreen(targetPos);
       const isActiveTargeting = activeSentinelTargetKey === key;
-      const pulse = 0.5 + Math.sin(nowSeconds * 6 + spec.pos.x * 0.2) * 0.5;
+      const hasCursor = sentinelCursorPos.x > 0 && sentinelCursorPos.y > 0;
+      const targetScreenPos = isActiveTargeting && hasCursor
+        ? { x: sentinelCursorPos.x, y: sentinelCursorPos.y }
+        : toScreen(targetPos);
 
-      ctx.save();
-      ctx.strokeStyle = isActiveTargeting
-        ? `rgba(254, 205, 211, ${0.72 + pulse * 0.2})`
-        : `rgba(251, 113, 133, ${0.42 + pulse * 0.18})`;
-      ctx.lineWidth = (isActiveTargeting ? 3.2 : 2.1) * cameraZoom;
-      ctx.setLineDash([
-        (8 + (isActiveTargeting ? 2 : 0)) * cameraZoom,
-        6 * cameraZoom,
-      ]);
-      ctx.beginPath();
-      ctx.moveTo(sourceScreenPos.x, sourceScreenPos.y - 30 * cameraZoom);
-      ctx.lineTo(targetScreenPos.x, targetScreenPos.y);
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(targetScreenPos.x, targetScreenPos.y);
-      ctx.scale(1, ISO_Y_RATIO);
-      const markerRadius = sentinelStrikeRadiusWorld * cameraZoom;
-      const markerAlpha = isActiveTargeting ? 0.24 + pulse * 0.15 : 0.14 + pulse * 0.1;
-      ctx.fillStyle = `rgba(190, 24, 93, ${markerAlpha})`;
-      ctx.strokeStyle = isActiveTargeting
-        ? `rgba(255, 228, 230, ${0.84 + pulse * 0.12})`
-        : `rgba(251, 113, 133, ${0.62 + pulse * 0.1})`;
-      ctx.lineWidth = (isActiveTargeting ? 3 : 2) * cameraZoom;
-      ctx.setLineDash([10 * cameraZoom, 8 * cameraZoom]);
-      ctx.beginPath();
-      ctx.arc(0, 0, markerRadius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.strokeStyle = `rgba(255, 237, 213, ${0.85 + pulse * 0.1})`;
-      ctx.lineWidth = 1.8 * cameraZoom;
-      ctx.beginPath();
-      ctx.arc(0, 0, markerRadius * 0.22, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+      renderTargetingReticle(ctx, {
+        x: targetScreenPos.x,
+        y: targetScreenPos.y,
+        zoom: cameraZoom,
+        time: nowSeconds,
+        color: RETICLE_COLORS.rose,
+        glowColor: { r: 190, g: 24, b: 93 },
+        radius: 52,
+        aoeRadius: sentinelStrikeRadiusWorld,
+        laserLine: {
+          fromX: sourceScreenPos.x,
+          fromY: sourceScreenPos.y - 30 * cameraZoom,
+        },
+        active: isActiveTargeting,
+      });
     });
 
-    // ========== RENDER TROOP/HERO MOVEMENT INDICATORS (UNDER ENTITIES) ==========
-    // Draw movement range circle when a troop is selected (renders UNDER towers/decorations)
+    // =========================================================================
+    // CONSOLIDATED RETICLE LAYER — all reticles on one layer, above road
+    // Order: range indicators → movement range → path target → static targets
+    //        → cursor-following reticles
+    // =========================================================================
+
+    // 1. Tower / station range indicators
+    for (const rr of pendingRangeReticles) {
+      if (rr.kind === "station") {
+        renderStationRange(ctx, rr.tower, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      } else {
+        renderTowerRange(ctx, rr.tower, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      }
+    }
+
+    // 2. Troop movement range circle
     if (selectedUnitMoveInfo && !selectedUnitMoveInfo.canMoveAnywhere) {
       renderTroopMoveRange(
         ctx,
@@ -7970,15 +7973,11 @@ export function usePrincetonTowerDefenseRuntime() {
           ownerType: selectedUnitMoveInfo.ownerType,
           isSelected: true,
         },
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
+        canvas.width, canvas.height, dpr, cameraOffset, cameraZoom,
       );
     }
 
-    // Draw path target indicator when hovering with a selected unit (renders UNDER towers/decorations)
+    // 3. Path target indicator (troop/hero move destination)
     const selectedTroopForIndicator = troops.find((t) => t.selected);
     const heroIsSelectedForIndicator = hero && !hero.dead && hero.selected;
     const isUnitDraggingForIndicator = !!draggingUnit;
@@ -8000,7 +7999,6 @@ export function usePrincetonTowerDefenseRuntime() {
             : draggedTroopForIndicator
               ? draggedTroopForIndicator.pos
               : moveTargetPos;
-      // Get theme color - hero's color if hero selected, otherwise use troop default
       const themeColor =
         (heroIsSelectedForIndicator || draggingUnit?.kind === "hero") && hero
           ? HERO_DATA[hero.type].color
@@ -8010,18 +8008,43 @@ export function usePrincetonTowerDefenseRuntime() {
         {
           targetPos: moveTargetPos,
           isValid: moveTargetValid,
-          isHero:
-            !!heroIsSelectedForIndicator ||
-            draggingUnit?.kind === "hero",
+          isHero: !!heroIsSelectedForIndicator || draggingUnit?.kind === "hero",
           unitPos: unitPos,
           themeColor: themeColor,
         },
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
+        canvas.width, canvas.height, dpr, cameraOffset, cameraZoom,
       );
+    }
+
+    // 4. Missile battery target reticle (follows cursor when retargeting)
+    const rMouse = mousePosRef.current;
+    const activeRetargetMortarId = missileMortarTargetingIdRef.current;
+    for (const tower of towers) {
+      if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarAutoAim === false && tower.mortarTarget) {
+        const isBeingRetargeted = activeRetargetMortarId === tower.id;
+        const targetScreenPos = isBeingRetargeted && rMouse.x > 0 && rMouse.y > 0
+          ? { x: rMouse.x, y: rMouse.y }
+          : worldToScreen(tower.mortarTarget, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+        renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds);
+      }
+    }
+
+    // 5. Cursor-following reticles (spell, troop placement, sentinel retarget)
+    const rTargeting = targetingSpellRef.current;
+    const rPlacing = placingTroopRef.current;
+
+    if ((rTargeting || rPlacing) && rMouse.x > 0 && rMouse.y > 0) {
+      const variant: SpellReticleVariant = rTargeting === "fireball"
+        ? "fireball"
+        : rTargeting === "lightning"
+          ? "lightning"
+          : "placement";
+      renderSpellReticle(ctx, {
+        x: rMouse.x, y: rMouse.y,
+        zoom: cameraZoom ?? 1,
+        time: Date.now() * 0.003,
+        variant,
+      });
     }
 
     // Pre-pass: draw ALL tower ground transitions before any tower bodies
@@ -8240,26 +8263,8 @@ export function usePrincetonTowerDefenseRuntime() {
 
 
         case "station-range":
-          renderStationRange(
-            ctx,
-            r.data as Tower & { isHovered?: boolean },
-            canvas.width,
-            canvas.height,
-            dpr,
-            cameraOffset,
-            cameraZoom
-          );
-          break;
         case "tower-range":
-          renderTowerRange(
-            ctx,
-            r.data as Tower & { isHovered?: boolean },
-            canvas.width,
-            canvas.height,
-            dpr,
-            cameraOffset,
-            cameraZoom
-          );
+          // Rendered in consolidated reticle pass (above entities)
           break;
         case "decoration": {
           const decData = r.data as {
@@ -8325,20 +8330,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 cameraOffset,
                 cameraZoom
               );
-              // Pass tower with only active debuffs for rendering
               renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
-            }
-            // Missile Battery target reticle (manual mode only)
-            if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarAutoAim === false && tower.mortarTarget) {
-              const targetScreenPos = worldToScreen(
-                tower.mortarTarget,
-                canvas.width,
-                canvas.height,
-                dpr,
-                cameraOffset,
-                cameraZoom
-              );
-              renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds);
             }
           }
           break;
@@ -8547,101 +8539,13 @@ export function usePrincetonTowerDefenseRuntime() {
       }
     }
 
-    // ========== SPELL / REINFORCEMENT TARGETING RETICLE ==========
-    const rTargeting = targetingSpellRef.current;
-    const rPlacing = placingTroopRef.current;
-    const rMouse = mousePosRef.current;
-    if ((rTargeting || rPlacing) && rMouse.x > 0 && rMouse.y > 0) {
-      const reticleScreenX = rMouse.x;
-      const reticleScreenY = rMouse.y;
-      const z = cameraZoom ?? 1;
-      const t = Date.now() * 0.003;
-      const pulse = 0.7 + Math.sin(t * 3) * 0.3;
-
-      let mainR: number, mainG: number, mainB: number;
-      let glowR: number, glowG: number, glowB: number;
-      let reticleRadius: number;
-
-      if (rTargeting === "fireball") {
-        mainR = 255; mainG = 120; mainB = 20;
-        glowR = 255; glowG = 80; glowB = 0;
-        reticleRadius = 50 * z;
-      } else if (rTargeting === "lightning") {
-        mainR = 120; mainG = 180; mainB = 255;
-        glowR = 80; glowG = 140; glowB = 255;
-        reticleRadius = 45 * z;
-      } else {
-        mainR = 100; mainG = 220; mainB = 140;
-        glowR = 50; glowG = 200; glowB = 120;
-        reticleRadius = 40 * z;
-      }
-
-      // Outer glow halo
-      const haloR = reticleRadius * 1.5;
-      const haloGrad = ctx.createRadialGradient(reticleScreenX, reticleScreenY, reticleRadius * 0.6, reticleScreenX, reticleScreenY, haloR);
-      haloGrad.addColorStop(0, `rgba(${glowR}, ${glowG}, ${glowB}, ${0.08 * pulse})`);
-      haloGrad.addColorStop(1, `rgba(${glowR}, ${glowG}, ${glowB}, 0)`);
-      ctx.fillStyle = haloGrad;
-      ctx.beginPath();
-      ctx.ellipse(reticleScreenX, reticleScreenY, haloR, haloR * 0.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Main reticle ellipse
-      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.6 * pulse})`;
-      ctx.lineWidth = 2 * z;
-      ctx.setLineDash([8 * z, 5 * z]);
-      ctx.beginPath();
-      ctx.ellipse(reticleScreenX, reticleScreenY, reticleRadius, reticleRadius * 0.5, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Inner solid ring
-      const innerR = reticleRadius * 0.6;
-      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.45 * pulse})`;
-      ctx.lineWidth = 1.5 * z;
-      ctx.beginPath();
-      ctx.ellipse(reticleScreenX, reticleScreenY, innerR, innerR * 0.5, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Crosshair lines
-      const chLen = reticleRadius * 0.35;
-      const chGap = reticleRadius * 0.15;
-      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.7 * pulse})`;
-      ctx.lineWidth = 1.5 * z;
-      ctx.beginPath();
-      ctx.moveTo(reticleScreenX - chLen - chGap, reticleScreenY);
-      ctx.lineTo(reticleScreenX - chGap, reticleScreenY);
-      ctx.moveTo(reticleScreenX + chGap, reticleScreenY);
-      ctx.lineTo(reticleScreenX + chLen + chGap, reticleScreenY);
-      ctx.moveTo(reticleScreenX, reticleScreenY - (chLen + chGap) * 0.5);
-      ctx.lineTo(reticleScreenX, reticleScreenY - chGap * 0.5);
-      ctx.moveTo(reticleScreenX, reticleScreenY + chGap * 0.5);
-      ctx.lineTo(reticleScreenX, reticleScreenY + (chLen + chGap) * 0.5);
-      ctx.stroke();
-
-      // Center dot
-      ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse})`;
-      ctx.beginPath();
-      ctx.arc(reticleScreenX, reticleScreenY, 2 * z, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Rotating tick marks
-      const tickCount = 4;
-      const tickDist = reticleRadius * 0.85;
-      const rotation = t * 0.8;
-      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.5 * pulse})`;
-      ctx.lineWidth = 2 * z;
-      for (let i = 0; i < tickCount; i++) {
-        const angle = rotation + (i / tickCount) * Math.PI * 2;
-        const tx = reticleScreenX + Math.cos(angle) * tickDist;
-        const ty = reticleScreenY + Math.sin(angle) * tickDist * 0.5;
-        const tx2 = reticleScreenX + Math.cos(angle) * (tickDist + 6 * z);
-        const ty2 = reticleScreenY + Math.sin(angle) * (tickDist + 6 * z) * 0.5;
-        ctx.beginPath();
-        ctx.moveTo(tx, ty);
-        ctx.lineTo(tx2, ty2);
-        ctx.stroke();
-      }
+    // Damage numbers (canvas overlay, gated by user settings)
+    const dmgNumberStyle = getGameSettings().ui.damageNumbers;
+    if (dmgNumberStyle !== "off") {
+      renderDamageNumbers(
+        ctx, canvas.width, canvas.height, dpr,
+        dmgNumberStyle, cameraOffset, cameraZoom,
+      );
     }
 
     // Restore state
@@ -8875,6 +8779,7 @@ export function usePrincetonTowerDefenseRuntime() {
   targetingSpellRef.current = targetingSpell;
   placingTroopRef.current = placingTroop;
   mousePosRef.current = mousePos;
+  missileMortarTargetingIdRef.current = missileMortarTargetingId;
   flushParticleQueueRef.current = flushQueuedParticles;
 
   // Game loop - uses refs to avoid restarting when state changes
@@ -9865,6 +9770,46 @@ export function usePrincetonTowerDefenseRuntime() {
         // Clicked elsewhere - deselect troops (don't select other entities)
         setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
         return;
+      }
+
+      // ========== RETICLE CLICK — click on a target reticle to retarget ==========
+      const RETICLE_HIT_RADIUS = 52;
+
+      // Missile battery reticles
+      for (const tower of towers) {
+        if (
+          tower.type === "mortar" && tower.level === 4 &&
+          tower.upgrade === "A" && tower.mortarAutoAim === false &&
+          tower.mortarTarget
+        ) {
+          const reticleScreen = worldToScreen(
+            tower.mortarTarget, width, height, dpr, cameraOffset, cameraZoom,
+          );
+          if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * cameraZoom) {
+            setMissileMortarTargetingId(tower.id);
+            setSelectedTower(null);
+            return;
+          }
+        }
+      }
+
+      // Sentinel nexus reticles
+      for (const spec of levelSpecialTowers) {
+        if (spec.type !== "sentinel_nexus") continue;
+        const key = getSpecialTowerKey(spec);
+        const targetPos = sentinelTargetsRef.current[key];
+        if (!targetPos) continue;
+        const reticleScreen = worldToScreen(
+          targetPos, width, height, dpr, cameraOffset, cameraZoom,
+        );
+        if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * cameraZoom) {
+          setActiveSentinelTargetKey(key);
+          setSelectedTower(null);
+          setHero((prev) => (prev ? { ...prev, selected: false } : null));
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          addParticles(gridToWorld(spec.pos), "spark", 6);
+          return;
+        }
       }
 
       // ========== NORMAL SELECTION MODE (nothing selected) ==========
@@ -11868,34 +11813,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 })()}
               {placingTroop && <PlacingTroopIndicator />}
               {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
-              {activeSentinelTargetKey && (
-                <div
-                  className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
-                  style={{
-                    zIndex: 180,
-                    background: "rgba(69, 10, 10, 0.86)",
-                    border: "1px solid rgba(251, 113, 133, 0.58)",
-                    color: "#ffe4e6",
-                    boxShadow: "0 0 18px rgba(244, 63, 94, 0.35)",
-                  }}
-                >
-                  Imperial Sentinel targeting mode: click any map location.
-                </div>
-              )}
-              {missileMortarTargetingId && (
-                <div
-                  className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
-                  style={{
-                    zIndex: 180,
-                    background: "rgba(74, 32, 0, 0.9)",
-                    border: "1px solid rgba(255, 140, 0, 0.6)",
-                    color: "#ffcc88",
-                    boxShadow: "0 0 18px rgba(255, 100, 0, 0.35)",
-                  }}
-                >
-                  Missile Battery targeting: click any map location to set strike zone.
-                </div>
-              )}
+              {activeSentinelTargetKey && <SentinelTargetingIndicator />}
+              {missileMortarTargetingId && <MissileTargetingIndicator />}
               {!isTouchDeviceRef.current && hoveredSpecialTower && (
                 <SpecialBuildingTooltip
                   type={hoveredSpecialTower.type}
