@@ -1,6 +1,243 @@
 import type { Position } from "../../types";
 import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
+function drawFurMantle(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+) {
+  const mantleCenterY = y - size * 0.42;
+  const mantleHalfW = size * 0.52;
+  const mantleHalfH = size * 0.22;
+
+  const mantleGrad = ctx.createRadialGradient(
+    x, mantleCenterY, size * 0.08,
+    x, mantleCenterY, mantleHalfW,
+  );
+  mantleGrad.addColorStop(0, "#5e4e3c");
+  mantleGrad.addColorStop(0.35, "#4e3e2c");
+  mantleGrad.addColorStop(0.7, "#3e2e1c");
+  mantleGrad.addColorStop(1, "#2e1e0e");
+  ctx.fillStyle = mantleGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, mantleCenterY, mantleHalfW, mantleHalfH, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const clumpCount = 28;
+  for (let i = 0; i < clumpCount; i++) {
+    const angle = (i / clumpCount) * Math.PI * 2;
+    const wobble = Math.sin(time * 1.0 + i * 2.1) * size * 0.006;
+    const baseX = x + Math.cos(angle) * (mantleHalfW + wobble);
+    const baseY = mantleCenterY + Math.sin(angle) * (mantleHalfH + wobble * 0.5);
+    const tuftLen = size * (0.07 + Math.sin(i * 1.9 + 0.5) * 0.03);
+    const tuftAngle = angle + Math.sin(time * 1.3 + i * 0.7) * 0.12;
+    const dirX = Math.cos(tuftAngle);
+    const dirY = Math.sin(tuftAngle) * 0.5;
+
+    ctx.strokeStyle = i % 4 === 0 ? "#6e5e4a" : i % 4 === 1 ? "#4e3e28" : i % 4 === 2 ? "#5e4e3a" : "#584832";
+    ctx.lineWidth = (2.8 - (i % 3) * 0.6) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.quadraticCurveTo(
+      baseX + dirX * tuftLen * 0.55 + Math.sin(i * 1.4) * size * 0.012,
+      baseY + dirY * tuftLen * 0.55,
+      baseX + dirX * tuftLen,
+      baseY + dirY * tuftLen,
+    );
+    ctx.stroke();
+  }
+
+  const innerGrad = ctx.createRadialGradient(
+    x, mantleCenterY, size * 0.04,
+    x, mantleCenterY, mantleHalfW * 0.72,
+  );
+  innerGrad.addColorStop(0, "#6e5e4c");
+  innerGrad.addColorStop(0.4, "#5e4e3c");
+  innerGrad.addColorStop(1, "#4e3e2c");
+  ctx.fillStyle = innerGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, mantleCenterY, mantleHalfW * 0.75, mantleHalfH * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(110, 95, 72, 0.35)";
+  ctx.lineWidth = 0.7 * zoom;
+  const strandCount = 36;
+  for (let i = 0; i < strandCount; i++) {
+    const angle = (i / strandCount) * Math.PI * 2;
+    const innerR = 0.5 + Math.sin(i * 2.9 + 1.2) * 0.1;
+    const outerR = 0.82 + Math.sin(i * 2.3 + 0.7) * 0.08;
+    ctx.beginPath();
+    ctx.moveTo(
+      x + Math.cos(angle) * mantleHalfW * innerR,
+      mantleCenterY + Math.sin(angle) * mantleHalfH * innerR,
+    );
+    ctx.lineTo(
+      x + Math.cos(angle + 0.06) * mantleHalfW * outerR,
+      mantleCenterY + Math.sin(angle + 0.06) * mantleHalfH * outerR,
+    );
+    ctx.stroke();
+  }
+
+  const puffCount = 10;
+  for (let i = 0; i < puffCount; i++) {
+    const t = (i / (puffCount - 1)) * 2 - 1;
+    const puffX = x + t * mantleHalfW * 0.85;
+    const puffY = mantleCenterY - mantleHalfH * 0.4 * (1 - t * t) + Math.sin(time * 1.1 + i * 1.5) * size * 0.005;
+    const puffR = size * (0.06 + (1 - Math.abs(t)) * 0.04);
+
+    const puffGrad = ctx.createRadialGradient(
+      puffX - size * 0.01, puffY - size * 0.01, 0,
+      puffX, puffY, puffR,
+    );
+    puffGrad.addColorStop(0, "#6e5e4c");
+    puffGrad.addColorStop(0.5, "#564636");
+    puffGrad.addColorStop(1, "#3e2e1c");
+    ctx.fillStyle = puffGrad;
+    ctx.beginPath();
+    ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = "#2e1e0e";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, mantleCenterY, mantleHalfW, mantleHalfH, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function furHash(i: number, seed: number): number {
+  const v = Math.sin(i * 127.1 + seed * 311.7) * 43758.5453;
+  return v - Math.floor(v);
+}
+
+function drawFurCollar(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+) {
+  const collarY = y - size * 0.28;
+  const baseW = size * 0.42;
+  const baseH = size * 0.18;
+
+  // Layer 1: Large irregular clumps forming the bulk
+  const clumpCount = 16;
+  for (let i = 0; i < clumpCount; i++) {
+    const angle = (i / clumpCount) * Math.PI * 2 + furHash(i, 1) * 0.35;
+    const radW = baseW * (0.75 + furHash(i, 2) * 0.45);
+    const radH = baseH * (0.6 + furHash(i, 3) * 0.7);
+    const cx = x + Math.cos(angle) * radW * 0.55 + (furHash(i, 4) - 0.5) * size * 0.08;
+    const cy = collarY + Math.sin(angle) * radH * 0.5 + (furHash(i, 5) - 0.5) * size * 0.04;
+    const clumpR = size * (0.07 + furHash(i, 6) * 0.06);
+    const squash = 0.5 + furHash(i, 7) * 0.8;
+    const tilt = (furHash(i, 8) - 0.5) * 1.2;
+
+    const cGrad = ctx.createRadialGradient(
+      cx - size * 0.01, cy - size * 0.01, 0,
+      cx, cy, clumpR,
+    );
+    const shade = 40 + Math.floor(furHash(i, 9) * 30);
+    cGrad.addColorStop(0, `rgb(${shade + 30}, ${shade + 18}, ${shade + 6})`);
+    cGrad.addColorStop(0.6, `rgb(${shade + 15}, ${shade + 8}, ${shade})`);
+    cGrad.addColorStop(1, `rgb(${shade}, ${shade - 8}, ${shade - 16})`);
+    ctx.fillStyle = cGrad;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, clumpR, clumpR * squash, tilt, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Layer 2: Smaller overlapping puffs for volume and irregularity
+  const puffCount = 22;
+  for (let i = 0; i < puffCount; i++) {
+    const angle = (i / puffCount) * Math.PI * 2 + furHash(i, 20) * 0.5;
+    const distW = baseW * (0.5 + furHash(i, 21) * 0.55);
+    const distH = baseH * (0.35 + furHash(i, 22) * 0.65);
+    const px = x + Math.cos(angle) * distW + (furHash(i, 23) - 0.5) * size * 0.06;
+    const py = collarY + Math.sin(angle) * distH + (furHash(i, 24) - 0.5) * size * 0.035;
+    const pr = size * (0.035 + furHash(i, 25) * 0.045);
+    const psquash = 0.4 + furHash(i, 26) * 0.9;
+    const ptilt = (furHash(i, 27) - 0.5) * 1.5;
+
+    const shade = 45 + Math.floor(furHash(i, 28) * 35);
+    ctx.fillStyle = `rgb(${shade + 25}, ${shade + 14}, ${shade + 4})`;
+    ctx.beginPath();
+    ctx.ellipse(px, py, pr, pr * psquash, ptilt, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Layer 3: Wispy tufts radiating outward with high variety
+  const tuftCount = 30;
+  for (let i = 0; i < tuftCount; i++) {
+    const angle = (i / tuftCount) * Math.PI * 2 + furHash(i, 40) * 0.6;
+    const edgeW = baseW * (0.8 + furHash(i, 41) * 0.4);
+    const edgeH = baseH * (0.7 + furHash(i, 42) * 0.5);
+    const bx = x + Math.cos(angle) * edgeW + (furHash(i, 43) - 0.5) * size * 0.05;
+    const by = collarY + Math.sin(angle) * edgeH;
+    const tuftLen = size * (0.04 + furHash(i, 44) * 0.06);
+    const curve = (furHash(i, 45) - 0.5) * size * 0.04;
+    const tuftAngle = angle + (furHash(i, 46) - 0.5) * 0.8 + Math.sin(time * 1.3 + i * 0.9) * 0.1;
+    const dx = Math.cos(tuftAngle);
+    const dy = Math.sin(tuftAngle) * 0.5;
+
+    const shade = 55 + Math.floor(furHash(i, 47) * 40);
+    ctx.strokeStyle = `rgb(${shade + 15}, ${shade + 5}, ${shade - 8})`;
+    ctx.lineWidth = (1.5 + furHash(i, 48) * 2.5) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(
+      bx + dx * tuftLen * 0.5 + curve,
+      by + dy * tuftLen * 0.5 + curve * 0.3,
+      bx + dx * tuftLen,
+      by + dy * tuftLen,
+    );
+    ctx.stroke();
+  }
+
+  // Layer 4: Fine fur strands across the surface
+  const strandCount = 40;
+  ctx.lineWidth = 0.7 * zoom;
+  for (let i = 0; i < strandCount; i++) {
+    const sx = x + (furHash(i, 60) - 0.5) * baseW * 1.5;
+    const sy = collarY + (furHash(i, 61) - 0.5) * baseH * 1.2;
+    const sAngle = furHash(i, 62) * Math.PI * 2;
+    const sLen = size * (0.02 + furHash(i, 63) * 0.035);
+    const shade = 60 + Math.floor(furHash(i, 64) * 30);
+    ctx.strokeStyle = `rgba(${shade + 20}, ${shade + 10}, ${shade}, 0.4)`;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + Math.cos(sAngle) * sLen, sy + Math.sin(sAngle) * sLen * 0.5);
+    ctx.stroke();
+  }
+
+  // Layer 5: Highlight puffs on top for volume
+  const highlightCount = 8;
+  for (let i = 0; i < highlightCount; i++) {
+    const angle = (i / highlightCount) * Math.PI * 2 + furHash(i, 80) * 0.7;
+    const hx = x + Math.cos(angle) * baseW * (0.3 + furHash(i, 81) * 0.35);
+    const hy = collarY + Math.sin(angle) * baseH * (0.2 + furHash(i, 82) * 0.3);
+    const hr = size * (0.03 + furHash(i, 83) * 0.03);
+    const hsquash = 0.5 + furHash(i, 84) * 0.7;
+    const htilt = furHash(i, 85) * Math.PI;
+
+    const hGrad = ctx.createRadialGradient(
+      hx - size * 0.005, hy - size * 0.005, 0,
+      hx, hy, hr,
+    );
+    hGrad.addColorStop(0, "rgba(120, 105, 85, 0.6)");
+    hGrad.addColorStop(0.5, "rgba(95, 80, 60, 0.35)");
+    hGrad.addColorStop(1, "rgba(70, 58, 42, 0)");
+    ctx.fillStyle = hGrad;
+    ctx.beginPath();
+    ctx.ellipse(hx, hy, hr, hr * hsquash, htilt, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
 function drawFrostSkirtArmor(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -657,6 +894,12 @@ export function drawMatheyKnightHero(
     ctx.shadowBlur = 0;
   }
 
+  // === FUR MANTLE ABOVE SHOULDERS (behind head) ===
+  drawFurMantle(ctx, x, y, size, time, zoom);
+
+  // === FUR COLLAR BEHIND HELMET ===
+  drawFurCollar(ctx, x, y, size, time, zoom);
+
   // === HEAVY BARREL HELM ===
   // Different from Captain's - this is a brutal bucket helm
   const helmGrad = ctx.createRadialGradient(
@@ -786,51 +1029,45 @@ export function drawMatheyKnightHero(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // === UPWARD-POINTING STUBBY METAL HORNS ===
-  for (let side = -1; side <= 1; side += 2) {
-    const hornX = x + side * size * 0.25;
-    // Horn body — wide base tapering to a short point
-    const hornGrad = ctx.createLinearGradient(
-      hornX - side * size * 0.06, y - size * 0.76,
-      hornX + side * size * 0.18, y - size * 0.96
-    );
-    hornGrad.addColorStop(0, "#505068");
-    hornGrad.addColorStop(0.4, "#404058");
-    hornGrad.addColorStop(1, "#303045");
-    ctx.fillStyle = hornGrad;
+  // === ROW OF SPIKES ALONG HELMET CROWN ===
+  const spikeCount = 9;
+  for (let i = 0; i < spikeCount; i++) {
+    const t = (i / (spikeCount - 1)) * 2 - 1; // -1 to 1
+    const spikeX = x + t * size * 0.28;
+    const baseY = y - size * 0.93 + t * t * size * 0.18;
+    const centerFactor = 1 - Math.abs(t);
+    const spikeHeight = size * (0.1 + 0.14 * centerFactor);
+    const halfW = size * 0.022;
+
+    const spikeGrad = ctx.createLinearGradient(spikeX, baseY, spikeX, baseY - spikeHeight);
+    spikeGrad.addColorStop(0, "#505068");
+    spikeGrad.addColorStop(0.4, "#404058");
+    spikeGrad.addColorStop(1, "#303045");
+    ctx.fillStyle = spikeGrad;
     ctx.beginPath();
-    ctx.moveTo(hornX - side * size * 0.12, y - size * 0.76);
-    ctx.quadraticCurveTo(
-      hornX + side * size * 0.08, y - size * 0.82,
-      hornX + side * size * 0.18, y - size * 0.96
-    );
-    ctx.lineTo(hornX + side * size * 0.12, y - size * 0.96);
-    ctx.quadraticCurveTo(
-      hornX + side * size * 0.02, y - size * 0.84,
-      hornX + side * size * 0.04, y - size * 0.76
-    );
+    ctx.moveTo(spikeX - halfW, baseY);
+    ctx.lineTo(spikeX, baseY - spikeHeight);
+    ctx.lineTo(spikeX + halfW, baseY);
     ctx.closePath();
     ctx.fill();
-    // Horn outline
+
     ctx.strokeStyle = "#252535";
     ctx.lineWidth = 1.5 * zoom;
     ctx.stroke();
-    // Horn highlight edge
+
     ctx.strokeStyle = "#606080";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(hornX - side * size * 0.1, y - size * 0.77);
-    ctx.quadraticCurveTo(
-      hornX + side * size * 0.06, y - size * 0.83,
-      hornX + side * size * 0.16, y - size * 0.95
-    );
+    ctx.moveTo(spikeX - halfW * 0.8, baseY);
+    ctx.lineTo(spikeX - size * 0.003, baseY - spikeHeight + size * 0.02);
     ctx.stroke();
-    // Frost glow at horn tip
+
+    const isCenterSpike = i === Math.floor(spikeCount / 2);
     ctx.fillStyle = "#60c0ff";
     ctx.shadowColor = "#80e0ff";
-    ctx.shadowBlur = 5 * zoom;
+    ctx.shadowBlur = (isCenterSpike ? 8 : 5) * zoom;
     ctx.beginPath();
-    ctx.arc(hornX + side * size * 0.15, y - size * 0.96, size * 0.02, 0, Math.PI * 2);
+    ctx.arc(spikeX, baseY - spikeHeight, size * (isCenterSpike ? 0.02 : 0.013), 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }

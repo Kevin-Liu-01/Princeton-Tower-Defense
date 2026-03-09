@@ -378,12 +378,6 @@ const QUALITY_ANIMATED_DECORATION_STRIDE: Record<RenderQuality, number> = {
   low: 3,
 };
 
-const QUALITY_ANIMATED_DECORATION_STRIDE_HEAVY: Record<RenderQuality, number> = {
-  high: 2,
-  medium: 3,
-  low: 4,
-};
-
 const QUALITY_SHADOW_MULTIPLIER: Record<RenderQuality, number> = {
   high: 1,
   medium: 0.6,
@@ -7395,6 +7389,26 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
+      const animatedDecorationStride =
+        QUALITY_ANIMATED_DECORATION_STRIDE[renderQuality];
+      const liveAnimatedDecorations: CachedVisibleDecoration[] = [];
+      if (animatedDecorationStride <= 1) {
+        liveAnimatedDecorations.push(...animatedDecorations);
+      } else {
+        for (let i = 0; i < animatedDecorations.length; i++) {
+          const entry = animatedDecorations[i];
+          const alwaysAnimate =
+            NON_THROTTLED_ANIMATED_DECORATION_TYPES.has(
+              entry.decoration.type
+            );
+          if (alwaysAnimate || i % animatedDecorationStride === 0) {
+            liveAnimatedDecorations.push(entry);
+          } else {
+            staticDecorations.push(entry);
+          }
+        }
+      }
+
       staticDecorations.sort((a, b) => a.isoY - b.isoY);
 
       let staticDecorationCanvas: HTMLCanvasElement | null = null;
@@ -7434,40 +7448,21 @@ export function usePrincetonTowerDefenseRuntime() {
       if (staticDecorationCanvas) {
         ctx.drawImage(staticDecorationCanvas, 0, 0, width, height);
       } else {
-        animatedDecorations.push(...staticDecorations);
+        liveAnimatedDecorations.push(...staticDecorations);
       }
 
       cachedStaticDecorationLayerRef.current = {
         key: decorationLayerKey,
         canvas: staticDecorationCanvas,
         backgroundDecorations,
-        animatedDecorations,
+        animatedDecorations: liveAnimatedDecorations,
         depthSensitiveDecorations,
       };
-      animatedVisibleDecorations = animatedDecorations;
+      animatedVisibleDecorations = liveAnimatedDecorations;
       depthSensitiveVisibleDecorations = depthSensitiveDecorations;
     }
 
-    const decorationPressure =
-      entityCountsRef.current.enemies +
-      entityCountsRef.current.projectiles * 0.7 +
-      entityCountsRef.current.effects * 0.5;
-    const animatedDecorationStride =
-      decorationPressure > 220
-        ? QUALITY_ANIMATED_DECORATION_STRIDE_HEAVY[renderQuality]
-        : QUALITY_ANIMATED_DECORATION_STRIDE[renderQuality];
-    for (let i = 0; i < animatedVisibleDecorations.length; i++) {
-      const entry = animatedVisibleDecorations[i];
-      const shouldAlwaysRender = NON_THROTTLED_ANIMATED_DECORATION_TYPES.has(
-        entry.decoration.type
-      );
-      if (
-        !shouldAlwaysRender &&
-        animatedDecorationStride > 1 &&
-        i % animatedDecorationStride !== 0
-      ) {
-        continue;
-      }
+    for (const entry of animatedVisibleDecorations) {
       renderables.push({
         type: "decoration",
         data: {

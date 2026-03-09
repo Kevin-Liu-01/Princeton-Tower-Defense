@@ -1,4 +1,11 @@
-import type { DecorationType, Enemy, Position, SpecialTower, Tower, TowerType } from "../types";
+import type {
+  DecorationType,
+  Enemy,
+  Position,
+  SpecialTower,
+  Tower,
+  TowerType,
+} from "../types";
 import {
   LEVEL_DATA,
   LEVEL_WAVES,
@@ -14,24 +21,26 @@ import {
   resolveMapDecorationRuntimePlacement,
 } from "../utils";
 
-const LARGE_LANDMARK_TYPES = new Set<DecorationType>([
-  "pyramid",
-  "nassau_hall",
-  "giant_sphinx",
-  "glacier",
-  "ice_fortress",
-  "frost_citadel",
-  "infernal_gate",
-  "obsidian_castle",
-  "carnegie_lake",
-]);
+const LANDMARK_TOWER_EXCLUSION: Partial<Record<DecorationType, number>> = {
+  pyramid: 1.0,
+  nassau_hall: 1.0,
+  giant_sphinx: 0.5,
+  glacier: 0.5,
+  ice_fortress: 0.5,
+  frost_citadel: 0.5,
+  infernal_gate: 0.5,
+  obsidian_castle: 0.5,
+  carnegie_lake: 1.0,
+  ruined_temple: 0.2,
+};
 
 function getLandmarkTowerExclusionRange(
   decorType: string,
   size: number,
 ): number {
-  if (LARGE_LANDMARK_TYPES.has(decorType as DecorationType)) {
-    return Math.ceil(size);
+  const multiplier = LANDMARK_TOWER_EXCLUSION[decorType as DecorationType];
+  if (multiplier !== undefined) {
+    return Math.ceil(size * multiplier);
   }
   return 0;
 }

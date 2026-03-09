@@ -881,9 +881,9 @@ export const LEVEL_DATA: Record<
       // Water and creatures
       // Main abyss pool: three emergent tentacles
       { type: "deep_water", pos: { x: 18, y: 8 }, variant: 1, size: 4 },
-      { type: "tentacle", pos: { x: 16.9, y: 9.1 }, variant: 2, size: 1.3 },
+      { type: "tentacle", pos: { x: 16.9, y: 9.1 }, variant: 0, size: 1.3 },
       { type: "tentacle", pos: { x: 18.2, y: 9.35 }, variant: 0, size: 1.0 },
-      { type: "tentacle", pos: { x: 19.3, y: 8.15 }, variant: 2, size: 1.55 },
+      { type: "tentacle", pos: { x: 19.3, y: 8.15 }, variant: 0, size: 1.55 },
 
       { type: "deep_water", pos: { x: 27, y: 11 }, variant: 1, size: 2.5 },
       { type: "deep_water", pos: { x: 2, y: 18 }, variant: 0, size: 2 },

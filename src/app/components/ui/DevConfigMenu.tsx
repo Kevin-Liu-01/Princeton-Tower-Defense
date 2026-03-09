@@ -72,7 +72,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
     levelOptions[0]?.id ?? ""
   );
   const [starsInput, setStarsInput] = useState("3");
-  const [pawPointsInput, setPawPointsInput] = useState("100");
+  const [pawPointsInput, setPawPointsInput] = useState("10000");
   const [progressDraft, setProgressDraft] = useState<string>(() =>
     JSON.stringify(progress, null, 2)
   );
@@ -215,6 +215,85 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                 ) : null}
               </section>
 
+              {gameState === "playing" ? (
+                <section className="rounded border border-blue-300/30 bg-blue-950/30 p-2">
+                  <div className="mb-2 font-semibold uppercase tracking-wide text-blue-200">
+                    In-Game Cheats
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onInstantVictory();
+                      setFeedback({ message: "Triggered instant victory.", isError: false });
+                    }}
+                    className="mb-2 w-full rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                  >
+                    Instant Victory
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onInstantLose();
+                      setFeedback({ message: "Triggered instant lose.", isError: false });
+                    }}
+                    className="mb-2 w-full rounded border border-red-300/40 bg-red-900/40 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/50"
+                  >
+                    Instant Lose
+                  </button>
+
+                  <div className="mb-2 grid grid-cols-[90px_auto] gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={pawPointsInput}
+                      onChange={(event) => setPawPointsInput(event.target.value)}
+                      className="rounded border border-blue-300/40 bg-black/60 px-2 py-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGrantPawPoints}
+                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                    >
+                      Grant PawPoints
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onAdjustLives(1)}
+                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                    >
+                      +1 Life
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAdjustLives(5)}
+                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                    >
+                      +5 Lives
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAdjustLives(-1)}
+                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                    >
+                      -1 Life
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onAdjustLives(-5)}
+                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                    >
+                      -5 Lives
+                    </button>
+                  </div>
+                </section>
+              ) : null}
+
               <section className="rounded border border-amber-300/30 bg-amber-950/30 p-2">
                 <div className="mb-2 font-semibold uppercase tracking-wide text-amber-200">
                   Progress Controls
@@ -318,85 +397,6 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   Apply Data
                 </button>
               </section>
-
-              {gameState === "playing" ? (
-                <section className="rounded border border-blue-300/30 bg-blue-950/30 p-2">
-                  <div className="mb-2 font-semibold uppercase tracking-wide text-blue-200">
-                    In-Game Cheats
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onInstantVictory();
-                      setFeedback({ message: "Triggered instant victory.", isError: false });
-                    }}
-                    className="mb-2 w-full rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                  >
-                    Instant Victory
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onInstantLose();
-                      setFeedback({ message: "Triggered instant lose.", isError: false });
-                    }}
-                    className="mb-2 w-full rounded border border-red-300/40 bg-red-900/40 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/50"
-                  >
-                    Instant Lose
-                  </button>
-
-                  <div className="mb-2 grid grid-cols-[90px_auto] gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      value={pawPointsInput}
-                      onChange={(event) => setPawPointsInput(event.target.value)}
-                      className="rounded border border-blue-300/40 bg-black/60 px-2 py-1"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleGrantPawPoints}
-                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                    >
-                      Grant PawPoints
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onAdjustLives(1)}
-                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                    >
-                      +1 Life
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onAdjustLives(5)}
-                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                    >
-                      +5 Lives
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onAdjustLives(-1)}
-                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                    >
-                      -1 Life
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onAdjustLives(-5)}
-                      className="rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
-                    >
-                      -5 Lives
-                    </button>
-                  </div>
-                </section>
-              ) : null}
 
               {feedback ? (
                 <div
