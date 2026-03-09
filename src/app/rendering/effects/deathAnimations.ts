@@ -871,8 +871,8 @@ export function renderPoisonDeath({
 
 // ---------------------------------------------------------------------------
 // Default Death
-// Quick white flash -> colored fragments scatter -> expanding ring -> smoke
-// Duration: 600ms
+// Body collapses -> debris scatters -> dust cloud -> region-colored pile
+// Duration: 1500ms
 // ---------------------------------------------------------------------------
 export function renderDefaultDeath({
   ctx,
@@ -881,75 +881,146 @@ export function renderDefaultDeath({
   progress: t,
   effect,
 }: DeathAnimationParams): void {
-  const deathSize = Math.max(14, (effect.enemySize || effect.size || 18) * 0.6) * zoom;
-  const deathColor = effect.color || "#ff4444";
+  const size = getDeathSize(effect, zoom);
   const cx = screenPos.x;
   const cy = screenPos.y;
+  const groundY = cy + size * 0.25;
 
-  // Phase 1 (0–0.25): White flash burst
-  if (t < 0.25) {
-    const flashT = t / 0.25;
-    const scale = 0.3 + easeOutCubic(flashT) * 0.6;
-    const flashAlpha = 1 - easeInQuad(flashT) * 0.6;
+  const groundColors = effect.regionGroundColors || ["#5a4e3e", "#4a3e2e", "#3a2e1e"];
+  const baseColor = groundColors[0];
+  const midColor = groundColors[1] || groundColors[0];
+  const darkColor = groundColors[2] || groundColors[1] || groundColors[0];
 
-    ctx.globalAlpha = flashAlpha * 0.4;
-    ctx.fillStyle = deathColor;
+  // Phase 1 (0–0.12): Brief flash in base color as the body pops
+  if (t < 0.12) {
+    const flashT = t / 0.12;
+    const scale = 0.4 + easeOutCubic(flashT) * 0.6;
+    const flashAlpha = 1 - easeInQuad(flashT) * 0.4;
+
+    ctx.globalAlpha = flashAlpha * 0.35;
+    ctx.fillStyle = baseColor;
     ctx.beginPath();
-    ctx.ellipse(cx, cy, deathSize * 0.35 * scale, deathSize * 0.28 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, size * 0.5 * scale, size * 0.4 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = flashAlpha * 0.8;
+    ctx.globalAlpha = flashAlpha * 0.6;
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.ellipse(cx, cy, deathSize * 0.18 * scale, deathSize * 0.14 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, size * 0.2 * scale, size * 0.15 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Phase 2 (0.1–0.85): Fragment scatter
-  if (t > 0.1 && t < 0.85) {
-    const fragT = easeOutCubic((t - 0.1) / 0.75);
-    const fragCount = 10;
-    for (let i = 0; i < fragCount; i++) {
-      const angle = (i / fragCount) * Math.PI * 2 + seededRandom(i * 7) * 0.5;
-      const speed = 0.6 + seededRandom(i * 13) * 0.6;
-      const dist = fragT * deathSize * speed * 1.8;
-      const fragX = cx + Math.cos(angle) * dist;
-      const fragY = cy + Math.sin(angle) * dist * ISO_Y_RATIO - fragT * deathSize * 0.3;
-      const fragSize = deathSize * 0.1 * (1 - fragT * 0.7);
+  // Phase 2 (0.04–0.2): Body collapses downward into a crumple
+  if (t > 0.04 && t < 0.2) {
+    const collapseT = easeInQuad((t - 0.04) / 0.16);
+    const bodyH = size * 0.7 * (1 - collapseT);
+    const bodyW = size * 0.35 * (1 + collapseT * 0.6);
 
-      ctx.globalAlpha = (1 - fragT) * 0.8;
-      ctx.fillStyle = i % 2 === 0 ? deathColor : "#ffffff";
-      ctx.save();
-      ctx.translate(fragX, fragY);
-      ctx.rotate(fragT * (seededRandom(i * 19) - 0.5) * 4);
-      ctx.fillRect(-fragSize * 0.5, -fragSize * 0.5, fragSize, fragSize);
-      ctx.restore();
+    ctx.globalAlpha = (1 - collapseT) * 0.55;
+    ctx.fillStyle = midColor;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + size * 0.2 * collapseT, bodyW, Math.max(2, bodyH), 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Phase 3 (0.05–0.25): Debris chunks scatter outward briefly
+  if (t > 0.05 && t < 0.25) {
+    const debrisT = easeOutCubic((t - 0.05) / 0.2);
+    const debrisCount = 12;
+    for (let i = 0; i < debrisCount; i++) {
+      const angle = (i / debrisCount) * Math.PI * 2 + seededRandom(i * 11) * 0.5;
+      const speed = 0.5 + seededRandom(i * 19) * 0.6;
+      const dist = debrisT * size * speed * 1.2;
+      const dx = cx + Math.cos(angle) * dist;
+      const dy = cy + Math.sin(angle) * dist * 0.4 + debrisT * size * 0.1;
+      const dSize = size * (0.04 + seededRandom(i * 23) * 0.06) * (1 - debrisT * 0.6);
+
+      ctx.globalAlpha = (1 - debrisT) * 0.75;
+      ctx.fillStyle = i % 3 === 0 ? baseColor : i % 3 === 1 ? midColor : darkColor;
+      ctx.beginPath();
+      ctx.arc(dx, dy, dSize, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
-  // Phase 3 (0.15–0.9): Expanding dissolve ring
-  if (t > 0.15 && t < 0.9) {
-    const ringT = easeOutCubic((t - 0.15) / 0.75);
-    const ringRadius = ringT * deathSize * 1.3;
-    ctx.globalAlpha = (1 - ringT) * 0.4;
-    ctx.strokeStyle = deathColor;
-    ctx.lineWidth = Math.max(0.5, (1 - ringT) * 2.5 * zoom);
-    ctx.beginPath();
-    ctx.arc(cx, cy, ringRadius, 0, Math.PI * 2);
-    ctx.stroke();
+  // Phase 4 (0.1–0.3): Dust cloud billowing up from collapse
+  if (t > 0.1 && t < 0.3) {
+    const dustT = (t - 0.1) / 0.2;
+    for (let i = 0; i < 5; i++) {
+      const delay = seededRandom(i * 51) * 0.15;
+      if (dustT < delay) continue;
+      const localT = Math.min(1, (dustT - delay) / (1 - delay));
+      const driftX = (seededRandom(i * 57) - 0.5) * size * 0.6;
+      const cloudX = cx + driftX * easeOutQuad(localT);
+      const cloudY = groundY - localT * size * 0.5;
+      const cloudSize = size * (0.2 + i * 0.07) * (0.3 + easeOutQuad(localT) * 0.7);
+
+      ctx.globalAlpha = (1 - easeInQuad(localT)) * 0.25;
+      ctx.fillStyle = baseColor;
+      ctx.beginPath();
+      ctx.ellipse(cloudX, cloudY, cloudSize, cloudSize * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  // Phase 4 (0.2–1.0): Smoke puff
-  if (t > 0.2) {
-    const smokeT = (t - 0.2) / 0.8;
-    const smokeAlpha = (1 - easeInQuad(smokeT)) * 0.25;
-    const smokeSize = deathSize * 0.3 * (0.5 + easeOutQuad(smokeT) * 2);
-    ctx.globalAlpha = smokeAlpha;
-    ctx.fillStyle = "#666666";
+  // Phase 5 (0.12–1.0): Ground pile in region colors — appears, sits, then fades
+  if (t > 0.12) {
+    const pileT = (t - 0.12) / 0.88;
+    const pileAppear = Math.min(1, easeOutCubic(pileT * 4));
+    const pileFade = pileT > 0.55 ? easeInQuad((pileT - 0.55) / 0.45) : 0;
+    const pileAlpha = pileAppear * (1 - pileFade);
+    const pileW = size * 1.05;
+    const pileH = size * 0.32;
+
+    // Shadow beneath pile
+    ctx.globalAlpha = pileAlpha * 0.25;
+    ctx.fillStyle = darkColor;
     ctx.beginPath();
-    ctx.arc(cx, cy - smokeT * deathSize * 0.4, smokeSize, 0, Math.PI * 2);
+    ctx.ellipse(cx, groundY + 3 * zoom, pileW * 1.2 * pileAppear, pileH * 1.15 * pileAppear, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Main pile base
+    ctx.globalAlpha = pileAlpha * 0.8;
+    ctx.fillStyle = midColor;
+    ctx.beginPath();
+    ctx.ellipse(cx, groundY, pileW * pileAppear, pileH * pileAppear, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Raised center mound
+    ctx.globalAlpha = pileAlpha * 0.85;
+    ctx.fillStyle = baseColor;
+    ctx.beginPath();
+    ctx.ellipse(cx, groundY - pileH * 0.25 * pileAppear, pileW * 0.55 * pileAppear, pileH * 0.45 * pileAppear, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Light highlight on top
+    ctx.globalAlpha = pileAlpha * 0.3;
+    ctx.fillStyle = lightenColor(baseColor, 40);
+    ctx.beginPath();
+    ctx.ellipse(cx - pileW * 0.08, groundY - pileH * 0.35 * pileAppear, pileW * 0.22 * pileAppear, pileH * 0.18 * pileAppear, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Scattered debris chunks around pile
+    for (let i = 0; i < 8; i++) {
+      const angle = seededRandom(i * 47) * Math.PI * 2;
+      const dist = pileW * (0.5 + seededRandom(i * 53) * 0.6) * pileAppear;
+      const speckX = cx + Math.cos(angle) * dist;
+      const speckY = groundY + Math.sin(angle) * dist * 0.3;
+      const speckSize = zoom * (1.5 + seededRandom(i * 61) * 1.5);
+      ctx.globalAlpha = pileAlpha * 0.5 * (1 - pileFade);
+      ctx.fillStyle = i % 3 === 0 ? darkColor : i % 3 === 1 ? midColor : baseColor;
+      ctx.beginPath();
+      ctx.arc(speckX, speckY, speckSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
+}
+
+function lightenColor(hex: string, amount: number): string {
+  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + amount);
+  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + amount);
+  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + amount);
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
 // ---------------------------------------------------------------------------

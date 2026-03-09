@@ -981,8 +981,8 @@ export function usePrincetonTowerDefenseRuntime() {
     [getCanvasDimensions]
   );
 
-  const handleCanvasWheel = useCallback(
-    (e: React.WheelEvent<HTMLCanvasElement>) => {
+  const handleCanvasWheelNative = useCallback(
+    (e: WheelEvent) => {
       if (gameState !== "playing" || battleOutcome) return;
       e.preventDefault();
 
@@ -1056,6 +1056,7 @@ export function usePrincetonTowerDefenseRuntime() {
       lastGestureScaleRef.current = null;
     };
 
+    canvas.addEventListener("wheel", handleCanvasWheelNative, { passive: false });
     canvas.addEventListener("gesturestart", handleGestureStart as EventListener, {
       passive: false,
     });
@@ -1067,12 +1068,13 @@ export function usePrincetonTowerDefenseRuntime() {
     });
 
     return () => {
+      canvas.removeEventListener("wheel", handleCanvasWheelNative);
       canvas.removeEventListener("gesturestart", handleGestureStart as EventListener);
       canvas.removeEventListener("gesturechange", handleGestureChange as EventListener);
       canvas.removeEventListener("gestureend", handleGestureEnd as EventListener);
       lastGestureScaleRef.current = null;
     };
-  }, [gameState, battleOutcome, zoomCameraAtClientPoint]);
+  }, [gameState, battleOutcome, zoomCameraAtClientPoint, handleCanvasWheelNative]);
 
   useEffect(() => {
     cachedStaticDecorationLayerRef.current = null;
@@ -1301,8 +1303,11 @@ export function usePrincetonTowerDefenseRuntime() {
         freeze: 800,
         sonic: 650,
         poison: 1200,
-        default: 600,
+        default: 1500,
       };
+
+      const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
+      const regionColors = REGION_THEMES[mapThemeKey]?.ground;
 
       const deathEffect: Effect = {
         id: generateId("fx"),
@@ -1316,12 +1321,13 @@ export function usePrincetonTowerDefenseRuntime() {
         enemySize: eData.size,
         isFlying: eData.flying,
         deathCause,
+        regionGroundColors: regionColors,
       };
       (deathEffect as Effect & { _spawnedAt: number })._spawnedAt = performance.now();
       pendingDeathEffectsRef.current.push(deathEffect);
       addEffectEntity(deathEffect);
     },
-    [awardBounty, addParticles, addEffectEntity]
+    [awardBounty, addParticles, addEffectEntity, selectedMap]
   );
 
   // Keyboard controls for camera
@@ -4530,7 +4536,8 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         sparkPositions.push(info.pos);
                         const eDeathData = ENEMY_DATA[enemy.type];
-                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 600, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying, deathCause: "default" as const }]);
+                        const arcaneRegionColors = REGION_THEMES[LEVEL_DATA[selectedMap]?.theme || "grassland"]?.ground;
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 1500, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying, deathCause: "default" as const, regionGroundColors: arcaneRegionColors }]);
                         return null;
                       }
                     }
@@ -4551,7 +4558,8 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         particlePositions.push(info.pos);
                         const eDeathData2 = ENEMY_DATA[enemy.type];
-                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 600, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying, deathCause: "default" as const }]);
+                        const quakeRegionColors = REGION_THEMES[LEVEL_DATA[selectedMap]?.theme || "grassland"]?.ground;
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 1500, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying, deathCause: "default" as const, regionGroundColors: quakeRegionColors }]);
                         return null;
                       }
                     }
@@ -11696,7 +11704,6 @@ export function usePrincetonTowerDefenseRuntime() {
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
             onPointerLeave={handleCanvasPointerLeave}
-            onWheel={handleCanvasWheel}
             className={`w-full h-full touch-none game-start-fade ${isPanning ? 'cursor-grabbing' :
               repositioningTower ? 'cursor-move' :
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'

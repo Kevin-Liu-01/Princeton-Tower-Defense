@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef, useCallback } from "react";
 
 interface CircleActionButtonProps {
   x: number;
@@ -9,12 +9,15 @@ interface CircleActionButtonProps {
   icon: React.ReactNode;
   label: string;
   subLabel?: string;
+  tooltip?: string;
   onClick: () => void;
   disabled?: boolean;
   borderColor: string;
   glowColor: string;
   bgGradient: string;
 }
+
+const LONG_PRESS_MS = 400;
 
 export function CircleActionButton({
   x,
@@ -23,12 +26,47 @@ export function CircleActionButton({
   icon,
   label,
   subLabel,
+  tooltip,
   onClick,
   disabled = false,
   borderColor,
   glowColor,
   bgGradient,
 }: CircleActionButtonProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didLongPress = useRef(false);
+
+  const clearTimer = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handlePointerDown = useCallback(() => {
+    if (!tooltip) return;
+    didLongPress.current = false;
+    longPressTimer.current = setTimeout(() => {
+      didLongPress.current = true;
+      setShowTooltip(true);
+    }, LONG_PRESS_MS);
+  }, [tooltip]);
+
+  const handlePointerUp = useCallback(() => {
+    clearTimer();
+    if (didLongPress.current) {
+      setShowTooltip(false);
+      didLongPress.current = false;
+    }
+  }, [clearTimer]);
+
+  const handlePointerLeave = useCallback(() => {
+    clearTimer();
+    setShowTooltip(false);
+    didLongPress.current = false;
+  }, [clearTimer]);
+
   return (
     <div
       className="fixed flex flex-col items-center pointer-events-none"
@@ -42,8 +80,15 @@ export function CircleActionButton({
       <button
         onClick={(e) => {
           e.stopPropagation();
+          if (didLongPress.current) return;
           onClick();
         }}
+        onMouseEnter={tooltip ? () => setShowTooltip(true) : undefined}
+        onMouseLeave={tooltip ? () => setShowTooltip(false) : undefined}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        onPointerCancel={handlePointerLeave}
         disabled={disabled}
         className={`pointer-events-auto rounded-full flex items-center justify-center transition-all duration-150 ${
           disabled
@@ -62,6 +107,8 @@ export function CircleActionButton({
       >
         {icon}
       </button>
+
+      {/* Label + cost */}
       <div
         className="text-center pointer-events-none whitespace-nowrap flex flex-col items-center"
         style={{ marginTop: 2 }}
@@ -91,6 +138,47 @@ export function CircleActionButton({
           </div>
         )}
       </div>
+
+      {/* Tooltip (hover / long-press) */}
+      {tooltip && showTooltip && (
+        <div
+          className="pointer-events-none absolute left-1/2 flex flex-col items-center"
+          style={{
+            bottom: size + 8,
+            transform: "translateX(-50%)",
+            zIndex: 999,
+          }}
+        >
+          <div
+            className="rounded-lg px-3 py-2"
+            style={{
+              width: 220,
+              fontSize: 12,
+              lineHeight: 1.4,
+              color: "#fff",
+              background: "rgba(0,0,0,0.88)",
+              border: `1px solid ${borderColor}`,
+              boxShadow: `0 0 8px ${glowColor}, 0 4px 12px rgba(0,0,0,0.6)`,
+              textShadow: "0 1px 2px rgba(0,0,0,0.8)",
+              whiteSpace: "normal",
+              textAlign: "center",
+            }}
+          >
+            {tooltip}
+          </div>
+          <div
+            style={{
+              width: 10,
+              height: 10,
+              marginTop: -5.5,
+              background: "rgba(0,0,0,0.88)",
+              borderRight: `1px solid ${borderColor}`,
+              borderBottom: `1px solid ${borderColor}`,
+              transform: "rotate(45deg)",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -67,6 +67,7 @@ interface ActionButtonDef {
   icon: React.ReactNode;
   label: string;
   subLabel?: string;
+  tooltip?: string;
   onClick: () => void;
   disabled?: boolean;
   borderColor: string;
@@ -130,6 +131,7 @@ function buildActionButtons(
       icon: <span className="text-red-200">{icons.A}</span>,
       label: towerData.upgrades.A.name,
       subLabel: `${upgradeCost} PP`,
+      tooltip: towerData.upgrades.A.effect,
       onClick: () => upgradeTower(tower.id, "A"),
       disabled: pawPoints < upgradeCost,
       borderColor: "rgba(239,68,68,0.7)",
@@ -142,6 +144,7 @@ function buildActionButtons(
       icon: <span className="text-blue-200">{icons.B}</span>,
       label: towerData.upgrades.B.name,
       subLabel: `${upgradeCost} PP`,
+      tooltip: towerData.upgrades.B.effect,
       onClick: () => upgradeTower(tower.id, "B"),
       disabled: pawPoints < upgradeCost,
       borderColor: "rgba(59,130,246,0.7)",
@@ -411,9 +414,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const nextStats = tower.level < 4
     ? calculateTowerStats(tower.type, tower.level + 1, undefined, 1, 1)
     : null;
-  const upgradeAStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "A", 1, 1) : null;
-  const upgradeBStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "B", 1, 1) : null;
-
   const hasRangeBuff = rangeBoost > 1;
   const hasDamageBuff = damageBoost > 1;
   const hasAttackSpeedBuff = attackSpeedBoost > 1;
@@ -670,6 +670,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             icon={btn.icon}
             label={btn.label}
             subLabel={btn.subLabel}
+            tooltip={btn.tooltip}
             onClick={btn.onClick}
             disabled={btn.disabled}
             borderColor={btn.borderColor}
@@ -1010,17 +1011,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             );
           })()}
 
-          {/* Upgrade Preview for Level 3 */}
-          {tower.level === 3 && upgradeAStats && upgradeBStats && (
-            <div className="grid grid-cols-2 gap-1 text-[7px]">
-              <div className="bg-red-950/40 p-1 rounded-md border border-red-800/40">
-                <div className="text-red-300 text-center">{towerData.upgrades.A.effect}</div>
-              </div>
-              <div className="bg-blue-950/40 p-1 rounded-md border border-blue-800/40">
-                <div className="text-blue-300 text-center">{towerData.upgrades.B.effect}</div>
-              </div>
-            </div>
-          )}
 
           {/* Arrow pointer */}
           {!flipBelow ? (

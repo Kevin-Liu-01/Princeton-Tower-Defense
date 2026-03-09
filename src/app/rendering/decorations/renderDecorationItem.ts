@@ -7,6 +7,7 @@ import {
   drawIsometricPrism,
   drawIsometricPyramid,
   drawBrickFace as sharedBrickFace,
+  drawOrganicBlobAt,
 } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
@@ -2975,16 +2976,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
       clearShadow(ctx);
       ctx.fillStyle = "#5d4037";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 2 * s,
-        10 * s,
-        5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 2 * s, 10 * s, 5 * s, decorX * 4.7 + decorY * 8.1);
       ctx.fill();
       break;
     case "sword": {
@@ -3269,16 +3261,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Disturbed ground / dirt mound at base of cluster
       if (swCount > 1) {
         ctx.fillStyle = "rgba(70,58,40,0.22)";
-        ctx.beginPath();
-        ctx.ellipse(
-          swX,
-          swY + 3 * s,
-          (5 + swCount * 2) * s,
-          (2.5 + swCount) * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, swX, swY + 3 * s, (5 + swCount * 2) * s, (2.5 + swCount) * s, swSeed * 3.7, 0.2);
         ctx.fill();
       }
 
@@ -3412,16 +3395,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Disturbed ground at base of cluster
       if (arCount > 2) {
         ctx.fillStyle = "rgba(65,55,38,0.18)";
-        ctx.beginPath();
-        ctx.ellipse(
-          arX,
-          arY + 2 * s,
-          (4 + arCount * 1.5) * s,
-          (2 + arCount * 0.6) * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, arX, arY + 2 * s, (4 + arCount * 1.5) * s, (2 + arCount * 0.6) * s, arSeed * 2.9, 0.2);
         ctx.fill();
       }
 
@@ -7246,151 +7220,189 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
 
-    case "lamppost":
-      // Victorian style isometric lamppost
-      // Ground Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 8 * s, 4 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
+    case "lamppost": {
+      const TRUE_ISO = 1 / Math.sqrt(3);
       const metalDark = "#212121";
       const metalMid = "#424242";
+      const metalDeep = "#1A1A1A";
+      const lpx = screenPos.x;
+      const lpy = screenPos.y;
 
-      // Base (stepped)
+      // Ground shadow
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(lpx, lpy, 8 * s, 4 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Base step 1 (larger isometric diamond platform)
+      const b1w = 6 * s;
+      const b1d = b1w * TRUE_ISO;
+      const b1h = 2 * s;
+      ctx.fillStyle = metalMid;
+      ctx.beginPath();
+      ctx.moveTo(lpx - b1w, lpy);
+      ctx.lineTo(lpx, lpy + b1d);
+      ctx.lineTo(lpx, lpy + b1d - b1h);
+      ctx.lineTo(lpx - b1w, lpy - b1h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = metalDeep;
+      ctx.beginPath();
+      ctx.moveTo(lpx, lpy + b1d);
+      ctx.lineTo(lpx + b1w, lpy);
+      ctx.lineTo(lpx + b1w, lpy - b1h);
+      ctx.lineTo(lpx, lpy + b1d - b1h);
+      ctx.closePath();
+      ctx.fill();
       ctx.fillStyle = metalDark;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 2 * s,
-        6 * s,
-        3 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(lpx - b1w, lpy - b1h);
+      ctx.lineTo(lpx, lpy + b1d - b1h);
+      ctx.lineTo(lpx + b1w, lpy - b1h);
+      ctx.lineTo(lpx, lpy - b1d - b1h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Base step 2 (smaller isometric diamond platform)
+      const b2y = lpy - b1h;
+      const b2w = 5 * s;
+      const b2d = b2w * TRUE_ISO;
+      const b2h = 2 * s;
+      ctx.fillStyle = metalDark;
+      ctx.beginPath();
+      ctx.moveTo(lpx - b2w, b2y);
+      ctx.lineTo(lpx, b2y + b2d);
+      ctx.lineTo(lpx, b2y + b2d - b2h);
+      ctx.lineTo(lpx - b2w, b2y - b2h);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = metalDeep;
+      ctx.beginPath();
+      ctx.moveTo(lpx, b2y + b2d);
+      ctx.lineTo(lpx + b2w, b2y);
+      ctx.lineTo(lpx + b2w, b2y - b2h);
+      ctx.lineTo(lpx, b2y + b2d - b2h);
+      ctx.closePath();
       ctx.fill();
       ctx.fillStyle = metalMid;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 4 * s,
-        5 * s,
-        2.5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(lpx - b2w, b2y - b2h);
+      ctx.lineTo(lpx, b2y + b2d - b2h);
+      ctx.lineTo(lpx + b2w, b2y - b2h);
+      ctx.lineTo(lpx, b2y - b2d - b2h);
+      ctx.closePath();
       ctx.fill();
 
-      {
-        // Pole (isometric cylinder)
-        const lpx = screenPos.x,
-          lpy = screenPos.y;
-        const lpD = 1.5 * s;
-        const poleGrad = ctx.createLinearGradient(
-          lpx - 2 * s,
-          0,
-          lpx + 2 * s,
-          0,
-        );
-        poleGrad.addColorStop(0, metalDark);
-        poleGrad.addColorStop(0.5, metalMid);
-        poleGrad.addColorStop(1, metalDark);
-        // Front face
-        ctx.fillStyle = poleGrad;
-        ctx.beginPath();
-        ctx.moveTo(lpx - 2 * s, lpy - 4 * s);
-        ctx.lineTo(lpx + 2 * s, lpy - 4 * s);
-        ctx.lineTo(lpx + 2 * s, lpy - 35 * s);
-        ctx.lineTo(lpx - 2 * s, lpy - 35 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Side face
-        ctx.fillStyle = "#1A1A1A";
-        ctx.beginPath();
-        ctx.moveTo(lpx + 2 * s, lpy - 4 * s);
-        ctx.lineTo(lpx + 2 * s + lpD, lpy - 4 * s - lpD * 0.5);
-        ctx.lineTo(lpx + 2 * s + lpD, lpy - 35 * s - lpD * 0.5);
-        ctx.lineTo(lpx + 2 * s, lpy - 35 * s);
-        ctx.closePath();
-        ctx.fill();
+      // Pole — isometric thin column
+      const poleHW = 2 * s;
+      const poleHD = poleHW * TRUE_ISO;
+      const poleBot = b2y - b2h;
+      const poleTop = lpy - 35 * s;
+      const poleGL = ctx.createLinearGradient(lpx - poleHW, 0, lpx, 0);
+      poleGL.addColorStop(0, metalDark);
+      poleGL.addColorStop(1, metalMid);
+      ctx.fillStyle = poleGL;
+      ctx.beginPath();
+      ctx.moveTo(lpx - poleHW, poleBot);
+      ctx.lineTo(lpx, poleBot + poleHD);
+      ctx.lineTo(lpx, poleTop + poleHD);
+      ctx.lineTo(lpx - poleHW, poleTop);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = metalDeep;
+      ctx.beginPath();
+      ctx.moveTo(lpx, poleBot + poleHD);
+      ctx.lineTo(lpx + poleHW, poleBot);
+      ctx.lineTo(lpx + poleHW, poleTop);
+      ctx.lineTo(lpx, poleTop + poleHD);
+      ctx.closePath();
+      ctx.fill();
 
-        // Lamp Head fixture (isometric trapezoid)
-        ctx.fillStyle = metalDark;
-        ctx.beginPath();
-        ctx.moveTo(lpx - 4 * s, lpy - 35 * s);
-        ctx.lineTo(lpx + 4 * s, lpy - 35 * s);
-        ctx.lineTo(lpx + 6 * s, lpy - 45 * s);
-        ctx.lineTo(lpx - 6 * s, lpy - 45 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Fixture side face
-        ctx.fillStyle = "#1A1A1A";
-        ctx.beginPath();
-        ctx.moveTo(lpx + 4 * s, lpy - 35 * s);
-        ctx.lineTo(lpx + 4 * s + lpD, lpy - 35 * s - lpD * 0.5);
-        ctx.lineTo(lpx + 6 * s + lpD, lpy - 45 * s - lpD * 0.5);
-        ctx.lineTo(lpx + 6 * s, lpy - 45 * s);
-        ctx.closePath();
-        ctx.fill();
+      // Lamp fixture — isometric trapezoid prism (widens upward)
+      const fixBot = poleTop;
+      const fixTop = lpy - 45 * s;
+      const fixBotHW = 4 * s;
+      const fixTopHW = 6 * s;
+      const fixBotHD = fixBotHW * TRUE_ISO;
+      const fixTopHD = fixTopHW * TRUE_ISO;
+      ctx.fillStyle = metalDark;
+      ctx.beginPath();
+      ctx.moveTo(lpx - fixBotHW, fixBot);
+      ctx.lineTo(lpx, fixBot + fixBotHD);
+      ctx.lineTo(lpx, fixTop + fixTopHD);
+      ctx.lineTo(lpx - fixTopHW, fixTop);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = metalDeep;
+      ctx.beginPath();
+      ctx.moveTo(lpx, fixBot + fixBotHD);
+      ctx.lineTo(lpx + fixBotHW, fixBot);
+      ctx.lineTo(lpx + fixTopHW, fixTop);
+      ctx.lineTo(lpx, fixTop + fixTopHD);
+      ctx.closePath();
+      ctx.fill();
 
-        // Glass/Light (isometric box)
-        const flicker = 0.1 + Math.sin(decorTime * 3) * 0.05;
-        const glassY = lpy - 44 * s;
-        ctx.fillStyle = `rgba(255, 236, 179, ${0.8 + flicker})`;
-        ctx.beginPath();
-        ctx.moveTo(lpx - 4 * s, glassY);
-        ctx.lineTo(lpx + 4 * s, glassY);
-        ctx.lineTo(lpx + 4 * s, glassY + 8 * s);
-        ctx.lineTo(lpx - 4 * s, glassY + 8 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Glass side
-        ctx.fillStyle = `rgba(220, 200, 140, ${0.6 + flicker})`;
-        ctx.beginPath();
-        ctx.moveTo(lpx + 4 * s, glassY);
-        ctx.lineTo(lpx + 4 * s + lpD * 1.5, glassY - lpD * 0.75);
-        ctx.lineTo(lpx + 4 * s + lpD * 1.5, glassY + 8 * s - lpD * 0.75);
-        ctx.lineTo(lpx + 4 * s, glassY + 8 * s);
-        ctx.closePath();
-        ctx.fill();
+      // Glass/light — isometric prism (warm glow faces)
+      const flicker = 0.1 + Math.sin(decorTime * 3) * 0.05;
+      const glassBot = fixBot + 1 * s;
+      const glassTop = fixTop - 1 * s;
+      const glassHW = 3.5 * s;
+      const glassHD = glassHW * TRUE_ISO;
+      ctx.fillStyle = `rgba(255, 236, 179, ${0.8 + flicker})`;
+      ctx.beginPath();
+      ctx.moveTo(lpx - glassHW, glassBot);
+      ctx.lineTo(lpx, glassBot + glassHD);
+      ctx.lineTo(lpx, glassTop + glassHD);
+      ctx.lineTo(lpx - glassHW, glassTop);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = `rgba(220, 200, 140, ${0.6 + flicker})`;
+      ctx.beginPath();
+      ctx.moveTo(lpx, glassBot + glassHD);
+      ctx.lineTo(lpx + glassHW, glassBot);
+      ctx.lineTo(lpx + glassHW, glassTop);
+      ctx.lineTo(lpx, glassTop + glassHD);
+      ctx.closePath();
+      ctx.fill();
 
-        // Glow Effect
-        const glowRad = ctx.createRadialGradient(
-          lpx,
-          lpy - 40 * s,
-          2 * s,
-          lpx,
-          lpy - 40 * s,
-          25 * s,
-        );
-        glowRad.addColorStop(0, `rgba(255, 213, 79, ${0.4 + flicker})`);
-        glowRad.addColorStop(1, "rgba(255, 213, 79, 0)");
-        ctx.fillStyle = glowRad;
-        ctx.beginPath();
-        ctx.arc(lpx, lpy - 40 * s, 25 * s, 0, Math.PI * 2);
-        ctx.fill();
+      // Glow effect
+      const glowCenterY = (glassBot + glassTop) / 2;
+      const glowRad = ctx.createRadialGradient(lpx, glowCenterY, 2 * s, lpx, glowCenterY, 25 * s);
+      glowRad.addColorStop(0, `rgba(255, 213, 79, ${0.4 + flicker})`);
+      glowRad.addColorStop(1, "rgba(255, 213, 79, 0)");
+      ctx.fillStyle = glowRad;
+      ctx.beginPath();
+      ctx.arc(lpx, glowCenterY, 25 * s, 0, Math.PI * 2);
+      ctx.fill();
 
-        // Lamp Top Cap (isometric pyramid)
-        ctx.fillStyle = metalMid;
-        ctx.beginPath();
-        ctx.moveTo(lpx - 7 * s, lpy - 45 * s);
-        ctx.lineTo(lpx + 7 * s, lpy - 45 * s);
-        ctx.lineTo(lpx, lpy - 52 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Cap side face
-        ctx.fillStyle = "#333333";
-        ctx.beginPath();
-        ctx.moveTo(lpx + 7 * s, lpy - 45 * s);
-        ctx.lineTo(lpx, lpy - 52 * s);
-        ctx.lineTo(lpx + lpD, lpy - 52 * s - lpD * 0.5);
-        ctx.lineTo(lpx + 7 * s + lpD, lpy - 45 * s - lpD * 0.5);
-        ctx.closePath();
-        ctx.fill();
-      }
+      // Top cap — isometric pyramid
+      const capBase = fixTop;
+      const capPeak = lpy - 52 * s;
+      const capHW = 7 * s;
+      const capHD = capHW * TRUE_ISO;
+      ctx.fillStyle = metalDark;
+      ctx.beginPath();
+      ctx.moveTo(lpx - capHW, capBase);
+      ctx.lineTo(lpx, capBase - capHD);
+      ctx.lineTo(lpx, capPeak);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = metalMid;
+      ctx.beginPath();
+      ctx.moveTo(lpx - capHW, capBase);
+      ctx.lineTo(lpx, capBase + capHD);
+      ctx.lineTo(lpx, capPeak);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#333333";
+      ctx.beginPath();
+      ctx.moveTo(lpx, capBase + capHD);
+      ctx.lineTo(lpx + capHW, capBase);
+      ctx.lineTo(lpx, capPeak);
+      ctx.closePath();
+      ctx.fill();
       break;
+    }
 
     case "hedge": {
       const hx = screenPos.x,
@@ -9572,19 +9584,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       groundShadowGrad.addColorStop(0.5, "rgba(100,75,30,0.2)");
       groundShadowGrad.addColorStop(1, "transparent");
       ctx.fillStyle = groundShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        duneBaseX,
-        duneBaseY + 12 * s,
-        60 * s,
-        18 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, duneBaseX, duneBaseY + 12 * s, 60 * s, 18 * s, decorX * 3.7 + decorY * 8.9);
       ctx.fill();
 
-      // Base sand spread - isometric ellipse that grounds the dune
+      // Base sand spread - organic blob that grounds the dune
       const baseSandGrad = ctx.createRadialGradient(
         duneBaseX,
         duneBaseY + 8 * s,
@@ -9597,16 +9600,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       baseSandGrad.addColorStop(0.6, "#b89035");
       baseSandGrad.addColorStop(1, "rgba(168,128,48,0)");
       ctx.fillStyle = baseSandGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        duneBaseX,
-        duneBaseY + 8 * s,
-        55 * s,
-        16 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, duneBaseX, duneBaseY + 8 * s, 55 * s, 16 * s, decorX * 5.1 + decorY * 12.3);
       ctx.fill();
 
       // Main dune body - gradient for depth with curved isometric base
@@ -15688,16 +15682,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.15)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 5 * s,
-        22 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x + 3 * s, screenPos.y + 5 * s, 22 * s, 10 * s, decorX * 4.3 + decorY * 7.7);
       ctx.fill();
 
       // Main dune shape (isometric mound)
@@ -15794,16 +15779,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Sand around half-buried chest
       ctx.fillStyle = "#d8c898";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 3 * s,
-        12 * s,
-        5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 3 * s, 12 * s, 5 * s, decorX * 9.1 + decorY * 6.3);
       ctx.fill();
 
       // Chest body - left face
@@ -17042,8 +17018,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       glSnowG.addColorStop(0.8, "#d4e4ee");
       glSnowG.addColorStop(1, "#b8d4e8");
       ctx.fillStyle = glSnowG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 35 * s, 12 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 2 * s, 35 * s, 12 * s, decorX * 6.7 + decorY * 4.9);
       ctx.fill();
 
       // Frost bloom glow at base
@@ -17177,6 +17152,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
     case "ice_fortress": {
       const ifVar = variant % 3;
+      const TRUE_ISO = 1 / Math.sqrt(3);
 
       // Ground shadow
       drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 8 * s, s, 44 * s, 18 * s, 65 * s, 0.35, "0,50,70");
@@ -17191,206 +17167,281 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ifSnowG.addColorStop(0.8, "#cde0ec");
       ifSnowG.addColorStop(1, "#b0cede");
       ctx.fillStyle = ifSnowG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 7 * s, 46 * s, 15 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 7 * s, 46 * s, 15 * s, decorX * 7.3 + decorY * 11.1);
       ctx.fill();
 
       const ifDrawWall = (wx: number, wy: number, ww: number, wh: number, wd: number) => {
-        // Front face with gradient
-        const wfG = ctx.createLinearGradient(wx, wy, wx, wy - wh);
-        wfG.addColorStop(0, "#0277BD");
-        wfG.addColorStop(0.3, "#29B6F6");
-        wfG.addColorStop(0.6, "#81D4FA");
-        wfG.addColorStop(1, "#d6eef8");
-        ctx.fillStyle = wfG;
+        // Proper isometric wall prism — diamond base, 3 visible faces
+        const hl = ww / 2;
+        const hd = wd * TRUE_ISO;
+
+        // Base diamond: left=(wx-hl,wy), front=(wx,wy+hd), right=(wx+hl,wy), back=(wx,wy-hd)
+        // Top diamond: same X, Y shifted up by wh
+        const bL = { x: wx - hl, y: wy };
+        const bF = { x: wx, y: wy + hd };
+        const bR = { x: wx + hl, y: wy };
+        const tL = { x: wx - hl, y: wy - wh };
+        const tF = { x: wx, y: wy + hd - wh };
+        const tR = { x: wx + hl, y: wy - wh };
+        const tB = { x: wx, y: wy - hd - wh };
+
+        // Left face (bright — faces the light)
+        const wlG = ctx.createLinearGradient(bL.x, bL.y, bF.x, tF.y);
+        wlG.addColorStop(0, "#29B6F6");
+        wlG.addColorStop(0.3, "#4fc3f7");
+        wlG.addColorStop(0.6, "#81D4FA");
+        wlG.addColorStop(1, "#d6eef8");
+        ctx.fillStyle = wlG;
         ctx.beginPath();
-        ctx.moveTo(wx - ww / 2, wy);
-        ctx.lineTo(wx - ww / 2, wy - wh);
-        ctx.lineTo(wx + ww / 2, wy - wh);
-        ctx.lineTo(wx + ww / 2, wy);
+        ctx.moveTo(bL.x, bL.y);
+        ctx.lineTo(bF.x, bF.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tL.x, tL.y);
         ctx.closePath();
         ctx.fill();
-        // Right face gradient
-        const wrG = ctx.createLinearGradient(wx + ww / 2, wy, wx + ww / 2 + wd, wy - wd * 0.5);
+
+        // Right face (dark — faces away from light)
+        const wrG = ctx.createLinearGradient(bF.x, bF.y, bR.x, tR.y);
         wrG.addColorStop(0, "#0277BD");
         wrG.addColorStop(0.5, "#01579B");
         wrG.addColorStop(1, "#003c5e");
         ctx.fillStyle = wrG;
         ctx.beginPath();
-        ctx.moveTo(wx + ww / 2, wy);
-        ctx.lineTo(wx + ww / 2, wy - wh);
-        ctx.lineTo(wx + ww / 2 + wd, wy - wh - wd * 0.5);
-        ctx.lineTo(wx + ww / 2 + wd, wy - wd * 0.5);
+        ctx.moveTo(bF.x, bF.y);
+        ctx.lineTo(bR.x, bR.y);
+        ctx.lineTo(tR.x, tR.y);
+        ctx.lineTo(tF.x, tF.y);
         ctx.closePath();
         ctx.fill();
-        // Top face
-        const wtG = ctx.createLinearGradient(wx - ww / 2, wy - wh, wx + ww / 2 + wd, wy - wh - wd * 0.5);
+
+        // Top face (diamond)
+        const wtG = ctx.createLinearGradient(tL.x, tL.y, tR.x, tR.y);
         wtG.addColorStop(0, "#e1f5fe");
         wtG.addColorStop(0.5, "#b3e5fc");
         wtG.addColorStop(1, "#81d4fa");
         ctx.fillStyle = wtG;
         ctx.beginPath();
-        ctx.moveTo(wx - ww / 2, wy - wh);
-        ctx.lineTo(wx + ww / 2, wy - wh);
-        ctx.lineTo(wx + ww / 2 + wd, wy - wh - wd * 0.5);
-        ctx.lineTo(wx - ww / 2 + wd, wy - wh - wd * 0.5);
+        ctx.moveTo(tL.x, tL.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tR.x, tR.y);
+        ctx.lineTo(tB.x, tB.y);
         ctx.closePath();
         ctx.fill();
-        // Snow on top
+
+        // Snow on top face
         ctx.fillStyle = "rgba(240,248,255,0.55)";
         ctx.beginPath();
-        ctx.moveTo(wx - ww / 2 + 2 * s, wy - wh);
-        ctx.quadraticCurveTo(wx, wy - wh - 3 * s, wx + ww / 2 - 2 * s, wy - wh);
-        ctx.lineTo(wx + ww / 2 + wd - 2 * s, wy - wh - wd * 0.5);
-        ctx.quadraticCurveTo(wx + wd / 2, wy - wh - wd * 0.5 - 2 * s, wx - ww / 2 + wd + 2 * s, wy - wh - wd * 0.5);
+        ctx.moveTo(tL.x + 2 * s, tL.y);
+        ctx.quadraticCurveTo((tL.x + tF.x) / 2, (tL.y + tF.y) / 2 - 2 * s, tF.x, tF.y + 1 * s);
+        ctx.quadraticCurveTo((tF.x + tR.x) / 2, (tF.y + tR.y) / 2 - 2 * s, tR.x - 2 * s, tR.y);
+        ctx.lineTo(tB.x, tB.y + 1 * s);
         ctx.closePath();
         ctx.fill();
-        // Stone block lines
+
+        // Stone block lines on left face
         ctx.strokeStyle = "rgba(0,40,60,0.12)";
         ctx.lineWidth = 0.6 * s;
         for (let sl = 1; sl < Math.floor(wh / (6 * s)); sl++) {
-          const sly = wy - sl * 6 * s;
+          const sly = -sl * 6 * s;
           ctx.beginPath();
-          ctx.moveTo(wx - ww / 2 + 1 * s, sly);
-          ctx.lineTo(wx + ww / 2 - 1 * s, sly);
+          ctx.moveTo(bL.x + 1 * s, bL.y + sly);
+          ctx.lineTo(bF.x - 1 * s, bF.y + sly);
           ctx.stroke();
         }
-        // Crenellations
-        const crenW = 4 * s;
-        const crenH = 4 * s;
-        const crenCount = Math.max(2, Math.floor(ww / (crenW * 2)));
-        ctx.fillStyle = "#b3e5fc";
-        for (let cr = 0; cr < crenCount; cr++) {
-          const cx = wx - ww / 2 + crenW + cr * (ww - crenW * 2) / Math.max(1, crenCount - 1);
-          ctx.fillRect(cx - crenW * 0.4, wy - wh - crenH, crenW * 0.8, crenH);
+        // Stone block lines on right face
+        for (let sl = 1; sl < Math.floor(wh / (6 * s)); sl++) {
+          const sly = -sl * 6 * s;
+          ctx.beginPath();
+          ctx.moveTo(bF.x + 1 * s, bF.y + sly);
+          ctx.lineTo(bR.x - 1 * s, bR.y + sly);
+          ctx.stroke();
         }
-        // Icicles hanging from wall edge
+
+        // Crenellations on top face edges
+        const crenH = 4 * s;
+        const crenW = 3 * s;
+        // Left edge crenellations
+        const leftCrenCount = Math.max(2, Math.floor(hl / (crenW * 2.5)));
+        ctx.fillStyle = "#b3e5fc";
+        for (let cr = 0; cr < leftCrenCount; cr++) {
+          const t = (cr + 0.5) / leftCrenCount;
+          const cx = tL.x + (tF.x - tL.x) * t;
+          const cy = tL.y + (tF.y - tL.y) * t;
+          ctx.fillRect(cx - crenW * 0.4, cy - crenH, crenW * 0.8, crenH);
+        }
+        // Right edge crenellations
+        for (let cr = 0; cr < leftCrenCount; cr++) {
+          const t = (cr + 0.5) / leftCrenCount;
+          const cx = tF.x + (tR.x - tF.x) * t;
+          const cy = tF.y + (tR.y - tF.y) * t;
+          ctx.fillRect(cx - crenW * 0.4, cy - crenH, crenW * 0.8, crenH);
+        }
+
+        // Icicles hanging from front edge
         ctx.fillStyle = "rgba(179,229,252,0.55)";
         for (let wic = 0; wic < 5; wic++) {
-          const wicx = wx - ww / 2 + ww * 0.15 + wic * ww * 0.18;
+          const t = 0.1 + wic * 0.2;
+          const wicx = bL.x + (bF.x - bL.x) * t;
+          const wicy = bL.y + (bF.y - bL.y) * t;
           const wicLen = (3 + wic * 1.3 % 5) * s;
           ctx.beginPath();
-          ctx.moveTo(wicx - 0.8 * s, wy);
-          ctx.lineTo(wicx, wy + wicLen);
-          ctx.lineTo(wicx + 0.8 * s, wy);
+          ctx.moveTo(wicx - 0.8 * s, wicy);
+          ctx.lineTo(wicx, wicy + wicLen);
+          ctx.lineTo(wicx + 0.8 * s, wicy);
           ctx.closePath();
           ctx.fill();
         }
       };
 
       const ifDrawTower = (tx: number, ty: number, tr: number, th: number, hasBanner: boolean) => {
-        // Tower body left face gradient
-        const tlG = ctx.createLinearGradient(tx - tr, ty, tx, ty - th);
+        // Proper isometric tower prism — square cross-section
+        const td = tr * TRUE_ISO;
+
+        // Base diamond: left=(tx-tr,ty), front=(tx,ty+td), right=(tx+tr,ty), back=(tx,ty-td)
+        const bL = { x: tx - tr, y: ty };
+        const bF = { x: tx, y: ty + td };
+        const bR = { x: tx + tr, y: ty };
+        // Top diamond (y - th)
+        const tL = { x: tx - tr, y: ty - th };
+        const tF = { x: tx, y: ty + td - th };
+        const tR = { x: tx + tr, y: ty - th };
+        const tB = { x: tx, y: ty - td - th };
+
+        // Left face (bright — faces the light)
+        const tlG = ctx.createLinearGradient(bL.x, bL.y, tF.x, tF.y);
         tlG.addColorStop(0, "#29B6F6");
-        tlG.addColorStop(0.4, "#81D4FA");
-        tlG.addColorStop(0.8, "#b3e5fc");
-        tlG.addColorStop(1, "#e1f5fe");
+        tlG.addColorStop(0.4, "#4fc3f7");
+        tlG.addColorStop(0.7, "#81D4FA");
+        tlG.addColorStop(1, "#d6eef8");
         ctx.fillStyle = tlG;
         ctx.beginPath();
-        ctx.moveTo(tx - tr, ty);
-        ctx.lineTo(tx - tr, ty - th);
-        ctx.lineTo(tx, ty - th - tr * 0.5);
-        ctx.lineTo(tx, ty);
+        ctx.moveTo(bL.x, bL.y);
+        ctx.lineTo(bF.x, bF.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tL.x, tL.y);
         ctx.closePath();
         ctx.fill();
-        // Tower body right face gradient
-        const trG = ctx.createLinearGradient(tx, ty - th, tx + tr, ty);
-        trG.addColorStop(0, "#81D4FA");
-        trG.addColorStop(0.4, "#0288D1");
-        trG.addColorStop(1, "#01579B");
-        ctx.fillStyle = trG;
+
+        // Right face (dark — faces away from light)
+        const trFG = ctx.createLinearGradient(bF.x, bF.y, bR.x, tR.y);
+        trFG.addColorStop(0, "#0288D1");
+        trFG.addColorStop(0.4, "#01579B");
+        trFG.addColorStop(1, "#003c5e");
+        ctx.fillStyle = trFG;
         ctx.beginPath();
-        ctx.moveTo(tx + tr, ty);
-        ctx.lineTo(tx + tr, ty - th);
-        ctx.lineTo(tx, ty - th - tr * 0.5);
-        ctx.lineTo(tx, ty);
+        ctx.moveTo(bF.x, bF.y);
+        ctx.lineTo(bR.x, bR.y);
+        ctx.lineTo(tR.x, tR.y);
+        ctx.lineTo(tF.x, tF.y);
         ctx.closePath();
         ctx.fill();
-        // Stone lines on tower
+
+        // Stone lines on left face
         ctx.strokeStyle = "rgba(0,40,60,0.1)";
         ctx.lineWidth = 0.5 * s;
         for (let tsl = 1; tsl < Math.floor(th / (7 * s)); tsl++) {
-          const tsly = ty - tsl * 7 * s;
+          const sly = -tsl * 7 * s;
           ctx.beginPath();
-          ctx.moveTo(tx - tr + 1 * s, tsly);
-          ctx.lineTo(tx, tsly - 1 * s);
+          ctx.moveTo(bL.x + 1 * s, bL.y + sly);
+          ctx.lineTo(bF.x - 1 * s, bF.y + sly);
           ctx.stroke();
         }
-        // Parapet platform
+
+        // Top face (diamond platform with parapet overhang)
+        const overhang = tr * 0.2;
         ctx.fillStyle = "#d6eef8";
         ctx.beginPath();
-        ctx.ellipse(tx, ty - th - tr * 0.25, tr * 1.2, tr * 0.55, 0, 0, Math.PI * 2);
+        ctx.moveTo(tL.x - overhang, tL.y);
+        ctx.lineTo(tF.x, tF.y + overhang * TRUE_ISO);
+        ctx.lineTo(tR.x + overhang, tR.y);
+        ctx.lineTo(tB.x, tB.y - overhang * TRUE_ISO);
+        ctx.closePath();
         ctx.fill();
+
         // Snow on parapet
         ctx.fillStyle = "rgba(240,248,255,0.6)";
         ctx.beginPath();
-        ctx.ellipse(tx, ty - th - tr * 0.3, tr * 0.9, tr * 0.35, 0, Math.PI, Math.PI * 2);
+        ctx.moveTo(tL.x, tL.y - 1 * s);
+        ctx.quadraticCurveTo(tx, tB.y - 2 * s, tR.x, tR.y - 1 * s);
+        ctx.lineTo(tB.x, tB.y);
+        ctx.closePath();
         ctx.fill();
-        // Battlement spikes
-        for (let bp = 0; bp < 5; bp++) {
-          const ba = (bp / 5) * Math.PI * 2;
-          const bpx = tx + Math.cos(ba) * tr;
-          const bpy = ty - th - tr * 0.25 + Math.sin(ba) * tr * 0.4;
-          const spikeG = ctx.createLinearGradient(bpx, bpy, bpx, bpy - 10 * s);
+
+        // Battlement spikes at corners and edges
+        const spikePositions = [
+          { x: tL.x - overhang, y: tL.y },
+          { x: tF.x, y: tF.y + overhang * TRUE_ISO },
+          { x: tR.x + overhang, y: tR.y },
+          { x: tB.x, y: tB.y - overhang * TRUE_ISO },
+          { x: (tL.x + tF.x) / 2 - overhang * 0.5, y: (tL.y + tF.y) / 2 + overhang * TRUE_ISO * 0.5 },
+          { x: (tF.x + tR.x) / 2 + overhang * 0.5, y: (tF.y + tR.y) / 2 + overhang * TRUE_ISO * 0.5 },
+        ];
+        for (const sp of spikePositions) {
+          const spikeG = ctx.createLinearGradient(sp.x, sp.y, sp.x, sp.y - 10 * s);
           spikeG.addColorStop(0, "#81D4FA");
           spikeG.addColorStop(1, "#e1f5fe");
           ctx.fillStyle = spikeG;
           ctx.beginPath();
-          ctx.moveTo(bpx - 2 * s, bpy);
-          ctx.lineTo(bpx, bpy - 10 * s);
-          ctx.lineTo(bpx + 2 * s, bpy);
+          ctx.moveTo(sp.x - 2 * s, sp.y);
+          ctx.lineTo(sp.x, sp.y - 10 * s);
+          ctx.lineTo(sp.x + 2 * s, sp.y);
           ctx.closePath();
           ctx.fill();
         }
-        // Window arches at multiple heights
+
+        // Window arches on left face
         for (let wn = 0; wn < 2; wn++) {
           const wny = ty - th * (0.35 + wn * 0.25);
+          const wnx = (bL.x + bF.x) / 2;
+          const wnyOff = (bL.y + bF.y) / 2 - ty;
           ctx.fillStyle = "rgba(0,30,50,0.5)";
           ctx.beginPath();
-          ctx.arc(tx - tr * 0.35, wny, 2.5 * s, Math.PI, 0);
-          ctx.lineTo(tx - tr * 0.35 + 2.5 * s, wny + 4 * s);
-          ctx.lineTo(tx - tr * 0.35 - 2.5 * s, wny + 4 * s);
+          ctx.arc(wnx, wny + wnyOff, 2.5 * s, Math.PI, 0);
+          ctx.lineTo(wnx + 2.5 * s, wny + wnyOff + 4 * s);
+          ctx.lineTo(wnx - 2.5 * s, wny + wnyOff + 4 * s);
           ctx.closePath();
           ctx.fill();
-          // Window glow
           ctx.fillStyle = "rgba(100,200,255,0.15)";
           ctx.beginPath();
-          ctx.arc(tx - tr * 0.35, wny + 1 * s, 1.5 * s, 0, Math.PI * 2);
+          ctx.arc(wnx, wny + wnyOff + 1 * s, 1.5 * s, 0, Math.PI * 2);
           ctx.fill();
         }
-        // Frost sparkles on tower
+
+        // Frost sparkles
         ctx.fillStyle = "rgba(255,255,255,0.65)";
         ctx.beginPath();
-        ctx.arc(tx - tr * 0.6, ty - th * 0.7, 1.5 * s, 0, Math.PI * 2);
+        ctx.arc(bL.x + tr * 0.3, ty - th * 0.7, 1.5 * s, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(tx + tr * 0.3, ty - th * 0.4, 1 * s, 0, Math.PI * 2);
+        ctx.arc(bR.x - tr * 0.3, ty - th * 0.4, 1 * s, 0, Math.PI * 2);
         ctx.fill();
+
         // Banner
         if (hasBanner) {
+          const banBase = tB.y;
           ctx.strokeStyle = "#455A64";
           ctx.lineWidth = 1.5 * s;
           ctx.beginPath();
-          ctx.moveTo(tx, ty - th - tr * 0.5);
-          ctx.lineTo(tx, ty - th - tr * 0.5 - 16 * s);
+          ctx.moveTo(tx, banBase);
+          ctx.lineTo(tx, banBase - 16 * s);
           ctx.stroke();
-          const banG = ctx.createLinearGradient(tx, ty - th - tr * 0.5 - 16 * s, tx + 10 * s, ty - th - tr * 0.5 - 8 * s);
+          const banG = ctx.createLinearGradient(tx, banBase - 16 * s, tx + 10 * s, banBase - 8 * s);
           banG.addColorStop(0, "#0D47A1");
           banG.addColorStop(1, "#1565C0");
           ctx.fillStyle = banG;
           ctx.beginPath();
-          ctx.moveTo(tx, ty - th - tr * 0.5 - 16 * s);
-          ctx.lineTo(tx + 10 * s, ty - th - tr * 0.5 - 14 * s);
-          ctx.lineTo(tx + 8 * s, ty - th - tr * 0.5 - 10 * s);
-          ctx.lineTo(tx + 10 * s, ty - th - tr * 0.5 - 6 * s);
-          ctx.lineTo(tx, ty - th - tr * 0.5 - 8 * s);
+          ctx.moveTo(tx, banBase - 16 * s);
+          ctx.lineTo(tx + 10 * s, banBase - 14 * s);
+          ctx.lineTo(tx + 8 * s, banBase - 10 * s);
+          ctx.lineTo(tx + 10 * s, banBase - 6 * s);
+          ctx.lineTo(tx, banBase - 8 * s);
           ctx.closePath();
           ctx.fill();
-          // Snowflake emblem on banner
+          // Snowflake emblem
           ctx.strokeStyle = "rgba(255,255,255,0.5)";
           ctx.lineWidth = 0.6 * s;
           const bex = tx + 5 * s;
-          const bey = ty - th - tr * 0.5 - 11 * s;
+          const bey = banBase - 11 * s;
           for (let be = 0; be < 6; be++) {
             const bea = (be / 6) * Math.PI * 2;
             ctx.beginPath();
@@ -17402,7 +17453,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       };
 
       if (ifVar === 0) {
-        ifDrawWall(screenPos.x, screenPos.y + 2 * s, 42 * s, 32 * s, 13 * s);
+        ifDrawWall(screenPos.x, screenPos.y + 2 * s, 42 * s, 32 * s, 21 * s);
         ifDrawTower(screenPos.x - 26 * s, screenPos.y + 3 * s, 11 * s, 54 * s, true);
         ifDrawTower(screenPos.x + 26 * s, screenPos.y - 3 * s, 11 * s, 54 * s, false);
         // Gate arch with gradient
@@ -17432,8 +17483,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.stroke();
         }
       } else if (ifVar === 1) {
-        ifDrawWall(screenPos.x - 8 * s, screenPos.y + 3 * s, 52 * s, 24 * s, 15 * s);
-        ifDrawWall(screenPos.x + 4 * s, screenPos.y - 20 * s, 32 * s, 20 * s, 11 * s);
+        ifDrawWall(screenPos.x - 8 * s, screenPos.y + 3 * s, 52 * s, 24 * s, 26 * s);
+        ifDrawWall(screenPos.x + 4 * s, screenPos.y - 20 * s, 32 * s, 20 * s, 16 * s);
         ifDrawTower(screenPos.x + 22 * s, screenPos.y - 1 * s, 12 * s, 62 * s, true);
         // Arrow slits with glow
         for (let asl = 0; asl < 4; asl++) {
@@ -17460,7 +17511,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
       } else {
-        ifDrawWall(screenPos.x, screenPos.y + 3 * s, 38 * s, 28 * s, 11 * s);
+        ifDrawWall(screenPos.x, screenPos.y + 3 * s, 38 * s, 28 * s, 19 * s);
         ifDrawTower(screenPos.x - 24 * s, screenPos.y + 5 * s, 10 * s, 48 * s, false);
         ifDrawTower(screenPos.x + 24 * s, screenPos.y - 1 * s, 10 * s, 48 * s, false);
         ifDrawTower(screenPos.x, screenPos.y - 7 * s, 13 * s, 65 * s, true);
@@ -17494,12 +17545,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
     case "ice_spire": {
       const isVar = variant % 3;
+      const TRUE_ISO = 1 / Math.sqrt(3);
 
       // Ground shadow
       drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 6 * s, s, 18 * s, 8 * s, 50 * s, 0.3, "0,60,80");
 
-      // Isometric base platform helper
-      const isDrawBase = (bw: number, bd: number) => {
+      // Isometric base platform helper (proper 30° isometric)
+      const isDrawBase = (bw: number) => {
+        const bd = bw * TRUE_ISO;
         // Top face
         const btG = ctx.createLinearGradient(screenPos.x - bw, screenPos.y, screenPos.x + bw, screenPos.y + bd);
         btG.addColorStop(0, "#b3e5fc");
@@ -17594,7 +17647,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       };
 
       if (isVar === 0) {
-        isDrawBase(16 * s, 7 * s);
+        isDrawBase(16 * s);
         isDrawSpire(screenPos.x - 12 * s, screenPos.y, 32 * s, 7 * s, false);
         isDrawSpire(screenPos.x + 5 * s, screenPos.y - 2 * s, 30 * s, 8 * s, false);
         isDrawSpire(screenPos.x, screenPos.y - 4 * s, 58 * s, 8 * s, true);
@@ -17607,7 +17660,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(screenPos.x - 1 * s, screenPos.y - 30 * s);
         ctx.stroke();
       } else if (isVar === 1) {
-        isDrawBase(19 * s, 8 * s);
+        isDrawBase(19 * s);
         // Twin spires
         isDrawSpire(screenPos.x - 10 * s, screenPos.y, 48 * s, 7 * s, true);
         isDrawSpire(screenPos.x + 10 * s, screenPos.y - 2 * s, 48 * s, 7 * s, true);
@@ -17632,7 +17685,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       } else {
         // Clustered crystal formation
-        isDrawBase(17 * s, 8 * s);
+        isDrawBase(17 * s);
         isDrawSpire(screenPos.x, screenPos.y - 2 * s, 54 * s, 7 * s, true);
         const csAngles = [0.7, 1.9, 3.3, 4.8];
         const csHeights = [34, 28, 38, 24];
@@ -17677,6 +17730,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
     case "ice_throne": {
       const itVar = variant % 3;
+      const TRUE_ISO = 1 / Math.sqrt(3);
 
       // Ground shadow
       drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 10 * s, s, 32 * s, 14 * s, 55 * s, 0.35, "0,50,70");
@@ -17691,42 +17745,43 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       itSnowG.addColorStop(0.8, "#cde0ec");
       itSnowG.addColorStop(1, "#b0cede");
       ctx.fillStyle = itSnowG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 10 * s, 34 * s, 12 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 10 * s, 34 * s, 12 * s, decorX * 5.7 + decorY * 9.3);
       ctx.fill();
 
-      // Dais lower step - top
-      const itD1G = ctx.createLinearGradient(screenPos.x - 28 * s, screenPos.y, screenPos.x + 28 * s, screenPos.y + 12 * s);
+      // Dais lower step - top (proper 30° isometric diamond)
+      const itD1W = 28 * s;
+      const itD1D = itD1W * TRUE_ISO;
+      const itD1G = ctx.createLinearGradient(screenPos.x - itD1W, screenPos.y, screenPos.x + itD1W, screenPos.y + itD1D + 4 * s);
       itD1G.addColorStop(0, "#81d4fa");
       itD1G.addColorStop(0.5, "#b3e5fc");
       itD1G.addColorStop(1, "#4fc3f7");
       ctx.fillStyle = itD1G;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 28 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
-      ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 4 * s);
+      ctx.moveTo(screenPos.x - itD1W, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s + itD1D);
+      ctx.lineTo(screenPos.x + itD1W, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s - itD1D);
       ctx.closePath();
       ctx.fill();
       // Dais lower step - left face
-      const itD1L = ctx.createLinearGradient(screenPos.x - 28 * s, screenPos.y, screenPos.x, screenPos.y + 20 * s);
+      const itD1L = ctx.createLinearGradient(screenPos.x - itD1W, screenPos.y, screenPos.x, screenPos.y + 4 * s + itD1D + 8 * s);
       itD1L.addColorStop(0, "#29B6F6");
       itD1L.addColorStop(1, "#0277BD");
       ctx.fillStyle = itD1L;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 28 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
-      ctx.lineTo(screenPos.x - 28 * s, screenPos.y + 12 * s);
+      ctx.moveTo(screenPos.x - itD1W, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s + itD1D);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s + itD1D + 8 * s);
+      ctx.lineTo(screenPos.x - itD1W, screenPos.y + 12 * s);
       ctx.closePath();
       ctx.fill();
       // Dais lower step - right face
       ctx.fillStyle = "#01579B";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 28 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
-      ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 12 * s);
+      ctx.moveTo(screenPos.x + itD1W, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s + itD1D);
+      ctx.lineTo(screenPos.x, screenPos.y + 4 * s + itD1D + 8 * s);
+      ctx.lineTo(screenPos.x + itD1W, screenPos.y + 12 * s);
       ctx.closePath();
       ctx.fill();
       // Rune engravings on dais face
@@ -17744,41 +17799,46 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       }
 
-      // Upper step - top
-      const itD2G = ctx.createLinearGradient(screenPos.x - 20 * s, screenPos.y - 6 * s, screenPos.x + 20 * s, screenPos.y + 6 * s);
+      // Upper step - top (proper 30° isometric diamond)
+      const itD2W = 20 * s;
+      const itD2D = itD2W * TRUE_ISO;
+      const itD2G = ctx.createLinearGradient(screenPos.x - itD2W, screenPos.y - itD2D, screenPos.x + itD2W, screenPos.y + itD2D);
       itD2G.addColorStop(0, "#b3e5fc");
       itD2G.addColorStop(0.5, "#e1f5fe");
       itD2G.addColorStop(1, "#81d4fa");
       ctx.fillStyle = itD2G;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 20 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 6 * s);
-      ctx.lineTo(screenPos.x + 20 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y - 7 * s);
+      ctx.moveTo(screenPos.x - itD2W, screenPos.y);
+      ctx.lineTo(screenPos.x, screenPos.y + itD2D);
+      ctx.lineTo(screenPos.x + itD2W, screenPos.y);
+      ctx.lineTo(screenPos.x, screenPos.y - itD2D);
       ctx.closePath();
       ctx.fill();
       // Upper step - left face
       ctx.fillStyle = "#4fc3f7";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 20 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 6 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 11 * s);
-      ctx.lineTo(screenPos.x - 20 * s, screenPos.y + 4 * s);
+      ctx.moveTo(screenPos.x - itD2W, screenPos.y);
+      ctx.lineTo(screenPos.x, screenPos.y + itD2D);
+      ctx.lineTo(screenPos.x, screenPos.y + itD2D + 5 * s);
+      ctx.lineTo(screenPos.x - itD2W, screenPos.y + 4 * s);
       ctx.closePath();
       ctx.fill();
 
       if (itVar === 0) {
         // Grand spiked throne
-        // Seat diamond
-        const itSeatG = ctx.createLinearGradient(screenPos.x, screenPos.y - 12 * s, screenPos.x, screenPos.y - 2 * s);
+        // Seat diamond (proper 30° isometric)
+        const itSeatW = 13 * s;
+        const itSeatD = itSeatW * TRUE_ISO;
+        const itSeatCY = screenPos.y - 6 * s;
+        const itSeatG = ctx.createLinearGradient(screenPos.x, itSeatCY - itSeatD, screenPos.x, itSeatCY + itSeatD);
         itSeatG.addColorStop(0, "#4fc3f7");
         itSeatG.addColorStop(1, "#0288D1");
         ctx.fillStyle = itSeatG;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 6 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 1 * s);
-        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 6 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 12 * s);
+        ctx.moveTo(screenPos.x - itSeatW, itSeatCY);
+        ctx.lineTo(screenPos.x, itSeatCY + itSeatD);
+        ctx.lineTo(screenPos.x + itSeatW, itSeatCY);
+        ctx.lineTo(screenPos.x, itSeatCY - itSeatD);
         ctx.closePath();
         ctx.fill();
         // Fur cushion on seat
@@ -17788,7 +17848,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         itFurG.addColorStop(1, "transparent");
         ctx.fillStyle = itFurG;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y - 7 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenPos.x, screenPos.y - 7 * s, 10 * s, 10 * s * TRUE_ISO, 0, 0, Math.PI * 2);
         ctx.fill();
         // Armrests - gradient pillars
         const itArmLG = ctx.createLinearGradient(screenPos.x - 15 * s, screenPos.y - 4 * s, screenPos.x - 15 * s, screenPos.y - 20 * s);
@@ -17895,12 +17955,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         itSeatG2.addColorStop(1, "#01579B");
         ctx.fillStyle = itSeatG2;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y - 8 * s, 13 * s, 7 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenPos.x, screenPos.y - 8 * s, 13 * s, 13 * s * TRUE_ISO, 0, 0, Math.PI * 2);
         ctx.fill();
         // Fur cushion
         ctx.fillStyle = "rgba(230,240,250,0.45)";
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y - 9 * s, 9 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(screenPos.x, screenPos.y - 9 * s, 9 * s, 9 * s * TRUE_ISO, 0, 0, Math.PI * 2);
         ctx.fill();
         // Curved backrest with gradient
         const itCurveG = ctx.createLinearGradient(screenPos.x, screenPos.y - 8 * s, screenPos.x, screenPos.y - 62 * s);
@@ -17965,17 +18025,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
       } else {
         // Jagged crystal throne
-        // Seat
-        const itSeatG3 = ctx.createLinearGradient(screenPos.x - 13 * s, screenPos.y - 10 * s, screenPos.x + 13 * s, screenPos.y + 2 * s);
+        // Seat (proper 30° isometric)
+        const itSeat3W = 13 * s;
+        const itSeat3D = itSeat3W * TRUE_ISO;
+        const itSeat3CY = screenPos.y - 4 * s;
+        const itSeatG3 = ctx.createLinearGradient(screenPos.x - itSeat3W, itSeat3CY - itSeat3D, screenPos.x + itSeat3W, itSeat3CY + itSeat3D);
         itSeatG3.addColorStop(0, "#4fc3f7");
         itSeatG3.addColorStop(0.5, "#0288D1");
         itSeatG3.addColorStop(1, "#01579B");
         ctx.fillStyle = itSeatG3;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y + 2 * s);
-        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 11 * s);
+        ctx.moveTo(screenPos.x - itSeat3W, itSeat3CY);
+        ctx.lineTo(screenPos.x, itSeat3CY + itSeat3D);
+        ctx.lineTo(screenPos.x + itSeat3W, itSeat3CY);
+        ctx.lineTo(screenPos.x, itSeat3CY - itSeat3D);
         ctx.closePath();
         ctx.fill();
         // Jagged backrest - left bright face
@@ -18087,37 +18150,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Snow mound at base
       ctx.fillStyle = "#f0f4f8";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 4 * s,
-        22 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 4 * s, 22 * s, 8 * s, decorX * 6.1 + decorY * 3.7);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 3 * s,
-        screenPos.y + 2 * s,
-        16 * s,
-        5 * s,
-        -0.15,
-        0,
-        0.01,
-      );
-      ctx.ellipse(
-        screenPos.x - 3 * s,
-        screenPos.y + 2 * s,
-        16 * s,
-        5 * s,
-        -0.15,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x - 3 * s, screenPos.y + 2 * s, 16 * s, 5 * s, decorX * 8.3 + decorY * 5.1, 0.12);
       ctx.fill();
 
       // Rock overhang - back face
@@ -18475,110 +18511,240 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       fsSnowG.addColorStop(0.8, "#d0dfe8");
       fsSnowG.addColorStop(1, "#b8ceda");
       ctx.fillStyle = fsSnowG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 3 * s, 20 * s, 8 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 3 * s, 20 * s, 8 * s, decorX * 5.3 + decorY * 7.9);
       ctx.fill();
 
-      // Ice block with gradients
-      const fsDrawIce = (bx: number, by: number, bw: number, bh: number, bd: number) => {
-        // Back face (darkest)
-        ctx.fillStyle = "#0277BD";
-        ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.4, by);
-        ctx.lineTo(bx - bw * 0.35, by - bh);
-        ctx.lineTo(bx + bw * 0.35, by - bh * 0.97);
-        ctx.lineTo(bx + bw * 0.4, by);
-        ctx.closePath();
-        ctx.fill();
-        // Left face gradient
-        const lG = ctx.createLinearGradient(bx - bw * 0.55, by, bx - bw * 0.2, by - bh);
+      // Isometric ice block prism with seed-based variation
+      const TRUE_ISO = 1 / Math.sqrt(3);
+      const iceSeed = decorX * 13.7 + decorY * 29.3;
+      const srand = (n: number) => {
+        const x = Math.sin(iceSeed * 127.1 + n * 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+      const iceRough = srand(40) * 2.5 * s;
+
+      const fsDrawIce = (bx: number, by: number, hw: number, bh: number, depthR: number, tiltX: number) => {
+        const hd = hw * depthR * TRUE_ISO;
+
+        const perturb = (idx: number) => ({
+          x: (srand(50 + idx * 2) - 0.5) * iceRough,
+          y: (srand(50 + idx * 2 + 1) - 0.5) * iceRough,
+        });
+        const p0 = perturb(0), p1 = perturb(1), p2 = perturb(2);
+        const p4 = perturb(4), p5 = perturb(5), p6 = perturb(6), p7 = perturb(7);
+
+        const bL = { x: bx - hw + p0.x, y: by + p0.y };
+        const bF = { x: bx + p1.x, y: by + hd + p1.y };
+        const bR = { x: bx + hw + p2.x, y: by + p2.y };
+        const tL = { x: bx - hw + tiltX + p4.x, y: by - bh + p4.y };
+        const tF = { x: bx + tiltX + p5.x, y: by + hd - bh + p5.y };
+        const tR = { x: bx + hw + tiltX + p6.x, y: by - bh + p6.y };
+        const tB = { x: bx + tiltX + p7.x, y: by - hd - bh + p7.y };
+
+        // Left face (lit)
+        const lG = ctx.createLinearGradient(bL.x, bL.y, tF.x, tF.y);
         lG.addColorStop(0, "#29B6F6");
         lG.addColorStop(0.3, "#4fc3f7");
-        lG.addColorStop(0.6, "#81d4fa");
-        lG.addColorStop(0.85, "#b3e5fc");
+        lG.addColorStop(0.65, "#81d4fa");
         lG.addColorStop(1, "#e1f5fe");
         ctx.fillStyle = lG;
         ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.55, by + bd * 0.3);
-        ctx.lineTo(bx - bw * 0.5, by - bh - bd * 0.1);
-        ctx.lineTo(bx - bw * 0.35, by - bh);
-        ctx.lineTo(bx - bw * 0.4, by);
+        ctx.moveTo(bL.x, bL.y);
+        ctx.lineTo(bF.x, bF.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tL.x, tL.y);
         ctx.closePath();
         ctx.fill();
-        // Right face gradient
-        const rG = ctx.createLinearGradient(bx + bw * 0.2, by - bh, bx + bw * 0.55, by);
-        rG.addColorStop(0, "#b3e5fc");
-        rG.addColorStop(0.3, "#81d4fa");
-        rG.addColorStop(0.6, "#4fc3f7");
-        rG.addColorStop(0.85, "#29B6F6");
-        rG.addColorStop(1, "#0288D1");
+
+        // Right face (shadow)
+        const rG = ctx.createLinearGradient(bF.x, bF.y, tR.x, tR.y);
+        rG.addColorStop(0, "#0288D1");
+        rG.addColorStop(0.45, "#01579B");
+        rG.addColorStop(1, "#003c5e");
         ctx.fillStyle = rG;
         ctx.beginPath();
-        ctx.moveTo(bx + bw * 0.55, by + bd * 0.3);
-        ctx.lineTo(bx + bw * 0.5, by - bh - bd * 0.1);
-        ctx.lineTo(bx + bw * 0.35, by - bh * 0.97);
-        ctx.lineTo(bx + bw * 0.4, by);
+        ctx.moveTo(bF.x, bF.y);
+        ctx.lineTo(bR.x, bR.y);
+        ctx.lineTo(tR.x, tR.y);
+        ctx.lineTo(tF.x, tF.y);
         ctx.closePath();
         ctx.fill();
-        // Top face gradient
-        const tG = ctx.createLinearGradient(bx - bw * 0.5, by - bh, bx + bw * 0.5, by - bh - bd * 0.4);
+
+        // Top face (diamond)
+        const tG = ctx.createLinearGradient(tL.x, tL.y, tR.x, tR.y);
         tG.addColorStop(0, "#e1f5fe");
         tG.addColorStop(0.5, "#e3f2fd");
         tG.addColorStop(1, "#b3e5fc");
         ctx.fillStyle = tG;
         ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.5, by - bh - bd * 0.1);
-        ctx.lineTo(bx, by - bh - bd * 0.4);
-        ctx.lineTo(bx + bw * 0.5, by - bh - bd * 0.1);
-        ctx.lineTo(bx, by - bh + bd * 0.15);
+        ctx.moveTo(tL.x, tL.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tR.x, tR.y);
+        ctx.lineTo(tB.x, tB.y);
         ctx.closePath();
         ctx.fill();
-        // Primary highlight streak
-        ctx.fillStyle = "rgba(255,255,255,0.45)";
+
+        // Translucency overlay on left face
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
         ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.49, by - bh * 0.82);
-        ctx.lineTo(bx - bw * 0.43, by - bh * 0.87);
-        ctx.lineTo(bx - bw * 0.39, by - bh * 0.25);
-        ctx.lineTo(bx - bw * 0.45, by - bh * 0.2);
+        ctx.moveTo(bL.x, bL.y);
+        ctx.lineTo(bF.x, bF.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.lineTo(tL.x, tL.y);
         ctx.closePath();
         ctx.fill();
-        // Secondary highlight
-        ctx.fillStyle = "rgba(255,255,255,0.2)";
+
+        // Primary highlight streak (left face, seeded position)
+        ctx.fillStyle = "rgba(255,255,255,0.38)";
+        const ht0 = 0.12 + srand(300) * 0.1;
+        const ht1 = ht0 + 0.08 + srand(301) * 0.06;
         ctx.beginPath();
-        ctx.moveTo(bx + bw * 0.34, by - bh * 0.72);
-        ctx.lineTo(bx + bw * 0.39, by - bh * 0.77);
-        ctx.lineTo(bx + bw * 0.41, by - bh * 0.18);
-        ctx.lineTo(bx + bw * 0.36, by - bh * 0.13);
+        ctx.moveTo(
+          bL.x + (bF.x - bL.x) * ht0 + (tL.x - bL.x) * 0.15,
+          bL.y + (bF.y - bL.y) * ht0 - bh * 0.82,
+        );
+        ctx.lineTo(
+          bL.x + (bF.x - bL.x) * ht1 + (tL.x - bL.x) * 0.15,
+          bL.y + (bF.y - bL.y) * ht1 - bh * 0.82,
+        );
+        ctx.lineTo(
+          bL.x + (bF.x - bL.x) * ht1 + (tL.x - bL.x) * 0.05,
+          bL.y + (bF.y - bL.y) * ht1 - bh * 0.18,
+        );
+        ctx.lineTo(
+          bL.x + (bF.x - bL.x) * ht0 + (tL.x - bL.x) * 0.05,
+          bL.y + (bF.y - bL.y) * ht0 - bh * 0.18,
+        );
         ctx.closePath();
         ctx.fill();
-        // Ice crack patterns
-        ctx.strokeStyle = "rgba(200,235,255,0.25)";
+
+        // Secondary highlight (right face)
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        const rht0 = 0.6 + srand(302) * 0.15;
+        const rht1 = rht0 + 0.06 + srand(303) * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(
+          bF.x + (bR.x - bF.x) * rht0 + (tF.x - bF.x) * 0.2,
+          bF.y + (bR.y - bF.y) * rht0 - bh * 0.75,
+        );
+        ctx.lineTo(
+          bF.x + (bR.x - bF.x) * rht1 + (tF.x - bF.x) * 0.2,
+          bF.y + (bR.y - bF.y) * rht1 - bh * 0.75,
+        );
+        ctx.lineTo(
+          bF.x + (bR.x - bF.x) * rht1 + (tF.x - bF.x) * 0.08,
+          bF.y + (bR.y - bF.y) * rht1 - bh * 0.15,
+        );
+        ctx.lineTo(
+          bF.x + (bR.x - bF.x) * rht0 + (tF.x - bF.x) * 0.08,
+          bF.y + (bR.y - bF.y) * rht0 - bh * 0.15,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Seeded crack patterns
+        ctx.strokeStyle = "rgba(200,235,255,0.28)";
         ctx.lineWidth = 0.7 * s;
-        ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.1, by - bh * 0.9);
-        ctx.lineTo(bx + bw * 0.05, by - bh * 0.55);
-        ctx.lineTo(bx - bw * 0.15, by - bh * 0.3);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(bx + bw * 0.05, by - bh * 0.55);
-        ctx.lineTo(bx + bw * 0.2, by - bh * 0.45);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(bx - bw * 0.3, by - bh * 0.6);
-        ctx.lineTo(bx - bw * 0.15, by - bh * 0.5);
-        ctx.lineTo(bx - bw * 0.2, by - bh * 0.35);
-        ctx.stroke();
+        const numCracks = 2 + Math.floor(srand(400) * 5);
+        for (let cr = 0; cr < numCracks; cr++) {
+          const onLeft = srand(410 + cr * 7) > 0.5;
+          const startT = 0.15 + srand(410 + cr * 7 + 1) * 0.7;
+          const startHf = 0.15 + srand(410 + cr * 7 + 2) * 0.7;
+          let sx: number, sy: number;
+          if (onLeft) {
+            sx = bL.x + (bF.x - bL.x) * startT;
+            sy = bL.y + (bF.y - bL.y) * startT - bh * startHf;
+          } else {
+            sx = bF.x + (bR.x - bF.x) * startT;
+            sy = bF.y + (bR.y - bF.y) * startT - bh * startHf;
+          }
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          const segs = 2 + Math.floor(srand(410 + cr * 7 + 3) * 3);
+          let cx = sx, cy = sy;
+          for (let sg = 0; sg < segs; sg++) {
+            cx += (srand(410 + cr * 7 + sg * 3 + 4) - 0.5) * hw * 0.35;
+            cy += (srand(410 + cr * 7 + sg * 3 + 5) - 0.5) * bh * 0.25;
+            ctx.lineTo(cx, cy);
+            if (srand(410 + cr * 7 + sg * 3 + 6) > 0.55) {
+              const bx2 = cx + (srand(500 + cr * sg) - 0.5) * hw * 0.2;
+              const by2 = cy + (srand(501 + cr * sg) - 0.5) * bh * 0.12;
+              ctx.lineTo(bx2, by2);
+              ctx.moveTo(cx, cy);
+            }
+          }
+          ctx.stroke();
+        }
+
         // Internal glow
-        const fsGlow = ctx.createRadialGradient(bx, by - bh * 0.5, 0, bx, by - bh * 0.5, bw * 0.4);
-        fsGlow.addColorStop(0, "rgba(144,202,249,0.12)");
-        fsGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = fsGlow;
+        const glowR = Math.max(hw, bh * 0.25);
+        const iGlow = ctx.createRadialGradient(bx, by - bh * 0.5, 0, bx, by - bh * 0.5, glowR);
+        iGlow.addColorStop(0, "rgba(144,202,249,0.12)");
+        iGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = iGlow;
         ctx.beginPath();
-        ctx.ellipse(bx, by - bh * 0.5, bw * 0.35, bh * 0.35, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx, by - bh * 0.5, hw * 0.65, bh * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // Frost crystal formations on top edges
+        const numCrystals = 1 + Math.floor(srand(600) * 5);
+        for (let fc = 0; fc < numCrystals; fc++) {
+          const edgeT = srand(610 + fc * 4);
+          const edgeIdx = Math.floor(srand(610 + fc * 4 + 1) * 4);
+          let ex: number, ey: number;
+          if (edgeIdx === 0) {
+            ex = tL.x + (tF.x - tL.x) * edgeT;
+            ey = tL.y + (tF.y - tL.y) * edgeT;
+          } else if (edgeIdx === 1) {
+            ex = tF.x + (tR.x - tF.x) * edgeT;
+            ey = tF.y + (tR.y - tF.y) * edgeT;
+          } else if (edgeIdx === 2) {
+            ex = tR.x + (tB.x - tR.x) * edgeT;
+            ey = tR.y + (tB.y - tR.y) * edgeT;
+          } else {
+            ex = tB.x + (tL.x - tB.x) * edgeT;
+            ey = tB.y + (tL.y - tB.y) * edgeT;
+          }
+          const cH = (3 + srand(610 + fc * 4 + 2) * 9) * s;
+          const cW = (0.8 + srand(610 + fc * 4 + 3) * 2) * s;
+          const cG = ctx.createLinearGradient(ex, ey, ex, ey - cH);
+          cG.addColorStop(0, "rgba(129,212,250,0.5)");
+          cG.addColorStop(1, "rgba(225,245,254,0.25)");
+          ctx.fillStyle = cG;
+          ctx.beginPath();
+          ctx.moveTo(ex - cW, ey);
+          ctx.lineTo(ex + (srand(620 + fc) - 0.5) * cW * 0.5, ey - cH);
+          ctx.lineTo(ex + cW, ey);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Edge frost lines along vertical edges
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(bF.x, bF.y);
+        ctx.lineTo(tF.x, tF.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bL.x, bL.y);
+        ctx.lineTo(tL.x, tL.y);
+        ctx.stroke();
       };
 
-      fsDrawIce(screenPos.x, screenPos.y, 30 * s, 56 * s, 9 * s);
+      // Seed-varied ice block dimensions per instance
+      const iceHW = (12 + srand(0) * 7) * s;
+      const iceH = (48 + srand(1) * 18) * s;
+      const iceDepthR = 0.7 + srand(2) * 0.6;
+      const iceTilt = (srand(3) - 0.5) * 5 * s;
+
+      if (fsVar === 0) {
+        fsDrawIce(screenPos.x, screenPos.y, iceHW, iceH, iceDepthR, iceTilt);
+      } else if (fsVar === 1) {
+        fsDrawIce(screenPos.x, screenPos.y, iceHW * 0.85, iceH * 1.08, iceDepthR * 0.8, iceTilt + 2 * s);
+      } else {
+        fsDrawIce(screenPos.x, screenPos.y, iceHW * 1.1, iceH * 1.05, iceDepthR * 1.15, iceTilt - 1 * s);
+      }
 
       if (fsVar === 0) {
         // Knight with sword and shield
@@ -18978,16 +19144,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Snow base
       ctx.fillStyle = "#eef4f8";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 5 * s,
-        30 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x, screenPos.y + 5 * s, 30 * s, 10 * s, decorX * 7.1 + decorY * 5.3);
       ctx.fill();
 
       // Isometric brick pillars
@@ -20198,16 +20355,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Snow mound base
       ctx.fillStyle = "#eef4f8";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        auroraBase + 2 * s,
-        14 * s,
-        5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, screenPos.x, auroraBase + 2 * s, 14 * s, 5 * s, decorX * 8.7 + decorY * 3.1);
       ctx.fill();
 
       // Crystal formation - main spire and satellites
@@ -20325,198 +20473,200 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "snow_lantern": {
+      const TRUE_ISO = 1 / Math.sqrt(3);
       const lanternStone = "#8a9aaa";
       const lanternStoneDark = "#6a7a8a";
       const lanternStoneLight = "#b0bfcf";
+      const slx = screenPos.x;
+      const sly = screenPos.y;
 
       // Ground shadow
-      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 14 * s, 7 * s, 30 * s, 0.25);
+      drawDirectionalShadow(ctx, slx, sly + 4 * s, s, 14 * s, 7 * s, 30 * s, 0.25);
 
       // Snow around base
       ctx.fillStyle = "#f0f4f8";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 4 * s,
-        14 * s,
-        6 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, slx, sly + 4 * s, 14 * s, 6 * s, decorX * 3.3 + decorY * 10.7);
       ctx.fill();
 
-      // Base pedestal (isometric)
+      // Base pedestal — isometric diamond platform with TRUE_ISO
+      const slBW = 8 * s;
+      const slBD = slBW * TRUE_ISO;
+      const slBH = 3 * s;
+      const slBY = sly + 2 * s;
+      // Top diamond
       ctx.fillStyle = lanternStoneDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 1 * s);
+      ctx.moveTo(slx - slBW, slBY);
+      ctx.lineTo(slx, slBY + slBD);
+      ctx.lineTo(slx + slBW, slBY);
+      ctx.lineTo(slx, slBY - slBD);
       ctx.closePath();
       ctx.fill();
-      // Base sides
+      // Left face
       ctx.fillStyle = lanternStone;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 8 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y + 5 * s);
+      ctx.moveTo(slx - slBW, slBY);
+      ctx.lineTo(slx, slBY + slBD);
+      ctx.lineTo(slx, slBY + slBD + slBH);
+      ctx.lineTo(slx - slBW, slBY + slBH);
+      ctx.closePath();
+      ctx.fill();
+      // Right face
+      ctx.fillStyle = lanternStoneDark;
+      ctx.beginPath();
+      ctx.moveTo(slx, slBY + slBD);
+      ctx.lineTo(slx + slBW, slBY);
+      ctx.lineTo(slx + slBW, slBY + slBH);
+      ctx.lineTo(slx, slBY + slBD + slBH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pillar/post — isometric column
+      const pilHW = 3 * s;
+      const pilHD = pilHW * TRUE_ISO;
+      const pilBot = slBY;
+      const pilTop = sly - 22 * s;
+      const pilGL = ctx.createLinearGradient(slx - pilHW, 0, slx, 0);
+      pilGL.addColorStop(0, lanternStoneLight);
+      pilGL.addColorStop(1, lanternStone);
+      ctx.fillStyle = pilGL;
+      ctx.beginPath();
+      ctx.moveTo(slx - pilHW, pilBot);
+      ctx.lineTo(slx, pilBot + pilHD);
+      ctx.lineTo(slx, pilTop + pilHD);
+      ctx.lineTo(slx - pilHW, pilTop);
       ctx.closePath();
       ctx.fill();
       ctx.fillStyle = lanternStoneDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 8 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 8 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 5 * s);
+      ctx.moveTo(slx, pilBot + pilHD);
+      ctx.lineTo(slx + pilHW, pilBot);
+      ctx.lineTo(slx + pilHW, pilTop);
+      ctx.lineTo(slx, pilTop + pilHD);
       ctx.closePath();
       ctx.fill();
 
-      // Pillar/post
-      ctx.fillStyle = lanternStone;
-      ctx.fillRect(screenPos.x - 3 * s, screenPos.y - 22 * s, 6 * s, 24 * s);
-      ctx.fillStyle = lanternStoneLight;
-      ctx.fillRect(screenPos.x - 3 * s, screenPos.y - 22 * s, 2 * s, 24 * s);
+      // Lantern housing — isometric box with open sides
+      const hTop = sly - 38 * s;
+      const hBot = pilTop;
+      const hHW = 10 * s;
+      const hHD = hHW * TRUE_ISO;
 
-      // Lantern housing - open sides to show light
-      const housingTop = screenPos.y - 38 * s;
-      const housingBottom = screenPos.y - 22 * s;
-      const housingW = 10 * s;
-
-      // Warm light glow
+      // Warm light glow (behind housing)
       const glowPulse = 0.6 + Math.sin(decorTime * 3) * 0.15;
-      const warmGlow = ctx.createRadialGradient(
-        screenPos.x,
-        (housingTop + housingBottom) / 2,
-        0,
-        screenPos.x,
-        (housingTop + housingBottom) / 2,
-        18 * s,
-      );
+      const glowMidY = (hTop + hBot) / 2;
+      const warmGlow = ctx.createRadialGradient(slx, glowMidY, 0, slx, glowMidY, 18 * s);
       warmGlow.addColorStop(0, `rgba(255,200,100,${glowPulse * 0.5})`);
       warmGlow.addColorStop(0.3, `rgba(255,180,80,${glowPulse * 0.25})`);
       warmGlow.addColorStop(1, "transparent");
       ctx.fillStyle = warmGlow;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        (housingTop + housingBottom) / 2,
-        18 * s,
-        12 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(slx, glowMidY, 18 * s, 12 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Housing back
-      ctx.fillStyle = lanternStoneDark;
+      // Housing left face (lit side with opening for light)
+      ctx.fillStyle = lanternStone;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - housingW, housingBottom);
-      ctx.lineTo(screenPos.x - housingW * 0.8, housingTop);
-      ctx.lineTo(screenPos.x + housingW * 0.8, housingTop);
-      ctx.lineTo(screenPos.x + housingW, housingBottom);
+      ctx.moveTo(slx - hHW, hBot);
+      ctx.lineTo(slx, hBot + hHD);
+      ctx.lineTo(slx, hTop + hHD);
+      ctx.lineTo(slx - hHW, hTop);
       ctx.closePath();
       ctx.fill();
-
-      // Inner warm glow visible through openings
+      // Warm glow opening on left face
       ctx.fillStyle = `rgba(255,200,100,${glowPulse * 0.7})`;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - housingW * 0.6, housingBottom + 1 * s);
-      ctx.lineTo(screenPos.x - housingW * 0.5, housingTop + 2 * s);
-      ctx.lineTo(screenPos.x + housingW * 0.5, housingTop + 2 * s);
-      ctx.lineTo(screenPos.x + housingW * 0.6, housingBottom + 1 * s);
+      const loInset = 2.5 * s;
+      ctx.moveTo(slx - hHW + loInset, hBot - loInset);
+      ctx.lineTo(slx - loInset, hBot + hHD - loInset);
+      ctx.lineTo(slx - loInset, hTop + hHD + loInset);
+      ctx.lineTo(slx - hHW + loInset, hTop + loInset);
       ctx.closePath();
       ctx.fill();
 
-      // Housing pillars (corner posts)
-      ctx.fillStyle = lanternStone;
-      ctx.fillRect(
-        screenPos.x - housingW - 1 * s,
-        housingTop,
-        3 * s,
-        housingBottom - housingTop,
-      );
-      ctx.fillRect(
-        screenPos.x + housingW - 2 * s,
-        housingTop,
-        3 * s,
-        housingBottom - housingTop,
-      );
-
-      // Roof (isometric pyramid)
+      // Housing right face (shadow side with opening)
       ctx.fillStyle = lanternStoneDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, housingTop - 12 * s);
-      ctx.lineTo(screenPos.x - housingW - 3 * s, housingTop);
-      ctx.lineTo(screenPos.x, housingTop + 4 * s);
+      ctx.moveTo(slx, hBot + hHD);
+      ctx.lineTo(slx + hHW, hBot);
+      ctx.lineTo(slx + hHW, hTop);
+      ctx.lineTo(slx, hTop + hHD);
       ctx.closePath();
       ctx.fill();
-
-      ctx.fillStyle = lanternStoneLight;
+      // Warm glow opening on right face
+      ctx.fillStyle = `rgba(255,180,80,${glowPulse * 0.55})`;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, housingTop - 12 * s);
-      ctx.lineTo(screenPos.x + housingW + 3 * s, housingTop);
-      ctx.lineTo(screenPos.x, housingTop + 4 * s);
+      ctx.moveTo(slx + loInset, hBot + hHD - loInset);
+      ctx.lineTo(slx + hHW - loInset, hBot - loInset);
+      ctx.lineTo(slx + hHW - loInset, hTop + loInset);
+      ctx.lineTo(slx + loInset, hTop + hHD + loInset);
       ctx.closePath();
       ctx.fill();
 
-      // Roof top cap
+      // Housing corner posts (isometric thin columns at front vertex)
+      ctx.fillStyle = lanternStone;
+      ctx.fillRect(slx - 1.5 * s, hTop, 3 * s, hBot - hTop);
+
+      // Roof — isometric pyramid with TRUE_ISO
+      const roofHW = hHW + 3 * s;
+      const roofHD = roofHW * TRUE_ISO;
+      const roofPeak = hTop - 12 * s;
+      // Back face
+      ctx.fillStyle = lanternStoneDark;
+      ctx.beginPath();
+      ctx.moveTo(slx - roofHW, hTop);
+      ctx.lineTo(slx, hTop - roofHD);
+      ctx.lineTo(slx, roofPeak);
+      ctx.closePath();
+      ctx.fill();
+      // Left face
       ctx.fillStyle = lanternStone;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        housingTop - 12 * s,
-        3 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(slx - roofHW, hTop);
+      ctx.lineTo(slx, hTop + roofHD);
+      ctx.lineTo(slx, roofPeak);
+      ctx.closePath();
+      ctx.fill();
+      // Right face
+      ctx.fillStyle = lanternStoneLight;
+      ctx.beginPath();
+      ctx.moveTo(slx, hTop + roofHD);
+      ctx.lineTo(slx + roofHW, hTop);
+      ctx.lineTo(slx, roofPeak);
+      ctx.closePath();
+      ctx.fill();
+
+      // Roof top ornament — small isometric diamond
+      ctx.fillStyle = lanternStone;
+      ctx.beginPath();
+      ctx.moveTo(slx - 2 * s, roofPeak);
+      ctx.lineTo(slx, roofPeak + 2 * s * TRUE_ISO);
+      ctx.lineTo(slx + 2 * s, roofPeak);
+      ctx.lineTo(slx, roofPeak - 2 * s * TRUE_ISO);
+      ctx.closePath();
       ctx.fill();
 
       // Snow on roof
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - housingW - 2 * s, housingTop + 1 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 4 * s,
-        housingTop - 6 * s,
-        screenPos.x,
-        housingTop - 12 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x + 2 * s,
-        housingTop - 14 * s,
-        screenPos.x,
-        housingTop - 15 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x - 2 * s,
-        housingTop - 14 * s,
-        screenPos.x,
-        housingTop - 12 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x + 4 * s,
-        housingTop - 6 * s,
-        screenPos.x + housingW + 2 * s,
-        housingTop + 1 * s,
-      );
-      ctx.lineTo(screenPos.x + housingW + 3 * s, housingTop);
-      ctx.lineTo(screenPos.x, housingTop - 12 * s);
-      ctx.lineTo(screenPos.x - housingW - 3 * s, housingTop);
+      ctx.moveTo(slx - roofHW, hTop + 1 * s);
+      ctx.quadraticCurveTo(slx - 4 * s, hTop - 5 * s, slx, roofPeak);
+      ctx.quadraticCurveTo(slx + 2 * s, roofPeak - 2 * s, slx, roofPeak - 3 * s);
+      ctx.quadraticCurveTo(slx - 2 * s, roofPeak - 2 * s, slx, roofPeak);
+      ctx.quadraticCurveTo(slx + 4 * s, hTop - 5 * s, slx + roofHW, hTop + 1 * s);
+      ctx.lineTo(slx + roofHW, hTop);
+      ctx.lineTo(slx, roofPeak);
+      ctx.lineTo(slx - roofHW, hTop);
       ctx.closePath();
       ctx.fill();
 
       // Light cone downward
       ctx.fillStyle = `rgba(255,200,100,${glowPulse * 0.12})`;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - housingW * 0.6, housingBottom);
-      ctx.lineTo(screenPos.x - housingW * 1.2, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x + housingW * 1.2, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x + housingW * 0.6, housingBottom);
+      ctx.moveTo(slx - hHW * 0.6, hBot);
+      ctx.lineTo(slx - hHW * 1.2, sly + 5 * s);
+      ctx.lineTo(slx + hHW * 1.2, sly + 5 * s);
+      ctx.lineTo(slx + hHW * 0.6, hBot);
       ctx.closePath();
       ctx.fill();
 
@@ -20525,8 +20675,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const warmPhase = (decorTime * 1.5 + p * 1.1) % 2;
         if (warmPhase < 1.2) {
           const warmAlpha = Math.sin((warmPhase / 1.2) * Math.PI) * 0.6;
-          const warmX = screenPos.x + Math.sin(decorTime + p * 2) * 4 * s;
-          const warmY = (housingTop + housingBottom) / 2 - warmPhase * 8 * s;
+          const warmX = slx + Math.sin(decorTime + p * 2) * 4 * s;
+          const warmY = glowMidY - warmPhase * 8 * s;
           ctx.fillStyle = `rgba(255,200,100,${warmAlpha})`;
           ctx.beginPath();
           ctx.arc(warmX, warmY, 1 * s, 0, Math.PI * 2);
@@ -25350,134 +25500,522 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "cauldron": {
-      const ISO = 0.5;
-      const iron = "#212121";
-      const ironLight = "#424242";
+      const TRUE_ISO = 1 / Math.sqrt(3);
+      const cVar = variant % 4;
+      const cx = screenPos.x;
+      const cy = screenPos.y;
+      const cSeed = decorX * 17.3 + decorY * 31.7;
+      const csrand = (n: number) => {
+        const v = Math.sin(cSeed * 127.1 + n * 311.7) * 43758.5453;
+        return v - Math.floor(v);
+      };
 
-      const rimR = 16 * s;
-      const bulgeR = 18 * s;
-      const baseR = 11 * s;
-      const potH = 26 * s;
-      const rimY = screenPos.y - potH;
-      const bulgeY = screenPos.y - potH * 0.4;
-      const baseY = screenPos.y;
-      const rimThick = 3 * s;
+      if (cVar <= 1) {
+        // ---- ACTUAL CAULDRONS ----
+        const iron = cVar === 0 ? "#212121" : "#1a1520";
+        const ironLight = cVar === 0 ? "#424242" : "#352840";
+        const ironHi = cVar === 0 ? "#555555" : "#4a3858";
+        const liquidColor = cVar === 0 ? "#64DD17" : "#9C27B0";
+        const liquidBright = cVar === 0 ? "#B2FF59" : "#CE93D8";
+        const glowColor = cVar === 0 ? "0,200,50" : "120,30,180";
 
-      // Ground shadow
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        baseY + 4 * s,
-        bulgeR + 2 * s,
-        (bulgeR + 2 * s) * ISO,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+        const rimR = 16 * s;
+        const bulgeR = 18 * s;
+        const baseR = 11 * s;
+        const potH = 26 * s;
+        const rimY = cy - potH;
+        const bulgeY = cy - potH * 0.4;
 
-      // Legs
-      ctx.fillStyle = iron;
-      ctx.fillRect(screenPos.x - 8 * s, baseY, 2.5 * s, 5 * s);
-      ctx.fillRect(screenPos.x + 5.5 * s, baseY, 2.5 * s, 5 * s);
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 4 * s, bulgeR + 2 * s, (bulgeR + 2 * s) * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Pot body – contoured silhouette with left wall, base arc, right wall
-      const bodyGrad = ctx.createLinearGradient(
-        screenPos.x - bulgeR,
-        rimY,
-        screenPos.x + bulgeR,
-        rimY,
-      );
-      bodyGrad.addColorStop(0, "#181818");
-      bodyGrad.addColorStop(0.3, ironLight);
-      bodyGrad.addColorStop(0.5, "#555555");
-      bodyGrad.addColorStop(0.7, ironLight);
-      bodyGrad.addColorStop(1, "#181818");
+        // Eerie ground glow
+        const glowPulse = 0.3 + Math.sin(decorTime * 2) * 0.1;
+        const groundGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, bulgeR * 1.5);
+        groundGlow.addColorStop(0, `rgba(${glowColor},${glowPulse})`);
+        groundGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = groundGlow;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 2 * s, bulgeR * 1.5, bulgeR * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - rimR, rimY);
-      // Left wall: rim → bulge
-      ctx.bezierCurveTo(
-        screenPos.x - bulgeR - 1 * s,
-        rimY + (bulgeY - rimY) * 0.45,
-        screenPos.x - bulgeR,
-        bulgeY - (bulgeY - rimY) * 0.15,
-        screenPos.x - bulgeR,
-        bulgeY,
-      );
-      // Left wall: bulge → base
-      ctx.bezierCurveTo(
-        screenPos.x - bulgeR,
-        bulgeY + (baseY - bulgeY) * 0.55,
-        screenPos.x - baseR - 2 * s,
-        baseY - 2 * s,
-        screenPos.x - baseR,
-        baseY,
-      );
-      // Base front arc (counterclockwise from π → 0 traces visible underside)
-      ctx.ellipse(screenPos.x, baseY, baseR, baseR * ISO, 0, Math.PI, 0, true);
-      // Right wall: base → bulge
-      ctx.bezierCurveTo(
-        screenPos.x + baseR + 2 * s,
-        baseY - 2 * s,
-        screenPos.x + bulgeR,
-        bulgeY + (baseY - bulgeY) * 0.55,
-        screenPos.x + bulgeR,
-        bulgeY,
-      );
-      // Right wall: bulge → rim
-      ctx.bezierCurveTo(
-        screenPos.x + bulgeR,
-        bulgeY - (bulgeY - rimY) * 0.15,
-        screenPos.x + bulgeR + 1 * s,
-        rimY + (bulgeY - rimY) * 0.45,
-        screenPos.x + rimR,
-        rimY,
-      );
-      ctx.closePath();
-      ctx.fill();
+        // Legs (isometric — front-left, front-right, back)
+        ctx.fillStyle = iron;
+        const legW = 2.5 * s;
+        const legH = 5 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * s, cy);
+        ctx.lineTo(cx - 8 * s + legW, cy + legW * TRUE_ISO * 0.5);
+        ctx.lineTo(cx - 8 * s + legW, cy + legH + legW * TRUE_ISO * 0.5);
+        ctx.lineTo(cx - 8 * s, cy + legH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 6 * s, cy);
+        ctx.lineTo(cx + 6 * s + legW, cy - legW * TRUE_ISO * 0.5);
+        ctx.lineTo(cx + 6 * s + legW, cy + legH - legW * TRUE_ISO * 0.5);
+        ctx.lineTo(cx + 6 * s, cy + legH);
+        ctx.closePath();
+        ctx.fill();
 
-      // Rim outer ellipse
-      ctx.fillStyle = ironLight;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, rimY, rimR, rimR * ISO, 0, 0, Math.PI * 2);
-      ctx.fill();
+        // Pot body with gradient
+        const bodyGrad = ctx.createLinearGradient(cx - bulgeR, rimY, cx + bulgeR, rimY);
+        bodyGrad.addColorStop(0, "#181818");
+        bodyGrad.addColorStop(0.3, ironLight);
+        bodyGrad.addColorStop(0.5, ironHi);
+        bodyGrad.addColorStop(0.7, ironLight);
+        bodyGrad.addColorStop(1, "#181818");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - rimR, rimY);
+        ctx.bezierCurveTo(cx - bulgeR - 1 * s, rimY + (bulgeY - rimY) * 0.45, cx - bulgeR, bulgeY - (bulgeY - rimY) * 0.15, cx - bulgeR, bulgeY);
+        ctx.bezierCurveTo(cx - bulgeR, bulgeY + (cy - bulgeY) * 0.55, cx - baseR - 2 * s, cy - 2 * s, cx - baseR, cy);
+        ctx.ellipse(cx, cy, baseR, baseR * TRUE_ISO, 0, Math.PI, 0, true);
+        ctx.bezierCurveTo(cx + baseR + 2 * s, cy - 2 * s, cx + bulgeR, bulgeY + (cy - bulgeY) * 0.55, cx + bulgeR, bulgeY);
+        ctx.bezierCurveTo(cx + bulgeR, bulgeY - (bulgeY - rimY) * 0.15, cx + bulgeR + 1 * s, rimY + (bulgeY - rimY) * 0.45, cx + rimR, rimY);
+        ctx.closePath();
+        ctx.fill();
 
-      // Rim inner hole
-      const innerR = rimR - rimThick;
-      ctx.fillStyle = iron;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, rimY, innerR, innerR * ISO, 0, 0, Math.PI * 2);
-      ctx.fill();
+        // Rivet details on body
+        ctx.fillStyle = ironHi;
+        const rivetCount = 5 + Math.floor(csrand(10) * 3);
+        for (let rv = 0; rv < rivetCount; rv++) {
+          const rvAngle = (rv / rivetCount) * Math.PI + 0.1;
+          const rvX = cx + Math.cos(rvAngle) * bulgeR * 0.95;
+          const rvY = bulgeY + Math.sin(rvAngle) * 2 * s;
+          ctx.beginPath();
+          ctx.arc(rvX, rvY, 1.2 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-      // Bubbling goo surface
-      const gooH = Math.sin(decorTime * 3) * 2 * s;
-      const gooR = innerR - 1 * s;
-      ctx.fillStyle = "#64DD17";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        rimY + 2 * s + gooH,
-        gooR,
-        gooR * ISO,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+        // Band/ring around belly
+        ctx.strokeStyle = ironHi;
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.ellipse(cx, bulgeY, bulgeR * 0.98, bulgeR * TRUE_ISO * 0.35, 0, Math.PI, 0);
+        ctx.stroke();
 
-      // Bubbles
-      const bx1 = Math.sin(decorTime * 5) * 3 * s;
-      const bx2 = Math.cos(decorTime * 4) * 3 * s;
-      ctx.fillStyle = "#B2FF59";
-      ctx.beginPath();
-      ctx.arc(screenPos.x + bx1, rimY + gooH, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(screenPos.x - bx2, rimY + 3 * s + gooH, 2 * s, 0, Math.PI * 2);
-      ctx.fill();
+        if (cVar === 1) {
+          // Skull decoration on front face
+          ctx.fillStyle = "rgba(200,200,190,0.4)";
+          ctx.beginPath();
+          ctx.arc(cx, bulgeY - 3 * s, 4 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(20,0,30,0.6)";
+          ctx.beginPath();
+          ctx.arc(cx - 1.5 * s, bulgeY - 4 * s, 1 * s, 0, Math.PI * 2);
+          ctx.arc(cx + 1.5 * s, bulgeY - 4 * s, 1 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(cx - 1 * s, bulgeY - 1 * s);
+          ctx.lineTo(cx + 1 * s, bulgeY - 1 * s);
+          ctx.stroke();
+
+          // Chains hanging from handles
+          ctx.strokeStyle = "rgba(100,80,120,0.5)";
+          ctx.lineWidth = 1.5 * s;
+          for (let ch = 0; ch < 4; ch++) {
+            const chx = cx - rimR + ch * 3 * s - 2 * s;
+            ctx.beginPath();
+            ctx.moveTo(chx, rimY + 2 * s);
+            ctx.quadraticCurveTo(chx - 1 * s, rimY + 8 * s, chx + 1 * s, rimY + 12 * s);
+            ctx.stroke();
+          }
+        }
+
+        // Handles (isometric arcs on sides)
+        ctx.strokeStyle = iron;
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.arc(cx - rimR - 3 * s, rimY + 6 * s, 5 * s, -Math.PI * 0.3, Math.PI * 0.6);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx + rimR + 3 * s, rimY + 6 * s, 5 * s, Math.PI * 0.4, Math.PI * 1.3);
+        ctx.stroke();
+
+        // Rim outer (isometric ellipse)
+        ctx.fillStyle = ironLight;
+        ctx.beginPath();
+        ctx.ellipse(cx, rimY, rimR, rimR * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rim inner hole
+        const rimThick = 3 * s;
+        const innerR = rimR - rimThick;
+        ctx.fillStyle = iron;
+        ctx.beginPath();
+        ctx.ellipse(cx, rimY, innerR, innerR * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bubbling liquid surface
+        const gooH = Math.sin(decorTime * 3) * 2 * s;
+        const gooR = innerR - 1 * s;
+        ctx.fillStyle = liquidColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, rimY + 2 * s + gooH, gooR, gooR * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated bubbles (seeded positions)
+        ctx.fillStyle = liquidBright;
+        for (let bb = 0; bb < 3; bb++) {
+          const bbPhase = (decorTime * (3 + bb * 0.7) + csrand(20 + bb) * 6) % 4;
+          if (bbPhase < 2) {
+            const bbx = cx + (csrand(30 + bb) - 0.5) * gooR * 1.2;
+            const bby = rimY + 2 * s + gooH - bbPhase * 3 * s;
+            const bbr = (1.5 + csrand(40 + bb) * 2) * s * (1 - bbPhase * 0.3);
+            ctx.globalAlpha = 0.7 * (1 - bbPhase / 2);
+            ctx.beginPath();
+            ctx.arc(bbx, bby, bbr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // Rising fumes
+        for (let fm = 0; fm < 3; fm++) {
+          const fmPhase = (decorTime * 1.2 + fm * 1.3 + csrand(50 + fm) * 4) % 3;
+          if (fmPhase < 2) {
+            const fmAlpha = 0.25 * (1 - fmPhase / 2);
+            const fmX = cx + (csrand(60 + fm) - 0.5) * gooR;
+            const fmY = rimY - fmPhase * 12 * s;
+            const fmR = (3 + fmPhase * 4) * s;
+            ctx.fillStyle = `rgba(${glowColor},${fmAlpha})`;
+            ctx.beginPath();
+            ctx.arc(fmX + Math.sin(decorTime * 2 + fm) * 2 * s, fmY, fmR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      } else if (cVar === 2) {
+        // ---- POISON VOLCANO ----
+        const rockDark = "#2a2218";
+        const rockMid = "#3d3228";
+        const rockLight = "#5a4a38";
+        const toxicGreen = "#64DD17";
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 5 * s, 24 * s, 12 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Toxic ground seep
+        const seepPulse = 0.15 + Math.sin(decorTime * 1.5) * 0.05;
+        const seepGrad = ctx.createRadialGradient(cx, cy + 3 * s, 5 * s, cx, cy + 3 * s, 22 * s);
+        seepGrad.addColorStop(0, `rgba(100,221,23,${seepPulse})`);
+        seepGrad.addColorStop(1, "transparent");
+        ctx.fillStyle = seepGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 3 * s, 22 * s, 11 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Volcano cone — isometric prism (triangular profile)
+        const vHW = 20 * s;
+        const vHD = vHW * TRUE_ISO;
+        const vH = 38 * s;
+        const vTopHW = 7 * s;
+        const vTopHD = vTopHW * TRUE_ISO;
+
+        // Left face (lit)
+        const vlG = ctx.createLinearGradient(cx - vHW, cy, cx, cy - vH);
+        vlG.addColorStop(0, rockDark);
+        vlG.addColorStop(0.4, rockMid);
+        vlG.addColorStop(0.7, rockLight);
+        vlG.addColorStop(1, rockMid);
+        ctx.fillStyle = vlG;
+        ctx.beginPath();
+        ctx.moveTo(cx - vHW, cy);
+        ctx.lineTo(cx, cy + vHD);
+        ctx.lineTo(cx, cy + vTopHD - vH);
+        ctx.lineTo(cx - vTopHW, cy - vH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (shadow)
+        const vrG = ctx.createLinearGradient(cx, cy + vHD, cx + vHW, cy - vH);
+        vrG.addColorStop(0, "#1a1510");
+        vrG.addColorStop(0.5, rockDark);
+        vrG.addColorStop(1, rockMid);
+        ctx.fillStyle = vrG;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + vHD);
+        ctx.lineTo(cx + vHW, cy);
+        ctx.lineTo(cx + vTopHW, cy - vH);
+        ctx.lineTo(cx, cy + vTopHD - vH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rock texture lines (seeded)
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.8 * s;
+        for (let rl = 0; rl < 6; rl++) {
+          const rlt = 0.15 + csrand(100 + rl) * 0.7;
+          const rlY = cy - vH * rlt;
+          const rlHW = vHW * (1 - rlt * 0.65);
+          ctx.beginPath();
+          ctx.moveTo(cx - rlHW, rlY + (1 - rlt) * vHD * 0.3);
+          ctx.lineTo(cx + rlHW * 0.3, rlY + (1 - rlt) * vHD * 0.8);
+          ctx.stroke();
+        }
+
+        // Crater top face (isometric diamond)
+        ctx.fillStyle = "#1a1008";
+        ctx.beginPath();
+        ctx.moveTo(cx - vTopHW, cy - vH);
+        ctx.lineTo(cx, cy + vTopHD - vH);
+        ctx.lineTo(cx + vTopHW, cy - vH);
+        ctx.lineTo(cx, cy - vTopHD - vH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Toxic liquid in crater
+        const craterPulse = Math.sin(decorTime * 3) * 1.5 * s;
+        const crR = vTopHW - 2 * s;
+        ctx.fillStyle = toxicGreen;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - vH + craterPulse, crR, crR * TRUE_ISO, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Toxic flows down the sides (2-3 seeded streams)
+        const numFlows = 2 + Math.floor(csrand(200) * 2);
+        for (let fl = 0; fl < numFlows; fl++) {
+          const flowT = 0.2 + csrand(210 + fl * 3) * 0.6;
+          const onLeft = csrand(210 + fl * 3 + 1) > 0.5;
+          const flowW = (2 + csrand(210 + fl * 3 + 2) * 2) * s;
+          const startX = onLeft
+            ? cx - vTopHW + (cx - (cx - vTopHW)) * flowT * 0.3
+            : cx + vTopHW * flowT;
+          const startY = cy - vH + vTopHD * flowT;
+          const endX = onLeft
+            ? cx - vHW * (0.3 + flowT * 0.4)
+            : cx + vHW * (0.3 + flowT * 0.4);
+          const endY = cy - 3 * s;
+
+          const flowGrad = ctx.createLinearGradient(startX, startY, endX, endY);
+          flowGrad.addColorStop(0, toxicGreen);
+          flowGrad.addColorStop(0.6, "rgba(100,221,23,0.5)");
+          flowGrad.addColorStop(1, "rgba(100,221,23,0.1)");
+          ctx.strokeStyle = flowGrad;
+          ctx.lineWidth = flowW;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(
+            (startX + endX) / 2 + (csrand(220 + fl) - 0.5) * 5 * s,
+            (startY + endY) / 2,
+            endX,
+            endY,
+          );
+          ctx.stroke();
+          ctx.lineCap = "butt";
+        }
+
+        // Rising toxic fumes
+        for (let fm = 0; fm < 4; fm++) {
+          const fmPhase = (decorTime * 0.8 + fm * 0.9 + csrand(300 + fm) * 3) % 3;
+          if (fmPhase < 2.5) {
+            const fmAlpha = 0.3 * (1 - fmPhase / 2.5);
+            const fmX = cx + (csrand(310 + fm) - 0.5) * vTopHW;
+            const fmY = cy - vH - fmPhase * 15 * s;
+            const fmR = (2 + fmPhase * 5) * s;
+            ctx.fillStyle = `rgba(100,220,30,${fmAlpha})`;
+            ctx.beginPath();
+            ctx.arc(fmX + Math.sin(decorTime * 1.5 + fm) * 3 * s, fmY, fmR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Bright glow from crater
+        const craterGlow = ctx.createRadialGradient(cx, cy - vH, 0, cx, cy - vH, vTopHW * 2);
+        craterGlow.addColorStop(0, "rgba(100,221,23,0.35)");
+        craterGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = craterGlow;
+        ctx.beginPath();
+        ctx.arc(cx, cy - vH, vTopHW * 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // ---- TOXIC CRATER / POOL ----
+        const crRockDark = "#2a2a20";
+        const crRockMid = "#44443a";
+        const crRockLight = "#5e5e50";
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 4 * s, 22 * s, 11 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Toxic ground stain
+        const stainGrad = ctx.createRadialGradient(cx, cy, 3 * s, cx, cy, 20 * s);
+        stainGrad.addColorStop(0, "rgba(100,221,23,0.2)");
+        stainGrad.addColorStop(0.5, "rgba(80,180,20,0.08)");
+        stainGrad.addColorStop(1, "transparent");
+        ctx.fillStyle = stainGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 2 * s, 20 * s, 10 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rock ring — isometric irregular boulders forming a crater rim
+        const crOuterHW = 18 * s;
+        const crOuterHD = crOuterHW * TRUE_ISO;
+        const crInnerHW = 10 * s;
+        const crInnerHD = crInnerHW * TRUE_ISO;
+        const crRimH = 10 * s;
+
+        // Back rocks (drawn first, behind pool)
+        ctx.fillStyle = crRockDark;
+        ctx.beginPath();
+        ctx.moveTo(cx - crOuterHW, cy);
+        ctx.lineTo(cx, cy - crOuterHD);
+        ctx.lineTo(cx + crOuterHW, cy);
+        ctx.lineTo(cx + crInnerHW, cy);
+        ctx.lineTo(cx, cy - crInnerHD);
+        ctx.lineTo(cx - crInnerHW, cy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Back rim height
+        ctx.fillStyle = crRockMid;
+        ctx.beginPath();
+        ctx.moveTo(cx - crOuterHW, cy);
+        ctx.lineTo(cx, cy - crOuterHD);
+        ctx.lineTo(cx, cy - crOuterHD - crRimH);
+        ctx.lineTo(cx - crOuterHW, cy - crRimH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = crRockDark;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - crOuterHD);
+        ctx.lineTo(cx + crOuterHW, cy);
+        ctx.lineTo(cx + crOuterHW, cy - crRimH);
+        ctx.lineTo(cx, cy - crOuterHD - crRimH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Toxic pool inside crater
+        const poolPulse = Math.sin(decorTime * 2.5) * 1.5 * s;
+        const poolGrad = ctx.createRadialGradient(cx - 2 * s, cy + poolPulse, 0, cx, cy, crInnerHW);
+        poolGrad.addColorStop(0, "#B2FF59");
+        poolGrad.addColorStop(0.4, "#64DD17");
+        poolGrad.addColorStop(0.8, "#33AA00");
+        poolGrad.addColorStop(1, "#1a6600");
+        ctx.fillStyle = poolGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + poolPulse * 0.5, crInnerHW * 0.9, crInnerHD * 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Animated bubbles in pool
+        ctx.fillStyle = "#B2FF59";
+        for (let pb = 0; pb < 4; pb++) {
+          const pbPhase = (decorTime * 2 + pb * 0.8 + csrand(400 + pb) * 5) % 2.5;
+          if (pbPhase < 1.5) {
+            const pbAlpha = 0.6 * (1 - pbPhase / 1.5);
+            const pbx = cx + (csrand(410 + pb) - 0.5) * crInnerHW * 1.2;
+            const pby = cy + poolPulse * 0.5 - pbPhase * 2 * s;
+            ctx.globalAlpha = pbAlpha;
+            ctx.beginPath();
+            ctx.arc(pbx, pby, (1.5 + csrand(420 + pb)) * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // Front rim left face (lit)
+        const frG = ctx.createLinearGradient(cx - crOuterHW, cy, cx, cy + crOuterHD);
+        frG.addColorStop(0, crRockLight);
+        frG.addColorStop(1, crRockMid);
+        ctx.fillStyle = frG;
+        ctx.beginPath();
+        ctx.moveTo(cx - crOuterHW, cy);
+        ctx.lineTo(cx, cy + crOuterHD);
+        ctx.lineTo(cx, cy + crOuterHD - crRimH);
+        ctx.lineTo(cx - crOuterHW, cy - crRimH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Front rim right face (shadow)
+        ctx.fillStyle = crRockDark;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + crOuterHD);
+        ctx.lineTo(cx + crOuterHW, cy);
+        ctx.lineTo(cx + crOuterHW, cy - crRimH);
+        ctx.lineTo(cx, cy + crOuterHD - crRimH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rim top face (ring between outer and inner diamonds)
+        ctx.fillStyle = crRockLight;
+        ctx.beginPath();
+        ctx.moveTo(cx - crOuterHW, cy - crRimH);
+        ctx.lineTo(cx, cy + crOuterHD - crRimH);
+        ctx.lineTo(cx + crOuterHW, cy - crRimH);
+        ctx.lineTo(cx, cy - crOuterHD - crRimH);
+        ctx.closePath();
+        ctx.fill();
+        // Cut out inner opening
+        ctx.fillStyle = "#1a2a10";
+        ctx.beginPath();
+        ctx.moveTo(cx - crInnerHW, cy - crRimH);
+        ctx.lineTo(cx, cy + crInnerHD - crRimH);
+        ctx.lineTo(cx + crInnerHW, cy - crRimH);
+        ctx.lineTo(cx, cy - crInnerHD - crRimH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Seeded rock bumps on rim
+        for (let rb = 0; rb < 6; rb++) {
+          const rbAngle = (rb / 6) * Math.PI * 2 + csrand(500 + rb) * 0.5;
+          const rbDist = crOuterHW * (0.85 + csrand(510 + rb) * 0.15);
+          const rbx = cx + Math.cos(rbAngle) * rbDist;
+          const rby = cy - crRimH + Math.sin(rbAngle) * rbDist * TRUE_ISO;
+          const rbSize = (2 + csrand(520 + rb) * 3) * s;
+          const rbGrad = ctx.createRadialGradient(rbx - 1 * s, rby - 1 * s, 0, rbx, rby, rbSize);
+          rbGrad.addColorStop(0, crRockLight);
+          rbGrad.addColorStop(1, crRockMid);
+          ctx.fillStyle = rbGrad;
+          ctx.beginPath();
+          ctx.arc(rbx, rby - rbSize * 0.5, rbSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Green glow from pool
+        const poolGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, crOuterHW);
+        poolGlow.addColorStop(0, `rgba(100,221,23,${0.2 + Math.sin(decorTime * 2) * 0.05})`);
+        poolGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = poolGlow;
+        ctx.beginPath();
+        ctx.arc(cx, cy - crRimH * 0.5, crOuterHW, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rising toxic fumes
+        for (let fm = 0; fm < 3; fm++) {
+          const fmPhase = (decorTime * 1.0 + fm * 1.1 + csrand(600 + fm) * 4) % 3;
+          if (fmPhase < 2) {
+            const fmAlpha = 0.2 * (1 - fmPhase / 2);
+            const fmX = cx + (csrand(610 + fm) - 0.5) * crInnerHW;
+            const fmY = cy - crRimH - fmPhase * 14 * s;
+            const fmR = (2.5 + fmPhase * 5) * s;
+            ctx.fillStyle = `rgba(100,220,30,${fmAlpha})`;
+            ctx.beginPath();
+            ctx.arc(fmX + Math.sin(decorTime * 1.8 + fm) * 2 * s, fmY, fmR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Splatter stains around edges
+        ctx.fillStyle = "rgba(100,221,23,0.12)";
+        for (let sp = 0; sp < 5; sp++) {
+          const spAngle = csrand(700 + sp) * Math.PI * 2;
+          const spDist = crOuterHW + 2 * s + csrand(710 + sp) * 6 * s;
+          const spx = cx + Math.cos(spAngle) * spDist;
+          const spy = cy + Math.sin(spAngle) * spDist * TRUE_ISO;
+          ctx.beginPath();
+          ctx.arc(spx, spy, (1 + csrand(720 + sp) * 2) * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       break;
     }
 

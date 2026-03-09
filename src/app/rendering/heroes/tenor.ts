@@ -347,7 +347,6 @@ export function drawTenorHero(
     drawShockwaveRings(ctx, x, y, s, attackPhase, attackIntensity, zoom);
   }
 
-  drawShadow(ctx, x, y, s);
   drawDressShoes(ctx, x, y, s, zoom);
   drawTuxedoBody(ctx, x, y, s, breathe, zoom);
   drawTenorSkirtArmor(ctx, x, y, s, time, zoom, isAttacking, attackIntensity, gemPulse);
@@ -447,19 +446,6 @@ function drawShockwaveRings(
     ctx.lineWidth = (2 - ring * 0.3) * zoom;
     ctx.stroke();
   }
-}
-
-// ─── SHADOW ──────────────────────────────────────────────────────────────────
-
-function drawShadow(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
-  const g = ctx.createRadialGradient(x, y + s * 0.52, 0, x, y + s * 0.52, s * 0.45);
-  g.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  g.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-  g.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.ellipse(x, y + s * 0.52, s * 0.42, s * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ─── DRESS SHOES ─────────────────────────────────────────────────────────────

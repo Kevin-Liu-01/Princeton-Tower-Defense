@@ -1,6 +1,7 @@
 import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
+import { drawOrganicBlobAt } from "./helpers";
 
 // Performance utilities - critical for Firefox
 export {
@@ -3152,82 +3153,73 @@ export function renderEffect(
     }
 
     case "mortar_impact": {
-      // Heavy explosive landing - crater + fire ring + debris
       const ip = progress;
       const sx = screenPos.x;
       const sy = screenPos.y;
       const sz = effect.size * zoom;
+      const seed = hashString32(effect.id);
+      const blobPts = 16;
 
-      // Ground scorch mark (persists longer)
-      const scorchAlpha = alpha * 0.7;
-      const scorchGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sz * 0.6);
-      scorchGrad.addColorStop(0, `rgba(30, 15, 5, ${scorchAlpha})`);
-      scorchGrad.addColorStop(0.5, `rgba(60, 30, 10, ${scorchAlpha * 0.6})`);
-      scorchGrad.addColorStop(1, "rgba(40, 20, 5, 0)");
-      ctx.fillStyle = scorchGrad;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, sz * 0.6, sz * 0.3, 0, 0, Math.PI * 2);
+      // Ground scorch — flat organic blob, no gradient
+      ctx.fillStyle = `rgba(35, 18, 6, ${alpha * 0.55 * (1 - ip * 0.3)})`;
+      drawOrganicBlobAt(ctx, sx, sy, sz * 0.6, sz * 0.28, seed, 0.12, blobPts);
       ctx.fill();
 
-      // Central fireball (early phase)
+      // Central fireball (early phase) — layered organic blobs
       if (ip < 0.5) {
         const fireP = ip / 0.5;
-        const fireSize = sz * 0.8 * (0.3 + fireP * 0.7);
-        const fireGrad = ctx.createRadialGradient(sx, sy - fireP * 10 * zoom, 0, sx, sy - fireP * 10 * zoom, fireSize);
-        fireGrad.addColorStop(0, `rgba(255, 255, 180, ${(1 - fireP) * 0.9})`);
-        fireGrad.addColorStop(0.3, `rgba(255, 180, 50, ${(1 - fireP) * 0.8})`);
-        fireGrad.addColorStop(0.6, `rgba(255, 80, 0, ${(1 - fireP) * 0.5})`);
-        fireGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
-        ctx.fillStyle = fireGrad;
-        ctx.beginPath();
-        ctx.arc(sx, sy - fireP * 10 * zoom, fireSize, 0, Math.PI * 2);
+        const fAlpha = (1 - fireP) * alpha;
+        const fY = sy - fireP * 10 * zoom;
+        const fSize = sz * 0.8 * (0.3 + fireP * 0.7);
+
+        // Outer orange glow
+        ctx.fillStyle = `rgba(255, 90, 10, ${fAlpha * 0.35})`;
+        drawOrganicBlobAt(ctx, sx, fY, fSize, fSize * 0.7, seed + 1, 0.2, blobPts);
+        ctx.fill();
+
+        // Inner bright core
+        ctx.fillStyle = `rgba(255, 220, 120, ${fAlpha * 0.7})`;
+        drawOrganicBlobAt(ctx, sx, fY, fSize * 0.5, fSize * 0.35, seed + 2, 0.18, blobPts);
         ctx.fill();
       }
 
-      // Expanding shockwave rings
-      for (let ring = 0; ring < 3; ring++) {
-        const rp = Math.min(1, ip * 1.5 + ring * 0.1);
-        const rRadius = sz * rp * (0.6 + ring * 0.2);
-        const rAlpha = (1 - rp) * alpha * (0.5 - ring * 0.12);
-        if (rAlpha <= 0) continue;
-
-        const rGrad = ctx.createRadialGradient(sx, sy, rRadius * 0.85, sx, sy, rRadius);
-        rGrad.addColorStop(0, "rgba(255, 140, 40, 0)");
-        rGrad.addColorStop(0.6, `rgba(255, ${100 - ring * 25}, ${20 - ring * 5}, ${rAlpha})`);
-        rGrad.addColorStop(1, "rgba(180, 40, 0, 0)");
-        ctx.fillStyle = rGrad;
-        ctx.beginPath();
-        ctx.ellipse(sx, sy, rRadius, rRadius * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
+      // Expanding shockwave ring — single organic ring stroke, no gradient
+      const rp = Math.min(1, ip * 1.5);
+      const rRadius = sz * rp * 0.8;
+      const rAlpha = (1 - rp) * alpha * 0.45;
+      if (rAlpha > 0.01) {
+        ctx.strokeStyle = `rgba(255, 120, 30, ${rAlpha})`;
+        ctx.lineWidth = Math.max(1, 3 * zoom * (1 - rp));
+        drawOrganicBlobAt(ctx, sx, sy, rRadius, rRadius * 0.5, seed + 3, 0.1, blobPts);
+        ctx.stroke();
       }
 
-      // Flying debris chunks
-      const debrisCount = 8;
+      // Debris — fewer chunks, batched into one path per color group
+      const debrisCount = 5;
       for (let d = 0; d < debrisCount; d++) {
-        const dAngle = (d / debrisCount) * Math.PI * 2 + 0.3;
+        const dAngle = (d / debrisCount) * Math.PI * 2 + seed * 0.1;
         const dDist = sz * 0.3 * ip * (0.5 + (d % 3) * 0.3);
         const dx = sx + Math.cos(dAngle) * dDist;
         const dy = sy + Math.sin(dAngle) * dDist * 0.5 - ip * (1 - ip) * 20 * zoom;
-        const dSize = (2 + (d % 2)) * zoom * (1 - ip);
-        const dAlpha = alpha * (1 - ip) * 0.7;
-        ctx.fillStyle = `rgba(${100 + d * 10}, ${60 + d * 5}, ${30 + d * 3}, ${dAlpha})`;
-        ctx.beginPath();
-        ctx.arc(dx, dy, dSize, 0, Math.PI * 2);
+        const dSize = (2 + (d & 1)) * zoom * (1 - ip);
+        if (dSize < 0.5) continue;
+        ctx.fillStyle = `rgba(${110 + d * 12}, ${65 + d * 6}, ${32}, ${alpha * (1 - ip) * 0.65})`;
+        drawOrganicBlobAt(ctx, dx, dy, dSize, dSize * 0.8, seed + 10 + d, 0.25, 8);
         ctx.fill();
       }
 
-      // Smoke column (later phase)
+      // Smoke puffs (later phase) — organic blobs rising
       if (ip > 0.2) {
         const smokeP = (ip - 0.2) / 0.8;
-        for (let s = 0; s < 4; s++) {
-          const sp = Math.min(1, smokeP + s * 0.15);
-          const smokeY = sy - sp * 40 * zoom;
-          const smokeX = sx + Math.sin(sp * 3 + s) * 8 * zoom;
-          const smokeSize = (6 + s * 3) * zoom * sp;
-          const smokeAlpha = alpha * (1 - sp) * 0.3;
-          ctx.fillStyle = `rgba(80, 70, 60, ${smokeAlpha})`;
-          ctx.beginPath();
-          ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+        for (let s = 0; s < 3; s++) {
+          const sp = Math.min(1, smokeP + s * 0.18);
+          const smokeY = sy - sp * 38 * zoom;
+          const smokeX = sx + Math.sin(sp * 3 + s) * 7 * zoom;
+          const smokeR = (6 + s * 3.5) * zoom * sp;
+          const smokeA = alpha * (1 - sp) * 0.25;
+          if (smokeA < 0.01) continue;
+          ctx.fillStyle = `rgba(75, 68, 58, ${smokeA})`;
+          drawOrganicBlobAt(ctx, smokeX, smokeY, smokeR, smokeR * 0.85, seed + 20 + s, 0.2, 10);
           ctx.fill();
         }
       }

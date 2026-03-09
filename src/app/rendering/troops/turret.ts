@@ -385,21 +385,6 @@ export function drawTurretTroop(
 
   ctx.save();
 
-  // ── GROUND SHADOW (multi-layer soft) ──
-  const shX = x + 1.5;
-  const shY = y + s * 0.38;
-  const penGrad = ctx.createRadialGradient(shX, shY, s * 0.12, shX, shY, s * 0.6);
-  penGrad.addColorStop(0, "rgba(0,0,0,0.26)");
-  penGrad.addColorStop(0.5, "rgba(0,0,0,0.14)");
-  penGrad.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = penGrad;
-  ctx.beginPath();
-  ctx.ellipse(shX, shY, s * 0.58, s * 0.29, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(0,0,0,0.22)";
-  ctx.beginPath();
-  ctx.ellipse(shX, shY, s * 0.38, s * 0.19, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // ── SANDBAG RING ──
   const sandbagHues = ["#7a7058", "#6d6452", "#736b57", "#6a6350"];

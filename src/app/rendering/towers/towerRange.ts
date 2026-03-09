@@ -1,8 +1,5 @@
 import type { Tower, DraggingTower, Position } from "../../types";
-import {
-  TILE_SIZE,
-  TOWER_DATA,
-} from "../../constants";
+import { TILE_SIZE, TOWER_DATA } from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
@@ -11,10 +8,7 @@ import {
   isValidBuildPosition,
   darkenColor,
 } from "../../utils";
-import {
-  drawIsometricPrism,
-  drawGroundTransition,
-} from "./towerHelpers";
+import { drawIsometricPrism, drawGroundTransition } from "./towerHelpers";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,

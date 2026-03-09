@@ -1,7 +1,6 @@
 // Volcanic region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawEnemyShadow } from "./helpers";
 
 // =====================================================
 // VOLCANIC REGION TROOPS
@@ -39,8 +38,6 @@ export function drawMagmaSpawnEnemy(
   ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
   ctx.fill();
 
-  // Scorched earth underneath
-  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.55, size * 0.2, 0.5);
 
   // Lava pool beneath
   const poolGrad = ctx.createRadialGradient(
@@ -430,8 +427,6 @@ export function drawFireImpEnemy(
   ctx.arc(x, y - hop, size * 0.7, 0, Math.PI * 2);
   ctx.fill();
 
-  // Scorched ground shadow
-  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.3, size * 0.1);
 
   // Ember trail on ground
   ctx.fillStyle = `rgba(251, 146, 60, ${0.4 + flameFlicker * 0.2})`;
@@ -983,8 +978,6 @@ export function drawEmberGuardEnemy(
   ctx.ellipse(x, y + size * 0.48, size * 0.5, size * 0.18, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shadow
-  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.45, size * 0.15, 0.5);
 
   // Articulated armored legs with molten joints
   const thighLen = size * 0.17;

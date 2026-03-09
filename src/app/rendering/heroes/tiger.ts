@@ -438,22 +438,6 @@ export function drawTigerHero(
     ctx.fill();
   }
 
-  // === DEEP SHADOW ===
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.6,
-    0,
-    x,
-    y + size * 0.6,
-    size * 0.65,
-  );
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.35)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.6, size * 0.65, size * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   ctx.save();
   ctx.translate(x, y);

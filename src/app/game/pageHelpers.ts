@@ -1,4 +1,4 @@
-import type { Enemy, Position, SpecialTower, Tower, TowerType } from "../types";
+import type { DecorationType, Enemy, Position, SpecialTower, Tower, TowerType } from "../types";
 import {
   LEVEL_DATA,
   LEVEL_WAVES,
@@ -13,6 +13,28 @@ import {
   getMapDecorationWorldPos,
   resolveMapDecorationRuntimePlacement,
 } from "../utils";
+
+const LARGE_LANDMARK_TYPES = new Set<DecorationType>([
+  "pyramid",
+  "nassau_hall",
+  "giant_sphinx",
+  "glacier",
+  "ice_fortress",
+  "frost_citadel",
+  "infernal_gate",
+  "obsidian_castle",
+  "carnegie_lake",
+]);
+
+function getLandmarkTowerExclusionRange(
+  decorType: string,
+  size: number,
+): number {
+  if (LARGE_LANDMARK_TYPES.has(decorType as DecorationType)) {
+    return Math.ceil(size);
+  }
+  return 0;
+}
 
 // Dinky Station spawn management constants
 export const TROOP_RESPAWN_TIME = 5000; // 5 seconds
@@ -35,7 +57,10 @@ export const DEFAULT_CAMERA_OFFSET: Position = {
 export const DEFAULT_CAMERA_ZOOM = 1.5;
 
 // Helper to get enemy position using their pathKey for dual-path support
-export const getEnemyPosWithPath = (enemy: Enemy, defaultMap: string): Position => {
+export const getEnemyPosWithPath = (
+  enemy: Enemy,
+  defaultMap: string,
+): Position => {
   const pathKey = enemy.pathKey || defaultMap;
   const basePos = getEnemyPosition(enemy, pathKey);
 
@@ -75,7 +100,10 @@ export const getFormationOffsets = (count: number): Position[] => {
 
 // Dynamic tower hitbox calculation based on tower type and level
 // Tower heights grow with level, so hitboxes should too
-export const getTowerHitboxRadius = (tower: Tower, zoom: number = 1): number => {
+export const getTowerHitboxRadius = (
+  tower: Tower,
+  zoom: number = 1,
+): number => {
   const level = tower.level;
   let baseWidth: number;
   let baseHeight: number;
@@ -158,14 +186,13 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
     for (const deco of levelData.decorations) {
       const decorType = deco.category || deco.type;
       if (decorType && LANDMARK_DECORATION_TYPES.has(decorType)) {
-        // Block the decoration position and surrounding cells based on size
         const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
         const size = resolvedPlacement?.scale ?? (deco.size || 1);
         const worldPos = getMapDecorationWorldPos(deco);
         const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
         const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
 
-        const range = Math.ceil(size);
+        const range = getLandmarkTowerExclusionRange(decorType, size);
         for (let dx = -range; dx <= range; dx++) {
           for (let dy = -range; dy <= range; dy++) {
             blocked.add(`${baseX + dx},${baseY + dy}`);
@@ -174,8 +201,12 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
       }
 
       // Block background decoration positions (water, lava, etc.)
-      const resolvedType = resolveMapDecorationRuntimePlacement(deco)?.runtimeType ?? decorType;
-      if (resolvedType && BACKGROUND_BLOCKING_DECORATION_TYPES.has(resolvedType)) {
+      const resolvedType =
+        resolveMapDecorationRuntimePlacement(deco)?.runtimeType ?? decorType;
+      if (
+        resolvedType &&
+        BACKGROUND_BLOCKING_DECORATION_TYPES.has(resolvedType)
+      ) {
         const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
         const size = resolvedPlacement?.scale ?? (deco.size || 1);
         const worldPos = getMapDecorationWorldPos(deco);

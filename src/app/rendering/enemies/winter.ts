@@ -43,11 +43,6 @@ export function drawSnowGoblinEnemy(
   ctx.arc(x, y - hop, size * 0.7, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ice crystal shadow
-  ctx.fillStyle = "rgba(30, 58, 95, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.38, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // Frozen footprints
   ctx.fillStyle = "rgba(147, 197, 253, 0.4)";
@@ -480,11 +475,6 @@ export function drawYetiEnemy(
   ctx.arc(x, y, size * 1.0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ground frost crack shadow
-  ctx.fillStyle = "rgba(15, 23, 42, 0.5)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.6, size * 0.6, size * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // Ice cracks radiating from feet
   ctx.strokeStyle = `rgba(147, 197, 253, ${frostPulse * 0.4})`;
@@ -1106,11 +1096,6 @@ export function drawIceWitchEnemy(
     ctx.stroke();
   }
 
-  // Shadow with icy tint
-  ctx.fillStyle = "rgba(30, 58, 95, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.42, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // Trailing ice mist behind
   ctx.fillStyle = `rgba(147, 197, 253, ${0.2 + breathMist * 0.15})`;

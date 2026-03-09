@@ -1,7 +1,6 @@
 // Princeton Tower Defense - Elemental/Nature Enemy Sprite Functions
 // Extracted from enemies/index.ts
 
-import { drawRadialShadow } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 
 
@@ -22,20 +21,6 @@ export function drawThornwalkerEnemy(
   const heartbeat = Math.sin(time * 4);
   const heartbeatPulse = heartbeat > 0.8 ? (heartbeat - 0.8) * 5 : 0;
   const thornExtend = isAttacking ? attackPhase * 0.6 : 0;
-
-  // Root shadow
-  ctx.fillStyle = "rgba(22, 101, 52, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.5,
-    size * 0.5,
-    size * 0.15,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
   // Twisted roots gripping the ground
   ctx.strokeStyle = bodyColorDark;
@@ -1361,12 +1346,6 @@ export function drawFrostlingEnemy(
     ctx.fill();
   }
 
-  // Shadow (faint, ethereal)
-  ctx.fillStyle = "rgba(125, 211, 252, 0.15)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.3, size * 0.08, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Main ghostly body with enhanced transparency layers
   // Outer transparency layer
   const outerBodyGrad = ctx.createRadialGradient(
@@ -1721,24 +1700,6 @@ export function drawInfernalEnemy(
   ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ground scorching effect
-  const scorchGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.5,
-    0,
-    x,
-    y + size * 0.5,
-    size * 0.55,
-  );
-  scorchGrad.addColorStop(0, "rgba(20, 5, 0, 0.7)");
-  scorchGrad.addColorStop(0.3, "rgba(50, 15, 5, 0.5)");
-  scorchGrad.addColorStop(0.6, "rgba(80, 30, 10, 0.3)");
-  scorchGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = scorchGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.55, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Scorch cracks on ground
   ctx.strokeStyle = `rgba(251, 146, 60, ${0.2 + flamePulse * 0.15})`;
   ctx.lineWidth = 1 * zoom;
@@ -1755,13 +1716,6 @@ export function drawInfernalEnemy(
     );
     ctx.stroke();
   }
-
-  // Charred ground shadow
-  drawRadialShadow(ctx, x, y + size * 0.45, size * 0.4, size * 0.4, size * 0.12, [
-    { offset: 0, color: "rgba(50, 20, 10, 0.6)" },
-    { offset: 0.5, color: "rgba(30, 10, 5, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0.2)" },
-  ]);
 
   // Tail with fire tip
   const tailWave = Math.sin(time * 3) * size * 0.08;
@@ -2545,12 +2499,6 @@ export function drawBansheeEnemy(
     ctx.stroke();
   }
 
-  // Ghostly shadow
-  ctx.fillStyle = "rgba(148, 163, 184, 0.15)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.6, size * 0.25, size * 0.06, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Main spectral body
   const bodyGrad = ctx.createRadialGradient(
     x,
@@ -2964,12 +2912,6 @@ export function drawJuggernautEnemy(
     ctx.stroke();
   }
 
-  // Heavy shadow
-  drawRadialShadow(ctx, x + groundShake, y + size * 0.5, size * 0.55, size * 0.55, size * 0.18, [
-    { offset: 0, color: "rgba(0, 0, 0, 0.5)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
-
   // Massive legs
   ctx.fillStyle = bodyColorDark;
   // Left leg
@@ -3381,20 +3323,6 @@ export function drawAssassinEnemy(
     );
     ctx.stroke();
   }
-
-  // Faint shadow
-  ctx.fillStyle = "rgba(30, 27, 75, 0.25)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.45,
-    size * 0.25,
-    size * 0.08,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
   // Smoke bomb particles at feet
   for (let sb = 0; sb < 6; sb++) {
@@ -3934,13 +3862,6 @@ export function drawDragonEnemy(
   ctx.beginPath();
   ctx.arc(x, y + hover, size * 1.2, 0, Math.PI * 2);
   ctx.fill();
-
-  // Ground shadow
-  drawRadialShadow(ctx, x, y + size * 0.52 + hover, size * 0.58, size * 0.58, size * 0.18, [
-    { offset: 0, color: "rgba(0, 0, 0, 0.42)" },
-    { offset: 0.6, color: "rgba(0, 0, 0, 0.22)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   const drawWing = (side: -1 | 1): void => {
     const wingRotation = side === -1 ? -0.5 + wingFlap : 0.5 - wingFlap;

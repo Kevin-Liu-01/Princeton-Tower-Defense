@@ -1,4 +1,3 @@
-import { drawEnemyShadow } from "./helpers";
 
 // =====================================================
 // FOREST REGION TROOPS
@@ -42,8 +41,6 @@ export function drawAthleteEnemy(
   }
   ctx.globalAlpha = 1;
 
-  // Ground shadow (elongated for speed)
-  drawEnemyShadow(ctx, x + size * 0.1, y + size * 0.45, size * 0.45, size * 0.1, 0.25);
 
   // --- LEGS with detailed anatomy ---
   const skinTone = "#e8c4a0";
@@ -478,8 +475,6 @@ export function drawProtestorEnemy(
     Math.abs(Math.sin(time * 4 * attackIntensity)) *
       (isAttacking ? 0.25 : 0.15);
 
-  // Ground shadow
-  drawEnemyShadow(ctx, x, y + size * 0.48, size * 0.4, size * 0.1, 0.25);
 
   // --- LEGS (jeans with details) ---
   const jeansColor = "#2d4263";

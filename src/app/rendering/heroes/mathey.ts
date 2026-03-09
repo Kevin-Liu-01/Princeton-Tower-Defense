@@ -417,15 +417,6 @@ export function drawMatheyKnightHero(
     ctx.restore();
   }
 
-  // === DEEP SHADOW ===
-  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.55, 0, x, y + size * 0.55, size * 0.6);
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.55, size * 0.6, size * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // === MASSIVE BULKY PLATE ARMOR BODY ===
   // This knight is significantly wider and heavier
@@ -795,39 +786,51 @@ export function drawMatheyKnightHero(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // === NO PLUME - Instead, heavy metal horns ===
+  // === UPWARD-POINTING STUBBY METAL HORNS ===
   for (let side = -1; side <= 1; side += 2) {
     const hornX = x + side * size * 0.25;
-    // Horn base
-    ctx.fillStyle = "#404058";
-    ctx.beginPath();
-    ctx.moveTo(hornX - side * size * 0.04, y - size * 0.82);
-    ctx.quadraticCurveTo(
-      hornX + side * size * 0.15, y - size * 1.0,
-      hornX + side * size * 0.32, y - size * 0.9
+    // Horn body — wide base tapering to a short point
+    const hornGrad = ctx.createLinearGradient(
+      hornX - side * size * 0.06, y - size * 0.76,
+      hornX + side * size * 0.18, y - size * 0.96
     );
+    hornGrad.addColorStop(0, "#505068");
+    hornGrad.addColorStop(0.4, "#404058");
+    hornGrad.addColorStop(1, "#303045");
+    ctx.fillStyle = hornGrad;
+    ctx.beginPath();
+    ctx.moveTo(hornX - side * size * 0.12, y - size * 0.76);
     ctx.quadraticCurveTo(
-      hornX + side * size * 0.18, y - size * 0.85,
-      hornX + side * size * 0.02, y - size * 0.78
+      hornX + side * size * 0.08, y - size * 0.82,
+      hornX + side * size * 0.18, y - size * 0.96
+    );
+    ctx.lineTo(hornX + side * size * 0.12, y - size * 0.96);
+    ctx.quadraticCurveTo(
+      hornX + side * size * 0.02, y - size * 0.84,
+      hornX + side * size * 0.04, y - size * 0.76
     );
     ctx.closePath();
     ctx.fill();
-    // Horn highlight
+    // Horn outline
+    ctx.strokeStyle = "#252535";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.stroke();
+    // Horn highlight edge
     ctx.strokeStyle = "#606080";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(hornX - side * size * 0.02, y - size * 0.8);
+    ctx.moveTo(hornX - side * size * 0.1, y - size * 0.77);
     ctx.quadraticCurveTo(
-      hornX + side * size * 0.12, y - size * 0.96,
-      hornX + side * size * 0.28, y - size * 0.88
+      hornX + side * size * 0.06, y - size * 0.83,
+      hornX + side * size * 0.16, y - size * 0.95
     );
     ctx.stroke();
-    // Frost glow at horn tips
+    // Frost glow at horn tip
     ctx.fillStyle = "#60c0ff";
     ctx.shadowColor = "#80e0ff";
-    ctx.shadowBlur = 4 * zoom;
+    ctx.shadowBlur = 5 * zoom;
     ctx.beginPath();
-    ctx.arc(hornX + side * size * 0.3, y - size * 0.89, size * 0.015, 0, Math.PI * 2);
+    ctx.arc(hornX + side * size * 0.15, y - size * 0.96, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }

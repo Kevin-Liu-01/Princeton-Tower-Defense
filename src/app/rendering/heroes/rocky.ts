@@ -431,7 +431,6 @@ export function drawRockyHero(
     drawAttackShockwaves(ctx, x, y, s, hop, attackPhase, attackIntensity, zoom);
   }
 
-  drawShadow(ctx, x, y, s);
   drawSquirrelTail(ctx, x, y, s, hop, time, zoom, isAttacking, attackPhase);
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, -1);
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, 1);
@@ -592,31 +591,6 @@ function drawAttackShockwaves(
     );
     ctx.stroke();
   }
-}
-
-// ─── SHADOW ──────────────────────────────────────────────────────────────────
-
-function drawShadow(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  s: number,
-) {
-  const g = ctx.createRadialGradient(
-    x,
-    y + s * 0.5,
-    0,
-    x,
-    y + s * 0.5,
-    s * 0.52,
-  );
-  g.addColorStop(0, "rgba(0,0,0,0.5)");
-  g.addColorStop(0.6, "rgba(0,0,0,0.22)");
-  g.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.ellipse(x, y + s * 0.5, s * 0.5, s * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ─── FLUFFY SQUIRREL TAIL ───────────────────────────────────────────────────

@@ -1,7 +1,5 @@
 import { setShadowBlur, clearShadow } from "../performance";
 import {
-  drawEnemyShadow,
-  drawRadialShadow,
   drawFaceCircle,
 } from "./helpers";
 
@@ -514,8 +512,6 @@ export function drawDefaultEnemy(
     ctx.fill();
   }
 
-  // Shadow beneath
-  drawEnemyShadow(ctx, x, y + size * 0.48, size * 0.28, size * 0.09);
 
   // Shadowy robes
   const robeGrad = ctx.createLinearGradient(
@@ -758,12 +754,6 @@ export function drawTrusteeEnemy(
     ctx.restore();
   }
 
-  // Lavish shadow with gold tint
-  drawRadialShadow(ctx, x, y + size * 0.58, size * 0.5, size * 0.5, size * 0.16, [
-    { offset: 0, color: "rgba(120, 80, 0, 0.5)" },
-    { offset: 0.5, color: "rgba(60, 40, 0, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Magnificent golden robes with purple velvet lining and corruption veins
   const robeGrad = ctx.createLinearGradient(

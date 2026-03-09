@@ -1,63 +1,9 @@
 // Princeton Tower Defense - Enemy Rendering Helpers
 // Shared shape functions for enemy rendering to reduce duplication.
 
-// ============================================================================
-// GROUND SHADOW
-// ============================================================================
-
-/**
- * Draws a simple flat elliptical ground shadow beneath an enemy.
- * @param yOffset - vertical offset from center (e.g. `size * 0.52`)
- * @param rx - horizontal radius (e.g. `size * 0.32`)
- * @param ry - vertical radius (e.g. `size * 0.1`)
- */
-export function drawEnemyShadow(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  rx: number,
-  ry: number,
-  alpha: number = 0.35,
-): void {
-  ctx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// ============================================================================
-// RADIAL GRADIENT SHADOW
-// ============================================================================
-
 export interface GradientStop {
   offset: number;
   color: string;
-}
-
-/**
- * Draws a radial-gradient shadow (fading from center outward) beneath an enemy.
- * @param cx, cy - center of the gradient and ellipse
- * @param gradRadius - outer radius of the gradient
- * @param rx, ry - ellipse radii for the fill shape
- * @param stops - gradient color stops
- */
-export function drawRadialShadow(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  gradRadius: number,
-  rx: number,
-  ry: number,
-  stops: GradientStop[],
-): void {
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, gradRadius);
-  for (const s of stops) {
-    grad.addColorStop(s.offset, s.color);
-  }
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ============================================================================

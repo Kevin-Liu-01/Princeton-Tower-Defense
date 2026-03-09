@@ -1,4 +1,3 @@
-import { drawEnemyShadow } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 
 export function drawBogCreatureEnemy(
@@ -46,8 +45,6 @@ export function drawBogCreatureEnemy(
   ctx.ellipse(x, y + size * 0.52, size * 0.6, size * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Deep shadow with murky puddle
-  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.55, size * 0.18, 0.6);
 
   // Toxic ripples in the pool
   ctx.strokeStyle = `rgba(132, 204, 22, ${0.2 + Math.sin(time * 3) * 0.1})`;
@@ -1003,8 +1000,6 @@ export function drawSwampTrollEnemy(
   const muscleFlexPhase = Math.sin(time * 2) * 0.03;
   size *= 1.3; // Larger size
 
-  // Ground impact crater shadow
-  drawEnemyShadow(ctx, x, y + size * 0.55, size * 0.65, size * 0.22, 0.6);
 
   // Murky footprint puddles
   ctx.fillStyle = "rgba(34, 87, 22, 0.35)";

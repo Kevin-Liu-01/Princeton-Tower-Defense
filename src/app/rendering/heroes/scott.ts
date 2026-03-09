@@ -51,7 +51,6 @@ export function drawFScottHero(
     drawAttackRings(ctx, x, y, size, attackPhase, attackIntensity, zoom);
   }
 
-  drawShadow(ctx, x, y, size);
   drawCape(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawSuit(ctx, x, y, size, breathe, zoom);
   drawScottSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, goldPulse);
@@ -198,31 +197,6 @@ function drawAttackRings(
     );
     ctx.stroke();
   }
-}
-
-// ─── SHADOW ──────────────────────────────────────────────────────────────────
-
-function drawShadow(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number,
-) {
-  const g = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.45,
-  );
-  g.addColorStop(0, "rgba(0,0,0,0.45)");
-  g.addColorStop(0.6, "rgba(0,0,0,0.2)");
-  g.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.42, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ─── CAPE (3-panel, connected to epaulettes, wraps & flutters) ──────────────

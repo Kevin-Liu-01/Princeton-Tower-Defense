@@ -1,7 +1,5 @@
 import { setShadowBlur, clearShadow } from "../performance";
 import {
-  drawEnemyShadow,
-  drawRadialShadow,
   drawRadialAura,
   drawRobeBody,
 } from "./helpers";
@@ -105,13 +103,6 @@ export function drawArcherEnemy(
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Radial shadow with spectral tint
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.38, size * 0.38, size * 0.11, [
-    { offset: 0, color: "rgba(4, 120, 87, 0.45)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.25)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Enchanted quiver
   ctx.save();
@@ -697,9 +688,6 @@ export function drawMageEnemy(
     clearShadow(ctx);
   }
 
-  // Shadow
-  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.32, size * 0.1);
-
   // Staff in right hand
   ctx.save();
   ctx.translate(x + size * 0.32, y - size * 0.1 + float);
@@ -1131,12 +1119,6 @@ export function drawCatapultEnemy(
     ctx.fill();
   }
 
-  // Shadow with hell-cracks
-  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.55, size * 0.55, size * 0.18, [
-    { offset: 0, color: "rgba(127, 29, 29, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
   ctx.strokeStyle = `rgba(220, 38, 38, ${hellGlow * 0.5})`;
   ctx.lineWidth = 1.5 * zoom;
   for (let crack = 0; crack < 6; crack++) {
@@ -1590,13 +1572,6 @@ export function drawWarlockEnemy(
     ctx.stroke();
   }
 
-  // Deeper shadow
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.12, [
-    { offset: 0, color: "rgba(30, 10, 60, 0.7)" },
-    { offset: 0.6, color: "rgba(30, 10, 60, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
-
   // Dark robes - more tattered and flowing
   const robeGrad = ctx.createLinearGradient(
     x - size * 0.45,
@@ -1908,13 +1883,6 @@ export function drawCrossbowmanEnemy(
   ctx.beginPath();
   ctx.ellipse(x, y + size * 0.48, size * 0.45, size * 0.14, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  // Shadow with curse tint
-  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.38, size * 0.38, size * 0.12, [
-    { offset: 0, color: "rgba(80, 20, 20, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Flowing cursed cape
   const capeGrad = ctx.createLinearGradient(x - size * 0.35, y, x + size * 0.35, y);
@@ -2445,13 +2413,6 @@ export function drawHexerEnemy(
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // === LAYER 4: SHADOW ===
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.35, size * 0.35, size * 0.1, [
-    { offset: 0, color: "rgba(76, 29, 149, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // === LAYER 5: TATTERED DRESS WITH MAGICAL THREADS ===
   const dressGrad = ctx.createLinearGradient(

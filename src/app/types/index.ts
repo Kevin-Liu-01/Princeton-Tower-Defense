@@ -716,6 +716,7 @@ export interface Effect {
   enemySize?: number;
   isFlying?: boolean;
   deathCause?: DeathCause;
+  regionGroundColors?: string[];
 }
 
 // Particle types

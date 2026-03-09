@@ -1,7 +1,7 @@
 // Desert region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawEnemyShadow, drawRadialAura } from "./helpers";
+import { drawRadialAura } from "./helpers";
 
 // =====================================================
 // DESERT REGION TROOPS
@@ -107,18 +107,6 @@ export function drawNomadEnemy(
     ctx.fill();
   }
 
-  // Deep shadow
-  drawEnemyShadow(ctx, x, y + size * 0.45, size * 0.45, size * 0.15, 0.45);
-
-  // Trailing shadow wisps
-  ctx.fillStyle = "rgba(0,0,0,0.2)";
-  for (let trail = 0; trail < 3; trail++) {
-    const trailX = x - size * 0.3 - trail * size * 0.12;
-    const trailY = y + size * 0.35 + Math.sin(time * 3 + trail) * size * 0.05;
-    ctx.beginPath();
-    ctx.ellipse(trailX, trailY, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
 
   // Outer flowing robe layer with wind
   ctx.fillStyle = `rgba(${bodyColorDark.slice(1).match(/../g)?.map(h => parseInt(h, 16)).join(", ") || "40,30,20"}, 0.4)`;
@@ -618,8 +606,6 @@ export function drawScorpionEnemy(
   const venomDrip = (time * 2) % 1;
   size *= 1.5; // Larger size
 
-  // Ground disturbance shadow
-  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.65, size * 0.25, 0.5);
 
   // Disturbed sand around creature
   ctx.fillStyle = "rgba(139, 119, 89, 0.3)";
@@ -1043,19 +1029,6 @@ export function drawScarabEnemy(
   ctx.arc(x, y + hoverFloat, size * 0.7, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shadow with magical distortion
-  ctx.fillStyle = "rgba(0,0,0,0.4)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.3,
-    size * 0.4 + Math.sin(time * 5) * size * 0.02,
-    size * 0.15,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
   // Articulated legs with joints (3 pairs)
   for (let side = -1; side <= 1; side += 2) {

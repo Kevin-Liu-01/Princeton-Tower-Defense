@@ -30,7 +30,6 @@ export function drawEngineerHero(
   drawAura(ctx, x, y, s, time, dataPulse, isAttacking);
   drawFloatingParticles(ctx, x, y, s, time);
   drawCircuitLines(ctx, x, y, s, time, dataPulse, zoom);
-  drawShadow(ctx, x, y, s);
   drawHoloGears(ctx, x, y, s, time, zoom, "behind");
   drawBackpack(ctx, x + idleSway, y + bodyBob, s, time, dataPulse, zoom, isAttacking, attackIntensity);
   drawBody(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse, zoom);
@@ -134,24 +133,6 @@ function drawCircuitLines(
     );
     ctx.fill();
   }
-}
-
-// ─── SHADOW ──────────────────────────────────────────────────────────────────
-
-function drawShadow(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  s: number,
-) {
-  const g = ctx.createRadialGradient(x, y + s * 0.52, 0, x, y + s * 0.52, s * 0.5);
-  g.addColorStop(0, "rgba(0, 0, 0, 0.55)");
-  g.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-  g.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.ellipse(x, y + s * 0.52, s * 0.48, s * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // ─── BACKPACK ────────────────────────────────────────────────────────────────

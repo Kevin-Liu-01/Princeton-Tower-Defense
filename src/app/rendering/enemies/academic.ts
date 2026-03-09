@@ -1,6 +1,4 @@
 import {
-  drawEnemyShadow,
-  drawRadialShadow,
   drawFaceCircle,
   drawEyes,
   drawRobeBody,
@@ -126,12 +124,6 @@ export function drawFreshmanEnemy(
     ctx.fill();
   }
 
-  // Shadow beneath with corruption seepage
-  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.35, size * 0.35, size * 0.12, [
-    { offset: 0, color: "rgba(20, 60, 20, 0.6)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Floating forbidden tome (behind) - more ornate
   ctx.save();
@@ -524,12 +516,6 @@ export function drawSophomoreEnemy(
     ctx.fill();
   }
 
-  // Shadow with electrical discharge
-  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.35, size * 0.35, size * 0.12, [
-    { offset: 0, color: "rgba(30, 58, 95, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.35)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Flowing apprentice robes with storm patterns
   const robeGrad = ctx.createLinearGradient(
@@ -952,12 +938,6 @@ export function drawJuniorEnemy(
     ctx.restore();
   }
 
-  // Shadow with madness seeping out
-  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.4, size * 0.38, size * 0.12, [
-    { offset: 0, color: "rgba(59, 7, 100, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Disheveled scholar robes - worn and stained with ink
   const robeGrad = ctx.createLinearGradient(
@@ -1397,13 +1377,6 @@ export function drawSeniorEnemy(
     ctx.fillText(runes[i], runeX, runeY);
   }
 
-  // === LAYER 3: SHADOW AND GROUND EFFECT ===
-  // Complex shadow with distortion
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.5, size * 0.45, size * 0.15, [
-    { offset: 0, color: "rgba(80, 20, 60, 0.5)" },
-    { offset: 0.5, color: "rgba(40, 10, 30, 0.35)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Corruption tendrils from shadow
   ctx.strokeStyle = `rgba(157, 23, 77, ${0.3 + powerSurge * 0.3})`;
@@ -2020,12 +1993,6 @@ export function drawGradStudentEnemy(
     ctx.restore();
   }
 
-  // Shadow with dimensional bleed
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.14, [
-    { offset: 0, color: "rgba(120, 53, 15, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Tattered lab coat with dimensional burns and chemical stains
   const coatGrad = ctx.createLinearGradient(
@@ -2431,8 +2398,6 @@ export function drawProfessorEnemy(
     ctx.restore();
   }
 
-  // Shadow (weakened by undeath)
-  drawEnemyShadow(ctx, x, y + size * 0.52, size * 0.35, size * 0.1, 0.3);
 
   // Ancient tweed robes (tattered, elegant)
   const robeGrad = ctx.createLinearGradient(
@@ -2807,12 +2772,6 @@ export function drawDeanEnemy(
     ctx.restore();
   }
 
-  // Void shadow beneath - reality warped
-  drawRadialShadow(ctx, x, y + size * 0.58, size * 0.55, size * 0.5, size * 0.16, [
-    { offset: 0, color: "rgba(30, 10, 60, 0.7)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Magnificent flowing robes with reality-warping edges
   ctx.save();

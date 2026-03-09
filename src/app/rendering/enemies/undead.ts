@@ -2,8 +2,6 @@
 // Extracted from enemies/index.ts: Specter, Berserker, Golem, Necromancer, Shadow Knight, Cultist, Plaguebearer
 
 import {
-  drawEnemyShadow,
-  drawRadialShadow,
   drawRadialAura,
   drawRobeBody,
 } from "./helpers";
@@ -800,12 +798,6 @@ export function drawBerserkerEnemy(
   }
   ctx.globalAlpha = 1;
 
-  // Blood-soaked ground
-  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.4, size * 0.35, size * 0.12, [
-    { offset: 0, color: "rgba(127, 29, 29, 0.5)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Muscular demonic body with runes
   const bodyGrad = ctx.createLinearGradient(
@@ -1140,12 +1132,6 @@ export function drawGolemEnemy(
     ctx.stroke();
   }
 
-  // Heavy shadow
-  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.5, size * 0.55, size * 0.18, [
-    { offset: 0, color: "rgba(0, 0, 0, 0.6)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Tail (behind body)
   ctx.save();
@@ -1815,12 +1801,6 @@ export function drawNecromancerEnemy(
     ctx.stroke();
   }
 
-  // Deep shadow
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.12, [
-    { offset: 0, color: "rgba(30, 27, 75, 0.6)" },
-    { offset: 0.5, color: "rgba(15, 10, 46, 0.35)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Dark robes with soul threads
   const robeGrad = ctx.createLinearGradient(
@@ -2172,12 +2152,6 @@ export function drawShadowKnightEnemy(
     ctx.fill();
   }
 
-  // Deeper shadow
-  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.14, [
-    { offset: 0, color: "rgba(0, 0, 0, 0.6)" },
-    { offset: 0.5, color: "rgba(0, 0, 0, 0.35)" },
-    { offset: 1, color: "rgba(0, 0, 0, 0)" },
-  ]);
 
   // Articulated armored legs with heavy deliberate stride
   const thighLen = size * 0.18;
@@ -2833,8 +2807,6 @@ export function drawCultistEnemy(
     ctx.fill();
   }
 
-  // Shadow
-  drawEnemyShadow(ctx, x, y + size * 0.45, size * 0.35, size * 0.12, 0.4);
 
   // Dark energy chains/tendrils wrapping around the body
   ctx.strokeStyle = `rgba(100, 30, 10, ${runeGlow * 0.5})`;
