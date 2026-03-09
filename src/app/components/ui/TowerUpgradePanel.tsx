@@ -37,7 +37,7 @@ import {
   Flag,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
-import { TOWER_DATA, TROOP_DATA } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA } from "../../constants";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
@@ -567,7 +567,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   }
 
   if (tower.type === "station") {
-    const baseDeployRange = TOWER_DATA.station.spawnRange || 180;
+    const baseDeployRange = TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE;
     const boostedDeployRange = Math.floor(baseDeployRange * rangeBoost);
     statsToShow.push({
       key: "deployRange", label: "Deploy", icon: <Fence size={14} />,

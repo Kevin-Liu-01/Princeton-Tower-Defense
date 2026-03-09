@@ -34,7 +34,7 @@ import {
   Rocket,
 } from "lucide-react";
 import type { Tower, TowerType, Position, SpellType } from "../../types";
-import { TOWER_DATA } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
 import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
 
@@ -278,7 +278,7 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
             </div>
           )}
           {tower.type === "station" && (() => {
-            const baseDeployRange = TOWER_DATA.station.spawnRange || 180;
+            const baseDeployRange = TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE;
             const boostedDeployRange = Math.floor(baseDeployRange * (tower.rangeBoost || 1));
             const isDeployBoosted = (tower.rangeBoost || 1) > 1;
             return (

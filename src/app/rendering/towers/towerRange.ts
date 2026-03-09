@@ -1,5 +1,5 @@
 import type { Tower, DraggingTower, Position } from "../../types";
-import { TILE_SIZE, TOWER_DATA } from "../../constants";
+import { TILE_SIZE, TOWER_DATA, LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
@@ -69,10 +69,10 @@ export function renderTowerRange(
   );
 
   let range = tData.range;
-  if (tower.level === 2) range *= 1.15;
+  if (tower.level === 2) range *= LEVEL_2_RANGE_MULT;
   if (tower.level === 3) {
-    if (tower.type === "library" && tower.upgrade === "B") range *= 1.5;
-    else range *= 1.25;
+    if (tower.type === "library" && tower.upgrade === "B") range *= LEVEL_4_RANGE_MULT;
+    else range *= LEVEL_3_RANGE_MULT;
   }
   if (tower.level >= 4 && tower.upgrade) {
     const towerStats = TOWER_STATS[tower.type];
@@ -80,7 +80,7 @@ export function renderTowerRange(
     if (upgradeRange !== undefined) {
       range = upgradeRange;
     } else {
-      range = tData.range * 1.5;
+      range = tData.range * LEVEL_4_RANGE_MULT;
     }
   }
   range *= tower.rangeBoost || 1;

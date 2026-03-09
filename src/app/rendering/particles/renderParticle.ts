@@ -1,6 +1,6 @@
 import type { Particle, Position } from "../../types";
 import { worldToScreen } from "../../utils";
-import { setShadowBlur, clearShadow, getPerformanceSettings } from "../performance";
+import { setShadowBlur, clearShadow, getPerformanceSettings, getScenePressure } from "../performance";
 
 // ============================================================================
 // PARTICLE RENDERER - Optimized to eliminate per-particle overhead
@@ -46,8 +46,10 @@ export function renderParticle(
   const prevAlpha = ctx.globalAlpha;
   ctx.globalAlpha = alpha;
 
-  // Under heavy particle load, simplify expensive render types
-  const simplified = particleDensityHint > 160 || getPerformanceSettings().reducedParticles;
+  const pressure = getScenePressure();
+  const simplified = particleDensityHint > 160
+    || getPerformanceSettings().reducedParticles
+    || pressure.skipDecorativeEffects;
 
   switch (particle.type) {
     case "fire":

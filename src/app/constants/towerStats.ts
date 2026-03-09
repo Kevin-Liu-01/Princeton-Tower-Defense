@@ -2,6 +2,7 @@
 // Centralized tower statistics for damage calculations and buff application
 
 import type { TroopType } from "../types";
+import { LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "./combatConstants";
 
 // ============================================================================
 // TOWER STATS INTERFACES
@@ -272,8 +273,8 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Concentrated laser attack",
         effect: "Continuous lock-on, damage increases over time",
         stats: {
-          damage: 45 * 2 * 0.15,
-          range: 320, // 1.6x base range - sniper beam
+          damage: 45 * 2 * 1.3 * 0.15,
+          range: 320,
           attackSpeed: 100,
           specialEffect: "Lock-on damage ramp",
         },
@@ -283,8 +284,8 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Multi-target electricity",
         effect: "Hits up to 5 targets at once",
         stats: {
-          damage: 45 * 2 * 0.7,
-          range: 300, // 1.5x base range
+          damage: 45 * 2 * 1.3 * 0.7,
+          range: 300,
           chainTargets: 5,
           specialEffect: "Bouncing lightning",
         },
@@ -409,7 +410,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   mortar: {
     name: "Palmer Mortar",
     baseStats: {
-      damage: 120,
+      damage: 48,
       range: 300,
       attackSpeed: 3000,
       projectileSpeed: 400,
@@ -439,7 +440,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Targeted missile strikes on selected area",
         effect: "Click to target area for devastating missile barrages",
         stats: {
-          damage: 120 * 2 * 1.5,
+          damage: 48 * 2 * 1.5,
           range: 400,
           attackSpeed: 4000,
           splashRadius: 150,
@@ -451,7 +452,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Rains burning embers across the field",
         effect: "Scatters burning ember piles that deal DoT",
         stats: {
-          damage: 120 * 2 * 0.4,
+          damage: 48 * 2 * 0.4,
           range: 350,
           attackSpeed: 2500,
           burnDamage: 25,
@@ -531,24 +532,22 @@ export function calculateTowerStats(
     }
   }
 
-  // Apply level-based range bonuses (these are standard across all towers)
+  // Apply level-based range bonuses (standard across all towers)
   if (level === 2) {
-    stats.range = towerDef.baseStats.range * 1.15;
+    stats.range = towerDef.baseStats.range * LEVEL_2_RANGE_MULT;
   }
   if (level === 3) {
-    stats.range = towerDef.baseStats.range * 1.25;
+    stats.range = towerDef.baseStats.range * LEVEL_3_RANGE_MULT;
   }
 
   // Apply upgrade path stats if at level 4 (upgrade selected)
   if (level >= 4 && upgrade) {
     const upgradePath = towerDef.upgrades[upgrade];
     if (upgradePath) {
-      // Level 4 upgrade stats override everything
       stats = { ...stats, ...upgradePath.stats };
     }
-    // If no specific range in upgrade path, use 1.5x base range
     if (upgradePath && upgradePath.stats?.range === undefined) {
-      stats.range = towerDef.baseStats.range * 1.5;
+      stats.range = towerDef.baseStats.range * LEVEL_4_RANGE_MULT;
     }
   }
 

@@ -12,7 +12,18 @@ import type {
   Particle,
   Position,
 } from "../types";
-import { HERO_DATA, MAP_PATHS, TOWER_DATA, TROOP_DATA } from "../constants";
+import {
+  HERO_DATA,
+  MAP_PATHS,
+  TOWER_DATA,
+  TROOP_DATA,
+  DEFAULT_TOWER_ATTACK_SPEED,
+  DEFAULT_TROOP_RANGED_RANGE,
+  DEFAULT_TROOP_MELEE_RANGE,
+  DEFAULT_TROOP_ATTACK_SPEED,
+  DEFAULT_TROOP_DAMAGE,
+  DAMAGE_FLASH_MS,
+} from "../constants";
 import { distance, gridToWorld, gridToWorldPath } from "../utils";
 import type { WaveState } from "./useGameState";
 
@@ -307,7 +318,7 @@ export function processGameUpdate(
 
     const baseRange = towerData.range ?? 0;
     const baseDamage = towerData.damage ?? 0;
-    const attackInterval = Math.max(100, towerData.attackSpeed ?? 1000);
+    const attackInterval = Math.max(100, towerData.attackSpeed ?? DEFAULT_TOWER_ATTACK_SPEED);
     const effectiveRange = baseRange * (tower.rangeBoost ?? 1);
     const effectiveDamage = baseDamage * (tower.damageBoost ?? 1);
 
@@ -450,9 +461,9 @@ export function processGameUpdate(
       const troopData = TROOP_DATA[troopType];
       if (!troopData) return troop;
 
-      const attackRange = troopData.isRanged ? troopData.range ?? 140 : 70;
-      const attackSpeed = troopData.attackSpeed ?? 1000;
-      const attackDamage = troopData.damage ?? 25;
+      const attackRange = troopData.isRanged ? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE : DEFAULT_TROOP_MELEE_RANGE;
+      const attackSpeed = troopData.attackSpeed ?? DEFAULT_TROOP_ATTACK_SPEED;
+      const attackDamage = troopData.damage ?? DEFAULT_TROOP_DAMAGE;
       let nextTroop = troop;
 
       if (troop.moving && troop.targetPos) {
@@ -519,7 +530,7 @@ export function processGameUpdate(
       return {
         ...enemy,
         hp: nextHp,
-        damageFlash: 180,
+        damageFlash: DAMAGE_FLASH_MS,
       };
     })
     .filter((enemy): enemy is Enemy => enemy !== null);

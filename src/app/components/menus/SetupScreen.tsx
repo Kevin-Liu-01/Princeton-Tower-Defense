@@ -20,7 +20,17 @@ import type {
   EnemyCategory,
 } from "../../types";
 import { OrnateFrame } from "../ui/OrnateFrame";
-import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
+import {
+  HERO_DATA,
+  SPELL_DATA,
+  TOWER_DATA,
+  ENEMY_DATA,
+  HERO_ABILITY_COOLDOWNS,
+  ARMORED_THRESHOLD,
+  FAST_SPEED_THRESHOLD,
+  DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
+  DEFAULT_ENEMY_TROOP_DAMAGE,
+} from "../../constants";
 
 // Import sprite components from GameUI
 import { TowerSprite, HeroSprite, SpellSprite, HeroAbilityIcon, HeroIcon, SpellIcon } from "../ui/GameUI";
@@ -975,8 +985,8 @@ export function SetupScreen({
                               const getEnemyTypeClass = () => {
                                 if (enemy.flying) return { type: "Flying", icon: <Wind size={10} />, color: "cyan" };
                                 if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={10} />, color: "purple" };
-                                if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
-                                if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
+                                if (enemy.armor > ARMORED_THRESHOLD) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
+                                if (enemy.speed > FAST_SPEED_THRESHOLD) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
                                 return { type: "Ground", icon: <Flag size={10} />, color: "red" };
                               };
                               const enemyTypeClass = getEnemyTypeClass();
@@ -1094,7 +1104,7 @@ export function SetupScreen({
                                         <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
                                           <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
                                           <div className="text-[7px] text-cyan-500">Speed</div>
-                                          <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                          <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
                                         </div>
                                       </div>
                                     )}
@@ -1105,7 +1115,7 @@ export function SetupScreen({
                                         <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                           <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
                                           <div className="text-[7px] text-red-500">Melee</div>
-                                          <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? 22}</div>
+                                          <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
                                         </div>
                                         <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                           <Timer size={10} className="mx-auto text-red-400 mb-0.5" />

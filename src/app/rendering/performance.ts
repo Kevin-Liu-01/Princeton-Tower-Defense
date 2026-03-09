@@ -80,7 +80,7 @@ export function setPerformanceSettings(settings: Partial<PerformanceSettings>): 
  */
 export function setShadowBlur(ctx: CanvasRenderingContext2D, blur: number, color?: string): void {
   const settings = getPerformanceSettings();
-  if (settings.disableShadows) {
+  if (settings.disableShadows || currentScenePressure.forceShadowsOff) {
     ctx.shadowBlur = 0;
     return;
   }
@@ -98,6 +98,40 @@ export function clearShadow(ctx: CanvasRenderingContext2D): void {
 }
 
 // ============================================================================
+// SHADOW INTERCEPTION — quality-aware override for ALL shadowBlur writes
+// ============================================================================
+
+const SHADOW_PATCHED = Symbol("shadowPatched");
+
+/**
+ * Intercept all `ctx.shadowBlur = N` writes so that quality scaling and
+ * scene-pressure shadow disabling apply universally — even in code that
+ * doesn't call `setShadowBlur`. Call once per context (idempotent).
+ */
+export function interceptShadows(ctx: CanvasRenderingContext2D): void {
+  const record = ctx as unknown as Record<symbol, boolean>;
+  if (record[SHADOW_PATCHED]) return;
+  record[SHADOW_PATCHED] = true;
+
+  let rawBlur = 0;
+  Object.defineProperty(ctx, "shadowBlur", {
+    get() {
+      return rawBlur;
+    },
+    set(value: number) {
+      const settings = getPerformanceSettings();
+      if (value === 0 || settings.disableShadows || currentScenePressure.forceShadowsOff) {
+        rawBlur = 0;
+        return;
+      }
+      rawBlur = value * settings.shadowQualityMultiplier;
+    },
+    configurable: true,
+    enumerable: true,
+  });
+}
+
+// ============================================================================
 // GRADIENT CACHING
 // ============================================================================
 
@@ -108,7 +142,7 @@ interface CachedGradient {
 }
 
 const gradientCache = new Map<string, CachedGradient>();
-const GRADIENT_CACHE_MAX_SIZE = 100;
+const GRADIENT_CACHE_MAX_SIZE = 512;
 const GRADIENT_CACHE_TTL = 5000; // 5 seconds
 
 /**
@@ -124,8 +158,9 @@ export function getCachedRadialGradient(
 ): CanvasGradient {
   const settings = getPerformanceSettings();
   
-  // For simplified gradients, reduce color stops
-  const stops = settings.simplifiedGradients && colorStops.length > 3
+  const simplify = (settings.simplifiedGradients || currentScenePressure.forceSimplifiedGradients)
+    && colorStops.length > 3;
+  const stops = simplify
     ? [colorStops[0], colorStops[colorStops.length - 1]]
     : colorStops;
   
@@ -141,9 +176,7 @@ export function getCachedRadialGradient(
     gradient.addColorStop(offset, color);
   }
   
-  // Cache management
   if (gradientCache.size >= GRADIENT_CACHE_MAX_SIZE) {
-    // Remove oldest entries
     const oldestKey = gradientCache.keys().next().value;
     if (oldestKey) gradientCache.delete(oldestKey);
   }
@@ -164,7 +197,9 @@ export function getCachedLinearGradient(
 ): CanvasGradient {
   const settings = getPerformanceSettings();
   
-  const stops = settings.simplifiedGradients && colorStops.length > 3
+  const simplify = (settings.simplifiedGradients || currentScenePressure.forceSimplifiedGradients)
+    && colorStops.length > 3;
+  const stops = simplify
     ? [colorStops[0], colorStops[colorStops.length - 1]]
     : colorStops;
   
@@ -204,8 +239,10 @@ export function clearGradientCache(): void {
  * Should spawn a particle? Returns false more often on Firefox
  */
 export function shouldSpawnParticle(baseChance: number): boolean {
+  if (currentScenePressure.skipNonEssentialParticles) return false;
   const settings = getPerformanceSettings();
-  const adjustedChance = settings.reducedParticles ? baseChance * 0.5 : baseChance;
+  const pressureReduction = currentScenePressure.skipDecorativeEffects ? 0.6 : 1;
+  const adjustedChance = (settings.reducedParticles ? baseChance * 0.5 : baseChance) * pressureReduction;
   return Math.random() < adjustedChance;
 }
 
@@ -213,8 +250,10 @@ export function shouldSpawnParticle(baseChance: number): boolean {
  * Get adjusted particle count for Firefox
  */
 export function getAdjustedParticleCount(baseCount: number): number {
+  if (currentScenePressure.skipNonEssentialParticles) return Math.ceil(baseCount * 0.2);
   const settings = getPerformanceSettings();
-  return settings.reducedParticles ? Math.ceil(baseCount * 0.5) : baseCount;
+  const pressureReduction = currentScenePressure.skipDecorativeEffects ? 0.6 : 1;
+  return Math.ceil((settings.reducedParticles ? baseCount * 0.5 : baseCount) * pressureReduction);
 }
 
 // ============================================================================
@@ -244,10 +283,59 @@ export function getFogQualityMultiplier(): number {
 }
 
 // ============================================================================
+// SCENE PRESSURE / ENTITY-COUNT LOD
+// ============================================================================
+
+export interface ScenePressure {
+  /** Total renderable count this frame */
+  total: number;
+  /** Skip decorative-only effects (glows, ambient particles, passive animations) */
+  skipDecorativeEffects: boolean;
+  /** Use simplified gradients (2-stop max) regardless of settings */
+  forceSimplifiedGradients: boolean;
+  /** Disable all shadows regardless of quality level */
+  forceShadowsOff: boolean;
+  /** Skip non-essential particles entirely */
+  skipNonEssentialParticles: boolean;
+  /** Simplify enemy rendering to basic shapes */
+  simplifyEnemies: boolean;
+}
+
+const PRESSURE_THRESHOLD_LIGHT = 200;
+const PRESSURE_THRESHOLD_MEDIUM = 300;
+const PRESSURE_THRESHOLD_HEAVY = 400;
+
+let currentScenePressure: ScenePressure = {
+  total: 0,
+  skipDecorativeEffects: false,
+  forceSimplifiedGradients: false,
+  forceShadowsOff: false,
+  skipNonEssentialParticles: false,
+  simplifyEnemies: false,
+};
+
+export function updateScenePressure(renderableCount: number): ScenePressure {
+  currentScenePressure = {
+    total: renderableCount,
+    skipDecorativeEffects: renderableCount > PRESSURE_THRESHOLD_LIGHT,
+    forceSimplifiedGradients: renderableCount > PRESSURE_THRESHOLD_MEDIUM,
+    forceShadowsOff: renderableCount > PRESSURE_THRESHOLD_MEDIUM,
+    skipNonEssentialParticles: renderableCount > PRESSURE_THRESHOLD_HEAVY,
+    simplifyEnemies: renderableCount > PRESSURE_THRESHOLD_HEAVY,
+  };
+  return currentScenePressure;
+}
+
+export function getScenePressure(): ScenePressure {
+  return currentScenePressure;
+}
+
+// ============================================================================
 // DEBUG INFO
 // ============================================================================
 
 export function getPerformanceDebugInfo(): string {
   const settings = getPerformanceSettings();
-  return `Firefox: ${isFirefox()}, Shadows: ${!settings.disableShadows}, Particles: ${settings.reducedParticles ? 'reduced' : 'full'}, Gradients cached: ${gradientCache.size}`;
+  const pressure = currentScenePressure;
+  return `Firefox: ${isFirefox()}, Shadows: ${!settings.disableShadows}, Particles: ${settings.reducedParticles ? 'reduced' : 'full'}, Gradients cached: ${gradientCache.size}, ScenePressure: ${pressure.total}`;
 }

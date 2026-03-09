@@ -35,7 +35,14 @@ import {
 } from "lucide-react";
 import type { GameState, LevelStars, EnemyType, EnemyTrait, EnemyCategory } from "../../types";
 import { OrnateFrame } from "../ui/OrnateFrame";
-import { ENEMY_DATA } from "../../constants";
+import {
+  ENEMY_DATA,
+  SPELL_DATA,
+  ARMORED_THRESHOLD,
+  FAST_SPEED_THRESHOLD,
+  DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
+  DEFAULT_ENEMY_TROOP_DAMAGE,
+} from "../../constants";
 import {
   TowerSprite,
   HeroSprite,
@@ -687,31 +694,31 @@ const CodexModal: React.FC<CodexModalProps> = ({
       type: "fireball" as const,
       name: "Fireballs",
       desc: "Launches a fireball that explodes on impact, dealing area damage.",
-      cost: 50,
+      cost: SPELL_DATA.fireball.cost,
     },
     {
       type: "lightning" as const,
       name: "Lightning",
       desc: "Strikes the strongest enemy with chain lightning.",
-      cost: 75,
+      cost: SPELL_DATA.lightning.cost,
     },
     {
       type: "freeze" as const,
       name: "Freeze",
       desc: "Freezes all enemies in an area, stopping movement.",
-      cost: 60,
+      cost: SPELL_DATA.freeze.cost,
     },
     {
       type: "payday" as const,
       name: "Payday",
       desc: "Instantly grants bonus gold.",
-      cost: 0,
+      cost: SPELL_DATA.payday.cost,
     },
     {
       type: "reinforcements" as const,
       name: "Reinforce",
       desc: "Summons 3 knight troops at target location.",
-      cost: 100,
+      cost: SPELL_DATA.reinforcements.cost,
     },
   ];
 
@@ -848,8 +855,8 @@ const CodexModal: React.FC<CodexModalProps> = ({
                             const getEnemyTypeClass = () => {
                               if (enemy.flying) return { type: "Flying", icon: <Wind size={10} />, color: "cyan" };
                               if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={10} />, color: "purple" };
-                              if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
-                              if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
+                              if (enemy.armor > ARMORED_THRESHOLD) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
+                              if (enemy.speed > FAST_SPEED_THRESHOLD) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
                               return { type: "Ground", icon: <Flag size={10} />, color: "red" };
                             };
                             const enemyTypeClass = getEnemyTypeClass();
@@ -967,7 +974,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
                                       <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
                                         <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
                                         <div className="text-[8px] text-cyan-500">Speed</div>
-                                        <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                        <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
                                       </div>
                                     </div>
                                   )}
@@ -978,7 +985,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
                                       <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                         <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
                                         <div className="text-[8px] text-red-500">Melee</div>
-                                        <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? 22}</div>
+                                        <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
                                       </div>
                                       <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                         <Timer size={10} className="mx-auto text-red-400 mb-0.5" />

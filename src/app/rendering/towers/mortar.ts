@@ -11,6 +11,17 @@ import {
   type Pt,
 } from "../helpers";
 import { drawIsometricPrism } from "./towerHelpers";
+import { TOWER_STATS } from "../../constants/towerStats";
+
+const MORTAR_BASE_ATTACK_SPEED = TOWER_STATS.mortar.baseStats.attackSpeed;
+const MISSILE_ATTACK_SPEED = TOWER_STATS.mortar.upgrades.A.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
+const EMBER_ATTACK_SPEED = TOWER_STATS.mortar.upgrades.B.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
+
+function getMortarAttackSpeed(tower: Tower): number {
+  if (tower.level === 4 && tower.upgrade === "A") return MISSILE_ATTACK_SPEED;
+  if (tower.level === 4 && tower.upgrade === "B") return EMBER_ATTACK_SPEED;
+  return MORTAR_BASE_ATTACK_SPEED;
+}
 
 export function renderMortarTower(
   ctx: CanvasRenderingContext2D,
@@ -25,6 +36,7 @@ export function renderMortarTower(
   const level = tower.level;
   const isMissile = level === 4 && tower.upgrade === "A";
   const isEmber = level === 4 && tower.upgrade === "B";
+  const variantAttackSpeed = getMortarAttackSpeed(tower);
   const baseW = 38 + level * 5;
   const depotH = (22 + level * 10) * 0.42;
   const rot = tower.rotation || 0;
@@ -933,7 +945,15 @@ export function renderMortarTower(
       // Pivot mount at foot (bracket plate + bolt)
       ctx.fillStyle = `rgb(${Math.floor(80 + bright * 20)},${Math.floor(80 + bright * 20)},${Math.floor(88 + bright * 20)})`;
       ctx.beginPath();
-      ctx.ellipse(footX, footY, 2.4 * zoom, 1.6 * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        footX,
+        footY,
+        2.4 * zoom,
+        1.6 * zoom * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.fillStyle = `rgba(200,200,210,${0.6 + bright * 0.3})`;
       ctx.beginPath();
@@ -943,7 +963,15 @@ export function renderMortarTower(
       // Pivot mount at attach (smaller)
       ctx.fillStyle = `rgb(${Math.floor(75 + bright * 20)},${Math.floor(75 + bright * 20)},${Math.floor(82 + bright * 20)})`;
       ctx.beginPath();
-      ctx.ellipse(attachX, attachY, 2 * zoom, 1.3 * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        attachX,
+        attachY,
+        2 * zoom,
+        1.3 * zoom * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.fillStyle = `rgba(190,190,200,${0.5 + bright * 0.3})`;
       ctx.beginPath();
@@ -960,7 +988,10 @@ export function renderMortarTower(
       const ci = (i * 2 + 1) % hexSides;
       const cni = (ci + 1) % hexSides;
       if (platNormals[ci] < -0.7) continue;
-      const bright = Math.max(0, Math.min(1, 0.2 + (platNormals[ci] + 1) * 0.4));
+      const bright = Math.max(
+        0,
+        Math.min(1, 0.2 + (platNormals[ci] + 1) * 0.4),
+      );
 
       // Cable runs from platform vertex to the adjacent vertex with sag
       const startX = platTop.x + platVerts[ci].x * 0.88;
@@ -999,10 +1030,26 @@ export function renderMortarTower(
       // Clamp brackets at endpoints
       ctx.fillStyle = `rgb(${Math.floor(55 + bright * 20)},${Math.floor(55 + bright * 20)},${Math.floor(60 + bright * 20)})`;
       ctx.beginPath();
-      ctx.ellipse(startX, startY, 1.4 * zoom, 0.9 * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        startX,
+        startY,
+        1.4 * zoom,
+        0.9 * zoom * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(endX, endY, 1.4 * zoom, 0.9 * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        endX,
+        endY,
+        1.4 * zoom,
+        0.9 * zoom * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       ctx.lineCap = "butt";
@@ -1679,7 +1726,7 @@ export function renderMortarTower(
     const dp = 0.3 + Math.sin(time * 2.5) * 0.15;
     ctx.fillStyle = `rgba(40, 180, 80, ${dp})`;
     ctx.fillRect(cpX - 2 * zoom, cpY - 5 * zoom, 4 * zoom, 2.5 * zoom);
-    ctx.fillStyle = timeSinceFire < 1500 ? "#ff2200" : "#00ff44";
+    ctx.fillStyle = timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2 ? "#ff2200" : "#00ff44";
     ctx.beginPath();
     ctx.arc(cpX, cpY - 2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1857,8 +1904,8 @@ export function renderMortarTower(
     ctx.arc(sx, sy, (2.5 + (st % 3) * 2) * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (timeSinceFire < 2500) {
-    const smokeT = timeSinceFire / 2500;
+  if (timeSinceFire < variantAttackSpeed) {
+    const smokeT = timeSinceFire / variantAttackSpeed;
     for (let p = 0; p < 4; p++) {
       const ang = time * 2 + p * 1.57;
       const dist = (6 + smokeT * 15) * zoom;
@@ -2960,7 +3007,7 @@ export function renderMortarStandardBarrel(
         const heatTint =
           (ti / 3) *
           (0.04 +
-            (timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.08 : 0));
+            (timeSinceFire < MORTAR_BASE_ATTACK_SPEED ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.08 : 0));
         if (heatTint > 0.01) {
           ctx.fillStyle = `rgba(255,80,20,${heatTint})`;
           ctx.beginPath();
@@ -3498,14 +3545,15 @@ export function renderMortarStandardBarrel(
           ctx.ellipse(vx, vy, 1.2 * zoom, 0.6 * zoom, rot, 0, Math.PI * 2);
           ctx.fill();
           // Steam from vents after firing
-          if (timeSinceFire < 1500) {
-            const steamA = (1 - timeSinceFire / 1500) * 0.2;
+          const halfBaseSpeed = MORTAR_BASE_ATTACK_SPEED / 2;
+          if (timeSinceFire < halfBaseSpeed) {
+            const steamA = (1 - timeSinceFire / halfBaseSpeed) * 0.2;
             ctx.fillStyle = `rgba(200,200,200,${steamA})`;
             ctx.beginPath();
             ctx.arc(
               vx,
-              vy - (timeSinceFire / 1500) * 5 * zoom,
-              (1 + (timeSinceFire / 1500) * 2) * zoom,
+              vy - (timeSinceFire / halfBaseSpeed) * 5 * zoom,
+              (1 + (timeSinceFire / halfBaseSpeed) * 2) * zoom,
               0,
               Math.PI * 2,
             );
@@ -4164,7 +4212,7 @@ export function renderMortarStandardBarrel(
 
         // Status LED
         ctx.fillStyle =
-          timeSinceFire < 1500 ? "rgba(255,100,0,0.6)" : "rgba(0,200,100,0.5)";
+          timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2 ? "rgba(255,100,0,0.6)" : "rgba(0,200,100,0.5)";
         ctx.beginPath();
         const ledX = lrfX - lrfW * 0.38 * tDx + lrfH * 0.28 * tubeNx;
         const ledY = lrfY - lrfW * 0.38 * tDy + lrfH * 0.28 * tubeNy;
@@ -4178,7 +4226,7 @@ export function renderMortarStandardBarrel(
   {
     const glowIntensity = level >= 3 ? 0.42 : level >= 2 ? 0.32 : 0.2;
     const fireBoost =
-      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.6 : 0;
+      timeSinceFire < MORTAR_BASE_ATTACK_SPEED ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.6 : 0;
     const pulse = Math.sin(time * 1.5) * 0.05;
     const totalGlow = glowIntensity + fireBoost + pulse;
 
@@ -4253,11 +4301,11 @@ export function renderMortarStandardBarrel(
     }
 
     // Heat shimmer effect above barrel mouth (rises along barrel axis)
-    if (totalGlow > 0.12 || timeSinceFire < 4000) {
+    if (totalGlow > 0.12 || timeSinceFire < MISSILE_ATTACK_SPEED) {
       const shimmerStr = Math.min(
         0.05,
         totalGlow * 0.12 +
-          (timeSinceFire < 4000 ? (1 - timeSinceFire / 4000) * 0.04 : 0),
+          (timeSinceFire < MISSILE_ATTACK_SPEED ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.04 : 0),
       );
       const shimmerCount = level >= 3 ? 5 : level >= 2 ? 4 : 3;
       const shimTiltA = Math.atan2(bNy, bNx);
@@ -4772,7 +4820,7 @@ export function renderMortarStandardBarrel(
     const colors = [
       "#00ff44",
       "#ffaa00",
-      timeSinceFire < 1000 ? "#ff2200" : "#004400",
+      timeSinceFire < MISSILE_ATTACK_SPEED / 4 ? "#ff2200" : "#004400",
     ];
     for (let ci = 0; ci < 3; ci++) {
       const ledOff = (ci - 1) * 1.5 * zoom;
@@ -5232,7 +5280,7 @@ export function renderMortarStandardBarrel(
     const recoilCompress =
       timeSinceFire < 800 ? (1 - timeSinceFire / 800) * 0.12 : 0;
 
-    for (let sp = 0; sp < 2; sp++) {
+    for (let sp = 1; sp >= 0; sp--) {
       const springSpacing = (sp - 0.5) * 6 * zoom;
       const springBaseOff = tiers[0].r + springR * 0.4;
       const springOffX =
@@ -5584,18 +5632,16 @@ export function renderMortarStandardBarrel(
     ctx.closePath();
     ctx.fill();
 
-    // Lens reflection highlight
+    // Lens reflection highlight (octagonal)
+    const reflVerts = generateIsoHexVertices(isoOff, scopeR * 0.35, scopeSides);
+    const reflOX = objPt.center.x - scopeR * 0.15;
+    const reflOY = objPt.center.y - scopeR * 0.1 * ISO_Y_RATIO;
     ctx.fillStyle = "rgba(180,200,255,0.18)";
     ctx.beginPath();
-    ctx.ellipse(
-      objPt.center.x - scopeR * 0.15,
-      objPt.center.y - scopeR * 0.1 * ISO_Y_RATIO,
-      scopeR * 0.3,
-      scopeR * 0.2 * ISO_Y_RATIO,
-      -0.4,
-      0,
-      Math.PI * 2,
-    );
+    ctx.moveTo(reflOX + reflVerts[0].x, reflOY + reflVerts[0].y);
+    for (let ri = 1; ri < scopeSides; ri++)
+      ctx.lineTo(reflOX + reflVerts[ri].x, reflOY + reflVerts[ri].y);
+    ctx.closePath();
     ctx.fill();
 
     // Scope mount brackets (connecting scope to barrel body)
@@ -5623,20 +5669,22 @@ export function renderMortarStandardBarrel(
       ctx.lineTo(mPt.x, mPt.y);
       ctx.stroke();
 
-      // Mount clamp ring
-      ctx.strokeStyle = mountDark;
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(
-        mPt.x,
-        mPt.y,
-        scopeR * 1.2,
-        scopeR * 0.6 * ISO_Y_RATIO,
-        Math.atan2(scTip.y - scBase.y, scTip.x - scBase.x),
-        0,
-        Math.PI * 2,
+      // Mount clamp ring (octagonal)
+      drawHexBand(
+        ctx,
+        generateIsoHexVertices(isoOff, scopeR, scopeSides),
+        scopeNormals,
+        { x: mPt.x, y: mPt.y + 1.2 * zoom },
+        { x: mPt.x, y: mPt.y - 1.2 * zoom },
+        1.2,
+        (n) => {
+          const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+          return `rgb(${40 + Math.floor(b * 25)},${40 + Math.floor(b * 25)},${46 + Math.floor(b * 20)})`;
+        },
+        "rgba(0,0,0,0.18)",
+        0.5 * zoom,
+        -0.15,
       );
-      ctx.stroke();
 
       // Clamp bolt
       ctx.fillStyle = mountAccent;
@@ -5651,21 +5699,23 @@ export function renderMortarStandardBarrel(
       ctx.fill();
     }
 
-    // Eyepiece rubber guard (rear cap detail)
+    // Eyepiece rubber guard (octagonal rear ring)
     const eyePt = scopePts[0];
-    ctx.strokeStyle = "#1a1a1e";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      eyePt.center.x,
-      eyePt.center.y,
-      scopeR * 0.9,
-      scopeR * 0.45 * ISO_Y_RATIO,
-      Math.atan2(scTip.y - scBase.y, scTip.x - scBase.x),
-      0,
-      Math.PI * 2,
+    drawHexBand(
+      ctx,
+      generateIsoHexVertices(isoOff, scopeR, scopeSides),
+      scopeNormals,
+      { x: eyePt.center.x, y: eyePt.center.y + 1 * zoom },
+      { x: eyePt.center.x, y: eyePt.center.y - 1 * zoom },
+      0.95,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.25 + (n + 1) * 0.3));
+        return `rgb(${18 + Math.floor(b * 14)},${18 + Math.floor(b * 14)},${22 + Math.floor(b * 10)})`;
+      },
+      "rgba(0,0,0,0.2)",
+      0.4 * zoom,
+      -0.15,
     );
-    ctx.stroke();
   }
 
   // ===== PHASE 4: Front shoe + clamp arm bar (in front of barrel) =====
@@ -5737,7 +5787,7 @@ export function renderMortarStandardBarrel(
   {
     const boreGlowBase = level >= 3 ? 0.12 : level >= 2 ? 0.08 : 0.04;
     const boreFireGlow =
-      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
+      timeSinceFire < MISSILE_ATTACK_SPEED ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.5 : 0;
     const borePulse = Math.sin(time * 1.5) * 0.03;
     const boreTotal = boreGlowBase + boreFireGlow + borePulse;
 
@@ -6389,7 +6439,7 @@ export function renderMortarEmberTurret(
     ctx.stroke();
     const ratchetTeeth = 16;
     // Stepped rotation: fire→hold→rotate one step (120°)→fire→…
-    const rAttackSpeed = 2500;
+    const rAttackSpeed = EMBER_ATTACK_SPEED;
     const rShotInterval = rAttackSpeed / 3;
     const rCyclePos = timeSinceFire % rAttackSpeed;
     const rActiveIdx = Math.floor(rCyclePos / rShotInterval);
@@ -6579,7 +6629,7 @@ export function renderMortarEmberTurret(
 
   // === REVOLVER MECHANISM (3 barrels: fire→hold→rotate 120°→fire→…) ===
   {
-    const attackSpeed = 2500;
+    const attackSpeed = EMBER_ATTACK_SPEED;
     const barrelCount = 3;
     const shotInterval = attackSpeed / barrelCount;
     const cyclePos = timeSinceFire % attackSpeed;

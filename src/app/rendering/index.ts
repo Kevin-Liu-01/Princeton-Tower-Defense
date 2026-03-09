@@ -3,6 +3,7 @@ import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
 import { drawOrganicBlobAt } from "./helpers";
 import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
+import { getScenePressure } from "./performance";
 
 // Performance utilities - critical for Firefox
 export {
@@ -13,6 +14,7 @@ export {
   clearShadow,
   clearGradientCache,
   getPerformanceDebugInfo,
+  getScenePressure,
 } from "./performance";
 
 // Tower rendering
@@ -138,9 +140,11 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = effect.intensity || 1;
-        const lightningPressure = effectDensityHint + enemies.length * 0.25;
-        const lowDetail = lightningPressure > 60;
-        const minimalDetail = lightningPressure > 90;
+        const scenePressure = getScenePressure();
+        const lightningPressure = effectDensityHint + enemies.length * 0.25
+          + (scenePressure.skipDecorativeEffects ? 40 : 0);
+        const lowDetail = lightningPressure > 60 || scenePressure.forceSimplifiedGradients;
+        const minimalDetail = lightningPressure > 90 || scenePressure.simplifyEnemies;
 
         // Find the source lab tower to get correct orb position
         let sourceX = screenPos.x;

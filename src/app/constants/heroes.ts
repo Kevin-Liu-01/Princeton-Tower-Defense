@@ -103,6 +103,18 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
 };
 
+// Hero-specific combat stats used by the runtime
+export const HERO_COMBAT_STATS = {
+  tauntDamage: 20,
+  tauntMoveSpeedMult: 0.8,
+  matheyAoeRadius: 70,
+  scottAoeRadius: 60,
+  heroAoeDamageMult: 0.5,
+  captainKnightHp: 350,
+  captainKnightMoveRadius: 180,
+  engineerTurretHp: 400,
+} as const;
+
 // Hero options for selection
 export const HERO_OPTIONS: HeroType[] = [
   "tiger",

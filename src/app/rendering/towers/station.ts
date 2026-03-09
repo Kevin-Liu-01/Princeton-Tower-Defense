@@ -1,12 +1,6 @@
 import type { Tower, Position } from "../../types";
-import {
-  ISO_ANGLE,
-  ISO_PRISM_D_FACTOR,
-  ISO_Y_RATIO,
-} from "../../constants";
-import {
-  darkenColor,
-} from "../../utils";
+import { ISO_ANGLE, ISO_PRISM_D_FACTOR, ISO_Y_RATIO } from "../../constants";
+import { darkenColor } from "../../utils";
 import {
   drawIsometricPrism,
   drawIsoDiamond,
@@ -1028,10 +1022,15 @@ export function renderStationTower(
         zoom,
       );
       // Battlement arrow slit — isometric flush with left face
-      drawIsoFlushSlit(ctx,
+      drawIsoFlushSlit(
+        ctx,
         screenPos.x + side * isoW * 0.7,
         screenPos.y + side * 2 * zoom - 4 * zoom,
-        1.2, 4, "left", zoom);
+        1.2,
+        4,
+        "left",
+        zoom,
+      );
     }
 
     // Fortress corner towers (small)
@@ -3130,240 +3129,6 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // === HIGH-TECH ELEMENT: Power conduit on wall ===
-    ctx.strokeStyle = "#8b7355";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(bX + 16 * zoom, bY - 5 * zoom);
-    ctx.lineTo(bX + 16 * zoom, bY - 20 * zoom);
-    ctx.stroke();
-    // Conduit glow nodes
-    const nodeGlow = 0.5 + Math.sin(time * 4) * 0.3;
-    ctx.fillStyle = `rgba(255, 108, 0, ${nodeGlow})`;
-    ctx.shadowColor = "#e06000";
-    ctx.shadowBlur = 4 * zoom;
-    ctx.beginPath();
-    ctx.arc(bX + 16 * zoom, bY - 8 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(bX + 16 * zoom, bY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Square pyramid roof (4 triangular faces meeting at a single peak)
-    const roofBaseY = bY - 24 * zoom;
-    const eaveOH = 3 * zoom;
-    const eHW = 18 * zoom + eaveOH;
-    const eHD = 7.5 * zoom + eaveOH * 0.5;
-    const rH = 22 * zoom;
-
-    // Eave diamond corners (isometric diamond with overhang)
-    const eBack = { x: bX, y: roofBaseY - eHD };
-    const eRight = { x: bX + eHW, y: roofBaseY };
-    const eFront = { x: bX, y: roofBaseY + eHD };
-    const eLeft = { x: bX - eHW, y: roofBaseY };
-
-    // Single peak point (center of diamond, elevated)
-    const peak = { x: bX, y: roofBaseY - rH };
-
-    // Back face (away from camera, draw first)
-    ctx.fillStyle = "#4b3315";
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eLeft.x, eLeft.y);
-    ctx.lineTo(eBack.x, eBack.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Left face (faces camera-left, brightest)
-    const leftGrad = ctx.createLinearGradient(peak.x, peak.y, eLeft.x, eLeft.y);
-    leftGrad.addColorStop(0, "#7b6345");
-    leftGrad.addColorStop(0.4, "#8b7355");
-    leftGrad.addColorStop(1, "#6b5535");
-    ctx.fillStyle = leftGrad;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eLeft.x, eLeft.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Right face (faces camera-right, shadowed)
-    const rightGrad = ctx.createLinearGradient(
-      peak.x,
-      peak.y,
-      eRight.x,
-      eRight.y,
-    );
-    rightGrad.addColorStop(0, "#6a5535");
-    rightGrad.addColorStop(0.4, "#5e4a2c");
-    rightGrad.addColorStop(1, "#544025");
-    ctx.fillStyle = rightGrad;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Front face left half (lit, matching left slope)
-    const frontLeftGrad = ctx.createLinearGradient(
-      peak.x,
-      peak.y,
-      eFront.x,
-      eFront.y,
-    );
-    frontLeftGrad.addColorStop(0, "#7b6345");
-    frontLeftGrad.addColorStop(0.5, "#8b7050");
-    frontLeftGrad.addColorStop(1, "#6b5535");
-    ctx.fillStyle = frontLeftGrad;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eLeft.x, eLeft.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Front face right half (shadowed, matching right slope)
-    const frontRightGrad = ctx.createLinearGradient(
-      peak.x,
-      peak.y,
-      eFront.x,
-      eFront.y,
-    );
-    frontRightGrad.addColorStop(0, "#6a5535");
-    frontRightGrad.addColorStop(0.5, "#5e4a2c");
-    frontRightGrad.addColorStop(1, "#544025");
-    ctx.fillStyle = frontRightGrad;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.closePath();
-    ctx.fill();
-
-    // Wooden shingle rows on left face
-    ctx.strokeStyle = "rgba(30, 20, 8, 0.4)";
-    ctx.lineWidth = 0.7 * zoom;
-    for (let row = 1; row <= 6; row++) {
-      const t = row / 7;
-      const plX = peak.x + (eLeft.x - peak.x) * t;
-      const plY = peak.y + (eLeft.y - peak.y) * t;
-      const pfX = peak.x + (eFront.x - peak.x) * t;
-      const pfY = peak.y + (eFront.y - peak.y) * t;
-      ctx.beginPath();
-      ctx.moveTo(plX, plY);
-      ctx.lineTo(pfX, pfY);
-      ctx.stroke();
-    }
-
-    // Wooden shingle rows on right face
-    for (let row = 1; row <= 6; row++) {
-      const t = row / 7;
-      const prX = peak.x + (eRight.x - peak.x) * t;
-      const prY = peak.y + (eRight.y - peak.y) * t;
-      const pfX = peak.x + (eFront.x - peak.x) * t;
-      const pfY = peak.y + (eFront.y - peak.y) * t;
-      ctx.beginPath();
-      ctx.moveTo(prX, prY);
-      ctx.lineTo(pfX, pfY);
-      ctx.stroke();
-    }
-
-    // Front face shingle rows (V-lines)
-    for (let row = 1; row <= 6; row++) {
-      const t = row / 7;
-      const plX = peak.x + (eLeft.x - peak.x) * t;
-      const plY = peak.y + (eLeft.y - peak.y) * t;
-      const prX = peak.x + (eRight.x - peak.x) * t;
-      const prY = peak.y + (eRight.y - peak.y) * t;
-      const fcX = peak.x + (eFront.x - peak.x) * t;
-      const fcY = peak.y + (eFront.y - peak.y) * t;
-      ctx.beginPath();
-      ctx.moveTo(plX, plY);
-      ctx.lineTo(fcX, fcY);
-      ctx.lineTo(prX, prY);
-      ctx.stroke();
-    }
-
-    // Roof edge outlines (only viewer-facing ridges and eaves)
-    ctx.strokeStyle = "rgba(40, 24, 8, 0.55)";
-    ctx.lineWidth = 1.2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eLeft.x, eLeft.y);
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.moveTo(peak.x, peak.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.stroke();
-
-    // Eave edge outlines (visible front edges only)
-    ctx.strokeStyle = "rgba(40, 24, 8, 0.6)";
-    ctx.lineWidth = 1.4 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(eLeft.x, eLeft.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.stroke();
-
-    // Eave fascia thickness (visible underside strip)
-    ctx.fillStyle = "rgba(58, 38, 16, 0.25)";
-    ctx.beginPath();
-    ctx.moveTo(eLeft.x, eLeft.y);
-    ctx.lineTo(eFront.x, eFront.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.lineTo(eRight.x, eRight.y + 2 * zoom);
-    ctx.lineTo(eFront.x, eFront.y + 2 * zoom);
-    ctx.lineTo(eLeft.x, eLeft.y + 2 * zoom);
-    ctx.closePath();
-    ctx.fill();
-
-    // Eave shadow outline (back edges)
-    ctx.strokeStyle = "rgba(42, 26, 8, 0.2)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(eBack.x, eBack.y);
-    ctx.lineTo(eLeft.x, eLeft.y);
-    ctx.moveTo(eBack.x, eBack.y);
-    ctx.lineTo(eRight.x, eRight.y);
-    ctx.stroke();
-
-    // Copper ridge cap rivets along front ridges
-    ctx.fillStyle = "#8b7355";
-    for (const corner of [eLeft, eRight]) {
-      for (let ri = 1; ri <= 3; ri++) {
-        const rt = ri / 4;
-        const rx = peak.x + (corner.x - peak.x) * rt;
-        const ry = peak.y + (corner.y - peak.y) * rt;
-        ctx.beginPath();
-        ctx.arc(rx, ry, 1.2 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Brass finial at peak with subtle glow
-    ctx.fillStyle = "#c9a227";
-    ctx.beginPath();
-    ctx.arc(peak.x, peak.y - 1.5 * zoom, 2.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#a08020";
-    ctx.beginPath();
-    ctx.arc(peak.x, peak.y - 1.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    // Finial spike
-    ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(peak.x, peak.y - 3.5 * zoom);
-    ctx.lineTo(peak.x, peak.y - 8 * zoom);
-    ctx.stroke();
-    ctx.fillStyle = "#e8c847";
-    ctx.beginPath();
-    ctx.arc(peak.x, peak.y - 8 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
     // Iron-bound double door with stone arch frame (left face)
     {
       const doorL = bX - 13 * zoom;
@@ -3781,6 +3546,240 @@ export function renderStationTower(
       ctx.closePath();
       ctx.fill();
     }
+
+    // === HIGH-TECH ELEMENT: Power conduit on wall ===
+    ctx.strokeStyle = "#8b7355";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX + 16 * zoom, bY - 5 * zoom);
+    ctx.lineTo(bX + 16 * zoom, bY - 20 * zoom);
+    ctx.stroke();
+    // Conduit glow nodes
+    const nodeGlow = 0.5 + Math.sin(time * 4) * 0.3;
+    ctx.fillStyle = `rgba(255, 108, 0, ${nodeGlow})`;
+    ctx.shadowColor = "#e06000";
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(bX + 16 * zoom, bY - 8 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(bX + 16 * zoom, bY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Square pyramid roof (4 triangular faces meeting at a single peak)
+    const roofBaseY = bY - 24 * zoom;
+    const eaveOH = 3 * zoom;
+    const eHW = 18 * zoom + eaveOH;
+    const eHD = 7.5 * zoom + eaveOH * 0.5;
+    const rH = 22 * zoom;
+
+    // Eave diamond corners (isometric diamond with overhang)
+    const eBack = { x: bX, y: roofBaseY - eHD };
+    const eRight = { x: bX + eHW, y: roofBaseY };
+    const eFront = { x: bX, y: roofBaseY + eHD };
+    const eLeft = { x: bX - eHW, y: roofBaseY };
+
+    // Single peak point (center of diamond, elevated)
+    const peak = { x: bX, y: roofBaseY - rH };
+
+    // Back face (away from camera, draw first)
+    ctx.fillStyle = "#4b3315";
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eLeft.x, eLeft.y);
+    ctx.lineTo(eBack.x, eBack.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Left face (faces camera-left, brightest)
+    const leftGrad = ctx.createLinearGradient(peak.x, peak.y, eLeft.x, eLeft.y);
+    leftGrad.addColorStop(0, "#7b6345");
+    leftGrad.addColorStop(0.4, "#8b7355");
+    leftGrad.addColorStop(1, "#6b5535");
+    ctx.fillStyle = leftGrad;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eLeft.x, eLeft.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right face (faces camera-right, shadowed)
+    const rightGrad = ctx.createLinearGradient(
+      peak.x,
+      peak.y,
+      eRight.x,
+      eRight.y,
+    );
+    rightGrad.addColorStop(0, "#6a5535");
+    rightGrad.addColorStop(0.4, "#5e4a2c");
+    rightGrad.addColorStop(1, "#544025");
+    ctx.fillStyle = rightGrad;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Front face left half (lit, matching left slope)
+    const frontLeftGrad = ctx.createLinearGradient(
+      peak.x,
+      peak.y,
+      eFront.x,
+      eFront.y,
+    );
+    frontLeftGrad.addColorStop(0, "#7b6345");
+    frontLeftGrad.addColorStop(0.5, "#8b7050");
+    frontLeftGrad.addColorStop(1, "#6b5535");
+    ctx.fillStyle = frontLeftGrad;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eLeft.x, eLeft.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Front face right half (shadowed, matching right slope)
+    const frontRightGrad = ctx.createLinearGradient(
+      peak.x,
+      peak.y,
+      eFront.x,
+      eFront.y,
+    );
+    frontRightGrad.addColorStop(0, "#6a5535");
+    frontRightGrad.addColorStop(0.5, "#5e4a2c");
+    frontRightGrad.addColorStop(1, "#544025");
+    ctx.fillStyle = frontRightGrad;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Wooden shingle rows on left face
+    ctx.strokeStyle = "rgba(30, 20, 8, 0.4)";
+    ctx.lineWidth = 0.7 * zoom;
+    for (let row = 1; row <= 6; row++) {
+      const t = row / 7;
+      const plX = peak.x + (eLeft.x - peak.x) * t;
+      const plY = peak.y + (eLeft.y - peak.y) * t;
+      const pfX = peak.x + (eFront.x - peak.x) * t;
+      const pfY = peak.y + (eFront.y - peak.y) * t;
+      ctx.beginPath();
+      ctx.moveTo(plX, plY);
+      ctx.lineTo(pfX, pfY);
+      ctx.stroke();
+    }
+
+    // Wooden shingle rows on right face
+    for (let row = 1; row <= 6; row++) {
+      const t = row / 7;
+      const prX = peak.x + (eRight.x - peak.x) * t;
+      const prY = peak.y + (eRight.y - peak.y) * t;
+      const pfX = peak.x + (eFront.x - peak.x) * t;
+      const pfY = peak.y + (eFront.y - peak.y) * t;
+      ctx.beginPath();
+      ctx.moveTo(prX, prY);
+      ctx.lineTo(pfX, pfY);
+      ctx.stroke();
+    }
+
+    // Front face shingle rows (V-lines)
+    for (let row = 1; row <= 6; row++) {
+      const t = row / 7;
+      const plX = peak.x + (eLeft.x - peak.x) * t;
+      const plY = peak.y + (eLeft.y - peak.y) * t;
+      const prX = peak.x + (eRight.x - peak.x) * t;
+      const prY = peak.y + (eRight.y - peak.y) * t;
+      const fcX = peak.x + (eFront.x - peak.x) * t;
+      const fcY = peak.y + (eFront.y - peak.y) * t;
+      ctx.beginPath();
+      ctx.moveTo(plX, plY);
+      ctx.lineTo(fcX, fcY);
+      ctx.lineTo(prX, prY);
+      ctx.stroke();
+    }
+
+    // Roof edge outlines (only viewer-facing ridges and eaves)
+    ctx.strokeStyle = "rgba(40, 24, 8, 0.55)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eLeft.x, eLeft.y);
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.moveTo(peak.x, peak.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.stroke();
+
+    // Eave edge outlines (visible front edges only)
+    ctx.strokeStyle = "rgba(40, 24, 8, 0.6)";
+    ctx.lineWidth = 1.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(eLeft.x, eLeft.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.stroke();
+
+    // Eave fascia thickness (visible underside strip)
+    ctx.fillStyle = "rgba(58, 38, 16, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(eLeft.x, eLeft.y);
+    ctx.lineTo(eFront.x, eFront.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.lineTo(eRight.x, eRight.y + 2 * zoom);
+    ctx.lineTo(eFront.x, eFront.y + 2 * zoom);
+    ctx.lineTo(eLeft.x, eLeft.y + 2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eave shadow outline (back edges)
+    ctx.strokeStyle = "rgba(42, 26, 8, 0.2)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(eBack.x, eBack.y);
+    ctx.lineTo(eLeft.x, eLeft.y);
+    ctx.moveTo(eBack.x, eBack.y);
+    ctx.lineTo(eRight.x, eRight.y);
+    ctx.stroke();
+
+    // Copper ridge cap rivets along front ridges
+    ctx.fillStyle = "#8b7355";
+    for (const corner of [eLeft, eRight]) {
+      for (let ri = 1; ri <= 3; ri++) {
+        const rt = ri / 4;
+        const rx = peak.x + (corner.x - peak.x) * rt;
+        const ry = peak.y + (corner.y - peak.y) * rt;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Brass finial at peak with subtle glow
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(peak.x, peak.y - 1.5 * zoom, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#a08020";
+    ctx.beginPath();
+    ctx.arc(peak.x, peak.y - 1.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    // Finial spike
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(peak.x, peak.y - 3.5 * zoom);
+    ctx.lineTo(peak.x, peak.y - 8 * zoom);
+    ctx.stroke();
+    ctx.fillStyle = "#e8c847";
+    ctx.beginPath();
+    ctx.arc(peak.x, peak.y - 8 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
 
     // Stone chimney with smoke stack and mortar detail
     const chimneyBaseY = roofBaseY + 2 * zoom;

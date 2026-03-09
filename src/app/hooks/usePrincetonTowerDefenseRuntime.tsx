@@ -64,6 +64,49 @@ import {
   getLevelPathKeys,
   ISO_Y_FACTOR,
   ISO_Y_RATIO,
+  HERO_COMBAT_STATS,
+  HERO_HEAL_DELAY_MS,
+  HERO_HEAL_RATE,
+  TROOP_HEAL_DELAY_MS,
+  TROOP_HEAL_RATE,
+  ENEMY_REGEN_RATE,
+  HERO_COMBAT_RADIUS,
+  HERO_AUTO_ABILITY_HP_THRESHOLD,
+  DAMAGE_FLASH_MS,
+  DAMAGE_FLASH_SHORT_MS,
+  DAMAGE_FLASH_LONG_MS,
+  DEFAULT_TROOP_HP,
+  DEFAULT_TROOP_DAMAGE,
+  DEFAULT_TROOP_ATTACK_SPEED,
+  DEFAULT_TROOP_MOVE_SPEED,
+  DEFAULT_TROOP_MELEE_RANGE,
+  DEFAULT_TROOP_RANGED_RANGE,
+  DEFAULT_ENEMY_TROOP_DAMAGE,
+  DEFAULT_ENEMY_HERO_DAMAGE,
+  DEFAULT_ENEMY_RANGE,
+  DEFAULT_ENEMY_PROJECTILE_DAMAGE,
+  DEFAULT_ENEMY_BURN_DAMAGE,
+  DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
+  DEFAULT_ENEMY_FLYING_ATTACK_RANGE,
+  DEFAULT_PROJECTILE_DAMAGE,
+  DEFAULT_TOWER_ATTACK_SPEED,
+  SCOTT_RANGE_BUFF,
+  SCOTT_DAMAGE_BUFF,
+  BEACON_RANGE_BUFF,
+  BEACON_BUFF_RANGE,
+  INVESTMENT_BANK_RANGE_BUFF,
+  INVESTMENT_BANK_BUFF_RANGE,
+  RECRUITMENT_CENTER_DAMAGE_BUFF,
+  RECRUITMENT_CENTER_BUFF_RANGE,
+  CHRONO_RELAY_SPEED_BUFF,
+  CHRONO_RELAY_BUFF_RANGE,
+  RANGE_BUFF_CAP,
+  DAMAGE_BUFF_CAP,
+  ATTACK_SPEED_BUFF_CAP,
+  STATION_TROOP_RANGE,
+  HERO_SUMMON_RANGE,
+  SENTINEL_NEXUS_STATS,
+  SUNFORGE_ORRERY_STATS,
 } from "../constants";
 // Utils
 import {
@@ -91,7 +134,7 @@ import {
   getMortarBarrelOrigin,
 } from "../utils";
 // Tower Stats
-import { calculateTowerStats, getUpgradeCost } from "../constants/towerStats";
+import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../constants/towerStats";
 // Game logic
 import {
   clampLaneOffset,
@@ -151,6 +194,7 @@ import {
   type OcclusionAnchor,
 } from "../rendering/decorations/occlusion";
 import { drawTriangle, drawRoundedRect } from "../rendering/utils/drawUtils";
+import { insertionSortBy } from "../rendering/utils/insertionSort";
 // Rendering
 import {
   renderTower,
@@ -202,7 +246,7 @@ import {
   renderStaticMapLayer,
   type StaticMapFogEndpoint,
 } from "../rendering/maps/staticLayer";
-import { setPerformanceSettings } from "../rendering/performance";
+import { setPerformanceSettings, updateScenePressure, interceptShadows } from "../rendering/performance";
 import { getGameSettings, getSettingsVersion } from "./useSettings";
 import {
   DECORATION_DENSITY_MULTIPLIER,
@@ -297,10 +341,24 @@ import { CameraModeOverlay } from "../components/ui/CameraModeOverlay";
 
 type RenderQuality = "high" | "medium" | "low";
 
+// Overscan margins (CSS pixels) for the background layer so that panning
+// doesn't require an expensive re-render every frame. The static map +
+// fog are rendered to a canvas this much larger than the viewport and then
+// repositioned via CSS transform during a pan.
+const BG_OVERSCAN_X = 600; // 300px each side
+const BG_OVERSCAN_Y = 600; // 200px top (height/3), 400px bottom
+// Overscan for the static decoration offscreen canvas (CSS px).
+// The canvas is this much larger so decorations at the edge aren't clipped
+// when the cache is shifted during a pan.
+const DECOR_OVERSCAN = 400; // 200px each side
+
 interface StaticMapLayerCache {
+  /** Key excludes camera offset — only map, zoom, canvas size, dpr */
   key: string;
   canvas: HTMLCanvasElement;
   fogEndpoints: StaticMapFogEndpoint[];
+  /** Camera offset used when rendering (the "anchor") */
+  anchorOffset: Position;
 }
 
 interface StaticDecorationLayerCache {
@@ -309,6 +367,14 @@ interface StaticDecorationLayerCache {
   backgroundDecorations: CachedVisibleDecoration[];
   animatedDecorations: CachedVisibleDecoration[];
   depthSensitiveDecorations: CachedVisibleDecoration[];
+  anchorOffset: Position;
+}
+
+interface FogLayerCache {
+  key: string;
+  canvas: HTMLCanvasElement;
+  renderedAtMs: number;
+  anchorOffset: Position;
 }
 
 interface AmbientLayerCache {
@@ -809,6 +875,7 @@ export function usePrincetonTowerDefenseRuntime() {
   });
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTouchTimeRef = useRef<number>(0); // Track touch to prevent duplicate click events
   const isTouchDeviceRef = useRef<boolean>(false); // Track if user is using touch input
@@ -848,6 +915,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const cachedStaticMapLayerRef = useRef<StaticMapLayerCache | null>(null);
   const cachedStaticDecorationLayerRef =
     useRef<StaticDecorationLayerCache | null>(null);
+  const cachedFogLayerRef = useRef<FogLayerCache | null>(null);
   const cachedAmbientLayerRef = useRef<AmbientLayerCache | null>(null);
 
   devPerfEnabledRef.current = devPerfEnabled;
@@ -1479,8 +1547,31 @@ export function usePrincetonTowerDefenseRuntime() {
   const handleCameraModeCapture = useCallback(async (): Promise<boolean> => {
     const canvas = canvasRef.current;
     if (!canvas) return false;
+    const bgCanvas = bgCanvasRef.current;
+    if (bgCanvas) {
+      const compositeCanvas = document.createElement("canvas");
+      compositeCanvas.width = canvas.width;
+      compositeCanvas.height = canvas.height;
+      const compositeCtx = compositeCanvas.getContext("2d");
+      if (compositeCtx) {
+        const dpr = getRenderDpr();
+        const cached = cachedStaticMapLayerRef.current;
+        const anchor = cached?.anchorOffset ?? cameraOffset;
+        const bgDeltaX = (anchor.x - cameraOffset.x) * cameraZoom;
+        const bgDeltaY = (anchor.y - cameraOffset.y) * cameraZoom;
+        const srcX = (BG_OVERSCAN_X / 2 + bgDeltaX) * dpr;
+        const srcY = (BG_OVERSCAN_Y / 3 + bgDeltaY) * dpr;
+        compositeCtx.drawImage(
+          bgCanvas,
+          srcX, srcY, canvas.width, canvas.height,
+          0, 0, canvas.width, canvas.height,
+        );
+        compositeCtx.drawImage(canvas, 0, 0);
+        return captureCanvas(compositeCanvas);
+      }
+    }
     return captureCanvas(canvas);
-  }, []);
+  }, [cameraOffset, cameraZoom, getRenderDpr]);
 
   const pauseLocked = cameraModeActive || inspectorActive;
 
@@ -1697,6 +1788,7 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     const resizeCanvas = () => {
       const canvas = canvasRef.current;
+      const bgCanvas = bgCanvasRef.current;
       const container = containerRef.current;
       if (canvas && container) {
         const dpr = getRenderDpr();
@@ -1705,7 +1797,14 @@ export function usePrincetonTowerDefenseRuntime() {
         canvas.height = rect.height * dpr;
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
-        // DO NOT apply ctx.scale here - we do it fresh each render frame
+        if (bgCanvas) {
+          bgCanvas.width = (rect.width + BG_OVERSCAN_X) * dpr;
+          bgCanvas.height = (rect.height + BG_OVERSCAN_Y) * dpr;
+          bgCanvas.style.width = `${rect.width + BG_OVERSCAN_X}px`;
+          bgCanvas.style.height = `${rect.height + BG_OVERSCAN_Y}px`;
+        }
+        cachedStaticMapLayerRef.current = null;
+        cachedFogLayerRef.current = null;
       }
     };
     resizeCanvas();
@@ -2012,62 +2111,60 @@ export function usePrincetonTowerDefenseRuntime() {
           // F. Scott's Inspiration buff check (used for both range and damage)
           const isScottActive = t.boostEnd ? now < t.boostEnd : false;
 
-          // F. Scott's Inspiration range buff (+25%, time-limited)
+          // F. Scott's Inspiration range buff (time-limited)
           if (isScottActive && t.isBuffed) {
-            rangeMultiplier *= 1.25;
+            rangeMultiplier *= SCOTT_RANGE_BUFF;
           }
 
-          // Beacon range buff (+20%)
+          // Beacon range buff
           for (const beacon of beacons) {
             const beaconPos = gridToWorld(beacon.pos);
-            if (distance(tWorldPos, beaconPos) < 250) {
-              rangeMultiplier *= 1.2;
+            if (distance(tWorldPos, beaconPos) < BEACON_BUFF_RANGE) {
+              rangeMultiplier *= BEACON_RANGE_BUFF;
             }
           }
 
-          // Investment Bank range buff (+15% each, from nearby level 4A clubs)
+          // Investment Bank range buff (from nearby level 4A clubs)
           prev.forEach((club) => {
             if (club.type === "club" && club.level === 4 && club.upgrade === "A" && club.id !== t.id) {
               const clubPos = gridToWorld(club.pos);
-              if (distance(tWorldPos, clubPos) <= 200) {
-                rangeMultiplier *= 1.15;
+              if (distance(tWorldPos, clubPos) <= INVESTMENT_BANK_BUFF_RANGE) {
+                rangeMultiplier *= INVESTMENT_BANK_RANGE_BUFF;
               }
             }
           });
 
-          // Cap range boost at 2.5x
-          rangeMultiplier = Math.min(rangeMultiplier, 2.5);
+          rangeMultiplier = Math.min(rangeMultiplier, RANGE_BUFF_CAP);
 
           // Calculate DAMAGE buffs (multiplicative stacking)
           let damageMultiplier = 1.0;
 
-          // F. Scott's Inspiration damage buff (+50%, time-limited)
+          // F. Scott's Inspiration damage buff (time-limited)
           if (isScottActive && t.isBuffed) {
-            damageMultiplier *= 1.5;
+            damageMultiplier *= SCOTT_DAMAGE_BUFF;
           }
 
-          // Recruitment Center damage buff (+15% each, from nearby level 4B clubs)
+          // Recruitment Center damage buff (from nearby level 4B clubs)
           prev.forEach((club) => {
             if (club.type === "club" && club.level === 4 && club.upgrade === "B" && club.id !== t.id) {
               const clubPos = gridToWorld(club.pos);
-              if (distance(tWorldPos, clubPos) <= 200) {
-                damageMultiplier *= 1.15;
+              if (distance(tWorldPos, clubPos) <= RECRUITMENT_CENTER_BUFF_RANGE) {
+                damageMultiplier *= RECRUITMENT_CENTER_DAMAGE_BUFF;
               }
             }
           });
 
-          // Cap damage boost at 3.0x
-          damageMultiplier = Math.min(damageMultiplier, 3.0);
+          damageMultiplier = Math.min(damageMultiplier, DAMAGE_BUFF_CAP);
 
           // Calculate ATTACK SPEED buffs (multiplicative stacking)
           let attackSpeedMultiplier = 1.0;
           for (const relay of chronoRelays) {
             const relayPos = gridToWorld(relay.pos);
-            if (distance(tWorldPos, relayPos) < 220) {
-              attackSpeedMultiplier *= 1.25;
+            if (distance(tWorldPos, relayPos) < CHRONO_RELAY_BUFF_RANGE) {
+              attackSpeedMultiplier *= CHRONO_RELAY_SPEED_BUFF;
             }
           }
-          attackSpeedMultiplier = Math.min(attackSpeedMultiplier, 2.4);
+          attackSpeedMultiplier = Math.min(attackSpeedMultiplier, ATTACK_SPEED_BUFF_CAP);
 
           const hasAnyBuff =
             rangeMultiplier > 1.0 ||
@@ -2180,12 +2277,12 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
 
-      // B2. SENTINEL NEXUS: Locked-coordinate lightning strike every 10 seconds.
+      // B2. SENTINEL NEXUS: Locked-coordinate lightning strike.
       if (sentinelNexuses.length > 0) {
-        const baseStrikeIntervalMs = 10000;
+        const baseStrikeIntervalMs = SENTINEL_NEXUS_STATS.strikeIntervalMs;
         const strikeIntervalMs = gameSpeed > 0 ? baseStrikeIntervalMs / gameSpeed : baseStrikeIntervalMs;
-        const strikeRadius = 140;
-        const strikeDamage = 240;
+        const strikeRadius = SENTINEL_NEXUS_STATS.radius;
+        const strikeDamage = SENTINEL_NEXUS_STATS.damage;
         const sentinelKeys = new Set<string>();
         const nextTargets = { ...sentinelTargetsRef.current };
         let targetsChanged = false;
@@ -2271,8 +2368,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 return {
                   ...enemy,
                   hp,
-                  damageFlash: 240,
-                  stunUntil: Math.max(enemy.stunUntil || 0, now + 450),
+                  damageFlash: SENTINEL_NEXUS_STATS.damageFlash,
+                  stunUntil: Math.max(enemy.stunUntil || 0, now + SENTINEL_NEXUS_STATS.stunDuration),
                 };
               })
               .filter(isDefined)
@@ -2299,12 +2396,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
       // B3. SUNFORGE ORRERY: Offensive tri-plasma barrage on dense enemy clusters.
       if (sunforgeOrreries.length > 0 && enemies.length > 0) {
-        const barrageIntervalMs = 9000;
-        const clusterScanRadius = 190;
-        const strikeRadius = 115;
-        const directDamage = 185;
-        const burnDps = 28;
-        const burnDurationMs = 2600;
+        const { barrageIntervalMs, clusterScanRadius, strikeRadius, directDamage, burnDps, burnDurationMs, stunDuration: sunforgeStunMs } = SUNFORGE_ORRERY_STATS;
         const sunforgeKeys = new Set<string>();
         const pendingDamage = new Map<
           string,
@@ -2344,19 +2436,20 @@ export function usePrincetonTowerDefenseRuntime() {
 
           const orreryWorldPos = gridToWorld(orrery.pos);
           const spinPhase = now * 0.0012 + orrery.pos.x * 0.17 + orrery.pos.y * 0.09;
+          const sfVolley = SUNFORGE_ORRERY_STATS.volleyOffsets;
           const volleyOffsets = [
-            { x: 0, y: 0, multiplier: 1.0, radiusScale: 1.0 },
+            { x: 0, y: 0, multiplier: sfVolley[0].multiplier, radiusScale: sfVolley[0].radiusScale },
             {
               x: Math.cos(spinPhase) * 70,
               y: Math.sin(spinPhase * 1.2) * 42,
-              multiplier: 0.76,
-              radiusScale: 0.92,
+              multiplier: sfVolley[1].multiplier,
+              radiusScale: sfVolley[1].radiusScale,
             },
             {
               x: Math.cos(spinPhase + Math.PI * 0.78) * 68,
               y: Math.sin(spinPhase * 1.28 + Math.PI * 0.52) * 40,
-              multiplier: 0.72,
-              radiusScale: 0.9,
+              multiplier: sfVolley[2].multiplier,
+              radiusScale: sfVolley[2].radiusScale,
             },
           ];
 
@@ -2416,12 +2509,12 @@ export function usePrincetonTowerDefenseRuntime() {
                 damage: 0,
                 burnDamage: 0,
                 burnUntil: now + burnDurationMs,
-                stunUntil: now + 320,
+                stunUntil: now + sunforgeStunMs,
               };
               update.damage += hitDamage;
               update.burnDamage = Math.max(update.burnDamage, burnDamage);
               update.burnUntil = Math.max(update.burnUntil, now + burnDurationMs);
-              update.stunUntil = Math.max(update.stunUntil, now + 320);
+              update.stunUntil = Math.max(update.stunUntil, now + sunforgeStunMs);
               pendingDamage.set(enemy.id, update);
             }
           });
@@ -2443,7 +2536,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 return {
                   ...enemy,
                   hp,
-                  damageFlash: 280,
+                  damageFlash: SUNFORGE_ORRERY_STATS.damageFlash,
                   burning: true,
                   burnDamage: Math.max(enemy.burnDamage || 0, incoming.burnDamage),
                   burnUntil: Math.max(enemy.burnUntil || 0, incoming.burnUntil),
@@ -2649,7 +2742,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     const abilities = applyEnemyAbilities(enemy, 'hero', now);
                     setHero((h) => {
                       if (!h) return null;
-                      const updated = { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() };
+                      const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
 
                       // Apply ability effects
                       if (abilities) {
@@ -2703,7 +2796,7 @@ export function usePrincetonTowerDefenseRuntime() {
               } else {
                 // TAUNTED MOVEMENT: Enemy moves toward hero instead of following path
                 const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-                const moveSpeed = enemy.speed * speedMult * deltaTime * 0.8; // Slightly slower when taunted
+                const moveSpeed = enemy.speed * speedMult * deltaTime * HERO_COMBAT_STATS.tauntMoveSpeedMult;
                 const dx = hero.pos.x - enemyPos.x;
                 const dy = hero.pos.y - enemyPos.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2791,7 +2884,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   const abilities = applyEnemyAbilities(enemy, 'hero', now);
                   setHero((h) => {
                     if (!h) return null;
-                    const updated = { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() };
+                    const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
 
                     // Apply ability effects
                     if (abilities) {
@@ -3031,7 +3124,7 @@ export function usePrincetonTowerDefenseRuntime() {
           // Check for nearby troop
           const nearbyTroop = getNearestTroop(enemyPos, 60);
           if (nearbyTroop) {
-            const damage = eData.troopDamage ?? 22;
+            const damage = eData.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE;
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
@@ -3066,17 +3159,17 @@ export function usePrincetonTowerDefenseRuntime() {
           // Only process non-ranged flying enemies (ranged flyers use the projectile path)
           if (!flyingData.flying || !flyingData.targetsTroops || flyingData.isRanged) return;
 
-          const attackSpeed = flyingData.troopAttackSpeed || 2000;
+          const attackSpeed = flyingData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED;
           const effectiveAttackInterval = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
           if (now - enemy.lastTroopAttack <= effectiveAttackInterval) return;
 
           const enemyPos = getEnemyPosCached(enemy);
 
           // Flying enemies can attack troops within a larger range (swooping attacks)
-          const attackRange = 80;
+          const attackRange = DEFAULT_ENEMY_FLYING_ATTACK_RANGE;
           const nearbyTroop = getNearestTroop(enemyPos, attackRange);
           if (nearbyTroop) {
-            const damage = flyingData.troopDamage || 20;
+            const damage = flyingData.troopDamage || DEFAULT_ENEMY_TROOP_DAMAGE;
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
@@ -3204,7 +3297,7 @@ export function usePrincetonTowerDefenseRuntime() {
           .map((enemy) => {
             // Process burning damage
             if (enemy.burning && enemy.burnUntil && now < enemy.burnUntil) {
-              const burnDmg = ((enemy.burnDamage || 10) * deltaTime) / 1000;
+              const burnDmg = ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000;
               const newHp = enemy.hp - burnDmg;
               if (newHp <= 0) {
                 onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
@@ -3221,7 +3314,7 @@ export function usePrincetonTowerDefenseRuntime() {
             // Regenerating enemies heal 1.5% max HP/sec when not in combat
             const eTraits = ENEMY_DATA[enemy.type].traits;
             if (eTraits?.includes("regenerating") && !enemy.inCombat && enemy.hp < enemy.maxHp) {
-              const regenAmount = (enemy.maxHp * 0.015 * deltaTime) / 1000;
+              const regenAmount = (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
               enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
             }
             // Clear frozen state when stun duration expires
@@ -3250,7 +3343,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval2) {
                 setHero((prevHero) => {
                   if (!prevHero || prevHero.dead) return prevHero;
-                  const heroDamage = ENEMY_DATA[enemy.type].troopDamage ?? 28;
+                  const heroDamage = ENEMY_DATA[enemy.type].troopDamage ?? DEFAULT_ENEMY_HERO_DAMAGE;
                   const newHp = prevHero.hp - heroDamage;
                   if (newHp <= 0) {
                     addParticles(prevHero.pos, "explosion", 12);
@@ -3356,7 +3449,7 @@ export function usePrincetonTowerDefenseRuntime() {
               } else {
                 const targetTroop = getNearestTroop(
                   enemyPos,
-                  enemyData.range || 120
+                  enemyData.range || DEFAULT_ENEMY_RANGE
                 );
                 if (targetTroop) {
                   rangedTarget = {
@@ -3439,7 +3532,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         rangedTarget!.pos.y - enemyPos.y,
                         rangedTarget!.pos.x - enemyPos.x
                       ),
-                      damage: enemyData.projectileDamage || 15,
+                      damage: enemyData.projectileDamage || DEFAULT_ENEMY_PROJECTILE_DAMAGE,
                       targetType: rangedTarget!.type,
                       targetId: rangedTarget!.id,
                       arcHeight: arcHeight,
@@ -3979,7 +4072,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const isRanged = troop.overrideIsRanged ?? troopData.isRanged;
           const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
           const attackRange = isRanged
-            ? troop.overrideRange ?? troopData.range ?? 150
+            ? troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE
             : MELEE_RANGE;
           const sightRange = isRanged
             ? TROOP_RANGED_SIGHT_RANGE
@@ -4030,7 +4123,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
           // Determine home position (where the troop should return to)
           const homePos = troop.userTargetPos || troop.spawnPoint;
-          const maxChaseRange = troop.moveRadius || 180; // Don't chase beyond this from home
+          const maxChaseRange = troop.moveRadius || HERO_SUMMON_RANGE;
 
           // Skip engagement logic if player has commanded this troop to move
           // This allows troops to disengage from combat and follow orders
@@ -4159,20 +4252,17 @@ export function usePrincetonTowerDefenseRuntime() {
           // HP regeneration - regenerate 2% max HP per second when out of combat for 3+ seconds
           const inCombat = enemiesInSightCount > 0 || updated.engaging;
           const now = Date.now();
-          const HEAL_DELAY_MS = 3000; // 3 seconds out of combat before healing starts
-
           // Update lastCombatTime if in combat
           if (inCombat) {
             updated.lastCombatTime = now;
-            updated.healFlash = undefined; // Stop healing effect when entering combat
+            updated.healFlash = undefined;
           }
 
-          // Only heal if out of combat for long enough
           const timeSinceCombat = now - (updated.lastCombatTime || 0);
-          if (!inCombat && troop.hp < troop.maxHp && timeSinceCombat >= HEAL_DELAY_MS) {
+          if (!inCombat && troop.hp < troop.maxHp && timeSinceCombat >= TROOP_HEAL_DELAY_MS) {
             updated.hp = Math.min(
               troop.maxHp,
-              troop.hp + (troop.maxHp * 0.02 * deltaTime) / 1000
+              troop.hp + (troop.maxHp * TROOP_HEAL_RATE * deltaTime) / 1000
             );
             // Show healing aura while regenerating (only set once to avoid constant state updates)
             if (!updated.healFlash || now - updated.healFlash > 800) {
@@ -4185,7 +4275,7 @@ export function usePrincetonTowerDefenseRuntime() {
             const moveStep = stepTowardTarget({
               current: updated.pos,
               target: troop.targetPos,
-              speed: 1.5,
+              speed: DEFAULT_TROOP_MOVE_SPEED,
               deltaTime,
               stopDistance: 5,
             });
@@ -4258,33 +4348,27 @@ export function usePrincetonTowerDefenseRuntime() {
       // Hero HP regeneration - with combat buffer
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
         const now = Date.now();
-        const HERO_HEAL_DELAY_MS = 5000; // 5 seconds out of combat before healing starts
 
-        // Consider in combat if any enemy is within 100 pixels OR currently targeting hero OR hero is attacking
         const inCombat =
           enemies.some(
             (e) =>
-              distance(hero.pos, getEnemyPosCached(e)) <= 100
+              distance(hero.pos, getEnemyPosCached(e)) <= HERO_COMBAT_RADIUS
           ) || enemies.some((e) => e.combatTarget === hero.id) || (hero.attackAnim > 0);
 
-        // Update lastCombatTime if in combat
         if (inCombat) {
           setHero((prev) => prev ? { ...prev, lastCombatTime: now, healFlash: undefined } : null);
         } else {
-          // Only heal if out of combat for long enough
           const timeSinceCombat = now - (hero.lastCombatTime || 0);
           if (timeSinceCombat >= HERO_HEAL_DELAY_MS) {
             setHero((prev) => {
               if (!prev || prev.hp >= prev.maxHp) return prev;
-              // Only refresh healFlash if it's expired or doesn't exist (avoid constant state churn)
               const needsNewHealFlash = !prev.healFlash || now - prev.healFlash > 800;
               return {
                 ...prev,
                 hp: Math.min(
                   prev.maxHp,
-                  prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
+                  prev.hp + (prev.maxHp * HERO_HEAL_RATE * deltaTime) / 1000
                 ),
-                // Show healing aura while regenerating
                 healFlash: needsNewHealFlash ? now : prev.healFlash,
               };
             });
@@ -4720,7 +4804,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 };
 
                 const troopHP =
-                  TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp || 100;
+                  TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp || DEFAULT_TROOP_HP;
                 troopsToSpawn.push({
                   id: generateId("troop"),
                   ownerId: tower.id,
@@ -4743,7 +4827,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
-                  moveRadius: (TOWER_DATA.station.spawnRange || 180) * (tower.rangeBoost || 1),
+                  moveRadius: (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) * (tower.rangeBoost || 1),
                   spawnSlot: r.slot,
                   userTargetPos: targetPos,
                 });
@@ -4819,7 +4903,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         : tower.upgrade === "A"
                           ? "centaur"
                           : "cavalry";
-                const troopHP = TROOP_DATA[troopType]?.hp || 100;
+                const troopHP = TROOP_DATA[troopType]?.hp || DEFAULT_TROOP_HP;
 
                 const newTroop: Troop = {
                   id: generateId("troop"),
@@ -4843,7 +4927,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
-                  moveRadius: (TOWER_DATA.station.spawnRange || 180) * (tower.rangeBoost || 1),
+                  moveRadius: (TOWER_DATA.station.spawnRange || STATION_TROOP_RANGE) * (tower.rangeBoost || 1),
                   spawnSlot: availableSlot,
                   userTargetPos: targetPos,
                 };
@@ -4937,14 +5021,8 @@ export function usePrincetonTowerDefenseRuntime() {
               });
             }
 
-            const attackCooldown = isGatling
-              ? 150 // Gatling is 8x faster
-              : isFlamethrower
-                ? 100 // Flamethrower is continuous
-                : isHeavyCannon
-                  ? 900 // Heavy cannon slightly slower but more damage
-                  : tData.attackSpeed;
-            // Scale attack cooldown with game speed and debuffs
+            const cannonStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+            const attackCooldown = cannonStats.attackSpeed;
             const effectiveAttackCooldown =
               gameSpeed > 0
                 ? attackCooldown / gameSpeed / attackSpeedMultiplier
@@ -4953,11 +5031,7 @@ export function usePrincetonTowerDefenseRuntime() {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
               const targetAimPos = getEnemyAimPosCached(target);
-              let damage = tData.damage * finalDamageMult;
-              if (tower.level === 2) damage *= 1.5;
-              if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
-              if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
-              if (isFlamethrower) damage *= 0.3; // DoT damage
+              const damage = cannonStats.damage * finalDamageMult;
               queueTowerEnemyMutation(target.id, (enemy) => {
                 const actualDmg = getEnemyDamageTaken(enemy, damage);
                 emitDamageNumber(targetPos, actualDmg, "tower");
@@ -4968,12 +5042,13 @@ export function usePrincetonTowerDefenseRuntime() {
                 }
                 const updates: Partial<Enemy> = {
                   hp: newHp,
-                  damageFlash: 100,
+                  damageFlash: DAMAGE_FLASH_SHORT_MS,
                 };
                 if (isFlamethrower) {
+                  const flameStats = TOWER_STATS.cannon.upgrades.B.stats;
                   updates.burning = true;
-                  updates.burnDamage = 15;
-                  updates.burnUntil = now + 3000;
+                  updates.burnDamage = flameStats.burnDamage ?? 15;
+                  updates.burnUntil = now + (flameStats.burnDuration ?? 3000);
                 }
                 return { ...enemy, ...updates };
               });
@@ -5013,8 +5088,8 @@ export function usePrincetonTowerDefenseRuntime() {
             const isTeslaCoil = tower.level === 3;
             const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
             const isChainLightning = tower.level === 4 && tower.upgrade === "B";
-            const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
-            // Scale attack cooldown with game speed and debuffs (attackSpeedMod)
+            const labStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+            const attackCooldown = labStats.attackSpeed;
             const effectiveLabCooldown =
               gameSpeed > 0
                 ? attackCooldown / gameSpeed / attackSpeedMultiplier
@@ -5027,17 +5102,8 @@ export function usePrincetonTowerDefenseRuntime() {
               if (validEnemies.length > 0) {
                 const target = validEnemies[0];
                 const targetAimPos = getEnemyAimPosCached(target);
-                let damage = tData.damage * finalDamageMult;
-                if (tower.level === 2) damage *= 1.5;
-                if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
-                if (tower.level === 4) damage *= 1.3; // Level 4 gets additional bonus
-                if (isFocusedBeam) damage *= 0.15; // Continuous beam
-                // Chain targets: Tesla Coil = 2, Chain Lightning = 5
-                const numChainTargets = isChainLightning
-                  ? 5
-                  : isTeslaCoil
-                    ? 2
-                    : 1;
+                const damage = labStats.damage * finalDamageMult;
+                const numChainTargets = labStats.chainTargets || 1;
                 const chainTargets =
                   isTeslaCoil || isChainLightning
                     ? validEnemies.slice(0, numChainTargets)
@@ -5046,13 +5112,14 @@ export function usePrincetonTowerDefenseRuntime() {
                   isTeslaCoil || isChainLightning ? damage * 0.7 : damage;
                 chainTargets.forEach((chainTarget) => {
                   queueTowerEnemyMutation(chainTarget.id, (enemy) => {
-                    const newHp =
-                      enemy.hp - getEnemyDamageTaken(enemy, chainDamage);
+                    const actualDmg = getEnemyDamageTaken(enemy, chainDamage);
+                    emitDamageNumber(getEnemyPosCached(enemy), actualDmg, "tower");
+                    const newHp = enemy.hp - actualDmg;
                     if (newHp <= 0) {
                       onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "lightning");
                       return null;
                     }
-                    return { ...enemy, hp: newHp, damageFlash: 150 };
+                    return { ...enemy, hp: newHp, damageFlash: DAMAGE_FLASH_MS };
                   });
                 });
                 const dx = targetAimPos.x - towerWorldPos.x;
@@ -5148,50 +5215,37 @@ export function usePrincetonTowerDefenseRuntime() {
             // Level 3: Elite Archers - faster attack, hits 2 targets
             // Level 4A: Shockwave - stun chance
             // Level 4B: Symphony - hits up to 5 targets
-            const isEliteArchers = tower.level === 3;
-            const isShockwave = tower.level === 4 && tower.upgrade === "A"; // Stun chance
-            const isSymphony = tower.level === 4 && tower.upgrade === "B"; // Multi-target
-            const attackSpeed = isEliteArchers
-              ? tData.attackSpeed * 0.7
-              : tData.attackSpeed;
-            // Scale attack cooldown with game speed
+            const isShockwave = tower.level === 4 && tower.upgrade === "A";
+            const archStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
             const effectiveArcherSpeed =
               gameSpeed > 0
-                ? attackSpeed / gameSpeed / attackSpeedMultiplier
-                : attackSpeed;
+                ? archStats.attackSpeed / gameSpeed / attackSpeedMultiplier
+                : archStats.attackSpeed;
             if (now - tower.lastAttack > effectiveArcherSpeed) {
               const validEnemies = getEnemiesInRange(
                 towerWorldPos,
                 finalRange
               );
               if (validEnemies.length > 0) {
-                // Level 1: single target, Level 2: 2 targets, Level 3 Elite: 3 targets, Level 4 Symphony: 5 targets
-                const numTargets = isSymphony
-                  ? 5
-                  : isEliteArchers
-                    ? 3
-                    : tower.level >= 2
-                      ? 2
-                      : 1;
+                const numTargets = archStats.chainTargets || 1;
                 const targets = validEnemies.slice(0, numTargets);
-                let damage = tData.damage * finalDamageMult;
-                if (tower.level === 2) damage *= 1.5;
-                if (tower.level >= 3) damage *= 2;
-                if (tower.level === 4) damage *= 1.25; // Additional level 4 bonus
+                const damage = archStats.damage * finalDamageMult;
                 targets.forEach((targetEnemy) => {
                   queueTowerEnemyMutation(targetEnemy.id, (enemy) => {
                     const targetEnemyPos = getEnemyPosCached(enemy);
-                    const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
+                    const actualDmg = getEnemyDamageTaken(enemy, damage);
+                    emitDamageNumber(targetEnemyPos, actualDmg, "tower");
+                    const newHp = enemy.hp - actualDmg;
                     if (newHp <= 0) {
                       onEnemyKill(enemy, targetEnemyPos, 10, "sonic");
                       return null;
                     }
                     const updates: Partial<Enemy> = {
                       hp: newHp,
-                      damageFlash: 150,
+                      damageFlash: DAMAGE_FLASH_MS,
                     };
-                    if (isShockwave && Math.random() < 0.3) {
-                      updates.stunUntil = now + 1000;
+                    if (isShockwave && Math.random() < (archStats.stunChance ?? 0)) {
+                      updates.stunUntil = now + (archStats.stunDuration ?? 1000);
                     }
                     return { ...enemy, ...updates };
                   });
@@ -5239,21 +5293,15 @@ export function usePrincetonTowerDefenseRuntime() {
             const isMissileBattery = tower.level === 4 && tower.upgrade === "A";
             const isEmberFoundry = tower.level === 4 && tower.upgrade === "B";
 
-            const attackCooldown = isMissileBattery
-              ? 4000
-              : isEmberFoundry
-                ? 2500
-                : tData.attackSpeed;
+            const mortarStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+            const attackCooldown = mortarStats.attackSpeed;
             const effectiveAttackCooldown =
               gameSpeed > 0
                 ? attackCooldown / gameSpeed / attackSpeedMultiplier
                 : attackCooldown;
 
-            const mortarStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
-            const splashRadius = mortarStats.splashRadius || 60;
-            let damage = tData.damage * finalDamageMult;
-            if (tower.level === 2) damage *= 1.5;
-            if (tower.level >= 3) damage *= 2;
+            const splashRadius = mortarStats.splashRadius || mortarStats.range * 0.33;
+            const damage = mortarStats.damage * finalDamageMult;
 
             // Missile Battery: defaults to auto-aim; manual uses stored position
             if (isMissileBattery && missileMortarTargetingIdRef.current === tower.id) {
@@ -5466,16 +5514,15 @@ export function usePrincetonTowerDefenseRuntime() {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
               const targetAimPos = getEnemyAimPosCached(target);
-              let damage = tData.damage * finalDamageMult;
-              if (tower.level === 2) damage *= 1.5;
-              if (tower.level === 3) damage *= 2;
+              const genericStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+              const damage = genericStats.damage * finalDamageMult;
               queueTowerEnemyMutation(target.id, (enemy) => {
                 const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
                 if (newHp <= 0) {
                   onEnemyKill(enemy, targetPos, 12);
                   return null;
                 }
-                return { ...enemy, hp: newHp, damageFlash: 200 };
+                return { ...enemy, hp: newHp, damageFlash: DAMAGE_FLASH_MS };
               });
               const dx = targetAimPos.x - towerWorldPos.x;
               const dy = targetAimPos.y - towerWorldPos.y;
@@ -5556,7 +5603,7 @@ export function usePrincetonTowerDefenseRuntime() {
             // Determine attack type based on hero
             const isAoEHero = hero.type === "mathey" || hero.type === "scott";
             const isMultiTargetHero = hero.type === "tenor";
-            const aoeDamageRadius = hero.type === "mathey" ? 70 : hero.type === "scott" ? 60 : 0;
+            const aoeDamageRadius = hero.type === "mathey" ? HERO_COMBAT_STATS.matheyAoeRadius : hero.type === "scott" ? HERO_COMBAT_STATS.scottAoeRadius : 0;
             const maxTargets = hero.type === "tenor" ? 3 : 1;
 
             // Get targets for multi-target heroes (Tenor hits up to 3)
@@ -5593,7 +5640,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
               // AoE damage for Mathey Knight and F. Scott
               if (isAoEHero && aoeDamageRadius > 0) {
-                const aoeDamage = Math.floor(heroData.damage * 0.5); // 50% damage to nearby enemies
+                const aoeDamage = Math.floor(heroData.damage * HERO_COMBAT_STATS.heroAoeDamageMult);
                 updatedEnemies = updatedEnemies.map((e) => {
                   if (!e || killedEnemyIds.includes(e.id)) return e;
                   if (attackTargets.some(t => t.id === e.id)) return e; // Already hit as primary
@@ -5745,10 +5792,10 @@ export function usePrincetonTowerDefenseRuntime() {
           if (!troopData) return; // Skip if troop data not found
           const isRanged = troop.overrideIsRanged ?? troopData.isRanged ?? false;
           const attackRange = isRanged
-            ? troop.overrideRange ?? troopData.range ?? 150
-            : 65;
+            ? troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE
+            : DEFAULT_TROOP_MELEE_RANGE;
           const attackCooldown =
-            troop.overrideAttackSpeed ?? troopData.attackSpeed ?? 1000;
+            troop.overrideAttackSpeed ?? troopData.attackSpeed ?? DEFAULT_TROOP_ATTACK_SPEED;
           // Scale troop attack cooldown with game speed
           const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
           const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
@@ -5768,7 +5815,7 @@ export function usePrincetonTowerDefenseRuntime() {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
               const targetAimPos = getEnemyAimPosCached(target);
-              const troopDamage = troop.overrideDamage ?? troopData.damage ?? 20;
+              const troopDamage = troop.overrideDamage ?? troopData.damage ?? DEFAULT_TROOP_DAMAGE;
               const dx = targetAimPos.x - troop.pos.x;
               const dy = targetAimPos.y - troop.pos.y;
               const rotation = Math.atan2(dy, dx);
@@ -5992,7 +6039,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 shouldDeflectOnHero = true;
                 continue;
               }
-              heroDamageTotal += proj.damage || 20;
+              heroDamageTotal += proj.damage || DEFAULT_PROJECTILE_DAMAGE;
               queuedImpactEffects.push({
                 id: generateId("eff"),
                 pos: proj.to,
@@ -6014,7 +6061,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 aoeEvents.push({
                   center: proj.to,
                   radius: proj.aoeRadius,
-                  damage: Math.floor((proj.damage || 20) * 0.5),
+                  damage: Math.floor((proj.damage || DEFAULT_PROJECTILE_DAMAGE) * 0.5),
                 });
               }
               continue;
@@ -6023,7 +6070,7 @@ export function usePrincetonTowerDefenseRuntime() {
             if (proj.targetType === "troop" && proj.targetId) {
               directTroopDamage.set(
                 proj.targetId,
-                (directTroopDamage.get(proj.targetId) ?? 0) + (proj.damage || 20)
+                (directTroopDamage.get(proj.targetId) ?? 0) + (proj.damage || DEFAULT_PROJECTILE_DAMAGE)
               );
               queuedImpactEffects.push({
                 id: generateId("eff"),
@@ -6129,9 +6176,10 @@ export function usePrincetonTowerDefenseRuntime() {
                 }
                 const updates: Partial<Enemy> = { hp: newHp, damageFlash: 200 };
                 if (shouldBurn) {
+                  const emberStats = TOWER_STATS.mortar.upgrades.B.stats;
                   updates.burning = true;
-                  updates.burnDamage = 25;
-                  updates.burnUntil = nowMs + 4000;
+                  updates.burnDamage = emberStats.burnDamage ?? 25;
+                  updates.burnUntil = nowMs + (emberStats.burnDuration ?? 4000);
                 }
                 nextEnemies.push({ ...enemy, ...updates });
               }
@@ -6372,6 +6420,7 @@ export function usePrincetonTowerDefenseRuntime() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    interceptShadows(ctx);
     const dpr = getRenderDpr();
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
@@ -6380,17 +6429,12 @@ export function usePrincetonTowerDefenseRuntime() {
     const renderQuality = renderQualityRef.current;
     renderFrameIndexRef.current += 1;
     // CRITICAL: Reset transform to identity matrix at start of each frame
-    // This prevents transform accumulation that causes the recursive rendering bug
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    // Apply DPR scaling fresh each frame
     ctx.scale(dpr, dpr);
-    // Clear the entire canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Cache the current time for all projectile renders this frame
     setProjectileRenderTime(Date.now());
 
-    // Get theme for current map
     const mapTheme = LEVEL_DATA[selectedMap]?.theme || "grassland";
     const theme = REGION_THEMES[mapTheme];
 
@@ -6414,68 +6458,92 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraZoom
       );
 
-    const staticLayerKey = [
+    // Cache key does NOT include camera offset — offset handled by overscan
+    const staticBaseKey = [
       selectedMap,
       canvas.width,
       canvas.height,
       dpr,
       cameraZoom.toFixed(3),
-      cameraOffset.x.toFixed(2),
-      cameraOffset.y.toFixed(2),
     ].join("|");
 
-    const preRoadCallback = (drawCtx: CanvasRenderingContext2D) => {
-      renderDecorationTransitions(
-        drawCtx,
-        selectedMap,
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom,
-      );
-    };
-
+    // =========================================================================
+    // BACKGROUND CANVAS — static map + fog with overscan so panning is free
+    // =========================================================================
+    const bgCanvas = bgCanvasRef.current;
     let fogEndpoints: StaticMapFogEndpoint[] = [];
+    const overscanCssW = width + BG_OVERSCAN_X;
+    const overscanCssH = height + BG_OVERSCAN_Y;
+
     const cachedStaticMapLayer = cachedStaticMapLayerRef.current;
-    if (cachedStaticMapLayer && cachedStaticMapLayer.key === staticLayerKey) {
-      ctx.drawImage(cachedStaticMapLayer.canvas, 0, 0, width, height);
-      fogEndpoints = cachedStaticMapLayer.fogEndpoints;
-    } else {
-      let renderedFromCache = false;
+    const staticAnchor = cachedStaticMapLayer?.anchorOffset;
+    const staticPanPxX = staticAnchor
+      ? (staticAnchor.x - cameraOffset.x) * cameraZoom
+      : 0;
+    const staticPanPxY = staticAnchor
+      ? (staticAnchor.y - cameraOffset.y) * cameraZoom
+      : 0;
+    const staticExceedsOverscan =
+      Math.abs(staticPanPxX) > BG_OVERSCAN_X / 3 ||
+      Math.abs(staticPanPxY) > BG_OVERSCAN_Y / 4;
+    const staticLayerChanged =
+      !cachedStaticMapLayer ||
+      cachedStaticMapLayer.key !== staticBaseKey ||
+      staticExceedsOverscan;
+
+    if (staticLayerChanged) {
       if (typeof document !== "undefined") {
-        const staticCanvas = document.createElement("canvas");
-        staticCanvas.width = canvas.width;
-        staticCanvas.height = canvas.height;
-        const staticCtx = staticCanvas.getContext("2d");
+        const offscreenStaticCanvas = document.createElement("canvas");
+        offscreenStaticCanvas.width = overscanCssW * dpr;
+        offscreenStaticCanvas.height = overscanCssH * dpr;
+        const staticCtx = offscreenStaticCanvas.getContext("2d");
         if (staticCtx) {
           staticCtx.setTransform(1, 0, 0, 1, 0, 0);
           staticCtx.scale(dpr, dpr);
+          const preRoadCb = (drawCtx: CanvasRenderingContext2D) => {
+            renderDecorationTransitions(
+              drawCtx,
+              selectedMap,
+              offscreenStaticCanvas.width,
+              offscreenStaticCanvas.height,
+              dpr,
+              cameraOffset,
+              cameraZoom,
+            );
+          };
           const staticLayerResult = renderStaticMapLayer({
             ctx: staticCtx,
             selectedMap,
             theme,
-            canvasWidthPx: canvas.width,
-            canvasHeightPx: canvas.height,
-            cssWidth: width,
-            cssHeight: height,
+            canvasWidthPx: offscreenStaticCanvas.width,
+            canvasHeightPx: offscreenStaticCanvas.height,
+            cssWidth: overscanCssW,
+            cssHeight: overscanCssH,
             dpr,
             cameraOffset,
             cameraZoom,
-            preRoadCallback,
+            preRoadCallback: preRoadCb,
           });
           fogEndpoints = staticLayerResult.fogEndpoints;
           cachedStaticMapLayerRef.current = {
-            key: staticLayerKey,
-            canvas: staticCanvas,
+            key: staticBaseKey,
+            canvas: offscreenStaticCanvas,
             fogEndpoints,
+            anchorOffset: { ...cameraOffset },
           };
-          ctx.drawImage(staticCanvas, 0, 0, width, height);
-          renderedFromCache = true;
         }
-      }
-
-      if (!renderedFromCache) {
+      } else {
+        const preRoadCb = (drawCtx: CanvasRenderingContext2D) => {
+          renderDecorationTransitions(
+            drawCtx,
+            selectedMap,
+            canvas.width,
+            canvas.height,
+            dpr,
+            cameraOffset,
+            cameraZoom,
+          );
+        };
         const staticLayerResult = renderStaticMapLayer({
           ctx,
           selectedMap,
@@ -6487,37 +6555,112 @@ export function usePrincetonTowerDefenseRuntime() {
           dpr,
           cameraOffset,
           cameraZoom,
-          preRoadCallback,
+          preRoadCallback: preRoadCb,
         });
         fogEndpoints = staticLayerResult.fogEndpoints;
       }
+      cachedFogLayerRef.current = null;
+    } else {
+      fogEndpoints = cachedStaticMapLayer.fogEndpoints;
     }
 
-    // Save state before camera transforms
+    // Fog — cached separately with a slower refresh rate (uses overscan dims)
+    const FOG_CACHE_REFRESH_MS = 200;
+    const fogCacheKey = [staticBaseKey, isChallengeTerrainLevel ? "c" : "n"].join("|");
+    const cachedFog = cachedFogLayerRef.current;
+    const fogNeedsRedraw =
+      !cachedFog ||
+      cachedFog.key !== fogCacheKey ||
+      frameNowMs - cachedFog.renderedAtMs > FOG_CACHE_REFRESH_MS;
+
+    if (fogNeedsRedraw && fogEndpoints.length > 0 && typeof document !== "undefined") {
+      const fogOffscreen = cachedFog?.canvas ?? document.createElement("canvas");
+      fogOffscreen.width = overscanCssW * dpr;
+      fogOffscreen.height = overscanCssH * dpr;
+      const fogCtx = fogOffscreen.getContext("2d");
+      if (fogCtx) {
+        fogCtx.setTransform(1, 0, 0, 1, 0, 0);
+        fogCtx.clearRect(0, 0, fogOffscreen.width, fogOffscreen.height);
+        fogCtx.scale(dpr, dpr);
+        const fogGroundRgb = hexToRgb(theme.ground[2]);
+        const fogAccentRgb = hexToRgb(theme.accent);
+        const fogPathRgb = hexToRgb(theme.path[2]);
+        const { fogBlobCount, fogWispCount } = computeFogCounts(isChallengeTerrainLevel);
+        const roadEndFogSize = isChallengeTerrainLevel ? 215 : 300;
+        for (const endpoint of fogEndpoints) {
+          drawRoadEndFog({
+            ctx: fogCtx,
+            endPos: endpoint.endPos,
+            towardsPos: endpoint.towardsPos,
+            size: roadEndFogSize,
+            nowSeconds,
+            cameraZoom,
+            groundRgb: fogGroundRgb,
+            accentRgb: fogAccentRgb,
+            pathRgb: fogPathRgb,
+            isChallengeTerrainLevel,
+            fogBlobCount,
+            fogWispCount,
+          });
+        }
+        cachedFogLayerRef.current = {
+          key: fogCacheKey,
+          canvas: fogOffscreen,
+          renderedAtMs: frameNowMs,
+          anchorOffset: cachedStaticMapLayerRef.current?.anchorOffset ?? { ...cameraOffset },
+        };
+      }
+    }
+
+    // Composite static layers onto background canvas (only when content changed)
+    if (bgCanvas && (staticLayerChanged || fogNeedsRedraw)) {
+      const bgCtx = bgCanvas.getContext("2d");
+      if (bgCtx) {
+        interceptShadows(bgCtx);
+        bgCtx.setTransform(1, 0, 0, 1, 0, 0);
+        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+        bgCtx.scale(dpr, dpr);
+        if (cachedStaticMapLayerRef.current) {
+          bgCtx.drawImage(cachedStaticMapLayerRef.current.canvas, 0, 0, overscanCssW, overscanCssH);
+        }
+        if (cachedFogLayerRef.current) {
+          bgCtx.drawImage(cachedFogLayerRef.current.canvas, 0, 0, overscanCssW, overscanCssH);
+        }
+      }
+    }
+    // Position bgCanvas via CSS transform — GPU-accelerated, runs every frame
+    if (bgCanvas) {
+      const bgAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
+      const bgDeltaX = (bgAnchor.x - cameraOffset.x) * cameraZoom;
+      const bgDeltaY = (bgAnchor.y - cameraOffset.y) * cameraZoom;
+      const translateX = BG_OVERSCAN_X / 2 + bgDeltaX;
+      const translateY = BG_OVERSCAN_Y / 3 + bgDeltaY;
+      bgCanvas.style.transform = `translate(${-translateX}px, ${-translateY}px)`;
+    }
+    // Fallback: if no bg canvas, extract visible portion from oversized cache
+    if (!bgCanvas) {
+      const fbAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
+      const fbDeltaX = (fbAnchor.x - cameraOffset.x) * cameraZoom;
+      const fbDeltaY = (fbAnchor.y - cameraOffset.y) * cameraZoom;
+      const fbSrcX = (BG_OVERSCAN_X / 2 + fbDeltaX) * dpr;
+      const fbSrcY = (BG_OVERSCAN_Y / 3 + fbDeltaY) * dpr;
+      if (cachedStaticMapLayerRef.current) {
+        ctx.drawImage(
+          cachedStaticMapLayerRef.current.canvas,
+          fbSrcX, fbSrcY, canvas.width, canvas.height,
+          0, 0, width, height,
+        );
+      }
+      if (cachedFogLayerRef.current) {
+        ctx.drawImage(
+          cachedFogLayerRef.current.canvas,
+          fbSrcX, fbSrcY, canvas.width, canvas.height,
+          0, 0, width, height,
+        );
+      }
+    }
+
     ctx.save();
-
-    // Draw fog over road ends to create fade effect
-    const fogGroundRgb = hexToRgb(theme.ground[2]);
-    const fogAccentRgb = hexToRgb(theme.accent);
-    const fogPathRgb = hexToRgb(theme.path[2]);
-    const { fogBlobCount, fogWispCount } = computeFogCounts(isChallengeTerrainLevel);
-    const roadEndFogSize = isChallengeTerrainLevel ? 215 : 300;
-    for (const endpoint of fogEndpoints) {
-      drawRoadEndFog({
-        ctx,
-        endPos: endpoint.endPos,
-        towardsPos: endpoint.towardsPos,
-        size: roadEndFogSize,
-        nowSeconds,
-        cameraZoom,
-        groundRgb: fogGroundRgb,
-        accentRgb: fogAccentRgb,
-        pathRgb: fogPathRgb,
-        isChallengeTerrainLevel,
-        fogBlobCount,
-        fogWispCount,
-      });
-    }
 
     // Pre-pass: special tower ground transitions (above roads, below decorations/towers)
     renderSpecialTowerTransitions(
@@ -7196,9 +7339,10 @@ export function usePrincetonTowerDefenseRuntime() {
     // Collect renderables
     const renderables: Renderable[] = [];
     const decorationMarginPx = QUALITY_DECORATION_MARGIN_PX[renderQuality];
+    const decorCullMarginPx = decorationMarginPx + DECOR_OVERSCAN / 2;
     const worldCorners = [
       screenToWorld(
-        { x: -decorationMarginPx, y: -decorationMarginPx },
+        { x: -decorCullMarginPx, y: -decorCullMarginPx },
         canvas.width,
         canvas.height,
         dpr,
@@ -7206,7 +7350,7 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraZoom
       ),
       screenToWorld(
-        { x: width + decorationMarginPx, y: -decorationMarginPx },
+        { x: width + decorCullMarginPx, y: -decorCullMarginPx },
         canvas.width,
         canvas.height,
         dpr,
@@ -7214,7 +7358,7 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraZoom
       ),
       screenToWorld(
-        { x: -decorationMarginPx, y: height + decorationMarginPx },
+        { x: -decorCullMarginPx, y: height + decorCullMarginPx },
         canvas.width,
         canvas.height,
         dpr,
@@ -7222,7 +7366,7 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraZoom
       ),
       screenToWorld(
-        { x: width + decorationMarginPx, y: height + decorationMarginPx },
+        { x: width + decorCullMarginPx, y: height + decorCullMarginPx },
         canvas.width,
         canvas.height,
         dpr,
@@ -7247,19 +7391,24 @@ export function usePrincetonTowerDefenseRuntime() {
       return pos;
     };
 
-    const decorationLayerKey = [
+    // Decoration cache key excludes offset — position correction handles panning
+    const DECOR_PAN_TOLERANCE_PX = 200;
+    const decorBaseKey = [
       selectedMap,
       canvas.width,
       canvas.height,
       dpr,
       renderQuality,
       cameraZoom.toFixed(3),
-      cameraOffset.x.toFixed(2),
-      cameraOffset.y.toFixed(2),
     ].join("|");
     const drawBackgroundDecorations = (
-      entries: CachedVisibleDecoration[]
+      entries: CachedVisibleDecoration[],
+      offsetCorrectionX = 0,
+      offsetCorrectionY = 0,
     ) => {
+      const hasCorrection = offsetCorrectionX !== 0 || offsetCorrectionY !== 0;
+      if (hasCorrection) ctx.save();
+      if (hasCorrection) ctx.translate(offsetCorrectionX, offsetCorrectionY);
       for (const entry of entries) {
         const dec = entry.decoration;
         const decVolume = getDecorationVolumeSpec(dec.type, dec.heightTag);
@@ -7282,6 +7431,7 @@ export function usePrincetonTowerDefenseRuntime() {
         });
         ctx.restore();
       }
+      if (hasCorrection) ctx.restore();
     };
     const drawLevelHazards = () => {
       const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
@@ -7353,14 +7503,35 @@ export function usePrincetonTowerDefenseRuntime() {
 
     let animatedVisibleDecorations: CachedVisibleDecoration[] = [];
     let depthSensitiveVisibleDecorations: CachedVisibleDecoration[] = [];
+    let decorPosCorrectX = 0;
+    let decorPosCorrectY = 0;
     const cachedStaticDecorationLayer = cachedStaticDecorationLayerRef.current;
-    if (
+    const decorAnchor = cachedStaticDecorationLayer?.anchorOffset;
+    const decorPanPxX = decorAnchor ? (decorAnchor.x - cameraOffset.x) * cameraZoom : Infinity;
+    const decorPanPxY = decorAnchor ? (decorAnchor.y - cameraOffset.y) * cameraZoom : Infinity;
+    const decorExceedsLimit =
+      Math.abs(decorPanPxX) > DECOR_PAN_TOLERANCE_PX ||
+      Math.abs(decorPanPxY) > DECOR_PAN_TOLERANCE_PX;
+    const decorCacheHit =
       cachedStaticDecorationLayer &&
-      cachedStaticDecorationLayer.key === decorationLayerKey
-    ) {
-      drawBackgroundDecorations(cachedStaticDecorationLayer.backgroundDecorations);
+      cachedStaticDecorationLayer.key === decorBaseKey &&
+      !decorExceedsLimit;
+    if (decorCacheHit) {
+      decorPosCorrectX = (cameraOffset.x - decorAnchor!.x) * cameraZoom;
+      decorPosCorrectY = (cameraOffset.y - decorAnchor!.y) * cameraZoom;
+      drawBackgroundDecorations(
+        cachedStaticDecorationLayer.backgroundDecorations,
+        decorPosCorrectX,
+        decorPosCorrectY,
+      );
       if (cachedStaticDecorationLayer.canvas) {
-        ctx.drawImage(cachedStaticDecorationLayer.canvas, 0, 0, width, height);
+        const dSrcX = (DECOR_OVERSCAN / 2 - decorPosCorrectX) * dpr;
+        const dSrcY = (DECOR_OVERSCAN / 2 - decorPosCorrectY) * dpr;
+        ctx.drawImage(
+          cachedStaticDecorationLayer.canvas,
+          dSrcX, dSrcY, canvas.width, canvas.height,
+          0, 0, width, height,
+        );
       }
       animatedVisibleDecorations = cachedStaticDecorationLayer.animatedDecorations;
       depthSensitiveVisibleDecorations =
@@ -7387,10 +7558,10 @@ export function usePrincetonTowerDefenseRuntime() {
         }
         const decScreenPos = toScreen({ x: dec.x, y: dec.y });
         if (
-          decScreenPos.x < -decorationMarginPx ||
-          decScreenPos.x > width + decorationMarginPx ||
-          decScreenPos.y < -decorationMarginPx ||
-          decScreenPos.y > height + decorationMarginPx
+          decScreenPos.x < -decorCullMarginPx ||
+          decScreenPos.x > width + decorCullMarginPx ||
+          decScreenPos.y < -decorCullMarginPx ||
+          decScreenPos.y > height + decorCullMarginPx
         ) {
           continue;
         }
@@ -7511,12 +7682,13 @@ export function usePrincetonTowerDefenseRuntime() {
       let staticDecorationCanvas: HTMLCanvasElement | null = null;
       if (typeof document !== "undefined") {
         const layerCanvas = document.createElement("canvas");
-        layerCanvas.width = canvas.width;
-        layerCanvas.height = canvas.height;
+        layerCanvas.width = (width + DECOR_OVERSCAN) * dpr;
+        layerCanvas.height = (height + DECOR_OVERSCAN) * dpr;
         const layerCtx = layerCanvas.getContext("2d");
         if (layerCtx) {
           layerCtx.setTransform(1, 0, 0, 1, 0, 0);
           layerCtx.scale(dpr, dpr);
+          layerCtx.translate(DECOR_OVERSCAN / 2, DECOR_OVERSCAN / 2);
           for (const entry of staticDecorations) {
             const dec = entry.decoration;
             layerCtx.save();
@@ -7543,17 +7715,24 @@ export function usePrincetonTowerDefenseRuntime() {
 
       drawBackgroundDecorations(backgroundDecorations);
       if (staticDecorationCanvas) {
-        ctx.drawImage(staticDecorationCanvas, 0, 0, width, height);
+        const dSrcX = (DECOR_OVERSCAN / 2) * dpr;
+        const dSrcY = (DECOR_OVERSCAN / 2) * dpr;
+        ctx.drawImage(
+          staticDecorationCanvas,
+          dSrcX, dSrcY, canvas.width, canvas.height,
+          0, 0, width, height,
+        );
       } else {
         liveAnimatedDecorations.push(...staticDecorations);
       }
 
       cachedStaticDecorationLayerRef.current = {
-        key: decorationLayerKey,
+        key: decorBaseKey,
         canvas: staticDecorationCanvas,
         backgroundDecorations,
         animatedDecorations: liveAnimatedDecorations,
         depthSensitiveDecorations,
+        anchorOffset: { ...cameraOffset },
       };
       animatedVisibleDecorations = liveAnimatedDecorations;
       depthSensitiveVisibleDecorations = depthSensitiveDecorations;
@@ -7566,7 +7745,9 @@ export function usePrincetonTowerDefenseRuntime() {
           ...entry.decoration,
           decorTime,
           selectedMap,
-          screenPos: entry.screenPos,
+          screenPos: decorPosCorrectX === 0 && decorPosCorrectY === 0
+            ? entry.screenPos
+            : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY },
         },
         isoY: entry.isoY,
       });
@@ -7578,7 +7759,9 @@ export function usePrincetonTowerDefenseRuntime() {
           ...entry.decoration,
           decorTime,
           selectedMap,
-          screenPos: entry.screenPos,
+          screenPos: decorPosCorrectX === 0 && decorPosCorrectY === 0
+            ? entry.screenPos
+            : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY },
         },
         isoY: entry.isoY,
       });
@@ -7804,7 +7987,8 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
     }
-    renderables.sort((a, b) => a.isoY - b.isoY);
+    insertionSortBy(renderables, (r) => r.isoY);
+    updateScenePressure(renderables.length);
 
     // =========================================================================
     // SPECIAL BUILDING RANGE RINGS (On Hover)
@@ -8415,9 +8599,16 @@ export function usePrincetonTowerDefenseRuntime() {
               targetPos = getEnemyWorldPos(targetEnemy);
             }
           }
+          const stationHighlighted =
+            !troopRenderable.selected &&
+            !!selectedTower &&
+            troopRenderable.ownerId === selectedTower &&
+            towers.some((t) => t.id === selectedTower && t.type === "station");
           renderTroop(
             ctx,
-            troopRenderable,
+            stationHighlighted
+              ? { ...troopRenderable, selected: true }
+              : troopRenderable,
             canvas.width,
             canvas.height,
             dpr,
@@ -9849,17 +10040,7 @@ export function usePrincetonTowerDefenseRuntime() {
         const isDeselecting = selectedTower === clickedTower.id;
         setSelectedTower(isDeselecting ? null : clickedTower.id);
         setHero((prev) => (prev ? { ...prev, selected: false } : null));
-        // If clicking on a Dinky Station, highlight its troops
-        if (clickedTower.type === "station" && !isDeselecting) {
-          setTroops((prev) =>
-            prev.map((t) => ({
-              ...t,
-              selected: t.ownerId === clickedTower.id,
-            }))
-          );
-        } else {
-          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
-        }
+        setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
         return;
       }
 
@@ -10507,7 +10688,7 @@ export function usePrincetonTowerDefenseRuntime() {
               : newUpgrade === "A"
                 ? "centaur"
                 : "cavalry";
-        const newHP = TROOP_DATA[newTroopType]?.hp || 100;
+        const newHP = TROOP_DATA[newTroopType]?.hp || DEFAULT_TROOP_HP;
 
         setTroops((prev) =>
           prev.map((t) => {
@@ -10774,7 +10955,9 @@ export function usePrincetonTowerDefenseRuntime() {
                     if (dist < impactRadius) {
                       const damageMultiplier = 1 - (dist / impactRadius) * 0.5;
                       const damage = Math.floor(damagePerMeteor * damageMultiplier);
-                      const newHp = e.hp - getEnemyDamageTaken(e, damage, "fire");
+                      const actualDmg = getEnemyDamageTaken(e, damage, "fire");
+                      emitDamageNumber(pos, actualDmg, "spell");
+                      const newHp = e.hp - actualDmg;
                       if (newHp <= 0) {
                         onEnemyKill(e, pos, 20, "fire");
                         addParticles(pos, "fire", 15);
@@ -10864,8 +11047,9 @@ export function usePrincetonTowerDefenseRuntime() {
               prev
                 .map((e) => {
                   if (e.id === target.id) {
-                    const newHp =
-                      e.hp - getEnemyDamageTaken(e, damagePerTarget);
+                    const actualDmg = getEnemyDamageTaken(e, damagePerTarget);
+                    emitDamageNumber(targetPos, actualDmg, "spell");
+                    const newHp = e.hp - actualDmg;
                     if (newHp <= 0) {
                       onEnemyKill(e, targetPos, 12, "lightning");
                       addParticles(targetPos, "spark", 25);
@@ -11205,7 +11389,7 @@ export function usePrincetonTowerDefenseRuntime() {
       case "captain": {
         // RALLY KNIGHTS - Summon 3 reinforcement knights (weaker summoned version)
         // Captain's summoned knights are weaker than Dinky Station knights
-        const summonedKnightHP = 350; // Reduced from 800
+        const summonedKnightHP = HERO_COMBAT_STATS.captainKnightHp;
         // Offsets are larger than TROOP_SEPARATION_DIST (35) to prevent immediate overlap
         const knightOffsets = [
           { x: -35, y: -20 },
@@ -11233,7 +11417,7 @@ export function usePrincetonTowerDefenseRuntime() {
             facingRight: true,
             attackAnim: 0,
             spawnPoint: knightPos,
-            moveRadius: 180, // Captain's summoned knights range
+            moveRadius: HERO_COMBAT_STATS.captainKnightMoveRadius,
             userTargetPos: knightPos, // Set home position to their starting position
           };
         });
@@ -11258,7 +11442,7 @@ export function usePrincetonTowerDefenseRuntime() {
         // DEPLOY TURRET - Create a stationary defense turret (as a troop, not a tower)
         // The turret is a fixed-position ranged unit that can be destroyed by enemies
         const turretPos = { x: hero.pos.x + 40, y: hero.pos.y };
-        const turretHP = 400;
+        const turretHP = HERO_COMBAT_STATS.engineerTurretHp;
         const newTurret: Troop = {
           id: generateId("turret"),
           ownerId: hero.id,
@@ -11321,10 +11505,9 @@ export function usePrincetonTowerDefenseRuntime() {
   ]);
 
   // Auto-trigger hero ability when HP drops below 25%
-  const AUTO_ABILITY_HP_THRESHOLD = 0.25;
   useEffect(() => {
     if (!hero || hero.dead || !hero.abilityReady || hero.hp <= 0) return;
-    if (hero.hp < hero.maxHp * AUTO_ABILITY_HP_THRESHOLD) {
+    if (hero.hp < hero.maxHp * HERO_AUTO_ABILITY_HP_THRESHOLD) {
       triggerHeroAbility();
     }
   }, [hero?.hp, hero?.maxHp, hero?.abilityReady, hero?.dead, triggerHeroAbility]);
@@ -11638,12 +11821,17 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const pendingStartWithRandomRef = useRef(false);
   const startWithRandomLoadout = useCallback(() => {
-    const hero = HERO_OPTIONS[Math.floor(Math.random() * HERO_OPTIONS.length)];
-    const shuffled = [...SPELL_OPTIONS].sort(() => Math.random() - 0.5);
-    setSelectedHero(hero);
-    setSelectedSpells(shuffled.slice(0, 3));
+    if (!selectedHero) {
+      const hero = HERO_OPTIONS[Math.floor(Math.random() * HERO_OPTIONS.length)];
+      setSelectedHero(hero);
+    }
+    if (selectedSpells.length < 3) {
+      const remaining = SPELL_OPTIONS.filter((s) => !selectedSpells.includes(s));
+      const shuffled = remaining.sort(() => Math.random() - 0.5);
+      setSelectedSpells([...selectedSpells, ...shuffled.slice(0, 3 - selectedSpells.length)]);
+    }
     pendingStartWithRandomRef.current = true;
-  }, []);
+  }, [selectedHero, selectedSpells]);
 
   useEffect(() => {
     if (pendingStartWithRandomRef.current && selectedHero && selectedSpells.length === 3) {
@@ -11739,16 +11927,21 @@ export function usePrincetonTowerDefenseRuntime() {
       <div className="flex-1 relative overflow-hidden">
         <div
           ref={containerRef}
-          className="absolute inset-0"
+          className="absolute inset-0 overflow-hidden"
           style={{ background: fadeOverlayBackground }}
         >
+          <canvas
+            ref={bgCanvasRef}
+            className="absolute pointer-events-none game-start-fade"
+            style={{ top: 0, left: 0, willChange: "transform" }}
+          />
           <canvas
             ref={canvasRef}
             onPointerDown={handlePointerDown}
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
             onPointerLeave={handleCanvasPointerLeave}
-            className={`w-full h-full touch-none game-start-fade ${isPanning ? 'cursor-grabbing' :
+            className={`absolute inset-0 w-full h-full touch-none game-start-fade ${isPanning ? 'cursor-grabbing' :
               repositioningTower ? 'cursor-move' :
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}

@@ -24,6 +24,10 @@ import {
   ISO_INV_Y,
   getLevelPaths,
   getLevelUniquePathSegments,
+  STATION_TROOP_RANGE,
+  BARRACKS_TROOP_RANGE,
+  SPELL_TROOP_RANGE,
+  HERO_SUMMON_RANGE,
 } from "../constants";
 
 // Enemy lane model: lanes are normalized to [-1, 1] and projected onto path
@@ -1467,11 +1471,6 @@ export interface TroopMoveInfo {
   ownerId: string;
 }
 
-// Default ranges for different troop types
-const STATION_TROOP_RANGE = 280; // Dinky Station base range (increased)
-const BARRACKS_TROOP_RANGE = 220; // Frontier Barracks range (increased)
-const SPELL_TROOP_RANGE = 200; // Reinforcement spell range
-const HERO_SUMMON_RANGE = 180; // Captain's rally range
 
 export function getTroopMoveInfo(
   troop: Troop,

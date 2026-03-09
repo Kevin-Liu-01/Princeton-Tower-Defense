@@ -68,6 +68,12 @@ import {
   INITIAL_LIVES,
   INITIAL_PAW_POINTS,
   WAVE_TIMER_BASE,
+  SENTINEL_NEXUS_STATS,
+  SUNFORGE_ORRERY_STATS,
+  ARMORED_THRESHOLD,
+  FAST_SPEED_THRESHOLD,
+  DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
+  DEFAULT_ENEMY_TROOP_DAMAGE,
 } from "../../constants";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
@@ -263,7 +269,7 @@ const SPECIAL_TOWER_INFO: Record<
     color: "text-rose-300",
     panelClass: "bg-rose-950/35 border-rose-800/40",
     effect: "Calls periodic lightning strikes at a locked coordinate.",
-    numbers: "Every 10s: up to 240 damage in 140 radius + short stun",
+    numbers: `Every ${SENTINEL_NEXUS_STATS.strikeIntervalMs / 1000}s: up to ${SENTINEL_NEXUS_STATS.damage} damage in ${SENTINEL_NEXUS_STATS.radius} radius + short stun`,
     tip: "Retarget onto spawn exits or boss path corners for highest value.",
   },
   sunforge_orrery: {
@@ -273,7 +279,7 @@ const SPECIAL_TOWER_INFO: Record<
     color: "text-orange-300",
     panelClass: "bg-orange-950/35 border-orange-800/40",
     effect: "Scans for dense enemy clusters and fires tri-plasma barrages.",
-    numbers: "Every 9s: up to 185 direct damage + 28 DPS burn (2.6s) per volley",
+    numbers: `Every ${SUNFORGE_ORRERY_STATS.barrageIntervalMs / 1000}s: up to ${SUNFORGE_ORRERY_STATS.directDamage} direct damage + ${SUNFORGE_ORRERY_STATS.burnDps} DPS burn (${(SUNFORGE_ORRERY_STATS.burnDurationMs / 1000).toFixed(1)}s) per volley`,
     tip: "Pair with slows and path intersections to maximize cluster density.",
   },
 };
@@ -2799,8 +2805,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             const getEnemyTypeClassification = () => {
                               if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
                               if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={12} />, color: "purple" };
-                              if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={12} />, color: "stone" };
-                              if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={12} />, color: "green" };
+                              if (enemy.armor > ARMORED_THRESHOLD) return { type: "Armored", icon: <Shield size={12} />, color: "stone" };
+                              if (enemy.speed > FAST_SPEED_THRESHOLD) return { type: "Fast", icon: <Gauge size={12} />, color: "green" };
                               return { type: "Ground", icon: <Flag size={12} />, color: "red" };
                             };
                             const enemyTypeClass = getEnemyTypeClassification();
@@ -2937,7 +2943,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                       <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
                                         <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
                                         <div className="text-[8px] text-cyan-500">Atk Speed</div>
-                                        <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                        <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
                                       </div>
                                     </div>
                                   )}
@@ -2948,7 +2954,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                       <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
                                         <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
                                         <div className="text-[8px] text-red-500">Melee Dmg</div>
-                                        <div className="text-red-300 font-bold text-[10px]">{enemy.troopDamage ?? 22}</div>
+                                        <div className="text-red-300 font-bold text-[10px]">{enemy.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
                                       </div>
                                       <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
                                         <Timer size={12} className="mx-auto text-red-400 mb-0.5" />

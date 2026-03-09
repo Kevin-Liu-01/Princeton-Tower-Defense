@@ -10,3 +10,4 @@ export * from "./pathing";
 export * from "./waves";
 export * from "./particles";
 export * from "./settings";
+export * from "./combatConstants";

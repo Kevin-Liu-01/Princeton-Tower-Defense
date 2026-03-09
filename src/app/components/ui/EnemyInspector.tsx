@@ -29,7 +29,13 @@ import {
   Wind,
 } from "lucide-react";
 import type { Enemy, Troop, Hero, Position, EnemyTrait } from "../../types";
-import { ENEMY_DATA, HERO_DATA, TROOP_DATA } from "../../constants";
+import {
+  DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
+  DEFAULT_ENEMY_TROOP_DAMAGE,
+  ENEMY_DATA,
+  HERO_DATA,
+  TROOP_DATA,
+} from "../../constants";
 import { EnemySprite, HeroIcon } from "../../sprites";
 import { PANEL, GOLD, OVERLAY, PURPLE_CARD, panelGradient } from "./theme";
 
@@ -376,7 +382,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-900/40 text-center">
               <Timer size={14} className="mx-auto text-cyan-400 mb-1" />
               <div className="text-[8px] text-cyan-500">Atk Speed</div>
-              <div className="text-cyan-200 font-bold text-xs">{((eData.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+              <div className="text-cyan-200 font-bold text-xs">{((eData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
             </div>
           </div>
         )}
@@ -387,7 +393,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
               <Swords size={14} className="mx-auto text-red-400 mb-1" />
               <div className="text-[8px] text-red-500">Melee Dmg</div>
-              <div className="text-red-200 font-bold text-xs">{eData.troopDamage ?? 22}</div>
+              <div className="text-red-200 font-bold text-xs">{eData.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
             </div>
             <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
               <Timer size={14} className="mx-auto text-red-400 mb-1" />
