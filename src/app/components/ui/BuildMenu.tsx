@@ -92,8 +92,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               <div className="flex items-center gap-1">
                 <BrickWallShield size={14} /> <div>BUILD TOWERS</div>
               </div>
-              <div className="text-[8px] text-amber-600 font-normal">
-                (Select, move+click, or drag-release)
+              <div className="ml-auto text-[8px] text-amber-600 font-normal">
+                (Select, Click, or Drag!)
               </div>
             </h3>
             {Object.entries(TOWER_DATA).map(([type, data]) => {

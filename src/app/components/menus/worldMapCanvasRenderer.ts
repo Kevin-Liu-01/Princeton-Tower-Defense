@@ -2843,18 +2843,40 @@ export const drawWorldMapCanvas = ({
   // Majestic Golden Pyramid with stone blocks, hieroglyphics, and light rays
   const drawGoldenPyramid = (px: number, pyPct: number, size: number) => {
     const py = getY(pyPct);
-    // Ground shadow
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    // Triangular cast shadow (light from upper-left, shadow to lower-right)
+    const baseLeftX = px - size;
+    const baseRightX = px + size;
+    const baseY = py + 5;
+    const shadowApexX = px + size * 1.1;
+    const shadowApexY = py + size * 0.4;
+
+    // Soft outer penumbra
     ctx.beginPath();
-    ctx.ellipse(
-      px + size * 0.3,
-      py + 8,
-      size * 1.3,
-      size * 0.35,
-      0.1,
-      0,
-      Math.PI * 2,
+    ctx.moveTo(baseLeftX - 3, baseY + 4);
+    ctx.lineTo(shadowApexX + 5, shadowApexY + 4);
+    ctx.lineTo(baseRightX + 5, baseY + 2);
+    ctx.lineTo(baseLeftX - 3, baseY + 2);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(0,0,0,0.06)";
+    ctx.fill();
+
+    // Core triangular shadow with gradient
+    ctx.beginPath();
+    ctx.moveTo(baseLeftX, baseY);
+    ctx.lineTo(baseRightX, baseY);
+    ctx.lineTo(shadowApexX, shadowApexY);
+    ctx.closePath();
+    const wmShadowGrad = ctx.createLinearGradient(
+      baseLeftX,
+      baseY,
+      shadowApexX,
+      shadowApexY,
     );
+    wmShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
+    wmShadowGrad.addColorStop(0.4, "rgba(0,0,0,0.18)");
+    wmShadowGrad.addColorStop(0.7, "rgba(0,0,0,0.06)");
+    wmShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = wmShadowGrad;
     ctx.fill();
 
     // Sand accumulated at base

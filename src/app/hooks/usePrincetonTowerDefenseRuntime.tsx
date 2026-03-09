@@ -11687,7 +11687,6 @@ export function usePrincetonTowerDefenseRuntime() {
                   tower={tower}
                   screenPos={screenPos}
                   pawPoints={pawPoints}
-                  cameraZoom={cameraZoom}
                   upgradeTower={upgradeTower}
                   sellTower={sellTower}
                   onClose={() => setSelectedTower(null)}

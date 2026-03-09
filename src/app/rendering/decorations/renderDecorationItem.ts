@@ -9964,56 +9964,55 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const leftY = baseCy;
       const tipY = baseCy - pHeight;
 
-      // Ground shadow
-      const shadowCenterX = pyrX + 30 * s;
-      const shadowCenterY = baseCy + pyrHD * 0.6;
-      const pyrShadowGrad = ctx.createRadialGradient(
-        shadowCenterX,
-        shadowCenterY,
-        0,
-        shadowCenterX,
-        shadowCenterY,
-        55 * s,
-      );
-      pyrShadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
-      pyrShadowGrad.addColorStop(0.5, "rgba(0,0,0,0.2)");
-      pyrShadowGrad.addColorStop(0.8, "rgba(0,0,0,0.08)");
-      pyrShadowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = pyrShadowGrad;
+      // Triangular cast shadow (light from upper-left, shadow to lower-right)
+      const backX = pyrX;
+      const backY = baseCy - pyrHD;
+      const shadowApexX = pyrX + 42 * s;
+      const shadowApexY = baseCy + 18 * s;
+
+      // Soft outer penumbra layer
       ctx.beginPath();
-      ctx.ellipse(
-        shadowCenterX,
-        shadowCenterY,
-        50 * s,
-        20 * s,
-        0.3,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(backX - 1 * s, backY - 2 * s);
+      ctx.lineTo(leftX - 4 * s, leftY + 2 * s);
+      ctx.lineTo(frontX - 1 * s, frontY + 5 * s);
+      ctx.lineTo(shadowApexX + 7 * s, shadowApexY + 4 * s);
+      ctx.lineTo(rightX + 7 * s, rightY - 1 * s);
+      ctx.lineTo(backX + 3 * s, backY - 3 * s);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(0,0,0,0.05)";
       ctx.fill();
 
-      // Ambient occlusion at base
-      const aoGrad = ctx.createRadialGradient(
-        pyrX,
-        baseCy + pyrHD * 0.3,
-        pyrHW * 0.3,
-        pyrX,
-        baseCy + pyrHD * 0.3,
-        pyrHW * 1.05,
-      );
-      aoGrad.addColorStop(0, "rgba(0,0,0,0.12)");
-      aoGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = aoGrad;
+      // Mid penumbra layer
       ctx.beginPath();
-      ctx.ellipse(
-        pyrX,
-        baseCy + pyrHD * 0.3,
-        pyrHW * 1.05,
-        pyrHD * 0.65,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(backX, backY - 1 * s);
+      ctx.lineTo(leftX - 2 * s, leftY + 1 * s);
+      ctx.lineTo(frontX, frontY + 3 * s);
+      ctx.lineTo(shadowApexX + 4 * s, shadowApexY + 2 * s);
+      ctx.lineTo(rightX + 4 * s, rightY);
+      ctx.lineTo(backX + 1 * s, backY - 2 * s);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(0,0,0,0.08)";
+      ctx.fill();
+
+      // Core shadow with gradient fade toward tip
+      ctx.beginPath();
+      ctx.moveTo(backX, backY);
+      ctx.lineTo(leftX, leftY);
+      ctx.lineTo(frontX, frontY);
+      ctx.lineTo(shadowApexX, shadowApexY);
+      ctx.lineTo(rightX, rightY);
+      ctx.closePath();
+      const pyrShadowGrad = ctx.createLinearGradient(
+        pyrX - pyrHW * 0.5,
+        baseCy,
+        shadowApexX,
+        shadowApexY,
       );
+      pyrShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
+      pyrShadowGrad.addColorStop(0.35, "rgba(0,0,0,0.22)");
+      pyrShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.10)");
+      pyrShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = pyrShadowGrad;
       ctx.fill();
 
       // Left face (shadow) with gradient

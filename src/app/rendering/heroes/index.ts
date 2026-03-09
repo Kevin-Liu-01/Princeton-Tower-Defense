@@ -22,7 +22,13 @@ const HERO_SIZE_OVERRIDES: Record<string, number> = {
 };
 
 const HERO_BAR_OFFSET: Record<string, number> = {
-  rocky: -18,
+  rocky: -15,
+  scott: -3,
+  captain: -10,
+  tiger: -8,
+  tenor: -5,
+  mathey: -8,
+  engineer: -2,
 };
 
 export function renderHero(
@@ -33,7 +39,7 @@ export function renderHero(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   const screenPos = worldToScreenRounded(
     hero.pos,
@@ -41,7 +47,7 @@ export function renderHero(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const zoom = cameraZoom || 1;
   const hData = HERO_DATA[hero.type];
@@ -60,7 +66,7 @@ export function renderHero(
       40 * ISO_Y_RATIO * zoom,
       0,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -72,11 +78,11 @@ export function renderHero(
   ctx.ellipse(
     screenPos.x,
     screenPos.y + 1 * zoom,
-      22 * zoom,
-      22 * ISO_Y_RATIO * zoom,
+    22 * zoom,
+    22 * ISO_Y_RATIO * zoom,
     0,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -96,7 +102,7 @@ export function renderHero(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom
+        cameraZoom,
       )
     : undefined;
   const localTargetPos = targetScreenPos
@@ -124,7 +130,7 @@ export function renderHero(
     time,
     zoom,
     attackPhase,
-    localTargetPos
+    localTargetPos,
   );
 
   ctx.restore();
@@ -135,34 +141,59 @@ export function renderHero(
 
     // Soft outer glow - larger diffuse emerald light for heroes
     const outerGlow = ctx.createRadialGradient(
-      screenPos.x, screenPos.y, size * 0.15,
-      screenPos.x, screenPos.y, size * 1.2
+      screenPos.x,
+      screenPos.y,
+      size * 0.15,
+      screenPos.x,
+      screenPos.y,
+      size * 1.2,
     );
     outerGlow.addColorStop(0, `rgba(134, 239, 172, ${0.55 * pulseAlpha})`);
     outerGlow.addColorStop(0.4, `rgba(74, 222, 128, ${0.35 * pulseAlpha})`);
     outerGlow.addColorStop(1, "rgba(34, 197, 94, 0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, size * 1.1, size * 0.65, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y,
+      size * 1.1,
+      size * 0.65,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Inner warm core - brighter for heroes
     const innerGlow = ctx.createRadialGradient(
-      screenPos.x, screenPos.y - size * 0.1, 0,
-      screenPos.x, screenPos.y, size * 0.55
+      screenPos.x,
+      screenPos.y - size * 0.1,
+      0,
+      screenPos.x,
+      screenPos.y,
+      size * 0.55,
     );
     innerGlow.addColorStop(0, `rgba(187, 247, 208, ${0.7 * pulseAlpha})`);
     innerGlow.addColorStop(0.45, `rgba(134, 239, 172, ${0.35 * pulseAlpha})`);
     innerGlow.addColorStop(1, "rgba(74, 222, 128, 0)");
     ctx.fillStyle = innerGlow;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y - size * 0.05, size * 0.55, size * 0.33, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y - size * 0.05,
+      size * 0.55,
+      size * 0.33,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Floating sparkle particles - more for heroes
     for (let i = 0; i < 8; i++) {
       const sparklePhase = (time * 0.65 + i * 0.125) % 1;
-      const sparkleX = screenPos.x + Math.sin(time * 1.6 + i * 1.0) * size * 0.45;
+      const sparkleX =
+        screenPos.x + Math.sin(time * 1.6 + i * 1.0) * size * 0.45;
       const sparkleY = screenPos.y + size * 0.2 - sparklePhase * size * 1.1;
       const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
       const sparkleSize = (2.2 + Math.sin(i * 1.1) * 0.7) * zoom;
@@ -180,12 +211,14 @@ export function renderHero(
 
     // Orbiting shimmer highlights - more for heroes
     for (let i = 0; i < 4; i++) {
-      const shimmerAngle = time * 0.9 + i * (Math.PI * 2 / 4);
+      const shimmerAngle = time * 0.9 + i * ((Math.PI * 2) / 4);
       const shimmerDist = size * 0.42;
       const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
-      const shimmerY = screenPos.y + Math.sin(shimmerAngle) * shimmerDist * 0.55;
-      const shimmerAlpha = (0.75 + Math.sin(time * 4.5 + i * 1.5) * 0.2) * pulseAlpha;
-      
+      const shimmerY =
+        screenPos.y + Math.sin(shimmerAngle) * shimmerDist * 0.55;
+      const shimmerAlpha =
+        (0.75 + Math.sin(time * 4.5 + i * 1.5) * 0.2) * pulseAlpha;
+
       ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha * 0.85})`;
       ctx.beginPath();
       ctx.arc(shimmerX, shimmerY, 2.0 * zoom, 0, Math.PI * 2);
@@ -197,7 +230,15 @@ export function renderHero(
     ctx.strokeStyle = `rgba(134, 239, 172, ${ringAlpha * pulseAlpha})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, size * 0.8, size * 0.48, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y,
+      size * 0.8,
+      size * 0.48,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
 
@@ -217,7 +258,13 @@ export function renderHero(
   // Background with gold trim effect
   ctx.fillStyle = "rgba(8, 8, 12, 0.95)";
   ctx.beginPath();
-  ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 1);
+  ctx.roundRect(
+    barX - 2,
+    barY - 2,
+    barWidth + 4,
+    barHeight + 4,
+    cornerRadius + 1,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.shadowOffsetY = 0;
@@ -244,7 +291,12 @@ export function renderHero(
 
   // Health gradient fill with vibrant colors
   if (hpWidth > 0) {
-    const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+    const hpGradient = ctx.createLinearGradient(
+      barX,
+      barY,
+      barX,
+      barY + barHeight,
+    );
     if (hpPercent > 0.5) {
       // Bright green - healthy hero
       hpGradient.addColorStop(0, "#a7f3d0");
@@ -266,17 +318,32 @@ export function renderHero(
     }
     ctx.fillStyle = hpGradient;
     ctx.beginPath();
-    ctx.roundRect(barX, barY, hpWidth, barHeight, [cornerRadius - 1, hpPercent > 0.92 ? cornerRadius - 1 : 0, hpPercent > 0.92 ? cornerRadius - 1 : 0, cornerRadius - 1]);
+    ctx.roundRect(barX, barY, hpWidth, barHeight, [
+      cornerRadius - 1,
+      hpPercent > 0.92 ? cornerRadius - 1 : 0,
+      hpPercent > 0.92 ? cornerRadius - 1 : 0,
+      cornerRadius - 1,
+    ]);
     ctx.fill();
 
     // Premium shine highlight
-    const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.5);
+    const shineGrad = ctx.createLinearGradient(
+      barX,
+      barY,
+      barX,
+      barY + barHeight * 0.5,
+    );
     shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
     shineGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
     shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
     ctx.fillStyle = shineGrad;
     ctx.beginPath();
-    ctx.roundRect(barX, barY, hpWidth, barHeight * 0.5, [cornerRadius - 1, hpPercent > 0.92 ? cornerRadius - 1 : 0, 0, 0]);
+    ctx.roundRect(barX, barY, hpWidth, barHeight * 0.5, [
+      cornerRadius - 1,
+      hpPercent > 0.92 ? cornerRadius - 1 : 0,
+      0,
+      0,
+    ]);
     ctx.fill();
 
     // Pulsing edge glow when low health
@@ -287,7 +354,13 @@ export function renderHero(
       ctx.strokeStyle = `rgba(239, 68, 68, ${pulseAlpha})`;
       ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
-      ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+      ctx.roundRect(
+        barX - 1,
+        barY - 1,
+        barWidth + 2,
+        barHeight + 2,
+        cornerRadius,
+      );
       ctx.stroke();
       ctx.shadowBlur = 0;
     }
@@ -314,7 +387,7 @@ function drawHeroSprite(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   switch (type) {
     case "tiger":
@@ -333,7 +406,7 @@ function drawHeroSprite(
         time,
         zoom,
         attackPhase,
-        targetPos
+        targetPos,
       );
       break;
     case "rocky":
@@ -341,13 +414,43 @@ function drawHeroSprite(
       break;
     case "scott":
     case "fscott":
-      drawFScottHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawFScottHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "captain":
-      drawCaptainHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawCaptainHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "engineer":
-      drawEngineerHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawEngineerHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     default:
       drawDefaultHero(ctx, x, y, size, color, time, zoom, attackPhase);
@@ -362,7 +465,7 @@ function drawDefaultHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
 ) {
   void attackPhase;
 

@@ -1875,18 +1875,54 @@ export function drawMortarCradleArm(
   const armGap = (level >= 3 ? 3.5 : level >= 2 ? 3 : 2.5) * zoom;
   const trunnionFrac = 0.32;
   const trunnionRecoil = tierRecoils[0] * 0.7 + tierRecoils[1] * 0.25;
-  const shelfEndFrac = 0.50;
+  const shelfEndFrac = 0.5;
   const shelfEndRecoil = tierRecoils[0] + tierRecoils[1] * 0.55;
 
   const armDefRaw = [
-    { frac: 0.01, recoil: tierRecoils[0] * 0.03, r: armR * 1.05, yOff: 5 * zoom, pad: armGap * 1.0 },
-    { frac: 0.10, recoil: tierRecoils[0] * 0.25, r: armR * 0.92, yOff: 0,         pad: armGap * 1.0 },
-    { frac: 0.20, recoil: tierRecoils[0] * 0.5,  r: armR * 0.78, yOff: 0,         pad: armGap * 0.7 },
-    { frac: trunnionFrac, recoil: trunnionRecoil,  r: armR * 0.55, yOff: 0,         pad: armGap * 0.15 },
-    { frac: 0.42, recoil: trunnionRecoil + (shelfEndRecoil - trunnionRecoil) * 0.5, r: armR * 0.40, yOff: 0, pad: 0 },
-    { frac: shelfEndFrac, recoil: shelfEndRecoil,  r: armR * 0.28, yOff: 0,         pad: 0 },
+    {
+      frac: 0.01,
+      recoil: tierRecoils[0] * 0.03,
+      r: armR * 1.05,
+      yOff: 5 * zoom,
+      pad: armGap * 1.0,
+    },
+    {
+      frac: 0.1,
+      recoil: tierRecoils[0] * 0.25,
+      r: armR * 0.92,
+      yOff: 0,
+      pad: armGap * 1.0,
+    },
+    {
+      frac: 0.2,
+      recoil: tierRecoils[0] * 0.5,
+      r: armR * 0.78,
+      yOff: 0,
+      pad: armGap * 0.7,
+    },
+    {
+      frac: trunnionFrac,
+      recoil: trunnionRecoil,
+      r: armR * 0.55,
+      yOff: 0,
+      pad: armGap * 0.15,
+    },
+    {
+      frac: 0.42,
+      recoil: trunnionRecoil + (shelfEndRecoil - trunnionRecoil) * 0.5,
+      r: armR * 0.4,
+      yOff: 0,
+      pad: 0,
+    },
+    {
+      frac: shelfEndFrac,
+      recoil: shelfEndRecoil,
+      r: armR * 0.28,
+      yOff: 0,
+      pad: 0,
+    },
   ];
-  const armDef = armDefRaw.map(a => ({
+  const armDef = armDefRaw.map((a) => ({
     ...a,
     offR: barrelRAtFrac(a.frac) + a.r + armGap + a.pad,
   }));
@@ -1932,10 +1968,22 @@ export function drawMortarCradleArm(
       const fB = Math.floor(dk.b + (md.b - dk.b) * bright);
       ctx.fillStyle = `rgb(${fR},${fG},${fB})`;
       ctx.beginPath();
-      ctx.moveTo(flangeBot.x + flangeVerts[i].x, flangeBot.y + flangeVerts[i].y);
-      ctx.lineTo(flangeBot.x + flangeVerts[ni].x, flangeBot.y + flangeVerts[ni].y);
-      ctx.lineTo(flangeTop.x + flangeVerts[ni].x, flangeTop.y + flangeVerts[ni].y);
-      ctx.lineTo(flangeTop.x + flangeVerts[i].x, flangeTop.y + flangeVerts[i].y);
+      ctx.moveTo(
+        flangeBot.x + flangeVerts[i].x,
+        flangeBot.y + flangeVerts[i].y,
+      );
+      ctx.lineTo(
+        flangeBot.x + flangeVerts[ni].x,
+        flangeBot.y + flangeVerts[ni].y,
+      );
+      ctx.lineTo(
+        flangeTop.x + flangeVerts[ni].x,
+        flangeTop.y + flangeVerts[ni].y,
+      );
+      ctx.lineTo(
+        flangeTop.x + flangeVerts[i].x,
+        flangeTop.y + flangeVerts[i].y,
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.05})`;
@@ -1948,8 +1996,10 @@ export function drawMortarCradleArm(
     for (let fi = 0; fi < hexSides; fi++) {
       if (sideNormals[fi] < -0.2) continue;
       const ni = (fi + 1) % hexSides;
-      const bx = flangeTop.x + (flangeVerts[fi].x + flangeVerts[ni].x) * 0.5 * 0.85;
-      const by = flangeTop.y + (flangeVerts[fi].y + flangeVerts[ni].y) * 0.5 * 0.85;
+      const bx =
+        flangeTop.x + (flangeVerts[fi].x + flangeVerts[ni].x) * 0.5 * 0.85;
+      const by =
+        flangeTop.y + (flangeVerts[fi].y + flangeVerts[ni].y) * 0.5 * 0.85;
       ctx.beginPath();
       ctx.arc(bx, by, 0.7 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -1957,7 +2007,14 @@ export function drawMortarCradleArm(
   }
 
   // ── BOTTOM CAP ──
-  drawHexCap(ctx, pts[0].center, pts[0].verts, metalDark, metalDark, 0.5 * zoom);
+  drawHexCap(
+    ctx,
+    pts[0].center,
+    pts[0].verts,
+    metalDark,
+    metalDark,
+    0.5 * zoom,
+  );
 
   // ── TAPERED OCTAGONAL PRISM SEGMENTS ──
   for (let si = 0; si < pts.length - 1; si++) {
@@ -1977,18 +2034,32 @@ export function drawMortarCradleArm(
       const faceMidX = (bot.verts[i].x + bot.verts[ni].x) * 0.5;
       const faceMidY = (bot.verts[i].y + bot.verts[ni].y) * 0.5;
       const faceGrad = ctx.createLinearGradient(
-        top.center.x + faceMidX, top.center.y + faceMidY,
-        bot.center.x + faceMidX, bot.center.y + faceMidY,
+        top.center.x + faceMidX,
+        top.center.y + faceMidY,
+        bot.center.x + faceMidX,
+        bot.center.y + faceMidY,
       );
-      faceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`);
+      faceGrad.addColorStop(
+        0,
+        `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`,
+      );
       faceGrad.addColorStop(0.4, `rgb(${fR},${fG},${fB})`);
-      faceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 14)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`);
+      faceGrad.addColorStop(
+        1,
+        `rgb(${Math.max(0, fR - 14)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`,
+      );
 
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
       ctx.moveTo(bot.center.x + bot.verts[i].x, bot.center.y + bot.verts[i].y);
-      ctx.lineTo(bot.center.x + bot.verts[ni].x, bot.center.y + bot.verts[ni].y);
-      ctx.lineTo(top.center.x + top.verts[ni].x, top.center.y + top.verts[ni].y);
+      ctx.lineTo(
+        bot.center.x + bot.verts[ni].x,
+        bot.center.y + bot.verts[ni].y,
+      );
+      ctx.lineTo(
+        top.center.x + top.verts[ni].x,
+        top.center.y + top.verts[ni].y,
+      );
       ctx.lineTo(top.center.x + top.verts[i].x, top.center.y + top.verts[i].y);
       ctx.closePath();
       ctx.fill();
@@ -2010,8 +2081,12 @@ export function drawMortarCradleArm(
             x: bot.center.x + (top.center.x - bot.center.x) * ribT + vLerp.x,
             y: bot.center.y + (top.center.y - bot.center.y) * ribT + vLerp.y,
           };
-          if (vi === i) { ctx.beginPath(); ctx.moveTo(ribPt.x, ribPt.y); }
-          else { ctx.lineTo(ribPt.x, ribPt.y); }
+          if (vi === i) {
+            ctx.beginPath();
+            ctx.moveTo(ribPt.x, ribPt.y);
+          } else {
+            ctx.lineTo(ribPt.x, ribPt.y);
+          }
         }
         ctx.strokeStyle = `rgba(${Math.max(0, fR - 20)},${Math.max(0, fG - 18)},${Math.max(0, fB - 16)},0.4)`;
         ctx.lineWidth = 0.8 * zoom;
@@ -2023,8 +2098,14 @@ export function drawMortarCradleArm(
         ctx.strokeStyle = `rgba(255,255,255,${0.06 + (bright - 0.55) * 0.2})`;
         ctx.lineWidth = 0.6 * zoom;
         ctx.beginPath();
-        ctx.moveTo(bot.center.x + bot.verts[ni].x, bot.center.y + bot.verts[ni].y);
-        ctx.lineTo(top.center.x + top.verts[ni].x, top.center.y + top.verts[ni].y);
+        ctx.moveTo(
+          bot.center.x + bot.verts[ni].x,
+          bot.center.y + bot.verts[ni].y,
+        );
+        ctx.lineTo(
+          top.center.x + top.verts[ni].x,
+          top.center.y + top.verts[ni].y,
+        );
         ctx.stroke();
       }
 
@@ -2041,8 +2122,14 @@ export function drawMortarCradleArm(
             x: bot.verts[ni].x + (top.verts[ni].x - bot.verts[ni].x) * t,
             y: bot.verts[ni].y + (top.verts[ni].y - bot.verts[ni].y) * t,
           };
-          const cx = bot.center.x + (top.center.x - bot.center.x) * t + (vL.x + vR.x) * 0.5 * 0.85;
-          const cy = bot.center.y + (top.center.y - bot.center.y) * t + (vL.y + vR.y) * 0.5 * 0.85;
+          const cx =
+            bot.center.x +
+            (top.center.x - bot.center.x) * t +
+            (vL.x + vR.x) * 0.5 * 0.85;
+          const cy =
+            bot.center.y +
+            (top.center.y - bot.center.y) * t +
+            (vL.y + vR.y) * 0.5 * 0.85;
           ctx.fillStyle = accent;
           ctx.beginPath();
           ctx.arc(cx, cy, 0.6 * zoom, 0, Math.PI * 2);
@@ -2056,7 +2143,10 @@ export function drawMortarCradleArm(
     }
 
     // Band ring at segment joints
-    drawHexBand(ctx, bot.verts, sideNormals,
+    drawHexBand(
+      ctx,
+      bot.verts,
+      sideNormals,
       { x: bot.center.x, y: bot.center.y + 1.2 * zoom },
       { x: bot.center.x, y: bot.center.y - 1.2 * zoom },
       1.08,
@@ -2065,14 +2155,22 @@ export function drawMortarCradleArm(
         if (level >= 3) return accent;
         return `rgb(${52 + Math.floor(b * 40)},${48 + Math.floor(b * 36)},${62 + Math.floor(b * 28)})`;
       },
-      "rgba(0,0,0,0.18)", 0.4 * zoom, -0.4,
+      "rgba(0,0,0,0.18)",
+      0.4 * zoom,
+      -0.4,
     );
   }
 
   // ── TOP CAP ──
   const tipPt = pts[pts.length - 1];
-  drawHexCap(ctx, tipPt.center, tipPt.verts,
-    isFront ? metalLight : metalMid, metalDark, 0.5 * zoom);
+  drawHexCap(
+    ctx,
+    tipPt.center,
+    tipPt.verts,
+    isFront ? metalLight : metalMid,
+    metalDark,
+    0.5 * zoom,
+  );
 
   // ── BARREL-CONNECTING STRUTS (short bolted bars from arm shelf to barrel) ──
   {
@@ -2086,8 +2184,10 @@ export function drawMortarCradleArm(
       const barrelSurfY = barrelPt.y + side * perpY * (bR + 1 * zoom);
 
       const strutGrad = ctx.createLinearGradient(
-        armPt.center.x, armPt.center.y - strutW * 0.5,
-        armPt.center.x, armPt.center.y + strutW * 0.5,
+        armPt.center.x,
+        armPt.center.y - strutW * 0.5,
+        armPt.center.x,
+        armPt.center.y + strutW * 0.5,
       );
       strutGrad.addColorStop(0, isFront ? metalLight : metalMid);
       strutGrad.addColorStop(0.5, metalMid);
@@ -2132,20 +2232,40 @@ export function drawMortarCradleArm(
     // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.12)";
     ctx.beginPath();
-    ctx.ellipse(piv.x, piv.y + 1.5 * zoom, pinR * 1.1, pinR * fS * 1.1, fAng, 0, Math.PI * 2);
+    ctx.ellipse(
+      piv.x,
+      piv.y + 1.5 * zoom,
+      pinR * 1.1,
+      pinR * fS * 1.1,
+      fAng,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Housing depth ring
     ctx.strokeStyle = metalDark;
     ctx.lineWidth = (level >= 3 ? 4 : 3) * zoom;
     ctx.beginPath();
-    ctx.ellipse(piv.x, piv.y + 1 * zoom, pinR * 0.95, pinR * 0.95 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(
+      piv.x,
+      piv.y + 1 * zoom,
+      pinR * 0.95,
+      pinR * 0.95 * fS,
+      fAng,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Hex housing face
     const housingGrad = ctx.createRadialGradient(
-      piv.x - pTx * pinR * 0.15, piv.y - pTy * pinR * 0.15, 0,
-      piv.x, piv.y, pinR,
+      piv.x - pTx * pinR * 0.15,
+      piv.y - pTy * pinR * 0.15,
+      0,
+      piv.x,
+      piv.y,
+      pinR,
     );
     housingGrad.addColorStop(0, isFront ? metalLight : metalMid);
     housingGrad.addColorStop(0.6, metalMid);
@@ -2179,7 +2299,15 @@ export function drawMortarCradleArm(
     ctx.strokeStyle = accent;
     ctx.lineWidth = (level >= 3 ? 1.6 : 1.1) * zoom;
     ctx.beginPath();
-    ctx.ellipse(piv.x, piv.y, pinR * 0.55, pinR * 0.55 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(
+      piv.x,
+      piv.y,
+      pinR * 0.55,
+      pinR * 0.55 * fS,
+      fAng,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Ball bearings (L2+)
@@ -2194,22 +2322,40 @@ export function drawMortarCradleArm(
         ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,0.2)";
         ctx.beginPath();
-        ctx.arc(bp.x - 0.2 * zoom, bp.y - 0.2 * zoom, 0.25 * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          bp.x - 0.2 * zoom,
+          bp.y - 0.2 * zoom,
+          0.25 * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
     }
 
     // Pin shaft
     const shaftGrad = ctx.createRadialGradient(
-      piv.x - pTx * pinR * 0.05, piv.y - pTy * pinR * 0.05, 0,
-      piv.x, piv.y, pinR * 0.35,
+      piv.x - pTx * pinR * 0.05,
+      piv.y - pTy * pinR * 0.05,
+      0,
+      piv.x,
+      piv.y,
+      pinR * 0.35,
     );
     shaftGrad.addColorStop(0, level >= 3 ? "#f0d860" : "#d0d0d8");
     shaftGrad.addColorStop(0.5, level >= 3 ? "#e8c840" : "#b0b0b8");
     shaftGrad.addColorStop(1, level >= 3 ? "#a08020" : "#808088");
     ctx.fillStyle = shaftGrad;
     ctx.beginPath();
-    ctx.ellipse(piv.x, piv.y, pinR * 0.3, pinR * 0.3 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(
+      piv.x,
+      piv.y,
+      pinR * 0.3,
+      pinR * 0.3 * fS,
+      fAng,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Keyway slot
@@ -2226,7 +2372,11 @@ export function drawMortarCradleArm(
     ctx.ellipse(
       piv.x - pTx * pinR * 0.08 - pNx * pinR * 0.04,
       piv.y - pTy * pinR * 0.08 - pNy * pinR * 0.04,
-      pinR * 0.1, pinR * 0.06, fAng, 0, Math.PI * 2,
+      pinR * 0.1,
+      pinR * 0.06,
+      fAng,
+      0,
+      Math.PI * 2,
     );
     ctx.fill();
 
@@ -2282,8 +2432,10 @@ export function drawMortarCradleArm(
     const cylNy = Math.sin(cylAng + Math.PI * 0.5);
 
     const cylGrad = ctx.createLinearGradient(
-      hydBase.x - cylNx * cylW, hydBase.y - cylNy * cylW,
-      hydBase.x + cylNx * cylW, hydBase.y + cylNy * cylW,
+      hydBase.x - cylNx * cylW,
+      hydBase.y - cylNy * cylW,
+      hydBase.x + cylNx * cylW,
+      hydBase.y + cylNy * cylW,
     );
     cylGrad.addColorStop(0, metalDark);
     cylGrad.addColorStop(0.3, isFront ? metalLight : metalMid);
@@ -2314,7 +2466,15 @@ export function drawMortarCradleArm(
 
     ctx.fillStyle = "rgba(20,20,25,0.45)";
     ctx.beginPath();
-    ctx.ellipse(hydMid.x, hydMid.y, cylW * 0.5, cylW * 0.32, cylAng, 0, Math.PI * 2);
+    ctx.ellipse(
+      hydMid.x,
+      hydMid.y,
+      cylW * 0.5,
+      cylW * 0.32,
+      cylAng,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = metalDark;
@@ -2332,7 +2492,13 @@ export function drawMortarCradleArm(
     ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,0.15)";
     ctx.beginPath();
-    ctx.arc(hydEnd.x - 0.2 * zoom, hydEnd.y - 0.2 * zoom, 0.35 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      hydEnd.x - 0.2 * zoom,
+      hydEnd.y - 0.2 * zoom,
+      0.35 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = isFront ? metalMid : metalDark;
@@ -2349,13 +2515,20 @@ export function drawMortarCradleArm(
 
     if (level >= 3) {
       for (const ls of [-1, 1]) {
-        const lsx = hydBase.x + (hydMid.x - hydBase.x) * 0.7 + ls * cylNx * cylW * 0.5;
-        const lsy = hydBase.y + (hydMid.y - hydBase.y) * 0.7 + ls * cylNy * cylW * 0.5;
+        const lsx =
+          hydBase.x + (hydMid.x - hydBase.x) * 0.7 + ls * cylNx * cylW * 0.5;
+        const lsy =
+          hydBase.y + (hydMid.y - hydBase.y) * 0.7 + ls * cylNy * cylW * 0.5;
         ctx.strokeStyle = "#2a2a2a";
         ctx.lineWidth = 0.6 * zoom;
         ctx.beginPath();
         ctx.moveTo(lsx, lsy);
-        ctx.quadraticCurveTo(lsx + ls * 2 * zoom, lsy + 3 * zoom, lsx + ls * 1 * zoom, lsy + 5 * zoom);
+        ctx.quadraticCurveTo(
+          lsx + ls * 2 * zoom,
+          lsy + 3 * zoom,
+          lsx + ls * 1 * zoom,
+          lsy + 5 * zoom,
+        );
         ctx.stroke();
         ctx.fillStyle = "#5a5a62";
         ctx.beginPath();
@@ -2369,12 +2542,24 @@ export function drawMortarCradleArm(
   if (level >= 2) {
     const brOff = side * -1.5 * zoom;
     const brStart: Pt = {
-      x: pts[0].center.x + perpX * brOff + (pts[1].center.x - pts[0].center.x) * 0.3,
-      y: pts[0].center.y + perpY * brOff + (pts[1].center.y - pts[0].center.y) * 0.3,
+      x:
+        pts[0].center.x +
+        perpX * brOff +
+        (pts[1].center.x - pts[0].center.x) * 0.3,
+      y:
+        pts[0].center.y +
+        perpY * brOff +
+        (pts[1].center.y - pts[0].center.y) * 0.3,
     };
     const brEnd: Pt = {
-      x: pts[3].center.x + (pts[4].center.x - pts[3].center.x) * 0.5 + perpX * brOff,
-      y: pts[3].center.y + (pts[4].center.y - pts[3].center.y) * 0.5 + perpY * brOff,
+      x:
+        pts[3].center.x +
+        (pts[4].center.x - pts[3].center.x) * 0.5 +
+        perpX * brOff,
+      y:
+        pts[3].center.y +
+        (pts[4].center.y - pts[3].center.y) * 0.5 +
+        perpY * brOff,
     };
     ctx.strokeStyle = level >= 3 ? "#6a6a72" : "#5a5a68";
     ctx.lineWidth = (level >= 3 ? 2 : 1.5) * zoom;
@@ -2388,8 +2573,15 @@ export function drawMortarCradleArm(
       const tbY = (brStart.y + brEnd.y) * 0.5;
       ctx.fillStyle = accent;
       ctx.beginPath();
-      ctx.ellipse(tbX, tbY, 2 * zoom, 1.2 * zoom,
-        Math.atan2(brEnd.y - brStart.y, brEnd.x - brStart.x), 0, Math.PI * 2);
+      ctx.ellipse(
+        tbX,
+        tbY,
+        2 * zoom,
+        1.2 * zoom,
+        Math.atan2(brEnd.y - brStart.y, brEnd.x - brStart.x),
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.strokeStyle = metalDark;
       ctx.lineWidth = 0.5 * zoom;
@@ -2409,7 +2601,10 @@ export function drawMortarCradleArm(
   if (level >= 2) {
     const lightPt: Pt = {
       x: pts[0].center.x + (pts[1].center.x - pts[0].center.x) * 0.45,
-      y: pts[0].center.y + (pts[1].center.y - pts[0].center.y) * 0.45 - 1.5 * zoom,
+      y:
+        pts[0].center.y +
+        (pts[1].center.y - pts[0].center.y) * 0.45 -
+        1.5 * zoom,
     };
     const isFlash = timeSinceFire < 400;
     ctx.fillStyle = "#2a2a30";
@@ -2417,8 +2612,12 @@ export function drawMortarCradleArm(
     ctx.arc(lightPt.x, lightPt.y, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = isFlash
-      ? level >= 3 ? "#ff4400" : "#ff8800"
-      : level >= 3 ? "#44aa44" : "#448844";
+      ? level >= 3
+        ? "#ff4400"
+        : "#ff8800"
+      : level >= 3
+        ? "#44aa44"
+        : "#448844";
     ctx.beginPath();
     ctx.arc(lightPt.x, lightPt.y, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();

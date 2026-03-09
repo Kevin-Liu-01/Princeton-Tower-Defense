@@ -3256,20 +3256,20 @@ export const HeroSprite: React.FC<{
         // === CYAN WORDS ORBITING HEAD ===
         {
           const headY = cy - 18 * scale + bounce;
-          const words = ["GATSBY", "dream", "green", "light"];
-          const wordCount = 4;
+          const words = ["GATSBY", "dream", "green", "light", "old sport", "jazz", "hope", "bay"];
+          const wordCount = 8;
           for (let i = 0; i < wordCount; i++) {
-            const angle = (i * Math.PI * 2 / wordCount) + (animated ? letterFloat : 0);
-            const orbitRx = 24 * scale;
-            const orbitRy = 12 * scale;
-            const bobY = animated ? Math.sin(t * 1.5 + i * 0.9) * 2 * scale : 0;
+            const angle = (i * Math.PI * 2 / wordCount) + (animated ? t * 0.6 : 0);
+            const orbitRx = 18 * scale;
+            const orbitRy = 9 * scale;
+            const bobY = animated ? Math.sin(t * 2 + i * 1.2) * 2 * scale : 0;
             const wordX = cx + Math.cos(angle) * orbitRx;
             const wordY = headY + Math.sin(angle) * orbitRy + bobY - 4 * scale;
             const depth = 0.6 + Math.sin(angle) * 0.4;
-            const fontSize = (3.5 + depth * 2) * scale;
-            ctx.font = `italic ${fontSize}px Georgia`;
+            const fontSize = (4 + depth * 3) * scale;
+            ctx.font = `italic bold ${fontSize}px Georgia`;
             ctx.textAlign = "center";
-            ctx.fillStyle = `rgba(0, 240, 230, ${0.3 + depth * 0.35})`;
+            ctx.fillStyle = `rgba(0, 230, 220, ${0.5 + depth * 0.4})`;
             ctx.shadowColor = "#00ffe0";
             ctx.shadowBlur = 6 * scale * depth;
             ctx.fillText(words[i], wordX, wordY);
@@ -4545,15 +4545,17 @@ export const HeroSprite: React.FC<{
         if (animated) {
           ctx.textAlign = "center";
           const trailWords = ["the", "green", "light", "across", "the", "bay"];
-          for (let i = 0; i < 5; i++) {
-            const wordPhase = (t * 0.35 + i * 0.3) % 1.8;
-            const wordX = cx + 12 * scale + wordPhase * 8 * scale + Math.sin(t + i) * 3 * scale;
-            const wordY = cy + 10 * scale - wordPhase * 16 * scale + bounce;
-            const alpha = Math.max(0, 1 - wordPhase / 1.8) * 0.7;
-            ctx.font = `italic ${(5 + (i % 2)) * scale}px Georgia`;
-            ctx.fillStyle = `rgba(0, 210, 200, ${alpha})`;
-            ctx.shadowColor = "#00d8d0";
-            ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < 4; i++) {
+            const wordPhase = (t * 0.3 + i * 0.35) % 2.0;
+            const drift = Math.sin(t * 0.8 + i * 1.3) * 4 * scale;
+            const wordX = cx + 14 * scale + wordPhase * 7 * scale + drift;
+            const wordY = cy + 8 * scale - wordPhase * 14 * scale + bounce;
+            const alpha = Math.max(0, 1 - wordPhase / 2.0) * 0.55;
+            const fontSize = (3.5 + (1 - wordPhase / 2.0) * 1.5) * scale;
+            ctx.font = `italic ${fontSize}px Georgia`;
+            ctx.fillStyle = `rgba(0, 220, 210, ${alpha})`;
+            ctx.shadowColor = "#00ffe0";
+            ctx.shadowBlur = 3 * scale * alpha;
             ctx.globalAlpha = alpha;
             ctx.fillText(trailWords[i % trailWords.length], wordX, wordY);
           }
