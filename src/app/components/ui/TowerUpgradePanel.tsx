@@ -155,19 +155,20 @@ function buildActionButtons(
 
   // --- Mortar special buttons (bottom-right quadrant) ---
   if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A") {
-    const hasRetarget = onRetargetMissile && !tower.mortarAutoAim;
+    const isAutoAim = tower.mortarAutoAim !== false;
+    const hasRetarget = onRetargetMissile && !isAutoAim;
     if (onToggleMissileAutoAim) {
       buttons.push({
         id: "autoaim",
         angle: hasRetarget ? -60 : 30,
-        icon: <Focus size={18} className={tower.mortarAutoAim ? "text-green-300" : "text-amber-300"} />,
-        label: tower.mortarAutoAim ? "Auto-Aim" : "Manual",
+        icon: <Focus size={18} className={isAutoAim ? "text-amber-300" : "text-green-300"} />,
+        label: isAutoAim ? "Manual" : "Auto-Aim",
         onClick: () => onToggleMissileAutoAim(tower.id),
-        borderColor: tower.mortarAutoAim ? "rgba(0,200,100,0.6)" : "rgba(180,140,60,0.5)",
-        glowColor: tower.mortarAutoAim ? "rgba(0,200,100,0.3)" : "rgba(180,140,60,0.2)",
-        bgGradient: tower.mortarAutoAim
-          ? "linear-gradient(180deg, #1a3a1a 0%, #0a200a 100%)"
-          : "linear-gradient(180deg, #3a2a1a 0%, #1a1008 100%)",
+        borderColor: isAutoAim ? "rgba(180,140,60,0.5)" : "rgba(0,200,100,0.6)",
+        glowColor: isAutoAim ? "rgba(180,140,60,0.2)" : "rgba(0,200,100,0.3)",
+        bgGradient: isAutoAim
+          ? "linear-gradient(180deg, #3a2a1a 0%, #1a1008 100%)"
+          : "linear-gradient(180deg, #1a3a1a 0%, #0a200a 100%)",
       });
     }
     if (hasRetarget) {

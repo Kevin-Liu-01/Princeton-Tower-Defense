@@ -587,6 +587,8 @@ export interface Projectile {
   aoeRadius?: number;
   // Speed multiplier (1.0 = normal, <1 = slower, >1 = faster)
   speed?: number;
+  // Delay before the projectile starts moving (ms). Counts down each tick.
+  spawnDelay?: number;
   // Visual customization
   color?: string;
   scale?: number;
@@ -628,6 +630,7 @@ export type EffectType =
   | "mortar_launch"
   | "mortar_impact"
   | "ember_field"
+  | "ember_impact"
   | "missile_trail"
   | "lightning_bolt"
   | "freeze_wave"

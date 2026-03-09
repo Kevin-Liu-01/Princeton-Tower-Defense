@@ -1209,13 +1209,57 @@ export function getProjectileOrigin(
   towerHeight: number,
   rotation: number,
 ): Position {
-  // Calculate the offset based on tower height and direction to target
   const barrelLength = 18;
   const elevationOffset = towerHeight * 0.8;
 
   return {
     x: towerPos.x + Math.cos(rotation) * barrelLength,
     y: towerPos.y + Math.sin(rotation) * barrelLength - elevationOffset,
+  };
+}
+
+/**
+ * Compute mortar barrel-tip origin offset and screen-space elevation.
+ * Matches the rendering geometry so projectiles appear to launch from
+ * the muzzle rather than the tower base.
+ */
+export function getMortarBarrelOrigin(
+  towerPos: Position,
+  targetPos: Position,
+  level: number,
+  upgrade?: string,
+): { from: Position; elevation: number } {
+  const isMissile = level === 4 && upgrade === "A";
+  const isEmber = level === 4 && upgrade === "B";
+
+  // Screen-space height of barrel tip above tower ground (at zoom=1).
+  // Derived from the rendering stack: wall(8) + plat(5) - overlap(1) + depot + barrel tiers.
+  const depotH = (22 + level * 10) * 0.42;
+  const baseToTopY = 12 + depotH;
+  let barrelTotalH: number;
+  if (isMissile) {
+    barrelTotalH = 27; // 10 + 9 + 8
+  } else if (isEmber) {
+    barrelTotalH = 21; // 8 + 7 + 6
+  } else {
+    barrelTotalH = (8 + level) * 2 + (6 + level * 0.5);
+  }
+  const elevation = baseToTopY + barrelTotalH;
+
+  // Forward offset in world space along the aim direction (barrel lean).
+  const dx = targetPos.x - towerPos.x;
+  const dy = targetPos.y - towerPos.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const barrelForward = isMissile ? 10 : isEmber ? 8 : 6 + level;
+  const nx = dist > 0 ? dx / dist : 0;
+  const ny = dist > 0 ? dy / dist : 0;
+
+  return {
+    from: {
+      x: towerPos.x + nx * barrelForward,
+      y: towerPos.y + ny * barrelForward,
+    },
+    elevation,
   };
 }
 

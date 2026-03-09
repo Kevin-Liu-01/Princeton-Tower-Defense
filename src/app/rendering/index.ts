@@ -3226,6 +3226,104 @@ export function renderEffect(
       break;
     }
 
+    case "ember_impact": {
+      const ep = progress;
+      const ex = screenPos.x;
+      const ey = screenPos.y;
+      const esz = effect.size * zoom;
+      const eSeed = hashString32(effect.id);
+      const eBlobPts = 14;
+
+      // Molten lava puddle — flat isometric ellipse that lingers and cools
+      const puddleR = esz * 0.55 * (0.3 + Math.min(1, ep * 3) * 0.7);
+      const puddleCool = Math.max(0, ep - 0.4) / 0.6;
+      const puddleAlpha = alpha * (1 - puddleCool * 0.5);
+      const lavaR = Math.floor(220 - puddleCool * 100);
+      const lavaG = Math.floor(100 - puddleCool * 70);
+      const lavaB = Math.floor(10 + puddleCool * 15);
+      ctx.fillStyle = `rgba(${lavaR}, ${lavaG}, ${lavaB}, ${puddleAlpha * 0.5})`;
+      drawOrganicBlobAt(ctx, ex, ey, puddleR, puddleR * 0.45, eSeed, 0.15, eBlobPts);
+      ctx.fill();
+
+      // Inner bright core — hot magma center
+      if (ep < 0.7) {
+        const coreAlpha = (1 - ep / 0.7) * alpha;
+        const coreR = puddleR * 0.5;
+        ctx.fillStyle = `rgba(255, 200, 60, ${coreAlpha * 0.6})`;
+        drawOrganicBlobAt(ctx, ex, ey, coreR, coreR * 0.45, eSeed + 1, 0.2, 10);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 180, ${coreAlpha * 0.4})`;
+        drawOrganicBlobAt(ctx, ex, ey, coreR * 0.4, coreR * 0.18, eSeed + 2, 0.15, 8);
+        ctx.fill();
+      }
+
+      // Lava splatter — droplets flying outward
+      if (ep < 0.5) {
+        const splatP = ep / 0.5;
+        const splatCount = 8;
+        for (let ls = 0; ls < splatCount; ls++) {
+          const sAngle = (ls / splatCount) * Math.PI * 2 + eSeed * 0.1;
+          const sDist = esz * 0.35 * splatP * (0.6 + (ls % 3) * 0.25);
+          const sx = ex + Math.cos(sAngle) * sDist;
+          const sy = ey + Math.sin(sAngle) * sDist * 0.5 - splatP * (1 - splatP) * 14 * zoom;
+          const sSize = (1.8 + (ls & 1) * 1.2) * zoom * (1 - splatP);
+          if (sSize < 0.4) continue;
+          const sGlow = ls % 3 === 0 ? 255 : 200;
+          ctx.fillStyle = `rgba(${sGlow}, ${80 + ls * 8}, 10, ${alpha * (1 - splatP) * 0.7})`;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, sSize, sSize * 0.7, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Expanding heat wave ring
+      const heatP = Math.min(1, ep * 2);
+      const heatR = esz * heatP * 0.7;
+      const heatAlpha = (1 - heatP) * alpha * 0.35;
+      if (heatAlpha > 0.01) {
+        ctx.strokeStyle = `rgba(255, 120, 20, ${heatAlpha})`;
+        ctx.lineWidth = Math.max(1, 2.5 * zoom * (1 - heatP));
+        drawOrganicBlobAt(ctx, ex, ey, heatR, heatR * 0.45, eSeed + 5, 0.1, eBlobPts);
+        ctx.stroke();
+      }
+
+      // Rising ember sparks (later phase)
+      if (ep > 0.15) {
+        const sparkP = (ep - 0.15) / 0.85;
+        for (let sp = 0; sp < 5; sp++) {
+          const spT = Math.min(1, sparkP + sp * 0.12);
+          const sparkAngle = (sp / 5) * Math.PI * 2 + eSeed * 0.3;
+          const sparkDrift = Math.sin(spT * 4 + sp) * 5 * zoom;
+          const sparkX = ex + Math.cos(sparkAngle) * esz * 0.15 + sparkDrift;
+          const sparkY = ey - spT * 30 * zoom + Math.sin(sparkAngle) * esz * 0.08;
+          const sparkA = alpha * (1 - spT) * 0.6;
+          if (sparkA < 0.01) continue;
+          const sparkSize = (1.5 + sp * 0.4) * zoom * (1 - spT * 0.5);
+          ctx.fillStyle = `rgba(255, ${140 + sp * 20}, ${20 + sp * 10}, ${sparkA})`;
+          ctx.beginPath();
+          ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Smoke plumes (mid-to-late)
+      if (ep > 0.3) {
+        const smokeP = (ep - 0.3) / 0.7;
+        for (let sm = 0; sm < 3; sm++) {
+          const smT = Math.min(1, smokeP + sm * 0.15);
+          const smokeX = ex + Math.sin(smT * 2.5 + sm * 1.8) * 6 * zoom;
+          const smokeY = ey - smT * 32 * zoom;
+          const smokeR = (5 + sm * 3) * zoom * smT;
+          const smokeA = alpha * (1 - smT) * 0.2;
+          if (smokeA < 0.01) continue;
+          ctx.fillStyle = `rgba(60, 45, 30, ${smokeA})`;
+          drawOrganicBlobAt(ctx, smokeX, smokeY, smokeR, smokeR * 0.8, eSeed + 10 + sm, 0.2, 10);
+          ctx.fill();
+        }
+      }
+      break;
+    }
+
     case "ember_field": {
       // Burning ember pile on the ground
       const emberSize = effect.size * zoom;
@@ -3290,15 +3388,17 @@ export function renderMissileTargetReticle(
 ): void {
   const pulse = 0.6 + Math.sin(timeSeconds * 3) * 0.4;
   const rotAngle = timeSeconds * 0.8;
-  const outerRadius = 28 * zoom;
-  const innerRadius = 8 * zoom;
+  const outerRadius = 48 * zoom;
+  const innerRadius = 14 * zoom;
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
 
-  // Outer pulsing ring (isometric)
+  // Everything inside isometric scale
   ctx.save();
   ctx.scale(1, ISO_Y_RATIO);
+
+  // Outer pulsing ring
   ctx.strokeStyle = `rgba(255, 80, 0, ${0.35 + pulse * 0.25})`;
   ctx.lineWidth = 2 * zoom;
   ctx.setLineDash([6 * zoom, 4 * zoom]);
@@ -3316,9 +3416,8 @@ export function renderMissileTargetReticle(
   ctx.beginPath();
   ctx.arc(0, 0, innerRadius * 2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
 
-  // Rotating crosshair lines
+  // Rotating crosshair lines (isometric-correct)
   ctx.rotate(rotAngle);
   ctx.strokeStyle = `rgba(255, 140, 0, ${0.5 + pulse * 0.3})`;
   ctx.lineWidth = 1.5 * zoom;
@@ -3327,8 +3426,8 @@ export function renderMissileTargetReticle(
     const cos = Math.cos(a);
     const sin = Math.sin(a);
     ctx.beginPath();
-    ctx.moveTo(cos * innerRadius, sin * innerRadius * ISO_Y_RATIO);
-    ctx.lineTo(cos * outerRadius * 0.7, sin * outerRadius * 0.7 * ISO_Y_RATIO);
+    ctx.moveTo(cos * innerRadius, sin * innerRadius);
+    ctx.lineTo(cos * outerRadius * 0.7, sin * outerRadius * 0.7);
     ctx.stroke();
   }
 
@@ -3337,6 +3436,8 @@ export function renderMissileTargetReticle(
   ctx.beginPath();
   ctx.arc(0, 0, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.restore();
 
   ctx.restore();
 }

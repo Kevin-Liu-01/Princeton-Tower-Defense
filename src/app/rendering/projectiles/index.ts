@@ -1342,6 +1342,8 @@ export function renderProjectile(
   cameraZoom?: number,
   projectileDensityHint: number = 0
 ) {
+  if (proj.spawnDelay && proj.spawnDelay > 0) return;
+
   const zoom = cameraZoom || 1;
   const t = proj.progress;
   const time = _cachedTime || Date.now() / 1000;

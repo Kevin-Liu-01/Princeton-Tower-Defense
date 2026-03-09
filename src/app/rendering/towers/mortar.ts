@@ -5963,6 +5963,40 @@ export function renderMortarEmberTurret(
         },
         "rgba(0,0,0,0.18)", 0.5 * zoom, -0.3,
       );
+
+      // Orange ember lights at tier junction (camera-facing sides only)
+      const eLightsCount = ti === 0 ? 3 : 2;
+      for (let ei = 0; ei < eLightsCount; ei++) {
+        const ea = (ei / eLightsCount) * Math.PI * 2 + ti * 0.6;
+        const elat = Math.cos(ea) * tier.r * 1.12;
+        const edep = Math.sin(ea) * tier.r * 1.12 * ISO_Y_RATIO;
+        const epx = topCenter.x + elat * bNx + edep * bAx;
+        const epy = topCenter.y + elat * bNy + edep * bAy;
+        const eDot = Math.cos(ea) * bNx + Math.sin(ea) * ISO_Y_RATIO * bAx
+          + Math.cos(ea) * bNy + Math.sin(ea) * ISO_Y_RATIO * bAy;
+        if (eDot < 0.2) continue;
+
+        const eFlicker = Math.sin(time * 5 + ei * 1.8 + ti * 2.5) > 0.3;
+        const eHeat = timeSinceFire < 2000 ? (1 - timeSinceFire / 2000) : 0;
+        const eBright = eFlicker || eHeat > 0.3;
+        const eColor = eBright ? "#ff8800" : "#552200";
+        const eGlowA = eBright ? 0.3 + eHeat * 0.2 : 0;
+
+        if (eGlowA > 0) {
+          const egR = 3.5 * zoom;
+          const egGrad = ctx.createRadialGradient(epx, epy, 0, epx, epy, egR);
+          egGrad.addColorStop(0, `rgba(255,136,0,${eGlowA})`);
+          egGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = egGrad;
+          ctx.beginPath();
+          ctx.arc(epx, epy, egR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = eColor;
+        ctx.beginPath();
+        ctx.arc(epx, epy, 1.1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     cumH += tier.h;
   }
@@ -6814,6 +6848,42 @@ export function renderMortarMissileSilo(
         },
         "rgba(0,0,0,0.15)", 0.5 * zoom, -0.3,
       );
+
+      // Status lights at tier junction (only on camera-facing sides)
+      const lightsPerTier = ti === 0 ? 3 : 2;
+      for (let si = 0; si < lightsPerTier; si++) {
+        const la = (si / lightsPerTier) * Math.PI * 2 + ti * 0.5;
+        const llat = Math.cos(la) * tier.r * 1.08;
+        const ldep = Math.sin(la) * tier.r * 1.08 * ISO_Y_RATIO;
+        const lpx = topCenter.x + llat * bNx + ldep * bAx;
+        const lpy = topCenter.y + llat * bNy + ldep * bAy;
+        const faceDot = Math.cos(la) * bNx + Math.sin(la) * ISO_Y_RATIO * bAx
+          + Math.cos(la) * bNy + Math.sin(la) * ISO_Y_RATIO * bAy;
+        if (faceDot < 0.2) continue;
+
+        const lMSince = timeSinceFire - si * 150 - ti * 450;
+        const lFiring = lMSince >= 0 && lMSince < 400;
+        const lOn = Math.sin(time * 4 + si * 2.1 + ti * 1.3) > 0.4;
+        const lColor = lFiring ? "#ff2200" : lOn ? "#00ff44" : "#003310";
+        const lGlowA = lFiring ? 0.35 : lOn ? 0.15 : 0;
+
+        if (lGlowA > 0) {
+          const lgR = 3 * zoom;
+          const lgGrad = ctx.createRadialGradient(lpx, lpy, 0, lpx, lpy, lgR);
+          lgGrad.addColorStop(0, lFiring
+            ? `rgba(255,34,0,${lGlowA})`
+            : `rgba(0,255,68,${lGlowA})`);
+          lgGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = lgGrad;
+          ctx.beginPath();
+          ctx.arc(lpx, lpy, lgR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = lColor;
+        ctx.beginPath();
+        ctx.arc(lpx, lpy, 1.1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
     cumH += tier.h;
   }
@@ -6825,6 +6895,35 @@ export function renderMortarMissileSilo(
   drawMortarCradleArm(ctx, { ...backArmBase, drawPhase: "front-arc" });
   drawMortarCradleArm(ctx, { ...frontArmBase, drawPhase: "front-arc" });
 
+
+  // === TARGETING MODE INDICATOR (wraps around barrel, drawn before muzzle cap) ===
+  {
+    const isAuto = tower.mortarAutoAim !== false;
+    const pulseA = 0.3 + Math.sin(time * 4) * 0.15;
+    ctx.strokeStyle = isAuto
+      ? `rgba(0,200,100,${pulseA})`
+      : `rgba(255,140,0,${pulseA})`;
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.setLineDash([4 * zoom, 3 * zoom]);
+    ctx.lineDashOffset = -time * 30;
+    const aiFrac = 0.55;
+    const aiCenter = posAtFrac(aiFrac, 0);
+    const aiR = tiers[1].r * 1.2;
+    const aiSegs = 24;
+    ctx.beginPath();
+    for (let i = 0; i <= aiSegs; i++) {
+      const a = (i / aiSegs) * Math.PI * 2;
+      const lat = Math.cos(a) * aiR;
+      const dep = Math.sin(a) * aiR * ISO_Y_RATIO;
+      const px = aiCenter.x + lat * bNx + dep * bAx;
+      const py = aiCenter.y + lat * bNy + dep * bAy;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // === MUZZLE CAP WITH LAUNCH TUBES ===
   {
@@ -6871,194 +6970,256 @@ export function renderMortarMissileSilo(
 
     drawHexCap(ctx, tipPt, rimVerts, "#445238", "rgba(0,0,0,0.15)", 0.6 * zoom);
 
-    const podRows = 3;
-    const podCols = 2;
-    const tubeR = 3.5 * zoom;
-    const tubeSpacing = 6.5 * zoom;
+    const tubeR = 3.2 * zoom;
+    const ringDist = topTier.r * 0.52;
+    const podPositions: { lat: number; dep: number; idx: number }[] = [];
+    for (let hi = 0; hi < 6; hi++) {
+      const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
+      podPositions.push({
+        lat: Math.cos(ha) * ringDist,
+        dep: Math.sin(ha) * ringDist * ISO_Y_RATIO,
+        idx: hi,
+      });
+    }
 
-    for (let row = 0; row < podRows; row++) {
-      for (let col = 0; col < podCols; col++) {
-        const podIdx = row * podCols + col;
-        const lat = (col - 0.5) * tubeSpacing;
-        const dep = (row - 1) * tubeSpacing * ISO_Y_RATIO;
-        const tubeX = tipPt.x + lat * bNx + dep * bAx;
-        const tubeY = tipPt.y + lat * bNy + dep * bAy;
+    podPositions.sort((a, b) => {
+      const ay = tipPt.y + a.lat * bNy + a.dep * bAy;
+      const by = tipPt.y + b.lat * bNy + b.dep * bAy;
+      return ay - by;
+    });
 
-        const collarGrad = ctx.createRadialGradient(
-          tubeX, tubeY, 0, tubeX, tubeY, tubeR * 1.3,
+    for (let pi = 0; pi < podPositions.length; pi++) {
+      const pod = podPositions[pi];
+      const podIdx = pod.idx;
+      const tubeX = tipPt.x + pod.lat * bNx + pod.dep * bAx;
+      const tubeY = tipPt.y + pod.lat * bNy + pod.dep * bAy;
+
+      const outerCollar = ctx.createRadialGradient(
+        tubeX - tubeR * 0.15, tubeY - tubeR * 0.08, 0,
+        tubeX, tubeY, tubeR * 1.5,
+      );
+      outerCollar.addColorStop(0, "#6a6a76");
+      outerCollar.addColorStop(0.3, "#52525e");
+      outerCollar.addColorStop(0.7, "#3a3a46");
+      outerCollar.addColorStop(1, "#22222e");
+      ctx.fillStyle = outerCollar;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 1.4, tubeR * 0.78, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#5e5e6c";
+      ctx.lineWidth = 1.0 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 1.4, tubeR * 0.78, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const midCollar = ctx.createRadialGradient(
+        tubeX - tubeR * 0.1, tubeY - tubeR * 0.06, tubeR * 0.1,
+        tubeX, tubeY, tubeR * 1.15,
+      );
+      midCollar.addColorStop(0, "#585864");
+      midCollar.addColorStop(0.5, "#44444e");
+      midCollar.addColorStop(1, "#2e2e38");
+      ctx.fillStyle = midCollar;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 1.15, tubeR * 0.64, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(120,120,140,0.25)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 1.15, tubeR * 0.64, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const boreGrad = ctx.createRadialGradient(
+        tubeX + tubeR * 0.08, tubeY + tubeR * 0.04, 0,
+        tubeX, tubeY, tubeR * 0.92,
+      );
+      boreGrad.addColorStop(0, "#020202");
+      boreGrad.addColorStop(0.5, "#080606");
+      boreGrad.addColorStop(0.85, "#0f0c0e");
+      boreGrad.addColorStop(1, "#1a1618");
+      ctx.fillStyle = boreGrad;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 0.92, tubeR * 0.52, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(60,55,70,0.35)";
+      ctx.lineWidth = 0.3 * zoom;
+      for (let rg = 0; rg < 8; rg++) {
+        const ra = (rg / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(
+          tubeX + Math.cos(ra) * tubeR * 0.18,
+          tubeY + Math.sin(ra) * tubeR * 0.1,
         );
-        collarGrad.addColorStop(0, "#4a4a56");
-        collarGrad.addColorStop(0.6, "#3a3a44");
-        collarGrad.addColorStop(1, "#2a2a34");
-        ctx.fillStyle = collarGrad;
-        ctx.beginPath();
-        ctx.ellipse(tubeX, tubeY, tubeR * 1.28, tubeR * 0.72, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#5a5a68";
-        ctx.lineWidth = 0.8 * zoom;
-        ctx.stroke();
-        ctx.strokeStyle = "#4a4a54";
-        ctx.lineWidth = 0.5 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(tubeX, tubeY, tubeR * 1.05, tubeR * 0.59, 0, 0, Math.PI * 2);
-        ctx.stroke();
-
-        const boreGrad = ctx.createRadialGradient(
-          tubeX, tubeY, 0, tubeX, tubeY, tubeR * 0.88,
+        ctx.lineTo(
+          tubeX + Math.cos(ra) * tubeR * 0.85,
+          tubeY + Math.sin(ra) * tubeR * 0.48,
         );
-        boreGrad.addColorStop(0, "#040303");
-        boreGrad.addColorStop(0.7, "#0a0808");
-        boreGrad.addColorStop(1, "#161214");
-        ctx.fillStyle = boreGrad;
-        ctx.beginPath();
-        ctx.ellipse(tubeX, tubeY, tubeR * 0.88, tubeR * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.stroke();
+      }
 
-        ctx.strokeStyle = "rgba(30,30,35,0.3)";
-        ctx.lineWidth = 0.2 * zoom;
-        for (let rg = 0; rg < 6; rg++) {
-          const ra = (rg / 6) * Math.PI * 2;
-          ctx.beginPath();
-          ctx.moveTo(
-            tubeX + Math.cos(ra) * tubeR * 0.2,
-            tubeY + Math.sin(ra) * tubeR * 0.11,
-          );
-          ctx.lineTo(
-            tubeX + Math.cos(ra) * tubeR * 0.82,
-            tubeY + Math.sin(ra) * tubeR * 0.46,
-          );
-          ctx.stroke();
-        }
+      ctx.strokeStyle = "rgba(90,90,105,0.15)";
+      ctx.lineWidth = 0.3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(tubeX, tubeY, tubeR * 0.55, tubeR * 0.31, 0, 0, Math.PI * 2);
+      ctx.stroke();
 
-        const fireDelay = podIdx * 200;
-        const mSince = timeSinceFire - fireDelay;
-        const isLaunching = mSince >= 0 && mSince < 400;
-        const isEmpty = mSince >= 400 && mSince < 1500;
-        const isReloading = mSince >= 1500 && mSince < 2200;
-        const isReady = mSince < 0 || mSince >= 2200;
+      const fireDelay = podIdx * 150;
+      const mSince = timeSinceFire - fireDelay;
+      const launchDur = 350;
+      const emptyDur = 800;
+      const reloadDur = 600;
+      const isLaunching = mSince >= 0 && mSince < launchDur;
+      const isEmpty = mSince >= launchDur && mSince < launchDur + emptyDur;
+      const isReloading = mSince >= launchDur + emptyDur && mSince < launchDur + emptyDur + reloadDur;
+      const isReady = mSince < 0 || mSince >= launchDur + emptyDur + reloadDur;
 
-        if (isReady || isReloading) {
-          const reloadT = isReloading ? (mSince - 1500) / 700 : 1;
-          const noseProtrude = reloadT * 3 * zoom;
-          const noseX = tubeX + bAx * noseProtrude;
-          const noseY = tubeY + bAy * noseProtrude;
-          ctx.fillStyle = "#cc2200";
-          ctx.beginPath();
-          ctx.ellipse(noseX, noseY, tubeR * 0.55, tubeR * 0.32, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#ff4400";
-          ctx.beginPath();
-          ctx.arc(
-            noseX + bAx * 2 * zoom, noseY + bAy * 2 * zoom,
-            tubeR * 0.22, 0, Math.PI * 2,
-          );
-          ctx.fill();
-          if (reloadT > 0.8) {
-            ctx.strokeStyle = "#8a8a8a";
-            ctx.lineWidth = 0.6 * zoom;
-            for (let f = 0; f < 4; f++) {
-              const fa = (f / 4) * Math.PI * 2;
-              ctx.beginPath();
-              ctx.moveTo(
-                tubeX + Math.cos(fa) * tubeR * 0.5,
-                tubeY + Math.sin(fa) * tubeR * 0.28,
-              );
-              ctx.lineTo(
-                tubeX + Math.cos(fa) * tubeR * 0.85,
-                tubeY + Math.sin(fa) * tubeR * 0.48,
-              );
-              ctx.stroke();
-            }
-          }
-        }
-
-        if (isEmpty) {
-          const deepBore = ctx.createRadialGradient(
-            tubeX, tubeY, 0, tubeX, tubeY, tubeR * 0.8,
-          );
-          deepBore.addColorStop(0, "#050404");
-          deepBore.addColorStop(1, "#1a1515");
-          ctx.fillStyle = deepBore;
-          ctx.beginPath();
-          ctx.ellipse(tubeX, tubeY, tubeR * 0.8, tubeR * 0.45, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      // Draw missile when ready, reloading, or fading out during launch
+      const showMissile = isReady || isReloading || isLaunching;
+      if (showMissile) {
+        let missileAlpha = 1;
+        let protrude = 3.5 * zoom;
 
         if (isLaunching) {
-          const launchT = mSince / 400;
-          const mRiseY = -launchT * 25 * zoom;
-          const mFwdDist = launchT * launchT * 18 * zoom;
-          const mAlpha = Math.max(0, 1 - launchT);
-          const mX = tubeX + bAx * mFwdDist;
-          const mY = tubeY + mRiseY + bAy * mFwdDist;
-
-          ctx.globalAlpha = mAlpha;
-          const mLen = 6 * zoom;
-          const mWid = 1.8 * zoom;
-          ctx.fillStyle = "#cc2200";
-          ctx.beginPath();
-          ctx.moveTo(mX + bAx * mLen, mY + bAy * mLen);
-          ctx.lineTo(mX + bNx * mWid, mY + bNy * mWid);
-          ctx.lineTo(mX - bAx * mLen * 0.4, mY - bAy * mLen * 0.4);
-          ctx.lineTo(mX - bNx * mWid, mY - bNy * mWid);
-          ctx.closePath();
-          ctx.fill();
-          ctx.fillStyle = "#ff5500";
-          ctx.beginPath();
-          ctx.arc(
-            mX + bAx * mLen * 1.15, mY + bAy * mLen * 1.15,
-            1.2 * zoom, 0, Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.strokeStyle = `rgba(150,150,150,${mAlpha})`;
-          ctx.lineWidth = 0.8 * zoom;
-          for (const s of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(mX - bAx * mLen * 0.3, mY - bAy * mLen * 0.3);
-            ctx.lineTo(
-              mX - bAx * mLen * 0.4 + bNx * s * 3 * zoom,
-              mY - bAy * mLen * 0.4 + bNy * s * 3 * zoom,
-            );
-            ctx.stroke();
-          }
-          ctx.fillStyle = `rgba(255,200,60,${mAlpha * 0.7})`;
-          ctx.beginPath();
-          ctx.arc(
-            mX - bAx * mLen * 0.5, mY - bAy * mLen * 0.5,
-            (1.5 + launchT * 2) * zoom, 0, Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.fillStyle = `rgba(255,120,20,${mAlpha * 0.4})`;
-          ctx.beginPath();
-          ctx.arc(
-            mX - bAx * mLen * 0.8, mY - bAy * mLen * 0.8 + zoom,
-            (2 + launchT * 3) * zoom, 0, Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.fillStyle = `rgba(180,180,180,${mAlpha * 0.25})`;
-          ctx.beginPath();
-          ctx.arc(
-            mX - bAx * mLen * 1.2, mY - bAy * mLen * 1.2 + 2 * zoom,
-            (3 + launchT * 4) * zoom, 0, Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.globalAlpha = 1;
-
-          if (mSince < 180) {
-            const flashA = (1 - mSince / 180) * 0.5;
-            const flashR_tube = tubeR * 2.5;
-            const flashGrad = ctx.createRadialGradient(
-              tubeX, tubeY, 0, tubeX, tubeY, flashR_tube,
-            );
-            flashGrad.addColorStop(0, `rgba(255,220,120,${flashA})`);
-            flashGrad.addColorStop(0.5, `rgba(255,140,40,${flashA * 0.5})`);
-            flashGrad.addColorStop(1, "rgba(255,80,0,0)");
-            ctx.fillStyle = flashGrad;
-            ctx.beginPath();
-            ctx.arc(tubeX, tubeY, flashR_tube, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          const t = mSince / launchDur;
+          missileAlpha = Math.max(0, 1 - t * t);
+        } else if (isReloading) {
+          const t = Math.min(1, (mSince - launchDur - emptyDur) / reloadDur);
+          const easeT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          protrude = easeT * 3.5 * zoom;
+          missileAlpha = easeT;
         }
+
+        ctx.globalAlpha = missileAlpha;
+        const noseX = tubeX + bAx * protrude;
+        const noseY = tubeY + bAy * protrude;
+        const bodyLen = tubeR * 0.7;
+        const bodyW = tubeR * 0.38;
+
+        // Metallic body (#999 / #ccc / #aaa — matches in-flight)
+        const mBodyGrad = ctx.createLinearGradient(
+          noseX - bNx * bodyW, noseY - bNy * bodyW,
+          noseX + bNx * bodyW, noseY + bNy * bodyW,
+        );
+        mBodyGrad.addColorStop(0, "#555");
+        mBodyGrad.addColorStop(0.2, "#999");
+        mBodyGrad.addColorStop(0.5, "#ccc");
+        mBodyGrad.addColorStop(0.8, "#777");
+        mBodyGrad.addColorStop(1, "#555");
+        ctx.fillStyle = mBodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(noseX + bAx * bodyLen * 0.4, noseY + bAy * bodyLen * 0.4);
+        ctx.lineTo(noseX + bNx * bodyW, noseY + bNy * bodyW);
+        ctx.lineTo(noseX - bAx * bodyLen * 0.3, noseY - bAy * bodyLen * 0.3);
+        ctx.lineTo(noseX - bNx * bodyW, noseY - bNy * bodyW);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.stroke();
+
+        // Red warhead (#cc1100 / #ee2200 / #991100 — matches in-flight)
+        const warheadGrad = ctx.createLinearGradient(
+          noseX - bNx * bodyW * 0.7, noseY - bNy * bodyW * 0.7,
+          noseX + bNx * bodyW * 0.7, noseY + bNy * bodyW * 0.7,
+        );
+        warheadGrad.addColorStop(0, "#991100");
+        warheadGrad.addColorStop(0.3, "#cc1100");
+        warheadGrad.addColorStop(0.5, "#ee2200");
+        warheadGrad.addColorStop(0.7, "#cc1100");
+        warheadGrad.addColorStop(1, "#991100");
+        ctx.fillStyle = warheadGrad;
+        ctx.beginPath();
+        ctx.moveTo(noseX + bAx * bodyLen, noseY + bAy * bodyLen);
+        ctx.lineTo(noseX + bNx * bodyW * 0.85, noseY + bNy * bodyW * 0.85);
+        ctx.lineTo(noseX + bAx * bodyLen * 0.4, noseY + bAy * bodyLen * 0.4);
+        ctx.lineTo(noseX - bNx * bodyW * 0.85, noseY - bNy * bodyW * 0.85);
+        ctx.closePath();
+        ctx.fill();
+
+        // Yellow hazard stripe (#ffcc00 — matches in-flight)
+        ctx.strokeStyle = "#ffcc00";
+        ctx.lineWidth = 0.6 * zoom;
+        const stripePos = 0.42;
+        ctx.beginPath();
+        ctx.moveTo(
+          noseX + bAx * bodyLen * stripePos + bNx * bodyW * 0.8,
+          noseY + bAy * bodyLen * stripePos + bNy * bodyW * 0.8,
+        );
+        ctx.lineTo(
+          noseX + bAx * bodyLen * stripePos - bNx * bodyW * 0.8,
+          noseY + bAy * bodyLen * stripePos - bNy * bodyW * 0.8,
+        );
+        ctx.stroke();
+
+        // Seeker nose (#223 — matches in-flight)
+        ctx.fillStyle = "#223";
+        ctx.beginPath();
+        ctx.arc(
+          noseX + bAx * bodyLen * 1.05, noseY + bAy * bodyLen * 1.05,
+          tubeR * 0.15, 0, Math.PI * 2,
+        );
+        ctx.fill();
+
+        // Specular highlight
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        ctx.beginPath();
+        ctx.moveTo(
+          noseX + bAx * bodyLen * 0.6 - bNx * bodyW * 0.7,
+          noseY + bAy * bodyLen * 0.6 - bNy * bodyW * 0.7,
+        );
+        ctx.lineTo(
+          noseX + bAx * bodyLen * 0.9 - bNx * bodyW * 0.3,
+          noseY + bAy * bodyLen * 0.9 - bNy * bodyW * 0.3,
+        );
+        ctx.lineTo(
+          noseX + bAx * bodyLen * 0.5 - bNx * bodyW * 0.2,
+          noseY + bAy * bodyLen * 0.5 - bNy * bodyW * 0.2,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+
+        // Muzzle flash at launch start
+        if (isLaunching && mSince < 180) {
+          const flashA = (1 - mSince / 180) * 0.5;
+          const flashR_tube = tubeR * 2.2;
+          const flashGrad = ctx.createRadialGradient(
+            tubeX, tubeY, 0, tubeX, tubeY, flashR_tube,
+          );
+          flashGrad.addColorStop(0, `rgba(255,235,140,${flashA})`);
+          flashGrad.addColorStop(0.4, `rgba(255,160,50,${flashA * 0.5})`);
+          flashGrad.addColorStop(1, "rgba(255,60,0,0)");
+          ctx.fillStyle = flashGrad;
+          ctx.beginPath();
+          ctx.arc(tubeX, tubeY, flashR_tube, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Empty bore after missile has faded
+      if (isEmpty) {
+        const deepBore = ctx.createRadialGradient(
+          tubeX + tubeR * 0.1, tubeY + tubeR * 0.05, 0,
+          tubeX, tubeY, tubeR * 0.85,
+        );
+        deepBore.addColorStop(0, "#030303");
+        deepBore.addColorStop(0.6, "#0a0808");
+        deepBore.addColorStop(1, "#181414");
+        ctx.fillStyle = deepBore;
+        ctx.beginPath();
+        ctx.ellipse(tubeX, tubeY, tubeR * 0.85, tubeR * 0.48, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Residual ember glow
+        const emptyPulse = 0.02 + Math.sin(time * 2 + podIdx * 0.8) * 0.01;
+        ctx.fillStyle = `rgba(255,80,20,${emptyPulse})`;
+        ctx.beginPath();
+        ctx.ellipse(tubeX, tubeY, tubeR * 0.5, tubeR * 0.28, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
   }
@@ -7103,9 +7264,10 @@ export function renderMortarMissileSilo(
 
   // === RADAR + SENSORS ===
   {
-    const tipPt = posAtFrac(1.0, 0);
-    const radarBaseX = tipPt.x - bAx * 6 * zoom;
-    const radarBaseY = tipPt.y - bAy * 6 * zoom;
+    // Radar mounted on the near side of the barrel mid-section
+    const midPt = posAtFrac(0.55, 0);
+    const radarBaseX = midPt.x + (-sinR) * nearSide * tiers[1].r * 1.1;
+    const radarBaseY = midPt.y + cosR * ISO_Y_RATIO * nearSide * tiers[1].r * 1.1;
     const radarTopY = radarBaseY - 10 * zoom;
     ctx.strokeStyle = "#6a6a72";
     ctx.lineWidth = 2 * zoom;
@@ -7143,9 +7305,7 @@ export function renderMortarMissileSilo(
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(sensorX, sensorY);
-    const midBarrel = posAtFrac(0.6, 0);
-    ctx.lineTo(midBarrel.x + (-sinR) * nearSide * tiers[1].r * 0.6,
-      midBarrel.y + cosR * ISO_Y_RATIO * nearSide * tiers[1].r * 0.6);
+    ctx.lineTo(radarBaseX, radarBaseY);
     ctx.stroke();
   }
 
@@ -7226,8 +7386,8 @@ export function renderMortarMissileSilo(
     ctx.lineWidth = 0.5 * zoom;
     ctx.strokeRect(rdX - 2.5 * zoom, rdY - 1.5 * zoom, 5 * zoom, 3 * zoom);
     for (let ri = 0; ri < 6; ri++) {
-      const mSince = timeSinceFire - ri * 200;
-      const isReady = mSince < 0 || mSince >= 2200;
+      const mSince = timeSinceFire - ri * 150;
+      const isReady = mSince < 0 || mSince >= 2100;
       ctx.fillStyle = isReady
         ? "#00cc44"
         : mSince >= 0 && mSince < 400
@@ -7240,43 +7400,41 @@ export function renderMortarMissileSilo(
     }
   }
 
-  // === AUTO-AIM INDICATOR ===
-  if (tower.mortarAutoAim) {
-    const pulseA = 0.3 + Math.sin(time * 4) * 0.15;
-    ctx.strokeStyle = `rgba(0,200,100,${pulseA})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.setLineDash([3 * zoom, 2 * zoom]);
-    const aiVerts = scaleVerts(platVerts, 1.06);
-    ctx.beginPath();
-    for (let i = 0; i <= hexSides; i++) {
-      const v = aiVerts[i % hexSides];
-      if (i === 0) ctx.moveTo(platTop.x + v.x, platTop.y + v.y);
-      else ctx.lineTo(platTop.x + v.x, platTop.y + v.y);
-    }
-    ctx.closePath();
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
+  // === STATUS LIGHTS (on muzzle cap rim) ===
+  {
+    const tipPt2 = posAtFrac(1.0, 0);
+    const lightR = tiers[2].r * 1.18;
+    for (let li = 0; li < 6; li++) {
+      const a = (li / 6) * Math.PI * 2;
+      const lat = Math.cos(a) * lightR;
+      const dep = Math.sin(a) * lightR * ISO_Y_RATIO;
+      const lx = tipPt2.x + lat * bNx + dep * bAx;
+      const ly = tipPt2.y + lat * bNy + dep * bAy;
 
-  // === STATUS LIGHTS ===
-  for (let li = 0; li < 6; li++) {
-    const mSince = timeSinceFire - li * 200;
-    const isLaunching = mSince >= 0 && mSince < 400;
-    ctx.fillStyle = isLaunching
-      ? "#ff2200"
-      : Math.sin(time * 4 + li) > 0.5
-        ? "#00ff44"
-        : "#004410";
-    const lightIdx = Math.floor((li / 6) * hexSides) % hexSides;
-    const lni = (lightIdx + 1) % hexSides;
-    const lx = (platVerts[lightIdx].x + platVerts[lni].x) * 0.5 * 0.85;
-    const ly = (platVerts[lightIdx].y + platVerts[lni].y) * 0.5 * 0.85;
-    ctx.beginPath();
-    ctx.arc(
-      platTop.x + lx, platTop.y + ly - 1 * zoom,
-      1.2 * zoom, 0, Math.PI * 2,
-    );
-    ctx.fill();
+      const mSince = timeSinceFire - li * 150;
+      const isLaunching = mSince >= 0 && mSince < 450;
+      const lightOn = Math.sin(time * 4 + li) > 0.5;
+      const color = isLaunching ? "#ff2200" : lightOn ? "#00ff44" : "#004410";
+      const glowA = isLaunching ? 0.4 : lightOn ? 0.2 : 0;
+
+      if (glowA > 0) {
+        const glowR = 3.5 * zoom;
+        const glowGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, glowR);
+        glowGrad.addColorStop(0, isLaunching
+          ? `rgba(255,34,0,${glowA})`
+          : `rgba(0,255,68,${glowA})`);
+        glowGrad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(lx, ly, glowR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 1.3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   ctx.restore();

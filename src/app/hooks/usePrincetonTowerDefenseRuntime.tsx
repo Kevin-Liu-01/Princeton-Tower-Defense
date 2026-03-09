@@ -88,6 +88,7 @@ import {
   getDecorationVolumeSpec,
   getLandmarkSpawnExclusion,
   resolveMapDecorationRuntimePlacement,
+  getMortarBarrelOrigin,
 } from "../utils";
 // Tower Stats
 import { calculateTowerStats, getUpgradeCost } from "../constants/towerStats";
@@ -1351,7 +1352,7 @@ export function usePrincetonTowerDefenseRuntime() {
         lightning: 1800,
         fire: 2000,
         freeze: 800,
-        sonic: 650,
+        sonic: 1800,
         poison: 1200,
         default: 1500,
       };
@@ -5245,8 +5246,8 @@ export function usePrincetonTowerDefenseRuntime() {
             if (tower.level === 2) damage *= 1.5;
             if (tower.level >= 3) damage *= 2;
 
-            // Missile Battery: auto-aim targets nearest enemy, manual uses stored position
-            if (isMissileBattery && !tower.mortarAutoAim && tower.mortarTarget) {
+            // Missile Battery: defaults to auto-aim; manual uses stored position
+            if (isMissileBattery && tower.mortarAutoAim === false && tower.mortarTarget) {
               const missileTarget = tower.mortarTarget;
               const tDx = missileTarget.x - towerWorldPos.x;
               const tDy = missileTarget.y - towerWorldPos.y;
@@ -5254,39 +5255,43 @@ export function usePrincetonTowerDefenseRuntime() {
               queueTowerPatch(tower.id, { rotation: trackRotation });
 
               if (now - tower.lastAttack > effectiveAttackCooldown) {
-                const missileCount = 4;
+                const missileCount = 6;
+                const barrelOrigin = getMortarBarrelOrigin(towerWorldPos, missileTarget, tower.level, tower.upgrade);
+                const impactRadius = splashRadius * 0.6;
+                const podStaggerMs = 150;
                 for (let i = 0; i < missileCount; i++) {
-                  const spread = 20;
-                  const offsetX = (Math.random() - 0.5) * spread * 2;
-                  const offsetY = (Math.random() - 0.5) * spread * 2;
+                  const circleAngle = (i / missileCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+                  const radiusJitter = impactRadius * (0.4 + Math.random() * 0.6);
                   const targetPos = {
-                    x: missileTarget.x + offsetX,
-                    y: missileTarget.y + offsetY,
+                    x: missileTarget.x + Math.cos(circleAngle) * radiusJitter,
+                    y: missileTarget.y + Math.sin(circleAngle) * radiusJitter,
                   };
                   const dx = targetPos.x - towerWorldPos.x;
                   const dy = targetPos.y - towerWorldPos.y;
                   const rotation = Math.atan2(dy, dx);
                   queuedTowerProjectiles.push({
                     id: generateId("msl"),
-                    from: towerWorldPos,
+                    from: barrelOrigin.from,
                     to: targetPos,
                     progress: 0,
                     type: "missile",
                     rotation,
-                    arcHeight: 140 + i * 20,
-                    damage: damage * 0.5,
+                    arcHeight: 130 + i * 15,
+                    elevation: barrelOrigin.elevation,
+                    damage: damage * 0.35,
                     targetType: "enemy",
                     isAoE: true,
-                    aoeRadius: splashRadius,
-                    speed: 0.18 + i * 0.03,
+                    aoeRadius: splashRadius * 0.75,
+                    speed: 0.16 + i * 0.02,
                     color: "#ff2200",
                     trailColor: "#ffaa00",
+                    spawnDelay: i * podStaggerMs,
                   });
                 }
                 queueTowerPatch(tower.id, { lastAttack: now });
-                addParticles(towerWorldPos, "smoke", 6);
+                addParticles(barrelOrigin.from, "smoke", 6);
               }
-            } else if (isMissileBattery && tower.mortarAutoAim) {
+            } else if (isMissileBattery) {
               const autoEnemies = getEnemiesInRange(towerWorldPos, finalRange);
               if (autoEnemies.length > 0) {
                 const autoTarget = autoEnemies[0];
@@ -5297,37 +5302,41 @@ export function usePrincetonTowerDefenseRuntime() {
                 queueTowerPatch(tower.id, { rotation: aRot, targetId: autoTarget.id });
 
                 if (now - tower.lastAttack > effectiveAttackCooldown) {
-                  const missileCount = 4;
+                  const missileCount = 6;
+                  const barrelOrigin = getMortarBarrelOrigin(towerWorldPos, autoPos, tower.level, tower.upgrade);
+                  const impactRadius = splashRadius * 0.6;
+                  const podStaggerMs = 150;
                   for (let i = 0; i < missileCount; i++) {
-                    const spread = 20;
-                    const offsetX = (Math.random() - 0.5) * spread * 2;
-                    const offsetY = (Math.random() - 0.5) * spread * 2;
+                    const circleAngle = (i / missileCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+                    const radiusJitter = impactRadius * (0.4 + Math.random() * 0.6);
                     const targetPos = {
-                      x: autoPos.x + offsetX,
-                      y: autoPos.y + offsetY,
+                      x: autoPos.x + Math.cos(circleAngle) * radiusJitter,
+                      y: autoPos.y + Math.sin(circleAngle) * radiusJitter,
                     };
                     const dx = targetPos.x - towerWorldPos.x;
                     const dy = targetPos.y - towerWorldPos.y;
                     const rotation = Math.atan2(dy, dx);
                     queuedTowerProjectiles.push({
                       id: generateId("msl"),
-                      from: towerWorldPos,
+                      from: barrelOrigin.from,
                       to: targetPos,
                       progress: 0,
                       type: "missile",
                       rotation,
-                      arcHeight: 140 + i * 20,
-                      damage: damage * 0.5,
+                      arcHeight: 130 + i * 15,
+                      elevation: barrelOrigin.elevation,
+                      damage: damage * 0.35,
                       targetType: "enemy",
                       isAoE: true,
-                      aoeRadius: splashRadius,
-                      speed: 0.18 + i * 0.03,
+                      aoeRadius: splashRadius * 0.75,
+                      speed: 0.16 + i * 0.02,
                       color: "#ff2200",
                       trailColor: "#ffaa00",
+                      spawnDelay: i * podStaggerMs,
                     });
                   }
                   queueTowerPatch(tower.id, { lastAttack: now });
-                  addParticles(towerWorldPos, "smoke", 6);
+                  addParticles(barrelOrigin.from, "smoke", 6);
                 }
               }
             } else {
@@ -5356,6 +5365,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 if (isEmberFoundry) {
                   const emberTarget = validEnemies[0];
                   const emberAimPos = getEnemyAimPosCached(emberTarget);
+                  const emberBarrel = getMortarBarrelOrigin(towerWorldPos, emberAimPos, tower.level, tower.upgrade);
                   const spread = 35;
                   for (let i = 0; i < 3; i++) {
                     const offsetX = (Math.random() - 0.5) * spread * 2;
@@ -5366,12 +5376,13 @@ export function usePrincetonTowerDefenseRuntime() {
                     const rotation = Math.atan2(dy, dx);
                     queuedTowerProjectiles.push({
                       id: generateId("emb"),
-                      from: towerWorldPos,
+                      from: emberBarrel.from,
                       to: targetPos,
                       progress: 0,
                       type: "ember",
                       rotation,
                       arcHeight: 100 + i * 15,
+                      elevation: emberBarrel.elevation,
                       damage: damage * 0.55,
                       targetType: "enemy",
                       isAoE: true,
@@ -5382,22 +5393,24 @@ export function usePrincetonTowerDefenseRuntime() {
                     });
                   }
                   queueTowerPatch(tower.id, { lastAttack: now });
-                  addParticles(towerWorldPos, "fire", 5);
+                  addParticles(emberBarrel.from, "fire", 5);
                 } else {
                   // Base mortar: single high-arc explosive shell
                   const target = validEnemies[0];
                   const targetAimPos = getEnemyAimPosCached(target);
+                  const shellBarrel = getMortarBarrelOrigin(towerWorldPos, targetAimPos, tower.level, tower.upgrade);
                   const dx = targetAimPos.x - towerWorldPos.x;
                   const dy = targetAimPos.y - towerWorldPos.y;
                   const rotation = Math.atan2(dx + dy, dx - dy);
                   queuedTowerProjectiles.push({
                     id: generateId("mrt"),
-                    from: towerWorldPos,
+                    from: shellBarrel.from,
                     to: targetAimPos,
                     progress: 0,
                     type: "mortarShell",
                     rotation,
                     arcHeight: 120,
+                    elevation: shellBarrel.elevation,
                     damage,
                     targetType: "enemy",
                     isAoE: true,
@@ -5407,7 +5420,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   queueTowerPatch(tower.id, { lastAttack: now });
                   queuedTowerEffects.push({
                     id: generateId("mrt"),
-                    pos: towerWorldPos,
+                    pos: shellBarrel.from,
                     type: "mortar_launch",
                     progress: 0,
                     size: 40,
@@ -5415,7 +5428,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     towerLevel: tower.level,
                     rotation,
                   });
-                  addParticles(towerWorldPos, "smoke", 4);
+                  addParticles(shellBarrel.from, "smoke", 4);
                 }
               }
             }
@@ -5920,6 +5933,13 @@ export function usePrincetonTowerDefenseRuntime() {
           const completingProjectiles: Projectile[] = [];
           const baseProgressStep = projectileDelta / 300;
           for (const proj of prev) {
+            if (proj.spawnDelay && proj.spawnDelay > 0) {
+              const remaining = proj.spawnDelay - projectileDelta;
+              nextProjectiles.push(remaining > 0
+                ? { ...proj, spawnDelay: remaining }
+                : { ...proj, spawnDelay: 0 });
+              continue;
+            }
             const progressStep = baseProgressStep * (proj.speed ?? 1);
             const nextProgress = Math.min(1, proj.progress + progressStep);
             if (nextProgress >= 1) {
@@ -5998,10 +6018,10 @@ export function usePrincetonTowerDefenseRuntime() {
               queuedImpactEffects.push({
                 id: generateId("eff"),
                 pos: proj.to,
-                type: proj.type === "ember" ? "fire_nova" : "mortar_impact",
+                type: proj.type === "ember" ? "ember_impact" : "mortar_impact",
                 progress: 0,
                 size: proj.aoeRadius,
-                duration: proj.type === "ember" ? 600 : 800,
+                duration: proj.type === "ember" ? 900 : 800,
               });
               mortarAoEEvents.push({
                 center: proj.to,
@@ -7629,6 +7649,7 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     });
     projectiles.forEach((proj) => {
+      if (proj.spawnDelay && proj.spawnDelay > 0) return;
       const x = proj.from.x + (proj.to.x - proj.from.x) * proj.progress;
       const y = proj.from.y + (proj.to.y - proj.from.y) * proj.progress;
       if (
@@ -8307,8 +8328,8 @@ export function usePrincetonTowerDefenseRuntime() {
               // Pass tower with only active debuffs for rendering
               renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
             }
-            // Missile Battery target reticle
-            if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarTarget) {
+            // Missile Battery target reticle (manual mode only)
+            if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarAutoAim === false && tower.mortarTarget) {
               const targetScreenPos = worldToScreen(
                 tower.mortarTarget,
                 canvas.width,
@@ -10494,8 +10515,9 @@ export function usePrincetonTowerDefenseRuntime() {
         prev.map((t) => {
           if (t.id === towerId) {
             const updates: Partial<Tower> = { level: newLevel, upgrade: newUpgrade };
-            // Missile Battery (mortar 4A): set initial target near enemy spawn
+            // Missile Battery (mortar 4A): default to auto-aim, set fallback manual target
             if (t.type === "mortar" && newLevel === 4 && newUpgrade === "A") {
+              updates.mortarAutoAim = true;
               const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
               const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS[selectedMap] ?? [];
               if (path.length >= 2) {
@@ -11818,13 +11840,19 @@ export function usePrincetonTowerDefenseRuntime() {
                         setSelectedTower(null);
                       }}
                       onToggleMissileAutoAim={(towerId) => {
+                        const tow = towers.find((t) => t.id === towerId);
+                        const switchingToManual = tow?.mortarAutoAim !== false;
                         setTowers((prev) =>
                           prev.map((t) =>
                             t.id === towerId
-                              ? { ...t, mortarAutoAim: !t.mortarAutoAim }
+                              ? { ...t, mortarAutoAim: t.mortarAutoAim === false ? true : false }
                               : t
                           )
                         );
+                        if (switchingToManual) {
+                          setMissileMortarTargetingId(towerId);
+                          setSelectedTower(null);
+                        }
                       }}
                       onRallyTroops={(towerId) => {
                         setTroops((prev) =>
