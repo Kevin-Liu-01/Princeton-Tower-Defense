@@ -56,7 +56,6 @@ export interface TowerUpgradePath {
 
 export interface TowerStatsDefinition {
   name: string;
-  icon: string;
   baseStats: TowerBaseStats;
   levels: {
     1: TowerLevelUpgrade;
@@ -77,7 +76,6 @@ export interface TowerStatsDefinition {
 export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   station: {
     name: "Dinky Station",
-    icon: "🚂",
     baseStats: {
       damage: 0,
       range: 0,
@@ -131,7 +129,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
 
   cannon: {
     name: "Nassau Cannon",
-    icon: "💣",
     baseStats: {
       damage: 65,
       range: 240,
@@ -187,7 +184,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
 
   library: {
     name: "Firestone Library",
-    icon: "📚",
     baseStats: {
       damage: 0,
       range: 220,
@@ -245,7 +241,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
 
   lab: {
     name: "E-Quad Lab",
-    icon: "⚗️",
     baseStats: {
       damage: 45,
       range: 200,
@@ -299,7 +294,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
 
   arch: {
     name: "Blair Arch",
-    icon: "🏛️",
     baseStats: {
       damage: 28,
       range: 260,
@@ -356,7 +350,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
 
   club: {
     name: "Eating Club",
-    icon: "🏦",
     baseStats: {
       damage: 0,
       range: 0,
@@ -415,7 +408,6 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   },
   mortar: {
     name: "Palmer Mortar",
-    icon: "💥",
     baseStats: {
       damage: 120,
       range: 300,

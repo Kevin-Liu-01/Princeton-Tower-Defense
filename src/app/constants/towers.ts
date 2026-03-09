@@ -6,7 +6,6 @@ export const TOWER_DATA: Record<
   TowerType,
   {
     name: string;
-    icon: string;
     cost: number;
     damage: number;
     range: number;
@@ -22,7 +21,7 @@ export const TOWER_DATA: Record<
 > = {
   station: {
     name: TOWER_STATS.station.name,
-    icon: TOWER_STATS.station.icon,
+
     cost: TOWER_STATS.station.levels[1].cost,
     damage: TOWER_STATS.station.baseStats.damage,
     range: TOWER_STATS.station.baseStats.range,
@@ -50,7 +49,7 @@ export const TOWER_DATA: Record<
   },
   cannon: {
     name: TOWER_STATS.cannon.name,
-    icon: TOWER_STATS.cannon.icon,
+
     cost: TOWER_STATS.cannon.levels[1].cost,
     damage: TOWER_STATS.cannon.baseStats.damage,
     range: TOWER_STATS.cannon.baseStats.range,
@@ -79,7 +78,7 @@ export const TOWER_DATA: Record<
   },
   library: {
     name: TOWER_STATS.library.name,
-    icon: TOWER_STATS.library.icon,
+
     cost: TOWER_STATS.library.levels[1].cost,
     damage: TOWER_STATS.library.baseStats.damage,
     range: TOWER_STATS.library.baseStats.range,
@@ -108,7 +107,7 @@ export const TOWER_DATA: Record<
   },
   lab: {
     name: TOWER_STATS.lab.name,
-    icon: TOWER_STATS.lab.icon,
+
     cost: TOWER_STATS.lab.levels[1].cost,
     damage: TOWER_STATS.lab.baseStats.damage,
     range: TOWER_STATS.lab.baseStats.range,
@@ -137,7 +136,7 @@ export const TOWER_DATA: Record<
   },
   arch: {
     name: TOWER_STATS.arch.name,
-    icon: TOWER_STATS.arch.icon,
+
     cost: TOWER_STATS.arch.levels[1].cost,
     damage: TOWER_STATS.arch.baseStats.damage,
     range: TOWER_STATS.arch.baseStats.range,
@@ -166,7 +165,7 @@ export const TOWER_DATA: Record<
   },
   club: {
     name: TOWER_STATS.club.name,
-    icon: TOWER_STATS.club.icon,
+
     cost: TOWER_STATS.club.levels[1].cost,
     damage: TOWER_STATS.club.baseStats.damage,
     range: TOWER_STATS.club.baseStats.range,
@@ -193,7 +192,7 @@ export const TOWER_DATA: Record<
   },
   mortar: {
     name: TOWER_STATS.mortar.name,
-    icon: TOWER_STATS.mortar.icon,
+
     cost: TOWER_STATS.mortar.levels[1].cost,
     damage: TOWER_STATS.mortar.baseStats.damage,
     range: TOWER_STATS.mortar.baseStats.range,

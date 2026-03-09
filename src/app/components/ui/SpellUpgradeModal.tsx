@@ -1400,7 +1400,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     style={{ animation: "celebrateBounce 0.5s ease-out" }}
                   >
                     <div className="text-xs text-emerald-300 font-bold">
-                      ✨{" "}
+                      <Sparkles size={12} className="inline text-emerald-300" />{" "}
                       {getSpellUpgradeNodes(justUpgraded.spellType)[
                         justUpgraded.tier - 1
                       ]?.title ?? `Tier ${justUpgraded.tier}`}{" "}

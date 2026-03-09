@@ -218,6 +218,8 @@ export function drawRobeBody(
         (i % 2) * (jaggedEdge.altAmplitude ?? jaggedEdge.amplitude * 0.8);
       ctx.lineTo(jagX, jagY);
     }
+  } else {
+    ctx.lineTo(cx + bottomW, bottomY);
   }
 
   ctx.quadraticCurveTo(cx + curveW, curveY, cx + shoulderW, shoulderY);

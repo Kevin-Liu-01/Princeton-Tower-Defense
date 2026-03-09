@@ -31,6 +31,7 @@ export function drawEngineerHero(
   drawFloatingParticles(ctx, x, y, s, time);
   drawCircuitLines(ctx, x, y, s, time, dataPulse, zoom);
   drawShadow(ctx, x, y, s);
+  drawHoloGears(ctx, x, y, s, time, zoom, "behind");
   drawBackpack(ctx, x + idleSway, y + bodyBob, s, time, dataPulse, zoom, isAttacking, attackIntensity);
   drawBody(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse, zoom);
   drawEngineerSkirtArmor(ctx, x + idleSway, y + bodyBob, s, time, zoom, isAttacking, attackIntensity, dataPulse);
@@ -41,7 +42,7 @@ export function drawEngineerHero(
     isAttacking, attackIntensity, targetPos, toolFidget,
   );
   drawHead(ctx, x + idleSway + headScan, y + bodyBob, s, time, dataPulse, holoFlicker, zoom);
-  drawHoloGears(ctx, x, y, s, time, zoom);
+  drawHoloGears(ctx, x, y, s, time, zoom, "front");
   if (isAttacking) {
     drawAttackEffects(ctx, x, y, s, attackIntensity, holoFlicker, time, zoom);
   }
@@ -365,7 +366,7 @@ function drawBody(
   zoom: number,
 ) {
   // Main exosuit torso
-  const sg = ctx.createLinearGradient(x - s * 0.44, y - s * 0.3, x + s * 0.44, y + s * 0.4);
+  const sg = ctx.createLinearGradient(x - s * 0.52, y - s * 0.3, x + s * 0.52, y + s * 0.4);
   sg.addColorStop(0, "#2e3e24");
   sg.addColorStop(0.2, "#4a5a36");
   sg.addColorStop(0.5, "#5a6a42");
@@ -373,12 +374,12 @@ function drawBody(
   sg.addColorStop(1, "#2e3e24");
   ctx.fillStyle = sg;
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.42, y + s * 0.48 + breathe);
-  ctx.lineTo(x - s * 0.46, y - s * 0.1);
-  ctx.lineTo(x - s * 0.34, y - s * 0.27);
-  ctx.quadraticCurveTo(x, y - s * 0.34, x + s * 0.34, y - s * 0.27);
-  ctx.lineTo(x + s * 0.46, y - s * 0.1);
-  ctx.lineTo(x + s * 0.42, y + s * 0.48 + breathe);
+  ctx.moveTo(x - s * 0.48, y + s * 0.48 + breathe);
+  ctx.lineTo(x - s * 0.54, y - s * 0.1);
+  ctx.lineTo(x - s * 0.42, y - s * 0.27);
+  ctx.quadraticCurveTo(x, y - s * 0.34, x + s * 0.42, y - s * 0.27);
+  ctx.lineTo(x + s * 0.54, y - s * 0.1);
+  ctx.lineTo(x + s * 0.48, y + s * 0.48 + breathe);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#1e2e18";
@@ -403,16 +404,16 @@ function drawBody(
   ctx.stroke();
 
   // Upper chest armor plate (dark gray/gunmetal)
-  const chestPlateG = ctx.createLinearGradient(x - s * 0.25, y - s * 0.27, x + s * 0.25, y - s * 0.08);
+  const chestPlateG = ctx.createLinearGradient(x - s * 0.30, y - s * 0.27, x + s * 0.30, y - s * 0.08);
   chestPlateG.addColorStop(0, "#3a3a42");
   chestPlateG.addColorStop(0.5, "#4a4a55");
   chestPlateG.addColorStop(1, "#3a3a42");
   ctx.fillStyle = chestPlateG;
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.25, y - s * 0.08);
-  ctx.lineTo(x - s * 0.28, y - s * 0.22);
-  ctx.quadraticCurveTo(x, y - s * 0.28, x + s * 0.28, y - s * 0.22);
-  ctx.lineTo(x + s * 0.25, y - s * 0.08);
+  ctx.moveTo(x - s * 0.30, y - s * 0.08);
+  ctx.lineTo(x - s * 0.34, y - s * 0.22);
+  ctx.quadraticCurveTo(x, y - s * 0.28, x + s * 0.34, y - s * 0.22);
+  ctx.lineTo(x + s * 0.30, y - s * 0.08);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#2a2a32";
@@ -423,46 +424,46 @@ function drawBody(
   ctx.strokeStyle = "#3a4a2c";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.38, y - s * 0.08);
-  ctx.lineTo(x + s * 0.38, y - s * 0.08);
-  ctx.moveTo(x - s * 0.36, y + s * 0.1);
-  ctx.lineTo(x + s * 0.36, y + s * 0.1);
+  ctx.moveTo(x - s * 0.46, y - s * 0.08);
+  ctx.lineTo(x + s * 0.46, y - s * 0.08);
+  ctx.moveTo(x - s * 0.44, y + s * 0.1);
+  ctx.lineTo(x + s * 0.44, y + s * 0.1);
   ctx.moveTo(x, y - s * 0.27);
   ctx.lineTo(x, y + s * 0.16);
   ctx.stroke();
 
-  // Reinforced shoulder ridges (tan/brown, contrasting)
+  // Reinforced shoulder ridges (tan/brown, contrasting) - massive pauldrons
   for (const side of [-1, 1]) {
-    const sx = x + side * s * 0.38;
+    const sx = x + side * s * 0.46;
     const ridgeG = ctx.createLinearGradient(
-      sx - side * s * 0.12, y - s * 0.27, sx + side * s * 0.06, y - s * 0.15,
+      sx - side * s * 0.18, y - s * 0.30, sx + side * s * 0.12, y - s * 0.12,
     );
     ridgeG.addColorStop(0, "#7a6a48");
     ridgeG.addColorStop(0.5, "#8a7a58");
     ridgeG.addColorStop(1, "#6a5a3e");
     ctx.fillStyle = ridgeG;
     ctx.beginPath();
-    ctx.moveTo(sx - side * s * 0.14, y - s * 0.28);
-    ctx.lineTo(sx + side * s * 0.08, y - s * 0.2);
-    ctx.lineTo(sx + side * s * 0.08, y - s * 0.13);
-    ctx.lineTo(sx - side * s * 0.14, y - s * 0.18);
+    ctx.moveTo(sx - side * s * 0.20, y - s * 0.32);
+    ctx.lineTo(sx + side * s * 0.14, y - s * 0.22);
+    ctx.lineTo(sx + side * s * 0.14, y - s * 0.12);
+    ctx.lineTo(sx - side * s * 0.20, y - s * 0.18);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#5a4a32";
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     // Shoulder-mounted equipment pod (dark gunmetal)
     ctx.fillStyle = "#2a2a3a";
     ctx.beginPath();
     ctx.roundRect(
-      x + side * s * 0.32 - s * 0.05,
-      y - s * 0.28,
-      s * 0.1, s * 0.08, s * 0.015,
+      x + side * s * 0.40 - s * 0.07,
+      y - s * 0.32,
+      s * 0.14, s * 0.11, s * 0.02,
     );
     ctx.fill();
     ctx.strokeStyle = "#3a3a4a";
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
     const podColor = side > 0
@@ -470,12 +471,12 @@ function drawBody(
       : `rgba(0, 200, 255, ${0.5 + dataPulse * 0.4})`;
     ctx.fillStyle = podColor;
     ctx.shadowColor = side > 0 ? "#ff3030" : "#00ccff";
-    ctx.shadowBlur = 4 * zoom;
+    ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
     ctx.arc(
-      x + side * s * 0.32,
-      y - s * 0.24,
-      s * 0.018, 0, Math.PI * 2,
+      x + side * s * 0.40,
+      y - s * 0.27,
+      s * 0.024, 0, Math.PI * 2,
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -484,7 +485,7 @@ function drawBody(
   // Side torso armor plates (brown/tan, flanking belly)
   for (const side of [-1, 1]) {
     const sideG = ctx.createLinearGradient(
-      x + side * s * 0.15, y - s * 0.05, x + side * s * 0.35, y + s * 0.12,
+      x + side * s * 0.15, y - s * 0.05, x + side * s * 0.46, y + s * 0.12,
     );
     sideG.addColorStop(0, "#6a5a3e");
     sideG.addColorStop(0.5, "#7a6a4e");
@@ -492,8 +493,8 @@ function drawBody(
     ctx.fillStyle = sideG;
     ctx.beginPath();
     ctx.moveTo(x + side * s * 0.22, y - s * 0.06);
-    ctx.lineTo(x + side * s * 0.38, y - s * 0.04);
-    ctx.lineTo(x + side * s * 0.36, y + s * 0.12);
+    ctx.lineTo(x + side * s * 0.46, y - s * 0.04);
+    ctx.lineTo(x + side * s * 0.44, y + s * 0.12);
     ctx.lineTo(x + side * s * 0.2, y + s * 0.14);
     ctx.closePath();
     ctx.fill();
@@ -503,19 +504,19 @@ function drawBody(
   }
 
   // Hi-vis orange reflective strips
-  const stripG = ctx.createLinearGradient(x - s * 0.42, y, x - s * 0.28, y);
+  const stripG = ctx.createLinearGradient(x - s * 0.50, y, x - s * 0.36, y);
   stripG.addColorStop(0, "#bb3800");
   stripG.addColorStop(0.3, "#ff5500");
   stripG.addColorStop(0.5, "#ff9933");
   stripG.addColorStop(0.7, "#ff5500");
   stripG.addColorStop(1, "#bb3800");
   ctx.fillStyle = stripG;
-  ctx.fillRect(x - s * 0.42, y - s * 0.2, s * 0.12, s * 0.52);
-  ctx.fillRect(x + s * 0.3, y - s * 0.2, s * 0.12, s * 0.52);
+  ctx.fillRect(x - s * 0.50, y - s * 0.2, s * 0.12, s * 0.52);
+  ctx.fillRect(x + s * 0.38, y - s * 0.2, s * 0.12, s * 0.52);
 
   ctx.fillStyle = "rgba(255, 255, 200, 0.35)";
-  ctx.fillRect(x - s * 0.41, y - s * 0.18, s * 0.035, s * 0.48);
-  ctx.fillRect(x + s * 0.36, y - s * 0.18, s * 0.035, s * 0.48);
+  ctx.fillRect(x - s * 0.49, y - s * 0.18, s * 0.035, s * 0.48);
+  ctx.fillRect(x + s * 0.44, y - s * 0.18, s * 0.035, s * 0.48);
 
   // Chest magazine pouches (BIGGER)
   for (const side of [-1, 1]) {
@@ -740,7 +741,7 @@ function drawEngineerSkirtBelt(
 ) {
   const skirtTop = y + s * 0.28;
   const beltWidth = s * 0.06;
-  const beltSpan = s * 0.5;
+  const beltSpan = s * 0.56;
 
   const bg = ctx.createLinearGradient(x - beltSpan, skirtTop, x + beltSpan, skirtTop);
   bg.addColorStop(0, "#2a2a2a");
@@ -783,15 +784,15 @@ function drawBeltAndPouches(
   dataPulse: number,
 ) {
   // Main belt
-  const bg = ctx.createLinearGradient(x - s * 0.46, y + s * 0.16, x + s * 0.46, y + s * 0.16);
+  const bg = ctx.createLinearGradient(x - s * 0.52, y + s * 0.16, x + s * 0.52, y + s * 0.16);
   bg.addColorStop(0, "#2a2a2a");
   bg.addColorStop(0.5, "#484848");
   bg.addColorStop(1, "#2a2a2a");
   ctx.fillStyle = bg;
-  ctx.fillRect(x - s * 0.46, y + s * 0.14, s * 0.92, s * 0.14);
+  ctx.fillRect(x - s * 0.52, y + s * 0.14, s * 1.04, s * 0.14);
   ctx.strokeStyle = "#5a5a5a";
   ctx.lineWidth = 1.5;
-  ctx.strokeRect(x - s * 0.46, y + s * 0.14, s * 0.92, s * 0.14);
+  ctx.strokeRect(x - s * 0.52, y + s * 0.14, s * 1.04, s * 0.14);
 
   // 6 belt pouches (MUCH BIGGER, varying sizes)
   const pouchConfigs = [
@@ -1010,8 +1011,8 @@ function drawArmsAndRifle(
   const sinA = Math.sin(gunAngle);
 
   // Key positions along the rifle in world space
-  const gripDist = s * 0.04;
-  const handguardDist = s * 0.3;
+  const gripDist = s * 0.06;
+  const handguardDist = s * 0.38;
   const gripWorldX = rifleX + sinA * gripDist;
   const gripWorldY = rifleY - cosA * gripDist;
   const handguardWorldX = rifleX - sinA * handguardDist;
@@ -1034,75 +1035,75 @@ function drawLeftArmDetailed(
   dataPulse: number,
 ) {
   const bob = Math.sin(time * 1.4) * s * 0.004;
-  const shoulderX = x - s * 0.34;
+  const shoulderX = x - s * 0.44;
   const shoulderY = y - s * 0.08 + bob;
 
-  // Shoulder pad (olive armor plate)
-  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.06, 0, shoulderX, shoulderY - s * 0.06, s * 0.1);
+  // Shoulder pad (olive armor plate) - massive pauldron
+  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.08, 0, shoulderX, shoulderY - s * 0.08, s * 0.16);
   spG.addColorStop(0, "#5a6a3e");
   spG.addColorStop(0.6, "#4a5a32");
   spG.addColorStop(1, "#3a4a28");
   ctx.fillStyle = spG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.06, s * 0.1, s * 0.06, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.08, s * 0.16, s * 0.10, -0.3, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#2e3a1e";
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.8;
   ctx.stroke();
   // Shoulder pad edge highlight
-  ctx.strokeStyle = "rgba(120,140,90,0.4)";
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = "rgba(120,140,90,0.5)";
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.065, s * 0.085, s * 0.045, -0.3, -0.5, 1.2);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.085, s * 0.14, s * 0.075, -0.3, -0.5, 1.2);
   ctx.stroke();
 
-  // Upper arm (bicep) with muscle definition
-  const uaG = ctx.createLinearGradient(shoulderX - s * 0.08, shoulderY, shoulderX + s * 0.08, shoulderY);
+  // Upper arm (bicep) with muscle definition - bulkier
+  const uaG = ctx.createLinearGradient(shoulderX - s * 0.12, shoulderY, shoulderX + s * 0.12, shoulderY);
   uaG.addColorStop(0, "#3a4a2c");
   uaG.addColorStop(0.3, "#5a6a42");
   uaG.addColorStop(0.7, "#566838");
   uaG.addColorStop(1, "#3a4a2c");
   ctx.fillStyle = uaG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.1, s * 0.16, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.14, s * 0.22, -0.15, 0, Math.PI * 2);
   ctx.fill();
   // Bicep highlight (muscle bulge)
-  ctx.fillStyle = "rgba(100,120,70,0.3)";
+  ctx.fillStyle = "rgba(100,120,70,0.35)";
   ctx.beginPath();
-  ctx.ellipse(shoulderX + s * 0.02, shoulderY + s * 0.02, s * 0.04, s * 0.08, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX + s * 0.03, shoulderY + s * 0.02, s * 0.06, s * 0.12, -0.15, 0, Math.PI * 2);
   ctx.fill();
   // Sleeve seam
   ctx.strokeStyle = "#3a4a28";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.09, s * 0.04, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.13, s * 0.06, -0.15, 0, Math.PI * 2);
   ctx.stroke();
 
   // Forearm connector (from elbow area toward handguard)
   const elbowX = shoulderX + s * 0.04;
   const elbowY = shoulderY + s * 0.14;
 
-  // Elbow pad
-  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.06);
+  // Elbow pad - reinforced
+  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.09);
   epG.addColorStop(0, "#4a4a38");
   epG.addColorStop(0.5, "#3a3a2c");
   epG.addColorStop(1, "#2e2e22");
   ctx.fillStyle = epG;
   ctx.beginPath();
-  ctx.ellipse(elbowX, elbowY, s * 0.055, s * 0.045, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(elbowX, elbowY, s * 0.08, s * 0.065, -0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#2a2a1e";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.stroke();
   // Elbow pad rivet
   ctx.fillStyle = "#5a5a4a";
   ctx.beginPath();
-  ctx.arc(elbowX, elbowY, s * 0.012, 0, Math.PI * 2);
+  ctx.arc(elbowX, elbowY, s * 0.016, 0, Math.PI * 2);
   ctx.fill();
 
-  // Forearm
+  // Forearm - thicker
   ctx.strokeStyle = "#4a5a36";
-  ctx.lineWidth = s * 0.09;
+  ctx.lineWidth = s * 0.14;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(elbowX, elbowY);
@@ -1110,47 +1111,47 @@ function drawLeftArmDetailed(
   ctx.stroke();
   ctx.lineCap = "butt";
 
-  // Forearm armor plate (tan/brown)
+  // Forearm armor plate (tan/brown) - wider
   const midForeX = (elbowX + handguardX) / 2;
   const midForeY = (elbowY + handguardY) / 2;
   const fpG = ctx.createLinearGradient(
-    midForeX - s * 0.06, midForeY - s * 0.04,
-    midForeX + s * 0.06, midForeY + s * 0.04,
+    midForeX - s * 0.09, midForeY - s * 0.06,
+    midForeX + s * 0.09, midForeY + s * 0.06,
   );
   fpG.addColorStop(0, "#5a4a32");
   fpG.addColorStop(0.5, "#6a5a42");
   fpG.addColorStop(1, "#5a4a32");
   ctx.fillStyle = fpG;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.065, s * 0.04, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.095, s * 0.06, gunAngle, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#4a3a28";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.stroke();
   // Armor plate strap
   ctx.strokeStyle = "#3a3020";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.07, s * 0.025, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.10, s * 0.035, gunAngle, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Left gauntlet (at handguard)
-  const gG = ctx.createRadialGradient(handguardX, handguardY, 0, handguardX, handguardY, s * 0.08);
+  // Left gauntlet (at handguard) - bigger
+  const gG = ctx.createRadialGradient(handguardX, handguardY, 0, handguardX, handguardY, s * 0.12);
   gG.addColorStop(0, "#6a5a42");
   gG.addColorStop(0.5, "#5a4a32");
   gG.addColorStop(1, "#4a3a28");
   ctx.fillStyle = gG;
   ctx.beginPath();
-  ctx.ellipse(handguardX, handguardY, s * 0.08, s * 0.06, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(handguardX, handguardY, s * 0.11, s * 0.08, gunAngle, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#4a3a28";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
   ctx.stroke();
   // Knuckle guard ridge
   ctx.strokeStyle = "#5a4a32";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(handguardX, handguardY, s * 0.075, s * 0.035, gunAngle, -0.6, 0.6);
+  ctx.ellipse(handguardX, handguardY, s * 0.105, s * 0.05, gunAngle, -0.6, 0.6);
   ctx.stroke();
   // Finger lines
   const perpX = Math.cos(gunAngle);
@@ -1198,75 +1199,75 @@ function drawRightArmDetailed(
   gripY: number,
 ) {
   const bob = Math.sin(time * 1.4 + Math.PI) * s * 0.004;
-  const shoulderX = x + s * 0.34;
+  const shoulderX = x + s * 0.44;
   const shoulderY = y - s * 0.08 + bob;
 
-  // Shoulder pad (darker olive)
-  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.06, 0, shoulderX, shoulderY - s * 0.06, s * 0.1);
+  // Shoulder pad (darker olive) - massive pauldron
+  const spG = ctx.createRadialGradient(shoulderX, shoulderY - s * 0.08, 0, shoulderX, shoulderY - s * 0.08, s * 0.16);
   spG.addColorStop(0, "#4e5e36");
   spG.addColorStop(0.6, "#3e4e2a");
   spG.addColorStop(1, "#2e3e20");
   ctx.fillStyle = spG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.06, s * 0.1, s * 0.06, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.08, s * 0.16, s * 0.10, 0.3, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#2a361a";
-  ctx.lineWidth = 1.2;
+  ctx.lineWidth = 1.8;
   ctx.stroke();
   // Shoulder pad edge highlight
-  ctx.strokeStyle = "rgba(110,130,80,0.4)";
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = "rgba(110,130,80,0.5)";
+  ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.065, s * 0.085, s * 0.045, 0.3, 1.9, 3.7);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.085, s * 0.14, s * 0.075, 0.3, 1.9, 3.7);
   ctx.stroke();
 
-  // Upper arm with muscle contour
-  const uaG = ctx.createLinearGradient(shoulderX - s * 0.08, shoulderY, shoulderX + s * 0.08, shoulderY);
+  // Upper arm with muscle contour - bulkier
+  const uaG = ctx.createLinearGradient(shoulderX - s * 0.12, shoulderY, shoulderX + s * 0.12, shoulderY);
   uaG.addColorStop(0, "#3a4a2c");
   uaG.addColorStop(0.35, "#566838");
   uaG.addColorStop(0.7, "#5a6a42");
   uaG.addColorStop(1, "#3a4a2c");
   ctx.fillStyle = uaG;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.1, s * 0.16, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY + s * 0.04, s * 0.14, s * 0.22, 0.15, 0, Math.PI * 2);
   ctx.fill();
   // Muscle highlight
-  ctx.fillStyle = "rgba(100,120,70,0.3)";
+  ctx.fillStyle = "rgba(100,120,70,0.35)";
   ctx.beginPath();
-  ctx.ellipse(shoulderX - s * 0.02, shoulderY + s * 0.02, s * 0.04, s * 0.08, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX - s * 0.03, shoulderY + s * 0.02, s * 0.06, s * 0.12, 0.15, 0, Math.PI * 2);
   ctx.fill();
   // Sleeve seam
   ctx.strokeStyle = "#3a4a28";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.beginPath();
-  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.09, s * 0.04, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(shoulderX, shoulderY - s * 0.02, s * 0.13, s * 0.06, 0.15, 0, Math.PI * 2);
   ctx.stroke();
 
   // Elbow
   const elbowX = shoulderX - s * 0.04;
   const elbowY = shoulderY + s * 0.14;
 
-  // Elbow pad (gunmetal)
-  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.06);
+  // Elbow pad (gunmetal) - reinforced
+  const epG = ctx.createRadialGradient(elbowX, elbowY, 0, elbowX, elbowY, s * 0.09);
   epG.addColorStop(0, "#3e3e4a");
   epG.addColorStop(0.5, "#2e2e38");
   epG.addColorStop(1, "#22222c");
   ctx.fillStyle = epG;
   ctx.beginPath();
-  ctx.ellipse(elbowX, elbowY, s * 0.055, s * 0.045, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(elbowX, elbowY, s * 0.08, s * 0.065, 0.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#1e1e28";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.stroke();
   // Elbow pad rivet
   ctx.fillStyle = "#4a4a58";
   ctx.beginPath();
-  ctx.arc(elbowX, elbowY, s * 0.012, 0, Math.PI * 2);
+  ctx.arc(elbowX, elbowY, s * 0.016, 0, Math.PI * 2);
   ctx.fill();
 
-  // Forearm
+  // Forearm - thicker
   ctx.strokeStyle = "#4a5a36";
-  ctx.lineWidth = s * 0.09;
+  ctx.lineWidth = s * 0.14;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(elbowX, elbowY);
@@ -1274,47 +1275,47 @@ function drawRightArmDetailed(
   ctx.stroke();
   ctx.lineCap = "butt";
 
-  // Forearm armor plate (gunmetal gray)
+  // Forearm armor plate (gunmetal gray) - wider
   const midForeX = (elbowX + gripX) / 2;
   const midForeY = (elbowY + gripY) / 2;
   const fpG = ctx.createLinearGradient(
-    midForeX - s * 0.06, midForeY - s * 0.04,
-    midForeX + s * 0.06, midForeY + s * 0.04,
+    midForeX - s * 0.09, midForeY - s * 0.06,
+    midForeX + s * 0.09, midForeY + s * 0.06,
   );
   fpG.addColorStop(0, "#2e2e3a");
   fpG.addColorStop(0.5, "#42424e");
   fpG.addColorStop(1, "#2e2e3a");
   ctx.fillStyle = fpG;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.065, s * 0.04, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.095, s * 0.06, gunAngle, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#22222e";
-  ctx.lineWidth = 0.8;
+  ctx.lineWidth = 1.0;
   ctx.stroke();
   // Armor plate strap
   ctx.strokeStyle = "#282830";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(midForeX, midForeY, s * 0.07, s * 0.025, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(midForeX, midForeY, s * 0.10, s * 0.035, gunAngle, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Right gauntlet (gunmetal, at grip)
-  const gG = ctx.createRadialGradient(gripX, gripY, 0, gripX, gripY, s * 0.08);
+  // Right gauntlet (gunmetal, at grip) - bigger
+  const gG = ctx.createRadialGradient(gripX, gripY, 0, gripX, gripY, s * 0.12);
   gG.addColorStop(0, "#42424e");
   gG.addColorStop(0.5, "#2e2e3a");
   gG.addColorStop(1, "#222230");
   ctx.fillStyle = gG;
   ctx.beginPath();
-  ctx.ellipse(gripX, gripY, s * 0.08, s * 0.06, gunAngle, 0, Math.PI * 2);
+  ctx.ellipse(gripX, gripY, s * 0.11, s * 0.08, gunAngle, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = "#1e1e28";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.2;
   ctx.stroke();
   // Knuckle guard ridge
   ctx.strokeStyle = "#3a3a48";
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(gripX, gripY, s * 0.075, s * 0.035, gunAngle, 2.5, 3.7);
+  ctx.ellipse(gripX, gripY, s * 0.105, s * 0.05, gunAngle, 2.5, 3.7);
   ctx.stroke();
   // Finger lines
   const perpX = Math.cos(gunAngle);
@@ -1348,7 +1349,7 @@ function drawRifleDetailed(
   ctx.translate(rifleX, rifleY);
   ctx.rotate(gunAngle);
 
-  const bw = s * 0.06;
+  const bw = s * 0.09;
 
   // === STOCK ===
   const stockG = ctx.createLinearGradient(-bw * 0.6, s * 0.06, bw * 0.6, s * 0.06);
@@ -2195,19 +2196,30 @@ function drawHoloGears(
   s: number,
   time: number,
   zoom: number,
+  layer: "behind" | "front",
 ) {
   for (let g = 0; g < 6; g++) {
     const ga = time * 1.8 + g * Math.PI * 0.34;
+    const depth = Math.sin(ga);
+
+    if (layer === "behind" && depth >= 0) continue;
+    if (layer === "front" && depth < 0) continue;
+
+    // depth ranges -1 (far behind) to +1 (close in front)
+    // scale: behind gears shrink, front gears grow
+    const depthScale = 0.85 + depth * 0.2;
+    const depthAlpha = 0.7 + depth * 0.3;
+
     const gd = s * 0.65;
     const gx = x + Math.cos(ga) * gd;
-    const gy = y - s * 0.05 + Math.sin(ga) * gd * 0.4;
-    const gs = s * (0.07 + Math.sin(time * 2 + g) * 0.018);
-    const gAlpha = 0.5 + Math.sin(time * 3 + g * 0.8) * 0.2;
+    const gy = y - s * 0.05 + depth * gd * 0.4;
+    const gs = s * (0.07 + Math.sin(time * 2 + g) * 0.018) * depthScale;
+    const gAlpha = (0.5 + Math.sin(time * 3 + g * 0.8) * 0.2) * depthAlpha;
 
     ctx.shadowColor = "#00ccff";
-    ctx.shadowBlur = 6 * zoom;
+    ctx.shadowBlur = (4 + depth * 3) * zoom;
     ctx.strokeStyle = `rgba(0, 200, 255, ${gAlpha})`;
-    ctx.lineWidth = 1.8 * zoom;
+    ctx.lineWidth = (1.4 + depth * 0.6) * zoom;
 
     ctx.beginPath();
     for (let t = 0; t < 8; t++) {

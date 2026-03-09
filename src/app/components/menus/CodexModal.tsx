@@ -38,6 +38,7 @@ import {
   EyeOff,
   AlertTriangle,
   Footprints,
+  Plane,
 } from "lucide-react";
 import type {
   HeroType,
@@ -75,6 +76,8 @@ import {
   EnemySprite,
   SpellSprite,
   HeroAbilityIcon,
+  HeroIcon,
+  SpellIcon,
 } from "../../sprites";
 import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
 
@@ -2147,17 +2150,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                         <div className="flex flex-wrap gap-1 mt-2">
                                           {troop.isMounted && (
                                             <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 border border-amber-700/50">
-                                              🐴 Mounted
+                                              <Wind size={10} className="inline" /> Mounted
                                             </span>
                                           )}
                                           {troop.isRanged && (
                                             <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 border border-blue-700/50">
-                                              🏹 Ranged
+                                              <Crosshair size={10} className="inline" /> Ranged
                                             </span>
                                           )}
                                           {troop.canTargetFlying && (
                                             <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
-                                              ✈️ Anti-Air
+                                              <Plane size={10} className="inline" /> Anti-Air
                                             </span>
                                           )}
                                         </div>
@@ -2302,7 +2305,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               {roleInfo.role}
                             </span>
                           </div>
-                          <span className="text-xl">{hero.icon}</span>
+                          <HeroIcon type={type} size={20} />
                         </div>
 
                         <div className="p-4">
@@ -2550,7 +2553,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               <h3 className="text-3xl font-bold text-amber-200">
                                 {hero.name}
                               </h3>
-                              <span className="text-2xl">{hero.icon}</span>
+                              <HeroIcon type={selectedHeroDetail as HeroType} size={24} />
                             </div>
                             <p className="text-stone-400 mb-4">
                               {hero.description}
@@ -3189,7 +3192,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 <h3 className="text-xl font-bold text-purple-200">
                                   {spell.name}
                                 </h3>
-                                <span className="text-xl">{spell.icon}</span>
+                                <SpellIcon type={type} size={20} />
                               </div>
                               <p className="text-sm text-stone-400">{spell.desc}</p>
                             </div>

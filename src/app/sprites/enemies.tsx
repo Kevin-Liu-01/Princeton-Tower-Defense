@@ -7461,34 +7461,31 @@ export const EnemySprite: React.FC<{
         const wingMembraneColor = "rgba(136, 19, 55, 0.7)";
         const wingVeinColor = "rgba(100, 10, 40, 0.5)";
 
-        // Left wing membrane
+        // Left wing membrane (scalloped edges with pointed finger tips)
         ctx.fillStyle = wingMembraneColor;
         ctx.beginPath();
         ctx.moveTo(cx - 6 * scale, cy - 4 * scale + dy);
-        ctx.quadraticCurveTo(cx - 12 * scale, cy - 14 * scale + dy - wingFlap, cx - 22 * scale, cy - 10 * scale + dy - wingFlap * 0.8);
-        ctx.lineTo(cx - 24 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
-        ctx.quadraticCurveTo(cx - 20 * scale, cy + 4 * scale + dy - wingFlap * 0.2, cx - 14 * scale, cy + 6 * scale + dy);
-        ctx.quadraticCurveTo(cx - 9 * scale, cy + 5 * scale + dy, cx - 6 * scale, cy + 2 * scale + dy);
+        ctx.quadraticCurveTo(cx - 12 * scale, cy - 15 * scale + dy - wingFlap, cx - 24 * scale, cy - 11 * scale + dy - wingFlap * 0.8);
+        ctx.quadraticCurveTo(cx - 18 * scale, cy - 5 * scale + dy - wingFlap * 0.6, cx - 27 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
+        ctx.quadraticCurveTo(cx - 19 * scale, cy + 3 * scale + dy - wingFlap * 0.2, cx - 16 * scale, cy + 7 * scale + dy);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy + 6 * scale + dy, cx - 6 * scale, cy + 2 * scale + dy);
         ctx.closePath();
         ctx.fill();
 
         // Left wing bone segments
         ctx.strokeStyle = wingBoneColor;
         ctx.lineWidth = 2 * scale;
-        // Main bone
         ctx.beginPath();
         ctx.moveTo(cx - 6 * scale, cy - 4 * scale + dy);
-        ctx.quadraticCurveTo(cx - 12 * scale, cy - 12 * scale + dy - wingFlap, cx - 22 * scale, cy - 10 * scale + dy - wingFlap * 0.8);
+        ctx.quadraticCurveTo(cx - 12 * scale, cy - 13 * scale + dy - wingFlap, cx - 24 * scale, cy - 11 * scale + dy - wingFlap * 0.8);
         ctx.stroke();
-        // Secondary bone
         ctx.beginPath();
         ctx.moveTo(cx - 6 * scale, cy - 2 * scale + dy);
-        ctx.quadraticCurveTo(cx - 14 * scale, cy - 6 * scale + dy - wingFlap * 0.6, cx - 24 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
+        ctx.quadraticCurveTo(cx - 14 * scale, cy - 6 * scale + dy - wingFlap * 0.6, cx - 27 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
         ctx.stroke();
-        // Tertiary bone
         ctx.beginPath();
         ctx.moveTo(cx - 6 * scale, cy + 1 * scale + dy);
-        ctx.quadraticCurveTo(cx - 10 * scale, cy + 1 * scale + dy - wingFlap * 0.3, cx - 14 * scale, cy + 6 * scale + dy);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy + 1 * scale + dy - wingFlap * 0.3, cx - 16 * scale, cy + 7 * scale + dy);
         ctx.stroke();
 
         // Left wing veins
@@ -7497,7 +7494,7 @@ export const EnemySprite: React.FC<{
         for (let v = 0; v < 4; v++) {
           const vFrac = (v + 1) / 5;
           ctx.beginPath();
-          const vx1 = cx - 6 * scale - vFrac * 10 * scale;
+          const vx1 = cx - 6 * scale - vFrac * 12 * scale;
           const vy1 = cy - 4 * scale + dy - wingFlap * vFrac * 0.5;
           const vx2 = vx1 - 3 * scale;
           const vy2 = vy1 + 6 * scale + wingFlap * 0.1;
@@ -7506,14 +7503,14 @@ export const EnemySprite: React.FC<{
           ctx.stroke();
         }
 
-        // Right wing membrane
+        // Right wing membrane (scalloped edges with pointed finger tips)
         ctx.fillStyle = wingMembraneColor;
         ctx.beginPath();
         ctx.moveTo(cx + 6 * scale, cy - 4 * scale + dy);
-        ctx.quadraticCurveTo(cx + 12 * scale, cy - 14 * scale + dy - wingFlap, cx + 22 * scale, cy - 10 * scale + dy - wingFlap * 0.8);
-        ctx.lineTo(cx + 24 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
-        ctx.quadraticCurveTo(cx + 20 * scale, cy + 4 * scale + dy - wingFlap * 0.2, cx + 14 * scale, cy + 6 * scale + dy);
-        ctx.quadraticCurveTo(cx + 9 * scale, cy + 5 * scale + dy, cx + 6 * scale, cy + 2 * scale + dy);
+        ctx.quadraticCurveTo(cx + 12 * scale, cy - 15 * scale + dy - wingFlap, cx + 24 * scale, cy - 11 * scale + dy - wingFlap * 0.8);
+        ctx.quadraticCurveTo(cx + 18 * scale, cy - 5 * scale + dy - wingFlap * 0.6, cx + 27 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
+        ctx.quadraticCurveTo(cx + 19 * scale, cy + 3 * scale + dy - wingFlap * 0.2, cx + 16 * scale, cy + 7 * scale + dy);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy + 6 * scale + dy, cx + 6 * scale, cy + 2 * scale + dy);
         ctx.closePath();
         ctx.fill();
 
@@ -7522,15 +7519,15 @@ export const EnemySprite: React.FC<{
         ctx.lineWidth = 2 * scale;
         ctx.beginPath();
         ctx.moveTo(cx + 6 * scale, cy - 4 * scale + dy);
-        ctx.quadraticCurveTo(cx + 12 * scale, cy - 12 * scale + dy - wingFlap, cx + 22 * scale, cy - 10 * scale + dy - wingFlap * 0.8);
+        ctx.quadraticCurveTo(cx + 12 * scale, cy - 13 * scale + dy - wingFlap, cx + 24 * scale, cy - 11 * scale + dy - wingFlap * 0.8);
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(cx + 6 * scale, cy - 2 * scale + dy);
-        ctx.quadraticCurveTo(cx + 14 * scale, cy - 6 * scale + dy - wingFlap * 0.6, cx + 24 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
+        ctx.quadraticCurveTo(cx + 14 * scale, cy - 6 * scale + dy - wingFlap * 0.6, cx + 27 * scale, cy - 2 * scale + dy - wingFlap * 0.4);
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(cx + 6 * scale, cy + 1 * scale + dy);
-        ctx.quadraticCurveTo(cx + 10 * scale, cy + 1 * scale + dy - wingFlap * 0.3, cx + 14 * scale, cy + 6 * scale + dy);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy + 1 * scale + dy - wingFlap * 0.3, cx + 16 * scale, cy + 7 * scale + dy);
         ctx.stroke();
 
         // Right wing veins
@@ -7539,7 +7536,7 @@ export const EnemySprite: React.FC<{
         for (let v = 0; v < 4; v++) {
           const vFrac = (v + 1) / 5;
           ctx.beginPath();
-          const vx1 = cx + 6 * scale + vFrac * 10 * scale;
+          const vx1 = cx + 6 * scale + vFrac * 12 * scale;
           const vy1 = cy - 4 * scale + dy - wingFlap * vFrac * 0.5;
           const vx2 = vx1 + 3 * scale;
           const vy2 = vy1 + 6 * scale + wingFlap * 0.1;

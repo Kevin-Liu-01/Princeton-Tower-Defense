@@ -1,7 +1,5 @@
 import type { Tower, Position } from "../../types";
-import {
-  ISO_Y_RATIO,
-} from "../../constants";
+import { ISO_Y_RATIO } from "../../constants";
 import {
   generateIsoHexVertices,
   computeHexSideNormals,
@@ -12,9 +10,7 @@ import {
   type IsoOffFn,
   type Pt,
 } from "../helpers";
-import {
-  drawIsometricPrism,
-} from "./towerHelpers";
+import { drawIsometricPrism } from "./towerHelpers";
 
 export function renderMortarTower(
   ctx: CanvasRenderingContext2D,
@@ -65,7 +61,14 @@ export function renderMortarTower(
     const shW = baseW * 0.65 * zoom;
     const shH = baseW * 0.3 * zoom;
     // Outer soft penumbra
-    const penGrad = ctx.createRadialGradient(shX, shY, shW * 0.4, shX, shY, shW * 1.15);
+    const penGrad = ctx.createRadialGradient(
+      shX,
+      shY,
+      shW * 0.4,
+      shX,
+      shY,
+      shW * 1.15,
+    );
     penGrad.addColorStop(0, "rgba(0,0,0,0.22)");
     penGrad.addColorStop(0.6, "rgba(0,0,0,0.12)");
     penGrad.addColorStop(1, "rgba(0,0,0,0)");
@@ -124,9 +127,15 @@ export function renderMortarTower(
       wallBot.x + (wallVerts[i].x + wallVerts[ni].x) * 0.5,
       wallBot.y + (wallVerts[i].y + wallVerts[ni].y) * 0.5,
     );
-    wallGrad.addColorStop(0, `rgb(${Math.min(255, r + 8)},${Math.min(255, g + 6)},${Math.min(255, b + 5)})`);
+    wallGrad.addColorStop(
+      0,
+      `rgb(${Math.min(255, r + 8)},${Math.min(255, g + 6)},${Math.min(255, b + 5)})`,
+    );
     wallGrad.addColorStop(0.6, `rgb(${r},${g},${b})`);
-    wallGrad.addColorStop(1, `rgb(${Math.max(0, r - 10)},${Math.max(0, g - 8)},${Math.max(0, b - 6)})`);
+    wallGrad.addColorStop(
+      1,
+      `rgb(${Math.max(0, r - 10)},${Math.max(0, g - 8)},${Math.max(0, b - 6)})`,
+    );
     ctx.fillStyle = wallGrad;
     ctx.beginPath();
     ctx.moveTo(wallBot.x + wallVerts[i].x, wallBot.y + wallVerts[i].y);
@@ -145,10 +154,16 @@ export function renderMortarTower(
 
     // Face interpolation helper for placing details on any wall face
     const wallFacePt = (u: number, v: number) => ({
-      x: wallBot.x + wallVerts[i].x * (1 - u) + wallVerts[ni].x * u
-        + (wallTop.x - wallBot.x + (wallVerts[i].x - wallVerts[i].x) * 0) * v,
-      y: wallBot.y + wallVerts[i].y * (1 - u) + wallVerts[ni].y * u
-        + (wallTop.y - wallBot.y) * v,
+      x:
+        wallBot.x +
+        wallVerts[i].x * (1 - u) +
+        wallVerts[ni].x * u +
+        (wallTop.x - wallBot.x + (wallVerts[i].x - wallVerts[i].x) * 0) * v,
+      y:
+        wallBot.y +
+        wallVerts[i].y * (1 - u) +
+        wallVerts[ni].y * u +
+        (wallTop.y - wallBot.y) * v,
     });
 
     if (level === 1) {
@@ -161,15 +176,27 @@ export function renderMortarTower(
         ctx.strokeStyle = `rgba(40,35,20,${0.14 + bright * 0.06})`;
         ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
-        ctx.moveTo(wallBot.x + wallVerts[i].x, rowY + wallVerts[i].y * (1 - rowVf));
-        ctx.lineTo(wallBot.x + wallVerts[ni].x, rowY + wallVerts[ni].y * (1 - rowVf));
+        ctx.moveTo(
+          wallBot.x + wallVerts[i].x,
+          rowY + wallVerts[i].y * (1 - rowVf),
+        );
+        ctx.lineTo(
+          wallBot.x + wallVerts[ni].x,
+          rowY + wallVerts[ni].y * (1 - rowVf),
+        );
         ctx.stroke();
         // Subtle bag bulge highlight
         ctx.strokeStyle = `rgba(160,140,100,${0.05 + bright * 0.04})`;
         ctx.lineWidth = 0.4 * zoom;
         ctx.beginPath();
-        ctx.moveTo(wallBot.x + wallVerts[i].x, rowY + wallVerts[i].y * (1 - rowVf) - 0.8 * zoom);
-        ctx.lineTo(wallBot.x + wallVerts[ni].x, rowY + wallVerts[ni].y * (1 - rowVf) - 0.8 * zoom);
+        ctx.moveTo(
+          wallBot.x + wallVerts[i].x,
+          rowY + wallVerts[i].y * (1 - rowVf) - 0.8 * zoom,
+        );
+        ctx.lineTo(
+          wallBot.x + wallVerts[ni].x,
+          rowY + wallVerts[ni].y * (1 - rowVf) - 0.8 * zoom,
+        );
         ctx.stroke();
       }
       // Vertical seam (offset brick pattern)
@@ -210,7 +237,13 @@ export function renderMortarTower(
         const sdv = ((seed * (sd + 3) * 13) % 100) / 100;
         const pt = wallFacePt(sdu, sdv);
         ctx.beginPath();
-        ctx.arc(pt.x, pt.y, (0.3 + ((seed * sd) % 3) * 0.15) * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          pt.x,
+          pt.y,
+          (0.3 + ((seed * sd) % 3) * 0.15) * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       // Frayed edge fibers at top
@@ -239,30 +272,52 @@ export function renderMortarTower(
       ctx.strokeStyle = `rgba(170,175,190,${0.1 + bright * 0.06})`;
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
-      ctx.moveTo(wallBot.x + wallVerts[i].x, midY + wallVerts[i].y * 0.5 - 0.6 * zoom);
-      ctx.lineTo(wallBot.x + wallVerts[ni].x, midY + wallVerts[ni].y * 0.5 - 0.6 * zoom);
+      ctx.moveTo(
+        wallBot.x + wallVerts[i].x,
+        midY + wallVerts[i].y * 0.5 - 0.6 * zoom,
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[ni].x,
+        midY + wallVerts[ni].y * 0.5 - 0.6 * zoom,
+      );
       ctx.stroke();
       // Weld heat tint (faint blue/purple along bead)
       ctx.strokeStyle = `rgba(100,80,160,${0.04 + bright * 0.03})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(wallBot.x + wallVerts[i].x, midY + wallVerts[i].y * 0.5 + 0.3 * zoom);
-      ctx.lineTo(wallBot.x + wallVerts[ni].x, midY + wallVerts[ni].y * 0.5 + 0.3 * zoom);
+      ctx.moveTo(
+        wallBot.x + wallVerts[i].x,
+        midY + wallVerts[i].y * 0.5 + 0.3 * zoom,
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[ni].x,
+        midY + wallVerts[ni].y * 0.5 + 0.3 * zoom,
+      );
       ctx.stroke();
       // Two rivet rows (top + bottom border)
       ctx.fillStyle = `rgba(140,145,160,${0.4 + bright * 0.3})`;
       for (const vf of [0.12, 0.88]) {
         for (let rv = 0; rv < 3; rv++) {
           const rvU = (rv + 0.5) / 3;
-          const rvx = wallBot.x + wallVerts[i].x * (1 - rvU) + wallVerts[ni].x * rvU;
-          const rvy = wallBot.y + (wallTop.y - wallBot.y) * vf + (wallVerts[i].y * (1 - rvU) + wallVerts[ni].y * rvU) * (1 - vf);
+          const rvx =
+            wallBot.x + wallVerts[i].x * (1 - rvU) + wallVerts[ni].x * rvU;
+          const rvy =
+            wallBot.y +
+            (wallTop.y - wallBot.y) * vf +
+            (wallVerts[i].y * (1 - rvU) + wallVerts[ni].y * rvU) * (1 - vf);
           ctx.beginPath();
           ctx.arc(rvx, rvy, 0.85 * zoom, 0, Math.PI * 2);
           ctx.fill();
           // Rivet highlight
           ctx.fillStyle = `rgba(200,200,210,${0.15 + bright * 0.1})`;
           ctx.beginPath();
-          ctx.arc(rvx - 0.2 * zoom, rvy - 0.2 * zoom, 0.35 * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            rvx - 0.2 * zoom,
+            rvy - 0.2 * zoom,
+            0.35 * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
           ctx.fillStyle = `rgba(140,145,160,${0.4 + bright * 0.3})`;
         }
@@ -287,10 +342,38 @@ export function renderMortarTower(
       // L3+: Polished ceremonial armor with gold filigree, beveled edges, engraving
       // Beveled inset border (creates depth illusion)
       const inset = 0.1;
-      const p0 = { x: wallBot.x + wallVerts[i].x * (1 - inset) + wallVerts[ni].x * inset, y: wallBot.y + wallVerts[i].y * (1 - inset) + wallVerts[ni].y * inset - 0.4 * zoom };
-      const p1 = { x: wallBot.x + wallVerts[ni].x * (1 - inset) + wallVerts[i].x * inset, y: wallBot.y + wallVerts[ni].y * (1 - inset) + wallVerts[i].y * inset - 0.4 * zoom };
-      const p2 = { x: wallTop.x + wallVerts[ni].x * (1 - inset) + wallVerts[i].x * inset, y: wallTop.y + wallVerts[ni].y * (1 - inset) + wallVerts[i].y * inset + 0.4 * zoom };
-      const p3 = { x: wallTop.x + wallVerts[i].x * (1 - inset) + wallVerts[ni].x * inset, y: wallTop.y + wallVerts[i].y * (1 - inset) + wallVerts[ni].y * inset + 0.4 * zoom };
+      const p0 = {
+        x: wallBot.x + wallVerts[i].x * (1 - inset) + wallVerts[ni].x * inset,
+        y:
+          wallBot.y +
+          wallVerts[i].y * (1 - inset) +
+          wallVerts[ni].y * inset -
+          0.4 * zoom,
+      };
+      const p1 = {
+        x: wallBot.x + wallVerts[ni].x * (1 - inset) + wallVerts[i].x * inset,
+        y:
+          wallBot.y +
+          wallVerts[ni].y * (1 - inset) +
+          wallVerts[i].y * inset -
+          0.4 * zoom,
+      };
+      const p2 = {
+        x: wallTop.x + wallVerts[ni].x * (1 - inset) + wallVerts[i].x * inset,
+        y:
+          wallTop.y +
+          wallVerts[ni].y * (1 - inset) +
+          wallVerts[i].y * inset +
+          0.4 * zoom,
+      };
+      const p3 = {
+        x: wallTop.x + wallVerts[i].x * (1 - inset) + wallVerts[ni].x * inset,
+        y:
+          wallTop.y +
+          wallVerts[i].y * (1 - inset) +
+          wallVerts[ni].y * inset +
+          0.4 * zoom,
+      };
       // Outer bevel shadow
       ctx.strokeStyle = `rgba(0,0,0,${0.08 + bright * 0.04})`;
       ctx.lineWidth = 1 * zoom;
@@ -341,7 +424,13 @@ export function renderMortarTower(
         ctx.fill();
         ctx.fillStyle = `rgba(230,200,80,${0.3 + bright * 0.2})`;
         ctx.beginPath();
-        ctx.arc(pp.x - 0.15 * zoom, pp.y - 0.15 * zoom, 0.4 * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          pp.x - 0.15 * zoom,
+          pp.y - 0.15 * zoom,
+          0.4 * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = `rgba(201,162,39,${0.55 + bright * 0.3})`;
       }
@@ -349,15 +438,28 @@ export function renderMortarTower(
       ctx.strokeStyle = `rgba(255,255,255,${0.035 + bright * 0.03})`;
       ctx.lineWidth = 0.7 * zoom;
       ctx.beginPath();
-      ctx.moveTo(wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08, wallTop.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 + 1 * zoom);
-      ctx.lineTo(wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08, wallBot.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 - 1 * zoom);
+      ctx.moveTo(
+        wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08,
+        wallTop.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 + 1 * zoom,
+      );
+      ctx.lineTo(
+        wallTop.x + wallVerts[i].x * 0.92 + wallVerts[ni].x * 0.08,
+        wallBot.y + wallVerts[i].y * 0.92 + wallVerts[ni].y * 0.08 - 1 * zoom,
+      );
       ctx.stroke();
       // Secondary shorter highlight (reflection break)
       ctx.strokeStyle = `rgba(255,255,255,${0.02 + bright * 0.015})`;
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
-      ctx.moveTo(wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8, wallTop.y + (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) + 2 * zoom);
-      ctx.lineTo(wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8, (wallBot.y + wallTop.y) * 0.5 + (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) * 0.5);
+      ctx.moveTo(
+        wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8,
+        wallTop.y + (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) + 2 * zoom,
+      );
+      ctx.lineTo(
+        wallBot.x + wallVerts[i].x * 0.2 + wallVerts[ni].x * 0.8,
+        (wallBot.y + wallTop.y) * 0.5 +
+          (wallVerts[i].y * 0.2 + wallVerts[ni].y * 0.8) * 0.5,
+      );
       ctx.stroke();
     }
   }
@@ -517,9 +619,15 @@ export function renderMortarTower(
       depotBot.x + (depotVerts[i].x + depotVerts[ni].x) * 0.5,
       depotBot.y + (depotVerts[i].y + depotVerts[ni].y) * 0.5,
     );
-    depotGrad.addColorStop(0, `rgb(${Math.min(255, dr + 10)},${Math.min(255, dg + 8)},${Math.min(255, db + 5)})`);
+    depotGrad.addColorStop(
+      0,
+      `rgb(${Math.min(255, dr + 10)},${Math.min(255, dg + 8)},${Math.min(255, db + 5)})`,
+    );
     depotGrad.addColorStop(0.5, `rgb(${dr},${dg},${db})`);
-    depotGrad.addColorStop(1, `rgb(${Math.max(0, dr - 12)},${Math.max(0, dg - 10)},${Math.max(0, db - 6)})`);
+    depotGrad.addColorStop(
+      1,
+      `rgb(${Math.max(0, dr - 12)},${Math.max(0, dg - 10)},${Math.max(0, db - 6)})`,
+    );
     ctx.fillStyle = depotGrad;
     ctx.beginPath();
     ctx.moveTo(depotBot.x + depotVerts[i].x, depotBot.y + depotVerts[i].y);
@@ -535,8 +643,16 @@ export function renderMortarTower(
 
     // Depot face detail helper
     const depotFacePt = (u: number, v: number) => ({
-      x: depotBot.x + depotVerts[i].x * (1 - u) + depotVerts[ni].x * u + (depotTop.x - depotBot.x) * v,
-      y: depotBot.y + depotVerts[i].y * (1 - u) + depotVerts[ni].y * u + (depotTop.y - depotBot.y) * v,
+      x:
+        depotBot.x +
+        depotVerts[i].x * (1 - u) +
+        depotVerts[ni].x * u +
+        (depotTop.x - depotBot.x) * v,
+      y:
+        depotBot.y +
+        depotVerts[i].y * (1 - u) +
+        depotVerts[ni].y * u +
+        (depotTop.y - depotBot.y) * v,
     });
 
     // Horizontal panel seam with shadow/highlight pair
@@ -550,8 +666,14 @@ export function renderMortarTower(
     ctx.strokeStyle = `rgba(${Math.min(255, dr + 20)},${Math.min(255, dg + 16)},${Math.min(255, db + 10)},0.08)`;
     ctx.lineWidth = 0.3 * zoom;
     ctx.beginPath();
-    ctx.moveTo(depotBot.x + depotVerts[i].x, seamY + depotVerts[i].y * 0.3 - 0.6 * zoom);
-    ctx.lineTo(depotBot.x + depotVerts[ni].x, seamY + depotVerts[ni].y * 0.3 - 0.6 * zoom);
+    ctx.moveTo(
+      depotBot.x + depotVerts[i].x,
+      seamY + depotVerts[i].y * 0.3 - 0.6 * zoom,
+    );
+    ctx.lineTo(
+      depotBot.x + depotVerts[ni].x,
+      seamY + depotVerts[ni].y * 0.3 - 0.6 * zoom,
+    );
     ctx.stroke();
 
     if (level === 1) {
@@ -616,9 +738,19 @@ export function renderMortarTower(
       ctx.lineTo(depotTop.x + mx, depotTop.y + my);
       ctx.stroke();
       // Rivet grid (4 corners + 2 mid-edges)
-      const rivetCol = level >= 3 ? `rgba(201,162,39,${0.4 + bright * 0.3})` : `rgba(130,130,140,${0.35 + bright * 0.25})`;
+      const rivetCol =
+        level >= 3
+          ? `rgba(201,162,39,${0.4 + bright * 0.3})`
+          : `rgba(130,130,140,${0.35 + bright * 0.25})`;
       ctx.fillStyle = rivetCol;
-      const rivetPositions = [[0.15, 0.15], [0.85, 0.15], [0.15, 0.85], [0.85, 0.85], [0.5, 0.12], [0.5, 0.88]];
+      const rivetPositions = [
+        [0.15, 0.15],
+        [0.85, 0.15],
+        [0.15, 0.85],
+        [0.85, 0.85],
+        [0.5, 0.12],
+        [0.5, 0.88],
+      ];
       for (const [ru, rv] of rivetPositions) {
         const rPt = depotFacePt(ru, rv);
         ctx.beginPath();
@@ -636,7 +768,10 @@ export function renderMortarTower(
         ctx.lineWidth = 0.5 * zoom;
         ctx.strokeRect(hPt.x - hW, hPt.y - hH, hW * 2, hH * 2);
         // Hatch handle
-        ctx.strokeStyle = level >= 3 ? `rgba(201,162,39,${0.3 + bright * 0.2})` : `rgba(120,120,130,${0.3 + bright * 0.2})`;
+        ctx.strokeStyle =
+          level >= 3
+            ? `rgba(201,162,39,${0.3 + bright * 0.2})`
+            : `rgba(120,120,130,${0.3 + bright * 0.2})`;
         ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
         ctx.moveTo(hPt.x - hW * 0.3, hPt.y);
@@ -648,7 +783,12 @@ export function renderMortarTower(
         ctx.fillStyle = `rgba(0,0,0,${0.2 + bright * 0.1})`;
         for (let vs = 0; vs < 3; vs++) {
           const vPt = depotFacePt(0.2 + vs * 0.3, 0.78);
-          ctx.fillRect(vPt.x - 0.8 * zoom, vPt.y - 0.3 * zoom, 1.6 * zoom, 0.6 * zoom);
+          ctx.fillRect(
+            vPt.x - 0.8 * zoom,
+            vPt.y - 0.3 * zoom,
+            1.6 * zoom,
+            0.6 * zoom,
+          );
         }
       }
     }
@@ -846,7 +986,7 @@ export function renderMortarTower(
       zoom,
     );
 
-    const cW = cSize * zoom * 0.5;  // half-width in screen space
+    const cW = cSize * zoom * 0.5; // half-width in screen space
     const cD = cSize * zoom * 0.25; // half-depth in screen space
     const cHp = cH * zoom;
 
@@ -872,7 +1012,12 @@ export function renderMortarTower(
     ctx.fillStyle = labelColor;
     const labelCx = crateX + cW * 0.5;
     const labelCy = crateY - cHp * 0.65 + cD * 0.25;
-    ctx.fillRect(labelCx - 1.5 * zoom, labelCy - 0.6 * zoom, 3 * zoom, 1.2 * zoom);
+    ctx.fillRect(
+      labelCx - 1.5 * zoom,
+      labelCy - 0.6 * zoom,
+      3 * zoom,
+      1.2 * zoom,
+    );
 
     // Wood plank lines on front-left face
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
@@ -922,8 +1067,12 @@ export function renderMortarTower(
 
       // Top cap (ellipse with highlight)
       const capGrad = ctx.createRadialGradient(
-        tankX - 0.5 * zoom, tankY - tH - 0.5 * zoom, 0,
-        tankX, tankY - tH, tRx,
+        tankX - 0.5 * zoom,
+        tankY - tH - 0.5 * zoom,
+        0,
+        tankX,
+        tankY - tH,
+        tRx,
       );
       capGrad.addColorStop(0, t === 0 ? "#7a4a2a" : "#6a5a3a");
       capGrad.addColorStop(0.7, t === 0 ? "#5a2a14" : "#4a3a28");
@@ -946,11 +1095,25 @@ export function renderMortarTower(
       // Pressure valve cap on top
       ctx.fillStyle = t === 0 ? "#cc4400" : "#aa6600";
       ctx.beginPath();
-      ctx.ellipse(tankX + 1.5 * zoom, tankY - tH - 0.5 * zoom, 1.2 * zoom, 0.7 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        tankX + 1.5 * zoom,
+        tankY - tH - 0.5 * zoom,
+        1.2 * zoom,
+        0.7 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.fillStyle = t === 0 ? "#ff6620" : "#cc8830";
       ctx.beginPath();
-      ctx.arc(tankX + 1.5 * zoom, tankY - tH - 0.5 * zoom, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.arc(
+        tankX + 1.5 * zoom,
+        tankY - tH - 0.5 * zoom,
+        0.5 * zoom,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Feed hose to depot
@@ -1024,10 +1187,17 @@ export function renderMortarTower(
 
       // Shell casing body (gradient for metallic volume)
       const shellGrad = ctx.createLinearGradient(
-        rackX - sRx, shellY, rackX + sRx, shellY,
+        rackX - sRx,
+        shellY,
+        rackX + sRx,
+        shellY,
       );
       const shellBase = isMissile ? "#aa1100" : isEmber ? "#cc5500" : "#7a6a50";
-      const shellLight = isMissile ? "#cc3322" : isEmber ? "#ee7722" : "#9a8a68";
+      const shellLight = isMissile
+        ? "#cc3322"
+        : isEmber
+          ? "#ee7722"
+          : "#9a8a68";
       const shellDark = isMissile ? "#881100" : isEmber ? "#aa4400" : "#5a4a38";
       shellGrad.addColorStop(0, shellDark);
       shellGrad.addColorStop(0.4, shellLight);
@@ -1042,19 +1212,43 @@ export function renderMortarTower(
       ctx.strokeStyle = isMissile ? "#cc5533" : isEmber ? "#dd8844" : "#b09060";
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.ellipse(rackX + sRx * 0.15, shellY, sRx * 0.2, sRy * 0.85, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        rackX + sRx * 0.15,
+        shellY,
+        sRx * 0.2,
+        sRy * 0.85,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
 
       // Nose cone (pointed tip, darker)
       ctx.fillStyle = isMissile ? "#661100" : isEmber ? "#884400" : "#4a4a52";
       ctx.beginPath();
-      ctx.ellipse(rackX - sRx * 0.7, shellY, sRx * 0.35, sRy * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        rackX - sRx * 0.7,
+        shellY,
+        sRx * 0.35,
+        sRy * 0.6,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Highlight glint
       ctx.fillStyle = "rgba(255,255,255,0.08)";
       ctx.beginPath();
-      ctx.ellipse(rackX - sRx * 0.2, shellY - sRy * 0.3, sRx * 0.35, sRy * 0.2, -0.3, 0, Math.PI * 2);
+      ctx.ellipse(
+        rackX - sRx * 0.2,
+        shellY - sRy * 0.3,
+        sRx * 0.35,
+        sRy * 0.2,
+        -0.3,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -1095,7 +1289,13 @@ export function renderMortarTower(
       ctx.fill();
       ctx.fillStyle = "#b0b0b8";
       ctx.beginPath();
-      ctx.arc(pivotX - 0.3 * zoom, pivotY - 0.3 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.arc(
+        pivotX - 0.3 * zoom,
+        pivotY - 0.3 * zoom,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Grabber claw at arm tip
@@ -1138,7 +1338,12 @@ export function renderMortarTower(
       const railOff = railSide * feedW * 0.4;
       ctx.beginPath();
       ctx.moveTo(convStartX + railOff, convStartY);
-      ctx.quadraticCurveTo(ctrlX + railOff, ctrlY, convEndX + railOff, convEndY);
+      ctx.quadraticCurveTo(
+        ctrlX + railOff,
+        ctrlY,
+        convEndX + railOff,
+        convEndY,
+      );
       ctx.stroke();
     }
     ctx.lineCap = "butt";
@@ -1148,8 +1353,14 @@ export function renderMortarTower(
     for (let ri = 0; ri < ribCount; ri++) {
       const rt = (ri + 0.5) / ribCount;
       const rtInv = 1 - rt;
-      const ribX = convStartX * rtInv * rtInv + 2 * ctrlX * rtInv * rt + convEndX * rt * rt;
-      const ribY = convStartY * rtInv * rtInv + 2 * ctrlY * rtInv * rt + convEndY * rt * rt;
+      const ribX =
+        convStartX * rtInv * rtInv +
+        2 * ctrlX * rtInv * rt +
+        convEndX * rt * rt;
+      const ribY =
+        convStartY * rtInv * rtInv +
+        2 * ctrlY * rtInv * rt +
+        convEndY * rt * rt;
       ctx.fillStyle = level >= 3 ? "rgba(80,80,88,0.25)" : "rgba(60,50,40,0.2)";
       ctx.beginPath();
       ctx.arc(ribX, ribY, feedW * 0.35, 0, Math.PI * 2);
@@ -1160,16 +1371,30 @@ export function renderMortarTower(
     if (timeSinceFire < 1000) {
       const shellT = Math.min(1, timeSinceFire / 1000);
       const stInv = 1 - shellT;
-      const sx = convStartX * stInv * stInv + 2 * ctrlX * stInv * shellT + convEndX * shellT * shellT;
-      const sy = convStartY * stInv * stInv + 2 * ctrlY * stInv * shellT + convEndY * shellT * shellT;
-      const tangentX = 2 * stInv * (ctrlX - convStartX) + 2 * shellT * (convEndX - ctrlX);
-      const tangentY = 2 * stInv * (ctrlY - convStartY) + 2 * shellT * (convEndY - ctrlY);
+      const sx =
+        convStartX * stInv * stInv +
+        2 * ctrlX * stInv * shellT +
+        convEndX * shellT * shellT;
+      const sy =
+        convStartY * stInv * stInv +
+        2 * ctrlY * stInv * shellT +
+        convEndY * shellT * shellT;
+      const tangentX =
+        2 * stInv * (ctrlX - convStartX) + 2 * shellT * (convEndX - ctrlX);
+      const tangentY =
+        2 * stInv * (ctrlY - convStartY) + 2 * shellT * (convEndY - ctrlY);
       const shellAng = Math.atan2(tangentY, tangentX);
       const shellLen = (level >= 3 ? 2.8 : 2.2) * zoom;
       const shellRad = (level >= 3 ? 1.4 : 1.1) * zoom;
 
       // Shell casing body
-      ctx.fillStyle = isMissile ? "#cc2200" : isEmber ? "#ff6600" : level >= 3 ? "#c9a227" : "#8a7a5a";
+      ctx.fillStyle = isMissile
+        ? "#cc2200"
+        : isEmber
+          ? "#ff6600"
+          : level >= 3
+            ? "#c9a227"
+            : "#8a7a5a";
       ctx.beginPath();
       ctx.ellipse(sx, sy, shellLen, shellRad, shellAng, 0, Math.PI * 2);
       ctx.fill();
@@ -1187,7 +1412,8 @@ export function renderMortarTower(
       // Casing rim
       const rimX = sx - Math.cos(shellAng) * shellLen * 0.75;
       const rimY = sy - Math.sin(shellAng) * shellLen * 0.75;
-      ctx.strokeStyle = level >= 3 ? "rgba(180,150,50,0.3)" : "rgba(100,90,70,0.25)";
+      ctx.strokeStyle =
+        level >= 3 ? "rgba(180,150,50,0.3)" : "rgba(100,90,70,0.25)";
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
       ctx.arc(rimX, rimY, shellRad * 0.9, 0, Math.PI * 2);
@@ -1578,10 +1804,14 @@ export interface CradleArmParams {
 
 export function isoQuadPath(
   ctx: CanvasRenderingContext2D,
-  cx: number, cy: number,
-  hw: number, hh: number,
-  uX: number, uY: number,
-  vX: number, vY: number,
+  cx: number,
+  cy: number,
+  hw: number,
+  hh: number,
+  uX: number,
+  uY: number,
+  vX: number,
+  vY: number,
 ) {
   ctx.moveTo(cx - hw * uX - hh * vX, cy - hw * uY - hh * vY);
   ctx.lineTo(cx + hw * uX - hh * vX, cy + hw * uY - hh * vY);
@@ -1598,47 +1828,144 @@ function parseHexColor(hex: string) {
   };
 }
 
-export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmParams) {
-  const { side, level, zoom, sinR, cosR, perpX, perpY, tiers, tierRecoils,
-    totalRecoil, posAtFrac, cradleW, metalDark, metalMid,
-    metalLight, accent, time, timeSinceFire } = p;
+export function drawMortarCradleArm(
+  ctx: CanvasRenderingContext2D,
+  p: CradleArmParams,
+) {
+  const {
+    side,
+    level,
+    zoom,
+    sinR,
+    cosR,
+    perpX,
+    perpY,
+    tiers,
+    tierRecoils,
+    totalRecoil,
+    posAtFrac,
+    cradleW,
+    metalDark,
+    metalMid,
+    metalLight,
+    accent,
+    time,
+    timeSinceFire,
+  } = p;
 
   const hexSides = 8;
   const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
   const sideVis = side * (-sinR + 0.5 * cosR);
   const isFront = sideVis > 0;
 
-  // Tapered octagonal prism — 4 key points defining 3 segments
   const armR = (level >= 3 ? 7.5 : level >= 2 ? 6.5 : 5.5) * zoom;
-  const armDef = [
-    { frac: 0.02, recoil: tierRecoils[0] * 0.05, r: armR, offR: cradleW, yOff: 4 * zoom },
-    { frac: 0.18, recoil: tierRecoils[0] * 0.45, r: armR * 0.72, offR: cradleW, yOff: 0 },
-    { frac: 0.42, recoil: (tierRecoils[0] + tierRecoils[1]) * 0.55, r: armR * 0.48, offR: tiers[1].r * 1.05, yOff: 0 },
-    { frac: 0.62, recoil: totalRecoil * 0.7, r: armR * 0.28, offR: tiers[2].r * 0.85, yOff: 0 },
-  ];
 
-  const pts = armDef.map(a => {
+  // Smoothly interpolated barrel radius at a given fractional position.
+  // Linear taper from tiers[0].r to tiers[2].r avoids sharp offR jumps
+  // at tier boundaries that create jarring lateral jogs in the arm.
+  const barrelRAtFrac = (frac: number) => {
+    const t = Math.min(1, Math.max(0, frac * 2));
+    return tiers[0].r + (tiers[1].r - tiers[0].r) * t;
+  };
+
+  // L-shaped arm: vertical uprights from the base, then a sharp bend
+  // inward to hug the barrel.  offR is computed from the actual barrel
+  // radius + arm cross-section + a gap, with extra padding at the base
+  // to create the straight vertical section.
+  const armGap = (level >= 3 ? 3.5 : level >= 2 ? 3 : 2.5) * zoom;
+  const trunnionFrac = 0.32;
+  const trunnionRecoil = tierRecoils[0] * 0.7 + tierRecoils[1] * 0.25;
+  const shelfEndFrac = 0.50;
+  const shelfEndRecoil = tierRecoils[0] + tierRecoils[1] * 0.55;
+
+  const armDefRaw = [
+    { frac: 0.01, recoil: tierRecoils[0] * 0.03, r: armR * 1.05, yOff: 5 * zoom, pad: armGap * 1.0 },
+    { frac: 0.10, recoil: tierRecoils[0] * 0.25, r: armR * 0.92, yOff: 0,         pad: armGap * 1.0 },
+    { frac: 0.20, recoil: tierRecoils[0] * 0.5,  r: armR * 0.78, yOff: 0,         pad: armGap * 0.7 },
+    { frac: trunnionFrac, recoil: trunnionRecoil,  r: armR * 0.55, yOff: 0,         pad: armGap * 0.15 },
+    { frac: 0.42, recoil: trunnionRecoil + (shelfEndRecoil - trunnionRecoil) * 0.5, r: armR * 0.40, yOff: 0, pad: 0 },
+    { frac: shelfEndFrac, recoil: shelfEndRecoil,  r: armR * 0.28, yOff: 0,         pad: 0 },
+  ];
+  const armDef = armDefRaw.map(a => ({
+    ...a,
+    offR: barrelRAtFrac(a.frac) + a.r + armGap + a.pad,
+  }));
+
+  const pts = armDef.map((a) => {
     const ap = posAtFrac(a.frac, a.recoil);
     return {
-      center: { x: ap.x + side * perpX * a.offR, y: ap.y + side * perpY * a.offR + a.yOff } as Pt,
+      center: {
+        x: ap.x + side * perpX * a.offR,
+        y: ap.y + side * perpY * a.offR + a.yOff,
+      } as Pt,
       verts: generateIsoHexVertices(isoOff, a.r, hexSides),
       r: a.r,
+      frac: a.frac,
+      offR: a.offR,
     };
   });
 
-  // Depth sorting and normals — same system as barrel tiers, rotation-aware
   const sideNormals = computeHexSideNormals(cosR, hexSides);
   const sorted = sortSidesByDepth(sideNormals);
   const dk = parseHexColor(metalDark);
+  const md = parseHexColor(metalMid);
   const lt = parseHexColor(metalLight);
 
-  // ── BOTTOM CAP (base of arm, on the turntable) ──
+  // ── BASE MOUNTING FLANGE ──
+  {
+    const flangeScale = 1.3;
+    const flangeVerts = pts[0].verts.map((v) => ({
+      x: v.x * flangeScale,
+      y: v.y * flangeScale,
+    }));
+    const flangeH = (level >= 3 ? 3 : 2.5) * zoom;
+    const flangeBot: Pt = { x: pts[0].center.x, y: pts[0].center.y + flangeH };
+    const flangeTop: Pt = pts[0].center;
+
+    for (const i of sorted) {
+      const ni = (i + 1) % hexSides;
+      const n = sideNormals[i];
+      if (n < -0.6) continue;
+      const bright = Math.max(0, Math.min(1, 0.25 + (n + 1) * 0.3));
+      const fR = Math.floor(dk.r + (md.r - dk.r) * bright);
+      const fG = Math.floor(dk.g + (md.g - dk.g) * bright);
+      const fB = Math.floor(dk.b + (md.b - dk.b) * bright);
+      ctx.fillStyle = `rgb(${fR},${fG},${fB})`;
+      ctx.beginPath();
+      ctx.moveTo(flangeBot.x + flangeVerts[i].x, flangeBot.y + flangeVerts[i].y);
+      ctx.lineTo(flangeBot.x + flangeVerts[ni].x, flangeBot.y + flangeVerts[ni].y);
+      ctx.lineTo(flangeTop.x + flangeVerts[ni].x, flangeTop.y + flangeVerts[ni].y);
+      ctx.lineTo(flangeTop.x + flangeVerts[i].x, flangeTop.y + flangeVerts[i].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.05})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+    }
+    drawHexCap(ctx, flangeTop, flangeVerts, metalMid, metalDark, 0.5 * zoom);
+
+    ctx.fillStyle = accent;
+    for (let fi = 0; fi < hexSides; fi++) {
+      if (sideNormals[fi] < -0.2) continue;
+      const ni = (fi + 1) % hexSides;
+      const bx = flangeTop.x + (flangeVerts[fi].x + flangeVerts[ni].x) * 0.5 * 0.85;
+      const by = flangeTop.y + (flangeVerts[fi].y + flangeVerts[ni].y) * 0.5 * 0.85;
+      ctx.beginPath();
+      ctx.arc(bx, by, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ── BOTTOM CAP ──
   drawHexCap(ctx, pts[0].center, pts[0].verts, metalDark, metalDark, 0.5 * zoom);
 
-  // ── TAPERED OCTAGONAL PRISM SEGMENTS (base → pivot → mid → tip) ──
+  // ── TAPERED OCTAGONAL PRISM SEGMENTS ──
   for (let si = 0; si < pts.length - 1; si++) {
     const bot = pts[si];
     const top = pts[si + 1];
+    const isBaseSeg = si === 0;
+    const isTrunnionSeg = si === 2;
+
     for (const i of sorted) {
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
@@ -1646,15 +1973,17 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
       const fR = Math.floor(dk.r + (lt.r - dk.r) * bright);
       const fG = Math.floor(dk.g + (lt.g - dk.g) * bright);
       const fB = Math.floor(dk.b + (lt.b - dk.b) * bright);
+
       const faceMidX = (bot.verts[i].x + bot.verts[ni].x) * 0.5;
       const faceMidY = (bot.verts[i].y + bot.verts[ni].y) * 0.5;
       const faceGrad = ctx.createLinearGradient(
         top.center.x + faceMidX, top.center.y + faceMidY,
         bot.center.x + faceMidX, bot.center.y + faceMidY,
       );
-      faceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 6)})`);
-      faceGrad.addColorStop(0.45, `rgb(${fR},${fG},${fB})`);
-      faceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 8)})`);
+      faceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`);
+      faceGrad.addColorStop(0.4, `rgb(${fR},${fG},${fB})`);
+      faceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 14)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`);
+
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
       ctx.moveTo(bot.center.x + bot.verts[i].x, bot.center.y + bot.verts[i].y);
@@ -1663,43 +1992,129 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
       ctx.lineTo(top.center.x + top.verts[i].x, top.center.y + top.verts[i].y);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = `rgba(0,0,0,${0.08 + bright * 0.06})`;
+      ctx.strokeStyle = `rgba(0,0,0,${0.06 + bright * 0.08})`;
       ctx.lineWidth = 0.5 * zoom;
       ctx.stroke();
+
       if (n < -0.5) continue;
-      if (si < 2) {
-        const t = 0.5;
-        const vLerp = { x: bot.verts[i].x + (top.verts[i].x - bot.verts[i].x) * t, y: bot.verts[i].y + (top.verts[i].y - bot.verts[i].y) * t };
-        const rx = bot.center.x + (top.center.x - bot.center.x) * t + vLerp.x * 0.8;
-        const ry = bot.center.y + (top.center.y - bot.center.y) * t + vLerp.y * 0.8;
-        ctx.fillStyle = accent;
+
+      // Horizontal stiffener rib on base segment
+      if (isBaseSeg && n > -0.1) {
+        const ribT = 0.5;
+        for (const vi of [i, ni]) {
+          const vLerp = {
+            x: bot.verts[vi].x + (top.verts[vi].x - bot.verts[vi].x) * ribT,
+            y: bot.verts[vi].y + (top.verts[vi].y - bot.verts[vi].y) * ribT,
+          };
+          const ribPt = {
+            x: bot.center.x + (top.center.x - bot.center.x) * ribT + vLerp.x,
+            y: bot.center.y + (top.center.y - bot.center.y) * ribT + vLerp.y,
+          };
+          if (vi === i) { ctx.beginPath(); ctx.moveTo(ribPt.x, ribPt.y); }
+          else { ctx.lineTo(ribPt.x, ribPt.y); }
+        }
+        ctx.strokeStyle = `rgba(${Math.max(0, fR - 20)},${Math.max(0, fG - 18)},${Math.max(0, fB - 16)},0.4)`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.stroke();
+      }
+
+      // Highlight edge
+      if (bright > 0.55) {
+        ctx.strokeStyle = `rgba(255,255,255,${0.06 + (bright - 0.55) * 0.2})`;
+        ctx.lineWidth = 0.6 * zoom;
         ctx.beginPath();
-        ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(bot.center.x + bot.verts[ni].x, bot.center.y + bot.verts[ni].y);
+        ctx.lineTo(top.center.x + top.verts[ni].x, top.center.y + top.verts[ni].y);
+        ctx.stroke();
+      }
+
+      // Rivets on base and trunnion segments
+      if ((isBaseSeg || isTrunnionSeg) && n > 0) {
+        const rivetCount = isBaseSeg ? 2 : 1;
+        for (let ri = 0; ri < rivetCount; ri++) {
+          const t = (ri + 1) / (rivetCount + 1);
+          const vL = {
+            x: bot.verts[i].x + (top.verts[i].x - bot.verts[i].x) * t,
+            y: bot.verts[i].y + (top.verts[i].y - bot.verts[i].y) * t,
+          };
+          const vR = {
+            x: bot.verts[ni].x + (top.verts[ni].x - bot.verts[ni].x) * t,
+            y: bot.verts[ni].y + (top.verts[ni].y - bot.verts[ni].y) * t,
+          };
+          const cx = bot.center.x + (top.center.x - bot.center.x) * t + (vL.x + vR.x) * 0.5 * 0.85;
+          const cy = bot.center.y + (top.center.y - bot.center.y) * t + (vL.y + vR.y) * 0.5 * 0.85;
+          ctx.fillStyle = accent;
+          ctx.beginPath();
+          ctx.arc(cx, cy, 0.6 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.beginPath();
+          ctx.arc(cx, cy, 0.25 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
-    if (si > 0) {
-      drawHexBand(ctx, bot.verts, sideNormals,
-        { x: bot.center.x, y: bot.center.y + 1 * zoom },
-        { x: bot.center.x, y: bot.center.y - 1 * zoom },
-        1.06,
-        (n) => {
-          const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
-          if (level >= 3) return accent;
-          return `rgb(${55 + Math.floor(b * 35)},${50 + Math.floor(b * 32)},${65 + Math.floor(b * 25)})`;
-        },
-        "rgba(0,0,0,0.15)", 0.4 * zoom, -0.3,
-      );
-    }
+
+    // Band ring at segment joints
+    drawHexBand(ctx, bot.verts, sideNormals,
+      { x: bot.center.x, y: bot.center.y + 1.2 * zoom },
+      { x: bot.center.x, y: bot.center.y - 1.2 * zoom },
+      1.08,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+        if (level >= 3) return accent;
+        return `rgb(${52 + Math.floor(b * 40)},${48 + Math.floor(b * 36)},${62 + Math.floor(b * 28)})`;
+      },
+      "rgba(0,0,0,0.18)", 0.4 * zoom, -0.4,
+    );
   }
 
   // ── TOP CAP ──
   const tipPt = pts[pts.length - 1];
-  drawHexCap(ctx, tipPt.center, tipPt.verts, isFront ? metalLight : metalMid, metalDark, 0.5 * zoom);
+  drawHexCap(ctx, tipPt.center, tipPt.verts,
+    isFront ? metalLight : metalMid, metalDark, 0.5 * zoom);
 
-  // ── TRUNNION PIVOT (at second key point) ──
+  // ── BARREL-CONNECTING STRUTS (short bolted bars from arm shelf to barrel) ──
   {
-    const piv = pts[1].center;
+    const strutW = (level >= 3 ? 3.5 : level >= 2 ? 3 : 2.5) * zoom;
+    const strutIndices = [3, pts.length - 1];
+    for (const si of strutIndices) {
+      const armPt = pts[si];
+      const bR = barrelRAtFrac(armDef[si].frac);
+      const barrelPt = posAtFrac(armDef[si].frac, armDef[si].recoil);
+      const barrelSurfX = barrelPt.x + side * perpX * (bR + 1 * zoom);
+      const barrelSurfY = barrelPt.y + side * perpY * (bR + 1 * zoom);
+
+      const strutGrad = ctx.createLinearGradient(
+        armPt.center.x, armPt.center.y - strutW * 0.5,
+        armPt.center.x, armPt.center.y + strutW * 0.5,
+      );
+      strutGrad.addColorStop(0, isFront ? metalLight : metalMid);
+      strutGrad.addColorStop(0.5, metalMid);
+      strutGrad.addColorStop(1, metalDark);
+      ctx.strokeStyle = strutGrad;
+      ctx.lineWidth = strutW;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(armPt.center.x, armPt.center.y);
+      ctx.lineTo(barrelSurfX, barrelSurfY);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(armPt.center.x, armPt.center.y, strutW * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(barrelSurfX, barrelSurfY, strutW * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ── TRUNNION PIVOT (at barrel-contact point — arm key-point 3, after bend) ──
+  {
+    const pivIdx = 3;
+    const piv = pts[pivIdx].center;
     const pinR = (level >= 3 ? 6.5 : level >= 2 ? 5.5 : 4.5) * zoom;
     const pLen = Math.hypot(perpX, perpY) || 1;
     const pNx = perpX / pLen;
@@ -1708,31 +2123,66 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
     const pTy = pNx;
     const fS = 0.55;
     const fAng = Math.atan2(pTy, pTx);
+
     const pivHex = (r: number, a: number) => ({
       x: piv.x + (Math.cos(a) * pTx + Math.sin(a) * fS * pNx) * r,
       y: piv.y + (Math.cos(a) * pTy + Math.sin(a) * fS * pNy) * r,
     });
+
+    // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.12)";
     ctx.beginPath();
-    ctx.ellipse(piv.x, piv.y + 1 * zoom, pinR * 1.05, pinR * fS * 1.05, fAng, 0, Math.PI * 2);
+    ctx.ellipse(piv.x, piv.y + 1.5 * zoom, pinR * 1.1, pinR * fS * 1.1, fAng, 0, Math.PI * 2);
     ctx.fill();
-    const housingGrad = ctx.createRadialGradient(piv.x - pTx * pinR * 0.15, piv.y - pTy * pinR * 0.15, 0, piv.x, piv.y, pinR);
+
+    // Housing depth ring
+    ctx.strokeStyle = metalDark;
+    ctx.lineWidth = (level >= 3 ? 4 : 3) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(piv.x, piv.y + 1 * zoom, pinR * 0.95, pinR * 0.95 * fS, fAng, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Hex housing face
+    const housingGrad = ctx.createRadialGradient(
+      piv.x - pTx * pinR * 0.15, piv.y - pTy * pinR * 0.15, 0,
+      piv.x, piv.y, pinR,
+    );
     housingGrad.addColorStop(0, isFront ? metalLight : metalMid);
     housingGrad.addColorStop(0.6, metalMid);
     housingGrad.addColorStop(1, metalDark);
     ctx.fillStyle = housingGrad;
     ctx.beginPath();
-    for (let hi = 0; hi < 6; hi++) { const hp = pivHex(pinR, hi * Math.PI / 3); hi === 0 ? ctx.moveTo(hp.x, hp.y) : ctx.lineTo(hp.x, hp.y); }
+    for (let hi = 0; hi < 6; hi++) {
+      const hp = pivHex(pinR, (hi * Math.PI) / 3);
+      hi === 0 ? ctx.moveTo(hp.x, hp.y) : ctx.lineTo(hp.x, hp.y);
+    }
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = metalDark;
-    ctx.lineWidth = 0.6 * zoom;
+    ctx.lineWidth = 0.7 * zoom;
     ctx.stroke();
+
+    // Inset face plate
+    ctx.fillStyle = isFront ? metalMid : metalDark;
+    ctx.beginPath();
+    for (let hi = 0; hi < 6; hi++) {
+      const hp = pivHex(pinR * 0.78, (hi * Math.PI) / 3);
+      hi === 0 ? ctx.moveTo(hp.x, hp.y) : ctx.lineTo(hp.x, hp.y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.stroke();
+
+    // Bearing race
     ctx.strokeStyle = accent;
-    ctx.lineWidth = (level >= 3 ? 1.5 : 1) * zoom;
+    ctx.lineWidth = (level >= 3 ? 1.6 : 1.1) * zoom;
     ctx.beginPath();
     ctx.ellipse(piv.x, piv.y, pinR * 0.55, pinR * 0.55 * fS, fAng, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Ball bearings (L2+)
     if (level >= 2) {
       const bearingCount = level >= 3 ? 8 : 6;
       for (let bi = 0; bi < bearingCount; bi++) {
@@ -1740,11 +2190,20 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
         const bp = pivHex(pinR * 0.55, ba);
         ctx.fillStyle = level >= 3 ? "#d0c060" : "#b0b0b8";
         ctx.beginPath();
-        ctx.arc(bp.x, bp.y, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.arc(bp.x, bp.y, 0.65 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.beginPath();
+        ctx.arc(bp.x - 0.2 * zoom, bp.y - 0.2 * zoom, 0.25 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
     }
-    const shaftGrad = ctx.createRadialGradient(piv.x - pTx * pinR * 0.05, piv.y - pTy * pinR * 0.05, 0, piv.x, piv.y, pinR * 0.35);
+
+    // Pin shaft
+    const shaftGrad = ctx.createRadialGradient(
+      piv.x - pTx * pinR * 0.05, piv.y - pTy * pinR * 0.05, 0,
+      piv.x, piv.y, pinR * 0.35,
+    );
     shaftGrad.addColorStop(0, level >= 3 ? "#f0d860" : "#d0d0d8");
     shaftGrad.addColorStop(0.5, level >= 3 ? "#e8c840" : "#b0b0b8");
     shaftGrad.addColorStop(1, level >= 3 ? "#a08020" : "#808088");
@@ -1752,32 +2211,82 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
     ctx.beginPath();
     ctx.ellipse(piv.x, piv.y, pinR * 0.3, pinR * 0.3 * fS, fAng, 0, Math.PI * 2);
     ctx.fill();
+
+    // Keyway slot
     ctx.strokeStyle = metalDark;
-    ctx.lineWidth = 0.8 * zoom;
+    ctx.lineWidth = 0.9 * zoom;
     ctx.beginPath();
     ctx.moveTo(piv.x - pTx * pinR * 0.14, piv.y - pTy * pinR * 0.14);
     ctx.lineTo(piv.x + pTx * pinR * 0.14, piv.y + pTy * pinR * 0.14);
     ctx.stroke();
+
+    // Specular highlight
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(
+      piv.x - pTx * pinR * 0.08 - pNx * pinR * 0.04,
+      piv.y - pTy * pinR * 0.08 - pNy * pinR * 0.04,
+      pinR * 0.1, pinR * 0.06, fAng, 0, Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Corner bolts
     ctx.fillStyle = accent;
-    for (let hi = 0; hi < 6; hi++) { const bp = pivHex(pinR * 0.72, hi * Math.PI / 3); ctx.beginPath(); ctx.arc(bp.x, bp.y, 0.7 * zoom, 0, Math.PI * 2); ctx.fill(); }
+    for (let hi = 0; hi < 6; hi++) {
+      const bp = pivHex(pinR * 0.72, (hi * Math.PI) / 3);
+      ctx.beginPath();
+      ctx.arc(bp.x, bp.y, 0.75 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.beginPath();
+      ctx.arc(bp.x, bp.y, 0.3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = accent;
+    }
+
+    // Grease fitting (L2+)
+    if (level >= 2) {
+      const gfP = pivHex(pinR * 0.88, Math.PI * 0.25);
+      ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
+      ctx.beginPath();
+      ctx.arc(gfP.x, gfP.y, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = level >= 3 ? "#e0c040" : "#b0b0b8";
+      ctx.beginPath();
+      ctx.arc(gfP.x, gfP.y - 0.7 * zoom, 0.45 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // ── HYDRAULIC CYLINDER (L2+) ──
   if (level >= 2) {
     const hydOff = side * 3 * zoom;
-    const hydBase = { x: pts[0].center.x + perpX * hydOff, y: pts[0].center.y + perpY * hydOff - 0.5 * zoom };
-    const hydEnd = { x: pts[2].center.x + perpX * hydOff * 0.7, y: pts[2].center.y + perpY * hydOff * 0.7 };
-    const recoilPhase = timeSinceFire < 800 ? (1 - timeSinceFire / 800) : 0;
+    const hydBase: Pt = {
+      x: pts[0].center.x + perpX * hydOff,
+      y: pts[0].center.y + perpY * hydOff - 0.5 * zoom,
+    };
+    const hydEnd: Pt = {
+      x: pts[4].center.x + perpX * hydOff * 0.7,
+      y: pts[4].center.y + perpY * hydOff * 0.7,
+    };
+    const recoilPhase = timeSinceFire < 800 ? 1 - timeSinceFire / 800 : 0;
     const hydSplit = 0.45 + recoilPhase * 0.08;
-    const hydMid = { x: hydBase.x + (hydEnd.x - hydBase.x) * hydSplit, y: hydBase.y + (hydEnd.y - hydBase.y) * hydSplit };
+    const hydMid: Pt = {
+      x: hydBase.x + (hydEnd.x - hydBase.x) * hydSplit,
+      y: hydBase.y + (hydEnd.y - hydBase.y) * hydSplit,
+    };
     const cylW = (level >= 3 ? 3.5 : 2.8) * zoom;
     const rodW = cylW * 0.5;
     const cylAng = Math.atan2(hydEnd.y - hydBase.y, hydEnd.x - hydBase.x);
     const cylNx = Math.cos(cylAng + Math.PI * 0.5);
     const cylNy = Math.sin(cylAng + Math.PI * 0.5);
-    const cylGrad = ctx.createLinearGradient(hydBase.x - cylNx * cylW, hydBase.y - cylNy * cylW, hydBase.x + cylNx * cylW, hydBase.y + cylNy * cylW);
+
+    const cylGrad = ctx.createLinearGradient(
+      hydBase.x - cylNx * cylW, hydBase.y - cylNy * cylW,
+      hydBase.x + cylNx * cylW, hydBase.y + cylNy * cylW,
+    );
     cylGrad.addColorStop(0, metalDark);
-    cylGrad.addColorStop(0.35, isFront ? metalLight : metalMid);
+    cylGrad.addColorStop(0.3, isFront ? metalLight : metalMid);
     cylGrad.addColorStop(0.7, metalMid);
     cylGrad.addColorStop(1, metalDark);
     ctx.strokeStyle = cylGrad;
@@ -1787,32 +2296,129 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
     ctx.moveTo(hydBase.x, hydBase.y);
     ctx.lineTo(hydMid.x, hydMid.y);
     ctx.stroke();
+
     ctx.strokeStyle = level >= 3 ? "#d0c840" : "#c0c0c8";
     ctx.lineWidth = rodW;
     ctx.beginPath();
     ctx.moveTo(hydMid.x, hydMid.y);
     ctx.lineTo(hydEnd.x, hydEnd.y);
     ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.15)";
+    ctx.lineWidth = rodW * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(hydMid.x + cylNx * rodW * 0.2, hydMid.y + cylNy * rodW * 0.2);
+    ctx.lineTo(hydEnd.x + cylNx * rodW * 0.2, hydEnd.y + cylNy * rodW * 0.2);
+    ctx.stroke();
     ctx.lineCap = "butt";
+
+    ctx.fillStyle = "rgba(20,20,25,0.45)";
+    ctx.beginPath();
+    ctx.ellipse(hydMid.x, hydMid.y, cylW * 0.5, cylW * 0.32, cylAng, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = metalDark;
     ctx.beginPath();
     ctx.arc(hydBase.x, hydBase.y, cylW * 0.55, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = metalMid;
+    ctx.beginPath();
+    ctx.arc(hydBase.x, hydBase.y, cylW * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = accent;
     ctx.beginPath();
-    ctx.arc(hydEnd.x, hydEnd.y, 1 * zoom, 0, Math.PI * 2);
+    ctx.arc(hydEnd.x, hydEnd.y, 1.1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.15)";
+    ctx.beginPath();
+    ctx.arc(hydEnd.x - 0.2 * zoom, hydEnd.y - 0.2 * zoom, 0.35 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = isFront ? metalMid : metalDark;
+    const brkW = 2.5 * zoom;
+    const brkH = 1.5 * zoom;
+    ctx.fillRect(hydBase.x - brkW, hydBase.y - brkH, brkW * 2, brkH * 2);
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.strokeRect(hydBase.x - brkW, hydBase.y - brkH, brkW * 2, brkH * 2);
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(hydBase.x, hydBase.y, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (level >= 3) {
+      for (const ls of [-1, 1]) {
+        const lsx = hydBase.x + (hydMid.x - hydBase.x) * 0.7 + ls * cylNx * cylW * 0.5;
+        const lsy = hydBase.y + (hydMid.y - hydBase.y) * 0.7 + ls * cylNy * cylW * 0.5;
+        ctx.strokeStyle = "#2a2a2a";
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(lsx, lsy);
+        ctx.quadraticCurveTo(lsx + ls * 2 * zoom, lsy + 3 * zoom, lsx + ls * 1 * zoom, lsy + 5 * zoom);
+        ctx.stroke();
+        ctx.fillStyle = "#5a5a62";
+        ctx.beginPath();
+        ctx.arc(lsx, lsy, 0.55 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // ── DIAGONAL BRACE (L2+) ──
+  if (level >= 2) {
+    const brOff = side * -1.5 * zoom;
+    const brStart: Pt = {
+      x: pts[0].center.x + perpX * brOff + (pts[1].center.x - pts[0].center.x) * 0.3,
+      y: pts[0].center.y + perpY * brOff + (pts[1].center.y - pts[0].center.y) * 0.3,
+    };
+    const brEnd: Pt = {
+      x: pts[3].center.x + (pts[4].center.x - pts[3].center.x) * 0.5 + perpX * brOff,
+      y: pts[3].center.y + (pts[4].center.y - pts[3].center.y) * 0.5 + perpY * brOff,
+    };
+    ctx.strokeStyle = level >= 3 ? "#6a6a72" : "#5a5a68";
+    ctx.lineWidth = (level >= 3 ? 2 : 1.5) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(brStart.x, brStart.y);
+    ctx.lineTo(brEnd.x, brEnd.y);
+    ctx.stroke();
+
+    if (level >= 3) {
+      const tbX = (brStart.x + brEnd.x) * 0.5;
+      const tbY = (brStart.y + brEnd.y) * 0.5;
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.ellipse(tbX, tbY, 2 * zoom, 1.2 * zoom,
+        Math.atan2(brEnd.y - brStart.y, brEnd.x - brStart.x), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = metalDark;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(brStart.x, brStart.y, 0.9 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(brEnd.x, brEnd.y, 0.9 * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // ── STATUS LIGHT (L2+) ──
   if (level >= 2) {
-    const lightPt = { x: pts[0].center.x + (pts[1].center.x - pts[0].center.x) * 0.5, y: pts[0].center.y + (pts[1].center.y - pts[0].center.y) * 0.5 - 1.5 * zoom };
+    const lightPt: Pt = {
+      x: pts[0].center.x + (pts[1].center.x - pts[0].center.x) * 0.45,
+      y: pts[0].center.y + (pts[1].center.y - pts[0].center.y) * 0.45 - 1.5 * zoom,
+    };
     const isFlash = timeSinceFire < 400;
     ctx.fillStyle = "#2a2a30";
     ctx.beginPath();
     ctx.arc(lightPt.x, lightPt.y, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = isFlash ? (level >= 3 ? "#ff4400" : "#ff8800") : (level >= 3 ? "#44aa44" : "#448844");
+    ctx.fillStyle = isFlash
+      ? level >= 3 ? "#ff4400" : "#ff8800"
+      : level >= 3 ? "#44aa44" : "#448844";
     ctx.beginPath();
     ctx.arc(lightPt.x, lightPt.y, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1922,9 +2528,10 @@ export function renderMortarStandardBarrel(
   const rodThick = level >= 3 ? 2.5 : level >= 2 ? 2 : 1.5;
 
   // Sort legs by isometric depth (back-to-front)
-  const legDepths = legAngles.map(la => isoDepthOfAngle(la));
-  const legOrder = Array.from({ length: legCount }, (_, i) => i)
-    .sort((a, b) => legDepths[a] - legDepths[b]);
+  const legDepths = legAngles.map((la) => isoDepthOfAngle(la));
+  const legOrder = Array.from({ length: legCount }, (_, i) => i).sort(
+    (a, b) => legDepths[a] - legDepths[b],
+  );
   // Median depth for splitting back vs front (legs behind barrel vs in front)
   const medianDepth = legDepths[legOrder[Math.floor(legCount / 2)]];
 
@@ -1953,14 +2560,20 @@ export function renderMortarStandardBarrel(
     ctx.lineTo(attachPt.x + (li % 2 === 0 ? -3 : 3) * zoom, attachPt.y);
     ctx.stroke();
 
-    ctx.fillStyle =
-      level >= 3 ? "#484050" : level >= 2 ? "#3e4248" : "#444448";
+    ctx.fillStyle = level >= 3 ? "#484050" : level >= 2 ? "#3e4248" : "#444448";
     ctx.beginPath();
-    ctx.ellipse(footX, footY, (level >= 2 ? 3.5 : 2.5) * zoom, (level >= 2 ? 1.8 : 1.3) * zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      footX,
+      footY,
+      (level >= 2 ? 3.5 : 2.5) * zoom,
+      (level >= 2 ? 1.8 : 1.3) * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
-    ctx.fillStyle =
-      level >= 3 ? "#6a6270" : level >= 2 ? "#5a5e68" : "#585860";
+    ctx.fillStyle = level >= 3 ? "#6a6270" : level >= 2 ? "#5a5e68" : "#585860";
     ctx.beginPath();
     ctx.arc(kneeX, kneeY, (level >= 2 ? 2.8 : 2) * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1996,8 +2609,10 @@ export function renderMortarStandardBarrel(
       const sNy = Math.cos(shockAng);
       const cylR = (level >= 3 ? 2.8 : 2.4) * zoom;
       const sCylGrad = ctx.createLinearGradient(
-        shockX + sNx * cylR, shockY + sNy * cylR,
-        shockX - sNx * cylR, shockY - sNy * cylR,
+        shockX + sNx * cylR,
+        shockY + sNy * cylR,
+        shockX - sNx * cylR,
+        shockY - sNy * cylR,
       );
       sCylGrad.addColorStop(0, "#5a5a62");
       sCylGrad.addColorStop(0.3, "#8a8a92");
@@ -2011,8 +2626,10 @@ export function renderMortarStandardBarrel(
       ctx.lineTo(shockMidX, shockMidY);
       ctx.stroke();
       const rodGrd = ctx.createLinearGradient(
-        shockMidX + sNx * cylR * 0.5, shockMidY + sNy * cylR * 0.5,
-        shockMidX - sNx * cylR * 0.5, shockMidY - sNy * cylR * 0.5,
+        shockMidX + sNx * cylR * 0.5,
+        shockMidY + sNy * cylR * 0.5,
+        shockMidX - sNx * cylR * 0.5,
+        shockMidY - sNy * cylR * 0.5,
       );
       rodGrd.addColorStop(0, "#9898a0");
       rodGrd.addColorStop(0.35, "#d0d0d8");
@@ -2065,7 +2682,12 @@ export function renderMortarStandardBarrel(
       const condEndY = kneeY * 0.5 + attachPt.y * 0.5;
       ctx.beginPath();
       ctx.moveTo(condStartX + 2 * zoom, condStartY);
-      ctx.quadraticCurveTo(kneeX + 3 * zoom, kneeY + 1 * zoom, condEndX + 2 * zoom, condEndY);
+      ctx.quadraticCurveTo(
+        kneeX + 3 * zoom,
+        kneeY + 1 * zoom,
+        condEndX + 2 * zoom,
+        condEndY,
+      );
       ctx.stroke();
     }
     ctx.lineCap = "butt";
@@ -2417,7 +3039,6 @@ export function renderMortarStandardBarrel(
         ctx.fill();
       }
     }
-
   }
 
   // ===== BACK CRADLE ARM (behind barrel, drawn first for depth) =====
@@ -2425,18 +3046,34 @@ export function renderMortarStandardBarrel(
     const carrWB = tiers[0].r * (level >= 3 ? 1.15 : level >= 2 ? 1.08 : 1.0);
     const cradleThick = (level >= 3 ? 10 : level >= 2 ? 9 : 7.5) * zoom;
     const cradleW = carrWB * (level >= 3 ? 1.35 : level >= 2 ? 1.28 : 1.2);
-    const metalDarkB = level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
-    const metalMidB = level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
-    const metalLightB = level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
+    const metalDarkB =
+      level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
+    const metalMidB =
+      level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
+    const metalLightB =
+      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
     const accentB = level >= 3 ? "#c9a227" : level >= 2 ? "#8a4428" : "#6a3a28";
     const totalRecoilEst = tierRecoils[0] + tierRecoils[1] + tierRecoils[2];
     drawMortarCradleArm(ctx, {
-      side: farSide, level, zoom, sinR, cosR,
-      perpX: -sinR, perpY: cosR * ISO_Y_RATIO,
-      tiers, tierRecoils, totalRecoil: totalRecoilEst, posAtFrac,
-      cradleW, cradleThick,
-      metalDark: metalDarkB, metalMid: metalMidB, metalLight: metalLightB, accent: accentB,
-      time, timeSinceFire,
+      side: farSide,
+      level,
+      zoom,
+      sinR,
+      cosR,
+      perpX: -sinR,
+      perpY: cosR * ISO_Y_RATIO,
+      tiers,
+      tierRecoils,
+      totalRecoil: totalRecoilEst,
+      posAtFrac,
+      cradleW,
+      cradleThick,
+      metalDark: metalDarkB,
+      metalMid: metalMidB,
+      metalLight: metalLightB,
+      accent: accentB,
+      time,
+      timeSinceFire,
     });
   }
 
@@ -2475,12 +3112,20 @@ export function renderMortarStandardBarrel(
       const faceMidX = (hexVerts[i].x + hexVerts[ni].x) * 0.5;
       const faceMidY = (hexVerts[i].y + hexVerts[ni].y) * 0.5;
       const faceGrad = ctx.createLinearGradient(
-        topCenter.x + faceMidX, topCenter.y + faceMidY,
-        botCenter.x + faceMidX, botCenter.y + faceMidY,
+        topCenter.x + faceMidX,
+        topCenter.y + faceMidY,
+        botCenter.x + faceMidX,
+        botCenter.y + faceMidY,
       );
-      faceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`);
+      faceGrad.addColorStop(
+        0,
+        `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`,
+      );
       faceGrad.addColorStop(0.4, `rgb(${fR},${fG},${fB})`);
-      faceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 15)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`);
+      faceGrad.addColorStop(
+        1,
+        `rgb(${Math.max(0, fR - 15)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`,
+      );
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
       ctx.moveTo(botCenter.x + hexVerts[i].x, botCenter.y + hexVerts[i].y);
@@ -2496,25 +3141,42 @@ export function renderMortarStandardBarrel(
 
       // Heat tint on barrel faces (subtle orange toward the muzzle end)
       if (ti >= 1) {
-        const heatTint = (ti / 3) * (0.04 + (timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.08 : 0));
+        const heatTint =
+          (ti / 3) *
+          (0.04 +
+            (timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.08 : 0));
         if (heatTint > 0.01) {
           ctx.fillStyle = `rgba(255,80,20,${heatTint})`;
           ctx.beginPath();
           ctx.moveTo(botCenter.x + hexVerts[i].x, botCenter.y + hexVerts[i].y);
-          ctx.lineTo(botCenter.x + hexVerts[ni].x, botCenter.y + hexVerts[ni].y);
-          ctx.lineTo(topCenter.x + hexVerts[ni].x, topCenter.y + hexVerts[ni].y);
+          ctx.lineTo(
+            botCenter.x + hexVerts[ni].x,
+            botCenter.y + hexVerts[ni].y,
+          );
+          ctx.lineTo(
+            topCenter.x + hexVerts[ni].x,
+            topCenter.y + hexVerts[ni].y,
+          );
           ctx.lineTo(topCenter.x + hexVerts[i].x, topCenter.y + hexVerts[i].y);
           ctx.closePath();
           ctx.fill();
         }
       }
 
-      if (n < -0.7) continue;
+      if (n < -0.85) continue;
 
       // Face interpolation helper
       const barrelFacePt = (u: number, v: number) => ({
-        x: botCenter.x + hexVerts[i].x * (1 - u) + hexVerts[ni].x * u + (topCenter.x - botCenter.x) * v,
-        y: botCenter.y + hexVerts[i].y * (1 - u) + hexVerts[ni].y * u + (topCenter.y - botCenter.y) * v,
+        x:
+          botCenter.x +
+          hexVerts[i].x * (1 - u) +
+          hexVerts[ni].x * u +
+          (topCenter.x - botCenter.x) * v,
+        y:
+          botCenter.y +
+          hexVerts[i].y * (1 - u) +
+          hexVerts[ni].y * u +
+          (topCenter.y - botCenter.y) * v,
       });
 
       // L1: Cast iron — sand-casting texture, sprue marks, heavy bolt heads
@@ -2536,7 +3198,13 @@ export function renderMortarStandardBarrel(
           const pv = ((pitSeed * (p + 3) * 11) % 100) / 100;
           const pt = barrelFacePt(pu, pv);
           ctx.beginPath();
-          ctx.arc(pt.x, pt.y, (0.2 + ((pitSeed * p) % 5) * 0.1) * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            pt.x,
+            pt.y,
+            (0.2 + ((pitSeed * p) % 5) * 0.1) * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
         // Surface scratch lines (machining marks)
@@ -2561,7 +3229,13 @@ export function renderMortarStandardBarrel(
           // Bolt specular
           ctx.fillStyle = `rgba(160,160,170,${0.15 + bright * 0.1})`;
           ctx.beginPath();
-          ctx.arc(bPt.x - 0.15 * zoom, bPt.y - 0.15 * zoom, 0.3 * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            bPt.x - 0.15 * zoom,
+            bPt.y - 0.15 * zoom,
+            0.3 * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
           ctx.fillStyle = `rgba(80,80,88,${0.45 + bright * 0.3})`;
         }
@@ -2620,7 +3294,12 @@ export function renderMortarStandardBarrel(
           const markY = (botCenter.y + topCenter.y) * 0.5 + my * 0.7;
           ctx.strokeStyle = `rgba(180,180,200,${0.1 + bright * 0.05})`;
           ctx.lineWidth = 0.3 * zoom;
-          ctx.strokeRect(markX - 1.5 * zoom, markY - 1 * zoom, 3 * zoom, 2 * zoom);
+          ctx.strokeRect(
+            markX - 1.5 * zoom,
+            markY - 1 * zoom,
+            3 * zoom,
+            2 * zoom,
+          );
         }
       }
 
@@ -2688,7 +3367,10 @@ export function renderMortarStandardBarrel(
         const hly2 = hexVerts[i].y * 0.25 + hexVerts[ni].y * 0.75;
         ctx.beginPath();
         ctx.moveTo(topCenter.x + hlx2, topCenter.y + hly2);
-        ctx.lineTo((botCenter.x + topCenter.x) * 0.5 + hlx2, (botCenter.y + topCenter.y) * 0.5 + hly2);
+        ctx.lineTo(
+          (botCenter.x + topCenter.x) * 0.5 + hlx2,
+          (botCenter.y + topCenter.y) * 0.5 + hly2,
+        );
         ctx.stroke();
         // Gold rosette rivets at face corners (with raised highlight)
         ctx.fillStyle = `rgba(201,162,39,${0.6 + bright * 0.3})`;
@@ -2701,7 +3383,13 @@ export function renderMortarStandardBarrel(
             ctx.fill();
             ctx.fillStyle = `rgba(240,210,80,${0.3 + bright * 0.2})`;
             ctx.beginPath();
-            ctx.arc(rx - 0.15 * zoom, ry - 0.15 * zoom, 0.35 * zoom, 0, Math.PI * 2);
+            ctx.arc(
+              rx - 0.15 * zoom,
+              ry - 0.15 * zoom,
+              0.35 * zoom,
+              0,
+              Math.PI * 2,
+            );
             ctx.fill();
             ctx.fillStyle = `rgba(201,162,39,${0.6 + bright * 0.3})`;
           }
@@ -2754,7 +3442,7 @@ export function renderMortarStandardBarrel(
           y: botCenter.y + (topCenter.y - botCenter.y) * ropeFrac,
         };
         for (let ri = 0; ri < hexSides; ri++) {
-          if (sideNormals[ri] < -0.7) continue;
+          if (sideNormals[ri] < -0.85) continue;
           const rni = (ri + 1) % hexSides;
           ctx.beginPath();
           ctx.moveTo(
@@ -2774,7 +3462,7 @@ export function renderMortarStandardBarrel(
     if (level >= 2) {
       ctx.fillStyle = level >= 3 ? "#e8c840" : "#8090a0";
       for (let i = 0; i < hexSides; i++) {
-        if (sideNormals[i] < -0.7) continue;
+        if (sideNormals[i] < -0.85) continue;
         ctx.beginPath();
         ctx.arc(
           topCenter.x + hexVerts[i].x * 1.03,
@@ -2799,7 +3487,7 @@ export function renderMortarStandardBarrel(
         ctx.strokeStyle = "#5a5a5a";
         ctx.lineWidth = 1.5 * zoom;
         for (let hi = 0; hi < hexSides; hi++) {
-          if (sideNormals[hi] < -0.7) continue;
+          if (sideNormals[hi] < -0.85) continue;
           const hni = (hi + 1) % hexSides;
           ctx.beginPath();
           ctx.moveTo(
@@ -2848,7 +3536,10 @@ export function renderMortarStandardBarrel(
           ctx.lineWidth = 0.8 * zoom;
           ctx.beginPath();
           ctx.moveTo(injX + perpOX, injY + perpOY);
-          ctx.lineTo(injX + aimDirX * 6 * zoom + perpOX, injY + aimDirY * 6 * zoom + perpOY);
+          ctx.lineTo(
+            injX + aimDirX * 6 * zoom + perpOX,
+            injY + aimDirY * 6 * zoom + perpOY,
+          );
           ctx.stroke();
         }
       }
@@ -2865,7 +3556,12 @@ export function renderMortarStandardBarrel(
         ctx.lineWidth = 1.5 * zoom;
         ctx.beginPath();
         ctx.moveTo(hx - bNx * 2 * zoom, hy - bNy * 2 * zoom);
-        ctx.quadraticCurveTo(hx - bAx * 4 * zoom, hy - bAy * 4 * zoom, hx + bNx * 2 * zoom, hy + bNy * 2 * zoom);
+        ctx.quadraticCurveTo(
+          hx - bAx * 4 * zoom,
+          hy - bAy * 4 * zoom,
+          hx + bNx * 2 * zoom,
+          hy + bNy * 2 * zoom,
+        );
         ctx.stroke();
       }
     }
@@ -2880,7 +3576,10 @@ export function renderMortarStandardBarrel(
         const screwX = screwPt.x - cosR * tier.r * 0.7;
         const screwY = screwPt.y - sinR * tier.r * ISO_Y_RATIO * 0.7;
         // Screw shaft — along barrel axis
-        const shaftEnd = { x: screwX - bAx * tier.h * 0.6, y: screwY - bAy * tier.h * 0.6 };
+        const shaftEnd = {
+          x: screwX - bAx * tier.h * 0.6,
+          y: screwY - bAy * tier.h * 0.6,
+        };
         ctx.strokeStyle = "#9a9aa0";
         ctx.lineWidth = 1.8 * zoom;
         ctx.beginPath();
@@ -3024,7 +3723,15 @@ export function renderMortarStandardBarrel(
           const pipeAng = Math.atan2(tipY - epy, tipX - epx);
           ctx.fillStyle = "#3a3a3a";
           ctx.beginPath();
-          ctx.ellipse(tipX, tipY, 1.5 * zoom, 0.9 * zoom, pipeAng, 0, Math.PI * 2);
+          ctx.ellipse(
+            tipX,
+            tipY,
+            1.5 * zoom,
+            0.9 * zoom,
+            pipeAng,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
       }
@@ -3043,14 +3750,19 @@ export function renderMortarStandardBarrel(
     if (scopeVis > -0.25) {
       const mountR = tiers[1].r * 0.85;
       const scopeBaseX = scopePt.x + scopeSide * sinR * mountR;
-      const scopeBaseY = scopePt.y - scopeSide * cosR * mountR * ISO_Y_RATIO * 0.4;
+      const scopeBaseY =
+        scopePt.y - scopeSide * cosR * mountR * ISO_Y_RATIO * 0.4;
 
       // Scope tube geometry
       const tubeStartX = scopeBaseX + scopeSide * 3 * zoom;
       const tubeStartY = scopeBaseY - 0.5 * zoom;
       const scopeEndPt = posAtFrac(scopeFrac + 0.28, scopeRecoil * 1.1);
-      const tubeEndX = scopeEndPt.x + scopeSide * sinR * mountR * 0.6 + cosR * 4 * zoom;
-      const tubeEndY = scopeEndPt.y - scopeSide * cosR * mountR * ISO_Y_RATIO * 0.25 + sinR * 2 * zoom;
+      const tubeEndX =
+        scopeEndPt.x + scopeSide * sinR * mountR * 0.6 + cosR * 4 * zoom;
+      const tubeEndY =
+        scopeEndPt.y -
+        scopeSide * cosR * mountR * ISO_Y_RATIO * 0.25 +
+        sinR * 2 * zoom;
       const tubeAng = Math.atan2(tubeEndY - tubeStartY, tubeEndX - tubeStartX);
       const tubeNx = -Math.sin(tubeAng);
       const tubeNy = Math.cos(tubeAng);
@@ -3061,13 +3773,11 @@ export function renderMortarStandardBarrel(
       // Scope mount bracket (Picatinny-style rail clamp) — isometric projected
       const outX = scopeSide * bNx;
       const outY = scopeSide * bNy;
-      const bracketColor = level >= 3 ? "#5a5a62" : level >= 2 ? "#404868" : "#4a4a4a";
+      const bracketColor =
+        level >= 3 ? "#5a5a62" : level >= 2 ? "#404868" : "#4a4a4a";
       ctx.fillStyle = bracketColor;
       ctx.beginPath();
-      ctx.moveTo(
-        scopeBaseX - 2 * zoom * bAx,
-        scopeBaseY - 2 * zoom * bAy,
-      );
+      ctx.moveTo(scopeBaseX - 2 * zoom * bAx, scopeBaseY - 2 * zoom * bAy);
       ctx.lineTo(
         scopeBaseX + 3.5 * zoom * outX - 2 * zoom * bAx,
         scopeBaseY + 3.5 * zoom * outY - 2 * zoom * bAy,
@@ -3080,10 +3790,7 @@ export function renderMortarStandardBarrel(
         scopeBaseX + 1 * zoom * outX + 3.5 * zoom * bAx,
         scopeBaseY + 1 * zoom * outY + 3.5 * zoom * bAy,
       );
-      ctx.lineTo(
-        scopeBaseX + 1 * zoom * outX,
-        scopeBaseY + 1 * zoom * outY,
-      );
+      ctx.lineTo(scopeBaseX + 1 * zoom * outX, scopeBaseY + 1 * zoom * outY);
       ctx.lineTo(scopeBaseX, scopeBaseY);
       ctx.closePath();
       ctx.fill();
@@ -3115,7 +3822,7 @@ export function renderMortarStandardBarrel(
         ctx.lineWidth = 0.2 * zoom;
         ctx.beginPath();
         for (let h = 0; h < 6; h++) {
-          const ha = h * Math.PI / 3;
+          const ha = (h * Math.PI) / 3;
           const hx = boltX + Math.cos(ha) * 0.3 * zoom;
           const hy = boltY + Math.sin(ha) * 0.3 * zoom;
           h === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
@@ -3135,12 +3842,17 @@ export function renderMortarStandardBarrel(
 
       // Scope tube body (gradient cylinder)
       const tubeGrad = ctx.createLinearGradient(
-        tubeStartX + tubeNx * tubeW * 0.5, tubeStartY + tubeNy * tubeW * 0.5,
-        tubeStartX - tubeNx * tubeW * 0.5, tubeStartY - tubeNy * tubeW * 0.5,
+        tubeStartX + tubeNx * tubeW * 0.5,
+        tubeStartY + tubeNy * tubeW * 0.5,
+        tubeStartX - tubeNx * tubeW * 0.5,
+        tubeStartY - tubeNy * tubeW * 0.5,
       );
-      const tubeDark = level >= 3 ? "#252530" : level >= 2 ? "#1e2238" : "#252525";
-      const tubeMid = level >= 3 ? "#3a3a45" : level >= 2 ? "#303850" : "#3a3a3a";
-      const tubeLight = level >= 3 ? "#50505a" : level >= 2 ? "#404868" : "#4a4a4a";
+      const tubeDark =
+        level >= 3 ? "#252530" : level >= 2 ? "#1e2238" : "#252525";
+      const tubeMid =
+        level >= 3 ? "#3a3a45" : level >= 2 ? "#303850" : "#3a3a3a";
+      const tubeLight =
+        level >= 3 ? "#50505a" : level >= 2 ? "#404868" : "#4a4a4a";
       tubeGrad.addColorStop(0, tubeDark);
       tubeGrad.addColorStop(0.3, tubeLight);
       tubeGrad.addColorStop(0.55, tubeMid);
@@ -3155,8 +3867,14 @@ export function renderMortarStandardBarrel(
       ctx.strokeStyle = `rgba(200,200,220,${0.1 + (level >= 3 ? 0.06 : 0)})`;
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(tubeStartX + tubeNx * tubeW * 0.25, tubeStartY + tubeNy * tubeW * 0.25);
-      ctx.lineTo(tubeEndX + tubeNx * tubeW * 0.25, tubeEndY + tubeNy * tubeW * 0.25);
+      ctx.moveTo(
+        tubeStartX + tubeNx * tubeW * 0.25,
+        tubeStartY + tubeNy * tubeW * 0.25,
+      );
+      ctx.lineTo(
+        tubeEndX + tubeNx * tubeW * 0.25,
+        tubeEndY + tubeNy * tubeW * 0.25,
+      );
       ctx.stroke();
       ctx.lineCap = "butt";
 
@@ -3172,10 +3890,13 @@ export function renderMortarStandardBarrel(
         const rhh = ringH * 0.5;
         // Ring body gradient — along tube normal
         const ringGrad = ctx.createLinearGradient(
-          rx - rhh * tubeNx, ry - rhh * tubeNy,
-          rx + rhh * tubeNx, ry + rhh * tubeNy,
+          rx - rhh * tubeNx,
+          ry - rhh * tubeNy,
+          rx + rhh * tubeNx,
+          ry + rhh * tubeNy,
         );
-        const ringBase = level >= 3 ? "#5a5a65" : level >= 2 ? "#404868" : "#4a4a4a";
+        const ringBase =
+          level >= 3 ? "#5a5a65" : level >= 2 ? "#404868" : "#4a4a4a";
         ringGrad.addColorStop(0, ringBase);
         ringGrad.addColorStop(0.5, level >= 3 ? "#6a6a72" : "#505868");
         ringGrad.addColorStop(1, ringBase);
@@ -3214,7 +3935,15 @@ export function renderMortarStandardBarrel(
       const objR = (level >= 3 ? 3 : 2.5) * zoom;
       ctx.fillStyle = level >= 3 ? "#1a1a24" : "#121218";
       ctx.beginPath();
-      ctx.ellipse(tubeEndX, tubeEndY, objR, objR * 0.65, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeEndX,
+        tubeEndY,
+        objR,
+        objR * 0.65,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Anti-reflection coating shimmer (color-shifting)
       const lensPhase = time * 2.5;
@@ -3224,54 +3953,120 @@ export function renderMortarStandardBarrel(
       const lensAlpha = 0.18 + Math.sin(lensPhase * 0.7) * 0.08;
       ctx.fillStyle = `rgba(${Math.floor(lensR)},${Math.floor(lensG)},${Math.floor(lensB)},${lensAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(tubeEndX, tubeEndY, objR * 0.75, objR * 0.5, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeEndX,
+        tubeEndY,
+        objR * 0.75,
+        objR * 0.5,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Lens rim ring
-      ctx.strokeStyle = level >= 3 ? "rgba(100,100,110,0.3)" : "rgba(60,60,70,0.25)";
+      ctx.strokeStyle =
+        level >= 3 ? "rgba(100,100,110,0.3)" : "rgba(60,60,70,0.25)";
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(tubeEndX, tubeEndY, objR, objR * 0.65, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeEndX,
+        tubeEndY,
+        objR,
+        objR * 0.65,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       // Specular highlight (crescent reflection)
       ctx.fillStyle = "rgba(255,255,255,0.18)";
       ctx.beginPath();
-      ctx.ellipse(tubeEndX - 0.5 * zoom, tubeEndY - 0.5 * zoom, 0.7 * zoom, 0.45 * zoom, tubeAng - 0.5, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeEndX - 0.5 * zoom,
+        tubeEndY - 0.5 * zoom,
+        0.7 * zoom,
+        0.45 * zoom,
+        tubeAng - 0.5,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Eyepiece (rear ocular bell — stepped wider diameter)
       const eyeR = (level >= 3 ? 3 : 2.5) * zoom;
       ctx.fillStyle = level >= 3 ? "#2a2a34" : "#1a1a22";
       ctx.beginPath();
-      ctx.ellipse(tubeStartX, tubeStartY, eyeR, eyeR * 0.7, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeStartX,
+        tubeStartY,
+        eyeR,
+        eyeR * 0.7,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Rubber eye cup
       ctx.strokeStyle = "#1a1a1a";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
-      ctx.ellipse(tubeStartX, tubeStartY, eyeR * 0.92, eyeR * 0.65, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeStartX,
+        tubeStartY,
+        eyeR * 0.92,
+        eyeR * 0.65,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       // Eye relief aperture
       ctx.fillStyle = "#060608";
       ctx.beginPath();
-      ctx.ellipse(tubeStartX, tubeStartY, eyeR * 0.5, eyeR * 0.35, tubeAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tubeStartX,
+        tubeStartY,
+        eyeR * 0.5,
+        eyeR * 0.35,
+        tubeAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // L2+: elevation turret — iso ellipse on barrel surface
       if (level >= 2) {
         const turBase = 0.4;
-        const turretX = tubeStartX + (tubeEndX - tubeStartX) * turBase - tubeNx * 3.2 * zoom;
-        const turretY = tubeStartY + (tubeEndY - tubeStartY) * turBase - tubeNy * 3.2 * zoom;
+        const turretX =
+          tubeStartX + (tubeEndX - tubeStartX) * turBase - tubeNx * 3.2 * zoom;
+        const turretY =
+          tubeStartY + (tubeEndY - tubeStartY) * turBase - tubeNy * 3.2 * zoom;
         const turretR = (level >= 3 ? 2.2 : 1.8) * zoom;
         const turSqueeze = 0.6;
         const turAngle = tubeAng;
         // Turret body gradient
-        const turGrad = ctx.createRadialGradient(turretX, turretY, 0, turretX, turretY, turretR);
+        const turGrad = ctx.createRadialGradient(
+          turretX,
+          turretY,
+          0,
+          turretX,
+          turretY,
+          turretR,
+        );
         turGrad.addColorStop(0, level >= 3 ? "#5a5a62" : "#444a58");
         turGrad.addColorStop(0.7, level >= 3 ? "#4a4a52" : "#3a3a48");
         turGrad.addColorStop(1, level >= 3 ? "#3a3a42" : "#2a2a38");
         ctx.fillStyle = turGrad;
         ctx.beginPath();
-        ctx.ellipse(turretX, turretY, turretR, turretR * turSqueeze, turAngle, 0, Math.PI * 2);
+        ctx.ellipse(
+          turretX,
+          turretY,
+          turretR,
+          turretR * turSqueeze,
+          turAngle,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.lineWidth = 0.35 * zoom;
@@ -3284,29 +4079,45 @@ export function renderMortarStandardBarrel(
           const ta = (tk / tickCount) * Math.PI * 2;
           const tkCos = Math.cos(ta);
           const tkSin = Math.sin(ta);
-          const inR = 0.7, outR = 0.95;
+          const inR = 0.7,
+            outR = 0.95;
           ctx.beginPath();
           ctx.moveTo(
-            turretX + (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * inR,
-            turretY + (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * inR,
+            turretX +
+              (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * inR,
+            turretY +
+              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * inR,
           );
           ctx.lineTo(
-            turretX + (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * outR,
-            turretY + (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * outR,
+            turretX +
+              (tkCos * tDx - tkSin * tubeNx * turSqueeze) * turretR * outR,
+            turretY +
+              (tkCos * tDy - tkSin * tubeNy * turSqueeze) * turretR * outR,
           );
           ctx.stroke();
         }
         // Turret cap
         ctx.fillStyle = level >= 3 ? "#c9a227" : "#6a6a72";
         ctx.beginPath();
-        ctx.ellipse(turretX, turretY, turretR * 0.35, turretR * 0.35 * turSqueeze, turAngle, 0, Math.PI * 2);
+        ctx.ellipse(
+          turretX,
+          turretY,
+          turretR * 0.35,
+          turretR * 0.35 * turSqueeze,
+          turAngle,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Pointer line along tube normal
         ctx.strokeStyle = level >= 3 ? "#f0d060" : "#9a9aa0";
         ctx.lineWidth = 0.25 * zoom;
         ctx.beginPath();
         ctx.moveTo(turretX, turretY);
-        ctx.lineTo(turretX - tubeNx * turretR * 0.35, turretY - tubeNy * turretR * 0.35);
+        ctx.lineTo(
+          turretX - tubeNx * turretR * 0.35,
+          turretY - tubeNy * turretR * 0.35,
+        );
         ctx.stroke();
 
         // Windage turret — offset along tube dir and normal
@@ -3315,7 +4126,15 @@ export function renderMortarStandardBarrel(
         const windR = (level >= 3 ? 1.4 : 1.1) * zoom;
         ctx.fillStyle = level >= 3 ? "#4a4a55" : "#3a3a48";
         ctx.beginPath();
-        ctx.ellipse(windX, windY, windR, windR * turSqueeze, turAngle, 0, Math.PI * 2);
+        ctx.ellipse(
+          windX,
+          windY,
+          windR,
+          windR * turSqueeze,
+          turAngle,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.18)";
         ctx.lineWidth = 0.3 * zoom;
@@ -3351,15 +4170,27 @@ export function renderMortarStandardBarrel(
         const lrfH = 3.2 * zoom;
         // Housing body — gradient along tube direction
         const lrfGrad = ctx.createLinearGradient(
-          lrfX - lrfW * 0.5 * tDx, lrfY - lrfW * 0.5 * tDy,
-          lrfX + lrfW * 0.5 * tDx, lrfY + lrfW * 0.5 * tDy,
+          lrfX - lrfW * 0.5 * tDx,
+          lrfY - lrfW * 0.5 * tDy,
+          lrfX + lrfW * 0.5 * tDx,
+          lrfY + lrfW * 0.5 * tDy,
         );
         lrfGrad.addColorStop(0, "#222228");
         lrfGrad.addColorStop(0.5, "#2e2e36");
         lrfGrad.addColorStop(1, "#1e1e24");
         ctx.fillStyle = lrfGrad;
         ctx.beginPath();
-        isoQuadPath(ctx, lrfX, lrfY, lrfW * 0.5, lrfH * 0.5, tDx, tDy, tubeNx, tubeNy);
+        isoQuadPath(
+          ctx,
+          lrfX,
+          lrfY,
+          lrfW * 0.5,
+          lrfH * 0.5,
+          tDx,
+          tDy,
+          tubeNx,
+          tubeNy,
+        );
         ctx.fill();
         // Housing border (gold accent)
         ctx.strokeStyle = "rgba(201,162,39,0.45)";
@@ -3368,7 +4199,17 @@ export function renderMortarStandardBarrel(
         // Mounting bracket to scope tube — projected
         ctx.fillStyle = "#3a3a42";
         ctx.beginPath();
-        isoQuadPath(ctx, lrfX - tubeNx * (lrfH * 0.5 + 0.75 * zoom), lrfY - tubeNy * (lrfH * 0.5 + 0.75 * zoom), 1 * zoom, 0.75 * zoom, tDx, tDy, tubeNx, tubeNy);
+        isoQuadPath(
+          ctx,
+          lrfX - tubeNx * (lrfH * 0.5 + 0.75 * zoom),
+          lrfY - tubeNy * (lrfH * 0.5 + 0.75 * zoom),
+          1 * zoom,
+          0.75 * zoom,
+          tDx,
+          tDy,
+          tubeNx,
+          tubeNy,
+        );
         ctx.fill();
 
         // Laser emitter aperture — offset along tube direction
@@ -3377,11 +4218,27 @@ export function renderMortarStandardBarrel(
         const emitterY = lrfY + lrfW * 0.35 * tDy;
         ctx.fillStyle = "#0a0a0a";
         ctx.beginPath();
-        ctx.ellipse(emitterX, emitterY, 1 * zoom, 0.6 * zoom, tubeAng, 0, Math.PI * 2);
+        ctx.ellipse(
+          emitterX,
+          emitterY,
+          1 * zoom,
+          0.6 * zoom,
+          tubeAng,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = `rgba(255, 20, 20, ${laserPulse})`;
         ctx.beginPath();
-        ctx.ellipse(emitterX, emitterY, 0.6 * zoom, 0.36 * zoom, tubeAng, 0, Math.PI * 2);
+        ctx.ellipse(
+          emitterX,
+          emitterY,
+          0.6 * zoom,
+          0.36 * zoom,
+          tubeAng,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         if (laserPulse > 0.35) {
           ctx.fillStyle = `rgba(255,0,0,${(laserPulse - 0.35) * 0.3})`;
@@ -3397,16 +4254,37 @@ export function renderMortarStandardBarrel(
         const readoutY = lrfY - lrfW * 0.3 * tDy;
         ctx.fillStyle = "#0a0a0a";
         ctx.beginPath();
-        isoQuadPath(ctx, readoutX, readoutY, readoutW * 0.5, readoutH * 0.5, tDx, tDy, tubeNx, tubeNy);
+        isoQuadPath(
+          ctx,
+          readoutX,
+          readoutY,
+          readoutW * 0.5,
+          readoutH * 0.5,
+          tDx,
+          tDy,
+          tubeNx,
+          tubeNy,
+        );
         ctx.fill();
         const readGlow = 0.35 + Math.sin(time * 2) * 0.1;
         ctx.fillStyle = `rgba(0, 255, 100, ${readGlow})`;
         ctx.beginPath();
-        isoQuadPath(ctx, readoutX, readoutY, readoutW * 0.45, readoutH * 0.4, tDx, tDy, tubeNx, tubeNy);
+        isoQuadPath(
+          ctx,
+          readoutX,
+          readoutY,
+          readoutW * 0.45,
+          readoutH * 0.4,
+          tDx,
+          tDy,
+          tubeNx,
+          tubeNy,
+        );
         ctx.fill();
 
         // Status LED
-        ctx.fillStyle = timeSinceFire < 1500 ? "rgba(255,100,0,0.6)" : "rgba(0,200,100,0.5)";
+        ctx.fillStyle =
+          timeSinceFire < 1500 ? "rgba(255,100,0,0.6)" : "rgba(0,200,100,0.5)";
         ctx.beginPath();
         const ledX = lrfX - lrfW * 0.38 * tDx + lrfH * 0.28 * tubeNx;
         const ledY = lrfY - lrfW * 0.38 * tDy + lrfH * 0.28 * tubeNy;
@@ -3419,7 +4297,8 @@ export function renderMortarStandardBarrel(
   // ===== BARREL BORE GLOW (inner heat that intensifies toward the top) =====
   {
     const glowIntensity = level >= 3 ? 0.35 : level >= 2 ? 0.25 : 0.15;
-    const fireBoost = timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
+    const fireBoost =
+      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
     const pulse = Math.sin(time * 1.5) * 0.05;
     const totalGlow = glowIntensity + fireBoost + pulse;
 
@@ -3456,25 +4335,54 @@ export function renderMortarStandardBarrel(
     const mouthR = tiers[2].r * 0.7;
     const mouthGlow = totalGlow * 1.2;
     if (mouthGlow > 0.05) {
-      const mGrad = ctx.createRadialGradient(mouthPt.x, mouthPt.y, 0, mouthPt.x, mouthPt.y, mouthR);
-      mGrad.addColorStop(0, `rgba(255, 200, 80, ${Math.min(mouthGlow * 0.7, 0.55)})`);
-      mGrad.addColorStop(0.3, `rgba(255, 140, 40, ${Math.min(mouthGlow * 0.45, 0.35)})`);
-      mGrad.addColorStop(0.6, `rgba(255, 80, 10, ${Math.min(mouthGlow * 0.2, 0.2)})`);
+      const mGrad = ctx.createRadialGradient(
+        mouthPt.x,
+        mouthPt.y,
+        0,
+        mouthPt.x,
+        mouthPt.y,
+        mouthR,
+      );
+      mGrad.addColorStop(
+        0,
+        `rgba(255, 200, 80, ${Math.min(mouthGlow * 0.7, 0.55)})`,
+      );
+      mGrad.addColorStop(
+        0.3,
+        `rgba(255, 140, 40, ${Math.min(mouthGlow * 0.45, 0.35)})`,
+      );
+      mGrad.addColorStop(
+        0.6,
+        `rgba(255, 80, 10, ${Math.min(mouthGlow * 0.2, 0.2)})`,
+      );
       mGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
       ctx.fillStyle = mGrad;
       ctx.beginPath();
-      ctx.ellipse(mouthPt.x, mouthPt.y, mouthR, mouthR * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        mouthPt.x,
+        mouthPt.y,
+        mouthR,
+        mouthR * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
     // Heat shimmer effect above barrel mouth (distortion illusion via oscillating transparent blobs)
     if (totalGlow > 0.12 || timeSinceFire < 4000) {
-      const shimmerStr = Math.min(0.05, totalGlow * 0.12 + (timeSinceFire < 4000 ? (1 - timeSinceFire / 4000) * 0.04 : 0));
+      const shimmerStr = Math.min(
+        0.05,
+        totalGlow * 0.12 +
+          (timeSinceFire < 4000 ? (1 - timeSinceFire / 4000) * 0.04 : 0),
+      );
       const shimmerCount = level >= 3 ? 5 : level >= 2 ? 4 : 3;
       for (let si = 0; si < shimmerCount; si++) {
         const shimPhase = time * (1.5 + si * 0.4) + si * 2.7;
         const shimX = mouthPt.x + Math.sin(shimPhase) * 3 * zoom;
-        const shimY = mouthPt.y - (3 + si * 3) * zoom + Math.cos(shimPhase * 0.7) * zoom;
+        const shimY =
+          mouthPt.y - (3 + si * 3) * zoom + Math.cos(shimPhase * 0.7) * zoom;
         const shimR = (2 + si * 0.8) * zoom;
         ctx.fillStyle = `rgba(255,200,100,${shimmerStr * (1 - si / shimmerCount)})`;
         ctx.beginPath();
@@ -3501,7 +4409,8 @@ export function renderMortarStandardBarrel(
     const trayStartX = feedX - feedDirX * 1 * zoom;
     const trayStartY = feedY - feedDirY * 1 * zoom + 2 * zoom;
     const trayEndX = feedX + feedDirX * trayLen;
-    const trayEndY = feedY + feedDirY * trayLen + (shellCount - 1) * 1.2 * zoom + 2 * zoom;
+    const trayEndY =
+      feedY + feedDirY * trayLen + (shellCount - 1) * 1.2 * zoom + 2 * zoom;
     ctx.strokeStyle = level >= 3 ? "#4e4e58" : "#3e3e44";
     ctx.lineWidth = (level >= 3 ? 2.2 : 1.8) * zoom;
     ctx.lineCap = "round";
@@ -3522,12 +4431,17 @@ export function renderMortarStandardBarrel(
     ctx.lineCap = "butt";
 
     // Shell chain links (connecting links between rounds)
-    const linkColor = level >= 3 ? "rgba(160,150,100,0.35)" : "rgba(100,100,90,0.3)";
+    const linkColor =
+      level >= 3 ? "rgba(160,150,100,0.35)" : "rgba(100,100,90,0.3)";
     for (let si = 0; si < shellCount - 1; si++) {
-      const lx1 = feedX + feedDirX * (si + 0.7) * shellSpacing + si * 0.8 * zoom;
-      const ly1 = feedY + feedDirY * (si + 0.7) * shellSpacing + si * 1.2 * zoom;
-      const lx2 = feedX + feedDirX * (si + 1.3) * shellSpacing + (si + 1) * 0.8 * zoom;
-      const ly2 = feedY + feedDirY * (si + 1.3) * shellSpacing + (si + 1) * 1.2 * zoom;
+      const lx1 =
+        feedX + feedDirX * (si + 0.7) * shellSpacing + si * 0.8 * zoom;
+      const ly1 =
+        feedY + feedDirY * (si + 0.7) * shellSpacing + si * 1.2 * zoom;
+      const lx2 =
+        feedX + feedDirX * (si + 1.3) * shellSpacing + (si + 1) * 0.8 * zoom;
+      const ly2 =
+        feedY + feedDirY * (si + 1.3) * shellSpacing + (si + 1) * 1.2 * zoom;
       ctx.strokeStyle = linkColor;
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
@@ -3546,13 +4460,24 @@ export function renderMortarStandardBarrel(
 
       // Shell casing body (brass/steel)
       const casingGrad = ctx.createLinearGradient(
-        sx + feedNormX * shellRad, sy + feedNormY * shellRad,
-        sx - feedNormX * shellRad, sy - feedNormY * shellRad,
+        sx + feedNormX * shellRad,
+        sy + feedNormY * shellRad,
+        sx - feedNormX * shellRad,
+        sy - feedNormY * shellRad,
       );
       const casingBase = level >= 3 ? [201, 162, 39] : [138, 122, 80];
-      casingGrad.addColorStop(0, `rgb(${casingBase[0] - 30},${casingBase[1] - 20},${casingBase[2] - 10})`);
-      casingGrad.addColorStop(0.35, `rgb(${Math.min(255, casingBase[0] + 20)},${Math.min(255, casingBase[1] + 15)},${Math.min(255, casingBase[2] + 10)})`);
-      casingGrad.addColorStop(1, `rgb(${casingBase[0] - 20},${casingBase[1] - 15},${casingBase[2] - 8})`);
+      casingGrad.addColorStop(
+        0,
+        `rgb(${casingBase[0] - 30},${casingBase[1] - 20},${casingBase[2] - 10})`,
+      );
+      casingGrad.addColorStop(
+        0.35,
+        `rgb(${Math.min(255, casingBase[0] + 20)},${Math.min(255, casingBase[1] + 15)},${Math.min(255, casingBase[2] + 10)})`,
+      );
+      casingGrad.addColorStop(
+        1,
+        `rgb(${casingBase[0] - 20},${casingBase[1] - 15},${casingBase[2] - 8})`,
+      );
       ctx.fillStyle = casingGrad;
       ctx.beginPath();
       ctx.ellipse(sx, sy, shellLen, shellRad, shellAng, 0, Math.PI * 2);
@@ -3564,10 +4489,19 @@ export function renderMortarStandardBarrel(
       // Driving band (copper ring near base of projectile)
       const bandX = sx + Math.cos(shellAng) * shellLen * 0.3;
       const bandY = sy + Math.sin(shellAng) * shellLen * 0.3;
-      ctx.strokeStyle = level >= 3 ? "rgba(180,120,50,0.35)" : "rgba(140,100,60,0.3)";
+      ctx.strokeStyle =
+        level >= 3 ? "rgba(180,120,50,0.35)" : "rgba(140,100,60,0.3)";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
-      ctx.ellipse(bandX, bandY, 0.3 * zoom, shellRad * 0.95, shellAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        bandX,
+        bandY,
+        0.3 * zoom,
+        shellRad * 0.95,
+        shellAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
 
       // Ogive tip (pointed nose) — iso ellipse
@@ -3576,13 +4510,22 @@ export function renderMortarStandardBarrel(
       const feedAng = Math.atan2(feedDirY, feedDirX);
       ctx.fillStyle = level >= 3 ? "#4a4a55" : "#5a5a60";
       ctx.beginPath();
-      ctx.ellipse(tipX, tipY, shellRad * 0.55, shellRad * 0.35, feedAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        tipX,
+        tipY,
+        shellRad * 0.55,
+        shellRad * 0.35,
+        feedAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Casing primer (small circle at base)
       const primerX = sx + Math.cos(shellAng) * shellLen * 0.85;
       const primerY = sy + Math.sin(shellAng) * shellLen * 0.85;
-      ctx.fillStyle = level >= 3 ? "rgba(180,150,60,0.3)" : "rgba(120,110,80,0.25)";
+      ctx.fillStyle =
+        level >= 3 ? "rgba(180,150,60,0.3)" : "rgba(120,110,80,0.25)";
       ctx.beginPath();
       ctx.arc(primerX, primerY, shellRad * 0.4, 0, Math.PI * 2);
       ctx.fill();
@@ -3590,7 +4533,15 @@ export function renderMortarStandardBarrel(
       // Specular highlight on casing
       ctx.fillStyle = `rgba(255,255,255,0.08)`;
       ctx.beginPath();
-      ctx.ellipse(sx + feedNormX * shellRad * 0.3, sy + feedNormY * shellRad * 0.3, shellLen * 0.5, shellRad * 0.2, shellAng, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx + feedNormX * shellRad * 0.3,
+        sy + feedNormY * shellRad * 0.3,
+        shellLen * 0.5,
+        shellRad * 0.2,
+        shellAng,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -3612,22 +4563,38 @@ export function renderMortarStandardBarrel(
     for (const ringFrac of ringPositions) {
       const ringRecoil = cumRecoil * ringFrac;
       const ringPt = posAtFrac(ringFrac, ringRecoil);
-      const tierIdx = ringFrac < tiers[0].h / totalH ? 0 : ringFrac < (tiers[0].h + tiers[1].h) / totalH ? 1 : 2;
+      const tierIdx =
+        ringFrac < tiers[0].h / totalH
+          ? 0
+          : ringFrac < (tiers[0].h + tiers[1].h) / totalH
+            ? 1
+            : 2;
       const ringR = tiers[tierIdx].r * 1.04;
       const ringVerts = generateIsoHexVertices(isoOff, ringR, hexSides);
       const ringNormals = computeHexSideNormals(cosR, hexSides);
       const ringH = 1.5 * zoom;
       const ringBot: Pt = { x: ringPt.x, y: ringPt.y + ringH * 0.5 };
       const ringTop: Pt = { x: ringPt.x, y: ringPt.y - ringH * 0.5 };
-      const ringColor = level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
-      drawHexBand(ctx, ringVerts, ringNormals, ringBot, ringTop, 1.0,
+      const ringColor =
+        level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
+      drawHexBand(
+        ctx,
+        ringVerts,
+        ringNormals,
+        ringBot,
+        ringTop,
+        1.0,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
           const rc = parseInt(ringColor.slice(1, 3), 16);
           const gc = parseInt(ringColor.slice(3, 5), 16);
           const bc = parseInt(ringColor.slice(5, 7), 16);
           return `rgb(${Math.floor(rc * (0.6 + b * 0.4))},${Math.floor(gc * (0.6 + b * 0.4))},${Math.floor(bc * (0.6 + b * 0.4))})`;
-        }, "rgba(0,0,0,0.12)", 0.3 * zoom, -0.7);
+        },
+        "rgba(0,0,0,0.12)",
+        0.3 * zoom,
+        -0.85,
+      );
     }
   }
 
@@ -3653,8 +4620,9 @@ export function renderMortarStandardBarrel(
 
   // ===== L2: instrument panel mounted on leg — iso projected =====
   if (level === 2 && nearSide * (-sinR + 0.5 * cosR) > -0.3) {
-    const panelX = nearSide * (-sinR) * tiers[0].r * 1.0;
-    const panelY = nearSide * cosR * tiers[0].r * ISO_Y_RATIO * 0.5 - totalH * 0.2;
+    const panelX = nearSide * -sinR * tiers[0].r * 1.0;
+    const panelY =
+      nearSide * cosR * tiers[0].r * ISO_Y_RATIO * 0.5 - totalH * 0.2;
     const pHW = 3 * zoom;
     const pHH = 2 * zoom;
     ctx.fillStyle = "#3a3a42";
@@ -3821,7 +4789,8 @@ export function renderMortarStandardBarrel(
     const sPerpX = -sinR;
     const sPerpY = cosR * ISO_Y_RATIO;
     const sCarrW = tiers[0].r * (level >= 3 ? 0.85 : level >= 2 ? 0.78 : 0.7);
-    const recoilCompress = timeSinceFire < 800 ? (1 - timeSinceFire / 800) * 0.15 : 0;
+    const recoilCompress =
+      timeSinceFire < 800 ? (1 - timeSinceFire / 800) * 0.15 : 0;
     for (const side of [farSide, nearSide]) {
       const springOX = side * sPerpX * sCarrW * 0.45;
       const springOY = side * sPerpY * sCarrW * 0.45;
@@ -3830,14 +4799,20 @@ export function renderMortarStandardBarrel(
       const coilCount = level >= 3 ? 10 : 7;
       const coilW = (level >= 3 ? 2.2 : 1.8) * zoom;
       const wireThick = (level >= 3 ? 1.0 : 0.8) * zoom;
-      const springLen = Math.hypot(sEndPt.x - sStartPt.x, sEndPt.y - sStartPt.y);
-      const springDirX = springLen > 0 ? (sEndPt.x - sStartPt.x) / springLen : 0;
-      const springDirY = springLen > 0 ? (sEndPt.y - sStartPt.y) / springLen : 0;
+      const springLen = Math.hypot(
+        sEndPt.x - sStartPt.x,
+        sEndPt.y - sStartPt.y,
+      );
+      const springDirX =
+        springLen > 0 ? (sEndPt.x - sStartPt.x) / springLen : 0;
+      const springDirY =
+        springLen > 0 ? (sEndPt.y - sStartPt.y) / springLen : 0;
       const springNx = -springDirY;
       const springNy = springDirX;
 
       // Spring guide rod (thin center line)
-      ctx.strokeStyle = level >= 3 ? "rgba(140,140,148,0.2)" : "rgba(100,100,110,0.15)";
+      ctx.strokeStyle =
+        level >= 3 ? "rgba(140,140,148,0.2)" : "rgba(100,100,110,0.15)";
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
       ctx.moveTo(sStartPt.x + springOX, sStartPt.y + springOY);
@@ -3849,8 +4824,13 @@ export function renderMortarStandardBarrel(
         ctx.fillStyle = level >= 3 ? "#5a5a62" : "#4a4a52";
         ctx.beginPath();
         ctx.ellipse(
-          endPt.x + springOX, endPt.y + springOY,
-          coilW * 0.55, coilW * 0.35, Math.atan2(springDirY, springDirX), 0, Math.PI * 2,
+          endPt.x + springOX,
+          endPt.y + springOY,
+          coilW * 0.55,
+          coilW * 0.35,
+          Math.atan2(springDirY, springDirX),
+          0,
+          Math.PI * 2,
         );
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.15)";
@@ -3873,9 +4853,12 @@ export function renderMortarStandardBarrel(
 
         if (s > 0) {
           const prevT = (s - 1) / segments;
-          const prevTComp = prevT * (1 - recoilCompress) + recoilCompress * prevT * prevT;
-          const prevCx = sStartPt.x + springOX + (sEndPt.x - sStartPt.x) * prevTComp;
-          const prevCy = sStartPt.y + springOY + (sEndPt.y - sStartPt.y) * prevTComp;
+          const prevTComp =
+            prevT * (1 - recoilCompress) + recoilCompress * prevT * prevT;
+          const prevCx =
+            sStartPt.x + springOX + (sEndPt.x - sStartPt.x) * prevTComp;
+          const prevCy =
+            sStartPt.y + springOY + (sEndPt.y - sStartPt.y) * prevTComp;
           const prevAngle = prevT * coilCount * Math.PI * 2;
           const prevWobX = Math.sin(prevAngle) * coilW * 0.45;
           const prevWobY = Math.cos(prevAngle) * coilW * 0.25;
@@ -3884,7 +4867,10 @@ export function renderMortarStandardBarrel(
 
           // Wire brightness varies with coil phase (front vs back of helix)
           const faceFactor = Math.cos(coilAngle) * 0.5 + 0.5;
-          const wireR = level >= 3 ? 155 + Math.round(faceFactor * 40) : 120 + Math.round(faceFactor * 30);
+          const wireR =
+            level >= 3
+              ? 155 + Math.round(faceFactor * 40)
+              : 120 + Math.round(faceFactor * 30);
           const wireG = wireR;
           const wireB = wireR + 8;
           ctx.strokeStyle = `rgb(${wireR},${wireG},${wireB})`;
@@ -4005,11 +4991,11 @@ export function renderMortarStandardBarrel(
       },
       "rgba(0,0,0,0.15)",
       0.4 * zoom,
-      -0.7,
+      -0.85,
     );
     ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
     for (let ci = 0; ci < hexSides; ci++) {
-      if (collarNormals[ci] < -0.7) continue;
+      if (collarNormals[ci] < -0.85) continue;
       ctx.beginPath();
       ctx.arc(
         collarPt.x + collarVerts[ci].x,
@@ -4022,23 +5008,492 @@ export function renderMortarStandardBarrel(
     }
   }
 
+  // ===== OCTAGONAL RECOIL SPRINGS (paired, mounted on one side of barrel) =====
+  {
+    const springPerp = { x: -sinR, y: cosR * ISO_Y_RATIO };
+    const springSide = farSide;
+    const springR = (level >= 3 ? 3.5 : level >= 2 ? 3 : 2.5) * zoom;
+    const springSides = 8;
+    const springDk = parseHexColor(
+      level >= 3 ? "#2a2832" : level >= 2 ? "#282c34" : "#2e2e32",
+    );
+    const springLt = parseHexColor(
+      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068",
+    );
+    const springNormals = computeHexSideNormals(cosR, springSides);
+    const springSorted = sortSidesByDepth(springNormals);
+    const recoilCompress =
+      timeSinceFire < 800 ? (1 - timeSinceFire / 800) * 0.12 : 0;
+
+    for (let sp = 0; sp < 2; sp++) {
+      const springSpacing = (sp - 0.5) * 6 * zoom;
+      const springBaseOff = tiers[0].r + springR * 0.4;
+      const springOffX =
+        springSide *
+        springPerp.x *
+        (springBaseOff + springSpacing * Math.abs(springPerp.x) * 0.3);
+      const springOffY =
+        springSide *
+        springPerp.y *
+        (springBaseOff + springSpacing * Math.abs(springPerp.y) * 0.3);
+      const barrelDirOff = springSpacing * bAx * 0.15;
+      const barrelDirOffY = springSpacing * bAy * 0.15;
+
+      const springBaseFrac = 0.06 + sp * 0.04;
+      const springTipFrac = 0.35 + sp * 0.03 - recoilCompress;
+      const springBaseRecoil = tierRecoils[0] * (0.1 + sp * 0.05);
+      const springTipRecoil = tierRecoils[0] * 0.7 + tierRecoils[1] * 0.2;
+
+      const sBase = posAtFrac(springBaseFrac, springBaseRecoil);
+      const sTip = posAtFrac(springTipFrac, springTipRecoil);
+
+      const segCount = 4;
+      const springPts: { center: Pt; verts: Pt[] }[] = [];
+      for (let si = 0; si <= segCount; si++) {
+        const t = si / segCount;
+        const cx = sBase.x + (sTip.x - sBase.x) * t + springOffX + barrelDirOff;
+        const cy =
+          sBase.y + (sTip.y - sBase.y) * t + springOffY + barrelDirOffY;
+        const taper = 1.0 - t * 0.15;
+        springPts.push({
+          center: { x: cx, y: cy },
+          verts: generateIsoHexVertices(isoOff, springR * taper, springSides),
+        });
+      }
+
+      // Bottom cap
+      drawHexCap(
+        ctx,
+        springPts[0].center,
+        springPts[0].verts,
+        level >= 3 ? "#3a3440" : "#3a3a3e",
+        level >= 3 ? "#2a2430" : "#2a2a2e",
+        0.4 * zoom,
+      );
+
+      // Prism segments
+      for (let si = 0; si < segCount; si++) {
+        const bot = springPts[si];
+        const top = springPts[si + 1];
+        for (const i of springSorted) {
+          const ni = (i + 1) % springSides;
+          const n = springNormals[i];
+          const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+          const fR = Math.floor(
+            springDk.r + (springLt.r - springDk.r) * bright,
+          );
+          const fG = Math.floor(
+            springDk.g + (springLt.g - springDk.g) * bright,
+          );
+          const fB = Math.floor(
+            springDk.b + (springLt.b - springDk.b) * bright,
+          );
+
+          ctx.fillStyle = `rgb(${fR},${fG},${fB})`;
+          ctx.beginPath();
+          ctx.moveTo(
+            bot.center.x + bot.verts[i].x,
+            bot.center.y + bot.verts[i].y,
+          );
+          ctx.lineTo(
+            bot.center.x + bot.verts[ni].x,
+            bot.center.y + bot.verts[ni].y,
+          );
+          ctx.lineTo(
+            top.center.x + top.verts[ni].x,
+            top.center.y + top.verts[ni].y,
+          );
+          ctx.lineTo(
+            top.center.x + top.verts[i].x,
+            top.center.y + top.verts[i].y,
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = `rgba(0,0,0,${0.06 + bright * 0.06})`;
+          ctx.lineWidth = 0.4 * zoom;
+          ctx.stroke();
+
+          if (n < -0.85) continue;
+
+          // Highlight on bright edges
+          if (bright > 0.55) {
+            ctx.strokeStyle = `rgba(255,255,255,${0.04 + (bright - 0.55) * 0.15})`;
+            ctx.lineWidth = 0.5 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(
+              bot.center.x + bot.verts[ni].x,
+              bot.center.y + bot.verts[ni].y,
+            );
+            ctx.lineTo(
+              top.center.x + top.verts[ni].x,
+              top.center.y + top.verts[ni].y,
+            );
+            ctx.stroke();
+          }
+        }
+
+        // Coil ring at each segment joint (spring detail)
+        if (si > 0) {
+          const ringScale = 1.12;
+          drawHexBand(
+            ctx,
+            bot.verts,
+            springNormals,
+            { x: bot.center.x, y: bot.center.y + 0.8 * zoom },
+            { x: bot.center.x, y: bot.center.y - 0.8 * zoom },
+            ringScale,
+            (n) => {
+              const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+              return level >= 3
+                ? `rgb(${140 + Math.floor(b * 50)},${120 + Math.floor(b * 45)},${30 + Math.floor(b * 20)})`
+                : `rgb(${80 + Math.floor(b * 40)},${80 + Math.floor(b * 40)},${90 + Math.floor(b * 30)})`;
+            },
+            "rgba(0,0,0,0.12)",
+            0.3 * zoom,
+            -0.85,
+          );
+        }
+      }
+
+      // Top cap
+      const sTop = springPts[segCount];
+      drawHexCap(
+        ctx,
+        sTop.center,
+        sTop.verts,
+        level >= 3 ? "#5a5260" : "#505058",
+        level >= 3 ? "#3a3440" : "#3a3a3e",
+        0.4 * zoom,
+      );
+
+      // End mounting bolts
+      const sAccent = level >= 3 ? "#c9a227" : "#8a8a90";
+      ctx.fillStyle = sAccent;
+      ctx.beginPath();
+      ctx.arc(
+        springPts[0].center.x,
+        springPts[0].center.y,
+        1 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(sTop.center.x, sTop.center.y, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== OCTAGONAL SCOPE (mounted on opposite side of barrel from springs) =====
+  {
+    const scopePerp = { x: -sinR, y: cosR * ISO_Y_RATIO };
+    const scopeSide = -farSide;
+    const scopeR = (level >= 3 ? 4 : level >= 2 ? 3.5 : 3) * zoom;
+    const scopeSides = 8;
+    const scopeDk = parseHexColor(
+      level >= 3 ? "#1e1a24" : level >= 2 ? "#222630" : "#28282c",
+    );
+    const scopeLt = parseHexColor(
+      level >= 3 ? "#5a4e5a" : level >= 2 ? "#4a5060" : "#505058",
+    );
+    const scopeNormals = computeHexSideNormals(cosR, scopeSides);
+    const scopeSorted = sortSidesByDepth(scopeNormals);
+
+    const scopeOffR = tiers[1].r + scopeR * 0.4;
+    const scopeBaseFrac = 0.22;
+    const scopeTipFrac = 0.52;
+    const scopeBaseRecoil = tierRecoils[0] * 0.4;
+    const scopeTipRecoil = tierRecoils[0] + tierRecoils[1] * 0.5;
+
+    const scBase = posAtFrac(scopeBaseFrac, scopeBaseRecoil);
+    const scTip = posAtFrac(scopeTipFrac, scopeTipRecoil);
+    const scopeOX = scopeSide * scopePerp.x * scopeOffR;
+    const scopeOY = scopeSide * scopePerp.y * scopeOffR;
+
+    const scopeSegCount = 3;
+    const scopePts: { center: Pt; verts: Pt[] }[] = [];
+    for (let si = 0; si <= scopeSegCount; si++) {
+      const t = si / scopeSegCount;
+      const cx = scBase.x + (scTip.x - scBase.x) * t + scopeOX;
+      const cy = scBase.y + (scTip.y - scBase.y) * t + scopeOY;
+      const taper = si === 0 ? 0.85 : si === scopeSegCount ? 1.1 : 1.0;
+      scopePts.push({
+        center: { x: cx, y: cy },
+        verts: generateIsoHexVertices(isoOff, scopeR * taper, scopeSides),
+      });
+    }
+
+    // Rear cap (eyepiece end — narrower)
+    drawHexCap(
+      ctx,
+      scopePts[0].center,
+      scopePts[0].verts,
+      level >= 3 ? "#2a2430" : "#2a2a30",
+      level >= 3 ? "#1a1420" : "#1e1e22",
+      0.4 * zoom,
+    );
+
+    // Scope body segments
+    for (let si = 0; si < scopeSegCount; si++) {
+      const bot = scopePts[si];
+      const top = scopePts[si + 1];
+      const isObjectiveEnd = si === scopeSegCount - 1;
+
+      for (const i of scopeSorted) {
+        const ni = (i + 1) % scopeSides;
+        const n = scopeNormals[i];
+        const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+        const fR = Math.floor(scopeDk.r + (scopeLt.r - scopeDk.r) * bright);
+        const fG = Math.floor(scopeDk.g + (scopeLt.g - scopeDk.g) * bright);
+        const fB = Math.floor(scopeDk.b + (scopeLt.b - scopeDk.b) * bright);
+
+        const faceGrad = ctx.createLinearGradient(
+          top.center.x,
+          top.center.y,
+          bot.center.x,
+          bot.center.y,
+        );
+        faceGrad.addColorStop(
+          0,
+          `rgb(${Math.min(255, fR + 8)},${Math.min(255, fG + 6)},${Math.min(255, fB + 5)})`,
+        );
+        faceGrad.addColorStop(0.5, `rgb(${fR},${fG},${fB})`);
+        faceGrad.addColorStop(
+          1,
+          `rgb(${Math.max(0, fR - 10)},${Math.max(0, fG - 8)},${Math.max(0, fB - 6)})`,
+        );
+        ctx.fillStyle = faceGrad;
+        ctx.beginPath();
+        ctx.moveTo(
+          bot.center.x + bot.verts[i].x,
+          bot.center.y + bot.verts[i].y,
+        );
+        ctx.lineTo(
+          bot.center.x + bot.verts[ni].x,
+          bot.center.y + bot.verts[ni].y,
+        );
+        ctx.lineTo(
+          top.center.x + top.verts[ni].x,
+          top.center.y + top.verts[ni].y,
+        );
+        ctx.lineTo(
+          top.center.x + top.verts[i].x,
+          top.center.y + top.verts[i].y,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(0,0,0,${0.07 + bright * 0.06})`;
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.stroke();
+
+        if (n < -0.85) continue;
+
+        // Edge highlight
+        if (bright > 0.5) {
+          ctx.strokeStyle = `rgba(255,255,255,${0.05 + (bright - 0.5) * 0.15})`;
+          ctx.lineWidth = 0.5 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(
+            bot.center.x + bot.verts[ni].x,
+            bot.center.y + bot.verts[ni].y,
+          );
+          ctx.lineTo(
+            top.center.x + top.verts[ni].x,
+            top.center.y + top.verts[ni].y,
+          );
+          ctx.stroke();
+        }
+
+        // Scope markings on the main body (middle segment)
+        if (si === 1 && n > 0) {
+          ctx.strokeStyle =
+            level >= 3 ? "rgba(200,160,40,0.2)" : "rgba(180,180,190,0.15)";
+          ctx.lineWidth = 0.4 * zoom;
+          for (let mk = 0; mk < 3; mk++) {
+            const mt = (mk + 1) / 4;
+            const mBot = {
+              x: bot.verts[i].x + (top.verts[i].x - bot.verts[i].x) * mt,
+              y: bot.verts[i].y + (top.verts[i].y - bot.verts[i].y) * mt,
+            };
+            const mTop = {
+              x: bot.verts[ni].x + (top.verts[ni].x - bot.verts[ni].x) * mt,
+              y: bot.verts[ni].y + (top.verts[ni].y - bot.verts[ni].y) * mt,
+            };
+            const mcx = bot.center.x + (top.center.x - bot.center.x) * mt;
+            const mcy = bot.center.y + (top.center.y - bot.center.y) * mt;
+            ctx.beginPath();
+            ctx.moveTo(mcx + mBot.x, mcy + mBot.y);
+            ctx.lineTo(mcx + mTop.x, mcy + mTop.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Band ring at joints
+      drawHexBand(
+        ctx,
+        bot.verts,
+        scopeNormals,
+        { x: bot.center.x, y: bot.center.y + 1 * zoom },
+        { x: bot.center.x, y: bot.center.y - 1 * zoom },
+        isObjectiveEnd ? 1.15 : 1.06,
+        (n) => {
+          const b = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.3));
+          if (level >= 3)
+            return `rgb(${140 + Math.floor(b * 50)},${115 + Math.floor(b * 45)},${28 + Math.floor(b * 18)})`;
+          return `rgb(${60 + Math.floor(b * 35)},${60 + Math.floor(b * 35)},${68 + Math.floor(b * 25)})`;
+        },
+        "rgba(0,0,0,0.15)",
+        0.4 * zoom,
+        -0.85,
+      );
+    }
+
+    // Objective lens (front cap — glass effect)
+    const objPt = scopePts[scopeSegCount];
+    const objVerts = objPt.verts;
+    drawHexCap(
+      ctx,
+      objPt.center,
+      objVerts,
+      level >= 3 ? "#3a3040" : "#2e2e36",
+      level >= 3 ? "#1e1824" : "#1e1e24",
+      0.4 * zoom,
+    );
+
+    // Lens glass (inner octagon with blue tint)
+    const lensVerts = objVerts.map((v) => ({ x: v.x * 0.7, y: v.y * 0.7 }));
+    ctx.fillStyle = level >= 3 ? "rgba(60,80,140,0.35)" : "rgba(40,60,120,0.3)";
+    ctx.beginPath();
+    ctx.moveTo(
+      objPt.center.x + lensVerts[0].x,
+      objPt.center.y + lensVerts[0].y,
+    );
+    for (let li = 1; li < scopeSides; li++)
+      ctx.lineTo(
+        objPt.center.x + lensVerts[li].x,
+        objPt.center.y + lensVerts[li].y,
+      );
+    ctx.closePath();
+    ctx.fill();
+
+    // Lens reflection highlight
+    ctx.fillStyle = "rgba(180,200,255,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(
+      objPt.center.x - scopeR * 0.15,
+      objPt.center.y - scopeR * 0.1 * ISO_Y_RATIO,
+      scopeR * 0.3,
+      scopeR * 0.2 * ISO_Y_RATIO,
+      -0.4,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Scope mount brackets (connecting scope to barrel body)
+    const mountAccent = level >= 3 ? "#c9a227" : "#7a7a82";
+    const mountDark = level >= 3 ? "#3a3440" : "#3a3a40";
+    for (let mi = 0; mi < 2; mi++) {
+      const mt = mi === 0 ? 0.15 : 0.7;
+      const mPt = {
+        x: scBase.x + (scTip.x - scBase.x) * mt + scopeOX,
+        y: scBase.y + (scTip.y - scBase.y) * mt + scopeOY,
+      };
+      const barrelPt = {
+        x: scBase.x + (scTip.x - scBase.x) * mt,
+        y: scBase.y + (scTip.y - scBase.y) * mt,
+      };
+
+      // Mount arm
+      ctx.strokeStyle = mountDark;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(
+        barrelPt.x + scopeSide * scopePerp.x * tiers[1].r * 0.9,
+        barrelPt.y + scopeSide * scopePerp.y * tiers[1].r * 0.9,
+      );
+      ctx.lineTo(mPt.x, mPt.y);
+      ctx.stroke();
+
+      // Mount clamp ring
+      ctx.strokeStyle = mountDark;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        mPt.x,
+        mPt.y,
+        scopeR * 1.2,
+        scopeR * 0.6 * ISO_Y_RATIO,
+        Math.atan2(scTip.y - scBase.y, scTip.x - scBase.x),
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+
+      // Clamp bolt
+      ctx.fillStyle = mountAccent;
+      ctx.beginPath();
+      ctx.arc(
+        mPt.x + scopeSide * scopePerp.x * scopeR * 0.8,
+        mPt.y + scopeSide * scopePerp.y * scopeR * 0.8,
+        0.8 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    // Eyepiece rubber guard (rear cap detail)
+    const eyePt = scopePts[0];
+    ctx.strokeStyle = "#1a1a1e";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      eyePt.center.x,
+      eyePt.center.y,
+      scopeR * 0.9,
+      scopeR * 0.45 * ISO_Y_RATIO,
+      Math.atan2(scTip.y - scBase.y, scTip.x - scBase.x),
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
   // ===== FRONT CRADLE ARM (drawn late for proper layering on top of barrel) =====
   {
     const carrWF = tiers[0].r * (level >= 3 ? 1.15 : level >= 2 ? 1.08 : 1.0);
     const cradleThickF = (level >= 3 ? 10 : level >= 2 ? 9 : 7.5) * zoom;
     const cradleWF = carrWF * (level >= 3 ? 1.35 : level >= 2 ? 1.28 : 1.2);
-    const metalDarkF = level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
-    const metalMidF = level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
-    const metalLightF = level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
+    const metalDarkF =
+      level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
+    const metalMidF =
+      level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
+    const metalLightF =
+      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
     const accentF = level >= 3 ? "#c9a227" : level >= 2 ? "#8a4428" : "#6a3a28";
     const totalRecoilF = tierRecoils[0] + tierRecoils[1] + tierRecoils[2];
     drawMortarCradleArm(ctx, {
-      side: nearSide, level, zoom, sinR, cosR,
-      perpX: -sinR, perpY: cosR * ISO_Y_RATIO,
-      tiers, tierRecoils, totalRecoil: totalRecoilF, posAtFrac,
-      cradleW: cradleWF, cradleThick: cradleThickF,
-      metalDark: metalDarkF, metalMid: metalMidF, metalLight: metalLightF, accent: accentF,
-      time, timeSinceFire,
+      side: nearSide,
+      level,
+      zoom,
+      sinR,
+      cosR,
+      perpX: -sinR,
+      perpY: cosR * ISO_Y_RATIO,
+      tiers,
+      tierRecoils,
+      totalRecoil: totalRecoilF,
+      posAtFrac,
+      cradleW: cradleWF,
+      cradleThick: cradleThickF,
+      metalDark: metalDarkF,
+      metalMid: metalMidF,
+      metalLight: metalLightF,
+      accent: accentF,
+      time,
+      timeSinceFire,
     });
   }
 
@@ -4092,12 +5547,20 @@ export function renderMortarStandardBarrel(
   // Inner bore (dark with gradient glow)
   {
     const boreGlowBase = level >= 3 ? 0.12 : level >= 2 ? 0.08 : 0.04;
-    const boreFireGlow = timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
+    const boreFireGlow =
+      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
     const borePulse = Math.sin(time * 1.5) * 0.03;
     const boreTotal = boreGlowBase + boreFireGlow + borePulse;
 
     // Outer bore ring (charred dark)
-    drawHexCap(ctx, rimPt, rimInnerVerts, "#0a0804", "rgba(0,0,0,0.3)", 0.8 * zoom);
+    drawHexCap(
+      ctx,
+      rimPt,
+      rimInnerVerts,
+      "#0a0804",
+      "rgba(0,0,0,0.3)",
+      0.8 * zoom,
+    );
 
     // Inner heat glow rings (concentric, getting brighter toward center)
     if (boreTotal > 0.02) {
@@ -4108,8 +5571,12 @@ export function renderMortarStandardBarrel(
         const r = Math.floor(255);
         const g = Math.floor(60 + (1 - scaleFactor) * 140);
         const b = Math.floor(10 + (1 - scaleFactor) * 30);
-        drawHexCap(ctx, rimPt, scaleVerts(rimInnerVerts, scaleFactor * 0.85),
-          `rgba(${r}, ${g}, ${b}, ${Math.min(layerAlpha, 0.45)})`);
+        drawHexCap(
+          ctx,
+          rimPt,
+          scaleVerts(rimInnerVerts, scaleFactor * 0.85),
+          `rgba(${r}, ${g}, ${b}, ${Math.min(layerAlpha, 0.45)})`,
+        );
       }
     }
 
@@ -4118,7 +5585,14 @@ export function renderMortarStandardBarrel(
       const coreT = timeSinceFire / 2500;
       const coreAlpha = (1 - coreT) * 0.55;
       const coreR = tiers[2].r * 0.5 * (1 + coreT * 0.3);
-      const coreGrad = ctx.createRadialGradient(rimPt.x, rimPt.y, 0, rimPt.x, rimPt.y, coreR);
+      const coreGrad = ctx.createRadialGradient(
+        rimPt.x,
+        rimPt.y,
+        0,
+        rimPt.x,
+        rimPt.y,
+        coreR,
+      );
       coreGrad.addColorStop(0, `rgba(255, 240, 140, ${coreAlpha})`);
       coreGrad.addColorStop(0.3, `rgba(255, 160, 40, ${coreAlpha * 0.6})`);
       coreGrad.addColorStop(0.7, `rgba(255, 60, 0, ${coreAlpha * 0.2})`);
@@ -4151,7 +5625,14 @@ export function renderMortarStandardBarrel(
     }
 
     // Core flash (bright white-yellow center)
-    const coreGrad = ctx.createRadialGradient(flashCx, flashCy, 0, flashCx, flashCy, fSize);
+    const coreGrad = ctx.createRadialGradient(
+      flashCx,
+      flashCy,
+      0,
+      flashCx,
+      flashCy,
+      fSize,
+    );
     coreGrad.addColorStop(0, `rgba(255, 250, 200, ${fA * 0.9})`);
     coreGrad.addColorStop(0.15, `rgba(255, 240, 140, ${fA * 0.8})`);
     coreGrad.addColorStop(0.35, `rgba(255, 180, 60, ${fA * 0.6})`);
@@ -4173,8 +5654,14 @@ export function renderMortarStandardBarrel(
         const outerR = fSize * (0.8 + fT * 0.6);
         ctx.lineWidth = (0.8 + (level - 1) * 0.3) * zoom;
         ctx.beginPath();
-        ctx.moveTo(flashCx + Math.cos(sa) * innerR, flashCy + Math.sin(sa) * innerR * 0.55);
-        ctx.lineTo(flashCx + Math.cos(sa) * outerR, flashCy + Math.sin(sa) * outerR * 0.55);
+        ctx.moveTo(
+          flashCx + Math.cos(sa) * innerR,
+          flashCy + Math.sin(sa) * innerR * 0.55,
+        );
+        ctx.lineTo(
+          flashCx + Math.cos(sa) * outerR,
+          flashCy + Math.sin(sa) * outerR * 0.55,
+        );
         ctx.stroke();
       }
     }
@@ -4190,7 +5677,9 @@ export function renderMortarStandardBarrel(
       ctx.arc(
         flashCx + Math.cos(pA) * pDist * 0.5,
         flashCy + Math.sin(pA) * pDist * 0.3 - fT * 12 * zoom - p * 2 * zoom,
-        pSize, 0, Math.PI * 2,
+        pSize,
+        0,
+        Math.PI * 2,
       );
       ctx.fill();
     }
@@ -4239,12 +5728,30 @@ export function renderMortarEmberTurret(
   const ePlatTop: Pt = { x: 0, y: 3 * zoom - platH };
 
   // Molten underglow beneath platform
-  const underGlow = ctx.createRadialGradient(0, ePlatBot.y + 2 * zoom, 0, 0, ePlatBot.y + 2 * zoom, platR * 0.9);
-  underGlow.addColorStop(0, `rgba(255,100,20,${0.12 + Math.sin(time * 2) * 0.04})`);
+  const underGlow = ctx.createRadialGradient(
+    0,
+    ePlatBot.y + 2 * zoom,
+    0,
+    0,
+    ePlatBot.y + 2 * zoom,
+    platR * 0.9,
+  );
+  underGlow.addColorStop(
+    0,
+    `rgba(255,100,20,${0.12 + Math.sin(time * 2) * 0.04})`,
+  );
   underGlow.addColorStop(1, "rgba(255,40,0,0)");
   ctx.fillStyle = underGlow;
   ctx.beginPath();
-  ctx.ellipse(0, ePlatBot.y + 2 * zoom, platR * 0.9, platR * 0.45, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    ePlatBot.y + 2 * zoom,
+    platR * 0.9,
+    platR * 0.45,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   for (const i of ePlatSorted) {
@@ -4268,8 +5775,12 @@ export function renderMortarEmberTurret(
 
     if (n > -0.5) {
       // Heat glow cracks on platform face
-      const cx = (ePlatBot.x + ePlatTop.x) * 0.5 + (ePlatVerts[i].x + ePlatVerts[ni].x) * 0.5;
-      const cy = (ePlatBot.y + ePlatTop.y) * 0.5 + (ePlatVerts[i].y + ePlatVerts[ni].y) * 0.5;
+      const cx =
+        (ePlatBot.x + ePlatTop.x) * 0.5 +
+        (ePlatVerts[i].x + ePlatVerts[ni].x) * 0.5;
+      const cy =
+        (ePlatBot.y + ePlatTop.y) * 0.5 +
+        (ePlatVerts[i].y + ePlatVerts[ni].y) * 0.5;
       const crackAlpha = 0.08 + Math.sin(time * 2.5 + i * 1.1) * 0.04;
       ctx.strokeStyle = `rgba(255,80,10,${crackAlpha})`;
       ctx.lineWidth = 0.6 * zoom;
@@ -4302,7 +5813,14 @@ export function renderMortarEmberTurret(
   );
 
   // Heat glow on cap surface
-  const capGlow = ctx.createRadialGradient(0, ePlatTop.y, 0, 0, ePlatTop.y, platR * 0.6);
+  const capGlow = ctx.createRadialGradient(
+    0,
+    ePlatTop.y,
+    0,
+    0,
+    ePlatTop.y,
+    platR * 0.6,
+  );
   capGlow.addColorStop(0, `rgba(255,80,0,${0.06 + Math.sin(time * 3) * 0.03})`);
   capGlow.addColorStop(1, "rgba(255,40,0,0)");
   ctx.fillStyle = capGlow;
@@ -4314,10 +5832,16 @@ export function renderMortarEmberTurret(
   ctx.strokeStyle = "rgba(100,60,30,0.12)";
   ctx.lineWidth = 0.4 * zoom;
   for (let tp = 0; tp < 6; tp++) {
-    const tpA = tp * Math.PI / 3;
+    const tpA = (tp * Math.PI) / 3;
     ctx.beginPath();
-    ctx.moveTo(Math.cos(tpA) * platR * 0.2, ePlatTop.y + Math.sin(tpA) * platR * 0.1);
-    ctx.lineTo(Math.cos(tpA) * platR * 0.7, ePlatTop.y + Math.sin(tpA) * platR * 0.35);
+    ctx.moveTo(
+      Math.cos(tpA) * platR * 0.2,
+      ePlatTop.y + Math.sin(tpA) * platR * 0.1,
+    );
+    ctx.lineTo(
+      Math.cos(tpA) * platR * 0.7,
+      ePlatTop.y + Math.sin(tpA) * platR * 0.35,
+    );
     ctx.stroke();
   }
 
@@ -4360,14 +5884,30 @@ export function renderMortarEmberTurret(
 
   // Anchor bolts on platform vertices
   for (let i = 0; i < hexSides; i++) {
-    if (ePlatNormals[i] < -0.7 && ePlatNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+    if (
+      ePlatNormals[i] < -0.7 &&
+      ePlatNormals[(i + hexSides - 1) % hexSides] < -0.7
+    )
+      continue;
     ctx.fillStyle = "#4a3020";
     ctx.beginPath();
-    ctx.arc(ePlatTop.x + ePlatVerts[i].x, ePlatTop.y + ePlatVerts[i].y, 1.8 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      ePlatTop.x + ePlatVerts[i].x,
+      ePlatTop.y + ePlatVerts[i].y,
+      1.8 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#8a6040";
     ctx.beginPath();
-    ctx.arc(ePlatTop.x + ePlatVerts[i].x, ePlatTop.y + ePlatVerts[i].y, 1 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      ePlatTop.x + ePlatVerts[i].x,
+      ePlatTop.y + ePlatVerts[i].y,
+      1 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -4480,7 +6020,15 @@ export function renderMortarEmberTurret(
   // Base flange (wide disc)
   ctx.fillStyle = "#3a2818";
   ctx.beginPath();
-  ctx.ellipse(spindleBase.x, spindleBase.y, 8 * zoom, 4 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleBase.x,
+    spindleBase.y,
+    8 * zoom,
+    4 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.strokeStyle = "#5a4030";
   ctx.lineWidth = 1 * zoom;
@@ -4489,14 +6037,28 @@ export function renderMortarEmberTurret(
   ctx.strokeStyle = "#6a5040";
   ctx.lineWidth = 0.6 * zoom;
   ctx.beginPath();
-  ctx.ellipse(spindleBase.x, spindleBase.y, 6.5 * zoom, 3.2 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleBase.x,
+    spindleBase.y,
+    6.5 * zoom,
+    3.2 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.stroke();
   // Flange bolts
   ctx.fillStyle = "#8a6a48";
   for (let fb = 0; fb < 6; fb++) {
-    const fba = fb * Math.PI / 3;
+    const fba = (fb * Math.PI) / 3;
     ctx.beginPath();
-    ctx.arc(Math.cos(fba) * 7 * zoom, spindleBase.y + Math.sin(fba) * 3.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      Math.cos(fba) * 7 * zoom,
+      spindleBase.y + Math.sin(fba) * 3.5 * zoom,
+      0.8 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -4520,10 +6082,22 @@ export function renderMortarEmberTurret(
     const cb = Math.floor(14 + bright * 22);
     ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
     ctx.beginPath();
-    ctx.moveTo(spindleBase.x + spNx * spindleR * nx0, spindleBase.y + spNy * spindleR * nx0);
-    ctx.lineTo(spindleBase.x + spNx * spindleR * nx1, spindleBase.y + spNy * spindleR * nx1);
-    ctx.lineTo(spindleTop.x + spNx * spindleR * nx1, spindleTop.y + spNy * spindleR * nx1);
-    ctx.lineTo(spindleTop.x + spNx * spindleR * nx0, spindleTop.y + spNy * spindleR * nx0);
+    ctx.moveTo(
+      spindleBase.x + spNx * spindleR * nx0,
+      spindleBase.y + spNy * spindleR * nx0,
+    );
+    ctx.lineTo(
+      spindleBase.x + spNx * spindleR * nx1,
+      spindleBase.y + spNy * spindleR * nx1,
+    );
+    ctx.lineTo(
+      spindleTop.x + spNx * spindleR * nx1,
+      spindleTop.y + spNy * spindleR * nx1,
+    );
+    ctx.lineTo(
+      spindleTop.x + spNx * spindleR * nx0,
+      spindleTop.y + spNy * spindleR * nx0,
+    );
     ctx.closePath();
     ctx.fill();
   }
@@ -4531,8 +6105,14 @@ export function renderMortarEmberTurret(
   ctx.strokeStyle = "rgba(220,170,90,0.14)";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(spindleBase.x + spNx * spindleR * 0.35, spindleBase.y + spNy * spindleR * 0.35);
-  ctx.lineTo(spindleTop.x + spNx * spindleR * 0.35, spindleTop.y + spNy * spindleR * 0.35);
+  ctx.moveTo(
+    spindleBase.x + spNx * spindleR * 0.35,
+    spindleBase.y + spNy * spindleR * 0.35,
+  );
+  ctx.lineTo(
+    spindleTop.x + spNx * spindleR * 0.35,
+    spindleTop.y + spNy * spindleR * 0.35,
+  );
   ctx.stroke();
   // Edge darkening
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -4562,8 +6142,14 @@ export function renderMortarEmberTurret(
     ctx.strokeStyle = "rgba(0,0,0,0.15)";
     ctx.lineWidth = 2.2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(bx - spNx * spindleR * 1.12 + 0.3 * zoom, by - spNy * spindleR * 1.12 + 0.3 * zoom);
-    ctx.lineTo(bx + spNx * spindleR * 1.12 + 0.3 * zoom, by + spNy * spindleR * 1.12 + 0.3 * zoom);
+    ctx.moveTo(
+      bx - spNx * spindleR * 1.12 + 0.3 * zoom,
+      by - spNy * spindleR * 1.12 + 0.3 * zoom,
+    );
+    ctx.lineTo(
+      bx + spNx * spindleR * 1.12 + 0.3 * zoom,
+      by + spNy * spindleR * 1.12 + 0.3 * zoom,
+    );
     ctx.stroke();
     // Ring body
     ctx.strokeStyle = "#8a6a48";
@@ -4576,19 +6162,40 @@ export function renderMortarEmberTurret(
     ctx.strokeStyle = "rgba(200,160,80,0.12)";
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
-    ctx.moveTo(bx - spNx * spindleR * 1.08, by - spNy * spindleR * 1.08 - 0.3 * zoom);
-    ctx.lineTo(bx + spNx * spindleR * 1.08, by + spNy * spindleR * 1.08 - 0.3 * zoom);
+    ctx.moveTo(
+      bx - spNx * spindleR * 1.08,
+      by - spNy * spindleR * 1.08 - 0.3 * zoom,
+    );
+    ctx.lineTo(
+      bx + spNx * spindleR * 1.08,
+      by + spNy * spindleR * 1.08 - 0.3 * zoom,
+    );
     ctx.stroke();
   }
 
   // Top cap (gradient for convex surface look)
-  const capGrd = ctx.createRadialGradient(spindleTop.x, spindleTop.y, 0, spindleTop.x, spindleTop.y, spindleR * 1.3);
+  const capGrd = ctx.createRadialGradient(
+    spindleTop.x,
+    spindleTop.y,
+    0,
+    spindleTop.x,
+    spindleTop.y,
+    spindleR * 1.3,
+  );
   capGrd.addColorStop(0, "#7a5a40");
   capGrd.addColorStop(0.5, "#5a4030");
   capGrd.addColorStop(1, "#3a2818");
   ctx.fillStyle = capGrd;
   ctx.beginPath();
-  ctx.ellipse(spindleTop.x, spindleTop.y, spindleR * 1.3, spindleR * 0.65, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleTop.x,
+    spindleTop.y,
+    spindleR * 1.3,
+    spindleR * 0.65,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.12)";
   ctx.lineWidth = 0.4 * zoom;
@@ -4596,12 +6203,28 @@ export function renderMortarEmberTurret(
   // Inner cap ring
   ctx.fillStyle = "#6a5040";
   ctx.beginPath();
-  ctx.ellipse(spindleTop.x, spindleTop.y, spindleR * 0.7, spindleR * 0.35, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleTop.x,
+    spindleTop.y,
+    spindleR * 0.7,
+    spindleR * 0.35,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Cap highlight
   ctx.fillStyle = "rgba(200,160,80,0.1)";
   ctx.beginPath();
-  ctx.ellipse(spindleTop.x - 0.5 * zoom, spindleTop.y - 0.3 * zoom, spindleR * 0.35, spindleR * 0.18, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleTop.x - 0.5 * zoom,
+    spindleTop.y - 0.3 * zoom,
+    spindleR * 0.35,
+    spindleR * 0.18,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Ratchet gear (at base)
@@ -4609,7 +6232,15 @@ export function renderMortarEmberTurret(
   ctx.strokeStyle = "#7a5a3a";
   ctx.lineWidth = 1.8 * zoom;
   ctx.beginPath();
-  ctx.ellipse(spindleBase.x, spindleBase.y, ratchetR, ratchetR * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    spindleBase.x,
+    spindleBase.y,
+    ratchetR,
+    ratchetR * 0.5,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.stroke();
   const ratchetTeeth = 16;
   for (let t = 0; t < ratchetTeeth; t++) {
@@ -4618,9 +6249,18 @@ export function renderMortarEmberTurret(
     const toothOuter = ratchetR * 1.12;
     ctx.fillStyle = "#8a6a48";
     ctx.beginPath();
-    ctx.moveTo(Math.cos(ta) * toothInner, spindleBase.y + Math.sin(ta) * toothInner * 0.5);
-    ctx.lineTo(Math.cos(ta + 0.1) * toothOuter, spindleBase.y + Math.sin(ta + 0.1) * toothOuter * 0.5);
-    ctx.lineTo(Math.cos(ta + 0.2) * toothInner, spindleBase.y + Math.sin(ta + 0.2) * toothInner * 0.5);
+    ctx.moveTo(
+      Math.cos(ta) * toothInner,
+      spindleBase.y + Math.sin(ta) * toothInner * 0.5,
+    );
+    ctx.lineTo(
+      Math.cos(ta + 0.1) * toothOuter,
+      spindleBase.y + Math.sin(ta + 0.1) * toothOuter * 0.5,
+    );
+    ctx.lineTo(
+      Math.cos(ta + 0.2) * toothInner,
+      spindleBase.y + Math.sin(ta + 0.2) * toothInner * 0.5,
+    );
     ctx.closePath();
     ctx.fill();
   }
@@ -4629,7 +6269,14 @@ export function renderMortarEmberTurret(
   const furnPulse = 0.55 + Math.sin(time * 3) * 0.3;
   const furnCx = spindleMid.x;
   const furnCy = spindleMid.y;
-  const furnGrad = ctx.createRadialGradient(furnCx, furnCy, 0, furnCx, furnCy, 16 * zoom);
+  const furnGrad = ctx.createRadialGradient(
+    furnCx,
+    furnCy,
+    0,
+    furnCx,
+    furnCy,
+    16 * zoom,
+  );
   furnGrad.addColorStop(0, `rgba(255, 180, 40, ${furnPulse * 0.5})`);
   furnGrad.addColorStop(0.3, `rgba(255, 100, 0, ${furnPulse * 0.35})`);
   furnGrad.addColorStop(0.6, `rgba(255, 50, 0, ${furnPulse * 0.15})`);
@@ -4648,7 +6295,10 @@ export function renderMortarEmberTurret(
     ctx.lineWidth = 2 * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(spindleBase.x + Math.cos(pa) * spindleR, spindleBase.y + Math.sin(pa) * spindleR * 0.5);
+    ctx.moveTo(
+      spindleBase.x + Math.cos(pa) * spindleR,
+      spindleBase.y + Math.sin(pa) * spindleR * 0.5,
+    );
     ctx.lineTo(px, py);
     ctx.stroke();
     ctx.lineCap = "butt";
@@ -4773,12 +6423,20 @@ export function renderMortarEmberTurret(
         const eFaceMidX = (hexVerts[i].x + hexVerts[ni].x) * 0.5;
         const eFaceMidY = (hexVerts[i].y + hexVerts[ni].y) * 0.5;
         const eFaceGrad = ctx.createLinearGradient(
-          topC.x + eFaceMidX, topC.y + eFaceMidY,
-          botC.x + eFaceMidX, botC.y + eFaceMidY,
+          topC.x + eFaceMidX,
+          topC.y + eFaceMidY,
+          botC.x + eFaceMidX,
+          botC.y + eFaceMidY,
         );
-        eFaceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 5)})`);
+        eFaceGrad.addColorStop(
+          0,
+          `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 5)})`,
+        );
         eFaceGrad.addColorStop(0.5, `rgb(${fR},${fG},${fB})`);
-        eFaceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 6)})`);
+        eFaceGrad.addColorStop(
+          1,
+          `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 6)})`,
+        );
         ctx.fillStyle = eFaceGrad;
         ctx.beginPath();
         ctx.moveTo(botC.x + hexVerts[i].x, botC.y + hexVerts[i].y);
@@ -4795,7 +6453,12 @@ export function renderMortarEmberTurret(
           // Heat scorch gradient (intensifies toward muzzle end)
           const heatBase = 0.05 + (ti / 2) * 0.04;
           const heatPulse = Math.sin(time * 2.5 + bi * 2 + i * 0.5) * 0.03;
-          const heatAlpha = heatBase + heatPulse + (isActiveBarrel && shotProgress < 0.4 ? (1 - shotProgress / 0.4) * 0.1 : 0);
+          const heatAlpha =
+            heatBase +
+            heatPulse +
+            (isActiveBarrel && shotProgress < 0.4
+              ? (1 - shotProgress / 0.4) * 0.1
+              : 0);
           ctx.fillStyle = `rgba(255,80,0,${heatAlpha})`;
           ctx.beginPath();
           ctx.moveTo(botC.x + hexVerts[i].x, botC.y + hexVerts[i].y);
@@ -4811,8 +6474,16 @@ export function renderMortarEmberTurret(
           ctx.strokeStyle = `rgba(255,120,20,${crackAlpha})`;
           ctx.lineWidth = 0.4 * zoom;
           const eFacePt = (u: number, v: number) => ({
-            x: botC.x + hexVerts[i].x * (1 - u) + hexVerts[ni].x * u + (topC.x - botC.x) * v,
-            y: botC.y + hexVerts[i].y * (1 - u) + hexVerts[ni].y * u + (topC.y - botC.y) * v,
+            x:
+              botC.x +
+              hexVerts[i].x * (1 - u) +
+              hexVerts[ni].x * u +
+              (topC.x - botC.x) * v,
+            y:
+              botC.y +
+              hexVerts[i].y * (1 - u) +
+              hexVerts[ni].y * u +
+              (topC.y - botC.y) * v,
           });
           const c1 = eFacePt(0.2, 0.3);
           const c2 = eFacePt(0.5, 0.6);
@@ -4835,13 +6506,26 @@ export function renderMortarEmberTurret(
             ctx.fill();
             ctx.fillStyle = `rgba(220,170,80,${0.1 + bright * 0.08})`;
             ctx.beginPath();
-            ctx.arc(rx - 0.12 * zoom, ry - 0.12 * zoom, 0.25 * zoom, 0, Math.PI * 2);
+            ctx.arc(
+              rx - 0.12 * zoom,
+              ry - 0.12 * zoom,
+              0.25 * zoom,
+              0,
+              Math.PI * 2,
+            );
             ctx.fill();
             ctx.fillStyle = `rgba(160,100,50,${0.45 + bright * 0.3})`;
           }
         }
       }
-      drawHexCap(ctx, topC, hexVerts, tier.light, "rgba(0,0,0,0.1)", 0.5 * zoom);
+      drawHexCap(
+        ctx,
+        topC,
+        hexVerts,
+        tier.light,
+        "rgba(0,0,0,0.1)",
+        0.5 * zoom,
+      );
 
       // Metal band with heat tint
       const bandBot: Pt = { x: topC.x, y: topC.y + 1.8 * zoom };
@@ -4866,7 +6550,11 @@ export function renderMortarEmberTurret(
     // Rim + bore (enhanced)
     const rimR = barrelTiers[1].r * 1.2;
     const rimVerts = generateIsoHexVertices(isoOff, rimR, hexSides);
-    const innerVerts = generateIsoHexVertices(isoOff, barrelTiers[1].r * 0.65, hexSides);
+    const innerVerts = generateIsoHexVertices(
+      isoOff,
+      barrelTiers[1].r * 0.65,
+      hexSides,
+    );
     const rimC: Pt = {
       x: bx + bMaxTiltX,
       y: by - barrelTotalH + bMaxTiltY + barrelRecoil,
@@ -4884,7 +6572,10 @@ export function renderMortarEmberTurret(
       ctx.fillStyle = `rgb(${Math.floor(180 * (0.6 + rb * 0.4))},${Math.floor(130 * (0.6 + rb * 0.4))},${Math.floor(30 * (0.6 + rb * 0.4))})`;
       ctx.beginPath();
       ctx.moveTo(rimBandBot.x + rimVerts[ri].x, rimBandBot.y + rimVerts[ri].y);
-      ctx.lineTo(rimBandBot.x + rimVerts[rni].x, rimBandBot.y + rimVerts[rni].y);
+      ctx.lineTo(
+        rimBandBot.x + rimVerts[rni].x,
+        rimBandBot.y + rimVerts[rni].y,
+      );
       ctx.lineTo(rimC.x + rimVerts[rni].x, rimC.y + rimVerts[rni].y);
       ctx.lineTo(rimC.x + rimVerts[ri].x, rimC.y + rimVerts[ri].y);
       ctx.closePath();
@@ -4899,14 +6590,25 @@ export function renderMortarEmberTurret(
     for (let gl = 3; gl >= 1; gl--) {
       const sf = gl / 3;
       const alpha = mPulse * (1 - sf + 0.3) * 0.5;
-      drawHexCap(ctx, rimC, scaleVerts(innerVerts, sf * 0.8),
-        `rgba(255, ${60 + (1 - sf) * 100}, ${(1 - sf) * 20}, ${Math.min(alpha, 0.5)})`);
+      drawHexCap(
+        ctx,
+        rimC,
+        scaleVerts(innerVerts, sf * 0.8),
+        `rgba(255, ${60 + (1 - sf) * 100}, ${(1 - sf) * 20}, ${Math.min(alpha, 0.5)})`,
+      );
     }
 
     if (isActiveBarrel && shotProgress < 0.2) {
       const fA = (1 - shotProgress / 0.2) * 0.8;
       const fSize = 12 * zoom;
-      const fGrad = ctx.createRadialGradient(rimC.x, rimC.y - 4 * zoom, 0, rimC.x, rimC.y - 4 * zoom, fSize);
+      const fGrad = ctx.createRadialGradient(
+        rimC.x,
+        rimC.y - 4 * zoom,
+        0,
+        rimC.x,
+        rimC.y - 4 * zoom,
+        fSize,
+      );
       fGrad.addColorStop(0, `rgba(255, 240, 120, ${fA})`);
       fGrad.addColorStop(0.3, `rgba(255, 140, 20, ${fA * 0.6})`);
       fGrad.addColorStop(0.6, `rgba(255, 60, 0, ${fA * 0.25})`);
@@ -4923,8 +6625,13 @@ export function renderMortarEmberTurret(
         ctx.beginPath();
         ctx.arc(
           rimC.x + Math.cos(spA) * spDist * 0.5,
-          rimC.y - 4 * zoom - shotProgress * 8 * zoom + Math.sin(spA) * spDist * 0.3,
-          (2 + shotProgress * 3) * zoom, 0, Math.PI * 2,
+          rimC.y -
+            4 * zoom -
+            shotProgress * 8 * zoom +
+            Math.sin(spA) * spDist * 0.3,
+          (2 + shotProgress * 3) * zoom,
+          0,
+          Math.PI * 2,
         );
         ctx.fill();
       }
@@ -5232,14 +6939,30 @@ export function renderMortarMissileSilo(
 
   // Anchor bolts on platform vertices (larger, detailed)
   for (let i = 0; i < hexSides; i++) {
-    if (mPlatNormals[i] < -0.7 && mPlatNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+    if (
+      mPlatNormals[i] < -0.7 &&
+      mPlatNormals[(i + hexSides - 1) % hexSides] < -0.7
+    )
+      continue;
     ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
-    ctx.arc(mPlatTop.x + mPlatVerts[i].x, mPlatTop.y + mPlatVerts[i].y, 2 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      mPlatTop.x + mPlatVerts[i].x,
+      mPlatTop.y + mPlatVerts[i].y,
+      2 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#6a6a72";
     ctx.beginPath();
-    ctx.arc(mPlatTop.x + mPlatVerts[i].x, mPlatTop.y + mPlatVerts[i].y, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.arc(
+      mPlatTop.x + mPlatVerts[i].x,
+      mPlatTop.y + mPlatVerts[i].y,
+      1.2 * zoom,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -5247,10 +6970,16 @@ export function renderMortarMissileSilo(
   ctx.strokeStyle = "rgba(80,80,90,0.08)";
   ctx.lineWidth = 0.4 * zoom;
   for (let tp = 0; tp < 8; tp++) {
-    const tpA = tp * Math.PI / 4;
+    const tpA = (tp * Math.PI) / 4;
     ctx.beginPath();
-    ctx.moveTo(Math.cos(tpA) * platR * 0.15, mPlatTop.y + Math.sin(tpA) * platR * 0.075);
-    ctx.lineTo(Math.cos(tpA) * platR * 0.75, mPlatTop.y + Math.sin(tpA) * platR * 0.375);
+    ctx.moveTo(
+      Math.cos(tpA) * platR * 0.15,
+      mPlatTop.y + Math.sin(tpA) * platR * 0.075,
+    );
+    ctx.lineTo(
+      Math.cos(tpA) * platR * 0.75,
+      mPlatTop.y + Math.sin(tpA) * platR * 0.375,
+    );
     ctx.stroke();
   }
 
@@ -5356,15 +7085,28 @@ export function renderMortarMissileSilo(
   };
 
   // Bilinear point on a quad face
-  const quadPt = (bl: Pt, br: Pt, tl: Pt, tr: Pt, u: number, v: number): Pt => ({
-    x: bl.x + (br.x - bl.x) * u + (tl.x - bl.x) * v + (tr.x - br.x - tl.x + bl.x) * u * v,
-    y: bl.y + (br.y - bl.y) * u + (tl.y - bl.y) * v + (tr.y - br.y - tl.y + bl.y) * u * v,
+  const quadPt = (
+    bl: Pt,
+    br: Pt,
+    tl: Pt,
+    tr: Pt,
+    u: number,
+    v: number,
+  ): Pt => ({
+    x:
+      bl.x +
+      (br.x - bl.x) * u +
+      (tl.x - bl.x) * v +
+      (tr.x - br.x - tl.x + bl.x) * u * v,
+    y:
+      bl.y +
+      (br.y - bl.y) * u +
+      (tl.y - bl.y) * v +
+      (tr.y - br.y - tl.y + bl.y) * u * v,
   });
 
   // Helper: draw panel detail on a side face (seams, rivets, warning stripe)
-  const drawSidePanelDetail = (
-    bl: Pt, br: Pt, tl: Pt, tr: Pt, vis: number,
-  ) => {
+  const drawSidePanelDetail = (bl: Pt, br: Pt, tl: Pt, tr: Pt, vis: number) => {
     // Horizontal panel seams (2 seams dividing face into 3 panels)
     for (const hf of [0.33, 0.66]) {
       const sl = quadPt(bl, br, tl, tr, 0, hf);
@@ -5407,7 +7149,13 @@ export function renderMortarMissileSilo(
         // Rivet specular
         ctx.fillStyle = `rgba(200,200,210,${0.06 + vis * 0.04})`;
         ctx.beginPath();
-        ctx.arc(rp.x - 0.1 * zoom, rp.y - 0.1 * zoom, 0.22 * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          rp.x - 0.1 * zoom,
+          rp.y - 0.1 * zoom,
+          0.22 * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = `rgba(130,130,142,${rivetAlpha})`;
       }
@@ -5433,7 +7181,14 @@ export function renderMortarMissileSilo(
     for (let sh = 0; sh < 6; sh++) {
       const su = (sh + 0.5) / 6;
       const shp1 = quadPt(bl, br, tl, tr, su, stripeVf);
-      const shp2 = quadPt(bl, br, tl, tr, Math.min(1, su + 0.08), stripeVf + 0.06);
+      const shp2 = quadPt(
+        bl,
+        br,
+        tl,
+        tr,
+        Math.min(1, su + 0.08),
+        stripeVf + 0.06,
+      );
       ctx.beginPath();
       ctx.moveTo(shp1.x, shp1.y);
       ctx.lineTo(shp2.x, shp2.y);
@@ -5446,14 +7201,24 @@ export function renderMortarMissileSilo(
     const hatchH = 2 * zoom;
     // Hatch recess shadow
     ctx.fillStyle = `rgba(0,0,0,${0.06 + vis * 0.03})`;
-    ctx.fillRect(hatchC.x - hatchW - 0.3 * zoom, hatchC.y - hatchH - 0.3 * zoom, (hatchW + 0.3 * zoom) * 2, (hatchH + 0.3 * zoom) * 2);
+    ctx.fillRect(
+      hatchC.x - hatchW - 0.3 * zoom,
+      hatchC.y - hatchH - 0.3 * zoom,
+      (hatchW + 0.3 * zoom) * 2,
+      (hatchH + 0.3 * zoom) * 2,
+    );
     // Hatch panel
     ctx.fillStyle = `rgba(80,82,90,${0.12 + vis * 0.06})`;
     ctx.fillRect(hatchC.x - hatchW, hatchC.y - hatchH, hatchW * 2, hatchH * 2);
     // Hatch border
     ctx.strokeStyle = `rgba(120,120,132,${0.18 + vis * 0.1})`;
     ctx.lineWidth = 0.5 * zoom;
-    ctx.strokeRect(hatchC.x - hatchW, hatchC.y - hatchH, hatchW * 2, hatchH * 2);
+    ctx.strokeRect(
+      hatchC.x - hatchW,
+      hatchC.y - hatchH,
+      hatchW * 2,
+      hatchH * 2,
+    );
     // Handle
     ctx.strokeStyle = `rgba(160,160,170,${0.2 + vis * 0.1})`;
     ctx.lineWidth = 0.6 * zoom;
@@ -5466,7 +7231,13 @@ export function renderMortarMissileSilo(
     for (const hcx of [-1, 1]) {
       for (const hcy of [-1, 1]) {
         ctx.beginPath();
-        ctx.arc(hatchC.x + hcx * (hatchW - 0.5 * zoom), hatchC.y + hcy * (hatchH - 0.5 * zoom), 0.35 * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          hatchC.x + hcx * (hatchW - 0.5 * zoom),
+          hatchC.y + hcy * (hatchH - 0.5 * zoom),
+          0.35 * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
     }
@@ -5478,7 +7249,12 @@ export function renderMortarMissileSilo(
     const b = Math.max(0, Math.min(1, backVis * 0.5 + 0.5));
     const backMidB = { x: (bb_l.x + bb_r.x) * 0.5, y: (bb_l.y + bb_r.y) * 0.5 };
     const backMidT = { x: (tb_l.x + tb_r.x) * 0.5, y: (tb_l.y + tb_r.y) * 0.5 };
-    const backGrad = ctx.createLinearGradient(backMidT.x, backMidT.y, backMidB.x, backMidB.y);
+    const backGrad = ctx.createLinearGradient(
+      backMidT.x,
+      backMidT.y,
+      backMidB.x,
+      backMidB.y,
+    );
     const bv = Math.floor(38 + b * 28);
     backGrad.addColorStop(0, `rgb(${bv + 8},${bv + 14},${bv + 6})`);
     backGrad.addColorStop(0.4, `rgb(${bv + 2},${bv + 6},${bv})`);
@@ -5528,7 +7304,12 @@ export function renderMortarMissileSilo(
     const b = Math.max(0, Math.min(1, leftVis * 0.5 + 0.5));
     const leftMidB = { x: (bb_l.x + bf_l.x) * 0.5, y: (bb_l.y + bf_l.y) * 0.5 };
     const leftMidT = { x: (tb_l.x + tf_l.x) * 0.5, y: (tb_l.y + tf_l.y) * 0.5 };
-    const leftGrad = ctx.createLinearGradient(leftMidT.x, leftMidT.y, leftMidB.x, leftMidB.y);
+    const leftGrad = ctx.createLinearGradient(
+      leftMidT.x,
+      leftMidT.y,
+      leftMidB.x,
+      leftMidB.y,
+    );
     const lv = Math.floor(33 + b * 28);
     leftGrad.addColorStop(0, `rgb(${lv + 8},${lv + 12},${lv + 5})`);
     leftGrad.addColorStop(0.4, `rgb(${lv + 2},${lv + 6},${lv})`);
@@ -5550,9 +7331,20 @@ export function renderMortarMissileSilo(
   // Right face
   if (rightVis > -0.3) {
     const b = Math.max(0, Math.min(1, rightVis * 0.5 + 0.5));
-    const rightMidB = { x: (bb_r.x + bf_r.x) * 0.5, y: (bb_r.y + bf_r.y) * 0.5 };
-    const rightMidT = { x: (tb_r.x + tf_r.x) * 0.5, y: (tb_r.y + tf_r.y) * 0.5 };
-    const rightGrad = ctx.createLinearGradient(rightMidT.x, rightMidT.y, rightMidB.x, rightMidB.y);
+    const rightMidB = {
+      x: (bb_r.x + bf_r.x) * 0.5,
+      y: (bb_r.y + bf_r.y) * 0.5,
+    };
+    const rightMidT = {
+      x: (tb_r.x + tf_r.x) * 0.5,
+      y: (tb_r.y + tf_r.y) * 0.5,
+    };
+    const rightGrad = ctx.createLinearGradient(
+      rightMidT.x,
+      rightMidT.y,
+      rightMidB.x,
+      rightMidB.y,
+    );
     const rv = Math.floor(33 + b * 28);
     rightGrad.addColorStop(0, `rgb(${rv + 8},${rv + 12},${rv + 5})`);
     rightGrad.addColorStop(0.4, `rgb(${rv + 2},${rv + 6},${rv})`);
@@ -5611,8 +7403,14 @@ export function renderMortarMissileSilo(
     ctx.lineWidth = 0.4 * zoom;
     for (let tp = 0; tp < 6; tp++) {
       const t = (tp + 0.5) / 6;
-      const lp = { x: tb_l.x + (tf_l.x - tb_l.x) * t, y: tb_l.y + (tf_l.y - tb_l.y) * t };
-      const rp = { x: tb_r.x + (tf_r.x - tb_r.x) * t, y: tb_r.y + (tf_r.y - tb_r.y) * t };
+      const lp = {
+        x: tb_l.x + (tf_l.x - tb_l.x) * t,
+        y: tb_l.y + (tf_l.y - tb_l.y) * t,
+      };
+      const rp = {
+        x: tb_r.x + (tf_r.x - tb_r.x) * t,
+        y: tb_r.y + (tf_r.y - tb_r.y) * t,
+      };
       ctx.beginPath();
       ctx.moveTo(lp.x, lp.y);
       ctx.lineTo(rp.x, rp.y);
@@ -5626,14 +7424,25 @@ export function renderMortarMissileSilo(
       const t = (ch + 1) / 5;
       const cx = topMidB.x + (topMidF.x - topMidB.x) * t;
       const cy = topMidB.y + (topMidF.y - topMidB.y) * t;
-      const tl = { x: tb_l.x + (tf_l.x - tb_l.x) * t, y: tb_l.y + (tf_l.y - tb_l.y) * t };
-      const tr = { x: tb_r.x + (tf_r.x - tb_r.x) * t, y: tb_r.y + (tf_r.y - tb_r.y) * t };
+      const tl = {
+        x: tb_l.x + (tf_l.x - tb_l.x) * t,
+        y: tb_l.y + (tf_l.y - tb_l.y) * t,
+      };
+      const tr = {
+        x: tb_r.x + (tf_r.x - tb_r.x) * t,
+        y: tb_r.y + (tf_r.y - tb_r.y) * t,
+      };
       const halfW = Math.hypot(tr.x - tl.x, tr.y - tl.y) * 0.15;
-      const perpDx = (tr.x - tl.x) / (Math.hypot(tr.x - tl.x, tr.y - tl.y) || 1);
-      const perpDy = (tr.y - tl.y) / (Math.hypot(tr.x - tl.x, tr.y - tl.y) || 1);
+      const perpDx =
+        (tr.x - tl.x) / (Math.hypot(tr.x - tl.x, tr.y - tl.y) || 1);
+      const perpDy =
+        (tr.y - tl.y) / (Math.hypot(tr.x - tl.x, tr.y - tl.y) || 1);
       ctx.beginPath();
       ctx.moveTo(cx - perpDx * halfW, cy - perpDy * halfW);
-      ctx.lineTo(cx + (topMidF.x - topMidB.x) * 0.03, cy + (topMidF.y - topMidB.y) * 0.03 - 1.5 * zoom);
+      ctx.lineTo(
+        cx + (topMidF.x - topMidB.x) * 0.03,
+        cy + (topMidF.y - topMidB.y) * 0.03 - 1.5 * zoom,
+      );
       ctx.lineTo(cx + perpDx * halfW, cy + perpDy * halfW);
       ctx.stroke();
     }
@@ -5641,7 +7450,10 @@ export function renderMortarMissileSilo(
     // Corner rivets on top face
     ctx.fillStyle = "rgba(100,100,110,0.35)";
     for (const corner of [tb_l, tb_r, tf_l, tf_r]) {
-      const toCenter = { x: (topMidB.x + topMidF.x) * 0.5, y: (topMidB.y + topMidF.y) * 0.5 };
+      const toCenter = {
+        x: (topMidB.x + topMidF.x) * 0.5,
+        y: (topMidB.y + topMidF.y) * 0.5,
+      };
       const rx = corner.x + (toCenter.x - corner.x) * 0.12;
       const ry = corner.y + (toCenter.y - corner.y) * 0.12;
       ctx.beginPath();
@@ -5697,13 +7509,28 @@ export function renderMortarMissileSilo(
           (tf_l.y - bf_l.y + (tf_r.y - bf_r.y - tf_l.y + bf_l.y) * u) * v;
 
         // Tube outer shroud (raised collar with gradient)
-        const tubeCollarGrad = ctx.createRadialGradient(tubeX, tubeY, 0, tubeX, tubeY, tubeR * 1.3);
+        const tubeCollarGrad = ctx.createRadialGradient(
+          tubeX,
+          tubeY,
+          0,
+          tubeX,
+          tubeY,
+          tubeR * 1.3,
+        );
         tubeCollarGrad.addColorStop(0, "#4a4a56");
         tubeCollarGrad.addColorStop(0.6, "#3a3a44");
         tubeCollarGrad.addColorStop(1, "#2a2a34");
         ctx.fillStyle = tubeCollarGrad;
         ctx.beginPath();
-        ctx.ellipse(tubeX, tubeY, tubeR * 1.28, tubeR * 0.72, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          tubeX,
+          tubeY,
+          tubeR * 1.28,
+          tubeR * 0.72,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Collar edge ring
         ctx.strokeStyle = "#5a5a68";
@@ -5713,11 +7540,26 @@ export function renderMortarMissileSilo(
         ctx.strokeStyle = "#4a4a54";
         ctx.lineWidth = 0.5 * zoom;
         ctx.beginPath();
-        ctx.ellipse(tubeX, tubeY, tubeR * 1.05, tubeR * 0.59, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          tubeX,
+          tubeY,
+          tubeR * 1.05,
+          tubeR * 0.59,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
 
         // Tube bore (deep dark opening with depth gradient)
-        const boreGradTube = ctx.createRadialGradient(tubeX, tubeY, 0, tubeX, tubeY, tubeR * 0.88);
+        const boreGradTube = ctx.createRadialGradient(
+          tubeX,
+          tubeY,
+          0,
+          tubeX,
+          tubeY,
+          tubeR * 0.88,
+        );
         boreGradTube.addColorStop(0, "#040303");
         boreGradTube.addColorStop(0.7, "#0a0808");
         boreGradTube.addColorStop(1, "#161214");
@@ -5732,8 +7574,14 @@ export function renderMortarMissileSilo(
         for (let rg = 0; rg < 6; rg++) {
           const ra = (rg / 6) * Math.PI * 2;
           ctx.beginPath();
-          ctx.moveTo(tubeX + Math.cos(ra) * tubeR * 0.2, tubeY + Math.sin(ra) * tubeR * 0.11);
-          ctx.lineTo(tubeX + Math.cos(ra) * tubeR * 0.82, tubeY + Math.sin(ra) * tubeR * 0.46);
+          ctx.moveTo(
+            tubeX + Math.cos(ra) * tubeR * 0.2,
+            tubeY + Math.sin(ra) * tubeR * 0.11,
+          );
+          ctx.lineTo(
+            tubeX + Math.cos(ra) * tubeR * 0.82,
+            tubeY + Math.sin(ra) * tubeR * 0.46,
+          );
           ctx.stroke();
         }
 

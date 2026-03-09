@@ -354,7 +354,6 @@ export type HeroType =
 // Hero data definition
 export interface HeroData {
   name: string;
-  icon: string;
   description: string;
   hp: number;
   damage: number;
@@ -525,7 +524,6 @@ export interface SpellData {
   cost: number;
   cooldown: number;
   desc: string;
-  icon: string;
 }
 
 // Spell state

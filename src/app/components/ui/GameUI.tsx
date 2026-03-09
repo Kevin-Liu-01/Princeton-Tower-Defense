@@ -6,7 +6,7 @@
 // =============================================================================
 
 // Sprite re-exports (used by SetupScreen and other consumers)
-export { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon } from "../../sprites";
+export { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon, HeroIcon, SpellIcon } from "../../sprites";
 
 // Hooks
 export { useIsTouchDevice, useResponsiveSizes } from "./hooks";

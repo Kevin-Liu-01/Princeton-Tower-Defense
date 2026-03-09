@@ -38,6 +38,9 @@ function drawChronoRelayBuilding(
   const crystalW = 14 * s2;
   const crystalTopY = -baseH - upperH - crystalH;
 
+  // Center the iso diamond on the tile (bottom vertex was at origin)
+  ctx.translate(0, baseW * tanA);
+
   ctx.fillStyle = "rgba(0,0,0,0.38)";
   ctx.beginPath();
   ctx.ellipse(0, -baseW * tanA + 4 * s2, 48 * s2, 24 * s2, 0, 0, Math.PI * 2);
@@ -328,6 +331,9 @@ function drawSentinelNexusBuilding(
   const upperW = 24 * s2;
   const upperH = 8 * s2;
   const towerH = 40 * s2;
+
+  // Center the iso diamond on the tile (bottom vertex was at origin)
+  ctx.translate(0, baseW * tanA);
 
   ctx.fillStyle = "rgba(0,0,0,0.4)";
   ctx.beginPath();
@@ -761,6 +767,9 @@ function drawSunforgeOrreryBuilding(
   const upperW = 23 * s2;
   const upperH = 8 * s2;
   const coreY = -baseH - upperH - 38 * s2;
+
+  // Center the iso diamond on the tile (bottom vertex was at origin)
+  ctx.translate(0, baseW * tanA);
 
   // Shadow
   ctx.fillStyle = "rgba(0,0,0,0.42)";
@@ -1822,6 +1831,9 @@ export function renderSpecialBuilding(
         const h = 36 * s2;
         const tanAngle = ISO_TAN;
         const roofOffset = w * tanAngle * 2;
+
+        // Center the iso diamond on the tile (bottom vertex was at origin)
+        ctx.translate(0, w * tanAngle);
   
         // Ground Shadow
         ctx.fillStyle = "rgba(0,0,0,0.4)";
@@ -2418,6 +2430,9 @@ export function renderSpecialBuilding(
         const w = 32 * s2;
         const h = 12 * s2;
         const tanA = ISO_TAN;
+
+        // Center the iso diamond on the tile (bottom vertex was at origin)
+        ctx.translate(0, w * tanA);
   
         // Foundation Shadow
         ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -2838,6 +2853,9 @@ export function renderSpecialBuilding(
         const w = 34 * s;
         const h = 48 * s;
         const tanA = ISO_TAN;
+
+        // Center the iso diamond on the tile (bottom vertex was at origin)
+        ctx.translate(0, w * tanA);
   
         // Foundation Shadow
         ctx.fillStyle = "rgba(0,0,0,0.35)";

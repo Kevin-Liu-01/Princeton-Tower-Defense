@@ -3962,19 +3962,29 @@ export function drawDragonEnemy(
     ctx.moveTo(0, 0);
     ctx.quadraticCurveTo(
       side * size * 0.22,
-      -size * 0.42,
-      side * size * 0.62,
-      -size * 0.52,
+      -size * 0.44,
+      side * size * 0.65,
+      -size * 0.56,
     );
-    ctx.lineTo(side * size * 0.82, -size * 0.28);
     ctx.quadraticCurveTo(
-      side * size * 0.58,
-      -size * 0.18,
-      side * size * 0.34,
+      side * size * 0.56,
+      -size * 0.38,
+      side * size * 0.86,
+      -size * 0.30,
+    );
+    ctx.quadraticCurveTo(
+      side * size * 0.60,
+      -size * 0.14,
+      side * size * 0.36,
       0,
     );
-    ctx.lineTo(side * size * 0.68, size * 0.12);
-    ctx.quadraticCurveTo(side * size * 0.3, size * 0.08, 0, size * 0.1);
+    ctx.quadraticCurveTo(
+      side * size * 0.38,
+      size * 0.03,
+      side * size * 0.72,
+      size * 0.16,
+    );
+    ctx.quadraticCurveTo(side * size * 0.32, size * 0.10, 0, size * 0.1);
     ctx.closePath();
     ctx.fill();
 
@@ -3982,35 +3992,47 @@ export function drawDragonEnemy(
     ctx.fillStyle = `rgba(0, 0, 0, 0.12)`;
     ctx.beginPath();
     ctx.moveTo(side * size * 0.12, -size * 0.12);
-    ctx.lineTo(side * size * 0.75, -size * 0.22);
-    ctx.lineTo(side * size * 0.63, -size * 0.02);
+    ctx.lineTo(side * size * 0.78, -size * 0.24);
+    ctx.lineTo(side * size * 0.65, -size * 0.02);
     ctx.lineTo(side * size * 0.25, size * 0.02);
     ctx.closePath();
     ctx.fill();
 
-    // Wing fingers
+    // Wing finger bones
     ctx.strokeStyle = bodyColorDark;
     ctx.lineWidth = 2 * zoom;
-    for (let finger = 0; finger < 5; finger++) {
+    const fingerTips = [
+      { ex: 0.65, ey: -0.56, cpx: 0.22, cpy: -0.44 },
+      { ex: 0.86, ey: -0.30, cpx: 0.40, cpy: -0.32 },
+      { ex: 0.36, ey: 0.00, cpx: 0.30, cpy: -0.16 },
+      { ex: 0.72, ey: 0.16, cpx: 0.38, cpy: 0.02 },
+    ];
+    for (let finger = 0; finger < fingerTips.length; finger++) {
+      const tip = fingerTips[finger];
       ctx.beginPath();
       ctx.moveTo(0, size * 0.01 * finger);
       ctx.quadraticCurveTo(
-        side * size * (0.28 + finger * 0.03),
-        -size * (0.2 + finger * 0.06),
-        side * size * (0.6 - finger * 0.09),
-        -size * (0.42 - finger * 0.1),
+        side * size * tip.cpx,
+        size * tip.cpy,
+        side * size * tip.ex,
+        size * tip.ey,
       );
       ctx.stroke();
     }
 
-    // Wing claw tips
+    // Wing claw tips at each finger endpoint
     ctx.fillStyle = "#1f1f1f";
-    for (let claw = 0; claw < 3; claw++) {
-      const clawX = side * size * (0.74 - claw * 0.1);
-      const clawY = -size * (0.28 + claw * 0.08);
+    const clawDefs = [
+      { x: 0.65, y: -0.56, dx: 0.03, dy: -0.07 },
+      { x: 0.86, y: -0.30, dx: 0.04, dy: -0.06 },
+      { x: 0.72, y: 0.16, dx: 0.04, dy: 0.05 },
+    ];
+    for (const cd of clawDefs) {
+      const clawX = side * size * cd.x;
+      const clawY = size * cd.y;
       ctx.beginPath();
       ctx.moveTo(clawX, clawY);
-      ctx.lineTo(clawX + side * size * 0.03, clawY - size * 0.08);
+      ctx.lineTo(clawX + side * size * cd.dx, clawY + size * cd.dy);
       ctx.lineTo(clawX - side * size * 0.018, clawY - size * 0.01);
       ctx.closePath();
       ctx.fill();
@@ -4020,8 +4042,8 @@ export function drawDragonEnemy(
     ctx.strokeStyle = `rgba(40, 20, 20, 0.45)`;
     ctx.lineWidth = 1.2 * zoom;
     for (let tear = 0; tear < 3; tear++) {
-      const tearBaseX = side * size * (0.4 + tear * 0.1);
-      const tearBaseY = -size * (0.08 + tear * 0.06);
+      const tearBaseX = side * size * (0.4 + tear * 0.12);
+      const tearBaseY = -size * (0.08 + tear * 0.07);
       ctx.beginPath();
       ctx.moveTo(tearBaseX, tearBaseY);
       ctx.lineTo(tearBaseX + side * size * 0.05, tearBaseY + size * 0.06);

@@ -341,7 +341,7 @@ export function drawTenorHero(
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
 
   drawSonicAura(ctx, x, y, s, time, isAttacking, zoom);
-  drawMusicalParticles(ctx, x, y, s, time, isAttacking);
+  drawMusicalParticles(ctx, x, y, s, time, isAttacking, "behind");
 
   if (isAttacking) {
     drawShockwaveRings(ctx, x, y, s, attackPhase, attackIntensity, zoom);
@@ -359,6 +359,7 @@ export function drawTenorHero(
   drawGoldChains(ctx, x, y, s, time, zoom);
   drawHead(ctx, x, y, s, time, singWave, breathe, zoom, isAttacking, attackIntensity, gemPulse);
   drawPoppedCollar(ctx, x, y, s, singWave, breathe, zoom);
+  drawMusicalParticles(ctx, x, y, s, time, isAttacking, "front");
   drawRimLight(ctx, x, y, s, time, zoom, isAttacking);
   drawFloatingNotes(ctx, x, y, s, time, isAttacking, zoom);
   drawSonicRings(ctx, x, y, s, time, isAttacking, zoom);
@@ -400,20 +401,29 @@ function drawSonicAura(
 function drawMusicalParticles(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, s: number,
-  time: number, isAttacking: boolean
+  time: number, isAttacking: boolean,
+  layer: "behind" | "front",
 ) {
   const count = isAttacking ? 14 : 10;
   for (let p = 0; p < count; p++) {
     const angle = (time * 1.8 + p * Math.PI * 2 / count) % (Math.PI * 2);
+    const depth = Math.sin(angle);
+
+    if (layer === "behind" && depth >= 0) continue;
+    if (layer === "front" && depth < 0) continue;
+
+    const depthScale = 0.85 + depth * 0.2;
+    const depthAlpha = 0.7 + depth * 0.3;
+
     const dist = s * 0.6 + Math.sin(time * 2.5 + p * 0.7) * s * 0.12;
     const px = x + Math.cos(angle) * dist;
-    const py = y - s * 0.2 + Math.sin(angle) * dist * 0.5;
-    const alpha = 0.55 + Math.sin(time * 4 + p * 0.6) * 0.3;
+    const py = y - s * 0.2 + depth * dist * 0.5;
+    const alpha = (0.55 + Math.sin(time * 4 + p * 0.6) * 0.3) * depthAlpha;
     ctx.fillStyle = p % 2 === 0
       ? `rgba(147, 112, 219, ${alpha})`
       : `rgba(255, 102, 0, ${alpha})`;
     ctx.beginPath();
-    ctx.arc(px, py, s * 0.02, 0, Math.PI * 2);
+    ctx.arc(px, py, s * 0.02 * depthScale, 0, Math.PI * 2);
     ctx.fill();
   }
 }

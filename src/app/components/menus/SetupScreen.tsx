@@ -23,7 +23,7 @@ import { OrnateFrame } from "../ui/OrnateFrame";
 import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 
 // Import sprite components from GameUI
-import { TowerSprite, HeroSprite, SpellSprite, HeroAbilityIcon } from "../ui/GameUI";
+import { TowerSprite, HeroSprite, SpellSprite, HeroAbilityIcon, HeroIcon, SpellIcon } from "../ui/GameUI";
 
 // Enemy sprite component for codex
 const EnemySprite: React.FC<{ type: EnemyType; size?: number }> = ({
@@ -563,7 +563,7 @@ export function SetupScreen({
                     {heroRoles[selectedHero]?.icon}
                     <span className="text-[10px] font-semibold uppercase tracking-wider">{heroRoles[selectedHero]?.role}</span>
                   </div>
-                  <span className="text-lg">{HERO_DATA[selectedHero].icon}</span>
+                  <HeroIcon type={selectedHero} size={18} />
                 </div>
 
                 <div className="p-3">
@@ -582,7 +582,7 @@ export function SetupScreen({
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl font-bold text-amber-200 mb-0.5 flex items-center gap-2">
                         {HERO_DATA[selectedHero].name}
-                        <span className="text-base">{HERO_DATA[selectedHero].icon}</span>
+                        <HeroIcon type={selectedHero} size={16} />
                       </h3>
                       <p className="text-[10px] text-stone-400/80 leading-relaxed line-clamp-2">
                         {HERO_DATA[selectedHero].description}
@@ -1226,7 +1226,7 @@ export function SetupScreen({
                             {roleData?.icon}
                             <span className="text-xs font-medium uppercase tracking-wider">{roleData?.role}</span>
                           </div>
-                          <span className="text-lg">{hero.icon}</span>
+                          <HeroIcon type={heroType} size={18} />
                         </div>
                         <div className="p-4 flex items-start gap-4">
                           <div
@@ -1325,7 +1325,7 @@ export function SetupScreen({
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-bold text-amber-200 text-lg">{spell.name}</h3>
-                              <span className="text-xl">{spell.icon}</span>
+                              <SpellIcon type={spellType} size={20} />
                             </div>
                             <p className="text-xs text-stone-400 mb-3">{spell.desc}</p>
                             <div className="flex items-center gap-3">

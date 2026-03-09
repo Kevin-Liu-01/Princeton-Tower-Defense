@@ -45,7 +45,7 @@ export function drawFScottHero(
     goldPulse,
     zoom,
   );
-  drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom);
+  drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom, "behind");
 
   if (isAttacking) {
     drawAttackRings(ctx, x, y, size, attackPhase, attackIntensity, zoom);
@@ -73,6 +73,7 @@ export function drawFScottHero(
   );
   drawHead(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawStormCollar(ctx, x, y, size, zoom);
+  drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom, "front");
   drawBook(ctx, x, y, size, time, zoom, isAttacking, writeCycle);
   drawPen(
     ctx,
@@ -144,17 +145,26 @@ function drawFloatingLetters(
   time: number,
   goldPulse: number,
   zoom: number,
+  layer: "behind" | "front",
 ) {
   const letters = "GATSBY";
   for (let p = 0; p < 10; p++) {
     const pAngle = (time * 1.5 + (p * Math.PI * 2) / 10) % (Math.PI * 2);
+    const depth = Math.sin(pAngle);
+
+    if (layer === "behind" && depth >= 0) continue;
+    if (layer === "front" && depth < 0) continue;
+
+    const depthScale = 0.85 + depth * 0.2;
+    const depthAlpha = 0.7 + depth * 0.3;
+
     const pDist = size * 0.6 + Math.sin(time * 2 + p * 0.7) * size * 0.1;
     const pRise = ((time * 0.5 + p * 0.4) % 1) * size * 0.25;
     const px = x + Math.cos(pAngle) * pDist;
-    const py = y - size * 0.1 + Math.sin(pAngle) * pDist * 0.4 - pRise;
-    const pAlpha = (0.6 - (pRise / (size * 0.25)) * 0.4) * goldPulse;
+    const py = y - size * 0.1 + depth * pDist * 0.4 - pRise;
+    const pAlpha = (0.6 - (pRise / (size * 0.25)) * 0.4) * goldPulse * depthAlpha;
     ctx.fillStyle = `rgba(80, 210, 210, ${pAlpha})`;
-    ctx.font = `italic ${8 * zoom}px Georgia`;
+    ctx.font = `italic ${Math.round(8 * zoom * depthScale)}px Georgia`;
     ctx.textAlign = "center";
     ctx.fillText(letters[p % letters.length], px, py);
   }
@@ -2631,12 +2641,6 @@ function drawBook(
     ctx.fillStyle = `rgba(80, 200, 220, ${0.06 * glowPulse})`;
     ctx.fillRect(bW * 0.02, -bH * 0.46, bW * 0.45, bH * 0.92);
   }
-
-  // Silvery blue title emboss on left page header
-  ctx.fillStyle = "#80b0c8";
-  ctx.font = `bold ${4.5 * zoom}px Georgia`;
-  ctx.textAlign = "center";
-  ctx.fillText("GATSBY", -bW * 0.24, -bH * 0.38);
 
   // Silvery blue corner decorations on covers
   ctx.strokeStyle = "#6898b0";

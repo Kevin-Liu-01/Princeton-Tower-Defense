@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import type { Enemy, Troop, Hero, Position, EnemyTrait } from "../../types";
 import { ENEMY_DATA, HERO_DATA, TROOP_DATA } from "../../constants";
-import { EnemySprite } from "../../sprites";
+import { EnemySprite, HeroIcon } from "../../sprites";
 import { PANEL, GOLD, OVERLAY, PURPLE_CARD, panelGradient } from "./theme";
 
 // =============================================================================
@@ -764,7 +764,7 @@ export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
             className="w-12 h-12 rounded-lg border-2 flex items-center justify-center text-2xl"
             style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)" }}
           >
-            {hData.icon}
+            <HeroIcon type={hero.type} size={24} />
           </div>
           <div>
             <h3 className="font-bold text-lg text-amber-100">{hData.name}</h3>

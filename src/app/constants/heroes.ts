@@ -4,7 +4,6 @@ import type { HeroData, HeroType } from "../types";
 export const HERO_DATA: Record<HeroType, HeroData> = {
   tiger: {
     name: "Princeton Tiger",
-    icon: "🐯",
     description:
       "The fearsome Princeton Tiger, an apex predator with a terrifying roar that freezes enemies in fear.",
     hp: 4250,
@@ -19,7 +18,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   tenor: {
     name: "Acapella Tenor",
-    icon: "🎵",
     description:
       "A virtuoso vocalist whose voice is a weapon. His sonic attacks pierce through even the toughest armor.",
     hp: 3200,
@@ -35,7 +33,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   mathey: {
     name: "Mathey Knight",
-    icon: "🛡️",
     description:
       "An elite defender from Mathey College, clad in enchanted armor. Draws enemy aggression and protects allies.",
     hp: 5600,
@@ -50,7 +47,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   rocky: {
     name: "Rocky Raccoon",
-    icon: "🐿️",
     description:
       "A campus squirrel fused with an ancient gargoyle. Half fur, half stone — all fury. Hurls boulders with terrifying force.",
     hp: 2750,
@@ -65,7 +61,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   scott: {
     name: "F. Scott",
-    icon: "📖",
     description:
       "The ghost of F. Scott Fitzgerald inspires defenders with literary brilliance, boosting their combat effectiveness.",
     hp: 3000,
@@ -80,7 +75,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   captain: {
     name: "General Mercer",
-    icon: "🐉",
     description:
       "A legendary commander wreathed in flame. Summons loyal knights to his banner.",
     hp: 4650,
@@ -95,7 +89,6 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   engineer: {
     name: "BSE Engineer",
-    icon: "🔧",
     description:
       "A brilliant inventor who deploys automated turrets designed in the Engineering Library. He needs more coffee.",
     hp: 2500,
