@@ -8907,13 +8907,14 @@ export const drawWorldMapCanvas = ({
 
     // Glow (use radial gradient instead of expensive shadowBlur)
     if (isSelected || (isHovered && isUnlocked)) {
-      const glowRadius = isSelected ? 40 : 32;
+      const glowRadius = isSelected ? 44 : 32;
       const glowColor = isSelected
-        ? nodePalette.glowSelected
+        ? "rgba(255,200,50,"
         : nodePalette.glowHover;
       const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
-      glow.addColorStop(0, glowColor + "0.4)");
-      glow.addColorStop(0.5, glowColor + "0.15)");
+      glow.addColorStop(0, glowColor + "0.45)");
+      glow.addColorStop(0.4, glowColor + "0.25)");
+      glow.addColorStop(0.7, glowColor + "0.1)");
       glow.addColorStop(1, glowColor + "0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -9091,9 +9092,29 @@ export const drawWorldMapCanvas = ({
     ctx.fillStyle = outerRing;
     ctx.fill();
 
+    // Gold outer glow rings when selected
+    if (isSelected) {
+      const goldPulse = 0.75 + 0.25 * Math.sin(time * 2.5);
+      ctx.strokeStyle = `rgba(255, 215, 0, ${0.12 * goldPulse})`;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 210, 0, ${0.25 * goldPulse})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 200, 0, ${0.5 * goldPulse})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
     // Metallic border strokes (double ring for bevel effect)
     ctx.strokeStyle = isSelected
-      ? nodePalette.border
+      ? "#FFD700"
       : isHovered
         ? nodePalette.border
         : isUnlocked
