@@ -119,10 +119,32 @@ const NATURE_FLASH_TYPES = new Set([
   "thornwalker",
   "bog_creature",
   "swamp_troll",
-  "sandworm",
+]);
+
+const DESERT_FLASH_TYPES = new Set([
+  "nomad",
   "scorpion",
   "scarab",
-  "nomad",
+  "sandworm",
+]);
+
+const FOREST_FLASH_TYPES = new Set([
+  "athlete",
+  "protestor",
+]);
+
+const STORM_FLASH_TYPES = new Set([
+  "harpy",
+  "wyvern",
+]);
+
+const BLOOD_FLASH_TYPES = new Set([
+  "berserker",
+  "juggernaut",
+]);
+
+const STONE_FLASH_TYPES = new Set([
+  "golem",
 ]);
 
 const DEFAULT_FLASH_PROFILE: EnemyFlashProfile = {
@@ -181,6 +203,46 @@ const NATURE_FLASH_PROFILE: EnemyFlashProfile = {
   attackBoost: 0.026,
 };
 
+const DESERT_FLASH_PROFILE: EnemyFlashProfile = {
+  outerColor: "rgba(255, 210, 130, 1)",
+  innerColor: "rgba(255, 240, 200, 0.92)",
+  rimColor: "rgba(210, 170, 80, 0.9)",
+  intensityScale: 0.96,
+  attackBoost: 0.028,
+};
+
+const FOREST_FLASH_PROFILE: EnemyFlashProfile = {
+  outerColor: "rgba(180, 210, 140, 1)",
+  innerColor: "rgba(230, 245, 210, 0.92)",
+  rimColor: "rgba(140, 180, 100, 0.9)",
+  intensityScale: 0.94,
+  attackBoost: 0.026,
+};
+
+const STORM_FLASH_PROFILE: EnemyFlashProfile = {
+  outerColor: "rgba(200, 220, 255, 1)",
+  innerColor: "rgba(230, 240, 255, 0.94)",
+  rimColor: "rgba(160, 190, 255, 0.92)",
+  intensityScale: 1.04,
+  attackBoost: 0.032,
+};
+
+const BLOOD_FLASH_PROFILE: EnemyFlashProfile = {
+  outerColor: "rgba(255, 170, 160, 1)",
+  innerColor: "rgba(255, 220, 210, 0.92)",
+  rimColor: "rgba(255, 120, 100, 0.94)",
+  intensityScale: 1.08,
+  attackBoost: 0.035,
+};
+
+const STONE_FLASH_PROFILE: EnemyFlashProfile = {
+  outerColor: "rgba(200, 200, 210, 1)",
+  innerColor: "rgba(235, 235, 240, 0.9)",
+  rimColor: "rgba(160, 160, 175, 0.88)",
+  intensityScale: 0.88,
+  attackBoost: 0.022,
+};
+
 export function getEnemyFlashProfile(
   enemyType: Enemy["type"],
   category?: string,
@@ -190,13 +252,18 @@ export function getEnemyFlashProfile(
   if (FROST_FLASH_TYPES.has(enemyType)) return FROST_FLASH_PROFILE;
   if (ARCANE_FLASH_TYPES.has(enemyType)) return ARCANE_FLASH_PROFILE;
   if (NATURE_FLASH_TYPES.has(enemyType)) return NATURE_FLASH_PROFILE;
+  if (DESERT_FLASH_TYPES.has(enemyType)) return DESERT_FLASH_PROFILE;
+  if (FOREST_FLASH_TYPES.has(enemyType)) return FOREST_FLASH_PROFILE;
+  if (STORM_FLASH_TYPES.has(enemyType)) return STORM_FLASH_PROFILE;
+  if (BLOOD_FLASH_TYPES.has(enemyType)) return BLOOD_FLASH_PROFILE;
+  if (STONE_FLASH_TYPES.has(enemyType)) return STONE_FLASH_PROFILE;
 
   if (category === "academic" || category === "campus")
     return RADIANT_FLASH_PROFILE;
-  if (category === "ranged" || category === "flying")
-    return ARCANE_FLASH_PROFILE;
+  if (category === "ranged") return ARCANE_FLASH_PROFILE;
+  if (category === "flying") return STORM_FLASH_PROFILE;
   if (category === "nature" || category === "swarm")
-    return NATURE_FLASH_PROFILE;
+    return DESERT_FLASH_PROFILE;
 
   return DEFAULT_FLASH_PROFILE;
 }

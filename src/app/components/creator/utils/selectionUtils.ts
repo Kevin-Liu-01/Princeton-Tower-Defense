@@ -13,7 +13,9 @@ export const getPointFromSelection = (
     case "hero_spawn":
       return draft.heroSpawn;
     case "special_tower":
-      return draft.specialTowerPos;
+      return draft.specialTowers[selection.index]?.pos ?? null;
+    case "tower":
+      return draft.placedTowers[selection.index]?.pos ?? null;
     case "decoration":
       return draft.decorations[selection.index]?.pos ?? null;
     case "hazard":
@@ -47,7 +49,12 @@ export const findSelectionNearPoint = (
     tryCandidate({ kind: "secondary_path", index }, p)
   );
   tryCandidate({ kind: "hero_spawn" }, draft.heroSpawn);
-  tryCandidate({ kind: "special_tower" }, draft.specialTowerPos);
+  draft.specialTowers.forEach((st, index) =>
+    tryCandidate({ kind: "special_tower", index }, st.pos)
+  );
+  draft.placedTowers.forEach((t, index) =>
+    tryCandidate({ kind: "tower", index }, t.pos)
+  );
   draft.decorations.forEach((deco, index) =>
     tryCandidate({ kind: "decoration", index }, deco.pos)
   );
@@ -91,10 +98,21 @@ export const applySelectionPointUpdate = (
   }
   if (target.kind === "special_tower") {
     const nextPoint = normalizeMapPoint(point);
-    if (draft.specialTowerPos && samePoint(draft.specialTowerPos, nextPoint)) {
-      return draft;
-    }
-    return { ...draft, specialTowerPos: nextPoint };
+    const current = draft.specialTowers[target.index];
+    if (!current) return draft;
+    if (samePoint(current.pos, nextPoint)) return draft;
+    const next = [...draft.specialTowers];
+    next[target.index] = { ...current, pos: nextPoint };
+    return { ...draft, specialTowers: next };
+  }
+  if (target.kind === "tower") {
+    const nextPoint = normalizeMapPoint(point);
+    const current = draft.placedTowers[target.index];
+    if (!current) return draft;
+    if (samePoint(current.pos, nextPoint)) return draft;
+    const next = [...draft.placedTowers];
+    next[target.index] = { ...current, pos: nextPoint };
+    return { ...draft, placedTowers: next };
   }
   if (target.kind === "decoration") {
     const nextPoint = normalizeMapPoint(point);
@@ -139,7 +157,16 @@ export const removeSelection = (
     return { ...draft, heroSpawn: null };
   }
   if (target.kind === "special_tower") {
-    return { ...draft, specialTowerPos: null };
+    return {
+      ...draft,
+      specialTowers: draft.specialTowers.filter((_, index) => index !== target.index),
+    };
+  }
+  if (target.kind === "tower") {
+    return {
+      ...draft,
+      placedTowers: draft.placedTowers.filter((_, index) => index !== target.index),
+    };
   }
   if (target.kind === "decoration") {
     return {

@@ -1,5 +1,5 @@
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawPoisonBubbles, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 export function drawBogCreatureEnemy(
   ctx: CanvasRenderingContext2D,
@@ -583,11 +583,11 @@ export function drawBogCreatureEnemy(
     ctx.fill();
   }
 
-  // Toxic green glow rings
-  drawPulsingGlowRings(ctx, x, y - size * 0.2, size * 0.45, time, zoom, {
+  // Toxic poison bubbles
+  drawPoisonBubbles(ctx, x, y - size * 0.2, size * 0.45, time, zoom, {
     color: "rgba(34, 197, 94, 0.5)",
-    count: 3, speed: 1.2, maxAlpha: 0.35,
-    expansion: 1.2, lineWidth: 1.5,
+    count: 5, speed: 1.0, maxAlpha: 0.4,
+    spread: 0.8,
   });
 
   // Floating muck/debris segments
@@ -1685,11 +1685,11 @@ export function drawSwampTrollEnemy(
     ctx.stroke();
   }
 
-  // Murky glow rings
-  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.5, time, zoom, {
-    color: "rgba(100, 150, 80, 0.4)",
-    count: 3, speed: 1, maxAlpha: 0.3,
-    expansion: 1.3, lineWidth: 2,
+  // Murky poison bubbles
+  drawPoisonBubbles(ctx, x, y - size * 0.1, size * 0.5, time, zoom, {
+    color: "rgba(100, 150, 80, 0.45)",
+    count: 6, speed: 0.8, maxAlpha: 0.35,
+    maxSize: 0.14, spread: 1.0,
   });
 
   // Floating bone/club fragments

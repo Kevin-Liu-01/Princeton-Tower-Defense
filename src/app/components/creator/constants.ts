@@ -3,6 +3,7 @@ import {
   GitBranch,
   MousePointer2,
   Route,
+  Sword,
   User,
 } from "lucide-react";
 import {
@@ -21,6 +22,7 @@ import type {
   MapHazard,
   MapTheme,
   SpecialTowerType,
+  TowerType,
 } from "../../types";
 import type {
   GridPoint,
@@ -126,17 +128,33 @@ export const UNIVERSAL_DECORATIONS: DecorationCategory[] = [
 ];
 
 export const HAZARD_OPTIONS_BY_THEME: Record<MapTheme, HazardType[]> = {
-  grassland: ["poison_fog", "deep_water", "storm_field"],
-  swamp: ["poison_fog", "deep_water", "maelstrom"],
-  desert: ["quicksand", "storm_field", "lava_geyser"],
-  winter: ["ice_sheet", "ice_spikes", "storm_field"],
-  volcanic: ["lava_geyser", "storm_field", "quicksand"],
+  grassland: ["poison_fog", "deep_water", "storm_field", "poison", "swamp"],
+  swamp: ["poison_fog", "deep_water", "maelstrom", "poison", "swamp", "void"],
+  desert: ["quicksand", "storm_field", "lava_geyser", "fire", "lava", "lightning"],
+  winter: ["ice_sheet", "ice_spikes", "storm_field", "slippery_ice", "ice"],
+  volcanic: ["lava_geyser", "storm_field", "quicksand", "lava", "fire", "volcano"],
 };
 
 export const ALL_HAZARD_OPTIONS: HazardType[] = [
   "poison_fog", "deep_water", "maelstrom", "storm_field",
   "quicksand", "ice_sheet", "ice_spikes", "lava_geyser",
+  "slippery_ice", "lava", "swamp", "ice", "poison",
+  "fire", "lightning", "void", "volcano",
 ];
+
+export const TOWER_TYPE_OPTIONS: TowerType[] = [
+  "cannon", "library", "lab", "arch", "club", "station", "mortar",
+];
+
+export const TOWER_DISPLAY_NAMES: Record<TowerType, string> = {
+  station: "Dinky Station",
+  cannon: "Nassau Cannon",
+  library: "Firestone Library",
+  lab: "E-Quad Lab",
+  arch: "Blair Arch",
+  club: "Eating Club",
+  mortar: "Palmer Mortar",
+};
 
 export const LANDMARK_OPTIONS = Array.from(
   LANDMARK_DECORATION_TYPES
@@ -155,7 +173,6 @@ export const TOOL_OPTIONS: ToolOption[] = [
   { key: "path_primary", label: "Path A", icon: Route },
   { key: "path_secondary", label: "Path B", icon: GitBranch },
   { key: "hero_spawn", label: "Hero", icon: User },
-  { key: "special_tower", label: "Objective", icon: ChessRook },
 ];
 
 export const TOOL_HINTS: Record<string, string> = {
@@ -163,7 +180,8 @@ export const TOOL_HINTS: Record<string, string> = {
   path_primary: "Click to append nodes to primary path.",
   path_secondary: "Click to append nodes to secondary path.",
   hero_spawn: "Click a tile to place hero spawn.",
-  special_tower: "Click a tile to place special objective.",
+  special_tower: "Click or drop to place objective.",
+  tower: "Click or drop to place pre-placed tower.",
   decoration: "Click or drop to place decoration.",
   landmark: "Click or drop to place landmark.",
   hazard: "Click or drop to place hazard.",

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  ChevronDown,
+  ChevronUp,
   Compass,
-  Landmark,
   Layers,
   MapPin,
   Paintbrush,
@@ -24,6 +25,12 @@ interface CreatorHeaderProps {
   onClose: () => void;
 }
 
+const DIFFICULTY_LABELS: Record<number, { label: string; color: string }> = {
+  1: { label: "Easy", color: "text-emerald-300" },
+  2: { label: "Medium", color: "text-amber-300" },
+  3: { label: "Hard", color: "text-red-300" },
+};
+
 export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
   draft,
   selectedPresetId,
@@ -32,63 +39,38 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
   onApplyMapPreset,
   onClose,
 }) => {
-  return (
-    <div className="px-4 py-3 border-b border-amber-800/50 bg-gradient-to-r from-amber-900/20 via-transparent to-amber-950/20">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold tracking-wide text-amber-100 inline-flex items-center gap-2">
-            <Layers size={18} />
-            Creator Sandbox
-          </h2>
-          <p className="text-xs sm:text-sm text-amber-300/80">
-            Design custom maps with paths, decorations, hazards, and wave configurations.
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-2 rounded-lg border border-amber-700/50 bg-amber-900/30 hover:bg-amber-800/45 transition-colors"
-          title="Close Creator"
-        >
-          <X size={18} />
-        </button>
-      </div>
+  const [expanded, setExpanded] = useState(false);
 
-      <div className="mt-2.5 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <MapPin size={11} />
-            Map Name
-          </span>
+  return (
+    <div className="px-4 py-2.5 border-b border-amber-700/40 bg-gradient-to-r from-amber-950/40 via-stone-950/60 to-amber-950/40">
+      {/* Top row: title + essential fields + close */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/30 to-amber-700/30 border border-amber-500/40 flex items-center justify-center">
+            <Layers size={16} className="text-amber-200" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold tracking-wide text-amber-100 leading-tight">
+              Map Creator
+            </h2>
+            <p className="text-[10px] text-amber-400/60 leading-tight">
+              {formatAssetName(draft.theme)} &middot; {DIFFICULTY_LABELS[draft.difficulty]?.label}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center gap-2 min-w-0">
           <input
             value={draft.name}
             onChange={(event) => onUpdateDraft({ name: event.target.value })}
-            placeholder="My Custom Map"
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2.5 py-1 text-xs outline-none focus:border-amber-400"
+            placeholder="Map Name"
+            className="flex-1 min-w-[120px] max-w-[260px] rounded-lg border border-amber-700/50 bg-stone-900/80 px-3 py-1.5 text-sm text-amber-100 outline-none focus:border-amber-400/80 placeholder:text-amber-500/40 transition-colors"
           />
-        </label>
 
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <Compass size={11} />
-            Slug
-          </span>
-          <input
-            value={draft.slug}
-            onChange={(event) => onUpdateDraft({ slug: event.target.value })}
-            placeholder="my-custom-map"
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2.5 py-1 text-xs outline-none focus:border-amber-400"
-          />
-        </label>
-
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <Paintbrush size={11} />
-            Theme
-          </span>
           <select
             value={draft.theme}
             onChange={(event) => onUpdateDraft({ theme: event.target.value as MapTheme })}
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2 py-1 text-xs outline-none focus:border-amber-400"
+            className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80"
           >
             {THEME_OPTIONS.map((theme) => (
               <option key={theme} value={theme}>
@@ -96,53 +78,39 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               </option>
             ))}
           </select>
-        </label>
 
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <Target size={11} />
-            Difficulty
-          </span>
           <select
             value={draft.difficulty}
             onChange={(event) =>
               onUpdateDraft({ difficulty: Number(event.target.value) as 1 | 2 | 3 })
             }
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2 py-1 text-xs outline-none focus:border-amber-400"
+            className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80"
           >
             <option value={1}>Easy</option>
             <option value={2}>Medium</option>
             <option value={3}>Hard</option>
           </select>
-        </label>
 
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <Sparkles size={11} />
-            Start Points
-          </span>
-          <input
-            type="number"
-            min={150}
-            max={2500}
-            value={draft.startingPawPoints}
-            onChange={(event) =>
-              onUpdateDraft({ startingPawPoints: Number(event.target.value) })
-            }
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2 py-1 text-xs outline-none focus:border-amber-400"
-            title="Starting paw points"
-          />
-        </label>
+          <div className="flex items-center gap-1 rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1 shrink-0">
+            <Sparkles size={11} className="text-amber-400/70" />
+            <input
+              type="number"
+              min={150}
+              max={2500}
+              value={draft.startingPawPoints}
+              onChange={(event) =>
+                onUpdateDraft({ startingPawPoints: Number(event.target.value) })
+              }
+              className="w-14 bg-transparent text-xs text-amber-200 outline-none tabular-nums"
+              title="Starting paw points"
+            />
+          </div>
 
-        <label className="rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-2.5">
-          <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-            <Swords size={11} />
-            Map Preset
-          </span>
           <select
             value={selectedPresetId}
             onChange={(event) => onApplyMapPreset(event.target.value)}
-            className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-2 py-1 text-xs outline-none focus:border-amber-400"
+            className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80 max-w-[140px]"
+            title="Load preset"
           >
             {waveTemplateOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -150,21 +118,55 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               </option>
             ))}
           </select>
-        </label>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="p-1.5 rounded-lg border border-amber-700/40 bg-stone-900/50 hover:bg-stone-800/70 transition-colors text-amber-300/80"
+            title={expanded ? "Collapse details" : "Expand details"}
+          >
+            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg border border-amber-700/40 bg-stone-900/50 hover:bg-red-900/40 hover:border-red-700/50 transition-colors text-amber-300/80 hover:text-red-200"
+            title="Close Creator"
+          >
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
-      <label className="mt-2 block rounded-lg border border-amber-700/60 bg-black/20 px-2.5 pb-1">
-        <span className="mb-0.5 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-300/80">
-          <Landmark size={11} />
-          Description
-        </span>
-        <textarea
-          value={draft.description}
-          onChange={(event) => onUpdateDraft({ description: event.target.value })}
-          placeholder="Describe the map's encounter flow and style..."
-          className="w-full rounded-md border border-amber-700/60 bg-stone-900 px-3 py-1.5 text-xs outline-none focus:border-amber-400 min-h-[42px]"
-        />
-      </label>
+      {/* Expandable detail row */}
+      {expanded && (
+        <div className="mt-2 pt-2 border-t border-amber-800/30 grid grid-cols-2 md:grid-cols-4 gap-2">
+          <label className="space-y-0.5">
+            <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
+              <Compass size={9} />
+              Slug
+            </span>
+            <input
+              value={draft.slug}
+              onChange={(event) => onUpdateDraft({ slug: event.target.value })}
+              placeholder="my-custom-map"
+              className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
+            />
+          </label>
+          <label className="space-y-0.5 col-span-2 md:col-span-3">
+            <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
+              <MapPin size={9} />
+              Description
+            </span>
+            <input
+              value={draft.description}
+              onChange={(event) => onUpdateDraft({ description: event.target.value })}
+              placeholder="Describe the map..."
+              className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
+            />
+          </label>
+        </div>
+      )}
     </div>
   );
 };

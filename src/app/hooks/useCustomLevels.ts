@@ -11,6 +11,7 @@ import type {
   MapDecoration,
   MapHazard,
   MapTheme,
+  Tower,
   WaveGroup,
 } from "../types";
 import { useLocalStorage } from "../useLocalStorage";
@@ -222,6 +223,25 @@ const validateAndBuildLevel = (
       }
     : undefined;
 
+  const specialTowers = draft.specialTowers && draft.specialTowers.length > 0
+    ? draft.specialTowers.map((st) => ({
+        ...st,
+        pos: normalizeGridPoint(st.pos),
+        hp: typeof st.hp === "number" ? Math.max(1, Math.round(st.hp)) : undefined,
+      }))
+    : undefined;
+
+  const placedTowers = draft.placedTowers && draft.placedTowers.length > 0
+    ? draft.placedTowers.map((t) => ({
+        ...t,
+        pos: normalizeGridPoint(t.pos),
+      }))
+    : undefined;
+
+  const allowedTowers = draft.allowedTowers && draft.allowedTowers.length > 0
+    ? draft.allowedTowers
+    : undefined;
+
   const startingPawPoints = Math.round(
     clamp(draft.startingPawPoints, 150, 2500)
   );
@@ -255,6 +275,9 @@ const validateAndBuildLevel = (
     secondaryPath: hasSecondaryPath ? secondaryPath : undefined,
     heroSpawn,
     specialTower,
+    specialTowers,
+    placedTowers,
+    allowedTowers,
     decorations,
     hazards,
     createdAt: existingEntry?.createdAt ?? now,
@@ -317,9 +340,42 @@ const registerCustomLevels = (levels: CustomLevelDefinition[]): void => {
             hp: level.specialTower.hp,
           }
         : undefined,
+      specialTowers: level.specialTowers
+        ? level.specialTowers.map((st) => ({
+            pos: { ...st.pos },
+            type: st.type,
+            hp: st.hp,
+          }))
+        : undefined,
+      levelKind: "custom",
+      allowedTowers: level.allowedTowers,
       decorations: level.decorations,
       hazards: level.hazards,
-    };
+    } as any;
+
+    if (level.placedTowers && level.placedTowers.length > 0) {
+      const placedTowerConfigs = level.placedTowers;
+      (LEVEL_DATA[level.id] as any).prePlacedTowers = () =>
+        placedTowerConfigs.map((config, idx) => ({
+          id: `preplaced-${idx}`,
+          type: config.type,
+          gridPosition: { ...config.pos },
+          position: { x: config.pos.x * 60 + 30, y: config.pos.y * 60 + 30 },
+          level: 1,
+          experience: 0,
+          range: 0,
+          cooldown: 0,
+          currentCooldown: 0,
+          target: null,
+          upgrade: null,
+          kills: 0,
+          totalDamage: 0,
+          projectiles: [],
+          effects: [],
+          troops: [],
+          isPrePlaced: true,
+        }));
+    }
 
     const levelWaves =
       level.customWaves && level.customWaves.length > 0

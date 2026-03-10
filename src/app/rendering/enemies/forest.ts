@@ -1,5 +1,5 @@
 import {
-  drawPulsingGlowRings,
+  drawLeafSwirl,
   drawShiftingSegments,
   drawOrbitingDebris,
 } from "./animationHelpers";
@@ -486,14 +486,14 @@ export function drawAthleteEnemy(
 
   // --- ANIMATED EFFECTS ---
 
-  // Speed aura glow rings around feet
-  drawPulsingGlowRings(ctx, x, y + size * 0.35 - bounce, size * 0.18, time, zoom, {
-    color: "rgba(255, 200, 100, 0.4)",
-    count: 3,
+  // Speed leaf swirl around feet
+  drawLeafSwirl(ctx, x, y + size * 0.35 - bounce, size * 0.18, time, zoom, {
+    color: "rgba(120, 180, 60, 0.5)",
+    colorAlt: "rgba(200, 170, 80, 0.45)",
+    count: 4,
     speed: 2.5,
-    maxAlpha: isAttacking ? 0.45 : 0.3,
-    expansion: 1.2,
-    lineWidth: 1.2,
+    maxAlpha: isAttacking ? 0.5 : 0.35,
+    leafSize: 0.1,
   });
 
   // Dust / speed particles orbiting body
@@ -1158,14 +1158,13 @@ export function drawProtestorEnemy(
 
   // --- ANIMATED EFFECTS ---
 
-  // Protest energy glow rings (warm orange/red)
-  drawPulsingGlowRings(ctx, headX, y - size * 0.1 - marchBob, size * 0.25, time, zoom, {
-    color: "rgba(255, 130, 60, 0.4)",
-    count: 3,
+  // Protest leaf/debris swirl
+  drawLeafSwirl(ctx, headX, y - size * 0.1 - marchBob, size * 0.25, time, zoom, {
+    color: "rgba(180, 120, 40, 0.45)",
+    colorAlt: "rgba(100, 160, 50, 0.4)",
+    count: 5,
     speed: 1.8,
-    maxAlpha: isAttacking ? 0.5 : 0.3,
-    expansion: 1.4,
-    lineWidth: 1.5,
+    maxAlpha: isAttacking ? 0.55 : 0.35,
   });
 
   // Floating sign fragments / debris orbiting body

@@ -1,4 +1,5 @@
 import type { TroopOwnerType } from "../../types";
+import type { MapTheme } from "../../constants/maps";
 
 // ============================================================================
 // KNIGHT COLOR THEMES - Distinct visual styles based on owner type
@@ -118,11 +119,50 @@ export const KNIGHT_THEME_RED: KnightTheme = {
   shockwave: "rgba(255, 80, 80, ",
 };
 
-// Get knight theme based on owner type
-export function getKnightTheme(ownerType?: TroopOwnerType): KnightTheme {
+// Purple theme - Volcanic barracks knights
+export const KNIGHT_THEME_PURPLE: KnightTheme = {
+  name: "volcanic",
+  auraColorInner: "rgba(180, 80, 255, ",
+  auraColorMid: "rgba(130, 40, 220, ",
+  auraColorOuter: "rgba(80, 20, 160, 0)",
+  flameWisps: "rgba(200, 120, 255, ",
+  energyRings: "rgba(160, 60, 255, ",
+  capeLight: "#5A1A8A",
+  capeMid: "#7B2FBB",
+  capeDark: "#3A0A66",
+  capeInner: "#280644",
+  sigilGlow: "rgba(180, 100, 255, ",
+  beltBuckle: "#B899CC",
+  crossguardMain: "#3A0060",
+  crossguardAccent: "#5520A0",
+  gemColor: "rgba(220, 180, 255, ",
+  bladeRunes: "rgba(180, 80, 255, ",
+  swingTrail: "rgba(200, 120, 255, ",
+  swingTrailAlt: "rgba(220, 170, 255, ",
+  shieldEmblem: "#7A30AA",
+  plume: "#9B44DD",
+  eyeGlow: "rgba(200, 140, 255, ",
+  eyeShadow: "#B366FF",
+  shockwave: "rgba(180, 100, 255, ",
+};
+
+// Get knight theme based on owner type and map theme.
+// Barracks knights adapt to the biome: orange on desert, purple on volcanic.
+export function getKnightTheme(
+  ownerType?: TroopOwnerType,
+  mapTheme?: MapTheme,
+): KnightTheme {
+  if (ownerType === "barracks") {
+    switch (mapTheme) {
+      case "desert":
+        return KNIGHT_THEME_ORANGE;
+      case "volcanic":
+        return KNIGHT_THEME_PURPLE;
+      default:
+        return KNIGHT_THEME_BLUE;
+    }
+  }
   switch (ownerType) {
-    case "barracks":
-      return KNIGHT_THEME_BLUE;
     case "hero_summon":
       return KNIGHT_THEME_RED;
     case "station":

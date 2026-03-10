@@ -9,15 +9,17 @@ import {
   Plus,
   Settings2,
   Sparkles,
+  Sword,
   Swords,
   Target,
   Trash2,
 } from "lucide-react";
 import type { CreatorDraftState, SelectionTarget, ToolMode, GridPoint } from "../types";
-import { TOOL_HINTS, OBJECTIVE_TYPE_STATS, TOOL_OPTIONS } from "../constants";
+import { TOOL_HINTS, OBJECTIVE_TYPE_STATS, TOOL_OPTIONS, TOWER_DISPLAY_NAMES } from "../constants";
 import { formatPointLabel, formatAssetName } from "../utils/gridUtils";
 import { getPointFromSelection } from "../utils/selectionUtils";
 import { LANDMARK_DECORATION_TYPES } from "../../../utils";
+import type { TowerType } from "../../../types";
 
 interface InspectorPanelProps {
   draft: CreatorDraftState;
@@ -57,144 +59,132 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     selection?.kind === "decoration" ? draft.decorations[selection.index] : null;
   const selectedHazard =
     selection?.kind === "hazard" ? draft.hazards[selection.index] : null;
+  const selectedObjective =
+    selection?.kind === "special_tower" ? draft.specialTowers[selection.index] : null;
+  const selectedTower =
+    selection?.kind === "tower" ? draft.placedTowers[selection.index] : null;
 
-  const activeToolEntry = TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0];
-  const ActiveToolIcon = activeToolEntry.icon;
+  const activeToolHint = TOOL_HINTS[tool] ?? "";
 
   const selectionSummary = (() => {
     if (!selection) return null;
     if (selection.kind === "primary_path") return `Path A node ${selection.index + 1}`;
     if (selection.kind === "secondary_path") return `Path B node ${selection.index + 1}`;
-    if (selection.kind === "hero_spawn") {
-      return selectedPoint ? `Hero Spawn ${formatPointLabel(selectedPoint)}` : "Hero Spawn";
-    }
+    if (selection.kind === "hero_spawn") return "Hero Spawn";
     if (selection.kind === "special_tower") {
-      const objectiveName = OBJECTIVE_TYPE_STATS[draft.specialTowerType].title;
-      return selectedPoint
-        ? `${objectiveName} ${formatPointLabel(selectedPoint)}`
-        : objectiveName;
+      return selectedObjective
+        ? OBJECTIVE_TYPE_STATS[selectedObjective.type].title
+        : "Objective";
+    }
+    if (selection.kind === "tower") {
+      return selectedTower ? TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ?? formatAssetName(selectedTower.type) : "Tower";
     }
     if (selection.kind === "hazard") {
-      const point =
-        (selectedHazard?.pos as GridPoint | undefined) ??
-        selectedHazard?.gridPos ??
-        selectedPoint;
-      const hazardName = selectedHazard?.type
-        ? formatAssetName(selectedHazard.type)
-        : "Hazard";
-      return point ? `${hazardName} ${formatPointLabel(point)}` : hazardName;
+      return selectedHazard?.type ? formatAssetName(selectedHazard.type) : "Hazard";
     }
     const decoType = selectedDecoration?.type ?? selectedDecoration?.category;
     const isLandmark = Boolean(decoType && LANDMARK_DECORATION_TYPES.has(decoType));
-    const decorationName = decoType
-      ? formatAssetName(decoType)
-      : isLandmark
-        ? "Landmark"
-        : "Decoration";
-    return selectedPoint
-      ? `${decorationName} ${formatPointLabel(selectedPoint)}`
-      : decorationName;
+    return decoType ? formatAssetName(decoType) : isLandmark ? "Landmark" : "Decoration";
   })();
 
   return (
-    <aside className="rounded-2xl border border-amber-900/60 bg-black/25 p-3 overflow-y-auto space-y-3">
-      {/* State + Inspector */}
-      <div className="rounded-xl border border-amber-800/40 bg-stone-900/70 p-2.5 text-xs">
-        <div className="text-amber-200 font-medium mb-2 inline-flex items-center gap-1.5">
-          <Settings2 size={12} />
+    <aside className="rounded-2xl border border-amber-800/30 bg-gradient-to-b from-stone-900/50 to-stone-950/70 p-3 overflow-y-auto space-y-3">
+      {/* Inspector */}
+      <div className="rounded-xl border border-amber-800/25 bg-stone-900/50 p-2.5 text-xs">
+        <div className="text-amber-200/90 font-medium mb-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+          <Settings2 size={13} />
           Inspector
         </div>
-        <div className="grid grid-cols-2 gap-1 text-[11px] mb-2">
-          <div className="rounded border border-amber-900/70 bg-black/25 px-2 py-1 inline-flex items-center gap-1.5">
-            <ActiveToolIcon size={11} />
-            {tool}
+
+        {/* Current tool + cursor */}
+        <div className="flex items-start gap-1.5 mb-2 text-[11px]">
+          <div className="rounded-md border border-amber-800/30 bg-stone-950/60 px-2 py-1 text-amber-300/80 min-w-0 flex-1 break-words">
+            {activeToolHint}
           </div>
-          <div className="rounded border border-amber-900/70 bg-black/25 px-2 py-1">
-            tile: {hoverPoint ? `${hoverPoint.x},${hoverPoint.y}` : "--,--"}
-          </div>
-          <div className="rounded border border-amber-900/70 bg-black/25 px-2 py-1 col-span-2 text-amber-300/80">
-            {TOOL_HINTS[tool]}
+          <div className="rounded-md border border-amber-800/30 bg-stone-950/60 px-2 py-1 text-amber-200 tabular-nums whitespace-nowrap shrink-0">
+            {hoverPoint ? `${hoverPoint.x},${hoverPoint.y}` : "--,--"}
           </div>
         </div>
 
+        {/* Selection details */}
         {selection && selectionSummary ? (
           <div className="space-y-2">
-            <div className="rounded-md border border-amber-600/40 bg-amber-900/15 px-2 py-1.5">
-              <div className="text-amber-200 mb-1 inline-flex items-center gap-1.5 font-medium">
-                <Target size={11} />
+            <div className="rounded-lg border border-amber-500/25 bg-amber-900/10 px-2.5 py-2">
+              <div className="text-amber-100 font-medium inline-flex items-center gap-1.5 text-[12px]">
+                <Target size={12} className="text-amber-400" />
                 {selectionSummary}
               </div>
               {selectedPoint && (
-                <div className="text-amber-400/75 text-[10px]">
-                  x:{selectedPoint.x}, y:{selectedPoint.y}
+                <div className="text-amber-400/60 text-[10px] mt-0.5">
+                  Position: {selectedPoint.x}, {selectedPoint.y}
                 </div>
               )}
             </div>
 
             {selection.kind === "decoration" && selectedDecoration && (
-              <div className="space-y-1.5">
-                <div className="text-amber-300/80 inline-flex items-center gap-1.5">
-                  <Paintbrush size={11} />
-                  {selectedDecoration.type ?? selectedDecoration.category}
-                </div>
-                <label className="flex items-center gap-2">
-                  <span className="text-amber-300/80 text-[11px]">size</span>
-                  <input
-                    type="range"
-                    min={0.5}
-                    max={8}
-                    step={0.1}
-                    value={selectedDecoration.size ?? 1}
-                    onChange={(event) =>
-                      onUpdateDecorationSize(selection.index, Number(event.target.value))
-                    }
-                    className="flex-1 accent-amber-500"
-                  />
-                  <span className="text-amber-200 text-[10px] w-8 text-right tabular-nums">
-                    {(selectedDecoration.size ?? 1).toFixed(1)}
-                  </span>
-                </label>
-              </div>
+              <label className="flex items-center gap-2 px-0.5">
+                <span className="text-amber-300/70 text-[11px] w-8">Size</span>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={8}
+                  step={0.1}
+                  value={selectedDecoration.size ?? 1}
+                  onChange={(event) =>
+                    onUpdateDecorationSize(selection.index, Number(event.target.value))
+                  }
+                  className="flex-1 accent-amber-500 h-1"
+                />
+                <span className="text-amber-200 text-[10px] w-7 text-right tabular-nums">
+                  {(selectedDecoration.size ?? 1).toFixed(1)}
+                </span>
+              </label>
             )}
 
             {selection.kind === "hazard" && selectedHazard && (
-              <div className="space-y-1.5">
-                <div className="text-amber-300/80 inline-flex items-center gap-1.5">
-                  <AlertTriangle size={11} />
-                  {selectedHazard.type}
-                </div>
-                <label className="flex items-center gap-2">
-                  <span className="text-amber-300/80 text-[11px]">radius</span>
-                  <input
-                    type="range"
-                    min={0.5}
-                    max={10}
-                    step={0.1}
-                    value={selectedHazard.radius ?? 1.5}
-                    onChange={(event) =>
-                      onUpdateHazardRadius(selection.index, Number(event.target.value))
-                    }
-                    className="flex-1 accent-amber-500"
-                  />
-                  <span className="text-amber-200 text-[10px] w-8 text-right tabular-nums">
-                    {(selectedHazard.radius ?? 1.5).toFixed(1)}
-                  </span>
-                </label>
+              <label className="flex items-center gap-2 px-0.5">
+                <span className="text-amber-300/70 text-[11px] w-10">Radius</span>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={10}
+                  step={0.1}
+                  value={selectedHazard.radius ?? 1.5}
+                  onChange={(event) =>
+                    onUpdateHazardRadius(selection.index, Number(event.target.value))
+                  }
+                  className="flex-1 accent-amber-500 h-1"
+                />
+                <span className="text-amber-200 text-[10px] w-7 text-right tabular-nums">
+                  {(selectedHazard.radius ?? 1.5).toFixed(1)}
+                </span>
+              </label>
+            )}
+
+            {selection.kind === "special_tower" && selectedObjective && (
+              <div className="text-[10px] text-amber-400/60 px-0.5">
+                {OBJECTIVE_TYPE_STATS[selectedObjective.type].effect}
+              </div>
+            )}
+
+            {selection.kind === "tower" && selectedTower && (
+              <div className="text-[10px] text-amber-400/60 px-0.5 inline-flex items-center gap-1">
+                <Sword size={9} /> Pre-placed {TOWER_DISPLAY_NAMES[selectedTower.type as TowerType] ?? selectedTower.type}
               </div>
             )}
 
             <button
               onClick={onEraseSelection}
-              className="inline-flex items-center gap-1 rounded-md border border-red-700/60 bg-red-900/25 px-2 py-1 text-[11px] hover:bg-red-800/30 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-700/40 bg-red-900/15 px-2.5 py-1.5 text-[11px] text-red-300/90 hover:bg-red-800/25 transition-colors font-medium"
             >
-              <Trash2 size={12} />
+              <Trash2 size={11} />
               Remove
             </button>
           </div>
         ) : (
-          <div className="text-amber-400/70 inline-flex items-center gap-1.5">
+          <div className="text-amber-500/40 inline-flex items-center gap-1.5 text-[11px]">
             <MousePointer2 size={11} />
-            nothing selected
+            Nothing selected
           </div>
         )}
       </div>
@@ -203,12 +193,12 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
       {(errors.length > 0 || notice) && (
         <div className="space-y-2">
           {errors.length > 0 && (
-            <div className="rounded-md border border-red-700/60 bg-red-900/20 p-2 text-xs text-red-200">
-              <div className="inline-flex items-center gap-1 mb-1 font-medium">
-                <AlertTriangle size={13} />
-                Validation
+            <div className="rounded-lg border border-red-700/40 bg-red-950/30 p-2.5 text-xs text-red-200/90">
+              <div className="inline-flex items-center gap-1 mb-1 font-medium text-red-300">
+                <AlertTriangle size={12} />
+                Issues
               </div>
-              <ul className="list-disc pl-4 space-y-0.5">
+              <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
                 {errors.map((error) => (
                   <li key={error}>{error}</li>
                 ))}
@@ -216,7 +206,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             </div>
           )}
           {notice && (
-            <div className="rounded-md border border-emerald-700/60 bg-emerald-900/20 p-2 text-xs text-emerald-200 inline-flex items-center gap-1.5">
+            <div className="rounded-lg border border-emerald-700/40 bg-emerald-950/30 p-2.5 text-xs text-emerald-200 inline-flex items-center gap-1.5">
               <Sparkles size={12} />
               {notice}
             </div>
@@ -224,29 +214,29 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
         </div>
       )}
 
-      {/* Build Actions */}
-      <div className="rounded-xl border border-amber-800/40 bg-stone-900/70 p-2.5 text-xs">
-        <div className="text-amber-200 font-medium mb-1 inline-flex items-center gap-1.5">
-          <Swords size={12} />
-          Actions
-        </div>
-        <div className="mb-2 inline-flex items-center gap-1.5">
+      {/* Actions */}
+      <div className="rounded-xl border border-amber-800/25 bg-stone-900/50 p-2.5 text-xs">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-amber-200/90 font-medium inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+            <Swords size={13} />
+            Actions
+          </span>
           {validationStatus.length === 0 ? (
-            <span className="inline-flex items-center gap-1 text-emerald-300/90">
-              <CheckCircle2 size={12} />
-              ready to save
+            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium">
+              <CheckCircle2 size={10} />
+              Ready
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-orange-300/90">
-              <AlertTriangle size={12} />
-              {validationStatus.length} issue(s)
+            <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+              <AlertTriangle size={10} />
+              {validationStatus.length}
             </span>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <button
             onClick={onSave}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-600/70 bg-emerald-700/25 px-3 py-2 text-sm text-emerald-100 hover:bg-emerald-600/30 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-600/15 px-3 py-2 text-sm text-emerald-200 hover:bg-emerald-500/25 transition-colors font-medium"
           >
             <Save size={14} />
             Save Map
@@ -254,25 +244,25 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
           <button
             onClick={onPlaytest}
             disabled={!draft.id}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-600/70 bg-blue-700/25 px-3 py-2 text-sm text-blue-100 hover:bg-blue-600/30 disabled:opacity-50 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-600/15 px-3 py-2 text-sm text-blue-200 hover:bg-blue-500/25 disabled:opacity-40 disabled:pointer-events-none transition-colors font-medium"
           >
             <Play size={14} />
             Playtest
           </button>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <button
               onClick={onNewMap}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-700/60 bg-amber-900/25 px-3 py-2 text-xs hover:bg-amber-800/35 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-700/40 bg-amber-900/15 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-800/25 transition-colors"
             >
-              <Plus size={13} />
+              <Plus size={12} />
               New
             </button>
             <button
               onClick={onDelete}
               disabled={!draft.id}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-700/70 bg-red-900/25 px-3 py-2 text-xs text-red-100 hover:bg-red-800/30 disabled:opacity-50 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-700/40 bg-red-900/15 px-3 py-1.5 text-xs text-red-200 hover:bg-red-800/25 disabled:opacity-40 disabled:pointer-events-none transition-colors"
             >
-              <Trash2 size={13} />
+              <Trash2 size={12} />
               Delete
             </button>
           </div>

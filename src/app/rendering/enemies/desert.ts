@@ -5,7 +5,7 @@ import { drawRadialAura } from "./helpers";
 import {
   drawAnimatedArm,
   drawAnimatedLegs,
-  drawPulsingGlowRings,
+  drawSandDust,
   drawShiftingSegments,
   drawAnimatedTendril,
   drawFloatingPiece,
@@ -591,14 +591,13 @@ export function drawNomadEnemy(
   );
   ctx.fill();
 
-  // Golden sand glow rings
-  drawPulsingGlowRings(ctx, x, y, size * 0.4, time, zoom, {
-    color: "rgba(251, 191, 36, 0.4)",
-    count: 3,
-    speed: 1.2,
-    maxAlpha: 0.3,
-    expansion: 1.8,
-    lineWidth: 1.5,
+  // Swirling sand dust
+  drawSandDust(ctx, x, y, size * 0.4, time, zoom, {
+    color: "rgba(251, 191, 36, 0.45)",
+    count: 8,
+    speed: 1.8,
+    maxAlpha: 0.35,
+    spread: 1.2,
   });
 
   // Floating sand crystal shards
@@ -1201,14 +1200,13 @@ export function drawScorpionEnemy(
     attackExtra: isAttacking ? 0.6 : 0,
   });
 
-  // Pulsing amber glow rings
-  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
+  // Swirling sand particles
+  drawSandDust(ctx, x, y, size * 0.35, time, zoom, {
     color: "rgba(245, 158, 11, 0.4)",
-    count: 3,
-    speed: 1.5,
-    maxAlpha: 0.25,
-    expansion: 1.4,
-    lineWidth: 1.5,
+    count: 7,
+    speed: 2.2,
+    maxAlpha: 0.3,
+    spread: 1.0,
   });
 
   // Floating chitin segments (diamond shape)
@@ -1705,22 +1703,21 @@ export function drawScarabEnemy(
     tipRadius: 0.01,
   });
 
-  // Emerald/gold pulsing glow rings
-  drawPulsingGlowRings(ctx, x, y + hoverFloat, size * 0.35, time, zoom, {
+  // Emerald/gold sand dust
+  drawSandDust(ctx, x, y + hoverFloat, size * 0.35, time, zoom, {
     color: "rgba(52, 211, 153, 0.4)",
-    count: 3,
-    speed: 1.8,
+    count: 9,
+    speed: 2.0,
     maxAlpha: 0.3,
-    expansion: 1.6,
-    lineWidth: 1.5,
+    spread: 1.3,
   });
-  drawPulsingGlowRings(ctx, x, y + hoverFloat, size * 0.25, time, zoom, {
-    color: "rgba(251, 191, 36, 0.3)",
-    count: 2,
-    speed: 1.2,
-    maxAlpha: 0.2,
-    expansion: 1.3,
-    lineWidth: 1,
+  drawSandDust(ctx, x, y + hoverFloat, size * 0.25, time, zoom, {
+    color: "rgba(251, 191, 36, 0.35)",
+    count: 5,
+    speed: 1.5,
+    maxAlpha: 0.25,
+    spread: 0.9,
+    particleSize: 0.04,
   });
 
   // Floating wing case segments

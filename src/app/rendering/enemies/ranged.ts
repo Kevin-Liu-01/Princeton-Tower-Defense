@@ -7,6 +7,7 @@ import {
   drawAnimatedArm,
   drawAnimatedLegs,
   drawPulsingGlowRings,
+  drawArcaneSparkles,
   drawShiftingSegments,
   drawOrbitingDebris,
   drawFloatingPiece,
@@ -1149,13 +1150,12 @@ export function drawMageEnemy(
   clearShadow(ctx);
   ctx.restore();
 
-  // === ARCANE GLOW RINGS around staff crystal ===
-  drawPulsingGlowRings(ctx, x + size * 0.32, y - size * 0.52 + float, size * 0.08, time, zoom, {
-    color: "rgba(139, 92, 246, 0.5)",
-    count: 3,
-    speed: 2,
-    maxAlpha: 0.4,
-    expansion: 1.8,
+  // === ARCANE SPARKLES around staff crystal ===
+  drawArcaneSparkles(ctx, x + size * 0.32, y - size * 0.52 + float, size * 0.08, time, zoom, {
+    color: "rgba(139, 92, 246, 0.6)",
+    count: 5,
+    speed: 2.5,
+    maxAlpha: 0.5,
   });
 
   // === FLOATING CRYSTAL ORBS ===
@@ -2049,13 +2049,13 @@ export function drawWarlockEnemy(
     ctx.stroke();
   }
 
-  // === DARK PURPLE VOID GLOW ===
-  drawPulsingGlowRings(ctx, x - size * 0.35, y + size * 0.02 + hover, size * 0.14, time, zoom, {
-    color: "rgba(147, 51, 234, 0.5)",
-    count: 3,
-    speed: 1.2,
-    maxAlpha: 0.45,
-    expansion: 1.6,
+  // === DARK PURPLE ARCANE SPARKLES ===
+  drawArcaneSparkles(ctx, x - size * 0.35, y + size * 0.02 + hover, size * 0.14, time, zoom, {
+    color: "rgba(147, 51, 234, 0.55)",
+    count: 5,
+    speed: 1.8,
+    maxAlpha: 0.5,
+    sparkleSize: 0.09,
   });
 
   // === FLOATING DARK ORBS ===
@@ -3296,13 +3296,13 @@ export function drawHexerEnemy(
     ctx.fill();
   }
 
-  // === SICKLY GREEN GLOW around hex crystal ===
-  drawPulsingGlowRings(ctx, x + size * 0.22, y - size * 0.22 + sway, size * 0.1, time, zoom, {
-    color: "rgba(74, 222, 128, 0.4)",
-    count: 3,
+  // === SICKLY GREEN ARCANE SPARKLES around hex crystal ===
+  drawArcaneSparkles(ctx, x + size * 0.22, y - size * 0.22 + sway, size * 0.1, time, zoom, {
+    color: "rgba(74, 222, 128, 0.5)",
+    count: 5,
     speed: 2.5,
-    maxAlpha: 0.4,
-    expansion: 1.5,
+    maxAlpha: 0.45,
+    sparkleSize: 0.1,
   });
 
   // === FLOATING HEX SYMBOLS ===

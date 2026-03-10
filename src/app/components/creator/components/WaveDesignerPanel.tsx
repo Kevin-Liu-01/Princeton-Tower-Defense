@@ -43,9 +43,9 @@ export const WaveDesignerPanel: React.FC<WaveDesignerPanelProps> = ({
   onRemoveWaveGroup,
 }) => {
   return (
-    <div className="rounded-xl border border-amber-800/40 bg-stone-900/70 p-2.5 text-xs">
-      <div className="text-amber-200 font-medium mb-2 inline-flex items-center gap-1.5">
-        <Swords size={12} />
+    <div className="rounded-xl border border-amber-800/30 bg-gradient-to-b from-stone-900/80 to-stone-950/80 p-3 text-xs">
+      <div className="text-[11px] uppercase tracking-wider text-amber-200/90 font-medium mb-2.5 inline-flex items-center gap-1.5">
+        <Swords size={13} />
         Wave Designer
       </div>
 

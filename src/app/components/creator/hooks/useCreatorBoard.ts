@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from "react";
 import type {
   DecorationCategory,
   HazardType,
+  SpecialTowerType,
+  TowerType,
 } from "../../../types";
 import type {
   CreatorDraftState,
@@ -51,6 +53,8 @@ export function useCreatorBoard(
   selectedDecorationType: DecorationCategory,
   selectedLandmarkType: DecorationCategory,
   selectedHazardType: HazardType,
+  selectedObjectiveType: SpecialTowerType,
+  selectedTowerType: TowerType,
   draftActions: CreatorDraftActions,
   camera: CreatorCameraState,
 ): CreatorBoardState {
@@ -130,7 +134,23 @@ export function useCreatorBoard(
         }
         if (tool === "special_tower") {
           if (!isInsideMap(point)) return prev;
-          return { ...prev, specialTowerPos: mapPoint, specialTowerEnabled: true };
+          return {
+            ...prev,
+            specialTowers: [
+              ...prev.specialTowers,
+              { pos: mapPoint, type: selectedObjectiveType },
+            ],
+          };
+        }
+        if (tool === "tower") {
+          if (!isInsideMap(point)) return prev;
+          return {
+            ...prev,
+            placedTowers: [
+              ...prev.placedTowers,
+              { pos: mapPoint, type: selectedTowerType },
+            ],
+          };
         }
         if (tool === "decoration") {
           if (!isInsideMap(point)) return prev;
@@ -179,14 +199,24 @@ export function useCreatorBoard(
         return;
       }
       if (tool === "special_tower") {
-        setSelection({ kind: "special_tower" });
+        const currentDraft = draftRef.current;
+        if (currentDraft) {
+          setSelection({ kind: "special_tower", index: currentDraft.specialTowers.length - 1 });
+        }
+        return;
+      }
+      if (tool === "tower") {
+        const currentDraft = draftRef.current;
+        if (currentDraft) {
+          setSelection({ kind: "tower", index: currentDraft.placedTowers.length - 1 });
+        }
         return;
       }
       if (tool === "hero_spawn") {
         setSelection({ kind: "hero_spawn" });
       }
     },
-    [tool, selectedDecorationType, selectedLandmarkType, selectedHazardType, draftRef, applyDraftUpdate, clearMessages]
+    [tool, selectedDecorationType, selectedLandmarkType, selectedHazardType, selectedObjectiveType, selectedTowerType, draftRef, applyDraftUpdate, clearMessages]
   );
 
   const handleBoardPointerDown = useCallback(
@@ -321,7 +351,22 @@ export function useCreatorBoard(
           };
         }
         if (payload.kind === "objective") {
-          return { ...prev, specialTowerPos: mapPoint, specialTowerEnabled: true };
+          return {
+            ...prev,
+            specialTowers: [
+              ...prev.specialTowers,
+              { pos: mapPoint, type: payload.value as SpecialTowerType },
+            ],
+          };
+        }
+        if (payload.kind === "tower") {
+          return {
+            ...prev,
+            placedTowers: [
+              ...prev.placedTowers,
+              { pos: mapPoint, type: payload.value as TowerType },
+            ],
+          };
         }
         return {
           ...prev,
@@ -333,10 +378,18 @@ export function useCreatorBoard(
       });
 
       if (payload.kind === "objective") {
-        setSelection({ kind: "special_tower" });
+        const currentDraft = draftRef.current;
+        if (currentDraft) {
+          setSelection({ kind: "special_tower", index: currentDraft.specialTowers.length - 1 });
+        }
+      } else if (payload.kind === "tower") {
+        const currentDraft = draftRef.current;
+        if (currentDraft) {
+          setSelection({ kind: "tower", index: currentDraft.placedTowers.length - 1 });
+        }
       }
     },
-    [getGridPointFromClient, updateHoverPoint, clearMessages, applyDraftUpdate]
+    [getGridPointFromClient, updateHoverPoint, clearMessages, applyDraftUpdate, draftRef]
   );
 
   const handleBoardDragOver = useCallback(

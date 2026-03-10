@@ -199,6 +199,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCreator, setShowCreator] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
   const [animTime, setAnimTime] = useState(0);
@@ -547,6 +548,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const postHydrationRef = useRef(false);
   useEffect(() => { postHydrationRef.current = true; }, []);
 
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
   const showPreview = !selectedLevel && (
     showBattlefieldPreview !== null
       ? showBattlefieldPreview
@@ -817,7 +824,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
                   title="Toggle Fullscreen"
                 >
-                  {document.fullscreenElement
+                  {isFullscreen
                     ? <Minimize size={15} className="text-cyan-400 shrink-0" />
                     : <Maximize size={15} className="text-cyan-400 shrink-0" />}
                 </button>

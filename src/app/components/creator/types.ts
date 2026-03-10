@@ -6,12 +6,15 @@ import type {
   MapHazard,
   MapTheme,
   SpecialTowerType,
+  TowerType,
   WaveGroup,
 } from "../../types";
 import type {
   CustomLevelDefinition,
   CustomLevelDraftInput,
   CustomLevelUpsertResult,
+  CustomPlacedTowerConfig,
+  CustomSpecialTowerConfig,
   GridPoint,
 } from "../../customLevels/types";
 import type { LucideIcon } from "lucide-react";
@@ -31,10 +34,9 @@ export interface CreatorDraftState {
   primaryPath: GridPoint[];
   secondaryPath: GridPoint[];
   heroSpawn: GridPoint | null;
-  specialTowerEnabled: boolean;
-  specialTowerType: SpecialTowerType;
-  specialTowerHp: number;
-  specialTowerPos: GridPoint | null;
+  specialTowers: CustomSpecialTowerConfig[];
+  placedTowers: CustomPlacedTowerConfig[];
+  allowedTowers: TowerType[];
   decorations: MapDecoration[];
   hazards: MapHazard[];
 }
@@ -45,6 +47,7 @@ export type ToolMode =
   | "path_secondary"
   | "hero_spawn"
   | "special_tower"
+  | "tower"
   | "decoration"
   | "landmark"
   | "hazard"
@@ -54,12 +57,13 @@ export type SelectionTarget =
   | { kind: "primary_path"; index: number }
   | { kind: "secondary_path"; index: number }
   | { kind: "hero_spawn" }
-  | { kind: "special_tower" }
+  | { kind: "special_tower"; index: number }
+  | { kind: "tower"; index: number }
   | { kind: "decoration"; index: number }
   | { kind: "hazard"; index: number };
 
 export interface PaletteDragPayload {
-  kind: "decoration" | "landmark" | "hazard" | "objective";
+  kind: "decoration" | "landmark" | "hazard" | "objective" | "tower";
   value: string;
 }
 

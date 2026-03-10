@@ -1,4 +1,5 @@
 import type { Troop, Position, TroopOwnerType } from "../../types";
+import type { MapTheme } from "../../constants/maps";
 import { TROOP_DATA, ISO_Y_RATIO } from "../../constants";
 import { worldToScreen, worldToScreenRounded } from "../../utils";
 import { getPerformanceSettings } from "../performance";
@@ -26,6 +27,7 @@ export function renderTroop(
   cameraOffset?: Position,
   cameraZoom?: number,
   targetPos?: Position,
+  mapTheme?: MapTheme,
 ) {
   const screenPos = worldToScreenRounded(
     troop.pos,
@@ -126,6 +128,7 @@ export function renderTroop(
     localTargetPos,
     troop.ownerType,
     troop.visualTier,
+    mapTheme,
   );
 
   ctx.restore();
@@ -332,6 +335,7 @@ function drawTroopSprite(
   targetPos?: Position,
   ownerType?: TroopOwnerType,
   visualTier?: number,
+  mapTheme?: MapTheme,
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
     footsoldier: 1.0,
@@ -469,6 +473,7 @@ function drawTroopSprite(
         attackPhase,
         ownerType,
         targetPos,
+        mapTheme,
       );
       break;
     case "turret":
@@ -496,6 +501,7 @@ function drawTroopSprite(
         attackPhase,
         undefined,
         targetPos,
+        mapTheme,
       );
   }
 }

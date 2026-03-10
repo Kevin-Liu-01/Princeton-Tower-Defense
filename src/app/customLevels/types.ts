@@ -2,6 +2,7 @@ import type {
   MapDecoration,
   MapHazard,
   MapTheme,
+  TowerType,
   WaveGroup,
   SpecialTowerType,
 } from "../types";
@@ -15,6 +16,11 @@ export interface CustomSpecialTowerConfig {
   pos: GridPoint;
   type: SpecialTowerType;
   hp?: number;
+}
+
+export interface CustomPlacedTowerConfig {
+  pos: GridPoint;
+  type: TowerType;
 }
 
 export interface CustomLevelDefinition {
@@ -31,6 +37,9 @@ export interface CustomLevelDefinition {
   secondaryPath?: GridPoint[];
   heroSpawn?: GridPoint;
   specialTower?: CustomSpecialTowerConfig;
+  specialTowers?: CustomSpecialTowerConfig[];
+  placedTowers?: CustomPlacedTowerConfig[];
+  allowedTowers?: TowerType[];
   decorations: MapDecoration[];
   hazards: MapHazard[];
   createdAt: number;
@@ -51,6 +60,9 @@ export interface CustomLevelDraftInput {
   secondaryPath?: GridPoint[];
   heroSpawn?: GridPoint;
   specialTower?: CustomSpecialTowerConfig;
+  specialTowers?: CustomSpecialTowerConfig[];
+  placedTowers?: CustomPlacedTowerConfig[];
+  allowedTowers?: TowerType[];
   decorations?: MapDecoration[];
   hazards?: MapHazard[];
 }

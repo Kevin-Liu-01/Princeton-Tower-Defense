@@ -1420,5 +1420,6 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     </div>
   );
 
+  if (typeof document === "undefined") return null;
   return createPortal(modalContent, document.body);
 };

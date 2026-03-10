@@ -1,4 +1,4 @@
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
 
 export function drawHarpyEnemy(
   ctx: CanvasRenderingContext2D,
@@ -799,14 +799,13 @@ export function drawHarpyEnemy(
     ctx.fill();
   }
 
-  // === WIND GLOW RINGS ===
-  drawPulsingGlowRings(ctx, x, y + swoop, size * 0.3, time, zoom, {
+  // === WIND GUSTS ===
+  drawWindGusts(ctx, x, y + swoop, size * 0.3, time, zoom, {
     color: "rgba(167, 139, 250, 0.4)",
-    count: 3,
-    speed: 2,
+    count: 5,
+    speed: 2.5,
     maxAlpha: 0.35,
-    expansion: 1.8,
-    lineWidth: 1.5,
+    gustLength: 0.6,
   });
 
   // === FLOATING FEATHER SHARDS (orbiting) ===
@@ -1775,14 +1774,14 @@ export function drawWyvernEnemy(
     },
   );
 
-  // === DRACONIC GLOW RINGS ===
-  drawPulsingGlowRings(ctx, x, y + hoverBob, size * 0.35, time, zoom, {
-    color: "rgba(74, 222, 128, 0.4)",
-    count: 4,
+  // === DRACONIC EMBER SPARKS ===
+  drawEmberSparks(ctx, x, y + hoverBob, size * 0.35, time, zoom, {
+    color: "rgba(74, 222, 128, 0.45)",
+    coreColor: "rgba(180, 255, 160, 0.7)",
+    count: 6,
     speed: 1.2,
-    maxAlpha: 0.3,
-    expansion: 2.0,
-    lineWidth: 2,
+    maxAlpha: 0.35,
+    sparkSize: 0.06,
   });
 
   // === FLOATING SCALE SEGMENTS (diamond) ===

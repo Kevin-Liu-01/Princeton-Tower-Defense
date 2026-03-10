@@ -5,6 +5,8 @@ import type {
   CustomLevelDefinition,
   CustomLevelDraftInput,
   CustomLevelUpsertResult,
+  CustomPlacedTowerConfig,
+  CustomSpecialTowerConfig,
 } from "../../../customLevels/types";
 import type {
   CreatorDraftState,
@@ -210,15 +212,20 @@ export function useCreatorDraft(
         currentDraft.secondaryPath.length > 0 ? currentDraft.secondaryPath : undefined,
       heroSpawn: currentDraft.heroSpawn ?? undefined,
       specialTower:
-        currentDraft.specialTowerEnabled && currentDraft.specialTowerPos
-          ? {
-            pos: currentDraft.specialTowerPos,
-            type: currentDraft.specialTowerType,
-            hp:
-              currentDraft.specialTowerType === "vault"
-                ? currentDraft.specialTowerHp
-                : undefined,
-          }
+        currentDraft.specialTowers.length === 1
+          ? currentDraft.specialTowers[0]
+          : undefined,
+      specialTowers:
+        currentDraft.specialTowers.length > 0
+          ? currentDraft.specialTowers
+          : undefined,
+      placedTowers:
+        currentDraft.placedTowers.length > 0
+          ? currentDraft.placedTowers
+          : undefined,
+      allowedTowers:
+        currentDraft.allowedTowers.length > 0
+          ? currentDraft.allowedTowers
           : undefined,
       decorations: currentDraft.decorations,
       hazards: currentDraft.hazards,
@@ -267,6 +274,10 @@ export function useCreatorDraft(
       const presetDecorations = cloneDecorations(preset.decorations);
       const presetHazards = cloneHazards(preset.hazards);
 
+      const specialTowers: CustomSpecialTowerConfig[] = preset.specialTower
+        ? [{ pos: { ...preset.specialTower.pos }, type: preset.specialTower.type, hp: preset.specialTower.hp }]
+        : [];
+
       applyDraftUpdate((prev) => ({
         ...prev,
         theme: preset.theme ?? prev.theme,
@@ -274,13 +285,7 @@ export function useCreatorDraft(
         startingPawPoints: preset.startingPawPoints ?? prev.startingPawPoints,
         waveTemplate: nextPresetId,
         customWaves: [],
-        specialTowerEnabled: Boolean(preset.specialTower),
-        specialTowerType: preset.specialTower?.type ?? "beacon",
-        specialTowerHp:
-          preset.specialTower?.type === "vault"
-            ? Math.max(1, Math.round(preset.specialTower.hp ?? 800))
-            : 800,
-        specialTowerPos: preset.specialTower ? { ...preset.specialTower.pos } : null,
+        specialTowers,
         decorations: presetDecorations,
         hazards: presetHazards,
       }));

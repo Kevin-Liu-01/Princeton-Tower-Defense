@@ -91,11 +91,16 @@ export function renderHero(
   const size = 32 * zoom * heroScale;
   const attackPhase = hero.attackAnim > 0 ? hero.attackAnim / 300 : 0;
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.2 : 1;
-  const facingRight =
+  const FLIP_ON_ATTACK_HEROES = new Set(["mathey", "captain"]);
+  const baseFacing =
     hero.facingRight ??
     (typeof hero.rotation === "number"
       ? Math.cos(hero.rotation + Math.PI / 4) >= 0
       : true);
+  const facingRight =
+    attackPhase > 0 && FLIP_ON_ATTACK_HEROES.has(hero.type)
+      ? !baseFacing
+      : baseFacing;
   const targetScreenPos = targetPos
     ? worldToScreen(
         targetPos,

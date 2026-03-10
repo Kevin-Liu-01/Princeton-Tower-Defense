@@ -6,6 +6,7 @@ import {
   MapPin,
   Paintbrush,
   Redo2,
+  Sword,
   Undo2,
   ZoomIn,
   ZoomOut,
@@ -109,81 +110,85 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
     targetMatches(selection, "secondary_path") ||
     targetMatches(hoverSelectionTarget, "secondary_path");
 
-  const activeToolEntry = TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0];
-  const ActiveToolIcon = activeToolEntry.icon;
+  const activeToolHint = TOOL_HINTS[tool] ?? "";
+  const ActiveToolIcon =
+    (TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0]).icon;
 
   return (
-    <section className="rounded-2xl border border-amber-800/50 bg-black/20 p-3 min-h-0 flex flex-col overflow-hidden">
+    <section className="rounded-2xl border border-amber-800/30 bg-black/20 p-2 min-h-0 flex flex-col overflow-hidden">
       {/* Toolbar strip */}
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="text-xs text-amber-300/80 inline-flex items-center gap-1.5">
-          <Compass size={13} />
-          Isometric Sandbox
+      <div className="flex items-center gap-1.5 mb-1.5 px-1">
+        {/* Undo / Redo / Erase */}
+        <div className="flex items-center gap-0.5 rounded-lg border border-amber-800/25 bg-stone-950/50 p-0.5">
+          <button
+            onClick={onUndo}
+            disabled={undoCount === 0}
+            className="inline-flex h-6 w-7 items-center justify-center rounded-md disabled:opacity-30 hover:bg-stone-800/80 transition-colors text-amber-300/80"
+            title={`Undo (${undoCount})`}
+          >
+            <Undo2 size={12} />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={redoCount === 0}
+            className="inline-flex h-6 w-7 items-center justify-center rounded-md disabled:opacity-30 hover:bg-stone-800/80 transition-colors text-amber-300/80"
+            title={`Redo (${redoCount})`}
+          >
+            <Redo2 size={12} />
+          </button>
+          <div className="w-px h-4 bg-amber-800/25" />
+          <button
+            onClick={() => onToolSelect("erase")}
+            className={`inline-flex h-6 w-7 items-center justify-center rounded-md transition-colors ${tool === "erase"
+              ? "bg-red-600/25 text-red-200"
+              : "text-amber-300/80 hover:bg-stone-800/80"
+              }`}
+            title="Erase tool"
+          >
+            <Eraser size={12} />
+          </button>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-end gap-1.5 text-[11px] text-amber-300/80 whitespace-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <button
-              onClick={onUndo}
-              disabled={undoCount === 0}
-              className="inline-flex h-7 items-center rounded border border-amber-700/60 bg-stone-900/80 px-2 disabled:opacity-50 hover:bg-stone-800/80 transition-colors"
-              title="Undo"
-            >
-              <Undo2 size={12} />
-            </button>
-            <button
-              onClick={onRedo}
-              disabled={redoCount === 0}
-              className="inline-flex h-7 items-center rounded border border-amber-700/60 bg-stone-900/80 px-2 disabled:opacity-50 hover:bg-stone-800/80 transition-colors"
-              title="Redo"
-            >
-              <Redo2 size={12} />
-            </button>
-            <button
-              onClick={() => onToolSelect("erase")}
-              className={`inline-flex h-7 items-center rounded border px-2 transition-colors ${tool === "erase"
-                ? "border-red-500/80 bg-red-700/20 text-red-100"
-                : "border-amber-700/60 bg-stone-900/80 hover:bg-stone-800/80"
-                }`}
-              title="Erase tool"
-            >
-              <Eraser size={12} />
-            </button>
-            <button
-              onClick={onZoomOut}
-              className="inline-flex h-7 items-center justify-center rounded border border-amber-700/60 bg-stone-900/80 px-2 hover:bg-stone-800/80 transition-colors"
-              title="Zoom out"
-            >
-              <ZoomOut size={12} />
-            </button>
-            <button
-              onClick={onZoomIn}
-              className="inline-flex h-7 items-center justify-center rounded border border-amber-700/60 bg-stone-900/80 px-2 hover:bg-stone-800/80 transition-colors"
-              title="Zoom in"
-            >
-              <ZoomIn size={12} />
-            </button>
-            <span className="inline-flex h-7 w-[60px] items-center justify-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200 tabular-nums">
-              <ZoomIn size={12} />
-              {Math.round(zoom * 100)}%
-            </span>
-            <span className="inline-flex h-7 items-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200">
-              <Paintbrush size={12} />
-              {decorationCount}
-            </span>
-            <span className="inline-flex h-7 items-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200">
-              <AlertTriangle size={12} />
-              {hazardCount}
-            </span>
-            <span className="inline-flex h-7 w-[60px] items-center justify-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200 tabular-nums">
-              <MapPin size={12} />
-              {formatPointLabel(hoverPoint)}
-            </span>
-          </div>
+
+        {/* Zoom */}
+        <div className="flex items-center gap-0.5 rounded-lg border border-amber-800/25 bg-stone-950/50 p-0.5">
+          <button
+            onClick={onZoomOut}
+            className="inline-flex h-6 w-7 items-center justify-center rounded-md hover:bg-stone-800/80 transition-colors text-amber-300/80"
+            title="Zoom out"
+          >
+            <ZoomOut size={12} />
+          </button>
+          <span className="text-[10px] text-amber-200 tabular-nums w-8 text-center font-medium">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={onZoomIn}
+            className="inline-flex h-6 w-7 items-center justify-center rounded-md hover:bg-stone-800/80 transition-colors text-amber-300/80"
+            title="Zoom in"
+          >
+            <ZoomIn size={12} />
+          </button>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Stats pills */}
+        <div className="flex items-center gap-1 text-[10px]">
+          <span className="inline-flex items-center gap-1 rounded-md border border-amber-900/30 bg-stone-950/50 px-1.5 py-0.5 text-amber-300/70">
+            <Paintbrush size={10} /> {decorationCount}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md border border-amber-900/30 bg-stone-950/50 px-1.5 py-0.5 text-amber-300/70">
+            <AlertTriangle size={10} /> {hazardCount}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md border border-amber-900/30 bg-stone-950/50 px-1.5 py-0.5 text-amber-200 tabular-nums font-medium">
+            <MapPin size={10} />
+            {formatPointLabel(hoverPoint)}
+          </span>
         </div>
       </div>
 
       {/* SVG board */}
-      <div className="rounded-xl border border-amber-800/50 bg-stone-950/80 p-2 min-h-0 flex flex-col flex-1">
+      <div className="rounded-xl border border-amber-800/30 bg-stone-950/80 p-1.5 min-h-0 flex flex-col flex-1">
         <div className="relative w-full flex-1 min-h-[560px]">
           <svg
             ref={boardRef}
@@ -395,29 +400,44 @@ export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
               />
             )}
 
-            {/* Special tower */}
-            {draft.specialTowerPos && (
+            {/* Special towers (objectives) */}
+            {draft.specialTowers.map((st, index) => (
               <IsoMarker
-                point={draft.specialTowerPos}
-                label="OBJ"
+                key={`obj-${index}-${st.pos.x}-${st.pos.y}`}
+                point={st.pos}
+                label={`OBJ${draft.specialTowers.length > 1 ? index + 1 : ""}`}
                 fill="rgba(217, 70, 239, 0.98)"
                 stroke="rgba(60, 16, 74, 0.95)"
-                selected={targetMatches(selection, "special_tower")}
-                highlighted={targetMatches(hoverSelectionTarget, "special_tower")}
-                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "special_tower")}
-                onPointerDown={(event) => startDragTarget({ kind: "special_tower" }, event)}
+                selected={targetMatches(selection, "special_tower", index)}
+                highlighted={targetMatches(hoverSelectionTarget, "special_tower", index)}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "special_tower", index)}
+                onPointerDown={(event) => startDragTarget({ kind: "special_tower", index }, event)}
               />
-            )}
+            ))}
+
+            {/* Placed towers */}
+            {draft.placedTowers.map((t, index) => (
+              <IsoMarker
+                key={`tw-${index}-${t.pos.x}-${t.pos.y}`}
+                point={t.pos}
+                label="T"
+                fill="rgba(59, 130, 246, 0.98)"
+                stroke="rgba(15, 23, 42, 0.95)"
+                selected={targetMatches(selection, "tower", index)}
+                highlighted={targetMatches(hoverSelectionTarget, "tower", index)}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "tower", index)}
+                onPointerDown={(event) => startDragTarget({ kind: "tower", index }, event)}
+              />
+            ))}
           </svg>
 
           {/* Tool hint overlay */}
-          <div className="absolute top-3 left-3 z-10 pointer-events-none inline-flex items-center gap-1.5 rounded-md border border-amber-700/65 bg-stone-950/80 px-2 py-1 text-[11px] text-amber-200">
-            <ActiveToolIcon size={12} />
-            {TOOL_HINTS[tool]}
+          <div className="absolute top-2 left-2 z-10 pointer-events-none inline-flex items-center gap-1.5 rounded-lg border border-amber-700/30 bg-stone-950/85 backdrop-blur-sm px-2 py-1 text-[10px] text-amber-200/90">
+            <ActiveToolIcon size={11} />
+            {activeToolHint}
           </div>
-          <div className="absolute top-3 right-3 z-10 pointer-events-none inline-flex items-center gap-1.5 rounded-md border border-amber-700/65 bg-stone-950/80 px-2 py-1 text-[11px] text-amber-200">
-            <Compass size={12} />
-            wheel to zoom &middot; alt+drag to pan
+          <div className="absolute bottom-2 right-2 z-10 pointer-events-none rounded-lg border border-amber-800/20 bg-stone-950/70 px-2 py-0.5 text-[9px] text-amber-400/40">
+            scroll to zoom &middot; alt+drag to pan
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import type { Position, TroopOwnerType } from "../../types";
+import type { MapTheme } from "../../constants/maps";
 import { getKnightTheme } from "./knightThemes";
 import {
   resolveWeaponRotation,
@@ -18,9 +19,9 @@ export function drawKnightTroop(
   attackPhase: number = 0,
   ownerType?: TroopOwnerType,
   targetPos?: Position,
+  mapTheme?: MapTheme,
 ) {
-  // Get theme based on owner type
-  const theme = getKnightTheme(ownerType);
+  const theme = getKnightTheme(ownerType, mapTheme);
 
   // DARK CHAMPION - Elite Knight with Soul-Forged Greatsword
   const stance = Math.sin(time * 3) * 1;

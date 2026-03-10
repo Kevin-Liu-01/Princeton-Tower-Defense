@@ -1,7 +1,7 @@
 // Volcanic region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 // =====================================================
 // VOLCANIC REGION TROOPS
@@ -461,14 +461,13 @@ export function drawMagmaSpawnEnemy(
     ctx.fill();
   }
 
-  // Lava glow rings
-  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.3, time, zoom, {
-    color: "rgba(251, 146, 60, 0.4)",
-    count: 3,
+  // Rising ember sparks
+  drawEmberSparks(ctx, x, y - size * 0.1, size * 0.3, time, zoom, {
+    color: "rgba(251, 146, 60, 0.5)",
+    coreColor: "rgba(255, 230, 150, 0.8)",
+    count: 6,
     speed: 1.2,
-    maxAlpha: 0.35,
-    expansion: 1.8,
-    lineWidth: 2,
+    maxAlpha: 0.45,
   });
 
   // Floating magma segments
@@ -1116,14 +1115,13 @@ export function drawFireImpEnemy(
   );
   ctx.fill();
 
-  // Fire glow rings
-  drawPulsingGlowRings(ctx, x, y - size * 0.05 - hop, size * 0.2, time, zoom, {
-    color: "rgba(251, 191, 36, 0.4)",
-    count: 3,
-    speed: 2,
-    maxAlpha: 0.3,
-    expansion: 2,
-    lineWidth: 1.5,
+  // Fire ember sparks
+  drawEmberSparks(ctx, x, y - size * 0.05 - hop, size * 0.2, time, zoom, {
+    color: "rgba(251, 191, 36, 0.5)",
+    coreColor: "rgba(255, 255, 200, 0.9)",
+    count: 5,
+    speed: 2.0,
+    maxAlpha: 0.4,
   });
 
   // Floating ember shards
@@ -1934,14 +1932,14 @@ export function drawEmberGuardEnemy(
     ctx.fill();
   }
 
-  // Molten glow rings
-  drawPulsingGlowRings(ctx, x, y - size * 0.2, size * 0.25, time, zoom, {
-    color: "rgba(249, 115, 22, 0.4)",
-    count: 3,
-    speed: 1,
-    maxAlpha: 0.3,
-    expansion: 2,
-    lineWidth: 2,
+  // Molten ember sparks
+  drawEmberSparks(ctx, x, y - size * 0.2, size * 0.25, time, zoom, {
+    color: "rgba(249, 115, 22, 0.5)",
+    coreColor: "rgba(255, 220, 160, 0.85)",
+    count: 7,
+    speed: 1.0,
+    maxAlpha: 0.4,
+    sparkSize: 0.06,
   });
 
   // Floating obsidian armor segments

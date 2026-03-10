@@ -10,6 +10,8 @@ import {
   drawAnimatedArm,
   drawAnimatedLegs,
   drawPulsingGlowRings,
+  drawShadowWisps,
+  drawPoisonBubbles,
   drawShiftingSegments,
   drawOrbitingDebris,
   drawAnimatedTendril,
@@ -740,14 +742,13 @@ export function drawSpecterEnemy(
     }
   }
 
-  // --- Pulsing ethereal blue glow rings ---
-  drawPulsingGlowRings(ctx, x, y + phase, size * 0.35, time, zoom, {
-    color: "rgba(56, 189, 248, 0.4)",
+  // --- Ethereal shadow wisps ---
+  drawShadowWisps(ctx, x, y + phase, size * 0.35, time, zoom, {
+    color: "rgba(56, 189, 248, 0.35)",
     count: 4,
     speed: 1.2,
-    maxAlpha: 0.35,
-    expansion: 1.8,
-    lineWidth: 1.5,
+    maxAlpha: 0.3,
+    wispLength: 0.45,
   });
 
   // --- Shifting ethereal segments ---
@@ -3021,14 +3022,13 @@ export function drawNecromancerEnemy(
   ctx.fill();
   clearShadow(ctx);
 
-  // --- Purple-green death glow rings ---
-  drawPulsingGlowRings(ctx, x, y + hover, size * 0.4, time, zoom, {
-    color: "rgba(74, 222, 128, 0.4)",
-    count: 4,
+  // --- Death shadow wisps ---
+  drawShadowWisps(ctx, x, y + hover, size * 0.4, time, zoom, {
+    color: "rgba(74, 222, 128, 0.35)",
+    count: 5,
     speed: 1.5,
-    maxAlpha: 0.4,
-    expansion: 1.7,
-    lineWidth: 1.5,
+    maxAlpha: 0.35,
+    wispLength: 0.5,
   });
 
   // --- Floating skull/bone shards ---
@@ -3741,14 +3741,13 @@ export function drawShadowKnightEnemy(
   clearShadow(ctx);
   ctx.restore();
 
-  // --- Dark purple glow rings ---
-  drawPulsingGlowRings(ctx, x, y + stance, size * 0.4, time, zoom, {
-    color: "rgba(139, 92, 246, 0.45)",
-    count: 3,
+  // --- Dark shadow wisps ---
+  drawShadowWisps(ctx, x, y + stance, size * 0.4, time, zoom, {
+    color: "rgba(139, 92, 246, 0.4)",
+    count: 4,
     speed: 1.8,
-    maxAlpha: 0.4,
-    expansion: 1.5,
-    lineWidth: 2,
+    maxAlpha: 0.35,
+    wispLength: 0.45,
   });
 
   // --- Floating shadow plate segments ---
@@ -4262,14 +4261,13 @@ export function drawCultistEnemy(
     }
   }
 
-  // --- Sickly dark glow rings ---
-  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
-    color: "rgba(255, 100, 50, 0.35)",
+  // --- Sickly shadow wisps ---
+  drawShadowWisps(ctx, x, y, size * 0.35, time, zoom, {
+    color: "rgba(255, 100, 50, 0.3)",
     count: 3,
     speed: 1.5,
-    maxAlpha: 0.3,
-    expansion: 1.6,
-    lineWidth: 1.5,
+    maxAlpha: 0.28,
+    wispLength: 0.4,
   });
 
   // --- Floating ritual symbol shards ---
@@ -5046,14 +5044,13 @@ export function drawPlaguebearerEnemy(
   );
   ctx.fill();
 
-  // --- Toxic green pulsing glow rings ---
-  drawPulsingGlowRings(ctx, x, y, size * 0.4, time, zoom, {
-    color: "rgba(132, 204, 22, 0.4)",
-    count: 4,
-    speed: 1.5,
-    maxAlpha: 0.35,
-    expansion: 1.8,
-    lineWidth: 1.5,
+  // --- Toxic plague bubbles ---
+  drawPoisonBubbles(ctx, x, y, size * 0.4, time, zoom, {
+    color: "rgba(132, 204, 22, 0.45)",
+    count: 6,
+    speed: 1.3,
+    maxAlpha: 0.4,
+    spread: 0.9,
   });
 
   // --- Floating plague cloud pieces ---

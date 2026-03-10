@@ -1,5 +1,9 @@
 import type { WaveGroup } from "../../../types";
-import type { CustomLevelDefinition } from "../../../customLevels/types";
+import type {
+  CustomLevelDefinition,
+  CustomSpecialTowerConfig,
+  CustomPlacedTowerConfig,
+} from "../../../customLevels/types";
 import type { CreatorDraftState, GridPoint } from "../types";
 import { ENEMY_OPTIONS } from "../constants";
 
@@ -23,13 +27,22 @@ export const createEmptyDraft = (): CreatorDraftState => ({
   primaryPath: [],
   secondaryPath: [],
   heroSpawn: null,
-  specialTowerEnabled: false,
-  specialTowerType: "beacon",
-  specialTowerHp: 800,
-  specialTowerPos: null,
+  specialTowers: [],
+  placedTowers: [],
+  allowedTowers: [],
   decorations: [],
   hazards: [],
 });
+
+const migrateSpecialTowers = (level: CustomLevelDefinition): CustomSpecialTowerConfig[] => {
+  if (level.specialTowers && level.specialTowers.length > 0) {
+    return level.specialTowers.map((st) => ({ ...st, pos: { ...st.pos } }));
+  }
+  if (level.specialTower) {
+    return [{ ...level.specialTower, pos: { ...level.specialTower.pos } }];
+  }
+  return [];
+};
 
 export const levelToDraft = (level: CustomLevelDefinition): CreatorDraftState => ({
   id: level.id,
@@ -45,10 +58,9 @@ export const levelToDraft = (level: CustomLevelDefinition): CreatorDraftState =>
   primaryPath: [...level.primaryPath],
   secondaryPath: [...(level.secondaryPath ?? [])],
   heroSpawn: level.heroSpawn ?? null,
-  specialTowerEnabled: Boolean(level.specialTower),
-  specialTowerType: level.specialTower?.type ?? "beacon",
-  specialTowerHp: level.specialTower?.hp ?? 800,
-  specialTowerPos: level.specialTower?.pos ?? null,
+  specialTowers: migrateSpecialTowers(level),
+  placedTowers: (level.placedTowers ?? []).map((t) => ({ ...t, pos: { ...t.pos } })),
+  allowedTowers: [...(level.allowedTowers ?? [])],
   decorations: level.decorations.map((deco) => ({ ...deco, pos: { ...deco.pos } })),
   hazards: level.hazards.map((hazard) => ({ ...hazard })),
 });
@@ -59,7 +71,9 @@ export const cloneDraftState = (draft: CreatorDraftState): CreatorDraftState => 
   primaryPath: draft.primaryPath.map((point) => ({ ...point })),
   secondaryPath: draft.secondaryPath.map((point) => ({ ...point })),
   heroSpawn: draft.heroSpawn ? { ...draft.heroSpawn } : null,
-  specialTowerPos: draft.specialTowerPos ? { ...draft.specialTowerPos } : null,
+  specialTowers: draft.specialTowers.map((st) => ({ ...st, pos: { ...st.pos } })),
+  placedTowers: draft.placedTowers.map((t) => ({ ...t, pos: { ...t.pos } })),
+  allowedTowers: [...draft.allowedTowers],
   decorations: draft.decorations.map((deco) => ({
     ...deco,
     pos: { ...deco.pos },
@@ -82,9 +96,6 @@ export const validateDraft = (draft: CreatorDraftState): string[] => {
   }
   if (!draft.heroSpawn) {
     errors.push("Hero spawn is required.");
-  }
-  if (draft.specialTowerEnabled && !draft.specialTowerPos) {
-    errors.push("Special tower is enabled but not placed.");
   }
   return errors;
 };

@@ -1,5 +1,7 @@
 import { ISO_TAN, ISO_Y_RATIO } from "../../constants";
+import type { MapTheme } from "../../constants/maps";
 import { drawIsoFlushSlit, drawIsoFlushDoor } from "../isoFlush";
+import { getBarracksBuildingPalette } from "./barracksTheme";
 
 // Special Building Types rendering
 function drawChronoRelayBuilding(
@@ -1251,6 +1253,7 @@ export function renderSpecialBuilding(
   vaultFlash: number,
   boostedTowerCount: number = 0,
   chargeProgress: number = 0,
+  mapTheme?: MapTheme,
 ): void {
   const s = zoom;
   const time = Date.now() / 1000;
@@ -4274,6 +4277,7 @@ export function renderSpecialBuilding(
     }
 
     case "barracks": {
+      const bp = getBarracksBuildingPalette(mapTheme);
       const spawnCycle = Date.now() % 12000;
       const isSpawning = spawnCycle < 1500;
       const isPreparing = spawnCycle > 10500;
@@ -4292,14 +4296,14 @@ export function renderSpecialBuilding(
         ctx.translate(0, spawnCircleY * 0.5);
         ctx.scale(1, ISO_Y_RATIO);
         ctx.rotate(time * 2);
-        ctx.strokeStyle = `rgba(79, 195, 247, ${1 - spawnCycle / 1500})`;
+        ctx.strokeStyle = `rgba(${bp.glowRgb}, ${1 - spawnCycle / 1500})`;
         ctx.lineWidth = 3 * s;
         ctx.setLineDash([8 * s, 4 * s]);
         ctx.beginPath();
         ctx.arc(0, 0, 45 * s, 0, Math.PI * 2);
         ctx.stroke();
         ctx.rotate(-time * 3);
-        ctx.strokeStyle = `rgba(100, 220, 255, ${0.8 * (1 - spawnCycle / 1500)})`;
+        ctx.strokeStyle = `rgba(${bp.glowRgbBright}, ${0.8 * (1 - spawnCycle / 1500)})`;
         ctx.setLineDash([4 * s, 8 * s]);
         ctx.beginPath();
         ctx.arc(0, 0, 30 * s, 0, Math.PI * 2);
@@ -4320,9 +4324,9 @@ export function renderSpecialBuilding(
       const bTanOff = bw * tanA + 2 * s;
       // Left face
       const baseGradL = ctx.createLinearGradient(-bw, -bTanOff, 0, 0);
-      baseGradL.addColorStop(0, "#2B3940");
-      baseGradL.addColorStop(0.5, "#37474F");
-      baseGradL.addColorStop(1, "#3D5058");
+      baseGradL.addColorStop(0, bp.foundationL[0]);
+      baseGradL.addColorStop(0.5, bp.foundationL[1]);
+      baseGradL.addColorStop(1, bp.foundationL[2]);
       ctx.fillStyle = baseGradL;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -4332,9 +4336,9 @@ export function renderSpecialBuilding(
       ctx.fill();
       // Right face
       const baseGradR = ctx.createLinearGradient(0, 0, bw, -bTanOff);
-      baseGradR.addColorStop(0, "#4A6270");
-      baseGradR.addColorStop(0.5, "#546E7A");
-      baseGradR.addColorStop(1, "#4E6672");
+      baseGradR.addColorStop(0, bp.foundationR[0]);
+      baseGradR.addColorStop(0.5, bp.foundationR[1]);
+      baseGradR.addColorStop(1, bp.foundationR[2]);
       ctx.fillStyle = baseGradR;
       ctx.beginPath();
       ctx.moveTo(0, 0);
@@ -4343,7 +4347,7 @@ export function renderSpecialBuilding(
       ctx.lineTo(0, -baseH);
       ctx.fill();
       // Top face
-      ctx.fillStyle = "#4E5D63";
+      ctx.fillStyle = bp.foundationTop;
       ctx.beginPath();
       ctx.moveTo(0, -baseH);
       ctx.lineTo(-bw, -bTanOff - baseH);
@@ -4372,7 +4376,7 @@ export function renderSpecialBuilding(
       ctx.stroke();
       // Corner rivets
       const rivetR = 1.5 * s;
-      ctx.fillStyle = "#2B3940";
+      ctx.fillStyle = bp.stoneDark;
       ctx.beginPath();
       ctx.arc(0, -baseH * 0.5, rivetR, 0, Math.PI * 2);
       ctx.fill();
@@ -4434,7 +4438,7 @@ export function renderSpecialBuilding(
         const plinthExt = 3 * s;
         const pw = bw + plinthExt;
         const pTanOff = pw * tanA + 2 * s;
-        ctx.fillStyle = "#283338";
+        ctx.fillStyle = bp.plinth[0];
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(-pw, -pTanOff);
@@ -4442,7 +4446,7 @@ export function renderSpecialBuilding(
         ctx.lineTo(0, -plinthH);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#37474F";
+        ctx.fillStyle = bp.plinth[1];
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(pw, -pTanOff);
@@ -4450,7 +4454,7 @@ export function renderSpecialBuilding(
         ctx.lineTo(0, -plinthH);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#3D4F59";
+        ctx.fillStyle = bp.plinth[2];
         ctx.beginPath();
         ctx.moveTo(0, -plinthH);
         ctx.lineTo(-pw, -pTanOff - plinthH);
@@ -4483,7 +4487,7 @@ export function renderSpecialBuilding(
           }
           ctx.fillStyle = "#1a1a1a";
           ctx.fillRect(-3 * s, -2 * s, 6 * s, 4 * s);
-          ctx.strokeStyle = "#2B3940";
+          ctx.strokeStyle = bp.stoneDark;
           ctx.lineWidth = 0.8 * s;
           for (let gi = 0; gi < 3; gi++) {
             const gx = -2 * s + gi * 2 * s;
@@ -4503,10 +4507,10 @@ export function renderSpecialBuilding(
         0,
         -baseH,
       );
-      wallGradL.addColorStop(0, "#344550");
-      wallGradL.addColorStop(0.3, "#3D4F59");
-      wallGradL.addColorStop(0.7, "#455A64");
-      wallGradL.addColorStop(1, "#4A6270");
+      wallGradL.addColorStop(0, bp.wallL[0]);
+      wallGradL.addColorStop(0.3, bp.wallL[1]);
+      wallGradL.addColorStop(0.7, bp.wallL[2]);
+      wallGradL.addColorStop(1, bp.wallL[3]);
       ctx.fillStyle = wallGradL;
       ctx.beginPath();
       ctx.moveTo(0, -baseH);
@@ -4521,10 +4525,10 @@ export function renderSpecialBuilding(
         w,
         -w * tanA - baseH,
       );
-      wallGradR.addColorStop(0, "#6B8794");
-      wallGradR.addColorStop(0.3, "#607D8B");
-      wallGradR.addColorStop(0.7, "#546E7A");
-      wallGradR.addColorStop(1, "#4C6470");
+      wallGradR.addColorStop(0, bp.wallR[0]);
+      wallGradR.addColorStop(0.3, bp.wallR[1]);
+      wallGradR.addColorStop(0.7, bp.wallR[2]);
+      wallGradR.addColorStop(1, bp.wallR[3]);
       ctx.fillStyle = wallGradR;
       ctx.beginPath();
       ctx.moveTo(0, -baseH);
@@ -4626,7 +4630,7 @@ export function renderSpecialBuilding(
         const qh = 8 * s;
         const qw = 5 * s;
         // Left quoin (iso-aligned to left wall)
-        ctx.fillStyle = i % 2 === 0 ? "#37474F" : "#3D5058";
+        ctx.fillStyle = i % 2 === 0 ? bp.quoinL[0] : bp.quoinL[1];
         ctx.beginPath();
         ctx.moveTo(0, qy);
         ctx.lineTo(-qw, qy - qw * tanA);
@@ -4635,7 +4639,7 @@ export function renderSpecialBuilding(
         ctx.closePath();
         ctx.fill();
         // Right quoin (iso-aligned to right wall)
-        ctx.fillStyle = i % 2 === 0 ? "#546E7A" : "#4E6672";
+        ctx.fillStyle = i % 2 === 0 ? bp.quoinR[0] : bp.quoinR[1];
         ctx.beginPath();
         ctx.moveTo(0, qy);
         ctx.lineTo(qw, qy - qw * tanA);
@@ -4655,8 +4659,8 @@ export function renderSpecialBuilding(
         0,
         corniceY,
       );
-      cornGradL.addColorStop(0, "#2B3940");
-      cornGradL.addColorStop(1, "#37474F");
+      cornGradL.addColorStop(0, bp.corniceL[0]);
+      cornGradL.addColorStop(1, bp.corniceL[1]);
       ctx.fillStyle = cornGradL;
       ctx.beginPath();
       ctx.moveTo(0, corniceY);
@@ -4671,8 +4675,8 @@ export function renderSpecialBuilding(
         w,
         -w * tanA + corniceY,
       );
-      cornGradR.addColorStop(0, "#4A6270");
-      cornGradR.addColorStop(1, "#3D5058");
+      cornGradR.addColorStop(0, bp.corniceR[0]);
+      cornGradR.addColorStop(1, bp.corniceR[1]);
       ctx.fillStyle = cornGradR;
       ctx.beginPath();
       ctx.moveTo(0, corniceY);
@@ -4708,11 +4712,11 @@ export function renderSpecialBuilding(
       {
         const slitHighY = -w * tanA * 0.5 - h * 0.7 - baseH;
         drawIsoFlushSlit(ctx, -w * 0.5, slitHighY, 2.5, 9, "left", s, {
-          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+          glowColor: isPreparing ? `rgba(${bp.glowRgb}` : undefined,
           glowAlpha: 0.4,
         });
         drawIsoFlushSlit(ctx, w * 0.5, slitHighY, 2.5, 9, "right", s, {
-          glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+          glowColor: isPreparing ? `rgba(${bp.glowRgb}` : undefined,
           glowAlpha: 0.4,
         });
         // Second row — flanking slits further out
@@ -4746,11 +4750,11 @@ export function renderSpecialBuilding(
       ctx.save();
       if (isPreparing || isSpawning) {
         ctx.shadowBlur = 20 * s;
-        ctx.shadowColor = "#4FC3F7";
+        ctx.shadowColor = bp.glowHex;
       }
 
       // Archway stone surround (voussoirs)
-      ctx.fillStyle = "#37474F";
+      ctx.fillStyle = bp.stoneMid;
       ctx.beginPath();
       ctx.moveTo(-12 * s, doorY);
       ctx.lineTo(-12 * s, doorY - 18 * s);
@@ -4798,8 +4802,8 @@ export function renderSpecialBuilding(
       // Door interior
       const archGrad = ctx.createLinearGradient(0, doorY - 22 * s, 0, doorY);
       archGrad.addColorStop(0, "#0a0a12");
-      archGrad.addColorStop(0.5, isPreparing ? "#0D47A1" : "#1a1a2e");
-      archGrad.addColorStop(1, isPreparing ? "#1565C0" : "#263238");
+      archGrad.addColorStop(0.5, isPreparing ? bp.doorGlowDark : "#1a1a2e");
+      archGrad.addColorStop(1, isPreparing ? bp.doorGlowMid : "#263238");
       ctx.fillStyle = archGrad;
       ctx.beginPath();
       ctx.moveTo(-8.5 * s, doorY);
@@ -5279,7 +5283,7 @@ export function renderSpecialBuilding(
       {
         const parH = 5 * s;
         // Back-left parapet wall (rL → rB)
-        ctx.fillStyle = "#2D3B42";
+        ctx.fillStyle = bp.wallL[0];
         ctx.beginPath();
         ctx.moveTo(rL.x, rL.y - eaveH);
         ctx.lineTo(rB.x, rB.y - eaveH);
@@ -5288,7 +5292,7 @@ export function renderSpecialBuilding(
         ctx.closePath();
         ctx.fill();
         // Back-right parapet wall (rB → rR)
-        ctx.fillStyle = "#344550";
+        ctx.fillStyle = bp.wallL[1];
         ctx.beginPath();
         ctx.moveTo(rB.x, rB.y - eaveH);
         ctx.lineTo(rR.x, rR.y - eaveH);
@@ -5310,7 +5314,7 @@ export function renderSpecialBuilding(
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
-          ctx.fillStyle = mi % 2 === 0 ? "#2D3B42" : "#263238";
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallL[0] : bp.stoneDark;
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny);
           ctx.lineTo(mx + nx, my + ny);
@@ -5318,7 +5322,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(mx - nx, my - ny - mH);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#3A4A52";
+          ctx.fillStyle = bp.wallL[2];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny - mH);
           ctx.lineTo(mx + nx, my + ny - mH);
@@ -5338,7 +5342,7 @@ export function renderSpecialBuilding(
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
-          ctx.fillStyle = mi % 2 === 0 ? "#344550" : "#2D3B42";
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallL[1] : bp.wallL[0];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny);
           ctx.lineTo(mx + nx, my + ny);
@@ -5346,7 +5350,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(mx - nx, my - ny - mH);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#3A4A52";
+          ctx.fillStyle = bp.wallL[2];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny - mH);
           ctx.lineTo(mx + nx, my + ny - mH);
@@ -5356,7 +5360,7 @@ export function renderSpecialBuilding(
           ctx.fill();
         }
         // Back corner cap at rB
-        ctx.fillStyle = "#344550";
+        ctx.fillStyle = bp.wallL[1];
         ctx.beginPath();
         ctx.moveTo(rB.x - 3 * s, rB.y - eaveH - parH);
         ctx.lineTo(rB.x + 3 * s, rB.y - eaveH - parH);
@@ -5364,7 +5368,7 @@ export function renderSpecialBuilding(
         ctx.lineTo(rB.x - 3 * s, rB.y - eaveH - parH - 6 * s);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#3A4A52";
+        ctx.fillStyle = bp.wallL[2];
         ctx.fillRect(rB.x - 3.5 * s, rB.y - eaveH - parH - 6 * s - 1.5 * s, 7 * s, 1.5 * s);
         ctx.fillStyle = "#1a1a2e";
         ctx.fillRect(rB.x - 0.8 * s, rB.y - eaveH - parH - 4.5 * s, 1.6 * s, 3 * s);
@@ -5530,7 +5534,7 @@ export function renderSpecialBuilding(
         turrets.forEach((tt) => {
           ctx.save();
           ctx.translate(tt.x, tt.y);
-          const tLc = tt.side === "left" ? "#344550" : "#3D4F59";
+          const tLc = tt.side === "left" ? bp.wallL[0] : bp.wallL[1];
           ctx.fillStyle = tLc;
           ctx.beginPath();
           ctx.moveTo(-turretR, 0);
@@ -5539,7 +5543,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(0, 0);
           ctx.closePath();
           ctx.fill();
-          const tRc = tt.side === "left" ? "#546E7A" : "#607D8B";
+          const tRc = tt.side === "left" ? bp.wallR[2] : bp.wallR[1];
           ctx.fillStyle = tRc;
           ctx.beginPath();
           ctx.moveTo(turretR, 0);
@@ -5548,7 +5552,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(0, 0);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#4E5D63";
+          ctx.fillStyle = bp.foundationTop;
           ctx.beginPath();
           ctx.moveTo(0, -turretH + turretR * tanA);
           ctx.lineTo(-turretR, -turretH);
@@ -5624,7 +5628,7 @@ export function renderSpecialBuilding(
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
-          ctx.fillStyle = mi % 2 === 0 ? "#4A5C65" : "#3F5159";
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallL[3] : bp.wallL[2];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny);
           ctx.lineTo(mx + nx, my + ny);
@@ -5632,7 +5636,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(mx - nx, my - ny - mH);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#5C6F78";
+          ctx.fillStyle = bp.wallR[2];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny - mH);
           ctx.lineTo(mx + nx, my + ny - mH);
@@ -5652,7 +5656,7 @@ export function renderSpecialBuilding(
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
-          ctx.fillStyle = mi % 2 === 0 ? "#566D78" : "#4D636D";
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallR[2] : bp.wallR[3];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny);
           ctx.lineTo(mx + nx, my + ny);
@@ -5660,7 +5664,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(mx - nx, my - ny - mH);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#5C6F78";
+          ctx.fillStyle = bp.wallR[1];
           ctx.beginPath();
           ctx.moveTo(mx - nx, my - ny - mH);
           ctx.lineTo(mx + nx, my + ny - mH);
@@ -5676,7 +5680,7 @@ export function renderSpecialBuilding(
           { x: rR.x, y: rR.y - eaveH - parH },
         ];
         cornerPts.forEach((cp) => {
-          ctx.fillStyle = "#4E5D63";
+          ctx.fillStyle = bp.foundationTop;
           ctx.beginPath();
           ctx.moveTo(cp.x - 3 * s, cp.y);
           ctx.lineTo(cp.x + 3 * s, cp.y);
@@ -5684,7 +5688,7 @@ export function renderSpecialBuilding(
           ctx.lineTo(cp.x - 3 * s, cp.y - 6 * s);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#5C6F78";
+          ctx.fillStyle = bp.wallR[2];
           ctx.fillRect(cp.x - 3.5 * s, cp.y - 6 * s - 1.5 * s, 7 * s, 1.5 * s);
           ctx.fillStyle = "#1a1a2e";
           ctx.fillRect(cp.x - 0.8 * s, cp.y - 4.5 * s, 1.6 * s, 3 * s);
@@ -5965,7 +5969,7 @@ export function renderSpecialBuilding(
       ctx.transform(1, tanA, 0, 1, 0, 0);
       // Outer shield border
       const shR = 9 * s;
-      ctx.fillStyle = "#2B3940";
+      ctx.fillStyle = bp.stoneDark;
       ctx.beginPath();
       ctx.moveTo(0, -shR);
       ctx.lineTo(-shR * 0.9, -shR * 0.4);

@@ -214,13 +214,14 @@ export function renderEnemy(
     const hurtTint = flashProfile.innerColor.match(/\d+/g) || ["255", "210", "190"];
     ctx.fillStyle = `rgba(${hurtTint[0]}, ${hurtTint[1]}, ${hurtTint[2]}, ${hurtAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.52, size * 0.34, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.56, size * 0.38, 0, 0, Math.PI * 2);
     ctx.fill();
     if (!lowDetailFx) {
-      ctx.strokeStyle = `rgba(255, 185, 150, ${hurtAlpha * 0.8})`;
+      const rimTint = flashProfile.rimColor.match(/\d+/g) || ["255", "185", "150"];
+      ctx.strokeStyle = `rgba(${rimTint[0]}, ${rimTint[1]}, ${rimTint[2]}, ${hurtAlpha * 0.8})`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.58, size * 0.38, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenPos.x, drawY, size * 0.62, size * 0.42, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();

@@ -5,8 +5,10 @@ import type {
   DecorationCategory,
   HazardType,
   SpecialTowerType,
+  TowerType,
 } from "../../types";
 import type { CreatorModalProps, ToolMode } from "./types";
+import { TOWER_TYPE_OPTIONS } from "./constants";
 import { useCreatorDraft } from "./hooks/useCreatorDraft";
 import { useCreatorCamera } from "./hooks/useCreatorCamera";
 import { useCreatorBoard } from "./hooks/useCreatorBoard";
@@ -34,6 +36,10 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     useState<DecorationCategory>("nassau_hall");
   const [selectedHazardType, setSelectedHazardType] =
     useState<HazardType>("poison_fog");
+  const [selectedObjectiveType, setSelectedObjectiveType] =
+    useState<SpecialTowerType>("beacon");
+  const [selectedTowerType, setSelectedTowerType] =
+    useState<TowerType>("cannon");
 
   const draftActions = useCreatorDraft(onSaveLevel, onDeleteLevel);
   const camera = useCreatorCamera();
@@ -42,6 +48,8 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     selectedDecorationType,
     selectedLandmarkType,
     selectedHazardType,
+    selectedObjectiveType,
+    selectedTowerType,
     draftActions,
     camera,
   );
@@ -50,9 +58,6 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
 
   const handleToolSelect = useCallback((nextTool: ToolMode): void => {
     setTool(nextTool);
-    if (nextTool === "decoration") {/* palette auto-selects */}
-    if (nextTool === "landmark") {/* palette auto-selects */}
-    if (nextTool === "hazard") {/* palette auto-selects */}
   }, []);
 
   const handleResetAll = useCallback((): void => {
@@ -62,6 +67,8 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     setSelectedDecorationType("tree");
     setSelectedLandmarkType("nassau_hall");
     setSelectedHazardType("poison_fog");
+    setSelectedObjectiveType("beacon");
+    setSelectedTowerType("cannon");
     board.clearSelection();
   }, [draftActions, camera, board]);
 
@@ -76,9 +83,13 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
 
   const handleUpdateDraft = useCallback(
     (patch: Partial<typeof draft>): void => {
-      setDraft((prev) => ({ ...prev, ...patch }));
+      setDraft((prev) => {
+        const next = { ...prev, ...patch };
+        draftActions.draftRef.current = next;
+        return next;
+      });
     },
-    [setDraft]
+    [setDraft, draftActions.draftRef]
   );
 
   const handleUpdateDecorationSize = useCallback(
@@ -107,23 +118,60 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     [applyDraftUpdate]
   );
 
-  const handleToggleObjective = useCallback(
-    (enabled: boolean): void => {
-      applyDraftUpdate((prev) => ({ ...prev, specialTowerEnabled: enabled }));
-    },
-    [applyDraftUpdate]
-  );
-
   const handleChangeObjectiveType = useCallback(
-    (type: SpecialTowerType): void => {
-      applyDraftUpdate((prev) => ({ ...prev, specialTowerType: type }));
+    (index: number, type: SpecialTowerType): void => {
+      applyDraftUpdate((prev) => {
+        const next = [...prev.specialTowers];
+        const current = next[index];
+        if (!current) return prev;
+        next[index] = { ...current, type };
+        return { ...prev, specialTowers: next };
+      });
     },
     [applyDraftUpdate]
   );
 
   const handleChangeObjectiveHp = useCallback(
-    (hp: number): void => {
-      applyDraftUpdate((prev) => ({ ...prev, specialTowerHp: hp }));
+    (index: number, hp: number): void => {
+      applyDraftUpdate((prev) => {
+        const next = [...prev.specialTowers];
+        const current = next[index];
+        if (!current) return prev;
+        next[index] = { ...current, hp };
+        return { ...prev, specialTowers: next };
+      });
+    },
+    [applyDraftUpdate]
+  );
+
+  const handleRemoveObjective = useCallback(
+    (index: number): void => {
+      applyDraftUpdate((prev) => ({
+        ...prev,
+        specialTowers: prev.specialTowers.filter((_, i) => i !== index),
+      }));
+    },
+    [applyDraftUpdate]
+  );
+
+  const handleToggleAllowedTower = useCallback(
+    (type: TowerType): void => {
+      applyDraftUpdate((prev) => {
+        const current = prev.allowedTowers;
+        if (current.length === 0) {
+          const allExceptThis = TOWER_TYPE_OPTIONS.filter((t) => t !== type);
+          return { ...prev, allowedTowers: allExceptThis };
+        }
+        if (current.includes(type)) {
+          const next = current.filter((t) => t !== type);
+          return { ...prev, allowedTowers: next };
+        }
+        const next = [...current, type];
+        if (next.length === TOWER_TYPE_OPTIONS.length) {
+          return { ...prev, allowedTowers: [] };
+        }
+        return { ...prev, allowedTowers: next };
+      });
     },
     [applyDraftUpdate]
   );
@@ -131,8 +179,8 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm p-2 sm:p-4">
-      <div className="w-full h-full rounded-2xl border border-amber-700/60 bg-gradient-to-b from-[#20170d] to-[#110b06] text-amber-100 flex flex-col overflow-hidden shadow-[0_0_45px_rgba(0,0,0,0.65)]">
+    <div className="fixed inset-0 z-[90] bg-black/85 backdrop-blur-md p-1.5 sm:p-3">
+      <div className="w-full h-full rounded-2xl border border-amber-700/30 bg-gradient-to-b from-[#1a130a] to-[#0d0804] text-amber-100 flex flex-col overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
         <CreatorHeader
           draft={draft}
           selectedPresetId={draftActions.selectedPresetId}
@@ -142,9 +190,9 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
           onClose={onClose}
         />
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)_360px] gap-3 p-3">
+        <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_340px] gap-2 p-2">
           {/* Left panel */}
-          <div className="space-y-3 overflow-y-auto">
+          <div className="space-y-2 overflow-y-auto">
             <InspectorPanel
               draft={draft}
               tool={tool}
@@ -203,12 +251,13 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
           />
 
           {/* Right panel */}
-          <aside className="rounded-2xl border border-amber-900/60 bg-black/25 p-3 overflow-y-auto space-y-3">
+          <aside className="rounded-2xl border border-amber-800/20 bg-stone-950/30 p-2 overflow-y-auto space-y-2">
             <ToolbeltPanel
               draft={draft}
               tool={tool}
               selection={board.selection}
               onToolSelect={handleToolSelect}
+              onToggleAllowedTower={handleToggleAllowedTower}
             />
 
             <PalettePanel
@@ -216,6 +265,8 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
               selectedDecorationType={selectedDecorationType}
               selectedLandmarkType={selectedLandmarkType}
               selectedHazardType={selectedHazardType}
+              selectedObjectiveType={selectedObjectiveType}
+              selectedTowerType={selectedTowerType}
               onSelectDecoration={(type) => {
                 setSelectedDecorationType(type);
                 handleToolSelect("decoration");
@@ -228,14 +279,22 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
                 setSelectedHazardType(type);
                 handleToolSelect("hazard");
               }}
+              onSelectObjective={(type) => {
+                setSelectedObjectiveType(type);
+                handleToolSelect("special_tower");
+              }}
+              onSelectTower={(type) => {
+                setSelectedTowerType(type);
+                handleToolSelect("tower");
+              }}
               onToolSelect={handleToolSelect}
             />
 
             <ObjectivePanel
               draft={draft}
-              onToggleEnabled={handleToggleObjective}
               onChangeType={handleChangeObjectiveType}
               onChangeHp={handleChangeObjectiveHp}
+              onRemove={handleRemoveObjective}
             />
 
             <WaveDesignerPanel

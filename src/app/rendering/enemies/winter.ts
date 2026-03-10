@@ -1,7 +1,7 @@
 // Winter region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawFrostCrystals, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
 
 // =====================================================
 // WINTER REGION TROOPS
@@ -506,14 +506,13 @@ export function drawSnowGoblinEnemy(
   }
   clearShadow(ctx);
 
-  // --- Frost glow rings (blue) ---
-  drawPulsingGlowRings(ctx, x, y - size * 0.1 - hop, size * 0.35, time, zoom, {
-    color: "rgba(147, 197, 253, 0.4)",
-    count: 3,
-    speed: 1.8,
-    maxAlpha: 0.35,
-    expansion: 1.2,
-    lineWidth: 1.5,
+  // --- Floating frost crystals ---
+  drawFrostCrystals(ctx, x, y - size * 0.1 - hop, size * 0.35, time, zoom, {
+    color: "rgba(147, 197, 253, 0.5)",
+    glowColor: "rgba(220, 240, 255, 0.6)",
+    count: 4,
+    speed: 2.0,
+    maxAlpha: 0.4,
   });
 
   // --- Floating ice crystal shards ---
@@ -1222,14 +1221,14 @@ export function drawYetiEnemy(
     ctx.fill();
   }
 
-  // --- Icy glow rings ---
-  drawPulsingGlowRings(ctx, x, y - size * 0.15, size * 0.55, time, zoom, {
-    color: "rgba(147, 197, 253, 0.4)",
-    count: 4,
-    speed: 1.2,
-    maxAlpha: 0.3,
-    expansion: 1.4,
-    lineWidth: 2,
+  // --- Floating ice crystal shards ---
+  drawFrostCrystals(ctx, x, y - size * 0.15, size * 0.55, time, zoom, {
+    color: "rgba(147, 197, 253, 0.45)",
+    glowColor: "rgba(200, 230, 255, 0.5)",
+    count: 6,
+    speed: 1.5,
+    maxAlpha: 0.35,
+    crystalSize: 0.12,
   });
 
   // --- Floating ice boulder segments (diamond shape) ---
@@ -1848,14 +1847,14 @@ export function drawIceWitchEnemy(
     ctx.fill();
   }
 
-  // --- Blue-white frost glow rings ---
-  drawPulsingGlowRings(ctx, x, y - size * 0.1 + float, size * 0.45, time, zoom, {
-    color: "rgba(191, 219, 254, 0.4)",
-    count: 3,
-    speed: 1.5,
-    maxAlpha: 0.35,
-    expansion: 1.3,
-    lineWidth: 1.5,
+  // --- Orbiting ice crystals ---
+  drawFrostCrystals(ctx, x, y - size * 0.1 + float, size * 0.45, time, zoom, {
+    color: "rgba(191, 219, 254, 0.5)",
+    glowColor: "rgba(230, 245, 255, 0.6)",
+    count: 5,
+    speed: 1.8,
+    maxAlpha: 0.4,
+    crystalSize: 0.11,
   });
 
   // --- Floating ice crystal shards ---

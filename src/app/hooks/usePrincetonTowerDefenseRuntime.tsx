@@ -8558,7 +8558,8 @@ export function usePrincetonTowerDefenseRuntime() {
             specialTowerHp,
             vaultFlash,
             spec.boostedTowerCount || 0,
-            spec.chargeProgress ?? 0
+            spec.chargeProgress ?? 0,
+            mapTheme
           );
           break;
         }
@@ -8728,7 +8729,8 @@ export function usePrincetonTowerDefenseRuntime() {
             dpr,
             cameraOffset,
             cameraZoom,
-            targetPos
+            targetPos,
+            mapTheme
           );
           // Render troop status effects (burning, slowed, poisoned, stunned)
           {

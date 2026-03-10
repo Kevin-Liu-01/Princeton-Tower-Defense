@@ -2,7 +2,7 @@
 // Extracted from enemies/index.ts
 
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 
 export function drawThornwalkerEnemy(
@@ -620,13 +620,13 @@ export function drawThornwalkerEnemy(
     ctx.fill();
   }
 
-  // Nature glow rings
-  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
-    color: "rgba(74, 222, 128, 0.4)",
-    count: 3,
+  // Nature leaf swirl
+  drawLeafSwirl(ctx, x, y, size * 0.35, time, zoom, {
+    color: "rgba(74, 222, 128, 0.5)",
+    colorAlt: "rgba(34, 160, 80, 0.45)",
+    count: 5,
     speed: 1.2,
-    maxAlpha: 0.3,
-    expansion: 1.2,
+    maxAlpha: 0.4,
   });
 
   // Floating thorn/leaf shards
@@ -1242,13 +1242,13 @@ export function drawSandwormEnemy(
     ctx.restore();
   }
 
-  // Amber glow rings
-  drawPulsingGlowRings(ctx, x, y + size * 0.2, size * 0.4, time, zoom, {
+  // Swirling sand dust
+  drawSandDust(ctx, x, y + size * 0.2, size * 0.4, time, zoom, {
     color: "rgba(217, 159, 60, 0.4)",
-    count: 3,
-    speed: 1.0,
-    maxAlpha: 0.25,
-    expansion: 1.4,
+    count: 8,
+    speed: 1.5,
+    maxAlpha: 0.3,
+    spread: 1.2,
   });
 
   // Shifting sand segments
@@ -1775,13 +1775,13 @@ export function drawFrostlingEnemy(
     }
   }
 
-  // Blue frost glow rings
-  drawPulsingGlowRings(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
-    color: "rgba(56, 189, 248, 0.4)",
-    count: 3,
-    speed: 1.5,
-    maxAlpha: 0.3,
-    expansion: 1.3,
+  // Floating frost crystals
+  drawFrostCrystals(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
+    color: "rgba(56, 189, 248, 0.45)",
+    glowColor: "rgba(200, 240, 255, 0.5)",
+    count: 4,
+    speed: 1.8,
+    maxAlpha: 0.35,
   });
 
   // Floating ice crystal shards
@@ -2429,13 +2429,13 @@ export function drawInfernalEnemy(
     }
   }
 
-  // Orange-red glow rings
-  drawPulsingGlowRings(ctx, x + rageShake, y + heatWave, size * 0.35, time, zoom, {
-    color: "rgba(251, 146, 60, 0.5)",
-    count: 3,
+  // Rising ember sparks
+  drawEmberSparks(ctx, x + rageShake, y + heatWave, size * 0.35, time, zoom, {
+    color: "rgba(251, 146, 60, 0.55)",
+    coreColor: "rgba(255, 240, 180, 0.85)",
+    count: 6,
     speed: 2.0,
-    maxAlpha: 0.35,
-    expansion: 1.5,
+    maxAlpha: 0.45,
   });
 
   // Floating ember segments
@@ -3052,13 +3052,13 @@ export function drawBansheeEnemy(
     ctx.restore();
   }
 
-  // Spectral glow rings
-  drawPulsingGlowRings(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
-    color: "rgba(148, 163, 184, 0.4)",
-    count: 3,
-    speed: 1.8,
-    maxAlpha: 0.25,
-    expansion: 1.4,
+  // Spectral shadow wisps
+  drawShadowWisps(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
+    color: "rgba(148, 163, 184, 0.35)",
+    count: 4,
+    speed: 1.6,
+    maxAlpha: 0.28,
+    wispLength: 0.4,
   });
 
   // Floating ethereal shards
@@ -4882,13 +4882,13 @@ export function drawAssassinEnemy(
     ctx.fill();
   }
 
-  // Subtle dark glow rings
-  drawPulsingGlowRings(ctx, x, y, size * 0.28, time, zoom, {
-    color: "rgba(88, 28, 135, 0.35)",
-    count: 2,
-    speed: 2.0,
-    maxAlpha: 0.2,
-    expansion: 1.0,
+  // Subtle shadow wisps
+  drawShadowWisps(ctx, x, y, size * 0.28, time, zoom, {
+    color: "rgba(88, 28, 135, 0.3)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.22,
+    wispLength: 0.35,
   });
 
   // Floating shadow blade shards
@@ -5718,13 +5718,14 @@ export function drawDragonEnemy(
   ctx.textBaseline = "middle";
   ctx.fillText("P", x, y + size * 0.15 + hover);
 
-  // Fire/storm glow rings
-  drawPulsingGlowRings(ctx, x, y + hover, size * 0.45, time, zoom, {
-    color: "rgba(255, 100, 50, 0.4)",
-    count: 3,
+  // Dragon ember sparks
+  drawEmberSparks(ctx, x, y + hover, size * 0.45, time, zoom, {
+    color: "rgba(255, 100, 50, 0.5)",
+    coreColor: "rgba(255, 200, 100, 0.8)",
+    count: 7,
     speed: 1.5,
-    maxAlpha: 0.3,
-    expansion: 1.5,
+    maxAlpha: 0.4,
+    sparkSize: 0.06,
   });
 
   // Floating scale segments
