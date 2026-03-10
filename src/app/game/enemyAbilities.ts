@@ -1,4 +1,4 @@
-import type { Enemy } from "../types";
+import type { Enemy, EnemyAbilityType } from "../types";
 import { ENEMY_DATA } from "../constants";
 
 export interface AbilityEffects {
@@ -6,25 +6,26 @@ export interface AbilityEffects {
   slow?: { intensity: number; duration: number };
   poison?: { damage: number; duration: number };
   stun?: { duration: number };
+  activatedTypes: EnemyAbilityType[];
 }
 
 export function applyEnemyAbilities(
   enemy: Enemy,
   _targetType: "troop" | "hero",
-  now: number
+  now: number,
 ): AbilityEffects | null {
   const eData = ENEMY_DATA[enemy.type];
   if (!eData.abilities || eData.abilities.length === 0) return null;
 
-  const abilityCooldown = eData.abilities[0]?.cooldown || 2000;
-  if (enemy.lastAbilityUse && now - enemy.lastAbilityUse < abilityCooldown) {
-    return null;
-  }
-
-  const result: AbilityEffects = {};
+  const cooldowns = enemy.abilityCooldowns || {};
+  const result: AbilityEffects = { activatedTypes: [] };
 
   for (const ability of eData.abilities) {
     if (ability.type.startsWith("tower_")) continue;
+
+    const abilityCooldown = ability.cooldown || 2000;
+    const lastUse = cooldowns[ability.type] || 0;
+    if (now - lastUse < abilityCooldown) continue;
 
     const chance = ability.chance || 0.3;
     if (Math.random() > chance) continue;
@@ -54,7 +55,21 @@ export function applyEnemyAbilities(
         };
         break;
     }
+
+    result.activatedTypes.push(ability.type);
   }
 
-  return Object.keys(result).length > 0 ? result : null;
+  return result.activatedTypes.length > 0 ? result : null;
+}
+
+export function buildAbilityCooldowns(
+  existing: Record<string, number> | undefined,
+  activatedTypes: EnemyAbilityType[],
+  now: number,
+): Record<string, number> {
+  const cooldowns = { ...(existing || {}) };
+  for (const type of activatedTypes) {
+    cooldowns[type] = now;
+  }
+  return cooldowns;
 }

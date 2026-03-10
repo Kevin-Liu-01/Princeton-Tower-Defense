@@ -151,7 +151,7 @@ import {
   ENEMY_FORMATION_PULL_STRENGTH,
   ENEMY_LANE_SHIFT_MS,
 } from "../game/enemyFormation";
-import { applyEnemyAbilities } from "../game/enemyAbilities";
+import { applyEnemyAbilities, buildAbilityCooldowns } from "../game/enemyAbilities";
 import { findClosestRoadPoint } from "../game/barracks";
 import {
   getPrioritizedEnemiesInRange,
@@ -2607,36 +2607,33 @@ export function usePrincetonTowerDefenseRuntime() {
                 // Slightly larger engagement for taunt - skip attacks when paused
                 const effectiveEnemyAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
                 if (!isPaused && now - (enemy.lastHeroAttack || 0) > effectiveEnemyAttackInterval) {
-                  // Play hit effect but do NO damage if shield is active
+                  const tauntAbilities = hero.shieldActive ? null : applyEnemyAbilities(enemy, 'hero', now);
                   if (hero.shieldActive) {
                     addParticles(hero.pos, "spark", 5);
                   } else {
-                    // Apply damage and enemy abilities to hero
-                    const abilities = applyEnemyAbilities(enemy, 'hero', now);
                     setHero((h) => {
                       if (!h) return null;
                       const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
 
-                      // Apply ability effects
-                      if (abilities) {
-                        if (abilities.burn) {
+                      if (tauntAbilities) {
+                        if (tauntAbilities.burn) {
                           updated.burning = true;
-                          updated.burnDamage = abilities.burn.damage;
-                          updated.burnUntil = now + abilities.burn.duration;
+                          updated.burnDamage = tauntAbilities.burn.damage;
+                          updated.burnUntil = now + tauntAbilities.burn.duration;
                         }
-                        if (abilities.slow) {
+                        if (tauntAbilities.slow) {
                           updated.slowed = true;
-                          updated.slowIntensity = abilities.slow.intensity;
-                          updated.slowUntil = now + abilities.slow.duration;
+                          updated.slowIntensity = tauntAbilities.slow.intensity;
+                          updated.slowUntil = now + tauntAbilities.slow.duration;
                         }
-                        if (abilities.poison) {
+                        if (tauntAbilities.poison) {
                           updated.poisoned = true;
-                          updated.poisonDamage = abilities.poison.damage;
-                          updated.poisonUntil = now + abilities.poison.duration;
+                          updated.poisonDamage = tauntAbilities.poison.damage;
+                          updated.poisonUntil = now + tauntAbilities.poison.duration;
                         }
-                        if (abilities.stun) {
+                        if (tauntAbilities.stun) {
                           updated.stunned = true;
-                          updated.stunUntil = now + abilities.stun.duration;
+                          updated.stunUntil = now + tauntAbilities.stun.duration;
                         }
                       }
 
@@ -2648,7 +2645,9 @@ export function usePrincetonTowerDefenseRuntime() {
                     inCombat: true,
                     combatTarget: hero.id,
                     lastHeroAttack: now,
-                    lastAbilityUse: now,
+                    lastAbilityUse: tauntAbilities ? now : enemy.lastAbilityUse,
+                    lastAbilityType: tauntAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
+                    abilityCooldowns: tauntAbilities ? buildAbilityCooldowns(enemy.abilityCooldowns, tauntAbilities.activatedTypes, now) : enemy.abilityCooldowns,
                     facingRight: getFacingRightFromDelta(
                       hero.pos.x - enemyPos.x,
                       hero.pos.y - enemyPos.y,
@@ -2752,39 +2751,36 @@ export function usePrincetonTowerDefenseRuntime() {
               // Scale enemy attack interval with game speed
               const effectiveHeroAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
               if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval) {
+                const heroAbilities = nearbyHero.shieldActive ? null : applyEnemyAbilities(enemy, 'hero', now);
                 if (!nearbyHero.shieldActive) {
-                  // Apply damage and enemy abilities to hero
-                  const abilities = applyEnemyAbilities(enemy, 'hero', now);
                   setHero((h) => {
                     if (!h) return null;
                     const updated = { ...h, hp: Math.max(0, h.hp - HERO_COMBAT_STATS.tauntDamage), lastCombatTime: Date.now() };
 
-                    // Apply ability effects
-                    if (abilities) {
-                      if (abilities.burn) {
+                    if (heroAbilities) {
+                      if (heroAbilities.burn) {
                         updated.burning = true;
-                        updated.burnDamage = abilities.burn.damage;
-                        updated.burnUntil = now + abilities.burn.duration;
+                        updated.burnDamage = heroAbilities.burn.damage;
+                        updated.burnUntil = now + heroAbilities.burn.duration;
                       }
-                      if (abilities.slow) {
+                      if (heroAbilities.slow) {
                         updated.slowed = true;
-                        updated.slowIntensity = abilities.slow.intensity;
-                        updated.slowUntil = now + abilities.slow.duration;
+                        updated.slowIntensity = heroAbilities.slow.intensity;
+                        updated.slowUntil = now + heroAbilities.slow.duration;
                       }
-                      if (abilities.poison) {
+                      if (heroAbilities.poison) {
                         updated.poisoned = true;
-                        updated.poisonDamage = abilities.poison.damage;
-                        updated.poisonUntil = now + abilities.poison.duration;
+                        updated.poisonDamage = heroAbilities.poison.damage;
+                        updated.poisonUntil = now + heroAbilities.poison.duration;
                       }
-                      if (abilities.stun) {
+                      if (heroAbilities.stun) {
                         updated.stunned = true;
-                        updated.stunUntil = now + abilities.stun.duration;
+                        updated.stunUntil = now + heroAbilities.stun.duration;
                       }
                     }
 
                     return updated;
                   });
-                  // Add melee attack visual effect based on enemy type
                   const attackAngle = Math.atan2(
                     nearbyHero.pos.y - enemyPos.y,
                     nearbyHero.pos.x - enemyPos.x
@@ -2811,13 +2807,16 @@ export function usePrincetonTowerDefenseRuntime() {
                     },
                   ]);
                 } else {
-                  addParticles(nearbyHero.pos, "spark", 5); // Visual feedback of "Blocked"
+                  addParticles(nearbyHero.pos, "spark", 5);
                 }
                 return {
                   ...enemy,
                   inCombat: true,
                   combatTarget: nearbyHero.id,
                   lastHeroAttack: now,
+                  lastAbilityUse: heroAbilities ? now : enemy.lastAbilityUse,
+                  lastAbilityType: heroAbilities?.activatedTypes[0] ?? enemy.lastAbilityType,
+                  abilityCooldowns: heroAbilities ? buildAbilityCooldowns(enemy.abilityCooldowns, heroAbilities.activatedTypes, now) : enemy.abilityCooldowns,
                   facingRight: getFacingRightFromDelta(
                     nearbyHero.pos.x - enemyPos.x,
                     nearbyHero.pos.y - enemyPos.y,
@@ -3001,26 +3000,26 @@ export function usePrincetonTowerDefenseRuntime() {
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
-            // Apply enemy abilities to troop
-            const abilities = applyEnemyAbilities(enemy, 'troop', now);
-            if (abilities) {
+            const troopAbils = applyEnemyAbilities(enemy, 'troop', now);
+            if (troopAbils) {
               const existing = troopAbilityEffects[nearbyTroop.id] || {};
-              if (abilities.burn) {
-                existing.burn = { damage: abilities.burn.damage, until: now + abilities.burn.duration };
+              if (troopAbils.burn) {
+                existing.burn = { damage: troopAbils.burn.damage, until: now + troopAbils.burn.duration };
               }
-              if (abilities.slow) {
-                existing.slow = { intensity: abilities.slow.intensity, until: now + abilities.slow.duration };
+              if (troopAbils.slow) {
+                existing.slow = { intensity: troopAbils.slow.intensity, until: now + troopAbils.slow.duration };
               }
-              if (abilities.poison) {
-                existing.poison = { damage: abilities.poison.damage, until: now + abilities.poison.duration };
+              if (troopAbils.poison) {
+                existing.poison = { damage: troopAbils.poison.damage, until: now + troopAbils.poison.duration };
               }
-              if (abilities.stun) {
-                existing.stun = { until: now + abilities.stun.duration };
+              if (troopAbils.stun) {
+                existing.stun = { until: now + troopAbils.stun.duration };
               }
               troopAbilityEffects[nearbyTroop.id] = existing;
 
-              // Update enemy's last ability time
               enemy.lastAbilityUse = now;
+              enemy.lastAbilityType = troopAbils.activatedTypes[0];
+              enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, troopAbils.activatedTypes, now);
             }
           }
         });
@@ -3045,10 +3044,29 @@ export function usePrincetonTowerDefenseRuntime() {
             const damage = flyingData.troopDamage || DEFAULT_ENEMY_TROOP_DAMAGE;
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
-
-            // Flying enemies don't stop - they continue moving
-            // But we track that they attacked
             enemy.lastTroopAttack = now;
+
+            const flyAbils = applyEnemyAbilities(enemy, 'troop', now);
+            if (flyAbils) {
+              const existing = troopAbilityEffects[nearbyTroop.id] || {};
+              if (flyAbils.burn) {
+                existing.burn = { damage: flyAbils.burn.damage, until: now + flyAbils.burn.duration };
+              }
+              if (flyAbils.slow) {
+                existing.slow = { intensity: flyAbils.slow.intensity, until: now + flyAbils.slow.duration };
+              }
+              if (flyAbils.poison) {
+                existing.poison = { damage: flyAbils.poison.damage, until: now + flyAbils.poison.duration };
+              }
+              if (flyAbils.stun) {
+                existing.stun = { until: now + flyAbils.stun.duration };
+              }
+              troopAbilityEffects[nearbyTroop.id] = existing;
+
+              enemy.lastAbilityUse = now;
+              enemy.lastAbilityType = flyAbils.activatedTypes[0];
+              enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, flyAbils.activatedTypes, now);
+            }
           }
         });
       } // End of !isPaused check for enemy attacks on troops
@@ -4329,8 +4347,9 @@ export function usePrincetonTowerDefenseRuntime() {
               }
             }
 
-            // Track cooldown so this enemy can't re-apply immediately
             enemy.lastAbilityUse = now;
+            enemy.lastAbilityType = ability.type;
+            enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, [ability.type], now);
           }
         }
 

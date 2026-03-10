@@ -325,6 +325,7 @@ export interface Enemy {
   // Ability cooldowns (tracks when enemy can use abilities again)
   abilityCooldowns?: Record<string, number>;
   lastAbilityUse?: number;
+  lastAbilityType?: EnemyAbilityType;
   // Dual-path support
   pathKey?: string;
   // Mark as dead for cleanup

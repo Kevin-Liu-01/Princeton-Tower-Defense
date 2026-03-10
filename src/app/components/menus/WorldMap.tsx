@@ -25,6 +25,7 @@ import {
   Sparkles,
   ChessKnight,
   Settings,
+  Info,
 } from "lucide-react";
 import type {
   GameState,
@@ -52,11 +53,12 @@ import { BattlefieldPreview } from "./BattlefieldPreview";
 import { RegionIcon } from "../../sprites";
 import { HeroSelector } from "./HeroSelector";
 import { SpellSelector } from "./SpellSelector";
-import { CustomLevelCreatorModal } from "./CustomLevelCreatorModal";
+import { CreatorModal } from "../creator";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
 import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
 import { SettingsModal } from "./SettingsModal";
 import { useSettings } from "../../hooks/useSettings";
+import { CreditsModal } from "./CreditsModal";
 
 const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as const;
 
@@ -188,6 +190,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [codexTab, setCodexTab] = useState<CodexTabId>("towers");
   const [showCreator, setShowCreator] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
   const [animTime, setAnimTime] = useState(0);
@@ -772,6 +775,21 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
                 <Settings size={15} className="text-amber-400/70 shrink-0" />
                 <span className="hidden sm:inline text-sm text-amber-200/60 font-bold tracking-wider uppercase">Settings</span>
+              </button>
+
+              {/* Credits */}
+              <button
+                onClick={() => setShowCredits(true)}
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
+                style={{
+                  background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                  border: `1.5px solid ${NEUTRAL.border}`,
+                  boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
+                }}
+              >
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
+                <Info size={15} className="text-amber-400/70 shrink-0" />
+                <span className="hidden sm:inline text-sm text-amber-200/60 font-bold tracking-wider uppercase">Credits</span>
               </button>
 
               {/* Nav arrows — grouped pill */}
@@ -1775,8 +1793,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           resetCategory={resetCategory}
         />
       )}
+      {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}
       {showCreator && (
-        <CustomLevelCreatorModal
+        <CreatorModal
           isOpen={showCreator}
           onClose={() => setShowCreator(false)}
           customLevels={customLevels}

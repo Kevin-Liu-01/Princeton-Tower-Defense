@@ -53,6 +53,7 @@ import {
   MarchingEnemies,
   HERO_COLORS,
 } from "../../sprites";
+import { CreditsModal } from "./CreditsModal";
 
 // =============================================================================
 // REGION AND LEVEL DATA
@@ -217,6 +218,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 }) => {
   const [currentRegion, setCurrentRegion] = useState(0);
   const [showCodex, setShowCodex] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const [codexTab, setCodexTab] = useState<
     "towers" | "heroes" | "enemies" | "spells"
   >("towers");
@@ -291,6 +293,15 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           >
             <Book size={18} className="text-purple-300" />
             <span className="text-purple-200">Codex</span>
+          </button>
+
+          {/* Credits button */}
+          <button
+            onClick={() => setShowCredits(true)}
+            className="px-4 py-2 bg-amber-900/40 hover:bg-amber-800/50 rounded-lg border border-amber-700/60 flex items-center gap-2 transition-colors"
+          >
+            <Info size={18} className="text-amber-400" />
+            <span className="text-amber-300">Credits</span>
           </button>
         </div>
       </div>
@@ -512,6 +523,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           setActiveTab={setCodexTab}
           onClose={() => setShowCodex(false)}
         />
+      )}
+
+      {/* Credits Modal */}
+      {showCredits && (
+        <CreditsModal onClose={() => setShowCredits(false)} />
       )}
     </div>
   );

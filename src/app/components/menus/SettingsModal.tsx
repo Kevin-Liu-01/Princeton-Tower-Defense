@@ -752,18 +752,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background: OVERLAY.black60, zIndex: 9999 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ background: OVERLAY.black60 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <OrnateFrame className="w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div
+        className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
+        style={{
+          background: panelGradient,
+          border: `2px solid ${GOLD.border35}`,
+          boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
+        }}
+      >
+        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={48}>
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4 border-b"
           style={{
-            background: panelGradient,
             borderColor: GOLD.border25,
           }}
         >
@@ -924,6 +931,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           Changes to landscaping density require reloading the map to take effect
         </div>
       </OrnateFrame>
+      </div>
     </div>
   );
 };

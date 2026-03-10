@@ -1,0 +1,426 @@
+import React from "react";
+import {
+  AlertTriangle,
+  Compass,
+  Eraser,
+  MapPin,
+  Paintbrush,
+  Redo2,
+  Undo2,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { GRID_HEIGHT, GRID_WIDTH } from "../../../constants";
+import { LANDMARK_DECORATION_TYPES } from "../../../utils";
+import type {
+  CreatorDraftState,
+  GridPoint,
+  SelectionTarget,
+  ToolMode,
+} from "../types";
+import { TOOL_HINTS, TOOL_OPTIONS } from "../constants";
+import { formatPointLabel, normalizePathPoint } from "../utils/gridUtils";
+import {
+  gridFloatToIso,
+  getIsoTilePolygon,
+  pathToIsoPoints,
+  MAP_PLANE_POLYGON,
+} from "../utils/isoMath";
+import { findSelectionNearPoint, targetMatches } from "../utils/selectionUtils";
+import { IsoMarker } from "./IsoMarker";
+
+interface CreatorCanvasProps {
+  draft: CreatorDraftState;
+  tool: ToolMode;
+  zoom: number;
+  viewBoxX: number;
+  viewBoxY: number;
+  viewBoxWidth: number;
+  viewBoxHeight: number;
+  boardRef: React.RefObject<SVGSVGElement>;
+  selection: SelectionTarget | null;
+  hoverPoint: GridPoint | null;
+  isBoardDragOver: boolean;
+  undoCount: number;
+  redoCount: number;
+  decorationCount: number;
+  hazardCount: number;
+  onUndo: () => void;
+  onRedo: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onToolSelect: (tool: ToolMode) => void;
+  onBoardPointerDown: (event: React.PointerEvent<SVGSVGElement>) => void;
+  onBoardPointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;
+  onBoardPointerUp: (event: React.PointerEvent<SVGSVGElement>) => void;
+  onBoardPointerLeave: () => void;
+  onBoardWheel: (event: React.WheelEvent<SVGSVGElement>) => void;
+  onDropOnBoard: (event: React.DragEvent<SVGSVGElement>) => void;
+  onBoardDragOver: (event: React.DragEvent<SVGSVGElement>) => void;
+  onBoardDragLeave: () => void;
+  startDragTarget: (target: SelectionTarget, event: React.PointerEvent) => void;
+}
+
+export const CreatorCanvas: React.FC<CreatorCanvasProps> = ({
+  draft,
+  tool,
+  zoom,
+  viewBoxX,
+  viewBoxY,
+  viewBoxWidth,
+  viewBoxHeight,
+  boardRef,
+  selection,
+  hoverPoint,
+  isBoardDragOver,
+  undoCount,
+  redoCount,
+  decorationCount,
+  hazardCount,
+  onUndo,
+  onRedo,
+  onZoomIn,
+  onZoomOut,
+  onToolSelect,
+  onBoardPointerDown,
+  onBoardPointerMove,
+  onBoardPointerUp,
+  onBoardPointerLeave,
+  onBoardWheel,
+  onDropOnBoard,
+  onBoardDragOver,
+  onBoardDragLeave,
+  startDragTarget,
+}) => {
+  const hoverIsErase = tool === "erase";
+  const hoverSelectionTarget = hoverPoint
+    ? findSelectionNearPoint(
+      tool === "path_primary" || tool === "path_secondary"
+        ? normalizePathPoint(hoverPoint)
+        : hoverPoint,
+      draft,
+      tool === "erase" ? 3.6 : 2.3
+    )
+    : null;
+  const primaryPathEmphasized =
+    targetMatches(selection, "primary_path") ||
+    targetMatches(hoverSelectionTarget, "primary_path");
+  const secondaryPathEmphasized =
+    targetMatches(selection, "secondary_path") ||
+    targetMatches(hoverSelectionTarget, "secondary_path");
+
+  const activeToolEntry = TOOL_OPTIONS.find((entry) => entry.key === tool) ?? TOOL_OPTIONS[0];
+  const ActiveToolIcon = activeToolEntry.icon;
+
+  return (
+    <section className="rounded-2xl border border-amber-800/50 bg-black/20 p-3 min-h-0 flex flex-col overflow-hidden">
+      {/* Toolbar strip */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="text-xs text-amber-300/80 inline-flex items-center gap-1.5">
+          <Compass size={13} />
+          Isometric Sandbox
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-end gap-1.5 text-[11px] text-amber-300/80 whitespace-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button
+              onClick={onUndo}
+              disabled={undoCount === 0}
+              className="inline-flex h-7 items-center rounded border border-amber-700/60 bg-stone-900/80 px-2 disabled:opacity-50 hover:bg-stone-800/80 transition-colors"
+              title="Undo"
+            >
+              <Undo2 size={12} />
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={redoCount === 0}
+              className="inline-flex h-7 items-center rounded border border-amber-700/60 bg-stone-900/80 px-2 disabled:opacity-50 hover:bg-stone-800/80 transition-colors"
+              title="Redo"
+            >
+              <Redo2 size={12} />
+            </button>
+            <button
+              onClick={() => onToolSelect("erase")}
+              className={`inline-flex h-7 items-center rounded border px-2 transition-colors ${tool === "erase"
+                ? "border-red-500/80 bg-red-700/20 text-red-100"
+                : "border-amber-700/60 bg-stone-900/80 hover:bg-stone-800/80"
+                }`}
+              title="Erase tool"
+            >
+              <Eraser size={12} />
+            </button>
+            <button
+              onClick={onZoomOut}
+              className="inline-flex h-7 items-center justify-center rounded border border-amber-700/60 bg-stone-900/80 px-2 hover:bg-stone-800/80 transition-colors"
+              title="Zoom out"
+            >
+              <ZoomOut size={12} />
+            </button>
+            <button
+              onClick={onZoomIn}
+              className="inline-flex h-7 items-center justify-center rounded border border-amber-700/60 bg-stone-900/80 px-2 hover:bg-stone-800/80 transition-colors"
+              title="Zoom in"
+            >
+              <ZoomIn size={12} />
+            </button>
+            <span className="inline-flex h-7 w-[60px] items-center justify-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200 tabular-nums">
+              <ZoomIn size={12} />
+              {Math.round(zoom * 100)}%
+            </span>
+            <span className="inline-flex h-7 items-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200">
+              <Paintbrush size={12} />
+              {decorationCount}
+            </span>
+            <span className="inline-flex h-7 items-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200">
+              <AlertTriangle size={12} />
+              {hazardCount}
+            </span>
+            <span className="inline-flex h-7 w-[60px] items-center justify-center gap-1 rounded border border-amber-900/60 bg-stone-900/70 px-2 text-amber-200 tabular-nums">
+              <MapPin size={12} />
+              {formatPointLabel(hoverPoint)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SVG board */}
+      <div className="rounded-xl border border-amber-800/50 bg-stone-950/80 p-2 min-h-0 flex flex-col flex-1">
+        <div className="relative w-full flex-1 min-h-[560px]">
+          <svg
+            ref={boardRef}
+            viewBox={`${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`}
+            preserveAspectRatio="xMidYMid meet"
+            onPointerDown={onBoardPointerDown}
+            onPointerMove={onBoardPointerMove}
+            onPointerUp={onBoardPointerUp}
+            onPointerLeave={onBoardPointerLeave}
+            onWheel={onBoardWheel}
+            onDragEnter={() => {/* handled by dragOver */}}
+            onDragOver={onBoardDragOver}
+            onDragLeave={onBoardDragLeave}
+            onDrop={onDropOnBoard}
+            className="w-full h-full rounded-lg border border-amber-900/40 bg-[#140f09] cursor-crosshair"
+          >
+            <defs>
+              <linearGradient id="isoBoardGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(84,58,24,0.65)" />
+                <stop offset="100%" stopColor="rgba(18,10,4,0.95)" />
+              </linearGradient>
+            </defs>
+
+            {/* Map plane */}
+            <polygon
+              points={MAP_PLANE_POLYGON}
+              fill="url(#isoBoardGradient)"
+              stroke="rgba(255,180,90,0.35)"
+              strokeWidth={2}
+            />
+
+            {/* Grid lines */}
+            {Array.from({ length: GRID_WIDTH + 1 }).map((_, x) => {
+              const start = gridFloatToIso(x, 0);
+              const end = gridFloatToIso(x, GRID_HEIGHT);
+              return (
+                <line
+                  key={`iso-v-${x}`}
+                  x1={start.x} y1={start.y}
+                  x2={end.x} y2={end.y}
+                  stroke="rgba(255,220,140,0.12)"
+                  strokeWidth={1}
+                />
+              );
+            })}
+            {Array.from({ length: GRID_HEIGHT + 1 }).map((_, y) => {
+              const start = gridFloatToIso(0, y);
+              const end = gridFloatToIso(GRID_WIDTH, y);
+              return (
+                <line
+                  key={`iso-h-${y}`}
+                  x1={start.x} y1={start.y}
+                  x2={end.x} y2={end.y}
+                  stroke="rgba(255,220,140,0.12)"
+                  strokeWidth={1}
+                />
+              );
+            })}
+
+            {/* Drop zone highlight */}
+            {isBoardDragOver && (
+              <polygon
+                points={MAP_PLANE_POLYGON}
+                fill="rgba(251,191,36,0.06)"
+                stroke="rgba(251,191,36,0.9)"
+                strokeWidth={2.4}
+                strokeDasharray="7 4"
+              />
+            )}
+
+            {/* Hover tile */}
+            {hoverPoint && (
+              <>
+                <polygon
+                  points={getIsoTilePolygon(hoverPoint, 0.08)}
+                  fill={hoverIsErase ? "rgba(160, 32, 32, 0.26)" : "rgba(255, 245, 200, 0.18)"}
+                  stroke={hoverIsErase ? "rgba(248, 113, 113, 0.98)" : "rgba(255, 255, 255, 0.95)"}
+                  strokeWidth={1.6}
+                />
+                <polygon
+                  points={getIsoTilePolygon(hoverPoint, -0.05)}
+                  fill="none"
+                  stroke={hoverIsErase ? "rgba(252, 165, 165, 0.92)" : "rgba(251, 191, 36, 0.94)"}
+                  strokeDasharray={hoverIsErase ? "3 2" : "4 3"}
+                  strokeWidth={1.2}
+                />
+              </>
+            )}
+
+            {/* Primary path */}
+            {draft.primaryPath.length >= 2 && (
+              <>
+                <polyline
+                  points={pathToIsoPoints(draft.primaryPath)}
+                  fill="none"
+                  stroke="rgba(251, 191, 36, 0.25)"
+                  strokeWidth={primaryPathEmphasized ? 10 : 7.5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+                <polyline
+                  points={pathToIsoPoints(draft.primaryPath)}
+                  fill="none"
+                  stroke="rgba(251, 191, 36, 0.96)"
+                  strokeWidth={primaryPathEmphasized ? 6.4 : 5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+              </>
+            )}
+
+            {/* Secondary path */}
+            {draft.secondaryPath.length >= 2 && (
+              <>
+                <polyline
+                  points={pathToIsoPoints(draft.secondaryPath)}
+                  fill="none"
+                  stroke="rgba(34, 211, 238, 0.24)"
+                  strokeWidth={secondaryPathEmphasized ? 10 : 7.5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+                <polyline
+                  points={pathToIsoPoints(draft.secondaryPath)}
+                  fill="none"
+                  stroke="rgba(34, 211, 238, 0.96)"
+                  strokeWidth={secondaryPathEmphasized ? 6.4 : 5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                />
+              </>
+            )}
+
+            {/* Primary path markers */}
+            {draft.primaryPath.map((point, index) => (
+              <IsoMarker
+                key={`p-${index}-${point.x}-${point.y}`}
+                point={point}
+                label={`A${index + 1}`}
+                fill="rgba(251, 191, 36, 0.98)"
+                stroke="rgba(40, 24, 8, 0.95)"
+                selected={targetMatches(selection, "primary_path", index)}
+                highlighted={targetMatches(hoverSelectionTarget, "primary_path", index)}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "primary_path", index)}
+                onPointerDown={(event) => startDragTarget({ kind: "primary_path", index }, event)}
+              />
+            ))}
+
+            {/* Secondary path markers */}
+            {draft.secondaryPath.map((point, index) => (
+              <IsoMarker
+                key={`s-${index}-${point.x}-${point.y}`}
+                point={point}
+                label={`B${index + 1}`}
+                fill="rgba(34, 211, 238, 0.98)"
+                stroke="rgba(7, 41, 52, 0.95)"
+                selected={targetMatches(selection, "secondary_path", index)}
+                highlighted={targetMatches(hoverSelectionTarget, "secondary_path", index)}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "secondary_path", index)}
+                onPointerDown={(event) => startDragTarget({ kind: "secondary_path", index }, event)}
+              />
+            ))}
+
+            {/* Decorations */}
+            {draft.decorations.map((deco, index) => {
+              const decorationType = deco.type ?? deco.category;
+              const isLandmark = Boolean(decorationType && LANDMARK_DECORATION_TYPES.has(decorationType));
+              return (
+                <IsoMarker
+                  key={`d-${index}-${deco.pos.x}-${deco.pos.y}`}
+                  point={deco.pos}
+                  label={isLandmark ? "L" : "D"}
+                  fill={isLandmark ? "rgba(125, 211, 252, 0.96)" : "rgba(250, 244, 224, 0.96)"}
+                  stroke={isLandmark ? "rgba(8, 47, 73, 0.95)" : "rgba(45, 34, 20, 0.95)"}
+                  selected={targetMatches(selection, "decoration", index)}
+                  highlighted={targetMatches(hoverSelectionTarget, "decoration", index)}
+                  danger={hoverIsErase && targetMatches(hoverSelectionTarget, "decoration", index)}
+                  onPointerDown={(event) => startDragTarget({ kind: "decoration", index }, event)}
+                />
+              );
+            })}
+
+            {/* Hazards */}
+            {draft.hazards.map((hazard, index) => {
+              const point = (hazard.pos as GridPoint | undefined) ?? hazard.gridPos;
+              if (!point) return null;
+              return (
+                <IsoMarker
+                  key={`h-${index}-${point.x}-${point.y}`}
+                  point={point}
+                  label="H"
+                  fill="rgba(248, 113, 113, 0.96)"
+                  stroke="rgba(66, 13, 13, 0.95)"
+                  selected={targetMatches(selection, "hazard", index)}
+                  highlighted={targetMatches(hoverSelectionTarget, "hazard", index)}
+                  danger={hoverIsErase && targetMatches(hoverSelectionTarget, "hazard", index)}
+                  onPointerDown={(event) => startDragTarget({ kind: "hazard", index }, event)}
+                />
+              );
+            })}
+
+            {/* Hero spawn */}
+            {draft.heroSpawn && (
+              <IsoMarker
+                point={draft.heroSpawn}
+                label="Hero"
+                fill="rgba(52, 211, 153, 0.98)"
+                stroke="rgba(7, 40, 30, 0.95)"
+                selected={targetMatches(selection, "hero_spawn")}
+                highlighted={targetMatches(hoverSelectionTarget, "hero_spawn")}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "hero_spawn")}
+                onPointerDown={(event) => startDragTarget({ kind: "hero_spawn" }, event)}
+              />
+            )}
+
+            {/* Special tower */}
+            {draft.specialTowerPos && (
+              <IsoMarker
+                point={draft.specialTowerPos}
+                label="OBJ"
+                fill="rgba(217, 70, 239, 0.98)"
+                stroke="rgba(60, 16, 74, 0.95)"
+                selected={targetMatches(selection, "special_tower")}
+                highlighted={targetMatches(hoverSelectionTarget, "special_tower")}
+                danger={hoverIsErase && targetMatches(hoverSelectionTarget, "special_tower")}
+                onPointerDown={(event) => startDragTarget({ kind: "special_tower" }, event)}
+              />
+            )}
+          </svg>
+
+          {/* Tool hint overlay */}
+          <div className="absolute top-3 left-3 z-10 pointer-events-none inline-flex items-center gap-1.5 rounded-md border border-amber-700/65 bg-stone-950/80 px-2 py-1 text-[11px] text-amber-200">
+            <ActiveToolIcon size={12} />
+            {TOOL_HINTS[tool]}
+          </div>
+          <div className="absolute top-3 right-3 z-10 pointer-events-none inline-flex items-center gap-1.5 rounded-md border border-amber-700/65 bg-stone-950/80 px-2 py-1 text-[11px] text-amber-200">
+            <Compass size={12} />
+            wheel to zoom &middot; alt+drag to pan
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
