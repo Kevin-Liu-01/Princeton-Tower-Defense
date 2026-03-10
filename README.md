@@ -50,7 +50,7 @@ Everything — towers, enemies, terrain, effects, UI — is drawn and animated i
 
 Campaign and challenge maps spanning grasslands, swamps, deserts, frozen tundra, and volcanic depths. Each region introduces new enemy types, environmental hazards, and visual identities — all rendered procedurally on Canvas.
 
-### ⚔️ 6 Towers with Branching Upgrades
+### ⚔️ 7 Towers with Branching Upgrades
 
 Each tower has a distinct role and two final upgrade paths that change its behavior.
 
@@ -62,6 +62,7 @@ Each tower has a distinct role and two final upgrade paths that change its behav
 | **Blair Arch** | Sonic AoE | Shockwave Siren · Symphony |
 | **Eating Club** | Economy | Investment Bank · Recruitment Center |
 | **Dinky Station** | Troop summons | Centaur Archers · Heavy Cavalry |
+| **Palmer Mortar** | Siege AoE | Missile Battery · Ember Foundry |
 
 ### 🐅 7 Playable Heroes
 
