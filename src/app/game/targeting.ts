@@ -47,6 +47,44 @@ export function getClosestEnemyInRange(
   return closestEnemy;
 }
 
+/**
+ * Builds a chain of enemies by hopping from the primary target to the nearest
+ * unchained enemy within `chainRange` of the last-chained enemy.
+ * The chain can extend beyond the tower's range.
+ */
+export function getChainTargets(
+  primaryTarget: Enemy,
+  maxChainCount: number,
+  chainRange: number,
+  allEnemies: Enemy[],
+  getEnemyPos: (enemy: Enemy) => Position
+): Enemy[] {
+  const chain: Enemy[] = [primaryTarget];
+  const chained = new Set<string>([primaryTarget.id]);
+
+  for (let i = 1; i < maxChainCount; i++) {
+    const lastPos = getEnemyPos(chain[chain.length - 1]);
+    let bestEnemy: Enemy | null = null;
+    let bestDist = chainRange;
+
+    for (const enemy of allEnemies) {
+      if (chained.has(enemy.id)) continue;
+      if (enemy.dead || enemy.hp <= 0) continue;
+      const dist = distance(lastPos, getEnemyPos(enemy));
+      if (dist <= bestDist) {
+        bestDist = dist;
+        bestEnemy = enemy;
+      }
+    }
+
+    if (!bestEnemy) break;
+    chain.push(bestEnemy);
+    chained.add(bestEnemy.id);
+  }
+
+  return chain;
+}
+
 export function getTroopCellKey(
   x: number,
   y: number,

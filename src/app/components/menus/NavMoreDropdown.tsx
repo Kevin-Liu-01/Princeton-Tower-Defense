@@ -10,6 +10,7 @@ import {
   Gamepad2,
   ExternalLink,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { GOLD, OVERLAY, panelGradient } from "../ui/theme";
 
 const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
@@ -20,7 +21,7 @@ const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
 
 interface DropdownItem {
   label: string;
-  icon: React.FC<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   href?: string;
   onClick?: () => void;
 }
@@ -184,7 +185,7 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
       <button
         ref={triggerRef}
         onClick={() => setOpen((prev) => !prev)}
-        className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"
+        className="relative flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"
         style={{
           background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
           border: `1.5px solid ${GOLD.border30}`,

@@ -139,7 +139,7 @@ export function renderEffect(
           cameraOffset,
           cameraZoom,
         );
-        const intensity = effect.intensity || 1;
+        const intensity = Math.max(0, effect.intensity || 1);
         const scenePressure = getScenePressure();
         const lightningPressure = effectDensityHint + enemies.length * 0.25
           + (scenePressure.skipDecorativeEffects ? 40 : 0);
@@ -423,7 +423,7 @@ export function renderEffect(
           cameraOffset,
           cameraZoom,
         );
-        const intensity = effect.intensity || 1;
+        const intensity = Math.max(0, effect.intensity || 1);
         const dx = targetScreen.x - screenPos.x;
         const dy = targetScreen.y - screenPos.y;
         const distanceLen = Math.hypot(dx, dy) || 1;
@@ -551,7 +551,7 @@ export function renderEffect(
           cameraOffset,
           cameraZoom,
         );
-        const intensity = effect.intensity || 1;
+        const intensity = Math.max(0, effect.intensity || 1);
         const noteIndex = effect.noteIndex || 0;
 
         // Find the source arch tower to get correct portal position

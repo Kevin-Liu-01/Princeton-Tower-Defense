@@ -525,13 +525,20 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   }
 
   if (baseStats.chainTargets && baseStats.chainTargets > 1) {
+    const isLabChain = tower.type === "lab";
     statsToShow.push({
-      key: "chain", label: "Targets", icon: <Users size={14} />,
+      key: "chain",
+      label: isLabChain ? "Chains" : "Targets",
+      icon: isLabChain ? <Zap size={14} /> : <Users size={14} />,
       value: `${baseStats.chainTargets}`,
       nextValue: nextStats && nextStats.chainTargets && nextStats.chainTargets > baseStats.chainTargets
         ? `${nextStats.chainTargets}` : undefined,
-      colorClass: "bg-yellow-950/60 border-yellow-800/50 text-yellow-400",
-      buffColorClass: "bg-yellow-950/60 border-yellow-500/70 text-yellow-400",
+      colorClass: isLabChain
+        ? "bg-cyan-950/60 border-cyan-800/50 text-cyan-400"
+        : "bg-yellow-950/60 border-yellow-800/50 text-yellow-400",
+      buffColorClass: isLabChain
+        ? "bg-cyan-950/60 border-cyan-500/70 text-cyan-400"
+        : "bg-yellow-950/60 border-yellow-500/70 text-yellow-400",
       debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
@@ -562,6 +569,19 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       value: `${baseStats.burnDamage}/s`,
       colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
       buffColorClass: "bg-red-950/60 border-red-500/70 text-red-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
+    });
+  }
+
+  if (baseStats.crescendoMaxStacks && baseStats.crescendoMaxStacks > 0) {
+    const currentStacks = tower.crescendoStacks || 0;
+    statsToShow.push({
+      key: "crescendo", label: "Crescendo", icon: <Music size={14} />,
+      value: `${currentStacks}/${baseStats.crescendoMaxStacks}`,
+      nextValue: nextStats && nextStats.crescendoMaxStacks && nextStats.crescendoMaxStacks > baseStats.crescendoMaxStacks
+        ? `${nextStats.crescendoMaxStacks}` : undefined,
+      colorClass: "bg-emerald-950/60 border-emerald-800/50 text-emerald-400",
+      buffColorClass: "bg-emerald-950/60 border-emerald-500/70 text-emerald-400",
       debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
@@ -606,6 +626,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   }
 
   const gridCols = statsToShow.length <= 2 ? 2 : statsToShow.length <= 3 ? 3 : 4;
+  const lastRowRemainder = statsToShow.length > gridCols ? statsToShow.length % gridCols : 0;
+  const lastRowStartIdx = lastRowRemainder > 0 ? statsToShow.length - lastRowRemainder : -1;
 
   // ---- Circle geometry ----
   const towerVisualOffsetY = 35 * cameraZoom;
@@ -859,17 +881,33 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
           {/* Stats Grid */}
           {statsToShow.length > 0 && (
-            <div className={`grid gap-1 mb-1.5`} style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
-              {statsToShow.map((stat) => {
+            <div className={`grid gap-1 mb-1.5`} style={{ gridTemplateColumns: `repeat(${gridCols * 2}, 1fr)` }}>
+              {statsToShow.map((stat, idx) => {
                 const isDebuffed = stat.isDebuffed && stat.debuffedValue !== undefined;
                 const isBoosted = stat.isBoosted && stat.buffedValue !== undefined;
                 const colorClass = isDebuffed ? stat.debuffColorClass : (isBoosted ? stat.buffColorClass : stat.colorClass);
+
+                let gridStyle: React.CSSProperties;
+                if (lastRowRemainder > 0 && idx >= lastRowStartIdx) {
+                  const posInLastRow = idx - lastRowStartIdx;
+                  const totalGridCols = gridCols * 2;
+                  const itemSpan = lastRowRemainder === 1
+                    ? Math.min(4, totalGridCols)
+                    : Math.floor(totalGridCols / lastRowRemainder);
+                  const totalUsed = itemSpan * lastRowRemainder;
+                  const offset = Math.floor((totalGridCols - totalUsed) / 2);
+                  gridStyle = { gridColumn: `${offset + 1 + posInLastRow * itemSpan} / span ${itemSpan}` };
+                } else if (stat.colSpan) {
+                  gridStyle = { gridColumn: `span ${stat.colSpan * 2}` };
+                } else {
+                  gridStyle = { gridColumn: `span 2` };
+                }
 
                 return (
                   <div
                     key={stat.key}
                     className={`p-1 rounded-md border text-center ${colorClass}`}
-                    style={stat.colSpan ? { gridColumn: `span ${stat.colSpan}` } : undefined}
+                    style={gridStyle}
                   >
                     <div className="flex items-center justify-center gap-0.5">
                       {stat.icon}

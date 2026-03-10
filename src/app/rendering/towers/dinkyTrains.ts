@@ -537,7 +537,7 @@ export function renderDinkyTrains(
       const hlRx = r * zoom * ISO_SIN;
       const hlRy = r * zoom;
       ctx.strokeStyle = bracketColor;
-      ctx.lineWidth = 2.5 * zoom;
+      ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(anchorX, anchorY);
       ctx.lineTo(cx, cy);
@@ -547,13 +547,13 @@ export function renderDinkyTrains(
       ctx.ellipse(cx, cy, hlRx, hlRy, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
-      ctx.lineWidth = 0.8 * zoom;
+      ctx.lineWidth = 0.7 * zoom;
       ctx.stroke();
       ctx.fillStyle = `rgba(255, 250, 200, ${glowAlpha})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 12 * zoom;
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(cx, cy, hlRx * 0.65, hlRy * 0.65, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, hlRx * 0.55, hlRy * 0.55, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
     };
@@ -630,6 +630,129 @@ export function renderDinkyTrains(
         ctx.lineTo(bCenter.x + bHw, bCenter.y + bHw * 0.5 + bH * 0.5);
         ctx.stroke();
       }
+    };
+
+    // Draws the complete front-of-train assembly (bumper beam, cowcatcher,
+    // headlight) flush with the cab prism's right face (the isometric "front").
+    // Forward projection uses isoOffset (track direction) so elements extend
+    // in the correct isometric "forward" rather than along the 2D face normal.
+    const drawTrainFront = (
+      cabX: number, cabY: number,
+      pw: number, pd: number, ph: number,
+      mainCol: string, darkCol: string, accentCol: string,
+      hlHousingCol: string, hlBracketCol: string,
+      hlGlowAlpha: number,
+      scale: number,
+      cowBarCount: number,
+    ) => {
+      const w = pw * zoom * 0.5;
+      const d = pd * zoom * 0.25;
+      const h = ph * zoom;
+      const s = scale;
+
+      // Right face (front of train) corners
+      const br = { x: cabX + w, y: cabY };
+      const bf = { x: cabX, y: cabY + d };
+      const tr = { x: cabX + w, y: cabY - h };
+      const tf = { x: cabX, y: cabY - h + d };
+
+      // Edge direction along bottom (br → bf)
+      const edx = bf.x - br.x;
+      const edy = bf.y - br.y;
+
+      // Face midpoints (bottom & top edges)
+      const botMid = { x: (br.x + bf.x) / 2, y: (br.y + bf.y) / 2 };
+      const topMid = { x: (tr.x + tf.x) / 2, y: (tr.y + tf.y) / 2 };
+
+      // === 3D BUMPER BEAM along front-face bottom edge ===
+      // Project outer edge forward along the track via isoOffset
+      const beamH = 1.5 * zoom * s;
+      const beamFwd = 0.7 * s;
+      const brO = isoOffset(br.x, br.y, beamFwd);
+      const bfO = isoOffset(bf.x, bf.y, beamFwd);
+
+      // Top face of beam (accent strip)
+      ctx.fillStyle = accentCol;
+      ctx.beginPath();
+      ctx.moveTo(br.x, br.y);
+      ctx.lineTo(bf.x, bf.y);
+      ctx.lineTo(bfO.x, bfO.y);
+      ctx.lineTo(brO.x, brO.y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front face of beam (vertical drop from outer edge)
+      ctx.fillStyle = mainCol;
+      ctx.beginPath();
+      ctx.moveTo(brO.x, brO.y);
+      ctx.lineTo(bfO.x, bfO.y);
+      ctx.lineTo(bfO.x, bfO.y + beamH);
+      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bottom face of beam
+      ctx.fillStyle = darkCol;
+      ctx.beginPath();
+      ctx.moveTo(br.x, br.y + beamH);
+      ctx.lineTo(bf.x, bf.y + beamH);
+      ctx.lineTo(bfO.x, bfO.y + beamH);
+      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Beam outlines
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(brO.x, brO.y);
+      ctx.lineTo(bfO.x, bfO.y);
+      ctx.lineTo(bfO.x, bfO.y + beamH);
+      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Top-face highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(br.x + edx * 0.15, br.y + edy * 0.15);
+      ctx.lineTo(bf.x - edx * 0.15, bf.y - edy * 0.15);
+      ctx.stroke();
+
+      // Bolts on bumper beam front face
+      ctx.fillStyle = accentCol;
+      for (let bi = 0; bi < 3; bi++) {
+        const bt = (bi + 1) / 4;
+        const bx = brO.x + edx * bt;
+        const by = brO.y + edy * bt + beamH * 0.35;
+        ctx.beginPath();
+        ctx.arc(bx, by, 0.5 * zoom * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // === COWCATCHER V-plow flush below bumper ===
+      const cowBase = {
+        x: (brO.x + bfO.x) / 2,
+        y: (brO.y + bfO.y) / 2 + beamH,
+      };
+      drawIsoCowcatcher(
+        cowBase.x, cowBase.y,
+        2.5 * s, 2 * s, 2.5 * s,
+        mainCol, darkCol, accentCol, cowBarCount);
+
+      // === HEADLIGHT mounted on upper front face ===
+      const hlAnchor = {
+        x: botMid.x + (topMid.x - botMid.x) * 0.7,
+        y: botMid.y + (topMid.y - botMid.y) * 0.7,
+      };
+      // Project headlight center forward along track by a small amount
+      const hlCenter = isoOffset(hlAnchor.x, hlAnchor.y, 1 * s);
+      drawIsoHeadlight(
+        hlAnchor.x, hlAnchor.y,
+        hlCenter.x, hlCenter.y,
+        1.8 * s,
+        hlHousingCol, hlBracketCol, hlGlowAlpha);
     };
 
     if (tower.level === 1) {
@@ -1117,8 +1240,8 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
       // Brass cap ring at top
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2 * zoom;
+      ctx.strokeStyle = "#8B7333";
+      ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         stackPos.x,
@@ -1555,20 +1678,11 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Isometric front headlight on cab
-      {
-        const flPos = { x: cabPos.x + 6 * zoom, y: cabPos.y - 7.5 * zoom };
-        drawIsoHeadlight(
-          cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom,
-          flPos.x, flPos.y, 2.8,
-          "#C9A227", "#B87333", 0.75 + Math.sin(time * 3) * 0.2);
-      }
-
-      // === COWCATCHER: Isometric brass V-plow ===
-      drawIsoCowcatcher(
-        cabPos.x + 4 * zoom, cabPos.y + 0.5 * zoom,
-        3, 3, 4,
-        "#B87333", "#8B5E3C", "#C9A227", 4);
+      // Front assembly: bumper beam, cowcatcher, headlight flush with cab face
+      drawTrainFront(cabPos.x, cabPos.y, 11, 10, 16,
+        "#B87333", "#8B5E3C", "#C9A227",
+        "#C9A227", "#B87333",
+        0.75 + Math.sin(time * 3) * 0.2, 1.0, 4);
 
       // "DINKY" nameplate on boiler side — 3D raised brass plaque
       const npPos = isoOffset(boilerPos.x, boilerPos.y - 3 * zoom, -4);
@@ -2406,20 +2520,11 @@ export function renderDinkyTrains(
       ctx.arc(chain2.x + 2.5 * zoom, chain2.y, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Isometric front headlight on cab
-      {
-        const flPos = { x: cabPos.x + 7 * zoom, y: cabPos.y - 8.5 * zoom };
-        drawIsoHeadlight(
-          cabPos.x + 6 * zoom, cabPos.y - 8 * zoom,
-          flPos.x, flPos.y, 3,
-          "#3a4050", "#3a4050", 0.7 + Math.sin(time * 3) * 0.2);
-      }
-
-      // === ARMORED PLOW/RAM — isometric V-wedge ===
-      drawIsoCowcatcher(
-        cabPos.x + 4.5 * zoom, cabPos.y + 0.5 * zoom,
-        3.5, 3.5, 5,
-        "#4a5060", "#2a3040", "#5a6070", 4);
+      // Front assembly: armored bumper, plow, headlight flush with cab face
+      drawTrainFront(cabPos.x, cabPos.y, 12, 11, 16,
+        "#4a5060", "#2a3040", "#5a6070",
+        "#3a4050", "#3a4050",
+        0.7 + Math.sin(time * 3) * 0.2, 1.1, 4);
 
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
@@ -3296,20 +3401,11 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Isometric front headlight with fortress bracket
-      {
-        const hlPos = { x: cabPos.x + 7.5 * zoom, y: cabPos.y - 10.5 * zoom };
-        drawIsoHeadlight(
-          cabPos.x + 6.5 * zoom, cabPos.y - 10 * zoom,
-          hlPos.x, hlPos.y, 3,
-          "#3a4050", "#3a4050", 0.75 + Math.sin(time * 3) * 0.2);
-      }
-
-      // Isometric battering ram — armored V-wedge
-      drawIsoCowcatcher(
-        cabPos.x + 5 * zoom, cabPos.y + 0.5 * zoom,
-        3.5, 3.5, 5,
-        "#3a4050", "#1a2030", "#5a6070", 3);
+      // Front assembly: fortress bumper, battering ram, headlight flush with cab
+      drawTrainFront(cabPos.x, cabPos.y, 13, 12, 18,
+        "#3a4050", "#1a2030", "#5a6070",
+        "#3a4050", "#3a4050",
+        0.75 + Math.sin(time * 3) * 0.2, 1.15, 3);
 
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
@@ -3851,20 +3947,11 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Ornamental cowcatcher — isometric gold V-plow
-      drawIsoCowcatcher(
-        cabPos.x + 4 * zoom, cabPos.y + 0.5 * zoom,
-        3, 3, 4,
-        "#C9A227", "#B89227", "#E8C847", 4);
-
-      // Isometric front headlight (gold bracket mount)
-      {
-        const hlPos = { x: cabPos.x + 6.5 * zoom, y: cabPos.y - 8.5 * zoom };
-        drawIsoHeadlight(
-          cabPos.x + 5.5 * zoom, cabPos.y - 8 * zoom,
-          hlPos.x, hlPos.y, 3,
-          "#C9A227", "#C9A227", 0.75 + Math.sin(time * 3) * 0.15);
-      }
+      // Front assembly: ornate gold bumper, cowcatcher, headlight flush with cab
+      drawTrainFront(cabPos.x, cabPos.y, 11, 11, 14,
+        "#C9A227", "#B89227", "#E8C847",
+        "#C9A227", "#C9A227",
+        0.75 + Math.sin(time * 3) * 0.15, 1.0, 4);
     } else {
       // ========== LEVEL 4B: Dark Royal Armored War Train ==========
       ctx.shadowColor = "rgba(0,0,0,0.7)";
@@ -4500,20 +4587,11 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Armored ram — isometric V-wedge with gold trim
-      drawIsoCowcatcher(
-        cabPos.x + 5 * zoom, cabPos.y + 0.5 * zoom,
-        4, 4, 5,
-        "#3a4050", "#1a2030", "#C9A227", 4);
-
-      // Isometric front headlight
-      {
-        const hlPos = { x: cabPos.x + 7.5 * zoom, y: cabPos.y - 9.5 * zoom };
-        drawIsoHeadlight(
-          cabPos.x + 6.5 * zoom, cabPos.y - 9 * zoom,
-          hlPos.x, hlPos.y, 3.5,
-          "#3a4050", "#3a4050", 0.75 + Math.sin(time * 3) * 0.2);
-      }
+      // Front assembly: armored ram, headlight flush with cab face
+      drawTrainFront(cabPos.x, cabPos.y, 13, 13, 18,
+        "#3a4050", "#1a2030", "#C9A227",
+        "#3a4050", "#3a4050",
+        0.75 + Math.sin(time * 3) * 0.2, 1.2, 4);
     }
 
     ctx.restore();

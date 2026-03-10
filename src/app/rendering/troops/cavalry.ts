@@ -863,44 +863,90 @@ export function drawCavalryTroop(
   }
 
   // === MAJESTIC TAIL (layered strands) ===
-  const tailWave1 = Math.sin(time * 6) * 10;
-  const tailWave2 = Math.sin(time * 6 + 1) * 12;
+  const tailWave1 = Math.sin(time * 6);
+  const tailWave2 = Math.sin(time * 6 + 1);
+  const tailWave3 = Math.sin(time * 4.2 + 0.5) * 0.7;
   const tailRootX = x + size * 0.42;
   const tailRootY = y + size * 0.12 + gallop * 0.15;
-  for (let strand = 0; strand < 4; strand++) {
-    const strandOffset = (strand - 1.5) * size * 0.012;
-    ctx.strokeStyle =
-      strand === 0
-        ? "#1d130d"
-        : strand === 1
-          ? "#2a1a10"
-          : strand === 2
-            ? "#3d2616"
-            : "rgba(156, 129, 219, 0.75)";
-    ctx.lineWidth = (6.8 - strand * 1.2) * zoom;
+  const cavTailCount = 10;
+  const cavTailColors = [
+    "#1d130d", "#1d130d", "#2a1a10", "#2a1a10", "#3d2616",
+    "#3d2616", "#5a3d24", "#5a3d24",
+    "rgba(120, 96, 180, 0.65)", "rgba(156, 129, 219, 0.75)",
+  ];
+  for (let strand = 0; strand < cavTailCount; strand++) {
+    const t = strand / (cavTailCount - 1);
+    const spread = (t - 0.5) * size * 0.065;
+    const phase = strand * 0.32;
+    const wave = Math.sin(time * 6 + phase);
+    const waveB = Math.sin(time * 4.2 + phase * 0.6);
+    const length = 0.34 + t * 0.07;
+    const thickness = (6.0 - t * 4.8) * zoom;
+    ctx.strokeStyle = cavTailColors[strand];
+    ctx.lineWidth = thickness;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(tailRootX + strandOffset, tailRootY + strandOffset * 0.2);
-    ctx.quadraticCurveTo(
-      x + size * 0.62 + tailWave1 + strandOffset * 7,
-      y + size * (0.24 + strand * 0.02),
-      x + size * 0.59 + tailWave2 + strandOffset * 8,
-      y + size * (0.5 - strand * 0.02),
+    ctx.moveTo(tailRootX + spread * 0.3, tailRootY + spread * 0.15);
+    ctx.bezierCurveTo(
+      x + size * 0.52 + wave * 7 + spread * 0.5,
+      y + size * 0.1 + spread * 0.4 + waveB * 2.5,
+      x + size * 0.66 + wave * 11 + tailWave3 * 6 + spread * 0.7,
+      y + size * (0.22 + t * 0.05) + waveB * 4,
+      x + size * (0.56 + t * 0.04) + wave * 13 + tailWave3 * 7 + spread,
+      y + size * (0.14 + length) + waveB * 3,
     );
     ctx.stroke();
   }
-  ctx.fillStyle = `rgba(193, 168, 252, ${0.45 + maneGlow * 0.35})`;
+  for (let w = 0; w < 5; w++) {
+    const wt = w / 4;
+    const wPhase = w * 0.75 + 1.5;
+    const wWave = Math.sin(time * 6 + wPhase);
+    const wWaveB = Math.sin(time * 4.2 + wPhase * 0.6);
+    const wSpread = (wt - 0.5) * size * 0.045;
+    const tipX = x + size * 0.58 + wWave * 14 + tailWave3 * 8 + wSpread;
+    const tipY = y + size * 0.46 + wWaveB * 4 + wSpread * 0.3;
+    ctx.strokeStyle = `rgba(156, 129, 219, ${0.3 + wt * 0.3})`;
+    ctx.lineWidth = (1.8 - wt * 0.5) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(
+      tipX - size * 0.06 - wWave * 2,
+      tipY - size * 0.07 - wWaveB * 2,
+    );
+    ctx.quadraticCurveTo(
+      tipX - size * 0.01 + wWave * 3,
+      tipY - size * 0.02,
+      tipX + wWave * 4 + size * 0.025 * wt,
+      tipY + size * 0.04 + wWaveB * 2,
+    );
+    ctx.stroke();
+  }
+  const cavGlowAlpha = 0.25 + maneGlow * 0.3;
+  ctx.fillStyle = `rgba(193, 168, 252, ${cavGlowAlpha})`;
   ctx.beginPath();
   ctx.ellipse(
-    x + size * 0.59 + tailWave2,
-    y + size * 0.49,
-    size * 0.03,
-    size * 0.018,
-    0.2,
+    x + size * 0.58 + Math.sin(time * 6 + 3.5) * 13 + tailWave3 * 7,
+    y + size * 0.47,
+    size * 0.04,
+    size * 0.022,
+    0.3 + tailWave1 * 0.15,
     0,
     Math.PI * 2,
   );
   ctx.fill();
+  if (maneGlow > 0.3) {
+    for (let p = 0; p < 3; p++) {
+      const pt = p / 2;
+      const pPhase = p * 1.1 + time * 3;
+      const sparkX = x + size * 0.56 + Math.sin(pPhase) * 14 + tailWave3 * 6;
+      const sparkY = y + size * (0.35 + pt * 0.1) + Math.cos(pPhase * 1.3) * 5;
+      const sparkAlpha = (0.4 + Math.sin(pPhase * 2) * 0.3) * maneGlow;
+      ctx.fillStyle = `rgba(220, 200, 255, ${sparkAlpha})`;
+      ctx.beginPath();
+      ctx.arc(sparkX, sparkY, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   // === ROYAL KNIGHT RIDER ===
   // Broader royal cape that rides above the horse silhouette.

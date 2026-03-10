@@ -6,6 +6,7 @@ import {
   drawIsoDiamond,
   drawIsoGothicWindow,
   drawIsoFlushSlit,
+  drawIsoFlushRect,
   drawMerlon,
 } from "./towerHelpers";
 import { renderDinkyTrains } from "./dinkyTrains";
@@ -97,16 +98,16 @@ export function renderStationTower(
     ctx.fillStyle = "#6a5a4a";
     const l1FoundCorners = [
       {
-        x: screenPos.x - (baseW + 22) * zoom * 0.45,
+        x: screenPos.x - (baseW + 22) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 22) * zoom * 0.45,
+        x: screenPos.x + (baseW + 22) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 34) * zoom * 0.22 + 12 * zoom,
+        y: screenPos.y + (baseD + 34) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
       },
     ];
     for (const bolt of l1FoundCorners) {
@@ -181,16 +182,16 @@ export function renderStationTower(
     ctx.fillStyle = "#7a6a5a";
     const bracketPositions = [
       {
-        x: screenPos.x - (baseW + 10) * zoom * 0.48,
+        x: screenPos.x - (baseW + 10) * zoom * 0.5,
         y: screenPos.y + 2 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 10) * zoom * 0.48,
+        x: screenPos.x + (baseW + 10) * zoom * 0.5,
         y: screenPos.y + 2 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 18) * zoom * 0.23 + 2 * zoom,
+        y: screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR + 2 * zoom,
       },
     ];
     for (const bracket of bracketPositions) {
@@ -228,12 +229,12 @@ export function renderStationTower(
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x - (baseW + 2) * zoom * 0.4 + i * 4 * zoom,
+        screenPos.x - (baseW + 2) * zoom * 0.5 + i * 4 * zoom,
         screenPos.y - 4 * zoom - i * 2 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 4 * zoom,
-        screenPos.y + (baseD + 8) * zoom * 0.2 - 4 * zoom - i * 2 * zoom,
+        screenPos.y + (baseD + 8) * zoom * ISO_PRISM_D_FACTOR - 4 * zoom - i * 2 * zoom,
       );
       ctx.stroke();
     }
@@ -250,13 +251,13 @@ export function renderStationTower(
     // Corner posts
     ctx.fillStyle = "#5a4a3a";
     ctx.fillRect(
-      screenPos.x - (baseW + 2) * zoom * 0.48 - 2 * zoom,
+      screenPos.x - (baseW + 2) * zoom * 0.5 - 2 * zoom,
       screenPos.y - 8 * zoom,
       4 * zoom,
       8 * zoom,
     );
     ctx.fillRect(
-      screenPos.x + (baseW + 2) * zoom * 0.48 - 2 * zoom,
+      screenPos.x + (baseW + 2) * zoom * 0.5 - 2 * zoom,
       screenPos.y - 8 * zoom,
       4 * zoom,
       8 * zoom,
@@ -266,7 +267,7 @@ export function renderStationTower(
     ctx.fillStyle = "#7a6a5a";
     ctx.beginPath();
     ctx.arc(
-      screenPos.x - (baseW + 2) * zoom * 0.48,
+      screenPos.x - (baseW + 2) * zoom * 0.5,
       screenPos.y - 8 * zoom,
       2.5 * zoom,
       0,
@@ -275,7 +276,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.arc(
-      screenPos.x + (baseW + 2) * zoom * 0.48,
+      screenPos.x + (baseW + 2) * zoom * 0.5,
       screenPos.y - 8 * zoom,
       2.5 * zoom,
       0,
@@ -457,16 +458,16 @@ export function renderStationTower(
     ctx.fillStyle = "#6a6a72";
     const foundCorners = [
       {
-        x: screenPos.x - (baseW + 20) * zoom * 0.48,
+        x: screenPos.x - (baseW + 20) * zoom * 0.5,
         y: screenPos.y + 9 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 20) * zoom * 0.48,
+        x: screenPos.x + (baseW + 20) * zoom * 0.5,
         y: screenPos.y + 9 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 34) * zoom * 0.24 + 9 * zoom,
+        y: screenPos.y + (baseD + 34) * zoom * ISO_PRISM_D_FACTOR + 9 * zoom,
       },
     ];
     for (const corner of foundCorners) {
@@ -521,23 +522,23 @@ export function renderStationTower(
       // Diagonal lines one direction
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x - (baseW + 4) * zoom * 0.4 + i * 6 * zoom,
+        screenPos.x - (baseW + 4) * zoom * 0.5 + i * 6 * zoom,
         screenPos.y - 5 * zoom - i * 3 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 6 * zoom,
-        screenPos.y + (baseD + 14) * zoom * 0.15 - 5 * zoom - i * 3 * zoom,
+        screenPos.y + (baseD + 14) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom - i * 3 * zoom,
       );
       ctx.stroke();
       // Diagonal lines other direction
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x + (baseW + 4) * zoom * 0.4 + i * 6 * zoom,
+        screenPos.x + (baseW + 4) * zoom * 0.5 + i * 6 * zoom,
         screenPos.y - 5 * zoom + i * 3 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 6 * zoom,
-        screenPos.y + (baseD + 14) * zoom * 0.15 - 5 * zoom + i * 3 * zoom,
+        screenPos.y + (baseD + 14) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom + i * 3 * zoom,
       );
       ctx.stroke();
     }
@@ -558,7 +559,7 @@ export function renderStationTower(
     ctx.fillStyle = "#5a5a62";
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 4) * zoom * 0.45,
+      screenPos.x - (baseW + 4) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       4,
       4,
@@ -568,7 +569,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 4) * zoom * 0.45,
+      screenPos.x + (baseW + 4) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       4,
       4,
@@ -581,7 +582,7 @@ export function renderStationTower(
     ctx.fillStyle = "#8a8a92";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 4) * zoom * 0.45,
+      screenPos.x - (baseW + 4) * zoom * 0.5,
       screenPos.y - 10 * zoom,
       3 * zoom,
       1.5 * zoom,
@@ -592,7 +593,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 4) * zoom * 0.45,
+      screenPos.x + (baseW + 4) * zoom * 0.5,
       screenPos.y - 10 * zoom,
       3 * zoom,
       1.5 * zoom,
@@ -890,7 +891,7 @@ export function renderStationTower(
     ctx.fillStyle = "#5a5a62";
     const anchorPositions = [
       {
-        x: screenPos.x - (baseW + 24) * zoom * 0.45,
+        x: screenPos.x - (baseW + 24) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
@@ -902,12 +903,12 @@ export function renderStationTower(
         y: screenPos.y + 15 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 24) * zoom * 0.45,
+        x: screenPos.x + (baseW + 24) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 38) * zoom * 0.22 + 12 * zoom,
+        y: screenPos.y + (baseD + 38) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
       },
     ];
     for (const anchor of anchorPositions) {
@@ -964,22 +965,22 @@ export function renderStationTower(
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x - (baseW + 6) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x - (baseW + 6) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 16) * zoom * 0.18 - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x + (baseW + 6) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x + (baseW + 6) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 16) * zoom * 0.18 - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -1001,12 +1002,12 @@ export function renderStationTower(
     ctx.strokeStyle = `rgba(255, 108, 0, ${platformGlow})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.48, screenPos.y - 5 * zoom);
+    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 5 * zoom);
     ctx.lineTo(
       screenPos.x,
-      screenPos.y + (baseD + 16) * zoom * 0.23 - 5 * zoom,
+      screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom,
     );
-    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.48, screenPos.y - 5 * zoom);
+    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 5 * zoom);
     ctx.stroke();
 
     // Mini battlements on corners - now with more detail
@@ -1036,7 +1037,7 @@ export function renderStationTower(
     // Fortress corner towers (small)
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 6) * zoom * 0.48,
+      screenPos.x - (baseW + 6) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -1046,7 +1047,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 6) * zoom * 0.48,
+      screenPos.x + (baseW + 6) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -1059,38 +1060,38 @@ export function renderStationTower(
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x - (baseW + 6) * zoom * 0.48,
+      screenPos.x - (baseW + 6) * zoom * 0.5,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.48 - 4 * zoom,
+      screenPos.x - (baseW + 6) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.48,
+      screenPos.x - (baseW + 6) * zoom * 0.5,
       screenPos.y - 12 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.48 + 4 * zoom,
+      screenPos.x - (baseW + 6) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x + (baseW + 6) * zoom * 0.48,
+      screenPos.x + (baseW + 6) * zoom * 0.5,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.48 - 4 * zoom,
+      screenPos.x + (baseW + 6) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.48,
+      screenPos.x + (baseW + 6) * zoom * 0.5,
       screenPos.y - 12 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.48 + 4 * zoom,
+      screenPos.x + (baseW + 6) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.closePath();
@@ -1516,24 +1517,24 @@ export function renderStationTower(
     ctx.fillStyle = "#4a2a1a";
     const l4aAnchors = [
       {
-        x: screenPos.x - (baseW + 26) * zoom * 0.42,
+        x: screenPos.x - (baseW + 26) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
-        x: screenPos.x - (baseW + 26) * zoom * 0.2,
+        x: screenPos.x - (baseW + 26) * zoom * 0.25,
         y: screenPos.y + 16 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 26) * zoom * 0.2,
+        x: screenPos.x + (baseW + 26) * zoom * 0.25,
         y: screenPos.y + 16 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 26) * zoom * 0.42,
+        x: screenPos.x + (baseW + 26) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 42) * zoom * 0.22 + 12 * zoom,
+        y: screenPos.y + (baseD + 42) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
       },
     ];
     for (const anchor of l4aAnchors) {
@@ -1575,7 +1576,7 @@ export function renderStationTower(
     ctx.strokeStyle = "rgba(0,0,0,0.1)";
     ctx.lineWidth = 1 * zoom;
     for (let col = 0; col < 6; col++) {
-      const fluteX = screenPos.x - (baseW + 16) * zoom * 0.35 - col * 4 * zoom;
+      const fluteX = screenPos.x - (baseW + 16) * zoom * 0.5 - col * 4 * zoom;
       const fluteTopY = screenPos.y + 1 * zoom + col * 0.8 * zoom;
       const fluteBottomY = screenPos.y + 8 * zoom + col * 1 * zoom;
       ctx.beginPath();
@@ -1586,7 +1587,7 @@ export function renderStationTower(
 
     // Stone mortar lines on middle tier right face
     for (let col = 0; col < 6; col++) {
-      const fluteX = screenPos.x + (baseW + 16) * zoom * 0.35 + col * 4 * zoom;
+      const fluteX = screenPos.x + (baseW + 16) * zoom * 0.5 + col * 4 * zoom;
       const fluteTopY = screenPos.y + 1 * zoom + col * 0.8 * zoom;
       const fluteBottomY = screenPos.y + 8 * zoom + col * 1 * zoom;
       ctx.beginPath();
@@ -1613,22 +1614,22 @@ export function renderStationTower(
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x - (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x - (baseW + 8) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * 0.15 - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x + (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x + (baseW + 8) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * 0.15 - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -1648,7 +1649,7 @@ export function renderStationTower(
     // Corner clay posts
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       5,
       5,
@@ -1658,7 +1659,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       5,
       5,
@@ -1671,7 +1672,7 @@ export function renderStationTower(
     ctx.fillStyle = "#8b4532";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 12 * zoom,
       3.5 * zoom,
       1.8 * zoom,
@@ -1682,7 +1683,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 12 * zoom,
       3.5 * zoom,
       1.8 * zoom,
@@ -1696,7 +1697,7 @@ export function renderStationTower(
     ctx.fillStyle = "#5a4020";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 15 * zoom,
       2 * zoom,
       2.5 * zoom,
@@ -1707,7 +1708,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 15 * zoom,
       2 * zoom,
       2.5 * zoom,
@@ -1720,7 +1721,7 @@ export function renderStationTower(
     ctx.fillStyle = "rgba(255, 180, 80, 0.5)";
     ctx.beginPath();
     ctx.arc(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 16 * zoom,
       2.5 * zoom,
       0,
@@ -1729,7 +1730,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.arc(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 16 * zoom,
       2.5 * zoom,
       0,
@@ -1860,24 +1861,24 @@ export function renderStationTower(
     ctx.fillStyle = "#5a5a62";
     const anchorPoints = [
       {
-        x: screenPos.x - (baseW + 26) * zoom * 0.42,
+        x: screenPos.x - (baseW + 26) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
-        x: screenPos.x - (baseW + 26) * zoom * 0.2,
+        x: screenPos.x - (baseW + 26) * zoom * 0.25,
         y: screenPos.y + 16 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 26) * zoom * 0.2,
+        x: screenPos.x + (baseW + 26) * zoom * 0.25,
         y: screenPos.y + 16 * zoom,
       },
       {
-        x: screenPos.x + (baseW + 26) * zoom * 0.42,
+        x: screenPos.x + (baseW + 26) * zoom * 0.5,
         y: screenPos.y + 12 * zoom,
       },
       {
         x: screenPos.x,
-        y: screenPos.y + (baseD + 42) * zoom * 0.22 + 12 * zoom,
+        y: screenPos.y + (baseD + 42) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
       },
     ];
     for (const anchor of anchorPoints) {
@@ -1935,22 +1936,22 @@ export function renderStationTower(
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x - (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x - (baseW + 8) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * 0.15 - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(
-        screenPos.x + (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
+        screenPos.x + (baseW + 8) * zoom * 0.5 + i * 5 * zoom,
         screenPos.y - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * 0.15 - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -2016,7 +2017,7 @@ export function renderStationTower(
     ctx.fillStyle = "#5a5a62";
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -2026,7 +2027,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -2040,7 +2041,7 @@ export function renderStationTower(
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 8 * zoom,
       3.5 * zoom,
       1.5 * zoom,
@@ -2051,7 +2052,7 @@ export function renderStationTower(
     ctx.stroke();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 8 * zoom,
       3.5 * zoom,
       1.5 * zoom,
@@ -2065,38 +2066,38 @@ export function renderStationTower(
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45 - 4 * zoom,
+      screenPos.x - (baseW + 8) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 12 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45 + 4 * zoom,
+      screenPos.x - (baseW + 8) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45 - 4 * zoom,
+      screenPos.x + (baseW + 8) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 12 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45 + 4 * zoom,
+      screenPos.x + (baseW + 8) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
     );
     ctx.closePath();
@@ -2106,30 +2107,30 @@ export function renderStationTower(
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45,
+      screenPos.x - (baseW + 8) * zoom * 0.5,
       screenPos.y - 22 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45 - 1.5 * zoom,
+      screenPos.x - (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.45 + 1.5 * zoom,
+      screenPos.x - (baseW + 8) * zoom * 0.5 + 1.5 * zoom,
       screenPos.y - 18 * zoom,
     );
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
     ctx.moveTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45,
+      screenPos.x + (baseW + 8) * zoom * 0.5,
       screenPos.y - 22 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45 - 1.5 * zoom,
+      screenPos.x + (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
       screenPos.y - 18 * zoom,
     );
     ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.45 + 1.5 * zoom,
+      screenPos.x + (baseW + 8) * zoom * 0.5 + 1.5 * zoom,
       screenPos.y - 18 * zoom,
     );
     ctx.closePath();
@@ -3891,6 +3892,216 @@ export function renderStationTower(
     ctx.fill();
 
     // (Sign removed)
+
+    // === Railroad semaphore signal (left side) ===
+    {
+      const sigX = bX - 14 * zoom;
+      const sigY = bY - 6 * zoom;
+      const poleTop = sigY - 34 * zoom;
+
+      // Signal pole — dark iron
+      ctx.strokeStyle = "#3a3a3a";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sigX, sigY);
+      ctx.lineTo(sigX, poleTop);
+      ctx.stroke();
+      // Highlight strip
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sigX + 0.8 * zoom, sigY);
+      ctx.lineTo(sigX + 0.8 * zoom, poleTop);
+      ctx.stroke();
+
+      // Pole base plate
+      ctx.fillStyle = "#4a4a4a";
+      ctx.beginPath();
+      ctx.moveTo(sigX - 4 * zoom, sigY);
+      ctx.lineTo(sigX, sigY + 2 * zoom);
+      ctx.lineTo(sigX + 4 * zoom, sigY);
+      ctx.lineTo(sigX, sigY - 2 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#2a2a2a";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Cross-arm bracket
+      const armY = poleTop + 4 * zoom;
+      ctx.strokeStyle = "#4a4a4a";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sigX, armY);
+      ctx.lineTo(sigX - 2 * zoom, armY - 2 * zoom);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sigX, armY);
+      ctx.lineTo(sigX + 2 * zoom, armY - 2 * zoom);
+      ctx.stroke();
+
+      // Animated semaphore arm — swings between stop/clear
+      const armAngle = Math.sin(time * 0.4) * 0.35 - 0.2;
+      const armLen = 10 * zoom;
+      const armEndX = sigX + Math.cos(armAngle) * armLen;
+      const armEndY = poleTop + 2 * zoom - Math.sin(armAngle) * armLen;
+
+      // Arm shadow
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 3.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sigX + 0.5 * zoom, poleTop + 2.5 * zoom);
+      ctx.lineTo(armEndX + 0.5 * zoom, armEndY + 0.5 * zoom);
+      ctx.stroke();
+
+      // Arm body — red with white stripe
+      ctx.strokeStyle = "#c03020";
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sigX, poleTop + 2 * zoom);
+      ctx.lineTo(armEndX, armEndY);
+      ctx.stroke();
+      // White stripe
+      const stripeT = 0.65;
+      const stripeX = sigX + (armEndX - sigX) * stripeT;
+      const stripeY = poleTop + 2 * zoom + (armEndY - poleTop - 2 * zoom) * stripeT;
+      ctx.strokeStyle = "#e8e0d0";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(stripeX, stripeY);
+      ctx.lineTo(armEndX, armEndY);
+      ctx.stroke();
+
+      // Arm end weight (counterbalance disc)
+      ctx.fillStyle = "#2a2a2a";
+      ctx.beginPath();
+      ctx.arc(armEndX, armEndY, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Finial ball at pole top
+      ctx.fillStyle = "#5a5a5a";
+      ctx.beginPath();
+      ctx.arc(sigX, poleTop - 1 * zoom, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.beginPath();
+      ctx.arc(sigX - 0.4 * zoom, poleTop - 1.6 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Signal lamp (below arm, on pole)
+      const lampY = poleTop + 8 * zoom;
+      ctx.fillStyle = "#3a3a3a";
+      ctx.fillRect(sigX - 2 * zoom, lampY - 2 * zoom, 4 * zoom, 4 * zoom);
+      // Lamp housing frame
+      ctx.strokeStyle = "#5a5a5a";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.strokeRect(sigX - 2 * zoom, lampY - 2 * zoom, 4 * zoom, 4 * zoom);
+
+      // Green/red lamp glow based on arm position
+      const isGreen = armAngle < -0.1;
+      const lampGlow = 0.7 + Math.sin(time * 2) * 0.15;
+      const lampColor = isGreen ? `rgba(50, 220, 80, ${lampGlow})` : `rgba(220, 50, 30, ${lampGlow})`;
+      ctx.fillStyle = lampColor;
+      ctx.shadowColor = isGreen ? "#33dd55" : "#dd3322";
+      ctx.shadowBlur = 6 * zoom;
+      ctx.beginPath();
+      ctx.arc(sigX, lampY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // === Cargo crates & barrel (left side, base level) ===
+    {
+      const crateX = bX - 12 * zoom;
+      const crateY = bY + 8 * zoom;
+
+      // Bottom crate — weathered wood
+      drawIsometricPrism(
+        ctx,
+        crateX,
+        crateY,
+        6,
+        5,
+        5,
+        { top: "#8a7050", left: "#6a5030", right: "#4a3818" },
+        zoom,
+      );
+      // Iron straps
+      ctx.strokeStyle = "#4a4a4a";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(crateX - 3 * zoom, crateY - 2 * zoom);
+      ctx.lineTo(crateX, crateY - 0.5 * zoom);
+      ctx.lineTo(crateX + 3 * zoom, crateY - 2 * zoom);
+      ctx.stroke();
+      // Stencil mark (small diamond logo)
+      ctx.fillStyle = "#c06020";
+      ctx.beginPath();
+      ctx.moveTo(crateX + 1.5 * zoom, crateY - 3 * zoom);
+      ctx.lineTo(crateX + 2.5 * zoom, crateY - 3.8 * zoom);
+      ctx.lineTo(crateX + 1.5 * zoom, crateY - 4.6 * zoom);
+      ctx.lineTo(crateX + 0.5 * zoom, crateY - 3.8 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top crate — slightly smaller, rotated
+      drawIsometricPrism(
+        ctx,
+        crateX + 1 * zoom,
+        crateY - 5 * zoom,
+        5,
+        4,
+        4,
+        { top: "#7a6545", left: "#5a4525", right: "#3a2d12" },
+        zoom,
+      );
+      // Iron strap
+      ctx.strokeStyle = "#4a4a4a";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(crateX - 1.5 * zoom, crateY - 7 * zoom);
+      ctx.lineTo(crateX + 1 * zoom, crateY - 6 * zoom);
+      ctx.lineTo(crateX + 3.5 * zoom, crateY - 7 * zoom);
+      ctx.stroke();
+
+      // Small barrel next to crates
+      const barrelX = crateX - 6 * zoom;
+      const barrelY = crateY - 1 * zoom;
+      // Barrel body (elliptical, slightly bulging)
+      const barrelGrad = ctx.createRadialGradient(
+        barrelX - 0.5 * zoom,
+        barrelY - 2 * zoom,
+        0,
+        barrelX,
+        barrelY - 2 * zoom,
+        3 * zoom,
+      );
+      barrelGrad.addColorStop(0, "#8a6a40");
+      barrelGrad.addColorStop(0.7, "#6a4a28");
+      barrelGrad.addColorStop(1, "#4a3018");
+      ctx.fillStyle = barrelGrad;
+      ctx.beginPath();
+      ctx.moveTo(barrelX - 2.5 * zoom, barrelY);
+      ctx.quadraticCurveTo(barrelX - 3 * zoom, barrelY - 2.5 * zoom, barrelX - 2.5 * zoom, barrelY - 5 * zoom);
+      ctx.lineTo(barrelX + 2.5 * zoom, barrelY - 5 * zoom);
+      ctx.quadraticCurveTo(barrelX + 3 * zoom, barrelY - 2.5 * zoom, barrelX + 2.5 * zoom, barrelY);
+      ctx.closePath();
+      ctx.fill();
+      // Barrel top (ellipse)
+      ctx.fillStyle = "#7a5a35";
+      ctx.beginPath();
+      ctx.ellipse(barrelX, barrelY - 5 * zoom, 2.5 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Iron hoops
+      ctx.strokeStyle = "#5a5a5a";
+      ctx.lineWidth = 1 * zoom;
+      for (const hoopY of [barrelY - 1 * zoom, barrelY - 4 * zoom]) {
+        ctx.beginPath();
+        ctx.moveTo(barrelX - 2.7 * zoom, hoopY);
+        ctx.quadraticCurveTo(barrelX, hoopY + 0.8 * zoom, barrelX + 2.7 * zoom, hoopY);
+        ctx.stroke();
+      }
+    }
 
     // === Lantern on post ===
     const lanternX = bX + 18 * zoom;
@@ -6040,12 +6251,27 @@ export function renderStationTower(
       "#5a4020",
       "#7a6040",
     );
-    // Stable door
-    ctx.fillStyle = "#4a3015";
-    ctx.fillRect(lwX - 5 * zoom, lwY - 14 * zoom, 8 * zoom, 14 * zoom);
-    ctx.strokeStyle = "#3a2005";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.strokeRect(lwX - 4.5 * zoom, lwY - 13.5 * zoom, 7 * zoom, 6 * zoom);
+    // Stable door (isometric on left face)
+    drawIsoFlushRect(
+      ctx,
+      lwX - 1 * zoom,
+      lwY - 7 * zoom,
+      8,
+      14,
+      "left",
+      zoom,
+      { fill: "#4a3015", recessDepth: 1, recessFill: "#2a1a05" },
+    );
+    drawIsoFlushRect(
+      ctx,
+      lwX - 1 * zoom,
+      lwY - 10.5 * zoom,
+      7,
+      6,
+      "left",
+      zoom,
+      { stroke: "#3a2005", lineWidth: 1.5 },
+    );
     // Horse head
     ctx.fillStyle = "#c9a868";
     ctx.beginPath();
@@ -6140,8 +6366,16 @@ export function renderStationTower(
       "#5a4020",
       "#7a6040",
     );
-    ctx.fillStyle = "#4a3015";
-    ctx.fillRect(rwX - 2 * zoom, rwY - 14 * zoom, 8 * zoom, 14 * zoom);
+    drawIsoFlushRect(
+      ctx,
+      rwX + 2 * zoom,
+      rwY - 7 * zoom,
+      8,
+      14,
+      "right",
+      zoom,
+      { fill: "#4a3015", recessDepth: 1, recessFill: "#2a1a05" },
+    );
     // Horse head
     ctx.fillStyle = "#8b6b4b";
     ctx.beginPath();
@@ -6892,12 +7126,27 @@ export function renderStationTower(
     ctx.lineTo(lwX + 9 * zoom - 2 * zoom, lwY - 24 * zoom - zoom);
     ctx.stroke();
 
-    // Stable door
-    ctx.fillStyle = "#3a2a1a";
-    ctx.fillRect(lwX - 5 * zoom, lwY - 16 * zoom, 8 * zoom, 16 * zoom);
-    ctx.strokeStyle = "#7b3fa0";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.strokeRect(lwX - 4.5 * zoom, lwY - 15.5 * zoom, 7 * zoom, 7 * zoom);
+    // Stable door (isometric on left face)
+    drawIsoFlushRect(
+      ctx,
+      lwX - 1 * zoom,
+      lwY - 8 * zoom,
+      8,
+      16,
+      "left",
+      zoom,
+      { fill: "#3a2a1a", recessDepth: 1, recessFill: "#1a0a05" },
+    );
+    drawIsoFlushRect(
+      ctx,
+      lwX - 1 * zoom,
+      lwY - 12 * zoom,
+      7,
+      7,
+      "left",
+      zoom,
+      { stroke: "#7b3fa0", lineWidth: 1.5 },
+    );
     // War horse head
     ctx.fillStyle = "#3a2a1a";
     ctx.beginPath();
@@ -7199,8 +7448,16 @@ export function renderStationTower(
     ctx.lineTo(rwX + 9 * zoom - 2 * zoom, rwY - 24 * zoom - zoom);
     ctx.stroke();
 
-    ctx.fillStyle = "#3a2a1a";
-    ctx.fillRect(rwX - 2 * zoom, rwY - 16 * zoom, 8 * zoom, 16 * zoom);
+    drawIsoFlushRect(
+      ctx,
+      rwX + 2 * zoom,
+      rwY - 8 * zoom,
+      8,
+      16,
+      "right",
+      zoom,
+      { fill: "#3a2a1a", recessDepth: 1, recessFill: "#1a0a05" },
+    );
     // White horse
     ctx.fillStyle = "#b0b0b0";
     ctx.beginPath();
@@ -11360,21 +11617,40 @@ export function renderStationTower(
         ? screenPos.y - 68 * zoom
         : screenPos.y - (38 + tower.level * 5) * zoom;
   const vaneAngle = Math.sin(time * 0.6) * 0.8 + Math.sin(time * 1.7) * 0.3;
-  const vanePoleColor =
-    tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#5a4a3a";
+  const vaneIsHighLevel = tower.level >= 4;
+  const vanePoleColor = vaneIsHighLevel
+    ? "#c9a227"
+    : tower.level >= 3
+      ? "#6a6a72"
+      : "#b87333";
+  const vaneArmLen = vaneIsHighLevel ? 5 : 7;
+  const vaneHeadScale = vaneIsHighLevel ? 1 : 1.4;
+  const vaneTailScale = vaneIsHighLevel ? 1 : 1.4;
+
+  // Vane pole shadow for contrast
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 3.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(vaneX + 0.5 * zoom, vaneY + 6.5 * zoom);
+  ctx.lineTo(vaneX + 0.5 * zoom, vaneY + 0.5 * zoom);
+  ctx.stroke();
 
   // Vane pole
   ctx.strokeStyle = vanePoleColor;
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(vaneX, vaneY + 6 * zoom);
   ctx.lineTo(vaneX, vaneY);
   ctx.stroke();
 
   // Vane finial (ornamental ball on top)
-  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#8a8a92";
+  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
   ctx.beginPath();
-  ctx.arc(vaneX, vaneY, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.arc(vaneX, vaneY, 1.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.beginPath();
+  ctx.arc(vaneX - 0.4 * zoom, vaneY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Vane arrow (rotates with wind)
@@ -11382,37 +11658,49 @@ export function renderStationTower(
   ctx.translate(vaneX, vaneY + 2 * zoom);
   const vaneDirX = Math.cos(vaneAngle);
   const vaneDirY = Math.sin(vaneAngle) * 0.4;
-  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
-  ctx.lineWidth = 1.5 * zoom;
+
+  // Arrow shadow
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
-  ctx.moveTo(-vaneDirX * 5 * zoom, -vaneDirY * 5 * zoom);
-  ctx.lineTo(vaneDirX * 5 * zoom, vaneDirY * 5 * zoom);
+  ctx.moveTo(-vaneDirX * vaneArmLen * zoom + 0.5, -vaneDirY * vaneArmLen * zoom + 0.5);
+  ctx.lineTo(vaneDirX * vaneArmLen * zoom + 0.5, vaneDirY * vaneArmLen * zoom + 0.5);
   ctx.stroke();
-  // Arrow head
-  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+
+  // Arrow shaft
+  ctx.strokeStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(vaneDirX * 5 * zoom, vaneDirY * 5 * zoom);
+  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
+  ctx.lineTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
+  ctx.stroke();
+
+  // Arrow head
+  ctx.fillStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
+  ctx.beginPath();
+  ctx.moveTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
   ctx.lineTo(
-    vaneDirX * 3 * zoom - vaneDirY * 2 * zoom,
-    vaneDirY * 3 * zoom + vaneDirX * 1 * zoom,
+    vaneDirX * (vaneArmLen - 2) * zoom - vaneDirY * 2.5 * vaneHeadScale * zoom,
+    vaneDirY * (vaneArmLen - 2) * zoom + vaneDirX * 1.5 * vaneHeadScale * zoom,
   );
   ctx.lineTo(
-    vaneDirX * 3 * zoom + vaneDirY * 2 * zoom,
-    vaneDirY * 3 * zoom - vaneDirX * 1 * zoom,
+    vaneDirX * (vaneArmLen - 2) * zoom + vaneDirY * 2.5 * vaneHeadScale * zoom,
+    vaneDirY * (vaneArmLen - 2) * zoom - vaneDirX * 1.5 * vaneHeadScale * zoom,
   );
   ctx.closePath();
   ctx.fill();
+
   // Tail fin
-  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#9a9aa2";
+  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
   ctx.beginPath();
-  ctx.moveTo(-vaneDirX * 5 * zoom, -vaneDirY * 5 * zoom);
+  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
   ctx.lineTo(
-    -vaneDirX * 4 * zoom - vaneDirY * 3 * zoom,
-    -vaneDirY * 4 * zoom + vaneDirX * 1.5 * zoom,
+    -vaneDirX * (vaneArmLen - 1) * zoom - vaneDirY * 3.5 * vaneTailScale * zoom,
+    -vaneDirY * (vaneArmLen - 1) * zoom + vaneDirX * 2 * vaneTailScale * zoom,
   );
   ctx.lineTo(
-    -vaneDirX * 4 * zoom + vaneDirY * 3 * zoom,
-    -vaneDirY * 4 * zoom - vaneDirX * 1.5 * zoom,
+    -vaneDirX * (vaneArmLen - 1) * zoom + vaneDirY * 3.5 * vaneTailScale * zoom,
+    -vaneDirY * (vaneArmLen - 1) * zoom - vaneDirX * 2 * vaneTailScale * zoom,
   );
   ctx.closePath();
   ctx.fill();
@@ -11796,7 +12084,7 @@ export function renderStationTower(
 
     // --- Corner post vines (thick climbing vines with many leaves) ---
     for (const postDir of [-1, 1]) {
-      const postX = screenPos.x + postDir * (baseW + 8) * zoom * 0.45;
+      const postX = screenPos.x + postDir * (baseW + 8) * zoom * 0.5;
       const postBaseY = screenPos.y - 2 * zoom;
       const postTopY = screenPos.y - 14 * zoom;
 
@@ -12510,8 +12798,8 @@ export function renderStationTower(
     // =============================================
     // 10. CORNER POST FLAGS
     // =============================================
-    const postLfX = screenPos.x - (baseW + 8) * zoom * 0.45;
-    const postRtX = screenPos.x + (baseW + 8) * zoom * 0.45;
+    const postLfX = screenPos.x - (baseW + 8) * zoom * 0.5;
+    const postRtX = screenPos.x + (baseW + 8) * zoom * 0.5;
     const postBaseY = screenPos.y - 2 * zoom;
     drawPoleFlag(postLfX, postBaseY, 8, 4, 5, purpleMid, -1);
     drawPoleFlag(postRtX, postBaseY, 8, 4, 5, purpleLight, 1);

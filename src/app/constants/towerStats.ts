@@ -21,6 +21,11 @@ export interface TowerBaseStats {
   burnDamage?: number;
   burnDuration?: number;
   chainTargets?: number;
+  chainRange?: number; // Max distance per chain hop
+  crescendoMaxStacks?: number;
+  crescendoSpeedMult?: number; // Per-stack cooldown multiplier (e.g. 0.92 = 8% faster)
+  crescendoDamageMult?: number; // Per-stack additive damage bonus (e.g. 0.05 = +5%)
+  crescendoDecayTime?: number; // Ms before stacks reset when idle
   income?: number; // For economy towers
   incomeInterval?: number;
   bonusIncomeMultiplier?: number;
@@ -246,24 +251,26 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       damage: 45,
       range: 200,
       attackSpeed: 800,
-      chainTargets: 1,
-      specialEffect: "Fast energy attacks with electric damage",
+      chainTargets: 3,
+      chainRange: 150,
+      specialEffect: "Chain lightning bouncing between enemies",
     },
     levels: {
       1: {
         cost: 100,
-        description: "Basic Zapper - Single target lightning",
+        description: "Tesla Zapper - Chains to 3 enemies",
       },
       2: {
         cost: 150,
-        description: "Enhanced Zapper - 1.5x damage",
+        description: "Enhanced Zapper - Chains to 4 enemies, 1.5x damage",
         multipliers: { damage: 1.5 },
+        overrides: { chainTargets: 4 },
       },
       3: {
         cost: 250,
-        description: "Tesla Coil - Chains to 2 targets",
+        description: "Tesla Coil - Chains to 5 enemies, 2x damage",
         multipliers: { damage: 2 },
-        overrides: { chainTargets: 2 },
+        overrides: { chainTargets: 5 },
       },
     },
     level4Cost: 450,
@@ -276,17 +283,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
           damage: 45 * 2 * 1.3 * 0.15,
           range: 320,
           attackSpeed: 100,
+          chainTargets: 1,
           specialEffect: "Lock-on damage ramp",
         },
       },
       B: {
         name: "Chain Lightning",
         description: "Multi-target electricity",
-        effect: "Hits up to 5 targets at once",
+        effect: "Chains to up to 8 enemies",
         stats: {
           damage: 45 * 2 * 1.3 * 0.7,
           range: 300,
-          chainTargets: 5,
+          chainTargets: 8,
+          chainRange: 180,
           specialEffect: "Bouncing lightning",
         },
       },
@@ -296,54 +305,63 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   arch: {
     name: "Blair Arch",
     baseStats: {
-      damage: 28,
-      range: 260,
-      attackSpeed: 600,
-      chainTargets: 1,
-      specialEffect: "Sonic attacks hit air and ground",
+      damage: 30,
+      range: 250,
+      attackSpeed: 700,
+      crescendoMaxStacks: 4,
+      crescendoSpeedMult: 0.92,
+      crescendoDamageMult: 0.05,
+      crescendoDecayTime: 2500,
+      specialEffect: "Sonic crescendo - accelerates with consecutive attacks",
     },
     levels: {
       1: {
         cost: 110,
-        description: "Sound Waves - Single target sonic",
+        description: "Crescendo - Builds attack speed over time",
       },
       2: {
         cost: 135,
-        description: "Resonance - Hits 2 targets, 1.5x damage",
-        multipliers: { damage: 1.5 },
-        overrides: { chainTargets: 2 },
+        description: "Resonance - Max 6 stacks, 1.4x damage",
+        multipliers: { damage: 1.4 },
+        overrides: { crescendoMaxStacks: 6 },
       },
       3: {
         cost: 225,
-        description: "Elite Archers - Hits 3 targets, 30% faster",
-        multipliers: { damage: 2, attackSpeed: 0.7 },
-        overrides: { chainTargets: 3 },
+        description: "Forte - Max 8 stacks, 1.8x damage",
+        multipliers: { damage: 1.8 },
+        overrides: { crescendoMaxStacks: 8 },
       },
     },
     level4Cost: 500,
     upgrades: {
       A: {
         name: "Shockwave Siren",
-        description: "Powerful stunning sound waves",
-        effect: "30% chance to stun enemies for 1s",
+        description: "Stunning crescendo attacks",
+        effect: "35% stun chance, max 8 crescendo stacks",
         stats: {
-          damage: 28 * 2 * 1.25,
-          range: 390, // 1.5x base range
-          stunChance: 0.3,
-          stunDuration: 1000,
-          chainTargets: 3,
-          specialEffect: "Stunning shockwaves",
+          damage: 30 * 1.8 * 1.25,
+          range: 350,
+          stunChance: 0.35,
+          stunDuration: 1200,
+          crescendoMaxStacks: 8,
+          crescendoSpeedMult: 0.92,
+          crescendoDamageMult: 0.05,
+          crescendoDecayTime: 2500,
+          specialEffect: "Stunning crescendo",
         },
       },
       B: {
         name: "Symphony Hall",
-        description: "Harmonious multi-target",
-        effect: "Hits up to 5 enemies simultaneously",
+        description: "Ultimate sonic crescendo",
+        effect: "Max 12 stacks with enhanced per-stack bonus",
         stats: {
-          damage: 28 * 2 * 1.125,
-          range: 416, // 1.6x base range - concert hall coverage
-          chainTargets: 5,
-          specialEffect: "Multi-target harmony",
+          damage: 30 * 1.8 * 1.1,
+          range: 370,
+          crescendoMaxStacks: 12,
+          crescendoSpeedMult: 0.90,
+          crescendoDamageMult: 0.07,
+          crescendoDecayTime: 3000,
+          specialEffect: "Ultimate crescendo",
         },
       },
     },

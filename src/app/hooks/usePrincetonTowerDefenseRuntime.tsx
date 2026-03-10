@@ -156,6 +156,7 @@ import { findClosestRoadPoint } from "../game/barracks";
 import {
   getPrioritizedEnemiesInRange,
   getClosestEnemyInRange,
+  getChainTargets,
   getTroopCellKey,
   findNearestTroopInRange,
   getVaultImpactPos,
@@ -5313,12 +5314,8 @@ export function usePrincetonTowerDefenseRuntime() {
               }
             }
           } else if (tower.type === "lab") {
-            // Level 3: Tesla Coil - chains to 2 targets
-            // Level 4A: Focused Beam - continuous lock-on with increasing damage
-            // Level 4B: Chain Lightning - hits up to 5 targets
-            const isTeslaCoil = tower.level === 3;
+            // All levels chain; L4A (Focused Beam) is the only non-chain path
             const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
-            const isChainLightning = tower.level === 4 && tower.upgrade === "B";
             const labStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
             const attackCooldown = labStats.attackSpeed;
             const effectiveLabCooldown =
@@ -5335,12 +5332,18 @@ export function usePrincetonTowerDefenseRuntime() {
                 const targetAimPos = getEnemyAimPosCached(target);
                 const damage = labStats.damage * finalDamageMult;
                 const numChainTargets = labStats.chainTargets || 1;
-                const chainTargets =
-                  isTeslaCoil || isChainLightning
-                    ? validEnemies.slice(0, numChainTargets)
-                    : [target];
-                const chainDamage =
-                  isTeslaCoil || isChainLightning ? damage * 0.7 : damage;
+                const chainRange = labStats.chainRange || 150;
+                const shouldChain = !isFocusedBeam && numChainTargets > 1;
+                const chainTargets = shouldChain
+                  ? getChainTargets(
+                      target,
+                      numChainTargets,
+                      chainRange,
+                      enemies,
+                      getEnemyPosCached
+                    )
+                  : [target];
+                const chainDamage = shouldChain ? damage * 0.7 : damage;
                 chainTargets.forEach((chainTarget) => {
                   queueTowerEnemyMutation(chainTarget.id, (enemy) => {
                     const actualDmg = getEnemyDamageTaken(enemy, chainDamage);
@@ -5386,16 +5389,12 @@ export function usePrincetonTowerDefenseRuntime() {
                     : lightningVisualPressure > 180
                       ? 0.82
                       : 1;
-                // Tesla coil position at top of tower - must match visual rendering
-                // In renderer: baseHeight = 25 + level * 8, coilHeight = 35 + level * 8
-                // orbY = topY - coilHeight + 5 = -(baseHeight + coilHeight - 5)
-                if (isTeslaCoil || isChainLightning) {
-                  // Draw chain lightning between all targets
+                if (shouldChain) {
                   visualChainTargets.forEach((chainTarget, i) => {
                     const chainPos = getEnemyAimPosCached(chainTarget);
                     const fromPos =
                       i === 0
-                        ? towerWorldPos // Use tower base position, renderer will adjust to orb
+                        ? towerWorldPos
                         : getEnemyAimPosCached(visualChainTargets[i - 1]);
                     queuedTowerEffects.push({
                       id: generateId("chain"),
@@ -5404,7 +5403,7 @@ export function usePrincetonTowerDefenseRuntime() {
                       progress: 0,
                       size: distance(fromPos, chainPos),
                       targetPos: chainPos,
-                      intensity: (1 - i * 0.15) * lightningIntensityScale, // Fade with each jump
+                      intensity: Math.max(0.1, (1 - i * 0.15)) * lightningIntensityScale,
                       duration: lightningFxDuration,
                       towerId: i === 0 ? tower.id : undefined,
                       towerLevel: tower.level,
@@ -5414,7 +5413,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 } else {
                   queuedTowerEffects.push({
                     id: generateId("zap"),
-                    pos: towerWorldPos, // Use tower base position, renderer will adjust to orb
+                    pos: towerWorldPos,
                     type: isFocusedBeam ? "beam" : "lightning",
                     progress: 0,
                     size: distance(towerWorldPos, targetAimPos),
@@ -5427,7 +5426,6 @@ export function usePrincetonTowerDefenseRuntime() {
                     towerUpgrade: tower.upgrade,
                   });
                 }
-                // Add spark particles at tower position
                 const sparkCount =
                   lightningVisualPressure > 240
                     ? 0
@@ -5443,46 +5441,56 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           } else if (tower.type === "arch") {
             // Arch tower - sonic attacks
-            // Level 3: Elite Archers - faster attack, hits 2 targets
-            // Level 4A: Shockwave - stun chance
-            // Level 4B: Symphony - hits up to 5 targets
+            // Crescendo mechanic: builds stacks on consecutive attacks
             const isShockwave = tower.level === 4 && tower.upgrade === "A";
             const archStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+            const maxStacks = archStats.crescendoMaxStacks || 4;
+            const speedMult = archStats.crescendoSpeedMult || 0.92;
+            const damageMult = archStats.crescendoDamageMult || 0.05;
+            const decayTime = archStats.crescendoDecayTime || 2500;
+            const currentStacks = tower.crescendoStacks || 0;
+
+            // Decay: reset stacks if idle too long
+            const effectiveDecay = gameSpeed > 0 ? decayTime / gameSpeed : decayTime;
+            if (currentStacks > 0 && now - tower.lastAttack > effectiveDecay) {
+              queueTowerPatch(tower.id, { crescendoStacks: 0 });
+            }
+
+            // Crescendo-adjusted cooldown: base * speedMult^stacks
+            const crescendoCooldown = archStats.attackSpeed * Math.pow(speedMult, currentStacks);
             const effectiveArcherSpeed =
               gameSpeed > 0
-                ? archStats.attackSpeed / gameSpeed / attackSpeedMultiplier
-                : archStats.attackSpeed;
+                ? crescendoCooldown / gameSpeed / attackSpeedMultiplier
+                : crescendoCooldown;
             if (now - tower.lastAttack > effectiveArcherSpeed) {
               const validEnemies = getEnemiesInRange(
                 towerWorldPos,
                 finalRange
               );
               if (validEnemies.length > 0) {
-                const numTargets = archStats.chainTargets || 1;
-                const targets = validEnemies.slice(0, numTargets);
-                const damage = archStats.damage * finalDamageMult;
-                targets.forEach((targetEnemy) => {
-                  queueTowerEnemyMutation(targetEnemy.id, (enemy) => {
-                    const targetEnemyPos = getEnemyPosCached(enemy);
-                    const actualDmg = getEnemyDamageTaken(enemy, damage);
-                    emitDamageNumber(targetEnemyPos, actualDmg, "tower");
-                    const newHp = enemy.hp - actualDmg;
-                    if (newHp <= 0) {
-                      onEnemyKill(enemy, targetEnemyPos, 10, "sonic");
-                      return null;
-                    }
-                    const updates: Partial<Enemy> = {
-                      hp: newHp,
-                      damageFlash: DAMAGE_FLASH_MS,
-                    };
-                    if (isShockwave && Math.random() < (archStats.stunChance ?? 0)) {
-                      updates.stunUntil = now + (archStats.stunDuration ?? 1000);
-                    }
-                    return { ...enemy, ...updates };
-                  });
-                });
-                const target = targets[0];
+                const target = validEnemies[0];
                 const targetAimPos = getEnemyAimPosCached(target);
+                // Crescendo-adjusted damage: base * (1 + damageMult * stacks)
+                const damage = archStats.damage * (1 + damageMult * currentStacks) * finalDamageMult;
+                queueTowerEnemyMutation(target.id, (enemy) => {
+                  const targetEnemyPos = getEnemyPosCached(enemy);
+                  const actualDmg = getEnemyDamageTaken(enemy, damage);
+                  emitDamageNumber(targetEnemyPos, actualDmg, "tower");
+                  const newHp = enemy.hp - actualDmg;
+                  if (newHp <= 0) {
+                    onEnemyKill(enemy, targetEnemyPos, 10, "sonic");
+                    return null;
+                  }
+                  const updates: Partial<Enemy> = {
+                    hp: newHp,
+                    damageFlash: DAMAGE_FLASH_MS,
+                  };
+                  if (isShockwave && Math.random() < (archStats.stunChance ?? 0)) {
+                    updates.stunUntil = now + (archStats.stunDuration ?? 1000);
+                  }
+                  return { ...enemy, ...updates };
+                });
+                const nextStacks = Math.min(currentStacks + 1, maxStacks);
                 const dx = targetAimPos.x - towerWorldPos.x;
                 const dy = targetAimPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
@@ -5490,34 +5498,34 @@ export function usePrincetonTowerDefenseRuntime() {
                   lastAttack: now,
                   rotation,
                   target: target.id,
+                  crescendoStacks: nextStacks,
                 });
+                const crescendoRatio = nextStacks / maxStacks;
                 queuedTowerEffects.push({
                   id: generateId("sonic"),
                   pos: towerWorldPos,
                   type: "sonic",
                   progress: 0,
                   size: finalRange,
+                  intensity: 0.5 + crescendoRatio * 0.5,
                 });
-                // Create music note cluster effects to each target
-                targets.forEach((target, i) => {
-                  const targetPos = getEnemyAimPosCached(target);
-                  // Create multiple note projectiles per target
-                  for (let n = 0; n < 3 + tower.level; n++) {
-                    queuedTowerEffects.push({
-                      id: generateId("note"),
-                      pos: towerWorldPos,
-                      type: "music_notes",
-                      progress: 0,
-                      size: distance(towerWorldPos, targetPos),
-                      targetPos,
-                      intensity: 1 - i * 0.1,
-                      towerId: tower.id,
-                      towerLevel: tower.level,
-                      towerUpgrade: tower.upgrade,
-                      noteIndex: n, // Different note variations
-                    });
-                  }
-                });
+                const targetPos = getEnemyAimPosCached(target);
+                const noteCount = 3 + Math.floor(crescendoRatio * 4);
+                for (let n = 0; n < noteCount; n++) {
+                  queuedTowerEffects.push({
+                    id: generateId("note"),
+                    pos: towerWorldPos,
+                    type: "music_notes",
+                    progress: 0,
+                    size: distance(towerWorldPos, targetPos),
+                    targetPos,
+                    intensity: 0.5 + crescendoRatio * 0.5,
+                    towerId: tower.id,
+                    towerLevel: tower.level,
+                    towerUpgrade: tower.upgrade,
+                    noteIndex: n,
+                  });
+                }
               }
             }
           } else if (tower.type === "mortar") {

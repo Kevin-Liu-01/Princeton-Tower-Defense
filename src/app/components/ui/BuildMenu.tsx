@@ -62,7 +62,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
       "Spawns troops to block enemies. Essential for creating chokepoints. No direct attack.",
     library:
       "Slows enemies in range. Perfect before high-damage towers. Stacks with multiple libraries.",
-    lab: "Deals chain/splash damage. Excellent against swarms. Place where enemies cluster.",
+    lab: "Chain lightning bounces between enemies. Excellent against swarms. Chains extend beyond tower range.",
+    arch: "Sonic crescendo builds attack speed with each hit. Place on sustained-traffic lanes for maximum ramp.",
     club: "Generates extra PP over time. Build early for economic advantage. No combat ability.",
     mortar:
       "Slow but devastating AoE. Shells arc high and explode on impact. Ideal against grouped enemies.",

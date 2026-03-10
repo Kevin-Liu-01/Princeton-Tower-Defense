@@ -34,6 +34,7 @@ import {
   Volume2,
   CircleOff,
   TrendingDown,
+  Music,
   Droplets,
   Ban,
   EyeOff,
@@ -1704,11 +1705,30 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
                   // Unique features
                   if (stats.chainTargets && stats.chainTargets > 1) {
+                    const isLabChain = type === "lab";
                     features.push(
-                      <div key="chain" className="bg-yellow-950/50 rounded-lg p-2 text-center border border-yellow-800/40">
-                        <Users size={14} className="mx-auto text-yellow-400 mb-1" />
-                        <div className="text-[9px] text-yellow-500">Targets</div>
-                        <div className="text-yellow-300 font-bold">{stats.chainTargets}</div>
+                      <div key="chain" className={isLabChain
+                        ? "bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40"
+                        : "bg-yellow-950/50 rounded-lg p-2 text-center border border-yellow-800/40"}>
+                        {isLabChain
+                          ? <Zap size={14} className="mx-auto text-cyan-400 mb-1" />
+                          : <Users size={14} className="mx-auto text-yellow-400 mb-1" />}
+                        <div className={isLabChain ? "text-[9px] text-cyan-500" : "text-[9px] text-yellow-500"}>
+                          {isLabChain ? "Chains" : "Targets"}
+                        </div>
+                        <div className={isLabChain ? "text-cyan-300 font-bold" : "text-yellow-300 font-bold"}>
+                          {stats.chainTargets}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.crescendoMaxStacks && stats.crescendoMaxStacks > 0) {
+                    features.push(
+                      <div key="crescendo" className="bg-emerald-950/50 rounded-lg p-2 text-center border border-emerald-800/40">
+                        <Music size={14} className="mx-auto text-emerald-400 mb-1" />
+                        <div className="text-[9px] text-emerald-500">Crescendo</div>
+                        <div className="text-emerald-300 font-bold">{stats.crescendoMaxStacks}</div>
                       </div>
                     );
                   }

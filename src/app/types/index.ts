@@ -117,6 +117,7 @@ export interface Tower {
   lastFreezeCheck?: number; // For Blizzard tower freeze timing
   chainTargets?: string[];
   damageAccumulator?: number;
+  crescendoStacks?: number;
   // Buff state
   damageBoost?: number;
   rangeBoost?: number;

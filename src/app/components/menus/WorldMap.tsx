@@ -71,7 +71,7 @@ const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as c
 
 const PrincetonLogo: React.FC = () => {
   return (
-    <div className="relative flex items-center gap-1.5 sm:gap-2">
+    <div className="relative flex items-center gap-1 sm:gap-2">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40 animate-pulse"
@@ -80,7 +80,7 @@ const PrincetonLogo: React.FC = () => {
       <PrincetonTDLogo size="h-9 w-9 sm:h-11 sm:w-11" />
       <div className="relative flex flex-col -mt-1">
         <span
-          className="text-sm sm:text-2xl font-black tracking-wider"
+          className="text-lg sm:text-2xl font-black tracking-wider"
           style={{
             background:
               "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
@@ -91,13 +91,13 @@ const PrincetonLogo: React.FC = () => {
           PRINCETON
         </span>
         <div className="flex items-center gap-1 sm:gap-2 -mt-1">
-          <Swords size={14} className="text-orange-400 hidden sm:block" />
-          <span className="text-[6px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
+          <Swords size={14} className="text-orange-400 size-2 sm:size-auto block" />
+          <span className="text-[7px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
             TOWER DEFENSE
           </span>
           <Swords
             size={14}
-            className="text-orange-400 hidden sm:block"
+            className="text-orange-400 size-2 sm:size-auto block"
             style={{ transform: "scaleX(-1)" }}
           />
         </div>
@@ -105,12 +105,12 @@ const PrincetonLogo: React.FC = () => {
 
       <div className="z-[-1] object-bottom object-contain absolute top-[-4.1rem] right-[-26rem] pointer-events-none select-none">
         <Image
-src="/images/new/gameplay_volcano.png"
-            alt="Battle Scene"
-            width={1200}
-            height={700}
-            priority
-            className="w-full h-full opacity-20 scale-125"
+          src="/images/new/gameplay_volcano.png"
+          alt="Battle Scene"
+          width={1200}
+          height={700}
+          priority
+          className="w-full h-full opacity-20 scale-125"
           style={{
             maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
@@ -691,7 +691,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
           <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
 
-          <div className="relative px-2 sm:px-5 py-1.5 sm:py-2 flex items-center justify-between gap-2 sm:gap-3 z-10">
+          <div className="relative px-4 sm:pl-3 sm:pr-5 py-1.5 sm:py-2 flex items-center justify-between gap-2 sm:gap-3 z-10">
             {/* Left: Logo + Stars badge */}
             <div className="flex items-center gap-2 sm:gap-4">
               <PrincetonLogo />
@@ -710,15 +710,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <span className="text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
               </div>
 
-              {/* Stars badge - mobile (compact) */}
-              <div className="flex sm:hidden relative items-center gap-1 px-2 py-1 rounded-lg" style={{
-                background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                border: `1px solid ${AMBER_CARD.border}`,
-              }}>
-                <Star size={11} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                <span className="font-black text-[10px] text-yellow-300">{totalStars}</span>
-                <span className="text-[7px] text-yellow-700 font-semibold">/{maxStars}</span>
-              </div>
+
             </div>
 
             {/* Center: Navigation buttons in a unified pill group */}

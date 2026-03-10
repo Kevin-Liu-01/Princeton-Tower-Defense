@@ -4,6 +4,7 @@ import {
   ISO_PRISM_D_FACTOR,
   ISO_Y_RATIO,
 } from "../../constants";
+import { calculateTowerStats } from "../../constants/towerStats";
 import {
   drawIsometricPrism,
   drawIsoCylinder,
@@ -72,7 +73,15 @@ export function renderArchTower(
     portalExpand = Math.sin(attackPhase * Math.PI) * 8 * zoom;
   }
 
-  const pulseSize = 1 + Math.sin(time * 3) * 0.02;
+  // Crescendo intensity: amplifies all visual effects based on stack count
+  const archStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+  const maxCrescendo = archStats.crescendoMaxStacks || 4;
+  const crescendoStacks = tower.crescendoStacks || 0;
+  const crescendoRatio = Math.min(crescendoStacks / maxCrescendo, 1);
+  const crescendoBoost = crescendoRatio * 0.6;
+  attackPulse += crescendoBoost;
+
+  const pulseSize = 1 + Math.sin(time * 3) * 0.02 + crescendoRatio * 0.03;
   const glowColor = isShockwave
     ? "255, 100, 100"
     : isSymphony
@@ -2750,6 +2759,61 @@ export function renderArchTower(
       })`;
       ctx.beginPath();
       ctx.arc(swirlX, swirlY, 2.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === CRESCENDO STACK INDICATOR ===
+  if (maxCrescendo > 0) {
+    const indicatorRX = (subBuildingWidth + 18) * zoom * ISO_PRISM_W_FACTOR;
+    const indicatorRY = (baseDepth + 36) * zoom * ISO_PRISM_D_FACTOR;
+    const indicatorY = screenPos.y + 22 * zoom;
+    const arcPerStack = Math.PI / maxCrescendo;
+    const arcGap = 0.04;
+
+    for (let s = 0; s < maxCrescendo; s++) {
+      const isLit = s < crescendoStacks;
+      const startAngle = Math.PI + s * arcPerStack + arcGap;
+      const endAngle = Math.PI + (s + 1) * arcPerStack - arcGap;
+
+      if (isLit) {
+        const stackIntensity = 0.5 + (s / maxCrescendo) * 0.5;
+        ctx.strokeStyle = `rgba(${glowColor}, ${stackIntensity})`;
+        ctx.lineWidth = 3 * zoom;
+        ctx.shadowColor = `rgb(${glowColor})`;
+        ctx.shadowBlur = 6 * zoom;
+      } else {
+        ctx.strokeStyle = `rgba(${glowColor}, 0.1)`;
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.shadowBlur = 0;
+      }
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x, indicatorY,
+        indicatorRX, indicatorRY,
+        0, startAngle, endAngle,
+      );
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Crescendo aura at high stacks
+    if (crescendoRatio > 0.5) {
+      const auraAlpha = (crescendoRatio - 0.5) * 0.4;
+      const auraGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y - 20 * zoom, 0,
+        screenPos.x, screenPos.y - 20 * zoom, 60 * zoom,
+      );
+      auraGrad.addColorStop(0, `rgba(${glowColor}, ${auraAlpha * 0.3})`);
+      auraGrad.addColorStop(0.6, `rgba(${glowColor}, ${auraAlpha * 0.1})`);
+      auraGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x, screenPos.y - 20 * zoom,
+        60 * zoom, 40 * zoom,
+        0, 0, Math.PI * 2,
+      );
       ctx.fill();
     }
   }

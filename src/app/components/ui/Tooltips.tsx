@@ -20,6 +20,7 @@ import {
   Flame,
   TrendingUp,
   TrendingDown,
+  Music,
   Mountain,
   Landmark,
   Eye,
@@ -268,8 +269,20 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
           )}
           {stats.chainTargets && stats.chainTargets > 1 && (
             <div className="flex items-center gap-1">
-              <Users size={11} className="text-yellow-400" />
-              <span className="text-yellow-300 font-medium">{stats.chainTargets}</span>
+              {tower.type === "lab"
+                ? <Zap size={11} className="text-cyan-400" />
+                : <Users size={11} className="text-yellow-400" />}
+              <span className={tower.type === "lab" ? "text-cyan-300 font-medium" : "text-yellow-300 font-medium"}>
+                {stats.chainTargets}
+              </span>
+            </div>
+          )}
+          {stats.crescendoMaxStacks && stats.crescendoMaxStacks > 0 && (
+            <div className="flex items-center gap-1">
+              <Music size={11} className="text-emerald-400" />
+              <span className="text-emerald-300 font-medium">
+                {tower.crescendoStacks || 0}/{stats.crescendoMaxStacks}
+              </span>
             </div>
           )}
           {tower.type === "club" && stats.income && (

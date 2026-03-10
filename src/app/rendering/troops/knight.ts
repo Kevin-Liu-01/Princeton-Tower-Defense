@@ -518,12 +518,13 @@ export function drawKnightTroop(
     swordX,
     swordY,
     swordBaseAngle,
-    Math.PI / 2,
+    -Math.PI / 2,
     isAttacking ? 1.45 : 0.82,
     WEAPON_LIMITS.rightMelee,
   );
   ctx.translate(swordX, swordY);
   ctx.rotate(swordAngle);
+  ctx.scale(1, -1);
 
   // Pommel
   ctx.fillStyle = "#3a2a1a";

@@ -484,34 +484,69 @@ export function drawCentaurTroop(
   // === MAJESTIC FLOWING TAIL ===
   const tailRootX = x + size * 0.5;
   const tailRootY = y + size * 0.07 + gallop * 0.12;
-  for (let strand = 0; strand < 5; strand++) {
-    const offset = (strand - 2) * size * 0.012;
-    ctx.strokeStyle =
-      strand < 2
-        ? "#3f2e1d"
-        : strand < 4
-          ? "#5b4128"
-          : "rgba(181, 151, 88, 0.78)";
-    ctx.lineWidth = (7.2 - strand * 1.2) * zoom;
+  const tailSwish2 = Math.sin(time * 5.6 + 0.9) * 0.8;
+  const tailSwish3 = Math.sin(time * 3.8 + 0.4) * 0.6;
+  const strandCount = 9;
+  const tailColors = [
+    "#2b1c13", "#2b1c13", "#3f2e1d", "#3f2e1d", "#5b4128",
+    "#5b4128", "#7d5d3f", "#9e7e52", "rgba(214, 187, 118, 0.82)",
+  ];
+  for (let strand = 0; strand < strandCount; strand++) {
+    const t = strand / (strandCount - 1);
+    const spread = (t - 0.5) * size * 0.06;
+    const phase = strand * 0.35;
+    const wave = Math.sin(time * 5.6 + phase);
+    const wave2 = Math.sin(time * 3.8 + phase * 0.7);
+    const length = 0.32 + t * 0.08;
+    const thickness = (5.5 - t * 4.2) * zoom;
+    ctx.strokeStyle = tailColors[strand];
+    ctx.lineWidth = thickness;
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(tailRootX + offset, tailRootY + offset * 0.2);
-    ctx.quadraticCurveTo(
-      x + size * 0.72 + tailSwish * (11 - strand),
-      y + size * (0.14 + strand * 0.012),
-      x + size * 0.6 + tailSwish * (15 - strand),
-      y + size * (0.44 - strand * 0.012),
+    ctx.moveTo(tailRootX + spread * 0.3, tailRootY + spread * 0.15);
+    ctx.bezierCurveTo(
+      x + size * 0.58 + wave * 6 + spread * 0.5,
+      y + size * 0.06 + spread * 0.4 + wave2 * 2,
+      x + size * 0.7 + wave * 10 + tailSwish2 * 5 + spread * 0.8,
+      y + size * (0.18 + t * 0.06) + wave2 * 4,
+      x + size * (0.58 + t * 0.04) + wave * 12 + tailSwish3 * 6 + spread,
+      y + size * (0.12 + length) + wave2 * 3,
     );
     ctx.stroke();
   }
-  ctx.fillStyle = `rgba(214, 187, 118, ${0.45 + Math.sin(time * 4) * 0.2})`;
+  for (let w = 0; w < 5; w++) {
+    const wt = w / 4;
+    const wPhase = w * 0.8 + 1.2;
+    const wWave = Math.sin(time * 5.6 + wPhase);
+    const wWave2 = Math.sin(time * 3.8 + wPhase * 0.7);
+    const wSpread = (wt - 0.5) * size * 0.05;
+    const tipX = x + size * 0.6 + wWave * 13 + tailSwish3 * 7 + wSpread;
+    const tipY = y + size * 0.42 + wWave2 * 4 + wSpread * 0.3;
+    ctx.strokeStyle = `rgba(181, 151, 88, ${0.35 + wt * 0.25})`;
+    ctx.lineWidth = (1.8 - wt * 0.6) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(
+      tipX - size * 0.06 - wWave * 2,
+      tipY - size * 0.08 - wWave2 * 2,
+    );
+    ctx.quadraticCurveTo(
+      tipX - size * 0.01 + wWave * 3,
+      tipY - size * 0.02,
+      tipX + wWave * 4 + size * 0.02 * wt,
+      tipY + size * 0.04 + wWave2 * 2,
+    );
+    ctx.stroke();
+  }
+  const glowAlpha = 0.2 + Math.sin(time * 4) * 0.1;
+  ctx.fillStyle = `rgba(214, 187, 118, ${glowAlpha})`;
   ctx.beginPath();
   ctx.ellipse(
-    x + size * 0.61 + tailSwish * 14,
-    y + size * 0.44,
-    size * 0.024,
-    size * 0.015,
-    0.2,
+    x + size * 0.6 + Math.sin(time * 5.6 + 3) * 12 + tailSwish3 * 6,
+    y + size * 0.42,
+    size * 0.035,
+    size * 0.02,
+    0.3 + tailSwish * 0.2,
     0,
     Math.PI * 2,
   );
