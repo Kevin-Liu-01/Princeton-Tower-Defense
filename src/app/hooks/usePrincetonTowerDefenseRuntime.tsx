@@ -337,6 +337,7 @@ import {
   EnemyDetailTooltip,
   TroopDetailTooltip,
   HeroDetailTooltip,
+  DevMenu,
 } from "../components/ui/GameUI";
 // Hooks
 import {
@@ -347,6 +348,7 @@ import {
 import { useCustomLevels } from "./useCustomLevels";
 import { useEntityCollection } from "./useEntityCollection";
 import { usePawPoints } from "./usePawPoints";
+import { useGameEventLog } from "./useGameEventLog";
 import { captureCanvas } from "../utils/screenshot";
 import { CameraModeOverlay } from "../components/ui/CameraModeOverlay";
 import { useTutorial, type EncounterQueueItem } from "./useTutorial";
@@ -612,6 +614,10 @@ export function usePrincetonTowerDefenseRuntime() {
   const [currentWave, setCurrentWave] = useState(0);
   const [nextWaveTimer, setNextWaveTimer] = useState(WAVE_TIMER_BASE);
   const [waveInProgress, setWaveInProgress] = useState(false);
+  const [devMenuOpen, setDevMenuOpen] = useState(false);
+  const gameEventLog = useGameEventLog();
+  const gameEventLogRef = useRef(gameEventLog);
+  gameEventLogRef.current = gameEventLog;
   const [waveStartConfirm, setWaveStartConfirm] =
     useState<WaveStartConfirmState | null>(null);
   const [hoveredWaveBubblePathKey, setHoveredWaveBubblePathKey] =
@@ -1250,6 +1256,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const particleUpdateAccumulator = useRef<number>(0); // Accumulate time between particle updates for throttling
   const effectsUpdateAccumulator = useRef<number>(0); // Accumulate time between effects updates for throttling
   const pendingDeathEffectsRef = useRef<Effect[]>([]); // Ref-based queue so render sees death effects immediately
+  const handledEnemyIdsRef = useRef<Set<string>>(new Set()); // Dedup guard for kills/leaks (React Strict Mode double-invokes updaters)
+  const handledWaveCompletionRef = useRef<number>(-1); // Last wave index whose completion was logged
 
   // Queue particle bursts and flush once per frame to avoid many setState calls during heavy combat.
   const addParticles = useCallback(
@@ -1371,13 +1379,19 @@ export function usePrincetonTowerDefenseRuntime() {
     [addPawPoints]
   );
 
-  // Centralized enemy death handler - awards bounty, particles, and death animation effect
+  // Centralized enemy death handler - awards bounty, particles, and death animation effect.
+  // Deduped by enemy ID because this is called inside setEnemies updaters which
+  // React Strict Mode double-invokes.
   const onEnemyKill = useCallback(
     (enemy: Enemy, pos: Position, particleCount: number = 8, deathCause: DeathCause = "default") => {
+      if (handledEnemyIdsRef.current.has(enemy.id)) return;
+      handledEnemyIdsRef.current.add(enemy.id);
+
       const eData = ENEMY_DATA[enemy.type];
       const baseBounty = eData.bounty;
       awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
       addParticles(pos, "explosion", particleCount);
+      gameEventLogRef.current.log("enemy_killed", `${eData.name || enemy.type} killed (${deathCause}) +${baseBounty} PP`, { enemyType: enemy.type, bounty: baseBounty, deathCause });
       if (enemy.goldAura) addParticles(pos, "gold", 6);
 
       const DEATH_DURATIONS: Record<DeathCause, number> = {
@@ -1756,6 +1770,8 @@ export function usePrincetonTowerDefenseRuntime() {
       setNextWaveTimer(WAVE_TIMER_BASE);
       setLevelStartTime(Date.now());
       setTimeSpent(0);
+      gameEventLogRef.current.clear();
+      gameEventLogRef.current.log("game_start", `Started level ${selectedMap}`, { map: selectedMap });
       // Set camera to level-specific settings
       if (levelSettings?.camera) {
         setCameraOffset(levelSettings.camera.offset);
@@ -1932,6 +1948,7 @@ export function usePrincetonTowerDefenseRuntime() {
     }
 
     console.log(`[Wave] Starting wave ${currentWave + 1} of ${levelWaves.length}`);
+    gameEventLogRef.current.log("wave_started", `Wave ${currentWave + 1} of ${levelWaves.length} started`, { wave: currentWave + 1, totalWaves: levelWaves.length });
     setWaveInProgress(true);
     const wave = levelWaves[currentWave];
     if (!wave) {
@@ -2029,8 +2046,11 @@ export function usePrincetonTowerDefenseRuntime() {
         }
 
         console.log(`[Wave] Wave ${currentW + 1} completed, advancing to wave ${currentW + 2}`);
+        if (handledWaveCompletionRef.current !== currentW) {
+          handledWaveCompletionRef.current = currentW;
+          gameEventLogRef.current.log("wave_completed", `Wave ${currentW + 1} completed`, { wave: currentW + 1 });
+        }
 
-        // These are safe to call since we confirmed we're on the right wave
         setWaveInProgress(false);
         setNextWaveTimer(WAVE_TIMER_BASE);
 
@@ -2082,6 +2102,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Update game function
   const updateGame = useCallback(
     (deltaTime: number) => {
+      handledEnemyIdsRef.current.clear();
       const now = Date.now();
       const isPaused = gameSpeed === 0;
       const levelWaves = getLevelWaves(selectedMap);
@@ -2106,6 +2127,7 @@ export function usePrincetonTowerDefenseRuntime() {
         setGameSpeed(0);
 
         updateLevelStats(selectedMap, finalTime, lives, false);
+        gameEventLogRef.current.log("defeat", `Defeat on ${selectedMap} — ${lives} lives remaining, ${finalTime}s elapsed`, { map: selectedMap, livesLeft: lives, time: finalTime });
         setBattleOutcome("defeat");
       }
       if (
@@ -2133,6 +2155,7 @@ export function usePrincetonTowerDefenseRuntime() {
         setHoveredWaveBubblePathKey(null);
         setNextWaveTimer(0);
         setGameSpeed(0);
+        gameEventLogRef.current.log("victory", `Victory on ${selectedMap}! ${lives} lives remaining`, { map: selectedMap, livesLeft: lives });
         setBattleOutcome("victory");
 
         const mapToSave = selectedMap;
@@ -3173,8 +3196,12 @@ export function usePrincetonTowerDefenseRuntime() {
               }
 
               if (nextPathIndex >= path.length - 1) {
-                const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
-                setLives((l) => Math.max(0, l - liveCost));
+                if (!handledEnemyIdsRef.current.has(enemy.id)) {
+                  handledEnemyIdsRef.current.add(enemy.id);
+                  const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
+                  setLives((l) => Math.max(0, l - liveCost));
+                  gameEventLogRef.current.log("enemy_leaked", `${ENEMY_DATA[enemy.type].name || enemy.type} reached the end (-${liveCost} life)`, { enemyType: enemy.type, liveCost });
+                }
                 return null;
               }
 
@@ -3793,8 +3820,12 @@ export function usePrincetonTowerDefenseRuntime() {
               );
 
               if (nextPathIndex >= path.length - 1) {
-                const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
-                setLives((l) => Math.max(0, l - liveCost));
+                if (!handledEnemyIdsRef.current.has(enemy.id)) {
+                  handledEnemyIdsRef.current.add(enemy.id);
+                  const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
+                  setLives((l) => Math.max(0, l - liveCost));
+                  gameEventLogRef.current.log("enemy_leaked", `${ENEMY_DATA[enemy.type].name || enemy.type} (flying) reached the end (-${liveCost} life)`, { enemyType: enemy.type, liveCost });
+                }
                 return null;
               }
 
@@ -9998,6 +10029,7 @@ export function usePrincetonTowerDefenseRuntime() {
           }
           addTowerEntity(newTower);
           addParticles(gridToWorld(gridPos), "spark", 12);
+          gameEventLogRef.current.log("tower_built", `Built ${TOWER_DATA[towerToPlace.type].name} for ${towerCost} PP`, { towerType: towerToPlace.type, cost: towerCost });
         }
         setDraggingTower(null);
         setBuildingTower(null);
@@ -11032,6 +11064,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
       removePawPoints(cost);
       addParticles(gridToWorld(tower.pos), "glow", 20);
+      gameEventLogRef.current.log("tower_upgraded", `Upgraded ${TOWER_DATA[tower.type].name} to Lv${newLevel}${newUpgrade ? ` (${newUpgrade})` : ""} for ${cost} PP`, { towerType: tower.type, newLevel, upgrade: newUpgrade, cost });
       setSelectedTower(null);
     },
     [addParticles, removePawPoints, setTowers, setTroops, activeWaveSpawnPaths, selectedMap]
@@ -11053,8 +11086,8 @@ export function usePrincetonTowerDefenseRuntime() {
       addPawPoints(refund);
       addParticles(gridToWorld(tower.pos), "smoke", 15);
       removeTowerEntity(towerId);
-      // Remove all troops belonging to this station
       removeTroopsWhere((troop) => troop.ownerId === towerId);
+      gameEventLogRef.current.log("tower_sold", `Sold ${TOWER_DATA[tower.type].name} Lv${tower.level} for ${refund} PP`, { towerType: tower.type, level: tower.level, refund });
       setSelectedTower(null);
     },
     [towers, addParticles, addPawPoints, removeTowerEntity, removeTroopsWhere]
@@ -11102,6 +11135,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
       if (!spendPawPoints(cost)) return;
+      gameEventLogRef.current.log("spell_cast", `Cast ${SPELL_DATA[spellType]?.name || spellType} for ${cost} PP`, { spellType, cost });
 
       let enteredTargeting = false;
       switch (spellType) {
@@ -12228,9 +12262,11 @@ export function usePrincetonTowerDefenseRuntime() {
       <TopHUD
         pawPoints={pawPoints}
         lives={lives}
+        maxLives={INITIAL_LIVES}
         currentWave={currentWave}
         totalWaves={totalWaves}
         nextWaveTimer={nextWaveTimer}
+        waveInProgress={waveInProgress}
         gameSpeed={gameSpeed}
         setGameSpeed={(nextSpeed) => {
           if (battleOutcome || pauseLocked) return;
@@ -12249,6 +12285,11 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraModeActive={cameraModeActive}
         onTogglePhotoMode={toggleCameraMode}
         pauseLocked={pauseLocked}
+        eventStats={gameEventLog.stats}
+        onToggleDevMenu={() => setDevMenuOpen((p) => !p)}
+        devMenuOpen={devMenuOpen}
+        enemyCount={enemies.length}
+        towerCount={towers.length}
       />
       {!cameraModeActive && devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
@@ -12460,6 +12501,14 @@ export function usePrincetonTowerDefenseRuntime() {
                 );
               })()}
               <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
+                {devMenuOpen && (
+                  <DevMenu
+                    events={gameEventLog.events}
+                    stats={gameEventLog.stats}
+                    onClear={gameEventLog.clear}
+                    onClose={() => setDevMenuOpen(false)}
+                  />
+                )}
                 <HeroSpellBar
                   hero={hero}
                   spells={spells}

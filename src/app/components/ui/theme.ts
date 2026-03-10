@@ -160,35 +160,35 @@ export const NEUTRAL = {
 // Defeat Screen — Crimson / Dark Red
 // -----------------------------------------------------------------------------
 export const DEFEAT = {
-  border30: "rgba(139,0,0,0.3)",
-  border25: "rgba(139,0,0,0.25)",
-  border20: "rgba(139,0,0,0.2)",
-  border15: "rgba(139,0,0,0.15)",
-  innerBorder12: "rgba(139,0,0,0.12)",
-  innerBorder10: "rgba(139,0,0,0.1)",
-  glow07: "rgba(139,0,0,0.07)",
-  glow06: "rgba(139,0,0,0.06)",
-  accent40: "rgba(200,50,50,0.4)",
-  accent50: "rgba(200,50,50,0.5)",
-  progressBg: "rgba(40,15,15,0.6)",
-  btnLight: "rgba(80,30,30,0.85)",
-  btnDark: "rgba(45,15,15,0.9)",
-  border35: "rgba(139,0,0,0.35)",
-  border40: "rgba(139,0,0,0.4)",
+  border30: "rgba(139,0,0,0.35)",
+  border25: "rgba(139,0,0,0.3)",
+  border20: "rgba(139,0,0,0.25)",
+  border15: "rgba(139,0,0,0.2)",
+  innerBorder12: "rgba(139,0,0,0.16)",
+  innerBorder10: "rgba(139,0,0,0.14)",
+  glow07: "rgba(139,0,0,0.1)",
+  glow06: "rgba(139,0,0,0.08)",
+  accent40: "rgba(220,50,50,0.45)",
+  accent50: "rgba(220,50,50,0.55)",
+  progressBg: "rgba(40,15,15,0.7)",
+  btnLight: "rgba(90,30,30,0.9)",
+  btnDark: "rgba(55,18,18,0.94)",
+  border35: "rgba(139,0,0,0.4)",
+  border40: "rgba(139,0,0,0.45)",
 } as const;
 
 // -----------------------------------------------------------------------------
 // Victory Screen — Warm Gold
 // -----------------------------------------------------------------------------
 export const VICTORY = {
-  blueCardBg: "rgba(38,34,50,0.6)",
-  blueCardBgDark: "rgba(28,26,40,0.4)",
-  blueBorder: "rgba(100,120,180,0.25)",
-  redCardBg: "rgba(50,30,30,0.6)",
-  redCardBgDark: "rgba(40,22,22,0.4)",
-  redBorder: "rgba(180,80,80,0.25)",
-  btnLight: "rgba(170,125,30,0.88)",
-  btnDark: "rgba(110,72,15,0.92)",
+  blueCardBg: "rgba(38,34,50,0.65)",
+  blueCardBgDark: "rgba(28,26,40,0.5)",
+  blueBorder: "rgba(100,120,180,0.35)",
+  redCardBg: "rgba(50,30,30,0.65)",
+  redCardBgDark: "rgba(40,22,22,0.5)",
+  redBorder: "rgba(180,80,80,0.35)",
+  btnLight: "rgba(180,130,30,0.92)",
+  btnDark: "rgba(120,78,15,0.95)",
 } as const;
 
 // -----------------------------------------------------------------------------

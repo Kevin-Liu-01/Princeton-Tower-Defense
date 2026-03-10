@@ -503,23 +503,23 @@ export function DefeatScreen({
             <div className="absolute inset-[3px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${DEFEAT.innerBorder12}` }} />
 
             {/* ===== Skull + Title Header ===== */}
-            <div className="flex flex-col items-center pt-8 pb-3 relative"
+            <div className="flex flex-col items-center pt-5 sm:pt-8 pb-2 sm:pb-3 relative"
               style={{ background: `linear-gradient(180deg, ${DEFEAT.glow07} 0%, transparent 100%)` }}
             >
-              <DefeatSprite size={110} />
+              <DefeatSprite size={80} />
 
               <h1
-                className="text-5xl font-black tracking-[0.25em] mt-2"
+                className="text-3xl sm:text-5xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-2"
                 style={{
-                  color: "#991b1b",
-                  textShadow: "0 0 40px rgba(153,27,27,0.35), 0 3px 0 #300808, 0 4px 8px rgba(0,0,0,0.6)",
+                  color: "#dc2626",
+                  textShadow: "0 0 50px rgba(220,38,38,0.45), 0 0 20px rgba(220,38,38,0.25), 0 3px 0 #450a0a, 0 4px 8px rgba(0,0,0,0.7)",
                 }}
               >
                 DEFEAT
               </h1>
 
               {/* Ornate divider with skull */}
-              <div className="flex items-center gap-3 mt-3 w-full px-10">
+              <div className="flex items-center gap-3 mt-3 w-full px-6 sm:px-10">
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border40} 30%, ${DEFEAT.accent50} 100%)` }} />
                 <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${DEFEAT.border25}, rgba(80,10,10,0.2))`, border: `1px solid ${DEFEAT.border35}` }}>
                   <Skull size={12} className="text-red-700/80" />
@@ -528,13 +528,13 @@ export function DefeatScreen({
               </div>
 
               {/* Level name */}
-              <p className="text-sm text-red-400/60 tracking-[0.3em] uppercase mt-2 font-semibold">
+              <p className="text-sm text-red-300/80 tracking-[0.3em] uppercase mt-2 font-semibold">
                 {levelName}
               </p>
             </div>
 
             {/* Flavor text */}
-            <p className="text-[10px] text-red-900/50 italic text-center px-10 mb-3 leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-red-300/60 italic text-center px-5 sm:px-10 mb-2 sm:mb-3 leading-relaxed">
               &ldquo;{defeatMessage}&rdquo;
             </p>
 
@@ -544,7 +544,7 @@ export function DefeatScreen({
             </div>
 
             {/* ===== Stats Grid ===== */}
-            <div className="px-5 py-4">
+            <div className="px-3 sm:px-5 py-3 sm:py-4">
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Time survived */}
                 <div className="rounded-xl p-3 relative" style={{
@@ -553,14 +553,14 @@ export function DefeatScreen({
                   boxShadow: "inset 0 0 12px rgba(80,70,100,0.05)",
                 }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <Clock size={11} className="text-stone-500/70" />
-                    <span className="text-[9px] font-bold text-stone-500/60 tracking-[0.2em] uppercase">Time</span>
+                    <Clock size={12} className="text-stone-400/80" />
+                    <span className="text-[10px] font-bold text-stone-400/70 tracking-[0.2em] uppercase">Time</span>
                   </div>
-                  <div className="text-xl font-black text-stone-400/80">
+                  <div className="text-2xl font-black text-stone-300/90">
                     {formatTime(timeSpent)}
                   </div>
                   {bestTime ? (
-                    <span className="text-[8px] text-stone-600/40 mt-1 block">Best: {formatTime(bestTime)}</span>
+                    <span className="text-[9px] text-stone-400/50 mt-1 block">Best: {formatTime(bestTime)}</span>
                   ) : null}
                 </div>
 
@@ -571,27 +571,27 @@ export function DefeatScreen({
                   boxShadow: "inset 0 0 12px rgba(139,0,0,0.05)",
                 }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <Wind size={11} className="text-red-800/60" />
-                    <span className="text-[9px] font-bold text-red-800/50 tracking-[0.2em] uppercase">Waves</span>
+                    <Wind size={12} className="text-red-500/70" />
+                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.2em] uppercase">Waves</span>
                   </div>
-                  <div className="text-xl font-black text-red-400/70">
+                  <div className="text-2xl font-black text-red-400/90">
                     {waveReached}/{totalWaves}
                   </div>
-                  <span className="text-[8px] text-red-900/40 mt-1 block">{waveProgress}% cleared</span>
+                  <span className="text-[9px] text-red-400/50 mt-1 block">{waveProgress}% cleared</span>
                 </div>
               </div>
 
               {/* Wave progress bar */}
               <div className="mt-2.5 rounded-xl p-2.5" style={{
                 background: `linear-gradient(90deg, ${DEFEAT.glow06}, ${DEFEAT.innerBorder10}, ${DEFEAT.glow06})`,
-                border: `1.5px solid ${DEFEAT.border15}`,
+                border: `1.5px solid ${DEFEAT.border25}`,
               }}>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
-                    <Swords size={11} className="text-red-800/50" />
-                    <span className="text-[9px] font-bold text-red-800/50 tracking-[0.15em] uppercase">Battle Progress</span>
+                    <Swords size={12} className="text-red-500/60" />
+                    <span className="text-[10px] font-bold text-red-500/60 tracking-[0.15em] uppercase">Battle Progress</span>
                   </div>
-                  <span className="text-[9px] text-red-400/50 font-bold">{waveProgress}%</span>
+                  <span className="text-[10px] text-red-400/70 font-bold">{waveProgress}%</span>
                 </div>
                 <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: DEFEAT.progressBg }}>
                   <div
@@ -611,10 +611,10 @@ export function DefeatScreen({
                 border: "1.5px solid rgba(80,70,60,0.15)",
               }}>
                 <div className="flex items-center gap-1.5">
-                  <Shield size={11} className="text-stone-600/50" />
-                  <span className="text-[9px] font-bold text-stone-600/50 tracking-[0.15em] uppercase">Attempt</span>
+                  <Shield size={12} className="text-stone-400/60" />
+                  <span className="text-[10px] font-bold text-stone-400/60 tracking-[0.15em] uppercase">Attempt</span>
                 </div>
-                <span className="text-xs font-black text-stone-500/60">#{timesPlayed}</span>
+                <span className="text-sm font-black text-stone-300/70">#{timesPlayed}</span>
               </div>
             </div>
 
@@ -624,16 +624,16 @@ export function DefeatScreen({
             </div>
 
             {/* ===== Encouragement ===== */}
-            <div className="px-5 py-3">
+            <div className="px-3 sm:px-5 py-2 sm:py-3">
               <div className="rounded-xl p-3 flex items-start gap-2.5" style={{
                 background: "linear-gradient(135deg, rgba(120,80,20,0.08), rgba(80,50,10,0.06))",
                 border: `1.5px solid ${GOLD.innerBorder12}`,
                 boxShadow: "inset 0 0 10px rgba(180,140,60,0.03)",
               }}>
-                <Flame size={13} className="text-amber-700/50 mt-0.5 shrink-0" />
+                <Flame size={14} className="text-amber-500/70 mt-0.5 shrink-0" />
                 <div>
-                  <span className="text-[8px] font-bold text-amber-600/40 tracking-[0.2em] uppercase">Wisdom</span>
-                  <p className="text-[10px] text-amber-600/50 leading-relaxed mt-0.5">{encouragement}</p>
+                  <span className="text-[9px] font-bold text-amber-500/60 tracking-[0.2em] uppercase">Wisdom</span>
+                  <p className="text-xs text-amber-400/70 leading-relaxed mt-0.5">{encouragement}</p>
                 </div>
               </div>
             </div>
@@ -644,39 +644,39 @@ export function DefeatScreen({
             </div>
 
             {/* ===== Footer Actions ===== */}
-            <div className="px-6 py-5 flex justify-center gap-3">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-2 sm:gap-3">
               <button
                 onClick={resetGame}
-                className="group relative px-10 py-3 rounded-xl font-bold tracking-[0.2em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
+                className="group relative px-5 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-xs sm:text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
                 style={{
                   background: `linear-gradient(180deg, ${DEFEAT.btnLight} 0%, ${DEFEAT.btnDark} 100%)`,
                   border: `1.5px solid ${RED_CARD.accent35}`,
-                  color: "#e8a090",
-                  textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                  boxShadow: `inset 0 1px 0 ${OVERLAY.white08}, 0 4px 16px ${OVERLAY.black40}, 0 0 20px rgba(139,0,0,0.08)`,
+                  color: "#fbbcb0",
+                  textShadow: "0 0 12px rgba(248,113,113,0.3), 0 2px 4px rgba(0,0,0,0.6)",
+                  boxShadow: `inset 0 1px 0 ${OVERLAY.white10}, 0 4px 16px ${OVERLAY.black40}, 0 0 20px rgba(220,38,38,0.12)`,
                 }}
               >
-                <span className="flex items-center gap-2.5">
-                  <RefreshCw size={15} />
+                <span className="flex items-center justify-center gap-2 sm:gap-2.5">
+                  <RefreshCw size={14} />
                   Try Again
-                  <Swords size={15} />
+                  <Swords size={14} />
                 </span>
               </button>
               {onBackToMap && (
                 <button
                   onClick={onBackToMap}
-                  className="group relative px-7 py-3 rounded-xl font-bold tracking-[0.15em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
+                  className="group relative px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold tracking-[0.1em] sm:tracking-[0.15em] uppercase text-xs sm:text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
                   style={{
                     background:
                       "linear-gradient(180deg, rgba(70,56,40,0.95) 0%, rgba(52,38,28,0.96) 100%)",
-                    border: "1.5px solid rgba(180,140,60,0.35)",
-                    color: "rgba(245, 216, 168, 0.9)",
-                    textShadow: "0 2px 4px rgba(0,0,0,0.45)",
+                    border: "1.5px solid rgba(180,140,60,0.45)",
+                    color: "rgba(245, 216, 168, 0.95)",
+                    textShadow: "0 0 10px rgba(180,140,60,0.2), 0 2px 4px rgba(0,0,0,0.5)",
                     boxShadow:
-                      "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.35)",
+                      "inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.4)",
                   }}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center justify-center gap-2">
                     <ArrowLeft size={14} />
                     Back to Map
                   </span>

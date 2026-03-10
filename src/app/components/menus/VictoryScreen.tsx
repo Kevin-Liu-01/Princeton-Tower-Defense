@@ -490,25 +490,25 @@ const CATEGORY_CONFIG: {
       key: "speed",
       label: "Speed",
       icon: Clock,
-      color: "text-blue-400/70",
+      color: "text-blue-400/85",
       fillClass: "text-blue-400 fill-blue-400",
-      emptyClass: "text-blue-900/30",
+      emptyClass: "text-blue-900/40",
     },
     {
       key: "survival",
       label: "Survival",
       icon: Heart,
-      color: "text-red-400/70",
+      color: "text-red-400/85",
       fillClass: "text-red-400 fill-red-400",
-      emptyClass: "text-red-900/30",
+      emptyClass: "text-red-900/40",
     },
     {
       key: "strategy",
       label: "Strategy",
       icon: Swords,
-      color: "text-amber-500/70",
+      color: "text-amber-500/85",
       fillClass: "text-amber-400 fill-amber-400",
-      emptyClass: "text-amber-900/30",
+      emptyClass: "text-amber-900/40",
     },
   ];
 
@@ -524,13 +524,13 @@ const CategoryRatingRow: React.FC<{
     className="rounded-lg px-3 py-2 flex items-center justify-between"
     style={{
       background:
-        "linear-gradient(90deg, rgba(120,80,20,0.10), rgba(180,140,60,0.12), rgba(120,80,20,0.10))",
-      border: "1px solid rgba(180,140,60,0.15)",
+        "linear-gradient(90deg, rgba(120,80,20,0.14), rgba(180,140,60,0.16), rgba(120,80,20,0.14))",
+      border: "1px solid rgba(180,140,60,0.25)",
     }}
   >
     <div className="flex items-center gap-2">
-      <Icon size={12} className={iconColor} />
-      <span className="text-[9px] font-bold text-amber-500/60 tracking-[0.15em] uppercase">
+      <Icon size={13} className={iconColor} />
+      <span className="text-[10px] font-bold text-amber-400/75 tracking-[0.15em] uppercase">
         {label}
       </span>
     </div>
@@ -640,23 +640,23 @@ export function VictoryScreen({
             <div className="absolute inset-[3px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder12}` }} />
 
             {/* ===== Trophy + Title Header ===== */}
-            <div className="flex flex-col items-center pt-8 pb-3 relative"
+            <div className="flex flex-col items-center pt-5 sm:pt-8 pb-2 sm:pb-3 relative"
               style={{ background: "linear-gradient(180deg, rgba(180,140,60,0.1) 0%, transparent 100%)" }}
             >
-              <TrophySprite size={110} />
+              <TrophySprite size={80} />
 
               <h1
-                className="text-5xl font-black tracking-[0.25em] mt-2"
+                className="text-3xl sm:text-5xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-2"
                 style={{
-                  color: "#f5c542",
-                  textShadow: "0 0 40px rgba(245,197,66,0.3), 0 3px 0 #7a5c10, 0 4px 8px rgba(0,0,0,0.6)",
+                  color: "#fcd34d",
+                  textShadow: "0 0 50px rgba(252,211,77,0.4), 0 0 20px rgba(252,211,77,0.25), 0 3px 0 #7a5c10, 0 4px 8px rgba(0,0,0,0.7)",
                 }}
               >
                 VICTORY
               </h1>
 
               {/* Ornate divider with crown */}
-              <div className="flex items-center gap-3 mt-3 w-full px-10">
+              <div className="flex items-center gap-3 mt-3 w-full px-6 sm:px-10">
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)` }} />
                 <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`, border: `1px solid ${GOLD.border40}` }}>
                   <Crown size={12} className="text-amber-400" />
@@ -665,7 +665,7 @@ export function VictoryScreen({
               </div>
 
               {/* Level name */}
-              <p className="text-sm text-amber-400/70 tracking-[0.3em] uppercase mt-2 font-semibold">
+              <p className="text-sm text-amber-300/85 tracking-[0.3em] uppercase mt-2 font-semibold">
                 {levelName}
               </p>
             </div>
@@ -681,14 +681,14 @@ export function VictoryScreen({
                 background: "linear-gradient(135deg, rgba(180,140,60,0.15), rgba(120,80,20,0.1))",
                 border: `1px solid ${GOLD.border25}`,
               }}>
-                <span className="text-[10px] font-bold text-amber-400/90 tracking-[0.3em] uppercase">
+                <span className="text-[11px] font-bold text-amber-300 tracking-[0.3em] uppercase">
                   {displayStars === 3 ? "★ Legendary ★" : displayStars === 2 ? "Heroic" : "Survived"}
                 </span>
               </div>
             </div>
 
             {/* Flavor text */}
-            <p className="text-[10px] text-amber-600/50 italic text-center px-10 mb-3 leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-amber-400/65 italic text-center px-5 sm:px-10 mb-2 sm:mb-3 leading-relaxed">
               &ldquo;{victoryMessage}&rdquo;
             </p>
 
@@ -698,51 +698,51 @@ export function VictoryScreen({
             </div>
 
             {/* ===== Stats Grid ===== */}
-            <div className="px-5 py-4">
+            <div className="px-3 sm:px-5 py-3 sm:py-4">
               <div className="grid grid-cols-2 gap-2.5">
                 {/* Time */}
                 <div className="rounded-xl p-3 relative" style={{
                   background: `linear-gradient(135deg, ${VICTORY.blueCardBg}, ${VICTORY.blueCardBgDark})`,
-                  border: `1.5px solid ${VICTORY.blueBorder}`,
-                  boxShadow: "inset 0 0 12px rgba(80,100,160,0.06)",
+                  border: `1.5px solid rgba(100,120,180,0.35)`,
+                  boxShadow: "inset 0 0 12px rgba(80,100,160,0.08)",
                 }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <Clock size={11} className="text-blue-400/70" />
-                    <span className="text-[9px] font-bold text-blue-400/60 tracking-[0.2em] uppercase">Time</span>
+                    <Clock size={12} className="text-blue-400/80" />
+                    <span className="text-[10px] font-bold text-blue-400/70 tracking-[0.2em] uppercase">Time</span>
                   </div>
-                  <div className="text-xl font-black text-blue-300/90" style={{ textShadow: "0 0 12px rgba(96,165,250,0.2)" }}>
+                  <div className="text-2xl font-black text-blue-300" style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}>
                     {formatTime(timeSpent)}
                   </div>
                   {isNewBestTime ? (
                     <div className="flex items-center gap-1 mt-1.5">
-                      <Sparkles size={9} className="text-emerald-400" />
-                      <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
+                      <Sparkles size={10} className="text-emerald-400" />
+                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
                     </div>
                   ) : bestTime ? (
-                    <span className="text-[8px] text-blue-500/40 mt-1 block">Best: {formatTime(bestTime)}</span>
+                    <span className="text-[9px] text-blue-400/50 mt-1 block">Best: {formatTime(bestTime)}</span>
                   ) : null}
                 </div>
 
                 {/* Lives */}
                 <div className="rounded-xl p-3 relative" style={{
                   background: `linear-gradient(135deg, ${VICTORY.redCardBg}, ${VICTORY.redCardBgDark})`,
-                  border: `1.5px solid ${VICTORY.redBorder}`,
-                  boxShadow: "inset 0 0 12px rgba(160,60,60,0.06)",
+                  border: `1.5px solid rgba(180,80,80,0.35)`,
+                  boxShadow: "inset 0 0 12px rgba(160,60,60,0.08)",
                 }}>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <Heart size={11} className="text-red-400/70" />
-                    <span className="text-[9px] font-bold text-red-400/60 tracking-[0.2em] uppercase">Lives</span>
+                    <Heart size={12} className="text-red-400/80" />
+                    <span className="text-[10px] font-bold text-red-400/70 tracking-[0.2em] uppercase">Lives</span>
                   </div>
-                  <div className={`text-xl font-black ${lives >= 15 ? "text-emerald-400/90" : lives >= 7 ? "text-yellow-400/90" : "text-red-400/90"}`}>
+                  <div className={`text-2xl font-black ${lives >= 15 ? "text-emerald-400" : lives >= 7 ? "text-yellow-400" : "text-red-400"}`}>
                     {lives}/20
                   </div>
                   {isNewBestHearts ? (
                     <div className="flex items-center gap-1 mt-1.5">
-                      <Sparkles size={9} className="text-emerald-400" />
-                      <span className="text-[8px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
+                      <Sparkles size={10} className="text-emerald-400" />
+                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
                     </div>
                   ) : bestHearts ? (
-                    <span className="text-[8px] text-red-500/40 mt-1 block">Best: {bestHearts}/20</span>
+                    <span className="text-[9px] text-red-400/50 mt-1 block">Best: {bestHearts}/20</span>
                   ) : null}
                 </div>
               </div>
@@ -769,22 +769,22 @@ export function VictoryScreen({
             </div>
 
             {/* ===== Continue Button ===== */}
-            <div className="px-6 py-5 flex justify-center">
+            <div className="px-4 sm:px-6 py-4 sm:py-5 flex justify-center">
               <button
                 onClick={() => resetGame()}
-                className="group relative px-10 py-3 rounded-xl font-bold tracking-[0.2em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
+                className="group relative px-6 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-xs sm:text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
                 style={{
                   background: `linear-gradient(180deg, ${VICTORY.btnLight} 0%, ${VICTORY.btnDark} 100%)`,
-                  border: `1.5px solid ${GOLD.bright50}`,
-                  color: "#ffe8a0",
-                  textShadow: "0 2px 4px rgba(0,0,0,0.5)",
-                  boxShadow: `inset 0 1px 0 ${OVERLAY.white15}, 0 4px 16px ${OVERLAY.black40}, 0 0 20px ${GOLD.innerBorder10}`,
+                  border: `1.5px solid ${GOLD.bright60}`,
+                  color: "#fff2c8",
+                  textShadow: "0 0 12px rgba(252,211,77,0.3), 0 2px 4px rgba(0,0,0,0.6)",
+                  boxShadow: `inset 0 1px 0 ${OVERLAY.white15}, 0 4px 16px ${OVERLAY.black40}, 0 0 24px rgba(180,140,60,0.15)`,
                 }}
               >
-                <span className="flex items-center gap-2.5">
-                  <Swords size={15} />
+                <span className="flex items-center gap-2 sm:gap-2.5">
+                  <Swords size={14} />
                   Onwards
-                  <ArrowRight size={15} />
+                  <ArrowRight size={14} />
                 </span>
               </button>
             </div>

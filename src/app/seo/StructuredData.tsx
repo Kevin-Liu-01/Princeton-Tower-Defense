@@ -1,17 +1,12 @@
-import { getAllStructuredData } from "./schemas";
+import { getEntityGraph } from "./schemas";
 
 export function StructuredData() {
-  const schemas = getAllStructuredData();
+  const graph = getEntityGraph();
 
   return (
-    <>
-      {schemas.map((schema, index) => (
-        <script
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      ))}
-    </>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(graph) }}
+    />
   );
 }

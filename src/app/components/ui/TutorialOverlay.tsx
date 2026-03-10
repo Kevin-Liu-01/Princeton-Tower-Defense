@@ -160,34 +160,34 @@ const TOWER_CARDS: TowerCardInfo[] = [
 
 function TowerCatalog() {
   return (
-    <div className="mt-3 mb-1 space-y-1.5">
+    <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {TOWER_CARDS.map((card) => {
         const theme = TOWER_SPRITE_FRAME_THEME[card.type];
         const data = TOWER_DATA[card.type];
         return (
           <div
             key={card.type}
-            className="flex items-start gap-2.5 rounded-lg p-2 transition-colors"
+            className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2 transition-colors"
             style={{
               background: "rgba(10,10,16,0.5)",
               border: `1px solid ${theme.border}`,
             }}
           >
             <div className="flex-shrink-0 mt-0.5">
-              <FramedSprite size={38} theme={theme}>
-                <TowerSprite type={card.type} size={30} level={1} />
+              <FramedSprite size={30} theme={theme}>
+                <TowerSprite type={card.type} size={22} level={1} />
               </FramedSprite>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-sm font-bold text-amber-200">{data.name}</span>
-                <span className={`text-[10px] font-semibold px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
+              <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+                <span className="text-xs sm:text-sm font-bold text-amber-200">{data.name}</span>
+                <span className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
                   {card.role}
                 </span>
-                <span className="text-xs text-amber-400/50 ml-auto">{data.cost} PP</span>
+                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto">{data.cost} PP</span>
               </div>
-              <p className="text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
-              <p className="text-xs text-amber-200/40 leading-snug mt-0.5">{card.detail}</p>
+              <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
+              <p className="text-[10px] sm:text-xs text-amber-200/40 leading-snug mt-0.5 hidden sm:block">{card.detail}</p>
             </div>
           </div>
         );
@@ -217,17 +217,17 @@ const SPELL_CARDS: SpellCardInfo[] = [
 
 function SpellCatalog() {
   return (
-    <div className="mt-3 mb-1 grid grid-cols-2 gap-1.5">
+    <div className="mt-2 sm:mt-3 mb-1 grid grid-cols-2 gap-1 sm:gap-1.5">
       {SPELL_CARDS.map((spell) => (
         <div
           key={spell.type}
-          className="flex items-center gap-2 rounded-lg p-1.5"
+          className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5"
           style={{ background: "rgba(10,10,16,0.5)", border: `1px solid rgba(80,80,80,0.25)` }}
         >
-          <SpellSprite type={spell.type} size={28} />
+          <SpellSprite type={spell.type} size={22} />
           <div className="min-w-0">
-            <span className="text-[13px] font-bold text-amber-200 block">{spell.name}</span>
-            <span className="text-[11px] text-amber-200/40 leading-tight block">{spell.tagline}</span>
+            <span className="text-[11px] sm:text-[13px] font-bold text-amber-200 block">{spell.name}</span>
+            <span className="text-[9px] sm:text-[11px] text-amber-200/40 leading-tight block">{spell.tagline}</span>
           </div>
         </div>
       ))}
@@ -258,14 +258,14 @@ const HERO_CARDS: HeroCardInfo[] = [
 
 function HeroCatalog() {
   return (
-    <div className="mt-3 mb-1 space-y-1.5">
+    <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {HERO_CARDS.map((card) => {
         const data = HERO_DATA[card.type];
         const heroColor = data.color;
         return (
           <div
             key={card.type}
-            className="flex items-start gap-2.5 rounded-lg p-2"
+            className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2"
             style={{
               background: "rgba(10,10,16,0.5)",
               border: `1px solid ${heroColor}44`,
@@ -274,8 +274,8 @@ function HeroCatalog() {
             <div
               className="flex-shrink-0 rounded-xl overflow-hidden mt-0.5"
               style={{
-                width: 38,
-                height: 38,
+                width: 30,
+                height: 30,
                 background: `radial-gradient(circle, ${heroColor}22, rgba(6,6,10,0.9))`,
                 border: `1.5px solid ${heroColor}66`,
                 display: "flex",
@@ -283,17 +283,17 @@ function HeroCatalog() {
                 justifyContent: "center",
               }}
             >
-              <HeroSprite type={card.type} size={32} />
+              <HeroSprite type={card.type} size={24} />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-sm font-bold text-amber-200">{data.name}</span>
-                <span className={`text-[10px] font-semibold px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
+              <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+                <span className="text-xs sm:text-sm font-bold text-amber-200">{data.name}</span>
+                <span className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
                   {card.role}
                 </span>
               </div>
-              <p className="text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
-              <div className="flex items-center gap-2 mt-1">
+              <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
+              <div className="hidden sm:flex items-center gap-2 mt-1">
                 <span className="text-[11px] text-amber-400/50">
                   <span className="font-semibold text-amber-300/60">{data.ability}</span> — {data.abilityDesc}
                 </span>
@@ -320,8 +320,8 @@ function TutorialUpgradeTree() {
   const levels = [1, 2, 3] as const;
 
   return (
-    <div className="mt-3 mb-1 rounded-lg border p-2.5" style={{ background: "rgba(10,10,16,0.55)", borderColor: GOLD.innerBorder10 }}>
-      <p className="text-xs text-amber-300/60 font-semibold uppercase tracking-wider mb-2 text-center">
+    <div className="mt-2 sm:mt-3 mb-1 rounded-lg border p-2 sm:p-2.5" style={{ background: "rgba(10,10,16,0.55)", borderColor: GOLD.innerBorder10 }}>
+      <p className="text-[10px] sm:text-xs text-amber-300/60 font-semibold uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
         Example: {towerData.name}
       </p>
 
@@ -511,7 +511,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
 
       {/* Tutorial panel */}
       <div
-        className="fixed w-full max-w-lg rounded-2xl overflow-hidden"
+        className="fixed w-[92vw] sm:w-full max-w-lg rounded-xl sm:rounded-2xl overflow-hidden"
         style={{
           ...panelStyle,
           background: panelGradient,
@@ -526,11 +526,11 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
         <OrnateFrame className="relative w-full h-full overflow-hidden" cornerSize={40}>
           {/* Header */}
           <div
-            className="flex items-center gap-3 px-5 py-3.5 border-b"
+            className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 border-b"
             style={{ borderColor: GOLD.border25 }}
           >
             <div
-              className="flex items-center justify-center w-8 h-8 rounded-lg"
+              className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg"
               style={{
                 background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                 border: `1px solid ${GOLD.innerBorder12}`,
@@ -539,22 +539,22 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               <BookOpen size={16} className="text-amber-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-amber-200 tracking-wide">
+              <h2 className="text-sm sm:text-base font-bold text-amber-200 tracking-wide">
                 {step.title}
               </h2>
-              <p className="text-xs text-amber-200/40 mt-0.5">
+              <p className="text-[10px] sm:text-xs text-amber-200/40 mt-0.5">
                 Step {currentStep + 1} of {totalSteps}
               </p>
             </div>
           </div>
 
           {/* Body */}
-          <div className="px-5 py-4 max-h-[50vh] overflow-y-auto">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
             {descriptionLines.map((line, i) => (
               <p
                 key={i}
-                className="text-sm text-amber-100/80 leading-relaxed"
-                style={{ marginTop: i > 0 ? 8 : 0, whiteSpace: "pre-wrap" }}
+                className="text-xs sm:text-sm text-amber-100/80 leading-relaxed"
+                style={{ marginTop: i > 0 ? 6 : 0, whiteSpace: "pre-wrap" }}
               >
                 {line}
               </p>
@@ -566,19 +566,19 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
 
           {/* Divider */}
-          <div className="mx-4" style={{ height: 1, background: dividerGradient }} />
+          <div className="mx-3 sm:mx-4" style={{ height: 1, background: dividerGradient }} />
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3">
             {/* Progress dots */}
-            <div className="flex gap-1.5">
+            <div className="flex gap-1 sm:gap-1.5">
               {TUTORIAL_STEPS.map((_, i) => (
                 <div
                   key={i}
                   className="rounded-full transition-all duration-200"
                   style={{
-                    width: i === currentStep ? 16 : 6,
-                    height: 6,
+                    width: i === currentStep ? 12 : 5,
+                    height: 5,
                     background:
                       i === currentStep
                         ? "rgba(251,191,36,0.8)"
@@ -591,17 +591,17 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={handleSkip}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-amber-200/50 hover:text-amber-200/80 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs text-amber-200/50 hover:text-amber-200/80 hover:bg-white/5 transition-colors"
               >
-                <SkipForward size={12} />
+                <SkipForward size={11} />
                 Skip
               </button>
               <button
                 onClick={handleNext}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
+                className="flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
                 style={{
                   background: "linear-gradient(135deg, rgba(180,125,30,0.85), rgba(120,75,15,0.9))",
                   border: `1px solid ${GOLD.border40}`,
@@ -609,7 +609,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
                 }}
               >
                 {isLastStep ? "Let's Go!" : "Next"}
-                <ChevronRight size={14} />
+                <ChevronRight size={13} />
               </button>
             </div>
           </div>

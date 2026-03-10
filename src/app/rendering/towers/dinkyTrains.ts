@@ -1533,8 +1533,8 @@ export function renderDinkyTrains(
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
       const stripeH = 3 * zoom;
-      const stL = isoOffset(trainX, stripeY, -11);
-      const stR = isoOffset(trainX, stripeY, 11);
+      const stL = isoOffset(trainX, stripeY, -7);
+      const stR = isoOffset(trainX, stripeY, 7);
       ctx.fillStyle = "#E77500";
       ctx.shadowColor = "rgba(231, 117, 0, 0.4)";
       ctx.shadowBlur = 4 * zoom;
@@ -1557,7 +1557,7 @@ export function renderDinkyTrains(
 
       // Isometric front headlight on cab
       {
-        const flPos = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 6);
+        const flPos = { x: cabPos.x + 6 * zoom, y: cabPos.y - 7.5 * zoom };
         drawIsoHeadlight(
           cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom,
           flPos.x, flPos.y, 2.8,
@@ -1566,8 +1566,8 @@ export function renderDinkyTrains(
 
       // === COWCATCHER: Isometric brass V-plow ===
       drawIsoCowcatcher(
-        cabPos.x + 5 * zoom, cabPos.y - 0.5 * zoom,
-        6, 5, 6,
+        cabPos.x + 4 * zoom, cabPos.y + 0.5 * zoom,
+        3, 3, 4,
         "#B87333", "#8B5E3C", "#C9A227", 4);
 
       // "DINKY" nameplate on boiler side — 3D raised brass plaque
@@ -2094,7 +2094,7 @@ export function renderDinkyTrains(
 
       // Isometric armored headlight on loco
       {
-        const hlPos = isoOffset(locoPos.x, locoPos.y - 7.5 * zoom, 6);
+        const hlPos = { x: locoPos.x + 7 * zoom, y: locoPos.y - 9 * zoom };
         drawIsoHeadlight(
           locoPos.x + 6 * zoom, locoPos.y - 8.5 * zoom,
           hlPos.x, hlPos.y, 2.5,
@@ -2408,7 +2408,7 @@ export function renderDinkyTrains(
 
       // Isometric front headlight on cab
       {
-        const flPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 8);
+        const flPos = { x: cabPos.x + 7 * zoom, y: cabPos.y - 8.5 * zoom };
         drawIsoHeadlight(
           cabPos.x + 6 * zoom, cabPos.y - 8 * zoom,
           flPos.x, flPos.y, 3,
@@ -2417,15 +2417,15 @@ export function renderDinkyTrains(
 
       // === ARMORED PLOW/RAM — isometric V-wedge ===
       drawIsoCowcatcher(
-        cabPos.x + 6 * zoom, cabPos.y - 1 * zoom,
-        8, 6, 7,
+        cabPos.x + 4.5 * zoom, cabPos.y + 0.5 * zoom,
+        3.5, 3.5, 5,
         "#4a5060", "#2a3040", "#5a6070", 4);
 
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
       const stripeH = 3.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -13);
-      const stR = isoOffset(trainX, stripeY, 13);
+      const stL = isoOffset(trainX, stripeY, -8);
+      const stR = isoOffset(trainX, stripeY, 8);
       ctx.fillStyle = "#E77500";
       ctx.shadowColor = "rgba(231, 117, 0, 0.35)";
       ctx.shadowBlur = 4 * zoom;
@@ -3298,7 +3298,7 @@ export function renderDinkyTrains(
 
       // Isometric front headlight with fortress bracket
       {
-        const hlPos = isoOffset(cabPos.x, cabPos.y - 9 * zoom, 9);
+        const hlPos = { x: cabPos.x + 7.5 * zoom, y: cabPos.y - 10.5 * zoom };
         drawIsoHeadlight(
           cabPos.x + 6.5 * zoom, cabPos.y - 10 * zoom,
           hlPos.x, hlPos.y, 3,
@@ -3307,15 +3307,15 @@ export function renderDinkyTrains(
 
       // Isometric battering ram — armored V-wedge
       drawIsoCowcatcher(
-        cabPos.x + 6.5 * zoom, cabPos.y - 2.5 * zoom,
-        8, 6, 7,
+        cabPos.x + 5 * zoom, cabPos.y + 0.5 * zoom,
+        3.5, 3.5, 5,
         "#3a4050", "#1a2030", "#5a6070", 3);
 
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
       const stripeH = 4 * zoom;
-      const stL = isoOffset(trainX, stripeY, -15);
-      const stR = isoOffset(trainX, stripeY, 15);
+      const stL = isoOffset(trainX, stripeY, -9);
+      const stR = isoOffset(trainX, stripeY, 9);
       ctx.fillStyle = "#E77500";
       ctx.shadowColor = "rgba(231, 117, 0, 0.3)";
       ctx.shadowBlur = 5 * zoom;
@@ -3669,7 +3669,7 @@ export function renderDinkyTrains(
 
       // Isometric headlight with brass bracket
       {
-        const hlPos = isoOffset(locoPos.x, locoPos.y - 7 * zoom, 6);
+        const hlPos = { x: locoPos.x + 7 * zoom, y: locoPos.y - 8.5 * zoom };
         drawIsoHeadlight(
           locoPos.x + 5.5 * zoom, locoPos.y - 8 * zoom,
           hlPos.x, hlPos.y, 3,
@@ -3829,8 +3829,8 @@ export function renderDinkyTrains(
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
       const stripeH = 4 * zoom;
-      const stL = isoOffset(trainX, stripeY, -15);
-      const stR = isoOffset(trainX, stripeY, 15);
+      const stL = isoOffset(trainX, stripeY, -8);
+      const stR = isoOffset(trainX, stripeY, 8);
       ctx.fillStyle = "#E77500";
       ctx.shadowColor = "rgba(231, 117, 0, 0.3)";
       ctx.shadowBlur = 5 * zoom;
@@ -3853,13 +3853,13 @@ export function renderDinkyTrains(
 
       // Ornamental cowcatcher — isometric gold V-plow
       drawIsoCowcatcher(
-        cabPos.x + 5.5 * zoom, cabPos.y - 1.5 * zoom,
-        7, 5, 6,
+        cabPos.x + 4 * zoom, cabPos.y + 0.5 * zoom,
+        3, 3, 4,
         "#C9A227", "#B89227", "#E8C847", 4);
 
       // Isometric front headlight (gold bracket mount)
       {
-        const hlPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 7);
+        const hlPos = { x: cabPos.x + 6.5 * zoom, y: cabPos.y - 8.5 * zoom };
         drawIsoHeadlight(
           cabPos.x + 5.5 * zoom, cabPos.y - 8 * zoom,
           hlPos.x, hlPos.y, 3,
@@ -4238,7 +4238,7 @@ export function renderDinkyTrains(
 
       // Isometric headlight with ornate bracket
       {
-        const hlPos = isoOffset(locoPos.x, locoPos.y - 9 * zoom, 7);
+        const hlPos = { x: locoPos.x + 7.5 * zoom, y: locoPos.y - 10.5 * zoom };
         drawIsoHeadlight(
           locoPos.x + 6 * zoom, locoPos.y - 10 * zoom,
           hlPos.x, hlPos.y, 3.2,
@@ -4478,8 +4478,8 @@ export function renderDinkyTrains(
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
       const stripeH = 4.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -16);
-      const stR = isoOffset(trainX, stripeY, 16);
+      const stL = isoOffset(trainX, stripeY, -9);
+      const stR = isoOffset(trainX, stripeY, 9);
       ctx.fillStyle = "#E77500";
       ctx.shadowColor = "rgba(231, 117, 0, 0.35)";
       ctx.shadowBlur = 5 * zoom;
@@ -4502,13 +4502,13 @@ export function renderDinkyTrains(
 
       // Armored ram — isometric V-wedge with gold trim
       drawIsoCowcatcher(
-        cabPos.x + 6.5 * zoom, cabPos.y - 2.5 * zoom,
-        9, 7, 8,
+        cabPos.x + 5 * zoom, cabPos.y + 0.5 * zoom,
+        4, 4, 5,
         "#3a4050", "#1a2030", "#C9A227", 4);
 
       // Isometric front headlight
       {
-        const hlPos = isoOffset(cabPos.x, cabPos.y - 8 * zoom, 9);
+        const hlPos = { x: cabPos.x + 7.5 * zoom, y: cabPos.y - 9.5 * zoom };
         drawIsoHeadlight(
           cabPos.x + 6.5 * zoom, cabPos.y - 9 * zoom,
           hlPos.x, hlPos.y, 3.5,

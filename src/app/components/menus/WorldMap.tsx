@@ -54,6 +54,7 @@ import { BattlefieldPreview } from "./BattlefieldPreview";
 import { RegionIcon } from "../../sprites";
 import { HeroSelector } from "./HeroSelector";
 import { SpellSelector } from "./SpellSelector";
+import { MobileLoadoutBar } from "./MobileLoadoutBar";
 import { CreatorModal } from "../creator";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
 import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
@@ -70,16 +71,16 @@ const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as c
 
 const PrincetonLogo: React.FC = () => {
   return (
-    <div className="relative  flex items-center gap-2">
+    <div className="relative flex items-center gap-1.5 sm:gap-2">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40 animate-pulse"
         />
       </div>
-      <PrincetonTDLogo size="h-11 w-11" />
+      <PrincetonTDLogo size="h-9 w-9 sm:h-11 sm:w-11" />
       <div className="relative flex flex-col -mt-1">
         <span
-          className="text-base sm:text-2xl font-black tracking-wider"
+          className="text-sm sm:text-2xl font-black tracking-wider"
           style={{
             background:
               "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
@@ -660,7 +661,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     >
       {/* TOP BAR */}
       <OrnateFrame
-        className="flex-shrink-0 overflow-hidden rounded-xl mx-2 sm:mx-3 mt-3 border-2 border-amber-700/50 shadow-xl"
+        className="flex-shrink-0 overflow-hidden rounded-xl mx-1.5 sm:mx-3 mt-1.5 sm:mt-3 border-2 border-amber-700/50 shadow-xl"
         cornerSize={25}
         showBorders={true}
         showSideBorders={true}
@@ -690,14 +691,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
           <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
 
-          <div className="relative px-3 sm:px-5 py-2 flex items-center justify-between gap-3 z-10">
+          <div className="relative px-2 sm:px-5 py-1.5 sm:py-2 flex items-center justify-between gap-2 sm:gap-3 z-10">
             {/* Left: Logo + Stars badge */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <PrincetonLogo />
 
               <div className="hidden sm:block w-px h-8 opacity-60" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
 
-              {/* Stars badge */}
+              {/* Stars badge - desktop */}
               <div className="hidden sm:flex relative items-center gap-2 px-4 py-1.5 rounded-xl" style={{
                 background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
                 border: `1.5px solid ${AMBER_CARD.border}`,
@@ -707,6 +708,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <Star size={15} className="text-yellow-400 fill-yellow-400 shrink-0" />
                 <span className="font-black text-sm text-yellow-300">{totalStars}</span>
                 <span className="text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
+              </div>
+
+              {/* Stars badge - mobile (compact) */}
+              <div className="flex sm:hidden relative items-center gap-1 px-2 py-1 rounded-lg" style={{
+                background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                border: `1px solid ${AMBER_CARD.border}`,
+              }}>
+                <Star size={11} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                <span className="font-black text-[10px] text-yellow-300">{totalStars}</span>
+                <span className="text-[7px] text-yellow-700 font-semibold">/{maxStars}</span>
               </div>
             </div>
 
@@ -721,27 +732,27 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
                 <button
                   onClick={() => openCodexTo("towers")}
-                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
                   <Book size={14} className="text-amber-400 shrink-0" />
                   <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Codex</span>
                 </button>
 
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <div className="w-px h-4 sm:h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
 
                 <button
                   onClick={() => setShowCreator(true)}
-                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
                   <Hammer size={14} className="text-amber-400 shrink-0" />
                   <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Creator</span>
                 </button>
 
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <div className="w-px h-4 sm:h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
 
                 <button
                   onClick={() => setShowSettings(true)}
-                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
                   <Settings size={14} className="text-amber-400 shrink-0" />
                   <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Settings</span>
@@ -774,9 +785,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </button>
 
               {/* More dropdown (portal-based, no overflow clipping) */}
-              <div className="hidden sm:flex">
-                <NavMoreDropdown onShowCredits={() => setShowCredits(true)} />
-              </div>
+              <NavMoreDropdown onShowCredits={() => setShowCredits(true)} />
 
               {/* Nav arrows */}
               <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
@@ -808,10 +817,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </OrnateFrame>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col sm:flex-row overflow-y-auto sm:overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
 
         {/* MOBILE: Campaign / Level detail panel above map */}
-        <div className="sm:hidden h-[36vh] flex-shrink-0 flex flex-col overflow-hidden px-2 pt-1.5 pb-1" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+        <div className="sm:hidden max-h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-1.5 pt-1 pb-0.5" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
             <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
             {selectedLevel && currentLevel ? (() => {
@@ -1533,9 +1542,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           </OrnateFrame>
         </div>
         {/* RIGHT: Map */}
-        <div className="relative flex-shrink-0 sm:flex-1 flex flex-col min-w-0 py-2 sm:py-3 px-2 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+        <div className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <OrnateFrame
-            className="h-[50vh] sm:h-auto sm:flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl sm:min-h-0"
+            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl min-h-0"
             cornerSize={28}
             showBorders={true}
           >
@@ -1741,31 +1750,24 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   />
                 </div>
               </div>
+
+              {/* MOBILE HERO & SPELL SELECTION BAR */}
+              <div className="flex sm:hidden absolute w-full bottom-0 left-0 right-0 p-1.5 pointer-events-none h-full z-20" style={{
+                background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.35) 60%, rgba(18,12,6,0.88) 80%, rgba(18,12,6,0.98) 100%)`
+              }}>
+                <div className="w-full mt-auto pointer-events-auto">
+                  <MobileLoadoutBar
+                    selectedHero={selectedHero}
+                    setSelectedHero={setSelectedHero}
+                    selectedSpells={selectedSpells}
+                    toggleSpell={toggleSpell}
+                    onOpenHeroCodex={() => openCodexTo("heroes")}
+                    onOpenSpellCodex={() => openCodexTo("spells")}
+                  />
+                </div>
+              </div>
             </div>
           </OrnateFrame>
-
-          {/* MOBILE: Hero & Spell panels stacked below the map */}
-          <div className="sm:hidden flex flex-col gap-2 pt-2 flex-shrink-0">
-            <HeroSelector
-              selectedHero={selectedHero}
-              setSelectedHero={setSelectedHero}
-              hoveredHero={hoveredHero}
-              setHoveredHero={setHoveredHero}
-              onOpenCodex={() => openCodexTo("heroes")}
-            />
-            <SpellSelector
-              selectedSpells={selectedSpells}
-              toggleSpell={toggleSpell}
-              hoveredSpell={hoveredSpell}
-              setHoveredSpell={setHoveredSpell}
-              availableSpellStars={availableSpellStars}
-              totalSpellStarsEarned={totalSpellStarsEarned}
-              spentSpellStars={spentSpellStars}
-              spellUpgradeLevels={spellUpgradeLevels}
-              upgradeSpell={upgradeSpell}
-              onOpenCodex={() => openCodexTo("spells")}
-            />
-          </div>
         </div>
       </div>
 

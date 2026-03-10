@@ -4,9 +4,22 @@ export const SITE_AUTHOR = "Kevin Liu";
 export const GITHUB_URL =
   "https://github.com/Kevin-Liu-01/Princeton-Tower-Defense";
 
+export const AUTHOR_URL = "https://www.kevin-liu.tech/";
+export const AUTHOR_GITHUB = "https://github.com/Kevin-Liu-01";
+export const AUTHOR_TWITTER = "https://x.com/kevskgs";
+export const AUTHOR_LINKEDIN =
+  "https://www.linkedin.com/in/kevin-liu-princeton/";
+
+export const AUTHOR_SAME_AS = [
+  AUTHOR_URL,
+  AUTHOR_GITHUB,
+  AUTHOR_TWITTER,
+  AUTHOR_LINKEDIN,
+] as const;
+
 export const SITE_DESCRIPTION =
   "Princeton Tower Defense is a free browser-based strategy game where you defend Princeton University's campus from waves of academic stress monsters. " +
-  "Build 7 unique towers inspired by real campus landmarks — Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar — " +
+  "Build 7 unique towers inspired by real campus landmarks (Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar), " +
   "each with dual upgrade paths. Summon heroes, cast spells, and battle through 23 handcrafted levels across 5 themed regions.";
 
 export const SITE_DESCRIPTION_SHORT =
@@ -116,31 +129,31 @@ export const OG_IMAGES = {
     url: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
     width: 1200,
     height: 630,
-    alt: "Princeton Tower Defense — isometric campus map with towers defending against waves of enemies near Nassau Hall",
+    alt: "Princeton Tower Defense gameplay - isometric campus map with towers defending against waves of enemies near Nassau Hall",
   },
   desert: {
     url: `${SITE_URL}/images/new/gameplay_desert_ui.png`,
     width: 1200,
     height: 630,
-    alt: "Princeton Tower Defense desert region — Sahara Sands with pyramid and oasis levels",
+    alt: "Princeton Tower Defense desert region - Sahara Sands with pyramid and oasis levels",
   },
   winter: {
     url: `${SITE_URL}/images/new/gameplay_winter_ui.png`,
     width: 1200,
     height: 630,
-    alt: "Princeton Tower Defense winter region — Frozen Frontier with glacier and fortress levels",
+    alt: "Princeton Tower Defense winter region - Frozen Frontier with glacier and fortress levels",
   },
   volcano: {
     url: `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
     width: 1200,
     height: 630,
-    alt: "Princeton Tower Defense volcanic region — Volcanic Depths with lava fields and caldera levels",
+    alt: "Princeton Tower Defense volcanic region - Volcanic Depths with lava fields and caldera levels",
   },
   swamp: {
     url: `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
     width: 1200,
     height: 630,
-    alt: "Princeton Tower Defense swamp region — Murky Marshes with bog and sunken temple levels",
+    alt: "Princeton Tower Defense swamp region - Murky Marshes with bog and sunken temple levels",
   },
   homepage: {
     url: `${SITE_URL}/images/promo/homepage.png`,

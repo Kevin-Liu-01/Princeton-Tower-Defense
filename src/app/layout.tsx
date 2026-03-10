@@ -12,12 +12,13 @@ import {
   OG_DESCRIPTION,
   KEYWORDS,
   OG_IMAGES,
+  AUTHOR_URL,
 } from "./seo/constants";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Free Browser Tower Defense Game at Princeton University`,
+    default: `${SITE_NAME} | Free Browser Tower Defense Game - 23 Levels, 7 Heroes, Custom Maps`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -25,21 +26,19 @@ export const metadata: Metadata = {
   generator: "Next.js",
   referrer: "origin-when-cross-origin",
   keywords: KEYWORDS,
-  authors: [{ name: SITE_AUTHOR, url: "https://github.com/Kevin-Liu-01" }],
+  authors: [{ name: SITE_AUTHOR, url: AUTHOR_URL }],
   creator: SITE_AUTHOR,
   publisher: SITE_AUTHOR,
   category: "Games",
   classification: "Tower Defense Strategy Game",
 
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-    ],
+    icon: [{ url: "/favicon.ico", sizes: "any" }],
     apple: [{ url: "/images/logos/princeton-td-logo.png" }],
   },
 
   openGraph: {
-    title: `${SITE_NAME} — Free Browser TD Game with 23 Levels, 7 Towers & Heroes`,
+    title: `${SITE_NAME} | Free Tower Defense Game with 7 Towers, Heroes & Spells`,
     description: OG_DESCRIPTION,
     type: "website",
     locale: "en_US",
@@ -48,17 +47,19 @@ export const metadata: Metadata = {
     images: [
       OG_IMAGES.primary,
       OG_IMAGES.desert,
+      OG_IMAGES.swamp,
       OG_IMAGES.winter,
+      OG_IMAGES.volcano,
       OG_IMAGES.homepage,
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — Free Browser Tower Defense Game`,
+    title: `${SITE_NAME} | Free Browser Tower Defense Game - Play Now`,
     description: SITE_DESCRIPTION_SHORT,
     images: [OG_IMAGES.primary],
-    creator: "@Kevin_Liu_01",
+    creator: "@kevskgs",
   },
 
   robots: {

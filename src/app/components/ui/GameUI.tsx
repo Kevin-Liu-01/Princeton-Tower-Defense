@@ -34,3 +34,5 @@ export {
 } from "./Tooltips";
 export { EnemyInspector, EnemyDetailTooltip, TroopDetailTooltip, HeroDetailTooltip } from "./EnemyInspector";
 export { HeroHoverTooltip } from "./HeroHoverTooltip";
+export { DevMenu } from "./DevMenu";
+export { HudTooltip } from "./HudTooltip";

@@ -1,0 +1,57 @@
+# Princeton Tower Defense
+
+> Princeton Tower Defense is a free browser-based tower defense strategy game set at Princeton University. Built with React, Next.js, and HTML5 Canvas with no game engine or sprite sheets. Play at https://princetontd.vercel.app
+
+## Game
+
+- [Play Now](https://princetontd.vercel.app): Launch the game directly in your browser. No download required.
+
+## Key Facts
+
+- Genre: Tower Defense / Strategy
+- Price: Free
+- Platform: Any modern web browser (desktop and mobile)
+- Levels: 23 handcrafted maps across 5 themed regions
+- Towers: 7 buildable towers, each with 2 upgrade paths (14 total)
+- Heroes: 7 playable hero characters with unique active abilities
+- Spells: 5 castable spells with upgrade trees
+- Enemies: 50+ unique enemy types including bosses, flying, ranged, and swarm
+- Features: Custom level creator, world map progression, challenge maps, environmental hazards
+- Tech Stack: Next.js 14, React 18, TypeScript, HTML5 Canvas
+- Author: Kevin Liu
+- Source Code: https://github.com/Kevin-Liu-01/Princeton-Tower-Defense
+
+## Regions
+
+- Princeton Grounds: Grassland theme with campus landmarks
+- Murky Marshes: Swamp theme with poison fog and bog hazards
+- Sahara Sands: Desert theme with quicksand and pyramids
+- Frozen Frontier: Winter theme with blizzard zones and glaciers
+- Volcanic Depths: Lava theme with geysers and obsidian terrain
+
+## Towers
+
+- Nassau Cannon: Heavy artillery → Gatling Gun or Flamethrower
+- Firestone Library: Slow and control → EQ Smasher or Blizzard
+- E-Quad Lab: Chain magic DPS → Focused Beam or Chain Lightning
+- Blair Arch: Sonic AoE → Shockwave Siren or Symphony
+- Eating Club: Economy → Investment Bank or Recruitment Center
+- Dinky Station: Troop summons → Centaur Archers or Heavy Cavalry
+- Palmer Mortar: Siege AoE → Missile Battery or Ember Foundry
+
+## Heroes
+
+- Princeton Tiger: Melee brawler with Mighty Roar AoE stun
+- Acapella Tenor: Ranged support with High Note sonic blast
+- Mathey Knight: Tank with Fortress Shield invincibility
+- Rocky Raccoon: Ranged artillery with Boulder Bash AoE
+- F. Scott: Buffer with Inspiration Cheer tower boost
+- General Mercer: Commander with Rally Knights summon
+- BSE Engineer: Utility with Deploy Turret automation
+
+## Contact
+
+- Website: https://princetontd.vercel.app
+- Author Portfolio: https://www.kevin-liu.tech
+- GitHub: https://github.com/Kevin-Liu-01
+- Source: https://github.com/Kevin-Liu-01/Princeton-Tower-Defense

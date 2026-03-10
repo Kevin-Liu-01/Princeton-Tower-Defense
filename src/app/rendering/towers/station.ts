@@ -3131,14 +3131,14 @@ export function renderStationTower(
 
     // Iron-bound double door with stone arch frame (left face)
     {
+      const isoSlope = ISO_Y_RATIO;
       const doorL = bX - 13 * zoom;
       const doorR = bX - 2 * zoom;
       const doorBot = bY - 1 * zoom;
       const doorTopL = bY - 19 * zoom;
-      const doorTopR = bY - 17 * zoom;
+      const doorTopR = doorTopL + (doorR - doorL) * isoSlope;
       const doorMidX = (doorL + doorR) * 0.5;
       const doorMidTopY = (doorTopL + doorTopR) * 0.5;
-      const isoSlope = (doorTopR - doorTopL) / (doorR - doorL);
 
       // Stone step at base
       ctx.fillStyle = "#6a5a4a";
@@ -4422,28 +4422,68 @@ export function renderStationTower(
       drawMerlon(ctx, m.x, m.y, 6, 5, 6, c2Colors, zoom);
     }
 
-    // Arched stone doorway
-    ctx.fillStyle = "#2a2a32";
-    ctx.beginPath();
-    ctx.moveTo(bX - 12 * zoom, bY - 2 * zoom);
-    ctx.lineTo(bX - 12 * zoom, bY - 19 * zoom);
-    ctx.arc(bX - 8 * zoom, bY - 19 * zoom, 4 * zoom, Math.PI, 0);
-    ctx.lineTo(bX - 4 * zoom, bY - 2 * zoom);
-    ctx.closePath();
-    ctx.fill();
-    // Arch stones
-    ctx.strokeStyle = "#5a5a62";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.arc(bX - 8 * zoom, bY - 19 * zoom, 4 * zoom, Math.PI, 0);
-    ctx.stroke();
-    // Door reinforcement
-    ctx.strokeStyle = "#8a8a92";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(bX - 11 * zoom, bY - 8 * zoom);
-    ctx.lineTo(bX - 5 * zoom, bY - 7 * zoom);
-    ctx.stroke();
+    // Arched stone doorway — isometric on the left face
+    {
+      const dSlope = ISO_Y_RATIO;
+      const dCx = bX - 8 * zoom;
+      const dHW = 4 * zoom;
+      const dBot = bY - 2 * zoom;
+      const dArchCy = bY - 15 * zoom;
+      const dArchR = dHW;
+      const dSegs = 16;
+
+      const traceDoorShape = (pad: number) => {
+        const hw = dHW + pad;
+        const r = dArchR + pad;
+        ctx.beginPath();
+        ctx.moveTo(dCx - hw, dBot + -hw * dSlope + pad);
+        ctx.lineTo(dCx - hw, dArchCy + -hw * dSlope);
+        for (let i = 0; i <= dSegs; i++) {
+          const theta = Math.PI * (1 - i / dSegs);
+          const u = hw * Math.cos(theta);
+          const v = r * Math.sin(theta);
+          ctx.lineTo(dCx + u, dArchCy + u * dSlope - v);
+        }
+        ctx.lineTo(dCx + hw, dBot + hw * dSlope + pad);
+        ctx.closePath();
+      };
+
+      // Recess shadow
+      ctx.save();
+      ctx.translate(-0.8 * zoom, -0.4 * zoom);
+      ctx.fillStyle = "#0a0a12";
+      traceDoorShape(1 * zoom);
+      ctx.fill();
+      ctx.restore();
+
+      // Interior void
+      ctx.fillStyle = "#2a2a32";
+      traceDoorShape(0);
+      ctx.fill();
+
+      // Warm glow inside
+      const dGlow = 0.15 + Math.sin(time * 1.5) * 0.06;
+      ctx.fillStyle = `rgba(255, 150, 80, ${dGlow})`;
+      traceDoorShape(-0.8 * zoom);
+      ctx.fill();
+
+      // Arch frame
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1.5 * zoom;
+      traceDoorShape(0.5 * zoom);
+      ctx.stroke();
+
+      // Iron crossbar reinforcements (follow face slope)
+      ctx.strokeStyle = "#8a8a92";
+      ctx.lineWidth = 1 * zoom;
+      for (let h = 0; h < 2; h++) {
+        const barH = (h + 1) * 4.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(dCx - dHW + 0.5 * zoom, dBot + -dHW * dSlope - barH);
+        ctx.lineTo(dCx + dHW - 0.5 * zoom, dBot + dHW * dSlope - barH);
+        ctx.stroke();
+      }
+    }
 
     // Gothic arrow slit windows (isometric, flush against right wall face)
     const slitGlow = 0.3 + Math.sin(time * 2) * 0.15;
@@ -4470,17 +4510,78 @@ export function renderStationTower(
       slitGlow,
     );
 
-    // === HIGH-TECH: Rotating radar/beacon on tower ===
-    const beaconAngle = time * 2;
-    ctx.strokeStyle = "#8a8a92";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(towerX, tRoofY - 12 * zoom);
-    ctx.lineTo(
-      towerX + Math.cos(beaconAngle) * 5 * zoom,
-      tRoofY - 12 * zoom + Math.sin(beaconAngle) * 2.5 * zoom,
-    );
-    ctx.stroke();
+    // === HIGH-TECH: Rotating radar/beacon on tower (isometric) ===
+    {
+      const bcPivotX = towerX;
+      const bcPivotY = tRoofY - 12 * zoom;
+      const bcAngle = time * 2;
+      const bcCos = Math.cos(bcAngle);
+      const bcSin = Math.sin(bcAngle);
+      const bcArmLen = 5 * zoom;
+      const bcTipX = bcPivotX + bcCos * bcArmLen;
+      const bcTipY = bcPivotY + bcSin * bcArmLen * ISO_Y_RATIO;
+
+      // Pivot hub (isometric ellipse)
+      ctx.fillStyle = "#6a6a72";
+      ctx.beginPath();
+      ctx.ellipse(
+        bcPivotX,
+        bcPivotY,
+        1.5 * zoom,
+        0.75 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Arm
+      ctx.strokeStyle = "#8a8a92";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bcPivotX, bcPivotY);
+      ctx.lineTo(bcTipX, bcTipY);
+      ctx.stroke();
+
+      // Mini dish at tip (isometric, facing perpendicular to arm)
+      const bcDishW = 3 * zoom * Math.abs(bcSin);
+      const bcDishH = 3 * zoom;
+      if (bcDishW > 0.5 * zoom) {
+        const bcFacing = bcSin > 0;
+        ctx.fillStyle = "#b0b0b8";
+        ctx.beginPath();
+        ctx.moveTo(bcTipX, bcTipY - bcDishH * 0.5);
+        ctx.quadraticCurveTo(
+          bcTipX + (bcFacing ? bcDishW * 0.4 : -bcDishW * 0.4),
+          bcTipY,
+          bcTipX,
+          bcTipY + bcDishH * 0.5,
+        );
+        ctx.quadraticCurveTo(
+          bcTipX - (bcFacing ? bcDishW * 0.1 : -bcDishW * 0.1),
+          bcTipY,
+          bcTipX,
+          bcTipY - bcDishH * 0.5,
+        );
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillStyle = "#b0b0b8";
+        ctx.fillRect(
+          bcTipX - 0.5 * zoom,
+          bcTipY - bcDishH * 0.5,
+          1 * zoom,
+          bcDishH,
+        );
+      }
+
+      // Blinking tip light
+      const bcBlink = Math.sin(time * 6) > 0.3 ? 0.8 : 0.2;
+      ctx.fillStyle = `rgba(255, 80, 0, ${bcBlink})`;
+      ctx.beginPath();
+      ctx.arc(bcTipX, bcTipY, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Garrison pennant on main building (triangular)
     const bannerWave2 = Math.sin(time * 3) * 2;
@@ -5438,141 +5539,130 @@ export function renderStationTower(
     // Clock on right tower (no numerals)
     drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 4 * zoom);
 
-    // Grand portcullis entrance with chains and archivolt
+    // Grand portcullis entrance — isometric on the left face
     {
-      const portL = bX - 7 * zoom;
-      const portR = bX + 3 * zoom;
-      const portBot = bY - 2 * zoom;
-      const portArchY = bY - 16 * zoom;
-      const portArchCx = bX - 2 * zoom;
-      const portArchR = 5 * zoom;
+      const slope = ISO_Y_RATIO;
+      const gateCx = bX - 6 * zoom;
+      const gateHW = 3.5 * zoom;
+      const portBot = bY + 1 * zoom;
+      const archCy = bY - 9 * zoom;
+      const archR = gateHW;
+      const archSegs = 20;
 
-      // Deep recess shadow
+      const traceGateShape = (pad: number) => {
+        const hw = gateHW + pad;
+        const r = archR + pad;
+        ctx.beginPath();
+        ctx.moveTo(gateCx - hw, portBot + -hw * slope + pad);
+        ctx.lineTo(gateCx - hw, archCy + -hw * slope);
+        for (let i = 0; i <= archSegs; i++) {
+          const theta = Math.PI * (1 - i / archSegs);
+          const u = hw * Math.cos(theta);
+          const v = r * Math.sin(theta);
+          ctx.lineTo(gateCx + u, archCy + u * slope - v);
+        }
+        ctx.lineTo(gateCx + hw, portBot + hw * slope + pad);
+        ctx.closePath();
+      };
+
+      // Deep recess shadow (offset into the wall for left face)
+      ctx.save();
+      ctx.translate(-1 * zoom, -0.5 * zoom);
       ctx.fillStyle = "#0a0a12";
-      ctx.beginPath();
-      ctx.moveTo(portL - 1 * zoom, portBot + 1 * zoom);
-      ctx.lineTo(portL - 1 * zoom, portArchY);
-      ctx.arc(portArchCx, portArchY, portArchR + 1 * zoom, Math.PI, 0);
-      ctx.lineTo(portR + 1 * zoom, portBot + 1 * zoom);
-      ctx.closePath();
+      traceGateShape(1 * zoom);
       ctx.fill();
+      ctx.restore();
 
       // Interior void (dark)
       ctx.fillStyle = "#1a1a22";
-      ctx.beginPath();
-      ctx.moveTo(portL, portBot);
-      ctx.lineTo(portL, portArchY);
-      ctx.arc(portArchCx, portArchY, portArchR, Math.PI, 0);
-      ctx.lineTo(portR, portBot);
-      ctx.closePath();
+      traceGateShape(0);
       ctx.fill();
 
       // Interior warm glow from inside
       const portGlow = 0.15 + Math.sin(time * 1.5) * 0.06;
       const portGlowGrad = ctx.createLinearGradient(
-        portArchCx,
+        gateCx,
         portBot,
-        portArchCx,
-        portArchY - portArchR,
+        gateCx,
+        archCy - archR,
       );
       portGlowGrad.addColorStop(0, `rgba(255, 120, 40, ${portGlow * 0.5})`);
       portGlowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${portGlow})`);
       portGlowGrad.addColorStop(1, "rgba(255, 80, 20, 0)");
       ctx.fillStyle = portGlowGrad;
-      ctx.beginPath();
-      ctx.moveTo(portL + 1 * zoom, portBot);
-      ctx.lineTo(portL + 1 * zoom, portArchY);
-      ctx.arc(portArchCx, portArchY, portArchR - 1 * zoom, Math.PI, 0);
-      ctx.lineTo(portR - 1 * zoom, portBot);
-      ctx.closePath();
+      traceGateShape(-1 * zoom);
       ctx.fill();
 
       // Stone archivolt molding (double arch frame)
       ctx.strokeStyle = "#7a7a82";
       ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(portL - 0.5 * zoom, portBot);
-      ctx.lineTo(portL - 0.5 * zoom, portArchY);
-      ctx.arc(portArchCx, portArchY, portArchR + 0.5 * zoom, Math.PI, 0);
-      ctx.lineTo(portR + 0.5 * zoom, portBot);
+      traceGateShape(0.5 * zoom);
       ctx.stroke();
       ctx.strokeStyle = "#5a5a62";
       ctx.lineWidth = 1.2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(portL - 2 * zoom, portBot);
-      ctx.lineTo(portL - 2 * zoom, portArchY);
-      ctx.arc(portArchCx, portArchY, portArchR + 2 * zoom, Math.PI, 0);
-      ctx.lineTo(portR + 2 * zoom, portBot);
+      traceGateShape(2 * zoom);
       ctx.stroke();
 
       // Carved keystone at arch apex
+      const keystoneX = gateCx;
+      const keystoneY = archCy - archR;
       ctx.fillStyle = "#7a7a82";
       ctx.beginPath();
-      ctx.moveTo(portArchCx + 2 * zoom, portArchY - portArchR);
-      ctx.lineTo(portArchCx, portArchY - portArchR - 3 * zoom);
-      ctx.lineTo(portArchCx + 2 * zoom, portArchY - portArchR);
+      ctx.moveTo(keystoneX - 2 * zoom, keystoneY);
+      ctx.lineTo(keystoneX, keystoneY - 3 * zoom);
+      ctx.lineTo(keystoneX + 2 * zoom, keystoneY);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = 0.6 * zoom;
       ctx.stroke();
-      // Keystone inlay
       ctx.fillStyle = "#c9a227";
       ctx.beginPath();
-      ctx.arc(
-        portArchCx,
-        portArchY - portArchR - 1 * zoom,
-        0.8 * zoom,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(keystoneX, keystoneY - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Portcullis iron grid
+      // Portcullis iron grid — vertical bars clipped to isometric arch
       ctx.strokeStyle = "#6a6a72";
       ctx.lineWidth = 1.5 * zoom;
-      const portW = portR - portL;
       for (let v = 0; v < 4; v++) {
-        const vx = portL + (v + 0.5) * (portW / 4);
-        const isoY =
-          portArchY +
-          Math.sqrt(
-            Math.max(
-              0,
-              portArchR * portArchR - (vx - portArchCx) * (vx - portArchCx),
-            ),
-          );
-        const topClipY =
-          portArchY -
-          Math.sqrt(
-            Math.max(
-              0,
-              portArchR * portArchR - (vx - portArchCx) * (vx - portArchCx),
-            ),
-          );
+        const t = (v + 0.5) / 4;
+        const u = gateHW * (2 * t - 1);
+        const vx = gateCx + u;
+        const vBot = portBot + u * slope;
+        const uNorm = u / gateHW;
+        const archV = archR * Math.sqrt(Math.max(0, 1 - uNorm * uNorm));
+        const vTop = archCy + u * slope - archV;
         ctx.beginPath();
-        ctx.moveTo(vx, portBot);
-        ctx.lineTo(vx, Math.min(isoY, topClipY));
+        ctx.moveTo(vx, vBot);
+        ctx.lineTo(vx, vTop);
         ctx.stroke();
       }
-      // Horizontal bars
+      // Horizontal crossbars (follow left-face isometric slope)
       for (let h = 0; h < 3; h++) {
-        const hy = portBot - (h + 1) * 3.5 * zoom;
-        const isoSlope = portR - portL > 0 ? 0.2 : 0;
+        const barH = (h + 1) * 3.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(portL + 0.5 * zoom, hy);
-        ctx.lineTo(portR - 0.5 * zoom, hy - portW * isoSlope);
+        ctx.moveTo(
+          gateCx - gateHW + 0.5 * zoom,
+          portBot + -gateHW * slope - barH,
+        );
+        ctx.lineTo(
+          gateCx + gateHW - 0.5 * zoom,
+          portBot + gateHW * slope - barH,
+        );
         ctx.stroke();
       }
 
-      // Portcullis spikes at bottom
+      // Portcullis spikes at bottom (follow face slope)
       ctx.fillStyle = "#5a5a62";
       for (let sp = 0; sp < 4; sp++) {
-        const spx = portL + (sp + 0.5) * (portW / 4);
+        const t = (sp + 0.5) / 4;
+        const u = gateHW * (2 * t - 1);
+        const spx = gateCx + u;
+        const spy = portBot + u * slope;
         ctx.beginPath();
-        ctx.moveTo(spx - 0.8 * zoom, portBot);
-        ctx.lineTo(spx, portBot + 2 * zoom);
-        ctx.lineTo(spx + 0.8 * zoom, portBot);
+        ctx.moveTo(spx - 0.8 * zoom, spy);
+        ctx.lineTo(spx, spy + 2 * zoom);
+        ctx.lineTo(spx + 0.8 * zoom, spy);
         ctx.closePath();
         ctx.fill();
       }
@@ -5580,25 +5670,28 @@ export function renderStationTower(
       // Chains on either side of the portcullis
       ctx.strokeStyle = "#5a5a62";
       ctx.lineWidth = 1 * zoom;
-      const chainY = portArchY - portArchR - 2 * zoom;
+      const chainBaseY = archCy - archR - 2 * zoom;
       for (const side of [-1, 1]) {
-        const cx = portArchCx + side * (portArchR + 1.5 * zoom);
+        const cu = side * (gateHW + 1.5 * zoom);
+        const chainX = gateCx + cu;
+        const chainY0 = chainBaseY + cu * slope;
         for (let link = 0; link < 4; link++) {
-          const ly = chainY - link * 2.5 * zoom;
+          const ly = chainY0 - link * 2.5 * zoom;
           ctx.beginPath();
-          ctx.ellipse(cx, ly, 1 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+          ctx.ellipse(chainX, ly, 1 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
       }
 
       // Winch mechanism hint (small gear above arch)
+      const winchY = chainBaseY - 12 * zoom;
       ctx.fillStyle = "#5a5a62";
       ctx.beginPath();
       for (let g = 0; g < 8; g++) {
         const gAngle = (g / 8) * Math.PI * 2 + time * 0.2;
         const gR = g % 2 === 0 ? 2.5 * zoom : 1.8 * zoom;
-        const gx = portArchCx + Math.cos(gAngle) * gR;
-        const gy = chainY - 12 * zoom + Math.sin(gAngle) * gR * 0.5;
+        const gx = gateCx + Math.cos(gAngle) * gR;
+        const gy = winchY + Math.sin(gAngle) * gR * 0.5;
         if (g === 0) ctx.moveTo(gx, gy);
         else ctx.lineTo(gx, gy);
       }
@@ -5606,24 +5699,29 @@ export function renderStationTower(
       ctx.fill();
       ctx.fillStyle = "#3a3a42";
       ctx.beginPath();
-      ctx.ellipse(
-        portArchCx,
-        chainY - 12 * zoom,
-        1 * zoom,
-        0.5 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(gateCx, winchY, 1 * zoom, 0.5 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Stone step at entrance base
+      // Stone step at entrance base (isometric parallelogram)
+      const stepHW = gateHW + 1.5 * zoom;
       ctx.fillStyle = "#5a5a62";
       ctx.beginPath();
-      ctx.moveTo(portL - 1.5 * zoom, portBot + 1 * zoom);
-      ctx.lineTo(portR + 1.5 * zoom, portBot + 1 * zoom);
-      ctx.lineTo(portR + 2 * zoom, portBot + 3 * zoom);
-      ctx.lineTo(portL - 2 * zoom, portBot + 3 * zoom);
+      ctx.moveTo(
+        gateCx - stepHW,
+        portBot + -stepHW * slope + 1 * zoom,
+      );
+      ctx.lineTo(
+        gateCx + stepHW,
+        portBot + stepHW * slope + 1 * zoom,
+      );
+      ctx.lineTo(
+        gateCx + stepHW + 0.5 * zoom,
+        portBot + stepHW * slope + 3 * zoom,
+      );
+      ctx.lineTo(
+        gateCx - stepHW - 0.5 * zoom,
+        portBot + -stepHW * slope + 3 * zoom,
+      );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.2)";
@@ -9497,8 +9595,7 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
 
-  // ---- ROTATING RADAR DISH (mounted on building roof, rendered before trains) ----
-  // Position radar on top of the building, near the right side
+  // ---- ROTATING RADAR DISH (isometric, mounted on building roof) ----
   const radarBaseX = screenPos.x + 10 * zoom;
   const radarBaseY = screenPos.y - (20 + tower.level * 5) * zoom;
   const radarSpeed = stationActive ? 1.8 : 1.2;
@@ -9511,7 +9608,7 @@ export function renderStationTower(
   const rdMastLight =
     tower.level >= 4 ? "#d4b030" : tower.level >= 3 ? "#7a7a82" : "#6a5a4a";
 
-  // Short mast (sits on the roof, not floating)
+  // Mast (isometric prism)
   const rdMastH = 8 * zoom;
   drawIsometricPrism(
     ctx,
@@ -9524,71 +9621,53 @@ export function renderStationTower(
     zoom,
   );
 
-  // Mounting bracket base (small platform on roof)
+  // Mounting bracket (isometric diamond platform)
   const rdPlatY = radarBaseY;
-  ctx.fillStyle = rdMastDark;
-  ctx.beginPath();
-  ctx.ellipse(
+  drawIsometricPrism(
+    ctx,
     radarBaseX,
-    rdPlatY + 0.5 * zoom,
-    3 * zoom,
-    1.5 * zoom,
-    0,
-    0,
-    Math.PI,
+    rdPlatY + 1 * zoom,
+    6,
+    5,
+    1,
+    { top: rdMastLight, left: rdMastDark, right: rdMastCol },
+    zoom,
   );
-  ctx.lineTo(radarBaseX - 3 * zoom, rdPlatY - 0.5 * zoom);
-  ctx.ellipse(
-    radarBaseX,
-    rdPlatY - 0.5 * zoom,
-    3 * zoom,
-    1.5 * zoom,
-    0,
-    Math.PI,
-    0,
-    true,
-  );
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = rdMastLight;
-  ctx.beginPath();
-  ctx.ellipse(
-    radarBaseX,
-    rdPlatY - 0.5 * zoom,
-    3 * zoom,
-    1.5 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
-  // Pivot post (vertical rod from platform)
+  // Pivot post (isometric prism instead of flat rect)
   const rdPivotH = 3 * zoom;
-  ctx.fillStyle = rdMastCol;
-  ctx.fillRect(
-    radarBaseX - 0.5 * zoom,
-    rdPlatY - rdPivotH - 0.5 * zoom,
-    1 * zoom,
-    rdPivotH,
+  drawIsometricPrism(
+    ctx,
+    radarBaseX,
+    rdPlatY,
+    1.5,
+    1,
+    rdPivotH / zoom,
+    { top: rdMastLight, left: rdMastDark, right: rdMastCol },
+    zoom,
   );
 
-  // Pivot hub
-  const rdHubY = rdPlatY - rdPivotH - 0.5 * zoom;
-  ctx.fillStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  // Pivot hub (isometric ellipse)
+  const rdHubY = rdPlatY - rdPivotH;
+  const rdHubCol = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.fillStyle = rdHubCol;
   ctx.beginPath();
-  ctx.arc(radarBaseX, rdHubY, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.ellipse(radarBaseX, rdHubY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.stroke();
 
-  // === 3D DISH (proper isometric, not just an ellipse) ===
+  // === 3D DISH (isometric rotation around vertical axis) ===
   const rdSinA = Math.sin(radarAngle);
   const rdCosA = Math.cos(radarAngle);
   const rdDishRadius = (6 + tower.level * 1.2) * zoom * levelScale;
   const rdDishDepth = 3 * zoom;
-  const rdDishY = rdHubY;
+  const rdArmLen = 3 * zoom;
 
-  const rdDishCX = radarBaseX + rdSinA * 2 * zoom;
-  const rdDishCY = rdDishY;
+  // Dish center traces isometric ellipse as it rotates
+  const rdDishCX = radarBaseX + rdSinA * rdArmLen;
+  const rdDishCY = rdHubY + rdCosA * rdArmLen * ISO_Y_RATIO;
 
   const rdViewAngle = Math.abs(rdSinA);
   const rdEdgeView = Math.abs(rdCosA);
@@ -9601,12 +9680,27 @@ export function renderStationTower(
   ctx.lineTo(rdDishCX, rdDishCY);
   ctx.stroke();
 
+  // Counter-arm stub (opposite side for balance)
+  const rdCounterX = radarBaseX - rdSinA * rdArmLen * 0.4;
+  const rdCounterY = rdHubY - rdCosA * rdArmLen * 0.4 * ISO_Y_RATIO;
+  ctx.strokeStyle = tower.level >= 4 ? "#a08020" : "#5a5a62";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(radarBaseX, rdHubY);
+  ctx.lineTo(rdCounterX, rdCounterY);
+  ctx.stroke();
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#6a6a72";
+  ctx.beginPath();
+  ctx.arc(rdCounterX, rdCounterY, 1 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
   if (rdViewAngle > 0.3) {
     const rdFaceW = rdDishRadius * rdViewAngle;
     const rdFaceH = rdDishRadius;
     const rdBowlDepth = rdDishDepth * rdEdgeView;
     const rdFacing = rdSinA > 0;
 
+    // Bowl interior (back face of dish)
     if (rdBowlDepth > 0.5 * zoom) {
       ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#4a4a52";
       ctx.beginPath();
@@ -9634,6 +9728,7 @@ export function renderStationTower(
       ctx.fill();
     }
 
+    // Dish face with gradient
     const rdDishGrad = ctx.createRadialGradient(
       rdDishCX,
       rdDishCY,
@@ -9644,13 +9739,13 @@ export function renderStationTower(
     );
     if (tower.level >= 4) {
       rdDishGrad.addColorStop(0, "#fff8e0");
-      rdDishGrad.addColorStop(0.4, "#e8c847");
-      rdDishGrad.addColorStop(0.8, "#c9a227");
+      rdDishGrad.addColorStop(0.3, "#e8c847");
+      rdDishGrad.addColorStop(0.7, "#c9a227");
       rdDishGrad.addColorStop(1, "#a08020");
     } else {
-      rdDishGrad.addColorStop(0, "#d0d0d8");
-      rdDishGrad.addColorStop(0.4, "#b0b0b8");
-      rdDishGrad.addColorStop(0.8, "#9090a0");
+      rdDishGrad.addColorStop(0, "#e0e0e8");
+      rdDishGrad.addColorStop(0.3, "#c0c0c8");
+      rdDishGrad.addColorStop(0.7, "#9898a8");
       rdDishGrad.addColorStop(1, "#6a6a72");
     }
     ctx.fillStyle = rdDishGrad;
@@ -9671,6 +9766,7 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
+    // Dish edge outline
     ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#7a7a82";
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
@@ -9683,8 +9779,9 @@ export function renderStationTower(
     );
     ctx.stroke();
 
+    // Concentric ring detail on dish face
     ctx.strokeStyle =
-      tower.level >= 4 ? "rgba(255,248,224,0.3)" : "rgba(200,200,210,0.3)";
+      tower.level >= 4 ? "rgba(255,248,224,0.25)" : "rgba(200,200,210,0.25)";
     ctx.lineWidth = 0.5 * zoom;
     for (let cr = 1; cr <= 3; cr++) {
       const crS = cr / 4;
@@ -9699,19 +9796,21 @@ export function renderStationTower(
       ctx.stroke();
     }
 
+    // Feed horn / receiver (struts + node at focal point)
     const rdRecX = rdDishCX + (rdFacing ? -rdFaceW * 0.6 : rdFaceW * 0.6);
     const rdRecY = rdDishCY;
     ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(rdDishCX, rdDishCY - rdFaceH * 0.6);
+    ctx.moveTo(rdDishCX, rdDishCY - rdFaceH * 0.5);
     ctx.lineTo(rdRecX, rdRecY);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(rdDishCX, rdDishCY + rdFaceH * 0.6);
+    ctx.moveTo(rdDishCX, rdDishCY + rdFaceH * 0.5);
+    ctx.lineTo(rdRecX, rdRecY);
+    ctx.moveTo(rdDishCX, rdDishCY);
     ctx.lineTo(rdRecX, rdRecY);
     ctx.stroke();
 
+    // Receiver node
     const rdRecCol = stationActive
       ? "#ff6633"
       : tower.level >= 4
@@ -9727,6 +9826,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.shadowBlur = 0;
   } else {
+    // Edge-on profile view
     const rdProfileH = rdDishRadius;
     const rdProfileW = rdDishDepth;
     const rdDir = rdCosA > 0 ? 1 : -1;
@@ -9763,13 +9863,22 @@ export function renderStationTower(
     ctx.stroke();
   }
 
+  // Sweep arc (isometric ellipse, not a flat circle)
   if (stationActive) {
     const sweepAlpha = 0.15 + stationIntensity * 0.3;
     ctx.strokeStyle = `rgba(255, 108, 0, ${sweepAlpha})`;
     ctx.lineWidth = 2 * zoom;
     const sweepR = (8 + tower.level * 2) * zoom;
     ctx.beginPath();
-    ctx.arc(radarBaseX, rdHubY, sweepR, radarAngle, radarAngle + 0.5);
+    ctx.ellipse(
+      radarBaseX,
+      rdHubY,
+      sweepR,
+      sweepR * ISO_Y_RATIO,
+      0,
+      radarAngle,
+      radarAngle + 0.5,
+    );
     ctx.stroke();
   }
 

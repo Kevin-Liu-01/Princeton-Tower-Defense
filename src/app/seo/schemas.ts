@@ -8,12 +8,54 @@ import {
   TOWER_NAMES,
   REGION_NAMES,
   HERO_NAMES,
+  AUTHOR_URL,
+  AUTHOR_GITHUB,
+  AUTHOR_TWITTER,
+  AUTHOR_LINKEDIN,
+  AUTHOR_SAME_AS,
 } from "./constants";
 
-export function getVideoGameSchema() {
+const PERSON_ID = `${SITE_URL}/#author`;
+const WEBSITE_ID = `${SITE_URL}/#website`;
+const GAME_ID = `${SITE_URL}/#game`;
+
+function getPersonSchema() {
   return {
-    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": PERSON_ID,
+    name: SITE_AUTHOR,
+    url: AUTHOR_URL,
+    sameAs: [...AUTHOR_SAME_AS],
+    jobTitle: "Software Engineer",
+    knowsAbout: [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "HTML5 Canvas",
+      "Game Development",
+      "Tower Defense",
+      "Web Development",
+      "Isometric Rendering",
+    ],
+  };
+}
+
+function getWebSiteSchema() {
+  return {
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    url: SITE_URL,
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    publisher: { "@id": PERSON_ID },
+    inLanguage: "en-US",
+  };
+}
+
+function getVideoGameSchema() {
+  return {
     "@type": "VideoGame",
+    "@id": GAME_ID,
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
@@ -21,21 +63,17 @@ export function getVideoGameSchema() {
     gamePlatform: ["Web Browser", "Desktop Browser", "Mobile Browser"],
     applicationCategory: "Game",
     operatingSystem: "Any (Browser-based)",
+    datePublished: "2024-12-01",
+    dateModified: new Date().toISOString().split("T")[0],
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "USD",
       availability: "https://schema.org/InStock",
     },
-    author: {
-      "@type": "Person",
-      name: SITE_AUTHOR,
-      url: GITHUB_URL,
-    },
-    publisher: {
-      "@type": "Person",
-      name: SITE_AUTHOR,
-    },
+    author: { "@id": PERSON_ID },
+    publisher: { "@id": PERSON_ID },
+    mainEntityOfPage: { "@id": WEBSITE_ID },
     image: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
     screenshot: [
       `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
@@ -45,10 +83,7 @@ export function getVideoGameSchema() {
       `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
       `${SITE_URL}/images/promo/homepage.png`,
     ],
-    numberOfPlayers: {
-      "@type": "QuantitativeValue",
-      value: 1,
-    },
+    numberOfPlayers: { "@type": "QuantitativeValue", value: 1 },
     playMode: "SinglePlayer",
     gameItem: TOWER_NAMES.map((tower) => ({
       "@type": "Thing",
@@ -58,7 +93,7 @@ export function getVideoGameSchema() {
     characterAttribute: HERO_NAMES.map((hero) => ({
       "@type": "Thing",
       name: hero,
-      description: `A summonable hero character in ${SITE_NAME} with unique abilities`,
+      description: `A playable hero character in ${SITE_NAME} with unique active abilities`,
     })),
     abstract:
       `${SITE_NAME} features ${GAME_STATS.levels} handcrafted levels across ${GAME_STATS.regions} themed regions ` +
@@ -67,12 +102,12 @@ export function getVideoGameSchema() {
       `and a full custom level creator with sharing support.`,
     inLanguage: "en",
     isAccessibleForFree: true,
+    sameAs: [GITHUB_URL],
   };
 }
 
-export function getWebApplicationSchema() {
+function getWebApplicationSchema() {
   return {
-    "@context": "https://schema.org",
     "@type": "WebApplication",
     name: SITE_NAME,
     url: SITE_URL,
@@ -95,18 +130,14 @@ export function getWebApplicationSchema() {
       "Challenge maps with tower restrictions for advanced players",
       "Dual-path levels with split enemy routes",
       "Environmental hazards: lava, quicksand, blizzard zones, poison fog, and more",
-      "Isometric HTML5 Canvas rendering — no downloads or plugins required",
+      "Isometric HTML5 Canvas rendering with no downloads or plugins required",
     ],
-    author: {
-      "@type": "Person",
-      name: SITE_AUTHOR,
-    },
+    author: { "@id": PERSON_ID },
   };
 }
 
-export function getFAQSchema() {
+function getFAQSchema() {
   return {
-    "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: [
       {
@@ -117,7 +148,7 @@ export function getFAQSchema() {
           text:
             "Princeton Tower Defense is a free browser-based tower defense strategy game set at Princeton University. " +
             "Players build towers at iconic campus landmarks like Nassau Hall, Firestone Library, and Blair Arch to defend " +
-            "against waves of enemies representing academic stress. The game features 23 levels across 5 themed regions, " +
+            "against waves of enemies. The game features 23 levels across 5 themed regions, " +
             "7 upgradeable towers with dual upgrade paths, 7 hero characters, 5 spells, and a custom level creator.",
         },
       },
@@ -128,7 +159,7 @@ export function getFAQSchema() {
           "@type": "Answer",
           text:
             `There are ${GAME_STATS.towers} towers in Princeton Tower Defense, each inspired by a real Princeton campus landmark: ` +
-            `${TOWER_NAMES.join(", ")}. Each tower has two distinct upgrade paths — for example, Nassau Cannon can upgrade into ` +
+            `${TOWER_NAMES.join(", ")}. Each tower has two distinct upgrade paths. For example, Nassau Cannon can upgrade into ` +
             "a rapid-fire Gatling Gun or a burn-damage Flamethrower, and Dinky Station can summon ranged Centaurs or tanky Royal Cavalry.",
         },
       },
@@ -186,19 +217,30 @@ export function getFAQSchema() {
         acceptedAnswer: {
           "@type": "Answer",
           text:
-            "Princeton Tower Defense stands out with its Princeton University campus theme — all towers, enemies, and maps reference real " +
+            "Princeton Tower Defense stands out with its Princeton University campus theme. All towers, enemies, and maps reference real " +
             "campus landmarks and student life. It features dual-lane enemy paths, 7 heroes with active abilities, a spell system with upgrades, " +
             "environmental hazards like lava geysers and quicksand, special objective structures, challenge maps with tower restrictions, " +
-            "and a full custom level creator. It's built entirely with React and HTML5 Canvas with isometric rendering — no game engine required.",
+            "and a full custom level creator. It's built entirely with React and HTML5 Canvas with isometric rendering and no game engine.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "What technology is Princeton Tower Defense built with?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Princeton Tower Defense is built with Next.js 14, React 18, TypeScript, and HTML5 Canvas. " +
+            "The entire rendering pipeline (isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, and ambient particles) " +
+            "is hand-written Canvas 2D with no game engine or sprite sheets. Static layers are cached to offscreen canvases, " +
+            "and quality-aware rendering adjusts detail based on runtime performance.",
         },
       },
     ],
   };
 }
 
-export function getBreadcrumbSchema() {
+function getBreadcrumbSchema() {
   return {
-    "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       {
@@ -211,27 +253,38 @@ export function getBreadcrumbSchema() {
   };
 }
 
-export function getSoftwareSourceCodeSchema() {
+function getSoftwareSourceCodeSchema() {
   return {
-    "@context": "https://schema.org",
     "@type": "SoftwareSourceCode",
     name: SITE_NAME,
     codeRepository: GITHUB_URL,
     programmingLanguage: ["TypeScript", "React", "Next.js"],
     runtimePlatform: "Web Browser",
-    author: {
-      "@type": "Person",
-      name: SITE_AUTHOR,
-    },
+    author: { "@id": PERSON_ID },
+    dateCreated: "2024-12-01",
+    license: "https://opensource.org/licenses/MIT",
   };
 }
 
-export function getAllStructuredData() {
-  return [
-    getVideoGameSchema(),
-    getWebApplicationSchema(),
-    getFAQSchema(),
-    getBreadcrumbSchema(),
-    getSoftwareSourceCodeSchema(),
-  ];
+export function getEntityGraph() {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      getPersonSchema(),
+      getWebSiteSchema(),
+      getVideoGameSchema(),
+      getWebApplicationSchema(),
+      getFAQSchema(),
+      getBreadcrumbSchema(),
+      getSoftwareSourceCodeSchema(),
+    ],
+  };
 }
+
+export {
+  getVideoGameSchema,
+  getWebApplicationSchema,
+  getFAQSchema,
+  getBreadcrumbSchema,
+  getSoftwareSourceCodeSchema,
+};

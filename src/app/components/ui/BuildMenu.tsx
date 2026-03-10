@@ -108,7 +108,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               const isSelected = buildingTower === towerType;
               const isHovered = hoveredTower === towerType;
               return (
-                <div key={type} className="relative w-full">
+                <div key={type} className="relative w-full min-w-[5.5rem] sm:min-w-0">
                   <button
                     onPointerDown={(e) => {
                       if (!canUse) return;
@@ -176,7 +176,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       }
                     }}
                     disabled={!canUse}
-                    className={`relative px-2 sm:px-3 py-1.5 sm:py-2 w-full transition-all flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap rounded-xl ${isSelected
+                    className={`relative px-2.5 sm:px-3 py-2 sm:py-2 w-full transition-all flex items-center gap-2 sm:gap-2.5 whitespace-nowrap rounded-xl ${isSelected
                       ? "scale-105"
                       : canUse
                         ? "hover:brightness-110 hover:scale-[1.02]"
@@ -207,7 +207,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                         Locked
                       </span>
                     )}
-                    <span className="absolute top-1 sm:top-1.5 bg-amber-900/80 p-0.5 px-1 rounded-md right-1 sm:right-1.5 text-[7px] sm:text-[9px] font-bold text-amber-400 z-10">
+                    <span className="absolute hidden sm:flex top-1 sm:top-1.5 bg-amber-900/80 p-0.5 px-1 rounded-md right-1 sm:right-1.5 text-[7px] sm:text-[9px] font-bold text-amber-400 z-10">
                       {placedTowers[towerType] > 0
                         ? `x${placedTowers[towerType]}`
                         : "x0"}

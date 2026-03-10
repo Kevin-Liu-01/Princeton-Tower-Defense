@@ -133,7 +133,7 @@ function NonEnemySpriteRow({ encounter }: { encounter: EncounterQueueItem }) {
 
 function EnemyCardList({ members }: { members: EnemyType[] }) {
   return (
-    <div className="px-4 py-2 space-y-2 max-h-[45vh] overflow-y-auto">
+    <div className="px-3 sm:px-4 py-1.5 sm:py-2 space-y-1.5 sm:space-y-2 max-h-[38vh] sm:max-h-[45vh] overflow-y-auto">
       {members.map((type) => {
         const data = ENEMY_DATA[type];
         if (!data) return null;
@@ -144,55 +144,55 @@ function EnemyCardList({ members }: { members: EnemyType[] }) {
         return (
           <div
             key={type}
-            className="flex items-start gap-3 rounded-lg p-2.5"
+            className="flex items-start gap-2 sm:gap-3 rounded-lg p-2 sm:p-2.5"
             style={{ background: "rgba(10,10,16,0.5)", border: `1px solid ${theme.border}` }}
           >
             <div className="flex-shrink-0 mt-0.5">
-              <FramedSprite size={48} theme={theme}>
-                <EnemySprite type={type} size={38} animated />
+              <FramedSprite size={36} theme={theme}>
+                <EnemySprite type={type} size={28} animated />
               </FramedSprite>
             </div>
             <div className="flex-1 min-w-0">
               {/* Name + traits */}
-              <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                <span className="text-sm font-bold text-amber-200">{data.name}</span>
-                {data.isBoss && <Crown size={12} className="text-red-400" />}
+              <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap mb-0.5 sm:mb-1">
+                <span className="text-xs sm:text-sm font-bold text-amber-200">{data.name}</span>
+                {data.isBoss && <Crown size={11} className="text-red-400" />}
                 {traits.map((t) => (
-                  <span key={t} className={`text-[10px] font-medium px-1.5 py-[1px] rounded-full border ${TRAIT_LABELS[t].color}`}>
+                  <span key={t} className={`text-[8px] sm:text-[10px] font-medium px-1 sm:px-1.5 py-[1px] rounded-full border ${TRAIT_LABELS[t].color}`}>
                     {TRAIT_LABELS[t].label}
                   </span>
                 ))}
               </div>
 
               {/* Description */}
-              <p className="text-xs text-amber-100/60 leading-snug mb-1.5">{data.desc}</p>
+              <p className="text-[10px] sm:text-xs text-amber-100/60 leading-snug mb-1 sm:mb-1.5">{data.desc}</p>
 
               {/* Stats row */}
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className="flex items-center gap-0.5 text-[11px] text-red-300">
-                  <Heart size={10} /> {data.hp}
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-0.5 sm:mb-1">
+                <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-red-300">
+                  <Heart size={9} /> {data.hp}
                 </span>
-                <span className="flex items-center gap-0.5 text-[11px] text-green-300">
-                  <Wind size={10} /> {data.speed.toFixed(2)}
+                <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-green-300">
+                  <Wind size={9} /> {data.speed.toFixed(2)}
                 </span>
                 {data.armor > 0 && (
-                  <span className="flex items-center gap-0.5 text-[11px] text-blue-300">
-                    <ShieldAlert size={10} /> {Math.round(data.armor * 100)}%
+                  <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-blue-300">
+                    <ShieldAlert size={9} /> {Math.round(data.armor * 100)}%
                   </span>
                 )}
                 {data.flying && (
-                  <span className="flex items-center gap-0.5 text-[11px] text-cyan-300">
-                    <Feather size={10} /> Flies
+                  <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-cyan-300">
+                    <Feather size={9} /> Flies
                   </span>
                 )}
                 {data.isRanged && (
-                  <span className="flex items-center gap-0.5 text-[11px] text-green-300">
-                    <Swords size={10} /> Ranged
+                  <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-green-300">
+                    <Swords size={9} /> Ranged
                   </span>
                 )}
                 {data.breakthrough && (
-                  <span className="flex items-center gap-0.5 text-[11px] text-amber-300">
-                    <Zap size={10} /> Bypass
+                  <span className="flex items-center gap-0.5 text-[10px] sm:text-[11px] text-amber-300">
+                    <Zap size={9} /> Bypass
                   </span>
                 )}
               </div>
@@ -202,8 +202,8 @@ function EnemyCardList({ members }: { members: EnemyType[] }) {
                 <div className="space-y-0.5">
                   {abilities.map((ab, i) => (
                     <div key={i} className="flex items-start gap-1">
-                      <Zap size={10} className="text-yellow-400 mt-0.5 flex-shrink-0" />
-                      <span className="text-[11px] text-amber-200/50">
+                      <Zap size={9} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+                      <span className="text-[10px] sm:text-[11px] text-amber-200/50">
                         <span className="font-semibold text-amber-300/70">{ab.name}</span> — {ab.desc}
                       </span>
                     </div>
@@ -240,7 +240,7 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[310] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[310] flex items-center justify-center p-2 sm:p-4"
       style={{ background: OVERLAY.black50 }}
     >
       <div
@@ -254,11 +254,11 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
         <OrnateFrame className="relative w-full h-full overflow-hidden" cornerSize={36}>
           {/* Header */}
           <div
-            className="flex items-center gap-3 px-5 py-3.5 border-b"
+            className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3.5 border-b"
             style={{ borderColor: GOLD.border25 }}
           >
             <div
-              className="flex items-center justify-center w-9 h-9 rounded-lg"
+              className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg"
               style={{
                 background: style.iconBg,
                 border: `1px solid ${GOLD.innerBorder12}`,
@@ -267,10 +267,10 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
               {style.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs uppercase tracking-widest text-amber-200/40 font-medium">
+              <p className="text-[10px] sm:text-xs uppercase tracking-widest text-amber-200/40 font-medium">
                 {style.label}
               </p>
-              <h3 className={`text-lg font-bold ${style.accentClass} tracking-wide`}>
+              <h3 className={`text-base sm:text-lg font-bold ${style.accentClass} tracking-wide`}>
                 {encounter.name}
               </h3>
             </div>
@@ -285,11 +285,11 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
               <NonEnemySpriteRow encounter={encounter} />
 
               {/* Body text */}
-              <div className="px-5 py-3 max-h-[40vh] overflow-y-auto">
+              <div className="px-3 sm:px-5 py-2.5 sm:py-3 max-h-[35vh] sm:max-h-[40vh] overflow-y-auto">
                 {encounter.description.split("\n").filter(Boolean).map((line, i) => (
                   <p
                     key={i}
-                    className="text-sm text-amber-100/80 leading-relaxed"
+                    className="text-xs sm:text-sm text-amber-100/80 leading-relaxed"
                     style={{ marginTop: i > 0 ? 6 : 0 }}
                   >
                     {line}
@@ -301,11 +301,11 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
 
           {/* Footer */}
           <div
-            className="flex items-center justify-between px-5 py-3 border-t"
+            className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-t"
             style={{ borderColor: GOLD.border25 }}
           >
             {remaining > 0 ? (
-              <p className="text-xs text-amber-200/40">
+              <p className="text-[10px] sm:text-xs text-amber-200/40">
                 +{remaining} more to show
               </p>
             ) : (
@@ -313,7 +313,7 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
             )}
             <button
               onClick={handleAcknowledge}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold text-amber-100 transition-all hover:brightness-110"
               style={{
                 background: "linear-gradient(135deg, rgba(180,125,30,0.85), rgba(120,75,15,0.9))",
                 border: `1px solid ${GOLD.border40}`,

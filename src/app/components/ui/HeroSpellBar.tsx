@@ -41,6 +41,51 @@ import {
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, NEUTRAL, RED_CARD, SELECTED, OVERLAY, SPELL_THEME } from "./theme";
+import { HudTooltip } from "./HudTooltip";
+
+// =============================================================================
+// HP THEME — transitions green → yellow → red by hero health %
+// =============================================================================
+
+function getHeroHpTheme(percent: number) {
+  if (percent <= 25) {
+    return {
+      barColor: "from-red-500 to-red-700",
+      glowColor: "shadow-red-500/50",
+      textColor: "text-red-400",
+      fillGradient: "linear-gradient(90deg, rgba(180,80,60,0.18), rgba(180,80,60,0.06))",
+      heartbeat: true,
+      beatSpeed: percent <= 10 ? "0.6s" : "0.9s",
+    };
+  }
+  if (percent <= 50) {
+    return {
+      barColor: "from-yellow-400 to-yellow-600",
+      glowColor: "shadow-yellow-500/40",
+      textColor: "text-yellow-400",
+      fillGradient: "linear-gradient(90deg, rgba(200,160,60,0.14), rgba(200,160,60,0.05))",
+      heartbeat: false,
+      beatSpeed: "0s",
+    };
+  }
+  return {
+    barColor: "from-emerald-400 to-emerald-600",
+    glowColor: "shadow-emerald-500/40",
+    textColor: "text-emerald-400",
+    fillGradient: "linear-gradient(90deg, rgba(180,140,50,0.12), rgba(180,140,50,0.04))",
+    heartbeat: false,
+    beatSpeed: "0s",
+  };
+}
+
+// =============================================================================
+// HERO ABILITY COLOR OVERLAY — subtle hero-color tint over the amber base
+// =============================================================================
+
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
 
 // =============================================================================
 // HERO AND SPELL BAR COMPONENT - ENHANCED
@@ -175,29 +220,27 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         }}
       >
         {hero && (
-          <div className="flex items-stretch gap-2 sm:gap-3">
+          <div className="flex items-stretch gap-1.5 sm:gap-3">
             {hero.dead ? (
               <>
-                <div className="relative p-1.5 sm:p-2 rounded-xl transition-all animate-pulse" style={{
+                {/* Dead hero card — matches alive card structure */}
+                <div className="relative p-1.5 sm:p-2 rounded-xl transition-all overflow-hidden" style={{
                   background: `linear-gradient(135deg, ${NEUTRAL.bgLightAlt}, ${NEUTRAL.bgDarkAlt})`,
                   border: `1.5px solid ${NEUTRAL.borderMid}`,
                   boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
                 }}>
                   <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorderMid}` }} />
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
+                  <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-1.5">
                     <div
-                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-50"
+                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-40 grayscale shrink-0"
                     >
                       <HeroSprite type={hero.type} size={sizes.heroIcon} />
                     </div>
-                    <div>
-                      <div className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1 text-left">
-                        <Shield size={10} className="sm:w-3 sm:h-3 inline" /> {HERO_DATA[hero.type].name}
+                    <div className="min-w-0">
+                      <div className="text-[9px] sm:text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1 text-left leading-tight max-w-[60px] sm:max-w-none">
+                        {HERO_DATA[hero.type].name}
                       </div>
-                      <div className="text-[8px] text-left text-stone-500">
-                        Hero has fallen
-                      </div>
-                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px] opacity-50">
+                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px] opacity-40">
                         <span className="text-stone-500">
                           <Swords size={12} className="inline" />{" "}
                           {HERO_DATA[hero.type].damage} DMG
@@ -213,12 +256,12 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="w-full relative">
-                    <div className="w-full bg-stone-900 h-3 sm:h-3.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
+                  <div className="relative z-10 w-full">
+                    <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
                       <div className="h-full w-0 rounded-sm bg-stone-700" />
                     </div>
                   </div>
-                  <div className="flex justify-between items-center mt-0.5 px-0.5">
+                  <div className="relative z-10 flex justify-between items-center mt-0.5 px-0.5">
                     <span className="text-[8px] sm:text-[9px] font-bold text-stone-500">
                       0/{hero.maxHp}
                     </span>
@@ -227,187 +270,236 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     </span>
                   </div>
                 </div>
-                <div className="px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 self-stretch relative font-bold rounded-xl flex flex-col items-center justify-center" style={{
-                  background: "linear-gradient(135deg, rgba(40,30,30,0.8), rgba(28,20,20,0.6))",
-                  border: `1.5px solid ${RED_CARD.border25}`,
-                  boxShadow: `inset 0 0 12px ${RED_CARD.glow05}`,
-                }}>
-                  <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
-                  <Timer size={18} className="text-red-400 mb-1 sm:w-[22px] sm:h-[22px]" />
-                  <span className="text-[10px] sm:text-[12px] text-red-400 font-bold">
-                    {Math.ceil(hero.respawnTimer / 1000)}s
-                  </span>
-                  <span className="text-[7px] sm:text-[8px] text-stone-500 uppercase tracking-wide">
-                    Respawning
-                  </span>
-                </div>
+                {/* Respawn timer — matches ability button dimensions */}
+                <HudTooltip label={`Hero respawning in ${Math.ceil(hero.respawnTimer / 1000)}s`} position="top">
+                  <div className="px-1.5 sm:px-3 py-1 sm:py-2.5 h-full relative font-bold rounded-xl flex flex-col items-center justify-center overflow-hidden max-w-[72px] sm:max-w-none" style={{
+                    background: "linear-gradient(135deg, rgba(50,20,20,0.85), rgba(35,12,12,0.7))",
+                    border: `1.5px solid ${RED_CARD.border25}`,
+                    boxShadow: `inset 0 0 12px ${RED_CARD.glow05}`,
+                  }}>
+                    {/* Respawn fill bar — fills upward as respawn completes */}
+                    <div
+                      className="absolute inset-0 pointer-events-none transition-all duration-300 ease-linear"
+                      style={{
+                        background: "linear-gradient(0deg, rgba(239,68,68,0.18), rgba(239,68,68,0.04))",
+                        clipPath: `inset(${Math.max(0, (hero.respawnTimer / 5000) * 100)}% 0 0 0)`,
+                      }}
+                    />
+                    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
+                    <div className="relative z-10 flex flex-col items-center justify-center">
+                      <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1 items-center text-[9px] sm:text-[12px] text-red-300 font-bold text-center leading-tight">
+                        {getHeroAbilityIcon(hero.type, 14, "text-red-400/60 inline mb-0.5")}
+                        {HERO_DATA[hero.type].ability}
+                      </span>
+                      <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+                        <Timer size={12} className="text-red-400 sm:w-[14px] sm:h-[14px]" />
+                        <span className="text-[11px] sm:text-[13px] text-red-400 font-black tabular-nums">
+                          {Math.ceil(hero.respawnTimer / 1000)}s
+                        </span>
+                      </div>
+                      <span className="text-[7px] sm:text-[8px] text-stone-500 uppercase tracking-wider mt-0.5">
+                        Respawning
+                      </span>
+                    </div>
+                  </div>
+                </HudTooltip>
               </>
             ) : (
               <>
-                <div
-                  className="relative p-1.5 sm:p-2 rounded-xl transition-all"
-                  style={{
-                    background: hero.selected
-                      ? `linear-gradient(135deg, rgba(100,68,18,0.55), rgba(72,48,14,0.4))`
-                      : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                    border: hero.selected
-                      ? `1.5px solid ${GOLD.accentBorder50}`
-                      : `1.5px solid ${GOLD.border30}`,
-                    boxShadow: hero.selected
-                      ? `inset 0 0 15px ${GOLD.accentGlow08}, 0 0 12px ${GOLD.accentGlow10}`
-                      : `inset 0 0 12px ${GOLD.glow04}`,
-                  }}
-                >
-                  {/* Inner border */}
-                  <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
-                    border: hero.selected ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${GOLD.innerBorder10}`,
-                  }} />
-                  {hero.selected ? (
-                    <Grab
-                      size={14}
-                      className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
-                    />
-                  ) : (
-                    <Pointer
-                      size={14}
-                      className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
-                    />
-                  )}
-
-                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
+                {(() => {
+                  const hpPercent = Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100));
+                  const hpTheme = getHeroHpTheme(hpPercent);
+                  return (
                     <div
-                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden"
+                      className="relative p-1.5 sm:p-2 rounded-xl transition-all overflow-hidden"
                       style={{
-                        borderColor: HERO_DATA[hero.type].color,
-                        backgroundColor: HERO_DATA[hero.type].color + "30",
+                        background: hero.selected
+                          ? `linear-gradient(135deg, rgba(100,68,18,0.55), rgba(72,48,14,0.4))`
+                          : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: hero.selected
+                          ? `1.5px solid ${GOLD.accentBorder50}`
+                          : `1.5px solid ${GOLD.border30}`,
+                        boxShadow: hero.selected
+                          ? `inset 0 0 15px ${GOLD.accentGlow08}, 0 0 12px ${GOLD.accentGlow10}`
+                          : `inset 0 0 12px ${GOLD.glow04}`,
                       }}
                     >
-                      <HeroSprite type={hero.type} size={sizes.heroIcon} />
-                    </div>
-                    <div>
-                      <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left">
-                        {HERO_DATA[hero.type].name}{" "}
+                      {/* HP gradient fill bar behind entire hero card */}
+                      <div
+                        className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
+                        style={{
+                          background: hpTheme.fillGradient,
+                          clipPath: `inset(0 ${100 - hpPercent}% 0 0)`,
+                        }}
+                      />
+                      {/* Inner border */}
+                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
+                        border: hero.selected ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${GOLD.innerBorder10}`,
+                      }} />
+                      <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
+                        <div className="absolute top-1 right-1 z-20">
+                          {hero.selected ? (
+                            <Grab size={14} className="text-amber-300/90 rounded p-0.5 bg-amber-500/50 sm:w-[18px] sm:h-[18px]" />
+                          ) : (
+                            <Pointer size={14} className="text-amber-400/90 rounded p-0.5 bg-amber-500/50 sm:w-[18px] sm:h-[18px]" />
+                          )}
+                        </div>
+                      </HudTooltip>
 
-                      </div>
-                      <div className="text-[8px] text-left text-amber-500">
-                        {hero.selected
-                          ? "Click map to move hero"
-                          : "Click hero to select"}
-                      </div>
-                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
-                        <span className="text-orange-400">
-                          <Swords size={12} className="inline" />{" "}
-                          {HERO_DATA[hero.type].damage} DMG
-                        </span>
-                        <span className="text-blue-400">
-                          <Target size={12} className="inline" />{" "}
-                          {HERO_DATA[hero.type].range} RNG
-                        </span>
-                        <span className="text-green-400">
-                          <Gauge size={12} className="inline" />{" "}
-                          {HERO_DATA[hero.type].speed} SPD
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {(() => {
-                    const hpPercent = Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100));
-                    const isLow = hpPercent <= 25;
-                    const isMedium = hpPercent > 25 && hpPercent <= 50;
-                    const barColor = isLow
-                      ? "from-red-500 to-red-700"
-                      : isMedium
-                        ? "from-yellow-400 to-yellow-600"
-                        : "from-emerald-400 to-emerald-600";
-                    const glowColor = isLow
-                      ? "shadow-red-500/50"
-                      : isMedium
-                        ? "shadow-yellow-500/40"
-                        : "shadow-emerald-500/40";
-                    const textColor = isLow
-                      ? "text-red-400"
-                      : isMedium
-                        ? "text-yellow-400"
-                        : "text-emerald-400";
-                    return (
-                      <>
-                        <div className="w-full relative">
-                          <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
-                            <div
-                              className={`h-full rounded-sm bg-gradient-to-r ${barColor} ${isLow ? 'animate-pulse' : ''} shadow-md ${glowColor}`}
-                              style={{ width: `${hpPercent}%` }}
-                            />
+                      <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-1.5">
+                        <div
+                          className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden shrink-0"
+                          style={{
+                            borderColor: HERO_DATA[hero.type].color,
+                            backgroundColor: HERO_DATA[hero.type].color + "30",
+                            animation: hpTheme.heartbeat ? `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` : "none",
+                          }}
+                        >
+                          <HeroSprite type={hero.type} size={sizes.heroIcon} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[9px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left leading-tight max-w-[60px] sm:max-w-none">
+                            {HERO_DATA[hero.type].name}
+                          </div>
+                          <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
+                            <span className="text-orange-400">
+                              <Swords size={12} className="inline" />{" "}
+                              {HERO_DATA[hero.type].damage} DMG
+                            </span>
+                            <span className="text-blue-400">
+                              <Target size={12} className="inline" />{" "}
+                              {HERO_DATA[hero.type].range} RNG
+                            </span>
+                            <span className="text-green-400">
+                              <Gauge size={12} className="inline" />{" "}
+                              {HERO_DATA[hero.type].speed} SPD
+                            </span>
                           </div>
                         </div>
-                        <div className="flex justify-between items-center mt-0.5 px-0.5">
-                          <span className={`text-[8px] sm:text-[9px] font-bold ${textColor}`}>
-                            {Math.floor(hero.hp)}/{hero.maxHp}
+                      </div>
+                      <div className="relative z-10 w-full">
+                        <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
+                          <div
+                            className={`h-full rounded-sm bg-gradient-to-r ${hpTheme.barColor} shadow-md ${hpTheme.glowColor} transition-all duration-300`}
+                            style={{ width: `${hpPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="relative z-10 flex justify-between items-center mt-0.5 px-0.5">
+                        <span className={`text-[8px] sm:text-[9px] font-bold ${hpTheme.textColor}`}>
+                          {Math.floor(hero.hp)}/{hero.maxHp}
+                        </span>
+                        <span className="text-[7px] sm:text-[8px] text-amber-500/80 font-medium">
+                          {Math.round(hpPercent)}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+                {(() => {
+                  const hc = HERO_DATA[hero.type].color;
+                  const cdFrac = hero.abilityCooldown / HERO_ABILITY_COOLDOWNS[hero.type];
+                  return (
+                <HudTooltip
+                  label={hero.abilityReady
+                    ? `${HERO_DATA[hero.type].ability} — Ready! Click to activate`
+                    : `${HERO_DATA[hero.type].ability} — ${Math.ceil(hero.abilityCooldown / 1000)}s cooldown`
+                  }
+                  position="top"
+                >
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUseHeroAbility();
+                    }}
+                    disabled={!hero.abilityReady}
+                    className="px-1.5 sm:px-3 py-1 sm:py-2.5 h-full relative transition-all font-bold rounded-xl flex flex-col items-center justify-center overflow-hidden hover:brightness-110 max-w-[72px] sm:max-w-none"
+                    style={{
+                      background: hero.abilityReady
+                        ? `linear-gradient(180deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
+                        : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                      border: hero.abilityReady
+                        ? `1.5px solid ${GOLD.accentBorder50}`
+                        : `1.5px solid ${NEUTRAL.border25}`,
+                      boxShadow: hero.abilityReady
+                        ? `inset 0 0 12px ${GOLD.accentGlow08}, 0 0 8px ${hexToRgba(hc, 0.15)}`
+                        : "none",
+                      cursor: hero.abilityReady ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    {/* Hero color tint overlay — subtle wash over the amber base */}
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: hero.abilityReady
+                          ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.18)}, ${hexToRgba(hc, 0.04)} 70%, transparent)`
+                          : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.1)}, transparent 70%)`,
+                      }}
+                    />
+                    {/* Cooldown sweep overlay — amber fill rising + dark sweep receding */}
+                    {!hero.abilityReady && (
+                      <>
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: `linear-gradient(0deg, ${hexToRgba(hc, 0.2)}, rgba(180,140,50,0.08))`,
+                            clipPath: `inset(${cdFrac * 100}% 0 0 0)`,
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 pointer-events-none"
+                          style={{
+                            background: "linear-gradient(0deg, rgba(0,0,0,0.65), rgba(0,0,0,0.45))",
+                            clipPath: `inset(${(1 - cdFrac) * 100}% 0 0 0)`,
+                          }}
+                        />
+                      </>
+                    )}
+                    {/* Inner border */}
+                    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
+                      border: hero.abilityReady ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${NEUTRAL.innerBorder}`,
+                    }} />
+                    {hero.abilityReady ? (
+                      <div className="relative z-10 flex flex-col items-center justify-center px-0.5 sm:px-2">
+                        <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1.5 items-center text-[9px] sm:text-[12px] text-amber-200 font-bold text-center leading-tight">
+                          {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
+                          {HERO_DATA[hero.type].ability}
+                        </span>
+                        <div className="hidden sm:block text-[7px] max-w-28 my-0.5 text-center text-amber-100/60 leading-snug">
+                          {HERO_DATA[hero.type].abilityDesc}
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
+                          <span className="font-extrabold text-[7px] sm:text-[10px] text-amber-300/80 uppercase tracking-wider">
+                            Ready
                           </span>
-                          <span className="text-[7px] sm:text-[8px] text-amber-500/80 font-medium">
-                            {Math.round(hpPercent)}%
+                          <span className="hidden sm:inline w-px h-2.5" style={{ background: "rgba(180,140,50,0.3)" }} />
+                          <span className="hidden sm:flex items-center gap-0.5 text-xs text-amber-400/80 tabular-nums">
+                            <Clock size={9} className="text-amber-400/70" />
+                            {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s
                           </span>
                         </div>
-                      </>
-                    );
-                  })()}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent selecting hero when clicking ability
-                    onUseHeroAbility();
-                  }}
-                  disabled={!hero.abilityReady}
-                  className="px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 self-stretch relative transition-all font-bold rounded-xl flex flex-col items-center justify-center"
-                  style={{
-                    background: hero.abilityReady
-                      ? `linear-gradient(180deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
-                      : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                    border: hero.abilityReady
-                      ? `1.5px solid ${GOLD.accentBorder50}`
-                      : `1.5px solid ${NEUTRAL.border25}`,
-                    boxShadow: hero.abilityReady
-                      ? `inset 0 0 12px ${GOLD.accentGlow08}`
-                      : "none",
-                    opacity: hero.abilityReady ? 1 : 0.5,
-                    cursor: hero.abilityReady ? "pointer" : "not-allowed",
-                  }}
-                >
-                  {/* Inner border */}
-                  <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
-                    border: hero.abilityReady ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${NEUTRAL.innerBorder}`,
-                  }} />
-                  {hero.abilityReady ? (
-                    <div className="flex flex-col py-0.5 sm:py-1 justify-center">
-                      <span className="hidden sm:inline text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
-                        {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
-                      </span>
-                      <span className="flex flex-col mx-auto sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
-                        {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
-                        {HERO_DATA[hero.type].ability}
-                      </span>
-                      <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
-                        {HERO_DATA[hero.type].abilityDesc}
                       </div>
-                      <span className="font-extrabold mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-amber-300/80">
-                        READY
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col animate-pulse items-center justify-center sm:px-4">
-                      <Timer size={14} className="text-stone-400 mb-0.5 sm:w-[18px] sm:h-[18px]" />
-                      <span className="text-[9px] sm:text-[11px] text-stone-400">
-                        {Math.ceil(hero.abilityCooldown / 1000)}s
-                      </span>
-                      <span className="text-[7px] sm:text-[8px] text-stone-500">
-                        cooldown
-                      </span>
-                      <div className="flex items-center gap-1 text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400">
-                        {getHeroAbilityIcon(hero.type, 12, "text-stone-500 opacity-60")}
-                        {HERO_DATA[hero.type].ability}
+                    ) : (
+                      <div className="relative z-10 flex flex-col items-center justify-center px-0.5 sm:px-2">
+                        <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1.5 items-center text-[9px] sm:text-[12px] text-stone-400 font-bold text-center leading-tight">
+                          {getHeroAbilityIcon(hero.type, 14, "text-stone-500 opacity-60 inline mb-0.5")}
+                          {HERO_DATA[hero.type].ability}
+                        </span>
+                        <div className="hidden sm:block text-[7px] max-w-28 my-0.5 text-center text-stone-500/60 leading-snug">
+                          {HERO_DATA[hero.type].abilityDesc}
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
+                          <Timer size={11} className="text-stone-400 sm:w-[14px] sm:h-[14px]" />
+                          <span className="text-[10px] sm:text-[13px] text-stone-300 font-black tabular-nums">
+                            {Math.ceil(hero.abilityCooldown / 1000)}s
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </button>
+                    )}
+                  </button>
+                </HudTooltip>
+                  );
+                })()}
               </>
             )}
           </div>
@@ -446,7 +538,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 disabled={!canCast && !isTargeting}
                 onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
                 onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
-                className={`relative px-1 sm:px-4 py-1 sm:py-2.5 transition-all rounded-lg sm:rounded-xl overflow-hidden self-stretch hover:brightness-110 ${isTargeting ? "animate-pulse ring-2 ring-offset-1 ring-offset-transparent" : ""}`}
+                className={`relative px-1 sm:px-4 py-1 sm:py-2.5 transition-all rounded-lg sm:rounded-xl overflow-hidden self-stretch hover:brightness-110 ${isTargeting ? "ring-2 ring-offset-1 ring-offset-transparent" : ""}`}
                 style={{
                   background: isTargeting
                     ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
@@ -454,12 +546,12 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
                       : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
                   border: isTargeting
-                    ? `2px solid ${theme?.panelBorder || "rgba(140,80,180,0.8)"}`
+                    ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.8)"}`
                     : canCast
                       ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
                       : `1.5px solid ${NEUTRAL.border}`,
                   boxShadow: isTargeting
-                    ? `inset 0 0 20px ${OVERLAY.white03}, 0 0 15px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
+                    ? `inset 0 0 20px ${OVERLAY.white03}, 0 0 15px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}, 0 0 0 1px ${theme?.panelBorder || "rgba(140,80,180,0.6)"}`
                     : canCast
                       ? `inset 0 0 12px ${OVERLAY.white03}`
                       : "none",
@@ -469,26 +561,23 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 }}
               >
                 <div
-                  className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold ${canCast ? "text-yellow-200" : "text-stone-300"
-                    }`}
+                  className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold z-20 ${canCast ? "text-yellow-200" : "text-stone-300"}`}
                   style={{
-                    background: canCast
-                      ? "rgba(120,90,20,0.5)"
-                      : "rgba(50,50,50,0.5)",
+                    background: canCast ? "rgba(120,90,20,0.5)" : "rgba(50,50,50,0.5)",
                     border: "1px solid rgba(250,204,21,0.18)",
                   }}
                 >
                   Lv {spellLevel + 1}
                 </div>
-                <div className="flex flex-col items-center justify-center h-full min-w-[28px] sm:min-w-[48px]">
+                <div className="relative z-10 flex flex-col items-center justify-center h-full w-[36px] sm:w-[64px]">
                   <SpellSprite type={spell.type} size={sizes.heroIcon > 36 ? 28 : 20} />
                   <div className={`font-bold uppercase text-[7px] sm:text-[9px] tracking-wide mt-0.5 ${canCast ? (theme?.nameColor || "text-purple-200") : "text-stone-400"}`}>
                     {spellData.shortName}
                   </div>
-                  {/* Cost + Cooldown */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                  {/* Cost + Cooldown — fixed layout */}
+                  <div className="flex items-center justify-center gap-0.5 sm:gap-1 mt-0.5 h-[14px] sm:h-[18px]">
                     {spell.cooldown > 0 ? (
-                      <span className="text-[8px] sm:text-[10px] font-bold text-red-400">
+                      <span className="text-[8px] sm:text-[10px] font-bold text-red-400 tabular-nums">
                         {Math.ceil(spell.cooldown / 1000)}s
                       </span>
                     ) : (
@@ -509,13 +598,20 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     )}
                   </div>
                 </div>
+                {/* Cooldown overlay with gradient sweep */}
                 {spell.cooldown > 0 && (
                   <div
-                    className="absolute inset-0 bg-black/70"
+                    className="absolute inset-0 pointer-events-none"
                     style={{
-                      clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100
-                        }% 0 0 0)`,
+                      background: "linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0.55))",
+                      clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100}% 0 0 0)`,
                     }}
+                  />
+                )}
+                {/* Targeting pulse ring */}
+                {isTargeting && (
+                  <div className="absolute inset-0 rounded-lg sm:rounded-xl pointer-events-none animate-pulse"
+                    style={{ boxShadow: `inset 0 0 20px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}` }}
                   />
                 )}
               </button>
@@ -584,6 +680,17 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
           );
         })}
       </div>
+
+      {/* CSS Keyframes */}
+      <style jsx>{`
+        @keyframes heroHeartbeat {
+          0%, 100% { transform: scale(1); }
+          12% { transform: scale(1.08); }
+          24% { transform: scale(1); }
+          36% { transform: scale(1.05); }
+          48% { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 };

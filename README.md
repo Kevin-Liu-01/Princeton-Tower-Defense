@@ -4,7 +4,7 @@
 
 # Princeton Tower Defense
 
-A full-featured tower defense game — built entirely in the browser with React, Canvas, and Next.js.
+A full-featured tower defense game built entirely in the browser with React, Canvas, and Next.js.
 
 Defend Princeton-inspired battlefields across 5 hand-crafted regions with branching tower upgrades, 7 playable heroes, tactical spells, and dual-lane pressure maps that actually require you to think.
 
@@ -20,16 +20,16 @@ Defend Princeton-inspired battlefields across 5 hand-crafted regions with branch
 
 Most browser TD games are simple click-and-place loops. Princeton TD is closer to a desktop-quality experience: isometric visuals rendered entirely on HTML5 Canvas, a real upgrade economy, hero units with active abilities, and map-specific hazards that change how every level plays.
 
-Everything — towers, enemies, terrain, effects, UI — is drawn and animated in code. No sprite sheets, no game engine. Just a `requestAnimationFrame` loop and a lot of geometry.
+Everything (towers, enemies, terrain, effects, UI) is drawn and animated in code. No sprite sheets, no game engine. Just a `requestAnimationFrame` loop and a lot of geometry.
 
 <div align="center">
 
 | | | |
 |:---:|:---:|:---:|
 | ![Grounds](public/images/new/gameplay_grounds.png) | ![Swamp](public/images/new/gameplay_swamp.png) | ![Desert](public/images/new/gameplay_desert.png) |
-| *Princeton Grounds — Grassland* | *Murky Marshes — Swamp* | *Sahara Sands — Desert* |
+| *Princeton Grounds - Grassland* | *Murky Marshes - Swamp* | *Sahara Sands - Desert* |
 | ![Winter](public/images/new/gameplay_winter.png) | ![Volcanic](public/images/new/gameplay_volcano.png) | ![All Towers](public/images/new/all_towers.png) |
-| *Frozen Frontier — Winter* | *Volcanic Depths — Lava* | *All 7 Campus Towers* |
+| *Frozen Frontier - Winter* | *Volcanic Depths - Lava* | *All 7 Campus Towers* |
 
 </div>
 
@@ -48,7 +48,7 @@ Everything — towers, enemies, terrain, effects, UI — is drawn and animated i
 
 ### 🏰 23 Levels Across 5 Regions
 
-Campaign and challenge maps spanning grasslands, swamps, deserts, frozen tundra, and volcanic depths. Each region introduces new enemy types, environmental hazards, and visual identities — all rendered procedurally on Canvas.
+Campaign and challenge maps spanning grasslands, swamps, deserts, frozen tundra, and volcanic depths. Each region introduces new enemy types, environmental hazards, and visual identities, all rendered procedurally on Canvas.
 
 ### ⚔️ 7 Towers with Branching Upgrades
 
@@ -70,18 +70,18 @@ Heroes are persistent units you place on the field. Each has unique stats, a com
 
 | Hero | Style | Ability |
 | :--- | :--- | :--- |
-| **Princeton Tiger** | Melee brawler | *Mighty Roar* — AoE stun + fear |
-| **Acapella Tenor** | Ranged support | *High Note* — sonic blast + ally heal |
-| **Mathey Knight** | Tank | *Fortress Shield* — invincibility + taunt |
-| **Rocky Raccoon** | Ranged artillery | *Boulder Bash* — massive AoE damage |
-| **F. Scott** | Buffer | *Inspiration Cheer* — tower damage/range boost |
-| **General Mercer** | Commander | *Rally Knights* — summon 3 armored knights |
-| **BSE Engineer** | Utility | *Deploy Turret* — automated defense turret |
+| **Princeton Tiger** | Melee brawler | *Mighty Roar* - AoE stun + fear |
+| **Acapella Tenor** | Ranged support | *High Note* - sonic blast + ally heal |
+| **Mathey Knight** | Tank | *Fortress Shield* - invincibility + taunt |
+| **Rocky Raccoon** | Ranged artillery | *Boulder Bash* - massive AoE damage |
+| **F. Scott** | Buffer | *Inspiration Cheer* - tower damage/range boost |
+| **General Mercer** | Commander | *Rally Knights* - summon 3 armored knights |
+| **BSE Engineer** | Utility | *Deploy Turret* - automated defense turret |
 
 ### ✨ Spells, Hazards & Challenge Rules
 
-- **5 castable spells** — Fireball, Lightning, Freeze, Payday, Reinforce — each upgradeable with earned stars.
-- **Map hazards** — lava pools, quicksand, blizzard zones, and special structures (vaults, shrines, barracks, beacons) that add layer-specific objectives.
+- **5 castable spells** including Fireball, Lightning, Freeze, Payday, and Reinforce, each upgradeable with earned stars.
+- **Map hazards** like lava pools, quicksand, blizzard zones, and special structures (vaults, shrines, barracks, beacons) that add layer-specific objectives.
 - **Challenge maps** with tower restrictions and multi-objective scoring that force non-standard strategies.
 
 ### 🗺️ World Map & Progression
@@ -90,7 +90,7 @@ A fully interactive world map with region nodes, star-gated progression, and a c
 
 ### 🎨 Custom Level Creator
 
-A built-in map editor lets you design and play your own levels — define paths, place towers, set wave compositions, and share creations.
+A built-in map editor lets you design and play your own levels. Define paths, place towers, set wave compositions, and share creations.
 
 ---
 
@@ -99,13 +99,13 @@ A built-in map editor lets you design and play your own levels — define paths,
 | | |
 | :--- | :--- |
 | **Framework** | Next.js 14 + React 18 |
-| **Rendering** | HTML5 Canvas (no game engine — all custom) |
+| **Rendering** | HTML5 Canvas (no game engine, all custom) |
 | **UI** | Tailwind CSS + Lucide icons + Radix |
 | **Animation** | `requestAnimationFrame` game loop with delta-time |
 | **State** | React hooks + localStorage persistence |
 | **Hosting** | Vercel |
 
-The entire rendering pipeline — isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, ambient particles — is hand-written Canvas 2D. Static layers are cached to offscreen canvases, and quality-aware rendering adjusts detail based on runtime performance.
+The entire rendering pipeline (isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, ambient particles) is hand-written Canvas 2D. Static layers are cached to offscreen canvases, and quality-aware rendering adjusts detail based on runtime performance.
 
 ## Architecture
 
@@ -113,18 +113,18 @@ The entire rendering pipeline — isometric terrain, tower animations, projectil
 src/app/
 ├── hooks/          # Game loop, runtime, settings
 ├── constants/      # Maps, waves, towers, heroes, combat tuning
-├── rendering/      # Canvas draw calls — towers, enemies, effects, terrain, UI
-├── components/     # React UI — menus, HUD, modals, world map
+├── rendering/      # Canvas draw calls for towers, enemies, effects, terrain, UI
+├── components/     # React UI including menus, HUD, modals, world map
 ├── sprites/        # SVG/component-based sprite definitions
 ├── game/           # Combat logic helpers
 └── types/          # TypeScript interfaces
 ```
 
 Key entry points:
-- **Game loop**: `hooks/usePrincetonTowerDefenseRuntime.tsx` — simulation tick + render dispatch
-- **Map data**: `constants/maps.ts` — path geometry, metadata, hazards, tower restrictions
-- **Wave data**: `constants/waves.ts` — per-level enemy schedules and compositions
-- **Rendering**: `rendering/` — modular draw functions for every game element
+- **Game loop**: `hooks/usePrincetonTowerDefenseRuntime.tsx` - simulation tick + render dispatch
+- **Map data**: `constants/maps.ts` - path geometry, metadata, hazards, tower restrictions
+- **Wave data**: `constants/waves.ts` - per-level enemy schedules and compositions
+- **Rendering**: `rendering/` - modular draw functions for every game element
 
 ## Getting Started
 

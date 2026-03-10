@@ -1,0 +1,207 @@
+# Princeton Tower Defense - Complete Reference
+
+> Princeton Tower Defense is a free, browser-based tower defense strategy game set at Princeton University. The entire rendering pipeline (isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, and ambient particles) is hand-written HTML5 Canvas 2D with no game engine or sprite sheets. Built with Next.js 14, React 18, and TypeScript.
+
+Play at: https://princetontd.vercel.app
+Source code: https://github.com/Kevin-Liu-01/Princeton-Tower-Defense
+Author: Kevin Liu (https://www.kevin-liu.tech)
+
+---
+
+## What Is Princeton Tower Defense?
+
+Princeton Tower Defense is a single-player tower defense game that runs entirely in the browser. Players build towers inspired by real Princeton University campus landmarks to defend against waves of enemies. The game features 23 handcrafted levels across 5 themed regions, 7 towers with dual upgrade paths, 7 playable heroes with active abilities, 5 castable spells, 50+ unique enemy types, and a full custom level creator.
+
+No download, installation, or account is required. The game is completely free and works on desktop and mobile browsers.
+
+---
+
+## Regions and Levels
+
+Princeton Tower Defense has 23 levels spread across 5 themed regions. Each region introduces unique environmental hazards, visual identities, and enemy types.
+
+### Princeton Grounds (Grassland)
+Campus-themed grassland levels including Poe Field, Carnegie Lake, and Nassau Hall. The starting region with standard terrain and introductory enemy waves.
+
+### Murky Marshes (Swamp)
+Toxic swamp levels including Murky Bog, Witch's Domain, and Sunken Temple. Features poison fog hazards that damage enemies and towers alike.
+
+### Sahara Sands (Desert)
+Arid desert levels including Desert Oasis, Pyramid Pass, and Sphinx Gate. Features quicksand zones that slow ground units.
+
+### Frozen Frontier (Winter)
+Icy tundra levels including Glacier Path, Frost Fortress, and Summit Peak. Features blizzard zones that reduce visibility and attack speed.
+
+### Volcanic Depths (Lava)
+Volcanic levels including Lava Fields, Caldera Basin, and Obsidian Throne. Features lava geysers that deal periodic area damage.
+
+Each region also includes challenge maps with special tower restrictions for advanced players.
+
+---
+
+## Towers
+
+There are 7 buildable towers in Princeton Tower Defense. Each tower is inspired by a real Princeton campus landmark, has a distinct combat role, and offers two final upgrade paths at level 4.
+
+| Tower | Role | Upgrade Path A | Upgrade Path B |
+|---|---|---|---|
+| Nassau Cannon | Heavy artillery | Gatling Gun (rapid fire) | Flamethrower (burn damage) |
+| Firestone Library | Slow and control | EQ Smasher (earthquake AoE) | Blizzard (freeze AoE) |
+| E-Quad Lab | Chain magic DPS | Focused Beam (single target) | Chain Lightning (multi-target) |
+| Blair Arch | Sonic AoE | Shockwave Siren (knockback) | Symphony (sustained aura) |
+| Eating Club | Economy | Investment Bank (passive income) | Recruitment Center (troop buffs) |
+| Dinky Station | Troop summons | Centaur Archers (ranged troops) | Heavy Cavalry (tanky troops) |
+| Palmer Mortar | Siege AoE | Missile Battery (targeted strikes) | Ember Foundry (burning ember fields) |
+
+Towers can be upgraded through levels 1-3 with stat improvements. At level 4, players choose one of two specialization paths that fundamentally change the tower's behavior.
+
+---
+
+## Heroes
+
+Princeton Tower Defense features 7 playable hero characters. Each hero has unique combat stats and an active ability on cooldown. Players select one hero before each level.
+
+| Hero | Combat Style | Active Ability | Ability Effect |
+|---|---|---|---|
+| Princeton Tiger | Melee brawler | Mighty Roar | AoE stun + fear |
+| Acapella Tenor | Ranged support | High Note | Sonic blast + ally heal |
+| Mathey Knight | Tank | Fortress Shield | Invincibility + taunt |
+| Rocky Raccoon | Ranged artillery | Boulder Bash | Massive AoE damage |
+| F. Scott | Buffer | Inspiration Cheer | Tower damage/range boost |
+| General Mercer | Commander | Rally Knights | Summon 3 armored knights |
+| BSE Engineer | Utility | Deploy Turret | Automated defense turret |
+
+Heroes are persistent units placed on the battlefield. Repositioning heroes to active lanes and timing abilities for stacked enemy groups or boss entries is critical for high-difficulty levels.
+
+---
+
+## Spells
+
+There are 5 castable spells in Princeton Tower Defense. Spells are selected before each level (players choose 3 from 5) and can be upgraded using stars earned from completing levels.
+
+| Spell | Effect | Upgrade Benefit |
+|---|---|---|
+| Fireball | AoE burst damage at target location | Increased radius and damage |
+| Lightning | Chain damage across grouped enemies | More chains, higher damage |
+| Freeze | Slows or stops all enemies in an area | Longer duration, wider radius |
+| Payday | Grants bonus economy (Paw Points) | Higher income per cast |
+| Reinforce | Summons temporary troops | More troops, ranged capability at higher levels |
+
+---
+
+## Enemy Types
+
+Princeton Tower Defense has over 50 unique enemy types organized into categories:
+
+- **Ground melee**: Standard infantry that walk the path and attack troops
+- **Flying**: Airborne enemies that ignore ground obstacles; require specific tower coverage
+- **Ranged**: Enemies that attack towers and troops from a distance
+- **Armored**: High-health enemies that require sustained DPS to bring down
+- **Fast**: Speed-focused enemies that can overwhelm unprepared defenses
+- **Swarm**: Large groups of weak enemies that test AoE capabilities
+- **Boss**: High-health, high-damage enemies with special abilities; consume multiple lives if they leak
+
+Each enemy type has distinct traits (health, speed, armor, abilities) that require different defensive strategies.
+
+---
+
+## Custom Level Creator
+
+Princeton Tower Defense includes a built-in level creator. Players can:
+
+- Design custom maps with primary and secondary enemy paths
+- Place hero spawn points
+- Add special objective structures (beacons, shrines, vaults, barracks)
+- Set theme-specific decorations and environmental hazards
+- Pre-place towers
+- Compose custom enemy waves with timing and group composition
+- Choose from 5 map themes: grassland, swamp, desert, winter, volcanic
+
+Created levels can be exported as JSON and shared.
+
+---
+
+## World Map and Progression
+
+The game features a fully interactive world map with:
+
+- Region nodes connected by paths
+- Star-gated progression (stars earned from levels unlock new regions)
+- Campaign overview showing completion status
+- Challenge maps that unlock after region completion
+- Spell upgrades purchasable with accumulated stars
+
+---
+
+## Technical Architecture
+
+Princeton Tower Defense is built entirely in the browser with no game engine or external rendering library.
+
+| Component | Technology |
+|---|---|
+| Framework | Next.js 14 + React 18 |
+| Language | TypeScript |
+| Rendering | HTML5 Canvas 2D (all custom, no engine) |
+| UI | Tailwind CSS + Lucide Icons + Radix |
+| Animation | requestAnimationFrame game loop with delta-time |
+| State | React hooks + localStorage persistence |
+| Hosting | Vercel |
+
+The rendering pipeline includes isometric terrain, tower animations, projectile arcs with physics, death effects, fog, god rays, and ambient particles. Static layers are cached to offscreen canvases. Quality-aware rendering adjusts detail level based on runtime frame rate.
+
+---
+
+## Source Code Structure
+
+```
+src/app/
+├── hooks/          # Game loop, runtime, settings
+├── constants/      # Maps, waves, towers, heroes, combat tuning
+├── rendering/      # Canvas draw calls for towers, enemies, effects, terrain, UI
+├── components/     # React UI including menus, HUD, modals, world map
+├── sprites/        # SVG/component-based sprite definitions
+├── game/           # Combat logic helpers
+└── types/          # TypeScript interfaces
+```
+
+Key files:
+- Game loop: `hooks/usePrincetonTowerDefenseRuntime.tsx`
+- Map data: `constants/maps.ts` (path geometry, metadata, hazards, tower restrictions)
+- Wave data: `constants/waves.ts` (per-level enemy schedules and compositions)
+- Rendering: `rendering/` (modular draw functions for every game element)
+
+---
+
+## Frequently Asked Questions
+
+### Is Princeton Tower Defense free?
+Yes, Princeton Tower Defense is completely free to play in any modern web browser. No download, installation, or account required.
+
+### What browsers are supported?
+Any modern browser with JavaScript and HTML5 Canvas support. This includes Chrome, Firefox, Safari, Edge, and mobile browsers.
+
+### Who made Princeton Tower Defense?
+Princeton Tower Defense was built by Kevin Liu, a software engineer. The entire game, including all rendering, combat logic, UI, and art, is written from scratch in TypeScript.
+
+### Can I contribute or report bugs?
+Yes. The source code is available at https://github.com/Kevin-Liu-01/Princeton-Tower-Defense. Bug reports can be filed as GitHub issues.
+
+### Is there multiplayer?
+No. Princeton Tower Defense is a single-player game.
+
+### How do tower upgrades work?
+Towers can be upgraded through levels 1-3 with incremental stat improvements. At level 4, you choose one of two specialization paths that fundamentally change the tower's behavior and combat role.
+
+### How does the star system work?
+Stars are earned by completing levels. Each level awards up to 3 stars based on performance (lives remaining). Stars unlock new regions, challenge maps, and spell upgrades on the world map.
+
+---
+
+## Contact
+
+- Game: https://princetontd.vercel.app
+- Author: Kevin Liu
+- Portfolio: https://www.kevin-liu.tech
+- GitHub: https://github.com/Kevin-Liu-01
+- Source Repository: https://github.com/Kevin-Liu-01/Princeton-Tower-Defense
+- Twitter/X: https://x.com/kevskgs
