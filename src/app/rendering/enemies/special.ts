@@ -2,6 +2,12 @@ import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawFaceCircle,
 } from "./helpers";
+import {
+  drawAnimatedArm,
+  drawAnimatedLegs,
+  drawPulsingGlowRings,
+  drawShiftingSegments,
+} from "./animationHelpers";
 
 export function drawMascotEnemy(
   ctx: CanvasRenderingContext2D,
@@ -468,6 +474,39 @@ export function drawMascotEnemy(
     }
     ctx.globalAlpha = 1;
   }
+
+  // Powerful clawed legs with stomping animation
+  drawAnimatedLegs(ctx, x, y + size * 0.38 + swoop * 0.15, size, time, zoom, {
+    color: "#0891b2",
+    colorDark: "#0e7490",
+    footColor: "#fcd34d",
+    strideSpeed: 3,
+    strideAmt: 0.45,
+    legLen: 0.22,
+    width: 0.07,
+  });
+
+  // Storm glow rings around body
+  drawPulsingGlowRings(ctx, x, y + swoop * 0.2, size * 0.5, time, zoom, {
+    color: "rgba(34, 211, 238, 0.5)",
+    count: 4,
+    speed: 2,
+    maxAlpha: 0.35,
+    expansion: 1.2,
+    lineWidth: 2,
+  });
+
+  // Floating storm scale segments (diamond shape)
+  drawShiftingSegments(ctx, x, y + swoop * 0.2, size, time, zoom, {
+    color: "#22d3ee",
+    colorAlt: "#06b6d4",
+    count: 8,
+    orbitRadius: 0.55,
+    segmentSize: 0.04,
+    orbitSpeed: 1.8,
+    shape: "diamond",
+  });
+
 }
 
 export function drawDefaultEnemy(
@@ -590,6 +629,42 @@ export function drawDefaultEnemy(
     );
     ctx.stroke();
   }
+
+  // Basic animated arms (behind robe)
+  drawAnimatedArm(ctx, x - size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, -1, {
+    color: "#3730a3",
+    colorDark: "#1e1b4b",
+    handColor: "#c7d2fe",
+    swingSpeed: 3,
+    swingAmt: 0.25,
+    baseAngle: 0.3,
+    upperLen: 0.15,
+    foreLen: 0.12,
+    width: 0.05,
+  });
+  drawAnimatedArm(ctx, x + size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, 1, {
+    color: "#3730a3",
+    colorDark: "#1e1b4b",
+    handColor: "#c7d2fe",
+    swingSpeed: 3,
+    swingAmt: 0.25,
+    baseAngle: 0.3,
+    upperLen: 0.15,
+    foreLen: 0.12,
+    width: 0.05,
+    phaseOffset: Math.PI,
+  });
+
+  // Basic walking legs (behind robe)
+  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+    color: "#312e81",
+    colorDark: "#1e1b4b",
+    footColor: "#0f0d24",
+    strideSpeed: 4,
+    strideAmt: 0.3,
+    legLen: 0.14,
+    width: 0.05,
+  });
 
   // Shadowy robes with flowing tattered edges
   const robeGrad = ctx.createLinearGradient(
@@ -916,6 +991,16 @@ export function drawDefaultEnemy(
     ctx.arc(x, y + size * 0.08, size * attackIntensity * 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Simple pulsing glow ring
+  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.4, time, zoom, {
+    color: "rgba(99, 102, 241, 0.4)",
+    count: 2,
+    speed: 1.5,
+    maxAlpha: 0.3,
+    expansion: 1.3,
+    lineWidth: 1.5,
+  });
 }
 
 // ============================================================================
@@ -1054,6 +1139,42 @@ export function drawTrusteeEnemy(
     ctx.restore();
   }
 
+  // Imposing animated arms (slow, commanding) - behind robes
+  const armShoulderY = y - size * 0.35 + float;
+  drawAnimatedArm(ctx, x - size * 0.28, armShoulderY, size, time, zoom, -1, {
+    color: "#d97706",
+    colorDark: "#92400e",
+    handColor: "#fef3c7",
+    swingSpeed: 1.5,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.2,
+    foreLen: 0.18,
+    width: 0.065,
+  });
+  drawAnimatedArm(ctx, x + size * 0.28, armShoulderY, size, time, zoom, 1, {
+    color: "#d97706",
+    colorDark: "#92400e",
+    handColor: "#fef3c7",
+    swingSpeed: 1.5,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.2,
+    foreLen: 0.18,
+    width: 0.065,
+    phaseOffset: Math.PI,
+  });
+
+  // Marching legs - behind robes
+  drawAnimatedLegs(ctx, x, y + size * 0.52, size, time, zoom, {
+    color: "#78350f",
+    colorDark: "#451a03",
+    footColor: "#1c1917",
+    strideSpeed: 2.5,
+    strideAmt: 0.25,
+    legLen: 0.18,
+    width: 0.06,
+  });
 
   // Magnificent golden robes with purple velvet lining and corruption veins
   const robeGrad = ctx.createLinearGradient(
@@ -1588,4 +1709,35 @@ export function drawTrusteeEnemy(
   ctx.stroke();
   clearShadow(ctx);
   ctx.restore();
+
+  // Golden glow rings around head
+  drawPulsingGlowRings(ctx, x, y - size * 0.5 + float, size * 0.3, time, zoom, {
+    color: "rgba(251, 191, 36, 0.5)",
+    count: 3,
+    speed: 1.2,
+    maxAlpha: 0.4,
+    expansion: 1.5,
+    lineWidth: 2,
+  });
+
+  // Golden glow rings around scepter gem
+  drawPulsingGlowRings(ctx, x - size * 0.5, y - size * 0.83 + float, size * 0.12, time, zoom, {
+    color: "rgba(251, 191, 36, 0.6)",
+    count: 2,
+    speed: 2,
+    maxAlpha: 0.5,
+    expansion: 2,
+    lineWidth: 1.5,
+  });
+
+  // Floating golden crown/coin segments
+  drawShiftingSegments(ctx, x, y - size * 0.6 + float, size, time, zoom, {
+    color: "#fbbf24",
+    colorAlt: "#f59e0b",
+    count: 6,
+    orbitRadius: 0.35,
+    segmentSize: 0.035,
+    orbitSpeed: 1.2,
+    shape: "circle",
+  });
 }

@@ -26,6 +26,7 @@ import {
   isChallengeMountainTopCell,
 } from "./challengeTerrain";
 import { drawPathDecorations } from "./pathDecorations";
+import { getPerformanceSettings } from "../performance";
 
 export interface RegionTheme {
   ground: string[];
@@ -1671,19 +1672,21 @@ export function renderStaticMapLayer({
   }
 
   const themeName = LEVEL_DATA[selectedMap]?.theme || "grassland";
-  for (const road of roads) {
-    drawPathDecorations({
-      ctx,
-      screenCenter: road.screenCenter,
-      screenLeft: road.screenLeft,
-      screenRight: road.screenRight,
-      smoothPath: road.smoothPath,
-      theme,
-      themeName,
-      cameraZoom,
-      mapSeed,
-      toScreen,
-    });
+  if (getPerformanceSettings().showPathDecorations) {
+    for (const road of roads) {
+      drawPathDecorations({
+        ctx,
+        screenCenter: road.screenCenter,
+        screenLeft: road.screenLeft,
+        screenRight: road.screenRight,
+        smoothPath: road.smoothPath,
+        theme,
+        themeName,
+        cameraZoom,
+        mapSeed,
+        toScreen,
+      });
+    }
   }
 
   return { fogEndpoints };

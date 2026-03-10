@@ -1,6 +1,7 @@
 // Winter region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
 
 // =====================================================
 // WINTER REGION TROOPS
@@ -118,6 +119,49 @@ export function drawSnowGoblinEnemy(
       ctx.fill();
     }
   }
+
+  // --- Animated helper legs (fast hopping stride) ---
+  drawAnimatedLegs(ctx, x + shiver, y + size * 0.05 - hop, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "#1e3a5f",
+    strideSpeed: 8,
+    strideAmt: 0.4,
+    legLen: 0.2,
+    width: 0.05,
+  });
+
+  // --- Animated helper arms (fast jittery swing, clawed) ---
+  drawAnimatedArm(ctx, x - size * 0.22, y - size * 0.1 - hop, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#93c5fd",
+    swingSpeed: 7,
+    swingAmt: 0.5,
+    baseAngle: 0.4,
+    upperLen: 0.15,
+    foreLen: 0.12,
+    width: 0.045,
+    handRadius: 0.025,
+    elbowBend: 0.5,
+    phaseOffset: 0.3,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.22, y - size * 0.1 - hop, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#93c5fd",
+    swingSpeed: 7,
+    swingAmt: 0.5,
+    baseAngle: 0.4,
+    upperLen: 0.15,
+    foreLen: 0.12,
+    width: 0.045,
+    handRadius: 0.025,
+    elbowBend: 0.5,
+    phaseOffset: 1.2,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
 
   // Hunched muscular body
   const bodyGrad = ctx.createRadialGradient(
@@ -462,6 +506,27 @@ export function drawSnowGoblinEnemy(
   }
   clearShadow(ctx);
 
+  // --- Frost glow rings (blue) ---
+  drawPulsingGlowRings(ctx, x, y - size * 0.1 - hop, size * 0.35, time, zoom, {
+    color: "rgba(147, 197, 253, 0.4)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.35,
+    expansion: 1.2,
+    lineWidth: 1.5,
+  });
+
+  // --- Floating ice crystal shards ---
+  drawShiftingSegments(ctx, x, y - size * 0.15 - hop, size, time, zoom, {
+    color: "rgba(191, 219, 254, 0.7)",
+    colorAlt: "rgba(147, 197, 253, 0.5)",
+    count: 5,
+    orbitRadius: 0.38,
+    segmentSize: 0.035,
+    orbitSpeed: 2.5,
+    shape: "shard",
+  });
+
   // Attack ice shards
   if (isAttacking) {
     ctx.fillStyle = `rgba(147, 197, 253, ${attackPhase * 0.7})`;
@@ -683,6 +748,49 @@ export function drawYetiEnemy(
       ctx.fill();
     }
   }
+
+  // --- Animated helper legs (heavy stomping stride) ---
+  drawAnimatedLegs(ctx, x, y + size * 0.12, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "#1e3a5f",
+    strideSpeed: 2.5,
+    strideAmt: 0.25,
+    legLen: 0.3,
+    width: 0.1,
+  });
+
+  // --- Animated helper arms (massive, slow, powerful swing) ---
+  drawAnimatedArm(ctx, x - size * 0.45, y - size * 0.35, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: bodyColorDark,
+    swingSpeed: 2,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.25,
+    foreLen: 0.22,
+    width: 0.1,
+    handRadius: 0.06,
+    elbowBend: 0.35,
+    phaseOffset: 0,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.45, y - size * 0.35, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: bodyColorDark,
+    swingSpeed: 2,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.25,
+    foreLen: 0.22,
+    width: 0.1,
+    handRadius: 0.06,
+    elbowBend: 0.35,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
 
   // Titanic furry body with muscle definition
   const bodyGrad = ctx.createRadialGradient(
@@ -1113,6 +1221,27 @@ export function drawYetiEnemy(
     ctx.arc(snowX, snowY, size * 0.015, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // --- Icy glow rings ---
+  drawPulsingGlowRings(ctx, x, y - size * 0.15, size * 0.55, time, zoom, {
+    color: "rgba(147, 197, 253, 0.4)",
+    count: 4,
+    speed: 1.2,
+    maxAlpha: 0.3,
+    expansion: 1.4,
+    lineWidth: 2,
+  });
+
+  // --- Floating ice boulder segments (diamond shape) ---
+  drawShiftingSegments(ctx, x, y - size * 0.2, size, time, zoom, {
+    color: "rgba(147, 197, 253, 0.6)",
+    colorAlt: "rgba(191, 219, 254, 0.5)",
+    count: 6,
+    orbitRadius: 0.5,
+    segmentSize: 0.06,
+    orbitSpeed: 1.0,
+    shape: "diamond",
+  });
 }
 
 export function drawIceWitchEnemy(
@@ -1184,6 +1313,50 @@ export function drawIceWitchEnemy(
     ctx.arc(mistX, mistY, size * (0.1 - mist * 0.015), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // --- Animated helper legs (gliding shuffle, slow) ---
+  drawAnimatedLegs(ctx, x, y + size * 0.18 + float, size, time, zoom, {
+    color: bodyColorDark,
+    colorDark: "#0f172a",
+    footColor: "#1e3a5f",
+    strideSpeed: 2,
+    strideAmt: 0.15,
+    legLen: 0.18,
+    width: 0.04,
+    shuffle: true,
+  });
+
+  // --- Animated helper arms (elegant casting gestures) ---
+  drawAnimatedArm(ctx, x - size * 0.25, y - size * 0.22 + float, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#c7d2fe",
+    swingSpeed: 3,
+    swingAmt: 0.4,
+    baseAngle: 0.5,
+    upperLen: 0.18,
+    foreLen: 0.16,
+    width: 0.04,
+    handRadius: 0.03,
+    elbowBend: 0.6,
+    phaseOffset: 0,
+    attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.25, y - size * 0.22 + float, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#c7d2fe",
+    swingSpeed: 3,
+    swingAmt: 0.4,
+    baseAngle: 0.5,
+    upperLen: 0.18,
+    foreLen: 0.16,
+    width: 0.04,
+    handRadius: 0.03,
+    elbowBend: 0.6,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+  });
 
   // Elaborate flowing cape/robe with multiple layers
   // Back cape layer
@@ -1674,6 +1847,28 @@ export function drawIceWitchEnemy(
     ctx.closePath();
     ctx.fill();
   }
+
+  // --- Blue-white frost glow rings ---
+  drawPulsingGlowRings(ctx, x, y - size * 0.1 + float, size * 0.45, time, zoom, {
+    color: "rgba(191, 219, 254, 0.4)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.35,
+    expansion: 1.3,
+    lineWidth: 1.5,
+  });
+
+  // --- Floating ice crystal shards ---
+  drawShiftingSegments(ctx, x, y - size * 0.15 + float, size, time, zoom, {
+    color: "rgba(191, 219, 254, 0.7)",
+    colorAlt: "rgba(147, 197, 253, 0.5)",
+    count: 5,
+    orbitRadius: 0.42,
+    segmentSize: 0.04,
+    orbitSpeed: 2.0,
+    shape: "shard",
+  });
+
 
   // Spell casting effect when attacking
   if (isAttacking) {

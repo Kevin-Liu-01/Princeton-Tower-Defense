@@ -20,20 +20,24 @@ export function isFirefox(): boolean {
 // ============================================================================
 
 export interface PerformanceSettings {
-  // Disable expensive shadow effects (huge Firefox improvement)
   disableShadows: boolean;
-  // Scale factor for shadowBlur radii (1.0 = full, 0.5 = halved, 0 = off).
-  // Applied even when disableShadows is false so lower quality levels can
-  // reduce GPU-expensive blur without removing shadows entirely.
   shadowQualityMultiplier: number;
-  // Reduce particle counts
   reducedParticles: boolean;
-  // Simplify gradients (fewer color stops)
   simplifiedGradients: boolean;
-  // Skip environmental effects entirely
   skipEnvironmentEffects: boolean;
-  // Reduce fog quality
   reducedFogQuality: boolean;
+  showGodRays: boolean;
+  showAurora: boolean;
+  showScreenGlow: boolean;
+  antiAliasing: boolean;
+  showHealthBars: boolean;
+  showPathDecorations: boolean;
+  showLandmarks: boolean;
+  showWaterEffects: boolean;
+  deathAnimations: boolean;
+  projectileTrails: boolean;
+  towerAnimations: boolean;
+  idleAnimations: boolean;
 }
 
 // Default settings based on browser
@@ -44,6 +48,18 @@ const firefoxDefaults: PerformanceSettings = {
   simplifiedGradients: true,
   skipEnvironmentEffects: false,
   reducedFogQuality: true,
+  showGodRays: true,
+  showAurora: true,
+  showScreenGlow: true,
+  antiAliasing: true,
+  showHealthBars: true,
+  showPathDecorations: true,
+  showLandmarks: true,
+  showWaterEffects: true,
+  deathAnimations: true,
+  projectileTrails: true,
+  towerAnimations: true,
+  idleAnimations: true,
 };
 
 const defaultSettings: PerformanceSettings = {
@@ -53,6 +69,18 @@ const defaultSettings: PerformanceSettings = {
   simplifiedGradients: false,
   skipEnvironmentEffects: false,
   reducedFogQuality: false,
+  showGodRays: true,
+  showAurora: true,
+  showScreenGlow: true,
+  antiAliasing: true,
+  showHealthBars: true,
+  showPathDecorations: true,
+  showLandmarks: true,
+  showWaterEffects: true,
+  deathAnimations: true,
+  projectileTrails: true,
+  towerAnimations: true,
+  idleAnimations: true,
 };
 
 let currentSettings: PerformanceSettings | null = null;

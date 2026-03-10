@@ -699,12 +699,14 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 }}
               >
                 <Activity size={15} className={performanceMode ? "text-cyan-300" : currentFps < 45 ? "text-red-300" : "text-purple-300"} />
-                <span className={`absolute -bottom-1 -right-1 text-[7px] font-bold px-0.5 rounded ${currentFps >= 55 ? "bg-green-700 text-green-100" :
-                  currentFps >= 45 ? "bg-yellow-700 text-yellow-100" :
-                    "bg-red-700 text-red-100"
-                  }`}>
-                  {currentFps}
-                </span>
+                {gameSettings.ui.showFpsCounter && (
+                  <span className={`absolute -bottom-1 -right-1 text-[7px] font-bold px-0.5 rounded ${currentFps >= 55 ? "bg-green-700 text-green-100" :
+                    currentFps >= 45 ? "bg-yellow-700 text-yellow-100" :
+                      "bg-red-700 text-red-100"
+                    }`}>
+                    {currentFps}
+                  </span>
+                )}
               </button>
               {onTogglePhotoMode && (
                 <button

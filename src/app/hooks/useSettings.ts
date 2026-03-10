@@ -45,7 +45,7 @@ export function getSettingsVersion(): number {
 }
 
 function syncPerformanceModule(settings: GameSettings): void {
-  const { graphics } = settings;
+  const { graphics, landscaping, animation, ui } = settings;
   setPerformanceSettings({
     disableShadows: graphics.shadowQuality === "off",
     shadowQualityMultiplier:
@@ -63,6 +63,18 @@ function syncPerformanceModule(settings: GameSettings): void {
     skipEnvironmentEffects: graphics.environmentEffects === "off",
     reducedFogQuality:
       graphics.fogQuality === "off" || graphics.fogQuality === "reduced",
+    showGodRays: graphics.showGodRays,
+    showAurora: graphics.showAurora,
+    showScreenGlow: graphics.showScreenGlow,
+    antiAliasing: graphics.antiAliasing,
+    showHealthBars: ui.showHealthBars,
+    showPathDecorations: landscaping.showPathDecorations,
+    showLandmarks: landscaping.showLandmarks,
+    showWaterEffects: landscaping.showWaterEffects,
+    deathAnimations: animation.deathAnimations,
+    projectileTrails: animation.projectileTrails,
+    towerAnimations: animation.towerAnimations,
+    idleAnimations: animation.idleAnimations,
   });
 }
 

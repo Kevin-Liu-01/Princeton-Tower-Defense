@@ -1,6 +1,7 @@
 // Volcanic region enemy sprites
 
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 // =====================================================
 // VOLCANIC REGION TROOPS
@@ -74,6 +75,48 @@ export function drawMagmaSpawnEnemy(
     );
     ctx.fill();
   }
+
+  // Animated magma tendrils (arm-like appendages) - drawn before body
+  drawAnimatedTendril(ctx, x - size * 0.35, y - size * 0.05, -Math.PI * 0.6, size, time, zoom, {
+    color: bodyColor,
+    tipColor: "#fbbf24",
+    length: 0.35,
+    width: 0.04,
+    segments: 10,
+    waveSpeed: 3,
+    waveAmt: 0.08,
+    tipRadius: 0.02,
+  });
+  drawAnimatedTendril(ctx, x + size * 0.35, y - size * 0.05, -Math.PI * 0.4, size, time, zoom, {
+    color: bodyColor,
+    tipColor: "#fbbf24",
+    length: 0.32,
+    width: 0.04,
+    segments: 10,
+    waveSpeed: 3.5,
+    waveAmt: 0.07,
+    tipRadius: 0.02,
+  });
+  drawAnimatedTendril(ctx, x - size * 0.2, y + size * 0.15, Math.PI * 0.7, size, time, zoom, {
+    color: bodyColorDark,
+    tipColor: "#fb923c",
+    length: 0.25,
+    width: 0.03,
+    segments: 8,
+    waveSpeed: 4,
+    waveAmt: 0.06,
+    tipRadius: 0.015,
+  });
+  drawAnimatedTendril(ctx, x + size * 0.2, y + size * 0.15, Math.PI * 0.3, size, time, zoom, {
+    color: bodyColorDark,
+    tipColor: "#fb923c",
+    length: 0.25,
+    width: 0.03,
+    segments: 8,
+    waveSpeed: 4.5,
+    waveAmt: 0.06,
+    tipRadius: 0.015,
+  });
 
   // Main molten body - amorphous shifting mass
   const bodyGrad = ctx.createRadialGradient(
@@ -418,6 +461,39 @@ export function drawMagmaSpawnEnemy(
     ctx.fill();
   }
 
+  // Lava glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.3, time, zoom, {
+    color: "rgba(251, 146, 60, 0.4)",
+    count: 3,
+    speed: 1.2,
+    maxAlpha: 0.35,
+    expansion: 1.8,
+    lineWidth: 2,
+  });
+
+  // Floating magma segments
+  drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
+    color: "#ea580c",
+    colorAlt: "#fbbf24",
+    count: 5,
+    orbitRadius: 0.35,
+    segmentSize: 0.035,
+    orbitSpeed: 1,
+    shape: "circle",
+  });
+
+  // Orbiting ember debris
+  drawOrbitingDebris(ctx, x, y - size * 0.15, size, time, zoom, {
+    color: "#fbbf24",
+    glowColor: "rgba(251, 191, 36, 0.3)",
+    count: 7,
+    speed: 2.5,
+    particleSize: 0.018,
+    minRadius: 0.3,
+    maxRadius: 0.5,
+    trailLen: 4,
+  });
+
   // Attack eruption effect
   if (isAttacking) {
     ctx.fillStyle = `rgba(251, 191, 36, ${attackPhase * 0.7})`;
@@ -507,6 +583,47 @@ export function drawFireImpEnemy(
     ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.035, size * 0.015, 0.2, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Animated hopping legs - drawn before body
+  drawAnimatedLegs(ctx, x, y + size * 0.12 - hop, size, time, zoom, {
+    color: "#b45309",
+    colorDark: "#7c2d12",
+    footColor: "#451a03",
+    strideSpeed: 8,
+    strideAmt: 0.4,
+    legLen: 0.14,
+    width: 0.04,
+  });
+
+  // Animated fiery arms - drawn before body
+  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.1 - hop, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#7c2d12",
+    swingSpeed: 7,
+    swingAmt: 0.5,
+    baseAngle: 0.4,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    handRadius: 0.03,
+    phaseOffset: 0,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.1 - hop, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#7c2d12",
+    swingSpeed: 7,
+    swingAmt: 0.5,
+    baseAngle: 0.4,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    handRadius: 0.03,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
 
   // Clawed feet with fire wisps
   ctx.fillStyle = "#7c2d12";
@@ -999,6 +1116,27 @@ export function drawFireImpEnemy(
   );
   ctx.fill();
 
+  // Fire glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.05 - hop, size * 0.2, time, zoom, {
+    color: "rgba(251, 191, 36, 0.4)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.3,
+    expansion: 2,
+    lineWidth: 1.5,
+  });
+
+  // Floating ember shards
+  drawShiftingSegments(ctx, x, y - size * 0.35 - hop, size, time, zoom, {
+    color: "#fb923c",
+    colorAlt: "#fbbf24",
+    count: 5,
+    orbitRadius: 0.22,
+    segmentSize: 0.025,
+    orbitSpeed: 2.5,
+    shape: "shard",
+  });
+
   // Rising embers
   ctx.fillStyle = `rgba(251, 191, 36, ${0.6 + flameFlicker * 0.3})`;
   for (let ember = 0; ember < 6; ember++) {
@@ -1086,6 +1224,51 @@ export function drawEmberGuardEnemy(
     );
     ctx.stroke();
   }
+
+  // Animated heavy marching legs - drawn before body
+  drawAnimatedLegs(ctx, x, y + size * 0.08, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "#451a03",
+    strideSpeed: 2.2,
+    strideAmt: 0.25,
+    legLen: 0.22,
+    width: 0.07,
+    shuffle: false,
+    phaseOffset: 0,
+  });
+
+  // Animated powerful arms - drawn before body
+  drawAnimatedArm(ctx, x - size * 0.35, y - size * 0.32, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#451a03",
+    swingSpeed: 2.2,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.2,
+    foreLen: 0.18,
+    width: 0.07,
+    handRadius: 0.045,
+    elbowBend: 0.3,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackPhase * 0.3 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.35, y - size * 0.32, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: "#451a03",
+    swingSpeed: 2.2,
+    swingAmt: 0.2,
+    baseAngle: 0.25,
+    upperLen: 0.2,
+    foreLen: 0.18,
+    width: 0.07,
+    handRadius: 0.045,
+    elbowBend: 0.3,
+    phaseOffset: 0,
+    attackExtra: isAttacking ? attackPhase * 0.3 : 0,
+  });
 
   // Articulated armored legs with molten joints
   const thighLen = size * 0.17;
@@ -1750,6 +1933,28 @@ export function drawEmberGuardEnemy(
     ctx.arc(emberX, emberY, size * 0.015 * (1 - emberPhase), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Molten glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.2, size * 0.25, time, zoom, {
+    color: "rgba(249, 115, 22, 0.4)",
+    count: 3,
+    speed: 1,
+    maxAlpha: 0.3,
+    expansion: 2,
+    lineWidth: 2,
+  });
+
+  // Floating obsidian armor segments
+  drawShiftingSegments(ctx, x, y - size * 0.15, size, time, zoom, {
+    color: "#1a0a02",
+    colorAlt: "#451a03",
+    count: 5,
+    orbitRadius: 0.4,
+    segmentSize: 0.04,
+    orbitSpeed: 0.8,
+    shape: "diamond",
+  });
+
 
   // Rising heat from armor
   ctx.fillStyle = `rgba(251, 146, 60, ${0.3 + Math.sin(time * 3) * 0.15})`;

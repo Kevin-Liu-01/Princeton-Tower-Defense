@@ -15,6 +15,7 @@ import type {
 } from "../types";
 import { INITIAL_LIVES, WAVE_TIMER_BASE } from "../constants";
 import { DEFAULT_CAMERA_OFFSET, DEFAULT_CAMERA_ZOOM } from "./pageHelpers";
+import { getGameSettings } from "../hooks/useSettings";
 
 export type PausableTimeoutEntry = {
   id: number;
@@ -144,7 +145,8 @@ export function resetBattleState({
 
   if (options.resetCamera) {
     setters.setCameraOffset(DEFAULT_CAMERA_OFFSET);
-    setters.setCameraZoom(DEFAULT_CAMERA_ZOOM);
+    const userZoom = getGameSettings().camera.defaultZoom;
+    setters.setCameraZoom(userZoom > 0 ? userZoom * DEFAULT_CAMERA_ZOOM : DEFAULT_CAMERA_ZOOM);
   }
 
   if (options.resetResultStats) {

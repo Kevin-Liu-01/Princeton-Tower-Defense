@@ -174,16 +174,25 @@ interface SettingRowProps {
   icon: React.ReactNode;
   label: string;
   description?: string;
+  tag?: "restart" | "coming-soon";
   children: React.ReactNode;
 }
 
-function SettingRow({ icon, label, description, children }: SettingRowProps) {
+function SettingRow({ icon, label, description, tag, children }: SettingRowProps) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 px-4 rounded-lg transition-colors hover:bg-white/[0.02]">
+    <div className={`flex items-center justify-between gap-4 py-3 px-4 rounded-lg transition-colors hover:bg-white/[0.02] ${tag === "coming-soon" ? "opacity-50 pointer-events-none" : ""}`}>
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="text-amber-500/70 flex-shrink-0">{icon}</div>
         <div className="min-w-0">
-          <div className="text-sm font-medium text-amber-200">{label}</div>
+          <div className="text-sm font-medium text-amber-200 flex items-center gap-2">
+            {label}
+            {tag === "restart" && (
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-400/80 border border-amber-700/30">Restart</span>
+            )}
+            {tag === "coming-soon" && (
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400/80 border border-zinc-600/30">Soon</span>
+            )}
+          </div>
           {description && (
             <div className="text-xs text-amber-200/40 mt-0.5">{description}</div>
           )}
@@ -319,14 +328,14 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Vegetation" />
-      <SettingRow icon={<Trees size={16} />} label="Decoration Density" description="Overall number of decorations placed on the map">
+      <SettingRow icon={<Trees size={16} />} label="Decoration Density" description="Overall number of decorations placed on the map" tag="restart">
         <SegmentedControl<DecorationDensity>
           value={l.decorationDensity}
           options={densityOptions}
           onChange={(v) => update({ decorationDensity: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Trees size={16} />} label="Tree Clusters" description="Number and size of tree clusters">
+      <SettingRow icon={<Trees size={16} />} label="Tree Clusters" description="Number and size of tree clusters" tag="restart">
         <SegmentedControl<DecorationDensity>
           value={l.treeClusterDensity}
           options={densityOptions}
@@ -335,7 +344,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Structures & Villages" />
-      <SettingRow icon={<Mountain size={16} />} label="Village Density" description="Number of village clusters">
+      <SettingRow icon={<Mountain size={16} />} label="Village Density" description="Number of village clusters" tag="restart">
         <SegmentedControl<DecorationDensity>
           value={l.villageDensity}
           options={densityOptions}
@@ -344,7 +353,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Battlefield" />
-      <SettingRow icon={<Swords size={16} />} label="Battle Debris" description="Craters, arrows, skeletons">
+      <SettingRow icon={<Swords size={16} />} label="Battle Debris" description="Craters, arrows, skeletons" tag="restart">
         <SegmentedControl<BattleDebrisDensity>
           value={l.battleDebrisDensity}
           options={[
@@ -358,7 +367,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Scaling" />
-      <SettingRow icon={<Maximize size={16} />} label="Decoration Scale" description="Size range of placed decorations">
+      <SettingRow icon={<Maximize size={16} />} label="Decoration Scale" description="Size range of placed decorations" tag="restart">
         <SegmentedControl<DecorationScale>
           value={l.decorationScale}
           options={[
@@ -372,13 +381,13 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Toggles" />
-      <SettingRow icon={<Layers size={16} />} label="Path Decorations" description="Cracks, tufts, surface details on roads">
+      <SettingRow icon={<Layers size={16} />} label="Path Decorations" description="Cracks, tufts, surface details on roads" tag="restart">
         <ToggleControl value={l.showPathDecorations} onChange={(v) => update({ showPathDecorations: v })} />
       </SettingRow>
-      <SettingRow icon={<Mountain size={16} />} label="Landmarks" description="Major structures (pyramids, castles, etc.)">
+      <SettingRow icon={<Mountain size={16} />} label="Landmarks" description="Major structures (pyramids, castles, etc.)" tag="restart">
         <ToggleControl value={l.showLandmarks} onChange={(v) => update({ showLandmarks: v })} />
       </SettingRow>
-      <SettingRow icon={<Cloud size={16} />} label="Water Effects" description="Reflections and ripples">
+      <SettingRow icon={<Cloud size={16} />} label="Water Effects" description="Fountains, pools, water features" tag="restart">
         <ToggleControl value={l.showWaterEffects} onChange={(v) => update({ showWaterEffects: v })} />
       </SettingRow>
     </>
@@ -393,7 +402,7 @@ function AnimationPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Quality" />
-      <SettingRow icon={<Activity size={16} />} label="Animation Intensity" description="Overall animation detail level">
+      <SettingRow icon={<Activity size={16} />} label="Animation Intensity" description="Overall animation detail level" tag="coming-soon">
         <SegmentedControl<AnimationIntensity>
           value={a.animationIntensity}
           options={[
@@ -407,7 +416,7 @@ function AnimationPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Screen Effects" />
-      <SettingRow icon={<Vibrate size={16} />} label="Screen Shake" description="Intensity of camera shake on impacts">
+      <SettingRow icon={<Vibrate size={16} />} label="Screen Shake" description="Intensity of camera shake on impacts" tag="coming-soon">
         <SliderControl
           value={a.screenShakeIntensity}
           min={0}
@@ -425,10 +434,10 @@ function AnimationPanel({ settings, updateCategory }: CategoryPanelProps) {
       <SettingRow icon={<Crosshair size={16} />} label="Projectile Trails" description="Visual trails on projectiles">
         <ToggleControl value={a.projectileTrails} onChange={(v) => update({ projectileTrails: v })} />
       </SettingRow>
-      <SettingRow icon={<Shield size={16} />} label="Tower Animations" description="Tower idle and attack animations">
+      <SettingRow icon={<Shield size={16} />} label="Tower Animations" description="Tower idle and attack animations" tag="coming-soon">
         <ToggleControl value={a.towerAnimations} onChange={(v) => update({ towerAnimations: v })} />
       </SettingRow>
-      <SettingRow icon={<Activity size={16} />} label="Idle Animations" description="Subtle idle movement on decorations">
+      <SettingRow icon={<Activity size={16} />} label="Idle Animations" description="Subtle idle movement on decorations" tag="coming-soon">
         <ToggleControl value={a.idleAnimations} onChange={(v) => update({ idleAnimations: v })} />
       </SettingRow>
     </>
@@ -443,7 +452,7 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Zoom" />
-      <SettingRow icon={<ZoomIn size={16} />} label="Default Zoom" description="Initial zoom level when entering a map">
+      <SettingRow icon={<ZoomIn size={16} />} label="Default Zoom" description="Initial zoom level when entering a map" tag="restart">
         <SliderControl
           value={c.defaultZoom}
           min={0.5}
@@ -465,7 +474,7 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Panning" />
-      <SettingRow icon={<MousePointer size={16} />} label="Edge Pan Speed" description="Camera speed when hovering edges">
+      <SettingRow icon={<MousePointer size={16} />} label="Edge Pan Speed" description="Camera speed when hovering edges" tag="coming-soon">
         <SegmentedControl<CameraEdgePan>
           value={c.edgePanSpeed}
           options={[
@@ -479,7 +488,7 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Behavior" />
-      <SettingRow icon={<Move size={16} />} label="Smooth Camera" description="Interpolate camera movement">
+      <SettingRow icon={<Move size={16} />} label="Smooth Camera" description="Interpolate camera movement" tag="coming-soon">
         <ToggleControl value={c.smoothCamera} onChange={(v) => update({ smoothCamera: v })} />
       </SettingRow>
       <SettingRow icon={<Target size={16} />} label="Zoom to Cursor" description="Zoom towards mouse position">
@@ -500,7 +509,7 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
       <SettingRow icon={<Activity size={16} />} label="FPS Counter" description="Show frames per second">
         <ToggleControl value={u.showFpsCounter} onChange={(v) => update({ showFpsCounter: v })} />
       </SettingRow>
-      <SettingRow icon={<PanelTop size={16} />} label="Performance Overlay" description="Show detailed performance stats">
+      <SettingRow icon={<PanelTop size={16} />} label="Performance Overlay" description="Show detailed performance stats" tag="coming-soon">
         <ToggleControl value={u.showPerformanceOverlay} onChange={(v) => update({ showPerformanceOverlay: v })} />
       </SettingRow>
 
@@ -532,12 +541,12 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
       <SettingRow icon={<Layers size={16} />} label="Wave Preview" description="Show upcoming wave composition">
         <ToggleControl value={u.showWavePreview} onChange={(v) => update({ showWavePreview: v })} />
       </SettingRow>
-      <SettingRow icon={<FastForward size={16} />} label="Auto-Send Waves" description="Automatically start next wave">
+      <SettingRow icon={<FastForward size={16} />} label="Auto-Send Waves" description="Automatically start next wave when timer expires">
         <ToggleControl value={u.autoSendWaves} onChange={(v) => update({ autoSendWaves: v })} />
       </SettingRow>
 
       <SectionDivider label="Interface Scale" />
-      <SettingRow icon={<Maximize size={16} />} label="UI Scale" description="Size of HUD elements">
+      <SettingRow icon={<Maximize size={16} />} label="UI Scale" description="Size of HUD elements" tag="coming-soon">
         <SegmentedControl<UIScale>
           value={u.uiScale}
           options={[
@@ -548,7 +557,7 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
           onChange={(v) => update({ uiScale: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Clock size={16} />} label="Tooltip Delay" description="Milliseconds before tooltips appear">
+      <SettingRow icon={<Clock size={16} />} label="Tooltip Delay" description="Milliseconds before tooltips appear" tag="coming-soon">
         <SliderControl
           value={u.tooltipDelay}
           min={0}
@@ -570,7 +579,7 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Volume" />
-      <SettingRow icon={<Volume2 size={16} />} label="Master Volume" description="Overall audio level">
+      <SettingRow icon={<Volume2 size={16} />} label="Master Volume" description="Overall audio level" tag="coming-soon">
         <SliderControl
           value={au.masterVolume}
           min={0}
@@ -580,7 +589,7 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Zap size={16} />} label="SFX Volume" description="Sound effects (attacks, abilities)">
+      <SettingRow icon={<Zap size={16} />} label="SFX Volume" description="Sound effects (attacks, abilities)" tag="coming-soon">
         <SliderControl
           value={au.sfxVolume}
           min={0}
@@ -590,7 +599,7 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Headphones size={16} />} label="Music Volume" description="Background music">
+      <SettingRow icon={<Headphones size={16} />} label="Music Volume" description="Background music" tag="coming-soon">
         <SliderControl
           value={au.musicVolume}
           min={0}
@@ -600,7 +609,7 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
           formatLabel={(v) => `${Math.round(v * 100)}%`}
         />
       </SettingRow>
-      <SettingRow icon={<Wind size={16} />} label="Ambient Volume" description="Environmental sounds (wind, water)">
+      <SettingRow icon={<Wind size={16} />} label="Ambient Volume" description="Environmental sounds (wind, water)" tag="coming-soon">
         <SliderControl
           value={au.ambientVolume}
           min={0}
@@ -612,7 +621,7 @@ function AudioPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Behavior" />
-      <SettingRow icon={<VolumeX size={16} />} label="Mute When Unfocused" description="Silence audio when tab is inactive">
+      <SettingRow icon={<VolumeX size={16} />} label="Mute When Unfocused" description="Silence audio when tab is inactive" tag="coming-soon">
         <ToggleControl value={au.muteWhenUnfocused} onChange={(v) => update({ muteWhenUnfocused: v })} />
       </SettingRow>
     </>
@@ -627,7 +636,7 @@ function AccessibilityPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Vision" />
-      <SettingRow icon={<Eye size={16} />} label="Colorblind Mode" description="Adjust colors for color vision deficiency">
+      <SettingRow icon={<Eye size={16} />} label="Colorblind Mode" description="Adjust colors for color vision deficiency" tag="coming-soon">
         <SegmentedControl<ColorblindMode>
           value={acc.colorblindMode}
           options={[
@@ -639,20 +648,20 @@ function AccessibilityPanel({ settings, updateCategory }: CategoryPanelProps) {
           onChange={(v) => update({ colorblindMode: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Contrast size={16} />} label="High Contrast UI" description="Increase contrast on UI elements">
+      <SettingRow icon={<Contrast size={16} />} label="High Contrast UI" description="Increase contrast on UI elements" tag="coming-soon">
         <ToggleControl value={acc.highContrastUI} onChange={(v) => update({ highContrastUI: v })} />
       </SettingRow>
 
       <SectionDivider label="Motion" />
-      <SettingRow icon={<Accessibility size={16} />} label="Reduced Motion" description="Minimize animations and movement">
+      <SettingRow icon={<Accessibility size={16} />} label="Reduced Motion" description="Minimize animations and movement" tag="coming-soon">
         <ToggleControl value={acc.reducedMotion} onChange={(v) => update({ reducedMotion: v })} />
       </SettingRow>
 
       <SectionDivider label="Readability" />
-      <SettingRow icon={<Type size={16} />} label="Large Text" description="Increase text size throughout UI">
+      <SettingRow icon={<Type size={16} />} label="Large Text" description="Increase text size throughout UI" tag="coming-soon">
         <ToggleControl value={acc.largeText} onChange={(v) => update({ largeText: v })} />
       </SettingRow>
-      <SettingRow icon={<AlertCircle size={16} />} label="Screen Reader Hints" description="Additional ARIA labels for assistive tech">
+      <SettingRow icon={<AlertCircle size={16} />} label="Screen Reader Hints" description="Additional ARIA labels for assistive tech" tag="coming-soon">
         <ToggleControl value={acc.screenReaderHints} onChange={(v) => update({ screenReaderHints: v })} />
       </SettingRow>
     </>

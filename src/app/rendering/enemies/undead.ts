@@ -6,6 +6,16 @@ import {
   drawRobeBody,
 } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import {
+  drawAnimatedArm,
+  drawAnimatedLegs,
+  drawPulsingGlowRings,
+  drawShiftingSegments,
+  drawOrbitingDebris,
+  drawAnimatedTendril,
+  drawFloatingPiece,
+  drawGlowingEyes,
+} from "./animationHelpers";
 
 export function drawSpecterEnemy(
   ctx: CanvasRenderingContext2D,
@@ -141,6 +151,30 @@ export function drawSpecterEnemy(
     ctx.beginPath();
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // --- Animated ghostly tendrils hanging below ---
+  for (let td = 0; td < 4; td++) {
+    const tendrilAng = Math.PI / 2 + (td - 1.5) * 0.35;
+    drawAnimatedTendril(
+      ctx,
+      x + (td - 1.5) * size * 0.12,
+      y + size * 0.3 + phase,
+      tendrilAng,
+      size,
+      time,
+      zoom,
+      {
+        color: `rgba(148, 163, 184, ${flicker * 0.5})`,
+        tipColor: `rgba(100, 116, 139, ${flicker * 0.3})`,
+        length: 0.35,
+        width: 0.025,
+        segments: 10,
+        waveSpeed: 3 + td * 0.5,
+        waveAmt: 0.08,
+        tipRadius: 0.01,
+      },
+    );
   }
 
   // === LAYER 4: MAIN GHOSTLY FORM (LAYERED FOR DEPTH) ===
@@ -706,6 +740,30 @@ export function drawSpecterEnemy(
     }
   }
 
+  // --- Pulsing ethereal blue glow rings ---
+  drawPulsingGlowRings(ctx, x, y + phase, size * 0.35, time, zoom, {
+    color: "rgba(56, 189, 248, 0.4)",
+    count: 4,
+    speed: 1.2,
+    maxAlpha: 0.35,
+    expansion: 1.8,
+    lineWidth: 1.5,
+  });
+
+  // --- Shifting ethereal segments ---
+  drawShiftingSegments(ctx, x, y + phase, size, time, zoom, {
+    color: `rgba(203, 213, 225, ${flicker * 0.5})`,
+    colorAlt: `rgba(148, 163, 184, ${flicker * 0.4})`,
+    count: 5,
+    orbitRadius: 0.35,
+    segmentSize: 0.03,
+    orbitSpeed: 1.0,
+    bobSpeed: 2.5,
+    bobAmt: 0.05,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
   // === LAYER 10: HOOD / SHROUD OVERLAY ===
   // Tattered hood edges
   ctx.strokeStyle = `rgba(100, 116, 139, ${flicker * 0.3})`;
@@ -1002,6 +1060,56 @@ export function drawBerserkerEnemy(
       ctx.stroke();
     }
   }
+
+  // --- Animated stomping legs ---
+  drawAnimatedLegs(ctx, x, y + size * 0.25 - bodyBob, size, time, zoom, {
+    color: "#991b1b",
+    colorDark: "#7f1d1d",
+    footColor: "#450a0a",
+    strideSpeed: 7,
+    strideAmt: 0.4,
+    legLen: 0.22,
+    width: 0.07,
+  });
+
+  // --- Animated berserker arms ---
+  drawAnimatedArm(
+    ctx, x - size * 0.38, y - size * 0.12 - bodyBob,
+    size, time, zoom, -1,
+    {
+      color: "#b91c1c",
+      colorDark: "#7f1d1d",
+      swingSpeed: 12,
+      swingAmt: 0.6,
+      baseAngle: 0.4,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      width: 0.08,
+      handColor: "#991b1b",
+      handRadius: 0.04,
+      elbowBend: 0.5,
+      attackExtra: isAttacking ? attackIntensity : 0,
+    },
+  );
+  drawAnimatedArm(
+    ctx, x + size * 0.38, y - size * 0.12 - bodyBob,
+    size, time, zoom, 1,
+    {
+      color: "#b91c1c",
+      colorDark: "#7f1d1d",
+      swingSpeed: 12,
+      swingAmt: 0.6,
+      baseAngle: 0.4,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      width: 0.08,
+      handColor: "#991b1b",
+      handRadius: 0.04,
+      elbowBend: 0.5,
+      phaseOffset: Math.PI,
+      attackExtra: isAttacking ? attackIntensity : 0,
+    },
+  );
 
   // === LAYER 5: MUSCULAR BODY WITH RUNE TATTOOS AND BATTLE SCARS ===
   const bodyGrad = ctx.createLinearGradient(
@@ -1806,6 +1914,36 @@ export function drawBerserkerEnemy(
   ctx.fill();
   clearShadow(ctx);
 
+  // --- Red rage glow rings ---
+  drawPulsingGlowRings(
+    ctx, x + attackShake, y - bodyBob, size * 0.4, time, zoom,
+    {
+      color: "rgba(239, 68, 68, 0.5)",
+      count: 3,
+      speed: 2.0,
+      maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.3 : 0),
+      expansion: 1.5,
+      lineWidth: 2,
+    },
+  );
+
+  // --- Floating blood/dark shards ---
+  drawShiftingSegments(
+    ctx, x + attackShake, y - bodyBob, size, time, zoom,
+    {
+      color: "#7f1d1d",
+      colorAlt: "#450a0a",
+      count: 6,
+      orbitRadius: 0.4,
+      segmentSize: 0.035,
+      orbitSpeed: 2.0,
+      bobSpeed: 3.5,
+      bobAmt: 0.04,
+      shape: "shard",
+      rotateWithOrbit: true,
+    },
+  );
+
   // === LAYER 8: FOOT IMPACT DUST ===
   if (leftFootImpact > 0.8) {
     ctx.fillStyle = `rgba(120, 30, 30, ${(leftFootImpact - 0.8) * 2.5})`;
@@ -2456,6 +2594,42 @@ export function drawGolemEnemy(
   ctx.fill();
   ctx.globalAlpha = 1;
 
+  // --- Earth-colored pulsing glow rings ---
+  drawPulsingGlowRings(ctx, x, y, size * 0.45, time, zoom, {
+    color: "rgba(251, 191, 36, 0.4)",
+    count: 3,
+    speed: 1.0,
+    maxAlpha: 0.35,
+    expansion: 1.6,
+    lineWidth: 2,
+  });
+
+  // --- Floating rock/crystal segments orbiting ---
+  drawShiftingSegments(ctx, x, y, size, time, zoom, {
+    color: "#78716c",
+    colorAlt: "#57534e",
+    count: 5,
+    orbitRadius: 0.45,
+    segmentSize: 0.045,
+    orbitSpeed: 0.8,
+    bobSpeed: 2,
+    bobAmt: 0.05,
+    shape: "diamond",
+    rotateWithOrbit: true,
+  });
+
+  // --- Orbiting stone debris ---
+  drawOrbitingDebris(ctx, x, y, size, time, zoom, {
+    color: "#a8a29e",
+    glowColor: "rgba(251, 191, 36, 0.3)",
+    count: 6,
+    speed: 1.2,
+    particleSize: 0.025,
+    minRadius: 0.35,
+    maxRadius: 0.55,
+    trailLen: 2,
+  });
+
   // Dust particles being kicked up
   for (let dust = 0; dust < 6; dust++) {
     const dustPhase = (time * 2 + dust * 0.4) % 1.5;
@@ -2573,6 +2747,55 @@ export function drawNecromancerEnemy(
     ctx.stroke();
   }
 
+
+  // --- Shuffling animated legs ---
+  drawAnimatedLegs(ctx, x, y + size * 0.3 + hover * 0.3, size, time, zoom, {
+    color: "#1e1b4b",
+    colorDark: "#0a0820",
+    footColor: "#312e81",
+    strideSpeed: 2.5,
+    strideAmt: 0.15,
+    legLen: 0.18,
+    width: 0.05,
+    shuffle: true,
+  });
+
+  // --- Spell-casting animated arms ---
+  drawAnimatedArm(
+    ctx, x - size * 0.35, y - size * 0.25 + hover,
+    size, time, zoom, -1,
+    {
+      color: "#1e1b4b",
+      colorDark: "#0a0820",
+      swingSpeed: 3,
+      swingAmt: 0.3,
+      baseAngle: 0.5,
+      upperLen: 0.18,
+      foreLen: 0.16,
+      width: 0.05,
+      handColor: "#e8e0d0",
+      handRadius: 0.03,
+      elbowBend: 0.6,
+    },
+  );
+  drawAnimatedArm(
+    ctx, x + size * 0.35, y - size * 0.25 + hover,
+    size, time, zoom, 1,
+    {
+      color: "#1e1b4b",
+      colorDark: "#0a0820",
+      swingSpeed: 3,
+      swingAmt: 0.3,
+      baseAngle: 0.5,
+      upperLen: 0.18,
+      foreLen: 0.16,
+      width: 0.05,
+      handColor: "#e8e0d0",
+      handRadius: 0.03,
+      elbowBend: 0.6,
+      phaseOffset: Math.PI * 0.5,
+    },
+  );
 
   // Dark robes with soul threads
   const robeGrad = ctx.createLinearGradient(
@@ -2797,6 +3020,31 @@ export function drawNecromancerEnemy(
   ctx.arc(x, y - size * 0.62 + hover, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
   clearShadow(ctx);
+
+  // --- Purple-green death glow rings ---
+  drawPulsingGlowRings(ctx, x, y + hover, size * 0.4, time, zoom, {
+    color: "rgba(74, 222, 128, 0.4)",
+    count: 4,
+    speed: 1.5,
+    maxAlpha: 0.4,
+    expansion: 1.7,
+    lineWidth: 1.5,
+  });
+
+  // --- Floating skull/bone shards ---
+  drawShiftingSegments(ctx, x, y + hover, size, time, zoom, {
+    color: "#e8e0d0",
+    colorAlt: "#a8a29e",
+    count: 5,
+    orbitRadius: 0.45,
+    segmentSize: 0.04,
+    orbitSpeed: 1.2,
+    bobSpeed: 2.5,
+    bobAmt: 0.05,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
 
   // Skull-topped staff with phylactery
   ctx.strokeStyle = "#1c1917";
@@ -3119,6 +3367,43 @@ export function drawShadowKnightEnemy(
     );
     ctx.stroke();
   }
+
+  // --- Marching animated arms ---
+  drawAnimatedArm(
+    ctx, x - size * 0.35, y - size * 0.18 + stance,
+    size, time, zoom, -1,
+    {
+      color: "#3f3f46",
+      colorDark: "#27272a",
+      swingSpeed: 5,
+      swingAmt: 0.2,
+      baseAngle: 0.35,
+      upperLen: 0.2,
+      foreLen: 0.17,
+      width: 0.07,
+      handColor: "#52525b",
+      handRadius: 0.035,
+      elbowBend: 0.45,
+    },
+  );
+  drawAnimatedArm(
+    ctx, x + size * 0.35, y - size * 0.18 + stance,
+    size, time, zoom, 1,
+    {
+      color: "#3f3f46",
+      colorDark: "#27272a",
+      swingSpeed: 5,
+      swingAmt: 0.2,
+      baseAngle: 0.35,
+      upperLen: 0.2,
+      foreLen: 0.17,
+      width: 0.07,
+      handColor: "#52525b",
+      handRadius: 0.035,
+      elbowBend: 0.45,
+      phaseOffset: Math.PI,
+    },
+  );
 
   // Armored body - more elaborate
   const armorGrad = ctx.createLinearGradient(
@@ -3455,6 +3740,30 @@ export function drawShadowKnightEnemy(
   ctx.fill();
   clearShadow(ctx);
   ctx.restore();
+
+  // --- Dark purple glow rings ---
+  drawPulsingGlowRings(ctx, x, y + stance, size * 0.4, time, zoom, {
+    color: "rgba(139, 92, 246, 0.45)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.4,
+    expansion: 1.5,
+    lineWidth: 2,
+  });
+
+  // --- Floating shadow plate segments ---
+  drawShiftingSegments(ctx, x, y + stance, size, time, zoom, {
+    color: "#3f3f46",
+    colorAlt: "#27272a",
+    count: 5,
+    orbitRadius: 0.42,
+    segmentSize: 0.045,
+    orbitSpeed: 1.5,
+    bobSpeed: 2.5,
+    bobAmt: 0.04,
+    shape: "diamond",
+    rotateWithOrbit: true,
+  });
 }
 
 // ============================================================================
@@ -3579,6 +3888,55 @@ export function drawCultistEnemy(
     ctx.fill();
   }
 
+
+  // --- Slow shuffling animated legs ---
+  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+    color: "#2a1810",
+    colorDark: "#1a0a05",
+    footColor: "#3d1f14",
+    strideSpeed: 2,
+    strideAmt: 0.12,
+    legLen: 0.16,
+    width: 0.045,
+    shuffle: true,
+  });
+
+  // --- Ritual gesture animated arms ---
+  drawAnimatedArm(
+    ctx, x - size * 0.2, y - size * 0.15,
+    size, time, zoom, -1,
+    {
+      color: bodyColorDark,
+      colorDark: "#1a0a05",
+      swingSpeed: 2.5,
+      swingAmt: 0.25,
+      baseAngle: 0.6,
+      upperLen: 0.16,
+      foreLen: 0.14,
+      width: 0.045,
+      handColor: "#c4a882",
+      handRadius: 0.03,
+      elbowBend: 0.5,
+    },
+  );
+  drawAnimatedArm(
+    ctx, x + size * 0.2, y - size * 0.15,
+    size, time, zoom, 1,
+    {
+      color: bodyColorDark,
+      colorDark: "#1a0a05",
+      swingSpeed: 2.5,
+      swingAmt: 0.25,
+      baseAngle: 0.6,
+      upperLen: 0.16,
+      foreLen: 0.14,
+      width: 0.045,
+      handColor: "#c4a882",
+      handRadius: 0.03,
+      elbowBend: 0.5,
+      phaseOffset: Math.PI,
+    },
+  );
 
   // Dark energy chains/tendrils wrapping around the body
   ctx.strokeStyle = `rgba(100, 30, 10, ${runeGlow * 0.5})`;
@@ -3904,6 +4262,30 @@ export function drawCultistEnemy(
     }
   }
 
+  // --- Sickly dark glow rings ---
+  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
+    color: "rgba(255, 100, 50, 0.35)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.3,
+    expansion: 1.6,
+    lineWidth: 1.5,
+  });
+
+  // --- Floating ritual symbol shards ---
+  drawShiftingSegments(ctx, x, y, size, time, zoom, {
+    color: "#7c2d12",
+    colorAlt: "#9a3412",
+    count: 4,
+    orbitRadius: 0.4,
+    segmentSize: 0.035,
+    orbitSpeed: 1.0,
+    bobSpeed: 2,
+    bobAmt: 0.04,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
   // Glowing coffee cup (forbidden caffeine)
   ctx.save();
   ctx.translate(x - size * 0.3, y + size * 0.05);
@@ -4067,6 +4449,56 @@ export function drawPlaguebearerEnemy(
     );
     ctx.stroke();
   }
+
+  // --- Shambling animated legs ---
+  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: bodyColorDark,
+    strideSpeed: 2,
+    strideAmt: 0.12,
+    legLen: 0.18,
+    width: 0.055,
+    shuffle: true,
+    phaseOffset: 0.5,
+  });
+
+  // --- Hunched dripping animated arms ---
+  drawAnimatedArm(
+    ctx, x - size * 0.36, y - size * 0.08,
+    size, time, zoom, -1,
+    {
+      color: bodyColor,
+      colorDark: bodyColorDark,
+      swingSpeed: 2,
+      swingAmt: 0.15,
+      baseAngle: 0.5,
+      upperLen: 0.16,
+      foreLen: 0.14,
+      width: 0.055,
+      handColor: bodyColorDark,
+      handRadius: 0.03,
+      elbowBend: 0.6,
+    },
+  );
+  drawAnimatedArm(
+    ctx, x + size * 0.36, y - size * 0.08,
+    size, time, zoom, 1,
+    {
+      color: bodyColor,
+      colorDark: bodyColorDark,
+      swingSpeed: 2,
+      swingAmt: 0.15,
+      baseAngle: 0.5,
+      upperLen: 0.16,
+      foreLen: 0.14,
+      width: 0.055,
+      handColor: bodyColorDark,
+      handRadius: 0.03,
+      elbowBend: 0.6,
+      phaseOffset: Math.PI,
+    },
+  );
 
   // Tattered hospital gown (back layer)
   ctx.fillStyle = "rgba(200, 210, 220, 0.4)";
@@ -4613,6 +5045,42 @@ export function drawPlaguebearerEnemy(
     y + size * 0.05,
   );
   ctx.fill();
+
+  // --- Toxic green pulsing glow rings ---
+  drawPulsingGlowRings(ctx, x, y, size * 0.4, time, zoom, {
+    color: "rgba(132, 204, 22, 0.4)",
+    count: 4,
+    speed: 1.5,
+    maxAlpha: 0.35,
+    expansion: 1.8,
+    lineWidth: 1.5,
+  });
+
+  // --- Floating plague cloud pieces ---
+  drawShiftingSegments(ctx, x, y, size, time, zoom, {
+    color: "rgba(101, 163, 13, 0.6)",
+    colorAlt: "rgba(132, 204, 22, 0.5)",
+    count: 6,
+    orbitRadius: 0.45,
+    segmentSize: 0.035,
+    orbitSpeed: 0.8,
+    bobSpeed: 2,
+    bobAmt: 0.05,
+    shape: "circle",
+    rotateWithOrbit: false,
+  });
+
+  // --- Orbiting toxic debris ---
+  drawOrbitingDebris(ctx, x, y, size, time, zoom, {
+    color: "rgba(200, 255, 50, 0.6)",
+    glowColor: "rgba(132, 204, 22, 0.3)",
+    count: 5,
+    speed: 1.0,
+    particleSize: 0.02,
+    minRadius: 0.3,
+    maxRadius: 0.5,
+    trailLen: 3,
+  });
 
   // Coughing effect: particles burst from mouth area
   if (coughCycle > 0) {

@@ -11,6 +11,7 @@ import { renderInspectIndicator } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile, enemyPaletteCache } from "./types";
 import { drawRegionOverlay } from "./regionOverlays";
+import { getPerformanceSettings } from "../performance";
 
 const mapThemeCache = new Map<string, MapTheme>();
 
@@ -564,10 +565,10 @@ export function renderEnemy(
   }
 
   // HP bar with armor display
-  if (enemy.hp < enemy.maxHp || eData.armor > 0) {
+  if (getPerformanceSettings().showHealthBars && (enemy.hp < enemy.maxHp || eData.armor > 0)) {
     const barWidth = size * 1.4;
     const barHeight = 6 * zoom;
-    const barY = drawY - size * 0.95;
+    const barY = drawY - size * 1.3;
     const barX = screenPos.x - barWidth / 2;
     const cornerRadius = 3 * zoom;
     const armor = eData.armor || 0;

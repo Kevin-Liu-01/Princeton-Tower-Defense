@@ -16,6 +16,7 @@ import { drawRockyHero } from "./rocky";
 import { drawFScottHero } from "./scott";
 import { drawCaptainHero } from "./captain";
 import { drawEngineerHero } from "./engineer";
+import { getPerformanceSettings } from "../performance";
 
 const HERO_SIZE_OVERRIDES: Record<string, number> = {
   rocky: 1.15,
@@ -241,6 +242,8 @@ export function renderHero(
     );
     ctx.stroke();
   }
+
+  if (!getPerformanceSettings().showHealthBars) return;
 
   // HP Bar - Premium hero style
   const barWidth = 48 * zoom;

@@ -251,7 +251,7 @@ import {
   renderStaticMapLayer,
   type StaticMapFogEndpoint,
 } from "../rendering/maps/staticLayer";
-import { setPerformanceSettings, updateScenePressure, interceptShadows } from "../rendering/performance";
+import { setPerformanceSettings, updateScenePressure, interceptShadows, getPerformanceSettings } from "../rendering/performance";
 import { getGameSettings, getSettingsVersion } from "./useSettings";
 import {
   DECORATION_DENSITY_MULTIPLIER,
@@ -460,6 +460,12 @@ const CAMERA_ZOOM_MAX = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.0014;
 const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
 const FRIENDLY_SEPARATION_MULT = 0.18;
+
+const WATER_DECORATION_TYPES = new Set([
+  "water", "fountain", "deep_water", "frozen_pond",
+  "lava_pool", "lava_fall", "poison_pool", "lake",
+  "algae_pool", "fishing_spot", "carnegie_lake",
+]);
 
 
 const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
@@ -952,9 +958,13 @@ export function usePrincetonTowerDefenseRuntime() {
         const centerY = viewHeight / 3;
         const zoomDelta = 1 / nextZoom - 1 / prevZoom;
 
+        const zoomToCursor = getGameSettings().camera.zoomToCursor;
+        const anchorX = zoomToCursor ? x : centerX;
+        const anchorY = zoomToCursor ? y : centerY;
+
         setCameraOffset((prevOffset) => ({
-          x: prevOffset.x + (x - centerX) * zoomDelta,
-          y: prevOffset.y + (y - centerY) * zoomDelta,
+          x: prevOffset.x + (anchorX - centerX) * zoomDelta,
+          y: prevOffset.y + (anchorY - centerY) * zoomDelta,
         }));
 
         return nextZoom;
@@ -976,9 +986,11 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       const normalizedDelta = Math.max(-600, Math.min(600, delta));
-      const sensitivity = e.ctrlKey
+      const userZoomSens = getGameSettings().camera.zoomSensitivity;
+      const baseSensitivity = e.ctrlKey
         ? TRACKPAD_PINCH_ZOOM_SENSITIVITY
         : WHEEL_ZOOM_SENSITIVITY;
+      const sensitivity = baseSensitivity * userZoomSens;
       const zoomFactor = Math.exp(-normalizedDelta * sensitivity);
 
       zoomCameraAtClientPoint(e.clientX, e.clientY, zoomFactor);
@@ -1291,23 +1303,25 @@ export function usePrincetonTowerDefenseRuntime() {
       const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
       const regionColors = REGION_THEMES[mapThemeKey]?.ground;
 
-      const deathEffect: Effect = {
-        id: generateId("fx"),
-        pos,
-        type: "enemy_death" as const,
-        progress: 0,
-        size: eData.size,
-        duration: DEATH_DURATIONS[deathCause],
-        color: eData.color,
-        enemyType: enemy.type,
-        enemySize: eData.size,
-        isFlying: eData.flying,
-        deathCause,
-        regionGroundColors: regionColors,
-      };
-      (deathEffect as Effect & { _spawnedAt: number })._spawnedAt = performance.now();
-      pendingDeathEffectsRef.current.push(deathEffect);
-      addEffectEntity(deathEffect);
+      if (getPerformanceSettings().deathAnimations) {
+        const deathEffect: Effect = {
+          id: generateId("fx"),
+          pos,
+          type: "enemy_death" as const,
+          progress: 0,
+          size: eData.size,
+          duration: DEATH_DURATIONS[deathCause],
+          color: eData.color,
+          enemyType: enemy.type,
+          enemySize: eData.size,
+          isFlying: eData.flying,
+          deathCause,
+          regionGroundColors: regionColors,
+        };
+        (deathEffect as Effect & { _spawnedAt: number })._spawnedAt = performance.now();
+        pendingDeathEffectsRef.current.push(deathEffect);
+        addEffectEntity(deathEffect);
+      }
     },
     [awardBounty, addParticles, addEffectEntity, selectedMap]
   );
@@ -1900,11 +1914,12 @@ export function usePrincetonTowerDefenseRuntime() {
         .map((tower) => gridToWorld(tower.pos));
       // Wave timer - check outside setState to avoid race conditions
       if (!waveInProgress && currentWave < levelWaves.length) {
+        const autoSend = getGameSettings().ui.autoSendWaves;
         const shouldStartWave = nextWaveTimer - deltaTime <= 0;
-        if (shouldStartWave) {
+        if (shouldStartWave && autoSend) {
           startWave();
           setNextWaveTimer(WAVE_TIMER_BASE);
-        } else {
+        } else if (!shouldStartWave) {
           setNextWaveTimer((prev) => Math.max(0, prev - deltaTime));
         }
       }
@@ -6279,6 +6294,8 @@ export function usePrincetonTowerDefenseRuntime() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     interceptShadows(ctx);
+    const perfSettings = getPerformanceSettings();
+    ctx.imageSmoothingEnabled = perfSettings.antiAliasing;
     const dpr = getRenderDpr();
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
@@ -6659,6 +6676,8 @@ export function usePrincetonTowerDefenseRuntime() {
 
         const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
         const type = categoryDecors[typeIndex] as DecorationType;
+
+        if (!landscapeSettings.showWaterEffects && WATER_DECORATION_TYPES.has(type)) continue;
 
         let baseScale = scaleRange.base;
         let scaleVar = scaleRange.variance;
@@ -7108,7 +7127,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
       // Add major landmarks from LEVEL_DATA if defined
       const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
-      if (levelDecorations) {
+      if (levelDecorations && landscapeSettings.showLandmarks) {
         const specialTowerWorldPositions = getLevelSpecialTowers(selectedMap).map((tower) =>
           gridToWorld(tower.pos)
         );
@@ -7680,22 +7699,27 @@ export function usePrincetonTowerDefenseRuntime() {
     });
     // Collect range reticle data (rendered in consolidated reticle pass, not depth-sorted with entities)
     const pendingRangeReticles: Array<{ kind: "station" | "tower"; tower: Tower & { isHovered?: boolean } }> = [];
-    towers.forEach((tower) => {
-      if (tower.type === "station" && tower.spawnRange) {
-        const isHovered = hoveredTower === tower.id;
-        pendingRangeReticles.push({ kind: "station", tower: { ...tower, isHovered } });
-      }
-    });
-    if (selectedTower) {
-      const tower = towers.find((t) => t.id === selectedTower);
-      if (tower && TOWER_DATA[tower.type].range > 0) {
-        pendingRangeReticles.push({ kind: "tower", tower });
-      }
+    const uiSettings = getGameSettings().ui;
+    if (uiSettings.showTowerRadii) {
+      towers.forEach((tower) => {
+        if (tower.type === "station" && tower.spawnRange) {
+          const isHovered = hoveredTower === tower.id;
+          pendingRangeReticles.push({ kind: "station", tower: { ...tower, isHovered } });
+        }
+      });
     }
-    if (hoveredTower && hoveredTower !== selectedTower) {
-      const tower = towers.find((t) => t.id === hoveredTower);
-      if (tower && TOWER_DATA[tower.type].range > 0) {
-        pendingRangeReticles.push({ kind: "tower", tower: { ...tower, isHovered: true } });
+    if (uiSettings.showRangeIndicators) {
+      if (selectedTower) {
+        const tower = towers.find((t) => t.id === selectedTower);
+        if (tower && TOWER_DATA[tower.type].range > 0) {
+          pendingRangeReticles.push({ kind: "tower", tower });
+        }
+      }
+      if (hoveredTower && hoveredTower !== selectedTower) {
+        const tower = towers.find((t) => t.id === hoveredTower);
+        if (tower && TOWER_DATA[tower.type].range > 0) {
+          pendingRangeReticles.push({ kind: "tower", tower: { ...tower, isHovered: true } });
+        }
       }
     }
     enemies.forEach((enemy) => {
@@ -8764,7 +8788,7 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     }
 
-    if (primedWaveBubble) {
+    if (primedWaveBubble && getGameSettings().ui.showWavePreview) {
       const { screenPos, radius, pathKey, pathLabel } = primedWaveBubble;
       const pathEntries = incomingWavePreviewByPath.get(pathKey) ?? [];
       const listRows = pathEntries.slice(0, 4);

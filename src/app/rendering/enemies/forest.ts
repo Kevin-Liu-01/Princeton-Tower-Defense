@@ -1,3 +1,8 @@
+import {
+  drawPulsingGlowRings,
+  drawShiftingSegments,
+  drawOrbitingDebris,
+} from "./animationHelpers";
 
 // =====================================================
 // FOREST REGION TROOPS
@@ -478,6 +483,41 @@ export function drawAthleteEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // --- ANIMATED EFFECTS ---
+
+  // Speed aura glow rings around feet
+  drawPulsingGlowRings(ctx, x, y + size * 0.35 - bounce, size * 0.18, time, zoom, {
+    color: "rgba(255, 200, 100, 0.4)",
+    count: 3,
+    speed: 2.5,
+    maxAlpha: isAttacking ? 0.45 : 0.3,
+    expansion: 1.2,
+    lineWidth: 1.2,
+  });
+
+  // Dust / speed particles orbiting body
+  drawOrbitingDebris(ctx, x, y - size * 0.1 - bounce, size, time, zoom, {
+    color: "rgba(200, 180, 140, 0.6)",
+    glowColor: "rgba(255, 220, 160, 0.25)",
+    count: isAttacking ? 7 : 5,
+    speed: isAttacking ? 3.5 : 2.2,
+    particleSize: 0.015,
+    minRadius: 0.3,
+    maxRadius: 0.5,
+    trailLen: 2,
+  });
+
+  // Floating energy fragments around torso
+  drawShiftingSegments(ctx, x, y - size * 0.15 - bounce, size, time, zoom, {
+    color: bodyColor,
+    colorAlt: bodyColorLight,
+    count: 4,
+    orbitRadius: 0.35,
+    segmentSize: 0.025,
+    orbitSpeed: 1.8,
+    shape: "circle",
+  });
 }
 
 export function drawProtestorEnemy(
@@ -1115,4 +1155,39 @@ export function drawProtestorEnemy(
       ctx.fill();
     }
   }
+
+  // --- ANIMATED EFFECTS ---
+
+  // Protest energy glow rings (warm orange/red)
+  drawPulsingGlowRings(ctx, headX, y - size * 0.1 - marchBob, size * 0.25, time, zoom, {
+    color: "rgba(255, 130, 60, 0.4)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: isAttacking ? 0.5 : 0.3,
+    expansion: 1.4,
+    lineWidth: 1.5,
+  });
+
+  // Floating sign fragments / debris orbiting body
+  drawShiftingSegments(ctx, headX, y - size * 0.15 - marchBob, size, time, zoom, {
+    color: "#f0f0e8",
+    colorAlt: bodyColor,
+    count: 5,
+    orbitRadius: 0.38,
+    segmentSize: 0.03,
+    orbitSpeed: 1.2,
+    shape: "shard",
+  });
+
+  // Leaves / paper particles orbiting
+  drawOrbitingDebris(ctx, headX, y - size * 0.05 - marchBob, size, time, zoom, {
+    color: "rgba(100, 160, 60, 0.7)",
+    glowColor: "rgba(140, 180, 80, 0.2)",
+    count: 6,
+    speed: 1.6,
+    particleSize: 0.018,
+    minRadius: 0.28,
+    maxRadius: 0.48,
+    trailLen: 2,
+  });
 }

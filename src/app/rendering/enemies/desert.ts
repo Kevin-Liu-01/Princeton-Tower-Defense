@@ -2,6 +2,14 @@
 
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawRadialAura } from "./helpers";
+import {
+  drawAnimatedArm,
+  drawAnimatedLegs,
+  drawPulsingGlowRings,
+  drawShiftingSegments,
+  drawAnimatedTendril,
+  drawFloatingPiece,
+} from "./animationHelpers";
 
 // =====================================================
 // DESERT REGION TROOPS
@@ -124,6 +132,45 @@ export function drawNomadEnemy(
     ctx.fill();
   }
 
+
+  // Animated walking legs (visible beneath robe)
+  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+    color: "#5c4a3a",
+    colorDark: "#3d2e22",
+    footColor: "#2a1f16",
+    strideSpeed: 4,
+    strideAmt: 0.25,
+    legLen: 0.2,
+    width: 0.04,
+  });
+
+  // Animated arms (sandy/brown tones, peek from beneath robe)
+  drawAnimatedArm(ctx, x - size * 0.28, y - size * 0.15, size, time, zoom, -1, {
+    color: "#8b7355",
+    colorDark: "#5c4a3a",
+    handColor: "#6b5a48",
+    swingSpeed: 2,
+    swingAmt: 0.15,
+    baseAngle: 0.4,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    elbowBend: 0.3,
+    attackExtra: isAttacking ? 0.5 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.28, y - size * 0.15, size, time, zoom, 1, {
+    color: "#8b7355",
+    colorDark: "#5c4a3a",
+    handColor: "#6b5a48",
+    swingSpeed: 2,
+    swingAmt: 0.1,
+    baseAngle: 0.3,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    phaseOffset: Math.PI,
+    elbowBend: 0.35,
+  });
 
   // Outer flowing robe layer with wind
   ctx.fillStyle = `rgba(${bodyColorDark.slice(1).match(/../g)?.map(h => parseInt(h, 16)).join(", ") || "40,30,20"}, 0.4)`;
@@ -543,6 +590,27 @@ export function drawNomadEnemy(
     size * 0.05, size * 0.03, 0, 0, Math.PI,
   );
   ctx.fill();
+
+  // Golden sand glow rings
+  drawPulsingGlowRings(ctx, x, y, size * 0.4, time, zoom, {
+    color: "rgba(251, 191, 36, 0.4)",
+    count: 3,
+    speed: 1.2,
+    maxAlpha: 0.3,
+    expansion: 1.8,
+    lineWidth: 1.5,
+  });
+
+  // Floating sand crystal shards
+  drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
+    color: "#c2986c",
+    colorAlt: "#d4a520",
+    count: 5,
+    orbitRadius: 0.4,
+    segmentSize: 0.03,
+    orbitSpeed: 1.0,
+    shape: "shard",
+  });
 
   // Wind-blown sand particles
   for (let wp = 0; wp < 12; wp++) {
@@ -1089,6 +1157,70 @@ export function drawScorpionEnemy(
       ctx.fill();
     }
   }
+
+  // Animated tail tendril overlay
+  drawAnimatedTendril(ctx, tailX + size * 0.08, tailY - size * 0.02, -0.8, size, time, zoom, {
+    color: bodyColorDark,
+    tipColor: "rgba(34, 197, 94, 0.7)",
+    length: 0.15,
+    width: 0.025,
+    segments: 6,
+    waveSpeed: 5,
+    waveAmt: 0.03,
+    tipRadius: 0.012,
+  });
+
+  // Animated pincer accents via arm helper
+  drawAnimatedArm(ctx, x - size * 0.25, y - size * 0.15, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    swingSpeed: 3,
+    swingAmt: 0.2,
+    baseAngle: -0.6,
+    upperLen: 0.12,
+    foreLen: 0.1,
+    width: 0.04,
+    handColor: bodyColorDark,
+    handRadius: 0.03,
+    elbowBend: -0.3,
+    attackExtra: isAttacking ? 0.6 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.25, y - size * 0.15, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    swingSpeed: 3,
+    swingAmt: 0.2,
+    baseAngle: -0.6,
+    upperLen: 0.12,
+    foreLen: 0.1,
+    width: 0.04,
+    handColor: bodyColorDark,
+    handRadius: 0.03,
+    phaseOffset: Math.PI,
+    elbowBend: -0.3,
+    attackExtra: isAttacking ? 0.6 : 0,
+  });
+
+  // Pulsing amber glow rings
+  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
+    color: "rgba(245, 158, 11, 0.4)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.25,
+    expansion: 1.4,
+    lineWidth: 1.5,
+  });
+
+  // Floating chitin segments (diamond shape)
+  drawShiftingSegments(ctx, x, y - size * 0.05, size, time, zoom, {
+    color: bodyColor,
+    colorAlt: bodyColorDark,
+    count: 6,
+    orbitRadius: 0.45,
+    segmentSize: 0.035,
+    orbitSpeed: 1.2,
+    shape: "diamond",
+  });
 }
 
 export function drawScarabEnemy(
@@ -1538,4 +1670,85 @@ export function drawScarabEnemy(
       ctx.stroke();
     }
   }
+
+  // Animated leg-like appendages (supplemental scuttle effect)
+  drawAnimatedLegs(ctx, x, y + size * 0.15 + hoverFloat, size, time, zoom, {
+    color: bodyColorDark,
+    colorDark: "#0a0805",
+    footColor: "#1a1510",
+    strideSpeed: 12,
+    strideAmt: 0.2,
+    legLen: 0.12,
+    width: 0.03,
+    shuffle: true,
+  });
+
+  // Mandible animations (animated tendrils)
+  drawAnimatedTendril(ctx, x - size * 0.05, y - size * 0.28 + hoverFloat, -1.8, size, time, zoom, {
+    color: "#1a1510",
+    tipColor: bodyColorDark,
+    length: 0.1,
+    width: 0.02,
+    segments: 4,
+    waveSpeed: 6,
+    waveAmt: 0.02,
+    tipRadius: 0.01,
+  });
+  drawAnimatedTendril(ctx, x + size * 0.05, y - size * 0.28 + hoverFloat, -1.3, size, time, zoom, {
+    color: "#1a1510",
+    tipColor: bodyColorDark,
+    length: 0.1,
+    width: 0.02,
+    segments: 4,
+    waveSpeed: 6,
+    waveAmt: 0.02,
+    tipRadius: 0.01,
+  });
+
+  // Emerald/gold pulsing glow rings
+  drawPulsingGlowRings(ctx, x, y + hoverFloat, size * 0.35, time, zoom, {
+    color: "rgba(52, 211, 153, 0.4)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.3,
+    expansion: 1.6,
+    lineWidth: 1.5,
+  });
+  drawPulsingGlowRings(ctx, x, y + hoverFloat, size * 0.25, time, zoom, {
+    color: "rgba(251, 191, 36, 0.3)",
+    count: 2,
+    speed: 1.2,
+    maxAlpha: 0.2,
+    expansion: 1.3,
+    lineWidth: 1,
+  });
+
+  // Floating wing case segments
+  drawShiftingSegments(ctx, x, y + hoverFloat, size, time, zoom, {
+    color: bodyColor,
+    colorAlt: bodyColorLight,
+    count: 5,
+    orbitRadius: 0.42,
+    segmentSize: 0.035,
+    orbitSpeed: 1.5,
+    shape: "shard",
+  });
+
+  // Floating wing case accent pieces
+  drawFloatingPiece(ctx, x - size * 0.35, y - size * 0.05 + hoverFloat, size, time, 0, {
+    width: 0.08,
+    height: 0.05,
+    color: bodyColorDark,
+    colorEdge: "#1a1510",
+    bobSpeed: 3,
+    bobAmt: 0.025,
+  });
+  drawFloatingPiece(ctx, x + size * 0.35, y - size * 0.05 + hoverFloat, size, time, Math.PI, {
+    width: 0.08,
+    height: 0.05,
+    color: bodyColorDark,
+    colorEdge: "#1a1510",
+    bobSpeed: 3,
+    bobAmt: 0.025,
+  });
 }

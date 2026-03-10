@@ -2,6 +2,7 @@
 // Extracted from enemies/index.ts
 
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 
 export function drawThornwalkerEnemy(
@@ -94,6 +95,20 @@ export function drawThornwalkerEnemy(
   );
   ctx.stroke();
   clearShadow(ctx);
+
+  // Animated vine tendrils (nature arms)
+  for (const side of [-1, 1] as const) {
+    drawAnimatedTendril(ctx, x + side * size * 0.2, y - size * 0.1, side * -1.2, size, time, zoom, {
+      color: "#22c55e",
+      tipColor: "#84cc16",
+      length: 0.35,
+      width: 0.025,
+      segments: 10,
+      waveSpeed: 3,
+      waveAmt: 0.08,
+      tipRadius: 0.018,
+    });
+  }
 
   // Main trunk body
   const trunkGrad = ctx.createLinearGradient(
@@ -604,6 +619,41 @@ export function drawThornwalkerEnemy(
     );
     ctx.fill();
   }
+
+  // Nature glow rings
+  drawPulsingGlowRings(ctx, x, y, size * 0.35, time, zoom, {
+    color: "rgba(74, 222, 128, 0.4)",
+    count: 3,
+    speed: 1.2,
+    maxAlpha: 0.3,
+    expansion: 1.2,
+  });
+
+  // Floating thorn/leaf shards
+  drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
+    color: "#22c55e",
+    colorAlt: "#2d3a1a",
+    count: 5,
+    orbitRadius: 0.4,
+    segmentSize: 0.035,
+    orbitSpeed: 0.8,
+    bobSpeed: 2.5,
+    bobAmt: 0.03,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
+  // Nature orbiting debris
+  drawOrbitingDebris(ctx, x, y, size, time, zoom, {
+    color: "#84cc16",
+    glowColor: "rgba(132, 204, 22, 0.3)",
+    count: 4,
+    speed: 1.5,
+    particleSize: 0.015,
+    minRadius: 0.35,
+    maxRadius: 0.55,
+    trailLen: 2,
+  });
 
   // Enhanced attack: thorns extend, vines lash forward, leaves scatter
   if (isAttacking) {
@@ -1157,6 +1207,21 @@ export function drawSandwormEnemy(
   ctx.fill();
   clearShadow(ctx);
 
+  // Animated tendrils around maw
+  for (let i = 0; i < 4; i++) {
+    const tendrilAngle = -Math.PI * 0.5 + i * Math.PI * 0.4 + Math.sin(time * 1.5) * 0.15;
+    drawAnimatedTendril(ctx, headX, headY, tendrilAngle, size, time, zoom, {
+      color: bodyColor,
+      tipColor: "rgba(161, 98, 7, 0.6)",
+      length: 0.25,
+      width: 0.02,
+      segments: 7,
+      waveSpeed: 5,
+      waveAmt: 0.05,
+      tipRadius: 0.012,
+    });
+  }
+
   // Paper scraps being devoured
   for (let p = 0; p < 6; p++) {
     const paperPhase = (time * 2 + p * 0.167) % 1;
@@ -1176,6 +1241,41 @@ export function drawSandwormEnemy(
     ctx.fillRect(-size * 0.02, -size * 0.01, size * 0.03, size * 0.005);
     ctx.restore();
   }
+
+  // Amber glow rings
+  drawPulsingGlowRings(ctx, x, y + size * 0.2, size * 0.4, time, zoom, {
+    color: "rgba(217, 159, 60, 0.4)",
+    count: 3,
+    speed: 1.0,
+    maxAlpha: 0.25,
+    expansion: 1.4,
+  });
+
+  // Shifting sand segments
+  drawShiftingSegments(ctx, x, y + size * 0.1, size, time, zoom, {
+    color: "rgba(194, 143, 64, 0.6)",
+    colorAlt: "rgba(161, 98, 7, 0.5)",
+    count: 6,
+    orbitRadius: 0.45,
+    segmentSize: 0.03,
+    orbitSpeed: 0.7,
+    bobSpeed: 2,
+    bobAmt: 0.04,
+    shape: "circle",
+    rotateWithOrbit: false,
+  });
+
+  // Earth-colored orbiting debris
+  drawOrbitingDebris(ctx, x, y + size * 0.2, size, time, zoom, {
+    color: "#92400e",
+    glowColor: "rgba(161, 98, 7, 0.3)",
+    count: 5,
+    speed: 1.2,
+    particleSize: 0.018,
+    minRadius: 0.3,
+    maxRadius: 0.5,
+    trailLen: 2,
+  });
 
   // Attack: ground shockwave ripple + maw flare
   if (isAttacking) {
@@ -1345,6 +1445,34 @@ export function drawFrostlingEnemy(
     );
     ctx.fill();
   }
+
+  // Frost animated arms
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.25, y + floatOffset - size * 0.1, size, time, zoom, side, {
+      color: "rgba(186, 230, 253, 0.6)",
+      colorDark: "rgba(125, 211, 252, 0.5)",
+      handColor: "rgba(224, 242, 254, 0.7)",
+      swingSpeed: 3,
+      swingAmt: 0.3,
+      baseAngle: 0.4,
+      upperLen: 0.16,
+      foreLen: 0.14,
+      width: 0.04,
+      handRadius: 0.025,
+    });
+  }
+
+  // Frost legs shuffling
+  drawAnimatedLegs(ctx, x, y + floatOffset + size * 0.25, size, time, zoom, {
+    color: "rgba(186, 230, 253, 0.4)",
+    colorDark: "rgba(125, 211, 252, 0.3)",
+    footColor: "rgba(224, 242, 254, 0.5)",
+    strideSpeed: 3,
+    strideAmt: 0.2,
+    legLen: 0.14,
+    width: 0.035,
+    shuffle: true,
+  });
 
   // Main ghostly body with enhanced transparency layers
   // Outer transparency layer
@@ -1647,6 +1775,29 @@ export function drawFrostlingEnemy(
     }
   }
 
+  // Blue frost glow rings
+  drawPulsingGlowRings(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
+    color: "rgba(56, 189, 248, 0.4)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.3,
+    expansion: 1.3,
+  });
+
+  // Floating ice crystal shards
+  drawShiftingSegments(ctx, x, y + floatOffset, size, time, zoom, {
+    color: "rgba(224, 242, 254, 0.8)",
+    colorAlt: "rgba(186, 230, 253, 0.7)",
+    count: 6,
+    orbitRadius: 0.38,
+    segmentSize: 0.03,
+    orbitSpeed: 1.2,
+    bobSpeed: 3,
+    bobAmt: 0.03,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
   // Snowflake particles floating around (detailed 6-pointed)
   for (let s = 0; s < 10; s++) {
     const snowPhase = (time * 0.5 + s * 0.1) % 1;
@@ -1807,6 +1958,35 @@ export function drawInfernalEnemy(
 
     ctx.restore();
   }
+
+  // Flame animated arms
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.32 + rageShake, y - size * 0.08 + heatWave, size, time, zoom, side, {
+      color: bodyColorDark,
+      colorDark: "#1c1917",
+      handColor: `rgba(251, 146, 60, ${flamePulse})`,
+      swingSpeed: 5,
+      swingAmt: 0.4,
+      baseAngle: 0.35,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      width: 0.06,
+      handRadius: 0.03,
+      elbowBend: 0.5,
+      attackExtra: isAttacking ? attackPhase : 0,
+    });
+  }
+
+  // Fire-stepping legs
+  drawAnimatedLegs(ctx, x + rageShake, y + size * 0.35 + heatWave, size, time, zoom, {
+    color: bodyColorDark,
+    colorDark: "#1c1917",
+    footColor: `rgba(251, 146, 60, ${flamePulse * 0.5})`,
+    strideSpeed: 4,
+    strideAmt: 0.25,
+    legLen: 0.18,
+    width: 0.06,
+  });
 
   // Body - cracked obsidian with muscular detail
   const bodyGrad = ctx.createLinearGradient(
@@ -2249,6 +2429,30 @@ export function drawInfernalEnemy(
     }
   }
 
+  // Orange-red glow rings
+  drawPulsingGlowRings(ctx, x + rageShake, y + heatWave, size * 0.35, time, zoom, {
+    color: "rgba(251, 146, 60, 0.5)",
+    count: 3,
+    speed: 2.0,
+    maxAlpha: 0.35,
+    expansion: 1.5,
+  });
+
+  // Floating ember segments
+  drawShiftingSegments(ctx, x + rageShake, y + heatWave, size, time, zoom, {
+    color: "rgba(220, 38, 38, 0.7)",
+    colorAlt: "rgba(251, 191, 36, 0.6)",
+    count: 7,
+    orbitRadius: 0.4,
+    segmentSize: 0.03,
+    orbitSpeed: 1.5,
+    bobSpeed: 4,
+    bobAmt: 0.04,
+    shape: "diamond",
+    rotateWithOrbit: true,
+  });
+
+
   // Attack: body engulfs in fire, fireball forms between hands
   if (isAttacking) {
     const engulfGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.6);
@@ -2497,6 +2701,37 @@ export function drawBansheeEnemy(
       y + floatOffset,
     );
     ctx.stroke();
+  }
+
+  // Ghostly animated arms (reaching/wailing)
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.22, y + floatOffset - size * 0.15, size, time, zoom, side, {
+      color: `rgba(226, 232, 240, ${wailIntensity * 0.5})`,
+      colorDark: `rgba(203, 213, 225, ${wailIntensity * 0.4})`,
+      handColor: `rgba(148, 163, 184, ${wailIntensity * 0.6})`,
+      swingSpeed: 2.5,
+      swingAmt: 0.5,
+      baseAngle: 0.2,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      width: 0.035,
+      handRadius: 0.02,
+      phaseOffset: side * 0.8,
+    });
+  }
+
+  // Animated tendrils below (floating wispy appendages)
+  for (let i = 0; i < 3; i++) {
+    const tendrilAngle = Math.PI * 0.35 + i * Math.PI * 0.15;
+    drawAnimatedTendril(ctx, x + (i - 1) * size * 0.12, y + floatOffset + size * 0.3, tendrilAngle, size, time, zoom, {
+      color: `rgba(203, 213, 225, ${wailIntensity * 0.35})`,
+      tipColor: `rgba(148, 163, 184, ${wailIntensity * 0.2})`,
+      length: 0.25,
+      width: 0.02,
+      segments: 8,
+      waveSpeed: 3,
+      waveAmt: 0.06,
+    });
   }
 
   // Main spectral body
@@ -2817,6 +3052,29 @@ export function drawBansheeEnemy(
     ctx.restore();
   }
 
+  // Spectral glow rings
+  drawPulsingGlowRings(ctx, x, y + floatOffset, size * 0.3, time, zoom, {
+    color: "rgba(148, 163, 184, 0.4)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.25,
+    expansion: 1.4,
+  });
+
+  // Floating ethereal shards
+  drawShiftingSegments(ctx, x, y + floatOffset, size, time, zoom, {
+    color: "rgba(226, 232, 240, 0.5)",
+    colorAlt: "rgba(203, 213, 225, 0.4)",
+    count: 5,
+    orbitRadius: 0.42,
+    segmentSize: 0.025,
+    orbitSpeed: 1.0,
+    bobSpeed: 2.5,
+    bobAmt: 0.04,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
   // Attack: wail waves intensify, chains rattle outward, mouth flare
   if (isAttacking) {
     for (let aw = 0; aw < 6; aw++) {
@@ -3045,6 +3303,19 @@ export function drawJuggernautEnemy(
     );
     ctx.stroke();
   }
+
+  // Heavy stomping animated legs
+  drawAnimatedLegs(ctx, x + groundShake, y + size * 0.38, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "#3f3f46",
+    strideSpeed: 2,
+    strideAmt: 0.15,
+    legLen: 0.2,
+    width: 0.07,
+    shuffle: false,
+    phaseOffset: stomp,
+  });
 
   // ── Massive legs with armored greaves ──
   for (let leg = 0; leg < 2; leg++) {
@@ -3492,6 +3763,24 @@ export function drawJuggernautEnemy(
     ctx.stroke();
   }
 
+  // Massive armored animated arms (slow swing)
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.42 + groundShake, y - size * 0.12 + breathCycle * 0.5, size, time, zoom, side, {
+      color: bodyColor,
+      colorDark: bodyColorDark,
+      handColor: "#52525b",
+      swingSpeed: 2,
+      swingAmt: 0.2,
+      baseAngle: 0.3,
+      upperLen: 0.22,
+      foreLen: 0.2,
+      width: 0.07,
+      handRadius: 0.04,
+      elbowBend: 0.35,
+      attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+    });
+  }
+
   // ── Powerful arms with gauntlets ──
   for (let arm = 0; arm < 2; arm++) {
     const aDir = arm === 0 ? -1 : 1;
@@ -3914,6 +4203,44 @@ export function drawJuggernautEnemy(
     ctx.fill();
   }
 
+  // Dark metallic glow rings
+  drawPulsingGlowRings(ctx, x + groundShake, y, size * 0.4, time, zoom, {
+    color: "rgba(212, 175, 55, 0.4)",
+    count: 2,
+    speed: 1.0,
+    maxAlpha: 0.2,
+    expansion: 1.2,
+    lineWidth: 2,
+  });
+
+  // Floating armor plate segments (diamond shape)
+  drawShiftingSegments(ctx, x + groundShake, y, size, time, zoom, {
+    color: "#52525b",
+    colorAlt: "#3f3f46",
+    count: 5,
+    orbitRadius: 0.48,
+    segmentSize: 0.04,
+    orbitSpeed: 0.6,
+    bobSpeed: 1.5,
+    bobAmt: 0.025,
+    shape: "diamond",
+    rotateWithOrbit: true,
+  });
+
+  // Floating shoulder pieces
+  for (const side of [-1, 1] as const) {
+    drawFloatingPiece(ctx, x + side * size * 0.5 + groundShake, y - size * 0.18 + breathCycle * 0.3, size, time, side * 1.5, {
+      width: 0.1,
+      height: 0.06,
+      color: "#3f3f46",
+      colorEdge: "#27272a",
+      bobSpeed: 2,
+      bobAmt: 0.015,
+      rotateSpeed: 1.5,
+      rotateAmt: 0.08,
+    });
+  }
+
   // ── Ambient gold energy wisps around body ──
   for (let w = 0; w < 3; w++) {
     const wPhase = time * 1.8 + w * 2.1;
@@ -3973,6 +4300,35 @@ export function drawAssassinEnemy(
   ctx.beginPath();
   ctx.arc(x, y, size * 0.65, 0, Math.PI * 2);
   ctx.fill();
+
+  // Quick-moving animated arms (fast swing)
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.18 + blurForward, y - size * 0.05, size, time, zoom, side, {
+      color: bodyColor,
+      colorDark: bodyColorDark,
+      handColor: `rgba(167, 139, 250, ${shadowFlicker})`,
+      swingSpeed: 8,
+      swingAmt: 0.45,
+      baseAngle: 0.5,
+      upperLen: 0.15,
+      foreLen: 0.14,
+      width: 0.04,
+      handRadius: 0.02,
+      elbowBend: 0.5,
+      attackExtra: isAttacking ? attackPhase * 0.8 : 0,
+    });
+  }
+
+  // Agile legs
+  drawAnimatedLegs(ctx, x + blurForward, y + size * 0.32, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "rgba(30, 27, 75, 0.8)",
+    strideSpeed: 8,
+    strideAmt: 0.35,
+    legLen: 0.14,
+    width: 0.04,
+  });
 
   // Shadow clone afterimages (2-3 semi-transparent copies trailing)
   for (let clone = 2; clone >= 0; clone--) {
@@ -4526,6 +4882,29 @@ export function drawAssassinEnemy(
     ctx.fill();
   }
 
+  // Subtle dark glow rings
+  drawPulsingGlowRings(ctx, x, y, size * 0.28, time, zoom, {
+    color: "rgba(88, 28, 135, 0.35)",
+    count: 2,
+    speed: 2.0,
+    maxAlpha: 0.2,
+    expansion: 1.0,
+  });
+
+  // Floating shadow blade shards
+  drawShiftingSegments(ctx, x, y, size, time, zoom, {
+    color: "rgba(30, 27, 75, 0.7)",
+    colorAlt: "rgba(167, 139, 250, 0.4)",
+    count: 4,
+    orbitRadius: 0.35,
+    segmentSize: 0.025,
+    orbitSpeed: 2.0,
+    bobSpeed: 4,
+    bobAmt: 0.03,
+    shape: "shard",
+    rotateWithOrbit: true,
+  });
+
   // Poison mist at ground level
   for (let pm = 0; pm < 4; pm++) {
     const pmPhase = (time * 0.8 + pm * 0.25) % 1;
@@ -4705,6 +5084,36 @@ export function drawDragonEnemy(
     }
     ctx.restore();
   };
+
+  // Powerful stomping animated legs (behind body)
+  drawAnimatedLegs(ctx, x, y + size * 0.4 + hover, size, time, zoom, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    footColor: "#1c1917",
+    strideSpeed: 2.5,
+    strideAmt: 0.2,
+    legLen: 0.22,
+    width: 0.07,
+    phaseOffset: shoulderLift,
+  });
+
+  // Powerful clawed animated arms
+  for (const side of [-1, 1] as const) {
+    drawAnimatedArm(ctx, x + side * size * 0.35, y + size * 0.05 + hover, size, time, zoom, side, {
+      color: bodyColor,
+      colorDark: bodyColorDark,
+      handColor: "#1c1917",
+      swingSpeed: 2.5,
+      swingAmt: 0.25,
+      baseAngle: 0.35,
+      upperLen: 0.22,
+      foreLen: 0.2,
+      width: 0.065,
+      handRadius: 0.035,
+      elbowBend: 0.4,
+      attackExtra: isAttacking ? attackPhase * 0.4 : 0,
+    });
+  }
 
   // WINGS (behind body)
   drawWing(-1);
@@ -5308,4 +5717,40 @@ export function drawDragonEnemy(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("P", x, y + size * 0.15 + hover);
+
+  // Fire/storm glow rings
+  drawPulsingGlowRings(ctx, x, y + hover, size * 0.45, time, zoom, {
+    color: "rgba(255, 100, 50, 0.4)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.3,
+    expansion: 1.5,
+  });
+
+  // Floating scale segments
+  drawShiftingSegments(ctx, x, y + hover, size, time, zoom, {
+    color: bodyColorLight,
+    colorAlt: bodyColor,
+    count: 7,
+    orbitRadius: 0.5,
+    segmentSize: 0.035,
+    orbitSpeed: 0.8,
+    bobSpeed: 2,
+    bobAmt: 0.03,
+    shape: "diamond",
+    rotateWithOrbit: true,
+  });
+
+  // Orbiting fire debris
+  drawOrbitingDebris(ctx, x, y + hover, size, time, zoom, {
+    color: "#fbbf24",
+    glowColor: "rgba(251, 191, 36, 0.4)",
+    count: 6,
+    speed: 1.8,
+    particleSize: 0.018,
+    minRadius: 0.4,
+    maxRadius: 0.65,
+    trailLen: 3,
+  });
+
 }

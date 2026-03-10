@@ -3,6 +3,7 @@ import {
   drawEyes,
   drawRobeBody,
 } from "./helpers";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris } from "./animationHelpers";
 
 export function drawFreshmanEnemy(
   ctx: CanvasRenderingContext2D,
@@ -184,6 +185,37 @@ export function drawFreshmanEnemy(
     }
     ctx.stroke();
   }
+
+  // Animated legs beneath robe
+  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+    color: "#2a5a2a",
+    colorDark: "#1a3a1a",
+    footColor: "#0a1a0a",
+    strideSpeed: 3,
+    strideAmt: 0.2,
+    shuffle: true,
+  });
+
+  // Animated arms behind robe
+  drawAnimatedArm(ctx, x - size * 0.28, y - size * 0.05, size, time, zoom, -1, {
+    color: "#2a5a2a",
+    colorDark: "#1a3a1a",
+    handColor: "#4ade80",
+    swingSpeed: 3.5,
+    swingAmt: 0.25,
+    baseAngle: 0.35,
+    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.28, y - size * 0.05, size, time, zoom, 1, {
+    color: "#2a5a2a",
+    colorDark: "#1a3a1a",
+    handColor: "#4ade80",
+    swingSpeed: 3.5,
+    swingAmt: 0.25,
+    baseAngle: 0.35,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+  });
 
   // Tattered robes with corruption spreading
   const robeGrad = ctx.createLinearGradient(
@@ -421,6 +453,33 @@ export function drawFreshmanEnemy(
   ctx.closePath();
   ctx.stroke();
   ctx.restore();
+
+  // Pulsing green glow rings around hands
+  drawPulsingGlowRings(ctx, x - size * 0.32, y + size * 0.25, size * 0.06, time, zoom, {
+    color: "rgba(74, 222, 128, 0.5)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.35 + (isAttacking ? attackIntensity * 0.3 : 0),
+    expansion: 1.8,
+  });
+  drawPulsingGlowRings(ctx, x + size * 0.32, y + size * 0.25, size * 0.06, time, zoom, {
+    color: "rgba(74, 222, 128, 0.5)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.35 + (isAttacking ? attackIntensity * 0.3 : 0),
+    expansion: 1.8,
+  });
+
+  // Floating rune shards
+  drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
+    color: "rgba(74, 222, 128, 0.6)",
+    colorAlt: "rgba(120, 255, 160, 0.5)",
+    count: 5,
+    orbitRadius: 0.42,
+    segmentSize: 0.03,
+    orbitSpeed: 1.2,
+    shape: "shard",
+  });
 }
 
 export function drawSophomoreEnemy(
@@ -516,6 +575,36 @@ export function drawSophomoreEnemy(
     ctx.fill();
   }
 
+  // Animated legs beneath robe
+  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+    color: "#1e3a5f",
+    colorDark: "#0c1929",
+    footColor: "#0a1525",
+    strideSpeed: 4.5,
+    strideAmt: 0.28,
+    phaseOffset: 0.5,
+  });
+
+  // Animated arms behind robe
+  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.05, size, time, zoom, -1, {
+    color: "#1e3a5f",
+    colorDark: "#0c1929",
+    handColor: "#93c5fd",
+    swingSpeed: 4,
+    swingAmt: 0.3,
+    baseAngle: 0.3,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.05, size, time, zoom, 1, {
+    color: "#1e3a5f",
+    colorDark: "#0c1929",
+    handColor: "#93c5fd",
+    swingSpeed: 4,
+    swingAmt: 0.3,
+    baseAngle: 0.3,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
 
   // Flowing apprentice robes with storm patterns
   const robeGrad = ctx.createLinearGradient(
@@ -784,6 +873,26 @@ export function drawSophomoreEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Lightning glow rings around spell hand
+  drawPulsingGlowRings(ctx, x + size * 0.42, y + swagger * 0.1, size * 0.08, time, zoom, {
+    color: "rgba(147, 197, 253, 0.6)",
+    count: 4,
+    speed: 2.5,
+    maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.3 : 0),
+    expansion: 2.0,
+  });
+
+  // Floating storm fragments
+  drawShiftingSegments(ctx, x, y - size * 0.15, size, time, zoom, {
+    color: "rgba(96, 165, 250, 0.5)",
+    colorAlt: "rgba(147, 197, 253, 0.4)",
+    count: 6,
+    orbitRadius: 0.38,
+    segmentSize: 0.025,
+    orbitSpeed: 2.0,
+    shape: "diamond",
+  });
 }
 
 export function drawJuniorEnemy(
@@ -938,6 +1047,36 @@ export function drawJuniorEnemy(
     ctx.restore();
   }
 
+  // Animated legs beneath robe
+  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+    color: "#3b0764",
+    colorDark: "#1e0a30",
+    footColor: "#0f0520",
+    strideSpeed: 5,
+    strideAmt: 0.32,
+    phaseOffset: 0.3,
+  });
+
+  // Animated arms behind robe
+  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.08, size, time, zoom, -1, {
+    color: "#3b0764",
+    colorDark: "#1e0a30",
+    handColor: "#c084fc",
+    swingSpeed: 4.5,
+    swingAmt: 0.28,
+    baseAngle: 0.32,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.08, size, time, zoom, 1, {
+    color: "#3b0764",
+    colorDark: "#1e0a30",
+    handColor: "#c084fc",
+    swingSpeed: 4.5,
+    swingAmt: 0.28,
+    baseAngle: 0.32,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
 
   // Disheveled scholar robes - worn and stained with ink
   const robeGrad = ctx.createLinearGradient(
@@ -1242,6 +1381,26 @@ export function drawJuniorEnemy(
   );
   ctx.fill();
   ctx.restore();
+
+  // Arcane glow rings around head
+  drawPulsingGlowRings(ctx, x, y - size * 0.35, size * 0.1, time, zoom, {
+    color: "rgba(192, 132, 252, 0.5)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.35 : 0),
+    expansion: 1.6,
+  });
+
+  // Floating crystal pieces
+  drawShiftingSegments(ctx, x, y - size * 0.05, size, time, zoom, {
+    color: "rgba(147, 51, 234, 0.5)",
+    colorAlt: "rgba(192, 132, 252, 0.4)",
+    count: 7,
+    orbitRadius: 0.4,
+    segmentSize: 0.028,
+    orbitSpeed: 1.5,
+    shape: "diamond",
+  });
 }
 
 export function drawSeniorEnemy(
@@ -1394,6 +1553,37 @@ export function drawSeniorEnemy(
     );
     ctx.stroke();
   }
+
+  // Animated legs beneath cloak
+  drawAnimatedLegs(ctx, x, y + size * 0.4 + floatHeight, size, time, zoom, {
+    color: "#2d1832",
+    colorDark: "#1f1225",
+    footColor: "#150818",
+    strideSpeed: 4,
+    strideAmt: 0.35,
+    phaseOffset: 0.2,
+  });
+
+  // Animated arms behind cloak
+  drawAnimatedArm(ctx, x - size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, -1, {
+    color: "#2d1832",
+    colorDark: "#1f1225",
+    handColor: "#f472b6",
+    swingSpeed: 3.5,
+    swingAmt: 0.32,
+    baseAngle: 0.35,
+    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, 1, {
+    color: "#2d1832",
+    colorDark: "#1f1225",
+    handColor: "#f472b6",
+    swingSpeed: 3.5,
+    swingAmt: 0.32,
+    baseAngle: 0.35,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+  });
 
   // === LAYER 4: THE LIVING GRADUATION CLOAK ===
   ctx.save();
@@ -1871,6 +2061,26 @@ export function drawSeniorEnemy(
     );
     ctx.fill();
   }
+
+  // Intense glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.12, time, zoom, {
+    color: "rgba(244, 114, 182, 0.5)",
+    count: 4,
+    speed: 2.2,
+    maxAlpha: 0.45 + (isAttacking ? attackIntensity * 0.35 : 0),
+    expansion: 2.0,
+  });
+
+  // Floating armor plates
+  drawShiftingSegments(ctx, x, y, size, time, zoom, {
+    color: "rgba(219, 39, 119, 0.5)",
+    colorAlt: "rgba(244, 114, 182, 0.4)",
+    count: 8,
+    orbitRadius: 0.45,
+    segmentSize: 0.035,
+    orbitSpeed: 1.3,
+    shape: "circle",
+  });
 }
 
 export function drawGradStudentEnemy(
@@ -1993,6 +2203,37 @@ export function drawGradStudentEnemy(
     ctx.restore();
   }
 
+  // Animated legs beneath lab coat
+  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+    color: "#d4d4d4",
+    colorDark: "#a3a3a3",
+    footColor: "#57534e",
+    strideSpeed: 3,
+    strideAmt: 0.18,
+    shuffle: true,
+    phaseOffset: 0.7,
+  });
+
+  // Animated arms behind lab coat
+  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.06, size, time, zoom, -1, {
+    color: "#d4d4d4",
+    colorDark: "#a3a3a3",
+    handColor: "#fbbf24",
+    swingSpeed: 3,
+    swingAmt: 0.2,
+    baseAngle: 0.3,
+    attackExtra: isAttacking ? attackIntensity * 0.35 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.06, size, time, zoom, 1, {
+    color: "#d4d4d4",
+    colorDark: "#a3a3a3",
+    handColor: "#fbbf24",
+    swingSpeed: 3,
+    swingAmt: 0.2,
+    baseAngle: 0.3,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.35 : 0,
+  });
 
   // Tattered lab coat with dimensional burns and chemical stains
   const coatGrad = ctx.createLinearGradient(
@@ -2339,6 +2580,26 @@ export function drawGradStudentEnemy(
     ctx.fillText(equations[e], 0, 0);
     ctx.restore();
   }
+
+  // Research glow rings around hands
+  drawPulsingGlowRings(ctx, x - size * 0.35, y + size * 0.15, size * 0.07, time, zoom, {
+    color: "rgba(251, 146, 60, 0.5)",
+    count: 3,
+    speed: 1.8,
+    maxAlpha: 0.35 + (isAttacking ? attackIntensity * 0.3 : 0),
+    expansion: 1.5,
+  });
+
+  // Floating paper/book pieces
+  drawShiftingSegments(ctx, x, y - size * 0.15, size, time, zoom, {
+    color: "rgba(254, 243, 199, 0.6)",
+    colorAlt: "rgba(251, 146, 60, 0.4)",
+    count: 6,
+    orbitRadius: 0.35,
+    segmentSize: 0.03,
+    orbitSpeed: 0.8,
+    shape: "shard",
+  });
 }
 
 export function drawProfessorEnemy(
@@ -2455,6 +2716,37 @@ export function drawProfessorEnemy(
     ctx.arc(px, py, size * 0.015 * (1 - pPhase * 0.5), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Animated legs beneath robes
+  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+    color: "#78716c",
+    colorDark: "#44403c",
+    footColor: "#292524",
+    strideSpeed: 3.5,
+    strideAmt: 0.25,
+    phaseOffset: 0.4,
+  });
+
+  // Animated arms behind robes
+  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, -1, {
+    color: "#78716c",
+    colorDark: "#44403c",
+    handColor: "#ef4444",
+    swingSpeed: 3,
+    swingAmt: 0.22,
+    baseAngle: 0.28,
+    attackExtra: isAttacking ? attackIntensity * 0.45 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, 1, {
+    color: "#78716c",
+    colorDark: "#44403c",
+    handColor: "#ef4444",
+    swingSpeed: 3,
+    swingAmt: 0.22,
+    baseAngle: 0.28,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.45 : 0,
+  });
 
   // Ancient tweed robes with depth
   const robeGrad = ctx.createLinearGradient(
@@ -2820,6 +3112,26 @@ export function drawProfessorEnemy(
       ctx.stroke();
     }
   }
+
+  // Powerful arcane glow
+  drawPulsingGlowRings(ctx, x - size * 0.35, y - size * 0.2 + hover, size * 0.08, time, zoom, {
+    color: "rgba(239, 68, 68, 0.5)",
+    count: 4,
+    speed: 2,
+    maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.35 : 0),
+    expansion: 1.8,
+  });
+
+  // Floating academic symbols
+  drawShiftingSegments(ctx, x, y - size * 0.1 + hover * 0.5, size, time, zoom, {
+    color: "rgba(239, 68, 68, 0.5)",
+    colorAlt: "rgba(248, 113, 113, 0.4)",
+    count: 6,
+    orbitRadius: 0.4,
+    segmentSize: 0.03,
+    orbitSpeed: 1.2,
+    shape: "diamond",
+  });
 }
 
 export function drawDeanEnemy(
@@ -2934,6 +3246,36 @@ export function drawDeanEnemy(
     ctx.restore();
   }
 
+  // Animated legs beneath robes
+  drawAnimatedLegs(ctx, x, y + size * 0.42 + hover * 0.5, size, time, zoom, {
+    color: "#1e1b4b",
+    colorDark: "#0f0a2a",
+    footColor: "#0a0520",
+    strideSpeed: 3,
+    strideAmt: 0.3,
+    phaseOffset: 0.1,
+  });
+
+  // Animated arms behind robes
+  drawAnimatedArm(ctx, x - size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, -1, {
+    color: "#1e1b4b",
+    colorDark: "#0f0a2a",
+    handColor: "#c084fc",
+    swingSpeed: 2.5,
+    swingAmt: 0.3,
+    baseAngle: 0.35,
+    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, 1, {
+    color: "#1e1b4b",
+    colorDark: "#0f0a2a",
+    handColor: "#c084fc",
+    swingSpeed: 2.5,
+    swingAmt: 0.3,
+    baseAngle: 0.35,
+    phaseOffset: Math.PI,
+    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+  });
 
   // Magnificent flowing robes with reality-warping edges
   ctx.save();
@@ -3313,4 +3655,35 @@ export function drawDeanEnemy(
   ctx.arc(0, -size * 0.62, size * 0.05, time * 3, time * 3 + Math.PI);
   ctx.stroke();
   ctx.restore();
+
+  // Dark powerful glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.15 + hover, size * 0.12, time, zoom, {
+    color: "rgba(168, 85, 247, 0.6)",
+    count: 5,
+    speed: 1.8,
+    maxAlpha: 0.5 + (isAttacking ? attackIntensity * 0.4 : 0),
+    expansion: 2.2,
+  });
+
+  // Floating scepter pieces and crown fragments
+  drawShiftingSegments(ctx, x, y - size * 0.05 + hover * 0.5, size, time, zoom, {
+    color: "rgba(168, 85, 247, 0.6)",
+    colorAlt: "rgba(201, 162, 39, 0.5)",
+    count: 8,
+    orbitRadius: 0.48,
+    segmentSize: 0.035,
+    orbitSpeed: 1.0,
+    shape: "shard",
+  });
+
+  // Orbiting void debris
+  drawOrbitingDebris(ctx, x, y + hover * 0.5, size, time, zoom, {
+    color: "#a855f7",
+    glowColor: "rgba(168, 85, 247, 0.3)",
+    count: 6,
+    speed: 1.5,
+    particleSize: 0.025,
+    minRadius: 0.3,
+    maxRadius: 0.55,
+  });
 }

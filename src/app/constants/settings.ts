@@ -158,7 +158,7 @@ export const DEFAULT_UI: UISettings = {
   showTowerRadii: true,
   showWavePreview: true,
   tooltipDelay: 400,
-  autoSendWaves: false,
+  autoSendWaves: true,
 };
 
 export const DEFAULT_AUDIO: AudioSettings = {

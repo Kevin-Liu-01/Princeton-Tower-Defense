@@ -1,6 +1,7 @@
 import type { Troop, Position, TroopOwnerType } from "../../types";
 import { TROOP_DATA, ISO_Y_RATIO } from "../../constants";
 import { worldToScreen, worldToScreenRounded } from "../../utils";
+import { getPerformanceSettings } from "../performance";
 
 import { drawSoldierTroop } from "./soldier";
 import { drawCavalryTroop } from "./cavalry";
@@ -217,7 +218,7 @@ export function renderTroop(
     }
   }
 
-  if (troop.hp < troop.maxHp) {
+  if (getPerformanceSettings().showHealthBars && troop.hp < troop.maxHp) {
     const barWidth = 32 * zoom;
     const barHeight = 5 * zoom;
     const barY = screenPos.y - size - 10 * zoom;

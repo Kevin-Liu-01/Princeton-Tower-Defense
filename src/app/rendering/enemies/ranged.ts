@@ -3,6 +3,14 @@ import {
   drawRadialAura,
   drawRobeBody,
 } from "./helpers";
+import {
+  drawAnimatedArm,
+  drawAnimatedLegs,
+  drawPulsingGlowRings,
+  drawShiftingSegments,
+  drawOrbitingDebris,
+  drawFloatingPiece,
+} from "./animationHelpers";
 
 export function drawArcherEnemy(
   ctx: CanvasRenderingContext2D,
@@ -157,6 +165,42 @@ export function drawArcherEnemy(
   ctx.arc(0, -size * 0.15, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
+
+  // === ANIMATED LEGS (beneath cloak) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+    color: "#064e3b",
+    colorDark: "#022c22",
+    footColor: "#1c1917",
+    strideSpeed: 5,
+    strideAmt: 0.3,
+    legLen: 0.18,
+    width: 0.05,
+  });
+
+  // === ANIMATED ARMS ===
+  drawAnimatedArm(ctx, x - size * 0.2, y - size * 0.18 + stance, size, time, zoom, -1, {
+    color: "#064e3b",
+    colorDark: "#022c22",
+    handColor: "#d6d3d1",
+    swingSpeed: 1.5,
+    swingAmt: 0.1,
+    baseAngle: 0.6,
+    upperLen: 0.18,
+    foreLen: 0.16,
+    width: 0.055,
+  });
+  drawAnimatedArm(ctx, x + size * 0.2, y - size * 0.18 + stance, size, time, zoom, 1, {
+    color: "#064e3b",
+    colorDark: "#022c22",
+    handColor: "#d6d3d1",
+    swingSpeed: 2.5,
+    swingAmt: 0.2,
+    baseAngle: 0.4,
+    upperLen: 0.17,
+    foreLen: 0.14,
+    width: 0.05,
+    attackExtra: isAttacking ? attackIntensity : 0,
+  });
 
   // Back cloak layer (darker, wider)
   const backCloakGrad = ctx.createLinearGradient(x - size * 0.45, y, x + size * 0.45, y);
@@ -511,6 +555,26 @@ export function drawArcherEnemy(
     ctx.fill();
     ctx.restore();
   }
+
+  // === SOUL GLOW around bow ===
+  drawPulsingGlowRings(ctx, x - size * 0.38, y + stance, size * 0.15, time, zoom, {
+    color: "rgba(52, 211, 153, 0.4)",
+    count: 3,
+    speed: 1.5,
+    maxAlpha: 0.35,
+    expansion: 1.2,
+  });
+
+  // === FLOATING ARROWHEAD SHARDS ===
+  drawShiftingSegments(ctx, x, y - size * 0.1, size, time, zoom, {
+    color: "#10b981",
+    colorAlt: "#34d399",
+    count: 5,
+    orbitRadius: 0.35,
+    segmentSize: 0.03,
+    orbitSpeed: 1.2,
+    shape: "shard",
+  });
 }
 
 export function drawMageEnemy(
@@ -734,6 +798,45 @@ export function drawMageEnemy(
   ctx.lineTo(size * 0.05, -size * 0.5);
   ctx.stroke();
   ctx.restore();
+
+  // === ANIMATED LEGS (beneath robes) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.35, size, time, zoom, {
+    color: "#3b0764",
+    colorDark: "#2e1065",
+    footColor: "#1c1917",
+    strideSpeed: 3,
+    strideAmt: 0.15,
+    legLen: 0.16,
+    width: 0.05,
+    shuffle: true,
+  });
+
+  // === ANIMATED ARMS (mystical gesturing) ===
+  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.2 + float, size, time, zoom, -1, {
+    color: "#4c1d95",
+    colorDark: "#2e1065",
+    handColor: "#e0d4c4",
+    swingSpeed: 3,
+    swingAmt: 0.35,
+    baseAngle: 0.5,
+    upperLen: 0.2,
+    foreLen: 0.17,
+    width: 0.05,
+    phaseOffset: 0.5,
+  });
+  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.2 + float, size, time, zoom, 1, {
+    color: "#4c1d95",
+    colorDark: "#2e1065",
+    handColor: "#e0d4c4",
+    swingSpeed: 3,
+    swingAmt: 0.3,
+    baseAngle: 0.4,
+    upperLen: 0.19,
+    foreLen: 0.16,
+    width: 0.05,
+    phaseOffset: 1.2,
+    attackExtra: isAttacking ? attackIntensity : 0,
+  });
 
   // Arcane robes
   const robeGrad = ctx.createLinearGradient(
@@ -1045,6 +1148,26 @@ export function drawMageEnemy(
   ctx.strokeRect(-size * 0.1, -size * 0.12, size * 0.2, size * 0.24);
   clearShadow(ctx);
   ctx.restore();
+
+  // === ARCANE GLOW RINGS around staff crystal ===
+  drawPulsingGlowRings(ctx, x + size * 0.32, y - size * 0.52 + float, size * 0.08, time, zoom, {
+    color: "rgba(139, 92, 246, 0.5)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.4,
+    expansion: 1.8,
+  });
+
+  // === FLOATING CRYSTAL ORBS ===
+  drawShiftingSegments(ctx, x, y - size * 0.15 + float, size, time, zoom, {
+    color: "#a78bfa",
+    colorAlt: "#8b5cf6",
+    count: 4,
+    orbitRadius: 0.28,
+    segmentSize: 0.035,
+    orbitSpeed: 1.8,
+    shape: "circle",
+  });
 }
 
 export function drawCatapultEnemy(
@@ -1133,6 +1256,43 @@ export function drawCatapultEnemy(
     }
     ctx.stroke();
   }
+
+  // === ANIMATED LEGS (crew member stance) ===
+  drawAnimatedLegs(ctx, x + size * 0.18, y + size * 0.12, size, time, zoom, {
+    color: "#292524",
+    colorDark: "#1c1917",
+    footColor: "#44403c",
+    strideSpeed: 3.5,
+    strideAmt: 0.2,
+    legLen: 0.16,
+    width: 0.055,
+  });
+
+  // === ANIMATED ARMS (operating catapult mechanism) ===
+  drawAnimatedArm(ctx, x + size * 0.1, y - size * 0.15, size, time, zoom, -1, {
+    color: "#292524",
+    colorDark: "#1c1917",
+    handColor: "#a8a29e",
+    swingSpeed: 2,
+    swingAmt: 0.25,
+    baseAngle: 0.8,
+    upperLen: 0.2,
+    foreLen: 0.18,
+    width: 0.06,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.26, y - size * 0.15, size, time, zoom, 1, {
+    color: "#292524",
+    colorDark: "#1c1917",
+    handColor: "#a8a29e",
+    swingSpeed: 2,
+    swingAmt: 0.2,
+    baseAngle: 0.5,
+    upperLen: 0.18,
+    foreLen: 0.16,
+    width: 0.055,
+    phaseOffset: Math.PI,
+  });
 
   // Demonic bone wheels with detailed rendering
   for (let w = 0; w < 2; w++) {
@@ -1465,6 +1625,26 @@ export function drawCatapultEnemy(
   ctx.beginPath();
   ctx.arc(x + size * 0.18, y - size * 0.2, size * 0.04, 0.2, Math.PI - 0.2);
   ctx.stroke();
+
+  // === FIERY GLOW around soul-fire ===
+  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.18, time, zoom, {
+    color: "rgba(220, 38, 38, 0.4)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.4,
+    expansion: 1.5,
+  });
+
+  // === FLOATING STONE FRAGMENTS ===
+  drawShiftingSegments(ctx, x, y + size * 0.1, size, time, zoom, {
+    color: "#78716c",
+    colorAlt: "#a8a29e",
+    count: 5,
+    orbitRadius: 0.4,
+    segmentSize: 0.04,
+    orbitSpeed: 1.0,
+    shape: "diamond",
+  });
 }
 
 export function drawWarlockEnemy(
@@ -1571,6 +1751,45 @@ export function drawWarlockEnemy(
     }
     ctx.stroke();
   }
+
+  // === ANIMATED LEGS (slow shuffling) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.36, size, time, zoom, {
+    color: "#1e0a3c",
+    colorDark: "#0f0520",
+    footColor: "#0a0315",
+    strideSpeed: 2,
+    strideAmt: 0.12,
+    legLen: 0.16,
+    width: 0.05,
+    shuffle: true,
+  });
+
+  // === ANIMATED ARMS (dark channeling) ===
+  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.25 + hover, size, time, zoom, -1, {
+    color: "#1e0a3c",
+    colorDark: "#0f0520",
+    handColor: "#a8a29e",
+    swingSpeed: 2,
+    swingAmt: 0.3,
+    baseAngle: 0.6,
+    upperLen: 0.22,
+    foreLen: 0.18,
+    width: 0.05,
+    phaseOffset: 0.3,
+  });
+  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.25 + hover, size, time, zoom, 1, {
+    color: "#1e0a3c",
+    colorDark: "#0f0520",
+    handColor: "#a8a29e",
+    swingSpeed: 2,
+    swingAmt: 0.25,
+    baseAngle: 0.5,
+    upperLen: 0.2,
+    foreLen: 0.17,
+    width: 0.05,
+    phaseOffset: 1.0,
+    attackExtra: isAttacking ? attackIntensity * 0.3 : 0,
+  });
 
   // Dark robes - more tattered and flowing
   const robeGrad = ctx.createLinearGradient(
@@ -1829,6 +2048,26 @@ export function drawWarlockEnemy(
     ctx.lineTo(x - size * 0.35 - size * attackIntensity * 0.8, y + size * 0.02 + hover);
     ctx.stroke();
   }
+
+  // === DARK PURPLE VOID GLOW ===
+  drawPulsingGlowRings(ctx, x - size * 0.35, y + size * 0.02 + hover, size * 0.14, time, zoom, {
+    color: "rgba(147, 51, 234, 0.5)",
+    count: 3,
+    speed: 1.2,
+    maxAlpha: 0.45,
+    expansion: 1.6,
+  });
+
+  // === FLOATING DARK ORBS ===
+  drawShiftingSegments(ctx, x, y - size * 0.1 + hover, size, time, zoom, {
+    color: "#4c1d95",
+    colorAlt: "#9333ea",
+    count: 5,
+    orbitRadius: 0.32,
+    segmentSize: 0.035,
+    orbitSpeed: 1.5,
+    shape: "circle",
+  });
 }
 
 export function drawCrossbowmanEnemy(
@@ -1927,6 +2166,43 @@ export function drawCrossbowmanEnemy(
   ctx.beginPath();
   ctx.ellipse(x, y + size * 0.48, size * 0.45, size * 0.14, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // === ANIMATED LEGS (marching stride) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.36, size, time, zoom, {
+    color: "#292524",
+    colorDark: "#1c1917",
+    footColor: "#3f3f46",
+    strideSpeed: 5,
+    strideAmt: 0.28,
+    legLen: 0.18,
+    width: 0.06,
+  });
+
+  // === ANIMATED ARMS (armored, one aiming) ===
+  drawAnimatedArm(ctx, x - size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, -1, {
+    color: "#3f3f46",
+    colorDark: "#27272a",
+    handColor: "#a8a29e",
+    swingSpeed: 2,
+    swingAmt: 0.15,
+    baseAngle: 0.7,
+    upperLen: 0.2,
+    foreLen: 0.17,
+    width: 0.06,
+    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, 1, {
+    color: "#3f3f46",
+    colorDark: "#27272a",
+    handColor: "#a8a29e",
+    swingSpeed: 4,
+    swingAmt: 0.1,
+    baseAngle: 0.3,
+    upperLen: 0.18,
+    foreLen: 0.15,
+    width: 0.055,
+    phaseOffset: Math.PI * 0.5,
+  });
 
   // Flowing cursed cape
   const capeGrad = ctx.createLinearGradient(x - size * 0.35, y, x + size * 0.35, y);
@@ -2311,6 +2587,26 @@ export function drawCrossbowmanEnemy(
   ctx.lineTo(-size * 0.22, size * 0.03);
   ctx.fill();
   ctx.restore();
+
+  // === MECHANICAL GLOW around crossbow mechanism ===
+  drawPulsingGlowRings(ctx, x - size * 0.36, y + size * 0.06, size * 0.12, time, zoom, {
+    color: "rgba(127, 29, 29, 0.4)",
+    count: 2,
+    speed: 1.8,
+    maxAlpha: 0.35,
+    expansion: 1.3,
+  });
+
+  // === FLOATING BOLT TIPS ===
+  drawShiftingSegments(ctx, x - size * 0.1, y - size * 0.1, size, time, zoom, {
+    color: "#7f1d1d",
+    colorAlt: "#991b1b",
+    count: 4,
+    orbitRadius: 0.3,
+    segmentSize: 0.03,
+    orbitSpeed: 1.5,
+    shape: "shard",
+  });
 }
 
 export function drawHexerEnemy(
@@ -2457,6 +2753,48 @@ export function drawHexerEnemy(
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // === ANIMATED LEGS (unsteady gait) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.34, size, time, zoom, {
+    color: "#6b21a8",
+    colorDark: "#4c1d95",
+    footColor: "#1a1a2e",
+    strideSpeed: 3.5,
+    strideAmt: 0.22,
+    legLen: 0.16,
+    width: 0.045,
+    shuffle: true,
+    phaseOffset: 0.7,
+  });
+
+  // === ANIMATED ARMS (curse-weaving gestures) ===
+  drawAnimatedArm(ctx, x - size * 0.16, y - size * 0.2 + sway, size, time, zoom, -1, {
+    color: "#9d174d",
+    colorDark: "#831843",
+    handColor: "#fdf4ff",
+    swingSpeed: 4,
+    swingAmt: 0.4,
+    baseAngle: 0.5,
+    upperLen: 0.18,
+    foreLen: 0.15,
+    width: 0.04,
+    phaseOffset: 0.3,
+    elbowBend: 0.5,
+  });
+  drawAnimatedArm(ctx, x + size * 0.16, y - size * 0.2 + sway, size, time, zoom, 1, {
+    color: "#9d174d",
+    colorDark: "#831843",
+    handColor: "#fdf4ff",
+    swingSpeed: 4,
+    swingAmt: 0.35,
+    baseAngle: 0.4,
+    upperLen: 0.17,
+    foreLen: 0.14,
+    width: 0.04,
+    phaseOffset: 1.5,
+    elbowBend: 0.6,
+    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+  });
 
   // === LAYER 5: TATTERED DRESS WITH MAGICAL THREADS ===
   const dressGrad = ctx.createLinearGradient(
@@ -2957,4 +3295,24 @@ export function drawHexerEnemy(
     );
     ctx.fill();
   }
+
+  // === SICKLY GREEN GLOW around hex crystal ===
+  drawPulsingGlowRings(ctx, x + size * 0.22, y - size * 0.22 + sway, size * 0.1, time, zoom, {
+    color: "rgba(74, 222, 128, 0.4)",
+    count: 3,
+    speed: 2.5,
+    maxAlpha: 0.4,
+    expansion: 1.5,
+  });
+
+  // === FLOATING HEX SYMBOLS ===
+  drawShiftingSegments(ctx, x, y - size * 0.15 + sway, size, time, zoom, {
+    color: "#be185d",
+    colorAlt: "#ec4899",
+    count: 5,
+    orbitRadius: 0.35,
+    segmentSize: 0.03,
+    orbitSpeed: 2.0,
+    shape: "diamond",
+  });
 }

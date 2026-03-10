@@ -1,5 +1,6 @@
 import type { Projectile, Position } from "../../types";
 import { worldToScreen } from "../../utils";
+import { getPerformanceSettings } from "../performance";
 
 // ============================================================================
 // PROJECTILE RENDERING - Optimized and visually polished
@@ -70,6 +71,7 @@ function drawTrail(
   trailLength: number = 4,
   trailSize: number = 4
 ) {
+  if (!getPerformanceSettings().projectileTrails) return;
   const t = proj.progress;
 
   const hasVerticalArc = Boolean(proj.arcHeight || proj.elevation);

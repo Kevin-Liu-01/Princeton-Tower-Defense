@@ -2,6 +2,8 @@
 // Each function is a self-contained screen-space effect that composes
 // over the game canvas to add depth and atmosphere.
 
+import { getPerformanceSettings } from "../performance";
+
 // ---------------------------------------------------------------------------
 // GOD RAYS – Volumetric light beams from a point source
 // ---------------------------------------------------------------------------
@@ -19,6 +21,7 @@ export function renderGodRays(
   baseAlpha: number,
   rayCount: number
 ): void {
+  if (!getPerformanceSettings().showGodRays) return;
   const diagonal = Math.sqrt(
     canvasWidth * canvasWidth + canvasHeight * canvasHeight
   );
@@ -134,6 +137,7 @@ export function renderAuroraEffect(
   time: number,
   intensity: number
 ): void {
+  if (!getPerformanceSettings().showAurora) return;
   const bandCount = 4;
 
   for (let band = 0; band < bandCount; band++) {
@@ -217,6 +221,7 @@ export function renderScreenGlow(
   alpha: number,
   size: number
 ): void {
+  if (!getPerformanceSettings().showScreenGlow) return;
   if (alpha < 0.003) return;
 
   const grad = ctx.createRadialGradient(x, y, 0, x, y, size);

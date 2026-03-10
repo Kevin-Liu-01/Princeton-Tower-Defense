@@ -10,6 +10,7 @@ import {
 } from "../../utils";
 import { drawIsometricPrism, drawGroundTransition } from "./towerHelpers";
 import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
+import { getGameSettings } from "../../hooks/useSettings";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,
@@ -297,33 +298,35 @@ export function renderTowerPreview(
   ctx.restore();
 
   // Range preview - show level 1 base range when placing
-  const tData = TOWER_DATA[dragging.type];
-  if (tData.range > 0) {
-    renderRangeReticle(ctx, {
-      x: screenPos.x,
-      y: screenPos.y,
-      range: tData.range,
-      zoom,
-      state: "preview",
-      color: isValid ? RETICLE_COLORS.blue : RETICLE_COLORS.red,
-      fillAlpha: 0,
-      strokeAlpha: 0.6,
-      dashed: true,
-    });
-  }
+  if (getGameSettings().ui.showTowerRadii) {
+    const tData = TOWER_DATA[dragging.type];
+    if (tData.range > 0) {
+      renderRangeReticle(ctx, {
+        x: screenPos.x,
+        y: screenPos.y,
+        range: tData.range,
+        zoom,
+        state: "preview",
+        color: isValid ? RETICLE_COLORS.blue : RETICLE_COLORS.red,
+        fillAlpha: 0,
+        strokeAlpha: 0.6,
+        dashed: true,
+      });
+    }
 
-  if (dragging.type === "station" && tData.spawnRange) {
-    renderRangeReticle(ctx, {
-      x: screenPos.x,
-      y: screenPos.y,
-      range: tData.spawnRange,
-      zoom,
-      state: "preview",
-      color: isValid ? RETICLE_COLORS.gold : RETICLE_COLORS.red,
-      fillAlpha: 0,
-      strokeAlpha: 0.5,
-      dashed: true,
-    });
+    if (dragging.type === "station" && tData.spawnRange) {
+      renderRangeReticle(ctx, {
+        x: screenPos.x,
+        y: screenPos.y,
+        range: tData.spawnRange,
+        zoom,
+        state: "preview",
+        color: isValid ? RETICLE_COLORS.gold : RETICLE_COLORS.red,
+        fillAlpha: 0,
+        strokeAlpha: 0.5,
+        dashed: true,
+      });
+    }
   }
 }
 

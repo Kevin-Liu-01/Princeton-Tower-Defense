@@ -1,3 +1,5 @@
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
+
 export function drawHarpyEnemy(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -311,6 +313,48 @@ export function drawHarpyEnemy(
   }
 
   ctx.restore();
+
+  // === ANIMATED LEGS (talon-like dangling, fast kick) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.25 + swoop, size, time, zoom, {
+    color: "#78350f",
+    colorDark: "#451a03",
+    footColor: "#1a1a2e",
+    strideSpeed: 10,
+    strideAmt: 0.45,
+    legLen: 0.2,
+    width: 0.04,
+  });
+
+  // === ANIMATED ARMS / CLAWS ===
+  drawAnimatedArm(ctx, x - size * 0.18, y + size * 0.05 + swoop, size, time, zoom, -1, {
+    color: "#8b5cf6",
+    colorDark: "#6d28d9",
+    handColor: "#78350f",
+    handRadius: 0.03,
+    swingSpeed: 8,
+    swingAmt: 0.4,
+    baseAngle: 0.2,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    elbowBend: 0.5,
+    attackExtra: attackIntensity,
+  });
+  drawAnimatedArm(ctx, x + size * 0.18, y + size * 0.05 + swoop, size, time, zoom, 1, {
+    color: "#8b5cf6",
+    colorDark: "#6d28d9",
+    handColor: "#78350f",
+    handRadius: 0.03,
+    swingSpeed: 8,
+    swingAmt: 0.4,
+    baseAngle: 0.2,
+    upperLen: 0.14,
+    foreLen: 0.12,
+    width: 0.04,
+    elbowBend: 0.5,
+    phaseOffset: Math.PI,
+    attackExtra: attackIntensity,
+  });
 
   // === LAYER 5: ELEGANT AVIAN BODY ===
   // Body gradient with feather pattern
@@ -754,6 +798,39 @@ export function drawHarpyEnemy(
     ctx.lineTo(x + size * 0.15, y + size * 0.6 + swoop);
     ctx.fill();
   }
+
+  // === WIND GLOW RINGS ===
+  drawPulsingGlowRings(ctx, x, y + swoop, size * 0.3, time, zoom, {
+    color: "rgba(167, 139, 250, 0.4)",
+    count: 3,
+    speed: 2,
+    maxAlpha: 0.35,
+    expansion: 1.8,
+    lineWidth: 1.5,
+  });
+
+  // === FLOATING FEATHER SHARDS (orbiting) ===
+  drawShiftingSegments(ctx, x, y + swoop, size, time, zoom, {
+    color: "#a78bfa",
+    colorAlt: "#7c3aed",
+    count: 5,
+    orbitRadius: 0.45,
+    segmentSize: 0.03,
+    orbitSpeed: 1.8,
+    shape: "shard",
+  });
+
+  // === ORBITING WIND PARTICLES ===
+  drawOrbitingDebris(ctx, x, y + swoop, size, time, zoom, {
+    color: "rgba(196, 181, 253, 0.6)",
+    glowColor: "rgba(167, 139, 250, 0.25)",
+    count: 4,
+    speed: 2.5,
+    particleSize: 0.015,
+    minRadius: 0.3,
+    maxRadius: 0.55,
+    trailLen: 2,
+  });
 }
 
 export function drawWyvernEnemy(
@@ -1085,6 +1162,17 @@ export function drawWyvernEnemy(
   ctx.lineTo(size * 0.35, -size * 0.12);
   ctx.fill();
   ctx.restore();
+
+  // === ANIMATED LEGS (powerful, tucked under, slow pump) ===
+  drawAnimatedLegs(ctx, x, y + size * 0.3 + breathe + hoverBob, size, time, zoom, {
+    color: "#059669",
+    colorDark: "#047857",
+    footColor: "#0f172a",
+    strideSpeed: 3,
+    strideAmt: 0.15,
+    legLen: 0.22,
+    width: 0.06,
+  });
 
   // === LAYER 4: MUSCULAR BODY ===
   const bodyY = y + size * 0.05 + breathe + hoverBob - lungeLean * 0.3;
@@ -1667,4 +1755,45 @@ export function drawWyvernEnemy(
       ctx.stroke();
     }
   }
+
+  // === TAIL WHIP TENDRIL ===
+  drawAnimatedTendril(
+    ctx,
+    x + size * 0.88,
+    y + size * 0.18 + breathe + hoverBob,
+    tailSwing * 0.3 + 0.15,
+    size,
+    time,
+    zoom,
+    {
+      color: "#047857",
+      tipColor: "#4ade80",
+      length: 0.35,
+      waveSpeed: 3.5,
+      waveAmt: 0.08,
+      width: 0.035,
+    },
+  );
+
+  // === DRACONIC GLOW RINGS ===
+  drawPulsingGlowRings(ctx, x, y + hoverBob, size * 0.35, time, zoom, {
+    color: "rgba(74, 222, 128, 0.4)",
+    count: 4,
+    speed: 1.2,
+    maxAlpha: 0.3,
+    expansion: 2.0,
+    lineWidth: 2,
+  });
+
+  // === FLOATING SCALE SEGMENTS (diamond) ===
+  drawShiftingSegments(ctx, x, y + hoverBob, size, time, zoom, {
+    color: "#10b981",
+    colorAlt: "#065f46",
+    count: 6,
+    orbitRadius: 0.5,
+    segmentSize: 0.035,
+    orbitSpeed: 1.2,
+    shape: "diamond",
+  });
+
 }

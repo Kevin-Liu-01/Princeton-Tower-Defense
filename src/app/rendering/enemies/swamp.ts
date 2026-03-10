@@ -1,4 +1,5 @@
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
 export function drawBogCreatureEnemy(
   ctx: CanvasRenderingContext2D,
@@ -170,6 +171,33 @@ export function drawBogCreatureEnemy(
   ctx.moveTo(x + size * 0.22, y + size * 0.05);
   ctx.lineTo(x + size * 0.25, y + size * 0.35);
   ctx.stroke();
+
+  // Animated slimy arms (behind body)
+  drawAnimatedArm(ctx, x - size * 0.4, y - size * 0.2, size, time, zoom, -1, {
+    color: bodyColor, colorDark: bodyColorDark,
+    swingSpeed: 1.8, swingAmt: 0.25, baseAngle: 0.5,
+    upperLen: 0.22, foreLen: 0.18, width: 0.08,
+    handColor: "#84cc16", handRadius: 0.04,
+    elbowBend: 0.3, phaseOffset: 0,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.4, y - size * 0.2, size, time, zoom, 1, {
+    color: bodyColor, colorDark: bodyColorDark,
+    swingSpeed: 1.8, swingAmt: 0.25, baseAngle: 0.5,
+    upperLen: 0.22, foreLen: 0.18, width: 0.08,
+    handColor: "#84cc16", handRadius: 0.04,
+    elbowBend: 0.3, phaseOffset: 1.2,
+    attackExtra: isAttacking ? attackPhase : 0,
+  });
+
+  // Sludge-dripping animated legs (behind body)
+  drawAnimatedLegs(ctx, x, y + size * 0.1, size, time, zoom, {
+    color: bodyColor, colorDark: bodyColorDark,
+    footColor: "#1a2e05",
+    strideSpeed: 2, strideAmt: 0.2,
+    legLen: 0.22, width: 0.07,
+    shuffle: true, phaseOffset: 0,
+  });
 
   // Main body - twisted amorphous mass (lurches forward when attacking)
   const bodyGrad = ctx.createLinearGradient(
@@ -554,6 +582,27 @@ export function drawBogCreatureEnemy(
     ctx.arc(sporeX, sporeY, sporeSize, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Toxic green glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.2, size * 0.45, time, zoom, {
+    color: "rgba(34, 197, 94, 0.5)",
+    count: 3, speed: 1.2, maxAlpha: 0.35,
+    expansion: 1.2, lineWidth: 1.5,
+  });
+
+  // Floating muck/debris segments
+  drawShiftingSegments(ctx, x, y - size * 0.15, size, time, zoom, {
+    color: "#2d3a1a", colorAlt: "#166534",
+    count: 5, orbitRadius: 0.4, segmentSize: 0.035,
+    orbitSpeed: 0.8, shape: "circle",
+  });
+
+  // Orbiting toxic debris
+  drawOrbitingDebris(ctx, x, y - size * 0.2, size, time, zoom, {
+    color: "#84cc16", glowColor: "rgba(132, 204, 22, 0.3)",
+    count: 4, speed: 1.2, particleSize: 0.018,
+    minRadius: 0.3, maxRadius: 0.5, trailLen: 2,
+  });
 
   // Attack: toxic spray burst and body lurch
   if (isAttacking) {
@@ -1031,6 +1080,33 @@ export function drawWillOWispEnemy(
     ctx.fill();
   }
 
+  // Animated tendrils trailing below
+  for (let td = 0; td < 4; td++) {
+    const tendrilAngle = Math.PI / 2 + (td - 1.5) * 0.4;
+    drawAnimatedTendril(ctx, x + (td - 1.5) * size * 0.12, y + size * 0.25 + float, tendrilAngle, size, time, zoom, {
+      color: `rgba(${rShift}, ${gShift}, ${bShift}, 0.4)`,
+      tipColor: `rgba(255, 255, 200, ${pulse * 0.6})`,
+      length: 0.25, width: 0.02, segments: 6,
+      waveSpeed: 3, waveAmt: 0.05, tipRadius: 0.012,
+    });
+  }
+
+  // Pulsing ethereal glow rings
+  drawPulsingGlowRings(ctx, x, y + float, size * 0.3, time, zoom, {
+    color: `rgba(${rShift}, ${gShift}, ${bShift}, 0.5)`,
+    count: 4, speed: 2, maxAlpha: 0.3,
+    expansion: 2, lineWidth: 1,
+  });
+
+  // Floating spirit shards
+  drawShiftingSegments(ctx, x, y + float, size, time, zoom, {
+    color: `rgba(200, 255, 180, ${pulse * 0.5})`,
+    colorAlt: `rgba(255, 255, 200, ${pulse * 0.4})`,
+    count: 5, orbitRadius: 0.45, segmentSize: 0.025,
+    orbitSpeed: 1.8, shape: "shard",
+  });
+
+
   // Attack: blinding light burst, rays extend, satellites scatter
   if (isAttacking) {
     // Blinding flash from core
@@ -1156,6 +1232,33 @@ export function drawSwampTrollEnemy(
       ctx.stroke();
     }
   }
+
+  // Massive animated arms (behind body)
+  drawAnimatedArm(ctx, x - size * 0.48, y - size * 0.35, size, time, zoom, -1, {
+    color: bodyColor, colorDark: bodyColorDark,
+    swingSpeed: 1.5, swingAmt: 0.2, baseAngle: 0.4,
+    upperLen: 0.28, foreLen: 0.22, width: 0.1,
+    handColor: "#2a2a1a", handRadius: 0.06,
+    elbowBend: 0.35, phaseOffset: 0,
+    attackExtra: isAttacking ? rage * 3 : 0,
+  });
+  drawAnimatedArm(ctx, x + size * 0.48, y - size * 0.35, size, time, zoom, 1, {
+    color: bodyColor, colorDark: bodyColorDark,
+    swingSpeed: 1.5, swingAmt: 0.2, baseAngle: 0.4,
+    upperLen: 0.28, foreLen: 0.22, width: 0.1,
+    handColor: "#2a2a1a", handRadius: 0.06,
+    elbowBend: 0.35, phaseOffset: 1.5,
+    attackExtra: isAttacking ? rage * 3 : 0,
+  });
+
+  // Stomping animated legs (behind body)
+  drawAnimatedLegs(ctx, x, y + size * 0.15, size, time, zoom, {
+    color: bodyColor, colorDark: bodyColorDark,
+    footColor: "#1a1a0a",
+    strideSpeed: 2.5, strideAmt: 0.25,
+    legLen: 0.28, width: 0.09,
+    shuffle: false, phaseOffset: 0,
+  });
 
   // Massive hunched body with muscle definition
   const bodyGrad = ctx.createRadialGradient(
@@ -1581,6 +1684,30 @@ export function drawSwampTrollEnemy(
     ctx.lineTo(mcX - size * 0.01, mcY + size * 0.015);
     ctx.stroke();
   }
+
+  // Murky glow rings
+  drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.5, time, zoom, {
+    color: "rgba(100, 150, 80, 0.4)",
+    count: 3, speed: 1, maxAlpha: 0.3,
+    expansion: 1.3, lineWidth: 2,
+  });
+
+  // Floating bone/club fragments
+  drawShiftingSegments(ctx, x, y - size * 0.3, size, time, zoom, {
+    color: "#c8c0a0", colorAlt: "#8a7a5a",
+    count: 4, orbitRadius: 0.5, segmentSize: 0.04,
+    orbitSpeed: 0.6, shape: "shard",
+  });
+
+  // Floating moss and bone pieces
+  drawFloatingPiece(ctx, x - size * 0.5, y - size * 0.4, size, time, 0, {
+    width: 0.1, height: 0.06, color: "#2d3a1a", colorEdge: "#1a2010",
+    bobSpeed: 2, bobAmt: 0.03,
+  });
+  drawFloatingPiece(ctx, x + size * 0.5, y - size * 0.35, size, time, 1.5, {
+    width: 0.08, height: 0.05, color: "#d4c9a8", colorEdge: "#8a7a5a",
+    bobSpeed: 2.5, bobAmt: 0.025,
+  });
 
   // Rage steam/breath when attacking
   if (isAttacking) {
