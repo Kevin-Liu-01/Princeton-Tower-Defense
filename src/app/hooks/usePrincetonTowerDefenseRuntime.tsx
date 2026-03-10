@@ -365,6 +365,8 @@ interface StaticMapLayerCache {
   fogEndpoints: StaticMapFogEndpoint[];
   /** Camera offset used when rendering (the "anchor") */
   anchorOffset: Position;
+  /** Zoom level at which the cache was rendered */
+  cacheZoom: number;
 }
 
 interface StaticDecorationLayerCache {
@@ -374,6 +376,8 @@ interface StaticDecorationLayerCache {
   animatedDecorations: CachedVisibleDecoration[];
   depthSensitiveDecorations: CachedVisibleDecoration[];
   anchorOffset: Position;
+  /** Zoom level at which the cache was rendered */
+  cacheZoom: number;
 }
 
 interface FogLayerCache {
@@ -459,6 +463,7 @@ const CAMERA_ZOOM_MIN = 0.5;
 const CAMERA_ZOOM_MAX = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.0014;
 const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
+const ZOOM_SETTLE_DEBOUNCE_MS = 150;
 const FRIENDLY_SEPARATION_MULT = 0.18;
 
 const WATER_DECORATION_TYPES = new Set([
@@ -781,7 +786,12 @@ export function usePrincetonTowerDefenseRuntime() {
     useRef<StaticDecorationLayerCache | null>(null);
   const cachedFogLayerRef = useRef<FogLayerCache | null>(null);
   const cachedAmbientLayerRef = useRef<AmbientLayerCache | null>(null);
+  const stableZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
+  const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
+  const isZoomDebouncingRef = useRef(false);
+  const zoomSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  cameraZoomRef.current = cameraZoom;
   devPerfEnabledRef.current = devPerfEnabled;
   entityCountsRef.current = {
     towers: towers.length,
@@ -969,6 +979,17 @@ export function usePrincetonTowerDefenseRuntime() {
 
         return nextZoom;
       });
+
+      isZoomDebouncingRef.current = true;
+      if (zoomSettleTimerRef.current) clearTimeout(zoomSettleTimerRef.current);
+      zoomSettleTimerRef.current = setTimeout(() => {
+        isZoomDebouncingRef.current = false;
+        stableZoomRef.current = cameraZoomRef.current;
+        cachedStaticMapLayerRef.current = null;
+        cachedStaticDecorationLayerRef.current = null;
+        cachedFogLayerRef.current = null;
+        zoomSettleTimerRef.current = null;
+      }, ZOOM_SETTLE_DEBOUNCE_MS);
     },
     [getCanvasDimensions]
   );
@@ -1073,6 +1094,11 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     cachedStaticDecorationLayerRef.current = null;
     cachedAmbientLayerRef.current = null;
+    if (zoomSettleTimerRef.current) {
+      clearTimeout(zoomSettleTimerRef.current);
+      zoomSettleTimerRef.current = null;
+    }
+    isZoomDebouncingRef.current = false;
   }, [selectedMap]);
 
   // Timer Cleanup Helper
@@ -1086,6 +1112,11 @@ export function usePrincetonTowerDefenseRuntime() {
       if (pt.timeoutId) clearTimeout(pt.timeoutId);
     });
     pausableTimeoutsRef.current = [];
+    if (zoomSettleTimerRef.current) {
+      clearTimeout(zoomSettleTimerRef.current);
+      zoomSettleTimerRef.current = null;
+    }
+    isZoomDebouncingRef.current = false;
   }, []);
 
   // Pausable timeout helper - creates a timeout that can be paused/resumed
@@ -6329,6 +6360,13 @@ export function usePrincetonTowerDefenseRuntime() {
 
     setProjectileRenderTime(Date.now());
 
+    if (!isZoomDebouncingRef.current) {
+      stableZoomRef.current = cameraZoom;
+    }
+    const cacheZoomForKey = stableZoomRef.current;
+    const zoomCompensation = cameraZoom / cacheZoomForKey;
+    const hasZoomMismatch = Math.abs(zoomCompensation - 1) > 0.001;
+
     const mapTheme = LEVEL_DATA[selectedMap]?.theme || "grassland";
     const theme = REGION_THEMES[mapTheme];
 
@@ -6351,14 +6389,18 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraOffset,
         cameraZoom
       );
+    const toScreenForCache = hasZoomMismatch
+      ? (p: Position) => worldToScreen(p, canvas.width, canvas.height, dpr, cameraOffset, cacheZoomForKey)
+      : toScreen;
 
-    // Cache key does NOT include camera offset — offset handled by overscan
+    // Cache key does NOT include camera offset — offset handled by overscan.
+    // Uses cacheZoomForKey (debounced) to avoid invalidation during continuous zoom.
     const staticBaseKey = [
       selectedMap,
       canvas.width,
       canvas.height,
       dpr,
-      cameraZoom.toFixed(3),
+      cacheZoomForKey.toFixed(3),
     ].join("|");
 
     // =========================================================================
@@ -6402,7 +6444,7 @@ export function usePrincetonTowerDefenseRuntime() {
               offscreenStaticCanvas.height,
               dpr,
               cameraOffset,
-              cameraZoom,
+              cacheZoomForKey,
             );
           };
           const staticLayerResult = renderStaticMapLayer({
@@ -6415,7 +6457,7 @@ export function usePrincetonTowerDefenseRuntime() {
             cssHeight: overscanCssH,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cameraZoom: cacheZoomForKey,
             preRoadCallback: preRoadCb,
           });
           fogEndpoints = staticLayerResult.fogEndpoints;
@@ -6424,6 +6466,7 @@ export function usePrincetonTowerDefenseRuntime() {
             canvas: offscreenStaticCanvas,
             fogEndpoints,
             anchorOffset: { ...cameraOffset },
+            cacheZoom: cacheZoomForKey,
           };
         }
       } else {
@@ -6435,7 +6478,7 @@ export function usePrincetonTowerDefenseRuntime() {
             canvas.height,
             dpr,
             cameraOffset,
-            cameraZoom,
+            cacheZoomForKey,
           );
         };
         const staticLayerResult = renderStaticMapLayer({
@@ -6448,7 +6491,7 @@ export function usePrincetonTowerDefenseRuntime() {
           cssHeight: height,
           dpr,
           cameraOffset,
-          cameraZoom,
+          cameraZoom: cacheZoomForKey,
           preRoadCallback: preRoadCb,
         });
         fogEndpoints = staticLayerResult.fogEndpoints;
@@ -6488,7 +6531,7 @@ export function usePrincetonTowerDefenseRuntime() {
             towardsPos: endpoint.towardsPos,
             size: roadEndFogSize,
             nowSeconds,
-            cameraZoom,
+            cameraZoom: cacheZoomForKey,
             groundRgb: fogGroundRgb,
             accentRgb: fogAccentRgb,
             pathRgb: fogPathRgb,
@@ -6522,35 +6565,71 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
     }
-    // Position bgCanvas via CSS transform — GPU-accelerated, runs every frame
+    // Position bgCanvas via CSS transform — GPU-accelerated, runs every frame.
+    // During active zoom, also apply CSS scale to compensate for zoom mismatch.
     if (bgCanvas) {
       const bgAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
       const bgDeltaX = (bgAnchor.x - cameraOffset.x) * cameraZoom;
       const bgDeltaY = (bgAnchor.y - cameraOffset.y) * cameraZoom;
-      const translateX = BG_OVERSCAN_X / 2 + bgDeltaX;
-      const translateY = BG_OVERSCAN_Y / 3 + bgDeltaY;
-      bgCanvas.style.transform = `translate(${-translateX}px, ${-translateY}px)`;
+      if (hasZoomMismatch) {
+        const tx = -bgDeltaX + width / 2 - overscanCssW * zoomCompensation / 2;
+        const ty = -bgDeltaY + height / 3 - overscanCssH * zoomCompensation / 3;
+        bgCanvas.style.transformOrigin = "0 0";
+        bgCanvas.style.transform = `translate(${tx}px,${ty}px) scale(${zoomCompensation})`;
+      } else {
+        const translateX = BG_OVERSCAN_X / 2 + bgDeltaX;
+        const translateY = BG_OVERSCAN_Y / 3 + bgDeltaY;
+        bgCanvas.style.transformOrigin = "";
+        bgCanvas.style.transform = `translate(${-translateX}px,${-translateY}px)`;
+      }
     }
     // Fallback: if no bg canvas, extract visible portion from oversized cache
     if (!bgCanvas) {
       const fbAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
       const fbDeltaX = (fbAnchor.x - cameraOffset.x) * cameraZoom;
       const fbDeltaY = (fbAnchor.y - cameraOffset.y) * cameraZoom;
-      const fbSrcX = (BG_OVERSCAN_X / 2 + fbDeltaX) * dpr;
-      const fbSrcY = (BG_OVERSCAN_Y / 3 + fbDeltaY) * dpr;
-      if (cachedStaticMapLayerRef.current) {
-        ctx.drawImage(
-          cachedStaticMapLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
-        );
-      }
-      if (cachedFogLayerRef.current) {
-        ctx.drawImage(
-          cachedFogLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
-        );
+      if (hasZoomMismatch) {
+        ctx.save();
+        ctx.translate(width / 2, height / 3);
+        ctx.scale(zoomCompensation, zoomCompensation);
+        ctx.translate(-width / 2, -height / 3);
+        const fbOffX = (cameraOffset.x - fbAnchor.x) * cacheZoomForKey;
+        const fbOffY = (cameraOffset.y - fbAnchor.y) * cacheZoomForKey;
+        ctx.translate(fbOffX, fbOffY);
+        const fbSrcX = (BG_OVERSCAN_X / 2) * dpr;
+        const fbSrcY = (BG_OVERSCAN_Y / 3) * dpr;
+        if (cachedStaticMapLayerRef.current) {
+          ctx.drawImage(
+            cachedStaticMapLayerRef.current.canvas,
+            fbSrcX, fbSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
+        if (cachedFogLayerRef.current) {
+          ctx.drawImage(
+            cachedFogLayerRef.current.canvas,
+            fbSrcX, fbSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
+        ctx.restore();
+      } else {
+        const fbSrcX = (BG_OVERSCAN_X / 2 + fbDeltaX) * dpr;
+        const fbSrcY = (BG_OVERSCAN_Y / 3 + fbDeltaY) * dpr;
+        if (cachedStaticMapLayerRef.current) {
+          ctx.drawImage(
+            cachedStaticMapLayerRef.current.canvas,
+            fbSrcX, fbSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
+        if (cachedFogLayerRef.current) {
+          ctx.drawImage(
+            cachedFogLayerRef.current.canvas,
+            fbSrcX, fbSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
       }
     }
 
@@ -7287,7 +7366,8 @@ export function usePrincetonTowerDefenseRuntime() {
       return pos;
     };
 
-    // Decoration cache key excludes offset — position correction handles panning
+    // Decoration cache key excludes offset — position correction handles panning.
+    // Uses cacheZoomForKey (debounced) to avoid invalidation during continuous zoom.
     const DECOR_PAN_TOLERANCE_PX = 200;
     const decorBaseKey = [
       selectedMap,
@@ -7295,12 +7375,13 @@ export function usePrincetonTowerDefenseRuntime() {
       canvas.height,
       dpr,
       renderQuality,
-      cameraZoom.toFixed(3),
+      cacheZoomForKey.toFixed(3),
     ].join("|");
     const drawBackgroundDecorations = (
       entries: CachedVisibleDecoration[],
       offsetCorrectionX = 0,
       offsetCorrectionY = 0,
+      scaleZoom = cameraZoom,
     ) => {
       const hasCorrection = offsetCorrectionX !== 0 || offsetCorrectionY !== 0;
       if (hasCorrection) ctx.save();
@@ -7317,7 +7398,7 @@ export function usePrincetonTowerDefenseRuntime() {
         renderDecorationItem({
           ctx,
           screenPos: entry.screenPos,
-          scale: cameraZoom * dec.scale,
+          scale: scaleZoom * dec.scale,
           type: dec.type,
           rotation: dec.rotation,
           variant: dec.variant,
@@ -7416,22 +7497,50 @@ export function usePrincetonTowerDefenseRuntime() {
       cachedStaticDecorationLayer &&
       cachedStaticDecorationLayer.key === decorBaseKey &&
       !decorExceedsLimit;
+    const decorCacheZoomVal = cachedStaticDecorationLayer?.cacheZoom ?? cacheZoomForKey;
+    const decorZoomRatio = cameraZoom / decorCacheZoomVal;
+    const decorHasZoomMismatch = decorCacheHit && Math.abs(decorZoomRatio - 1) > 0.001;
     if (decorCacheHit) {
-      decorPosCorrectX = (cameraOffset.x - decorAnchor!.x) * cameraZoom;
-      decorPosCorrectY = (cameraOffset.y - decorAnchor!.y) * cameraZoom;
-      drawBackgroundDecorations(
-        cachedStaticDecorationLayer.backgroundDecorations,
-        decorPosCorrectX,
-        decorPosCorrectY,
-      );
-      if (cachedStaticDecorationLayer.canvas) {
-        const dSrcX = (DECOR_OVERSCAN / 2 - decorPosCorrectX) * dpr;
-        const dSrcY = (DECOR_OVERSCAN / 2 - decorPosCorrectY) * dpr;
-        ctx.drawImage(
-          cachedStaticDecorationLayer.canvas,
-          dSrcX, dSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+      if (decorHasZoomMismatch) {
+        const offsetAtCacheZoom_X = (cameraOffset.x - decorAnchor!.x) * decorCacheZoomVal;
+        const offsetAtCacheZoom_Y = (cameraOffset.y - decorAnchor!.y) * decorCacheZoomVal;
+        ctx.save();
+        ctx.translate(width / 2, height / 3);
+        ctx.scale(decorZoomRatio, decorZoomRatio);
+        ctx.translate(-width / 2, -height / 3);
+        ctx.translate(offsetAtCacheZoom_X, offsetAtCacheZoom_Y);
+        drawBackgroundDecorations(
+          cachedStaticDecorationLayer.backgroundDecorations,
+          0, 0,
+          decorCacheZoomVal,
         );
+        if (cachedStaticDecorationLayer.canvas) {
+          const dSrcX = (DECOR_OVERSCAN / 2) * dpr;
+          const dSrcY = (DECOR_OVERSCAN / 2) * dpr;
+          ctx.drawImage(
+            cachedStaticDecorationLayer.canvas,
+            dSrcX, dSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
+        ctx.restore();
+      } else {
+        decorPosCorrectX = (cameraOffset.x - decorAnchor!.x) * cameraZoom;
+        decorPosCorrectY = (cameraOffset.y - decorAnchor!.y) * cameraZoom;
+        drawBackgroundDecorations(
+          cachedStaticDecorationLayer.backgroundDecorations,
+          decorPosCorrectX,
+          decorPosCorrectY,
+        );
+        if (cachedStaticDecorationLayer.canvas) {
+          const dSrcX = (DECOR_OVERSCAN / 2 - decorPosCorrectX) * dpr;
+          const dSrcY = (DECOR_OVERSCAN / 2 - decorPosCorrectY) * dpr;
+          ctx.drawImage(
+            cachedStaticDecorationLayer.canvas,
+            dSrcX, dSrcY, canvas.width, canvas.height,
+            0, 0, width, height,
+          );
+        }
       }
       animatedVisibleDecorations = cachedStaticDecorationLayer.animatedDecorations;
       depthSensitiveVisibleDecorations =
@@ -7456,7 +7565,7 @@ export function usePrincetonTowerDefenseRuntime() {
         ) {
           continue;
         }
-        const decScreenPos = toScreen({ x: dec.x, y: dec.y });
+        const decScreenPos = toScreenForCache({ x: dec.x, y: dec.y });
         if (
           decScreenPos.x < -decorCullMarginPx ||
           decScreenPos.x > width + decorCullMarginPx ||
@@ -7485,7 +7594,7 @@ export function usePrincetonTowerDefenseRuntime() {
         if (volume.heightTag !== "landmark") {
           return anchors;
         }
-        const screenScale = cameraZoom * entry.decoration.scale;
+        const screenScale = cacheZoomForKey * entry.decoration.scale;
         anchors.push({
           source: entry,
           heightTag: volume.heightTag,
@@ -7585,7 +7694,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const vol = getDecorationVolumeSpec(dec.type, dec.heightTag);
           entry.sprite = prerenderDecorationSprite(
             dec.type,
-            cameraZoom * dec.scale,
+            cacheZoomForKey * dec.scale,
             dec.rotation,
             dec.variant,
             dec.x,
@@ -7605,7 +7714,7 @@ export function usePrincetonTowerDefenseRuntime() {
         const dec = entry.decoration;
         entry.sprite = prerenderDecorationSprite(
           dec.type,
-          cameraZoom * dec.scale,
+          cacheZoomForKey * dec.scale,
           dec.rotation,
           dec.variant,
           dec.x,
@@ -7635,7 +7744,7 @@ export function usePrincetonTowerDefenseRuntime() {
             renderDecorationItem({
               ctx: layerCtx,
               screenPos: entry.screenPos,
-              scale: cameraZoom * dec.scale,
+              scale: cacheZoomForKey * dec.scale,
               type: dec.type,
               rotation: dec.rotation,
               variant: dec.variant,
@@ -7653,7 +7762,7 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      drawBackgroundDecorations(backgroundDecorations);
+      drawBackgroundDecorations(backgroundDecorations, 0, 0, cacheZoomForKey);
       if (staticDecorationCanvas) {
         const dSrcX = (DECOR_OVERSCAN / 2) * dpr;
         const dSrcY = (DECOR_OVERSCAN / 2) * dpr;
@@ -7673,29 +7782,55 @@ export function usePrincetonTowerDefenseRuntime() {
         animatedDecorations: liveAnimatedDecorations,
         depthSensitiveDecorations: spriteCachedDepthDecorations,
         anchorOffset: { ...cameraOffset },
+        cacheZoom: cacheZoomForKey,
       };
       animatedVisibleDecorations = liveAnimatedDecorations;
       depthSensitiveVisibleDecorations = spriteCachedDepthDecorations;
     }
 
+    const decorOffsetDx = decorHasZoomMismatch && decorAnchor
+      ? (cameraOffset.x - decorAnchor.x) * cameraZoom
+      : 0;
+    const decorOffsetDy = decorHasZoomMismatch && decorAnchor
+      ? (cameraOffset.y - decorAnchor.y) * cameraZoom
+      : 0;
+    const zoomCorrCenterX = width / 2 * (1 - decorZoomRatio);
+    const zoomCorrCenterY = height / 3 * (1 - decorZoomRatio);
     for (const entry of animatedVisibleDecorations) {
+      let screenPos: Position;
+      if (decorHasZoomMismatch) {
+        screenPos = {
+          x: entry.screenPos.x * decorZoomRatio + zoomCorrCenterX + decorOffsetDx,
+          y: entry.screenPos.y * decorZoomRatio + zoomCorrCenterY + decorOffsetDy,
+        };
+      } else if (decorPosCorrectX !== 0 || decorPosCorrectY !== 0) {
+        screenPos = { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
+      } else {
+        screenPos = entry.screenPos;
+      }
       renderables.push({
         type: "decoration",
         data: {
           ...entry.decoration,
           decorTime,
           selectedMap,
-          screenPos: decorPosCorrectX === 0 && decorPosCorrectY === 0
-            ? entry.screenPos
-            : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY },
+          screenPos,
         },
         isoY: entry.isoY,
       });
     }
     for (const entry of depthSensitiveVisibleDecorations) {
-      const correctedPos = decorPosCorrectX === 0 && decorPosCorrectY === 0
-        ? entry.screenPos
-        : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
+      let correctedPos: Position;
+      if (decorHasZoomMismatch) {
+        correctedPos = {
+          x: entry.screenPos.x * decorZoomRatio + zoomCorrCenterX + decorOffsetDx,
+          y: entry.screenPos.y * decorZoomRatio + zoomCorrCenterY + decorOffsetDy,
+        };
+      } else if (decorPosCorrectX !== 0 || decorPosCorrectY !== 0) {
+        correctedPos = { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
+      } else {
+        correctedPos = entry.screenPos;
+      }
       renderables.push({
         type: "decoration",
         data: {
@@ -8431,7 +8566,16 @@ export function usePrincetonTowerDefenseRuntime() {
           };
           const decScreenPos = decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
           if (decData._sprite) {
+            if (hasZoomMismatch) {
+              ctx.save();
+              ctx.translate(decScreenPos.x, decScreenPos.y);
+              ctx.scale(zoomCompensation, zoomCompensation);
+              ctx.translate(-decScreenPos.x, -decScreenPos.y);
+            }
             drawDecorationSprite(ctx, decData._sprite, decScreenPos);
+            if (hasZoomMismatch) {
+              ctx.restore();
+            }
           } else {
             const decScale = cameraZoom * decData.scale;
             ctx.save();
