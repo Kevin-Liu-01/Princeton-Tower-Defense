@@ -89,6 +89,18 @@ import {
 import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
 
 // =============================================================================
+// GAMEPLAY REGION IMAGES
+// =============================================================================
+
+const REGION_IMAGES = [
+  { src: "/images/new/gameplay_grounds.png", alt: "Princeton Grounds", label: "Grounds" },
+  { src: "/images/new/gameplay_swamp.png", alt: "Murky Marshes", label: "Swamp" },
+  { src: "/images/new/gameplay_desert.png", alt: "Sahara Sands", label: "Desert" },
+  { src: "/images/new/gameplay_winter.png", alt: "Frozen Frontier", label: "Winter" },
+  { src: "/images/new/gameplay_volcano.png", alt: "Volcanic Depths", label: "Volcanic" },
+] as const;
+
+// =============================================================================
 // CODEX HELPER FUNCTIONS
 // =============================================================================
 
@@ -3625,6 +3637,26 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       </div>
                     </div>
                   </div>
+                  <div className="mt-3 relative rounded-lg overflow-hidden border border-amber-700/25" style={{ height: 80 }}>
+                    <Image
+                      src="/images/new/gameplay_volcano_ui.png"
+                      alt="Gameplay overview"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 800px"
+                      className="object-cover object-center"
+                      style={{ opacity: 0.35 }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-950/70 via-transparent to-amber-950/70" />
+                    <div className="absolute inset-0 flex items-center justify-center gap-6 text-[10px] text-amber-300/80 uppercase tracking-widest font-semibold">
+                      <span>Build</span>
+                      <ChevronRight size={10} className="text-amber-400/40" />
+                      <span>Defend</span>
+                      <ChevronRight size={10} className="text-amber-400/40" />
+                      <span>Upgrade</span>
+                      <ChevronRight size={10} className="text-amber-400/40" />
+                      <span>Conquer</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -3673,6 +3705,20 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         </FramedCodexSprite>
                       ))}
                     </div>
+                    <div className="relative rounded-lg overflow-hidden border border-amber-700/25 mb-3" style={{ height: 90 }}>
+                      <Image
+                        src="/images/new/all_towers.png"
+                        alt="All campus towers"
+                        fill
+                        sizes="(max-width: 640px) 100vw, 500px"
+                        className="object-cover object-center"
+                        style={{ opacity: 0.45 }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-amber-950/80 via-transparent to-amber-950/40" />
+                      <div className="absolute bottom-1.5 left-2.5 text-[10px] text-amber-300/70 font-semibold tracking-wider uppercase">
+                        7 Campus Towers · 14 Upgrade Paths
+                      </div>
+                    </div>
                     <div className="rounded border border-amber-800/35 bg-amber-950/25 px-2 py-1.5 text-xs text-amber-200 mb-2">
                       Cost range: {cheapestTower ? `${TOWER_DATA[cheapestTower.type].name} (${cheapestTower.cost} PP)` : "-"}{" "}
                       to {priciestTower ? `${TOWER_DATA[priciestTower.type].name} (${priciestTower.cost} PP)` : "-"}
@@ -3687,6 +3733,23 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     <div className="flex items-center gap-2 text-blue-300 mb-2">
                       <Flag size={14} />
                       <span className="text-sm font-semibold">3) Maps, Paths, and Lane Geometry</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5 mb-3">
+                      {REGION_IMAGES.map((region) => (
+                        <div key={region.label} className="relative rounded-md overflow-hidden border border-blue-700/25 aspect-[16/10]">
+                          <Image
+                            src={region.src}
+                            alt={region.alt}
+                            fill
+                            sizes="100px"
+                            className="object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                          <span className="absolute bottom-0.5 left-0 right-0 text-center text-[8px] text-blue-200/90 font-semibold tracking-wider">
+                            {region.label}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                     <div className="rounded-lg border border-blue-800/35 bg-blue-950/20 p-2.5 mb-3">
                       <div className="flex items-center justify-center gap-1.5">
@@ -3834,6 +3897,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     <div className="flex items-center gap-2 text-sky-300 mb-2">
                       <Crosshair size={14} />
                       <span className="text-sm font-semibold">8) Ranged Combat and Target Priority</span>
+                    </div>
+                    <div className="relative rounded-lg overflow-hidden border border-sky-700/25 mb-3" style={{ height: 80 }}>
+                      <Image
+                        src="/images/new/gameplay_missile1.png"
+                        alt="Missile barrage in action"
+                        fill
+                        sizes="(max-width: 640px) 100vw, 500px"
+                        className="object-cover object-center"
+                        style={{ opacity: 0.4 }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-950/70 via-transparent to-sky-950/70" />
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
                       <FramedCodexSprite size={40} theme={TOWER_SPRITE_FRAME_THEME.arch}>
