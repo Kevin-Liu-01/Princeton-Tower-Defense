@@ -2,7 +2,7 @@
 // Contains all decoration rendering switch cases for various decoration types
 
 import type { DecorationType, Position } from "../../types";
-import { ISO_COS, ISO_SIN, ISO_TAN, ISO_Y_RATIO } from "../../constants";
+import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import {
   drawIsometricPrism,
   drawIsometricPyramid,
@@ -28,6 +28,7 @@ import {
 } from "./foliageShapes";
 import { drawTentacle } from "./tentacleShapes";
 import { drawBench } from "./benchShapes";
+import { drawBrokenWallDecoration } from "./wallShapes";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -8212,219 +8213,269 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "dune": {
-      // Enhanced 3D isometric sand dune with proper ground blending
       const duneBaseX = screenPos.x;
       const duneBaseY = screenPos.y;
+      const duneSeed = decorX * 3.7 + decorY * 8.9;
 
-      // Isometric ground shadow/base - fades into terrain
+      // Ground shadow - wide, soft organic blob
       const groundShadowGrad = ctx.createRadialGradient(
         duneBaseX,
-        duneBaseY + 12 * s,
+        duneBaseY + 14 * s,
         0,
         duneBaseX,
-        duneBaseY + 12 * s,
-        65 * s,
+        duneBaseY + 14 * s,
+        70 * s,
       );
-      groundShadowGrad.addColorStop(0, "rgba(120,90,40,0.35)");
-      groundShadowGrad.addColorStop(0.5, "rgba(100,75,30,0.2)");
+      groundShadowGrad.addColorStop(0, "rgba(110,80,35,0.3)");
+      groundShadowGrad.addColorStop(0.5, "rgba(100,75,30,0.15)");
       groundShadowGrad.addColorStop(1, "transparent");
       ctx.fillStyle = groundShadowGrad;
       drawOrganicBlobAt(
         ctx,
         duneBaseX,
-        duneBaseY + 12 * s,
-        60 * s,
-        18 * s,
-        decorX * 3.7 + decorY * 8.9,
+        duneBaseY + 14 * s,
+        68 * s,
+        22 * s,
+        duneSeed,
+        0.12,
+        32,
       );
       ctx.fill();
 
-      // Base sand spread - organic blob that grounds the dune
+      // Base sand spread - wide blob that grounds the dune into terrain
       const baseSandGrad = ctx.createRadialGradient(
         duneBaseX,
         duneBaseY + 8 * s,
         0,
         duneBaseX,
         duneBaseY + 8 * s,
-        55 * s,
+        62 * s,
       );
       baseSandGrad.addColorStop(0, "#c9a040");
-      baseSandGrad.addColorStop(0.6, "#b89035");
+      baseSandGrad.addColorStop(0.5, "#bfa040");
+      baseSandGrad.addColorStop(0.8, "#b08830");
       baseSandGrad.addColorStop(1, "rgba(168,128,48,0)");
       ctx.fillStyle = baseSandGrad;
       drawOrganicBlobAt(
         ctx,
         duneBaseX,
         duneBaseY + 8 * s,
-        55 * s,
-        16 * s,
-        decorX * 5.1 + decorY * 12.3,
+        58 * s,
+        20 * s,
+        duneSeed * 1.3,
+        0.15,
+        32,
       );
       ctx.fill();
 
-      // Main dune body - gradient for depth with curved isometric base
-      const duneGrad = ctx.createLinearGradient(
-        duneBaseX - 45 * s,
-        duneBaseY - 20 * s,
-        duneBaseX + 45 * s,
-        duneBaseY + 5 * s,
-      );
-      duneGrad.addColorStop(0, "#f0d070");
-      duneGrad.addColorStop(0.3, "#e8c060");
-      duneGrad.addColorStop(0.6, "#d4a84b");
-      duneGrad.addColorStop(1, "#b08830");
-
-      ctx.fillStyle = duneGrad;
-      ctx.beginPath();
-      // Start from left side of isometric base ellipse
-      ctx.moveTo(duneBaseX - 52 * s, duneBaseY + 6 * s);
-      // Curve up to first peak
-      ctx.bezierCurveTo(
-        duneBaseX - 40 * s,
-        duneBaseY - 2 * s,
-        duneBaseX - 20 * s,
-        duneBaseY - 15 * s,
-        duneBaseX - 5 * s,
-        duneBaseY - 22 * s,
-      );
-      // Continue to second ridge
-      ctx.bezierCurveTo(
-        duneBaseX + 10 * s,
-        duneBaseY - 15 * s,
-        duneBaseX + 30 * s,
-        duneBaseY - 8 * s,
-        duneBaseX + 45 * s,
-        duneBaseY - 3 * s,
-      );
-      // Curve down to right side of isometric base
-      ctx.bezierCurveTo(
-        duneBaseX + 52 * s,
-        duneBaseY + 2 * s,
-        duneBaseX + 54 * s,
-        duneBaseY + 5 * s,
-        duneBaseX + 52 * s,
-        duneBaseY + 8 * s,
-      );
-      // Isometric curved base (front edge of dune)
-      ctx.bezierCurveTo(
-        duneBaseX + 35 * s,
-        duneBaseY + 14 * s,
-        duneBaseX - 35 * s,
-        duneBaseY + 14 * s,
-        duneBaseX - 52 * s,
-        duneBaseY + 6 * s,
-      );
-      ctx.fill();
-
-      // Secondary dune layer (foreground ridge)
-      const dune2Grad = ctx.createLinearGradient(
-        duneBaseX - 35 * s,
-        duneBaseY - 5 * s,
-        duneBaseX + 40 * s,
-        duneBaseY + 10 * s,
-      );
-      dune2Grad.addColorStop(0, "#ddb855");
-      dune2Grad.addColorStop(0.4, "#d4a84b");
-      dune2Grad.addColorStop(1, "#a08028");
-
-      ctx.fillStyle = dune2Grad;
-      ctx.beginPath();
-      ctx.moveTo(duneBaseX - 42 * s, duneBaseY + 10 * s);
-      ctx.bezierCurveTo(
-        duneBaseX - 25 * s,
-        duneBaseY + 2 * s,
-        duneBaseX - 5 * s,
-        duneBaseY - 6 * s,
-        duneBaseX + 12 * s,
+      // Main dune body - large organic blob with radial gradient for 3D depth
+      const duneBodyGrad = ctx.createRadialGradient(
+        duneBaseX - 8 * s,
         duneBaseY - 10 * s,
+        0,
+        duneBaseX,
+        duneBaseY,
+        50 * s,
       );
-      ctx.bezierCurveTo(
-        duneBaseX + 28 * s,
-        duneBaseY - 5 * s,
-        duneBaseX + 40 * s,
-        duneBaseY + 2 * s,
-        duneBaseX + 46 * s,
-        duneBaseY + 10 * s,
-      );
-      // Curved isometric base for foreground ridge
-      ctx.bezierCurveTo(
-        duneBaseX + 25 * s,
-        duneBaseY + 16 * s,
-        duneBaseX - 25 * s,
-        duneBaseY + 16 * s,
-        duneBaseX - 42 * s,
-        duneBaseY + 10 * s,
+      duneBodyGrad.addColorStop(0, "#f0d070");
+      duneBodyGrad.addColorStop(0.35, "#e8c060");
+      duneBodyGrad.addColorStop(0.65, "#d4a84b");
+      duneBodyGrad.addColorStop(1, "#b89035");
+      ctx.fillStyle = duneBodyGrad;
+      drawOrganicBlobAt(
+        ctx,
+        duneBaseX - 5 * s,
+        duneBaseY - 2 * s,
+        48 * s,
+        22 * s,
+        duneSeed * 2.1,
+        0.18,
+        32,
       );
       ctx.fill();
 
-      // Wind-blown crest (highlighted edge with glow)
-      setShadowBlur(ctx, 4 * s, "rgba(255,230,150,0.4)");
-      ctx.strokeStyle = "#f5e090";
-      ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.moveTo(duneBaseX - 20 * s, duneBaseY - 8 * s);
-      ctx.bezierCurveTo(
-        duneBaseX - 10 * s,
+      // Primary peak mound - taller blob offset upward
+      const peakGrad = ctx.createRadialGradient(
+        duneBaseX - 12 * s,
+        duneBaseY - 20 * s,
+        0,
+        duneBaseX - 6 * s,
+        duneBaseY - 8 * s,
+        30 * s,
+      );
+      peakGrad.addColorStop(0, "#f5db78");
+      peakGrad.addColorStop(0.5, "#e8c060");
+      peakGrad.addColorStop(1, "#d4a84b");
+      ctx.fillStyle = peakGrad;
+      drawOrganicBlobAt(
+        ctx,
+        duneBaseX - 8 * s,
+        duneBaseY - 10 * s,
+        32 * s,
+        18 * s,
+        duneSeed * 3.7,
+        0.2,
+        32,
+      );
+      ctx.fill();
+
+      // Secondary ridge blob offset to the right
+      const ridgeGrad = ctx.createRadialGradient(
+        duneBaseX + 16 * s,
+        duneBaseY - 6 * s,
+        0,
+        duneBaseX + 16 * s,
+        duneBaseY + 2 * s,
+        26 * s,
+      );
+      ridgeGrad.addColorStop(0, "#ddb855");
+      ridgeGrad.addColorStop(0.6, "#d4a84b");
+      ridgeGrad.addColorStop(1, "#b89035");
+      ctx.fillStyle = ridgeGrad;
+      drawOrganicBlobAt(
+        ctx,
+        duneBaseX + 16 * s,
+        duneBaseY,
+        26 * s,
+        14 * s,
+        duneSeed * 5.3,
+        0.18,
+        28,
+      );
+      ctx.fill();
+
+      // Sunlit highlight blob on the peak
+      const highlightGrad = ctx.createRadialGradient(
+        duneBaseX - 14 * s,
         duneBaseY - 18 * s,
-        duneBaseX,
+        0,
+        duneBaseX - 10 * s,
+        duneBaseY - 14 * s,
+        18 * s,
+      );
+      highlightGrad.addColorStop(0, "rgba(255,235,160,0.5)");
+      highlightGrad.addColorStop(0.6, "rgba(245,220,130,0.2)");
+      highlightGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = highlightGrad;
+      drawOrganicBlobAt(
+        ctx,
+        duneBaseX - 12 * s,
+        duneBaseY - 14 * s,
+        20 * s,
+        12 * s,
+        duneSeed * 7.1,
+        0.12,
+        28,
+      );
+      ctx.fill();
+
+      // Shadow blob on the lee side for depth
+      const shadowGrad = ctx.createRadialGradient(
+        duneBaseX + 18 * s,
+        duneBaseY + 4 * s,
+        0,
+        duneBaseX + 18 * s,
+        duneBaseY + 4 * s,
+        22 * s,
+      );
+      shadowGrad.addColorStop(0, "rgba(140,100,40,0.35)");
+      shadowGrad.addColorStop(0.7, "rgba(130,95,35,0.15)");
+      shadowGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = shadowGrad;
+      drawOrganicBlobAt(
+        ctx,
+        duneBaseX + 18 * s,
+        duneBaseY + 4 * s,
+        22 * s,
+        10 * s,
+        duneSeed * 9.3,
+        0.14,
+        24,
+      );
+      ctx.fill();
+
+      // Wind-blown crest highlight with glow
+      setShadowBlur(ctx, 4 * s, "rgba(255,230,150,0.35)");
+      ctx.strokeStyle = "rgba(245,225,140,0.7)";
+      ctx.lineWidth = 1.5 * s;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(duneBaseX - 25 * s, duneBaseY - 6 * s);
+      ctx.bezierCurveTo(
+        duneBaseX - 15 * s,
+        duneBaseY - 18 * s,
+        duneBaseX - 5 * s,
         duneBaseY - 22 * s,
-        duneBaseX + 12 * s,
-        duneBaseY - 12 * s,
+        duneBaseX + 8 * s,
+        duneBaseY - 10 * s,
       );
       ctx.stroke();
       clearShadow(ctx);
 
-      // Wind ripples texture on the dune face
-      ctx.strokeStyle = "rgba(160,120,50,0.35)";
-      ctx.lineWidth = 0.8 * s;
-      for (let r = 0; r < 5; r++) {
-        const ry = duneBaseY + r * 2.5 * s;
-        const rxOffset = r * 3 * s;
+      // Wind ripple texture across the dune face
+      ctx.strokeStyle = "rgba(160,120,50,0.25)";
+      ctx.lineWidth = 0.7 * s;
+      for (let r = 0; r < 6; r++) {
+        const ry = duneBaseY + r * 2.8 * s - 2 * s;
+        const rxOff = r * 2.5 * s;
         ctx.beginPath();
-        ctx.moveTo(duneBaseX - 38 * s + rxOffset, ry + 2 * s);
+        ctx.moveTo(duneBaseX - 35 * s + rxOff, ry + 2 * s);
         ctx.bezierCurveTo(
-          duneBaseX - 20 * s + rxOffset,
-          ry - 1 * s,
-          duneBaseX + rxOffset,
-          ry - 1 * s,
-          duneBaseX + 25 * s + rxOffset * 0.5,
+          duneBaseX - 18 * s + rxOff,
+          ry - 1.5 * s,
+          duneBaseX + 2 * s + rxOff,
+          ry - 1.5 * s,
+          duneBaseX + 22 * s + rxOff * 0.5,
           ry + 2 * s,
         );
         ctx.stroke();
       }
 
       // Sand grain texture highlights
-      ctx.fillStyle = "rgba(255,235,180,0.25)";
-      for (let g = 0; g < 8; g++) {
-        const gx = duneBaseX - 30 * s + g * 9 * s + Math.sin(g * 1.7) * 5 * s;
-        const gy = duneBaseY - 5 * s + Math.cos(g * 2.3) * 8 * s;
+      ctx.fillStyle = "rgba(255,235,180,0.2)";
+      for (let g = 0; g < 10; g++) {
+        const gx =
+          duneBaseX -
+          30 * s +
+          g * 8 * s +
+          Math.sin(g * 1.7 + duneSeed) * 5 * s;
+        const gy =
+          duneBaseY - 5 * s + Math.cos(g * 2.3 + duneSeed) * 8 * s;
         ctx.beginPath();
-        ctx.ellipse(gx, gy, 2 * s, 1 * s, 0.5, 0, Math.PI * 2);
+        ctx.ellipse(gx, gy, 2.2 * s, 0.8 * s, 0.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Subtle wind-blown sand particles with animation
-      ctx.fillStyle = "rgba(240,215,130,0.4)";
+      // Animated wind-blown sand particles
+      ctx.fillStyle = "rgba(240,215,130,0.35)";
       const windOffset = Math.sin(decorTime * 2.5) * 6 * s;
       const windOffset2 = Math.cos(decorTime * 1.8) * 4 * s;
       for (let p = 0; p < 5; p++) {
         const px =
-          duneBaseX - 15 * s + p * 10 * s + windOffset + (p % 2) * windOffset2;
+          duneBaseX -
+          15 * s +
+          p * 10 * s +
+          windOffset +
+          (p % 2) * windOffset2;
         const py =
-          duneBaseY - 16 * s + p * 3 * s + Math.sin(decorTime * 3 + p) * 2 * s;
+          duneBaseY -
+          16 * s +
+          p * 3 * s +
+          Math.sin(decorTime * 3 + p) * 2 * s;
         ctx.beginPath();
         ctx.ellipse(px, py, 4 * s, 1.2 * s, 0.4, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // Scattered sand at the base edges for natural blending
-      ctx.fillStyle = "rgba(200,160,80,0.3)";
-      for (let sp = 0; sp < 12; sp++) {
-        const angle = (sp / 12) * Math.PI * 2;
-        const dist = 48 * s + Math.sin(sp * 2.7) * 8 * s;
+      ctx.fillStyle = "rgba(200,160,80,0.25)";
+      for (let sp = 0; sp < 14; sp++) {
+        const angle = (sp / 14) * Math.PI * 2;
+        const dist = 52 * s + Math.sin(sp * 2.7 + duneSeed) * 8 * s;
         const spx = duneBaseX + Math.cos(angle) * dist * 0.9;
         const spy = duneBaseY + 10 * s + Math.sin(angle) * dist * 0.3;
-        const spSize = 1.5 * s + Math.abs(Math.sin(sp * 1.3)) * 2 * s;
+        const spSize =
+          1.5 * s + Math.abs(Math.sin(sp * 1.3 + duneSeed)) * 2 * s;
         ctx.beginPath();
         ctx.ellipse(
           spx,
@@ -15379,279 +15430,216 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "snow_pile": {
-      // Proper isometric 3D snow drift with diamond base
       const snowBaseX = screenPos.x;
       const snowBaseY = screenPos.y;
       const snowSeed = (dec.x || 0) * 7.3 + (dec.y || 0) * 13.1;
 
-      // Isometric ratios
-      const isoWidth = 35 * s; // Half-width of diamond base
-      const isoDepth = 18 * s; // Half-depth (appears shorter due to iso angle)
-      const snowHeight = 28 * s; // Peak height
-
-      // Diamond base corners (isometric)
-      const leftPt = { x: snowBaseX - isoWidth, y: snowBaseY };
-      const rightPt = { x: snowBaseX + isoWidth, y: snowBaseY };
-      const backPt = { x: snowBaseX, y: snowBaseY - isoDepth };
-      const frontPt = { x: snowBaseX, y: snowBaseY + isoDepth };
-      const peakPt = { x: snowBaseX - 5 * s, y: snowBaseY - snowHeight };
-
-      // Soft shadow on ground
+      // Ground shadow
       drawDirectionalShadow(
         ctx,
         snowBaseX,
         snowBaseY + 2 * s,
         s,
-        35 * s,
-        18 * s,
-        30 * s,
-        0.28,
+        40 * s,
+        20 * s,
+        32 * s,
+        0.25,
         "70,90,120",
       );
 
-      // Back face (darker, more blue - facing away from light)
-      const backFaceGrad = ctx.createLinearGradient(
-        backPt.x,
-        backPt.y,
+      // Wide snow spread on ground - soft fade into terrain
+      const groundSnowGrad = ctx.createRadialGradient(
         snowBaseX,
-        snowBaseY + isoDepth * 0.5,
-      );
-      backFaceGrad.addColorStop(0, "#c8d5e5");
-      backFaceGrad.addColorStop(0.5, "#d5e0eb");
-      backFaceGrad.addColorStop(1, "#dde8f0");
-
-      ctx.fillStyle = backFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(leftPt.x, leftPt.y);
-      ctx.quadraticCurveTo(
-        leftPt.x + 8 * s,
-        leftPt.y - snowHeight * 0.6,
-        peakPt.x - 8 * s,
-        peakPt.y + 5 * s,
-      );
-      ctx.quadraticCurveTo(
-        backPt.x - 5 * s,
-        backPt.y - snowHeight * 0.4,
-        backPt.x,
-        backPt.y,
-      );
-      ctx.lineTo(leftPt.x, leftPt.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Left face (medium shadow)
-      const leftFaceGrad = ctx.createLinearGradient(
-        leftPt.x,
-        leftPt.y,
-        frontPt.x,
-        frontPt.y,
-      );
-      leftFaceGrad.addColorStop(0, "#d0dce8");
-      leftFaceGrad.addColorStop(0.4, "#dce6ef");
-      leftFaceGrad.addColorStop(1, "#e5edf4");
-
-      ctx.fillStyle = leftFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(leftPt.x, leftPt.y);
-      ctx.quadraticCurveTo(
-        leftPt.x + 8 * s,
-        leftPt.y - snowHeight * 0.6,
-        peakPt.x - 8 * s,
-        peakPt.y + 5 * s,
-      );
-      ctx.quadraticCurveTo(
-        peakPt.x,
-        peakPt.y,
-        peakPt.x + 5 * s,
-        peakPt.y + 8 * s,
-      );
-      ctx.quadraticCurveTo(
-        frontPt.x - 10 * s,
-        frontPt.y - snowHeight * 0.3,
-        frontPt.x,
-        frontPt.y,
-      );
-      ctx.lineTo(leftPt.x, leftPt.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right face (brightest - lit side)
-      const rightFaceGrad = ctx.createLinearGradient(
-        backPt.x,
-        backPt.y - snowHeight,
-        rightPt.x,
-        rightPt.y,
-      );
-      rightFaceGrad.addColorStop(0, "#ffffff");
-      rightFaceGrad.addColorStop(0.2, "#fcfeff");
-      rightFaceGrad.addColorStop(0.5, "#f5fafc");
-      rightFaceGrad.addColorStop(1, "#eef4f8");
-
-      ctx.fillStyle = rightFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(backPt.x, backPt.y);
-      ctx.quadraticCurveTo(
-        backPt.x + 5 * s,
-        backPt.y - snowHeight * 0.5,
-        peakPt.x + 3 * s,
-        peakPt.y + 3 * s,
-      );
-      ctx.quadraticCurveTo(
-        rightPt.x - 10 * s,
-        rightPt.y - snowHeight * 0.5,
-        rightPt.x,
-        rightPt.y,
-      );
-      ctx.lineTo(backPt.x, backPt.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Front face (lit, but slightly shadowed due to angle)
-      const frontFaceGrad = ctx.createLinearGradient(
-        peakPt.x,
-        peakPt.y,
-        frontPt.x,
-        frontPt.y,
-      );
-      frontFaceGrad.addColorStop(0, "#f8fbfd");
-      frontFaceGrad.addColorStop(0.3, "#f2f7fa");
-      frontFaceGrad.addColorStop(0.7, "#eaf1f6");
-      frontFaceGrad.addColorStop(1, "#e0eaf2");
-
-      ctx.fillStyle = frontFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(frontPt.x, frontPt.y);
-      ctx.quadraticCurveTo(
-        frontPt.x - 10 * s,
-        frontPt.y - snowHeight * 0.3,
-        peakPt.x + 5 * s,
-        peakPt.y + 8 * s,
-      );
-      ctx.quadraticCurveTo(
-        peakPt.x + 8 * s,
-        peakPt.y + 5 * s,
-        peakPt.x + 12 * s,
-        peakPt.y + 10 * s,
-      );
-      ctx.quadraticCurveTo(
-        rightPt.x - 5 * s,
-        rightPt.y - snowHeight * 0.25,
-        rightPt.x,
-        rightPt.y,
-      );
-      ctx.lineTo(frontPt.x, frontPt.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Secondary smaller mound on top-right
-      const mound2X = snowBaseX + 12 * s;
-      const mound2Y = snowBaseY - 5 * s;
-      const mound2Grad = ctx.createRadialGradient(
-        mound2X - 3 * s,
-        mound2Y - 8 * s,
+        snowBaseY + 6 * s,
         0,
-        mound2X,
-        mound2Y,
-        15 * s,
+        snowBaseX,
+        snowBaseY + 6 * s,
+        50 * s,
       );
-      mound2Grad.addColorStop(0, "#ffffff");
-      mound2Grad.addColorStop(0.5, "#f5f9fc");
-      mound2Grad.addColorStop(1, "#e8f0f5");
-      ctx.fillStyle = mound2Grad;
-      ctx.beginPath();
-      ctx.moveTo(mound2X - 12 * s, mound2Y + 6 * s);
-      ctx.quadraticCurveTo(
-        mound2X - 8 * s,
-        mound2Y - 10 * s,
-        mound2X + 2 * s,
-        mound2Y - 12 * s,
+      groundSnowGrad.addColorStop(0, "#e8f0f5");
+      groundSnowGrad.addColorStop(0.5, "#e0eaf2");
+      groundSnowGrad.addColorStop(0.8, "rgba(220,235,245,0.4)");
+      groundSnowGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = groundSnowGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX,
+        snowBaseY + 6 * s,
+        48 * s,
+        17 * s,
+        snowSeed,
+        0.12,
+        32,
       );
-      ctx.quadraticCurveTo(
-        mound2X + 12 * s,
-        mound2Y - 6 * s,
-        mound2X + 15 * s,
-        mound2Y + 6 * s,
-      );
-      ctx.quadraticCurveTo(
-        mound2X + 5 * s,
-        mound2Y + 8 * s,
-        mound2X - 5 * s,
-        mound2Y + 7 * s,
-      );
-      ctx.quadraticCurveTo(
-        mound2X - 10 * s,
-        mound2Y + 7 * s,
-        mound2X - 12 * s,
-        mound2Y + 6 * s,
-      );
-      ctx.closePath();
       ctx.fill();
 
-      // Blue shadow in crevice between mounds
-      ctx.fillStyle = "rgba(150, 180, 215, 0.3)";
-      ctx.beginPath();
-      ctx.moveTo(snowBaseX - 5 * s, snowBaseY - 12 * s);
-      ctx.quadraticCurveTo(
+      // Main snow body - large organic blob with blue shadow tones
+      const mainSnowGrad = ctx.createRadialGradient(
         snowBaseX + 5 * s,
-        snowBaseY - 8 * s,
-        snowBaseX + 10 * s,
-        snowBaseY - 10 * s,
+        snowBaseY - 12 * s,
+        0,
+        snowBaseX,
+        snowBaseY,
+        40 * s,
       );
-      ctx.quadraticCurveTo(
+      mainSnowGrad.addColorStop(0, "#f0f5fa");
+      mainSnowGrad.addColorStop(0.4, "#e5edf4");
+      mainSnowGrad.addColorStop(0.7, "#dce6ef");
+      mainSnowGrad.addColorStop(1, "#d0dce8");
+      ctx.fillStyle = mainSnowGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX - 2 * s,
+        snowBaseY - 3 * s,
+        40 * s,
+        20 * s,
+        snowSeed * 1.7,
+        0.15,
+        32,
+      );
+      ctx.fill();
+
+      // Primary mound - brighter, higher organic blob
+      const moundGrad = ctx.createRadialGradient(
+        snowBaseX - 6 * s,
+        snowBaseY - 20 * s,
+        0,
+        snowBaseX - 3 * s,
+        snowBaseY - 8 * s,
+        30 * s,
+      );
+      moundGrad.addColorStop(0, "#ffffff");
+      moundGrad.addColorStop(0.3, "#f8fbfd");
+      moundGrad.addColorStop(0.6, "#f0f5fa");
+      moundGrad.addColorStop(1, "#e5edf4");
+      ctx.fillStyle = moundGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX - 5 * s,
+        snowBaseY - 8 * s,
+        32 * s,
+        18 * s,
+        snowSeed * 3.1,
+        0.18,
+        32,
+      );
+      ctx.fill();
+
+      // Peak highlight blob - bright white cap
+      const peakSnowGrad = ctx.createRadialGradient(
+        snowBaseX - 8 * s,
+        snowBaseY - 22 * s,
+        0,
+        snowBaseX - 5 * s,
+        snowBaseY - 14 * s,
+        18 * s,
+      );
+      peakSnowGrad.addColorStop(0, "#ffffff");
+      peakSnowGrad.addColorStop(0.5, "rgba(255,255,255,0.8)");
+      peakSnowGrad.addColorStop(1, "rgba(248,251,253,0.3)");
+      ctx.fillStyle = peakSnowGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX - 6 * s,
+        snowBaseY - 16 * s,
+        20 * s,
+        11 * s,
+        snowSeed * 5.3,
+        0.2,
+        28,
+      );
+      ctx.fill();
+
+      // Secondary mound offset to the right
+      const mound2SnowGrad = ctx.createRadialGradient(
+        snowBaseX + 14 * s,
+        snowBaseY - 10 * s,
+        0,
+        snowBaseX + 14 * s,
+        snowBaseY - 2 * s,
+        20 * s,
+      );
+      mound2SnowGrad.addColorStop(0, "#ffffff");
+      mound2SnowGrad.addColorStop(0.4, "#f5f9fc");
+      mound2SnowGrad.addColorStop(1, "#e8f0f5");
+      ctx.fillStyle = mound2SnowGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX + 14 * s,
+        snowBaseY - 3 * s,
+        20 * s,
+        13 * s,
+        snowSeed * 7.7,
+        0.17,
+        28,
+      );
+      ctx.fill();
+
+      // Blue shadow blob in the crevice between mounds
+      const creviceGrad = ctx.createRadialGradient(
+        snowBaseX + 3 * s,
+        snowBaseY - 7 * s,
+        0,
         snowBaseX + 3 * s,
         snowBaseY - 5 * s,
-        snowBaseX - 5 * s,
-        snowBaseY - 12 * s,
+        12 * s,
+      );
+      creviceGrad.addColorStop(0, "rgba(150,180,215,0.35)");
+      creviceGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = creviceGrad;
+      drawOrganicBlobAt(
+        ctx,
+        snowBaseX + 3 * s,
+        snowBaseY - 5 * s,
+        12 * s,
+        7 * s,
+        snowSeed * 9.1,
+        0.1,
+        24,
       );
       ctx.fill();
 
-      // Soft edge definition between faces
-      ctx.strokeStyle = "rgba(180, 200, 220, 0.3)";
-      ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.moveTo(peakPt.x, peakPt.y + 3 * s);
-      ctx.quadraticCurveTo(
-        frontPt.x - 8 * s,
-        frontPt.y - snowHeight * 0.25,
-        frontPt.x,
-        frontPt.y,
-      );
-      ctx.stroke();
-
-      // Highlight ridges on top
-      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      // Highlight ridge on the lit crest
+      setShadowBlur(ctx, 3 * s, "rgba(255,255,255,0.3)");
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
       ctx.lineWidth = 2 * s;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(peakPt.x - 10 * s, peakPt.y + 12 * s);
-      ctx.quadraticCurveTo(
-        peakPt.x - 2 * s,
-        peakPt.y - 2 * s,
-        peakPt.x + 8 * s,
-        peakPt.y + 8 * s,
+      ctx.moveTo(snowBaseX - 18 * s, snowBaseY - 10 * s);
+      ctx.bezierCurveTo(
+        snowBaseX - 10 * s,
+        snowBaseY - 22 * s,
+        snowBaseX - 2 * s,
+        snowBaseY - 24 * s,
+        snowBaseX + 6 * s,
+        snowBaseY - 14 * s,
       );
       ctx.stroke();
+      clearShadow(ctx);
 
-      // Secondary highlight
-      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      // Secondary highlight on the right mound
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.moveTo(mound2X - 5 * s, mound2Y - 5 * s);
-      ctx.quadraticCurveTo(
-        mound2X + 2 * s,
-        mound2Y - 10 * s,
-        mound2X + 8 * s,
-        mound2Y - 4 * s,
+      ctx.moveTo(snowBaseX + 8 * s, snowBaseY - 8 * s);
+      ctx.bezierCurveTo(
+        snowBaseX + 14 * s,
+        snowBaseY - 14 * s,
+        snowBaseX + 20 * s,
+        snowBaseY - 12 * s,
+        snowBaseX + 22 * s,
+        snowBaseY - 4 * s,
       );
       ctx.stroke();
 
       // Snow texture bumps on surfaces
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
       for (let bump = 0; bump < 10; bump++) {
         const bumpAngle = (bump / 10) * Math.PI * 2 + snowSeed;
         const bumpDist = (12 + Math.sin(snowSeed + bump * 2) * 8) * s;
         const bumpX = snowBaseX + Math.cos(bumpAngle) * bumpDist * 0.8;
-        const bumpY = snowBaseY - 10 * s + Math.sin(bumpAngle) * bumpDist * 0.4;
+        const bumpY =
+          snowBaseY - 10 * s + Math.sin(bumpAngle) * bumpDist * 0.4;
         const bumpSize = (1.5 + Math.sin(snowSeed + bump) * 0.8) * s;
         ctx.beginPath();
         ctx.ellipse(
@@ -15667,7 +15655,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       }
 
       // Frost crystals scattered on surface
-      ctx.fillStyle = "rgba(220, 240, 255, 0.75)";
+      ctx.fillStyle = "rgba(220, 240, 255, 0.7)";
       const crystalSpots = [
         { x: -20, y: -18 },
         { x: -8, y: -24 },
@@ -15679,9 +15667,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       crystalSpots.forEach((cp, idx) => {
         const cx = snowBaseX + cp.x * s;
         const cy = snowBaseY + cp.y * s;
-        const crystalSize = (1.2 + Math.sin(snowSeed + idx * 1.7) * 0.4) * s;
-
-        // 6-point frost crystal
+        const crystalSize =
+          (1.2 + Math.sin(snowSeed + idx * 1.7) * 0.4) * s;
         ctx.beginPath();
         for (let i = 0; i < 6; i++) {
           const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
@@ -15700,17 +15687,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const sparklePhase =
           (sparkleTime + sp * 0.9 + Math.sin(snowSeed + sp) * 0.5) % 2;
         if (sparklePhase < 0.5) {
-          const sparkleAlpha = Math.sin((sparklePhase * Math.PI) / 0.5) * 0.95;
+          const sparkleAlpha =
+            Math.sin((sparklePhase * Math.PI) / 0.5) * 0.95;
           const spAngle =
             (sp / 7) * Math.PI * 1.5 - Math.PI * 0.5 + snowSeed * 0.1;
           const spDist = (15 + sp * 3) * s;
           const spx = snowBaseX + Math.cos(spAngle) * spDist * 0.7;
-          const spy = snowBaseY - 15 * s + Math.sin(spAngle) * spDist * 0.35;
+          const spy =
+            snowBaseY - 15 * s + Math.sin(spAngle) * spDist * 0.35;
 
           ctx.fillStyle = `rgba(255,255,255,${sparkleAlpha})`;
           const starSize = (1.2 + Math.sin(sparklePhase * 6) * 0.4) * s;
 
-          // 4-point sparkle star
           ctx.beginPath();
           ctx.moveTo(spx, spy - starSize * 1.8);
           ctx.lineTo(spx + starSize * 0.25, spy - starSize * 0.25);
@@ -15723,7 +15711,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.closePath();
           ctx.fill();
 
-          // Bright center
           ctx.beginPath();
           ctx.arc(spx, spy, starSize * 0.35, 0, Math.PI * 2);
           ctx.fill();
@@ -15733,7 +15720,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Floating snow particles
       ctx.fillStyle = "rgba(255,255,255,0.45)";
       for (let p = 0; p < 4; p++) {
-        const particlePhase = (decorTime * 0.7 + p * 0.8 + snowSeed) % 2.5;
+        const particlePhase =
+          (decorTime * 0.7 + p * 0.8 + snowSeed) % 2.5;
         const px =
           snowBaseX -
           12 * s +
@@ -15754,12 +15742,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "rgba(255, 252, 245, 0.5)";
       ctx.lineWidth = 1.2 * s;
       ctx.beginPath();
-      ctx.moveTo(backPt.x + 5 * s, backPt.y - 3 * s);
-      ctx.quadraticCurveTo(
-        peakPt.x + 5 * s,
-        peakPt.y + 2 * s,
-        rightPt.x - 10 * s,
-        rightPt.y - 8 * s,
+      ctx.moveTo(snowBaseX + 5 * s, snowBaseY - 16 * s);
+      ctx.bezierCurveTo(
+        snowBaseX - 3 * s,
+        snowBaseY - 24 * s,
+        snowBaseX + 18 * s,
+        snowBaseY - 16 * s,
+        snowBaseX + 24 * s,
+        snowBaseY - 6 * s,
       );
       ctx.stroke();
       break;
@@ -18931,238 +18921,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "broken_wall": {
-      const wallStone = "#8a9aaa";
-      const wallStoneDark = "#6a7a8a";
-      const wallStoneLight = "#aabaca";
-      const wallSnow = "#f5f9fc";
-      const wallIce = "#c5e3f6";
-
-      // Ground shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 8 * s,
-        28 * s,
-        12 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Snow at base
-      ctx.fillStyle = wallSnow;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 4 * s,
-        26 * s,
-        9 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Rubble pile
-      const rubbleColors = [wallStoneDark, wallStone, wallStoneLight];
-      const rubble = [
-        { dx: -18, dy: 2, r: 4 },
-        { dx: -12, dy: 4, r: 3 },
-        { dx: -6, dy: 3, r: 5 },
-        { dx: 2, dy: 5, r: 3.5 },
-        { dx: 8, dy: 3, r: 4 },
-        { dx: 14, dy: 4, r: 3 },
-        { dx: 20, dy: 2, r: 3.5 },
-        { dx: -8, dy: 0, r: 3 },
-        { dx: 5, dy: 1, r: 2.5 },
-      ];
-      rubble.forEach((rb, idx) => {
-        ctx.fillStyle = rubbleColors[idx % 3];
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x + rb.dx * s,
-          screenPos.y + rb.dy * s,
-          rb.r * s,
-          rb.r * 0.6 * s,
-          idx * 0.5,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      });
-
-      // Standing wall section - left side (taller, isometric)
-      {
-        const bwLen = 16 * s;
-        const bwH = 38 * s;
-        const bwD = 4 * s;
-        const bwx1 = screenPos.x - 22 * s;
-        const bwy1 = screenPos.y + bwLen * 0.25;
-        const bwx2 = screenPos.x - 22 * s + bwLen;
-        const bwy2 = screenPos.y + bwLen * 0.25 - bwLen * 0.5;
-
-        drawBrickFace(
-          ctx,
-          bwx1 - bwD,
-          bwy1 - bwD * 0.5,
-          bwx1,
-          bwy1,
-          bwH,
-          wallStoneLight,
-          "rgba(40,50,60,0.3)",
-          s,
-          5,
-          2,
-        );
-
-        ctx.fillStyle = wallStoneLight;
-        ctx.beginPath();
-        ctx.moveTo(bwx1, bwy1 - bwH);
-        ctx.lineTo(bwx2, bwy2 - bwH);
-        ctx.lineTo(bwx2 - bwD, bwy2 - bwD * 0.5 - bwH);
-        ctx.lineTo(bwx1 - bwD, bwy1 - bwD * 0.5 - bwH);
-        ctx.closePath();
-        ctx.fill();
-
-        drawBrickFace(
-          ctx,
-          bwx1,
-          bwy1,
-          bwx2,
-          bwy2,
-          bwH,
-          wallStone,
-          "rgba(30,40,50,0.3)",
-          s,
-          9,
-          4,
-        );
-
-        // Jagged broken top
-        ctx.fillStyle = wallStoneLight;
-        ctx.beginPath();
-        ctx.moveTo(bwx2, bwy2 - bwH);
-        ctx.lineTo(bwx2 + 2 * s, bwy2 - bwH + 4 * s);
-        ctx.lineTo(bwx2 - 3 * s, bwy2 - bwH + 2 * s);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Right wall section (shorter, more broken, isometric)
-      {
-        const bwLen = 14 * s;
-        const bwH = 22 * s;
-        const bwx1 = screenPos.x + 4 * s;
-        const bwy1 = screenPos.y + bwLen * 0.25;
-        const bwx2 = screenPos.x + 4 * s + bwLen;
-        const bwy2 = screenPos.y + bwLen * 0.25 - bwLen * 0.5;
-
-        drawBrickFace(
-          ctx,
-          bwx1,
-          bwy1,
-          bwx2,
-          bwy2,
-          bwH,
-          wallStoneDark,
-          "rgba(30,40,50,0.35)",
-          s,
-          6,
-          4,
-        );
-
-        // Jagged top
-        ctx.fillStyle = wallStoneLight;
-        ctx.beginPath();
-        ctx.moveTo(bwx2, bwy2 - bwH);
-        ctx.lineTo(bwx2 + 1 * s, bwy2 - bwH + 3 * s);
-        ctx.lineTo(bwx2 - 3 * s, bwy2 - bwH + 2 * s);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Frost/ice on wall
-      ctx.fillStyle = wallIce;
-      ctx.globalAlpha = 0.4;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 22 * s, screenPos.y - 30 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 18 * s,
-        screenPos.y - 25 * s,
-        screenPos.x - 22 * s,
-        screenPos.y - 15 * s,
-      );
-      ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 14 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 24 * s,
-        screenPos.y - 24 * s,
-        screenPos.x - 22 * s,
-        screenPos.y - 30 * s,
-      );
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // Snow on top of walls
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 26 * s, screenPos.y - 38 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 18 * s,
-        screenPos.y - 44 * s,
-        screenPos.x - 10 * s,
-        screenPos.y - 38 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x - 8 * s,
-        screenPos.y - 36 * s,
-        screenPos.x - 6 * s,
-        screenPos.y - 35 * s,
-      );
-      ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 35 * s);
-      ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 38 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 10 * s,
-        screenPos.y - 21 * s,
-        8 * s,
-        3 * s,
-        0.1,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Small icicles hanging from broken edges
-      const wallIcicles = [
-        { dx: -14, dy: -35, h: 8 },
-        { dx: -10, dy: -36, h: 6 },
-        { dx: 8, dy: -20, h: 5 },
-        { dx: 12, dy: -21, h: 7 },
-      ];
-      wallIcicles.forEach((wi) => {
-        const wix = screenPos.x + wi.dx * s;
-        const wiy = screenPos.y + wi.dy * s;
-        ctx.fillStyle = wallIce;
-        ctx.beginPath();
-        ctx.moveTo(wix - 1.5 * s, wiy);
-        ctx.lineTo(wix, wiy + wi.h * s);
-        ctx.lineTo(wix + 1.5 * s, wiy);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
-        ctx.beginPath();
-        ctx.moveTo(wix - 0.5 * s, wiy + 1 * s);
-        ctx.lineTo(wix, wiy + wi.h * 0.7 * s);
-        ctx.lineTo(wix + 0.5 * s, wiy + 1 * s);
-        ctx.closePath();
-        ctx.fill();
-      });
+      drawBrokenWallDecoration(ctx, screenPos, s, variant, decorX, decorY);
       break;
     }
 

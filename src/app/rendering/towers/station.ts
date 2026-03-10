@@ -3782,8 +3782,8 @@ export function renderStationTower(
     ctx.fill();
 
     // Stone chimney with smoke stack and mortar detail
-    const chimneyBaseY = roofBaseY + 2 * zoom;
-    const chimX = bX + 6 * zoom;
+    const chimneyBaseY = roofBaseY + 4 * zoom;
+    const chimX = bX + 10 * zoom;
     drawIsometricPrism(
       ctx,
       chimX,
@@ -4450,7 +4450,7 @@ export function renderStationTower(
     drawIsoGothicWindow(
       ctx,
       bX + 6 * zoom,
-      bY - 22 * zoom,
+      bY - 18 * zoom,
       2,
       8,
       "right",
@@ -4461,7 +4461,7 @@ export function renderStationTower(
     drawIsoGothicWindow(
       ctx,
       bX + 11 * zoom,
-      bY - 24 * zoom,
+      bY - 20 * zoom,
       2,
       8,
       "right",
@@ -5629,125 +5629,6 @@ export function renderStationTower(
       ctx.strokeStyle = "rgba(0,0,0,0.2)";
       ctx.lineWidth = 0.6 * zoom;
       ctx.stroke();
-    }
-
-    // Ornate rose window above entrance with tracery and stained glass
-    {
-      const roseX = bX - 3 * zoom;
-      const roseY = bY - 26 * zoom;
-      const roseR = 4.5 * zoom;
-      const roseGlow = 0.4 + Math.sin(time * 2) * 0.2;
-
-      // Deep recess behind window
-      ctx.fillStyle = "#1a1a22";
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, roseR + 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Outer stone frame ring (double molding)
-      ctx.strokeStyle = "#6a6a72";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, roseR + 0.5 * zoom, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, roseR + 2 * zoom, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Stained glass segments (8 colored petals)
-      const petalColors = [
-        "#cc5500",
-        "#aa3300",
-        "#dd7700",
-        "#bb4400",
-        "#cc6600",
-        "#aa4400",
-        "#dd8800",
-        "#bb5500",
-      ];
-      for (let p = 0; p < 8; p++) {
-        const a1 = (p / 8) * Math.PI * 2;
-        const a2 = ((p + 1) / 8) * Math.PI * 2;
-        ctx.fillStyle = petalColors[p];
-        ctx.globalAlpha = roseGlow;
-        ctx.beginPath();
-        ctx.moveTo(roseX, roseY);
-        ctx.arc(roseX, roseY, roseR - 0.5 * zoom, a1, a2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-
-      // Overall glow overlay
-      ctx.fillStyle = `rgba(255, 140, 40, ${roseGlow * 0.3})`;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, roseR - 0.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Tracery spokes (stone dividers between petals)
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 1.2 * zoom;
-      for (let s = 0; s < 8; s++) {
-        const angle = (s / 8) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(roseX, roseY);
-        ctx.lineTo(
-          roseX + Math.cos(angle) * (roseR - 0.5 * zoom),
-          roseY + Math.sin(angle) * (roseR - 0.5 * zoom),
-        );
-        ctx.stroke();
-      }
-
-      // Inner tracery ring
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, roseR * 0.55, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Cusp decorations between spokes (outer ring)
-      for (let c = 0; c < 8; c++) {
-        const cAngle = ((c + 0.5) / 8) * Math.PI * 2;
-        const cR = roseR * 0.78;
-        ctx.fillStyle = "#4a4a52";
-        ctx.beginPath();
-        ctx.arc(
-          roseX + Math.cos(cAngle) * cR,
-          roseY + Math.sin(cAngle) * cR,
-          1 * zoom,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-
-      // Center boss gem
-      ctx.fillStyle = `rgba(255, 160, 60, ${roseGlow})`;
-      ctx.shadowColor = "#ff8800";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      // Gem specular highlight
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.beginPath();
-      ctx.arc(
-        roseX - 0.3 * zoom,
-        roseY - 0.4 * zoom,
-        0.6 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Light spill on wall below rose window
-      ctx.fillStyle = `rgba(255, 140, 40, ${roseGlow * 0.08})`;
-      ctx.beginPath();
-      ctx.arc(roseX, roseY + roseR + 4 * zoom, roseR * 1.5, 0, Math.PI * 2);
-      ctx.fill();
     }
 
     // (Sign removed)
