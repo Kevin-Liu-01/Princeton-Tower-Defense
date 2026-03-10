@@ -1346,7 +1346,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
           {/* Inner ghost border */}
           <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
           <Image
-            src="/images/gameplay-latest-zoomed.png"
+            src="/images/new/gameplay_volcano.png"
             alt="Battle Scene"
             fill
             sizes="100vw"

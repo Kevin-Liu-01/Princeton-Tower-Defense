@@ -14,7 +14,7 @@ Defend Princeton-inspired battlefields across 5 hand-crafted regions with branch
 
 ---
 
-![Volcanic Battlefield](public/images/gameplay-latest-zoomed.png)
+![Volcanic Battlefield](public/images/new/gameplay_volcano_ui.png)
 
 ## What Makes This Different
 
@@ -26,8 +26,21 @@ Everything — towers, enemies, terrain, effects, UI — is drawn and animated i
 
 | | | |
 |:---:|:---:|:---:|
-| ![Desert](public/images/gameplay-latest-3.png) | ![Winter](public/images/gameplay-latest-5.png) | ![Volcanic](public/images/gameplay-latest.png) |
-| *Stadium Sands — Desert* | *Frist Frontier — Winter* | *Dormitory Depths — Volcanic* |
+| ![Grounds](public/images/new/gameplay_grounds.png) | ![Swamp](public/images/new/gameplay_swamp.png) | ![Desert](public/images/new/gameplay_desert.png) |
+| *Princeton Grounds — Grassland* | *Murky Marshes — Swamp* | *Sahara Sands — Desert* |
+| ![Winter](public/images/new/gameplay_winter.png) | ![Volcanic](public/images/new/gameplay_volcano.png) | ![All Towers](public/images/new/all_towers.png) |
+| *Frozen Frontier — Winter* | *Volcanic Depths — Lava* | *All 7 Campus Towers* |
+
+</div>
+
+### Combat in Action
+
+<div align="center">
+
+| | | |
+|:---:|:---:|:---:|
+| ![Missile Barrage 1](public/images/new/gameplay_missile1.png) | ![Missile Barrage 2](public/images/new/gameplay_missile2.png) | ![Missile Barrage 3](public/images/new/gameplay_missile3.png) |
+| ![Winter Missile](public/images/new/gameplay_winter_missile.png) | ![Volcano Missile](public/images/new/gameplay_volcano_missile.png) | |
 
 </div>
 

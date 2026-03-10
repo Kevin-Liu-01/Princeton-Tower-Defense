@@ -13,11 +13,11 @@ const BattlefieldPreviewCanvas = lazy(
 );
 
 const SLIDESHOW_IMAGES = [
-  "/images/promo/gameplay-latest.png",
-  "/images/promo/gameplay-desert.png",
-  "/images/promo/gameplay-winter.png",
-  "/images/gameplay-latest-zoomed.png",
-  "/images/gameplay-latest-zoomed-2.png",
+  "/images/new/gameplay_grounds_ui.png",
+  "/images/new/gameplay_desert_ui.png",
+  "/images/new/gameplay_swamp_ui.png",
+  "/images/new/gameplay_winter_ui.png",
+  "/images/new/gameplay_volcano_ui.png",
 ];
 
 const CYCLE_INTERVAL_MS = 6000;

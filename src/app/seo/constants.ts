@@ -113,22 +113,34 @@ export const GAME_STATS = {
 
 export const OG_IMAGES = {
   primary: {
-    url: `${SITE_URL}/images/gameplay-latest.png`,
+    url: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
     width: 1200,
     height: 630,
     alt: "Princeton Tower Defense — isometric campus map with towers defending against waves of enemies near Nassau Hall",
   },
   desert: {
-    url: `${SITE_URL}/images/promo/gameplay-desert.png`,
+    url: `${SITE_URL}/images/new/gameplay_desert_ui.png`,
     width: 1200,
     height: 630,
     alt: "Princeton Tower Defense desert region — Sahara Sands with pyramid and oasis levels",
   },
   winter: {
-    url: `${SITE_URL}/images/promo/gameplay-winter.png`,
+    url: `${SITE_URL}/images/new/gameplay_winter_ui.png`,
     width: 1200,
     height: 630,
     alt: "Princeton Tower Defense winter region — Frozen Frontier with glacier and fortress levels",
+  },
+  volcano: {
+    url: `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
+    width: 1200,
+    height: 630,
+    alt: "Princeton Tower Defense volcanic region — Volcanic Depths with lava fields and caldera levels",
+  },
+  swamp: {
+    url: `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
+    width: 1200,
+    height: 630,
+    alt: "Princeton Tower Defense swamp region — Murky Marshes with bog and sunken temple levels",
   },
   homepage: {
     url: `${SITE_URL}/images/promo/homepage.png`,

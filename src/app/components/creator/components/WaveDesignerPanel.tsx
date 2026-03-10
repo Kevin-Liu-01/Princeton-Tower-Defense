@@ -1,6 +1,7 @@
 import React from "react";
 import {
   AlertTriangle,
+  Download,
   Route,
   Swords,
   Target,
@@ -109,16 +110,16 @@ const TemplateWavesView: React.FC<{
 }> = ({ templateWaves, waveTemplateOptions, waveTemplate, onApplyPresetWaves }) => {
   return (
     <div className="space-y-2">
-      <label className="block">
-        <span className="text-[11px] text-amber-400/80 inline-flex items-center gap-1.5 mb-1">
-          <Target size={11} />
-          Wave Template
-          <span className="text-amber-500/50 font-normal">(waves only)</span>
+      <div className="rounded-md border border-cyan-800/30 bg-cyan-950/15 p-2">
+        <span className="text-[10px] text-cyan-300/70 inline-flex items-center gap-1 mb-1 font-medium uppercase tracking-wide">
+          <Download size={9} />
+          Import Waves from Preset
         </span>
         <select
           value={waveTemplate}
           onChange={(event) => onApplyPresetWaves(event.target.value)}
-          className="w-full rounded border border-amber-700/60 bg-stone-950 px-2 py-1 text-xs"
+          className="w-full rounded border border-cyan-700/40 bg-stone-950/80 px-2 py-1 text-xs text-cyan-200 outline-none focus:border-cyan-400/60"
+          title="Only imports waves — does not affect decorations, hazards, objectives, or theme"
         >
           {waveTemplateOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -126,7 +127,8 @@ const TemplateWavesView: React.FC<{
             </option>
           ))}
         </select>
-      </label>
+        <p className="text-[9px] text-cyan-500/40 mt-0.5">Only changes waves</p>
+      </div>
 
       {templateWaves.length > 0 ? (
         <div className="max-h-64 overflow-y-auto pr-1 space-y-1.5">

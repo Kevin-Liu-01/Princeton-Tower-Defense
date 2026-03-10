@@ -37,7 +37,7 @@ import {
   TROOP_DATA,
 } from "../../constants";
 import { EnemySprite, HeroIcon } from "../../sprites";
-import { PANEL, GOLD, OVERLAY, PURPLE_CARD, panelGradient } from "./theme";
+import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./theme";
 
 // =============================================================================
 // ENEMY INSPECTOR COMPONENT

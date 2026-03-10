@@ -36,11 +36,13 @@ export function getVideoGameSchema() {
       "@type": "Person",
       name: SITE_AUTHOR,
     },
-    image: `${SITE_URL}/images/gameplay-latest.png`,
+    image: `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
     screenshot: [
-      `${SITE_URL}/images/gameplay-latest.png`,
-      `${SITE_URL}/images/promo/gameplay-desert.png`,
-      `${SITE_URL}/images/promo/gameplay-winter.png`,
+      `${SITE_URL}/images/new/gameplay_grounds_ui.png`,
+      `${SITE_URL}/images/new/gameplay_desert_ui.png`,
+      `${SITE_URL}/images/new/gameplay_swamp_ui.png`,
+      `${SITE_URL}/images/new/gameplay_winter_ui.png`,
+      `${SITE_URL}/images/new/gameplay_volcano_ui.png`,
       `${SITE_URL}/images/promo/homepage.png`,
     ],
     numberOfPlayers: {

@@ -32,6 +32,7 @@ import {
   validateDraft,
 } from "../utils/draftUtils";
 import { removeSelection } from "../utils/selectionUtils";
+import { exportMapToFile, importMapFromFile } from "../utils/mapFileIO";
 import type { GridPoint } from "../types";
 
 const cloneDecorations = (decorations: MapDecoration[] | undefined): MapDecoration[] =>
@@ -60,6 +61,9 @@ export interface CreatorDraftActions {
   applyMapPreset: (presetId: string) => void;
   applyPresetSections: (presetId: string, sections: PresetSection[]) => void;
   applyPresetWaves: (presetId: string) => void;
+  applyPresetObjectives: (presetId: string) => void;
+  exportMap: () => void;
+  importMap: () => Promise<void>;
   validationStatus: string[];
   errors: string[];
   notice: string | null;
@@ -339,10 +343,6 @@ export function useCreatorDraft(
         return next;
       });
 
-      if (sectionSet.has("waves")) {
-        setSelectedPresetId(nextPresetId);
-      }
-
       const sectionNames = sections.map((s) =>
         s === "theme" ? "theme/settings" : s
       );
@@ -358,6 +358,31 @@ export function useCreatorDraft(
     },
     [applyPresetSections]
   );
+
+  const applyPresetObjectives = useCallback(
+    (presetId: string): void => {
+      applyPresetSections(presetId, ["objectives"]);
+    },
+    [applyPresetSections]
+  );
+
+  const exportMap = useCallback((): void => {
+    exportMapToFile(draftRef.current);
+    setNotice("Map exported to file.");
+  }, [draftRef]);
+
+  const importMap = useCallback(async (): Promise<void> => {
+    try {
+      const imported = await importMapFromFile();
+      pushDraftHistory(draftRef.current);
+      setDraft(imported);
+      draftRef.current = imported;
+      setNotice(`Imported "${imported.name || "Untitled"}".`);
+      setErrors([]);
+    } catch (err) {
+      setErrors([err instanceof Error ? err.message : "Import failed."]);
+    }
+  }, [draftRef, pushDraftHistory, setDraft]);
 
   // Wave editing
   const startCustomWaves = useCallback((): void => {
@@ -464,6 +489,9 @@ export function useCreatorDraft(
     applyMapPreset,
     applyPresetSections,
     applyPresetWaves,
+    applyPresetObjectives,
+    exportMap,
+    importMap,
     validationStatus,
     errors,
     notice,

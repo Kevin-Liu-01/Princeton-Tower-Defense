@@ -207,6 +207,8 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
               onDelete={draftActions.deleteCurrentDraft}
               onEraseSelection={() => draftActions.eraseSelection(board.selection, board.clearSelection)}
               onNewMap={handleResetAll}
+              onExportMap={draftActions.exportMap}
+              onImportMap={draftActions.importMap}
               onUpdateDecorationSize={handleUpdateDecorationSize}
               onUpdateHazardRadius={handleUpdateHazardRadius}
             />
@@ -293,9 +295,11 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
 
             <ObjectivePanel
               draft={draft}
+              waveTemplateOptions={draftActions.waveTemplateOptions}
               onChangeType={handleChangeObjectiveType}
               onChangeHp={handleChangeObjectiveHp}
               onRemove={handleRemoveObjective}
+              onImportObjectives={draftActions.applyPresetObjectives}
             />
 
             <WaveDesignerPanel

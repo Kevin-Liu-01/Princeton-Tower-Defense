@@ -104,12 +104,12 @@ const PrincetonLogo: React.FC = () => {
 
       <div className="z-[-1] object-bottom object-contain absolute top-[-4.1rem] right-[-26rem] pointer-events-none select-none">
         <Image
-          src="/images/gameplay-latest-zoomed.png"
-          alt="Battle Scene"
-          width={1200}
-          height={700}
-          priority
-          className="w-full h-full opacity-20 scale-125"
+src="/images/new/gameplay_volcano.png"
+            alt="Battle Scene"
+            width={1200}
+            height={700}
+            priority
+            className="w-full h-full opacity-20 scale-125"
           style={{
             maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
@@ -675,7 +675,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           {/* Right-side background image */}
           <div className="absolute top-[-2rem] right-0 w-[28rem] h-[calc(100%+4rem)] pointer-events-none select-none z-0">
             <Image
-              src="/images/gameplay-latest-5.png"
+              src="/images/new/gameplay_winter.png"
               alt=""
               width={1200}
               height={700}

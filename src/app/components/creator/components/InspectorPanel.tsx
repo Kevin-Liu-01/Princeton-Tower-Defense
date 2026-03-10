@@ -2,6 +2,7 @@ import React from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  Download,
   MousePointer2,
   Paintbrush,
   Save,
@@ -13,6 +14,7 @@ import {
   Swords,
   Target,
   Trash2,
+  Upload,
 } from "lucide-react";
 import type { CreatorDraftState, SelectionTarget, ToolMode, GridPoint } from "../types";
 import { TOOL_HINTS, OBJECTIVE_TYPE_STATS, TOOL_OPTIONS, TOWER_DISPLAY_NAMES } from "../constants";
@@ -34,6 +36,8 @@ interface InspectorPanelProps {
   onDelete: () => void;
   onEraseSelection: () => void;
   onNewMap: () => void;
+  onExportMap: () => void;
+  onImportMap: () => void;
   onUpdateDecorationSize: (index: number, size: number) => void;
   onUpdateHazardRadius: (index: number, radius: number) => void;
 }
@@ -51,6 +55,8 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   onDelete,
   onEraseSelection,
   onNewMap,
+  onExportMap,
+  onImportMap,
   onUpdateDecorationSize,
   onUpdateHazardRadius,
 }) => {
@@ -264,6 +270,24 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
             >
               <Trash2 size={12} />
               Delete
+            </button>
+          </div>
+          <div className="flex gap-1.5">
+            <button
+              onClick={onExportMap}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-700/40 bg-cyan-900/15 px-3 py-1.5 text-xs text-cyan-200 hover:bg-cyan-800/25 transition-colors"
+              title="Export this map as a .ptd.json file"
+            >
+              <Download size={12} />
+              Export
+            </button>
+            <button
+              onClick={onImportMap}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-700/40 bg-cyan-900/15 px-3 py-1.5 text-xs text-cyan-200 hover:bg-cyan-800/25 transition-colors"
+              title="Import a map from a .ptd.json file"
+            >
+              <Upload size={12} />
+              Import
             </button>
           </div>
         </div>

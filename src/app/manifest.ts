@@ -27,22 +27,34 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     screenshots: [
       {
-        src: "/images/gameplay-latest.png",
+        src: "/images/new/gameplay_grounds_ui.png",
         sizes: "1200x630",
         type: "image/png",
-        label: "Princeton Tower Defense gameplay on campus map",
+        label: "Princeton Tower Defense gameplay on campus grounds",
       },
       {
-        src: "/images/promo/gameplay-desert.png",
+        src: "/images/new/gameplay_desert_ui.png",
         sizes: "1200x630",
         type: "image/png",
         label: "Desert region — Sahara Sands level",
       },
       {
-        src: "/images/promo/gameplay-winter.png",
+        src: "/images/new/gameplay_swamp_ui.png",
+        sizes: "1200x630",
+        type: "image/png",
+        label: "Swamp region — Murky Marshes level",
+      },
+      {
+        src: "/images/new/gameplay_winter_ui.png",
         sizes: "1200x630",
         type: "image/png",
         label: "Winter region — Frozen Frontier level",
+      },
+      {
+        src: "/images/new/gameplay_volcano_ui.png",
+        sizes: "1200x630",
+        type: "image/png",
+        label: "Volcanic region — Volcanic Depths level",
       },
     ],
   };

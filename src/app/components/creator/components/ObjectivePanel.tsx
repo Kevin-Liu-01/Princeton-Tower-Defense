@@ -2,6 +2,7 @@ import React from "react";
 import {
   AlertTriangle,
   ChessRook,
+  Download,
   MapPin,
   Sparkles,
   Trash2,
@@ -16,9 +17,11 @@ import {
 
 interface ObjectivePanelProps {
   draft: CreatorDraftState;
+  waveTemplateOptions: { value: string; label: string }[];
   onChangeType: (index: number, type: SpecialTowerType) => void;
   onChangeHp: (index: number, hp: number) => void;
   onRemove: (index: number) => void;
+  onImportObjectives: (presetId: string) => void;
 }
 
 const ObjectiveRow: React.FC<{
@@ -82,9 +85,11 @@ const ObjectiveRow: React.FC<{
 
 export const ObjectivePanel: React.FC<ObjectivePanelProps> = ({
   draft,
+  waveTemplateOptions,
   onChangeType,
   onChangeHp,
   onRemove,
+  onImportObjectives,
 }) => {
   return (
     <div className="rounded-xl border border-amber-800/30 bg-gradient-to-b from-stone-900/80 to-stone-950/80 p-3 text-xs">
@@ -116,6 +121,34 @@ export const ObjectivePanel: React.FC<ObjectivePanelProps> = ({
           ))}
         </div>
       )}
+
+      <div className="mt-2 rounded-md border border-cyan-800/30 bg-cyan-950/15 p-2">
+        <span className="text-[10px] text-cyan-300/70 inline-flex items-center gap-1 mb-1 font-medium uppercase tracking-wide">
+          <Download size={9} />
+          Import Objectives from Preset
+        </span>
+        <select
+          defaultValue=""
+          onChange={(event) => {
+            if (event.target.value) {
+              onImportObjectives(event.target.value);
+              event.target.value = "";
+            }
+          }}
+          className="w-full rounded border border-cyan-700/40 bg-stone-950/80 px-2 py-1 text-xs text-cyan-200 outline-none focus:border-cyan-400/60"
+          title="Replaces objectives with the selected preset's objectives"
+        >
+          <option value="" disabled>
+            Select preset...
+          </option>
+          {waveTemplateOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-[9px] text-cyan-500/40 mt-0.5">Only changes objectives</p>
+      </div>
     </div>
   );
 };
