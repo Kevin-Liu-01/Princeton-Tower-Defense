@@ -805,7 +805,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[1500] flex items-center justify-center p-4 backdrop-blur-sm"
       style={{ background: OVERLAY.black60 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

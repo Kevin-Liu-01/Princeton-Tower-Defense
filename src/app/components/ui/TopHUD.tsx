@@ -708,6 +708,17 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   </span>
                 )}
               </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                title="Open settings"
+                className="relative z-10 p-1.5 hidden sm:flex items-center justify-center rounded-lg transition-colors hover:brightness-125"
+                style={{
+                  background: "linear-gradient(135deg, rgba(140,70,10,0.5), rgba(95,45,5,0.3))",
+                  border: "1px solid rgba(217,119,6,0.4)",
+                }}
+              >
+                <Settings size={15} className="text-orange-300" />
+              </button>
               {onTogglePhotoMode && (
                 <button
                   onClick={onTogglePhotoMode}
@@ -726,17 +737,6 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   <Camera size={15} className={cameraModeActive ? "text-indigo-200" : "text-indigo-300"} />
                 </button>
               )}
-              <button
-                onClick={() => setShowSettings(true)}
-                title="Open settings"
-                className="relative z-10 p-1.5 hidden sm:flex items-center justify-center rounded-lg transition-colors hover:brightness-125"
-                style={{
-                  background: "linear-gradient(135deg, rgba(140,70,10,0.5), rgba(95,45,5,0.3))",
-                  border: "1px solid rgba(217,119,6,0.4)",
-                }}
-              >
-                <Settings size={15} className="text-orange-300" />
-              </button>
               <button
                 onClick={() => {
                   retryLevel();

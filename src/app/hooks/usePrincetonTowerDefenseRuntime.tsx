@@ -474,7 +474,34 @@ const WATER_DECORATION_TYPES = new Set([
 ]);
 
 
-const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
+const QUALITY_TRANSITION_COOLDOWN_MS = 5000;
+const QUALITY_TRANSITION_MAX_COOLDOWN_MS = 30_000;
+
+// Downgrade thresholds (avgFrameMs must exceed these to drop quality)
+const QUALITY_DOWNGRADE_THRESHOLD: Record<RenderQuality, number> = {
+  high: 22,   // ~45fps → drop to medium
+  medium: 30, // ~33fps → drop to low
+  low: Infinity,
+};
+
+// Upgrade thresholds (avgFrameMs must drop below these to raise quality)
+const QUALITY_UPGRADE_THRESHOLD: Record<RenderQuality, number> = {
+  high: -Infinity,
+  medium: 14, // ~71fps sustained → promote to high   (8ms gap from high's 22ms downgrade)
+  low: 18,    // ~56fps sustained → promote to medium  (12ms gap from medium's 30ms downgrade)
+};
+
+const QUALITY_UPGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
+  high: "high",
+  medium: "high",
+  low: "medium",
+};
+
+const QUALITY_DOWNGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
+  high: "medium",
+  medium: "low",
+  low: "low",
+};
 const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
 const DEV_CONFIG_MENU_ENABLED =
   typeof DEV_CONFIG_ENV_VALUE === "string" &&
@@ -766,6 +793,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const renderQualityRef = useRef<RenderQuality>("high");
   const rollingFrameMsRef = useRef<number>(16.7);
   const qualityLastChangedAtRef = useRef<number>(0);
+  const qualityCooldownMsRef = useRef<number>(QUALITY_TRANSITION_COOLDOWN_MS);
+  const qualityThresholdSustainedSinceRef = useRef<number>(0);
   const renderFrameIndexRef = useRef<number>(0);
   const devPerfEnabledRef = useRef<boolean>(devPerfEnabled);
   const devPerfLastPublishedAtRef = useRef<number>(0);
@@ -9120,32 +9149,50 @@ export function usePrincetonTowerDefenseRuntime() {
         : 0;
       const cappedDelta = Math.min(rawDelta, 100); // Max 100ms per frame
       const sampleMs = Math.max(8, cappedDelta || 16.7);
-      rollingFrameMsRef.current = rollingFrameMsRef.current * 0.92 + sampleMs * 0.08;
+      rollingFrameMsRef.current = rollingFrameMsRef.current * 0.97 + sampleMs * 0.03;
 
-      if (timestamp - qualityLastChangedAtRef.current > QUALITY_TRANSITION_COOLDOWN_MS) {
+      if (timestamp - qualityLastChangedAtRef.current > qualityCooldownMsRef.current) {
         const avgFrameMs = rollingFrameMsRef.current;
         const currentQuality = renderQualityRef.current;
-        let nextQuality = currentQuality;
+        let nextQuality: RenderQuality = currentQuality;
 
-        if (currentQuality === "high") {
-          if (avgFrameMs > 18) nextQuality = "medium";
-        } else if (currentQuality === "medium") {
-          if (avgFrameMs > 23) nextQuality = "low";
-          else if (avgFrameMs < 16.2) nextQuality = "high";
-        } else if (avgFrameMs < 20) {
-          nextQuality = "medium";
+        if (avgFrameMs > QUALITY_DOWNGRADE_THRESHOLD[currentQuality]) {
+          nextQuality = QUALITY_DOWNGRADE_TARGET[currentQuality];
+        } else if (avgFrameMs < QUALITY_UPGRADE_THRESHOLD[currentQuality]) {
+          nextQuality = QUALITY_UPGRADE_TARGET[currentQuality];
         }
 
         if (nextQuality !== currentQuality) {
-          renderQualityRef.current = nextQuality;
-          qualityLastChangedAtRef.current = timestamp;
-          const nextDprCap = QUALITY_DPR_CAP[nextQuality];
-          setRenderDprCap((prev) =>
-            Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
-          );
-          setPerformanceSettings({
-            shadowQualityMultiplier: QUALITY_SHADOW_MULTIPLIER[nextQuality],
-          });
+          const sustainedSince = qualityThresholdSustainedSinceRef.current;
+          if (sustainedSince === 0) {
+            qualityThresholdSustainedSinceRef.current = timestamp;
+          } else if (timestamp - sustainedSince > 2000) {
+            renderQualityRef.current = nextQuality;
+            qualityLastChangedAtRef.current = timestamp;
+            qualityThresholdSustainedSinceRef.current = 0;
+
+            qualityCooldownMsRef.current = Math.min(
+              qualityCooldownMsRef.current * 2,
+              QUALITY_TRANSITION_MAX_COOLDOWN_MS,
+            );
+
+            const nextDprCap = QUALITY_DPR_CAP[nextQuality];
+            setRenderDprCap((prev) =>
+              Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
+            );
+            setPerformanceSettings({
+              shadowQualityMultiplier: QUALITY_SHADOW_MULTIPLIER[nextQuality],
+            });
+          }
+        } else {
+          qualityThresholdSustainedSinceRef.current = 0;
+
+          if (qualityCooldownMsRef.current > QUALITY_TRANSITION_COOLDOWN_MS) {
+            qualityCooldownMsRef.current = Math.max(
+              QUALITY_TRANSITION_COOLDOWN_MS,
+              qualityCooldownMsRef.current - cappedDelta,
+            );
+          }
         }
       }
 
