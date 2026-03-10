@@ -59,6 +59,47 @@ export function drawHarpyEnemy(
     ctx.restore();
   }
 
+  // Wind swirl particles orbiting the wings
+  for (let ws = 0; ws < 5; ws++) {
+    const swirlAngle = time * 3.5 + ws * (Math.PI * 2) / 5;
+    const swirlRadius = size * (0.55 + Math.sin(time * 1.2 + ws) * 0.1);
+    const swirlX = x + Math.cos(swirlAngle) * swirlRadius;
+    const swirlY =
+      y - size * 0.05 + Math.sin(swirlAngle) * swirlRadius * 0.35 + swoop;
+    const swirlAlpha = 0.2 + Math.sin(time * 2 + ws * 1.3) * 0.1;
+    ctx.strokeStyle = `rgba(196, 181, 253, ${swirlAlpha})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(swirlX, swirlY, size * 0.025, swirlAngle, swirlAngle + Math.PI);
+    ctx.stroke();
+  }
+
+  // === LAYER 2B: WING SHADOWS ON GROUND ===
+  const shadowAlpha = 0.1 + Math.abs(wingFlap) * 0.06;
+  ctx.fillStyle = `rgba(30, 15, 60, ${shadowAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.15,
+    y + size * 0.55,
+    size * (0.45 + wingFlap * 0.15),
+    size * 0.06,
+    -0.2 - wingFlap * 0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.15,
+    y + size * 0.55,
+    size * (0.45 + wingFlap * 0.15),
+    size * 0.06,
+    0.2 + wingFlap * 0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
   // === LAYER 3: MAGNIFICENT LEFT WING ===
   ctx.save();
   ctx.translate(x - size * 0.18, y - size * 0.08 + swoop);
@@ -154,6 +195,23 @@ export function drawHarpyEnemy(
   );
   ctx.fill();
 
+  // Fine feather barbs at wing tips
+  ctx.strokeStyle = `rgba(91, 33, 182, ${0.35 + featherRuffle * 0.15})`;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let fb = 0; fb < 5; fb++) {
+    const tipX = -size * 0.82 - fb * size * 0.025;
+    const tipY = -size * 0.2 + fb * size * 0.05;
+    const barb = Math.sin(time * 5 + fb) * size * 0.01;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - size * 0.06, tipY - size * 0.04 + barb);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - size * 0.05, tipY + size * 0.03 + barb);
+    ctx.stroke();
+  }
+
   ctx.restore();
 
   // === LAYER 4: MAGNIFICENT RIGHT WING ===
@@ -234,6 +292,23 @@ export function drawHarpyEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Fine feather barbs at wing tips (mirrored)
+  ctx.strokeStyle = `rgba(91, 33, 182, ${0.35 + featherRuffle * 0.15})`;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let fb = 0; fb < 5; fb++) {
+    const tipX = size * 0.82 + fb * size * 0.025;
+    const tipY = -size * 0.2 + fb * size * 0.05;
+    const barb = Math.sin(time * 5 + fb) * size * 0.01;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX + size * 0.06, tipY - size * 0.04 + barb);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX + size * 0.05, tipY + size * 0.03 + barb);
+    ctx.stroke();
+  }
 
   ctx.restore();
 
@@ -822,6 +897,44 @@ export function drawWyvernEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Additional toxic drips along tail segments
+  for (let td = 0; td < 3; td++) {
+    const tdPhase = (time * 1.5 + td * 0.6) % 1.2;
+    const tdSegX = (td + 2) * size * 0.12;
+    const tdAlpha = Math.max(0, 0.5 - tdPhase * 0.35) * venomIntensity;
+    ctx.fillStyle = `rgba(52, 211, 153, ${tdAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      tdSegX,
+      size * 0.06 + tdPhase * size * 0.06,
+      size * 0.01 * (1 - tdPhase * 0.4),
+      size * 0.018 * (1 - tdPhase * 0.3),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Venom glow on tail tip
+  const glowPulse = 0.3 + Math.sin(time * 4) * 0.15 + venomIntensity * 0.2;
+  const tipGlowGrad = ctx.createRadialGradient(
+    spikeBase + size * 0.22,
+    -size * 0.03,
+    0,
+    spikeBase + size * 0.22,
+    -size * 0.03,
+    size * 0.08,
+  );
+  tipGlowGrad.addColorStop(0, `rgba(74, 222, 128, ${glowPulse})`);
+  tipGlowGrad.addColorStop(0.5, `rgba(52, 211, 153, ${glowPulse * 0.4})`);
+  tipGlowGrad.addColorStop(1, "rgba(52, 211, 153, 0)");
+  ctx.fillStyle = tipGlowGrad;
+  ctx.beginPath();
+  ctx.arc(spikeBase + size * 0.22, -size * 0.03, size * 0.08, 0, Math.PI * 2);
+  ctx.fill();
+
   ctx.restore();
 
   // === LAYER 3: MAGNIFICENT WINGS ===
@@ -1054,6 +1167,20 @@ export function drawWyvernEnemy(
     ctx.lineTo(spikeX, spikeY - spikeSize);
     ctx.lineTo(spikeX + spikeSize * 0.4, spikeY + spikeSize * 0.3);
     ctx.fill();
+  }
+
+  // Enhanced scale texture across body
+  ctx.strokeStyle = "rgba(6, 95, 70, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 5; col++) {
+      const scaleOffX = (row % 2) * size * 0.04;
+      const scX = x - size * 0.12 + col * size * 0.07 + scaleOffX;
+      const scY = bodyY - size * 0.15 + row * size * 0.08;
+      ctx.beginPath();
+      ctx.arc(scX, scY, size * 0.028, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.stroke();
+    }
   }
 
   // === LAYER 5: POWERFUL NECK ===

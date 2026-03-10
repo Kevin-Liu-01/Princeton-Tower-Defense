@@ -2354,108 +2354,188 @@ export function drawProfessorEnemy(
   attackPhase: number = 0,
 ) {
   const isAttacking = attackPhase > 0;
-  const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
-  // ARCHLICH PROFESSOR - Ancient undead lecturer with arcane knowledge
+  const attackIntensity = attackPhase;
   const hover =
     Math.sin(time * 2) * 3 * zoom +
     (isAttacking ? attackIntensity * size * 0.12 : 0);
   const powerPulse = 0.6 + Math.sin(time * 3) * 0.4 + attackIntensity * 0.4;
   const lectureGesture =
     Math.sin(time * 2.5) * 0.2 + (isAttacking ? attackIntensity * 0.5 : 0);
+  const knowledgeGlow = 0.4 + Math.sin(time * 4) * 0.3;
+  const breathe = Math.sin(time * 1.5) * 0.02;
+  size *= 1.2;
 
-  // Red/crimson power aura
-  const auraGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.75);
-  auraGrad.addColorStop(0, `rgba(239, 68, 68, ${powerPulse * 0.3})`);
-  auraGrad.addColorStop(0.5, `rgba(185, 28, 28, ${powerPulse * 0.15})`);
-  auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = auraGrad;
+  // Spectral knowledge distortion field
+  ctx.strokeStyle = `rgba(239, 68, 68, ${powerPulse * 0.2})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let i = 0; i < 3; i++) {
+    const distPhase = (time * 0.6 + i * 0.35) % 2;
+    const distSize = size * 0.35 + distPhase * size * 0.35;
+    ctx.globalAlpha = 0.3 * (1 - distPhase / 2);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.45, distSize, distSize * 0.28, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Crimson knowledge pool beneath
+  const poolGrad = ctx.createRadialGradient(
+    x, y + size * 0.45, size * 0.05,
+    x, y + size * 0.45, size * 0.5,
+  );
+  poolGrad.addColorStop(0, `rgba(185, 28, 28, ${powerPulse * 0.3})`);
+  poolGrad.addColorStop(0.5, `rgba(127, 29, 29, ${powerPulse * 0.15})`);
+  poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.75, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Floating lecture notes (spectral)
-  for (let i = 0; i < 4; i++) {
-    const noteAngle = time * 1 + i * Math.PI * 0.5;
-    const noteDist = size * 0.5;
-    const nx = x + Math.cos(noteAngle) * noteDist;
-    const ny = y - size * 0.1 + Math.sin(noteAngle) * noteDist * 0.35 + hover;
-    ctx.save();
-    ctx.translate(nx, ny);
-    ctx.rotate(Math.sin(time * 2 + i) * 0.15);
-    ctx.fillStyle = `rgba(254, 243, 199, ${
-      0.5 + Math.sin(time * 3 + i) * 0.2
-    })`;
-    ctx.fillRect(-size * 0.06, -size * 0.08, size * 0.12, size * 0.16);
-    // Arcane equations
-    ctx.strokeStyle = `rgba(185, 28, 28, ${powerPulse})`;
-    ctx.lineWidth = 1 * zoom;
+  // Layered crimson power aura
+  for (let layer = 2; layer >= 0; layer--) {
+    const layerSize = size * (0.7 + layer * 0.12);
+    const layerAlpha = powerPulse * 0.1 * (1 - layer * 0.2);
+    const auraGrad = ctx.createRadialGradient(x, y, 0, x, y, layerSize);
+    auraGrad.addColorStop(0, `rgba(239, 68, 68, ${layerAlpha * 0.5})`);
+    auraGrad.addColorStop(0.4, `rgba(185, 28, 28, ${layerAlpha})`);
+    auraGrad.addColorStop(0.7, `rgba(127, 29, 29, ${layerAlpha * 0.5})`);
+    auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.moveTo(-size * 0.04, -size * 0.04);
-    ctx.lineTo(size * 0.04, -size * 0.04);
-    ctx.moveTo(-size * 0.03, 0);
-    ctx.lineTo(size * 0.03, 0);
-    ctx.stroke();
+    ctx.arc(x, y, layerSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Floating spectral chalk equations
+  for (let eq = 0; eq < 6; eq++) {
+    const eqAngle = time * 0.8 + eq * Math.PI * 0.33;
+    const eqDist = size * 0.55 + Math.sin(time * 1.5 + eq) * size * 0.08;
+    const eqX = x + Math.cos(eqAngle) * eqDist;
+    const eqY = y - size * 0.1 + Math.sin(eqAngle) * eqDist * 0.35 + hover;
+    const eqAlpha = 0.35 + Math.sin(time * 2.5 + eq) * 0.15;
+    ctx.save();
+    ctx.translate(eqX, eqY);
+    ctx.rotate(Math.sin(time * 1.5 + eq) * 0.12);
+    ctx.fillStyle = `rgba(254, 243, 199, ${eqAlpha})`;
+    ctx.fillRect(-size * 0.065, -size * 0.085, size * 0.13, size * 0.17);
+    // Page shadow edge
+    ctx.fillStyle = `rgba(200, 180, 140, ${eqAlpha * 0.5})`;
+    ctx.fillRect(size * 0.055, -size * 0.085, size * 0.01, size * 0.17);
+    // Arcane equations - varied per note
+    ctx.strokeStyle = `rgba(185, 28, 28, ${powerPulse * 0.8})`;
+    ctx.lineWidth = 1 * zoom;
+    const lineCount = 2 + (eq % 3);
+    for (let l = 0; l < lineCount; l++) {
+      const lw = size * (0.03 + Math.sin(eq + l) * 0.015);
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.04, -size * 0.05 + l * size * 0.035);
+      ctx.lineTo(-size * 0.04 + lw * 2, -size * 0.05 + l * size * 0.035);
+      ctx.stroke();
+    }
+    // Glowing sigil on some pages
+    if (eq % 2 === 0) {
+      ctx.fillStyle = `rgba(239, 68, 68, ${knowledgeGlow * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(0, size * 0.02, size * 0.015, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
+  // Rising knowledge particles
+  for (let p = 0; p < 8; p++) {
+    const pPhase = (time * 0.5 + p * 0.15) % 1;
+    const pAngle = (p * Math.PI) / 4 + time * 0.2;
+    const pDist = size * (0.15 + pPhase * 0.35);
+    const px = x + Math.cos(pAngle) * pDist;
+    const py = y + size * 0.15 - pPhase * size * 0.65;
+    const pAlpha = (1 - pPhase) * 0.4 * powerPulse;
+    ctx.fillStyle = `rgba(239, 68, 68, ${pAlpha})`;
+    ctx.beginPath();
+    ctx.arc(px, py, size * 0.015 * (1 - pPhase * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
 
-  // Ancient tweed robes (tattered, elegant)
+  // Ancient tweed robes with depth
   const robeGrad = ctx.createLinearGradient(
-    x - size * 0.4,
-    y,
-    x + size * 0.4,
-    y,
+    x - size * 0.4, y - size * 0.3,
+    x + size * 0.4, y + size * 0.3,
   );
   robeGrad.addColorStop(0, "#44403c");
-  robeGrad.addColorStop(0.3, "#78716c");
+  robeGrad.addColorStop(0.2, "#78716c");
   robeGrad.addColorStop(0.5, "#a8a29e");
-  robeGrad.addColorStop(0.7, "#78716c");
+  robeGrad.addColorStop(0.8, "#78716c");
   robeGrad.addColorStop(1, "#44403c");
   ctx.fillStyle = robeGrad;
-  drawRobeBody(ctx, x, size * 0.22, y - size * 0.32 + hover * 0.2, size * 0.38, y + size * 0.5, size * 0.45, y, {
-    count: 5,
+  drawRobeBody(ctx, x, size * 0.22, y - size * 0.32 + hover * 0.2 + breathe * size, size * 0.38, y + size * 0.5, size * 0.45, y, {
+    count: 6,
     amplitude: size * 0.03,
     time: time,
     speed: 3,
-    altAmplitude: size * 0.04,
+    altAmplitude: size * 0.05,
   });
+
+  // Tweed texture lines
+  ctx.strokeStyle = "rgba(68, 64, 60, 0.2)";
+  ctx.lineWidth = 1 * zoom;
+  for (let tw = 0; tw < 6; tw++) {
+    const twX = x - size * 0.25 + tw * size * 0.1;
+    ctx.beginPath();
+    ctx.moveTo(twX, y - size * 0.15 + hover * 0.1);
+    ctx.lineTo(twX + size * 0.02, y + size * 0.35);
+    ctx.stroke();
+  }
 
   // Elbow patches (leather, worn)
   ctx.fillStyle = "#57534e";
   ctx.beginPath();
   ctx.ellipse(
-    x - size * 0.38,
-    y + size * 0.08 + hover * 0.1,
-    size * 0.07,
-    size * 0.1,
-    0.2,
-    0,
-    Math.PI * 2,
+    x - size * 0.38, y + size * 0.08 + hover * 0.1,
+    size * 0.07, size * 0.1, 0.2, 0, Math.PI * 2,
   );
   ctx.ellipse(
-    x + size * 0.38,
-    y + size * 0.08 + hover * 0.1,
-    size * 0.07,
-    size * 0.1,
-    -0.2,
-    0,
-    Math.PI * 2,
+    x + size * 0.38, y + size * 0.08 + hover * 0.1,
+    size * 0.07, size * 0.1, -0.2, 0, Math.PI * 2,
   );
   ctx.fill();
+  // Patch stitch detail
+  ctx.strokeStyle = "#44403c";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.38, y + size * 0.08 + hover * 0.1,
+    size * 0.06, size * 0.09, 0.2, 0, Math.PI * 2,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.38, y + size * 0.08 + hover * 0.1,
+    size * 0.06, size * 0.09, -0.2, 0, Math.PI * 2,
+  );
+  ctx.stroke();
 
-  // Crimson academic hood/collar
-  ctx.fillStyle = "#b91c1c";
+  // Crimson academic hood/collar with gradient
+  const collarGrad = ctx.createLinearGradient(
+    x - size * 0.15, y - size * 0.28,
+    x + size * 0.15, y + size * 0.1,
+  );
+  collarGrad.addColorStop(0, "#991b1b");
+  collarGrad.addColorStop(0.5, "#b91c1c");
+  collarGrad.addColorStop(1, "#7f1d1d");
+  ctx.fillStyle = collarGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.28 + hover * 0.2);
-  ctx.quadraticCurveTo(
-    x,
-    y - size * 0.15 + hover * 0.2,
-    x + size * 0.15,
-    y - size * 0.28 + hover * 0.2,
-  );
+  ctx.quadraticCurveTo(x, y - size * 0.15 + hover * 0.2, x + size * 0.15, y - size * 0.28 + hover * 0.2);
   ctx.lineTo(x + size * 0.12, y + size * 0.1);
   ctx.quadraticCurveTo(x, y + size * 0.2, x - size * 0.12, y + size * 0.1);
   ctx.fill();
+  // Collar gold trim
+  ctx.strokeStyle = `rgba(184, 134, 11, ${0.4 + knowledgeGlow * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14, y - size * 0.26 + hover * 0.2);
+  ctx.quadraticCurveTo(x, y - size * 0.14 + hover * 0.2, x + size * 0.14, y - size * 0.26 + hover * 0.2);
+  ctx.stroke();
   // Ancient sigil on collar
   ctx.fillStyle = `rgba(254, 243, 199, ${powerPulse})`;
   ctx.font = `${size * 0.1}px serif`;
@@ -2476,46 +2556,61 @@ export function drawProfessorEnemy(
   ctx.lineTo(x + size * 0.1, y - size * 0.18 + hover * 0.2);
   ctx.closePath();
   ctx.fill();
+  ctx.fillStyle = "#b91c1c";
   ctx.beginPath();
   ctx.arc(x, y - size * 0.22 + hover * 0.2, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
 
-  // Skeletal face with preserved flesh
-  ctx.fillStyle = "#d6d3d1";
+  // Skeletal face with preserved flesh and detail
+  const faceGrad = ctx.createRadialGradient(
+    x - size * 0.04, y - size * 0.5 + hover, size * 0.02,
+    x, y - size * 0.48 + hover, size * 0.22,
+  );
+  faceGrad.addColorStop(0, "#e7e5e4");
+  faceGrad.addColorStop(0.5, "#d6d3d1");
+  faceGrad.addColorStop(0.8, "#a8a29e");
+  faceGrad.addColorStop(1, "#78716c");
+  ctx.fillStyle = faceGrad;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.48 + hover, size * 0.22, 0, Math.PI * 2);
   ctx.fill();
 
-  // Sunken, preserved features
-  ctx.fillStyle = "rgba(68, 64, 60, 0.3)";
+  // Skull cracks showing through preserved flesh
+  ctx.strokeStyle = "rgba(68, 64, 60, 0.3)";
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.1,
-    y - size * 0.42 + hover,
-    size * 0.04,
-    size * 0.06,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.1,
-    y - size * 0.42 + hover,
-    size * 0.04,
-    size * 0.06,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.moveTo(x - size * 0.05, y - size * 0.62 + hover);
+  ctx.lineTo(x - size * 0.08, y - size * 0.52 + hover);
+  ctx.lineTo(x - size * 0.04, y - size * 0.45 + hover);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.1, y - size * 0.58 + hover);
+  ctx.lineTo(x + size * 0.06, y - size * 0.5 + hover);
+  ctx.stroke();
+
+  // Sunken eye sockets
+  ctx.fillStyle = "rgba(68, 64, 60, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.1, y - size * 0.5 + hover, size * 0.055, size * 0.065, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.1, y - size * 0.5 + hover, size * 0.055, size * 0.065, 0.1, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ancient spectacles (gold, ornate)
+  // Ancient golden spectacles (ornate, detailed)
   ctx.strokeStyle = "#b8860b";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.07, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.07, 0, Math.PI * 2);
   ctx.stroke();
+  // Spectacles lens sheen
+  ctx.fillStyle = `rgba(254, 243, 199, ${0.1 + knowledgeGlow * 0.1})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.06, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.06, 0, Math.PI * 2);
+  ctx.fill();
+  // Bridge and temples
+  ctx.strokeStyle = "#b8860b";
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.03, y - size * 0.5 + hover);
   ctx.lineTo(x + size * 0.03, y - size * 0.5 + hover);
@@ -2525,58 +2620,53 @@ export function drawProfessorEnemy(
   ctx.lineTo(x + size * 0.22, y - size * 0.48 + hover);
   ctx.stroke();
 
-  // Glowing red eyes behind spectacles (optimized - no shadowBlur)
+  // Glowing red eyes behind spectacles with gradient
+  const eyeGlowGrad = ctx.createRadialGradient(
+    x - size * 0.1, y - size * 0.5 + hover, 0,
+    x - size * 0.1, y - size * 0.5 + hover, size * 0.05,
+  );
+  eyeGlowGrad.addColorStop(0, `rgba(248, 113, 113, ${powerPulse})`);
+  eyeGlowGrad.addColorStop(0.5, `rgba(239, 68, 68, ${powerPulse * 0.6})`);
+  eyeGlowGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
+  ctx.fillStyle = eyeGlowGrad;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.05, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  // Eye cores
   ctx.fillStyle = "#f87171";
   ctx.beginPath();
-  ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.035, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.025, 0, Math.PI * 2);
+  ctx.fill();
+  // Eye bright points
+  ctx.fillStyle = `rgba(254, 202, 202, ${powerPulse * 0.8})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.01, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.01, 0, Math.PI * 2);
   ctx.fill();
 
-  // Distinguished but wispy white hair
+  // Distinguished wispy white hair with more strands
   ctx.fillStyle = "#e7e5e4";
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.62 + hover,
-    size * 0.18,
-    size * 0.08,
-    0,
-    0,
-    Math.PI,
-  );
+  ctx.ellipse(x, y - size * 0.62 + hover, size * 0.18, size * 0.08, 0, 0, Math.PI);
   ctx.fill();
   // Side tufts
   ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.2,
-    y - size * 0.48 + hover,
-    size * 0.06,
-    size * 0.12,
-    0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.2,
-    y - size * 0.48 + hover,
-    size * 0.06,
-    size * 0.12,
-    -0.3,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x - size * 0.2, y - size * 0.48 + hover, size * 0.06, size * 0.12, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.2, y - size * 0.48 + hover, size * 0.06, size * 0.12, -0.3, 0, Math.PI * 2);
   ctx.fill();
-  // Wispy strands
+  // Wispy animated strands
   ctx.strokeStyle = "#d6d3d1";
   ctx.lineWidth = 1.5 * zoom;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 7; i++) {
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.1 + i * size * 0.05, y - size * 0.64 + hover);
+    ctx.moveTo(x - size * 0.12 + i * size * 0.04, y - size * 0.64 + hover);
     ctx.quadraticCurveTo(
-      x - size * 0.1 + i * size * 0.05 + Math.sin(time * 2 + i) * size * 0.03,
-      y - size * 0.72 + hover,
-      x - size * 0.08 + i * size * 0.05,
-      y - size * 0.7 + hover,
+      x - size * 0.12 + i * size * 0.04 + Math.sin(time * 2.5 + i * 0.8) * size * 0.04,
+      y - size * 0.74 + hover,
+      x - size * 0.1 + i * size * 0.04,
+      y - size * 0.72 + hover + Math.sin(time * 3 + i) * size * 0.02,
     );
     ctx.stroke();
   }
@@ -2584,80 +2674,152 @@ export function drawProfessorEnemy(
   // Bushy ethereal eyebrows
   ctx.fillStyle = "#d6d3d1";
   ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.1,
-    y - size * 0.58 + hover,
-    size * 0.06,
-    size * 0.025,
-    -0.15,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.1,
-    y - size * 0.58 + hover,
-    size * 0.06,
-    size * 0.025,
-    0.15,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x - size * 0.1, y - size * 0.58 + hover, size * 0.065, size * 0.028, -0.15, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.1, y - size * 0.58 + hover, size * 0.065, size * 0.028, 0.15, 0, Math.PI * 2);
   ctx.fill();
 
-  // Knowing skeletal smile
+  // Skeletal nose bridge
+  ctx.strokeStyle = "rgba(120, 113, 108, 0.4)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.47 + hover);
+  ctx.lineTo(x - size * 0.02, y - size * 0.4 + hover);
+  ctx.lineTo(x + size * 0.01, y - size * 0.39 + hover);
+  ctx.stroke();
+
+  // Knowing skeletal smile with teeth detail
   ctx.fillStyle = "#44403c";
   ctx.beginPath();
-  ctx.arc(
-    x,
-    y - size * 0.38 + hover,
-    size * 0.06,
-    0.1 * Math.PI,
-    0.9 * Math.PI,
-  );
+  ctx.arc(x, y - size * 0.38 + hover, size * 0.06, 0.1 * Math.PI, 0.9 * Math.PI);
   ctx.fill();
   ctx.fillStyle = "#e7e5e4";
-  ctx.fillRect(
-    x - size * 0.05,
-    y - size * 0.38 + hover,
-    size * 0.1,
-    size * 0.02,
-  );
+  ctx.fillRect(x - size * 0.05, y - size * 0.38 + hover, size * 0.1, size * 0.02);
+  // Individual teeth
+  ctx.strokeStyle = "#a8a29e";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let t = 0; t < 4; t++) {
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.04 + t * size * 0.025, y - size * 0.38 + hover);
+    ctx.lineTo(x - size * 0.04 + t * size * 0.025, y - size * 0.36 + hover);
+    ctx.stroke();
+  }
 
-  // Lecturing skeletal hand
+  // Lecturing skeletal hand with articulated fingers
   ctx.save();
   ctx.translate(x - size * 0.45, y - size * 0.1 + hover);
   ctx.rotate(-0.4 + lectureGesture);
-  // Skeletal hand
+  // Bony wrist
   ctx.fillStyle = "#d6d3d1";
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.07, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, size * 0.06, size * 0.04, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Pointing finger bone
-  ctx.fillRect(-size * 0.02, -size * 0.18, size * 0.04, size * 0.18);
-  // Magical spark at fingertip
-  ctx.fillStyle = `rgba(255, 100, 100, ${powerPulse})`;
+  // Finger bones - spread in lecturing gesture
+  ctx.strokeStyle = "#d6d3d1";
+  ctx.lineWidth = 2.5 * zoom;
+  const fingerAngles = [-0.6, -0.3, 0, 0.3];
+  for (let f = 0; f < 4; f++) {
+    const fAngle = fingerAngles[f] + Math.sin(time * 3 + f * 0.5) * 0.05;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(fAngle - Math.PI / 2) * size * 0.04, Math.sin(fAngle - Math.PI / 2) * size * 0.03);
+    ctx.lineTo(
+      Math.cos(fAngle - Math.PI / 2) * size * 0.12,
+      Math.sin(fAngle - Math.PI / 2) * size * 0.1 - size * 0.1,
+    );
+    ctx.stroke();
+    // Knuckle joints
+    ctx.fillStyle = "#a8a29e";
+    ctx.beginPath();
+    ctx.arc(
+      Math.cos(fAngle - Math.PI / 2) * size * 0.08,
+      Math.sin(fAngle - Math.PI / 2) * size * 0.07 - size * 0.06,
+      size * 0.008, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  // Magical spark at index fingertip
+  const sparkGrad = ctx.createRadialGradient(0, -size * 0.18, 0, 0, -size * 0.18, size * 0.05);
+  sparkGrad.addColorStop(0, `rgba(255, 200, 200, ${powerPulse})`);
+  sparkGrad.addColorStop(0.5, `rgba(239, 68, 68, ${powerPulse * 0.5})`);
+  sparkGrad.addColorStop(1, "rgba(239, 68, 68, 0)");
+  ctx.fillStyle = sparkGrad;
   ctx.beginPath();
-  ctx.arc(0, -size * 0.2, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(0, -size * 0.18, size * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 220, 220, ${powerPulse})`;
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.18, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  // Ancient tome floating beside
+  // Ancient tome floating beside - more detailed
   ctx.save();
-  ctx.translate(
-    x + size * 0.42,
-    y - size * 0.15 + hover + Math.sin(time * 2.5) * 3,
-  );
+  ctx.translate(x + size * 0.42, y - size * 0.15 + hover + Math.sin(time * 2.5) * 3);
   ctx.rotate(Math.sin(time * 1.5) * 0.1);
+  // Book spine
+  ctx.fillStyle = "#5b1a1a";
+  ctx.fillRect(-size * 0.09, -size * 0.1, size * 0.03, size * 0.2);
+  // Book cover
   ctx.fillStyle = "#7f1d1d";
-  ctx.fillRect(-size * 0.08, -size * 0.1, size * 0.16, size * 0.2);
+  ctx.fillRect(-size * 0.06, -size * 0.1, size * 0.14, size * 0.2);
+  // Cover gold trim
+  ctx.strokeStyle = `rgba(184, 134, 11, ${0.4 + knowledgeGlow * 0.3})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(-size * 0.06, -size * 0.1, size * 0.14, size * 0.2);
+  // Pages
   ctx.fillStyle = "#fef3c7";
-  ctx.fillRect(-size * 0.06, -size * 0.08, size * 0.12, size * 0.16);
-  // Glowing text
+  ctx.fillRect(-size * 0.04, -size * 0.08, size * 0.1, size * 0.16);
+  // Page lines
+  ctx.strokeStyle = "rgba(180, 160, 120, 0.3)";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let l = 0; l < 5; l++) {
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.02, -size * 0.06 + l * size * 0.03);
+    ctx.lineTo(size * 0.04, -size * 0.06 + l * size * 0.03);
+    ctx.stroke();
+  }
+  // Glowing arcane text
   ctx.fillStyle = `rgba(239, 68, 68, ${powerPulse})`;
   ctx.font = `${size * 0.06}px serif`;
   ctx.textAlign = "center";
-  ctx.fillText("∑∫", 0, size * 0.02);
+  ctx.fillText("∑∫", size * 0.01, size * 0.02);
+  // Book aura
+  const bookGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.12);
+  bookGlow.addColorStop(0, `rgba(239, 68, 68, ${knowledgeGlow * 0.15})`);
+  bookGlow.addColorStop(1, "rgba(239, 68, 68, 0)");
+  ctx.fillStyle = bookGlow;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
+
+  // Attack: arcane lecture blast - knowledge explosion
+  if (isAttacking) {
+    // Expanding knowledge rings
+    for (let ring = 0; ring < 3; ring++) {
+      const ringPhase = attackIntensity * (1 + ring * 0.12);
+      const ringSize = size * (0.15 + ringPhase * 0.7);
+      const ringAlpha = Math.max(0, (1 - ringPhase) * 0.35);
+      ctx.strokeStyle = `rgba(239, 68, 68, ${ringAlpha})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.arc(x, y, ringSize, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Crimson energy beams from fingertip and tome
+    ctx.strokeStyle = `rgba(248, 113, 113, ${attackIntensity * 0.5})`;
+    ctx.lineWidth = (2 + attackIntensity * 3) * zoom;
+    const beamLen = size * attackIntensity * 0.6;
+    for (let beam = 0; beam < 5; beam++) {
+      const beamAngle = (beam / 5) * Math.PI * 2 + time * 3;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.35, y - size * 0.2 + hover);
+      ctx.lineTo(
+        x - size * 0.35 + Math.cos(beamAngle) * beamLen,
+        y - size * 0.2 + hover + Math.sin(beamAngle) * beamLen,
+      );
+      ctx.stroke();
+    }
+  }
 }
 
 export function drawDeanEnemy(

@@ -41,6 +41,20 @@ export function drawAthleteEnemy(
   }
   ctx.globalAlpha = 1;
 
+  // Speed lines when attacking (intense sprint effect)
+  if (isAttacking) {
+    ctx.lineWidth = 1.5 * zoom;
+    for (let sl = 0; sl < 5; sl++) {
+      const slPhase = (time * 4 + sl * 0.4) % 1;
+      const slY = y - size * 0.35 + sl * size * 0.15 - bounce;
+      const slAlpha = (1 - slPhase) * 0.35;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${slAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.3 - slPhase * size * 0.4, slY);
+      ctx.lineTo(x - size * 0.3 - slPhase * size * 0.4 - size * 0.25, slY);
+      ctx.stroke();
+    }
+  }
 
   // --- LEGS with detailed anatomy ---
   const skinTone = "#e8c4a0";
@@ -138,6 +152,22 @@ export function drawAthleteEnemy(
   ctx.lineTo(-size * 0.1, size * 0.39);
   ctx.stroke();
   ctx.restore();
+
+  // Dust kick-up from running shoes
+  const dustIntensity = isAttacking ? 0.35 : 0.2;
+  for (let dp = 0; dp < 4; dp++) {
+    const dustPhase = (time * 3.5 + dp * 0.5) % 1;
+    const dustX =
+      x - size * 0.05 - dustPhase * size * 0.3 + Math.sin(dp * 2.1) * size * 0.1;
+    const dustY =
+      y + size * 0.48 - bounce - dustPhase * size * 0.12;
+    const dustAlpha = (1 - dustPhase) * dustIntensity;
+    const dustSize = size * (0.02 + dustPhase * 0.025);
+    ctx.fillStyle = `rgba(180, 160, 130, ${dustAlpha})`;
+    ctx.beginPath();
+    ctx.arc(dustX, dustY, dustSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // --- SHORTS with detail ---
   const shortsGrad = ctx.createLinearGradient(
@@ -698,6 +728,37 @@ export function drawProtestorEnemy(
   ctx.font = `${size * 0.08}px sans-serif`;
   ctx.fillText("★", -size * 0.28, -size * 0.08);
   ctx.fillText("★", size * 0.28, -size * 0.08);
+
+  // Sign tape strips (holding it together)
+  ctx.fillStyle = "rgba(200, 190, 160, 0.5)";
+  ctx.save();
+  ctx.rotate(0.3);
+  ctx.fillRect(-size * 0.36, -size * 0.22, size * 0.12, size * 0.03);
+  ctx.restore();
+  ctx.save();
+  ctx.rotate(-0.25);
+  ctx.fillRect(size * 0.22, size * 0.12, size * 0.14, size * 0.03);
+  ctx.restore();
+
+  // Sign bounce-jiggle exclamation lines
+  const jiggle = Math.sin(time * 9 * attackIntensity);
+  if (Math.abs(jiggle) > 0.5) {
+    ctx.strokeStyle = `rgba(0, 0, 0, ${Math.abs(jiggle) * 0.3})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.42, -size * 0.12);
+    ctx.lineTo(-size * 0.48, -size * 0.16);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.42, -size * 0.1);
+    ctx.lineTo(size * 0.48, -size * 0.14);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.26);
+    ctx.lineTo(0, -size * 0.32);
+    ctx.stroke();
+  }
+
   ctx.restore();
 
   // --- ARMS ---
@@ -1035,4 +1096,23 @@ export function drawProtestorEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Breath puff effect (cold weather chanting)
+  const breathCycle = (Math.sin(time * 8 * attackIntensity) + 1) * 0.5;
+  if (breathCycle > 0.4) {
+    for (let bp = 0; bp < 3; bp++) {
+      const puffPhase = (time * 1.5 + bp * 0.4) % 1.8;
+      const puffX =
+        headX - size * 0.08 - puffPhase * size * 0.15 +
+        Math.sin(time + bp) * size * 0.02;
+      const puffY =
+        headY + size * 0.12 - puffPhase * size * 0.08;
+      const puffAlpha = Math.max(0, (0.2 - puffPhase * 0.1) * breathCycle);
+      const puffSize = size * (0.02 + puffPhase * 0.025);
+      ctx.fillStyle = `rgba(220, 230, 245, ${puffAlpha})`;
+      ctx.beginPath();
+      ctx.arc(puffX, puffY, puffSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 }

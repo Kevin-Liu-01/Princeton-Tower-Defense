@@ -67,6 +67,21 @@ export function drawSnowGoblinEnemy(
   );
   ctx.fill();
 
+  // Expanding frost rings around footprints
+  for (let ring = 0; ring < 2; ring++) {
+    const ringPhase = (time * 0.8 + ring * 0.5) % 1;
+    const ringAlpha = (1 - ringPhase) * 0.3;
+    const ringRadius = size * (0.05 + ringPhase * 0.12);
+    ctx.strokeStyle = `rgba(147, 197, 253, ${ringAlpha})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.15, y + size * 0.35, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + size * 0.15, y + size * 0.33, ringRadius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   // Clawed feet with ice crystals
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
@@ -153,6 +168,26 @@ export function drawSnowGoblinEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Icicle drips from body armor edges
+  for (let icicle = 0; icicle < 5; icicle++) {
+    const icicleX = x - size * 0.2 + icicle * size * 0.1;
+    const icicleBaseY = y + size * 0.18 - hop;
+    const icicleLen = size * (0.06 + Math.sin(icicle * 1.3 + time * 0.5) * 0.02);
+    ctx.fillStyle = `rgba(191, 219, 254, ${0.7 + frostPulse * 0.3})`;
+    ctx.beginPath();
+    ctx.moveTo(icicleX - size * 0.012, icicleBaseY);
+    ctx.lineTo(icicleX, icicleBaseY + icicleLen);
+    ctx.lineTo(icicleX + size * 0.012, icicleBaseY);
+    ctx.fill();
+    const dripPhase = (time * 0.6 + icicle * 0.2) % 1;
+    if (dripPhase < 0.5) {
+      ctx.fillStyle = `rgba(147, 197, 253, ${(0.5 - dripPhase) * 1.2})`;
+      ctx.beginPath();
+      ctx.arc(icicleX, icicleBaseY + icicleLen + dripPhase * size * 0.15, size * 0.01, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   // Wiry muscular arms with frost claws
   ctx.fillStyle = bodyColor;
@@ -395,6 +430,16 @@ export function drawSnowGoblinEnemy(
     ctx.fill();
   }
 
+  // Directional frost breath cone
+  const breathConeAlpha = 0.12 + Math.sin(time * 4) * 0.08;
+  ctx.fillStyle = `rgba(191, 219, 254, ${breathConeAlpha})`;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.25 - hop);
+  ctx.lineTo(x + size * 0.3, y - size * 0.38 - hop + Math.sin(time * 5) * size * 0.03);
+  ctx.lineTo(x + size * 0.25, y - size * 0.15 - hop + Math.sin(time * 4) * size * 0.02);
+  ctx.closePath();
+  ctx.fill();
+
   // Swirling ice crystals
   ctx.fillStyle = "#fff";
   setShadowBlur(ctx, 4 * zoom, "#93c5fd");
@@ -546,6 +591,23 @@ export function drawYetiEnemy(
       furY + size * 0.03 - rightLegLift,
     );
     ctx.stroke();
+  }
+
+  // Snow powder shaking from fur during movement
+  const strideIntensity = Math.abs(Math.sin(walkPhase * 2));
+  ctx.fillStyle = `rgba(255, 255, 255, ${strideIntensity * 0.45})`;
+  for (let powder = 0; powder < 8; powder++) {
+    const powderSide = powder < 4 ? -1 : 1;
+    const powderIdx = powder % 4;
+    const powderPhase = (time * 2 + powderIdx * 0.25) % 1;
+    const px = x + powderSide * size * (0.4 + powderPhase * 0.15) + Math.sin(time * 5 + powder) * size * 0.05;
+    const py = y - size * 0.1 + powderIdx * size * 0.12 - powderPhase * size * 0.1;
+    const powderRadius = size * 0.02 * (1 - powderPhase) * strideIntensity;
+    if (powderRadius > 0.001) {
+      ctx.beginPath();
+      ctx.arc(px, py, powderRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // Massive clawed feet
@@ -987,6 +1049,21 @@ export function drawYetiEnemy(
     ctx.fill();
   }
 
+  // Rage roar shockwave rings during attack
+  if (isAttacking && attackPhase > 0.1) {
+    const roarWave = Math.sin(attackPhase * Math.PI);
+    for (let ring = 0; ring < 3; ring++) {
+      const ringPhase = (attackPhase * 2 + ring * 0.3) % 1;
+      const ringRadius = size * (0.3 + ringPhase * 0.6);
+      const ringAlpha = (1 - ringPhase) * roarWave * 0.25;
+      ctx.strokeStyle = `rgba(147, 197, 253, ${ringAlpha})`;
+      ctx.lineWidth = (3 - ring) * zoom;
+      ctx.beginPath();
+      ctx.arc(x, y - size * 0.45, ringRadius, -Math.PI * 0.8, -Math.PI * 0.2);
+      ctx.stroke();
+    }
+  }
+
   // Frost breath - enhanced when attacking
   if (isAttacking && attackPhase > 0.2) {
     const breathIntensity = (attackPhase - 0.2) * 1.25;
@@ -1386,6 +1463,24 @@ export function drawIceWitchEnemy(
     ctx.stroke();
   }
 
+  // Crystalline refraction sparkles around staff orb
+  for (let sparkle = 0; sparkle < 8; sparkle++) {
+    const sparkleAngle = time * 4 + sparkle * (Math.PI / 4);
+    const sparkleDist = orbSize * (1.3 + Math.sin(time * 6 + sparkle * 2) * 0.4);
+    const sx = orbX + Math.cos(sparkleAngle) * sparkleDist;
+    const sy = orbY + Math.sin(sparkleAngle) * sparkleDist;
+    const sparkleAlpha = 0.3 + Math.sin(time * 8 + sparkle * 1.5) * 0.3;
+    const sparkleLen = size * (0.02 + Math.sin(time * 5 + sparkle) * 0.01);
+    ctx.strokeStyle = `rgba(220, 235, 255, ${sparkleAlpha})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sx - sparkleLen, sy);
+    ctx.lineTo(sx + sparkleLen, sy);
+    ctx.moveTo(sx, sy - sparkleLen);
+    ctx.lineTo(sx, sy + sparkleLen);
+    ctx.stroke();
+  }
+
   // Elaborate hood with crown-like ice spikes
   const hoodGrad = ctx.createLinearGradient(
     x,
@@ -1561,6 +1656,24 @@ export function drawIceWitchEnemy(
     ctx.fill();
   }
   clearShadow(ctx);
+
+  // Inner orbit angular ice shards
+  for (let shard = 0; shard < 4; shard++) {
+    const shardAngle = -time * 3.5 + shard * (Math.PI / 2);
+    const shardOrbit = size * 0.22;
+    const shardX = orbX + Math.cos(shardAngle) * shardOrbit;
+    const shardY = orbY + Math.sin(shardAngle) * shardOrbit * 0.6;
+    const shardAlpha = 0.5 + Math.sin(time * 4 + shard) * 0.3;
+    const shardLen = size * 0.035;
+    ctx.fillStyle = `rgba(191, 219, 254, ${shardAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(shardX, shardY - shardLen);
+    ctx.lineTo(shardX + shardLen * 0.3, shardY);
+    ctx.lineTo(shardX, shardY + shardLen * 0.5);
+    ctx.lineTo(shardX - shardLen * 0.3, shardY);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // Spell casting effect when attacking
   if (isAttacking) {

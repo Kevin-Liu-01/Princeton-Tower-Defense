@@ -64,6 +64,23 @@ export function drawNomadEnemy(
   }
   ctx.restore();
 
+  // Heat distortion wavering effect around feet
+  ctx.save();
+  for (let hd = 0; hd < 4; hd++) {
+    const hdY = y + size * 0.3 + hd * size * 0.06;
+    const hdWave = Math.sin(time * 7 + hd * 1.8) * size * 0.04;
+    const hdAlpha = 0.04 - hd * 0.008;
+    ctx.fillStyle = `rgba(255, 220, 150, ${hdAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + hdWave, hdY,
+      size * (0.35 - hd * 0.04), size * 0.025,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
   // Sandstorm shroud visual (sand swirling around when ability ready)
   ctx.save();
   for (let ss = 0; ss < 16; ss++) {
@@ -182,6 +199,20 @@ export function drawNomadEnemy(
     ctx.moveTo(tatterX - size * 0.02, y + size * 0.38);
     ctx.lineTo(tatterX + tatterSway, y + size * 0.38 + tatterLen);
     ctx.lineTo(tatterX + size * 0.02, y + size * 0.38);
+    ctx.fill();
+  }
+
+  // Sand trailing from cloak edges
+  for (let st = 0; st < 5; st++) {
+    const stPhase = (time * 1.2 + st * 0.4) % 1;
+    const stBaseX = x - size * 0.35 + st * size * 0.16 + windDir * size * st * 0.03;
+    const stY = y + size * 0.38 + stPhase * size * 0.25;
+    const stDrift = Math.sin(time * 3 + st * 1.2) * size * 0.03 + windDir * size * stPhase * 0.2;
+    const stSize = size * (0.012 + Math.sin(st) * 0.005) * (1 - stPhase * 0.6);
+    const stAlpha = (1 - stPhase) * 0.5;
+    ctx.fillStyle = `rgba(194, 154, 108, ${stAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(stBaseX + stDrift, stY, stSize, stSize * 2, 0.2, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -625,18 +656,33 @@ export function drawScorpionEnemy(
     ctx.fill();
   }
 
-  // Armored segmented legs (4 on each side) with joints
+  // Armored segmented legs (4 on each side) with isometric depth
+  // Legs fan out: front legs reach forward-up, rear legs reach backward-down
+  const legAngles = [-0.55, -0.2, 0.15, 0.5];
+  const legLengths = [0.38, 0.42, 0.42, 0.36];
   for (let side = -1; side <= 1; side += 2) {
     for (let leg = 0; leg < 4; leg++) {
       const legPhase = legWave + leg * 0.6;
-      const legBaseX = x + side * (size * 0.12 + leg * size * 0.1);
-      const legMidX = legBaseX + side * size * 0.22;
-      const legEndX = legBaseX + side * size * 0.4;
-      const legMidY = y + size * 0.12 + Math.sin(legPhase) * size * 0.08;
-      const legEndY = y + size * 0.3;
+      const legAngle = legAngles[leg];
+      const legLen = legLengths[leg];
+
+      const legBaseX = x + side * (size * 0.12 + leg * size * 0.08);
+      const legBaseY = y + size * 0.02 + leg * size * 0.05;
+
+      // Mid-joint arches upward then leg reaches to ground contact
+      const midSpreadX = side * size * 0.2;
+      const midSpreadY = legAngle * size * 0.15;
+      const legMidX = legBaseX + midSpreadX;
+      const legMidY = legBaseY + midSpreadY - size * 0.04 + Math.sin(legPhase) * size * 0.06;
+
+      // Foot contact point fans out in isometric perspective
+      const endSpreadX = side * size * legLen;
+      const endSpreadY = legAngle * size * 0.35;
+      const legEndX = legBaseX + endSpreadX;
+      const legEndY = legBaseY + endSpreadY + size * 0.2 + Math.sin(legPhase) * size * 0.02;
 
       // Leg segments with gradient
-      const legGrad = ctx.createLinearGradient(legBaseX, y, legEndX, legEndY);
+      const legGrad = ctx.createLinearGradient(legBaseX, legBaseY, legEndX, legEndY);
       legGrad.addColorStop(0, bodyColor);
       legGrad.addColorStop(1, bodyColorDark);
 
@@ -644,7 +690,7 @@ export function drawScorpionEnemy(
       ctx.lineWidth = 5 * zoom;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(legBaseX, y + size * 0.08);
+      ctx.moveTo(legBaseX, legBaseY);
       ctx.lineTo(legMidX, legMidY);
       ctx.lineTo(legEndX, legEndY);
       ctx.stroke();
@@ -660,8 +706,14 @@ export function drawScorpionEnemy(
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(legMidX, legMidY);
-      ctx.lineTo(legMidX + side * size * 0.05, legMidY - size * 0.06);
+      ctx.lineTo(legMidX + side * size * 0.04, legMidY - size * 0.06);
       ctx.stroke();
+
+      // Small foot shadow at contact point
+      ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+      ctx.beginPath();
+      ctx.ellipse(legEndX, legEndY + size * 0.01, size * 0.025, size * 0.01, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -712,6 +764,33 @@ export function drawScorpionEnemy(
   ctx.fillStyle = bodyColor;
   ctx.beginPath();
   ctx.ellipse(x, y - size * 0.1, size * 0.32, size * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Chitin shine/gleam highlights
+  const gleamPhase = Math.sin(time * 2.5) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(255, 250, 230, ${gleamPhase * 0.35})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.12, y + size * 0.02,
+    size * 0.06, size * 0.12,
+    -0.3, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 245, 220, ${gleamPhase * 0.25})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.15, y - size * 0.08,
+    size * 0.05, size * 0.08,
+    0.4, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 255, 255, ${gleamPhase * 0.2})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.08, y - size * 0.15,
+    size * 0.03, size * 0.02,
+    -0.5, 0, Math.PI * 2,
+  );
   ctx.fill();
 
   // Head/carapace with armored plates
@@ -947,6 +1026,27 @@ export function drawScorpionEnemy(
     ctx.fill();
   }
 
+  // Extended venom drip trail from stinger
+  for (let vd = 0; vd < 3; vd++) {
+    const vdPhase = (time * 1.5 + vd * 0.6) % 1;
+    const vdY = tailY - size * 0.15 + vdPhase * size * 0.3;
+    const vdX = tailX + size * 0.19 + Math.sin(time * 2 + vd) * size * 0.01;
+    const vdSize = size * (0.018 - vdPhase * 0.01);
+    const vdAlpha = (1 - vdPhase) * 0.6;
+    ctx.fillStyle = `rgba(34, 197, 94, ${vdAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(vdX, vdY, vdSize * 0.6, vdSize, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const vpAlpha = 0.2 + Math.sin(time * 2) * 0.1;
+  ctx.fillStyle = `rgba(34, 197, 94, ${vpAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    tailX + size * 0.15, y + size * 0.32,
+    size * 0.06, size * 0.025, 0, 0, Math.PI * 2,
+  );
+  ctx.fill();
+
   // Multiple glowing eyes (8 eyes like a real scorpion)
   ctx.fillStyle = "#1a0505";
   // Central pair
@@ -1073,6 +1173,22 @@ export function drawScarabEnemy(
       ctx.lineTo(legEndX + side * size * 0.01, legEndY + size * 0.04);
       ctx.fill();
     }
+  }
+
+  // Sand dust particles kicked up by legs
+  for (let sd = 0; sd < 8; sd++) {
+    const sdPhase = (time * 2 + sd * 0.5) % 1;
+    const sdSide = sd < 4 ? -1 : 1;
+    const sdLeg = sd % 4;
+    const sdBaseX = x + sdSide * (size * 0.15 + sdLeg * size * 0.08);
+    const sdX = sdBaseX + Math.sin(time * 3 + sd) * size * 0.04;
+    const sdY = y + size * 0.25 - sdPhase * size * 0.12;
+    const sdSize = size * (0.01 + Math.sin(sd * 1.7) * 0.005) * (1 - sdPhase);
+    const sdAlpha = (1 - sdPhase) * 0.4;
+    ctx.fillStyle = `rgba(194, 154, 108, ${sdAlpha})`;
+    ctx.beginPath();
+    ctx.arc(sdX, sdY, sdSize, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // Main carapace with iridescent sheen
@@ -1373,6 +1489,22 @@ export function drawScarabEnemy(
     0,
     Math.PI * 2,
   );
+  ctx.fill();
+
+  // Iridescent color-shifting shell overlay
+  const iriPhase = time * 0.8;
+  const iriR = Math.round(180 + Math.sin(iriPhase) * 50);
+  const iriG = Math.round(160 + Math.sin(iriPhase + 2.1) * 60);
+  const iriB = Math.round(100 + Math.sin(iriPhase + 4.2) * 80);
+  ctx.fillStyle = `rgba(${iriR}, ${iriG}, ${iriB}, ${shimmer * 0.2})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y + hoverFloat, size * 0.35, size * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+  const bandX = x + Math.sin(time * 1.5) * size * 0.2;
+  const bandAlpha = 0.15 + Math.sin(time * 3) * 0.08;
+  ctx.fillStyle = `rgba(255, 255, 240, ${bandAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(bandX, y + hoverFloat, size * 0.05, size * 0.22, 0.2, 0, Math.PI * 2);
   ctx.fill();
 
   // Floating magical particles

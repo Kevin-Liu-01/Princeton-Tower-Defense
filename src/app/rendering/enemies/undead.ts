@@ -742,54 +742,220 @@ export function drawBerserkerEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  // BLOOD WARDEN - Possessed warrior channeling demonic rage through cursed runes
+  // BLOOD WARDEN - Frenzied berserker channeling demonic rage through cursed blood runes
   const isAttacking = attackPhase > 0;
-  const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+  const attackIntensity = attackPhase;
   const rage =
     Math.sin(time * 14) * 4 * zoom +
     (isAttacking ? attackIntensity * size * 0.25 : 0);
   const breathe = Math.sin(time * 9) * 0.1;
-  const armSwing = Math.sin(time * 12) * 0.5;
+  const armSwing =
+    Math.sin(time * 12) * 0.5 +
+    (isAttacking ? Math.sin(time * 25) * attackIntensity * 0.8 : 0);
   const bloodPulse = 0.6 + Math.sin(time * 6) * 0.35;
   const runeGlow = 0.5 + Math.sin(time * 4) * 0.4;
+  const heartbeat = Math.sin(time * 8);
+  const heartbeatSharp = Math.pow(Math.max(0, heartbeat), 3);
+  const walkPhase = time * 3.5;
+  const leftStep = Math.sin(walkPhase);
+  const rightStep = Math.sin(walkPhase + Math.PI);
+  const bodyBob = Math.abs(Math.sin(walkPhase)) * size * 0.012;
+  const headY = y - size * 0.38 + rage * 0.3 - bodyBob;
+  const attackShake = isAttacking
+    ? Math.sin(time * 30) * attackIntensity * size * 0.015
+    : 0;
+  const furyScale = isAttacking ? 1 + attackIntensity * 0.15 : 1;
 
-  // Blood mist aura
-  for (let mist = 0; mist < 8; mist++) {
-    const mistAngle = time * 0.8 + (mist * Math.PI) / 4;
-    const mistDist = size * 0.5 + Math.sin(time * 2 + mist) * size * 0.1;
-    ctx.fillStyle = `rgba(220, 38, 38, ${bloodPulse * 0.15})`;
+  // === LAYER 1: GROUND CRACK EFFECTS FROM HEAVY FOOTSTEPS ===
+  const leftFootImpact = Math.max(0, -Math.sin(walkPhase - 0.3));
+  const rightFootImpact = Math.max(0, -Math.sin(walkPhase + Math.PI - 0.3));
+  ctx.strokeStyle = `rgba(80, 10, 10, ${0.35 + bloodPulse * 0.15})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let crack = 0; crack < 5; crack++) {
+    const crackAngle = (crack * Math.PI) / 2.5 + Math.sin(crack * 2.1) * 0.2;
+    const crackAlpha = leftFootImpact > 0.6 ? (leftFootImpact - 0.6) * 2 : 0;
+    if (crackAlpha > 0) {
+      ctx.globalAlpha = crackAlpha * 0.6;
+      ctx.beginPath();
+      let cx = x - size * 0.12;
+      let cy = y + size * 0.48;
+      ctx.moveTo(cx, cy);
+      for (let seg = 0; seg < 3; seg++) {
+        const bend = Math.sin(crack * 2.7 + seg * 1.5) * 0.25;
+        cx += Math.cos(crackAngle + bend) * size * 0.09;
+        cy += size * (0.015 + seg * 0.01);
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+  }
+  for (let crack = 0; crack < 5; crack++) {
+    const crackAngle =
+      (crack * Math.PI) / 2.5 + Math.sin(crack * 1.8 + 1) * 0.2;
+    const crackAlpha =
+      rightFootImpact > 0.6 ? (rightFootImpact - 0.6) * 2 : 0;
+    if (crackAlpha > 0) {
+      ctx.globalAlpha = crackAlpha * 0.6;
+      ctx.beginPath();
+      let cx = x + size * 0.12;
+      let cy = y + size * 0.48;
+      ctx.moveTo(cx, cy);
+      for (let seg = 0; seg < 3; seg++) {
+        const bend = Math.sin(crack * 3.1 + seg * 1.3) * 0.25;
+        cx += Math.cos(crackAngle + bend) * size * 0.09;
+        cy += size * (0.015 + seg * 0.01);
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // === LAYER 2: BLOOD RAGE POOL BENEATH ===
+  const poolGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.48,
+    0,
+    x,
+    y + size * 0.48,
+    size * 0.55 * furyScale,
+  );
+  poolGrad.addColorStop(0, `rgba(127, 29, 29, ${0.5 + heartbeatSharp * 0.2})`);
+  poolGrad.addColorStop(
+    0.35,
+    `rgba(185, 28, 28, ${0.3 + heartbeatSharp * 0.15})`,
+  );
+  poolGrad.addColorStop(
+    0.65,
+    `rgba(220, 38, 38, ${0.15 + heartbeatSharp * 0.1})`,
+  );
+  poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = poolGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y + size * 0.48,
+    size * 0.55 * furyScale,
+    size * 0.18 * furyScale,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Expanding blood rings
+  for (let ring = 0; ring < 3; ring++) {
+    const ringPhase = (time * 1.2 + ring * 0.33) % 1;
+    const ringRadius = size * (0.2 + ringPhase * 0.4) * furyScale;
+    const ringAlpha = (1 - ringPhase) * 0.3;
+    ctx.strokeStyle = `rgba(220, 38, 38, ${ringAlpha})`;
+    ctx.lineWidth = (1.5 - ringPhase) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      x,
+      y + size * 0.48,
+      ringRadius,
+      ringRadius * 0.32,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
+  // Blood pool surface bubbles
+  for (let bub = 0; bub < 4; bub++) {
+    const bubPhase = (time * 1.8 + bub * 0.25) % 1;
+    const bubScale = Math.sin(bubPhase * Math.PI);
+    const bx = x - size * 0.25 + bub * size * 0.17;
+    ctx.strokeStyle = `rgba(185, 28, 28, ${bubScale * 0.4})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.arc(
+      bx,
+      y + size * 0.48,
+      size * 0.015 + bubScale * size * 0.012,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
+  // === LAYER 3: BLOOD MIST AURA ===
+  for (let mist = 0; mist < 10; mist++) {
+    const mistAngle = time * 0.8 + (mist * Math.PI) / 5;
+    const mistDist =
+      (size * 0.5 + Math.sin(time * 2 + mist) * size * 0.12) * furyScale;
+    const mistSize = size * (0.06 + Math.sin(time * 3 + mist * 1.7) * 0.03);
+    ctx.fillStyle = `rgba(220, 38, 38, ${bloodPulse * 0.12})`;
     ctx.beginPath();
     ctx.arc(
       x + Math.cos(mistAngle) * mistDist,
       y + Math.sin(mistAngle) * mistDist * 0.5,
-      size * 0.08,
+      mistSize,
       0,
       Math.PI * 2,
     );
     ctx.fill();
   }
 
-  // Rage aura - more intense
-  const rageGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.8);
-  rageGrad.addColorStop(0, `rgba(220, 38, 38, ${bloodPulse * 0.4})`);
-  rageGrad.addColorStop(0.4, `rgba(185, 28, 28, ${bloodPulse * 0.25})`);
-  rageGrad.addColorStop(0.7, `rgba(127, 29, 29, ${bloodPulse * 0.1})`);
+  // Rage aura with heartbeat pulse
+  const rageGrad = ctx.createRadialGradient(
+    x,
+    y,
+    0,
+    x,
+    y,
+    size * 0.85 * furyScale,
+  );
+  rageGrad.addColorStop(
+    0,
+    `rgba(220, 38, 38, ${(bloodPulse * 0.4 + heartbeatSharp * 0.2) * furyScale})`,
+  );
+  rageGrad.addColorStop(
+    0.3,
+    `rgba(185, 28, 28, ${bloodPulse * 0.3 + heartbeatSharp * 0.12})`,
+  );
+  rageGrad.addColorStop(
+    0.6,
+    `rgba(153, 27, 27, ${bloodPulse * 0.15 + heartbeatSharp * 0.06})`,
+  );
+  rageGrad.addColorStop(0.8, `rgba(127, 29, 29, ${bloodPulse * 0.06})`);
   rageGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = rageGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+  ctx.arc(x, y, size * 0.85 * furyScale, 0, Math.PI * 2);
   ctx.fill();
 
-  // Motion blur effect - more dramatic
-  ctx.globalAlpha = 0.35;
+  // Rage particles (orbit faster during attack)
+  const particleSpeed = isAttacking ? 2.5 : 1.2;
+  for (let p = 0; p < 8; p++) {
+    const pAngle = time * particleSpeed + (p * Math.PI) / 4;
+    const pDist =
+      size * (0.45 + Math.sin(time * 3 + p * 1.3) * 0.12) * furyScale;
+    const pAlpha = 0.35 + Math.sin(time * 5 + p) * 0.2;
+    ctx.fillStyle = `rgba(239, 68, 68, ${pAlpha})`;
+    ctx.beginPath();
+    ctx.arc(
+      x + Math.cos(pAngle) * pDist,
+      y + Math.sin(pAngle) * pDist * 0.45,
+      size * 0.018,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Motion blur trails
+  ctx.globalAlpha = 0.3;
   for (let i = 1; i < 4; i++) {
-    ctx.fillStyle = `rgba(185, 28, 28, ${0.3 - i * 0.08})`;
+    ctx.fillStyle = `rgba(185, 28, 28, ${0.25 - i * 0.07})`;
     ctx.beginPath();
     ctx.ellipse(
-      x + i * 9,
+      x + i * 8,
       y,
-      size * (0.28 - i * 0.04),
-      size * (0.38 - i * 0.05),
+      size * (0.26 - i * 0.04),
+      size * (0.36 - i * 0.05),
       0,
       0,
       Math.PI * 2,
@@ -798,181 +964,554 @@ export function drawBerserkerEnemy(
   }
   ctx.globalAlpha = 1;
 
+  // === LAYER 4: ATTACK BLOOD SPLATTER ===
+  if (isAttacking) {
+    for (let splat = 0; splat < 12; splat++) {
+      const splatAngle = (splat * Math.PI) / 6 + time * 0.5;
+      const splatDist =
+        size * (0.3 + attackIntensity * 0.5) *
+        (0.5 + Math.sin(time * 8 + splat * 2.1) * 0.5);
+      const splatSize =
+        size * 0.025 * attackIntensity * (0.5 + Math.sin(splat * 3.7) * 0.5);
+      ctx.fillStyle = `rgba(220, 38, 38, ${attackIntensity * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(
+        x + Math.cos(splatAngle) * splatDist + attackShake,
+        y + Math.sin(splatAngle) * splatDist * 0.6,
+        splatSize,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
 
-  // Muscular demonic body with runes
+    // Blood spray arcs from weapons
+    ctx.strokeStyle = `rgba(220, 38, 38, ${attackIntensity * 0.4})`;
+    ctx.lineWidth = 2 * zoom;
+    for (let arc = 0; arc < 3; arc++) {
+      const arcAngle = -Math.PI * 0.3 + arc * 0.3 + armSwing;
+      const arcDist = size * 0.4 * attackIntensity;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.4, y - size * 0.1);
+      ctx.quadraticCurveTo(
+        x - size * 0.5 + Math.cos(arcAngle) * arcDist,
+        y - size * 0.3 + Math.sin(arcAngle) * arcDist * 0.5,
+        x - size * 0.3 + Math.cos(arcAngle + 0.5) * arcDist * 1.3,
+        y - size * 0.2 + Math.sin(arcAngle + 0.5) * arcDist * 0.8,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // === LAYER 5: MUSCULAR BODY WITH RUNE TATTOOS AND BATTLE SCARS ===
   const bodyGrad = ctx.createLinearGradient(
-    x - size * 0.35,
-    y,
-    x + size * 0.35,
-    y,
+    x - size * 0.38,
+    y - size * 0.15,
+    x + size * 0.38,
+    y + size * 0.1,
   );
   bodyGrad.addColorStop(0, "#450a0a");
-  bodyGrad.addColorStop(0.3, "#7f1d1d");
-  bodyGrad.addColorStop(0.5, "#b91c1c");
-  bodyGrad.addColorStop(0.7, "#7f1d1d");
+  bodyGrad.addColorStop(0.2, "#7f1d1d");
+  bodyGrad.addColorStop(0.45, "#b91c1c");
+  bodyGrad.addColorStop(0.55, "#991b1b");
+  bodyGrad.addColorStop(0.8, "#7f1d1d");
   bodyGrad.addColorStop(1, "#450a0a");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.38, y + size * 0.42);
-  ctx.lineTo(x - size * 0.45 - breathe * size, y - size * 0.12);
+  ctx.lineTo(x - size * 0.42, y + size * 0.2);
   ctx.quadraticCurveTo(
-    x,
-    y - size * 0.45,
-    x + size * 0.45 + breathe * size,
-    y - size * 0.12,
+    x - size * 0.48 - breathe * size,
+    y - size * 0.05,
+    x - size * 0.44 - breathe * size,
+    y - size * 0.14,
+  );
+  ctx.quadraticCurveTo(x, y - size * 0.48, x + size * 0.44 + breathe * size, y - size * 0.14);
+  ctx.quadraticCurveTo(
+    x + size * 0.48 + breathe * size,
+    y - size * 0.05,
+    x + size * 0.42,
+    y + size * 0.2,
   );
   ctx.lineTo(x + size * 0.38, y + size * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  // Blood rune tattoos on body
-  ctx.strokeStyle = `rgba(220, 38, 38, ${runeGlow})`;
-  ctx.lineWidth = 2 * zoom;
-  // Left rune
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.25, y - size * 0.1);
-  ctx.lineTo(x - size * 0.2, y + size * 0.15);
-  ctx.lineTo(x - size * 0.3, y + size * 0.25);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(x - size * 0.25, y + size * 0.05, size * 0.04, 0, Math.PI * 2);
-  ctx.stroke();
-  // Right rune
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.25, y - size * 0.1);
-  ctx.lineTo(x + size * 0.2, y + size * 0.15);
-  ctx.lineTo(x + size * 0.3, y + size * 0.25);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(x + size * 0.25, y + size * 0.05, size * 0.04, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // War paint stripes - blood-soaked
-  ctx.fillStyle = "#1a1a2e";
-  ctx.fillRect(x - size * 0.28, y - size * 0.18, size * 0.1, size * 0.4);
-  ctx.fillRect(x + size * 0.18, y - size * 0.18, size * 0.1, size * 0.4);
-
-  // Massive demon-touched arms
-  // Left arm with cursed axe
-  ctx.save();
-  ctx.translate(x - size * 0.4, y - size * 0.12);
-  ctx.rotate(-0.55 + armSwing);
-  const armGrad = ctx.createLinearGradient(0, 0, 0, size * 0.4);
-  armGrad.addColorStop(0, "#b91c1c");
-  armGrad.addColorStop(1, "#7f1d1d");
-  ctx.fillStyle = armGrad;
-  ctx.fillRect(-size * 0.1, 0, size * 0.2, size * 0.4);
-  // Arm runes
-  ctx.strokeStyle = `rgba(220, 38, 38, ${runeGlow * 0.7})`;
+  // Chest muscle definition
+  ctx.strokeStyle = `rgba(69, 10, 10, 0.4)`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(0, size * 0.05);
-  ctx.lineTo(0, size * 0.3);
+  ctx.moveTo(x, y - size * 0.3);
+  ctx.lineTo(x, y + size * 0.15);
   ctx.stroke();
-  // Cursed great axe
-  ctx.fillStyle = "#1c1917";
-  ctx.fillRect(-size * 0.035, size * 0.35, size * 0.07, size * 0.35);
-  // Axe head with blood glow
-  ctx.fillStyle = "#3f3f46";
   ctx.beginPath();
-  ctx.moveTo(-size * 0.025, size * 0.6);
-  ctx.quadraticCurveTo(-size * 0.15, size * 0.55, -size * 0.22, size * 0.45);
-  ctx.lineTo(-size * 0.22, size * 0.7);
-  ctx.quadraticCurveTo(-size * 0.15, size * 0.65, -size * 0.025, size * 0.65);
-  ctx.fill();
-  // Blood glow on blade
-  ctx.strokeStyle = `rgba(220, 38, 38, ${bloodPulse})`;
+  ctx.moveTo(x - size * 0.03, y - size * 0.2);
+  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.18, x - size * 0.3, y - size * 0.08);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.03, y - size * 0.2);
+  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.18, x + size * 0.3, y - size * 0.08);
+  ctx.stroke();
+  // Ab ridges
+  for (let ab = 0; ab < 3; ab++) {
+    const abY = y + size * 0.0 + ab * size * 0.08;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.12, abY);
+    ctx.lineTo(x + size * 0.12, abY);
+    ctx.stroke();
+  }
+
+  // === PULSING RUNE TATTOOS (with heartbeat animation) ===
+  const runeAlpha = runeGlow + heartbeatSharp * 0.3;
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha})`;
+  ctx.lineWidth = 2 * zoom;
+
+  // Left chest rune (circle-cross pattern)
+  ctx.beginPath();
+  ctx.arc(x - size * 0.16, y - size * 0.08, size * 0.055, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16, y - size * 0.135);
+  ctx.lineTo(x - size * 0.16, y - size * 0.025);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.215, y - size * 0.08);
+  ctx.lineTo(x - size * 0.105, y - size * 0.08);
+  ctx.stroke();
+
+  // Right chest rune (diamond pattern)
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.16, y - size * 0.14);
+  ctx.lineTo(x + size * 0.21, y - size * 0.08);
+  ctx.lineTo(x + size * 0.16, y - size * 0.02);
+  ctx.lineTo(x + size * 0.11, y - size * 0.08);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.16, y - size * 0.08, size * 0.025, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Torso vertical rune lines
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, y + size * 0.05);
+  ctx.lineTo(x - size * 0.12, y + size * 0.2);
+  ctx.lineTo(x - size * 0.06, y + size * 0.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.08, y + size * 0.05);
+  ctx.lineTo(x + size * 0.12, y + size * 0.2);
+  ctx.lineTo(x + size * 0.06, y + size * 0.3);
+  ctx.stroke();
+
+  // Spine rune (center back / visible on chest glow)
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha * 0.6})`;
+  ctx.lineWidth = 1 * zoom;
+  for (let dot = 0; dot < 5; dot++) {
+    ctx.beginPath();
+    ctx.arc(
+      x,
+      y - size * 0.15 + dot * size * 0.1,
+      size * 0.012,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
+  // === ANIMATED VEINS / RAGE VEINS (pulse with heartbeat) ===
+  const veinAlpha = 0.25 + heartbeatSharp * 0.45;
+  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha})`;
+  ctx.lineWidth = 1.2 * zoom;
+
+  // Left shoulder veins
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.12);
+  ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.18, x - size * 0.18, y - size * 0.22);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.3, y - size * 0.1);
+  ctx.quadraticCurveTo(x - size * 0.25, y - size * 0.02, x - size * 0.2, y + size * 0.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.28, y - size * 0.14);
+  ctx.lineTo(x - size * 0.32, y - size * 0.05);
+  ctx.stroke();
+
+  // Right shoulder veins
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.35, y - size * 0.12);
+  ctx.quadraticCurveTo(x + size * 0.28, y - size * 0.18, x + size * 0.18, y - size * 0.22);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.3, y - size * 0.1);
+  ctx.quadraticCurveTo(x + size * 0.25, y - size * 0.02, x + size * 0.2, y + size * 0.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.28, y - size * 0.14);
+  ctx.lineTo(x + size * 0.32, y - size * 0.05);
+  ctx.stroke();
+
+  // Chest veins branching from center
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.15);
+  ctx.quadraticCurveTo(x - size * 0.08, y - size * 0.2, x - size * 0.15, y - size * 0.17);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.15);
+  ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.2, x + size * 0.15, y - size * 0.17);
+  ctx.stroke();
+
+  // === BATTLE SCARS AND WOUNDS ===
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.6)";
+  ctx.lineWidth = 2.5 * zoom;
+  // Diagonal chest scar
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.15);
+  ctx.lineTo(x + size * 0.1, y + size * 0.2);
+  ctx.stroke();
+  // Scar highlight (lighter edge)
+  ctx.strokeStyle = "rgba(185, 28, 28, 0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24, y - size * 0.14);
+  ctx.lineTo(x + size * 0.11, y + size * 0.21);
+  ctx.stroke();
+
+  // Short horizontal gash on right side
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.5)";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(-size * 0.05, size * 0.58);
-  ctx.lineTo(-size * 0.18, size * 0.52);
+  ctx.moveTo(x + size * 0.15, y + size * 0.05);
+  ctx.lineTo(x + size * 0.3, y + size * 0.02);
+  ctx.stroke();
+
+  // Puncture wound (small filled circle with glow)
+  ctx.fillStyle = `rgba(127, 29, 29, ${0.5 + heartbeatSharp * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.05, y + size * 0.12, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(220, 38, 38, ${0.3 + heartbeatSharp * 0.2})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.05, y + size * 0.12, size * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === LAYER 6: DUAL-WIELDING ARMS WITH WEAPONS ===
+
+  // Left arm - Cursed great axe
+  ctx.save();
+  ctx.translate(x - size * 0.42 + attackShake, y - size * 0.14 - bodyBob);
+  ctx.rotate(-0.55 + armSwing);
+  const armGradL = ctx.createLinearGradient(0, 0, 0, size * 0.42);
+  armGradL.addColorStop(0, "#b91c1c");
+  armGradL.addColorStop(0.5, "#991b1b");
+  armGradL.addColorStop(1, "#7f1d1d");
+  ctx.fillStyle = armGradL;
+  // Upper arm (muscular taper)
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.12, 0);
+  ctx.quadraticCurveTo(-size * 0.14, size * 0.12, -size * 0.1, size * 0.22);
+  ctx.lineTo(size * 0.1, size * 0.22);
+  ctx.quadraticCurveTo(size * 0.14, size * 0.12, size * 0.12, 0);
+  ctx.closePath();
+  ctx.fill();
+  // Forearm
+  ctx.fillStyle = "#991b1b";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.09, size * 0.22);
+  ctx.lineTo(-size * 0.07, size * 0.42);
+  ctx.lineTo(size * 0.07, size * 0.42);
+  ctx.lineTo(size * 0.09, size * 0.22);
+  ctx.closePath();
+  ctx.fill();
+
+  // Arm veins (pulse with heartbeat)
+  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, size * 0.03);
+  ctx.quadraticCurveTo(size * 0.04, size * 0.15, 0, size * 0.32);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.05, size * 0.08);
+  ctx.lineTo(-size * 0.06, size * 0.25);
+  ctx.stroke();
+
+  // Arm rune band
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.11, size * 0.1);
+  ctx.lineTo(size * 0.11, size * 0.1);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.14);
+  ctx.lineTo(size * 0.1, size * 0.14);
+  ctx.stroke();
+
+  // Axe handle (wrapped leather)
+  ctx.fillStyle = "#292524";
+  ctx.fillRect(-size * 0.035, size * 0.38, size * 0.07, size * 0.38);
+  // Handle wrapping
+  ctx.strokeStyle = "#57534e";
+  ctx.lineWidth = 1 * zoom;
+  for (let wrap = 0; wrap < 5; wrap++) {
+    const wy = size * 0.4 + wrap * size * 0.065;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.035, wy);
+    ctx.lineTo(size * 0.035, wy + size * 0.03);
+    ctx.stroke();
+  }
+
+  // Axe head - massive double-bladed
+  ctx.fillStyle = "#52525b";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.025, size * 0.62);
+  ctx.quadraticCurveTo(-size * 0.12, size * 0.58, -size * 0.2, size * 0.48);
+  ctx.quadraticCurveTo(-size * 0.24, size * 0.55, -size * 0.2, size * 0.65);
+  ctx.quadraticCurveTo(-size * 0.12, size * 0.68, -size * 0.025, size * 0.66);
+  ctx.fill();
+  // Axe edge glow
+  ctx.strokeStyle = `rgba(220, 38, 38, ${bloodPulse * 0.8})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, size * 0.48);
+  ctx.quadraticCurveTo(-size * 0.24, size * 0.55, -size * 0.2, size * 0.65);
+  ctx.stroke();
+  // Blood drip from axe
+  const dripY = (time * 2) % 1;
+  ctx.fillStyle = `rgba(220, 38, 38, ${(1 - dripY) * 0.6})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    -size * 0.22,
+    size * 0.58 + dripY * size * 0.15,
+    size * 0.008,
+    size * 0.015,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // Rune etching on blade
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha * 0.5})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.55);
+  ctx.lineTo(-size * 0.14, size * 0.6);
+  ctx.lineTo(-size * 0.1, size * 0.63);
   ctx.stroke();
   ctx.restore();
 
-  // Right arm with spikes
+  // Right arm - War cleaver / second blade
   ctx.save();
-  ctx.translate(x + size * 0.4, y - size * 0.12);
+  ctx.translate(x + size * 0.42 + attackShake, y - size * 0.14 - bodyBob);
   ctx.rotate(0.55 - armSwing);
-  ctx.fillStyle = armGrad;
-  ctx.fillRect(-size * 0.1, 0, size * 0.2, size * 0.38);
-  // Spiked gauntlet
-  ctx.fillStyle = "#1c1917";
-  ctx.fillRect(-size * 0.12, size * 0.32, size * 0.24, size * 0.1);
-  // Spikes
-  for (let spike = 0; spike < 3; spike++) {
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.08 + spike * size * 0.08, size * 0.42);
-    ctx.lineTo(-size * 0.06 + spike * size * 0.08, size * 0.52);
-    ctx.lineTo(-size * 0.04 + spike * size * 0.08, size * 0.42);
-    ctx.fill();
-  }
+  const armGradR = ctx.createLinearGradient(0, 0, 0, size * 0.42);
+  armGradR.addColorStop(0, "#b91c1c");
+  armGradR.addColorStop(0.5, "#991b1b");
+  armGradR.addColorStop(1, "#7f1d1d");
+  ctx.fillStyle = armGradR;
+  // Upper arm
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.12, 0);
+  ctx.quadraticCurveTo(-size * 0.14, size * 0.12, -size * 0.1, size * 0.22);
+  ctx.lineTo(size * 0.1, size * 0.22);
+  ctx.quadraticCurveTo(size * 0.14, size * 0.12, size * 0.12, 0);
+  ctx.closePath();
+  ctx.fill();
+  // Forearm
+  ctx.fillStyle = "#991b1b";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.09, size * 0.22);
+  ctx.lineTo(-size * 0.07, size * 0.42);
+  ctx.lineTo(size * 0.07, size * 0.42);
+  ctx.lineTo(size * 0.09, size * 0.22);
+  ctx.closePath();
+  ctx.fill();
+
+  // Arm veins
+  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, size * 0.03);
+  ctx.quadraticCurveTo(-size * 0.04, size * 0.15, 0, size * 0.32);
+  ctx.stroke();
+
+  // Arm scar
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.5)";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.06, size * 0.12);
+  ctx.lineTo(size * 0.04, size * 0.28);
+  ctx.stroke();
+
+  // War cleaver handle
+  ctx.fillStyle = "#292524";
+  ctx.fillRect(-size * 0.03, size * 0.38, size * 0.06, size * 0.22);
+  // Cleaver blade (broad, straight)
+  ctx.fillStyle = "#71717a";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.03, size * 0.55);
+  ctx.lineTo(size * 0.18, size * 0.48);
+  ctx.lineTo(size * 0.22, size * 0.52);
+  ctx.lineTo(size * 0.22, size * 0.72);
+  ctx.lineTo(size * 0.18, size * 0.75);
+  ctx.lineTo(size * 0.03, size * 0.68);
+  ctx.closePath();
+  ctx.fill();
+  // Cleaver edge highlight
+  ctx.strokeStyle = `rgba(200, 200, 210, 0.4)`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.22, size * 0.52);
+  ctx.lineTo(size * 0.22, size * 0.72);
+  ctx.stroke();
+  // Blood stain on blade
+  ctx.fillStyle = `rgba(185, 28, 28, 0.5)`;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.1, size * 0.58);
+  ctx.quadraticCurveTo(size * 0.15, size * 0.62, size * 0.12, size * 0.68);
+  ctx.quadraticCurveTo(size * 0.08, size * 0.64, size * 0.1, size * 0.58);
+  ctx.fill();
+  // Blade rune
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha * 0.4})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.12, size * 0.54);
+  ctx.lineTo(size * 0.15, size * 0.6);
+  ctx.lineTo(size * 0.12, size * 0.66);
+  ctx.stroke();
   ctx.restore();
 
-  // Fierce demonic head
+  // === LAYER 7: HEAD WITH WAR PAINT ===
   const headGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.38 + rage * 0.3,
+    x + attackShake,
+    headY,
     0,
-    x,
-    y - size * 0.38 + rage * 0.3,
+    x + attackShake,
+    headY,
     size * 0.22,
   );
   headGrad.addColorStop(0, "#a8a29e");
-  headGrad.addColorStop(0.6, "#78716c");
+  headGrad.addColorStop(0.4, "#8a8178");
+  headGrad.addColorStop(0.7, "#78716c");
   headGrad.addColorStop(1, "#57534e");
   ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.38 + rage * 0.3, size * 0.2, 0, Math.PI * 2);
+  ctx.arc(x + attackShake, headY, size * 0.2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Face runes
-  ctx.strokeStyle = `rgba(220, 38, 38, ${runeGlow})`;
-  ctx.lineWidth = 2 * zoom;
+  // Head rage veins (visible on temples)
+  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha * 0.8})`;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.16, y - size * 0.42 + rage * 0.3);
-  ctx.lineTo(x - size * 0.1, y - size * 0.32 + rage * 0.3);
+  ctx.moveTo(x - size * 0.18 + attackShake, headY - size * 0.04);
+  ctx.quadraticCurveTo(
+    x - size * 0.14 + attackShake,
+    headY - size * 0.1,
+    x - size * 0.08 + attackShake,
+    headY - size * 0.12,
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.16, y - size * 0.42 + rage * 0.3);
-  ctx.lineTo(x + size * 0.1, y - size * 0.32 + rage * 0.3);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.52 + rage * 0.3);
-  ctx.lineTo(x, y - size * 0.42 + rage * 0.3);
+  ctx.moveTo(x + size * 0.18 + attackShake, headY - size * 0.04);
+  ctx.quadraticCurveTo(
+    x + size * 0.14 + attackShake,
+    headY - size * 0.1,
+    x + size * 0.08 + attackShake,
+    headY - size * 0.12,
+  );
   ctx.stroke();
 
-  // Demonic eyes (intense blood glow)
+  // === WAR PAINT (three horizontal blood stripes across face) ===
+  ctx.fillStyle = `rgba(185, 28, 28, ${0.65 + heartbeatSharp * 0.15})`;
+  // Top stripe across forehead
+  ctx.beginPath();
+  ctx.ellipse(
+    x + attackShake,
+    headY - size * 0.1,
+    size * 0.16,
+    size * 0.018,
+    -0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // Middle stripe across eyes
+  ctx.fillStyle = `rgba(127, 29, 29, ${0.7 + heartbeatSharp * 0.15})`;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.19 + attackShake, headY - size * 0.05);
+  ctx.lineTo(x + size * 0.19 + attackShake, headY - size * 0.03);
+  ctx.lineTo(x + size * 0.19 + attackShake, headY + size * 0.01);
+  ctx.lineTo(x - size * 0.19 + attackShake, headY - size * 0.01);
+  ctx.closePath();
+  ctx.fill();
+  // Lower jaw stripe
+  ctx.fillStyle = `rgba(185, 28, 28, ${0.5 + heartbeatSharp * 0.1})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x + attackShake,
+    headY + size * 0.1,
+    size * 0.12,
+    size * 0.015,
+    0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Face rune markings (vertical tribal lines)
+  ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha})`;
+  ctx.lineWidth = 2 * zoom;
+  // Left cheek rune
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16 + attackShake, headY - size * 0.06);
+  ctx.lineTo(x - size * 0.12 + attackShake, headY + size * 0.08);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14 + attackShake, headY - size * 0.02);
+  ctx.lineTo(x - size * 0.18 + attackShake, headY + size * 0.04);
+  ctx.stroke();
+  // Right cheek rune
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.16 + attackShake, headY - size * 0.06);
+  ctx.lineTo(x + size * 0.12 + attackShake, headY + size * 0.08);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.14 + attackShake, headY - size * 0.02);
+  ctx.lineTo(x + size * 0.18 + attackShake, headY + size * 0.04);
+  ctx.stroke();
+  // Forehead rune (vertical center)
+  ctx.beginPath();
+  ctx.moveTo(x + attackShake, headY - size * 0.18);
+  ctx.lineTo(x + attackShake, headY - size * 0.08);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.03 + attackShake, headY - size * 0.14);
+  ctx.lineTo(x + size * 0.03 + attackShake, headY - size * 0.14);
+  ctx.stroke();
+
+  // Demonic eyes (intense blood glow with rage)
+  const eyeSize = size * (0.05 + heartbeatSharp * 0.008);
   ctx.fillStyle = "#fef2f2";
   ctx.beginPath();
-  ctx.arc(
-    x - size * 0.08,
-    y - size * 0.4 + rage * 0.3,
-    size * 0.05,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.08,
-    y - size * 0.4 + rage * 0.3,
-    size * 0.05,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(x - size * 0.08 + attackShake, headY - size * 0.02, eyeSize, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.08 + attackShake, headY - size * 0.02, eyeSize, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#dc2626";
-  setShadowBlur(ctx, 10 * zoom, "#dc2626");
+  setShadowBlur(ctx, 12 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.08,
-    y - size * 0.4 + rage * 0.3,
-    size * 0.03,
+    x - size * 0.08 + attackShake,
+    headY - size * 0.02,
+    size * 0.032,
     0,
     Math.PI * 2,
   );
   ctx.arc(
-    x + size * 0.08,
-    y - size * 0.4 + rage * 0.3,
-    size * 0.03,
+    x + size * 0.08 + attackShake,
+    headY - size * 0.02,
+    size * 0.032,
     0,
     Math.PI * 2,
   );
@@ -982,87 +1521,320 @@ export function drawBerserkerEnemy(
   ctx.fillStyle = "#450a0a";
   ctx.beginPath();
   ctx.ellipse(
-    x - size * 0.08,
-    y - size * 0.4 + rage * 0.3,
+    x - size * 0.08 + attackShake,
+    headY - size * 0.02,
     size * 0.008,
-    size * 0.02,
+    size * 0.022,
     0,
     0,
     Math.PI * 2,
   );
   ctx.ellipse(
-    x + size * 0.08,
-    y - size * 0.4 + rage * 0.3,
+    x + size * 0.08 + attackShake,
+    headY - size * 0.02,
     size * 0.008,
-    size * 0.02,
+    size * 0.022,
     0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
 
+  // Eye brow ridges (furrowed)
+  ctx.strokeStyle = "#57534e";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14 + attackShake, headY - size * 0.06);
+  ctx.quadraticCurveTo(
+    x - size * 0.08 + attackShake,
+    headY - size * 0.1,
+    x - size * 0.03 + attackShake,
+    headY - size * 0.07,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.14 + attackShake, headY - size * 0.06);
+  ctx.quadraticCurveTo(
+    x + size * 0.08 + attackShake,
+    headY - size * 0.1,
+    x + size * 0.03 + attackShake,
+    headY - size * 0.07,
+  );
+  ctx.stroke();
+
   // Screaming mouth with fangs
+  const mouthOpen = size * (0.055 + Math.abs(rage) * 0.01) + (isAttacking ? attackIntensity * size * 0.02 : 0);
   ctx.fillStyle = "#1a1a2e";
   ctx.beginPath();
   ctx.ellipse(
-    x,
-    y - size * 0.28 + rage * 0.3,
+    x + attackShake,
+    headY + size * 0.1,
     size * 0.1,
-    size * 0.06 + Math.abs(rage) * 0.012,
+    mouthOpen,
     0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
-  // Fanged teeth
+  // Tongue
+  ctx.fillStyle = "#991b1b";
+  ctx.beginPath();
+  ctx.ellipse(
+    x + attackShake,
+    headY + size * 0.11,
+    size * 0.05,
+    mouthOpen * 0.5,
+    0,
+    0,
+    Math.PI,
+  );
+  ctx.fill();
+  // Upper fangs
   ctx.fillStyle = "#f5f5f5";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.08, y - size * 0.31 + rage * 0.3);
-  ctx.lineTo(x - size * 0.06, y - size * 0.24 + rage * 0.3);
-  ctx.lineTo(x - size * 0.04, y - size * 0.31 + rage * 0.3);
+  ctx.moveTo(x - size * 0.08 + attackShake, headY + size * 0.06);
+  ctx.lineTo(x - size * 0.06 + attackShake, headY + size * 0.14);
+  ctx.lineTo(x - size * 0.04 + attackShake, headY + size * 0.06);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.08, y - size * 0.31 + rage * 0.3);
-  ctx.lineTo(x + size * 0.06, y - size * 0.24 + rage * 0.3);
-  ctx.lineTo(x + size * 0.04, y - size * 0.31 + rage * 0.3);
+  ctx.moveTo(x + size * 0.08 + attackShake, headY + size * 0.06);
+  ctx.lineTo(x + size * 0.06 + attackShake, headY + size * 0.14);
+  ctx.lineTo(x + size * 0.04 + attackShake, headY + size * 0.06);
+  ctx.fill();
+  // Lower fangs
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.05 + attackShake, headY + size * 0.15);
+  ctx.lineTo(x - size * 0.035 + attackShake, headY + size * 0.08);
+  ctx.lineTo(x - size * 0.02 + attackShake, headY + size * 0.15);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.05 + attackShake, headY + size * 0.15);
+  ctx.lineTo(x + size * 0.035 + attackShake, headY + size * 0.08);
+  ctx.lineTo(x + size * 0.02 + attackShake, headY + size * 0.15);
   ctx.fill();
 
-  // Wild flaming hair with horns
+  // Face scar (across nose/cheek)
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.5)";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12 + attackShake, headY + size * 0.02);
+  ctx.lineTo(x + size * 0.06 + attackShake, headY - size * 0.06);
+  ctx.stroke();
+
+  // === RAGE STEAM / BREATH EFFECT ===
+  const breathIntensity = 0.3 + heartbeatSharp * 0.4 + (isAttacking ? attackIntensity * 0.3 : 0);
+  for (let steam = 0; steam < 5; steam++) {
+    const steamPhase = (time * 2 + steam * 0.2) % 1;
+    const steamY = headY + size * 0.08 - steamPhase * size * 0.25;
+    const steamX =
+      x +
+      attackShake +
+      Math.sin(time * 6 + steam * 1.5) * size * 0.04 +
+      (steam - 2) * size * 0.03;
+    const steamAlpha = (1 - steamPhase) * breathIntensity * 0.35;
+    const steamSize = size * (0.02 + steamPhase * 0.04);
+    ctx.fillStyle = `rgba(220, 38, 38, ${steamAlpha})`;
+    ctx.beginPath();
+    ctx.arc(steamX, steamY, steamSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Nostril steam wisps (twin plumes)
+  for (let plume = 0; plume < 3; plume++) {
+    const plumePhase = (time * 2.5 + plume * 0.33) % 1;
+    const plumeAlpha = (1 - plumePhase) * breathIntensity * 0.25;
+    const plumeRise = plumePhase * size * 0.18;
+    // Left nostril
+    ctx.fillStyle = `rgba(200, 40, 40, ${plumeAlpha})`;
+    ctx.beginPath();
+    ctx.arc(
+      x - size * 0.03 + attackShake + Math.sin(time * 5 + plume) * size * 0.015,
+      headY + size * 0.04 - plumeRise,
+      size * (0.012 + plumePhase * 0.02),
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    // Right nostril
+    ctx.beginPath();
+    ctx.arc(
+      x + size * 0.03 + attackShake + Math.sin(time * 5 + plume + 1) * size * 0.015,
+      headY + size * 0.04 - plumeRise,
+      size * (0.012 + plumePhase * 0.02),
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // === WILD FLAMING HAIR WITH HORNS ===
   ctx.fillStyle = "#991b1b";
-  for (let i = 0; i < 9; i++) {
-    const hairAngle = -Math.PI * 0.35 + i * Math.PI * 0.087;
-    const hairLen = size * (0.25 + Math.sin(time * 10 + i) * 0.05);
+  for (let i = 0; i < 11; i++) {
+    const hairAngle = -Math.PI * 0.4 + i * Math.PI * 0.08;
+    const hairLen = size * (0.22 + Math.sin(time * 10 + i) * 0.06);
+    const hairFlicker = Math.sin(time * 12 + i * 2.3) * size * 0.04;
     ctx.beginPath();
     ctx.moveTo(
-      x + Math.cos(hairAngle) * size * 0.16,
-      y - size * 0.5 + rage * 0.3,
+      x + Math.cos(hairAngle) * size * 0.16 + attackShake,
+      headY - size * 0.12,
     );
     ctx.quadraticCurveTo(
       x +
         Math.cos(hairAngle) * size * 0.28 +
-        Math.sin(time * 10 + i) * size * 0.06,
-      y - size * 0.65 + rage * 0.3,
-      x + Math.cos(hairAngle) * size * 0.22,
-      y - size * 0.5 - hairLen + rage * 0.3,
+        hairFlicker +
+        attackShake,
+      headY - size * 0.28,
+      x + Math.cos(hairAngle) * size * 0.22 + attackShake,
+      headY - size * 0.12 - hairLen,
     );
     ctx.lineTo(
-      x + Math.cos(hairAngle) * size * 0.13,
-      y - size * 0.48 + rage * 0.3,
+      x + Math.cos(hairAngle) * size * 0.13 + attackShake,
+      headY - size * 0.1,
     );
     ctx.fill();
   }
-  // Small demon horns
-  ctx.fillStyle = "#1c1917";
+
+  // Hair flame tips (brighter)
+  ctx.fillStyle = `rgba(239, 68, 68, ${0.4 + heartbeatSharp * 0.2})`;
+  for (let tip = 0; tip < 6; tip++) {
+    const tipAngle = -Math.PI * 0.3 + tip * Math.PI * 0.12;
+    const tipLen = size * (0.08 + Math.sin(time * 14 + tip * 1.7) * 0.04);
+    ctx.beginPath();
+    ctx.moveTo(
+      x + Math.cos(tipAngle) * size * 0.2 + attackShake,
+      headY - size * 0.3 - Math.sin(time * 10 + tip) * size * 0.04,
+    );
+    ctx.lineTo(
+      x + Math.cos(tipAngle) * size * 0.22 + Math.sin(time * 12 + tip) * size * 0.03 + attackShake,
+      headY - size * 0.3 - tipLen,
+    );
+    ctx.lineTo(
+      x + Math.cos(tipAngle) * size * 0.18 + attackShake,
+      headY - size * 0.28,
+    );
+    ctx.fill();
+  }
+
+  // Demon horns (curved, ridged)
+  const hornGrad = ctx.createLinearGradient(0, headY - size * 0.15, 0, headY - size * 0.7);
+  hornGrad.addColorStop(0, "#292524");
+  hornGrad.addColorStop(0.4, "#1c1917");
+  hornGrad.addColorStop(0.8, "#0c0a09");
+  hornGrad.addColorStop(1, "#450a0a");
+  ctx.fillStyle = hornGrad;
+  // Left horn
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.12, y - size * 0.52 + rage * 0.3);
-  ctx.lineTo(x - size * 0.18, y - size * 0.68 + rage * 0.3);
-  ctx.lineTo(x - size * 0.08, y - size * 0.5 + rage * 0.3);
+  ctx.moveTo(x - size * 0.12 + attackShake, headY - size * 0.14);
+  ctx.quadraticCurveTo(
+    x - size * 0.22 + attackShake,
+    headY - size * 0.38,
+    x - size * 0.18 + attackShake,
+    headY - size * 0.52,
+  );
+  ctx.lineTo(x - size * 0.14 + attackShake, headY - size * 0.48);
+  ctx.quadraticCurveTo(
+    x - size * 0.17 + attackShake,
+    headY - size * 0.32,
+    x - size * 0.08 + attackShake,
+    headY - size * 0.13,
+  );
+  ctx.closePath();
   ctx.fill();
+  // Right horn
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.12, y - size * 0.52 + rage * 0.3);
-  ctx.lineTo(x + size * 0.18, y - size * 0.68 + rage * 0.3);
-  ctx.lineTo(x + size * 0.08, y - size * 0.5 + rage * 0.3);
+  ctx.moveTo(x + size * 0.12 + attackShake, headY - size * 0.14);
+  ctx.quadraticCurveTo(
+    x + size * 0.22 + attackShake,
+    headY - size * 0.38,
+    x + size * 0.18 + attackShake,
+    headY - size * 0.52,
+  );
+  ctx.lineTo(x + size * 0.14 + attackShake, headY - size * 0.48);
+  ctx.quadraticCurveTo(
+    x + size * 0.17 + attackShake,
+    headY - size * 0.32,
+    x + size * 0.08 + attackShake,
+    headY - size * 0.13,
+  );
+  ctx.closePath();
   ctx.fill();
+
+  // Horn ridges
+  ctx.strokeStyle = "rgba(87, 83, 78, 0.4)";
+  ctx.lineWidth = 1 * zoom;
+  for (let ridge = 0; ridge < 4; ridge++) {
+    const rt = 0.2 + ridge * 0.18;
+    // Left horn ridges
+    const lhx =
+      x -
+      size * (0.12 + rt * 0.06) +
+      attackShake;
+    const lhy = headY - size * (0.14 + rt * 0.34);
+    ctx.beginPath();
+    ctx.moveTo(lhx - size * 0.02, lhy);
+    ctx.lineTo(lhx + size * 0.02, lhy);
+    ctx.stroke();
+    // Right horn ridges
+    const rhx =
+      x +
+      size * (0.12 + rt * 0.06) +
+      attackShake;
+    ctx.beginPath();
+    ctx.moveTo(rhx - size * 0.02, lhy);
+    ctx.lineTo(rhx + size * 0.02, lhy);
+    ctx.stroke();
+  }
+
+  // Horn tip glow
+  setShadowBlur(ctx, 6 * zoom, "#dc2626");
+  ctx.fillStyle = `rgba(220, 38, 38, ${runeAlpha * 0.5})`;
+  ctx.beginPath();
+  ctx.arc(
+    x - size * 0.18 + attackShake,
+    headY - size * 0.52,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.18 + attackShake,
+    headY - size * 0.52,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  clearShadow(ctx);
+
+  // === LAYER 8: FOOT IMPACT DUST ===
+  if (leftFootImpact > 0.8) {
+    ctx.fillStyle = `rgba(120, 30, 30, ${(leftFootImpact - 0.8) * 2.5})`;
+    for (let dust = 0; dust < 4; dust++) {
+      ctx.beginPath();
+      ctx.arc(
+        x - size * 0.14 + (dust - 1.5) * size * 0.06,
+        y + size * 0.5,
+        size * 0.018 * (leftFootImpact - 0.8) * 4,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
+  if (rightFootImpact > 0.8) {
+    ctx.fillStyle = `rgba(120, 30, 30, ${(rightFootImpact - 0.8) * 2.5})`;
+    for (let dust = 0; dust < 4; dust++) {
+      ctx.beginPath();
+      ctx.arc(
+        x + size * 0.14 + (dust - 1.5) * size * 0.06,
+        y + size * 0.5,
+        size * 0.018 * (rightFootImpact - 0.8) * 4,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
 }
 
 export function drawGolemEnemy(

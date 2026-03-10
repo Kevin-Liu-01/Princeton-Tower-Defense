@@ -199,6 +199,23 @@ export function drawBogCreatureEnemy(
   ctx.quadraticCurveTo(x - size * 0.35, y + size * 0.15, x - size * 0.45, y);
   ctx.fill();
 
+  // Bubbling surface detail across body
+  for (let bb = 0; bb < 8; bb++) {
+    const bbPhase = (time * 1.8 + bb * 0.5) % 1;
+    const bbX = x + Math.sin(bb * 1.9 + time * 0.5) * size * 0.3;
+    const bbY = y - size * 0.4 + Math.cos(bb * 2.3) * size * 0.25 - bbPhase * size * 0.12;
+    const bbSize = size * (0.015 + Math.sin(bb * 1.4) * 0.008) * (1 - bbPhase);
+    const bbAlpha = (1 - bbPhase) * 0.5;
+    ctx.fillStyle = `rgba(100, 180, 60, ${bbAlpha})`;
+    ctx.beginPath();
+    ctx.arc(bbX, bbY, bbSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(180, 255, 120, ${bbAlpha * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(bbX - bbSize * 0.3, bbY - bbSize * 0.3, bbSize * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Exposed rib-like structures
   ctx.strokeStyle = "#2d1f0d";
   ctx.lineWidth = 3 * zoom;
@@ -287,6 +304,24 @@ export function drawBogCreatureEnemy(
     const dripLength = size * (0.08 + dripPhase * 0.06);
     ctx.beginPath();
     ctx.ellipse(dripX, dripY, size * 0.025, dripLength, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dripping ooze trails from body edges
+  for (let ot = 0; ot < 4; ot++) {
+    const otX = x - size * 0.35 + ot * size * 0.22;
+    const otPhase = (time * 0.8 + ot * 0.45) % 1;
+    const otStartY = y + size * 0.1;
+    const otEndY = otStartY + otPhase * size * 0.35;
+    const otWidth = size * (0.018 - otPhase * 0.008);
+    const otAlpha = (1 - otPhase) * 0.7;
+    ctx.fillStyle = `rgba(110, 180, 30, ${otAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(otX, (otStartY + otEndY) * 0.5, otWidth, (otEndY - otStartY) * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(132, 204, 22, ${otAlpha * 0.8})`;
+    ctx.beginPath();
+    ctx.arc(otX, otEndY, size * 0.012, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -581,6 +616,33 @@ export function drawWillOWispEnemy(
   const bShift = Math.round(22 + colorShift * 10);
   const shiftColor = `rgba(${rShift}, ${gShift}, ${bShift}`;
 
+  // Ethereal reflection pool on ground beneath
+  const poolY = y + size * 0.55;
+  const reflectPulse = 0.3 + Math.sin(time * 2.5) * 0.15;
+  const reflPoolGrad = ctx.createRadialGradient(
+    x, poolY, 0,
+    x, poolY, size * 0.5,
+  );
+  reflPoolGrad.addColorStop(0, `${shiftColor}, ${reflectPulse * 0.4})`);
+  reflPoolGrad.addColorStop(0.3, `rgba(74, 222, 128, ${reflectPulse * 0.25})`);
+  reflPoolGrad.addColorStop(0.6, `${shiftColor}, ${reflectPulse * 0.1})`);
+  reflPoolGrad.addColorStop(1, `${shiftColor}, 0)`);
+  ctx.fillStyle = reflPoolGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, poolY, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `${shiftColor}, ${reflectPulse * 0.3})`;
+  ctx.lineWidth = 1 * zoom;
+  for (let rr = 0; rr < 3; rr++) {
+    const rrPhase = (time * 0.6 + rr * 0.33) % 1;
+    const rrRadius = size * (0.1 + rrPhase * 0.35);
+    ctx.globalAlpha = (1 - rrPhase) * reflectPulse;
+    ctx.beginPath();
+    ctx.ellipse(x, poolY, rrRadius, rrRadius * 0.3, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
   // Ghostly ectoplasmic trail behind
   ctx.save();
   for (let trail = 0; trail < 6; trail++) {
@@ -775,6 +837,31 @@ export function drawWillOWispEnemy(
   ctx.quadraticCurveTo(
     x - size * 0.2, y - size * 0.15 + float,
     x, y - size * 0.4 + float,
+  );
+  ctx.fill();
+
+  // Spectral color shift layers
+  const spectralPhase = Math.sin(time * 1.2) * 0.5 + 0.5;
+  const spectralR = Math.round(120 + spectralPhase * 80);
+  const spectralG = Math.round(200 + spectralPhase * 55);
+  const spectralB = Math.round(100 + (1 - spectralPhase) * 80);
+  ctx.fillStyle = `rgba(${spectralR}, ${spectralG}, ${spectralB}, ${pulse * 0.25 * flicker})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x + Math.sin(time * 1.8) * size * 0.05,
+    y - size * 0.1 + float,
+    size * 0.22, size * 0.18,
+    time * 0.3, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  const shimmerPhase2 = Math.sin(time * 2.5 + 1.5) * 0.5 + 0.5;
+  ctx.fillStyle = `rgba(${Math.round(180 + shimmerPhase2 * 60)}, ${Math.round(220 + shimmerPhase2 * 35)}, ${Math.round(150 + shimmerPhase2 * 50)}, ${pulse * 0.15})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x - Math.sin(time * 2.2) * size * 0.04,
+    y - size * 0.15 + float,
+    size * 0.15, size * 0.12,
+    -time * 0.2, 0, Math.PI * 2,
   );
   ctx.fill();
 
@@ -1147,6 +1234,34 @@ export function drawSwampTrollEnemy(
   );
   ctx.fill();
 
+  // Chest breathing expansion overlay
+  const chestExpand = Math.sin(time * 1.2) * 0.04;
+  const chestGrad = ctx.createRadialGradient(
+    x, y - size * 0.18, size * 0.05,
+    x, y - size * 0.18, size * 0.3,
+  );
+  chestGrad.addColorStop(0, `rgba(80, 100, 50, ${0.2 + chestExpand * 2})`);
+  chestGrad.addColorStop(0.6, `rgba(50, 70, 30, ${0.1 + chestExpand})`);
+  chestGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = chestGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x, y - size * 0.18,
+    size * (0.32 + chestExpand * 2), size * (0.22 + chestExpand * 3),
+    0, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.strokeStyle = `rgba(40, 50, 20, ${0.3 + chestExpand * 3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let cl = 0; cl < 3; cl++) {
+    const clY = y - size * 0.25 + cl * size * 0.08;
+    const clExpand = chestExpand * (3 - cl) * size;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.25 - clExpand, clY);
+    ctx.quadraticCurveTo(x, clY - size * 0.02 * (1 + chestExpand * 8), x + size * 0.25 + clExpand, clY);
+    ctx.stroke();
+  }
+
   // Wound/scar marks on belly
   ctx.strokeStyle = "#4a1a1a";
   ctx.lineWidth = 3 * zoom;
@@ -1442,6 +1557,29 @@ export function drawSwampTrollEnemy(
       Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  // Falling moss clumps dislodged from body
+  for (let mc = 0; mc < 5; mc++) {
+    const mcPhase = (time * 0.6 + mc * 0.7) % 1;
+    const mcStartX = x + Math.sin(mc * 2.8) * size * 0.4;
+    const mcX = mcStartX + Math.sin(time * 2 + mc) * size * 0.05;
+    const mcStartY = y - size * 0.4 + Math.cos(mc * 1.9) * size * 0.15;
+    const mcY = mcStartY + mcPhase * size * 0.7;
+    const mcSize = size * (0.025 + Math.sin(mc * 1.3) * 0.01) * (1 - mcPhase * 0.5);
+    const mcAlpha = (1 - mcPhase) * 0.7;
+    ctx.fillStyle = `rgba(22, 101, 52, ${mcAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(mcX, mcY, mcSize, mcSize * 0.7, mc * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(34, 120, 60, ${mcAlpha * 0.5})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(mcX, mcY);
+    ctx.lineTo(mcX + size * 0.015, mcY + size * 0.02);
+    ctx.moveTo(mcX, mcY);
+    ctx.lineTo(mcX - size * 0.01, mcY + size * 0.015);
+    ctx.stroke();
   }
 
   // Rage steam/breath when attacking

@@ -149,6 +149,26 @@ export function drawMagmaSpawnEnemy(
     ctx.fill();
   }
 
+  // Cooling crust plates with glowing crack edges
+  for (let crust = 0; crust < 4; crust++) {
+    const crustAngle = crust * (Math.PI / 2) + time * 0.1;
+    const crustX = x + Math.cos(crustAngle) * size * 0.2;
+    const crustY = y - size * 0.1 + Math.sin(crustAngle * 0.7) * size * 0.15;
+    const crustW = size * (0.08 + Math.sin(crust * 1.5) * 0.02);
+    ctx.fillStyle = `rgba(50, 20, 5, ${0.6 + Math.sin(time + crust) * 0.15})`;
+    ctx.beginPath();
+    ctx.moveTo(crustX - crustW, crustY - crustW * 0.4);
+    ctx.lineTo(crustX - crustW * 0.3, crustY - crustW * 0.7);
+    ctx.lineTo(crustX + crustW * 0.5, crustY - crustW * 0.3);
+    ctx.lineTo(crustX + crustW * 0.7, crustY + crustW * 0.4);
+    ctx.lineTo(crustX, crustY + crustW * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(251, 191, 36, ${glow * 0.6})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.stroke();
+  }
+
   // Glowing molten crack network
   ctx.strokeStyle = `rgba(251, 191, 36, ${glow})`;
   ctx.lineWidth = 3 * zoom;
@@ -346,6 +366,35 @@ export function drawMagmaSpawnEnemy(
     ctx.fill();
   }
 
+  // Lava bubble pop bursts
+  for (let pop = 0; pop < 3; pop++) {
+    const popCycle = (time * 1.2 + pop * 0.33) % 1;
+    const popX = x - size * 0.15 + pop * size * 0.15;
+    const popBaseY = y - size * 0.35 - Math.abs(Math.sin(time * 2 + pop)) * size * 0.1;
+    if (popCycle > 0.7) {
+      const burstPhase = (popCycle - 0.7) / 0.3;
+      const burstAlpha = (1 - burstPhase) * 0.6;
+      ctx.strokeStyle = `rgba(251, 191, 36, ${burstAlpha})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.arc(popX, popBaseY, size * 0.03 + burstPhase * size * 0.06, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(251, 146, 60, ${burstAlpha * 0.8})`;
+      for (let splat = 0; splat < 4; splat++) {
+        const splatAngle = splat * (Math.PI / 2) + pop;
+        const splatDist = burstPhase * size * 0.08;
+        ctx.beginPath();
+        ctx.arc(
+          popX + Math.cos(splatAngle) * splatDist,
+          popBaseY + Math.sin(splatAngle) * splatDist,
+          size * 0.01 * (1 - burstPhase),
+          0, Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+  }
+
   // Rising embers/sparks
   ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + glow * 0.3})`;
   for (let ember = 0; ember < 8; ember++) {
@@ -433,6 +482,31 @@ export function drawFireImpEnemy(
   ctx.beginPath();
   ctx.ellipse(x, y + size * 0.32, size * 0.15, size * 0.05, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Burning fire footprints
+  const stepPhase = (time * 2) % 2;
+  const leftFootGlow = stepPhase < 1 ? 1 - stepPhase : 0;
+  const rightFootGlow = stepPhase >= 1 ? 2 - stepPhase : 0;
+  if (leftFootGlow > 0.1) {
+    ctx.fillStyle = `rgba(251, 146, 60, ${leftFootGlow * 0.35})`;
+    ctx.beginPath();
+    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.06, size * 0.03, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(251, 191, 36, ${leftFootGlow * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.035, size * 0.015, -0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (rightFootGlow > 0.1) {
+    ctx.fillStyle = `rgba(251, 146, 60, ${rightFootGlow * 0.35})`;
+    ctx.beginPath();
+    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.06, size * 0.03, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(251, 191, 36, ${rightFootGlow * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.035, size * 0.015, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Clawed feet with fire wisps
   ctx.fillStyle = "#7c2d12";
@@ -737,6 +811,22 @@ export function drawFireImpEnemy(
   ctx.arc(x + size * 0.08, y - size * 0.7 - hop, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
 
+  // Smoke wisps rising from horn tips
+  for (let horn = -1; horn <= 1; horn += 2) {
+    const hornTipX = x + horn * size * 0.08;
+    const hornTipY = y - size * 0.7 - hop;
+    for (let puff = 0; puff < 3; puff++) {
+      const smokePhase = (time * 1.5 + puff * 0.3 + (horn > 0 ? 0.15 : 0)) % 1;
+      const smokeX = hornTipX + Math.sin(time * 4 + puff * 2 + horn) * size * 0.03;
+      const smokeY = hornTipY - smokePhase * size * 0.2;
+      const smokeRadius = size * (0.015 + smokePhase * 0.02) * (1 - smokePhase * 0.5);
+      ctx.fillStyle = `rgba(80, 60, 40, ${(1 - smokePhase) * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(smokeX, smokeY, smokeRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   // Large mischievous eyes
   ctx.fillStyle = "#0a0502";
   ctx.beginPath();
@@ -978,6 +1068,24 @@ export function drawEmberGuardEnemy(
   ctx.ellipse(x, y + size * 0.48, size * 0.5, size * 0.18, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Heat shimmer distortion lines rising from armor
+  for (let shimmer = 0; shimmer < 6; shimmer++) {
+    const shimmerX = x - size * 0.3 + shimmer * size * 0.12;
+    const shimmerPhase = (time * 1.8 + shimmer * 0.17) % 1;
+    const shimmerBaseY = y - size * 0.1 - shimmerPhase * size * 0.7;
+    const shimmerAlpha = (1 - shimmerPhase) * 0.15;
+    ctx.strokeStyle = `rgba(251, 191, 36, ${shimmerAlpha})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(shimmerX, shimmerBaseY);
+    ctx.quadraticCurveTo(
+      shimmerX + Math.sin(time * 6 + shimmer) * size * 0.04,
+      shimmerBaseY - size * 0.05,
+      shimmerX + Math.sin(time * 6 + shimmer + 1) * size * 0.04,
+      shimmerBaseY - size * 0.1,
+    );
+    ctx.stroke();
+  }
 
   // Articulated armored legs with molten joints
   const thighLen = size * 0.17;
@@ -1222,6 +1330,38 @@ export function drawEmberGuardEnemy(
   ctx.moveTo(x - size * 0.22, y - size * 0.12);
   ctx.lineTo(x + size * 0.22, y - size * 0.12);
   ctx.stroke();
+
+  // Sparking rivet effects on armor
+  const sparkTime = (time * 3) % 4;
+  const activeRivet = Math.floor(sparkTime);
+  const sparkProgress = sparkTime - activeRivet;
+  const rivetPositions: [number, number][] = [
+    [x - size * 0.28, y - size * 0.28],
+    [x + size * 0.28, y - size * 0.28],
+    [x - size * 0.25, y - size * 0.12],
+    [x + size * 0.25, y - size * 0.12],
+  ];
+  if (sparkProgress < 0.4) {
+    const sparkAlpha = (0.4 - sparkProgress) * 2.5;
+    const [rx, ry] = rivetPositions[activeRivet];
+    ctx.fillStyle = `rgba(255, 255, 200, ${sparkAlpha * 0.8})`;
+    ctx.beginPath();
+    ctx.arc(rx, ry, size * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(251, 191, 36, ${sparkAlpha * 0.6})`;
+    for (let sp = 0; sp < 3; sp++) {
+      const spAngle = sp * (Math.PI * 2 / 3) + time * 8;
+      const spDist = sparkProgress * size * 0.12;
+      ctx.beginPath();
+      ctx.arc(
+        rx + Math.cos(spAngle) * spDist,
+        ry + Math.sin(spAngle) * spDist + sparkProgress * size * 0.03,
+        Math.max(0.001, size * 0.008 * (1 - sparkProgress * 2)),
+        0, Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
 
   // Glowing infernal core in chest
   const coreGrad = ctx.createRadialGradient(

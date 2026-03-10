@@ -1772,19 +1772,63 @@ export function drawWarlockEnemy(
   ctx.fill();
   clearShadow(ctx);
 
-  // Skeletal hand holding orb
-  ctx.fillStyle = "#a8a29e";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.28,
-    y + size * 0.08 + hover,
-    size * 0.04,
-    size * 0.02,
-    0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Skeletal hands holding orb - both sides
+  for (const side of [-1, 1]) {
+    const handX = x + side * size * 0.28;
+    const handY = y + size * 0.08 + hover;
+    ctx.fillStyle = "#a8a29e";
+    ctx.beginPath();
+    ctx.ellipse(handX, handY, size * 0.04, size * 0.025, side * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Bony fingers reaching toward orb
+    ctx.strokeStyle = "#d6d3d1";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let f = 0; f < 3; f++) {
+      const fAngle = side * (-0.4 + f * 0.3) + Math.sin(time * 3 + f) * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(handX + Math.cos(fAngle) * size * 0.03, handY + Math.sin(fAngle) * size * 0.02);
+      ctx.lineTo(
+        handX + Math.cos(fAngle) * size * 0.07,
+        handY + Math.sin(fAngle) * size * 0.04,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // Dark mist pooling at robe bottom
+  for (let mist = 0; mist < 5; mist++) {
+    const mistPhase = (time * 0.5 + mist * 0.3) % 1;
+    const mistX = x - size * 0.3 + mist * size * 0.15 + Math.sin(time + mist) * size * 0.05;
+    const mistY = y + size * 0.5 + mistPhase * size * 0.1;
+    const mistAlpha = (1 - mistPhase) * darkPulse * 0.25;
+    ctx.fillStyle = `rgba(88, 28, 135, ${mistAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(mistX, mistY, size * 0.08 * (1 + mistPhase), size * 0.03, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Attack: soul drain vortex
+  if (isAttacking) {
+    // Expanding void rings
+    for (let ring = 0; ring < 3; ring++) {
+      const ringPhase = attackIntensity * (1 + ring * 0.15);
+      const ringSize = size * (0.2 + ringPhase * 0.6);
+      const ringAlpha = (1 - ringPhase) * 0.4;
+      ctx.strokeStyle = `rgba(147, 51, 234, ${Math.max(0, ringAlpha)})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.arc(x - size * 0.35, y + size * 0.02 + hover, ringSize, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Void beam from orb
+    const beamAlpha = attackIntensity * 0.5;
+    ctx.strokeStyle = `rgba(167, 139, 250, ${beamAlpha})`;
+    ctx.lineWidth = (3 + attackIntensity * 4) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.35, y + size * 0.02 + hover);
+    ctx.lineTo(x - size * 0.35 - size * attackIntensity * 0.8, y + size * 0.02 + hover);
+    ctx.stroke();
+  }
 }
 
 export function drawCrossbowmanEnemy(
