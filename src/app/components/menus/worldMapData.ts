@@ -314,12 +314,12 @@ export const DEV_LEVELS: LevelNode[] = [
     id: "dev_enemy_showcase",
     name: "Enemy Showcase",
     description:
-      "Dual-path sandbox with every tower at every upgrade.\nDev-only testing level.",
+      "Sandbox with every tower at every upgrade.\nDev-only testing level.",
     region: "grassland",
     difficulty: 1,
     tags: ["Dev", "All Enemies"],
-    x: 50,
-    y: 40,
+    x: 200,
+    y: 62,
     connectsTo: [],
   },
 ];

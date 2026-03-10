@@ -299,6 +299,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       showTopBottomBorders={false}
     >
       <div
+        data-tutorial="top-hud"
         className="relative z-20"
         style={{
           background: panelGradient,

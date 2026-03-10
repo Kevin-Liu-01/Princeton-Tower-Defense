@@ -11,6 +11,7 @@ import type {
 import type {
   CreatorDraftState,
   MapPresetTemplate,
+  PresetSection,
   SelectionTarget,
 } from "../types";
 import type { DecorationCategory, HazardType, MapDecoration, MapHazard } from "../../../types";
@@ -57,6 +58,8 @@ export interface CreatorDraftActions {
   deleteCurrentDraft: () => void;
   eraseSelection: (selection: SelectionTarget | null, clearSelection: () => void) => void;
   applyMapPreset: (presetId: string) => void;
+  applyPresetSections: (presetId: string, sections: PresetSection[]) => void;
+  applyPresetWaves: (presetId: string) => void;
   validationStatus: string[];
   errors: string[];
   notice: string | null;
@@ -301,6 +304,61 @@ export function useCreatorDraft(
     [resolvePresetId, mapPresetById, applyDraftUpdate]
   );
 
+  const applyPresetSections = useCallback(
+    (presetId: string, sections: PresetSection[]): void => {
+      const nextPresetId = resolvePresetId(presetId);
+      const preset = mapPresetById.get(nextPresetId);
+      if (!preset || sections.length === 0) return;
+
+      const sectionSet = new Set(sections);
+
+      applyDraftUpdate((prev) => {
+        const next = { ...prev };
+
+        if (sectionSet.has("theme")) {
+          next.theme = preset.theme ?? prev.theme;
+          next.difficulty = preset.difficulty ?? prev.difficulty;
+          next.startingPawPoints = preset.startingPawPoints ?? prev.startingPawPoints;
+        }
+        if (sectionSet.has("waves")) {
+          next.waveTemplate = nextPresetId;
+          next.customWaves = [];
+        }
+        if (sectionSet.has("decorations")) {
+          next.decorations = cloneDecorations(preset.decorations);
+        }
+        if (sectionSet.has("hazards")) {
+          next.hazards = cloneHazards(preset.hazards);
+        }
+        if (sectionSet.has("objectives")) {
+          next.specialTowers = preset.specialTower
+            ? [{ pos: { ...preset.specialTower.pos }, type: preset.specialTower.type, hp: preset.specialTower.hp }]
+            : [];
+        }
+
+        return next;
+      });
+
+      if (sectionSet.has("waves")) {
+        setSelectedPresetId(nextPresetId);
+      }
+
+      const sectionNames = sections.map((s) =>
+        s === "theme" ? "theme/settings" : s
+      );
+      setNotice(`Imported ${sectionNames.join(", ")} from "${preset.label}".`);
+      setErrors([]);
+    },
+    [resolvePresetId, mapPresetById, applyDraftUpdate]
+  );
+
+  const applyPresetWaves = useCallback(
+    (presetId: string): void => {
+      applyPresetSections(presetId, ["waves"]);
+    },
+    [applyPresetSections]
+  );
+
   // Wave editing
   const startCustomWaves = useCallback((): void => {
     applyDraftUpdate((prev) => {
@@ -404,6 +462,8 @@ export function useCreatorDraft(
     deleteCurrentDraft,
     eraseSelection,
     applyMapPreset,
+    applyPresetSections,
+    applyPresetWaves,
     validationStatus,
     errors,
     notice,

@@ -187,6 +187,7 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
           waveTemplateOptions={draftActions.waveTemplateOptions}
           onUpdateDraft={handleUpdateDraft}
           onApplyMapPreset={draftActions.applyMapPreset}
+          onApplyPresetSections={draftActions.applyPresetSections}
           onClose={onClose}
         />
 
@@ -305,7 +306,7 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
               waveTemplateOptions={draftActions.waveTemplateOptions}
               onStartCustomWaves={draftActions.startCustomWaves}
               onUseTemplateWaves={draftActions.useTemplateWaves}
-              onApplyMapPreset={draftActions.applyMapPreset}
+              onApplyPresetWaves={draftActions.applyPresetWaves}
               onAddWave={draftActions.addWave}
               onRemoveWave={draftActions.removeWave}
               onAddWaveGroup={draftActions.addWaveGroup}

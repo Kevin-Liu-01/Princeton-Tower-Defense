@@ -174,6 +174,20 @@ export function computeSeparationForces(
   return forces;
 }
 
+export function constrainToNearPath(
+  pos: Position,
+  nearestPathPoint: Position,
+  distToPath: number,
+  maxDistance: number,
+): Position {
+  if (distToPath <= maxDistance) return pos;
+  const ratio = maxDistance / distToPath;
+  return {
+    x: nearestPathPoint.x + (pos.x - nearestPathPoint.x) * ratio,
+    y: nearestPathPoint.y + (pos.y - nearestPathPoint.y) * ratio,
+  };
+}
+
 export function computeRepulsionFromNeighbors(
   origin: Position,
   neighbors: PositionedUnit[],

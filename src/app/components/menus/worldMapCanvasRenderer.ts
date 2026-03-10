@@ -109,739 +109,756 @@ export const drawWorldMapCanvas = ({
   }
 
   if (!bgCacheValid) {
+    // Background with rich war atmosphere - deep layered gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
+    bgGrad.addColorStop(0, "#2d3a1f"); // greenish for grassland
+    bgGrad.addColorStop(0.21, "#1f2a18"); // transition
+    bgGrad.addColorStop(0.22, "#1a2a1a"); // swamp
+    bgGrad.addColorStop(0.39, "#2a2818"); // transition
+    bgGrad.addColorStop(0.41, "#4a3a22"); // desert
+    bgGrad.addColorStop(0.59, "#3a3020"); // transition
+    bgGrad.addColorStop(0.61, "#2a3848"); // winter
+    bgGrad.addColorStop(0.78, "#1a2838"); // transition
+    bgGrad.addColorStop(0.8, "#3a1a1a"); // volcanic
+    bgGrad.addColorStop(1, "#2a0a0a");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
 
-  // Background with rich war atmosphere - deep layered gradient
-  const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
-  bgGrad.addColorStop(0, "#2d3a1f"); // greenish for grassland
-  bgGrad.addColorStop(0.21, "#1f2a18"); // transition
-  bgGrad.addColorStop(0.22, "#1a2a1a"); // swamp
-  bgGrad.addColorStop(0.39, "#2a2818"); // transition
-  bgGrad.addColorStop(0.41, "#4a3a22"); // desert
-  bgGrad.addColorStop(0.59, "#3a3020"); // transition
-  bgGrad.addColorStop(0.61, "#2a3848"); // winter
-  bgGrad.addColorStop(0.78, "#1a2838"); // transition
-  bgGrad.addColorStop(0.8, "#3a1a1a"); // volcanic
-  bgGrad.addColorStop(1, "#2a0a0a");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, width, height);
+    // Vertical atmosphere gradient (darker at edges, lighter in middle)
+    const vGrad = ctx.createLinearGradient(0, 0, 0, height);
+    vGrad.addColorStop(0, "rgba(0,0,0,0.35)");
+    vGrad.addColorStop(0.3, "rgba(0,0,0,0.05)");
+    vGrad.addColorStop(0.5, "rgba(0,0,0,0)");
+    vGrad.addColorStop(0.7, "rgba(0,0,0,0.05)");
+    vGrad.addColorStop(1, "rgba(0,0,0,0.4)");
+    ctx.fillStyle = vGrad;
+    ctx.fillRect(0, 0, width, height);
 
-  // Vertical atmosphere gradient (darker at edges, lighter in middle)
-  const vGrad = ctx.createLinearGradient(0, 0, 0, height);
-  vGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-  vGrad.addColorStop(0.3, "rgba(0,0,0,0.05)");
-  vGrad.addColorStop(0.5, "rgba(0,0,0,0)");
-  vGrad.addColorStop(0.7, "rgba(0,0,0,0.05)");
-  vGrad.addColorStop(1, "rgba(0,0,0,0.4)");
-  ctx.fillStyle = vGrad;
-  ctx.fillRect(0, 0, width, height);
-
-  // Subtle radial warm vignette
-  const vigGrad = ctx.createRadialGradient(
-    width / 2,
-    height / 2,
-    height * 0.3,
-    width / 2,
-    height / 2,
-    width,
-  );
-  vigGrad.addColorStop(0, "rgba(60,40,20,0)");
-  vigGrad.addColorStop(0.7, "rgba(20,10,5,0.15)");
-  vigGrad.addColorStop(1, "rgba(10,5,2,0.45)");
-  ctx.fillStyle = vigGrad;
-  ctx.fillRect(0, 0, width, height);
-
-  // === ENHANCED GROUND TEXTURES ===
-  // Layer 1: Large region-aware terrain patches for depth
-  ctx.globalAlpha = 0.15;
-  for (let i = 0; i < (isMobile ? 40 : 100); i++) {
-    const px = seededRandom(i * 7) * width;
-    const py = seededRandom(i * 7 + 1) * height;
-    const psize = 30 + seededRandom(i * 7 + 2) * 70;
-
-    // Region-specific terrain colors
-    let hue1 = "#5a4a3a";
-    let hue2 = "#3a2a1a";
-    if (px > 1440) {
-      hue1 = "#4a2020";
-      hue2 = "#2a0a0a";
-    } else if (px > 1080) {
-      hue1 = "#5a6a7a";
-      hue2 = "#3a4a5a";
-    } else if (px > 720) {
-      hue1 = "#8a7a5a";
-      hue2 = "#6a5a3a";
-    } else if (px > 380) {
-      hue1 = "#2a4a2a";
-      hue2 = "#1a3a1a";
-    } else {
-      hue1 = "#3a5a2a";
-      hue2 = "#2a4a1a";
-    }
-
-    ctx.fillStyle = seededRandom(i * 7 + 3) > 0.5 ? hue1 : hue2;
-    ctx.beginPath();
-    // Organic blob shape
-    ctx.moveTo(px + psize * 0.5, py);
-    for (let a = 0; a < Math.PI * 2; a += 0.25) {
-      const r = psize * (0.35 + seededRandom(i + a * 100) * 0.35);
-      ctx.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Layer 2: Region-aware dirt/soil texture with isometric perspective
-  ctx.globalAlpha = 0.1;
-  for (let i = 0; i < (isMobile ? 200 : 600); i++) {
-    const dx = seededRandom(i * 11) * width;
-    const dy = seededRandom(i * 11 + 1) * height;
-    const dw = 3 + seededRandom(i * 11 + 2) * 12;
-    const dh = dw * 0.4;
-
-    let soilLight = "#6a5a4a";
-    let soilDark = "#2a1a0a";
-    if (dx > 1440) {
-      soilLight = "#5a2a1a";
-      soilDark = "#1a0505";
-    } else if (dx > 1080) {
-      soilLight = "#8a9aaa";
-      soilDark = "#4a5a6a";
-    } else if (dx > 720) {
-      soilLight = "#b8a080";
-      soilDark = "#6a5a40";
-    } else if (dx > 380) {
-      soilLight = "#3a5a3a";
-      soilDark = "#1a2a1a";
-    } else {
-      soilLight = "#5a6a3a";
-      soilDark = "#2a3a1a";
-    }
-
-    ctx.fillStyle = seededRandom(i * 11 + 3) > 0.6 ? soilLight : soilDark;
-    ctx.beginPath();
-    ctx.ellipse(dx, dy, dw, dh, seededRandom(i) * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Layer 3: Region-aware small pebbles and debris
-  ctx.globalAlpha = 0.18;
-  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
-    const sx = seededRandom(i * 13) * width;
-    const sy = seededRandom(i * 13 + 1) * height;
-    const ss = 1 + seededRandom(i * 13 + 2) * 3.5;
-
-    let pebbleColors = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"];
-    if (sx > 1440) pebbleColors = ["#4a2020", "#3a1010", "#5a2a1a", "#2a0a0a"];
-    else if (sx > 1080)
-      pebbleColors = ["#8a9aa8", "#b0c0d0", "#6a7a88", "#a0b0c0"];
-    else if (sx > 720)
-      pebbleColors = ["#a0905a", "#c0b080", "#8a7a4a", "#b0a070"];
-    else if (sx > 380)
-      pebbleColors = ["#2a4a2a", "#3a5a3a", "#1a3a1a", "#2a5a2a"];
-    else pebbleColors = ["#4a5a2a", "#5a6a3a", "#3a4a1a", "#4a5a2a"];
-
-    ctx.fillStyle = pebbleColors[Math.floor(seededRandom(i * 13 + 3) * 4)];
-    ctx.beginPath();
-    ctx.ellipse(sx, sy, ss, ss * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // Layer 4: Grass tufts in isometric style (scattered across map)
-  const drawGrassTuft = (
-    gx: number,
-    gy: number,
-    scale: number,
-    color: string,
-  ) => {
-    ctx.fillStyle = color;
-    const blades = 3 + Math.floor(seededRandom(gx + gy) * 4);
-    for (let b = 0; b < blades; b++) {
-      const bx = gx + (b - blades / 2) * 2 * scale;
-      const bh = (6 + seededRandom(gx + b) * 6) * scale;
-      const sway = Math.sin(time * 2 + gx * 0.1 + b) * 1.5;
-      ctx.beginPath();
-      ctx.moveTo(bx, gy);
-      ctx.quadraticCurveTo(bx + sway, gy - bh * 0.6, bx + sway * 1.5, gy - bh);
-      ctx.quadraticCurveTo(bx + sway * 0.5, gy - bh * 0.4, bx, gy);
-      ctx.fill();
-    }
-  };
-  ctx.globalAlpha = 0.4;
-  for (let i = 0; i < (isMobile ? 80 : 300); i++) {
-    const gx = seededRandom(i * 17) * width;
-    const gy = seededRandom(i * 17 + 1) * height;
-    // Determine grass color based on region
-    let grassColor = "#3a5a2a";
-    if (gx > 1440)
-      grassColor = "#3a2020"; // volcanic - dead grass
-    else if (gx > 1080)
-      grassColor = "#4a5a5a"; // winter - frosty
-    else if (gx > 720)
-      grassColor = "#6a5a3a"; // desert - dry
-    else if (gx > 380) grassColor = "#2a4a2a"; // swamp - dark green
-
-    drawGrassTuft(gx, gy, 0.5 + seededRandom(i * 17 + 2) * 0.5, grassColor);
-  }
-  ctx.globalAlpha = 1;
-
-  // Layer 5: Cracks and weathering lines (region-aware)
-  ctx.globalAlpha = 0.08;
-  ctx.lineWidth = 1;
-  for (let i = 0; i < (isMobile ? 40 : 120); i++) {
-    const cx = seededRandom(i * 19) * width;
-    const cy = seededRandom(i * 19 + 1) * height;
-    const clen = 15 + seededRandom(i * 19 + 2) * 50;
-
-    // Region-aware crack color
-    if (cx > 1440) ctx.strokeStyle = "#2a0500";
-    else if (cx > 1080) ctx.strokeStyle = "#2a3a4a";
-    else if (cx > 720) ctx.strokeStyle = "#3a2a10";
-    else if (cx > 380) ctx.strokeStyle = "#0a1a0a";
-    else ctx.strokeStyle = "#1a2a00";
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    let cpx = cx,
-      cpy = cy;
-    for (let j = 0; j < 5; j++) {
-      const nx = cpx + (seededRandom(i * 19 + j * 3) - 0.5) * clen * 0.5;
-      const ny = cpy + seededRandom(i * 19 + j * 3 + 1) * clen * 0.3;
-      ctx.lineTo(nx, ny);
-      cpx = nx;
-      cpy = ny;
-    }
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  // Layer 6: Enhanced parchment/texture overlay (region-aware)
-  ctx.globalAlpha = 0.05;
-  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
-    const ptx = seededRandom(i * 3) * width;
-    const pty = seededRandom(i * 3 + 1) * height;
-    const ptSize = 2 + seededRandom(i * 3 + 2) * 12;
-
-    let ptColor1 = "#6a5a4a";
-    let ptColor2 = "#2a1a0a";
-    if (ptx > 1440) {
-      ptColor1 = "#5a2020";
-      ptColor2 = "#1a0505";
-    } else if (ptx > 1080) {
-      ptColor1 = "#8a9ab0";
-      ptColor2 = "#4a5a70";
-    } else if (ptx > 720) {
-      ptColor1 = "#a09060";
-      ptColor2 = "#5a4a30";
-    } else if (ptx > 380) {
-      ptColor1 = "#3a5a3a";
-      ptColor2 = "#1a3a1a";
-    } else {
-      ptColor1 = "#5a6a3a";
-      ptColor2 = "#2a3a1a";
-    }
-
-    ctx.fillStyle = seededRandom(i) > 0.5 ? ptColor1 : ptColor2;
-    ctx.beginPath();
-    ctx.arc(ptx, pty, ptSize, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  // --- NATURAL FADING REGION TRANSITIONS (jagged but smooth) ---
-  const drawRuggedBorder = (
-    x: number,
-    region1Color: string,
-    region2Color: string,
-  ) => {
-    ctx.save();
-
-    // Build jagged path points
-    const pathPoints: { x: number; y: number }[] = [];
-    for (let y = 0; y <= height; y += 4) {
-      const offset =
-        Math.sin(y * 0.12 + x * 0.008) * 20 +
-        Math.sin(y * 0.06 + x * 0.02) * 14 +
-        Math.sin(y * 0.25 + x * 0.04) * 8 +
-        seededRandom(y + x) * 16 -
-        8;
-      pathPoints.push({ x: x + offset, y });
-    }
-
-    // Multiple soft fade layers from wide to narrow for a natural blended transition
-    // Each layer uses a clipping region on one side of the jagged edge
-
-    const fadeWidths = [90, 65, 45, 28, 16];
-    const fadeAlphas = [0.06, 0.09, 0.12, 0.16, 0.2];
-
-    // LEFT SIDE: region1 color fading into region2
-    for (let layer = 0; layer < fadeWidths.length; layer++) {
-      const fw = fadeWidths[layer];
-      const alpha = fadeAlphas[layer];
-
-      ctx.save();
-      // Clip to the left side of the jagged border
-      ctx.beginPath();
-      ctx.moveTo(x - fw - 10, 0);
-      pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
-      ctx.lineTo(x - fw - 10, height);
-      ctx.closePath();
-      ctx.clip();
-
-      // Horizontal gradient fading region1 color from left toward the border
-      const leftGrad = ctx.createLinearGradient(x - fw, 0, x + 5, 0);
-      leftGrad.addColorStop(0, region1Color + "00");
-      leftGrad.addColorStop(
-        0.4,
-        region1Color +
-          Math.round(alpha * 255)
-            .toString(16)
-            .padStart(2, "0"),
-      );
-      leftGrad.addColorStop(1, region1Color + "00");
-      ctx.fillStyle = leftGrad;
-      ctx.fillRect(x - fw - 10, 0, fw + 20, height);
-      ctx.restore();
-    }
-
-    // RIGHT SIDE: region2 color fading into region1
-    for (let layer = 0; layer < fadeWidths.length; layer++) {
-      const fw = fadeWidths[layer];
-      const alpha = fadeAlphas[layer];
-
-      ctx.save();
-      // Clip to the right side of the jagged border
-      ctx.beginPath();
-      pathPoints.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.lineTo(x + fw + 10, height);
-      ctx.lineTo(x + fw + 10, 0);
-      ctx.closePath();
-      ctx.clip();
-
-      // Horizontal gradient fading region2 color from right toward the border
-      const rightGrad = ctx.createLinearGradient(x - 5, 0, x + fw, 0);
-      rightGrad.addColorStop(0, region2Color + "00");
-      rightGrad.addColorStop(
-        0.6,
-        region2Color +
-          Math.round(alpha * 255)
-            .toString(16)
-            .padStart(2, "0"),
-      );
-      rightGrad.addColorStop(1, region2Color + "00");
-      ctx.fillStyle = rightGrad;
-      ctx.fillRect(x - 10, 0, fw + 20, height);
-      ctx.restore();
-    }
-
-    // Very subtle dark seam at the exact border edge (thin, low opacity)
-    ctx.beginPath();
-    ctx.moveTo(pathPoints[0].x, 0);
-    pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Even subtler lighter edge on top for depth
-    ctx.beginPath();
-    ctx.moveTo(pathPoints[0].x, 0);
-    pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.restore();
-  };
-
-  // Region backgrounds with rich multi-layered fills
-  const regions = [
-    {
-      name: "PRINCETON GROUNDS",
-      x: 0,
-      w: 380,
-      colors: ["#3d5a2f", "#2d4a1f", "#1a3010"],
-      labelColor: "#8ade50",
-      labelGlow: "#4a8020",
-      accentTop: "rgba(100,180,60,0.12)",
-      accentBot: "rgba(40,80,20,0.15)",
-    },
-    {
-      name: "MATHEY MARSHES",
-      x: 380,
-      w: 340,
-      colors: ["#2a3a2a", "#1a2a1a", "#0a1a0a"],
-      labelColor: "#6aaa6a",
-      labelGlow: "#2a5a2a",
-      accentTop: "rgba(60,120,80,0.1)",
-      accentBot: "rgba(20,60,30,0.15)",
-    },
-    {
-      name: "STADIUM SANDS",
-      x: 720,
-      w: 360,
-      colors: ["#c49a6c", "#a88050", "#7a6040"],
-      labelColor: "#ffe060",
-      labelGlow: "#aa8020",
-      accentTop: "rgba(220,180,120,0.15)",
-      accentBot: "rgba(120,90,50,0.12)",
-    },
-    {
-      name: "FRIST FRONTIER",
-      x: 1080,
-      w: 360,
-      colors: ["#8ab0d0", "#6a90b8", "#4a6888"],
-      labelColor: "#d0f0ff",
-      labelGlow: "#5090c0",
-      accentTop: "rgba(150,200,240,0.12)",
-      accentBot: "rgba(60,100,150,0.15)",
-    },
-    {
-      name: "DORMITORY DEPTHS",
-      x: 1440,
-      w: 380,
-      colors: ["#5a2020", "#3a1010", "#1a0505"],
-      labelColor: "#ff8855",
-      labelGlow: "#aa3010",
-      accentTop: "rgba(200,60,30,0.12)",
-      accentBot: "rgba(80,20,10,0.15)",
-    },
-  ];
-
-  regions.forEach((r) => {
-    // Multi-layered region fill
-    const grad = ctx.createLinearGradient(r.x, 0, r.x + r.w, height);
-    grad.addColorStop(0, r.colors[0]);
-    grad.addColorStop(0.5, r.colors[1]);
-    grad.addColorStop(1, r.colors[2]);
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = grad;
-    ctx.fillRect(r.x, 0, r.w, height);
-
-    // Top atmospheric glow
-    const topGlow = ctx.createLinearGradient(r.x, 0, r.x, height * 0.4);
-    topGlow.addColorStop(0, r.accentTop);
-    topGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = topGlow;
-    ctx.fillRect(r.x, 0, r.w, height * 0.4);
-
-    // Bottom atmospheric depth
-    const botGlow = ctx.createLinearGradient(r.x, height * 0.6, r.x, height);
-    botGlow.addColorStop(0, "rgba(0,0,0,0)");
-    botGlow.addColorStop(1, r.accentBot);
-    ctx.fillStyle = botGlow;
-    ctx.fillRect(r.x, height * 0.6, r.w, height * 0.4);
-
-    // Soft inner radial atmosphere
-    const regionCx = r.x + r.w / 2;
-    const regionCy = height / 2;
-    const innerGlow = ctx.createRadialGradient(
-      regionCx,
-      regionCy,
-      0,
-      regionCx,
-      regionCy,
-      r.w * 0.6,
+    // Subtle radial warm vignette
+    const vigGrad = ctx.createRadialGradient(
+      width / 2,
+      height / 2,
+      height * 0.3,
+      width / 2,
+      height / 2,
+      width,
     );
-    innerGlow.addColorStop(0, r.accentTop);
-    innerGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = innerGlow;
-    ctx.beginPath();
-    ctx.ellipse(
-      regionCx,
-      regionCy,
-      r.w * 0.55,
-      height * 0.45,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    vigGrad.addColorStop(0, "rgba(60,40,20,0)");
+    vigGrad.addColorStop(0.7, "rgba(20,10,5,0.15)");
+    vigGrad.addColorStop(1, "rgba(10,5,2,0.45)");
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, width, height);
 
-    // --- Ornate Region Label Banner (auto-sized) ---
-    const labelX = r.x + r.w / 2;
-    const labelY = 20;
+    // === ENHANCED GROUND TEXTURES ===
+    // Layer 1: Large region-aware terrain patches for depth
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < (isMobile ? 40 : 100); i++) {
+      const px = seededRandom(i * 7) * width;
+      const py = seededRandom(i * 7 + 1) * height;
+      const psize = 30 + seededRandom(i * 7 + 2) * 70;
 
-    ctx.save();
-    ctx.font = "bold 11px 'bc-novatica-cyr', serif";
-    ctx.textAlign = "center";
-    (ctx as unknown as Record<string, string>).letterSpacing = "3px";
-
-    // Measure text to auto-size banner
-    const textMetrics = ctx.measureText(r.name);
-    const bannerW = textMetrics.width + 30;
-    const bannerH = 20;
-    const bx = labelX - bannerW / 2;
-    const by = labelY - bannerH / 2 - 1;
-
-    // Banner shadow
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.beginPath();
-    ctx.moveTo(bx - 12, by + 2);
-    ctx.lineTo(bx + 4, by + 2);
-    ctx.lineTo(bx + 4, by + bannerH + 2);
-    ctx.lineTo(bx - 12, by + bannerH * 0.65 + 2);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(bx + bannerW - 4 + 12, by + 2);
-    ctx.lineTo(bx + bannerW - 4, by + 2);
-    ctx.lineTo(bx + bannerW - 4, by + bannerH + 2);
-    ctx.lineTo(bx + bannerW - 4 + 12, by + bannerH * 0.65 + 2);
-    ctx.closePath();
-    ctx.fill();
-
-    // Left ribbon tail
-    const ribbonGrad1 = ctx.createLinearGradient(bx - 10, by, bx + 5, by);
-    ribbonGrad1.addColorStop(0, r.colors[2]);
-    ribbonGrad1.addColorStop(1, r.colors[1]);
-    ctx.fillStyle = ribbonGrad1;
-    ctx.beginPath();
-    ctx.moveTo(bx - 10, by + 1);
-    ctx.lineTo(bx + 5, by + 1);
-    ctx.lineTo(bx + 5, by + bannerH - 1);
-    ctx.lineTo(bx - 10, by + bannerH * 0.6);
-    ctx.closePath();
-    ctx.fill();
-
-    // Right ribbon tail
-    const ribbonGrad2 = ctx.createLinearGradient(
-      bx + bannerW - 5,
-      by,
-      bx + bannerW + 10,
-      by,
-    );
-    ribbonGrad2.addColorStop(0, r.colors[1]);
-    ribbonGrad2.addColorStop(1, r.colors[2]);
-    ctx.fillStyle = ribbonGrad2;
-    ctx.beginPath();
-    ctx.moveTo(bx + bannerW - 5, by + 1);
-    ctx.lineTo(bx + bannerW + 10, by + 1);
-    ctx.lineTo(bx + bannerW + 10, by + bannerH * 0.6);
-    ctx.lineTo(bx + bannerW - 5, by + bannerH - 1);
-    ctx.closePath();
-    ctx.fill();
-
-    // Main banner body
-    const bannerGrad = ctx.createLinearGradient(bx, by, bx, by + bannerH);
-    bannerGrad.addColorStop(0, r.colors[0]);
-    bannerGrad.addColorStop(0.3, r.colors[1]);
-    bannerGrad.addColorStop(0.7, r.colors[1]);
-    bannerGrad.addColorStop(1, r.colors[2]);
-    ctx.fillStyle = bannerGrad;
-    ctx.fillRect(bx + 2, by, bannerW - 4, bannerH);
-
-    // Banner top highlight edge
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
-    ctx.fillRect(bx + 2, by, bannerW - 4, 2);
-
-    // Banner bottom shadow edge
-    ctx.fillStyle = "rgba(0,0,0,0.2)";
-    ctx.fillRect(bx + 2, by + bannerH - 2, bannerW - 4, 2);
-
-    // Gold trim lines
-    ctx.strokeStyle = r.labelGlow + "80";
-    ctx.lineWidth = 0.8;
-    ctx.strokeRect(bx + 4, by + 2, bannerW - 8, bannerH - 4);
-
-    // Decorative diamond studs at corners
-    const drawDiamond = (dx: number, dy: number, ds: number) => {
-      ctx.fillStyle = r.labelColor + "90";
-      ctx.beginPath();
-      ctx.moveTo(dx, dy - ds);
-      ctx.lineTo(dx + ds, dy);
-      ctx.lineTo(dx, dy + ds);
-      ctx.lineTo(dx - ds, dy);
-      ctx.closePath();
-      ctx.fill();
-    };
-    drawDiamond(bx + 8, labelY, 2.5);
-    drawDiamond(bx + bannerW - 8, labelY, 2.5);
-
-    // Text glow (use multiple draws instead of expensive shadowBlur)
-    ctx.fillStyle = r.labelGlow;
-    ctx.globalAlpha = 0.3;
-    ctx.fillText(r.name, labelX - 1, labelY + 4);
-    ctx.fillText(r.name, labelX + 1, labelY + 4);
-    ctx.fillText(r.name, labelX, labelY + 3);
-    ctx.fillText(r.name, labelX, labelY + 5);
-    ctx.globalAlpha = 1;
-
-    // Text shadow for depth
-    ctx.fillStyle = "rgba(0,0,0,0.6)";
-    ctx.fillText(r.name, labelX + 0.5, labelY + 4.5);
-
-    // Main text
-    ctx.fillStyle = r.labelColor;
-    ctx.fillText(r.name, labelX, labelY + 4);
-
-    // Main text
-    ctx.fillStyle = r.labelColor;
-    ctx.fillText(r.name, labelX, labelY + 4);
-
-    ctx.restore();
-  });
-
-  // Draw natural fading borders between regions
-  drawRuggedBorder(380, "#3d5a2f", "#2a3a2a");
-  drawRuggedBorder(720, "#2a3a2a", "#9a8060");
-  drawRuggedBorder(1080, "#9a8060", "#5a6a7a");
-  drawRuggedBorder(1450, "#5a6a7a", "#5a3030");
-
-  // === ROADS (drawn early so region details layer on top) ===
-  const drawRoadSegment = (points: [number, number][]) => {
-    if (points.length < 2) return;
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    // Smooth bezier path helper
-    const tracePath = (ox: number, oy: number) => {
-      ctx.beginPath();
-      const pts = points.map((p) => [p[0] + ox, getY(p[1]) + oy]);
-      ctx.moveTo(pts[0][0], pts[0][1]);
-      if (pts.length === 2) {
-        ctx.lineTo(pts[1][0], pts[1][1]);
+      // Region-specific terrain colors
+      let hue1 = "#5a4a3a";
+      let hue2 = "#3a2a1a";
+      if (px > 1440) {
+        hue1 = "#4a2020";
+        hue2 = "#2a0a0a";
+      } else if (px > 1080) {
+        hue1 = "#5a6a7a";
+        hue2 = "#3a4a5a";
+      } else if (px > 720) {
+        hue1 = "#8a7a5a";
+        hue2 = "#6a5a3a";
+      } else if (px > 380) {
+        hue1 = "#2a4a2a";
+        hue2 = "#1a3a1a";
       } else {
-        for (let i = 1; i < pts.length - 1; i++) {
-          const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
-          const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
-          ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
-        }
-        ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+        hue1 = "#3a5a2a";
+        hue2 = "#2a4a1a";
+      }
+
+      ctx.fillStyle = seededRandom(i * 7 + 3) > 0.5 ? hue1 : hue2;
+      ctx.beginPath();
+      // Organic blob shape
+      ctx.moveTo(px + psize * 0.5, py);
+      for (let a = 0; a < Math.PI * 2; a += 0.25) {
+        const r = psize * (0.35 + seededRandom(i + a * 100) * 0.35);
+        ctx.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 2: Region-aware dirt/soil texture with isometric perspective
+    ctx.globalAlpha = 0.1;
+    for (let i = 0; i < (isMobile ? 200 : 600); i++) {
+      const dx = seededRandom(i * 11) * width;
+      const dy = seededRandom(i * 11 + 1) * height;
+      const dw = 3 + seededRandom(i * 11 + 2) * 12;
+      const dh = dw * 0.4;
+
+      let soilLight = "#6a5a4a";
+      let soilDark = "#2a1a0a";
+      if (dx > 1440) {
+        soilLight = "#5a2a1a";
+        soilDark = "#1a0505";
+      } else if (dx > 1080) {
+        soilLight = "#8a9aaa";
+        soilDark = "#4a5a6a";
+      } else if (dx > 720) {
+        soilLight = "#b8a080";
+        soilDark = "#6a5a40";
+      } else if (dx > 380) {
+        soilLight = "#3a5a3a";
+        soilDark = "#1a2a1a";
+      } else {
+        soilLight = "#5a6a3a";
+        soilDark = "#2a3a1a";
+      }
+
+      ctx.fillStyle = seededRandom(i * 11 + 3) > 0.6 ? soilLight : soilDark;
+      ctx.beginPath();
+      ctx.ellipse(dx, dy, dw, dh, seededRandom(i) * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 3: Region-aware small pebbles and debris
+    ctx.globalAlpha = 0.18;
+    for (let i = 0; i < (isMobile ? 150 : 500); i++) {
+      const sx = seededRandom(i * 13) * width;
+      const sy = seededRandom(i * 13 + 1) * height;
+      const ss = 1 + seededRandom(i * 13 + 2) * 3.5;
+
+      let pebbleColors = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"];
+      if (sx > 1440)
+        pebbleColors = ["#4a2020", "#3a1010", "#5a2a1a", "#2a0a0a"];
+      else if (sx > 1080)
+        pebbleColors = ["#8a9aa8", "#b0c0d0", "#6a7a88", "#a0b0c0"];
+      else if (sx > 720)
+        pebbleColors = ["#a0905a", "#c0b080", "#8a7a4a", "#b0a070"];
+      else if (sx > 380)
+        pebbleColors = ["#2a4a2a", "#3a5a3a", "#1a3a1a", "#2a5a2a"];
+      else pebbleColors = ["#4a5a2a", "#5a6a3a", "#3a4a1a", "#4a5a2a"];
+
+      ctx.fillStyle = pebbleColors[Math.floor(seededRandom(i * 13 + 3) * 4)];
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, ss, ss * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 4: Grass tufts in isometric style (scattered across map)
+    const drawGrassTuft = (
+      gx: number,
+      gy: number,
+      scale: number,
+      color: string,
+    ) => {
+      ctx.fillStyle = color;
+      const blades = 3 + Math.floor(seededRandom(gx + gy) * 4);
+      for (let b = 0; b < blades; b++) {
+        const bx = gx + (b - blades / 2) * 2 * scale;
+        const bh = (6 + seededRandom(gx + b) * 6) * scale;
+        const sway = Math.sin(time * 2 + gx * 0.1 + b) * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, gy);
+        ctx.quadraticCurveTo(
+          bx + sway,
+          gy - bh * 0.6,
+          bx + sway * 1.5,
+          gy - bh,
+        );
+        ctx.quadraticCurveTo(bx + sway * 0.5, gy - bh * 0.4, bx, gy);
+        ctx.fill();
       }
     };
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < (isMobile ? 80 : 300); i++) {
+      const gx = seededRandom(i * 17) * width;
+      const gy = seededRandom(i * 17 + 1) * height;
+      // Determine grass color based on region
+      let grassColor = "#3a5a2a";
+      if (gx > 1440)
+        grassColor = "#3a2020"; // volcanic - dead grass
+      else if (gx > 1080)
+        grassColor = "#4a5a5a"; // winter - frosty
+      else if (gx > 720)
+        grassColor = "#6a5a3a"; // desert - dry
+      else if (gx > 380) grassColor = "#2a4a2a"; // swamp - dark green
 
-    // Region-aware dirt colors
-    const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
-    let dirtLight: string, dirtMid: string, dirtDark: string;
-    if (avgX < 380) {
-      dirtLight = "rgba(105, 85, 55, 0.28)";
-      dirtMid = "rgba(85, 70, 40, 0.32)";
-      dirtDark = "rgba(55, 45, 25, 0.35)";
-    } else if (avgX < 720) {
-      dirtLight = "rgba(80, 70, 50, 0.3)";
-      dirtMid = "rgba(60, 55, 38, 0.35)";
-      dirtDark = "rgba(40, 35, 22, 0.38)";
-    } else if (avgX < 1080) {
-      dirtLight = "rgba(130, 105, 65, 0.3)";
-      dirtMid = "rgba(110, 85, 50, 0.32)";
-      dirtDark = "rgba(80, 60, 30, 0.35)";
-    } else if (avgX < 1440) {
-      dirtLight = "rgba(90, 85, 80, 0.28)";
-      dirtMid = "rgba(70, 65, 60, 0.32)";
-      dirtDark = "rgba(45, 42, 38, 0.35)";
-    } else {
-      dirtLight = "rgba(70, 45, 35, 0.3)";
-      dirtMid = "rgba(55, 30, 22, 0.35)";
-      dirtDark = "rgba(35, 18, 12, 0.38)";
+      drawGrassTuft(gx, gy, 0.5 + seededRandom(i * 17 + 2) * 0.5, grassColor);
     }
+    ctx.globalAlpha = 1;
 
-    // Ground shadow
-    tracePath(2, 3);
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
-    ctx.lineWidth = 16;
-    ctx.stroke();
+    // Layer 5: Cracks and weathering lines (region-aware)
+    ctx.globalAlpha = 0.08;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < (isMobile ? 40 : 120); i++) {
+      const cx = seededRandom(i * 19) * width;
+      const cy = seededRandom(i * 19 + 1) * height;
+      const clen = 15 + seededRandom(i * 19 + 2) * 50;
 
-    // Road bed (dark border)
-    tracePath(0, 0);
-    ctx.strokeStyle = dirtDark;
-    ctx.lineWidth = 13;
-    ctx.stroke();
+      // Region-aware crack color
+      if (cx > 1440) ctx.strokeStyle = "#2a0500";
+      else if (cx > 1080) ctx.strokeStyle = "#2a3a4a";
+      else if (cx > 720) ctx.strokeStyle = "#3a2a10";
+      else if (cx > 380) ctx.strokeStyle = "#0a1a0a";
+      else ctx.strokeStyle = "#1a2a00";
 
-    // Main surface (flat color instead of gradient)
-    tracePath(0, 0);
-    ctx.strokeStyle = dirtMid;
-    ctx.lineWidth = 10;
-    ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      let cpx = cx,
+        cpy = cy;
+      for (let j = 0; j < 5; j++) {
+        const nx = cpx + (seededRandom(i * 19 + j * 3) - 0.5) * clen * 0.5;
+        const ny = cpy + seededRandom(i * 19 + j * 3 + 1) * clen * 0.3;
+        ctx.lineTo(nx, ny);
+        cpx = nx;
+        cpy = ny;
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
 
-    // Worn center highlight
-    tracePath(0, 0);
-    ctx.strokeStyle = dirtLight;
-    ctx.lineWidth = 5;
-    ctx.stroke();
+    // Layer 6: Enhanced parchment/texture overlay (region-aware)
+    ctx.globalAlpha = 0.05;
+    for (let i = 0; i < (isMobile ? 150 : 500); i++) {
+      const ptx = seededRandom(i * 3) * width;
+      const pty = seededRandom(i * 3 + 1) * height;
+      const ptSize = 2 + seededRandom(i * 3 + 2) * 12;
 
+      let ptColor1 = "#6a5a4a";
+      let ptColor2 = "#2a1a0a";
+      if (ptx > 1440) {
+        ptColor1 = "#5a2020";
+        ptColor2 = "#1a0505";
+      } else if (ptx > 1080) {
+        ptColor1 = "#8a9ab0";
+        ptColor2 = "#4a5a70";
+      } else if (ptx > 720) {
+        ptColor1 = "#a09060";
+        ptColor2 = "#5a4a30";
+      } else if (ptx > 380) {
+        ptColor1 = "#3a5a3a";
+        ptColor2 = "#1a3a1a";
+      } else {
+        ptColor1 = "#5a6a3a";
+        ptColor2 = "#2a3a1a";
+      }
+
+      ctx.fillStyle = seededRandom(i) > 0.5 ? ptColor1 : ptColor2;
+      ctx.beginPath();
+      ctx.arc(ptx, pty, ptSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // --- NATURAL FADING REGION TRANSITIONS (jagged but smooth) ---
+    const drawRuggedBorder = (
+      x: number,
+      region1Color: string,
+      region2Color: string,
+    ) => {
+      ctx.save();
+
+      // Build jagged path points
+      const pathPoints: { x: number; y: number }[] = [];
+      for (let y = 0; y <= height; y += 4) {
+        const offset =
+          Math.sin(y * 0.12 + x * 0.008) * 20 +
+          Math.sin(y * 0.06 + x * 0.02) * 14 +
+          Math.sin(y * 0.25 + x * 0.04) * 8 +
+          seededRandom(y + x) * 16 -
+          8;
+        pathPoints.push({ x: x + offset, y });
+      }
+
+      // Multiple soft fade layers from wide to narrow for a natural blended transition
+      // Each layer uses a clipping region on one side of the jagged edge
+
+      const fadeWidths = [90, 65, 45, 28, 16];
+      const fadeAlphas = [0.06, 0.09, 0.12, 0.16, 0.2];
+
+      // LEFT SIDE: region1 color fading into region2
+      for (let layer = 0; layer < fadeWidths.length; layer++) {
+        const fw = fadeWidths[layer];
+        const alpha = fadeAlphas[layer];
+
+        ctx.save();
+        // Clip to the left side of the jagged border
+        ctx.beginPath();
+        ctx.moveTo(x - fw - 10, 0);
+        pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(x - fw - 10, height);
+        ctx.closePath();
+        ctx.clip();
+
+        // Horizontal gradient fading region1 color from left toward the border
+        const leftGrad = ctx.createLinearGradient(x - fw, 0, x + 5, 0);
+        leftGrad.addColorStop(0, region1Color + "00");
+        leftGrad.addColorStop(
+          0.4,
+          region1Color +
+            Math.round(alpha * 255)
+              .toString(16)
+              .padStart(2, "0"),
+        );
+        leftGrad.addColorStop(1, region1Color + "00");
+        ctx.fillStyle = leftGrad;
+        ctx.fillRect(x - fw - 10, 0, fw + 20, height);
+        ctx.restore();
+      }
+
+      // RIGHT SIDE: region2 color fading into region1
+      for (let layer = 0; layer < fadeWidths.length; layer++) {
+        const fw = fadeWidths[layer];
+        const alpha = fadeAlphas[layer];
+
+        ctx.save();
+        // Clip to the right side of the jagged border
+        ctx.beginPath();
+        pathPoints.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.lineTo(x + fw + 10, height);
+        ctx.lineTo(x + fw + 10, 0);
+        ctx.closePath();
+        ctx.clip();
+
+        // Horizontal gradient fading region2 color from right toward the border
+        const rightGrad = ctx.createLinearGradient(x - 5, 0, x + fw, 0);
+        rightGrad.addColorStop(0, region2Color + "00");
+        rightGrad.addColorStop(
+          0.6,
+          region2Color +
+            Math.round(alpha * 255)
+              .toString(16)
+              .padStart(2, "0"),
+        );
+        rightGrad.addColorStop(1, region2Color + "00");
+        ctx.fillStyle = rightGrad;
+        ctx.fillRect(x - 10, 0, fw + 20, height);
+        ctx.restore();
+      }
+
+      // Very subtle dark seam at the exact border edge (thin, low opacity)
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, 0);
+      pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Even subtler lighter edge on top for depth
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, 0);
+      pathPoints.forEach((p) => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
+    // Region backgrounds with rich multi-layered fills
+    const regions = [
+      {
+        name: "PRINCETON GROUNDS",
+        x: 0,
+        w: 380,
+        colors: ["#3d5a2f", "#2d4a1f", "#1a3010"],
+        labelColor: "#8ade50",
+        labelGlow: "#4a8020",
+        accentTop: "rgba(100,180,60,0.12)",
+        accentBot: "rgba(40,80,20,0.15)",
+      },
+      {
+        name: "MATHEY MARSHES",
+        x: 380,
+        w: 340,
+        colors: ["#2a3a2a", "#1a2a1a", "#0a1a0a"],
+        labelColor: "#6aaa6a",
+        labelGlow: "#2a5a2a",
+        accentTop: "rgba(60,120,80,0.1)",
+        accentBot: "rgba(20,60,30,0.15)",
+      },
+      {
+        name: "STADIUM SANDS",
+        x: 720,
+        w: 360,
+        colors: ["#c49a6c", "#a88050", "#7a6040"],
+        labelColor: "#ffe060",
+        labelGlow: "#aa8020",
+        accentTop: "rgba(220,180,120,0.15)",
+        accentBot: "rgba(120,90,50,0.12)",
+      },
+      {
+        name: "FRIST FRONTIER",
+        x: 1080,
+        w: 360,
+        colors: ["#8ab0d0", "#6a90b8", "#4a6888"],
+        labelColor: "#d0f0ff",
+        labelGlow: "#5090c0",
+        accentTop: "rgba(150,200,240,0.12)",
+        accentBot: "rgba(60,100,150,0.15)",
+      },
+      {
+        name: "DORMITORY DEPTHS",
+        x: 1440,
+        w: 380,
+        colors: ["#5a2020", "#3a1010", "#1a0505"],
+        labelColor: "#ff8855",
+        labelGlow: "#aa3010",
+        accentTop: "rgba(200,60,30,0.12)",
+        accentBot: "rgba(80,20,10,0.15)",
+      },
+    ];
+
+    regions.forEach((r) => {
+      // Multi-layered region fill
+      const grad = ctx.createLinearGradient(r.x, 0, r.x + r.w, height);
+      grad.addColorStop(0, r.colors[0]);
+      grad.addColorStop(0.5, r.colors[1]);
+      grad.addColorStop(1, r.colors[2]);
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = grad;
+      ctx.fillRect(r.x, 0, r.w, height);
+
+      // Top atmospheric glow
+      const topGlow = ctx.createLinearGradient(r.x, 0, r.x, height * 0.4);
+      topGlow.addColorStop(0, r.accentTop);
+      topGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = topGlow;
+      ctx.fillRect(r.x, 0, r.w, height * 0.4);
+
+      // Bottom atmospheric depth
+      const botGlow = ctx.createLinearGradient(r.x, height * 0.6, r.x, height);
+      botGlow.addColorStop(0, "rgba(0,0,0,0)");
+      botGlow.addColorStop(1, r.accentBot);
+      ctx.fillStyle = botGlow;
+      ctx.fillRect(r.x, height * 0.6, r.w, height * 0.4);
+
+      // Soft inner radial atmosphere
+      const regionCx = r.x + r.w / 2;
+      const regionCy = height / 2;
+      const innerGlow = ctx.createRadialGradient(
+        regionCx,
+        regionCy,
+        0,
+        regionCx,
+        regionCy,
+        r.w * 0.6,
+      );
+      innerGlow.addColorStop(0, r.accentTop);
+      innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = innerGlow;
+      ctx.beginPath();
+      ctx.ellipse(
+        regionCx,
+        regionCy,
+        r.w * 0.55,
+        height * 0.45,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // --- Ornate Region Label Banner (auto-sized) ---
+      const labelX = r.x + r.w / 2;
+      const labelY = 20;
+
+      ctx.save();
+      ctx.font = "bold 11px 'bc-novatica-cyr', serif";
+      ctx.textAlign = "center";
+      (ctx as unknown as Record<string, string>).letterSpacing = "3px";
+
+      // Measure text to auto-size banner
+      const textMetrics = ctx.measureText(r.name);
+      const bannerW = textMetrics.width + 30;
+      const bannerH = 20;
+      const bx = labelX - bannerW / 2;
+      const by = labelY - bannerH / 2 - 1;
+
+      // Banner shadow
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.moveTo(bx - 12, by + 2);
+      ctx.lineTo(bx + 4, by + 2);
+      ctx.lineTo(bx + 4, by + bannerH + 2);
+      ctx.lineTo(bx - 12, by + bannerH * 0.65 + 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(bx + bannerW - 4 + 12, by + 2);
+      ctx.lineTo(bx + bannerW - 4, by + 2);
+      ctx.lineTo(bx + bannerW - 4, by + bannerH + 2);
+      ctx.lineTo(bx + bannerW - 4 + 12, by + bannerH * 0.65 + 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left ribbon tail
+      const ribbonGrad1 = ctx.createLinearGradient(bx - 10, by, bx + 5, by);
+      ribbonGrad1.addColorStop(0, r.colors[2]);
+      ribbonGrad1.addColorStop(1, r.colors[1]);
+      ctx.fillStyle = ribbonGrad1;
+      ctx.beginPath();
+      ctx.moveTo(bx - 10, by + 1);
+      ctx.lineTo(bx + 5, by + 1);
+      ctx.lineTo(bx + 5, by + bannerH - 1);
+      ctx.lineTo(bx - 10, by + bannerH * 0.6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right ribbon tail
+      const ribbonGrad2 = ctx.createLinearGradient(
+        bx + bannerW - 5,
+        by,
+        bx + bannerW + 10,
+        by,
+      );
+      ribbonGrad2.addColorStop(0, r.colors[1]);
+      ribbonGrad2.addColorStop(1, r.colors[2]);
+      ctx.fillStyle = ribbonGrad2;
+      ctx.beginPath();
+      ctx.moveTo(bx + bannerW - 5, by + 1);
+      ctx.lineTo(bx + bannerW + 10, by + 1);
+      ctx.lineTo(bx + bannerW + 10, by + bannerH * 0.6);
+      ctx.lineTo(bx + bannerW - 5, by + bannerH - 1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Main banner body
+      const bannerGrad = ctx.createLinearGradient(bx, by, bx, by + bannerH);
+      bannerGrad.addColorStop(0, r.colors[0]);
+      bannerGrad.addColorStop(0.3, r.colors[1]);
+      bannerGrad.addColorStop(0.7, r.colors[1]);
+      bannerGrad.addColorStop(1, r.colors[2]);
+      ctx.fillStyle = bannerGrad;
+      ctx.fillRect(bx + 2, by, bannerW - 4, bannerH);
+
+      // Banner top highlight edge
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(bx + 2, by, bannerW - 4, 2);
+
+      // Banner bottom shadow edge
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.fillRect(bx + 2, by + bannerH - 2, bannerW - 4, 2);
+
+      // Gold trim lines
+      ctx.strokeStyle = r.labelGlow + "80";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(bx + 4, by + 2, bannerW - 8, bannerH - 4);
+
+      // Decorative diamond studs at corners
+      const drawDiamond = (dx: number, dy: number, ds: number) => {
+        ctx.fillStyle = r.labelColor + "90";
+        ctx.beginPath();
+        ctx.moveTo(dx, dy - ds);
+        ctx.lineTo(dx + ds, dy);
+        ctx.lineTo(dx, dy + ds);
+        ctx.lineTo(dx - ds, dy);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawDiamond(bx + 8, labelY, 2.5);
+      drawDiamond(bx + bannerW - 8, labelY, 2.5);
+
+      // Text glow (use multiple draws instead of expensive shadowBlur)
+      ctx.fillStyle = r.labelGlow;
+      ctx.globalAlpha = 0.3;
+      ctx.fillText(r.name, labelX - 1, labelY + 4);
+      ctx.fillText(r.name, labelX + 1, labelY + 4);
+      ctx.fillText(r.name, labelX, labelY + 3);
+      ctx.fillText(r.name, labelX, labelY + 5);
+      ctx.globalAlpha = 1;
+
+      // Text shadow for depth
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillText(r.name, labelX + 0.5, labelY + 4.5);
+
+      // Main text
+      ctx.fillStyle = r.labelColor;
+      ctx.fillText(r.name, labelX, labelY + 4);
+
+      // Main text
+      ctx.fillStyle = r.labelColor;
+      ctx.fillText(r.name, labelX, labelY + 4);
+
+      ctx.restore();
+    });
+
+    // Draw natural fading borders between regions
+    drawRuggedBorder(380, "#3d5a2f", "#2a3a2a");
+    drawRuggedBorder(720, "#2a3a2a", "#9a8060");
+    drawRuggedBorder(1080, "#9a8060", "#5a6a7a");
+    drawRuggedBorder(1450, "#5a6a7a", "#5a3030");
+
+    // === ROADS (drawn early so region details layer on top) ===
+    const drawRoadSegment = (points: [number, number][]) => {
+      if (points.length < 2) return;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // Smooth bezier path helper
+      const tracePath = (ox: number, oy: number) => {
+        ctx.beginPath();
+        const pts = points.map((p) => [p[0] + ox, getY(p[1]) + oy]);
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        if (pts.length === 2) {
+          ctx.lineTo(pts[1][0], pts[1][1]);
+        } else {
+          for (let i = 1; i < pts.length - 1; i++) {
+            const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
+            const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
+            ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
+          }
+          ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+        }
+      };
+
+      // Region-aware dirt colors
+      const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
+      let dirtLight: string, dirtMid: string, dirtDark: string;
+      if (avgX < 380) {
+        dirtLight = "rgba(105, 85, 55, 0.28)";
+        dirtMid = "rgba(85, 70, 40, 0.32)";
+        dirtDark = "rgba(55, 45, 25, 0.35)";
+      } else if (avgX < 720) {
+        dirtLight = "rgba(80, 70, 50, 0.3)";
+        dirtMid = "rgba(60, 55, 38, 0.35)";
+        dirtDark = "rgba(40, 35, 22, 0.38)";
+      } else if (avgX < 1080) {
+        dirtLight = "rgba(130, 105, 65, 0.3)";
+        dirtMid = "rgba(110, 85, 50, 0.32)";
+        dirtDark = "rgba(80, 60, 30, 0.35)";
+      } else if (avgX < 1440) {
+        dirtLight = "rgba(90, 85, 80, 0.28)";
+        dirtMid = "rgba(70, 65, 60, 0.32)";
+        dirtDark = "rgba(45, 42, 38, 0.35)";
+      } else {
+        dirtLight = "rgba(70, 45, 35, 0.3)";
+        dirtMid = "rgba(55, 30, 22, 0.35)";
+        dirtDark = "rgba(35, 18, 12, 0.38)";
+      }
+
+      // Ground shadow
+      tracePath(2, 3);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+      ctx.lineWidth = 16;
+      ctx.stroke();
+
+      // Road bed (dark border)
+      tracePath(0, 0);
+      ctx.strokeStyle = dirtDark;
+      ctx.lineWidth = 13;
+      ctx.stroke();
+
+      // Main surface (flat color instead of gradient)
+      tracePath(0, 0);
+      ctx.strokeStyle = dirtMid;
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      // Worn center highlight
+      tracePath(0, 0);
+      ctx.strokeStyle = dirtLight;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
+    // Winding roads with interesting shapes — S-curves, switchbacks, terrain-following
+    // Grassland: gentle rolling curves from castle to bridge 1
+    drawRoadSegment([
+      [70, 50],
+      [95, 47],
+      [125, 42],
+      [160, 38],
+      [195, 40],
+      [230, 46],
+      [260, 53],
+      [285, 58],
+      [310, 62],
+      [340, 60],
+      [375, 58],
+    ]);
+    // Swamp: winding path through marshland, bridge1 end to bridge2
+    drawRoadSegment([
+      [425, 57],
+      [450, 60],
+      [475, 65],
+      [500, 62],
+      [525, 55],
+      [555, 48],
+      [580, 42],
+      [610, 40],
+      [640, 44],
+      [670, 48],
+      [715, 48],
+    ]);
+    // Desert: sweeping dune-hugging curves, bridge2 end to bridge3
+    drawRoadSegment([
+      [760, 49],
+      [790, 45],
+      [815, 40],
+      [845, 38],
+      [875, 42],
+      [910, 50],
+      [940, 58],
+      [965, 62],
+      [995, 58],
+      [1030, 52],
+      [1075, 55],
+    ]);
+    // Winter: switchback through mountain pass, bridge3 end to bridge4
+    drawRoadSegment([
+      [1125, 55],
+      [1155, 50],
+      [1180, 44],
+      [1210, 40],
+      [1240, 44],
+      [1270, 52],
+      [1300, 58],
+      [1330, 62],
+      [1360, 58],
+      [1395, 52],
+      [1445, 52],
+    ]);
+    // Volcanic: treacherous path through lava fields, bridge4 end to enemy castle
+    drawRoadSegment([
+      [1493, 52],
+      [1515, 48],
+      [1540, 42],
+      [1565, 38],
+      [1590, 42],
+      [1620, 50],
+      [1650, 55],
+      [1680, 52],
+      [1710, 46],
+      [1740, 48],
+      [MAP_WIDTH - 70, 50],
+    ]);
+  } // end !bgCacheValid (static background section)
+
+  if (_savedCtx) {
+    ctx = _savedCtx;
+  }
+  if (staticBgCache?.current.canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(staticBgCache.current.canvas, 0, 0);
     ctx.restore();
-  };
-
-  // Winding roads with interesting shapes — S-curves, switchbacks, terrain-following
-  // Grassland: gentle rolling curves from castle to bridge 1
-  drawRoadSegment([
-    [70, 50],
-    [95, 47],
-    [125, 42],
-    [160, 38],
-    [195, 40],
-    [230, 46],
-    [260, 53],
-    [285, 58],
-    [310, 62],
-    [340, 60],
-    [375, 58],
-  ]);
-  // Swamp: winding path through marshland, bridge1 end to bridge2
-  drawRoadSegment([
-    [425, 57],
-    [450, 60],
-    [475, 65],
-    [500, 62],
-    [525, 55],
-    [555, 48],
-    [580, 42],
-    [610, 40],
-    [640, 44],
-    [670, 48],
-    [715, 48],
-  ]);
-  // Desert: sweeping dune-hugging curves, bridge2 end to bridge3
-  drawRoadSegment([
-    [760, 49],
-    [790, 45],
-    [815, 40],
-    [845, 38],
-    [875, 42],
-    [910, 50],
-    [940, 58],
-    [965, 62],
-    [995, 58],
-    [1030, 52],
-    [1075, 55],
-  ]);
-  // Winter: switchback through mountain pass, bridge3 end to bridge4
-  drawRoadSegment([
-    [1125, 55],
-    [1155, 50],
-    [1180, 44],
-    [1210, 40],
-    [1240, 44],
-    [1270, 52],
-    [1300, 58],
-    [1330, 62],
-    [1360, 58],
-    [1395, 52],
-    [1445, 52],
-  ]);
-  // Volcanic: treacherous path through lava fields, bridge4 end to enemy castle
-  drawRoadSegment([
-    [1493, 52],
-    [1515, 48],
-    [1540, 42],
-    [1565, 38],
-    [1590, 42],
-    [1620, 50],
-    [1650, 55],
-    [1680, 52],
-    [1710, 46],
-    [1740, 48],
-    [MAP_WIDTH - 70, 50],
-  ]);
+    ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+  }
 
   // === GRASSLAND DETAILS ===
   // Lush volumetric trees with radial gradient canopies and animated details
@@ -8607,19 +8624,6 @@ export const drawWorldMapCanvas = ({
   drawCastleLabel(70, 50, "YOUR KINGDOM", false);
   drawCastleLabel(MAP_WIDTH - 70, 50, "ENEMY KINGDOM", true);
 
-  } // end !bgCacheValid (static background section)
-
-  if (_savedCtx) {
-    ctx = _savedCtx;
-  }
-  if (staticBgCache?.current.canvas) {
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(staticBgCache.current.canvas, 0, 0);
-    ctx.restore();
-    ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
-  }
-
   // --- PATH CONNECTIONS ---
   const LOCKED_PATH_COLORS: Record<
     string,
@@ -8959,9 +8963,7 @@ export const drawWorldMapCanvas = ({
     // Glow (use radial gradient instead of expensive shadowBlur)
     if (isSelected || (isHovered && isUnlocked)) {
       const glowRadius = isSelected ? 44 : 32;
-      const glowColor = isSelected
-        ? "rgba(255,200,50,"
-        : nodePalette.glowHover;
+      const glowColor = isSelected ? "rgba(255,200,50," : nodePalette.glowHover;
       const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
       glow.addColorStop(0, glowColor + "0.45)");
       glow.addColorStop(0.4, glowColor + "0.25)");
@@ -9861,7 +9863,13 @@ export const drawWorldMapCanvas = ({
         const ex = lx + 50 + offset + Math.sin(marchPhase) * 3;
         const ey = ly + 6 + Math.sin(time * 2 + i * 0.7) * 2;
         const bobble = Math.sin(time * 6 + i * 2) * 2;
-        const bodyColors = ["#4a1515", "#3a1010", "#5a2020", "#451818", "#3d1212"];
+        const bodyColors = [
+          "#4a1515",
+          "#3a1010",
+          "#5a2020",
+          "#451818",
+          "#3d1212",
+        ];
 
         ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.beginPath();
@@ -9939,10 +9947,10 @@ export const drawWorldMapCanvas = ({
       const lvlData = LEVEL_DATA[level.id];
       const directPreview = lvlData?.previewImage;
       const fallbackPreview = !directPreview
-        ? allLevels
-            .filter(l => l.region === level.region)
-            .map(l => LEVEL_DATA[l.id]?.previewImage)
-            .find(Boolean) ?? LEVEL_DATA.poe?.previewImage
+        ? (allLevels
+            .filter((l) => l.region === level.region)
+            .map((l) => LEVEL_DATA[l.id]?.previewImage)
+            .find(Boolean) ?? LEVEL_DATA.poe?.previewImage)
         : undefined;
       const previewSrc = directPreview ?? fallbackPreview;
       const isFallback = !directPreview && !!fallbackPreview;
@@ -10165,5 +10173,4 @@ export const drawWorldMapCanvas = ({
   brGrad.addColorStop(1, "rgba(5,3,1,0)");
   ctx.fillStyle = brGrad;
   ctx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
-
 };

@@ -689,7 +689,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="p-2 pointer-events-auto rounded-lg backdrop-blur-sm relative"
+          className="px-2 pt-2 pb-0.5 pointer-events-auto rounded-lg backdrop-blur-sm relative"
           style={{
             background: panelGradient,
             border: `2px solid ${GOLD.border35}`,

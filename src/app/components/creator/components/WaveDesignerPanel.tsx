@@ -19,7 +19,7 @@ interface WaveDesignerPanelProps {
   waveTemplateOptions: { value: string; label: string }[];
   onStartCustomWaves: () => void;
   onUseTemplateWaves: () => void;
-  onApplyMapPreset: (presetId: string) => void;
+  onApplyPresetWaves: (presetId: string) => void;
   onAddWave: () => void;
   onRemoveWave: (waveIndex: number) => void;
   onAddWaveGroup: (waveIndex: number) => void;
@@ -35,7 +35,7 @@ export const WaveDesignerPanel: React.FC<WaveDesignerPanelProps> = ({
   waveTemplateOptions,
   onStartCustomWaves,
   onUseTemplateWaves,
-  onApplyMapPreset,
+  onApplyPresetWaves,
   onAddWave,
   onRemoveWave,
   onAddWaveGroup,
@@ -85,7 +85,7 @@ export const WaveDesignerPanel: React.FC<WaveDesignerPanelProps> = ({
           templateWaves={templateWaves}
           waveTemplateOptions={waveTemplateOptions}
           waveTemplate={waveTemplate}
-          onApplyMapPreset={onApplyMapPreset}
+          onApplyPresetWaves={onApplyPresetWaves}
         />
       ) : (
         <CustomWavesEditor
@@ -105,18 +105,19 @@ const TemplateWavesView: React.FC<{
   templateWaves: WaveGroup[][];
   waveTemplateOptions: { value: string; label: string }[];
   waveTemplate: string;
-  onApplyMapPreset: (presetId: string) => void;
-}> = ({ templateWaves, waveTemplateOptions, waveTemplate, onApplyMapPreset }) => {
+  onApplyPresetWaves: (presetId: string) => void;
+}> = ({ templateWaves, waveTemplateOptions, waveTemplate, onApplyPresetWaves }) => {
   return (
     <div className="space-y-2">
       <label className="block">
         <span className="text-[11px] text-amber-400/80 inline-flex items-center gap-1.5 mb-1">
           <Target size={11} />
           Wave Template
+          <span className="text-amber-500/50 font-normal">(waves only)</span>
         </span>
         <select
           value={waveTemplate}
-          onChange={(event) => onApplyMapPreset(event.target.value)}
+          onChange={(event) => onApplyPresetWaves(event.target.value)}
           className="w-full rounded border border-amber-700/60 bg-stone-950 px-2 py-1 text-xs"
         >
           {waveTemplateOptions.map((option) => (

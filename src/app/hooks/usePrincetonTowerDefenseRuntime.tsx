@@ -283,6 +283,9 @@ import {
   DEFAULT_CAMERA_OFFSET,
   DEFAULT_CAMERA_ZOOM,
   ALLY_ALERT_RANGE,
+  MAX_TROOP_PATH_DISTANCE,
+  MAX_HERO_PATH_DISTANCE,
+  UNIT_SETTLE_DISTANCE,
   getEnemyPosWithPath,
   getFormationOffsets,
   getTowerHitboxRadius,
@@ -296,6 +299,7 @@ import {
 import {
   clampPositionToRadius,
   computeSeparationForces,
+  constrainToNearPath,
   getFacingRightFromDelta,
   stepTowardTarget,
 } from "../game/unitMovement";
@@ -345,6 +349,9 @@ import { useEntityCollection } from "./useEntityCollection";
 import { usePawPoints } from "./usePawPoints";
 import { captureCanvas } from "../utils/screenshot";
 import { CameraModeOverlay } from "../components/ui/CameraModeOverlay";
+import { useTutorial, type EncounterQueueItem } from "./useTutorial";
+import { TutorialOverlay } from "../components/ui/TutorialOverlay";
+import { EncounterTooltip } from "../components/ui/EncounterTooltip";
 
 type RenderQuality = "high" | "medium" | "low";
 
@@ -537,6 +544,16 @@ export function usePrincetonTowerDefenseRuntime() {
     unlockLevel,
   } = useGameProgress();
   const { customLevels, upsertCustomLevel, deleteCustomLevel } = useCustomLevels();
+
+  // Tutorial system
+  const tutorial = useTutorial();
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [encounterQueue, setEncounterQueue] = useState<EncounterQueueItem[]>([]);
+  const [encounterIndex, setEncounterIndex] = useState(0);
+  const pendingWaveStartRef = useRef(false);
+  const tutorialBlockingRef = useRef(false);
+  tutorialBlockingRef.current = showTutorial || encounterQueue.length > 0;
+
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
   const levelStats = progress.levelStats;
@@ -1628,6 +1645,26 @@ export function usePrincetonTowerDefenseRuntime() {
     clearEffects,
   ]);
 
+  // Tutorial & encounter check when entering playing state
+  useEffect(() => {
+    if (gameState !== "playing") return;
+
+    if (!tutorial.hasCompletedTutorial) {
+      setShowTutorial(true);
+      return;
+    }
+
+    const levelData = LEVEL_DATA[selectedMap];
+    const specialTowerTypes = (getLevelSpecialTowers(selectedMap) ?? []).map((t) => t.type);
+    const hazardTypes = (levelData?.hazards ?? []).map((h) => h.type);
+    const levelEncounters = tutorial.getLevelEncounters(specialTowerTypes, hazardTypes);
+
+    if (levelEncounters.length > 0) {
+      setEncounterQueue(levelEncounters);
+      setEncounterIndex(0);
+    }
+  }, [gameState, selectedMap, tutorial.hasCompletedTutorial, tutorial.getLevelEncounters]);
+
   // Clear all timers when leaving the playing state (defeat, victory, quit)
   useEffect(() => {
     if (gameState !== "playing") {
@@ -1635,6 +1672,9 @@ export function usePrincetonTowerDefenseRuntime() {
       pendingParticleBurstsRef.current = [];
       clearParticlePool();
       setHoveredWaveBubblePathKey(null);
+      setShowTutorial(false);
+      setEncounterQueue([]);
+      setEncounterIndex(0);
     }
   }, [gameState, clearAllTimers]);
 
@@ -1822,8 +1862,64 @@ export function usePrincetonTowerDefenseRuntime() {
     }
   }, [gameSpeed, pauseAllTimeouts, resumeAllTimeouts, setTroops, setHero, setEnemies, setTowers]);
 
+  // --- Tutorial & encounter callbacks ---
+
+  const startWaveInnerRef = useRef<() => void>(() => { });
+
+  const queueLevelEncounters = useCallback((mapKey: string) => {
+    const levelData = LEVEL_DATA[mapKey];
+    const specialTowerTypes = (getLevelSpecialTowers(mapKey) ?? []).map((t) => t.type);
+    const hazardTypes = (levelData?.hazards ?? []).map((h) => h.type);
+    const levelEncounters = tutorial.getLevelEncounters(specialTowerTypes, hazardTypes);
+    if (levelEncounters.length > 0) {
+      setEncounterQueue(levelEncounters);
+      setEncounterIndex(0);
+    }
+  }, [tutorial]);
+
+  const handleTutorialComplete = useCallback(() => {
+    tutorial.markTutorialComplete();
+    setShowTutorial(false);
+    queueLevelEncounters(selectedMap);
+  }, [tutorial, selectedMap, queueLevelEncounters]);
+
+  const handleTutorialSkip = useCallback(() => {
+    tutorial.skipTutorial();
+    setShowTutorial(false);
+    queueLevelEncounters(selectedMap);
+  }, [tutorial, selectedMap, queueLevelEncounters]);
+
+  const handleEncounterAcknowledge = useCallback(() => {
+    const nextIndex = encounterIndex + 1;
+    if (nextIndex >= encounterQueue.length) {
+      const specialTowerKeys = encounterQueue
+        .filter((e) => e.category === "special_tower")
+        .map((e) => e.key.replace("special-tower-", ""));
+      const hazardKeys = encounterQueue
+        .filter((e) => e.category === "hazard")
+        .map((e) => e.key.replace("hazard-", ""));
+
+      if (specialTowerKeys.length > 0 || hazardKeys.length > 0) {
+        tutorial.markLevelEncountersSeen(
+          specialTowerKeys as import("../types").SpecialTowerType[],
+          hazardKeys as import("../types").HazardType[]
+        );
+      }
+
+      setEncounterQueue([]);
+      setEncounterIndex(0);
+
+      if (pendingWaveStartRef.current) {
+        pendingWaveStartRef.current = false;
+        startWaveInnerRef.current();
+      }
+    } else {
+      setEncounterIndex(nextIndex);
+    }
+  }, [encounterIndex, encounterQueue, tutorial]);
+
   // Start wave function
-  const startWave = useCallback(() => {
+  const startWaveInner = useCallback(() => {
     const levelWaves = getLevelWaves(selectedMap);
     // Double-check guards to prevent duplicate wave starts
     if (waveInProgress) {
@@ -1950,13 +2046,130 @@ export function usePrincetonTowerDefenseRuntime() {
     activeWaveSpawnPaths,
   ]);
 
+  startWaveInnerRef.current = startWaveInner;
+
+  // Wrapper that checks for new enemy encounters before spawning
+  const startWave = useCallback(() => {
+    if (tutorialBlockingRef.current) return;
+
+    const levelWaves = getLevelWaves(selectedMap);
+    if (waveInProgress || currentWave >= levelWaves.length) {
+      startWaveInner();
+      return;
+    }
+
+    const wave = levelWaves[currentWave];
+    if (!wave) {
+      startWaveInner();
+      return;
+    }
+
+    const waveEnemyTypes = Array.from(new Set(wave.map((g) => g.type)));
+    const unseenEncounters = tutorial.getUnseenEnemyEncounters(waveEnemyTypes);
+
+    if (unseenEncounters.length > 0) {
+      tutorial.markEnemiesSeen(waveEnemyTypes);
+      setEncounterQueue(unseenEncounters);
+      setEncounterIndex(0);
+      pendingWaveStartRef.current = true;
+      return;
+    }
+
+    tutorial.markEnemiesSeen(waveEnemyTypes);
+    startWaveInner();
+  }, [startWaveInner, selectedMap, waveInProgress, currentWave, tutorial]);
+
   // Update game function
   const updateGame = useCallback(
     (deltaTime: number) => {
       const now = Date.now();
       const isPaused = gameSpeed === 0;
+      const levelWaves = getLevelWaves(selectedMap);
 
-      // CRITICAL: Skip ALL game logic when paused
+      // Win/lose checks run before the isPaused guard so they can't be blocked
+      // by a pause that coincides with the condition becoming true (stale closure race).
+      if (
+        lives <= 0 &&
+        gameState === "playing" &&
+        !battleOutcome &&
+        !gameEndHandledRef.current
+      ) {
+        gameEndHandledRef.current = true;
+
+        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
+        setTimeSpent(finalTime);
+
+        clearAllTimers();
+        setWaveInProgress(false);
+        setHoveredWaveBubblePathKey(null);
+        setNextWaveTimer(0);
+        setGameSpeed(0);
+
+        updateLevelStats(selectedMap, finalTime, lives, false);
+        setBattleOutcome("defeat");
+      }
+      if (
+        gameState === "playing" &&
+        !battleOutcome &&
+        currentWave >= levelWaves.length &&
+        enemies.length === 0 &&
+        !waveInProgress &&
+        !gameEndHandledRef.current
+      ) {
+        gameEndHandledRef.current = true;
+
+        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
+        setTimeSpent(finalTime);
+
+        const { overall: stars } = calculateCategoryRatings(
+          finalTime,
+          lives,
+          totalWaves,
+        );
+        setStarsEarned(stars);
+
+        clearAllTimers();
+        setWaveInProgress(false);
+        setHoveredWaveBubblePathKey(null);
+        setNextWaveTimer(0);
+        setGameSpeed(0);
+        setBattleOutcome("victory");
+
+        const mapToSave = selectedMap;
+        updateLevelStars(mapToSave, stars);
+        updateLevelStats(mapToSave, finalTime, lives, true);
+
+        const nextLevel = CAMPAIGN_LEVEL_UNLOCKS[mapToSave];
+        if (nextLevel && !unlockedMaps.includes(nextLevel)) {
+          unlockLevel(nextLevel);
+        }
+
+        const projectedLevelStars = {
+          ...levelStars,
+          [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
+        };
+        (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
+          RegionKey
+        >).forEach((regionKey) => {
+          if (!isRegionCleared(regionKey, projectedLevelStars)) return;
+          REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
+            if (!unlockedMaps.includes(challengeLevel)) {
+              unlockLevel(challengeLevel);
+            }
+          });
+        });
+
+        const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
+        if (
+          nextChallengeLevel &&
+          (projectedLevelStars[mapToSave] || 0) > 0 &&
+          !unlockedMaps.includes(nextChallengeLevel)
+        ) {
+          unlockLevel(nextChallengeLevel);
+        }
+      }
+
+      // Skip ALL game logic when paused.
       // This prevents Date.now() based timers from advancing (status effects, healing, buffs)
       // and ensures enemies/troops/heroes don't move or act while paused.
       // Rendering still happens via the render() call in the game loop.
@@ -1968,8 +2181,6 @@ export function usePrincetonTowerDefenseRuntime() {
       // where stale state might cause double spawns
       const timeSinceReset = now - gameResetTimeRef.current;
       const isInResetTransition = timeSinceReset < 100; // 100ms grace period
-
-      const levelWaves = getLevelWaves(selectedMap);
       const specialTowers = getLevelSpecialTowers(selectedMap);
       const beacons = specialTowers.filter((tower) => tower.type === "beacon");
       const chronoRelays = specialTowers.filter(
@@ -1991,7 +2202,8 @@ export function usePrincetonTowerDefenseRuntime() {
         .filter((tower) => tower.type === "vault")
         .map((tower) => gridToWorld(tower.pos));
       // Wave timer - check outside setState to avoid race conditions
-      if (!waveInProgress && currentWave < levelWaves.length) {
+      // Freeze the timer while tutorial or encounter overlays are active
+      if (!waveInProgress && currentWave < levelWaves.length && !tutorialBlockingRef.current) {
         const autoSend = getGameSettings().ui.autoSendWaves;
         const shouldStartWave = nextWaveTimer - deltaTime <= 0;
         if (shouldStartWave && autoSend) {
@@ -3906,9 +4118,17 @@ export function usePrincetonTowerDefenseRuntime() {
                 });
 
                 if (!step.reached) {
+                  let heroChasePos = step.pos;
+                  const heroPathCheck = findClosestPathPoint(heroChasePos, selectedMap);
+                  if (heroPathCheck) {
+                    heroChasePos = constrainToNearPath(
+                      heroChasePos, heroPathCheck.point,
+                      heroPathCheck.distance, MAX_HERO_PATH_DISTANCE,
+                    );
+                  }
                   return {
                     ...prev,
-                    pos: step.pos,
+                    pos: heroChasePos,
                     rotation: step.rotation,
                     facingRight: step.facingRight,
                     aggroTarget: closestEnemy.id,
@@ -3971,9 +4191,14 @@ export function usePrincetonTowerDefenseRuntime() {
 
           return prev;
         });
-        // Apply unified separation force to hero
+        // Apply unified separation force to hero (suppress when settled at home)
         setHero((prev) => {
           if (!prev || prev.dead) return prev;
+          const heroHome = prev.homePos || prev.pos;
+          const heroSettled = !prev.aggroTarget && !prev.moving
+            && distance(prev.pos, heroHome) < UNIT_SETTLE_DISTANCE;
+          if (heroSettled) return prev;
+
           const force = friendlySeparation.get(prev.id);
           if (
             !force ||
@@ -4140,11 +4365,17 @@ export function usePrincetonTowerDefenseRuntime() {
               });
 
               if (!moveStep.reached) {
-                updated.pos = clampPositionToRadius(
-                  moveStep.pos,
-                  homePos,
-                  maxChaseRange
+                let chasePos = clampPositionToRadius(
+                  moveStep.pos, homePos, maxChaseRange,
                 );
+                const chasePathCheck = findClosestPathPoint(chasePos, selectedMap);
+                if (chasePathCheck) {
+                  chasePos = constrainToNearPath(
+                    chasePos, chasePathCheck.point,
+                    chasePathCheck.distance, MAX_TROOP_PATH_DISTANCE,
+                  );
+                }
+                updated.pos = chasePos;
                 updated.rotation = moveStep.rotation;
                 updated.facingRight = moveStep.facingRight;
                 updated.engaging = true;
@@ -4195,22 +4426,21 @@ export function usePrincetonTowerDefenseRuntime() {
                 updated.pos = returnStep.pos;
                 updated.rotation = returnStep.rotation;
                 updated.facingRight = returnStep.facingRight;
-                updated.moving = true;
-                updated.targetPos = homePos;
-              } else {
-                // At home - stop moving
-                updated.moving = false;
-                updated.targetPos = undefined;
               }
             }
           }
 
-          const force = friendlySeparation.get(troop.id);
-          if (force && !isStationary) {
-            updated.pos = {
-              x: updated.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
-              y: updated.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
-            };
+          const troopSettled = !closestEnemy && !troop.moving && homePos
+            && distance(updated.pos, homePos) < UNIT_SETTLE_DISTANCE;
+
+          if (!troopSettled && !isStationary) {
+            const force = friendlySeparation.get(troop.id);
+            if (force) {
+              updated.pos = {
+                x: updated.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
+                y: updated.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
+              };
+            }
           }
 
           if (homePos && !isStationary) {
@@ -6215,100 +6445,6 @@ export function usePrincetonTowerDefenseRuntime() {
           cooldown: Math.max(0, spell.cooldown - deltaTime),
         }))
       );
-      // Check win/lose conditions - ref guard prevents duplicate triggers across animation frames
-      if (
-        lives <= 0 &&
-        gameState === "playing" &&
-        !battleOutcome &&
-        !gameEndHandledRef.current
-      ) {
-        gameEndHandledRef.current = true;
-
-        // Calculate time spent on defeat (subtract accumulated pause time)
-        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
-        setTimeSpent(finalTime);
-
-        // Freeze battle in-place and show overlay without leaving the battle screen.
-        clearAllTimers();
-        setWaveInProgress(false);
-        setHoveredWaveBubblePathKey(null);
-        setNextWaveTimer(0);
-        setGameSpeed(0);
-
-        // Save stats for defeat (won = false)
-        updateLevelStats(selectedMap, finalTime, lives, false);
-        setBattleOutcome("defeat");
-      }
-      if (
-        gameState === "playing" &&
-        !battleOutcome &&
-        currentWave >= levelWaves.length &&
-        enemies.length === 0 &&
-        !waveInProgress &&
-        !gameEndHandledRef.current
-      ) {
-        gameEndHandledRef.current = true;
-
-        // Calculate time spent on victory (subtract accumulated pause time)
-        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
-        setTimeSpent(finalTime);
-
-        // Calculate stars from multi-category ratings
-        const { overall: stars } = calculateCategoryRatings(
-          finalTime,
-          lives,
-          totalWaves,
-        );
-        setStarsEarned(stars);
-
-        // Freeze battle in-place and show overlay without leaving the battle screen.
-        clearAllTimers();
-        setWaveInProgress(false);
-        setHoveredWaveBubblePathKey(null);
-        setNextWaveTimer(0);
-        setGameSpeed(0);
-        setBattleOutcome("victory");
-
-        // Save progress to localStorage immediately (no setTimeout to avoid stale closure issues)
-        // Using the captured selectedMap value directly
-        const mapToSave = selectedMap;
-        updateLevelStars(mapToSave, stars);
-
-        // Save stats for victory (won = true)
-        updateLevelStats(mapToSave, finalTime, lives, true);
-
-        // Campaign progression unlocks.
-        const nextLevel = CAMPAIGN_LEVEL_UNLOCKS[mapToSave];
-        if (nextLevel && !unlockedMaps.includes(nextLevel)) {
-          unlockLevel(nextLevel);
-        }
-
-        // Challenge progression unlocks when all campaign stages in a region
-        // have at least one star.
-        const projectedLevelStars = {
-          ...levelStars,
-          [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
-        };
-        (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
-          RegionKey
-        >).forEach((regionKey) => {
-          if (!isRegionCleared(regionKey, projectedLevelStars)) return;
-          REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
-            if (!unlockedMaps.includes(challengeLevel)) {
-              unlockLevel(challengeLevel);
-            }
-          });
-        });
-
-        const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
-        if (
-          nextChallengeLevel &&
-          (projectedLevelStars[mapToSave] || 0) > 0 &&
-          !unlockedMaps.includes(nextChallengeLevel)
-        ) {
-          unlockLevel(nextChallengeLevel);
-        }
-      }
     },
     [
       gameSpeed,
@@ -12384,6 +12520,19 @@ export function usePrincetonTowerDefenseRuntime() {
           bestTime={currentLevelStats.bestTime}
           timesPlayed={currentLevelStats.timesPlayed || 1}
           overlay
+        />
+      )}
+      {showTutorial && (
+        <TutorialOverlay
+          onComplete={handleTutorialComplete}
+          onSkip={handleTutorialSkip}
+        />
+      )}
+      {!showTutorial && encounterQueue.length > 0 && (
+        <EncounterTooltip
+          encounters={encounterQueue}
+          currentIndex={encounterIndex}
+          onAcknowledge={handleEncounterAcknowledge}
         />
       )}
     </div>

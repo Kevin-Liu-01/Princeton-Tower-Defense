@@ -122,12 +122,12 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
       </div>
       <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
         {(() => {
-          const spellLabels: Record<SpellType, { brief: string; nameColor: string; briefColor: string; borderColor: string }> = {
-            fireball: { brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)" },
-            lightning: { brief: "Chain lightning stuns and shocks eight enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)" },
-            freeze: { brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)" },
-            payday: { brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)" },
-            reinforcements: { brief: "Summon three armored reinforcements to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)" },
+          const spellLabels: Record<SpellType, { nameColor: string; borderColor: string; trait: string; traitColor: string; traitBg: string; traitBorder: string }> = {
+            fireball: { nameColor: "text-orange-300", borderColor: "rgba(234,88,12,0.4)", trait: "AoE Burn", traitColor: "text-red-300/80", traitBg: "rgba(127,29,29,0.25)", traitBorder: "rgba(127,29,29,0.2)" },
+            lightning: { nameColor: "text-yellow-300", borderColor: "rgba(234,179,8,0.4)", trait: "Chain Stun", traitColor: "text-cyan-300/80", traitBg: "rgba(22,78,99,0.25)", traitBorder: "rgba(22,78,99,0.2)" },
+            freeze: { nameColor: "text-cyan-300", borderColor: "rgba(6,182,212,0.4)", trait: "Global Freeze", traitColor: "text-indigo-300/80", traitBg: "rgba(49,46,129,0.25)", traitBorder: "rgba(49,46,129,0.2)" },
+            payday: { nameColor: "text-amber-300", borderColor: "rgba(245,158,11,0.4)", trait: "Gold Boost", traitColor: "text-yellow-300/80", traitBg: "rgba(113,63,18,0.25)", traitBorder: "rgba(113,63,18,0.2)" },
+            reinforcements: { nameColor: "text-emerald-300", borderColor: "rgba(16,185,129,0.4)", trait: "Summon Units", traitColor: "text-emerald-300/80", traitBg: "rgba(6,78,59,0.25)", traitBorder: "rgba(6,78,59,0.2)" },
           };
           return (
             <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
@@ -176,8 +176,6 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     {label && (
                       <>
                         <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{spellData?.shortName ?? spellType}</span>
-                        <span className={`text-[6.5px] leading-tight text-center hidden sm:block ${label.briefColor}`}>{label.brief}</span>
-                        {/* Cost & Cooldown at a glance */}
                         <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
                           <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
                             style={{ background: spellCost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${spellCost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
@@ -190,6 +188,10 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                             <span className="text-blue-300/80">{spellCooldownSeconds}s</span>
                           </span>
                         </div>
+                        <span className="text-[6px] sm:text-[7px] font-semibold px-1 sm:px-1.5 py-px rounded mt-0.5 hidden sm:inline-block"
+                          style={{ background: label.traitBg, border: `1px solid ${label.traitBorder}` }}>
+                          <span className={label.traitColor}>{label.trait}</span>
+                        </span>
                       </>
                     )}
                     {isSelected && (
@@ -367,56 +369,56 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
         const spell = SPELL_DATA[hoveredSpell];
         const spellLevel = spellUpgradeLevels[hoveredSpell] ?? 0;
         return (
-          <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl z-50"
+          <div className="absolute bottom-full right-0 mb-2 w-80 rounded-xl z-50"
             style={{
               background: `linear-gradient(180deg, ${info.panelBg}, rgba(18,14,10,0.99))`,
               border: `1.5px solid ${info.panelBorder}`,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.7), inset 0 0 20px rgba(255,255,255,0.02)',
             }}>
             <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.04)' }} />
-            <div className="px-3 py-2 rounded-t-xl relative" style={{ background: info.headerBg }}>
-              <div className="flex items-center gap-2">
+            <div className="px-3.5 py-2.5 rounded-t-xl relative" style={{ background: info.headerBg }}>
+              <div className="flex items-center gap-2.5">
                 {info.icon}
                 <span className={`font-bold text-sm ${info.accentText}`}>{spell.name}</span>
-                <span className="ml-auto text-[10px] font-bold px-1.5 py-px rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
+                <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
                   LV {spellLevel + 1}/{MAX_SPELL_UPGRADE_LEVEL + 1}
                 </span>
               </div>
               <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent)' }} />
             </div>
-            <div className="px-3 py-2.5">
-              <div className="flex gap-1.5 mb-2">
-                <div className="rounded-md px-2 py-1 text-center flex-1"
+            <div className="px-3.5 py-3">
+              <div className="flex gap-2 mb-3">
+                <div className="rounded-lg px-2.5 py-1.5 text-center flex-1"
                   style={{ background: 'rgba(120,80,20,0.2)', border: '1px solid rgba(120,80,20,0.2)' }}>
-                  <div className="text-[7px] text-amber-500/70 font-medium uppercase">Cost</div>
-                  <div className="text-amber-300 font-bold text-[11px]">
+                  <div className="text-[8px] text-amber-500/70 font-medium uppercase tracking-wide">Cost</div>
+                  <div className="text-amber-300 font-bold text-xs">
                     {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
                   </div>
                 </div>
-                <div className="rounded-md px-2 py-1 text-center flex-1"
+                <div className="rounded-lg px-2.5 py-1.5 text-center flex-1"
                   style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.2)' }}>
-                  <div className="text-[7px] text-blue-500/70 font-medium uppercase">Cooldown</div>
-                  <div className="text-blue-300 font-bold text-[11px]">{spell.cooldown / 1000}s</div>
+                  <div className="text-[8px] text-blue-500/70 font-medium uppercase tracking-wide">Cooldown</div>
+                  <div className="text-blue-300 font-bold text-xs">{spell.cooldown / 1000}s</div>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-1.5 mb-2">
+              <div className="grid grid-cols-3 gap-2 mb-3">
                 {info.stats.map((stat) => (
-                  <div key={stat.label} className="rounded-md px-1.5 py-1 text-center"
+                  <div key={stat.label} className="rounded-lg px-2 py-1.5 text-center"
                     style={{ background: stat.statBg, border: `1px solid ${stat.statBorder}` }}>
                     <div className="flex items-center justify-center mb-0.5">{stat.icon}</div>
-                    <div className="text-[7px] text-stone-500 font-medium">{stat.label}</div>
-                    <div className={`font-bold text-[11px] ${stat.color}`}>{stat.value}</div>
+                    <div className="text-[8px] text-stone-500 font-medium">{stat.label}</div>
+                    <div className={`font-bold text-xs ${stat.color}`}>{stat.value}</div>
                   </div>
                 ))}
               </div>
-              <div className="mb-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
-              <div className="rounded-md px-2.5 py-2"
+              <div className="mb-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
+              <div className="rounded-lg px-3 py-2.5"
                 style={{ background: info.effectBg, border: '1px solid rgba(80,60,50,0.12)' }}>
-                <div className={`${info.effectLabel} uppercase text-[7px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
-                  <Sparkles size={8} className="opacity-60" />
+                <div className={`${info.effectLabel} uppercase text-[8px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
+                  <Sparkles size={9} className="opacity-60" />
                   How it works
                 </div>
-                <p className={`text-[10px] ${info.effectText} leading-relaxed`}>{info.effect}</p>
+                <p className={`text-[11px] ${info.effectText} leading-relaxed`}>{info.effect}</p>
               </div>
             </div>
           </div>

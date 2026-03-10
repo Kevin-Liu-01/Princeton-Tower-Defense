@@ -10,3 +10,18 @@ export { AnimatedCastle, MarchingEnemies } from "./animated";
 export { HERO_ABILITY_ICON_COLORS, HeroAbilityIcon, getHeroAbilityIcon } from "./hero-ability-icons";
 export { HERO_ICON_COLORS, HeroIcon } from "./hero-icons";
 export { SPELL_ICON_COLORS, SpellIcon } from "./spell-icons";
+export {
+  type SpriteFrameTheme,
+  buildThemeFromAccent,
+  TOWER_SPRITE_FRAME_THEME,
+  ENEMY_CATEGORY_SPRITE_FRAME_THEME,
+  SPECIAL_TOWER_SPRITE_THEME,
+  HAZARD_SPRITE_THEME,
+  getEnemySpriteFrameTheme,
+  FramedSprite,
+  SpriteShell,
+  SpecialTowerSprite,
+  HazardSprite,
+  renderSpecialTowerGlyph,
+  renderHazardGlyph,
+} from "./shared";

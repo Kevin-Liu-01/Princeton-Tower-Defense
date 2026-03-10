@@ -1,4 +1,5 @@
 import type { MapDecoration, MapHazard, Tower, TowerType } from "../types";
+import { computeGridPathLength, roundPathCorners } from "../utils/pathSmoothing";
 import { buildShowcaseTowers } from "./devShowcase";
 
 // =============================================================================
@@ -337,10 +338,6 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: -5, y: 2 },
     { x: 35, y: 2 },
   ],
-  dev_enemy_showcase_b: [
-    { x: -5, y: 28 },
-    { x: 35, y: 28 },
-  ],
   // =====================
   // REGION CHALLENGES
   // =====================
@@ -554,6 +551,19 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 39, y: 14 },
   ],
 };
+
+// Speed scale per path: originalLength / roundedLength.
+// Applied by getPathSegmentLength so enemies traverse rounded paths in the
+// same total time as the original straight-segment paths.
+export const MAP_PATH_SPEED_SCALES: Record<string, number> = {};
+
+for (const key of Object.keys(MAP_PATHS)) {
+  const originalLength = computeGridPathLength(MAP_PATHS[key]);
+  MAP_PATHS[key] = roundPathCorners(MAP_PATHS[key]);
+  const roundedLength = computeGridPathLength(MAP_PATHS[key]);
+  MAP_PATH_SPEED_SCALES[key] =
+    roundedLength > 0 ? originalLength / roundedLength : 1;
+}
 
 // =============================================================================
 // LEVEL DATA - All regions with theme info and wave count
@@ -1918,16 +1928,14 @@ export const LEVEL_DATA: Record<
     name: "Enemy Showcase",
     position: { x: 60, y: 60 },
     description:
-      "Dev-only sandbox. Dual paths, every tower at every upgrade level.",
+      "Dev-only sandbox. Every tower at every upgrade level.",
     camera: { offset: { x: -100, y: -390 }, zoom: 0.85 },
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
     levelKind: "custom",
     startingPawPoints: 99999,
-    heroSpawn: { x: 15, y: 15 },
-    dualPath: true,
-    secondaryPath: "dev_enemy_showcase_b",
+    heroSpawn: { x: 15, y: 2 },
     prePlacedTowers: buildShowcaseTowers,
   },
 };

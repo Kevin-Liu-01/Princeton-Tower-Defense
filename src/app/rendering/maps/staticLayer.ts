@@ -82,6 +82,7 @@ interface ChallengeBackdropPalette {
 
 const PATH_TENSION = 0.25;
 const PATH_SUBDIVISIONS = 8;
+const SMOOTH_PATH_SPACING = 24;
 // Slightly thicker visual roads while keeping gameplay hitboxes unchanged.
 const ROAD_BASE_WIDTH = Math.round(ROAD_EXCLUSION_BUFFER * 1.3);
 const ROAD_WOBBLE = 10;
@@ -348,6 +349,52 @@ function addPathWobble(
   return { left, right };
 }
 
+/**
+ * Resamples a polyline at uniform arc-length intervals so point density stays
+ * consistent regardless of how many input points exist.
+ */
+function resampleByArcLength(
+  points: Position[],
+  spacing: number,
+): Position[] {
+  if (points.length < 2) return points;
+
+  const arcLengths = [0];
+  for (let i = 1; i < points.length; i++) {
+    const dx = points[i].x - points[i - 1].x;
+    const dy = points[i].y - points[i - 1].y;
+    arcLengths.push(arcLengths[i - 1] + Math.sqrt(dx * dx + dy * dy));
+  }
+
+  const totalLength = arcLengths[arcLengths.length - 1];
+  if (totalLength < spacing) return points;
+
+  const numSamples = Math.max(2, Math.round(totalLength / spacing));
+  const result: Position[] = [];
+  let srcIdx = 0;
+
+  for (let i = 0; i <= numSamples; i++) {
+    const targetDist = (i / numSamples) * totalLength;
+
+    while (
+      srcIdx < arcLengths.length - 2 &&
+      arcLengths[srcIdx + 1] < targetDist
+    ) {
+      srcIdx++;
+    }
+
+    const segLen = arcLengths[srcIdx + 1] - arcLengths[srcIdx];
+    const t = segLen > 0 ? (targetDist - arcLengths[srcIdx]) / segLen : 0;
+
+    result.push({
+      x: points[srcIdx].x + (points[srcIdx + 1].x - points[srcIdx].x) * t,
+      y: points[srcIdx].y + (points[srcIdx + 1].y - points[srcIdx].y) * t,
+    });
+  }
+
+  return result;
+}
+
 function buildRoadGeometry(
   path: GridPosition[],
   mapSeed: number,
@@ -357,7 +404,8 @@ function buildRoadGeometry(
     return null;
   }
   const pathWorldPoints = path.map((p) => gridToWorldPath(p));
-  const smoothPath = generateSmoothPath(pathWorldPoints);
+  const rawSmooth = generateSmoothPath(pathWorldPoints);
+  const smoothPath = resampleByArcLength(rawSmooth, SMOOTH_PATH_SPACING);
   const { left, right } = addPathWobble(smoothPath, mapSeed);
   return {
     smoothPath,
@@ -419,8 +467,10 @@ function drawRoad(
     }
   }
   for (let i = screenCenter.length - 1; i >= 0; i--) {
-    const rx = screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.88;
-    const ry = screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.88;
+    const rx =
+      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.88;
+    const ry =
+      screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.88;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
@@ -432,7 +482,9 @@ function drawRoad(
     const lx =
       screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * topLayerBlend;
     const ly =
-      screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * topLayerBlend - 2;
+      screenCenter[i].y +
+      (screenLeft[i].y - screenCenter[i].y) * topLayerBlend -
+      2;
     if (i === 0) {
       ctx.moveTo(lx, ly);
     } else {
@@ -441,9 +493,12 @@ function drawRoad(
   }
   for (let i = screenCenter.length - 1; i >= 0; i--) {
     const rx =
-      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * topLayerBlend;
+      screenCenter[i].x +
+      (screenRight[i].x - screenCenter[i].x) * topLayerBlend;
     const ry =
-      screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * topLayerBlend - 2;
+      screenCenter[i].y +
+      (screenRight[i].y - screenCenter[i].y) * topLayerBlend -
+      2;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
@@ -544,7 +599,7 @@ function drawFlatRidge(
   segments: number,
   color: string,
   seed: number,
-  jaggedness: number = 1
+  jaggedness: number = 1,
 ): void {
   const rand = createSeededRandom(seed);
   ctx.fillStyle = color;
@@ -569,7 +624,7 @@ function drawIsoTile(
   y: number,
   tileWidth: number,
   tileHeight: number,
-  fillStyle: string
+  fillStyle: string,
 ): void {
   ctx.fillStyle = fillStyle;
   ctx.beginPath();
@@ -594,7 +649,7 @@ function parseColorToRgb(color: string): { r: number; g: number; b: number } {
   }
 
   const rgbMatch = trimmed.match(
-    /^rgba?\(\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)/i
+    /^rgba?\(\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)\s*,\s*([+-]?\d+\.?\d*)/i,
   );
   if (rgbMatch) {
     return {
@@ -622,12 +677,13 @@ function shadeHexColor(color: string, amount: number): string {
   return rgbToHex(
     clampRgb(rgb.r + amount),
     clampRgb(rgb.g + amount),
-    clampRgb(rgb.b + amount)
+    clampRgb(rgb.b + amount),
   );
 }
 
 function tileNoise(gx: number, gy: number, seed: number): number {
-  const value = Math.sin(gx * 12.9898 + gy * 78.233 + seed * 0.137) * 43758.5453;
+  const value =
+    Math.sin(gx * 12.9898 + gy * 78.233 + seed * 0.137) * 43758.5453;
   return value - Math.floor(value);
 }
 
@@ -651,13 +707,29 @@ function drawSoftCloud(
   y: number,
   width: number,
   height: number,
-  color: string
+  color: string,
 ): void {
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.ellipse(x, y, width * 0.42, height * 0.36, 0, 0, Math.PI * 2);
-  ctx.ellipse(x - width * 0.24, y + 1, width * 0.26, height * 0.26, -0.08, 0, Math.PI * 2);
-  ctx.ellipse(x + width * 0.22, y + 1, width * 0.24, height * 0.23, 0.12, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - width * 0.24,
+    y + 1,
+    width * 0.26,
+    height * 0.26,
+    -0.08,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + width * 0.22,
+    y + 1,
+    width * 0.24,
+    height * 0.23,
+    0.12,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 }
 
@@ -667,7 +739,7 @@ function renderChallengeSkyDecorations(
   height: number,
   mapSeed: number,
   themeKey: ChallengeThemeKey,
-  palette: ChallengeBackdropPalette
+  palette: ChallengeBackdropPalette,
 ): void {
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
@@ -681,7 +753,7 @@ function renderChallengeSkyDecorations(
         y,
         width * (0.08 + skyRandom() * 0.05),
         height * 0.06,
-        palette.skyAccent
+        palette.skyAccent,
       );
     }
     ctx.strokeStyle = "rgba(70, 90, 70, 0.45)";
@@ -722,7 +794,14 @@ function renderChallengeSkyDecorations(
   if (themeKey === "desert") {
     const sunX = width * 0.82;
     const sunY = height * 0.14;
-    const sunGrad = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, width * 0.1);
+    const sunGrad = ctx.createRadialGradient(
+      sunX,
+      sunY,
+      4,
+      sunX,
+      sunY,
+      width * 0.1,
+    );
     sunGrad.addColorStop(0, "rgba(255,245,200,0.92)");
     sunGrad.addColorStop(0.45, "rgba(255,212,138,0.45)");
     sunGrad.addColorStop(1, "rgba(255,212,138,0)");
@@ -746,7 +825,12 @@ function renderChallengeSkyDecorations(
   }
 
   if (themeKey === "winter") {
-    const aurora = ctx.createLinearGradient(0, height * 0.03, width, height * 0.42);
+    const aurora = ctx.createLinearGradient(
+      0,
+      height * 0.03,
+      width,
+      height * 0.42,
+    );
     aurora.addColorStop(0, "rgba(128, 215, 255, 0)");
     aurora.addColorStop(0.2, "rgba(128, 215, 255, 0.14)");
     aurora.addColorStop(0.55, "rgba(170, 244, 232, 0.18)");
@@ -761,7 +845,7 @@ function renderChallengeSkyDecorations(
       width * 0.54,
       height * 0.28,
       width * 0.92,
-      height * 0.15
+      height * 0.15,
     );
     ctx.stroke();
 
@@ -793,7 +877,7 @@ function renderChallengeSkyDecorations(
         6 + i * 1.8,
         0.1,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
     }
@@ -815,7 +899,7 @@ function drawIsometricMountainMass(
   height: number,
   mapSeed: number,
   themeKey: ChallengeThemeKey,
-  palette: ChallengeBackdropPalette
+  palette: ChallengeBackdropPalette,
 ): void {
   const rand = createSeededRandom(mapSeed + 1601);
   const ridgeSegments =
@@ -864,13 +948,21 @@ function drawIsometricMountainMass(
     width * 0.08,
     width * 0.5,
     height * 0.9,
-    width * 0.6
+    width * 0.6,
   );
   mountainShadow.addColorStop(0, hexToRgba(palette.mountainShadow, 0.45));
   mountainShadow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = mountainShadow;
   ctx.beginPath();
-  ctx.ellipse(width * 0.5, height * 0.9, width * 0.54, height * 0.16, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    width * 0.5,
+    height * 0.9,
+    width * 0.54,
+    height * 0.16,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   for (let i = 0; i < ridgePoints.length - 1; i++) {
@@ -878,7 +970,8 @@ function drawIsometricMountainMass(
     const topRight = ridgePoints[i + 1];
     const bottomLeft = basePoints[i];
     const bottomRight = basePoints[i + 1];
-    ctx.fillStyle = i % 2 === 0 ? palette.mountainFacetA : palette.mountainFacetB;
+    ctx.fillStyle =
+      i % 2 === 0 ? palette.mountainFacetA : palette.mountainFacetB;
     ctx.beginPath();
     ctx.moveTo(topLeft.x, topLeft.y);
     ctx.lineTo(topRight.x, topRight.y);
@@ -903,7 +996,12 @@ function drawIsometricMountainMass(
   ctx.closePath();
   ctx.fill();
 
-  const leftShade = ctx.createLinearGradient(0, height * 0.24, width * 0.5, height);
+  const leftShade = ctx.createLinearGradient(
+    0,
+    height * 0.24,
+    width * 0.5,
+    height,
+  );
   leftShade.addColorStop(0, hexToRgba(palette.mountainLeft, 0.38));
   leftShade.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = leftShade;
@@ -917,13 +1015,21 @@ function drawIsometricMountainMass(
   ctx.closePath();
   ctx.fill();
 
-  const rightShade = ctx.createLinearGradient(width, height * 0.23, width * 0.5, height);
+  const rightShade = ctx.createLinearGradient(
+    width,
+    height * 0.23,
+    width * 0.5,
+    height,
+  );
   rightShade.addColorStop(0, hexToRgba(palette.mountainRight, 0.42));
   rightShade.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = rightShade;
   ctx.beginPath();
   ctx.moveTo(width + 40, height);
-  ctx.lineTo(ridgePoints[ridgePoints.length - 1].x, ridgePoints[ridgePoints.length - 1].y + 10);
+  ctx.lineTo(
+    ridgePoints[ridgePoints.length - 1].x,
+    ridgePoints[ridgePoints.length - 1].y + 10,
+  );
   for (let i = ridgePoints.length - 2; i >= Math.ceil(ridgeSegments / 2); i--) {
     ctx.lineTo(ridgePoints[i].x, ridgePoints[i].y + 2);
   }
@@ -953,8 +1059,14 @@ function drawIsometricMountainMass(
       const prev = ridgePoints[Math.max(0, index - 1)];
       ctx.beginPath();
       ctx.moveTo(point.x, point.y + 3);
-      ctx.lineTo(prev.x + (point.x - prev.x) * 0.42, point.y + crestDepth * 0.55);
-      ctx.lineTo(next.x - (next.x - point.x) * 0.42, point.y + crestDepth * 0.6);
+      ctx.lineTo(
+        prev.x + (point.x - prev.x) * 0.42,
+        point.y + crestDepth * 0.55,
+      );
+      ctx.lineTo(
+        next.x - (next.x - point.x) * 0.42,
+        point.y + crestDepth * 0.6,
+      );
       ctx.closePath();
       ctx.fill();
     });
@@ -971,7 +1083,7 @@ function drawIsometricMountainMass(
         height * 0.05,
         -0.2,
         Math.PI * 0.95,
-        Math.PI * 1.86
+        Math.PI * 1.86,
       );
       ctx.stroke();
     }
@@ -1009,7 +1121,7 @@ function drawIsometricMountainMass(
         height * 0.045,
         -0.15,
         Math.PI * 0.95,
-        Math.PI * 1.86
+        Math.PI * 1.86,
       );
       ctx.stroke();
     }
@@ -1021,7 +1133,7 @@ function renderChallengeMountainBackdrop(
   width: number,
   height: number,
   mapSeed: number,
-  themeKey: ChallengeThemeKey
+  themeKey: ChallengeThemeKey,
 ): void {
   const palette = CHALLENGE_BACKDROP_PALETTES[themeKey];
   const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
@@ -1048,7 +1160,7 @@ function renderChallengeMountainBackdrop(
     height * 0.04,
     11,
     palette.farRidge,
-    mapSeed + 901
+    mapSeed + 901,
   );
   drawFlatRidge(
     ctx,
@@ -1059,7 +1171,7 @@ function renderChallengeMountainBackdrop(
     13,
     palette.midRidge,
     mapSeed + 947,
-    1.2
+    1.2,
   );
   drawFlatRidge(
     ctx,
@@ -1070,7 +1182,7 @@ function renderChallengeMountainBackdrop(
     15,
     palette.nearRidge,
     mapSeed + 983,
-    1.35
+    1.35,
   );
 
   drawIsometricMountainMass(ctx, width, height, mapSeed, themeKey, palette);
@@ -1090,7 +1202,7 @@ function renderChallengeWorldMountain(
   tileWidth: number,
   tileHeight: number,
   toScreen: (p: Position) => Position,
-  themeKey: ChallengeThemeKey
+  themeKey: ChallengeThemeKey,
 ): number[] | null {
   const segments = getChallengePathSegments(selectedMap);
   const palette = CHALLENGE_BACKDROP_PALETTES[themeKey];
@@ -1132,7 +1244,12 @@ function renderChallengeWorldMountain(
       for (const offset of expansionOffsets) {
         const nx = gx + offset.x;
         const ny = gy + offset.y;
-        if (nx < bounds.minX || nx > bounds.maxX || ny < bounds.minY || ny > bounds.maxY) {
+        if (
+          nx < bounds.minX ||
+          nx > bounds.maxX ||
+          ny < bounds.minY ||
+          ny > bounds.maxY
+        ) {
           continue;
         }
         const nextKey = toCellKey(nx, ny);
@@ -1154,20 +1271,27 @@ function renderChallengeWorldMountain(
   });
 
   const maxLayerIndex = Math.max(0, ...towerLayerIndexByCell.values());
-  const blockHeight = CHALLENGE_MOUNTAIN_DEPTH.terraceStep * CHALLENGE_TERRACE_BLOCK_SCALE;
+  const blockHeight =
+    CHALLENGE_MOUNTAIN_DEPTH.terraceStep * CHALLENGE_TERRACE_BLOCK_SCALE;
   const layerDepthByIndex = new Array<number>(maxLayerIndex + 1).fill(0);
   const depthProfileRandom = createSeededRandom(mapSeed + 1883);
   let cumulativeLayerDepth = 0;
   for (let layer = 1; layer <= maxLayerIndex; layer++) {
     const layerProgress = layer / Math.max(1, maxLayerIndex);
     const minBlocks =
-      layer === 1 ? CHALLENGE_TOP_TIER_MIN_BLOCKS : CHALLENGE_TERRACE_STEP_MIN_BLOCKS;
+      layer === 1
+        ? CHALLENGE_TOP_TIER_MIN_BLOCKS
+        : CHALLENGE_TERRACE_STEP_MIN_BLOCKS;
     const boostedMaxBlocks =
       CHALLENGE_TERRACE_STEP_MAX_BLOCKS +
       layerProgress * CHALLENGE_TERRACE_OUTER_BOOST_BLOCKS;
     const randomBlocks =
-      minBlocks + depthProfileRandom() * Math.max(0, boostedMaxBlocks - minBlocks);
-    const quantizedBlocks = Math.max(minBlocks, Math.round(randomBlocks * 2) / 2);
+      minBlocks +
+      depthProfileRandom() * Math.max(0, boostedMaxBlocks - minBlocks);
+    const quantizedBlocks = Math.max(
+      minBlocks,
+      Math.round(randomBlocks * 2) / 2,
+    );
     cumulativeLayerDepth += quantizedBlocks * blockHeight;
     layerDepthByIndex[layer] = cumulativeLayerDepth;
   }
@@ -1185,7 +1309,7 @@ function renderChallengeWorldMountain(
   };
   const voidDepth = Math.max(
     CHALLENGE_MOUNTAIN_DEPTH.baseShadow,
-    depthForLayer(maxLayerIndex + 2)
+    depthForLayer(maxLayerIndex + 2),
   );
   const seamOverlap = Math.max(1.5, tileHeight * 0.14);
   const getLayerIndex = (gx: number, gy: number): number | null => {
@@ -1194,7 +1318,7 @@ function renderChallengeWorldMountain(
   };
   const getNeighborInfo = (
     gx: number,
-    gy: number
+    gy: number,
   ): { exists: boolean; depth: number } => {
     const layer = getLayerIndex(gx, gy);
     if (layer === null) {
@@ -1227,18 +1351,39 @@ function renderChallengeWorldMountain(
     });
 
   type PrecomputedCell = {
-    cell: typeof renderCells[0];
-    topNoise: number; cliffNoise: number; layerNorm: number;
-    northDrop: number; westDrop: number; northwestDrop: number;
-    northeastDrop: number; southwestDrop: number;
-    rightDrop: number; southDrop: number; southeastDrop: number;
-    topX: number; topY: number; rightX: number; rightY: number;
-    leftX: number; leftY: number; bottomX: number; bottomY: number;
+    cell: (typeof renderCells)[0];
+    topNoise: number;
+    cliffNoise: number;
+    layerNorm: number;
+    northDrop: number;
+    westDrop: number;
+    northwestDrop: number;
+    northeastDrop: number;
+    southwestDrop: number;
+    rightDrop: number;
+    southDrop: number;
+    southeastDrop: number;
+    topX: number;
+    topY: number;
+    rightX: number;
+    rightY: number;
+    leftX: number;
+    leftY: number;
+    bottomX: number;
+    bottomY: number;
   };
 
   const precomputed: PrecomputedCell[] = renderCells.map((cell) => {
-    const topNoise = tileNoise(cell.gx, cell.gy, mapSeed + 257 + cell.rawLayerIndex * 11);
-    const cliffNoise = tileNoise(cell.gx, cell.gy, mapSeed + 743 + cell.rawLayerIndex * 17);
+    const topNoise = tileNoise(
+      cell.gx,
+      cell.gy,
+      mapSeed + 257 + cell.rawLayerIndex * 11,
+    );
+    const cliffNoise = tileNoise(
+      cell.gx,
+      cell.gy,
+      mapSeed + 743 + cell.rawLayerIndex * 17,
+    );
     const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
     const isTopPlateauCell = cell.layerIndex === 0;
 
@@ -1251,11 +1396,21 @@ function renderChallengeWorldMountain(
     const southwestNeighbor = getNeighborInfo(cell.gx - 1, cell.gy + 1);
     const southeastNeighbor = getNeighborInfo(cell.gx + 1, cell.gy + 1);
 
-    const rawNW = northwestNeighbor.exists ? Math.max(0, northwestNeighbor.depth - cell.depth) : 0;
-    const rawN = northNeighbor.exists ? Math.max(0, northNeighbor.depth - cell.depth) : 0;
-    const rawW = westNeighbor.exists ? Math.max(0, westNeighbor.depth - cell.depth) : 0;
-    const rawNE = northeastNeighbor.exists ? Math.max(0, northeastNeighbor.depth - cell.depth) : 0;
-    const rawSW = southwestNeighbor.exists ? Math.max(0, southwestNeighbor.depth - cell.depth) : 0;
+    const rawNW = northwestNeighbor.exists
+      ? Math.max(0, northwestNeighbor.depth - cell.depth)
+      : 0;
+    const rawN = northNeighbor.exists
+      ? Math.max(0, northNeighbor.depth - cell.depth)
+      : 0;
+    const rawW = westNeighbor.exists
+      ? Math.max(0, westNeighbor.depth - cell.depth)
+      : 0;
+    const rawNE = northeastNeighbor.exists
+      ? Math.max(0, northeastNeighbor.depth - cell.depth)
+      : 0;
+    const rawSW = southwestNeighbor.exists
+      ? Math.max(0, southwestNeighbor.depth - cell.depth)
+      : 0;
 
     const northwestDrop = isTopPlateauCell ? 0 : rawNW;
     const northDrop = isTopPlateauCell ? 0 : rawN;
@@ -1268,9 +1423,18 @@ function renderChallengeWorldMountain(
 
     const tileTopY = cell.screenPos.y + cell.depth;
     return {
-      cell, topNoise, cliffNoise, layerNorm,
-      northDrop, westDrop, northwestDrop, northeastDrop, southwestDrop,
-      rightDrop, southDrop, southeastDrop,
+      cell,
+      topNoise,
+      cliffNoise,
+      layerNorm,
+      northDrop,
+      westDrop,
+      northwestDrop,
+      northeastDrop,
+      southwestDrop,
+      rightDrop,
+      southDrop,
+      southeastDrop,
       topX: cell.screenPos.x,
       topY: tileTopY,
       rightX: cell.screenPos.x + tileWidth * 0.5,
@@ -1288,15 +1452,19 @@ function renderChallengeWorldMountain(
     if (arr) arr.push(d);
     else cellsByLayer.set(d.cell.layerIndex, [d]);
   }
-  const sortedLayerIndices = Array.from(cellsByLayer.keys()).sort((a, b) => b - a);
+  const sortedLayerIndices = Array.from(cellsByLayer.keys()).sort(
+    (a, b) => b - a,
+  );
 
   const drawBackFaces = (d: PrecomputedCell) => {
     if (d.northDrop > 0.5) {
       const northColor = shadeHexColor(
         blendHexColors(
-          palette.mountainRight, palette.mountainFacetB,
-          0.08 + d.layerNorm * 0.26 + d.cliffNoise * 0.1
-        ), -14
+          palette.mountainRight,
+          palette.mountainFacetB,
+          0.08 + d.layerNorm * 0.26 + d.cliffNoise * 0.1,
+        ),
+        -14,
       );
       ctx.fillStyle = northColor;
       ctx.beginPath();
@@ -1311,9 +1479,11 @@ function renderChallengeWorldMountain(
     if (d.westDrop > 0.5) {
       const westColor = shadeHexColor(
         blendHexColors(
-          palette.mountainLeft, palette.mountainFacetA,
-          0.08 + d.layerNorm * 0.22 + d.cliffNoise * 0.1
-        ), -12
+          palette.mountainLeft,
+          palette.mountainFacetA,
+          0.08 + d.layerNorm * 0.22 + d.cliffNoise * 0.1,
+        ),
+        -12,
       );
       ctx.fillStyle = westColor;
       ctx.beginPath();
@@ -1327,7 +1497,7 @@ function renderChallengeWorldMountain(
 
     const topCornerDrop = Math.max(
       Math.min(d.northDrop, d.westDrop),
-      d.northwestDrop > 0.5 ? d.northwestDrop * 0.74 : 0
+      d.northwestDrop > 0.5 ? d.northwestDrop * 0.74 : 0,
     );
     if (topCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.16);
@@ -1342,31 +1512,41 @@ function renderChallengeWorldMountain(
 
   const drawTopTile = (d: PrecomputedCell) => {
     const topBase = blendHexColors(
-      palette.mountainTop, palette.landHighlight,
-      0.32 + (1 - d.layerNorm) * 0.12 + d.topNoise * 0.15
+      palette.mountainTop,
+      palette.landHighlight,
+      0.32 + (1 - d.layerNorm) * 0.12 + d.topNoise * 0.15,
     );
     const topColor = shadeHexColor(
       blendHexColors(topBase, palette.mountainFacetA, d.layerNorm * 0.26),
-      Math.round((d.topNoise - 0.48) * 12)
+      Math.round((d.topNoise - 0.48) * 12),
     );
     drawIsoTile(
       ctx,
       d.cell.screenPos.x,
       d.cell.screenPos.y + d.cell.depth,
-      tileWidth, tileHeight, topColor
+      tileWidth,
+      tileHeight,
+      topColor,
     );
 
     if (d.topNoise > 0.34) {
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.14 + d.topNoise * 0.08);
+      ctx.strokeStyle = hexToRgba(
+        palette.mountainShadow,
+        0.14 + d.topNoise * 0.08,
+      );
       ctx.lineWidth = Math.max(0.52, tileHeight * 0.045);
       ctx.beginPath();
       ctx.moveTo(
         d.cell.screenPos.x - tileWidth * 0.16,
-        d.cell.screenPos.y + d.cell.depth + tileHeight * (0.43 + d.topNoise * 0.06)
+        d.cell.screenPos.y +
+          d.cell.depth +
+          tileHeight * (0.43 + d.topNoise * 0.06),
       );
       ctx.lineTo(
         d.cell.screenPos.x + tileWidth * (0.18 + d.topNoise * 0.05),
-        d.cell.screenPos.y + d.cell.depth + tileHeight * (0.5 + d.topNoise * 0.07)
+        d.cell.screenPos.y +
+          d.cell.depth +
+          tileHeight * (0.5 + d.topNoise * 0.07),
       );
       ctx.stroke();
     }
@@ -1376,14 +1556,21 @@ function renderChallengeWorldMountain(
     if (d.rightDrop > 0.5) {
       const rightColorTop = shadeHexColor(
         blendHexColors(
-          palette.mountainRight, palette.mountainFacetB,
-          0.22 + d.layerNorm * 0.45 + d.cliffNoise * 0.15
-        ), -4
+          palette.mountainRight,
+          palette.mountainFacetB,
+          0.22 + d.layerNorm * 0.45 + d.cliffNoise * 0.15,
+        ),
+        -4,
       );
-      const rightColorBot = shadeHexColor(rightColorTop, -18 - Math.round(d.layerNorm * 8));
+      const rightColorBot = shadeHexColor(
+        rightColorTop,
+        -18 - Math.round(d.layerNorm * 8),
+      );
       const rightGrad = ctx.createLinearGradient(
-        0, (d.rightY + d.bottomY) * 0.5,
-        0, (d.rightY + d.bottomY) * 0.5 + d.rightDrop
+        0,
+        (d.rightY + d.bottomY) * 0.5,
+        0,
+        (d.rightY + d.bottomY) * 0.5 + d.rightDrop,
       );
       rightGrad.addColorStop(0, rightColorTop);
       rightGrad.addColorStop(1, rightColorBot);
@@ -1396,9 +1583,15 @@ function renderChallengeWorldMountain(
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.22 + d.layerNorm * 0.18);
+      ctx.strokeStyle = hexToRgba(
+        palette.mountainShadow,
+        0.22 + d.layerNorm * 0.18,
+      );
       ctx.lineWidth = Math.max(0.6, tileHeight * 0.05);
-      const rightLineCount = Math.max(1, Math.floor(d.rightDrop / (blockHeight * 0.9)));
+      const rightLineCount = Math.max(
+        1,
+        Math.floor(d.rightDrop / (blockHeight * 0.9)),
+      );
       for (let i = 1; i <= rightLineCount; i++) {
         const t = i / (rightLineCount + 1);
         const lineY = d.rightY + d.rightDrop * t;
@@ -1412,14 +1605,21 @@ function renderChallengeWorldMountain(
     if (d.southDrop > 0.5) {
       const leftColorTop = shadeHexColor(
         blendHexColors(
-          palette.mountainLeft, palette.mountainFacetA,
-          0.2 + d.layerNorm * 0.4 + d.cliffNoise * 0.12
-        ), 0
+          palette.mountainLeft,
+          palette.mountainFacetA,
+          0.2 + d.layerNorm * 0.4 + d.cliffNoise * 0.12,
+        ),
+        0,
       );
-      const leftColorBot = shadeHexColor(leftColorTop, -16 - Math.round(d.layerNorm * 6));
+      const leftColorBot = shadeHexColor(
+        leftColorTop,
+        -16 - Math.round(d.layerNorm * 6),
+      );
       const leftGrad = ctx.createLinearGradient(
-        0, (d.leftY + d.bottomY) * 0.5,
-        0, (d.leftY + d.bottomY) * 0.5 + d.southDrop
+        0,
+        (d.leftY + d.bottomY) * 0.5,
+        0,
+        (d.leftY + d.bottomY) * 0.5 + d.southDrop,
       );
       leftGrad.addColorStop(0, leftColorTop);
       leftGrad.addColorStop(1, leftColorBot);
@@ -1432,9 +1632,15 @@ function renderChallengeWorldMountain(
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.18 + d.layerNorm * 0.16);
+      ctx.strokeStyle = hexToRgba(
+        palette.mountainShadow,
+        0.18 + d.layerNorm * 0.16,
+      );
       ctx.lineWidth = Math.max(0.55, tileHeight * 0.045);
-      const southLineCount = Math.max(1, Math.floor(d.southDrop / (blockHeight * 0.88)));
+      const southLineCount = Math.max(
+        1,
+        Math.floor(d.southDrop / (blockHeight * 0.88)),
+      );
       for (let i = 1; i <= southLineCount; i++) {
         const t = i / (southLineCount + 1);
         const lineY = d.leftY + d.southDrop * t;
@@ -1447,21 +1653,27 @@ function renderChallengeWorldMountain(
 
     const rightCornerDrop = Math.max(
       Math.min(d.northDrop, d.rightDrop),
-      d.northeastDrop > 0.5 ? d.northeastDrop * 0.74 : 0
+      d.northeastDrop > 0.5 ? d.northeastDrop * 0.74 : 0,
     );
     if (rightCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
       ctx.beginPath();
       ctx.moveTo(d.rightX + seamOverlap * 0.25, d.rightY);
-      ctx.lineTo(d.rightX + tileWidth * 0.08, d.rightY + rightCornerDrop * 0.78);
-      ctx.lineTo(d.rightX - tileWidth * 0.08, d.rightY + rightCornerDrop * 0.78);
+      ctx.lineTo(
+        d.rightX + tileWidth * 0.08,
+        d.rightY + rightCornerDrop * 0.78,
+      );
+      ctx.lineTo(
+        d.rightX - tileWidth * 0.08,
+        d.rightY + rightCornerDrop * 0.78,
+      );
       ctx.closePath();
       ctx.fill();
     }
 
     const leftCornerDrop = Math.max(
       Math.min(d.westDrop, d.southDrop),
-      d.southwestDrop > 0.5 ? d.southwestDrop * 0.74 : 0
+      d.southwestDrop > 0.5 ? d.southwestDrop * 0.74 : 0,
     );
     if (leftCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
@@ -1475,14 +1687,20 @@ function renderChallengeWorldMountain(
 
     const bottomCornerDrop = Math.max(
       Math.min(d.rightDrop, d.southDrop),
-      d.southeastDrop > 0.5 ? d.southeastDrop * 0.78 : 0
+      d.southeastDrop > 0.5 ? d.southeastDrop * 0.78 : 0,
     );
     if (bottomCornerDrop > 0.5) {
       ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.28);
       ctx.beginPath();
       ctx.moveTo(d.bottomX, d.bottomY - seamOverlap);
-      ctx.lineTo(d.bottomX + tileWidth * 0.09, d.bottomY + bottomCornerDrop * 0.8);
-      ctx.lineTo(d.bottomX - tileWidth * 0.09, d.bottomY + bottomCornerDrop * 0.8);
+      ctx.lineTo(
+        d.bottomX + tileWidth * 0.09,
+        d.bottomY + bottomCornerDrop * 0.8,
+      );
+      ctx.lineTo(
+        d.bottomX - tileWidth * 0.09,
+        d.bottomY + bottomCornerDrop * 0.8,
+      );
       ctx.closePath();
       ctx.fill();
     }
@@ -1564,7 +1782,7 @@ export function renderStaticMapLayer({
       cssWidth,
       cssHeight,
       mapSeed,
-      mapThemeKey
+      mapThemeKey,
     );
 
     challengeDistanceByCell = renderChallengeWorldMountain(
@@ -1574,7 +1792,7 @@ export function renderStaticMapLayer({
       tileWidth,
       tileHeight,
       toScreen,
-      mapThemeKey
+      mapThemeKey,
     );
   } else {
     const gradient = ctx.createRadialGradient(
@@ -1630,7 +1848,10 @@ export function renderStaticMapLayer({
         const screenPos = toScreen(worldPos);
         const tintBaseAlpha = isChallengeTopLayer ? 0.01 : 0.02;
         const tintVarAlpha = isChallengeTopLayer ? 0.02 : 0.03;
-        ctx.fillStyle = hexToRgba(theme.accent, tintBaseAlpha + gridRandom() * tintVarAlpha);
+        ctx.fillStyle = hexToRgba(
+          theme.accent,
+          tintBaseAlpha + gridRandom() * tintVarAlpha,
+        );
         ctx.beginPath();
         ctx.moveTo(screenPos.x, screenPos.y);
         ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y + tileHeight / 2);
@@ -1658,16 +1879,7 @@ export function renderStaticMapLayer({
     if (!road) continue;
 
     roads.push(road);
-    drawRoad(
-      ctx,
-      road,
-      theme,
-      cameraZoom,
-      mapSeed,
-      0.72,
-      true,
-      toScreen,
-    );
+    drawRoad(ctx, road, theme, cameraZoom, mapSeed, 0.72, true, toScreen);
     fogEndpoints.push(...getFogEndpoints(road));
   }
 

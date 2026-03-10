@@ -75,6 +75,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
       showTopBottomBorders={false}
     >
       <div
+        data-tutorial="build-menu"
         className="relative z-20"
         style={{
           background: panelGradientReversed,

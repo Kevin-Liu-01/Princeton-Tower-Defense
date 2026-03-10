@@ -57,6 +57,9 @@ export const MELEE_RANGE = 60; // Close range where ranged units switch to melee
 export const FORMATION_SPACING = 30; // Distance between troops in formation
 export const ALLY_ALERT_RANGE = 150; // Range within which allies share aggro when one is engaging
 export const ENEMY_SPEED_MODIFIER = 1.25; // Global enemy speed multiplier (slower enemies)
+export const MAX_TROOP_PATH_DISTANCE = 30; // Max distance troops can wander from the path
+export const MAX_HERO_PATH_DISTANCE = 45; // Softer path constraint for player-controlled hero
+export const UNIT_SETTLE_DISTANCE = 15; // When within this distance of home and idle, suppress separation
 
 export const DEFAULT_CAMERA_OFFSET: Position = {
   x: -40,

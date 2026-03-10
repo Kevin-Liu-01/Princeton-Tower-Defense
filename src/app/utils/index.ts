@@ -13,6 +13,7 @@ import type {
 import {
   TILE_SIZE,
   MAP_PATHS,
+  MAP_PATH_SPEED_SCALES,
   TOWER_COLORS,
   TROOP_SPREAD_RADIUS,
   HERO_PATH_HITBOX_SIZE,
@@ -1158,7 +1159,8 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-// Get the length of a path segment in world units
+// Get the length of a path segment in world units, scaled so that rounded
+// paths preserve the same total traversal time as the original straight paths.
 export function getPathSegmentLength(
   pathIndex: number,
   mapKey: string,
@@ -1168,7 +1170,8 @@ export function getPathSegmentLength(
 
   const p1 = gridToWorldPath(path[pathIndex]);
   const p2 = gridToWorldPath(path[pathIndex + 1]);
-  return distance(p1, p2);
+  const scale = MAP_PATH_SPEED_SCALES[mapKey] ?? 1;
+  return distance(p1, p2) * scale;
 }
 
 // Clamp utility
@@ -1486,7 +1489,6 @@ export interface TroopMoveInfo {
   ownerType: "station" | "barracks" | "spell" | "hero" | "hero_summon";
   ownerId: string;
 }
-
 
 export function getTroopMoveInfo(
   troop: Troop,

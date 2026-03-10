@@ -157,6 +157,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
   return (
     <div
+      data-tutorial="hero-spell-bar"
       className="px-2 sm:px-3 py-2 flex items-center justify-between relative z-20 pointer-events-none"
       style={{ zIndex: 100 }}
     >

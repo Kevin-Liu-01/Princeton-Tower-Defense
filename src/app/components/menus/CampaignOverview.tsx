@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo } from "react";
+import Image from "next/image";
 import {
   Star,
   Swords,
@@ -93,10 +94,12 @@ function getPreviewImage(levelId: string): string | undefined {
 function MapPreviewBg({ src, fadeColor }: { src: string; fadeColor: string }) {
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-      <img
+      <Image
         src={src}
         alt=""
-        className="absolute right-0 top-0 h-full w-[65%] object-cover object-center opacity-30"
+        fill
+        sizes="400px"
+        className="absolute right-0 top-0 !w-[65%] !left-auto object-cover object-center opacity-30"
         style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }}
       />
       <div
@@ -202,10 +205,29 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-auto">
+    <div className="flex-1 flex flex-col h-full overflow-auto relative">
+      {/* Decorative top-right corner image with gradient fade */}
+      {recommended && getPreviewImage(recommended.id) && (
+        <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none z-0 overflow-hidden">
+          <Image
+            src={getPreviewImage(recommended.id)!}
+            alt=""
+            fill
+            sizes="192px"
+            className="object-cover opacity-20"
+            style={{
+              maskImage:
+                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.5) 30%, transparent 65%)",
+              WebkitMaskImage:
+                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.5) 30%, transparent 65%)",
+            }}
+          />
+        </div>
+      )}
+
       {/* Top divider */}
       <div
-        className="h-px flex-shrink-0"
+        className="h-px flex-shrink-0 relative z-10"
         style={{
           background: `linear-gradient(90deg, transparent, ${GOLD.border35} 30%, ${GOLD.bright50} 50%, ${GOLD.border35} 70%, transparent)`,
         }}
@@ -213,7 +235,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
 
       {/* Header */}
       <div
-        className="flex-shrink-0 px-4 py-3"
+        className="flex-shrink-0 px-4 py-3 relative z-10"
         style={{ borderBottom: `1px solid ${GOLD.border25}` }}
       >
         <div className="flex items-center gap-2 mb-3">
@@ -344,27 +366,32 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
             <div className="relative px-3 py-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Crown size={14} className="text-amber-300" />
+              <div className="flex items-center gap-1.5 mb-2">
+                <Crown size={12} className="text-amber-300/80" />
                 <span className="text-[9px] font-bold text-amber-300/90 uppercase tracking-[0.15em]">
                   Continue Campaign
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-bold text-amber-100">
-                    {recommended.name}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0">
+                    <RegionIcon type={recommended.region} size={36} framed />
                   </div>
-                  <div className="text-[10px] text-amber-400/70">
-                    {REGION_META[recommended.region]?.displayName} &middot;{" "}
-                    {recommended.difficulty === 1
-                      ? "Easy"
-                      : recommended.difficulty === 2
-                        ? "Medium"
-                        : "Hard"}
+                  <div className="flex flex-col items-start min-w-0">
+                    <div className="text-sm font-bold text-amber-100 leading-tight">
+                      {recommended.name}
+                    </div>
+                    <div className="text-[10px] text-amber-400/70 mt-0.5">
+                      {REGION_META[recommended.region]?.displayName} &middot;{" "}
+                      {recommended.difficulty === 1
+                        ? "Easy"
+                        : recommended.difficulty === 2
+                          ? "Medium"
+                          : "Hard"}
+                    </div>
                   </div>
                 </div>
-                <ChevronRight size={20} className="text-amber-300/80" />
+                <ChevronRight size={20} className="text-amber-300/80 shrink-0" />
               </div>
             </div>
           </button>

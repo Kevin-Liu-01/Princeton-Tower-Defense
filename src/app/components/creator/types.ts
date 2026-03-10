@@ -89,6 +89,24 @@ export interface MapPresetTemplate {
   };
 }
 
+export type PresetSection = "waves" | "decorations" | "hazards" | "objectives" | "theme";
+
+export const ALL_PRESET_SECTIONS: PresetSection[] = [
+  "waves",
+  "decorations",
+  "hazards",
+  "objectives",
+  "theme",
+];
+
+export const PRESET_SECTION_LABELS: Record<PresetSection, string> = {
+  waves: "Waves",
+  decorations: "Decorations",
+  hazards: "Hazards",
+  objectives: "Objectives",
+  theme: "Theme & Settings",
+};
+
 export interface ObjectiveTypeStats {
   title: string;
   effect: string;

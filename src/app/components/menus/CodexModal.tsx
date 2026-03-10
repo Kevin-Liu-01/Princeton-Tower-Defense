@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Star,
   Book,
@@ -1344,10 +1345,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
         >
           {/* Inner ghost border */}
           <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-          <img
+          <Image
             src="/images/gameplay-latest-zoomed.png"
             alt="Battle Scene"
-            className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.05] pointer-events-none select-none"
+            fill
+            sizes="100vw"
+            className="z-5 object-bottom object-cover opacity-[0.05] pointer-events-none select-none"
           />
 
           {/* Header */}

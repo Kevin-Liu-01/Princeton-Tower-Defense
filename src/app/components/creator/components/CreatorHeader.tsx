@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
   Compass,
+  Download,
   Layers,
   MapPin,
-  Paintbrush,
   Sparkles,
-  Swords,
-  Target,
   X,
 } from "lucide-react";
-import type { CreatorDraftState } from "../types";
+import type { CreatorDraftState, PresetSection } from "../types";
+import { ALL_PRESET_SECTIONS, PRESET_SECTION_LABELS } from "../types";
 import type { MapTheme } from "../../../types";
 import { THEME_OPTIONS } from "../constants";
 import { formatAssetName } from "../utils/gridUtils";
@@ -22,6 +21,7 @@ interface CreatorHeaderProps {
   waveTemplateOptions: { value: string; label: string }[];
   onUpdateDraft: (patch: Partial<CreatorDraftState>) => void;
   onApplyMapPreset: (presetId: string) => void;
+  onApplyPresetSections: (presetId: string, sections: PresetSection[]) => void;
   onClose: () => void;
 }
 
@@ -37,9 +37,32 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
   waveTemplateOptions,
   onUpdateDraft,
   onApplyMapPreset,
+  onApplyPresetSections,
   onClose,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [importPresetId, setImportPresetId] = useState(selectedPresetId);
+  const [importSections, setImportSections] = useState<Set<PresetSection>>(
+    () => new Set(ALL_PRESET_SECTIONS)
+  );
+
+  const toggleImportSection = useCallback((section: PresetSection) => {
+    setImportSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) {
+        next.delete(section);
+      } else {
+        next.add(section);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleImportSelected = useCallback(() => {
+    const sections = ALL_PRESET_SECTIONS.filter((s) => importSections.has(s));
+    if (sections.length === 0) return;
+    onApplyPresetSections(importPresetId, sections);
+  }, [importPresetId, importSections, onApplyPresetSections]);
 
   return (
     <div className="px-4 py-2.5 border-b border-amber-700/40 bg-gradient-to-r from-amber-950/40 via-stone-950/60 to-amber-950/40">
@@ -106,18 +129,21 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
             />
           </div>
 
-          <select
-            value={selectedPresetId}
-            onChange={(event) => onApplyMapPreset(event.target.value)}
-            className="rounded-lg border border-amber-700/50 bg-stone-900/80 px-2 py-1.5 text-xs text-amber-200 outline-none focus:border-amber-400/80 max-w-[140px]"
-            title="Load preset"
-          >
-            {waveTemplateOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-1 shrink-0">
+            <select
+              value={selectedPresetId}
+              onChange={(event) => onApplyMapPreset(event.target.value)}
+              className="rounded-lg border border-violet-600/50 bg-violet-950/40 px-2 py-1.5 text-xs text-violet-200 outline-none focus:border-violet-400/80 max-w-[140px]"
+              title="Overwrites waves, decorations, hazards, objectives, and theme from this preset"
+            >
+              {waveTemplateOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span className="text-[9px] text-violet-400/60 whitespace-nowrap">Full Preset</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -140,31 +166,84 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
 
       {/* Expandable detail row */}
       {expanded && (
-        <div className="mt-2 pt-2 border-t border-amber-800/30 grid grid-cols-2 md:grid-cols-4 gap-2">
-          <label className="space-y-0.5">
-            <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
-              <Compass size={9} />
-              Slug
-            </span>
-            <input
-              value={draft.slug}
-              onChange={(event) => onUpdateDraft({ slug: event.target.value })}
-              placeholder="my-custom-map"
-              className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
-            />
-          </label>
-          <label className="space-y-0.5 col-span-2 md:col-span-3">
-            <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
-              <MapPin size={9} />
-              Description
-            </span>
-            <input
-              value={draft.description}
-              onChange={(event) => onUpdateDraft({ description: event.target.value })}
-              placeholder="Describe the map..."
-              className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
-            />
-          </label>
+        <div className="mt-2 pt-2 border-t border-amber-800/30 space-y-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <label className="space-y-0.5">
+              <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
+                <Compass size={9} />
+                Slug
+              </span>
+              <input
+                value={draft.slug}
+                onChange={(event) => onUpdateDraft({ slug: event.target.value })}
+                placeholder="my-custom-map"
+                className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
+              />
+            </label>
+            <label className="space-y-0.5 col-span-2 md:col-span-3">
+              <span className="text-[10px] uppercase tracking-wide text-amber-400/60 inline-flex items-center gap-1">
+                <MapPin size={9} />
+                Description
+              </span>
+              <input
+                value={draft.description}
+                onChange={(event) => onUpdateDraft({ description: event.target.value })}
+                placeholder="Describe the map..."
+                className="w-full rounded-md border border-amber-700/40 bg-stone-900/60 px-2 py-1 text-xs text-amber-200 outline-none focus:border-amber-400/70"
+              />
+            </label>
+          </div>
+
+          {/* Selective preset import */}
+          <div className="rounded-lg border border-cyan-700/30 bg-cyan-950/20 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wide text-cyan-300/70 font-medium mb-1.5 inline-flex items-center gap-1.5">
+              <Download size={10} />
+              Import from Preset
+            </div>
+            <div className="flex items-end gap-3">
+              <label className="space-y-0.5">
+                <span className="text-[10px] text-cyan-400/60">Source</span>
+                <select
+                  value={importPresetId}
+                  onChange={(event) => setImportPresetId(event.target.value)}
+                  className="block rounded-md border border-cyan-700/40 bg-stone-950/80 px-2 py-1 text-xs text-cyan-200 outline-none focus:border-cyan-400/70"
+                >
+                  {waveTemplateOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {ALL_PRESET_SECTIONS.map((section) => (
+                  <label
+                    key={section}
+                    className="inline-flex items-center gap-1 cursor-pointer select-none"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={importSections.has(section)}
+                      onChange={() => toggleImportSection(section)}
+                      className="accent-cyan-500 w-3 h-3"
+                    />
+                    <span className={`text-[11px] ${importSections.has(section) ? "text-cyan-100" : "text-cyan-400/50"}`}>
+                      {PRESET_SECTION_LABELS[section]}
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              <button
+                onClick={handleImportSelected}
+                disabled={importSections.size === 0}
+                className="shrink-0 rounded-md border border-cyan-600/50 bg-cyan-700/30 px-3 py-1 text-[11px] text-cyan-100 hover:bg-cyan-600/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Import
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

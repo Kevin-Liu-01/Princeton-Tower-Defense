@@ -25,13 +25,8 @@ import {
   Sparkles,
   ChessKnight,
   Settings,
-  Info,
-  Github,
-  Gamepad2,
   Maximize,
   Minimize,
-  Share2,
-  Bug,
 } from "lucide-react";
 import type {
   GameState,
@@ -65,6 +60,7 @@ import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
 import { SettingsModal } from "./SettingsModal";
 import { useSettings } from "../../hooks/useSettings";
 import { CreditsModal } from "./CreditsModal";
+import { NavMoreDropdown } from "./NavMoreDropdown";
 
 const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as const;
 
@@ -74,14 +70,14 @@ const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as c
 
 const PrincetonLogo: React.FC = () => {
   return (
-    <div className="relative flex items-center gap-2">
+    <div className="relative  flex items-center gap-2">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40 animate-pulse"
         />
       </div>
       <PrincetonTDLogo size="h-11 w-11" />
-      <div className="relative flex flex-col">
+      <div className="relative flex flex-col -mt-1">
         <span
           className="text-base sm:text-2xl font-black tracking-wider"
           style={{
@@ -93,14 +89,14 @@ const PrincetonLogo: React.FC = () => {
         >
           PRINCETON
         </span>
-        <div className="flex items-center gap-1 sm:gap-2 -mt-0.5">
-          <Swords size={14} className="text-orange-400 size-2 sm:size-auto" />
+        <div className="flex items-center gap-1 sm:gap-2 -mt-1">
+          <Swords size={14} className="text-orange-400 hidden sm:block" />
           <span className="text-[6px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
             TOWER DEFENSE
           </span>
           <Swords
             size={14}
-            className="text-orange-400 size-2 sm:size-auto"
+            className="text-orange-400 hidden sm:block"
             style={{ transform: "scaleX(-1)" }}
           />
         </div>
@@ -241,7 +237,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       const panelH = bottomPanelRef.current?.offsetHeight ?? 0;
       const overlayPad = 24;
       const scale = Math.max(1.0, Math.min(1.5, cw / MAP_WIDTH));
-      const minMapH = MAP_WIDTH * 0.28;
+      const minMapH = MAP_WIDTH * 0.29;
       const desiredMapH = (ch - panelH - overlayPad) / scale;
       setContainerWidth(cw);
       setMapHeight(Math.max(minMapH, desiredMapH));
@@ -727,7 +723,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   onClick={() => openCodexTo("towers")}
                   className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
-                  <Book size={14} className="text-purple-400 shrink-0" />
+                  <Book size={14} className="text-amber-400 shrink-0" />
                   <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Codex</span>
                 </button>
 
@@ -737,7 +733,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   onClick={() => setShowCreator(true)}
                   className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
-                  <Hammer size={14} className="text-orange-400 shrink-0" />
+                  <Hammer size={14} className="text-amber-400 shrink-0" />
                   <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Creator</span>
                 </button>
 
@@ -747,87 +743,39 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   onClick={() => setShowSettings(true)}
                   className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
                 >
-                  <Settings size={14} className="text-sky-400 shrink-0" />
-                  <span className="hidden sm:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">Settings</span>
-                </button>
-
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-
-                <button
-                  onClick={() => setShowCredits(true)}
-                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                >
-                  <Info size={14} className="text-emerald-400 shrink-0" />
-                  <span className="hidden sm:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">Credits</span>
+                  <Settings size={14} className="text-amber-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Settings</span>
                 </button>
               </div>
             </div>
 
-            {/* Right: Utility buttons + Nav arrows */}
+            {/* Right: Fullscreen + More dropdown + Nav arrows */}
             <div className="flex items-center gap-2 sm:gap-2.5">
-              {/* Icon button group: More Games, GitHub, Fullscreen */}
-              <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
-                background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
-                border: `1.5px solid ${GOLD.border30}`,
-                boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                <a
-                  href="https://www.kevin-liu.tech/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative z-10 flex items-center gap-2 px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                  title="More Games"
-                >
-                  <Gamepad2 size={15} className="text-pink-400 shrink-0" />
-                  <span className="hidden md:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">More</span>
-                </a>
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-                <a
-                  href="https://github.com/Kevin-Liu-01/Princeton-Tower-Defense"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                  title="GitHub Repository"
-                >
-                  <Github size={15} className="text-amber-100/70 shrink-0" />
-                </a>
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I've been playing Princeton Tower Defense — a free browser TD game with 23 levels, 5 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`)}&url=${encodeURIComponent("https://princetontd.vercel.app/")}&hashtags=${encodeURIComponent("gamedev,indiegame,towdefense,princeton")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                  title="Share on X / Twitter"
-                >
-                  <Share2 size={15} className="text-violet-400 shrink-0" />
-                </a>
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-                <a
-                  href="https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                  title="Report a Bug"
-                >
-                  <Bug size={15} className="text-red-400 shrink-0" />
-                </a>
-                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-                <button
-                  onClick={() => {
-                    if (document.fullscreenElement) {
-                      document.exitFullscreen();
-                    } else {
-                      document.documentElement.requestFullscreen();
-                    }
-                  }}
-                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
-                  title="Toggle Fullscreen"
-                >
-                  {isFullscreen
-                    ? <Minimize size={15} className="text-cyan-400 shrink-0" />
-                    : <Maximize size={15} className="text-cyan-400 shrink-0" />}
-                </button>
+              {/* Fullscreen toggle */}
+              <button
+                onClick={() => {
+                  if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                  } else {
+                    document.documentElement.requestFullscreen();
+                  }
+                }}
+                className="hidden sm:flex relative items-center px-3 py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"
+                style={{
+                  background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
+                  border: `1.5px solid ${GOLD.border30}`,
+                  boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
+                }}
+                title="Toggle Fullscreen"
+              >
+                {isFullscreen
+                  ? <Minimize size={15} className="text-amber-300/70 shrink-0" />
+                  : <Maximize size={15} className="text-amber-300/70 shrink-0" />}
+              </button>
+
+              {/* More dropdown (portal-based, no overflow clipping) */}
+              <div className="hidden sm:flex">
+                <NavMoreDropdown onShowCredits={() => setShowCredits(true)} />
               </div>
 
               {/* Nav arrows */}
@@ -872,7 +820,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                   {previewImg && (
                     <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                      <img src={previewImg} alt="" className={`absolute right-0 top-0 h-full w-[60%] object-cover ${LEVEL_DATA[currentLevel.id]?.previewImage ? "opacity-25" : "opacity-40 blur-[1px]"}`} style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
+                      <Image src={previewImg} alt="" fill unoptimized className={`absolute right-0 top-0 !h-full !w-[60%] !left-auto object-cover ${LEVEL_DATA[currentLevel.id]?.previewImage ? "opacity-25" : "opacity-40 blur-[1px]"}`} style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
                       <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${PANEL.bgDark} 35%, transparent 75%)` }} />
                     </div>
                   )}
@@ -1065,7 +1013,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       >
                         {previewImg && (
                           <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                            <img src={previewImg} alt="" className="absolute right-0 top-0 h-full w-[55%] object-cover opacity-20" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)" }} />
+                            <Image src={previewImg} alt="" fill unoptimized className="absolute right-0 top-0 !h-full !w-[55%] !left-auto object-cover opacity-20" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)" }} />
                           </div>
                         )}
                         <div className="absolute inset-[1px] rounded-[3px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.05)" }} />
@@ -1407,58 +1355,59 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             const levelPreview = LEVEL_DATA[l.id]?.previewImage;
                             const fadeColor = l.id === selectedLevel ? SELECTED.warmBgLight : PANEL.bgWarmLight;
                             return (
-                            <div
-                              key={l.id}
-                              className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative overflow-hidden"
-                              style={{
-                                background: l.id === selectedLevel
-                                  ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
-                                  : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                                border: l.id === selectedLevel
-                                  ? `1.5px solid ${GOLD.accentBorder40}`
-                                  : `1.5px solid ${GOLD.border25}`,
-                                boxShadow: l.id === selectedLevel
-                                  ? `inset 0 0 10px ${GOLD.accentGlow08}`
-                                  : `inset 0 0 8px ${GOLD.glow04}`
-                              }}
-                              onClick={() => handleLevelClick(l.id)}
-                            >
-                              {levelPreview && (
-                                <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                                  <img src={levelPreview} alt="" className="absolute right-0 top-0 h-full w-[60%] object-cover object-center opacity-25" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }} />
-                                  <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${fadeColor} 30%, transparent 70%)` }} />
+                              <div
+                                key={l.id}
+                                className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative overflow-hidden"
+                                style={{
+                                  background: l.id === selectedLevel
+                                    ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
+                                    : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                                  border: l.id === selectedLevel
+                                    ? `1.5px solid ${GOLD.accentBorder40}`
+                                    : `1.5px solid ${GOLD.border25}`,
+                                  boxShadow: l.id === selectedLevel
+                                    ? `inset 0 0 10px ${GOLD.accentGlow08}`
+                                    : `inset 0 0 8px ${GOLD.glow04}`
+                                }}
+                                onClick={() => handleLevelClick(l.id)}
+                              >
+                                {levelPreview && (
+                                  <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                                    <Image src={levelPreview} alt="" fill unoptimized className="absolute right-0 top-0 !h-full !w-[60%] !left-auto object-cover object-center opacity-25" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }} />
+                                    <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${fadeColor} 30%, transparent 70%)` }} />
+                                  </div>
+                                )}
+                                <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
+                                  border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
+                                }} />
+                                <div className="relative z-10 w-8 h-8 flex items-center justify-center">
+                                  {isLevelUnlocked(l.id)
+                                    ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} />
+                                    : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} />
+                                  }
                                 </div>
-                              )}
-                              <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
-                                border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
-                              }} />
-                              <div className="relative z-10 w-8 h-8 flex items-center justify-center">
-                                {isLevelUnlocked(l.id)
-                                  ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} />
-                                  : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} />
-                                }
-                              </div>
-                              <div className="relative z-10 flex-1 min-w-0">
-                                <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
-                                  {l.name}
-                                  {l.kind === "challenge" ? " • Challenge" : ""}
+                                <div className="relative z-10 flex-1 min-w-0">
+                                  <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
+                                    {l.name}
+                                    {l.kind === "challenge" ? " • Challenge" : ""}
+                                  </div>
+                                </div>
+                                <div className="relative z-10 flex gap-0.5">
+                                  {[1, 2, 3].map((s) => (
+                                    <Star
+                                      key={s}
+                                      size={14}
+                                      className={
+                                        (levelStars[l.id] || 0) >= s
+                                          ? "text-yellow-400 fill-yellow-400 drop-shadow"
+                                          : "text-stone-600"
+                                      }
+                                    />
+                                  ))}
                                 </div>
                               </div>
-                              <div className="relative z-10 flex gap-0.5">
-                                {[1, 2, 3].map((s) => (
-                                  <Star
-                                    key={s}
-                                    size={14}
-                                    className={
-                                      (levelStars[l.id] || 0) >= s
-                                        ? "text-yellow-400 fill-yellow-400 drop-shadow"
-                                        : "text-stone-600"
-                                    }
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          );})}
+                            );
+                          })}
                           {/* Region Progress footer */}
                           <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
                             <span className="text-amber-400 text-sm font-medium">
