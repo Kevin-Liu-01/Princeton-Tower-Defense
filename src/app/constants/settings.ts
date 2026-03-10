@@ -73,6 +73,7 @@ export interface UISettings {
   showHealthBars: boolean;
   showRangeIndicators: boolean;
   showTowerRadii: boolean;
+  showTowerBadges: boolean;
   showWavePreview: boolean;
   tooltipDelay: number;
   autoSendWaves: boolean;
@@ -156,6 +157,7 @@ export const DEFAULT_UI: UISettings = {
   showHealthBars: true,
   showRangeIndicators: true,
   showTowerRadii: true,
+  showTowerBadges: false,
   showWavePreview: true,
   tooltipDelay: 400,
   autoSendWaves: true,
@@ -438,3 +440,4 @@ export const SETTINGS_CATEGORIES: SettingsCategoryMeta[] = [
 // -----------------------------------------------------------------------------
 
 export const SETTINGS_STORAGE_KEY = "princeton-td-settings";
+export const DEV_MODE_STORAGE_KEY = "ptd:dev-mode-unlocked";

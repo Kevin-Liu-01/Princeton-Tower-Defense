@@ -1,4 +1,5 @@
-import type { MapDecoration, MapHazard, TowerType } from "../types";
+import type { MapDecoration, MapHazard, Tower, TowerType } from "../types";
+import { buildShowcaseTowers } from "./devShowcase";
 
 // =============================================================================
 // MAP PATHS - All regions including secondary paths for dual-path levels
@@ -333,8 +334,12 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
   // DEV TEST LEVELS
   // =====================
   dev_enemy_showcase: [
-    { x: -5, y: 15 },
-    { x: 35, y: 15 },
+    { x: -5, y: 2 },
+    { x: 35, y: 2 },
+  ],
+  dev_enemy_showcase_b: [
+    { x: -5, y: 28 },
+    { x: 35, y: 28 },
   ],
   // =====================
   // REGION CHALLENGES
@@ -603,6 +608,7 @@ export const LEVEL_DATA: Record<
     }>;
     decorations?: MapDecoration[]; // Map-specific decorations
     hazards?: MapHazard[]; // Environmental hazards
+    prePlacedTowers?: () => Tower[]; // Factory for towers placed at level start
   }
 > = {
   // =====================
@@ -1911,14 +1917,18 @@ export const LEVEL_DATA: Record<
   dev_enemy_showcase: {
     name: "Enemy Showcase",
     position: { x: 60, y: 60 },
-    description: "Dev-only test level. Every enemy type, one at a time.",
-    camera: { offset: { x: -100, y: -390 }, zoom: 1.05 },
+    description:
+      "Dev-only sandbox. Dual paths, every tower at every upgrade level.",
+    camera: { offset: { x: -100, y: -390 }, zoom: 0.85 },
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
     levelKind: "custom",
     startingPawPoints: 99999,
     heroSpawn: { x: 15, y: 15 },
+    dualPath: true,
+    secondaryPath: "dev_enemy_showcase_b",
+    prePlacedTowers: buildShowcaseTowers,
   },
 };
 

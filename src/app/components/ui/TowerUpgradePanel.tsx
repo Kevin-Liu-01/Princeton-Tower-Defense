@@ -713,7 +713,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           {/* Header */}
           <div className="flex items-center gap-2 mb-1.5 pb-1.5" style={{ borderBottom: '1px solid ' + GOLD.border25 }}>
             <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: PANEL.bgDeep, border: '1.5px solid ' + GOLD.border30 }}>
-              <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} />
+              <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} upgrade={tower.upgrade} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">

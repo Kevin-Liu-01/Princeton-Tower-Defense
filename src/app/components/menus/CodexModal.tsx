@@ -1887,14 +1887,21 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               >
                                 <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
                                   <div className="flex items-center gap-2">
-                                    <div className="flex">
-                                      {[...Array(level)].map((_, i) => (
-                                        <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
-                                      ))}
+                                    <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                      <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={28} level={level} />
                                     </div>
-                                    <span className={`font-bold ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
-                                      Lvl {level}
-                                    </span>
+                                    <div>
+                                      <div className="flex items-center gap-1">
+                                        <div className="flex">
+                                          {[...Array(level)].map((_, i) => (
+                                            <Star key={i} size={10} className="text-yellow-400 fill-yellow-400" />
+                                          ))}
+                                        </div>
+                                        <span className={`font-bold text-sm ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
+                                          Lvl {level}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
                                   <span className="text-amber-400 text-xs flex items-center gap-1">
                                     <Coins size={10} /> {cost} PP
@@ -1917,9 +1924,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                               }`}
                                           >
                                             {/* Path header */}
-                                            <div className={`px-2 py-1 text-[10px] font-bold ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"
-                                              }`}>
-                                              {tower.upgrades[path].name}
+                                            <div className={`px-2 py-1.5 flex items-center gap-2 ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"}`}>
+                                              <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                                <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={22} level={4} upgrade={path as "A" | "B"} />
+                                              </div>
+                                              <span className="text-[10px] font-bold">{tower.upgrades[path].name}</span>
                                             </div>
 
                                             {/* Path stats */}
@@ -2097,6 +2106,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                       type={selectedTower as keyof typeof TOWER_DATA}
                                       size={48}
                                       level={4}
+                                      upgrade={path as "A" | "B"}
                                     />
                                   </FramedCodexSprite>
                                   <div className="flex-1">

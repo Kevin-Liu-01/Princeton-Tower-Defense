@@ -26,6 +26,12 @@ import {
   ChessKnight,
   Settings,
   Info,
+  Github,
+  Gamepad2,
+  Maximize,
+  Minimize,
+  Share2,
+  Bug,
 } from "lucide-react";
 import type {
   GameState,
@@ -45,7 +51,7 @@ import {
   LEVEL_DATA,
 } from "../../constants";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
-import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
 import { WORLD_LEVELS, MAP_WIDTH, getWaveCount, DEV_LEVELS, DEV_LEVEL_IDS } from "./worldMapData";
 import { CodexModal, type CodexTabId } from "./CodexModal";
 import { CampaignOverview } from "./CampaignOverview";
@@ -145,6 +151,7 @@ interface WorldMapProps {
   /** When Battle is clicked without hero/spells selected, run this to pick random loadout and start */
   onStartWithRandomLoadout?: () => void;
   isDevMode?: boolean;
+  onDevModeChange?: (enabled: boolean) => void;
 }
 
 type SelectableLevel = {
@@ -178,6 +185,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   upgradeSpell,
   onStartWithRandomLoadout,
   isDevMode,
+  onDevModeChange,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -199,8 +207,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [containerWidth, setContainerWidth] = useState(MAP_WIDTH);
   const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
+  const [isMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 768,
+  );
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
   const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const staticBgCacheRef = useRef<{
+    canvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+  }>({ canvas: null, w: 0, h: 0 });
   const dragRef = useRef({
     hasDragged: false,
     isDragging: false,
@@ -337,6 +353,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       lastCanvasSizeRef,
       animTimeRef,
       levels: visibleWorldLevels,
+      isMobile,
+      staticBgCache: staticBgCacheRef,
     });
   };
 
@@ -364,10 +382,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId: number;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
+    const frameInterval = isMobile ? 33 : 20; // 30fps mobile, 50fps desktop
 
     const animate = (timestamp: number) => {
-      // Canvas drawing throttled to ~50fps (20ms)
-      if (timestamp - lastDrawTime > 20) {
+      if (timestamp - lastDrawTime > frameInterval) {
         animTimeRef.current = timestamp / 1000;
         lastDrawTime = timestamp;
         drawMapRef.current();
@@ -383,7 +401,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     };
     animate(0);
     return () => cancelAnimationFrame(animationId);
-  }, []);
+  }, [isMobile]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (dragRef.current.isDragging) return;
@@ -646,153 +664,166 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         showTopBottomBorders={false}
       >
         <div
-          className="relative sm:px-1 z-20"
+          className="relative sm:px-1 z-20 overflow-hidden"
           style={{
             background: panelGradient,
           }}
         >
-          {/* Subtle top highlight */}
+          {/* Right-side background image */}
+          <div className="absolute top-[-2rem] right-0 w-[28rem] h-[calc(100%+4rem)] pointer-events-none select-none z-0">
+            <Image
+              src="/images/gameplay-latest-5.png"
+              alt=""
+              width={1200}
+              height={700}
+              priority
+              className="w-full h-full object-cover opacity-15 scale-110"
+              style={{
+                maskImage: "linear-gradient(to left, black 0%, black 30%, transparent 80%)",
+                WebkitMaskImage: "linear-gradient(to left, black 0%, black 30%, transparent 80%)",
+              }}
+            />
+          </div>
+
           <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
 
-          <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2">
-            {/* Left: Logo */}
-            <PrincetonLogo />
+          <div className="relative px-3 sm:px-5 py-2 flex items-center justify-between gap-3 z-10">
+            {/* Left: Logo + Stars badge */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <PrincetonLogo />
 
-            {/* Right: Stats strip */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              {/* Hearts stat */}
-              <div className="hidden sm:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
-                background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-                border: `1.5px solid ${RED_CARD.border}`,
-                boxShadow: `inset 0 0 12px ${RED_CARD.glow06}`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-                <Heart size={15} className="text-red-400 fill-red-400 shrink-0" />
-                <span className="font-black text-sm text-red-300">
-                  {levelStats
-                    ? Object.values(levelStats).reduce(
-                      (acc, stats) => acc + (stats.bestHearts || 0),
-                      0
-                    )
-                    : 0}
-                </span>
-                <span className="hidden sm:inline text-[9px] text-red-700 font-semibold">/300</span>
-              </div>
+              <div className="hidden sm:block w-px h-8 opacity-60" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
 
-              {/* Stars stat */}
-              <div className="hidden sm:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+              {/* Stars badge */}
+              <div className="hidden sm:flex relative items-center gap-2 px-4 py-1.5 rounded-xl" style={{
                 background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
                 border: `1.5px solid ${AMBER_CARD.border}`,
-                boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}`,
+                boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}, 0 0 10px rgba(180,140,50,0.08)`,
               }}>
                 <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
                 <Star size={15} className="text-yellow-400 fill-yellow-400 shrink-0" />
                 <span className="font-black text-sm text-yellow-300">{totalStars}</span>
-                <span className="hidden sm:inline text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
+                <span className="text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
               </div>
+            </div>
 
-              {/* Total Battles */}
-              <div className="hidden md:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
-                background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
-                border: `1.5px solid ${BLUE_CARD.border}`,
-                boxShadow: `inset 0 0 12px ${BLUE_CARD.glow}`,
+            {/* Center: Navigation buttons in a unified pill group */}
+            <div className="flex items-center">
+              <div className="relative flex items-center rounded-xl overflow-hidden" style={{
+                background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
+                border: `1.5px solid ${GOLD.border30}`,
+                boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
               }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
-                <Swords size={14} className="text-blue-400/70 shrink-0" />
-                <span className="font-black text-sm text-blue-300/80">
-                  {levelStats
-                    ? Object.values(levelStats).reduce(
-                      (acc, stats) => acc + (stats.timesPlayed || 0),
-                      0
-                    )
-                    : 0}
-                </span>
-                <span className="text-[8px] text-blue-500/50 font-bold tracking-wider uppercase">Battles</span>
-              </div>
-
-              {/* Victories */}
-              <div className="hidden lg:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
-                background: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`,
-                border: `1.5px solid ${GREEN_CARD.border}`,
-                boxShadow: `inset 0 0 12px ${GREEN_CARD.glow}`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
-                <Trophy size={14} className="text-emerald-400/70 shrink-0" />
-                <span className="font-black text-sm text-emerald-300/80">
-                  {levelStats
-                    ? Object.values(levelStats).reduce(
-                      (acc, stats) => acc + (stats.timesWon || 0),
-                      0
-                    )
-                    : 0}
-                </span>
-                <span className="text-[8px] text-emerald-600/50 font-bold tracking-wider uppercase">Wins</span>
-              </div>
-
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-7" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
-
-              {/* Codex */}
-              <button
-                onClick={() => openCodexTo("towers")}
-                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
-                style={{
-                  background: `linear-gradient(135deg, ${PURPLE_CARD.bgLight}, ${PURPLE_CARD.bgDark})`,
-                  border: `1.5px solid ${PURPLE_CARD.border}`,
-                  boxShadow: `inset 0 0 12px ${PURPLE_CARD.glow}`,
-                }}
-              >
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${PURPLE_CARD.innerBorder}` }} />
-                <Book size={15} className="text-purple-400/80 shrink-0" />
-                <span className="hidden sm:inline text-sm text-purple-300/70 font-bold tracking-wider uppercase">Codex</span>
-              </button>
-
-              {/* Creator */}
-              <button
-                onClick={() => setShowCreator(true)}
-                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
-                style={{
-                  background: `linear-gradient(135deg, rgba(120, 95, 20, 0.42), rgba(80, 60, 10, 0.42))`,
-                  border: `1.5px solid ${GOLD.border35}`,
-                  boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
-                }}
-              >
                 <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                <Hammer size={15} className="text-amber-300/90 shrink-0" />
-                <span className="hidden sm:inline text-sm text-amber-200/90 font-bold tracking-wider uppercase">Creator</span>
-              </button>
 
-              {/* Settings */}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
-                style={{
-                  background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                  border: `1.5px solid ${NEUTRAL.border}`,
-                  boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
-                }}
-              >
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
-                <Settings size={15} className="text-amber-400/70 shrink-0" />
-                <span className="hidden sm:inline text-sm text-amber-200/60 font-bold tracking-wider uppercase">Settings</span>
-              </button>
+                <button
+                  onClick={() => openCodexTo("towers")}
+                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                >
+                  <Book size={14} className="text-purple-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Codex</span>
+                </button>
 
-              {/* Credits */}
-              <button
-                onClick={() => setShowCredits(true)}
-                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
-                style={{
-                  background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                  border: `1.5px solid ${NEUTRAL.border}`,
-                  boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
-                }}
-              >
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
-                <Info size={15} className="text-amber-400/70 shrink-0" />
-                <span className="hidden sm:inline text-sm text-amber-200/60 font-bold tracking-wider uppercase">Credits</span>
-              </button>
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
 
-              {/* Nav arrows — grouped pill */}
+                <button
+                  onClick={() => setShowCreator(true)}
+                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                >
+                  <Hammer size={14} className="text-orange-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Creator</span>
+                </button>
+
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                >
+                  <Settings size={14} className="text-sky-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">Settings</span>
+                </button>
+
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+
+                <button
+                  onClick={() => setShowCredits(true)}
+                  className="relative z-10 flex items-center gap-2 px-3.5 sm:px-4 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                >
+                  <Info size={14} className="text-emerald-400 shrink-0" />
+                  <span className="hidden sm:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">Credits</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Utility buttons + Nav arrows */}
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Icon button group: More Games, GitHub, Fullscreen */}
+              <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
+                background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
+                border: `1.5px solid ${GOLD.border30}`,
+                boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                <a
+                  href="https://www.kevin-liu.tech/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative z-10 flex items-center gap-2 px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  title="More Games"
+                >
+                  <Gamepad2 size={15} className="text-pink-400 shrink-0" />
+                  <span className="hidden md:inline text-xs text-amber-200/70 font-bold tracking-wider uppercase">More</span>
+                </a>
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <a
+                  href="https://github.com/Kevin-Liu-01/Princeton-Tower-Defense"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  title="GitHub Repository"
+                >
+                  <Github size={15} className="text-amber-100/70 shrink-0" />
+                </a>
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`I've been playing Princeton Tower Defense — a free browser TD game with 23 levels, 5 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`)}&url=${encodeURIComponent("https://princetontd.vercel.app/")}&hashtags=${encodeURIComponent("gamedev,indiegame,towdefense,princeton")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  title="Share on X / Twitter"
+                >
+                  <Share2 size={15} className="text-violet-400 shrink-0" />
+                </a>
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <a
+                  href="https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  title="Report a Bug"
+                >
+                  <Bug size={15} className="text-red-400 shrink-0" />
+                </a>
+                <div className="w-px h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
+                <button
+                  onClick={() => {
+                    if (document.fullscreenElement) {
+                      document.exitFullscreen();
+                    } else {
+                      document.documentElement.requestFullscreen();
+                    }
+                  }}
+                  className="relative z-10 flex items-center px-3 py-2 transition-all duration-150 hover:bg-amber-600/15"
+                  title="Toggle Fullscreen"
+                >
+                  {document.fullscreenElement
+                    ? <Minimize size={15} className="text-cyan-400 shrink-0" />
+                    : <Maximize size={15} className="text-cyan-400 shrink-0" />}
+                </button>
+              </div>
+
+              {/* Nav arrows */}
               <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
                 background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                 border: `1.5px solid ${GOLD.border25}`,
@@ -801,14 +832,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                 <button
                   onClick={() => goToPreviousLevel()}
-                  className="relative z-10 px-2.5 py-2.5 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
+                  className="relative z-10 px-3 py-2 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
                 >
                   <ChevronLeft size={16} className="text-amber-500/70" />
                 </button>
                 <div className="w-px h-5" style={{ background: "rgba(180,140,60,0.2)" }} />
                 <button
                   onClick={() => goToNextLevel()}
-                  className="relative z-10 px-2.5 py-2.5 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
+                  className="relative z-10 px-3 py-2 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
                 >
                   <ChevronRight size={16} className="text-amber-500/70" />
                 </button>
@@ -1791,6 +1822,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           applyPreset={applyPreset}
           resetToDefaults={resetToDefaults}
           resetCategory={resetCategory}
+          onDevModeChange={onDevModeChange}
         />
       )}
       {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}

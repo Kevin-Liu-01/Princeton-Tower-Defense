@@ -1,130 +1,140 @@
+<div align="center">
+
+<img src="public/images/logos/princeton-td-logo.svg" alt="Princeton TD Logo" width="80" />
+
 # Princeton Tower Defense
 
-A fantasy tower defense game inspired by Princeton locations and Kingdom Rush.
+A full-featured tower defense game — built entirely in the browser with React, Canvas, and Next.js.
 
-Defend iconic Princeton-inspired battlefields with a full hero roster, branching tower upgrades, and chaotic dual-lane pressure. It is classic lane-defense strategy with an isometric style, custom map flavor, and way more personality than your average TD clone.
+Defend Princeton-inspired battlefields across 5 hand-crafted regions with branching tower upgrades, 7 playable heroes, tactical spells, and dual-lane pressure maps that actually require you to think.
 
-**[Play the game](http://princeton-tower-defense.vercel.app/)**
+**[Play Now](https://princetontd.vercel.app/)** · **[Report Bug](https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues)** · **[Portfolio](https://www.kevin-liu.tech/)**
 
-![Gameplay Screenshot](public/images/gameplay-latest-2.png)
+</div>
 
-## Why It Hits
+---
 
-- **23 total levels** across campaign and challenge progression.
-- **6 distinct towers** with upgrade paths tuned for damage, control, economy, and summons.
-- **7 playable heroes** with different combat identities and active abilities.
-- **Dual-path pressure maps** that force split-defense planning.
-- **Hazards + special objectives** that change how each level is solved.
-- **Star-based progression** with challenge unlock milestones.
-- **Hand-crafted isometric visuals** with heavy canvas rendering polish.
-- **Spell support + troop interactions** for comeback potential in bad waves.
+![Volcanic Battlefield](public/images/gameplay-latest-zoomed.png)
 
-## New Features
+## What Makes This Different
 
-- Added **3 new challenge maps**: Cannon Crest, Triad Keep, and Frontier Outpost.
-- Expanded the game to **23 playable maps** total (`15 campaign + 8 challenge`).
-- Added **tower-restricted challenge rules** with in-game Locked states in the build menu.
-- Added a **challenge-chain unlock flow** (`ivy_crossroads -> cannon_crest`, `blight_basin -> triad_keep`, `whiteout_pass -> frontier_outpost`).
-- Added full **wave definitions** for the new challenge maps with dual-lane pressure patterns.
-- Upgraded challenge objective logic with **multi-vault HP aggregation** and richer special-building interactions.
-- Reworked world-map presentation with **region-specific challenge styling**, updated node metadata, and cleaner level descriptions.
-- Added new **challenge map art direction** with themed mountain backdrops and stronger visual identity per region.
-- Improved pre-wave readability with **hover-reactive spawn/wave bubble feedback**.
-- Updated progression tracking so all new challenge maps slot cleanly into existing save progress.
+Most browser TD games are simple click-and-place loops. Princeton TD is closer to a desktop-quality experience: isometric visuals rendered entirely on HTML5 Canvas, a real upgrade economy, hero units with active abilities, and map-specific hazards that change how every level plays.
 
-## Core Gameplay
+Everything — towers, enemies, terrain, effects, UI — is drawn and animated in code. No sprite sheets, no game engine. Just a `requestAnimationFrame` loop and a lot of geometry.
 
-### Objective
+<div align="center">
 
-Stop enemies from reaching the end of each path. Every escape costs a life. Hit zero lives and the run ends.
+| | | |
+|:---:|:---:|:---:|
+| ![Desert](public/images/gameplay-latest-3.png) | ![Winter](public/images/gameplay-latest-5.png) | ![Volcanic](public/images/gameplay-latest.png) |
+| *Stadium Sands — Desert* | *Frist Frontier — Winter* | *Dormitory Depths — Volcanic* |
 
-### Controls
+</div>
 
-| Action | Control |
-| --- | --- |
-| Place Tower | Click + drag from build menu |
-| Select Tower/Hero | Click unit |
-| Move Hero | Click destination while hero is selected |
-| Cast Spell | Click spell icon in bottom bar |
+## Features
 
-### Strategy Notes
+### 🏰 23 Levels Across 5 Regions
 
-- Open with lane control and slow effects before pure DPS.
-- Use Dinky troops and hero placement to stabilize split-lane spikes.
-- Save spells for elite rushes or objective-defense emergencies.
-- In restriction challenges, optimize around permitted tower synergies, not universal builds.
+Campaign and challenge maps spanning grasslands, swamps, deserts, frozen tundra, and volcanic depths. Each region introduces new enemy types, environmental hazards, and visual identities — all rendered procedurally on Canvas.
 
-## Content Overview
+### ⚔️ 6 Towers with Branching Upgrades
 
-### Towers (6)
+Each tower has a distinct role and two final upgrade paths that change its behavior.
 
-| Tower | Role | Signature Upgrades |
-| --- | --- | --- |
-| **Nassau Cannon** | Heavy artillery | Gatling / Flamethrower |
-| **Firestone Library** | Slow + control | EQ Smasher / Blizzard |
-| **E-Quad Lab** | Chain magic DPS | Focused Beam / Chain Lightning |
-| **Blair Arch** | Sonic AoE control | Shockwave Siren / Symphony |
-| **Eating Club** | Economy support | Investment Bank / Recruitment Center |
-| **Dinky Station** | Troop deployment | Centaur Archers / Heavy Cavalry |
+| Tower | Role | Upgrade Paths |
+| :--- | :--- | :--- |
+| **Nassau Cannon** | Heavy artillery | Gatling Gun · Flamethrower |
+| **Firestone Library** | Slow + control | EQ Smasher · Blizzard |
+| **E-Quad Lab** | Chain magic DPS | Focused Beam · Chain Lightning |
+| **Blair Arch** | Sonic AoE | Shockwave Siren · Symphony |
+| **Eating Club** | Economy | Investment Bank · Recruitment Center |
+| **Dinky Station** | Troop summons | Centaur Archers · Heavy Cavalry |
 
-### Heroes (7)
+### 🐅 7 Playable Heroes
 
-Tiger, Tenor, Mathey, Rocky, Scott, Captain, and Engineer each ship with distinct kits (tank, support, summon, ranged DPS, utility hybrids).
+Heroes are persistent units you place on the field. Each has unique stats, a combat identity, and an active ability on cooldown.
 
-### Regions and Levels
+| Hero | Style | Ability |
+| :--- | :--- | :--- |
+| **Princeton Tiger** | Melee brawler | *Mighty Roar* — AoE stun + fear |
+| **Acapella Tenor** | Ranged support | *High Note* — sonic blast + ally heal |
+| **Mathey Knight** | Tank | *Fortress Shield* — invincibility + taunt |
+| **Rocky Raccoon** | Ranged artillery | *Boulder Bash* — massive AoE damage |
+| **F. Scott** | Buffer | *Inspiration Cheer* — tower damage/range boost |
+| **General Mercer** | Commander | *Rally Knights* — summon 3 armored knights |
+| **BSE Engineer** | Utility | *Deploy Turret* — automated defense turret |
 
-- **Grassland**: Poe Field, Carnegie Lake, Nassau Hall, Ivy Crossroads, Cannon Crest
-- **Swamp**: Murky Bog, Witch's Domain, Sunken Temple, Blight Basin, Triad Keep
-- **Desert**: Desert Oasis, Pyramid Pass, Sphinx Gate, Sunscorch Labyrinth
-- **Winter**: Glacier Path, Frost Fortress, Summit Peak, Whiteout Pass, Frontier Outpost
-- **Volcanic**: Lava Fields, Caldera Basin, Obsidian Throne, Ashen Spiral
+### ✨ Spells, Hazards & Challenge Rules
 
-## Technical Details
+- **5 castable spells** — Fireball, Lightning, Freeze, Payday, Reinforce — each upgradeable with earned stars.
+- **Map hazards** — lava pools, quicksand, blizzard zones, and special structures (vaults, shrines, barracks, beacons) that add layer-specific objectives.
+- **Challenge maps** with tower restrictions and multi-objective scoring that force non-standard strategies.
 
-### Runtime Architecture
+### 🗺️ World Map & Progression
 
-- Main game loop is in `src/app/hooks/usePrincetonTowerDefenseRuntime.tsx` and runs simulation + render via `requestAnimationFrame`.
-- Progression is data-driven with explicit unlock graphs:
-  - `CAMPAIGN_LEVEL_UNLOCKS`
-  - `REGION_CHALLENGE_UNLOCKS`
-  - `CHALLENGE_LEVEL_UNLOCKS`
-- Objective logic supports multiple special-building interactions (`vault`, `barracks`, `shrine`, `beacon`) and per-map objective HP behavior.
+A fully interactive world map with region nodes, star-gated progression, and a campaign overview. Stars earned from levels unlock new regions, challenge maps, and spell upgrades.
 
-### Data-Driven Level Design
+### 🎨 Custom Level Creator
 
-- `src/app/constants/maps.ts` defines:
-  - path geometry (primary + optional secondary path)
-  - map metadata (theme, camera, difficulty, level kind)
-  - hazards and special structures
-  - tower restrictions via `allowedTowers`
-- `src/app/constants/waves.ts` defines per-level wave schedules and enemy composition.
+A built-in map editor lets you design and play your own levels — define paths, place towers, set wave compositions, and share creations.
 
-### Challenge Terrain Pipeline
+---
 
-- `src/app/rendering/maps/challengeTerrain.ts` computes challenge path segments and mountain bounds.
-- `src/app/rendering/maps/staticLayer.ts` builds region-specific challenge backdrops and isometric mountain terraces around path footprints.
-- Decoration visibility for challenge levels is filtered by terrain footprint to keep scene composition coherent and performant.
+## Built With
 
-### Rendering and Performance
+| | |
+| :--- | :--- |
+| **Framework** | Next.js 14 + React 18 |
+| **Rendering** | HTML5 Canvas (no game engine — all custom) |
+| **UI** | Tailwind CSS + Lucide icons + Radix |
+| **Animation** | `requestAnimationFrame` game loop with delta-time |
+| **State** | React hooks + localStorage persistence |
+| **Hosting** | Vercel |
 
-- Static map, decoration, and ambient layers are cached to reduce per-frame draw cost.
-- Quality-aware rendering adjusts fog complexity and other visual load based on runtime pressure.
-- Additional optimization notes live in `docs/CANVAS_OPTIMIZATION.md`.
+The entire rendering pipeline — isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, ambient particles — is hand-written Canvas 2D. Static layers are cached to offscreen canvases, and quality-aware rendering adjusts detail based on runtime performance.
 
-### Persistence Model
+## Architecture
 
-- `src/app/useLocalStorage.ts` now type-guards and merges game progress structures to avoid destructive schema drift.
-- New maps can be introduced without invalidating older local saves.
+```
+src/app/
+├── hooks/          # Game loop, runtime, settings
+├── constants/      # Maps, waves, towers, heroes, combat tuning
+├── rendering/      # Canvas draw calls — towers, enemies, effects, terrain, UI
+├── components/     # React UI — menus, HUD, modals, world map
+├── sprites/        # SVG/component-based sprite definitions
+├── game/           # Combat logic helpers
+└── types/          # TypeScript interfaces
+```
 
-## Local Development
+Key entry points:
+- **Game loop**: `hooks/usePrincetonTowerDefenseRuntime.tsx` — simulation tick + render dispatch
+- **Map data**: `constants/maps.ts` — path geometry, metadata, hazards, tower restrictions
+- **Wave data**: `constants/waves.ts` — per-level enemy schedules and compositions
+- **Rendering**: `rendering/` — modular draw functions for every game element
+
+## Getting Started
 
 ```bash
+git clone https://github.com/Kevin-Liu-01/Princeton-Tower-Defense.git
+cd Princeton-Tower-Defense
 npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) and start playing.
 
-## Deploy on Vercel
+## Deployment
 
-The easiest deployment path is the [Vercel platform](https://vercel.com/new).
+Deployed on [Vercel](https://vercel.com). Push to `main` to auto-deploy.
+
+```bash
+npm run build   # Verify production build locally
+```
+
+---
+
+<div align="center">
+
+**[Play Princeton TD](https://princetontd.vercel.app/)** · Built by [Kevin Liu](https://www.kevin-liu.tech/)
+
+</div>

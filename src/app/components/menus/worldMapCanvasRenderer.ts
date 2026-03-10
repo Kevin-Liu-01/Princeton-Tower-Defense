@@ -10,6 +10,12 @@ import {
   seededRandom,
 } from "./worldMapUtils";
 
+interface StaticBgCache {
+  canvas: HTMLCanvasElement | null;
+  w: number;
+  h: number;
+}
+
 interface DrawWorldMapParams {
   canvasRef: RefObject<HTMLCanvasElement>;
   mapHeight: number;
@@ -22,6 +28,8 @@ interface DrawWorldMapParams {
   lastCanvasSizeRef: MutableRefObject<{ w: number; h: number }>;
   animTimeRef: MutableRefObject<number>;
   levels?: LevelNode[];
+  isMobile?: boolean;
+  staticBgCache?: MutableRefObject<StaticBgCache>;
 }
 
 export const drawWorldMapCanvas = ({
@@ -36,6 +44,8 @@ export const drawWorldMapCanvas = ({
   lastCanvasSizeRef,
   animTimeRef,
   levels: levelsOverride,
+  isMobile = false,
+  staticBgCache,
 }: DrawWorldMapParams): void => {
   const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
@@ -44,10 +54,12 @@ export const drawWorldMapCanvas = ({
   const getLevelById = (id: string) => getWorldLevelById(id);
   const canvas = canvasRef.current;
   if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  const rawCtx = canvas.getContext("2d");
+  if (!rawCtx) return;
+  let ctx: CanvasRenderingContext2D = rawCtx;
 
-  const dpr = window.devicePixelRatio || 1;
+  const rawDpr = window.devicePixelRatio || 1;
+  const dpr = Math.min(rawDpr, isMobile ? 1.5 : 2);
   const width = MAP_WIDTH;
   const height = mapHeight;
   const mapScale = Math.max(1.0, Math.min(1.5, containerWidth / MAP_WIDTH));
@@ -71,6 +83,32 @@ export const drawWorldMapCanvas = ({
 
   // Clear canvas (cheaper than resizing) — scale map coordinates to display
   ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+
+  // --- Static background caching ---
+  // Everything through the castle labels is static (depends only on dimensions).
+  // Cache to an offscreen canvas so we skip ~8500 lines of drawing per frame.
+  let _savedCtx: CanvasRenderingContext2D | undefined;
+  const bgCacheValid =
+    staticBgCache != null &&
+    staticBgCache.current.canvas !== null &&
+    staticBgCache.current.w === displayW &&
+    staticBgCache.current.h === displayH;
+
+  if (staticBgCache && !bgCacheValid) {
+    const bgCanvas =
+      staticBgCache.current.canvas ?? document.createElement("canvas");
+    bgCanvas.width = displayW * dpr;
+    bgCanvas.height = displayH * dpr;
+    const bgCtx = bgCanvas.getContext("2d");
+    if (bgCtx) {
+      _savedCtx = ctx;
+      ctx = bgCtx;
+      ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+      staticBgCache.current = { canvas: bgCanvas, w: displayW, h: displayH };
+    }
+  }
+
+  if (!bgCacheValid) {
 
   // Background with rich war atmosphere - deep layered gradient
   const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
@@ -115,7 +153,7 @@ export const drawWorldMapCanvas = ({
   // === ENHANCED GROUND TEXTURES ===
   // Layer 1: Large region-aware terrain patches for depth
   ctx.globalAlpha = 0.15;
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < (isMobile ? 40 : 100); i++) {
     const px = seededRandom(i * 7) * width;
     const py = seededRandom(i * 7 + 1) * height;
     const psize = 30 + seededRandom(i * 7 + 2) * 70;
@@ -155,7 +193,7 @@ export const drawWorldMapCanvas = ({
 
   // Layer 2: Region-aware dirt/soil texture with isometric perspective
   ctx.globalAlpha = 0.1;
-  for (let i = 0; i < 600; i++) {
+  for (let i = 0; i < (isMobile ? 200 : 600); i++) {
     const dx = seededRandom(i * 11) * width;
     const dy = seededRandom(i * 11 + 1) * height;
     const dw = 3 + seededRandom(i * 11 + 2) * 12;
@@ -189,7 +227,7 @@ export const drawWorldMapCanvas = ({
 
   // Layer 3: Region-aware small pebbles and debris
   ctx.globalAlpha = 0.18;
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
     const sx = seededRandom(i * 13) * width;
     const sy = seededRandom(i * 13 + 1) * height;
     const ss = 1 + seededRandom(i * 13 + 2) * 3.5;
@@ -232,7 +270,7 @@ export const drawWorldMapCanvas = ({
     }
   };
   ctx.globalAlpha = 0.4;
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < (isMobile ? 80 : 300); i++) {
     const gx = seededRandom(i * 17) * width;
     const gy = seededRandom(i * 17 + 1) * height;
     // Determine grass color based on region
@@ -252,7 +290,7 @@ export const drawWorldMapCanvas = ({
   // Layer 5: Cracks and weathering lines (region-aware)
   ctx.globalAlpha = 0.08;
   ctx.lineWidth = 1;
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < (isMobile ? 40 : 120); i++) {
     const cx = seededRandom(i * 19) * width;
     const cy = seededRandom(i * 19 + 1) * height;
     const clen = 15 + seededRandom(i * 19 + 2) * 50;
@@ -281,7 +319,7 @@ export const drawWorldMapCanvas = ({
 
   // Layer 6: Enhanced parchment/texture overlay (region-aware)
   ctx.globalAlpha = 0.05;
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < (isMobile ? 150 : 500); i++) {
     const ptx = seededRandom(i * 3) * width;
     const pty = seededRandom(i * 3 + 1) * height;
     const ptSize = 2 + seededRandom(i * 3 + 2) * 12;
@@ -8569,6 +8607,19 @@ export const drawWorldMapCanvas = ({
   drawCastleLabel(70, 50, "YOUR KINGDOM", false);
   drawCastleLabel(MAP_WIDTH - 70, 50, "ENEMY KINGDOM", true);
 
+  } // end !bgCacheValid (static background section)
+
+  if (_savedCtx) {
+    ctx = _savedCtx;
+  }
+  if (staticBgCache?.current.canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(staticBgCache.current.canvas, 0, 0);
+    ctx.restore();
+    ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+  }
+
   // --- PATH CONNECTIONS ---
   const LOCKED_PATH_COLORS: Record<
     string,
@@ -9944,7 +9995,7 @@ export const drawWorldMapCanvas = ({
 
   // === ATMOSPHERIC CLOUD LAYER ===
   ctx.save();
-  for (let c = 0; c < 12; c++) {
+  for (let c = 0; c < (isMobile ? 5 : 12); c++) {
     const cloudBaseX =
       seededRandom(c * 37) * width + Math.sin(time * 0.15 + c * 2) * 40;
     const cloudBaseY = 30 + seededRandom(c * 37 + 1) * (height * 0.25);
@@ -9978,7 +10029,7 @@ export const drawWorldMapCanvas = ({
   // === FLYING CREATURES ===
   // Birds in grassland/swamp, bats in volcanic
   ctx.save();
-  for (let b = 0; b < 8; b++) {
+  for (let b = 0; b < (isMobile ? 3 : 8); b++) {
     const birdBaseX = seededRandom(b * 53) * width;
     const birdBaseY = 15 + seededRandom(b * 53 + 1) * 35;
     const birdX =
@@ -10023,7 +10074,7 @@ export const drawWorldMapCanvas = ({
 
   // === ANIMATED DUST MOTES / PARTICLES ===
   ctx.save();
-  for (let d = 0; d < 30; d++) {
+  for (let d = 0; d < (isMobile ? 10 : 30); d++) {
     const dustX =
       seededRandom(d * 67) * width + Math.sin(time * 0.4 + d * 1.3) * 20;
     const dustY =

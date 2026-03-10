@@ -254,6 +254,7 @@ import {
 import { setPerformanceSettings, updateScenePressure, interceptShadows, getPerformanceSettings } from "../rendering/performance";
 import { getGameSettings, getSettingsVersion } from "./useSettings";
 import {
+  DEV_MODE_STORAGE_KEY,
   DECORATION_DENSITY_MULTIPLIER,
   TREE_CLUSTER_COUNT,
   GROVE_COUNT,
@@ -482,6 +483,15 @@ const DEV_PERF_STORAGE_KEY = "ptd:dev-perf-overlay-enabled";
 
 function isDefined<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
+}
+
+function readDevModeUnlocked(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(DEV_MODE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 export function usePrincetonTowerDefenseRuntime() {
@@ -726,6 +736,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
   const [cameraModeActive, setCameraModeActive] = useState(false);
   const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
+  const [isDevModeUnlocked, setIsDevModeUnlocked] = useState(readDevModeUnlocked);
+  const isDevMode = DEV_CONFIG_MENU_ENABLED || isDevModeUnlocked;
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
     () => DEV_CONFIG_MENU_ENABLED
   );
@@ -1537,7 +1549,12 @@ export function usePrincetonTowerDefenseRuntime() {
       setNextWaveTimer(WAVE_TIMER_BASE);
       setWaveInProgress(false);
       setHoveredWaveBubblePathKey(null);
-      clearTowers();
+      const prePlaced = levelData?.prePlacedTowers?.() ?? [];
+      if (prePlaced.length > 0) {
+        setTowers(prePlaced);
+      } else {
+        clearTowers();
+      }
       clearEnemies();
       setHero(null); // Will be re-initialized by the hero effect
       clearTroops();
@@ -1575,6 +1592,7 @@ export function usePrincetonTowerDefenseRuntime() {
     selectedMap,
     resetPawPoints,
     clearTowers,
+    setTowers,
     clearEnemies,
     clearTroops,
     clearProjectiles,
@@ -11918,7 +11936,11 @@ export function usePrincetonTowerDefenseRuntime() {
     setLives(0);
   }, [gameState, battleOutcome, clearAllTimers]);
 
-  const devConfigMenu = DEV_CONFIG_MENU_ENABLED ? (
+  const handleDevModeChange = useCallback((enabled: boolean) => {
+    setIsDevModeUnlocked(enabled);
+  }, []);
+
+  const devConfigMenu = isDevMode ? (
     <DevConfigMenu
       gameState={gameState}
       levelOptions={devLevelOptions}
@@ -11984,7 +12006,8 @@ export function usePrincetonTowerDefenseRuntime() {
           onDeleteCustomLevel={deleteCustomLevel}
           gameState={gameState}
           onStartWithRandomLoadout={startWithRandomLoadout}
-          isDevMode={DEV_CONFIG_MENU_ENABLED}
+          isDevMode={isDevMode}
+          onDevModeChange={handleDevModeChange}
         />
         {devConfigMenu}
       </>

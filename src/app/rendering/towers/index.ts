@@ -5,6 +5,7 @@ import {
   ISO_PRISM_D_FACTOR,
 } from "../../constants";
 import { gridToWorld, worldToScreenRounded } from "../../utils";
+import { getGameSettings } from "../../hooks/useSettings";
 import {
   drawTowerPassiveEffects,
   getTowerFoundationSize,
@@ -190,30 +191,32 @@ export function renderTower(
       break;
   }
 
-  if (tower.level > 1) {
-    const starY = screenPos.y + 20 * zoom - tower.level * 8 * zoom;
-    ctx.fillStyle = "#c9a227";
-    ctx.shadowColor = "#c9a227";
-    ctx.shadowBlur = 6 * zoom;
-    drawStar(ctx, screenPos.x, starY, 8 * zoom, 4 * zoom, "#c9a227");
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "#8b6914";
-    ctx.font = `bold ${8 * zoom}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(tower.level.toString(), screenPos.x, starY + 1 * zoom);
-  }
+  if (getGameSettings().ui.showTowerBadges) {
+    if (tower.level > 1) {
+      const starY = screenPos.y + 20 * zoom - tower.level * 8 * zoom;
+      ctx.fillStyle = "#c9a227";
+      ctx.shadowColor = "#c9a227";
+      ctx.shadowBlur = 6 * zoom;
+      drawStar(ctx, screenPos.x, starY, 8 * zoom, 4 * zoom, "#c9a227");
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#8b6914";
+      ctx.font = `bold ${8 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(tower.level.toString(), screenPos.x, starY + 1 * zoom);
+    }
 
-  if (tower.level === 4 && tower.upgrade) {
-    const badgeY = screenPos.y + 35 * zoom - tower.level * 8 * zoom;
-    ctx.fillStyle = tower.upgrade === "A" ? "#ff6b6b" : "#4ecdc4";
-    ctx.beginPath();
-    ctx.arc(screenPos.x, badgeY, 6 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.font = `bold ${8 * zoom}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(tower.upgrade, screenPos.x, badgeY);
+    if (tower.level === 4 && tower.upgrade) {
+      const badgeY = screenPos.y + 35 * zoom - tower.level * 8 * zoom;
+      ctx.fillStyle = tower.upgrade === "A" ? "#ff6b6b" : "#4ecdc4";
+      ctx.beginPath();
+      ctx.arc(screenPos.x, badgeY, 6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fff";
+      ctx.font = `bold ${8 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(tower.upgrade, screenPos.x, badgeY);
+    }
   }
 }

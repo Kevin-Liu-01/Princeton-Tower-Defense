@@ -39,9 +39,13 @@ import {
   Contrast,
   Type,
   AlertCircle,
+  Lock,
+  Unlock,
+  Star,
 } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 import type {
   GameSettings,
   QualityPreset,
@@ -536,6 +540,9 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
       <SettingRow icon={<Target size={16} />} label="Tower Radii" description="Show radius circles during placement">
         <ToggleControl value={u.showTowerRadii} onChange={(v) => update({ showTowerRadii: v })} />
       </SettingRow>
+      <SettingRow icon={<Star size={16} />} label="Tower Badges" description="Show level stars and upgrade path badges on towers">
+        <ToggleControl value={u.showTowerBadges} onChange={(v) => update({ showTowerBadges: v })} />
+      </SettingRow>
 
       <SectionDivider label="Gameplay" />
       <SettingRow icon={<Layers size={16} />} label="Wave Preview" description="Show upcoming wave composition">
@@ -715,6 +722,29 @@ export interface SettingsModalProps {
   applyPreset: (preset: QualityPreset) => void;
   resetToDefaults: () => void;
   resetCategory: (category: SettingsCategory) => void;
+  onDevModeChange?: (enabled: boolean) => void;
+}
+
+const DEV_PASSWORD = "princetonpowerlifting";
+
+function readDevModeFromStorage(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(DEV_MODE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeDevModeToStorage(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (enabled) {
+      window.localStorage.setItem(DEV_MODE_STORAGE_KEY, "1");
+    } else {
+      window.localStorage.removeItem(DEV_MODE_STORAGE_KEY);
+    }
+  } catch { /* noop */ }
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -724,10 +754,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   applyPreset,
   resetToDefaults,
   resetCategory,
+  onDevModeChange,
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsCategory>("graphics");
   const [showPresets, setShowPresets] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [devPassword, setDevPassword] = useState("");
+  const [devUnlocked, setDevUnlocked] = useState(readDevModeFromStorage);
+  const [devPasswordError, setDevPasswordError] = useState(false);
 
   const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const PanelComponent = activeTabDef.panel;
@@ -750,9 +784,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   }, [confirmReset, resetToDefaults]);
 
+  const handleDevPasswordSubmit = useCallback(() => {
+    if (devPassword === DEV_PASSWORD) {
+      setDevUnlocked(true);
+      writeDevModeToStorage(true);
+      setDevPassword("");
+      setDevPasswordError(false);
+      onDevModeChange?.(true);
+    } else {
+      setDevPasswordError(true);
+      setTimeout(() => setDevPasswordError(false), 2000);
+    }
+  }, [devPassword, onDevModeChange]);
+
+  const handleDevModeDisable = useCallback(() => {
+    setDevUnlocked(false);
+    writeDevModeToStorage(false);
+    onDevModeChange?.(false);
+  }, [onDevModeChange]);
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 backdrop-blur-sm"
       style={{ background: OVERLAY.black60 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -858,29 +911,86 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               borderColor: GOLD.innerBorder08,
             }}
           >
-            <div className="py-2">
-              {TABS.map((tab) => {
-                const active = tab.id === activeTab;
-                return (
+            <div className="py-2 flex flex-col h-full">
+              <div className="flex-1">
+                {TABS.map((tab) => {
+                  const active = tab.id === activeTab;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
+                      style={{
+                        background: active
+                          ? `linear-gradient(90deg, rgba(180,140,60,0.15), transparent)`
+                          : "transparent",
+                        borderRight: active ? `2px solid rgba(251,191,36,0.6)` : "2px solid transparent",
+                        color: active ? "rgba(253,230,138,0.9)" : "rgba(253,230,138,0.45)",
+                      }}
+                    >
+                      <span className={active ? "text-amber-400" : "text-amber-600/50"}>
+                        {tab.icon}
+                      </span>
+                      <span className="text-sm font-medium">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Developer Mode */}
+              <div
+                className="mt-auto px-3 pt-3 pb-4 border-t"
+                style={{ borderColor: GOLD.innerBorder08 }}
+              >
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}>
+                    {devUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
+                  </span>
+                  <span
+                    className="text-xs font-medium"
+                    style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}
+                  >
+                    Developer
+                  </span>
+                </div>
+                {devUnlocked ? (
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all"
+                    onClick={handleDevModeDisable}
+                    className="w-full px-2 py-1.5 rounded text-xs font-medium transition-colors"
                     style={{
-                      background: active
-                        ? `linear-gradient(90deg, rgba(180,140,60,0.15), transparent)`
-                        : "transparent",
-                      borderRight: active ? `2px solid rgba(251,191,36,0.6)` : "2px solid transparent",
-                      color: active ? "rgba(253,230,138,0.9)" : "rgba(253,230,138,0.45)",
+                      background: "rgba(74,222,128,0.1)",
+                      border: "1px solid rgba(74,222,128,0.25)",
+                      color: "rgba(74,222,128,0.8)",
                     }}
                   >
-                    <span className={active ? "text-amber-400" : "text-amber-600/50"}>
-                      {tab.icon}
-                    </span>
-                    <span className="text-sm font-medium">{tab.label}</span>
+                    Enabled — Disable
                   </button>
-                );
-              })}
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    <input
+                      type="password"
+                      value={devPassword}
+                      onChange={(e) => setDevPassword(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleDevPasswordSubmit();
+                      }}
+                      placeholder="Password"
+                      className="w-full px-2 py-1.5 rounded text-xs"
+                      style={{
+                        background: PANEL.bgDeep,
+                        border: `1px solid ${devPasswordError ? "rgba(239,68,68,0.5)" : GOLD.innerBorder10}`,
+                        color: "rgba(253,230,138,0.7)",
+                        outline: "none",
+                      }}
+                    />
+                    {devPasswordError && (
+                      <span className="text-xs" style={{ color: "rgba(239,68,68,0.8)" }}>
+                        Wrong password
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
