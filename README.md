@@ -40,7 +40,7 @@ Everything — towers, enemies, terrain, effects, UI — is drawn and animated i
 | | | |
 |:---:|:---:|:---:|
 | ![Missile Barrage 1](public/images/new/gameplay_missile1.png) | ![Missile Barrage 2](public/images/new/gameplay_missile2.png) | ![Missile Barrage 3](public/images/new/gameplay_missile3.png) |
-| ![Winter Missile](public/images/new/gameplay_winter_missile.png) | ![Volcano Missile](public/images/new/gameplay_volcano_missile.png) | |
+| ![Winter Missile](public/images/new/gameplay_winter_missile.png) | ![Volcano Missile](public/images/new/gameplay_volcano_missile.png) | ![Desert Missile](public/images/new/gameplay_desert_missile.png) |
 
 </div>
 
