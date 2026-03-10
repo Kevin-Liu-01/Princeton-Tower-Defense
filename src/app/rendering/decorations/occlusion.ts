@@ -1,11 +1,16 @@
 import type { Position } from "../../types";
 import type { RuntimeDecoration } from "./decorationHelpers";
+import type { DecorationSprite } from "./spriteCache";
 
 export interface CachedVisibleDecoration {
   decoration: RuntimeDecoration;
   screenPos: Position;
   isoY: number;
   shadowOnly?: boolean;
+  /** Pre-rendered sprite for fast per-frame drawing (depth-sensitive decorations) */
+  sprite?: DecorationSprite;
+  /** Separate shadow-only sprite for background shadow pass */
+  shadowSprite?: DecorationSprite;
 }
 
 export interface OcclusionAnchor {

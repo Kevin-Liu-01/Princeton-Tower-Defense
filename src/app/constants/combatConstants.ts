@@ -12,7 +12,7 @@ export const ENEMY_REGEN_RATE = 0.015;
 export const HERO_COMBAT_RADIUS = 100;
 export const HERO_AUTO_ABILITY_HP_THRESHOLD = 0.25;
 export const STATION_TROOP_RANGE = 280;
-export const BARRACKS_TROOP_RANGE = 220;
+export const BARRACKS_TROOP_RANGE = 300;
 export const SPELL_TROOP_RANGE = 200;
 export const HERO_SUMMON_RANGE = 180;
 

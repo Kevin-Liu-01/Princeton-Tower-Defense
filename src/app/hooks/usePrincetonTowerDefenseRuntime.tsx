@@ -104,6 +104,7 @@ import {
   DAMAGE_BUFF_CAP,
   ATTACK_SPEED_BUFF_CAP,
   STATION_TROOP_RANGE,
+  BARRACKS_TROOP_RANGE,
   HERO_SUMMON_RANGE,
   SENTINEL_NEXUS_STATS,
   SUNFORGE_ORRERY_STATS,
@@ -195,6 +196,10 @@ import {
 } from "../rendering/decorations/occlusion";
 import { drawTriangle, drawRoundedRect } from "../rendering/utils/drawUtils";
 import { insertionSortBy } from "../rendering/utils/insertionSort";
+import {
+  prerenderDecorationSprite,
+  drawDecorationSprite,
+} from "../rendering/decorations/spriteCache";
 // Rendering
 import {
   renderTower,
@@ -321,6 +326,7 @@ import {
   SpecialBuildingTooltip,
   LandmarkTooltip,
   HazardTooltip,
+  DecorationInspectorTooltip,
   HeroHoverTooltip,
   EnemyInspector,
   EnemyDetailTooltip,
@@ -454,155 +460,6 @@ const CAMERA_ZOOM_MAX = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.0014;
 const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
 const FRIENDLY_SEPARATION_MULT = 0.18;
-
-
-// All decoration types that use decorTime for animation.  At high quality they
-// animate live; at lower quality the stride-based freeze bakes them into the
-// static decoration canvas so they stay visible but stop animating.
-const RUNTIME_ANIMATED_DECORATION_TYPES = new Set<string>([
-  // Fire / light
-  "torch",
-  "fire",
-  "fire_pit",
-  "campfire",
-  "lamppost",
-  "ember",
-  "ember_rock",
-  "fire_crystal",
-  "charred_tree",
-  // Water / liquid
-  "fountain",
-  "lava_pool",
-  "lava_fall",
-  "deep_water",
-  "poison_pool",
-  "lake",
-  "algae_pool",
-  "fishing_spot",
-  "frozen_pond",
-  "frozen_waterfall",
-  "sunken_pillar",
-  "dock",
-  "lily_pad",
-  // Ice / snow
-  "ice_crystal",
-  "snow_pile",
-  "glacier",
-  "ice_fortress",
-  "ice_spire",
-  "ice_throne",
-  "icicles",
-  "frozen_soldier",
-  "aurora_crystal",
-  "snow_lantern",
-  "snowman",
-  "ice_bridge",
-  "frost_citadel",
-  // Volcanic / dark
-  "volcano_rim",
-  "obsidian_castle",
-  "dark_barracks",
-  "dark_throne",
-  "dark_spire",
-  "obsidian_pillar",
-  "skull_throne",
-  "infernal_gate",
-  // Swamp / nature
-  "swamp_tree",
-  "mushroom",
-  "fog_wisp",
-  "cauldron",
-  "tentacle",
-  "reeds",
-  // Desert / exotic
-  "cobra_statue",
-  "pyramid",
-  "obelisk",
-  "dune",
-  // Structures / misc
-  "hut",
-  "tent",
-  "signpost",
-  "treasure_chest",
-  "hanging_cage",
-  "statue",
-  "idol_statue",
-  "war_monument",
-  "bone_altar",
-  "sun_obelisk",
-  "glowing_runes",
-  // Flora (common – will freeze first under stride)
-  "grass",
-  "flowers",
-]);
-
-// Landmark/hero decorations that should never pop in and out due stride throttling.
-const NON_THROTTLED_ANIMATED_DECORATION_TYPES = new Set<string>([
-  "fountain",
-  "lava_fall",
-  "tentacle",
-]);
-
-// Tall/occluding decorations that need proper depth interleave with units near the path.
-const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
-  "tree",
-  "pine_tree",
-  "pine",
-  "palm",
-  "swamp_tree",
-  "charred_tree",
-  "mushroom",
-  "hut",
-  "building",
-  "tent",
-  "fence",
-  "cart",
-  "barrel",
-  "bench",
-  "ruins",
-  "broken_wall",
-  "broken_bridge",
-  "gate",
-  "dock",
-  "statue",
-  "obelisk",
-  "pyramid",
-  "sphinx",
-  "giant_sphinx",
-  "nassau_hall",
-  "carnegie_lake",
-  "glacier",
-  "ice_fortress",
-  "ice_throne",
-  "obsidian_castle",
-  "witch_cottage",
-  "volcano_rim",
-  "skull_throne",
-  "obsidian_pillar",
-  "hanging_cage",
-  "idol_statue",
-  "war_monument",
-  "bone_altar",
-  "sun_obelisk",
-  "frost_citadel",
-  "infernal_gate",
-  "ice_bridge",
-  "tombstone",
-]);
-
-// Some oversized landmarks should always interleave by depth, regardless of path proximity.
-const ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES = new Set<DecorationType>([
-  "nassau_hall",
-  "carnegie_lake",
-  "ruins",
-  "sunken_pillar",
-  "war_monument",
-  "bone_altar",
-  "sun_obelisk",
-  "frost_citadel",
-  "infernal_gate",
-]);
-const DEPTH_SENSITIVE_PATH_DISTANCE = 180;
 
 
 const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
@@ -837,6 +694,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const [hoveredInspectEnemy, setHoveredInspectEnemy] = useState<string | null>(null);
   const [hoveredInspectTroop, setHoveredInspectTroop] = useState<string | null>(null);
   const [hoveredInspectHero, setHoveredInspectHero] = useState(false);
+  const [hoveredInspectDecoration, setHoveredInspectDecoration] = useState<Decoration | null>(null);
   // Troop/Hero movement target indicator state
   const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
   const [moveTargetValid, setMoveTargetValid] = useState(false);
@@ -2623,7 +2481,7 @@ export function usePrincetonTowerDefenseRuntime() {
             attackAnim: 0,
             selected: false,
             spawnPoint: rallyPoint,
-            moveRadius: 220,
+            moveRadius: BARRACKS_TROOP_RANGE,
             spawnSlot: availableSlot,
           };
 
@@ -7410,6 +7268,10 @@ export function usePrincetonTowerDefenseRuntime() {
       if (hasCorrection) ctx.save();
       if (hasCorrection) ctx.translate(offsetCorrectionX, offsetCorrectionY);
       for (const entry of entries) {
+        if (entry.sprite) {
+          drawDecorationSprite(ctx, entry.sprite, entry.screenPos);
+          continue;
+        }
         const dec = entry.decoration;
         const decVolume = getDecorationVolumeSpec(dec.type, dec.heightTag);
         const hasBackgroundShadowPass = decVolume.backgroundShadowOnly;
@@ -7574,7 +7436,6 @@ export function usePrincetonTowerDefenseRuntime() {
 
       const backgroundDecorations: CachedVisibleDecoration[] = [];
       const staticDecorations: CachedVisibleDecoration[] = [];
-      const animatedDecorations: CachedVisibleDecoration[] = [];
       const depthSensitiveDecorations: CachedVisibleDecoration[] = [];
       const occlusionAnchors: OcclusionAnchor[] = visibleDecorations.reduce<
         OcclusionAnchor[]
@@ -7600,28 +7461,43 @@ export function usePrincetonTowerDefenseRuntime() {
         return anchors;
       }, []);
 
-      const renderPathSegments: PathSegment[] = [];
-      const renderPathKeys =
+      // Decorations within 7 tiles of a road need correct depth layering
+      // with towers/enemies; everything else is baked into the static canvas.
+      const DEPTH_LAYER_ROAD_DIST = TILE_SIZE * 7;
+      // Vertical animated types that need depth sorting with towers/enemies.
+      const ANIMATED_DEPTH_TYPES: ReadonlySet<string> = new Set([
+        "torch", "fire", "fire_pit", "campfire", "fountain",
+        "glowing_runes", "tentacle",
+      ]);
+      // Flat/ground animated types rendered in the background pass (always
+      // behind upright decorations) but still animate per-frame.
+      const ANIMATED_BG_TYPES: ReadonlySet<string> = new Set([
+        "deep_water", "lava_pool", "lava_fall", "poison_pool",
+        "lake", "algae_pool", "fishing_spot", "carnegie_lake",
+      ]);
+      // Large structures that always need depth sorting regardless of road proximity.
+      const ALWAYS_DEPTH_SORTED_TYPES: ReadonlySet<string> = new Set([
+        "broken_wall", "broken_bridge", "ruins", "hut",
+        "statue", "obelisk", "hanging_cage",
+      ]);
+      const decorPathKeys =
         activeWaveSpawnPaths.length > 0
           ? activeWaveSpawnPaths
           : getLevelPathKeys(selectedMap);
-      for (const pathKey of renderPathKeys) {
+      const decorPathSegments: PathSegment[] = [];
+      for (const pathKey of decorPathKeys) {
         const pathPoints = MAP_PATHS[pathKey];
         if (pathPoints && pathPoints.length >= 2) {
-          renderPathSegments.push(...buildPathSegments(pathPoints));
+          decorPathSegments.push(...buildPathSegments(pathPoints));
         }
       }
-      const renderDistToPath = (worldPos: Position): number =>
-        minDistanceToPath(worldPos, renderPathSegments);
+
       for (const entry of visibleDecorations) {
-        const type = entry.decoration.type;
         const renderLayer = getDecorationRenderLayer(entry.decoration);
         const volume = getDecorationVolumeSpec(
           entry.decoration.type,
           entry.decoration.heightTag
         );
-        const heightTag = volume.heightTag;
-        const isLargeByHeight = heightTag === "tall" || heightTag === "landmark";
         const occlusionState = getOcclusionState(entry, occlusionAnchors);
         const resolvedEntry =
           occlusionState.clampIsoY === undefined
@@ -7633,51 +7509,77 @@ export function usePrincetonTowerDefenseRuntime() {
         if (volume.backgroundShadowOnly) {
           backgroundDecorations.push({ ...resolvedEntry, shadowOnly: true });
         }
-        if (renderLayer === "background") {
-          backgroundDecorations.push(resolvedEntry);
-        } else if (occlusionState.isInsideOccluder) {
-          // Decorations inside/around landmark volumes must interleave by depth.
-          depthSensitiveDecorations.push(resolvedEntry);
-        } else if (RUNTIME_ANIMATED_DECORATION_TYPES.has(type)) {
-          if (heightTag === "landmark") {
-            depthSensitiveDecorations.push(resolvedEntry);
-          } else {
-            animatedDecorations.push(resolvedEntry);
-          }
-        } else if (
-          ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES.has(type) ||
-          heightTag === "landmark" ||
-          ((DEPTH_SENSITIVE_DECORATION_TYPES.has(type) || isLargeByHeight) &&
-            renderDistToPath({
-              x: resolvedEntry.decoration.x,
-              y: resolvedEntry.decoration.y,
-            }) <= DEPTH_SENSITIVE_PATH_DISTANCE)
+        const isNearRoad =
+          minDistanceToPath(
+            { x: entry.decoration.x, y: entry.decoration.y },
+            decorPathSegments,
+          ) <= DEPTH_LAYER_ROAD_DIST;
+        const isDepthAnimated = ANIMATED_DEPTH_TYPES.has(entry.decoration.type);
+        const isBgAnimated = ANIMATED_BG_TYPES.has(entry.decoration.type);
+        const alwaysDepth = ALWAYS_DEPTH_SORTED_TYPES.has(entry.decoration.type);
+        if (
+          volume.heightTag === "landmark" ||
+          alwaysDepth ||
+          (isNearRoad &&
+            (isDepthAnimated ||
+              (volume.heightTag !== "ground" && volume.heightTag !== "short")))
         ) {
           depthSensitiveDecorations.push(resolvedEntry);
+        } else if (renderLayer === "background" || isBgAnimated) {
+          backgroundDecorations.push(resolvedEntry);
         } else {
           staticDecorations.push(resolvedEntry);
         }
       }
 
-      const shouldFreezeAnimations = renderQuality !== "high";
       const liveAnimatedDecorations: CachedVisibleDecoration[] = [];
-      if (!shouldFreezeAnimations) {
-        liveAnimatedDecorations.push(...animatedDecorations);
-      } else {
-        for (const entry of animatedDecorations) {
-          if (
-            NON_THROTTLED_ANIMATED_DECORATION_TYPES.has(
-              entry.decoration.type
-            )
-          ) {
-            liveAnimatedDecorations.push(entry);
-          } else {
-            staticDecorations.push(entry);
-          }
-        }
-      }
 
       staticDecorations.sort((a, b) => a.isoY - b.isoY);
+
+      // Animated depth-sensitive decorations render per-frame (live decorTime);
+      // static ones get sprite-cached for fast drawImage blitting.
+      const spriteCachedDepthDecorations: CachedVisibleDecoration[] = [];
+      for (const entry of depthSensitiveDecorations) {
+        if (ANIMATED_DEPTH_TYPES.has(entry.decoration.type)) {
+          liveAnimatedDecorations.push(entry);
+        } else {
+          const dec = entry.decoration;
+          const vol = getDecorationVolumeSpec(dec.type, dec.heightTag);
+          entry.sprite = prerenderDecorationSprite(
+            dec.type,
+            cameraZoom * dec.scale,
+            dec.rotation,
+            dec.variant,
+            dec.x,
+            dec.y,
+            selectedMap,
+            mapTheme,
+            dpr,
+            dec.heightTag,
+            false,
+            vol.backgroundShadowOnly,
+          ) ?? undefined;
+          spriteCachedDepthDecorations.push(entry);
+        }
+      }
+      for (const entry of backgroundDecorations) {
+        if (ANIMATED_BG_TYPES.has(entry.decoration.type)) continue;
+        const dec = entry.decoration;
+        entry.sprite = prerenderDecorationSprite(
+          dec.type,
+          cameraZoom * dec.scale,
+          dec.rotation,
+          dec.variant,
+          dec.x,
+          dec.y,
+          selectedMap,
+          mapTheme,
+          dpr,
+          dec.heightTag,
+          !!entry.shadowOnly,
+          false,
+        ) ?? undefined;
+      }
 
       let staticDecorationCanvas: HTMLCanvasElement | null = null;
       if (typeof document !== "undefined") {
@@ -7731,11 +7633,11 @@ export function usePrincetonTowerDefenseRuntime() {
         canvas: staticDecorationCanvas,
         backgroundDecorations,
         animatedDecorations: liveAnimatedDecorations,
-        depthSensitiveDecorations,
+        depthSensitiveDecorations: spriteCachedDepthDecorations,
         anchorOffset: { ...cameraOffset },
       };
       animatedVisibleDecorations = liveAnimatedDecorations;
-      depthSensitiveVisibleDecorations = depthSensitiveDecorations;
+      depthSensitiveVisibleDecorations = spriteCachedDepthDecorations;
     }
 
     for (const entry of animatedVisibleDecorations) {
@@ -7753,15 +7655,17 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     }
     for (const entry of depthSensitiveVisibleDecorations) {
+      const correctedPos = decorPosCorrectX === 0 && decorPosCorrectY === 0
+        ? entry.screenPos
+        : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
       renderables.push({
         type: "decoration",
         data: {
           ...entry.decoration,
           decorTime,
           selectedMap,
-          screenPos: decorPosCorrectX === 0 && decorPosCorrectY === 0
-            ? entry.screenPos
-            : { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY },
+          screenPos: correctedPos,
+          _sprite: entry.sprite,
         },
         isoY: entry.isoY,
       });
@@ -8480,28 +8384,33 @@ export function usePrincetonTowerDefenseRuntime() {
             selectedMap: string;
             screenPos?: Position;
             heightTag?: DecorationHeightTag;
+            _sprite?: import("../rendering/decorations/spriteCache").DecorationSprite;
           };
           const decScreenPos = decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
-          const decScale = cameraZoom * decData.scale;
-          ctx.save();
-          renderDecorationItem({
-            ctx,
-            screenPos: decScreenPos,
-            scale: decScale,
-            type: decData.type,
-            rotation: decData.rotation,
-            variant: decData.variant,
-            decorTime: decData.decorTime,
-            decorX: decData.x,
-            decorY: decData.y,
-            selectedMap: decData.selectedMap,
-            mapTheme,
-            skipShadow: getDecorationVolumeSpec(
-              decData.type,
-              decData.heightTag
-            ).backgroundShadowOnly,
-          });
-          ctx.restore();
+          if (decData._sprite) {
+            drawDecorationSprite(ctx, decData._sprite, decScreenPos);
+          } else {
+            const decScale = cameraZoom * decData.scale;
+            ctx.save();
+            renderDecorationItem({
+              ctx,
+              screenPos: decScreenPos,
+              scale: decScale,
+              type: decData.type,
+              rotation: decData.rotation,
+              variant: decData.variant,
+              decorTime: decData.decorTime,
+              decorX: decData.x,
+              decorY: decData.y,
+              selectedMap: decData.selectedMap,
+              mapTheme,
+              skipShadow: getDecorationVolumeSpec(
+                decData.type,
+                decData.heightTag
+              ).backgroundShadowOnly,
+            });
+            ctx.restore();
+          }
           break;
         }
         case "tower":
@@ -9822,7 +9731,7 @@ export function usePrincetonTowerDefenseRuntime() {
       );
       const clickedSpecialTower =
         levelSpecialTowers.find(
-          (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 105
+          (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 140
         ) ?? null;
       const clickedSentinelNexus =
         clickedSpecialTower?.type === "sentinel_nexus"
@@ -10406,6 +10315,29 @@ export function usePrincetonTowerDefenseRuntime() {
         setHoveredInspectTroop(hoveredTroop?.id || null);
         setHoveredInspectHero(isHeroHovered);
 
+        const hasUnitHover = !!(hoveredEnemy || hoveredTroop || isHeroHovered);
+        let closestDec: Decoration | null = null;
+        if (!hasUnitHover) {
+          const allDecorations = cachedDecorationsRef.current?.decorations;
+          if (allDecorations) {
+            let bestDecDist = Infinity;
+            for (const dec of allDecorations) {
+              const decScreen = worldToScreen(
+                { x: dec.x, y: dec.y },
+                width, height, dpr,
+                cameraOffset, cameraZoom,
+              );
+              const hitRadius = cameraZoom * dec.scale * 25;
+              const dist = distance({ x, y }, decScreen);
+              if (dist < hitRadius && dist < bestDecDist) {
+                bestDecDist = dist;
+                closestDec = dec;
+              }
+            }
+          }
+        }
+        setHoveredInspectDecoration(closestDec);
+
         if (gameSpeed === 0) {
           return;
         }
@@ -10460,7 +10392,7 @@ export function usePrincetonTowerDefenseRuntime() {
           towerWorldPos, width, height, dpr, cameraOffset, cameraZoom
         );
         const dist = distance({ x, y }, towerScreenPos);
-        if (dist < 60 && dist < nearestSpecialDist) {
+        if (dist < 80 && dist < nearestSpecialDist) {
           hoveredSpecial = tower;
           nearestSpecialDist = dist;
         }
@@ -12055,6 +11987,9 @@ export function usePrincetonTowerDefenseRuntime() {
               )}
               {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !selectedTower && (
                 <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
+              )}
+              {inspectorActive && hoveredInspectDecoration && (
+                <DecorationInspectorTooltip decoration={hoveredInspectDecoration} position={mousePos} />
               )}
               <EnemyInspector
                 isActive={inspectorActive}

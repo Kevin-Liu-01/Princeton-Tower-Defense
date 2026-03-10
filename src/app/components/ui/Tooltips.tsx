@@ -33,7 +33,8 @@ import {
   Crosshair,
   Rocket,
 } from "lucide-react";
-import type { Tower, TowerType, Position, SpellType } from "../../types";
+import type { Tower, TowerType, Position, SpellType, Decoration } from "../../types";
+import { getDecorationVolumeSpec } from "../../utils";
 import { STATION_TROOP_RANGE, TOWER_DATA } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
 import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
@@ -1051,3 +1052,102 @@ export const HazardTooltip: React.FC<HazardTooltipProps> = ({ hazardType, positi
     </div>
   );
 };
+
+// =============================================================================
+// DECORATION INSPECTOR TOOLTIP
+// =============================================================================
+
+interface DecorationInspectorTooltipProps {
+  decoration: Decoration;
+  position: Position;
+}
+
+const HEIGHT_TAG_COLORS: Record<string, string> = {
+  ground: "text-stone-400",
+  short: "text-emerald-400",
+  medium: "text-sky-400",
+  tall: "text-amber-400",
+  landmark: "text-purple-400",
+};
+
+export const DecorationInspectorTooltip: React.FC<DecorationInspectorTooltipProps> = ({
+  decoration,
+  position,
+}) => {
+  const volume = getDecorationVolumeSpec(decoration.type, decoration.heightTag);
+  const displayName = decoration.type
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const tooltipWidth = 220;
+  let tooltipX = position.x + 20;
+  let tooltipY = position.y - 30;
+  if (tooltipX + tooltipWidth > window.innerWidth - 10)
+    tooltipX = position.x - tooltipWidth - 20;
+  if (tooltipY < 60) tooltipY = 60;
+  if (tooltipY + 160 > window.innerHeight - 10)
+    tooltipY = window.innerHeight - 170;
+
+  const tagColor = HEIGHT_TAG_COLORS[volume.heightTag] ?? "text-stone-400";
+
+  return (
+    <div
+      className="fixed pointer-events-none shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+      style={{
+        left: tooltipX,
+        top: tooltipY,
+        zIndex: 260,
+        width: tooltipWidth,
+        background: panelGradient,
+        border: "1.5px solid " + GOLD.border30,
+        boxShadow: "0 0 20px " + GOLD.glow07,
+      }}
+    >
+      <div
+        className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10"
+        style={{ border: "1px solid " + GOLD.innerBorder08 }}
+      />
+      <div
+        className="px-3 py-1.5 relative z-10"
+        style={{
+          background: PANEL.bgWarmMid,
+          borderBottom: "1px solid " + GOLD.border25,
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Eye className="text-cyan-400" size={14} />
+          <span className="font-bold text-amber-200 text-sm">
+            {displayName}
+          </span>
+        </div>
+        <div className="text-[9px] text-amber-500/70 uppercase tracking-wider mt-0.5">
+          Decoration Inspector
+        </div>
+      </div>
+      <div className="px-3 py-2 space-y-1">
+        <Row label="Type" value={decoration.type} />
+        <Row label="Height" value={volume.heightTag} valueClass={tagColor} />
+        <Row label="Scale" value={decoration.scale.toFixed(2)} />
+        <Row label="Variant" value={String(decoration.variant)} />
+        <Row
+          label="World"
+          value={`(${Math.round(decoration.x)}, ${Math.round(decoration.y)})`}
+        />
+        <Row label="Rotation" value={`${(decoration.rotation * (180 / Math.PI)).toFixed(0)}°`} />
+      </div>
+    </div>
+  );
+};
+
+const Row: React.FC<{
+  label: string;
+  value: string;
+  valueClass?: string;
+}> = ({ label, value, valueClass }) => (
+  <div className="flex justify-between text-[10px]">
+    <span className="text-amber-500/60 uppercase tracking-wider">{label}</span>
+    <span className={valueClass ?? "text-amber-100/90 font-medium"}>
+      {value}
+    </span>
+  </div>
+);
