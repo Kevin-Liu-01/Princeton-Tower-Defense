@@ -7043,7 +7043,7 @@ export function renderStationTower(
     ctx.strokeStyle = "#b89227";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.arc(bX - 4 * zoom, bY - 18 * zoom, 4.5 * zoom, Math.PI, 0);
+    ctx.arc(bX, bY - 20 * zoom, 4.5 * zoom, Math.PI, 0);
     ctx.stroke();
 
     // Hanging herb drying rack
@@ -8829,7 +8829,7 @@ export function renderStationTower(
     ctx.strokeStyle = "#b89227";
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.arc(bX - 0 * zoom, bY - 20 * zoom, 5.5 * zoom, Math.PI, 0);
+    ctx.arc(bX, bY - 20 * zoom, 5.5 * zoom, Math.PI, 0);
     ctx.stroke();
     // Interior purple glow
     const intGlow = 0.4 + Math.sin(time * 2) * 0.15;
