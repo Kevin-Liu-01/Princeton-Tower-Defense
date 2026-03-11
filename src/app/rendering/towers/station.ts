@@ -129,6 +129,10 @@ export function renderStationTower(
 ) {
   void colors;
 
+  const is4A = tower.level === 4 && tower.upgrade === "A";
+  const is4B = tower.level === 4 && tower.upgrade === "B";
+  const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
+
   ctx.save();
   // Shift the entire building up slightly
   screenPos = { x: screenPos.x, y: screenPos.y - 10 * zoom };
@@ -1937,13 +1941,13 @@ export function renderStationTower(
       baseW + 26,
       baseD + 42,
       12,
-      "#3a3a42",
-      "#2a2a32",
-      "#1a1a22",
+      uc("#3a3a42", "#1e2d55", "#3a3a42"),
+      uc("#2a2a32", "#142248", "#2a2a32"),
+      uc("#1a1a22", "#0c1438", "#1a1a22"),
     );
 
     // Heavy iron reinforcement bands
-    ctx.strokeStyle = "#4a4a52";
+    ctx.strokeStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(
@@ -1975,7 +1979,7 @@ export function renderStationTower(
     ctx.stroke();
 
     // Foundation anchor points with gold caps
-    ctx.fillStyle = "#5a5a62";
+    ctx.fillStyle = uc("#5a5a62", "#384a72", "#5a5a62");
     const anchorPoints = [
       {
         x: screenPos.x - (baseW + 26) * zoom * 0.5,
@@ -2007,7 +2011,7 @@ export function renderStationTower(
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 1.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#5a5a62";
+      ctx.fillStyle = uc("#5a5a62", "#384a72", "#5a5a62");
     }
 
     // Royal stone tier
@@ -2017,9 +2021,9 @@ export function renderStationTower(
       baseW + 16,
       baseD + 30,
       9,
-      "#5a5a62",
-      "#4a4a52",
-      "#3a3a42",
+      uc("#5a5a62", "#384a72", "#5a5a62"),
+      uc("#4a4a52", "#2a3a65", "#4a4a52"),
+      uc("#3a3a42", "#1e2d55", "#3a3a42"),
     );
 
     // Gold decorative molding on middle tier
@@ -2041,13 +2045,13 @@ export function renderStationTower(
       baseW + 8,
       baseD + 18,
       6,
-      "#6a6a72",
-      "#5a5a62",
-      "#4a4a52",
+      uc("#6a6a72", "#485a80", "#6a6a72"),
+      uc("#5a5a62", "#384a72", "#5a5a62"),
+      uc("#4a4a52", "#2a3a65", "#4a4a52"),
     );
 
     // Royal heraldic floor pattern
-    ctx.strokeStyle = "#4a4a52";
+    ctx.strokeStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.lineWidth = 0.8 * zoom;
     // Cross pattern
     for (let i = -3; i <= 3; i++) {
@@ -2145,7 +2149,11 @@ export function renderStationTower(
       6,
       5,
       12,
-      { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
+      {
+        top: uc("#7a7a82", "#5570a8", "#7a7a82"),
+        left: uc("#5a5a62", "#384a72", "#5a5a62"),
+        right: uc("#4a4a52", "#2a3a65", "#4a4a52"),
+      },
       zoom,
     );
     drawIsometricPrism(
@@ -2155,7 +2163,11 @@ export function renderStationTower(
       6,
       5,
       12,
-      { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
+      {
+        top: uc("#7a7a82", "#5570a8", "#7a7a82"),
+        left: uc("#5a5a62", "#384a72", "#5a5a62"),
+        right: uc("#4a4a52", "#2a3a65", "#4a4a52"),
+      },
       zoom,
     );
 
@@ -2186,7 +2198,7 @@ export function renderStationTower(
     ctx.stroke();
 
     // Pillar caps with finials
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.beginPath();
     ctx.moveTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 18 * zoom);
     ctx.lineTo(
@@ -2251,11 +2263,15 @@ export function renderStationTower(
       8,
       6,
       16,
-      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+      {
+        top: uc("#5a5a62", "#384a72", "#5a5a62"),
+        left: uc("#4a4a52", "#2a3a65", "#4a4a52"),
+        right: uc("#3a3a42", "#1e2d55", "#3a3a42"),
+      },
       zoom,
     );
     // Guard silhouette
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = uc("#3a3a42", "#1e2d55", "#3a3a42");
     ctx.beginPath();
     ctx.arc(guardX, guardY - 20 * zoom, 3 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2344,7 +2360,7 @@ export function renderStationTower(
   // Common track bed (gravel ballast)
   const bedColor =
     tower.level >= 4
-      ? "#3a3a42"
+      ? uc("#42382a", "#1e2d55", "#3a3a42")
       : tower.level >= 3
         ? "#4a4a52"
         : tower.level >= 2
@@ -2369,7 +2385,7 @@ export function renderStationTower(
   const numSleepers = 9;
   const sleeperColor =
     tower.level >= 4
-      ? "#4a4a52"
+      ? uc("#52483a", "#2a3a65", "#4a4a52")
       : tower.level >= 3
         ? "#5a5a62"
         : tower.level >= 2
@@ -2377,7 +2393,7 @@ export function renderStationTower(
           : "#6b5030";
   const sleeperDark =
     tower.level >= 4
-      ? "#3a3a42"
+      ? uc("#42382a", "#1e2d55", "#3a3a42")
       : tower.level >= 3
         ? "#4a4a52"
         : tower.level >= 2
@@ -2519,8 +2535,7 @@ export function renderStationTower(
       const perpY = railOff * zoom * 0.125;
 
       // Spike
-      ctx.fillStyle =
-        tower.level >= 4 && tower.upgrade === "A" ? "#c9a227" : "#e06000";
+      ctx.fillStyle = uc("#c9a227", "#8090b8", "#e06000");
       ctx.beginPath();
       ctx.arc(
         sleeperCenter.x + perpX,
@@ -2581,9 +2596,17 @@ export function renderStationTower(
   // ---- BACK FENCE EDGES (drawn behind building body for correct isometric depth) ----
   {
     const fPostColor =
-      tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#6a5230";
+      tower.level >= 4
+        ? uc("#c9a227", "#8090b8", "#c9a227")
+        : tower.level >= 3
+          ? "#6a6a72"
+          : "#6a5230";
     const fRailColor =
-      tower.level >= 4 ? "#a88420" : tower.level >= 3 ? "#5a5a62" : "#5a4220";
+      tower.level >= 4
+        ? uc("#a88420", "#6878a0", "#a88420")
+        : tower.level >= 3
+          ? "#5a5a62"
+          : "#5a4220";
     const topPlatW =
       tower.level <= 2 ? baseW + 4 : tower.level === 3 ? baseW + 6 : baseW + 8;
     const topPlatD =
@@ -7020,7 +7043,7 @@ export function renderStationTower(
     ctx.strokeStyle = "#b89227";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.arc(bX - 2 * zoom, bY - 18 * zoom, 4.5 * zoom, Math.PI, 0);
+    ctx.arc(bX - 4 * zoom, bY - 18 * zoom, 4.5 * zoom, Math.PI, 0);
     ctx.stroke();
 
     // Hanging herb drying rack
@@ -7089,7 +7112,7 @@ export function renderStationTower(
       46,
       40,
       5,
-      { top: "#505058", left: "#404048", right: "#333340" },
+      { top: "#303d6a", left: "#253460", right: "#1e2a52" },
       zoom,
     );
     // Bottom step mortar
@@ -7119,7 +7142,7 @@ export function renderStationTower(
       42,
       36,
       4,
-      { top: "#555560", left: "#484850", right: "#3a3a42" },
+      { top: "#35426c", left: "#2a3862", right: "#1e2d55" },
       zoom,
     );
     // Middle step mortar
@@ -7142,7 +7165,7 @@ export function renderStationTower(
       38,
       32,
       4,
-      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+      { top: "#3a486e", left: "#2a3a64", right: "#1e2d55" },
       zoom,
     );
     // Top step mortar
@@ -7238,7 +7261,7 @@ export function renderStationTower(
       14,
       12,
       24,
-      { top: "#6a5a4a", left: "#5a4a3a", right: "#4a3a2a" },
+      { top: "#504a65", left: "#403a55", right: "#302a45" },
       zoom,
     );
 
@@ -7376,7 +7399,7 @@ export function renderStationTower(
     ctx.restore();
 
     // Left stable roof - left slope
-    ctx.fillStyle = "#5a3a30";
+    ctx.fillStyle = "#3a3055";
     ctx.beginPath();
     ctx.moveTo(lwX, lwY - 36 * zoom);
     ctx.lineTo(lwX - 9 * zoom, lwY - 24 * zoom);
@@ -7384,7 +7407,7 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Left stable roof - right slope
-    ctx.fillStyle = "#4a2a20";
+    ctx.fillStyle = "#2a2245";
     ctx.beginPath();
     ctx.moveTo(lwX, lwY - 36 * zoom);
     ctx.lineTo(lwX + 9 * zoom, lwY - 24 * zoom);
@@ -7517,7 +7540,7 @@ export function renderStationTower(
     );
     ctx.stroke();
     // Pole with isometric depth
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = "#1e2d55";
     ctx.beginPath();
     ctx.moveTo(lwpX - 1 * zoom, lwpBot + 2 * zoom);
     ctx.lineTo(lwpX - 1 * zoom, lwpTop - 2 * zoom);
@@ -7525,7 +7548,7 @@ export function renderStationTower(
     ctx.lineTo(lwpX + 1 * zoom, lwpBot + 2 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#2a3a64";
     ctx.beginPath();
     ctx.moveTo(lwpX + 1 * zoom, lwpTop - 2 * zoom);
     ctx.lineTo(
@@ -7539,7 +7562,7 @@ export function renderStationTower(
     ctx.lineTo(lwpX + 1 * zoom, lwpBot + 2 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#6a6a72";
+    ctx.fillStyle = "#485882";
     ctx.beginPath();
     ctx.arc(lwpX, lwpTop - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -7554,7 +7577,7 @@ export function renderStationTower(
       14,
       12,
       24,
-      { top: "#6a5a4a", left: "#5a4a3a", right: "#4a3a2a" },
+      { top: "#504a65", left: "#403a55", right: "#302a45" },
       zoom,
     );
 
@@ -7687,7 +7710,7 @@ export function renderStationTower(
     ctx.restore();
 
     // Right stable roof - left slope
-    ctx.fillStyle = "#5a3a30";
+    ctx.fillStyle = "#3a3055";
     ctx.beginPath();
     ctx.moveTo(rwX, rwY - 36 * zoom);
     ctx.lineTo(rwX - 9 * zoom, rwY - 24 * zoom);
@@ -7695,7 +7718,7 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Right stable roof - right slope
-    ctx.fillStyle = "#4a2a20";
+    ctx.fillStyle = "#2a2245";
     ctx.beginPath();
     ctx.moveTo(rwX, rwY - 36 * zoom);
     ctx.lineTo(rwX + 9 * zoom, rwY - 24 * zoom);
@@ -7813,7 +7836,7 @@ export function renderStationTower(
     );
     ctx.stroke();
     // Pole with isometric depth
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = "#1e2d55";
     ctx.beginPath();
     ctx.moveTo(rwpX - 1 * zoom, rwpBot + 2 * zoom);
     ctx.lineTo(rwpX - 1 * zoom, rwpTop - 2 * zoom);
@@ -7821,7 +7844,7 @@ export function renderStationTower(
     ctx.lineTo(rwpX + 1 * zoom, rwpBot + 2 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#2a3a64";
     ctx.beginPath();
     ctx.moveTo(rwpX + 1 * zoom, rwpTop - 2 * zoom);
     ctx.lineTo(
@@ -7835,7 +7858,7 @@ export function renderStationTower(
     ctx.lineTo(rwpX + 1 * zoom, rwpBot + 2 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#6a6a72";
+    ctx.fillStyle = "#485882";
     ctx.beginPath();
     ctx.arc(rwpX, rwpTop - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -7855,13 +7878,13 @@ export function renderStationTower(
     }
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = "#4a4458";
     ctx.beginPath();
     ctx.ellipse(fGearX, fGearY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Steam pipes on foundation
-    ctx.strokeStyle = "#6a6a72";
+    ctx.strokeStyle = "#485882";
     ctx.lineWidth = 4 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 24 * zoom, bY + 10 * zoom);
@@ -7883,7 +7906,7 @@ export function renderStationTower(
     ctx.fill();
 
     // Steam exhaust with purple glow
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#283a68";
     ctx.beginPath();
     ctx.ellipse(
       bX - 16 * zoom,
@@ -7929,7 +7952,7 @@ export function renderStationTower(
       34,
       28,
       38,
-      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+      { top: "#485882", left: "#384a78", right: "#283a68" },
       zoom,
     );
 
@@ -8236,7 +8259,7 @@ export function renderStationTower(
     const keepTop = bY - 38 * zoom;
     const c4hw = 34 * zoom * 0.5;
     const c4hd = 28 * zoom * 0.25;
-    const c4Colors = { top: "#b89227", left: "#6a6a72", right: "#5a5a62" };
+    const c4Colors = { top: "#b89227", left: "#485882", right: "#384a78" };
     const c4Merlons: { x: number; y: number }[] = [];
     for (let row = -1; row <= 1; row++) {
       for (let col = -1; col <= 1; col++) {
@@ -8261,7 +8284,7 @@ export function renderStationTower(
       12,
       10,
       48,
-      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+      { top: "#485882", left: "#384a78", right: "#283a68" },
       zoom,
     );
 
@@ -8422,7 +8445,7 @@ export function renderStationTower(
     }
     // Conical roof
     const ltRoofY = ltY - 48 * zoom;
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#283a68";
     ctx.beginPath();
     ctx.moveTo(ltX, ltRoofY - 14 * zoom);
     ctx.lineTo(ltX - 7 * zoom, ltRoofY);
@@ -8430,7 +8453,7 @@ export function renderStationTower(
     ctx.lineTo(ltX + 7 * zoom, ltRoofY);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = "#1e2d55";
     ctx.beginPath();
     ctx.moveTo(ltX, ltRoofY - 14 * zoom);
     ctx.lineTo(ltX + 7 * zoom, ltRoofY);
@@ -8456,7 +8479,7 @@ export function renderStationTower(
       ctx.stroke();
     }
     // Ridge line
-    ctx.strokeStyle = "#2a2a32";
+    ctx.strokeStyle = "#1e2238";
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(ltX - 7 * zoom, ltRoofY);
@@ -8478,7 +8501,7 @@ export function renderStationTower(
     const rbpBot = ltRoofY - 24 * zoom;
     const rbpIsoD = 1.5 * zoom;
     // Pole with isometric depth (behind flag)
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = "#1e2d55";
     ctx.beginPath();
     ctx.moveTo(rbpX - 1 * zoom, rbpBot + 2 * zoom);
     ctx.lineTo(rbpX - 1 * zoom, rbpTop - 2 * zoom);
@@ -8486,7 +8509,7 @@ export function renderStationTower(
     ctx.lineTo(rbpX + 1 * zoom, rbpBot + 2 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#2a3a64";
     ctx.beginPath();
     ctx.moveTo(rbpX + 1 * zoom, rbpTop - 2 * zoom);
     ctx.lineTo(
@@ -8501,7 +8524,7 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Finial
-    ctx.fillStyle = "#6a6a72";
+    ctx.fillStyle = "#485882";
     ctx.beginPath();
     ctx.arc(rbpX, rbpTop - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -8568,7 +8591,7 @@ export function renderStationTower(
       14,
       12,
       54,
-      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+      { top: "#485882", left: "#384a78", right: "#283a68" },
       zoom,
     );
 
@@ -8717,14 +8740,14 @@ export function renderStationTower(
     }
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = "#4a4458";
     ctx.beginPath();
     ctx.ellipse(tGearX, tGearY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Tower spire
     const rtRoofY = rtY - 54 * zoom;
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = "#283a68";
     ctx.beginPath();
     ctx.moveTo(rtX, rtRoofY - 18 * zoom);
     ctx.lineTo(rtX - 8 * zoom, rtRoofY);
@@ -8732,7 +8755,7 @@ export function renderStationTower(
     ctx.lineTo(rtX + 8 * zoom, rtRoofY);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = "#1e2d55";
     ctx.beginPath();
     ctx.moveTo(rtX, rtRoofY - 18 * zoom);
     ctx.lineTo(rtX + 8 * zoom, rtRoofY);
@@ -8758,7 +8781,7 @@ export function renderStationTower(
       ctx.stroke();
     }
     // Ridge line
-    ctx.strokeStyle = "#2a2a32";
+    ctx.strokeStyle = "#1e2238";
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(rtX - 8 * zoom, rtRoofY);
@@ -8789,12 +8812,12 @@ export function renderStationTower(
     ctx.beginPath();
     ctx.arc(rtX - 3 * zoom, rtY - 38 * zoom, 5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#5a5a62";
+    ctx.strokeStyle = "#384a72";
     ctx.lineWidth = 2 * zoom;
     ctx.stroke();
 
     // Main entrance
-    ctx.fillStyle = "#2a2a2a";
+    ctx.fillStyle = "#1a1e2a";
     ctx.beginPath();
     ctx.moveTo(bX - 7 * zoom, bY - 2 * zoom);
     ctx.lineTo(bX - 7 * zoom, bY - 20 * zoom);
@@ -8806,7 +8829,7 @@ export function renderStationTower(
     ctx.strokeStyle = "#b89227";
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.arc(bX - 2 * zoom, bY - 20 * zoom, 5.5 * zoom, Math.PI, 0);
+    ctx.arc(bX - 0 * zoom, bY - 20 * zoom, 5.5 * zoom, Math.PI, 0);
     ctx.stroke();
     // Interior purple glow
     const intGlow = 0.4 + Math.sin(time * 2) * 0.15;
@@ -8833,7 +8856,11 @@ export function renderStationTower(
   const gearY = screenPos.y + 2 * zoom;
   const gearSize = 4 + tower.level * 0.5;
   const gearColor =
-    tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#8a8a92" : "#6a5a4a";
+    tower.level >= 4
+      ? uc("#c9a227", "#8090b8", "#c9a227")
+      : tower.level >= 3
+        ? "#8a8a92"
+        : "#6a5a4a";
   const gearTeeth = 8 + tower.level;
 
   // Main gear
@@ -8867,7 +8894,8 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Gear center
-  ctx.fillStyle = tower.level >= 4 ? "#b8860b" : "#4a4a4a";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#b8860b", "#6878a0", "#b8860b") : "#4a4a4a";
   ctx.beginPath();
   ctx.ellipse(
     gearX,
@@ -8969,8 +8997,10 @@ export function renderStationTower(
   const spW = 1 * zoom;
   const spD = 0.8 * zoom;
   const spH = 18 * zoom;
-  const spColor = tower.level >= 4 ? "#c9a227" : "#5a4a3a";
-  const spDark = tower.level >= 4 ? "#a08020" : "#4a3a2a";
+  const spColor =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#5a4a3a";
+  const spDark =
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#4a3a2a";
   ctx.fillStyle = spDark;
   ctx.beginPath();
   ctx.moveTo(signX - spW, signY + spH);
@@ -8994,7 +9024,8 @@ export function renderStationTower(
   const sbD = 2 * zoom;
   const sbLeft = signX - sbW * 0.5;
   const sbTop = signY - sbH;
-  ctx.fillStyle = tower.level >= 4 ? "#2a2a32" : "#3a3a3a";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#302820", "#1e2838", "#2a2a32") : "#3a3a3a";
   ctx.beginPath();
   ctx.moveTo(sbLeft, sbTop);
   ctx.lineTo(sbLeft + sbW, sbTop);
@@ -9002,7 +9033,8 @@ export function renderStationTower(
   ctx.lineTo(sbLeft, sbTop + sbH);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = tower.level >= 4 ? "#3a3a42" : "#4a4a4a";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#423830", "#1e2d55", "#3a3a42") : "#4a4a4a";
   ctx.beginPath();
   ctx.moveTo(sbLeft, sbTop);
   ctx.lineTo(sbLeft + sbD * 0.5, sbTop - sbD * 0.25);
@@ -9010,7 +9042,8 @@ export function renderStationTower(
   ctx.lineTo(sbLeft + sbW, sbTop);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = tower.level >= 4 ? "#1a1a22" : "#2a2a2a";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#201810", "#121828", "#1a1a22") : "#2a2a2a";
   ctx.beginPath();
   ctx.moveTo(sbLeft + sbW, sbTop);
   ctx.lineTo(sbLeft + sbW + sbD * 0.5, sbTop - sbD * 0.25);
@@ -9018,7 +9051,8 @@ export function renderStationTower(
   ctx.lineTo(sbLeft + sbW, sbTop + sbH);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#e06000";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#e06000";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(sbLeft, sbTop);
@@ -9052,7 +9086,8 @@ export function renderStationTower(
   // Level-specific station extras
   if (tower.level >= 2) {
     // Extra pipes
-    ctx.strokeStyle = tower.level >= 4 ? "#b8860b" : "#6a6a72";
+    ctx.strokeStyle =
+      tower.level >= 4 ? uc("#b8860b", "#6878a0", "#b8860b") : "#6a6a72";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - 25 * zoom, screenPos.y);
@@ -9129,9 +9164,17 @@ export function renderStationTower(
   // ---- FRONT FENCE EDGES (drawn in front of building body) ----
   {
     const fPostColor =
-      tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#6a5230";
+      tower.level >= 4
+        ? uc("#c9a227", "#8090b8", "#c9a227")
+        : tower.level >= 3
+          ? "#6a6a72"
+          : "#6a5230";
     const fRailColor =
-      tower.level >= 4 ? "#a88420" : tower.level >= 3 ? "#5a5a62" : "#5a4220";
+      tower.level >= 4
+        ? uc("#a88420", "#6878a0", "#a88420")
+        : tower.level >= 3
+          ? "#5a5a62"
+          : "#5a4220";
     const topPlatW =
       tower.level <= 2 ? baseW + 4 : tower.level === 3 ? baseW + 6 : baseW + 8;
     const topPlatD =
@@ -9195,11 +9238,23 @@ export function renderStationTower(
   // ---- WINDOWS (3D isometric, aligned to building faces) ----
   const reflLightAngle = time * 0.3;
   const frameColor =
-    tower.level >= 4 ? "#b89227" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#b89227", "#7888a8", "#b89227")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#5a4a3a";
   const frameDark =
-    tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#4a4a52" : "#4a3a2a";
+    tower.level >= 4
+      ? uc("#8a7020", "#5a6888", "#8a7020")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#4a3a2a";
   const sillColor =
-    tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#6a6a72" : "#6a5a4a";
+    tower.level >= 4
+      ? uc("#a08020", "#6878a0", "#a08020")
+      : tower.level >= 3
+        ? "#6a6a72"
+        : "#6a5a4a";
 
   // Isometric slope for window faces: 2:1 isometric
   // Left face runs direction (-1, -ISO_Y_RATIO) toward back-left
@@ -9283,9 +9338,21 @@ export function renderStationTower(
 
     // Glass pane (dark with gradient)
     const glassDark =
-      tower.level >= 4 ? "rgba(20, 25, 45, 0.9)" : "rgba(30, 40, 55, 0.9)";
+      tower.level >= 4
+        ? uc(
+            "rgba(30, 25, 15, 0.9)",
+            "rgba(15, 22, 42, 0.9)",
+            "rgba(20, 25, 45, 0.9)",
+          )
+        : "rgba(30, 40, 55, 0.9)";
     const glassLight =
-      tower.level >= 4 ? "rgba(40, 45, 65, 0.8)" : "rgba(50, 60, 75, 0.8)";
+      tower.level >= 4
+        ? uc(
+            "rgba(50, 45, 35, 0.8)",
+            "rgba(28, 38, 62, 0.8)",
+            "rgba(40, 45, 65, 0.8)",
+          )
+        : "rgba(50, 60, 75, 0.8)";
     const glassGrad = ctx.createLinearGradient(tlx, tly, brx, bry);
     glassGrad.addColorStop(0, glassDark);
     glassGrad.addColorStop(1, glassLight);
@@ -9394,7 +9461,11 @@ export function renderStationTower(
 
   // Door step/stoop (small platform in front)
   const stepColor =
-    tower.level >= 4 ? "#7a6a5a" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#7a6852", "#485a80", "#7a6a5a")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#5a4a3a";
   ctx.fillStyle = stepColor;
   ctx.beginPath();
   ctx.moveTo(doorX - 5 * zoom, doorY + 2 * zoom);
@@ -9431,9 +9502,17 @@ export function renderStationTower(
 
   // Door frame (3D isometric)
   const doorFrameColor =
-    tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#5a5a62" : "#5a4020";
+    tower.level >= 4
+      ? uc("#c9a227", "#8090b8", "#c9a227")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#5a4020";
   const doorFrameDark =
-    tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#4a4a52" : "#4a3010";
+    tower.level >= 4
+      ? uc("#a08020", "#6878a0", "#a08020")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#4a3010";
   // Left jamb
   ctx.fillStyle = doorFrameDark;
   ctx.beginPath();
@@ -9485,9 +9564,17 @@ export function renderStationTower(
 
   // Door panels (3D raised detail with isometric depth)
   const panelColor =
-    tower.level >= 4 ? "#3a2a1a" : tower.level >= 3 ? "#3a3a42" : "#4a3010";
+    tower.level >= 4
+      ? uc("#3a2a1a", "#1e2838", "#3a2a1a")
+      : tower.level >= 3
+        ? "#3a3a42"
+        : "#4a3010";
   const panelLight =
-    tower.level >= 4 ? "#4a3a2a" : tower.level >= 3 ? "#4a4a52" : "#5a4020";
+    tower.level >= 4
+      ? uc("#4a3a2a", "#1e2d55", "#4a3a2a")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#5a4020";
   // Left door panel
   const lpx = doorX - 2.5 * zoom;
   const lpy = doorY - 7 * zoom;
@@ -9554,8 +9641,10 @@ export function renderStationTower(
   ctx.stroke();
 
   // Door handles (3D knobs)
-  const handleColor = tower.level >= 4 ? "#e8c847" : "#8a8a8a";
-  const handleDark = tower.level >= 4 ? "#c9a227" : "#6a6a6a";
+  const handleColor =
+    tower.level >= 4 ? uc("#e8c847", "#a0b0d0", "#e8c847") : "#8a8a8a";
+  const handleDark =
+    tower.level >= 4 ? uc("#c9a227", "#7888a8", "#c9a227") : "#6a6a6a";
   for (const hx of [doorX + 1.8 * zoom, doorX - 1.3 * zoom]) {
     ctx.fillStyle = handleDark;
     ctx.beginPath();
@@ -9601,10 +9690,19 @@ export function renderStationTower(
 
   // ---- STRUCTURAL BEAMS / TRUSSES (industrial feel) ----
   const beamColor =
-    tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#8a7020", "#5a6888", "#8a7020")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#5a4a3a";
   const beamHighlight =
-    tower.level >= 4 ? "#a08828" : tower.level >= 3 ? "#6a6a72" : "#6a5a4a";
-  const rivetColor = tower.level >= 4 ? "#c9a227" : "#8a8a8a";
+    tower.level >= 4
+      ? uc("#a08828", "#6878a0", "#a08828")
+      : tower.level >= 3
+        ? "#6a6a72"
+        : "#6a5a4a";
+  const rivetColor =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#8a8a8a";
 
   // Right wall cross brace with I-beam profile
   const braceRX = screenPos.x + 6 * zoom;
@@ -9778,7 +9876,11 @@ export function renderStationTower(
   // ---- ROOF RIDGE LINE AND EAVES ----
   const roofRidgeY = screenPos.y - (26 + tower.level * 4) * zoom;
   ctx.strokeStyle =
-    tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#7a6040";
+    tower.level >= 4
+      ? uc("#c9a227", "#8090b8", "#c9a227")
+      : tower.level >= 3
+        ? "#6a6a72"
+        : "#7a6040";
   ctx.lineWidth = 2 * zoom;
 
   // Eave overhang shadow
@@ -9797,7 +9899,8 @@ export function renderStationTower(
   const gaugeX = screenPos.x - 16 * zoom;
   const gaugeY = screenPos.y - 26 * zoom;
 
-  ctx.fillStyle = tower.level >= 4 ? "#b8860b" : "#8b7355";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#b8860b", "#6878a0", "#b8860b") : "#8b7355";
   ctx.beginPath();
   ctx.arc(gaugeX, gaugeY, 4 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -9850,14 +9953,16 @@ export function renderStationTower(
     14,
     10,
     3,
-    tower.level >= 4 ? "#7a6a5a" : "#5a5a62",
-    tower.level >= 4 ? "#6a5a4a" : "#4a4a52",
-    tower.level >= 4 ? "#5a4a3a" : "#3a3a42",
+    tower.level >= 4 ? uc("#7a6852", "#485a80", "#7a6a5a") : "#5a5a62",
+    tower.level >= 4 ? uc("#6a5842", "#384a72", "#6a5a4a") : "#4a4a52",
+    tower.level >= 4 ? uc("#5a4832", "#2a3a65", "#5a4a3a") : "#3a3a42",
   );
 
   // Dock bumper bollards (3D isometric)
-  const bollardColor = tower.level >= 4 ? "#c9a227" : "#cc8800";
-  const bollardDark = tower.level >= 4 ? "#a08020" : "#aa6600";
+  const bollardColor =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#cc8800";
+  const bollardDark =
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#aa6600";
   const bollardPositions = [
     { x: dockX - 5 * zoom, y: dockY + 2 * zoom },
     { x: dockX + 4 * zoom, y: dockY + 0.5 * zoom },
@@ -9898,23 +10003,23 @@ export function renderStationTower(
     {
       ox: -2,
       oy: 0,
-      top: tower.level >= 4 ? "#c9a230" : "#9a7920",
-      left: tower.level >= 4 ? "#a08020" : "#7a5810",
-      right: tower.level >= 4 ? "#b89227" : "#8b6914",
+      top: tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#9a7920",
+      left: tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#7a5810",
+      right: tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#8b6914",
     },
     {
       ox: 1,
       oy: -0.5,
-      top: tower.level >= 4 ? "#d0a835" : "#a58025",
-      left: tower.level >= 4 ? "#b89227" : "#8b6914",
-      right: tower.level >= 4 ? "#c9a230" : "#9a7920",
+      top: tower.level >= 4 ? uc("#d0a835", "#8898b8", "#d0a835") : "#a58025",
+      left: tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#8b6914",
+      right: tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#9a7920",
     },
     {
       ox: -0.5,
       oy: -2.5,
-      top: tower.level >= 4 ? "#dab040" : "#b08a30",
-      left: tower.level >= 4 ? "#c9a230" : "#9a7920",
-      right: tower.level >= 4 ? "#d0a835" : "#a58025",
+      top: tower.level >= 4 ? uc("#dab040", "#98a8c0", "#dab040") : "#b08a30",
+      left: tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#9a7920",
+      right: tower.level >= 4 ? uc("#d0a835", "#8898b8", "#d0a835") : "#a58025",
     },
   ];
   for (const scr of stackedCrates) {
@@ -9970,11 +10075,13 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Vent frame (3D rim)
-  ctx.strokeStyle = tower.level >= 4 ? "#8a7020" : "#5a5a62";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#8a7020", "#5a6888", "#8a7020") : "#5a5a62";
   ctx.lineWidth = 1 * zoom;
   ctx.stroke();
   // Top lip
-  ctx.fillStyle = tower.level >= 4 ? "#7a6a30" : "#4a4a52";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#7a6a30", "#384a72", "#7a6a30") : "#4a4a52";
   ctx.beginPath();
   ctx.moveTo(ventGrateX, ventGrateY);
   ctx.lineTo(ventGrateX + vgD * 0.5, ventGrateY - vgD * 0.25);
@@ -9983,7 +10090,8 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Grate slats
-  ctx.strokeStyle = tower.level >= 4 ? "#8a7020" : "#5a5a62";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#8a7020", "#5a6888", "#8a7020") : "#5a5a62";
   ctx.lineWidth = 0.6 * zoom;
   for (let vl = 0; vl < 4; vl++) {
     const vlx = ventGrateX + (vl + 0.5) * 1.5 * zoom;
@@ -10018,7 +10126,8 @@ export function renderStationTower(
   const bfLeft = boardX - boardW * 0.5;
   const bfTop = boardY - boardH * 0.5;
   // Front face
-  ctx.fillStyle = tower.level >= 4 ? "#3a2a1a" : "#1a1a22";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#3a2a1a", "#121828", "#3a2a1a") : "#1a1a22";
   ctx.beginPath();
   ctx.moveTo(bfLeft, bfTop);
   ctx.lineTo(bfLeft + boardW, bfTop);
@@ -10027,7 +10136,8 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Top face (depth)
-  ctx.fillStyle = tower.level >= 4 ? "#4a3a2a" : "#2a2a32";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#4a3a2a", "#1e2838", "#4a3a2a") : "#2a2a32";
   ctx.beginPath();
   ctx.moveTo(bfLeft, bfTop);
   ctx.lineTo(bfLeft + boardD * 0.5, bfTop - boardD * 0.25);
@@ -10036,7 +10146,8 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Right face (depth)
-  ctx.fillStyle = tower.level >= 4 ? "#2a1a0a" : "#0a0a12";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#2a1a0a", "#080e1a", "#2a1a0a") : "#0a0a12";
   ctx.beginPath();
   ctx.moveTo(bfLeft + boardW, bfTop);
   ctx.lineTo(bfLeft + boardW + boardD * 0.5, bfTop - boardD * 0.25);
@@ -10045,7 +10156,8 @@ export function renderStationTower(
   ctx.closePath();
   ctx.fill();
   // Frame border
-  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#5a5a62";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#5a5a62";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(bfLeft, bfTop);
@@ -10057,7 +10169,13 @@ export function renderStationTower(
 
   // Board screen (dark green/amber depending on level)
   const screenColor =
-    tower.level >= 4 ? "rgba(40, 35, 10, 0.9)" : "rgba(10, 25, 15, 0.9)";
+    tower.level >= 4
+      ? uc(
+          "rgba(40, 35, 10, 0.9)",
+          "rgba(10, 18, 35, 0.9)",
+          "rgba(40, 35, 10, 0.9)",
+        )
+      : "rgba(10, 25, 15, 0.9)";
   ctx.fillStyle = screenColor;
   ctx.beginPath();
   ctx.moveTo(bfLeft + 1 * zoom, bfTop + 1 * zoom);
@@ -10069,7 +10187,8 @@ export function renderStationTower(
 
   // Animated text ticker (scrolling dots/dashes simulating a train schedule)
   const tickerSpeed = stationActive ? time * 2 : time * 1.5;
-  const dotColor = tower.level >= 4 ? "#c9a227" : "#33cc33";
+  const dotColor =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#33cc33";
   const dotAlertColor = stationActive
     ? isStationAttacking
       ? "#ff4422"
@@ -10116,7 +10235,8 @@ export function renderStationTower(
   const brkW = 1 * zoom;
   const brkH = 4 * zoom;
   const brkD = 0.8 * zoom;
-  ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#4a4a52";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#8a7020", "#384a72", "#8a7020") : "#4a4a52";
   ctx.beginPath();
   ctx.moveTo(boardX - brkW, boardY + boardH * 0.5);
   ctx.lineTo(boardX + brkW, boardY + boardH * 0.5);
@@ -10124,7 +10244,8 @@ export function renderStationTower(
   ctx.lineTo(boardX - brkW, boardY + boardH * 0.5 + brkH);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = tower.level >= 4 ? "#9a8030" : "#5a5a62";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#9a8030", "#5a6888", "#9a8030") : "#5a5a62";
   ctx.beginPath();
   ctx.moveTo(boardX + brkW, boardY + boardH * 0.5);
   ctx.lineTo(boardX + brkW + brkD, boardY + boardH * 0.5 - brkD * 0.5);
@@ -10140,11 +10261,23 @@ export function renderStationTower(
   const radarAngle = time * radarSpeed;
 
   const rdMastCol =
-    tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#c9a227", "#8090b8", "#c9a227")
+      : tower.level >= 3
+        ? "#6a6a72"
+        : "#5a4a3a";
   const rdMastDark =
-    tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#5a5a62" : "#4a3a2a";
+    tower.level >= 4
+      ? uc("#a08020", "#6878a0", "#a08020")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#4a3a2a";
   const rdMastLight =
-    tower.level >= 4 ? "#d4b030" : tower.level >= 3 ? "#7a7a82" : "#6a5a4a";
+    tower.level >= 4
+      ? uc("#d4b030", "#98a8c0", "#d4b030")
+      : tower.level >= 3
+        ? "#7a7a82"
+        : "#6a5a4a";
 
   // Mast (isometric prism)
   const rdMastH = 8 * zoom;
@@ -10187,7 +10320,8 @@ export function renderStationTower(
 
   // Pivot hub (isometric ellipse)
   const rdHubY = rdPlatY - rdPivotH;
-  const rdHubCol = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  const rdHubCol =
+    tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#6a6a72";
   ctx.fillStyle = rdHubCol;
   ctx.beginPath();
   ctx.ellipse(radarBaseX, rdHubY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
@@ -10211,7 +10345,8 @@ export function renderStationTower(
   const rdEdgeView = Math.abs(rdCosA);
 
   // Support arm from hub to dish center
-  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#6a6a72";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#6a6a72";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(radarBaseX, rdHubY);
@@ -10221,13 +10356,15 @@ export function renderStationTower(
   // Counter-arm stub (opposite side for balance)
   const rdCounterX = radarBaseX - rdSinA * rdArmLen * 0.4;
   const rdCounterY = rdHubY - rdCosA * rdArmLen * 0.4 * ISO_Y_RATIO;
-  ctx.strokeStyle = tower.level >= 4 ? "#a08020" : "#5a5a62";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#5a5a62";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(radarBaseX, rdHubY);
   ctx.lineTo(rdCounterX, rdCounterY);
   ctx.stroke();
-  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#6a6a72";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#6a6a72";
   ctx.beginPath();
   ctx.arc(rdCounterX, rdCounterY, 1 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -10240,7 +10377,8 @@ export function renderStationTower(
 
     // Bowl interior (back face of dish)
     if (rdBowlDepth > 0.5 * zoom) {
-      ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#4a4a52";
+      ctx.fillStyle =
+        tower.level >= 4 ? uc("#8a7020", "#5a6888", "#8a7020") : "#4a4a52";
       ctx.beginPath();
       ctx.moveTo(
         rdDishCX + (rdFacing ? rdBowlDepth : -rdBowlDepth),
@@ -10276,10 +10414,10 @@ export function renderStationTower(
       rdFaceH,
     );
     if (tower.level >= 4) {
-      rdDishGrad.addColorStop(0, "#fff8e0");
-      rdDishGrad.addColorStop(0.3, "#e8c847");
-      rdDishGrad.addColorStop(0.7, "#c9a227");
-      rdDishGrad.addColorStop(1, "#a08020");
+      rdDishGrad.addColorStop(0, uc("#fff8e0", "#e8e8f0", "#fff8e0"));
+      rdDishGrad.addColorStop(0.3, uc("#e8c847", "#b0b0c8", "#e8c847"));
+      rdDishGrad.addColorStop(0.7, uc("#c9a227", "#7888a8", "#c9a227"));
+      rdDishGrad.addColorStop(1, uc("#a08020", "#5a6888", "#a08020"));
     } else {
       rdDishGrad.addColorStop(0, "#e0e0e8");
       rdDishGrad.addColorStop(0.3, "#c0c0c8");
@@ -10305,7 +10443,8 @@ export function renderStationTower(
     ctx.fill();
 
     // Dish edge outline
-    ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#7a7a82";
+    ctx.strokeStyle =
+      tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#7a7a82";
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(rdDishCX, rdDishCY - rdFaceH);
@@ -10319,7 +10458,13 @@ export function renderStationTower(
 
     // Concentric ring detail on dish face
     ctx.strokeStyle =
-      tower.level >= 4 ? "rgba(255,248,224,0.25)" : "rgba(200,200,210,0.25)";
+      tower.level >= 4
+        ? uc(
+            "rgba(255,248,224,0.25)",
+            "rgba(200,200,240,0.25)",
+            "rgba(255,248,224,0.25)",
+          )
+        : "rgba(200,200,210,0.25)";
     ctx.lineWidth = 0.5 * zoom;
     for (let cr = 1; cr <= 3; cr++) {
       const crS = cr / 4;
@@ -10337,7 +10482,8 @@ export function renderStationTower(
     // Feed horn / receiver (struts + node at focal point)
     const rdRecX = rdDishCX + (rdFacing ? -rdFaceW * 0.6 : rdFaceW * 0.6);
     const rdRecY = rdDishCY;
-    ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+    ctx.strokeStyle =
+      tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#7a7a82";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(rdDishCX, rdDishCY - rdFaceH * 0.5);
@@ -10352,7 +10498,7 @@ export function renderStationTower(
     const rdRecCol = stationActive
       ? "#ff6633"
       : tower.level >= 4
-        ? "#e8c847"
+        ? uc("#e8c847", "#a0b0d0", "#e8c847")
         : "#5a5a62";
     ctx.fillStyle = rdRecCol;
     if (stationActive) {
@@ -10369,7 +10515,8 @@ export function renderStationTower(
     const rdProfileW = rdDishDepth;
     const rdDir = rdCosA > 0 ? 1 : -1;
 
-    ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+    ctx.fillStyle =
+      tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#7a7a82";
     ctx.beginPath();
     ctx.moveTo(rdDishCX, rdDishCY - rdProfileH);
     ctx.quadraticCurveTo(
@@ -10388,7 +10535,8 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#5a5a62";
+    ctx.strokeStyle =
+      tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#5a5a62";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(rdDishCX, rdDishCY - rdProfileH);
@@ -10837,7 +10985,7 @@ export function renderStationTower(
           ? "#3a3a42"
           : tower.level === 3
             ? "#2a2a32"
-            : "#3a3020";
+            : uc("#3a3020", "#2a2a38", "#3a3020");
     const postLight =
       tower.level === 1
         ? "#5a4a38"
@@ -10845,7 +10993,7 @@ export function renderStationTower(
           ? "#4a4a52"
           : tower.level === 3
             ? "#3a3a42"
-            : "#4a4030";
+            : uc("#4a4030", "#3a3a48", "#4a4030");
     const postAccent =
       tower.level === 1
         ? "#6a5a48"
@@ -10853,7 +11001,7 @@ export function renderStationTower(
           ? "#5a5a62"
           : tower.level === 3
             ? "#4a4a52"
-            : "#5a4a30";
+            : uc("#5a4a30", "#4a4a58", "#5a4a30");
     const glowR =
       tower.level === 1
         ? 255
@@ -10861,7 +11009,7 @@ export function renderStationTower(
           ? 200
           : tower.level === 3
             ? 180
-            : 255;
+            : uc(255, 180, 255);
     const glowG =
       tower.level === 1
         ? 180
@@ -10869,7 +11017,7 @@ export function renderStationTower(
           ? 220
           : tower.level === 3
             ? 200
-            : 160;
+            : uc(160, 160, 160);
     const glowB =
       tower.level === 1
         ? 80
@@ -10877,7 +11025,7 @@ export function renderStationTower(
           ? 255
           : tower.level === 3
             ? 255
-            : 40;
+            : uc(40, 255, 40);
     const glowHex =
       tower.level === 1
         ? "#ff9632"
@@ -10885,7 +11033,7 @@ export function renderStationTower(
           ? "#64c8ff"
           : tower.level === 3
             ? "#80c8ff"
-            : "#ffa028";
+            : uc("#ffa028", "#b0a0ff", "#ffa028");
 
     for (let i = 0; i < lampPositions.length; i++) {
       const lamp = lampPositions[i];
@@ -11121,8 +11269,10 @@ export function renderStationTower(
 
   // ---- CRANE ARM (rendered above train for correct layering) ----
   {
-    const crMastColor = tower.level >= 4 ? "#b89227" : "#6a6a72";
-    const crMastDark = tower.level >= 4 ? "#a08020" : "#5a5a62";
+    const crMastColor =
+      tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#6a6a72";
+    const crMastDark =
+      tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#5a5a62";
     const crMastW = 2.5 * zoom;
     const crMastD = 1.5 * zoom;
     const crMastH = 22 * zoom;
@@ -11184,7 +11334,8 @@ export function renderStationTower(
     const craneArmY =
       dockY - 20 * zoom + Math.sin(craneAngle) * craneArmLen * 0.3;
 
-    ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+    ctx.strokeStyle =
+      tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#7a7a82";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(dockX + 5 * zoom, dockY - 20 * zoom);
@@ -11219,7 +11370,8 @@ export function renderStationTower(
     const hangCrateSize = 2.5 * zoom;
     const hangCrateX = craneArmX + cableSwing;
     const hangCrateY = craneArmY + 10 * zoom;
-    ctx.fillStyle = tower.level >= 4 ? "#c9a230" : "#9a7920";
+    ctx.fillStyle =
+      tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#9a7920";
     ctx.beginPath();
     ctx.moveTo(hangCrateX, hangCrateY - hangCrateSize * 0.3);
     ctx.lineTo(hangCrateX + hangCrateSize, hangCrateY);
@@ -11227,7 +11379,8 @@ export function renderStationTower(
     ctx.lineTo(hangCrateX - hangCrateSize, hangCrateY);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = tower.level >= 4 ? "#a08020" : "#7a5810";
+    ctx.fillStyle =
+      tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#7a5810";
     ctx.beginPath();
     ctx.moveTo(hangCrateX - hangCrateSize, hangCrateY);
     ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 0.3);
@@ -11235,7 +11388,8 @@ export function renderStationTower(
     ctx.lineTo(hangCrateX - hangCrateSize, hangCrateY + hangCrateSize * 1.2);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = tower.level >= 4 ? "#b89227" : "#8b6914";
+    ctx.fillStyle =
+      tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#8b6914";
     ctx.beginPath();
     ctx.moveTo(hangCrateX + hangCrateSize, hangCrateY);
     ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 0.3);
@@ -11416,7 +11570,11 @@ export function renderStationTower(
 
   // Belt side rails (3D frame) — 2:1 iso slope
   const beltRailColor =
-    tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#8a7020", "#5a6888", "#8a7020")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#5a4a3a";
   const beltTilt = -ISO_ANGLE;
   ctx.strokeStyle = beltRailColor;
   ctx.lineWidth = 2 * zoom;
@@ -11455,7 +11613,8 @@ export function renderStationTower(
   ctx.stroke();
 
   // Roller drums at each end — tilted to match belt angle
-  const rollerColor = tower.level >= 4 ? "#c9a227" : "#6a6a72";
+  const rollerColor =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#6a6a72";
   for (const rEnd of [-0.5, 0.5]) {
     const rx = conveyorCX + conveyorLen * rEnd;
     const ry = conveyorCY - (rEnd + 0.5) * conveyorLen * 0.5;
@@ -11504,7 +11663,13 @@ export function renderStationTower(
     const sx = conveyorCX - conveyorLen * 0.5 + segT * conveyorLen;
     const sy = conveyorCY - segT * conveyorLen * 0.5;
     ctx.strokeStyle =
-      tower.level >= 4 ? `rgba(201, 162, 39, 0.6)` : `rgba(120, 120, 130, 0.6)`;
+      tower.level >= 4
+        ? uc(
+            `rgba(201, 162, 39, 0.6)`,
+            `rgba(160, 160, 180, 0.6)`,
+            `rgba(201, 162, 39, 0.6)`,
+          )
+        : `rgba(120, 120, 130, 0.6)`;
     ctx.beginPath();
     ctx.moveTo(sx, sy - conveyorW);
     ctx.lineTo(sx + 1.5 * zoom, sy - conveyorW * 0.5);
@@ -11535,14 +11700,14 @@ export function renderStationTower(
 
   // Multiple cargo crates on belt — 3D isometric boxes
   const crateColors = [
-    tower.level >= 4 ? "#b89227" : "#8b6914",
-    tower.level >= 4 ? "#a08020" : "#7a5810",
-    tower.level >= 4 ? "#c9a230" : "#9a7920",
+    tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#8b6914",
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#7a5810",
+    tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#9a7920",
   ];
   const crateDarkColors = [
-    tower.level >= 4 ? "#8a6a17" : "#6b4904",
-    tower.level >= 4 ? "#806010" : "#5a3800",
-    tower.level >= 4 ? "#a98220" : "#7a5910",
+    tower.level >= 4 ? uc("#8a6a17", "#5a6888", "#8a6a17") : "#6b4904",
+    tower.level >= 4 ? uc("#806010", "#5a5a72", "#806010") : "#5a3800",
+    tower.level >= 4 ? uc("#a98220", "#6878a0", "#a98220") : "#7a5910",
   ];
   for (let ci = 0; ci < 3; ci++) {
     const crateT = (beltSpeed * 0.08 + ci * 0.33) % 1;
@@ -11614,7 +11779,8 @@ export function renderStationTower(
   const antOscillation = Math.sin(time * 3) * 2 * zoom;
 
   // Antenna mast
-  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#6a6a72";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(antennaX, antennaY + antennaHeight);
@@ -11624,7 +11790,8 @@ export function renderStationTower(
   // Antenna tip node
   const antTipX = antennaX + antOscillation * 0.3;
   const antTipY = antennaY;
-  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#aaaaaa";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#e8c847", "#a0b0d0", "#e8c847") : "#aaaaaa";
   ctx.beginPath();
   ctx.arc(antTipX, antTipY, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -11643,7 +11810,8 @@ export function renderStationTower(
   }
 
   // Cross-bar elements on antenna mast
-  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#6a6a72";
   ctx.lineWidth = 1 * zoom;
   for (let cb = 0; cb < 3; cb++) {
     const cbY = antennaY + antennaHeight * (0.25 + cb * 0.25);
@@ -11701,9 +11869,17 @@ export function renderStationTower(
 
   // Track ties (3D isometric wooden cross-beams beneath switch)
   const tieColor =
-    tower.level >= 4 ? "#5a4a3a" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#5a4832", "#2a3a65", "#5a4a3a")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#5a4a3a";
   const tieDark =
-    tower.level >= 4 ? "#4a3a2a" : tower.level >= 3 ? "#3a3a42" : "#4a3a2a";
+    tower.level >= 4
+      ? uc("#4a382a", "#1e2d55", "#4a3a2a")
+      : tower.level >= 3
+        ? "#3a3a42"
+        : "#4a3a2a";
   for (let ti = 0; ti < 3; ti++) {
     const tix = switchX + (ti - 1) * 4 * zoom;
     const tiy = switchY + (ti - 1) * 2 * zoom;
@@ -11731,7 +11907,8 @@ export function renderStationTower(
   }
 
   // Guard rails (fixed outer rails)
-  const guardColor = tower.level >= 4 ? "#a08020" : "#6a6a72";
+  const guardColor =
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#6a6a72";
   ctx.strokeStyle = guardColor;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
@@ -11744,7 +11921,8 @@ export function renderStationTower(
   ctx.stroke();
 
   // Switch rail pivot point (enhanced)
-  ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#3a3a42";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#8a7020", "#5a6888", "#8a7020") : "#3a3a42";
   ctx.beginPath();
   ctx.arc(switchX, switchY, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -11752,7 +11930,8 @@ export function renderStationTower(
   ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
   // Pivot center bolt
-  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#7a7a82";
   ctx.beginPath();
   ctx.arc(switchX, switchY, 1 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -11760,7 +11939,8 @@ export function renderStationTower(
   // Switch lever rail
   ctx.save();
   ctx.translate(switchX, switchY);
-  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#7a7a82";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#b89227", "#7888a8", "#b89227") : "#7a7a82";
   ctx.lineWidth = 2.5 * zoom;
   const swLeverX = Math.cos(-0.5 + switchAngle) * 10 * zoom;
   const swLeverY = Math.sin(-0.5 + switchAngle) * 5 * zoom;
@@ -11770,11 +11950,13 @@ export function renderStationTower(
   ctx.stroke();
 
   // Switch lever handle (grip at end)
-  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#5a5a62";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#5a5a62";
   ctx.beginPath();
   ctx.arc(swLeverX, swLeverY, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#8a8a92";
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#e8c847", "#a0b0d0", "#e8c847") : "#8a8a92";
   ctx.beginPath();
   ctx.arc(swLeverX, swLeverY, 1.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -11877,7 +12059,11 @@ export function renderStationTower(
 
     ctx.fillStyle =
       tower.level >= 4
-        ? `rgba(201, 162, 39, ${elAlpha})`
+        ? uc(
+            `rgba(201, 162, 39, ${elAlpha})`,
+            `rgba(160, 160, 190, ${elAlpha})`,
+            `rgba(201, 162, 39, ${elAlpha})`,
+          )
         : `rgba(255, 200, 100, ${elAlpha})`;
     ctx.beginPath();
     ctx.arc(elx, ely, 1.2 * zoom, 0, Math.PI * 2);
@@ -11900,7 +12086,8 @@ export function renderStationTower(
   const trolleyY = trolleyCY - trolleyT * trolleyTrackLen * 0.5;
 
   // Trolley track (pair of thin rails along NW axis)
-  ctx.strokeStyle = tower.level >= 4 ? "#a08020" : "#5a5a62";
+  ctx.strokeStyle =
+    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#5a5a62";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(trolleyCX, trolleyCY);
@@ -11930,11 +12117,23 @@ export function renderStationTower(
   // Trolley body (3D isometric cart prism, rotated 90°)
   const trolleyH = 3 * zoom;
   const trolleyTop =
-    tower.level >= 4 ? "#b89227" : tower.level >= 3 ? "#5a5a62" : "#6a5a4a";
+    tower.level >= 4
+      ? uc("#b89227", "#7888a8", "#b89227")
+      : tower.level >= 3
+        ? "#5a5a62"
+        : "#6a5a4a";
   const trolleyLeft =
-    tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+    tower.level >= 4
+      ? uc("#a08020", "#6878a0", "#a08020")
+      : tower.level >= 3
+        ? "#4a4a52"
+        : "#5a4a3a";
   const trolleyRight =
-    tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#3a3a42" : "#4a3a2a";
+    tower.level >= 4
+      ? uc("#8a7020", "#5a6888", "#8a7020")
+      : tower.level >= 3
+        ? "#3a3a42"
+        : "#4a3a2a";
   drawIsometricPrism(
     ctx,
     trolleyX,
@@ -11953,7 +12152,8 @@ export function renderStationTower(
   );
 
   // Tiny cargo on trolley (3D isometric crate, rotated 90°)
-  const cargoTop = tower.level >= 4 ? "#c9a230" : "#8b6914";
+  const cargoTop =
+    tower.level >= 4 ? uc("#c9a230", "#8090b8", "#c9a230") : "#8b6914";
   drawIsometricPrism(
     ctx,
     trolleyX,
@@ -12049,7 +12249,13 @@ export function renderStationTower(
   const wireEndX = screenPos.x - 4 * zoom;
   const wireEndY = screenPos.y - 18 * zoom;
   ctx.strokeStyle =
-    tower.level >= 4 ? "rgba(184, 146, 39, 0.3)" : "rgba(100, 100, 110, 0.3)";
+    tower.level >= 4
+      ? uc(
+          "rgba(184, 146, 39, 0.3)",
+          "rgba(140, 140, 170, 0.3)",
+          "rgba(184, 146, 39, 0.3)",
+        )
+      : "rgba(100, 100, 110, 0.3)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(wireStartX, wireStartY);

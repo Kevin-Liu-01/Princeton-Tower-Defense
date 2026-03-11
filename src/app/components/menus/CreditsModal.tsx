@@ -3,6 +3,7 @@ import React from "react";
 import { X, ExternalLink, Github, Globe, Cpu, Zap, Palette, Box, Monitor, ChevronDown } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { GOLD, OVERLAY, panelGradient } from "../ui/theme";
+import { BaseModal } from "../ui/BaseModal";
 
 export interface CreditsModalProps {
   onClose: () => void;
@@ -61,13 +62,7 @@ const TECH_STATS: { label: string; value: string }[] = [
 
 export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ background: OVERLAY.black60 }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <BaseModal isOpen onClose={onClose} backdropBg={OVERLAY.black60}>
       <div
         className="relative w-full max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
         style={{
@@ -274,7 +269,7 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
           </div>
         </OrnateFrame>
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

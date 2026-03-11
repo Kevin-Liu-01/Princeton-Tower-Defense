@@ -88,6 +88,7 @@ import {
   SpellIcon,
 } from "../../sprites";
 import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
+import { BaseModal } from "../ui/BaseModal";
 
 // =============================================================================
 // GAMEPLAY REGION IMAGES
@@ -1459,7 +1460,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: OVERLAY.black60 }}>
+    <BaseModal isOpen onClose={onClose} backdropBg={OVERLAY.black60}>
       <div
         className="relative w-full max-w-6xl max-h-[92vh] rounded-2xl overflow-hidden"
         style={{
@@ -3990,6 +3991,6 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
           </div>
         </OrnateFrame>
       </div>
-    </div>
+    </BaseModal>
   );
 };

@@ -20,6 +20,7 @@ import type {
   EnemyCategory,
 } from "../../types";
 import { OrnateFrame } from "../ui/OrnateFrame";
+import { BaseModal } from "../ui/BaseModal";
 import {
   HERO_DATA,
   SPELL_DATA,
@@ -808,7 +809,7 @@ export function SetupScreen({
 
       {/* Codex Modal */}
       {showCodex && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-6">
+        <BaseModal isOpen onClose={() => setShowCodex(false)} backdropBg="rgba(0,0,0,0.85)" blurClass="" paddingClass="p-6">
           <OrnateFrame
             className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
             cornerSize={48}
@@ -1358,7 +1359,7 @@ export function SetupScreen({
               )}
             </div>
           </OrnateFrame>
-        </div>
+        </BaseModal>
       )}
     </div>
   );

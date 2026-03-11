@@ -12,6 +12,7 @@ import { TOWER_TYPE_OPTIONS } from "./constants";
 import { useCreatorDraft } from "./hooks/useCreatorDraft";
 import { useCreatorCamera } from "./hooks/useCreatorCamera";
 import { useCreatorBoard } from "./hooks/useCreatorBoard";
+import { BaseModal } from "../ui/BaseModal";
 import { CreatorHeader } from "./components/CreatorHeader";
 import { CreatorCanvas } from "./components/CreatorCanvas";
 import { InspectorPanel } from "./components/InspectorPanel";
@@ -176,10 +177,16 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
     [applyDraftUpdate]
   );
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[90] bg-black/85 backdrop-blur-md p-1.5 sm:p-3">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      closeOnBackdropClick={false}
+      zClass="z-[90]"
+      blurClass="backdrop-blur-md"
+      backdropBg="rgba(0,0,0,0.85)"
+      paddingClass="p-1.5 sm:p-3"
+    >
       <div className="w-full h-full rounded-2xl border border-amber-700/30 bg-gradient-to-b from-[#1a130a] to-[#0d0804] text-amber-100 flex flex-col overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
         <CreatorHeader
           draft={draft}
@@ -320,7 +327,7 @@ export const CreatorModal: React.FC<CreatorModalProps> = ({
           </aside>
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

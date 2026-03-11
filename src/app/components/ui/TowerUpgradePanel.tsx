@@ -5,7 +5,7 @@ import {
   Heart,
   Timer,
   Zap,
-  ArrowUp,
+  ChevronsUp,
   CircleDollarSign,
   Users,
   X,
@@ -40,6 +40,7 @@ import {
 import type { Tower, Position } from "../../types";
 import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA } from "../../constants";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
+import { getTowerFoundationSize, getTowerVisualHeight } from "../../rendering/towers/towerHelpers";
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, panelGradient } from "./theme";
@@ -114,7 +115,7 @@ function buildActionButtons(
     buttons.push({
       id: "upgrade",
       angle: -90,
-      icon: <ArrowUp size={20} className="text-green-200" />,
+      icon: <ChevronsUp size={22} className="text-green-200" />,
       label: `Level ${tower.level + 1}`,
       subLabel: `${upgradeCost} PP`,
       onClick: () => upgradeTower(tower.id),
@@ -645,11 +646,15 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const lastRowRemainder = statsToShow.length > gridCols ? statsToShow.length % gridCols : 0;
   const lastRowStartIdx = lastRowRemainder > 0 ? statsToShow.length - lastRowRemainder : -1;
 
-  // ---- Circle geometry ----
-  const towerVisualOffsetY = 35 * cameraZoom;
+  // ---- Circle geometry (centered on tower visual mass) ----
+  const fndSize = getTowerFoundationSize(tower);
+  const towerFootprint = Math.max(fndSize.w, fndSize.d);
+  const typeBoost = Math.max(0, (towerFootprint - 60) * 0.3);
+  const baseOrbit = 75 + (tower.level - 1) * 12 + typeBoost;
+  const visualHeight = getTowerVisualHeight(tower);
   const circleCenterX = screenPos.x;
-  const circleCenterY = screenPos.y + towerVisualOffsetY;
-  const circleRadius = Math.round(70 * cameraZoom);
+  const circleCenterY = screenPos.y - visualHeight * 0.5 * cameraZoom;
+  const circleRadius = Math.round(baseOrbit * cameraZoom);
   const btnOrbitRadius = circleRadius;
   const btnSize = 44;
   const panelCircleGap = 8;
@@ -1166,7 +1171,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                     {isFocusedBeam ? "Focused Beam" : "Chain Lightning"}
                   </span>
                   <span className="text-[7px] bg-cyan-900 px-1 py-0.5 rounded text-cyan-400 ml-auto">
-                    {isFocusedBeam ? "Lock-on" : "Chain"}
+                    {isFocusedBeam ? "Lock" : "Chain"}
                   </span>
                 </div>
                 <div className="grid grid-cols-4 gap-1 mb-1">
@@ -1175,7 +1180,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                       <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
                         <Focus size={10} className="mx-auto text-purple-400" />
                         <div className="text-[7px] text-purple-500">Mode</div>
-                        <span className="text-purple-200 font-bold text-[10px]">Lock-on</span>
+                        <span className="text-purple-200 font-bold text-[10px]">Lock</span>
                       </div>
                       <div className="bg-cyan-950/40 p-1 rounded border border-cyan-900/30 text-center">
                         <TrendingUp size={10} className="mx-auto text-cyan-400" />

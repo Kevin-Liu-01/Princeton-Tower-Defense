@@ -411,6 +411,35 @@ export function renderLibraryTower(
 ) {
   void colors;
 
+  const is4A = tower.level === 4 && tower.upgrade === "A";
+  const is4B = tower.level === 4 && tower.upgrade === "B";
+  const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
+
+  const st = {
+    void: uc("#2a0800", "#0a0a1a", "#1a0a00"),
+    mortar: uc("#3a1008", "#0a1a2a", "#2a1a0a"),
+    dark: uc("#4a2010", "#1a2a3a", "#3a2a1a"),
+    mid: uc("#5a3020", "#2a3a4a", "#4a3a2a"),
+    base: uc("#6a4030", "#3a4a5a", "#5a4a3a"),
+    light: uc("#7a5040", "#4a5a6a", "#6a5a4a"),
+    pale: uc("#8a6050", "#5a6a7a", "#7a6a5a"),
+    palest: uc("#9a7060", "#6a7a8a", "#8a7a6a"),
+    top: uc("#aa8070", "#7a8a9a", "#9a8a7a"),
+  };
+  const gd = {
+    main: uc("#cc7a27", "#7aacc9", "#c9a227"),
+    sub: uc("#bb6820", "#6a9ab8", "#b89020"),
+    rgba: uc("204, 122, 39", "122, 172, 201", "201, 162, 39"),
+  };
+  const railRgba = uc("106, 64, 48", "58, 74, 90", "90, 74, 58");
+  const mortarHl = uc("rgba(130, 90, 70,", "rgba(80, 100, 120,", "rgba(120, 100, 80,");
+  const tileRgba = uc("84, 58, 42", "42, 58, 74", "74, 58, 42");
+  const stTint = {
+    a: uc("148, 100, 86", "106, 122, 138", "138, 122, 106"),
+    b: uc("84, 48, 32", "42, 58, 74", "74, 58, 42"),
+    c: uc("110, 74, 58", "68, 84, 100", "100, 84, 68"),
+  };
+
   ctx.save();
   const sX = screenPos.x;
   const baseWidth = 34 + tower.level * 5;
@@ -475,11 +504,11 @@ export function renderLibraryTower(
     baseWidth + 20,
     3,
     {
-      top: "#3a2a1a",
-      left: "#2a1a0a",
-      right: "#1a0a00",
-      leftBack: "#4a3a2a",
-      rightBack: "#3a2a1a",
+      top: st.dark,
+      left: st.mortar,
+      right: st.void,
+      leftBack: st.mid,
+      rightBack: st.dark,
     },
     zoom,
   );
@@ -493,11 +522,11 @@ export function renderLibraryTower(
     baseWidth + 14,
     3,
     {
-      top: "#4a3a2a",
-      left: "#3a2a1a",
-      right: "#2a1a0a",
-      leftBack: "#5a4a3a",
-      rightBack: "#4a3a2a",
+      top: st.mid,
+      left: st.dark,
+      right: st.mortar,
+      leftBack: st.base,
+      rightBack: st.mid,
     },
     zoom,
   );
@@ -511,11 +540,11 @@ export function renderLibraryTower(
     baseWidth + 10,
     8,
     {
-      top: "#5a4a3a",
-      left: "#4a3a2a",
-      right: "#3a2a1a",
-      leftBack: "#6a5a4a",
-      rightBack: "#5a4a3a",
+      top: st.base,
+      left: st.mid,
+      right: st.dark,
+      leftBack: st.light,
+      rightBack: st.base,
     },
     zoom,
   );
@@ -567,7 +596,7 @@ export function renderLibraryTower(
   // Gold trim along upper step front edge
   const fndW2 = (baseWidth + 10) * zoom * 0.5;
   const fndD2 = (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR;
-  ctx.strokeStyle = `rgba(201, 162, 39, ${0.35 + Math.sin(time * 1.5) * 0.1})`;
+  ctx.strokeStyle = `rgba(${gd.rgba}, ${0.35 + Math.sin(time * 1.5) * 0.1})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(screenPos.x - fndW2, screenPos.y);
@@ -594,18 +623,18 @@ export function renderLibraryTower(
       5,
       12,
       {
-        top: "#7a6a5a",
-        left: "#5a4a3a",
-        right: "#4a3a2a",
-        leftBack: "#6a5a4a",
-        rightBack: "#5a4a3a",
+        top: st.pale,
+        left: st.base,
+        right: st.mid,
+        leftBack: st.light,
+        rightBack: st.base,
       },
       zoom,
     );
 
     // Pillar cap (pyramid)
     const capY = pp.y + 2 * zoom - 12 * zoom;
-    ctx.fillStyle = "#8a7a6a";
+    ctx.fillStyle = st.palest;
     ctx.beginPath();
     ctx.moveTo(pp.x, capY - 4 * zoom);
     ctx.lineTo(pp.x - 3.5 * zoom, capY);
@@ -615,7 +644,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Pillar gold finial
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.arc(pp.x, capY - 5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -867,11 +896,11 @@ export function renderLibraryTower(
     baseWidth,
     lowerBodyHeight,
     {
-      top: "#6a5a4a",
-      left: "#5a4a3a",
-      right: "#4a3a2a",
-      leftBack: "#7a6a5a",
-      rightBack: "#6a5a4a",
+      top: st.light,
+      left: st.base,
+      right: st.mid,
+      leftBack: st.pale,
+      rightBack: st.light,
     },
     zoom,
   );
@@ -887,10 +916,10 @@ export function renderLibraryTower(
     32,
     16,
     {
-      rail: "#4a3a2a",
-      topRail: "#6a5a4a",
-      backPanel: "rgba(90, 74, 58, 0.35)",
-      frontPanel: "rgba(90, 74, 58, 0.25)",
+      rail: st.mid,
+      topRail: st.light,
+      backPanel: `rgba(${railRgba}, 0.35)`,
+      frontPanel: `rgba(${railRgba}, 0.25)`,
     },
     zoom,
   );
@@ -914,10 +943,10 @@ export function renderLibraryTower(
       const alpha = shade === 0 ? 0.05 : shade === 1 ? 0.08 : 0.03;
       const tint =
         shade === 0
-          ? "138, 122, 106"
+          ? stTint.a
           : shade === 1
-            ? "74, 58, 42"
-            : "100, 84, 68";
+            ? stTint.b
+            : stTint.c;
 
       // Left face block (parallelogram flush with wall)
       ctx.fillStyle = `rgba(${tint}, ${alpha})`;
@@ -946,26 +975,26 @@ export function renderLibraryTower(
     const yEdge = screenPos.y - frac * bodyH;
 
     // Left face — dark mortar groove
-    ctx.strokeStyle = "#2a1a0a";
+    ctx.strokeStyle = st.mortar;
     ctx.beginPath();
     ctx.moveTo(sX - w, yEdge);
     ctx.lineTo(sX, yEdge + d);
     ctx.stroke();
     // Left face — lighter upper highlight
-    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.strokeStyle = `${mortarHl} 0.25)`;
     ctx.beginPath();
     ctx.moveTo(sX - w, yEdge - 1 * zoom);
     ctx.lineTo(sX, yEdge + d - 1 * zoom);
     ctx.stroke();
 
     // Right face — dark mortar groove
-    ctx.strokeStyle = "#2a1a0a";
+    ctx.strokeStyle = st.mortar;
     ctx.beginPath();
     ctx.moveTo(sX, yEdge + d);
     ctx.lineTo(sX + w, yEdge);
     ctx.stroke();
     // Right face — lighter upper highlight
-    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.strokeStyle = `${mortarHl} 0.25)`;
     ctx.beginPath();
     ctx.moveTo(sX, yEdge + d - 1 * zoom);
     ctx.lineTo(sX + w, yEdge - 1 * zoom);
@@ -973,7 +1002,7 @@ export function renderLibraryTower(
   }
 
   // Vertical mortar joints (staggered per row for ashlar bond)
-  ctx.strokeStyle = "#2a1a0a";
+  ctx.strokeStyle = st.mortar;
   for (let row = 0; row <= numMortarRows; row++) {
     const frac1 = row / (numMortarRows + 1);
     const frac2 = (row + 1) / (numMortarRows + 1);
@@ -1043,7 +1072,7 @@ export function renderLibraryTower(
     const lanternTipX = scX + side * 5 * zoom;
 
     // Ornate wall mount plate
-    ctx.fillStyle = "#4a3a2a";
+    ctx.fillStyle = st.mid;
     ctx.beginPath();
     ctx.moveTo(scX - side * 0.5 * zoom, scY - 2.5 * zoom);
     ctx.lineTo(scX - side * 0.5 * zoom, scY + 2.5 * zoom);
@@ -1053,7 +1082,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Curved iron bracket arm
-    ctx.strokeStyle = "#5a4a3a";
+    ctx.strokeStyle = st.base;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(scX + side * 1 * zoom, scY);
@@ -1082,7 +1111,7 @@ export function renderLibraryTower(
     const lSize = 2.5 * zoom;
 
     // Lantern top cap
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.moveTo(lx, ly - lSize * 1.8);
     ctx.lineTo(lx - lSize, ly - lSize * 1.2);
@@ -1095,7 +1124,7 @@ export function renderLibraryTower(
     ctx.fillRect(lx - lSize, ly - lSize * 1.2, lSize * 2, lSize * 2);
 
     // Lantern glass frame struts
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = gd.main;
     ctx.lineWidth = 0.6 * zoom;
     ctx.strokeRect(lx - lSize, ly - lSize * 1.2, lSize * 2, lSize * 2);
     ctx.beginPath();
@@ -1104,7 +1133,7 @@ export function renderLibraryTower(
     ctx.stroke();
 
     // Lantern bottom finial
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.moveTo(lx, ly + lSize * 1.2);
     ctx.lineTo(lx - lSize * 0.5, ly + lSize * 0.8);
@@ -1236,13 +1265,13 @@ export function renderLibraryTower(
   const roseGlow = 0.5 + Math.sin(time * 1.8) * 0.2 + attackPulse * 0.3;
 
   // Outer stone frame with molding
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, roseY, roseRadius + 2 * zoom, 0, Math.PI * 2);
   ctx.stroke();
   // Inner frame
-  ctx.strokeStyle = "#5a4a3a";
+  ctx.strokeStyle = st.base;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, roseY, roseRadius + 0.5 * zoom, 0, Math.PI * 2);
@@ -1282,7 +1311,7 @@ export function renderLibraryTower(
   }
 
   // Gothic tracery (stone mullions)
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 0.8 * zoom;
   for (let petal = 0; petal < 8; petal++) {
     const petalAngle = (petal / 8) * Math.PI * 2;
@@ -1324,7 +1353,7 @@ export function renderLibraryTower(
   }
 
   // Inner ring (middle stone circle)
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, roseY, roseRadius * 0.5, 0, Math.PI * 2);
@@ -1382,7 +1411,7 @@ export function renderLibraryTower(
   const doorH = 12 * zoom;
 
   // Stone step at entrance base
-  ctx.fillStyle = "#5a4a3a";
+  ctx.fillStyle = st.base;
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW - 2 * zoom, entranceY + 1 * zoom);
   ctx.lineTo(entranceX, entranceY + 3 * zoom);
@@ -1391,7 +1420,7 @@ export function renderLibraryTower(
   ctx.closePath();
   ctx.fill();
   // Step front edge
-  ctx.fillStyle = "#4a3a2a";
+  ctx.fillStyle = st.mid;
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW - 2 * zoom, entranceY + 1 * zoom);
   ctx.lineTo(entranceX, entranceY + 3 * zoom);
@@ -1399,7 +1428,7 @@ export function renderLibraryTower(
   ctx.lineTo(entranceX - doorW - 2 * zoom, entranceY + 3 * zoom);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#3a2a1a";
+  ctx.fillStyle = st.dark;
   ctx.beginPath();
   ctx.moveTo(entranceX, entranceY + 3 * zoom);
   ctx.lineTo(entranceX + doorW + 2 * zoom, entranceY + 1 * zoom);
@@ -1409,7 +1438,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Deep door recess (shadow)
-  ctx.fillStyle = "#1a0a00";
+  ctx.fillStyle = st.void;
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW, entranceY);
   ctx.lineTo(entranceX - doorW, entranceY - doorH * 0.6);
@@ -1424,7 +1453,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Outer archivolt (ornate arch molding)
-  ctx.strokeStyle = "#6a5a4a";
+  ctx.strokeStyle = st.light;
   ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW - 1.5 * zoom, entranceY);
@@ -1439,7 +1468,7 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Inner archivolt
-  ctx.strokeStyle = "#5a4a3a";
+  ctx.strokeStyle = st.base;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW + 0.5 * zoom, entranceY);
@@ -1454,7 +1483,7 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Keystone at arch apex
-  ctx.fillStyle = "#7a6a5a";
+  ctx.fillStyle = st.pale;
   ctx.beginPath();
   ctx.moveTo(entranceX, entranceY - doorH * 0.95);
   ctx.lineTo(entranceX - 2.5 * zoom, entranceY - doorH * 0.82);
@@ -1462,7 +1491,7 @@ export function renderLibraryTower(
   ctx.closePath();
   ctx.fill();
   // Gold inlay on keystone
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = gd.main;
   ctx.beginPath();
   ctx.arc(entranceX, entranceY - doorH * 0.87, 1 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -1522,11 +1551,11 @@ export function renderLibraryTower(
     const torchY = entranceY - doorH * 0.5;
 
     // Wall plate
-    ctx.fillStyle = "#4a3a2a";
+    ctx.fillStyle = st.mid;
     ctx.fillRect(torchX - 1.5 * zoom, torchY + 1 * zoom, 3 * zoom, 4 * zoom);
 
     // Ornate bracket arm (curved iron)
-    ctx.strokeStyle = "#5a4a3a";
+    ctx.strokeStyle = st.base;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(torchX, torchY + 3 * zoom);
@@ -1539,7 +1568,7 @@ export function renderLibraryTower(
     ctx.stroke();
 
     // Torch bowl (cup shape)
-    ctx.fillStyle = "#6a5a3a";
+    ctx.fillStyle = st.light;
     ctx.beginPath();
     ctx.moveTo(torchX + tSide * 0 * zoom - 2.5 * zoom, torchY - 2 * zoom);
     ctx.lineTo(torchX + tSide * 0 * zoom + 2.5 * zoom, torchY - 2 * zoom);
@@ -1637,7 +1666,7 @@ export function renderLibraryTower(
     const bTop = screenPos.y - lowerBodyHeight * zoom;
 
     // Buttress side face (3D depth)
-    ctx.fillStyle = "#4a3a2a";
+    ctx.fillStyle = st.mid;
     ctx.beginPath();
     ctx.moveTo(bxOuter, screenPos.y + d * 0.45);
     ctx.lineTo(bxOuter + side * 3 * zoom, screenPos.y + d * 0.5);
@@ -1647,7 +1676,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Buttress front face
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = st.base;
     ctx.beginPath();
     ctx.moveTo(bx, screenPos.y + d * 0.35);
     ctx.lineTo(bxOuter, screenPos.y + d * 0.45);
@@ -1657,7 +1686,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Buttress stone course lines
-    ctx.strokeStyle = "#3a2a1a";
+    ctx.strokeStyle = st.dark;
     ctx.lineWidth = 0.7 * zoom;
     for (let row = 0; row < 4; row++) {
       const rowFrac = row / 4;
@@ -1672,7 +1701,7 @@ export function renderLibraryTower(
     }
 
     // Buttress pinnacle cap (3D pointed)
-    ctx.fillStyle = "#6a5a4a";
+    ctx.fillStyle = st.light;
     ctx.beginPath();
     ctx.moveTo(screenPos.x + side * w * 1.0, bTop - 6 * zoom);
     ctx.lineTo(bx, bTop + d * 0.1);
@@ -1682,7 +1711,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Pinnacle finial on buttress
-    ctx.fillStyle = "#7a6a5a";
+    ctx.fillStyle = st.pale;
     ctx.beginPath();
     ctx.moveTo(screenPos.x + side * w * 1.0, bTop - 10 * zoom);
     ctx.lineTo(screenPos.x + side * w * 0.95, bTop - 5 * zoom);
@@ -1691,7 +1720,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Flying arch support (double arch for Gothic feel)
-    ctx.strokeStyle = "#4a3a2a";
+    ctx.strokeStyle = st.mid;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(
@@ -1851,7 +1880,7 @@ export function renderLibraryTower(
     const pinnBaseY = screenPos.y - lowerBodyHeight * zoom + pDepth * d * 0.3;
 
     // Pinnacle shaft
-    ctx.fillStyle = "#6a5a4a";
+    ctx.fillStyle = st.light;
     ctx.beginPath();
     ctx.moveTo(pinnX - 2 * zoom, pinnBaseY);
     ctx.lineTo(pinnX + 2 * zoom, pinnBaseY);
@@ -1861,7 +1890,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Pinnacle pointed tip
-    ctx.fillStyle = "#7a6a5a";
+    ctx.fillStyle = st.pale;
     ctx.beginPath();
     ctx.moveTo(pinnX, pinnBaseY - 16 * zoom);
     ctx.lineTo(pinnX - 2.5 * zoom, pinnBaseY - 9 * zoom);
@@ -1870,13 +1899,13 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Crocket (decorative knob) on pinnacle
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.arc(pinnX, pinnBaseY - 16.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
     // Small side crockets
-    ctx.fillStyle = "#b89020";
+    ctx.fillStyle = gd.sub;
     ctx.beginPath();
     ctx.arc(
       pinnX - 1.8 * zoom,
@@ -1912,9 +1941,9 @@ export function renderLibraryTower(
   const windowYBase = screenPos.y - lowerBodyHeight * zoom * 0.25;
   const glowIntensity = 0.5 + Math.sin(time * 2) * 0.3 + attackPulse;
   const libraryWindowColors = {
-    frame: "#3a2a1a",
+    frame: st.dark,
     void: `${mainColor} ${glowIntensity * 0.9})`,
-    sill: "#3a2a1a",
+    sill: st.dark,
   };
   const isUpgraded = tower.level === 4 && !!tower.upgrade;
 
@@ -1948,7 +1977,7 @@ export function renderLibraryTower(
   );
   ctx.fill();
 
-  ctx.fillStyle = "#8a7a6a";
+  ctx.fillStyle = st.palest;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -1961,7 +1990,7 @@ export function renderLibraryTower(
   );
   ctx.fill();
 
-  ctx.fillStyle = "#9a8a7a";
+  ctx.fillStyle = st.top;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -1980,18 +2009,18 @@ export function renderLibraryTower(
   const runeGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5;
 
   // Recessed groove around stone
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 2 * zoom, stoneRY + 1 * zoom, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   // Stone tablet surface (darker than plate, like inlaid stone)
-  ctx.fillStyle = "#5a4a3a";
+  ctx.fillStyle = st.base;
   ctx.beginPath();
   ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 1 * zoom, stoneRY + 0.5 * zoom, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#6a5a4a";
+  ctx.fillStyle = st.light;
   ctx.beginPath();
   ctx.ellipse(sX, plateY - 3 * zoom, stoneRX, stoneRY, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -2050,7 +2079,7 @@ export function renderLibraryTower(
     const railH = baseHeight * zoom * 0.6;
 
     // Shadow side of rail
-    ctx.fillStyle = "#3a2a1a";
+    ctx.fillStyle = st.dark;
     ctx.fillRect(
       railX - 4 * zoom + (dx > 0 ? 6 * zoom : 0),
       railTop,
@@ -2059,11 +2088,11 @@ export function renderLibraryTower(
     );
 
     // Main rail body
-    ctx.fillStyle = "#4a3a2a";
+    ctx.fillStyle = st.mid;
     ctx.fillRect(railX - 4 * zoom, railTop, 8 * zoom, railH);
 
     // Rail highlight edge
-    ctx.fillStyle = "#6a5a4a";
+    ctx.fillStyle = st.light;
     ctx.fillRect(
       railX - 4 * zoom + (dx < 0 ? 0 : 6 * zoom),
       railTop,
@@ -2072,7 +2101,7 @@ export function renderLibraryTower(
     );
 
     // Rail cap (chamfered top)
-    ctx.fillStyle = "#7a6a5a";
+    ctx.fillStyle = st.pale;
     ctx.beginPath();
     ctx.moveTo(railX - 5 * zoom, railTop);
     ctx.lineTo(railX, railTop - 3 * zoom);
@@ -2096,7 +2125,7 @@ export function renderLibraryTower(
       );
       ctx.fill();
       // Rivet
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = gd.main;
       ctx.beginPath();
       ctx.arc(railX, rivetY, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -2138,11 +2167,11 @@ export function renderLibraryTower(
     baseWidth - 4,
     baseHeight * 0.4,
     {
-      top: "#7a6a5a",
-      left: "#6a5a4a",
-      right: "#5a4a3a",
-      leftBack: "#8a7a6a",
-      rightBack: "#7a6a5a",
+      top: st.pale,
+      left: st.light,
+      right: st.base,
+      leftBack: st.palest,
+      rightBack: st.pale,
     },
     zoom,
   );
@@ -2153,13 +2182,13 @@ export function renderLibraryTower(
   const connY = pistonTopY + 2 * zoom;
 
   // Ring body (back half)
-  ctx.fillStyle = "#5a4a3a";
+  ctx.fillStyle = st.base;
   ctx.beginPath();
   ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Left half matches left face
-  ctx.fillStyle = "#6a5a4a";
+  ctx.fillStyle = st.light;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -2174,7 +2203,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Gold trim on connector ring
-  ctx.strokeStyle = "rgba(201, 162, 39, 0.4)";
+  ctx.strokeStyle = `rgba(${gd.rgba}, 0.4)`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -2189,14 +2218,14 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Front border
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, 0, Math.PI);
   ctx.stroke();
 
   // Dentil molding along connector ring (front arc)
-  ctx.fillStyle = "#7a6a5a";
+  ctx.fillStyle = st.pale;
   for (let dm = 0; dm < 10; dm++) {
     const dmAngle = (dm / 10) * Math.PI;
     const dmX = screenPos.x + Math.cos(dmAngle) * connRX * 0.92;
@@ -2223,10 +2252,10 @@ export function renderLibraryTower(
       const alpha = shade === 0 ? 0.04 : shade === 1 ? 0.06 : 0.02;
       const tint =
         shade === 0
-          ? "138, 122, 106"
+          ? stTint.a
           : shade === 1
-            ? "74, 58, 42"
-            : "100, 84, 68";
+            ? stTint.b
+            : stTint.c;
       ctx.fillStyle = `rgba(${tint}, ${alpha})`;
       ctx.beginPath();
       ctx.moveTo(sX - uw * (1 - u1), pistonTopY + u1 * ud - uf1 * upperH);
@@ -2249,7 +2278,7 @@ export function renderLibraryTower(
   for (let row = 1; row <= 4; row++) {
     const frac = row / 5;
     const yEdge = pistonTopY - frac * upperH;
-    ctx.strokeStyle = "#2a1a0a";
+    ctx.strokeStyle = st.mortar;
     ctx.beginPath();
     ctx.moveTo(sX - uw, yEdge);
     ctx.lineTo(sX, yEdge + ud);
@@ -2258,7 +2287,7 @@ export function renderLibraryTower(
     ctx.moveTo(sX, yEdge + ud);
     ctx.lineTo(sX + uw, yEdge);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(120, 100, 80, 0.2)";
+    ctx.strokeStyle = `${mortarHl} 0.2)`;
     ctx.beginPath();
     ctx.moveTo(sX - uw, yEdge - 1 * zoom);
     ctx.lineTo(sX, yEdge + ud - 1 * zoom);
@@ -2314,9 +2343,9 @@ export function renderLibraryTower(
       const vy = ventY + (side === -1 ? d * 0.55 * 0.15 : d * 0.55 * 0.15);
 
       drawIsoFlushVent(ctx, vx, vy, 5, 3.5, face, zoom, {
-        frameColor: "#3a2a1a",
-        bgColor: "#1a0a00",
-        slatColor: "#5a4a3a",
+        frameColor: st.dark,
+        bgColor: st.void,
+        slatColor: st.base,
         slats: 3,
       });
 
@@ -2339,11 +2368,11 @@ export function renderLibraryTower(
     const pinnH = 10 * zoom;
 
     // Pinnacle base
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = st.base;
     ctx.fillRect(pinnX - 2 * zoom, pinnY - 2 * zoom, 4 * zoom, 4 * zoom);
 
     // Pinnacle spire
-    ctx.fillStyle = "#6a5a4a";
+    ctx.fillStyle = st.light;
     ctx.beginPath();
     ctx.moveTo(pinnX, pinnY - pinnH);
     ctx.lineTo(pinnX - 2.5 * zoom, pinnY - 2 * zoom);
@@ -2352,7 +2381,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Pinnacle crocket (decorative bumps)
-    ctx.fillStyle = "#7a6a5a";
+    ctx.fillStyle = st.pale;
     for (let c = 0; c < 3; c++) {
       const crocketFrac = 0.3 + c * 0.25;
       const crocketX =
@@ -2364,7 +2393,7 @@ export function renderLibraryTower(
     }
 
     // Pinnacle finial (tiny orb at top)
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.arc(pinnX, pinnY - pinnH - 1.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2376,7 +2405,7 @@ export function renderLibraryTower(
   const balconyD = baseWidth * zoom * 0.24;
 
   // Balcony underside (corbel support — 3D depth)
-  ctx.fillStyle = "#3a2a1a";
+  ctx.fillStyle = st.dark;
   ctx.beginPath();
   ctx.moveTo(sX - balconyW, balconyY);
   ctx.lineTo(sX, balconyY + balconyD);
@@ -2384,7 +2413,7 @@ export function renderLibraryTower(
   ctx.lineTo(sX - balconyW * 0.7, balconyY + 3 * zoom);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#2a1a0a";
+  ctx.fillStyle = st.mortar;
   ctx.beginPath();
   ctx.moveTo(sX, balconyY + balconyD);
   ctx.lineTo(sX + balconyW, balconyY);
@@ -2397,7 +2426,7 @@ export function renderLibraryTower(
   for (const cb of [-0.6, 0, 0.6]) {
     const cbX = sX + cb * balconyW * 0.7;
     const cbY = balconyY + balconyD * (1 - Math.abs(cb) * 0.7);
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = st.base;
     ctx.beginPath();
     ctx.moveTo(cbX - 1.5 * zoom, cbY + 3 * zoom);
     ctx.lineTo(cbX, cbY + 6 * zoom);
@@ -2407,7 +2436,7 @@ export function renderLibraryTower(
   }
 
   // Balcony floor (isometric slab)
-  ctx.fillStyle = "#6a5a4a";
+  ctx.fillStyle = st.light;
   ctx.beginPath();
   ctx.moveTo(sX - balconyW, balconyY);
   ctx.lineTo(sX, balconyY - balconyD);
@@ -2417,7 +2446,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Balcony floor tile pattern
-  ctx.strokeStyle = "rgba(74, 58, 42, 0.3)";
+  ctx.strokeStyle = `rgba(${tileRgba}, 0.3)`;
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX - balconyW * 0.5, balconyY + balconyD * 0.5);
@@ -2429,7 +2458,7 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Balcony gold edge trim
-  ctx.strokeStyle = "rgba(201, 162, 39, 0.35)";
+  ctx.strokeStyle = `rgba(${gd.rgba}, 0.35)`;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX - balconyW, balconyY);
@@ -2455,7 +2484,7 @@ export function renderLibraryTower(
     const midRailY = (p0.y + p1.y) / 2;
 
     // Panel fill
-    ctx.fillStyle = "rgba(90, 74, 58, 0.45)";
+    ctx.fillStyle = `rgba(${railRgba}, 0.45)`;
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
     ctx.lineTo(p1.x, p1.y);
@@ -2465,7 +2494,7 @@ export function renderLibraryTower(
     ctx.fill();
 
     // Gothic arch cutout (decorative)
-    ctx.strokeStyle = "rgba(74, 58, 42, 0.5)";
+    ctx.strokeStyle = `rgba(${tileRgba}, 0.5)`;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(
@@ -2483,10 +2512,10 @@ export function renderLibraryTower(
 
   for (const post of railPosts) {
     // Post with chamfered top
-    ctx.fillStyle = "#5a4a3a";
+    ctx.fillStyle = st.base;
     ctx.fillRect(post.x - 1 * zoom, post.y - railH, 2 * zoom, railH);
     // Post cap (gold finial)
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = gd.main;
     ctx.beginPath();
     ctx.moveTo(post.x, post.y - railH - 1.5 * zoom);
     ctx.lineTo(post.x - 1.2 * zoom, post.y - railH);
@@ -2496,7 +2525,7 @@ export function renderLibraryTower(
   }
 
   // Upper railing bar
-  ctx.strokeStyle = "#5a4a3a";
+  ctx.strokeStyle = st.base;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(railPosts[0].x, railPosts[0].y - railH);
@@ -2506,7 +2535,7 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Lower railing bar
-  ctx.strokeStyle = "#4a3a2a";
+  ctx.strokeStyle = st.mid;
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(railPosts[0].x, railPosts[0].y - railH * 0.35);
@@ -2539,7 +2568,7 @@ export function renderLibraryTower(
   // ========== ENHANCED GOTHIC SPIRE ==========
 
   // Spire base platform
-  ctx.fillStyle = "#5a4a3a";
+  ctx.fillStyle = st.base;
   ctx.beginPath();
   ctx.ellipse(
     sX,
@@ -2553,7 +2582,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Spire back face
-  ctx.fillStyle = "#3a2a1a";
+  ctx.fillStyle = st.dark;
   ctx.beginPath();
   ctx.moveTo(sX, topY - spireHeight);
   ctx.lineTo(sX - baseWidth * zoom * 0.32, topY);
@@ -2562,7 +2591,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Spire front face
-  ctx.fillStyle = "#4a3a2a";
+  ctx.fillStyle = st.mid;
   ctx.beginPath();
   ctx.moveTo(sX, topY - spireHeight);
   ctx.lineTo(sX, topY + baseWidth * zoom * 0.12);
@@ -2571,7 +2600,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Spire right face
-  ctx.fillStyle = "#5a4a3a";
+  ctx.fillStyle = st.base;
   ctx.beginPath();
   ctx.moveTo(sX, topY - spireHeight);
   ctx.lineTo(sX + baseWidth * zoom * 0.32, topY);
@@ -2581,7 +2610,7 @@ export function renderLibraryTower(
   ctx.fill();
 
   // Spire ridge line
-  ctx.strokeStyle = "#2a1a0a";
+  ctx.strokeStyle = st.mortar;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX, topY - spireHeight);
@@ -2595,7 +2624,7 @@ export function renderLibraryTower(
     const bandWidth = baseWidth * zoom * 0.32 * (0.9 - band * 0.15);
 
     // Band line
-    ctx.strokeStyle = "#6a5a4a";
+    ctx.strokeStyle = st.light;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(sX - bandWidth, bandY + bandWidth * 0.35);
@@ -2616,7 +2645,7 @@ export function renderLibraryTower(
   }
 
   // Spire finial (decorative top piece)
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = gd.main;
   ctx.beginPath();
   ctx.moveTo(sX, topY - spireHeight - 6 * zoom);
   ctx.lineTo(sX - 3 * zoom, topY - spireHeight + 2 * zoom);
@@ -2695,7 +2724,7 @@ export function renderLibraryTower(
   const antennaH = 8 * zoom;
 
   // Main antenna shaft
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = gd.main;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX, antennaBaseY);
@@ -2747,14 +2776,14 @@ export function renderLibraryTower(
   const clockR = 3.5 * zoom;
 
   ctx.fillStyle = "rgba(240, 230, 210, 0.85)";
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(sX, clockCenterY, clockR, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#3a2a1a";
+  ctx.fillStyle = st.dark;
   for (let h = 0; h < 12; h++) {
     const hAngle = (h / 12) * Math.PI * 2 - Math.PI / 2;
     const markerLen = h % 3 === 0 ? 1 * zoom : 0.5 * zoom;
@@ -2773,7 +2802,7 @@ export function renderLibraryTower(
 
   const hourAngle = ((time * 0.02) % (Math.PI * 2)) - Math.PI / 2;
   const minuteAngle = ((time * 0.24) % (Math.PI * 2)) - Math.PI / 2;
-  ctx.strokeStyle = "#2a1a0a";
+  ctx.strokeStyle = st.mortar;
   ctx.lineWidth = 0.7 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX, clockCenterY);
@@ -2791,13 +2820,13 @@ export function renderLibraryTower(
   );
   ctx.stroke();
 
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = gd.main;
   ctx.beginPath();
   ctx.arc(sX, clockCenterY, 0.7 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Central arcane core display
-  ctx.fillStyle = "#3a2a1a";
+  ctx.fillStyle = st.dark;
   ctx.beginPath();
   ctx.arc(sX, topY + 6 * zoom, 9 * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -2834,7 +2863,7 @@ export function renderLibraryTower(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  ctx.strokeStyle = "#3a2a1a";
+  ctx.strokeStyle = st.dark;
   ctx.lineWidth = 1 * zoom;
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2 + time * 2;

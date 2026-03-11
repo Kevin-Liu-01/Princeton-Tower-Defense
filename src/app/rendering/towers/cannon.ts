@@ -74,6 +74,28 @@ export function renderCannonTower(
   void cameraOffset;
   void cameraZoom;
 
+  // Level 4 upgrade theme helpers
+  const is4A = tower.level === 4 && tower.upgrade === "A";
+  const is4B = tower.level === 4 && tower.upgrade === "B";
+  const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
+
+  // Steel body palette (gray → dark gunmetal 4A, warm bronze 4B)
+  const s = {
+    s0: uc("#12121e", "#221a16", "#1a1a22"),
+    s1: uc("#1e1e2a", "#322a22", "#2a2a32"),
+    s2: uc("#2a2a38", "#423a2a", "#3a3a42"),
+    s3: uc("#35354a", "#524a3a", "#4a4a52"),
+    s4: uc("#44445a", "#625a44", "#5a5a62"),
+    s5: uc("#55556a", "#726a55", "#6a6a72"),
+    s6: uc("#66667a", "#827a66", "#7a7a82"),
+    s7: uc("#77778a", "#928a77", "#8a8a92"),
+  };
+  // Tech accent (orange → amber-gold 4A, hot red 4B)
+  const tAcc = uc("#ffaa22", "#ff3300", "#ff6600");
+  const tRgba = uc("255, 170, 34", "255, 51, 0", "255, 102, 0");
+  // Bearing/ring glow
+  const bRgba = uc("255, 200, 80", "255, 80, 30", "255, 150, 50");
+
   ctx.save();
   const level = tower.level;
   const baseWidth = 36 + level * 5;
@@ -89,7 +111,7 @@ export function renderCannonTower(
   const canBalSegs = 32;
   const canBalPosts = 16;
 
-  ctx.strokeStyle = "#3a3a42";
+  ctx.strokeStyle = s.s2;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -102,7 +124,7 @@ export function renderCannonTower(
     Math.PI * 2,
   );
   ctx.stroke();
-  ctx.strokeStyle = "#5a5a62";
+  ctx.strokeStyle = s.s4;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -114,7 +136,7 @@ export function renderCannonTower(
     Math.PI * 2,
   );
   ctx.stroke();
-  ctx.strokeStyle = "#5a5a62";
+  ctx.strokeStyle = s.s4;
   ctx.lineWidth = 1 * zoom;
   for (let bp = 0; bp < canBalPosts; bp++) {
     const pa = (bp / canBalPosts) * Math.PI * 2;
@@ -134,7 +156,7 @@ export function renderCannonTower(
     const y0b = canBalY + Math.sin(a0) * canBalRY;
     const x1 = screenPos.x + Math.cos(a1) * canBalRX;
     const y1b = canBalY + Math.sin(a1) * canBalRY;
-    ctx.fillStyle = `rgba(74, 74, 82, 0.35)`;
+    ctx.fillStyle = `rgba(${uc("53, 53, 74", "82, 74, 53", "74, 74, 82")}, 0.35)`;
     ctx.beginPath();
     ctx.moveTo(x0, y0b);
     ctx.lineTo(x1, y1b);
@@ -152,25 +174,28 @@ export function renderCannonTower(
     baseWidth,
     baseHeight,
     {
-      base: "#4a4a52",
-      dark: "#2a2a32",
-      light: "#6a6a72",
-      accent: "#ff6600",
+      base: s.s3,
+      dark: s.s1,
+      light: s.s5,
+      accent: tAcc,
     },
     zoom,
     time,
     level,
+    s,
+    tAcc,
+    tRgba,
   );
 
   const topY = screenPos.y - baseHeight * zoom;
 
   // ========== BASE RAILING FRONT HALF (in front of building body) ==========
-  ctx.strokeStyle = "#3a3a42";
+  ctx.strokeStyle = s.s2;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(screenPos.x, canBalY, canBalRX, canBalRY, 0, 0, Math.PI);
   ctx.stroke();
-  ctx.strokeStyle = "#5a5a62";
+  ctx.strokeStyle = s.s4;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -182,7 +207,7 @@ export function renderCannonTower(
     Math.PI,
   );
   ctx.stroke();
-  ctx.strokeStyle = "#5a5a62";
+  ctx.strokeStyle = s.s4;
   ctx.lineWidth = 1 * zoom;
   for (let bp = 0; bp < canBalPosts; bp++) {
     const pa = (bp / canBalPosts) * Math.PI * 2;
@@ -202,7 +227,7 @@ export function renderCannonTower(
     const y0b = canBalY + Math.sin(a0) * canBalRY;
     const x1 = screenPos.x + Math.cos(a1) * canBalRX;
     const y1b = canBalY + Math.sin(a1) * canBalRY;
-    ctx.fillStyle = `rgba(74, 74, 82, 0.25)`;
+    ctx.fillStyle = `rgba(${uc("53, 53, 74", "82, 74, 53", "74, 74, 82")}, 0.25)`;
     ctx.beginPath();
     ctx.moveTo(x0, y0b);
     ctx.lineTo(x1, y1b);
@@ -215,7 +240,7 @@ export function renderCannonTower(
   // ========== ENHANCED TURRET MOUNTING PLATFORM ==========
 
   // Outer mounting ring (heavy base)
-  ctx.fillStyle = "#2a2a32";
+  ctx.fillStyle = s.s1;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -229,7 +254,7 @@ export function renderCannonTower(
   ctx.fill();
 
   // Tech platform on top
-  ctx.fillStyle = "#3a3a42";
+  ctx.fillStyle = s.s2;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -243,7 +268,7 @@ export function renderCannonTower(
   ctx.fill();
 
   // Inner platform detail
-  ctx.fillStyle = "#4a4a52";
+  ctx.fillStyle = s.s3;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -258,7 +283,7 @@ export function renderCannonTower(
 
   // Glowing tech ring
   const pulse = 0.7 + Math.sin(time * 3) * 0.3;
-  ctx.strokeStyle = `rgba(255, 102, 0, ${pulse * 0.6})`;
+  ctx.strokeStyle = `rgba(${tRgba}, ${pulse * 0.6})`;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -273,7 +298,7 @@ export function renderCannonTower(
   ctx.stroke();
 
   // Mounting bolts around platform
-  ctx.fillStyle = "#5a5a62";
+  ctx.fillStyle = s.s4;
   for (let i = 0; i < 8; i++) {
     const boltAngle = (i / 8) * Math.PI * 2 + time * 0.5;
     const boltX = screenPos.x + Math.cos(boltAngle) * baseWidth * 0.48 * zoom;
@@ -286,7 +311,7 @@ export function renderCannonTower(
 
   // Power conduits to turret (level 2+)
   if (level >= 2) {
-    ctx.strokeStyle = `rgba(255, 102, 0, ${0.4 + Math.sin(time * 4) * 0.2})`;
+    ctx.strokeStyle = `rgba(${tRgba}, ${0.4 + Math.sin(time * 4) * 0.2})`;
     ctx.lineWidth = 1.5 * zoom;
     for (let i = 0; i < 4; i++) {
       const conduitAngle = (i / 4) * Math.PI * 2 + Math.PI / 8;
@@ -308,7 +333,7 @@ export function renderCannonTower(
   // Central rotation mechanism (level 3)
   if (level >= 3) {
     // Rotation bearing
-    ctx.strokeStyle = "#6a6a72";
+    ctx.strokeStyle = s.s5;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -323,7 +348,7 @@ export function renderCannonTower(
     ctx.stroke();
 
     // Bearing glow
-    ctx.strokeStyle = `rgba(255, 150, 50, ${pulse * 0.5})`;
+    ctx.strokeStyle = `rgba(${bRgba}, ${pulse * 0.5})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -362,7 +387,9 @@ export function drawMechanicalFaceDetails(
   zoom: number,
   time: number,
   level: number,
+  tRgbaOverride?: string,
 ) {
+  const _tR = tRgbaOverride ?? "255, 102, 0";
   const wFactor = 0.5;
   const dFactor = ISO_PRISM_D_FACTOR;
   const w = width * zoom * wFactor;
@@ -531,7 +558,7 @@ export function drawMechanicalFaceDetails(
     ctx.stroke();
 
     // Slit glow
-    ctx.strokeStyle = `rgba(255, 102, 0, ${slitGlow * 0.45})`;
+    ctx.strokeStyle = `rgba(${_tR}, ${slitGlow * 0.45})`;
     ctx.lineWidth = 1.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(slitLS.x, slitLS.y);
@@ -549,7 +576,7 @@ export function drawMechanicalFaceDetails(
     ctx.lineTo(slitRE.x, slitRE.y);
     ctx.stroke();
 
-    ctx.strokeStyle = `rgba(255, 102, 0, ${slitGlow * 0.35})`;
+    ctx.strokeStyle = `rgba(${_tR}, ${slitGlow * 0.35})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(slitRS.x, slitRS.y);
@@ -641,7 +668,13 @@ export function drawMechanicalTowerBase(
   zoom: number,
   time: number,
   level: number,
+  sp?: { s0: string; s1: string; s2: string; s3: string; s4: string; s5: string; s6: string; s7: string },
+  tAcc?: string,
+  tRgba?: string,
 ) {
+  const _s = sp ?? { s0: "#1a1a22", s1: "#2a2a32", s2: "#3a3a42", s3: "#4a4a52", s4: "#5a5a62", s5: "#6a6a72", s6: "#7a7a82", s7: "#8a8a92" };
+  const _tAcc = tAcc ?? "#ff6600";
+  const _tRgba = tRgba ?? "255, 102, 0";
   // Stepped foundation — rough-hewn plinth (bottom tier)
   drawIsometricPrism(
     ctx,
@@ -651,11 +684,11 @@ export function drawMechanicalTowerBase(
     width + 18,
     6,
     {
-      top: "#2a2a32",
-      left: "#222230",
-      right: "#1a1a28",
-      leftBack: "#282838",
-      rightBack: "#222232",
+      top: _s.s1,
+      left: darkenColor(_s.s1, 8),
+      right: darkenColor(_s.s1, 16),
+      leftBack: lightenColor(_s.s1, 5),
+      rightBack: lightenColor(_s.s1, 2),
     },
     zoom,
   );
@@ -669,11 +702,11 @@ export function drawMechanicalTowerBase(
     width + 12,
     6,
     {
-      top: "#3a3a42",
-      left: "#2a2a32",
-      right: "#252530",
-      leftBack: "#32323a",
-      rightBack: "#2d2d35",
+      top: _s.s2,
+      left: _s.s1,
+      right: darkenColor(_s.s1, 5),
+      leftBack: lightenColor(_s.s2, 3),
+      rightBack: darkenColor(_s.s2, 5),
     },
     zoom,
   );
@@ -801,6 +834,7 @@ export function drawMechanicalTowerBase(
     zoom,
     time,
     level,
+    _tRgba,
   );
 
   // Add tech details on top of the fully enclosed base
@@ -841,7 +875,7 @@ export function drawMechanicalTowerBase(
     2,
     time,
     zoom,
-    "rgb(255, 102, 0)",
+    `rgb(${_tRgba})`,
   );
 
   if (level >= 3) {
@@ -854,7 +888,7 @@ export function drawMechanicalTowerBase(
       2.5,
       time + 0.3,
       zoom,
-      "rgb(255, 80, 0)",
+      `rgb(${_tRgba})`,
     );
   }
 
@@ -894,7 +928,7 @@ export function drawMechanicalTowerBase(
     faceSide: number,
   ) => {
     // Vent recess
-    ctx.fillStyle = "#1a1a22";
+    ctx.fillStyle = _s.s0;
     ctx.beginPath();
     ctx.moveTo(vx, vy);
     ctx.lineTo(vx + isoSlopeX * vw, vy + isoSlopeY * vw);
@@ -905,11 +939,11 @@ export function drawMechanicalTowerBase(
 
     // Louvered slats
     const numSlats = 3;
-    for (let s = 0; s < numSlats; s++) {
-      const sT = (s + 0.5) / numSlats;
+    for (let sl = 0; sl < numSlats; sl++) {
+      const sT = (sl + 0.5) / numSlats;
       const sY = vy + sT * vh;
       const sYR = vy + isoSlopeY * vw + sT * vh;
-      ctx.fillStyle = faceSide > 0 ? "#4a4a52" : "#3a3a42";
+      ctx.fillStyle = faceSide > 0 ? _s.s3 : _s.s2;
       ctx.beginPath();
       ctx.moveTo(vx + 0.5 * zoom, sY - 1 * zoom);
       ctx.lineTo(vx + isoSlopeX * vw - 0.5 * zoom, sYR - 1 * zoom);
@@ -929,7 +963,7 @@ export function drawMechanicalTowerBase(
     }
 
     // Inner glow between slats
-    ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow * 0.5})`;
+    ctx.fillStyle = `rgba(${_tRgba}, ${ventGlow * 0.5})`;
     ctx.beginPath();
     ctx.moveTo(vx + 0.8 * zoom, vy + 0.8 * zoom);
     ctx.lineTo(
@@ -945,7 +979,7 @@ export function drawMechanicalTowerBase(
     ctx.fill();
 
     // Iron frame
-    ctx.strokeStyle = "#5a5a62";
+    ctx.strokeStyle = _s.s4;
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(vx, vy);
@@ -956,7 +990,7 @@ export function drawMechanicalTowerBase(
     ctx.stroke();
 
     // Corner rivets
-    ctx.fillStyle = "#6a6a72";
+    ctx.fillStyle = _s.s5;
     const corners = [
       { x: vx + 0.8 * zoom, y: vy + 0.8 * zoom },
       {
@@ -1001,9 +1035,9 @@ export function drawMechanicalTowerBase(
     8 + level * 2,
     gearRotation,
     {
-      outer: "#4a4a52",
-      inner: "#3a3a42",
-      teeth: "#5a5a62",
+      outer: _s.s3,
+      inner: _s.s2,
+      teeth: _s.s4,
       highlight: colors.accent,
     },
     zoom,
@@ -1019,9 +1053,9 @@ export function drawMechanicalTowerBase(
     6 + level,
     gearRotation,
     {
-      outer: "#5a5a62",
-      inner: "#4a4a52",
-      teeth: "#6a6a72",
+      outer: _s.s4,
+      inner: _s.s3,
+      teeth: _s.s5,
       highlight: colors.accent,
     },
     zoom,
@@ -1038,9 +1072,9 @@ export function drawMechanicalTowerBase(
       8 + level,
       -gearRotation,
       {
-        outer: "#4a4a52",
-        inner: "#3a3a42",
-        teeth: "#5a5a62",
+        outer: _s.s3,
+        inner: _s.s2,
+        teeth: _s.s4,
         highlight: colors.accent,
       },
       zoom,
@@ -1175,11 +1209,11 @@ export function drawMechanicalTowerBase(
 
     // Helper: bolt/connector at a joint
     const drawJointBolt = (bx: number, by: number, radius: number) => {
-      ctx.fillStyle = "#7a7a82";
+      ctx.fillStyle = _s.s6;
       ctx.beginPath();
       ctx.arc(bx, by, radius * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#5a5a62";
+      ctx.fillStyle = _s.s4;
       ctx.beginPath();
       ctx.arc(bx, by, radius * 0.55 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -1192,8 +1226,8 @@ export function drawMechanicalTowerBase(
       const lv = { x: postBase[0].x, y: postBase[0].y - hy };
       const bv = { x: postBase[3].x, y: postBase[3].y - hy };
       const rv = { x: postBase[2].x, y: postBase[2].y - hy };
-      drawBeam(bv.x, bv.y, lv.x, lv.y, 2.2, "#4a4a52", 0);
-      drawBeam(bv.x, bv.y, rv.x, rv.y, 2.2, "#3a3a42", 0);
+      drawBeam(bv.x, bv.y, lv.x, lv.y, 2.2, _s.s3, 0);
+      drawBeam(bv.x, bv.y, rv.x, rv.y, 2.2, _s.s2, 0);
     }
 
     // Back vertical posts (left and back)
@@ -1203,7 +1237,7 @@ export function drawMechanicalTowerBase(
       postTop[3].x,
       postTop[3].y,
       2.5,
-      "#4a4a52",
+      _s.s3,
       0,
     );
     drawBeam(
@@ -1212,7 +1246,7 @@ export function drawMechanicalTowerBase(
       postTop[0].x,
       postTop[0].y,
       2.5,
-      "#4a4a52",
+      _s.s3,
       0.04,
     );
 
@@ -1243,7 +1277,7 @@ export function drawMechanicalTowerBase(
       postTop[1].x,
       postTop[1].y,
       3,
-      "#6a6a72",
+      _s.s5,
       0.08,
     );
     drawBeam(
@@ -1252,7 +1286,7 @@ export function drawMechanicalTowerBase(
       postTop[2].x,
       postTop[2].y,
       2.8,
-      "#5a5a62",
+      _s.s4,
       0.06,
     );
 
@@ -1262,12 +1296,12 @@ export function drawMechanicalTowerBase(
       const lv = { x: postBase[0].x, y: postBase[0].y - hy };
       const fv = { x: postBase[1].x, y: postBase[1].y - hy };
       const rv = { x: postBase[2].x, y: postBase[2].y - hy };
-      drawBeam(lv.x, lv.y, fv.x, fv.y, 2.5, "#6a6a72", 0.07);
-      drawBeam(fv.x, fv.y, rv.x, rv.y, 2.5, "#5a5a62", 0.05);
+      drawBeam(lv.x, lv.y, fv.x, fv.y, 2.5, _s.s5, 0.07);
+      drawBeam(fv.x, fv.y, rv.x, rv.y, 2.5, _s.s4, 0.05);
     }
 
     // Front X-braces (front-left and front-right faces)
-    const xBraceColor = "#5a5a62";
+    const xBraceColor = _s.s4;
     ctx.lineWidth = 1.5 * zoom;
     // Front-left face brace
     ctx.strokeStyle = xBraceColor;
@@ -1381,7 +1415,7 @@ export function drawMechanicalTowerBase(
       }
 
       // Top ellipse cap
-      ctx.fillStyle = "#5a5a62";
+      ctx.fillStyle = _s.s4;
       ctx.beginPath();
       ctx.ellipse(drumX, drumY - drumH, drumRx, drumRy, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -1390,7 +1424,7 @@ export function drawMechanicalTowerBase(
       ctx.stroke();
 
       // Top cap inner ring
-      ctx.strokeStyle = "#6a6a72";
+      ctx.strokeStyle = _s.s5;
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -1408,7 +1442,7 @@ export function drawMechanicalTowerBase(
       for (let band = 0; band < 3; band++) {
         const bandT = (band + 0.5) / 3;
         const bandY = drumY - drumH + bandT * drumH;
-        ctx.strokeStyle = "#ff6600";
+        ctx.strokeStyle = _tAcc;
         ctx.lineWidth = 1.5 * zoom;
         ctx.beginPath();
         ctx.ellipse(drumX, bandY, drumRx, drumRy, 0, 0, Math.PI);
@@ -1430,7 +1464,7 @@ export function drawMechanicalTowerBase(
       }
 
       // Rivets on bands
-      ctx.fillStyle = "#7a7a82";
+      ctx.fillStyle = _s.s6;
       for (let band = 0; band < 3; band++) {
         const bandT = (band + 0.5) / 3;
         const bandY = drumY - drumH + bandT * drumH;
@@ -1466,7 +1500,7 @@ export function drawMechanicalTowerBase(
   // ========== ARMOR PLATING (Level 2+) ==========
   if (level >= 2) {
     // Side armor plates
-    ctx.fillStyle = "#5a5a62";
+    ctx.fillStyle = _s.s4;
 
     // Left armor plate
     ctx.beginPath();
@@ -1487,7 +1521,7 @@ export function drawMechanicalTowerBase(
     ctx.fill();
 
     // Armor plate rivets
-    ctx.fillStyle = "#7a7a82";
+    ctx.fillStyle = _s.s6;
     const rivetPositions = [
       { x: x - w * 1.05, y: y - height * zoom * 0.1 },
       { x: x - w * 1.1, y: y - height * zoom * 0.25 },
@@ -1501,7 +1535,7 @@ export function drawMechanicalTowerBase(
     }
 
     // Armor edge highlight
-    ctx.strokeStyle = "#8a8a92";
+    ctx.strokeStyle = _s.s7;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - w * 1.15, y - height * zoom * 0.3);
@@ -1516,7 +1550,7 @@ export function drawMechanicalTowerBase(
   // ========== LEVEL 3 HEAVY ARMOR & EQUIPMENT ==========
   if (level >= 3) {
     // Additional heavy armor plating on front
-    ctx.fillStyle = "#4a4a52";
+    ctx.fillStyle = _s.s3;
     ctx.beginPath();
     ctx.moveTo(x - w * 0.6, y + 4 * zoom);
     ctx.lineTo(x - w * 0.8, y - height * zoom * 0.5);
@@ -1569,7 +1603,7 @@ export function drawMechanicalTowerBase(
     }
 
     // Secondary ammo drum (smaller)
-    ctx.fillStyle = "#3a3a42";
+    ctx.fillStyle = _s.s2;
     ctx.beginPath();
     ctx.ellipse(
       chain2StartX,
@@ -1583,8 +1617,8 @@ export function drawMechanicalTowerBase(
     ctx.fill();
 
     // Hydraulic pistons
-    ctx.fillStyle = "#6a6a72";
-    ctx.strokeStyle = "#4a4a52";
+    ctx.fillStyle = _s.s5;
+    ctx.strokeStyle = _s.s3;
     ctx.lineWidth = 2 * zoom;
 
     // Left piston
@@ -1593,7 +1627,7 @@ export function drawMechanicalTowerBase(
     ctx.moveTo(x - w * 0.85, y + 5 * zoom);
     ctx.lineTo(x - w * 0.75, topY + 18 * zoom + pistonExtend);
     ctx.stroke();
-    ctx.fillStyle = "#8a8a92";
+    ctx.fillStyle = _s.s7;
     ctx.beginPath();
     ctx.arc(
       x - w * 0.75,
@@ -1605,12 +1639,12 @@ export function drawMechanicalTowerBase(
     ctx.fill();
 
     // Right piston
-    ctx.strokeStyle = "#4a4a52";
+    ctx.strokeStyle = _s.s3;
     ctx.beginPath();
     ctx.moveTo(x + w * 0.85, y + 5 * zoom);
     ctx.lineTo(x + w * 0.75, topY + 18 * zoom - pistonExtend);
     ctx.stroke();
-    ctx.fillStyle = "#8a8a92";
+    ctx.fillStyle = _s.s7;
     ctx.beginPath();
     ctx.arc(
       x + w * 0.75,
@@ -1622,7 +1656,7 @@ export function drawMechanicalTowerBase(
     ctx.fill();
 
     // Power cables
-    ctx.strokeStyle = "#ff4400";
+    ctx.strokeStyle = _tAcc;
     ctx.lineWidth = 1.5 * zoom;
     for (let cable = 0; cable < 3; cable++) {
       const cableY = y - height * zoom * (0.2 + cable * 0.15);
@@ -1647,7 +1681,7 @@ export function drawMechanicalTowerBase(
       const sIsoSlope = 0.5;
 
       // Housing back shadow
-      ctx.fillStyle = "#1a1a22";
+      ctx.fillStyle = _s.s0;
       ctx.beginPath();
       ctx.moveTo(sensorX + 0.5 * zoom, sensorY + 0.5 * zoom);
       ctx.lineTo(
@@ -1663,7 +1697,7 @@ export function drawMechanicalTowerBase(
       ctx.fill();
 
       // Housing front face (isometric parallelogram)
-      ctx.fillStyle = "#2a2a32";
+      ctx.fillStyle = _s.s1;
       ctx.beginPath();
       ctx.moveTo(sensorX, sensorY);
       ctx.lineTo(sensorX + sensorW, sensorY - sensorW * sIsoSlope);
@@ -1673,12 +1707,12 @@ export function drawMechanicalTowerBase(
       ctx.fill();
 
       // Housing edge highlight
-      ctx.strokeStyle = "#4a4a52";
+      ctx.strokeStyle = _s.s3;
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
 
       // Antenna stub on top
-      ctx.strokeStyle = "#5a5a62";
+      ctx.strokeStyle = _s.s4;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(sensorX + sensorW * 0.5, sensorY - sensorW * sIsoSlope * 0.5);
@@ -1727,7 +1761,7 @@ export function drawMechanicalTowerBase(
       ctx.fill();
 
       // Lens ring
-      ctx.strokeStyle = "#4a4a52";
+      ctx.strokeStyle = _s.s3;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.arc(lensCx, lensCy, 3.2 * zoom, 0, Math.PI * 2);
@@ -1767,7 +1801,7 @@ export function drawMechanicalTowerBase(
       const evIsoX = vent === 0 ? -1 : 1;
 
       // Vent recess
-      ctx.fillStyle = "#1a1a22";
+      ctx.fillStyle = _s.s0;
       ctx.beginPath();
       ctx.moveTo(evX - evW * 0.5, evY - evH * 0.5);
       ctx.lineTo(evX + evW * 0.5, evY - evH * 0.5 - evW * 0.25 * evIsoX);
@@ -1778,11 +1812,11 @@ export function drawMechanicalTowerBase(
 
       // Louvered slats
       const numSlats = 4;
-      for (let s = 0; s < numSlats; s++) {
-        const sT = (s + 0.5) / numSlats;
+      for (let sl = 0; sl < numSlats; sl++) {
+        const sT = (sl + 0.5) / numSlats;
         const sYL = evY - evH * 0.5 + sT * evH;
         const sYR = sYL - evW * 0.25 * evIsoX;
-        ctx.fillStyle = "#3a3a42";
+        ctx.fillStyle = _s.s2;
         ctx.beginPath();
         ctx.moveTo(evX - evW * 0.5 + 0.5 * zoom, sYL - 1 * zoom);
         ctx.lineTo(evX + evW * 0.5 - 0.5 * zoom, sYR - 1 * zoom);
@@ -1794,7 +1828,7 @@ export function drawMechanicalTowerBase(
 
       // Inner glow
       const evGlow = 0.4 + Math.sin(time * 4 + vent) * 0.3;
-      ctx.fillStyle = `rgba(255, 100, 0, ${evGlow})`;
+      ctx.fillStyle = `rgba(${_tRgba}, ${evGlow})`;
       ctx.beginPath();
       ctx.moveTo(evX - evW * 0.4, evY - evH * 0.35);
       ctx.lineTo(evX + evW * 0.4, evY - evH * 0.35 - evW * 0.2 * evIsoX);
@@ -1804,7 +1838,7 @@ export function drawMechanicalTowerBase(
       ctx.fill();
 
       // Iron frame
-      ctx.strokeStyle = "#5a5a62";
+      ctx.strokeStyle = _s.s4;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(evX - evW * 0.5, evY - evH * 0.5);
@@ -1835,7 +1869,7 @@ export function drawMechanicalTowerBase(
     }
 
     // Heavy bolts/anchors
-    ctx.fillStyle = "#5a5a62";
+    ctx.fillStyle = _s.s4;
     const heavyBoltPositions = [
       { x: x - w * 0.95, y: y + 6 * zoom },
       { x: x + w * 0.95, y: y + 6 * zoom },
@@ -1847,16 +1881,16 @@ export function drawMechanicalTowerBase(
       ctx.arc(bolt.x, bolt.y, 3.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
       // Bolt highlight
-      ctx.fillStyle = "#7a7a82";
+      ctx.fillStyle = _s.s6;
       ctx.beginPath();
       ctx.arc(bolt.x - 1 * zoom, bolt.y - 1 * zoom, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#5a5a62";
+      ctx.fillStyle = _s.s4;
     }
   }
 
   // Corner reinforcement bolts
-  ctx.fillStyle = "#5a5a62";
+  ctx.fillStyle = _s.s4;
   const boltSize = 2.5 * zoom;
   // Front corners
   ctx.beginPath();

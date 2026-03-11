@@ -20,6 +20,115 @@ export function renderClubTower(
 ) {
   void colors;
 
+  const is4A = tower.level === 4 && tower.upgrade === "A";
+  const is4B = tower.level === 4 && tower.upgrade === "B";
+  const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
+
+  // Structural colors: green/gold (default), blue/purple (4A), red/orange (4B)
+  const st = {
+    vdark: uc("#1a1a3a", "#3a1a1a", "#1a2a1a"),
+    dark: uc("#2a2a4a", "#4a2a2a", "#2a3a2a"),
+    mid: uc("#3a3a5a", "#5a3a3a", "#3a4a3a"),
+    light: uc("#4a4a6a", "#6a4a4a", "#4a5a4a"),
+    mid2: uc("#3a4060", "#603a30", "#3a5a3a"),
+    dark2: uc("#2a3050", "#502a20", "#2a4a2a"),
+    vdark2: uc("#1a2040", "#401a10", "#1a3a1a"),
+    light2: uc("#4a5070", "#704a40", "#4a6a4a"),
+    up: uc("#2a3a6a", "#6a2a1a", "#2a5a3a"),
+    upL: uc("#1a2a5a", "#5a1a0a", "#1a4a2a"),
+    upR: uc("#0a1a4a", "#4a0a00", "#0a3a1a"),
+    upLB: uc("#3a4a7a", "#7a3a2a", "#3a6a4a"),
+  };
+  const bd = {
+    top: uc("#3a4a80", "#803a30", "#3a6a4a"),
+    left: uc("#2a3a70", "#702a20", "#2a5a3a"),
+    right: uc("#1a2a60", "#601a10", "#1a4a2a"),
+    leftBack: uc("#4a5a90", "#904a40", "#4a7a5a"),
+    rightBack: uc("#3a4a80", "#803a30", "#3a6a4a"),
+  };
+  const bm = {
+    bd: uc("#1a1a4a", "#4a1a1a", "#1a3a1a"),
+    bm: uc("#2a3a6a", "#6a2a2a", "#2a5a3a"),
+    bl: uc("#3a5080", "#804030", "#3a7a4a"),
+    fd: uc("#1a2a5a", "#5a1a1a", "#1a4a2a"),
+    fm: uc("#3a4a7a", "#7a3a2a", "#3a6a4a"),
+    fl: uc("#5a6a9a", "#9a5a3a", "#5a8a6a"),
+  };
+  const ac = {
+    dim: uc("#5a4aaa", "#aa5820", "#a08020"),
+    main: uc("#7a6acc", "#cc7a27", "#c9a227"),
+    mid: uc("#8a7acc", "#daa040", "#dab540"),
+    hi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
+    r: uc(122, 204, 201),
+    g: uc(106, 122, 162),
+    b: uc(204, 39, 39),
+    bandShadowR: uc(60, 100, 100),
+    bandShadowG: uc(40, 60, 80),
+    bandShadowB: uc(100, 20, 20),
+    bandHiR: uc(150, 255, 255),
+    bandHiG: uc(130, 180, 232),
+    bandHiB: uc(255, 100, 138),
+    bandDentil: uc("#6a5aaa", "#c07020", "#b89020"),
+  };
+  const rf = {
+    ll: uc(["#2a2a60", "#1e1e48", "#151538"] as const, ["#602a2a", "#481e1e", "#381515"] as const, ["#2a5040", "#1e3e30", "#152e24"] as const),
+    rl: uc(["#303070", "#2a2a5a", "#1e1e48"] as const, ["#703030", "#5a2a2a", "#481e1e"] as const, ["#366050", "#2a4a3a", "#1e3e2e"] as const),
+    depth: uc("#1a1a40", "#401a1a", "#1a3828"),
+    ridge: uc("#3a4a80", "#804040", "#3a6a50"),
+    ridgeHi: uc("rgba(80, 100, 180, 0.4)", "rgba(180, 100, 80, 0.4)", "rgba(80, 140, 100, 0.4)"),
+    front: uc("#2a3a70", "#703030", "#2a5a40"),
+    tileStroke: uc("rgba(10, 10, 40, ", "rgba(40, 10, 10, ", "rgba(10, 30, 18, "),
+  };
+  const dm = {
+    stops: uc(
+      ["#dcdcff", "#aab8ff", "#8a7acc", "#7a6acc", "#5a4aaa", "#3a2a8a"] as const,
+      ["#ffddcc", "#ffb86a", "#daa040", "#cc7a27", "#aa5820", "#7a3008"] as const,
+      ["#fffadc", "#ffe44d", "#dab540", "#c9a227", "#a8860b", "#7a5a08"] as const,
+    ),
+    flash: uc(
+      ["#eeeeff", "#ccccff"] as const,
+      ["#ffeeee", "#ffccaa"] as const,
+      ["#ffffee", "#fff066"] as const,
+    ),
+    rim: uc("#3a2a8a", "#8a3a0a", "#8b6914"),
+    finBase: uc("#5a4aaa", "#aa5820", "#b89020"),
+    finShaft: uc("#7a6acc", "#cc7a27", "#c9a227"),
+    finKnob: uc("#8a7acc", "#daa040", "#dab540"),
+    finKnobHi: uc("#b8aaff", "#ffb86a", "#ffe88a"),
+    finGlowRGB: uc("150, 120, 255", "255, 150, 50", "255, 215, 0"),
+    finGlowHex: uc("#8866ff", "#ff8822", "#ffd700"),
+  };
+  const xb = {
+    back: uc("rgba(42, 42, 100, 0.4)", "rgba(100, 42, 42, 0.4)", "rgba(42, 90, 58, 0.4)"),
+    front: uc("rgba(58, 58, 120, 0.5)", "rgba(120, 58, 58, 0.5)", "rgba(58, 106, 74, 0.5)"),
+  };
+  const pn = {
+    back: uc("rgba(42, 42, 100, 0.35)", "rgba(100, 42, 42, 0.35)", "rgba(42, 90, 58, 0.35)"),
+    front: uc("rgba(42, 42, 100, 0.25)", "rgba(100, 42, 42, 0.25)", "rgba(42, 90, 58, 0.25)"),
+  };
+  const fl = {
+    body: uc("#2a2a6a", "#6a2a2a", "#2a5a3a"),
+    stripe: uc("rgba(26, 26, 80, 0.6)", "rgba(80, 26, 26, 0.6)", "rgba(26, 58, 38, 0.6)"),
+  };
+  const orb = {
+    outer: uc("rgba(100, 120, 255,", "rgba(255, 120, 50,", "rgba(0, 255, 180,"),
+    inner: uc("rgba(80, 100, 230,", "rgba(230, 100, 30,", "rgba(0, 230, 160,"),
+  };
+  const eg = {
+    field: uc(
+      `rgba(100, 150, 255, ${0.3 + Math.sin(time * 2) * 0.15})`,
+      `rgba(255, 150, 50, ${0.3 + Math.sin(time * 2) * 0.15})`,
+      `rgba(0, 255, 200, ${0.3 + Math.sin(time * 2) * 0.15})`,
+    ),
+    upgradeAStroke: uc("#4488ff", "#ff6622", "#00ff66"),
+    upgradeAFill: uc("rgba(100, 150, 255, 0.9)", "rgba(255, 150, 100, 0.9)", "rgba(0, 255, 100, 0.9)"),
+    upgradeAShadow: uc("#4488ff", "#ff6622", "#00ff66"),
+    upgradeBBg: uc("#0a0a2a", "#2a0a0a", "#0a2a1a"),
+    upgradeBStroke: uc("#2a2a6a", "#6a2a2a", "#2a4a3a"),
+    upgradeBFill: uc("rgba(100, 150, 255,", "rgba(255, 150, 100,", "rgba(0, 255, 100,"),
+    upgradeBBar: uc("#4488ff", "#ff6622", "#00ff66"),
+  };
+
   ctx.save();
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 25 + tower.level * 8;
@@ -44,11 +153,11 @@ export function renderClubTower(
     baseWidth + 18,
     3,
     {
-      top: "#3a4a3a",
-      left: "#2a3a2a",
-      right: "#1a2a1a",
-      leftBack: "#4a5a4a",
-      rightBack: "#3a4a3a",
+      top: st.mid,
+      left: st.dark,
+      right: st.vdark,
+      leftBack: st.light,
+      rightBack: st.mid,
     },
     zoom,
   );
@@ -62,16 +171,16 @@ export function renderClubTower(
     baseWidth + 13,
     3,
     {
-      top: "#3a5a3a",
-      left: "#2a4a2a",
-      right: "#1a3a1a",
-      leftBack: "#4a6a4a",
-      rightBack: "#3a5a3a",
+      top: st.mid2,
+      left: st.dark2,
+      right: st.vdark2,
+      leftBack: st.light2,
+      rightBack: st.mid2,
     },
     zoom,
   );
 
-  // Upper step with gold bevel
+  // Upper step with accent bevel
   drawIsometricPrism(
     ctx,
     screenPos.x,
@@ -80,18 +189,18 @@ export function renderClubTower(
     baseWidth + 8,
     6,
     {
-      top: "#2a5a3a",
-      left: "#1a4a2a",
-      right: "#0a3a1a",
-      leftBack: "#3a6a4a",
-      rightBack: "#2a5a3a",
+      top: st.up,
+      left: st.upL,
+      right: st.upR,
+      leftBack: st.upLB,
+      rightBack: st.up,
     },
     zoom,
   );
 
-  // Gold trim along the front visible edge of upper step
+  // Accent trim along the front visible edge of upper step
   const foundGlow = 0.5 + Math.sin(time * 2) * 0.2 + flashIntensity * 0.4;
-  ctx.strokeStyle = `rgba(201, 162, 39, ${foundGlow})`;
+  ctx.strokeStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${foundGlow})`;
   ctx.lineWidth = 2 * zoom;
   const fndW = (baseWidth + 8) * zoom * 0.5;
   const fndD = (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR;
@@ -105,22 +214,22 @@ export function renderClubTower(
   for (const side of [-1, 1]) {
     const rosX = screenPos.x + side * fndW * 0.75;
     const rosY = screenPos.y + fndD * 0.3;
-    ctx.fillStyle = "#1a4a2a";
+    ctx.fillStyle = st.upL;
     ctx.beginPath();
     ctx.arc(rosX, rosY, 3 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 0.8 * zoom;
     ctx.stroke();
     const rosGlow =
       0.4 + Math.sin(time * 3 + side * 1.5) * 0.2 + flashIntensity * 0.3;
-    ctx.fillStyle = `rgba(201, 162, 39, ${rosGlow})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${rosGlow})`;
     ctx.beginPath();
     ctx.arc(rosX, rosY, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Main tower body - dark green tech with gold trim
+  // Main tower body
   drawIsometricPrism(
     ctx,
     screenPos.x,
@@ -128,13 +237,7 @@ export function renderClubTower(
     baseWidth,
     baseWidth,
     baseHeight,
-    {
-      top: "#3a6a4a",
-      left: "#2a5a3a",
-      right: "#1a4a2a",
-      leftBack: "#4a7a5a",
-      rightBack: "#3a6a4a",
-    },
+    bd,
     zoom,
   );
 
@@ -153,10 +256,10 @@ export function renderClubTower(
     32,
     16,
     {
-      rail: "#a08020",
-      topRail: "#c9a227",
-      backPanel: "rgba(42, 90, 58, 0.35)",
-      frontPanel: "rgba(42, 90, 58, 0.25)",
+      rail: ac.dim,
+      topRail: ac.main,
+      backPanel: pn.back,
+      frontPanel: pn.front,
     },
     zoom,
   );
@@ -212,14 +315,14 @@ export function renderClubTower(
     }
 
     // Capital (Ionic-style top block)
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = ac.main;
     ctx.fillRect(colX - 3.5 * zoom, colTopY - 2 * zoom, 7 * zoom, 3 * zoom);
-    ctx.strokeStyle = "#ffe88a";
+    ctx.strokeStyle = ac.hi;
     ctx.lineWidth = 0.4 * zoom;
     ctx.strokeRect(colX - 3.5 * zoom, colTopY - 2 * zoom, 7 * zoom, 3 * zoom);
     // Volute scrolls on capital
     for (const vs of [-1, 1]) {
-      ctx.strokeStyle = "#dab540";
+      ctx.strokeStyle = ac.mid;
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
       ctx.arc(
@@ -248,11 +351,11 @@ export function renderClubTower(
     screenPos.x - w * 0.38,
     entabY + 4 * zoom,
   );
-  entabGrad.addColorStop(0, "#4a7a5a");
-  entabGrad.addColorStop(1, "#2a5a3a");
+  entabGrad.addColorStop(0, bd.leftBack);
+  entabGrad.addColorStop(1, bd.left);
   ctx.fillStyle = entabGrad;
   ctx.fillRect(screenPos.x - w * 0.38, entabY, w * 0.76, 4 * zoom);
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1 * zoom;
   ctx.strokeRect(screenPos.x - w * 0.38, entabY, w * 0.76, 4 * zoom);
 
@@ -260,9 +363,9 @@ export function renderClubTower(
   const triCount = 5;
   for (let tri = 0; tri < triCount; tri++) {
     const triX = screenPos.x - w * 0.35 + (tri / (triCount - 1)) * w * 0.7;
-    ctx.fillStyle = "#2a5a3a";
+    ctx.fillStyle = bd.left;
     ctx.fillRect(triX - 1.5 * zoom, entabY + 0.5 * zoom, 3 * zoom, 3 * zoom);
-    ctx.strokeStyle = "rgba(201, 162, 39, 0.4)";
+    ctx.strokeStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, 0.4)`;
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(triX - 0.5 * zoom, entabY + 0.5 * zoom);
@@ -279,8 +382,8 @@ export function renderClubTower(
     screenPos.x,
     entabY,
   );
-  pedGrad.addColorStop(0, "#3a6a4a");
-  pedGrad.addColorStop(1, "#2a5a3a");
+  pedGrad.addColorStop(0, bd.top);
+  pedGrad.addColorStop(1, bd.left);
   ctx.fillStyle = pedGrad;
   ctx.beginPath();
   ctx.moveTo(screenPos.x - w * 0.4, entabY);
@@ -288,12 +391,12 @@ export function renderClubTower(
   ctx.lineTo(screenPos.x + w * 0.4, entabY);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
   // Pediment tympanum decoration (small relief)
-  ctx.fillStyle = `rgba(201, 162, 39, ${0.3 + Math.sin(time * 1.5) * 0.1})`;
+  ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${0.3 + Math.sin(time * 1.5) * 0.1})`;
   ctx.beginPath();
   ctx.moveTo(screenPos.x, entabY - 6 * zoom);
   ctx.lineTo(screenPos.x + 3 * zoom, entabY - 2 * zoom);
@@ -337,9 +440,9 @@ export function renderClubTower(
     crestX + crestR,
     crestY + crestR,
   );
-  crestGrad.addColorStop(0, "#1a4a2a");
-  crestGrad.addColorStop(0.5, "#0a3a1a");
-  crestGrad.addColorStop(1, "#082a12");
+  crestGrad.addColorStop(0, st.upL);
+  crestGrad.addColorStop(0.5, st.upR);
+  crestGrad.addColorStop(1, st.vdark);
   ctx.fillStyle = crestGrad;
   ctx.beginPath();
   ctx.moveTo(crestX, crestY - crestR);
@@ -351,11 +454,11 @@ export function renderClubTower(
   ctx.closePath();
   ctx.fill();
 
-  // Gold border — double line
-  ctx.strokeStyle = "#c9a227";
+  // Accent border — double line
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1.8 * zoom;
   ctx.stroke();
-  ctx.strokeStyle = "#dab540";
+  ctx.strokeStyle = ac.mid;
   ctx.lineWidth = 0.6 * zoom;
   // Inner border
   ctx.beginPath();
@@ -369,7 +472,7 @@ export function renderClubTower(
   ctx.stroke();
 
   // Horizontal divider line
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(crestX - crestR * 0.7, crestY);
@@ -383,11 +486,11 @@ export function renderClubTower(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("P", crestX + 0.3 * zoom, crestY - crestR * 0.15 + 0.3 * zoom);
-  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow})`;
+  ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${crestGlow})`;
   ctx.fillText("P", crestX, crestY - crestR * 0.15);
 
   // Small crown above the shield
-  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow * 0.9})`;
+  ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${crestGlow * 0.9})`;
   ctx.beginPath();
   ctx.moveTo(crestX - 3 * zoom, crestY - crestR - 1 * zoom);
   ctx.lineTo(crestX - 4 * zoom, crestY - crestR - 4 * zoom);
@@ -412,7 +515,7 @@ export function renderClubTower(
 
     // Dark void
     traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
-    ctx.fillStyle = "#0a1a0a";
+    ctx.fillStyle = uc("#0a0a1a", "#1a0a0a", "#0a1a0a");
     ctx.fill();
 
     // Treasury glow
@@ -421,15 +524,15 @@ export function renderClubTower(
     const winGrad = ctx.createRadialGradient(
       winX, winCY, 0, winX, winCY, wW * zoom,
     );
-    winGrad.addColorStop(0, `rgba(255, 200, 50, ${treasGlow})`);
-    winGrad.addColorStop(1, `rgba(100, 80, 20, ${treasGlow * 0.2})`);
+    winGrad.addColorStop(0, `rgba(${ac.bandHiR}, ${ac.bandHiG}, ${Math.min(ac.bandHiB, 100)}, ${treasGlow})`);
+    winGrad.addColorStop(1, `rgba(${ac.bandShadowR}, ${ac.bandShadowG}, ${ac.bandShadowB}, ${treasGlow * 0.2})`);
     traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
     ctx.fillStyle = winGrad;
     ctx.fill();
 
     // Border
     traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 1 * zoom;
     ctx.stroke();
 
@@ -445,7 +548,7 @@ export function renderClubTower(
 
     // Dormer roof cap (skewed triangle)
     const capHw = hw * 1.4;
-    ctx.fillStyle = "#1a3a2a";
+    ctx.fillStyle = st.vdark;
     ctx.beginPath();
     ctx.moveTo(winX - capHw, winCY - hh - capHw * slope);
     ctx.lineTo(winX, winCY - hh - 3.5 * zoom);
@@ -529,12 +632,12 @@ export function renderClubTower(
   };
 
   const drawClubBolt = (bx: number, by: number, glow: boolean) => {
-    ctx.fillStyle = glow ? "#c9a227" : "#8a7a5a";
+    ctx.fillStyle = glow ? ac.main : "#8a7a5a";
     ctx.beginPath();
     ctx.arc(bx, by, 1.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
     if (glow) {
-      ctx.fillStyle = "#ffe88a";
+      ctx.fillStyle = ac.hi;
       ctx.beginPath();
       ctx.arc(bx - 0.3 * zoom, by - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -548,9 +651,9 @@ export function renderClubTower(
     buttBT.x,
     buttBT.y,
     2.2,
-    "#1a3a1a",
-    "#2a5a3a",
-    "#3a7a4a",
+    bm.bd,
+    bm.bm,
+    bm.bl,
   );
   drawClubBeam(
     buttL.x,
@@ -558,9 +661,9 @@ export function renderClubTower(
     buttLT.x,
     buttLT.y,
     2.2,
-    "#1a3a1a",
-    "#2a5a3a",
-    "#3a7a4a",
+    bm.bd,
+    bm.bm,
+    bm.bl,
   );
 
   // Back horizontal frames
@@ -574,8 +677,8 @@ export function renderClubTower(
     const fRx = buttR.x + (buttRT.x - buttR.x) * t;
     const fRy = buttR.y + (buttRT.y - buttR.y) * t;
     // Back-left and back-right
-    drawClubBeam(fBx, fBy, fLx, fLy, 1.5, "#1a3a1a", "#2a5a3a", "#3a7a4a");
-    drawClubBeam(fBx, fBy, fRx, fRy, 1.5, "#1a3a1a", "#2a5a3a", "#3a7a4a");
+    drawClubBeam(fBx, fBy, fLx, fLy, 1.5, bm.bd, bm.bm, bm.bl);
+    drawClubBeam(fBx, fBy, fRx, fRy, 1.5, bm.bd, bm.bm, bm.bl);
     drawClubBolt(fBx, fBy, false);
   }
 
@@ -591,7 +694,7 @@ export function renderClubTower(
     const b1y = buttB.y + (buttBT.y - buttB.y) * t1;
     const l1x = buttL.x + (buttLT.x - buttL.x) * t1;
     const l1y = buttL.y + (buttLT.y - buttL.y) * t1;
-    ctx.strokeStyle = "rgba(42, 90, 58, 0.4)";
+    ctx.strokeStyle = xb.back;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(b0x, b0y);
@@ -610,9 +713,9 @@ export function renderClubTower(
     buttRT.x,
     buttRT.y,
     2.5,
-    "#1a4a2a",
-    "#3a6a4a",
-    "#5a8a6a",
+    bm.fd,
+    bm.fm,
+    bm.fl,
   );
   drawClubBeam(
     buttF.x,
@@ -620,9 +723,9 @@ export function renderClubTower(
     buttFT.x,
     buttFT.y,
     2.5,
-    "#1a4a2a",
-    "#3a6a4a",
-    "#5a8a6a",
+    bm.fd,
+    bm.fm,
+    bm.fl,
   );
 
   // Front horizontal frames + gold trim
@@ -635,8 +738,8 @@ export function renderClubTower(
     const fLx = buttL.x + (buttLT.x - buttL.x) * t;
     const fLy = buttL.y + (buttLT.y - buttL.y) * t;
     // Front-right and front-left
-    drawClubBeam(fFx, fFy, fRx, fRy, 1.8, "#1a4a2a", "#3a6a4a", "#5a8a6a");
-    drawClubBeam(fFx, fFy, fLx, fLy, 1.8, "#1a4a2a", "#3a6a4a", "#5a8a6a");
+    drawClubBeam(fFx, fFy, fRx, fRy, 1.8, bm.fd, bm.fm, bm.fl);
+    drawClubBeam(fFx, fFy, fLx, fLy, 1.8, bm.fd, bm.fm, bm.fl);
     // Gold accent on front bolts
     drawClubBolt(fFx, fFy, true);
     drawClubBolt(fRx, fRy, true);
@@ -655,7 +758,7 @@ export function renderClubTower(
     const f1y = buttF.y + (buttFT.y - buttF.y) * t1;
     const r1x = buttR.x + (buttRT.x - buttR.x) * t1;
     const r1y = buttR.y + (buttRT.y - buttR.y) * t1;
-    ctx.strokeStyle = "rgba(58, 106, 74, 0.5)";
+    ctx.strokeStyle = xb.front;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(f0x, f0y);
@@ -669,7 +772,7 @@ export function renderClubTower(
 
   // ========== FACE DETAILS (stone blocks, weathering, gold inlays) ==========
   // Left face (visible) — stone block seams
-  ctx.strokeStyle = "rgba(20, 60, 30, 0.35)";
+  ctx.strokeStyle = uc("rgba(20, 20, 60, 0.35)", "rgba(60, 20, 20, 0.35)", "rgba(20, 60, 30, 0.35)");
   ctx.lineWidth = 0.6 * zoom;
   const leftFaceSeams = 5;
   for (let s = 1; s < leftFaceSeams; s++) {
@@ -703,7 +806,7 @@ export function renderClubTower(
     const mortarT = r / mortarRows;
     const mortarY = screenPos.y - h * mortarT;
     // Left face mortar
-    ctx.strokeStyle = "rgba(20, 60, 30, 0.25)";
+    ctx.strokeStyle = uc("rgba(20, 20, 60, 0.25)", "rgba(60, 20, 20, 0.25)", "rgba(20, 60, 30, 0.25)");
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.95, mortarY + d * 0.45);
@@ -743,7 +846,7 @@ export function renderClubTower(
     const inlaySize = 3 * zoom;
     const inlayGlow =
       0.5 + Math.sin(time * 2 + i * 1.2) * 0.2 + flashIntensity * 0.3;
-    ctx.fillStyle = `rgba(201, 162, 39, ${inlayGlow})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${inlayGlow})`;
     ctx.beginPath();
     ctx.moveTo(inlayX, inlayY - inlaySize);
     ctx.lineTo(inlayX + inlaySize * 0.7, inlayY);
@@ -751,7 +854,7 @@ export function renderClubTower(
     ctx.lineTo(inlayX - inlaySize * 0.7, inlayY);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
@@ -795,13 +898,13 @@ export function renderClubTower(
   }
 
   // Gold corner pilasters (tapered strips following isometric edges)
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = ac.main;
   for (const side of [-1, 1]) {
     const pilX = screenPos.x + side * w * 0.97;
     const pilBotY = screenPos.y;
     const pilTopY = screenPos.y - baseHeight * zoom * 0.92;
     // Pilaster shadow
-    ctx.fillStyle = "rgba(100, 80, 20, 0.4)";
+    ctx.fillStyle = `rgba(${ac.bandShadowR}, ${ac.bandShadowG}, ${ac.bandShadowB}, 0.4)`;
     ctx.beginPath();
     ctx.moveTo(pilX + side * 1 * zoom, pilBotY + 1 * zoom);
     ctx.lineTo(pilX + side * 1.5 * zoom, pilBotY - 2 * zoom);
@@ -810,7 +913,7 @@ export function renderClubTower(
     ctx.closePath();
     ctx.fill();
     // Main pilaster
-    ctx.fillStyle = "#c9a227";
+    ctx.fillStyle = ac.main;
     ctx.beginPath();
     ctx.moveTo(pilX, pilBotY);
     ctx.lineTo(pilX + side * 1.2 * zoom, pilBotY - 1.5 * zoom);
@@ -819,14 +922,14 @@ export function renderClubTower(
     ctx.closePath();
     ctx.fill();
     // Pilaster highlight
-    ctx.strokeStyle = "#ffe88a";
+    ctx.strokeStyle = ac.hi;
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(pilX + side * 0.3 * zoom, pilBotY);
     ctx.lineTo(pilX + side * 0.3 * zoom, pilTopY + 1.5 * zoom);
     ctx.stroke();
     // Capital (top ornament)
-    ctx.fillStyle = "#dab540";
+    ctx.fillStyle = ac.mid;
     ctx.beginPath();
     ctx.ellipse(
       pilX + side * 0.6 * zoom,
@@ -856,7 +959,7 @@ export function renderClubTower(
   for (let band = 0; band < tower.level; band++) {
     const bandY = screenPos.y - baseHeight * zoom * (0.25 + band * 0.25);
     // Band shadow
-    ctx.strokeStyle = "rgba(100, 80, 20, 0.3)";
+    ctx.strokeStyle = `rgba(${ac.bandShadowR}, ${ac.bandShadowG}, ${ac.bandShadowB}, 0.3)`;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.35 + 1 * zoom);
@@ -864,7 +967,7 @@ export function renderClubTower(
     ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.35 + 1 * zoom);
     ctx.stroke();
     // Main band
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.35);
@@ -872,7 +975,7 @@ export function renderClubTower(
     ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.35);
     ctx.stroke();
     // Band highlight
-    ctx.strokeStyle = "rgba(255, 232, 138, 0.35)";
+    ctx.strokeStyle = `rgba(${ac.bandHiR}, ${ac.bandHiG}, ${ac.bandHiB}, 0.35)`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.9, bandY + d * 0.35 - 1 * zoom);
@@ -894,7 +997,7 @@ export function renderClubTower(
         dtX = screenPos.x + w * 0.9 * t2;
         dtY = bandY + d * 0.5 + (d * 0.35 - d * 0.5) * t2;
       }
-      ctx.fillStyle = "#b89020";
+      ctx.fillStyle = ac.dim;
       ctx.fillRect(dtX - 0.8 * zoom, dtY - 2.5 * zoom, 1.6 * zoom, 1.5 * zoom);
     }
   }
@@ -917,7 +1020,7 @@ export function renderClubTower(
       outer: "#8b7355",
       inner: "#6b5335",
       teeth: "#a08060",
-      highlight: "#c9a227",
+      highlight: ac.main,
     },
     zoom,
   );
@@ -935,7 +1038,7 @@ export function renderClubTower(
       outer: "#7a6245",
       inner: "#5a4225",
       teeth: "#9a8260",
-      highlight: "#c9a227",
+      highlight: ac.main,
     },
     zoom,
   );
@@ -953,7 +1056,7 @@ export function renderClubTower(
       outer: "#7a6245",
       inner: "#5a4225",
       teeth: "#9a8260",
-      highlight: "#c9a227",
+      highlight: ac.main,
     },
     zoom,
   );
@@ -972,7 +1075,7 @@ export function renderClubTower(
         outer: "#6a5235",
         inner: "#4a3215",
         teeth: "#8a7250",
-        highlight: "#b8960b",
+        highlight: ac.dim,
       },
       zoom,
     );
@@ -988,11 +1091,11 @@ export function renderClubTower(
   ctx.fillStyle = "#1a1208";
   ctx.fillRect(ledgerX, ledgerY, ledgerW, ledgerH);
   // Ornate gold frame
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1.5 * zoom;
   ctx.strokeRect(ledgerX, ledgerY, ledgerW, ledgerH);
   // Inner frame line
-  ctx.strokeStyle = "#8a7020";
+  ctx.strokeStyle = ac.dim;
   ctx.lineWidth = 0.5 * zoom;
   ctx.strokeRect(
     ledgerX + 1.5 * zoom,
@@ -1006,9 +1109,9 @@ export function renderClubTower(
   const screenBaseGlow = 0.5 + Math.sin(time * 3) * 0.2;
 
   // Gold text heading
-  ctx.fillStyle = `rgba(201, 162, 39, ${screenBaseGlow + screenFlash * 0.5})`;
+  ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${screenBaseGlow + screenFlash * 0.5})`;
   if (flashIntensity > 0) {
-    ctx.shadowColor = "#ffd700";
+    ctx.shadowColor = dm.finGlowHex;
     ctx.shadowBlur = 8 * zoom * flashIntensity;
   }
   ctx.font = `bold ${5 * zoom}px serif`;
@@ -1026,7 +1129,7 @@ export function renderClubTower(
       0.4 +
       Math.sin(time * 2 + i * 0.8) * 0.15 +
       (flashIntensity > 0 && i === Math.floor(time * 8) % 4 ? 0.3 : 0);
-    ctx.fillStyle = `rgba(201, 162, 39, ${barGlow})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${barGlow})`;
     ctx.fillRect(ledgerX + 2 * zoom, barY, barWidth, 1.5 * zoom);
   }
 
@@ -1038,12 +1141,12 @@ export function renderClubTower(
     const rBoardH = 16 * zoom;
     ctx.fillStyle = "#1a1208";
     ctx.fillRect(rBoardX, rBoardY, rBoardW, rBoardH);
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 1.5 * zoom;
     ctx.strokeRect(rBoardX, rBoardY, rBoardW, rBoardH);
 
     // Earnings graph (gold line)
-    ctx.strokeStyle = `rgba(201, 162, 39, ${screenBaseGlow + screenFlash * 0.3})`;
+    ctx.strokeStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${screenBaseGlow + screenFlash * 0.3})`;
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(rBoardX + 1.5 * zoom, rBoardY + rBoardH * 0.6);
@@ -1057,8 +1160,8 @@ export function renderClubTower(
 
     // Flash indicator
     if (flashIntensity > 0) {
-      ctx.fillStyle = `rgba(255, 215, 0, ${flashIntensity})`;
-      ctx.shadowColor = "#ffd700";
+      ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${flashIntensity})`;
+      ctx.shadowColor = dm.finGlowHex;
       ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
       ctx.arc(
@@ -1088,7 +1191,7 @@ export function renderClubTower(
       pFrameW,
       pFrameH,
     );
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 1.5 * zoom;
     ctx.strokeRect(
       portraitCX - pFrameW * 0.5,
@@ -1112,7 +1215,7 @@ export function renderClubTower(
     ctx.fill();
 
     // Gold nameplate
-    ctx.fillStyle = `rgba(201, 162, 39, ${figGlow + 0.1})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${figGlow + 0.1})`;
     ctx.fillRect(
       portraitCX - 4 * zoom,
       portraitCY + pFrameH * 0.35 + zoom,
@@ -1150,7 +1253,7 @@ export function renderClubTower(
     // Gold banding on chest
     const chestHW = chestW * zoom * 0.5;
     const chestDO = chestD * zoom * ISO_PRISM_D_FACTOR;
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = ac.main;
     ctx.lineWidth = 1 * zoom;
     // Horizontal band
     const bandY = chestY - chestH * zoom * 0.5;
@@ -1162,7 +1265,7 @@ export function renderClubTower(
 
     // Gold latch/lock
     const lockGlow = 0.5 + Math.sin(time * 3) * 0.2 + flashIntensity * 0.4;
-    ctx.fillStyle = `rgba(201, 162, 39, ${lockGlow})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${lockGlow})`;
     ctx.beginPath();
     ctx.arc(
       chestX,
@@ -1177,8 +1280,8 @@ export function renderClubTower(
     for (let gc = 0; gc < 3; gc++) {
       const gcOff = (gc - 1) * 3 * zoom;
       const gcBob = Math.sin(time * 2 + gc * 1.5) * 0.5 * zoom;
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#ffaa00";
+      ctx.fillStyle = ac.main;
+      ctx.shadowColor = ac.main;
       ctx.shadowBlur = (3 + flashIntensity * 3) * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -1206,7 +1309,7 @@ export function renderClubTower(
   ctx.fill();
 
   // Gold rim
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.arc(vaultCX, vaultCY, 10 * zoom, 0, Math.PI * 2);
@@ -1272,8 +1375,8 @@ export function renderClubTower(
 
   // Vault center jewel
   const vaultGlow = 0.6 + Math.sin(time * 3) * 0.3 + flashIntensity * 0.4;
-  ctx.fillStyle = `rgba(255, 215, 0, ${vaultGlow})`;
-  ctx.shadowColor = "#c9a227";
+  ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${vaultGlow})`;
+  ctx.shadowColor = ac.main;
   ctx.shadowBlur = (6 + flashIntensity * 10) * zoom;
   ctx.beginPath();
   ctx.arc(vaultCX, vaultCY, 2.5 * zoom, 0, Math.PI * 2);
@@ -1296,7 +1399,7 @@ export function renderClubTower(
 
   // Gold filigree scroll lines
   const filigreeGlow = 0.35 + Math.sin(time * 2) * 0.15 + flashIntensity * 0.25;
-  ctx.strokeStyle = `rgba(201, 162, 39, ${filigreeGlow})`;
+  ctx.strokeStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${filigreeGlow})`;
   ctx.lineWidth = 0.8 * zoom;
 
   for (let i = 1; i <= tower.level + 1; i++) {
@@ -1351,7 +1454,7 @@ export function renderClubTower(
 
     for (let b = 0; b < 4; b++) {
       const bandY = spoutTopY + (spoutBotY - spoutTopY) * (b / 4 + 0.1);
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = ac.main;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(spoutX - 2 * zoom, bandY);
@@ -1361,7 +1464,7 @@ export function renderClubTower(
 
     const spoutMouthGlow =
       0.15 + Math.sin(time * 2 + side) * 0.08 + flashIntensity * 0.2;
-    ctx.fillStyle = `rgba(201, 162, 39, ${spoutMouthGlow})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${spoutMouthGlow})`;
     ctx.beginPath();
     ctx.ellipse(
       spoutX + side * 4 * zoom,
@@ -1381,10 +1484,10 @@ export function renderClubTower(
   const topRailRY = d * 0.88;
   const topRailH = 5 * zoom;
   const clubTopRailColors = {
-    rail: "#a08020",
-    topRail: "#c9a227",
-    backPanel: "rgba(42, 90, 58, 0.35)",
-    frontPanel: "rgba(42, 90, 58, 0.25)",
+    rail: ac.dim,
+    topRail: ac.main,
+    backPanel: pn.back,
+    frontPanel: pn.front,
   };
   drawIsometricRailing(
     ctx,
@@ -1427,11 +1530,11 @@ export function renderClubTower(
   ctx.stroke();
 
   // Gold ornamental ball on top
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = ac.main;
   ctx.beginPath();
   ctx.arc(flagPoleX, flagPoleTopY, 2 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ffe88a";
+  ctx.fillStyle = ac.hi;
   ctx.beginPath();
   ctx.arc(
     flagPoleX - 0.5 * zoom,
@@ -1449,7 +1552,7 @@ export function renderClubTower(
   const waveSegs = 6;
 
   // Flag body with wave
-  ctx.fillStyle = "#2a5a3a";
+  ctx.fillStyle = fl.body;
   ctx.beginPath();
   ctx.moveTo(flagPoleX, flagTopY2);
   for (let seg = 1; seg <= waveSegs; seg++) {
@@ -1471,7 +1574,7 @@ export function renderClubTower(
   ctx.fill();
 
   // Darker stripe across middle of flag
-  ctx.fillStyle = "rgba(26, 58, 38, 0.6)";
+  ctx.fillStyle = fl.stripe;
   ctx.beginPath();
   ctx.moveTo(flagPoleX, flagTopY2 + flagH * 0.35);
   for (let seg = 1; seg <= waveSegs; seg++) {
@@ -1494,7 +1597,7 @@ export function renderClubTower(
   ctx.fill();
 
   // Gold border trim
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(flagPoleX, flagTopY2);
@@ -1527,7 +1630,7 @@ export function renderClubTower(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("EC", flagCenterX + 0.5 * zoom, flagCenterY + 0.5 * zoom);
-  ctx.fillStyle = `rgba(201, 162, 39, ${0.9 + Math.sin(time * 2) * 0.1})`;
+  ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${0.9 + Math.sin(time * 2) * 0.1})`;
   ctx.fillText("EC", flagCenterX, flagCenterY);
 
   // ========== ORNATE CHIMNEY (3D isometric, left side) ==========
@@ -1629,7 +1732,7 @@ export function renderClubTower(
   );
 
   // Gold trim ring around chimney crown
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = ac.main;
   ctx.lineWidth = 1 * zoom;
   const crownW = (chimneyW + 3) * zoom * 0.5;
   const crownD = (chimneyD + 3) * zoom * 0.25;
@@ -1736,9 +1839,9 @@ export function renderClubTower(
     roofLeftX,
     roofFrontY,
   );
-  leftRoofGrad.addColorStop(0, "#2a5040");
-  leftRoofGrad.addColorStop(0.5, "#1e3e30");
-  leftRoofGrad.addColorStop(1, "#152e24");
+  leftRoofGrad.addColorStop(0, rf.ll[0]);
+  leftRoofGrad.addColorStop(0.5, rf.ll[1]);
+  leftRoofGrad.addColorStop(1, rf.ll[2]);
   ctx.fillStyle = leftRoofGrad;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY);
@@ -1754,9 +1857,9 @@ export function renderClubTower(
     roofRightX,
     roofFrontY,
   );
-  rightRoofGrad.addColorStop(0, "#366050");
-  rightRoofGrad.addColorStop(0.5, "#2a4a3a");
-  rightRoofGrad.addColorStop(1, "#1e3e2e");
+  rightRoofGrad.addColorStop(0, rf.rl[0]);
+  rightRoofGrad.addColorStop(0.5, rf.rl[1]);
+  rightRoofGrad.addColorStop(1, rf.rl[2]);
   ctx.fillStyle = rightRoofGrad;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY);
@@ -1766,7 +1869,7 @@ export function renderClubTower(
   ctx.fill();
 
   // Right side depth face
-  ctx.fillStyle = "#1a3828";
+  ctx.fillStyle = rf.depth;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY);
   ctx.lineTo(roofRightX, roofRightY);
@@ -1803,7 +1906,7 @@ export function renderClubTower(
     ctx.fill();
 
     // Horizontal row line
-    ctx.strokeStyle = "rgba(10, 30, 18, 0.5)";
+    ctx.strokeStyle = rf.tileStroke + "0.5)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(l1x, l1y);
@@ -1813,7 +1916,7 @@ export function renderClubTower(
     // Vertical shingle separators (staggered)
     const tileCols = 3 + Math.floor(row * 0.8);
     const staggerOff = row % 2 === 0 ? 0 : 0.5 / tileCols;
-    ctx.strokeStyle = "rgba(10, 30, 18, 0.3)";
+    ctx.strokeStyle = rf.tileStroke + "0.3)";
     ctx.lineWidth = 0.4 * zoom;
     for (let col = 1; col < tileCols; col++) {
       const ct = col / tileCols + staggerOff;
@@ -1853,7 +1956,7 @@ export function renderClubTower(
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(10, 40, 22, 0.45)";
+    ctx.strokeStyle = rf.tileStroke + "0.45)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(l1x, l1y);
@@ -1862,7 +1965,7 @@ export function renderClubTower(
 
     const tileCols = 3 + Math.floor(row * 0.8);
     const staggerOff = row % 2 === 0 ? 0 : 0.5 / tileCols;
-    ctx.strokeStyle = "rgba(10, 40, 22, 0.25)";
+    ctx.strokeStyle = rf.tileStroke + "0.25)";
     ctx.lineWidth = 0.4 * zoom;
     for (let col = 1; col < tileCols; col++) {
       const ct = col / tileCols + staggerOff;
@@ -1879,7 +1982,7 @@ export function renderClubTower(
   }
 
   // Ridge cap along the peak (left edge)
-  ctx.strokeStyle = "#3a6a50";
+  ctx.strokeStyle = rf.ridge;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY);
@@ -1891,7 +1994,7 @@ export function renderClubTower(
   ctx.lineTo(roofRightX, roofRightY);
   ctx.stroke();
   // Ridge highlight
-  ctx.strokeStyle = "rgba(80, 140, 100, 0.4)";
+  ctx.strokeStyle = rf.ridgeHi;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY + 0.5 * zoom);
@@ -1899,7 +2002,7 @@ export function renderClubTower(
   ctx.stroke();
 
   // Front ridge (peak to front)
-  ctx.strokeStyle = "#2a5a40";
+  ctx.strokeStyle = rf.front;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(roofPeakX, roofPeakY);
@@ -1954,15 +2057,15 @@ export function renderClubTower(
     domeY,
     domeRX,
   );
-  domeGrad.addColorStop(0, flashIntensity > 0 ? "#ffffee" : "#fffadc");
-  domeGrad.addColorStop(0.15, flashIntensity > 0 ? "#fff066" : "#ffe44d");
-  domeGrad.addColorStop(0.4, "#dab540");
-  domeGrad.addColorStop(0.65, "#c9a227");
-  domeGrad.addColorStop(0.85, "#a8860b");
-  domeGrad.addColorStop(1, "#7a5a08");
+  domeGrad.addColorStop(0, flashIntensity > 0 ? dm.flash[0] : dm.stops[0]);
+  domeGrad.addColorStop(0.15, flashIntensity > 0 ? dm.flash[1] : dm.stops[1]);
+  domeGrad.addColorStop(0.4, dm.stops[2]);
+  domeGrad.addColorStop(0.65, dm.stops[3]);
+  domeGrad.addColorStop(0.85, dm.stops[4]);
+  domeGrad.addColorStop(1, dm.stops[5]);
   ctx.fillStyle = domeGrad;
   if (flashIntensity > 0) {
-    ctx.shadowColor = "#ffd700";
+    ctx.shadowColor = dm.finGlowHex;
     ctx.shadowBlur = 15 * zoom * flashIntensity;
   }
   ctx.beginPath();
@@ -1971,7 +2074,7 @@ export function renderClubTower(
   ctx.shadowBlur = 0;
 
   // Dome rim ring (3D base ring)
-  ctx.strokeStyle = "#8b6914";
+  ctx.strokeStyle = dm.rim;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -2038,7 +2141,7 @@ export function renderClubTower(
   const finialBaseY = domeY - domeRY * 0.6;
 
   // Finial neck/base collar
-  ctx.fillStyle = "#b89020";
+  ctx.fillStyle = ac.dim;
   ctx.beginPath();
   ctx.ellipse(
     domeX,
@@ -2053,7 +2156,7 @@ export function renderClubTower(
 
   // Finial shaft with taper
   const finialTipY = topY - 34 * zoom;
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = ac.main;
   ctx.beginPath();
   ctx.moveTo(domeX - 2.5 * zoom, finialBaseY);
   ctx.lineTo(domeX - 1.2 * zoom, finialBaseY - 8 * zoom);
@@ -2074,11 +2177,11 @@ export function renderClubTower(
   ctx.stroke();
 
   // Decorative knob midway
-  ctx.fillStyle = "#dab540";
+  ctx.fillStyle = ac.mid;
   ctx.beginPath();
   ctx.arc(domeX, finialBaseY - 5 * zoom, 1.8 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ffe88a";
+  ctx.fillStyle = ac.hi;
   ctx.beginPath();
   ctx.arc(
     domeX - 0.4 * zoom,
@@ -2091,8 +2194,8 @@ export function renderClubTower(
 
   // Finial tip glow
   const finialGlow = 0.6 + Math.sin(time * 4) * 0.3 + flashIntensity * 0.4;
-  ctx.fillStyle = `rgba(255, 215, 0, ${finialGlow})`;
-  ctx.shadowColor = "#ffd700";
+  ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${finialGlow})`;
+  ctx.shadowColor = dm.finGlowHex;
   ctx.shadowBlur = (8 + flashIntensity * 10) * zoom;
   ctx.beginPath();
   ctx.arc(domeX, finialTipY, 2 * zoom, 0, Math.PI * 2);
@@ -2200,7 +2303,7 @@ export function renderClubTower(
     ctx.translate(screenPos.x, coinY);
     ctx.rotate(orb.tilt);
     // Outer glow (back half)
-    ctx.strokeStyle = `rgba(0, 255, 180, ${ringAlpha * 0.25})`;
+    ctx.strokeStyle = `${orb.outer} ${ringAlpha * 0.25})`;
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -2214,7 +2317,7 @@ export function renderClubTower(
     );
     ctx.stroke();
     // Main ring (back half — upper arc is behind)
-    ctx.strokeStyle = `rgba(0, 230, 160, ${ringAlpha})`;
+    ctx.strokeStyle = `${orb.inner} ${ringAlpha})`;
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, orbRX, orbRY, 0, Math.PI, Math.PI * 2);
@@ -2280,13 +2383,13 @@ export function renderClubTower(
     0,
     coinR,
   );
-  creditGrad.addColorStop(0, flashIntensity > 0 ? "#ffffe8" : "#ffe88a");
-  creditGrad.addColorStop(0.3, "#dab540");
-  creditGrad.addColorStop(0.7, "#c9a227");
-  creditGrad.addColorStop(1, "#8b6914");
+  creditGrad.addColorStop(0, flashIntensity > 0 ? "#ffffe8" : ac.hi);
+  creditGrad.addColorStop(0.3, ac.mid);
+  creditGrad.addColorStop(0.7, ac.main);
+  creditGrad.addColorStop(1, dm.rim);
   ctx.fillStyle = creditGrad;
   if (flashIntensity > 0) {
-    ctx.shadowColor = "#ffd700";
+    ctx.shadowColor = dm.finGlowHex;
     ctx.shadowBlur = 12 * zoom * flashIntensity;
   }
   ctx.beginPath();
@@ -2295,7 +2398,7 @@ export function renderClubTower(
   ctx.shadowBlur = 0;
 
   // Coin rim
-  ctx.strokeStyle = "#a88520";
+  ctx.strokeStyle = ac.dim;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.arc(0, 0, coinR - 0.5 * zoom, 0, Math.PI * 2);
@@ -2314,7 +2417,7 @@ export function renderClubTower(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("$", 0.4 * zoom, 0.4 * zoom);
-  ctx.fillStyle = "#ffe88a";
+  ctx.fillStyle = ac.hi;
   ctx.fillText("$", 0, 0);
 
   // Specular highlight
@@ -2345,13 +2448,13 @@ export function renderClubTower(
     ctx.translate(screenPos.x, coinY);
     ctx.rotate(orb.tilt);
     // Outer glow (front half)
-    ctx.strokeStyle = `rgba(0, 255, 180, ${ringAlpha * 0.25})`;
+    ctx.strokeStyle = `${orb.outer} ${ringAlpha * 0.25})`;
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, orbRX + zoom, orbRY + 0.5 * zoom, 0, 0, Math.PI);
     ctx.stroke();
     // Main ring (front half — lower arc is in front)
-    ctx.strokeStyle = `rgba(0, 230, 160, ${ringAlpha})`;
+    ctx.strokeStyle = `${orb.inner} ${ringAlpha})`;
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, orbRX, orbRY, 0, 0, Math.PI);
@@ -2408,7 +2511,7 @@ export function renderClubTower(
     );
   }
   const plateGlow = 0.4 + Math.sin(time * 2) * 0.15;
-  ctx.fillStyle = `rgba(255, 215, 0, ${plateGlow})`;
+  ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${plateGlow})`;
   ctx.beginPath();
   ctx.ellipse(
     diningX,
@@ -2449,8 +2552,8 @@ export function renderClubTower(
     const pAlpha = Math.sin(pPhase * Math.PI) * (0.7 + flashIntensity * 0.3);
     const pSize = 2 + Math.sin(time * 6 + i) * 1 + flashIntensity;
 
-    ctx.fillStyle = `rgba(255, 215, 0, ${pAlpha})`;
-    ctx.shadowColor = "#c9a227";
+    ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${pAlpha})`;
+    ctx.shadowColor = ac.main;
     ctx.shadowBlur = (4 + flashIntensity * 4) * zoom;
     ctx.beginPath();
     ctx.arc(pX, pY, pSize * zoom, 0, Math.PI * 2);
@@ -2463,9 +2566,9 @@ export function renderClubTower(
     // Dramatic expanding gold burst ring
     const burstRadius = (1 - flashIntensity) * 40 * zoom;
     const burstAlpha = flashIntensity * 0.7;
-    ctx.strokeStyle = `rgba(255, 215, 0, ${burstAlpha})`;
+    ctx.strokeStyle = `rgba(${dm.finGlowRGB}, ${burstAlpha})`;
     ctx.lineWidth = (3 + flashIntensity * 2) * zoom;
-    ctx.shadowColor = "#ffd700";
+    ctx.shadowColor = dm.finGlowHex;
     ctx.shadowBlur = 12 * zoom * flashIntensity;
     ctx.beginPath();
     ctx.arc(screenPos.x, topY - 15 * zoom, burstRadius, 0, Math.PI * 2);
@@ -2492,8 +2595,8 @@ export function renderClubTower(
         (1 - flashIntensity) * 15 * zoom;
       const fcAlpha = flashIntensity * 0.8;
       const fcSize = (2 + flashIntensity * 2) * zoom;
-      ctx.fillStyle = `rgba(255, 215, 0, ${fcAlpha})`;
-      ctx.shadowColor = "#ffaa00";
+      ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${fcAlpha})`;
+      ctx.shadowColor = ac.main;
       ctx.shadowBlur = 6 * zoom * flashIntensity;
       ctx.beginPath();
       ctx.ellipse(fcX, fcY, fcSize, fcSize * 0.6, coinAngle, 0, Math.PI * 2);
@@ -2503,8 +2606,8 @@ export function renderClubTower(
 
     // Ka-ching "$" text floating up
     const kachingY = topY - 40 * zoom - (1 - flashIntensity) * 20 * zoom;
-    ctx.fillStyle = `rgba(255, 230, 100, ${flashIntensity})`;
-    ctx.shadowColor = "#ffd700";
+    ctx.fillStyle = `rgba(${dm.finGlowRGB}, ${flashIntensity})`;
+    ctx.shadowColor = dm.finGlowHex;
     ctx.shadowBlur = 8 * zoom * flashIntensity;
     ctx.font = `bold ${(10 + flashIntensity * 6) * zoom}px Arial`;
     ctx.textAlign = "center";
@@ -2513,7 +2616,7 @@ export function renderClubTower(
     ctx.shadowBlur = 0;
 
     // Treasury pulse glow on building
-    ctx.fillStyle = `rgba(255, 200, 50, ${flashIntensity * 0.15})`;
+    ctx.fillStyle = `rgba(${ac.r}, ${ac.g}, ${ac.b}, ${flashIntensity * 0.15})`;
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x,
@@ -2550,9 +2653,9 @@ export function renderClubTower(
       const bankY = screenPos.y - h * 0.15;
 
       // Data bank housing
-      ctx.fillStyle = "#2a3a2a";
+      ctx.fillStyle = st.dark;
       ctx.fillRect(bankX - 4 * zoom, bankY - 12 * zoom, 8 * zoom, 14 * zoom);
-      ctx.strokeStyle = "#4a5a4a";
+      ctx.strokeStyle = st.light;
       ctx.lineWidth = 1 * zoom;
       ctx.strokeRect(bankX - 4 * zoom, bankY - 12 * zoom, 8 * zoom, 14 * zoom);
 
@@ -2561,8 +2664,8 @@ export function renderClubTower(
         const lightY = bankY - 10 * zoom + light * 3 * zoom;
         const lightOn = Math.sin(time * 8 + light * 1.5 + side * 3) > 0;
         ctx.fillStyle = lightOn
-          ? `rgba(0, 255, 100, 0.8)`
-          : `rgba(0, 50, 20, 0.5)`;
+          ? uc(`rgba(100, 150, 255, 0.8)`, `rgba(255, 150, 50, 0.8)`, `rgba(0, 255, 100, 0.8)`)
+          : uc(`rgba(20, 20, 50, 0.5)`, `rgba(50, 20, 10, 0.5)`, `rgba(0, 50, 20, 0.5)`);
         ctx.beginPath();
         ctx.arc(bankX, lightY, 1.5 * zoom, 0, Math.PI * 2);
         ctx.fill();
@@ -2601,7 +2704,7 @@ export function renderClubTower(
   if (tower.level >= 3) {
     // Floating energy field around dome
     const fieldRotation = time * 0.8;
-    ctx.strokeStyle = `rgba(0, 255, 200, ${0.3 + Math.sin(time * 2) * 0.15})`;
+    ctx.strokeStyle = eg.field;
     ctx.lineWidth = 1.5 * zoom;
     for (let ring = 0; ring < 3; ring++) {
       ctx.beginPath();
@@ -2619,9 +2722,9 @@ export function renderClubTower(
 
     if (tower.upgrade === "A") {
       // Investment Fund - holographic stock chart
-      ctx.strokeStyle = "#00ff66";
+      ctx.strokeStyle = eg.upgradeAStroke;
       ctx.lineWidth = 3 * zoom;
-      ctx.shadowColor = "#00ff66";
+      ctx.shadowColor = eg.upgradeAShadow;
       ctx.shadowBlur = 10 * zoom;
       ctx.beginPath();
       ctx.moveTo(screenPos.x - 22 * zoom, topY - 42 * zoom);
@@ -2632,7 +2735,7 @@ export function renderClubTower(
       ctx.shadowBlur = 0;
 
       // Arrow head
-      ctx.fillStyle = "#00ff66";
+      ctx.fillStyle = eg.upgradeAStroke;
       ctx.beginPath();
       ctx.moveTo(screenPos.x + 22 * zoom, topY - 70 * zoom);
       ctx.lineTo(screenPos.x + 15 * zoom, topY - 66 * zoom);
@@ -2641,9 +2744,9 @@ export function renderClubTower(
       ctx.fill();
 
       // Glowing data points
-      ctx.shadowColor = "#00ff66";
+      ctx.shadowColor = eg.upgradeAShadow;
       ctx.shadowBlur = 8 * zoom;
-      ctx.fillStyle = `rgba(0, 255, 100, 0.9)`;
+      ctx.fillStyle = eg.upgradeAFill;
       const points = [
         { x: -10, y: -58 },
         { x: 2, y: -50 },
@@ -2663,14 +2766,14 @@ export function renderClubTower(
       ctx.shadowBlur = 0;
     } else if (tower.upgrade === "B") {
       // Recruitment Center - personnel holograms
-      ctx.fillStyle = "#0a2a1a";
+      ctx.fillStyle = eg.upgradeBBg;
       ctx.fillRect(
         screenPos.x - 24 * zoom,
         topY - 52 * zoom,
         18 * zoom,
         18 * zoom,
       );
-      ctx.strokeStyle = "#2a4a3a";
+      ctx.strokeStyle = eg.upgradeBStroke;
       ctx.strokeRect(
         screenPos.x - 24 * zoom,
         topY - 52 * zoom,
@@ -2682,7 +2785,7 @@ export function renderClubTower(
       for (let p = 0; p < 2; p++) {
         const personX = screenPos.x - 19 * zoom + p * 10 * zoom;
         const personGlow = 0.6 + Math.sin(time * 3 + p * 1.5) * 0.2;
-        ctx.fillStyle = `rgba(0, 255, 100, ${personGlow})`;
+        ctx.fillStyle = `${eg.upgradeBFill} ${personGlow})`;
         ctx.beginPath();
         ctx.arc(personX, topY - 44 * zoom, 3 * zoom, 0, Math.PI * 2);
         ctx.fill();
@@ -2690,14 +2793,14 @@ export function renderClubTower(
       }
 
       // Status bars
-      ctx.fillStyle = "#0a2a1a";
+      ctx.fillStyle = eg.upgradeBBg;
       ctx.fillRect(
         screenPos.x + 6 * zoom,
         topY - 54 * zoom,
         18 * zoom,
         20 * zoom,
       );
-      ctx.strokeStyle = "#2a4a3a";
+      ctx.strokeStyle = eg.upgradeBStroke;
       ctx.strokeRect(
         screenPos.x + 6 * zoom,
         topY - 54 * zoom,
@@ -2712,7 +2815,7 @@ export function renderClubTower(
       ];
       for (let i = 0; i < bars.length; i++) {
         const barY = topY - 52 * zoom + i * 6 * zoom;
-        ctx.fillStyle = "#00ff66";
+        ctx.fillStyle = eg.upgradeBBar;
         ctx.fillRect(
           screenPos.x + 8 * zoom,
           barY,

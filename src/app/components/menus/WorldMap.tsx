@@ -23,7 +23,6 @@ import {
   ChessRook,
   Map as MapIcon,
   Sparkles,
-  ChessKnight,
   Settings,
   Maximize,
   Minimize,
@@ -196,6 +195,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCreator, setShowCreator] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [loadoutCompact, setLoadoutCompact] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
@@ -242,25 +242,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       if (!containerRef.current) return;
       const cw = containerRef.current.clientWidth;
       const ch = containerRef.current.clientHeight;
-      const panelH = bottomPanelRef.current?.offsetHeight ?? 0;
-      const overlayPad = 24;
       const scale = Math.max(1.0, Math.min(1.5, cw / MAP_WIDTH));
       const minMapH = MAP_WIDTH * 0.29;
-      const desiredMapH = (ch - panelH - overlayPad) / scale;
+      const desiredMapH = ch / scale;
       setContainerWidth(cw);
       setMapHeight(Math.max(minMapH, desiredMapH));
     };
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
-    const panelEl = bottomPanelRef.current;
-    let ro: ResizeObserver | undefined;
-    if (panelEl) {
-      ro = new ResizeObserver(updateDimensions);
-      ro.observe(panelEl);
-    }
     return () => {
       window.removeEventListener("resize", updateDimensions);
-      ro?.disconnect();
     };
   }, []);
 
@@ -1538,7 +1529,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </div>
           </OrnateFrame>
         </div>
-        {/* RIGHT: Map */}
+        {/* RIGHT: Map + Loadout column */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <div className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <OrnateFrame
             className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl min-h-0"
@@ -1641,114 +1633,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              {/* HERO & SPELL SELECTION OVERLAY (desktop only) */}
-              <div className="hidden sm:flex absolute w-full bottom-0 left-0 right-0 p-3 pointer-events-none h-full overflow-x-auto z-20" style={{
-                background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.4) 65%, rgba(18,12,6,0.92) 85%, rgba(18,12,6,0.98) 100%)`
-              }}>
-                <div ref={bottomPanelRef} className="flex w-full mt-auto gap-3 pointer-events-auto items-stretch">
-                  {/* --- Flavor / Battle Summary Panel --- */}
-                  <div className="hidden sm:flex sm:flex-col w-44 flex-shrink-0 relative rounded-xl"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(41,32,20,0.97) 0%, rgba(28,22,15,0.99) 100%)',
-                      border: '1.5px solid rgba(180,140,60,0.45)',
-                      boxShadow: 'inset 0 0 20px rgba(180,140,60,0.06), 0 4px 24px rgba(0,0,0,0.5)',
-                    }}>
-                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.12)' }} />
-                    <div className="px-2 sm:px-3 py-2  relative"
-                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.1), transparent)' }}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <ChessKnight size={13} className="text-amber-400 shrink-0" />
-                          <span className="text-[9px] sm:text-[10px] text-nowrap font-bold text-amber-300 tracking-[0.2em] uppercase">
-                            Guide
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => openCodexTo("guide")}
-                          className="flex items-center justify-center w-5 h-5 rounded-md text-blue-300/80 transition-all hover:brightness-150 hover:scale-110"
-                          style={{
-                            background: 'rgba(30,50,100,0.3)',
-                            border: '1px solid rgba(80,120,200,0.25)',
-                          }}
-                          title="Guide"
-                        >
-                          <Book size={10} />
-                        </button>
-                      </div>
-                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
-                    </div>
-                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-2">
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {([
-                          { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
-                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
-                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={11} />, color: "text-purple-300", bg: "rgba(80,40,120,0.25)", border: "rgba(140,80,200,0.22)" },
-                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={11} />, color: "text-red-300", bg: "rgba(100,30,30,0.25)", border: "rgba(180,60,60,0.22)" },
-                          { label: "Special", tab: "special_towers" as CodexTabId, icon: <Star size={11} />, color: "text-yellow-300", bg: "rgba(100,80,20,0.25)", border: "rgba(200,160,40,0.22)" },
-                          { label: "Hazards", tab: "hazards" as CodexTabId, icon: <AlertTriangle size={11} />, color: "text-orange-300", bg: "rgba(100,50,15,0.25)", border: "rgba(200,100,30,0.22)" },
-                        ]).map((item) => (
-                          <button
-                            key={item.tab}
-                            onClick={() => openCodexTo(item.tab)}
-                            className={`flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-md text-[8px] font-semibold ${item.color} tracking-wide uppercase transition-all hover:brightness-130 hover:scale-105`}
-                            style={{
-                              background: `linear-gradient(135deg, ${item.bg}, rgba(30,22,12,0.2))`,
-                              border: `1px solid ${item.border}`,
-                            }}
-                          >
-                            <span className="shrink-0 flex items-center justify-center w-[11px] h-[11px]">{item.icon}</span>
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="w-full h-px my-0.5" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 20%, rgba(255,200,80,0.3) 50%, rgba(180,140,60,0.25) 80%, transparent)' }} />
-                      <button
-                        onClick={() => {
-                          const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
-                          if (unlockedLevelsList.length > 0) {
-                            const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                            handleLevelClick(farthestLevel.id);
-                          }
-                        }}
-                        className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2.5 transition-all hover:brightness-125 hover:scale-[1.03] active:scale-[0.98]"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(160,110,25,0.55), rgba(120,75,15,0.45))',
-                          border: '1px solid rgba(200,160,60,0.4)',
-                          boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.12), 0 2px 8px rgba(0,0,0,0.3)',
-                        }}>
-                        <Swords size={13} className="text-amber-400 shrink-0" />
-                        <span className="text-[9px] font-bold text-amber-200 tracking-wider uppercase">Defend the Realm</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* --- Hero Panel --- */}
-                  <HeroSelector
-                    selectedHero={selectedHero}
-                    setSelectedHero={setSelectedHero}
-                    hoveredHero={hoveredHero}
-                    setHoveredHero={setHoveredHero}
-                    onOpenCodex={() => openCodexTo("heroes")}
-                  />
-
-                  {/* --- Spell Panel --- */}
-                  <SpellSelector
-                    selectedSpells={selectedSpells}
-                    toggleSpell={toggleSpell}
-                    hoveredSpell={hoveredSpell}
-                    setHoveredSpell={setHoveredSpell}
-                    availableSpellStars={availableSpellStars}
-                    totalSpellStarsEarned={totalSpellStarsEarned}
-                    spentSpellStars={spentSpellStars}
-                    spellUpgradeLevels={spellUpgradeLevels}
-                    upgradeSpell={upgradeSpell}
-                    onOpenCodex={() => openCodexTo("spells")}
-                  />
-                </div>
-              </div>
-
-              {/* MOBILE HERO & SPELL FLOATING CIRCLES */}
-              <div className="flex sm:hidden absolute w-full bottom-0 left-0 right-0 pointer-events-none z-20">
+              {/* MOBILE/TABLET HERO & SPELL FLOATING CIRCLES */}
+              <div className="flex xl:hidden absolute w-full bottom-0 left-0 right-0 pointer-events-none z-20">
                 <div className="w-full pointer-events-auto">
                   <MobileLoadoutBar
                     selectedHero={selectedHero}
@@ -1767,6 +1653,134 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </div>
             </div>
           </OrnateFrame>
+        </div>
+
+        {/* DESKTOP: LOADOUT BAR (below map, inside right column) */}
+        <div className="hidden xl:block flex-shrink-0 px-1.5 sm:px-3 pb-1.5 sm:pb-3">
+          <OrnateFrame
+            className="rounded-xl border-2 border-amber-600/50 shadow-xl overflow-hidden"
+            cornerSize={20}
+            showBorders={true}
+            showSideBorders={true}
+            showTopBottomBorders={false}
+          >
+            <div
+              className="relative"
+              style={{
+                background: panelGradient,
+                boxShadow: `inset 0 0 20px ${GOLD.glow04}`,
+              }}
+            >
+              <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: dividerGradient }} />
+
+              <div ref={bottomPanelRef} className="flex items-stretch gap-2 px-3 py-2">
+                {/* Guide / Codex Quick Links */}
+                <div className="flex flex-col flex-shrink-0 relative">
+                  {/* Circular codex buttons in a column */}
+                  <div className="flex flex-col items-center gap-1.5 py-1">
+                    {([
+                      { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                      { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                      { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
+                      { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
+                    ]).map((item) => (
+                      <button
+                        key={item.tab}
+                        onClick={() => openCodexTo(item.tab)}
+                        className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                        style={{
+                          background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
+                          border: `1.5px solid ${item.border}`,
+                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
+                          color: item.color,
+                        }}
+                        title={item.label}
+                      >
+                        {item.icon}
+                        <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                          style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
+                          {item.label}
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
+                        if (unlockedLevelsList.length > 0) {
+                          const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                          handleLevelClick(farthestLevel.id);
+                        }
+                      }}
+                      className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                      style={{
+                        background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
+                        border: '1.5px solid rgba(200,160,60,0.5)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
+                        color: '#fbbf24',
+                      }}
+                      title="Defend the Realm"
+                    >
+                      <Swords size={13} />
+                      <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                        style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
+                        Battle
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hero Selector */}
+                <HeroSelector
+                  selectedHero={selectedHero}
+                  setSelectedHero={setSelectedHero}
+                  hoveredHero={hoveredHero}
+                  setHoveredHero={setHoveredHero}
+                  onOpenCodex={() => openCodexTo("heroes")}
+                  compact={loadoutCompact}
+                />
+
+                {/* Spell Selector */}
+                <SpellSelector
+                  selectedSpells={selectedSpells}
+                  toggleSpell={toggleSpell}
+                  hoveredSpell={hoveredSpell}
+                  setHoveredSpell={setHoveredSpell}
+                  availableSpellStars={availableSpellStars}
+                  totalSpellStarsEarned={totalSpellStarsEarned}
+                  spentSpellStars={spentSpellStars}
+                  spellUpgradeLevels={spellUpgradeLevels}
+                  upgradeSpell={upgradeSpell}
+                  onOpenCodex={() => openCodexTo("spells")}
+                  compact={loadoutCompact}
+                />
+
+                {/* Compact toggle */}
+                <div className="flex flex-col items-center justify-center flex-shrink-0">
+                  <button
+                    onClick={() => setLoadoutCompact(!loadoutCompact)}
+                    className="flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 hover:scale-110 hover:brightness-125"
+                    style={{
+                      background: loadoutCompact
+                        ? 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.5), rgba(20,16,10,0.8))'
+                        : 'radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))',
+                      border: `1.5px solid ${loadoutCompact ? 'rgba(180,140,60,0.5)' : 'rgba(100,80,50,0.3)'}`,
+                      boxShadow: loadoutCompact ? '0 0 8px rgba(180,140,60,0.2)' : 'none',
+                    }}
+                    title={loadoutCompact ? "Expand loadout" : "Compact loadout"}
+                  >
+                    {loadoutCompact ? (
+                      <ChevronLeft size={14} className="text-amber-400" />
+                    ) : (
+                      <ChevronRight size={14} className="text-amber-400/60" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-px opacity-40" style={{ background: dividerGradient }} />
+            </div>
+          </OrnateFrame>
+        </div>
         </div>
       </div>
 

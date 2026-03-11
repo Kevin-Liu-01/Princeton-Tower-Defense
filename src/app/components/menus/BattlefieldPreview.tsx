@@ -13,11 +13,11 @@ const BattlefieldPreviewCanvas = lazy(
 );
 
 const SLIDESHOW_IMAGES = [
-  "/images/new/gameplay_grounds_ui.png",
-  "/images/new/gameplay_desert_ui.png",
-  "/images/new/gameplay_swamp_ui.png",
-  "/images/new/gameplay_winter_ui.png",
-  "/images/new/gameplay_volcano_ui.png",
+  "/images/new/gameplay_grounds.png",
+  "/images/new/gameplay_desert.png",
+  "/images/new/gameplay_swamp.png",
+  "/images/new/gameplay_winter.png",
+  "/images/new/gameplay_volcano.png",
 ];
 
 const CYCLE_INTERVAL_MS = 6000;
@@ -64,7 +64,8 @@ export const BattlefieldPreview: React.FC<{
                 src={src}
                 alt=""
                 fill
-                sizes="(max-width: 640px) 100vw, 400px"
+                unoptimized
+                sizes="(max-width: 640px) 100vw, 600px"
                 className="object-cover object-center transition-opacity duration-1000 pointer-events-none"
                 style={{ opacity: i === currentIndex ? 0.65 : 0 }}
                 priority={i === 0}
@@ -80,15 +81,7 @@ export const BattlefieldPreview: React.FC<{
             <div
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: `radial-gradient(ellipse at center, transparent 10%, ${PANEL.bgDark} 90%)`,
-              }}
-            />
-            {/* Subtle warm accent wash */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(180,120,20,0.08) 0%, transparent 50%, rgba(180,120,20,0.05) 100%)",
+                background: `radial-gradient(ellipse at center, transparent 30%, ${PANEL.bgDark} 95%)`,
               }}
             />
           </>

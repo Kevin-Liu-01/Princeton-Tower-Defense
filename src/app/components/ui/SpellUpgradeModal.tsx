@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { createPortal } from "react-dom";
+import { BaseModal } from "./BaseModal";
 import type { LucideIcon } from "lucide-react";
 import {
   Banknote,
@@ -593,15 +593,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
   spellUpgradeLevels,
   onUpgradeSpell,
 }) => {
-  const [mounted, setMounted] = React.useState(false);
   const [selectedNode, setSelectedNode] = React.useState<SelectedNode>(() =>
     getDefaultSelection(spellUpgradeLevels),
   );
   const [justUpgraded, setJustUpgraded] = React.useState<SelectedNode | null>(null);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -621,7 +616,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     return () => clearTimeout(timer);
   }, [justUpgraded]);
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen) return null;
 
   const columnCount = SPELL_OPTIONS.length;
   const boardWidth =
@@ -659,16 +654,18 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     }, 800);
   };
 
-  const modalContent = (
-    <div className="fixed inset-0 z-[1300] isolate flex items-center justify-center p-2 sm:p-4 pointer-events-auto">
+  return (
+    <BaseModal
+      isOpen
+      onClose={onClose}
+      usePortal
+      zClass="z-[1300]"
+      blurClass=""
+      backdropBg="rgba(0,0,0,0.85)"
+      paddingClass="p-2 sm:p-4"
+      className="isolate pointer-events-auto"
+    >
       <style>{ANIMATIONS_CSS}</style>
-
-      <button
-        type="button"
-        aria-label="Close upgrades"
-        className="absolute inset-0 bg-black/85"
-        onClick={onClose}
-      />
 
       <OrnateFrame
         className="relative z-10 w-full max-w-[1280px] max-h-[94vh] overflow-hidden rounded-2xl border border-amber-400/45"
@@ -1418,9 +1415,6 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
           </div>
         </div>
       </OrnateFrame>
-    </div>
+    </BaseModal>
   );
-
-  if (typeof document === "undefined") return null;
-  return createPortal(modalContent, document.body);
 };

@@ -21,6 +21,36 @@ import { OrnateFrame } from "./OrnateFrame";
 import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, DIVIDER, SELECTED, NEUTRAL, panelGradientReversed } from "./theme";
 
+const TOWER_ROLES: Record<TowerType, {
+  label: string;
+  accent: string;
+  text: string;
+  bg: string;
+  border: string;
+  statColor: string;
+  statIcon: (size: number) => React.ReactNode;
+}> = {
+  cannon: { label: "DPS", accent: "rgba(239,68,68,0.7)", text: "rgb(252,165,165)", bg: "rgba(127,29,29,0.35)", border: "rgba(153,27,27,0.3)", statColor: "rgb(252,165,165)", statIcon: (s) => <Swords size={s} className="text-red-400" /> },
+  mortar: { label: "AoE", accent: "rgba(249,115,22,0.7)", text: "rgb(253,186,116)", bg: "rgba(124,45,18,0.35)", border: "rgba(154,52,18,0.3)", statColor: "rgb(253,186,116)", statIcon: (s) => <TargetIcon size={s} className="text-orange-400" /> },
+  lab: { label: "Chain", accent: "rgba(56,189,248,0.7)", text: "rgb(125,211,252)", bg: "rgba(12,74,110,0.35)", border: "rgba(14,116,144,0.3)", statColor: "rgb(125,211,252)", statIcon: (s) => <Swords size={s} className="text-sky-400" /> },
+  arch: { label: "Ramp", accent: "rgba(168,85,247,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)", statIcon: (s) => <GaugeIcon size={s} className="text-purple-400" /> },
+  station: { label: "Troops", accent: "rgba(192,132,252,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)", statIcon: (s) => <UsersIcon size={s} className="text-purple-400" /> },
+  library: { label: "Slow", accent: "rgba(96,165,250,0.7)", text: "rgb(147,197,253)", bg: "rgba(30,58,138,0.35)", border: "rgba(30,64,175,0.3)", statColor: "rgb(147,197,253)", statIcon: (s) => <Snowflake size={s} className="text-blue-400" /> },
+  club: { label: "Econ", accent: "rgba(74,222,128,0.7)", text: "rgb(134,239,172)", bg: "rgba(20,83,45,0.35)", border: "rgba(22,101,52,0.3)", statColor: "rgb(134,239,172)", statIcon: (s) => <CoinsIcon size={s} className="text-green-400" /> },
+};
+
+function getTowerKeyStat(type: string, data: { damage: number; range: number; attackSpeed: number }): string {
+  switch (type) {
+    case "station": return `${TROOP_DATA.footsoldier.hp}HP`;
+    case "library": return "20%";
+    case "club": return "+8PP/8s";
+    case "mortar": return `${data.damage}`;
+    default:
+      if (data.damage > 0) return `${data.damage}`;
+      return `${data.range}`;
+  }
+}
+
 interface BuildMenuProps {
   pawPoints: number;
   buildingTower: TowerType | null;
@@ -71,7 +101,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
   return (
     <OrnateFrame
-      className="border-t-2 border-amber-700/50 shadow-xl backdrop-blur-sm"
+      className="border-2 border-amber-700/50 shadow-xl backdrop-blur-sm"
       cornerSize={28}
       showTopBottomBorders={false}
     >
@@ -89,8 +119,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
           className="px-1.5 sm:px-3 py-2 overflow-x-auto relative z-20"
           style={{ zIndex: 100 }}
         >
-          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-max">
-            <h3 className="text-[10px] font-bold text-amber-300 tracking-wider hidden sm:flex flex-col justify-center gap-1 whitespace-nowrap px-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 w-full">
+            <h3 className="text-[10px] font-bold text-amber-300 tracking-wider hidden sm:flex flex-col justify-center gap-1 whitespace-nowrap px-1 flex-shrink-0">
               <div className="flex items-center gap-1">
                 <BrickWallShield size={14} /> <div>BUILD TOWERS</div>
               </div>
@@ -108,8 +138,10 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               const canUse = canAfford && !isRestricted;
               const isSelected = buildingTower === towerType;
               const isHovered = hoveredTower === towerType;
+              const towerCount = placedTowers[towerType] || 0;
+              const role = TOWER_ROLES[towerType];
               return (
-                <div key={type} className="relative w-full min-w-[5.5rem] sm:min-w-0">
+                <div key={type} className="relative flex-1 min-w-[2.75rem] sm:min-w-0">
                   <button
                     onPointerDown={(e) => {
                       if (!canUse) return;
@@ -137,7 +169,6 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       const pointerDownMeta = pointerDownTowerRef.current;
                       if (pointerDownMeta?.tower === towerType) {
                         pointerDownTowerRef.current = null;
-                        // Pointer click on already-selected tower should deselect.
                         if (pointerDownMeta.wasSelected) {
                           setBuildingTower(null);
                           setHoveredBuildTower(null);
@@ -145,11 +176,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                           setDraggingTower(null);
                           setIsBuildDragging(false);
                         }
-                        // Pointer click on unselected tower should stay selected.
                         return;
                       }
-
-                      // if we have a tower selected, deselect it
                       if (isSelected) {
                         setBuildingTower(null);
                         setHoveredBuildTower(null);
@@ -177,7 +205,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       }
                     }}
                     disabled={!canUse}
-                    className={`relative px-2.5 sm:px-3 py-2 sm:py-2 w-full transition-all flex items-center gap-2 sm:gap-2.5 whitespace-nowrap rounded-xl ${isSelected
+                    className={`relative w-full transition-all rounded-xl whitespace-nowrap ${isSelected
                       ? "scale-105"
                       : canUse
                         ? "hover:brightness-110 hover:scale-[1.02]"
@@ -199,78 +227,70 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                         : `inset 0 0 12px ${GOLD.glow04}`,
                     }}
                   >
-                    {/* Inner border */}
+                    {/* Role accent — thin colored bottom strip */}
+                    <div className="absolute bottom-0 left-[10px] right-[10px] h-[2px] rounded-b-full" style={{ background: role.accent }} />
+
                     <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
                       border: isSelected ? `1px solid ${GOLD.accentBorder15}` : canUse ? `1px solid ${GOLD.innerBorder10}` : "none",
                     }} />
+
                     {isRestricted && (
-                      <span className="absolute top-1 sm:top-1.5 left-1 sm:left-1.5 bg-red-950/75 border border-red-500/40 text-red-200 text-[7px] sm:text-[8px] px-1 py-[1px] rounded">
+                      <span className="absolute top-1 sm:top-1.5 left-1 sm:left-1.5 bg-red-950/75 border border-red-500/40 text-red-200 text-[7px] sm:text-[8px] px-1 py-[1px] rounded z-10">
                         Locked
                       </span>
                     )}
-                    <span className="absolute hidden sm:flex top-1 sm:top-1.5 bg-amber-900/80 p-0.5 px-1 rounded-md right-1 sm:right-1.5 text-[7px] sm:text-[9px] font-bold text-amber-400 z-10">
-                      {placedTowers[towerType] > 0
-                        ? `x${placedTowers[towerType]}`
-                        : "x0"}
-                    </span>
-                    <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center">
-                      <TowerSprite type={towerType} size={sizes.towerIcon} />
+
+                    {/* ── Mobile: compact vertical card ── */}
+                    <div className="flex sm:hidden flex-col items-center py-1.5 px-1 gap-0.5 relative">
+                      <div className="w-7 h-7 flex items-center justify-center">
+                        <TowerSprite type={towerType} size={sizes.towerIcon} />
+                      </div>
+                      <span className="text-[7px] font-bold text-amber-400 flex items-center gap-0.5 leading-none">
+                        <PawPrint size={7} />{data.cost}
+                      </span>
+                      <span className="text-[6px] font-bold uppercase tracking-wide leading-none px-1 py-px rounded"
+                        style={{ color: role.text, background: role.bg, border: `1px solid ${role.border}` }}>
+                        {role.label}
+                      </span>
                     </div>
-                    <div className="flex flex-col items-start">
-                      <div className="font-bold text-[8px] sm:text-[10px] text-amber-200">
-                        {data.name}
+
+                    {/* ── Desktop: horizontal detail card ── */}
+                    <div className="hidden sm:flex items-center gap-2.5 px-2.5 py-2">
+                      <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+                        <TowerSprite type={towerType} size={sizes.towerIcon} />
                       </div>
-                      <div className="text-[7px] sm:text-[9px] text-amber-400 flex items-center gap-0.5 sm:gap-1">
-                        <PawPrint size={8} className="sm:w-2.5 sm:h-2.5" /> {data.cost} PP
+                      <div className="flex flex-col items-start min-w-0">
+                        <div className="font-bold text-[10px] text-amber-200 leading-tight truncate max-w-full">
+                          {data.name}
+                        </div>
+                        <div className="text-[9px] text-amber-400 flex items-center gap-1">
+                          <PawPrint size={10} /> {data.cost} PP
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[7px] font-bold uppercase tracking-wider px-1 py-px rounded"
+                            style={{ color: role.text, background: role.bg, border: `1px solid ${role.border}` }}>
+                            {role.label}
+                          </span>
+                          <span className="flex items-center gap-[2px] text-[8px] font-semibold" style={{ color: role.statColor }}>
+                            {role.statIcon(8)}{getTowerKeyStat(type, data)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="hidden sm:flex gap-1.5 text-[8px] mt-0.5 flex-wrap">
-                        {/* Standard combat towers */}
-                        {data.damage > 0 && type !== "library" && (
-                          <span className="text-red-400 flex items-center gap-0.5">
-                            <Swords size={9} /> {data.damage}
-                          </span>
-                        )}
-                        {data.range > 0 && type !== "station" && type !== "club" && (
-                          <span className="text-blue-400 flex items-center gap-0.5">
-                            <TargetIcon size={9} /> {data.range}
-                          </span>
-                        )}
-                        {data.attackSpeed > 0 && (
-                          <span className="text-green-400 flex items-center gap-0.5">
-                            <GaugeIcon size={9} /> {(data.attackSpeed / 1000).toFixed(1)}s
-                          </span>
-                        )}
-                        {/* Dinky Station */}
-                        {type === "station" && (
-                          <span className="text-purple-300 flex items-center gap-0.5">
-                            <UsersIcon size={9} /> {TROOP_DATA.footsoldier.hp}HP / {TROOP_DATA.footsoldier.damage}DMG
-                          </span>
-                        )}
-                        {/* Eating Club */}
-                        {type === "club" && (
-                          <span className="text-amber-400 flex items-center gap-0.5">
-                            <CoinsIcon size={9} /> +8 PP/8s
-                          </span>
-                        )}
-                        {/* Firestone Library */}
-                        {type === "library" && (
-                          <span className="text-purple-400 flex items-center gap-0.5">
-                            <Snowflake size={9} /> 20% Slow
-                          </span>
-                        )}
-                      </div>
+                      <span className="absolute top-1.5 right-1.5 px-1 py-px rounded text-[8px] font-bold tabular-nums z-10"
+                        style={{
+                          background: towerCount > 0 ? "rgba(120,80,20,0.6)" : "rgba(50,40,25,0.5)",
+                          color: towerCount > 0 ? "rgb(252,211,77)" : "rgba(160,140,100,0.5)",
+                          border: `1px solid ${towerCount > 0 ? "rgba(180,140,60,0.3)" : "rgba(70,55,30,0.2)"}`,
+                        }}
+                      >
+                        x{towerCount}
+                      </span>
+                      {isSelected ? (
+                        <Grab size={18} className="text-amber-400 absolute bottom-1.5 right-1.5" />
+                      ) : (
+                        <PlusCircle size={18} className="text-amber-600 absolute bottom-1.5 right-1.5" />
+                      )}
                     </div>
-                    {isSelected ? (
-                      <Grab
-                        size={14}
-                        className="text-amber-400 rounded p-0.5 absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 sm:w-[18px] sm:h-[18px]"
-                      />
-                    ) : (
-                      <PlusCircle
-                        size={14}
-                        className="text-amber-600 rounded p-0.5 absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 sm:w-[18px] sm:h-[18px]"
-                      />
-                    )}
                   </button>
 
                   {/* Enhanced Tooltip - hidden on touch devices */}
@@ -422,6 +442,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
           </div>
         </div>
       </div>
+      <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
+
     </OrnateFrame>
   );
 };

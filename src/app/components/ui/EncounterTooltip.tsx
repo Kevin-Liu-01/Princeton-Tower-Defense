@@ -23,6 +23,7 @@ import {
   AMBER_CARD,
   panelGradient,
 } from "./theme";
+import { BaseModal } from "./BaseModal";
 import type { EncounterQueueItem } from "../../hooks/useTutorial";
 import type { EnemyType, SpecialTowerType, HazardType } from "../../types";
 import {
@@ -239,9 +240,13 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
   const remaining = encounters.length - currentIndex - 1;
 
   return (
-    <div
-      className="fixed inset-0 z-[310] flex items-center justify-center p-2 sm:p-4"
-      style={{ background: OVERLAY.black50 }}
+    <BaseModal
+      isOpen
+      onClose={handleAcknowledge}
+      zClass="z-[310]"
+      blurClass=""
+      backdropBg={OVERLAY.black50}
+      paddingClass="p-2 sm:p-4"
     >
       <div
         className="relative w-full max-w-md rounded-2xl overflow-hidden"
@@ -326,7 +331,7 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
           </div>
         </OrnateFrame>
       </div>
-    </div>
+    </BaseModal>
   );
 };
 

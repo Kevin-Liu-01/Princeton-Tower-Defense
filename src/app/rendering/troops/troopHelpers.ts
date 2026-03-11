@@ -101,103 +101,197 @@ export function drawMuscularHorseBody(
   zoom: number,
   colors: HorseBodyColors,
 ) {
+  const rx = radiusX;
+  const ry = radiusY;
+
+  // Base body with rich gradient — light source from upper-front
   const bodyGrad = ctx.createRadialGradient(
-    centerX - radiusX * 0.2,
-    centerY - radiusY * 0.3,
+    centerX - rx * 0.25,
+    centerY - ry * 0.35,
     0,
-    centerX,
-    centerY,
-    Math.max(radiusX, radiusY),
+    centerX + rx * 0.1,
+    centerY + ry * 0.1,
+    Math.max(rx, ry) * 1.15,
   );
   bodyGrad.addColorStop(0, colors.coatLight);
-  bodyGrad.addColorStop(0.35, colors.coatMid);
+  bodyGrad.addColorStop(0.2, colors.coatMid);
+  bodyGrad.addColorStop(0.6, colors.coatDark);
   bodyGrad.addColorStop(1, colors.coatDark);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+  ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Shoulder muscle mass (front)
-  const shX = centerX - radiusX * 0.52;
-  const shY = centerY - radiusY * 0.1;
+  // Shoulder muscle group — large gradient overlay
+  const shX = centerX - rx * 0.5;
+  const shY = centerY - ry * 0.08;
+  ctx.save();
   ctx.fillStyle = colors.muscleHighlight;
   ctx.beginPath();
-  ctx.ellipse(shX, shY, radiusX * 0.34, radiusY * 0.55, -0.25, 0, Math.PI * 2);
+  ctx.ellipse(shX, shY, rx * 0.38, ry * 0.62, -0.2, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
 
-  // Haunch muscle mass (rear)
-  const hhX = centerX + radiusX * 0.48;
-  const hhY = centerY - radiusY * 0.05;
+  // Shoulder specular — bright spot at muscle peak
+  ctx.save();
+  ctx.globalAlpha = 0.09;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(
+    shX - rx * 0.06,
+    shY - ry * 0.18,
+    rx * 0.16,
+    ry * 0.22,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // Haunch muscle group
+  const hhX = centerX + rx * 0.46;
+  const hhY = centerY - ry * 0.03;
   ctx.fillStyle = colors.muscleHighlight;
   ctx.beginPath();
-  ctx.ellipse(hhX, hhY, radiusX * 0.3, radiusY * 0.5, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(hhX, hhY, rx * 0.33, ry * 0.56, 0.15, 0, Math.PI * 2);
   ctx.fill();
 
-  // Barrel shadow (underside depth)
-  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  // Haunch specular
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(
+    hhX + rx * 0.04,
+    hhY - ry * 0.16,
+    rx * 0.14,
+    ry * 0.2,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // Coat sheen — crescent highlight across the top
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX - rx * 0.08,
+    centerY - ry * 0.35,
+    rx * 0.65,
+    ry * 0.32,
+    -0.08,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // Deep belly shadow (two-layer)
+  ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
   ctx.beginPath();
   ctx.ellipse(
     centerX,
-    centerY + radiusY * 0.4,
-    radiusX * 0.65,
-    radiusY * 0.28,
+    centerY + ry * 0.35,
+    rx * 0.72,
+    ry * 0.3,
+    0,
+    0,
+    Math.PI,
+  );
+  ctx.fill();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.06)";
+  ctx.beginPath();
+  ctx.ellipse(
+    centerX,
+    centerY + ry * 0.5,
+    rx * 0.5,
+    ry * 0.18,
     0,
     0,
     Math.PI,
   );
   ctx.fill();
 
-  // Spine ridge highlight
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
-  ctx.lineWidth = 1.5 * zoom;
+  // Spine ridge — bezier for natural arch
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(centerX - radiusX * 0.55, centerY - radiusY * 0.35);
-  ctx.quadraticCurveTo(
-    centerX,
-    centerY - radiusY * 0.75,
-    centerX + radiusX * 0.55,
-    centerY - radiusY * 0.3,
+  ctx.moveTo(centerX - rx * 0.6, centerY - ry * 0.32);
+  ctx.bezierCurveTo(
+    centerX - rx * 0.2,
+    centerY - ry * 0.8,
+    centerX + rx * 0.2,
+    centerY - ry * 0.74,
+    centerX + rx * 0.6,
+    centerY - ry * 0.28,
   );
   ctx.stroke();
+  ctx.lineCap = "butt";
 
-  // Shoulder definition arcs
+  // Shoulder definition — major arc and secondary
   ctx.strokeStyle = colors.muscleShadow;
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
-  ctx.arc(shX, shY, radiusX * 0.22, 0.3, 2.4);
+  ctx.arc(shX, shY, rx * 0.25, 0.2, 2.5);
   ctx.stroke();
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.arc(
-    shX + radiusX * 0.08,
-    shY + radiusY * 0.18,
-    radiusX * 0.18,
-    0.5,
-    2.0,
-  );
+  ctx.arc(shX + rx * 0.1, shY + ry * 0.22, rx * 0.19, 0.4, 2.1);
   ctx.stroke();
 
-  // Haunch definition arcs
+  // Haunch definition — major arc and secondary
+  ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
-  ctx.arc(hhX, hhY, radiusX * 0.2, 0.4, 2.2);
+  ctx.arc(hhX, hhY, rx * 0.23, 0.3, 2.3);
   ctx.stroke();
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.arc(
-    hhX - radiusX * 0.06,
-    hhY + radiusY * 0.14,
-    radiusX * 0.16,
-    0.6,
-    2.0,
-  );
+  ctx.arc(hhX - rx * 0.07, hhY + ry * 0.18, rx * 0.17, 0.5, 2.1);
   ctx.stroke();
 
   // Ribcage hints
-  ctx.lineWidth = 0.8 * zoom;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.save();
+  ctx.globalAlpha = 0.65;
   for (let rib = 0; rib < 3; rib++) {
-    const ribX = centerX - radiusX * 0.12 + rib * radiusX * 0.16;
+    const ribX = centerX - rx * 0.1 + rib * rx * 0.15;
     ctx.beginPath();
-    ctx.arc(ribX, centerY + radiusY * 0.08, radiusY * 0.38, 0.8, 2.2);
+    ctx.arc(ribX, centerY + ry * 0.1, ry * 0.36, 0.7, 2.3);
     ctx.stroke();
   }
+  ctx.restore();
+
+  // Hip bone hint
+  ctx.strokeStyle = colors.muscleHighlight;
+  ctx.lineWidth = 1.0 * zoom;
+  ctx.beginPath();
+  ctx.arc(
+    centerX + rx * 0.28,
+    centerY - ry * 0.55,
+    rx * 0.12,
+    0.8,
+    2.8,
+  );
+  ctx.stroke();
+
+  // Withers notch
+  ctx.strokeStyle = colors.muscleShadow;
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.beginPath();
+  ctx.arc(
+    centerX - rx * 0.25,
+    centerY - ry * 0.6,
+    rx * 0.1,
+    1.2,
+    2.6,
+  );
+  ctx.stroke();
 }
 
 // ── Horse leg ───────────────────────────────────────────────
@@ -236,94 +330,122 @@ export function drawMuscularHorseLeg(
   ctx.translate(legX, legY);
   ctx.rotate(stride);
 
-  // Muscular thigh — bezier bulge instead of linear taper
-  const hipW = size * 0.062;
-  const bulgeW = size * 0.072;
+  // ── Muscular thigh ──
+  const hipW = size * 0.065;
+  const bulgeW = size * 0.078;
   const kneeW = size * 0.042;
-  const bulgeY = upperLen * 0.38;
+  const bulgeY = upperLen * 0.36;
 
   const upperGrad = ctx.createLinearGradient(-hipW, 0, hipW, upperLen);
   upperGrad.addColorStop(0, colors.thighLight);
-  upperGrad.addColorStop(0.5, colors.thighMid);
+  upperGrad.addColorStop(0.45, colors.thighMid);
   upperGrad.addColorStop(1, colors.thighDark);
   ctx.fillStyle = upperGrad;
   ctx.beginPath();
   ctx.moveTo(-hipW, 0);
   ctx.bezierCurveTo(
     -bulgeW,
-    bulgeY * 0.6,
-    -bulgeW * 0.85,
-    upperLen * 0.7,
+    bulgeY * 0.5,
+    -bulgeW * 0.88,
+    upperLen * 0.65,
     kneeSwing - kneeW,
     upperLen,
   );
   ctx.lineTo(kneeSwing + kneeW, upperLen);
   ctx.bezierCurveTo(
-    bulgeW * 0.85,
-    upperLen * 0.7,
+    bulgeW * 0.88,
+    upperLen * 0.65,
     bulgeW,
-    bulgeY * 0.6,
+    bulgeY * 0.5,
     hipW,
     0,
   );
   ctx.closePath();
   ctx.fill();
 
-  // Thigh muscle highlight (front)
-  ctx.fillStyle = "rgba(255, 240, 210, 0.14)";
+  // Thigh highlight — front specular
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.ellipse(
-    -size * 0.008,
-    bulgeY,
-    size * 0.022,
-    size * 0.05,
-    0.15,
+    -size * 0.012,
+    bulgeY * 0.85,
+    size * 0.018,
+    size * 0.055,
+    0.12,
     0,
     Math.PI * 2,
   );
   ctx.fill();
+  ctx.restore();
 
-  // Thigh shadow (back)
+  // Thigh muscle separator
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.005, size * 0.01);
+  ctx.bezierCurveTo(
+    -size * 0.015,
+    bulgeY * 0.6,
+    -size * 0.008,
+    bulgeY * 1.4,
+    kneeSwing,
+    upperLen - size * 0.01,
+  );
+  ctx.stroke();
+
+  // Thigh shadow (inner)
   ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
   ctx.beginPath();
   ctx.ellipse(
-    size * 0.022,
+    size * 0.024,
     bulgeY * 1.3,
     size * 0.016,
-    size * 0.035,
+    size * 0.04,
     -0.1,
     0,
     Math.PI * 2,
   );
   ctx.fill();
 
-  // Knee joint
+  // ── Knee joint ──
   ctx.fillStyle = colors.thighDark;
   ctx.beginPath();
   ctx.ellipse(
     kneeSwing,
     upperLen,
-    size * 0.046,
-    size * 0.03,
+    size * 0.048,
+    size * 0.032,
     0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+  // Kneecap highlight
+  ctx.save();
+  ctx.globalAlpha = 0.1;
+  ctx.fillStyle = "#fff";
   ctx.beginPath();
   ctx.ellipse(
-    kneeSwing - size * 0.006,
-    upperLen - size * 0.006,
-    size * 0.018,
-    size * 0.013,
+    kneeSwing - size * 0.008,
+    upperLen - size * 0.008,
+    size * 0.02,
+    size * 0.014,
     0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
+  ctx.restore();
+  // Kneecap shadow ring
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.arc(kneeSwing, upperLen, size * 0.035, 0.5, 2.6);
+  ctx.stroke();
 
-  // Lower leg / greave — bezier taper
+  // ── Lower leg / greave ──
   const fetlockX = kneeSwing + fetlockSwing;
   const lowerGrad = ctx.createLinearGradient(
     kneeSwing - size * 0.045,
@@ -338,18 +460,18 @@ export function drawMuscularHorseLeg(
   ctx.beginPath();
   ctx.moveTo(kneeSwing - size * 0.04, upperLen);
   ctx.bezierCurveTo(
-    kneeSwing - size * 0.043,
+    kneeSwing - size * 0.044,
     upperLen + lowerLen * 0.3,
-    fetlockX - size * 0.037,
+    fetlockX - size * 0.038,
     upperLen + lowerLen * 0.7,
     fetlockX - size * 0.034,
     upperLen + lowerLen,
   );
   ctx.lineTo(fetlockX + size * 0.034, upperLen + lowerLen);
   ctx.bezierCurveTo(
-    fetlockX + size * 0.037,
+    fetlockX + size * 0.038,
     upperLen + lowerLen * 0.7,
-    kneeSwing + size * 0.043,
+    kneeSwing + size * 0.044,
     upperLen + lowerLen * 0.3,
     kneeSwing + size * 0.04,
     upperLen,
@@ -357,49 +479,126 @@ export function drawMuscularHorseLeg(
   ctx.closePath();
   ctx.fill();
 
-  // Greave trim
+  // Greave trim line
   ctx.strokeStyle = colors.trimColor;
   ctx.lineWidth = 1.1 * zoom;
   ctx.beginPath();
   ctx.moveTo(kneeSwing - size * 0.026, upperLen + size * 0.02);
   ctx.lineTo(
     fetlockX - size * 0.018,
+    upperLen + lowerLen - size * 0.025,
+  );
+  ctx.stroke();
+
+  // Tendon lines on cannon bone
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(kneeSwing + size * 0.02, upperLen + size * 0.015);
+  ctx.lineTo(
+    fetlockX + size * 0.015,
     upperLen + lowerLen - size * 0.02,
   );
   ctx.stroke();
 
-  // Hoof with rounded sole
+  // Greave specular highlight
   ctx.save();
-  ctx.translate(fetlockX, upperLen + lowerLen);
-  ctx.rotate(-0.2 + stride * 0.45);
-  ctx.fillStyle = colors.hoofColor;
+  ctx.globalAlpha = 0.07;
+  ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.moveTo(-size * 0.06, size * 0.004);
-  ctx.lineTo(size * 0.057, -size * 0.008);
-  ctx.quadraticCurveTo(
-    size * 0.063,
-    size * 0.02,
-    size * 0.052,
-    size * 0.04,
+  ctx.ellipse(
+    (kneeSwing + fetlockX) / 2 - size * 0.012,
+    upperLen + lowerLen * 0.45,
+    size * 0.012,
+    lowerLen * 0.3,
+    0.05,
+    0,
+    Math.PI * 2,
   );
-  ctx.lineTo(-size * 0.053, size * 0.044);
+  ctx.fill();
+  ctx.restore();
+
+  // ── Fetlock tuft ──
+  const ftX = fetlockX;
+  const ftY = upperLen + lowerLen;
+  ctx.fillStyle = colors.thighDark;
+  ctx.beginPath();
+  ctx.moveTo(ftX - size * 0.038, ftY - size * 0.005);
   ctx.quadraticCurveTo(
-    -size * 0.064,
-    size * 0.022,
-    -size * 0.06,
-    size * 0.004,
+    ftX - size * 0.05,
+    ftY + size * 0.018,
+    ftX - size * 0.03,
+    ftY + size * 0.025,
+  );
+  ctx.lineTo(ftX + size * 0.03, ftY + size * 0.025);
+  ctx.quadraticCurveTo(
+    ftX + size * 0.05,
+    ftY + size * 0.018,
+    ftX + size * 0.038,
+    ftY - size * 0.005,
   );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = colors.trimColor;
-  ctx.lineWidth = 1 * zoom;
+
+  // ── Hoof ──
+  ctx.save();
+  ctx.translate(ftX, ftY);
+  ctx.rotate(-0.2 + stride * 0.45);
+  const hoofGrad = ctx.createLinearGradient(
+    -size * 0.06,
+    0,
+    size * 0.06,
+    size * 0.045,
+  );
+  hoofGrad.addColorStop(0, colors.hoofColor);
+  hoofGrad.addColorStop(0.4, "#3a2a1c");
+  hoofGrad.addColorStop(1, colors.hoofColor);
+  ctx.fillStyle = hoofGrad;
   ctx.beginPath();
-  ctx.moveTo(-size * 0.046, size * 0.014);
-  ctx.lineTo(size * 0.044, size * 0.004);
+  ctx.moveTo(-size * 0.062, size * 0.003);
+  ctx.lineTo(size * 0.059, -size * 0.009);
+  ctx.quadraticCurveTo(
+    size * 0.066,
+    size * 0.02,
+    size * 0.054,
+    size * 0.042,
+  );
+  ctx.lineTo(-size * 0.055, size * 0.046);
+  ctx.quadraticCurveTo(
+    -size * 0.067,
+    size * 0.024,
+    -size * 0.062,
+    size * 0.003,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Horseshoe arc
+  ctx.strokeStyle = colors.trimColor;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, size * 0.022, size * 0.042, 0.35, Math.PI - 0.35);
   ctx.stroke();
+
+  // Hoof sole highlight
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(
+    -size * 0.01,
+    size * 0.015,
+    size * 0.03,
+    size * 0.012,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
   ctx.restore();
 
-  ctx.restore();
+  ctx.restore(); // hoof transform
+  ctx.restore(); // leg transform
 }
 
 // ── Horse tail ──────────────────────────────────────────────

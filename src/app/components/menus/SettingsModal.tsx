@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { BaseModal } from "../ui/BaseModal";
 import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 import type {
   GameSettings,
@@ -879,13 +880,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [onDevModeChange]);
 
   return (
-    <div
-      className="fixed inset-0 z-[1500] flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ background: OVERLAY.black60 }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <BaseModal isOpen onClose={onClose} zClass="z-[1500]" backdropBg={OVERLAY.black60}>
       <div
         className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
         style={{
@@ -1129,6 +1124,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </OrnateFrame>
       </div>
-    </div>
+    </BaseModal>
   );
 };

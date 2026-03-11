@@ -57,35 +57,25 @@ export function renderTower(
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
 
   if (isSelected || isHovered) {
+    const glowFnd = getTowerFoundationSize(tower);
+    const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.05;
+    const glowRy = glowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.05;
+    const innerRx = glowRx * 0.9;
+    const innerRy = glowRy * 0.9;
+
     ctx.save();
     ctx.shadowColor = isSelected ? "#c9a227" : "#ffffff";
     ctx.shadowBlur = 30 * zoom;
 
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y + 8 * zoom,
-      42 * zoom,
-      21 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(screenPos.x, screenPos.y + 8 * zoom, glowRx, glowRy, 0, 0, Math.PI * 2);
     ctx.fillStyle = isSelected
       ? "rgba(255, 215, 0, 0.15)"
       : "rgba(255,255,255,0.1)";
     ctx.fill();
 
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y + 8 * zoom,
-      38 * zoom,
-      19 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(screenPos.x, screenPos.y + 8 * zoom, innerRx, innerRy, 0, 0, Math.PI * 2);
     ctx.fillStyle = isSelected
       ? "rgba(255, 215, 0, 0.25)"
       : "rgba(255,255,255,0.2)";
@@ -93,19 +83,13 @@ export function renderTower(
 
     if (isSelected) {
       const ringPulse = 1 + Math.sin(time * 4) * 0.05;
+      const ringRx = glowRx * 1.05 * ringPulse;
+      const ringRy = glowRy * 1.05 * ringPulse;
       ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
       ctx.lineWidth = 2 * zoom;
       ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 8 * zoom,
-        44 * zoom * ringPulse,
-        22 * zoom * ringPulse,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(screenPos.x, screenPos.y + 8 * zoom, ringRx, ringRy, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
     }

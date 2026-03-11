@@ -39,6 +39,7 @@ interface HeroSelectorProps {
   hoveredHero: HeroType | null;
   setHoveredHero: (hero: HeroType | null) => void;
   onOpenCodex?: () => void;
+  compact?: boolean;
 }
 
 export const HeroSelector: React.FC<HeroSelectorProps> = ({
@@ -47,9 +48,87 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
   hoveredHero,
   setHoveredHero,
   onOpenCodex,
+  compact = false,
 }) => {
+  if (compact) {
+    return (
+      <div className="flex-1 relative rounded-xl flex flex-col min-w-0"
+        style={{
+          background: 'linear-gradient(180deg, rgba(38,32,24,0.97) 0%, rgba(24,20,14,0.99) 100%)',
+          border: '1.5px solid rgba(180,140,60,0.4)',
+          boxShadow: 'inset 0 0 24px rgba(180,140,60,0.05), 0 4px 24px rgba(0,0,0,0.5)',
+        }}>
+        <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
+        <div className="px-3 py-1.5 relative flex items-center justify-between"
+          style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
+          <div className="flex items-center gap-1.5">
+            <HeroHelmetIcon size={14} />
+            <span className="text-[8px] font-bold text-amber-300/90 tracking-[0.15em] uppercase">Champion</span>
+          </div>
+          {onOpenCodex && (
+            <button onClick={onOpenCodex} className="flex items-center justify-center w-4 h-4 rounded transition-all hover:scale-110 hover:brightness-125"
+              style={{ background: 'rgba(180,140,60,0.12)', border: '1px solid rgba(180,140,60,0.25)' }} title="View in Codex">
+              <Info size={8} className="text-amber-400/70" />
+            </button>
+          )}
+          <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
+        </div>
+        <div className="px-2 py-2 flex items-center gap-1.5 justify-center">
+          {heroOptions.map((heroType) => {
+            const hero = HERO_DATA[heroType];
+            const isSelected = selectedHero === heroType;
+            return (
+              <button
+                key={heroType}
+                onClick={() => setSelectedHero(heroType)}
+                onMouseEnter={() => setHoveredHero(heroType)}
+                onMouseLeave={() => setHoveredHero(null)}
+                className={`relative flex items-center justify-center rounded-full transition-all duration-200 ${isSelected ? "scale-115 z-10" : "hover:scale-110 hover:brightness-110"}`}
+                style={{
+                  width: 38, height: 38,
+                  background: isSelected
+                    ? `radial-gradient(circle at 30% 30%, ${hero.color}40, ${hero.color}15)`
+                    : 'radial-gradient(circle at 30% 30%, rgba(50,44,36,0.95), rgba(24,20,16,0.95))',
+                  border: `2px solid ${isSelected ? hero.color : 'rgba(100,90,70,0.3)'}`,
+                  boxShadow: isSelected ? `0 0 12px ${hero.color}35, inset 0 0 8px ${hero.color}15` : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  outline: isSelected ? `2px solid ${hero.color}50` : 'none',
+                  outlineOffset: '1px',
+                }}
+              >
+                <HeroSprite type={heroType} size={26} />
+                {isSelected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center border-[1.5px] border-stone-900 text-[7px] text-white font-bold"
+                    style={{ boxShadow: '0 0 6px rgba(245,158,11,0.5)' }}>
+                    ✓
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {hoveredHero && hoveredHero !== selectedHero && (
+          <div className="absolute bottom-full left-0 mb-2 w-80 rounded-xl z-50"
+            style={{
+              background: 'linear-gradient(180deg, rgba(38,32,24,0.99), rgba(24,20,14,0.99))',
+              border: '1.5px solid rgba(180,140,60,0.5)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.7), inset 0 0 20px rgba(180,140,60,0.04)',
+            }}>
+            <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.08)' }} />
+            <div className="p-3.5">
+              <div className="flex items-center gap-2.5 mb-2">
+                <HeroIcon type={hoveredHero} size={20} />
+                <span className="text-amber-200 font-bold text-sm">{HERO_DATA[hoveredHero].name}</span>
+              </div>
+              <p className="text-xs text-stone-400/90 mb-2 leading-relaxed">{HERO_DATA[hoveredHero].description}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
+    <div className="flex-1 relative rounded-xl flex flex-col min-w-0"
       style={{
         background: 'linear-gradient(180deg, rgba(38,32,24,0.97) 0%, rgba(24,20,14,0.99) 100%)',
         border: '1.5px solid rgba(180,140,60,0.4)',
@@ -58,11 +137,11 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
       {/* Inner border glow */}
       <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
       {/* Header */}
-      <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
+      <div className="px-3 py-2 relative flex items-center justify-between"
         style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <HeroHelmetIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
-          <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+          <HeroHelmetIcon size={18} />
+          <span className="text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.2em] uppercase">
             Select Champion
           </span>
         </div>
@@ -79,10 +158,10 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
             <Info size={10} className="text-amber-400/70" />
           </button>
         )}
-        <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
+        <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
       </div>
-      <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
-        <div className="grid-cols-4 grid sm:flex gap-1 sm:gap-1.5 mb-1.5 sm:mb-2 w-full">
+      <div className="p-3 flex-1 flex flex-col justify-between">
+        <div className="flex gap-1.5 mb-2 w-full">
           {heroOptions.map((heroType) => {
             const hero = HERO_DATA[heroType];
             const isSelected = selectedHero === heroType;
@@ -92,8 +171,8 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                 onClick={() => setSelectedHero(heroType)}
                 onMouseEnter={() => setHoveredHero(heroType)}
                 onMouseLeave={() => setHoveredHero(null)}
-                className={`relative flex flex-col items-center w-full p-0.5 sm:p-2.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
-                  ? "scale-105 sm:scale-110 z-10"
+                className={`relative flex flex-col items-center w-full p-2.5 rounded-lg transition-all duration-200 ${isSelected
+                  ? "scale-110 z-10"
                   : "hover:scale-105 hover:brightness-110"
                   }`}
                 style={{
@@ -108,19 +187,18 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                   outlineOffset: '1px',
                 }}
               >
-                <div className="scale-75 sm:scale-100">
+                <div>
                   <HeroSprite
                     type={heroType}
                     size={36}
-                    color={hero.color}
                   />
                 </div>
-                <span className="absolute -bottom-0.5 sm:-bottom-2 left-1/2 -translate-x-1/2 text-[6px] sm:text-[7px] font-semibold px-1 sm:px-1.5 py-px rounded hidden sm:inline-block whitespace-nowrap"
+                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[7px] font-semibold px-1.5 py-px rounded inline-block whitespace-nowrap"
                   style={{ background: HERO_ROLES[heroType].bg, border: `1px solid ${HERO_ROLES[heroType].border}` }}>
                   <span className={HERO_ROLES[heroType].color}>{HERO_ROLES[heroType].label}</span>
                 </span>
                 {isSelected && (
-                  <div className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-amber-500 rounded-full flex items-center justify-center border sm:border-2 border-stone-900 text-[6px] sm:text-[8px] text-white font-bold"
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center border-2 border-stone-900 text-[8px] text-white font-bold"
                     style={{ boxShadow: '0 0 6px rgba(245,158,11,0.5)' }}>
                     ✓
                   </div>

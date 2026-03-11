@@ -4,6 +4,15 @@ import type { TowerType } from "../types";
 import { ISO_Y_RATIO } from "../constants";
 import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import { lightenColor } from "./utils";
+import {
+  drawCannonGatling, drawCannonFlamethrower,
+  drawLibraryEQSmasher, drawLibraryBlizzard,
+  drawLabFocusedBeam, drawLabChainLightning,
+  drawArchShockwave, drawArchSymphony,
+  drawClubInvestmentBank, drawClubRecruitmentCenter,
+  drawStationCentaurStables, drawStationRoyalCavalry,
+  drawMortarMissileBattery, drawMortarEmberFoundry,
+} from "./towerLevel4Sprites";
 
 export const TowerSprite: React.FC<{
   type: TowerType;
@@ -32,6 +41,11 @@ export const TowerSprite: React.FC<{
 
     switch (type) {
       case "cannon": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawCannonGatling(ctx, cx, cy, s, t, animated, size);
+          else drawCannonFlamethrower(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // NASSAU CANNON - Dark Military Bunker with Orange Vents
         // Based on reference: Dark gray/black bunker with glowing orange vents
@@ -307,6 +321,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "library": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawLibraryEQSmasher(ctx, cx, cy, s, t, animated, size);
+          else drawLibraryBlizzard(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // FIRESTONE LIBRARY - Purple Gothic Tower with Ornate Architecture
         // Based on reference: Tall purple/gray stone tower with pointed spire
@@ -662,6 +681,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "lab": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawLabFocusedBeam(ctx, cx, cy, s, t, animated, size);
+          else drawLabChainLightning(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // E-QUAD LAB - Industrial Tesla Coil with Cyan Energy Orb
         // Based on reference: Blue-gray industrial building with glowing orb
@@ -996,6 +1020,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "arch": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawArchShockwave(ctx, cx, cy, s, t, animated, size);
+          else drawArchSymphony(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // BLAIR ARCH - Gothic Arch with Central Spire and Dynamic Portal
         // Tan stone base with thick arch and single central triangle spike
@@ -1319,6 +1348,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "club": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawClubInvestmentBank(ctx, cx, cy, s, t, animated, size);
+          else drawClubRecruitmentCenter(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // EATING CLUB - Elegant Green Colonial Mansion with Columns
         // Based on reference: Green mansion with white columns, $ symbol
@@ -1683,6 +1717,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "station": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawStationCentaurStables(ctx, cx, cy, s, t, animated, size);
+          else drawStationRoyalCavalry(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // DINKY STATION - Red Victorian Railway Station with Clock Tower
         // Based on reference: Red brick building with prominent clock tower
@@ -2115,6 +2154,11 @@ export const TowerSprite: React.FC<{
         break;
       }
       case "mortar": {
+        if (level === 4 && upgrade) {
+          if (upgrade === "A") drawMortarMissileBattery(ctx, cx, cy, s, t, animated, size);
+          else drawMortarEmberFoundry(ctx, cx, cy, s, t, animated, size);
+          break;
+        }
         // =====================================================================
         // PALMER MORTAR - Stacked hex-prism tiers with ammo foundation
         // =====================================================================

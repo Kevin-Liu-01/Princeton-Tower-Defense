@@ -35,6 +35,88 @@ export function renderLabTower(
   const d = baseWidth * zoom * 0.25;
   const h = baseHeight * zoom;
 
+  // Level 4 upgrade theme helpers
+  const is4A = tower.level === 4 && tower.upgrade === "A";
+  const is4B = tower.level === 4 && tower.upgrade === "B";
+  const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
+
+  const fnd1 = {
+    top: uc("#3a2a1a", "#302845", "#1a2a3a"), left: uc("#302218", "#28203a", "#122230"),
+    right: uc("#281a0a", "#201832", "#0a1a28"), leftBack: uc("#3d2d1d", "#332b48", "#1d2d3d"),
+    rightBack: uc("#352515", "#2b2340", "#152535"),
+  };
+  const fnd2 = {
+    top: uc("#45351a", "#3a3050", "#1a3545"), left: uc("#3d2d14", "#322848", "#142d3d"),
+    right: uc("#35250e", "#2a2040", "#0e2535"), leftBack: uc("#48381d", "#3d3353", "#1d3848"),
+    rightBack: uc("#403017", "#352b4b", "#173040"),
+  };
+  const fnd3 = {
+    top: uc("#4f3a1a", "#40355a", "#1a3a4f"), left: uc("#403015", "#382d50", "#153040"),
+    right: uc("#352510", "#302548", "#102535"), leftBack: uc("#55401d", "#43385d", "#1d4055"),
+    rightBack: uc("#483518", "#3b3055", "#183548"),
+  };
+  const bodyC = {
+    top: uc("#9b7a4d", "#8878b8", "#4d7a9b"), left: uc("#856a3a", "#7868a8", "#3a6585"),
+    right: uc("#7b5a2d", "#685898", "#2d5a7b"), leftBack: uc("#95754a", "#8575b5", "#4a7595"),
+    rightBack: uc("#88683d", "#7565a5", "#3d6888"),
+  };
+  const railRgb = uc("123, 90, 45", "110, 85, 150", "45, 90, 123");
+  const railC = {
+    rail: uc("#8a6a2a", "#7a58a8", "#2a6a8a"), topRail: uc("#aa8a3a", "#9a78c0", "#3a8aaa"),
+    backPanel: `rgba(${railRgb}, 0.35)`, frontPanel: `rgba(${railRgb}, 0.25)`,
+  };
+  const energy1 = uc("#ffaa00", "#b080ff", "#00ccff");
+  const energy2 = uc("#ffcc00", "#c8a0ff", "#00ffff");
+  const eR = uc("255, 170, 0", "176, 128, 255", "0, 204, 255");
+  const eR2 = uc("255, 204, 0", "200, 160, 255", "0, 255, 255");
+  const eRPlasma = uc("255, 200, 0", "190, 140, 255", "0, 255, 200");
+  const orbMid = uc("#ffff88", "#e0c0ff", "#88ffff");
+  const orbOuter = uc("#ff8800", "#8060cc", "#0088ff");
+  const copper1 = uc("#c9a227", "#8a90a8", "#b87333");
+  const copper2 = uc("#dab540", "#9aa0b8", "#d4944a");
+  const copper3 = uc("#e8c84d", "#aab0c8", "#c9a227");
+  const cable1 = uc("#ff8800", "#b070ee", "#ff5500");
+  const cable2 = uc("#ffaa00", "#9860cc", "#ff4400");
+
+  // Structural metal palette
+  const sm = {
+    darkest: uc("#4d3a2d", "#3d2868", "#2d4a6a"),
+    dark: uc("#5a4a3a", "#4a3878", "#3a5a7a"),
+    mid: uc("#6a5a3a", "#5a4888", "#3a6a8a"),
+    main: uc("#8a7a5a", "#7a68a8", "#5a8aaa"),
+    alt: uc("#7a6a4a", "#6a5898", "#4a7a9a"),
+    light: uc("#9a8a6a", "#8a78b8", "#6a9aba"),
+    lighter: uc("#aa9a7a", "#9a88c8", "#7aaaba"),
+    bolt: uc("#8a7a6a", "#7a68a8", "#6a8aaa"),
+    boltDk: uc("#6a5a4a", "#5a4888", "#4a6a8a"),
+    boltMd: uc("#7a6a5a", "#6a5898", "#5a7a9a"),
+    boltLt: uc("#9a8a70", "#8a78a8", "#7a9ab0"),
+    xbrace: uc("#706040", "#604080", "#4a7090"),
+    rod: uc("#ccaa88", "#a898cc", "#8ab8cc"),
+    insRod: uc("#a09070", "#8a78a8", "#7aa0b0"),
+    jbox: uc("#5a4a2a", "#3a2870", "#2a5a7a"),
+    jboxAlt: uc("#55452a", "#352868", "#2a5a75"),
+  };
+  const seamRgb = uc("70, 55, 30", "50, 30, 70", "30, 70, 100");
+  const seamHiRgb = uc("160, 130, 80", "130, 100, 180", "100, 160, 200");
+  const xbrRgb = uc("90, 70, 40", "70, 45, 100", "60, 90, 120");
+  const hlRgb = uc("220, 170, 80", "180, 150, 255", "120, 220, 255");
+  const bandHlRgb = uc("220, 170, 80", "180, 150, 255", "100, 220, 255");
+  const partRgb = uc("255, 230, 180", "220, 200, 255", "200, 255, 255");
+  const discRgb = uc("80, 60, 30", "60, 40, 90", "40, 80, 120");
+  const beaconLens = uc("255, 220, 150", "220, 200, 255", "150, 230, 255");
+  const radC = {
+    dark: uc("#3a2a1a", "#2a1840", "#153d5a"),
+    mid: uc("#4a3a1a", "#3a284a", "#1a4a6a"),
+    top: uc("#5a4a2a", "#3a2870", "#2a5a7a"),
+    fin: uc("70, 55, 30", "50, 30, 70", "30, 80, 120"),
+  };
+  const ventC = {
+    frame: uc("#352a1a", "#251840", "#1a3545"),
+    bg: uc("#201a0a", "#150828", "#0a2030"),
+    slat: uc("#55452a", "#3a2860", "#2a5a75"),
+  };
+
   // ========== STEPPED TECH FOUNDATION ==========
   // Lowest step — heavy concrete plinth
   drawIsometricPrism(
@@ -44,13 +126,7 @@ export function renderLabTower(
     baseWidth + 16,
     baseWidth + 16,
     3,
-    {
-      top: "#1a2a3a",
-      left: "#122230",
-      right: "#0a1a28",
-      leftBack: "#1d2d3d",
-      rightBack: "#152535",
-    },
+    fnd1,
     zoom,
   );
 
@@ -62,13 +138,7 @@ export function renderLabTower(
     baseWidth + 12,
     baseWidth + 12,
     3,
-    {
-      top: "#1a3545",
-      left: "#142d3d",
-      right: "#0e2535",
-      leftBack: "#1d3848",
-      rightBack: "#173040",
-    },
+    fnd2,
     zoom,
   );
 
@@ -80,13 +150,7 @@ export function renderLabTower(
     baseWidth + 8,
     baseWidth + 8,
     6,
-    {
-      top: "#1a3a4f",
-      left: "#153040",
-      right: "#102535",
-      leftBack: "#1d4055",
-      rightBack: "#183548",
-    },
+    fnd3,
     zoom,
   );
 
@@ -94,7 +158,7 @@ export function renderLabTower(
   const foundGlow = 0.3 + Math.sin(time * 2) * 0.15;
   const fndLabW = (baseWidth + 8) * zoom * 0.5;
   const fndLabD = (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR;
-  ctx.strokeStyle = `rgba(0, 255, 255, ${foundGlow})`;
+  ctx.strokeStyle = `rgba(${eR2}, ${foundGlow})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(screenPos.x - fndLabW, screenPos.y);
@@ -153,11 +217,11 @@ export function renderLabTower(
   for (const side of [-1, 1]) {
     const boltX = screenPos.x + side * fndLabW * 0.85;
     const boltY = screenPos.y + fndLabD * 0.15;
-    ctx.fillStyle = "#5a7a9a";
+    ctx.fillStyle = sm.boltMd;
     ctx.beginPath();
     ctx.arc(boltX, boltY, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#7a9ab0";
+    ctx.fillStyle = sm.boltLt;
     ctx.beginPath();
     ctx.arc(boltX - 0.3 * zoom, boltY - 0.3 * zoom, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -171,13 +235,7 @@ export function renderLabTower(
     baseWidth,
     baseWidth,
     baseHeight - 6,
-    {
-      top: "#4d7a9b",
-      left: "#3a6585",
-      right: "#2d5a7b",
-      leftBack: "#4a7595",
-      rightBack: "#3d6888",
-    },
+    bodyC,
     zoom,
   );
 
@@ -191,12 +249,7 @@ export function renderLabTower(
     5 * zoom,
     32,
     16,
-    {
-      rail: "#2a6a8a",
-      topRail: "#3a8aaa",
-      backPanel: "rgba(45, 90, 123, 0.35)",
-      frontPanel: "rgba(45, 90, 123, 0.25)",
-    },
+    railC,
     zoom,
   );
 
@@ -205,7 +258,7 @@ export function renderLabTower(
   const bodyTopY = screenPos.y + 2 * zoom - bodyH;
 
   // Left face — vertical panel seams
-  ctx.strokeStyle = "rgba(30, 70, 100, 0.4)";
+  ctx.strokeStyle = `rgba(${seamRgb}, 0.4)`;
   ctx.lineWidth = 0.6 * zoom;
   const panelSeams = 5;
   for (let s = 1; s < panelSeams; s++) {
@@ -239,7 +292,7 @@ export function renderLabTower(
     const seamT = r / horizSeams;
     const seamY = screenPos.y + 2 * zoom - bodyH * seamT;
     // Left face
-    ctx.strokeStyle = "rgba(30, 70, 100, 0.3)";
+    ctx.strokeStyle = `rgba(${seamRgb}, 0.3)`;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.95, seamY + d * 0.45);
@@ -252,7 +305,7 @@ export function renderLabTower(
     ctx.stroke();
 
     // Seam highlight (lighter line just above)
-    ctx.strokeStyle = "rgba(100, 160, 200, 0.12)";
+    ctx.strokeStyle = `rgba(${seamHiRgb}, 0.12)`;
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.95, seamY + d * 0.45 - 0.5 * zoom);
@@ -262,7 +315,7 @@ export function renderLabTower(
   }
 
   // Rivet rows along panel seams (left face visible rivets)
-  ctx.fillStyle = "#5a8aaa";
+  ctx.fillStyle = sm.main;
   for (let r = 0; r < horizSeams; r++) {
     const ry = screenPos.y + 2 * zoom - bodyH * ((r + 0.5) / horizSeams);
     for (let c = 0; c < 3; c++) {
@@ -325,7 +378,7 @@ export function renderLabTower(
     ctx.closePath();
     ctx.fill();
     // Main strut
-    ctx.fillStyle = "#3a6a8a";
+    ctx.fillStyle = sm.mid;
     ctx.beginPath();
     ctx.moveTo(strutX, strutBotY);
     ctx.lineTo(strutX + side * 2 * zoom, strutBotY + d * 0.12);
@@ -334,14 +387,14 @@ export function renderLabTower(
     ctx.closePath();
     ctx.fill();
     // Strut highlight
-    ctx.strokeStyle = "#6a9aba";
+    ctx.strokeStyle = sm.light;
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(strutX + side * 0.3 * zoom, strutBotY);
     ctx.lineTo(strutX + side * 0.3 * zoom, strutTopY);
     ctx.stroke();
     // Top and bottom caps
-    ctx.fillStyle = "#5a8aaa";
+    ctx.fillStyle = sm.main;
     for (const capY of [strutBotY, strutTopY]) {
       ctx.beginPath();
       ctx.ellipse(
@@ -361,7 +414,7 @@ export function renderLabTower(
   for (let band = 0; band < tower.level; band++) {
     const bandY = screenPos.y + 2 * zoom - bodyH * (0.25 + band * 0.25);
     const bandGlow = 0.2 + Math.sin(time * 2 + band * 1.5) * 0.1;
-    ctx.strokeStyle = `rgba(0, 200, 255, ${bandGlow})`;
+    ctx.strokeStyle = `rgba(${eR}, ${bandGlow})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.4);
@@ -369,7 +422,7 @@ export function renderLabTower(
     ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.4);
     ctx.stroke();
     // Band highlight
-    ctx.strokeStyle = `rgba(100, 220, 255, ${bandGlow * 0.5})`;
+    ctx.strokeStyle = `rgba(${bandHlRgb}, ${bandGlow * 0.5})`;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.9, bandY + d * 0.4 - 0.8 * zoom);
@@ -385,7 +438,7 @@ export function renderLabTower(
     const ringRadius = 12 + tower.level * 2 - ring * 2;
     const ringAlpha = 0.3 + Math.sin(time * 4 + ring) * 0.15;
 
-    ctx.strokeStyle = `rgba(0, 255, 255, ${ringAlpha})`;
+    ctx.strokeStyle = `rgba(${eR2}, ${ringAlpha})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -404,7 +457,7 @@ export function renderLabTower(
       const nodeAngle = ringRotation + ring * 0.5 + (node / 4) * Math.PI * 2;
       const nodeX = screenPos.x + Math.cos(nodeAngle) * ringRadius * zoom;
       const nodeY = ringY + Math.sin(nodeAngle) * ringRadius * 0.4 * zoom;
-      ctx.fillStyle = `rgba(0, 255, 255, ${ringAlpha + 0.2})`;
+      ctx.fillStyle = `rgba(${eR2}, ${ringAlpha + 0.2})`;
       ctx.beginPath();
       ctx.arc(nodeX, nodeY, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -428,7 +481,7 @@ export function renderLabTower(
     ctx.stroke();
 
     // Pipe body
-    ctx.strokeStyle = "#3a5a7a";
+    ctx.strokeStyle = sm.dark;
     ctx.lineWidth = 3.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(pipeStartX, pipeStartY);
@@ -436,7 +489,7 @@ export function renderLabTower(
     ctx.stroke();
 
     // Pipe highlight
-    ctx.strokeStyle = "#6a9aba";
+    ctx.strokeStyle = sm.light;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(pipeStartX - 0.5 * zoom, pipeStartY - 0.4 * zoom);
@@ -450,7 +503,7 @@ export function renderLabTower(
       const t = (cl + 0.5) / 4;
       const clX = pipeStartX + pipeDx * t;
       const clY = pipeStartY + pipeDy * t;
-      ctx.strokeStyle = "#5a8aaa";
+      ctx.strokeStyle = sm.main;
       ctx.lineWidth = 1.5 * zoom;
       const pAngle = Math.atan2(pipeDy, pipeDx) + Math.PI * 0.5;
       ctx.beginPath();
@@ -469,11 +522,11 @@ export function renderLabTower(
     for (const endT of [0, 1]) {
       const fX = pipeStartX + pipeDx * endT;
       const fY = pipeStartY + pipeDy * endT;
-      ctx.fillStyle = "#5a7a9a";
+      ctx.fillStyle = sm.boltMd;
       ctx.beginPath();
       ctx.arc(fX, fY, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#7aaaba";
+      ctx.strokeStyle = sm.lighter;
       ctx.lineWidth = 0.6 * zoom;
       ctx.stroke();
     }
@@ -492,14 +545,14 @@ export function renderLabTower(
     ctx.lineTo(crossRX + 0.5 * zoom, crossY + 0.8 * zoom);
     ctx.stroke();
     // Body
-    ctx.strokeStyle = "#3a6a8a";
+    ctx.strokeStyle = sm.mid;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(crossLX, crossY);
     ctx.lineTo(crossRX, crossY);
     ctx.stroke();
     // Highlight
-    ctx.strokeStyle = "#6a9aba";
+    ctx.strokeStyle = sm.light;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(crossLX, crossY - 0.5 * zoom);
@@ -509,8 +562,8 @@ export function renderLabTower(
     const flowGlow = 0.3 + Math.sin(time * 3) * 0.15;
     const flowPhase = (time * 2) % 1;
     const flowX = crossLX + (crossRX - crossLX) * flowPhase;
-    ctx.fillStyle = `rgba(0, 200, 255, ${flowGlow})`;
-    ctx.shadowColor = "#00ccff";
+    ctx.fillStyle = `rgba(${eR}, ${flowGlow})`;
+    ctx.shadowColor = energy1;
     ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
     ctx.arc(flowX, crossY, 2 * zoom, 0, Math.PI * 2);
@@ -564,7 +617,7 @@ export function renderLabTower(
       ctx.lineTo(bx, by);
       ctx.stroke();
       if (highlightAlpha > 0) {
-        ctx.strokeStyle = `rgba(120, 220, 255, ${highlightAlpha})`;
+        ctx.strokeStyle = `rgba(${hlRgb}, ${highlightAlpha})`;
         ctx.lineWidth = 0.8 * zoom;
         ctx.beginPath();
         ctx.moveTo(ax, ay - 0.5 * zoom);
@@ -579,18 +632,18 @@ export function renderLabTower(
       radius: number,
       glow: boolean,
     ) => {
-      ctx.fillStyle = "#6a8aaa";
+      ctx.fillStyle = sm.bolt;
       ctx.beginPath();
       ctx.arc(bx, by, radius * zoom, 0, Math.PI * 2);
       ctx.fill();
       if (glow) {
         const boltGlow = 0.35 + Math.sin(time * 3 + bx * 0.1) * 0.2;
-        ctx.fillStyle = `rgba(0, 200, 255, ${boltGlow})`;
+        ctx.fillStyle = `rgba(${eR}, ${boltGlow})`;
         ctx.beginPath();
         ctx.arc(bx, by, radius * 0.5 * zoom, 0, Math.PI * 2);
         ctx.fill();
       } else {
-        ctx.fillStyle = "#4a6a8a";
+        ctx.fillStyle = sm.boltDk;
         ctx.beginPath();
         ctx.arc(bx, by, radius * 0.5 * zoom, 0, Math.PI * 2);
         ctx.fill();
@@ -603,8 +656,8 @@ export function renderLabTower(
       const lv = { x: labPostBase[0].x, y: labPostBase[0].y - hy };
       const bv = { x: labPostBase[3].x, y: labPostBase[3].y - hy };
       const rv = { x: labPostBase[2].x, y: labPostBase[2].y - hy };
-      drawLabBeam(bv.x, bv.y, lv.x, lv.y, 2, "#3a5a7a", 0);
-      drawLabBeam(bv.x, bv.y, rv.x, rv.y, 2, "#2d4a6a", 0);
+      drawLabBeam(bv.x, bv.y, lv.x, lv.y, 2, sm.dark, 0);
+      drawLabBeam(bv.x, bv.y, rv.x, rv.y, 2, sm.darkest, 0);
     }
 
     // Back vertical posts
@@ -614,7 +667,7 @@ export function renderLabTower(
       labPostTop[3].x,
       labPostTop[3].y,
       2.2,
-      "#3a5a7a",
+      sm.dark,
       0,
     );
     drawLabBeam(
@@ -623,13 +676,13 @@ export function renderLabTower(
       labPostTop[0].x,
       labPostTop[0].y,
       2.2,
-      "#3a5a7a",
+      sm.dark,
       0.03,
     );
 
     // Back X-braces
     if (tower.level >= 3) {
-      ctx.strokeStyle = "rgba(60, 90, 120, 0.45)";
+      ctx.strokeStyle = `rgba(${xbrRgb}, 0.45)`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(labPostBase[3].x, labPostBase[3].y);
@@ -648,7 +701,7 @@ export function renderLabTower(
       labPostTop[1].x,
       labPostTop[1].y,
       2.8,
-      "#5a8aaa",
+      sm.main,
       0.08,
     );
     drawLabBeam(
@@ -657,7 +710,7 @@ export function renderLabTower(
       labPostTop[2].x,
       labPostTop[2].y,
       2.5,
-      "#4a7a9a",
+      sm.alt,
       0.06,
     );
 
@@ -667,12 +720,12 @@ export function renderLabTower(
       const lv = { x: labPostBase[0].x, y: labPostBase[0].y - hy };
       const fv = { x: labPostBase[1].x, y: labPostBase[1].y - hy };
       const rv = { x: labPostBase[2].x, y: labPostBase[2].y - hy };
-      drawLabBeam(lv.x, lv.y, fv.x, fv.y, 2.3, "#5a8aaa", 0.06);
-      drawLabBeam(fv.x, fv.y, rv.x, rv.y, 2.3, "#4a7a9a", 0.04);
+      drawLabBeam(lv.x, lv.y, fv.x, fv.y, 2.3, sm.main, 0.06);
+      drawLabBeam(fv.x, fv.y, rv.x, rv.y, 2.3, sm.alt, 0.04);
     }
 
     // --- Front X-braces ---
-    ctx.strokeStyle = "#4a7090";
+    ctx.strokeStyle = sm.xbrace;
     ctx.lineWidth = 1.4 * zoom;
     ctx.beginPath();
     ctx.moveTo(labPostBase[0].x, labPostBase[0].y);
@@ -708,7 +761,7 @@ export function renderLabTower(
     }
 
     // --- Power cables routed along scaffolding with sag ---
-    const cableColors = ["#ff5500", "#00ccff", "#ff5500"];
+    const cableColors = [cable1, energy1, cable1];
     for (let cable = 0; cable < (tower.level >= 3 ? 3 : 2); cable++) {
       const cableFrac = 0.2 + cable * 0.25;
       const hy = scaffH * cableFrac;
@@ -782,7 +835,7 @@ export function renderLabTower(
       const capD = 2 * zoom;
 
       // Left face of capacitor (isometric)
-      ctx.fillStyle = ci % 2 === 0 ? "#3a5a7a" : "#4a7a9a";
+      ctx.fillStyle = ci % 2 === 0 ? sm.dark : sm.alt;
       ctx.beginPath();
       ctx.moveTo(capX - capW, capY);
       ctx.lineTo(capX, capY + capD);
@@ -792,7 +845,7 @@ export function renderLabTower(
       ctx.fill();
 
       // Right face of capacitor
-      ctx.fillStyle = ci % 2 === 0 ? "#2a4a6a" : "#3a6a8a";
+      ctx.fillStyle = ci % 2 === 0 ? sm.darkest : sm.mid;
       ctx.beginPath();
       ctx.moveTo(capX, capY + capD);
       ctx.lineTo(capX + capW, capY);
@@ -802,7 +855,7 @@ export function renderLabTower(
       ctx.fill();
 
       // Top face
-      ctx.fillStyle = "#5a8aaa";
+      ctx.fillStyle = sm.main;
       ctx.beginPath();
       ctx.moveTo(capX - capW, capY - capHt);
       ctx.lineTo(capX, capY + capD - capHt);
@@ -813,7 +866,7 @@ export function renderLabTower(
 
       // Energy indicator glow ring
       const capGlow = 0.4 + Math.sin(time * 3 + ci * 1.5) * 0.25;
-      ctx.strokeStyle = `rgba(0, 200, 255, ${capGlow})`;
+      ctx.strokeStyle = `rgba(${eR}, ${capGlow})`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -828,7 +881,7 @@ export function renderLabTower(
       ctx.stroke();
 
       // Terminal nubs on top
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = copper3;
       ctx.beginPath();
       ctx.arc(
         capX - capW * 0.3,
@@ -860,7 +913,7 @@ export function renderLabTower(
       const coilBaseY = screenPos.y - h * 0.1;
 
       // Mini coil housing
-      ctx.fillStyle = "#2a4a6a";
+      ctx.fillStyle = sm.darkest;
       ctx.beginPath();
       ctx.moveTo(coilX - 6 * zoom, coilBaseY);
       ctx.lineTo(coilX - 4 * zoom, coilBaseY - sideCoilHeight);
@@ -924,7 +977,7 @@ export function renderLabTower(
       const miniOrbPulse = 0.6 + Math.sin(time * 5 + offsetX) * 0.3;
       const miniOrbY = coilBaseY - sideCoilHeight - 5 * zoom;
 
-      ctx.shadowColor = "#00ffff";
+      ctx.shadowColor = energy2;
       ctx.shadowBlur = 12 * zoom;
       const miniOrbGrad = ctx.createRadialGradient(
         coilX,
@@ -935,8 +988,8 @@ export function renderLabTower(
         5 * zoom,
       );
       miniOrbGrad.addColorStop(0, "#ffffff");
-      miniOrbGrad.addColorStop(0.4, "#88ffff");
-      miniOrbGrad.addColorStop(1, "#0088ff");
+      miniOrbGrad.addColorStop(0.4, orbMid);
+      miniOrbGrad.addColorStop(1, orbOuter);
       ctx.fillStyle = miniOrbGrad;
       ctx.beginPath();
       ctx.arc(coilX, miniOrbY, 5 * zoom * miniOrbPulse, 0, Math.PI * 2);
@@ -945,9 +998,9 @@ export function renderLabTower(
 
       // Energy arc from side coil to main tower
       const arcAlpha = 0.4 + Math.sin(time * 6 + offsetX) * 0.3;
-      ctx.strokeStyle = `rgba(0, 255, 255, ${arcAlpha})`;
+      ctx.strokeStyle = `rgba(${eR2}, ${arcAlpha})`;
       ctx.lineWidth = 1.5 * zoom;
-      ctx.shadowColor = "#00ffff";
+      ctx.shadowColor = energy2;
       ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
       ctx.moveTo(coilX, miniOrbY);
@@ -961,7 +1014,7 @@ export function renderLabTower(
       for (let arc = 0; arc < 3; arc++) {
         const arcAngle = time * 4 + arc * ((Math.PI * 2) / 3) + offsetX;
         const arcLen = (8 + Math.sin(time * 7 + arc) * 4) * zoom;
-        ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + Math.random() * 0.3})`;
+        ctx.strokeStyle = `rgba(${eR2}, ${0.3 + Math.random() * 0.3})`;
         ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(coilX, miniOrbY);
@@ -977,7 +1030,7 @@ export function renderLabTower(
     }
 
     // Plasma conduits on the ground
-    ctx.strokeStyle = `rgba(0, 255, 200, ${0.4 + Math.sin(time * 3) * 0.2})`;
+    ctx.strokeStyle = `rgba(${eRPlasma}, ${0.4 + Math.sin(time * 3) * 0.2})`;
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([4 * zoom, 4 * zoom]);
     ctx.lineDashOffset = -time * 25;
@@ -992,7 +1045,7 @@ export function renderLabTower(
     ctx.setLineDash([]);
 
     // Bundled wiring harness (from side coils to tower body)
-    const wireColors = ["#ff4400", "#00bbdd", "#ff6622", "#00ddaa"];
+    const wireColors = [cable2, uc("#ddaa00", "#bb00dd", "#00bbdd"), uc("#ffaa22", "#dd22ff", "#ff6622"), uc("#ddcc00", "#aa00dd", "#00ddaa")];
     const wireCount = 4 + tower.level;
     for (let wire = 0; wire < wireCount; wire++) {
       const wireFrac = 0.08 + (wire / wireCount) * 0.55;
@@ -1035,7 +1088,7 @@ export function renderLabTower(
       for (let ci = 0; ci < 2; ci++) {
         const clampY = screenPos.y - h * (0.18 + ci * 0.28);
         const clampX = screenPos.x + side * w * 0.52;
-        ctx.fillStyle = "#3a5a7a";
+        ctx.fillStyle = sm.dark;
         ctx.beginPath();
         ctx.ellipse(
           clampX,
@@ -1047,7 +1100,7 @@ export function renderLabTower(
           Math.PI * 2,
         );
         ctx.fill();
-        ctx.strokeStyle = "#5a8aaa";
+        ctx.strokeStyle = sm.main;
         ctx.lineWidth = 0.6 * zoom;
         ctx.stroke();
       }
@@ -1059,7 +1112,7 @@ export function renderLabTower(
       const ringRadius = w * (0.7 + ring * 0.15);
       const ringAlpha = 0.25 + Math.sin(time * 4 + ring) * 0.15;
 
-      ctx.strokeStyle = `rgba(0, 255, 200, ${ringAlpha})`;
+      ctx.strokeStyle = `rgba(${eRPlasma}, ${ringAlpha})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -1082,7 +1135,7 @@ export function renderLabTower(
       const px = screenPos.x + Math.cos(particleAngle) * particleDist;
       const py = particleY + Math.sin(particleAngle) * particleDist * 0.35;
 
-      ctx.fillStyle = `rgba(200, 255, 255, ${0.4 + Math.sin(time * 8 + p) * 0.3})`;
+      ctx.fillStyle = `rgba(${partRgb}, ${0.4 + Math.sin(time * 8 + p) * 0.3})`;
       ctx.beginPath();
       ctx.arc(px, py, 2 * zoom, 0, Math.PI * 2);
       ctx.fill();
@@ -1096,10 +1149,10 @@ export function renderLabTower(
     const l4AttackPulse = l4IsAttacking
       ? Math.sin((l4TimeSinceFire / 400) * Math.PI)
       : 0;
-    const l4Accent = tower.upgrade === "A" ? "255, 180, 80" : "110, 125, 255";
+    const l4Accent = is4A ? "255, 180, 80" : "176, 148, 255";
 
     // --- REINFORCED STRUCTURAL CROSS-BRACING ---
-    ctx.strokeStyle = "#4a7a9a";
+    ctx.strokeStyle = sm.alt;
     ctx.lineWidth = 2.5 * zoom;
     for (const side of [-1, 1]) {
       ctx.beginPath();
@@ -1137,19 +1190,19 @@ export function renderLabTower(
       const pY = screenPos.y - pp.sy * h;
       const pistonExt =
         (3 + Math.sin(time * 2.5 + pi * 1.5) * 2 + l4AttackPulse * 4) * zoom;
-      ctx.fillStyle = "#3a5a7a";
+      ctx.fillStyle = sm.dark;
       ctx.fillRect(pX - 2.5 * zoom, pY - 8 * zoom, 5 * zoom, 8 * zoom);
-      ctx.strokeStyle = "#5a8aaa";
+      ctx.strokeStyle = sm.main;
       ctx.lineWidth = 0.7 * zoom;
       ctx.strokeRect(pX - 2.5 * zoom, pY - 8 * zoom, 5 * zoom, 8 * zoom);
-      ctx.fillStyle = "#8ab8cc";
+      ctx.fillStyle = sm.rod;
       ctx.fillRect(
         pX - 1 * zoom,
         pY - 8 * zoom - pistonExt,
         2 * zoom,
         pistonExt + 2 * zoom,
       );
-      ctx.fillStyle = "#5a8aaa";
+      ctx.fillStyle = sm.main;
       ctx.beginPath();
       ctx.ellipse(
         pX,
@@ -1182,7 +1235,7 @@ export function renderLabTower(
     for (const side of [-1, 1]) {
       const insX = screenPos.x + side * w * 1.08;
       const insTopY = screenPos.y - h * 0.55;
-      ctx.strokeStyle = "#6a8aaa";
+      ctx.strokeStyle = sm.bolt;
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
       ctx.moveTo(insX, insTopY - 2 * zoom);
@@ -1191,7 +1244,7 @@ export function renderLabTower(
       for (let dd = 0; dd < 4; dd++) {
         const discY = insTopY + dd * 3 * zoom;
         const discR = (3.5 - dd * 0.25) * zoom;
-        ctx.fillStyle = dd % 2 === 0 ? "#5a7a9a" : "#4a6a8a";
+        ctx.fillStyle = dd % 2 === 0 ? sm.boltMd : sm.boltDk;
         ctx.beginPath();
         ctx.ellipse(insX, discY, discR, discR * 0.35, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -1209,7 +1262,7 @@ export function renderLabTower(
         );
         ctx.stroke();
         if (dd < 3) {
-          ctx.fillStyle = "#7aa0b0";
+          ctx.fillStyle = sm.insRod;
           ctx.fillRect(
             insX - 0.4 * zoom,
             discY + discR * 0.3,
@@ -1226,9 +1279,9 @@ export function renderLabTower(
       const dX = screenPos.x + dSide * w * 0.85;
       const dY = screenPos.y - h * 0.35;
       const swing = Math.sin(time * 3.5 + di * 2.1) * 3 * zoom;
-      ctx.fillStyle = "#5a7a9a";
+      ctx.fillStyle = sm.boltMd;
       ctx.fillRect(dX - 1.8 * zoom, dY - 0.8 * zoom, 3.6 * zoom, 1.6 * zoom);
-      ctx.strokeStyle = "#7a9ab0";
+      ctx.strokeStyle = sm.boltLt;
       ctx.lineWidth = 0.7 * zoom;
       ctx.beginPath();
       ctx.moveTo(dX - 5.5 * zoom, dY + 3.5 * zoom + swing);
@@ -1242,11 +1295,11 @@ export function renderLabTower(
       for (const ws of [-1, 1]) {
         const wX = dX + ws * 5.5 * zoom;
         const wY = dY + 3.5 * zoom + (ws === -1 ? swing : -swing);
-        ctx.fillStyle = "#3a5a7a";
+        ctx.fillStyle = sm.dark;
         ctx.beginPath();
         ctx.ellipse(wX, wY, 1.8 * zoom, 2.8 * zoom, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "#5a8aaa";
+        ctx.strokeStyle = sm.main;
         ctx.lineWidth = 0.4 * zoom;
         ctx.stroke();
       }
@@ -1257,9 +1310,9 @@ export function renderLabTower(
       const barX = screenPos.x + side * w * 0.5;
       const barTop = screenPos.y - h * 0.68;
       const barBot = screenPos.y - h * 0.08;
-      ctx.fillStyle = "#b87333";
+      ctx.fillStyle = copper1;
       ctx.fillRect(barX - 1.2 * zoom, barTop, 2.4 * zoom, barBot - barTop);
-      ctx.fillStyle = "#d4944a";
+      ctx.fillStyle = copper2;
       ctx.fillRect(barX - 0.4 * zoom, barTop, 0.8 * zoom, barBot - barTop);
       for (let cp = 0; cp < 4; cp++) {
         const phase = (time * 3 + cp * 0.25) % 1;
@@ -1306,7 +1359,7 @@ export function renderLabTower(
     const discRadius = 6 + disc * 2;
     const discY = disc * 8 * zoom;
 
-    ctx.fillStyle = `rgba(40, 80, 120, ${0.6 - disc * 0.1})`;
+    ctx.fillStyle = `rgba(${discRgb}, ${0.6 - disc * 0.1})`;
     ctx.beginPath();
     ctx.ellipse(
       0,
@@ -1320,7 +1373,7 @@ export function renderLabTower(
     ctx.fill();
 
     // Disc edge glow
-    ctx.strokeStyle = `rgba(0, 255, 255, ${
+    ctx.strokeStyle = `rgba(${eR2}, ${
       0.5 + Math.sin(time * 5 + disc) * 0.3
     })`;
     ctx.lineWidth = 2 * zoom;
@@ -1338,7 +1391,7 @@ export function renderLabTower(
       ((baseHeight - 6) * zoom * i) / (tower.level + 2);
 
     // Left face conduit — bezier for natural routing
-    ctx.strokeStyle = `rgba(0, 200, 255, ${conduitGlow})`;
+    ctx.strokeStyle = `rgba(${eR}, ${conduitGlow})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.15, lineY + d * 0.25);
@@ -1362,7 +1415,7 @@ export function renderLabTower(
     ctx.stroke();
 
     // Junction boxes at endpoints
-    ctx.fillStyle = "#2a5a7a";
+    ctx.fillStyle = sm.jbox;
     ctx.fillRect(
       screenPos.x - w * 0.85 - 1.5 * zoom,
       lineY - d * 0.2 - 1 * zoom,
@@ -1387,7 +1440,7 @@ export function renderLabTower(
     // Radiator body (isometric box)
     const radDOff = 2 * zoom;
     // Left face
-    ctx.fillStyle = side === -1 ? "#1a4a6a" : "#153d5a";
+    ctx.fillStyle = side === -1 ? radC.mid : radC.dark;
     ctx.beginPath();
     ctx.moveTo(radX - radW, radY);
     ctx.lineTo(radX, radY + radDOff);
@@ -1396,7 +1449,7 @@ export function renderLabTower(
     ctx.closePath();
     ctx.fill();
     // Right face
-    ctx.fillStyle = side === -1 ? "#153d5a" : "#1a4a6a";
+    ctx.fillStyle = side === -1 ? radC.dark : radC.mid;
     ctx.beginPath();
     ctx.moveTo(radX, radY + radDOff);
     ctx.lineTo(radX + radW, radY);
@@ -1405,7 +1458,7 @@ export function renderLabTower(
     ctx.closePath();
     ctx.fill();
     // Top face
-    ctx.fillStyle = "#2a5a7a";
+    ctx.fillStyle = radC.top;
     ctx.beginPath();
     ctx.moveTo(radX - radW, radY - radHt);
     ctx.lineTo(radX, radY + radDOff - radHt);
@@ -1415,7 +1468,7 @@ export function renderLabTower(
     ctx.fill();
 
     // Radiator fins (horizontal lines)
-    ctx.strokeStyle = "rgba(30, 80, 120, 0.5)";
+    ctx.strokeStyle = `rgba(${radC.fin}, 0.5)`;
     ctx.lineWidth = 0.5 * zoom;
     for (let fin = 1; fin < 8; fin++) {
       const finT = fin / 8;
@@ -1428,7 +1481,7 @@ export function renderLabTower(
     }
 
     // Coolant inlet/outlet pipes
-    ctx.fillStyle = "#3a6a8a";
+    ctx.fillStyle = sm.mid;
     ctx.beginPath();
     ctx.arc(radX, radY - radHt - radDOff + zoom, 2 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1438,7 +1491,7 @@ export function renderLabTower(
 
     // Heat shimmer glow
     const heatGlow = 0.15 + Math.sin(time * 3 + side * 2) * 0.1;
-    ctx.fillStyle = `rgba(0, 200, 255, ${heatGlow})`;
+    ctx.fillStyle = `rgba(${eR}, ${heatGlow})`;
     ctx.beginPath();
     ctx.ellipse(
       radX,
@@ -1459,13 +1512,13 @@ export function renderLabTower(
       const ventX = screenPos.x + side * w * 0.55;
       const face = side === -1 ? "left" as const : "right" as const;
       drawIsoFlushVent(ctx, ventX, ventY, 5, 3, face, zoom, {
-        frameColor: "#1a3545",
-        bgColor: "#0a2030",
-        slatColor: "#2a5a75",
+        frameColor: ventC.frame,
+        bgColor: ventC.bg,
+        slatColor: ventC.slat,
         slats: 3,
       });
       const ventGlow = 0.25 + Math.sin(time * 4 + i * 0.5 + side) * 0.15;
-      ctx.fillStyle = `rgba(0, 200, 255, ${ventGlow})`;
+      ctx.fillStyle = `rgba(${eR}, ${ventGlow})`;
       traceIsoFlushRect(ctx, ventX, ventY, 4, 2.1, face, zoom);
       ctx.fill();
     }
@@ -1479,7 +1532,7 @@ export function renderLabTower(
     const traceX2 = screenPos.x + side * w * 0.72;
 
     // Main vertical trace
-    ctx.strokeStyle = "#4a7a9a";
+    ctx.strokeStyle = sm.alt;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(traceX0, screenPos.y - h * 0.15);
@@ -1499,7 +1552,7 @@ export function renderLabTower(
     ctx.stroke();
 
     // Secondary trace (thinner)
-    ctx.strokeStyle = "#3a6a8a";
+    ctx.strokeStyle = sm.mid;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(traceX0 + side * 3 * zoom, screenPos.y - h * 0.2);
@@ -1531,8 +1584,8 @@ export function renderLabTower(
     }
 
     const pulseAlpha = Math.sin(currentPhase * Math.PI) * 0.8;
-    ctx.fillStyle = `rgba(0, 220, 255, ${pulseAlpha})`;
-    ctx.shadowColor = "#00ccff";
+    ctx.fillStyle = `rgba(${eR}, ${pulseAlpha})`;
+    ctx.shadowColor = energy1;
     ctx.shadowBlur = 5 * zoom;
     ctx.beginPath();
     ctx.arc(cpX, cpY, 1.8 * zoom, 0, Math.PI * 2);
@@ -1541,12 +1594,12 @@ export function renderLabTower(
 
     // Terminal node at end
     const nodeGlow = 0.5 + Math.sin(time * 4 + side * 2) * 0.25;
-    ctx.fillStyle = "#2a5a7a";
+    ctx.fillStyle = sm.jbox;
     ctx.beginPath();
     ctx.arc(traceX2, screenPos.y - h * 0.48, 3.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = `rgba(0, 220, 255, ${nodeGlow})`;
-    ctx.shadowColor = "#00ccff";
+    ctx.fillStyle = `rgba(${eR}, ${nodeGlow})`;
+    ctx.shadowColor = energy1;
     ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
     ctx.arc(traceX2, screenPos.y - h * 0.48, 2 * zoom, 0, Math.PI * 2);
@@ -1554,7 +1607,7 @@ export function renderLabTower(
     ctx.shadowBlur = 0;
 
     // SMD component pads along traces
-    ctx.fillStyle = "#5a8aaa";
+    ctx.fillStyle = sm.main;
     const padPositions = [0.22, 0.28, 0.33];
     for (const padT of padPositions) {
       const padY = screenPos.y - h * padT;
@@ -1574,14 +1627,14 @@ export function renderLabTower(
   const dispH = 10 * zoom;
 
   // Panel housing
-  ctx.fillStyle = "#0a1a28";
+  ctx.fillStyle = fnd1.right;
   ctx.fillRect(dispX - dispW * 0.5, dispY, dispW, dispH);
   // Beveled frame
-  ctx.strokeStyle = "#3a6a8a";
+  ctx.strokeStyle = sm.mid;
   ctx.lineWidth = 1.5 * zoom;
   ctx.strokeRect(dispX - dispW * 0.5, dispY, dispW, dispH);
   // Inner bezel
-  ctx.strokeStyle = "#2a5a75";
+  ctx.strokeStyle = sm.jboxAlt;
   ctx.lineWidth = 0.5 * zoom;
   ctx.strokeRect(
     dispX - dispW * 0.5 + 1.5 * zoom,
@@ -1592,7 +1645,7 @@ export function renderLabTower(
 
   // Screen content — scrolling hex data
   const screenGlow = 0.6 + Math.sin(time * 3) * 0.2;
-  ctx.fillStyle = `rgba(0, 200, 255, ${screenGlow * 0.7})`;
+  ctx.fillStyle = `rgba(${eR}, ${screenGlow * 0.7})`;
   ctx.font = `${3.5 * zoom}px monospace`;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
@@ -1613,7 +1666,7 @@ export function renderLabTower(
   }
 
   // Waveform overlay
-  ctx.strokeStyle = `rgba(0, 255, 255, ${screenGlow})`;
+  ctx.strokeStyle = `rgba(${eR2}, ${screenGlow})`;
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   for (let i = 0; i < 10; i++) {
@@ -1639,11 +1692,11 @@ export function renderLabTower(
   ];
   for (const bp of beaconPositions) {
     // Beacon mount
-    ctx.fillStyle = "#3a5a7a";
+    ctx.fillStyle = sm.dark;
     ctx.fillRect(bp.x - 1.5 * zoom, bp.y, 3 * zoom, 3 * zoom);
 
     // Beacon dome
-    ctx.fillStyle = "#2a4a6a";
+    ctx.fillStyle = sm.darkest;
     ctx.beginPath();
     ctx.arc(bp.x, bp.y, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1651,8 +1704,8 @@ export function renderLabTower(
     // Rotating beam effect
     const beamAngle = time * 5 + bp.phase * Math.PI * 2;
     const beamAlpha = 0.4 + Math.sin(beamAngle) * 0.3;
-    ctx.fillStyle = `rgba(0, 200, 255, ${beamAlpha})`;
-    ctx.shadowColor = "#00ccff";
+    ctx.fillStyle = `rgba(${eR}, ${beamAlpha})`;
+    ctx.shadowColor = energy1;
     ctx.shadowBlur = 5 * zoom;
     ctx.beginPath();
     ctx.arc(bp.x, bp.y, 2 * zoom, 0, Math.PI * 2);
@@ -1660,7 +1713,7 @@ export function renderLabTower(
     ctx.shadowBlur = 0;
 
     // Beacon lens highlight
-    ctx.fillStyle = "rgba(150, 230, 255, 0.3)";
+    ctx.fillStyle = `rgba(${beaconLens}, 0.3)`;
     ctx.beginPath();
     ctx.arc(bp.x - 0.5 * zoom, bp.y - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -1673,12 +1726,7 @@ export function renderLabTower(
   const labTopRailRX = w * 0.88;
   const labTopRailRY = d * 0.88;
   const labTopRailH = 5 * zoom;
-  const labTopRailColors = {
-    rail: "#2a6a8a",
-    topRail: "#3a8aaa",
-    backPanel: "rgba(45, 90, 123, 0.35)",
-    frontPanel: "rgba(45, 90, 123, 0.25)",
-  };
+  const labTopRailColors = railC;
   drawIsometricRailing(
     ctx,
     screenPos.x,

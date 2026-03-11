@@ -50,6 +50,7 @@ interface SpellSelectorProps {
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
   onOpenCodex?: () => void;
+  compact?: boolean;
 }
 
 export const SpellSelector: React.FC<SpellSelectorProps> = ({
@@ -63,6 +64,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   spellUpgradeLevels,
   upgradeSpell,
   onOpenCodex,
+  compact = false,
 }) => {
   const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
   const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
@@ -73,8 +75,107 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
     spellUpgradeLevels.reinforcements
   );
 
+  const spellBorderColors: Record<SpellType, string> = {
+    fireball: "rgba(234,88,12,0.5)",
+    lightning: "rgba(234,179,8,0.5)",
+    freeze: "rgba(6,182,212,0.5)",
+    payday: "rgba(245,158,11,0.5)",
+    reinforcements: "rgba(16,185,129,0.5)",
+  };
+
+  if (compact) {
+    return (
+      <div className="flex-1 relative rounded-xl flex flex-col min-w-0"
+        style={{
+          background: 'linear-gradient(180deg, rgba(30,22,40,0.97) 0%, rgba(20,14,30,0.99) 100%)',
+          border: '1.5px solid rgba(140,80,200,0.35)',
+          boxShadow: 'inset 0 0 24px rgba(140,80,200,0.04), 0 4px 24px rgba(0,0,0,0.5)',
+        }}>
+        <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(140,80,200,0.08)' }} />
+        <div className="px-3 py-1.5 relative flex items-center justify-between"
+          style={{ background: 'linear-gradient(90deg, rgba(120,60,180,0.15), rgba(80,30,140,0.08), transparent)' }}>
+          <div className="flex items-center gap-1.5">
+            <SpellOrbIcon size={14} />
+            <span className="text-[8px] font-bold text-purple-300/90 tracking-[0.15em] uppercase">Spells</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="w-2 h-2 rounded-sm transition-all duration-300"
+                  style={{
+                    background: i < selectedSpells.length ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(60,40,80,0.4)',
+                    border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
+                  }} />
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setShowUpgradeModal(true)}
+              className="flex items-center gap-0.5 rounded border py-0.5 px-1.5 transition-all hover:brightness-110"
+              style={{ background: "linear-gradient(180deg, rgba(98,72,18,0.82), rgba(72,52,12,0.78))", borderColor: "rgba(250,204,21,0.45)" }}>
+              <EnchantedAnvilIcon size={10} />
+              <span className="text-[7px] font-bold text-yellow-200 flex items-center gap-0.5">
+                <Star size={7} className="fill-yellow-300 text-yellow-300" />{availableSpellStars}
+              </span>
+            </button>
+            {onOpenCodex && (
+              <button onClick={onOpenCodex} className="flex items-center justify-center w-4 h-4 rounded transition-all hover:scale-110 hover:brightness-125"
+                style={{ background: 'rgba(140,80,200,0.12)', border: '1px solid rgba(140,80,200,0.25)' }} title="View in Codex">
+                <Info size={8} className="text-purple-400/70" />
+              </button>
+            )}
+          </div>
+          <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
+        </div>
+        <div className="px-2 py-2 flex items-center gap-1.5 justify-center">
+          {spellOptions.map((spellType) => {
+            const isSelected = selectedSpells.includes(spellType);
+            const canSelect = isSelected || selectedSpells.length < 3;
+            const spellIndex = selectedSpells.indexOf(spellType);
+            const borderColor = spellBorderColors[spellType];
+            return (
+              <button
+                key={spellType}
+                onClick={() => toggleSpell(spellType)}
+                onMouseEnter={() => setHoveredSpell(spellType)}
+                onMouseLeave={() => setHoveredSpell(null)}
+                disabled={!canSelect && !isSelected}
+                className={`relative flex items-center justify-center rounded-full transition-all duration-200 ${isSelected ? "scale-115 z-10" : canSelect ? "hover:scale-110 hover:brightness-110" : "opacity-35 cursor-not-allowed"}`}
+                style={{
+                  width: 38, height: 38,
+                  background: isSelected
+                    ? 'radial-gradient(circle at 30% 30%, rgba(120,50,200,0.3), rgba(60,20,100,0.2))'
+                    : 'radial-gradient(circle at 30% 30%, rgba(40,30,50,0.95), rgba(20,14,28,0.95))',
+                  border: `2px solid ${isSelected ? borderColor : 'rgba(80,60,100,0.3)'}`,
+                  boxShadow: isSelected ? `0 0 12px ${borderColor}, inset 0 0 8px rgba(168,85,247,0.1)` : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                  outline: isSelected ? `2px solid ${borderColor}` : 'none',
+                  outlineOffset: '1px',
+                }}
+              >
+                <SpellSprite type={spellType} size={24} />
+                {isSelected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] text-white font-bold border-[1.5px] border-stone-900"
+                    style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 6px rgba(168,85,247,0.5)' }}>
+                    {spellIndex + 1}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <SpellUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          availableStars={availableSpellStars}
+          totalStarsEarned={totalSpellStarsEarned}
+          spentStars={spentSpellStars}
+          spellUpgradeLevels={spellUpgradeLevels}
+          onUpgradeSpell={upgradeSpell}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
+    <div className="flex-1 relative rounded-xl flex flex-col min-w-0"
       style={{
         background: 'linear-gradient(180deg, rgba(30,22,40,0.97) 0%, rgba(20,14,30,0.99) 100%)',
         border: '1.5px solid rgba(140,80,200,0.35)',
@@ -83,19 +184,19 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
       {/* Inner border glow */}
       <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(140,80,200,0.08)' }} />
       {/* Header */}
-      <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
+      <div className="px-3 py-2 relative flex items-center justify-between"
         style={{ background: 'linear-gradient(90deg, rgba(120,60,180,0.15), rgba(80,30,140,0.08), transparent)' }}>
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <SpellOrbIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
-          <span className="text-[8px] sm:text-[9px] font-bold text-purple-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-            <span className="hidden sm:inline">Select </span>Spells
+        <div className="flex items-center gap-2">
+          <SpellOrbIcon size={18} />
+          <span className="text-[9px] font-bold text-purple-300/90 tracking-[0.2em] uppercase">
+            Select Spells
           </span>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-2">
           {/* Spell slots indicator */}
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="flex items-center gap-1">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm transition-all duration-300"
+              <div key={i} className="w-2.5 h-2.5 rounded-sm transition-all duration-300"
                 style={{
                   background: i < selectedSpells.length
                     ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
@@ -119,9 +220,9 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             </button>
           )}
         </div>
-        <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
+        <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
       </div>
-      <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
+      <div className="p-3 flex-1 flex flex-col justify-between">
         {(() => {
           const spellLabels: Record<SpellType, { nameColor: string; borderColor: string; trait: string; traitColor: string; traitBg: string; traitBorder: string }> = {
             fireball: { nameColor: "text-orange-300", borderColor: "rgba(234,88,12,0.4)", trait: "AoE Burn", traitColor: "text-red-300/80", traitBg: "rgba(127,29,29,0.25)", traitBorder: "rgba(127,29,29,0.2)" },
@@ -131,7 +232,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             reinforcements: { nameColor: "text-emerald-300", borderColor: "rgba(16,185,129,0.4)", trait: "Summon Units", traitColor: "text-emerald-300/80", traitBg: "rgba(6,78,59,0.25)", traitBorder: "rgba(6,78,59,0.2)" },
           };
           return (
-            <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
+            <div className="flex gap-1.5">
               {spellOptions.map((spellType) => {
                 const isSelected = selectedSpells.includes(spellType);
                 const canSelect = isSelected || selectedSpells.length < 3;
@@ -148,7 +249,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     onMouseEnter={() => setHoveredSpell(spellType)}
                     onMouseLeave={() => setHoveredSpell(null)}
                     disabled={!canSelect && !isSelected}
-                    className={`relative w-full p-1 sm:p-1.5 pb-0.5 sm:pb-1 flex flex-col items-center gap-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
+                    className={`relative w-full p-1.5 pb-1 flex flex-col items-center gap-0.5 rounded-lg transition-all duration-200 ${isSelected
                       ? "z-10"
                       : canSelect
                         ? "hover:scale-105 hover:brightness-110"
@@ -171,32 +272,32 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     <div className="absolute top-0.5 left-0.5 rounded border border-yellow-500/35 bg-yellow-900/45 px-1 py-px text-[7px] font-bold text-yellow-200">
                       Lv {spellLevel + 1}
                     </div>
-                    <div className="scale-75 sm:scale-100">
+                    <div>
                       <SpellSprite type={spellType} size={32} />
                     </div>
                     {label && (
                       <>
-                        <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{spellData?.shortName ?? spellType}</span>
-                        <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
-                          <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
+                        <span className={`text-[8px] font-semibold leading-none ${label.nameColor}`}>{spellData?.shortName ?? spellType}</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[7px] font-medium px-1 py-px rounded flex items-center gap-0.5"
                             style={{ background: spellCost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${spellCost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
-                            <Coins size={6} className={`sm:w-[7px] sm:h-[7px] ${spellCost > 0 ? "text-amber-400/70" : "text-green-400/70"}`} />
+                            <Coins size={7} className={spellCost > 0 ? "text-amber-400/70" : "text-green-400/70"} />
                             <span className={spellCost > 0 ? "text-amber-300/80" : "text-green-300/80"}>{spellCost > 0 ? spellCost : "Free"}</span>
                           </span>
-                          <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
+                          <span className="text-[7px] font-medium px-1 py-px rounded flex items-center gap-0.5"
                             style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(30,58,138,0.2)' }}>
-                            <Clock size={6} className="text-blue-400/70 sm:w-[7px] sm:h-[7px]" />
+                            <Clock size={7} className="text-blue-400/70" />
                             <span className="text-blue-300/80">{spellCooldownSeconds}s</span>
                           </span>
                         </div>
-                        <span className="text-[6px] sm:text-[7px] font-semibold px-1 sm:px-1.5 py-px rounded mt-0.5 hidden sm:inline-block"
+                        <span className="text-[7px] font-semibold px-1.5 py-px rounded mt-0.5 inline-block"
                           style={{ background: label.traitBg, border: `1px solid ${label.traitBorder}` }}>
                           <span className={label.traitColor}>{label.trait}</span>
                         </span>
                       </>
                     )}
                     {isSelected && (
-                      <div className="absolute -top-1 sm:-top-1.5 -right-1 sm:-right-1.5 w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[10px] text-white font-bold border sm:border-2 border-stone-900"
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-stone-900"
                         style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 6px rgba(168,85,247,0.5)' }}>
                         {spellIndex + 1}
                       </div>
@@ -204,28 +305,11 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   </button>
                 );
               })}
-              <button
-                type="button"
-                onClick={() => setShowUpgradeModal(true)}
-                className="sm:hidden relative w-full p-1 pb-0.5 flex flex-col items-center justify-center gap-1 rounded-md transition-all hover:scale-105 hover:brightness-110"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(98,72,18,0.45), rgba(72,52,12,0.35))',
-                  border: '1.5px solid rgba(250,204,21,0.35)',
-                  boxShadow: 'inset 0 0 12px rgba(250,204,21,0.08)',
-                }}
-              >
-                <EnchantedAnvilIcon size={22} />
-                <span className="text-[7px] font-bold uppercase tracking-wide text-yellow-200">Upgrades</span>
-                <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[7px] font-semibold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">
-                  <Star size={8} className="fill-yellow-300 text-yellow-300" />
-                  {availableSpellStars}
-                </span>
-              </button>
             </div>
           );
         })()}
         {/* Spell loadout summary */}
-        <div className="hidden sm:block mt-auto pt-2">
+        <div className="mt-auto pt-2">
           <div className="h-px mb-2" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.2) 30%, rgba(140,80,200,0.2) 70%, transparent)' }} />
           <div className="flex items-center gap-2">
             {selectedSpells.length === 3 ? (
@@ -276,14 +360,14 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             <button
               type="button"
               onClick={() => setShowUpgradeModal(true)}
-              className="inline-flex ml-auto items-center gap-1 rounded-md border py-1 px-1.5 sm:px-2 transition-all hover:brightness-110 flex-shrink-0"
+              className="inline-flex ml-auto items-center gap-1 rounded-md border py-1 px-2 transition-all hover:brightness-110 flex-shrink-0"
               style={{
                 background: "linear-gradient(180deg, rgba(98,72,18,0.82), rgba(72,52,12,0.78))",
                 borderColor: "rgba(250,204,21,0.45)",
                 boxShadow: "inset 0 0 10px rgba(250,204,21,0.15)",
               }}
             >
-              <EnchantedAnvilIcon size={14} className="sm:w-4 sm:h-4" />
+              <EnchantedAnvilIcon size={16} />
               <span className="text-[8px] font-bold uppercase tracking-wide text-yellow-200">
                 Upgrades
               </span>
