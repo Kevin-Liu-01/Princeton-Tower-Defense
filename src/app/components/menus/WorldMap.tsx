@@ -919,20 +919,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   <div className="flex-shrink-0 px-2 pb-1.5 pt-1 relative z-10" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
                     <button
                       onClick={canStart ? startGame : onStartWithRandomLoadout}
-                      className="w-full py-2 rounded-lg font-bold text-sm transition-all relative overflow-hidden group"
+                      className="w-full py-3 rounded-lg font-black text-sm transition-all relative overflow-hidden group uppercase"
                       style={{
-                        background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
-                        border: `1.5px solid ${GOLD.accentBorder50}`,
-                        boxShadow: `0 0 16px ${GOLD.accentGlow10}, inset 0 0 10px ${GOLD.accentGlow08}`,
-                        color: "rgba(253, 230, 138, 0.9)",
-                        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                        background: `linear-gradient(180deg, rgba(200,150,30,0.97) 0%, rgba(160,105,15,0.97) 50%, rgba(130,80,10,0.97) 100%)`,
+                        border: `2px solid rgba(255,210,80,0.7)`,
+                        boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
+                        color: "rgba(253,230,138,0.9)",
+                        textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid rgba(255,230,140,0.2)` }} />
                       <div className="relative flex items-center justify-center gap-2">
                         <Swords size={16} />
-                        <span className="tracking-wider">BATTLE</span>
+                        <span className="tracking-widest">BATTLE</span>
                         <Play size={14} />
                       </div>
                     </button>
@@ -1576,8 +1576,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     const scale = mapScale;
                     const yMap = getY(worldLevel.y);
                     const nodeSize = 28;
-                    const btnWidth = 110;
-                    const btnHeight = 32;
+                    const btnWidth = 120;
+                    const btnHeight = 38;
                     const gap = 8;
                     const tooltipBelow = worldLevel.y < 50;
                     const centerXPx = worldLevel.x * scale;
@@ -1615,7 +1615,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             border: `2px solid rgba(255,210,80,0.7)`,
                             borderRadius: '8px',
                             boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
-                            color: "#fff8e0",
+                            color: "rgba(253,230,138,0.9)",
                             textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
                           }}
                         >

@@ -865,6 +865,91 @@ const HazardSprite: React.FC<{ type: CodexHazardType; size?: number }> = ({
 };
 
 // =============================================================================
+// CODEX UI HELPERS
+// =============================================================================
+
+const COLOR_MAP: Record<string, {
+  headerBg: string; headerBorder: string; text: string;
+  statBg: string; statBorder: string; statText: string;
+  barBg: string; chipBg: string; chipBorder: string;
+}> = {
+  purple: { headerBg: "bg-purple-950/50", headerBorder: "border-purple-800/30", text: "text-purple-400", statBg: "bg-purple-950/40", statBorder: "border-purple-800/30", statText: "text-purple-300", barBg: "bg-purple-500/70", chipBg: "bg-purple-950/50", chipBorder: "border-purple-900/40" },
+  red: { headerBg: "bg-red-950/50", headerBorder: "border-red-800/30", text: "text-red-400", statBg: "bg-red-950/40", statBorder: "border-red-800/30", statText: "text-red-300", barBg: "bg-red-500/70", chipBg: "bg-red-950/50", chipBorder: "border-red-900/40" },
+  cyan: { headerBg: "bg-cyan-950/50", headerBorder: "border-cyan-800/30", text: "text-cyan-400", statBg: "bg-cyan-950/40", statBorder: "border-cyan-800/30", statText: "text-cyan-300", barBg: "bg-cyan-500/70", chipBg: "bg-cyan-950/50", chipBorder: "border-cyan-900/40" },
+  yellow: { headerBg: "bg-yellow-950/50", headerBorder: "border-yellow-800/30", text: "text-yellow-400", statBg: "bg-yellow-950/40", statBorder: "border-yellow-800/30", statText: "text-yellow-300", barBg: "bg-yellow-500/70", chipBg: "bg-yellow-950/50", chipBorder: "border-yellow-900/40" },
+  blue: { headerBg: "bg-blue-950/50", headerBorder: "border-blue-800/30", text: "text-blue-400", statBg: "bg-blue-950/40", statBorder: "border-blue-800/30", statText: "text-blue-300", barBg: "bg-blue-500/70", chipBg: "bg-blue-950/50", chipBorder: "border-blue-900/40" },
+  amber: { headerBg: "bg-amber-950/50", headerBorder: "border-amber-800/30", text: "text-amber-400", statBg: "bg-amber-950/40", statBorder: "border-amber-800/30", statText: "text-amber-300", barBg: "bg-amber-500/70", chipBg: "bg-amber-950/50", chipBorder: "border-amber-900/40" },
+  orange: { headerBg: "bg-orange-950/50", headerBorder: "border-orange-800/30", text: "text-orange-400", statBg: "bg-orange-950/40", statBorder: "border-orange-800/30", statText: "text-orange-300", barBg: "bg-orange-500/70", chipBg: "bg-orange-950/50", chipBorder: "border-orange-900/40" },
+  green: { headerBg: "bg-green-950/50", headerBorder: "border-green-800/30", text: "text-green-400", statBg: "bg-green-950/40", statBorder: "border-green-800/30", statText: "text-green-300", barBg: "bg-green-500/70", chipBg: "bg-green-950/50", chipBorder: "border-green-900/40" },
+  stone: { headerBg: "bg-stone-950/50", headerBorder: "border-stone-800/30", text: "text-stone-400", statBg: "bg-stone-950/40", statBorder: "border-stone-800/30", statText: "text-stone-300", barBg: "bg-stone-500/70", chipBg: "bg-stone-950/50", chipBorder: "border-stone-900/40" },
+};
+
+const getCC = (color: string) => COLOR_MAP[color] || COLOR_MAP.amber;
+
+const TOWER_COLOR: Record<string, string> = {
+  station: "purple", cannon: "red", library: "cyan",
+  lab: "yellow", arch: "blue", club: "amber", mortar: "orange",
+};
+
+const calculateDPS = (damage: number, attackSpeed: number): number => {
+  if (attackSpeed <= 0 || damage <= 0) return 0;
+  return damage / (attackSpeed / 1000);
+};
+
+const StatBar: React.FC<{
+  value: number;
+  max: number;
+  color: string;
+  label: string;
+  displayValue: string;
+  icon: React.ReactNode;
+}> = ({ value, max, color, label, displayValue, icon }) => {
+  const pct = Math.min(100, Math.max(3, (value / max) * 100));
+  const cc = getCC(color);
+  return (
+    <div className="flex items-center gap-2">
+      <div className={`flex items-center gap-1 w-[60px] shrink-0 ${cc.text}`}>
+        {icon}
+        <span className="text-[10px] uppercase tracking-wide font-medium">{label}</span>
+      </div>
+      <div className="flex-1 h-[6px] rounded-full bg-stone-800/60 overflow-hidden">
+        <div className={`h-full rounded-full ${cc.barBg}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={`w-10 text-right font-bold text-xs ${cc.statText}`}>{displayValue}</span>
+    </div>
+  );
+};
+
+const DPSBadge: React.FC<{ dps: number; size?: "sm" | "md" }> = ({ dps, size = "md" }) => (
+  <div className={`flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-950/60 to-orange-950/40 border border-red-800/40 ${size === "sm" ? "px-1.5 py-0.5" : "px-2.5 py-1"}`}>
+    <Flame size={size === "sm" ? 10 : 12} className="text-orange-400" />
+    <span className={`text-stone-400 uppercase ${size === "sm" ? "text-[8px]" : "text-[10px]"}`}>DPS</span>
+    <span className={`font-bold text-orange-300 ${size === "sm" ? "text-[10px]" : "text-sm"}`}>{dps.toFixed(1)}</span>
+  </div>
+);
+
+const HPBar: React.FC<{ hp: number; maxHp: number; isBoss?: boolean }> = ({ hp, maxHp, isBoss }) => {
+  const pct = Math.min(100, Math.max(3, (hp / maxHp) * 100));
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1">
+          <Heart size={10} className={isBoss ? "text-purple-400" : "text-red-400"} />
+          <span className={`text-[10px] font-medium ${isBoss ? "text-purple-400" : "text-red-400"}`}>HP</span>
+        </div>
+        <span className={`text-xs font-bold ${isBoss ? "text-purple-300" : "text-red-300"}`}>{hp.toLocaleString()}</span>
+      </div>
+      <div className="h-[5px] rounded-full bg-stone-800/60 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${isBoss ? "bg-gradient-to-r from-purple-500/80 to-rose-500/80" : "bg-gradient-to-r from-red-600/70 to-red-400/70"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
 // CODEX MODAL
 // =============================================================================
 
@@ -1031,6 +1116,39 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
       )
       : null;
   const rangedHeroCount = heroTypes.filter((type) => HERO_DATA[type].range >= 170).length;
+
+  // ── Stat bar scaling maximums (derived from actual game data) ──
+  const heroMaxHp = Math.max(...heroTypes.map(t => HERO_DATA[t].hp), 1);
+  const heroMaxDmg = Math.max(...heroTypes.map(t => HERO_DATA[t].damage), 1);
+  const heroMaxRange = Math.max(...heroTypes.map(t => HERO_DATA[t].range), 1);
+  const heroMaxSpeed = Math.max(...heroTypes.map(t => HERO_DATA[t].speed), 1);
+  const heroMaxAtkRate = Math.max(...heroTypes.map(t => 1000 / HERO_DATA[t].attackSpeed), 0.1);
+
+  const towerBaseStats = towerTypes.map(t => calculateTowerStats(t, 1, undefined, 1, 1));
+  const towerMaxDmg = Math.max(...towerBaseStats.map(s => s.damage), 1);
+  const towerMaxRange = Math.max(...towerBaseStats.filter(s => s.range > 0).map(s => s.range), 1);
+  const towerMaxSlow = Math.max(...towerBaseStats.map(s => (s.slowAmount || 0) * 100), 1);
+  const towerMaxIncome = Math.max(...towerBaseStats.map(s => s.income || 0), 1);
+
+  const towerAllLevelStats = towerTypes.flatMap(t =>
+    [1, 2, 3].map(lvl => calculateTowerStats(t, lvl, undefined, 1, 1))
+      .concat(["A", "B"].map(p => calculateTowerStats(t, 4, p as "A" | "B", 1, 1)))
+  );
+  const towerGlobalMaxDmg = Math.max(...towerAllLevelStats.map(s => s.damage), 1);
+  const towerGlobalMaxRange = Math.max(...towerAllLevelStats.filter(s => s.range > 0).map(s => s.range), 1);
+  const towerGlobalMaxAtkRate = Math.max(...towerAllLevelStats.filter(s => s.attackSpeed > 0).map(s => 1000 / s.attackSpeed), 0.1);
+  const towerGlobalMaxIncome = Math.max(...towerAllLevelStats.map(s => s.income || 0), 1);
+  const towerGlobalMaxIncomeRate = Math.max(...towerAllLevelStats.filter(s => s.incomeInterval && s.incomeInterval > 0).map(s => 1000 / (s.incomeInterval || 8000)), 0.05);
+  const towerGlobalMaxSlow = Math.max(...towerAllLevelStats.map(s => (s.slowAmount || 0) * 100), 1);
+
+  const troopTypes = Object.values(TROOP_DATA);
+  const troopMaxHp = Math.max(...troopTypes.map(t => t.hp), 1);
+  const troopMaxDmg = Math.max(...troopTypes.map(t => t.damage), 1);
+  const troopMaxAtkRate = Math.max(...troopTypes.map(t => 1000 / t.attackSpeed), 0.1);
+
+  const enemyMaxBounty = Math.max(...enemyTypes.map(t => ENEMY_DATA[t].bounty), 1);
+  const enemyMaxSpeed = Math.max(...enemyTypes.map(t => ENEMY_DATA[t].speed), 0.1);
+  const enemyMaxArmor = Math.max(...enemyTypes.map(t => ENEMY_DATA[t].armor * 100), 1);
 
   const spellEntries = spellTypes.map((type) => ({
     type,
@@ -1543,7 +1661,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
                   {towerTypes.map((type) => {
                     const tower = TOWER_DATA[type];
                     const stats = getDynamicStats(type, 1);
@@ -1553,7 +1671,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <button
                         key={type}
                         onClick={() => setSelectedTower(type)}
-                        className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
+                        className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative h-full flex flex-col"
                         style={{
                           background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                           border: `1.5px solid ${GOLD.border25}`,
@@ -1561,97 +1679,106 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         }}
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        {/* Header with category */}
-                        <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                          type === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                            type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                              type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                  type === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                    "bg-stone-950/50 border-stone-800/30"
-                          }`}>
-                          <div className="flex items-center gap-2">
-                            {towerIcons[type]}
-                            <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
-                              type === "cannon" ? "text-red-400" :
-                                type === "library" ? "text-cyan-400" :
-                                  type === "lab" ? "text-yellow-400" :
-                                    type === "arch" ? "text-blue-400" :
-                                      type === "club" ? "text-amber-400" :
-                                        "text-stone-400"
-                              }`}>
-                              {cat.category}
-                            </span>
-                          </div>
-                          <span className="text-amber-400 flex items-center gap-1 text-xs">
-                            <Coins size={12} /> {tower.cost} PP
-                          </span>
-                        </div>
+                        {(() => {
+                          const cc = getCC(TOWER_COLOR[type]);
+                          const dps = calculateDPS(stats.damage, stats.attackSpeed);
 
-                        <div className="p-4">
-                          <div className="flex items-start gap-4 mb-3">
-                            <FramedCodexSprite
-                              size={64}
-                              theme={TOWER_SPRITE_FRAME_THEME[type]}
-                              className="group-hover:scale-105 transition-transform"
-                            >
-                              <TowerSprite type={type} size={52} level={1} />
-                            </FramedCodexSprite>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                                {tower.name}
-                              </h3>
-                              <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                                {tower.desc}
-                              </p>
-                            </div>
-                            <ChevronRight
-                              size={20}
-                              className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                            />
-                          </div>
+                          const cardRows: { value: number; max: number; color: string; label: string; displayValue: string; icon: React.ReactNode }[] = [];
+                          if (stats.damage > 0)
+                            cardRows.push({ value: stats.damage, max: towerMaxDmg, color: "red", label: "DMG", displayValue: `${Math.floor(stats.damage)}`, icon: <Swords size={10} /> });
+                          if (stats.range > 0 && type !== "club")
+                            cardRows.push({ value: stats.range, max: towerMaxRange, color: "blue", label: "RNG", displayValue: `${Math.floor(stats.range)}`, icon: <Target size={10} /> });
+                          if (stats.slowAmount != null && stats.slowAmount > 0)
+                            cardRows.push({ value: stats.slowAmount * 100, max: towerMaxSlow, color: "cyan", label: "SLOW", displayValue: `${Math.round(stats.slowAmount * 100)}%`, icon: <Snowflake size={10} /> });
+                          if (stats.income != null && stats.income > 0)
+                            cardRows.push({ value: stats.income, max: towerMaxIncome, color: "amber", label: "EARN", displayValue: `+${stats.income} PP`, icon: <Banknote size={10} /> });
+                          if (type === "station")
+                            cardRows.push({ value: TROOP_DATA.footsoldier.hp, max: troopMaxHp, color: "purple", label: "TROOP", displayValue: `${TROOP_DATA.footsoldier.hp} HP`, icon: <Users size={10} /> });
 
-                          {/* Base stats */}
-                          <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                            {stats.damage > 0 && (
-                              <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
-                                <Swords size={11} /> {Math.floor(stats.damage)}
-                              </span>
-                            )}
-                            {stats.range > 0 && (
-                              <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
-                                <Target size={11} /> {Math.floor(stats.range)}
-                              </span>
-                            )}
-                            {stats.slowAmount && stats.slowAmount > 0 && (
-                              <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
-                                <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
-                              </span>
-                            )}
-                            {stats.income && stats.income > 0 && (
-                              <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
-                                <Banknote size={11} /> +{stats.income} PP
-                              </span>
-                            )}
-                            {type === "station" && (
-                              <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
-                                <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
-                              </span>
-                            )}
-                          </div>
+                          return (
+                            <>
+                              <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${cc.headerBg} ${cc.headerBorder}`}>
+                                <div className="flex items-center gap-2">
+                                  {towerIcons[type]}
+                                  <span className={`text-xs font-medium uppercase tracking-wider ${cc.text}`}>
+                                    {cat.category}
+                                  </span>
+                                </div>
+                                <span className="text-amber-400 flex items-center gap-1 text-xs font-bold">
+                                  <Coins size={12} /> {tower.cost} PP
+                                </span>
+                              </div>
 
-                          {/* Level 4 upgrade previews */}
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
-                              <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
-                              <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
-                            </div>
-                            <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
-                              <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
-                              <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
-                            </div>
-                          </div>
-                        </div>
+                              <div className="p-4 flex flex-col flex-1">
+                                <div className="flex items-start gap-3 mb-3">
+                                  <FramedCodexSprite
+                                    size={56}
+                                    theme={TOWER_SPRITE_FRAME_THEME[type]}
+                                    className="group-hover:scale-105 transition-transform"
+                                  >
+                                    <TowerSprite type={type} size={44} level={1} />
+                                  </FramedCodexSprite>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <h3 className="text-base font-bold text-amber-200 group-hover:text-amber-100 truncate">
+                                        {tower.name}
+                                      </h3>
+                                      <ChevronRight
+                                        size={16}
+                                        className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
+                                      />
+                                    </div>
+                                    <p className="text-[11px] text-stone-400 line-clamp-2 mt-0.5 leading-relaxed">
+                                      {tower.desc}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="rounded-lg bg-stone-950/40 border border-stone-700/25 p-2.5 mb-3 flex-1">
+                                  <div className="space-y-2">
+                                    {cardRows.map((row, i) => (
+                                      <StatBar key={i} value={row.value} max={row.max} color={row.color} label={row.label} displayValue={row.displayValue} icon={row.icon} />
+                                    ))}
+                                  </div>
+                                  {dps > 0 && (
+                                    <div className="mt-2 pt-2 border-t border-stone-700/25">
+                                      <DPSBadge dps={dps} size="sm" />
+                                    </div>
+                                  )}
+                                  {type === "station" && (
+                                    <div className="mt-2 pt-2 border-t border-stone-700/25">
+                                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-purple-950/40 border border-purple-800/30">
+                                        <Users size={10} className="text-purple-400" />
+                                        <span className="text-[10px] text-stone-400 uppercase">Spawn</span>
+                                        <span className="text-[10px] font-bold text-purple-300">1 troop / {(stats.spawnInterval || 5000) / 1000}s</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  {type === "club" && (
+                                    <div className="mt-2 pt-2 border-t border-stone-700/25">
+                                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-950/40 border border-amber-800/30">
+                                        <Timer size={10} className="text-amber-400" />
+                                        <span className="text-[10px] text-stone-400 uppercase">Every</span>
+                                        <span className="text-[10px] font-bold text-amber-300">{(stats.incomeInterval || 8000) / 1000}s</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 mt-auto">
+                                  <div className="px-2.5 py-2 bg-red-950/30 rounded-lg border border-red-900/30 group-hover:border-red-700/50 transition-colors">
+                                    <div className="text-[8px] text-red-500/70 uppercase mb-0.5 tracking-wider font-medium">Path A</div>
+                                    <div className="text-[11px] text-red-300 font-semibold truncate">{tower.upgrades.A.name}</div>
+                                  </div>
+                                  <div className="px-2.5 py-2 bg-blue-950/30 rounded-lg border border-blue-900/30 group-hover:border-blue-700/50 transition-colors">
+                                    <div className="text-[8px] text-blue-500/70 uppercase mb-0.5 tracking-wider font-medium">Path B</div>
+                                    <div className="text-[11px] text-blue-300 font-semibold truncate">{tower.upgrades.B.name}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </button>
                     );
                   })}
@@ -1838,62 +1965,63 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
                       }}>
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${selectedTower === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                          selectedTower === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                            selectedTower === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                              selectedTower === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                selectedTower === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                  selectedTower === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                    "bg-stone-950/50 border-stone-800/30"
-                          }`}>
-                          {towerIcons[selectedTower]}
-                          <span className={`text-sm font-medium uppercase tracking-wider ${selectedTower === "station" ? "text-purple-400" :
-                            selectedTower === "cannon" ? "text-red-400" :
-                              selectedTower === "library" ? "text-cyan-400" :
-                                selectedTower === "lab" ? "text-yellow-400" :
-                                  selectedTower === "arch" ? "text-blue-400" :
-                                    selectedTower === "club" ? "text-amber-400" :
-                                      "text-stone-400"
-                            }`}>
-                            {cat.category}
-                          </span>
-                        </div>
-                        <div className="p-6 flex items-start gap-6">
-                          <FramedCodexSprite
-                            size={112}
-                            theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
-                          >
-                            <TowerSprite
-                              type={selectedTower as keyof typeof TOWER_DATA}
-                              size={96}
-                              level={4}
-                            />
-                          </FramedCodexSprite>
-                          <div className="flex-1">
-                            <h3 className="text-3xl font-bold text-amber-200 mb-2">
-                              {tower.name}
-                            </h3>
-                            <p className="text-stone-400 mb-4">{tower.desc}</p>
-                            <div className="flex flex-wrap gap-3">
-                              <div className="px-4 py-2 bg-amber-950/50 rounded-lg border border-amber-800/40">
-                                <div className="text-xs text-amber-500">Base Cost</div>
-                                <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
+                        {(() => {
+                          const tcc = getCC(TOWER_COLOR[selectedTower]);
+                          const baseStats = getDynamicStats(selectedTower, 1);
+                          const baseDps = calculateDPS(baseStats.damage, baseStats.attackSpeed);
+                          return (
+                            <>
+                              <div className={`px-6 py-3 border-b flex items-center gap-3 ${tcc.headerBg} ${tcc.headerBorder}`}>
+                                {towerIcons[selectedTower]}
+                                <span className={`text-sm font-medium uppercase tracking-wider ${tcc.text}`}>
+                                  {cat.category}
+                                </span>
                               </div>
-                              {getDynamicStats(selectedTower, 1).damage > 0 && (
-                                <div className="px-4 py-2 bg-red-950/50 rounded-lg border border-red-800/40">
-                                  <div className="text-xs text-red-500">Base Damage</div>
-                                  <div className="text-red-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).damage)}</div>
+                              <div className="p-6 flex flex-col sm:flex-row items-start gap-6">
+                                <FramedCodexSprite
+                                  size={112}
+                                  theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
+                                >
+                                  <TowerSprite
+                                    type={selectedTower as keyof typeof TOWER_DATA}
+                                    size={96}
+                                    level={4}
+                                  />
+                                </FramedCodexSprite>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-3xl font-bold text-amber-200 mb-1">
+                                    {tower.name}
+                                  </h3>
+                                  <p className="text-stone-400 mb-4 text-sm leading-relaxed">{tower.desc}</p>
+                                  <div className="flex flex-wrap gap-3">
+                                    <div className="px-4 py-2.5 bg-amber-950/50 rounded-lg border border-amber-800/40">
+                                      <div className="text-[10px] text-amber-500 uppercase tracking-wider">Base Cost</div>
+                                      <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
+                                    </div>
+                                    {baseStats.damage > 0 && (
+                                      <div className="px-4 py-2.5 bg-red-950/50 rounded-lg border border-red-800/40">
+                                        <div className="text-[10px] text-red-500 uppercase tracking-wider">Base Damage</div>
+                                        <div className="text-red-300 font-bold text-lg">{Math.floor(baseStats.damage)}</div>
+                                      </div>
+                                    )}
+                                    {baseStats.range > 0 && selectedTower !== "club" && (
+                                      <div className="px-4 py-2.5 bg-blue-950/50 rounded-lg border border-blue-800/40">
+                                        <div className="text-[10px] text-blue-500 uppercase tracking-wider">Base Range</div>
+                                        <div className="text-blue-300 font-bold text-lg">{Math.floor(baseStats.range)}</div>
+                                      </div>
+                                    )}
+                                    {baseDps > 0 && (
+                                      <div className="px-4 py-2.5 bg-gradient-to-r from-red-950/50 to-orange-950/40 rounded-lg border border-red-800/40">
+                                        <div className="text-[10px] text-orange-500 uppercase tracking-wider">Base DPS</div>
+                                        <div className="text-orange-300 font-bold text-lg">{baseDps.toFixed(1)}</div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                              {getDynamicStats(selectedTower, 1).range > 0 && selectedTower !== "club" && (
-                                <div className="px-4 py-2 bg-blue-950/50 rounded-lg border border-blue-800/40">
-                                  <div className="text-xs text-blue-500">Base Range</div>
-                                  <div className="text-blue-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).range)}</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Level Progression */}
@@ -1944,12 +2072,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                   </span>
                                 </div>
                                 <div className="p-3">
-                                  {/* Level 4 shows both upgrade paths */}
                                   {level === 4 ? (
                                     <div className="space-y-2">
                                       {(["A", "B"] as const).map((path) => {
                                         const pathStats = getDynamicStats(selectedTower, 4, path);
                                         const pathTroop = isStation ? getTroopForLevel(4, path) : null;
+                                        const pathDps = calculateDPS(pathStats.damage, pathStats.attackSpeed);
 
                                         return (
                                           <div
@@ -1959,17 +2087,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                               : "bg-blue-950/30 border-blue-800/40"
                                               }`}
                                           >
-                                            {/* Path header */}
-                                            <div className={`px-2 py-1.5 flex items-center gap-2 ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"}`}>
-                                              <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
-                                                <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={22} level={4} upgrade={path as "A" | "B"} />
+                                            <div className={`px-2 py-1.5 flex items-center justify-between ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"}`}>
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                                  <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={22} level={4} upgrade={path as "A" | "B"} />
+                                                </div>
+                                                <span className="text-[10px] font-bold">{tower.upgrades[path].name}</span>
                                               </div>
-                                              <span className="text-[10px] font-bold">{tower.upgrades[path].name}</span>
+                                              {pathDps > 0 && <DPSBadge dps={pathDps} size="sm" />}
                                             </div>
 
-                                            {/* Path stats */}
-                                            <div className="p-1.5">
-                                              {/* Station shows troop stats for each path */}
+                                            <div className="p-1.5 space-y-1">
                                               {isStation && pathTroop && (
                                                 <div className="grid grid-cols-3 gap-1 text-[9px]">
                                                   <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
@@ -1987,7 +2115,6 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                                 </div>
                                               )}
 
-                                              {/* Combat towers show damage/range/speed for each path */}
                                               {!isStation && selectedTower !== "club" && (
                                                 <div className="grid grid-cols-3 gap-1 text-[9px]">
                                                   {pathStats.damage > 0 && (
@@ -2011,7 +2138,6 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                                 </div>
                                               )}
 
-                                              {/* Club shows income for each path */}
                                               {selectedTower === "club" && (
                                                 <div className="grid grid-cols-2 gap-1 text-[9px]">
                                                   <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
@@ -2031,70 +2157,48 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     </div>
                                   ) : (
                                     <>
-                                      <p className="text-xs text-stone-400 mb-3 line-clamp-2">
+                                      <p className="text-xs text-stone-400 mb-3 line-clamp-2 leading-relaxed">
                                         {tower.levelDesc[level as 1 | 2 | 3]}
                                       </p>
 
-                                      {/* Station shows troop stats */}
                                       {isStation && troop && (
-                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                            <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
-                                            <div className="text-red-300 font-bold">{troop.hp}</div>
-                                          </div>
-                                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                            <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
-                                            <div className="text-orange-300 font-bold">{troop.damage}</div>
-                                          </div>
-                                          <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                            <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
-                                            <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
-                                          </div>
+                                        <div className="space-y-1.5">
+                                          <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
+                                          <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
+                                          <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
                                         </div>
                                       )}
 
-                                      {/* Combat towers show damage/range/speed */}
                                       {!isStation && selectedTower !== "club" && (
-                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                        <div className="space-y-1.5">
                                           {stats.damage > 0 && (
-                                            <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                              <div className="text-red-500 text-[8px]">DMG</div>
-                                              <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
-                                            </div>
+                                            <StatBar value={stats.damage} max={towerGlobalMaxDmg} color="red" label="DMG" displayValue={`${Math.floor(stats.damage)}`} icon={<Swords size={10} />} />
                                           )}
                                           {stats.range > 0 && (
-                                            <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                              <div className="text-blue-500 text-[8px]">RNG</div>
-                                              <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
-                                            </div>
+                                            <StatBar value={stats.range} max={towerGlobalMaxRange} color="blue" label="RNG" displayValue={`${Math.floor(stats.range)}`} icon={<Target size={10} />} />
                                           )}
                                           {stats.attackSpeed > 0 && (
-                                            <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                              <div className="text-green-500 text-[8px]">SPD</div>
-                                              <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
-                                            </div>
+                                            <StatBar value={1000 / stats.attackSpeed} max={towerGlobalMaxAtkRate} color="green" label="SPD" displayValue={`${(stats.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
                                           )}
+                                          {(() => {
+                                            const levelDps = calculateDPS(stats.damage, stats.attackSpeed);
+                                            return levelDps > 0 ? (
+                                              <div className="mt-1"><DPSBadge dps={levelDps} size="sm" /></div>
+                                            ) : null;
+                                          })()}
                                         </div>
                                       )}
 
-                                      {/* Club shows income */}
                                       {selectedTower === "club" && (
-                                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                            <div className="text-amber-500 text-[8px]">Income</div>
-                                            <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                                          </div>
-                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                            <div className="text-amber-500 text-[8px]">Interval</div>
-                                            <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
-                                          </div>
+                                        <div className="space-y-1.5">
+                                          <StatBar value={stats.income || 0} max={towerGlobalMaxIncome} color="amber" label="PP" displayValue={`+${stats.income}`} icon={<Banknote size={10} />} />
+                                          <StatBar value={1000 / (stats.incomeInterval || 8000)} max={towerGlobalMaxIncomeRate} color="amber" label="INT" displayValue={`${(stats.incomeInterval || 8000) / 1000}s`} icon={<Timer size={10} />} />
                                         </div>
                                       )}
 
-                                      {/* Library shows slow */}
                                       {selectedTower === "library" && (
-                                        <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
-                                          <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
+                                        <div className="mt-1.5">
+                                          <StatBar value={(stats.slowAmount || 0) * 100} max={towerGlobalMaxSlow} color="cyan" label="SLOW" displayValue={`${Math.round((stats.slowAmount || 0) * 100)}%`} icon={<Snowflake size={10} />} />
                                         </div>
                                       )}
                                     </>
@@ -2335,30 +2439,20 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         }}
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        {/* Role header */}
-                        <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                          roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                            roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                              roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
-                                roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                  roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                    "bg-amber-950/50 border-amber-800/30"
-                          }`}>
-                          <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
-                            roleInfo.color === "purple" ? "text-purple-400" :
-                              roleInfo.color === "blue" ? "text-blue-400" :
-                                roleInfo.color === "red" ? "text-red-400" :
-                                  roleInfo.color === "yellow" ? "text-yellow-400" :
-                                    roleInfo.color === "green" ? "text-green-400" :
-                                      "text-amber-400"
-                            }`}>
-                            {roleInfo.icon}
-                            <span className="text-xs font-medium uppercase tracking-wider">
-                              {roleInfo.role}
-                            </span>
-                          </div>
-                          <HeroIcon type={type} size={20} />
-                        </div>
+                        {(() => {
+                          const rcc = getCC(roleInfo.color);
+                          return (
+                            <div className={`px-4 py-2 border-b flex items-center justify-between ${rcc.headerBg} ${rcc.headerBorder}`}>
+                              <div className={`flex items-center gap-2 ${rcc.text}`}>
+                                {roleInfo.icon}
+                                <span className="text-xs font-medium uppercase tracking-wider">
+                                  {roleInfo.role}
+                                </span>
+                              </div>
+                              <HeroIcon type={type} size={20} />
+                            </div>
+                          );
+                        })()}
 
                         <div className="p-4">
                           <div className="flex items-start gap-4 mb-3">
@@ -2383,24 +2477,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             />
                           </div>
 
-                          {/* Stats grid */}
-                          <div className="grid grid-cols-4 gap-1.5 mb-3">
-                            <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                              <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                              <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
-                            </div>
-                            <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
-                              <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                              <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
-                            </div>
-                            <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
-                              <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
-                              <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
-                            </div>
-                            <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
-                              <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                              <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
-                            </div>
+                          <div className="space-y-1.5 mb-3">
+                            <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={10} />} />
+                            <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={10} />} />
+                            <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={10} />} />
+                            <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={10} />} />
                           </div>
 
                           {/* Ability preview */}
@@ -2560,35 +2641,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
                       }}>
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${info.roleColor === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                          info.roleColor === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                            info.roleColor === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                              info.roleColor === "red" ? "bg-red-950/50 border-red-800/30" :
-                                info.roleColor === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                  info.roleColor === "green" ? "bg-green-950/50 border-green-800/30" :
-                                    "bg-amber-950/50 border-amber-800/30"
-                          }`}>
-                          <span className={`${info.roleColor === "orange" ? "text-orange-400" :
-                            info.roleColor === "purple" ? "text-purple-400" :
-                              info.roleColor === "blue" ? "text-blue-400" :
-                                info.roleColor === "red" ? "text-red-400" :
-                                  info.roleColor === "yellow" ? "text-yellow-400" :
-                                    info.roleColor === "green" ? "text-green-400" :
-                                      "text-amber-400"
-                            }`}>
-                            {info.roleIcon}
-                          </span>
-                          <span className={`text-sm font-medium uppercase tracking-wider ${info.roleColor === "orange" ? "text-orange-400" :
-                            info.roleColor === "purple" ? "text-purple-400" :
-                              info.roleColor === "blue" ? "text-blue-400" :
-                                info.roleColor === "red" ? "text-red-400" :
-                                  info.roleColor === "yellow" ? "text-yellow-400" :
-                                    info.roleColor === "green" ? "text-green-400" :
-                                      "text-amber-400"
-                            }`}>
-                            {info.role}
-                          </span>
-                        </div>
+                        {(() => {
+                          const hcc = getCC(info.roleColor);
+                          return (
+                            <div className={`px-6 py-3 border-b flex items-center gap-3 ${hcc.headerBg} ${hcc.headerBorder}`}>
+                              <span className={hcc.text}>{info.roleIcon}</span>
+                              <span className={`text-sm font-medium uppercase tracking-wider ${hcc.text}`}>
+                                {info.role}
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         <div className="p-6 flex items-start gap-6">
                           <FramedCodexSprite
@@ -2610,32 +2673,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             <p className="text-stone-400 mb-4">
                               {hero.description}
                             </p>
-                            <div className="grid grid-cols-5 gap-3">
-                              <div className="bg-red-950/50 rounded-lg p-2.5 text-center border border-red-800/40">
-                                <Heart size={16} className="mx-auto text-red-400 mb-1" />
-                                <div className="text-[10px] text-red-500">Health</div>
-                                <div className="text-red-300 font-bold text-lg">{hero.hp}</div>
-                              </div>
-                              <div className="bg-orange-950/50 rounded-lg p-2.5 text-center border border-orange-800/40">
-                                <Swords size={16} className="mx-auto text-orange-400 mb-1" />
-                                <div className="text-[10px] text-orange-500">Damage</div>
-                                <div className="text-orange-300 font-bold text-lg">{hero.damage}</div>
-                              </div>
-                              <div className="bg-blue-950/50 rounded-lg p-2.5 text-center border border-blue-800/40">
-                                <Target size={16} className="mx-auto text-blue-400 mb-1" />
-                                <div className="text-[10px] text-blue-500">Range</div>
-                                <div className="text-blue-300 font-bold text-lg">{hero.range}</div>
-                              </div>
-                              <div className="bg-green-950/50 rounded-lg p-2.5 text-center border border-green-800/40">
-                                <Gauge size={16} className="mx-auto text-green-400 mb-1" />
-                                <div className="text-[10px] text-green-500">Atk Speed</div>
-                                <div className="text-green-300 font-bold text-lg">{(hero.attackSpeed / 1000).toFixed(1)}s</div>
-                              </div>
-                              <div className="bg-cyan-950/50 rounded-lg p-2.5 text-center border border-cyan-800/40">
-                                <Wind size={16} className="mx-auto text-cyan-400 mb-1" />
-                                <div className="text-[10px] text-cyan-500">Move</div>
-                                <div className="text-cyan-300 font-bold text-lg">{hero.speed}</div>
-                              </div>
+                            <div className="space-y-2.5 bg-stone-900/40 rounded-xl p-4 border border-stone-700/30">
+                              <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={10} />} />
+                              <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={10} />} />
+                              <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={10} />} />
+                              <StatBar value={1000 / hero.attackSpeed} max={heroMaxAtkRate} color="green" label="ATK" displayValue={`${(hero.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
+                              <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={10} />} />
                             </div>
                           </div>
                         </div>
@@ -2837,8 +2880,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             const traits = enemy.traits || [];
                             const abilities = enemy.abilities || [];
                             const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
+                            const maxHpInCategory = Math.max(...categoryEnemies.map(t => ENEMY_DATA[t].hp), 1);
 
-                            // Determine threat level based on HP and boss status
                             const getThreatLevel = (hp: number, isBoss?: boolean) => {
                               if (isBoss || hp >= 1000) return { level: "Boss", color: "purple", icon: <Crown size={12} /> };
                               if (hp >= 500) return { level: "Elite", color: "orange", icon: <Star size={12} /> };
@@ -2846,8 +2889,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               return { level: "Minion", color: "green", icon: <Skull size={12} /> };
                             };
                             const threat = getThreatLevel(enemy.hp, enemy.isBoss);
+                            const threatCC = getCC(threat.color);
 
-                            // Enemy type classification
                             const getEnemyTypeClassification = () => {
                               if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
                               if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={12} />, color: "purple" };
@@ -2856,6 +2899,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               return { type: "Ground", icon: <Flag size={12} />, color: "red" };
                             };
                             const enemyTypeClass = getEnemyTypeClassification();
+                            const typeCC = getCC(enemyTypeClass.color);
 
                             return (
                               <div
@@ -2868,30 +2912,22 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 }}
                               >
                                 <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                                {/* Header with threat level */}
-                                <div className={`px-4 py-2 border-b flex items-center justify-between ${threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                                  threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                                    threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                      "bg-green-950/50 border-green-800/30"
-                                  }`}>
-                                  <div className={`flex items-center gap-2 ${threat.color === "purple" ? "text-purple-400" :
-                                    threat.color === "orange" ? "text-orange-400" :
-                                      threat.color === "yellow" ? "text-yellow-400" :
-                                        "text-green-400"
-                                    }`}>
+                                <div className={`px-4 py-2 border-b flex items-center justify-between ${threatCC.headerBg} ${threatCC.headerBorder}`}>
+                                  <div className={`flex items-center gap-2 ${threatCC.text}`}>
                                     {threat.icon}
                                     <span className="text-xs font-medium uppercase tracking-wider">
                                       {threat.level}
                                     </span>
                                   </div>
-                                  <div className={`flex items-center gap-1.5 text-xs ${enemyTypeClass.color === "cyan" ? "text-cyan-400" :
-                                    enemyTypeClass.color === "purple" ? "text-purple-400" :
-                                      enemyTypeClass.color === "stone" ? "text-stone-400" :
-                                        enemyTypeClass.color === "green" ? "text-green-400" :
-                                          "text-red-400"
-                                    }`}>
-                                    {enemyTypeClass.icon}
-                                    <span>{enemyTypeClass.type}</span>
+                                  <div className="flex items-center gap-3">
+                                    <div className={`flex items-center gap-1.5 text-xs ${typeCC.text}`}>
+                                      {enemyTypeClass.icon}
+                                      <span>{enemyTypeClass.type}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded-lg border border-rose-800/50 flex-shrink-0">
+                                      <Heart size={10} className="text-rose-400" />
+                                      <span className="text-rose-300 font-bold text-[10px]">{enemy.liveCost || 1} {(enemy.liveCost || 1) > 1 ? "lives" : "life"}</span>
+                                    </div>
                                   </div>
                                 </div>
 
@@ -2904,44 +2940,25 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                       <EnemySprite type={type} size={52} animated />
                                     </FramedCodexSprite>
                                     <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <h3 className="text-lg font-bold text-red-200 truncate">
-                                          {enemy.name}
-                                        </h3>
-                                        {/* Lives Cost Badge - Top Right */}
-                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
-                                          <Heart size={12} className="text-rose-400" />
-                                          <span className="text-rose-300 font-bold text-xs">{enemy.liveCost || 1}</span>
-                                        </div>
-                                      </div>
-                                      <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                                      <h3 className="text-lg font-bold text-red-200 truncate">
+                                        {enemy.name}
+                                      </h3>
+                                      <p className="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">
                                         {enemy.desc}
                                       </p>
                                     </div>
                                   </div>
 
-                                  {/* Base Stats grid */}
-                                  <div className="grid grid-cols-4 gap-1.5 mb-2">
-                                    <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                                      <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[9px] text-red-500">HP</div>
-                                      <div className="text-red-300 font-bold text-xs">{enemy.hp}</div>
-                                    </div>
-                                    <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/40">
-                                      <Coins size={12} className="mx-auto text-amber-400 mb-0.5" />
-                                      <div className="text-[9px] text-amber-500">Bounty</div>
-                                      <div className="text-amber-300 font-bold text-xs">{enemy.bounty}</div>
-                                    </div>
-                                    <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/40">
-                                      <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
-                                      <div className="text-[9px] text-green-500">Speed</div>
-                                      <div className="text-green-300 font-bold text-xs">{enemy.speed}</div>
-                                    </div>
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center border border-stone-700/40">
-                                      <Shield size={12} className="mx-auto text-stone-400 mb-0.5" />
-                                      <div className="text-[9px] text-stone-500">Armor</div>
-                                      <div className="text-stone-300 font-bold text-xs">{Math.round(enemy.armor * 100)}%</div>
-                                    </div>
+                                  <div className="mb-3">
+                                    <HPBar hp={enemy.hp} maxHp={maxHpInCategory} isBoss={enemy.isBoss} />
+                                  </div>
+
+                                  <div className="space-y-1.5 mb-2">
+                                    <StatBar value={enemy.bounty} max={enemyMaxBounty} color="amber" label="LOOT" displayValue={`${enemy.bounty} PP`} icon={<Coins size={10} />} />
+                                    <StatBar value={enemy.speed} max={enemyMaxSpeed} color="green" label="SPD" displayValue={`${enemy.speed}`} icon={<Gauge size={10} />} />
+                                    {enemy.armor > 0 && (
+                                      <StatBar value={enemy.armor * 100} max={enemyMaxArmor} color="stone" label="ARM" displayValue={`${Math.round(enemy.armor * 100)}%`} icon={<Shield size={10} />} />
+                                    )}
                                   </div>
 
                                   {/* Ranged Stats (if applicable) */}
@@ -3199,37 +3216,34 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         }}
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        {/* Header */}
-                        <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                          info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                            info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
-                              info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
-                                info.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                  "bg-purple-950/50 border-purple-800/30"
-                          }`}>
-                          <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
-                            info.color === "yellow" ? "text-yellow-400" :
-                              info.color === "cyan" ? "text-cyan-400" :
-                                info.color === "amber" ? "text-amber-400" :
-                                  info.color === "green" ? "text-green-400" :
-                                    "text-purple-400"
-                            }`}>
-                            {info.icon}
-                            <span className="text-xs font-medium uppercase tracking-wider">
-                              {info.category}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-amber-400 flex items-center gap-1 text-xs">
-                              <Coins size={12} />
-                              {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
-                            </span>
-                            <span className="text-blue-400 flex items-center gap-1 text-xs">
-                              <Timer size={12} />
-                              {spell.cooldown / 1000}s
-                            </span>
-                          </div>
-                        </div>
+                        {(() => {
+                          const scc = getCC(info.color);
+                          return (
+                            <div className={`px-4 py-2.5 border-b flex items-center justify-between ${scc.headerBg} ${scc.headerBorder}`}>
+                              <div className={`flex items-center gap-2 ${scc.text}`}>
+                                {info.icon}
+                                <span className="text-xs font-medium uppercase tracking-wider">
+                                  {info.category}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {spell.cost > 0 ? (
+                                  <span className="text-amber-400 flex items-center gap-1 text-xs font-bold">
+                                    <Coins size={12} /> {spell.cost} PP
+                                  </span>
+                                ) : (
+                                  <span className="text-emerald-400 flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 bg-emerald-950/50 rounded border border-emerald-800/40">
+                                    FREE
+                                  </span>
+                                )}
+                                <span className="text-blue-400 flex items-center gap-1 text-xs">
+                                  <Timer size={12} />
+                                  {spell.cooldown / 1000}s
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         <div className="p-4">
                           <div className="flex items-start gap-4 mb-4">
@@ -3250,64 +3264,46 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             </div>
                           </div>
 
-                          {/* Stats grid */}
-                          <div className="grid grid-cols-3 gap-2 mb-4">
-                            {info.stats.map((stat, i) => (
-                              <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
-                                info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
-                                  info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
-                                    info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
-                                      info.color === "green" ? "bg-green-950/40 border-green-800/30" :
-                                        "bg-purple-950/40 border-purple-800/30"
-                                }`}>
-                                <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
-                                  info.color === "yellow" ? "text-yellow-400" :
-                                    info.color === "cyan" ? "text-cyan-400" :
-                                      info.color === "amber" ? "text-amber-400" :
-                                        info.color === "green" ? "text-green-400" :
-                                          "text-purple-400"
-                                  }`}>
-                                  {stat.icon}
+                          {(() => {
+                            const scc = getCC(info.color);
+                            return (
+                              <>
+                                <div className="grid grid-cols-3 gap-2 mb-4">
+                                  {info.stats.map((stat, i) => (
+                                    <div key={i} className={`rounded-lg p-2.5 text-center border ${scc.statBg} ${scc.statBorder}`}>
+                                      <div className={`flex items-center justify-center mb-1 ${scc.text}`}>
+                                        {stat.icon}
+                                      </div>
+                                      <div className="text-[9px] text-stone-500 uppercase tracking-wider">{stat.label}</div>
+                                      <div className={`font-bold text-sm ${scc.statText}`}>{stat.value}</div>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="text-[9px] text-stone-500">{stat.label}</div>
-                                <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
-                                  info.color === "yellow" ? "text-yellow-300" :
-                                    info.color === "cyan" ? "text-cyan-300" :
-                                      info.color === "amber" ? "text-amber-300" :
-                                        info.color === "green" ? "text-green-300" :
-                                          "text-purple-300"
-                                  }`}>{stat.value}</div>
-                              </div>
-                            ))}
-                          </div>
 
-                          {/* Details */}
-                          <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
-                            <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                              <Info size={10} /> Details
-                            </div>
-                            <ul className="text-xs text-stone-300 space-y-1">
-                              {info.details.map((detail, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-purple-400 mt-0.5">•</span>
-                                  <span>{detail}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                                <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
+                                  <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <Info size={10} /> Details
+                                  </div>
+                                  <ul className="text-xs text-stone-300 space-y-1.5">
+                                    {info.details.map((detail, i) => (
+                                      <li key={i} className="flex items-start gap-2">
+                                        <span className={`mt-0.5 ${scc.text}`}>•</span>
+                                        <span className="leading-relaxed">{detail}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
 
-                          {/* Tip */}
-                          <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
-                            info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
-                              info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
-                                info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
-                                  info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
-                                    "bg-purple-950/30 border border-purple-800/30 text-purple-300"
-                            }`}>
-                            <Sparkles size={12} />
-                            <span className="font-medium">Pro Tip:</span>
-                            <span className="text-stone-400">{info.tip}</span>
-                          </div>
+                                <div className={`rounded-lg px-3 py-2.5 text-xs flex items-start gap-2 border ${scc.statBg} ${scc.statBorder}`}>
+                                  <Sparkles size={12} className={`mt-0.5 shrink-0 ${scc.text}`} />
+                                  <div>
+                                    <span className={`font-semibold ${scc.statText}`}>Pro Tip: </span>
+                                    <span className="text-stone-400">{info.tip}</span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     );

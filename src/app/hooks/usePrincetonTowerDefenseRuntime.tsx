@@ -2517,6 +2517,7 @@ export function usePrincetonTowerDefenseRuntime() {
             targetPos,
             intensity: 1.55,
             duration: 240,
+            color: "red",
           });
           strikeEffects.push({
             id: generateId("sentinel_impact"),
@@ -5440,6 +5441,7 @@ export function usePrincetonTowerDefenseRuntime() {
                       towerId: i === 0 ? tower.id : undefined,
                       towerLevel: tower.level,
                       towerUpgrade: tower.upgrade,
+                      color: tower.level === 4 && tower.upgrade === "B" ? "violet" : undefined,
                     });
                   });
                 } else {
@@ -5459,6 +5461,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     towerId: tower.id,
                     towerLevel: tower.level,
                     towerUpgrade: tower.upgrade,
+                    color: isFocusedBeam ? "yellow" : undefined,
                   });
                 }
                 const sparkCount =

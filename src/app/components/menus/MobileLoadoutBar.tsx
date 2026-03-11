@@ -13,10 +13,25 @@ import {
   Check,
   Coins,
   Clock,
+  Flame,
+  Zap,
+  Snowflake,
+  Users,
+  TrendingUp,
 } from "lucide-react";
 import type { HeroType, SpellType, SpellUpgradeLevels } from "../../types";
-import { HERO_DATA, HERO_ABILITY_COOLDOWNS, SPELL_DATA } from "../../constants";
+import {
+  HERO_DATA,
+  HERO_ABILITY_COOLDOWNS,
+  SPELL_DATA,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
+} from "../../constants";
 import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
+import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 
@@ -217,15 +232,7 @@ function SpellCircleButton({
         boxShadow: `0 0 20px rgba(140,80,200,0.2), 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
       }}
     >
-      {/* Wand / Sparkle icon */}
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M12 2L13.5 8.5L20 7L15 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L9 12L4 7L10.5 8.5L12 2Z"
-          fill={isFull ? "rgba(168,85,247,0.9)" : "rgba(168,85,247,0.4)"}
-          stroke={isFull ? "#c084fc" : "rgba(168,85,247,0.5)"}
-          strokeWidth="0.5"
-        />
-      </svg>
+      <SpellOrbIcon size={30} active={isFull} />
       {/* Count badge */}
       <div
         className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2"
@@ -282,31 +289,7 @@ function UpgradeCircleButton({
           : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
       }}
     >
-      {/* Upgrade icon - anvil/hammer style */}
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M7 4L9 2L15 2L17 4L17 8L15 10L9 10L7 8Z"
-          fill={hasStars ? "rgba(250,204,21,0.8)" : "rgba(180,150,60,0.4)"}
-          stroke={hasStars ? "#fde047" : "rgba(180,150,60,0.5)"}
-          strokeWidth="0.7"
-        />
-        <rect
-          x="11"
-          y="10"
-          width="2"
-          height="8"
-          rx="0.5"
-          fill={hasStars ? "rgba(200,160,40,0.7)" : "rgba(140,120,50,0.4)"}
-        />
-        <rect
-          x="8"
-          y="18"
-          width="8"
-          height="3"
-          rx="1"
-          fill={hasStars ? "rgba(160,130,30,0.6)" : "rgba(120,100,40,0.3)"}
-        />
-      </svg>
+      <EnchantedAnvilIcon size={28} active={hasStars} />
       {/* Star badge */}
       {hasStars && (
         <div
@@ -472,9 +455,9 @@ function SpellSelectionContent({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {/* Slot indicator */}
-      <div className="flex items-center justify-center gap-2 mb-2">
+      <div className="flex items-center justify-center gap-2 mb-1">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
@@ -508,13 +491,14 @@ function SpellSelectionContent({
         const selectionIndex = selectedSpells.indexOf(spellType);
         const colors = SPELL_COLORS[spellType];
         const spellLevel = spellUpgradeLevels[spellType] ?? 0;
+        const stats = getSpellStatsForType(spellType, spellLevel);
 
         return (
           <button
             key={spellType}
             onClick={() => canSelect && toggleSpell(spellType)}
             disabled={!canSelect && !isSelected}
-            className={`w-full rounded-xl p-2.5 flex items-center gap-3 transition-all active:scale-[0.98] ${
+            className={`w-full rounded-xl p-2.5 transition-all active:scale-[0.98] text-left ${
               !canSelect && !isSelected ? "opacity-40" : ""
             }`}
             style={{
@@ -527,106 +511,152 @@ function SpellSelectionContent({
                 : "none",
             }}
           >
-            {/* Spell sprite */}
-            <div
-              className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{
-                background: `${colors.bg}`,
-                border: `1.5px solid ${colors.border}`,
-              }}
-            >
-              <SpellSprite type={spellType} size={32} />
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0 text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-amber-200">
-                  {spell.shortName}
-                </span>
-                <span
-                  className="text-[7px] font-bold px-1 py-px rounded border"
-                  style={{
-                    background: "rgba(113,63,18,0.3)",
-                    borderColor: "rgba(250,204,21,0.25)",
-                    color: "#fde047",
-                  }}
-                >
-                  Lv {spellLevel + 1}
-                </span>
+            {/* Top row: sprite + name + level + selection */}
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: colors.bg,
+                  border: `1.5px solid ${colors.border}`,
+                }}
+              >
+                <SpellSprite type={spellType} size={30} />
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span
-                  className="text-[8px] font-medium px-1 py-px rounded flex items-center gap-0.5"
-                  style={{
-                    background:
-                      spell.cost > 0
-                        ? "rgba(120,80,20,0.3)"
-                        : "rgba(20,83,45,0.3)",
-                    border: `1px solid ${
-                      spell.cost > 0
-                        ? "rgba(120,80,20,0.2)"
-                        : "rgba(20,83,45,0.2)"
-                    }`,
-                  }}
-                >
-                  <Coins
-                    size={7}
-                    className={
-                      spell.cost > 0
-                        ? "text-amber-400/70"
-                        : "text-green-400/70"
-                    }
-                  />
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-amber-200">
+                    {spell.name}
+                  </span>
                   <span
-                    className={
-                      spell.cost > 0
-                        ? "text-amber-300/80"
-                        : "text-green-300/80"
-                    }
+                    className="text-[7px] font-bold px-1 py-px rounded border"
+                    style={{
+                      background: "rgba(113,63,18,0.3)",
+                      borderColor: "rgba(250,204,21,0.25)",
+                      color: "#fde047",
+                    }}
                   >
-                    {spell.cost > 0 ? spell.cost : "Free"}
+                    Lv {spellLevel + 1}
                   </span>
-                </span>
-                <span
-                  className="text-[8px] font-medium px-1 py-px rounded flex items-center gap-0.5"
+                </div>
+                <p className="text-[8px] text-stone-400/80 leading-snug mt-0.5">
+                  {spell.desc}
+                </p>
+              </div>
+
+              {isSelected ? (
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white"
                   style={{
-                    background: "rgba(30,58,138,0.25)",
-                    border: "1px solid rgba(30,58,138,0.2)",
+                    background: "linear-gradient(135deg, #a855f7, #7c3aed)",
+                    boxShadow: "0 0 8px rgba(168,85,247,0.5)",
                   }}
                 >
-                  <Clock size={7} className="text-blue-400/70" />
-                  <span className="text-blue-300/80">
-                    {spell.cooldown / 1000}s
-                  </span>
-                </span>
-              </div>
+                  {selectionIndex + 1}
+                </div>
+              ) : canSelect ? (
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-dashed"
+                  style={{ borderColor: "rgba(140,80,200,0.3)" }}
+                >
+                  <span className="text-[8px] text-purple-500/40">+</span>
+                </div>
+              ) : null}
             </div>
 
-            {/* Selection indicator */}
-            {isSelected ? (
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white"
+            {/* Stats grid */}
+            <div className="flex items-center gap-0 rounded overflow-hidden"
+              style={{ border: "1px solid rgba(100,70,140,0.12)" }}
+            >
+              {/* Cost */}
+              <div className="flex-1 flex items-center justify-center gap-0.5 py-1"
                 style={{
-                  background: "linear-gradient(135deg, #a855f7, #7c3aed)",
-                  boxShadow: "0 0 8px rgba(168,85,247,0.5)",
+                  background: spell.cost > 0 ? "rgba(120,80,20,0.2)" : "rgba(20,83,45,0.2)",
+                  borderRight: "1px solid rgba(100,70,140,0.08)",
                 }}
               >
-                {selectionIndex + 1}
+                <Coins size={8} className={spell.cost > 0 ? "text-amber-400/70" : "text-green-400/70"} />
+                <span className={`text-[8px] font-bold ${spell.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}`}>
+                  {spell.cost > 0 ? `${spell.cost} PP` : "Free"}
+                </span>
               </div>
-            ) : canSelect ? (
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-dashed"
+              {/* Cooldown */}
+              <div className="flex-1 flex items-center justify-center gap-0.5 py-1"
                 style={{
-                  borderColor: "rgba(140,80,200,0.3)",
+                  background: "rgba(30,58,138,0.15)",
+                  borderRight: "1px solid rgba(100,70,140,0.08)",
                 }}
               >
-                <span className="text-[8px] text-purple-500/40">+</span>
+                <Clock size={8} className="text-blue-400/70" />
+                <span className="text-[8px] font-bold text-blue-300/80">{spell.cooldown / 1000}s</span>
               </div>
-            ) : null}
+              {/* Spell-specific stats */}
+              {stats.map((stat, idx) => (
+                <div key={idx} className="flex-1 flex items-center justify-center gap-0.5 py-1"
+                  style={{
+                    background: stat.bg,
+                    borderRight: idx < stats.length - 1 ? "1px solid rgba(100,70,140,0.08)" : "none",
+                  }}
+                >
+                  {stat.icon}
+                  <span className={`text-[8px] font-bold ${stat.textColor}`}>{stat.value}</span>
+                </div>
+              ))}
+            </div>
           </button>
         );
       })}
     </div>
   );
+}
+
+interface SpellStatDisplay {
+  icon: React.ReactNode;
+  value: string;
+  textColor: string;
+  bg: string;
+}
+
+function getSpellStatsForType(spellType: SpellType, level: number): SpellStatDisplay[] {
+  switch (spellType) {
+    case "fireball": {
+      const s = getFireballSpellStats(level);
+      return [
+        { icon: <Flame size={8} className="text-orange-400/70" />, value: `${s.damagePerMeteor}×${s.meteorCount}`, textColor: "text-orange-300/80", bg: "rgba(124,45,18,0.15)" },
+        { icon: <Target size={8} className="text-red-400/70" />, value: `${s.impactRadius}`, textColor: "text-red-300/80", bg: "rgba(127,29,29,0.15)" },
+        { icon: <Timer size={8} className="text-amber-400/70" />, value: `${(s.burnDurationMs / 1000).toFixed(1)}s`, textColor: "text-amber-300/80", bg: "rgba(120,53,15,0.15)" },
+      ];
+    }
+    case "lightning": {
+      const s = getLightningSpellStats(level);
+      return [
+        { icon: <Zap size={8} className="text-yellow-400/70" />, value: `${s.totalDamage}`, textColor: "text-yellow-300/80", bg: "rgba(113,63,18,0.15)" },
+        { icon: <TrendingUp size={8} className="text-cyan-400/70" />, value: `${s.chainCount}ch`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
+        { icon: <Timer size={8} className="text-blue-400/70" />, value: `${(s.stunDurationMs / 1000).toFixed(2)}s`, textColor: "text-blue-300/80", bg: "rgba(30,58,138,0.15)" },
+      ];
+    }
+    case "freeze": {
+      const s = getFreezeSpellStats(level);
+      return [
+        { icon: <Snowflake size={8} className="text-cyan-400/70" />, value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
+        { icon: <Target size={8} className="text-indigo-400/70" />, value: "Global", textColor: "text-indigo-300/80", bg: "rgba(49,46,129,0.15)" },
+      ];
+    }
+    case "payday": {
+      const s = getPaydaySpellStats(level);
+      return [
+        { icon: <Coins size={8} className="text-amber-400/70" />, value: `${s.basePayout}`, textColor: "text-amber-300/80", bg: "rgba(120,53,15,0.15)" },
+        { icon: <TrendingUp size={8} className="text-green-400/70" />, value: `+${s.bonusPerEnemy}/e`, textColor: "text-green-300/80", bg: "rgba(20,83,45,0.15)" },
+        { icon: <Timer size={8} className="text-yellow-400/70" />, value: `${s.auraDurationMs / 1000}s`, textColor: "text-yellow-300/80", bg: "rgba(113,63,18,0.15)" },
+      ];
+    }
+    case "reinforcements": {
+      const s = getReinforcementSpellStats(level);
+      return [
+        { icon: <Users size={8} className="text-emerald-400/70" />, value: `×${s.knightCount}`, textColor: "text-emerald-300/80", bg: "rgba(6,78,59,0.15)" },
+        { icon: <Heart size={8} className="text-red-400/70" />, value: `${s.knightHp}`, textColor: "text-red-300/80", bg: "rgba(127,29,29,0.15)" },
+        { icon: <Swords size={8} className="text-orange-400/70" />, value: `${s.knightDamage}`, textColor: "text-orange-300/80", bg: "rgba(124,45,18,0.15)" },
+      ];
+    }
+  }
 }

@@ -1908,38 +1908,28 @@ export function renderLibraryTower(
     }
   }
 
-  // Gothic windows on lower body (3D isometric, flush with left/right faces)
-  const windowY = screenPos.y - lowerBodyHeight * zoom * 0.5 - 5 * zoom;
+  // Gothic windows on lower body (flush with left/right faces)
+  const windowYBase = screenPos.y - lowerBodyHeight * zoom * 0.25;
   const glowIntensity = 0.5 + Math.sin(time * 2) * 0.3 + attackPulse;
   const libraryWindowColors = {
     frame: "#3a2a1a",
     void: `${mainColor} ${glowIntensity * 0.9})`,
     sill: "#3a2a1a",
   };
-  drawIsoGothicWindow(
-    ctx,
-    sX - 11 * zoom,
-    windowY,
-    5,
-    10,
-    "left",
-    zoom,
-    mainColor,
-    glowIntensity,
-    libraryWindowColors,
-  );
-  drawIsoGothicWindow(
-    ctx,
-    sX + 11 * zoom,
-    windowY,
-    5,
-    10,
-    "right",
-    zoom,
-    mainColor,
-    glowIntensity,
-    libraryWindowColors,
-  );
+  const isUpgraded = tower.level === 4 && !!tower.upgrade;
+
+  if (isUpgraded) {
+    // Two windows per side for EQ Smasher / Blizzard towers — spread toward edges
+    const twinW = 3.5;
+    const twinH = 8;
+    drawIsoGothicWindow(ctx, sX - w * 0.82, windowYBase + 0.18 * d, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX - w * 0.18, windowYBase + 0.82 * d, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + w * 0.82, windowYBase + 0.18 * d, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + w * 0.18, windowYBase + 0.82 * d, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+  } else {
+    drawIsoGothicWindow(ctx, sX - w * 0.5, windowYBase + 0.5 * d, 5, 10, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + w * 0.5, windowYBase + 0.5 * d, 5, 10, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+  }
 
   // Piston plate/anvil
   const plateY = screenPos.y - lowerBodyHeight * zoom;
@@ -1984,30 +1974,53 @@ export function renderLibraryTower(
   );
   ctx.fill();
 
-  // Rune inscriptions on plate
+  // Arcane inscription stone recessed into piston plate
+  const stoneRX = baseWidth * zoom * 0.28;
+  const stoneRY = baseWidth * zoom * 0.14;
   const runeGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5;
-  ctx.strokeStyle = `${mainColor} ${runeGlow})`;
+
+  // Recessed groove around stone
+  ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    plateY - 2 * zoom,
-    baseWidth * zoom * 0.35,
-    baseWidth * zoom * 0.18,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 2 * zoom, stoneRY + 1 * zoom, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Plate rune symbols
-  ctx.fillStyle = `rgba(${glowColor}, ${runeGlow})`;
-  ctx.font = `${6 * zoom}px serif`;
+  // Stone tablet surface (darker than plate, like inlaid stone)
+  ctx.fillStyle = "#5a4a3a";
+  ctx.beginPath();
+  ctx.ellipse(sX, plateY - 2 * zoom, stoneRX + 1 * zoom, stoneRY + 0.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#6a5a4a";
+  ctx.beginPath();
+  ctx.ellipse(sX, plateY - 3 * zoom, stoneRX, stoneRY, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing rune circle inscribed on stone
+  ctx.strokeStyle = `${mainColor} ${runeGlow * 0.6})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(sX, plateY - 3 * zoom, stoneRX * 0.85, stoneRY * 0.85, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Central arcane inscription text
+  ctx.fillStyle = `rgba(${glowColor}, ${runeGlow * 0.9})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 4 * zoom;
+  ctx.font = `${5 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("ᛗᛚᛝ", sX, plateY - 3 * zoom);
+  ctx.shadowBlur = 0;
+
+  // Orbiting rune symbols around the stone rim
+  ctx.font = `${4 * zoom}px serif`;
   const plateRunes = ["ᛗ", "ᛚ", "ᛝ", "ᛟ"];
   for (let i = 0; i < 4; i++) {
     const prAngle = (i / 4) * Math.PI * 2 + time * 0.5;
-    const prX = screenPos.x + Math.cos(prAngle) * baseWidth * zoom * 0.25;
-    const prY = plateY - 2 * zoom + Math.sin(prAngle) * baseWidth * zoom * 0.12;
+    const prX = sX + Math.cos(prAngle) * stoneRX * 0.7;
+    const prY = plateY - 3 * zoom + Math.sin(prAngle) * stoneRY * 0.7;
+    ctx.fillStyle = `rgba(${glowColor}, ${runeGlow * 0.5})`;
     ctx.fillText(plateRunes[i], prX, prY);
   }
 
@@ -2949,43 +2962,7 @@ export function renderLibraryTower(
     }
   }
 
-  // ========== LEVEL 2 UNIQUE FEATURES ==========
-  if (tower.level === 2) {
-    // Mystical scroll unfurling
-    const scrollY = screenPos.y - lowerBodyHeight * zoom * 0.8;
-    const scrollGlow = 0.4 + Math.sin(time * 2) * 0.2;
-    ctx.fillStyle = "#e8dcc8";
-    ctx.fillRect(sX - 6 * zoom, scrollY - 4 * zoom, 12 * zoom, 8 * zoom);
-
-    // Scroll roll details
-    ctx.fillStyle = "#d4c8b0";
-    ctx.beginPath();
-    ctx.ellipse(
-      sX - 6 * zoom,
-      scrollY,
-      1.5 * zoom,
-      4 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(
-      sX + 6 * zoom,
-      scrollY,
-      1.5 * zoom,
-      4 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.fillStyle = `rgba(${glowColor}, ${scrollGlow})`;
-    ctx.font = `${5 * zoom}px serif`;
-    ctx.fillText("ᛗᛚᛝ", sX, scrollY + 2 * zoom);
-  }
+  // (Scroll removed — arcane runes are now inscribed on the piston plate)
 
   // ========== LEVEL 3 UNIQUE FEATURES ==========
   // (Barrier circle, nodes, and crystal shards are now drawn via drawLibraryOrbitalEffects)
@@ -3008,32 +2985,20 @@ export function renderLibraryTower(
 
   // (Energy amplifier rings are now drawn via drawLibraryOrbitalEffects)
 
-  // Gothic windows on top level (drawn last so visible above scroll/orbital effects; move with piston)
-  const topWindowY = pistonTopY + baseHeight * 0.4 * zoom * 0.25 - 5 * zoom;
-  drawIsoGothicWindow(
-    ctx,
-    sX - 11 * zoom,
-    topWindowY,
-    5,
-    10,
-    "left",
-    zoom,
-    mainColor,
-    glowIntensity,
-    libraryWindowColors,
-  );
-  drawIsoGothicWindow(
-    ctx,
-    sX + 11 * zoom,
-    topWindowY,
-    5,
-    10,
-    "right",
-    zoom,
-    mainColor,
-    glowIntensity,
-    libraryWindowColors,
-  );
+  // Gothic windows on top level (drawn last; move with piston)
+  const topWinYBase = pistonTopY - upperH * 0.35;
+
+  if (isUpgraded) {
+    const twinW = 3.5;
+    const twinH = 8;
+    drawIsoGothicWindow(ctx, sX - uw * 0.7, topWinYBase + 0.3 * ud, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX - uw * 0.3, topWinYBase + 0.7 * ud, twinW, twinH, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + uw * 0.7, topWinYBase + 0.3 * ud, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + uw * 0.3, topWinYBase + 0.7 * ud, twinW, twinH, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+  } else {
+    drawIsoGothicWindow(ctx, sX - uw * 0.5, topWinYBase + 0.5 * ud, 5, 10, "left", zoom, mainColor, glowIntensity, libraryWindowColors);
+    drawIsoGothicWindow(ctx, sX + uw * 0.5, topWinYBase + 0.5 * ud, 5, 10, "right", zoom, mainColor, glowIntensity, libraryWindowColors);
+  }
 
   ctx.restore();
 }

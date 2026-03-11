@@ -2116,7 +2116,7 @@ export function renderChainLightning(
   ctx.fill();
 
   // Pulsing tech ring
-  ctx.strokeStyle = `rgba(80, 200, 255, ${0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4})`;
+  ctx.strokeStyle = `rgba(110, 125, 255, ${0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4})`;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -2547,7 +2547,7 @@ export function renderChainLightning(
     );
     ctx.fill();
     if (attackPulse > 0.15) {
-      ctx.fillStyle = `rgba(80, 200, 255, ${attackPulse * 0.3})`;
+      ctx.fillStyle = `rgba(110, 125, 255, ${attackPulse * 0.3})`;
       for (let v = 0; v < 2; v++) {
         const vy = ((time * 10 + v * 0.4) % 1) * 3 * zoom;
         ctx.beginPath();
@@ -2597,7 +2597,7 @@ export function renderChainLightning(
     );
     miniFieldGrad.addColorStop(
       0,
-      `rgba(80, 200, 255, ${miniFieldAlpha + attackPulse * 0.2})`,
+      `rgba(110, 125, 255, ${miniFieldAlpha + attackPulse * 0.2})`,
     );
     miniFieldGrad.addColorStop(
       0.5,
@@ -2615,7 +2615,7 @@ export function renderChainLightning(
     );
     ctx.fill();
 
-    ctx.shadowColor = isAttacking ? "#88ffff" : "#00ccff";
+    ctx.shadowColor = isAttacking ? "#aabbff" : "#4455dd";
     ctx.shadowBlur = (15 + attackPulse * 15) * zoom * pulse;
     const miniOrbGrad = ctx.createRadialGradient(
       cx - 1.5 * zoom * coilSize,
@@ -2629,15 +2629,15 @@ export function renderChainLightning(
       miniOrbGrad.addColorStop(0, "#ffffff");
       miniOrbGrad.addColorStop(0.15, "#ffffff");
       miniOrbGrad.addColorStop(0.35, "#ccffff");
-      miniOrbGrad.addColorStop(0.6, "#00ddff");
-      miniOrbGrad.addColorStop(0.85, "#0088ff");
-      miniOrbGrad.addColorStop(1, "#0066cc");
+      miniOrbGrad.addColorStop(0.6, "#5566ff");
+      miniOrbGrad.addColorStop(0.85, "#3344bb");
+      miniOrbGrad.addColorStop(1, "#5511aa");
     } else {
       miniOrbGrad.addColorStop(0, "#ffffff");
       miniOrbGrad.addColorStop(0.25, "#ccffff");
-      miniOrbGrad.addColorStop(0.5, "#00ccff");
-      miniOrbGrad.addColorStop(0.8, "#0088ff");
-      miniOrbGrad.addColorStop(1, "#0044aa");
+      miniOrbGrad.addColorStop(0.5, "#4455dd");
+      miniOrbGrad.addColorStop(0.8, "#3344bb");
+      miniOrbGrad.addColorStop(1, "#440099");
     }
     ctx.fillStyle = miniOrbGrad;
     ctx.beginPath();
@@ -2656,7 +2656,7 @@ export function renderChainLightning(
       miniCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
       miniCoreGrad.addColorStop(
         0.5,
-        `rgba(220, 255, 255, ${attackPulse * 0.9})`,
+        `rgba(220, 230, 255, ${attackPulse * 0.9})`,
       );
       miniCoreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackPulse * 0.5})`);
       ctx.fillStyle = miniCoreGrad;
@@ -2693,7 +2693,7 @@ export function renderChainLightning(
         });
       }
       ctx.save();
-      ctx.shadowColor = "#00ccff";
+      ctx.shadowColor = "#4455dd";
       ctx.shadowBlur = 6 * zoom;
       ctx.strokeStyle = `rgba(40, 180, 255, ${0.15 + attackPulse * 0.12})`;
       ctx.lineWidth = 3 * zoom * coilSize;
@@ -2769,7 +2769,7 @@ export function renderChainLightning(
     ctx.beginPath();
     ctx.ellipse(cbX, cbY, 2.2 * zoom, 3.5 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = `rgba(80, 200, 255, ${charge * 0.6})`;
+    ctx.fillStyle = `rgba(110, 125, 255, ${charge * 0.6})`;
     ctx.beginPath();
     ctx.ellipse(
       cbX,
@@ -2812,7 +2812,7 @@ export function renderChainLightning(
     ctx.moveTo(taX, taY + 2.5 * zoom);
     ctx.lineTo(taX + taSide * 3 * zoom, taY + 8 * zoom);
     ctx.stroke();
-    ctx.fillStyle = `rgba(80, 200, 255, ${0.3 + attackPulse * 0.4})`;
+    ctx.fillStyle = `rgba(110, 125, 255, ${0.3 + attackPulse * 0.4})`;
     ctx.beginPath();
     ctx.arc(taX, taY, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2860,7 +2860,7 @@ export function renderChainLightning(
   ctx.fill();
 
   // Main orb gradient
-  ctx.shadowColor = isAttacking ? "#88ffff" : "#00ccff";
+  ctx.shadowColor = isAttacking ? "#aabbff" : "#4455dd";
   ctx.shadowBlur = (30 + attackPulse * 30) * zoom * mainOrbPulse;
   const mainOrbGrad = ctx.createRadialGradient(
     screenPos.x - 4 * zoom,
@@ -2874,15 +2874,15 @@ export function renderChainLightning(
     mainOrbGrad.addColorStop(0, "#ffffff");
     mainOrbGrad.addColorStop(0.15, "#ffffff");
     mainOrbGrad.addColorStop(0.35, "#ccffff");
-    mainOrbGrad.addColorStop(0.6, "#00ddff");
-    mainOrbGrad.addColorStop(0.85, "#0088ff");
-    mainOrbGrad.addColorStop(1, "#0066cc");
+    mainOrbGrad.addColorStop(0.6, "#5566ff");
+    mainOrbGrad.addColorStop(0.85, "#3344bb");
+    mainOrbGrad.addColorStop(1, "#5511aa");
   } else {
     mainOrbGrad.addColorStop(0, "#ffffff");
     mainOrbGrad.addColorStop(0.2, "#ccffff");
-    mainOrbGrad.addColorStop(0.5, "#00ccff");
-    mainOrbGrad.addColorStop(0.8, "#0088ff");
-    mainOrbGrad.addColorStop(1, "#0044aa");
+    mainOrbGrad.addColorStop(0.5, "#4455dd");
+    mainOrbGrad.addColorStop(0.8, "#3344bb");
+    mainOrbGrad.addColorStop(1, "#440099");
   }
   ctx.fillStyle = mainOrbGrad;
   ctx.beginPath();
@@ -2899,7 +2899,7 @@ export function renderChainLightning(
       mainOrbSize * 0.5,
     );
     coreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
-    coreGrad.addColorStop(0.5, `rgba(220, 255, 255, ${attackPulse * 0.9})`);
+    coreGrad.addColorStop(0.5, `rgba(220, 230, 255, ${attackPulse * 0.9})`);
     coreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackPulse * 0.5})`);
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
@@ -2936,7 +2936,7 @@ export function renderChainLightning(
       });
     }
     ctx.save();
-    ctx.shadowColor = "#00ccff";
+    ctx.shadowColor = "#4455dd";
     ctx.shadowBlur = 10 * zoom;
     ctx.strokeStyle = `rgba(40, 180, 255, ${0.2 + attackPulse * 0.18})`;
     ctx.lineWidth = 4.5 * zoom;
@@ -2965,7 +2965,7 @@ export function renderChainLightning(
       ctx.lineTo(boltPts[p].x, boltPts[p].y);
     ctx.stroke();
     const tip = boltPts[boltPts.length - 1];
-    ctx.fillStyle = `rgba(200, 255, 255, ${0.55 + attackPulse * 0.3})`;
+    ctx.fillStyle = `rgba(210, 220, 255, ${0.55 + attackPulse * 0.3})`;
     ctx.beginPath();
     ctx.arc(tip.x, tip.y, 2 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -3032,7 +3032,7 @@ export function renderChainLightning(
       });
     }
     ctx.save();
-    ctx.shadowColor = "#00ccff";
+    ctx.shadowColor = "#4455dd";
     ctx.shadowBlur = 8 * zoom;
     ctx.strokeStyle = `rgba(40, 180, 255, ${0.15 + attackPulse * 0.15})`;
     ctx.lineWidth = 4 * zoom;

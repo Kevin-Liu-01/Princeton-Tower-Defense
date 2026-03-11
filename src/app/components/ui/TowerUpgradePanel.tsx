@@ -441,14 +441,14 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   if (tower.level === 4 && tower.upgrade) {
     const t = tower.type;
     const u = tower.upgrade;
-    if (t === "library" && u === "A")  { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("splash"); }
-    if (t === "library" && u === "B")  { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("stun"); }
-    if (t === "cannon"  && u === "B")  { upgradeDetailKeys.add("burn"); }
-    if (t === "lab"     && u === "B")  { upgradeDetailKeys.add("chain"); }
-    if (t === "arch"    && u === "A")  { upgradeDetailKeys.add("stun"); upgradeDetailKeys.add("crescendo"); }
-    if (t === "arch"    && u === "B")  { upgradeDetailKeys.add("crescendo"); }
-    if (t === "mortar"  && u === "A")  { upgradeDetailKeys.add("splash"); }
-    if (t === "mortar"  && u === "B")  { upgradeDetailKeys.add("burn"); upgradeDetailKeys.add("splash"); }
+    if (t === "library" && u === "A") { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("splash"); }
+    if (t === "library" && u === "B") { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("stun"); }
+    if (t === "cannon" && u === "B") { upgradeDetailKeys.add("burn"); }
+    if (t === "lab" && u === "B") { upgradeDetailKeys.add("chain"); }
+    if (t === "arch" && u === "A") { upgradeDetailKeys.add("stun"); upgradeDetailKeys.add("crescendo"); }
+    if (t === "arch" && u === "B") { upgradeDetailKeys.add("crescendo"); }
+    if (t === "mortar" && u === "A") { upgradeDetailKeys.add("splash"); }
+    if (t === "mortar" && u === "B") { upgradeDetailKeys.add("burn"); upgradeDetailKeys.add("splash"); }
   }
 
   // ---- Stats array ----

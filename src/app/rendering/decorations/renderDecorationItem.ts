@@ -24699,8 +24699,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           bulgeR * 0.98,
           bulgeR * TRUE_ISO * 0.35,
           0,
-          Math.PI,
           0,
+          Math.PI,
         );
         ctx.stroke();
 

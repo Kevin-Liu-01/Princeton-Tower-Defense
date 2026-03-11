@@ -1096,7 +1096,7 @@ export function renderLabTower(
     const l4AttackPulse = l4IsAttacking
       ? Math.sin((l4TimeSinceFire / 400) * Math.PI)
       : 0;
-    const l4Accent = tower.upgrade === "A" ? "255, 180, 80" : "80, 200, 255";
+    const l4Accent = tower.upgrade === "A" ? "255, 180, 80" : "110, 125, 255";
 
     // --- REINFORCED STRUCTURAL CROSS-BRACING ---
     ctx.strokeStyle = "#4a7a9a";

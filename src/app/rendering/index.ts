@@ -1,7 +1,7 @@
 import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
-import { drawOrganicBlobAt } from "./helpers";
+import { drawOrganicBlobAt, type LightningColorScheme } from "./helpers";
 import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 import { getScenePressure } from "./performance";
 
@@ -146,6 +146,37 @@ export function renderEffect(
         const lowDetail = lightningPressure > 60 || scenePressure.forceSimplifiedGradients;
         const minimalDetail = lightningPressure > 90 || scenePressure.simplifyEnemies;
 
+        const BOLT_PALETTES: Record<LightningColorScheme, {
+          outer: string; mid: string; core: string;
+          branch: string; branchCore: string;
+          impactCenter: string; impactMid: string; impactEdge: string;
+        }> = {
+          blue: {
+            outer: "30, 100, 255", mid: "0, 220, 255", core: "220, 255, 255",
+            branch: "0, 200, 255", branchCore: "200, 255, 255",
+            impactCenter: "200, 255, 255", impactMid: "0, 200, 255", impactEdge: "0, 100, 255",
+          },
+          yellow: {
+            outer: "255, 170, 30", mid: "255, 230, 50", core: "255, 255, 220",
+            branch: "255, 200, 0", branchCore: "255, 255, 200",
+            impactCenter: "255, 255, 200", impactMid: "255, 200, 0", impactEdge: "255, 140, 0",
+          },
+          red: {
+            outer: "255, 60, 30", mid: "255, 100, 80", core: "255, 220, 210",
+            branch: "255, 80, 40", branchCore: "255, 200, 190",
+            impactCenter: "255, 220, 210", impactMid: "255, 80, 40", impactEdge: "200, 20, 0",
+          },
+          violet: {
+            outer: "70, 65, 230", mid: "110, 110, 255", core: "215, 225, 255",
+            branch: "100, 100, 255", branchCore: "200, 210, 255",
+            impactCenter: "215, 225, 255", impactMid: "100, 100, 255", impactEdge: "40, 35, 180",
+          },
+        };
+        const boltScheme: LightningColorScheme =
+          (effect.color as LightningColorScheme) ||
+          (effect.type === "beam" ? "yellow" : "blue");
+        const bp = BOLT_PALETTES[boltScheme] || BOLT_PALETTES.blue;
+
         // Find the source lab tower to get correct orb position
         let sourceX = screenPos.x;
         let sourceY = screenPos.y;
@@ -252,20 +283,20 @@ export function renderEffect(
         ctx.shadowBlur = 0;
 
         // Layer 1: wide outer glow (no shadowBlur — just a wide translucent stroke)
-        ctx.strokeStyle = `rgba(30, 100, 255, ${effectAlpha * 0.22 * intensity})`;
+        ctx.strokeStyle = `rgba(${bp.outer}, ${effectAlpha * 0.22 * intensity})`;
         ctx.lineWidth = (minimalDetail ? 5 : lowDetail ? 8 : 12) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
-        // Layer 2: mid glow (cyan)
-        ctx.strokeStyle = `rgba(0, 220, 255, ${effectAlpha * 0.55 * intensity})`;
+        // Layer 2: mid glow
+        ctx.strokeStyle = `rgba(${bp.mid}, ${effectAlpha * 0.55 * intensity})`;
         ctx.lineWidth = (minimalDetail ? 2.5 : lowDetail ? 3.5 : 5) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
         if (!minimalDetail) {
           // Layer 3: white-hot core
-          ctx.strokeStyle = `rgba(220, 255, 255, ${effectAlpha * 0.9 * intensity})`;
+          ctx.strokeStyle = `rgba(${bp.core}, ${effectAlpha * 0.9 * intensity})`;
           ctx.lineWidth = (lowDetail ? 1.2 : 1.8) * zoom * intensity;
           tracePolyline(ctx, mainPts);
           ctx.stroke();
@@ -286,12 +317,12 @@ export function renderEffect(
               });
             }
 
-            ctx.strokeStyle = `rgba(0, 200, 255, ${effectAlpha * 0.35 * intensity})`;
+            ctx.strokeStyle = `rgba(${bp.branch}, ${effectAlpha * 0.35 * intensity})`;
             ctx.lineWidth = 2.4 * zoom * intensity;
             tracePolyline(ctx, brPts);
             ctx.stroke();
 
-            ctx.strokeStyle = `rgba(200, 255, 255, ${effectAlpha * 0.6 * intensity})`;
+            ctx.strokeStyle = `rgba(${bp.branchCore}, ${effectAlpha * 0.6 * intensity})`;
             ctx.lineWidth = 0.9 * zoom * intensity;
             tracePolyline(ctx, brPts);
             ctx.stroke();
@@ -310,9 +341,9 @@ export function renderEffect(
             targetScreen.y,
             impactRadius,
           );
-          impGrad.addColorStop(0, `rgba(200, 255, 255, ${effectAlpha * 0.6 * intensity * impactPulse})`);
-          impGrad.addColorStop(0.4, `rgba(0, 200, 255, ${effectAlpha * 0.3 * intensity})`);
-          impGrad.addColorStop(1, `rgba(0, 100, 255, 0)`);
+          impGrad.addColorStop(0, `rgba(${bp.impactCenter}, ${effectAlpha * 0.6 * intensity * impactPulse})`);
+          impGrad.addColorStop(0.4, `rgba(${bp.impactMid}, ${effectAlpha * 0.3 * intensity})`);
+          impGrad.addColorStop(1, `rgba(${bp.impactEdge}, 0)`);
           ctx.fillStyle = impGrad;
           ctx.beginPath();
           ctx.arc(targetScreen.x, targetScreen.y, impactRadius, 0, Math.PI * 2);

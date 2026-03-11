@@ -838,25 +838,42 @@ export function drawRangeIndicator(
 // EFFECT HELPERS
 // ============================================================================
 
-export type LightningColorScheme = "blue" | "yellow";
+export type LightningColorScheme = "blue" | "yellow" | "red" | "violet";
 
 const LIGHTNING_COLORS: Record<LightningColorScheme, {
   outerGlow: string; outerStroke: string;
   midGlow: string; midStroke: string;
   coreStroke: string;
-  branchStroke: string; impactFill: string;
+  branchStroke: string; branchCore: string;
+  impactFill: string;
 }> = {
   blue: {
     outerGlow: "#0088ff", outerStroke: "30, 100, 255",
     midGlow: "#00ffff", midStroke: "0, 220, 255",
     coreStroke: "220, 255, 255",
-    branchStroke: "0, 200, 255", impactFill: "150, 255, 255",
+    branchStroke: "0, 200, 255", branchCore: "200, 255, 255",
+    impactFill: "150, 255, 255",
   },
   yellow: {
     outerGlow: "#ff8800", outerStroke: "255, 170, 30",
     midGlow: "#ffee00", midStroke: "255, 230, 50",
     coreStroke: "255, 255, 220",
-    branchStroke: "255, 200, 0", impactFill: "255, 255, 150",
+    branchStroke: "255, 200, 0", branchCore: "255, 255, 200",
+    impactFill: "255, 255, 150",
+  },
+  red: {
+    outerGlow: "#ff2200", outerStroke: "255, 60, 30",
+    midGlow: "#ff4444", midStroke: "255, 100, 80",
+    coreStroke: "255, 220, 210",
+    branchStroke: "255, 80, 40", branchCore: "255, 200, 190",
+    impactFill: "255, 150, 130",
+  },
+  violet: {
+    outerGlow: "#4444dd", outerStroke: "70, 65, 230",
+    midGlow: "#7788ff", midStroke: "110, 110, 255",
+    coreStroke: "215, 225, 255",
+    branchStroke: "100, 100, 255", branchCore: "200, 210, 255",
+    impactFill: "180, 190, 255",
   },
 };
 
@@ -956,7 +973,7 @@ export function drawLightningBolt(
     );
     ctx.stroke();
 
-    ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.5 * intensity})`;
+    ctx.strokeStyle = `rgba(${c.branchCore}, ${alpha * 0.5 * intensity})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(bp.x, bp.y);

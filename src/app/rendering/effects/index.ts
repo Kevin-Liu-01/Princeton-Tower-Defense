@@ -70,7 +70,10 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = effect.intensity || 1;
-        const boltColor: LightningColorScheme = effect.type === "beam" ? "yellow" : "blue";
+        const boltColor: LightningColorScheme =
+          (effect.color as LightningColorScheme) ||
+          (effect.type === "beam" ? "yellow" : "blue");
+        const colors = { blue: "150, 255, 255", yellow: "255, 255, 150", red: "255, 150, 130" };
         drawLightningBolt(
           ctx,
           screenPos.x,
@@ -84,8 +87,7 @@ export function renderEffect(
         );
 
         // Impact spark
-        const impactRgb = effect.type === "beam" ? "255, 255, 150" : "150, 255, 255";
-        ctx.fillStyle = `rgba(${impactRgb}, ${alpha * intensity})`;
+        ctx.fillStyle = `rgba(${colors[boltColor]}, ${alpha * intensity})`;
         ctx.beginPath();
         ctx.arc(
           targetScreen.x,
