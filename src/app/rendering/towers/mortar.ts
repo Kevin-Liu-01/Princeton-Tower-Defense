@@ -14,8 +14,10 @@ import { drawIsometricPrism } from "./towerHelpers";
 import { TOWER_STATS } from "../../constants/towerStats";
 
 const MORTAR_BASE_ATTACK_SPEED = TOWER_STATS.mortar.baseStats.attackSpeed;
-const MISSILE_ATTACK_SPEED = TOWER_STATS.mortar.upgrades.A.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
-const EMBER_ATTACK_SPEED = TOWER_STATS.mortar.upgrades.B.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
+const MISSILE_ATTACK_SPEED =
+  TOWER_STATS.mortar.upgrades.A.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
+const EMBER_ATTACK_SPEED =
+  TOWER_STATS.mortar.upgrades.B.stats.attackSpeed ?? MORTAR_BASE_ATTACK_SPEED;
 
 function getMortarAttackSpeed(tower: Tower): number {
   if (tower.level === 4 && tower.upgrade === "A") return MISSILE_ATTACK_SPEED;
@@ -557,8 +559,8 @@ export function renderMortarTower(
   ctx.fillStyle = "#7a7a82";
   for (let i = 0; i < hexSides; i++) {
     if (
-      platNormals[i] < -0.3 &&
-      platNormals[(i + hexSides - 1) % hexSides] < -0.3
+      platNormals[i] < -0.5 &&
+      platNormals[(i + hexSides - 1) % hexSides] < -0.5
     )
       continue;
     ctx.beginPath();
@@ -689,7 +691,7 @@ export function renderMortarTower(
     ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.06})`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
-    if (n < -0.2) continue;
+    if (n < -0.5) continue;
 
     // Depot face detail helper
     const depotFacePt = (u: number, v: number) => ({
@@ -892,7 +894,7 @@ export function renderMortarTower(
     },
     "rgba(0,0,0,0.15)",
     0.4 * zoom,
-    -0.3,
+    -0.5,
   );
 
   // ========== HYDRAULIC ACTUATORS (platform to depot) ==========
@@ -902,7 +904,7 @@ export function renderMortarTower(
     for (let h = 0; h < hydCount; h++) {
       const hi = Math.floor(h * hydSpacing + 1) % hexSides;
       const n = platNormals[hi];
-      if (n < -0.3) continue;
+      if (n < -0.5) continue;
       const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
 
       // Foot anchors on platform edge, attach points on depot body
@@ -1588,7 +1590,7 @@ export function renderMortarTower(
       },
       "rgba(0,0,0,0.15)",
       0.4 * zoom,
-      -0.3,
+      -0.5,
     );
     drawHexCap(
       ctx,
@@ -1726,7 +1728,8 @@ export function renderMortarTower(
     const dp = 0.3 + Math.sin(time * 2.5) * 0.15;
     ctx.fillStyle = `rgba(40, 180, 80, ${dp})`;
     ctx.fillRect(cpX - 2 * zoom, cpY - 5 * zoom, 4 * zoom, 2.5 * zoom);
-    ctx.fillStyle = timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2 ? "#ff2200" : "#00ff44";
+    ctx.fillStyle =
+      timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2 ? "#ff2200" : "#00ff44";
     ctx.beginPath();
     ctx.arc(cpX, cpY - 2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -3007,7 +3010,9 @@ export function renderMortarStandardBarrel(
         const heatTint =
           (ti / 3) *
           (0.04 +
-            (timeSinceFire < MORTAR_BASE_ATTACK_SPEED ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.08 : 0));
+            (timeSinceFire < MORTAR_BASE_ATTACK_SPEED
+              ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.08
+              : 0));
         if (heatTint > 0.01) {
           ctx.fillStyle = `rgba(255,80,20,${heatTint})`;
           ctx.beginPath();
@@ -3291,7 +3296,7 @@ export function renderMortarStandardBarrel(
       },
       "rgba(0,0,0,0.2)",
       0.5 * zoom,
-      -0.3,
+      -1.5,
     );
 
     // L1: rope bindings between tiers
@@ -3478,7 +3483,7 @@ export function renderMortarStandardBarrel(
       if (level === 2) {
         for (const side of [-1, 1]) {
           const sideVis = side * (-sinR + 0.5 * cosR);
-          if (sideVis < -0.3) continue;
+          if (sideVis < -0.85) continue;
           const hPt = posAtFrac(
             botFrac + (topFrac - botFrac) * 0.5,
             cumRecoil - tierRecoils[ti] * 0.5,
@@ -3539,7 +3544,7 @@ export function renderMortarStandardBarrel(
           const va = rot + vi * Math.PI * 0.5;
           const vx = ventPt.x + Math.cos(va) * tier.r * 0.85;
           const vy = ventPt.y + Math.sin(va) * tier.r * ISO_Y_RATIO * 0.85;
-          if (Math.cos(va) * cosR + Math.sin(va) * sinR < -0.3) continue;
+          if (Math.cos(va) * cosR + Math.sin(va) * sinR < -0.85) continue;
           ctx.fillStyle = "#1a1a1a";
           ctx.beginPath();
           ctx.ellipse(vx, vy, 1.2 * zoom, 0.6 * zoom, rot, 0, Math.PI * 2);
@@ -3566,7 +3571,7 @@ export function renderMortarStandardBarrel(
       if (level >= 3) {
         for (const side of [-1, 1]) {
           const epSideVis = side * (-sinR + 0.5 * cosR);
-          if (epSideVis < -0.3) continue;
+          if (epSideVis < -0.85) continue;
           const epPt = posAtFrac(
             botFrac + (topFrac - botFrac) * 0.3,
             cumRecoil - tierRecoils[ti] * 0.7,
@@ -3598,6 +3603,90 @@ export function renderMortarStandardBarrel(
           );
           ctx.fill();
         }
+      }
+    }
+
+    // ===== BARREL COLLAR (hex ring at tier junction, drawn after its tier) =====
+    if (ti === 0) {
+      const collarFrac = tiers[0].h / totalH;
+      const collarRecoil = tierRecoils[0];
+      const collarPt = posAtFrac(collarFrac, collarRecoil);
+      const collarR = (tiers[0].r + tiers[1].r) * 0.5;
+      const collarVerts = generateIsoHexVertices(
+        isoOff,
+        collarR * 1.05,
+        hexSides,
+      );
+      const collarNormals = computeHexSideNormals(cosR, hexSides);
+      const collarBotPt: Pt = { x: collarPt.x, y: collarPt.y + 1.2 * zoom };
+      const collarTopPt: Pt = { x: collarPt.x, y: collarPt.y - 1.2 * zoom };
+      drawHexBand(
+        ctx,
+        collarVerts,
+        collarNormals,
+        collarBotPt,
+        collarTopPt,
+        1.0,
+        (n) => {
+          const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+          return level >= 3
+            ? `rgb(${Math.floor(180 * (0.6 + b * 0.4))},${Math.floor(150 * (0.6 + b * 0.4))},${Math.floor(40 * (0.6 + b * 0.4))})`
+            : `rgb(${Math.floor(90 + b * 30)},${Math.floor(90 + b * 30)},${Math.floor(100 + b * 22)})`;
+        },
+        "rgba(0,0,0,0.15)",
+        0.4 * zoom,
+        -1.5,
+      );
+      ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
+      for (let ci = 0; ci < hexSides; ci++) {
+        if (collarNormals[ci] < -1.5) continue;
+        ctx.beginPath();
+        ctx.arc(
+          collarPt.x + collarVerts[ci].x,
+          collarPt.y + collarVerts[ci].y,
+          0.8 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+
+    // ===== REINFORCING RING for this tier (drawn after tier faces) =====
+    {
+      const ringPositions = [0.35, 0.7];
+      const tierBotFrac = cumH / totalH;
+      const tierTopFrac = (cumH + tier.h) / totalH;
+      for (const ringFrac of ringPositions) {
+        if (ringFrac < tierBotFrac || ringFrac >= tierTopFrac) continue;
+        const ringRecoil = cumRecoil * ringFrac;
+        const ringPt = posAtFrac(ringFrac, ringRecoil);
+        const ringR = tier.r * 1.04;
+        const ringVerts = generateIsoHexVertices(isoOff, ringR, hexSides);
+        const ringNormals = computeHexSideNormals(cosR, hexSides);
+        const ringH = 1.5 * zoom;
+        const ringBot: Pt = { x: ringPt.x, y: ringPt.y + ringH * 0.5 };
+        const ringTop: Pt = { x: ringPt.x, y: ringPt.y - ringH * 0.5 };
+        const ringColor =
+          level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
+        drawHexBand(
+          ctx,
+          ringVerts,
+          ringNormals,
+          ringBot,
+          ringTop,
+          1.0,
+          (n) => {
+            const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+            const rc = parseInt(ringColor.slice(1, 3), 16);
+            const gc = parseInt(ringColor.slice(3, 5), 16);
+            const bc = parseInt(ringColor.slice(5, 7), 16);
+            return `rgb(${Math.floor(rc * (0.6 + b * 0.4))},${Math.floor(gc * (0.6 + b * 0.4))},${Math.floor(bc * (0.6 + b * 0.4))})`;
+          },
+          "rgba(0,0,0,0.12)",
+          0.3 * zoom,
+          -1.5,
+        );
       }
     }
 
@@ -3738,7 +3827,7 @@ export function renderMortarStandardBarrel(
         for (const ti of tubePrismSorted) {
           const tni = (ti + 1) % tubeHexSides;
           const tn = tubePrismNormals[ti];
-          if (tn < -0.3) continue;
+          if (tn < -0.85) continue;
           const bright = Math.max(0, Math.min(1, 0.2 + (tn + 1) * 0.4));
           const fR = Math.floor(
             tubeDkRgb.r + (tubeLtRgb.r - tubeDkRgb.r) * bright,
@@ -4212,7 +4301,9 @@ export function renderMortarStandardBarrel(
 
         // Status LED
         ctx.fillStyle =
-          timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2 ? "rgba(255,100,0,0.6)" : "rgba(0,200,100,0.5)";
+          timeSinceFire < MORTAR_BASE_ATTACK_SPEED / 2
+            ? "rgba(255,100,0,0.6)"
+            : "rgba(0,200,100,0.5)";
         ctx.beginPath();
         const ledX = lrfX - lrfW * 0.38 * tDx + lrfH * 0.28 * tubeNx;
         const ledY = lrfY - lrfW * 0.38 * tDy + lrfH * 0.28 * tubeNy;
@@ -4226,7 +4317,9 @@ export function renderMortarStandardBarrel(
   {
     const glowIntensity = level >= 3 ? 0.42 : level >= 2 ? 0.32 : 0.2;
     const fireBoost =
-      timeSinceFire < MORTAR_BASE_ATTACK_SPEED ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.6 : 0;
+      timeSinceFire < MORTAR_BASE_ATTACK_SPEED
+        ? (1 - timeSinceFire / MORTAR_BASE_ATTACK_SPEED) * 0.6
+        : 0;
     const pulse = Math.sin(time * 1.5) * 0.05;
     const totalGlow = glowIntensity + fireBoost + pulse;
 
@@ -4305,7 +4398,9 @@ export function renderMortarStandardBarrel(
       const shimmerStr = Math.min(
         0.05,
         totalGlow * 0.12 +
-          (timeSinceFire < MISSILE_ATTACK_SPEED ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.04 : 0),
+          (timeSinceFire < MISSILE_ATTACK_SPEED
+            ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.04
+            : 0),
       );
       const shimmerCount = level >= 3 ? 5 : level >= 2 ? 4 : 3;
       const shimTiltA = Math.atan2(bNy, bNx);
@@ -4498,47 +4593,6 @@ export function renderMortarStandardBarrel(
     ctx.stroke();
   }
 
-  // ===== BARREL REINFORCING RINGS (extra hex bands between tiers) =====
-  {
-    const ringPositions = [0.35, 0.7];
-    for (const ringFrac of ringPositions) {
-      const ringRecoil = cumRecoil * ringFrac;
-      const ringPt = posAtFrac(ringFrac, ringRecoil);
-      const tierIdx =
-        ringFrac < tiers[0].h / totalH
-          ? 0
-          : ringFrac < (tiers[0].h + tiers[1].h) / totalH
-            ? 1
-            : 2;
-      const ringR = tiers[tierIdx].r * 1.04;
-      const ringVerts = generateIsoHexVertices(isoOff, ringR, hexSides);
-      const ringNormals = computeHexSideNormals(cosR, hexSides);
-      const ringH = 1.5 * zoom;
-      const ringBot: Pt = { x: ringPt.x, y: ringPt.y + ringH * 0.5 };
-      const ringTop: Pt = { x: ringPt.x, y: ringPt.y - ringH * 0.5 };
-      const ringColor =
-        level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
-      drawHexBand(
-        ctx,
-        ringVerts,
-        ringNormals,
-        ringBot,
-        ringTop,
-        1.0,
-        (n) => {
-          const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
-          const rc = parseInt(ringColor.slice(1, 3), 16);
-          const gc = parseInt(ringColor.slice(3, 5), 16);
-          const bc = parseInt(ringColor.slice(5, 7), 16);
-          return `rgb(${Math.floor(rc * (0.6 + b * 0.4))},${Math.floor(gc * (0.6 + b * 0.4))},${Math.floor(bc * (0.6 + b * 0.4))})`;
-        },
-        "rgba(0,0,0,0.12)",
-        0.3 * zoom,
-        -0.15,
-      );
-    }
-  }
-
   // ===== ISOMETRIC SCOPE mounted on barrel =====
   {
     const scopeFrac = level >= 3 ? 0.7 : level >= 2 ? 0.65 : 0.6;
@@ -4618,7 +4672,7 @@ export function renderMortarStandardBarrel(
       for (const si of isoScopeSorted) {
         const sni = (si + 1) % isoScopeSides;
         const sn = isoScopeNormals[si];
-        if (sn < -0.3) continue;
+        if (sn < -0.85) continue;
         const bright = Math.max(0, Math.min(1, 0.2 + (sn + 1) * 0.4));
         const cR = Math.floor(
           isoScopeDk.r + (isoScopeLt.r - isoScopeDk.r) * bright,
@@ -4689,7 +4743,7 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.12)",
         0.35 * zoom,
-        -0.2,
+        -1.5,
       );
     }
 
@@ -4849,7 +4903,7 @@ export function renderMortarStandardBarrel(
     ];
     for (let s = 0; s < 3; s++) {
       const sa = scaffAngles[s];
-      if (Math.cos(sa) + 0.5 * Math.sin(sa) < -0.3) continue;
+      if (Math.cos(sa) + 0.5 * Math.sin(sa) < -0.85) continue;
       const footX = Math.cos(sa) * scaffR;
       const footY = Math.sin(sa) * scaffR * ISO_Y_RATIO + 4 * zoom;
       const topPt = posAtFrac(0.4, tierRecoils[0]);
@@ -5146,7 +5200,7 @@ export function renderMortarStandardBarrel(
     for (let w = 0; w < wireCount; w++) {
       const wireAngle = rot + Math.PI * 0.5 + w * Math.PI * 0.25;
       const wireVis = Math.cos(wireAngle) + 0.5 * Math.sin(wireAngle);
-      if (wireVis < -0.3) continue;
+      if (wireVis < -0.85) continue;
       const startR = tiers[0].r * (0.6 + w * 0.1);
       const startX = Math.cos(wireAngle) * startR;
       const startY = Math.sin(wireAngle) * startR * ISO_Y_RATIO + 3 * zoom;
@@ -5180,7 +5234,7 @@ export function renderMortarStandardBarrel(
       const lightPt = posAtFrac(lightFrac, lightRecoil);
       const lightAngle = rot + Math.PI * 0.55 + li * Math.PI * 0.35;
       const lightVis = Math.cos(lightAngle) + 0.5 * Math.sin(lightAngle);
-      if (lightVis < -0.3) continue;
+      if (lightVis < -0.85) continue;
       const lightR = tiers[Math.min(li, 2)].r;
       const lx = lightPt.x + Math.cos(lightAngle) * lightR * 0.98;
       const ly = lightPt.y + Math.sin(lightAngle) * lightR * ISO_Y_RATIO * 0.98;
@@ -5214,52 +5268,6 @@ export function renderMortarStandardBarrel(
         ctx.fill();
         ctx.globalAlpha = 1;
       }
-    }
-  }
-
-  // ===== BARREL COLLAR (hex ring at tier 0→1 junction, moves with recoil) =====
-  {
-    const collarFrac = tiers[0].h / totalH;
-    const collarRecoil = tierRecoils[0];
-    const collarPt = posAtFrac(collarFrac, collarRecoil);
-    const collarR = (tiers[0].r + tiers[1].r) * 0.5;
-    const collarVerts = generateIsoHexVertices(
-      isoOff,
-      collarR * 1.05,
-      hexSides,
-    );
-    const collarNormals = computeHexSideNormals(cosR, hexSides);
-    const collarBotPt: Pt = { x: collarPt.x, y: collarPt.y + 1.2 * zoom };
-    const collarTopPt: Pt = { x: collarPt.x, y: collarPt.y - 1.2 * zoom };
-    drawHexBand(
-      ctx,
-      collarVerts,
-      collarNormals,
-      collarBotPt,
-      collarTopPt,
-      1.0,
-      (n) => {
-        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
-        return level >= 3
-          ? `rgb(${Math.floor(180 * (0.6 + b * 0.4))},${Math.floor(150 * (0.6 + b * 0.4))},${Math.floor(40 * (0.6 + b * 0.4))})`
-          : `rgb(${Math.floor(90 + b * 30)},${Math.floor(90 + b * 30)},${Math.floor(100 + b * 22)})`;
-      },
-      "rgba(0,0,0,0.15)",
-      0.4 * zoom,
-      -0.15,
-    );
-    ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
-    for (let ci = 0; ci < hexSides; ci++) {
-      if (collarNormals[ci] < -0.15) continue;
-      ctx.beginPath();
-      ctx.arc(
-        collarPt.x + collarVerts[ci].x,
-        collarPt.y + collarVerts[ci].y,
-        0.8 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
     }
   }
 
@@ -5405,7 +5413,7 @@ export function renderMortarStandardBarrel(
             },
             "rgba(0,0,0,0.12)",
             0.3 * zoom,
-            -0.15,
+            -1.5,
           );
         }
       }
@@ -5600,7 +5608,7 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.15)",
         0.4 * zoom,
-        -0.15,
+        -1.5,
       );
     }
 
@@ -5683,7 +5691,7 @@ export function renderMortarStandardBarrel(
         },
         "rgba(0,0,0,0.18)",
         0.5 * zoom,
-        -0.15,
+        -1.5,
       );
 
       // Clamp bolt
@@ -5714,7 +5722,7 @@ export function renderMortarStandardBarrel(
       },
       "rgba(0,0,0,0.2)",
       0.4 * zoom,
-      -0.15,
+      -1.5,
     );
   }
 
@@ -5787,7 +5795,9 @@ export function renderMortarStandardBarrel(
   {
     const boreGlowBase = level >= 3 ? 0.12 : level >= 2 ? 0.08 : 0.04;
     const boreFireGlow =
-      timeSinceFire < MISSILE_ATTACK_SPEED ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.5 : 0;
+      timeSinceFire < MISSILE_ATTACK_SPEED
+        ? (1 - timeSinceFire / MISSILE_ATTACK_SPEED) * 0.5
+        : 0;
     const borePulse = Math.sin(time * 1.5) * 0.03;
     const boreTotal = boreGlowBase + boreFireGlow + borePulse;
 
@@ -6158,7 +6168,7 @@ export function renderMortarEmberTurret(
       },
       "rgba(0,0,0,0.15)",
       0.5 * zoom,
-      -0.3,
+      -0.5,
     );
     const gearTeeth = 20;
     for (let g = 0; g < gearTeeth; g++) {
@@ -6385,7 +6395,7 @@ export function renderMortarEmberTurret(
         },
         "rgba(0,0,0,0.18)",
         0.5 * zoom,
-        -0.3,
+        -1.5,
       );
 
       // Orange ember lights at tier junction (camera-facing sides only)
@@ -6401,7 +6411,7 @@ export function renderMortarEmberTurret(
           Math.sin(ea) * ISO_Y_RATIO * bAx +
           Math.cos(ea) * bNy +
           Math.sin(ea) * ISO_Y_RATIO * bAy;
-        if (eDot < 0.2) continue;
+        if (eDot < -0.5) continue;
 
         const eFlicker = Math.sin(time * 5 + ei * 1.8 + ti * 2.5) > 0.3;
         const eHeat = timeSinceFire < 2000 ? 1 - timeSinceFire / 2000 : 0;
@@ -6901,7 +6911,7 @@ export function renderMortarEmberTurret(
             },
             "rgba(0,0,0,0.18)",
             0.5 * zoom,
-            -0.3,
+            -1.5,
           );
         }
         bCumH += bTier.h;
@@ -7167,7 +7177,7 @@ function drawMissileSiloDepthSortedAccessories(
       for (const mi of mastSorted) {
         const mni = (mi + 1) % mastSides;
         const mn = mastNormals[mi];
-        if (mn < -0.3) continue;
+        if (mn < -0.85) continue;
         const bright = Math.max(0, Math.min(1, 0.2 + (mn + 1) * 0.4));
         const cv = Math.floor(55 + bright * 55);
         const mGrad = ctx.createLinearGradient(
@@ -7216,7 +7226,7 @@ function drawMissileSiloDepthSortedAccessories(
         },
         "rgba(0,0,0,0.12)",
         0.35 * zoom,
-        -0.3,
+        -1.5,
       );
 
       const dishAngle = time * 1.5;
@@ -7711,7 +7721,7 @@ export function renderMortarMissileSilo(
       },
       "rgba(0,0,0,0.12)",
       0.4 * zoom,
-      -0.3,
+      -0.5,
     );
     for (let g = 0; g < 20; g++) {
       const ga = (g / 20) * Math.PI * 2 + time * 0.15;
@@ -8017,7 +8027,7 @@ export function renderMortarMissileSilo(
         },
         "rgba(0,0,0,0.15)",
         0.5 * zoom,
-        -0.3,
+        -1.5,
       );
 
       // Status lights at tier junction (only on camera-facing sides)
@@ -8033,7 +8043,7 @@ export function renderMortarMissileSilo(
           Math.sin(la) * ISO_Y_RATIO * bAx +
           Math.cos(la) * bNy +
           Math.sin(la) * ISO_Y_RATIO * bAy;
-        if (faceDot < 0.2) continue;
+        if (faceDot < -0.5) continue;
 
         const lMSince = timeSinceFire - si * 150 - ti * 450;
         const lFiring = lMSince >= 0 && lMSince < 400;
