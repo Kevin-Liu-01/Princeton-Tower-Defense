@@ -504,27 +504,68 @@ export const HeroHelmetIcon: React.FC<IconProps & { active?: boolean }> = ({
       <circle cx="16.5" cy="13.5" r=".55" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".75" : ".25"} />
 
       {/* Visor / face guard */}
-      <path d="M6.5 14.5H17.5V17C17.5 17 16 18 12 18C8 18 6.5 17 6.5 17V14.5Z"
+      <path d="M6.5 14.5H17.5V16.8C17.5 16.8 16 17.5 12 17.5C8 17.5 6.5 16.8 6.5 16.8V14.5Z"
         fill={active ? "#52525b" : "#28282e"} />
 
       {/* Eye slit */}
-      <path d="M7.5 15.5H16.5V16.3H7.5Z" fill={active ? "#18181b" : "#0e0e10"} />
-      <path d="M7.5 15.5H16.5V15.9H7.5Z" fill={active ? "#27272a" : "#18181a"} opacity=".60" />
+      <path d="M7.5 15.3H16.5V16.2H7.5Z" fill={active ? "#18181b" : "#0e0e10"} />
+      <path d="M7.5 15.3H16.5V15.7H7.5Z" fill={active ? "#27272a" : "#18181a"} opacity=".60" />
+      {/* Visor brow ridge */}
+      <path d="M7 15.1H17" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".4" opacity=".45" />
 
       {/* Eye glow */}
-      <ellipse cx="9.5" cy="15.9" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
-      <ellipse cx="14.5" cy="15.9" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
+      <ellipse cx="9.5" cy="15.75" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
+      <ellipse cx="14.5" cy="15.75" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
 
       {/* Nose guard */}
-      <line x1="12" y1="14.5" x2="12" y2="17.5" stroke={active ? "#71717a" : "#383840"} strokeWidth=".8" />
-      <line x1="12" y1="14.5" x2="12" y2="17.5" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".3" opacity=".50" />
+      <line x1="12" y1="14.5" x2="12" y2="17.2" stroke={active ? "#71717a" : "#383840"} strokeWidth=".9" />
+      <line x1="12" y1="14.5" x2="12" y2="17.2" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".3" opacity=".50" />
 
-      {/* Cheek plates */}
-      <path d="M5 14.5L6.5 14.5V17L5 16Z" fill={active ? "#71717a" : "#383840"} />
-      <path d="M19 14.5L17.5 14.5V17L19 16Z" fill={active ? "#71717a" : "#383840"} />
+      {/* Chainmail curtain below visor */}
+      <g opacity={active ? ".50" : ".18"}>
+        {[0, 1, 2, 3].map((row) => (
+          <g key={row}>
+            {[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5].map((col) => (
+              <circle
+                key={col}
+                cx={12 + col * 0.95 + (row % 2 ? 0.47 : 0)}
+                cy={17.8 + row * 0.8}
+                r=".38"
+                stroke={active ? "#a1a1aa" : "#4a4a54"}
+                strokeWidth=".22"
+                fill="none"
+              />
+            ))}
+          </g>
+        ))}
+      </g>
+      {/* Chainmail shadow fade */}
+      <path d="M8.5 17.5H15.5V21H8.5Z" fill={active ? "#3f3f46" : "#1e1e22"} opacity=".15" />
 
-      {/* Chin guard */}
-      <path d="M8 17.5Q12 19.5 16 17.5" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".8" fill="none" />
+      {/* Left cheek guard — layered plate */}
+      <path d="M4.2 14H6.5V17.5L5.2 18.5L4.2 17Z" fill={`url(#${u}-steel)`} />
+      <path d="M4.2 14H6.5V14.8H4.5Z" fill={active ? "#d4d4d8" : "#636370"} opacity=".30" />
+      <path d="M4.5 15.5L6.3 15.5" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".3" opacity=".40" />
+      <path d="M4.8 16.8L6.3 16.8" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".3" opacity=".35" />
+      <circle cx="5.5" cy="15" r=".35" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".65" : ".20"} />
+      <circle cx="5.5" cy="17" r=".3" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".50" : ".15"} />
+      {/* Left guard edge highlight */}
+      <path d="M4.2 14L4.2 17L5.2 18.5" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".3" opacity=".35" fill="none" />
+
+      {/* Right cheek guard — layered plate */}
+      <path d="M19.8 14H17.5V17.5L18.8 18.5L19.8 17Z" fill={`url(#${u}-steel)`} />
+      <path d="M19.8 14H17.5V14.8H19.5Z" fill={active ? "#d4d4d8" : "#636370"} opacity=".30" />
+      <path d="M19.5 15.5L17.7 15.5" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".3" opacity=".40" />
+      <path d="M19.2 16.8L17.7 16.8" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".3" opacity=".35" />
+      <circle cx="18.5" cy="15" r=".35" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".65" : ".20"} />
+      <circle cx="18.5" cy="17" r=".3" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".50" : ".15"} />
+      {/* Right guard edge highlight */}
+      <path d="M19.8 14L19.8 17L18.8 18.5" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".3" opacity=".35" fill="none" />
+
+      {/* Chin guard — curved plate */}
+      <path d="M8 17.5Q10 18.5 12 18.8Q14 18.5 16 17.5L15.5 18.5Q12 20 8.5 18.5Z"
+        fill={active ? "#52525b" : "#28282e"} />
+      <path d="M9 18Q12 19.2 15 18" stroke={active ? "#71717a" : "#383840"} strokeWidth=".35" fill="none" opacity=".50" />
 
       {/* Plume */}
       <path d="M12 3.5Q13.5 1 16 0.5Q14.5 2 14 3.5Q13.5 1.5 15 0.8Q13 2 12.5 3.5"

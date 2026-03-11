@@ -179,7 +179,16 @@ export const drawWorldMapCanvas = ({
       }
 
       ctx.fillStyle = seededRandom(i * 7 + 3) > 0.5 ? hue1 : hue2;
-      drawOrganicBlobAt(ctx, px, py, psize * 0.45, psize * 0.22, i * 7.3, 0.25, 20);
+      drawOrganicBlobAt(
+        ctx,
+        px,
+        py,
+        psize * 0.45,
+        psize * 0.22,
+        i * 7.3,
+        0.25,
+        20,
+      );
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -864,11 +873,21 @@ export const drawWorldMapCanvas = ({
 
   // Organic meadow patches — soft ground cover blobs
   const meadowPatches: [number, number, number, number][] = [
-    [60, 42, 32, 18], [130, 70, 28, 14], [200, 55, 35, 16],
-    [250, 30, 24, 12], [310, 72, 30, 15], [80, 85, 26, 13],
-    [160, 22, 22, 11], [340, 38, 28, 14], [100, 52, 20, 10],
-    [280, 62, 25, 12], [370, 55, 22, 11], [50, 60, 18, 9],
-    [220, 80, 24, 12], [175, 44, 30, 14], [300, 48, 26, 13],
+    [60, 42, 32, 18],
+    [130, 70, 28, 14],
+    [200, 55, 35, 16],
+    [250, 30, 24, 12],
+    [310, 72, 30, 15],
+    [80, 85, 26, 13],
+    [160, 22, 22, 11],
+    [340, 38, 28, 14],
+    [100, 52, 20, 10],
+    [280, 62, 25, 12],
+    [370, 55, 22, 11],
+    [50, 60, 18, 9],
+    [220, 80, 24, 12],
+    [175, 44, 30, 14],
+    [300, 48, 26, 13],
   ];
   for (let i = 0; i < meadowPatches.length; i++) {
     const [mx, myPct, mrx, mry] = meadowPatches[i];
@@ -1208,8 +1227,23 @@ export const drawWorldMapCanvas = ({
     [190, 38],
     [280, 60],
     [360, 45],
+    [65, 50],
+    [110, 72],
+    [165, 50],
+    [215, 70],
+    [255, 30],
+    [305, 80],
+    [345, 42],
+    [90, 45],
+    [175, 88],
+    [230, 25],
+    [310, 35],
+    [370, 58],
+    [60, 78],
+    [125, 55],
+    [295, 50],
   ].forEach(([x, yPct], i) => {
-    drawTree(x, yPct, 0.6 + seededRandom(i + 100) * 0.4);
+    drawTree(x, yPct, 0.5 + seededRandom(i + 100) * 0.5);
   });
 
   // Enhanced military camp with canvas texture, campfire embers, and cooking details
@@ -1555,6 +1589,158 @@ export const drawWorldMapCanvas = ({
   drawCamp(860, 34);
   drawCamp(1020, 75);
   drawCamp(1580, 82);
+  drawCamp(350, 35);
+  drawCamp(470, 48);
+  drawCamp(750, 78);
+  drawCamp(1150, 38);
+  drawCamp(1310, 72);
+  drawCamp(1680, 45);
+
+  // Destroyed stone ruins — crumbling walls, broken arches, scattered rubble
+  const drawRuins = (
+    rx: number,
+    ryPct: number,
+    scale: number,
+    tint?: string,
+  ) => {
+    const ry = getY(ryPct);
+    const seed = rx * 3.7 + ryPct * 11.3;
+    const stoneBase = tint || "#5a5048";
+    const stoneDark = tint
+      ? tint.replace(/[0-9a-f]{2}/gi, (m) => {
+          const v = Math.max(0, parseInt(m, 16) - 30);
+          return v.toString(16).padStart(2, "0");
+        })
+      : "#3a3028";
+
+    // Rubble shadow
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(
+      rx + 2 * scale,
+      ry + 3 * scale,
+      18 * scale,
+      6 * scale,
+      0.1,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Scattered rubble stones
+    for (let i = 0; i < 8; i++) {
+      const sx = rx + (seededRandom(seed + i * 7) - 0.5) * 28 * scale;
+      const sy = ry + (seededRandom(seed + i * 7 + 1) - 0.3) * 10 * scale;
+      const ss = (1.5 + seededRandom(seed + i * 7 + 2) * 3) * scale;
+      ctx.fillStyle =
+        seededRandom(seed + i * 7 + 3) > 0.5 ? stoneBase : stoneDark;
+      ctx.beginPath();
+      ctx.ellipse(
+        sx,
+        sy,
+        ss,
+        ss * 0.6,
+        seededRandom(seed + i * 7 + 4) * 1.5,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    // Standing wall fragments
+    const wallCount = 2 + Math.floor(seededRandom(seed + 50) * 2);
+    for (let w = 0; w < wallCount; w++) {
+      const wx = rx + (seededRandom(seed + w * 13 + 60) - 0.5) * 22 * scale;
+      const wy = ry + (seededRandom(seed + w * 13 + 61) - 0.5) * 4 * scale;
+      const wh = (8 + seededRandom(seed + w * 13 + 62) * 14) * scale;
+      const ww = (3 + seededRandom(seed + w * 13 + 63) * 3) * scale;
+      const wallGrad = ctx.createLinearGradient(wx - ww, 0, wx + ww, 0);
+      wallGrad.addColorStop(0, stoneDark);
+      wallGrad.addColorStop(0.5, stoneBase);
+      wallGrad.addColorStop(1, stoneDark);
+      ctx.fillStyle = wallGrad;
+      // Jagged top edge
+      ctx.beginPath();
+      ctx.moveTo(wx - ww, wy);
+      ctx.lineTo(wx - ww, wy - wh * 0.7);
+      const jaggedPts = 3 + Math.floor(seededRandom(seed + w * 13 + 64) * 3);
+      for (let j = 0; j <= jaggedPts; j++) {
+        const jt = j / jaggedPts;
+        const jx = wx - ww + jt * ww * 2;
+        const jy =
+          wy - wh * (0.6 + seededRandom(seed + w * 13 + j * 5 + 70) * 0.4);
+        ctx.lineTo(jx, jy);
+      }
+      ctx.lineTo(wx + ww, wy);
+      ctx.closePath();
+      ctx.fill();
+      // Mortar lines
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.4 * scale;
+      for (let m = 0; m < 3; m++) {
+        const my = wy - (m + 1) * wh * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(wx - ww, my);
+        ctx.lineTo(wx + ww, my + scale * 0.5);
+        ctx.stroke();
+      }
+    }
+
+    // Broken arch (50% chance)
+    if (seededRandom(seed + 100) > 0.5) {
+      const archX = rx + (seededRandom(seed + 101) - 0.5) * 10 * scale;
+      const archY = ry - 2 * scale;
+      const archW = 8 * scale;
+      const archH = 10 * scale;
+      ctx.strokeStyle = stoneBase;
+      ctx.lineWidth = 2.5 * scale;
+      ctx.beginPath();
+      ctx.moveTo(archX - archW, archY);
+      ctx.lineTo(archX - archW, archY - archH * 0.6);
+      ctx.arc(archX, archY - archH * 0.6, archW, Math.PI, Math.PI * 1.65);
+      ctx.stroke();
+      // Second pillar (partial)
+      ctx.beginPath();
+      ctx.moveTo(archX + archW, archY);
+      ctx.lineTo(archX + archW, archY - archH * 0.4);
+      ctx.stroke();
+    }
+
+    // Vine/moss growth
+    ctx.fillStyle = "rgba(60,100,40,0.25)";
+    for (let v = 0; v < 4; v++) {
+      const vx = rx + (seededRandom(seed + v * 11 + 120) - 0.5) * 20 * scale;
+      const vy = ry - seededRandom(seed + v * 11 + 121) * 10 * scale;
+      ctx.beginPath();
+      ctx.ellipse(
+        vx,
+        vy,
+        2 * scale,
+        1.5 * scale,
+        seededRandom(seed + v * 11 + 122),
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  };
+
+  // Place ruins across regions
+  drawRuins(145, 72, 0.5);
+  drawRuins(265, 28, 0.45);
+  drawRuins(345, 80, 0.55);
+  drawRuins(455, 62, 0.5, "#3a4a3a");
+  drawRuins(590, 42, 0.6, "#3a4a3a");
+  drawRuins(680, 72, 0.5, "#3a4a3a");
+  drawRuins(820, 62, 0.5, "#8a7a5a");
+  drawRuins(950, 72, 0.55, "#8a7a5a");
+  drawRuins(1040, 30, 0.45, "#8a7a5a");
+  drawRuins(1160, 72, 0.5, "#6a7a8a");
+  drawRuins(1290, 38, 0.55, "#6a7a8a");
+  drawRuins(1400, 70, 0.5, "#6a7a8a");
+  drawRuins(1510, 42, 0.5, "#4a2a1a");
+  drawRuins(1640, 80, 0.55, "#4a2a1a");
+  drawRuins(1740, 38, 0.45, "#4a2a1a");
 
   // Cylindrical watch tower with ivy, pennant flag, and multi-level windows
   const drawWatchTower = (tx: number, tyPct: number) => {
@@ -1795,6 +1981,14 @@ export const drawWorldMapCanvas = ({
   drawWatchTower(1240, 52);
   drawWatchTower(1180, 25);
   drawWatchTower(1620, 30);
+  drawWatchTower(140, 85);
+  drawWatchTower(305, 30);
+  drawWatchTower(640, 48);
+  drawWatchTower(760, 68);
+  drawWatchTower(1000, 28);
+  drawWatchTower(1350, 78);
+  drawWatchTower(1500, 52);
+  drawWatchTower(1700, 72);
 
   // Crater with layered depth, scorch marks, pulsing embers, and debris
   const drawCrater = (cx: number, cyPct: number, size: number) => {
@@ -1976,16 +2170,39 @@ export const drawWorldMapCanvas = ({
   drawCrater(1400, 60, 15);
   drawCrater(1500, 75, 12);
   drawCrater(1700, 85, 9);
+  drawCrater(100, 78, 10);
+  drawCrater(215, 42, 11);
+  drawCrater(350, 55, 12);
+  drawCrater(445, 68, 14);
+  drawCrater(530, 30, 10);
+  drawCrater(680, 62, 12);
+  drawCrater(830, 48, 13);
+  drawCrater(1050, 72, 10);
+  drawCrater(1160, 38, 11);
+  drawCrater(1350, 78, 14);
+  drawCrater(1550, 42, 12);
+  drawCrater(1650, 68, 11);
+  drawCrater(1760, 55, 13);
 
   // === SWAMP DETAILS ===
 
   // Murky bog pools — dark organic blob water patches
   const bogPools: [number, number, number, number][] = [
-    [410, 65, 28, 12], [470, 45, 22, 10], [520, 75, 32, 14],
-    [560, 38, 18, 8], [600, 68, 26, 11], [650, 42, 24, 10],
-    [440, 28, 20, 9], [510, 55, 30, 13], [680, 62, 22, 10],
-    [590, 80, 25, 11], [490, 35, 16, 7], [630, 30, 20, 9],
-    [420, 80, 18, 8], [700, 50, 24, 11], [550, 50, 20, 9],
+    [410, 65, 28, 12],
+    [470, 45, 22, 10],
+    [520, 75, 32, 14],
+    [560, 38, 18, 8],
+    [600, 68, 26, 11],
+    [650, 42, 24, 10],
+    [440, 28, 20, 9],
+    [510, 55, 30, 13],
+    [680, 62, 22, 10],
+    [590, 80, 25, 11],
+    [490, 35, 16, 7],
+    [630, 30, 20, 9],
+    [420, 80, 18, 8],
+    [700, 50, 24, 11],
+    [550, 50, 20, 9],
   ];
   for (let i = 0; i < bogPools.length; i++) {
     const [px, pyPct, prx, pry] = bogPools[i];
@@ -2000,7 +2217,16 @@ export const drawWorldMapCanvas = ({
     // Subtle sheen on water surface
     ctx.globalAlpha = 0.08;
     ctx.fillStyle = "#5a9a6a";
-    drawOrganicBlobAt(ctx, px - 2, py - 1, prx * 0.5, pry * 0.4, i * 6.3 + 99, 0.15, 12);
+    drawOrganicBlobAt(
+      ctx,
+      px - 2,
+      py - 1,
+      prx * 0.5,
+      pry * 0.4,
+      i * 6.3 + 99,
+      0.15,
+      12,
+    );
     ctx.fill();
     ctx.globalAlpha = 1;
   }
@@ -2460,8 +2686,23 @@ export const drawWorldMapCanvas = ({
     [465, 45],
     [570, 75],
     [695, 50],
+    [405, 78],
+    [445, 38],
+    [475, 58],
+    [510, 72],
+    [528, 55],
+    [560, 28],
+    [590, 65],
+    [615, 42],
+    [655, 35],
+    [685, 62],
+    [710, 45],
+    [700, 72],
+    [440, 50],
+    [505, 42],
+    [620, 80],
   ].forEach(([x, yPct], i) => {
-    drawWillowTree(x, yPct, 0.7 + seededRandom(i + 500) * 0.4);
+    drawWillowTree(x, yPct, 0.6 + seededRandom(i + 500) * 0.5);
   });
 
   // Swamp pools/puddles — murky water with animated ripples, lily pads, algae, reflections, fish
@@ -2649,6 +2890,9 @@ export const drawWorldMapCanvas = ({
   drawSwampPool(515, 65, 25);
   drawSwampPool(605, 50, 18);
   drawSwampPool(660, 40, 22);
+  drawSwampPool(480, 75, 16);
+  drawSwampPool(570, 35, 14);
+  drawSwampPool(700, 55, 18);
 
   // Swamp Gas Bubbles — multiple sizes, toxic glow, pop animation
   const drawSwampGas = (x: number, yPct: number) => {
@@ -2812,11 +3056,21 @@ export const drawWorldMapCanvas = ({
 
   // Sand drift patches — layered organic blob dune formations
   const driftPatches: [number, number, number, number][] = [
-    [750, 50, 40, 16], [810, 72, 34, 13], [870, 32, 30, 12],
-    [930, 60, 38, 15], [990, 45, 32, 13], [760, 80, 26, 10],
-    [840, 25, 28, 11], [900, 70, 36, 14], [960, 35, 24, 10],
-    [1020, 58, 30, 12], [1050, 75, 22, 9], [780, 40, 20, 8],
-    [850, 55, 34, 14], [1060, 30, 26, 10], [730, 65, 24, 10],
+    [750, 50, 40, 16],
+    [810, 72, 34, 13],
+    [870, 32, 30, 12],
+    [930, 60, 38, 15],
+    [990, 45, 32, 13],
+    [760, 80, 26, 10],
+    [840, 25, 28, 11],
+    [900, 70, 36, 14],
+    [960, 35, 24, 10],
+    [1020, 58, 30, 12],
+    [1050, 75, 22, 9],
+    [780, 40, 20, 8],
+    [850, 55, 34, 14],
+    [1060, 30, 26, 10],
+    [730, 65, 24, 10],
   ];
   for (let i = 0; i < driftPatches.length; i++) {
     const [dx, dyPct, drx, dry] = driftPatches[i];
@@ -3050,15 +3304,24 @@ export const drawWorldMapCanvas = ({
   drawSandDune(870, 20, 45, 12, "#c8a070", "#b89060", "#a88050");
   drawSandDune(980, 28, 35, 9, "#c49a6c", "#b08a5c", "#9a7a4c");
   drawSandDune(1050, 22, 32, 8, "#c8a070", "#b89060", "#a88050");
+  drawSandDune(730, 18, 30, 8, "#c49a6c", "#b08a5c", "#9a7a4c");
+  drawSandDune(830, 15, 35, 9, "#c8a070", "#b89060", "#a88050");
+  drawSandDune(1070, 18, 28, 7, "#c49a6c", "#b08a5c", "#9a7a4c");
   // Mid dunes
   drawSandDune(800, 45, 48, 12, "#d4aa7a", "#c49a6a", "#b08a5a");
   drawSandDune(920, 50, 42, 11, "#d8b080", "#c8a070", "#b89060");
   drawSandDune(1010, 42, 38, 10, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(740, 55, 36, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(850, 40, 32, 8, "#d8b080", "#c8a070", "#b89060");
+  drawSandDune(1060, 48, 34, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
   // Front dunes (lighter, closer)
   drawSandDune(750, 75, 35, 9, "#e0be8a", "#d0ae7a", "#c09e6a");
   drawSandDune(860, 80, 40, 10, "#e4c490", "#d4b480", "#c4a470");
   drawSandDune(960, 78, 32, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
   drawSandDune(1040, 82, 28, 7, "#e4c490", "#d4b480", "#c4a470");
+  drawSandDune(790, 85, 30, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
+  drawSandDune(910, 72, 38, 10, "#e4c490", "#d4b480", "#c4a470");
+  drawSandDune(1025, 88, 26, 6, "#e0be8a", "#d0ae7a", "#c09e6a");
 
   // Majestic Golden Pyramid with stone blocks, hieroglyphics, and light rays
   const drawGoldenPyramid = (px: number, pyPct: number, size: number) => {
@@ -3297,201 +3560,710 @@ export const drawWorldMapCanvas = ({
   drawGoldenPyramid(860, 65, 27);
   drawGoldenPyramid(850, 50, 25);
   drawGoldenPyramid(950, 23, 17);
-
   drawGoldenPyramid(970, 85, 20);
-
   drawGoldenPyramid(960, 35, 28);
+  drawGoldenPyramid(785, 30, 15);
+  drawGoldenPyramid(900, 75, 18);
+  drawGoldenPyramid(1020, 28, 14);
+  drawGoldenPyramid(1045, 55, 16);
 
-  // Sphinx statue — weathered, detailed, sand-buried paws
+  // Sphinx statue — weathered limestone, recumbent lion body, Nemes headdress
   const drawSphinx = (sx: number, syPct: number, scale: number) => {
     const sy = getY(syPct);
-    // Body shadow
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.beginPath();
-    ctx.ellipse(
-      sx + 5 * scale,
+    const spSeed = sx * 3.1 + syPct * 7.3;
+
+    // Ground shadow — organic
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    drawOrganicBlobAt(
+      ctx,
+      sx + 4 * scale,
       sy + 10 * scale,
-      28 * scale,
-      7 * scale,
-      0,
-      0,
-      Math.PI * 2,
+      30 * scale,
+      8 * scale,
+      spSeed + 90,
+      0.12,
+      14,
     );
     ctx.fill();
 
-    // Sand burying the paws
+    // Sand drift burying lower body and paws
     const sandBury = ctx.createRadialGradient(
-      sx + 10 * scale,
-      sy + 6 * scale,
+      sx + 8 * scale,
+      sy + 7 * scale,
       0,
-      sx + 10 * scale,
-      sy + 6 * scale,
-      22 * scale,
+      sx + 8 * scale,
+      sy + 7 * scale,
+      26 * scale,
     );
-    sandBury.addColorStop(0, "rgba(210, 180, 130, 0.6)");
+    sandBury.addColorStop(0, "rgba(210, 180, 130, 0.55)");
+    sandBury.addColorStop(0.6, "rgba(210, 180, 130, 0.3)");
     sandBury.addColorStop(1, "rgba(210, 180, 130, 0)");
     ctx.fillStyle = sandBury;
-    ctx.beginPath();
-    ctx.ellipse(
-      sx + 10 * scale,
-      sy + 6 * scale,
-      22 * scale,
-      8 * scale,
-      0,
-      0,
-      Math.PI * 2,
+    drawOrganicBlobAt(
+      ctx,
+      sx + 8 * scale,
+      sy + 7 * scale,
+      26 * scale,
+      9 * scale,
+      spSeed + 80,
+      0.14,
+      14,
     );
     ctx.fill();
 
-    // Lion body with detailed gradient
+    // === LION BODY (recumbent form with haunches, not just an ellipse) ===
     const bodyGrad = ctx.createLinearGradient(
-      sx - 22 * scale,
-      sy - 8 * scale,
-      sx + 22 * scale,
-      sy + 8 * scale,
+      sx - 24 * scale,
+      sy - 10 * scale,
+      sx + 24 * scale,
+      sy + 10 * scale,
     );
-    bodyGrad.addColorStop(0, "#8a6a48");
-    bodyGrad.addColorStop(0.3, "#c8a878");
-    bodyGrad.addColorStop(0.6, "#b89868");
+    bodyGrad.addColorStop(0, "#9a7a55");
+    bodyGrad.addColorStop(0.2, "#c8a878");
+    bodyGrad.addColorStop(0.5, "#bfa070");
+    bodyGrad.addColorStop(0.8, "#a88a60");
     bodyGrad.addColorStop(1, "#8a6a48");
     ctx.fillStyle = bodyGrad;
     ctx.beginPath();
-    ctx.ellipse(sx, sy, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
+    // Haunches (back end, raised)
+    ctx.moveTo(sx + 20 * scale, sy + 6 * scale);
+    ctx.bezierCurveTo(
+      sx + 22 * scale,
+      sy + 2 * scale,
+      sx + 18 * scale,
+      sy - 8 * scale,
+      sx + 10 * scale,
+      sy - 9 * scale,
+    );
+    // Back/spine ridge
+    ctx.bezierCurveTo(
+      sx + 2 * scale,
+      sy - 10 * scale,
+      sx - 6 * scale,
+      sy - 9 * scale,
+      sx - 12 * scale,
+      sy - 6 * scale,
+    );
+    // Chest slopes down to paws
+    ctx.bezierCurveTo(
+      sx - 14 * scale,
+      sy - 3 * scale,
+      sx - 14 * scale,
+      sy + 2 * scale,
+      sx - 12 * scale,
+      sy + 6 * scale,
+    );
+    // Belly underside
+    ctx.bezierCurveTo(
+      sx - 4 * scale,
+      sy + 9 * scale,
+      sx + 10 * scale,
+      sy + 9 * scale,
+      sx + 20 * scale,
+      sy + 6 * scale,
+    );
+    ctx.closePath();
     ctx.fill();
 
-    // Weathered texture lines (cracks on body)
-    ctx.strokeStyle = "rgba(70, 55, 40, 0.2)";
-    ctx.lineWidth = 0.5;
-    for (let c = 0; c < 5; c++) {
-      const cx0 = sx - 15 * scale + seededRandom(sx + c * 7) * 30 * scale;
-      const cy0 = sy - 5 * scale + seededRandom(sx + c * 11) * 10 * scale;
+    // Haunches highlight — rounded bump on rear
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = "#d4b888";
+    ctx.beginPath();
+    ctx.ellipse(
+      sx + 14 * scale,
+      sy - 4 * scale,
+      8 * scale,
+      6 * scale,
+      -0.2,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.restore();
+
+    // Stone block lines visible on body
+    ctx.save();
+    ctx.strokeStyle = "rgba(80, 65, 45, 0.15)";
+    ctx.lineWidth = 0.5 * scale;
+    for (let bl = 0; bl < 4; bl++) {
+      const blY = sy - 5 * scale + bl * 3.5 * scale;
+      const blLeftX = sx - 11 * scale + bl * 1.5 * scale;
+      const blRightX = sx + 18 * scale - bl * 2 * scale;
       ctx.beginPath();
-      ctx.moveTo(cx0, cy0);
-      ctx.lineTo(
-        cx0 + (seededRandom(sx + c * 13) - 0.5) * 8 * scale,
-        cy0 + seededRandom(sx + c * 17) * 6 * scale,
+      ctx.moveTo(blLeftX, blY);
+      ctx.quadraticCurveTo(
+        (blLeftX + blRightX) / 2,
+        blY + seededRandom(spSeed + bl * 5) * 1.5 * scale,
+        blRightX,
+        blY + 0.5 * scale,
       );
       ctx.stroke();
     }
+    // Vertical joints
+    for (let vj = 0; vj < 6; vj++) {
+      const vjX =
+        sx -
+        8 * scale +
+        vj * 5 * scale +
+        seededRandom(spSeed + vj * 9) * 2 * scale;
+      const vjTopY = sy - 8 * scale + vj * 0.5 * scale;
+      const vjBotY =
+        vjTopY + 3 * scale + seededRandom(spSeed + vj * 11) * 2 * scale;
+      ctx.beginPath();
+      ctx.moveTo(vjX, vjTopY);
+      ctx.lineTo(vjX + 0.3 * scale, vjBotY);
+      ctx.stroke();
+    }
+    ctx.restore();
 
-    // Paws (partially buried in sand)
+    // Weathered erosion marks on body (branching cracks)
+    ctx.save();
+    ctx.strokeStyle = "rgba(70, 55, 40, 0.2)";
+    ctx.lineWidth = 0.6;
+    for (let c = 0; c < 7; c++) {
+      const cx0 = sx - 10 * scale + seededRandom(spSeed + c * 7) * 28 * scale;
+      const cy0 = sy - 6 * scale + seededRandom(spSeed + c * 11) * 10 * scale;
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0);
+      const cmx = cx0 + (seededRandom(spSeed + c * 13) - 0.5) * 6 * scale;
+      const cmy = cy0 + seededRandom(spSeed + c * 17) * 5 * scale;
+      ctx.quadraticCurveTo(
+        (cx0 + cmx) / 2 + seededRandom(spSeed + c * 19) * 2 * scale,
+        (cy0 + cmy) / 2,
+        cmx,
+        cmy,
+      );
+      ctx.stroke();
+      // Small branch off the crack
+      if (seededRandom(spSeed + c * 21) > 0.4) {
+        ctx.beginPath();
+        ctx.moveTo(cmx, cmy);
+        ctx.lineTo(
+          cmx + (seededRandom(spSeed + c * 23) - 0.5) * 4 * scale,
+          cmy + seededRandom(spSeed + c * 25) * 3 * scale,
+        );
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // === FRONT PAWS (extended forward, partially sand-buried) ===
+    // Left paw
     ctx.fillStyle = "#b89868";
     ctx.beginPath();
-    ctx.ellipse(
-      sx + 20 * scale,
-      sy + 4 * scale,
-      9 * scale,
-      4.5 * scale,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    // Paw detail lines
-    ctx.strokeStyle = "rgba(80, 60, 40, 0.3)";
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(sx + 15 * scale, sy + 4 * scale);
-    ctx.lineTo(sx + 25 * scale, sy + 4 * scale);
-    ctx.stroke();
-
-    // Human head with better proportions
-    const headGrad = ctx.createRadialGradient(
-      sx - 16 * scale,
-      sy - 12 * scale,
-      0,
-      sx - 16 * scale,
-      sy - 10 * scale,
-      12 * scale,
-    );
-    headGrad.addColorStop(0, "#dcc090");
-    headGrad.addColorStop(0.7, "#b89868");
-    headGrad.addColorStop(1, "#907850");
-    ctx.fillStyle = headGrad;
-    // Neck connecting head to body
-    ctx.beginPath();
-    ctx.moveTo(sx - 10 * scale, sy - 4 * scale);
-    ctx.quadraticCurveTo(
+    ctx.moveTo(sx - 12 * scale, sy + 3 * scale);
+    ctx.bezierCurveTo(
       sx - 14 * scale,
-      sy - 8 * scale,
-      sx - 16 * scale,
-      sy - 6 * scale,
+      sy + 4 * scale,
+      sx - 18 * scale,
+      sy + 5 * scale,
+      sx - 20 * scale,
+      sy + 6 * scale,
     );
-    ctx.lineTo(sx - 18 * scale, sy - 2 * scale);
+    ctx.bezierCurveTo(
+      sx - 18 * scale,
+      sy + 8 * scale,
+      sx - 14 * scale,
+      sy + 8 * scale,
+      sx - 11 * scale,
+      sy + 6 * scale,
+    );
     ctx.closePath();
     ctx.fill();
-    // Head
+    // Right paw
+    ctx.fillStyle = "#c0a070";
     ctx.beginPath();
-    ctx.arc(sx - 16 * scale, sy - 10 * scale, 9 * scale, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Headdress (Nemes) - more detailed with stripes
-    ctx.fillStyle = "#c9a050";
-    ctx.beginPath();
-    ctx.moveTo(sx - 26 * scale, sy - 2 * scale);
-    ctx.lineTo(sx - 20 * scale, sy - 20 * scale);
-    ctx.lineTo(sx - 8 * scale, sy - 20 * scale);
-    ctx.lineTo(sx - 6 * scale, sy - 2 * scale);
+    ctx.moveTo(sx - 10 * scale, sy + 2 * scale);
+    ctx.bezierCurveTo(
+      sx - 13 * scale,
+      sy + 2.5 * scale,
+      sx - 17 * scale,
+      sy + 3 * scale,
+      sx - 19 * scale,
+      sy + 4 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 17 * scale,
+      sy + 6 * scale,
+      sx - 13 * scale,
+      sy + 6 * scale,
+      sx - 10 * scale,
+      sy + 4 * scale,
+    );
     ctx.closePath();
     ctx.fill();
-    // Headdress stripes
-    ctx.strokeStyle = "rgba(100, 80, 40, 0.4)";
-    ctx.lineWidth = 0.7;
-    for (let hs = 0; hs < 3; hs++) {
-      const hsX = sx - 22 * scale + hs * 5 * scale;
+    // Paw digit lines
+    ctx.strokeStyle = "rgba(80, 60, 40, 0.25)";
+    ctx.lineWidth = 0.4 * scale;
+    for (let pd = 0; pd < 3; pd++) {
+      const pdX = sx - 19 * scale + pd * 2 * scale;
       ctx.beginPath();
-      ctx.moveTo(hsX, sy - 3 * scale);
-      ctx.lineTo(hsX + 3 * scale, sy - 18 * scale);
+      ctx.moveTo(pdX, sy + 4.5 * scale);
+      ctx.lineTo(pdX - 0.5 * scale, sy + 6 * scale);
       ctx.stroke();
     }
 
-    // Face — eyes and missing nose area
-    ctx.fillStyle = "#4a3a2a";
+    // Tail curling over haunch
+    ctx.strokeStyle = "#a88a5a";
+    ctx.lineWidth = 2 * scale;
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.arc(sx - 18 * scale, sy - 12 * scale, 1.5 * scale, 0, Math.PI * 2);
+    ctx.moveTo(sx + 20 * scale, sy + 3 * scale);
+    ctx.bezierCurveTo(
+      sx + 24 * scale,
+      sy - 2 * scale,
+      sx + 22 * scale,
+      sy - 7 * scale,
+      sx + 18 * scale,
+      sy - 8 * scale,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "#bfa070";
+    ctx.lineWidth = 1.2 * scale;
+    ctx.stroke();
+
+    // === CHEST / NECK rising from body ===
+    const chestGrad = ctx.createLinearGradient(
+      sx - 16 * scale,
+      sy - 6 * scale,
+      sx - 10 * scale,
+      sy - 16 * scale,
+    );
+    chestGrad.addColorStop(0, "#b89868");
+    chestGrad.addColorStop(0.5, "#cbb080");
+    chestGrad.addColorStop(1, "#bfa070");
+    ctx.fillStyle = chestGrad;
+    ctx.beginPath();
+    ctx.moveTo(sx - 12 * scale, sy - 6 * scale);
+    ctx.bezierCurveTo(
+      sx - 15 * scale,
+      sy - 10 * scale,
+      sx - 17 * scale,
+      sy - 14 * scale,
+      sx - 16 * scale,
+      sy - 18 * scale,
+    );
+    ctx.lineTo(sx - 12 * scale, sy - 18 * scale);
+    ctx.bezierCurveTo(
+      sx - 10 * scale,
+      sy - 12 * scale,
+      sx - 9 * scale,
+      sy - 8 * scale,
+      sx - 8 * scale,
+      sy - 5 * scale,
+    );
+    ctx.closePath();
     ctx.fill();
+
+    // === HEAD ===
+    const headGrad = ctx.createRadialGradient(
+      sx - 15 * scale,
+      sy - 22 * scale,
+      0,
+      sx - 14 * scale,
+      sy - 20 * scale,
+      10 * scale,
+    );
+    headGrad.addColorStop(0, "#dcc090");
+    headGrad.addColorStop(0.6, "#c4a878");
+    headGrad.addColorStop(1, "#a08058");
+    ctx.fillStyle = headGrad;
     ctx.beginPath();
-    ctx.arc(sx - 13 * scale, sy - 12 * scale, 1.5 * scale, 0, Math.PI * 2);
+    ctx.moveTo(sx - 10 * scale, sy - 17 * scale);
+    ctx.bezierCurveTo(
+      sx - 9 * scale,
+      sy - 22 * scale,
+      sx - 11 * scale,
+      sy - 27 * scale,
+      sx - 14 * scale,
+      sy - 28 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 17 * scale,
+      sy - 27 * scale,
+      sx - 20 * scale,
+      sy - 24 * scale,
+      sx - 20 * scale,
+      sy - 19 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 20 * scale,
+      sy - 16 * scale,
+      sx - 16 * scale,
+      sy - 15 * scale,
+      sx - 10 * scale,
+      sy - 17 * scale,
+    );
+    ctx.closePath();
     ctx.fill();
-    // Missing nose — small weathered indent
-    ctx.fillStyle = "rgba(100, 80, 55, 0.5)";
+
+    // Chin / jaw line
+    ctx.fillStyle = "#b89060";
     ctx.beginPath();
-    ctx.ellipse(
-      sx - 15.5 * scale,
-      sy - 9.5 * scale,
-      1.5 * scale,
-      1 * scale,
-      0,
-      0,
-      Math.PI * 2,
+    ctx.moveTo(sx - 19 * scale, sy - 17 * scale);
+    ctx.quadraticCurveTo(
+      sx - 15 * scale,
+      sy - 14.5 * scale,
+      sx - 11 * scale,
+      sy - 16 * scale,
+    );
+    ctx.quadraticCurveTo(
+      sx - 15 * scale,
+      sy - 15.5 * scale,
+      sx - 19 * scale,
+      sy - 17 * scale,
     );
     ctx.fill();
-    // Mouth line
-    ctx.strokeStyle = "rgba(80, 60, 40, 0.4)";
-    ctx.lineWidth = 0.7;
+
+    // === NEMES HEADDRESS (with lappets flowing down) ===
+    const nemesGrad = ctx.createLinearGradient(
+      sx - 22 * scale,
+      sy - 28 * scale,
+      sx - 8 * scale,
+      sy - 16 * scale,
+    );
+    nemesGrad.addColorStop(0, "#d4b060");
+    nemesGrad.addColorStop(0.5, "#c9a050");
+    nemesGrad.addColorStop(1, "#b08838");
+    ctx.fillStyle = nemesGrad;
+    // Main headdress crown
     ctx.beginPath();
-    ctx.moveTo(sx - 19 * scale, sy - 7 * scale);
-    ctx.quadraticCurveTo(
-      sx - 15.5 * scale,
+    ctx.moveTo(sx - 22 * scale, sy - 18 * scale);
+    ctx.bezierCurveTo(
+      sx - 23 * scale,
+      sy - 24 * scale,
+      sx - 20 * scale,
+      sy - 30 * scale,
+      sx - 14 * scale,
+      sy - 31 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 8 * scale,
+      sy - 30 * scale,
+      sx - 6 * scale,
+      sy - 24 * scale,
+      sx - 7 * scale,
+      sy - 18 * scale,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Left lappet (draping down over shoulder)
+    ctx.fillStyle = "#c9a050";
+    ctx.beginPath();
+    ctx.moveTo(sx - 22 * scale, sy - 18 * scale);
+    ctx.bezierCurveTo(
+      sx - 23 * scale,
+      sy - 12 * scale,
+      sx - 22 * scale,
       sy - 6 * scale,
-      sx - 12 * scale,
+      sx - 20 * scale,
+      sy - 2 * scale,
+    );
+    ctx.lineTo(sx - 18 * scale, sy - 2 * scale);
+    ctx.bezierCurveTo(
+      sx - 19 * scale,
       sy - 7 * scale,
+      sx - 20 * scale,
+      sy - 13 * scale,
+      sx - 19 * scale,
+      sy - 18 * scale,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Right lappet (shorter, further away perspective)
+    ctx.fillStyle = "#b89040";
+    ctx.beginPath();
+    ctx.moveTo(sx - 7 * scale, sy - 18 * scale);
+    ctx.bezierCurveTo(
+      sx - 6 * scale,
+      sy - 13 * scale,
+      sx - 7 * scale,
+      sy - 8 * scale,
+      sx - 8 * scale,
+      sy - 4 * scale,
+    );
+    ctx.lineTo(sx - 10 * scale, sy - 4 * scale);
+    ctx.bezierCurveTo(
+      sx - 9 * scale,
+      sy - 9 * scale,
+      sx - 8 * scale,
+      sy - 14 * scale,
+      sx - 9 * scale,
+      sy - 18 * scale,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Headdress stripes (alternating gold/blue bands)
+    ctx.save();
+    ctx.strokeStyle = "rgba(60, 60, 120, 0.3)";
+    ctx.lineWidth = 1.2 * scale;
+    for (let hs = 0; hs < 5; hs++) {
+      const hsT = 0.15 + hs * 0.15;
+      const hsLeftX = sx - 22 * scale + hsT * 4 * scale;
+      const hsRightX = sx - 7 * scale - hsT * 4 * scale;
+      const hsY = sy - 30 * scale + hsT * 14 * scale;
+      ctx.beginPath();
+      ctx.moveTo(hsLeftX, hsY);
+      ctx.quadraticCurveTo(
+        (hsLeftX + hsRightX) / 2,
+        hsY + 1 * scale,
+        hsRightX,
+        hsY,
+      );
+      ctx.stroke();
+    }
+    // Stripes on left lappet
+    ctx.strokeStyle = "rgba(60, 60, 120, 0.25)";
+    ctx.lineWidth = 0.8 * scale;
+    for (let ls = 0; ls < 4; ls++) {
+      const lsY = sy - 16 * scale + ls * 4 * scale;
+      ctx.beginPath();
+      ctx.moveTo(sx - 22 * scale + ls * 0.5 * scale, lsY);
+      ctx.lineTo(sx - 18.5 * scale + ls * 0.3 * scale, lsY + 0.5 * scale);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Uraeus (cobra) on forehead
+    ctx.fillStyle = "#c9a050";
+    ctx.beginPath();
+    ctx.moveTo(sx - 14 * scale, sy - 31 * scale);
+    ctx.lineTo(sx - 14.5 * scale, sy - 34 * scale);
+    ctx.quadraticCurveTo(
+      sx - 13 * scale,
+      sy - 35 * scale,
+      sx - 12 * scale,
+      sy - 33 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 12.5 * scale,
+      sy - 32 * scale,
+      sx - 13.5 * scale,
+      sy - 31.5 * scale,
+      sx - 14 * scale,
+      sy - 31 * scale,
+    );
+    ctx.fill();
+    ctx.fillStyle = "#a07830";
+    ctx.beginPath();
+    ctx.arc(sx - 13.5 * scale, sy - 33.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // === FACE DETAILS ===
+    // Eyes — almond-shaped with lids
+    ctx.save();
+    for (let eye = 0; eye < 2; eye++) {
+      const eyeX = sx - (eye === 0 ? 17 : 12) * scale;
+      const eyeY = sy - 22 * scale;
+      // Eye socket shadow
+      ctx.fillStyle = "rgba(80, 60, 40, 0.3)";
+      ctx.beginPath();
+      ctx.ellipse(
+        eyeX,
+        eyeY,
+        2.2 * scale,
+        1.2 * scale,
+        eye === 0 ? -0.1 : 0.1,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // Eyeball
+      ctx.fillStyle = "#907858";
+      ctx.beginPath();
+      ctx.ellipse(
+        eyeX,
+        eyeY,
+        1.8 * scale,
+        1 * scale,
+        eye === 0 ? -0.1 : 0.1,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // Pupil
+      ctx.fillStyle = "#4a3828";
+      ctx.beginPath();
+      ctx.arc(eyeX, eyeY, 0.7 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Upper eyelid line
+      ctx.strokeStyle = "rgba(60, 45, 30, 0.5)";
+      ctx.lineWidth = 0.6 * scale;
+      ctx.beginPath();
+      ctx.ellipse(
+        eyeX,
+        eyeY - 0.3 * scale,
+        2 * scale,
+        0.8 * scale,
+        eye === 0 ? -0.1 : 0.1,
+        Math.PI,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+      // Kohl eyeliner extending outward
+      ctx.strokeStyle = "rgba(40, 30, 20, 0.4)";
+      ctx.lineWidth = 0.4 * scale;
+      const extDir = eye === 0 ? -1 : 1;
+      ctx.beginPath();
+      ctx.moveTo(eyeX + extDir * 2 * scale, eyeY);
+      ctx.lineTo(eyeX + extDir * 3 * scale, eyeY + 0.8 * scale);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Missing nose — weathered indent with shadow
+    ctx.fillStyle = "rgba(90, 70, 48, 0.5)";
+    ctx.beginPath();
+    ctx.moveTo(sx - 15.5 * scale, sy - 20.5 * scale);
+    ctx.bezierCurveTo(
+      sx - 16.5 * scale,
+      sy - 19 * scale,
+      sx - 16 * scale,
+      sy - 17.5 * scale,
+      sx - 14.5 * scale,
+      sy - 18 * scale,
+    );
+    ctx.bezierCurveTo(
+      sx - 13.5 * scale,
+      sy - 18.5 * scale,
+      sx - 14 * scale,
+      sy - 20 * scale,
+      sx - 15.5 * scale,
+      sy - 20.5 * scale,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "rgba(70, 55, 35, 0.35)";
+    ctx.lineWidth = 0.4 * scale;
+    ctx.stroke();
+
+    // Mouth — slight serene smile
+    ctx.strokeStyle = "rgba(80, 60, 40, 0.45)";
+    ctx.lineWidth = 0.7 * scale;
+    ctx.beginPath();
+    ctx.moveTo(sx - 18 * scale, sy - 17 * scale);
+    ctx.bezierCurveTo(
+      sx - 16.5 * scale,
+      sy - 16 * scale,
+      sx - 13.5 * scale,
+      sy - 16 * scale,
+      sx - 11.5 * scale,
+      sy - 17 * scale,
+    );
+    ctx.stroke();
+    // Upper lip highlight
+    ctx.strokeStyle = "rgba(200, 170, 120, 0.25)";
+    ctx.lineWidth = 0.5 * scale;
+    ctx.beginPath();
+    ctx.moveTo(sx - 17 * scale, sy - 17.5 * scale);
+    ctx.quadraticCurveTo(
+      sx - 14.5 * scale,
+      sy - 17 * scale,
+      sx - 12 * scale,
+      sy - 17.5 * scale,
     );
     ctx.stroke();
 
-    // Weathering cracks on head
-    ctx.strokeStyle = "rgba(80, 60, 40, 0.25)";
+    // False beard (Pharaoh beard, partially broken off)
+    ctx.fillStyle = "#a08050";
+    ctx.beginPath();
+    ctx.moveTo(sx - 16 * scale, sy - 16 * scale);
+    ctx.bezierCurveTo(
+      sx - 16.5 * scale,
+      sy - 13 * scale,
+      sx - 15 * scale,
+      sy - 10 * scale,
+      sx - 14 * scale,
+      sy - 9 * scale,
+    );
+    ctx.lineTo(sx - 13 * scale, sy - 10 * scale);
+    ctx.bezierCurveTo(
+      sx - 13.5 * scale,
+      sy - 12 * scale,
+      sx - 14 * scale,
+      sy - 14 * scale,
+      sx - 14 * scale,
+      sy - 16 * scale,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(70, 55, 35, 0.3)";
+    ctx.lineWidth = 0.4 * scale;
+    ctx.stroke();
+    // Broken edge at bottom
+    ctx.strokeStyle = "rgba(90, 70, 50, 0.4)";
+    ctx.lineWidth = 0.6 * scale;
+    ctx.beginPath();
+    ctx.moveTo(sx - 14.5 * scale, sy - 9.5 * scale);
+    ctx.lineTo(sx - 13.5 * scale, sy - 9 * scale);
+    ctx.lineTo(sx - 13 * scale, sy - 10 * scale);
+    ctx.stroke();
+
+    // Weathering cracks on head/face
+    ctx.save();
+    ctx.strokeStyle = "rgba(80, 60, 40, 0.2)";
     ctx.lineWidth = 0.4;
-    ctx.beginPath();
-    ctx.moveTo(sx - 20 * scale, sy - 8 * scale);
-    ctx.lineTo(sx - 17 * scale, sy - 6 * scale);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(sx - 11 * scale, sy - 14 * scale);
-    ctx.lineTo(sx - 13 * scale, sy - 11 * scale);
-    ctx.stroke();
+    const headCracks: [number, number, number, number][] = [
+      [-19, -20, -16.5, -17.5],
+      [-11, -25, -13, -22],
+      [-18, -25, -16, -23],
+      [-10, -19, -12, -17],
+    ];
+    for (const [x1, y1, x2, y2] of headCracks) {
+      ctx.beginPath();
+      ctx.moveTo(sx + x1 * scale, sy + y1 * scale);
+      ctx.quadraticCurveTo(
+        sx + ((x1 + x2) / 2) * scale + seededRandom(spSeed + x1) * 1.5 * scale,
+        sy + ((y1 + y2) / 2) * scale,
+        sx + x2 * scale,
+        sy + y2 * scale,
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Wind-blown sand particles drifting past
+    ctx.save();
+    for (let sp = 0; sp < 4; sp++) {
+      const spPhase = (time * 12 + sp * 15 + spSeed) % 50;
+      const spX = sx - 25 * scale + spPhase * 1.2 * scale;
+      const spY = sy + (seededRandom(spSeed + sp * 71) - 0.5) * 16 * scale;
+      const spAlpha = Math.max(0, 0.3 - Math.abs(spPhase - 25) / 40);
+      if (spAlpha > 0) {
+        ctx.fillStyle = `rgba(210, 180, 130, ${spAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          spX,
+          spY,
+          0.6 + seededRandom(spSeed + sp * 73) * 0.6,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    // Subtle golden highlight on lit side
+    ctx.save();
+    ctx.globalAlpha = 0.08;
+    const sunGrad = ctx.createLinearGradient(
+      sx - 24 * scale,
+      sy - 30 * scale,
+      sx + 10 * scale,
+      sy + 5 * scale,
+    );
+    sunGrad.addColorStop(0, "#ffe880");
+    sunGrad.addColorStop(0.4, "#ffe880");
+    sunGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = sunGrad;
+    ctx.fillRect(sx - 24 * scale, sy - 35 * scale, 48 * scale, 45 * scale);
+    ctx.restore();
   };
-  drawSphinx(920, 68, 0.8);
+  drawSphinx(965, 43, 0.8);
 
   // Palm tree — curved trunk with ring segments, individual swaying fronds, coconuts, fallen fronds
   const drawPalmTree = (tx: number, tyPct: number, scale: number) => {
@@ -3585,55 +4357,86 @@ export const drawWorldMapCanvas = ({
       ctx.lineWidth = 1.2;
     }
 
-    // Palm fronds — individual fronds that sway independently
-    const frondColors = [
-      "#1d6b2c",
-      "#2d8b3c",
-      "#1a6028",
-      "#2d8b3c",
-      "#1d6b2c",
-      "#258533",
+    // Palm fronds — pinnate leaves with individual leaflets drooping from an arching midrib
+    const frondColorPairs: [string, string][] = [
+      ["#1d6b2c", "#2a8838"],
+      ["#2d8b3c", "#3a9e4a"],
+      ["#1a6028", "#288a35"],
+      ["#2d8b3c", "#3a9e4a"],
+      ["#1d6b2c", "#2a8838"],
+      ["#258533", "#32a040"],
+      ["#1a6028", "#288a35"],
+      ["#226830", "#2e9040"],
     ];
-    const frondAngles = [-1.0, -0.5, -0.1, 0.3, 0.7, 1.2];
-    const frondLengths = [1.0, 1.1, 0.9, 1.05, 1.0, 0.85];
-    frondAngles.forEach((angle, i) => {
+    const frondAngles = [-1.2, -0.75, -0.35, 0.0, 0.35, 0.75, 1.15, 1.5];
+    const frondLengths = [0.95, 1.05, 1.12, 1.0, 1.1, 1.05, 0.92, 0.82];
+    const crownX = tx + 4 * scale;
+    const crownY = ty - 40 * scale;
+
+    frondAngles.forEach((baseAngle, i) => {
       const sway =
-        Math.sin(time * 1.2 + i * 1.1) * 0.06 +
-        Math.sin(time * 2.5 + i * 0.7) * 0.03;
+        Math.sin(time * 1.2 + i * 1.1) * 0.07 +
+        Math.sin(time * 2.5 + i * 0.7) * 0.035;
+      const ang = baseAngle + sway;
+      const len = 28 * scale * frondLengths[i];
+      const [colorDark, colorLight] = frondColorPairs[i];
+
       ctx.save();
-      ctx.translate(tx + 4 * scale, ty - 40 * scale);
-      ctx.rotate(angle + sway);
-      const len = 30 * scale * frondLengths[i];
-      // Frond midrib
-      ctx.strokeStyle = "#1a5020";
-      ctx.lineWidth = 1.2 * scale;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(len * 0.5, -6 * scale, len, 4 * scale);
-      ctx.stroke();
-      // Frond leaf shape
-      ctx.fillStyle = frondColors[i];
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.quadraticCurveTo(len * 0.3, -9 * scale, len, 3 * scale);
-      ctx.quadraticCurveTo(len * 0.3, -1 * scale, 0, 0);
-      ctx.fill();
-      // Individual leaflet notches
-      ctx.strokeStyle = "rgba(10, 50, 15, 0.3)";
-      ctx.lineWidth = 0.4;
-      for (let n = 0; n < 5; n++) {
-        const nt = (n + 1) / 6;
-        const nx = nt * len * 0.9;
-        const ny = -6 * scale * (1 - nt) + 3 * scale * nt;
-        ctx.beginPath();
-        ctx.moveTo(nx, ny);
-        ctx.lineTo(nx + 3 * scale, ny - 3 * scale);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(nx, ny);
-        ctx.lineTo(nx + 3 * scale, ny + 2 * scale);
-        ctx.stroke();
+      ctx.translate(crownX, crownY);
+      ctx.rotate(ang);
+
+      // Midrib: arches up then droops under gravity (local coords: X = along frond, Y = perpendicular)
+      const segments = 10;
+      const ribPts: { x: number; y: number }[] = [];
+      for (let s = 0; s <= segments; s++) {
+        const t = s / segments;
+        const rx = t * len;
+        const arch = -Math.sin(t * Math.PI * 0.7) * len * 0.08;
+        const gravity = t * t * len * 0.25;
+        ribPts.push({ x: rx, y: arch + gravity });
       }
+
+      // Draw midrib stroke
+      ctx.strokeStyle = "#1a5020";
+      ctx.lineWidth = 1.3 * scale;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      for (let s = 1; s <= segments; s++) {
+        ctx.lineTo(ribPts[s].x, ribPts[s].y);
+      }
+      ctx.stroke();
+
+      // Draw pinnate leaflets along the midrib
+      for (let s = 1; s <= segments; s++) {
+        const t = s / segments;
+        const pt = ribPts[s];
+
+        // Leaflets taper: longest at ~40% along the frond, shorter at base and tip
+        const taper = 1 - Math.abs(t - 0.4) * 1.6;
+        const leafLen = Math.max(0, (4 + taper * 7) * scale);
+        if (leafLen < 1.5 * scale) continue;
+
+        // Leaflets angle slightly backward along the frond and droop (positive Y = down in local rotated space)
+        const backAngle = 0.35;
+        for (const side of [-1, 1] as const) {
+          const baseAng = (Math.PI / 2) * side + backAngle;
+          const tipX = pt.x + Math.cos(baseAng) * leafLen * 0.3;
+          const tipY = pt.y + Math.sin(baseAng) * leafLen + leafLen * 0.15;
+          const cpX = pt.x + Math.cos(baseAng) * leafLen * 0.15;
+          const cpY =
+            pt.y + Math.sin(baseAng) * leafLen * 0.55 + leafLen * 0.05;
+
+          ctx.fillStyle = side === -1 ? colorDark : colorLight;
+          ctx.globalAlpha = 0.88 - t * 0.2;
+          ctx.beginPath();
+          ctx.moveTo(pt.x, pt.y);
+          ctx.quadraticCurveTo(cpX - 0.6 * scale * side, cpY, tipX, tipY);
+          ctx.quadraticCurveTo(cpX + 0.6 * scale * side, cpY, pt.x, pt.y);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
       ctx.restore();
     });
 
@@ -4064,8 +4867,16 @@ export const drawWorldMapCanvas = ({
     [1000, 40],
     [1040, 65],
     [1060, 30],
+    [760, 45],
+    [780, 72],
+    [820, 30],
+    [870, 55],
+    [915, 80],
+    [970, 32],
+    [1020, 58],
+    [1055, 82],
   ].forEach(([x, yPct], i) => {
-    drawDesertCactus(x, yPct, 0.6 + seededRandom(i + 200) * 0.3);
+    drawDesertCactus(x, yPct, 0.5 + seededRandom(i + 200) * 0.35);
   });
 
   // Camel — better anatomy, saddle/cargo, rope lead between caravan
@@ -4377,6 +5188,13 @@ export const drawWorldMapCanvas = ({
   drawCamel(880, 72, 0.6, 1);
   drawCamel(905, 74, 0.55, 1);
   drawCamel(1010, 50, 0.65, -1);
+  drawCamel(760, 55, 0.5, -1);
+  drawCamel(1050, 42, 0.55, 1);
+
+  // More palm trees near oasis area
+  drawPalmTree(740, 48, 0.55);
+  drawPalmTree(810, 38, 0.5);
+  drawPalmTree(830, 70, 0.6);
 
   // Ornate Bedouin tent with colorful patterns, hanging lanterns, carpet
   const drawDesertCamp = (cx: number, cyPct: number) => {
@@ -4641,6 +5459,8 @@ export const drawWorldMapCanvas = ({
   };
   drawDesertCamp(820, 22);
   drawDesertCamp(1030, 58);
+  drawDesertCamp(920, 82);
+  drawDesertCamp(760, 38);
 
   // Dramatic swirling sand/dust particles — varied sizes, some streaking
   for (let p = 0; p < 40; p++) {
@@ -4836,16 +5656,30 @@ export const drawWorldMapCanvas = ({
   drawBurningWreck(990, 20);
   drawBurningWreck(1520, 32);
   drawBurningWreck(1650, 62);
+  drawBurningWreck(870, 48);
+  drawBurningWreck(1040, 60);
+  drawBurningWreck(1570, 75);
+  drawBurningWreck(1700, 28);
 
   // === FROZEN FRONTIER DETAILS === (Enhanced Winter Environment)
 
   // Snow drift mounds — soft white organic blobs
   const snowDrifts: [number, number, number, number][] = [
-    [1110, 55, 30, 12], [1170, 38, 26, 10], [1230, 70, 34, 14],
-    [1290, 42, 28, 11], [1340, 65, 32, 13], [1400, 35, 24, 10],
-    [1130, 80, 22, 9], [1200, 28, 20, 8], [1260, 55, 26, 10],
-    [1320, 78, 30, 12], [1380, 48, 22, 9], [1420, 60, 18, 7],
-    [1150, 45, 28, 11], [1350, 30, 24, 10], [1100, 70, 20, 8],
+    [1110, 55, 30, 12],
+    [1170, 38, 26, 10],
+    [1230, 70, 34, 14],
+    [1290, 42, 28, 11],
+    [1340, 65, 32, 13],
+    [1400, 35, 24, 10],
+    [1130, 80, 22, 9],
+    [1200, 28, 20, 8],
+    [1260, 55, 26, 10],
+    [1320, 78, 30, 12],
+    [1380, 48, 22, 9],
+    [1420, 60, 18, 7],
+    [1150, 45, 28, 11],
+    [1350, 30, 24, 10],
+    [1100, 70, 20, 8],
   ];
   for (let i = 0; i < snowDrifts.length; i++) {
     const [sx, syPct, srx, sry] = snowDrifts[i];
@@ -4874,7 +5708,16 @@ export const drawWorldMapCanvas = ({
     // Ice sheen
     ctx.globalAlpha = 0.06;
     ctx.fillStyle = "#e0f0ff";
-    drawOrganicBlobAt(ctx, fx + 2, fy - 1, fr * 0.35, fr * 0.2, i * 4.9 + 77, 0.1, 10);
+    drawOrganicBlobAt(
+      ctx,
+      fx + 2,
+      fy - 1,
+      fr * 0.35,
+      fr * 0.2,
+      i * 4.9 + 77,
+      0.1,
+      10,
+    );
     ctx.fill();
   }
   // Evergreen shrub patches
@@ -4960,18 +5803,19 @@ export const drawWorldMapCanvas = ({
   ) => {
     const my = getY(myPct);
     const isoDepth = heightPx * 0.35;
+    const mtSeed = mx * 2.1 + myPct * 5.7;
 
-    // Shadow underneath
+    // Shadow underneath — organic shape
     ctx.fillStyle = "rgba(30, 50, 70, 0.3)";
-    ctx.beginPath();
-    ctx.ellipse(
+    drawOrganicBlobAt(
+      ctx,
       mx + width * 0.08,
       my + isoDepth * 0.4,
       width * 0.55,
       isoDepth * 0.45,
-      0.1,
-      0,
-      Math.PI * 2,
+      mtSeed + 99,
+      0.15,
+      14,
     );
     ctx.fill();
 
@@ -4999,6 +5843,51 @@ export const drawWorldMapCanvas = ({
     ctx.closePath();
     ctx.fill();
 
+    // Secondary ridge/spur on the right for mountain-range feel
+    const spurGrad = ctx.createLinearGradient(
+      mx + width * 0.15,
+      my - heightPx * 0.6,
+      mx + width * 0.55,
+      my,
+    );
+    spurGrad.addColorStop(0, "#6a7a8a");
+    spurGrad.addColorStop(0.5, "#556878");
+    spurGrad.addColorStop(1, "#4a5a6a");
+    ctx.fillStyle = spurGrad;
+    ctx.beginPath();
+    ctx.moveTo(mx + width * 0.18, my - heightPx * 0.65);
+    ctx.bezierCurveTo(
+      mx + width * 0.28,
+      my - heightPx * 0.55,
+      mx + width * 0.38,
+      my - heightPx * 0.35,
+      mx + width * 0.52,
+      my + isoDepth * 0.2,
+    );
+    ctx.lineTo(mx + width * 0.45, my + isoDepth * 0.4);
+    ctx.lineTo(mx + width * 0.18, my - heightPx * 0.35);
+    ctx.closePath();
+    ctx.fill();
+    // Snow on spur ridge
+    ctx.fillStyle = "rgba(230, 242, 255, 0.6)";
+    ctx.beginPath();
+    ctx.moveTo(mx + width * 0.18, my - heightPx * 0.65);
+    ctx.quadraticCurveTo(
+      mx + width * 0.25,
+      my - heightPx * 0.58,
+      mx + width * 0.32,
+      my - heightPx * 0.48,
+    );
+    ctx.lineTo(mx + width * 0.28, my - heightPx * 0.46);
+    ctx.quadraticCurveTo(
+      mx + width * 0.22,
+      my - heightPx * 0.56,
+      mx + width * 0.17,
+      my - heightPx * 0.62,
+    );
+    ctx.closePath();
+    ctx.fill();
+
     // Front face (lit left side) with detailed gradient
     const mtGrad = ctx.createLinearGradient(
       mx - width * 0.4,
@@ -5015,12 +5904,22 @@ export const drawWorldMapCanvas = ({
     ctx.fillStyle = mtGrad;
     ctx.beginPath();
     ctx.moveTo(mx + width * 0.05, my - heightPx);
-    ctx.lineTo(mx - width * 0.02, my - heightPx * 0.9);
-    ctx.lineTo(mx - width * 0.08, my - heightPx * 0.95);
-    ctx.lineTo(mx - width * 0.18, my - heightPx * 0.7);
-    ctx.lineTo(mx - width * 0.25, my - heightPx * 0.5);
-    ctx.lineTo(mx - width * 0.35, my - heightPx * 0.25);
-    ctx.lineTo(mx - width * 0.4, my);
+    ctx.bezierCurveTo(
+      mx - width * 0.01,
+      my - heightPx * 0.92,
+      mx - width * 0.06,
+      my - heightPx * 0.96,
+      mx - width * 0.1,
+      my - heightPx * 0.82,
+    );
+    ctx.bezierCurveTo(
+      mx - width * 0.16,
+      my - heightPx * 0.62,
+      mx - width * 0.28,
+      my - heightPx * 0.38,
+      mx - width * 0.4,
+      my,
+    );
     ctx.lineTo(mx - width * 0.4, my + isoDepth * 0.4);
     ctx.lineTo(mx + width * 0.05, my + isoDepth * 0.25);
     ctx.closePath();
@@ -5038,10 +5937,83 @@ export const drawWorldMapCanvas = ({
       const leftX = mx - width * (0.38 - s * 0.03);
       const rightX = mx + width * 0.04;
       ctx.moveTo(leftX, strataY);
-      ctx.lineTo(rightX, strataY - heightPx * 0.03);
+      ctx.quadraticCurveTo(
+        leftX + (rightX - leftX) * 0.3,
+        strataY - heightPx * 0.02 + seededRandom(mtSeed + s) * 3,
+        rightX,
+        strataY - heightPx * 0.03,
+      );
       ctx.lineTo(rightX, strataY + heightPx * 0.04);
-      ctx.lineTo(leftX, strataY + heightPx * 0.05);
+      ctx.quadraticCurveTo(
+        leftX + (rightX - leftX) * 0.6,
+        strataY + heightPx * 0.06 - seededRandom(mtSeed + s + 10) * 2,
+        leftX,
+        strataY + heightPx * 0.05,
+      );
       ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Deep crevasse shadow lines cutting across the face
+    ctx.save();
+    ctx.strokeStyle = "rgba(20, 35, 50, 0.35)";
+    ctx.lineWidth = 1.2;
+    for (let cv = 0; cv < 3; cv++) {
+      const cvStartY = my - heightPx * (0.3 + cv * 0.22);
+      const cvStartX = mx - width * (0.32 - cv * 0.06);
+      const cvLen = width * (0.15 + seededRandom(mtSeed + cv * 7) * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(cvStartX, cvStartY);
+      ctx.bezierCurveTo(
+        cvStartX + cvLen * 0.3,
+        cvStartY + heightPx * 0.06 + seededRandom(mtSeed + cv * 3) * 4,
+        cvStartX + cvLen * 0.7,
+        cvStartY + heightPx * 0.02 - seededRandom(mtSeed + cv * 5) * 3,
+        cvStartX + cvLen,
+        cvStartY + heightPx * 0.08,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(40, 55, 70, 0.2)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(20, 35, 50, 0.35)";
+    }
+    ctx.restore();
+
+    // Exposed darker rock patches on the face
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    for (let ep = 0; ep < 5; ep++) {
+      const epX = mx - width * (0.08 + seededRandom(mtSeed + ep * 11) * 0.25);
+      const epY = my - heightPx * (0.15 + seededRandom(mtSeed + ep * 13) * 0.6);
+      const epW = 4 + seededRandom(mtSeed + ep * 17) * 6;
+      const epH = 2 + seededRandom(mtSeed + ep * 19) * 3;
+      ctx.fillStyle = seededRandom(mtSeed + ep) > 0.5 ? "#4a5868" : "#3a4858";
+      drawOrganicBlobAt(ctx, epX, epY, epW, epH, mtSeed + ep * 3.3, 0.25, 8);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Snow accumulation on ledges
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    for (let sl = 0; sl < 4; sl++) {
+      const ledgeY = my - heightPx * (0.2 + sl * 0.16);
+      const ledgeX = mx - width * (0.34 - sl * 0.04);
+      const ledgeW = 8 + seededRandom(mtSeed + sl * 21) * 10;
+      ctx.fillStyle = "#e8f2ff";
+      drawOrganicBlobAt(
+        ctx,
+        ledgeX + ledgeW * 0.4,
+        ledgeY + 1,
+        ledgeW * 0.5,
+        2.5,
+        mtSeed + sl * 5.1,
+        0.2,
+        8,
+      );
       ctx.fill();
     }
     ctx.restore();
@@ -5059,6 +6031,30 @@ export const drawWorldMapCanvas = ({
       my + isoDepth * 0.4,
     );
     ctx.fill();
+
+    // Talus/scree boulders at base
+    ctx.save();
+    for (let tb = 0; tb < 8; tb++) {
+      const tbAngle = (tb / 8) * Math.PI - Math.PI * 0.1;
+      const tbDist = width * (0.38 + seededRandom(mtSeed + tb * 9) * 0.15);
+      const tbX = mx + Math.cos(tbAngle) * tbDist * 0.5;
+      const tbY = my + isoDepth * 0.2 + Math.sin(tbAngle) * tbDist * 0.15;
+      const tbSize = 2 + seededRandom(mtSeed + tb * 14) * 3;
+      const tbShade = 70 + Math.floor(seededRandom(mtSeed + tb * 16) * 30);
+      ctx.fillStyle = `rgb(${tbShade}, ${tbShade + 10}, ${tbShade + 20})`;
+      drawOrganicBlobAt(
+        ctx,
+        tbX,
+        tbY,
+        tbSize,
+        tbSize * 0.6,
+        mtSeed + tb * 2.7,
+        0.25,
+        7,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
 
     // Snow cap with multiple sculpted layers
     ctx.fillStyle = "#ffffff";
@@ -5105,6 +6101,84 @@ export const drawWorldMapCanvas = ({
     ctx.closePath();
     ctx.fill();
 
+    // Frozen waterfall streak on front face
+    ctx.save();
+    const fwX = mx - width * 0.15;
+    const fwStartY = my - heightPx * 0.55;
+    const fwEndY = my - heightPx * 0.1;
+    const fwGrad = ctx.createLinearGradient(fwX, fwStartY, fwX, fwEndY);
+    fwGrad.addColorStop(0, "rgba(180, 215, 240, 0.5)");
+    fwGrad.addColorStop(0.3, "rgba(160, 200, 230, 0.4)");
+    fwGrad.addColorStop(0.7, "rgba(140, 190, 225, 0.25)");
+    fwGrad.addColorStop(1, "rgba(120, 180, 220, 0.1)");
+    ctx.strokeStyle = fwGrad;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(fwX, fwStartY);
+    ctx.bezierCurveTo(
+      fwX - 3,
+      fwStartY + (fwEndY - fwStartY) * 0.3,
+      fwX + 4,
+      fwStartY + (fwEndY - fwStartY) * 0.6,
+      fwX - 1,
+      fwEndY,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(210, 235, 255, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Rime frost crystals near summit
+    ctx.save();
+    ctx.globalAlpha = 0.45;
+    for (let rf = 0; rf < 5; rf++) {
+      const rfX =
+        mx +
+        width * 0.05 +
+        (seededRandom(mtSeed + rf * 23) - 0.5) * width * 0.15;
+      const rfY =
+        my - heightPx * (0.85 + seededRandom(mtSeed + rf * 25) * 0.12);
+      ctx.strokeStyle = "rgba(200, 230, 255, 0.7)";
+      ctx.lineWidth = 0.8;
+      for (let branch = 0; branch < 3; branch++) {
+        const angle =
+          (branch / 3) * Math.PI -
+          Math.PI * 0.3 +
+          seededRandom(mtSeed + rf + branch) * 0.4;
+        const len = 2 + seededRandom(mtSeed + rf * 3 + branch) * 3;
+        ctx.beginPath();
+        ctx.moveTo(rfX, rfY);
+        ctx.lineTo(rfX + Math.cos(angle) * len, rfY + Math.sin(angle) * len);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // Snow cornices overhanging the ridgeline
+    ctx.fillStyle = "rgba(240, 248, 255, 0.7)";
+    ctx.beginPath();
+    ctx.moveTo(mx + width * 0.12, my - heightPx * 0.88);
+    ctx.quadraticCurveTo(
+      mx + width * 0.16,
+      my - heightPx * 0.86,
+      mx + width * 0.2,
+      my - heightPx * 0.82,
+    );
+    ctx.quadraticCurveTo(
+      mx + width * 0.18,
+      my - heightPx * 0.8,
+      mx + width * 0.14,
+      my - heightPx * 0.82,
+    );
+    ctx.quadraticCurveTo(
+      mx + width * 0.11,
+      my - heightPx * 0.85,
+      mx + width * 0.12,
+      my - heightPx * 0.88,
+    );
+    ctx.fill();
+
     // Wind-blown snow at summit (animated wisps)
     const windPhase = time * 1.5;
     ctx.save();
@@ -5127,18 +6201,40 @@ export const drawWorldMapCanvas = ({
     }
     ctx.restore();
 
-    // Icicles hanging from outcrops
-    ctx.fillStyle = "rgba(200, 230, 255, 0.7)";
-    for (let ic = 0; ic < 4; ic++) {
-      const icX = mx - width * 0.25 + ic * width * 0.12;
-      const icY = my - heightPx * (0.5 + ic * 0.08);
-      const icLen = 4 + seededRandom(mx + ic * 7) * 6;
+    // Icicles hanging from outcrops — varied sizes with sparkle
+    for (let ic = 0; ic < 7; ic++) {
+      const icX =
+        mx -
+        width * 0.32 +
+        ic * width * 0.08 +
+        seededRandom(mtSeed + ic * 31) * 3;
+      const icY = my - heightPx * (0.4 + seededRandom(mtSeed + ic * 33) * 0.35);
+      const icLen = 3 + seededRandom(mtSeed + ic * 7) * 8;
+      const icW = 1 + seededRandom(mtSeed + ic * 9) * 1.5;
+      const icGrad = ctx.createLinearGradient(icX, icY, icX, icY + icLen);
+      icGrad.addColorStop(0, "rgba(200, 230, 255, 0.8)");
+      icGrad.addColorStop(0.5, "rgba(180, 220, 250, 0.6)");
+      icGrad.addColorStop(1, "rgba(170, 215, 248, 0.3)");
+      ctx.fillStyle = icGrad;
       ctx.beginPath();
-      ctx.moveTo(icX - 1.5, icY);
-      ctx.lineTo(icX, icY + icLen);
-      ctx.lineTo(icX + 1.5, icY);
+      ctx.moveTo(icX - icW, icY);
+      ctx.quadraticCurveTo(
+        icX - icW * 0.6,
+        icY + icLen * 0.7,
+        icX,
+        icY + icLen,
+      );
+      ctx.quadraticCurveTo(icX + icW * 0.6, icY + icLen * 0.7, icX + icW, icY);
       ctx.closePath();
       ctx.fill();
+      // Sparkle glint
+      const sparkle = Math.sin(time * 4 + ic * 2.3 + mtSeed) * 0.5 + 0.5;
+      if (sparkle > 0.7) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${(sparkle - 0.7) * 2})`;
+        ctx.beginPath();
+        ctx.arc(icX, icY + icLen * 0.2, 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Avalanche snow cascading (animated particles on slope)
@@ -5163,9 +6259,13 @@ export const drawWorldMapCanvas = ({
   drawSnowMountain(1250, 25, 45, 20);
   drawSnowMountain(1350, 26, 48, 28);
   drawSnowMountain(1380, 28, 48, 28);
-
+  drawSnowMountain(1095, 20, 30, 14);
+  drawSnowMountain(1190, 22, 38, 18);
+  drawSnowMountain(1420, 24, 32, 16);
   drawSnowMountain(1310, 80, 68, 38);
   drawSnowMountain(1350, 82, 68, 38);
+  drawSnowMountain(1120, 82, 40, 22);
+  drawSnowMountain(1200, 85, 50, 28);
 
   // Detailed frosted pine trees with individual branch layers
   const drawFrostedPine = (x: number, yPct: number, scale: number) => {
@@ -5179,6 +6279,31 @@ export const drawWorldMapCanvas = ({
       14 * scale,
       5 * scale,
       0.2,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Snow pile at base drawn first so it sits behind the trunk and branches
+    const snowGrad = ctx.createRadialGradient(
+      x,
+      y + 2 * scale,
+      0,
+      x,
+      y + 2 * scale,
+      12 * scale,
+    );
+    snowGrad.addColorStop(0, "#f4f8ff");
+    snowGrad.addColorStop(0.7, "#e0ecf8");
+    snowGrad.addColorStop(1, "rgba(220, 235, 248, 0)");
+    ctx.fillStyle = snowGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + 2 * scale,
+      y + 2 * scale,
+      12 * scale,
+      5 * scale,
+      0.1,
       0,
       Math.PI * 2,
     );
@@ -5318,31 +6443,6 @@ export const drawWorldMapCanvas = ({
       ctx.lineTo(pcX + 1 * scale, pcY + 1 * scale);
       ctx.stroke();
     }
-
-    // Snow pile at base with drift
-    const snowGrad = ctx.createRadialGradient(
-      x,
-      y + 2 * scale,
-      0,
-      x,
-      y + 2 * scale,
-      12 * scale,
-    );
-    snowGrad.addColorStop(0, "#f4f8ff");
-    snowGrad.addColorStop(0.7, "#e0ecf8");
-    snowGrad.addColorStop(1, "rgba(220, 235, 248, 0)");
-    ctx.fillStyle = snowGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      x + 2 * scale,
-      y + 2 * scale,
-      12 * scale,
-      5 * scale,
-      0.1,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
 
     // Natural snow cap at treetop
     ctx.fillStyle = "#ffffff";
@@ -5555,58 +6655,63 @@ export const drawWorldMapCanvas = ({
     heightRatio: number,
   ) => {
     const ly = getY(lyPct);
+    const h = width * heightRatio;
+    const seed = lx * 3.1 + lyPct * 7.7;
 
-    // Snow drifts along edges
-    ctx.fillStyle = "rgba(230, 240, 250, 0.6)";
-    ctx.beginPath();
-    ctx.ellipse(lx, ly, width + 6, width * heightRatio + 5, 0, 0, Math.PI * 2);
+    // Snow bank — organic blob outline
+    ctx.fillStyle = "rgba(225,238,248,0.55)";
+    drawOrganicBlobAt(ctx, lx, ly, width + 7, h + 5, seed + 0.5, 0.18, 20);
     ctx.fill();
 
-    // Deep water underneath (visible depth through translucent ice)
+    // Deep water underneath
     const depthGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, width);
-    depthGrad.addColorStop(0, "rgba(30, 60, 100, 0.5)");
-    depthGrad.addColorStop(0.5, "rgba(40, 80, 130, 0.4)");
-    depthGrad.addColorStop(1, "rgba(50, 90, 140, 0.3)");
+    depthGrad.addColorStop(0, "rgba(25,55,95,0.5)");
+    depthGrad.addColorStop(0.5, "rgba(35,75,125,0.4)");
+    depthGrad.addColorStop(1, "rgba(50,90,140,0.25)");
     ctx.fillStyle = depthGrad;
-    ctx.beginPath();
-    ctx.ellipse(lx, ly, width, width * heightRatio, 0, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, lx, ly, width + 1, h + 0.5, seed, 0.15, 18);
     ctx.fill();
 
     // Translucent ice surface
     const iceGrad = ctx.createRadialGradient(
       lx - width * 0.2,
-      ly - width * heightRatio * 0.2,
+      ly - h * 0.2,
       0,
       lx,
       ly,
       width,
     );
-    iceGrad.addColorStop(0, "rgba(210, 235, 255, 0.6)");
-    iceGrad.addColorStop(0.3, "rgba(185, 215, 245, 0.65)");
-    iceGrad.addColorStop(0.7, "rgba(160, 195, 230, 0.7)");
-    iceGrad.addColorStop(1, "rgba(130, 170, 210, 0.5)");
+    iceGrad.addColorStop(0, "rgba(210,235,255,0.6)");
+    iceGrad.addColorStop(0.3, "rgba(185,215,245,0.65)");
+    iceGrad.addColorStop(0.7, "rgba(160,195,230,0.7)");
+    iceGrad.addColorStop(1, "rgba(130,170,210,0.45)");
     ctx.fillStyle = iceGrad;
-    ctx.beginPath();
-    ctx.ellipse(lx, ly, width, width * heightRatio, 0, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, lx, ly, width, h, seed, 0.15, 18);
     ctx.fill();
 
+    // Organic shore edge highlight
+    ctx.strokeStyle = "rgba(200,225,245,0.3)";
+    ctx.lineWidth = 1.2;
+    drawOrganicBlobAt(ctx, lx, ly, width - 2, h - 1, seed, 0.12, 16);
+    ctx.stroke();
+
     // Branching ice cracks
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+    ctx.strokeStyle = "rgba(255,255,255,0.45)";
     ctx.lineWidth = 0.8;
     for (let c = 0; c < 6; c++) {
       const startAngle = seededRandom(lx + c) * Math.PI * 2;
-      const crackLen = 12 + seededRandom(lx + c + 10) * 25;
+      const crackLen = 10 + seededRandom(lx + c + 10) * (width * 0.6);
       const midX = lx + Math.cos(startAngle) * crackLen * 0.5;
       const midY = ly + Math.sin(startAngle) * crackLen * heightRatio * 0.5;
       ctx.beginPath();
       ctx.moveTo(lx, ly);
-      ctx.lineTo(midX, midY);
-      ctx.lineTo(
+      ctx.quadraticCurveTo(
+        midX + (seededRandom(lx + c + 20) - 0.5) * 5,
+        midY + (seededRandom(lx + c + 21) - 0.5) * 3,
         lx + Math.cos(startAngle) * crackLen,
         ly + Math.sin(startAngle) * crackLen * heightRatio,
       );
       ctx.stroke();
-      // Branch crack
       if (c < 4) {
         ctx.beginPath();
         ctx.moveTo(midX, midY);
@@ -5620,23 +6725,19 @@ export const drawWorldMapCanvas = ({
       }
     }
 
-    // Trapped air bubbles under ice
-    ctx.fillStyle = "rgba(200, 230, 255, 0.35)";
+    // Trapped air bubbles
+    ctx.fillStyle = "rgba(200,230,255,0.35)";
     for (let b = 0; b < 8; b++) {
       const bx = lx - width * 0.6 + seededRandom(lx + b * 13) * width * 1.2;
-      const by =
-        ly -
-        width * heightRatio * 0.5 +
-        seededRandom(lx + b * 17) * width * heightRatio;
+      const by = ly - h * 0.5 + seededRandom(lx + b * 17) * h;
       const bSize = 1.5 + seededRandom(lx + b * 23) * 3;
       const dx = (bx - lx) / width;
-      const dy = (by - ly) / (width * heightRatio);
-      if (dx * dx + dy * dy < 0.8) {
+      const dy = (by - ly) / h;
+      if (dx * dx + dy * dy < 0.7) {
         ctx.beginPath();
         ctx.arc(bx, by, bSize, 0, Math.PI * 2);
         ctx.fill();
-        // Bubble highlight
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
         ctx.beginPath();
         ctx.arc(
           bx - bSize * 0.3,
@@ -5646,19 +6747,16 @@ export const drawWorldMapCanvas = ({
           Math.PI * 2,
         );
         ctx.fill();
-        ctx.fillStyle = "rgba(200, 230, 255, 0.35)";
+        ctx.fillStyle = "rgba(200,230,255,0.35)";
       }
     }
 
     // Skating scratch marks
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 0.6;
     for (let sc = 0; sc < 4; sc++) {
       const scX = lx - width * 0.4 + seededRandom(lx + sc * 41) * width * 0.8;
-      const scY =
-        ly -
-        width * heightRatio * 0.2 +
-        seededRandom(lx + sc * 43) * width * heightRatio * 0.4;
+      const scY = ly - h * 0.2 + seededRandom(lx + sc * 43) * h * 0.4;
       const scLen = 8 + seededRandom(lx + sc * 47) * 12;
       const scAngle = seededRandom(lx + sc * 51) * Math.PI;
       ctx.beginPath();
@@ -5668,7 +6766,6 @@ export const drawWorldMapCanvas = ({
         scY + Math.sin(scAngle) * scLen * heightRatio,
       );
       ctx.stroke();
-      // Paired scratch
       ctx.beginPath();
       ctx.moveTo(scX + 2, scY + 1);
       ctx.lineTo(
@@ -5678,14 +6775,11 @@ export const drawWorldMapCanvas = ({
       ctx.stroke();
     }
 
-    // Surface shimmer spots
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.25 + Math.sin(time * 3) * 0.15})`;
+    // Surface shimmer
+    ctx.fillStyle = `rgba(255,255,255,${0.25 + Math.sin(time * 3) * 0.15})`;
     for (let s = 0; s < 4; s++) {
       const sx = lx - width * 0.5 + seededRandom(lx + s * 7) * width;
-      const sy =
-        ly -
-        width * heightRatio * 0.3 +
-        seededRandom(lx + s * 11) * width * heightRatio * 0.6;
+      const sy = ly - h * 0.3 + seededRandom(lx + s * 11) * h * 0.6;
       ctx.beginPath();
       ctx.ellipse(
         sx,
@@ -5701,6 +6795,8 @@ export const drawWorldMapCanvas = ({
   };
   drawFrozenLake(1200, 82, 45, 0.35);
   drawFrozenLake(1340, 58, 35, 0.3);
+  drawFrozenLake(1120, 60, 30, 0.25);
+  drawFrozenLake(1290, 72, 28, 0.3);
 
   // Igloo with visible ice block construction and warm interior glow
   const drawIgloo = (ix: number, iyPct: number, scale: number) => {
@@ -5853,6 +6949,8 @@ export const drawWorldMapCanvas = ({
   };
   drawIgloo(1160, 50, 0.8);
   drawIgloo(1390, 75, 0.7);
+  drawIgloo(1240, 38, 0.65);
+  drawIgloo(1310, 62, 0.6);
 
   // Woolly mammoth with shaggy fur, curved tusks, expressive eye
   const drawMammoth = (
@@ -6128,6 +7226,30 @@ export const drawWorldMapCanvas = ({
   drawMammoth(1230, 65, 0.5, 1);
   drawMammoth(1300, 25, 0.4, -1);
 
+  // More frosted pines for density
+  [
+    [1102, 62],
+    [1130, 42],
+    [1155, 82],
+    [1195, 55],
+    [1250, 45],
+    [1270, 78],
+    [1310, 32],
+    [1350, 62],
+    [1380, 42],
+    [1410, 55],
+    [1435, 72],
+  ].forEach(([x, yPct], i) => {
+    drawFrostedPine(x, yPct, 0.5 + seededRandom(i + 400) * 0.2);
+  });
+
+  // More ice crystals
+  drawIceCrystal(1095, 45, 0.5);
+  drawIceCrystal(1170, 70, 0.55);
+  drawIceCrystal(1250, 30, 0.45);
+  drawIceCrystal(1320, 55, 0.5);
+  drawIceCrystal(1400, 40, 0.55);
+
   // Enhanced snowfall with different flake sizes, tumbling rotation, wind gusts
   for (let layer = 0; layer < 3; layer++) {
     const speed = 18 + layer * 18;
@@ -6191,10 +7313,18 @@ export const drawWorldMapCanvas = ({
 
   // Lava pool patches — glowing organic blobs
   const lavaPools: [number, number, number, number][] = [
-    [1480, 60, 20, 9], [1540, 45, 16, 7], [1600, 70, 22, 10],
-    [1660, 35, 18, 8], [1720, 55, 24, 10], [1500, 80, 14, 6],
-    [1560, 28, 18, 8], [1640, 65, 20, 9], [1700, 42, 16, 7],
-    [1760, 72, 22, 10], [1470, 48, 12, 5], [1620, 82, 16, 7],
+    [1480, 60, 20, 9],
+    [1540, 45, 16, 7],
+    [1600, 70, 22, 10],
+    [1660, 35, 18, 8],
+    [1720, 55, 24, 10],
+    [1500, 80, 14, 6],
+    [1560, 28, 18, 8],
+    [1640, 65, 20, 9],
+    [1700, 42, 16, 7],
+    [1760, 72, 22, 10],
+    [1470, 48, 12, 5],
+    [1620, 82, 16, 7],
   ];
   for (let i = 0; i < lavaPools.length; i++) {
     const [lx, lyPct, lrx, lry] = lavaPools[i];
@@ -6232,7 +7362,16 @@ export const drawWorldMapCanvas = ({
     // Obsidian sheen
     ctx.globalAlpha = 0.06;
     ctx.fillStyle = "#6a5a7a";
-    drawOrganicBlobAt(ctx, ox + 1, oy - 1, or * 0.3, or * 0.2, i * 5.1 + 55, 0.15, 8);
+    drawOrganicBlobAt(
+      ctx,
+      ox + 1,
+      oy - 1,
+      or * 0.3,
+      or * 0.2,
+      i * 5.1 + 55,
+      0.15,
+      8,
+    );
     ctx.fill();
   }
   // Ember scatter — tiny glowing organic spots
@@ -6248,6 +7387,220 @@ export const drawWorldMapCanvas = ({
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  // Charred ash trees — dead, blackened trunks with gnarled claw-like branches and ember glow
+  const drawAshTree = (ax: number, ayPct: number, scale: number) => {
+    const ay = getY(ayPct);
+    const treeSeed = ax * 7.3 + ayPct * 11.1;
+
+    // Ground shadow
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(
+      ax + 3 * scale,
+      ay + 4 * scale,
+      10 * scale,
+      4 * scale,
+      0.15,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Ash/soot ground patch
+    ctx.fillStyle = "rgba(30,20,15,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(ax, ay + 2 * scale, 8 * scale, 3 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main trunk — thick, charred, slightly twisted
+    const trunkH = (35 + seededRandom(treeSeed) * 15) * scale;
+    const trunkLean = (seededRandom(treeSeed + 1) - 0.5) * 6 * scale;
+    const trunkW = (3.5 + seededRandom(treeSeed + 2) * 1.5) * scale;
+    const trunkTopX = ax + trunkLean;
+    const trunkTopY = ay - trunkH;
+    const trunkMidX =
+      ax + trunkLean * 0.4 + (seededRandom(treeSeed + 3) - 0.5) * 4 * scale;
+    const trunkMidY = ay - trunkH * 0.55;
+
+    const trunkGrad = ctx.createLinearGradient(
+      ax - trunkW,
+      ay,
+      ax + trunkW,
+      ay,
+    );
+    trunkGrad.addColorStop(0, "#0a0808");
+    trunkGrad.addColorStop(0.3, "#1e1614");
+    trunkGrad.addColorStop(0.5, "#2a201c");
+    trunkGrad.addColorStop(0.7, "#1a1210");
+    trunkGrad.addColorStop(1, "#0a0808");
+    ctx.strokeStyle = trunkGrad;
+    ctx.lineWidth = trunkW;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.quadraticCurveTo(trunkMidX, trunkMidY, trunkTopX, trunkTopY);
+    ctx.stroke();
+
+    // Bark cracks with faint inner glow
+    ctx.lineWidth = 0.6 * scale;
+    for (let c = 0; c < 5; c++) {
+      const ct = 0.15 + c * 0.16;
+      const cx =
+        ax +
+        (trunkTopX - ax) * ct +
+        (seededRandom(treeSeed + c * 7 + 10) - 0.5) * 2 * scale;
+      const cy = ay + (trunkTopY - ay) * ct;
+      ctx.strokeStyle = `rgba(180,60,10,${0.15 + seededRandom(treeSeed + c * 7 + 11) * 0.1})`;
+      ctx.beginPath();
+      ctx.moveTo(cx - 1.5 * scale, cy - 1 * scale);
+      ctx.lineTo(cx + 1.5 * scale, cy + 1.5 * scale);
+      ctx.stroke();
+    }
+
+    // Gnarled branches — multiple claw-like limbs reaching upward
+    const branchCount = 3 + Math.floor(seededRandom(treeSeed + 20) * 3);
+    for (let b = 0; b < branchCount; b++) {
+      const bSeed = treeSeed + b * 31 + 50;
+      const bFrac = 0.45 + seededRandom(bSeed) * 0.5;
+      const bStartX =
+        ax +
+        (trunkTopX - ax) * bFrac +
+        (seededRandom(bSeed + 1) - 0.5) * 2 * scale;
+      const bStartY = ay + (trunkTopY - ay) * bFrac;
+      const bSide = seededRandom(bSeed + 2) > 0.5 ? 1 : -1;
+      const bAngle =
+        -0.3 +
+        seededRandom(bSeed + 3) * 0.6 +
+        bSide * (0.3 + seededRandom(bSeed + 4) * 0.5);
+      const bLen = (12 + seededRandom(bSeed + 5) * 14) * scale;
+      const bEndX = bStartX + Math.cos(bAngle - Math.PI / 2) * bLen;
+      const bEndY = bStartY + Math.sin(bAngle - Math.PI / 2) * bLen;
+      const bCpX = bStartX + (bEndX - bStartX) * 0.5 + bSide * 4 * scale;
+      const bCpY = bStartY + (bEndY - bStartY) * 0.6;
+
+      // Branch stroke
+      const bWidth = (2.2 - bFrac * 1.2) * scale;
+      ctx.strokeStyle = "#1a1210";
+      ctx.lineWidth = bWidth;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(bStartX, bStartY);
+      ctx.quadraticCurveTo(bCpX, bCpY, bEndX, bEndY);
+      ctx.stroke();
+
+      // Sub-branches (smaller twigs at the end)
+      for (let sb = 0; sb < 2; sb++) {
+        const sbSeed = bSeed + sb * 17 + 100;
+        const sbLen = (4 + seededRandom(sbSeed) * 6) * scale;
+        const sbAngle =
+          bAngle - Math.PI / 2 + (seededRandom(sbSeed + 1) - 0.5) * 1.2;
+        const sbX = bEndX + Math.cos(sbAngle) * sbLen;
+        const sbY = bEndY + Math.sin(sbAngle) * sbLen;
+        ctx.strokeStyle = "#151010";
+        ctx.lineWidth = bWidth * 0.45;
+        ctx.beginPath();
+        ctx.moveTo(bEndX, bEndY);
+        ctx.lineTo(sbX, sbY);
+        ctx.stroke();
+      }
+
+      // Ember dots along branches
+      const emberCount = 1 + Math.floor(seededRandom(bSeed + 7) * 3);
+      for (let e = 0; e < emberCount; e++) {
+        const et = 0.3 + seededRandom(bSeed + e * 13 + 200) * 0.6;
+        const mt = 1 - et;
+        const eX = mt * mt * bStartX + 2 * mt * et * bCpX + et * et * bEndX;
+        const eY = mt * mt * bStartY + 2 * mt * et * bCpY + et * et * bEndY;
+        const ePulse = 0.5 + Math.sin(time * 3 + bSeed + e * 2.1) * 0.3;
+        const eSize = (1.2 + seededRandom(bSeed + e * 13 + 201) * 1.5) * scale;
+        // Glow halo
+        const eGlow = ctx.createRadialGradient(eX, eY, 0, eX, eY, eSize * 3);
+        eGlow.addColorStop(0, `rgba(255,120,30,${ePulse * 0.35})`);
+        eGlow.addColorStop(1, "rgba(255,80,10,0)");
+        ctx.fillStyle = eGlow;
+        ctx.beginPath();
+        ctx.arc(eX, eY, eSize * 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Bright core
+        ctx.fillStyle = `rgba(255,160,50,${ePulse * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(eX, eY, eSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,220,120,${ePulse * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(eX, eY, eSize * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Trunk ember dots
+    for (let e = 0; e < 4; e++) {
+      const et = 0.2 + e * 0.18;
+      const eX =
+        ax +
+        (trunkTopX - ax) * et +
+        (seededRandom(treeSeed + e * 19 + 300) - 0.5) * trunkW * 0.8;
+      const eY = ay + (trunkTopY - ay) * et;
+      const ePulse = 0.4 + Math.sin(time * 2.5 + treeSeed + e * 1.8) * 0.3;
+      const eSize = (1.0 + seededRandom(treeSeed + e * 19 + 301) * 1.2) * scale;
+      const eGlow = ctx.createRadialGradient(eX, eY, 0, eX, eY, eSize * 2.5);
+      eGlow.addColorStop(0, `rgba(255,100,20,${ePulse * 0.4})`);
+      eGlow.addColorStop(1, "rgba(255,60,10,0)");
+      ctx.fillStyle = eGlow;
+      ctx.beginPath();
+      ctx.arc(eX, eY, eSize * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255,140,40,${ePulse * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(eX, eY, eSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Smoldering base glow
+    const baseGlow = ctx.createRadialGradient(ax, ay, 0, ax, ay, 6 * scale);
+    baseGlow.addColorStop(
+      0,
+      `rgba(200,60,10,${0.12 + Math.sin(time * 1.5 + treeSeed) * 0.05})`,
+    );
+    baseGlow.addColorStop(1, "rgba(150,30,5,0)");
+    ctx.fillStyle = baseGlow;
+    ctx.beginPath();
+    ctx.arc(ax, ay, 6 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  // Place ash trees throughout the volcanic region
+  const ashTreePositions: [number, number, number][] = [
+    [1465, 42, 0.7],
+    [1490, 70, 0.85],
+    [1515, 35, 0.65],
+    [1540, 58, 0.9],
+    [1570, 25, 0.6],
+    [1595, 75, 0.75],
+    [1620, 40, 0.8],
+    [1650, 55, 0.7],
+    [1680, 30, 0.85],
+    [1710, 68, 0.65],
+    [1735, 45, 0.9],
+    [1760, 60, 0.7],
+    [1475, 55, 0.6],
+    [1555, 80, 0.75],
+    [1640, 22, 0.65],
+    [1700, 78, 0.8],
+    [1750, 35, 0.7],
+    [1780, 50, 0.6],
+    [1450, 62, 0.55],
+    [1500, 45, 0.7],
+    [1530, 82, 0.6],
+    [1575, 48, 0.75],
+    [1610, 72, 0.65],
+    [1660, 38, 0.8],
+    [1695, 55, 0.7],
+    [1740, 72, 0.6],
+    [1770, 28, 0.65],
+  ];
+  ashTreePositions.forEach(([atx, aty, ats]) => drawAshTree(atx, aty, ats));
 
   // Hellish sky gradient overlay with pulsing intensity
   ctx.save();
@@ -6278,8 +7631,9 @@ export const drawWorldMapCanvas = ({
   ) => {
     const vy = getY(vyPct);
     const hw = vw / 2;
+    const vSeed = vx * 1.7 + vyPct * 4.3;
 
-    // --- Ambient lava glow underneath ---
+    // --- Ambient lava glow underneath — organic shape ---
     const ambientGlow = ctx.createRadialGradient(
       vx,
       vy,
@@ -6298,29 +7652,29 @@ export const drawWorldMapCanvas = ({
     );
     ambientGlow.addColorStop(1, "rgba(80, 20, 5, 0)");
     ctx.fillStyle = ambientGlow;
-    ctx.beginPath();
-    ctx.ellipse(
+    drawOrganicBlobAt(
+      ctx,
       vx,
       vy - heightPx * 0.2,
       hw * 1.3,
       heightPx * 0.8,
-      0,
-      0,
-      Math.PI * 2,
+      vSeed + 50,
+      0.12,
+      14,
     );
     ctx.fill();
 
-    // --- Ground shadow ---
+    // --- Ground shadow — organic ---
     ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.beginPath();
-    ctx.ellipse(
+    drawOrganicBlobAt(
+      ctx,
       vx + 4,
       vy + 8,
       hw * 0.7,
       heightPx * 0.15,
-      0.05,
-      0,
-      Math.PI * 2,
+      vSeed + 60,
+      0.15,
+      12,
     );
     ctx.fill();
 
@@ -6380,6 +7734,39 @@ export const drawWorldMapCanvas = ({
     ctx.closePath();
     ctx.fill();
 
+    // --- Buttress ridge/spur on left side for mass ---
+    const buttGrad = ctx.createLinearGradient(
+      vx - hw * 0.55,
+      vy - heightPx * 0.4,
+      vx - hw * 0.2,
+      vy,
+    );
+    buttGrad.addColorStop(0, "#3a2018");
+    buttGrad.addColorStop(0.6, "#2a1410");
+    buttGrad.addColorStop(1, "#1a0a08");
+    ctx.fillStyle = buttGrad;
+    ctx.beginPath();
+    ctx.moveTo(vx - hw * 0.35, vy - heightPx * 0.45);
+    ctx.bezierCurveTo(
+      vx - hw * 0.52,
+      vy - heightPx * 0.32,
+      vx - hw * 0.62,
+      vy - heightPx * 0.15,
+      vx - hw * 0.65,
+      vy + 6,
+    );
+    ctx.lineTo(vx - hw * 0.55, vy + 6);
+    ctx.bezierCurveTo(
+      vx - hw * 0.48,
+      vy - heightPx * 0.1,
+      vx - hw * 0.38,
+      vy - heightPx * 0.28,
+      vx - hw * 0.35,
+      vy - heightPx * 0.45,
+    );
+    ctx.closePath();
+    ctx.fill();
+
     // --- Rocky ridge details on front face ---
     ctx.save();
     for (let r = 0; r < 5; r++) {
@@ -6415,33 +7802,113 @@ export const drawWorldMapCanvas = ({
     ctx.globalAlpha = 1;
     ctx.restore();
 
-    // --- LAVA FLOWS (winding rivers, not straight lines) ---
+    // --- Glowing fissures/cracks across the rock face ---
+    ctx.save();
+    for (let fi = 0; fi < 5; fi++) {
+      const fiStartX = vx + (seededRandom(vSeed + fi * 11) - 0.5) * hw * 0.7;
+      const fiStartY =
+        vy - heightPx * (0.2 + seededRandom(vSeed + fi * 13) * 0.6);
+      const fiLen = 6 + seededRandom(vSeed + fi * 15) * 12;
+      const fiAngle = -0.3 + seededRandom(vSeed + fi * 17) * 1.2;
+      const fiEndX = fiStartX + Math.cos(fiAngle) * fiLen;
+      const fiEndY = fiStartY + Math.sin(fiAngle) * fiLen;
+      const fiPulse = 0.4 + Math.sin(time * 2.5 + fi * 1.7 + vSeed) * 0.3;
+
+      ctx.strokeStyle = `rgba(255, 120, 30, ${fiPulse * 0.5})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(fiStartX, fiStartY);
+      ctx.quadraticCurveTo(
+        (fiStartX + fiEndX) / 2 + (seededRandom(vSeed + fi * 19) - 0.5) * 5,
+        (fiStartY + fiEndY) / 2,
+        fiEndX,
+        fiEndY,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 200, 80, ${fiPulse * 0.6})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 240, 180, ${fiPulse * 0.3})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // --- Cooled lava patches on slopes (dark organic blobs) ---
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    for (let cp = 0; cp < 6; cp++) {
+      const cpX = vx + (seededRandom(vSeed + cp * 21) - 0.5) * hw * 0.8;
+      const cpY = vy - heightPx * (0.1 + seededRandom(vSeed + cp * 23) * 0.65);
+      const cpW = 3 + seededRandom(vSeed + cp * 25) * 6;
+      const cpH = 2 + seededRandom(vSeed + cp * 27) * 3;
+      ctx.fillStyle = seededRandom(vSeed + cp) > 0.5 ? "#1a0a06" : "#0d0503";
+      drawOrganicBlobAt(ctx, cpX, cpY, cpW, cpH, vSeed + cp * 4.1, 0.3, 8);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // --- Base rubble/boulders around the volcano ---
+    for (let br = 0; br < 8; br++) {
+      const brAngle =
+        (br / 8) * Math.PI * 2 + seededRandom(vSeed + br * 31) * 0.4;
+      const brDist = hw * (0.5 + seededRandom(vSeed + br * 33) * 0.2);
+      const brX = vx + Math.cos(brAngle) * brDist;
+      const brY = vy + 4 + Math.sin(brAngle) * brDist * 0.25;
+      const brSize = 2 + seededRandom(vSeed + br * 35) * 4;
+      const brShade = 20 + Math.floor(seededRandom(vSeed + br * 37) * 25);
+      ctx.fillStyle = `rgb(${brShade + 10}, ${brShade}, ${brShade - 5})`;
+      drawOrganicBlobAt(
+        ctx,
+        brX,
+        brY,
+        brSize,
+        brSize * 0.55,
+        vSeed + br * 2.3,
+        0.25,
+        7,
+      );
+      ctx.fill();
+    }
+
+    // --- LAVA FLOWS (winding rivers with branching tributaries) ---
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
     for (let f = 0; f < 3; f++) {
-      const seed = seededRandom(vx + f * 17);
+      const fSeed = seededRandom(vx + f * 17);
       const flowStartX = vx - hw * 0.08 + f * hw * 0.08;
-      const flowEndX = vx + (f - 1) * hw * 0.35 + seed * hw * 0.15;
+      const flowEndX = vx + (f - 1) * hw * 0.35 + fSeed * hw * 0.15;
       const flowMid1X =
-        flowStartX + (flowEndX - flowStartX) * 0.3 + (seed - 0.5) * 12;
+        flowStartX + (flowEndX - flowStartX) * 0.3 + (fSeed - 0.5) * 12;
       const flowMid1Y = vy - heightPx * 0.65;
       const flowMid2X =
-        flowStartX + (flowEndX - flowStartX) * 0.65 + (seed - 0.5) * 18;
+        flowStartX + (flowEndX - flowStartX) * 0.65 + (fSeed - 0.5) * 18;
       const flowMid2Y = vy - heightPx * 0.3;
       const flowPulse = 0.55 + Math.sin(time * 2.2 + f * 1.8 + vx * 0.01) * 0.2;
 
+      const drawFlowPath = () => {
+        ctx.beginPath();
+        ctx.moveTo(flowStartX, vy - heightPx + 7);
+        ctx.bezierCurveTo(
+          flowMid1X,
+          flowMid1Y,
+          flowMid2X,
+          flowMid2Y,
+          flowEndX,
+          vy + 2,
+        );
+      };
+
+      // Scorched rock bleed along flow
+      ctx.strokeStyle = `rgba(60, 15, 5, ${flowPulse * 0.25})`;
+      ctx.lineWidth = 10;
+      drawFlowPath();
+      ctx.stroke();
+
       // Outer glow (wide, dim)
-      ctx.strokeStyle = `rgba(180, 40, 5, ${flowPulse * 0.3})`;
+      ctx.strokeStyle = `rgba(180, 40, 5, ${flowPulse * 0.35})`;
       ctx.lineWidth = 7;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(flowStartX, vy - heightPx + 7);
-      ctx.bezierCurveTo(
-        flowMid1X,
-        flowMid1Y,
-        flowMid2X,
-        flowMid2Y,
-        flowEndX,
-        vy + 2,
-      );
+      drawFlowPath();
       ctx.stroke();
 
       // Main lava body
@@ -6450,13 +7917,39 @@ export const drawWorldMapCanvas = ({
       ctx.stroke();
 
       // Bright core
-      ctx.strokeStyle = `rgba(255, 180, 60, ${flowPulse * 0.5})`;
+      ctx.strokeStyle = `rgba(255, 180, 60, ${flowPulse * 0.55})`;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Hot white center
-      ctx.strokeStyle = `rgba(255, 240, 180, ${flowPulse * 0.25})`;
+      ctx.strokeStyle = `rgba(255, 240, 180, ${flowPulse * 0.3})`;
       ctx.lineWidth = 0.6;
+      ctx.stroke();
+
+      // Branching tributary from mid-flow
+      const tribX =
+        flowStartX + (flowEndX - flowStartX) * 0.55 + (fSeed - 0.5) * 8;
+      const tribY = vy - heightPx * 0.4;
+      const tribEndX = tribX + (seededRandom(vSeed + f * 41) - 0.3) * hw * 0.3;
+      const tribEndY = vy + 1;
+      const tribPulse = flowPulse * 0.7;
+
+      ctx.strokeStyle = `rgba(200, 50, 10, ${tribPulse * 0.3})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(tribX, tribY);
+      ctx.quadraticCurveTo(
+        tribX + (tribEndX - tribX) * 0.4,
+        tribY + (tribEndY - tribY) * 0.6,
+        tribEndX,
+        tribEndY,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 140, 40, ${tribPulse * 0.5})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 230, 150, ${tribPulse * 0.25})`;
+      ctx.lineWidth = 0.5;
       ctx.stroke();
     }
 
@@ -6495,7 +7988,52 @@ export const drawWorldMapCanvas = ({
     ctx.ellipse(vx, craterY + 1, craterW - 1, craterH - 1, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Lava glow from crater (pulsing)
+    // Visible lava pool inside crater
+    const glowPulse = 0.6 + Math.sin(time * 2.8 + vx * 0.02) * 0.25;
+    const craterLavaGrad = ctx.createRadialGradient(
+      vx - craterW * 0.15,
+      craterY,
+      0,
+      vx,
+      craterY + 1,
+      craterW * 0.8,
+    );
+    craterLavaGrad.addColorStop(0, `rgba(255, 240, 140, ${glowPulse * 0.9})`);
+    craterLavaGrad.addColorStop(0.3, `rgba(255, 160, 40, ${glowPulse * 0.8})`);
+    craterLavaGrad.addColorStop(0.7, `rgba(220, 60, 10, ${glowPulse * 0.6})`);
+    craterLavaGrad.addColorStop(1, `rgba(120, 20, 5, ${glowPulse * 0.3})`);
+    ctx.fillStyle = craterLavaGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      vx,
+      craterY + 1,
+      craterW * 0.75,
+      craterH * 0.7,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Bubbles in crater lava
+    for (let bub = 0; bub < 3; bub++) {
+      const bubPhase = (time * 1.5 + bub * 2.1 + vSeed) % 3;
+      if (bubPhase < 1.5) {
+        const bubScale = Math.sin((bubPhase / 1.5) * Math.PI);
+        const bubX =
+          vx + (seededRandom(vSeed + bub * 41) - 0.5) * craterW * 0.5;
+        const bubY =
+          craterY + (seededRandom(vSeed + bub * 43) - 0.5) * craterH * 0.3;
+        const bubR = (1.5 + seededRandom(vSeed + bub * 45) * 2) * bubScale;
+        ctx.strokeStyle = `rgba(255, 220, 100, ${0.6 * bubScale})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.arc(bubX, bubY, bubR, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // Lava glow from crater (pulsing, extends upward)
     const lavaGlow = ctx.createRadialGradient(
       vx,
       craterY + 1,
@@ -6504,10 +8042,9 @@ export const drawWorldMapCanvas = ({
       craterY + 1,
       craterW * 1.8,
     );
-    const glowPulse = 0.6 + Math.sin(time * 2.8 + vx * 0.02) * 0.25;
-    lavaGlow.addColorStop(0, `rgba(255, 220, 100, ${glowPulse})`);
-    lavaGlow.addColorStop(0.2, `rgba(255, 140, 40, ${glowPulse * 0.7})`);
-    lavaGlow.addColorStop(0.5, `rgba(200, 60, 10, ${glowPulse * 0.3})`);
+    lavaGlow.addColorStop(0, `rgba(255, 220, 100, ${glowPulse * 0.5})`);
+    lavaGlow.addColorStop(0.2, `rgba(255, 140, 40, ${glowPulse * 0.35})`);
+    lavaGlow.addColorStop(0.5, `rgba(200, 60, 10, ${glowPulse * 0.15})`);
     lavaGlow.addColorStop(1, "rgba(120, 30, 5, 0)");
     ctx.fillStyle = lavaGlow;
     ctx.beginPath();
@@ -6529,53 +8066,109 @@ export const drawWorldMapCanvas = ({
     );
     ctx.stroke();
 
-    // --- SMOKE PLUME ---
-    for (let s = 0; s < 6; s++) {
-      const smokeAge = (time * 10 + s * 14) % 55;
-      const smokeY2 = craterY - smokeAge * 1.1;
-      const drift = Math.sin(time * 0.8 + s * 2.2) * (4 + smokeAge * 0.25);
-      const smokeR = 6 + smokeAge * 0.45;
-      const alpha = Math.max(0, 0.35 - smokeAge / 70);
+    // --- Heat shimmer distortion above crater ---
+    ctx.save();
+    ctx.globalAlpha = 0.035 + Math.sin(time * 3.5 + vx) * 0.015;
+    for (let hs = 0; hs < 5; hs++) {
+      const hsY = craterY - 10 - hs * 8;
+      ctx.fillStyle = "#ff6020";
+      ctx.beginPath();
+      for (let hx = vx - hw * 0.3; hx < vx + hw * 0.3; hx += 3) {
+        const distort =
+          Math.sin(time * 7 + hx * 0.1 + hs * 0.9) * (2 + hs * 0.5);
+        if (hx === vx - hw * 0.3) ctx.moveTo(hx, hsY + distort);
+        else ctx.lineTo(hx, hsY + distort);
+      }
+      ctx.lineTo(vx + hw * 0.3, hsY + 5);
+      ctx.lineTo(vx - hw * 0.3, hsY + 5);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // --- SMOKE PLUME (volumetric with organic shapes) ---
+    for (let s = 0; s < 8; s++) {
+      const smokeAge = (time * 10 + s * 12) % 65;
+      const smokeY2 = craterY - smokeAge * 1.2;
+      const drift = Math.sin(time * 0.8 + s * 2.2) * (4 + smokeAge * 0.3);
+      const smokeR = 5 + smokeAge * 0.5;
+      const alpha = Math.max(0, 0.35 - smokeAge / 80);
       if (alpha <= 0) continue;
 
-      // Ash/smoke puff
       ctx.fillStyle = `rgba(45, 35, 30, ${alpha})`;
-      ctx.beginPath();
-      ctx.arc(vx + drift, smokeY2, smokeR, 0, Math.PI * 2);
-      ctx.fill();
-      // Second blob for volume
-      ctx.fillStyle = `rgba(55, 45, 38, ${alpha * 0.5})`;
-      ctx.beginPath();
-      ctx.arc(
-        vx + drift + smokeR * 0.4,
-        smokeY2 - smokeR * 0.3,
-        smokeR * 0.7,
-        0,
-        Math.PI * 2,
+      drawOrganicBlobAt(
+        ctx,
+        vx + drift,
+        smokeY2,
+        smokeR,
+        smokeR * 0.8,
+        vSeed + s * 3.7,
+        0.2,
+        10,
       );
       ctx.fill();
 
-      // Hot underlit glow on fresh smoke
-      if (smokeAge < 18) {
-        ctx.fillStyle = `rgba(160, 60, 15, ${alpha * 0.35})`;
-        ctx.beginPath();
-        ctx.arc(
+      ctx.fillStyle = `rgba(60, 50, 42, ${alpha * 0.4})`;
+      drawOrganicBlobAt(
+        ctx,
+        vx + drift + smokeR * 0.35,
+        smokeY2 - smokeR * 0.25,
+        smokeR * 0.65,
+        smokeR * 0.55,
+        vSeed + s * 5.1,
+        0.2,
+        8,
+      );
+      ctx.fill();
+
+      if (smokeAge < 20) {
+        ctx.fillStyle = `rgba(180, 70, 15, ${alpha * 0.4})`;
+        drawOrganicBlobAt(
+          ctx,
           vx + drift,
-          smokeY2 + smokeR * 0.3,
-          smokeR * 0.5,
-          0,
-          Math.PI * 2,
+          smokeY2 + smokeR * 0.35,
+          smokeR * 0.45,
+          smokeR * 0.35,
+          vSeed + s * 7.3,
+          0.25,
+          8,
         );
         ctx.fill();
       }
     }
 
+    // --- Volcanic bombs (ejected glowing rocks arcing out) ---
+    for (let vb = 0; vb < 3; vb++) {
+      const vbCycle = (time * 8 + vb * 18 + vSeed) % 50;
+      if (vbCycle > 35) continue;
+      const vbProgress = vbCycle / 35;
+      const vbAngle =
+        -Math.PI * 0.5 + (seededRandom(vSeed + vb * 51) - 0.5) * 1.2;
+      const vbSpeed = 15 + seededRandom(vSeed + vb * 53) * 10;
+      const vbX = vx + Math.cos(vbAngle) * vbSpeed * vbProgress;
+      const vbY =
+        craterY +
+        Math.sin(vbAngle) * vbSpeed * vbProgress +
+        20 * vbProgress * vbProgress;
+      const vbAlpha = Math.max(0, 1 - vbProgress * 1.2);
+      const vbSize = 1.5 + seededRandom(vSeed + vb * 55) * 1.5;
+
+      ctx.fillStyle = `rgba(255, 120, 20, ${vbAlpha * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(vbX, vbY, vbSize + 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 220, 80, ${vbAlpha})`;
+      ctx.beginPath();
+      ctx.arc(vbX, vbY, vbSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     // --- Scattered embers from crater ---
-    for (let e = 0; e < 4; e++) {
-      const eAge = (time * 25 + e * 20 + vx) % 40;
-      const eX = vx + Math.sin(time * 3 + e * 2.5 + vx) * (3 + eAge * 0.3);
-      const eY = craterY - eAge * 0.8;
-      const eAlpha = Math.max(0, 0.8 - eAge / 30);
+    for (let e = 0; e < 6; e++) {
+      const eAge = (time * 25 + e * 16 + vx) % 45;
+      const eX = vx + Math.sin(time * 3 + e * 2.5 + vx) * (3 + eAge * 0.35);
+      const eY = craterY - eAge * 0.9;
+      const eAlpha = Math.max(0, 0.8 - eAge / 35);
       if (eAlpha > 0) {
         ctx.fillStyle = `rgba(255, ${150 + Math.floor(seededRandom(e + vx) * 80)}, 30, ${eAlpha})`;
         ctx.beginPath();
@@ -6583,14 +8176,39 @@ export const drawWorldMapCanvas = ({
         ctx.fill();
       }
     }
+
+    // --- Falling ash particles around the volcano ---
+    ctx.save();
+    for (let ash = 0; ash < 5; ash++) {
+      const ashX = vx + (seededRandom(vSeed + ash * 61) - 0.5) * hw * 1.4;
+      const ashCycle = (time * 8 + ash * 11 + vSeed) % 40;
+      const ashY = craterY - 20 + ashCycle * 1.5;
+      const ashDrift = Math.sin(time * 1.2 + ash * 1.8) * 3;
+      const ashAlpha = Math.max(0, 0.3 - ashCycle / 60);
+      if (ashAlpha > 0) {
+        ctx.fillStyle = `rgba(80, 65, 55, ${ashAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          ashX + ashDrift,
+          ashY,
+          0.8 + seededRandom(vSeed + ash * 63) * 0.8,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+    ctx.restore();
   };
   drawVolcano(1530, 22, 95, 35);
   drawVolcano(1700, 21, 85, 30);
-
   drawVolcano(1720, 24, 95, 45);
-
+  drawVolcano(1460, 18, 70, 28);
+  drawVolcano(1600, 16, 80, 32);
   drawVolcano(1720, 84, 95, 45);
   drawVolcano(1700, 86, 85, 30);
+  drawVolcano(1460, 88, 75, 30);
+  drawVolcano(1580, 86, 65, 25);
 
   // Lava pools with crusted surface, bubbles forming/popping, heat shimmer
   const drawLavaPool = (
@@ -6600,16 +8218,18 @@ export const drawWorldMapCanvas = ({
     heightRatio: number,
   ) => {
     const py = getY(pyPct);
+    const h = width * heightRatio;
+    const seed = px * 2.3 + pyPct * 5.1;
 
     // Heat distortion shimmer above pool
     ctx.save();
     ctx.globalAlpha = 0.04 + Math.sin(time * 3 + px) * 0.02;
-    for (let h = 0; h < 4; h++) {
-      const heatY = py - width * heightRatio - 5 - h * 6;
+    for (let hh = 0; hh < 4; hh++) {
+      const heatY = py - h - 5 - hh * 6;
       ctx.fillStyle = "#ff6600";
       ctx.beginPath();
       for (let hx = px - width; hx < px + width; hx += 4) {
-        const distort = Math.sin(time * 6 + hx * 0.08 + h * 0.7) * 2;
+        const distort = Math.sin(time * 6 + hx * 0.08 + hh * 0.7) * 2;
         if (hx === px - width) ctx.moveTo(hx, heatY + distort);
         else ctx.lineTo(hx, heatY + distort);
       }
@@ -6620,51 +8240,49 @@ export const drawWorldMapCanvas = ({
     }
     ctx.restore();
 
-    // Outer glow
+    // Outer glow — organic shape
     const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, width * 1.6);
     glowGrad.addColorStop(
       0,
-      `rgba(255, 100, 30, ${0.28 + Math.sin(time * 2) * 0.1})`,
+      `rgba(255,100,30,${0.28 + Math.sin(time * 2) * 0.1})`,
     );
     glowGrad.addColorStop(
       0.4,
-      `rgba(255, 60, 20, ${0.15 + Math.sin(time * 2.5) * 0.06})`,
+      `rgba(255,60,20,${0.15 + Math.sin(time * 2.5) * 0.06})`,
     );
-    glowGrad.addColorStop(1, "rgba(200, 40, 10, 0)");
+    glowGrad.addColorStop(1, "rgba(200,40,10,0)");
     ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      px,
-      py,
-      width * 1.6,
-      width * heightRatio * 1.6,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    drawOrganicBlobAt(ctx, px, py, width * 1.6, h * 1.6, seed + 10, 0.12, 16);
     ctx.fill();
 
-    // Pool edge (cooled lava crust)
-    ctx.fillStyle = "#2a1a12";
-    ctx.beginPath();
-    ctx.ellipse(px, py, width + 5, width * heightRatio + 4, 0, 0, Math.PI * 2);
+    // Cooled lava crust edge — organic
+    ctx.fillStyle = "#2a1a0c";
+    drawOrganicBlobAt(ctx, px, py, width + 5, h + 4, seed + 0.3, 0.2, 20);
     ctx.fill();
-    // Crust detail on edge
-    ctx.strokeStyle = "rgba(60, 30, 15, 0.5)";
-    ctx.lineWidth = 1;
-    for (let ec = 0; ec < 8; ec++) {
-      const angle = (ec / 8) * Math.PI * 2;
-      const edgeX = px + Math.cos(angle) * (width + 2);
-      const edgeY = py + Math.sin(angle) * (width * heightRatio + 2);
-      ctx.beginPath();
-      ctx.arc(edgeX, edgeY, 3 + seededRandom(px + ec) * 3, 0, Math.PI * 2);
-      ctx.stroke();
+    // Rocky crust bumps along edge
+    for (let ec = 0; ec < 10; ec++) {
+      const angle = (ec / 10) * Math.PI * 2 + seededRandom(px + ec + 100) * 0.3;
+      const edgeR = width + 3 + seededRandom(px + ec) * 4;
+      const edgeX = px + Math.cos(angle) * edgeR * 0.95;
+      const edgeY = py + Math.sin(angle) * edgeR * heightRatio * 0.95;
+      ctx.fillStyle = seededRandom(px + ec + 50) > 0.5 ? "#3a2214" : "#221008";
+      drawOrganicBlobAt(
+        ctx,
+        edgeX,
+        edgeY,
+        3 + seededRandom(px + ec + 60) * 3,
+        2 + seededRandom(px + ec + 61) * 2,
+        ec * 4.3,
+        0.3,
+        8,
+      );
+      ctx.fill();
     }
 
-    // Main lava surface
+    // Main lava surface — organic blob
     const lavaGrad = ctx.createRadialGradient(
       px - width * 0.2,
-      py - width * heightRatio * 0.2,
+      py - h * 0.2,
       0,
       px,
       py,
@@ -6676,74 +8294,63 @@ export const drawWorldMapCanvas = ({
     lavaGrad.addColorStop(0.8, "#cc2200");
     lavaGrad.addColorStop(1, "#881100");
     ctx.fillStyle = lavaGrad;
-    ctx.beginPath();
-    ctx.ellipse(px, py, width, width * heightRatio, 0, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, px, py, width, h, seed, 0.18, 18);
     ctx.fill();
 
-    // Crusted dark surface patches with bright cracks
+    // Crusted dark surface patches — organic blobs
     ctx.save();
     ctx.globalAlpha = 0.35;
     for (let cr = 0; cr < 5; cr++) {
       const crX = px - width * 0.5 + seededRandom(px + cr * 19) * width;
-      const crY =
-        py -
-        width * heightRatio * 0.3 +
-        seededRandom(px + cr * 23) * width * heightRatio * 0.6;
+      const crY = py - h * 0.3 + seededRandom(px + cr * 23) * h * 0.6;
       const crSize = 4 + seededRandom(px + cr * 29) * 8;
       const crDx = (crX - px) / width;
-      const crDy = (crY - py) / (width * heightRatio);
+      const crDy = (crY - py) / h;
       if (crDx * crDx + crDy * crDy < 0.7) {
-        // Dark crust patch
-        ctx.fillStyle = "rgba(30, 15, 10, 0.6)";
-        ctx.beginPath();
-        ctx.ellipse(
+        ctx.fillStyle = "rgba(30,15,10,0.6)";
+        drawOrganicBlobAt(
+          ctx,
           crX,
           crY,
           crSize,
           crSize * 0.6,
-          seededRandom(px + cr) * 1.5,
-          0,
-          Math.PI * 2,
+          cr * 7.1,
+          0.25,
+          10,
         );
         ctx.fill();
-        // Bright crack around patch
-        ctx.strokeStyle = `rgba(255, 180, 60, ${0.4 + Math.sin(time * 3 + cr) * 0.2})`;
+        ctx.strokeStyle = `rgba(255,180,60,${0.4 + Math.sin(time * 3 + cr) * 0.2})`;
         ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(
+        drawOrganicBlobAt(
+          ctx,
           crX,
           crY,
           crSize + 1,
           crSize * 0.6 + 1,
-          seededRandom(px + cr) * 1.5,
-          0,
-          Math.PI * 2,
+          cr * 7.1,
+          0.25,
+          10,
         );
         ctx.stroke();
       }
     }
     ctx.restore();
 
-    // Bubbles forming and popping with splashes
+    // Bubbles forming and popping
     for (let b = 0; b < 6; b++) {
       const bubbleCycle = (time * 2.5 + b * 1.2 + px * 0.1) % 2.5;
       const bx = px - width * 0.5 + seededRandom(px + b) * width;
-      const by =
-        py -
-        width * heightRatio * 0.3 +
-        seededRandom(px + b + 10) * width * heightRatio * 0.6;
+      const by = py - h * 0.3 + seededRandom(px + b + 10) * h * 0.6;
       const bDx = (bx - px) / width;
-      const bDy = (by - py) / (width * heightRatio);
+      const bDy = (by - py) / h;
       if (bDx * bDx + bDy * bDy < 0.7) {
         if (bubbleCycle < 1.8) {
-          // Growing bubble
           const bSize = 1.5 + bubbleCycle * 2.5;
-          ctx.fillStyle = `rgba(255, 200, 100, ${0.5 - bubbleCycle * 0.2})`;
+          ctx.fillStyle = `rgba(255,200,100,${0.5 - bubbleCycle * 0.2})`;
           ctx.beginPath();
           ctx.arc(bx, by, bSize, 0, Math.PI * 2);
           ctx.fill();
-          // Bubble highlight
-          ctx.fillStyle = `rgba(255, 240, 180, ${0.3 - bubbleCycle * 0.1})`;
+          ctx.fillStyle = `rgba(255,240,180,${0.3 - bubbleCycle * 0.1})`;
           ctx.beginPath();
           ctx.arc(
             bx - bSize * 0.3,
@@ -6754,9 +8361,8 @@ export const drawWorldMapCanvas = ({
           );
           ctx.fill();
         } else if (bubbleCycle < 2.1) {
-          // Pop splash
           const popPhase = (bubbleCycle - 1.8) / 0.3;
-          ctx.fillStyle = `rgba(255, 180, 60, ${0.6 - popPhase * 0.6})`;
+          ctx.fillStyle = `rgba(255,180,60,${0.6 - popPhase * 0.6})`;
           for (let sp = 0; sp < 4; sp++) {
             const spAngle = (sp / 4) * Math.PI * 2 + b;
             const spDist = 3 + popPhase * 6;
@@ -6774,29 +8380,29 @@ export const drawWorldMapCanvas = ({
       }
     }
 
-    // Surface shimmer lines
-    ctx.strokeStyle = `rgba(255, 220, 150, ${0.3 + Math.sin(time * 4) * 0.15})`;
+    // Surface shimmer — organic curves
+    ctx.strokeStyle = `rgba(255,220,150,${0.3 + Math.sin(time * 4) * 0.15})`;
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(
-      px - width * 0.3,
-      py - width * heightRatio * 0.2,
+    drawOrganicBlobAt(
+      ctx,
+      px - width * 0.2,
+      py - h * 0.1,
       width * 0.3,
-      width * heightRatio * 0.2,
-      0.3,
-      0,
-      Math.PI,
+      h * 0.2,
+      seed + 20,
+      0.2,
+      8,
     );
     ctx.stroke();
-    ctx.beginPath();
-    ctx.ellipse(
+    drawOrganicBlobAt(
+      ctx,
       px + width * 0.15,
-      py + width * heightRatio * 0.1,
+      py + h * 0.1,
       width * 0.2,
-      width * heightRatio * 0.15,
-      -0.2,
-      0,
-      Math.PI,
+      h * 0.15,
+      seed + 30,
+      0.2,
+      8,
     );
     ctx.stroke();
   };
@@ -6804,14 +8410,20 @@ export const drawWorldMapCanvas = ({
   drawLavaPool(1620, 78, 25, 0.3);
   drawLavaPool(1700, 55, 35, 0.4);
   drawLavaPool(1760, 75, 28, 0.35);
+  drawLavaPool(1475, 42, 22, 0.3);
+  drawLavaPool(1555, 80, 20, 0.25);
+  drawLavaPool(1660, 35, 26, 0.3);
+  drawLavaPool(1730, 82, 24, 0.35);
 
-  // Lava rivers — organic bezier paths with layered glow, crusted banks, embers
-  const drawLavaRiver = (points: number[][]) => {
+  // Lava rivers — Catmull-Rom spline paths with organic banks, integrated terrain glow
+  const drawLavaRiver = (points: number[][], riverWidth?: number) => {
     ctx.save();
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
+    const rw = riverWidth || 7;
+    const seed = points[0][0] * 1.7 + points[0][1] * 3.3;
 
-    // Helper: draw smooth bezier through points
+    // Catmull-Rom spline for ultra-smooth curves
     const tracePath = (offsetX: number, offsetY: number) => {
       const pts = points.map((p) => [p[0] + offsetX, getY(p[1]) + offsetY]);
       ctx.beginPath();
@@ -6819,93 +8431,187 @@ export const drawWorldMapCanvas = ({
       if (pts.length === 2) {
         ctx.lineTo(pts[1][0], pts[1][1]);
       } else {
-        for (let i = 1; i < pts.length - 1; i++) {
-          const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
-          const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
-          ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
+        const tension = 0.35;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[Math.max(0, i - 1)];
+          const p1 = pts[i];
+          const p2 = pts[Math.min(pts.length - 1, i + 1)];
+          const p3 = pts[Math.min(pts.length - 1, i + 2)];
+          const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+          const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+          const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+          const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
         }
-        ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
       }
+    };
+
+    // Sample a point along the spline at parameter t (0-1)
+    const sampleSpline = (t: number): [number, number] => {
+      const totalSegs = points.length - 1;
+      const rawIdx = t * totalSegs;
+      const segIdx = Math.min(Math.floor(rawIdx), totalSegs - 1);
+      const segT = rawIdx - segIdx;
+      const x =
+        points[segIdx][0] + (points[segIdx + 1][0] - points[segIdx][0]) * segT;
+      const yPct =
+        points[segIdx][1] + (points[segIdx + 1][1] - points[segIdx][1]) * segT;
+      return [x, getY(yPct)];
     };
 
     const pulse = 0.5 + Math.sin(time * 2) * 0.5;
 
-    // Ambient glow (combined outer layers)
+    // Scorched terrain bleed — ground discoloration along the banks
     tracePath(0, 0);
-    ctx.strokeStyle = `rgba(255, 60, 0, ${0.08 + pulse * 0.04})`;
-    ctx.lineWidth = 28;
+    ctx.strokeStyle = "rgba(50,20,5,0.12)";
+    ctx.lineWidth = rw * 6;
     ctx.stroke();
 
-    // Cooled rock bank edges (dark crust)
+    // Ambient heat glow — wide, soft
     tracePath(0, 0);
-    ctx.strokeStyle = "rgba(30, 15, 8, 0.85)";
-    ctx.lineWidth = 14;
+    ctx.strokeStyle = `rgba(255,60,0,${0.06 + pulse * 0.03})`;
+    ctx.lineWidth = rw * 5;
     ctx.stroke();
 
-    // Main molten lava body (flat animated color instead of gradient)
     tracePath(0, 0);
-    ctx.strokeStyle = `rgba(255, ${100 + pulse * 40}, ${10 + pulse * 20}, 0.9)`;
-    ctx.lineWidth = 7;
+    ctx.strokeStyle = `rgba(255,80,10,${0.1 + pulse * 0.05})`;
+    ctx.lineWidth = rw * 3.5;
+    ctx.stroke();
+
+    // Cooled rock bank — organic edge with bumps
+    tracePath(0, 0);
+    ctx.strokeStyle = "#1a0c06";
+    ctx.lineWidth = rw * 2.4;
+    ctx.stroke();
+
+    // Bank texture — rocky crust detail
+    tracePath(0, 0);
+    ctx.strokeStyle = "rgba(40,22,10,0.7)";
+    ctx.lineWidth = rw * 2;
+    ctx.stroke();
+
+    // Inner bank highlight (hot rock edge)
+    tracePath(0, 0);
+    ctx.strokeStyle = `rgba(120,40,10,${0.4 + pulse * 0.15})`;
+    ctx.lineWidth = rw * 1.6;
+    ctx.stroke();
+
+    // Main molten lava body
+    tracePath(0, 0);
+    ctx.strokeStyle = `rgba(255,${90 + pulse * 50},${10 + pulse * 25},0.92)`;
+    ctx.lineWidth = rw;
     ctx.stroke();
 
     // Bright hot vein
     tracePath(0, 0);
-    ctx.strokeStyle = `rgba(255, 200, 80, ${0.55 + pulse * 0.25})`;
-    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = `rgba(255,200,80,${0.5 + pulse * 0.25})`;
+    ctx.lineWidth = rw * 0.5;
     ctx.stroke();
 
-    // White-hot core
+    // White-hot core — animated width
     tracePath(0, 0);
-    ctx.strokeStyle = `rgba(255, 240, 180, ${0.25 + pulse * 0.2})`;
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = `rgba(255,240,180,${0.2 + pulse * 0.2})`;
+    ctx.lineWidth = rw * 0.2 + Math.sin(time * 4) * 0.5;
     ctx.stroke();
 
-    // Surface texture — dark cooled patches drifting along
-    for (let r = 0; r < 5; r++) {
-      const speed = 6 + seededRandom(r + points[0][0] * 0.01) * 4;
-      const raftProgress =
-        ((time * speed + r * 20 + points[0][0] * 0.1) % 100) / 100;
-      const segIdx = Math.min(
-        Math.floor(raftProgress * (points.length - 1)),
-        points.length - 2,
+    // Organic blob pools where the river widens at bends
+    for (let i = 1; i < points.length - 1; i++) {
+      const poolX = points[i][0];
+      const poolY = getY(points[i][1]);
+      const poolR = rw * 0.6 + seededRandom(seed + i * 7) * rw * 0.4;
+      // Lava pool at bend
+      const bendGrad = ctx.createRadialGradient(
+        poolX,
+        poolY,
+        0,
+        poolX,
+        poolY,
+        poolR * 1.5,
       );
-      const segT = raftProgress * (points.length - 1) - segIdx;
-      const raftX =
-        points[segIdx][0] + (points[segIdx + 1][0] - points[segIdx][0]) * segT;
-      const raftYPct =
-        points[segIdx][1] + (points[segIdx + 1][1] - points[segIdx][1]) * segT;
-      const raftY = getY(raftYPct);
-      const raftSize = 1.5 + seededRandom(points[0][0] + r * 11) * 2.5;
-      // Dark crust chunk
-      ctx.fillStyle = `rgba(35, 18, 10, ${0.5 + seededRandom(r * 7) * 0.3})`;
-      ctx.beginPath();
-      ctx.ellipse(
+      bendGrad.addColorStop(0, `rgba(255,200,80,${0.3 + pulse * 0.15})`);
+      bendGrad.addColorStop(0.5, `rgba(255,100,20,${0.2 + pulse * 0.1})`);
+      bendGrad.addColorStop(1, "rgba(180,40,5,0)");
+      ctx.fillStyle = bendGrad;
+      drawOrganicBlobAt(
+        ctx,
+        poolX,
+        poolY,
+        poolR * 1.5,
+        poolR,
+        seed + i * 3.7,
+        0.25,
+        10,
+      );
+      ctx.fill();
+    }
+
+    // Rock formations along banks — organic blobs
+    for (let rb = 0; rb < points.length * 3; rb++) {
+      const t = rb / (points.length * 3 - 1);
+      const [sx, sy] = sampleSpline(t);
+      const side = seededRandom(seed + rb * 11) > 0.5 ? 1 : -1;
+      const offset = rw * 1.2 + seededRandom(seed + rb * 11 + 1) * rw * 0.8;
+      const perpAngle =
+        t < 0.99
+          ? Math.atan2(
+              sampleSpline(Math.min(1, t + 0.05))[1] - sy,
+              sampleSpline(Math.min(1, t + 0.05))[0] - sx,
+            ) +
+            Math.PI / 2
+          : 0;
+      const rockX = sx + Math.cos(perpAngle) * offset * side;
+      const rockY = sy + Math.sin(perpAngle) * offset * side;
+      const rockR = 2 + seededRandom(seed + rb * 11 + 2) * 4;
+      ctx.fillStyle =
+        seededRandom(seed + rb * 11 + 3) > 0.5 ? "#2a1508" : "#1a0c04";
+      drawOrganicBlobAt(
+        ctx,
+        rockX,
+        rockY,
+        rockR,
+        rockR * 0.6,
+        rb * 3.1,
+        0.3,
+        8,
+      );
+      ctx.fill();
+    }
+
+    // Drifting dark crust chunks
+    for (let r = 0; r < 6; r++) {
+      const speed = 5 + seededRandom(r + seed * 0.01) * 4;
+      const raftProgress = ((time * speed + r * 18 + seed * 0.1) % 100) / 100;
+      const [raftX, raftY] = sampleSpline(raftProgress);
+      const raftSize = 1.5 + seededRandom(seed + r * 11) * 2;
+      ctx.fillStyle = `rgba(35,18,10,${0.5 + seededRandom(r * 7) * 0.3})`;
+      drawOrganicBlobAt(
+        ctx,
         raftX,
         raftY,
         raftSize,
         raftSize * 0.5,
-        seededRandom(r + points[0][0]) * 2,
-        0,
-        Math.PI * 2,
+        r * 4.3,
+        0.3,
+        6,
       );
       ctx.fill();
-      // Hot edge on chunk
-      ctx.strokeStyle = `rgba(255, 120, 30, ${0.2 + pulse * 0.15})`;
-      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = `rgba(255,120,30,${0.2 + pulse * 0.15})`;
+      ctx.lineWidth = 0.5;
       ctx.stroke();
     }
 
     // Rising embers along the river
-    for (let e = 0; e < 4; e++) {
-      const eAge = (time * 12 + e * 18 + points[0][0] * 0.3) % 35;
-      const eIdx = Math.floor((e * (points.length - 1)) / 4);
-      const ex = points[eIdx][0] + Math.sin(time * 2 + e * 3) * 6;
-      const ey = getY(points[eIdx][1]) - eAge * 1.5;
+    for (let e = 0; e < 6; e++) {
+      const eAge = (time * 12 + e * 15 + seed * 0.3) % 35;
+      const eT = e / 5;
+      const [ex0, ey0] = sampleSpline(eT);
+      const ex = ex0 + Math.sin(time * 2 + e * 3) * 5;
+      const ey = ey0 - eAge * 1.5;
       const eAlpha = Math.max(0, 0.7 - eAge / 25);
       if (eAlpha > 0) {
         const eSize = 1.2 - eAge * 0.025;
         if (eSize > 0.3) {
-          ctx.fillStyle = `rgba(255, ${180 - eAge * 4}, ${50 - eAge}, ${eAlpha})`;
+          ctx.fillStyle = `rgba(255,${180 - eAge * 4},${50 - eAge},${eAlpha})`;
           ctx.beginPath();
           ctx.arc(ex, ey, eSize, 0, Math.PI * 2);
           ctx.fill();
@@ -6915,16 +8621,16 @@ export const drawWorldMapCanvas = ({
 
     // Steam wisps at junction points
     for (let i = 1; i < points.length - 1; i++) {
-      for (let s = 0; s < 2; s++) {
-        const sAge = (time * 6 + s * 12 + i * 8) % 20;
+      for (let s = 0; s < 3; s++) {
+        const sAge = (time * 6 + s * 10 + i * 8) % 22;
         const sx =
-          points[i][0] + Math.sin(time * 1.5 + s + i) * 5 + (s === 0 ? -6 : 6);
+          points[i][0] + Math.sin(time * 1.5 + s + i) * 6 + (s - 1) * 5;
         const sy = getY(points[i][1]) - 4 - sAge * 1.2;
-        const sAlpha = Math.max(0, 0.15 - sAge / 30);
+        const sAlpha = Math.max(0, 0.12 - sAge / 35);
         if (sAlpha > 0) {
-          ctx.fillStyle = `rgba(200, 190, 180, ${sAlpha})`;
+          ctx.fillStyle = `rgba(180,170,160,${sAlpha})`;
           ctx.beginPath();
-          ctx.arc(sx, sy, 2 + sAge * 0.25, 0, Math.PI * 2);
+          ctx.arc(sx, sy, 2 + sAge * 0.3, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -6932,25 +8638,61 @@ export const drawWorldMapCanvas = ({
 
     ctx.restore();
   };
-  drawLavaRiver([
-    [1460, 72],
-    [1490, 65],
-    [1520, 68],
-    [1560, 62],
-    [1590, 68],
-  ]);
-  drawLavaRiver([
-    [1480, 38],
-    [1510, 42],
-    [1550, 38],
-    [1590, 45],
-  ]);
-  drawLavaRiver([
-    [1640, 45],
-    [1680, 50],
-    [1720, 48],
-    [1760, 55],
-  ]);
+  drawLavaRiver(
+    [
+      [1460, 72],
+      [1478, 67],
+      [1500, 65],
+      [1520, 68],
+      [1545, 63],
+      [1568, 65],
+      [1590, 68],
+    ],
+    8,
+  );
+  drawLavaRiver(
+    [
+      [1480, 38],
+      [1498, 40],
+      [1515, 42],
+      [1535, 39],
+      [1558, 38],
+      [1578, 42],
+      [1590, 45],
+    ],
+    7,
+  );
+  drawLavaRiver(
+    [
+      [1640, 45],
+      [1658, 48],
+      [1678, 50],
+      [1700, 48],
+      [1722, 50],
+      [1742, 52],
+      [1760, 55],
+    ],
+    8,
+  );
+  drawLavaRiver(
+    [
+      [1470, 55],
+      [1495, 52],
+      [1520, 55],
+      [1545, 50],
+    ],
+    5,
+  );
+  drawLavaRiver(
+    [
+      [1650, 70],
+      [1680, 72],
+      [1710, 68],
+      [1740, 72],
+      [1770, 70],
+    ],
+    6,
+  );
 
   // Obsidian spires with reflective glass surface, geometric fractures, magical glow
   const drawObsidianSpire = (sx: number, syPct: number, scale: number) => {
@@ -7106,8 +8848,15 @@ export const drawWorldMapCanvas = ({
     [1690, 42],
     [1740, 68],
     [1780, 38],
+    [1460, 30],
+    [1505, 58],
+    [1555, 45],
+    [1610, 80],
+    [1665, 28],
+    [1720, 52],
+    [1770, 75],
   ].forEach(([x, yPct], i) => {
-    drawObsidianSpire(x, yPct, 0.7 + seededRandom(i + 400) * 0.4);
+    drawObsidianSpire(x, yPct, 0.6 + seededRandom(i + 400) * 0.45);
   });
 
   // Demon statue with wings, runic inscriptions, ritual circle
@@ -7642,6 +9391,16 @@ export const drawWorldMapCanvas = ({
     }
   };
   drawBurningRuins(1600, 68, 0.8);
+  drawBurningRuins(1490, 45, 0.6);
+  drawBurningRuins(1730, 40, 0.7);
+
+  // More demon statues
+  drawDemonStatue(1480, 38, 0.6);
+  drawDemonStatue(1660, 72, 0.65);
+
+  // More fire elementals
+  drawFireElemental(1540, 30, 0.5);
+  drawFireElemental(1710, 45, 0.45);
 
   // Ember particles with spiral rising patterns, varying brightness, spark trails
   for (let i = 0; i < 45; i++) {
@@ -7908,6 +9667,26 @@ export const drawWorldMapCanvas = ({
     [1550, 85, 6],
     [1640, 25, 7],
     [1710, 80, 5],
+    [95, 42, 5],
+    [175, 58, 6],
+    [245, 82, 4],
+    [340, 35, 5],
+    [415, 42, 6],
+    [525, 55, 5],
+    [620, 38, 4],
+    [700, 65, 5],
+    [780, 48, 6],
+    [875, 35, 4],
+    [950, 55, 5],
+    [1050, 72, 6],
+    [1140, 35, 5],
+    [1225, 55, 4],
+    [1310, 82, 5],
+    [1420, 38, 6],
+    [1500, 62, 5],
+    [1580, 42, 4],
+    [1670, 58, 5],
+    [1750, 35, 6],
   ].forEach(([x, y, size]) => {
     drawBoulder(x, y, size);
   });
@@ -7954,6 +9733,16 @@ export const drawWorldMapCanvas = ({
   drawWagonWheel(1165, 32, 7, 1.8);
   drawWagonWheel(1395, 68, 6, 0.9);
   drawWagonWheel(1605, 25, 8, 1.5);
+  drawWagonWheel(85, 50, 6, 0.3);
+  drawWagonWheel(230, 78, 7, 1.7);
+  drawWagonWheel(380, 42, 5, 0.9);
+  drawWagonWheel(555, 55, 7, 2.3);
+  drawWagonWheel(670, 80, 6, 0.6);
+  drawWagonWheel(835, 38, 5, 1.1);
+  drawWagonWheel(1080, 58, 7, 1.4);
+  drawWagonWheel(1285, 42, 6, 2.0);
+  drawWagonWheel(1480, 72, 5, 0.4);
+  drawWagonWheel(1720, 55, 7, 1.6);
 
   // Scattered arrows in the ground
   const drawArrow = (ax: number, ayPct: number, angle: number) => {
@@ -8217,6 +10006,23 @@ export const drawWorldMapCanvas = ({
     [1480, 40, false],
     [1560, 70, true],
     [1680, 55, false],
+    [75, 72, false],
+    [120, 35, true],
+    [255, 75, false],
+    [335, 55, true],
+    [415, 38, false],
+    [580, 78, true],
+    [650, 32, false],
+    [730, 62, true],
+    [845, 42, false],
+    [920, 75, true],
+    [1050, 55, false],
+    [1170, 78, true],
+    [1260, 30, false],
+    [1380, 45, true],
+    [1540, 55, false],
+    [1620, 38, true],
+    [1750, 65, false],
   ].forEach(([x, y, isEnemy]) => {
     drawFallenSoldier(x as number, y as number, isEnemy as boolean);
   });
@@ -8232,6 +10038,16 @@ export const drawWorldMapCanvas = ({
   drawBattleScene(1340, 68, true, 3);
   drawBattleScene(1520, 25, false, 2);
   drawBattleScene(1670, 75, true, 3);
+  drawBattleScene(90, 58, false, 2);
+  drawBattleScene(245, 30, true, 2);
+  drawBattleScene(420, 65, false, 3);
+  drawBattleScene(550, 42, true, 2);
+  drawBattleScene(760, 72, false, 2);
+  drawBattleScene(975, 28, true, 2);
+  drawBattleScene(1150, 45, false, 3);
+  drawBattleScene(1290, 32, true, 2);
+  drawBattleScene(1600, 55, false, 2);
+  drawBattleScene(1740, 35, true, 3);
 
   // === ENHANCED KINGDOM CASTLES ===
   const drawKingdomCastle = (x: number, yPct: number, isEnemy: boolean) => {
@@ -8954,18 +10770,23 @@ export const drawWorldMapCanvas = ({
       const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
       const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
 
-      const cp1x = fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
+      const cp1x =
+        fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
       const cp1y = fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
-      const cp2x = toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
+      const cp2x =
+        toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
       const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
 
       const traceCubic = (ox: number, oy: number) => {
         ctx.beginPath();
         ctx.moveTo(fromX + ox, fromY + oy);
         ctx.bezierCurveTo(
-          cp1x + ox, cp1y + oy,
-          cp2x + ox, cp2y + oy,
-          toX + ox, toY + oy,
+          cp1x + ox,
+          cp1y + oy,
+          cp2x + ox,
+          cp2y + oy,
+          toX + ox,
+          toY + oy,
         );
       };
 
@@ -9005,8 +10826,16 @@ export const drawWorldMapCanvas = ({
           const dotPos = (time * 0.4 + orb * 0.33) % 1;
           const t = dotPos;
           const mt = 1 - t;
-          const ox = mt*mt*mt * fromX + 3*mt*mt*t * cp1x + 3*mt*t*t * cp2x + t*t*t * toX;
-          const oy = mt*mt*mt * fromY + 3*mt*mt*t * cp1y + 3*mt*t*t * cp2y + t*t*t * toY;
+          const ox =
+            mt * mt * mt * fromX +
+            3 * mt * mt * t * cp1x +
+            3 * mt * t * t * cp2x +
+            t * t * t * toX;
+          const oy =
+            mt * mt * mt * fromY +
+            3 * mt * mt * t * cp1y +
+            3 * mt * t * t * cp2y +
+            t * t * t * toY;
           ctx.fillStyle = "#ffd700";
           ctx.globalAlpha = 0.3;
           ctx.beginPath();
@@ -9037,6 +10866,2096 @@ export const drawWorldMapCanvas = ({
       }
     });
   });
+
+  // === ABOVE-PATH LANDMARKS (rendered over connection paths) ===
+
+  // === LANDMARK: Carnegie Lake (near Poe Field → Carnegie Lake path) ===
+  {
+    const lkX = 268,
+      lkY = getY(44);
+    const lkW = 36,
+      lkH = 16;
+    // Grassy bank
+    ctx.fillStyle = "rgba(50,90,35,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(lkX, lkY, lkW + 10, lkH + 6, -0.1, 0, Math.PI * 2);
+    ctx.fill();
+    // Soft mud ring
+    ctx.fillStyle = "rgba(60,50,30,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(lkX, lkY, lkW + 5, lkH + 3, -0.1, 0, Math.PI * 2);
+    ctx.fill();
+    // Main water body
+    const lakeGrad = ctx.createRadialGradient(
+      lkX - 4,
+      lkY - 2,
+      0,
+      lkX,
+      lkY,
+      lkW,
+    );
+    lakeGrad.addColorStop(0, "rgba(25,80,130,0.7)");
+    lakeGrad.addColorStop(0.3, "rgba(35,100,155,0.6)");
+    lakeGrad.addColorStop(0.7, "rgba(50,120,170,0.45)");
+    lakeGrad.addColorStop(1, "rgba(80,150,190,0.15)");
+    ctx.fillStyle = lakeGrad;
+    drawOrganicBlobAt(ctx, lkX, lkY, lkW, lkH, 42.7, 0.12, 20);
+    ctx.fill();
+    // Depth shading — darker center
+    ctx.fillStyle = "rgba(15,50,90,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(lkX - 2, lkY, lkW * 0.5, lkH * 0.4, -0.1, 0, Math.PI * 2);
+    ctx.fill();
+    // Animated ripples
+    for (let rp = 0; rp < 3; rp++) {
+      const ripT = (time * 0.8 + rp * 2.1) % 3;
+      const ripA = Math.max(0, 0.2 - ripT * 0.07);
+      const ripR = 3 + ripT * 6;
+      const rpx = lkX - 8 + rp * 10;
+      const rpy = lkY - 2 + rp * 3;
+      ctx.strokeStyle = `rgba(180,220,255,${ripA})`;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.ellipse(rpx, rpy, ripR, ripR * 0.4, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Shoreline highlight
+    ctx.strokeStyle = "rgba(120,190,230,0.2)";
+    ctx.lineWidth = 1.2;
+    drawOrganicBlobAt(ctx, lkX, lkY, lkW - 2, lkH - 1, 42.7, 0.1, 18);
+    ctx.stroke();
+    // Small wooden dock
+    const dkX = lkX + lkW * 0.6,
+      dkY = lkY - lkH * 0.3;
+    ctx.fillStyle = "#5a4a30";
+    ctx.fillRect(dkX, dkY - 1, 14, 3);
+    ctx.fillRect(dkX, dkY - 3, 2, 5);
+    ctx.fillRect(dkX + 12, dkY - 3, 2, 5);
+    ctx.fillRect(dkX + 6, dkY + 2, 2, 3);
+    // Lily pads
+    const lilyPositions = [
+      [-12, 3],
+      [-6, -5],
+      [5, 4],
+      [14, -2],
+      [-18, -1],
+      [8, -7],
+    ];
+    lilyPositions.forEach(([ox, oy], li) => {
+      const lpx = lkX + ox,
+        lpy = lkY + oy;
+      ctx.fillStyle = `rgba(40,110,30,${0.45 + seededRandom(li * 7 + 215) * 0.15})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        lpx,
+        lpy,
+        3.5,
+        2.2,
+        seededRandom(li * 3) * 1.5,
+        0.2,
+        Math.PI * 1.85,
+      );
+      ctx.fill();
+      if (seededRandom(li * 7 + 216) > 0.5) {
+        ctx.fillStyle = "#e0a0c0";
+        ctx.beginPath();
+        ctx.arc(lpx + 1, lpy - 0.5, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    // Reed clusters around shore
+    const reedClusters = [
+      [-lkW + 4, 4],
+      [-lkW * 0.5, lkH - 2],
+      [lkW * 0.4, lkH],
+      [lkW - 6, -lkH + 3],
+      [-lkW * 0.7, -lkH + 1],
+    ];
+    reedClusters.forEach(([ox, oy], ri) => {
+      for (let r = 0; r < 4; r++) {
+        const rx = lkX + ox + (r - 1.5) * 2;
+        const ry = lkY + oy;
+        const sway = Math.sin(time * 2.2 + ri * 1.5 + r * 0.7) * 1.8;
+        ctx.strokeStyle = r % 2 === 0 ? "#3a6a28" : "#4a7a38";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry);
+        ctx.quadraticCurveTo(rx + sway * 0.5, ry - 5, rx + sway, ry - 9 - r);
+        ctx.stroke();
+      }
+    });
+    // Reflection shimmer
+    ctx.fillStyle = `rgba(200,230,255,${0.06 + Math.sin(time * 1.5) * 0.03})`;
+    ctx.beginPath();
+    ctx.ellipse(lkX + 6, lkY - 3, lkW * 0.3, lkH * 0.15, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === LANDMARK: Nassau Hall courtyard walls ===
+  {
+    const nhX = 312,
+      nhY = getY(70);
+    const s = 1.8;
+    // Courtyard floor — flagstones
+    ctx.fillStyle = "rgba(90,80,65,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(nhX, nhY + 4 * s, 18 * s, 7 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (let fi = 0; fi < 12; fi++) {
+      const fx = nhX + (seededRandom(fi * 7 + 330) - 0.5) * 28 * s;
+      const fy = nhY + (seededRandom(fi * 7 + 331) - 0.3) * 8 * s;
+      ctx.strokeStyle = "rgba(70,60,45,0.12)";
+      ctx.lineWidth = 0.4;
+      ctx.strokeRect(
+        fx,
+        fy,
+        3 + seededRandom(fi * 7 + 332) * 4,
+        2 + seededRandom(fi * 7 + 333) * 2,
+      );
+    }
+    // Building shadow
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(nhX, nhY + 8 * s, 16 * s, 4 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Main building body
+    const bGrad = ctx.createLinearGradient(nhX - 14 * s, 0, nhX + 14 * s, 0);
+    bGrad.addColorStop(0, "#5a5048");
+    bGrad.addColorStop(0.3, "#7a7068");
+    bGrad.addColorStop(0.7, "#6a6058");
+    bGrad.addColorStop(1, "#4a4038");
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(nhX - 14 * s, nhY - 8 * s, 28 * s, 14 * s);
+    // Roof
+    ctx.fillStyle = "#3a3830";
+    ctx.beginPath();
+    ctx.moveTo(nhX - 16 * s, nhY - 8 * s);
+    ctx.lineTo(nhX, nhY - 16 * s);
+    ctx.lineTo(nhX + 16 * s, nhY - 8 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#2a2820";
+    ctx.fillRect(nhX - 16 * s, nhY - 9 * s, 32 * s, 1.5 * s);
+    // Cupola / bell tower
+    ctx.fillStyle = "#5a5848";
+    ctx.fillRect(nhX - 2.5 * s, nhY - 20 * s, 5 * s, 6 * s);
+    ctx.fillStyle = "#7a7868";
+    ctx.fillRect(nhX - 3.5 * s, nhY - 21 * s, 7 * s, 2 * s);
+    ctx.fillStyle = "#3a3830";
+    ctx.beginPath();
+    ctx.moveTo(nhX - 3 * s, nhY - 21 * s);
+    ctx.lineTo(nhX, nhY - 25 * s);
+    ctx.lineTo(nhX + 3 * s, nhY - 21 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Windows (two rows)
+    for (let row = 0; row < 2; row++) {
+      for (let wi = 0; wi < 5; wi++) {
+        const wx = nhX - 11 * s + wi * 5.5 * s;
+        const wy = nhY - 6 * s + row * 5.5 * s;
+        ctx.fillStyle = "#1a1a18";
+        ctx.fillRect(wx, wy, 2.5 * s, 3 * s);
+        ctx.fillStyle = `rgba(200,180,100,${0.08 + Math.sin(time * 1.5 + wi + row * 3) * 0.04})`;
+        ctx.fillRect(wx + 0.3, wy + 0.3, 1.9 * s, 2.4 * s);
+      }
+    }
+    // Gate — large central arch
+    ctx.fillStyle = "#1a1a18";
+    ctx.beginPath();
+    ctx.moveTo(nhX - 4 * s, nhY + 6 * s);
+    ctx.lineTo(nhX - 4 * s, nhY - 1 * s);
+    ctx.arc(nhX, nhY - 1 * s, 4 * s, Math.PI, 0);
+    ctx.lineTo(nhX + 4 * s, nhY + 6 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Gate pillars
+    ctx.fillStyle = "#7a7068";
+    ctx.fillRect(nhX - 5 * s, nhY - 2 * s, 1.5 * s, 8 * s);
+    ctx.fillRect(nhX + 3.5 * s, nhY - 2 * s, 1.5 * s, 8 * s);
+    // Courtyard walls extending outward
+    ctx.fillStyle = "#5a5048";
+    ctx.fillRect(nhX - 18 * s, nhY + 2 * s, 5 * s, 2 * s);
+    ctx.fillRect(nhX + 13 * s, nhY + 2 * s, 5 * s, 2 * s);
+    ctx.fillRect(nhX - 18 * s, nhY, 2 * s, 6 * s);
+    ctx.fillRect(nhX + 16 * s, nhY, 2 * s, 6 * s);
+  }
+
+  // === LANDMARK: Cannon Crest artillery ===
+  {
+    const ccX = 168,
+      ccY = getY(18);
+    // Earthwork / berm
+    ctx.fillStyle = "rgba(60,50,30,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(ccX, ccY + 6, 32, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(70,60,35,0.2)";
+    ctx.beginPath();
+    ctx.moveTo(ccX - 30, ccY + 4);
+    ctx.quadraticCurveTo(ccX - 28, ccY - 4, ccX - 20, ccY - 3);
+    ctx.lineTo(ccX + 20, ccY - 3);
+    ctx.quadraticCurveTo(ccX + 28, ccY - 4, ccX + 30, ccY + 4);
+    ctx.closePath();
+    ctx.fill();
+    // Sandbag wall
+    for (let sb = 0; sb < 8; sb++) {
+      const sbx = ccX - 22 + sb * 6.5;
+      const sby = ccY - 2;
+      ctx.fillStyle = sb % 2 === 0 ? "#8a7a58" : "#7a6a48";
+      ctx.beginPath();
+      ctx.ellipse(sbx, sby, 3.5, 2, 0.1 * ((sb % 3) - 1), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Three cannons at different angles
+    const cannons: [number, number, number][] = [
+      [-18, 1, -0.35],
+      [0, -1, -0.15],
+      [18, 0, 0.1],
+    ];
+    cannons.forEach(([ox, oy, rot]) => {
+      const cx = ccX + ox,
+        cy = ccY + oy;
+      // Carriage
+      ctx.fillStyle = "#3a2a1a";
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+      ctx.fillRect(-4, -2, 8, 4);
+      ctx.restore();
+      // Wheels (pair)
+      for (const wside of [-1, 1]) {
+        const wx = cx + wside * 5;
+        const wy = cy + 3;
+        ctx.strokeStyle = "#4a3a2a";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.arc(wx, wy, 5, 0, Math.PI * 2);
+        ctx.stroke();
+        // Spokes
+        for (let sp = 0; sp < 6; sp++) {
+          const sa = (sp / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.lineTo(wx + Math.cos(sa) * 4.5, wy + Math.sin(sa) * 4.5);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#3a2a1a";
+        ctx.beginPath();
+        ctx.arc(wx, wy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Barrel
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rot);
+      const barrelGrad = ctx.createLinearGradient(0, -2.5, 0, 2.5);
+      barrelGrad.addColorStop(0, "#2a2a2a");
+      barrelGrad.addColorStop(0.5, "#4a4a4a");
+      barrelGrad.addColorStop(1, "#2a2a2a");
+      ctx.fillStyle = barrelGrad;
+      ctx.fillRect(-3, -2.5, 18, 5);
+      // Barrel bands
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(2, -3, 1.5, 6);
+      ctx.fillRect(8, -3, 1.5, 6);
+      // Muzzle
+      ctx.fillStyle = "#1a1a1a";
+      ctx.fillRect(14, -3.5, 3, 7);
+      ctx.fillStyle = "#0a0a0a";
+      ctx.beginPath();
+      ctx.arc(17, 0, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    // Ammo crate
+    ctx.fillStyle = "#4a3a20";
+    ctx.fillRect(ccX + 8, ccY + 4, 8, 6);
+    ctx.fillStyle = "#3a2a18";
+    ctx.fillRect(ccX + 8, ccY + 4, 8, 1.2);
+    ctx.strokeStyle = "#2a1a10";
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(ccX + 8, ccY + 4, 8, 6);
+    // Cannonballs
+    for (let cb = 0; cb < 4; cb++) {
+      ctx.fillStyle = "#2a2a2a";
+      ctx.beginPath();
+      ctx.arc(ccX - 12 + cb * 3, ccY + 8, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Battle flag
+    ctx.fillStyle = "#4a3a28";
+    ctx.fillRect(ccX + 24, ccY - 18, 1.5, 22);
+    const flagWave = Math.sin(time * 3.5) * 2;
+    ctx.fillStyle = "#c84030";
+    ctx.beginPath();
+    ctx.moveTo(ccX + 25.5, ccY - 17);
+    ctx.quadraticCurveTo(
+      ccX + 33,
+      ccY - 15 + flagWave,
+      ccX + 36,
+      ccY - 12 + flagWave,
+    );
+    ctx.lineTo(ccX + 25.5, ccY - 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#e8c840";
+    ctx.beginPath();
+    ctx.arc(ccX + 30, ccY - 13 + flagWave * 0.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === LANDMARK: Ivy Crossroads arch ===
+  {
+    const ivX = 380,
+      ivY = getY(22);
+    const s = 1.8;
+    // Cobblestone path beneath
+    ctx.fillStyle = "rgba(80,70,55,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(ivX, ivY + 8 * s, 14 * s, 4 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Stone pillar bases
+    ctx.fillStyle = "#5a5a4a";
+    ctx.fillRect(ivX - 10 * s, ivY + 4 * s, 5 * s, 3 * s);
+    ctx.fillRect(ivX + 5 * s, ivY + 4 * s, 5 * s, 3 * s);
+    // Stone pillars
+    const pillarGradL = ctx.createLinearGradient(
+      ivX - 10 * s,
+      0,
+      ivX - 5 * s,
+      0,
+    );
+    pillarGradL.addColorStop(0, "#4a4a42");
+    pillarGradL.addColorStop(0.5, "#6a6a5a");
+    pillarGradL.addColorStop(1, "#5a5a4a");
+    ctx.fillStyle = pillarGradL;
+    ctx.fillRect(ivX - 9 * s, ivY - 10 * s, 4 * s, 14 * s);
+    const pillarGradR = ctx.createLinearGradient(
+      ivX + 5 * s,
+      0,
+      ivX + 10 * s,
+      0,
+    );
+    pillarGradR.addColorStop(0, "#5a5a4a");
+    pillarGradR.addColorStop(0.5, "#6a6a5a");
+    pillarGradR.addColorStop(1, "#4a4a42");
+    ctx.fillStyle = pillarGradR;
+    ctx.fillRect(ivX + 5 * s, ivY - 10 * s, 4 * s, 14 * s);
+    // Pillar caps
+    ctx.fillStyle = "#7a7a68";
+    ctx.fillRect(ivX - 10.5 * s, ivY - 11 * s, 6 * s, 2 * s);
+    ctx.fillRect(ivX + 4.5 * s, ivY - 11 * s, 6 * s, 2 * s);
+    // Stone arch
+    ctx.strokeStyle = "#6a6a5a";
+    ctx.lineWidth = 4 * s;
+    ctx.beginPath();
+    ctx.arc(ivX, ivY - 10 * s, 9 * s, Math.PI, 0);
+    ctx.stroke();
+    // Keystone at top of arch
+    ctx.fillStyle = "#7a7a68";
+    ctx.beginPath();
+    ctx.moveTo(ivX - 2 * s, ivY - 18 * s);
+    ctx.lineTo(ivX, ivY - 20 * s);
+    ctx.lineTo(ivX + 2 * s, ivY - 18 * s);
+    ctx.lineTo(ivX + 1.5 * s, ivY - 16 * s);
+    ctx.lineTo(ivX - 1.5 * s, ivY - 16 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Ivy vines covering the arch — thick clusters
+    for (let iv = 0; iv < 16; iv++) {
+      const a = Math.PI + (iv / 16) * Math.PI;
+      const ivR = 9 * s + (seededRandom(iv * 5 + 365) - 0.5) * 3;
+      const vx = ivX + Math.cos(a) * ivR;
+      const vy = ivY - 10 * s + Math.sin(a) * ivR;
+      ctx.fillStyle =
+        seededRandom(iv * 5 + 366) > 0.3
+          ? "rgba(35,95,25,0.55)"
+          : "rgba(50,120,35,0.5)";
+      const leafSize = 2.5 * s + seededRandom(iv * 5 + 367) * 1.5 * s;
+      ctx.beginPath();
+      ctx.ellipse(vx, vy, leafSize, leafSize * 0.65, a + 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Ivy on pillars — hanging tendrils
+    for (const px of [-7.5 * s, 6.5 * s]) {
+      for (let t = 0; t < 5; t++) {
+        const ty = ivY - 8 * s + t * 3.5 * s;
+        const sway = Math.sin(time * 1.8 + t * 0.9 + px) * 1.2;
+        ctx.fillStyle = t < 3 ? "rgba(40,105,28,0.5)" : "rgba(50,120,35,0.4)";
+        ctx.beginPath();
+        ctx.ellipse(ivX + px + sway, ty, 3 * s, 1.8 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // Hanging ivy tendrils from arch bottom
+    for (let h = 0; h < 6; h++) {
+      const hx = ivX - 7 * s + h * 3 * s;
+      const tendrilLen = 4 + seededRandom(h * 3 + 370) * 6;
+      ctx.strokeStyle = "rgba(30,80,20,0.4)";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(
+        hx,
+        ivY - 10 * s + Math.sqrt(Math.max(0, (9 * s) ** 2 - (hx - ivX) ** 2)),
+      );
+      ctx.quadraticCurveTo(
+        hx + Math.sin(time * 2 + h) * 1.5,
+        ivY - 5 * s + tendrilLen * 0.5,
+        hx + Math.sin(time * 2.5 + h) * 2,
+        ivY - 5 * s + tendrilLen,
+      );
+      ctx.stroke();
+    }
+    // Signpost at base
+    ctx.fillStyle = "#4a3a28";
+    ctx.fillRect(ivX + 12 * s, ivY - 4 * s, 1.5 * s, 10 * s);
+    ctx.fillStyle = "#6a5a40";
+    ctx.save();
+    ctx.translate(ivX + 13 * s, ivY - 3 * s);
+    ctx.rotate(-0.1);
+    ctx.fillRect(0, 0, 8 * s, 2.5 * s);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(ivX + 13 * s, ivY - 0.5 * s);
+    ctx.rotate(0.12);
+    ctx.fillRect(0, 0, 7 * s, 2.5 * s);
+    ctx.restore();
+  }
+
+  // === LANDMARK: Witch's Domain hut (near x:535, y:33) ===
+  {
+    const whX = 528,
+      whY = getY(24);
+    const s = 1.6;
+    // Ground — dead grass and moss
+    ctx.fillStyle = "rgba(25,40,20,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(whX, whY + 8 * s, 22 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Scattered bones/skulls around
+    for (let b = 0; b < 5; b++) {
+      const bx = whX + (seededRandom(b * 7 + 525) - 0.5) * 35 * s;
+      const by = whY + 4 * s + seededRandom(b * 7 + 526) * 6 * s;
+      ctx.fillStyle = "#c8c0a8";
+      ctx.beginPath();
+      ctx.ellipse(
+        bx,
+        by,
+        1.5,
+        1,
+        seededRandom(b * 7 + 527) * 2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Crooked fence
+    for (let f = 0; f < 7; f++) {
+      const fx = whX - 20 * s + f * 6.5 * s;
+      const fy = whY + 5 * s + Math.sin(f * 1.3) * 2;
+      const lean = (seededRandom(f * 3 + 530) - 0.5) * 0.3;
+      ctx.save();
+      ctx.translate(fx, fy);
+      ctx.rotate(lean);
+      ctx.fillStyle = "#2a2218";
+      ctx.fillRect(-0.8, -6 * s, 1.6, 8 * s);
+      ctx.fillStyle = "#3a3228";
+      ctx.beginPath();
+      ctx.moveTo(-1.2, -6 * s);
+      ctx.lineTo(0, -7.5 * s);
+      ctx.lineTo(1.2, -6 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    // Crossbeams on fence
+    ctx.strokeStyle = "#2a2218";
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(whX - 20 * s, whY + 1 * s);
+    ctx.lineTo(whX + 18 * s, whY + 2 * s);
+    ctx.stroke();
+    // Hut body — crooked, larger
+    const hutGrad = ctx.createLinearGradient(whX - 12 * s, 0, whX + 12 * s, 0);
+    hutGrad.addColorStop(0, "#1a1810");
+    hutGrad.addColorStop(0.5, "#2a2820");
+    hutGrad.addColorStop(1, "#201e16");
+    ctx.fillStyle = hutGrad;
+    ctx.beginPath();
+    ctx.moveTo(whX - 12 * s, whY + 5 * s);
+    ctx.lineTo(whX - 10 * s, whY - 6 * s);
+    ctx.lineTo(whX + 11 * s, whY - 7 * s);
+    ctx.lineTo(whX + 13 * s, whY + 5 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Plank texture on hut
+    ctx.strokeStyle = "rgba(0,0,0,0.1)";
+    ctx.lineWidth = 0.4;
+    for (let pl = 0; pl < 5; pl++) {
+      const px = whX - 10 * s + pl * 4.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(px, whY - 6 * s + pl * 0.2);
+      ctx.lineTo(px + 0.5, whY + 5 * s);
+      ctx.stroke();
+    }
+    // Crooked roof — larger, with overhang
+    ctx.fillStyle = "#1a1a12";
+    ctx.beginPath();
+    ctx.moveTo(whX - 15 * s, whY - 5 * s);
+    ctx.lineTo(whX + 1 * s, whY - 20 * s);
+    ctx.lineTo(whX + 16 * s, whY - 6 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#121210";
+    ctx.fillRect(whX - 14 * s, whY - 6 * s, 29 * s, 1.5 * s);
+    // Door — arched, with glow
+    ctx.fillStyle = "#0a0a08";
+    ctx.beginPath();
+    ctx.moveTo(whX - 3 * s, whY + 5 * s);
+    ctx.lineTo(whX - 3 * s, whY - 1 * s);
+    ctx.arc(whX, whY - 1 * s, 3 * s, Math.PI, 0);
+    ctx.lineTo(whX + 3 * s, whY + 5 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = `rgba(80,200,40,${0.08 + Math.sin(time * 1.5) * 0.04})`;
+    ctx.fill();
+    // Windows with eerie glow
+    for (const wx of [-7 * s, 6 * s]) {
+      ctx.fillStyle = "#0a0a08";
+      ctx.fillRect(whX + wx, whY - 4 * s, 4 * s, 3.5 * s);
+      ctx.fillStyle = `rgba(100,255,50,${0.35 + Math.sin(time * 2 + wx) * 0.15})`;
+      ctx.fillRect(whX + wx + 0.4, whY - 3.6 * s, 3.2 * s, 2.7 * s);
+      // Window glow halo
+      const wGlow = ctx.createRadialGradient(
+        whX + wx + 2 * s,
+        whY - 2.5 * s,
+        0,
+        whX + wx + 2 * s,
+        whY - 2.5 * s,
+        8 * s,
+      );
+      wGlow.addColorStop(
+        0,
+        `rgba(80,200,40,${0.12 + Math.sin(time * 2.5 + wx) * 0.06})`,
+      );
+      wGlow.addColorStop(1, "rgba(60,150,30,0)");
+      ctx.fillStyle = wGlow;
+      ctx.beginPath();
+      ctx.arc(whX + wx + 2 * s, whY - 2.5 * s, 8 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Chimney with green smoke
+    ctx.fillStyle = "#2a2418";
+    ctx.save();
+    ctx.translate(whX + 8 * s, whY - 19 * s);
+    ctx.rotate(0.12);
+    ctx.fillRect(0, 0, 3 * s, 10 * s);
+    ctx.restore();
+    for (let sm = 0; sm < 5; sm++) {
+      const smokeY = whY - 22 * s - sm * 5 * s - ((time * 8 + sm * 5) % 18);
+      const smokeX = whX + 9.5 * s + Math.sin(time * 1.5 + sm * 0.8) * 3;
+      ctx.fillStyle = `rgba(70,180,50,${0.18 - sm * 0.03})`;
+      ctx.beginPath();
+      ctx.arc(smokeX, smokeY, (2.5 + sm * 1.2) * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Cauldron in front
+    ctx.fillStyle = "#1a1a18";
+    ctx.beginPath();
+    ctx.ellipse(whX - 14 * s, whY + 3 * s, 4 * s, 3 * s, 0, 0, Math.PI);
+    ctx.fill();
+    ctx.fillStyle = `rgba(60,200,30,${0.3 + Math.sin(time * 3) * 0.12})`;
+    ctx.beginPath();
+    ctx.ellipse(whX - 14 * s, whY + 1 * s, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Bubbles from cauldron
+    for (let bub = 0; bub < 3; bub++) {
+      const bubPhase = (time * 2.5 + bub * 1.3) % 2;
+      const bubY = whY - bubPhase * 6 * s;
+      const bubA = Math.max(0, 0.3 - bubPhase * 0.15);
+      ctx.fillStyle = `rgba(80,220,50,${bubA})`;
+      ctx.beginPath();
+      ctx.arc(
+        whX - 14 * s + Math.sin(time * 3 + bub) * 2,
+        bubY,
+        1.2 * s,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Hanging bottles from roof
+    for (let bt = 0; bt < 4; bt++) {
+      const btx = whX - 10 * s + bt * 6 * s;
+      const bty = whY - 5 * s;
+      ctx.strokeStyle = "#3a3a30";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(btx, bty);
+      ctx.lineTo(btx, bty + 3 * s);
+      ctx.stroke();
+      ctx.fillStyle =
+        seededRandom(bt + 540) > 0.5
+          ? "rgba(80,160,40,0.5)"
+          : "rgba(140,60,180,0.4)";
+      ctx.beginPath();
+      ctx.ellipse(btx, bty + 4 * s, 1 * s, 1.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Sunken Temple ruins (near x:650, y:56) ===
+  {
+    const stX = 666,
+      stY = getY(68);
+    const s = 1.7;
+    // Flooded base — large murky pool
+    ctx.fillStyle = "rgba(20,45,35,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(stX, stY + 6 * s, 28 * s, 10 * s, -0.05, 0, Math.PI * 2);
+    ctx.fill();
+    // Water surface
+    const waterGrad = ctx.createRadialGradient(
+      stX,
+      stY + 4 * s,
+      0,
+      stX,
+      stY + 4 * s,
+      24 * s,
+    );
+    waterGrad.addColorStop(0, "rgba(25,60,50,0.35)");
+    waterGrad.addColorStop(0.6, "rgba(35,75,60,0.25)");
+    waterGrad.addColorStop(1, "rgba(50,90,70,0.1)");
+    ctx.fillStyle = waterGrad;
+    drawOrganicBlobAt(ctx, stX, stY + 4 * s, 25 * s, 9 * s, 650.3, 0.1, 18);
+    ctx.fill();
+    // Water ripples
+    for (let rp = 0; rp < 3; rp++) {
+      const ripT = (time * 0.6 + rp * 1.8) % 2.5;
+      const ripA = Math.max(0, 0.15 - ripT * 0.06);
+      ctx.strokeStyle = `rgba(120,180,150,${ripA})`;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.ellipse(
+        stX + (rp - 1) * 8 * s,
+        stY + 3 * s,
+        4 + ripT * 5,
+        1.5 + ripT * 2,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+    // Crumbling stone steps leading into water
+    for (let step = 0; step < 4; step++) {
+      const sx = stX + 16 * s + step * 3 * s;
+      const sy = stY + (4 - step) * 2 * s;
+      ctx.fillStyle = step < 2 ? "rgba(60,70,55,0.4)" : "#4a5a4a";
+      ctx.fillRect(sx, sy, 6 * s, 2 * s);
+    }
+    // Broken columns — 6 total at various heights
+    const colPositions: [number, number, number][] = [
+      [-18, 2, 0.8],
+      [-10, -1, 1.0],
+      [-3, -3, 0.6],
+      [5, -2, 1.0],
+      [13, 0, 0.9],
+      [20, 2, 0.5],
+    ];
+    colPositions.forEach(([ox, oy, hFactor], ci) => {
+      const colH = (12 + seededRandom(ci * 7 + 650) * 14) * s * hFactor;
+      const colW = 2.5 * s;
+      // Column shadow in water
+      ctx.fillStyle = "rgba(0,0,0,0.1)";
+      ctx.beginPath();
+      ctx.ellipse(
+        stX + ox * s + 1,
+        stY + oy * s + 2,
+        colW + 1,
+        colW * 0.4,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // Column body with gradient
+      const colGrad = ctx.createLinearGradient(
+        stX + ox * s - colW,
+        0,
+        stX + ox * s + colW,
+        0,
+      );
+      colGrad.addColorStop(0, "#3a4a3a");
+      colGrad.addColorStop(0.5, "#5a6a5a");
+      colGrad.addColorStop(1, "#4a5a4a");
+      ctx.fillStyle = colGrad;
+      ctx.fillRect(stX + ox * s - colW, stY + oy * s - colH, colW * 2, colH);
+      // Fluted detail
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.4;
+      for (let fl = 0; fl < 3; fl++) {
+        const flx = stX + ox * s - colW + (fl + 0.5) * colW * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(flx, stY + oy * s);
+        ctx.lineTo(flx, stY + oy * s - colH);
+        ctx.stroke();
+      }
+      // Column capital
+      if (colH > 10 * s) {
+        ctx.fillStyle = "#5a6a5a";
+        ctx.fillRect(
+          stX + ox * s - colW - 1.5,
+          stY + oy * s - colH - 2 * s,
+          colW * 2 + 3,
+          2.5 * s,
+        );
+        ctx.fillRect(
+          stX + ox * s - colW - 0.5,
+          stY + oy * s - colH - 3.5 * s,
+          colW * 2 + 1,
+          1.5 * s,
+        );
+      }
+      // Jagged broken top (if shorter)
+      if (colH <= 10 * s) {
+        ctx.fillStyle = "#4a5a4a";
+        for (let j = 0; j < 3; j++) {
+          const jx = stX + ox * s - colW + j * colW * 0.7;
+          const jh = seededRandom(ci * 3 + j + 660) * 3 * s;
+          ctx.fillRect(jx, stY + oy * s - colH - jh, colW * 0.5, jh);
+        }
+      }
+      // Moss growth
+      ctx.fillStyle = "rgba(35,80,30,0.35)";
+      ctx.beginPath();
+      ctx.ellipse(
+        stX + ox * s,
+        stY + oy * s - colH * 0.35,
+        colW + 2,
+        2.5 * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    });
+    // Stone lintel spanning two columns (tilted, cracked)
+    ctx.save();
+    ctx.translate(stX - 6 * s, stY - 18 * s);
+    ctx.rotate(-0.1);
+    ctx.fillStyle = "#4a5a4a";
+    ctx.fillRect(0, 0, 16 * s, 3 * s);
+    // Crack in lintel
+    ctx.strokeStyle = "#2a3a2a";
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(6 * s, 0);
+    ctx.lineTo(7 * s, 1.5 * s);
+    ctx.lineTo(8 * s, 0.5 * s);
+    ctx.lineTo(9 * s, 3 * s);
+    ctx.stroke();
+    ctx.restore();
+    // Fallen pediment triangle
+    ctx.fillStyle = "#3a4a3a";
+    ctx.save();
+    ctx.translate(stX + 8 * s, stY + 2 * s);
+    ctx.rotate(0.6);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(8 * s, 0);
+    ctx.lineTo(4 * s, -4 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // Scattered rubble in water
+    for (let rb = 0; rb < 8; rb++) {
+      const rbx = stX + (seededRandom(rb * 5 + 670) - 0.5) * 40 * s;
+      const rby = stY + 2 * s + seededRandom(rb * 5 + 671) * 8 * s;
+      ctx.fillStyle = seededRandom(rb * 5 + 672) > 0.5 ? "#4a5a4a" : "#3a4a3a";
+      ctx.beginPath();
+      ctx.ellipse(
+        rbx,
+        rby,
+        2 + seededRandom(rb * 5 + 673) * 2,
+        1 + seededRandom(rb * 5 + 674) * 1.5,
+        seededRandom(rb * 5 + 675),
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Water shimmer
+    ctx.fillStyle = `rgba(100,180,150,${0.08 + Math.sin(time * 2.5) * 0.04})`;
+    ctx.beginPath();
+    ctx.ellipse(stX - 4 * s, stY + 3 * s, 18 * s, 5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === LANDMARK: Blight Basin poison pools (near x:540, y:70) ===
+  {
+    const bbX = 550,
+      bbY = getY(82);
+    const s = 1.6;
+    // Tainted ground
+    ctx.fillStyle = "rgba(30,40,15,0.2)";
+    ctx.beginPath();
+    ctx.ellipse(bbX, bbY + 2 * s, 24 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Dead trees around the basin
+    for (let dt = 0; dt < 3; dt++) {
+      const dtx = bbX + (dt - 1) * 16 * s;
+      const dty = bbY - 2 * s + (seededRandom(dt * 5 + 540) - 0.5) * 8;
+      ctx.strokeStyle = "#2a2018";
+      ctx.lineWidth = 1.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(dtx, dty + 4 * s);
+      ctx.quadraticCurveTo(
+        dtx + (seededRandom(dt + 541) - 0.5) * 3,
+        dty - 4 * s,
+        dtx + (seededRandom(dt + 542) - 0.5) * 4,
+        dty - 10 * s,
+      );
+      ctx.stroke();
+      // Bare branches
+      for (let br = 0; br < 3; br++) {
+        const brt = 0.3 + br * 0.25;
+        const brx = dtx + (seededRandom(dt + 542) - 0.5) * 4 * brt;
+        const bry = dty + 4 * s - (4 + 10 * brt) * s;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(brx, bry);
+        ctx.lineTo(
+          brx + (seededRandom(dt * 3 + br + 543) - 0.5) * 8 * s,
+          bry - 4 * s,
+        );
+        ctx.stroke();
+      }
+    }
+    // Poison pools — 5, interconnected look
+    const pools: [number, number, number][] = [
+      [-12, 2, 8],
+      [-4, -3, 10],
+      [6, 1, 9],
+      [14, -1, 7],
+      [0, 5, 6],
+    ];
+    pools.forEach(([ox, oy, pr], p) => {
+      const px = bbX + ox * s,
+        py = bbY + oy * s;
+      const prs = pr * s;
+      const poisonGrad = ctx.createRadialGradient(px, py, 0, px, py, prs);
+      poisonGrad.addColorStop(
+        0,
+        `rgba(70,210,25,${0.3 + Math.sin(time * 2 + p * 0.8) * 0.12})`,
+      );
+      poisonGrad.addColorStop(
+        0.5,
+        `rgba(50,160,15,${0.2 + Math.sin(time * 2.2 + p) * 0.06})`,
+      );
+      poisonGrad.addColorStop(1, "rgba(30,100,10,0)");
+      ctx.fillStyle = poisonGrad;
+      drawOrganicBlobAt(ctx, px, py, prs, prs * 0.5, p * 4.3, 0.18, 14);
+      ctx.fill();
+      // Bubbles rising from each pool
+      for (let bub = 0; bub < 2; bub++) {
+        const bubPhase = (time * 1.5 + p * 1.1 + bub * 0.7) % 2;
+        const bubA = Math.max(0, 0.25 - bubPhase * 0.13);
+        ctx.fillStyle = `rgba(100,230,40,${bubA})`;
+        ctx.beginPath();
+        ctx.arc(
+          px + Math.sin(time * 3 + p + bub) * 2,
+          py - bubPhase * 5 * s,
+          (1 + bub * 0.5) * s,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    });
+    // Toxic mushroom clusters
+    const mushrooms: [number, number, number][] = [
+      [-16, -4, 1.0],
+      [-8, 6, 0.8],
+      [2, -5, 1.1],
+      [10, 4, 0.9],
+      [18, -2, 0.7],
+      [-12, 0, 0.6],
+      [6, 7, 0.85],
+      [16, 1, 0.75],
+    ];
+    mushrooms.forEach(([ox, oy, ms], m) => {
+      const mx = bbX + ox * s,
+        my = bbY + oy * s;
+      const mscale = ms * s;
+      // Stem
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(mx - 0.6 * mscale, my, 1.2 * mscale, 4.5 * mscale);
+      // Cap
+      ctx.fillStyle = `rgba(120,200,40,${0.65 + Math.sin(time * 3 + m * 0.7) * 0.12})`;
+      ctx.beginPath();
+      ctx.ellipse(mx, my, 3 * mscale, 2 * mscale, 0, Math.PI, 0);
+      ctx.fill();
+      // Spots on cap
+      ctx.fillStyle = "rgba(200,255,100,0.35)";
+      ctx.beginPath();
+      ctx.arc(
+        mx - 0.8 * mscale,
+        my - 0.8 * mscale,
+        0.6 * mscale,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(mx + 1 * mscale, my - 0.5 * mscale, 0.4 * mscale, 0, Math.PI * 2);
+      ctx.fill();
+      // Spore glow
+      if (seededRandom(m * 7 + 555) > 0.5) {
+        ctx.fillStyle = `rgba(100,255,50,${0.06 + Math.sin(time * 2.5 + m) * 0.03})`;
+        ctx.beginPath();
+        ctx.arc(mx, my - 1 * mscale, 5 * mscale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    // Poison mist hovering over basin
+    for (let mist = 0; mist < 4; mist++) {
+      const mistX =
+        bbX +
+        (seededRandom(mist * 3 + 560) - 0.5) * 30 * s +
+        Math.sin(time * 0.8 + mist) * 4;
+      const mistY = bbY - 4 * s + Math.sin(time * 0.6 + mist * 1.5) * 2;
+      ctx.fillStyle = `rgba(80,180,40,${0.06 + Math.sin(time * 1.2 + mist) * 0.03})`;
+      ctx.beginPath();
+      ctx.ellipse(mistX, mistY, 8 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Triad Keep fortified structure (near x:640, y:28) ===
+  {
+    const tkX = 648,
+      tkY = getY(20);
+    const s = 1.7;
+    // Moat
+    ctx.fillStyle = "rgba(20,40,30,0.25)";
+    ctx.beginPath();
+    ctx.ellipse(tkX, tkY + 8 * s, 22 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(30,60,45,0.15)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(tkX, tkY + 8 * s, 20 * s, 7 * s, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Keep shadow
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(tkX, tkY + 7 * s, 16 * s, 5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Outer walls
+    const wallGrad = ctx.createLinearGradient(tkX - 16 * s, 0, tkX + 16 * s, 0);
+    wallGrad.addColorStop(0, "#2a3a28");
+    wallGrad.addColorStop(0.3, "#3a4a38");
+    wallGrad.addColorStop(0.7, "#3a4a38");
+    wallGrad.addColorStop(1, "#2a3a28");
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(tkX - 14 * s, tkY - 4 * s, 28 * s, 10 * s);
+    // Wall top / parapet
+    ctx.fillStyle = "#2a3a2a";
+    ctx.fillRect(tkX - 15 * s, tkY - 5 * s, 30 * s, 2 * s);
+    // Battlements on outer wall
+    for (let b = 0; b < 7; b++) {
+      ctx.fillStyle = "#3a4a38";
+      ctx.fillRect(tkX - 15 * s + b * 4.5 * s, tkY - 8 * s, 3 * s, 4 * s);
+    }
+    // Central keep tower — taller
+    const towerGrad = ctx.createLinearGradient(tkX - 6 * s, 0, tkX + 6 * s, 0);
+    towerGrad.addColorStop(0, "#2a3a28");
+    towerGrad.addColorStop(0.5, "#3a4a38");
+    towerGrad.addColorStop(1, "#2a3a28");
+    ctx.fillStyle = towerGrad;
+    ctx.fillRect(tkX - 6 * s, tkY - 18 * s, 12 * s, 22 * s);
+    ctx.fillStyle = "#2a3a2a";
+    ctx.fillRect(tkX - 7 * s, tkY - 19 * s, 14 * s, 2 * s);
+    // Tower battlements
+    for (let b = 0; b < 4; b++) {
+      ctx.fillStyle = "#3a4a38";
+      ctx.fillRect(tkX - 7 * s + b * 4 * s, tkY - 22 * s, 2.5 * s, 4 * s);
+    }
+    // Tower windows
+    for (let tw = 0; tw < 3; tw++) {
+      const twy = tkY - 16 * s + tw * 5 * s;
+      ctx.fillStyle = "#0a0a08";
+      ctx.fillRect(tkX - 2 * s, twy, 4 * s, 3 * s);
+      ctx.fillStyle = `rgba(200,180,80,${0.06 + Math.sin(time * 1.5 + tw) * 0.03})`;
+      ctx.fillRect(tkX - 1.5 * s, twy + 0.3, 3 * s, 2.4 * s);
+    }
+    // Gate — arched with portcullis
+    ctx.fillStyle = "#0a0a08";
+    ctx.beginPath();
+    ctx.moveTo(tkX - 4 * s, tkY + 6 * s);
+    ctx.lineTo(tkX - 4 * s, tkY - 1 * s);
+    ctx.arc(tkX, tkY - 1 * s, 4 * s, Math.PI, 0);
+    ctx.lineTo(tkX + 4 * s, tkY + 6 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Portcullis bars
+    ctx.strokeStyle = "#2a2a20";
+    ctx.lineWidth = 0.6 * s;
+    for (let pg = 0; pg < 4; pg++) {
+      const pgx = tkX - 3 * s + pg * 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(pgx, tkY + 6 * s);
+      ctx.lineTo(
+        pgx,
+        tkY -
+          1 * s +
+          Math.sqrt(Math.max(0, (4 * s) ** 2 - (pgx - tkX) ** 2)) * -1,
+      );
+      ctx.stroke();
+    }
+    // Corner turrets
+    for (const cx of [-14 * s, 14 * s]) {
+      ctx.fillStyle = "#2a3a28";
+      ctx.fillRect(tkX + cx - 3 * s, tkY - 10 * s, 6 * s, 16 * s);
+      ctx.fillStyle = "#3a4a38";
+      ctx.fillRect(tkX + cx - 3.5 * s, tkY - 11 * s, 7 * s, 2 * s);
+      // Turret cone top
+      ctx.fillStyle = "#2a3a28";
+      ctx.beginPath();
+      ctx.moveTo(tkX + cx - 3 * s, tkY - 11 * s);
+      ctx.lineTo(tkX + cx, tkY - 15 * s);
+      ctx.lineTo(tkX + cx + 3 * s, tkY - 11 * s);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Banners on turrets
+    for (const bx of [-14 * s, 14 * s]) {
+      ctx.fillStyle = "#2a5a2a";
+      ctx.fillRect(tkX + bx - 0.5, tkY - 20 * s, 1.2 * s, 8 * s);
+      const bwave = Math.sin(time * 3 + bx) * 1.5;
+      ctx.fillStyle = "#4a8a30";
+      ctx.beginPath();
+      ctx.moveTo(tkX + bx + 0.8, tkY - 19 * s);
+      ctx.quadraticCurveTo(
+        tkX + bx + 5 * s,
+        tkY - 17.5 * s + bwave,
+        tkX + bx + 6 * s,
+        tkY - 15 * s + bwave,
+      );
+      ctx.lineTo(tkX + bx + 0.8, tkY - 13 * s);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Drawbridge
+    ctx.fillStyle = "#3a2a18";
+    ctx.fillRect(tkX - 5 * s, tkY + 4 * s, 10 * s, 5 * s);
+    ctx.strokeStyle = "#2a1a10";
+    ctx.lineWidth = 0.4;
+    for (let db = 0; db < 4; db++) {
+      ctx.beginPath();
+      ctx.moveTo(tkX - 5 * s + db * 3 * s, tkY + 4 * s);
+      ctx.lineTo(tkX - 5 * s + db * 3 * s, tkY + 9 * s);
+      ctx.stroke();
+    }
+  }
+
+  // === LANDMARK: Sunscorch Labyrinth maze walls (near x:1000, y:67) ===
+  {
+    const lbX = 910,
+      lbY = getY(63);
+    const s = 1.7;
+    const wallC = "#9a8050";
+    const wallD = "#6a5a30";
+    const wallH = "#b09060";
+    // Sand floor
+    ctx.fillStyle = "rgba(180,150,100,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(lbX, lbY + 3 * s, 28 * s, 12 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Maze wall fragments — larger network
+    const mazeWalls: [number, number, number, number, number][] = [
+      [-22, -10, 14, 3, 0],
+      [-22, -10, 3, 18, 0],
+      [-10, -12, 3, 14, 0],
+      [-10, -12, 12, 3, 0.03],
+      [2, -14, 3, 10, 0],
+      [2, -14, 16, 3, -0.02],
+      [18, -12, 3, 14, 0],
+      [18, 0, -14, 3, 0],
+      [6, -4, 3, 12, 0],
+      [-6, 0, 12, 3, 0.04],
+      [-18, 6, 14, 3, 0],
+      [10, 4, 3, 10, 0],
+      [-8, 8, 18, 3, -0.02],
+      [18, 4, 3, 10, 0],
+    ];
+    mazeWalls.forEach(([ox, oy, w, h, rot], wi) => {
+      ctx.save();
+      ctx.translate(lbX + ox * s, lbY + oy * s);
+      ctx.rotate(rot);
+      // Wall gradient for depth
+      const wGrad = ctx.createLinearGradient(0, 0, 0, Math.abs(h) * s);
+      wGrad.addColorStop(0, wallH);
+      wGrad.addColorStop(0.3, wallC);
+      wGrad.addColorStop(1, wallD);
+      ctx.fillStyle = wGrad;
+      ctx.fillRect(0, 0, w * s, h * s);
+      // Top edge highlight
+      ctx.fillStyle = wallH;
+      ctx.fillRect(0, 0, w * s, 0.8 * s);
+      // Shadow at base
+      ctx.fillStyle = "rgba(0,0,0,0.1)";
+      ctx.fillRect(0, (h - 0.5) * s, w * s, 0.5 * s);
+      // Brick lines
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.3;
+      const brickCount = Math.floor(Math.abs(w) / 3);
+      for (let bi = 1; bi < brickCount; bi++) {
+        const bx = bi * 3 * s + (seededRandom(wi * 5 + bi + 1000) - 0.5) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, 0);
+        ctx.lineTo(bx, h * s);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+    // Sand drifts against walls
+    for (let sd = 0; sd < 6; sd++) {
+      const sdx = lbX + (seededRandom(sd * 7 + 1010) - 0.5) * 36 * s;
+      const sdy = lbY + (seededRandom(sd * 7 + 1011) - 0.3) * 16 * s;
+      ctx.fillStyle = "rgba(200,170,120,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(
+        sdx,
+        sdy,
+        5 * s,
+        2 * s,
+        seededRandom(sd * 7 + 1012) * 1.5,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Skeleton near entrance
+    ctx.fillStyle = "#d0c8b0";
+    ctx.beginPath();
+    ctx.arc(lbX - 18 * s, lbY + 10 * s, 2 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c8c0a0";
+    ctx.lineWidth = 0.8 * s;
+    ctx.beginPath();
+    ctx.moveTo(lbX - 18 * s, lbY + 12 * s);
+    ctx.lineTo(lbX - 16 * s, lbY + 16 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(lbX - 17 * s, lbY + 13 * s);
+    ctx.lineTo(lbX - 20 * s, lbY + 15 * s);
+    ctx.stroke();
+    // Eye sockets
+    ctx.fillStyle = "#1a1a10";
+    ctx.beginPath();
+    ctx.arc(lbX - 18.8 * s, lbY + 9.5 * s, 0.5 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(lbX - 17.2 * s, lbY + 9.5 * s, 0.5 * s, 0, Math.PI * 2);
+    ctx.fill();
+    // Heat shimmer over labyrinth
+    ctx.fillStyle = `rgba(220,190,130,${0.04 + Math.sin(time * 1.8) * 0.02})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      lbX,
+      lbY - 4 * s + Math.sin(time * 0.5) * 2,
+      22 * s,
+      6 * s,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // === LANDMARK: Frost Fortress walls (near x:1268, y:67) ===
+  {
+    const ffX = 1258,
+      ffY = getY(78);
+    const s = 1.8;
+    const stoneC = "#6a7a8a";
+    const stoneD = "#4a5a6a";
+    const stoneH = "#8a9aaa";
+    const iceC = "rgba(200,230,255,0.35)";
+    // Snow ground around fortress
+    ctx.fillStyle = "rgba(220,235,248,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(ffX, ffY + 8 * s, 30 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Fortress shadow
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(ffX, ffY + 6 * s, 24 * s, 6 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Main curtain wall
+    const cwGrad = ctx.createLinearGradient(ffX - 20 * s, 0, ffX + 20 * s, 0);
+    cwGrad.addColorStop(0, stoneD);
+    cwGrad.addColorStop(0.3, stoneC);
+    cwGrad.addColorStop(0.7, stoneC);
+    cwGrad.addColorStop(1, stoneD);
+    ctx.fillStyle = cwGrad;
+    ctx.fillRect(ffX - 18 * s, ffY - 8 * s, 36 * s, 14 * s);
+    // Wall cap
+    ctx.fillStyle = stoneH;
+    ctx.fillRect(ffX - 19 * s, ffY - 9 * s, 38 * s, 2 * s);
+    // Battlements on wall
+    for (let b = 0; b < 9; b++) {
+      ctx.fillStyle = stoneC;
+      ctx.fillRect(ffX - 19 * s + b * 4.5 * s, ffY - 12 * s, 3 * s, 4 * s);
+      ctx.fillStyle = iceC;
+      ctx.fillRect(ffX - 19 * s + b * 4.5 * s, ffY - 12 * s, 3 * s, 1 * s);
+    }
+    // Ice coating on wall top
+    ctx.fillStyle = iceC;
+    ctx.fillRect(ffX - 19 * s, ffY - 9 * s, 38 * s, 1.5 * s);
+    // Gate — large arched
+    ctx.fillStyle = "#1a2030";
+    ctx.beginPath();
+    ctx.moveTo(ffX - 5 * s, ffY + 6 * s);
+    ctx.lineTo(ffX - 5 * s, ffY - 2 * s);
+    ctx.arc(ffX, ffY - 2 * s, 5 * s, Math.PI, 0);
+    ctx.lineTo(ffX + 5 * s, ffY + 6 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Portcullis
+    ctx.strokeStyle = "#3a4050";
+    ctx.lineWidth = 0.6 * s;
+    for (let pg = 0; pg < 5; pg++) {
+      const pgx = ffX - 4 * s + pg * 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(pgx, ffY + 6 * s);
+      ctx.lineTo(
+        pgx,
+        ffY -
+          2 * s +
+          Math.sqrt(Math.max(0, (5 * s) ** 2 - (pgx - ffX) ** 2)) * -1,
+      );
+      ctx.stroke();
+    }
+    for (let ph = 0; ph < 3; ph++) {
+      ctx.beginPath();
+      ctx.moveTo(ffX - 4.5 * s, ffY + 4 * s - ph * 3 * s);
+      ctx.lineTo(ffX + 4.5 * s, ffY + 4 * s - ph * 3 * s);
+      ctx.stroke();
+    }
+    // Corner towers (pair)
+    for (const tx of [-18 * s, 18 * s]) {
+      const tGrad = ctx.createLinearGradient(
+        ffX + tx - 4 * s,
+        0,
+        ffX + tx + 4 * s,
+        0,
+      );
+      tGrad.addColorStop(0, stoneD);
+      tGrad.addColorStop(0.5, stoneC);
+      tGrad.addColorStop(1, stoneD);
+      ctx.fillStyle = tGrad;
+      ctx.fillRect(ffX + tx - 4 * s, ffY - 16 * s, 8 * s, 22 * s);
+      // Tower cap
+      ctx.fillStyle = stoneH;
+      ctx.fillRect(ffX + tx - 5 * s, ffY - 17 * s, 10 * s, 2 * s);
+      // Conical roof
+      ctx.fillStyle = "#4a5868";
+      ctx.beginPath();
+      ctx.moveTo(ffX + tx - 5 * s, ffY - 17 * s);
+      ctx.lineTo(ffX + tx, ffY - 24 * s);
+      ctx.lineTo(ffX + tx + 5 * s, ffY - 17 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Snow on roof
+      ctx.fillStyle = "rgba(230,240,252,0.5)";
+      ctx.beginPath();
+      ctx.moveTo(ffX + tx - 4 * s, ffY - 18 * s);
+      ctx.lineTo(ffX + tx, ffY - 23 * s);
+      ctx.lineTo(ffX + tx + 4 * s, ffY - 18 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Tower windows
+      for (let tw = 0; tw < 2; tw++) {
+        ctx.fillStyle = "#1a2030";
+        ctx.fillRect(
+          ffX + tx - 1.5 * s,
+          ffY - 14 * s + tw * 5 * s,
+          3 * s,
+          2.5 * s,
+        );
+        ctx.fillStyle = `rgba(180,200,240,${0.06 + Math.sin(time * 1.5 + tw + tx) * 0.03})`;
+        ctx.fillRect(
+          ffX + tx - 1 * s,
+          ffY - 13.5 * s + tw * 5 * s,
+          2 * s,
+          1.8 * s,
+        );
+      }
+      // Ice on tower
+      ctx.fillStyle = iceC;
+      ctx.fillRect(ffX + tx - 5 * s, ffY - 17 * s, 10 * s, 1 * s);
+    }
+    // Central keep tower
+    ctx.fillStyle = stoneD;
+    ctx.fillRect(ffX - 5 * s, ffY - 20 * s, 10 * s, 14 * s);
+    ctx.fillStyle = stoneH;
+    ctx.fillRect(ffX - 6 * s, ffY - 21 * s, 12 * s, 2 * s);
+    ctx.fillStyle = "#4a5868";
+    ctx.beginPath();
+    ctx.moveTo(ffX - 5 * s, ffY - 21 * s);
+    ctx.lineTo(ffX, ffY - 28 * s);
+    ctx.lineTo(ffX + 5 * s, ffY - 21 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(230,240,252,0.45)";
+    ctx.beginPath();
+    ctx.moveTo(ffX - 4 * s, ffY - 22 * s);
+    ctx.lineTo(ffX, ffY - 27 * s);
+    ctx.lineTo(ffX + 4 * s, ffY - 22 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Banner on central keep
+    ctx.fillStyle = "#3a4a60";
+    ctx.fillRect(ffX - 0.5, ffY - 34 * s, 1.2 * s, 8 * s);
+    const bfw = Math.sin(time * 3) * 2;
+    ctx.fillStyle = "#5a8ac0";
+    ctx.beginPath();
+    ctx.moveTo(ffX + 0.8, ffY - 33 * s);
+    ctx.quadraticCurveTo(
+      ffX + 7 * s,
+      ffY - 31 * s + bfw,
+      ffX + 9 * s,
+      ffY - 28 * s + bfw,
+    );
+    ctx.lineTo(ffX + 0.8, ffY - 26 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Snowflake emblem on banner
+    ctx.fillStyle = "rgba(230,240,255,0.6)";
+    ctx.beginPath();
+    ctx.arc(ffX + 4.5 * s, ffY - 30 * s + bfw * 0.5, 1.2 * s, 0, Math.PI * 2);
+    ctx.fill();
+    // Icicles along wall edge
+    for (let ic = 0; ic < 12; ic++) {
+      const icx = ffX - 18 * s + ic * 3.2 * s;
+      const icLen = 2 + seededRandom(ic * 3 + 1268) * 4;
+      ctx.fillStyle = "rgba(180,210,240,0.35)";
+      ctx.beginPath();
+      ctx.moveTo(icx - 0.8, ffY - 7 * s);
+      ctx.lineTo(icx, ffY - 7 * s + icLen * s);
+      ctx.lineTo(icx + 0.8, ffY - 7 * s);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Frontier Outpost palisade (near x:1332, y:28) ===
+  {
+    const foX = 1340,
+      foY = getY(20);
+    const s = 1.6;
+    // Cleared ground around outpost
+    ctx.fillStyle = "rgba(200,215,230,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(foX, foY + 5 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Wooden palisade ring — larger, more posts
+    const palisadeR = 16 * s;
+    const palisadeH = 4 * s;
+    const postCount = 16;
+    for (let p = 0; p < postCount; p++) {
+      const pa = (p / postCount) * Math.PI * 2;
+      const px = foX + Math.cos(pa) * palisadeR;
+      const py = foY + Math.sin(pa) * palisadeH;
+      const logH = (10 + seededRandom(p * 3 + 1332) * 5) * s;
+      const lean = (seededRandom(p * 3 + 1333) - 0.5) * 0.08;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(lean);
+      // Log
+      ctx.fillStyle = seededRandom(p * 3 + 1334) > 0.5 ? "#3a2a18" : "#3e2e1c";
+      ctx.fillRect(-1.2 * s, -logH, 2.4 * s, logH);
+      // Bark texture
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.3;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -logH);
+      ctx.stroke();
+      // Pointed top
+      ctx.fillStyle = "#4a3a28";
+      ctx.beginPath();
+      ctx.moveTo(-1.5 * s, -logH);
+      ctx.lineTo(0, -logH - 3 * s);
+      ctx.lineTo(1.5 * s, -logH);
+      ctx.closePath();
+      ctx.fill();
+      // Snow cap
+      ctx.fillStyle = "rgba(230,240,250,0.55)";
+      ctx.beginPath();
+      ctx.ellipse(0, -logH - 2.5 * s, 2 * s, 1.2 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Horizontal reinforcing beams
+    ctx.strokeStyle = "#3a2a18";
+    ctx.lineWidth = 1.2 * s;
+    for (const beamH of [0.3, 0.6]) {
+      ctx.beginPath();
+      for (let p = 0; p <= postCount; p++) {
+        const pa = (p / postCount) * Math.PI * 2;
+        const px = foX + Math.cos(pa) * palisadeR;
+        const py = foY + Math.sin(pa) * palisadeH;
+        const logH = (10 + seededRandom((p % postCount) * 3 + 1332) * 5) * s;
+        const bx = px,
+          by = py - logH * beamH;
+        if (p === 0) ctx.moveTo(bx, by);
+        else ctx.lineTo(bx, by);
+      }
+      ctx.stroke();
+    }
+    // Gate opening (front, bottom of palisade)
+    ctx.fillStyle = "rgba(60,50,30,0.2)";
+    ctx.fillRect(foX - 4 * s, foY + palisadeH - 2 * s, 8 * s, 6 * s);
+    // Central watchtower — taller, with platform
+    const twGrad = ctx.createLinearGradient(foX - 3 * s, 0, foX + 3 * s, 0);
+    twGrad.addColorStop(0, "#2a1a10");
+    twGrad.addColorStop(0.5, "#3a2a18");
+    twGrad.addColorStop(1, "#2a1a10");
+    ctx.fillStyle = twGrad;
+    ctx.fillRect(foX - 2.5 * s, foY - 20 * s, 5 * s, 24 * s);
+    // Platform
+    ctx.fillStyle = "#4a3a28";
+    ctx.fillRect(foX - 6 * s, foY - 22 * s, 12 * s, 3 * s);
+    // Railing on platform
+    ctx.strokeStyle = "#3a2a18";
+    ctx.lineWidth = 0.8 * s;
+    ctx.strokeRect(foX - 6 * s, foY - 26 * s, 12 * s, 4 * s);
+    // Roof over platform
+    ctx.fillStyle = "#2a1a10";
+    ctx.beginPath();
+    ctx.moveTo(foX - 7 * s, foY - 26 * s);
+    ctx.lineTo(foX, foY - 30 * s);
+    ctx.lineTo(foX + 7 * s, foY - 26 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Snow on roof
+    ctx.fillStyle = "rgba(230,240,252,0.5)";
+    ctx.beginPath();
+    ctx.moveTo(foX - 6 * s, foY - 27 * s);
+    ctx.lineTo(foX, foY - 29 * s);
+    ctx.lineTo(foX + 6 * s, foY - 27 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Campfire inside compound
+    const cfX = foX + 6 * s,
+      cfY = foY + 1 * s;
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(cfX, cfY + 2, 4 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Fire stones
+    for (let fs = 0; fs < 6; fs++) {
+      const fsa = (fs / 6) * Math.PI * 2;
+      ctx.fillStyle = "#4a4040";
+      ctx.beginPath();
+      ctx.arc(
+        cfX + Math.cos(fsa) * 2.5 * s,
+        cfY + Math.sin(fsa) * 1.2 * s,
+        1 * s,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Fire
+    const fireH = 4 + Math.sin(time * 6) * 1.5;
+    const fireGlow = ctx.createRadialGradient(
+      cfX,
+      cfY - 1,
+      0,
+      cfX,
+      cfY - 1,
+      6 * s,
+    );
+    fireGlow.addColorStop(
+      0,
+      `rgba(255,150,30,${0.15 + Math.sin(time * 4) * 0.05})`,
+    );
+    fireGlow.addColorStop(1, "rgba(255,80,10,0)");
+    ctx.fillStyle = fireGlow;
+    ctx.beginPath();
+    ctx.arc(cfX, cfY - 1, 6 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,120,20,${0.6 + Math.sin(time * 5) * 0.2})`;
+    ctx.beginPath();
+    ctx.moveTo(cfX - 1.5 * s, cfY);
+    ctx.quadraticCurveTo(
+      cfX + Math.sin(time * 7) * 1.5,
+      cfY - fireH * s * 0.6,
+      cfX,
+      cfY - fireH * s,
+    );
+    ctx.quadraticCurveTo(
+      cfX - Math.sin(time * 8) * 1.5,
+      cfY - fireH * s * 0.6,
+      cfX + 1.5 * s,
+      cfY,
+    );
+    ctx.closePath();
+    ctx.fill();
+    // Smoke
+    for (let sm = 0; sm < 3; sm++) {
+      const smY = cfY - (fireH + 3 + sm * 4) * s - ((time * 10 + sm * 4) % 12);
+      const smX = cfX + Math.sin(time * 1.5 + sm) * 2;
+      ctx.fillStyle = `rgba(150,160,170,${0.12 - sm * 0.03})`;
+      ctx.beginPath();
+      ctx.arc(smX, smY, (1.5 + sm * 0.8) * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Glacier formations (near x:1142, y:48) ===
+  {
+    const glX = 1125,
+      glY = getY(36);
+    const s = 1.8;
+    // Glacier base — wide ice sheet
+    ctx.fillStyle = "rgba(160,200,230,0.15)";
+    ctx.beginPath();
+    ctx.ellipse(glX, glY + 4 * s, 24 * s, 8 * s, -0.05, 0, Math.PI * 2);
+    ctx.fill();
+    // Main glacier body
+    const iceGrad = ctx.createLinearGradient(
+      glX - 18 * s,
+      glY - 22 * s,
+      glX + 10 * s,
+      glY + 4 * s,
+    );
+    iceGrad.addColorStop(0, "rgba(130,190,230,0.55)");
+    iceGrad.addColorStop(0.3, "rgba(150,210,240,0.5)");
+    iceGrad.addColorStop(0.7, "rgba(120,180,220,0.4)");
+    iceGrad.addColorStop(1, "rgba(180,220,245,0.25)");
+    ctx.fillStyle = iceGrad;
+    ctx.beginPath();
+    ctx.moveTo(glX - 18 * s, glY + 4 * s);
+    ctx.lineTo(glX - 14 * s, glY - 8 * s);
+    ctx.lineTo(glX - 10 * s, glY - 5 * s);
+    ctx.lineTo(glX - 6 * s, glY - 16 * s);
+    ctx.lineTo(glX - 1 * s, glY - 12 * s);
+    ctx.lineTo(glX + 3 * s, glY - 22 * s);
+    ctx.lineTo(glX + 8 * s, glY - 14 * s);
+    ctx.lineTo(glX + 12 * s, glY - 18 * s);
+    ctx.lineTo(glX + 16 * s, glY - 10 * s);
+    ctx.lineTo(glX + 20 * s, glY + 4 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Crevasse lines — deep blue cracks
+    ctx.strokeStyle = "rgba(60,100,160,0.3)";
+    ctx.lineWidth = 0.8 * s;
+    const crevasses: [number, number, number, number][] = [
+      [-12, -4, -8, -14],
+      [-4, -8, 0, -20],
+      [4, -6, 8, -16],
+      [10, -4, 14, -12],
+      [-2, 0, 2, -8],
+    ];
+    crevasses.forEach(([x1, y1, x2, y2]) => {
+      ctx.beginPath();
+      ctx.moveTo(glX + x1 * s, glY + y1 * s);
+      ctx.quadraticCurveTo(
+        glX + (x1 + x2) * 0.5 * s + seededRandom(x1 + y1 + 1135) * 3,
+        glY + (y1 + y2) * 0.5 * s,
+        glX + x2 * s,
+        glY + y2 * s,
+      );
+      ctx.stroke();
+    });
+    // Sheen highlights — bright reflective patches
+    ctx.fillStyle = "rgba(220,240,255,0.28)";
+    ctx.beginPath();
+    ctx.moveTo(glX - 8 * s, glY - 10 * s);
+    ctx.lineTo(glX - 4 * s, glY - 6 * s);
+    ctx.lineTo(glX + 1 * s, glY - 18 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "rgba(230,245,255,0.2)";
+    ctx.beginPath();
+    ctx.moveTo(glX + 6 * s, glY - 10 * s);
+    ctx.lineTo(glX + 10 * s, glY - 6 * s);
+    ctx.lineTo(glX + 13 * s, glY - 14 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Separate ice spires to the right
+    const spireGrad = ctx.createLinearGradient(
+      glX + 22 * s,
+      glY - 10 * s,
+      glX + 28 * s,
+      glY + 2 * s,
+    );
+    spireGrad.addColorStop(0, "rgba(140,200,235,0.45)");
+    spireGrad.addColorStop(1, "rgba(170,215,240,0.25)");
+    ctx.fillStyle = spireGrad;
+    ctx.beginPath();
+    ctx.moveTo(glX + 22 * s, glY + 3 * s);
+    ctx.lineTo(glX + 24 * s, glY - 8 * s);
+    ctx.lineTo(glX + 27 * s, glY - 4 * s);
+    ctx.lineTo(glX + 29 * s, glY - 12 * s);
+    ctx.lineTo(glX + 32 * s, glY + 3 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Frozen waterfall effect on left side
+    ctx.fillStyle = "rgba(160,210,240,0.3)";
+    ctx.beginPath();
+    ctx.moveTo(glX - 16 * s, glY - 4 * s);
+    ctx.quadraticCurveTo(glX - 20 * s, glY + 2 * s, glX - 18 * s, glY + 6 * s);
+    ctx.quadraticCurveTo(glX - 22 * s, glY + 4 * s, glX - 20 * s, glY - 2 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Icicles along bottom edge
+    for (let ic = 0; ic < 8; ic++) {
+      const icx = glX - 14 * s + ic * 4.5 * s;
+      const icy = glY + 3 * s;
+      const icLen = (2 + seededRandom(ic * 3 + 1135) * 4) * s;
+      ctx.fillStyle = "rgba(180,215,245,0.35)";
+      ctx.beginPath();
+      ctx.moveTo(icx - 0.8, icy);
+      ctx.lineTo(icx, icy + icLen);
+      ctx.lineTo(icx + 0.8, icy);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Sparkle effect
+    for (let sp = 0; sp < 4; sp++) {
+      const spPhase = (time * 2 + sp * 1.5) % 3;
+      const spA =
+        spPhase < 1 ? spPhase * 0.3 : Math.max(0, 0.3 - (spPhase - 1) * 0.15);
+      const spx = glX + (seededRandom(sp * 7 + 1140) - 0.4) * 30 * s;
+      const spy = glY + (seededRandom(sp * 7 + 1141) - 0.7) * 20 * s;
+      ctx.fillStyle = `rgba(255,255,255,${spA})`;
+      ctx.beginPath();
+      ctx.arc(spx, spy, 1.2 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Obsidian Throne (near x:1702, y:59) ===
+  {
+    const otX = 1718,
+      otY = getY(70);
+    const s = 1.8;
+    // Lava moat ring
+    const moatGlow = ctx.createRadialGradient(
+      otX,
+      otY + 6 * s,
+      16 * s,
+      otX,
+      otY + 6 * s,
+      22 * s,
+    );
+    moatGlow.addColorStop(0, "rgba(200,50,10,0)");
+    moatGlow.addColorStop(
+      0.4,
+      `rgba(220,60,15,${0.12 + Math.sin(time * 1.5) * 0.06})`,
+    );
+    moatGlow.addColorStop(
+      0.7,
+      `rgba(255,80,20,${0.18 + Math.sin(time * 2) * 0.08})`,
+    );
+    moatGlow.addColorStop(1, "rgba(180,30,5,0)");
+    ctx.fillStyle = moatGlow;
+    ctx.beginPath();
+    ctx.ellipse(otX, otY + 6 * s, 22 * s, 9 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Obsidian platform (raised dais)
+    ctx.fillStyle = "#0a0808";
+    ctx.beginPath();
+    ctx.ellipse(otX, otY + 6 * s, 16 * s, 6 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Dais steps
+    for (let step = 0; step < 3; step++) {
+      const stepR = (14 - step * 3) * s;
+      const stepH = (5 - step * 1.2) * s;
+      ctx.fillStyle = step % 2 === 0 ? "#1a1018" : "#140e14";
+      ctx.beginPath();
+      ctx.ellipse(otX, otY + stepH, stepR, stepR * 0.38, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Skull decorations on dais edge
+    for (let sk = 0; sk < 6; sk++) {
+      const ska = (sk / 6) * Math.PI * 2;
+      const skx = otX + Math.cos(ska) * 12 * s;
+      const sky = otY + Math.sin(ska) * 4.5 * s + 2 * s;
+      ctx.fillStyle = "#c8b8a0";
+      ctx.beginPath();
+      ctx.arc(skx, sky, 1.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1a0a08";
+      ctx.beginPath();
+      ctx.arc(skx - 0.5 * s, sky - 0.3 * s, 0.4 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(skx + 0.5 * s, sky - 0.3 * s, 0.4 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Throne back — tall, imposing, angular with spikes
+    const throneGrad = ctx.createLinearGradient(
+      otX - 8 * s,
+      otY - 28 * s,
+      otX + 8 * s,
+      otY,
+    );
+    throneGrad.addColorStop(0, "#1a1018");
+    throneGrad.addColorStop(0.3, "#2a2028");
+    throneGrad.addColorStop(0.7, "#1a1418");
+    throneGrad.addColorStop(1, "#0a0808");
+    ctx.fillStyle = throneGrad;
+    ctx.beginPath();
+    ctx.moveTo(otX - 8 * s, otY + 2 * s);
+    ctx.lineTo(otX - 7 * s, otY - 16 * s);
+    ctx.lineTo(otX - 5 * s, otY - 22 * s);
+    ctx.lineTo(otX - 3 * s, otY - 28 * s);
+    ctx.lineTo(otX - 1 * s, otY - 24 * s);
+    ctx.lineTo(otX, otY - 30 * s);
+    ctx.lineTo(otX + 1 * s, otY - 24 * s);
+    ctx.lineTo(otX + 3 * s, otY - 28 * s);
+    ctx.lineTo(otX + 5 * s, otY - 22 * s);
+    ctx.lineTo(otX + 7 * s, otY - 16 * s);
+    ctx.lineTo(otX + 8 * s, otY + 2 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Obsidian sheen on throne
+    ctx.fillStyle = "rgba(60,50,80,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(otX - 3 * s, otY - 20 * s);
+    ctx.lineTo(otX - 1 * s, otY - 10 * s);
+    ctx.lineTo(otX + 2 * s, otY - 24 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Throne seat
+    ctx.fillStyle = "#2a1a20";
+    ctx.fillRect(otX - 6 * s, otY - 4 * s, 12 * s, 5 * s);
+    // Armrests with claw tips
+    for (const arm of [-1, 1]) {
+      ctx.fillStyle = "#1a1018";
+      ctx.fillRect(otX + arm * 7 * s, otY - 7 * s, 2.5 * s, 10 * s);
+      // Claw/skull at armrest end
+      ctx.fillStyle = "#2a2028";
+      ctx.beginPath();
+      ctx.arc(otX + arm * 8.2 * s, otY - 8 * s, 2 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255,40,10,${0.3 + Math.sin(time * 2.5 + arm) * 0.15})`;
+      ctx.beginPath();
+      ctx.arc(otX + arm * 8.2 * s, otY - 8.5 * s, 0.8 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Glowing runes on throne back — more, pulsing
+    const runeA = 0.35 + Math.sin(time * 2) * 0.15;
+    ctx.fillStyle = `rgba(255,60,20,${runeA})`;
+    const runePositions = [
+      [0, -26],
+      [-2, -20],
+      [2, -20],
+      [-4, -14],
+      [4, -14],
+      [0, -18],
+      [-1, -12],
+      [1, -12],
+      [0, -8],
+    ];
+    runePositions.forEach(([rx, ry]) => {
+      ctx.beginPath();
+      ctx.arc(otX + rx * s, otY + ry * s, 1.2 * s, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    // Rune connecting lines
+    ctx.strokeStyle = `rgba(255,50,15,${runeA * 0.5})`;
+    ctx.lineWidth = 0.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(otX - 4 * s, otY - 14 * s);
+    ctx.lineTo(otX, otY - 18 * s);
+    ctx.lineTo(otX + 4 * s, otY - 14 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(otX, otY - 26 * s);
+    ctx.lineTo(otX - 2 * s, otY - 20 * s);
+    ctx.lineTo(otX + 2 * s, otY - 20 * s);
+    ctx.closePath();
+    ctx.stroke();
+    // Pulsing power aura
+    const auraGrad = ctx.createRadialGradient(
+      otX,
+      otY - 12 * s,
+      0,
+      otX,
+      otY - 12 * s,
+      24 * s,
+    );
+    auraGrad.addColorStop(
+      0,
+      `rgba(200,40,10,${0.1 + Math.sin(time * 1.5) * 0.05})`,
+    );
+    auraGrad.addColorStop(
+      0.5,
+      `rgba(180,30,8,${0.05 + Math.sin(time * 1.5) * 0.03})`,
+    );
+    auraGrad.addColorStop(1, "rgba(150,20,5,0)");
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(otX, otY - 12 * s, 24 * s, 0, Math.PI * 2);
+    ctx.fill();
+    // Floating embers around throne
+    for (let em = 0; em < 6; em++) {
+      const emPhase = (time * 1.2 + em * 1.1) % 4;
+      const emA = Math.sin((emPhase * Math.PI) / 4) * 0.5;
+      const emX = otX + Math.sin(time * 0.8 + em * 1.5) * 12 * s;
+      const emY = otY - 10 * s - emPhase * 6 * s;
+      ctx.fillStyle = `rgba(255,100,20,${emA})`;
+      ctx.beginPath();
+      ctx.arc(emX, emY, 0.8 * s, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Ashen Spiral geyser vents (near x:1612, y:72) ===
+  {
+    const gsX = 1620,
+      gsY = getY(78);
+    const s = 1.6;
+    // Scorched spiral crack pattern on ground
+    ctx.strokeStyle = "rgba(180,60,10,0.15)";
+    ctx.lineWidth = 1.2 * s;
+    ctx.beginPath();
+    for (let a = 0; a < Math.PI * 4; a += 0.15) {
+      const spiralR = 4 * s + a * 3 * s;
+      const sx = gsX + Math.cos(a) * spiralR;
+      const sy = gsY + Math.sin(a) * spiralR * 0.4;
+      if (a === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    // Inner glow of spiral
+    ctx.strokeStyle = `rgba(255,80,20,${0.06 + Math.sin(time * 1.2) * 0.03})`;
+    ctx.lineWidth = 3 * s;
+    ctx.beginPath();
+    for (let a = 0; a < Math.PI * 3; a += 0.2) {
+      const spiralR = 3 * s + a * 2.5 * s;
+      const sx = gsX + Math.cos(a) * spiralR;
+      const sy = gsY + Math.sin(a) * spiralR * 0.4;
+      if (a === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    // 6 geyser vents along the spiral
+    for (let g = 0; g < 6; g++) {
+      const gAngle = g * 1.2;
+      const gR = 5 * s + gAngle * 2.8 * s;
+      const gx = gsX + Math.cos(gAngle) * gR;
+      const gy = gsY + Math.sin(gAngle) * gR * 0.4;
+      // Vent mound
+      ctx.fillStyle = "#2a1a08";
+      ctx.beginPath();
+      ctx.ellipse(gx, gy, 5 * s, 2.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Vent hole
+      ctx.fillStyle = "#1a0a05";
+      ctx.beginPath();
+      ctx.ellipse(gx, gy, 3.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Rim glow
+      const rimA = 0.3 + Math.sin(time * 3 + g * 1.2) * 0.15;
+      ctx.strokeStyle = `rgba(255,80,20,${rimA})`;
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.ellipse(gx, gy, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // Fire/steam burst — staggered timing
+      const burstPhase = (time * 1.8 + g * 1.3) % 5;
+      if (burstPhase < 2) {
+        const burstH = burstPhase * 12 * s;
+        const burstA = 0.4 * (1 - burstPhase / 2);
+        const burstW = (2 + burstPhase * 1.5) * s;
+        // Fire core
+        ctx.fillStyle = `rgba(255,180,50,${burstA})`;
+        ctx.beginPath();
+        ctx.moveTo(gx - burstW * 0.5, gy);
+        ctx.quadraticCurveTo(
+          gx + Math.sin(time * 6 + g) * 2 * s,
+          gy - burstH * 0.5,
+          gx,
+          gy - burstH,
+        );
+        ctx.quadraticCurveTo(
+          gx - Math.sin(time * 7 + g) * 2 * s,
+          gy - burstH * 0.5,
+          gx + burstW * 0.5,
+          gy,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Outer fire
+        ctx.fillStyle = `rgba(255,80,20,${burstA * 0.6})`;
+        ctx.beginPath();
+        ctx.moveTo(gx - burstW, gy);
+        ctx.quadraticCurveTo(
+          gx + Math.sin(time * 5 + g) * 3 * s,
+          gy - burstH * 0.4,
+          gx,
+          gy - burstH * 0.8,
+        );
+        ctx.quadraticCurveTo(
+          gx - Math.sin(time * 5.5 + g) * 3 * s,
+          gy - burstH * 0.4,
+          gx + burstW,
+          gy,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Sparks
+        for (let sp = 0; sp < 3; sp++) {
+          const spY = gy - burstH * (0.3 + sp * 0.2);
+          const spX = gx + Math.sin(time * 8 + sp + g) * 4 * s;
+          ctx.fillStyle = `rgba(255,200,80,${burstA * 0.8})`;
+          ctx.beginPath();
+          ctx.arc(spX, spY, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      // Residual heat haze
+      const hazeA = 0.04 + Math.sin(time * 1.5 + g * 0.8) * 0.02;
+      ctx.fillStyle = `rgba(200,100,40,${hazeA})`;
+      ctx.beginPath();
+      ctx.ellipse(gx, gy - 6 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LANDMARK: Caldera Basin vent (near x:1592, y:37) ===
+  {
+    const cbX = 1584,
+      cbY = getY(30);
+    const s = 1.7;
+    // Outer rocky rim
+    ctx.fillStyle = "#2a1a08";
+    ctx.beginPath();
+    ctx.ellipse(cbX, cbY + 2 * s, 20 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Rocky rim detail — jagged boulders around edge
+    for (let rb = 0; rb < 10; rb++) {
+      const rba = (rb / 10) * Math.PI * 2;
+      const rbx = cbX + Math.cos(rba) * 17 * s;
+      const rby = cbY + Math.sin(rba) * 6.5 * s + 2 * s;
+      const rbs = (2 + seededRandom(rb * 5 + 1585) * 3) * s;
+      ctx.fillStyle = seededRandom(rb * 5 + 1586) > 0.5 ? "#3a2a14" : "#2a1a0c";
+      ctx.beginPath();
+      ctx.ellipse(
+        rbx,
+        rby,
+        rbs,
+        rbs * 0.6,
+        seededRandom(rb * 5 + 1587) * 1.5,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Inner caldera depression
+    ctx.fillStyle = "#1a0a04";
+    ctx.beginPath();
+    ctx.ellipse(cbX, cbY + 1 * s, 14 * s, 5.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Lava surface
+    const lavaGrad = ctx.createRadialGradient(
+      cbX - 2 * s,
+      cbY,
+      0,
+      cbX,
+      cbY,
+      12 * s,
+    );
+    lavaGrad.addColorStop(
+      0,
+      `rgba(255,120,30,${0.4 + Math.sin(time * 1.8) * 0.15})`,
+    );
+    lavaGrad.addColorStop(
+      0.3,
+      `rgba(255,80,20,${0.3 + Math.sin(time * 2) * 0.1})`,
+    );
+    lavaGrad.addColorStop(
+      0.7,
+      `rgba(200,40,10,${0.15 + Math.sin(time * 1.8) * 0.08})`,
+    );
+    lavaGrad.addColorStop(1, "rgba(120,20,5,0)");
+    ctx.fillStyle = lavaGrad;
+    ctx.beginPath();
+    ctx.ellipse(cbX, cbY + 1 * s, 12 * s, 4.5 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Dark cooled crust patches on lava
+    for (let cr = 0; cr < 5; cr++) {
+      const crx = cbX + (seededRandom(cr * 7 + 1590) - 0.5) * 16 * s;
+      const cry = cbY + (seededRandom(cr * 7 + 1591) - 0.5) * 4 * s;
+      ctx.fillStyle = `rgba(30,10,5,${0.3 + Math.sin(time * 0.8 + cr * 1.5) * 0.1})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        crx,
+        cry,
+        (3 + seededRandom(cr * 7 + 1592) * 3) * s,
+        (1 + seededRandom(cr * 7 + 1593) * 1.5) * s,
+        seededRandom(cr * 7 + 1594),
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Bubbles in lava
+    for (let bub = 0; bub < 4; bub++) {
+      const bubPhase = (time * 1.2 + bub * 1.3) % 2.5;
+      const bubA = Math.sin((bubPhase * Math.PI) / 2.5) * 0.35;
+      const bubR = (1.5 + bubPhase * 1.5) * s;
+      const bubX = cbX + (seededRandom(bub * 3 + 1595) - 0.5) * 14 * s;
+      const bubY = cbY + (seededRandom(bub * 3 + 1596) - 0.5) * 4 * s;
+      ctx.fillStyle = `rgba(255,150,40,${bubA})`;
+      ctx.beginPath();
+      ctx.arc(bubX, bubY, bubR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Heat shimmer / steam rising
+    for (let st = 0; st < 4; st++) {
+      const stPhase = (time * 0.6 + st * 0.8) % 3;
+      const stA = Math.max(0, 0.12 - stPhase * 0.04);
+      const stx =
+        cbX +
+        (seededRandom(st * 5 + 1598) - 0.5) * 12 * s +
+        Math.sin(time * 1.2 + st) * 3;
+      const sty = cbY - 4 * s - stPhase * 8 * s;
+      ctx.fillStyle = `rgba(180,100,50,${stA})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        stx,
+        sty,
+        (3 + stPhase * 2) * s,
+        (1.5 + stPhase) * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    // Ambient glow
+    const ambGlow = ctx.createRadialGradient(cbX, cbY, 0, cbX, cbY, 22 * s);
+    ambGlow.addColorStop(
+      0,
+      `rgba(255,80,20,${0.06 + Math.sin(time * 1.5) * 0.03})`,
+    );
+    ambGlow.addColorStop(1, "rgba(200,40,10,0)");
+    ctx.fillStyle = ambGlow;
+    ctx.beginPath();
+    ctx.arc(cbX, cbY, 22 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   type NodePalette = {
     glowSelected: string;
@@ -10268,7 +14187,8 @@ export const drawWorldMapCanvas = ({
       }
 
       // Draw first tag badge in top-right corner
-      const tagText = level.kind === "challenge" ? "Challenge" : (level.tags[0] ?? "");
+      const tagText =
+        level.kind === "challenge" ? "Challenge" : (level.tags[0] ?? "");
       if (tagText) {
         ctx.save();
         ctx.font = "bold 8px 'bc-novatica-cyr', sans-serif";
@@ -10280,11 +14200,15 @@ export const drawWorldMapCanvas = ({
         const tagY = cardY + 4;
 
         const isChallenge = level.kind === "challenge";
-        ctx.fillStyle = isChallenge ? "rgba(160,60,40,0.92)" : "rgba(20,18,14,0.85)";
+        ctx.fillStyle = isChallenge
+          ? "rgba(160,60,40,0.92)"
+          : "rgba(20,18,14,0.85)";
         ctx.beginPath();
         ctx.roundRect(tagX, tagY, tagW, tagH, 3);
         ctx.fill();
-        ctx.strokeStyle = isChallenge ? "rgba(255,140,80,0.6)" : "rgba(180,150,80,0.5)";
+        ctx.strokeStyle = isChallenge
+          ? "rgba(255,140,80,0.6)"
+          : "rgba(180,150,80,0.5)";
         ctx.lineWidth = 0.8;
         ctx.stroke();
 

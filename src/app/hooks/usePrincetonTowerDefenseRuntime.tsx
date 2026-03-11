@@ -5488,10 +5488,21 @@ export function usePrincetonTowerDefenseRuntime() {
             const decayTime = archStats.crescendoDecayTime || 2500;
             const currentStacks = tower.crescendoStacks || 0;
 
-            // Decay: reset stacks if idle too long
+            // Decay: gradually lose stacks one at a time when idle
             const effectiveDecay = gameSpeed > 0 ? decayTime / gameSpeed : decayTime;
             if (currentStacks > 0 && now - tower.lastAttack > effectiveDecay) {
-              queueTowerPatch(tower.id, { crescendoStacks: 0 });
+              const decayInterval = effectiveDecay / maxStacks;
+              const decayStartTime = tower.lastAttack + effectiveDecay;
+              const lastDecay =
+                tower.lastCrescendoDecay && tower.lastCrescendoDecay >= decayStartTime
+                  ? tower.lastCrescendoDecay
+                  : decayStartTime - decayInterval;
+              if (now - lastDecay >= decayInterval) {
+                queueTowerPatch(tower.id, {
+                  crescendoStacks: currentStacks - 1,
+                  lastCrescendoDecay: now,
+                });
+              }
             }
 
             // Crescendo-adjusted cooldown: base * speedMult^stacks

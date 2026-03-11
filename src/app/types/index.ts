@@ -119,6 +119,7 @@ export interface Tower {
   chainTargets?: string[];
   damageAccumulator?: number;
   crescendoStacks?: number;
+  lastCrescendoDecay?: number;
   // Buff state
   damageBoost?: number;
   rangeBoost?: number;

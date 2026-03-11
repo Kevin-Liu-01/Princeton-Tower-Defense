@@ -1,7 +1,7 @@
 import { WORLD_LEVELS, DEV_LEVELS, type LevelNode } from "./worldMapData";
 
 export const getWorldMapY = (pct: number, mapHeight: number): number => {
-  const topMargin = 80;
+  const topMargin = 55;
   const bottomMargin = 50;
   const usableHeight = mapHeight - topMargin - bottomMargin;
   const remapped = (pct - 20) / 60;
