@@ -624,16 +624,41 @@ export function DefeatScreen({
             </div>
 
             {/* ===== Encouragement ===== */}
-            <div className="px-3 sm:px-5 py-2 sm:py-3">
-              <div className="rounded-xl p-3 flex items-start gap-2.5" style={{
-                background: "linear-gradient(135deg, rgba(120,80,20,0.08), rgba(80,50,10,0.06))",
+            <div className="px-3 sm:px-5 py-3 sm:py-4">
+              <div className="relative rounded-xl overflow-hidden" style={{
+                background: "linear-gradient(180deg, rgba(60,42,14,0.14) 0%, rgba(40,28,10,0.10) 50%, rgba(60,42,14,0.14) 100%)",
                 border: `1.5px solid ${GOLD.innerBorder12}`,
-                boxShadow: "inset 0 0 10px rgba(180,140,60,0.03)",
+                boxShadow: `inset 0 0 20px rgba(180,140,60,0.04), 0 0 12px rgba(180,140,60,0.03)`,
               }}>
-                <Flame size={14} className="text-amber-500/70 mt-0.5 shrink-0" />
-                <div>
-                  <span className="text-[9px] font-bold text-amber-500/60 tracking-[0.2em] uppercase">Wisdom</span>
-                  <p className="text-xs text-amber-400/70 leading-relaxed mt-0.5">{encouragement}</p>
+                {/* Top inner highlight */}
+                <div className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.15) 30%, rgba(180,140,60,0.25) 50%, rgba(180,140,60,0.15) 70%, transparent)" }} />
+                {/* Bottom inner highlight */}
+                <div className="absolute inset-x-0 bottom-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.1) 30%, rgba(180,140,60,0.18) 50%, rgba(180,140,60,0.1) 70%, transparent)" }} />
+
+                <div className="flex flex-col items-center px-5 sm:px-8 py-4 sm:py-5">
+                  {/* Glowing flame icon */}
+                  <div className="relative mb-2.5">
+                    <div className="absolute inset-0 rounded-full" style={{
+                      background: "radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(180,140,60,0.06) 50%, transparent 70%)",
+                      transform: "scale(2.5)",
+                    }} />
+                    <Flame size={20} className="relative text-amber-500/80" style={{ filter: "drop-shadow(0 0 6px rgba(245,158,11,0.35))" }} />
+                  </div>
+
+                  {/* Label with decorative lines */}
+                  <div className="flex items-center gap-3 w-full mb-3">
+                    <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))" }} />
+                    <span className="text-[9px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(245,180,60,0.65)" }}>Wisdom</span>
+                    <div className="flex-1 h-px" style={{ background: "linear-gradient(270deg, transparent, rgba(180,140,60,0.25) 60%, rgba(180,140,60,0.35))" }} />
+                  </div>
+
+                  {/* Quote text */}
+                  <p className="text-xs sm:text-sm text-center leading-relaxed italic" style={{
+                    color: "rgba(252,211,77,0.72)",
+                    textShadow: "0 0 16px rgba(180,140,60,0.12)",
+                  }}>
+                    {encouragement}
+                  </p>
                 </div>
               </div>
             </div>

@@ -4,7 +4,11 @@ import {
   WEAPON_LIMITS,
   TROOP_MASTERWORK_STYLES,
   drawTroopMasterworkFinish,
+  drawHorseTail,
+  drawMuscularHorseBody,
+  drawMuscularHorseLeg,
 } from "./troopHelpers";
+import type { HorseLegColors } from "./troopHelpers";
 
 export function drawCavalryTroop(
   ctx: CanvasRenderingContext2D,
@@ -132,57 +136,23 @@ export function drawCavalryTroop(
   }
 
   // === MAJESTIC ROYAL WAR STEED ===
-  // Horse body with rich gradient
-  const bodyGrad = ctx.createRadialGradient(
-    x - size * 0.1,
-    y + size * 0.05,
-    0,
+  const bodyY = y + size * 0.18 + gallop * 0.15;
+  drawMuscularHorseBody(
+    ctx,
     x,
-    y + size * 0.15,
-    size * 0.55,
-  );
-  bodyGrad.addColorStop(0, horseCoatLight);
-  bodyGrad.addColorStop(0.3, "#4a2f1d");
-  bodyGrad.addColorStop(0.6, horseCoatMid);
-  bodyGrad.addColorStop(1, horseCoatDark);
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.18 + gallop * 0.15,
+    bodyY,
     size * 0.48,
     size * 0.31,
-    0,
-    0,
-    Math.PI * 2,
+    size,
+    zoom,
+    {
+      coatLight: horseCoatLight,
+      coatMid: horseCoatMid,
+      coatDark: horseCoatDark,
+      muscleHighlight: "rgba(90, 70, 45, 0.2)",
+      muscleShadow: "rgba(30, 20, 10, 0.35)",
+    },
   );
-  ctx.fill();
-
-  // Muscular definition on horse body
-  ctx.strokeStyle = "rgba(60, 40, 20, 0.4)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.15,
-    y + size * 0.15 + gallop * 0.15,
-    size * 0.18,
-    size * 0.12,
-    -0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.15,
-    y + size * 0.2 + gallop * 0.15,
-    size * 0.2,
-    size * 0.14,
-    0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
 
   // === ORNATE ROYAL BARDING (horse armor) ===
   // Base barding plate with gradient
@@ -388,131 +358,31 @@ export function drawCavalryTroop(
   ctx.stroke();
 
   // === HORSE LEGS (jointed gait with angled hooves) ===
-  const drawCavalryHorseLeg = (
-    legX: number,
-    legY: number,
-    stride: number,
-    bendPhase: number,
-  ) => {
-    const upperLen = size * 0.17;
-    const lowerLen = size * 0.19;
-    const kneeSwing = Math.sin(time * 8 + bendPhase) * size * 0.03;
-    const fetlockSwing = Math.sin(time * 8 + bendPhase + 0.8) * size * 0.025;
-
-    ctx.save();
-    ctx.translate(legX, legY);
-    ctx.rotate(stride);
-
-    // Upper leg
-    const upperGrad = ctx.createLinearGradient(
-      -size * 0.05,
-      0,
-      size * 0.05,
-      upperLen,
-    );
-    upperGrad.addColorStop(0, horseCoatLight);
-    upperGrad.addColorStop(0.6, horseCoatMid);
-    upperGrad.addColorStop(1, horseCoatDark);
-    ctx.fillStyle = upperGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.045, 0);
-    ctx.quadraticCurveTo(
-      -size * 0.06,
-      upperLen * 0.55,
-      kneeSwing - size * 0.04,
-      upperLen,
-    );
-    ctx.lineTo(kneeSwing + size * 0.04, upperLen);
-    ctx.quadraticCurveTo(size * 0.06, upperLen * 0.55, size * 0.045, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Knee cap
-    ctx.fillStyle = "rgba(90, 63, 41, 0.7)";
-    ctx.beginPath();
-    ctx.ellipse(
-      kneeSwing,
-      upperLen,
-      size * 0.042,
-      size * 0.028,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Lower leg
-    const fetlockX = kneeSwing + fetlockSwing;
-    const lowerGrad = ctx.createLinearGradient(
-      kneeSwing - size * 0.045,
-      upperLen,
-      fetlockX + size * 0.045,
-      upperLen + lowerLen,
-    );
-    lowerGrad.addColorStop(0, "#595f6d");
-    lowerGrad.addColorStop(0.45, "#7a8394");
-    lowerGrad.addColorStop(1, "#4f5666");
-    ctx.fillStyle = lowerGrad;
-    ctx.beginPath();
-    ctx.moveTo(kneeSwing - size * 0.04, upperLen);
-    ctx.lineTo(fetlockX - size * 0.036, upperLen + lowerLen);
-    ctx.lineTo(fetlockX + size * 0.036, upperLen + lowerLen);
-    ctx.lineTo(kneeSwing + size * 0.04, upperLen);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = `rgba(179, 135, 63, 0.75)`;
-    ctx.lineWidth = 1.1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(kneeSwing - size * 0.028, upperLen + size * 0.02);
-    ctx.lineTo(fetlockX - size * 0.02, upperLen + lowerLen - size * 0.02);
-    ctx.stroke();
-
-    // Angled hoof
-    ctx.save();
-    ctx.translate(fetlockX, upperLen + lowerLen);
-    ctx.rotate(-0.2 + stride * 0.45);
-    ctx.fillStyle = "#2c2017";
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.06, size * 0.004);
-    ctx.lineTo(size * 0.055, -size * 0.008);
-    ctx.lineTo(size * 0.05, size * 0.038);
-    ctx.lineTo(-size * 0.052, size * 0.042);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = `rgba(179, 135, 63, 0.9)`;
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.048, size * 0.012);
-    ctx.lineTo(size * 0.044, size * 0.003);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.restore();
+  const cavLegColors: HorseLegColors = {
+    thighLight: horseCoatLight,
+    thighMid: horseCoatMid,
+    thighDark: horseCoatDark,
+    greaveTop: "#595f6d",
+    greaveMid: "#7a8394",
+    greaveBottom: "#4f5666",
+    hoofColor: "#2c2017",
+    trimColor: brassMid,
   };
-
-  drawCavalryHorseLeg(
-    x - size * 0.25,
-    y + size * 0.36 + gallop * 0.13,
-    legCycle * 1.15,
-    0.2,
+  drawMuscularHorseLeg(
+    ctx, x - size * 0.25, y + size * 0.36 + gallop * 0.13,
+    size, zoom, time, legCycle * 1.15, 0.2, 8, cavLegColors,
   );
-  drawCavalryHorseLeg(
-    x - size * 0.08,
-    y + size * 0.37 + gallop * 0.13,
-    -legCycle * 0.95,
-    1.2,
+  drawMuscularHorseLeg(
+    ctx, x - size * 0.08, y + size * 0.37 + gallop * 0.13,
+    size, zoom, time, -legCycle * 0.95, 1.2, 8, cavLegColors,
   );
-  drawCavalryHorseLeg(
-    x + size * 0.13,
-    y + size * 0.37 + gallop * 0.13,
-    -legCycle * 1.05,
-    2.1,
+  drawMuscularHorseLeg(
+    ctx, x + size * 0.13, y + size * 0.37 + gallop * 0.13,
+    size, zoom, time, -legCycle * 1.05, 2.1, 8, cavLegColors,
   );
-  drawCavalryHorseLeg(
-    x + size * 0.3,
-    y + size * 0.36 + gallop * 0.13,
-    legCycle * 0.88,
-    3.1,
+  drawMuscularHorseLeg(
+    ctx, x + size * 0.3, y + size * 0.36 + gallop * 0.13,
+    size, zoom, time, legCycle * 0.88, 3.1, 8, cavLegColors,
   );
 
   // === HORSE NECK AND HEAD ===
@@ -862,91 +732,26 @@ export function drawCavalryTroop(
     ctx.fill();
   }
 
-  // === MAJESTIC TAIL (layered strands) ===
-  const tailWave1 = Math.sin(time * 6);
-  const tailWave2 = Math.sin(time * 6 + 1);
-  const tailWave3 = Math.sin(time * 4.2 + 0.5) * 0.7;
-  const tailRootX = x + size * 0.42;
-  const tailRootY = y + size * 0.12 + gallop * 0.15;
-  const cavTailCount = 10;
-  const cavTailColors = [
-    "#1d130d", "#1d130d", "#2a1a10", "#2a1a10", "#3d2616",
-    "#3d2616", "#5a3d24", "#5a3d24",
-    "rgba(120, 96, 180, 0.65)", "rgba(156, 129, 219, 0.75)",
-  ];
-  for (let strand = 0; strand < cavTailCount; strand++) {
-    const t = strand / (cavTailCount - 1);
-    const spread = (t - 0.5) * size * 0.065;
-    const phase = strand * 0.32;
-    const wave = Math.sin(time * 6 + phase);
-    const waveB = Math.sin(time * 4.2 + phase * 0.6);
-    const length = 0.34 + t * 0.07;
-    const thickness = (6.0 - t * 4.8) * zoom;
-    ctx.strokeStyle = cavTailColors[strand];
-    ctx.lineWidth = thickness;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(tailRootX + spread * 0.3, tailRootY + spread * 0.15);
-    ctx.bezierCurveTo(
-      x + size * 0.52 + wave * 7 + spread * 0.5,
-      y + size * 0.1 + spread * 0.4 + waveB * 2.5,
-      x + size * 0.66 + wave * 11 + tailWave3 * 6 + spread * 0.7,
-      y + size * (0.22 + t * 0.05) + waveB * 4,
-      x + size * (0.56 + t * 0.04) + wave * 13 + tailWave3 * 7 + spread,
-      y + size * (0.14 + length) + waveB * 3,
-    );
-    ctx.stroke();
-  }
-  for (let w = 0; w < 5; w++) {
-    const wt = w / 4;
-    const wPhase = w * 0.75 + 1.5;
-    const wWave = Math.sin(time * 6 + wPhase);
-    const wWaveB = Math.sin(time * 4.2 + wPhase * 0.6);
-    const wSpread = (wt - 0.5) * size * 0.045;
-    const tipX = x + size * 0.58 + wWave * 14 + tailWave3 * 8 + wSpread;
-    const tipY = y + size * 0.46 + wWaveB * 4 + wSpread * 0.3;
-    ctx.strokeStyle = `rgba(156, 129, 219, ${0.3 + wt * 0.3})`;
-    ctx.lineWidth = (1.8 - wt * 0.5) * zoom;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(
-      tipX - size * 0.06 - wWave * 2,
-      tipY - size * 0.07 - wWaveB * 2,
-    );
-    ctx.quadraticCurveTo(
-      tipX - size * 0.01 + wWave * 3,
-      tipY - size * 0.02,
-      tipX + wWave * 4 + size * 0.025 * wt,
-      tipY + size * 0.04 + wWaveB * 2,
-    );
-    ctx.stroke();
-  }
-  const cavGlowAlpha = 0.25 + maneGlow * 0.3;
-  ctx.fillStyle = `rgba(193, 168, 252, ${cavGlowAlpha})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.58 + Math.sin(time * 6 + 3.5) * 13 + tailWave3 * 7,
-    y + size * 0.47,
-    size * 0.04,
-    size * 0.022,
-    0.3 + tailWave1 * 0.15,
-    0,
-    Math.PI * 2,
+  // === MAJESTIC TAIL ===
+  drawHorseTail(
+    ctx,
+    x + size * 0.42,
+    y + size * 0.12 + gallop * 0.15,
+    size,
+    zoom,
+    time,
+    6.0,
+    4.2,
+    {
+      base: "#1d130d",
+      mid: "#3d2616",
+      highlight: "#5a3d24",
+      accent: "rgba(156, 129, 219, 0.45)",
+      glowRgb: "193, 168, 252",
+    },
+    0.25 + maneGlow * 0.3,
+    { rgb: "220, 200, 255", intensity: maneGlow, threshold: 0.3 },
   );
-  ctx.fill();
-  if (maneGlow > 0.3) {
-    for (let p = 0; p < 3; p++) {
-      const pt = p / 2;
-      const pPhase = p * 1.1 + time * 3;
-      const sparkX = x + size * 0.56 + Math.sin(pPhase) * 14 + tailWave3 * 6;
-      const sparkY = y + size * (0.35 + pt * 0.1) + Math.cos(pPhase * 1.3) * 5;
-      const sparkAlpha = (0.4 + Math.sin(pPhase * 2) * 0.3) * maneGlow;
-      ctx.fillStyle = `rgba(220, 200, 255, ${sparkAlpha})`;
-      ctx.beginPath();
-      ctx.arc(sparkX, sparkY, size * 0.008, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
 
   // === ROYAL KNIGHT RIDER ===
   // Broader royal cape that rides above the horse silhouette.

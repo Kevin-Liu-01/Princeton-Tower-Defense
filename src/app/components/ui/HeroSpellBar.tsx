@@ -42,6 +42,7 @@ import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, NEUTRAL, RED_CARD, SELECTED, OVERLAY, SPELL_THEME } from "./theme";
 import { HudTooltip } from "./HudTooltip";
+import { MobileHeroSpellBar } from "./MobileHeroSpellBar";
 
 // =============================================================================
 // HP THEME — transitions green → yellow → red by hero health %
@@ -203,9 +204,27 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   return (
     <div
       data-tutorial="hero-spell-bar"
-      className="px-2 sm:px-3 py-2 flex items-center justify-between relative z-20 pointer-events-none"
+      className="relative z-20 pointer-events-none"
       style={{ zIndex: 100 }}
     >
+      {/* Mobile: Compact circle layout */}
+      <div className="flex sm:hidden">
+        <MobileHeroSpellBar
+          hero={hero}
+          spells={spells}
+          pawPoints={pawPoints}
+          enemies={enemies}
+          spellUpgradeLevels={spellUpgradeLevels}
+          targetingSpell={targetingSpell}
+          placingTroop={placingTroop}
+          toggleHeroSelection={toggleHeroSelection}
+          onUseHeroAbility={onUseHeroAbility}
+          castSpell={castSpell}
+        />
+      </div>
+
+      {/* Desktop: Full card layout */}
+      <div className="hidden sm:flex px-3 py-2 items-center justify-between">
       {/* Hero Section */}
       <div
         role="button"
@@ -679,6 +698,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
             </div>
           );
         })}
+      </div>
       </div>
 
       {/* CSS Keyframes */}

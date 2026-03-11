@@ -5,7 +5,11 @@ import {
   WEAPON_LIMITS,
   TROOP_MASTERWORK_STYLES,
   drawTroopMasterworkFinish,
+  drawHorseTail,
+  drawMuscularHorseBody,
+  drawMuscularHorseLeg,
 } from "./troopHelpers";
+import type { HorseLegColors } from "./troopHelpers";
 
 export function drawCentaurTroop(
   ctx: CanvasRenderingContext2D,
@@ -22,7 +26,6 @@ export function drawCentaurTroop(
   const gallop = Math.sin(time * 7.4) * 4.4;
   const legCycle = Math.sin(time * 7.4) * 0.44;
   const breathe = Math.sin(time * 2) * 0.5;
-  const tailSwish = Math.sin(time * 5.6);
   const hairFlow = Math.sin(time * 4.6);
   const shimmer = Math.sin(time * 5) * 0.5 + 0.5;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
@@ -148,76 +151,23 @@ export function drawCentaurTroop(
   }
 
   // === POWERFUL HORSE BODY WITH DETAILED COAT ===
-  // Main body with brown-green coat gradient
-  const bodyGrad = ctx.createRadialGradient(
-    x + size * 0.02,
-    y + size * 0.05,
-    0,
+  const bodyY = y + size * 0.15 + gallop * 0.12;
+  drawMuscularHorseBody(
+    ctx,
     x + size * 0.08,
-    y + size * 0.15,
-    size * 0.55,
-  );
-  bodyGrad.addColorStop(0, centaurBrownLight);
-  bodyGrad.addColorStop(0.25, "#80603c");
-  bodyGrad.addColorStop(0.5, centaurBrownMid);
-  bodyGrad.addColorStop(0.75, "#4f3a23");
-  bodyGrad.addColorStop(1, centaurBrownDark);
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.08,
-    y + size * 0.15 + gallop * 0.12,
+    bodyY,
     size * 0.46,
     size * 0.28,
-    0,
-    0,
-    Math.PI * 2,
+    size,
+    zoom,
+    {
+      coatLight: centaurBrownLight,
+      coatMid: centaurBrownMid,
+      coatDark: centaurBrownDark,
+      muscleHighlight: "rgba(188, 164, 109, 0.22)",
+      muscleShadow: "rgba(71, 53, 34, 0.35)",
+    },
   );
-  ctx.fill();
-
-  // Muscle definition highlights
-  ctx.strokeStyle = "rgba(188, 164, 109, 0.4)";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.1,
-    y + size * 0.08 + gallop * 0.12,
-    size * 0.14,
-    0.4,
-    2.2,
-  );
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(
-    x + size * 0.3,
-    y + size * 0.06 + gallop * 0.12,
-    size * 0.12,
-    0.5,
-    2.0,
-  );
-  ctx.stroke();
-
-  // Muscle definition shadows
-  ctx.strokeStyle = "rgba(71,53,34,0.55)";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.08,
-    y + size * 0.14 + gallop * 0.12,
-    size * 0.17,
-    0.3,
-    2.5,
-  );
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(
-    x + size * 0.28,
-    y + size * 0.12 + gallop * 0.12,
-    size * 0.15,
-    0.4,
-    2.3,
-  );
-  ctx.stroke();
 
   // Battle scars (honorable marks)
   ctx.strokeStyle = "rgba(100, 70, 30, 0.35)";
@@ -357,200 +307,52 @@ export function drawCentaurTroop(
   }
 
   // === POWERFUL LEGS WITH JOINTED ANATOMY ===
-  const drawCentaurHorseLeg = (
-    legX: number,
-    legY: number,
-    stride: number,
-    phaseOffset: number,
-  ) => {
-    const upperLen = size * 0.16;
-    const lowerLen = size * 0.18;
-    const kneeSwing = Math.sin(time * 7 + phaseOffset) * size * 0.03;
-    const fetlockSwing = Math.sin(time * 7 + phaseOffset + 0.9) * size * 0.026;
-    ctx.save();
-    ctx.translate(legX, legY);
-    ctx.rotate(stride);
-
-    // Upper leg muscle
-    const upperGrad = ctx.createLinearGradient(
-      -size * 0.05,
-      0,
-      size * 0.05,
-      upperLen,
-    );
-    upperGrad.addColorStop(0, centaurBrownLight);
-    upperGrad.addColorStop(0.6, centaurBrownMid);
-    upperGrad.addColorStop(1, centaurBrownDark);
-    ctx.fillStyle = upperGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.05, 0);
-    ctx.quadraticCurveTo(
-      -size * 0.065,
-      upperLen * 0.55,
-      kneeSwing - size * 0.04,
-      upperLen,
-    );
-    ctx.lineTo(kneeSwing + size * 0.04, upperLen);
-    ctx.quadraticCurveTo(size * 0.065, upperLen * 0.55, size * 0.05, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "rgba(214, 190, 140, 0.24)";
-    ctx.beginPath();
-    ctx.ellipse(
-      kneeSwing - size * 0.006,
-      upperLen * 0.46,
-      size * 0.023,
-      size * 0.043,
-      0.2,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Lower leg armor
-    const fetlockX = kneeSwing + fetlockSwing;
-    const lowerGrad = ctx.createLinearGradient(
-      kneeSwing - size * 0.042,
-      upperLen,
-      fetlockX + size * 0.042,
-      upperLen + lowerLen,
-    );
-    lowerGrad.addColorStop(0, centaurLeafDark);
-    lowerGrad.addColorStop(0.45, centaurLeafMid);
-    lowerGrad.addColorStop(1, "#2e4a27");
-    ctx.fillStyle = lowerGrad;
-    ctx.beginPath();
-    ctx.moveTo(kneeSwing - size * 0.04, upperLen);
-    ctx.lineTo(fetlockX - size * 0.034, upperLen + lowerLen);
-    ctx.lineTo(fetlockX + size * 0.034, upperLen + lowerLen);
-    ctx.lineTo(kneeSwing + size * 0.04, upperLen);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = `rgba(183, 146, 69, 0.78)`;
-    ctx.lineWidth = 1.1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(kneeSwing - size * 0.026, upperLen + size * 0.018);
-    ctx.lineTo(fetlockX - size * 0.017, upperLen + lowerLen - size * 0.02);
-    ctx.stroke();
-
-    // Hoof angle and silhouette
-    ctx.save();
-    ctx.translate(fetlockX, upperLen + lowerLen);
-    ctx.rotate(-0.2 + stride * 0.5);
-    ctx.fillStyle = "#2b1f16";
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.058, size * 0.005);
-    ctx.lineTo(size * 0.055, -size * 0.007);
-    ctx.lineTo(size * 0.052, size * 0.036);
-    ctx.lineTo(-size * 0.051, size * 0.04);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = centaurGoldMid;
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.046, size * 0.013);
-    ctx.lineTo(size * 0.044, size * 0.003);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.restore();
+  const centaurLegColors: HorseLegColors = {
+    thighLight: centaurBrownLight,
+    thighMid: centaurBrownMid,
+    thighDark: centaurBrownDark,
+    greaveTop: centaurLeafDark,
+    greaveMid: centaurLeafMid,
+    greaveBottom: "#2e4a27",
+    hoofColor: "#2b1f16",
+    trimColor: centaurGoldMid,
   };
-
-  drawCentaurHorseLeg(
-    x - size * 0.2,
-    y + size * 0.33 + gallop * 0.1,
-    legCycle * 1.12,
-    0.1,
+  drawMuscularHorseLeg(
+    ctx, x - size * 0.2, y + size * 0.33 + gallop * 0.1,
+    size, zoom, time, legCycle * 1.12, 0.1, 7, centaurLegColors,
   );
-  drawCentaurHorseLeg(
-    x - size * 0.05,
-    y + size * 0.34 + gallop * 0.1,
-    -legCycle * 0.9,
-    1.15,
+  drawMuscularHorseLeg(
+    ctx, x - size * 0.05, y + size * 0.34 + gallop * 0.1,
+    size, zoom, time, -legCycle * 0.9, 1.15, 7, centaurLegColors,
   );
-  drawCentaurHorseLeg(
-    x + size * 0.22,
-    y + size * 0.34 + gallop * 0.1,
-    -legCycle * 1.03,
-    2.15,
+  drawMuscularHorseLeg(
+    ctx, x + size * 0.22, y + size * 0.34 + gallop * 0.1,
+    size, zoom, time, -legCycle * 1.03, 2.15, 7, centaurLegColors,
   );
-  drawCentaurHorseLeg(
-    x + size * 0.37,
-    y + size * 0.33 + gallop * 0.1,
-    legCycle * 0.86,
-    3.0,
+  drawMuscularHorseLeg(
+    ctx, x + size * 0.37, y + size * 0.33 + gallop * 0.1,
+    size, zoom, time, legCycle * 0.86, 3.0, 7, centaurLegColors,
   );
 
   // === MAJESTIC FLOWING TAIL ===
-  const tailRootX = x + size * 0.5;
-  const tailRootY = y + size * 0.07 + gallop * 0.12;
-  const tailSwish2 = Math.sin(time * 5.6 + 0.9) * 0.8;
-  const tailSwish3 = Math.sin(time * 3.8 + 0.4) * 0.6;
-  const strandCount = 9;
-  const tailColors = [
-    "#2b1c13", "#2b1c13", "#3f2e1d", "#3f2e1d", "#5b4128",
-    "#5b4128", "#7d5d3f", "#9e7e52", "rgba(214, 187, 118, 0.82)",
-  ];
-  for (let strand = 0; strand < strandCount; strand++) {
-    const t = strand / (strandCount - 1);
-    const spread = (t - 0.5) * size * 0.06;
-    const phase = strand * 0.35;
-    const wave = Math.sin(time * 5.6 + phase);
-    const wave2 = Math.sin(time * 3.8 + phase * 0.7);
-    const length = 0.32 + t * 0.08;
-    const thickness = (5.5 - t * 4.2) * zoom;
-    ctx.strokeStyle = tailColors[strand];
-    ctx.lineWidth = thickness;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(tailRootX + spread * 0.3, tailRootY + spread * 0.15);
-    ctx.bezierCurveTo(
-      x + size * 0.58 + wave * 6 + spread * 0.5,
-      y + size * 0.06 + spread * 0.4 + wave2 * 2,
-      x + size * 0.7 + wave * 10 + tailSwish2 * 5 + spread * 0.8,
-      y + size * (0.18 + t * 0.06) + wave2 * 4,
-      x + size * (0.58 + t * 0.04) + wave * 12 + tailSwish3 * 6 + spread,
-      y + size * (0.12 + length) + wave2 * 3,
-    );
-    ctx.stroke();
-  }
-  for (let w = 0; w < 5; w++) {
-    const wt = w / 4;
-    const wPhase = w * 0.8 + 1.2;
-    const wWave = Math.sin(time * 5.6 + wPhase);
-    const wWave2 = Math.sin(time * 3.8 + wPhase * 0.7);
-    const wSpread = (wt - 0.5) * size * 0.05;
-    const tipX = x + size * 0.6 + wWave * 13 + tailSwish3 * 7 + wSpread;
-    const tipY = y + size * 0.42 + wWave2 * 4 + wSpread * 0.3;
-    ctx.strokeStyle = `rgba(181, 151, 88, ${0.35 + wt * 0.25})`;
-    ctx.lineWidth = (1.8 - wt * 0.6) * zoom;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(
-      tipX - size * 0.06 - wWave * 2,
-      tipY - size * 0.08 - wWave2 * 2,
-    );
-    ctx.quadraticCurveTo(
-      tipX - size * 0.01 + wWave * 3,
-      tipY - size * 0.02,
-      tipX + wWave * 4 + size * 0.02 * wt,
-      tipY + size * 0.04 + wWave2 * 2,
-    );
-    ctx.stroke();
-  }
-  const glowAlpha = 0.2 + Math.sin(time * 4) * 0.1;
-  ctx.fillStyle = `rgba(214, 187, 118, ${glowAlpha})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.6 + Math.sin(time * 5.6 + 3) * 12 + tailSwish3 * 6,
-    y + size * 0.42,
-    size * 0.035,
-    size * 0.02,
-    0.3 + tailSwish * 0.2,
-    0,
-    Math.PI * 2,
+  drawHorseTail(
+    ctx,
+    x + size * 0.5,
+    y + size * 0.07 + gallop * 0.12,
+    size,
+    zoom,
+    time,
+    5.6,
+    3.8,
+    {
+      base: "#2b1c13",
+      mid: "#5b4128",
+      highlight: "#9e7e52",
+      accent: "rgba(181, 151, 88, 0.45)",
+      glowRgb: "214, 187, 118",
+    },
+    0.2 + Math.sin(time * 4) * 0.1,
   );
-  ctx.fill();
 
   // === MUSCULAR HUMAN TORSO ===
   // Back muscles layer
