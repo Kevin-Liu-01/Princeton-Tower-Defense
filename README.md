@@ -59,10 +59,12 @@ Each tower has a distinct role and two final upgrade paths that change its behav
 | **Nassau Cannon** | Heavy artillery | Gatling Gun · Flamethrower |
 | **Firestone Library** | Slow + control | EQ Smasher · Blizzard |
 | **E-Quad Lab** | Chain magic DPS | Focused Beam · Chain Lightning |
-| **Blair Arch** | Sonic AoE | Shockwave Siren · Symphony |
+| **Blair Arch** | Sonic crescendo | Shockwave Siren · Symphony Hall |
 | **Eating Club** | Economy | Investment Bank · Recruitment Center |
 | **Dinky Station** | Troop summons | Centaur Archers · Heavy Cavalry |
 | **Palmer Mortar** | Siege AoE | Missile Battery · Ember Foundry |
+
+**Blair Arch's crescendo system** is worth calling out: consecutive hits build stacks that increase both attack speed and damage. Stacks decay when idle, so positioning matters — keep it in a busy lane and it snowballs. Shockwave Siren adds a 35% stun chance at max stacks, while Symphony Hall pushes to 12 stacks with stronger per-stack scaling and slower decay.
 
 ### 🐅 7 Playable Heroes
 

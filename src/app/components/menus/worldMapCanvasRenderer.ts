@@ -1581,20 +1581,6 @@ export const drawWorldMapCanvas = ({
       ctx.fill();
     }
   };
-  drawCamp(100, 25);
-  drawCamp(180, 55);
-  drawCamp(290, 78);
-  drawCamp(620, 78);
-  drawCamp(540, 28);
-  drawCamp(860, 34);
-  drawCamp(1020, 75);
-  drawCamp(1580, 82);
-  drawCamp(350, 35);
-  drawCamp(470, 48);
-  drawCamp(750, 78);
-  drawCamp(1150, 38);
-  drawCamp(1310, 72);
-  drawCamp(1680, 45);
 
   // Destroyed stone ruins — crumbling walls, broken arches, scattered rubble
   const drawRuins = (
@@ -1726,21 +1712,6 @@ export const drawWorldMapCanvas = ({
   };
 
   // Place ruins across regions
-  drawRuins(145, 72, 0.5);
-  drawRuins(265, 28, 0.45);
-  drawRuins(345, 80, 0.55);
-  drawRuins(455, 62, 0.5, "#3a4a3a");
-  drawRuins(590, 42, 0.6, "#3a4a3a");
-  drawRuins(680, 72, 0.5, "#3a4a3a");
-  drawRuins(820, 62, 0.5, "#8a7a5a");
-  drawRuins(950, 72, 0.55, "#8a7a5a");
-  drawRuins(1040, 30, 0.45, "#8a7a5a");
-  drawRuins(1160, 72, 0.5, "#6a7a8a");
-  drawRuins(1290, 38, 0.55, "#6a7a8a");
-  drawRuins(1400, 70, 0.5, "#6a7a8a");
-  drawRuins(1510, 42, 0.5, "#4a2a1a");
-  drawRuins(1640, 80, 0.55, "#4a2a1a");
-  drawRuins(1740, 38, 0.45, "#4a2a1a");
 
   // Cylindrical watch tower with ivy, pennant flag, and multi-level windows
   const drawWatchTower = (tx: number, tyPct: number) => {
@@ -1972,23 +1943,6 @@ export const drawWorldMapCanvas = ({
     ctx.arc(tx + 3, ty - 1, 0.8, 0, Math.PI * 2);
     ctx.fill();
   };
-  drawWatchTower(55, 66);
-  drawWatchTower(220, 25);
-  drawWatchTower(230, 70);
-  drawWatchTower(330, 42);
-  drawWatchTower(490, 70);
-  drawWatchTower(867, 33);
-  drawWatchTower(1240, 52);
-  drawWatchTower(1180, 25);
-  drawWatchTower(1620, 30);
-  drawWatchTower(140, 85);
-  drawWatchTower(305, 30);
-  drawWatchTower(640, 48);
-  drawWatchTower(760, 68);
-  drawWatchTower(1000, 28);
-  drawWatchTower(1350, 78);
-  drawWatchTower(1500, 52);
-  drawWatchTower(1700, 72);
 
   // Crater with layered depth, scorch marks, pulsing embers, and debris
   const drawCrater = (cx: number, cyPct: number, size: number) => {
@@ -2156,33 +2110,6 @@ export const drawWorldMapCanvas = ({
     );
     ctx.stroke();
   };
-  drawCrater(180, 60, 15);
-  drawCrater(260, 32, 12);
-  drawCrater(320, 80, 10);
-  drawCrater(600, 45, 18);
-  drawCrater(750, 70, 14);
-  drawCrater(920, 30, 11);
-  drawCrater(980, 65, 14);
-  drawCrater(1120, 55, 16);
-  drawCrater(1200, 50, 19);
-  drawCrater(1290, 25, 19);
-  drawCrater(1300, 60, 13);
-  drawCrater(1400, 60, 15);
-  drawCrater(1500, 75, 12);
-  drawCrater(1700, 85, 9);
-  drawCrater(100, 78, 10);
-  drawCrater(215, 42, 11);
-  drawCrater(350, 55, 12);
-  drawCrater(445, 68, 14);
-  drawCrater(530, 30, 10);
-  drawCrater(680, 62, 12);
-  drawCrater(830, 48, 13);
-  drawCrater(1050, 72, 10);
-  drawCrater(1160, 38, 11);
-  drawCrater(1350, 78, 14);
-  drawCrater(1550, 42, 12);
-  drawCrater(1650, 68, 11);
-  drawCrater(1760, 55, 13);
 
   // === SWAMP DETAILS ===
 
@@ -2674,7 +2601,7 @@ export const drawWorldMapCanvas = ({
     [420, 70],
     [450, 80],
     [480, 25],
-    [500, 20],
+    [450, 20],
     [640, 55],
     [550, 85],
     [540, 45],
@@ -3300,28 +3227,8 @@ export const drawWorldMapCanvas = ({
   };
 
   // Back dunes (darker, distant)
-  drawSandDune(760, 25, 40, 10, "#c49a6c", "#b08a5c", "#9a7a4c");
-  drawSandDune(870, 20, 45, 12, "#c8a070", "#b89060", "#a88050");
-  drawSandDune(980, 28, 35, 9, "#c49a6c", "#b08a5c", "#9a7a4c");
-  drawSandDune(1050, 22, 32, 8, "#c8a070", "#b89060", "#a88050");
-  drawSandDune(730, 18, 30, 8, "#c49a6c", "#b08a5c", "#9a7a4c");
-  drawSandDune(830, 15, 35, 9, "#c8a070", "#b89060", "#a88050");
-  drawSandDune(1070, 18, 28, 7, "#c49a6c", "#b08a5c", "#9a7a4c");
   // Mid dunes
-  drawSandDune(800, 45, 48, 12, "#d4aa7a", "#c49a6a", "#b08a5a");
-  drawSandDune(920, 50, 42, 11, "#d8b080", "#c8a070", "#b89060");
-  drawSandDune(1010, 42, 38, 10, "#d4aa7a", "#c49a6a", "#b08a5a");
-  drawSandDune(740, 55, 36, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
-  drawSandDune(850, 40, 32, 8, "#d8b080", "#c8a070", "#b89060");
-  drawSandDune(1060, 48, 34, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
   // Front dunes (lighter, closer)
-  drawSandDune(750, 75, 35, 9, "#e0be8a", "#d0ae7a", "#c09e6a");
-  drawSandDune(860, 80, 40, 10, "#e4c490", "#d4b480", "#c4a470");
-  drawSandDune(960, 78, 32, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
-  drawSandDune(1040, 82, 28, 7, "#e4c490", "#d4b480", "#c4a470");
-  drawSandDune(790, 85, 30, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
-  drawSandDune(910, 72, 38, 10, "#e4c490", "#d4b480", "#c4a470");
-  drawSandDune(1025, 88, 26, 6, "#e0be8a", "#d0ae7a", "#c09e6a");
 
   // Majestic Golden Pyramid with stone blocks, hieroglyphics, and light rays
   const drawGoldenPyramid = (px: number, pyPct: number, size: number) => {
@@ -3555,17 +3462,6 @@ export const drawWorldMapCanvas = ({
     ctx.closePath();
     ctx.fill();
   };
-  drawGoldenPyramid(770, 66, 27);
-  drawGoldenPyramid(820, 70, 27);
-  drawGoldenPyramid(860, 65, 27);
-  drawGoldenPyramid(850, 50, 25);
-  drawGoldenPyramid(950, 23, 17);
-  drawGoldenPyramid(970, 85, 20);
-  drawGoldenPyramid(960, 35, 28);
-  drawGoldenPyramid(785, 30, 15);
-  drawGoldenPyramid(900, 75, 18);
-  drawGoldenPyramid(1020, 28, 14);
-  drawGoldenPyramid(1045, 55, 16);
 
   // Sphinx statue — weathered limestone, recumbent lion body, Nemes headdress
   const drawSphinx = (sx: number, syPct: number, scale: number) => {
@@ -4263,7 +4159,6 @@ export const drawWorldMapCanvas = ({
     ctx.fillRect(sx - 24 * scale, sy - 35 * scale, 48 * scale, 45 * scale);
     ctx.restore();
   };
-  drawSphinx(965, 43, 0.8);
 
   // Palm tree — curved trunk with ring segments, individual swaying fronds, coconuts, fallen fronds
   const drawPalmTree = (tx: number, tyPct: number, scale: number) => {
@@ -4594,7 +4489,6 @@ export const drawWorldMapCanvas = ({
       ctx.stroke();
     }
   };
-  drawOasis(780, 42, 25);
   drawPalmTree(765, 40, 0.7);
   drawPalmTree(795, 44, 0.6);
   drawPalmTree(778, 38, 0.8);
@@ -5185,11 +5079,6 @@ export const drawWorldMapCanvas = ({
 
     ctx.restore();
   };
-  drawCamel(880, 72, 0.6, 1);
-  drawCamel(905, 74, 0.55, 1);
-  drawCamel(1010, 50, 0.65, -1);
-  drawCamel(760, 55, 0.5, -1);
-  drawCamel(1050, 42, 0.55, 1);
 
   // More palm trees near oasis area
   drawPalmTree(740, 48, 0.55);
@@ -5457,10 +5346,6 @@ export const drawWorldMapCanvas = ({
     ctx.arc(fireX, fireY - 6, 25, 0, Math.PI * 2);
     ctx.fill();
   };
-  drawDesertCamp(820, 22);
-  drawDesertCamp(1030, 58);
-  drawDesertCamp(920, 82);
-  drawDesertCamp(760, 38);
 
   // Dramatic swirling sand/dust particles — varied sizes, some streaking
   for (let p = 0; p < 40; p++) {
@@ -5651,15 +5536,6 @@ export const drawWorldMapCanvas = ({
     ctx.arc(wx, wy - 8, 22, 0, Math.PI * 2);
     ctx.fill();
   };
-  drawBurningWreck(810, 25);
-  drawBurningWreck(960, 75);
-  drawBurningWreck(990, 20);
-  drawBurningWreck(1520, 32);
-  drawBurningWreck(1650, 62);
-  drawBurningWreck(870, 48);
-  drawBurningWreck(1040, 60);
-  drawBurningWreck(1570, 75);
-  drawBurningWreck(1700, 28);
 
   // === FROZEN FRONTIER DETAILS === (Enhanced Winter Environment)
 
@@ -6255,17 +6131,6 @@ export const drawWorldMapCanvas = ({
       ctx.restore();
     }
   };
-  drawSnowMountain(1130, 30, 35, 16);
-  drawSnowMountain(1250, 25, 45, 20);
-  drawSnowMountain(1350, 26, 48, 28);
-  drawSnowMountain(1380, 28, 48, 28);
-  drawSnowMountain(1095, 20, 30, 14);
-  drawSnowMountain(1190, 22, 38, 18);
-  drawSnowMountain(1420, 24, 32, 16);
-  drawSnowMountain(1310, 80, 68, 38);
-  drawSnowMountain(1350, 82, 68, 38);
-  drawSnowMountain(1120, 82, 40, 22);
-  drawSnowMountain(1200, 85, 50, 28);
 
   // Detailed frosted pine trees with individual branch layers
   const drawFrostedPine = (x: number, yPct: number, scale: number) => {
@@ -6642,10 +6507,6 @@ export const drawWorldMapCanvas = ({
     ctx.closePath();
     ctx.fill();
   };
-  drawIceCrystal(1120, 62, 0.8);
-  drawIceCrystal(1270, 48, 1);
-  drawIceCrystal(1350, 72, 0.7);
-  drawIceCrystal(1410, 38, 0.9);
 
   // Frozen lake with visible depth, trapped bubbles, skating scratches
   const drawFrozenLake = (
@@ -6793,10 +6654,6 @@ export const drawWorldMapCanvas = ({
       ctx.fill();
     }
   };
-  drawFrozenLake(1200, 82, 45, 0.35);
-  drawFrozenLake(1340, 58, 35, 0.3);
-  drawFrozenLake(1120, 60, 30, 0.25);
-  drawFrozenLake(1290, 72, 28, 0.3);
 
   // Igloo with visible ice block construction and warm interior glow
   const drawIgloo = (ix: number, iyPct: number, scale: number) => {
@@ -6947,10 +6804,6 @@ export const drawWorldMapCanvas = ({
       ctx.fill();
     }
   };
-  drawIgloo(1160, 50, 0.8);
-  drawIgloo(1390, 75, 0.7);
-  drawIgloo(1240, 38, 0.65);
-  drawIgloo(1310, 62, 0.6);
 
   // Woolly mammoth with shaggy fur, curved tusks, expressive eye
   const drawMammoth = (
@@ -7223,8 +7076,6 @@ export const drawWorldMapCanvas = ({
 
     ctx.restore();
   };
-  drawMammoth(1230, 65, 0.5, 1);
-  drawMammoth(1300, 25, 0.4, -1);
 
   // More frosted pines for density
   [
@@ -7244,11 +7095,6 @@ export const drawWorldMapCanvas = ({
   });
 
   // More ice crystals
-  drawIceCrystal(1095, 45, 0.5);
-  drawIceCrystal(1170, 70, 0.55);
-  drawIceCrystal(1250, 30, 0.45);
-  drawIceCrystal(1320, 55, 0.5);
-  drawIceCrystal(1400, 40, 0.55);
 
   // Enhanced snowfall with different flake sizes, tumbling rotation, wind gusts
   for (let layer = 0; layer < 3; layer++) {
@@ -8200,15 +8046,6 @@ export const drawWorldMapCanvas = ({
     }
     ctx.restore();
   };
-  drawVolcano(1530, 22, 95, 35);
-  drawVolcano(1700, 21, 85, 30);
-  drawVolcano(1720, 24, 95, 45);
-  drawVolcano(1460, 18, 70, 28);
-  drawVolcano(1600, 16, 80, 32);
-  drawVolcano(1720, 84, 95, 45);
-  drawVolcano(1700, 86, 85, 30);
-  drawVolcano(1460, 88, 75, 30);
-  drawVolcano(1580, 86, 65, 25);
 
   // Lava pools with crusted surface, bubbles forming/popping, heat shimmer
   const drawLavaPool = (
@@ -8406,14 +8243,6 @@ export const drawWorldMapCanvas = ({
     );
     ctx.stroke();
   };
-  drawLavaPool(1500, 65, 30, 0.35);
-  drawLavaPool(1620, 78, 25, 0.3);
-  drawLavaPool(1700, 55, 35, 0.4);
-  drawLavaPool(1760, 75, 28, 0.35);
-  drawLavaPool(1475, 42, 22, 0.3);
-  drawLavaPool(1555, 80, 20, 0.25);
-  drawLavaPool(1660, 35, 26, 0.3);
-  drawLavaPool(1730, 82, 24, 0.35);
 
   // Lava rivers — Catmull-Rom spline paths with organic banks, integrated terrain glow
   const drawLavaRiver = (points: number[][], riverWidth?: number) => {
@@ -8638,61 +8467,6 @@ export const drawWorldMapCanvas = ({
 
     ctx.restore();
   };
-  drawLavaRiver(
-    [
-      [1460, 72],
-      [1478, 67],
-      [1500, 65],
-      [1520, 68],
-      [1545, 63],
-      [1568, 65],
-      [1590, 68],
-    ],
-    8,
-  );
-  drawLavaRiver(
-    [
-      [1480, 38],
-      [1498, 40],
-      [1515, 42],
-      [1535, 39],
-      [1558, 38],
-      [1578, 42],
-      [1590, 45],
-    ],
-    7,
-  );
-  drawLavaRiver(
-    [
-      [1640, 45],
-      [1658, 48],
-      [1678, 50],
-      [1700, 48],
-      [1722, 50],
-      [1742, 52],
-      [1760, 55],
-    ],
-    8,
-  );
-  drawLavaRiver(
-    [
-      [1470, 55],
-      [1495, 52],
-      [1520, 55],
-      [1545, 50],
-    ],
-    5,
-  );
-  drawLavaRiver(
-    [
-      [1650, 70],
-      [1680, 72],
-      [1710, 68],
-      [1740, 72],
-      [1770, 70],
-    ],
-    6,
-  );
 
   // Obsidian spires with reflective glass surface, geometric fractures, magical glow
   const drawObsidianSpire = (sx: number, syPct: number, scale: number) => {
@@ -9075,8 +8849,6 @@ export const drawWorldMapCanvas = ({
     ctx.arc(dx, dy - 43 * scale, 12 * scale, 0, Math.PI * 2);
     ctx.fill();
   };
-  drawDemonStatue(1560, 52, 0.8);
-  drawDemonStatue(1720, 28, 0.7);
 
   // Fire elemental with face features, trailing particles, heat distortion
   const drawFireElemental = (fx: number, fyPct: number, scale: number) => {
@@ -9221,9 +8993,6 @@ export const drawWorldMapCanvas = ({
       }
     }
   };
-  drawFireElemental(1490, 55, 0.6);
-  drawFireElemental(1660, 38, 0.5);
-  drawFireElemental(1750, 62, 0.55);
 
   // Burning ruins with collapsed arches, standing columns, scattered debris
   const drawBurningRuins = (rx: number, ryPct: number, scale: number) => {
@@ -9395,12 +9164,8 @@ export const drawWorldMapCanvas = ({
   drawBurningRuins(1730, 40, 0.7);
 
   // More demon statues
-  drawDemonStatue(1480, 38, 0.6);
-  drawDemonStatue(1660, 72, 0.65);
 
   // More fire elementals
-  drawFireElemental(1540, 30, 0.5);
-  drawFireElemental(1710, 45, 0.45);
 
   // Ember particles with spiral rising patterns, varying brightness, spark trails
   for (let i = 0; i < 45; i++) {
@@ -9725,24 +9490,6 @@ export const drawWorldMapCanvas = ({
   };
 
   // Broken wagon wheels scattered around
-  drawWagonWheel(155, 68, 8, 0.5);
-  drawWagonWheel(295, 35, 6, 1.2);
-  drawWagonWheel(485, 72, 7, 0.8);
-  drawWagonWheel(715, 28, 6, 2.1);
-  drawWagonWheel(945, 70, 8, 0.3);
-  drawWagonWheel(1165, 32, 7, 1.8);
-  drawWagonWheel(1395, 68, 6, 0.9);
-  drawWagonWheel(1605, 25, 8, 1.5);
-  drawWagonWheel(85, 50, 6, 0.3);
-  drawWagonWheel(230, 78, 7, 1.7);
-  drawWagonWheel(380, 42, 5, 0.9);
-  drawWagonWheel(555, 55, 7, 2.3);
-  drawWagonWheel(670, 80, 6, 0.6);
-  drawWagonWheel(835, 38, 5, 1.1);
-  drawWagonWheel(1080, 58, 7, 1.4);
-  drawWagonWheel(1285, 42, 6, 2.0);
-  drawWagonWheel(1480, 72, 5, 0.4);
-  drawWagonWheel(1720, 55, 7, 1.6);
 
   // Scattered arrows in the ground
   const drawArrow = (ax: number, ayPct: number, angle: number) => {
@@ -9770,12 +9517,6 @@ export const drawWorldMapCanvas = ({
   };
 
   // Arrows scattered across battlefields
-  for (let i = 0; i < 40; i++) {
-    const ax = seededRandom(i * 23) * width;
-    const ay = 25 + seededRandom(i * 23 + 1) * 55;
-    const angle = (seededRandom(i * 23 + 2) - 0.5) * 0.6;
-    drawArrow(ax, ay, angle);
-  }
 
   // Shields and helmets on ground
   const drawFallenShield = (sx: number, syPct: number, isEnemy: boolean) => {
@@ -9790,6 +9531,436 @@ export const drawWorldMapCanvas = ({
     ctx.fill();
   };
 
+  // --- PATH CONNECTIONS ---
+  const LOCKED_PATH_COLORS: Record<
+    string,
+    { partial: string; locked: string }
+  > = {
+    grassland: { partial: "#9a8a72", locked: "#6a5e44" },
+    swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
+    desert: { partial: "#c4a878", locked: "#9a7e52" },
+    winter: { partial: "#8aa8c4", locked: "#5a7a98" },
+    volcanic: { partial: "#b07060", locked: "#7a4838" },
+  };
+  allLevels.forEach((level) => {
+    const fromX = level.x;
+    const fromY = getY(level.y);
+
+    level.connectsTo.forEach((toId) => {
+      const toLevel = getLevelById(toId);
+      if (!toLevel) return;
+      const toX = toLevel.x;
+      const toY = getY(toLevel.y);
+      const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
+      const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
+
+      const connectionSeed = `${level.id}->${toId}`
+        .split("")
+        .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
+      const segmentLength = Math.hypot(toX - fromX, toY - fromY);
+      const dy = toY - fromY;
+      const dx = toX - fromX;
+      const avgY = (fromY + toY) / 2;
+
+      const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
+      const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
+      const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
+
+      const baseDirection =
+        Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
+      const flipChance =
+        Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
+      const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
+      let arcDirection = shouldFlip ? -baseDirection : baseDirection;
+      if (Math.abs(dy) < 8) {
+        const edgeBias = avgY < height * 0.5 ? 1 : -1;
+        arcDirection =
+          seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
+      }
+
+      const angle = Math.atan2(dy, dx);
+      const perpX = -Math.sin(angle);
+      const perpY = Math.cos(angle);
+      const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
+      const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
+      const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
+
+      const cp1x =
+        fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
+      const cp1y = fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
+      const cp2x =
+        toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
+      const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
+
+      const traceCubic = (ox: number, oy: number) => {
+        ctx.beginPath();
+        ctx.moveTo(fromX + ox, fromY + oy);
+        ctx.bezierCurveTo(
+          cp1x + ox,
+          cp1y + oy,
+          cp2x + ox,
+          cp2y + oy,
+          toX + ox,
+          toY + oy,
+        );
+      };
+
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (isUnlocked) {
+        traceCubic(2, 3);
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = 12;
+        ctx.stroke();
+      } else {
+        traceCubic(1, 2);
+        ctx.strokeStyle = "rgba(0,0,0,0.30)";
+        ctx.lineWidth = 8;
+        ctx.stroke();
+      }
+
+      if (isUnlocked) {
+        traceCubic(0, 0);
+        ctx.strokeStyle = "#8B6914";
+        ctx.lineWidth = 10;
+        ctx.stroke();
+
+        traceCubic(0, 0);
+        ctx.strokeStyle = "#D4A828";
+        ctx.lineWidth = 7;
+        ctx.stroke();
+
+        traceCubic(0, 0);
+        ctx.strokeStyle = "#F0C840";
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.6;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        for (let orb = 0; orb < 3; orb++) {
+          const dotPos = (time * 0.4 + orb * 0.33) % 1;
+          const t = dotPos;
+          const mt = 1 - t;
+          const ox =
+            mt * mt * mt * fromX +
+            3 * mt * mt * t * cp1x +
+            3 * mt * t * t * cp2x +
+            t * t * t * toX;
+          const oy =
+            mt * mt * mt * fromY +
+            3 * mt * mt * t * cp1y +
+            3 * mt * t * t * cp2y +
+            t * t * t * toY;
+          ctx.fillStyle = "#ffd700";
+          ctx.globalAlpha = 0.3;
+          ctx.beginPath();
+          ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 0.9;
+          ctx.fillStyle = "#FFE060";
+          ctx.beginPath();
+          ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FFFAC0";
+          ctx.beginPath();
+          ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+      } else {
+        const lockedColors =
+          LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
+        ctx.strokeStyle = isPartial
+          ? lockedColors.partial
+          : lockedColors.locked;
+        ctx.lineWidth = isPartial ? 6 : 4;
+        ctx.setLineDash([8, 6]);
+        traceCubic(0, 0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  });
+
+  // === ABOVE-PATH STRUCTURES (rendered over connection paths) ===
+
+  drawCamp(100, 25);
+  drawCamp(180, 55);
+  drawCamp(290, 78);
+  drawCamp(620, 78);
+  drawCamp(540, 28);
+  drawCamp(860, 34);
+  drawCamp(1020, 75);
+  drawCamp(1580, 82);
+  drawCamp(350, 35);
+  drawCamp(470, 48);
+  drawCamp(750, 78);
+  drawCamp(1150, 38);
+  drawCamp(1310, 72);
+  drawCamp(1680, 45);
+  drawRuins(145, 72, 0.5);
+  drawRuins(265, 28, 0.45);
+  drawRuins(345, 80, 0.55);
+  drawRuins(455, 62, 0.5, "#3a4a3a");
+  drawRuins(590, 42, 0.6, "#3a4a3a");
+  drawRuins(680, 72, 0.5, "#3a4a3a");
+  drawRuins(820, 62, 0.5, "#8a7a5a");
+  drawRuins(950, 72, 0.55, "#8a7a5a");
+  drawRuins(1040, 30, 0.45, "#8a7a5a");
+  drawRuins(1160, 72, 0.5, "#6a7a8a");
+  drawRuins(1290, 38, 0.55, "#6a7a8a");
+  drawRuins(1400, 70, 0.5, "#6a7a8a");
+  drawRuins(1510, 42, 0.5, "#4a2a1a");
+  drawRuins(1640, 80, 0.55, "#4a2a1a");
+  drawRuins(1740, 38, 0.45, "#4a2a1a");
+  drawWatchTower(55, 66);
+  drawWatchTower(220, 25);
+  drawWatchTower(230, 70);
+  drawWatchTower(330, 42);
+  drawWatchTower(490, 70);
+  drawWatchTower(867, 33);
+  drawWatchTower(1240, 52);
+  drawWatchTower(1180, 25);
+  drawWatchTower(1620, 30);
+  drawWatchTower(140, 85);
+  drawWatchTower(305, 30);
+  drawWatchTower(640, 48);
+  drawWatchTower(760, 68);
+  drawWatchTower(1000, 28);
+  drawWatchTower(1350, 78);
+  drawWatchTower(1500, 52);
+  drawWatchTower(1700, 72);
+  drawCrater(180, 60, 15);
+  drawCrater(260, 32, 12);
+  drawCrater(320, 80, 10);
+  drawCrater(600, 45, 18);
+  drawCrater(750, 70, 14);
+  drawCrater(920, 30, 11);
+  drawCrater(980, 65, 14);
+  drawCrater(1120, 55, 16);
+  drawCrater(1200, 50, 19);
+  drawCrater(1290, 25, 19);
+  drawCrater(1300, 60, 13);
+  drawCrater(1400, 60, 15);
+  drawCrater(1500, 75, 12);
+  drawCrater(1700, 85, 9);
+  drawCrater(100, 78, 10);
+  drawCrater(215, 42, 11);
+  drawCrater(350, 55, 12);
+  drawCrater(445, 68, 14);
+  drawCrater(530, 30, 10);
+  drawCrater(680, 62, 12);
+  drawCrater(830, 48, 13);
+  drawCrater(1050, 72, 10);
+  drawCrater(1160, 38, 11);
+  drawCrater(1350, 78, 14);
+  drawCrater(1550, 42, 12);
+  drawCrater(1650, 68, 11);
+  drawCrater(1760, 55, 13);
+  drawSandDune(760, 25, 40, 10, "#c49a6c", "#b08a5c", "#9a7a4c");
+  drawSandDune(870, 20, 45, 12, "#c8a070", "#b89060", "#a88050");
+  drawSandDune(980, 28, 35, 9, "#c49a6c", "#b08a5c", "#9a7a4c");
+  drawSandDune(1050, 22, 32, 8, "#c8a070", "#b89060", "#a88050");
+  drawSandDune(730, 18, 30, 8, "#c49a6c", "#b08a5c", "#9a7a4c");
+  drawSandDune(830, 15, 35, 9, "#c8a070", "#b89060", "#a88050");
+  drawSandDune(1070, 18, 28, 7, "#c49a6c", "#b08a5c", "#9a7a4c");
+  drawSandDune(800, 45, 48, 12, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(920, 50, 42, 11, "#d8b080", "#c8a070", "#b89060");
+  drawSandDune(1010, 42, 38, 10, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(740, 55, 36, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(850, 40, 32, 8, "#d8b080", "#c8a070", "#b89060");
+  drawSandDune(1060, 48, 34, 9, "#d4aa7a", "#c49a6a", "#b08a5a");
+  drawSandDune(750, 75, 35, 9, "#e0be8a", "#d0ae7a", "#c09e6a");
+  drawSandDune(860, 80, 40, 10, "#e4c490", "#d4b480", "#c4a470");
+  drawSandDune(960, 78, 32, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
+  drawSandDune(1040, 82, 28, 7, "#e4c490", "#d4b480", "#c4a470");
+  drawSandDune(790, 85, 30, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
+  drawSandDune(910, 72, 38, 10, "#e4c490", "#d4b480", "#c4a470");
+  drawSandDune(1025, 88, 26, 6, "#e0be8a", "#d0ae7a", "#c09e6a");
+  drawGoldenPyramid(770, 66, 27);
+  drawGoldenPyramid(820, 70, 27);
+  drawGoldenPyramid(860, 65, 27);
+  drawGoldenPyramid(850, 50, 25);
+  drawGoldenPyramid(950, 23, 17);
+  drawGoldenPyramid(970, 85, 20);
+  drawGoldenPyramid(960, 35, 28);
+  drawGoldenPyramid(785, 30, 15);
+  drawGoldenPyramid(900, 75, 18);
+  drawGoldenPyramid(1020, 28, 14);
+  drawGoldenPyramid(1045, 55, 16);
+  drawSphinx(965, 43, 0.8);
+  drawOasis(780, 42, 25);
+  drawCamel(880, 72, 0.6, 1);
+  drawCamel(905, 74, 0.55, 1);
+  drawCamel(1010, 50, 0.65, -1);
+  drawCamel(760, 55, 0.5, -1);
+  drawCamel(1050, 42, 0.55, 1);
+  drawDesertCamp(820, 22);
+  drawDesertCamp(1030, 58);
+  drawDesertCamp(920, 82);
+  drawDesertCamp(760, 38);
+  drawBurningWreck(810, 25);
+  drawBurningWreck(960, 75);
+  drawBurningWreck(990, 20);
+  drawBurningWreck(1520, 32);
+  drawBurningWreck(1650, 62);
+  drawBurningWreck(870, 48);
+  drawBurningWreck(1040, 60);
+  drawBurningWreck(1570, 75);
+  drawBurningWreck(1700, 28);
+  drawSnowMountain(1130, 30, 35, 16);
+  drawSnowMountain(1250, 25, 45, 20);
+  drawSnowMountain(1350, 26, 48, 28);
+  drawSnowMountain(1380, 28, 48, 28);
+  drawSnowMountain(1095, 20, 30, 14);
+  drawSnowMountain(1190, 22, 38, 18);
+  drawSnowMountain(1420, 24, 32, 16);
+  drawSnowMountain(1310, 80, 68, 38);
+  drawSnowMountain(1350, 82, 68, 38);
+  drawSnowMountain(1120, 82, 40, 22);
+  drawSnowMountain(1200, 85, 50, 28);
+  drawIceCrystal(1120, 62, 0.8);
+  drawIceCrystal(1270, 48, 1);
+  drawIceCrystal(1350, 72, 0.7);
+  drawIceCrystal(1410, 38, 0.9);
+  drawFrozenLake(1200, 82, 45, 0.35);
+  drawFrozenLake(1340, 58, 35, 0.3);
+  drawFrozenLake(1120, 60, 30, 0.25);
+  drawFrozenLake(1240, 57, 28, 0.3);
+  drawIgloo(1160, 50, 0.8);
+  drawIgloo(1390, 75, 0.7);
+  drawIgloo(1240, 38, 0.65);
+  drawIgloo(1310, 62, 0.6);
+  drawMammoth(1230, 65, 0.5, 1);
+  drawMammoth(1300, 25, 0.4, -1);
+  drawIceCrystal(1095, 45, 0.5);
+  drawIceCrystal(1170, 70, 0.55);
+  drawIceCrystal(1250, 30, 0.45);
+  drawIceCrystal(1320, 55, 0.5);
+  drawIceCrystal(1400, 40, 0.55);
+  drawVolcano(1530, 22, 95, 35);
+  drawVolcano(1700, 21, 85, 30);
+  drawVolcano(1720, 24, 95, 45);
+  drawVolcano(1460, 18, 70, 28);
+  drawVolcano(1600, 23, 80, 32);
+  drawVolcano(1720, 84, 95, 45);
+  drawVolcano(1700, 86, 85, 30);
+  drawVolcano(1460, 88, 75, 30);
+  drawVolcano(1580, 86, 65, 25);
+  drawLavaPool(1500, 65, 30, 0.35);
+  drawLavaPool(1620, 78, 25, 0.3);
+  drawLavaPool(1700, 55, 35, 0.4);
+  drawLavaPool(1760, 75, 28, 0.35);
+  drawLavaPool(1475, 42, 22, 0.3);
+  drawLavaPool(1555, 80, 20, 0.25);
+  drawLavaPool(1660, 35, 26, 0.3);
+  drawLavaPool(1730, 82, 24, 0.35);
+  drawLavaRiver(
+    [
+      [1460, 72],
+      [1478, 67],
+      [1500, 65],
+      [1520, 68],
+      [1545, 63],
+      [1568, 65],
+      [1590, 68],
+    ],
+    8,
+  );
+  drawLavaRiver(
+    [
+      [1480, 38],
+      [1498, 40],
+      [1515, 42],
+      [1535, 39],
+      [1558, 38],
+      [1578, 42],
+      [1590, 45],
+    ],
+    7,
+  );
+  drawLavaRiver(
+    [
+      [1640, 45],
+      [1658, 48],
+      [1678, 50],
+      [1700, 48],
+      [1722, 50],
+      [1742, 52],
+      [1760, 55],
+    ],
+    8,
+  );
+  drawLavaRiver(
+    [
+      [1470, 55],
+      [1495, 52],
+      [1520, 55],
+      [1545, 50],
+    ],
+    5,
+  );
+  drawLavaRiver(
+    [
+      [1650, 70],
+      [1680, 72],
+      [1710, 68],
+      [1740, 72],
+      [1770, 70],
+    ],
+    6,
+  );
+  drawDemonStatue(1560, 52, 0.8);
+  drawDemonStatue(1720, 28, 0.7);
+  drawFireElemental(1490, 55, 0.6);
+  drawFireElemental(1660, 38, 0.5);
+  drawFireElemental(1750, 62, 0.55);
+  drawDemonStatue(1480, 38, 0.6);
+  drawDemonStatue(1660, 72, 0.65);
+  drawFireElemental(1540, 30, 0.5);
+  drawFireElemental(1710, 45, 0.45);
+  drawWagonWheel(155, 68, 8, 0.5);
+  drawWagonWheel(295, 35, 6, 1.2);
+  drawWagonWheel(485, 72, 7, 0.8);
+  drawWagonWheel(715, 28, 6, 2.1);
+  drawWagonWheel(945, 70, 8, 0.3);
+  drawWagonWheel(1165, 32, 7, 1.8);
+  drawWagonWheel(1395, 68, 6, 0.9);
+  drawWagonWheel(1605, 25, 8, 1.5);
+  drawWagonWheel(85, 50, 6, 0.3);
+  drawWagonWheel(230, 78, 7, 1.7);
+  drawWagonWheel(380, 42, 5, 0.9);
+  drawWagonWheel(555, 55, 7, 2.3);
+  drawWagonWheel(670, 80, 6, 0.6);
+  drawWagonWheel(835, 38, 5, 1.1);
+  drawWagonWheel(1080, 58, 7, 1.4);
+  drawWagonWheel(1285, 42, 6, 2.0);
+  drawWagonWheel(1480, 72, 5, 0.4);
+  drawWagonWheel(1720, 55, 7, 1.6);
+  drawWagonWheel(155, 68, 8, 0.5);
+  drawWagonWheel(295, 35, 6, 1.2);
+  drawWagonWheel(485, 72, 7, 0.8);
+  drawWagonWheel(715, 28, 6, 2.1);
+  drawWagonWheel(945, 70, 8, 0.3);
+  drawWagonWheel(1165, 32, 7, 1.8);
+  drawWagonWheel(1395, 68, 6, 0.9);
+  drawWagonWheel(1605, 25, 8, 1.5);
+  drawWagonWheel(85, 50, 6, 0.3);
+  drawWagonWheel(230, 78, 7, 1.7);
+  drawWagonWheel(380, 42, 5, 0.9);
+  drawWagonWheel(555, 55, 7, 2.3);
+  drawWagonWheel(670, 80, 6, 0.6);
+  drawWagonWheel(835, 38, 5, 1.1);
+  drawWagonWheel(1080, 58, 7, 1.4);
+  drawWagonWheel(1285, 42, 6, 2.0);
+  drawWagonWheel(1480, 72, 5, 0.4);
+  drawWagonWheel(1720, 55, 7, 1.6);
+  for (let i = 0; i < 40; i++) {
+    const ax = seededRandom(i * 23) * width;
+    const ay = 25 + seededRandom(i * 23 + 1) * 55;
+    const angle = (seededRandom(i * 23 + 2) - 0.5) * 0.6;
+    drawArrow(ax, ay, angle);
+  }
   for (let i = 0; i < 25; i++) {
     const sx = seededRandom(i * 31) * width;
     const sy = 30 + seededRandom(i * 31 + 1) * 50;
@@ -10716,157 +10887,6 @@ export const drawWorldMapCanvas = ({
   drawCastleLabel(70, 50, "YOUR KINGDOM", false);
   drawCastleLabel(MAP_WIDTH - 70, 50, "ENEMY KINGDOM", true);
 
-  // --- PATH CONNECTIONS ---
-  const LOCKED_PATH_COLORS: Record<
-    string,
-    { partial: string; locked: string }
-  > = {
-    grassland: { partial: "#9a8a72", locked: "#6a5e44" },
-    swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
-    desert: { partial: "#c4a878", locked: "#9a7e52" },
-    winter: { partial: "#8aa8c4", locked: "#5a7a98" },
-    volcanic: { partial: "#b07060", locked: "#7a4838" },
-  };
-  allLevels.forEach((level) => {
-    const fromX = level.x;
-    const fromY = getY(level.y);
-
-    level.connectsTo.forEach((toId) => {
-      const toLevel = getLevelById(toId);
-      if (!toLevel) return;
-      const toX = toLevel.x;
-      const toY = getY(toLevel.y);
-      const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
-      const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
-
-      const connectionSeed = `${level.id}->${toId}`
-        .split("")
-        .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
-      const segmentLength = Math.hypot(toX - fromX, toY - fromY);
-      const dy = toY - fromY;
-      const dx = toX - fromX;
-      const avgY = (fromY + toY) / 2;
-
-      const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
-      const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
-      const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
-
-      const baseDirection =
-        Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
-      const flipChance =
-        Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
-      const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
-      let arcDirection = shouldFlip ? -baseDirection : baseDirection;
-      if (Math.abs(dy) < 8) {
-        const edgeBias = avgY < height * 0.5 ? 1 : -1;
-        arcDirection =
-          seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
-      }
-
-      const angle = Math.atan2(dy, dx);
-      const perpX = -Math.sin(angle);
-      const perpY = Math.cos(angle);
-      const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
-      const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
-      const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
-
-      const cp1x =
-        fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
-      const cp1y = fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
-      const cp2x =
-        toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
-      const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
-
-      const traceCubic = (ox: number, oy: number) => {
-        ctx.beginPath();
-        ctx.moveTo(fromX + ox, fromY + oy);
-        ctx.bezierCurveTo(
-          cp1x + ox,
-          cp1y + oy,
-          cp2x + ox,
-          cp2y + oy,
-          toX + ox,
-          toY + oy,
-        );
-      };
-
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      if (isUnlocked) {
-        traceCubic(2, 3);
-        ctx.strokeStyle = "rgba(0,0,0,0.35)";
-        ctx.lineWidth = 12;
-        ctx.stroke();
-      } else {
-        traceCubic(1, 2);
-        ctx.strokeStyle = "rgba(0,0,0,0.30)";
-        ctx.lineWidth = 8;
-        ctx.stroke();
-      }
-
-      if (isUnlocked) {
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#8B6914";
-        ctx.lineWidth = 10;
-        ctx.stroke();
-
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#D4A828";
-        ctx.lineWidth = 7;
-        ctx.stroke();
-
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#F0C840";
-        ctx.lineWidth = 3;
-        ctx.globalAlpha = 0.6;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-
-        for (let orb = 0; orb < 3; orb++) {
-          const dotPos = (time * 0.4 + orb * 0.33) % 1;
-          const t = dotPos;
-          const mt = 1 - t;
-          const ox =
-            mt * mt * mt * fromX +
-            3 * mt * mt * t * cp1x +
-            3 * mt * t * t * cp2x +
-            t * t * t * toX;
-          const oy =
-            mt * mt * mt * fromY +
-            3 * mt * mt * t * cp1y +
-            3 * mt * t * t * cp2y +
-            t * t * t * toY;
-          ctx.fillStyle = "#ffd700";
-          ctx.globalAlpha = 0.3;
-          ctx.beginPath();
-          ctx.arc(ox, oy, 6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 0.9;
-          ctx.fillStyle = "#FFE060";
-          ctx.beginPath();
-          ctx.arc(ox, oy, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#FFFAC0";
-          ctx.beginPath();
-          ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-      } else {
-        const lockedColors =
-          LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
-        ctx.strokeStyle = isPartial
-          ? lockedColors.partial
-          : lockedColors.locked;
-        ctx.lineWidth = isPartial ? 6 : 4;
-        ctx.setLineDash([8, 6]);
-        traceCubic(0, 0);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    });
-  });
-
   // === ABOVE-PATH LANDMARKS (rendered over connection paths) ===
 
   // === LANDMARK: Carnegie Lake (near Poe Field → Carnegie Lake path) ===
@@ -11324,8 +11344,8 @@ export const drawWorldMapCanvas = ({
 
   // === LANDMARK: Witch's Domain hut (near x:535, y:33) ===
   {
-    const whX = 528,
-      whY = getY(24);
+    const whX = 481,
+      whY = getY(30);
     const s = 1.6;
     // Ground — dead grass and moss
     ctx.fillStyle = "rgba(25,40,20,0.25)";
@@ -11834,8 +11854,8 @@ export const drawWorldMapCanvas = ({
 
   // === LANDMARK: Triad Keep fortified structure (near x:640, y:28) ===
   {
-    const tkX = 648,
-      tkY = getY(20);
+    const tkX = 618,
+      tkY = getY(25);
     const s = 1.7;
     // Moat
     ctx.fillStyle = "rgba(20,40,30,0.25)";
@@ -12077,8 +12097,8 @@ export const drawWorldMapCanvas = ({
 
   // === LANDMARK: Frost Fortress walls (near x:1268, y:67) ===
   {
-    const ffX = 1258,
-      ffY = getY(78);
+    const ffX = 1200,
+      ffY = getY(76);
     const s = 1.8;
     const stoneC = "#6a7a8a";
     const stoneD = "#4a5a6a";
@@ -12255,7 +12275,7 @@ export const drawWorldMapCanvas = ({
   // === LANDMARK: Frontier Outpost palisade (near x:1332, y:28) ===
   {
     const foX = 1340,
-      foY = getY(20);
+      foY = getY(42);
     const s = 1.6;
     // Cleared ground around outpost
     ctx.fillStyle = "rgba(200,215,230,0.12)";
@@ -12544,7 +12564,7 @@ export const drawWorldMapCanvas = ({
 
   // === LANDMARK: Obsidian Throne (near x:1702, y:59) ===
   {
-    const otX = 1718,
+    const otX = 1738,
       otY = getY(70);
     const s = 1.8;
     // Lava moat ring
@@ -12722,8 +12742,8 @@ export const drawWorldMapCanvas = ({
 
   // === LANDMARK: Ashen Spiral geyser vents (near x:1612, y:72) ===
   {
-    const gsX = 1620,
-      gsY = getY(78);
+    const gsX = 1580,
+      gsY = getY(61);
     const s = 1.6;
     // Scorched spiral crack pattern on ground
     ctx.strokeStyle = "rgba(180,60,10,0.15)";

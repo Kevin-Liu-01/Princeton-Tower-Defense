@@ -1,5 +1,8 @@
 import type { MapDecoration, MapHazard, Tower, TowerType } from "../types";
-import { computeGridPathLength, roundPathCorners } from "../utils/pathSmoothing";
+import {
+  computeGridPathLength,
+  roundPathCorners,
+} from "../utils/pathSmoothing";
 import { buildShowcaseTowers } from "./devShowcase";
 
 // =============================================================================
@@ -1825,7 +1828,7 @@ export const LEVEL_DATA: Record<
   },
   triad_keep: {
     name: "Triad Keep",
-    position: { x: 760, y: 270 },
+    position: { x: 810, y: 270 },
     description:
       "Build only Dinky, Library, and Club.\nStall, support, and out-economy the waves.",
     camera: { offset: { x: -148, y: -334 }, zoom: 0.84 },
@@ -1927,8 +1930,7 @@ export const LEVEL_DATA: Record<
   dev_enemy_showcase: {
     name: "Enemy Showcase",
     position: { x: 60, y: 60 },
-    description:
-      "Dev-only sandbox. Every tower at every upgrade level.",
+    description: "Dev-only sandbox. Every tower at every upgrade level.",
     camera: { offset: { x: -100, y: -390 }, zoom: 0.85 },
     region: "grassland",
     theme: "grassland",

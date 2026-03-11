@@ -136,7 +136,7 @@ export const WORLD_LEVELS: LevelNode[] = [
     difficulty: 3,
     kind: "challenge",
     tags: ["Restricted Build", "Economy"],
-    x: 640,
+    x: 680,
     y: 28,
     connectsTo: [],
   },
