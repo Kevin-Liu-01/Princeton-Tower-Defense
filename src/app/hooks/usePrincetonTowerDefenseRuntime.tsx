@@ -343,6 +343,7 @@ import {
 // Hooks
 import {
   useGameProgress,
+  useLocalStorage,
   DEFAULT_GAME_PROGRESS,
   type GameProgress,
 } from "../useLocalStorage";
@@ -535,8 +536,8 @@ export function usePrincetonTowerDefenseRuntime() {
   // Game state
   const [gameState, setGameState] = useState<GameState>("menu");
   const [selectedMap, setSelectedMap] = useState<string>("poe");
-  const [selectedHero, setSelectedHero] = useState<HeroType | null>("tiger");
-  const [selectedSpells, setSelectedSpells] = useState<SpellType[]>([]);
+  const [selectedHero, setSelectedHero] = useLocalStorage<HeroType | null>("princeton-td-selected-hero", "tiger");
+  const [selectedSpells, setSelectedSpells] = useLocalStorage<SpellType[]>("princeton-td-selected-spells", []);
 
   // Persistent progress (saved to localStorage)
   const {
@@ -5322,6 +5323,17 @@ export function usePrincetonTowerDefenseRuntime() {
               gameSpeed > 0
                 ? attackCooldown / gameSpeed / attackSpeedMultiplier
                 : attackCooldown;
+
+            // Focused Beam lock-on ramp: decay stacks if idle too long
+            const lockOnDecayTime = labStats.lockOnDecayTime || 600;
+            const currentLockOnStacks = tower.lockOnStacks || 0;
+            if (isFocusedBeam && currentLockOnStacks > 0) {
+              const effectiveDecay = gameSpeed > 0 ? lockOnDecayTime / gameSpeed : lockOnDecayTime;
+              if (now - tower.lastAttack > effectiveDecay) {
+                queueTowerPatch(tower.id, { lockOnStacks: 0, lockedTarget: undefined });
+              }
+            }
+
             if (now - tower.lastAttack > effectiveLabCooldown) {
               const validEnemies = getEnemiesInRange(
                 towerWorldPos,
@@ -5330,7 +5342,22 @@ export function usePrincetonTowerDefenseRuntime() {
               if (validEnemies.length > 0) {
                 const target = validEnemies[0];
                 const targetAimPos = getEnemyAimPosCached(target);
-                const damage = labStats.damage * finalDamageMult;
+
+                // Focused Beam ramp: stacks build when hitting the same target
+                let lockOnStacks = 0;
+                if (isFocusedBeam) {
+                  const maxStacks = labStats.lockOnMaxStacks || 20;
+                  const sameTarget = tower.lockedTarget === target.id;
+                  lockOnStacks = sameTarget
+                    ? Math.min(currentLockOnStacks + 1, maxStacks)
+                    : 0;
+                }
+                const lockOnDamageMult = isFocusedBeam
+                  ? 1 + lockOnStacks * (labStats.lockOnDamageMult || 0.15)
+                  : 1;
+
+                const baseDamage = labStats.damage * finalDamageMult;
+                const damage = baseDamage * lockOnDamageMult;
                 const numChainTargets = labStats.chainTargets || 1;
                 const chainRange = labStats.chainRange || 150;
                 const shouldChain = !isFocusedBeam && numChainTargets > 1;
@@ -5359,11 +5386,16 @@ export function usePrincetonTowerDefenseRuntime() {
                 const dx = targetAimPos.x - towerWorldPos.x;
                 const dy = targetAimPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
-                queueTowerPatch(tower.id, {
+                const towerPatch: Partial<Tower> = {
                   lastAttack: now,
                   rotation,
                   target: target.id,
-                });
+                };
+                if (isFocusedBeam) {
+                  towerPatch.lockedTarget = target.id;
+                  towerPatch.lockOnStacks = lockOnStacks;
+                }
+                queueTowerPatch(tower.id, towerPatch);
                 const lightningVisualPressure =
                   entityCountsRef.current.effects +
                   entityCountsRef.current.projectiles * 0.7 +
@@ -5411,6 +5443,9 @@ export function usePrincetonTowerDefenseRuntime() {
                     });
                   });
                 } else {
+                  const lockOnRatio = isFocusedBeam
+                    ? lockOnStacks / (labStats.lockOnMaxStacks || 20)
+                    : 0;
                   queuedTowerEffects.push({
                     id: generateId("zap"),
                     pos: towerWorldPos,
@@ -5419,7 +5454,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     size: distance(towerWorldPos, targetAimPos),
                     targetPos: targetAimPos,
                     intensity:
-                      (isFocusedBeam ? 0.8 : 1) * lightningIntensityScale,
+                      (isFocusedBeam ? 0.5 + lockOnRatio * 0.5 : 1) * lightningIntensityScale,
                     duration: lightningFxDuration,
                     towerId: tower.id,
                     towerLevel: tower.level,
@@ -12199,7 +12234,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setSelectedSpells([...selectedSpells, ...shuffled.slice(0, 3 - selectedSpells.length)]);
     }
     pendingStartWithRandomRef.current = true;
-  }, [selectedHero, selectedSpells]);
+  }, [selectedHero, selectedSpells, setSelectedHero, setSelectedSpells]);
 
   useEffect(() => {
     if (pendingStartWithRandomRef.current && selectedHero && selectedSpells.length === 3) {

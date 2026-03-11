@@ -559,9 +559,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   showPreviewRef.current = showPreview;
 
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
-  const hasAlternateTooltipOpen = Boolean(
-    hoveredLevel && hoveredLevel !== selectedLevel
-  );
   const currentLevel = selectedLevel ? getLevelById(selectedLevel) : null;
   const isCurrentCustomLevel = Boolean(currentLevel?.isCustom);
   const isCurrentChallengeLevel =
@@ -1573,23 +1570,21 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     onMouseLeave={() => setHoveredLevel(null)}
                     onClick={handleClick}
                   />
-                  {selectedLevel && !hasAlternateTooltipOpen && (() => {
+                  {selectedLevel && (() => {
                     const worldLevel = visibleWorldLevels.find((l) => l.id === selectedLevel);
                     if (!worldLevel) return null;
                     const scale = mapScale;
                     const yMap = getY(worldLevel.y);
-                    const size = 28;
-                    const cardWidth = 150;
-                    const cardHeight = 110;
-                    const cardXMap = worldLevel.x - cardWidth / 2;
-                    const showBelow = worldLevel.y < 50;
-                    const cardYMap = showBelow ? yMap + size + 12 : yMap - size - cardHeight - 12;
-                    const cardBottomPx = (cardYMap + cardHeight) * scale;
-                    const inset = 6;
-                    const btnLeftPx = (cardXMap + inset) * scale;
-                    const btnWidthPx = (cardWidth - inset * 2) * scale;
-                    const buttonH = 28;
-                    const shieldPad = 12;
+                    const nodeSize = 28;
+                    const btnWidth = 110;
+                    const btnHeight = 32;
+                    const gap = 8;
+                    const tooltipBelow = worldLevel.y < 50;
+                    const centerXPx = worldLevel.x * scale;
+                    const btnTopPx = tooltipBelow
+                      ? (yMap - nodeSize - gap - btnHeight) * scale
+                      : (yMap + nodeSize + gap) * scale;
+                    const shieldPad = 14;
                     const handleBattleClick = (e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (canStart) startGame();
@@ -1597,12 +1592,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     };
                     return (
                       <div
-                        className="absolute z-30 pointer-events-auto"
+                        className="absolute z-40 pointer-events-auto"
                         style={{
-                          left: `${btnLeftPx - shieldPad}px`,
-                          top: `${cardBottomPx - shieldPad}px`,
-                          width: `${btnWidthPx + shieldPad * 2}px`,
-                          height: `${buttonH + shieldPad * 2}px`,
+                          left: `${centerXPx - (btnWidth * scale) / 2 - shieldPad}px`,
+                          top: `${btnTopPx - shieldPad}px`,
+                          width: `${btnWidth * scale + shieldPad * 2}px`,
+                          height: `${btnHeight * scale + shieldPad * 2}px`,
                         }}
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
@@ -1610,25 +1605,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <button
                           type="button"
                           onClick={handleBattleClick}
-                          className="absolute rounded-b-md font-bold transition-all overflow-hidden group"
+                          className="absolute rounded-lg font-bold transition-all overflow-hidden group hover:brightness-125 hover:scale-105 active:scale-95"
                           style={{
                             left: `${shieldPad}px`,
                             top: `${shieldPad}px`,
-                            width: `${btnWidthPx}px`,
-                            height: `${buttonH}px`,
-                            background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
-                            border: `1.5px solid ${GOLD.accentBorder50}`,
-                            borderTop: 'none',
-                            boxShadow: `0 4px 12px ${GOLD.accentGlow10}`,
-                            color: "rgba(253, 230, 138, 0.9)",
-                            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                            width: `${btnWidth * scale}px`,
+                            height: `${btnHeight * scale}px`,
+                            background: `linear-gradient(180deg, rgba(200,150,30,0.97) 0%, rgba(160,105,15,0.97) 50%, rgba(130,80,10,0.97) 100%)`,
+                            border: `2px solid rgba(255,210,80,0.7)`,
+                            borderRadius: '8px',
+                            boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
+                            color: "#fff8e0",
+                            textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
                           }}
                         >
-                          <div className="absolute inset-[1px] top-0 rounded-b-[4px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}`, borderTop: 'none' }} />
-                          <span className="flex items-center text-xs font-bold justify-center gap-1.5 relative z-10 tracking-wide">
-                            <Swords size={14} />
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid rgba(255,230,140,0.2)` }} />
+                          <span className="flex items-center justify-center gap-1.5 relative z-10 text-xs font-black tracking-widest uppercase">
+                            <Swords size={13} />
                             BATTLE
-                            <Play size={12} />
+                            <ChevronRight size={14} className="-ml-0.5" />
                           </span>
                         </button>
                       </div>

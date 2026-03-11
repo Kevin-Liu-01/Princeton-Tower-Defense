@@ -9991,6 +9991,34 @@ export const drawWorldMapCanvas = ({
         }
       }
 
+      // Draw first tag badge in top-right corner
+      const tagText = level.kind === "challenge" ? "Challenge" : (level.tags[0] ?? "");
+      if (tagText) {
+        ctx.save();
+        ctx.font = "bold 8px 'bc-novatica-cyr', sans-serif";
+        const tagMetrics = ctx.measureText(tagText);
+        const tagPadH = 5;
+        const tagW = tagMetrics.width + tagPadH * 2;
+        const tagH = 14;
+        const tagX = cardX + cardWidth - 4 - tagW;
+        const tagY = cardY + 4;
+
+        const isChallenge = level.kind === "challenge";
+        ctx.fillStyle = isChallenge ? "rgba(160,60,40,0.92)" : "rgba(20,18,14,0.85)";
+        ctx.beginPath();
+        ctx.roundRect(tagX, tagY, tagW, tagH, 3);
+        ctx.fill();
+        ctx.strokeStyle = isChallenge ? "rgba(255,140,80,0.6)" : "rgba(180,150,80,0.5)";
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        ctx.fillStyle = isChallenge ? "#FFD4B0" : "#E8D8A0";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(tagText, tagX + tagW / 2, tagY + tagH / 2);
+        ctx.restore();
+      }
+
       // Draw Text
       ctx.fillStyle = "#ffd700";
       ctx.textAlign = "center";

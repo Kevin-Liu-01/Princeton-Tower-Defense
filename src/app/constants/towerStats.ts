@@ -2,7 +2,11 @@
 // Centralized tower statistics for damage calculations and buff application
 
 import type { TroopType } from "../types";
-import { LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "./combatConstants";
+import {
+  LEVEL_2_RANGE_MULT,
+  LEVEL_3_RANGE_MULT,
+  LEVEL_4_RANGE_MULT,
+} from "./combatConstants";
 
 // ============================================================================
 // TOWER STATS INTERFACES
@@ -26,6 +30,9 @@ export interface TowerBaseStats {
   crescendoSpeedMult?: number; // Per-stack cooldown multiplier (e.g. 0.92 = 8% faster)
   crescendoDamageMult?: number; // Per-stack additive damage bonus (e.g. 0.05 = +5%)
   crescendoDecayTime?: number; // Ms before stacks reset when idle
+  lockOnMaxStacks?: number;
+  lockOnDamageMult?: number; // Per-stack additive damage multiplier (e.g. 0.15 = +15% per stack)
+  lockOnDecayTime?: number; // Ms before stacks reset when target changes or idle
   income?: number; // For economy towers
   incomeInterval?: number;
   bonusIncomeMultiplier?: number;
@@ -284,6 +291,9 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
           range: 320,
           attackSpeed: 100,
           chainTargets: 1,
+          lockOnMaxStacks: 120,
+          lockOnDamageMult: 0.045,
+          lockOnDecayTime: 600,
           specialEffect: "Lock-on damage ramp",
         },
       },
@@ -358,7 +368,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
           damage: 30 * 1.8 * 1.1,
           range: 370,
           crescendoMaxStacks: 12,
-          crescendoSpeedMult: 0.90,
+          crescendoSpeedMult: 0.9,
           crescendoDamageMult: 0.07,
           crescendoDecayTime: 3000,
           specialEffect: "Ultimate crescendo",

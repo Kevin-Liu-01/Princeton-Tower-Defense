@@ -674,6 +674,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
         cornerSize={46}
         color="#d97706"
         glowColor="#fbbf24"
+        showSideBorders={false}
       >
         {/* ── Header ── */}
         <div className="sticky top-0 z-20 border-b border-amber-700/25 bg-stone-950/95 px-4 sm:px-6 py-3 backdrop-blur">

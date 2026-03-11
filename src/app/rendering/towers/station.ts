@@ -11,6 +11,114 @@ import {
 } from "./towerHelpers";
 import { renderDinkyTrains } from "./dinkyTrains";
 
+function drawWeathervane(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  tower: Tower,
+  zoom: number,
+  time: number,
+) {
+  const vaneX =
+    tower.level === 4 && tower.upgrade === "A"
+      ? screenPos.x - 16 * zoom
+      : tower.level === 4 && tower.upgrade === "B"
+        ? screenPos.x - 16 * zoom
+        : screenPos.x - 28 * zoom;
+  const vaneY =
+    tower.level === 4 && tower.upgrade === "A"
+      ? screenPos.y - 72 * zoom
+      : tower.level === 4 && tower.upgrade === "B"
+        ? screenPos.y - 68 * zoom
+        : screenPos.y - (38 + tower.level * 5) * zoom;
+  const vaneAngle = Math.sin(time * 0.6) * 0.8 + Math.sin(time * 1.7) * 0.3;
+  const vaneIsHighLevel = tower.level >= 4;
+  const vanePoleColor = vaneIsHighLevel
+    ? "#c9a227"
+    : tower.level >= 3
+      ? "#6a6a72"
+      : "#b87333";
+  const vaneArmLen = vaneIsHighLevel ? 5 : 7;
+  const vaneHeadScale = vaneIsHighLevel ? 1 : 1.4;
+  const vaneTailScale = vaneIsHighLevel ? 1 : 1.4;
+
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 3.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(vaneX + 0.5 * zoom, vaneY + 6.5 * zoom);
+  ctx.lineTo(vaneX + 0.5 * zoom, vaneY + 0.5 * zoom);
+  ctx.stroke();
+
+  ctx.strokeStyle = vanePoleColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(vaneX, vaneY + 6 * zoom);
+  ctx.lineTo(vaneX, vaneY);
+  ctx.stroke();
+
+  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
+  ctx.beginPath();
+  ctx.arc(vaneX, vaneY, 1.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
+  ctx.beginPath();
+  ctx.arc(vaneX - 0.4 * zoom, vaneY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.save();
+  ctx.translate(vaneX, vaneY + 2 * zoom);
+  const vaneDirX = Math.cos(vaneAngle);
+  const vaneDirY = Math.sin(vaneAngle) * 0.4;
+
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(
+    -vaneDirX * vaneArmLen * zoom + 0.5,
+    -vaneDirY * vaneArmLen * zoom + 0.5,
+  );
+  ctx.lineTo(
+    vaneDirX * vaneArmLen * zoom + 0.5,
+    vaneDirY * vaneArmLen * zoom + 0.5,
+  );
+  ctx.stroke();
+
+  ctx.strokeStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
+  ctx.lineTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
+  ctx.stroke();
+
+  ctx.fillStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
+  ctx.beginPath();
+  ctx.moveTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
+  ctx.lineTo(
+    vaneDirX * (vaneArmLen - 2) * zoom - vaneDirY * 2.5 * vaneHeadScale * zoom,
+    vaneDirY * (vaneArmLen - 2) * zoom + vaneDirX * 1.5 * vaneHeadScale * zoom,
+  );
+  ctx.lineTo(
+    vaneDirX * (vaneArmLen - 2) * zoom + vaneDirY * 2.5 * vaneHeadScale * zoom,
+    vaneDirY * (vaneArmLen - 2) * zoom - vaneDirX * 1.5 * vaneHeadScale * zoom,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
+  ctx.beginPath();
+  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
+  ctx.lineTo(
+    -vaneDirX * (vaneArmLen - 1) * zoom - vaneDirY * 3.5 * vaneTailScale * zoom,
+    -vaneDirY * (vaneArmLen - 1) * zoom + vaneDirX * 2 * vaneTailScale * zoom,
+  );
+  ctx.lineTo(
+    -vaneDirX * (vaneArmLen - 1) * zoom + vaneDirY * 3.5 * vaneTailScale * zoom,
+    -vaneDirY * (vaneArmLen - 1) * zoom - vaneDirX * 2 * vaneTailScale * zoom,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 export function renderStationTower(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,
@@ -234,7 +342,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 4 * zoom,
-        screenPos.y + (baseD + 8) * zoom * ISO_PRISM_D_FACTOR - 4 * zoom - i * 2 * zoom,
+        screenPos.y +
+          (baseD + 8) * zoom * ISO_PRISM_D_FACTOR -
+          4 * zoom -
+          i * 2 * zoom,
       );
       ctx.stroke();
     }
@@ -527,7 +638,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 6 * zoom,
-        screenPos.y + (baseD + 14) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom - i * 3 * zoom,
+        screenPos.y +
+          (baseD + 14) * zoom * ISO_PRISM_D_FACTOR -
+          5 * zoom -
+          i * 3 * zoom,
       );
       ctx.stroke();
       // Diagonal lines other direction
@@ -538,7 +652,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 6 * zoom,
-        screenPos.y + (baseD + 14) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom + i * 3 * zoom,
+        screenPos.y +
+          (baseD + 14) * zoom * ISO_PRISM_D_FACTOR -
+          5 * zoom +
+          i * 3 * zoom,
       );
       ctx.stroke();
     }
@@ -970,7 +1087,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 16) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom -
+          i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
@@ -980,7 +1100,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 16) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom +
+          i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -1059,18 +1182,12 @@ export function renderStationTower(
     // Tower caps
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 6) * zoom * 0.5,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 18 * zoom);
     ctx.lineTo(
       screenPos.x - (baseW + 6) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.5,
-      screenPos.y - 12 * zoom,
-    );
+    ctx.lineTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 12 * zoom);
     ctx.lineTo(
       screenPos.x - (baseW + 6) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
@@ -1078,18 +1195,12 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x + (baseW + 6) * zoom * 0.5,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 18 * zoom);
     ctx.lineTo(
       screenPos.x + (baseW + 6) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.5,
-      screenPos.y - 12 * zoom,
-    );
+    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 12 * zoom);
     ctx.lineTo(
       screenPos.x + (baseW + 6) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
@@ -1619,7 +1730,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 18) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom -
+          i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
@@ -1629,7 +1743,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 18) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom +
+          i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -1941,7 +2058,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom - i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 18) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom -
+          i * 2.5 * zoom,
       );
       ctx.stroke();
       ctx.beginPath();
@@ -1951,7 +2071,10 @@ export function renderStationTower(
       );
       ctx.lineTo(
         screenPos.x + i * 5 * zoom,
-        screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR - 6 * zoom + i * 2.5 * zoom,
+        screenPos.y +
+          (baseD + 18) * zoom * ISO_PRISM_D_FACTOR -
+          6 * zoom +
+          i * 2.5 * zoom,
       );
       ctx.stroke();
     }
@@ -2065,18 +2188,12 @@ export function renderStationTower(
     // Pillar caps with finials
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 18 * zoom);
     ctx.lineTo(
       screenPos.x - (baseW + 8) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
-      screenPos.y - 12 * zoom,
-    );
+    ctx.lineTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 12 * zoom);
     ctx.lineTo(
       screenPos.x - (baseW + 8) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
@@ -2084,18 +2201,12 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 18 * zoom);
     ctx.lineTo(
       screenPos.x + (baseW + 8) * zoom * 0.5 - 4 * zoom,
       screenPos.y - 14 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
-      screenPos.y - 12 * zoom,
-    );
+    ctx.lineTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 12 * zoom);
     ctx.lineTo(
       screenPos.x + (baseW + 8) * zoom * 0.5 + 4 * zoom,
       screenPos.y - 14 * zoom,
@@ -2106,10 +2217,7 @@ export function renderStationTower(
     // Gold finial spikes
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
-      screenPos.y - 22 * zoom,
-    );
+    ctx.moveTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 22 * zoom);
     ctx.lineTo(
       screenPos.x - (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
       screenPos.y - 18 * zoom,
@@ -2121,10 +2229,7 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
-      screenPos.y - 22 * zoom,
-    );
+    ctx.moveTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 22 * zoom);
     ctx.lineTo(
       screenPos.x + (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
       screenPos.y - 18 * zoom,
@@ -3893,121 +3998,296 @@ export function renderStationTower(
 
     // (Sign removed)
 
-    // === Railroad semaphore signal (left side) ===
+    // Weathervane drawn here for level 1 so it layers behind the semaphore
+    drawWeathervane(ctx, screenPos, tower, zoom, time);
+
+    // === Railroad semaphore signal (left side) — isometric 3D ===
     {
       const sigX = bX - 14 * zoom;
       const sigY = bY - 6 * zoom;
-      const poleTop = sigY - 34 * zoom;
+      const poleH = 34 * zoom;
+      const poleTop = sigY - poleH;
+      const poleW = 1.8 * zoom;
+      const isoDepth = poleW * 0.5;
 
-      // Signal pole — dark iron
-      ctx.strokeStyle = "#3a3a3a";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(sigX, sigY);
-      ctx.lineTo(sigX, poleTop);
-      ctx.stroke();
-      // Highlight strip
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(sigX + 0.8 * zoom, sigY);
-      ctx.lineTo(sigX + 0.8 * zoom, poleTop);
-      ctx.stroke();
+      // --- Isometric base plate (thick iron slab) ---
+      drawIsometricPrism(
+        ctx,
+        sigX,
+        sigY + 1 * zoom,
+        8,
+        6,
+        2,
+        { top: "#5a5a5a", left: "#4a4a4a", right: "#3a3a3a" },
+        zoom,
+      );
+      // Base rivets (four corners)
+      ctx.fillStyle = "#6a6a6a";
+      for (const [rx, ry] of [
+        [-2.5, -0.2],
+        [2.5, -0.2],
+        [0, -1.2],
+        [0, 1],
+      ] as const) {
+        ctx.beginPath();
+        ctx.arc(
+          sigX + rx * zoom,
+          sigY + 1 * zoom + ry * zoom,
+          0.6 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
 
-      // Pole base plate
-      ctx.fillStyle = "#4a4a4a";
+      // --- 3D isometric pole (four-faced prism) ---
+      // Right face (darker)
+      ctx.fillStyle = "#383838";
       ctx.beginPath();
-      ctx.moveTo(sigX - 4 * zoom, sigY);
-      ctx.lineTo(sigX, sigY + 2 * zoom);
-      ctx.lineTo(sigX + 4 * zoom, sigY);
-      ctx.lineTo(sigX, sigY - 2 * zoom);
+      ctx.moveTo(sigX + poleW * 0.5, sigY);
+      ctx.lineTo(sigX + poleW * 0.5 + isoDepth, sigY - isoDepth * 0.5);
+      ctx.lineTo(sigX + poleW * 0.5 + isoDepth, poleTop - isoDepth * 0.5);
+      ctx.lineTo(sigX + poleW * 0.5, poleTop);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#2a2a2a";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.stroke();
+      // Left face (lighter)
+      ctx.fillStyle = "#505050";
+      ctx.beginPath();
+      ctx.moveTo(sigX - poleW * 0.5, sigY);
+      ctx.lineTo(sigX - poleW * 0.5 - isoDepth, sigY - isoDepth * 0.5);
+      ctx.lineTo(sigX - poleW * 0.5 - isoDepth, poleTop - isoDepth * 0.5);
+      ctx.lineTo(sigX - poleW * 0.5, poleTop);
+      ctx.closePath();
+      ctx.fill();
+      // Front face
+      ctx.fillStyle = "#454545";
+      ctx.fillRect(sigX - poleW * 0.5, poleTop, poleW, poleH);
+      // Front edge highlight
+      ctx.fillStyle = "rgba(255,255,255,0.07)";
+      ctx.fillRect(sigX - poleW * 0.5, poleTop, 0.6 * zoom, poleH);
 
-      // Cross-arm bracket
-      const armY = poleTop + 4 * zoom;
+      // Pole iron collar bands (3 evenly spaced)
+      ctx.fillStyle = "#5a5a5a";
+      for (let cb = 0; cb < 3; cb++) {
+        const cby = sigY - 4 * zoom - cb * 10 * zoom;
+        ctx.fillRect(
+          sigX - poleW * 0.5 - 0.5 * zoom,
+          cby - 0.8 * zoom,
+          poleW + 1 * zoom,
+          1.6 * zoom,
+        );
+        // Band right-face extension
+        ctx.fillStyle = "#484848";
+        ctx.beginPath();
+        ctx.moveTo(sigX + poleW * 0.5 + 0.5 * zoom, cby - 0.8 * zoom);
+        ctx.lineTo(
+          sigX + poleW * 0.5 + isoDepth + 0.5 * zoom,
+          cby - 0.8 * zoom - isoDepth * 0.5,
+        );
+        ctx.lineTo(
+          sigX + poleW * 0.5 + isoDepth + 0.5 * zoom,
+          cby + 0.8 * zoom - isoDepth * 0.5,
+        );
+        ctx.lineTo(sigX + poleW * 0.5 + 0.5 * zoom, cby + 0.8 * zoom);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#5a5a5a";
+      }
+
+      // --- Diagonal support struts (isometric braces from pole to base) ---
       ctx.strokeStyle = "#4a4a4a";
-      ctx.lineWidth = 1.5 * zoom;
+      ctx.lineWidth = 1.2 * zoom;
+      // Left brace
       ctx.beginPath();
-      ctx.moveTo(sigX, armY);
-      ctx.lineTo(sigX - 2 * zoom, armY - 2 * zoom);
+      ctx.moveTo(sigX - poleW * 0.5, sigY - 8 * zoom);
+      ctx.lineTo(sigX - 3.5 * zoom, sigY - 0.5 * zoom);
       ctx.stroke();
+      // Right brace
       ctx.beginPath();
-      ctx.moveTo(sigX, armY);
-      ctx.lineTo(sigX + 2 * zoom, armY - 2 * zoom);
+      ctx.moveTo(sigX + poleW * 0.5, sigY - 8 * zoom);
+      ctx.lineTo(sigX + 3.5 * zoom, sigY - 0.5 * zoom);
       ctx.stroke();
 
-      // Animated semaphore arm — swings between stop/clear
+      // --- Animated semaphore arm — 3D isometric blade (behind lamp) ---
       const armAngle = Math.sin(time * 0.4) * 0.35 - 0.2;
-      const armLen = 10 * zoom;
-      const armEndX = sigX + Math.cos(armAngle) * armLen;
-      const armEndY = poleTop + 2 * zoom - Math.sin(armAngle) * armLen;
+      const armLen = 11 * zoom;
+      const armThick = 1.8 * zoom;
+      const armDepthOff = 1 * zoom;
+      const pivotX = sigX;
+      const pivotY = poleTop + 2 * zoom;
+      const cosA = Math.cos(armAngle);
+      const sinA = Math.sin(armAngle);
+      const tipX = pivotX + cosA * armLen;
+      const tipY = pivotY - sinA * armLen;
+      const perpX = sinA * armThick;
+      const perpY = cosA * armThick;
 
-      // Arm shadow
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 3.5 * zoom;
+      // Arm shadow on building
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.beginPath();
-      ctx.moveTo(sigX + 0.5 * zoom, poleTop + 2.5 * zoom);
-      ctx.lineTo(armEndX + 0.5 * zoom, armEndY + 0.5 * zoom);
+      ctx.moveTo(pivotX + 1, pivotY + 1);
+      ctx.lineTo(tipX + 1, tipY + 1);
+      ctx.lineTo(tipX + perpX + 1, tipY + perpY + 1);
+      ctx.lineTo(pivotX + perpX + 1, pivotY + perpY + 1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Arm isometric bottom face (depth)
+      ctx.fillStyle = "#7a1510";
+      ctx.beginPath();
+      ctx.moveTo(pivotX + perpX, pivotY + perpY);
+      ctx.lineTo(tipX + perpX, tipY + perpY);
+      ctx.lineTo(tipX + perpX + armDepthOff, tipY + perpY - armDepthOff * 0.5);
+      ctx.lineTo(
+        pivotX + perpX + armDepthOff,
+        pivotY + perpY - armDepthOff * 0.5,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Arm main face — red
+      ctx.fillStyle = "#c03020";
+      ctx.beginPath();
+      ctx.moveTo(pivotX, pivotY);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(tipX + perpX, tipY + perpY);
+      ctx.lineTo(pivotX + perpX, pivotY + perpY);
+      ctx.closePath();
+      ctx.fill();
+
+      // White stripe on outer third
+      const st = 0.62;
+      const ssx = pivotX + (tipX - pivotX) * st;
+      const ssy = pivotY + (tipY - pivotY) * st;
+      ctx.fillStyle = "#e8e0d0";
+      ctx.beginPath();
+      ctx.moveTo(ssx, ssy);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(tipX + perpX, tipY + perpY);
+      ctx.lineTo(ssx + perpX, ssy + perpY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Arm top edge highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(pivotX, pivotY);
+      ctx.lineTo(tipX, tipY);
       ctx.stroke();
 
-      // Arm body — red with white stripe
-      ctx.strokeStyle = "#c03020";
-      ctx.lineWidth = 3 * zoom;
+      // Arm isometric top face
+      ctx.fillStyle = "#d44030";
       ctx.beginPath();
-      ctx.moveTo(sigX, poleTop + 2 * zoom);
-      ctx.lineTo(armEndX, armEndY);
-      ctx.stroke();
-      // White stripe
-      const stripeT = 0.65;
-      const stripeX = sigX + (armEndX - sigX) * stripeT;
-      const stripeY = poleTop + 2 * zoom + (armEndY - poleTop - 2 * zoom) * stripeT;
-      ctx.strokeStyle = "#e8e0d0";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(stripeX, stripeY);
-      ctx.lineTo(armEndX, armEndY);
-      ctx.stroke();
+      ctx.moveTo(pivotX, pivotY);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(tipX + armDepthOff, tipY - armDepthOff * 0.5);
+      ctx.lineTo(pivotX + armDepthOff, pivotY - armDepthOff * 0.5);
+      ctx.closePath();
+      ctx.fill();
 
-      // Arm end weight (counterbalance disc)
+      // Counterbalance weight at tip (3D disc)
       ctx.fillStyle = "#2a2a2a";
       ctx.beginPath();
-      ctx.arc(armEndX, armEndY, 2 * zoom, 0, Math.PI * 2);
+      ctx.ellipse(
+        tipX + perpX * 0.5,
+        tipY + perpY * 0.5,
+        2.2 * zoom,
+        1.2 * zoom,
+        armAngle,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
-
-      // Finial ball at pole top
-      ctx.fillStyle = "#5a5a5a";
-      ctx.beginPath();
-      ctx.arc(sigX, poleTop - 1 * zoom, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.12)";
-      ctx.beginPath();
-      ctx.arc(sigX - 0.4 * zoom, poleTop - 1.6 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Signal lamp (below arm, on pole)
-      const lampY = poleTop + 8 * zoom;
       ctx.fillStyle = "#3a3a3a";
-      ctx.fillRect(sigX - 2 * zoom, lampY - 2 * zoom, 4 * zoom, 4 * zoom);
-      // Lamp housing frame
-      ctx.strokeStyle = "#5a5a5a";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.strokeRect(sigX - 2 * zoom, lampY - 2 * zoom, 4 * zoom, 4 * zoom);
-
-      // Green/red lamp glow based on arm position
-      const isGreen = armAngle < -0.1;
-      const lampGlow = 0.7 + Math.sin(time * 2) * 0.15;
-      const lampColor = isGreen ? `rgba(50, 220, 80, ${lampGlow})` : `rgba(220, 50, 30, ${lampGlow})`;
-      ctx.fillStyle = lampColor;
-      ctx.shadowColor = isGreen ? "#33dd55" : "#dd3322";
-      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.arc(sigX, lampY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.ellipse(
+        tipX + perpX * 0.5,
+        tipY + perpY * 0.5,
+        1.5 * zoom,
+        0.8 * zoom,
+        armAngle,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
-      ctx.shadowBlur = 0;
+
+      // Pivot bolt (visible brass circle)
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(
+        pivotX + perpX * 0.5,
+        pivotY + perpY * 0.5,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.fillStyle = "#e8c847";
+      ctx.beginPath();
+      ctx.arc(
+        pivotX + perpX * 0.5 - 0.3 * zoom,
+        pivotY + perpY * 0.5 - 0.3 * zoom,
+        0.5 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // --- Finial cap at pole top (behind lamp, 3D sphere with specular) ---
+      const finGrad = ctx.createRadialGradient(
+        sigX - 0.6 * zoom,
+        poleTop - 2 * zoom,
+        0,
+        sigX,
+        poleTop - 1.2 * zoom,
+        2.5 * zoom,
+      );
+      finGrad.addColorStop(0, "#7a7a7a");
+      finGrad.addColorStop(0.5, "#5a5a5a");
+      finGrad.addColorStop(1, "#3a3a3a");
+      ctx.fillStyle = finGrad;
+      ctx.beginPath();
+      ctx.arc(sigX, poleTop - 1.2 * zoom, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.22)";
+      ctx.beginPath();
+      ctx.arc(
+        sigX - 0.5 * zoom,
+        poleTop - 2 * zoom,
+        0.8 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // --- 3D lamp housing (isometric box, drawn last = in front) ---
+      const lampY = poleTop + 10 * zoom;
+      drawIsometricPrism(
+        ctx,
+        sigX,
+        lampY,
+        4,
+        3,
+        5,
+        { top: "#4a4a4a", left: "#5a5a5a", right: "#3a3a3a" },
+        zoom,
+      );
+      // Lamp glass pane on front face (inset glow)
+      const isGreen = Math.sin(time * 0.4) < 0;
+      const lampGlow = 0.8 + Math.sin(time * 2.5) * 0.15;
+      const lampColor = isGreen
+        ? `rgba(50, 220, 80, ${lampGlow})`
+        : `rgba(220, 50, 30, ${lampGlow})`;
+      ctx.fillStyle = lampColor;
+      ctx.fillRect(sigX - 1.2 * zoom, lampY - 4 * zoom, 2.4 * zoom, 3 * zoom);
+      // Glow halo
+      ctx.fillStyle = isGreen
+        ? `rgba(50, 220, 80, ${lampGlow * 0.25})`
+        : `rgba(220, 50, 30, ${lampGlow * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(sigX, lampY - 2.5 * zoom, 4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // === Cargo crates & barrel (left side, base level) ===
@@ -4082,15 +4362,33 @@ export function renderStationTower(
       ctx.fillStyle = barrelGrad;
       ctx.beginPath();
       ctx.moveTo(barrelX - 2.5 * zoom, barrelY);
-      ctx.quadraticCurveTo(barrelX - 3 * zoom, barrelY - 2.5 * zoom, barrelX - 2.5 * zoom, barrelY - 5 * zoom);
+      ctx.quadraticCurveTo(
+        barrelX - 3 * zoom,
+        barrelY - 2.5 * zoom,
+        barrelX - 2.5 * zoom,
+        barrelY - 5 * zoom,
+      );
       ctx.lineTo(barrelX + 2.5 * zoom, barrelY - 5 * zoom);
-      ctx.quadraticCurveTo(barrelX + 3 * zoom, barrelY - 2.5 * zoom, barrelX + 2.5 * zoom, barrelY);
+      ctx.quadraticCurveTo(
+        barrelX + 3 * zoom,
+        barrelY - 2.5 * zoom,
+        barrelX + 2.5 * zoom,
+        barrelY,
+      );
       ctx.closePath();
       ctx.fill();
       // Barrel top (ellipse)
       ctx.fillStyle = "#7a5a35";
       ctx.beginPath();
-      ctx.ellipse(barrelX, barrelY - 5 * zoom, 2.5 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        barrelX,
+        barrelY - 5 * zoom,
+        2.5 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Iron hoops
       ctx.strokeStyle = "#5a5a5a";
@@ -4098,7 +4396,12 @@ export function renderStationTower(
       for (const hoopY of [barrelY - 1 * zoom, barrelY - 4 * zoom]) {
         ctx.beginPath();
         ctx.moveTo(barrelX - 2.7 * zoom, hoopY);
-        ctx.quadraticCurveTo(barrelX, hoopY + 0.8 * zoom, barrelX + 2.7 * zoom, hoopY);
+        ctx.quadraticCurveTo(
+          barrelX,
+          hoopY + 0.8 * zoom,
+          barrelX + 2.7 * zoom,
+          hoopY,
+        );
         ctx.stroke();
       }
     }
@@ -5917,14 +6220,8 @@ export function renderStationTower(
       const stepHW = gateHW + 1.5 * zoom;
       ctx.fillStyle = "#5a5a62";
       ctx.beginPath();
-      ctx.moveTo(
-        gateCx - stepHW,
-        portBot + -stepHW * slope + 1 * zoom,
-      );
-      ctx.lineTo(
-        gateCx + stepHW,
-        portBot + stepHW * slope + 1 * zoom,
-      );
+      ctx.moveTo(gateCx - stepHW, portBot + -stepHW * slope + 1 * zoom);
+      ctx.lineTo(gateCx + stepHW, portBot + stepHW * slope + 1 * zoom);
       ctx.lineTo(
         gateCx + stepHW + 0.5 * zoom,
         portBot + stepHW * slope + 3 * zoom,
@@ -6252,16 +6549,11 @@ export function renderStationTower(
       "#7a6040",
     );
     // Stable door (isometric on left face)
-    drawIsoFlushRect(
-      ctx,
-      lwX - 1 * zoom,
-      lwY - 7 * zoom,
-      8,
-      14,
-      "left",
-      zoom,
-      { fill: "#4a3015", recessDepth: 1, recessFill: "#2a1a05" },
-    );
+    drawIsoFlushRect(ctx, lwX - 1 * zoom, lwY - 7 * zoom, 8, 14, "left", zoom, {
+      fill: "#4a3015",
+      recessDepth: 1,
+      recessFill: "#2a1a05",
+    });
     drawIsoFlushRect(
       ctx,
       lwX - 1 * zoom,
@@ -7127,26 +7419,15 @@ export function renderStationTower(
     ctx.stroke();
 
     // Stable door (isometric on left face)
-    drawIsoFlushRect(
-      ctx,
-      lwX - 1 * zoom,
-      lwY - 8 * zoom,
-      8,
-      16,
-      "left",
-      zoom,
-      { fill: "#3a2a1a", recessDepth: 1, recessFill: "#1a0a05" },
-    );
-    drawIsoFlushRect(
-      ctx,
-      lwX - 1 * zoom,
-      lwY - 12 * zoom,
-      7,
-      7,
-      "left",
-      zoom,
-      { stroke: "#7b3fa0", lineWidth: 1.5 },
-    );
+    drawIsoFlushRect(ctx, lwX - 1 * zoom, lwY - 8 * zoom, 8, 16, "left", zoom, {
+      fill: "#3a2a1a",
+      recessDepth: 1,
+      recessFill: "#1a0a05",
+    });
+    drawIsoFlushRect(ctx, lwX - 1 * zoom, lwY - 12 * zoom, 7, 7, "left", zoom, {
+      stroke: "#7b3fa0",
+      lineWidth: 1.5,
+    });
     // War horse head
     ctx.fillStyle = "#3a2a1a";
     ctx.beginPath();
@@ -11604,107 +11885,10 @@ export function renderStationTower(
   }
 
   // ---- ROTATING WEATHERVANE (transport compass on roof peak) ----
-  const vaneX =
-    tower.level === 4 && tower.upgrade === "A"
-      ? screenPos.x - 16 * zoom
-      : tower.level === 4 && tower.upgrade === "B"
-        ? screenPos.x - 16 * zoom
-        : screenPos.x - 28 * zoom;
-  const vaneY =
-    tower.level === 4 && tower.upgrade === "A"
-      ? screenPos.y - 72 * zoom
-      : tower.level === 4 && tower.upgrade === "B"
-        ? screenPos.y - 68 * zoom
-        : screenPos.y - (38 + tower.level * 5) * zoom;
-  const vaneAngle = Math.sin(time * 0.6) * 0.8 + Math.sin(time * 1.7) * 0.3;
-  const vaneIsHighLevel = tower.level >= 4;
-  const vanePoleColor = vaneIsHighLevel
-    ? "#c9a227"
-    : tower.level >= 3
-      ? "#6a6a72"
-      : "#b87333";
-  const vaneArmLen = vaneIsHighLevel ? 5 : 7;
-  const vaneHeadScale = vaneIsHighLevel ? 1 : 1.4;
-  const vaneTailScale = vaneIsHighLevel ? 1 : 1.4;
-
-  // Vane pole shadow for contrast
-  ctx.strokeStyle = "rgba(0,0,0,0.35)";
-  ctx.lineWidth = 3.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(vaneX + 0.5 * zoom, vaneY + 6.5 * zoom);
-  ctx.lineTo(vaneX + 0.5 * zoom, vaneY + 0.5 * zoom);
-  ctx.stroke();
-
-  // Vane pole
-  ctx.strokeStyle = vanePoleColor;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(vaneX, vaneY + 6 * zoom);
-  ctx.lineTo(vaneX, vaneY);
-  ctx.stroke();
-
-  // Vane finial (ornamental ball on top)
-  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
-  ctx.beginPath();
-  ctx.arc(vaneX, vaneY, 1.8 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.25)";
-  ctx.beginPath();
-  ctx.arc(vaneX - 0.4 * zoom, vaneY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Vane arrow (rotates with wind)
-  ctx.save();
-  ctx.translate(vaneX, vaneY + 2 * zoom);
-  const vaneDirX = Math.cos(vaneAngle);
-  const vaneDirY = Math.sin(vaneAngle) * 0.4;
-
-  // Arrow shadow
-  ctx.strokeStyle = "rgba(0,0,0,0.3)";
-  ctx.lineWidth = 3 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(-vaneDirX * vaneArmLen * zoom + 0.5, -vaneDirY * vaneArmLen * zoom + 0.5);
-  ctx.lineTo(vaneDirX * vaneArmLen * zoom + 0.5, vaneDirY * vaneArmLen * zoom + 0.5);
-  ctx.stroke();
-
-  // Arrow shaft
-  ctx.strokeStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
-  ctx.lineTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
-  ctx.stroke();
-
-  // Arrow head
-  ctx.fillStyle = vaneIsHighLevel ? "#c9a227" : "#c48a30";
-  ctx.beginPath();
-  ctx.moveTo(vaneDirX * vaneArmLen * zoom, vaneDirY * vaneArmLen * zoom);
-  ctx.lineTo(
-    vaneDirX * (vaneArmLen - 2) * zoom - vaneDirY * 2.5 * vaneHeadScale * zoom,
-    vaneDirY * (vaneArmLen - 2) * zoom + vaneDirX * 1.5 * vaneHeadScale * zoom,
-  );
-  ctx.lineTo(
-    vaneDirX * (vaneArmLen - 2) * zoom + vaneDirY * 2.5 * vaneHeadScale * zoom,
-    vaneDirY * (vaneArmLen - 2) * zoom - vaneDirX * 1.5 * vaneHeadScale * zoom,
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Tail fin
-  ctx.fillStyle = vaneIsHighLevel ? "#e8c847" : "#d4a853";
-  ctx.beginPath();
-  ctx.moveTo(-vaneDirX * vaneArmLen * zoom, -vaneDirY * vaneArmLen * zoom);
-  ctx.lineTo(
-    -vaneDirX * (vaneArmLen - 1) * zoom - vaneDirY * 3.5 * vaneTailScale * zoom,
-    -vaneDirY * (vaneArmLen - 1) * zoom + vaneDirX * 2 * vaneTailScale * zoom,
-  );
-  ctx.lineTo(
-    -vaneDirX * (vaneArmLen - 1) * zoom + vaneDirY * 3.5 * vaneTailScale * zoom,
-    -vaneDirY * (vaneArmLen - 1) * zoom - vaneDirX * 2 * vaneTailScale * zoom,
-  );
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
+  // For level 1, this is drawn earlier (before semaphore) to layer behind it.
+  if (tower.level !== 1) {
+    drawWeathervane(ctx, screenPos, tower, zoom, time);
+  }
 
   // ---- ANIMATED GROUND-LEVEL CARGO TROLLEY (NW isometric axis) ----
   const trolleyTrackLen = 18 * zoom;

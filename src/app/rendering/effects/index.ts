@@ -13,7 +13,7 @@ import type {
 } from "../../types";
 import { worldToScreen } from "../../utils";
 import { ISO_Y_RATIO } from "../../constants";
-import { drawLightningBolt, drawExplosion } from "../helpers";
+import { drawLightningBolt, drawExplosion, type LightningColorScheme } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import { renderEnemyDeath } from "./deathAnimations";
 
@@ -70,6 +70,7 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = effect.intensity || 1;
+        const boltColor: LightningColorScheme = effect.type === "beam" ? "yellow" : "blue";
         drawLightningBolt(
           ctx,
           screenPos.x,
@@ -79,10 +80,12 @@ export function renderEffect(
           intensity,
           zoom,
           alpha,
+          boltColor,
         );
 
         // Impact spark
-        ctx.fillStyle = `rgba(150, 255, 255, ${alpha * intensity})`;
+        const impactRgb = effect.type === "beam" ? "255, 255, 150" : "150, 255, 255";
+        ctx.fillStyle = `rgba(${impactRgb}, ${alpha * intensity})`;
         ctx.beginPath();
         ctx.arc(
           targetScreen.x,

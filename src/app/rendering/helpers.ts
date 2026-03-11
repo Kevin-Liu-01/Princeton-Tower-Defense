@@ -838,6 +838,28 @@ export function drawRangeIndicator(
 // EFFECT HELPERS
 // ============================================================================
 
+export type LightningColorScheme = "blue" | "yellow";
+
+const LIGHTNING_COLORS: Record<LightningColorScheme, {
+  outerGlow: string; outerStroke: string;
+  midGlow: string; midStroke: string;
+  coreStroke: string;
+  branchStroke: string; impactFill: string;
+}> = {
+  blue: {
+    outerGlow: "#0088ff", outerStroke: "30, 100, 255",
+    midGlow: "#00ffff", midStroke: "0, 220, 255",
+    coreStroke: "220, 255, 255",
+    branchStroke: "0, 200, 255", impactFill: "150, 255, 255",
+  },
+  yellow: {
+    outerGlow: "#ff8800", outerStroke: "255, 170, 30",
+    midGlow: "#ffee00", midStroke: "255, 230, 50",
+    coreStroke: "255, 255, 220",
+    branchStroke: "255, 200, 0", impactFill: "255, 255, 150",
+  },
+};
+
 export function drawLightningBolt(
   ctx: CanvasRenderingContext2D,
   x1: number,
@@ -847,6 +869,7 @@ export function drawLightningBolt(
   intensity: number = 1,
   zoom: number = 1,
   alpha: number = 1,
+  colorScheme: LightningColorScheme = "blue",
 ): void {
   const dx = x2 - x1;
   const dy = y2 - y1;
@@ -879,10 +902,12 @@ export function drawLightningBolt(
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
+  const c = LIGHTNING_COLORS[colorScheme];
+
   // Layer 1: outer glow
-  ctx.shadowColor = "#0088ff";
+  ctx.shadowColor = c.outerGlow;
   ctx.shadowBlur = 16 * zoom * intensity;
-  ctx.strokeStyle = `rgba(30, 100, 255, ${alpha * 0.25 * intensity})`;
+  ctx.strokeStyle = `rgba(${c.outerStroke}, ${alpha * 0.25 * intensity})`;
   ctx.lineWidth = 9 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
@@ -890,9 +915,9 @@ export function drawLightningBolt(
   ctx.stroke();
 
   // Layer 2: mid glow
-  ctx.shadowColor = "#00ffff";
+  ctx.shadowColor = c.midGlow;
   ctx.shadowBlur = 10 * zoom * intensity;
-  ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.55 * intensity})`;
+  ctx.strokeStyle = `rgba(${c.midStroke}, ${alpha * 0.55 * intensity})`;
   ctx.lineWidth = 3.5 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
@@ -901,7 +926,7 @@ export function drawLightningBolt(
 
   // Layer 3: bright core
   ctx.shadowBlur = 4 * zoom;
-  ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.85 * intensity})`;
+  ctx.strokeStyle = `rgba(${c.coreStroke}, ${alpha * 0.85 * intensity})`;
   ctx.lineWidth = 1.2 * zoom * intensity;
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
@@ -915,7 +940,7 @@ export function drawLightningBolt(
     const brAngle =
       Math.atan2(dy, dx) + (noise(boltSeed + 73) - 0.5) * Math.PI * 0.7;
     const brLen = (12 + noise(boltSeed + 53) * 18) * zoom * intensity;
-    ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
+    ctx.strokeStyle = `rgba(${c.branchStroke}, ${alpha * 0.35 * intensity})`;
     ctx.lineWidth = 2.5 * zoom * intensity;
     ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();

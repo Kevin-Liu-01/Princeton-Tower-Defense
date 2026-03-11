@@ -35,6 +35,7 @@ import {
   Lock,
   Fence,
   Flag,
+  Rocket,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
 import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA } from "../../constants";
@@ -435,6 +436,21 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const hasDamageDebuff = damageDebuff > 0;
   const hasRangeDebuff = rangeDebuff > 0;
 
+  // Stats already shown in the tower-specific upgrade detail section — skip in top grid
+  const upgradeDetailKeys = new Set<string>();
+  if (tower.level === 4 && tower.upgrade) {
+    const t = tower.type;
+    const u = tower.upgrade;
+    if (t === "library" && u === "A")  { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("splash"); }
+    if (t === "library" && u === "B")  { upgradeDetailKeys.add("slow"); upgradeDetailKeys.add("stun"); }
+    if (t === "cannon"  && u === "B")  { upgradeDetailKeys.add("burn"); }
+    if (t === "lab"     && u === "B")  { upgradeDetailKeys.add("chain"); }
+    if (t === "arch"    && u === "A")  { upgradeDetailKeys.add("stun"); upgradeDetailKeys.add("crescendo"); }
+    if (t === "arch"    && u === "B")  { upgradeDetailKeys.add("crescendo"); }
+    if (t === "mortar"  && u === "A")  { upgradeDetailKeys.add("splash"); }
+    if (t === "mortar"  && u === "B")  { upgradeDetailKeys.add("burn"); upgradeDetailKeys.add("splash"); }
+  }
+
   // ---- Stats array ----
   const statsToShow: Array<{
     key: string;
@@ -512,7 +528,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.slowAmount && baseStats.slowAmount > 0) {
+  if (baseStats.slowAmount && baseStats.slowAmount > 0 && !upgradeDetailKeys.has("slow")) {
     statsToShow.push({
       key: "slow", label: "Slow", icon: <Snowflake size={14} />,
       value: `${Math.round(baseStats.slowAmount * 100)}%`,
@@ -524,7 +540,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.chainTargets && baseStats.chainTargets > 1) {
+  if (baseStats.chainTargets && baseStats.chainTargets > 1 && !upgradeDetailKeys.has("chain")) {
     const isLabChain = tower.type === "lab";
     statsToShow.push({
       key: "chain",
@@ -543,7 +559,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.splashRadius && baseStats.splashRadius > 0) {
+  if (baseStats.splashRadius && baseStats.splashRadius > 0 && !upgradeDetailKeys.has("splash")) {
     statsToShow.push({
       key: "splash", label: "Splash", icon: <Target size={14} />,
       value: Math.floor(baseStats.splashRadius),
@@ -553,7 +569,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.stunChance && baseStats.stunChance > 0) {
+  if (baseStats.stunChance && baseStats.stunChance > 0 && !upgradeDetailKeys.has("stun")) {
     statsToShow.push({
       key: "stun", label: "Freeze", icon: <Snowflake size={14} />,
       value: `${Math.round(baseStats.stunChance * 100)}%`,
@@ -563,7 +579,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.burnDamage && baseStats.burnDamage > 0) {
+  if (baseStats.burnDamage && baseStats.burnDamage > 0 && !upgradeDetailKeys.has("burn")) {
     statsToShow.push({
       key: "burn", label: "Burn", icon: <Flame size={14} />,
       value: `${baseStats.burnDamage}/s`,
@@ -573,7 +589,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  if (baseStats.crescendoMaxStacks && baseStats.crescendoMaxStacks > 0) {
+  if (baseStats.crescendoMaxStacks && baseStats.crescendoMaxStacks > 0 && !upgradeDetailKeys.has("crescendo")) {
     const currentStacks = tower.crescendoStacks || 0;
     statsToShow.push({
       key: "crescendo", label: "Crescendo", icon: <Music size={14} />,
@@ -954,20 +970,27 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 <CoinsIcon size={12} className="text-amber-400" />
                 <span className="text-[9px] font-bold text-amber-300">Paw Points Generation</span>
               </div>
-              <div className="grid grid-cols-2 gap-1.5 mb-1">
+              <div className="grid grid-cols-4 gap-1.5 mb-1">
                 <div className="bg-amber-900/40 p-1 rounded border border-amber-700/40 text-center">
-                  <div className="text-[7px] text-amber-500">Paw Points</div>
-                  <div className="text-amber-300 font-bold text-xs">+{baseStats.income || 8}</div>
+                  <CoinsIcon size={10} className="mx-auto text-amber-400" />
+                  <div className="text-[7px] text-amber-500">PP/Tick</div>
+                  <div className="text-amber-300 font-bold text-[10px]">+{baseStats.income || 8}</div>
                   {nextStats && nextStats.income && nextStats.income > (baseStats.income || 0) && (
                     <div className="text-green-400 text-[8px]">→ +{nextStats.income}</div>
                   )}
                 </div>
                 <div className="bg-amber-900/40 p-1 rounded border border-amber-700/40 text-center">
+                  <Timer size={10} className="mx-auto text-amber-400" />
                   <div className="text-[7px] text-amber-500">Interval</div>
-                  <div className="text-amber-300 font-bold text-xs">{(baseStats.incomeInterval || 8000) / 1000}s</div>
+                  <div className="text-amber-300 font-bold text-[10px]">{(baseStats.incomeInterval || 8000) / 1000}s</div>
                   {nextStats && nextStats.incomeInterval && nextStats.incomeInterval < (baseStats.incomeInterval || 0) && (
                     <div className="text-green-400 text-[8px]">→ {nextStats.incomeInterval / 1000}s</div>
                   )}
+                </div>
+                <div className="bg-amber-900/40 p-1 rounded border border-amber-700/40 text-center col-span-2">
+                  <TrendingUp size={10} className="mx-auto text-amber-400" />
+                  <div className="text-[7px] text-amber-500">PP/sec</div>
+                  <div className="text-amber-300 font-bold text-[10px]">{((baseStats.income || 8) / ((baseStats.incomeInterval || 8000) / 1000)).toFixed(1)}</div>
                 </div>
               </div>
               <div className="text-[7px] text-amber-400/80 text-center mb-1">
@@ -1026,7 +1049,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                     {troop.isMounted ? "Mounted" : troop.isRanged ? "Ranged" : "Infantry"}
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-1 mb-1">
+                <div className="grid grid-cols-4 gap-1 mb-1">
                   <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
                     <Heart size={10} className="mx-auto text-red-400" />
                     <div className="text-[7px] text-red-500">HP</div>
@@ -1038,9 +1061,14 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                     <span className="text-orange-200 font-bold text-[10px]">{troop.damage}</span>
                   </div>
                   <div className="bg-green-950/40 p-1 rounded border border-green-900/30 text-center">
-                    {troop.isRanged ? <Crosshair size={10} className="mx-auto text-green-400" /> : <Gauge size={10} className="mx-auto text-green-400" />}
-                    <div className="text-[7px] text-green-500">{troop.isRanged ? "Range" : "Speed"}</div>
-                    <span className="text-green-200 font-bold text-[10px]">{troop.isRanged ? troop.range : `${(troop.attackSpeed / 1000).toFixed(1)}s`}</span>
+                    <Gauge size={10} className="mx-auto text-green-400" />
+                    <div className="text-[7px] text-green-500">Atk Spd</div>
+                    <span className="text-green-200 font-bold text-[10px]">{(troop.attackSpeed / 1000).toFixed(1)}s</span>
+                  </div>
+                  <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
+                    {troop.isRanged ? <Crosshair size={10} className="mx-auto text-blue-400" /> : <Swords size={10} className="mx-auto text-blue-400" />}
+                    <div className="text-[7px] text-blue-500">{troop.isRanged ? "Range" : "Type"}</div>
+                    <span className="text-blue-200 font-bold text-[10px]">{troop.isRanged ? troop.range : "Melee"}</span>
                   </div>
                 </div>
                 <div className="text-[7px] text-stone-400 text-center italic">
@@ -1050,6 +1078,362 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             );
           })()}
 
+
+          {/* Cannon Special Display (level 4 only) */}
+          {tower.type === "cannon" && tower.level === 4 && tower.upgrade && (() => {
+            const isGatling = tower.upgrade === "A";
+            const dps = baseStats.attackSpeed > 0 ? Math.floor(baseStats.damage * 1000 / baseStats.attackSpeed) : 0;
+
+            return (
+              <div className="mb-1.5 bg-stone-900/50 rounded-md p-1.5 border border-stone-700/40">
+                <div className="flex items-center gap-1 mb-1">
+                  {isGatling ? <Crosshair size={12} className="text-stone-400" /> : <Flame size={12} className="text-orange-400" />}
+                  <span className="text-[9px] font-bold text-stone-300">
+                    {isGatling ? "Gatling Gun" : "Flamethrower"}
+                  </span>
+                  <span className="text-[7px] bg-stone-800 px-1 py-0.5 rounded text-stone-400 ml-auto">
+                    {isGatling ? "Rapid Fire" : "Continuous"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {isGatling ? (
+                    <>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Gauge size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Rounds/s</div>
+                        <span className="text-red-200 font-bold text-[10px]">{(1000 / baseStats.attackSpeed).toFixed(1)}</span>
+                      </div>
+                      <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                        <Swords size={10} className="mx-auto text-orange-400" />
+                        <div className="text-[7px] text-orange-500">DPS</div>
+                        <span className="text-orange-200 font-bold text-[10px]">{dps}</span>
+                      </div>
+                      <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                        <Target size={10} className="mx-auto text-amber-400" />
+                        <div className="text-[7px] text-amber-500">Caliber</div>
+                        <span className="text-amber-200 font-bold text-[10px]">Light</span>
+                      </div>
+                      <div className="bg-stone-900/40 p-1 rounded border border-stone-700/30 text-center">
+                        <Repeat size={10} className="mx-auto text-stone-400" />
+                        <div className="text-[7px] text-stone-500">Fire Mode</div>
+                        <span className="text-stone-200 font-bold text-[10px]">Auto</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                        <Flame size={10} className="mx-auto text-orange-400" />
+                        <div className="text-[7px] text-orange-500">Stream</div>
+                        <span className="text-orange-200 font-bold text-[10px]">Cont.</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Flame size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Burn</div>
+                        <span className="text-red-200 font-bold text-[10px]">{baseStats.burnDamage}/s</span>
+                      </div>
+                      <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                        <Timer size={10} className="mx-auto text-amber-400" />
+                        <div className="text-[7px] text-amber-500">Burn Dur</div>
+                        <span className="text-amber-200 font-bold text-[10px]">{(baseStats.burnDuration || 3000) / 1000}s</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <TrendingUp size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Total DPS</div>
+                        <span className="text-red-200 font-bold text-[10px]">{dps + (baseStats.burnDamage || 0)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="text-[7px] text-stone-400 text-center italic">
+                  {isGatling
+                    ? "Rapid-fire suppression with high sustained DPS"
+                    : "Continuous fire stream that sets enemies ablaze"}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Lab Special Display (level 4 only) */}
+          {tower.type === "lab" && tower.level === 4 && tower.upgrade && (() => {
+            const isFocusedBeam = tower.upgrade === "A";
+            const dps = baseStats.attackSpeed > 0 ? Math.floor(baseStats.damage * 1000 / baseStats.attackSpeed) : 0;
+
+            return (
+              <div className="mb-1.5 bg-cyan-950/40 rounded-md p-1.5 border border-cyan-700/50">
+                <div className="flex items-center gap-1 mb-1">
+                  <Zap size={12} className="text-cyan-400" />
+                  <span className="text-[9px] font-bold text-cyan-300">
+                    {isFocusedBeam ? "Focused Beam" : "Chain Lightning"}
+                  </span>
+                  <span className="text-[7px] bg-cyan-900 px-1 py-0.5 rounded text-cyan-400 ml-auto">
+                    {isFocusedBeam ? "Lock-on" : "Chain"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {isFocusedBeam ? (
+                    <>
+                      <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
+                        <Focus size={10} className="mx-auto text-purple-400" />
+                        <div className="text-[7px] text-purple-500">Mode</div>
+                        <span className="text-purple-200 font-bold text-[10px]">Lock-on</span>
+                      </div>
+                      <div className="bg-cyan-950/40 p-1 rounded border border-cyan-900/30 text-center">
+                        <TrendingUp size={10} className="mx-auto text-cyan-400" />
+                        <div className="text-[7px] text-cyan-500">Ramp</div>
+                        <span className="text-cyan-200 font-bold text-[10px]">+DMG/s</span>
+                      </div>
+                      <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
+                        <Crosshair size={10} className="mx-auto text-blue-400" />
+                        <div className="text-[7px] text-blue-500">Target</div>
+                        <span className="text-blue-200 font-bold text-[10px]">Single</span>
+                      </div>
+                      <div className="bg-indigo-950/40 p-1 rounded border border-indigo-900/30 text-center">
+                        <Swords size={10} className="mx-auto text-indigo-400" />
+                        <div className="text-[7px] text-indigo-500">Base DPS</div>
+                        <span className="text-indigo-200 font-bold text-[10px]">{dps}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-cyan-950/40 p-1 rounded border border-cyan-900/30 text-center">
+                        <Zap size={10} className="mx-auto text-cyan-400" />
+                        <div className="text-[7px] text-cyan-500">Chains</div>
+                        <span className="text-cyan-200 font-bold text-[10px]">{baseStats.chainTargets}</span>
+                      </div>
+                      <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
+                        <Radar size={10} className="mx-auto text-blue-400" />
+                        <div className="text-[7px] text-blue-500">Chain Rng</div>
+                        <span className="text-blue-200 font-bold text-[10px]">{baseStats.chainRange}</span>
+                      </div>
+                      <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
+                        <Swords size={10} className="mx-auto text-purple-400" />
+                        <div className="text-[7px] text-purple-500">DPS</div>
+                        <span className="text-purple-200 font-bold text-[10px]">{dps}</span>
+                      </div>
+                      <div className="bg-indigo-950/40 p-1 rounded border border-indigo-900/30 text-center">
+                        <TrendingUp size={10} className="mx-auto text-indigo-400" />
+                        <div className="text-[7px] text-indigo-500">Total DPS</div>
+                        <span className="text-indigo-200 font-bold text-[10px]">{dps * (baseStats.chainTargets || 1)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="text-[7px] text-cyan-400/80 text-center italic">
+                  {isFocusedBeam
+                    ? "Continuous lock-on beam that ramps damage over time"
+                    : "Lightning bounces between up to 8 nearby enemies"}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Arch Crescendo Display (level 4 only) */}
+          {tower.type === "arch" && tower.level === 4 && tower.upgrade && (() => {
+            const isShockwave = tower.upgrade === "A";
+            const speedMult = baseStats.crescendoSpeedMult || 0.92;
+            const dmgMult = baseStats.crescendoDamageMult || 0.05;
+            const decayTime = baseStats.crescendoDecayTime || 2500;
+            const maxStacks = baseStats.crescendoMaxStacks || 4;
+
+            return (
+              <div className="mb-1.5 bg-emerald-950/40 rounded-md p-1.5 border border-emerald-700/50">
+                <div className="flex items-center gap-1 mb-1">
+                  <Music size={12} className="text-emerald-400" />
+                  <span className="text-[9px] font-bold text-emerald-300">
+                    {isShockwave ? "Shockwave Siren" : "Symphony Hall"}
+                  </span>
+                  <span className="text-[7px] bg-emerald-900 px-1 py-0.5 rounded text-emerald-400 ml-auto">
+                    {isShockwave ? "Stun" : `${maxStacks} Stacks`}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  <div className="bg-emerald-900/40 p-1 rounded border border-emerald-800/30 text-center">
+                    <Gauge size={10} className="mx-auto text-emerald-400" />
+                    <div className="text-[7px] text-emerald-500">Spd/Stack</div>
+                    <span className="text-emerald-200 font-bold text-[10px]">+{Math.round((1 - speedMult) * 100)}%</span>
+                  </div>
+                  <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                    <TrendingUp size={10} className="mx-auto text-orange-400" />
+                    <div className="text-[7px] text-orange-500">DMG/Stack</div>
+                    <span className="text-orange-200 font-bold text-[10px]">+{Math.round(dmgMult * 100)}%</span>
+                  </div>
+                  <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                    <Timer size={10} className="mx-auto text-amber-400" />
+                    <div className="text-[7px] text-amber-500">Decay</div>
+                    <span className="text-amber-200 font-bold text-[10px]">{(decayTime / 1000).toFixed(1)}s</span>
+                  </div>
+                  {isShockwave ? (
+                    <div className="bg-yellow-950/40 p-1 rounded border border-yellow-900/30 text-center">
+                      <Zap size={10} className="mx-auto text-yellow-400" />
+                      <div className="text-[7px] text-yellow-500">Stun</div>
+                      <span className="text-yellow-200 font-bold text-[10px]">{Math.round((baseStats.stunChance || 0.35) * 100)}%</span>
+                    </div>
+                  ) : (
+                    <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
+                      <Sparkles size={10} className="mx-auto text-purple-400" />
+                      <div className="text-[7px] text-purple-500">Max Spd</div>
+                      <span className="text-purple-200 font-bold text-[10px]">{Math.round(Math.pow(speedMult, maxStacks) * 100)}%</span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-[7px] text-emerald-400/80 text-center italic">
+                  {isShockwave
+                    ? "Crescendo attacks with a chance to stun enemies"
+                    : "Ultimate crescendo with enhanced per-stack bonuses"}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Library Control Display (level 4 only) */}
+          {tower.type === "library" && tower.level === 4 && tower.upgrade && (() => {
+            const isEQ = tower.upgrade === "A";
+            const dps = baseStats.attackSpeed > 0 ? Math.floor(baseStats.damage * 1000 / baseStats.attackSpeed) : 0;
+
+            return (
+              <div className="mb-1.5 bg-indigo-950/40 rounded-md p-1.5 border border-indigo-700/50">
+                <div className="flex items-center gap-1 mb-1">
+                  {isEQ ? <Mountain size={12} className="text-amber-400" /> : <Snowflake size={12} className="text-blue-400" />}
+                  <span className="text-[9px] font-bold text-indigo-300">
+                    {isEQ ? "EQ Smasher" : "Blizzard"}
+                  </span>
+                  <span className="text-[7px] bg-indigo-900 px-1 py-0.5 rounded text-indigo-400 ml-auto">
+                    {isEQ ? "AoE" : "Freeze"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {isEQ ? (
+                    <>
+                      <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                        <Mountain size={10} className="mx-auto text-amber-400" />
+                        <div className="text-[7px] text-amber-500">Type</div>
+                        <span className="text-amber-200 font-bold text-[10px]">Seismic</span>
+                      </div>
+                      <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
+                        <Snowflake size={10} className="mx-auto text-purple-400" />
+                        <div className="text-[7px] text-purple-500">Slow</div>
+                        <span className="text-purple-200 font-bold text-[10px]">{Math.round((baseStats.slowAmount || 0) * 100)}%</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Target size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Splash</div>
+                        <span className="text-red-200 font-bold text-[10px]">{Math.floor(baseStats.splashRadius || 80)}</span>
+                      </div>
+                      <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                        <Swords size={10} className="mx-auto text-orange-400" />
+                        <div className="text-[7px] text-orange-500">DPS</div>
+                        <span className="text-orange-200 font-bold text-[10px]">{dps}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
+                        <Snowflake size={10} className="mx-auto text-blue-400" />
+                        <div className="text-[7px] text-blue-500">Freeze</div>
+                        <span className="text-blue-200 font-bold text-[10px]">{Math.round((baseStats.stunChance || 0) * 100)}%</span>
+                      </div>
+                      <div className="bg-cyan-950/40 p-1 rounded border border-cyan-900/30 text-center">
+                        <Timer size={10} className="mx-auto text-cyan-400" />
+                        <div className="text-[7px] text-cyan-500">Freeze Dur</div>
+                        <span className="text-cyan-200 font-bold text-[10px]">{(baseStats.stunDuration || 2000) / 1000}s</span>
+                      </div>
+                      <div className="bg-purple-950/40 p-1 rounded border border-purple-900/30 text-center">
+                        <Snowflake size={10} className="mx-auto text-purple-400" />
+                        <div className="text-[7px] text-purple-500">Slow</div>
+                        <span className="text-purple-200 font-bold text-[10px]">{Math.round((baseStats.slowAmount || 0) * 100)}%</span>
+                      </div>
+                      <div className="bg-indigo-950/40 p-1 rounded border border-indigo-900/30 text-center">
+                        <Radar size={10} className="mx-auto text-indigo-400" />
+                        <div className="text-[7px] text-indigo-500">Coverage</div>
+                        <span className="text-indigo-200 font-bold text-[10px]">Wide</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="text-[7px] text-indigo-400/80 text-center italic">
+                  {isEQ
+                    ? "Seismic waves deal AoE damage and slow enemies"
+                    : "Freezing winds slow and freeze nearby enemies"}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Mortar / Missile Display (level 4 only) */}
+          {tower.type === "mortar" && tower.level === 4 && tower.upgrade && (() => {
+            const isMissileBattery = tower.upgrade === "A";
+            const isAutoAim = tower.mortarAutoAim !== false;
+
+            return (
+              <div className="mb-1.5 bg-red-950/40 rounded-md p-1.5 border border-red-700/50">
+                <div className="flex items-center gap-1 mb-1">
+                  {isMissileBattery
+                    ? <Rocket size={12} className="text-orange-400" />
+                    : <Flame size={12} className="text-red-400" />}
+                  <span className="text-[9px] font-bold text-red-300">
+                    {isMissileBattery ? "Missile Battery" : "Ember Foundry"}
+                  </span>
+                  <span className="text-[7px] bg-red-900 px-1 py-0.5 rounded text-red-400 ml-auto">
+                    {isMissileBattery ? "Guided" : "Incendiary"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1 mb-1">
+                  {isMissileBattery ? (
+                    <>
+                      <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                        <Rocket size={10} className="mx-auto text-orange-400" />
+                        <div className="text-[7px] text-orange-500">Missiles</div>
+                        <span className="text-orange-200 font-bold text-[10px]">6-pod</span>
+                      </div>
+                      <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                        <Focus size={10} className="mx-auto text-amber-400" />
+                        <div className="text-[7px] text-amber-500">Tracking</div>
+                        <span className="text-amber-200 font-bold text-[10px]">{isAutoAim ? "Auto" : "Manual"}</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Target size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Blast</div>
+                        <span className="text-red-200 font-bold text-[10px]">{Math.floor(baseStats.splashRadius || 150)}</span>
+                      </div>
+                      <div className="bg-blue-950/40 p-1 rounded border border-blue-900/30 text-center">
+                        <Crosshair size={10} className="mx-auto text-blue-400" />
+                        <div className="text-[7px] text-blue-500">Strike</div>
+                        <span className="text-blue-200 font-bold text-[10px]">{Math.floor(baseStats.range)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                        <Flame size={10} className="mx-auto text-orange-400" />
+                        <div className="text-[7px] text-orange-500">Barrels</div>
+                        <span className="text-orange-200 font-bold text-[10px]">3</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Flame size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Burn</div>
+                        <span className="text-red-200 font-bold text-[10px]">{baseStats.burnDamage}/s</span>
+                      </div>
+                      <div className="bg-amber-950/40 p-1 rounded border border-amber-900/30 text-center">
+                        <Timer size={10} className="mx-auto text-amber-400" />
+                        <div className="text-[7px] text-amber-500">Duration</div>
+                        <span className="text-amber-200 font-bold text-[10px]">{(baseStats.burnDuration || 4000) / 1000}s</span>
+                      </div>
+                      <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                        <Target size={10} className="mx-auto text-red-400" />
+                        <div className="text-[7px] text-red-500">Blast</div>
+                        <span className="text-red-200 font-bold text-[10px]">{Math.floor(baseStats.splashRadius || 170)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="text-[7px] text-red-400/80 text-center italic">
+                  {isMissileBattery
+                    ? "Fires guided missiles at targeted areas"
+                    : "Rains burning embers across the field"}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Arrow pointer */}
           {!flipBelow ? (

@@ -129,6 +129,18 @@ export const TowerSprite: React.FC<{
         ctx.moveTo(cx + 10 * s, cy - 4 * s);
         ctx.lineTo(cx + 8 * s, cy + 8 * s);
         ctx.stroke();
+        if (level >= 2) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 10 * s, cy + 2 * s);
+          ctx.lineTo(cx - 2 * s, cy + 2 * s);
+          ctx.stroke();
+        }
+        if (level >= 3) {
+          ctx.fillStyle = "#3a3a3f";
+          ctx.beginPath();
+          ctx.arc(cx + 6 * s, cy + 4 * s, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         // Orange glowing vents on left face
         const ventGlow = animated ? 0.6 + Math.sin(t * 4) * 0.3 : 0.7;
@@ -239,14 +251,14 @@ export const TowerSprite: React.FC<{
         if (level === 4 && upgrade) {
           ctx.save();
           ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = upgrade === "A" ? "rgba(180, 30, 0, 0.1)" : "rgba(255, 100, 0, 0.1)";
+          ctx.fillStyle = upgrade === "A" ? "rgba(180, 195, 210, 0.1)" : "rgba(255, 180, 0, 0.1)";
           ctx.fillRect(0, 0, size, size);
           ctx.globalCompositeOperation = "source-over";
           ctx.restore();
           if (upgrade === "A") {
             const gPulse = animated ? 0.5 + Math.sin(t * 8) * 0.3 : 0.6;
-            ctx.fillStyle = `rgba(255, 50, 0, ${gPulse * 0.6})`;
-            ctx.shadowColor = "#ff3200";
+            ctx.fillStyle = `rgba(200, 210, 220, ${gPulse * 0.6})`;
+            ctx.shadowColor = "#b0c0d0";
             ctx.shadowBlur = 15 * s;
             ctx.beginPath();
             ctx.arc(cx + 18 * s, cy - 14 * s, 3.5 * s, 0, Math.PI * 2);
@@ -256,13 +268,13 @@ export const TowerSprite: React.FC<{
               for (let i = 0; i < 4; i++) {
                 const bx = cx + (20 + i * 2) * s;
                 const by = cy - (14 + Math.sin(t * 10 + i) * 2) * s;
-                ctx.fillStyle = `rgba(255, ${150 + i * 30}, 0, ${0.6 - i * 0.12})`;
+                ctx.fillStyle = `rgba(${180 + i * 20}, ${190 + i * 15}, ${200 + i * 10}, ${0.6 - i * 0.12})`;
                 ctx.beginPath();
                 ctx.arc(bx, by, (1.2 - i * 0.2) * s, 0, Math.PI * 2);
                 ctx.fill();
               }
             }
-            ctx.strokeStyle = `rgba(255, 80, 0, ${gPulse * 0.4})`;
+            ctx.strokeStyle = `rgba(180, 195, 210, ${gPulse * 0.4})`;
             ctx.lineWidth = 1.5 * s;
             ctx.setLineDash([2 * s, 2 * s]);
             ctx.beginPath();
@@ -275,7 +287,7 @@ export const TowerSprite: React.FC<{
               for (let i = 0; i < 5; i++) {
                 const fx = cx + (16 + i * 2.5) * s;
                 const fy = cy - (12 + Math.sin(t * 5 + i) * 2.5) * s;
-                ctx.fillStyle = `rgba(255, ${60 + i * 35}, 0, ${fPulse * (1 - i * 0.15)})`;
+                ctx.fillStyle = `rgba(255, ${80 + i * 40}, 0, ${fPulse * (1 - i * 0.15)})`;
                 ctx.shadowColor = "#ff4400";
                 ctx.shadowBlur = 8 * s;
                 ctx.beginPath();
@@ -284,7 +296,7 @@ export const TowerSprite: React.FC<{
               }
               ctx.shadowBlur = 0;
             }
-            ctx.fillStyle = `rgba(255, 60, 0, ${fPulse * 0.25})`;
+            ctx.fillStyle = `rgba(255, 200, 0, ${fPulse * 0.3})`;
             ctx.beginPath();
             ctx.ellipse(cx, cy + 14 * s, 14 * s, 5 * s, 0, 0, Math.PI * 2);
             ctx.fill();
@@ -377,6 +389,27 @@ export const TowerSprite: React.FC<{
           ctx.stroke();
         }
 
+        // Window glow colors (defined early for level-based details)
+        const glowIntensity = (animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.8) * (0.7 + level * 0.1);
+        const libR = level === 4 && upgrade === "A" ? 255 : level === 4 && upgrade === "B" ? 100 : 160;
+        const libG = level === 4 && upgrade === "A" ? 140 : level === 4 && upgrade === "B" ? 180 : 80;
+        const libB = level === 4 && upgrade === "A" ? 40 : level === 4 && upgrade === "B" ? 255 : 220;
+        const libShadow = level === 4 && upgrade === "A" ? "#ff8c28" : level === 4 && upgrade === "B" ? "#64b4ff" : "#a050dc";
+
+        // Level 2+: Decorative shield/crest emblem on left face
+        if (level >= 2) {
+          const crestX = cx - 7 * s;
+          const crestY = cy - 5 * s;
+          ctx.fillStyle = level >= 3 ? "#c9a227" : "#6a6575";
+          ctx.beginPath();
+          ctx.moveTo(crestX, crestY - 1 * s);
+          ctx.lineTo(crestX + 1 * s, crestY);
+          ctx.lineTo(crestX, crestY + 1 * s);
+          ctx.lineTo(crestX - 1 * s, crestY);
+          ctx.closePath();
+          ctx.fill();
+        }
+
         // Decorative trim bands
         ctx.fillStyle = level >= 3 ? "#c9a227" : "#6a6575";
         ctx.fillRect(cx - 11 * s, cy + 8 * s, 10 * s, 1.5 * s);
@@ -384,8 +417,21 @@ export const TowerSprite: React.FC<{
         ctx.fillRect(cx - 10 * s, cy - 2 * s, 9 * s, 1.5 * s);
         ctx.fillRect(cx + 1 * s, cy - 2 * s, 9 * s, 1.5 * s);
 
+        // Level 3+: Second row of smaller windows below main arched windows
+        if (level >= 3) {
+          const smallWinY = cy + 8 * s;
+          ctx.fillStyle = "#1a1520";
+          ctx.fillRect(cx - 9 * s, smallWinY, 3 * s, 2 * s);
+          ctx.fillRect(cx + 6 * s, smallWinY, 3 * s, 2 * s);
+          ctx.fillStyle = `rgba(${libR}, ${libG}, ${libB}, ${glowIntensity * 0.7})`;
+          ctx.shadowColor = libShadow;
+          ctx.shadowBlur = 4 * s;
+          ctx.fillRect(cx - 8.5 * s, smallWinY + 0.25 * s, 2 * s, 1.5 * s);
+          ctx.fillRect(cx + 6.5 * s, smallWinY + 0.25 * s, 2 * s, 1.5 * s);
+          ctx.shadowBlur = 0;
+        }
+
         // Purple arched windows - left side
-        const glowIntensity = (animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.8) * (0.7 + level * 0.1);
         ctx.fillStyle = "#1a1520";
         ctx.beginPath();
         ctx.moveTo(cx - 9 * s, cy + 6 * s);
@@ -395,8 +441,8 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         // Window glow
-        ctx.fillStyle = `rgba(160, 80, 220, ${glowIntensity})`;
-        ctx.shadowColor = "#a050dc";
+        ctx.fillStyle = `rgba(${libR}, ${libG}, ${libB}, ${glowIntensity})`;
+        ctx.shadowColor = libShadow;
         ctx.shadowBlur = 6 * s;
         ctx.beginPath();
         ctx.moveTo(cx - 8.5 * s, cy + 5.5 * s);
@@ -416,8 +462,8 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 9 * s, cy + 6 * s);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = `rgba(160, 80, 220, ${glowIntensity})`;
-        ctx.shadowColor = "#a050dc";
+        ctx.fillStyle = `rgba(${libR}, ${libG}, ${libB}, ${glowIntensity})`;
+        ctx.shadowColor = libShadow;
         ctx.shadowBlur = 6 * s;
         ctx.beginPath();
         ctx.moveTo(cx + 5.5 * s, cy + 5.5 * s);
@@ -435,11 +481,11 @@ export const TowerSprite: React.FC<{
         ctx.fill();
         // Rose window glow
         const roseGrad = ctx.createRadialGradient(cx, cy - 5 * s, 0, cx, cy - 5 * s, 3.5 * s);
-        roseGrad.addColorStop(0, `rgba(200, 120, 255, ${glowIntensity})`);
-        roseGrad.addColorStop(0.5, `rgba(160, 80, 220, ${glowIntensity * 0.8})`);
-        roseGrad.addColorStop(1, `rgba(100, 40, 180, ${glowIntensity * 0.5})`);
+        roseGrad.addColorStop(0, `rgba(${Math.min(libR + 40, 255)}, ${Math.min(libG + 40, 255)}, ${Math.min(libB + 35, 255)}, ${glowIntensity})`);
+        roseGrad.addColorStop(0.5, `rgba(${libR}, ${libG}, ${libB}, ${glowIntensity * 0.8})`);
+        roseGrad.addColorStop(1, `rgba(${Math.floor(libR * 0.6)}, ${Math.floor(libG * 0.5)}, ${Math.floor(libB * 0.8)}, ${glowIntensity * 0.5})`);
         ctx.fillStyle = roseGrad;
-        ctx.shadowColor = "#c080ff";
+        ctx.shadowColor = libShadow;
         ctx.shadowBlur = 10 * s;
         ctx.beginPath();
         ctx.arc(cx, cy - 5 * s, 3 * s, 0, Math.PI * 2);
@@ -485,8 +531,8 @@ export const TowerSprite: React.FC<{
         ctx.fill();
 
         // Spire orb with purple glow
-        ctx.fillStyle = `rgba(180, 100, 255, ${glowIntensity})`;
-        ctx.shadowColor = "#b464ff";
+        ctx.fillStyle = `rgba(${Math.min(libR + 20, 255)}, ${Math.min(libG + 20, 255)}, ${Math.min(libB + 35, 255)}, ${glowIntensity})`;
+        ctx.shadowColor = libShadow;
         ctx.shadowBlur = 8 * s;
         ctx.beginPath();
         ctx.arc(cx, cy - 22 * s, 2 * s, 0, Math.PI * 2);
@@ -529,7 +575,7 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         // Door glow
-        ctx.fillStyle = `rgba(160, 80, 220, ${glowIntensity * 0.5})`;
+        ctx.fillStyle = `rgba(${libR}, ${libG}, ${libB}, ${glowIntensity * 0.5})`;
         ctx.beginPath();
         ctx.moveTo(cx - 2 * s, cy + 15 * s);
         ctx.lineTo(cx - 2 * s, cy + 12 * s);
@@ -540,7 +586,7 @@ export const TowerSprite: React.FC<{
 
         // Floating magic particles
         if (animated) {
-          ctx.fillStyle = `rgba(180, 120, 255, ${0.5 + Math.sin(t * 3) * 0.3})`;
+          ctx.fillStyle = `rgba(${Math.min(libR + 20, 255)}, ${Math.min(libG + 40, 255)}, ${Math.min(libB + 35, 255)}, ${0.5 + Math.sin(t * 3) * 0.3})`;
           for (let i = 0; i < 2 + level * 2; i++) {
             const particleAngle = t * 0.8 + (i * Math.PI * 2) / 5;
             const particleR = 10 * s + Math.sin(t * 2 + i) * 2 * s;
@@ -612,7 +658,7 @@ export const TowerSprite: React.FC<{
           }
         }
 
-        drawLevelIndicator(ctx, cx, cy, s, level, "#b464ff", upgrade);
+        drawLevelIndicator(ctx, cx, cy, s, level, level === 4 && upgrade === "A" ? "#ff8c28" : level === 4 && upgrade === "B" ? "#64b4ff" : "#b464ff", upgrade);
         break;
       }
       case "lab": {
@@ -841,24 +887,56 @@ export const TowerSprite: React.FC<{
         ctx.fill();
         ctx.shadowBlur = 0;
 
+        // Level 2+: Second smaller set of windows on building faces
+        if (level >= 2) {
+          const smallWinSize = 2 * s;
+          ctx.fillStyle = "#0a1520";
+          ctx.fillRect(cx - 9 * s, cy + 0 * s, smallWinSize, smallWinSize);
+          ctx.fillRect(cx + 7 * s, cy + 0 * s, smallWinSize, smallWinSize);
+          ctx.fillStyle = `rgba(0, 200, 255, ${labGlow * 0.8})`;
+          ctx.shadowColor = "#00ccff";
+          ctx.shadowBlur = 4 * s;
+          ctx.fillRect(cx - 8.5 * s, cy + 0.25 * s, smallWinSize - 0.5 * s, smallWinSize - 0.5 * s);
+          ctx.fillRect(cx + 7.5 * s, cy + 0.25 * s, smallWinSize - 0.5 * s, smallWinSize - 0.5 * s);
+          ctx.shadowBlur = 0;
+        }
+
+        // Level 3+: Pipe/conduit details connecting coil to building
+        if (level >= 3) {
+          ctx.strokeStyle = "#3a4a55";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(cx - 2 * s, cy - 4.5 * s);
+          ctx.lineTo(cx - 6 * s, cy + 2 * s);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 2 * s, cy - 4.5 * s);
+          ctx.lineTo(cx + 6 * s, cy + 2 * s);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 4.5 * s);
+          ctx.lineTo(cx, cy + 4 * s);
+          ctx.stroke();
+        }
+
         // Level 4 upgrade effects
         if (level === 4 && upgrade) {
           ctx.save();
           ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = upgrade === "A" ? "rgba(255, 200, 50, 0.1)" : "rgba(120, 80, 255, 0.12)";
+          ctx.fillStyle = upgrade === "A" ? "rgba(50, 200, 80, 0.1)" : "rgba(255, 220, 50, 0.12)";
           ctx.fillRect(0, 0, size, size);
           ctx.globalCompositeOperation = "source-over";
           ctx.restore();
           if (upgrade === "A") {
             const bPulse = animated ? 0.5 + Math.sin(t * 5) * 0.3 : 0.6;
-            ctx.strokeStyle = `rgba(255, 220, 100, ${bPulse * 0.8})`;
+            ctx.strokeStyle = `rgba(80, 220, 100, ${bPulse * 0.8})`;
             ctx.lineWidth = 2 * s;
             ctx.beginPath();
             ctx.moveTo(cx, cy - 19 * s);
             ctx.lineTo(cx, cy - 30 * s);
             ctx.stroke();
-            ctx.fillStyle = `rgba(255, 240, 150, ${bPulse})`;
-            ctx.shadowColor = "#ffdd66";
+            ctx.fillStyle = `rgba(100, 255, 120, ${bPulse})`;
+            ctx.shadowColor = "#50ff60";
             ctx.shadowBlur = 12 * s;
             ctx.beginPath();
             ctx.arc(cx, cy - 30 * s, 3 * s, 0, Math.PI * 2);
@@ -869,7 +947,7 @@ export const TowerSprite: React.FC<{
                 const lAngle = t * 2 + (i * Math.PI) / 2;
                 const lx = cx + Math.cos(lAngle) * 5 * s;
                 const ly = cy - 30 * s + Math.sin(lAngle) * 2 * s;
-                ctx.strokeStyle = `rgba(255, 220, 100, ${0.6 - i * 0.1})`;
+                ctx.strokeStyle = `rgba(80, ${200 + i * 15}, 100, ${0.6 - i * 0.1})`;
                 ctx.lineWidth = 1 * s;
                 ctx.beginPath();
                 ctx.moveTo(cx, cy - 30 * s);
@@ -880,7 +958,7 @@ export const TowerSprite: React.FC<{
           } else {
             const cPulse = animated ? 0.5 + Math.sin(t * 4) * 0.3 : 0.6;
             if (animated) {
-              ctx.strokeStyle = `rgba(150, 100, 255, ${cPulse * 0.8})`;
+              ctx.strokeStyle = `rgba(255, 220, 80, ${cPulse * 0.8})`;
               ctx.lineWidth = 1.5 * s;
               for (let i = 0; i < 5; i++) {
                 const arcAngle = t * 3 + (i * Math.PI * 2) / 5;
@@ -903,8 +981,8 @@ export const TowerSprite: React.FC<{
               { x: cx, y: cy + 2 * s },
             ];
             for (const orb of orbPositions) {
-              ctx.fillStyle = `rgba(150, 100, 255, ${cPulse * 0.6})`;
-              ctx.shadowColor = "#9966ff";
+              ctx.fillStyle = `rgba(255, 220, 80, ${cPulse * 0.6})`;
+              ctx.shadowColor = "#ffdd44";
               ctx.shadowBlur = 6 * s;
               ctx.beginPath();
               ctx.arc(orb.x, orb.y, 2 * s, 0, Math.PI * 2);
@@ -919,9 +997,17 @@ export const TowerSprite: React.FC<{
       }
       case "arch": {
         // =====================================================================
-        // BLAIR ARCH - Gothic Arch with Central Spire and Green Portal
+        // BLAIR ARCH - Gothic Arch with Central Spire and Dynamic Portal
         // Tan stone base with thick arch and single central triangle spike
+        // Energy: green default, RED for Shockwave (A), BLUE for Symphony (B)
         // =====================================================================
+
+        // Dynamic energy colors based on upgrade
+        const eR = level === 4 && upgrade === "A" ? 255 : level === 4 && upgrade === "B" ? 100 : 100;
+        const eG = level === 4 && upgrade === "A" ? 80 : level === 4 && upgrade === "B" ? 180 : 255;
+        const eB = level === 4 && upgrade === "A" ? 80 : level === 4 && upgrade === "B" ? 255 : 150;
+        const eShadow = level === 4 && upgrade === "A" ? "#ff3030" : level === 4 && upgrade === "B" ? "#4090ff" : "#50ff80";
+        const eIndicator = level === 4 && upgrade === "A" ? "#ff5050" : level === 4 && upgrade === "B" ? "#64b4ff" : "#50ff80";
 
         // Ground shadow
         ctx.fillStyle = "rgba(0,0,0,0.4)";
@@ -954,6 +1040,15 @@ export const TowerSprite: React.FC<{
         }
         ctx.closePath();
         ctx.fill();
+
+        // Level 2+: Rune circle on base platform
+        if (level >= 2) {
+          ctx.strokeStyle = `rgba(${eR}, ${eG}, ${eB}, 0.2)`;
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 14 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
 
         // THICK ARCH STRUCTURE - Main body
         // Left wall of arch (dark tan)
@@ -1006,8 +1101,8 @@ export const TowerSprite: React.FC<{
         // Stone block pattern on arch walls
         ctx.strokeStyle = level >= 3 ? "rgba(180,150,60,0.15)" : "rgba(0,0,0,0.12)";
         ctx.lineWidth = 0.5 * s;
-        for (let row = 0; row < 4; row++) {
-          const y = cy + 10 * s - row * 4 * s;
+        for (let row = 0; row < 3 + level; row++) {
+          const y = cy + 10 * s - row * (16 / (3 + level)) * s;
           ctx.beginPath();
           ctx.moveTo(cx - 14 * s + row * s, y);
           ctx.lineTo(cx - 7 * s, y);
@@ -1018,8 +1113,35 @@ export const TowerSprite: React.FC<{
           ctx.stroke();
         }
 
+        // Level 2+: Vertical pilaster detail on walls
+        if (level >= 2) {
+          ctx.strokeStyle = "rgba(0,0,0,0.08)";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(cx - 11 * s, cy + 12 * s);
+          ctx.lineTo(cx - 10 * s, cy - 3 * s);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 11 * s, cy + 12 * s);
+          ctx.lineTo(cx + 10 * s, cy - 3 * s);
+          ctx.stroke();
+        }
+
+        // Level 3+: Decorative string course with gold trim
+        if (level >= 3) {
+          ctx.strokeStyle = "#c9a227";
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(cx - 15 * s, cy + 4 * s);
+          ctx.lineTo(cx - 7 * s, cy + 4 * s);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 7 * s, cy + 4 * s);
+          ctx.lineTo(cx + 15 * s, cy + 4 * s);
+          ctx.stroke();
+        }
+
         // CENTRAL TRIANGLE SPIRE
-        // Left face of spire (darker)
         ctx.fillStyle = "#7a6a50";
         ctx.beginPath();
         ctx.moveTo(cx, cy - 22 * s);
@@ -1028,7 +1150,6 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
 
-        // Right face of spire (lighter)
         ctx.fillStyle = "#9a8a70";
         ctx.beginPath();
         ctx.moveTo(cx, cy - 22 * s);
@@ -1037,10 +1158,16 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
 
-        // Spire orb at top
+        // Level 3+: Spire window slit
+        if (level >= 3) {
+          ctx.fillStyle = `rgba(${eR}, ${eG}, ${eB}, 0.5)`;
+          ctx.fillRect(cx - 0.5 * s, cy - 18 * s, 1 * s, 4 * s);
+        }
+
+        // Spire orb at top (dynamic energy color)
         const portalGlow = (animated ? 0.5 + Math.sin(t * 2) * 0.25 : 0.6) * (0.7 + level * 0.1);
-        ctx.fillStyle = `rgba(100, 255, 150, ${portalGlow})`;
-        ctx.shadowColor = "#64ff96";
+        ctx.fillStyle = `rgba(${eR}, ${eG}, ${eB}, ${portalGlow})`;
+        ctx.shadowColor = eShadow;
         ctx.shadowBlur = 8 * s;
         ctx.beginPath();
         ctx.arc(cx, cy - 22 * s, 2 * s, 0, Math.PI * 2);
@@ -1060,14 +1187,14 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
 
-        // GREEN PORTAL GLOW
-        const greenGrad = ctx.createRadialGradient(cx, cy + 4 * s, 0, cx, cy + 4 * s, 10 * s);
-        greenGrad.addColorStop(0, `rgba(120, 255, 150, ${portalGlow})`);
-        greenGrad.addColorStop(0.4, `rgba(80, 220, 100, ${portalGlow * 0.8})`);
-        greenGrad.addColorStop(0.7, `rgba(40, 180, 80, ${portalGlow * 0.5})`);
-        greenGrad.addColorStop(1, `rgba(20, 100, 50, ${portalGlow * 0.2})`);
-        ctx.fillStyle = greenGrad;
-        ctx.shadowColor = "#50ff80";
+        // PORTAL GLOW (dynamic energy color)
+        const portalGrad = ctx.createRadialGradient(cx, cy + 4 * s, 0, cx, cy + 4 * s, 10 * s);
+        portalGrad.addColorStop(0, `rgba(${Math.min(eR + 20, 255)}, ${eG}, ${Math.min(eB + 20, 255)}, ${portalGlow})`);
+        portalGrad.addColorStop(0.4, `rgba(${eR}, ${Math.max(eG - 35, 0)}, ${Math.max(eB - 50, 0)}, ${portalGlow * 0.8})`);
+        portalGrad.addColorStop(0.7, `rgba(${Math.floor(eR * 0.5)}, ${Math.floor(eG * 0.7)}, ${Math.floor(eB * 0.6)}, ${portalGlow * 0.5})`);
+        portalGrad.addColorStop(1, `rgba(${Math.floor(eR * 0.2)}, ${Math.floor(eG * 0.4)}, ${Math.floor(eB * 0.35)}, ${portalGlow * 0.2})`);
+        ctx.fillStyle = portalGrad;
+        ctx.shadowColor = eShadow;
         ctx.shadowBlur = 15 * s;
         ctx.beginPath();
         ctx.arc(cx, cy + 2 * s, 6 * s, Math.PI, 0);
@@ -1077,20 +1204,30 @@ export const TowerSprite: React.FC<{
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Green glowing windows on arch walls
+        // Glowing windows on arch walls (dynamic energy color)
         ctx.fillStyle = "#1a2a1a";
         ctx.fillRect(cx - 12 * s, cy - 2 * s, 3 * s, (3 + level) * s);
         ctx.fillRect(cx + 9 * s, cy - 2 * s, 3 * s, (3 + level) * s);
-        ctx.fillStyle = `rgba(80, 220, 100, ${portalGlow})`;
-        ctx.shadowColor = "#50dc64";
+        ctx.fillStyle = `rgba(${eR}, ${Math.max(eG - 35, 0)}, ${Math.max(eB - 50, 0)}, ${portalGlow})`;
+        ctx.shadowColor = eShadow;
         ctx.shadowBlur = 4 * s;
-        ctx.fillRect(cx - 11.5 * s, cy - 1.5 * s, 2 * s, 4 * s);
-        ctx.fillRect(cx + 9.5 * s, cy - 1.5 * s, 2 * s, 4 * s);
+        ctx.fillRect(cx - 11.5 * s, cy - 1.5 * s, 2 * s, (2 + level) * s);
+        ctx.fillRect(cx + 9.5 * s, cy - 1.5 * s, 2 * s, (2 + level) * s);
         ctx.shadowBlur = 0;
 
-        // Portal swirl effect
+        // Level 2+: Extra pair of smaller windows
+        if (level >= 2) {
+          ctx.fillStyle = "#1a2a1a";
+          ctx.fillRect(cx - 12 * s, cy + 5 * s, 2.5 * s, 3 * s);
+          ctx.fillRect(cx + 9.5 * s, cy + 5 * s, 2.5 * s, 3 * s);
+          ctx.fillStyle = `rgba(${eR}, ${eG}, ${eB}, ${portalGlow * 0.6})`;
+          ctx.fillRect(cx - 11.5 * s, cy + 5.5 * s, 1.5 * s, 2 * s);
+          ctx.fillRect(cx + 10 * s, cy + 5.5 * s, 1.5 * s, 2 * s);
+        }
+
+        // Portal swirl effect (dynamic color)
         if (animated) {
-          ctx.strokeStyle = `rgba(150, 255, 180, ${0.5 + Math.sin(t * 3) * 0.3})`;
+          ctx.strokeStyle = `rgba(${Math.min(eR + 50, 255)}, ${eG}, ${Math.min(eB + 30, 255)}, ${0.5 + Math.sin(t * 3) * 0.3})`;
           ctx.lineWidth = 1.2 * s;
           for (let i = 0; i < 1 + level; i++) {
             const spiralOffset = t * 2.5 + i * Math.PI * 0.67;
@@ -1107,9 +1244,9 @@ export const TowerSprite: React.FC<{
           }
         }
 
-        // Musical notes emanating from portal
+        // Musical notes emanating from portal (dynamic color)
         if (animated) {
-          ctx.fillStyle = `rgba(100, 255, 150, ${0.6 + Math.sin(t * 4) * 0.3})`;
+          ctx.fillStyle = `rgba(${eR}, ${eG}, ${eB}, ${0.6 + Math.sin(t * 4) * 0.3})`;
           ctx.font = `${3 * s}px serif`;
           ctx.textAlign = "center";
           const noteY = cy - ((t * 15) % 12) * s;
@@ -1117,6 +1254,7 @@ export const TowerSprite: React.FC<{
           ctx.globalAlpha = noteAlpha;
           ctx.fillText("♪", cx - 3 * s, noteY);
           ctx.fillText("♫", cx + 3 * s, noteY + 2 * s);
+          if (level >= 3) ctx.fillText("♬", cx, noteY - 3 * s);
           ctx.globalAlpha = 1;
         }
 
@@ -1124,7 +1262,7 @@ export const TowerSprite: React.FC<{
         if (level === 4 && upgrade) {
           ctx.save();
           ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = upgrade === "A" ? "rgba(255, 60, 30, 0.12)" : "rgba(255, 200, 50, 0.1)";
+          ctx.fillStyle = upgrade === "A" ? "rgba(255, 60, 30, 0.12)" : "rgba(80, 140, 255, 0.12)";
           ctx.fillRect(0, 0, size, size);
           ctx.globalCompositeOperation = "source-over";
           ctx.restore();
@@ -1151,19 +1289,19 @@ export const TowerSprite: React.FC<{
             }
           } else {
             const hPulse = animated ? 0.5 + Math.sin(t * 2) * 0.25 : 0.6;
-            ctx.fillStyle = `rgba(255, 200, 50, ${hPulse * 0.3})`;
+            ctx.fillStyle = `rgba(80, 150, 255, ${hPulse * 0.3})`;
             ctx.beginPath();
             ctx.ellipse(cx, cy + 4 * s, 14 * s, 7 * s, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = `rgba(255, 215, 100, ${hPulse})`;
-            ctx.shadowColor = "#ffd764";
+            ctx.fillStyle = `rgba(100, 180, 255, ${hPulse})`;
+            ctx.shadowColor = "#4090ff";
             ctx.shadowBlur = 10 * s;
             ctx.beginPath();
             ctx.arc(cx, cy - 22 * s, 2.5 * s, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
             if (animated) {
-              ctx.fillStyle = `rgba(255, 215, 100, ${0.5 + Math.sin(t * 3) * 0.3})`;
+              ctx.fillStyle = `rgba(120, 200, 255, ${0.5 + Math.sin(t * 3) * 0.3})`;
               ctx.font = `${4 * s}px serif`;
               ctx.textAlign = "center";
               for (let i = 0; i < 3; i++) {
@@ -1177,7 +1315,7 @@ export const TowerSprite: React.FC<{
           }
         }
 
-        drawLevelIndicator(ctx, cx, cy, s, level, "#50ff80", upgrade);
+        drawLevelIndicator(ctx, cx, cy, s, level, eIndicator, upgrade);
         break;
       }
       case "club": {
@@ -1288,6 +1426,20 @@ export const TowerSprite: React.FC<{
           ctx.moveTo(cx - 12 * s + i * 3 * s, y);
           ctx.lineTo(cx + 12 * s - i * 3 * s, y);
           ctx.stroke();
+        }
+
+        // Level 2+: Dormer windows on roof
+        if (level >= 2) {
+          ctx.fillStyle = "#0a1a0a";
+          ctx.fillRect(cx - 4 * s, cy - 9 * s, 3 * s, 2 * s);
+          ctx.fillStyle = "rgba(255, 215, 100, 0.6)";
+          ctx.fillRect(cx - 3.7 * s, cy - 8.7 * s, 2.4 * s, 1.4 * s);
+        }
+        if (level >= 3) {
+          ctx.fillStyle = "#0a1a0a";
+          ctx.fillRect(cx + 2 * s, cy - 8 * s, 3 * s, 2 * s);
+          ctx.fillStyle = "rgba(255, 215, 100, 0.6)";
+          ctx.fillRect(cx + 2.3 * s, cy - 7.7 * s, 2.4 * s, 1.4 * s);
         }
 
         // GLASS DISPLAY WINDOWS / SCREENS on front facade
@@ -1451,6 +1603,32 @@ export const TowerSprite: React.FC<{
             ctx.arc(ivy.x + (i % 2) * 1.5 * s, ivy.y - i * 1.5 * s, 1.2 * s, 0, Math.PI * 2);
             ctx.fill();
           }
+        }
+
+        // Level 2+: Garden hedge/bush in front
+        if (level >= 2) {
+          ctx.fillStyle = "#1a5a1a";
+          const hedgeY = cy + 15 * s;
+          ctx.beginPath();
+          ctx.arc(cx - 4 * s, hedgeY, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(cx + 3 * s, hedgeY, 1.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Level 3+: Lamp post on left side
+        if (level >= 3) {
+          ctx.fillStyle = "#2a2020";
+          ctx.fillRect(cx - 10 * s, cy + 2 * s, 0.6 * s, 8 * s);
+          ctx.fillStyle = "#3a3030";
+          ctx.fillRect(cx - 10.3 * s, cy + 1 * s, 1.2 * s, 1.5 * s);
+          ctx.fillStyle = `rgba(255, 215, 100, ${windowGlow})`;
+          ctx.shadowColor = "#ffd764";
+          ctx.shadowBlur = 4 * s;
+          ctx.beginPath();
+          ctx.arc(cx - 9.7 * s, cy + 2 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
         }
 
         // Level 4 upgrade effects
@@ -1658,6 +1836,12 @@ export const TowerSprite: React.FC<{
           ctx.stroke();
         }
 
+        // Level 2+: Chimney on right side of building
+        if (level >= 2) {
+          ctx.fillStyle = "#5a1a1a";
+          ctx.fillRect(cx + 8 * s, cy - 7 * s, 2 * s, 5 * s);
+        }
+
         // Decorative trim
         ctx.fillStyle = level >= 3 ? "#c9a227" : "#9a4a4a";
         ctx.fillRect(cx - 10 * s, cy + 6 * s, 9 * s, 1 * s);
@@ -1789,6 +1973,23 @@ export const TowerSprite: React.FC<{
         ctx.arc(cx, cy - 10 * s, 0.5 * s, 0, Math.PI * 2);
         ctx.fill();
 
+        // Level 3+: Weather vane on top of roof
+        if (level >= 3) {
+          ctx.strokeStyle = "#3a2020";
+          ctx.lineWidth = 0.4 * s;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 22 * s);
+          ctx.lineTo(cx, cy - 26 * s);
+          ctx.stroke();
+          ctx.fillStyle = "#5a3030";
+          ctx.beginPath();
+          ctx.moveTo(cx - 1.5 * s, cy - 25 * s);
+          ctx.lineTo(cx + 1.5 * s, cy - 25 * s);
+          ctx.lineTo(cx, cy - 26 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+
         // Station windows with warm glow
         const windowGlow = (animated ? 0.6 + Math.sin(t * 2) * 0.2 : 0.7) * (0.7 + level * 0.1);
         // Left windows
@@ -1860,18 +2061,18 @@ export const TowerSprite: React.FC<{
         if (level === 4 && upgrade) {
           ctx.save();
           ctx.globalCompositeOperation = "source-atop";
-          ctx.fillStyle = upgrade === "A" ? "rgba(60, 140, 60, 0.1)" : "rgba(50, 80, 200, 0.1)";
+          ctx.fillStyle = upgrade === "A" ? "rgba(255, 140, 40, 0.1)" : "rgba(140, 50, 200, 0.1)";
           ctx.fillRect(0, 0, size, size);
           ctx.globalCompositeOperation = "source-over";
           ctx.restore();
           if (upgrade === "A") {
             const sPulse = animated ? 0.5 + Math.sin(t * 2) * 0.25 : 0.6;
-            ctx.fillStyle = `rgba(80, 180, 80, ${sPulse * 0.2})`;
+            ctx.fillStyle = `rgba(255, 160, 60, ${sPulse * 0.2})`;
             ctx.beginPath();
             ctx.ellipse(cx, cy + 10 * s, 18 * s, 8 * s, 0, 0, Math.PI * 2);
             ctx.fill();
             if (animated) {
-              ctx.fillStyle = `rgba(60, 180, 60, ${0.5 + Math.sin(t * 3) * 0.3})`;
+              ctx.fillStyle = `rgba(255, 140, 40, ${0.5 + Math.sin(t * 3) * 0.3})`;
               for (let i = 0; i < 4; i++) {
                 const lAngle = t * 0.8 + (i * Math.PI) / 2;
                 const lr = (10 + Math.sin(t + i) * 2) * s;
@@ -1889,12 +2090,12 @@ export const TowerSprite: React.FC<{
             ctx.fillText("U", cx, cy - 22 * s);
           } else {
             const rPulse = animated ? 0.5 + Math.sin(t * 2) * 0.25 : 0.6;
-            ctx.fillStyle = `rgba(50, 80, 200, ${rPulse * 0.2})`;
+            ctx.fillStyle = `rgba(140, 50, 200, ${rPulse * 0.2})`;
             ctx.beginPath();
             ctx.ellipse(cx, cy + 8 * s, 16 * s, 7 * s, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = `rgba(80, 120, 255, ${rPulse})`;
-            ctx.shadowColor = "#5078ff";
+            ctx.fillStyle = `rgba(160, 80, 255, ${rPulse})`;
+            ctx.shadowColor = "#a050ff";
             ctx.shadowBlur = 6 * s;
             ctx.beginPath();
             ctx.moveTo(cx - 3 * s, cy - 22 * s);
@@ -1903,7 +2104,7 @@ export const TowerSprite: React.FC<{
             ctx.closePath();
             ctx.fill();
             ctx.shadowBlur = 0;
-            ctx.fillStyle = `rgba(255, 215, 0, ${rPulse * 0.8})`;
+            ctx.fillStyle = `rgba(200, 150, 255, ${rPulse * 0.8})`;
             ctx.beginPath();
             ctx.arc(cx, cy - 23 * s, 1 * s, 0, Math.PI * 2);
             ctx.fill();
@@ -2278,6 +2479,37 @@ export const TowerSprite: React.FC<{
           ctx.ellipse(cx, tierY, tierRadii[2] * 0.4, tierRadii[2] * 0.2, 0, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0;
+        }
+
+        // Level 2+: Targeting scope/sight on right side
+        if (level >= 2) {
+          const scopeX = cx + tierRadii[2] + 3 * s;
+          ctx.strokeStyle = "#505058";
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(scopeX, tierY);
+          ctx.lineTo(scopeX, tierY - 6 * s);
+          ctx.stroke();
+          ctx.fillStyle = "#505058";
+          ctx.beginPath();
+          ctx.arc(scopeX, tierY - 6 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Level 3+: Reinforcement plates and scope pennant
+        if (level >= 3) {
+          const plateFill = "#686870";
+          ctx.fillStyle = plateFill;
+          ctx.fillRect(cx - 4 * s, cy + 4 * s, 3 * s, 2 * s);
+          ctx.fillRect(cx + 1 * s, cy + 2 * s, 2.5 * s, 1.5 * s);
+          ctx.fillRect(cx - 2 * s, cy + 3 * s, 2 * s, 1.5 * s);
+          const scopeX = cx + tierRadii[2] + 3 * s;
+          ctx.fillStyle = "#8a3030";
+          ctx.beginPath();
+          ctx.moveTo(scopeX, tierY - 6 * s);
+          ctx.lineTo(scopeX + 1.5 * s, tierY - 8 * s);
+          ctx.lineTo(scopeX + 0.5 * s, tierY - 6 * s);
+          ctx.closePath();
+          ctx.fill();
         }
 
         // Level 4 upgrade effects

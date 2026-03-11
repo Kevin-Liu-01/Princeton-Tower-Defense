@@ -6,7 +6,9 @@ import {
   drawIsometricPrism,
   drawIsoGothicWindow,
   drawIsometricRailing,
+  drawIsoFlushVent,
 } from "./towerHelpers";
+import { traceIsoFlushRect } from "../isoFlush";
 
 export function getEllipseHalfBounds(
   rx: number,
@@ -381,14 +383,14 @@ export function drawLibraryOrbitalEffects(
     ctx.setLineDash([]);
   }
 
-  // Purple energy field around tower (split arc)
+  // Energy field aura around tower base (split arc, drawn at foundation level)
   const auraSize = 30 + Math.sin(time * 3) * 5;
   ctx.strokeStyle = `${mainColor} ${0.35 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5})`;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(
     sX,
-    screenPos.y + shakeY - baseHeight * zoom * 0.3,
+    screenPos.y + shakeY + 8 * zoom,
     auraSize * zoom,
     auraSize * zoom * 0.5,
     0,
@@ -893,76 +895,114 @@ export function renderLibraryTower(
     zoom,
   );
 
-  // Stone block pattern on lower body with mortar joints
+  // Stone block pattern on lower body — flush isometric mortar joints
+  const bodyH = lowerBodyHeight * zoom;
+  const numMortarRows = tower.level === 1 ? 3 : 5;
   ctx.lineWidth = 1 * zoom;
-  for (let row = 0; row < 5; row++) {
-    const blockY = screenPos.y - row * lowerBodyHeight * zoom * 0.18;
-    const nextBlockY = screenPos.y - (row + 1) * lowerBodyHeight * zoom * 0.18;
 
-    // Left face horizontal mortar (darker groove + lighter upper edge)
-    ctx.strokeStyle = "#2a1a0a";
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15 - 1 * zoom);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55 - 1 * zoom);
-    ctx.stroke();
-
-    // Right face horizontal mortar
-    ctx.strokeStyle = "#2a1a0a";
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15 - 1 * zoom);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55 - 1 * zoom);
-    ctx.stroke();
-
-    // Vertical mortar joints (staggered per row for ashlar bond)
-    const stagger = row % 2 === 0 ? 0 : 0.15;
+  // Wall texturing — subtle stone block fills on each face
+  for (let row = 0; row <= numMortarRows; row++) {
+    const frac1 = row / (numMortarRows + 1);
+    const frac2 = (row + 1) / (numMortarRows + 1);
+    const stagger = row % 2 === 0 ? 0 : 1 / 6;
     for (let col = 0; col < 3; col++) {
-      const t = 0.25 + col * 0.25 + stagger;
-      if (t > 0.95) continue;
+      const u1 = Math.max(0, col / 3 + stagger);
+      const u2 = Math.min(1, (col + 1) / 3 + stagger);
+      if (u1 >= u2) continue;
 
-      // Left face vertical joints
-      const ljX = screenPos.x - w * (0.1 + t * 0.75);
-      const ljY1 = blockY + d * (0.15 - t * 0.7);
-      const ljY2 = nextBlockY + d * (0.15 - t * 0.7);
-      ctx.strokeStyle = "#2a1a0a";
+      const shade = (row * 3 + col) % 3;
+      const alpha = shade === 0 ? 0.05 : shade === 1 ? 0.08 : 0.03;
+      const tint =
+        shade === 0
+          ? "138, 122, 106"
+          : shade === 1
+            ? "74, 58, 42"
+            : "100, 84, 68";
+
+      // Left face block (parallelogram flush with wall)
+      ctx.fillStyle = `rgba(${tint}, ${alpha})`;
       ctx.beginPath();
-      ctx.moveTo(ljX, ljY1);
-      ctx.lineTo(ljX, ljY2);
+      ctx.moveTo(sX - w * (1 - u1), screenPos.y + u1 * d - frac1 * bodyH);
+      ctx.lineTo(sX - w * (1 - u2), screenPos.y + u2 * d - frac1 * bodyH);
+      ctx.lineTo(sX - w * (1 - u2), screenPos.y + u2 * d - frac2 * bodyH);
+      ctx.lineTo(sX - w * (1 - u1), screenPos.y + u1 * d - frac2 * bodyH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right face block (mirrored)
+      ctx.beginPath();
+      ctx.moveTo(sX + w * (1 - u1), screenPos.y + u1 * d - frac1 * bodyH);
+      ctx.lineTo(sX + w * (1 - u2), screenPos.y + u2 * d - frac1 * bodyH);
+      ctx.lineTo(sX + w * (1 - u2), screenPos.y + u2 * d - frac2 * bodyH);
+      ctx.lineTo(sX + w * (1 - u1), screenPos.y + u1 * d - frac2 * bodyH);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Horizontal mortar lines (flush edge-to-edge)
+  for (let row = 1; row <= numMortarRows; row++) {
+    const frac = row / (numMortarRows + 1);
+    const yEdge = screenPos.y - frac * bodyH;
+
+    // Left face — dark mortar groove
+    ctx.strokeStyle = "#2a1a0a";
+    ctx.beginPath();
+    ctx.moveTo(sX - w, yEdge);
+    ctx.lineTo(sX, yEdge + d);
+    ctx.stroke();
+    // Left face — lighter upper highlight
+    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(sX - w, yEdge - 1 * zoom);
+    ctx.lineTo(sX, yEdge + d - 1 * zoom);
+    ctx.stroke();
+
+    // Right face — dark mortar groove
+    ctx.strokeStyle = "#2a1a0a";
+    ctx.beginPath();
+    ctx.moveTo(sX, yEdge + d);
+    ctx.lineTo(sX + w, yEdge);
+    ctx.stroke();
+    // Right face — lighter upper highlight
+    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(sX, yEdge + d - 1 * zoom);
+    ctx.lineTo(sX + w, yEdge - 1 * zoom);
+    ctx.stroke();
+  }
+
+  // Vertical mortar joints (staggered per row for ashlar bond)
+  ctx.strokeStyle = "#2a1a0a";
+  for (let row = 0; row <= numMortarRows; row++) {
+    const frac1 = row / (numMortarRows + 1);
+    const frac2 = (row + 1) / (numMortarRows + 1);
+    const stagger = row % 2 === 0 ? 0.0 : 1 / 6;
+    for (let col = 1; col < 3; col++) {
+      const u = col / 3 + stagger;
+      if (u > 0.95 || u < 0.05) continue;
+
+      // Left face vertical joint
+      const ljX = sX - w * (1 - u);
+      ctx.beginPath();
+      ctx.moveTo(ljX, screenPos.y + u * d - frac1 * bodyH);
+      ctx.lineTo(ljX, screenPos.y + u * d - frac2 * bodyH);
       ctx.stroke();
 
-      // Right face vertical joints
-      const rjX = screenPos.x + w * (0.1 + t * 0.75);
+      // Right face vertical joint (mirrored)
+      const rjX = sX + w * (1 - u);
       ctx.beginPath();
-      ctx.moveTo(rjX, ljY1);
-      ctx.lineTo(rjX, ljY2);
+      ctx.moveTo(rjX, screenPos.y + u * d - frac1 * bodyH);
+      ctx.lineTo(rjX, screenPos.y + u * d - frac2 * bodyH);
       ctx.stroke();
     }
   }
 
-  // Weathered stone texture using proper rgba (no globalAlpha hack)
-  for (let i = 0; i < 12; i++) {
-    const stoneX = screenPos.x + ((((i * 7 + 3) % 11) / 11) * 2 - 1) * w * 0.7;
-    const stoneY =
-      screenPos.y - ((i * 13 + 5) % 9) * lowerBodyHeight * zoom * 0.1;
-    ctx.fillStyle =
-      i % 2 === 0 ? "rgba(138, 122, 106, 0.08)" : "rgba(74, 58, 42, 0.08)";
-    ctx.fillRect(stoneX - 2 * zoom, stoneY - 1.5 * zoom, 4 * zoom, 3 * zoom);
-  }
-
   // Left-face weathering gradient (rain stain effect)
   const leftWeatherGrad = ctx.createLinearGradient(
-    screenPos.x - w * 0.85,
-    screenPos.y - lowerBodyHeight * zoom,
-    screenPos.x - w * 0.1,
+    sX - w,
+    screenPos.y - bodyH,
+    sX,
     screenPos.y,
   );
   leftWeatherGrad.addColorStop(0, "rgba(30, 20, 10, 0.12)");
@@ -970,10 +1010,10 @@ export function renderLibraryTower(
   leftWeatherGrad.addColorStop(1, "rgba(30, 20, 10, 0)");
   ctx.fillStyle = leftWeatherGrad;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x, screenPos.y + d * 0.15);
-  ctx.lineTo(screenPos.x - w, screenPos.y - d * 0.5);
-  ctx.lineTo(screenPos.x - w, screenPos.y - lowerBodyHeight * zoom - d * 0.5);
-  ctx.lineTo(screenPos.x, screenPos.y - lowerBodyHeight * zoom);
+  ctx.moveTo(sX, screenPos.y + d);
+  ctx.lineTo(sX - w, screenPos.y);
+  ctx.lineTo(sX - w, screenPos.y - bodyH);
+  ctx.lineTo(sX, screenPos.y - bodyH + d);
   ctx.closePath();
   ctx.fill();
 
@@ -2151,29 +2191,68 @@ export function renderLibraryTower(
     ctx.fillRect(dmX - 0.8 * zoom, dmY - 1.5 * zoom, 1.6 * zoom, 1.5 * zoom);
   }
 
-  // Stone blocks on upper section with improved mortar rendering
+  // Stone blocks on upper section — flush isometric mortar + texturing
+  const uw = (baseWidth - 4) * zoom * 0.5;
+  const ud = (baseWidth - 4) * zoom * ISO_PRISM_D_FACTOR;
+  const upperH = baseHeight * 0.4 * zoom;
   ctx.lineWidth = 1 * zoom;
+
+  // Upper body wall texturing
   for (let row = 0; row < 4; row++) {
-    const blockY = pistonTopY + 12 * zoom - row * baseHeight * 0.12 * zoom;
-    // Dark mortar groove
+    const uf1 = row / 5;
+    const uf2 = (row + 1) / 5;
+    const uStagger = row % 2 === 0 ? 0 : 1 / 6;
+    for (let col = 0; col < 3; col++) {
+      const u1 = Math.max(0, col / 3 + uStagger);
+      const u2 = Math.min(1, (col + 1) / 3 + uStagger);
+      if (u1 >= u2) continue;
+      const shade = (row * 3 + col) % 3;
+      const alpha = shade === 0 ? 0.04 : shade === 1 ? 0.06 : 0.02;
+      const tint =
+        shade === 0
+          ? "138, 122, 106"
+          : shade === 1
+            ? "74, 58, 42"
+            : "100, 84, 68";
+      ctx.fillStyle = `rgba(${tint}, ${alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(sX - uw * (1 - u1), pistonTopY + u1 * ud - uf1 * upperH);
+      ctx.lineTo(sX - uw * (1 - u2), pistonTopY + u2 * ud - uf1 * upperH);
+      ctx.lineTo(sX - uw * (1 - u2), pistonTopY + u2 * ud - uf2 * upperH);
+      ctx.lineTo(sX - uw * (1 - u1), pistonTopY + u1 * ud - uf2 * upperH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(sX + uw * (1 - u1), pistonTopY + u1 * ud - uf1 * upperH);
+      ctx.lineTo(sX + uw * (1 - u2), pistonTopY + u2 * ud - uf1 * upperH);
+      ctx.lineTo(sX + uw * (1 - u2), pistonTopY + u2 * ud - uf2 * upperH);
+      ctx.lineTo(sX + uw * (1 - u1), pistonTopY + u1 * ud - uf2 * upperH);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Upper body flush mortar lines
+  for (let row = 1; row <= 4; row++) {
+    const frac = row / 5;
+    const yEdge = pistonTopY - frac * upperH;
     ctx.strokeStyle = "#2a1a0a";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
+    ctx.moveTo(sX - uw, yEdge);
+    ctx.lineTo(sX, yEdge + ud);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
+    ctx.moveTo(sX, yEdge + ud);
+    ctx.lineTo(sX + uw, yEdge);
     ctx.stroke();
-    // Light mortar upper edge
     ctx.strokeStyle = "rgba(120, 100, 80, 0.2)";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15 - 1 * zoom);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.moveTo(sX - uw, yEdge - 1 * zoom);
+    ctx.lineTo(sX, yEdge + ud - 1 * zoom);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15 - 1 * zoom);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.moveTo(sX, yEdge + ud - 1 * zoom);
+    ctx.lineTo(sX + uw, yEdge - 1 * zoom);
     ctx.stroke();
   }
 
@@ -2189,13 +2268,15 @@ export function renderLibraryTower(
       16 * zoom -
       (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
     ctx.strokeStyle = `${mainColor} ${panelGlow * 0.5})`;
+    // Left face accent — flush isometric (partial span t=0.1 to t=0.9)
     ctx.beginPath();
-    ctx.moveTo(sX - w * 0.15, lineY + d * 0.3);
-    ctx.lineTo(sX - w * 0.7, lineY - d * 0.2);
+    ctx.moveTo(sX - uw * 0.9, lineY + 0.1 * ud);
+    ctx.lineTo(sX - uw * 0.1, lineY + 0.9 * ud);
     ctx.stroke();
+    // Right face accent — flush isometric
     ctx.beginPath();
-    ctx.moveTo(sX + w * 0.7, lineY - d * 0.2);
-    ctx.lineTo(sX + w * 0.15, lineY + d * 0.3);
+    ctx.moveTo(sX + uw * 0.9, lineY + 0.1 * ud);
+    ctx.lineTo(sX + uw * 0.1, lineY + 0.9 * ud);
     ctx.stroke();
 
     // Small rune glyph at the center of each accent band
@@ -2204,11 +2285,11 @@ export function renderLibraryTower(
     ctx.fillStyle = `rgba(${glowColor}, ${bandRuneAlpha})`;
     ctx.font = `${4 * zoom}px serif`;
     ctx.textAlign = "center";
-    ctx.fillText("ᛏ", sX - w * 0.4, lineY + d * 0.05);
-    ctx.fillText("ᛏ", sX + w * 0.4, lineY + d * 0.05);
+    ctx.fillText("ᛏ", sX - uw * 0.5, lineY + 0.5 * ud);
+    ctx.fillText("ᛏ", sX + uw * 0.5, lineY + 0.5 * ud);
   }
 
-  // Gothic louvered exhaust vents (heat from mystical forge inside)
+  // Gothic louvered exhaust vents — isometric flush with wall faces
   for (let i = 0; i < Math.min(tower.level, 3); i++) {
     const ventY = screenPos.y - lowerBodyHeight * zoom * 0.35 - i * 8 * zoom;
     const ventGlow =
@@ -2216,67 +2297,20 @@ export function renderLibraryTower(
 
     for (const side of [-1, 1]) {
       const vx = sX + side * w * 0.55;
-      const vy = ventY + d * 0.15;
-      const vw = 5 * zoom;
-      const vh = 4 * zoom;
+      const face = side === -1 ? ("left" as const) : ("right" as const);
+      const vy = ventY + (side === -1 ? d * 0.55 * 0.15 : d * 0.55 * 0.15);
 
-      // Gothic pointed vent housing
-      ctx.fillStyle = "#3a2a1a";
-      ctx.beginPath();
-      ctx.moveTo(vx - vw, vy + vh * 0.3);
-      ctx.lineTo(vx - vw, vy - vh * 0.5);
-      ctx.quadraticCurveTo(vx, vy - vh * 1.1, vx + vw, vy - vh * 0.5);
-      ctx.lineTo(vx + vw, vy + vh * 0.3);
-      ctx.closePath();
+      drawIsoFlushVent(ctx, vx, vy, 5, 3.5, face, zoom, {
+        frameColor: "#3a2a1a",
+        bgColor: "#1a0a00",
+        slatColor: "#5a4a3a",
+        slats: 3,
+      });
+
+      // Warm arcane glow from within
+      ctx.fillStyle = `rgba(${glowColor}, ${ventGlow * 0.5})`;
+      traceIsoFlushRect(ctx, vx, vy, 4, 2.5, face, zoom);
       ctx.fill();
-
-      // Louvered slats
-      ctx.strokeStyle = "#5a4a3a";
-      ctx.lineWidth = 0.6 * zoom;
-      for (let s = 0; s < 3; s++) {
-        const slY = vy - vh * 0.3 + s * vh * 0.25;
-        ctx.beginPath();
-        ctx.moveTo(vx - vw * 0.75, slY);
-        ctx.lineTo(vx + vw * 0.75, slY);
-        ctx.stroke();
-      }
-
-      // Warm glow from within
-      const ventGrad = ctx.createRadialGradient(
-        vx,
-        vy - vh * 0.1,
-        0,
-        vx,
-        vy - vh * 0.1,
-        vw,
-      );
-      ventGrad.addColorStop(0, `rgba(${glowColor}, ${ventGlow * 0.6})`);
-      ventGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
-      ctx.fillStyle = ventGrad;
-      ctx.beginPath();
-      ctx.moveTo(vx - vw * 0.8, vy + vh * 0.2);
-      ctx.lineTo(vx - vw * 0.8, vy - vh * 0.4);
-      ctx.quadraticCurveTo(vx, vy - vh * 0.9, vx + vw * 0.8, vy - vh * 0.4);
-      ctx.lineTo(vx + vw * 0.8, vy + vh * 0.2);
-      ctx.closePath();
-      ctx.fill();
-
-      // Heat shimmer above vent
-      if (i === 0) {
-        const shimmerAlpha = 0.08 + Math.sin(time * 6 + side * 2) * 0.04;
-        ctx.fillStyle = `rgba(${glowColor}, ${shimmerAlpha})`;
-        ctx.beginPath();
-        ctx.ellipse(
-          vx,
-          vy - vh * 1.2 - Math.sin(time * 3 + side) * 1.5 * zoom,
-          3 * zoom,
-          1.5 * zoom,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
     }
   }
 
@@ -2916,7 +2950,7 @@ export function renderLibraryTower(
   }
 
   // ========== LEVEL 2 UNIQUE FEATURES ==========
-  if (tower.level >= 2) {
+  if (tower.level === 2) {
     // Mystical scroll unfurling
     const scrollY = screenPos.y - lowerBodyHeight * zoom * 0.8;
     const scrollGlow = 0.4 + Math.sin(time * 2) * 0.2;

@@ -333,7 +333,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <>
     <OrnateFrame
-      className="border-b-2 border-amber-700/50 shadow-xl relative flex-shrink-0"
+      className="border-b-2 border-amber-700/50 shadow-xl relative flex-shrink-0 z-[70]"
       cornerSize={28}
       showBorders={true}
       showTopBottomBorders={false}

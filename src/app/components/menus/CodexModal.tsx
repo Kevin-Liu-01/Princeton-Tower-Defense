@@ -1355,6 +1355,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
           cornerSize={48}
           color="#d97706"
           glowColor="#f59e0b"
+          showSideBorders={false}
         >
           {/* Inner ghost border */}
           <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />

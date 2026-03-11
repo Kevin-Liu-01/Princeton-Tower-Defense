@@ -81,14 +81,14 @@ function SegmentedControl<T extends string>({
   onChange,
 }: SegmentedControlProps<T>) {
   return (
-    <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: PANEL.bgDeep }}>
+    <div className="flex flex-wrap gap-1 p-0.5 rounded-lg" style={{ background: PANEL.bgDeep }}>
       {options.map((opt) => {
         const active = opt.value === value;
         return (
           <button
             key={opt.value}
             onClick={() => onChange(opt.value)}
-            className="px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap"
+            className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md text-[11px] sm:text-xs font-medium transition-all whitespace-nowrap"
             style={{
               background: active
                 ? `linear-gradient(180deg, ${GOLD.accentBorder50}, ${GOLD.accentBorder35})`
@@ -184,7 +184,7 @@ interface SettingRowProps {
 
 function SettingRow({ icon, label, description, tag, children }: SettingRowProps) {
   return (
-    <div className={`flex items-center justify-between gap-4 py-3 px-4 rounded-lg transition-colors hover:bg-white/[0.02] ${tag === "coming-soon" ? "opacity-50 pointer-events-none" : ""}`}>
+    <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 py-3 px-3 sm:px-4 rounded-lg transition-colors hover:bg-white/[0.02] ${tag === "coming-soon" ? "opacity-50 pointer-events-none" : ""}`}>
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="text-amber-500/70 flex-shrink-0">{icon}</div>
         <div className="min-w-0">
@@ -202,7 +202,7 @@ function SettingRow({ icon, label, description, tag, children }: SettingRowProps
           )}
         </div>
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="flex-shrink-0 ml-7 sm:ml-0">{children}</div>
     </div>
   );
 }
@@ -217,6 +217,81 @@ function SectionDivider({ label }: { label: string }) {
         <div className="flex-1 h-px" style={{ background: dividerGradient }} />
       </div>
     </div>
+  );
+}
+
+// =============================================================================
+// DEVELOPER MODE SECTION (shared between desktop sidebar & mobile bottom)
+// =============================================================================
+
+interface DevModeSectionProps {
+  devUnlocked: boolean;
+  devPassword: string;
+  devPasswordError: boolean;
+  onDevPasswordChange: (value: string) => void;
+  onDevPasswordSubmit: () => void;
+  onDevModeDisable: () => void;
+}
+
+function DevModeSection({
+  devUnlocked,
+  devPassword,
+  devPasswordError,
+  onDevPasswordChange,
+  onDevPasswordSubmit,
+  onDevModeDisable,
+}: DevModeSectionProps) {
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-2.5">
+        <span style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}>
+          {devUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
+        </span>
+        <span
+          className="text-xs font-medium"
+          style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}
+        >
+          Developer
+        </span>
+      </div>
+      {devUnlocked ? (
+        <button
+          onClick={onDevModeDisable}
+          className="w-full px-2 py-1.5 rounded text-xs font-medium transition-colors"
+          style={{
+            background: "rgba(74,222,128,0.1)",
+            border: "1px solid rgba(74,222,128,0.25)",
+            color: "rgba(74,222,128,0.8)",
+          }}
+        >
+          Enabled — Disable
+        </button>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          <input
+            type="password"
+            value={devPassword}
+            onChange={(e) => onDevPasswordChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onDevPasswordSubmit();
+            }}
+            placeholder="Password"
+            className="w-full px-2 py-1.5 rounded text-xs"
+            style={{
+              background: PANEL.bgDeep,
+              border: `1px solid ${devPasswordError ? "rgba(239,68,68,0.5)" : GOLD.innerBorder10}`,
+              color: "rgba(253,230,138,0.7)",
+              outline: "none",
+            }}
+          />
+          {devPasswordError && (
+            <span className="text-xs" style={{ color: "rgba(239,68,68,0.8)" }}>
+              Wrong password
+            </span>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -819,26 +894,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
         }}
       >
-        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={48}>
+        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={48}
+          showSideBorders={false}
+        >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-6 py-4 border-b"
+            className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 border-b"
             style={{
               borderColor: GOLD.border25,
             }}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Monitor size={22} className="text-amber-400" />
-              <h2 className="text-xl font-bold text-amber-200 tracking-wide">
+              <h2 className="text-lg sm:text-xl font-bold text-amber-200 tracking-wide">
                 Settings
               </h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* Preset dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setShowPresets(!showPresets)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                   style={{
                     background: PANEL.bgDeep,
                     border: `1px solid ${GOLD.innerBorder12}`,
@@ -846,7 +923,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   }}
                 >
                   <Zap size={14} />
-                  Presets
+                  <span className="hidden sm:inline">Presets</span>
                   <ChevronDown size={14} className={`transition-transform ${showPresets ? "rotate-180" : ""}`} />
                 </button>
                 {showPresets && (
@@ -879,7 +956,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Reset */}
               <button
                 onClick={handleResetAll}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                 style={{
                   background: confirmReset ? "rgba(180,60,60,0.3)" : PANEL.bgDeep,
                   border: `1px solid ${confirmReset ? "rgba(180,60,60,0.5)" : GOLD.innerBorder12}`,
@@ -887,7 +964,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }}
               >
                 <RotateCcw size={14} />
-                {confirmReset ? "Confirm?" : "Reset All"}
+                <span className="hidden sm:inline">{confirmReset ? "Confirm?" : "Reset All"}</span>
               </button>
 
               {/* Close */}
@@ -902,10 +979,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Body */}
-          <div className="flex flex-1 overflow-hidden" style={{ background: PANEL.bgDark }}>
-            {/* Sidebar tabs */}
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0" style={{ background: PANEL.bgDark }}>
+            {/* Mobile horizontal tabs */}
             <div
-              className="w-48 flex-shrink-0 overflow-y-auto border-r"
+              className="md:hidden overflow-x-auto flex-shrink-0 border-b scrollbar-none"
+              style={{
+                background: PANEL.bgDeepSolid,
+                borderColor: GOLD.innerBorder08,
+              }}
+            >
+              <div className="flex">
+                {TABS.map((tab) => {
+                  const active = tab.id === activeTab;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-all flex-shrink-0"
+                      style={{
+                        background: active ? "rgba(180,140,60,0.15)" : "transparent",
+                        borderBottom: active ? "2px solid rgba(251,191,36,0.6)" : "2px solid transparent",
+                        color: active ? "rgba(253,230,138,0.9)" : "rgba(253,230,138,0.45)",
+                      }}
+                    >
+                      <span className={active ? "text-amber-400" : "text-amber-600/50"}>
+                        {tab.icon}
+                      </span>
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Desktop sidebar tabs */}
+            <div
+              className="hidden md:block w-48 flex-shrink-0 overflow-y-auto border-r"
               style={{
                 background: PANEL.bgDeepSolid,
                 borderColor: GOLD.innerBorder08,
@@ -937,76 +1046,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   })}
                 </div>
 
-                {/* Developer Mode */}
+                {/* Developer Mode - desktop sidebar */}
                 <div
-                  className="mt-auto px-3 pl-5 pt-3 pb-4 border-t"
+                  className="mt-auto px-3 pt-3 pb-4 border-t"
                   style={{ borderColor: GOLD.innerBorder08 }}
                 >
-                  <div className="flex items-center gap-2 mb-2.5">
-                    <span style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}>
-                      {devUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
-                    </span>
-                    <span
-                      className="text-xs font-medium"
-                      style={{ color: devUnlocked ? "rgba(74,222,128,0.8)" : "rgba(253,230,138,0.35)" }}
-                    >
-                      Developer
-                    </span>
-                  </div>
-                  {devUnlocked ? (
-                    <button
-                      onClick={handleDevModeDisable}
-                      className="w-full px-2 py-1.5 rounded text-xs font-medium transition-colors"
-                      style={{
-                        background: "rgba(74,222,128,0.1)",
-                        border: "1px solid rgba(74,222,128,0.25)",
-                        color: "rgba(74,222,128,0.8)",
-                      }}
-                    >
-                      Enabled — Disable
-                    </button>
-                  ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <input
-                        type="password"
-                        value={devPassword}
-                        onChange={(e) => setDevPassword(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleDevPasswordSubmit();
-                        }}
-                        placeholder="Password"
-                        className="w-full px-2 py-1.5 rounded text-xs"
-                        style={{
-                          background: PANEL.bgDeep,
-                          border: `1px solid ${devPasswordError ? "rgba(239,68,68,0.5)" : GOLD.innerBorder10}`,
-                          color: "rgba(253,230,138,0.7)",
-                          outline: "none",
-                        }}
-                      />
-                      {devPasswordError && (
-                        <span className="text-xs" style={{ color: "rgba(239,68,68,0.8)" }}>
-                          Wrong password
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <DevModeSection
+                    devUnlocked={devUnlocked}
+                    devPassword={devPassword}
+                    devPasswordError={devPasswordError}
+                    onDevPasswordChange={setDevPassword}
+                    onDevPasswordSubmit={handleDevPasswordSubmit}
+                    onDevModeDisable={handleDevModeDisable}
+                  />
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto min-h-0">
               {/* Category header + reset */}
               <div
-                className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b"
+                className="sticky top-0 z-10 flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b"
                 style={{
                   background: PANEL.bgDark,
                   borderColor: GOLD.innerBorder08,
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-400">{activeTabDef.icon}</span>
-                  <h3 className="text-base font-semibold text-amber-200">
+                  <span className="text-amber-400 hidden md:inline">{activeTabDef.icon}</span>
+                  <h3 className="text-sm sm:text-base font-semibold text-amber-200">
                     {activeTabDef.label}
                   </h3>
                 </div>
@@ -1026,12 +1095,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   updateCategory={updateCategory}
                 />
               </div>
+
+              {/* Developer Mode - mobile bottom */}
+              <div
+                className="md:hidden mx-3 mb-4 px-3 pt-3 pb-4 rounded-lg border"
+                style={{
+                  background: PANEL.bgDeepSolid,
+                  borderColor: GOLD.innerBorder08,
+                }}
+              >
+                <DevModeSection
+                  devUnlocked={devUnlocked}
+                  devPassword={devPassword}
+                  devPasswordError={devPasswordError}
+                  onDevPasswordChange={setDevPassword}
+                  onDevPasswordSubmit={handleDevPasswordSubmit}
+                  onDevModeDisable={handleDevModeDisable}
+                />
+              </div>
             </div>
           </div>
 
           {/* Footer hint */}
           <div
-            className="px-6 py-2.5 text-center text-xs border-t"
+            className="px-3 sm:px-6 py-2 sm:py-2.5 text-center text-[11px] sm:text-xs border-t"
             style={{
               background: PANEL.bgDeepSolid,
               borderColor: GOLD.innerBorder08,

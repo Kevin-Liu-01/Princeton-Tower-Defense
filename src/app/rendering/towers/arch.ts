@@ -99,10 +99,10 @@ export function renderArchTower(
   // Lowest step — rough-hewn stone plinth
   drawIsometricPrism(
     ctx,
-    screenPos.x + foundationShift * 0.3,
+    screenPos.x,
     screenPos.y + 22 * zoom,
-    subBuildingWidth + 12 + pillarSpread * 2,
-    baseDepth + 40 + pillarSpread * 2,
+    subBuildingWidth + 12,
+    baseDepth + 40,
     3,
     {
       top: "#3a2a1a",
@@ -117,10 +117,10 @@ export function renderArchTower(
   // Middle step — dressed stone
   drawIsometricPrism(
     ctx,
-    screenPos.x + foundationShift * 0.3,
+    screenPos.x,
     screenPos.y + 20 * zoom,
-    subBuildingWidth + 8 + pillarSpread * 2,
-    baseDepth + 36 + pillarSpread * 2,
+    subBuildingWidth + 8,
+    baseDepth + 36,
     4,
     {
       top: "#5a4a3a",
@@ -135,10 +135,10 @@ export function renderArchTower(
   // Upper step — polished foundation
   drawIsometricPrism(
     ctx,
-    screenPos.x + foundationShift * 0.3,
+    screenPos.x,
     screenPos.y + 16 * zoom,
-    subBuildingWidth + pillarSpread * 2,
-    baseDepth + 28 + pillarSpread * 2,
+    subBuildingWidth,
+    baseDepth + 28,
     12,
     {
       top: "#786858",
@@ -151,30 +151,20 @@ export function renderArchTower(
   );
 
   // Gold trim along upper step front edge
-  const fndHW =
-    (subBuildingWidth + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR;
-  const fndHD = (baseDepth + 28 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR;
+  const fndHW = subBuildingWidth * zoom * ISO_PRISM_W_FACTOR;
+  const fndHD = (baseDepth + 28) * zoom * ISO_PRISM_D_FACTOR;
   ctx.strokeStyle = `rgba(201, 162, 39, ${0.3 + Math.sin(time * 1.5) * 0.1})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(
-    screenPos.x + foundationShift * 0.3 - fndHW,
-    screenPos.y + 4 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x + foundationShift * 0.3,
-    screenPos.y + 4 * zoom + fndHD,
-  );
-  ctx.lineTo(
-    screenPos.x + foundationShift * 0.3 + fndHW,
-    screenPos.y + 4 * zoom,
-  );
+  ctx.moveTo(screenPos.x - fndHW, screenPos.y + 4 * zoom);
+  ctx.lineTo(screenPos.x, screenPos.y + 4 * zoom + fndHD);
+  ctx.lineTo(screenPos.x + fndHW, screenPos.y + 4 * zoom);
   ctx.stroke();
 
   // Foundation rune circle on upper step
-  const runeCircleGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4;
-  const runeRX = (subBuildingWidth + pillarSpread * 2) * zoom * 0.38;
-  const runeRY = (baseDepth + 28 + pillarSpread * 2) * zoom * 0.18;
+  const runeCircleGlow = 0.3 + Math.sin(time * 2) * 0.15;
+  const runeRX = subBuildingWidth * zoom * 0.38;
+  const runeRY = (baseDepth + 28) * zoom * 0.18;
   ctx.strokeStyle = `rgba(${glowColor}, ${runeCircleGlow})`;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
@@ -226,12 +216,9 @@ export function renderArchTower(
   for (let corner = 0; corner < 4; corner++) {
     const bp = buttressPositions[corner];
     const cx =
-      screenPos.x +
-      bp.sx * ((subBuildingWidth + pillarSpread * 2) * 0.42) * zoom;
+      screenPos.x + bp.sx * (subBuildingWidth * 0.42) * zoom;
     const cy =
-      screenPos.y +
-      14 * zoom +
-      bp.sy * (baseDepth + 20 + pillarSpread * 2) * zoom * 0.18;
+      screenPos.y + 14 * zoom + bp.sy * (baseDepth + 20) * zoom * 0.18;
 
     // Buttress as isometric prism
     drawIsometricPrism(
@@ -269,8 +256,7 @@ export function renderArchTower(
     ctx.fill();
 
     // Buttress rune glow
-    const buttressGlow =
-      0.4 + Math.sin(time * 3 + corner) * 0.25 + attackPulse * 0.3;
+    const buttressGlow = 0.4 + Math.sin(time * 3 + corner) * 0.25;
     ctx.fillStyle = `rgba(${glowColor}, ${buttressGlow})`;
     ctx.shadowColor = `rgb(${glowColor})`;
     ctx.shadowBlur = 3 * zoom;
@@ -2765,56 +2751,361 @@ export function renderArchTower(
 
   // === CRESCENDO STACK INDICATOR ===
   if (maxCrescendo > 0) {
-    const indicatorRX = (subBuildingWidth + 18) * zoom * ISO_PRISM_W_FACTOR;
-    const indicatorRY = (baseDepth + 36) * zoom * ISO_PRISM_D_FACTOR;
-    const indicatorY = screenPos.y + 22 * zoom;
+    const cresRX = (subBuildingWidth + 14) * zoom * ISO_PRISM_W_FACTOR;
+    const cresRY = (baseDepth + 32) * zoom * ISO_PRISM_D_FACTOR;
+    const cresY = screenPos.y + 16 * zoom;
     const arcPerStack = Math.PI / maxCrescendo;
-    const arcGap = 0.04;
+    const arcGap = 0.05;
 
+    // Carved groove ring in foundation stone
+    ctx.strokeStyle = "rgba(20, 15, 10, 0.45)";
+    ctx.lineWidth = 5.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, cresY, cresRX, cresRY, 0, 0, Math.PI);
+    ctx.stroke();
+
+    // Stone lip borders framing the groove
+    ctx.strokeStyle = "rgba(100, 88, 70, 0.5)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      cresY,
+      cresRX + 2.5 * zoom,
+      cresRY + 1.2 * zoom,
+      0,
+      0,
+      Math.PI,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      cresY,
+      cresRX - 2.5 * zoom,
+      cresRY - 1.2 * zoom,
+      0,
+      0,
+      Math.PI,
+    );
+    ctx.stroke();
+
+    // Draw each crescendo segment with crystal nodes
     for (let s = 0; s < maxCrescendo; s++) {
       const isLit = s < crescendoStacks;
-      const startAngle = Math.PI + s * arcPerStack + arcGap;
-      const endAngle = Math.PI + (s + 1) * arcPerStack - arcGap;
+      const startAngle = s * arcPerStack + arcGap;
+      const endAngle = (s + 1) * arcPerStack - arcGap;
+      const midAngle = (startAngle + endAngle) / 2;
+      const nodeX = screenPos.x + Math.cos(midAngle) * cresRX;
+      const nodeY = cresY + Math.sin(midAngle) * cresRY;
 
       if (isLit) {
-        const stackIntensity = 0.5 + (s / maxCrescendo) * 0.5;
-        ctx.strokeStyle = `rgba(${glowColor}, ${stackIntensity})`;
-        ctx.lineWidth = 3 * zoom;
+        const stackT = s / maxCrescendo;
+        const stackIntensity = 0.4 + stackT * 0.6;
+        const stackPulse = Math.sin(time * 3 + s * 0.8) * 0.15;
+        const glow = stackIntensity + stackPulse;
+
+        // Outer glow arc (wide, soft)
+        ctx.strokeStyle = `rgba(${glowColor}, ${glow * 0.35})`;
+        ctx.lineWidth = 7 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          cresY,
+          cresRX,
+          cresRY,
+          0,
+          startAngle,
+          endAngle,
+        );
+        ctx.stroke();
+
+        // Main arc segment
+        ctx.strokeStyle = `rgba(${glowColor}, ${glow * 0.8})`;
+        ctx.lineWidth = 3.5 * zoom;
         ctx.shadowColor = `rgb(${glowColor})`;
-        ctx.shadowBlur = 6 * zoom;
-      } else {
-        ctx.strokeStyle = `rgba(${glowColor}, 0.1)`;
-        ctx.lineWidth = 1.5 * zoom;
+        ctx.shadowBlur = 8 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          cresY,
+          cresRX,
+          cresRY,
+          0,
+          startAngle,
+          endAngle,
+        );
+        ctx.stroke();
+
+        // Inner bright core line
+        ctx.strokeStyle = `rgba(255, 255, 255, ${glow * 0.35})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          cresY,
+          cresRX,
+          cresRY,
+          0,
+          startAngle,
+          endAngle,
+        );
+        ctx.stroke();
         ctx.shadowBlur = 0;
+
+        // Crystal node at segment midpoint
+        const crystalH = (3.5 + stackIntensity * 2.5) * zoom;
+        const crystalW = crystalH * 0.6;
+
+        // Node shadow on foundation
+        ctx.fillStyle = `rgba(${glowColor}, ${glow * 0.15})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          nodeX,
+          nodeY + 1.5 * zoom,
+          crystalW * 1.4,
+          crystalW * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        // Crystal body (dark face)
+        ctx.fillStyle = `rgba(${glowColor}, ${glow * 0.7})`;
+        ctx.beginPath();
+        ctx.moveTo(nodeX, nodeY - crystalH);
+        ctx.lineTo(nodeX - crystalW, nodeY);
+        ctx.lineTo(nodeX, nodeY + crystalH * 0.35);
+        ctx.lineTo(nodeX + crystalW, nodeY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crystal highlight facet
+        ctx.fillStyle = `rgba(255, 255, 255, ${glow * 0.4})`;
+        ctx.beginPath();
+        ctx.moveTo(nodeX, nodeY - crystalH);
+        ctx.lineTo(nodeX + crystalW, nodeY);
+        ctx.lineTo(nodeX + crystalW * 0.15, nodeY - crystalH * 0.35);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crystal inner glow point
+        ctx.fillStyle = `rgba(255, 255, 255, ${glow * 0.6})`;
+        ctx.shadowColor = `rgb(${glowColor})`;
+        ctx.shadowBlur = (5 + stackIntensity * 4) * zoom;
+        ctx.beginPath();
+        ctx.arc(nodeX, nodeY - crystalH * 0.2, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Rising energy beam from lit node toward tower body
+        const beamH =
+          (18 + stackIntensity * 14 + Math.sin(time * 4 + s) * 4) * zoom;
+        const beamW = (1.2 + stackIntensity * 0.8) * zoom;
+        const beamGrad = ctx.createLinearGradient(
+          nodeX,
+          nodeY,
+          nodeX,
+          nodeY - beamH,
+        );
+        beamGrad.addColorStop(0, `rgba(${glowColor}, ${glow * 0.4})`);
+        beamGrad.addColorStop(0.4, `rgba(${glowColor}, ${glow * 0.15})`);
+        beamGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(nodeX - beamW, nodeY);
+        ctx.lineTo(nodeX - beamW * 0.2, nodeY - beamH);
+        ctx.lineTo(nodeX + beamW * 0.2, nodeY - beamH);
+        ctx.lineTo(nodeX + beamW, nodeY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rising particles along beam
+        for (let p = 0; p < 3; p++) {
+          const pPhase = (time * 1.5 + s * 0.4 + p * 0.33) % 1;
+          const pY = nodeY - pPhase * beamH;
+          const pAlpha = (1 - pPhase) * glow * 0.6;
+          const pSize = (1.3 + Math.sin(time * 6 + p) * 0.4) * zoom;
+          ctx.fillStyle = `rgba(${glowColor}, ${pAlpha})`;
+          ctx.beginPath();
+          ctx.arc(
+            nodeX + Math.sin(time * 3 + p + s) * 1.5 * zoom,
+            pY,
+            pSize,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+      } else {
+        // Unlit segment: dim carved groove
+        ctx.strokeStyle = `rgba(${glowColor}, 0.07)`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          cresY,
+          cresRX,
+          cresRY,
+          0,
+          startAngle,
+          endAngle,
+        );
+        ctx.stroke();
+
+        // Dim dormant node marker
+        ctx.fillStyle = "rgba(80, 70, 60, 0.2)";
+        ctx.beginPath();
+        ctx.moveTo(nodeX, nodeY - 2 * zoom);
+        ctx.lineTo(nodeX - 1.5 * zoom, nodeY);
+        ctx.lineTo(nodeX, nodeY + 0.8 * zoom);
+        ctx.lineTo(nodeX + 1.5 * zoom, nodeY);
+        ctx.closePath();
+        ctx.fill();
       }
+    }
+
+    // Energy chains between consecutive lit nodes
+    if (crescendoStacks >= 2) {
+      const chainAlpha =
+        0.15 + crescendoRatio * 0.25 + Math.sin(time * 4) * 0.08;
+      ctx.strokeStyle = `rgba(${glowColor}, ${chainAlpha})`;
+      ctx.lineWidth = 1 * zoom;
+      for (let s = 0; s < crescendoStacks - 1; s++) {
+        const a1 = (s + 0.5) * arcPerStack;
+        const a2 = (s + 1.5) * arcPerStack;
+        const x1 = screenPos.x + Math.cos(a1) * cresRX;
+        const y1 = cresY + Math.sin(a1) * cresRY;
+        const x2 = screenPos.x + Math.cos(a2) * cresRX;
+        const y2 = cresY + Math.sin(a2) * cresRY;
+        const cpX = (x1 + x2) / 2 + Math.sin(time * 8 + s) * 2.5 * zoom;
+        const cpY = (y1 + y2) / 2 - 3.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.quadraticCurveTo(cpX, cpY, x2, y2);
+        ctx.stroke();
+      }
+    }
+
+    // Crescendo aura layers (ground pool + tower body glow)
+    if (crescendoRatio > 0.3) {
+      const auraT = (crescendoRatio - 0.3) / 0.7;
+
+      // Ground-level glow pool around foundation
+      const poolAlpha = auraT * 0.18 + Math.sin(time * 2) * 0.04;
+      const poolGrad = ctx.createRadialGradient(
+        screenPos.x,
+        cresY,
+        0,
+        screenPos.x,
+        cresY,
+        cresRX * 1.25,
+      );
+      poolGrad.addColorStop(0, `rgba(${glowColor}, ${poolAlpha * 0.35})`);
+      poolGrad.addColorStop(0.5, `rgba(${glowColor}, ${poolAlpha * 0.12})`);
+      poolGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+      ctx.fillStyle = poolGrad;
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x, indicatorY,
-        indicatorRX, indicatorRY,
-        0, startAngle, endAngle,
+        screenPos.x,
+        cresY,
+        cresRX * 1.25,
+        cresRY * 1.25,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Tower body aura (vertical glow wrapping the structure)
+      const bodyAlpha = auraT * 0.12;
+      const bodyGrad = ctx.createLinearGradient(
+        screenPos.x,
+        screenPos.y + 20 * zoom,
+        screenPos.x,
+        screenPos.y - 55 * zoom,
+      );
+      bodyGrad.addColorStop(0, `rgba(${glowColor}, ${bodyAlpha})`);
+      bodyGrad.addColorStop(0.35, `rgba(${glowColor}, ${bodyAlpha * 0.4})`);
+      bodyGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y - 18 * zoom,
+        (subBuildingWidth + 8) * zoom * 0.45,
+        55 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    // Max crescendo: pulsing crown + ascending wisps
+    if (crescendoRatio >= 1) {
+      const crownPulse = 0.25 + Math.sin(time * 5) * 0.12;
+
+      // Crown ring at arch level
+      ctx.strokeStyle = `rgba(${glowColor}, ${crownPulse})`;
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.shadowColor = `rgb(${glowColor})`;
+      ctx.shadowBlur = 10 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y - 42 * zoom,
+        22 * zoom,
+        10 * zoom,
+        0,
+        0,
+        Math.PI * 2,
       );
       ctx.stroke();
       ctx.shadowBlur = 0;
-    }
 
-    // Crescendo aura at high stacks
-    if (crescendoRatio > 0.5) {
-      const auraAlpha = (crescendoRatio - 0.5) * 0.4;
-      const auraGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y - 20 * zoom, 0,
-        screenPos.x, screenPos.y - 20 * zoom, 60 * zoom,
-      );
-      auraGrad.addColorStop(0, `rgba(${glowColor}, ${auraAlpha * 0.3})`);
-      auraGrad.addColorStop(0.6, `rgba(${glowColor}, ${auraAlpha * 0.1})`);
-      auraGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
-      ctx.fillStyle = auraGrad;
+      // Inner crown ring
+      ctx.strokeStyle = `rgba(255, 255, 255, ${crownPulse * 0.3})`;
+      ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x, screenPos.y - 20 * zoom,
-        60 * zoom, 40 * zoom,
-        0, 0, Math.PI * 2,
+        screenPos.x,
+        screenPos.y - 42 * zoom,
+        18 * zoom,
+        8 * zoom,
+        0,
+        0,
+        Math.PI * 2,
       );
-      ctx.fill();
+      ctx.stroke();
+
+      // Ascending energy wisps spiraling upward
+      for (let ew = 0; ew < 6; ew++) {
+        const ewPhase = (time * 1.2 + ew * 0.33) % 2;
+        const ewAngle = (ew / 6) * Math.PI * 2 + time * 0.8;
+        const ewRadius = (12 + Math.sin(ewPhase * Math.PI) * 8) * zoom;
+        const ewX = screenPos.x + Math.cos(ewAngle) * ewRadius;
+        const ewY = screenPos.y + 15 * zoom - ewPhase * 50 * zoom;
+        const ewAlpha = Math.max(0, 1 - ewPhase / 2) * 0.35;
+
+        if (ewAlpha > 0.04) {
+          ctx.fillStyle = `rgba(${glowColor}, ${ewAlpha})`;
+          ctx.shadowColor = `rgb(${glowColor})`;
+          ctx.shadowBlur = 4 * zoom;
+          ctx.beginPath();
+          ctx.arc(
+            ewX,
+            ewY,
+            (1.8 + Math.sin(time * 4 + ew) * 0.6) * zoom,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
     }
   }
 

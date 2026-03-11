@@ -111,6 +111,7 @@ export interface Tower {
   }>;
   // Combat state
   lockedTarget?: string;
+  lockOnStacks?: number;
   burnTargets?: string[];
   freezeCharges?: number;
   lastSpawn?: number;
