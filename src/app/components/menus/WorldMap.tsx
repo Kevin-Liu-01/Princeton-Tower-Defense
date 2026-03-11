@@ -215,6 +215,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     w: number;
     h: number;
   }>({ canvas: null, w: 0, h: 0 });
+  const decorationCacheRef = useRef<{
+    groundCanvas: HTMLCanvasElement | null;
+    structureCanvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+    timeBucket: number;
+  }>({ groundCanvas: null, structureCanvas: null, w: 0, h: 0, timeBucket: -1 });
   const dragRef = useRef({
     hasDragged: false,
     isDragging: false,
@@ -353,6 +360,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       levels: visibleWorldLevels,
       isMobile,
       staticBgCache: staticBgCacheRef,
+      decorationCache: decorationCacheRef,
     });
   };
 
