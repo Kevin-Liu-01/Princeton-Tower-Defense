@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import {
-  Shield,
   Heart,
   Swords,
   Target,
@@ -12,6 +11,7 @@ import {
 import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, HeroIcon } from "../../sprites";
+import { HeroHelmetIcon } from "../../sprites/custom-icons";
 
 const HERO_ROLES: Record<HeroType, { label: string; color: string; bg: string; border: string }> = {
   tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)" },
@@ -61,7 +61,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
       <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
         style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Shield size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
+          <HeroHelmetIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
           <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
             Select Champion
           </span>

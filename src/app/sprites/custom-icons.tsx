@@ -442,6 +442,109 @@ export const EnchantedAnvilIcon: React.FC<IconProps & { active?: boolean }> = ({
   );
 };
 
+export const HeroHelmetIcon: React.FC<IconProps & { active?: boolean }> = ({
+  active = true,
+  ...props
+}) => {
+  const u = useId();
+  return (
+    <Svg {...props}>
+      <defs>
+        <linearGradient id={`${u}-steel`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={active ? "#e4e4e7" : "#636370"} />
+          <stop offset="30%" stopColor={active ? "#a1a1aa" : "#4a4a54"} />
+          <stop offset="65%" stopColor={active ? "#71717a" : "#383840"} />
+          <stop offset="100%" stopColor={active ? "#3f3f46" : "#1e1e22"} />
+        </linearGradient>
+        <linearGradient id={`${u}-gold`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={active ? "#fde68a" : "#7a6418"} />
+          <stop offset="50%" stopColor={active ? "#f59e0b" : "#6a5014"} />
+          <stop offset="100%" stopColor={active ? "#b45309" : "#4a3410"} />
+        </linearGradient>
+        <radialGradient id={`${u}-glow`} cx="50%" cy="30%">
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity={active ? ".30" : ".08"} />
+          <stop offset="60%" stopColor="#d97706" stopOpacity={active ? ".10" : ".03"} />
+          <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`${u}-plume`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={active ? "#ef4444" : "#7a2020"} />
+          <stop offset="40%" stopColor={active ? "#dc2626" : "#6a1818"} />
+          <stop offset="100%" stopColor={active ? "#991b1b" : "#4a1010"} />
+        </linearGradient>
+      </defs>
+
+      {/* Ambient glow */}
+      <circle cx="12" cy="11" r="11" fill={`url(#${u}-glow)`} />
+
+      {/* Helmet dome */}
+      <path d="M5.5 13C5.5 7.5 8 3.5 12 3.5C16 3.5 18.5 7.5 18.5 13"
+        fill={`url(#${u}-steel)`} />
+
+      {/* Central ridge / crest */}
+      <path d="M12 3.5V13" stroke={active ? "#d4d4d8" : "#636370"} strokeWidth="1.2" opacity=".45" />
+      <path d="M12 3.5L12.6 13H11.4Z" fill={active ? "#e4e4e7" : "#6a6a72"} opacity=".20" />
+
+      {/* Dome highlight */}
+      <path d="M8 6Q10 4.5 12 4.2Q10 5 8.5 8Z" fill="white" opacity={active ? ".35" : ".10"} />
+      <ellipse cx="9.5" cy="6" rx="1.8" ry="1" fill="white" opacity={active ? ".18" : ".05"} />
+
+      {/* Dome rim shine */}
+      <path d="M5.5 13Q12 14 18.5 13" stroke={active ? "#e4e4e7" : "#636370"} strokeWidth=".5" opacity=".30" fill="none" />
+
+      {/* Gold crown band */}
+      <path d="M5 12.5H19V14.5H5Z" fill={`url(#${u}-gold)`} />
+      <path d="M5 12.5H19V13.2H5Z" fill={active ? "#fde68a" : "#7a6418"} opacity=".40" />
+
+      {/* Band gem — centre diamond */}
+      <path d="M12 12.2L13 13.5L12 14.8L11 13.5Z" fill={active ? "#38bdf8" : "#1a5070"} />
+      <path d="M12 12.6L12.5 13.5L12 14.2L11.5 13.5Z" fill={active ? "#7dd3fc" : "#2a6080"} opacity=".60" />
+
+      {/* Band rivets */}
+      <circle cx="7.5" cy="13.5" r=".55" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".75" : ".25"} />
+      <circle cx="16.5" cy="13.5" r=".55" fill={active ? "#fef3c7" : "#6a5818"} opacity={active ? ".75" : ".25"} />
+
+      {/* Visor / face guard */}
+      <path d="M6.5 14.5H17.5V17C17.5 17 16 18 12 18C8 18 6.5 17 6.5 17V14.5Z"
+        fill={active ? "#52525b" : "#28282e"} />
+
+      {/* Eye slit */}
+      <path d="M7.5 15.5H16.5V16.3H7.5Z" fill={active ? "#18181b" : "#0e0e10"} />
+      <path d="M7.5 15.5H16.5V15.9H7.5Z" fill={active ? "#27272a" : "#18181a"} opacity=".60" />
+
+      {/* Eye glow */}
+      <ellipse cx="9.5" cy="15.9" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
+      <ellipse cx="14.5" cy="15.9" rx="1.2" ry=".35" fill={active ? "#fbbf24" : "#5a4410"} opacity={active ? ".70" : ".20"} />
+
+      {/* Nose guard */}
+      <line x1="12" y1="14.5" x2="12" y2="17.5" stroke={active ? "#71717a" : "#383840"} strokeWidth=".8" />
+      <line x1="12" y1="14.5" x2="12" y2="17.5" stroke={active ? "#a1a1aa" : "#4a4a54"} strokeWidth=".3" opacity=".50" />
+
+      {/* Cheek plates */}
+      <path d="M5 14.5L6.5 14.5V17L5 16Z" fill={active ? "#71717a" : "#383840"} />
+      <path d="M19 14.5L17.5 14.5V17L19 16Z" fill={active ? "#71717a" : "#383840"} />
+
+      {/* Chin guard */}
+      <path d="M8 17.5Q12 19.5 16 17.5" stroke={active ? "#52525b" : "#28282e"} strokeWidth=".8" fill="none" />
+
+      {/* Plume */}
+      <path d="M12 3.5Q13.5 1 16 0.5Q14.5 2 14 3.5Q13.5 1.5 15 0.8Q13 2 12.5 3.5"
+        fill={`url(#${u}-plume)`} opacity={active ? ".90" : ".30"} />
+      <path d="M12 3.5Q13 1.8 14.5 1.2Q13.2 2.5 13 3.5"
+        fill={active ? "#fca5a5" : "#8a3838"} opacity={active ? ".35" : ".10"} />
+
+      {/* Plume wind wisps */}
+      <path d="M15 1Q16.5 0.5 18 1" stroke={active ? "#ef4444" : "#5a1818"} strokeWidth=".4" fill="none" opacity={active ? ".45" : ".12"} />
+      <path d="M14.5 2Q16 1 17.5 1.5" stroke={active ? "#dc2626" : "#5a1818"} strokeWidth=".35" fill="none" opacity={active ? ".35" : ".10"} />
+
+      {/* Ambient sparkles */}
+      <circle cx="4" cy="8" r=".5" fill={active ? "#fde68a" : "#5a4818"} opacity={active ? ".55" : ".15"} />
+      <circle cx="20" cy="7" r=".45" fill={active ? "#fbbf24" : "#5a4818"} opacity={active ? ".48" : ".12"} />
+      <path d="M3 15L2.5 16L3 17L3.5 16Z" fill={active ? "#fde68a" : "#5a4818"} opacity={active ? ".42" : ".12"} />
+      <path d="M21 14L20.5 15L21 16L21.5 15Z" fill={active ? "#fbbf24" : "#5a4818"} opacity={active ? ".38" : ".10"} />
+    </Svg>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // UPGRADE CONCEPT ICONS — currentColor-based, themed for game upgrades
 // ═══════════════════════════════════════════════════════════════════════════

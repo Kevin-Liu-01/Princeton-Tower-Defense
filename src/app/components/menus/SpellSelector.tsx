@@ -28,6 +28,7 @@ import {
   getReinforcementSpellStats,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
+import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 
 const spellOptions: SpellType[] = [
@@ -85,7 +86,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
       <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
         style={{ background: 'linear-gradient(90deg, rgba(120,60,180,0.15), rgba(80,30,140,0.08), transparent)' }}>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <Sparkles size={11} className="text-purple-400 sm:w-[13px] sm:h-[13px]" />
+          <SpellOrbIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
           <span className="text-[8px] sm:text-[9px] font-bold text-purple-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
             <span className="hidden sm:inline">Select </span>Spells
           </span>
@@ -213,7 +214,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   boxShadow: 'inset 0 0 12px rgba(250,204,21,0.08)',
                 }}
               >
-                <Sparkles size={20} className="text-yellow-300" />
+                <EnchantedAnvilIcon size={22} />
                 <span className="text-[7px] font-bold uppercase tracking-wide text-yellow-200">Upgrades</span>
                 <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[7px] font-semibold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">
                   <Star size={8} className="fill-yellow-300 text-yellow-300" />
@@ -230,7 +231,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             {selectedSpells.length === 3 ? (
               <div className="flex items-center gap-2 px-2 py-1.5 rounded-md flex-1 min-w-0"
                 style={{ background: 'rgba(88,28,135,0.12)', border: '1px solid rgba(88,28,135,0.15)' }}>
-                <Sparkles size={10} className="text-purple-400/70 flex-shrink-0" />
+                <SpellOrbIcon size={14} className="flex-shrink-0" />
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   {selectedSpells.map((sp, i) => (
                     <React.Fragment key={sp}>
@@ -282,7 +283,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 boxShadow: "inset 0 0 10px rgba(250,204,21,0.15)",
               }}
             >
-              <Sparkles size={10} className="text-yellow-300 sm:w-3 sm:h-3" />
+              <EnchantedAnvilIcon size={14} className="sm:w-4 sm:h-4" />
               <span className="text-[8px] font-bold uppercase tracking-wide text-yellow-200">
                 Upgrades
               </span>

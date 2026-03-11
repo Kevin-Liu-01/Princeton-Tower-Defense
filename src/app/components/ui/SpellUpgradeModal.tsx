@@ -45,6 +45,7 @@ import {
   getReinforcementSpellStats,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
+import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { OrnateFrame } from "./OrnateFrame";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -680,7 +681,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
         <div className="sticky top-0 z-20 border-b border-amber-700/25 bg-stone-950/95 px-4 sm:px-6 py-3 backdrop-blur">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-amber-300">
-              <Sparkles size={16} />
+              <EnchantedAnvilIcon size={22} />
               <h2 className="text-lg sm:text-xl font-extrabold tracking-wide">
                 Spell Upgrades
               </h2>
@@ -1157,10 +1158,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                               boxShadow: `0 0 16px ${tag.accent}25, inset 0 1px 0 ${tag.accent}15`,
                             }}
                           >
-                            <Sparkles
-                              size={13}
+                            <SpellOrbIcon
+                              size={15}
                               style={{
-                                color: tag.accent,
                                 filter: `drop-shadow(0 0 3px ${tag.accent})`,
                               }}
                             />
@@ -1401,7 +1401,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     style={{ animation: "celebrateBounce 0.5s ease-out" }}
                   >
                     <div className="text-xs text-emerald-300 font-bold">
-                      <Sparkles size={12} className="inline text-emerald-300" />{" "}
+                      <SpellOrbIcon size={14} className="inline" />{" "}
                       {getSpellUpgradeNodes(justUpgraded.spellType)[
                         justUpgraded.tier - 1
                       ]?.title ?? `Tier ${justUpgraded.tier}`}{" "}

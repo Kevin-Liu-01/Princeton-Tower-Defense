@@ -9,6 +9,7 @@ import {
   isWorldLevelUnlocked,
   seededRandom,
 } from "./worldMapUtils";
+import { drawOrganicBlobAt } from "../../rendering/helpers";
 
 interface StaticBgCache {
   canvas: HTMLCanvasElement | null;
@@ -178,14 +179,7 @@ export const drawWorldMapCanvas = ({
       }
 
       ctx.fillStyle = seededRandom(i * 7 + 3) > 0.5 ? hue1 : hue2;
-      ctx.beginPath();
-      // Organic blob shape
-      ctx.moveTo(px + psize * 0.5, py);
-      for (let a = 0; a < Math.PI * 2; a += 0.25) {
-        const r = psize * (0.35 + seededRandom(i + a * 100) * 0.35);
-        ctx.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5);
-      }
-      ctx.closePath();
+      drawOrganicBlobAt(ctx, px, py, psize * 0.45, psize * 0.22, i * 7.3, 0.25, 20);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -707,7 +701,7 @@ export const drawWorldMapCanvas = ({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // Smooth bezier path helper
+      // Catmull-Rom to cubic Bézier spline for ultra-smooth roads
       const tracePath = (ox: number, oy: number) => {
         ctx.beginPath();
         const pts = points.map((p) => [p[0] + ox, getY(p[1]) + oy]);
@@ -715,12 +709,18 @@ export const drawWorldMapCanvas = ({
         if (pts.length === 2) {
           ctx.lineTo(pts[1][0], pts[1][1]);
         } else {
-          for (let i = 1; i < pts.length - 1; i++) {
-            const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
-            const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
-            ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
+          const tension = 0.35;
+          for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[Math.max(0, i - 1)];
+            const p1 = pts[i];
+            const p2 = pts[Math.min(pts.length - 1, i + 1)];
+            const p3 = pts[Math.min(pts.length - 1, i + 2)];
+            const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+            const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+            const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+            const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
           }
-          ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
         }
       };
 
@@ -861,6 +861,51 @@ export const drawWorldMapCanvas = ({
   }
 
   // === GRASSLAND DETAILS ===
+
+  // Organic meadow patches — soft ground cover blobs
+  const meadowPatches: [number, number, number, number][] = [
+    [60, 42, 32, 18], [130, 70, 28, 14], [200, 55, 35, 16],
+    [250, 30, 24, 12], [310, 72, 30, 15], [80, 85, 26, 13],
+    [160, 22, 22, 11], [340, 38, 28, 14], [100, 52, 20, 10],
+    [280, 62, 25, 12], [370, 55, 22, 11], [50, 60, 18, 9],
+    [220, 80, 24, 12], [175, 44, 30, 14], [300, 48, 26, 13],
+  ];
+  for (let i = 0; i < meadowPatches.length; i++) {
+    const [mx, myPct, mrx, mry] = meadowPatches[i];
+    const my = getY(myPct);
+    ctx.globalAlpha = 0.12 + seededRandom(i * 31 + 200) * 0.08;
+    ctx.fillStyle = seededRandom(i * 31 + 201) > 0.5 ? "#4a7a2a" : "#3a6a20";
+    drawOrganicBlobAt(ctx, mx, my, mrx, mry, i * 5.7, 0.2, 18);
+    ctx.fill();
+  }
+  // Flower clusters as smaller organic blobs
+  const flowerColors = ["#d4a0c0", "#c0a0d4", "#d4c080", "#a0d4a0", "#d4a080"];
+  for (let i = 0; i < 20; i++) {
+    const fx = 20 + seededRandom(i * 43 + 300) * 350;
+    const fyPct = 20 + seededRandom(i * 43 + 301) * 65;
+    const fy = getY(fyPct);
+    const fr = 4 + seededRandom(i * 43 + 302) * 6;
+    ctx.globalAlpha = 0.2 + seededRandom(i * 43 + 303) * 0.15;
+    ctx.fillStyle = flowerColors[i % flowerColors.length];
+    drawOrganicBlobAt(ctx, fx, fy, fr, fr * 0.6, i * 3.2, 0.3, 12);
+    ctx.fill();
+  }
+  // Soft bush mounds
+  for (let i = 0; i < 12; i++) {
+    const bx = 30 + seededRandom(i * 37 + 400) * 340;
+    const byPct = 22 + seededRandom(i * 37 + 401) * 60;
+    const by = getY(byPct);
+    const br = 8 + seededRandom(i * 37 + 402) * 10;
+    ctx.globalAlpha = 0.15 + seededRandom(i * 37 + 403) * 0.1;
+    const bushGrad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+    bushGrad.addColorStop(0, "#3a6a28");
+    bushGrad.addColorStop(1, "rgba(40,80,25,0)");
+    ctx.fillStyle = bushGrad;
+    drawOrganicBlobAt(ctx, bx, by, br, br * 0.55, i * 4.1, 0.18, 16);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
   // Lush volumetric trees with radial gradient canopies and animated details
   const drawTree = (x: number, yPct: number, scale: number) => {
     const y = getY(yPct);
@@ -1933,6 +1978,72 @@ export const drawWorldMapCanvas = ({
   drawCrater(1700, 85, 9);
 
   // === SWAMP DETAILS ===
+
+  // Murky bog pools — dark organic blob water patches
+  const bogPools: [number, number, number, number][] = [
+    [410, 65, 28, 12], [470, 45, 22, 10], [520, 75, 32, 14],
+    [560, 38, 18, 8], [600, 68, 26, 11], [650, 42, 24, 10],
+    [440, 28, 20, 9], [510, 55, 30, 13], [680, 62, 22, 10],
+    [590, 80, 25, 11], [490, 35, 16, 7], [630, 30, 20, 9],
+    [420, 80, 18, 8], [700, 50, 24, 11], [550, 50, 20, 9],
+  ];
+  for (let i = 0; i < bogPools.length; i++) {
+    const [px, pyPct, prx, pry] = bogPools[i];
+    const py = getY(pyPct);
+    const poolGrad = ctx.createRadialGradient(px, py, 0, px, py, prx);
+    poolGrad.addColorStop(0, "rgba(20,50,25,0.35)");
+    poolGrad.addColorStop(0.6, "rgba(15,40,20,0.2)");
+    poolGrad.addColorStop(1, "rgba(10,30,15,0)");
+    ctx.fillStyle = poolGrad;
+    drawOrganicBlobAt(ctx, px, py, prx, pry, i * 6.3, 0.22, 18);
+    ctx.fill();
+    // Subtle sheen on water surface
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = "#5a9a6a";
+    drawOrganicBlobAt(ctx, px - 2, py - 1, prx * 0.5, pry * 0.4, i * 6.3 + 99, 0.15, 12);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  // Moss and algae patches
+  for (let i = 0; i < 18; i++) {
+    const mx = 390 + seededRandom(i * 47 + 500) * 320;
+    const myPct = 22 + seededRandom(i * 47 + 501) * 60;
+    const my = getY(myPct);
+    const mr = 5 + seededRandom(i * 47 + 502) * 10;
+    ctx.globalAlpha = 0.15 + seededRandom(i * 47 + 503) * 0.12;
+    ctx.fillStyle = seededRandom(i * 47 + 504) > 0.5 ? "#2a5a2a" : "#1a4a20";
+    drawOrganicBlobAt(ctx, mx, my, mr, mr * 0.5, i * 4.7, 0.28, 14);
+    ctx.fill();
+  }
+  // Lily pad clusters
+  for (let i = 0; i < 10; i++) {
+    const lx = 400 + seededRandom(i * 53 + 600) * 300;
+    const lyPct = 30 + seededRandom(i * 53 + 601) * 45;
+    const ly = getY(lyPct);
+    const lr = 3 + seededRandom(i * 53 + 602) * 4;
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = "#3a8a3a";
+    drawOrganicBlobAt(ctx, lx, ly, lr, lr * 0.65, i * 2.9, 0.12, 10);
+    ctx.fill();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = "#a0d0a0";
+    ctx.beginPath();
+    ctx.arc(lx + lr * 0.2, ly - lr * 0.1, lr * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Foggy mist patches
+  for (let i = 0; i < 8; i++) {
+    const fogX = 400 + seededRandom(i * 61 + 700) * 310;
+    const fogYPct = 25 + seededRandom(i * 61 + 701) * 55;
+    const fogY = getY(fogYPct);
+    const fogR = 20 + seededRandom(i * 61 + 702) * 30;
+    ctx.globalAlpha = 0.04 + seededRandom(i * 61 + 703) * 0.03;
+    ctx.fillStyle = "#8aaa8a";
+    drawOrganicBlobAt(ctx, fogX, fogY, fogR, fogR * 0.35, i * 3.1, 0.15, 20);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
   // Dramatically enhanced swamp environment with rich atmosphere
   const drawWillowTree = (x: number, yPct: number, scale: number) => {
     const y = getY(yPct);
@@ -2698,6 +2809,60 @@ export const drawWorldMapCanvas = ({
   }
 
   // === SAHARA SANDS DETAILS === (Enhanced Desert Environment)
+
+  // Sand drift patches — layered organic blob dune formations
+  const driftPatches: [number, number, number, number][] = [
+    [750, 50, 40, 16], [810, 72, 34, 13], [870, 32, 30, 12],
+    [930, 60, 38, 15], [990, 45, 32, 13], [760, 80, 26, 10],
+    [840, 25, 28, 11], [900, 70, 36, 14], [960, 35, 24, 10],
+    [1020, 58, 30, 12], [1050, 75, 22, 9], [780, 40, 20, 8],
+    [850, 55, 34, 14], [1060, 30, 26, 10], [730, 65, 24, 10],
+  ];
+  for (let i = 0; i < driftPatches.length; i++) {
+    const [dx, dyPct, drx, dry] = driftPatches[i];
+    const ddy = getY(dyPct);
+    const driftGrad = ctx.createRadialGradient(dx, ddy, 0, dx, ddy, drx);
+    driftGrad.addColorStop(0, "rgba(200,170,110,0.18)");
+    driftGrad.addColorStop(0.7, "rgba(180,150,90,0.08)");
+    driftGrad.addColorStop(1, "rgba(160,130,70,0)");
+    ctx.fillStyle = driftGrad;
+    drawOrganicBlobAt(ctx, dx, ddy, drx, dry, i * 7.1, 0.18, 20);
+    ctx.fill();
+  }
+  // Rocky outcrops
+  for (let i = 0; i < 10; i++) {
+    const rx = 730 + seededRandom(i * 59 + 800) * 340;
+    const ryPct = 25 + seededRandom(i * 59 + 801) * 55;
+    const ry = getY(ryPct);
+    const rr = 6 + seededRandom(i * 59 + 802) * 8;
+    ctx.globalAlpha = 0.18 + seededRandom(i * 59 + 803) * 0.1;
+    ctx.fillStyle = seededRandom(i * 59 + 804) > 0.5 ? "#8a7050" : "#7a6040";
+    drawOrganicBlobAt(ctx, rx, ry, rr, rr * 0.55, i * 5.3, 0.25, 14);
+    ctx.fill();
+  }
+  // Oasis-like vegetation spots
+  for (let i = 0; i < 8; i++) {
+    const ox = 740 + seededRandom(i * 67 + 900) * 320;
+    const oyPct = 30 + seededRandom(i * 67 + 901) * 45;
+    const oy = getY(oyPct);
+    const or = 4 + seededRandom(i * 67 + 902) * 5;
+    ctx.globalAlpha = 0.12 + seededRandom(i * 67 + 903) * 0.08;
+    ctx.fillStyle = "#5a8a3a";
+    drawOrganicBlobAt(ctx, ox, oy, or, or * 0.6, i * 3.7, 0.2, 12);
+    ctx.fill();
+  }
+  // Heat shimmer patches (very subtle warm blobs)
+  for (let i = 0; i < 6; i++) {
+    const hx = 750 + seededRandom(i * 71 + 950) * 300;
+    const hyPct = 20 + seededRandom(i * 71 + 951) * 30;
+    const hy = getY(hyPct);
+    const hr = 25 + seededRandom(i * 71 + 952) * 35;
+    ctx.globalAlpha = 0.03 + Math.sin(time * 1.5 + i * 2) * 0.015;
+    ctx.fillStyle = "#e0c080";
+    drawOrganicBlobAt(ctx, hx, hy, hr, hr * 0.3, i * 4.3, 0.12, 18);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   // Smooth flowing sand dune with wind-carved ridgeline, grain texture, and footprint trails
   const drawSandDune = (
@@ -4674,6 +4839,57 @@ export const drawWorldMapCanvas = ({
 
   // === FROZEN FRONTIER DETAILS === (Enhanced Winter Environment)
 
+  // Snow drift mounds — soft white organic blobs
+  const snowDrifts: [number, number, number, number][] = [
+    [1110, 55, 30, 12], [1170, 38, 26, 10], [1230, 70, 34, 14],
+    [1290, 42, 28, 11], [1340, 65, 32, 13], [1400, 35, 24, 10],
+    [1130, 80, 22, 9], [1200, 28, 20, 8], [1260, 55, 26, 10],
+    [1320, 78, 30, 12], [1380, 48, 22, 9], [1420, 60, 18, 7],
+    [1150, 45, 28, 11], [1350, 30, 24, 10], [1100, 70, 20, 8],
+  ];
+  for (let i = 0; i < snowDrifts.length; i++) {
+    const [sx, syPct, srx, sry] = snowDrifts[i];
+    const sy = getY(syPct);
+    const snowGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, srx);
+    snowGrad.addColorStop(0, "rgba(220,230,240,0.2)");
+    snowGrad.addColorStop(0.6, "rgba(200,210,230,0.1)");
+    snowGrad.addColorStop(1, "rgba(180,190,210,0)");
+    ctx.fillStyle = snowGrad;
+    drawOrganicBlobAt(ctx, sx, sy, srx, sry, i * 5.9, 0.16, 18);
+    ctx.fill();
+  }
+  // Frozen pond patches
+  for (let i = 0; i < 8; i++) {
+    const fx = 1090 + seededRandom(i * 73 + 1000) * 340;
+    const fyPct = 30 + seededRandom(i * 73 + 1001) * 45;
+    const fy = getY(fyPct);
+    const fr = 10 + seededRandom(i * 73 + 1002) * 14;
+    ctx.globalAlpha = 0.1 + seededRandom(i * 73 + 1003) * 0.06;
+    const iceGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
+    iceGrad.addColorStop(0, "#a0c8e0");
+    iceGrad.addColorStop(1, "rgba(140,180,210,0)");
+    ctx.fillStyle = iceGrad;
+    drawOrganicBlobAt(ctx, fx, fy, fr, fr * 0.55, i * 4.9, 0.15, 16);
+    ctx.fill();
+    // Ice sheen
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = "#e0f0ff";
+    drawOrganicBlobAt(ctx, fx + 2, fy - 1, fr * 0.35, fr * 0.2, i * 4.9 + 77, 0.1, 10);
+    ctx.fill();
+  }
+  // Evergreen shrub patches
+  for (let i = 0; i < 12; i++) {
+    const ex = 1095 + seededRandom(i * 79 + 1100) * 340;
+    const eyPct = 22 + seededRandom(i * 79 + 1101) * 60;
+    const ey = getY(eyPct);
+    const er = 5 + seededRandom(i * 79 + 1102) * 7;
+    ctx.globalAlpha = 0.14 + seededRandom(i * 79 + 1103) * 0.08;
+    ctx.fillStyle = seededRandom(i * 79 + 1104) > 0.5 ? "#2a4a3a" : "#1a3a2a";
+    drawOrganicBlobAt(ctx, ex, ey, er, er * 0.6, i * 3.3, 0.22, 14);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
   // Aurora Borealis - vivid curtain-like ribbons with full spectrum color shifting
   ctx.save();
   for (let a = 0; a < 6; a++) {
@@ -5972,6 +6188,66 @@ export const drawWorldMapCanvas = ({
   ctx.restore();
 
   // === INFERNO DEPTHS DETAILS === (Enhanced Volcanic Environment)
+
+  // Lava pool patches — glowing organic blobs
+  const lavaPools: [number, number, number, number][] = [
+    [1480, 60, 20, 9], [1540, 45, 16, 7], [1600, 70, 22, 10],
+    [1660, 35, 18, 8], [1720, 55, 24, 10], [1500, 80, 14, 6],
+    [1560, 28, 18, 8], [1640, 65, 20, 9], [1700, 42, 16, 7],
+    [1760, 72, 22, 10], [1470, 48, 12, 5], [1620, 82, 16, 7],
+  ];
+  for (let i = 0; i < lavaPools.length; i++) {
+    const [lx, lyPct, lrx, lry] = lavaPools[i];
+    const ly = getY(lyPct);
+    const pulse = 0.12 + Math.sin(time * 2 + i * 1.7) * 0.04;
+    const lavaGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, lrx);
+    lavaGrad.addColorStop(0, `rgba(255,80,20,${pulse + 0.08})`);
+    lavaGrad.addColorStop(0.5, `rgba(200,40,10,${pulse})`);
+    lavaGrad.addColorStop(1, "rgba(100,20,5,0)");
+    ctx.fillStyle = lavaGrad;
+    drawOrganicBlobAt(ctx, lx, ly, lrx, lry, i * 6.7, 0.2, 16);
+    ctx.fill();
+  }
+  // Ash mounds
+  for (let i = 0; i < 14; i++) {
+    const ax = 1450 + seededRandom(i * 83 + 1200) * 340;
+    const ayPct = 22 + seededRandom(i * 83 + 1201) * 60;
+    const ay = getY(ayPct);
+    const ar = 8 + seededRandom(i * 83 + 1202) * 12;
+    ctx.globalAlpha = 0.12 + seededRandom(i * 83 + 1203) * 0.08;
+    ctx.fillStyle = seededRandom(i * 83 + 1204) > 0.5 ? "#3a2a1a" : "#2a1a0a";
+    drawOrganicBlobAt(ctx, ax, ay, ar, ar * 0.45, i * 4.9, 0.22, 16);
+    ctx.fill();
+  }
+  // Obsidian shard formations (angular-ish blobs with high bumpiness)
+  for (let i = 0; i < 8; i++) {
+    const ox = 1460 + seededRandom(i * 89 + 1300) * 330;
+    const oyPct = 28 + seededRandom(i * 89 + 1301) * 50;
+    const oy = getY(oyPct);
+    const or = 4 + seededRandom(i * 89 + 1302) * 6;
+    ctx.globalAlpha = 0.2 + seededRandom(i * 89 + 1303) * 0.1;
+    ctx.fillStyle = "#1a1018";
+    drawOrganicBlobAt(ctx, ox, oy, or, or * 0.7, i * 5.1, 0.4, 10);
+    ctx.fill();
+    // Obsidian sheen
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = "#6a5a7a";
+    drawOrganicBlobAt(ctx, ox + 1, oy - 1, or * 0.3, or * 0.2, i * 5.1 + 55, 0.15, 8);
+    ctx.fill();
+  }
+  // Ember scatter — tiny glowing organic spots
+  for (let i = 0; i < 16; i++) {
+    const ex = 1455 + seededRandom(i * 97 + 1400) * 335;
+    const eyPct = 20 + seededRandom(i * 97 + 1401) * 65;
+    const ey = getY(eyPct);
+    const er = 2 + seededRandom(i * 97 + 1402) * 3;
+    const glow = 0.15 + Math.sin(time * 3.5 + i * 2.3) * 0.08;
+    ctx.globalAlpha = glow;
+    ctx.fillStyle = seededRandom(i * 97 + 1403) > 0.5 ? "#ff6020" : "#ff9040";
+    drawOrganicBlobAt(ctx, ex, ey, er, er * 0.6, i * 2.7, 0.3, 8);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 
   // Hellish sky gradient overlay with pulsing intensity
   ctx.save();
@@ -8651,18 +8927,14 @@ export const drawWorldMapCanvas = ({
         .split("")
         .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
       const segmentLength = Math.hypot(toX - fromX, toY - fromY);
-      const baseMidX = (fromX + toX) / 2;
-      const controlXJitter =
-        (seededRandom(connectionSeed + 17) - 0.5) *
-        Math.min(40, segmentLength * 0.22);
-      const midX = baseMidX + controlXJitter;
-      const baseArcLift = Math.min(52, Math.max(30, segmentLength * 0.16));
-      const liftVariance = 0.75 + seededRandom(connectionSeed + 29) * 0.85;
-      const arcLift = Math.min(74, Math.max(24, baseArcLift * liftVariance));
-      const avgY = (fromY + toY) / 2;
       const dy = toY - fromY;
-      // In canvas space, +Y is downward.
-      // Keep a geometry-driven bend, then add deterministic per-link variation.
+      const dx = toX - fromX;
+      const avgY = (fromY + toY) / 2;
+
+      const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
+      const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
+      const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
+
       const baseDirection =
         Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
       const flipChance =
@@ -8674,74 +8946,80 @@ export const drawWorldMapCanvas = ({
         arcDirection =
           seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
       }
-      const midY = avgY + arcDirection * arcLift;
 
-      // Shadow
+      const angle = Math.atan2(dy, dx);
+      const perpX = -Math.sin(angle);
+      const perpY = Math.cos(angle);
+      const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
+      const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
+      const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
+
+      const cp1x = fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
+      const cp1y = fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
+      const cp2x = toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
+      const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
+
+      const traceCubic = (ox: number, oy: number) => {
+        ctx.beginPath();
+        ctx.moveTo(fromX + ox, fromY + oy);
+        ctx.bezierCurveTo(
+          cp1x + ox, cp1y + oy,
+          cp2x + ox, cp2y + oy,
+          toX + ox, toY + oy,
+        );
+      };
+
       ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       if (isUnlocked) {
+        traceCubic(2, 3);
         ctx.strokeStyle = "rgba(0,0,0,0.35)";
         ctx.lineWidth = 12;
-        ctx.beginPath();
-        ctx.moveTo(fromX + 2, fromY + 3);
-        ctx.quadraticCurveTo(midX + 2, midY + 3, toX + 2, toY + 3);
         ctx.stroke();
       } else {
+        traceCubic(1, 2);
         ctx.strokeStyle = "rgba(0,0,0,0.30)";
         ctx.lineWidth = 8;
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
         ctx.stroke();
       }
 
       if (isUnlocked) {
-        // Outer border (dark golden)
+        traceCubic(0, 0);
         ctx.strokeStyle = "#8B6914";
         ctx.lineWidth = 10;
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
         ctx.stroke();
-        // Main road (bright gold)
+
+        traceCubic(0, 0);
         ctx.strokeStyle = "#D4A828";
         ctx.lineWidth = 7;
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
         ctx.stroke();
-        // Center highlight
+
+        traceCubic(0, 0);
         ctx.strokeStyle = "#F0C840";
         ctx.lineWidth = 3;
         ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        // Animated marching orbs (3 orbs spaced apart)
         for (let orb = 0; orb < 3; orb++) {
           const dotPos = (time * 0.4 + orb * 0.33) % 1;
           const t = dotPos;
           const mt = 1 - t;
-          // Quadratic bezier interpolation
-          const dx = mt * mt * fromX + 2 * mt * t * midX + t * t * toX;
-          const dy = mt * mt * fromY + 2 * mt * t * midY + t * t * toY;
-          // Glow
+          const ox = mt*mt*mt * fromX + 3*mt*mt*t * cp1x + 3*mt*t*t * cp2x + t*t*t * toX;
+          const oy = mt*mt*mt * fromY + 3*mt*mt*t * cp1y + 3*mt*t*t * cp2y + t*t*t * toY;
           ctx.fillStyle = "#ffd700";
           ctx.globalAlpha = 0.3;
           ctx.beginPath();
-          ctx.arc(dx, dy, 6, 0, Math.PI * 2);
+          ctx.arc(ox, oy, 6, 0, Math.PI * 2);
           ctx.fill();
-          // Orb
           ctx.globalAlpha = 0.9;
           ctx.fillStyle = "#FFE060";
           ctx.beginPath();
-          ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+          ctx.arc(ox, oy, 3, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = "#FFFAC0";
           ctx.beginPath();
-          ctx.arc(dx - 0.5, dy - 0.5, 1.5, 0, Math.PI * 2);
+          ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.globalAlpha = 1;
         }
@@ -8753,9 +9031,7 @@ export const drawWorldMapCanvas = ({
           : lockedColors.locked;
         ctx.lineWidth = isPartial ? 6 : 4;
         ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
+        traceCubic(0, 0);
         ctx.stroke();
         ctx.setLineDash([]);
       }

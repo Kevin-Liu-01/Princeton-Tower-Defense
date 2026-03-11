@@ -3275,9 +3275,9 @@ export function renderMortarStandardBarrel(
       0.8 * zoom,
     );
 
-    // Metal band at tier top
+    // Metal band at tier top (aligned along barrel axis)
     const bandH = (level >= 3 ? 2.5 : 2) * zoom;
-    const bandBot: Pt = { x: topCenter.x, y: topCenter.y + bandH };
+    const bandBot: Pt = { x: topCenter.x - bAx * bandH, y: topCenter.y - bAy * bandH };
     const bandColor =
       level >= 3 ? "#d4aa2a" : level >= 2 ? "#6a7a96" : "#6a5844";
     drawHexBand(
@@ -3618,8 +3618,9 @@ export function renderMortarStandardBarrel(
         hexSides,
       );
       const collarNormals = computeHexSideNormals(cosR, hexSides);
-      const collarBotPt: Pt = { x: collarPt.x, y: collarPt.y + 1.2 * zoom };
-      const collarTopPt: Pt = { x: collarPt.x, y: collarPt.y - 1.2 * zoom };
+      const collarBandH = 1.2 * zoom;
+      const collarBotPt: Pt = { x: collarPt.x - bAx * collarBandH, y: collarPt.y - bAy * collarBandH };
+      const collarTopPt: Pt = { x: collarPt.x + bAx * collarBandH, y: collarPt.y + bAy * collarBandH };
       drawHexBand(
         ctx,
         collarVerts,
@@ -3665,8 +3666,8 @@ export function renderMortarStandardBarrel(
         const ringVerts = generateIsoHexVertices(isoOff, ringR, hexSides);
         const ringNormals = computeHexSideNormals(cosR, hexSides);
         const ringH = 1.5 * zoom;
-        const ringBot: Pt = { x: ringPt.x, y: ringPt.y + ringH * 0.5 };
-        const ringTop: Pt = { x: ringPt.x, y: ringPt.y - ringH * 0.5 };
+        const ringBot: Pt = { x: ringPt.x - bAx * ringH * 0.5, y: ringPt.y - bAy * ringH * 0.5 };
+        const ringTop: Pt = { x: ringPt.x + bAx * ringH * 0.5, y: ringPt.y + bAy * ringH * 0.5 };
         const ringColor =
           level >= 3 ? "#8a7a52" : level >= 2 ? "#606878" : "#5a5048";
         drawHexBand(
@@ -4732,8 +4733,8 @@ export function renderMortarStandardBarrel(
         ctx,
         isoScopeVerts,
         isoScopeNormals,
-        { x: sBot.x, y: sBot.y + 0.8 * zoom },
-        { x: sBot.x, y: sBot.y - 0.8 * zoom },
+        { x: sBot.x - bAx * 0.8 * zoom, y: sBot.y - bAy * 0.8 * zoom },
+        { x: sBot.x + bAx * 0.8 * zoom, y: sBot.y + bAy * 0.8 * zoom },
         isObjEnd ? 1.12 : 1.04,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.3));
@@ -4858,9 +4859,10 @@ export function renderMortarStandardBarrel(
 
   // ===== L2: instrument panel mounted on leg — iso projected =====
   if (level === 2 && nearSide * (-sinR + 0.5 * cosR) > -0.3) {
-    const panelX = nearSide * -sinR * tiers[0].r * 1.0;
+    const panelAnchor = posAtFrac(0.15, tierRecoils[0] * 0.3);
+    const panelX = panelAnchor.x + nearSide * (-sinR) * tiers[0].r * 1.0;
     const panelY =
-      nearSide * cosR * tiers[0].r * ISO_Y_RATIO * 0.5 - totalH * 0.2;
+      panelAnchor.y + nearSide * cosR * tiers[0].r * ISO_Y_RATIO * 0.5;
     const pHW = 3 * zoom;
     const pHH = 2 * zoom;
     ctx.fillStyle = "#3a3a42";
@@ -4901,29 +4903,34 @@ export function renderMortarStandardBarrel(
       rot * 0.1 + Math.PI * 0.6,
       rot * 0.1 + Math.PI * 1.2,
     ];
+    const scaffTopPt = posAtFrac(0.4, tierRecoils[0]);
     for (let s = 0; s < 3; s++) {
       const sa = scaffAngles[s];
       if (Math.cos(sa) + 0.5 * Math.sin(sa) < -0.85) continue;
       const footX = Math.cos(sa) * scaffR;
       const footY = Math.sin(sa) * scaffR * ISO_Y_RATIO + 4 * zoom;
-      const topPt = posAtFrac(0.4, tierRecoils[0]);
-      // Vertical pole
+      const poleTopX = scaffTopPt.x + Math.cos(sa) * scaffR * 0.2;
+      const poleTopY = scaffTopPt.y + Math.sin(sa) * scaffR * ISO_Y_RATIO * 0.2;
       ctx.beginPath();
       ctx.moveTo(footX, footY);
-      ctx.lineTo(topPt.x + footX * 0.2, topPt.y);
+      ctx.lineTo(poleTopX, poleTopY);
       ctx.stroke();
-      // Horizontal platform beam
       const nextS = (s + 1) % 3;
       const nsa = scaffAngles[nextS];
       if (Math.sin(nsa) >= -0.3) {
         const nfx = Math.cos(nsa) * scaffR;
         const nfy = Math.sin(nsa) * scaffR * ISO_Y_RATIO + 4 * zoom;
-        const beamY = (footY + topPt.y) * 0.5;
+        const nPoleTopX = scaffTopPt.x + Math.cos(nsa) * scaffR * 0.2;
+        const nPoleTopY = scaffTopPt.y + Math.sin(nsa) * scaffR * ISO_Y_RATIO * 0.2;
+        const beamMidX = (footX + poleTopX) * 0.5;
+        const beamMidY = (footY + poleTopY) * 0.5;
+        const nBeamMidX = (nfx + nPoleTopX) * 0.5;
+        const nBeamMidY = (nfy + nPoleTopY) * 0.5;
         ctx.strokeStyle = "#6a6a6e";
         ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
-        ctx.moveTo((footX + topPt.x + footX * 0.2) * 0.5, beamY);
-        ctx.lineTo((nfx + topPt.x + nfx * 0.2) * 0.5, (nfy + topPt.y) * 0.5);
+        ctx.moveTo(beamMidX, beamMidY);
+        ctx.lineTo(nBeamMidX, nBeamMidY);
         ctx.stroke();
         ctx.strokeStyle = "#7a7a80";
         ctx.lineWidth = 1.2 * zoom;
@@ -4950,6 +4957,7 @@ export function renderMortarStandardBarrel(
       ctx.arc(genX, genY - 4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
       // Power cable to barrel
+      const cableEnd = posAtFrac(0.5, cumRecoil * 0.5);
       ctx.strokeStyle = "#2a2a32";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
@@ -4957,8 +4965,8 @@ export function renderMortarStandardBarrel(
       ctx.quadraticCurveTo(
         genX + cosR * 5 * zoom,
         genY - 8 * zoom,
-        0,
-        -totalH * 0.5,
+        cableEnd.x,
+        cableEnd.y,
       );
       ctx.stroke();
     }
@@ -5395,15 +5403,15 @@ export function renderMortarStandardBarrel(
           }
         }
 
-        // Coil ring at each segment joint (spring detail)
+        // Coil ring at each segment joint (spring detail, aligned along barrel axis)
         if (si > 0) {
           const ringScale = 1.12;
           drawHexBand(
             ctx,
             bot.verts,
             springNormals,
-            { x: bot.center.x, y: bot.center.y + 0.8 * zoom },
-            { x: bot.center.x, y: bot.center.y - 0.8 * zoom },
+            { x: bot.center.x - bAx * 0.8 * zoom, y: bot.center.y - bAy * 0.8 * zoom },
+            { x: bot.center.x + bAx * 0.8 * zoom, y: bot.center.y + bAy * 0.8 * zoom },
             ringScale,
             (n) => {
               const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
@@ -5592,13 +5600,13 @@ export function renderMortarStandardBarrel(
         }
       }
 
-      // Band ring at joints
+      // Band ring at joints (aligned along barrel axis)
       drawHexBand(
         ctx,
         bot.verts,
         scopeNormals,
-        { x: bot.center.x, y: bot.center.y + 1 * zoom },
-        { x: bot.center.x, y: bot.center.y - 1 * zoom },
+        { x: bot.center.x - bAx * 1 * zoom, y: bot.center.y - bAy * 1 * zoom },
+        { x: bot.center.x + bAx * 1 * zoom, y: bot.center.y + bAy * 1 * zoom },
         isObjectiveEnd ? 1.15 : 1.06,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.3));
@@ -5677,13 +5685,13 @@ export function renderMortarStandardBarrel(
       ctx.lineTo(mPt.x, mPt.y);
       ctx.stroke();
 
-      // Mount clamp ring (octagonal)
+      // Mount clamp ring (octagonal, aligned along barrel axis)
       drawHexBand(
         ctx,
         generateIsoHexVertices(isoOff, scopeR, scopeSides),
         scopeNormals,
-        { x: mPt.x, y: mPt.y + 1.2 * zoom },
-        { x: mPt.x, y: mPt.y - 1.2 * zoom },
+        { x: mPt.x - bAx * 1.2 * zoom, y: mPt.y - bAy * 1.2 * zoom },
+        { x: mPt.x + bAx * 1.2 * zoom, y: mPt.y + bAy * 1.2 * zoom },
         1.2,
         (n) => {
           const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
@@ -5707,14 +5715,14 @@ export function renderMortarStandardBarrel(
       ctx.fill();
     }
 
-    // Eyepiece rubber guard (octagonal rear ring)
+    // Eyepiece rubber guard (octagonal rear ring, aligned along barrel axis)
     const eyePt = scopePts[0];
     drawHexBand(
       ctx,
       generateIsoHexVertices(isoOff, scopeR, scopeSides),
       scopeNormals,
-      { x: eyePt.center.x, y: eyePt.center.y + 1 * zoom },
-      { x: eyePt.center.x, y: eyePt.center.y - 1 * zoom },
+      { x: eyePt.center.x - bAx * 1 * zoom, y: eyePt.center.y - bAy * 1 * zoom },
+      { x: eyePt.center.x + bAx * 1 * zoom, y: eyePt.center.y + bAy * 1 * zoom },
       0.95,
       (n) => {
         const b = Math.max(0, Math.min(1, 0.25 + (n + 1) * 0.3));
@@ -6381,7 +6389,7 @@ export function renderMortarEmberTurret(
     );
 
     if (ti < 2) {
-      const bandBot: Pt = { x: topCenter.x, y: topCenter.y + 2 * zoom };
+      const bandBot: Pt = { x: topCenter.x - bAx * 2 * zoom, y: topCenter.y - bAy * 2 * zoom };
       drawHexBand(
         ctx,
         hexVerts,
@@ -6895,9 +6903,9 @@ export function renderMortarEmberTurret(
           0.5 * zoom,
         );
 
-        // Bronze band between barrel tiers
+        // Bronze band between barrel tiers (aligned along barrel axis)
         if (bti === 0) {
-          const bBandBot: Pt = { x: topC.x, y: topC.y + 1.8 * zoom };
+          const bBandBot: Pt = { x: topC.x - bAx * 1.8 * zoom, y: topC.y - bAy * 1.8 * zoom };
           drawHexBand(
             ctx,
             bHexVerts,
@@ -8013,7 +8021,7 @@ export function renderMortarMissileSilo(
     );
 
     if (ti < 2) {
-      const bandBot: Pt = { x: topCenter.x, y: topCenter.y + 2 * zoom };
+      const bandBot: Pt = { x: topCenter.x - bAx * 2 * zoom, y: topCenter.y - bAy * 2 * zoom };
       drawHexBand(
         ctx,
         hexVerts,
