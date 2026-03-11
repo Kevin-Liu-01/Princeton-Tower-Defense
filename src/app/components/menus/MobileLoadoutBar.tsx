@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Shield,
   Sparkles,
@@ -9,11 +9,16 @@ import {
   Target,
   Gauge,
   Timer,
-  Info,
+  Star,
+  Check,
+  Coins,
+  Clock,
 } from "lucide-react";
-import type { HeroType, SpellType } from "../../types";
+import type { HeroType, SpellType, SpellUpgradeLevels } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS, SPELL_DATA } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
+import { MobileBottomSheet } from "./MobileBottomSheet";
+import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 
 const HERO_OPTIONS: HeroType[] = [
   "tiger",
@@ -33,6 +38,16 @@ const SPELL_OPTIONS: SpellType[] = [
   "reinforcements",
 ];
 
+const HERO_ROLES: Record<HeroType, string> = {
+  tiger: "Brawler",
+  tenor: "Mage",
+  mathey: "Tank",
+  rocky: "Artillery",
+  scott: "Support",
+  captain: "Summoner",
+  engineer: "Builder",
+};
+
 interface MobileLoadoutBarProps {
   selectedHero: HeroType | null;
   setSelectedHero: (hero: HeroType) => void;
@@ -40,6 +55,11 @@ interface MobileLoadoutBarProps {
   toggleSpell: (spell: SpellType) => void;
   onOpenHeroCodex?: () => void;
   onOpenSpellCodex?: () => void;
+  availableSpellStars: number;
+  totalSpellStarsEarned: number;
+  spentSpellStars: number;
+  spellUpgradeLevels: SpellUpgradeLevels;
+  upgradeSpell: (spellType: SpellType) => void;
 }
 
 export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
@@ -47,252 +67,566 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
   setSelectedHero,
   selectedSpells,
   toggleSpell,
-  onOpenHeroCodex,
-  onOpenSpellCodex,
+  availableSpellStars,
+  totalSpellStarsEarned,
+  spentSpellStars,
+  spellUpgradeLevels,
+  upgradeSpell,
 }) => {
+  const [showHeroSheet, setShowHeroSheet] = useState(false);
+  const [showSpellSheet, setShowSpellSheet] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
   return (
-    <div className="flex flex-col gap-1">
-      {/* Hero Selection */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(38,32,24,0.97) 0%, rgba(24,20,14,0.99) 100%)",
-          border: "1.5px solid rgba(180,140,60,0.35)",
-          boxShadow:
-            "inset 0 0 16px rgba(180,140,60,0.04), 0 4px 16px rgba(0,0,0,0.5)",
-        }}
-      >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-2.5 py-1"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)",
-          }}
-        >
-          <div className="flex items-center gap-1.5">
-            <Shield size={10} className="text-amber-400" />
-            <span className="text-[7px] font-bold text-amber-300/90 tracking-[0.15em] uppercase">
-              Select Champion
-            </span>
-          </div>
-          {onOpenHeroCodex && (
-            <button
-              onClick={onOpenHeroCodex}
-              className="flex items-center justify-center w-4 h-4 rounded"
-              style={{
-                background: "rgba(180,140,60,0.12)",
-                border: "1px solid rgba(180,140,60,0.2)",
-              }}
-            >
-              <Info size={8} className="text-amber-400/60" />
-            </button>
-          )}
-        </div>
+    <>
+      {/* Floating circle buttons */}
+      <div className="flex items-end justify-between w-full px-3 pb-3">
+        {/* Left: Hero circle */}
+        <HeroCircleButton
+          selectedHero={selectedHero}
+          onClick={() => setShowHeroSheet(true)}
+        />
 
-        {/* Hero grid */}
-        <div className="px-1.5 pt-1 pb-1.5 flex items-center gap-1">
-          {HERO_OPTIONS.map((heroType) => {
-            const hero = HERO_DATA[heroType];
-            const isSelected = selectedHero === heroType;
-            return (
-              <button
-                key={heroType}
-                onClick={() => setSelectedHero(heroType)}
-                className="relative flex items-center justify-center rounded-lg transition-all flex-1"
-                style={{
-                  aspectRatio: "1",
-                  background: isSelected
-                    ? `linear-gradient(135deg, ${hero.color}30, ${hero.color}12)`
-                    : "linear-gradient(135deg, rgba(38,34,30,0.95), rgba(24,20,16,0.95))",
-                  border: `1.5px solid ${isSelected ? hero.color : "rgba(80,70,50,0.2)"}`,
-                  boxShadow: isSelected
-                    ? `0 0 10px ${hero.color}25, inset 0 0 8px ${hero.color}10`
-                    : "none",
-                  outline: isSelected
-                    ? `1.5px solid ${hero.color}50`
-                    : "none",
-                  outlineOffset: "1px",
-                }}
-              >
-                <HeroSprite type={heroType} size={30} color={hero.color} />
-                {isSelected && (
-                  <div
-                    className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full border border-stone-900 flex items-center justify-center"
-                    style={{
-                      boxShadow: "0 0 4px rgba(245,158,11,0.5)",
-                      fontSize: 5,
-                      color: "white",
-                      fontWeight: 700,
-                    }}
-                  >
-                    ✓
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Selected hero info strip */}
-        {selectedHero && (
-          <SelectedHeroStrip heroType={selectedHero} />
-        )}
-      </div>
-
-      {/* Spell Selection */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(30,22,40,0.97) 0%, rgba(20,14,30,0.99) 100%)",
-          border: "1.5px solid rgba(140,80,200,0.3)",
-          boxShadow:
-            "inset 0 0 16px rgba(140,80,200,0.03), 0 4px 16px rgba(0,0,0,0.5)",
-        }}
-      >
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-2.5 py-1"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(100,50,160,0.18), rgba(60,30,100,0.08), transparent)",
-          }}
-        >
-          <div className="flex items-center gap-1.5">
-            <Sparkles size={10} className="text-purple-400" />
-            <span className="text-[7px] font-bold text-purple-300/90 tracking-[0.15em] uppercase">
-              Spells
-            </span>
-            <span className="text-[7px] font-bold text-purple-400/50">
-              {selectedSpells.length}/3
-            </span>
-          </div>
-          {onOpenSpellCodex && (
-            <button
-              onClick={onOpenSpellCodex}
-              className="flex items-center justify-center w-4 h-4 rounded"
-              style={{
-                background: "rgba(100,50,160,0.12)",
-                border: "1px solid rgba(140,80,200,0.2)",
-              }}
-            >
-              <Info size={8} className="text-purple-400/60" />
-            </button>
-          )}
-        </div>
-
-        {/* Spell grid */}
-        <div className="px-1.5 pt-1 pb-1.5 flex items-center gap-1">
-          {SPELL_OPTIONS.map((spellType) => {
-            const isSelected = selectedSpells.includes(spellType);
-            const spell = SPELL_DATA[spellType];
-            return (
-              <button
-                key={spellType}
-                onClick={() => toggleSpell(spellType)}
-                className="relative flex flex-col items-center justify-center rounded-lg transition-all flex-1 py-1"
-                style={{
-                  background: isSelected
-                    ? "linear-gradient(135deg, rgba(100,60,180,0.3), rgba(60,30,120,0.15))"
-                    : "linear-gradient(135deg, rgba(30,22,38,0.95), rgba(20,14,28,0.95))",
-                  border: `1.5px solid ${isSelected ? "rgba(160,100,255,0.5)" : "rgba(70,40,100,0.2)"}`,
-                  boxShadow: isSelected
-                    ? "0 0 8px rgba(140,80,255,0.2)"
-                    : "none",
-                  outline: isSelected
-                    ? "1.5px solid rgba(160,100,255,0.35)"
-                    : "none",
-                  outlineOffset: "1px",
-                }}
-              >
-                <SpellSprite type={spellType} size={26} />
-                <span className="text-[6px] font-semibold text-purple-200/60 mt-0.5 leading-none">
-                  {spell.shortName}
-                </span>
-                {isSelected && (
-                  <div
-                    className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-purple-500 rounded-full border border-stone-900 flex items-center justify-center"
-                    style={{
-                      boxShadow: "0 0 4px rgba(140,80,255,0.5)",
-                      fontSize: 5,
-                      color: "white",
-                      fontWeight: 700,
-                    }}
-                  >
-                    ✓
-                  </div>
-                )}
-              </button>
-            );
-          })}
+        {/* Right: Spells + Upgrades */}
+        <div className="flex items-end gap-2.5">
+          <SpellCircleButton
+            selectedCount={selectedSpells.length}
+            onClick={() => setShowSpellSheet(true)}
+          />
+          <UpgradeCircleButton
+            availableStars={availableSpellStars}
+            onClick={() => setShowUpgradeModal(true)}
+          />
         </div>
       </div>
-    </div>
+
+      {/* Hero Selection Sheet */}
+      <MobileBottomSheet
+        isOpen={showHeroSheet}
+        onClose={() => setShowHeroSheet(false)}
+        title="Choose Champion"
+        titleIcon={<Shield size={14} className="text-amber-400" />}
+        accentColor="rgba(180,140,60,0.4)"
+      >
+        <HeroSelectionContent
+          selectedHero={selectedHero}
+          setSelectedHero={(hero) => {
+            setSelectedHero(hero);
+            setShowHeroSheet(false);
+          }}
+        />
+      </MobileBottomSheet>
+
+      {/* Spell Selection Sheet */}
+      <MobileBottomSheet
+        isOpen={showSpellSheet}
+        onClose={() => setShowSpellSheet(false)}
+        title="Arcane Spells"
+        titleIcon={<Sparkles size={14} className="text-purple-400" />}
+        accentColor="rgba(140,80,200,0.4)"
+      >
+        <SpellSelectionContent
+          selectedSpells={selectedSpells}
+          toggleSpell={toggleSpell}
+          spellUpgradeLevels={spellUpgradeLevels}
+        />
+      </MobileBottomSheet>
+
+      {/* Upgrade Modal */}
+      <SpellUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        availableStars={availableSpellStars}
+        totalStarsEarned={totalSpellStarsEarned}
+        spentStars={spentSpellStars}
+        spellUpgradeLevels={spellUpgradeLevels}
+        onUpgradeSpell={upgradeSpell}
+      />
+    </>
   );
 };
 
-function SelectedHeroStrip({ heroType }: { heroType: HeroType }) {
-  const hero = HERO_DATA[heroType];
-  const cooldown = HERO_ABILITY_COOLDOWNS[heroType];
+// ── Circle Buttons ─────────────────────────────────────────────────────────
+
+const CIRCLE_SIZE = 56;
+
+function HeroCircleButton({
+  selectedHero,
+  onClick,
+}: {
+  selectedHero: HeroType | null;
+  onClick: () => void;
+}) {
+  const hero = selectedHero ? HERO_DATA[selectedHero] : null;
+  const borderColor = hero ? hero.color : "rgba(180,140,60,0.5)";
 
   return (
-    <div
-      className="px-2 pb-1.5"
+    <button
+      onClick={onClick}
+      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
+      style={{
+        width: CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
+        background: hero
+          ? `linear-gradient(135deg, ${hero.color}30, ${hero.color}10)`
+          : "linear-gradient(135deg, rgba(38,32,24,0.95), rgba(24,20,14,0.95))",
+        border: `2px solid ${borderColor}`,
+        boxShadow: `0 0 20px ${borderColor}30, 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
+      }}
     >
+      {selectedHero ? (
+        <HeroSprite type={selectedHero} size={38} />
+      ) : (
+        <Shield size={24} className="text-amber-400/60" />
+      )}
+      {/* Label */}
       <div
-        className="flex items-center gap-1.5 rounded-md px-2 py-1"
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
         style={{
-          background:
-            "linear-gradient(135deg, rgba(28,24,18,0.8), rgba(20,16,12,0.9))",
-          border: "1px solid rgba(120,100,60,0.15)",
+          background: "rgba(20,16,10,0.9)",
+          border: `1px solid ${borderColor}60`,
+          color: hero ? hero.color : "rgba(180,140,60,0.7)",
         }}
       >
-        {/* Name + role badge */}
-        <span className="text-[10px] font-bold text-amber-200 whitespace-nowrap">
-          {hero.name}
-        </span>
+        {selectedHero ? HERO_ROLES[selectedHero] : "Hero"}
+      </div>
+    </button>
+  );
+}
 
-        {/* Compact stats */}
-        <div className="flex items-center gap-0 flex-1 rounded overflow-hidden min-w-0"
-          style={{ border: "1px solid rgba(100,80,50,0.12)" }}
+function SpellCircleButton({
+  selectedCount,
+  onClick,
+}: {
+  selectedCount: number;
+  onClick: () => void;
+}) {
+  const isFull = selectedCount === 3;
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
+      style={{
+        width: CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
+        background: isFull
+          ? "linear-gradient(135deg, rgba(120,50,200,0.25), rgba(80,20,150,0.15))"
+          : "linear-gradient(135deg, rgba(30,22,40,0.95), rgba(20,14,30,0.95))",
+        border: `2px solid ${isFull ? "rgba(168,85,247,0.6)" : "rgba(140,80,200,0.4)"}`,
+        boxShadow: `0 0 20px rgba(140,80,200,0.2), 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
+      }}
+    >
+      {/* Wand / Sparkle icon */}
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M12 2L13.5 8.5L20 7L15 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L9 12L4 7L10.5 8.5L12 2Z"
+          fill={isFull ? "rgba(168,85,247,0.9)" : "rgba(168,85,247,0.4)"}
+          stroke={isFull ? "#c084fc" : "rgba(168,85,247,0.5)"}
+          strokeWidth="0.5"
+        />
+      </svg>
+      {/* Count badge */}
+      <div
+        className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2"
+        style={{
+          background: isFull
+            ? "linear-gradient(135deg, #22c55e, #16a34a)"
+            : "linear-gradient(135deg, #a855f7, #7c3aed)",
+          borderColor: "rgba(20,14,30,0.9)",
+          color: "white",
+          boxShadow: isFull
+            ? "0 0 8px rgba(34,197,94,0.5)"
+            : "0 0 8px rgba(168,85,247,0.5)",
+        }}
+      >
+        {selectedCount}
+      </div>
+      {/* Label */}
+      <div
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
+        style={{
+          background: "rgba(20,14,30,0.9)",
+          border: "1px solid rgba(140,80,200,0.4)",
+          color: isFull ? "#a855f7" : "rgba(168,85,247,0.6)",
+        }}
+      >
+        Spells
+      </div>
+    </button>
+  );
+}
+
+function UpgradeCircleButton({
+  availableStars,
+  onClick,
+}: {
+  availableStars: number;
+  onClick: () => void;
+}) {
+  const hasStars = availableStars > 0;
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
+      style={{
+        width: CIRCLE_SIZE,
+        height: CIRCLE_SIZE,
+        background: hasStars
+          ? "linear-gradient(135deg, rgba(98,72,18,0.45), rgba(72,52,12,0.35))"
+          : "linear-gradient(135deg, rgba(38,34,20,0.95), rgba(24,20,12,0.95))",
+        border: `2px solid ${hasStars ? "rgba(250,204,21,0.5)" : "rgba(180,150,60,0.3)"}`,
+        boxShadow: hasStars
+          ? "0 0 20px rgba(250,204,21,0.2), 0 4px 16px rgba(0,0,0,0.5), inset 0 0 12px rgba(250,204,21,0.08)"
+          : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+      }}
+    >
+      {/* Upgrade icon - anvil/hammer style */}
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M7 4L9 2L15 2L17 4L17 8L15 10L9 10L7 8Z"
+          fill={hasStars ? "rgba(250,204,21,0.8)" : "rgba(180,150,60,0.4)"}
+          stroke={hasStars ? "#fde047" : "rgba(180,150,60,0.5)"}
+          strokeWidth="0.7"
+        />
+        <rect
+          x="11"
+          y="10"
+          width="2"
+          height="8"
+          rx="0.5"
+          fill={hasStars ? "rgba(200,160,40,0.7)" : "rgba(140,120,50,0.4)"}
+        />
+        <rect
+          x="8"
+          y="18"
+          width="8"
+          height="3"
+          rx="1"
+          fill={hasStars ? "rgba(160,130,30,0.6)" : "rgba(120,100,40,0.3)"}
+        />
+      </svg>
+      {/* Star badge */}
+      {hasStars && (
+        <div
+          className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2"
+          style={{
+            background: "linear-gradient(135deg, #fbbf24, #d97706)",
+            borderColor: "rgba(38,34,20,0.9)",
+            color: "white",
+            boxShadow: "0 0 8px rgba(251,191,36,0.5)",
+          }}
         >
-          {[
-            { icon: <Heart size={7} className="text-red-400" />, value: hero.hp, bg: "rgba(127,29,29,0.2)" },
-            { icon: <Swords size={7} className="text-orange-400" />, value: hero.damage, bg: "rgba(124,45,18,0.2)" },
-            { icon: <Target size={7} className="text-blue-400" />, value: hero.range, bg: "rgba(30,58,138,0.2)" },
-            { icon: <Gauge size={7} className="text-green-400" />, value: hero.speed, bg: "rgba(20,83,45,0.2)" },
-            { icon: <Timer size={7} className="text-purple-400" />, value: `${cooldown / 1000}s`, bg: "rgba(88,28,135,0.2)" },
-          ].map((stat, idx) => (
+          {availableStars}
+        </div>
+      )}
+      {/* Label */}
+      <div
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
+        style={{
+          background: "rgba(24,20,12,0.9)",
+          border: `1px solid ${hasStars ? "rgba(250,204,21,0.4)" : "rgba(180,150,60,0.25)"}`,
+          color: hasStars ? "#fbbf24" : "rgba(180,150,60,0.5)",
+        }}
+      >
+        Upgrade
+      </div>
+    </button>
+  );
+}
+
+// ── Sheet Content Components ───────────────────────────────────────────────
+
+function HeroSelectionContent({
+  selectedHero,
+  setSelectedHero,
+}: {
+  selectedHero: HeroType | null;
+  setSelectedHero: (hero: HeroType) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      {HERO_OPTIONS.map((heroType) => {
+        const hero = HERO_DATA[heroType];
+        const isSelected = selectedHero === heroType;
+        const cooldown = HERO_ABILITY_COOLDOWNS[heroType];
+
+        return (
+          <button
+            key={heroType}
+            onClick={() => setSelectedHero(heroType)}
+            className="w-full rounded-xl p-2.5 flex items-center gap-3 transition-all active:scale-[0.98]"
+            style={{
+              background: isSelected
+                ? `linear-gradient(135deg, ${hero.color}25, ${hero.color}10)`
+                : "linear-gradient(135deg, rgba(38,34,30,0.6), rgba(24,20,16,0.6))",
+              border: `1.5px solid ${isSelected ? hero.color : "rgba(80,70,50,0.2)"}`,
+              boxShadow: isSelected
+                ? `0 0 12px ${hero.color}20, inset 0 0 8px ${hero.color}08`
+                : "none",
+            }}
+          >
+            {/* Hero sprite */}
             <div
-              key={idx}
-              className="flex-1 flex items-center justify-center gap-0.5 py-0.5"
+              className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
               style={{
-                background: stat.bg,
-                borderRight:
-                  idx < 4 ? "1px solid rgba(100,80,50,0.08)" : "none",
+                background: `linear-gradient(135deg, ${hero.color}20, ${hero.color}08)`,
+                border: `1.5px solid ${hero.color}40`,
               }}
             >
-              {stat.icon}
-              <span className="text-[7px] font-bold text-amber-200/80">
-                {stat.value}
-              </span>
+              <HeroSprite type={heroType} size={36} />
             </div>
-          ))}
-        </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-bold text-amber-200">
+                  {hero.name}
+                </span>
+                <span
+                  className="text-[7px] font-semibold px-1.5 py-px rounded-full uppercase tracking-wider"
+                  style={{
+                    background: `${hero.color}20`,
+                    border: `1px solid ${hero.color}30`,
+                    color: hero.color,
+                  }}
+                >
+                  {HERO_ROLES[heroType]}
+                </span>
+              </div>
+
+              {/* Stats strip */}
+              <div className="flex items-center gap-0 mt-1 rounded overflow-hidden"
+                style={{ border: "1px solid rgba(100,80,50,0.12)" }}
+              >
+                {[
+                  { icon: <Heart size={7} className="text-red-400" />, value: hero.hp, bg: "rgba(127,29,29,0.2)" },
+                  { icon: <Swords size={7} className="text-orange-400" />, value: hero.damage, bg: "rgba(124,45,18,0.2)" },
+                  { icon: <Target size={7} className="text-blue-400" />, value: hero.range, bg: "rgba(30,58,138,0.2)" },
+                  { icon: <Gauge size={7} className="text-green-400" />, value: hero.speed, bg: "rgba(20,83,45,0.2)" },
+                  { icon: <Timer size={7} className="text-purple-400" />, value: `${cooldown / 1000}s`, bg: "rgba(88,28,135,0.2)" },
+                ].map((stat, idx) => (
+                  <div
+                    key={idx}
+                    className="flex-1 flex items-center justify-center gap-0.5 py-0.5"
+                    style={{
+                      background: stat.bg,
+                      borderRight: idx < 4 ? "1px solid rgba(100,80,50,0.08)" : "none",
+                    }}
+                  >
+                    {stat.icon}
+                    <span className="text-[7px] font-bold text-amber-200/80">
+                      {stat.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ability */}
+              <div className="flex items-center gap-1 mt-1">
+                <HeroAbilityIcon type={heroType} size={8} />
+                <span className="text-[7px] font-semibold text-purple-300/80">
+                  {hero.ability}:
+                </span>
+                <span className="text-[7px] text-purple-200/50 truncate">
+                  {hero.abilityDesc}
+                </span>
+              </div>
+            </div>
+
+            {/* Selection indicator */}
+            {isSelected && (
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `linear-gradient(135deg, ${hero.color}, ${hero.color}cc)`,
+                  boxShadow: `0 0 8px ${hero.color}50`,
+                }}
+              >
+                <Check size={14} className="text-white" />
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SpellSelectionContent({
+  selectedSpells,
+  toggleSpell,
+  spellUpgradeLevels,
+}: {
+  selectedSpells: SpellType[];
+  toggleSpell: (spell: SpellType) => void;
+  spellUpgradeLevels: SpellUpgradeLevels;
+}) {
+  const SPELL_COLORS: Record<SpellType, { accent: string; bg: string; border: string }> = {
+    fireball: { accent: "#f97316", bg: "rgba(124,45,18,0.15)", border: "rgba(234,88,12,0.3)" },
+    lightning: { accent: "#eab308", bg: "rgba(113,63,18,0.15)", border: "rgba(234,179,8,0.3)" },
+    freeze: { accent: "#06b6d4", bg: "rgba(22,78,99,0.15)", border: "rgba(6,182,212,0.3)" },
+    payday: { accent: "#f59e0b", bg: "rgba(120,53,15,0.15)", border: "rgba(245,158,11,0.3)" },
+    reinforcements: { accent: "#10b981", bg: "rgba(6,78,59,0.15)", border: "rgba(16,185,129,0.3)" },
+  };
+
+  return (
+    <div className="space-y-1.5">
+      {/* Slot indicator */}
+      <div className="flex items-center justify-center gap-2 mb-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="w-3 h-3 rounded-sm transition-all"
+            style={{
+              background:
+                i < selectedSpells.length
+                  ? "linear-gradient(135deg, #a855f7, #7c3aed)"
+                  : "rgba(60,40,80,0.4)",
+              border: `1px solid ${
+                i < selectedSpells.length
+                  ? "rgba(168,85,247,0.6)"
+                  : "rgba(100,70,140,0.25)"
+              }`,
+              boxShadow:
+                i < selectedSpells.length
+                  ? "0 0 6px rgba(168,85,247,0.4)"
+                  : "none",
+            }}
+          />
+        ))}
+        <span className="text-[9px] font-bold text-purple-300/60 ml-1">
+          {selectedSpells.length}/3 Selected
+        </span>
       </div>
 
-      {/* Ability */}
-      <div className="flex items-center gap-1 mt-0.5 px-0.5">
-        <HeroAbilityIcon type={heroType} size={8} />
-        <span className="text-[7px] font-semibold text-purple-300/80">
-          {hero.ability}:
-        </span>
-        <span className="text-[7px] text-purple-200/50 truncate">
-          {hero.abilityDesc}
-        </span>
-      </div>
+      {SPELL_OPTIONS.map((spellType) => {
+        const spell = SPELL_DATA[spellType];
+        const isSelected = selectedSpells.includes(spellType);
+        const canSelect = isSelected || selectedSpells.length < 3;
+        const selectionIndex = selectedSpells.indexOf(spellType);
+        const colors = SPELL_COLORS[spellType];
+        const spellLevel = spellUpgradeLevels[spellType] ?? 0;
+
+        return (
+          <button
+            key={spellType}
+            onClick={() => canSelect && toggleSpell(spellType)}
+            disabled={!canSelect && !isSelected}
+            className={`w-full rounded-xl p-2.5 flex items-center gap-3 transition-all active:scale-[0.98] ${
+              !canSelect && !isSelected ? "opacity-40" : ""
+            }`}
+            style={{
+              background: isSelected
+                ? `linear-gradient(135deg, ${colors.bg}, ${colors.bg})`
+                : "linear-gradient(135deg, rgba(30,22,38,0.6), rgba(20,14,28,0.6))",
+              border: `1.5px solid ${isSelected ? colors.border : "rgba(70,40,100,0.2)"}`,
+              boxShadow: isSelected
+                ? `0 0 12px ${colors.accent}15`
+                : "none",
+            }}
+          >
+            {/* Spell sprite */}
+            <div
+              className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{
+                background: `${colors.bg}`,
+                border: `1.5px solid ${colors.border}`,
+              }}
+            >
+              <SpellSprite type={spellType} size={32} />
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0 text-left">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-amber-200">
+                  {spell.shortName}
+                </span>
+                <span
+                  className="text-[7px] font-bold px-1 py-px rounded border"
+                  style={{
+                    background: "rgba(113,63,18,0.3)",
+                    borderColor: "rgba(250,204,21,0.25)",
+                    color: "#fde047",
+                  }}
+                >
+                  Lv {spellLevel + 1}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span
+                  className="text-[8px] font-medium px-1 py-px rounded flex items-center gap-0.5"
+                  style={{
+                    background:
+                      spell.cost > 0
+                        ? "rgba(120,80,20,0.3)"
+                        : "rgba(20,83,45,0.3)",
+                    border: `1px solid ${
+                      spell.cost > 0
+                        ? "rgba(120,80,20,0.2)"
+                        : "rgba(20,83,45,0.2)"
+                    }`,
+                  }}
+                >
+                  <Coins
+                    size={7}
+                    className={
+                      spell.cost > 0
+                        ? "text-amber-400/70"
+                        : "text-green-400/70"
+                    }
+                  />
+                  <span
+                    className={
+                      spell.cost > 0
+                        ? "text-amber-300/80"
+                        : "text-green-300/80"
+                    }
+                  >
+                    {spell.cost > 0 ? spell.cost : "Free"}
+                  </span>
+                </span>
+                <span
+                  className="text-[8px] font-medium px-1 py-px rounded flex items-center gap-0.5"
+                  style={{
+                    background: "rgba(30,58,138,0.25)",
+                    border: "1px solid rgba(30,58,138,0.2)",
+                  }}
+                >
+                  <Clock size={7} className="text-blue-400/70" />
+                  <span className="text-blue-300/80">
+                    {spell.cooldown / 1000}s
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Selection indicator */}
+            {isSelected ? (
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white"
+                style={{
+                  background: "linear-gradient(135deg, #a855f7, #7c3aed)",
+                  boxShadow: "0 0 8px rgba(168,85,247,0.5)",
+                }}
+              >
+                {selectionIndex + 1}
+              </div>
+            ) : canSelect ? (
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-dashed"
+                style={{
+                  borderColor: "rgba(140,80,200,0.3)",
+                }}
+              >
+                <span className="text-[8px] text-purple-500/40">+</span>
+              </div>
+            ) : null}
+          </button>
+        );
+      })}
     </div>
   );
 }

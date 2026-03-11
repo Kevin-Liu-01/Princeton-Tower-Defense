@@ -809,7 +809,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
 
         {/* MOBILE: Campaign / Level detail panel above map */}
-        <div className="sm:hidden max-h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-1.5 pt-1 pb-0.5" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+        <div className="sm:hidden h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-1.5 pt-1 pb-0.5" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
             <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
             {selectedLevel && currentLevel ? (() => {
@@ -1739,11 +1739,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              {/* MOBILE HERO & SPELL SELECTION BAR */}
-              <div className="flex sm:hidden absolute w-full bottom-0 left-0 right-0 p-1.5 pointer-events-none h-full z-20" style={{
-                background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.35) 60%, rgba(18,12,6,0.88) 80%, rgba(18,12,6,0.98) 100%)`
-              }}>
-                <div className="w-full mt-auto pointer-events-auto">
+              {/* MOBILE HERO & SPELL FLOATING CIRCLES */}
+              <div className="flex sm:hidden absolute w-full bottom-0 left-0 right-0 pointer-events-none z-20">
+                <div className="w-full pointer-events-auto">
                   <MobileLoadoutBar
                     selectedHero={selectedHero}
                     setSelectedHero={setSelectedHero}
@@ -1751,6 +1749,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     toggleSpell={toggleSpell}
                     onOpenHeroCodex={() => openCodexTo("heroes")}
                     onOpenSpellCodex={() => openCodexTo("spells")}
+                    availableSpellStars={availableSpellStars}
+                    totalSpellStarsEarned={totalSpellStarsEarned}
+                    spentSpellStars={spentSpellStars}
+                    spellUpgradeLevels={spellUpgradeLevels}
+                    upgradeSpell={upgradeSpell}
                   />
                 </div>
               </div>
