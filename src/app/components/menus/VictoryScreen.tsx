@@ -50,7 +50,7 @@ export function calculateCategoryRatings(
         : 1;
   const strategy =
     speed >= 3 && survival >= 3 ? 3 : speed >= 2 && survival >= 2 ? 2 : 1;
-  const overall = Math.floor((speed + survival + strategy) / 3);
+  const overall = survival;
 
   return { speed, survival, strategy, overall };
 }

@@ -175,7 +175,7 @@ export const DevMenu: React.FC<DevMenuProps> = ({ events, stats, onClear, onClos
 
   return (
     <div
-      className="flex flex-col pointer-events-auto ml-2 mb-1 rounded-lg overflow-hidden"
+      className="flex flex-col pointer-events-auto mr-2 mb-1 rounded-lg overflow-hidden ml-auto"
       style={{
         height: LOG_HEIGHT,
         width: LOG_WIDTH,

@@ -130,7 +130,7 @@ const DESERT_FLASH_TYPES = new Set([
 
 const FOREST_FLASH_TYPES = new Set([
   "athlete",
-  "protestor",
+  "tiger_fan",
 ]);
 
 const STORM_FLASH_TYPES = new Set([

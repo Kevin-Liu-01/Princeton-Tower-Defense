@@ -36,7 +36,7 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -73,7 +73,10 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
     };
   }, [open, updatePosition]);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback(() => {
+    setOpen(false);
+    setMenuPos(null);
+  }, []);
 
   const items: (DropdownItem | "divider")[] = [
     {
@@ -114,9 +117,10 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
         ref={menuRef}
         className="fixed w-48 rounded-xl overflow-hidden shadow-2xl"
         style={{
-          top: menuPos.top,
-          right: menuPos.right,
+          top: menuPos?.top ?? 0,
+          right: menuPos?.right ?? 0,
           zIndex: 9999,
+          visibility: menuPos ? "visible" : "hidden",
           background: panelGradient,
           border: `1.5px solid ${GOLD.border30}`,
           boxShadow: `0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 ${OVERLAY.white06}`,
@@ -184,7 +188,10 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
     <>
       <button
         ref={triggerRef}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          if (!open) updatePosition();
+          setOpen((prev) => !prev);
+        }}
         className="relative flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"
         style={{
           background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,

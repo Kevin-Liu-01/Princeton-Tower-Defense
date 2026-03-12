@@ -15,7 +15,7 @@ import type { WaveGroup } from "../types";
 export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   // GRASSLAND REGION
-  // Regional: frosh, athlete, protestor
+  // Regional: frosh, athlete, tiger_fan
   // =====================
   poe: [
     // Wave 1: Gentle intro
@@ -27,7 +27,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 2: Ranged intro
     [
       { type: "archer", count: 3, interval: 800 },
-      { type: "protestor", count: 3, interval: 750, delay: 4000 },
+      { type: "tiger_fan", count: 3, interval: 750, delay: 4000 },
       { type: "cultist", count: 3, interval: 750, delay: 3500 },
       { type: "frosh", count: 3, interval: 800, delay: 3500 },
     ],
@@ -40,7 +40,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     ],
     // Wave 4: Mixed pressure
     [
-      { type: "protestor", count: 4, interval: 700 },
+      { type: "tiger_fan", count: 4, interval: 700 },
       { type: "crossbowman", count: 3, interval: 750, delay: 3200 },
       { type: "frosh", count: 5, interval: 650, delay: 3000 },
       { type: "harpy", count: 3, interval: 800, delay: 3200 },
@@ -62,7 +62,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 7: Boss intro
     [
       { type: "senior", count: 3, interval: 1400 },
-      { type: "protestor", count: 5, interval: 600, delay: 2500 },
+      { type: "tiger_fan", count: 5, interval: 600, delay: 2500 },
       { type: "banshee", count: 3, interval: 800, delay: 2500 },
       { type: "mage", count: 4, interval: 700, delay: 2500 },
     ],
@@ -87,7 +87,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "crossbowman", count: 3, interval: 800 },
       { type: "frosh", count: 4, interval: 750, delay: 3800 },
-      { type: "protestor", count: 4, interval: 700, delay: 3500 },
+      { type: "tiger_fan", count: 4, interval: 700, delay: 3500 },
       { type: "mage", count: 3, interval: 850, delay: 3500 },
     ],
     // Wave 3: Flying wave
@@ -100,7 +100,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 4: Tank push
     [
       { type: "junior", count: 4, interval: 850 },
-      { type: "protestor", count: 5, interval: 650, delay: 3200 },
+      { type: "tiger_fan", count: 5, interval: 650, delay: 3200 },
       { type: "cultist", count: 4, interval: 700, delay: 3000 },
       { type: "berserker", count: 4, interval: 700, delay: 3000 },
     ],
@@ -122,7 +122,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "senior", count: 4, interval: 1100 },
       { type: "shadow_knight", count: 3, interval: 1200, delay: 2600 },
-      { type: "protestor", count: 6, interval: 550, delay: 2500 },
+      { type: "tiger_fan", count: 6, interval: 550, delay: 2500 },
       { type: "hexer", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 8: Necromancer wave
@@ -144,7 +144,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "gradstudent", count: 4, interval: 1400 },
       { type: "assassin", count: 4, interval: 700, delay: 2000 },
-      { type: "protestor", count: 7, interval: 500, delay: 2000 },
+      { type: "tiger_fan", count: 7, interval: 500, delay: 2000 },
       { type: "wyvern", count: 4, interval: 900, delay: 2000 },
       { type: "infernal", count: 4, interval: 800, delay: 2000 },
     ],
@@ -154,7 +154,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 1: Opening salvo
     [
       { type: "frosh", count: 5, interval: 800 },
-      { type: "protestor", count: 4, interval: 700, delay: 4000 },
+      { type: "tiger_fan", count: 4, interval: 700, delay: 4000 },
       { type: "archer", count: 3, interval: 750, delay: 3800 },
     ],
     // Wave 2: Dark magic intro
@@ -174,7 +174,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 4: Tank siege
     [
       { type: "junior", count: 4, interval: 900 },
-      { type: "protestor", count: 5, interval: 650, delay: 3200 },
+      { type: "tiger_fan", count: 5, interval: 650, delay: 3200 },
       { type: "crossbowman", count: 4, interval: 700, delay: 3000 },
       { type: "specter", count: 3, interval: 800, delay: 3000 },
     ],
@@ -190,7 +190,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mage", count: 4, interval: 850 },
       { type: "warlock", count: 4, interval: 800, delay: 2800 },
       { type: "archer", count: 5, interval: 650, delay: 2600 },
-      { type: "protestor", count: 5, interval: 600, delay: 2600 },
+      { type: "tiger_fan", count: 5, interval: 600, delay: 2600 },
     ],
     // Wave 7: Plaguebearer siege
     [
@@ -217,7 +217,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "juggernaut", count: 1, interval: 3200 },
       { type: "professor", count: 3, interval: 1600, delay: 2200 },
-      { type: "protestor", count: 6, interval: 500, delay: 2200 },
+      { type: "tiger_fan", count: 6, interval: 500, delay: 2200 },
       { type: "banshee", count: 5, interval: 700, delay: 2200 },
       { type: "infernal", count: 4, interval: 800, delay: 2200 },
     ],
@@ -1535,7 +1535,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   ivy_crossroads: [
     [
       { type: "athlete", count: 7, interval: 700 },
-      { type: "protestor", count: 6, interval: 680, delay: 2800 },
+      { type: "tiger_fan", count: 6, interval: 680, delay: 2800 },
       { type: "crossbowman", count: 4, interval: 780, delay: 2600 },
     ],
     [
@@ -1559,7 +1559,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "plaguebearer", count: 4, interval: 860 },
       { type: "shadow_knight", count: 4, interval: 1050, delay: 2200 },
-      { type: "protestor", count: 10, interval: 470, delay: 2100 },
+      { type: "tiger_fan", count: 10, interval: 470, delay: 2100 },
       { type: "wyvern", count: 4, interval: 980, delay: 2100 },
     ],
     [
@@ -1597,7 +1597,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "golem", count: 1, interval: 2900 },
       { type: "shadow_knight", count: 6, interval: 840, delay: 1800 },
       { type: "banshee", count: 7, interval: 560, delay: 1700 },
-      { type: "protestor", count: 16, interval: 360, delay: 1600 },
+      { type: "tiger_fan", count: 16, interval: 360, delay: 1600 },
     ],
     [
       { type: "trustee", count: 2, interval: 2400 },
@@ -1935,7 +1935,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   cannon_crest: [
     [
       { type: "athlete", count: 8, interval: 620 },
-      { type: "protestor", count: 7, interval: 580, delay: 2600 },
+      { type: "tiger_fan", count: 7, interval: 580, delay: 2600 },
       { type: "crossbowman", count: 5, interval: 720, delay: 2400 },
     ],
     [
@@ -1951,7 +1951,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "plaguebearer", count: 6, interval: 760 },
       { type: "hexer", count: 7, interval: 640, delay: 2200 },
-      { type: "protestor", count: 14, interval: 360, delay: 2000 },
+      { type: "tiger_fan", count: 14, interval: 360, delay: 2000 },
     ],
     [
       { type: "senior", count: 4, interval: 980 },
@@ -1971,7 +1971,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 2, interval: 2300 },
       { type: "golem", count: 2, interval: 2500, delay: 1900 },
-      { type: "protestor", count: 18, interval: 300, delay: 1700 },
+      { type: "tiger_fan", count: 18, interval: 300, delay: 1700 },
       { type: "assassin", count: 10, interval: 480, delay: 1600 },
     ],
     [
@@ -2119,7 +2119,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       // Campus
       { type: "mascot", count: 1, interval: 1000, delay: 3000 },
       { type: "athlete", count: 1, interval: 1000, delay: 3000 },
-      { type: "protestor", count: 1, interval: 1000, delay: 3000 },
+      { type: "tiger_fan", count: 1, interval: 1000, delay: 3000 },
       // Ranged
       { type: "archer", count: 1, interval: 1000, delay: 3000 },
       { type: "mage", count: 1, interval: 1000, delay: 3000 },

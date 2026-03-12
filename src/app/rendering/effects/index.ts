@@ -19,7 +19,7 @@ import { renderEnemyDeath } from "./deathAnimations";
 
 // Re-export fog effects
 export { drawRoadEndFog, computeFogCounts, type RgbColor, type DrawRoadEndFogParams } from "./fog";
-export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig } from "./inspectIndicator";
+export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig, type InspectUnitType, type InspectRenderPass } from "./inspectIndicator";
 
 // ============================================================================
 // EFFECT RENDERING

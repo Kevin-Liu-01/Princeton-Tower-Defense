@@ -38,9 +38,9 @@ import {
   Rocket,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
-import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR } from "../../constants";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
-import { getTowerFoundationSize, getTowerVisualHeight } from "../../rendering/towers/towerHelpers";
+import { getTowerFoundationSize } from "../../rendering/towers/towerHelpers";
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, panelGradient } from "./theme";
@@ -646,14 +646,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const lastRowRemainder = statsToShow.length > gridCols ? statsToShow.length % gridCols : 0;
   const lastRowStartIdx = lastRowRemainder > 0 ? statsToShow.length - lastRowRemainder : -1;
 
-  // ---- Circle geometry (centered on tower visual mass) ----
+  // ---- Circle geometry (derived from foundation size, scales with type + level + zoom) ----
   const fndSize = getTowerFoundationSize(tower);
   const towerFootprint = Math.max(fndSize.w, fndSize.d);
-  const typeBoost = Math.max(0, (towerFootprint - 60) * 0.3);
-  const baseOrbit = 75 + (tower.level - 1) * 12 + typeBoost;
-  const visualHeight = getTowerVisualHeight(tower);
+  const baseOrbit = towerFootprint * 0.9 + 20;
   const circleCenterX = screenPos.x;
-  const circleCenterY = screenPos.y - visualHeight * 0.5 * cameraZoom;
+  const circleCenterY = screenPos.y + 0.25 * towerFootprint * cameraZoom;
   const circleRadius = Math.round(baseOrbit * cameraZoom);
   const btnOrbitRadius = circleRadius;
   const btnSize = 44;

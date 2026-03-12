@@ -3465,7 +3465,7 @@ export type { RgbColor, DrawRoadEndFogParams } from "./effects/fog";
 export { renderTowerDebuffEffects, renderUnitStatusEffects } from "./effects";
 
 // Re-export unified inspect indicator
-export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig } from "./effects/inspectIndicator";
+export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig, type InspectRenderPass } from "./effects/inspectIndicator";
 
 // Re-export UI rendering functions for troop movement
 export {

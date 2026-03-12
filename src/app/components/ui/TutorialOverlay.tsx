@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { ChevronRight, SkipForward, BookOpen } from "lucide-react";
+import { ChevronRight, SkipForward, BookOpen, ArrowRight } from "lucide-react";
 import { OrnateFrame } from "./OrnateFrame";
 import {
   GOLD,
@@ -29,6 +29,10 @@ import type { TowerType, SpellType, HeroType } from "../../types";
 export interface TutorialOverlayProps {
   onComplete: () => void;
   onSkip: () => void;
+  selectedHero?: HeroType | null;
+  selectedSpells?: SpellType[];
+  onHeroChange?: (hero: HeroType) => void;
+  onSpellToggle?: (spell: SpellType) => void;
 }
 
 // =============================================================================
@@ -174,8 +178,8 @@ function TowerCatalog() {
             }}
           >
             <div className="flex-shrink-0 mt-0.5">
-              <FramedSprite size={30} theme={theme}>
-                <TowerSprite type={card.type} size={22} level={1} />
+              <FramedSprite size={42} theme={theme}>
+                <TowerSprite type={card.type} size={32} level={1} />
               </FramedSprite>
             </div>
             <div className="flex-1 min-w-0">
@@ -215,22 +219,54 @@ const SPELL_CARDS: SpellCardInfo[] = [
   { type: "reinforcements", name: "Reinforcements", tagline: "Drops soldiers anywhere on the map", color: "border-emerald-700/40" },
 ];
 
-function SpellCatalog() {
+const MAX_SPELLS = 3;
+
+function SpellCatalog({ selectedSpells, onSpellToggle }: { selectedSpells?: SpellType[]; onSpellToggle?: (spell: SpellType) => void }) {
+  const selected = selectedSpells ?? [];
+  const isFull = selected.length >= MAX_SPELLS;
   return (
-    <div className="mt-2 sm:mt-3 mb-1 grid grid-cols-2 gap-1 sm:gap-1.5">
-      {SPELL_CARDS.map((spell) => (
-        <div
-          key={spell.type}
-          className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5"
-          style={{ background: "rgba(10,10,16,0.5)", border: `1px solid rgba(80,80,80,0.25)` }}
-        >
-          <SpellSprite type={spell.type} size={22} />
-          <div className="min-w-0">
-            <span className="text-[11px] sm:text-[13px] font-bold text-amber-200 block">{spell.name}</span>
-            <span className="text-[9px] sm:text-[11px] text-amber-200/40 leading-tight block">{spell.tagline}</span>
-          </div>
-        </div>
-      ))}
+    <div className="mt-2 sm:mt-3 mb-1">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] sm:text-xs text-amber-300/50 font-semibold uppercase tracking-wider">
+          Tap to equip/unequip
+        </span>
+        <span className="text-[10px] sm:text-xs text-amber-200/40">
+          {selected.length}/{MAX_SPELLS} equipped
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-1 sm:gap-1.5">
+        {SPELL_CARDS.map((spell) => {
+          const isSelected = selected.includes(spell.type);
+          const isDisabled = !isSelected && isFull;
+          return (
+            <button
+              key={spell.type}
+              type="button"
+              onClick={() => onSpellToggle?.(spell.type)}
+              disabled={isDisabled}
+              className="flex items-center gap-1.5 sm:gap-2 rounded-lg p-1 sm:p-1.5 relative text-left transition-all duration-150"
+              style={{
+                background: isSelected ? "rgba(251,191,36,0.1)" : "rgba(10,10,16,0.5)",
+                border: isSelected ? "2px solid rgba(251,191,36,0.5)" : "1px solid rgba(80,80,80,0.25)",
+                boxShadow: isSelected ? "0 0 10px rgba(251,191,36,0.15)" : "none",
+                opacity: isDisabled ? 0.4 : 1,
+                cursor: isDisabled ? "not-allowed" : "pointer",
+              }}
+            >
+              {isSelected && (
+                <div className="absolute top-0.5 right-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-amber-400/80">
+                  Equipped
+                </div>
+              )}
+              <SpellSprite type={spell.type} size={30} />
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-[13px] font-bold text-amber-200 block">{spell.name}</span>
+                <span className="text-[9px] sm:text-[11px] text-amber-200/40 leading-tight block">{spell.tagline}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -256,26 +292,37 @@ const HERO_CARDS: HeroCardInfo[] = [
   { type: "engineer", role: "Tech", tagline: "Deploys automated turrets to create crossfire.", roleColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
 ];
 
-function HeroCatalog() {
+function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType | null; onHeroChange?: (hero: HeroType) => void }) {
   return (
     <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {HERO_CARDS.map((card) => {
         const data = HERO_DATA[card.type];
         const heroColor = data.color;
+        const isSelected = selectedHero === card.type;
         return (
-          <div
+          <button
             key={card.type}
-            className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2"
+            type="button"
+            onClick={() => onHeroChange?.(card.type)}
+            className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2 relative w-full text-left transition-all duration-150"
             style={{
-              background: "rgba(10,10,16,0.5)",
-              border: `1px solid ${heroColor}44`,
+              background: isSelected ? `${heroColor}18` : "rgba(10,10,16,0.5)",
+              border: isSelected ? `2px solid ${heroColor}88` : `1px solid ${heroColor}44`,
+              boxShadow: isSelected ? `0 0 12px ${heroColor}30` : "none",
+              cursor: "pointer",
             }}
           >
+            {isSelected && (
+              <div className="absolute top-1 right-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                style={{ background: `${heroColor}30`, color: heroColor, border: `1px solid ${heroColor}55` }}>
+                Selected
+              </div>
+            )}
             <div
               className="flex-shrink-0 rounded-xl overflow-hidden mt-0.5"
               style={{
-                width: 30,
-                height: 30,
+                width: 42,
+                height: 42,
                 background: `radial-gradient(circle, ${heroColor}22, rgba(6,6,10,0.9))`,
                 border: `1.5px solid ${heroColor}66`,
                 display: "flex",
@@ -283,7 +330,7 @@ function HeroCatalog() {
                 justifyContent: "center",
               }}
             >
-              <HeroSprite type={card.type} size={24} />
+              <HeroSprite type={card.type} size={34} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
@@ -299,7 +346,7 @@ function HeroCatalog() {
                 </span>
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
@@ -325,7 +372,7 @@ function TutorialUpgradeTree() {
         Example: {towerData.name}
       </p>
 
-      {/* Levels 1-3 */}
+      {/* Levels 1-3, then arrow to Lv4 A/B fork — all left-to-right */}
       <div className="flex items-center justify-center gap-0">
         {levels.map((lvl, i) => {
           const desc = statsDef.levels[lvl]?.description || `Level ${lvl}`;
@@ -338,47 +385,40 @@ function TutorialUpgradeTree() {
                     <TowerSprite type={towerType} size={26} level={lvl} />
                   </FramedSprite>
                 </div>
-                <span className="text-[11px] mt-0.5 text-amber-200/50 text-center leading-tight max-w-[70px]">
-                  Lv{lvl}: {shortDesc}
+                <span className="text-[10px] mt-0.5 text-amber-200/50 text-center leading-tight max-w-[60px]">
+                  Lv{lvl}
                 </span>
               </div>
-              {i < 2 && (
-                <div className="flex-shrink-0 mx-1">
-                  <div style={{ width: 16, height: 2, background: "rgba(251,191,36,0.4)", borderRadius: 1 }} />
-                </div>
-              )}
+              <ArrowRight size={16} className="flex-shrink-0 mx-1 text-amber-400/50" />
             </React.Fragment>
           );
         })}
-      </div>
 
-      {/* Branch connector */}
-      <div className="flex justify-center mt-1">
-        <div style={{ width: 2, height: 8, background: "rgba(251,191,36,0.35)", borderRadius: 1 }} />
-      </div>
-
-      {/* Level 4 A/B fork */}
-      <div className="flex items-start justify-center gap-4">
-        {(["A", "B"] as const).map((branch) => {
-          const info = towerData.upgrades[branch];
-          const borderCol = branch === "A" ? "rgba(239,68,68,0.6)" : "rgba(59,130,246,0.6)";
-          const labelColor = branch === "A" ? "text-red-300" : "text-blue-300";
-          return (
-            <div key={branch} className="flex flex-col items-center">
-              <div className="rounded-lg overflow-hidden" style={{ border: `1.5px solid ${borderCol}` }}>
-                <FramedSprite size={34} theme={theme}>
-                  <TowerSprite type={towerType} size={26} level={4} upgrade={branch} />
-                </FramedSprite>
+        {/* Level 4 A/B fork inline */}
+        <div className="flex flex-col items-center gap-1">
+          {(["A", "B"] as const).map((branch) => {
+            const info = towerData.upgrades[branch];
+            const borderCol = branch === "A" ? "rgba(239,68,68,0.6)" : "rgba(59,130,246,0.6)";
+            const labelColor = branch === "A" ? "text-red-300" : "text-blue-300";
+            return (
+              <div key={branch} className="flex items-center gap-1.5">
+                <div className="rounded-lg overflow-hidden" style={{ border: `1.5px solid ${borderCol}` }}>
+                  <FramedSprite size={34} theme={theme}>
+                    <TowerSprite type={towerType} size={26} level={4} upgrade={branch} />
+                  </FramedSprite>
+                </div>
+                <div className="flex flex-col">
+                  <span className={`text-[10px] font-semibold ${labelColor} leading-tight`}>
+                    {info.name}
+                  </span>
+                  <span className="text-[9px] text-amber-200/30 leading-tight max-w-[80px]">
+                    {info.effect}
+                  </span>
+                </div>
               </div>
-              <span className={`text-[11px] mt-0.5 font-semibold ${labelColor}`}>
-                {info.name}
-              </span>
-              <span className="text-[10px] text-amber-200/30 text-center max-w-[90px] leading-tight">
-                {info.effect}
-              </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -391,6 +431,10 @@ function TutorialUpgradeTree() {
 export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
   onComplete,
   onSkip,
+  selectedHero,
+  selectedSpells,
+  onHeroChange,
+  onSpellToggle,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -560,9 +604,9 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
               </p>
             ))}
             {showTowerCatalog && <TowerCatalog />}
-            {showSpellCatalog && <SpellCatalog />}
+            {showSpellCatalog && <SpellCatalog selectedSpells={selectedSpells} onSpellToggle={onSpellToggle} />}
             {showUpgradeTree && <TutorialUpgradeTree />}
-            {showHeroCatalog && <HeroCatalog />}
+            {showHeroCatalog && <HeroCatalog selectedHero={selectedHero} onHeroChange={onHeroChange} />}
           </div>
 
           {/* Divider */}

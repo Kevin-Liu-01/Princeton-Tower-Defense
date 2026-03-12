@@ -355,7 +355,7 @@ import { captureCanvas } from "../utils/screenshot";
 import { CameraModeOverlay } from "../components/ui/CameraModeOverlay";
 import { useTutorial, type EncounterQueueItem } from "./useTutorial";
 import { TutorialOverlay } from "../components/ui/TutorialOverlay";
-import { EncounterTooltip } from "../components/ui/EncounterTooltip";
+import { InlineEncounterPanel } from "../components/ui/EncounterTooltip";
 
 type RenderQuality = "high" | "medium" | "low";
 
@@ -554,9 +554,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [encounterQueue, setEncounterQueue] = useState<EncounterQueueItem[]>([]);
   const [encounterIndex, setEncounterIndex] = useState(0);
-  const pendingWaveStartRef = useRef(false);
+  const [encounterExiting, setEncounterExiting] = useState(false);
   const tutorialBlockingRef = useRef(false);
-  tutorialBlockingRef.current = showTutorial || encounterQueue.length > 0;
+  tutorialBlockingRef.current = showTutorial;
 
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
@@ -741,6 +741,10 @@ export function usePrincetonTowerDefenseRuntime() {
   const [placingTroop, setPlacingTroop] = useState(false);
   const [targetingSpell, setTargetingSpell] = useState<SpellType | null>(null);
   const targetingSpellRef = useRef<SpellType | null>(null);
+  const [spellAutoAim, setSpellAutoAim] = useLocalStorage<Partial<Record<SpellType, boolean>>>("princeton-td-spell-autoaim", {
+    fireball: false,
+    lightning: false,
+  });
   const placingTroopRef = useRef(false);
   const mousePosRef = useRef<Position>({ x: 0, y: 0 });
   const executeTargetedSpellRef = useRef<(spellType: SpellType, pos: Position) => void>(() => { });
@@ -1462,6 +1466,10 @@ export function usePrincetonTowerDefenseRuntime() {
           setCameraZoom((prev) => Math.max(prev - 0.1, 0.5));
           break;
         case "escape":
+          // Cancel tower build placement
+          setBuildingTower(null);
+          setDraggingTower(null);
+          setIsBuildDragging(false);
           // Cancel spell targeting/placement with PP refund
           if (targetingSpellRef.current) {
             const refundCost = SPELL_DATA[targetingSpellRef.current]?.cost ?? 0;
@@ -1520,6 +1528,21 @@ export function usePrincetonTowerDefenseRuntime() {
     window.addEventListener("keydown", handleCameraModeKey);
     return () => window.removeEventListener("keydown", handleCameraModeKey);
   }, [gameState, toggleCameraMode]);
+
+  // Space bar toggles pause
+  useEffect(() => {
+    if (gameState !== "playing") return;
+    const handlePauseKey = (e: KeyboardEvent) => {
+      if (e.key !== " ") return;
+      if ((e.target as HTMLElement)?.tagName === "BUTTON" || (e.target as HTMLElement)?.tagName === "INPUT") return;
+      e.preventDefault();
+      if (cameraModeActive || inspectorActive) return;
+      if (battleOutcome) return;
+      setGameSpeed((prev) => (prev === 0 ? 1 : 0));
+    };
+    window.addEventListener("keydown", handlePauseKey);
+    return () => window.removeEventListener("keydown", handlePauseKey);
+  }, [gameState, cameraModeActive, inspectorActive, battleOutcome]);
 
   const handleCameraModeCapture = useCallback(async (): Promise<boolean> => {
     const canvas = canvasRef.current;
@@ -1907,34 +1930,93 @@ export function usePrincetonTowerDefenseRuntime() {
     queueLevelEncounters(selectedMap);
   }, [tutorial, selectedMap, queueLevelEncounters]);
 
+  const handleTutorialHeroChange = useCallback((heroType: HeroType) => {
+    setSelectedHero(heroType);
+    const heroData = HERO_DATA[heroType];
+    setHero((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        type: heroType,
+        hp: heroData.hp,
+        maxHp: heroData.hp,
+        abilityReady: true,
+        abilityCooldown: 0,
+      };
+    });
+  }, [setSelectedHero]);
+
+  const handleTutorialSpellToggle = useCallback((spellType: SpellType) => {
+    setSelectedSpells((prev) => {
+      const isEquipped = prev.includes(spellType);
+      if (isEquipped) {
+        return prev.filter((s) => s !== spellType);
+      }
+      if (prev.length >= 3) return prev;
+      return [...prev, spellType];
+    });
+  }, [setSelectedSpells]);
+
+  // Keep live spells in sync when selectedSpells changes during tutorial
+  useEffect(() => {
+    if (!showTutorial) return;
+    setSpells(
+      selectedSpells.map((type) => ({
+        type,
+        cooldown: 0,
+        maxCooldown: SPELL_DATA[type]?.cooldown ?? 0,
+      }))
+    );
+  }, [selectedSpells, showTutorial]);
+
+  const encounterQueueRef = useRef(encounterQueue);
+  encounterQueueRef.current = encounterQueue;
+  const encounterIndexRef = useRef(encounterIndex);
+  encounterIndexRef.current = encounterIndex;
+
   const handleEncounterAcknowledge = useCallback(() => {
-    const nextIndex = encounterIndex + 1;
-    if (nextIndex >= encounterQueue.length) {
-      const specialTowerKeys = encounterQueue
+    const queue = encounterQueueRef.current;
+    const idx = encounterIndexRef.current;
+    const nextIndex = idx + 1;
+    if (nextIndex >= queue.length) {
+      const specialTowerKeys = queue
         .filter((e) => e.category === "special_tower")
         .map((e) => e.key.replace("special-tower-", ""));
-      const hazardKeys = encounterQueue
+      const hazardKeys = queue
         .filter((e) => e.category === "hazard")
         .map((e) => e.key.replace("hazard-", ""));
-
       if (specialTowerKeys.length > 0 || hazardKeys.length > 0) {
         tutorial.markLevelEncountersSeen(
           specialTowerKeys as import("../types").SpecialTowerType[],
           hazardKeys as import("../types").HazardType[]
         );
       }
-
-      setEncounterQueue([]);
-      setEncounterIndex(0);
-
-      if (pendingWaveStartRef.current) {
-        pendingWaveStartRef.current = false;
-        startWaveInnerRef.current();
-      }
+      setEncounterExiting(true);
     } else {
       setEncounterIndex(nextIndex);
     }
-  }, [encounterIndex, encounterQueue, tutorial]);
+  }, [tutorial]);
+
+  const ENCOUNTER_AUTO_DISMISS_MS = 8000;
+  const ENCOUNTER_EXIT_DURATION_MS = 300;
+
+  useEffect(() => {
+    if (!encounterExiting) return;
+    const timer = setTimeout(() => {
+      setEncounterQueue([]);
+      setEncounterIndex(0);
+      setEncounterExiting(false);
+    }, ENCOUNTER_EXIT_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [encounterExiting]);
+
+  useEffect(() => {
+    if (encounterQueue.length === 0 || encounterExiting) return;
+    const timer = setTimeout(() => {
+      handleEncounterAcknowledge();
+    }, ENCOUNTER_AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [encounterIndex, encounterQueue.length, encounterExiting, handleEncounterAcknowledge]);
 
   // Start wave function
   const startWaveInner = useCallback(() => {
@@ -2093,8 +2175,6 @@ export function usePrincetonTowerDefenseRuntime() {
       tutorial.markEnemiesSeen(waveEnemyTypes);
       setEncounterQueue(unseenEncounters);
       setEncounterIndex(0);
-      pendingWaveStartRef.current = true;
-      return;
     }
 
     tutorial.markEnemiesSeen(waveEnemyTypes);
@@ -8792,6 +8872,36 @@ export function usePrincetonTowerDefenseRuntime() {
       ctx.restore();
     });
 
+    // ========== INSPECTOR GROUND CIRCLES — below entities ==========
+    if (inspectorActive) {
+      enemies.forEach((enemy) => {
+        renderEnemyInspectIndicator(
+          ctx, enemy, canvas.width, canvas.height, dpr, selectedMap,
+          selectedInspectEnemy?.id === enemy.id,
+          hoveredInspectEnemy === enemy.id,
+          cameraOffset, cameraZoom, "ground",
+        );
+      });
+      troops.forEach((troop) => {
+        if (troop.dead) return;
+        const troopScreen = worldToScreen(troop.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+        renderUnitInspectIndicator(
+          ctx, troopScreen, cameraZoom ?? 1, 18,
+          selectedInspectTroop?.id === troop.id,
+          hoveredInspectTroop === troop.id,
+          "troop", "ground",
+        );
+      });
+      if (hero && !hero.dead) {
+        const heroScreen = worldToScreen(hero.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+        renderUnitInspectIndicator(
+          ctx, heroScreen, cameraZoom ?? 1, 22,
+          selectedInspectHero, hoveredInspectHero,
+          "hero", "ground",
+        );
+      }
+    }
+
     // Render all entities with camera offset and zoom (including special buildings)
     renderables.forEach((r) => {
       switch (r.type) {
@@ -9074,26 +9184,16 @@ export function usePrincetonTowerDefenseRuntime() {
       );
     }
 
-    // ========== INSPECTOR INDICATORS - TOP LAYER ==========
-    // Render inspector indicators as a separate pass so they're always on top
-    // and can be easily hovered/clicked
+    // ========== INSPECTOR OVERLAY — markers & labels above entities ==========
     if (inspectorActive) {
       enemies.forEach((enemy) => {
         renderEnemyInspectIndicator(
-          ctx,
-          enemy,
-          canvas.width,
-          canvas.height,
-          dpr,
-          selectedMap,
+          ctx, enemy, canvas.width, canvas.height, dpr, selectedMap,
           selectedInspectEnemy?.id === enemy.id,
           hoveredInspectEnemy === enemy.id,
-          cameraOffset,
-          cameraZoom
+          cameraOffset, cameraZoom, "overlay",
         );
       });
-
-      // Troop inspect indicators
       troops.forEach((troop) => {
         if (troop.dead) return;
         const troopScreen = worldToScreen(troop.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
@@ -9101,18 +9201,15 @@ export function usePrincetonTowerDefenseRuntime() {
           ctx, troopScreen, cameraZoom ?? 1, 18,
           selectedInspectTroop?.id === troop.id,
           hoveredInspectTroop === troop.id,
-          "rgba(59, 130, 246, 0.7)",
+          "troop", "overlay",
         );
       });
-
-      // Hero inspect indicator
       if (hero && !hero.dead) {
         const heroScreen = worldToScreen(hero.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
         renderUnitInspectIndicator(
           ctx, heroScreen, cameraZoom ?? 1, 22,
-          selectedInspectHero,
-          hoveredInspectHero,
-          "rgba(245, 158, 11, 0.9)",
+          selectedInspectHero, hoveredInspectHero,
+          "hero", "overlay",
         );
       }
     }
@@ -9341,6 +9438,10 @@ export function usePrincetonTowerDefenseRuntime() {
     inspectorActive,
     selectedInspectEnemy,
     hoveredInspectEnemy,
+    hoveredInspectTroop,
+    hoveredInspectHero,
+    selectedInspectTroop,
+    selectedInspectHero,
     getWaveStartBubblesScreenData,
     hoveredWaveBubblePathKey,
     waveStartConfirm,
@@ -9603,12 +9704,6 @@ export function usePrincetonTowerDefenseRuntime() {
 
       // Start click-hold tower placement dragging on canvas.
       if (buildingTower || draggingTower) {
-        if (gameSpeed === 0) {
-          setDraggingTower(null);
-          setBuildingTower(null);
-          setIsBuildDragging(false);
-          return;
-        }
         const towerType = draggingTower?.type || buildingTower;
         if (towerType) {
           setIsBuildDragging(true);
@@ -9635,7 +9730,8 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       // In inspector mode, let handleCanvasClick handle everything
-      if (inspectorActive && gameSpeed === 0) {
+      // Skip if actively placing a tower — tower placement takes priority.
+      if (inspectorActive && gameSpeed === 0 && !buildingTower && !draggingTower) {
         return;
       }
 
@@ -9938,8 +10034,10 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       // ========== INSPECTOR MODE - Handle unit selection ==========
-      // Intercept clicks for enemy/troop/hero selection when inspector is active AND game is paused
-      if (inspectorActive && gameSpeed === 0) {
+      // Intercept clicks for enemy/troop/hero selection when inspector is active AND game is paused.
+      // Friendly units (hero/troops) get a distance bias so they're easier to click
+      // when overlapping enemies during combat.
+      if (inspectorActive && gameSpeed === 0 && !draggingTower && !buildingTower) {
         const worldPos = screenToWorld(
           clickPos,
           width,
@@ -9949,13 +10047,13 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
 
+        const FRIENDLY_BIAS = 12;
         let closestType: "enemy" | "troop" | "hero" | null = null;
         let closestDist = Infinity;
         let closestEnemy: Enemy | null = null;
         let closestTroop: Troop | null = null;
         const clickRadius = 40 / cameraZoom;
 
-        // Check enemies
         for (const enemy of enemies) {
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
           const eData = ENEMY_DATA[enemy.type];
@@ -9972,10 +10070,9 @@ export function usePrincetonTowerDefenseRuntime() {
           }
         }
 
-        // Check hero
         if (hero && !hero.dead) {
           const dist = distance(worldPos, hero.pos);
-          if (dist < 30 + clickRadius && dist < closestDist) {
+          if (dist < 30 + clickRadius && dist - FRIENDLY_BIAS < closestDist) {
             closestDist = dist;
             closestType = "hero";
             closestEnemy = null;
@@ -9983,11 +10080,10 @@ export function usePrincetonTowerDefenseRuntime() {
           }
         }
 
-        // Check troops
         for (const troop of troops) {
           if (troop.dead) continue;
           const dist = distance(worldPos, troop.pos);
-          if (dist < 22 + clickRadius && dist < closestDist) {
+          if (dist < 22 + clickRadius && dist - FRIENDLY_BIAS < closestDist) {
             closestDist = dist;
             closestType = "troop";
             closestEnemy = null;
@@ -9995,7 +10091,6 @@ export function usePrincetonTowerDefenseRuntime() {
           }
         }
 
-        // Clear all selections first
         setSelectedInspectEnemy(null);
         setSelectedInspectTroop(null);
         setSelectedInspectHero(false);
@@ -10007,15 +10102,6 @@ export function usePrincetonTowerDefenseRuntime() {
         } else if (closestType === "troop" && closestTroop) {
           setSelectedInspectTroop(closestTroop);
         }
-        return;
-      }
-
-      // ========== PREVENT TOWER PLACEMENT WHEN PAUSED ==========
-      if (gameSpeed === 0 && (draggingTower || buildingTower)) {
-        // Game is paused - cancel tower placement
-        setDraggingTower(null);
-        setBuildingTower(null);
-        setIsBuildDragging(false);
         return;
       }
 
@@ -10720,23 +10806,17 @@ export function usePrincetonTowerDefenseRuntime() {
         }
 
         // ========== TOWER DRAGGING ON TOUCH ==========
-        if (gameSpeed === 0) {
-          if (draggingTower) {
-            setDraggingTower(null);
-            setBuildingTower(null);
-            setIsBuildDragging(false);
-          }
-        } else {
-          if (isBuildDragging && buildingTower && !draggingTower) {
-            setDraggingTower({ type: buildingTower, pos: { x, y } });
-          } else if (isBuildDragging && draggingTower) {
-            setDraggingTower({ type: draggingTower.type, pos: { x, y } });
-          }
+        if (isBuildDragging && buildingTower && !draggingTower) {
+          setDraggingTower({ type: buildingTower, pos: { x, y } });
+        } else if (isBuildDragging && draggingTower) {
+          setDraggingTower({ type: draggingTower.type, pos: { x, y } });
         }
         return; // Skip hover effects for touch
       }
 
-      // ========== INSPECTOR MODE - Handle enemy hover ==========
+      // ========== INSPECTOR MODE - Handle unit hover ==========
+      // Friendly units (hero/troops) get a distance bias so they're easier
+      // to hover/select when overlapping enemies during combat.
       if (inspectorActive) {
         const mouseWorldPos = screenToWorld(
           { x, y },
@@ -10747,6 +10827,7 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
 
+        const FRIENDLY_BIAS = 12;
         let hoveredEnemy: Enemy | null = null;
         let closestDist = Infinity;
         const hoverRadius = 40 / cameraZoom;
@@ -10754,7 +10835,6 @@ export function usePrincetonTowerDefenseRuntime() {
         for (const enemy of enemies) {
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
           const eData = ENEMY_DATA[enemy.type];
-          // Adjust hitbox position for flying enemies (they render higher up)
           const flyingOffset = eData.flying ? 35 : 0;
           const adjustedEnemyPos = { x: enemyPos.x, y: enemyPos.y - flyingOffset };
           const dist = distance(mouseWorldPos, adjustedEnemyPos);
@@ -10766,23 +10846,21 @@ export function usePrincetonTowerDefenseRuntime() {
           }
         }
 
-        // Check hero hover
         let isHeroHovered = false;
         if (hero && !hero.dead) {
           const heroDist = distance(mouseWorldPos, hero.pos);
-          if (heroDist < 30 + hoverRadius && heroDist < closestDist) {
+          if (heroDist < 30 + hoverRadius && heroDist - FRIENDLY_BIAS < closestDist) {
             closestDist = heroDist;
             hoveredEnemy = null;
             isHeroHovered = true;
           }
         }
 
-        // Check troop hover
         let hoveredTroop: Troop | null = null;
         for (const troop of troops) {
           if (troop.dead) continue;
           const troopDist = distance(mouseWorldPos, troop.pos);
-          if (troopDist < 22 + hoverRadius && troopDist < closestDist) {
+          if (troopDist < 22 + hoverRadius && troopDist - FRIENDLY_BIAS < closestDist) {
             closestDist = troopDist;
             hoveredEnemy = null;
             isHeroHovered = false;
@@ -10817,26 +10895,16 @@ export function usePrincetonTowerDefenseRuntime() {
         }
         setHoveredInspectDecoration(closestDec);
 
-        if (gameSpeed === 0) {
+        if (gameSpeed === 0 && !draggingTower && !buildingTower) {
           return;
         }
       }
 
-      // ========== PREVENT TOWER DRAGGING WHEN PAUSED ==========
-      if (gameSpeed === 0) {
-        // Game is paused - don't allow tower dragging
-        if (draggingTower) {
-          setDraggingTower(null);
-          setBuildingTower(null);
-          setIsBuildDragging(false);
-        }
-      } else {
-        // Game is running - keep classic move-preview behavior, while also supporting hold-drag placement.
-        if (buildingTower && !draggingTower) {
-          setDraggingTower({ type: buildingTower, pos: { x, y } });
-        } else if (draggingTower) {
-          setDraggingTower({ type: draggingTower.type, pos: { x, y } });
-        }
+      // Tower drag preview — works while paused too.
+      if (buildingTower && !draggingTower) {
+        setDraggingTower({ type: buildingTower, pos: { x, y } });
+      } else if (draggingTower) {
+        setDraggingTower({ type: draggingTower.type, pos: { x, y } });
       }
       const mouseWorldPos = screenToWorld(
         { x, y },
@@ -10846,7 +10914,10 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraOffset,
         cameraZoom
       );
-      // Check for tower hover with dynamic hitbox based on tower level/height
+      // ========== HOVER DETECTION (mutually exclusive — one tooltip at a time) ==========
+      // Priority: Tower/Troop > Hero > Special Building > Landmark > Hazard
+
+      // 1. Tower
       const hoveredT = towers.find((t) => {
         const worldPos = gridToWorld(t.pos);
         const screenPos = worldToScreen(
@@ -10861,24 +10932,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return distance({ x, y }, screenPos) < hitboxRadius;
       });
 
-      // Check if hovering near any special building (screen-space for zoom-aware hitbox)
-      const specialTowers = getLevelSpecialTowers(selectedMap);
-      let hoveredSpecial: SpecialTower | null = null;
-      let nearestSpecialDist = Infinity;
-      for (const tower of specialTowers) {
-        const towerWorldPos = gridToWorld(tower.pos);
-        const towerScreenPos = worldToScreen(
-          towerWorldPos, width, height, dpr, cameraOffset, cameraZoom
-        );
-        const dist = distance({ x, y }, towerScreenPos);
-        if (dist < 80 && dist < nearestSpecialDist) {
-          hoveredSpecial = tower;
-          nearestSpecialDist = dist;
-        }
-      }
-      setHoveredSpecialTower(hoveredSpecial);
-
-      // Check for troop hover (to show station range)
+      // 2. Troop (only if no tower — shares hoveredTower state)
       let hoveredTroopOwnerId: string | null = null;
       if (!hoveredT) {
         const hoveredTroop = troops.find((t) => {
@@ -10897,8 +10951,8 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      setHoveredTower(hoveredT?.id || hoveredTroopOwnerId || null);
-
+      // 3. Hero
+      let isHeroHovered = false;
       if (hero && !hero.dead) {
         const heroScreen = worldToScreen(
           hero.pos,
@@ -10908,54 +10962,96 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom
         );
-        setHoveredHero(distance({ x, y }, heroScreen) < 28);
+        isHeroHovered = distance({ x, y }, heroScreen) < 28;
       }
 
-      // ========== LANDMARK & HAZARD HOVER DETECTION ==========
-      // Only check when not hovering a tower/troop (lower priority)
-      if (!hoveredT && !hoveredTroopOwnerId) {
-        const levelData = LEVEL_DATA[selectedMap];
+      // 4. Special building
+      const specialTowers = getLevelSpecialTowers(selectedMap);
+      let hoveredSpecial: SpecialTower | null = null;
+      let nearestSpecialDist = Infinity;
+      for (const tower of specialTowers) {
+        const towerWorldPos = gridToWorld(tower.pos);
+        const towerScreenPos = worldToScreen(
+          towerWorldPos, width, height, dpr, cameraOffset, cameraZoom
+        );
+        const dist = distance({ x, y }, towerScreenPos);
+        if (dist < 80 && dist < nearestSpecialDist) {
+          hoveredSpecial = tower;
+          nearestSpecialDist = dist;
+        }
+      }
 
-        // Check landmarks (decorations that are in LANDMARK_DECORATION_TYPES)
-        let foundLandmark: string | null = null;
-        if (levelData?.decorations) {
-          for (const deco of levelData.decorations) {
-            const decoType = deco.category || deco.type;
-            if (decoType && (LANDMARK_DECORATION_TYPES.has(decoType) || decoType === "statue" || decoType === "demon_statue" || decoType === "obelisk")) {
-              const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
-              const decoWorldPos = getMapDecorationWorldPos(deco);
-              const decoScreen = worldToScreen(decoWorldPos, width, height, dpr, cameraOffset, cameraZoom);
-              const scale =
-                (resolvedPlacement?.scale ?? (deco.size || 1)) * cameraZoom;
-              const hitRadius = scale * 35;
-              const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
-              const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
-              if (distance({ x, y }, hitCenter) < hitRadius) {
-                foundLandmark = decoType;
-                break;
-              }
+      // 5. Landmark
+      let foundLandmark: string | null = null;
+      const levelData = LEVEL_DATA[selectedMap];
+      if (levelData?.decorations) {
+        for (const deco of levelData.decorations) {
+          const decoType = deco.category || deco.type;
+          if (decoType && (LANDMARK_DECORATION_TYPES.has(decoType) || decoType === "statue" || decoType === "demon_statue" || decoType === "obelisk")) {
+            const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+            const decoWorldPos = getMapDecorationWorldPos(deco);
+            const decoScreen = worldToScreen(decoWorldPos, width, height, dpr, cameraOffset, cameraZoom);
+            const scale =
+              (resolvedPlacement?.scale ?? (deco.size || 1)) * cameraZoom;
+            const hitRadius = scale * 35;
+            const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
+            const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
+            if (distance({ x, y }, hitCenter) < hitRadius) {
+              foundLandmark = decoType;
+              break;
             }
           }
         }
+      }
+
+      // 6. Hazard
+      let foundHazard: string | null = null;
+      if (levelData?.hazards) {
+        for (const haz of levelData.hazards) {
+          if (haz.pos) {
+            const hazWorldPos = gridToWorld(haz.pos);
+            const hazScreen = worldToScreen(hazWorldPos, width, height, dpr, cameraOffset, cameraZoom);
+            const hitRadius = (haz.radius || 2) * 24 * cameraZoom;
+            if (distance({ x, y }, hazScreen) < hitRadius) {
+              foundHazard = haz.type;
+              break;
+            }
+          }
+        }
+      }
+
+      // Apply priority — only the highest-priority hover gets state set
+      const hasTowerOrTroop = !!(hoveredT || hoveredTroopOwnerId);
+      setHoveredTower(hoveredT?.id || hoveredTroopOwnerId || null);
+
+      if (hasTowerOrTroop) {
+        setHoveredHero(false);
+        setHoveredSpecialTower(null);
+        setHoveredLandmark(null);
+        setHoveredHazardType(null);
+      } else if (isHeroHovered) {
+        setHoveredHero(true);
+        setHoveredSpecialTower(null);
+        setHoveredLandmark(null);
+        setHoveredHazardType(null);
+      } else if (hoveredSpecial) {
+        setHoveredHero(false);
+        setHoveredSpecialTower(hoveredSpecial);
+        setHoveredLandmark(null);
+        setHoveredHazardType(null);
+      } else if (foundLandmark) {
+        setHoveredHero(false);
+        setHoveredSpecialTower(null);
         setHoveredLandmark(foundLandmark);
-
-        // Check hazards
-        let foundHazard: string | null = null;
-        if (levelData?.hazards) {
-          for (const haz of levelData.hazards) {
-            if (haz.pos) {
-              const hazWorldPos = gridToWorld(haz.pos);
-              const hazScreen = worldToScreen(hazWorldPos, width, height, dpr, cameraOffset, cameraZoom);
-              const hitRadius = (haz.radius || 2) * 24 * cameraZoom;
-              if (distance({ x, y }, hazScreen) < hitRadius) {
-                foundHazard = haz.type;
-                break;
-              }
-            }
-          }
-        }
+        setHoveredHazardType(null);
+      } else if (foundHazard) {
+        setHoveredHero(false);
+        setHoveredSpecialTower(null);
+        setHoveredLandmark(null);
         setHoveredHazardType(foundHazard);
       } else {
+        setHoveredHero(false);
+        setHoveredSpecialTower(null);
         setHoveredLandmark(null);
         setHoveredHazardType(null);
       }
@@ -11199,11 +11295,11 @@ export function usePrincetonTowerDefenseRuntime() {
         case "fireball":
         case "lightning": {
           const level = spellUpgradeLevels[spellType] ?? 0;
-          if (level >= 2) {
+          const useManualTarget = level >= 2 && !spellAutoAim[spellType];
+          if (useManualTarget) {
             setTargetingSpell(spellType);
             enteredTargeting = true;
           } else {
-            // Auto-target: pick center of enemies as the cast point
             const enemyPositions = enemies.map((e) => getEnemyPosWithPath(e, selectedMap));
             const avgX = enemyPositions.reduce((s, p) => s + p.x, 0) / enemyPositions.length;
             const avgY = enemyPositions.reduce((s, p) => s + p.y, 0) / enemyPositions.length;
@@ -11314,8 +11410,13 @@ export function usePrincetonTowerDefenseRuntime() {
       setEnemies,
       setEffects,
       spellUpgradeLevels,
+      spellAutoAim,
     ]
   );
+
+  const toggleSpellAutoAim = useCallback((spellType: SpellType) => {
+    setSpellAutoAim((prev) => ({ ...prev, [spellType]: !prev[spellType] }));
+  }, [setSpellAutoAim]);
 
   const executeTargetedSpell = useCallback(
     (spellType: SpellType, centerWorldPos: Position) => {
@@ -12274,6 +12375,8 @@ export function usePrincetonTowerDefenseRuntime() {
           spentSpellStars={spentSpellStars}
           spellUpgradeLevels={spellUpgradeLevels}
           upgradeSpell={upgradeSpell}
+          spellAutoAim={spellAutoAim}
+          onToggleSpellAutoAim={toggleSpellAutoAim}
           unlockedMaps={unlockedMaps}
           levelStars={levelStars}
           levelStats={levelStats}
@@ -12382,6 +12485,8 @@ export function usePrincetonTowerDefenseRuntime() {
               setCameraOffset={setCameraOffset}
               setCameraZoom={setCameraZoom}
               defaultOffset={selectedLevelData?.camera?.offset}
+              showCameraDpad={getGameSettings().ui.showCameraDpad}
+              showControlsReference={getGameSettings().ui.showControlsReference}
             />
           )}
           {!cameraModeActive && (
@@ -12392,7 +12497,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   if (!tower) return null;
                   return <TowerHoverTooltip tower={tower} position={mousePos} />;
                 })()}
-              {!isTouchDeviceRef.current && hoveredHero && hero && !hero.dead && (
+              {!isTouchDeviceRef.current && hoveredHero && !hoveredTower && hero && !hero.dead && (
                 <HeroHoverTooltip hero={hero} position={mousePos} />
               )}
               {selectedTower &&
@@ -12452,7 +12557,7 @@ export function usePrincetonTowerDefenseRuntime() {
               {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
               {activeSentinelTargetKey && <SentinelTargetingIndicator />}
               {missileMortarTargetingId && <MissileTargetingIndicator />}
-              {!isTouchDeviceRef.current && hoveredSpecialTower && (
+              {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
                 <SpecialBuildingTooltip
                   type={hoveredSpecialTower.type}
                   hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
@@ -12476,10 +12581,10 @@ export function usePrincetonTowerDefenseRuntime() {
                   }
                 />
               )}
-              {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !selectedTower && (
+              {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !hoveredHero && !hoveredSpecialTower && !selectedTower && (
                 <LandmarkTooltip landmarkType={hoveredLandmark} position={mousePos} />
               )}
-              {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !selectedTower && (
+              {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !hoveredHero && !hoveredSpecialTower && !hoveredLandmark && !selectedTower && (
                 <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
               )}
               {inspectorActive && hoveredInspectDecoration && (
@@ -12559,14 +12664,31 @@ export function usePrincetonTowerDefenseRuntime() {
                 );
               })()}
               <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
-                {devMenuOpen && (
-                  <DevMenu
-                    events={gameEventLog.events}
-                    stats={gameEventLog.stats}
-                    onClear={gameEventLog.clear}
-                    onClose={() => setDevMenuOpen(false)}
-                  />
-                )}
+                <div className="flex justify-between items-end px-0">
+                  {/* Left: Enemy encounters (above hero section) */}
+                  <div className="flex-shrink-0">
+                    {!showTutorial && encounterQueue.length > 0 && (
+                      <InlineEncounterPanel
+                        encounters={encounterQueue}
+                        currentIndex={encounterIndex}
+                        onAcknowledge={handleEncounterAcknowledge}
+                        autoDismissMs={ENCOUNTER_AUTO_DISMISS_MS}
+                        exiting={encounterExiting}
+                      />
+                    )}
+                  </div>
+                  {/* Right: Event log (above spells) */}
+                  <div className="flex-shrink-0">
+                    {devMenuOpen && (
+                      <DevMenu
+                        events={gameEventLog.events}
+                        stats={gameEventLog.stats}
+                        onClear={gameEventLog.clear}
+                        onClose={() => setDevMenuOpen(false)}
+                      />
+                    )}
+                  </div>
+                </div>
                 <HeroSpellBar
                   hero={hero}
                   spells={spells}
@@ -12575,6 +12697,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   spellUpgradeLevels={spellUpgradeLevels}
                   targetingSpell={targetingSpell}
                   placingTroop={placingTroop}
+                  spellAutoAim={spellAutoAim}
+                  onToggleSpellAutoAim={toggleSpellAutoAim}
                   toggleHeroSelection={toggleHeroSelection}
                   onUseHeroAbility={triggerHeroAbility}
                   castSpell={castSpell}
@@ -12633,13 +12757,10 @@ export function usePrincetonTowerDefenseRuntime() {
         <TutorialOverlay
           onComplete={handleTutorialComplete}
           onSkip={handleTutorialSkip}
-        />
-      )}
-      {!showTutorial && encounterQueue.length > 0 && (
-        <EncounterTooltip
-          encounters={encounterQueue}
-          currentIndex={encounterIndex}
-          onAcknowledge={handleEncounterAcknowledge}
+          selectedHero={selectedHero}
+          selectedSpells={selectedSpells}
+          onHeroChange={handleTutorialHeroChange}
+          onSpellToggle={handleTutorialSpellToggle}
         />
       )}
     </div>

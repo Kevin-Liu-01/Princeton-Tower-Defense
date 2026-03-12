@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   ArrowUpCircle,
   ArrowDownCircle,
@@ -7,6 +7,7 @@ import {
   ArrowRightCircle,
   ZoomIn,
   ZoomOut,
+  X,
 } from "lucide-react";
 import type { Position } from "../../types";
 import { PANEL, GOLD, panelGradient } from "./theme";
@@ -19,6 +20,8 @@ interface CameraControlsProps {
   setCameraOffset: React.Dispatch<React.SetStateAction<Position>>;
   setCameraZoom: React.Dispatch<React.SetStateAction<number>>;
   defaultOffset?: Position;
+  showCameraDpad?: boolean;
+  showControlsReference?: boolean;
 }
 
 const dpadBtnStyle: React.CSSProperties = {
@@ -31,13 +34,24 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
   setCameraOffset,
   setCameraZoom,
   defaultOffset = { x: -40, y: -60 },
+  showCameraDpad = true,
+  showControlsReference = true,
 }) => {
+  const [dpadDismissed, setDpadDismissed] = useState(false);
+  const [controlsDismissed, setControlsDismissed] = useState(false);
+
+  const cameraDpadVisible = showCameraDpad && !dpadDismissed;
+  const controlsRefVisible = showControlsReference && !controlsDismissed;
+
+  if (!cameraDpadVisible && !controlsRefVisible) return null;
+
   return (
     <div
       className="absolute top-2 right-2 hidden sm:flex flex-col gap-1.5"
       style={{ zIndex: 60 }}
     >
       {/* Camera Panel */}
+      {cameraDpadVisible && (
       <div
         className="p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
         style={{
@@ -48,6 +62,14 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       >
         {/* Inner ghost border */}
         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+
+        <button
+          onClick={() => setDpadDismissed(true)}
+          className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
+          title="Hide camera controls"
+        >
+          <X size={10} className="text-amber-500/60 hover:text-amber-300" />
+        </button>
 
         <div
           className="text-[9px] text-amber-200 mb-1.5 font-bold text-center tracking-[0.15em] uppercase relative z-10"
@@ -125,8 +147,10 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
         </div>
 
       </div>
+      )}
 
       {/* Controls help panel */}
+      {controlsRefVisible && (
       <div
         className="hidden sm:block p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
         style={{
@@ -137,6 +161,14 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
       >
         {/* Inner ghost border */}
         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+
+        <button
+          onClick={() => setControlsDismissed(true)}
+          className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
+          title="Hide controls reference"
+        >
+          <X size={10} className="text-amber-500/60 hover:text-amber-300" />
+        </button>
 
         <div
           className="text-[9px] text-amber-200 font-bold tracking-[0.15em] mb-1.5 text-center uppercase relative z-10"
@@ -167,6 +199,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 };

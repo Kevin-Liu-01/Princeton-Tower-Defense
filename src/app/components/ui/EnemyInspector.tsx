@@ -83,6 +83,8 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
     }
   };
 
+  const liveTroops = troops.filter(t => !t.dead).length;
+
   return (
     <div
       className="absolute top-2 left-2 flex flex-col gap-2"
@@ -90,11 +92,11 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
     >
       <button
         onClick={handleToggle}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg shadow-lg backdrop-blur-sm transition-all relative"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm transition-all relative"
         style={isActive ? {
           background: `linear-gradient(135deg, ${PURPLE_CARD.bgLight}, ${PURPLE_CARD.bgDark})`,
           border: `1.5px solid ${PURPLE_CARD.border}`,
-          boxShadow: `inset 0 0 10px ${PURPLE_CARD.glow}`,
+          boxShadow: `0 0 12px ${PURPLE_CARD.glow}, inset 0 0 10px ${PURPLE_CARD.glow}`,
         } : {
           background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
           border: `1.5px solid ${GOLD.border25}`,
@@ -107,32 +109,47 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
         ) : (
           <Eye size={14} className="text-amber-400" />
         )}
-        <span className={`text-[9px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
-          {isActive ? "EXIT" : "INSPECT"}
+        <span className={`text-[10px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
+          {isActive ? "EXIT INSPECT" : "INSPECT"}
         </span>
       </button>
 
       {isActive && (
         <div
-          className="p-2 rounded-lg shadow-lg backdrop-blur-sm relative"
+          className="p-2.5 rounded-lg shadow-lg backdrop-blur-md relative min-w-[160px]"
           style={{
             background: `linear-gradient(135deg, ${PURPLE_CARD.bgLight}, ${PURPLE_CARD.bgDark})`,
             border: `1.5px solid ${PURPLE_CARD.border}`,
-            boxShadow: `inset 0 0 10px ${PURPLE_CARD.glow}`,
+            boxShadow: `0 0 16px ${PURPLE_CARD.glow}, inset 0 0 10px ${PURPLE_CARD.glow}`,
           }}
         >
           <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${PURPLE_CARD.innerBorder}` }} />
-          <div className="text-[9px] text-purple-300 mb-1 font-bold text-center tracking-wider flex items-center gap-1 justify-center">
-            <AlertTriangle size={10} />
-            PAUSED - CLICK ANY UNIT
+          <div className="text-[10px] text-purple-200 mb-2 font-bold text-center tracking-wider flex items-center gap-1.5 justify-center">
+            <Crosshair size={12} className="text-purple-400" />
+            CLICK ANY UNIT
           </div>
-          <div className="text-[8px] text-purple-400/80 text-center">
-            {enemies.length} enemies{troops.length > 0 ? `, ${troops.filter(t => !t.dead).length} troops` : ""} on field
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[9px]">
+              <span className="text-red-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                Enemies
+              </span>
+              <span className="text-red-300 font-bold">{enemies.length}</span>
+            </div>
+            {liveTroops > 0 && (
+              <div className="flex items-center justify-between text-[9px]">
+                <span className="text-blue-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
+                  Troops
+                </span>
+                <span className="text-blue-300 font-bold">{liveTroops}</span>
+              </div>
+            )}
           </div>
           {selectedEnemy && (
             <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${PURPLE_CARD.border}` }}>
-              <div className="text-[9px] text-purple-200 text-center">
-                Selected: {ENEMY_DATA[selectedEnemy.type]?.name || selectedEnemy.type}
+              <div className="text-[9px] text-purple-200 text-center font-medium">
+                {ENEMY_DATA[selectedEnemy.type]?.name || selectedEnemy.type}
               </div>
             </div>
           )}
@@ -244,18 +261,17 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
         zIndex: 300,
         width: tooltipWidth,
         background: panelGradient,
-        border: `2px solid ${GOLD.border35}`,
-        boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
+        border: "2px solid rgba(239, 68, 68, 0.35)",
+        boxShadow: "0 0 24px rgba(239, 68, 68, 0.12), inset 0 0 12px rgba(239, 68, 68, 0.05)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-      {/* Header */}
+      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(239, 68, 68, 0.1)" }} />
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{
-          background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight})`,
-          borderBottom: `1px solid ${GOLD.border25}`,
+          background: "linear-gradient(90deg, rgba(30, 10, 10, 0.9), rgba(45, 15, 15, 0.7))",
+          borderBottom: "1px solid rgba(239, 68, 68, 0.25)",
         }}
       >
         <div className="flex items-center gap-3">
@@ -266,7 +282,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <EnemySprite type={enemy.type} size={44} animated />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-purple-100">{eData.name}</h3>
+            <h3 className="font-bold text-lg text-red-100">{eData.name}</h3>
             <div className="flex items-center gap-2">
               {eData.isBoss && (
                 <span className="text-[9px] px-1.5 py-0.5 bg-red-900/60 rounded text-red-300 font-bold">BOSS</span>
@@ -281,7 +297,6 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Lives Cost Badge */}
           <div className="flex items-center gap-1 px-2 py-1 bg-rose-950/60 rounded border border-rose-800/50">
             <Heart size={12} className="text-rose-400" />
             <span className="text-rose-300 font-bold text-xs">{eData.liveCost || 1}</span>
@@ -289,9 +304,9 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-all hover:scale-110"
-            style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+            style={{ background: PANEL.bgWarmMid, border: "1px solid rgba(239, 68, 68, 0.25)" }}
           >
-            <X size={18} className="text-purple-400" />
+            <X size={18} className="text-red-400" />
           </button>
         </div>
       </div>
@@ -629,32 +644,32 @@ export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
         zIndex: 300,
         width: tooltipWidth,
         background: panelGradient,
-        border: `2px solid ${GOLD.border35}`,
-        boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
+        border: "2px solid rgba(59, 130, 246, 0.4)",
+        boxShadow: "0 0 24px rgba(59, 130, 246, 0.15), inset 0 0 12px rgba(59, 130, 246, 0.06)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-      {/* Header */}
+      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(59, 130, 246, 0.12)" }} />
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{
-          background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight})`,
-          borderBottom: `1px solid ${GOLD.border25}`,
+          background: "linear-gradient(90deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7))",
+          borderBottom: "1px solid rgba(59, 130, 246, 0.25)",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-lg border-2 flex items-center justify-center"
-            style={{ borderColor: tData.color, backgroundColor: tData.color + "20" }}
+            style={{ borderColor: "rgba(59, 130, 246, 0.6)", backgroundColor: "rgba(59, 130, 246, 0.12)" }}
           >
-            <Users size={20} style={{ color: tData.color }} />
+            <Users size={20} className="text-blue-400" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-amber-100">{tData.name}</h3>
+            <h3 className="font-bold text-lg text-blue-100">{tData.name}</h3>
             <div className="flex items-center gap-2">
+              <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/60 rounded text-blue-300 font-bold">TROOP</span>
               {troop.ownerType && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/60 rounded text-blue-300">{troop.ownerType.toUpperCase()}</span>
+                <span className="text-[9px] px-1.5 py-0.5 bg-slate-800/60 rounded text-slate-300">{troop.ownerType.toUpperCase()}</span>
               )}
               {(troop.overrideIsRanged || tData.isRanged) && (
                 <span className="text-[9px] px-1.5 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>
@@ -667,7 +682,7 @@ export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
           className="p-1.5 rounded-lg transition-all hover:scale-110"
           style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
         >
-          <X size={18} className="text-purple-400" />
+          <X size={18} className="text-blue-400" />
         </button>
       </div>
 
@@ -751,24 +766,23 @@ export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
         zIndex: 300,
         width: tooltipWidth,
         background: panelGradient,
-        border: `2px solid ${GOLD.border35}`,
-        boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
+        border: "2px solid rgba(245, 158, 11, 0.4)",
+        boxShadow: "0 0 24px rgba(245, 158, 11, 0.15), inset 0 0 12px rgba(245, 158, 11, 0.06)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-      {/* Header */}
+      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(245, 158, 11, 0.12)" }} />
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{
-          background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight})`,
-          borderBottom: `1px solid ${GOLD.border25}`,
+          background: "linear-gradient(90deg, rgba(30, 20, 10, 0.9), rgba(45, 30, 15, 0.7))",
+          borderBottom: "1px solid rgba(245, 158, 11, 0.3)",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-lg border-2 flex items-center justify-center text-2xl"
-            style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)" }}
+            style={{ borderColor: "rgba(245, 158, 11, 0.7)", backgroundColor: "rgba(245, 158, 11, 0.1)" }}
           >
             <HeroIcon type={hero.type} size={24} />
           </div>
@@ -782,9 +796,9 @@ export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
         <button
           onClick={onClose}
           className="p-1.5 rounded-lg transition-all hover:scale-110"
-          style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+          style={{ background: PANEL.bgWarmMid, border: "1px solid rgba(245, 158, 11, 0.3)" }}
         >
-          <X size={18} className="text-purple-400" />
+          <X size={18} className="text-amber-400" />
         </button>
       </div>
 

@@ -2220,28 +2220,6 @@ export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
   }
 }
 
-/**
- * Approximate tip height (pixels above screenPos.y at zoom=1).
- * Derived from each renderer's primary height parameters:
- *   cannon/lab/club/library: baseHeight = base + level * perLevel
- *   arch: pillarHeight + yShift
- *   station: main structure + yShift
- *   mortar: depotH + base platform
- */
-export function getTowerVisualHeight(tower: Tower): number {
-  const level = tower.level;
-  switch (tower.type) {
-    case "cannon":  return 24 + level * 10;
-    case "lab":     return 25 + level * 8;
-    case "club":    return 25 + level * 8;
-    case "library": return 30 + level * 10;
-    case "arch":    return 25 + level * 6 + 8;
-    case "station": return 30 + level * 6 + 10;
-    case "mortar":  return (22 + level * 10) * 0.42 + 15;
-    default:        return 30;
-  }
-}
-
 export function drawGroundTransition(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,

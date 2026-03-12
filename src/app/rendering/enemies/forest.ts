@@ -520,7 +520,7 @@ export function drawAthleteEnemy(
   });
 }
 
-export function drawProtestorEnemy(
+export function drawTigerFanEnemy(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -532,7 +532,7 @@ export function drawProtestorEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  // CAMPUS PROTESTOR - Passionate student activist with detailed sign and outfit
+  // TIGER FAN - Passionate student with detailed sign and outfit
   const isAttacking = attackPhase > 0;
   const attackIntensity = isAttacking ? 1.4 : 1; // More vigorous when attacking
   const signWave =
@@ -1156,37 +1156,4 @@ export function drawProtestorEnemy(
     }
   }
 
-  // --- ANIMATED EFFECTS ---
-
-  // Protest leaf/debris swirl
-  drawLeafSwirl(ctx, headX, y - size * 0.1 - marchBob, size * 0.25, time, zoom, {
-    color: "rgba(180, 120, 40, 0.45)",
-    colorAlt: "rgba(100, 160, 50, 0.4)",
-    count: 5,
-    speed: 1.8,
-    maxAlpha: isAttacking ? 0.55 : 0.35,
-  });
-
-  // Floating sign fragments / debris orbiting body
-  drawShiftingSegments(ctx, headX, y - size * 0.15 - marchBob, size, time, zoom, {
-    color: "#f0f0e8",
-    colorAlt: bodyColor,
-    count: 5,
-    orbitRadius: 0.38,
-    segmentSize: 0.03,
-    orbitSpeed: 1.2,
-    shape: "shard",
-  });
-
-  // Leaves / paper particles orbiting
-  drawOrbitingDebris(ctx, headX, y - size * 0.05 - marchBob, size, time, zoom, {
-    color: "rgba(100, 160, 60, 0.7)",
-    glowColor: "rgba(140, 180, 80, 0.2)",
-    count: 6,
-    speed: 1.6,
-    particleSize: 0.018,
-    minRadius: 0.28,
-    maxRadius: 0.48,
-    trailLen: 2,
-  });
 }

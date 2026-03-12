@@ -197,7 +197,7 @@ export type EnemyType =
   | "dragon"
   // Region-specific common troops - Forest
   | "athlete"
-  | "protestor"
+  | "tiger_fan"
   // Region-specific common troops - Swamp
   | "bog_creature"
   | "will_o_wisp"
@@ -218,7 +218,7 @@ export type EnemyType =
 // Enemy categories for organization
 export type EnemyCategory =
   | "academic" // Academic progression: writing sem, thesis, grad apps, etc.
-  | "campus" // Campus life: athletes, protestors, recruiters, etc.
+  | "campus" // Campus life: athletes, tiger fans, recruiters, etc.
   | "ranged" // Ranged attackers
   | "flying" // Flying enemies
   | "boss" // Major boss enemies

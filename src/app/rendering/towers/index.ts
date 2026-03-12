@@ -58,8 +58,8 @@ export function renderTower(
 
   if (isSelected || isHovered) {
     const glowFnd = getTowerFoundationSize(tower);
-    const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.05;
-    const glowRy = glowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.05;
+    const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.7;
+    const glowRy = glowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.7;
     const innerRx = glowRx * 0.9;
     const innerRy = glowRy * 0.9;
 

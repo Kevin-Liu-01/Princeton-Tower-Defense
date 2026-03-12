@@ -38,7 +38,7 @@ export type EnemyType =
   | "dragon"
   // Region-specific common troops - Forest
   | "athlete"
-  | "protestor"
+  | "tiger_fan"
   // Region-specific common troops - Swamp
   | "bog_creature"
   | "will_o_wisp"
@@ -8093,8 +8093,8 @@ export const EnemySprite: React.FC<{
         ctx.restore();
         break;
       }
-      case "protestor": {
-        // CAMPUS PROTESTOR - Passionate figure with sign
+      case "tiger_fan": {
+        // TIGER FAN - Passionate figure with sign
         const chantBob = Math.sin(t * 3) * 1.5;
         const signWave = Math.sin(t * 2) * 5;
 

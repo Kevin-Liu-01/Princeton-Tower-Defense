@@ -16,7 +16,7 @@ const HEAVY_GROUND_SLAM_TYPES = new Set<EnemyType>([
   "gradstudent",
   "ember_guard",
   "bog_creature",
-  "protestor",
+  "tiger_fan",
 ]);
 
 const SLASH_ATTACK_TYPES = new Set<EnemyType>([

@@ -69,3 +69,9 @@ canvas {
 ::-webkit-scrollbar {
   display: none;
 }
+
+html,
+body {
+  overflow: hidden;
+  height: 100dvh;
+}

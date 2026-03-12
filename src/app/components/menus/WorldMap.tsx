@@ -143,6 +143,8 @@ interface WorldMapProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  spellAutoAim: Partial<Record<SpellType, boolean>>;
+  onToggleSpellAutoAim: (spellType: SpellType) => void;
   gameState: GameState;
   /** When Battle is clicked without hero/spells selected, run this to pick random loadout and start */
   onStartWithRandomLoadout?: () => void;
@@ -179,6 +181,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  spellAutoAim,
+  onToggleSpellAutoAim,
   onStartWithRandomLoadout,
   isDevMode,
   onDevModeChange,
@@ -195,7 +199,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCreator, setShowCreator] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
-  const [loadoutCompact, setLoadoutCompact] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
@@ -203,6 +206,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const animTimeRef = useRef(0);
   const [mapHeight, setMapHeight] = useState(500);
   const [containerWidth, setContainerWidth] = useState(MAP_WIDTH);
+  const [loadoutCompact, setLoadoutCompact] = useState(true);
   const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
   const [isMobile] = useState(
@@ -653,12 +657,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   }
 
   return (
-    <div className="w-full h-screen flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}` }}
+    <div className="w-full h-dvh flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}` }}
     >
       {/* TOP BAR */}
       <OrnateFrame
         className="flex-shrink-0 overflow-hidden rounded-xl mx-1.5 sm:mx-3 mt-1.5 sm:mt-3 border-2 border-amber-700/50 shadow-xl"
-        cornerSize={25}
+        cornerSize={22}
+        borderVariant="compact"
         showBorders={true}
         showSideBorders={true}
         showTopBottomBorders={false}
@@ -943,7 +948,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 {/* Campaign header + progress */}
                 <div className="flex items-center gap-2 mb-1.5">
                   <MapIcon size={14} className="text-amber-400" />
-                  <span className="text-xs font-bold text-amber-100 tracking-wide">Campaign</span>
+                  <span className="text-xs font-bold text-amber-100 tracking-wide">CAMPAIGN</span>
                   <div className="flex-1" />
                   <div className="flex items-center gap-1">
                     <Star size={10} className="text-yellow-400 fill-yellow-400" />
@@ -1531,256 +1536,356 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         </div>
         {/* RIGHT: Map + Loadout column */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-        <div className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
-          <OrnateFrame
-            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl min-h-0"
-            cornerSize={28}
-            showBorders={true}
-          >
-            <div
-              ref={containerRef}
-              className="absolute inset-0"
+          <div className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+            <OrnateFrame
+              className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl min-h-0"
+              cornerSize={28}
+              showBorders={true}
             >
               <div
-                ref={scrollContainerRef}
-                className="absolute h-full inset-0 overflow-auto z-10"
-                style={{ cursor: dragCursor ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
-                onMouseDown={handleDragStart}
-                onMouseMove={handleDragMove}
-                onMouseUp={handleDragEnd}
-                onMouseLeave={handleDragEnd}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                ref={containerRef}
+                className="absolute inset-0"
               >
                 <div
-                  ref={canvasWrapperRef}
-                  className="relative game-start-fade"
-                  style={{
-                    width: `${displayW}px`,
-                    height: `${displayH}px`,
-                    margin: displayW <= containerWidth ? '0 auto' : undefined,
-                  }}
+                  ref={scrollContainerRef}
+                  className="absolute h-full inset-0 overflow-auto z-10"
+                  style={{ cursor: dragCursor ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
                 >
-                  <canvas
-                    ref={canvasRef}
-                    className="block"
-                    style={{ cursor: dragCursor ? 'grabbing' : 'grab' }}
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={() => setHoveredLevel(null)}
-                    onClick={handleClick}
-                  />
-                  {selectedLevel && (() => {
-                    const worldLevel = visibleWorldLevels.find((l) => l.id === selectedLevel);
-                    if (!worldLevel) return null;
-                    const scale = mapScale;
-                    const yMap = getY(worldLevel.y);
-                    const nodeSize = 28;
-                    const btnWidth = 120;
-                    const btnHeight = 38;
-                    const gap = 8;
-                    const tooltipBelow = worldLevel.y < 50;
-                    const centerXPx = worldLevel.x * scale;
-                    const btnTopPx = tooltipBelow
-                      ? (yMap - nodeSize - gap - btnHeight) * scale
-                      : (yMap + nodeSize + gap) * scale;
-                    const shieldPad = 14;
-                    const handleBattleClick = (e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      if (canStart) startGame();
-                      else onStartWithRandomLoadout?.();
-                    };
-                    return (
-                      <div
-                        className="absolute z-40 pointer-events-auto"
-                        style={{
-                          left: `${centerXPx - (btnWidth * scale) / 2 - shieldPad}px`,
-                          top: `${btnTopPx - shieldPad}px`,
-                          width: `${btnWidth * scale + shieldPad * 2}px`,
-                          height: `${btnHeight * scale + shieldPad * 2}px`,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        onMouseDown={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={handleBattleClick}
-                          className="absolute rounded-lg font-bold transition-all overflow-hidden group hover:brightness-125 hover:scale-105 active:scale-95"
+                  <div
+                    ref={canvasWrapperRef}
+                    className="relative game-start-fade"
+                    style={{
+                      width: `${displayW}px`,
+                      height: `${displayH}px`,
+                      margin: displayW <= containerWidth ? '0 auto' : undefined,
+                    }}
+                  >
+                    <canvas
+                      ref={canvasRef}
+                      className="block"
+                      style={{ cursor: dragCursor ? 'grabbing' : 'grab' }}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={() => setHoveredLevel(null)}
+                      onClick={handleClick}
+                    />
+                    {selectedLevel && (() => {
+                      const worldLevel = visibleWorldLevels.find((l) => l.id === selectedLevel);
+                      if (!worldLevel) return null;
+                      const scale = mapScale;
+                      const yMap = getY(worldLevel.y);
+                      const nodeSize = 28;
+                      const btnWidth = 120;
+                      const btnHeight = 38;
+                      const gap = 8;
+                      const tooltipBelow = worldLevel.y < 50;
+                      const centerXPx = worldLevel.x * scale;
+                      const btnTopPx = tooltipBelow
+                        ? (yMap - nodeSize - gap - btnHeight) * scale
+                        : (yMap + nodeSize + gap) * scale;
+                      const shieldPad = 14;
+                      const handleBattleClick = (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        if (canStart) startGame();
+                        else onStartWithRandomLoadout?.();
+                      };
+                      return (
+                        <div
+                          className="absolute z-40 pointer-events-auto"
                           style={{
-                            left: `${shieldPad}px`,
-                            top: `${shieldPad}px`,
-                            width: `${btnWidth * scale}px`,
-                            height: `${btnHeight * scale}px`,
-                            background: `linear-gradient(180deg, rgba(200,150,30,0.97) 0%, rgba(160,105,15,0.97) 50%, rgba(130,80,10,0.97) 100%)`,
-                            border: `2px solid rgba(255,210,80,0.7)`,
-                            borderRadius: '8px',
-                            boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
-                            color: "rgba(253,230,138,0.9)",
-                            textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
+                            left: `${centerXPx - (btnWidth * scale) / 2 - shieldPad}px`,
+                            top: `${btnTopPx - shieldPad}px`,
+                            width: `${btnWidth * scale + shieldPad * 2}px`,
+                            height: `${btnHeight * scale + shieldPad * 2}px`,
                           }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid rgba(255,230,140,0.2)` }} />
-                          <span className="flex items-center justify-center gap-1.5 relative z-10 text-xs font-black tracking-widest uppercase">
-                            <Swords size={13} />
-                            BATTLE
-                            <ChevronRight size={14} className="-ml-0.5" />
-                          </span>
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* MOBILE/TABLET HERO & SPELL FLOATING CIRCLES */}
-              <div className="flex xl:hidden absolute w-full bottom-0 left-0 right-0 pointer-events-none z-20">
-                <div className="w-full pointer-events-auto">
-                  <MobileLoadoutBar
-                    selectedHero={selectedHero}
-                    setSelectedHero={setSelectedHero}
-                    selectedSpells={selectedSpells}
-                    toggleSpell={toggleSpell}
-                    onOpenHeroCodex={() => openCodexTo("heroes")}
-                    onOpenSpellCodex={() => openCodexTo("spells")}
-                    availableSpellStars={availableSpellStars}
-                    totalSpellStarsEarned={totalSpellStarsEarned}
-                    spentSpellStars={spentSpellStars}
-                    spellUpgradeLevels={spellUpgradeLevels}
-                    upgradeSpell={upgradeSpell}
-                  />
-                </div>
-              </div>
-            </div>
-          </OrnateFrame>
-        </div>
-
-        {/* DESKTOP: LOADOUT BAR (below map, inside right column) */}
-        <div className="hidden xl:block flex-shrink-0 px-1.5 sm:px-3 pb-1.5 sm:pb-3">
-          <OrnateFrame
-            className="rounded-xl border-2 border-amber-600/50 shadow-xl overflow-hidden"
-            cornerSize={20}
-            showBorders={true}
-            showSideBorders={true}
-            showTopBottomBorders={false}
-          >
-            <div
-              className="relative"
-              style={{
-                background: panelGradient,
-                boxShadow: `inset 0 0 20px ${GOLD.glow04}`,
-              }}
-            >
-              <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: dividerGradient }} />
-
-              <div ref={bottomPanelRef} className="flex items-stretch gap-2 px-3 py-2">
-                {/* Guide / Codex Quick Links */}
-                <div className="flex flex-col flex-shrink-0 relative">
-                  {/* Circular codex buttons in a column */}
-                  <div className="flex flex-col items-center gap-1.5 py-1">
-                    {([
-                      { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                      { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                      { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
-                      { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
-                    ]).map((item) => (
-                      <button
-                        key={item.tab}
-                        onClick={() => openCodexTo(item.tab)}
-                        className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                        style={{
-                          background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
-                          border: `1.5px solid ${item.border}`,
-                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
-                          color: item.color,
-                        }}
-                        title={item.label}
-                      >
-                        {item.icon}
-                        <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                          style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
-                          {item.label}
-                        </span>
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => {
-                        const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
-                        if (unlockedLevelsList.length > 0) {
-                          const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                          handleLevelClick(farthestLevel.id);
-                        }
-                      }}
-                      className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                      style={{
-                        background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
-                        border: '1.5px solid rgba(200,160,60,0.5)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
-                        color: '#fbbf24',
-                      }}
-                      title="Defend the Realm"
-                    >
-                      <Swords size={13} />
-                      <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                        style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
-                        Battle
-                      </span>
-                    </button>
+                          <button
+                            type="button"
+                            onClick={handleBattleClick}
+                            className="absolute rounded-lg font-bold transition-all overflow-hidden group hover:brightness-125 hover:scale-105 active:scale-95"
+                            style={{
+                              left: `${shieldPad}px`,
+                              top: `${shieldPad}px`,
+                              width: `${btnWidth * scale}px`,
+                              height: `${btnHeight * scale}px`,
+                              background: `linear-gradient(180deg, rgba(200,150,30,0.97) 0%, rgba(160,105,15,0.97) 50%, rgba(130,80,10,0.97) 100%)`,
+                              border: `2px solid rgba(255,210,80,0.7)`,
+                              borderRadius: '8px',
+                              boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
+                              color: "rgba(253,230,138,0.9)",
+                              textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid rgba(255,230,140,0.2)` }} />
+                            <span className="flex items-center justify-center gap-1.5 relative z-10 text-xs font-black tracking-widest uppercase">
+                              <Swords size={13} />
+                              BATTLE
+                              <ChevronRight size={14} className="-ml-0.5" />
+                            </span>
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
-                {/* Hero Selector */}
-                <HeroSelector
-                  selectedHero={selectedHero}
-                  setSelectedHero={setSelectedHero}
-                  hoveredHero={hoveredHero}
-                  setHoveredHero={setHoveredHero}
-                  onOpenCodex={() => openCodexTo("heroes")}
-                  compact={loadoutCompact}
-                />
-
-                {/* Spell Selector */}
-                <SpellSelector
-                  selectedSpells={selectedSpells}
-                  toggleSpell={toggleSpell}
-                  hoveredSpell={hoveredSpell}
-                  setHoveredSpell={setHoveredSpell}
-                  availableSpellStars={availableSpellStars}
-                  totalSpellStarsEarned={totalSpellStarsEarned}
-                  spentSpellStars={spentSpellStars}
-                  spellUpgradeLevels={spellUpgradeLevels}
-                  upgradeSpell={upgradeSpell}
-                  onOpenCodex={() => openCodexTo("spells")}
-                  compact={loadoutCompact}
-                />
-
-                {/* Compact toggle */}
-                <div className="flex flex-col items-center justify-center flex-shrink-0">
-                  <button
-                    onClick={() => setLoadoutCompact(!loadoutCompact)}
-                    className="flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 hover:scale-110 hover:brightness-125"
-                    style={{
-                      background: loadoutCompact
-                        ? 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.5), rgba(20,16,10,0.8))'
-                        : 'radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))',
-                      border: `1.5px solid ${loadoutCompact ? 'rgba(180,140,60,0.5)' : 'rgba(100,80,50,0.3)'}`,
-                      boxShadow: loadoutCompact ? '0 0 8px rgba(180,140,60,0.2)' : 'none',
-                    }}
-                    title={loadoutCompact ? "Expand loadout" : "Compact loadout"}
-                  >
-                    {loadoutCompact ? (
-                      <ChevronLeft size={14} className="text-amber-400" />
-                    ) : (
-                      <ChevronRight size={14} className="text-amber-400/60" />
-                    )}
-                  </button>
+                {/* MOBILE/TABLET HERO & SPELL FLOATING CIRCLES */}
+                <div className="flex xl:hidden absolute w-full bottom-0 left-0 right-0 pointer-events-none z-20">
+                  <div className="w-full pointer-events-auto">
+                    <MobileLoadoutBar
+                      selectedHero={selectedHero}
+                      setSelectedHero={setSelectedHero}
+                      selectedSpells={selectedSpells}
+                      toggleSpell={toggleSpell}
+                      onOpenHeroCodex={() => openCodexTo("heroes")}
+                      onOpenSpellCodex={() => openCodexTo("spells")}
+                      availableSpellStars={availableSpellStars}
+                      totalSpellStarsEarned={totalSpellStarsEarned}
+                      spentSpellStars={spentSpellStars}
+                      spellUpgradeLevels={spellUpgradeLevels}
+                      upgradeSpell={upgradeSpell}
+                    />
+                  </div>
                 </div>
               </div>
+            </OrnateFrame>
+          </div>
 
-              <div className="h-px opacity-40" style={{ background: dividerGradient }} />
-            </div>
-          </OrnateFrame>
-        </div>
+          {/* DESKTOP: LOADOUT BAR (below map, inside right column) */}
+          <div className="hidden xl:block flex-shrink-0 px-1.5 sm:px-3 pb-1.5 sm:pb-3">
+            <OrnateFrame
+              className="rounded-xl border-2 border-amber-600/50 shadow-xl overflow-hidden"
+              cornerSize={20}
+              borderVariant="compact"
+              showBorders={true}
+              showSideBorders={true}
+              showTopBottomBorders={false}
+            >
+              <div
+                className="relative"
+                style={{
+                  background: panelGradient,
+                  boxShadow: `inset 0 0 20px ${GOLD.glow04}`,
+                }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: dividerGradient }} />
+
+                <div ref={bottomPanelRef}>
+                  {loadoutCompact ? (
+                    /* ── Compact: wheel carousels ── */
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      {/* Guide / Codex Quick Links — horizontal row */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {([
+                          { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
+                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
+                        ]).map((item) => (
+                          <button
+                            key={item.tab}
+                            onClick={() => openCodexTo(item.tab)}
+                            className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                            style={{
+                              background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
+                              border: `1.5px solid ${item.border}`,
+                              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
+                              color: item.color,
+                            }}
+                            title={item.label}
+                          >
+                            {item.icon}
+                            <span className="absolute bottom-full mb-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                              style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
+                              {item.label}
+                            </span>
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => {
+                            const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
+                            if (unlockedLevelsList.length > 0) {
+                              const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                              handleLevelClick(farthestLevel.id);
+                            }
+                          }}
+                          className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                          style={{
+                            background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
+                            border: '1.5px solid rgba(200,160,60,0.5)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
+                            color: '#fbbf24',
+                          }}
+                          title="Defend the Realm"
+                        >
+                          <Swords size={13} />
+                          <span className="absolute bottom-full mb-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                            style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
+                            Battle
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="w-px h-8 flex-shrink-0" style={{ background: 'linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)' }} />
+
+                      {/* Hero Selector — wheel carousel */}
+                      <HeroSelector
+                        selectedHero={selectedHero}
+                        setSelectedHero={setSelectedHero}
+                        hoveredHero={hoveredHero}
+                        setHoveredHero={setHoveredHero}
+                        onOpenCodex={() => openCodexTo("heroes")}
+                        compact
+                      />
+
+                      {/* Divider */}
+                      <div className="w-px h-8 flex-shrink-0" style={{ background: 'linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)' }} />
+
+                      {/* Spell Selector — wheel carousel */}
+                      <SpellSelector
+                        selectedSpells={selectedSpells}
+                        toggleSpell={toggleSpell}
+                        hoveredSpell={hoveredSpell}
+                        setHoveredSpell={setHoveredSpell}
+                        availableSpellStars={availableSpellStars}
+                        totalSpellStarsEarned={totalSpellStarsEarned}
+                        spentSpellStars={spentSpellStars}
+                        spellUpgradeLevels={spellUpgradeLevels}
+                        upgradeSpell={upgradeSpell}
+                        spellAutoAim={spellAutoAim}
+                        onToggleSpellAutoAim={onToggleSpellAutoAim}
+                        onOpenCodex={() => openCodexTo("spells")}
+                        compact
+                      />
+
+                      {/* Toggle to expanded */}
+                      <button
+                        onClick={() => setLoadoutCompact(false)}
+                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
+                        style={{
+                          background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.4), rgba(20,16,10,0.8))',
+                          border: '1.5px solid rgba(180,140,60,0.35)',
+                          boxShadow: '0 0 6px rgba(180,140,60,0.12)',
+                        }}
+                        title="Expand loadout"
+                      >
+                        <ChevronLeft size={12} className="text-amber-400/70" />
+                      </button>
+                    </div>
+                  ) : (
+                    /* ── Expanded: full two-row layout ── */
+                    <div className="flex items-stretch gap-2 px-3 py-2">
+                      {/* Guide / Codex Quick Links — vertical column */}
+                      <div className="flex flex-col flex-shrink-0 relative">
+                        <div className="flex flex-col items-center gap-1.5 py-1">
+                          {([
+                            { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                            { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
+                            { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
+                            { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
+                          ]).map((item) => (
+                            <button
+                              key={item.tab}
+                              onClick={() => openCodexTo(item.tab)}
+                              className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                              style={{
+                                background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
+                                border: `1.5px solid ${item.border}`,
+                                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
+                                color: item.color,
+                              }}
+                              title={item.label}
+                            >
+                              {item.icon}
+                              <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                                style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
+                                {item.label}
+                              </span>
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => {
+                              const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
+                              if (unlockedLevelsList.length > 0) {
+                                const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                                handleLevelClick(farthestLevel.id);
+                              }
+                            }}
+                            className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                            style={{
+                              background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
+                              border: '1.5px solid rgba(200,160,60,0.5)',
+                              boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
+                              color: '#fbbf24',
+                            }}
+                            title="Defend the Realm"
+                          >
+                            <Swords size={13} />
+                            <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                              style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
+                              Battle
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Hero Selector — expanded */}
+                      <HeroSelector
+                        selectedHero={selectedHero}
+                        setSelectedHero={setSelectedHero}
+                        hoveredHero={hoveredHero}
+                        setHoveredHero={setHoveredHero}
+                        onOpenCodex={() => openCodexTo("heroes")}
+                      />
+
+                      {/* Spell Selector — expanded */}
+                      <SpellSelector
+                        selectedSpells={selectedSpells}
+                        toggleSpell={toggleSpell}
+                        hoveredSpell={hoveredSpell}
+                        setHoveredSpell={setHoveredSpell}
+                        availableSpellStars={availableSpellStars}
+                        totalSpellStarsEarned={totalSpellStarsEarned}
+                        spentSpellStars={spentSpellStars}
+                        spellUpgradeLevels={spellUpgradeLevels}
+                        upgradeSpell={upgradeSpell}
+                        spellAutoAim={spellAutoAim}
+                        onToggleSpellAutoAim={onToggleSpellAutoAim}
+                        onOpenCodex={() => openCodexTo("spells")}
+                      />
+
+                      {/* Toggle to compact */}
+                      <div className="flex flex-col items-center justify-center flex-shrink-0">
+                        <button
+                          onClick={() => setLoadoutCompact(true)}
+                          className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
+                          style={{
+                            background: 'radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))',
+                            border: '1.5px solid rgba(100,80,50,0.3)',
+                          }}
+                          title="Compact loadout"
+                        >
+                          <ChevronRight size={12} className="text-amber-400/60" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px opacity-40" style={{ background: dividerGradient }} />
+              </div>
+            </OrnateFrame>
+          </div>
         </div>
       </div>
 

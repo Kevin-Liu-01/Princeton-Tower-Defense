@@ -11,7 +11,7 @@ import {
   UsersIcon,
   TargetIcon,
   GaugeIcon,
-  PlusCircle,
+  GripVertical,
   Grab,
 } from "lucide-react";
 import type { TowerType, DraggingTower } from "../../types";
@@ -102,8 +102,10 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   return (
     <OrnateFrame
       className="border-2 border-amber-700/50 shadow-xl backdrop-blur-sm"
-      cornerSize={28}
-      showTopBottomBorders={false}
+      cornerSize={24}
+      cornerVariant="compact"
+      sideBorderVariant="compact"
+      topBottomBorderVariant="compact"
     >
       <div
         data-tutorial="build-menu"
@@ -227,8 +229,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                         : `inset 0 0 12px ${GOLD.glow04}`,
                     }}
                   >
-                    {/* Role accent — thin colored bottom strip */}
-                    <div className="absolute bottom-0 left-[10px] right-[10px] h-[2px] rounded-b-full" style={{ background: role.accent }} />
+                    {/* Role accent — glowing bottom edge */}
+                    <div className="absolute bottom-0 left-3 right-3 h-px rounded-full" style={{
+                      background: `linear-gradient(90deg, transparent, ${role.accent} 30%, ${role.text} 50%, ${role.accent} 70%, transparent)`,
+                    }} />
+                    <div className="absolute bottom-0 left-6 right-6 h-[3px] rounded-full blur-[2px]" style={{
+                      background: `linear-gradient(90deg, transparent, ${role.accent} 40%, transparent)`,
+                    }} />
 
                     <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
                       border: isSelected ? `1px solid ${GOLD.accentBorder15}` : canUse ? `1px solid ${GOLD.innerBorder10}` : "none",
@@ -288,7 +295,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       {isSelected ? (
                         <Grab size={18} className="text-amber-400 absolute bottom-1.5 right-1.5" />
                       ) : (
-                        <PlusCircle size={18} className="text-amber-600 absolute bottom-1.5 right-1.5" />
+                        <GripVertical size={16} className="text-amber-600/70 absolute bottom-2 right-1" />
                       )}
                     </div>
                   </button>

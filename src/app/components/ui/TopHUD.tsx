@@ -18,9 +18,6 @@ import {
   Camera,
   Lock,
   TerminalSquare,
-  Skull,
-  Swords,
-  Shield,
 } from "lucide-react";
 import {
   getPerformanceSettings,
@@ -67,15 +64,15 @@ function getLivesTheme(percent: number, flashing: boolean) {
   }
   if (percent > 30) {
     return {
-      bg: "linear-gradient(135deg, rgba(60,45,18,0.8), rgba(45,32,12,0.65))",
-      border: "1.5px solid rgba(200,160,40,0.45)",
-      shadow: "inset 0 0 12px rgba(200,160,40,0.08)",
-      innerBorder: "1px solid rgba(200,160,40,0.15)",
-      iconClass: "text-yellow-400",
-      iconFill: "#fbbf24",
-      textClass: "text-yellow-300",
-      barColor: "#fbbf24",
-      subText: "text-yellow-600/50",
+      bg: "linear-gradient(135deg, rgba(65,30,10,0.8), rgba(50,22,8,0.65))",
+      border: "1.5px solid rgba(234,120,20,0.45)",
+      shadow: "inset 0 0 12px rgba(234,120,20,0.08)",
+      innerBorder: "1px solid rgba(234,120,20,0.15)",
+      iconClass: "text-orange-500",
+      iconFill: "#ea580c",
+      textClass: "text-orange-300",
+      barColor: "#ea580c",
+      subText: "text-orange-600/50",
     };
   }
   return {
@@ -148,11 +145,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   cameraModeActive = false,
   onTogglePhotoMode,
   pauseLocked = false,
-  eventStats,
   onToggleDevMenu,
   devMenuOpen = false,
-  enemyCount = 0,
-  towerCount = 0,
 }) => {
   const [performanceMode, setPerformanceMode] = useState(() => {
     const settings = getPerformanceSettings();
@@ -334,9 +328,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     <>
       <OrnateFrame
         className="border-2 border-amber-700/50 shadow-xl relative flex-shrink-0 z-[70]"
-        cornerSize={28}
+        cornerSize={24}
+        cornerVariant="compact"
+        sideBorderVariant="compact"
+        topBottomBorderVariant="compact"
         showBorders={true}
-        showTopBottomBorders={false}
+        showTopBottomBorders={true}
       >
         <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
 
@@ -523,36 +520,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
             </div>
 
-            {/* Center: Live field stats */}
-            <div className="hidden lg:flex items-center gap-2 px-2.5 rounded-lg h-9 sm:h-10 shrink-0" style={{
-              background: "rgba(20,20,20,0.4)",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}>
-              <HudTooltip label={`${enemyCount} enemies alive`}>
-                <div className="flex items-center gap-1">
-                  <Skull size={11} className="text-red-400/70" />
-                  <span className="text-[11px] font-bold text-red-300/80 tabular-nums">{enemyCount}</span>
-                </div>
-              </HudTooltip>
-              <div className="w-px h-3" style={{ background: "rgba(255,255,255,0.08)" }} />
-              <HudTooltip label={`${towerCount} towers placed`}>
-                <div className="flex items-center gap-1">
-                  <Shield size={11} className="text-amber-400/70" />
-                  <span className="text-[11px] font-bold text-amber-300/80 tabular-nums">{towerCount}</span>
-                </div>
-              </HudTooltip>
-              {eventStats && (
-                <>
-                  <div className="w-px h-3" style={{ background: "rgba(255,255,255,0.08)" }} />
-                  <HudTooltip label={`${eventStats.enemiesKilled} total kills`}>
-                    <div className="flex items-center gap-1">
-                      <Swords size={11} className="text-orange-400/70" />
-                      <span className="text-[11px] font-bold text-orange-300/80 tabular-nums">{eventStats.enemiesKilled}</span>
-                    </div>
-                  </HudTooltip>
-                </>
-              )}
-            </div>
+            {/* Center: Live field stats — hidden */}
 
             {/* CSS Keyframes */}
             <style jsx>{`

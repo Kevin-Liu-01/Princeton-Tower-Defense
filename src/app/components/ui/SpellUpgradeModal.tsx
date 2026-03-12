@@ -731,7 +731,19 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
               color="#a16207"
               glowColor="#fbbf24"
             >
-              <div className="p-3 sm:p-4" style={{ background: "rgba(16, 12, 10, 0.86)" }}>
+              <div className="relative p-3 sm:p-4" style={{ background: "rgba(16, 12, 10, 0.86)" }}>
+                {/* Faint gameplay background */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: "url('/images/gameplay-latest.png')",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center 40%",
+                    opacity: 0.045,
+                    maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
+                    WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
+                  }}
+                />
                 <div className="mb-3 flex items-center justify-end gap-2">
                   <div className="flex items-center gap-1.5 text-[10px] text-amber-200/60">
                     <span className="inline-block w-2 h-2 rounded-full bg-emerald-400/90" />

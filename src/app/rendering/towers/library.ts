@@ -366,38 +366,7 @@ export function drawLibraryOrbitalEffects(
       ctx.fill();
     }
 
-    ctx.strokeStyle = `rgba(100, 200, 255, ${0.4 + Math.sin(time * 3) * 0.2})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([4 * zoom, 4 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(
-      sX,
-      screenPos.y + shakeY,
-      40 * zoom,
-      20 * zoom,
-      0,
-      drawFront ? 0 : Math.PI,
-      drawFront ? Math.PI : Math.PI * 2,
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
   }
-
-  // Energy field aura around tower base (split arc, drawn at foundation level)
-  const auraSize = 30 + Math.sin(time * 3) * 5;
-  ctx.strokeStyle = `${mainColor} ${0.35 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    sX,
-    screenPos.y + shakeY + 8 * zoom,
-    auraSize * zoom,
-    auraSize * zoom * 0.5,
-    0,
-    drawFront ? 0 : Math.PI,
-    drawFront ? Math.PI : Math.PI * 2,
-  );
-  ctx.stroke();
 }
 
 // LIBRARY TOWER - Kingdom Fantasy Gothic Design with Mystical Elements
@@ -885,6 +854,40 @@ export function renderLibraryTower(
         ctx.restore();
       }
     }
+  }
+
+  // Base-level aura rings (drawn before building so they layer underneath)
+  const auraSize = 30 + Math.sin(time * 3) * 5;
+  ctx.strokeStyle = `${mainColor} ${0.35 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(
+    sX,
+    screenPos.y + shakeY + 8 * zoom,
+    auraSize * zoom,
+    auraSize * zoom * 0.5,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+
+  if (tower.level === 4 && tower.upgrade === "B") {
+    ctx.strokeStyle = `rgba(100, 200, 255, ${0.4 + Math.sin(time * 3) * 0.2})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([4 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(
+      sX,
+      screenPos.y + shakeY,
+      40 * zoom,
+      20 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   // Lower tower body

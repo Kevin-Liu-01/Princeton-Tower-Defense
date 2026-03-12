@@ -7,7 +7,7 @@ import {
   lightenColor,
   darkenColor,
 } from "../../utils";
-import { renderInspectIndicator } from "../effects/inspectIndicator";
+import { renderInspectIndicator, type InspectRenderPass } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile, enemyPaletteCache } from "./types";
 import { drawRegionOverlay } from "./regionOverlays";
@@ -71,7 +71,7 @@ import {
 } from "./elemental";
 import {
   drawAthleteEnemy,
-  drawProtestorEnemy,
+  drawTigerFanEnemy,
 } from "./forest";
 import {
   drawBogCreatureEnemy,
@@ -893,6 +893,7 @@ export function renderEnemyInspectIndicator(
   isHovered: boolean,
   cameraOffset?: Position,
   cameraZoom?: number,
+  renderPass: InspectRenderPass = "all",
 ) {
   const pathKey = enemy.pathKey || selectedMap;
   const worldPos = getEnemyPosition(enemy, pathKey);
@@ -927,6 +928,8 @@ export function renderEnemyInspectIndicator(
     unitSize: size,
     isSelected,
     isHovered,
+    unitType: "enemy",
+    renderPass,
   });
 }
 
@@ -1066,8 +1069,8 @@ function drawEnemySprite(
     case "athlete":
       drawAthleteEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
       break;
-    case "protestor":
-      drawProtestorEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+    case "tiger_fan":
+      drawTigerFanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
       break;
     case "bog_creature":
       drawBogCreatureEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);

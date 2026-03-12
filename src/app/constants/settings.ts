@@ -77,6 +77,8 @@ export interface UISettings {
   showWavePreview: boolean;
   tooltipDelay: number;
   autoSendWaves: boolean;
+  showCameraDpad: boolean;
+  showControlsReference: boolean;
 }
 
 export interface AudioSettings {
@@ -161,6 +163,8 @@ export const DEFAULT_UI: UISettings = {
   showWavePreview: true,
   tooltipDelay: 400,
   autoSendWaves: true,
+  showCameraDpad: true,
+  showControlsReference: true,
 };
 
 export const DEFAULT_AUDIO: AudioSettings = {

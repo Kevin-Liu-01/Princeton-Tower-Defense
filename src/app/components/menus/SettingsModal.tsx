@@ -42,6 +42,8 @@ import {
   Lock,
   Unlock,
   Star,
+  Gamepad2,
+  Keyboard,
 } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
@@ -618,6 +620,14 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
       <SettingRow icon={<Star size={16} />} label="Tower Badges" description="Show level stars and upgrade path badges on towers">
         <ToggleControl value={u.showTowerBadges} onChange={(v) => update({ showTowerBadges: v })} />
+      </SettingRow>
+
+      <SectionDivider label="Overlays" />
+      <SettingRow icon={<Gamepad2 size={16} />} label="Camera D-Pad" description="Show on-screen camera movement controls">
+        <ToggleControl value={u.showCameraDpad} onChange={(v) => update({ showCameraDpad: v })} />
+      </SettingRow>
+      <SettingRow icon={<Keyboard size={16} />} label="Controls Reference" description="Show keyboard shortcut reference panel">
+        <ToggleControl value={u.showControlsReference} onChange={(v) => update({ showControlsReference: v })} />
       </SettingRow>
 
       <SectionDivider label="Gameplay" />

@@ -141,7 +141,7 @@ export const drawWorldMapCanvas = ({
     vGrad.addColorStop(0.3, "rgba(0,0,0,0.05)");
     vGrad.addColorStop(0.5, "rgba(0,0,0,0)");
     vGrad.addColorStop(0.7, "rgba(0,0,0,0.05)");
-    vGrad.addColorStop(1, "rgba(0,0,0,0.4)");
+    vGrad.addColorStop(0.7, "rgba(0,0,0,0.35)");
     ctx.fillStyle = vGrad;
     ctx.fillRect(0, 0, width, height);
 

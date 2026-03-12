@@ -15,7 +15,7 @@ const SHARED_ENEMY_TYPES = new Set([
   "harpy", "wyvern",
   "specter", "berserker", "necromancer", "shadow_knight", "cultist", "plaguebearer",
   "banshee", "assassin", "infernal",
-  "athlete", "protestor",
+  "athlete", "tiger_fan",
   "mascot",
 ]);
 
@@ -28,7 +28,7 @@ const ENEMY_CATEGORY_MAP: Record<string, EnemyCategory> = {
   specter: "undead", berserker: "undead", necromancer: "undead",
   shadow_knight: "undead", cultist: "undead", plaguebearer: "undead",
   banshee: "elemental", assassin: "elemental", infernal: "elemental",
-  athlete: "forest", protestor: "forest",
+  athlete: "forest", tiger_fan: "forest",
   mascot: "special",
 };
 

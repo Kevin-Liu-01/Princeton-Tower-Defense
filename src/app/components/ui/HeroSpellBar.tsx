@@ -19,6 +19,7 @@ import {
   Sparkles,
   Users,
   TrendingUp,
+  Crosshair,
 } from "lucide-react";
 import type {
   Hero,
@@ -100,6 +101,8 @@ interface HeroSpellBarProps {
   spellUpgradeLevels: SpellUpgradeLevels;
   targetingSpell: SpellType | null;
   placingTroop: boolean;
+  spellAutoAim: Partial<Record<SpellType, boolean>>;
+  onToggleSpellAutoAim: (spellType: SpellType) => void;
   toggleHeroSelection: () => void;
   onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
@@ -113,6 +116,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   spellUpgradeLevels,
   targetingSpell,
   placingTroop,
+  spellAutoAim,
+  onToggleSpellAutoAim,
   toggleHeroSelection,
   onUseHeroAbility,
   castSpell,
@@ -217,6 +222,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
           spellUpgradeLevels={spellUpgradeLevels}
           targetingSpell={targetingSpell}
           placingTroop={placingTroop}
+          spellAutoAim={spellAutoAim}
+          onToggleSpellAutoAim={onToggleSpellAutoAim}
           toggleHeroSelection={toggleHeroSelection}
           onUseHeroAbility={onUseHeroAbility}
           castSpell={castSpell}
@@ -550,8 +557,57 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               );
             const isHovered = hoveredSpell === spell.type;
             const isTargeting = targetingSpell === spell.type || (spell.type === "reinforcements" && placingTroop);
+            const isAimableSpell = spell.type === "fireball" || spell.type === "lightning";
+            const hasUnlockedAim = isAimableSpell && spellLevel >= 2;
+            const autoAimOn = isAimableSpell && !!spellAutoAim[spell.type];
+            const autoAimTooltip = !isAimableSpell
+              ? "You can only auto aim meteor or lightning"
+              : !hasUnlockedAim
+                ? "Unlock auto aiming spells by upgrading"
+                : autoAimOn
+                  ? "Auto-aim ON — click to switch to manual targeting"
+                  : "Auto-aim OFF — click to enable auto targeting";
             return (
               <div key={spell.type} className="relative self-stretch flex">
+                {/* Auto-aim toggle — only for aimable spells (meteor & lightning) */}
+                {isAimableSpell && (
+                  <HudTooltip label={autoAimTooltip} position="top">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (hasUnlockedAim) onToggleSpellAutoAim(spell.type);
+                      }}
+                      className="absolute -top-1.5 -left-1.5 z-30 flex items-center justify-center rounded-full transition-all"
+                      style={{
+                        width: 26,
+                        height: 26,
+                        background: hasUnlockedAim && autoAimOn
+                          ? (theme ? `${theme.panelBg}` : "rgba(80,60,20,0.8)")
+                          : "rgba(30,28,24,0.85)",
+                        border: `2px solid ${hasUnlockedAim && autoAimOn
+                          ? (theme?.panelBorder || "rgba(250,204,21,0.6)")
+                          : hasUnlockedAim
+                            ? "rgba(180,140,60,0.4)"
+                            : "rgba(80,70,50,0.3)"
+                          }`,
+                        boxShadow: hasUnlockedAim && autoAimOn
+                          ? `0 0 8px ${theme?.panelBorder || "rgba(250,204,21,0.3)"}`
+                          : "none",
+                        cursor: hasUnlockedAim ? "pointer" : "not-allowed",
+                        opacity: hasUnlockedAim ? 1 : 0.4,
+                      }}
+                    >
+                      <Crosshair
+                        size={14}
+                        className={
+                          hasUnlockedAim && autoAimOn
+                            ? (theme?.nameColor || "text-amber-200")
+                            : "text-stone-500"
+                        }
+                      />
+                    </button>
+                  </HudTooltip>
+                )}
                 <button
                   onClick={() => castSpell(spell.type)}
                   disabled={!canCast && !isTargeting}

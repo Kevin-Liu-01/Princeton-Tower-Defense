@@ -370,6 +370,8 @@ interface MobileHeroSpellBarProps {
   spellUpgradeLevels: SpellUpgradeLevels;
   targetingSpell: SpellType | null;
   placingTroop: boolean;
+  spellAutoAim: Partial<Record<SpellType, boolean>>;
+  onToggleSpellAutoAim: (spellType: SpellType) => void;
   toggleHeroSelection: () => void;
   onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
@@ -383,6 +385,8 @@ export const MobileHeroSpellBar: React.FC<MobileHeroSpellBarProps> = ({
   spellUpgradeLevels,
   targetingSpell,
   placingTroop,
+  spellAutoAim: _spellAutoAim,
+  onToggleSpellAutoAim: _onToggleSpellAutoAim,
   toggleHeroSelection,
   onUseHeroAbility,
   castSpell,

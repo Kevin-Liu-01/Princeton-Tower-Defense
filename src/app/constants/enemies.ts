@@ -966,15 +966,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   // CAMPUS ENEMIES (Regional) - Campus life
   // =============================================================================
-  protestor: {
-    name: "Campus Protestor",
+  tiger_fan: {
+    name: "Tiger Fan",
     hp: 230,
     speed: 0.34,
     bounty: 12,
     armor: 0.15,
     flying: false,
     troopDamage: 25,
-    desc: "Passionate and determined. Carries a sign that provides minor protection.",
+    desc: "Diehard fan cheering on the team. Carries a poster sign that provides minor protection.",
     color: "#ef4444",
     size: 22,
     category: "campus",
@@ -982,8 +982,8 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     abilities: [
       {
         type: "slow",
-        name: "Rally Cry",
-        desc: "Passionate speeches slow defender morale",
+        name: "Go Tigers!",
+        desc: "Deafening cheers rattle defender focus",
         chance: 0.15,
         duration: 1500,
         intensity: 0.2,

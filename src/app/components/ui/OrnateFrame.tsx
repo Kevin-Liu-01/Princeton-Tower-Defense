@@ -175,6 +175,95 @@ const OrnateCorner: React.FC<OrnateCornerProps> = ({
   );
 };
 
+interface OrnateCornerCompactProps {
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  size?: number;
+  color?: string;
+  glowColor?: string;
+}
+
+const OrnateCornerCompact: React.FC<OrnateCornerCompactProps> = ({
+  position,
+  size = 24,
+  color = "#d97706",
+  glowColor = "#f59e0b",
+}) => {
+  const rotations = {
+    "top-left": "rotate(0)",
+    "top-right": "rotate(90deg)",
+    "bottom-right": "rotate(180deg)",
+    "bottom-left": "rotate(270deg)",
+  };
+
+  const positions = {
+    "top-left": "top-0 left-0",
+    "top-right": "top-0 right-0",
+    "bottom-right": "bottom-0 right-0",
+    "bottom-left": "bottom-0 left-0",
+  };
+
+  return (
+    <div
+      className={`absolute ${positions[position]} pointer-events-none z-30`}
+      style={{
+        width: size,
+        height: size,
+        transform: rotations[position],
+        filter: `drop-shadow(0 0 4px ${glowColor}40)`,
+      }}
+    >
+      <svg
+        viewBox="0 0 40 40"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-full"
+      >
+        {/* Simple L-bracket */}
+        <path
+          d="M0 0 L0 30 Q3 27 7 25 L7 7 L25 7 Q27 3 30 0 Z"
+          fill={`${color}20`}
+          stroke={color}
+          strokeWidth="1.2"
+        />
+        {/* Inner bracket */}
+        <path
+          d="M2 2 L2 22 Q5 20 8 18 L8 8 L18 8 Q20 5 22 2 Z"
+          fill="none"
+          stroke={color}
+          strokeWidth="0.7"
+          opacity="0.5"
+        />
+        {/* Corner diamond */}
+        <path
+          d="M6 6 L9 3 L12 6 L9 9 Z"
+          fill={glowColor}
+          opacity="0.85"
+        />
+        {/* Single decorative curl */}
+        <path
+          d="M3 20 Q6 17 10 15 Q14 13 18 11"
+          fill="none"
+          stroke={glowColor}
+          strokeWidth="1"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
+        <path
+          d="M20 3 Q17 6 15 10 Q13 14 11 18"
+          fill="none"
+          stroke={glowColor}
+          strokeWidth="1"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
+        {/* Accent dots */}
+        <circle cx="20" cy="6" r="1" fill={glowColor} opacity="0.6" />
+        <circle cx="6" cy="20" r="1" fill={glowColor} opacity="0.6" />
+      </svg>
+    </div>
+  );
+};
+
 interface OrnateBorderProps {
   position: "top" | "bottom" | "left" | "right";
   color?: string;
@@ -345,10 +434,89 @@ const OrnateBorder: React.FC<OrnateBorderProps> = ({
   );
 };
 
+interface OrnateBorderCompactProps {
+  position: "top" | "bottom" | "left" | "right";
+  color?: string;
+  glowColor?: string;
+  scale?: number;
+}
+
+const OrnateBorderCompact: React.FC<OrnateBorderCompactProps> = ({
+  position,
+  color = "#d97706",
+  glowColor = "#f59e0b",
+  scale = 1,
+}) => {
+  const isHorizontal = position === "top" || position === "bottom";
+
+  const positionClasses = {
+    top: "top-0 left-1/2 -translate-x-1/2",
+    bottom: "bottom-0 left-1/2 -translate-x-1/2",
+    left: "left-0 top-1/2 -translate-y-1/2",
+    right: "right-0 top-1/2 -translate-y-1/2",
+  };
+
+  if (isHorizontal) {
+    return (
+      <div
+        className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
+        style={{
+          width: "calc(100% - 36px)",
+          height: 6 * scale,
+          filter: `drop-shadow(0 0 ${3 * scale}px ${glowColor}30)`,
+        }}
+      >
+        <svg
+          viewBox="0 0 400 4"
+          fill="none"
+          preserveAspectRatio="none"
+          className="w-full h-full"
+          style={{ transform: position === "bottom" ? "scaleY(-1)" : undefined }}
+        >
+          <path d="M0 2 L400 2" fill="none" stroke={color} strokeWidth="0.8" opacity="0.6" />
+          <path d="M20 0.8 L380 0.8" fill="none" stroke={color} strokeWidth="0.3" opacity="0.2" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
+      style={{
+        width: 8 * scale,
+        height: "calc(100% - 36px)",
+        filter: `drop-shadow(0 0 ${3 * scale}px ${glowColor}25)`,
+      }}
+    >
+      <svg
+        viewBox="0 0 8 60"
+        fill="none"
+        preserveAspectRatio="none"
+        className="w-full h-full"
+        style={{ transform: position === "right" ? "scaleX(-1)" : undefined }}
+      >
+        <path d="M4 0 L4 22" fill="none" stroke={color} strokeWidth="1" opacity="0.6" />
+        <path d="M4 38 L4 60" fill="none" stroke={color} strokeWidth="1" opacity="0.6" />
+        <circle cx="4" cy="30" r="1.5" fill={glowColor} opacity="0.7" />
+        <path d="M4 24 L2 26 L4 28 L6 26 Z" fill={glowColor} opacity="0.4" />
+        <path d="M4 32 L2 34 L4 36 L6 34 Z" fill={glowColor} opacity="0.4" />
+      </svg>
+    </div>
+  );
+};
+
+export type OrnateVariant = "standard" | "compact";
+
 export interface OrnateFrameProps {
   children: React.ReactNode;
   className?: string;
   cornerSize?: number;
+  cornerVariant?: OrnateVariant;
+  /** Fallback variant for both side and top/bottom borders */
+  borderVariant?: OrnateVariant;
+  sideBorderVariant?: OrnateVariant;
+  topBottomBorderVariant?: OrnateVariant;
   showBorders?: boolean;
   showSideBorders?: boolean;
   showTopBottomBorders?: boolean;
@@ -359,10 +527,24 @@ export interface OrnateFrameProps {
   glowColor?: string;
 }
 
+const CORNER_COMPONENTS: Record<OrnateVariant, React.FC<OrnateCornerProps | OrnateCornerCompactProps>> = {
+  standard: OrnateCorner,
+  compact: OrnateCornerCompact,
+};
+
+const BORDER_COMPONENTS: Record<OrnateVariant, React.FC<OrnateBorderProps | OrnateBorderCompactProps>> = {
+  standard: OrnateBorder,
+  compact: OrnateBorderCompact,
+};
+
 export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   children,
   className = "",
   cornerSize = 36,
+  cornerVariant = "standard",
+  borderVariant = "standard",
+  sideBorderVariant,
+  topBottomBorderVariant,
   showBorders = true,
   showSideBorders = true,
   showTopBottomBorders = true,
@@ -372,28 +554,31 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   color = "#d97706",
   glowColor = "#f59e0b",
 }) => {
+  const CornerComponent = CORNER_COMPONENTS[cornerVariant];
+  const SideBorderComponent = BORDER_COMPONENTS[sideBorderVariant ?? borderVariant];
+  const TopBottomBorderComponent = BORDER_COMPONENTS[topBottomBorderVariant ?? borderVariant];
+
   return (
     <div className={`relative ${className}`}>
       {children}
 
-      {/* Decorative overlays rendered after children to stay on top */}
-      <OrnateCorner position="top-left" size={cornerSize} color={color} glowColor={glowColor} />
-      <OrnateCorner position="top-right" size={cornerSize} color={color} glowColor={glowColor} />
-      <OrnateCorner position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
-      <OrnateCorner position="bottom-right" size={cornerSize} color={color} glowColor={glowColor} />
+      <CornerComponent position="top-left" size={cornerSize} color={color} glowColor={glowColor} />
+      <CornerComponent position="top-right" size={cornerSize} color={color} glowColor={glowColor} />
+      <CornerComponent position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
+      <CornerComponent position="bottom-right" size={cornerSize} color={color} glowColor={glowColor} />
 
       {showBorders && (
         <>
           {showTopBottomBorders && (
             <>
-              <OrnateBorder position="top" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
-              <OrnateBorder position="bottom" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
+              <TopBottomBorderComponent position="top" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
+              <TopBottomBorderComponent position="bottom" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
             </>
           )}
           {showSideBorders && (
             <>
-              <OrnateBorder position="left" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
-              <OrnateBorder position="right" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
+              <SideBorderComponent position="left" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
+              <SideBorderComponent position="right" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
             </>
           )}
         </>
@@ -408,8 +593,7 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   );
 };
 
-// Also export individual components for more granular use
-export { OrnateCorner, OrnateBorder };
-export type { OrnateCornerProps, OrnateBorderProps };
+export { OrnateCorner, OrnateCornerCompact, OrnateBorder, OrnateBorderCompact };
+export type { OrnateCornerProps, OrnateCornerCompactProps, OrnateBorderProps, OrnateBorderCompactProps };
 
 export default OrnateFrame;
