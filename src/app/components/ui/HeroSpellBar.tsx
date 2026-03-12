@@ -565,8 +565,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               : !hasUnlockedAim
                 ? "Unlock auto aiming spells by upgrading"
                 : autoAimOn
-                  ? "Auto-aim ON — click to switch to manual targeting"
-                  : "Auto-aim OFF — click to enable auto targeting";
+                  ? "Auto-aim ON. click to switch to manual targeting"
+                  : "Auto-aim OFF. click to enable auto targeting";
             return (
               <div key={spell.type} className="relative self-stretch flex">
                 {/* Auto-aim toggle — only for aimable spells (meteor & lightning) */}

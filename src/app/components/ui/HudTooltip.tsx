@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface HudTooltipProps {
   label: string;
@@ -11,6 +12,8 @@ interface HudTooltipProps {
 }
 
 const TOOLTIP_DELAY = 400;
+const GAP = 6;
+const PAD = 8;
 
 export const HudTooltip: React.FC<HudTooltipProps> = ({
   label,
@@ -20,9 +23,10 @@ export const HudTooltip: React.FC<HudTooltipProps> = ({
   disabled = false,
 }) => {
   const [visible, setVisible] = useState(false);
+  const [style, setStyle] = useState<{ left: number; top: number; arrowOff: number } | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [nudge, setNudge] = useState(0);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const show = useCallback(() => {
     if (disabled) return;
@@ -32,36 +36,28 @@ export const HudTooltip: React.FC<HudTooltipProps> = ({
   const hide = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setVisible(false);
+    setStyle(null);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }, []);
 
   useEffect(() => {
-    if (!visible || !wrapperRef.current) {
-      setNudge(0);
-      return;
-    }
-    const rect = wrapperRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const pad = 8;
+    if (!visible || !wrapperRef.current || !tooltipRef.current) return;
+    const wr = wrapperRef.current.getBoundingClientRect();
+    const tip = tooltipRef.current;
+    const tipW = tip.offsetWidth;
+    const tipH = tip.offsetHeight;
+    const cx = wr.left + wr.width / 2;
 
-    const tooltipEl = wrapperRef.current.querySelector("[data-hud-tooltip]") as HTMLElement | null;
-    if (!tooltipEl) return;
-    const tipWidth = tooltipEl.offsetWidth;
-    const halfTip = tipWidth / 2;
+    let left = cx - tipW / 2;
+    if (left < PAD) left = PAD;
+    if (left + tipW > window.innerWidth - PAD) left = window.innerWidth - PAD - tipW;
 
-    if (centerX - halfTip < pad) {
-      setNudge(pad - (centerX - halfTip));
-    } else if (centerX + halfTip > window.innerWidth - pad) {
-      setNudge(window.innerWidth - pad - (centerX + halfTip));
-    } else {
-      setNudge(0);
-    }
-  }, [visible]);
+    const top = position === "top" ? wr.top - GAP - tipH : wr.bottom + GAP;
+    const arrowOff = cx - left;
+
+    setStyle({ left, top, arrowOff });
+  }, [visible, position, label]);
 
   return (
     <div
@@ -72,37 +68,42 @@ export const HudTooltip: React.FC<HudTooltipProps> = ({
       onPointerDown={hide}
     >
       {children}
-      {visible && (
-        <div
-          data-hud-tooltip
-          className={`absolute left-1/2 z-[1400] px-2.5 py-1.5 rounded-md text-[11px] font-medium whitespace-nowrap pointer-events-none select-none hidden md:block ${
-            position === "bottom" ? "top-full mt-2" : "bottom-full mb-2"
-          }`}
-          style={{
-            transform: `translateX(calc(-50% + ${nudge}px))`,
-            background: "rgba(10,10,15,0.95)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.88)",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.05)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          {label}
+      {visible && typeof document !== "undefined" &&
+        createPortal(
           <div
-            className={`absolute left-1/2 w-2 h-2 rotate-45 ${
-              position === "bottom" ? "-top-1" : "-bottom-1"
-            }`}
+            ref={tooltipRef}
+            className="fixed z-[9999] px-2.5 py-1.5 rounded-md text-[11px] font-medium whitespace-nowrap pointer-events-none select-none hidden md:block"
             style={{
-              transform: `translateX(calc(-50% - ${nudge}px))`,
+              left: style?.left ?? -9999,
+              top: style?.top ?? -9999,
+              opacity: style ? 1 : 0,
               background: "rgba(10,10,15,0.95)",
-              borderLeft: position === "bottom" ? "1px solid rgba(255,255,255,0.1)" : "none",
-              borderTop: position === "bottom" ? "1px solid rgba(255,255,255,0.1)" : "none",
-              borderRight: position === "top" ? "1px solid rgba(255,255,255,0.1)" : "none",
-              borderBottom: position === "top" ? "1px solid rgba(255,255,255,0.1)" : "none",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.88)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.05)",
+              backdropFilter: "blur(12px)",
             }}
-          />
-        </div>
-      )}
+          >
+            {label}
+            {style && (
+              <div
+                className={`absolute w-2 h-2 rotate-45 ${
+                  position === "bottom" ? "-top-1" : "-bottom-1"
+                }`}
+                style={{
+                  left: style.arrowOff,
+                  transform: "translateX(-50%)",
+                  background: "rgba(10,10,15,0.95)",
+                  borderLeft: position === "bottom" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                  borderTop: position === "bottom" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                  borderRight: position === "top" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                  borderBottom: position === "top" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                }}
+              />
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

@@ -1699,6 +1699,7 @@ export function usePrincetonTowerDefenseRuntime() {
     const levelEncounters = tutorial.getLevelEncounters(specialTowerTypes, hazardTypes);
 
     if (levelEncounters.length > 0) {
+      setEncounterExiting(false);
       setEncounterQueue(levelEncounters);
       setEncounterIndex(0);
     }
@@ -1712,6 +1713,7 @@ export function usePrincetonTowerDefenseRuntime() {
       clearParticlePool();
       setHoveredWaveBubblePathKey(null);
       setShowTutorial(false);
+      setEncounterExiting(false);
       setEncounterQueue([]);
       setEncounterIndex(0);
     }
@@ -1913,6 +1915,7 @@ export function usePrincetonTowerDefenseRuntime() {
     const hazardTypes = (levelData?.hazards ?? []).map((h) => h.type);
     const levelEncounters = tutorial.getLevelEncounters(specialTowerTypes, hazardTypes);
     if (levelEncounters.length > 0) {
+      setEncounterExiting(false);
       setEncounterQueue(levelEncounters);
       setEncounterIndex(0);
     }
@@ -2173,6 +2176,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
     if (unseenEncounters.length > 0) {
       tutorial.markEnemiesSeen(waveEnemyTypes);
+      setEncounterExiting(false);
       setEncounterQueue(unseenEncounters);
       setEncounterIndex(0);
     }

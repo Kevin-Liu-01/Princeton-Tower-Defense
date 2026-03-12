@@ -33,10 +33,10 @@ const TOWER_ROLES: Record<TowerType, {
   cannon: { label: "DPS", accent: "rgba(239,68,68,0.7)", text: "rgb(252,165,165)", bg: "rgba(127,29,29,0.35)", border: "rgba(153,27,27,0.3)", statColor: "rgb(252,165,165)", statIcon: (s) => <Swords size={s} className="text-red-400" /> },
   mortar: { label: "AoE", accent: "rgba(249,115,22,0.7)", text: "rgb(253,186,116)", bg: "rgba(124,45,18,0.35)", border: "rgba(154,52,18,0.3)", statColor: "rgb(253,186,116)", statIcon: (s) => <TargetIcon size={s} className="text-orange-400" /> },
   lab: { label: "Chain", accent: "rgba(56,189,248,0.7)", text: "rgb(125,211,252)", bg: "rgba(12,74,110,0.35)", border: "rgba(14,116,144,0.3)", statColor: "rgb(125,211,252)", statIcon: (s) => <Swords size={s} className="text-sky-400" /> },
-  arch: { label: "Ramp", accent: "rgba(168,85,247,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)", statIcon: (s) => <GaugeIcon size={s} className="text-purple-400" /> },
-  station: { label: "Troops", accent: "rgba(192,132,252,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)", statIcon: (s) => <UsersIcon size={s} className="text-purple-400" /> },
-  library: { label: "Slow", accent: "rgba(96,165,250,0.7)", text: "rgb(147,197,253)", bg: "rgba(30,58,138,0.35)", border: "rgba(30,64,175,0.3)", statColor: "rgb(147,197,253)", statIcon: (s) => <Snowflake size={s} className="text-blue-400" /> },
-  club: { label: "Econ", accent: "rgba(74,222,128,0.7)", text: "rgb(134,239,172)", bg: "rgba(20,83,45,0.35)", border: "rgba(22,101,52,0.3)", statColor: "rgb(134,239,172)", statIcon: (s) => <CoinsIcon size={s} className="text-green-400" /> },
+  arch: { label: "Ramp", accent: "rgba(74,222,128,0.7)", text: "rgb(134,239,172)", bg: "rgba(20,83,45,0.35)", border: "rgba(22,101,52,0.3)", statColor: "rgb(134,239,172)", statIcon: (s) => <GaugeIcon size={s} className="text-green-400" /> },
+  station: { label: "Troops", accent: "rgba(232,121,249,0.7)", text: "rgb(240,171,252)", bg: "rgba(112,26,117,0.35)", border: "rgba(134,25,143,0.3)", statColor: "rgb(240,171,252)", statIcon: (s) => <UsersIcon size={s} className="text-fuchsia-400" /> },
+  library: { label: "Slow", accent: "rgba(168,85,247,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)", statIcon: (s) => <Snowflake size={s} className="text-purple-400" /> },
+  club: { label: "Econ", accent: "rgba(250,204,21,0.7)", text: "rgb(253,224,71)", bg: "rgba(113,63,18,0.35)", border: "rgba(133,77,14,0.3)", statColor: "rgb(253,224,71)", statIcon: (s) => <CoinsIcon size={s} className="text-yellow-400" /> },
 };
 
 function getTowerKeyStat(type: string, data: { damage: number; range: number; attackSpeed: number }): string {

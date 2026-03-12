@@ -14,6 +14,7 @@ import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, HeroIcon } from "../../sprites";
 import { HeroHelmetIcon } from "../../sprites/custom-icons";
+import { HudTooltip } from "../ui/HudTooltip";
 import { HallOfHeroesModal } from "./HallOfHeroesModal";
 
 const HERO_ROLES: Record<HeroType, { label: string; color: string; bg: string; border: string }> = {
@@ -99,18 +100,19 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
           <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
 
           {/* Helmet icon — opens Hall of Heroes */}
-          <button
-            onClick={() => setShowHallOfHeroes(true)}
-            className="flex-shrink-0 relative z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.45), rgba(20,16,10,0.8))',
-              border: '1.5px solid rgba(180,140,60,0.4)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 8px rgba(180,140,60,0.15)',
-            }}
-            title="Open Hall of Heroes"
-          >
-            <HeroHelmetIcon size={16} />
-          </button>
+          <HudTooltip label="Hall of Heroes" position="top">
+            <button
+              onClick={() => setShowHallOfHeroes(true)}
+              className="flex-shrink-0 relative z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+              style={{
+                background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.45), rgba(20,16,10,0.8))',
+                border: '1.5px solid rgba(180,140,60,0.4)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 8px rgba(180,140,60,0.15)',
+              }}
+            >
+              <HeroHelmetIcon size={16} />
+            </button>
+          </HudTooltip>
 
           {/* Carousel track */}
           <div
@@ -152,6 +154,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                   <button
                     key={heroType}
                     onClick={() => selectHero(heroType)}
+                    title={`${hero.name} — ${HERO_ROLES[heroType].label}${isSel ? ' (Equipped)' : ''}`}
                     className="absolute flex items-center justify-center rounded-full"
                     style={{
                       width: CIRCLE,
@@ -208,13 +211,16 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                 {HERO_ROLES[centeredHero].label}
               </span>
             </div>
-            <button
-              onClick={() => setShowHallOfHeroes(true)}
-              className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-              title="Hall of Heroes"
-            >
-              <Info size={14} className="text-amber-400/60 hover:text-amber-400" />
-            </button>
+            {onOpenCodex && (
+              <HudTooltip label="View in Codex" position="top">
+                <button
+                  onClick={onOpenCodex}
+                  className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                >
+                  <Info size={14} className="text-amber-400/60 hover:text-amber-400" />
+                </button>
+              </HudTooltip>
+            )}
           </div>
 
         </div>

@@ -624,83 +624,66 @@ interface TailGeo {
   size: number;
 }
 
-function fillTailLayer(
+function fillTailBody(
   ctx: CanvasRenderingContext2D,
   g: TailGeo,
   color: string,
-  scale: number,
+  widthMul: number,
   dx: number,
   dy: number,
 ) {
-  const hw = g.rootHW * scale;
-  const cp1HW = hw * 1.15;
-  const cp2HW = hw * 0.85;
-  const tipHW = hw * 0.18;
+  const rw = g.rootHW * widthMul * 0.65;
+  const bulge = g.rootHW * widthMul * 1.5;
+  const tipW = g.rootHW * widthMul * 1.1;
 
   ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(g.rootX - hw + dx, g.rootY + dy);
+  ctx.moveTo(g.rootX - rw + dx, g.rootY + dy);
   ctx.bezierCurveTo(
-    g.cp1X - cp1HW + dx,
+    g.cp1X - bulge + dx,
     g.cp1Y + dy,
-    g.cp2X - cp2HW + dx,
+    g.cp2X - tipW + dx,
     g.cp2Y + dy,
-    g.tipX - tipHW + dx,
+    g.tipX - tipW * 0.55 + dx,
     g.tipY + dy,
   );
   ctx.quadraticCurveTo(
     g.tipX + dx,
-    g.tipY + tipHW * 0.6 + dy,
-    g.tipX + tipHW + dx,
+    g.tipY + tipW * 0.4 + dy,
+    g.tipX + tipW * 0.55 + dx,
     g.tipY + dy,
   );
   ctx.bezierCurveTo(
-    g.cp2X + cp2HW + dx,
-    g.cp2Y + g.size * 0.01 + dy,
-    g.cp1X + cp1HW + dx,
-    g.cp1Y + g.size * 0.006 + dy,
-    g.rootX + hw + dx,
+    g.cp2X + tipW + dx,
+    g.cp2Y + g.size * 0.006 + dy,
+    g.cp1X + bulge + dx,
+    g.cp1Y + g.size * 0.003 + dy,
+    g.rootX + rw + dx,
     g.rootY + dy,
   );
   ctx.closePath();
   ctx.fill();
 }
 
-function fillTailWisp(
+function drawTailStrand(
   ctx: CanvasRenderingContext2D,
-  baseX: number,
-  baseY: number,
-  endX: number,
-  endY: number,
-  halfWidth: number,
-  waveOffset: number,
+  sx: number,
+  sy: number,
+  c1x: number,
+  c1y: number,
+  c2x: number,
+  c2y: number,
+  ex: number,
+  ey: number,
   color: string,
+  width: number,
 ) {
-  const midX = (baseX + endX) / 2;
-  const midY = (baseY + endY) / 2;
-  const bulge = halfWidth * 1.4;
-
-  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
   ctx.beginPath();
-  ctx.moveTo(baseX, baseY - halfWidth);
-  ctx.bezierCurveTo(
-    midX - bulge * 0.3 + waveOffset * 2,
-    midY - bulge,
-    endX + waveOffset * 1.2,
-    endY - halfWidth * 0.3,
-    endX,
-    endY,
-  );
-  ctx.bezierCurveTo(
-    endX - waveOffset * 0.8,
-    endY + halfWidth * 0.3,
-    midX + bulge * 0.3 - waveOffset,
-    midY + bulge,
-    baseX,
-    baseY + halfWidth,
-  );
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(sx, sy);
+  ctx.bezierCurveTo(c1x, c1y, c2x, c2y, ex, ey);
+  ctx.stroke();
 }
 
 export function drawHorseTail(
@@ -718,48 +701,106 @@ export function drawHorseTail(
 ) {
   const wave = Math.sin(time * primaryFreq);
   const wave2 = Math.sin(time * secondaryFreq + 0.5);
-  const swish = Math.sin(time * primaryFreq * 0.68 + 0.4) * 0.7;
+  const swish = Math.sin(time * primaryFreq * 0.68 + 0.4) * 0.6;
 
   const geo: TailGeo = {
     rootX,
     rootY,
-    cp1X: rootX + size * 0.08 + wave * 5,
-    cp1Y: rootY + size * 0.06 + wave2 * 1.5,
-    cp2X: rootX + size * 0.18 + wave * 9 + swish * 4,
-    cp2Y: rootY + size * 0.17 + wave2 * 2.5,
-    tipX: rootX + size * 0.1 + wave * 12 + swish * 6,
-    tipY: rootY + size * 0.34 + wave2 * 3,
-    rootHW: size * 0.042,
+    cp1X: rootX + size * 0.12 + wave * 3,
+    cp1Y: rootY + size * 0.10 + wave2 * 1.5,
+    cp2X: rootX + size * 0.20 + wave * 5 + swish * 2,
+    cp2Y: rootY + size * 0.22 + wave2 * 2,
+    tipX: rootX + size * 0.14 + wave * 6 + swish * 3,
+    tipY: rootY + size * 0.36 + wave2 * 2.5,
+    rootHW: size * 0.05,
     size,
   };
 
-  fillTailLayer(ctx, geo, colors.base, 1.0, 0, 0);
-  fillTailLayer(ctx, geo, colors.mid, 0.7, size * 0.003, -size * 0.002);
-  fillTailLayer(ctx, geo, colors.highlight, 0.35, size * 0.005, -size * 0.004);
+  // Soft outer halo for bushy volume
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  fillTailBody(ctx, geo, colors.base, 1.4, -size * 0.004, size * 0.002);
+  fillTailBody(ctx, geo, colors.base, 1.4, size * 0.004, size * 0.002);
+  ctx.restore();
 
-  const wispCount = 5;
-  for (let w = 0; w < wispCount; w++) {
-    const wt = w / (wispCount - 1);
-    const wPhase = w * 0.8 + 0.6;
-    const ww = Math.sin(time * primaryFreq + wPhase);
-    const ww2 = Math.sin(time * secondaryFreq + wPhase * 0.7);
-    const spread = (wt - 0.5) * size * 0.06;
-    fillTailWisp(
+  // Core filled body layers
+  fillTailBody(ctx, geo, colors.base, 1.0, 0, 0);
+  fillTailBody(ctx, geo, colors.mid, 0.75, size * 0.002, -size * 0.001);
+  fillTailBody(ctx, geo, colors.highlight, 0.4, size * 0.004, -size * 0.003);
+
+  // Flowing hair strands fanning from root to tip
+  ctx.save();
+  ctx.lineCap = "round";
+  const strandCount = 14;
+  for (let i = 0; i < strandCount; i++) {
+    const t = i / (strandCount - 1);
+    const offset = (t - 0.5) * 2;
+    const phase = i * 0.55 + 0.4;
+    const sw = Math.sin(time * primaryFreq * 0.85 + phase);
+    const sw2 = Math.sin(time * secondaryFreq * 0.9 + phase * 0.7);
+
+    const sx = geo.rootX + offset * geo.rootHW * 0.4;
+    const sy = geo.rootY + Math.abs(offset) * size * 0.003;
+
+    const fan = offset * size * 0.04;
+    const waveOff = sw * size * 0.01;
+
+    const c1x = geo.cp1X + fan * 0.3 + waveOff * 0.4;
+    const c1y = geo.cp1Y + Math.abs(offset) * size * 0.006;
+    const c2x = geo.cp2X + fan * 0.7 + waveOff * 0.8;
+    const c2y = geo.cp2Y + offset * size * 0.01 + sw2 * 1.5;
+    const ex = geo.tipX + fan * 1.3 + waveOff;
+    const ey = geo.tipY + offset * size * 0.016 + sw2 * 2;
+
+    const thickness =
+      (size * 0.004 + size * 0.003 * (1 - Math.abs(offset))) * zoom;
+
+    const ci = i % 3;
+    const strandColor =
+      ci === 0 ? colors.base : ci === 1 ? colors.mid : colors.highlight;
+
+    ctx.globalAlpha = 0.4 + (1 - Math.abs(offset)) * 0.35;
+    drawTailStrand(ctx, sx, sy, c1x, c1y, c2x, c2y, ex, ey, strandColor, thickness);
+  }
+  ctx.restore();
+
+  // Bright highlight strands for backlit silky look
+  ctx.save();
+  ctx.lineCap = "round";
+  for (let i = 0; i < 5; i++) {
+    const t = (i + 0.5) / 5;
+    const offset = (t - 0.5) * 1.6;
+    const phase = i * 0.9 + 1.5;
+    const hw = Math.sin(time * primaryFreq * 0.7 + phase);
+
+    const sx = geo.rootX + offset * geo.rootHW * 0.3;
+    const sy = geo.rootY;
+    const fan = offset * size * 0.03;
+    const ex = geo.tipX + fan * 1.1 + hw * size * 0.008;
+    const ey = geo.tipY + offset * size * 0.013 + hw * 2;
+
+    ctx.globalAlpha = 0.5;
+    drawTailStrand(
       ctx,
-      geo.tipX + spread * 0.3,
-      geo.tipY - size * 0.012 + spread * 0.12,
-      geo.tipX + ww * 5 + spread * 1.1 + size * 0.022,
-      geo.tipY + size * 0.07 + ww2 * 2.5 + Math.abs(spread) * 0.3,
-      size * 0.007 * (1 - wt * 0.15),
-      ww,
-      colors.accent,
+      sx,
+      sy,
+      geo.cp1X + fan * 0.25,
+      geo.cp1Y,
+      geo.cp2X + fan * 0.6,
+      geo.cp2Y + offset * size * 0.006,
+      ex,
+      ey,
+      colors.highlight,
+      0.7 * zoom,
     );
   }
+  ctx.restore();
 
+  // Center spine
   ctx.save();
   ctx.strokeStyle = colors.highlight;
   ctx.lineWidth = 0.8 * zoom;
-  ctx.globalAlpha = 0.2;
+  ctx.globalAlpha = 0.12;
   ctx.beginPath();
   ctx.moveTo(rootX, rootY);
   ctx.bezierCurveTo(
@@ -773,14 +814,15 @@ export function drawHorseTail(
   ctx.stroke();
   ctx.restore();
 
+  // Tip glow
   ctx.fillStyle = `rgba(${colors.glowRgb}, ${glowAlpha})`;
   ctx.beginPath();
   ctx.ellipse(
     geo.tipX,
     geo.tipY,
-    size * 0.028,
-    size * 0.017,
-    wave * 0.25,
+    size * 0.032,
+    size * 0.02,
+    wave * 0.2,
     0,
     Math.PI * 2,
   );

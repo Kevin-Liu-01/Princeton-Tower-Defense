@@ -668,14 +668,14 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
       <style>{ANIMATIONS_CSS}</style>
 
       <OrnateFrame
-        className="relative z-10 w-full max-w-[1280px] max-h-[94vh] overflow-hidden rounded-2xl border border-amber-400/45"
+        className="relative z-10 w-full max-w-[1280px] max-h-[94vh] overflow-hidden rounded-2xl border border-amber-400/45 flex flex-col"
         cornerSize={46}
         color="#d97706"
         glowColor="#fbbf24"
         showSideBorders={false}
       >
         {/* ── Header ── */}
-        <div className="sticky top-0 z-20 border-b border-amber-700/25 bg-stone-950/95 px-4 sm:px-6 py-3 backdrop-blur">
+        <div className="shrink-0 z-20 border-b border-amber-700/25 bg-stone-950/95 px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-amber-300">
               <EnchantedAnvilIcon size={22} />
@@ -722,16 +722,17 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
         </div>
 
         {/* ── Main Content ── */}
-        <div className="h-[calc(94vh-148px)] overflow-y-auto overscroll-y-contain">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_332px]">
+        <div className="flex-1 min-h-0 grid lg:grid-cols-[minmax(0,1fr)_332px] grid-rows-[minmax(0,1fr)]">
             {/* ── Grid Panel ── */}
             <OrnateFrame
-              className="rounded-2xl border border-amber-700/25"
-              cornerSize={34}
+              className="border border-amber-700/25 min-h-0 overflow-hidden"
+              cornerSize={28}
               color="#a16207"
               glowColor="#fbbf24"
+              cornerVariant="compact"
+              borderVariant="compact"
             >
-              <div className="relative p-3 sm:p-4" style={{ background: "rgba(16, 12, 10, 0.86)" }}>
+              <div className="relative p-3 sm:p-4 h-full overflow-y-auto overscroll-y-contain" style={{ background: "rgba(16, 12, 10, 0.86)" }}>
                 {/* Faint gameplay background */}
                 <div
                   className="absolute inset-0 pointer-events-none"
@@ -739,7 +740,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     backgroundImage: "url('/images/gameplay-latest.png')",
                     backgroundSize: "cover",
                     backgroundPosition: "center 40%",
-                    opacity: 0.045,
+                    opacity: 0.2,
                     maskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
                     WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 85%)",
                   }}
@@ -1080,13 +1081,13 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
 
             {/* ── Detail Panel ── */}
             <OrnateFrame
-              className="rounded-2xl border border-amber-700/25"
+              className="border border-amber-700/25 min-h-0 overflow-hidden"
               cornerSize={30}
               color={selectedTheme.accent}
               glowColor={selectedTheme.glow}
             >
               <div
-                className="h-full p-3 sm:p-4"
+                className="h-full p-3 sm:p-4 overflow-y-auto overscroll-y-contain"
                 style={{ background: "rgba(20, 14, 10, 0.9)" }}
               >
                 {/* Spell identity */}
@@ -1424,7 +1425,6 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                 )}
               </div>
             </OrnateFrame>
-          </div>
         </div>
       </OrnateFrame>
     </BaseModal>

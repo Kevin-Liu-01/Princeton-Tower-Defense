@@ -105,18 +105,19 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(140,80,200,0.08)' }} />
 
           {/* Spell orb icon — opens Spellbook */}
-          <button
-            onClick={() => setShowSpellbook(true)}
-            className="flex-shrink-0 relative z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-            style={{
-              background: 'radial-gradient(circle at 30% 30%, rgba(80,40,120,0.45), rgba(20,14,28,0.8))',
-              border: '1.5px solid rgba(140,80,200,0.4)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 8px rgba(140,80,200,0.15)',
-            }}
-            title="Open Spellbook"
-          >
-            <SpellOrbIcon size={16} />
-          </button>
+          <HudTooltip label="Spellbook" position="top">
+            <button
+              onClick={() => setShowSpellbook(true)}
+              className="flex-shrink-0 relative z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+              style={{
+                background: 'radial-gradient(circle at 30% 30%, rgba(80,40,120,0.45), rgba(20,14,28,0.8))',
+                border: '1.5px solid rgba(140,80,200,0.4)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 8px rgba(140,80,200,0.15)',
+              }}
+            >
+              <SpellOrbIcon size={16} />
+            </button>
+          </HudTooltip>
 
           {/* Carousel track */}
           <div
@@ -166,6 +167,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                       }
                     }}
                     disabled={isCenter && !canToggle && !isSel}
+                    title={`${SPELL_DATA[spellType].shortName}${isSel ? ` (Slot ${selectedSpells.indexOf(spellType) + 1})` : ''}`}
                     className="absolute flex items-center justify-center rounded-full"
                     style={{
                       width: CIRCLE,
@@ -190,6 +192,14 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     }}
                   >
                     <SpellSprite type={spellType} size={isCenter ? 26 : 20} />
+                    {(spellUpgradeLevels[spellType] ?? 0) > 0 && (
+                      <div
+                        className={`absolute ${isSel ? '-top-0.5 -left-0.5' : '-top-0.5 -right-0.5'} w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-yellow-100 font-bold border-[1.5px] border-stone-900`}
+                        style={{ background: 'linear-gradient(135deg, #d97706, #92400e)', boxShadow: '0 0 5px rgba(217,119,6,0.5)' }}
+                      >
+                        {spellUpgradeLevels[spellType]}
+                      </div>
+                    )}
                     {isSel && (
                       <div
                         className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-white font-bold border-[1.5px] border-stone-900"
@@ -229,32 +239,37 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 ))}
               </div>
             </div>
-            <button
-              onClick={() => setShowSpellbook(true)}
-              className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-              title="Spellbook"
-            >
-              <Info size={14} className="text-purple-400/60 hover:text-purple-400" />
-            </button>
+            {onOpenCodex && (
+              <HudTooltip label="View in Codex" position="top">
+                <button
+                  onClick={onOpenCodex}
+                  className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                >
+                  <Info size={14} className="text-purple-400/60 hover:text-purple-400" />
+                </button>
+              </HudTooltip>
+            )}
           </div>
 
           {/* Upgrade button — far right */}
-          <button
-            type="button"
-            onClick={() => setShowUpgradeModal(true)}
-            className="relative z-10 flex-shrink-0 ml-1 mr-1 flex items-center gap-2 rounded-lg border py-1 px-4 transition-all hover:brightness-115 hover:scale-105"
-            style={{
-              background: "linear-gradient(180deg, rgba(130,95,20,0.92), rgba(88,62,14,0.9))",
-              borderColor: "rgba(250,204,21,0.55)",
-              boxShadow: "0 0 16px rgba(250,204,21,0.18), inset 0 0 10px rgba(250,204,21,0.14), 0 2px 8px rgba(0,0,0,0.45)",
-            }}
-          >
-            <EnchantedAnvilIcon size={32} />
-            <span className="text-[12px] font-bold text-yellow-200 flex items-center gap-0.5">
-              <Star size={12} className="fill-yellow-300 text-yellow-300" />
-              {availableSpellStars}
-            </span>
-          </button>
+          <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
+            <button
+              type="button"
+              onClick={() => setShowUpgradeModal(true)}
+              className="relative z-10 flex-shrink-0 ml-1 mr-1 flex items-center gap-2 rounded-lg border py-1 px-4 transition-all hover:brightness-115 hover:scale-105"
+              style={{
+                background: "linear-gradient(180deg, rgba(130,95,20,0.92), rgba(88,62,14,0.9))",
+                borderColor: "rgba(250,204,21,0.55)",
+                boxShadow: "0 0 16px rgba(250,204,21,0.18), inset 0 0 10px rgba(250,204,21,0.14), 0 2px 8px rgba(0,0,0,0.45)",
+              }}
+            >
+              <EnchantedAnvilIcon size={32} />
+              <span className="text-[12px] font-bold text-yellow-200 flex items-center gap-0.5">
+                <Star size={12} className="fill-yellow-300 text-yellow-300" />
+                {availableSpellStars}
+              </span>
+            </button>
+          </HudTooltip>
 
         </div>
 

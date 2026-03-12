@@ -74,4 +74,5 @@ html,
 body {
   overflow: hidden;
   height: 100dvh;
+  background: #000;
 }
