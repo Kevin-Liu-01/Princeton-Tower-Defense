@@ -9,6 +9,9 @@ import {
   Timer,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  Shield,
+  Crosshair,
 } from "lucide-react";
 import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
@@ -20,26 +23,94 @@ import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/them
 
 const HERO_ROLES: Record<
   HeroType,
-  { label: string; color: string; bg: string; border: string }
+  { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
-  tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)" },
-  tenor: { label: "Mage", color: "text-violet-300", bg: "rgba(35,20,65,0.85)", border: "rgba(139,92,246,0.35)" },
-  mathey: { label: "Tank", color: "text-indigo-300", bg: "rgba(25,25,60,0.85)", border: "rgba(99,102,241,0.35)" },
-  rocky: { label: "Artillery", color: "text-amber-300", bg: "rgba(45,35,10,0.85)", border: "rgba(138,112,32,0.35)" },
-  scott: { label: "Support", color: "text-teal-300", bg: "rgba(8,45,42,0.85)", border: "rgba(20,184,166,0.35)" },
-  captain: { label: "Summoner", color: "text-red-300", bg: "rgba(55,12,12,0.85)", border: "rgba(220,38,38,0.35)" },
-  engineer: { label: "Builder", color: "text-yellow-300", bg: "rgba(50,38,5,0.85)", border: "rgba(234,179,8,0.35)" },
+  tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)", icon: <Swords size={10} /> },
+  tenor: { label: "Mage", color: "text-violet-300", bg: "rgba(35,20,65,0.85)", border: "rgba(139,92,246,0.35)", icon: <Sparkles size={10} /> },
+  mathey: { label: "Tank", color: "text-indigo-300", bg: "rgba(25,25,60,0.85)", border: "rgba(99,102,241,0.35)", icon: <Shield size={10} /> },
+  rocky: { label: "Artillery", color: "text-amber-300", bg: "rgba(45,35,10,0.85)", border: "rgba(138,112,32,0.35)", icon: <Crosshair size={10} /> },
+  scott: { label: "Support", color: "text-teal-300", bg: "rgba(8,45,42,0.85)", border: "rgba(20,184,166,0.35)", icon: <Heart size={10} /> },
+  captain: { label: "Summoner", color: "text-red-300", bg: "rgba(55,12,12,0.85)", border: "rgba(220,38,38,0.35)", icon: <Sparkles size={10} /> },
+  engineer: { label: "Builder", color: "text-yellow-300", bg: "rgba(50,38,5,0.85)", border: "rgba(234,179,8,0.35)", icon: <Target size={10} /> },
 };
 
 const heroOptions: HeroType[] = [
   "tiger", "tenor", "mathey", "rocky", "scott", "captain", "engineer",
 ];
 
+const STAT_MAX: Record<string, number> = { HP: 5600, DMG: 90, RNG: 250, SPD: 3.5 };
+
 interface HallOfHeroesModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedHero: HeroType | null;
   onSelectHero: (hero: HeroType) => void;
+}
+
+function HeroStatCard({ icon, value, label, bg, barColor, maxValue }: {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  bg: string;
+  barColor: string;
+  maxValue: number;
+}) {
+  const pct = Math.min(100, (value / maxValue) * 100);
+  return (
+    <div
+      className="flex flex-col items-center px-4 py-2.5 rounded-lg min-w-[70px] relative overflow-hidden"
+      style={{ background: bg, border: "1px solid rgba(180,140,60,0.15)" }}
+    >
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{ backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 4px, rgba(255,255,255,0.05) 4px, rgba(255,255,255,0.05) 5px)" }}
+      />
+      {icon}
+      <span className="text-sm font-bold text-amber-200 mt-1.5 tabular-nums">{value}</span>
+      <span className="text-[7px] text-amber-500/50 uppercase font-bold tracking-wider mb-1.5">{label}</span>
+      <div className="w-full h-[3px] rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.3)" }}>
+        <div className="h-full rounded-full animate-stat-fill" style={{ width: `${pct}%`, background: barColor }} />
+      </div>
+    </div>
+  );
+}
+
+function FloatingParticles({ color, count = 6 }: { color: string; count?: number }) {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 rounded-full animate-float-particle"
+          style={{
+            background: color,
+            left: `${15 + (i * 70) / count}%`,
+            bottom: `${10 + (i % 3) * 15}%`,
+            animationDelay: `${i * 0.5}s`,
+            animationDuration: `${2.5 + (i % 3) * 0.5}s`,
+            boxShadow: `0 0 6px ${color}`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function RuneBackground() {
+  return (
+    <div className="absolute inset-0 pointer-events-none animate-rune-fade overflow-hidden">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="rune-grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M30 5 L30 15 M25 10 L35 10" stroke="rgba(180,140,60,0.4)" strokeWidth="0.5" fill="none" />
+            <circle cx="30" cy="10" r="2" stroke="rgba(180,140,60,0.3)" strokeWidth="0.3" fill="none" />
+            <path d="M5 30 L15 30 M10 25 L10 35" stroke="rgba(180,140,60,0.3)" strokeWidth="0.5" fill="none" />
+            <path d="M50 50 L55 45 L55 55 Z" stroke="rgba(180,140,60,0.25)" strokeWidth="0.3" fill="none" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#rune-grid)" />
+      </svg>
+    </div>
+  );
 }
 
 export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
@@ -57,6 +128,7 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
   }, [isOpen, selectedHero]);
 
   const hero = HERO_DATA[focusedHero];
+  const role = HERO_ROLES[focusedHero];
   const isEquipped = selectedHero === focusedHero;
   const focusedIdx = heroOptions.indexOf(focusedHero);
 
@@ -68,24 +140,22 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60}>
       <div
-        className="relative w-[92vw] max-w-[840px] max-h-[88vh] rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-[92vw] max-w-[880px] max-h-[88vh] rounded-2xl overflow-hidden flex flex-col"
         style={{
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,
-          boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
+          boxShadow: `0 0 60px ${GOLD.glow07}, 0 0 120px rgba(180,140,60,0.04), inset 0 0 30px ${GOLD.glow04}`,
         }}
       >
-        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={48} showSideBorders={false}>
+        <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={52} showSideBorders={false}>
           <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+          <RuneBackground />
 
           {/* Close */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-50 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
-            style={{
-              background: PANEL.bgDeep,
-              border: `1px solid ${GOLD.border25}`,
-            }}
+            className="absolute top-3 right-3 z-50 w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:rotate-90 duration-300"
+            style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
           >
             <X size={16} className="text-amber-400" />
           </button>
@@ -93,224 +163,289 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
           {/* Header */}
           <div
             className="relative px-6 py-4 flex-shrink-0"
-            style={{
-              background: "linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.08), transparent)",
-            }}
+            style={{ background: "linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.08), transparent)" }}
           >
             <div className="flex items-center gap-3">
-              <HeroHelmetIcon size={28} />
-              <h2 className="text-lg font-bold text-amber-200 tracking-[0.2em] uppercase">
-                Hall of Heroes
-              </h2>
+              <div className="relative">
+                <HeroHelmetIcon size={30} />
+                <div className="absolute -inset-1 rounded-full animate-badge-glow" style={{ "--glow-color": "rgba(180,140,60,0.3)" } as React.CSSProperties} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-amber-200 tracking-[0.2em] uppercase font-cinzel">
+                  Hall of Heroes
+                </h2>
+                <p className="text-[9px] text-amber-600/50 tracking-[0.15em] uppercase mt-0.5">
+                  Choose your champion wisely
+                </p>
+              </div>
             </div>
-            <div
-              className="absolute bottom-0 left-0 right-0 h-px"
-              style={{ background: dividerGradient }}
-            />
+            <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: dividerGradient }} />
           </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col lg:flex-row p-5 gap-5">
-            {/* Featured hero showcase */}
-            <div
-              className="flex-1 relative rounded-xl overflow-hidden"
-              style={{
-                background: `linear-gradient(135deg, ${hero.color}12, rgba(20,16,10,0.97))`,
-                border: `1.5px solid ${hero.color}35`,
-                minHeight: 340,
-              }}
-            >
-              {/* Placeholder action background */}
+          <div className="flex-1 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col lg:flex-row p-5 gap-5">
+              {/* Featured hero showcase */}
               <div
-                className="absolute inset-0 opacity-[0.06]"
+                className="flex-1 relative rounded-xl overflow-hidden"
                 style={{
-                  backgroundImage: `url('/images/heroes/${focusedHero}-action.png')`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: `radial-gradient(ellipse at 50% 30%, ${hero.color}08, transparent 60%), linear-gradient(0deg, rgba(18,14,8,0.98) 0%, transparent 50%)`,
-                }}
-              />
-
-              {/* Navigation arrows */}
-              <button
-                onClick={() => navigate(-1)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                style={{
-                  background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(180,140,60,0.3)",
+                  background: `linear-gradient(135deg, ${hero.color}12, rgba(20,16,10,0.97))`,
+                  border: `1.5px solid ${hero.color}35`,
+                  minHeight: 420,
                 }}
               >
-                <ChevronLeft size={20} className="text-amber-400" />
-              </button>
-              <button
-                onClick={() => navigate(1)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
-                style={{
-                  background: "rgba(0,0,0,0.5)",
-                  border: "1px solid rgba(180,140,60,0.3)",
-                }}
-              >
-                <ChevronRight size={20} className="text-amber-400" />
-              </button>
-
-              {/* Hero content */}
-              <div className="relative z-10 flex flex-col items-center justify-center h-full py-8 px-4">
+                {/* Background layers */}
                 <div
-                  className="w-28 h-28 rounded-full flex items-center justify-center mb-5 transition-all duration-300"
+                  className="absolute inset-0 opacity-[0.06]"
                   style={{
-                    background: `radial-gradient(circle, ${hero.color}30, ${hero.color}08)`,
-                    border: `3px solid ${hero.color}`,
-                    boxShadow: `0 0 40px ${hero.color}30, 0 0 80px ${hero.color}15, inset 0 0 20px ${hero.color}10`,
+                    backgroundImage: `url('/images/heroes/${focusedHero}-action.png')`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                   }}
-                >
-                  <HeroSprite type={focusedHero} size={72} />
-                </div>
-
-                <h3 className="text-2xl font-black text-amber-100 tracking-wide mb-1">
-                  {hero.name}
-                </h3>
-                <span
-                  className="text-xs font-bold uppercase tracking-[0.2em] px-3 py-0.5 rounded-full mb-4"
+                />
+                <div
+                  className="absolute inset-0"
                   style={{
-                    background: HERO_ROLES[focusedHero].bg,
-                    border: `1px solid ${HERO_ROLES[focusedHero].border}`,
+                    background: `radial-gradient(ellipse at 50% 25%, ${hero.color}10, transparent 55%), linear-gradient(0deg, rgba(18,14,8,0.99) 0%, rgba(18,14,8,0.7) 30%, transparent 60%)`,
                   }}
-                >
-                  <span className={HERO_ROLES[focusedHero].color}>
-                    {HERO_ROLES[focusedHero].label}
-                  </span>
-                </span>
+                />
 
-                {/* Stats row */}
-                <div className="flex gap-2 mb-5">
-                  {[
-                    { icon: <Heart size={13} className="text-red-400" />, value: hero.hp, label: "HP", bg: "rgba(127,29,29,0.2)" },
-                    { icon: <Swords size={13} className="text-orange-400" />, value: hero.damage, label: "DMG", bg: "rgba(124,45,18,0.2)" },
-                    { icon: <Target size={13} className="text-blue-400" />, value: hero.range, label: "RNG", bg: "rgba(30,58,138,0.2)" },
-                    { icon: <Gauge size={13} className="text-green-400" />, value: hero.speed, label: "SPD", bg: "rgba(20,83,45,0.2)" },
-                  ].map((stat) => (
+                <FloatingParticles color={hero.color} count={8} />
+
+                {/* Navigation arrows */}
+                {(["left", "right"] as const).map((side) => (
+                  <button
+                    key={side}
+                    onClick={() => navigate(side === "left" ? -1 : 1)}
+                    className={`absolute ${side === "left" ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:bg-black/70 duration-200 group`}
+                    style={{ background: "rgba(0,0,0,0.45)", border: `1px solid ${hero.color}40` }}
+                  >
+                    {side === "left"
+                      ? <ChevronLeft size={20} className="text-amber-400 group-hover:text-amber-300 transition-colors" />
+                      : <ChevronRight size={20} className="text-amber-400 group-hover:text-amber-300 transition-colors" />
+                    }
+                  </button>
+                ))}
+
+                {/* Hero content */}
+                <div className="relative z-10 flex flex-col items-center justify-center h-full py-8 px-4">
+                  {/* Hero avatar with animated aura */}
+                  <div className="relative mb-6">
+                    {/* Outer spinning aura ring */}
                     <div
-                      key={stat.label}
-                      className="flex flex-col items-center px-3.5 py-2 rounded-lg"
+                      className="absolute -inset-6 rounded-full animate-aura-spin"
                       style={{
-                        background: stat.bg,
-                        border: "1px solid rgba(180,140,60,0.12)",
+                        background: `conic-gradient(from 0deg, transparent, ${hero.color}20, transparent, ${hero.color}15, transparent)`,
+                      }}
+                    />
+                    {/* Pulsing glow */}
+                    <div
+                      className="absolute -inset-4 rounded-full animate-hero-aura"
+                      style={{
+                        background: `radial-gradient(circle, ${hero.color}20, transparent 70%)`,
+                      }}
+                    />
+                    {/* Avatar circle */}
+                    <div
+                      className="relative w-[120px] h-[120px] rounded-full flex items-center justify-center transition-all duration-500"
+                      style={{
+                        background: `radial-gradient(circle at 40% 35%, ${hero.color}35, ${hero.color}10)`,
+                        border: `3px solid ${hero.color}`,
+                        boxShadow: `0 0 40px ${hero.color}30, 0 0 80px ${hero.color}15, inset 0 0 25px ${hero.color}12`,
                       }}
                     >
-                      {stat.icon}
-                      <span className="text-sm font-bold text-amber-200 mt-1">
-                        {stat.value}
-                      </span>
-                      <span className="text-[8px] text-amber-500/60 uppercase font-semibold">
-                        {stat.label}
-                      </span>
+                      <HeroSprite type={focusedHero} size={76} />
                     </div>
-                  ))}
-                </div>
-
-                {/* Ability */}
-                <div
-                  className="px-5 py-3 rounded-xl max-w-[360px] text-center"
-                  style={{
-                    background: "rgba(88,28,135,0.14)",
-                    border: "1px solid rgba(88,28,135,0.2)",
-                  }}
-                >
-                  <div className="flex items-center justify-center gap-2 mb-1.5">
-                    <HeroAbilityIcon type={focusedHero} size={16} />
-                    <span className="text-sm font-bold text-purple-200">
-                      {hero.ability}
-                    </span>
-                    <span className="text-[9px] text-purple-400/60 flex items-center gap-0.5">
-                      <Timer size={9} />
-                      {HERO_ABILITY_COOLDOWNS[focusedHero] / 1000}s
-                    </span>
+                    {/* Equipped badge */}
+                    {isEquipped && (
+                      <div
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider text-amber-200 animate-badge-glow z-20"
+                        style={{
+                          background: "linear-gradient(135deg, rgba(100,70,15,0.95), rgba(60,40,8,0.95))",
+                          border: "1px solid rgba(250,200,60,0.5)",
+                          "--glow-color": "rgba(250,200,60,0.3)",
+                        } as React.CSSProperties}
+                      >
+                        Active
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[11px] text-purple-300/70 leading-relaxed">
-                    {hero.abilityDesc}
+
+                  {/* Name + Role */}
+                  <h3 className="text-2xl font-black text-amber-100 tracking-wide mb-1.5 font-cinzel">
+                    {hero.name}
+                  </h3>
+                  <span
+                    className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] px-3.5 py-1 rounded-full mb-3"
+                    style={{ background: role.bg, border: `1px solid ${role.border}` }}
+                  >
+                    <span className={role.color}>{role.icon}</span>
+                    <span className={role.color}>{role.label}</span>
+                  </span>
+
+                  {/* Lore blurb */}
+                  <p className="text-[10px] text-amber-400/40 leading-relaxed text-center max-w-[340px] mb-5 italic">
+                    {hero.description}
                   </p>
+
+                  {/* Ornate divider */}
+                  <div className="w-48 h-px mb-5" style={{ background: `linear-gradient(90deg, transparent, ${hero.color}40, transparent)` }} />
+
+                  {/* Stats row */}
+                  <div className="flex gap-2 mb-5 flex-wrap justify-center">
+                    <HeroStatCard icon={<Heart size={14} className="text-red-400" />} value={hero.hp} label="HP" bg="rgba(127,29,29,0.2)" barColor="#ef4444" maxValue={STAT_MAX.HP} />
+                    <HeroStatCard icon={<Swords size={14} className="text-orange-400" />} value={hero.damage} label="DMG" bg="rgba(124,45,18,0.2)" barColor="#f97316" maxValue={STAT_MAX.DMG} />
+                    <HeroStatCard icon={<Target size={14} className="text-blue-400" />} value={hero.range} label="RNG" bg="rgba(30,58,138,0.2)" barColor="#3b82f6" maxValue={STAT_MAX.RNG} />
+                    <HeroStatCard icon={<Gauge size={14} className="text-green-400" />} value={hero.speed} label="SPD" bg="rgba(20,83,45,0.2)" barColor="#22c55e" maxValue={STAT_MAX.SPD} />
+                  </div>
+
+                  {/* Ability section */}
+                  <div
+                    className="relative px-5 py-3.5 rounded-xl max-w-[380px] text-center overflow-hidden"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(88,28,135,0.18), rgba(88,28,135,0.08))",
+                      border: "1px solid rgba(88,28,135,0.25)",
+                    }}
+                  >
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <div className="absolute inset-0 animate-shimmer" style={{ background: "linear-gradient(90deg, transparent, rgba(168,85,247,0.06), transparent)" }} />
+                    </div>
+                    <div className="relative">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: "rgba(88,28,135,0.3)", border: "1px solid rgba(139,92,246,0.3)" }}>
+                          <HeroAbilityIcon type={focusedHero} size={14} />
+                        </div>
+                        <span className="text-sm font-bold text-purple-200 tracking-wide">
+                          {hero.ability}
+                        </span>
+                        <span className="text-[9px] text-purple-400/50 flex items-center gap-0.5 bg-purple-950/30 px-1.5 py-0.5 rounded">
+                          <Timer size={9} />
+                          {HERO_ABILITY_COOLDOWNS[focusedHero] / 1000}s
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-purple-300/60 leading-relaxed">
+                        {hero.abilityDesc}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Select button */}
+                  <button
+                    onClick={() => {
+                      onSelectHero(focusedHero);
+                      onClose();
+                    }}
+                    className="mt-6 px-10 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 hover:brightness-110 duration-200 relative overflow-hidden group"
+                    style={{
+                      background: isEquipped
+                        ? "linear-gradient(180deg, rgba(40,70,40,0.9), rgba(25,45,25,0.9))"
+                        : "linear-gradient(180deg, rgba(180,130,30,0.92), rgba(120,78,15,0.95))",
+                      border: isEquipped
+                        ? "1.5px solid rgba(100,200,100,0.5)"
+                        : "1.5px solid rgba(250,200,60,0.55)",
+                      boxShadow: isEquipped
+                        ? "0 0 20px rgba(100,200,100,0.15)"
+                        : "0 0 25px rgba(250,200,60,0.18), inset 0 0 12px rgba(250,200,60,0.1)",
+                      color: isEquipped ? "#86efac" : "#fde68a",
+                    }}
+                  >
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
+                    </div>
+                    <span className="relative z-10">
+                      {isEquipped ? "Equipped" : "Select Champion"}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Hero roster */}
+              <div className="w-full lg:w-[220px] flex flex-col gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 px-1 mb-1">
+                  <span className="text-[9px] font-bold text-amber-500/50 uppercase tracking-[0.2em]">
+                    Roster
+                  </span>
+                  <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(180,140,60,0.15), transparent)" }} />
+                  <span className="text-[8px] text-amber-600/30 font-medium">{heroOptions.length} heroes</span>
                 </div>
 
-                {/* Select button */}
-                <button
-                  onClick={() => {
-                    onSelectHero(focusedHero);
-                    onClose();
-                  }}
-                  className="mt-5 px-8 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 hover:brightness-110"
-                  style={{
-                    background: isEquipped
-                      ? "linear-gradient(180deg, rgba(40,70,40,0.9), rgba(25,45,25,0.9))"
-                      : "linear-gradient(180deg, rgba(180,130,30,0.92), rgba(120,78,15,0.95))",
-                    border: isEquipped
-                      ? "1.5px solid rgba(100,200,100,0.5)"
-                      : "1.5px solid rgba(250,200,60,0.55)",
-                    boxShadow: isEquipped
-                      ? "0 0 20px rgba(100,200,100,0.15)"
-                      : "0 0 20px rgba(250,200,60,0.15), inset 0 0 10px rgba(250,200,60,0.1)",
-                    color: isEquipped ? "#86efac" : "#fde68a",
-                  }}
-                >
-                  {isEquipped ? "✓ Equipped" : "Select Champion"}
-                </button>
-              </div>
-            </div>
-
-            {/* Hero roster */}
-            <div className="w-full lg:w-[200px] flex flex-col gap-2 flex-shrink-0">
-              <span className="text-[9px] font-bold text-amber-500/60 uppercase tracking-[0.2em] px-1">
-                Roster
-              </span>
-              <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5">
-                {heroOptions.map((ht) => {
-                  const h = HERO_DATA[ht];
-                  const isFocused = focusedHero === ht;
-                  const isSel = selectedHero === ht;
-                  return (
-                    <button
-                      key={ht}
-                      onClick={() => setFocusedHero(ht)}
-                      className={`relative flex flex-col items-center p-2.5 rounded-lg transition-all duration-200 ${
-                        isFocused
-                          ? "scale-105 z-10"
-                          : "hover:scale-105 hover:brightness-110"
-                      }`}
-                      style={{
-                        background: isFocused
-                          ? `linear-gradient(135deg, ${h.color}30, ${h.color}10)`
-                          : "linear-gradient(135deg, rgba(38,34,28,0.9), rgba(24,20,16,0.9))",
-                        border: `1.5px solid ${isFocused ? h.color : "rgba(100,90,70,0.2)"}`,
-                        boxShadow: isFocused
-                          ? `0 0 14px ${h.color}25`
-                          : "none",
-                      }}
-                    >
-                      <HeroSprite type={ht} size={36} />
-                      <span className="text-[8px] font-bold text-amber-300/70 mt-1 leading-none whitespace-nowrap">
-                        {h.name}
-                      </span>
-                      {isSel && (
-                        <div
-                          className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center border-[1.5px] border-stone-900 text-[7px] text-white font-bold"
-                          style={{
-                            boxShadow: "0 0 6px rgba(245,158,11,0.5)",
-                          }}
-                        >
-                          ✓
+                <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
+                  {heroOptions.map((ht) => {
+                    const h = HERO_DATA[ht];
+                    const r = HERO_ROLES[ht];
+                    const isFocused = focusedHero === ht;
+                    const isSel = selectedHero === ht;
+                    return (
+                      <button
+                        key={ht}
+                        onClick={() => setFocusedHero(ht)}
+                        className={`relative flex flex-col items-center p-3 rounded-lg transition-all duration-200 group ${
+                          isFocused ? "scale-105 z-10" : "hover:scale-105 hover:brightness-110"
+                        }`}
+                        style={{
+                          background: isFocused
+                            ? `linear-gradient(135deg, ${h.color}30, ${h.color}10)`
+                            : "linear-gradient(135deg, rgba(38,34,28,0.9), rgba(24,20,16,0.9))",
+                          border: `1.5px solid ${isFocused ? h.color : "rgba(100,90,70,0.2)"}`,
+                          boxShadow: isFocused
+                            ? `0 0 18px ${h.color}25, inset 0 0 12px ${h.color}08`
+                            : "none",
+                        }}
+                      >
+                        {/* Inner shimmer on hover */}
+                        <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `radial-gradient(circle at 50% 30%, ${h.color}10, transparent 70%)` }} />
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
+
+                        <div className="relative">
+                          <HeroSprite type={ht} size={38} />
+                          {isFocused && (
+                            <div className="absolute -inset-1 rounded-full" style={{ boxShadow: `0 0 12px ${h.color}30` }} />
+                          )}
+                        </div>
+                        <span className="text-[8px] font-bold text-amber-300/70 mt-1.5 leading-none whitespace-nowrap">
+                          {h.name}
+                        </span>
+                        {/* Role micro-badge */}
+                        <span className={`text-[6px] font-semibold uppercase tracking-wider mt-0.5 ${r.color} opacity-60`}>
+                          {r.label}
+                        </span>
+
+                        {isSel && (
+                          <div
+                            className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-amber-500 rounded-full flex items-center justify-center border-[1.5px] border-stone-900 text-[7px] text-white font-bold"
+                            style={{ boxShadow: "0 0 8px rgba(245,158,11,0.5)" }}
+                          >
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Current selection summary */}
+                <div className="mt-auto pt-3">
+                  <div className="h-px mb-3" style={{ background: "linear-gradient(90deg, transparent, rgba(180,140,60,0.15) 30%, rgba(180,140,60,0.15) 70%, transparent)" }} />
+                  {selectedHero && (
+                    <div
+                      className="flex items-center gap-2.5 p-2.5 rounded-lg"
+                      style={{ background: "rgba(60,45,15,0.2)", border: "1px solid rgba(180,140,60,0.12)" }}
+                    >
+                      <HeroSprite type={selectedHero} size={24} />
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-bold text-amber-200">
+                          {HERO_DATA[selectedHero].name}
+                        </span>
+                        <span className="text-[7px] text-amber-500/40 uppercase tracking-wider font-semibold">
+                          Current Champion
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </OrnateFrame>
       </div>
     </BaseModal>

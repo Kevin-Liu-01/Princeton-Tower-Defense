@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Heart,
   Timer,
@@ -9,8 +10,6 @@ import {
   Shield,
   Pointer,
   Grab,
-  Wind,
-  ShellIcon,
   Coins,
   Clock,
   Flame,
@@ -40,7 +39,7 @@ import {
   getReinforcementSpellStats,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
-import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
+import { useIsTouchDevice } from "./hooks";
 import { PANEL, GOLD, NEUTRAL, RED_CARD, SELECTED, OVERLAY, SPELL_THEME } from "./theme";
 import { HudTooltip } from "./HudTooltip";
 import { MobileHeroSpellBar } from "./MobileHeroSpellBar";
@@ -92,6 +91,40 @@ function hexToRgba(hex: string, a: number): string {
 // =============================================================================
 // HERO AND SPELL BAR COMPONENT - ENHANCED
 // =============================================================================
+// SPELL INFO PORTAL — renders above the orb via portal to avoid clipping
+// =============================================================================
+
+interface SpellInfoPortalProps {
+  anchorRef: React.RefObject<HTMLDivElement | null>;
+  children: React.ReactNode;
+}
+
+const SpellInfoPortal: React.FC<SpellInfoPortalProps> = ({ anchorRef, children }) => {
+  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
+
+  useEffect(() => {
+    if (!anchorRef.current) return;
+    const rect = anchorRef.current.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const panelW = 280;
+    let left = cx - panelW / 2;
+    if (left < 8) left = 8;
+    if (left + panelW > window.innerWidth - 8) left = window.innerWidth - 8 - panelW;
+    setPos({ left, bottom: window.innerHeight - rect.top + 10 });
+  }, [anchorRef]);
+
+  if (!pos || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      className="fixed z-[9998] pointer-events-none"
+      style={{ left: pos.left, bottom: pos.bottom, width: 280 }}
+    >
+      {children}
+    </div>,
+    document.body,
+  );
+};
 
 interface HeroSpellBarProps {
   hero: Hero | null;
@@ -122,11 +155,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   onUseHeroAbility,
   castSpell,
 }) => {
-  const [hoveredSpell, setHoveredSpell] = React.useState<SpellType | null>(
-    null
-  );
+  const [hoveredSpell, setHoveredSpell] = React.useState<SpellType | null>(null);
+  const orbRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const getOrbRef = useCallback((type: string) => (el: HTMLDivElement | null) => { orbRefs.current[type] = el; }, []);
   const isTouchDevice = useIsTouchDevice();
-  const sizes = useResponsiveSizes();
   const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
   const lightningStats = getLightningSpellStats(spellUpgradeLevels.lightning);
   const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
@@ -231,12 +263,12 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </div>
 
       {/* Desktop: Full card layout */}
-      <div className="hidden xl:flex px-3 py-2 items-center justify-between">
+      <div className="hidden xl:flex px-3 py-2 items-end justify-between gap-3">
         {/* Hero Section */}
         <div
           role="button"
           tabIndex={0}
-          className="flex-shrink-0 h-full pointer-events-auto cursor-pointer"
+          className="flex-shrink-0 pointer-events-auto cursor-pointer"
           onClick={toggleHeroSelection}
           onKeyDown={(e) => {
             if ((e.key === "Enter" || e.key === " ") && hero) {
@@ -246,86 +278,67 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
           }}
         >
           {hero && (
-            <div className="flex items-stretch gap-1.5 sm:gap-3">
+            <div className="flex items-stretch gap-2">
               {hero.dead ? (
                 <>
-                  {/* Dead hero card — matches alive card structure */}
-                  <div className="relative p-1.5 sm:p-2 rounded-xl transition-all overflow-hidden" style={{
-                    background: `linear-gradient(135deg, ${NEUTRAL.bgLightAlt}, ${NEUTRAL.bgDarkAlt})`,
-                    border: `1.5px solid ${NEUTRAL.borderMid}`,
-                    boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
+                  {/* Dead hero card */}
+                  <div className="relative rounded-2xl overflow-hidden" style={{
+                    background: `linear-gradient(180deg, ${NEUTRAL.bgLightAlt}, ${NEUTRAL.bgDarkAlt})`,
+                    border: `2px solid ${NEUTRAL.borderMid}`,
+                    boxShadow: `inset 0 0 20px ${NEUTRAL.glow}`,
+                    padding: '10px 14px',
                   }}>
-                    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorderMid}` }} />
-                    <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-1.5">
-                      <div
-                        className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-40 grayscale shrink-0"
-                      >
-                        <HeroSprite type={hero.type} size={sizes.heroIcon} />
+                    <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorderMid}` }} />
+                    <div className="relative z-10 flex items-center gap-3 mb-2">
+                      <div className="w-14 h-14 rounded-full border-3 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-30 grayscale shrink-0">
+                        <HeroSprite type={hero.type} size={40} />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-[9px] sm:text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1 text-left leading-tight max-w-[60px] sm:max-w-none">
+                        <div className="text-xs font-black text-stone-400 uppercase tracking-wider leading-tight">
                           {HERO_DATA[hero.type].name}
                         </div>
-                        <div className="hidden sm:flex gap-2 mt-0.5 text-[9px] opacity-40">
-                          <span className="text-stone-500">
-                            <Swords size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].damage} DMG
-                          </span>
-                          <span className="text-stone-500">
-                            <Target size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].range} RNG
-                          </span>
-                          <span className="text-stone-500">
-                            <Gauge size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].speed} SPD
-                          </span>
+                        <div className="flex gap-2 mt-1 text-[9px] opacity-40">
+                          <span className="text-stone-500 flex items-center gap-0.5"><Swords size={10} /> {HERO_DATA[hero.type].damage}</span>
+                          <span className="text-stone-500 flex items-center gap-0.5"><Target size={10} /> {HERO_DATA[hero.type].range}</span>
+                          <span className="text-stone-500 flex items-center gap-0.5"><Gauge size={10} /> {HERO_DATA[hero.type].speed}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="relative z-10 w-full">
-                      <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
-                        <div className="h-full w-0 rounded-sm bg-stone-700" />
+                    <div className="relative z-10">
+                      <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(100,100,100,0.2)' }}>
+                        <div className="h-full w-0 rounded-full bg-stone-700" />
+                      </div>
+                      <div className="flex justify-between items-center mt-1 px-0.5">
+                        <span className="text-[9px] font-bold text-stone-500 tabular-nums">0/{hero.maxHp}</span>
+                        <span className="text-[8px] text-stone-600">0%</span>
                       </div>
                     </div>
-                    <div className="relative z-10 flex justify-between items-center mt-0.5 px-0.5">
-                      <span className="text-[8px] sm:text-[9px] font-bold text-stone-500">
-                        0/{hero.maxHp}
-                      </span>
-                      <span className="text-[7px] sm:text-[8px] text-stone-600 font-medium">
-                        0%
-                      </span>
-                    </div>
                   </div>
-                  {/* Respawn timer — matches ability button dimensions */}
+                  {/* Respawn timer */}
                   <HudTooltip label={`Hero respawning in ${Math.ceil(hero.respawnTimer / 1000)}s`} position="top">
-                    <div className="px-1.5 sm:px-3 py-1 sm:py-2.5 h-full relative font-bold rounded-xl flex flex-col items-center justify-center overflow-hidden max-w-[72px] sm:max-w-none" style={{
-                      background: "linear-gradient(135deg, rgba(50,20,20,0.85), rgba(35,12,12,0.7))",
-                      border: `1.5px solid ${RED_CARD.border25}`,
-                      boxShadow: `inset 0 0 12px ${RED_CARD.glow05}`,
+                    <div className="relative rounded-2xl flex flex-col items-center justify-center overflow-hidden" style={{
+                      background: "linear-gradient(180deg, rgba(55,18,18,0.92), rgba(35,10,10,0.9))",
+                      border: `2px solid ${RED_CARD.border25}`,
+                      boxShadow: `inset 0 0 20px rgba(239,68,68,0.06), 0 0 12px rgba(239,68,68,0.08)`,
+                      padding: '12px 20px',
                     }}>
-                      {/* Respawn fill bar — fills upward as respawn completes */}
-                      <div
-                        className="absolute inset-0 pointer-events-none transition-all duration-300 ease-linear"
+                      <div className="absolute inset-0 pointer-events-none transition-all duration-300 ease-linear"
                         style={{
                           background: "linear-gradient(0deg, rgba(239,68,68,0.18), rgba(239,68,68,0.04))",
                           clipPath: `inset(${Math.max(0, (hero.respawnTimer / 5000) * 100)}% 0 0 0)`,
                         }}
                       />
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
-                      <div className="relative z-10 flex flex-col items-center justify-center">
-                        <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1 items-center text-[9px] sm:text-[12px] text-red-300 font-bold text-center leading-tight">
-                          {getHeroAbilityIcon(hero.type, 14, "text-red-400/60 inline mb-0.5")}
+                      <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
+                      <div className="relative z-10 flex flex-col items-center">
+                        <span className="flex items-center gap-1.5 text-[12px] text-red-300 font-bold">
+                          {getHeroAbilityIcon(hero.type, 16, "text-red-400/60")}
                           {HERO_DATA[hero.type].ability}
                         </span>
-                        <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
-                          <Timer size={12} className="text-red-400 sm:w-[14px] sm:h-[14px]" />
-                          <span className="text-[11px] sm:text-[13px] text-red-400 font-black tabular-nums">
-                            {Math.ceil(hero.respawnTimer / 1000)}s
-                          </span>
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <Timer size={14} className="text-red-400" />
+                          <span className="text-[14px] text-red-400 font-black tabular-nums">{Math.ceil(hero.respawnTimer / 1000)}s</span>
                         </div>
-                        <span className="text-[7px] sm:text-[8px] text-stone-500 uppercase tracking-wider mt-0.5">
-                          Respawning
-                        </span>
+                        <span className="text-[8px] text-stone-500 uppercase tracking-widest mt-1">Respawning</span>
                       </div>
                     </div>
                   </HudTooltip>
@@ -335,89 +348,89 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   {(() => {
                     const hpPercent = Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100));
                     const hpTheme = getHeroHpTheme(hpPercent);
+                    const hc = HERO_DATA[hero.type].color;
                     return (
                       <div
-                        className="relative p-1.5 sm:p-2 rounded-xl transition-all overflow-hidden"
+                        className="relative rounded-2xl overflow-hidden transition-all"
                         style={{
                           background: hero.selected
-                            ? `linear-gradient(135deg, rgba(100,68,18,0.55), rgba(72,48,14,0.4))`
-                            : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                            ? `linear-gradient(180deg, rgba(100,68,18,0.55), rgba(60,40,12,0.5))`
+                            : `linear-gradient(180deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                           border: hero.selected
-                            ? `1.5px solid ${GOLD.accentBorder50}`
-                            : `1.5px solid ${GOLD.border30}`,
+                            ? `2px solid ${GOLD.accentBorder50}`
+                            : `2px solid ${GOLD.border30}`,
                           boxShadow: hero.selected
-                            ? `inset 0 0 15px ${GOLD.accentGlow08}, 0 0 12px ${GOLD.accentGlow10}`
-                            : `inset 0 0 12px ${GOLD.glow04}`,
+                            ? `inset 0 0 20px ${GOLD.accentGlow08}, 0 0 16px ${GOLD.accentGlow10}`
+                            : `inset 0 0 15px ${GOLD.glow04}, 0 0 12px rgba(0,0,0,0.3)`,
+                          padding: '10px 14px',
                         }}
                       >
-                        {/* HP gradient fill bar behind entire hero card */}
-                        <div
-                          className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
-                          style={{
-                            background: hpTheme.fillGradient,
-                            clipPath: `inset(0 ${100 - hpPercent}% 0 0)`,
-                          }}
+                        <div className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
+                          style={{ background: hpTheme.fillGradient, clipPath: `inset(0 ${100 - hpPercent}% 0 0)` }}
                         />
-                        {/* Inner border */}
-                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
+                        <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{
                           border: hero.selected ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${GOLD.innerBorder10}`,
                         }} />
                         <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
-                          <div className="absolute top-1 right-1 z-20">
+                          <div className="absolute top-2 right-2 z-20">
                             {hero.selected ? (
-                              <Grab size={14} className="text-amber-300/90 rounded p-0.5 bg-amber-500/50 sm:w-[18px] sm:h-[18px]" />
+                              <Grab size={16} className="text-amber-300 rounded-md p-0.5" style={{ background: 'rgba(180,140,60,0.3)' }} />
                             ) : (
-                              <Pointer size={14} className="text-amber-400/90 rounded p-0.5 bg-amber-500/50 sm:w-[18px] sm:h-[18px]" />
+                              <Pointer size={16} className="text-amber-400 rounded-md p-0.5" style={{ background: 'rgba(180,140,60,0.2)' }} />
                             )}
                           </div>
                         </HudTooltip>
 
-                        <div className="relative z-10 flex items-center gap-1.5 sm:gap-3 mb-1 sm:mb-1.5">
+                        <div className="relative z-10 flex items-center gap-3 mb-2">
                           <div
-                            className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden shrink-0"
+                            className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shrink-0 pt-0.5"
                             style={{
-                              borderColor: HERO_DATA[hero.type].color,
-                              backgroundColor: HERO_DATA[hero.type].color + "30",
+                              border: `3px solid ${hc}`,
+                              background: `radial-gradient(circle at 35% 35%, ${hc}35, ${hc}10)`,
+                              boxShadow: `0 0 16px ${hc}25, inset 0 0 10px ${hc}15`,
                               animation: hpTheme.heartbeat ? `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` : "none",
                             }}
                           >
-                            <HeroSprite type={hero.type} size={sizes.heroIcon} />
+                            <HeroSprite type={hero.type} size={40} />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-[9px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left leading-tight max-w-[60px] sm:max-w-none">
+                            <div className="text-xs font-black text-amber-200 uppercase tracking-wider leading-tight">
                               {HERO_DATA[hero.type].name}
                             </div>
-                            <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
-                              <span className="text-orange-400">
-                                <Swords size={12} className="inline" />{" "}
-                                {HERO_DATA[hero.type].damage} DMG
-                              </span>
-                              <span className="text-blue-400">
-                                <Target size={12} className="inline" />{" "}
-                                {HERO_DATA[hero.type].range} RNG
-                              </span>
-                              <span className="text-green-400">
-                                <Gauge size={12} className="inline" />{" "}
-                                {HERO_DATA[hero.type].speed} SPD
-                              </span>
+                            <div className="flex gap-1.5 mt-1">
+                              {[
+                                { icon: <Swords size={10} />, val: HERO_DATA[hero.type].damage, color: 'text-orange-300', bg: 'rgba(180,80,20,0.2)', border: 'rgba(180,80,20,0.15)' },
+                                { icon: <Target size={10} />, val: HERO_DATA[hero.type].range, color: 'text-blue-300', bg: 'rgba(40,80,160,0.2)', border: 'rgba(40,80,160,0.15)' },
+                                { icon: <Gauge size={10} />, val: HERO_DATA[hero.type].speed, color: 'text-green-300', bg: 'rgba(20,120,60,0.2)', border: 'rgba(20,120,60,0.15)' },
+                              ].map((s, i) => (
+                                <span key={i} className={`${s.color} text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md`}
+                                  style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                                  {s.icon} {s.val}
+                                </span>
+                              ))}
                             </div>
                           </div>
                         </div>
-                        <div className="relative z-10 w-full">
-                          <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
+                        <div className="relative z-10">
+                          <div className="w-full h-3 rounded-full overflow-hidden" style={{
+                            background: 'rgba(0,0,0,0.5)',
+                            border: `1px solid rgba(180,140,60,0.12)`,
+                            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.4)',
+                          }}>
                             <div
-                              className={`h-full rounded-sm bg-gradient-to-r ${hpTheme.barColor} shadow-md ${hpTheme.glowColor} transition-all duration-300`}
-                              style={{ width: `${hpPercent}%` }}
+                              className={`h-full rounded-full bg-gradient-to-r ${hpTheme.barColor} transition-all duration-300`}
+                              style={{
+                                width: `${hpPercent}%`,
+                                boxShadow: `0 0 8px ${hpTheme.glowColor.replace('shadow-', '').replace('/50', '').replace('/40', '')}40`,
+                              }}
                             />
                           </div>
-                        </div>
-                        <div className="relative z-10 flex justify-between items-center mt-0.5 px-0.5">
-                          <span className={`text-[8px] sm:text-[9px] font-bold ${hpTheme.textColor}`}>
-                            {Math.floor(hero.hp)}/{hero.maxHp}
-                          </span>
-                          <span className="text-[7px] sm:text-[8px] text-amber-500/80 font-medium">
-                            {Math.round(hpPercent)}%
-                          </span>
+                          <div className="flex justify-between items-center mt-1 px-0.5">
+                            <span className={`text-[9px] font-bold tabular-nums ${hpTheme.textColor}`}>
+                              {Math.floor(hero.hp)}/{hero.maxHp}
+                            </span>
+                            <span className="text-[8px] text-amber-500/70 font-medium tabular-nums">{Math.round(hpPercent)}%</span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -434,91 +447,73 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         position="top"
                       >
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onUseHeroAbility();
-                          }}
+                          onClick={(e) => { e.stopPropagation(); onUseHeroAbility(); }}
                           disabled={!hero.abilityReady}
-                          className="px-1.5 sm:px-3 py-1 sm:py-2.5 h-full relative transition-all font-bold rounded-xl flex flex-col items-center justify-center overflow-hidden hover:brightness-110 max-w-[72px] sm:max-w-none"
+                          className="relative transition-all font-bold rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:brightness-110"
                           style={{
                             background: hero.abilityReady
                               ? `linear-gradient(180deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
-                              : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                              : `linear-gradient(180deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
                             border: hero.abilityReady
-                              ? `1.5px solid ${GOLD.accentBorder50}`
-                              : `1.5px solid ${NEUTRAL.border25}`,
+                              ? `2px solid ${GOLD.accentBorder50}`
+                              : `2px solid ${NEUTRAL.border25}`,
                             boxShadow: hero.abilityReady
-                              ? `inset 0 0 12px ${GOLD.accentGlow08}, 0 0 8px ${hexToRgba(hc, 0.15)}`
-                              : "none",
+                              ? `inset 0 0 16px ${GOLD.accentGlow08}, 0 0 12px ${hexToRgba(hc, 0.2)}`
+                              : "inset 0 0 10px rgba(0,0,0,0.2)",
                             cursor: hero.abilityReady ? "pointer" : "not-allowed",
+                            padding: '12px 20px',
                           }}
                         >
-                          {/* Hero color tint overlay — subtle wash over the amber base */}
-                          <div
-                            className="absolute inset-0 pointer-events-none"
+                          <div className="absolute inset-0 pointer-events-none"
                             style={{
                               background: hero.abilityReady
-                                ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.18)}, ${hexToRgba(hc, 0.04)} 70%, transparent)`
-                                : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.1)}, transparent 70%)`,
+                                ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.2)}, ${hexToRgba(hc, 0.04)} 70%, transparent)`
+                                : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.08)}, transparent 70%)`,
                             }}
                           />
-                          {/* Cooldown sweep overlay — amber fill rising + dark sweep receding */}
                           {!hero.abilityReady && (
                             <>
-                              <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                  background: `linear-gradient(0deg, ${hexToRgba(hc, 0.2)}, rgba(180,140,50,0.08))`,
-                                  clipPath: `inset(${cdFrac * 100}% 0 0 0)`,
-                                }}
+                              <div className="absolute inset-0 pointer-events-none"
+                                style={{ background: `linear-gradient(0deg, ${hexToRgba(hc, 0.2)}, rgba(180,140,50,0.08))`, clipPath: `inset(${cdFrac * 100}% 0 0 0)` }}
                               />
-                              <div
-                                className="absolute inset-0 pointer-events-none"
-                                style={{
-                                  background: "linear-gradient(0deg, rgba(0,0,0,0.65), rgba(0,0,0,0.45))",
-                                  clipPath: `inset(${(1 - cdFrac) * 100}% 0 0 0)`,
-                                }}
+                              <div className="absolute inset-0 pointer-events-none"
+                                style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.65), rgba(0,0,0,0.45))", clipPath: `inset(${(1 - cdFrac) * 100}% 0 0 0)` }}
                               />
                             </>
                           )}
-                          {/* Inner border */}
-                          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
+                          <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{
                             border: hero.abilityReady ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${NEUTRAL.innerBorder}`,
                           }} />
                           {hero.abilityReady ? (
-                            <div className="relative z-10 flex flex-col items-center justify-center px-0.5 sm:px-2">
-                              <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1.5 items-center text-[9px] sm:text-[12px] text-amber-200 font-bold text-center leading-tight">
-                                {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
+                            <div className="relative z-10 flex flex-col items-center justify-center">
+                              <span className="flex items-center gap-1.5 text-[12px] text-amber-200 font-bold leading-tight">
+                                {getHeroAbilityIcon(hero.type, 16, "inline")}
                                 {HERO_DATA[hero.type].ability}
                               </span>
-                              <div className="hidden sm:block text-[7px] max-w-28 my-0.5 text-center text-amber-100/60 leading-snug">
+                              <div className="text-[7px] max-w-28 my-1 text-center text-amber-100/50 leading-snug">
                                 {HERO_DATA[hero.type].abilityDesc}
                               </div>
-                              <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
-                                <span className="font-extrabold text-[7px] sm:text-[10px] text-amber-300/80 uppercase tracking-wider">
-                                  Ready
-                                </span>
-                                <span className="hidden sm:inline w-px h-2.5" style={{ background: "rgba(180,140,50,0.3)" }} />
-                                <span className="hidden sm:flex items-center gap-0.5 text-xs text-amber-400/80 tabular-nums">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-extrabold text-[10px] text-amber-300/90 uppercase tracking-wider">Ready</span>
+                                <span className="w-px h-3" style={{ background: "rgba(180,140,50,0.3)" }} />
+                                <span className="flex items-center gap-0.5 text-xs text-amber-400/80 tabular-nums">
                                   <Clock size={9} className="text-amber-400/70" />
                                   {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s
                                 </span>
                               </div>
                             </div>
                           ) : (
-                            <div className="relative z-10 flex flex-col items-center justify-center px-0.5 sm:px-2">
-                              <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1.5 items-center text-[9px] sm:text-[12px] text-stone-400 font-bold text-center leading-tight">
-                                {getHeroAbilityIcon(hero.type, 14, "text-stone-500 opacity-60 inline mb-0.5")}
+                            <div className="relative z-10 flex flex-col items-center justify-center">
+                              <span className="flex items-center gap-1.5 text-[12px] text-stone-400 font-bold leading-tight">
+                                {getHeroAbilityIcon(hero.type, 16, "text-stone-500 opacity-60 inline")}
                                 {HERO_DATA[hero.type].ability}
                               </span>
-                              <div className="hidden sm:block text-[7px] max-w-28 my-0.5 text-center text-stone-500/60 leading-snug">
+                              <div className="text-[7px] max-w-28 my-1 text-center text-stone-500/50 leading-snug">
                                 {HERO_DATA[hero.type].abilityDesc}
                               </div>
-                              <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 sm:mt-1">
-                                <Timer size={11} className="text-stone-400 sm:w-[14px] sm:h-[14px]" />
-                                <span className="text-[10px] sm:text-[13px] text-stone-300 font-black tabular-nums">
-                                  {Math.ceil(hero.abilityCooldown / 1000)}s
-                                </span>
+                              <div className="flex items-center gap-1.5">
+                                <Timer size={14} className="text-stone-400" />
+                                <span className="text-[14px] text-stone-300 font-black tabular-nums">{Math.ceil(hero.abilityCooldown / 1000)}s</span>
                               </div>
                             </div>
                           )}
@@ -533,17 +528,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         </div>
 
         {/* Spell Section */}
-        <div className="flex ml-1.5 sm:ml-3 items-center self-stretch gap-1 sm:gap-2.5 relative px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl pointer-events-auto" style={{
-          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-          border: `1.5px solid ${GOLD.border30}`,
-          boxShadow: `inset 0 0 15px ${GOLD.glow04}`,
-        }}>
-          {/* Inner border */}
-          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-          <span className="hidden px-2 sm:flex items-center flex-col text-[9px] text-amber-500/70 font-bold tracking-wider mr-1">
-            <ShellIcon size={12} className="inline mb-0.5" />
-            SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
-          </span>
+        <div className="flex items-end gap-3 pointer-events-auto">
           {spells.map((spell) => {
             const spellData = SPELL_DATA[spell.type];
             const spellLevel = spellUpgradeLevels[spell.type] ?? 0;
@@ -567,189 +552,177 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 : autoAimOn
                   ? "Auto-aim ON. click to switch to manual targeting"
                   : "Auto-aim OFF. click to enable auto targeting";
+            const spellAccent = theme?.panelBorder || "rgba(140,80,180,0.5)";
+            const ORBS = 72;
             return (
-              <div key={spell.type} className="relative self-stretch flex">
-                {/* Auto-aim toggle — only for aimable spells (meteor & lightning) */}
-                {isAimableSpell && (
-                  <HudTooltip label={autoAimTooltip} position="top">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (hasUnlockedAim) onToggleSpellAutoAim(spell.type);
-                      }}
-                      className="absolute -top-1.5 -left-1.5 z-30 flex items-center justify-center rounded-full transition-all"
-                      style={{
-                        width: 26,
-                        height: 26,
-                        background: hasUnlockedAim && autoAimOn
-                          ? (theme ? `${theme.panelBg}` : "rgba(80,60,20,0.8)")
-                          : "rgba(30,28,24,0.85)",
-                        border: `2px solid ${hasUnlockedAim && autoAimOn
-                          ? (theme?.panelBorder || "rgba(250,204,21,0.6)")
-                          : hasUnlockedAim
-                            ? "rgba(180,140,60,0.4)"
-                            : "rgba(80,70,50,0.3)"
-                          }`,
-                        boxShadow: hasUnlockedAim && autoAimOn
-                          ? `0 0 8px ${theme?.panelBorder || "rgba(250,204,21,0.3)"}`
-                          : "none",
-                        cursor: hasUnlockedAim ? "pointer" : "not-allowed",
-                        opacity: hasUnlockedAim ? 1 : 0.4,
-                      }}
-                    >
-                      <Crosshair
-                        size={14}
-                        className={
-                          hasUnlockedAim && autoAimOn
-                            ? (theme?.nameColor || "text-amber-200")
-                            : "text-stone-500"
-                        }
-                      />
-                    </button>
-                  </HudTooltip>
-                )}
-                <button
+              <div key={spell.type} className="flex flex-col items-center">
+                {/* Orb wrapper — badges position relative to this */}
+                <div className="relative" ref={getOrbRef(spell.type)}>
+                  {/* Auto-aim toggle — on left of border ring */}
+                  {isAimableSpell && (
+                    <HudTooltip label={autoAimTooltip} position="top">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); if (hasUnlockedAim) onToggleSpellAutoAim(spell.type); }}
+                        className="absolute z-30 flex items-center justify-center rounded-full transition-all"
+                        style={{
+                          width: 22, height: 22,
+                          top: 1, left: -2,
+                          background: hasUnlockedAim && autoAimOn ? (theme?.panelBg || "rgba(80,60,20,0.8)") : "rgba(24,22,18,0.9)",
+                          border: `2px solid ${hasUnlockedAim && autoAimOn ? spellAccent : hasUnlockedAim ? "rgba(180,140,60,0.3)" : "rgba(60,55,45,0.25)"}`,
+                          boxShadow: hasUnlockedAim && autoAimOn ? `0 0 8px ${spellAccent}` : "none",
+                          cursor: hasUnlockedAim ? "pointer" : "not-allowed",
+                          opacity: hasUnlockedAim ? 1 : 0.35,
+                        }}
+                      >
+                        <Crosshair size={12} className={hasUnlockedAim && autoAimOn ? (theme?.nameColor || "text-amber-200") : "text-stone-500"} />
+                      </button>
+                    </HudTooltip>
+                  )}
+                  {/* Level badge — on right of border ring */}
+                  {spellLevel > 0 && (
+                    <div className="absolute z-30 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-100 border-2 border-stone-900"
+                      style={{ top: 1, right: -2, background: 'linear-gradient(135deg, #d97706, #92400e)', boxShadow: '0 0 6px rgba(217,119,6,0.5)' }}>
+                      {spellLevel}
+                    </div>
+                  )}
+                  {/* Spell orb button */}
+                  <button
                   onClick={() => castSpell(spell.type)}
                   disabled={!canCast && !isTargeting}
                   onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
                   onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
-                  className={`relative px-1 sm:px-4 py-1 sm:py-2.5 transition-all rounded-lg sm:rounded-xl overflow-hidden self-stretch hover:brightness-110 ${isTargeting ? "ring-2 ring-offset-1 ring-offset-transparent" : ""}`}
+                  className="relative rounded-full overflow-hidden transition-all hover:brightness-115 hover:scale-105 active:scale-95"
                   style={{
-                    background: isTargeting
-                      ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
-                      : canCast
-                        ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
-                        : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                    width: ORBS, height: ORBS,
+                    background: (canCast || isTargeting)
+                      ? `radial-gradient(circle at 35% 35%, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, ${PANEL.bgDeep})`
+                      : `radial-gradient(circle at 35% 35%, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
                     border: isTargeting
-                      ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.8)"}`
-                      : canCast
-                        ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
-                        : `1.5px solid ${NEUTRAL.border}`,
+                      ? `3px solid ${spellAccent}`
+                      : (canCast ? `3px solid ${spellAccent}` : `3px solid ${NEUTRAL.border}`),
                     boxShadow: isTargeting
-                      ? `inset 0 0 20px ${OVERLAY.white03}, 0 0 15px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}, 0 0 0 1px ${theme?.panelBorder || "rgba(140,80,180,0.6)"}`
+                      ? `0 0 20px ${spellAccent}, inset 0 0 15px rgba(255,255,255,0.04)`
                       : canCast
-                        ? `inset 0 0 12px ${OVERLAY.white03}`
-                        : "none",
-                    ...(isTargeting ? { ringColor: theme?.panelBorder } : {}),
-                    opacity: (canCast || isTargeting) ? 1 : 0.5,
+                        ? `0 0 12px ${spellAccent.replace('0.5', '0.2')}, inset 0 0 12px rgba(255,255,255,0.03)`
+                        : 'inset 0 0 8px rgba(0,0,0,0.3)',
+                    opacity: (canCast || isTargeting) ? 1 : 0.45,
                     cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
                   }}
                 >
-                  <div
-                    className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold z-20 ${canCast ? "text-yellow-200" : "text-stone-300"}`}
-                    style={{
-                      background: canCast ? "rgba(120,90,20,0.5)" : "rgba(50,50,50,0.5)",
-                      border: "1px solid rgba(250,204,21,0.18)",
-                    }}
-                  >
-                    Lv {spellLevel + 1}
+                  <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
+                    border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.08)' : 'rgba(80,80,80,0.1)'}`,
+                  }} />
+                  <div className="relative z-10 flex items-center justify-center w-full h-full">
+                    <SpellSprite type={spell.type} size={36} />
                   </div>
-                  <div className="relative z-10 flex flex-col items-center justify-center h-full w-[36px] sm:w-[64px]">
-                    <SpellSprite type={spell.type} size={sizes.heroIcon > 36 ? 28 : 20} />
-                    <div className={`font-bold uppercase text-[7px] sm:text-[9px] tracking-wide mt-0.5 ${canCast ? (theme?.nameColor || "text-purple-200") : "text-stone-400"}`}>
-                      {spellData.shortName}
-                    </div>
-                    {/* Cost + Cooldown — fixed layout */}
-                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 mt-0.5 h-[14px] sm:h-[18px]">
-                      {spell.cooldown > 0 ? (
-                        <span className="text-[8px] sm:text-[10px] font-bold text-red-400 tabular-nums">
-                          {Math.ceil(spell.cooldown / 1000)}s
-                        </span>
-                      ) : (
-                        <>
-                          <span className="text-[7px] sm:text-[9px] font-semibold flex items-center gap-0.5 px-0.5 sm:px-1 py-px rounded"
-                            style={{ background: spellData.cost > 0 ? SELECTED.warmBgLight : 'rgba(20,83,45,0.35)' }}>
-                            <Coins size={8} className={`sm:w-[9px] sm:h-[9px] ${spellData.cost > 0 ? "text-amber-400/80" : "text-green-400/80"}`} />
-                            <span className={spellData.cost > 0 ? "text-amber-300" : "text-green-300"}>
-                              {spellData.cost > 0 ? spellData.cost : "Free"}
-                            </span>
-                          </span>
-                          <span className="hidden sm:flex text-[8px] sm:text-[9px] font-semibold items-center gap-0.5 px-1 py-px rounded"
-                            style={{ background: 'rgba(30,58,138,0.3)' }}>
-                            <Clock size={9} className="text-blue-400/80" />
-                            <span className="text-blue-300">{spellData.cooldown / 1000}s</span>
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {/* Cooldown overlay with gradient sweep */}
                   {spell.cooldown > 0 && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
+                    <div className="absolute inset-0 pointer-events-none rounded-full"
                       style={{
-                        background: "linear-gradient(0deg, rgba(0,0,0,0.75), rgba(0,0,0,0.55))",
+                        background: "rgba(0,0,0,0.7)",
                         clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100}% 0 0 0)`,
                       }}
                     />
                   )}
-                  {/* Targeting pulse ring */}
                   {isTargeting && (
-                    <div className="absolute inset-0 rounded-lg sm:rounded-xl pointer-events-none animate-pulse"
-                      style={{ boxShadow: `inset 0 0 20px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}` }}
+                    <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+                      style={{ boxShadow: `inset 0 0 25px ${spellAccent}` }}
                     />
                   )}
-                </button>
-                {isHovered && !isTouchDevice && theme && (
-                  <div className="hidden [@media(hover:hover)]:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 rounded-xl z-50 pointer-events-none"
-                    style={{
-                      background: `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeepSolid})`,
-                      border: `1.5px solid ${theme.panelBorder}`,
-                      boxShadow: `0 8px 32px ${OVERLAY.black60}, inset 0 0 20px ${OVERLAY.white02}`,
-                    }}>
-                    {/* Inner glow */}
-                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${OVERLAY.white04}` }} />
-                    {/* Header */}
-                    <div className="px-3 py-2 rounded-t-xl relative" style={{ background: theme.headerBg }}>
-                      <div className="flex items-center gap-2">
-                        {theme.icon}
-                        <span className={`font-bold text-sm ${theme.accentColor}`}>{spellData.name}</span>
-                        <span className="ml-auto text-[10px] font-bold px-1.5 py-px rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
-                          LV {spellLevel + 1}/{MAX_SPELL_UPGRADE_LEVEL + 1}
+                  </button>
+                </div>
+                {/* Spell name */}
+                <div className={`mt-1.5 text-[9px] font-bold uppercase tracking-wider ${(canCast || isTargeting) ? (theme?.nameColor || "text-purple-200") : "text-stone-500"}`}>
+                  {spellData.shortName}
+                </div>
+                {/* Cost / Cooldown row */}
+                <div className="flex items-center justify-center gap-1 mt-0.5 h-[16px]">
+                  {spell.cooldown > 0 ? (
+                    <span className="text-[10px] font-bold text-red-400 tabular-nums">{Math.ceil(spell.cooldown / 1000)}s</span>
+                  ) : (
+                    <>
+                      <span className="text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md"
+                        style={{ background: spellData.cost > 0 ? 'rgba(100,68,18,0.4)' : 'rgba(20,83,45,0.35)', border: '1px solid rgba(180,140,60,0.1)' }}>
+                        <Coins size={8} className={spellData.cost > 0 ? "text-amber-400/80" : "text-green-400/80"} />
+                        <span className={spellData.cost > 0 ? "text-amber-300" : "text-green-300"}>
+                          {spellData.cost > 0 ? spellData.cost : "Free"}
                         </span>
+                      </span>
+                      <span className="text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md"
+                        style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(60,100,180,0.1)' }}>
+                        <Clock size={8} className="text-blue-400/80" />
+                        <span className="text-blue-300">{spellData.cooldown / 1000}s</span>
+                      </span>
+                    </>
+                  )}
+                </div>
+                {/* Hover tooltip panel — portal-based */}
+                {isHovered && !isTouchDevice && theme && (
+                  <SpellInfoPortal anchorRef={{ current: orbRefs.current[spell.type] ?? null }}>
+                    <div className="hidden [@media(hover:hover)]:block rounded-2xl overflow-hidden"
+                      style={{
+                        background: `linear-gradient(180deg, ${PANEL.bgLight}, ${PANEL.bgDark})`,
+                        border: `2px solid ${theme.panelBorder}`,
+                        boxShadow: `0 12px 40px rgba(0,0,0,0.7), 0 0 20px ${theme.panelBorder.replace('0.5', '0.15')}, inset 0 0 20px ${OVERLAY.white02}`,
+                      }}>
+                      <div className="absolute inset-[3px] rounded-[13px] pointer-events-none z-10" style={{ border: `1px solid ${OVERLAY.white04}` }} />
+                      {/* Header */}
+                      <div className="relative px-4 py-2.5" style={{ background: theme.headerBg }}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{
+                            background: theme.panelBg, border: `1.5px solid ${theme.panelBorder}`,
+                          }}>
+                            {theme.icon}
+                          </div>
+                          <span className={`font-black text-sm tracking-wide ${theme.accentColor}`}>{spellData.name}</span>
+                          <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: 'rgba(120,90,20,0.4)', border: '1px solid rgba(250,204,21,0.25)', color: '#fde68a' }}>
+                            LV {spellLevel + 1}/{MAX_SPELL_UPGRADE_LEVEL + 1}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${theme.panelBorder} 30%, ${theme.panelBorder} 70%, transparent)` }} />
                       </div>
-                      <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: `linear-gradient(90deg, transparent, ${OVERLAY.white10} 50%, transparent)` }} />
-                    </div>
-                    <div className="px-3 py-2.5">
-                      {/* Cost & Cooldown */}
-                      <div className="flex gap-1.5 mb-2">
-                        <div className="rounded-md px-2 py-1 text-center flex-1"
-                          style={{ background: SELECTED.warmBgDark, border: `1px solid ${SELECTED.warmBgDark}` }}>
-                          <div className="text-[7px] text-amber-500/70 font-medium uppercase">Cost</div>
-                          <div className="text-amber-300 font-bold text-[11px]">
-                            {spellData.cost > 0 ? `${spellData.cost} PP` : "FREE"}
+                      {/* Body */}
+                      <div className="px-4 py-3">
+                        {/* Cost & Cooldown */}
+                        <div className="flex gap-2 mb-3">
+                          <div className="rounded-lg px-3 py-1.5 text-center flex-1"
+                            style={{ background: 'rgba(100,68,18,0.25)', border: `1px solid rgba(180,140,60,0.15)` }}>
+                            <div className="text-[8px] text-amber-500/70 font-semibold uppercase tracking-wider">Cost</div>
+                            <div className="text-amber-200 font-black text-sm mt-0.5">
+                              {spellData.cost > 0 ? `${spellData.cost} PP` : "FREE"}
+                            </div>
+                          </div>
+                          <div className="rounded-lg px-3 py-1.5 text-center flex-1"
+                            style={{ background: 'rgba(30,58,138,0.15)', border: '1px solid rgba(60,100,180,0.12)' }}>
+                            <div className="text-[8px] text-blue-400/70 font-semibold uppercase tracking-wider">Cooldown</div>
+                            <div className="text-blue-200 font-black text-sm mt-0.5">{spellData.cooldown / 1000}s</div>
                           </div>
                         </div>
-                        <div className="rounded-md px-2 py-1 text-center flex-1"
-                          style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.2)' }}>
-                          <div className="text-[7px] text-blue-500/70 font-medium uppercase">Cooldown</div>
-                          <div className="text-blue-300 font-bold text-[11px]">{spellData.cooldown / 1000}s</div>
+                        {/* Stats */}
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          {theme.stats.map((stat) => (
+                            <div key={stat.label} className="rounded-lg px-2 py-1.5 text-center"
+                              style={{ background: stat.bg, border: `1px solid ${stat.border}` }}>
+                              <div className="flex items-center justify-center mb-1">{stat.icon}</div>
+                              <div className="text-[8px] text-stone-400 font-medium uppercase">{stat.label}</div>
+                              <div className={`font-black text-sm ${stat.color}`}>{stat.value}</div>
+                            </div>
+                          ))}
                         </div>
-                      </div>
-                      {/* Stats */}
-                      <div className="grid grid-cols-3 gap-1.5 mb-2">
-                        {theme.stats.map((stat) => (
-                          <div key={stat.label} className="rounded-md px-1.5 py-1 text-center"
-                            style={{ background: stat.bg, border: `1px solid ${stat.border}` }}>
-                            <div className="flex items-center justify-center mb-0.5">{stat.icon}</div>
-                            <div className="text-[7px] text-stone-500 font-medium">{stat.label}</div>
-                            <div className={`font-bold text-[11px] ${stat.color}`}>{stat.value}</div>
+                        {/* Divider */}
+                        <div className="mb-3 h-px" style={{ background: `linear-gradient(90deg, transparent, ${theme.panelBorder.replace('0.5', '0.3')} 50%, transparent)` }} />
+                        {/* Effect */}
+                        <div className="rounded-lg px-3 py-2.5"
+                          style={{ background: theme.effectBg, border: `1px solid ${theme.effectBg.replace('0.15', '0.2')}` }}>
+                          <div className={`${theme.effectLabel} uppercase text-[8px] font-bold mb-1.5 tracking-wider flex items-center gap-1`}>
+                            <Sparkles size={9} className="opacity-70" />
+                            How it works
                           </div>
-                        ))}
-                      </div>
-                      {/* Divider */}
-                      <div className="mb-2 h-px" style={{ background: `linear-gradient(90deg, transparent, ${OVERLAY.white06} 50%, transparent)` }} />
-                      {/* Effect */}
-                      <div className="rounded-md px-2.5 py-2"
-                        style={{ background: theme.effectBg, border: '1px solid rgba(80,60,50,0.12)' }}>
-                        <div className={`${theme.effectLabel} uppercase text-[7px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
-                          <Sparkles size={8} className="opacity-60" />
-                          How it works
+                          <p className={`text-[11px] ${theme.effectText} leading-relaxed`}>{theme.effect}</p>
                         </div>
-                        <p className={`text-[10px] ${theme.effectText} leading-relaxed`}>{theme.effect}</p>
                       </div>
                     </div>
-                  </div>
+                  </SpellInfoPortal>
                 )}
               </div>
             );

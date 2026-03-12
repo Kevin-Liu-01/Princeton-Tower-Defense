@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Shield,
   AlertTriangle,
@@ -368,18 +368,42 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
   exiting = false,
 }) => {
   const encounter = encounters[currentIndex];
-  const prevIndexRef = useRef(currentIndex);
+  const [paused, setPaused] = useState(false);
+
+  const onAcknowledgeRef = useRef(onAcknowledge);
+  onAcknowledgeRef.current = onAcknowledge;
+
+  const remainingRef = useRef(autoDismissMs);
+  const timerStartRef = useRef(Date.now());
+
+  // Reset remaining time when the encounter changes
+  useEffect(() => {
+    remainingRef.current = autoDismissMs;
+    timerStartRef.current = Date.now();
+  }, [currentIndex, encounters.length, autoDismissMs]);
+
+  // Auto-dismiss timer — pauses on hover, resumes with remaining time
+  useEffect(() => {
+    if (paused || exiting || encounters.length === 0) return;
+    timerStartRef.current = Date.now();
+    const timer = setTimeout(() => {
+      onAcknowledgeRef.current();
+    }, remainingRef.current);
+    return () => {
+      clearTimeout(timer);
+      const elapsed = Date.now() - timerStartRef.current;
+      remainingRef.current = Math.max(0, remainingRef.current - elapsed);
+    };
+  }, [paused, exiting, currentIndex, encounters.length]);
 
   const handleAcknowledge = useCallback(() => {
-    onAcknowledge();
-  }, [onAcknowledge]);
+    onAcknowledgeRef.current();
+  }, []);
 
   if (!encounter) return null;
 
   const style = getCategoryStyle(encounter.category);
   const remaining = encounters.length - currentIndex - 1;
-  const indexChanged = prevIndexRef.current !== currentIndex;
-  if (indexChanged) prevIndexRef.current = currentIndex;
 
   const categoryGlow = style.borderColor.replace("0.5)", "0.15)");
   const categoryTint = style.borderColor.replace("0.5)", "0.06)");
@@ -387,6 +411,8 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
   return (
     <div
       className="flex flex-col pointer-events-auto ml-2 mb-1 rounded-xl overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
       style={{
         width: INLINE_PANEL_WIDTH,
         maxWidth: "calc(100vw - 16px)",
@@ -445,6 +471,7 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
             style={{
               background: "rgba(255,255,255,0.12)",
               animation: `encounterCountdown ${autoDismissMs}ms linear forwards`,
+              animationPlayState: paused ? "paused" : "running",
             }}
           />
           <Check size={12} className="relative z-10" />

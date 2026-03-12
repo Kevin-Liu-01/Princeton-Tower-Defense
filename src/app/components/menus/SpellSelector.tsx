@@ -36,14 +36,22 @@ const spellAccents: Record<SpellType, string> = {
   reinforcements: "#10b981",
 };
 
-const CIRCLE = 36;
-const GAP = 4;
+const spellTraits: Record<SpellType, { trait: string; color: string; bg: string; border: string }> = {
+  fireball: { trait: "AoE Burn", color: "text-red-300/80", bg: "rgba(127,29,29,0.25)", border: "rgba(127,29,29,0.2)" },
+  lightning: { trait: "Chain Stun", color: "text-cyan-300/80", bg: "rgba(22,78,99,0.25)", border: "rgba(22,78,99,0.2)" },
+  freeze: { trait: "Global Freeze", color: "text-indigo-300/80", bg: "rgba(49,46,129,0.25)", border: "rgba(49,46,129,0.2)" },
+  payday: { trait: "Gold Boost", color: "text-yellow-300/80", bg: "rgba(113,63,18,0.25)", border: "rgba(113,63,18,0.2)" },
+  reinforcements: { trait: "Summon Units", color: "text-emerald-300/80", bg: "rgba(6,78,59,0.25)", border: "rgba(6,78,59,0.2)" },
+};
+
+const CIRCLE = 42;
+const GAP = 6;
 const STEP = CIRCLE + GAP;
 const VISIBLE_COUNT = 3;
 const VP_W = VISIBLE_COUNT * CIRCLE + (VISIBLE_COUNT - 1) * GAP;
-const VP_H = Math.ceil(CIRCLE * 1.15) + 4;
+const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
-const VP_CY = VP_H / 2;
+const VP_CY = VP_H / 2 - 3;
 
 function circularDiff(idx: number, center: number, len: number): number {
   const raw = ((idx - center) % len + len) % len;
@@ -121,155 +129,195 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
 
           {/* Carousel track */}
           <div
-            className="relative z-10 flex items-center gap-1 rounded-xl px-1 flex-shrink-0"
+            className="relative z-10 flex flex-col items-center rounded-xl flex-shrink-0"
             style={{
               background: 'linear-gradient(180deg, rgba(16,10,24,0.6), rgba(22,16,30,0.5))',
               border: '1px solid rgba(100,65,140,0.18)',
               boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(140,80,200,0.08)',
-              padding: '3px 4px',
+              padding: '3px 4px 2px',
             }}
           >
-            {/* Left arrow */}
-            <button
-              onClick={() => navigate(-1)}
-              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-              style={{ background: 'rgba(140,80,200,0.12)', border: '1px solid rgba(140,80,200,0.2)' }}
-            >
-              <ChevronLeft size={11} className="text-purple-400/80" />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Left arrow */}
+              <button
+                onClick={() => navigate(-1)}
+                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                style={{ background: 'rgba(140,80,200,0.12)', border: '1px solid rgba(140,80,200,0.2)' }}
+              >
+                <ChevronLeft size={11} className="text-purple-400/80" />
+              </button>
 
-            {/* Wheel viewport */}
-            <div
-              className="relative overflow-hidden flex-shrink-0"
-              style={{ width: VP_W, height: VP_H }}
-            >
-              {spellOptions.map((spellType, idx) => {
-                const accent = spellAccents[spellType];
-                const diff = circularDiff(idx, centerIdx, spellOptions.length);
-                const absDiff = Math.abs(diff);
-                const isCenter = diff === 0;
-                const halfVisible = Math.floor(VISIBLE_COUNT / 2);
-                const isVisible = absDiff <= halfVisible;
-                const isSel = selectedSpells.includes(spellType);
-                const canToggle = isSel || selectedSpells.length < 3;
-                const scale = isCenter ? 1.15 : 0.82;
-                const x = VP_CX + diff * STEP - CIRCLE / 2;
-                const y = VP_CY - CIRCLE / 2;
+              {/* Wheel viewport */}
+              <div
+                className="relative overflow-hidden flex-shrink-0"
+                style={{ width: VP_W, height: VP_H }}
+              >
+                {spellOptions.map((spellType, idx) => {
+                  const accent = spellAccents[spellType];
+                  const diff = circularDiff(idx, centerIdx, spellOptions.length);
+                  const absDiff = Math.abs(diff);
+                  const isCenter = diff === 0;
+                  const halfVisible = Math.floor(VISIBLE_COUNT / 2);
+                  const isVisible = absDiff <= halfVisible;
+                  const isSel = selectedSpells.includes(spellType);
+                  const canToggle = isSel || selectedSpells.length < 3;
+                  const scale = isCenter ? 1.15 : 0.82;
+                  const x = VP_CX + diff * STEP - CIRCLE / 2;
+                  const y = VP_CY - CIRCLE / 2;
 
-                return (
-                  <button
-                    key={spellType}
-                    onClick={() => {
-                      if (isCenter) {
-                        if (canToggle || isSel) toggleSpell(spellType);
-                      } else {
-                        setCenterIdx(idx);
-                      }
-                    }}
-                    disabled={isCenter && !canToggle && !isSel}
-                    title={`${SPELL_DATA[spellType].shortName}${isSel ? ` (Slot ${selectedSpells.indexOf(spellType) + 1})` : ''}`}
-                    className="absolute flex items-center justify-center rounded-full"
-                    style={{
-                      width: CIRCLE,
-                      height: CIRCLE,
-                      left: 0,
-                      top: 0,
-                      transform: `translate(${x}px, ${y}px) scale(${scale})`,
-                      opacity: isVisible ? (isCenter ? 1 : 0.55) : 0,
-                      pointerEvents: isVisible ? 'auto' : 'none',
-                      background: isSel
-                        ? `radial-gradient(circle at 30% 30%, ${accent}35, ${accent}10)`
-                        : isCenter
-                          ? `radial-gradient(circle at 30% 30%, ${accent}18, ${accent}06)`
-                          : 'radial-gradient(circle at 30% 30%, rgba(36,28,44,0.9), rgba(24,18,30,0.9))',
-                      border: `2px solid ${isSel ? accent : isCenter ? `${accent}70` : 'rgba(80,60,100,0.25)'}`,
-                      boxShadow: isSel
-                        ? `0 0 14px ${accent}30, inset 0 0 8px ${accent}12`
-                        : isCenter ? `0 0 10px ${accent}18` : 'none',
-                      cursor: isCenter && !canToggle && !isSel ? 'not-allowed' : 'pointer',
-                      transition: 'transform 0.35s cubic-bezier(0.4,0,0.15,1), opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
-                      zIndex: isCenter ? 3 : 1,
-                    }}
-                  >
-                    <SpellSprite type={spellType} size={isCenter ? 26 : 20} />
-                    {(spellUpgradeLevels[spellType] ?? 0) > 0 && (
-                      <div
-                        className={`absolute ${isSel ? '-top-0.5 -left-0.5' : '-top-0.5 -right-0.5'} w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-yellow-100 font-bold border-[1.5px] border-stone-900`}
-                        style={{ background: 'linear-gradient(135deg, #d97706, #92400e)', boxShadow: '0 0 5px rgba(217,119,6,0.5)' }}
-                      >
-                        {spellUpgradeLevels[spellType]}
-                      </div>
-                    )}
-                    {isSel && (
-                      <div
-                        className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-white font-bold border-[1.5px] border-stone-900"
-                        style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 6px rgba(168,85,247,0.5)' }}
-                      >
-                        {selectedSpells.indexOf(spellType) + 1}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={spellType}
+                      onClick={() => {
+                        if (isCenter) {
+                          if (canToggle || isSel) toggleSpell(spellType);
+                        } else {
+                          setCenterIdx(idx);
+                        }
+                      }}
+                      disabled={isCenter && !canToggle && !isSel}
+                      title={`${SPELL_DATA[spellType].shortName}${isSel ? ` (Slot ${selectedSpells.indexOf(spellType) + 1})` : ''}`}
+                      className="absolute flex items-center justify-center rounded-full"
+                      style={{
+                        width: CIRCLE,
+                        height: CIRCLE,
+                        left: 0,
+                        top: 0,
+                        transform: `translate(${x}px, ${y}px) scale(${scale})`,
+                        opacity: isVisible ? (isCenter ? 1 : 0.55) : 0,
+                        pointerEvents: isVisible ? 'auto' : 'none',
+                        background: isSel
+                          ? `radial-gradient(circle at 30% 30%, ${accent}35, ${accent}10)`
+                          : isCenter
+                            ? `radial-gradient(circle at 30% 30%, ${accent}18, ${accent}06)`
+                            : 'radial-gradient(circle at 30% 30%, rgba(36,28,44,0.9), rgba(24,18,30,0.9))',
+                        border: `2px solid ${isSel ? accent : isCenter ? `${accent}70` : 'rgba(80,60,100,0.25)'}`,
+                        boxShadow: isSel
+                          ? `0 0 14px ${accent}30, inset 0 0 8px ${accent}12`
+                          : isCenter ? `0 0 10px ${accent}18` : 'none',
+                        cursor: isCenter && !canToggle && !isSel ? 'not-allowed' : 'pointer',
+                        transition: 'transform 0.35s cubic-bezier(0.4,0,0.15,1), opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
+                        zIndex: isCenter ? 3 : 1,
+                      }}
+                    >
+                      <SpellSprite type={spellType} size={isCenter ? 30 : 22} />
+                      {(spellUpgradeLevels[spellType] ?? 0) > 0 && (
+                        <div
+                          className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-[1px] rounded-full px-[5px] py-[1px] text-[7px] font-bold text-yellow-100 z-20 whitespace-nowrap"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(146,64,14,0.95), rgba(120,53,15,0.9))',
+                            border: '1px solid rgba(250,190,60,0.5)',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.5), 0 0 6px rgba(217,119,6,0.3)',
+                          }}
+                        >
+                          <Star size={7} className="fill-yellow-300 text-yellow-300 flex-shrink-0" />
+                          {spellUpgradeLevels[spellType]}
+                        </div>
+                      )}
+                      {isSel && (
+                        <div
+                          className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-black border-2 border-stone-900 z-20"
+                          style={{
+                            background: 'linear-gradient(135deg, #a855f7, #7c3aed)',
+                            boxShadow: '0 0 10px rgba(168,85,247,0.6), 0 0 4px rgba(168,85,247,0.8)',
+                          }}
+                        >
+                          {selectedSpells.indexOf(spellType) + 1}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right arrow */}
+              <button
+                onClick={() => navigate(1)}
+                className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                style={{ background: 'rgba(140,80,200,0.12)', border: '1px solid rgba(140,80,200,0.2)' }}
+              >
+                <ChevronRight size={11} className="text-purple-400/80" />
+              </button>
             </div>
 
-            {/* Right arrow */}
-            <button
-              onClick={() => navigate(1)}
-              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-              style={{ background: 'rgba(140,80,200,0.12)', border: '1px solid rgba(140,80,200,0.2)' }}
-            >
-              <ChevronRight size={11} className="text-purple-400/80" />
-            </button>
+            {/* Slot indicators — inside carousel */}
+            <div className="absolute bottom-2 right-3 flex items-center gap-[3px] mt-0.5">
+              {[2, 1, 0].map((i) => (
+                <div
+                  key={i}
+                  className="w-[6px] h-[6px] rounded-[1.5px] transition-all duration-300"
+                  style={{
+                    background: i < selectedSpells.length ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(60,40,80,0.4)',
+                    border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
+                    boxShadow: i < selectedSpells.length ? '0 0 3px rgba(168,85,247,0.4)' : 'none',
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Spell info */}
-          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 ml-1.5 px-2 py-1.5">
-            <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold text-purple-100 leading-tight truncate drop-shadow-sm">
-                {centeredData.shortName}
-              </span>
-              <div className="flex items-center gap-[3px] mt-0.5">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="w-2.5 h-2.5 rounded-sm transition-all duration-300"
-                    style={{
-                      background: i < selectedSpells.length ? 'linear-gradient(135deg, #a855f7, #7c3aed)' : 'rgba(60,40,80,0.4)',
-                      border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.5)' : 'rgba(100,70,140,0.2)'}`,
-                    }} />
-                ))}
+          {/* Spell info + upgrade */}
+          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 px-2.5 py-1">
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
+                  style={{ color: spellAccents[centeredSpell] }}
+                >
+                  {centeredData.shortName}
+                </span>
+                {onOpenCodex && (
+                  <button
+                    onClick={onOpenCodex}
+                    className="flex-shrink-0 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                  >
+                    <Info size={12} className="text-purple-400/50 hover:text-purple-400" />
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-row items-center gap-1.5">
+                <span
+                  className="text-[7px] font-semibold px-1.5 py-[1px] rounded inline-block"
+                  style={{
+                    background: spellTraits[centeredSpell].bg,
+                    border: `1px solid ${spellTraits[centeredSpell].border}`,
+                  }}
+                >
+                  <span className={spellTraits[centeredSpell].color}>{spellTraits[centeredSpell].trait}</span>
+                </span>
+                <span
+                  className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-bold text-yellow-200"
+                  style={{
+                    background: 'rgba(120,53,15,0.4)',
+                    border: '1px solid rgba(250,190,60,0.3)',
+                  }}
+                >
+                  <Star size={7} className="fill-yellow-300 text-yellow-300" />
+                  {(spellUpgradeLevels[centeredSpell] ?? 0) + 1}
+                </span>
               </div>
             </div>
-            {onOpenCodex && (
-              <HudTooltip label="View in Codex" position="top">
-                <button
-                  onClick={onOpenCodex}
-                  className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-                >
-                  <Info size={14} className="text-purple-400/60 hover:text-purple-400" />
-                </button>
-              </HudTooltip>
-            )}
-          </div>
 
-          {/* Upgrade button — far right */}
-          <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
-            <button
-              type="button"
-              onClick={() => setShowUpgradeModal(true)}
-              className="relative z-10 flex-shrink-0 ml-1 mr-1 flex items-center gap-2 rounded-lg border py-1 px-4 transition-all hover:brightness-115 hover:scale-105"
-              style={{
-                background: "linear-gradient(180deg, rgba(130,95,20,0.92), rgba(88,62,14,0.9))",
-                borderColor: "rgba(250,204,21,0.55)",
-                boxShadow: "0 0 16px rgba(250,204,21,0.18), inset 0 0 10px rgba(250,204,21,0.14), 0 2px 8px rgba(0,0,0,0.45)",
-              }}
-            >
-              <EnchantedAnvilIcon size={32} />
-              <span className="text-[12px] font-bold text-yellow-200 flex items-center gap-0.5">
-                <Star size={12} className="fill-yellow-300 text-yellow-300" />
-                {availableSpellStars}
-              </span>
-            </button>
-          </HudTooltip>
+            {/* Upgrade button — larger, inline */}
+            <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="flex-shrink-0 ml-auto flex items-center gap-1.5 rounded-lg border py-1.5 px-2.5 transition-all hover:brightness-110 hover:scale-105"
+                style={{
+                  background: "linear-gradient(180deg, rgba(130,95,20,0.9), rgba(88,62,14,0.85))",
+                  borderColor: "rgba(250,204,21,0.5)",
+                  boxShadow: "0 0 10px rgba(250,204,21,0.12), inset 0 0 8px rgba(250,204,21,0.1)",
+                }}
+              >
+                <EnchantedAnvilIcon size={18} />
+                <span className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[9px] font-bold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">
+                  <Star size={9} className="fill-yellow-300 text-yellow-300" />
+                  {availableSpellStars}
+                </span>
+              </button>
+            </HudTooltip>
+          </div>
 
         </div>
 

@@ -1976,6 +1976,8 @@ export function usePrincetonTowerDefenseRuntime() {
   encounterQueueRef.current = encounterQueue;
   const encounterIndexRef = useRef(encounterIndex);
   encounterIndexRef.current = encounterIndex;
+  const tutorialRef = useRef(tutorial);
+  tutorialRef.current = tutorial;
 
   const handleEncounterAcknowledge = useCallback(() => {
     const queue = encounterQueueRef.current;
@@ -1989,7 +1991,7 @@ export function usePrincetonTowerDefenseRuntime() {
         .filter((e) => e.category === "hazard")
         .map((e) => e.key.replace("hazard-", ""));
       if (specialTowerKeys.length > 0 || hazardKeys.length > 0) {
-        tutorial.markLevelEncountersSeen(
+        tutorialRef.current.markLevelEncountersSeen(
           specialTowerKeys as import("../types").SpecialTowerType[],
           hazardKeys as import("../types").HazardType[]
         );
@@ -1998,7 +2000,7 @@ export function usePrincetonTowerDefenseRuntime() {
     } else {
       setEncounterIndex(nextIndex);
     }
-  }, [tutorial]);
+  }, []);
 
   const ENCOUNTER_AUTO_DISMISS_MS = 8000;
   const ENCOUNTER_EXIT_DURATION_MS = 300;
@@ -2012,14 +2014,6 @@ export function usePrincetonTowerDefenseRuntime() {
     }, ENCOUNTER_EXIT_DURATION_MS);
     return () => clearTimeout(timer);
   }, [encounterExiting]);
-
-  useEffect(() => {
-    if (encounterQueue.length === 0 || encounterExiting) return;
-    const timer = setTimeout(() => {
-      handleEncounterAcknowledge();
-    }, ENCOUNTER_AUTO_DISMISS_MS);
-    return () => clearTimeout(timer);
-  }, [encounterIndex, encounterQueue.length, encounterExiting, handleEncounterAcknowledge]);
 
   // Start wave function
   const startWaveInner = useCallback(() => {

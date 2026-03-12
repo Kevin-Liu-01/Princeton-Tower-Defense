@@ -76,3 +76,62 @@ body {
   height: 100dvh;
   background: #000;
 }
+
+/* ─── Modal Animations ─── */
+
+@keyframes hero-aura-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+@keyframes hero-aura-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translateY(-30px) scale(1.2); opacity: 0.7; }
+  90% { opacity: 0; }
+  100% { transform: translateY(-60px) scale(0.8); }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes stat-bar-fill {
+  from { width: 0%; }
+}
+
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 8px var(--glow-color, rgba(180,140,60,0.3)); }
+  50% { box-shadow: 0 0 16px var(--glow-color, rgba(180,140,60,0.5)); }
+}
+
+@keyframes rune-fade {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
+@keyframes spell-orb-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.04); filter: brightness(1.15); }
+}
+
+@keyframes loadout-slot-idle {
+  0%, 100% { border-color: rgba(140,80,200,0.15); }
+  50% { border-color: rgba(140,80,200,0.3); }
+}
+
+.animate-hero-aura { animation: hero-aura-pulse 3s ease-in-out infinite; }
+.animate-aura-spin { animation: hero-aura-spin 20s linear infinite; }
+.animate-float-particle { animation: float-particle 3s ease-in-out infinite; }
+.animate-shimmer { animation: shimmer-sweep 3s ease-in-out infinite; }
+.animate-stat-fill { animation: stat-bar-fill 0.8s ease-out forwards; }
+.animate-badge-glow { animation: badge-glow 2s ease-in-out infinite; }
+.animate-rune-fade { animation: rune-fade 4s ease-in-out infinite; }
+.animate-spell-orb { animation: spell-orb-pulse 2.5s ease-in-out infinite; }
+.animate-loadout-idle { animation: loadout-slot-idle 2s ease-in-out infinite; }

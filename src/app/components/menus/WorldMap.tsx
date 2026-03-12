@@ -21,7 +21,6 @@ import {
   Eye,
   BarChart3,
   ChessRook,
-  Map as MapIcon,
   Sparkles,
   Settings,
   Maximize,
@@ -45,7 +44,7 @@ import {
   LEVEL_DATA,
 } from "../../constants";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
-import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
 import { WORLD_LEVELS, MAP_WIDTH, getWaveCount, DEV_LEVELS, DEV_LEVEL_IDS } from "./worldMapData";
 import { CodexModal, type CodexTabId } from "./CodexModal";
 import { CampaignOverview } from "./CampaignOverview";
@@ -54,6 +53,8 @@ import { RegionIcon } from "../../sprites";
 import { HeroSelector } from "./HeroSelector";
 import { SpellSelector } from "./SpellSelector";
 import { MobileLoadoutBar } from "./MobileLoadoutBar";
+import { MobileCampaignBar } from "./MobileCampaignBar";
+import { MobileLevelSheet } from "./MobileLevelSheet";
 import { CreatorModal } from "../creator";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
 import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
@@ -62,7 +63,6 @@ import { useSettings } from "../../hooks/useSettings";
 import { CreditsModal } from "./CreditsModal";
 import { NavMoreDropdown } from "./NavMoreDropdown";
 
-const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as const;
 
 // =============================================================================
 // LOGO COMPONENT
@@ -812,237 +812,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
 
-        {/* MOBILE: Campaign / Level detail panel above map */}
-        <div className="sm:hidden h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-1.5 pt-1 pb-0.5" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
-          <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
-            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-            {selectedLevel && currentLevel ? (() => {
-              const previewImg = LEVEL_DATA[currentLevel.id]?.previewImage ?? fallbackPreviewImage;
-              return (
-                <div className="flex-1 flex flex-col overflow-hidden relative">
-                  {previewImg && (
-                    <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                      <Image src={previewImg} alt="" fill unoptimized className={`absolute right-0 top-0 !h-full !w-[60%] !left-auto object-cover ${LEVEL_DATA[currentLevel.id]?.previewImage ? "opacity-25" : "opacity-40 blur-[1px]"}`} style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
-                      <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${PANEL.bgDark} 35%, transparent 75%)` }} />
-                    </div>
-                  )}
-                  <div className="flex-1 flex flex-col overflow-auto p-2 pb-1 relative z-10 min-h-0">
-                    {/* Row 1: Icon + Name + nav + close */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <RegionIcon type={currentLevel.region} size={22} framed challenge={isCurrentChallengeLevel} />
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-sm font-bold text-amber-100 truncate">{currentLevel.name}</h2>
-                        <p className="text-[9px] text-amber-400/60 italic truncate leading-tight">&ldquo;{currentLevel.description}&rdquo;</p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button onClick={() => goToPreviousLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
-                          <ChevronLeft size={14} className="text-amber-400" />
-                        </button>
-                        <button onClick={() => goToNextLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
-                          <ChevronRight size={14} className="text-amber-400" />
-                        </button>
-                        <button onClick={() => setSelectedLevel(null)} className="p-0.5 rounded border transition-colors ml-0.5" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
-                          <X size={14} className="text-amber-400" />
-                        </button>
-                      </div>
-                    </div>
-                    {/* Row 2: Tags + difficulty + waves */}
-                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                      {isCurrentChallengeLevel && (
-                        <span className="text-[8px] font-bold px-1.5 py-px rounded tracking-wider uppercase" style={challengeBadgeStyle}>Challenge</span>
-                      )}
-                      {currentLevel.tags.map((tag) => (
-                        <span key={tag} className="text-[8px] font-semibold px-1.5 py-px rounded tracking-wide" style={{ background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`, border: `1px solid ${GOLD.border25}`, color: "rgba(252,211,77,0.8)" }}>{tag}</span>
-                      ))}
-                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`, border: `1px solid ${NEUTRAL.border}` }}>
-                        <Skull size={10} className="text-amber-400" />
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3].map((d) => (
-                            <div key={d} className={`w-2 h-2 rounded-full ${d <= currentLevel.difficulty ? currentLevel.difficulty === 1 ? "bg-green-500" : currentLevel.difficulty === 2 ? "bg-yellow-500" : "bg-red-500" : "bg-stone-700"}`} />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`, border: `1px solid ${AMBER_CARD.border}` }}>
-                        <Flag size={10} className="text-amber-300" />
-                        <span className="text-amber-200 font-bold text-[9px]">{waveCount}W</span>
-                      </div>
-                    </div>
-                    {/* Row 3: Stars + hearts + time */}
-                    <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`, border: `1px solid ${AMBER_CARD.border}` }}>
-                        <Trophy size={10} className="text-yellow-500" />
-                        <div className="flex gap-px">
-                          {[1, 2, 3].map((s) => (
-                            <Star key={s} size={10} className={`${(levelStars[currentLevel.id] || 0) >= s ? "text-yellow-400 fill-yellow-400" : "text-stone-600"}`} />
-                          ))}
-                        </div>
-                      </div>
-                      {levelStats[currentLevel.id] && (
-                        <>
-                          <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: `1px solid ${RED_CARD.border}` }}>
-                            <Heart size={10} className="text-red-400 fill-red-400" />
-                            <span className="text-red-200 font-mono font-bold text-[9px]">{levelStats[currentLevel.id]?.bestHearts}/20</span>
-                          </div>
-                          <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: `1px solid ${BLUE_CARD.border}` }}>
-                            <Clock size={10} className="text-blue-400" />
-                            <span className="text-blue-200 font-mono font-bold text-[9px]">{levelStats[currentLevel.id]?.bestTime ? `${Math.floor(levelStats[currentLevel.id]!.bestTime! / 60)}m${levelStats[currentLevel.id]!.bestTime! % 60}s` : "—"}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    {/* Row 4: Region levels */}
-                    <div className="flex-1 overflow-y-auto">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                        <span className="text-[8px] font-bold text-amber-400 uppercase tracking-widest">Region</span>
-                        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                      </div>
-                      <div className="flex gap-1 flex-wrap">
-                        {visibleWorldLevels.filter((l) => l.region === currentLevel.region && !DEV_LEVEL_IDS.has(l.id)).map((l) => (
-                          <button
-                            key={l.id}
-                            onClick={() => handleLevelClick(l.id)}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded transition-all text-left"
-                            style={{
-                              background: l.id === selectedLevel ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})` : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                              border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder40 : GOLD.border25}`,
-                            }}
-                          >
-                            <span className={`text-[9px] font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/80"}`}>{l.name}</span>
-                            <div className="flex gap-px flex-shrink-0">
-                              {[1, 2, 3].map((s) => (
-                                <Star key={s} size={8} className={(levelStars[l.id] || 0) >= s ? "text-yellow-400 fill-yellow-400" : "text-stone-600"} />
-                              ))}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Battle button pinned at bottom */}
-                  <div className="flex-shrink-0 px-2 pb-1.5 pt-1 relative z-10" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-                    <button
-                      onClick={canStart ? startGame : onStartWithRandomLoadout}
-                      className="w-full py-3 rounded-lg font-black text-sm transition-all relative overflow-hidden group uppercase"
-                      style={{
-                        background: `linear-gradient(180deg, rgba(200,150,30,0.97) 0%, rgba(160,105,15,0.97) 50%, rgba(130,80,10,0.97) 100%)`,
-                        border: `2px solid rgba(255,210,80,0.7)`,
-                        boxShadow: `0 0 18px rgba(255,180,40,0.35), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4), inset 0 -1px 0 rgba(80,50,10,0.4)`,
-                        color: "rgba(253,230,138,0.9)",
-                        textShadow: "0 1px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,200,60,0.3)",
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
-                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid rgba(255,230,140,0.2)` }} />
-                      <div className="relative flex items-center justify-center gap-2">
-                        <Swords size={16} />
-                        <span className="tracking-widest">BATTLE</span>
-                        <Play size={14} />
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              );
-            })() : (
-              <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
-                {/* Campaign header + progress */}
-                <div className="flex items-center gap-2 mb-1.5">
-                  <MapIcon size={14} className="text-amber-400" />
-                  <span className="text-xs font-bold text-amber-100 tracking-wide">CAMPAIGN</span>
-                  <div className="flex-1" />
-                  <div className="flex items-center gap-1">
-                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-[10px] font-bold text-amber-300">{totalStars}/{maxStars}</span>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => goToPreviousLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
-                      <ChevronLeft size={14} className="text-amber-400" />
-                    </button>
-                    <button onClick={() => goToNextLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
-                      <ChevronRight size={14} className="text-amber-400" />
-                    </button>
-                  </div>
-                </div>
-                {/* Progress bar */}
-                <div className="h-2 rounded-full overflow-hidden mb-2 relative" style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}>
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${maxStars > 0 ? (totalStars / maxStars) * 100 : 0}%`, background: "linear-gradient(90deg, rgba(180,120,20,0.9), rgba(220,170,40,0.95), rgba(180,120,20,0.9))", boxShadow: "0 0 8px rgba(220,170,40,0.4)" }} />
-                </div>
-                {/* Stats row */}
-                <div className="grid grid-cols-3 gap-1 mb-2">
-                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: `1px solid ${BLUE_CARD.border}` }}>
-                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
-                    <Swords size={10} className="text-blue-400/80" />
-                    <span className="text-[9px] font-bold text-blue-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0)}</span>
-                    <span className="text-[7px] text-blue-500/60 font-bold uppercase tracking-wider">Games</span>
-                  </div>
-                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`, border: `1px solid ${GREEN_CARD.border}` }}>
-                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
-                    <Trophy size={10} className="text-emerald-400/80" />
-                    <span className="text-[9px] font-bold text-emerald-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0)}</span>
-                    <span className="text-[7px] text-emerald-500/60 font-bold uppercase tracking-wider">Wins</span>
-                  </div>
-                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: `1px solid ${RED_CARD.border}` }}>
-                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-                    <Heart size={10} className="text-red-400 fill-red-400" />
-                    <span className="text-[9px] font-bold text-red-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0)}</span>
-                    <span className="text-[7px] text-red-700 font-semibold">/{visibleWorldLevels.length * 20}</span>
-                  </div>
-                </div>
-                {/* Region list with icons and preview gradients */}
-                <div className="flex-1 overflow-y-auto space-y-1">
-                  {REGION_ORDER.map((region) => {
-                    const levels = visibleWorldLevels.filter((l) => l.region === region && !DEV_LEVEL_IDS.has(l.id));
-                    const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
-                    const rMax = levels.length * 3;
-                    const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
-                    const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
-                    const regionMeta: Record<string, { name: string; color: string; border: string; bgLight: string; bgDark: string }> = {
-                      grassland: { name: "Princeton Grounds", color: "text-green-400", border: "rgba(80,160,60,0.45)", bgLight: "rgba(30,50,25,0.8)", bgDark: "rgba(20,35,18,0.65)" },
-                      swamp: { name: "Mathey Marshes", color: "text-teal-400", border: "rgba(60,140,130,0.45)", bgLight: "rgba(20,40,38,0.8)", bgDark: "rgba(15,30,28,0.65)" },
-                      desert: { name: "Stadium Sands", color: "text-amber-400", border: "rgba(180,140,50,0.45)", bgLight: "rgba(55,40,18,0.8)", bgDark: "rgba(40,28,12,0.65)" },
-                      winter: { name: "Frist Frontier", color: "text-blue-400", border: "rgba(80,130,200,0.45)", bgLight: "rgba(25,35,50,0.8)", bgDark: "rgba(18,25,40,0.65)" },
-                      volcanic: { name: "Dormitory Depths", color: "text-red-400", border: "rgba(180,70,50,0.45)", bgLight: "rgba(50,25,20,0.8)", bgDark: "rgba(35,18,15,0.65)" },
-                    };
-                    const meta = regionMeta[region] ?? { name: region, color: "text-amber-400", border: GOLD.border25, bgLight: PANEL.bgWarmLight, bgDark: PANEL.bgWarmMid };
-                    const targetLevel = levels.find((l) => unlockedMapSet.has(l.id) && (levelStars[l.id] || 0) < 3) ?? levels[0];
-                    const previewImg = targetLevel ? LEVEL_DATA[targetLevel.id]?.previewImage : undefined;
-                    return (
-                      <button
-                        key={region}
-                        onClick={() => { if (targetLevel) handleLevelClick(targetLevel.id); }}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded overflow-hidden transition-all hover:brightness-110 relative"
-                        style={{ background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`, border: `1px solid ${meta.border}`, boxShadow: `inset 0 0 8px ${meta.border.replace('0.45', '0.08')}` }}
-                      >
-                        {previewImg && (
-                          <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                            <Image src={previewImg} alt="" fill unoptimized className="absolute right-0 top-0 !h-full !w-[55%] !left-auto object-cover opacity-20" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)" }} />
-                          </div>
-                        )}
-                        <div className="absolute inset-[1px] rounded-[3px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.05)" }} />
-                        <div className="relative flex-shrink-0">
-                          <RegionIcon type={region} size={20} framed />
-                        </div>
-                        <div className="relative flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className={`text-[9px] font-bold truncate ${meta.color}`}>{meta.name}</span>
-                            <span className="text-[8px] text-amber-400/60 font-medium ml-1 flex-shrink-0">{completed}/{levels.length}</span>
-                          </div>
-                          <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.04)" }}>
-                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: meta.border }} />
-                          </div>
-                        </div>
-                        <div className="relative flex items-center gap-px flex-shrink-0">
-                          <Star size={9} className={stars > 0 ? "text-yellow-400 fill-yellow-400" : "text-stone-600"} />
-                          <span className="text-[8px] font-bold text-amber-300/70">{stars}/{rMax}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* MOBILE: Compact campaign bar with horizontal region scroller */}
+        <MobileCampaignBar
+          levelStars={levelStars}
+          unlockedMaps={unlockedMaps}
+          selectedLevel={selectedLevel}
+          onSelectLevel={handleLevelClick}
+          isDevMode={isDevMode}
+        />
 
         {/* DESKTOP: LEFT SIDEBAR */}
         <div className="hidden sm:flex sm:h-auto sm:w-80 flex-shrink-0 flex-col overflow-hidden pl-3 py-3" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
@@ -1682,9 +1459,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <div ref={bottomPanelRef}>
                   {loadoutCompact ? (
                     /* ── Compact: wheel carousels ── */
-                    <div className="flex items-center gap-2 px-3 py-2">
+                    <div className="flex items-stretch gap-2 px-3 py-2">
                       {/* Guide / Codex Quick Links — horizontal row */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 flex-shrink-0 self-center">
                         {([
                           { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
                           { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
@@ -1736,7 +1513,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </div>
 
                       {/* Divider */}
-                      <div className="w-px h-8 flex-shrink-0" style={{ background: 'linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)' }} />
+                      <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)' }} />
 
                       {/* Hero Selector — wheel carousel */}
                       <HeroSelector
@@ -1749,7 +1526,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       />
 
                       {/* Divider */}
-                      <div className="w-px h-8 flex-shrink-0" style={{ background: 'linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)' }} />
+                      <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)' }} />
 
                       {/* Spell Selector — wheel carousel */}
                       <SpellSelector
@@ -1771,7 +1548,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       {/* Toggle to expanded */}
                       <button
                         onClick={() => setLoadoutCompact(false)}
-                        className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
+                        className="flex-shrink-0 self-center w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
                         style={{
                           background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.4), rgba(20,16,10,0.8))',
                           border: '1.5px solid rgba(180,140,60,0.35)',
@@ -1888,6 +1665,24 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           </div>
         </div>
       </div>
+
+      {/* MOBILE: Level detail bottom sheet */}
+      {isMobile && (
+        <MobileLevelSheet
+          level={currentLevel ?? null}
+          levelStars={levelStars}
+          levelStats={levelStats}
+          unlockedMaps={unlockedMaps}
+          canStart={!!canStart}
+          onClose={() => setSelectedLevel(null)}
+          onBattle={startGame}
+          onBattleRandom={() => onStartWithRandomLoadout?.()}
+          onNavigateNext={goToNextLevel}
+          onNavigatePrev={goToPreviousLevel}
+          onSelectLevel={handleLevelClick}
+          isDevMode={isDevMode}
+        />
+      )}
 
       {showCodex && <CodexModal onClose={() => setShowCodex(false)} defaultTab={codexTab} />}
       {showSettings && (
