@@ -668,7 +668,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
       <style>{ANIMATIONS_CSS}</style>
 
       <OrnateFrame
-        className="relative z-10 w-full max-w-[1280px] max-h-[94vh] overflow-hidden rounded-2xl border border-amber-400/45 flex flex-col"
+        className="relative z-10 w-full max-w-[1280px] max-h-[94dvh] overflow-hidden rounded-2xl border border-amber-400/45 flex flex-col"
         cornerSize={46}
         color="#d97706"
         glowColor="#fbbf24"

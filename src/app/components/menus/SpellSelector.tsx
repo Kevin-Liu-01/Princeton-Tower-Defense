@@ -13,6 +13,8 @@ import {
 import type { SpellType, SpellUpgradeLevels } from "../../types";
 import {
   SPELL_DATA,
+  SPELL_ACCENTS,
+  SPELL_TRAITS,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
@@ -28,22 +30,6 @@ const spellOptions: SpellType[] = [
   "reinforcements",
 ];
 
-const spellAccents: Record<SpellType, string> = {
-  fireball: "#ea580c",
-  lightning: "#eab308",
-  freeze: "#06b6d4",
-  payday: "#f59e0b",
-  reinforcements: "#10b981",
-};
-
-const spellTraits: Record<SpellType, { trait: string; color: string; bg: string; border: string }> = {
-  fireball: { trait: "AoE Burn", color: "text-red-300/80", bg: "rgba(127,29,29,0.25)", border: "rgba(127,29,29,0.2)" },
-  lightning: { trait: "Chain Stun", color: "text-cyan-300/80", bg: "rgba(22,78,99,0.25)", border: "rgba(22,78,99,0.2)" },
-  freeze: { trait: "Global Freeze", color: "text-indigo-300/80", bg: "rgba(49,46,129,0.25)", border: "rgba(49,46,129,0.2)" },
-  payday: { trait: "Gold Boost", color: "text-yellow-300/80", bg: "rgba(113,63,18,0.25)", border: "rgba(113,63,18,0.2)" },
-  reinforcements: { trait: "Summon Units", color: "text-emerald-300/80", bg: "rgba(6,78,59,0.25)", border: "rgba(6,78,59,0.2)" },
-};
-
 const CIRCLE = 42;
 const GAP = 6;
 const STEP = CIRCLE + GAP;
@@ -51,7 +37,7 @@ const VISIBLE_COUNT = 3;
 const VP_W = VISIBLE_COUNT * CIRCLE + (VISIBLE_COUNT - 1) * GAP;
 const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
-const VP_CY = VP_H / 2 - 3;
+const VP_CY = VP_H / 2;
 
 function circularDiff(idx: number, center: number, len: number): number {
   const raw = ((idx - center) % len + len) % len;
@@ -153,7 +139,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 style={{ width: VP_W, height: VP_H }}
               >
                 {spellOptions.map((spellType, idx) => {
-                  const accent = spellAccents[spellType];
+                  const accent = SPELL_ACCENTS[spellType];
                   const diff = circularDiff(idx, centerIdx, spellOptions.length);
                   const absDiff = Math.abs(diff);
                   const isCenter = diff === 0;
@@ -257,12 +243,13 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           </div>
 
           {/* Spell info + upgrade */}
-          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 px-2.5 py-1">
-            <div className="flex flex-col gap-1 min-w-0">
-              <div className="flex items-center gap-1.5">
+          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 px-2.5 py-1.5">
+            <div className="flex flex-col justify-center gap-[5px] min-w-0 flex-1">
+              {/* Row 1: Name + codex */}
+              <div className="flex items-center gap-1.5 min-w-0">
                 <span
                   className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
-                  style={{ color: spellAccents[centeredSpell] }}
+                  style={{ color: SPELL_ACCENTS[centeredSpell] }}
                 >
                   {centeredData.shortName}
                 </span>
@@ -275,15 +262,17 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   </button>
                 )}
               </div>
-              <div className="flex flex-row items-center gap-1.5">
+
+              {/* Row 2: Trait + Level */}
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="text-[7px] font-semibold px-1.5 py-[1px] rounded inline-block"
+                  className="text-[7px] font-semibold px-1.5 py-[1px] rounded"
                   style={{
-                    background: spellTraits[centeredSpell].bg,
-                    border: `1px solid ${spellTraits[centeredSpell].border}`,
+                    background: SPELL_TRAITS[centeredSpell].bg,
+                    border: `1px solid ${SPELL_TRAITS[centeredSpell].border}`,
                   }}
                 >
-                  <span className={spellTraits[centeredSpell].color}>{spellTraits[centeredSpell].trait}</span>
+                  <span className={SPELL_TRAITS[centeredSpell].color}>{SPELL_TRAITS[centeredSpell].trait}</span>
                 </span>
                 <span
                   className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-bold text-yellow-200"
@@ -296,9 +285,28 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   {(spellUpgradeLevels[centeredSpell] ?? 0) + 1}
                 </span>
               </div>
+
+              {/* Row 3: Cost + Cooldown */}
+              <div className="flex items-center gap-1">
+                <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                  style={{
+                    background: centeredData.cost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)',
+                    border: `1px solid ${centeredData.cost > 0 ? 'rgba(120,80,20,0.15)' : 'rgba(20,83,45,0.15)'}`,
+                  }}>
+                  <Coins size={7} className={centeredData.cost > 0 ? "text-amber-400" : "text-green-400"} />
+                  <span className={centeredData.cost > 0 ? "text-amber-300/90" : "text-green-300/90"}>
+                    {centeredData.cost > 0 ? `${centeredData.cost} PP` : "Free"}
+                  </span>
+                </span>
+                <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                  style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.15)' }}>
+                  <Clock size={7} className="text-blue-400" />
+                  <span className="text-blue-300/90">{centeredData.cooldown / 1000}s</span>
+                </span>
+              </div>
             </div>
 
-            {/* Upgrade button — larger, inline */}
+            {/* Upgrade button */}
             <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
               <button
                 type="button"
@@ -395,12 +403,12 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
       </div>
       <div className="p-3 flex-1 flex flex-col justify-between">
         {(() => {
-          const spellLabels: Record<SpellType, { nameColor: string; borderColor: string; trait: string; traitColor: string; traitBg: string; traitBorder: string }> = {
-            fireball: { nameColor: "text-orange-300", borderColor: "rgba(234,88,12,0.4)", trait: "AoE Burn", traitColor: "text-red-300/80", traitBg: "rgba(127,29,29,0.25)", traitBorder: "rgba(127,29,29,0.2)" },
-            lightning: { nameColor: "text-yellow-300", borderColor: "rgba(234,179,8,0.4)", trait: "Chain Stun", traitColor: "text-cyan-300/80", traitBg: "rgba(22,78,99,0.25)", traitBorder: "rgba(22,78,99,0.2)" },
-            freeze: { nameColor: "text-cyan-300", borderColor: "rgba(6,182,212,0.4)", trait: "Global Freeze", traitColor: "text-indigo-300/80", traitBg: "rgba(49,46,129,0.25)", traitBorder: "rgba(49,46,129,0.2)" },
-            payday: { nameColor: "text-amber-300", borderColor: "rgba(245,158,11,0.4)", trait: "Gold Boost", traitColor: "text-yellow-300/80", traitBg: "rgba(113,63,18,0.25)", traitBorder: "rgba(113,63,18,0.2)" },
-            reinforcements: { nameColor: "text-emerald-300", borderColor: "rgba(16,185,129,0.4)", trait: "Summon Units", traitColor: "text-emerald-300/80", traitBg: "rgba(6,78,59,0.25)", traitBorder: "rgba(6,78,59,0.2)" },
+          const spellLabelExtras: Record<SpellType, { nameColor: string; borderColor: string }> = {
+            fireball: { nameColor: "text-orange-300", borderColor: "rgba(234,88,12,0.4)" },
+            lightning: { nameColor: "text-yellow-300", borderColor: "rgba(234,179,8,0.4)" },
+            freeze: { nameColor: "text-cyan-300", borderColor: "rgba(6,182,212,0.4)" },
+            payday: { nameColor: "text-amber-300", borderColor: "rgba(245,158,11,0.4)" },
+            reinforcements: { nameColor: "text-emerald-300", borderColor: "rgba(16,185,129,0.4)" },
           };
           return (
             <div className="flex gap-1.5">
@@ -408,7 +416,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 const isSelected = selectedSpells.includes(spellType);
                 const canSelect = isSelected || selectedSpells.length < 3;
                 const spellIndex = selectedSpells.indexOf(spellType);
-                const label = spellLabels[spellType];
+                const label = { ...spellLabelExtras[spellType], ...SPELL_TRAITS[spellType] };
                 const spellData = SPELL_DATA[spellType];
                 const spellCost = spellData?.cost ?? 0;
                 const spellCooldownSeconds = (spellData?.cooldown ?? 0) / 1000;
@@ -508,8 +516,8 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                           </span>
                         </div>
                         <span className="text-[7px] font-semibold px-1.5 py-px rounded mt-0.5 inline-block"
-                          style={{ background: label.traitBg, border: `1px solid ${label.traitBorder}` }}>
-                          <span className={label.traitColor}>{label.trait}</span>
+                          style={{ background: label.bg, border: `1px solid ${label.border}` }}>
+                          <span className={label.color}>{label.trait}</span>
                         </span>
                       </>
                     )}

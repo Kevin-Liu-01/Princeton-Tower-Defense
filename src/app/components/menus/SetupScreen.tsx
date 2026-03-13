@@ -6,7 +6,7 @@ import {
   Shield, Zap, ChevronRight, Swords, X, Crown, Heart, Target,
   Wind, Timer, Sparkles, Crosshair, Flame, Snowflake, Coins,
   Users, Gauge, TrendingUp, Star, Info, Wrench, Volume2,
-  Mountain, Building, CircleDot, Check, TrendingDown, Droplets,
+  Mountain, Building, Check, TrendingDown, Droplets,
   Ban, EyeOff, AlertTriangle, Footprints, Flag
 } from "lucide-react";
 import type {
@@ -31,6 +31,13 @@ import {
   FAST_SPEED_THRESHOLD,
   DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
   DEFAULT_ENEMY_TROOP_DAMAGE,
+  HERO_ROLES,
+  SPELL_TRAITS,
+  ENEMY_TRAIT_META,
+  ENEMY_ABILITY_META,
+  ENEMY_CATEGORY_META,
+  ENEMY_CATEGORY_ORDER,
+  groupEnemiesByCategory,
 } from "../../constants";
 
 // Import sprite components from GameUI
@@ -164,93 +171,54 @@ const EnemySprite: React.FC<{ type: EnemyType; size?: number }> = ({
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 
-// Helper function to get trait icon and info
-const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string; color: string; desc: string } => {
-  switch (trait) {
-    case "flying":
-      return { icon: <Wind size={10} />, label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles" };
-    case "ranged":
-      return { icon: <Crosshair size={10} />, label: "Ranged", color: "text-green-400", desc: "Attacks from distance" };
-    case "armored":
-      return { icon: <Shield size={10} />, label: "Armored", color: "text-amber-400", desc: "Reduces damage" };
-    case "fast":
-      return { icon: <Footprints size={10} />, label: "Fast", color: "text-yellow-400", desc: "High movement speed" };
-    case "boss":
-      return { icon: <Crown size={10} />, label: "Boss", color: "text-red-400", desc: "Powerful enemy" };
-    case "summoner":
-      return { icon: <Users size={10} />, label: "Summoner", color: "text-purple-400", desc: "Spawns minions" };
-    case "regenerating":
-      return { icon: <Heart size={10} />, label: "Regen", color: "text-green-400", desc: "Heals over time" };
-    case "aoe_attack":
-      return { icon: <Target size={10} />, label: "AoE", color: "text-orange-400", desc: "Area damage" };
-    case "magic_resist":
-      return { icon: <Sparkles size={10} />, label: "Magic Resist", color: "text-blue-400", desc: "Magic defense" };
-    case "tower_debuffer":
-      return { icon: <TrendingDown size={10} />, label: "Debuffer", color: "text-rose-400", desc: "Weakens towers" };
-    case "breakthrough":
-      return { icon: <Zap size={10} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses troops" };
-    default:
-      return { icon: <Info size={10} />, label: trait, color: "text-gray-400", desc: "Unknown" };
-  }
+// Trait icon factory (JSX must be local)
+const TRAIT_ICONS: Record<EnemyTrait, (size: number) => React.ReactNode> = {
+  flying: (s) => <Wind size={s} />,
+  ranged: (s) => <Crosshair size={s} />,
+  armored: (s) => <Shield size={s} />,
+  fast: (s) => <Footprints size={s} />,
+  boss: (s) => <Crown size={s} />,
+  summoner: (s) => <Users size={s} />,
+  regenerating: (s) => <Heart size={s} />,
+  aoe_attack: (s) => <Target size={s} />,
+  magic_resist: (s) => <Sparkles size={s} />,
+  tower_debuffer: (s) => <TrendingDown size={s} />,
+  breakthrough: (s) => <Zap size={s} />,
 };
 
-// Helper function to get ability icon and color
-const getAbilityInfo = (abilityType: string): { icon: React.ReactNode; color: string; bgColor: string } => {
-  switch (abilityType) {
-    case "burn":
-      return { icon: <Flame size={12} />, color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" };
-    case "slow":
-      return { icon: <Snowflake size={12} />, color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" };
-    case "poison":
-      return { icon: <Droplets size={12} />, color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" };
-    case "stun":
-      return { icon: <Zap size={12} />, color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" };
-    case "tower_slow":
-      return { icon: <Timer size={12} />, color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" };
-    case "tower_weaken":
-      return { icon: <TrendingDown size={12} />, color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" };
-    case "tower_blind":
-      return { icon: <EyeOff size={12} />, color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" };
-    case "tower_disable":
-      return { icon: <Ban size={12} />, color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" };
-    default:
-      return { icon: <AlertTriangle size={12} />, color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" };
-  }
+const getTraitInfo = (trait: EnemyTrait, iconSize = 10) => {
+  const meta = ENEMY_TRAIT_META[trait] ?? { label: trait, color: "text-gray-400", desc: "Unknown", pillColor: "" };
+  const iconFn = TRAIT_ICONS[trait];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <Info size={iconSize} /> };
 };
 
-// Enemy category display info
-const CATEGORY_INFO: Record<EnemyCategory, { name: string; desc: string; icon: React.ReactNode; color: string; bgColor: string }> = {
-  academic: { name: "Academic", desc: "Academic progression and milestones", icon: <Target size={16} />, color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
-  campus: { name: "Campus Life", desc: "Campus events and activities", icon: <Flag size={16} />, color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
-  ranged: { name: "Ranged", desc: "Attack from a distance", icon: <Crosshair size={16} />, color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
-  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", icon: <Wind size={16} />, color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
-  boss: { name: "Bosses", desc: "Major threats with devastating power", icon: <Crown size={16} />, color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
-  nature: { name: "Nature", desc: "Environmental and biome creatures", icon: <Sparkles size={16} />, color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
-  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", icon: <Users size={16} />, color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+// Ability icon factory (JSX must be local)
+const ABILITY_ICONS: Record<string, (size: number) => React.ReactNode> = {
+  burn: (s) => <Flame size={s} />,
+  slow: (s) => <Snowflake size={s} />,
+  poison: (s) => <Droplets size={s} />,
+  stun: (s) => <Zap size={s} />,
+  tower_slow: (s) => <Timer size={s} />,
+  tower_weaken: (s) => <TrendingDown size={s} />,
+  tower_blind: (s) => <EyeOff size={s} />,
+  tower_disable: (s) => <Ban size={s} />,
 };
 
-// Category display order
-const CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
+const getAbilityInfo = (abilityType: string, iconSize = 12) => {
+  const meta = ENEMY_ABILITY_META[abilityType as keyof typeof ENEMY_ABILITY_META] ?? ENEMY_ABILITY_META.default;
+  const iconFn = ABILITY_ICONS[abilityType];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <AlertTriangle size={iconSize} /> };
+};
 
-// Group enemies by category
-const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> => {
-  const grouped: Record<EnemyCategory, EnemyType[]> = {
-    academic: [],
-    campus: [],
-    ranged: [],
-    flying: [],
-    boss: [],
-    nature: [],
-    swarm: [],
-  };
-
-  enemyTypes.forEach(type => {
-    const enemy = ENEMY_DATA[type];
-    const category = enemy.category || "campus"; // Default to campus if not specified
-    grouped[category].push(type);
-  });
-
-  return grouped;
+// Category icons (JSX must be local)
+const SETUP_CATEGORY_ICONS: Record<EnemyCategory, React.ReactNode> = {
+  academic: <Target size={16} />,
+  campus: <Flag size={16} />,
+  ranged: <Crosshair size={16} />,
+  flying: <Wind size={16} />,
+  boss: <Crown size={16} />,
+  nature: <Sparkles size={16} />,
+  swarm: <Users size={16} />,
 };
 
 interface SetupScreenProps {
@@ -308,25 +276,47 @@ export function SetupScreen({
     "reinforcements",
   ];
 
-  // Hero role data for display
-  const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
-    tiger: { role: "Melee Fighter", icon: <Swords size={12} />, color: "orange" },
-    tenor: { role: "AoE Support", icon: <Volume2 size={12} />, color: "purple" },
-    mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
-    rocky: { role: "Ranged Artillery", icon: <Target size={12} />, color: "green" },
-    scott: { role: "Support Buffer", icon: <TrendingUp size={12} />, color: "cyan" },
-    captain: { role: "Summoner", icon: <Users size={12} />, color: "red" },
-    engineer: { role: "Turret Builder", icon: <Wrench size={12} />, color: "amber" },
+  // Hero role icons (JSX must be local)
+  const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
+    tiger: <Swords size={12} />,
+    tenor: <Volume2 size={12} />,
+    mathey: <Shield size={12} />,
+    rocky: <Target size={12} />,
+    scott: <TrendingUp size={12} />,
+    captain: <Users size={12} />,
+    engineer: <Wrench size={12} />,
   };
+  const HERO_COLOR_MAP: Record<HeroType, string> = {
+    tiger: "orange", tenor: "purple", mathey: "blue", rocky: "green",
+    scott: "cyan", captain: "red", engineer: "amber",
+  };
+  const heroRoles = Object.fromEntries(
+    (Object.keys(HERO_ROLES) as HeroType[]).map((h) => [h, {
+      role: HERO_ROLES[h].label,
+      icon: HERO_ROLE_ICONS[h],
+      color: HERO_COLOR_MAP[h],
+    }])
+  );
 
-  // Spell type data for display
-  const spellInfo: Record<string, { category: string; icon: React.ReactNode; color: string }> = {
-    fireball: { category: "Damage", icon: <Flame size={12} />, color: "orange" },
-    lightning: { category: "Chain Damage", icon: <Zap size={12} />, color: "yellow" },
-    freeze: { category: "Crowd Control", icon: <Snowflake size={12} />, color: "cyan" },
-    payday: { category: "Economy", icon: <Coins size={12} />, color: "amber" },
-    reinforcements: { category: "Summon", icon: <Users size={12} />, color: "green" },
+  // Spell type icons (JSX must be local)
+  const SPELL_ICONS: Record<SpellType, React.ReactNode> = {
+    fireball: <Flame size={12} />,
+    lightning: <Zap size={12} />,
+    freeze: <Snowflake size={12} />,
+    payday: <Coins size={12} />,
+    reinforcements: <Users size={12} />,
   };
+  const SPELL_COLOR_MAP: Record<SpellType, string> = {
+    fireball: "orange", lightning: "yellow", freeze: "cyan",
+    payday: "amber", reinforcements: "green",
+  };
+  const spellInfo = Object.fromEntries(
+    (Object.keys(SPELL_TRAITS) as SpellType[]).map((s) => [s, {
+      category: SPELL_TRAITS[s].trait,
+      icon: SPELL_ICONS[s],
+      color: SPELL_COLOR_MAP[s],
+    }])
+  );
 
   const levels = [
     {
@@ -811,7 +801,7 @@ export function SetupScreen({
       {showCodex && (
         <BaseModal isOpen onClose={() => setShowCodex(false)} backdropBg="rgba(0,0,0,0.85)" blurClass="" paddingClass="p-6">
           <OrnateFrame
-            className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+            className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 max-w-5xl w-full max-h-[85dvh] overflow-hidden flex flex-col shadow-2xl"
             cornerSize={48}
             color="#d97706"
             glowColor="#f59e0b"
@@ -943,22 +933,22 @@ export function SetupScreen({
 
                 return (
                   <div className="space-y-4">
-                    {CATEGORY_ORDER.map(category => {
+                    {ENEMY_CATEGORY_ORDER.map(category => {
                       const categoryEnemies = groupedEnemies[category];
                       if (categoryEnemies.length === 0) return null;
 
-                      const catInfo = CATEGORY_INFO[category];
+                      const catMeta = ENEMY_CATEGORY_META[category];
 
                       return (
                         <div key={category}>
                           {/* Category Header */}
-                          <div className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${catInfo.bgColor.replace('bg-', 'border-')}`}>
-                            <div className={`p-1.5 rounded ${catInfo.bgColor}`}>
-                              {catInfo.icon}
+                          <div className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${catMeta.bgColor.replace('bg-', 'border-')}`}>
+                            <div className={`p-1.5 rounded ${catMeta.bgColor}`}>
+                              {SETUP_CATEGORY_ICONS[category]}
                             </div>
                             <div className="flex-1">
-                              <h3 className={`font-bold text-sm ${catInfo.color}`}>{catInfo.name}</h3>
-                              <p className="text-[9px] text-stone-400">{catInfo.desc}</p>
+                              <h3 className={`font-bold text-sm ${catMeta.color}`}>{catMeta.name}</h3>
+                              <p className="text-[9px] text-stone-400">{catMeta.desc}</p>
                             </div>
                             <span className="text-[9px] text-stone-500 bg-stone-800/50 px-1.5 py-0.5 rounded">
                               {categoryEnemies.length}

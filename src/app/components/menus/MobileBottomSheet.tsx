@@ -86,7 +86,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         style={{
           position: "relative",
           width: "100%",
-          maxHeight: "70vh",
+          maxHeight: "70dvh",
           overflow: "hidden",
           background:
             "linear-gradient(180deg, rgba(38,32,24,0.99) 0%, rgba(20,16,10,0.99) 100%)",
@@ -155,7 +155,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
         <div
           style={{
             overflowY: "auto",
-            maxHeight: "calc(70vh - 60px)",
+            maxHeight: "calc(70dvh - 60px)",
             padding: 12,
             WebkitOverflowScrolling: "touch",
           }}

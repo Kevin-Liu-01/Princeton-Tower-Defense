@@ -13,6 +13,7 @@ import {
   HERO_DATA,
   SPELL_DATA,
   HERO_ABILITY_COOLDOWNS,
+  SPELL_FULL_THEMES,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 
@@ -23,36 +24,9 @@ const CIRCLE_SIZE = 44;
 const HP_RING_RADIUS = (HERO_CIRCLE_SIZE - 4) / 2;
 const HP_RING_CIRCUMFERENCE = 2 * Math.PI * HP_RING_RADIUS;
 
-const SPELL_ACCENT: Record<
-  string,
-  { border: string; glow: string; bg: string }
-> = {
-  fireball: {
-    border: "#f97316",
-    glow: "rgba(249,115,22,0.3)",
-    bg: "rgba(124,45,18,0.3)",
-  },
-  lightning: {
-    border: "#eab308",
-    glow: "rgba(234,179,8,0.3)",
-    bg: "rgba(113,63,18,0.3)",
-  },
-  freeze: {
-    border: "#06b6d4",
-    glow: "rgba(6,182,212,0.3)",
-    bg: "rgba(22,78,99,0.3)",
-  },
-  payday: {
-    border: "#f59e0b",
-    glow: "rgba(245,158,11,0.3)",
-    bg: "rgba(120,53,15,0.3)",
-  },
-  reinforcements: {
-    border: "#10b981",
-    glow: "rgba(16,185,129,0.3)",
-    bg: "rgba(6,78,59,0.3)",
-  },
-};
+const SPELL_ACCENT: Record<string, { border: string; glow: string; bg: string }> = Object.fromEntries(
+  Object.entries(SPELL_FULL_THEMES).map(([k, v]) => [k, { border: v.accent, glow: v.glow, bg: v.bg }])
+);
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

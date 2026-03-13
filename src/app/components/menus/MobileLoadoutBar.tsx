@@ -29,6 +29,8 @@ import {
   getFreezeSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
+  HERO_ROLES,
+  SPELL_FULL_THEMES,
 } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
@@ -53,15 +55,7 @@ const SPELL_OPTIONS: SpellType[] = [
   "reinforcements",
 ];
 
-const HERO_ROLES: Record<HeroType, string> = {
-  tiger: "Brawler",
-  tenor: "Mage",
-  mathey: "Tank",
-  rocky: "Artillery",
-  scott: "Support",
-  captain: "Summoner",
-  engineer: "Builder",
-};
+const getHeroRoleLabel = (type: HeroType): string => HERO_ROLES[type].label;
 
 interface MobileLoadoutBarProps {
   selectedHero: HeroType | null;
@@ -203,7 +197,7 @@ function HeroCircleButton({
           color: hero ? hero.color : "rgba(180,140,60,0.7)",
         }}
       >
-        {selectedHero ? HERO_ROLES[selectedHero] : "Hero"}
+        {selectedHero ? getHeroRoleLabel(selectedHero) : "Hero"}
       </div>
     </button>
   );
@@ -375,7 +369,7 @@ function HeroSelectionContent({
                     color: hero.color,
                   }}
                 >
-                  {HERO_ROLES[heroType]}
+                  {getHeroRoleLabel(heroType)}
                 </span>
               </div>
 
@@ -446,13 +440,7 @@ function SpellSelectionContent({
   toggleSpell: (spell: SpellType) => void;
   spellUpgradeLevels: SpellUpgradeLevels;
 }) {
-  const SPELL_COLORS: Record<SpellType, { accent: string; bg: string; border: string }> = {
-    fireball: { accent: "#f97316", bg: "rgba(124,45,18,0.15)", border: "rgba(234,88,12,0.3)" },
-    lightning: { accent: "#eab308", bg: "rgba(113,63,18,0.15)", border: "rgba(234,179,8,0.3)" },
-    freeze: { accent: "#06b6d4", bg: "rgba(22,78,99,0.15)", border: "rgba(6,182,212,0.3)" },
-    payday: { accent: "#f59e0b", bg: "rgba(120,53,15,0.15)", border: "rgba(245,158,11,0.3)" },
-    reinforcements: { accent: "#10b981", bg: "rgba(6,78,59,0.15)", border: "rgba(16,185,129,0.3)" },
-  };
+  const SPELL_COLORS = SPELL_FULL_THEMES;
 
   return (
     <div className="space-y-2">

@@ -11,32 +11,23 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { HeroType } from "../../types";
-import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
+import { HERO_DATA, HERO_ABILITY_COOLDOWNS, HERO_ROLES } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, HeroIcon } from "../../sprites";
 import { HeroHelmetIcon } from "../../sprites/custom-icons";
 import { HudTooltip } from "../ui/HudTooltip";
 import { HallOfHeroesModal } from "./HallOfHeroesModal";
 
-const HERO_ROLES: Record<HeroType, { label: string; color: string; bg: string; border: string }> = {
-  tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)" },
-  tenor: { label: "Mage", color: "text-violet-300", bg: "rgba(35,20,65,0.85)", border: "rgba(139,92,246,0.35)" },
-  mathey: { label: "Tank", color: "text-indigo-300", bg: "rgba(25,25,60,0.85)", border: "rgba(99,102,241,0.35)" },
-  rocky: { label: "Artillery", color: "text-amber-300", bg: "rgba(45,35,10,0.85)", border: "rgba(138,112,32,0.35)" },
-  scott: { label: "Support", color: "text-teal-300", bg: "rgba(8,45,42,0.85)", border: "rgba(20,184,166,0.35)" },
-  captain: { label: "Summoner", color: "text-red-300", bg: "rgba(55,12,12,0.85)", border: "rgba(220,38,38,0.35)" },
-  engineer: { label: "Builder", color: "text-yellow-300", bg: "rgba(50,38,5,0.85)", border: "rgba(234,179,8,0.35)" },
-};
 
 const heroOptions: HeroType[] = [
   "tiger", "tenor", "mathey", "rocky", "scott", "captain", "engineer",
 ];
 
-const CIRCLE = 34;
-const GAP = 3;
+const CIRCLE = 42;
+const GAP = 6;
 const STEP = CIRCLE + GAP;
-const VISIBLE_COUNT = 5;
+const VISIBLE_COUNT = 3;
 const VP_W = VISIBLE_COUNT * CIRCLE + (VISIBLE_COUNT - 1) * GAP;
-const VP_H = Math.ceil(CIRCLE * 1.15) + 4;
+const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
 const VP_CY = VP_H / 2;
 
@@ -177,11 +168,14 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                       zIndex: isCenter ? 3 : 1,
                     }}
                   >
-                    <HeroSprite type={heroType} size={isCenter ? 26 : 20} />
+                    <HeroSprite type={heroType} size={isCenter ? 30 : 22} />
                     {isSel && (
                       <div
-                        className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[6px] text-white font-bold border-[1.5px] border-stone-900"
-                        style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', boxShadow: '0 0 6px rgba(245,158,11,0.5)' }}
+                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-black border-2 border-stone-900 z-20"
+                        style={{
+                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                          boxShadow: '0 0 10px rgba(245,158,11,0.6), 0 0 4px rgba(245,158,11,0.8)',
+                        }}
                       >
                         ✓
                       </div>
@@ -202,25 +196,76 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
           </div>
 
           {/* Hero info */}
-          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 ml-1.5 px-2 py-1.5">
-            <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold text-amber-100 leading-tight truncate drop-shadow-sm">
+          <div className="relative z-10 flex-1 flex flex-col justify-center gap-[5px] min-w-0 ml-2 px-2.5 py-1.5">
+            {/* Row 1: Name + codex */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
+                style={{ color: centeredData.color }}
+              >
                 {centeredData.name}
               </span>
-              <span className={`text-[9px] font-semibold leading-tight ${HERO_ROLES[centeredHero].color}`}>
-                {HERO_ROLES[centeredHero].label}
-              </span>
-            </div>
-            {onOpenCodex && (
-              <HudTooltip label="View in Codex" position="top">
+              {onOpenCodex && (
                 <button
                   onClick={onOpenCodex}
-                  className="flex-shrink-0 ml-auto mr-0.5 flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+                  className="flex-shrink-0 ml-auto flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
                 >
-                  <Info size={14} className="text-amber-400/60 hover:text-amber-400" />
+                  <Info size={12} className="text-amber-400/50 hover:text-amber-400" />
                 </button>
-              </HudTooltip>
-            )}
+              )}
+            </div>
+
+            {/* Row 2: Role + Ability */}
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`text-[7px] font-semibold px-1.5 py-[1px] rounded ${HERO_ROLES[centeredHero].color}`}
+                style={{
+                  background: HERO_ROLES[centeredHero].bg,
+                  border: `1px solid ${HERO_ROLES[centeredHero].border}`,
+                }}
+              >
+                {HERO_ROLES[centeredHero].label}
+              </span>
+              <span
+                className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-semibold text-purple-200"
+                style={{
+                  background: 'rgba(88,28,135,0.2)',
+                  border: '1px solid rgba(88,28,135,0.2)',
+                }}
+              >
+                <HeroAbilityIcon type={centeredHero} size={8} />
+                {centeredData.ability}
+              </span>
+            </div>
+
+            {/* Row 3: Stats */}
+            <div className="flex items-center gap-1">
+              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                style={{ background: 'rgba(127,29,29,0.2)', border: '1px solid rgba(127,29,29,0.15)' }}>
+                <Heart size={7} className="text-red-400" />
+                <span className="text-red-300/90">{centeredData.hp}</span>
+              </span>
+              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                style={{ background: 'rgba(124,45,18,0.2)', border: '1px solid rgba(124,45,18,0.15)' }}>
+                <Swords size={7} className="text-orange-400" />
+                <span className="text-orange-300/90">{centeredData.damage}</span>
+              </span>
+              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.15)' }}>
+                <Target size={7} className="text-blue-400" />
+                <span className="text-blue-300/90">{centeredData.range}</span>
+              </span>
+              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                style={{ background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(6,78,59,0.15)' }}>
+                <Gauge size={7} className="text-emerald-400" />
+                <span className="text-emerald-300/90">{centeredData.speed}</span>
+              </span>
+              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
+                style={{ background: 'rgba(113,63,18,0.2)', border: '1px solid rgba(113,63,18,0.15)' }}>
+                <Timer size={7} className="text-amber-400" />
+                <span className="text-amber-300/90">{HERO_ABILITY_COOLDOWNS[centeredHero] / 1000}s</span>
+              </span>
+            </div>
           </div>
 
         </div>

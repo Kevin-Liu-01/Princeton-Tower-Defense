@@ -178,7 +178,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
               </button>
             </div>
 
-            <div className="space-y-3 max-h-[78vh] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[78dvh] overflow-y-auto pr-1">
               <section className="rounded border border-emerald-300/30 bg-emerald-950/30 p-2">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-semibold uppercase tracking-wide text-emerald-200">

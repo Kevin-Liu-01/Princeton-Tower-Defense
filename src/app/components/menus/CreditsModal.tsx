@@ -64,7 +64,7 @@ export const CreditsModal: React.FC<CreditsModalProps> = ({ onClose }) => {
   return (
     <BaseModal isOpen onClose={onClose} backdropBg={OVERLAY.black60}>
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-2xl max-h-[90dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,

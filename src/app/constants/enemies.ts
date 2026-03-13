@@ -1,4 +1,4 @@
-import type { EnemyData, EnemyType } from "../types";
+import type { EnemyData, EnemyType, EnemyTrait, EnemyCategory, EnemyAbilityType } from "../types";
 
 // Enemy data with visual properties
 // Categories: academic, campus, ranged, flying, boss, nature, swarm
@@ -1317,3 +1317,94 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     ],
   },
 };
+
+// =============================================================================
+// ENEMY TRAIT DISPLAY METADATA
+// =============================================================================
+
+export interface EnemyTraitMeta {
+  label: string;
+  color: string;
+  desc: string;
+  pillColor: string;
+}
+
+export const ENEMY_TRAIT_META: Record<EnemyTrait, EnemyTraitMeta> = {
+  flying: { label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles, only hit by certain towers", pillColor: "bg-cyan-900/60 text-cyan-300 border-cyan-700/40" },
+  ranged: { label: "Ranged", color: "text-green-400", desc: "Attacks from a distance", pillColor: "bg-green-900/60 text-green-300 border-green-700/40" },
+  armored: { label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage", pillColor: "bg-blue-900/60 text-blue-300 border-blue-700/40" },
+  fast: { label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies", pillColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
+  boss: { label: "Boss", color: "text-red-400", desc: "Powerful elite enemy with high HP", pillColor: "bg-red-900/60 text-red-300 border-red-700/40" },
+  summoner: { label: "Summoner", color: "text-purple-400", desc: "Can summon additional enemies", pillColor: "bg-purple-900/60 text-purple-300 border-purple-700/40" },
+  regenerating: { label: "Regen", color: "text-green-400", desc: "Slowly recovers health over time", pillColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40" },
+  aoe_attack: { label: "AoE", color: "text-orange-400", desc: "Attacks hit multiple targets", pillColor: "bg-orange-900/60 text-orange-300 border-orange-700/40" },
+  magic_resist: { label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks", pillColor: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40" },
+  tower_debuffer: { label: "Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers", pillColor: "bg-rose-900/60 text-rose-300 border-rose-700/40" },
+  breakthrough: { label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping", pillColor: "bg-amber-900/60 text-amber-300 border-amber-700/40" },
+};
+
+// =============================================================================
+// ENEMY ABILITY TYPE DISPLAY METADATA
+// =============================================================================
+
+export interface EnemyAbilityMeta {
+  color: string;
+  bgColor: string;
+}
+
+export const ENEMY_ABILITY_META: Record<EnemyAbilityType | "default", EnemyAbilityMeta> = {
+  burn: { color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" },
+  slow: { color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" },
+  poison: { color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" },
+  stun: { color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" },
+  tower_slow: { color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" },
+  tower_weaken: { color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" },
+  tower_blind: { color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" },
+  tower_disable: { color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" },
+  default: { color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" },
+};
+
+// =============================================================================
+// ENEMY CATEGORY DISPLAY METADATA
+// =============================================================================
+
+export interface EnemyCategoryMeta {
+  name: string;
+  desc: string;
+  color: string;
+  bgColor: string;
+}
+
+export const ENEMY_CATEGORY_META: Record<EnemyCategory, EnemyCategoryMeta> = {
+  academic: { name: "Academic", desc: "Academic progression and milestones", color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
+  campus: { name: "Campus Life", desc: "Campus events and activities", color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
+  ranged: { name: "Ranged", desc: "Attack from a distance", color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
+  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
+  boss: { name: "Bosses", desc: "Major threats with devastating power", color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
+  nature: { name: "Nature", desc: "Environmental and biome creatures", color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
+  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+};
+
+export const ENEMY_CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
+
+export const ENEMY_CATEGORY_ACCENTS: Record<EnemyCategory, string> = {
+  academic: "#c084fc",
+  campus: "#f59e0b",
+  ranged: "#4ade80",
+  flying: "#22d3ee",
+  boss: "#f87171",
+  nature: "#34d399",
+  swarm: "#facc15",
+};
+
+export function groupEnemiesByCategory(enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> {
+  const grouped: Record<EnemyCategory, EnemyType[]> = {
+    academic: [], campus: [], ranged: [], flying: [], boss: [], nature: [], swarm: [],
+  };
+  for (const type of enemyTypes) {
+    const enemy = ENEMY_DATA[type];
+    const category = enemy.category || "campus";
+    grouped[category].push(type);
+  }
+  return grouped;
+}

@@ -137,6 +137,33 @@ export const HERO_ABILITY_COOLDOWNS: Record<HeroType, number> = {
   engineer: 35000,
 };
 
+export interface HeroRole {
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}
+
+export const HERO_ROLES: Record<HeroType, HeroRole> = {
+  tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)" },
+  tenor: { label: "Mage", color: "text-violet-300", bg: "rgba(35,20,65,0.85)", border: "rgba(139,92,246,0.35)" },
+  mathey: { label: "Tank", color: "text-indigo-300", bg: "rgba(25,25,60,0.85)", border: "rgba(99,102,241,0.35)" },
+  rocky: { label: "Artillery", color: "text-amber-300", bg: "rgba(45,35,10,0.85)", border: "rgba(138,112,32,0.35)" },
+  scott: { label: "Support", color: "text-teal-300", bg: "rgba(8,45,42,0.85)", border: "rgba(20,184,166,0.35)" },
+  captain: { label: "Summoner", color: "text-red-300", bg: "rgba(55,12,12,0.85)", border: "rgba(220,38,38,0.35)" },
+  engineer: { label: "Builder", color: "text-yellow-300", bg: "rgba(50,38,5,0.85)", border: "rgba(234,179,8,0.35)" },
+};
+
+export const HERO_COLOR_NAMES: Record<HeroType, string> = {
+  tiger: "orange",
+  tenor: "purple",
+  mathey: "blue",
+  rocky: "red",
+  scott: "yellow",
+  captain: "green",
+  engineer: "amber",
+};
+
 export const HERO_COLORS: Record<
   HeroType,
   { base: string; dark: string; accent: string; light: string }

@@ -892,7 +892,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <BaseModal isOpen onClose={onClose} zClass="z-[1500]" backdropBg={OVERLAY.black60}>
       <div
-        className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-full max-w-4xl max-h-[90dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,

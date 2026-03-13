@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import type { EnemyType as EType, SpecialTowerType, HazardType, EnemyCategory, TowerType } from "../types";
+import type { EnemyType as EType, SpecialTowerType, HazardType, EnemyCategory, TowerType, SpellType } from "../types";
 import { ENEMY_DATA } from "../constants";
 
 // =============================================================================
@@ -67,6 +67,22 @@ export const ENEMY_CATEGORY_SPRITE_FRAME_THEME: Record<EnemyCategory, SpriteFram
   nature: buildThemeFromAccent("#34d399"),
   swarm: buildThemeFromAccent("#facc15"),
 };
+
+// =============================================================================
+// SPELL SPRITE FRAME THEMES
+// =============================================================================
+
+export const SPELL_SPRITE_FRAME_THEME: Record<SpellType, SpriteFrameTheme> = {
+  fireball: buildThemeFromAccent("#fb923c"),
+  lightning: buildThemeFromAccent("#facc15"),
+  freeze: buildThemeFromAccent("#67e8f9"),
+  payday: buildThemeFromAccent("#34d399"),
+  reinforcements: buildThemeFromAccent("#a78bfa"),
+};
+
+// =============================================================================
+// THEME LOOKUP HELPERS
+// =============================================================================
 
 export function getEnemySpriteFrameTheme(type: EType): SpriteFrameTheme {
   const category = ENEMY_DATA[type].category || "campus";

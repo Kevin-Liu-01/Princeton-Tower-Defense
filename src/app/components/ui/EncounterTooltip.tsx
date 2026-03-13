@@ -33,7 +33,7 @@ import {
   HazardSprite,
   getEnemySpriteFrameTheme,
 } from "../../sprites";
-import { ENEMY_DATA } from "../../constants/enemies";
+import { ENEMY_DATA, ENEMY_TRAIT_META } from "../../constants/enemies";
 
 // =============================================================================
 // PROPS
@@ -90,19 +90,9 @@ function getCategoryStyle(category: EncounterQueueItem["category"]): CategorySty
 // TRAIT DISPLAY
 // =============================================================================
 
-const TRAIT_LABELS: Record<string, { label: string; color: string }> = {
-  flying: { label: "Flying", color: "bg-cyan-900/60 text-cyan-300 border-cyan-700/40" },
-  ranged: { label: "Ranged", color: "bg-green-900/60 text-green-300 border-green-700/40" },
-  armored: { label: "Armored", color: "bg-blue-900/60 text-blue-300 border-blue-700/40" },
-  fast: { label: "Fast", color: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
-  boss: { label: "Boss", color: "bg-red-900/60 text-red-300 border-red-700/40" },
-  summoner: { label: "Summoner", color: "bg-purple-900/60 text-purple-300 border-purple-700/40" },
-  regenerating: { label: "Regen", color: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40" },
-  aoe_attack: { label: "AoE", color: "bg-orange-900/60 text-orange-300 border-orange-700/40" },
-  magic_resist: { label: "Magic Resist", color: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40" },
-  tower_debuffer: { label: "Debuffs Towers", color: "bg-rose-900/60 text-rose-300 border-rose-700/40" },
-  breakthrough: { label: "Breakthrough", color: "bg-amber-900/60 text-amber-300 border-amber-700/40" },
-};
+const TRAIT_LABELS: Record<string, { label: string; color: string }> = Object.fromEntries(
+  Object.entries(ENEMY_TRAIT_META).map(([k, v]) => [k, { label: v.label, color: v.pillColor }])
+);
 
 // =============================================================================
 // SPRITE ROW COMPONENTS (for non-enemy encounters)
@@ -134,7 +124,7 @@ function NonEnemySpriteRow({ encounter }: { encounter: EncounterQueueItem }) {
 
 function EnemyCardList({ members }: { members: EnemyType[] }) {
   return (
-    <div className="px-3 sm:px-4 py-2 sm:py-2.5 space-y-2 sm:space-y-2.5 max-h-[38vh] sm:max-h-[45vh] overflow-y-auto">
+    <div className="px-3 sm:px-4 py-2 sm:py-2.5 space-y-2 sm:space-y-2.5 max-h-[38dvh] sm:max-h-[45dvh] overflow-y-auto">
       {members.map((type) => {
         const data = ENEMY_DATA[type];
         if (!data) return null;
@@ -303,7 +293,7 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
               <NonEnemySpriteRow encounter={encounter} />
 
               {/* Body text */}
-              <div className="px-3 sm:px-5 py-2.5 sm:py-3 max-h-[35vh] sm:max-h-[40vh] overflow-y-auto">
+              <div className="px-3 sm:px-5 py-2.5 sm:py-3 max-h-[35dvh] sm:max-h-[40dvh] overflow-y-auto">
                 {encounter.description.split("\n").filter(Boolean).map((line, i) => (
                   <p
                     key={i}

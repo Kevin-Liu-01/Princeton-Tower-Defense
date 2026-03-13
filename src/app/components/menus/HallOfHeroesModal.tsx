@@ -14,24 +14,21 @@ import {
   Crosshair,
 } from "lucide-react";
 import type { HeroType } from "../../types";
-import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
+import { HERO_DATA, HERO_ABILITY_COOLDOWNS, HERO_ROLES } from "../../constants";
 import { HeroSprite, HeroAbilityIcon } from "../../sprites";
 import { HeroHelmetIcon } from "../../sprites/custom-icons";
 import { BaseModal } from "../ui/BaseModal";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
 
-const HERO_ROLES: Record<
-  HeroType,
-  { label: string; color: string; bg: string; border: string; icon: React.ReactNode }
-> = {
-  tiger: { label: "Brawler", color: "text-orange-300", bg: "rgba(60,25,5,0.85)", border: "rgba(234,88,12,0.35)", icon: <Swords size={10} /> },
-  tenor: { label: "Mage", color: "text-violet-300", bg: "rgba(35,20,65,0.85)", border: "rgba(139,92,246,0.35)", icon: <Sparkles size={10} /> },
-  mathey: { label: "Tank", color: "text-indigo-300", bg: "rgba(25,25,60,0.85)", border: "rgba(99,102,241,0.35)", icon: <Shield size={10} /> },
-  rocky: { label: "Artillery", color: "text-amber-300", bg: "rgba(45,35,10,0.85)", border: "rgba(138,112,32,0.35)", icon: <Crosshair size={10} /> },
-  scott: { label: "Support", color: "text-teal-300", bg: "rgba(8,45,42,0.85)", border: "rgba(20,184,166,0.35)", icon: <Heart size={10} /> },
-  captain: { label: "Summoner", color: "text-red-300", bg: "rgba(55,12,12,0.85)", border: "rgba(220,38,38,0.35)", icon: <Sparkles size={10} /> },
-  engineer: { label: "Builder", color: "text-yellow-300", bg: "rgba(50,38,5,0.85)", border: "rgba(234,179,8,0.35)", icon: <Target size={10} /> },
+const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
+  tiger: <Swords size={10} />,
+  tenor: <Sparkles size={10} />,
+  mathey: <Shield size={10} />,
+  rocky: <Crosshair size={10} />,
+  scott: <Heart size={10} />,
+  captain: <Sparkles size={10} />,
+  engineer: <Target size={10} />,
 };
 
 const heroOptions: HeroType[] = [
@@ -140,7 +137,7 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60}>
       <div
-        className="relative w-[92vw] max-w-[880px] max-h-[88vh] rounded-2xl overflow-hidden flex flex-col"
+        className="relative w-[92vw] max-w-[880px] max-h-[88dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,
@@ -278,7 +275,7 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
                     className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.2em] px-3.5 py-1 rounded-full mb-3"
                     style={{ background: role.bg, border: `1px solid ${role.border}` }}
                   >
-                    <span className={role.color}>{role.icon}</span>
+                    <span className={role.color}>{HERO_ROLE_ICONS[focusedHero]}</span>
                     <span className={role.color}>{role.label}</span>
                   </span>
 

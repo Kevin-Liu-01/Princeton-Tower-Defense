@@ -47,7 +47,6 @@ import type {
   SpellType,
   EnemyTrait,
   EnemyCategory,
-  EnemyType,
   HazardType,
   SpecialTowerType,
 } from "../../types";
@@ -76,6 +75,14 @@ import {
   FAST_SPEED_THRESHOLD,
   DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
   DEFAULT_ENEMY_TROOP_DAMAGE,
+  HERO_ROLES,
+  HERO_COLOR_NAMES,
+  ENEMY_TRAIT_META,
+  ENEMY_ABILITY_META,
+  ENEMY_CATEGORY_META,
+  ENEMY_CATEGORY_ORDER,
+  groupEnemiesByCategory,
+  TOWER_CATEGORIES,
 } from "../../constants";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
@@ -87,6 +94,14 @@ import {
   HeroIcon,
   SpellIcon,
 } from "../../sprites";
+import {
+  buildThemeFromAccent,
+  TOWER_SPRITE_FRAME_THEME,
+  SPELL_SPRITE_FRAME_THEME,
+  getEnemySpriteFrameTheme,
+  FramedSprite,
+  type SpriteFrameTheme,
+} from "../../sprites/shared";
 import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
 import { BaseModal } from "../ui/BaseModal";
 
@@ -106,93 +121,65 @@ const REGION_IMAGES = [
 // CODEX HELPER FUNCTIONS
 // =============================================================================
 
-// Helper function to get trait icon and info
-const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string; color: string; desc: string } => {
-  switch (trait) {
-    case "flying":
-      return { icon: <Wind size={12} />, label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles, only hit by certain towers" };
-    case "ranged":
-      return { icon: <Crosshair size={12} />, label: "Ranged", color: "text-green-400", desc: "Attacks from a distance" };
-    case "armored":
-      return { icon: <Shield size={12} />, label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage" };
-    case "fast":
-      return { icon: <Footprints size={12} />, label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies" };
-    case "boss":
-      return { icon: <Crown size={12} />, label: "Boss", color: "text-red-400", desc: "Powerful elite enemy with high HP" };
-    case "summoner":
-      return { icon: <Users size={12} />, label: "Summoner", color: "text-purple-400", desc: "Can summon additional enemies" };
-    case "regenerating":
-      return { icon: <Heart size={12} />, label: "Regenerating", color: "text-green-400", desc: "Slowly recovers health over time" };
-    case "aoe_attack":
-      return { icon: <Target size={12} />, label: "AoE Attack", color: "text-orange-400", desc: "Attacks hit multiple targets" };
-    case "magic_resist":
-      return { icon: <Sparkles size={12} />, label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks" };
-    case "tower_debuffer":
-      return { icon: <TrendingDown size={12} />, label: "Tower Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers" };
-    case "breakthrough":
-      return { icon: <Zap size={12} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping" };
-    default:
-      return { icon: <Info size={12} />, label: trait, color: "text-gray-400", desc: "Unknown trait" };
-  }
+// Trait icon factory - icons are JSX so they must live in the component file
+const TRAIT_ICONS: Record<EnemyTrait, (size: number) => React.ReactNode> = {
+  flying: (s) => <Wind size={s} />,
+  ranged: (s) => <Crosshair size={s} />,
+  armored: (s) => <Shield size={s} />,
+  fast: (s) => <Footprints size={s} />,
+  boss: (s) => <Crown size={s} />,
+  summoner: (s) => <Users size={s} />,
+  regenerating: (s) => <Heart size={s} />,
+  aoe_attack: (s) => <Target size={s} />,
+  magic_resist: (s) => <Sparkles size={s} />,
+  tower_debuffer: (s) => <TrendingDown size={s} />,
+  breakthrough: (s) => <Zap size={s} />,
 };
 
-// Helper function to get ability icon and color
-const getAbilityInfo = (abilityType: string): { icon: React.ReactNode; color: string; bgColor: string } => {
-  switch (abilityType) {
-    case "burn":
-      return { icon: <Flame size={14} />, color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" };
-    case "slow":
-      return { icon: <Snowflake size={14} />, color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" };
-    case "poison":
-      return { icon: <Droplets size={14} />, color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" };
-    case "stun":
-      return { icon: <Zap size={14} />, color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" };
-    case "tower_slow":
-      return { icon: <Timer size={14} />, color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" };
-    case "tower_weaken":
-      return { icon: <TrendingDown size={14} />, color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" };
-    case "tower_blind":
-      return { icon: <EyeOff size={14} />, color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" };
-    case "tower_disable":
-      return { icon: <Ban size={14} />, color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" };
-    default:
-      return { icon: <AlertTriangle size={14} />, color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" };
-  }
+const getTraitInfo = (trait: EnemyTrait, iconSize = 12) => {
+  const meta = ENEMY_TRAIT_META[trait] ?? { label: trait, color: "text-gray-400", desc: "Unknown trait", pillColor: "" };
+  const iconFn = TRAIT_ICONS[trait];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <Info size={iconSize} /> };
 };
 
-// Enemy category display info
-const CATEGORY_INFO: Record<EnemyCategory, { name: string; desc: string; icon: React.ReactNode; color: string; bgColor: string }> = {
-  academic: { name: "Academic", desc: "Academic progression and milestones", icon: <Book size={16} />, color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
-  campus: { name: "Campus Life", desc: "Campus events and activities", icon: <Flag size={16} />, color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
-  ranged: { name: "Ranged", desc: "Attack from a distance", icon: <Crosshair size={16} />, color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
-  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", icon: <Wind size={16} />, color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
-  boss: { name: "Bosses", desc: "Major threats with devastating power", icon: <Crown size={16} />, color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
-  nature: { name: "Nature", desc: "Environmental and biome creatures", icon: <Sparkles size={16} />, color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
-  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", icon: <Users size={16} />, color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+// Ability icon factory - icons are JSX
+const ABILITY_ICONS: Record<string, (size: number) => React.ReactNode> = {
+  burn: (s) => <Flame size={s} />,
+  slow: (s) => <Snowflake size={s} />,
+  poison: (s) => <Droplets size={s} />,
+  stun: (s) => <Zap size={s} />,
+  tower_slow: (s) => <Timer size={s} />,
+  tower_weaken: (s) => <TrendingDown size={s} />,
+  tower_blind: (s) => <EyeOff size={s} />,
+  tower_disable: (s) => <Ban size={s} />,
 };
 
-// Category display order
-const CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
+const getAbilityInfo = (abilityType: string, iconSize = 14) => {
+  const meta = ENEMY_ABILITY_META[abilityType as keyof typeof ENEMY_ABILITY_META] ?? ENEMY_ABILITY_META.default;
+  const iconFn = ABILITY_ICONS[abilityType];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <AlertTriangle size={iconSize} /> };
+};
 
-// Group enemies by category
-const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> => {
-  const grouped: Record<EnemyCategory, EnemyType[]> = {
-    academic: [],
-    campus: [],
-    ranged: [],
-    flying: [],
-    boss: [],
-    nature: [],
-    swarm: [],
-  };
+// Hero role icons (JSX, must live locally)
+const HERO_ROLE_ICONS: Record<HeroType, (size: number) => React.ReactNode> = {
+  tiger: (s) => <Swords size={s} />,
+  tenor: (s) => <Volume2 size={s} />,
+  mathey: (s) => <Shield size={s} />,
+  rocky: (s) => <Target size={s} />,
+  scott: (s) => <TrendingUp size={s} />,
+  captain: (s) => <Users size={s} />,
+  engineer: (s) => <CircleDot size={s} />,
+};
 
-  enemyTypes.forEach(type => {
-    const enemy = ENEMY_DATA[type];
-    const category = enemy.category || "campus"; // Default to campus if not specified
-    grouped[category].push(type);
-  });
-
-  return grouped;
+// Category icons (JSX, must live locally)
+const CATEGORY_ICONS: Record<EnemyCategory, React.ReactNode> = {
+  academic: <Book size={16} />,
+  campus: <Flag size={16} />,
+  ranged: <Crosshair size={16} />,
+  flying: <Wind size={16} />,
+  boss: <Crown size={16} />,
+  nature: <Sparkles size={16} />,
+  swarm: <Users size={16} />,
 };
 
 export type CodexTabId =
@@ -554,98 +541,10 @@ const HAZARD_SPRITE_THEME: Record<
   },
 };
 
-type SpriteFrameTheme = { background: string; border: string; glow: string };
-
-const hexToRgba = (hex: string, alpha: number): string => {
-  const normalized = hex.trim().replace("#", "");
-  const fullHex =
-    normalized.length === 3
-      ? normalized
-        .split("")
-        .map((char) => `${char}${char}`)
-        .join("")
-      : normalized;
-  if (fullHex.length !== 6) return `rgba(245, 158, 11, ${alpha})`;
-  const parsed = Number.parseInt(fullHex, 16);
-  if (Number.isNaN(parsed)) return `rgba(245, 158, 11, ${alpha})`;
-  const r = (parsed >> 16) & 255;
-  const g = (parsed >> 8) & 255;
-  const b = parsed & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-
-const buildThemeFromAccent = (accentHex: string): SpriteFrameTheme => ({
-  background: `radial-gradient(circle at 28% 24%, ${hexToRgba(accentHex, 0.28)}, ${hexToRgba(
-    accentHex,
-    0.18
-  )} 42%, rgba(14,14,22,0.96) 100%)`,
-  border: hexToRgba(accentHex, 0.72),
-  glow: hexToRgba(accentHex, 0.42),
-});
-
-const TOWER_SPRITE_FRAME_THEME: Record<keyof typeof TOWER_DATA, SpriteFrameTheme> = {
-  station: buildThemeFromAccent("#a78bfa"),
-  cannon: buildThemeFromAccent("#f87171"),
-  library: buildThemeFromAccent("#67e8f9"),
-  lab: buildThemeFromAccent("#facc15"),
-  arch: buildThemeFromAccent("#60a5fa"),
-  club: buildThemeFromAccent("#f59e0b"),
-  mortar: buildThemeFromAccent("#fb923c"),
-};
-
-const SPELL_SPRITE_FRAME_THEME: Record<SpellType, SpriteFrameTheme> = {
-  fireball: buildThemeFromAccent("#fb923c"),
-  lightning: buildThemeFromAccent("#facc15"),
-  freeze: buildThemeFromAccent("#67e8f9"),
-  payday: buildThemeFromAccent("#34d399"),
-  reinforcements: buildThemeFromAccent("#a78bfa"),
-};
-
-const ENEMY_CATEGORY_SPRITE_FRAME_THEME: Record<EnemyCategory, SpriteFrameTheme> = {
-  academic: buildThemeFromAccent("#c084fc"),
-  campus: buildThemeFromAccent("#f59e0b"),
-  ranged: buildThemeFromAccent("#4ade80"),
-  flying: buildThemeFromAccent("#22d3ee"),
-  boss: buildThemeFromAccent("#f87171"),
-  nature: buildThemeFromAccent("#34d399"),
-  swarm: buildThemeFromAccent("#facc15"),
-};
-
-const getEnemySpriteFrameTheme = (type: EnemyType): SpriteFrameTheme => {
-  const category = ENEMY_DATA[type].category || "campus";
-  return ENEMY_CATEGORY_SPRITE_FRAME_THEME[category];
-};
-
 const getHeroSpriteFrameTheme = (type: HeroType): SpriteFrameTheme =>
   buildThemeFromAccent(HERO_DATA[type].color || "#f59e0b");
 
-const FramedCodexSprite: React.FC<{
-  size: number;
-  theme: SpriteFrameTheme;
-  className?: string;
-  children: React.ReactNode;
-}> = ({ size, theme, className, children }) => (
-  <div
-    className={`relative overflow-hidden rounded-xl shrink-0 ${className || ""}`}
-    style={{
-      width: size,
-      height: size,
-      background: theme.background,
-      border: `1.5px solid ${theme.border}`,
-      boxShadow: `0 0 20px ${theme.glow}, inset 0 0 18px rgba(6,6,10,0.72)`,
-    }}
-  >
-    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.14)" }} />
-    <div
-      className="absolute inset-[2px] rounded-[10px] pointer-events-none"
-      style={{
-        background:
-          "radial-gradient(circle at 26% 22%, rgba(255,255,255,0.22), rgba(255,255,255,0.03) 38%, rgba(0,0,0,0.25) 90%)",
-      }}
-    />
-    <div className="absolute inset-0 flex items-center justify-center">{children}</div>
-  </div>
-);
+const FramedCodexSprite = FramedSprite;
 
 const renderSpecialTowerGlyph = (type: SpecialTowerType): React.ReactNode => {
   switch (type) {
@@ -887,10 +786,9 @@ const COLOR_MAP: Record<string, {
 
 const getCC = (color: string) => COLOR_MAP[color] || COLOR_MAP.amber;
 
-const TOWER_COLOR: Record<string, string> = {
-  station: "purple", cannon: "red", library: "cyan",
-  lab: "yellow", arch: "blue", club: "amber", mortar: "orange",
-};
+const TOWER_COLOR: Record<string, string> = Object.fromEntries(
+  Object.entries(TOWER_CATEGORIES).map(([k, v]) => [k, v.colorName])
+);
 
 const calculateDPS = (damage: number, attackSpeed: number): number => {
   if (attackSpeed <= 0 || damage <= 0) return 0;
@@ -1448,21 +1346,14 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
     club: <Banknote size={16} className="text-amber-400" />,
   };
 
-  // Tower category descriptions
-  const towerCategories: Record<string, { category: string; color: string }> = {
-    station: { category: "Troop Spawner", color: "purple" },
-    cannon: { category: "Heavy Artillery", color: "red" },
-    library: { category: "Crowd Control", color: "cyan" },
-    lab: { category: "Energy Damage", color: "yellow" },
-    arch: { category: "Multi-Target", color: "blue" },
-    club: { category: "Economy", color: "amber" },
-    mortar: { category: "Siege AoE", color: "orange" },
-  };
+  const towerCategories = Object.fromEntries(
+    Object.entries(TOWER_CATEGORIES).map(([k, v]) => [k, { category: v.label, color: v.colorName }])
+  );
 
   return (
     <BaseModal isOpen onClose={onClose} backdropBg={OVERLAY.black60}>
       <div
-        className="relative w-full max-w-6xl max-h-[92vh] rounded-2xl overflow-hidden"
+        className="relative w-full max-w-6xl max-h-[92dvh] rounded-2xl overflow-hidden"
         style={{
           background: panelGradient,
           border: `2px solid ${GOLD.border35}`,
@@ -1591,7 +1482,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
           </div>
 
           {/* Content area */}
-          <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
+          <div className="p-6 z-10 overflow-y-auto max-h-[calc(92dvh-140px)]">
             {activeTab === "towers" && !selectedTower && (
               <div className="space-y-5">
                 <div
@@ -2416,17 +2307,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     const hero = HERO_DATA[type];
                     const cooldown = HERO_ABILITY_COOLDOWNS[type];
 
-                    // Hero role icons and colors
-                    const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
-                      tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
-                      tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
-                      mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
-                      rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
-                      scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
-                      captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
-                      engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
-                    };
-                    const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
+                    const heroRole = HERO_ROLES[type];
+                    const roleInfo = { role: heroRole.label, color: HERO_COLOR_NAMES[type] };
 
                     return (
                       <button
@@ -2445,7 +2327,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                           return (
                             <div className={`px-4 py-2 border-b flex items-center justify-between ${rcc.headerBg} ${rcc.headerBorder}`}>
                               <div className={`flex items-center gap-2 ${rcc.text}`}>
-                                {roleInfo.icon}
+                                {HERO_ROLE_ICONS[type](12)}
                                 <span className="text-xs font-medium uppercase tracking-wider">
                                   {roleInfo.role}
                                 </span>
@@ -2848,22 +2730,22 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                   </div>
 
-                  {CATEGORY_ORDER.map(category => {
+                  {ENEMY_CATEGORY_ORDER.map(category => {
                     const categoryEnemies = groupedEnemies[category];
                     if (categoryEnemies.length === 0) return null;
 
-                    const catInfo = CATEGORY_INFO[category];
+                    const catMeta = ENEMY_CATEGORY_META[category];
 
                     return (
                       <div key={category}>
                         {/* Category Header */}
                         <div className="flex items-center gap-3 mb-3 pb-3" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                          <div className={`p-2 rounded-lg ${catInfo.bgColor}`} style={{ border: `1px solid ${GOLD.border25}` }}>
-                            {catInfo.icon}
+                          <div className={`p-2 rounded-lg ${catMeta.bgColor}`} style={{ border: `1px solid ${GOLD.border25}` }}>
+                            {CATEGORY_ICONS[category]}
                           </div>
                           <div>
-                            <h3 className={`font-bold text-lg ${catInfo.color}`}>{catInfo.name}</h3>
-                            <p className="text-xs text-amber-400/50">{catInfo.desc}</p>
+                            <h3 className={`font-bold text-lg ${catMeta.color}`}>{catMeta.name}</h3>
+                            <p className="text-xs text-amber-400/50">{catMeta.desc}</p>
                           </div>
                           <div className="ml-auto text-xs font-bold px-2.5 py-1 rounded-md" style={{
                             background: PANEL.bgWarmMid,

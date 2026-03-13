@@ -227,6 +227,29 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
   ],
 };
 
+export const SPELL_ACCENTS: Record<SpellType, string> = {
+  fireball: "#ea580c",
+  lightning: "#eab308",
+  freeze: "#06b6d4",
+  payday: "#f59e0b",
+  reinforcements: "#10b981",
+};
+
+export interface SpellTrait {
+  trait: string;
+  color: string;
+  bg: string;
+  border: string;
+}
+
+export const SPELL_TRAITS: Record<SpellType, SpellTrait> = {
+  fireball: { trait: "AoE Burn", color: "text-red-300/80", bg: "rgba(127,29,29,0.25)", border: "rgba(127,29,29,0.2)" },
+  lightning: { trait: "Chain Stun", color: "text-cyan-300/80", bg: "rgba(22,78,99,0.25)", border: "rgba(22,78,99,0.2)" },
+  freeze: { trait: "Global Freeze", color: "text-indigo-300/80", bg: "rgba(49,46,129,0.25)", border: "rgba(49,46,129,0.2)" },
+  payday: { trait: "Gold Boost", color: "text-yellow-300/80", bg: "rgba(113,63,18,0.25)", border: "rgba(113,63,18,0.2)" },
+  reinforcements: { trait: "Summon Units", color: "text-emerald-300/80", bg: "rgba(6,78,59,0.25)", border: "rgba(6,78,59,0.2)" },
+};
+
 export const DEFAULT_SPELL_UPGRADES: SpellUpgradeLevels = {
   fireball: 0,
   lightning: 0,
@@ -382,3 +405,41 @@ export const getReinforcementSpellStats = (
     visualTier: normalizedLevel,
   };
 };
+
+// =============================================================================
+// SPELL FULL THEMES (derived from accent hex for UI theming)
+// =============================================================================
+
+export interface SpellFullTheme {
+  accent: string;
+  bg: string;
+  border: string;
+  glow: string;
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const n = hex.replace("#", "");
+  const p = Number.parseInt(n, 16);
+  return `rgba(${(p >> 16) & 255}, ${(p >> 8) & 255}, ${p & 255}, ${alpha})`;
+}
+
+function darkenHex(hex: string): string {
+  const n = hex.replace("#", "");
+  const p = Number.parseInt(n, 16);
+  const r = Math.floor(((p >> 16) & 255) * 0.35);
+  const g = Math.floor(((p >> 8) & 255) * 0.35);
+  const b = Math.floor((p & 255) * 0.35);
+  return `rgba(${r}, ${g}, ${b}, 0.3)`;
+}
+
+export const SPELL_FULL_THEMES: Record<SpellType, SpellFullTheme> = Object.fromEntries(
+  SPELL_OPTIONS.map((type) => {
+    const accent = SPELL_ACCENTS[type];
+    return [type, {
+      accent,
+      bg: darkenHex(accent),
+      border: hexToRgba(accent, 0.3),
+      glow: hexToRgba(accent, 0.3),
+    }];
+  })
+) as Record<SpellType, SpellFullTheme>;

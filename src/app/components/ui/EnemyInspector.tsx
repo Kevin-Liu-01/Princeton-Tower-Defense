@@ -35,6 +35,8 @@ import {
   ENEMY_DATA,
   HERO_DATA,
   TROOP_DATA,
+  ENEMY_TRAIT_META,
+  ENEMY_ABILITY_META,
 } from "../../constants";
 import { EnemySprite, HeroIcon } from "../../sprites";
 import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./theme";
@@ -169,58 +171,41 @@ interface EnemyDetailTooltipProps {
   onClose: () => void;
 }
 
-// Helper function to get trait icon and info
-const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string; color: string; desc: string } => {
-  switch (trait) {
-    case "flying":
-      return { icon: <Wind size={12} />, label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles, only hit by certain towers" };
-    case "ranged":
-      return { icon: <Crosshair size={12} />, label: "Ranged", color: "text-green-400", desc: "Attacks from a distance" };
-    case "armored":
-      return { icon: <ShieldHalf size={12} />, label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage" };
-    case "fast":
-      return { icon: <Footprints size={12} />, label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies" };
-    case "boss":
-      return { icon: <Crown size={12} />, label: "Boss", color: "text-red-400", desc: "Powerful elite enemy with high HP" };
-    case "summoner":
-      return { icon: <Users size={12} />, label: "Summoner", color: "text-purple-400", desc: "Can summon additional enemies" };
-    case "regenerating":
-      return { icon: <Heart size={12} />, label: "Regenerating", color: "text-green-400", desc: "Slowly recovers health over time" };
-    case "aoe_attack":
-      return { icon: <Target size={12} />, label: "AoE Attack", color: "text-orange-400", desc: "Attacks hit multiple targets" };
-    case "magic_resist":
-      return { icon: <Sparkles size={12} />, label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks" };
-    case "tower_debuffer":
-      return { icon: <TrendingDown size={12} />, label: "Tower Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers" };
-    case "breakthrough":
-      return { icon: <Zap size={12} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping" };
-    default:
-      return { icon: <Info size={12} />, label: trait, color: "text-gray-400", desc: "Unknown trait" };
-  }
+const TRAIT_ICONS: Record<EnemyTrait, (size: number) => React.ReactNode> = {
+  flying: (s) => <Wind size={s} />,
+  ranged: (s) => <Crosshair size={s} />,
+  armored: (s) => <ShieldHalf size={s} />,
+  fast: (s) => <Footprints size={s} />,
+  boss: (s) => <Crown size={s} />,
+  summoner: (s) => <Users size={s} />,
+  regenerating: (s) => <Heart size={s} />,
+  aoe_attack: (s) => <Target size={s} />,
+  magic_resist: (s) => <Sparkles size={s} />,
+  tower_debuffer: (s) => <TrendingDown size={s} />,
+  breakthrough: (s) => <Zap size={s} />,
 };
 
-// Helper function to get ability icon and color
-const getAbilityInfo = (abilityType: string): { icon: React.ReactNode; color: string; bgColor: string } => {
-  switch (abilityType) {
-    case "burn":
-      return { icon: <Flame size={14} />, color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" };
-    case "slow":
-      return { icon: <Snowflake size={14} />, color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" };
-    case "poison":
-      return { icon: <Droplets size={14} />, color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" };
-    case "stun":
-      return { icon: <ZapIcon size={14} />, color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" };
-    case "tower_slow":
-      return { icon: <Timer size={14} />, color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" };
-    case "tower_weaken":
-      return { icon: <TrendingDown size={14} />, color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" };
-    case "tower_blind":
-      return { icon: <EyeOff size={14} />, color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" };
-    case "tower_disable":
-      return { icon: <Ban size={14} />, color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" };
-    default:
-      return { icon: <AlertTriangle size={14} />, color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" };
-  }
+const getTraitInfo = (trait: EnemyTrait, iconSize = 12) => {
+  const meta = ENEMY_TRAIT_META[trait] ?? { label: trait, color: "text-gray-400", desc: "Unknown trait", pillColor: "" };
+  const iconFn = TRAIT_ICONS[trait];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <Info size={iconSize} /> };
+};
+
+const ABILITY_ICONS: Record<string, (size: number) => React.ReactNode> = {
+  burn: (s) => <Flame size={s} />,
+  slow: (s) => <Snowflake size={s} />,
+  poison: (s) => <Droplets size={s} />,
+  stun: (s) => <ZapIcon size={s} />,
+  tower_slow: (s) => <Timer size={s} />,
+  tower_weaken: (s) => <TrendingDown size={s} />,
+  tower_blind: (s) => <EyeOff size={s} />,
+  tower_disable: (s) => <Ban size={s} />,
+};
+
+const getAbilityInfo = (abilityType: string, iconSize = 14) => {
+  const meta = ENEMY_ABILITY_META[abilityType as keyof typeof ENEMY_ABILITY_META] ?? ENEMY_ABILITY_META.default;
+  const iconFn = ABILITY_ICONS[abilityType];
+  return { ...meta, icon: iconFn ? iconFn(iconSize) : <AlertTriangle size={iconSize} /> };
 };
 
 export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({

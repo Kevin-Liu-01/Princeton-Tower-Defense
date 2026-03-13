@@ -593,7 +593,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({
           </div>
 
           {/* Body */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 max-h-[40vh] sm:max-h-[50vh] overflow-y-auto">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 max-h-[40dvh] sm:max-h-[50dvh] overflow-y-auto">
             {descriptionLines.map((line, i) => (
               <p
                 key={i}

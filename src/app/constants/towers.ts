@@ -221,6 +221,43 @@ export const TOWER_DATA: Record<
   },
 };
 
+// =============================================================================
+// TOWER ACCENT COLORS (used for sprite frame themes and UI theming)
+// =============================================================================
+
+export const TOWER_ACCENTS: Record<TowerType, string> = {
+  station: "#a78bfa",
+  cannon: "#f87171",
+  library: "#67e8f9",
+  lab: "#facc15",
+  arch: "#60a5fa",
+  club: "#f59e0b",
+  mortar: "#fb923c",
+};
+
+// =============================================================================
+// TOWER CATEGORIES (role label + color name for UI display)
+// =============================================================================
+
+export interface TowerCategory {
+  label: string;
+  colorName: string;
+}
+
+export const TOWER_CATEGORIES: Record<TowerType, TowerCategory> = {
+  station: { label: "Troop Spawner", colorName: "purple" },
+  cannon: { label: "Heavy Artillery", colorName: "red" },
+  library: { label: "Crowd Control", colorName: "cyan" },
+  lab: { label: "Energy Damage", colorName: "yellow" },
+  arch: { label: "Multi-Target", colorName: "blue" },
+  club: { label: "Economy", colorName: "amber" },
+  mortar: { label: "Siege AoE", colorName: "orange" },
+};
+
+// =============================================================================
+// TOWER RENDERING COLORS
+// =============================================================================
+
 // Tower colors
 export const TOWER_COLORS: Record<
   TowerType,

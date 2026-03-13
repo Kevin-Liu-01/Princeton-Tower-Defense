@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { SpellType, SpellUpgradeLevels } from "../../types";
-import { SPELL_DATA, MAX_SPELL_UPGRADE_LEVEL } from "../../constants";
+import { SPELL_DATA, SPELL_ACCENTS, SPELL_TRAITS, MAX_SPELL_UPGRADE_LEVEL } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
@@ -46,50 +46,50 @@ const SPELL_META: Record<
 > = {
   fireball: {
     nameColor: "text-orange-200",
-    accent: "#ea580c",
+    accent: SPELL_ACCENTS.fireball,
     bg: "rgba(55,28,12,0.97)",
     border: "rgba(234,88,12,0.5)",
-    trait: "AoE Burn",
+    trait: SPELL_TRAITS.fireball.trait,
     icon: <Flame size={14} className="text-orange-400" />,
     element: "Fire",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(234,88,12,0.2), transparent, rgba(249,115,22,0.15), transparent)",
   },
   lightning: {
     nameColor: "text-yellow-200",
-    accent: "#eab308",
+    accent: SPELL_ACCENTS.lightning,
     bg: "rgba(48,38,14,0.97)",
     border: "rgba(234,179,8,0.5)",
-    trait: "Chain Stun",
+    trait: SPELL_TRAITS.lightning.trait,
     icon: <Zap size={14} className="text-yellow-400" />,
     element: "Lightning",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(234,179,8,0.2), transparent, rgba(250,204,21,0.15), transparent)",
   },
   freeze: {
     nameColor: "text-cyan-200",
-    accent: "#06b6d4",
+    accent: SPELL_ACCENTS.freeze,
     bg: "rgba(12,28,42,0.98)",
     border: "rgba(6,182,212,0.5)",
-    trait: "Global Freeze",
+    trait: SPELL_TRAITS.freeze.trait,
     icon: <Snowflake size={14} className="text-cyan-400" />,
     element: "Ice",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(6,182,212,0.2), transparent, rgba(34,211,238,0.15), transparent)",
   },
   payday: {
     nameColor: "text-amber-200",
-    accent: "#f59e0b",
+    accent: SPELL_ACCENTS.payday,
     bg: "rgba(48,34,12,0.97)",
     border: "rgba(245,158,11,0.5)",
-    trait: "Gold Boost",
+    trait: SPELL_TRAITS.payday.trait,
     icon: <Coins size={14} className="text-amber-400" />,
     element: "Gold",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(245,158,11,0.2), transparent, rgba(251,191,36,0.15), transparent)",
   },
   reinforcements: {
     nameColor: "text-emerald-200",
-    accent: "#10b981",
+    accent: SPELL_ACCENTS.reinforcements,
     bg: "rgba(16,32,22,0.98)",
     border: "rgba(16,185,129,0.5)",
-    trait: "Summon Units",
+    trait: SPELL_TRAITS.reinforcements.trait,
     icon: <Shield size={14} className="text-emerald-400" />,
     element: "Nature",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(16,185,129,0.2), transparent, rgba(52,211,153,0.15), transparent)",
@@ -198,7 +198,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
     <>
       <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60}>
         <div
-          className="relative w-[92vw] max-w-[880px] max-h-[88vh] rounded-2xl overflow-hidden flex flex-col"
+          className="relative w-[92vw] max-w-[880px] max-h-[88dvh] rounded-2xl overflow-hidden flex flex-col"
           style={{
             background: panelGradient,
             border: `2px solid ${GOLD.border35}`,
