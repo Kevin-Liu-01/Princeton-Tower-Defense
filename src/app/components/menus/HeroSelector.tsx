@@ -90,21 +90,6 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
         >
           <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
 
-          {/* Helmet icon — opens Hall of Heroes */}
-          <HudTooltip label="Hall of Heroes" position="top">
-            <button
-              onClick={() => setShowHallOfHeroes(true)}
-              className="flex-shrink-0 relative z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
-              style={{
-                background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.45), rgba(20,16,10,0.8))',
-                border: '1.5px solid rgba(180,140,60,0.4)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 8px rgba(180,140,60,0.15)',
-              }}
-            >
-              <HeroHelmetIcon size={16} />
-            </button>
-          </HudTooltip>
-
           {/* Carousel track */}
           <div
             className="relative z-10 flex items-center gap-1 rounded-xl px-1 flex-shrink-0"
@@ -159,22 +144,22 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                         ? `radial-gradient(circle at 30% 30%, ${hero.color}40, ${hero.color}12)`
                         : isCenter
                           ? `radial-gradient(circle at 30% 30%, ${hero.color}25, ${hero.color}08)`
-                          : 'radial-gradient(circle at 30% 30%, rgba(38,34,28,0.9), rgba(24,20,16,0.9))',
-                      border: `2px solid ${isSel ? hero.color : isCenter ? `${hero.color}80` : 'rgba(100,90,70,0.25)'}`,
+                          : `radial-gradient(circle at 30% 30%, ${hero.color}18, ${hero.color}06)`,
+                      border: `2px solid ${isSel ? hero.color : isCenter ? `${hero.color}80` : `${hero.color}30`}`,
                       boxShadow: isSel
                         ? `0 0 14px ${hero.color}35, inset 0 0 8px ${hero.color}15`
-                        : isCenter ? `0 0 10px ${hero.color}20` : 'none',
+                        : isCenter ? `0 0 10px ${hero.color}20` : `inset 0 0 6px ${hero.color}10`,
                       transition: 'transform 0.35s cubic-bezier(0.4,0,0.15,1), opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
                       zIndex: isCenter ? 3 : 1,
                     }}
                   >
-                    <HeroSprite type={heroType} size={isCenter ? 30 : 22} />
+                    <HeroSprite type={heroType} size={isCenter ? 30 : 26} />
                     {isSel && (
                       <div
-                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-black border-2 border-stone-900 z-20"
+                        className="absolute -top-1 -right-1 w-[16px] h-[16px] rounded-full flex items-center justify-center text-[9px] text-white font-black border-[1.5px] border-stone-900 z-20"
                         style={{
                           background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                          boxShadow: '0 0 10px rgba(245,158,11,0.6), 0 0 4px rgba(245,158,11,0.8)',
+                          boxShadow: '0 0 8px rgba(245,158,11,0.6), 0 0 3px rgba(245,158,11,0.8)',
                         }}
                       >
                         ✓
@@ -195,77 +180,102 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
             </button>
           </div>
 
-          {/* Hero info */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center gap-[5px] min-w-0 ml-2 px-2.5 py-1.5">
-            {/* Row 1: Name + codex */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span
-                className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
-                style={{ color: centeredData.color }}
-              >
-                {centeredData.name}
-              </span>
-              {onOpenCodex && (
-                <button
-                  onClick={onOpenCodex}
-                  className="flex-shrink-0 ml-auto flex items-center justify-center transition-all hover:scale-110 hover:brightness-125"
+          {/* Hero info + Hall of Heroes button */}
+          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 px-1 py-1.5">
+            <div className="flex flex-col justify-center gap-[5px] min-w-0 flex-1 overflow-hidden">
+              {/* Row 1: Name */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
+                  style={{ color: centeredData.color }}
                 >
-                  <Info size={12} className="text-amber-400/50 hover:text-amber-400" />
-                </button>
-              )}
+                  {centeredData.name}
+                </span>
+              </div>
+
+              {/* Row 2: Role + Ability */}
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`text-[7px] font-semibold px-1.5 py-[1px] rounded ${HERO_ROLES[centeredHero].color}`}
+                  style={{
+                    background: HERO_ROLES[centeredHero].bg,
+                    border: `1px solid ${HERO_ROLES[centeredHero].border}`,
+                  }}
+                >
+                  {HERO_ROLES[centeredHero].label}
+                </span>
+                <span
+                  className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-semibold text-purple-200"
+                  style={{
+                    background: 'rgba(88,28,135,0.2)',
+                    border: '1px solid rgba(88,28,135,0.2)',
+                  }}
+                >
+                  <HeroAbilityIcon type={centeredHero} size={8} />
+                  {centeredData.ability}
+                </span>
+              </div>
+
+              {/* Row 3: Stats */}
+              <div className="flex items-center gap-[3px]">
+                <span className="flex items-center gap-[1px] text-[6px] font-semibold rounded px-[3px] py-[1px]"
+                  style={{ background: 'rgba(127,29,29,0.2)', border: '1px solid rgba(127,29,29,0.15)' }}>
+                  <Heart size={6} className="text-red-400" />
+                  <span className="text-red-300/90">{centeredData.hp}</span>
+                </span>
+                <span className="flex items-center gap-[1px] text-[6px] font-semibold rounded px-[3px] py-[1px]"
+                  style={{ background: 'rgba(124,45,18,0.2)', border: '1px solid rgba(124,45,18,0.15)' }}>
+                  <Swords size={6} className="text-orange-400" />
+                  <span className="text-orange-300/90">{centeredData.damage}</span>
+                </span>
+                <span className="flex items-center gap-[1px] text-[6px] font-semibold rounded px-[3px] py-[1px]"
+                  style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.15)' }}>
+                  <Target size={6} className="text-blue-400" />
+                  <span className="text-blue-300/90">{centeredData.range}</span>
+                </span>
+                <span className="flex items-center gap-[1px] text-[6px] font-semibold rounded px-[3px] py-[1px]"
+                  style={{ background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(6,78,59,0.15)' }}>
+                  <Gauge size={6} className="text-emerald-400" />
+                  <span className="text-emerald-300/90">{centeredData.speed}</span>
+                </span>
+                <span className="flex items-center gap-[1px] text-[6px] font-semibold rounded px-[3px] py-[1px]"
+                  style={{ background: 'rgba(113,63,18,0.2)', border: '1px solid rgba(113,63,18,0.15)' }}>
+                  <Timer size={6} className="text-amber-400" />
+                  <span className="text-amber-300/90">{HERO_ABILITY_COOLDOWNS[centeredHero] / 1000}s</span>
+                </span>
+              </div>
             </div>
 
-            {/* Row 2: Role + Ability */}
-            <div className="flex items-center gap-1.5">
-              <span
-                className={`text-[7px] font-semibold px-1.5 py-[1px] rounded ${HERO_ROLES[centeredHero].color}`}
-                style={{
-                  background: HERO_ROLES[centeredHero].bg,
-                  border: `1px solid ${HERO_ROLES[centeredHero].border}`,
-                }}
-              >
-                {HERO_ROLES[centeredHero].label}
-              </span>
-              <span
-                className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-semibold text-purple-200"
-                style={{
-                  background: 'rgba(88,28,135,0.2)',
-                  border: '1px solid rgba(88,28,135,0.2)',
-                }}
-              >
-                <HeroAbilityIcon type={centeredHero} size={8} />
-                {centeredData.ability}
-              </span>
-            </div>
-
-            {/* Row 3: Stats */}
-            <div className="flex items-center gap-1">
-              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
-                style={{ background: 'rgba(127,29,29,0.2)', border: '1px solid rgba(127,29,29,0.15)' }}>
-                <Heart size={7} className="text-red-400" />
-                <span className="text-red-300/90">{centeredData.hp}</span>
-              </span>
-              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
-                style={{ background: 'rgba(124,45,18,0.2)', border: '1px solid rgba(124,45,18,0.15)' }}>
-                <Swords size={7} className="text-orange-400" />
-                <span className="text-orange-300/90">{centeredData.damage}</span>
-              </span>
-              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
-                style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.15)' }}>
-                <Target size={7} className="text-blue-400" />
-                <span className="text-blue-300/90">{centeredData.range}</span>
-              </span>
-              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
-                style={{ background: 'rgba(6,78,59,0.2)', border: '1px solid rgba(6,78,59,0.15)' }}>
-                <Gauge size={7} className="text-emerald-400" />
-                <span className="text-emerald-300/90">{centeredData.speed}</span>
-              </span>
-              <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
-                style={{ background: 'rgba(113,63,18,0.2)', border: '1px solid rgba(113,63,18,0.15)' }}>
-                <Timer size={7} className="text-amber-400" />
-                <span className="text-amber-300/90">{HERO_ABILITY_COOLDOWNS[centeredHero] / 1000}s</span>
-              </span>
-            </div>
+            {/* Hall of Heroes button */}
+            {(() => {
+              const SIZE = 50;
+              const STROKE = 3;
+              return (
+                <HudTooltip label="Hall of Heroes" position="top">
+                  <button
+                    type="button"
+                    onClick={() => setShowHallOfHeroes(true)}
+                    className="flex-shrink-0 ml-auto relative transition-all hover:scale-110 hover:brightness-110"
+                    style={{ width: SIZE, height: SIZE }}
+                  >
+                    <svg className="absolute inset-0" width={SIZE} height={SIZE}>
+                      <circle cx={SIZE / 2} cy={SIZE / 2} r={(SIZE - STROKE) / 2} fill="none" stroke="rgba(180,140,60,0.35)" strokeWidth={STROKE} />
+                    </svg>
+                    <div
+                      className="absolute rounded-full flex items-center justify-center"
+                      style={{
+                        inset: STROKE + 1,
+                        background: "radial-gradient(circle at 35% 30%, rgba(160,115,30,0.95), rgba(88,62,14,0.9))",
+                        border: "1.5px solid rgba(250,204,21,0.45)",
+                        boxShadow: "0 0 10px rgba(250,204,21,0.1), inset 0 0 8px rgba(250,204,21,0.08)",
+                      }}
+                    >
+                      <HeroHelmetIcon size={28} />
+                    </div>
+                  </button>
+                </HudTooltip>
+              );
+            })()}
           </div>
 
         </div>

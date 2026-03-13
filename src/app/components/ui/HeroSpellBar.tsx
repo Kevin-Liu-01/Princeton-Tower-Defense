@@ -372,7 +372,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           border: hero.selected ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${GOLD.innerBorder10}`,
                         }} />
                         <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
-                          <div className="absolute top-2 right-2 z-20">
+                          <div className="absolute top-0 -right-1 z-20">
                             {hero.selected ? (
                               <Grab size={16} className="text-amber-300 rounded-md p-0.5" style={{ background: 'rgba(180,140,60,0.3)' }} />
                             ) : (
@@ -490,7 +490,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                                 {getHeroAbilityIcon(hero.type, 16, "inline")}
                                 {HERO_DATA[hero.type].ability}
                               </span>
-                              <div className="text-[7px] max-w-28 my-1 text-center text-amber-100/50 leading-snug">
+                              <div className="text-[9px] max-w-28 my-2 text-center text-amber-100/50 leading-snug">
                                 {HERO_DATA[hero.type].abilityDesc}
                               </div>
                               <div className="flex items-center gap-1.5">
@@ -508,7 +508,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                                 {getHeroAbilityIcon(hero.type, 16, "text-stone-500 opacity-60 inline")}
                                 {HERO_DATA[hero.type].ability}
                               </span>
-                              <div className="text-[7px] max-w-28 my-1 text-center text-stone-500/50 leading-snug">
+                              <div className="text-[9px] max-w-28 my-2 text-center text-stone-500/50 leading-snug">
                                 {HERO_DATA[hero.type].abilityDesc}
                               </div>
                               <div className="flex items-center gap-1.5">
@@ -587,47 +587,47 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   )}
                   {/* Spell orb button */}
                   <button
-                  onClick={() => castSpell(spell.type)}
-                  disabled={!canCast && !isTargeting}
-                  onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
-                  onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
-                  className="relative rounded-full overflow-hidden transition-all hover:brightness-115 hover:scale-105 active:scale-95"
-                  style={{
-                    width: ORBS, height: ORBS,
-                    background: (canCast || isTargeting)
-                      ? `radial-gradient(circle at 35% 35%, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, ${PANEL.bgDeep})`
-                      : `radial-gradient(circle at 35% 35%, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                    border: isTargeting
-                      ? `3px solid ${spellAccent}`
-                      : (canCast ? `3px solid ${spellAccent}` : `3px solid ${NEUTRAL.border}`),
-                    boxShadow: isTargeting
-                      ? `0 0 20px ${spellAccent}, inset 0 0 15px rgba(255,255,255,0.04)`
-                      : canCast
-                        ? `0 0 12px ${spellAccent.replace('0.5', '0.2')}, inset 0 0 12px rgba(255,255,255,0.03)`
-                        : 'inset 0 0 8px rgba(0,0,0,0.3)',
-                    opacity: (canCast || isTargeting) ? 1 : 0.45,
-                    cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
-                  }}
-                >
-                  <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
-                    border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.08)' : 'rgba(80,80,80,0.1)'}`,
-                  }} />
-                  <div className="relative z-10 flex items-center justify-center w-full h-full">
-                    <SpellSprite type={spell.type} size={36} />
-                  </div>
-                  {spell.cooldown > 0 && (
-                    <div className="absolute inset-0 pointer-events-none rounded-full"
-                      style={{
-                        background: "rgba(0,0,0,0.7)",
-                        clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100}% 0 0 0)`,
-                      }}
-                    />
-                  )}
-                  {isTargeting && (
-                    <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
-                      style={{ boxShadow: `inset 0 0 25px ${spellAccent}` }}
-                    />
-                  )}
+                    onClick={() => castSpell(spell.type)}
+                    disabled={!canCast && !isTargeting}
+                    onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
+                    onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
+                    className="relative rounded-full overflow-hidden transition-all hover:brightness-115 hover:scale-105 active:scale-95"
+                    style={{
+                      width: ORBS, height: ORBS,
+                      background: (canCast || isTargeting)
+                        ? `radial-gradient(circle at 35% 35%, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, ${PANEL.bgDeep})`
+                        : `radial-gradient(circle at 35% 35%, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                      border: isTargeting
+                        ? `3px solid ${spellAccent}`
+                        : (canCast ? `3px solid ${spellAccent}` : `3px solid ${NEUTRAL.border}`),
+                      boxShadow: isTargeting
+                        ? `0 0 20px ${spellAccent}, inset 0 0 15px rgba(255,255,255,0.04)`
+                        : canCast
+                          ? `0 0 12px ${spellAccent.replace('0.5', '0.2')}, inset 0 0 12px rgba(255,255,255,0.03)`
+                          : 'inset 0 0 8px rgba(0,0,0,0.3)',
+                      opacity: (canCast || isTargeting) ? 1 : 0.45,
+                      cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
+                      border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.08)' : 'rgba(80,80,80,0.1)'}`,
+                    }} />
+                    <div className="relative z-10 flex items-center justify-center w-full h-full">
+                      <SpellSprite type={spell.type} size={36} />
+                    </div>
+                    {spell.cooldown > 0 && (
+                      <div className="absolute inset-0 pointer-events-none rounded-full"
+                        style={{
+                          background: "rgba(0,0,0,0.7)",
+                          clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100}% 0 0 0)`,
+                        }}
+                      />
+                    )}
+                    {isTargeting && (
+                      <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+                        style={{ boxShadow: `inset 0 0 25px ${spellAccent}` }}
+                      />
+                    )}
                   </button>
                 </div>
                 {/* Spell name */}
