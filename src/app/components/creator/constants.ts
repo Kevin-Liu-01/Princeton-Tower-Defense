@@ -161,7 +161,13 @@ export const LANDMARK_OPTIONS = Array.from(
 ) as DecorationCategory[];
 
 export const CHALLENGE_DECORATIONS: DecorationCategory[] = [
-  "war_monument", "bone_altar", "sun_obelisk", "frost_citadel", "infernal_gate",
+  "cannon_crest",
+  "ivy_crossroads",
+  "blight_basin",
+  "triad_keep",
+  "sunscorch_labyrinth",
+  "frontier_outpost",
+  "ashen_spiral",
 ];
 
 export const ENEMY_OPTIONS = Object.keys(ENEMY_DATA) as EnemyType[];

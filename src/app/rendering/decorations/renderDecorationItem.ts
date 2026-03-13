@@ -29,6 +29,7 @@ import {
 import { drawTentacle } from "./tentacleShapes";
 import { drawBench } from "./benchShapes";
 import { drawBrokenWallDecoration } from "./wallShapes";
+import { CHALLENGE_LANDMARK_TYPES, renderChallengeLandmark } from "./challengeLandmarks";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -101,6 +102,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
   } = params;
 
   const dec = { x: decorX, y: decorY };
+
+  if (CHALLENGE_LANDMARK_TYPES.has(type)) {
+    renderChallengeLandmark({
+      ctx,
+      screenPos,
+      scale: s,
+      type,
+      decorTime,
+      decorX,
+      decorY,
+      shadowOnly,
+      skipShadow,
+    });
+    return;
+  }
 
   switch (type) {
     // === GRASSLAND DECORATIONS ===

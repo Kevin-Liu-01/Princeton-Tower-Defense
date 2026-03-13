@@ -5442,12 +5442,12 @@ export function usePrincetonTowerDefenseRuntime() {
                 const shouldChain = !isFocusedBeam && numChainTargets > 1;
                 const chainTargets = shouldChain
                   ? getChainTargets(
-                      target,
-                      numChainTargets,
-                      chainRange,
-                      enemies,
-                      getEnemyPosCached
-                    )
+                    target,
+                    numChainTargets,
+                    chainRange,
+                    enemies,
+                    getEnemyPosCached
+                  )
                   : [target];
                 const chainDamage = shouldChain ? damage * 0.7 : damage;
                 chainTargets.forEach((chainTarget) => {
@@ -12416,39 +12416,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const isVictory = battleOutcome === "victory";
   const isDefeat = battleOutcome === "defeat";
   return (
-    <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden relative">
-      <TopHUD
-        pawPoints={pawPoints}
-        lives={lives}
-        maxLives={INITIAL_LIVES}
-        currentWave={currentWave}
-        totalWaves={totalWaves}
-        nextWaveTimer={nextWaveTimer}
-        waveInProgress={waveInProgress}
-        gameSpeed={gameSpeed}
-        setGameSpeed={(nextSpeed) => {
-          if (battleOutcome || pauseLocked) return;
-          setGameSpeed(nextSpeed);
-        }}
-        goldSpellActive={goldSpellActive}
-        eatingClubIncomeEvents={eatingClubIncomeEvents}
-        onEatingClubEventComplete={(id) => setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))}
-        bountyIncomeEvents={bountyIncomeEvents}
-        onBountyEventComplete={(id) => setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))}
-        inspectorActive={inspectorActive}
-        setInspectorActive={setInspectorActive}
-        setSelectedInspectEnemy={setSelectedInspectEnemy}
-        quitLevel={quitLevel}
-        retryLevel={retryLevel}
-        cameraModeActive={cameraModeActive}
-        onTogglePhotoMode={toggleCameraMode}
-        pauseLocked={pauseLocked}
-        eventStats={gameEventLog.stats}
-        onToggleDevMenu={() => setDevMenuOpen((p) => !p)}
-        devMenuOpen={devMenuOpen}
-        enemyCount={enemies.length}
-        towerCount={towers.length}
-      />
+    <div className="w-full h-[100dvh] bg-black flex flex-col text-amber-100 overflow-hidden relative" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       {!cameraModeActive && devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -12472,19 +12440,73 @@ export function usePrincetonTowerDefenseRuntime() {
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}
           />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] p-2 ">
+            <TopHUD
+              pawPoints={pawPoints}
+              lives={lives}
+              maxLives={INITIAL_LIVES}
+              currentWave={currentWave}
+              totalWaves={totalWaves}
+              gameSpeed={gameSpeed}
+              setGameSpeed={(nextSpeed) => {
+                if (battleOutcome || pauseLocked) return;
+                setGameSpeed(nextSpeed);
+              }}
+              goldSpellActive={goldSpellActive}
+              eatingClubIncomeEvents={eatingClubIncomeEvents}
+              onEatingClubEventComplete={(id) =>
+                setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))
+              }
+              bountyIncomeEvents={bountyIncomeEvents}
+              onBountyEventComplete={(id) =>
+                setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))
+              }
+              inspectorActive={inspectorActive}
+              setInspectorActive={setInspectorActive}
+              setSelectedInspectEnemy={setSelectedInspectEnemy}
+              quitLevel={quitLevel}
+              retryLevel={retryLevel}
+              cameraModeActive={cameraModeActive}
+              onTogglePhotoMode={toggleCameraMode}
+              pauseLocked={pauseLocked}
+              onToggleDevMenu={() => setDevMenuOpen((p) => !p)}
+              devMenuOpen={devMenuOpen}
+            />
+            {!cameraModeActive && (
+              <div className="mt-2 flex items-start justify-between gap-2 sm:gap-3">
+                <EnemyInspector
+                  isActive={inspectorActive}
+                  setIsActive={setInspectorActive}
+                  selectedEnemy={selectedInspectEnemy}
+                  setSelectedEnemy={setSelectedInspectEnemy}
+                  enemies={enemies}
+                  troops={troops}
+                  setGameSpeed={(nextSpeed) => {
+                    if (battleOutcome) return;
+                    setGameSpeed(nextSpeed);
+                  }}
+                  previousGameSpeed={previousGameSpeed}
+                  setPreviousGameSpeed={setPreviousGameSpeed}
+                  gameSpeed={gameSpeed}
+                  onDeactivate={() => {
+                    setSelectedInspectTroop(null);
+                    setSelectedInspectHero(false);
+                  }}
+                />
+                <CameraControls
+                  setCameraOffset={setCameraOffset}
+                  setCameraZoom={setCameraZoom}
+                  defaultOffset={selectedLevelData?.camera?.offset}
+                  showCameraDpad={getGameSettings().ui.showCameraDpad}
+                  showControlsReference={getGameSettings().ui.showControlsReference}
+                />
+              </div>
+            )}
+          </div>
           {cameraModeActive && (
             <CameraModeOverlay
               onCapture={handleCameraModeCapture}
               onExit={exitCameraMode}
-            />
-          )}
-          {!cameraModeActive && (
-            <CameraControls
-              setCameraOffset={setCameraOffset}
-              setCameraZoom={setCameraZoom}
-              defaultOffset={selectedLevelData?.camera?.offset}
-              showCameraDpad={getGameSettings().ui.showCameraDpad}
-              showControlsReference={getGameSettings().ui.showControlsReference}
             />
           )}
           {!cameraModeActive && (
@@ -12588,25 +12610,6 @@ export function usePrincetonTowerDefenseRuntime() {
               {inspectorActive && hoveredInspectDecoration && (
                 <DecorationInspectorTooltip decoration={hoveredInspectDecoration} position={mousePos} />
               )}
-              <EnemyInspector
-                isActive={inspectorActive}
-                setIsActive={setInspectorActive}
-                selectedEnemy={selectedInspectEnemy}
-                setSelectedEnemy={setSelectedInspectEnemy}
-                enemies={enemies}
-                troops={troops}
-                setGameSpeed={(nextSpeed) => {
-                  if (battleOutcome) return;
-                  setGameSpeed(nextSpeed);
-                }}
-                previousGameSpeed={previousGameSpeed}
-                setPreviousGameSpeed={setPreviousGameSpeed}
-                gameSpeed={gameSpeed}
-                onDeactivate={() => {
-                  setSelectedInspectTroop(null);
-                  setSelectedInspectHero(false);
-                }}
-              />
               {inspectorActive && selectedInspectEnemy && (() => {
                 const enemyPos = getEnemyPosWithPath(selectedInspectEnemy, selectedMap);
                 const screenPos = worldToScreen(

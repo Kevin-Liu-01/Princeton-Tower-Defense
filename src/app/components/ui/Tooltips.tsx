@@ -855,6 +855,48 @@ const LANDMARK_INFO: Record<string, { name: string; icon: React.ReactNode; desc:
     desc: "A frozen arch spanning a treacherous chasm.",
     lore: "Crossing it requires courage, balance, and the good sense not to look down.",
   },
+  cannon_crest: {
+    name: "Cannon Crest",
+    icon: <Crosshair className="text-stone-400" size={16} />,
+    desc: "An entrenched artillery berm lined with Nassau cannons.",
+    lore: "The ridge was reshaped around firing lanes. Every sandbag exists because someone learned the hard way.",
+  },
+  ivy_crossroads: {
+    name: "Ivy Crossroads",
+    icon: <Landmark className="text-emerald-400" size={16} />,
+    desc: "An ivy-choked arch marking a split crossroads through old campus stone.",
+    lore: "Nobody remembers who built the arch first. The ivy is now the senior partner.",
+  },
+  blight_basin: {
+    name: "Blight Basin",
+    icon: <Skull className="text-lime-400" size={16} />,
+    desc: "A poisoned basin where corrosive pools bubble through dead ground.",
+    lore: "The air tastes wrong here. The mushrooms seem thrilled about that.",
+  },
+  triad_keep: {
+    name: "Triad Keep",
+    icon: <Shield className="text-emerald-400" size={16} />,
+    desc: "A fortified swamp keep ringed by murky water and green banners.",
+    lore: "Three halls fed this fortress once. Now only the walls remember the guest list.",
+  },
+  sunscorch_labyrinth: {
+    name: "Sunscorch Labyrinth",
+    icon: <TrendingUp className="text-amber-400" size={16} />,
+    desc: "A burning sandstone maze whose walls trap heat as well as armies.",
+    lore: "It was designed to confuse invaders and roast them while they were busy being confused.",
+  },
+  frontier_outpost: {
+    name: "Frontier Outpost",
+    icon: <Fence className="text-cyan-300" size={16} />,
+    desc: "A snowbound palisade outpost built around a rough watchtower and campfire.",
+    lore: "The walls creak, the fire sputters, and somehow it still holds every winter.",
+  },
+  ashen_spiral: {
+    name: "Ashen Spiral",
+    icon: <Flame className="text-orange-400" size={16} />,
+    desc: "A spiral of scorched vents that erupts in staggered waves of fire.",
+    lore: "Stand still too long and the ground starts making plans for you.",
+  },
   war_monument: {
     name: "War Monument",
     icon: <Swords className="text-stone-400" size={16} />,

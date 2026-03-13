@@ -375,9 +375,8 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
                       <button
                         key={ht}
                         onClick={() => setFocusedHero(ht)}
-                        className={`relative flex flex-col items-center p-3 rounded-lg transition-all duration-200 group ${
-                          isFocused ? "scale-105 z-10" : "hover:scale-105 hover:brightness-110"
-                        }`}
+                        className={`relative flex flex-col items-center p-3 rounded-lg transition-all duration-200 group ${isFocused ? "scale-105 z-10" : "hover:scale-105 hover:brightness-110"
+                          }`}
                         style={{
                           background: isFocused
                             ? `linear-gradient(135deg, ${h.color}30, ${h.color}10)`
@@ -409,7 +408,7 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
 
                         {isSel && (
                           <div
-                            className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-amber-500 rounded-full flex items-center justify-center border-[1.5px] border-stone-900 text-[7px] text-white font-bold"
+                            className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center border-[1.5px] border-stone-900 text-[7px] text-white font-bold"
                             style={{ boxShadow: "0 0 8px rgba(245,158,11,0.5)" }}
                           >
                             ✓

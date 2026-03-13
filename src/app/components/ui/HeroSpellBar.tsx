@@ -117,7 +117,7 @@ const SpellInfoPortal: React.FC<SpellInfoPortalProps> = ({ anchorRef, children }
 
   return createPortal(
     <div
-      className="fixed z-[9998] pointer-events-none"
+      className="fixed z-[85] pointer-events-none"
       style={{ left: pos.left, bottom: pos.bottom, width: 280 }}
     >
       {children}
@@ -242,7 +242,6 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
     <div
       data-tutorial="hero-spell-bar"
       className="relative z-20 pointer-events-none"
-      style={{ zIndex: 100 }}
     >
       {/* Mobile/Tablet: Compact circle layout */}
       <div className="flex xl:hidden">
@@ -263,7 +262,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </div>
 
       {/* Desktop: Full card layout */}
-      <div className="hidden xl:flex px-3 py-2 items-end justify-between gap-3">
+      <div className="hidden xl:flex p-2 pr-4 items-end justify-between gap-3">
         {/* Hero Section */}
         <div
           role="button"
@@ -383,7 +382,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
                         <div className="relative z-10 flex items-center gap-3 mb-2">
                           <div
-                            className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shrink-0 pt-0.5"
+                            className="relative w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shrink-0 pt-0.5"
                             style={{
                               border: `3px solid ${hc}`,
                               background: `radial-gradient(circle at 35% 35%, ${hc}35, ${hc}10)`,
@@ -391,7 +390,21 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                               animation: hpTheme.heartbeat ? `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` : "none",
                             }}
                           >
-                            <HeroSprite type={hero.type} size={40} />
+                            <div
+                              className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
+                              style={{
+                                backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
+                              }}
+                            />
+                            <div
+                              className="absolute inset-0 rounded-full pointer-events-none"
+                              style={{
+                                background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, ${hc}25 45%, rgba(0,0,0,0.5) 100%)`,
+                              }}
+                            />
+                            <div className="relative z-10 flex items-center justify-center">
+                              <HeroSprite type={hero.type} size={40} />
+                            </div>
                           </div>
                           <div className="min-w-0">
                             <div className="text-xs font-black text-amber-200 uppercase tracking-wider leading-tight">
@@ -609,6 +622,20 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
                     }}
                   >
+                    <div
+                      className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
+                      style={{
+                        backgroundImage: (canCast || isTargeting) ? `url(/images/spells/${spell.type}-action.png)` : undefined,
+                      }}
+                    />
+                    <div
+                      className="absolute inset-0 rounded-full pointer-events-none"
+                      style={{
+                        background: (canCast || isTargeting)
+                          ? "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 25%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.6) 100%)"
+                          : undefined,
+                      }}
+                    />
                     <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
                       border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.08)' : 'rgba(80,80,80,0.1)'}`,
                     }} />

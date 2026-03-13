@@ -108,7 +108,7 @@ function MobileHeroCircle({
 
       {/* Inner circle */}
       <div
-        className="rounded-full flex items-center justify-center overflow-hidden"
+        className="relative rounded-full flex items-center justify-center overflow-hidden"
         style={{
           width: HERO_CIRCLE_SIZE - 6,
           height: HERO_CIRCLE_SIZE - 6,
@@ -121,7 +121,23 @@ function MobileHeroCircle({
           filter: isAlive ? "none" : "grayscale(0.8)",
         }}
       >
-        <HeroSprite type={hero.type} size={30} />
+        {isAlive && (
+          <>
+            <div
+              className="absolute inset-0 rounded-full bg-cover bg-center opacity-70"
+              style={{ backgroundImage: `url(/images/heroes/${hero.type}-action.png)` }}
+            />
+            <div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 15%, ${heroData.color}20 40%, rgba(0,0,0,0.5) 100%)`,
+              }}
+            />
+          </>
+        )}
+        <div className="relative z-10 flex items-center justify-center">
+          <HeroSprite type={hero.type} size={30} />
+        </div>
       </div>
 
       {/* Label */}
@@ -254,7 +270,7 @@ function MobileSpellCircle({
     <button
       onClick={onClick}
       disabled={!active}
-      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
+      className="relative rounded-full flex items-center justify-center overflow-hidden transition-all active:scale-95"
       style={{
         width: CIRCLE_SIZE,
         height: CIRCLE_SIZE,
@@ -271,6 +287,20 @@ function MobileSpellCircle({
         cursor: active ? "pointer" : "not-allowed",
       }}
     >
+      {active && (
+        <>
+          <div
+            className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
+            style={{ backgroundImage: `url(/images/spells/${spell.type}-action.png)` }}
+          />
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              background: "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.6) 100%)",
+            }}
+          />
+        </>
+      )}
       {/* Cooldown sweep */}
       {onCooldown && (
         <div

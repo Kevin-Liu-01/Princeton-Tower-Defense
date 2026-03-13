@@ -1,11 +1,6 @@
 import type { Tower, Enemy, Position } from "../../types";
-import {
-  ISO_PRISM_D_FACTOR,
-} from "../../constants";
-import {
-  drawIsometricPrism,
-  drawIsometricRailing,
-} from "./towerHelpers";
+import { ISO_PRISM_D_FACTOR } from "../../constants";
+import { drawIsometricPrism, drawIsometricRailing } from "./towerHelpers";
 import { drawIsoFlushVent, traceIsoFlushRect } from "../isoFlush";
 import {
   renderTeslaCoil,
@@ -41,29 +36,39 @@ export function renderLabTower(
   const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
 
   const fnd1 = {
-    top: uc("#3a2a1a", "#302845", "#1a2a3a"), left: uc("#302218", "#28203a", "#122230"),
-    right: uc("#281a0a", "#201832", "#0a1a28"), leftBack: uc("#3d2d1d", "#332b48", "#1d2d3d"),
+    top: uc("#3a2a1a", "#302845", "#1a2a3a"),
+    left: uc("#302218", "#28203a", "#122230"),
+    right: uc("#281a0a", "#201832", "#0a1a28"),
+    leftBack: uc("#3d2d1d", "#332b48", "#1d2d3d"),
     rightBack: uc("#352515", "#2b2340", "#152535"),
   };
   const fnd2 = {
-    top: uc("#45351a", "#3a3050", "#1a3545"), left: uc("#3d2d14", "#322848", "#142d3d"),
-    right: uc("#35250e", "#2a2040", "#0e2535"), leftBack: uc("#48381d", "#3d3353", "#1d3848"),
+    top: uc("#45351a", "#3a3050", "#1a3545"),
+    left: uc("#3d2d14", "#322848", "#142d3d"),
+    right: uc("#35250e", "#2a2040", "#0e2535"),
+    leftBack: uc("#48381d", "#3d3353", "#1d3848"),
     rightBack: uc("#403017", "#352b4b", "#173040"),
   };
   const fnd3 = {
-    top: uc("#4f3a1a", "#40355a", "#1a3a4f"), left: uc("#403015", "#382d50", "#153040"),
-    right: uc("#352510", "#302548", "#102535"), leftBack: uc("#55401d", "#43385d", "#1d4055"),
+    top: uc("#4f3a1a", "#40355a", "#1a3a4f"),
+    left: uc("#403015", "#382d50", "#153040"),
+    right: uc("#352510", "#302548", "#102535"),
+    leftBack: uc("#55401d", "#43385d", "#1d4055"),
     rightBack: uc("#483518", "#3b3055", "#183548"),
   };
   const bodyC = {
-    top: uc("#9b7a4d", "#8878b8", "#4d7a9b"), left: uc("#856a3a", "#7868a8", "#3a6585"),
-    right: uc("#7b5a2d", "#685898", "#2d5a7b"), leftBack: uc("#95754a", "#8575b5", "#4a7595"),
+    top: uc("#9b7a4d", "#8878b8", "#4d7a9b"),
+    left: uc("#856a3a", "#7868a8", "#3a6585"),
+    right: uc("#7b5a2d", "#685898", "#2d5a7b"),
+    leftBack: uc("#95754a", "#8575b5", "#4a7595"),
     rightBack: uc("#88683d", "#7565a5", "#3d6888"),
   };
   const railRgb = uc("123, 90, 45", "110, 85, 150", "45, 90, 123");
   const railC = {
-    rail: uc("#8a6a2a", "#7a58a8", "#2a6a8a"), topRail: uc("#aa8a3a", "#9a78c0", "#3a8aaa"),
-    backPanel: `rgba(${railRgb}, 0.35)`, frontPanel: `rgba(${railRgb}, 0.25)`,
+    rail: uc("#8a6a2a", "#7a58a8", "#2a6a8a"),
+    topRail: uc("#aa8a3a", "#9a78c0", "#3a8aaa"),
+    backPanel: `rgba(${railRgb}, 0.35)`,
+    frontPanel: `rgba(${railRgb}, 0.25)`,
   };
   const energy1 = uc("#ffaa00", "#b080ff", "#00ccff");
   const energy2 = uc("#ffcc00", "#c8a0ff", "#00ffff");
@@ -1045,7 +1050,12 @@ export function renderLabTower(
     ctx.setLineDash([]);
 
     // Bundled wiring harness (from side coils to tower body)
-    const wireColors = [cable2, uc("#ddaa00", "#bb00dd", "#00bbdd"), uc("#ffaa22", "#dd22ff", "#ff6622"), uc("#ddcc00", "#aa00dd", "#00ddaa")];
+    const wireColors = [
+      cable2,
+      uc("#ddaa00", "#bb00dd", "#00bbdd"),
+      uc("#ffaa22", "#dd22ff", "#ff6622"),
+      uc("#ddcc00", "#aa00dd", "#00ddaa"),
+    ];
     const wireCount = 4 + tower.level;
     for (let wire = 0; wire < wireCount; wire++) {
       const wireFrac = 0.08 + (wire / wireCount) * 0.55;
@@ -1373,9 +1383,7 @@ export function renderLabTower(
     ctx.fill();
 
     // Disc edge glow
-    ctx.strokeStyle = `rgba(${eR2}, ${
-      0.5 + Math.sin(time * 5 + disc) * 0.3
-    })`;
+    ctx.strokeStyle = `rgba(${eR2}, ${0.5 + Math.sin(time * 5 + disc) * 0.3})`;
     ctx.lineWidth = 2 * zoom;
     ctx.stroke();
   }
@@ -1510,7 +1518,7 @@ export function renderLabTower(
     const ventY = screenPos.y - h * 0.3 - i * 12 * zoom;
     for (const side of [-1, 1]) {
       const ventX = screenPos.x + side * w * 0.55;
-      const face = side === -1 ? "left" as const : "right" as const;
+      const face = side === -1 ? ("left" as const) : ("right" as const);
       drawIsoFlushVent(ctx, ventX, ventY, 5, 3, face, zoom, {
         frameColor: ventC.frame,
         bgColor: ventC.bg,
@@ -1797,4 +1805,3 @@ export function renderLabTower(
 
   ctx.restore();
 }
-

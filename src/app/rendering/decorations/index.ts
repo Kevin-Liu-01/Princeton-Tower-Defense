@@ -18,6 +18,13 @@ import {
   drawIceThrone,
   drawObsidianCastle,
   drawWitchCottage,
+  drawCannonCrest,
+  drawIvyCrossroads,
+  drawBlightBasin,
+  drawTriadKeep,
+  drawSunscorchLabyrinth,
+  drawFrontierOutpost,
+  drawAshenSpiral,
 } from "./landmarks";
 
 // Export the decoration item renderer for use in page.tsx
@@ -164,6 +171,27 @@ export function renderDecoration(
       break;
     case "witch_cottage":
       drawWitchCottage(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "cannon_crest":
+      drawCannonCrest(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "ivy_crossroads":
+      drawIvyCrossroads(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "blight_basin":
+      drawBlightBasin(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "triad_keep":
+      drawTriadKeep(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "sunscorch_labyrinth":
+      drawSunscorchLabyrinth(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "frontier_outpost":
+      drawFrontierOutpost(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "ashen_spiral":
+      drawAshenSpiral(ctx, screenPos.x, screenPos.y, scale, time);
       break;
     default:
       // Generic decoration
@@ -2078,8 +2106,9 @@ function drawFence(
   x: number,
   y: number,
   scale: number,
-  _v?: string,
+  variant?: string,
 ): void {
+  void variant;
   const s = scale;
   const wallLen = 30 * s;
   const wallH = 14 * s;

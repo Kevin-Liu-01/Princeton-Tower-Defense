@@ -1584,7 +1584,7 @@ export const LEVEL_DATA: Record<
       { type: "maelstrom", pos: { x: 24, y: 18 }, radius: 2.1 },
     ],
     decorations: [
-      { type: "war_monument", pos: { x: 15, y: 4 }, variant: 0, size: 1.7 },
+      { type: "ivy_crossroads", pos: { x: 15, y: 4 }, variant: 0, size: 1.7 },
       { type: "gate", pos: { x: 1, y: 15 }, variant: 0 },
       { type: "gate", pos: { x: 31, y: 15 }, variant: 1 },
       { type: "statue", pos: { x: 9, y: 10 }, variant: 6 },
@@ -1652,7 +1652,7 @@ export const LEVEL_DATA: Record<
       { type: "deep_water", pos: { x: 17, y: 10 }, radius: 1.8 },
     ],
     decorations: [
-      { type: "bone_altar", pos: { x: 17, y: 6 }, variant: 0, size: 2.2 },
+      { type: "blight_basin", pos: { x: 17, y: 6 }, variant: 0, size: 2.2 },
       { type: "ruined_temple", pos: { x: 14, y: 24 }, variant: 6, size: 2 },
       { type: "sunken_pillar", pos: { x: 8, y: 12 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 24, y: 22 }, variant: 1 },
@@ -1721,7 +1721,7 @@ export const LEVEL_DATA: Record<
       { type: "quicksand", pos: { x: 18.5, y: 13 }, radius: 2.4 },
     ],
     decorations: [
-      { type: "sun_obelisk", pos: { x: 16, y: 3 }, variant: 0, size: 1.5 },
+      { type: "sunscorch_labyrinth", pos: { x: 16, y: 3 }, variant: 0, size: 1.5 },
       { type: "pyramid", pos: { x: 4, y: 4 }, variant: 0, size: 1.4 },
       { type: "pyramid", pos: { x: 27, y: 6 }, variant: 1, size: 1.6 },
       { type: "pyramid", pos: { x: 16, y: 28 }, variant: 0, size: 1.2 },
@@ -1868,7 +1868,7 @@ export const LEVEL_DATA: Record<
       { type: "volcano", pos: { x: 16, y: 22 }, radius: 2.5 },
     ],
     decorations: [
-      { type: "infernal_gate", pos: { x: 16, y: 2 }, variant: 0, size: 2.5 },
+      { type: "ashen_spiral", pos: { x: 16, y: 2 }, variant: 0, size: 2.5 },
       { type: "dark_throne", pos: { x: 18, y: 4 }, variant: 0 },
       { type: "skull_throne", pos: { x: 14, y: 28 }, variant: 0, size: 1.5 },
       { type: "lava_pool", pos: { x: 8, y: 14 }, variant: 0, size: 1.8 },
@@ -1943,7 +1943,7 @@ export const LEVEL_DATA: Record<
       { type: "poison_fog", pos: { x: 25, y: 14 }, radius: 1.6 },
     ],
     decorations: [
-      { type: "war_monument", pos: { x: 16, y: 2 }, variant: 1, size: 2 },
+      { type: "cannon_crest", pos: { x: 16, y: 2 }, variant: 1, size: 2 },
       { type: "gate", pos: { x: 1, y: 16 }, variant: 0 },
       { type: "gate", pos: { x: 31, y: 16 }, variant: 1 },
       { type: "building", pos: { x: 5, y: 8 }, variant: 0 },
@@ -2014,7 +2014,7 @@ export const LEVEL_DATA: Record<
       { type: "poison_fog", pos: { x: 26, y: 18 }, radius: 1.7 },
     ],
     decorations: [
-      { type: "bone_altar", pos: { x: 16, y: 4 }, variant: 1, size: 2 },
+      { type: "triad_keep", pos: { x: 16, y: 4 }, variant: 1, size: 2 },
       { type: "ruined_temple", pos: { x: 16, y: 26 }, variant: 6, size: 2 },
       { type: "sunken_pillar", pos: { x: 7, y: 10 }, variant: 1 },
       { type: "sunken_pillar", pos: { x: 25, y: 23 }, variant: 0 },
@@ -2085,7 +2085,7 @@ export const LEVEL_DATA: Record<
       { type: "ice_sheet", pos: { x: 28, y: 10 }, radius: 1.5 },
     ],
     decorations: [
-      { type: "frost_citadel", pos: { x: 16, y: 4 }, variant: 1, size: 1.8 },
+      { type: "frontier_outpost", pos: { x: 16, y: 4 }, variant: 1, size: 1.8 },
       { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
       { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
       { type: "ice_throne", pos: { x: 16, y: 28 }, variant: 0, size: 1.2 },

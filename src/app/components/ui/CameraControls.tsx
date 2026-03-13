@@ -47,8 +47,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
 
   return (
     <div
-      className="absolute top-2 right-2 hidden sm:flex flex-col gap-1.5"
-      style={{ zIndex: 60 }}
+      className="pointer-events-auto hidden sm:flex flex-col gap-1.5"
     >
       {/* Camera Panel */}
       {cameraDpadVisible && (

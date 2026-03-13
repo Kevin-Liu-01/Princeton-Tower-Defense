@@ -343,7 +343,7 @@ export function SetupScreen({
   ];
 
   return (
-    <div className="w-full h-screen flex flex-col bg-gradient-to-br from-stone-900 via-amber-950 to-stone-900 text-amber-100 overflow-hidden">
+    <div className="w-full h-[100dvh] flex flex-col bg-gradient-to-br from-stone-900 via-amber-950 to-stone-900 text-amber-100 overflow-hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       {/* Header */}
       <div className="flex-shrink-0 text-center py-3 border-b border-amber-800/30 bg-gradient-to-r from-transparent via-amber-950/40 to-transparent"
         style={{ boxShadow: "0 1px 0 rgba(255,200,100,0.05)" }}>

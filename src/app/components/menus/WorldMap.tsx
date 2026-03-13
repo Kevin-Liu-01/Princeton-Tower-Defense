@@ -254,8 +254,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     };
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
+    window.visualViewport?.addEventListener("resize", updateDimensions);
     return () => {
       window.removeEventListener("resize", updateDimensions);
+      window.visualViewport?.removeEventListener("resize", updateDimensions);
     };
   }, []);
 
@@ -657,7 +659,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   }
 
   return (
-    <div className="w-full h-dvh flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}` }}
+    <div className="w-full h-dvh flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}`, paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {/* TOP BAR */}
       <OrnateFrame

@@ -890,7 +890,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [onDevModeChange]);
 
   return (
-    <BaseModal isOpen onClose={onClose} zClass="z-[1500]" backdropBg={OVERLAY.black60}>
+    <BaseModal isOpen onClose={onClose} zClass="z-[1500]" backdropBg={OVERLAY.black60} usePortal>
       <div
         className="relative w-full max-w-4xl max-h-[90dvh] rounded-2xl overflow-hidden flex flex-col"
         style={{

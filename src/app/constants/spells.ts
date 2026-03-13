@@ -3,8 +3,8 @@ import type { SpellData, SpellType, SpellUpgradeLevels } from "../types";
 // Spell data
 export const SPELL_DATA: Record<SpellType, SpellData> = {
   fireball: {
-    name: "Meteor Shower",
-    shortName: "Fireball",
+    name: "Fireball Strike",
+    shortName: "Fireballs",
     cost: 50,
     cooldown: 15000,
     desc: "Rains 10 meteors dealing 80 AoE damage each, burning enemies for 4s",
@@ -17,14 +17,14 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     desc: "Chains to 8 enemies, 900 total damage with stun",
   },
   freeze: {
-    name: "Arctic Blast",
+    name: "Arctic Freeze",
     shortName: "Freeze",
     cost: 60,
     cooldown: 20000,
     desc: "Freezes ALL enemies for 3 seconds",
   },
   payday: {
-    name: "Gold Rush",
+    name: "Paw Point Payday",
     shortName: "Payday",
     cost: 0,
     cooldown: 30000,
@@ -52,7 +52,7 @@ export const SPELL_UPGRADE_COSTS = [2, 2, 3, 3, 3] as const;
 export const MAX_SPELL_UPGRADE_LEVEL = SPELL_UPGRADE_COSTS.length;
 export const SPELL_MAX_UPGRADE_STARS_PER_SPELL = SPELL_UPGRADE_COSTS.reduce(
   (sum, cost) => sum + cost,
-  0
+  0,
 );
 export const SPELL_TOTAL_MAX_UPGRADE_STARS =
   SPELL_MAX_UPGRADE_STARS_PER_SPELL * SPELL_OPTIONS.length;
@@ -75,7 +75,8 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
     {
       level: 2,
       title: "Twinfall Pattern",
-      description: "+2 meteors with wider strike lanes. Unlocks manual targeting.",
+      description:
+        "+2 meteors with wider strike lanes. Unlocks manual targeting.",
       cost: SPELL_UPGRADE_COSTS[1],
     },
     {
@@ -243,11 +244,36 @@ export interface SpellTrait {
 }
 
 export const SPELL_TRAITS: Record<SpellType, SpellTrait> = {
-  fireball: { trait: "AoE Burn", color: "text-red-300/80", bg: "rgba(127,29,29,0.25)", border: "rgba(127,29,29,0.2)" },
-  lightning: { trait: "Chain Stun", color: "text-cyan-300/80", bg: "rgba(22,78,99,0.25)", border: "rgba(22,78,99,0.2)" },
-  freeze: { trait: "Global Freeze", color: "text-indigo-300/80", bg: "rgba(49,46,129,0.25)", border: "rgba(49,46,129,0.2)" },
-  payday: { trait: "Gold Boost", color: "text-yellow-300/80", bg: "rgba(113,63,18,0.25)", border: "rgba(113,63,18,0.2)" },
-  reinforcements: { trait: "Summon Units", color: "text-emerald-300/80", bg: "rgba(6,78,59,0.25)", border: "rgba(6,78,59,0.2)" },
+  fireball: {
+    trait: "AoE Burn",
+    color: "text-red-300/80",
+    bg: "rgba(127,29,29,0.25)",
+    border: "rgba(127,29,29,0.2)",
+  },
+  lightning: {
+    trait: "Chain Stun",
+    color: "text-cyan-300/80",
+    bg: "rgba(22,78,99,0.25)",
+    border: "rgba(22,78,99,0.2)",
+  },
+  freeze: {
+    trait: "Global Freeze",
+    color: "text-indigo-300/80",
+    bg: "rgba(49,46,129,0.25)",
+    border: "rgba(49,46,129,0.2)",
+  },
+  payday: {
+    trait: "Gold Boost",
+    color: "text-yellow-300/80",
+    bg: "rgba(113,63,18,0.25)",
+    border: "rgba(113,63,18,0.2)",
+  },
+  reinforcements: {
+    trait: "Summon Units",
+    color: "text-emerald-300/80",
+    bg: "rgba(6,78,59,0.25)",
+    border: "rgba(6,78,59,0.2)",
+  },
 };
 
 export const DEFAULT_SPELL_UPGRADES: SpellUpgradeLevels = {
@@ -259,23 +285,30 @@ export const DEFAULT_SPELL_UPGRADES: SpellUpgradeLevels = {
 };
 
 export const normalizeSpellUpgradeLevels = (
-  raw?: Partial<SpellUpgradeLevels> | null
+  raw?: Partial<SpellUpgradeLevels> | null,
 ): SpellUpgradeLevels =>
-  SPELL_OPTIONS.reduce((acc, spellType) => {
-    const rawLevel = raw?.[spellType];
-    const level = Number.isFinite(rawLevel)
-      ? Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, Math.floor(rawLevel as number)))
-      : 0;
-    acc[spellType] = level;
-    return acc;
-  }, { ...DEFAULT_SPELL_UPGRADES });
+  SPELL_OPTIONS.reduce(
+    (acc, spellType) => {
+      const rawLevel = raw?.[spellType];
+      const level = Number.isFinite(rawLevel)
+        ? Math.max(
+            0,
+            Math.min(MAX_SPELL_UPGRADE_LEVEL, Math.floor(rawLevel as number)),
+          )
+        : 0;
+      acc[spellType] = level;
+      return acc;
+    },
+    { ...DEFAULT_SPELL_UPGRADES },
+  );
 
-export const getSpellUpgradeNodes = (spellType: SpellType): SpellUpgradeNode[] =>
-  SPELL_TECH_TREE[spellType];
+export const getSpellUpgradeNodes = (
+  spellType: SpellType,
+): SpellUpgradeNode[] => SPELL_TECH_TREE[spellType];
 
 export const getSpellUpgradeCost = (
   spellType: SpellType,
-  targetLevel: number
+  targetLevel: number,
 ): number => {
   if (targetLevel <= 0) return 0;
   const node = SPELL_TECH_TREE[spellType][targetLevel - 1];
@@ -284,11 +317,11 @@ export const getSpellUpgradeCost = (
 
 export const getNextSpellUpgradeCost = (
   spellType: SpellType,
-  currentLevel: number
+  currentLevel: number,
 ): number => getSpellUpgradeCost(spellType, currentLevel + 1);
 
 export const getSpentSpellUpgradeStars = (
-  upgrades?: Partial<SpellUpgradeLevels> | null
+  upgrades?: Partial<SpellUpgradeLevels> | null,
 ): number => {
   const normalized = normalizeSpellUpgradeLevels(upgrades);
   return SPELL_OPTIONS.reduce((totalSpent, spellType) => {
@@ -384,12 +417,14 @@ export const getPaydaySpellStats = (level: number): PaydaySpellStats => {
     maxBonus:
       50 + (normalizedLevel >= 2 ? 15 : 0) + (normalizedLevel >= 5 ? 15 : 0),
     auraDurationMs:
-      10000 + (normalizedLevel >= 3 ? 2000 : 0) + (normalizedLevel >= 5 ? 3000 : 0),
+      10000 +
+      (normalizedLevel >= 3 ? 2000 : 0) +
+      (normalizedLevel >= 5 ? 3000 : 0),
   };
 };
 
 export const getReinforcementSpellStats = (
-  level: number
+  level: number,
 ): ReinforcementSpellStats => {
   const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
   return {
@@ -432,14 +467,18 @@ function darkenHex(hex: string): string {
   return `rgba(${r}, ${g}, ${b}, 0.3)`;
 }
 
-export const SPELL_FULL_THEMES: Record<SpellType, SpellFullTheme> = Object.fromEntries(
-  SPELL_OPTIONS.map((type) => {
-    const accent = SPELL_ACCENTS[type];
-    return [type, {
-      accent,
-      bg: darkenHex(accent),
-      border: hexToRgba(accent, 0.3),
-      glow: hexToRgba(accent, 0.3),
-    }];
-  })
-) as Record<SpellType, SpellFullTheme>;
+export const SPELL_FULL_THEMES: Record<SpellType, SpellFullTheme> =
+  Object.fromEntries(
+    SPELL_OPTIONS.map((type) => {
+      const accent = SPELL_ACCENTS[type];
+      return [
+        type,
+        {
+          accent,
+          bg: darkenHex(accent),
+          border: hexToRgba(accent, 0.3),
+          glow: hexToRgba(accent, 0.3),
+        },
+      ];
+    }),
+  ) as Record<SpellType, SpellFullTheme>;

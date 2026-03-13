@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
 import { Analytics } from "@vercel/analytics/next";
@@ -14,6 +14,14 @@ import {
   OG_IMAGES,
   AUTHOR_URL,
 } from "./seo/constants";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

@@ -89,8 +89,7 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
 
   return (
     <div
-      className="absolute top-2 left-2 flex flex-col gap-2"
-      style={{ zIndex: 60 }}
+      className="pointer-events-auto flex flex-col gap-2"
     >
       <button
         onClick={handleToggle}

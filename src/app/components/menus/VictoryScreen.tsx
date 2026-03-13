@@ -580,7 +580,7 @@ export function VictoryScreen({
     <div
       className={`${overlay
         ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
-        : "w-full h-screen flex flex-col items-center justify-center relative overflow-auto"
+        : "w-full h-[100dvh] flex flex-col items-center justify-center relative overflow-auto"
         } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
       style={{
         background: overlay

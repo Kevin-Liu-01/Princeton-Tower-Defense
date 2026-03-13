@@ -110,3 +110,73 @@ export function drawWitchCottage(
 ): void {
   renderLandmark(ctx, x, y, scale, "witch_cottage", 0, time);
 }
+
+export function drawCannonCrest(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "cannon_crest", 0, time);
+}
+
+export function drawIvyCrossroads(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "ivy_crossroads", 0, time);
+}
+
+export function drawBlightBasin(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "blight_basin", 0, time);
+}
+
+export function drawTriadKeep(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "triad_keep", 0, time);
+}
+
+export function drawSunscorchLabyrinth(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "sunscorch_labyrinth", 0, time);
+}
+
+export function drawFrontierOutpost(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "frontier_outpost", 0, time);
+}
+
+export function drawAshenSpiral(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "ashen_spiral", 0, time);
+}

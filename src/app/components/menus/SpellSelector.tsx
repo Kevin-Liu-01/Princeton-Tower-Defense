@@ -271,10 +271,13 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               </div>
             </div>
 
-            {/* Spellbook button */}
+            {/* Spellbook button — circle with slot-fill ring */}
             {(() => {
               const SIZE = 50;
               const STROKE = 3;
+              const R = (SIZE - STROKE) / 2;
+              const C = 2 * Math.PI * R;
+              const fillFrac = selectedSpells.length / 3;
               return (
                 <HudTooltip label="Spellbook" position="top">
                   <button
@@ -283,8 +286,21 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     className="flex-shrink-0 ml-auto relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
                   >
-                    <svg className="absolute inset-0" width={SIZE} height={SIZE}>
-                      <circle cx={SIZE / 2} cy={SIZE / 2} r={(SIZE - STROKE) / 2} fill="none" stroke="rgba(140,80,200,0.35)" strokeWidth={STROKE} />
+                    <svg className="absolute inset-0 -rotate-90" width={SIZE} height={SIZE}>
+                      <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="rgba(60,30,100,0.35)" strokeWidth={STROKE} />
+                      <circle
+                        cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none"
+                        stroke="url(#spellbookSlotGrad)" strokeWidth={STROKE}
+                        strokeDasharray={`${C * fillFrac} ${C * (1 - fillFrac)}`}
+                        strokeLinecap="round"
+                        className="transition-all duration-500"
+                      />
+                      <defs>
+                        <linearGradient id="spellbookSlotGrad" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#a855f7" />
+                          <stop offset="100%" stopColor="#7c3aed" />
+                        </linearGradient>
+                      </defs>
                     </svg>
                     <div
                       className="absolute rounded-full flex items-center justify-center"
@@ -302,13 +318,11 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               );
             })()}
 
-            {/* Upgrade button — circle with slot-fill ring */}
+            {/* Upgrade button — golden aura ring */}
             {(() => {
               const SIZE = 50;
               const STROKE = 3;
               const R = (SIZE - STROKE) / 2;
-              const C = 2 * Math.PI * R;
-              const fillFrac = selectedSpells.length / 3;
               return (
                 <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
                   <button
@@ -317,24 +331,17 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     className="flex-shrink-0 relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
                   >
-                    {/* SVG ring */}
-                    <svg className="absolute inset-0 -rotate-90" width={SIZE} height={SIZE}>
-                      <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="rgba(80,60,20,0.35)" strokeWidth={STROKE} />
-                      <circle
-                        cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none"
-                        stroke="url(#slotGrad)" strokeWidth={STROKE}
-                        strokeDasharray={`${C * fillFrac} ${C * (1 - fillFrac)}`}
-                        strokeLinecap="round"
-                        className="transition-all duration-500"
-                      />
+                    <svg className="absolute inset-0" width={SIZE} height={SIZE}>
                       <defs>
-                        <linearGradient id="slotGrad" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#a855f7" />
-                          <stop offset="100%" stopColor="#7c3aed" />
+                        <linearGradient id="upgradeAuraGrad" gradientTransform="rotate(75)">
+                          <stop offset="0%" stopColor="#fbbf24" />
+                          <stop offset="40%" stopColor="#f59e0b" />
+                          <stop offset="70%" stopColor="#d97706" />
+                          <stop offset="100%" stopColor="#fbbf24" />
                         </linearGradient>
                       </defs>
+                      <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="url(#upgradeAuraGrad)" strokeWidth={STROKE} opacity={0.7} />
                     </svg>
-                    {/* Inner circle */}
                     <div
                       className="absolute rounded-full flex items-center justify-center"
                       style={{
