@@ -452,14 +452,16 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </div>
 
       {/* Lives */}
-      <div className="relative shrink-0">
+      <div
+        className="relative shrink-0"
+        style={{ animation: livesShake ? "shake 0.5s ease-in-out" : "none" }}
+      >
         <div
           className="relative flex h-9 items-center gap-1 overflow-hidden rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
             background: livesTheme.bg,
             border: livesTheme.border,
             boxShadow: livesTheme.shadow,
-            animation: livesShake ? "shake 0.5s ease-in-out" : "none",
           }}
         >
           <div
@@ -881,7 +883,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 <div className="flex items-center shrink-0">
                   <PrincetonTDLogo size="h-10 w-10" />
                   <div
-                    className="ml-2.5 h-7 w-px"
+                    className="ml-1.5 mr-2 h-7 w-px"
                     style={{
                       background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)`,
                     }}
