@@ -6,6 +6,16 @@ import {
   distance,
 } from "../utils";
 
+const BARRACKS_OWNER_PREFIX = "special_barracks";
+
+export function getBarracksOwnerId(pos: { x: number; y: number }): string {
+  return `${BARRACKS_OWNER_PREFIX}_${pos.x}_${pos.y}`;
+}
+
+export function isBarracksOwnerId(ownerId: string): boolean {
+  return ownerId.startsWith(BARRACKS_OWNER_PREFIX);
+}
+
 /**
  * Finds the closest point on any active road/path to the given world position.
  * Used by barracks and stations to determine troop rally points.

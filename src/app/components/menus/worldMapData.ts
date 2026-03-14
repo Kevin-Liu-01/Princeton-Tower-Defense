@@ -163,7 +163,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     tags: ["High Ground", "Split Defense"],
     x: 910,
     y: 38,
-    connectsTo: ["sphinx"],
+    connectsTo: ["sphinx", "sun_obelisk"],
+  },
+  {
+    id: "sun_obelisk",
+    name: "Sun Obelisk",
+    description:
+      "Solar monuments scorch both lanes.\nSplit forces across ancient killing grounds.",
+    region: "desert",
+    difficulty: 3,
+    kind: "challenge",
+    tags: ["Solar Hazards", "Dual Lane"],
+    x: 870,
+    y: 28,
+    connectsTo: [],
   },
   {
     id: "sphinx",
@@ -276,7 +289,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     tags: ["Split Anchor", "Eruptions"],
     x: 1592,
     y: 37,
-    connectsTo: ["throne"],
+    connectsTo: ["throne", "infernal_gate"],
+  },
+  {
+    id: "infernal_gate",
+    name: "Infernal Gate",
+    description:
+      "Demonic portals flood twin fire lanes.\nSurvive eruptions around the bone altar.",
+    region: "volcanic",
+    difficulty: 3,
+    kind: "challenge",
+    tags: ["Lava Geysers", "Bone Altar"],
+    x: 1530,
+    y: 28,
+    connectsTo: [],
   },
   {
     id: "throne",

@@ -192,25 +192,25 @@ export function renderHazard(
       drawVolcanoHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "lava":
-      drawSimpleLavaHazard(ctx, sRad, time, zoom);
+      drawSimpleLavaHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "swamp":
-      drawSimpleSwampHazard(ctx, sRad, time, zoom);
+      drawSimpleSwampHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "ice":
-      drawSimpleIceHazard(ctx, sRad, time, zoom);
+      drawSimpleIceHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "poison":
-      drawSimplePoisonHazard(ctx, sRad, time, zoom);
+      drawSimplePoisonHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "fire":
-      drawSimpleFireHazard(ctx, sRad, time, zoom);
+      drawSimpleFireHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "lightning":
-      drawSimpleLightningHazard(ctx, sRad, time, zoom);
+      drawSimpleLightningHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "void":
-      drawSimpleVoidHazard(ctx, sRad, time, zoom);
+      drawSimpleVoidHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "ice_spikes":
     case "spikes":
@@ -1702,24 +1702,63 @@ function drawQuicksandHazard(
   drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 150, 0.18);
   ctx.fill();
 
-  // 3. Animated spiral suction pattern
+  // 3. Organic spiral suction pattern (multiple layers with depth)
   ctx.save();
-  const spiralSpeed = time * 0.8;
-  for (let arm = 0; arm < 4; arm++) {
-    ctx.strokeStyle = `rgba(90, 70, 50, ${0.3 + arm * 0.1})`;
-    ctx.lineWidth = (3 - arm * 0.5) * cameraZoom;
+  const spiralSpeed = time * 0.5;
+  for (let arm = 0; arm < 5; arm++) {
+    const armSeed = hazSeed + arm * 17.3;
+    const armAlpha = 0.12 + arm * 0.06;
+
+    // Outer soft glow spiral
+    ctx.strokeStyle = `rgba(120, 95, 65, ${armAlpha * 0.5})`;
+    ctx.lineWidth = (5 - arm * 0.6) * cameraZoom;
     ctx.beginPath();
-    for (let t = 0; t < 3; t += 0.05) {
-      const spiralR = sRad * 0.1 + t * sRad * 0.25;
-      const spiralAngle = t * 3 + spiralSpeed + arm * (Math.PI / 2);
-      const sx = Math.cos(spiralAngle) * spiralR;
-      const sy = Math.sin(spiralAngle) * spiralR * isoRatio;
+    for (let t = 0; t <= 1; t += 0.02) {
+      const spiralR = sRad * (0.08 + t * 0.72);
+      const wobble = Math.sin(t * 6 + armSeed) * sRad * 0.03;
+      const spiralAngle = t * 4.5 + spiralSpeed + arm * (Math.PI * 2 / 5);
+      const sx = Math.cos(spiralAngle) * (spiralR + wobble);
+      const sy = Math.sin(spiralAngle) * (spiralR + wobble) * isoRatio;
+      if (t === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // Inner crisp spiral line
+    ctx.strokeStyle = `rgba(70, 50, 32, ${armAlpha})`;
+    ctx.lineWidth = (2.2 - arm * 0.2) * cameraZoom;
+    ctx.beginPath();
+    for (let t = 0; t <= 1; t += 0.02) {
+      const spiralR = sRad * (0.06 + t * 0.7);
+      const wobble = Math.sin(t * 6 + armSeed) * sRad * 0.025;
+      const spiralAngle = t * 4.5 + spiralSpeed + arm * (Math.PI * 2 / 5);
+      const sx = Math.cos(spiralAngle) * (spiralR + wobble);
+      const sy = Math.sin(spiralAngle) * (spiralR + wobble) * isoRatio;
       if (t === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
     ctx.stroke();
   }
   ctx.restore();
+
+  // Sand grain particles drifting along spiral paths
+  for (let grain = 0; grain < 14; grain++) {
+    const grainSeed = hazSeed + grain * 7.31;
+    const cycle = (time * 0.35 + seededNoise(grainSeed) * 3) % 3;
+    const t = cycle / 3;
+    const armIdx = grain % 5;
+    const spiralR = sRad * (0.08 + t * 0.72);
+    const spiralAngle = t * 4.5 + spiralSpeed + armIdx * (Math.PI * 2 / 5);
+    const gx = Math.cos(spiralAngle) * spiralR;
+    const gy = Math.sin(spiralAngle) * spiralR * isoRatio;
+    const sz = (1.5 + seededNoise(grainSeed + 3) * 2) * cameraZoom * (0.4 + t * 0.6);
+    const alpha = 0.5 * (1 - t * 0.6);
+
+    ctx.fillStyle = `rgba(160, 130, 90, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(gx, gy, sz, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // 4. Sand ripples moving inward
   for (let ripple = 0; ripple < 4; ripple++) {
@@ -2144,222 +2183,522 @@ function drawStormFieldHazard(
 }
 
 // ============================================================================
-// SIMPLE HAZARD TYPES (for backwards compatibility)
+// THEMED HAZARD TYPES
 // ============================================================================
 
-function drawSimpleLavaHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const lavaGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  lavaGrad.addColorStop(0, "#ff6600");
-  lavaGrad.addColorStop(0.3, "#ff4400");
-  lavaGrad.addColorStop(0.7, "#cc2200");
-  lavaGrad.addColorStop(1, "#880000");
+function drawSimpleLavaHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 37.3 + (pos.y || 0) * 53.7;
+  const pulse = Math.sin(time * 2.2 + hazSeed) * 0.5 + 0.5;
 
+  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.4, 0, 0, sRad * 1.25);
+  scorchGrad.addColorStop(0, "transparent");
+  scorchGrad.addColorStop(0.5, "rgba(60, 30, 10, 0.4)");
+  scorchGrad.addColorStop(0.8, "rgba(40, 20, 5, 0.25)");
+  scorchGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = scorchGrad;
+  drawOrganicBlob(ctx, sRad * 1.2, sRad * 1.15 * isoRatio, hazSeed, 0.2);
+  ctx.fill();
+
+  const lavaGrad = ctx.createRadialGradient(-sRad * 0.15, -sRad * 0.1 * isoRatio, 0, 0, 0, sRad);
+  lavaGrad.addColorStop(0, "rgba(255, 200, 50, 0.95)");
+  lavaGrad.addColorStop(0.25, "rgba(255, 120, 20, 0.92)");
+  lavaGrad.addColorStop(0.55, "rgba(200, 60, 10, 0.9)");
+  lavaGrad.addColorStop(0.8, "rgba(140, 30, 5, 0.92)");
+  lavaGrad.addColorStop(1, "rgba(80, 15, 0, 0.88)");
   ctx.fillStyle = lavaGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 40, 0.16);
   ctx.fill();
 
-  // Bubbles
-  ctx.fillStyle = "#ffaa00";
-  for (let i = 0; i < 5; i++) {
-    const bubblePhase = (time + i * 0.7) % 2;
-    const bubbleSize = (3 + Math.sin(time * 3 + i) * 2) * zoom * (1 - bubblePhase * 0.5);
-    const bubbleX = Math.cos(i * 1.3) * size * 0.5;
-    const bubbleY = Math.sin(i * 1.7) * size * 0.25 - bubblePhase * 5 * zoom;
-
-    if (bubblePhase < 1.5) {
-      ctx.beginPath();
-      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-function drawSimpleSwampHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const swampGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  swampGrad.addColorStop(0, "#4a5d23");
-  swampGrad.addColorStop(0.5, "#3d4d1f");
-  swampGrad.addColorStop(1, "#2d3d15");
-
-  ctx.fillStyle = swampGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Bubbles
-  ctx.fillStyle = "rgba(100, 130, 60, 0.6)";
-  for (let i = 0; i < 4; i++) {
-    const bubbleTime = (time * 0.8 + i * 0.5) % 2;
-    if (bubbleTime < 0.3) {
-      const bubbleX = Math.cos(i * 2.5) * size * 0.4;
-      const bubbleY = Math.sin(i * 2.5) * size * 0.2;
-      ctx.beginPath();
-      ctx.arc(bubbleX, bubbleY - bubbleTime * 10 * zoom, 3 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-}
-
-function drawSimpleIceHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const iceGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  iceGrad.addColorStop(0, "#e0f0ff");
-  iceGrad.addColorStop(0.5, "#a0d0ff");
-  iceGrad.addColorStop(1, "#70b0e0");
-
-  ctx.fillStyle = iceGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Cracks
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1 * zoom;
-  for (let i = 0; i < 4; i++) {
-    const angle = (i / 4) * Math.PI * 2;
+  for (let vein = 0; vein < 6; vein++) {
+    const vAngle = (vein / 6) * Math.PI * 2 + hazSeed * 0.1;
+    const vDrift = time * 0.4 + vein * 1.1;
+    ctx.strokeStyle = `rgba(255, 180, 40, ${0.3 + pulse * 0.25})`;
+    ctx.lineWidth = (2 + Math.sin(vDrift) * 0.8) * cameraZoom;
     ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(angle) * size * 0.7, Math.sin(angle) * size * 0.35);
+    const vR = sRad * (0.2 + Math.sin(vDrift + 1) * 0.15);
+    const vEndR = sRad * (0.6 + Math.sin(vDrift + 2) * 0.15);
+    ctx.moveTo(Math.cos(vAngle) * vR, Math.sin(vAngle) * vR * isoRatio);
+    ctx.quadraticCurveTo(
+      Math.cos(vAngle + 0.25) * (vR + vEndR) * 0.6,
+      Math.sin(vAngle + 0.25) * (vR + vEndR) * 0.6 * isoRatio,
+      Math.cos(vAngle + 0.5) * vEndR,
+      Math.sin(vAngle + 0.5) * vEndR * isoRatio
+    );
     ctx.stroke();
   }
 
-  // Shimmer
-  ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-  ctx.beginPath();
-  ctx.arc(-size * 0.3, -size * 0.15, size * 0.15, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function drawSimplePoisonHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const poisonGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  poisonGrad.addColorStop(0, "#80ff80");
-  poisonGrad.addColorStop(0.4, "#40cc40");
-  poisonGrad.addColorStop(0.8, "#208820");
-  poisonGrad.addColorStop(1, "#105510");
-
-  ctx.fillStyle = poisonGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Toxic bubbles
-  ctx.fillStyle = "#aaff00";
-  for (let i = 0; i < 6; i++) {
-    const bubblePhase = (time * 1.2 + i * 0.4) % 1.5;
-    const bubbleX = Math.cos(i * 1.1) * size * 0.5;
-    const bubbleY = Math.sin(i * 1.1) * size * 0.25 - bubblePhase * 15 * zoom;
-    const bubbleSize = 3 * zoom * (1 - bubblePhase / 1.5);
-
-    if (bubblePhase < 1.2) {
-      ctx.globalAlpha = 1 - bubblePhase / 1.5;
-      ctx.beginPath();
-      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawSimpleFireHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  // Scorched ground
-  ctx.fillStyle = "#3d2817";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Flames
-  for (let i = 0; i < 5; i++) {
-    const flameX = Math.cos(i * 1.3) * size * 0.4;
-    const flameY = Math.sin(i * 1.3) * size * 0.2;
-    const flameHeight = (15 + Math.sin(time * 5 + i) * 5) * zoom;
-
-    const flameGrad = ctx.createLinearGradient(flameX, flameY, flameX, flameY - flameHeight);
-    flameGrad.addColorStop(0, "#ff4400");
-    flameGrad.addColorStop(0.3, "#ff8800");
-    flameGrad.addColorStop(0.7, "#ffcc00");
-    flameGrad.addColorStop(1, "rgba(255, 255, 200, 0)");
-
-    ctx.fillStyle = flameGrad;
+  for (let ember = 0; ember < 10; ember++) {
+    const ePhase = (time * 0.7 + seededNoise(hazSeed + ember * 3.7) * 2) % 2;
+    const eAngle = seededNoise(hazSeed + ember * 5.1) * Math.PI * 2;
+    const eDist = sRad * (0.15 + seededNoise(hazSeed + ember * 8.3) * 0.5);
+    const ex = Math.cos(eAngle) * eDist;
+    const ey = Math.sin(eAngle) * eDist * isoRatio - ePhase * 18 * cameraZoom;
+    const eSize = (1.5 + (ember % 3) * 0.8) * cameraZoom * (1 - ePhase / 2);
+    ctx.fillStyle = `rgba(255, ${150 + (ember % 3) * 40}, 20, ${0.8 * (1 - ePhase / 2)})`;
     ctx.beginPath();
-    ctx.moveTo(flameX - 5 * zoom, flameY);
-    ctx.quadraticCurveTo(
-      flameX - 3 * zoom + Math.sin(time * 8 + i) * 2 * zoom,
-      flameY - flameHeight * 0.5,
-      flameX + Math.sin(time * 10 + i) * 3 * zoom,
-      flameY - flameHeight
-    );
-    ctx.quadraticCurveTo(
-      flameX + 3 * zoom + Math.sin(time * 8 + i) * 2 * zoom,
-      flameY - flameHeight * 0.5,
-      flameX + 5 * zoom,
-      flameY
-    );
+    ctx.arc(ex, ey, eSize, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.35);
+  glowGrad.addColorStop(0, `rgba(255, 240, 180, ${0.3 + pulse * 0.2})`);
+  glowGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.35, sRad * 0.25 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
-function drawSimpleLightningHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const chargedGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  chargedGrad.addColorStop(0, "#4080c0");
-  chargedGrad.addColorStop(0.5, "#305090");
-  chargedGrad.addColorStop(1, "#203060");
+function drawSimpleSwampHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 29.3 + (pos.y || 0) * 47.1;
 
-  ctx.fillStyle = chargedGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
+  const wetGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 1.3);
+  wetGrad.addColorStop(0, "transparent");
+  wetGrad.addColorStop(0.4, "rgba(35, 50, 20, 0.35)");
+  wetGrad.addColorStop(0.8, "rgba(25, 40, 15, 0.2)");
+  wetGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = wetGrad;
+  drawOrganicBlob(ctx, sRad * 1.25, sRad * 1.2 * isoRatio, hazSeed, 0.22);
   ctx.fill();
 
-  // Electric arcs
-  if (Math.sin(time * 20) > 0.9) {
-    ctx.strokeStyle = "#88ccff";
-    ctx.lineWidth = 2 * zoom;
-    ctx.shadowColor = "#00aaff";
-    ctx.shadowBlur = 10;
+  const swampGrad = ctx.createRadialGradient(-sRad * 0.1, -sRad * 0.08 * isoRatio, 0, 0, 0, sRad);
+  swampGrad.addColorStop(0, "rgba(55, 75, 30, 0.92)");
+  swampGrad.addColorStop(0.35, "rgba(45, 62, 25, 0.9)");
+  swampGrad.addColorStop(0.7, "rgba(35, 50, 18, 0.92)");
+  swampGrad.addColorStop(1, "rgba(20, 32, 10, 0.88)");
+  ctx.fillStyle = swampGrad;
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 30, 0.18);
+  ctx.fill();
 
-    for (let i = 0; i < 2; i++) {
-      const startX = (Math.random() - 0.5) * size;
-      const startY = (Math.random() - 0.5) * size * 0.5;
-      const endX = (Math.random() - 0.5) * size;
-      const endY = (Math.random() - 0.5) * size * 0.5;
+  for (let patch = 0; patch < 5; patch++) {
+    const pAngle = seededNoise(hazSeed + patch * 4.7) * Math.PI * 2;
+    const pDist = sRad * (0.2 + seededNoise(hazSeed + patch * 6.3) * 0.45);
+    const drift = Math.sin(time * 0.3 + patch * 1.4) * 4 * cameraZoom;
+    const px = Math.cos(pAngle) * pDist + drift;
+    const py = Math.sin(pAngle) * pDist * isoRatio;
+    const pSize = sRad * (0.08 + seededNoise(hazSeed + patch * 9.1) * 0.1);
+    ctx.fillStyle = `rgba(70, 100, 35, ${0.5 + seededNoise(hazSeed + patch) * 0.3})`;
+    drawOrganicBlobAt(ctx, px, py, pSize, pSize * isoRatio, hazSeed + patch * 20, 0.25);
+    ctx.fill();
+  }
 
+  for (let bubble = 0; bubble < 8; bubble++) {
+    const bPhase = (time * 0.6 + seededNoise(hazSeed + bubble * 2.1) * 3) % 3;
+    if (bPhase > 1) continue;
+    const bAngle = seededNoise(hazSeed + bubble * 3.7) * Math.PI * 2;
+    const bDist = sRad * (0.15 + seededNoise(hazSeed + bubble * 5.3) * 0.5);
+    const bx = Math.cos(bAngle) * bDist;
+    const by = Math.sin(bAngle) * bDist * isoRatio - bPhase * 12 * cameraZoom;
+    const bSize = (2.5 + (bubble % 3)) * cameraZoom * Math.sin(bPhase * Math.PI);
+    ctx.fillStyle = `rgba(90, 120, 50, ${0.5 * (1 - bPhase)})`;
+    ctx.beginPath();
+    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const sheenGrad = ctx.createRadialGradient(
+    -sRad * 0.25, -sRad * 0.15 * isoRatio, 0,
+    -sRad * 0.25, -sRad * 0.15 * isoRatio, sRad * 0.4
+  );
+  const sheenAlpha = 0.12 + Math.sin(time * 1.5 + hazSeed) * 0.06;
+  sheenGrad.addColorStop(0, `rgba(130, 180, 60, ${sheenAlpha})`);
+  sheenGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = sheenGrad;
+  ctx.beginPath();
+  ctx.ellipse(-sRad * 0.2, -sRad * 0.12 * isoRatio, sRad * 0.4, sRad * 0.2 * isoRatio, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSimpleIceHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 33.7 + (pos.y || 0) * 51.3;
+
+  const frostGrad = ctx.createRadialGradient(0, 0, sRad * 0.5, 0, 0, sRad * 1.25);
+  frostGrad.addColorStop(0, "transparent");
+  frostGrad.addColorStop(0.4, "rgba(200, 230, 255, 0.25)");
+  frostGrad.addColorStop(0.8, "rgba(180, 215, 245, 0.15)");
+  frostGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = frostGrad;
+  drawOrganicBlob(ctx, sRad * 1.2, sRad * 1.15 * isoRatio, hazSeed, 0.2);
+  ctx.fill();
+
+  const iceGrad = ctx.createRadialGradient(-sRad * 0.2, -sRad * 0.12 * isoRatio, 0, 0, 0, sRad);
+  iceGrad.addColorStop(0, "rgba(230, 245, 255, 0.94)");
+  iceGrad.addColorStop(0.3, "rgba(180, 220, 255, 0.9)");
+  iceGrad.addColorStop(0.65, "rgba(140, 195, 240, 0.92)");
+  iceGrad.addColorStop(1, "rgba(100, 170, 220, 0.88)");
+  ctx.fillStyle = iceGrad;
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 50, 0.16);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 1.2 * cameraZoom;
+  for (let crack = 0; crack < 8; crack++) {
+    const cAngle = seededNoise(hazSeed + crack * 3.3) * Math.PI * 2;
+    const cLen = sRad * (0.3 + seededNoise(hazSeed + crack * 5.7) * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    const midX = Math.cos(cAngle + 0.15) * cLen * 0.5;
+    const midY = Math.sin(cAngle + 0.15) * cLen * 0.5 * isoRatio;
+    ctx.lineTo(midX, midY);
+    ctx.lineTo(Math.cos(cAngle) * cLen, Math.sin(cAngle) * cLen * isoRatio);
+    ctx.stroke();
+    if (seededNoise(hazSeed + crack * 11) > 0.4) {
+      const branchAngle = cAngle + (seededNoise(hazSeed + crack * 13) - 0.5) * 1.2;
+      const branchLen = cLen * 0.4;
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      const midX = (startX + endX) / 2 + (Math.random() - 0.5) * 10 * zoom;
-      const midY = (startY + endY) / 2 + (Math.random() - 0.5) * 5 * zoom;
-      ctx.lineTo(midX, midY);
-      ctx.lineTo(endX, endY);
+      ctx.moveTo(midX, midY);
+      ctx.lineTo(
+        midX + Math.cos(branchAngle) * branchLen,
+        midY + Math.sin(branchAngle) * branchLen * isoRatio
+      );
       ctx.stroke();
     }
+  }
 
-    ctx.shadowBlur = 0;
+  for (let mote = 0; mote < 8; mote++) {
+    const mPhase = (time * 0.5 + seededNoise(hazSeed + mote * 2.3) * 3) % 3;
+    const mAngle = seededNoise(hazSeed + mote * 4.1) * Math.PI * 2;
+    const mDist = sRad * (0.2 + seededNoise(hazSeed + mote * 6.7) * 0.55);
+    const mx = Math.cos(mAngle) * mDist;
+    const my = Math.sin(mAngle) * mDist * isoRatio - mPhase * 10 * cameraZoom;
+    const mSize = (1.5 + (mote % 3) * 0.5) * cameraZoom * (1 - mPhase / 3);
+    ctx.fillStyle = `rgba(220, 240, 255, ${0.6 * (1 - mPhase / 3)})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, mSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const shimmer = Math.sin(time * 1.8 + hazSeed) * 0.5 + 0.5;
+  const specGrad = ctx.createRadialGradient(
+    -sRad * 0.3, -sRad * 0.18 * isoRatio, 0,
+    -sRad * 0.3, -sRad * 0.18 * isoRatio, sRad * 0.38
+  );
+  specGrad.addColorStop(0, `rgba(255, 255, 255, ${0.22 + shimmer * 0.18})`);
+  specGrad.addColorStop(0.5, "rgba(230, 245, 255, 0.06)");
+  specGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = specGrad;
+  ctx.beginPath();
+  ctx.ellipse(-sRad * 0.25, -sRad * 0.14 * isoRatio, sRad * 0.38, sRad * 0.2 * isoRatio, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSimplePoisonHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 29.7;
+
+  const deadGrad = ctx.createRadialGradient(0, 0, sRad * 0.4, 0, 0, sRad * 1.3);
+  deadGrad.addColorStop(0, "transparent");
+  deadGrad.addColorStop(0.45, "rgba(50, 60, 20, 0.3)");
+  deadGrad.addColorStop(0.8, "rgba(35, 45, 15, 0.18)");
+  deadGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = deadGrad;
+  drawOrganicBlob(ctx, sRad * 1.25, sRad * 1.2 * isoRatio, hazSeed, 0.22);
+  ctx.fill();
+
+  const poisonGrad = ctx.createRadialGradient(-sRad * 0.12, -sRad * 0.08 * isoRatio, 0, 0, 0, sRad);
+  poisonGrad.addColorStop(0, "rgba(120, 255, 80, 0.92)");
+  poisonGrad.addColorStop(0.3, "rgba(80, 210, 50, 0.9)");
+  poisonGrad.addColorStop(0.6, "rgba(50, 160, 30, 0.92)");
+  poisonGrad.addColorStop(1, "rgba(25, 90, 15, 0.88)");
+  ctx.fillStyle = poisonGrad;
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 35, 0.17);
+  ctx.fill();
+
+  for (let bubble = 0; bubble < 10; bubble++) {
+    const bPhase = (time * 0.9 + seededNoise(hazSeed + bubble * 2.7) * 2.5) % 2.5;
+    if (bPhase > 1.5) continue;
+    const bAngle = seededNoise(hazSeed + bubble * 4.3) * Math.PI * 2;
+    const bDist = sRad * (0.1 + seededNoise(hazSeed + bubble * 6.1) * 0.6);
+    const bx = Math.cos(bAngle) * bDist;
+    const by = Math.sin(bAngle) * bDist * isoRatio;
+    const bSize = (2 + (bubble % 4) * 0.8) * cameraZoom * Math.sin((bPhase / 1.5) * Math.PI);
+    ctx.fillStyle = `rgba(160, 255, 80, ${0.55 * Math.sin((bPhase / 1.5) * Math.PI)})`;
+    ctx.beginPath();
+    ctx.arc(bx, by - bPhase * 8 * cameraZoom, bSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let wisp = 0; wisp < 6; wisp++) {
+    const wPhase = (time * 0.4 + seededNoise(hazSeed + wisp * 3.9) * 3) % 3;
+    const wAngle = seededNoise(hazSeed + wisp * 5.3) * Math.PI * 2;
+    const wDist = sRad * (0.15 + seededNoise(hazSeed + wisp * 7.7) * 0.4);
+    const wx = Math.cos(wAngle) * wDist + Math.sin(time * 0.5 + wisp) * 3 * cameraZoom;
+    const wy = Math.sin(wAngle) * wDist * isoRatio - wPhase * 20 * cameraZoom;
+    const wSize = sRad * (0.06 + (wisp % 3) * 0.02) * (1 - wPhase / 3);
+    ctx.fillStyle = `rgba(100, 200, 50, ${0.18 * (1 - wPhase / 3)})`;
+    ctx.beginPath();
+    ctx.ellipse(wx, wy, wSize, wSize * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const glow = Math.sin(time * 2.5 + hazSeed) * 0.5 + 0.5;
+  const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.4);
+  glowGrad.addColorStop(0, `rgba(140, 255, 60, ${0.15 + glow * 0.12})`);
+  glowGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.4, sRad * 0.28 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawSimpleFireHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 43.1 + (pos.y || 0) * 31.7;
+  const emberGlow = Math.sin(time * 3 + hazSeed) * 0.5 + 0.5;
+
+  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.2, 0, 0, sRad * 1.2);
+  scorchGrad.addColorStop(0, "rgba(50, 25, 10, 0.85)");
+  scorchGrad.addColorStop(0.5, "rgba(40, 20, 8, 0.7)");
+  scorchGrad.addColorStop(0.8, "rgba(30, 15, 5, 0.4)");
+  scorchGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = scorchGrad;
+  drawOrganicBlob(ctx, sRad * 1.15, sRad * 1.1 * isoRatio, hazSeed, 0.2);
+  ctx.fill();
+
+  const emberGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.85);
+  emberGrad.addColorStop(0, `rgba(180, 60, 10, ${0.5 + emberGlow * 0.2})`);
+  emberGrad.addColorStop(0.5, `rgba(120, 35, 5, ${0.35 + emberGlow * 0.15})`);
+  emberGrad.addColorStop(1, "rgba(60, 15, 0, 0.15)");
+  ctx.fillStyle = emberGrad;
+  drawOrganicBlob(ctx, sRad * 0.85, sRad * 0.8 * isoRatio, hazSeed + 25, 0.15);
+  ctx.fill();
+
+  for (let flame = 0; flame < 7; flame++) {
+    const fAngle = seededNoise(hazSeed + flame * 3.1) * Math.PI * 2;
+    const fDist = sRad * (0.15 + seededNoise(hazSeed + flame * 5.7) * 0.45);
+    const fx = Math.cos(fAngle) * fDist;
+    const fy = Math.sin(fAngle) * fDist * isoRatio;
+    const fHeight = (12 + seededNoise(hazSeed + flame * 7.3) * 12 + Math.sin(time * 5 + flame * 1.3) * 4) * cameraZoom;
+    const fWidth = (3 + seededNoise(hazSeed + flame * 9.1) * 3) * cameraZoom;
+
+    const flameGrad = ctx.createLinearGradient(fx, fy, fx, fy - fHeight);
+    flameGrad.addColorStop(0, "rgba(255, 68, 0, 0.9)");
+    flameGrad.addColorStop(0.3, "rgba(255, 136, 0, 0.75)");
+    flameGrad.addColorStop(0.65, "rgba(255, 204, 0, 0.5)");
+    flameGrad.addColorStop(1, "rgba(255, 255, 200, 0)");
+    ctx.fillStyle = flameGrad;
+
+    const sway = Math.sin(time * 8 + flame * 1.7 + hazSeed) * 2 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(fx - fWidth, fy);
+    ctx.quadraticCurveTo(fx - fWidth * 0.6 + sway * 0.5, fy - fHeight * 0.5, fx + sway, fy - fHeight);
+    ctx.quadraticCurveTo(fx + fWidth * 0.6 + sway * 0.5, fy - fHeight * 0.5, fx + fWidth, fy);
+    ctx.fill();
+  }
+
+  for (let spark = 0; spark < 8; spark++) {
+    const sPhase = (time * 1.2 + seededNoise(hazSeed + spark * 2.3) * 2) % 2;
+    const sAngle = seededNoise(hazSeed + spark * 4.7) * Math.PI * 2;
+    const sDist = sRad * (0.1 + seededNoise(hazSeed + spark * 6.1) * 0.4);
+    const sx = Math.cos(sAngle) * sDist + Math.sin(time * 3 + spark) * 2 * cameraZoom;
+    const sy = Math.sin(sAngle) * sDist * isoRatio - sPhase * 22 * cameraZoom;
+    const sSize = (1 + (spark % 3) * 0.5) * cameraZoom * (1 - sPhase / 2);
+    ctx.fillStyle = `rgba(255, ${200 - spark * 15}, 50, ${0.7 * (1 - sPhase / 2)})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, sSize, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
-function drawSimpleVoidHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-  voidGrad.addColorStop(0, "#000000");
-  voidGrad.addColorStop(0.4, "#1a0a2e");
-  voidGrad.addColorStop(0.7, "#2d1b4e");
-  voidGrad.addColorStop(1, "#3d2b5e");
+function drawSimpleLightningHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 47.7 + (pos.y || 0) * 23.3;
+  const pulse = Math.sin(time * 3.4 + hazSeed) * 0.5 + 0.5;
 
-  ctx.fillStyle = voidGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
+  const chargeGrad = ctx.createRadialGradient(0, 0, sRad * 0.15, 0, 0, sRad * 1.15);
+  chargeGrad.addColorStop(0, "rgba(50, 80, 160, 0.82)");
+  chargeGrad.addColorStop(0.45, "rgba(35, 55, 120, 0.65)");
+  chargeGrad.addColorStop(0.8, "rgba(20, 30, 70, 0.45)");
+  chargeGrad.addColorStop(1, "rgba(10, 15, 35, 0.2)");
+  ctx.fillStyle = chargeGrad;
+  drawOrganicBlob(ctx, sRad * 1.08, sRad * isoRatio, hazSeed, 0.2);
   ctx.fill();
 
-  // Swirling particles
-  ctx.fillStyle = "#8844cc";
-  for (let i = 0; i < 8; i++) {
-    const angle = time + (i / 8) * Math.PI * 2;
-    const radius = size * 0.3 + Math.sin(time * 2 + i) * size * 0.1;
-    const particleX = Math.cos(angle) * radius;
-    const particleY = Math.sin(angle) * radius * 0.5;
+  const fieldR = sRad * (0.7 + pulse * 0.15);
+  ctx.strokeStyle = `rgba(130, 200, 255, ${0.2 + pulse * 0.15})`;
+  ctx.lineWidth = 2 * cameraZoom;
+  drawOrganicBlob(ctx, fieldR, fieldR * isoRatio, hazSeed + 40, 0.12);
+  ctx.stroke();
 
-    ctx.globalAlpha = 0.5 + Math.sin(time * 3 + i) * 0.3;
+  for (let slot = 0; slot < 3; slot++) {
+    const slotSeed = hazSeed + slot * 97.3;
+    const cyclePeriod = 1.8 + seededNoise(slotSeed + 10) * 1.2;
+    const cyclePhase = (time + seededNoise(slotSeed) * cyclePeriod) % cyclePeriod;
+    const flashDuration = 0.22;
+    if (cyclePhase > flashDuration) continue;
+
+    const flashAlpha = 1 - cyclePhase / flashDuration;
+    const boltSeed = slotSeed + Math.floor(time / cyclePeriod) * 7.1;
+    const boltAngle = seededNoise(boltSeed) * Math.PI * 2;
+    const boltLen = sRad * (0.3 + seededNoise(boltSeed + 1) * 0.5);
+    const startX = Math.cos(boltAngle) * boltLen * 0.15;
+    const startY = Math.sin(boltAngle) * boltLen * 0.15 * isoRatio;
+    const endX = Math.cos(boltAngle) * boltLen;
+    const endY = Math.sin(boltAngle) * boltLen * isoRatio;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(120, 200, 255, ${flashAlpha * 0.8})`;
+    ctx.shadowBlur = 14 * cameraZoom;
+    ctx.strokeStyle = `rgba(180, 230, 255, ${flashAlpha * 0.9})`;
+    ctx.lineWidth = (2 + slot * 0.4) * cameraZoom;
     ctx.beginPath();
-    ctx.arc(particleX, particleY, 2 * zoom, 0, Math.PI * 2);
+    ctx.moveTo(startX, startY);
+    for (let seg = 1; seg <= 4; seg++) {
+      const t = seg / 4;
+      const baseX = startX + (endX - startX) * t;
+      const baseY = startY + (endY - startY) * t;
+      const jitter = (1 - Math.abs(t - 0.5) * 2) * sRad * 0.12;
+      ctx.lineTo(
+        baseX + (seededNoise(boltSeed + seg * 11) - 0.5) * jitter,
+        baseY + (seededNoise(boltSeed + seg * 17) - 0.5) * jitter * isoRatio
+      );
+    }
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${flashAlpha * 0.6})`;
+    ctx.lineWidth = 1 * cameraZoom;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  for (let mote = 0; mote < 10; mote++) {
+    const mPhase = (time * 0.9 + seededNoise(hazSeed + mote * 2.1) * 2) % 2;
+    const mAngle = seededNoise(hazSeed + mote * 4.3) * Math.PI * 2 + time * 0.4;
+    const mDist = sRad * (0.15 + seededNoise(hazSeed + mote * 6.7) * 0.55);
+    const mx = Math.cos(mAngle) * mDist;
+    const my = Math.sin(mAngle) * mDist * isoRatio - mPhase * 16 * cameraZoom;
+    const mSize = (1.2 + (mote % 3) * 0.6) * cameraZoom * (1 - mPhase / 2);
+    ctx.save();
+    ctx.shadowColor = "rgba(130, 200, 255, 0.7)";
+    ctx.shadowBlur = 6 * cameraZoom;
+    ctx.fillStyle = `rgba(180, 230, 255, ${0.5 * (1 - mPhase / 2)})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, mSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function drawSimpleVoidHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 53.3 + (pos.y || 0) * 37.7;
+
+  const distortGrad = ctx.createRadialGradient(0, 0, sRad * 0.35, 0, 0, sRad * 1.25);
+  distortGrad.addColorStop(0, "transparent");
+  distortGrad.addColorStop(0.4, "rgba(60, 30, 100, 0.35)");
+  distortGrad.addColorStop(0.75, "rgba(40, 15, 70, 0.2)");
+  distortGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = distortGrad;
+  drawOrganicBlob(ctx, sRad * 1.2, sRad * 1.15 * isoRatio, hazSeed, 0.22);
+  ctx.fill();
+
+  const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad);
+  voidGrad.addColorStop(0, "rgba(0, 0, 0, 0.97)");
+  voidGrad.addColorStop(0.3, "rgba(15, 5, 30, 0.94)");
+  voidGrad.addColorStop(0.6, "rgba(35, 15, 60, 0.9)");
+  voidGrad.addColorStop(1, "rgba(50, 25, 80, 0.82)");
+  ctx.fillStyle = voidGrad;
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 45, 0.18);
+  ctx.fill();
+
+  const horizonR = sRad * (0.55 + Math.sin(time * 1.2 + hazSeed) * 0.04);
+  ctx.strokeStyle = `rgba(160, 80, 255, ${0.35 + Math.sin(time * 2 + hazSeed) * 0.15})`;
+  ctx.lineWidth = 2.5 * cameraZoom;
+  drawOrganicBlob(ctx, horizonR, horizonR * isoRatio, hazSeed + 80, 0.12);
+  ctx.stroke();
+
+  for (let p = 0; p < 14; p++) {
+    const pAngle = (p / 14) * Math.PI * 2 + time * 1.5;
+    const pDist = sRad * (0.4 + Math.sin(time * 0.8 + p * 1.3 + hazSeed) * 0.12);
+    const px = Math.cos(pAngle) * pDist;
+    const py = Math.sin(pAngle) * pDist * isoRatio;
+    const pSize = (1.5 + (p % 4) * 0.5) * cameraZoom;
+    const hue = (p * 25 + time * 30) % 360;
+    ctx.fillStyle = `hsla(${270 + (hue % 60) - 30}, 80%, 60%, ${0.45 + Math.sin(time * 3 + p) * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pSize, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.globalAlpha = 1;
+
+  for (let star = 0; star < 8; star++) {
+    const sAngle = seededNoise(hazSeed + star * 3.7) * Math.PI * 2 + time * 0.3;
+    const sDist = sRad * seededNoise(hazSeed + star * 5.1) * 0.4;
+    const sx = Math.cos(sAngle) * sDist;
+    const sy = Math.sin(sAngle) * sDist * isoRatio;
+    const twinkle = Math.sin(time * 4 + star * 2.1 + hazSeed) * 0.5 + 0.5;
+    ctx.fillStyle = `rgba(220, 180, 255, ${0.3 + twinkle * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, (0.8 + twinkle * 0.8) * cameraZoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  for (let tear = 0; tear < 3; tear++) {
+    const tPhase = (time * 0.3 + seededNoise(hazSeed + tear * 4.7) * 4) % 4;
+    if (tPhase > 1.5) continue;
+    const tAngle = seededNoise(hazSeed + tear * 6.3) * Math.PI * 2;
+    const tDist = sRad * (0.2 + seededNoise(hazSeed + tear * 8.1) * 0.4);
+    const tx = Math.cos(tAngle) * tDist;
+    const ty = Math.sin(tAngle) * tDist * isoRatio;
+    const tLen = sRad * 0.2 * Math.sin((tPhase / 1.5) * Math.PI);
+    const tRot = seededNoise(hazSeed + tear * 10.3) * Math.PI;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(tRot);
+    ctx.strokeStyle = `rgba(200, 120, 255, ${0.6 * Math.sin((tPhase / 1.5) * Math.PI)})`;
+    ctx.lineWidth = 2 * cameraZoom;
+    ctx.shadowColor = "rgba(180, 100, 255, 0.6)";
+    ctx.shadowBlur = 8 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(-tLen, 0);
+    ctx.lineTo(tLen, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function drawGenericHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {

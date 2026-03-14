@@ -2102,6 +2102,132 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 10, interval: 660, delay: 1450 },
     ],
   ],
+  sun_obelisk: [
+    [
+      { type: "nomad", count: 9, interval: 640 },
+      { type: "scarab", count: 8, interval: 560, delay: 2600 },
+      { type: "scorpion", count: 6, interval: 660, delay: 2400 },
+    ],
+    [
+      { type: "archer", count: 6, interval: 680 },
+      { type: "nomad", count: 10, interval: 480, delay: 2300 },
+      { type: "crossbowman", count: 5, interval: 700, delay: 2100 },
+      { type: "scarab", count: 8, interval: 520, delay: 2000 },
+    ],
+    [
+      { type: "sandworm", count: 4, interval: 960 },
+      { type: "scorpion", count: 10, interval: 460, delay: 2100 },
+      { type: "hexer", count: 5, interval: 720, delay: 1900 },
+      { type: "harpy", count: 4, interval: 700, delay: 1800 },
+    ],
+    [
+      { type: "mage", count: 5, interval: 740 },
+      { type: "assassin", count: 6, interval: 600, delay: 2000 },
+      { type: "nomad", count: 12, interval: 420, delay: 1800 },
+      { type: "wyvern", count: 4, interval: 900, delay: 1700 },
+    ],
+    [
+      { type: "plaguebearer", count: 5, interval: 760 },
+      { type: "shadow_knight", count: 5, interval: 940, delay: 2000 },
+      { type: "sandworm", count: 5, interval: 880, delay: 1800 },
+      { type: "scarab", count: 14, interval: 380, delay: 1700 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 1400 },
+      { type: "professor", count: 2, interval: 1800, delay: 2000 },
+      { type: "scorpion", count: 14, interval: 380, delay: 1700 },
+      { type: "banshee", count: 5, interval: 600, delay: 1600 },
+    ],
+    [
+      { type: "dean", count: 1, interval: 2800 },
+      { type: "necromancer", count: 5, interval: 980, delay: 1800 },
+      { type: "nomad", count: 16, interval: 340, delay: 1600 },
+      { type: "harpy", count: 6, interval: 580, delay: 1500 },
+    ],
+    [
+      { type: "dragon", count: 1, interval: 2600 },
+      { type: "shadow_knight", count: 6, interval: 760, delay: 1700 },
+      { type: "sandworm", count: 6, interval: 840, delay: 1600 },
+      { type: "assassin", count: 8, interval: 480, delay: 1500 },
+    ],
+    [
+      { type: "trustee", count: 1, interval: 3000 },
+      { type: "dean", count: 1, interval: 2500, delay: 1700 },
+      { type: "professor", count: 3, interval: 1400, delay: 1600 },
+      { type: "scarab", count: 18, interval: 320, delay: 1500 },
+      { type: "wyvern", count: 6, interval: 780, delay: 1500 },
+    ],
+    [
+      { type: "golem", count: 1, interval: 2800 },
+      { type: "trustee", count: 2, interval: 2300, delay: 1700 },
+      { type: "dragon", count: 2, interval: 2100, delay: 1600 },
+      { type: "scorpion", count: 20, interval: 300, delay: 1500 },
+      { type: "nomad", count: 18, interval: 320, delay: 1500 },
+    ],
+  ],
+  infernal_gate: [
+    [
+      { type: "fire_imp", count: 10, interval: 540 },
+      { type: "magma_spawn", count: 8, interval: 600, delay: 2500 },
+      { type: "ember_guard", count: 5, interval: 840, delay: 2300 },
+    ],
+    [
+      { type: "infernal", count: 5, interval: 760 },
+      { type: "fire_imp", count: 12, interval: 400, delay: 2200 },
+      { type: "warlock", count: 5, interval: 740, delay: 2000 },
+      { type: "harpy", count: 5, interval: 620, delay: 1900 },
+    ],
+    [
+      { type: "wyvern", count: 5, interval: 880 },
+      { type: "magma_spawn", count: 10, interval: 440, delay: 2100 },
+      { type: "shadow_knight", count: 5, interval: 920, delay: 1900 },
+      { type: "banshee", count: 5, interval: 660, delay: 1800 },
+    ],
+    [
+      { type: "assassin", count: 7, interval: 540 },
+      { type: "ember_guard", count: 7, interval: 660, delay: 2000 },
+      { type: "infernal", count: 6, interval: 700, delay: 1800 },
+      { type: "plaguebearer", count: 5, interval: 720, delay: 1700 },
+    ],
+    [
+      { type: "necromancer", count: 5, interval: 1020 },
+      { type: "dragon", count: 1, interval: 2600, delay: 2000 },
+      { type: "fire_imp", count: 16, interval: 340, delay: 1700 },
+      { type: "wyvern", count: 6, interval: 760, delay: 1600 },
+    ],
+    [
+      { type: "gradstudent", count: 4, interval: 1250 },
+      { type: "professor", count: 3, interval: 1550, delay: 2000 },
+      { type: "magma_spawn", count: 14, interval: 360, delay: 1700 },
+      { type: "shadow_knight", count: 6, interval: 800, delay: 1600 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 2200 },
+      { type: "catapult", count: 4, interval: 1100, delay: 1800 },
+      { type: "ember_guard", count: 8, interval: 620, delay: 1600 },
+      { type: "infernal", count: 7, interval: 640, delay: 1500 },
+    ],
+    [
+      { type: "trustee", count: 1, interval: 3000 },
+      { type: "dean", count: 2, interval: 2100, delay: 1800 },
+      { type: "dragon", count: 2, interval: 2100, delay: 1600 },
+      { type: "fire_imp", count: 20, interval: 280, delay: 1500 },
+      { type: "assassin", count: 8, interval: 520, delay: 1500 },
+    ],
+    [
+      { type: "golem", count: 1, interval: 2800 },
+      { type: "juggernaut", count: 1, interval: 2900, delay: 1800 },
+      { type: "necromancer", count: 6, interval: 880, delay: 1600 },
+      { type: "magma_spawn", count: 16, interval: 320, delay: 1500 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 2300 },
+      { type: "golem", count: 2, interval: 2500, delay: 1700 },
+      { type: "dragon", count: 3, interval: 1900, delay: 1600 },
+      { type: "ember_guard", count: 12, interval: 540, delay: 1500 },
+      { type: "fire_imp", count: 24, interval: 240, delay: 1500 },
+    ],
+  ],
   // =====================
   // DEV TEST LEVELS
   // =====================

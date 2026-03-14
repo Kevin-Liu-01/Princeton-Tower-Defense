@@ -71,7 +71,7 @@ export interface BattleStateRefs {
   pausedAtRef: MutableRefObject<number | null>;
   totalPausedTimeRef: MutableRefObject<number>;
   pausableTimeoutsRef: MutableRefObject<PausableTimeoutEntry[]>;
-  lastBarracksSpawnRef: MutableRefObject<number>;
+  lastBarracksSpawnRef: MutableRefObject<Map<string, number>>;
   gameResetTimeRef: MutableRefObject<number>;
 }
 
@@ -104,7 +104,7 @@ export function resetBattleState({
   refs.pausedAtRef.current = null;
   refs.totalPausedTimeRef.current = 0;
   refs.pausableTimeoutsRef.current = [];
-  refs.lastBarracksSpawnRef.current = 0;
+  refs.lastBarracksSpawnRef.current = new Map();
   refs.gameResetTimeRef.current = Date.now();
 
   setters.setGameState(options.targetGameState);

@@ -26,14 +26,8 @@ import {
 import PrincetonTDLogo from "./PrincetonTDLogo";
 import { HudSurface } from "./topHud/HudSurface";
 import {
-  PANEL,
   GOLD,
-  AMBER_CARD,
-  RED_CARD,
-
   SELECTED,
-  SPEED,
-  MANA,
 } from "./theme";
 import { SettingsModal } from "../menus/SettingsModal";
 import { useSettings } from "../../hooks/useSettings";
@@ -47,10 +41,10 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 function getLivesTheme(percent: number, flashing: boolean) {
   if (flashing) {
     return {
-      bg: "linear-gradient(135deg, rgba(180,30,30,0.8), rgba(120,20,20,0.6))",
-      border: "1.5px solid rgba(248,113,113,0.6)",
-      shadow: "inset 0 0 15px rgba(248,113,113,0.2)",
-      innerBorder: "1px solid rgba(248,113,113,0.2)",
+      bg: "linear-gradient(135deg, rgba(80,12,12,0.95), rgba(50,8,8,0.95))",
+      border: "1.5px solid rgba(248,113,113,0.5)",
+      shadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 12px rgba(248,113,113,0.15)",
+      innerBorder: "1px solid rgba(248,113,113,0.15)",
       iconClass: "text-red-200 scale-125",
       iconFill: "#fecaca",
       textClass: "text-red-100",
@@ -60,10 +54,10 @@ function getLivesTheme(percent: number, flashing: boolean) {
   }
   if (percent > 60) {
     return {
-      bg: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-      border: `1.5px solid ${RED_CARD.border}`,
-      shadow: `inset 0 0 12px ${RED_CARD.glow06}`,
-      innerBorder: `1px solid ${RED_CARD.innerBorder12}`,
+      bg: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+      border: "1.5px solid rgba(180,140,60,0.4)",
+      shadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+      innerBorder: "1px solid rgba(180,140,60,0.15)",
       iconClass: "text-red-400",
       iconFill: "#f87171",
       textClass: "text-red-300",
@@ -73,10 +67,10 @@ function getLivesTheme(percent: number, flashing: boolean) {
   }
   if (percent > 30) {
     return {
-      bg: "linear-gradient(135deg, rgba(65,30,10,0.8), rgba(50,22,8,0.65))",
-      border: "1.5px solid rgba(234,120,20,0.45)",
-      shadow: "inset 0 0 12px rgba(234,120,20,0.08)",
-      innerBorder: "1px solid rgba(234,120,20,0.15)",
+      bg: "linear-gradient(135deg, rgba(35,16,5,0.95), rgba(22,10,3,0.95))",
+      border: "1.5px solid rgba(180,90,15,0.35)",
+      shadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+      innerBorder: "1px solid rgba(180,90,15,0.12)",
       iconClass: "text-orange-500",
       iconFill: "#ea580c",
       textClass: "text-orange-300",
@@ -85,10 +79,10 @@ function getLivesTheme(percent: number, flashing: boolean) {
     };
   }
   return {
-    bg: "linear-gradient(135deg, rgba(90,15,15,0.85), rgba(60,8,8,0.7))",
-    border: "1.5px solid rgba(220,38,38,0.55)",
-    shadow: "inset 0 0 15px rgba(220,38,38,0.12)",
-    innerBorder: "1px solid rgba(220,38,38,0.2)",
+    bg: "linear-gradient(135deg, rgba(50,6,6,0.95), rgba(30,4,4,0.95))",
+    border: "1.5px solid rgba(180,30,30,0.45)",
+    shadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 10px rgba(180,30,30,0.08)",
+    innerBorder: "1px solid rgba(180,30,30,0.15)",
     iconClass: "text-red-300 animate-pulse",
     iconFill: "#ef4444",
     textClass: "text-red-200",
@@ -330,134 +324,182 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     }
   };
 
+  const ICON_BADGE_BASE = "absolute left-0 top-1/2 z-20 flex h-7 w-7 -translate-x-1/3 -translate-y-1/2 items-center justify-center rounded-full sm:h-8 sm:w-8";
+  const ICON_BADGE_SHADOW = "0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)";
+
   const leftStatsContent = (
-    <>
-      <div
-        className={`relative flex h-8 min-w-[60px] shrink-0 items-center justify-center gap-1 rounded-lg px-2 py-1.5 transition-all duration-200 sm:h-9 sm:min-w-[88px] sm:gap-1.5 sm:px-3 ${ppPulse ? "scale-110" : "scale-100"}`}
-        style={{
-          background: goldSpellActive
-            ? "linear-gradient(135deg, rgba(140,100,20,0.7), rgba(100,68,15,0.5))"
-            : eatingClubFlash
-              ? "linear-gradient(135deg, rgba(10,60,30,0.8), rgba(5,45,20,0.6))"
-              : `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-          border: goldSpellActive
-            ? "1.5px solid rgba(250,204,21,0.5)"
-            : eatingClubFlash
-              ? "1.5px solid rgba(52,211,153,0.5)"
-              : `1.5px solid ${AMBER_CARD.border}`,
-          boxShadow: goldSpellActive
-            ? "inset 0 0 15px rgba(250,204,21,0.1), 0 0 12px rgba(250,204,21,0.15)"
-            : eatingClubFlash
-              ? "inset 0 0 15px rgba(52,211,153,0.1)"
-              : `inset 0 0 12px ${AMBER_CARD.glow}`,
-        }}
-      >
+    <div className="flex items-center gap-4 min-w-0 shrink-0">
+      {/* Paw Points */}
+      <div className={`relative shrink-0 transition-transform duration-200 ${ppPulse ? "scale-110" : "scale-100"}`}>
         <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+          className="relative flex h-9 items-center gap-1.5 rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
-            border: goldSpellActive
-              ? "1px solid rgba(250,204,21,0.15)"
+            background: goldSpellActive
+              ? "linear-gradient(135deg, rgba(90,65,10,0.95), rgba(60,40,5,0.95))"
               : eatingClubFlash
-                ? "1px solid rgba(52,211,153,0.15)"
-                : `1px solid ${AMBER_CARD.innerBorder}`,
+                ? "linear-gradient(135deg, rgba(6,35,18,0.95), rgba(3,25,12,0.95))"
+                : "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+            border: goldSpellActive
+              ? "1.5px solid rgba(250,204,21,0.5)"
+              : eatingClubFlash
+                ? "1.5px solid rgba(52,211,153,0.5)"
+                : `1.5px solid ${GOLD.border25}`,
+            boxShadow: goldSpellActive
+              ? "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 15px rgba(250,204,21,0.1)"
+              : eatingClubFlash
+                ? "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 15px rgba(52,211,153,0.1)"
+                : "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
           }}
-        />
-        {activeBountyFloaters.map((floater, index) => (
-          <div
-            key={floater.id}
-            className="absolute left-1/2 whitespace-nowrap font-bold text-xs sm:text-sm pointer-events-none"
-            style={{
-              animation: "bountyFloat 1s ease-out forwards",
-              animationDelay: `${index * 30}ms`,
-              bottom: -8,
-              zIndex: 100 - index,
-            }}
-          >
-            <span
-              className={
-                floater.isGoldBoosted
-                  ? "text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]"
-                  : "text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]"
-              }
-            >
-              +{floater.amount}
-            </span>
-            {floater.isGoldBoosted && (
-              <Sparkles size={10} className="ml-0.5 inline-block text-yellow-300" />
-            )}
-          </div>
-        ))}
-        {activeEatingClubFloaters.map((floater, index) => (
-          <div
-            key={floater.id}
-            className="absolute left-1/2 whitespace-nowrap font-bold text-xs sm:text-sm pointer-events-none"
-            style={{
-              animation: "eatingClubFloat 1.2s ease-out forwards",
-              animationDelay: `${index * 50}ms`,
-              bottom: -8,
-              zIndex: 90 - index,
-            }}
-          >
-            <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
-              +{floater.amount}
-            </span>
-            <Landmark size={10} className="ml-0.5 inline-block text-emerald-400" />
-          </div>
-        ))}
-        <PawPrint
-          size={14}
-          className={`shrink-0 transition-colors duration-200 ${goldSpellActive
-            ? "text-yellow-300"
-            : eatingClubFlash
-              ? "text-emerald-300"
-              : "text-amber-400"
-            }`}
-        />
-        <span
-          className={`text-sm font-black tabular-nums transition-colors duration-200 sm:text-base ${goldSpellActive
-            ? "text-yellow-200"
-            : eatingClubFlash
-              ? "text-emerald-200"
-              : "text-amber-200"
-            }`}
         >
-          {Math.round(pawPoints)}
-        </span>
-        {goldSpellActive && (
-          <div className="absolute inset-0 rounded-lg bg-yellow-400/15 pointer-events-none animate-pulse" />
-        )}
-        {eatingClubFlash && (
           <div
-            className="absolute inset-0 rounded-lg bg-emerald-400/25 pointer-events-none"
-            style={{ animation: "eatingClubGlow 0.4s ease-out forwards" }}
+            className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+            style={{
+              border: goldSpellActive
+                ? "1px solid rgba(250,204,21,0.15)"
+                : eatingClubFlash
+                  ? "1px solid rgba(52,211,153,0.15)"
+                  : `1px solid ${GOLD.innerBorder08}`,
+            }}
           />
-        )}
+          {activeBountyFloaters.map((floater, index) => (
+            <div
+              key={floater.id}
+              className="absolute left-1/2 whitespace-nowrap font-bold text-xs sm:text-sm pointer-events-none"
+              style={{
+                animation: "bountyFloat 1s ease-out forwards",
+                animationDelay: `${index * 30}ms`,
+                bottom: -8,
+                zIndex: 100 - index,
+              }}
+            >
+              <span
+                className={
+                  floater.isGoldBoosted
+                    ? "text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]"
+                    : "text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]"
+                }
+              >
+                +{floater.amount}
+              </span>
+              {floater.isGoldBoosted && (
+                <Sparkles size={10} className="ml-0.5 inline-block text-yellow-300" />
+              )}
+            </div>
+          ))}
+          {activeEatingClubFloaters.map((floater, index) => (
+            <div
+              key={floater.id}
+              className="absolute left-1/2 whitespace-nowrap font-bold text-xs sm:text-sm pointer-events-none"
+              style={{
+                animation: "eatingClubFloat 1.2s ease-out forwards",
+                animationDelay: `${index * 50}ms`,
+                bottom: -8,
+                zIndex: 90 - index,
+              }}
+            >
+              <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+                +{floater.amount}
+              </span>
+              <Landmark size={10} className="ml-0.5 inline-block text-emerald-400" />
+            </div>
+          ))}
+          <span
+            className={`relative z-10 text-sm font-black tabular-nums transition-colors duration-200 sm:text-base ${goldSpellActive
+              ? "text-yellow-200"
+              : eatingClubFlash
+                ? "text-emerald-200"
+                : "text-amber-200"
+              }`}
+          >
+            {Math.round(pawPoints)}
+          </span>
+          {goldSpellActive && (
+            <div className="absolute inset-0 rounded-lg bg-yellow-400/15 pointer-events-none animate-pulse" />
+          )}
+          {eatingClubFlash && (
+            <div
+              className="absolute inset-0 rounded-lg bg-emerald-400/25 pointer-events-none"
+              style={{ animation: "eatingClubGlow 0.4s ease-out forwards" }}
+            />
+          )}
+        </div>
+        <div
+          className={ICON_BADGE_BASE}
+          style={{
+            background: goldSpellActive
+              ? "linear-gradient(135deg, rgba(120,90,20,0.98), rgba(80,58,10,0.98))"
+              : eatingClubFlash
+                ? "linear-gradient(135deg, rgba(10,60,35,0.98), rgba(5,40,22,0.98))"
+                : "linear-gradient(135deg, rgba(48,35,16,0.98), rgba(30,22,10,0.98))",
+            border: goldSpellActive
+              ? "2px solid rgba(250,204,21,0.6)"
+              : eatingClubFlash
+                ? "2px solid rgba(52,211,153,0.6)"
+                : "2px solid rgba(180,140,60,0.5)",
+            boxShadow: ICON_BADGE_SHADOW,
+          }}
+        >
+          <PawPrint
+            size={14}
+            className={`transition-colors duration-200 ${goldSpellActive
+              ? "text-yellow-300"
+              : eatingClubFlash
+                ? "text-emerald-300"
+                : "text-amber-400"
+              }`}
+          />
+        </div>
       </div>
 
-      <div
-        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg transition-all sm:h-9 sm:min-w-[88px]"
-        style={{
-          background: livesTheme.bg,
-          border: livesTheme.border,
-          boxShadow: livesTheme.shadow,
-          animation: livesShake ? "shake 0.5s ease-in-out" : "none",
-        }}
-      >
+      {/* Lives */}
+      <div className="relative shrink-0">
         <div
-          className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
+          className="relative flex h-9 items-center gap-1 overflow-hidden rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
-            background: `linear-gradient(90deg, ${livesTheme.barColor}25, ${livesTheme.barColor}15)`,
-            clipPath: `inset(0 ${100 - livesPercent}% 0 0)`,
+            background: livesTheme.bg,
+            border: livesTheme.border,
+            boxShadow: livesTheme.shadow,
+            animation: livesShake ? "shake 0.5s ease-in-out" : "none",
           }}
-        />
+        >
+          <div
+            className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
+            style={{
+              background: `linear-gradient(90deg, ${livesTheme.barColor}25, ${livesTheme.barColor}15)`,
+              clipPath: `inset(0 ${100 - livesPercent}% 0 0)`,
+            }}
+          />
+          <div
+            className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+            style={{ border: livesTheme.innerBorder }}
+          />
+          <div className="relative z-10 flex items-center gap-1">
+            <span
+              className={`text-sm font-black leading-none tabular-nums transition-colors sm:text-base ${livesTheme.textClass}`}
+            >
+              {lives}
+            </span>
+            <span
+              className={`text-[9px] font-medium sm:text-[10px] ${livesTheme.subText}`}
+            >
+              /{maxLives}
+            </span>
+          </div>
+          {livesFlash && (
+            <div className="absolute inset-0 bg-red-500/30 pointer-events-none" />
+          )}
+        </div>
         <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
-          style={{ border: livesTheme.innerBorder }}
-        />
-        <div className="relative z-10 flex items-center justify-center gap-1.5">
+          className={ICON_BADGE_BASE}
+          style={{
+            background: "linear-gradient(135deg, rgba(55,16,16,0.98), rgba(35,10,10,0.98))",
+            border: `2px solid ${livesTheme.iconFill}88`,
+            boxShadow: ICON_BADGE_SHADOW,
+          }}
+        >
           <Heart
             size={14}
-            className={`shrink-0 ${livesTheme.iconClass}`}
+            className={livesTheme.iconClass}
             fill={livesTheme.iconFill}
             style={{
               animation:
@@ -471,332 +513,359 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   : "none",
             }}
           />
-          <span
-            className={`text-sm font-black leading-none tabular-nums transition-colors sm:text-base ${livesTheme.textClass}`}
-          >
-            {lives}
-          </span>
-          <span
-            className={`hidden text-[8px] font-medium sm:inline sm:text-[9px] ${livesTheme.subText}`}
-          >
-            /{maxLives}
-          </span>
         </div>
-        {livesFlash && (
-          <div className="absolute inset-0 bg-red-500/30 pointer-events-none" />
-        )}
       </div>
 
-      <div
-        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-9 sm:min-w-[88px]"
-        style={{
-          background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-          border: `1.5px solid ${AMBER_CARD.border}`,
-          boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}`,
-        }}
-      >
+      {/* Wave */}
+      <div className="relative shrink-0">
         <div
-          className="absolute inset-0 pointer-events-none transition-all duration-700 ease-out"
+          className="relative flex h-9 items-center gap-1 overflow-hidden rounded-lg pl-6 pr-3 sm:h-10 sm:pl-7 sm:pr-4"
           style={{
-            background:
-              "linear-gradient(90deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12))",
-            clipPath: `inset(0 ${100 - waveProgress}% 0 0)`,
+            background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+            border: `1.5px solid ${GOLD.border25}`,
+            boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
           }}
-        />
+        >
+          <div
+            className="absolute inset-0 pointer-events-none transition-all duration-700 ease-out"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12))",
+              clipPath: `inset(0 ${100 - waveProgress}% 0 0)`,
+            }}
+          />
+          <div
+            className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+            style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+          />
+          <div className="relative z-10 flex items-center gap-1">
+            <span className="text-sm font-black leading-none tabular-nums text-amber-200 sm:text-base">
+              {Math.min(currentWave + 1, totalWaves)}
+            </span>
+            <span className="text-[9px] font-medium text-amber-500/50 sm:text-[10px]">
+              / {totalWaves}
+            </span>
+          </div>
+        </div>
         <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
-          style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }}
-        />
-        <div className="relative z-10 flex items-center justify-center gap-1.5">
-          <Skull size={13} className="shrink-0 text-amber-400" />
-          <span className="text-sm font-black leading-none tabular-nums text-amber-200 sm:text-base">
-            {Math.min(currentWave + 1, totalWaves)}
-          </span>
-          <span className="hidden text-[9px] font-medium text-amber-500/50 sm:inline sm:text-[10px]">
-            / {totalWaves}
-          </span>
+          className={ICON_BADGE_BASE}
+          style={{
+            background: "linear-gradient(135deg, rgba(48,35,16,0.98), rgba(30,22,10,0.98))",
+            border: "2px solid rgba(180,140,60,0.5)",
+            boxShadow: ICON_BADGE_SHADOW,
+          }}
+        >
+          <Skull size={13} className="text-amber-400" />
         </div>
       </div>
-
-    </>
+    </div>
   );
 
-  const rightControlsContent = (
-    <>
+  const speedControlsContent = (
+    <div
+      className="relative flex h-9 items-center gap-1 rounded-lg px-2 sm:h-10 sm:gap-1.5 sm:px-2.5"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
+        border: "1.5px solid rgba(90,110,40,0.3)",
+        boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+      }}
+    >
       <div
-        className="relative flex h-8 items-center gap-0.5 rounded-lg px-1 sm:h-10 sm:px-2"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(35,40,20,0.7), rgba(25,30,12,0.5))",
-          border: "1.5px solid rgba(120,140,60,0.3)",
-          boxShadow: "inset 0 0 12px rgba(120,140,60,0.05)",
-        }}
-      >
+        className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+        style={{ border: "1px solid rgba(90,110,40,0.08)" }}
+      />
+      <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed"}>
+        <button
+          onClick={() => {
+            if (pauseLocked) return;
+            setGameSpeed((prev) => Math.max(prev - 0.25, 0));
+            exitInspectorOnSpeed();
+          }}
+          disabled={pauseLocked}
+          className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full transition-all sm:h-7 sm:w-7 ${pauseLocked
+            ? "cursor-not-allowed opacity-40"
+            : "hover:brightness-125 active:scale-95"
+            }`}
+          style={{
+            background: "linear-gradient(135deg, rgba(40,55,25,0.8), rgba(25,35,15,0.6))",
+            border: "1px solid rgba(80,120,60,0.35)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+          }}
+        >
+          <Rewind size={11} className="text-green-300/90" />
+        </button>
+      </HudTooltip>
+      <HudTooltip label="Current game speed">
+        <span
+          className="relative z-10 min-w-[32px] cursor-default rounded-md px-2 py-1 text-center text-[11px] font-black tabular-nums text-green-200 sm:min-w-[36px] sm:text-xs"
+          style={{
+            background: "linear-gradient(135deg, rgba(30,45,15,0.7), rgba(18,28,8,0.5))",
+            border: "1px solid rgba(80,120,60,0.3)",
+            boxShadow: "inset 0 1px 4px rgba(0,0,0,0.3), 0 0 6px rgba(100,140,60,0.08)",
+          }}
+        >
+          {Number.isInteger(gameSpeed)
+            ? gameSpeed + "x"
+            : gameSpeed % 0.5 === 0
+              ? gameSpeed.toFixed(1) + "x"
+              : gameSpeed.toFixed(2) + "x"}
+        </span>
+      </HudTooltip>
+      <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed"}>
+        <button
+          onClick={() => {
+            if (pauseLocked) return;
+            setGameSpeed((prev) => Math.min(prev + 0.25, 5));
+            exitInspectorOnSpeed();
+          }}
+          disabled={pauseLocked}
+          className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full transition-all sm:h-7 sm:w-7 ${pauseLocked
+            ? "cursor-not-allowed opacity-40"
+            : "hover:brightness-125 active:scale-95"
+            }`}
+          style={{
+            background: "linear-gradient(135deg, rgba(40,55,25,0.8), rgba(25,35,15,0.6))",
+            border: "1px solid rgba(80,120,60,0.35)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+          }}
+        >
+          <FastForward size={11} className="text-green-300/90" />
+        </button>
+      </HudTooltip>
+      <div className="hidden sm:contents">
         <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
-          style={{ border: "1px solid rgba(120,140,60,0.1)" }}
+          className="mx-0.5 h-5 w-px"
+          style={{ background: "linear-gradient(180deg, transparent, rgba(90,110,40,0.3), transparent)" }}
         />
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed"}>
-          <button
-            onClick={() => {
-              if (pauseLocked) return;
-              setGameSpeed((prev) => Math.max(prev - 0.25, 0));
-              exitInspectorOnSpeed();
-            }}
-            disabled={pauseLocked}
-            className={`relative z-10 rounded-md p-0.5 transition-colors sm:p-1 ${pauseLocked
-              ? "cursor-not-allowed opacity-40"
-              : "hover:bg-green-800/40"
-              }`}
-            style={{ border: "1px solid rgba(80,120,60,0.3)" }}
+        {PRESET_SPEEDS.map((speed) => (
+          <HudTooltip
+            key={speed}
+            label={pauseLocked ? "Speed locked" : `Set speed to ${speed}x`}
           >
-            <Rewind size={12} className="text-green-300/80" />
-          </button>
-        </HudTooltip>
-        <HudTooltip label="Current game speed">
-          <span
-            className="relative z-10 w-7 cursor-default rounded-md px-1 py-0.5 text-center text-[10px] font-black tabular-nums text-green-300/90 sm:w-9 sm:px-1.5 sm:text-[11px]"
-            style={{ background: MANA.fill, border: "1px solid rgba(80,120,60,0.25)" }}
-          >
-            {Number.isInteger(gameSpeed)
-              ? gameSpeed + "x"
-              : gameSpeed % 0.5 === 0
-                ? gameSpeed.toFixed(1) + "x"
-                : gameSpeed.toFixed(2) + "x"}
-          </span>
-        </HudTooltip>
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed"}>
-          <button
-            onClick={() => {
-              if (pauseLocked) return;
-              setGameSpeed((prev) => Math.min(prev + 0.25, 5));
-              exitInspectorOnSpeed();
-            }}
-            disabled={pauseLocked}
-            className={`relative z-10 rounded-md p-0.5 transition-colors sm:p-1 ${pauseLocked
-              ? "cursor-not-allowed opacity-40"
-              : "hover:bg-green-800/40"
-              }`}
-            style={{ border: "1px solid rgba(80,120,60,0.3)" }}
-          >
-            <FastForward size={12} className="text-green-300/80" />
-          </button>
-        </HudTooltip>
-        <div className="hidden sm:contents">
-          {PRESET_SPEEDS.map((speed) => (
-            <HudTooltip
-              key={speed}
-              label={pauseLocked ? "Speed locked" : `Set speed to ${speed}x`}
-            >
-              <button
-                onClick={() => {
-                  if (pauseLocked) return;
-                  setGameSpeed(speed);
-                  exitInspectorOnSpeed();
-                }}
-                disabled={pauseLocked}
-                className={`relative z-10 rounded-md px-1.5 py-0.5 text-[10px] font-black transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : ""
-                  }`}
-                style={{
-                  background:
-                    gameSpeed === speed
-                      ? `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
-                      : SPEED.bg,
-                  border:
-                    gameSpeed === speed
-                      ? `1px solid ${GOLD.accentBorder40}`
-                      : "1px solid rgba(80,100,140,0.2)",
-                  color:
-                    gameSpeed === speed
-                      ? "#fde68a"
-                      : "rgba(147,197,253,0.7)",
-                }}
-              >
-                {speed}x
-              </button>
-            </HudTooltip>
-          ))}
-        </div>
-      </div>
-
-      <div
-        className="relative hidden h-8 items-center gap-0.5 rounded-lg px-1 sm:flex sm:h-10 sm:px-1.5"
-        style={{
-          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-          border: `1.5px solid ${GOLD.border25}`,
-          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-        }}
-      >
-        <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
-          style={{ border: `1px solid ${GOLD.innerBorder08}` }}
-        />
-        <HudTooltip label={`Performance mode: ${performanceMode ? "ON" : "OFF"} · ${currentFps} FPS`}>
-          <button
-            onClick={togglePerformanceMode}
-            className={`relative z-10 flex items-center justify-center rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5 ${currentFps < 45 && !performanceMode ? "animate-pulse" : ""
-              }`}
-            style={{
-              background: performanceMode
-                ? "linear-gradient(135deg, rgba(20,120,120,0.5), rgba(10,80,80,0.3))"
-                : currentFps < 45
-                  ? "linear-gradient(135deg, rgba(120,30,30,0.5), rgba(80,15,15,0.3))"
-                  : "linear-gradient(135deg, rgba(60,30,80,0.5), rgba(40,20,55,0.3))",
-              border: performanceMode
-                ? "1px solid rgba(34,211,238,0.4)"
-                : currentFps < 45
-                  ? "1px solid rgba(248,113,113,0.4)"
-                  : "1px solid rgba(140,80,180,0.3)",
-            }}
-          >
-            <Activity
-              size={13}
-              className={
-                performanceMode
-                  ? "text-cyan-300"
-                  : currentFps < 45
-                    ? "text-red-300"
-                    : "text-purple-300"
-              }
-            />
-            {gameSettings.ui.showFpsCounter && (
-              <span
-                className={`absolute -bottom-1 -right-1 rounded px-0.5 text-[7px] font-bold ${currentFps >= 55
-                  ? "bg-green-700 text-green-100"
-                  : currentFps >= 45
-                    ? "bg-yellow-700 text-yellow-100"
-                    : "bg-red-700 text-red-100"
-                  }`}
-              >
-                {currentFps}
-              </span>
-            )}
-          </button>
-        </HudTooltip>
-        <HudTooltip label="Game settings">
-          <button
-            onClick={() => setShowSettings(true)}
-            className="relative z-10 flex items-center justify-center rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(140,70,10,0.5), rgba(95,45,5,0.3))",
-              border: "1px solid rgba(217,119,6,0.4)",
-            }}
-          >
-            <Settings size={13} className="text-orange-300" />
-          </button>
-        </HudTooltip>
-        {onTogglePhotoMode && (
-          <HudTooltip label={cameraModeActive ? "Exit photo mode (F2)" : "Photo mode (F2)"}>
             <button
-              onClick={onTogglePhotoMode}
-              className="relative z-10 flex items-center justify-center rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5"
-              style={{
-                background: cameraModeActive
-                  ? "linear-gradient(135deg, rgba(100,80,180,0.6), rgba(70,50,140,0.4))"
-                  : "linear-gradient(135deg, rgba(60,60,100,0.5), rgba(35,35,70,0.3))",
-                border: cameraModeActive
-                  ? "1px solid rgba(160,140,255,0.5)"
-                  : "1px solid rgba(120,120,200,0.35)",
-                boxShadow: cameraModeActive ? "0 0 8px rgba(140,120,255,0.3)" : "none",
-              }}
-            >
-              <Camera size={13} className={cameraModeActive ? "text-indigo-200" : "text-indigo-300"} />
-            </button>
-          </HudTooltip>
-        )}
-        {onToggleDevMenu && (
-          <HudTooltip label={devMenuOpen ? "Close event log" : "Event log"}>
-            <button
-              onClick={onToggleDevMenu}
-              className="relative z-10 flex items-center justify-center rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5"
-              style={{
-                background: devMenuOpen
-                  ? "linear-gradient(135deg, rgba(30,70,120,0.6), rgba(20,50,90,0.4))"
-                  : "linear-gradient(135deg, rgba(30,50,80,0.5), rgba(20,35,60,0.3))",
-                border: devMenuOpen
-                  ? "1px solid rgba(96,165,250,0.5)"
-                  : "1px solid rgba(80,120,200,0.35)",
-                boxShadow: devMenuOpen ? "0 0 8px rgba(96,165,250,0.2)" : "none",
-              }}
-            >
-              <TerminalSquare
-                size={13}
-                className={devMenuOpen ? "text-blue-200" : "text-blue-300"}
-              />
-            </button>
-          </HudTooltip>
-        )}
-      </div>
-
-      <div
-        className="relative flex h-8 items-center gap-0.5 rounded-lg px-0.5 sm:h-10 sm:px-1.5"
-        style={{
-          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-          border: `1.5px solid ${GOLD.border25}`,
-          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-        }}
-      >
-        <div
-          className="absolute inset-[2px] rounded-[6px] pointer-events-none"
-          style={{ border: `1px solid ${GOLD.innerBorder08}` }}
-        />
-        <HudTooltip label={pauseLocked ? "Locked — exit photo/inspect mode first" : gameSpeed === 0 ? "Resume game (Space)" : "Pause game (Space)"}>
-          <button
-            onClick={() => {
-              if (pauseLocked) return;
-              if (gameSpeed === 0) {
-                setGameSpeed(1);
+              onClick={() => {
+                if (pauseLocked) return;
+                setGameSpeed(speed);
                 exitInspectorOnSpeed();
-              } else {
-                setGameSpeed(0);
-              }
-            }}
-            disabled={pauseLocked}
-            className={`relative z-10 rounded-md p-1 transition-colors sm:p-1.5 ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125"
-              }`}
-            style={{
-              background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
-              border: `1px solid ${GOLD.border35}`,
-            }}
-          >
-            {pauseLocked ? (
-              <Lock size={13} className="text-amber-300/60" />
-            ) : gameSpeed === 0 ? (
-              <Play size={13} className="text-amber-300" />
-            ) : (
-              <Pause size={13} className="text-amber-300" />
-            )}
-          </button>
-        </HudTooltip>
-        <HudTooltip label="Restart level">
-          <button
-            onClick={retryLevel}
-            className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))",
-              border: "1px solid rgba(60,140,80,0.35)",
-            }}
-          >
-            <RefreshCcw size={13} className="text-emerald-300" />
-          </button>
-        </HudTooltip>
-        <HudTooltip label="Quit to world map">
-          <button
-            onClick={quitLevel}
-            className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125 sm:p-1.5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))",
-              border: `1px solid ${RED_CARD.accent35}`,
-            }}
-          >
-            <X size={13} className="text-red-300" />
-          </button>
-        </HudTooltip>
+              }}
+              disabled={pauseLocked}
+              className={`relative z-10 rounded-md px-2 py-0.5 text-[10px] font-black transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125 active:scale-95"
+                }`}
+              style={{
+                background:
+                  gameSpeed === speed
+                    ? "linear-gradient(135deg, rgba(80,110,30,0.7), rgba(55,75,20,0.5))"
+                    : "rgba(20,26,12,0.6)",
+                border:
+                  gameSpeed === speed
+                    ? "1px solid rgba(130,180,50,0.5)"
+                    : "1px solid rgba(60,80,30,0.25)",
+                color:
+                  gameSpeed === speed
+                    ? "#bef264"
+                    : "rgba(163,230,53,0.5)",
+                boxShadow:
+                  gameSpeed === speed
+                    ? "0 0 6px rgba(130,180,50,0.15)"
+                    : "none",
+              }}
+            >
+              {speed}x
+            </button>
+          </HudTooltip>
+        ))}
       </div>
-    </>
+    </div>
+  );
+
+  const CIRCLE_BTN = "relative z-10 flex h-7 w-7 items-center justify-center rounded-full transition-all hover:brightness-130 active:scale-95";
+  const CIRCLE_BTN_SHADOW = "0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)";
+
+  const utilityControlsContent = (
+    <div
+      className="relative hidden h-9 items-center gap-1.5 rounded-lg px-2 sm:flex sm:h-10"
+      style={{
+        background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+        border: `1.5px solid ${GOLD.border25}`,
+        boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+      }}
+    >
+      <div
+        className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <HudTooltip label={`Performance mode: ${performanceMode ? "ON" : "OFF"} · ${currentFps} FPS`}>
+        <button
+          onClick={togglePerformanceMode}
+          className={`${CIRCLE_BTN} ${currentFps < 45 && !performanceMode ? "animate-pulse" : ""}`}
+          style={{
+            background: performanceMode
+              ? "linear-gradient(180deg, rgba(30,140,140,0.6), rgba(15,90,90,0.4))"
+              : currentFps < 45
+                ? "linear-gradient(180deg, rgba(140,35,35,0.6), rgba(90,18,18,0.4))"
+                : "linear-gradient(180deg, rgba(65,35,90,0.6), rgba(42,22,60,0.4))",
+            border: performanceMode
+              ? "1.5px solid rgba(34,211,238,0.45)"
+              : currentFps < 45
+                ? "1.5px solid rgba(248,113,113,0.45)"
+                : "1.5px solid rgba(140,80,180,0.35)",
+            boxShadow: CIRCLE_BTN_SHADOW,
+          }}
+        >
+          <Activity
+            size={14}
+            className={
+              performanceMode
+                ? "text-cyan-300"
+                : currentFps < 45
+                  ? "text-red-300"
+                  : "text-purple-300"
+            }
+          />
+          {gameSettings.ui.showFpsCounter && (
+            <span
+              className={`absolute -bottom-1 -right-1 rounded-full px-1 text-[7px] font-bold leading-tight ${currentFps >= 55
+                ? "bg-green-700/90 text-green-100"
+                : currentFps >= 45
+                  ? "bg-yellow-700/90 text-yellow-100"
+                  : "bg-red-700/90 text-red-100"
+                }`}
+            >
+              {currentFps}
+            </span>
+          )}
+        </button>
+      </HudTooltip>
+      <HudTooltip label="Game settings">
+        <button
+          onClick={() => setShowSettings(true)}
+          className={CIRCLE_BTN}
+          style={{
+            background: "linear-gradient(180deg, rgba(150,75,12,0.6), rgba(100,48,6,0.4))",
+            border: "1.5px solid rgba(217,119,6,0.45)",
+            boxShadow: CIRCLE_BTN_SHADOW,
+          }}
+        >
+          <Settings size={14} className="text-orange-300" />
+        </button>
+      </HudTooltip>
+      {onTogglePhotoMode && (
+        <HudTooltip label={cameraModeActive ? "Exit photo mode (F2)" : "Photo mode (F2)"}>
+          <button
+            onClick={onTogglePhotoMode}
+            className={CIRCLE_BTN}
+            style={{
+              background: cameraModeActive
+                ? "linear-gradient(180deg, rgba(110,90,200,0.65), rgba(75,55,150,0.45))"
+                : "linear-gradient(180deg, rgba(60,60,110,0.55), rgba(38,38,75,0.4))",
+              border: cameraModeActive
+                ? "1.5px solid rgba(160,140,255,0.5)"
+                : "1.5px solid rgba(120,120,200,0.35)",
+              boxShadow: cameraModeActive
+                ? `${CIRCLE_BTN_SHADOW}, 0 0 10px rgba(140,120,255,0.25)`
+                : CIRCLE_BTN_SHADOW,
+            }}
+          >
+            <Camera size={14} className={cameraModeActive ? "text-indigo-200" : "text-indigo-300"} />
+          </button>
+        </HudTooltip>
+      )}
+      {onToggleDevMenu && (
+        <HudTooltip label={devMenuOpen ? "Close event log" : "Event log"}>
+          <button
+            onClick={onToggleDevMenu}
+            className={CIRCLE_BTN}
+            style={{
+              background: devMenuOpen
+                ? "linear-gradient(180deg, rgba(35,80,135,0.65), rgba(22,55,100,0.45))"
+                : "linear-gradient(180deg, rgba(32,55,90,0.55), rgba(22,38,65,0.4))",
+              border: devMenuOpen
+                ? "1.5px solid rgba(96,165,250,0.5)"
+                : "1.5px solid rgba(80,120,200,0.35)",
+              boxShadow: devMenuOpen
+                ? `${CIRCLE_BTN_SHADOW}, 0 0 10px rgba(96,165,250,0.2)`
+                : CIRCLE_BTN_SHADOW,
+            }}
+          >
+            <TerminalSquare
+              size={14}
+              className={devMenuOpen ? "text-blue-200" : "text-blue-300"}
+            />
+          </button>
+        </HudTooltip>
+      )}
+    </div>
+  );
+
+  const gameControlsContent = (
+    <div
+      className="relative flex h-9 items-center gap-1.5 rounded-lg px-2 sm:h-10"
+      style={{
+        background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+        border: `1.5px solid ${GOLD.border25}`,
+        boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+      }}
+    >
+      <div
+        className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+        style={{ border: `1px solid ${GOLD.innerBorder08}` }}
+      />
+      <HudTooltip label={pauseLocked ? "Locked — exit photo/inspect mode first" : gameSpeed === 0 ? "Resume game (Space)" : "Pause game (Space)"}>
+        <button
+          onClick={() => {
+            if (pauseLocked) return;
+            if (gameSpeed === 0) {
+              setGameSpeed(1);
+              exitInspectorOnSpeed();
+            } else {
+              setGameSpeed(0);
+            }
+          }}
+          disabled={pauseLocked}
+          className={`${CIRCLE_BTN} ${pauseLocked ? "cursor-not-allowed opacity-40" : ""}`}
+          style={{
+            background: `linear-gradient(180deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
+            border: `1.5px solid ${GOLD.border35}`,
+            boxShadow: `${CIRCLE_BTN_SHADOW}, 0 0 8px rgba(180,140,60,0.1)`,
+          }}
+        >
+          {pauseLocked ? (
+            <Lock size={14} className="text-amber-300/60" />
+          ) : gameSpeed === 0 ? (
+            <Play size={14} className="text-amber-300" />
+          ) : (
+            <Pause size={14} className="text-amber-300" />
+          )}
+        </button>
+      </HudTooltip>
+      <HudTooltip label="Restart level">
+        <button
+          onClick={retryLevel}
+          className={CIRCLE_BTN}
+          style={{
+            background: "linear-gradient(180deg, rgba(25,95,48,0.6), rgba(12,60,28,0.4))",
+            border: "1.5px solid rgba(60,140,80,0.4)",
+            boxShadow: CIRCLE_BTN_SHADOW,
+          }}
+        >
+          <RefreshCcw size={14} className="text-emerald-300" />
+        </button>
+      </HudTooltip>
+      <HudTooltip label="Quit to world map">
+        <button
+          onClick={quitLevel}
+          className={CIRCLE_BTN}
+          style={{
+            background: "linear-gradient(180deg, rgba(110,22,22,0.6), rgba(75,12,12,0.4))",
+            border: "1.5px solid rgba(200,60,60,0.45)",
+            boxShadow: CIRCLE_BTN_SHADOW,
+          }}
+        >
+          <X size={14} className="text-red-300" />
+        </button>
+      </HudTooltip>
+    </div>
   );
 
   return (
@@ -806,16 +875,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         className="pointer-events-none relative z-[70]"
       >
         {isDesktop ? (
-          <div className="flex items-start justify-between gap-3">
-            <HudSurface
-              className="min-w-0"
-              contentClassName="relative px-3 py-2 rounded-br-xl"
-            >
-              <div className="flex items-center gap-2 min-w-0">
+          <HudSurface contentClassName="relative px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0 shrink-0 pl-1">
                 <div className="flex items-center shrink-0">
                   <PrincetonTDLogo size="h-10 w-10" />
                   <div
-                    className="ml-2 h-7 w-px"
+                    className="ml-2.5 h-7 w-px"
                     style={{
                       background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)`,
                     }}
@@ -823,21 +889,161 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 </div>
                 {leftStatsContent}
               </div>
-            </HudSurface>
-            <HudSurface contentClassName="px-2 py-2">
-              <div className="flex items-center gap-1.5 shrink-0">
-                {rightControlsContent}
+              <div className="flex items-center gap-1.5">
+                {speedControlsContent}
               </div>
-            </HudSurface>
-          </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {utilityControlsContent}
+                {gameControlsContent}
+              </div>
+            </div>
+          </HudSurface>
         ) : (
           <HudSurface contentClassName="relative px-2 py-1.5">
             <div className="flex items-center justify-between gap-1">
               <div className="flex items-center gap-1 min-w-0 flex-shrink">
-                {leftStatsContent}
+                {/* Paw Points — compact */}
+                <div
+                  className={`relative flex h-8 min-w-[52px] shrink-0 items-center justify-center gap-1 rounded-lg px-2 py-1 transition-all duration-200 ${ppPulse ? "scale-110" : "scale-100"}`}
+                  style={{
+                    background: goldSpellActive
+                      ? "linear-gradient(135deg, rgba(90,65,10,0.95), rgba(60,40,5,0.95))"
+                      : eatingClubFlash
+                        ? "linear-gradient(135deg, rgba(6,35,18,0.95), rgba(3,25,12,0.95))"
+                        : "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+                    border: `1.5px solid ${GOLD.border25}`,
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {activeBountyFloaters.map((floater, index) => (
+                    <div
+                      key={floater.id}
+                      className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
+                      style={{ animation: "bountyFloat 1s ease-out forwards", animationDelay: `${index * 30}ms`, bottom: -8, zIndex: 100 - index }}
+                    >
+                      <span className={floater.isGoldBoosted ? "text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]" : "text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]"}>+{floater.amount}</span>
+                    </div>
+                  ))}
+                  {activeEatingClubFloaters.map((floater, index) => (
+                    <div
+                      key={floater.id}
+                      className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
+                      style={{ animation: "eatingClubFloat 1.2s ease-out forwards", animationDelay: `${index * 50}ms`, bottom: -8, zIndex: 90 - index }}
+                    >
+                      <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">+{floater.amount}</span>
+                    </div>
+                  ))}
+                  <PawPrint size={12} className={`shrink-0 ${goldSpellActive ? "text-yellow-300" : eatingClubFlash ? "text-emerald-300" : "text-amber-400"}`} />
+                  <span className={`text-sm font-black tabular-nums ${goldSpellActive ? "text-yellow-200" : eatingClubFlash ? "text-emerald-200" : "text-amber-200"}`}>
+                    {Math.round(pawPoints)}
+                  </span>
+                </div>
+                {/* Lives — compact */}
+                <div
+                  className="relative flex h-8 min-w-[48px] shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-2 py-1"
+                  style={{
+                    background: livesTheme.bg,
+                    border: livesTheme.border,
+                    boxShadow: livesTheme.shadow,
+                    animation: livesShake ? "shake 0.5s ease-in-out" : "none",
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
+                    style={{
+                      background: `linear-gradient(90deg, ${livesTheme.barColor}25, ${livesTheme.barColor}15)`,
+                      clipPath: `inset(0 ${100 - livesPercent}% 0 0)`,
+                    }}
+                  />
+                  <Heart size={12} className={`relative z-10 shrink-0 ${livesTheme.iconClass}`} fill={livesTheme.iconFill} />
+                  <span className={`relative z-10 text-sm font-black tabular-nums ${livesTheme.textClass}`}>{lives}</span>
+                  {livesFlash && <div className="absolute inset-0 bg-red-500/30 pointer-events-none" />}
+                </div>
+                {/* Wave — compact */}
+                <div
+                  className="relative flex h-8 min-w-[48px] shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg px-2 py-1"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+                    border: `1.5px solid ${GOLD.border25}`,
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none transition-all duration-700 ease-out"
+                    style={{
+                      background: "linear-gradient(90deg, rgba(251,191,36,0.2), rgba(245,158,11,0.12))",
+                      clipPath: `inset(0 ${100 - waveProgress}% 0 0)`,
+                    }}
+                  />
+                  <Skull size={11} className="relative z-10 shrink-0 text-amber-400" />
+                  <span className="relative z-10 text-sm font-black tabular-nums text-amber-200">{Math.min(currentWave + 1, totalWaves)}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {rightControlsContent}
+              <div className="flex items-center gap-0.5 shrink-0">
+                {/* Speed — compact */}
+                <div
+                  className="relative flex h-8 items-center gap-0.5 rounded-lg px-1"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
+                    border: "1.5px solid rgba(90,110,40,0.3)",
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <button
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.25, 0)); exitInspectorOnSpeed(); } }}
+                    disabled={pauseLocked}
+                    className={`relative z-10 rounded-md p-0.5 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40"}`}
+                    style={{ border: "1px solid rgba(80,120,60,0.3)" }}
+                  >
+                    <Rewind size={10} className="text-green-300/80" />
+                  </button>
+                  <span
+                    className="relative z-10 w-7 cursor-default rounded-md px-1 py-0.5 text-center text-[10px] font-black tabular-nums text-green-300/90"
+                    style={{ background: "rgba(28,22,14,0.6)", border: "1px solid rgba(80,120,60,0.25)" }}
+                  >
+                    {Number.isInteger(gameSpeed) ? gameSpeed + "x" : gameSpeed % 0.5 === 0 ? gameSpeed.toFixed(1) + "x" : gameSpeed.toFixed(2) + "x"}
+                  </span>
+                  <button
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.25, 5)); exitInspectorOnSpeed(); } }}
+                    disabled={pauseLocked}
+                    className={`relative z-10 rounded-md p-0.5 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40"}`}
+                    style={{ border: "1px solid rgba(80,120,60,0.3)" }}
+                  >
+                    <FastForward size={10} className="text-green-300/80" />
+                  </button>
+                </div>
+                {/* Game controls — compact */}
+                <div
+                  className="relative flex h-8 items-center gap-0.5 rounded-lg px-0.5"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(28,20,10,0.95), rgba(16,11,6,0.95))",
+                    border: `1.5px solid ${GOLD.border25}`,
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <button
+                    onClick={() => { if (pauseLocked) return; if (gameSpeed === 0) { setGameSpeed(1); exitInspectorOnSpeed(); } else { setGameSpeed(0); } }}
+                    disabled={pauseLocked}
+                    className={`relative z-10 rounded-md p-1 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125"}`}
+                    style={{ background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`, border: `1px solid ${GOLD.border35}` }}
+                  >
+                    {pauseLocked ? <Lock size={12} className="text-amber-300/60" /> : gameSpeed === 0 ? <Play size={12} className="text-amber-300" /> : <Pause size={12} className="text-amber-300" />}
+                  </button>
+                  <button
+                    onClick={retryLevel}
+                    className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
+                    style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))", border: "1px solid rgba(60,140,80,0.35)" }}
+                  >
+                    <RefreshCcw size={12} className="text-emerald-300" />
+                  </button>
+                  <button
+                    onClick={quitLevel}
+                    className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
+                    style={{ background: "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))", border: "1px solid rgba(200,60,60,0.45)" }}
+                  >
+                    <X size={12} className="text-red-300" />
+                  </button>
+                </div>
               </div>
             </div>
           </HudSurface>

@@ -209,11 +209,56 @@ function calculateSingleHazardEffect(
       }
       break;
     case "volcano": {
-      // Periodically summons fireballs - less frequent but more damaging than geyser
       if (Math.random() < 0.055) {
         effect.lavaDamage += 15;
         effect.fireParticlePos = enemyPos;
         particles.push({ pos: enemyPos, type: "fire", count: 8 });
+      }
+      break;
+    }
+    case "lava":
+      if (Math.random() < 0.08) {
+        effect.lavaDamage += 4;
+        effect.fireParticlePos = enemyPos;
+      }
+      break;
+    case "swamp": {
+      effect.poisonDamage += (6 * deltaTime) / 1000;
+      if (effect.environmentalSlow < 0.35) {
+        effect.environmentalSlow = 0.35;
+        effect.environmentalSlowSource = "quicksand";
+      }
+      break;
+    }
+    case "ice":
+      effect.environmentalSpeed = 1.5;
+      if (Math.random() < 0.08) {
+        particles.push({ pos: hazard.worldPos, type: "ice", count: 2 });
+      }
+      break;
+    case "poison":
+      effect.poisonDamage += (12 * deltaTime) / 1000;
+      if (Math.random() < 0.08) {
+        particles.push({ pos: hazard.worldPos, type: "poison", count: 2 });
+      }
+      break;
+    case "fire":
+      effect.lavaDamage += (10 * deltaTime) / 1000;
+      if (Math.random() < 0.1) {
+        effect.fireParticlePos = enemyPos;
+      }
+      break;
+    case "lightning":
+      if (Math.random() < 0.06) {
+        effect.lavaDamage += 18;
+        particles.push({ pos: enemyPos, type: "storm", count: 4 });
+      }
+      break;
+    case "void": {
+      effect.poisonDamage += (8 * deltaTime) / 1000;
+      if (effect.environmentalSlow < 0.3) {
+        effect.environmentalSlow = 0.3;
+        effect.environmentalSlowSource = "unknown";
       }
       break;
     }

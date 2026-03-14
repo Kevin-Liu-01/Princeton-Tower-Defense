@@ -10,6 +10,7 @@ import type {
   DecorationHeightTag,
   MapDecoration,
 } from "../types";
+import { getBarracksOwnerId, isBarracksOwnerId } from "../game/barracks";
 import {
   TILE_SIZE,
   MAP_PATHS,
@@ -1582,7 +1583,7 @@ export function getTroopMoveInfo(
     pos: { x: number; y: number };
     rangeBoost?: number;
   }[],
-  specialTower?: { type: string; pos: { x: number; y: number } },
+  specialTowers?: { type: string; pos: { x: number; y: number } }[],
 ): TroopMoveInfo {
   // Check if owned by a dinky station
   const station = towers.find(
@@ -1599,18 +1600,20 @@ export function getTroopMoveInfo(
     };
   }
 
-  // Check if owned by frontier barracks (special building)
-  if (
-    troop.ownerId === "special_barracks" &&
-    specialTower?.type === "barracks"
-  ) {
-    return {
-      anchorPos: gridToWorld(specialTower.pos),
-      moveRadius: BARRACKS_TROOP_RANGE,
-      canMoveAnywhere: false,
-      ownerType: "barracks",
-      ownerId: "special_barracks",
-    };
+  // Check if owned by a frontier barracks (special building)
+  if (isBarracksOwnerId(troop.ownerId) && specialTowers) {
+    const matchedBarracks = specialTowers.find(
+      (t) => t.type === "barracks" && getBarracksOwnerId(t.pos) === troop.ownerId,
+    );
+    if (matchedBarracks) {
+      return {
+        anchorPos: gridToWorld(matchedBarracks.pos),
+        moveRadius: BARRACKS_TROOP_RANGE,
+        canMoveAnywhere: false,
+        ownerType: "barracks",
+        ownerId: troop.ownerId,
+      };
+    }
   }
 
   // Check if owned by hero (captain's rally ability)

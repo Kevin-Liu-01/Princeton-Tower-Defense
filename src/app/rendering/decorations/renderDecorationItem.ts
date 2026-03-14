@@ -23104,6 +23104,156 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       }
 
+      // Iron chains hanging from backrest spikes
+      ctx.lineCap = "round";
+      [-8, 0, 8].forEach((xOff) => {
+        const chainTop = bkTop + bkTD + 4 * s;
+        const chainLen = 18 + Math.abs(xOff) * 0.5;
+        const chainSway = Math.sin(decorTime * 1.2 + xOff * 0.3) * 1.5 * s;
+        ctx.strokeStyle = "#4a4a50";
+        ctx.lineWidth = 0.9 * s;
+        for (let link = 0; link < 6; link++) {
+          const ly = chainTop + link * 3 * s;
+          const lx =
+            sx + xOff * s + chainSway * (link / 6);
+          if (link % 2 === 0) {
+            ctx.beginPath();
+            ctx.ellipse(lx, ly, 1.2 * s, 1.8 * s, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          } else {
+            ctx.beginPath();
+            ctx.ellipse(lx, ly, 1.8 * s, 1.2 * s, 0.3, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = "#3a3a40";
+        ctx.beginPath();
+        ctx.arc(
+          sx + xOff * s + chainSway,
+          chainTop + chainLen * s,
+          1.5 * s,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      });
+
+      // Blood drips from embedded skulls
+      embSkulls.slice(0, 3).forEach(([ht, xOff], idx) => {
+        const dripPhase = (decorTime * 0.6 + idx * 1.5) % 3;
+        if (dripPhase < 2) {
+          const dripY =
+            bkBase + (bkTop - bkBase) * ht + bkD * 2 + dripPhase * 8 * s;
+          const eI2 = bkI + (bkTI - bkI) * ht;
+          const dripX = sx + xOff * eI2;
+          const dripAlpha = Math.max(0, 0.5 - dripPhase * 0.25);
+          ctx.fillStyle = `rgba(140,15,15,${dripAlpha})`;
+          ctx.beginPath();
+          ctx.ellipse(dripX, dripY, 0.6 * s, 1.2 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(
+            dripX,
+            dripY + 2 * s,
+            0.4 * s,
+            0.8 * s,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+      });
+
+      // Candles on armrests with flickering flame
+      [-1, 1].forEach((side) => {
+        const cax = sx + side * seatI * 1.05;
+        const cay = seatTop + seatD - 9.5 * s;
+        ctx.fillStyle = "#e8d8a0";
+        ctx.fillRect(cax - 0.8 * s, cay, 1.6 * s, 4.5 * s);
+        ctx.fillStyle = "#d4c48a";
+        ctx.fillRect(cax - 0.9 * s, cay + 4 * s, 1.8 * s, 0.8 * s);
+        const cFlicker = Math.sin(decorTime * 9 + side * 2) * 0.8 * s;
+        const cFlicker2 = Math.cos(decorTime * 7.3 + side) * 0.5 * s;
+        setShadowBlur(ctx, 6 * s, "#ffaa30");
+        ctx.fillStyle = `rgba(255,180,40,${0.6 + sPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.moveTo(cax - 1.2 * s, cay);
+        ctx.quadraticCurveTo(
+          cax + cFlicker,
+          cay - 4 * s,
+          cax + cFlicker2,
+          cay - 6 * s,
+        );
+        ctx.quadraticCurveTo(cax - cFlicker * 0.5, cay - 3 * s, cax + 1.2 * s, cay);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,240,150,${0.7 + sPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(cax - 0.5 * s, cay);
+        ctx.quadraticCurveTo(
+          cax + cFlicker * 0.3,
+          cay - 2.5 * s,
+          cax,
+          cay - 3.5 * s,
+        );
+        ctx.quadraticCurveTo(cax - cFlicker2 * 0.3, cay - 1.5 * s, cax + 0.5 * s, cay);
+        ctx.closePath();
+        ctx.fill();
+        clearShadow(ctx);
+      });
+
+      // Red mist creeping at base
+      for (let i = 0; i < 6; i++) {
+        const mistPhase = decorTime * 0.4 + i * 1.1;
+        const mistX = sx + Math.sin(mistPhase * 0.7) * 25 * s;
+        const mistY = sy + 4 * s + Math.cos(mistPhase * 0.5) * 4 * s;
+        const mistAlpha = 0.06 + Math.sin(mistPhase) * 0.04;
+        ctx.fillStyle = `rgba(120,15,15,${mistAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(mistX, mistY, (8 + i * 2) * s, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Iron band reinforcements on seat
+      ctx.strokeStyle = "#3a3a42";
+      ctx.lineWidth = 0.7 * s;
+      for (let band = 0; band < 2; band++) {
+        const bandY = sBase - seatH * ((band + 0.3) / 2.5);
+        ctx.beginPath();
+        ctx.moveTo(sx - seatI, bandY + seatD);
+        ctx.lineTo(sx, bandY + seatD * 2);
+        ctx.lineTo(sx + seatI, bandY + seatD);
+        ctx.stroke();
+        ctx.fillStyle = "#5a5a60";
+        [-0.7, 0.7].forEach((t) => {
+          const rivX = sx + t * seatI;
+          const rivY = bandY + seatD * (1 + t * 0.5);
+          ctx.beginPath();
+          ctx.arc(rivX, rivY, 0.6 * s, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // Skull crown glow halo
+      setShadowBlur(ctx, 16 * s, redGl);
+      const crownGlow = ctx.createRadialGradient(
+        sx,
+        cSkY - 3 * s,
+        0,
+        sx,
+        cSkY - 3 * s,
+        12 * s,
+      );
+      crownGlow.addColorStop(0, `rgba(200,20,20,${0.15 + sPulse * 0.1})`);
+      crownGlow.addColorStop(0.5, `rgba(150,10,10,${0.06 + sPulse * 0.04})`);
+      crownGlow.addColorStop(1, "rgba(100,0,0,0)");
+      ctx.fillStyle = crownGlow;
+      ctx.beginPath();
+      ctx.arc(sx, cSkY - 3 * s, 12 * s, 0, Math.PI * 2);
+      ctx.fill();
+      clearShadow(ctx);
+
       break;
     }
 
@@ -35491,6 +35641,155 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
       }
 
+      // Shield trophies on base tier corners
+      const shieldPositions = [
+        { x: cx - t1I * 0.75, y: cy - 1 * s, facing: 1 },
+        { x: cx + t1I * 0.75, y: cy - 2.5 * s, facing: -1 },
+        { x: cx - t1I * 0.35, y: cy + baseD * 0.7, facing: 1 },
+        { x: cx + t1I * 0.35, y: cy - baseD * 0.2, facing: -1 },
+      ];
+      shieldPositions.forEach(({ x: shX, y: shY, facing }) => {
+        const shW = 4 * s;
+        const shH = 5 * s;
+        const shGr = ctx.createLinearGradient(shX, shY - shH, shX, shY + shH);
+        shGr.addColorStop(0, "#505060");
+        shGr.addColorStop(0.5, "#3a3a48");
+        shGr.addColorStop(1, "#282834");
+        ctx.fillStyle = shGr;
+        ctx.beginPath();
+        ctx.moveTo(shX, shY - shH);
+        ctx.lineTo(shX + shW * facing, shY - shH * 0.3);
+        ctx.lineTo(shX + shW * 0.6 * facing, shY + shH * 0.7);
+        ctx.lineTo(shX, shY + shH);
+        ctx.lineTo(shX - shW * 0.4 * facing, shY + shH * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(200,170,80,${0.2 + wmPulse * 0.1})`;
+        ctx.lineWidth = 0.5 * s;
+        ctx.stroke();
+        ctx.strokeStyle = "#6a6a78";
+        ctx.lineWidth = 0.3 * s;
+        ctx.beginPath();
+        ctx.moveTo(shX, shY - shH * 0.5);
+        ctx.lineTo(shX, shY + shH * 0.5);
+        ctx.moveTo(shX - shW * 0.3 * facing, shY);
+        ctx.lineTo(shX + shW * 0.5 * facing, shY);
+        ctx.stroke();
+      });
+
+      // Wreath carved on pillar front face
+      const wreathY = wmPillarBase - wmPillarH * 0.5;
+      const wreathR = 4 * s;
+      ctx.strokeStyle = `rgba(200,170,80,${0.18 + wmPulse * 0.12})`;
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.ellipse(cx, wreathY + wmPD * 2, wreathR, wreathR * 1.1, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let leaf = 0; leaf < 12; leaf++) {
+        const la = (leaf / 12) * Math.PI * 2;
+        const lx = cx + Math.cos(la) * wreathR;
+        const ly = wreathY + wmPD * 2 + Math.sin(la) * wreathR * 1.1;
+        ctx.fillStyle = `rgba(180,155,60,${0.12 + wmPulse * 0.08})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          lx,
+          ly,
+          1.2 * s,
+          0.5 * s,
+          la + Math.PI * 0.5,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Torch braziers at base corners
+      [
+        { x: cx - baseI * 0.85, y: cy + baseD * 0.15 },
+        { x: cx + baseI * 0.85, y: cy - baseD * 0.15 },
+      ].forEach(({ x: bx, y: by }, bIdx) => {
+        ctx.fillStyle = "#2a2a34";
+        ctx.beginPath();
+        ctx.moveTo(bx - 2.5 * s, by);
+        ctx.lineTo(bx - 3.5 * s, by - 6 * s);
+        ctx.lineTo(bx + 3.5 * s, by - 6 * s);
+        ctx.lineTo(bx + 2.5 * s, by);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a54";
+        ctx.lineWidth = 0.4 * s;
+        ctx.stroke();
+        ctx.fillStyle = "#1a1a22";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 6 * s, 3.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const bf1 = Math.sin(decorTime * 7.5 + bIdx * 2) * 1 * s;
+        const bf2 = Math.cos(decorTime * 5.8 + bIdx) * 0.8 * s;
+        setShadowBlur(ctx, 8 * s, "#ff6600");
+        ctx.fillStyle = `rgba(255,100,20,${0.35 + wmPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(bx - 2.5 * s, by - 6 * s);
+        ctx.quadraticCurveTo(bx + bf1, by - 14 * s, bx + bf2, by - 17 * s);
+        ctx.quadraticCurveTo(bx - bf1 * 0.5, by - 12 * s, bx + 2.5 * s, by - 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,200,60,${0.5 + wmPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.moveTo(bx - 1.2 * s, by - 6 * s);
+        ctx.quadraticCurveTo(bx + bf2 * 0.5, by - 11 * s, bx, by - 13 * s);
+        ctx.quadraticCurveTo(bx - bf1 * 0.3, by - 9 * s, bx + 1.2 * s, by - 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        clearShadow(ctx);
+      });
+
+      // Memorial inscription lines on pillar
+      ctx.strokeStyle = `rgba(200,170,80,${0.08 + wmPulse * 0.06})`;
+      ctx.lineWidth = 0.4 * s;
+      for (let row = 1; row <= 5; row++) {
+        const inscY = wmPillarBase - wmPillarH * (0.12 + row * 0.08);
+        const inscW = 4 * s;
+        for (let ch = 0; ch < 3; ch++) {
+          const inscX = cx - wmPI * 0.4 + ch * 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(inscX, inscY + wmPD + 0.5 * s);
+          ctx.lineTo(inscX + inscW * 0.3, inscY + wmPD);
+          ctx.lineTo(inscX + inscW * 0.6, inscY + wmPD + 0.8 * s);
+          ctx.stroke();
+        }
+      }
+
+      // Weathered stone cracks on base
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.4 * s;
+      const crackSeeds = [0.2, 0.5, 0.8, 1.3, 1.7];
+      crackSeeds.forEach((seed) => {
+        const crX = cx + Math.cos(seed * 4) * baseI * 0.7;
+        const crY = cy + Math.sin(seed * 3) * baseD * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(crX, crY);
+        ctx.lineTo(crX + Math.cos(seed * 2) * 4 * s, crY + Math.sin(seed) * 2 * s);
+        ctx.lineTo(
+          crX + Math.cos(seed * 2 + 0.5) * 6 * s,
+          crY + Math.sin(seed + 0.5) * 3 * s,
+        );
+        ctx.stroke();
+      });
+
+      // Smoke wisps from eternal flame
+      for (let i = 0; i < 3; i++) {
+        const smokePh = decorTime * 0.8 + i * 1.2;
+        const smokeAlpha = Math.max(0, 0.08 - ((decorTime * 4 + i * 6) % 20) * 0.004);
+        if (smokeAlpha > 0.01) {
+          const smX = cx + Math.sin(smokePh * 0.6) * 6 * s;
+          const smY = wmFlameY - 22 * s - ((decorTime * 6 + i * 8) % 30) * s;
+          ctx.fillStyle = `rgba(40,40,50,${smokeAlpha})`;
+          ctx.beginPath();
+          ctx.ellipse(smX, smY, (3 + i) * s, (2 + i * 0.5) * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
       break;
     }
 
@@ -35895,6 +36194,177 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
       }
 
+      // Ritual candles at platform corners
+      const candleSpots = [
+        { x: cx - plI * 0.85, y: cy + 32 * s * 0.25 * 0.15 - 5 * s },
+        { x: cx + plI * 0.85, y: cy - 32 * s * 0.25 * 0.15 - 5 * s },
+        { x: cx - plI * 0.3, y: cy + 32 * s * 0.25 * 0.7 - 5 * s },
+        { x: cx + plI * 0.3, y: cy - 32 * s * 0.25 * 0.7 + 32 * s * 0.25 - 5 * s },
+      ];
+      candleSpots.forEach(({ x: cdx, y: cdy }, cdIdx) => {
+        ctx.fillStyle = boneShadow;
+        ctx.fillRect(cdx - 0.6 * s, cdy, 1.2 * s, 3.5 * s);
+        ctx.fillStyle = "#2a1a2a";
+        ctx.beginPath();
+        ctx.ellipse(cdx, cdy, 1.5 * s, 0.7 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const cf1 = Math.sin(decorTime * 8 + cdIdx * 1.8) * 0.6 * s;
+        const cf2 = Math.cos(decorTime * 6.5 + cdIdx * 1.2) * 0.4 * s;
+        setShadowBlur(ctx, 5 * s, "#44ff66");
+        ctx.fillStyle = `rgba(50,255,80,${0.45 + baPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.moveTo(cdx - 1 * s, cdy);
+        ctx.quadraticCurveTo(cdx + cf1, cdy - 3.5 * s, cdx + cf2, cdy - 5 * s);
+        ctx.quadraticCurveTo(cdx - cf1 * 0.5, cdy - 2.5 * s, cdx + 1 * s, cdy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(150,255,180,${0.6 + baPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(cdx - 0.4 * s, cdy);
+        ctx.quadraticCurveTo(cdx, cdy - 2 * s, cdx + cf2 * 0.3, cdy - 3 * s);
+        ctx.quadraticCurveTo(cdx, cdy - 1.5 * s, cdx + 0.4 * s, cdy);
+        ctx.closePath();
+        ctx.fill();
+        clearShadow(ctx);
+      });
+
+      // Ectoplasm dripping from top skull
+      for (let drip = 0; drip < 3; drip++) {
+        const dripPh = (decorTime * 0.4 + drip * 1.2) % 3;
+        if (dripPh < 2.5) {
+          const dripX = cx + (drip - 1) * 2.5 * s;
+          const dripStartY = topSkY + 5.6 * s;
+          const dripLen = dripPh * 6 * s;
+          const dripAlpha = Math.max(0, 0.4 - dripPh * 0.16);
+          const dripGr = ctx.createLinearGradient(
+            dripX,
+            dripStartY,
+            dripX,
+            dripStartY + dripLen,
+          );
+          dripGr.addColorStop(0, `rgba(40,200,60,${dripAlpha})`);
+          dripGr.addColorStop(1, `rgba(30,180,50,${dripAlpha * 0.3})`);
+          ctx.strokeStyle = dripGr;
+          ctx.lineWidth = (0.8 - dripPh * 0.1) * s;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(dripX, dripStartY);
+          ctx.quadraticCurveTo(
+            dripX + Math.sin(dripPh * 2) * 1.5 * s,
+            dripStartY + dripLen * 0.6,
+            dripX + Math.sin(dripPh * 3) * 0.8 * s,
+            dripStartY + dripLen,
+          );
+          ctx.stroke();
+          ctx.fillStyle = `rgba(40,220,70,${dripAlpha * 0.8})`;
+          ctx.beginPath();
+          ctx.arc(
+            dripX + Math.sin(dripPh * 3) * 0.8 * s,
+            dripStartY + dripLen,
+            0.5 * s,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+      }
+
+      // Bone rib cage frame around tier 3
+      const ribBaseY = cy - 12 * s;
+      const ribTopY = cy - 18 * s;
+      const ribI = 16 * s * 0.433;
+      [-1, 1].forEach((side) => {
+        for (let rib = 0; rib < 3; rib++) {
+          const ribT = (rib + 0.5) / 3;
+          const ribStartX = cx + side * ribI * ribT;
+          const ribStartY = ribBaseY + (side < 0 ? 16 * s * 0.25 * ribT : -16 * s * 0.25 * ribT + 16 * s * 0.25);
+          const ribEndY = ribTopY + 2 * s;
+          ctx.strokeStyle = boneLight;
+          ctx.lineWidth = 0.8 * s;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(ribStartX, ribStartY - 6 * s);
+          ctx.quadraticCurveTo(
+            ribStartX + side * 3 * s,
+            (ribStartY + ribEndY) * 0.5 - 8 * s,
+            ribStartX + side * 1 * s,
+            ribEndY - 3 * s,
+          );
+          ctx.stroke();
+          ctx.fillStyle = boneWhite;
+          ctx.beginPath();
+          ctx.arc(ribStartX + side * 1 * s, ribEndY - 3 * s, 0.6 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // Corrupted mushrooms growing from cracks
+      const mushPositions = [
+        { x: cx - 30 * s, y: cy + 8 * s, sz: 1.0 },
+        { x: cx + 26 * s, y: cy - 6 * s, sz: 0.8 },
+        { x: cx - 18 * s, y: cy + 12 * s, sz: 0.7 },
+        { x: cx + 34 * s, y: cy + 2 * s, sz: 0.6 },
+      ];
+      mushPositions.forEach(({ x: mx, y: my, sz: msz }) => {
+        ctx.fillStyle = "#4a3050";
+        ctx.fillRect(mx - 0.4 * s * msz, my - 2 * s * msz, 0.8 * s * msz, 2.5 * s * msz);
+        const capGr = ctx.createRadialGradient(mx, my - 2.5 * s * msz, 0, mx, my - 2.5 * s * msz, 2.5 * s * msz);
+        capGr.addColorStop(0, "#6a3080");
+        capGr.addColorStop(0.6, "#4a2060");
+        capGr.addColorStop(1, "#2a1040");
+        ctx.fillStyle = capGr;
+        ctx.beginPath();
+        ctx.ellipse(mx, my - 2.5 * s * msz, 2.5 * s * msz, 1.5 * s * msz, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(100,255,120,${0.3 + baPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(mx - 0.5 * s * msz, my - 3 * s * msz, 0.3 * s * msz, 0, Math.PI * 2);
+        ctx.arc(mx + 0.8 * s * msz, my - 2.8 * s * msz, 0.2 * s * msz, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Pulsing summoning sigil below altar
+      setShadowBlur(ctx, 8 * s, "#9944ff");
+      const sigilPhase = decorTime * 0.3;
+      ctx.strokeStyle = `rgba(150,60,220,${0.1 + baPulse * 0.15})`;
+      ctx.lineWidth = 0.6 * s;
+      ctx.beginPath();
+      for (let pt = 0; pt <= 5; pt++) {
+        const sa = (pt / 5) * Math.PI * 2 + sigilPhase;
+        const sr = 18 * s;
+        const px = cx + Math.cos(sa) * sr;
+        const py = cy + 3 * s + Math.sin(sa) * sr * 0.45;
+        if (pt === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      for (let pt = 0; pt <= 5; pt++) {
+        const sa = (pt / 5) * Math.PI * 2 - sigilPhase * 0.7;
+        const sr = 14 * s;
+        const px = cx + Math.cos(sa) * sr;
+        const py = cy + 3 * s + Math.sin(sa) * sr * 0.45;
+        if (pt === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      clearShadow(ctx);
+
+      // Floating bone fragments
+      for (let fb = 0; fb < 4; fb++) {
+        const fbPh = decorTime * 1.2 + fb * 1.6;
+        const fbX = cx + Math.sin(fbPh * 0.5) * 15 * s;
+        const fbY = cy - 10 * s - Math.sin(fbPh * 0.8) * 8 * s - fb * 4 * s;
+        const fbAlpha = 0.2 + Math.sin(fbPh) * 0.15;
+        ctx.fillStyle = `rgba(200,185,165,${fbAlpha})`;
+        const fbAng = fbPh * 0.4;
+        ctx.beginPath();
+        ctx.ellipse(fbX, fbY, 1.5 * s, 0.5 * s, fbAng, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       break;
     }
 
@@ -36144,6 +36614,186 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.ellipse(shX, shY, 14 * s, 3 * s, 0, 0, Math.PI * 2);
         ctx.fill();
+      }
+
+      // Sphinx guardians flanking the base
+      [-1, 1].forEach((side) => {
+        const spx = cx + side * 18 * s;
+        const spy = cy + side * 8 * s;
+        const spBodyGr = ctx.createLinearGradient(
+          spx - 4 * s,
+          spy,
+          spx + 4 * s,
+          spy + 4 * s,
+        );
+        spBodyGr.addColorStop(0, "#a08850");
+        spBodyGr.addColorStop(0.5, "#8a7440");
+        spBodyGr.addColorStop(1, "#6a5a30");
+        ctx.fillStyle = spBodyGr;
+        ctx.beginPath();
+        ctx.moveTo(spx - 5 * s * side, spy + 1 * s);
+        ctx.lineTo(spx + 1 * s * side, spy - 2 * s);
+        ctx.lineTo(spx + 6 * s * side, spy + 1 * s);
+        ctx.lineTo(spx + 7 * s * side, spy + 4 * s);
+        ctx.lineTo(spx - 6 * s * side, spy + 4 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#b09860";
+        ctx.beginPath();
+        ctx.arc(spx + 0.5 * s * side, spy - 2.5 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#c4aa70";
+        ctx.beginPath();
+        ctx.arc(spx + 0.5 * s * side, spy - 3 * s, 1.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#0a0a0a";
+        ctx.beginPath();
+        ctx.ellipse(
+          spx + (0.5 - 0.6 * side) * s,
+          spy - 2.8 * s,
+          0.4 * s,
+          0.5 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.ellipse(
+          spx + (0.5 + 0.6 * side) * s,
+          spy - 2.8 * s,
+          0.4 * s,
+          0.5 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,210,60,${0.2 + soPulse * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(spx + (0.5 - 0.6 * side) * s, spy - 2.8 * s, 0.3 * s, 0, Math.PI * 2);
+        ctx.arc(spx + (0.5 + 0.6 * side) * s, spy - 2.8 * s, 0.3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#8a7440";
+        ctx.beginPath();
+        ctx.moveTo(spx + 6 * s * side, spy + 4 * s);
+        ctx.lineTo(spx + 8 * s * side, spy + 3 * s);
+        ctx.lineTo(spx + 8 * s * side, spy + 5 * s);
+        ctx.lineTo(spx + 6 * s * side, spy + 5 * s);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // Turquoise gem accents on base tiers
+      setShadowBlur(ctx, 4 * s, "#00ccaa");
+      const gemPositions = [
+        { x: cx - bI * 0.5, y: cy - 2 * s },
+        { x: cx + bI * 0.5, y: cy - 2 * s },
+        { x: cx, y: cy + bD - 2 * s },
+        { x: cx, y: cy - bD - 2 * s },
+      ];
+      gemPositions.forEach(({ x: gx, y: gy }) => {
+        ctx.fillStyle = `rgba(0,200,170,${0.3 + soPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 1.5 * s);
+        ctx.lineTo(gx + 1.2 * s, gy);
+        ctx.lineTo(gx, gy + 1 * s);
+        ctx.lineTo(gx - 1.2 * s, gy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(100,255,220,${0.4 + soPulse * 0.25})`;
+        ctx.beginPath();
+        ctx.arc(gx - 0.2 * s, gy - 0.3 * s, 0.35 * s, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      clearShadow(ctx);
+
+      // Sand drift accumulation against obelisk base
+      ctx.fillStyle = "rgba(190,160,80,0.25)";
+      ctx.beginPath();
+      ctx.moveTo(cx + soI + 1 * s, soBase + soD);
+      ctx.quadraticCurveTo(
+        cx + soI + 6 * s,
+        soBase + soD + 2 * s,
+        cx + soI + 10 * s,
+        soBase + soD + 4 * s,
+      );
+      ctx.lineTo(cx + soI + 1 * s, soBase + soD + 4 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(180,150,70,0.2)";
+      ctx.beginPath();
+      ctx.moveTo(cx - soI - 1 * s, soBase + soD);
+      ctx.quadraticCurveTo(
+        cx - soI - 5 * s,
+        soBase + soD + 1.5 * s,
+        cx - soI - 8 * s,
+        soBase + soD + 3 * s,
+      );
+      ctx.lineTo(cx - soI - 1 * s, soBase + soD + 3 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Cobra motifs carved on obelisk shaft
+      setShadowBlur(ctx, 3 * s, "#ffaa00");
+      const cobraPositions = [0.3, 0.6];
+      cobraPositions.forEach((ht) => {
+        const cobraY = soBase - soH * ht;
+        const cobraX = cx - soI * 0.5;
+        const cobraAlpha = 0.2 + soPulse * 0.15;
+        ctx.strokeStyle = `rgba(255,185,45,${cobraAlpha})`;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(cobraX - 0.5 * s, cobraY + soD + 2 * s);
+        ctx.quadraticCurveTo(
+          cobraX - 1.5 * s,
+          cobraY + soD - 1 * s,
+          cobraX,
+          cobraY + soD - 3 * s,
+        );
+        ctx.quadraticCurveTo(
+          cobraX + 1 * s,
+          cobraY + soD - 4 * s,
+          cobraX + 2 * s,
+          cobraY + soD - 3 * s,
+        );
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cobraX - 1 * s, cobraY + soD - 2.5 * s);
+        ctx.lineTo(cobraX - 2.5 * s, cobraY + soD - 3.5 * s);
+        ctx.moveTo(cobraX + 2 * s, cobraY + soD - 2.5 * s);
+        ctx.lineTo(cobraX + 3.5 * s, cobraY + soD - 3.5 * s);
+        ctx.stroke();
+      });
+      clearShadow(ctx);
+
+      // Scattered pottery/artifact fragments around base
+      const potPositions = [
+        { x: cx - 22 * s, y: cy + 6 * s, r: 0.4 },
+        { x: cx + 20 * s, y: cy - 4 * s, r: 0.6 },
+        { x: cx - 28 * s, y: cy + 2 * s, r: 0.3 },
+        { x: cx + 28 * s, y: cy + 4 * s, r: 0.5 },
+      ];
+      potPositions.forEach(({ x: px, y: py, r: pr }) => {
+        ctx.fillStyle = "#8a6a40";
+        ctx.beginPath();
+        ctx.ellipse(px, py, 2 * s * pr, 1.2 * s * pr, pr * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#6a5030";
+        ctx.lineWidth = 0.3 * s;
+        ctx.stroke();
+      });
+
+      // Gold dust particles floating
+      for (let gp = 0; gp < 5; gp++) {
+        const gpPh = decorTime * 0.9 + gp * 1.3;
+        const gpAlpha = 0.15 + Math.sin(gpPh * 1.5) * 0.1;
+        if (gpAlpha > 0.08) {
+          const gpX = cx + Math.sin(gpPh * 0.4) * 18 * s;
+          const gpY = soBase - soH * 0.3 - Math.abs(Math.sin(gpPh * 0.6)) * 30 * s;
+          ctx.fillStyle = `rgba(255,210,80,${gpAlpha})`;
+          ctx.beginPath();
+          ctx.arc(gpX, gpY, 0.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       break;
@@ -36870,6 +37520,285 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
       }
+
+      // Demon face relief on arch keystone
+      const demonX = igArchMidX;
+      const demonY = igArchMidY - 1 * s;
+      ctx.fillStyle = "#2a2a3c";
+      ctx.beginPath();
+      ctx.ellipse(demonX, demonY, 5 * s, 6 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1a1a28";
+      ctx.beginPath();
+      ctx.ellipse(demonX, demonY + 1 * s, 4 * s, 5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      setShadowBlur(ctx, 4 * s, igLava);
+      ctx.fillStyle = `rgba(255,40,0,${0.4 + igPulse * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        demonX - 1.8 * s,
+        demonY - 1.5 * s,
+        1.2 * s,
+        0.8 * s,
+        -0.2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.ellipse(
+        demonX + 1.8 * s,
+        demonY - 1.5 * s,
+        1.2 * s,
+        0.8 * s,
+        0.2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      clearShadow(ctx);
+      ctx.fillStyle = "#0a0a12";
+      ctx.beginPath();
+      ctx.moveTo(demonX - 0.8 * s, demonY + 0.5 * s);
+      ctx.lineTo(demonX, demonY + 2 * s);
+      ctx.lineTo(demonX + 0.8 * s, demonY + 0.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#3a3a4c";
+      ctx.lineWidth = 0.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(demonX - 2.5 * s, demonY + 2.5 * s);
+      ctx.quadraticCurveTo(demonX, demonY + 4 * s, demonX + 2.5 * s, demonY + 2.5 * s);
+      ctx.stroke();
+      ctx.strokeStyle = "#2a2a3a";
+      ctx.lineWidth = 0.3 * s;
+      for (let tooth = -2; tooth <= 2; tooth++) {
+        ctx.beginPath();
+        ctx.moveTo(
+          demonX + tooth * 0.8 * s,
+          demonY + 2.5 * s + Math.abs(tooth) * 0.3 * s,
+        );
+        ctx.lineTo(demonX + tooth * 0.8 * s, demonY + 3.5 * s);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "#1e1e2c";
+      ctx.lineWidth = 0.6 * s;
+      ctx.beginPath();
+      ctx.moveTo(demonX - 2 * s, demonY - 4 * s);
+      ctx.quadraticCurveTo(demonX - 4 * s, demonY - 7 * s, demonX - 3 * s, demonY - 10 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(demonX + 2 * s, demonY - 4 * s);
+      ctx.quadraticCurveTo(demonX + 4 * s, demonY - 7 * s, demonX + 3 * s, demonY - 10 * s);
+      ctx.stroke();
+
+      // Chains hanging between pillars
+      const chainStartLY = igLPy - igPH * 0.4;
+      const chainStartRY = igRPy - igPH * 0.4;
+      const chainSegs = 8;
+      ctx.strokeStyle = "#3a3a44";
+      ctx.lineWidth = 0.8 * s;
+      const chainSag = 12 * s;
+      const chainSway2 = Math.sin(decorTime * 0.8) * 2 * s;
+      for (let seg = 0; seg < chainSegs; seg++) {
+        const t1 = seg / chainSegs;
+        const t2 = (seg + 1) / chainSegs;
+        const x1 = igLPx + (igRPx - igLPx) * t1;
+        const y1 =
+          chainStartLY +
+          (chainStartRY - chainStartLY) * t1 +
+          Math.sin(t1 * Math.PI) * chainSag +
+          chainSway2 * t1;
+        const x2 = igLPx + (igRPx - igLPx) * t2;
+        const y2 =
+          chainStartLY +
+          (chainStartRY - chainStartLY) * t2 +
+          Math.sin(t2 * Math.PI) * chainSag +
+          chainSway2 * t2;
+        if (seg % 2 === 0) {
+          ctx.beginPath();
+          ctx.ellipse(
+            (x1 + x2) / 2,
+            (y1 + y2) / 2,
+            Math.hypot(x2 - x1, y2 - y1) * 0.55,
+            1.2 * s,
+            Math.atan2(y2 - y1, x2 - x1),
+            0,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(
+            (x1 + x2) / 2,
+            (y1 + y2) / 2,
+            1.2 * s,
+            Math.hypot(x2 - x1, y2 - y1) * 0.55,
+            Math.atan2(y2 - y1, x2 - x1),
+            0,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+        }
+      }
+
+      // Braziers flanking the gate at base
+      [-1, 1].forEach((side) => {
+        const brx = side < 0 ? igLPx + side * 8 * s : igRPx + side * 8 * s;
+        const bry = side < 0 ? igLPy - 2 * s : igRPy - 2 * s;
+        ctx.fillStyle = igObsMd;
+        ctx.beginPath();
+        ctx.moveTo(brx - 3 * s, bry);
+        ctx.lineTo(brx - 1 * s, bry - 8 * s);
+        ctx.lineTo(brx + 1 * s, bry - 8 * s);
+        ctx.lineTo(brx + 3 * s, bry);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = igObsLt;
+        ctx.lineWidth = 0.3 * s;
+        ctx.stroke();
+        ctx.fillStyle = igObsDk;
+        ctx.beginPath();
+        ctx.ellipse(brx, bry - 8 * s, 3 * s, 1.3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const brf1 = Math.sin(decorTime * 8 + side * 2.5) * 1.2 * s;
+        const brf2 = Math.cos(decorTime * 6 + side * 1.5) * 0.8 * s;
+        setShadowBlur(ctx, 10 * s, igLava);
+        ctx.fillStyle = `rgba(255,80,15,${0.4 + igPulse * 0.25})`;
+        ctx.beginPath();
+        ctx.moveTo(brx - 3 * s, bry - 8 * s);
+        ctx.quadraticCurveTo(
+          brx + brf1,
+          bry - 18 * s,
+          brx + brf2,
+          bry - 22 * s,
+        );
+        ctx.quadraticCurveTo(
+          brx - brf1 * 0.5,
+          bry - 15 * s,
+          brx + 3 * s,
+          bry - 8 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,200,60,${0.55 + igPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.moveTo(brx - 1.5 * s, bry - 8 * s);
+        ctx.quadraticCurveTo(brx + brf2 * 0.4, bry - 14 * s, brx, bry - 17 * s);
+        ctx.quadraticCurveTo(
+          brx - brf1 * 0.3,
+          bry - 12 * s,
+          brx + 1.5 * s,
+          bry - 8 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        clearShadow(ctx);
+      });
+
+      // Fallen warrior debris around base
+      const debrisItems = [
+        { x: cx - 30 * s, y: cy + 10 * s, type: "sword" },
+        { x: cx + 28 * s, y: cy + 6 * s, type: "shield" },
+        { x: cx - 24 * s, y: cy + 14 * s, type: "helmet" },
+        { x: cx + 22 * s, y: cy + 12 * s, type: "bones" },
+      ];
+      debrisItems.forEach(({ x: dx, y: dy, type }) => {
+        if (type === "sword") {
+          ctx.strokeStyle = "#6a6a78";
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(dx - 4 * s, dy + 1 * s);
+          ctx.lineTo(dx + 4 * s, dy - 1 * s);
+          ctx.stroke();
+          ctx.fillStyle = "#4a3828";
+          ctx.fillRect(dx - 5 * s, dy + 0.5 * s, 2 * s, 1.5 * s);
+        } else if (type === "shield") {
+          ctx.fillStyle = "#3a3a44";
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 3 * s, 2 * s, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#4a4a54";
+          ctx.lineWidth = 0.3 * s;
+          ctx.stroke();
+        } else if (type === "helmet") {
+          ctx.fillStyle = "#3a3a42";
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 2.5 * s, 1.5 * s, 0, 0, Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 2.5 * s, 1 * s, 0, Math.PI, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = "#b8a890";
+          ctx.lineWidth = 0.6 * s;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(dx - 2 * s, dy);
+          ctx.lineTo(dx + 2 * s, dy + 0.5 * s);
+          ctx.moveTo(dx - 1 * s, dy + 1 * s);
+          ctx.lineTo(dx + 1.5 * s, dy - 0.5 * s);
+          ctx.stroke();
+        }
+      });
+
+      // Enhanced portal distortion rings
+      setShadowBlur(ctx, 6 * s, "#aa44ff");
+      for (let ring = 0; ring < 3; ring++) {
+        const ringPhase = decorTime * 1.2 + ring * 0.8;
+        const ringR = (5 + ring * 4) * s;
+        const ringAlpha = 0.12 + igPulse * 0.1 - ring * 0.03;
+        ctx.strokeStyle = `rgba(180,80,255,${ringAlpha})`;
+        ctx.lineWidth = (0.8 - ring * 0.15) * s;
+        ctx.beginPath();
+        ctx.ellipse(
+          igPortCx,
+          igPortCy,
+          ringR + Math.sin(ringPhase) * 2 * s,
+          ringR * 1.3 + Math.cos(ringPhase) * 2 * s,
+          ringPhase * 0.2,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+      clearShadow(ctx);
+
+      // Lava glow from beneath the platform
+      const underGlow = ctx.createRadialGradient(
+        cx,
+        cy + 5 * s,
+        0,
+        cx,
+        cy + 5 * s,
+        45 * s,
+      );
+      underGlow.addColorStop(0, `rgba(255,80,0,${0.08 + igPulse * 0.05})`);
+      underGlow.addColorStop(0.5, `rgba(200,30,0,${0.04 + igPulse * 0.02})`);
+      underGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = underGlow;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 5 * s, 45 * s, 20 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Smoke columns rising from braziers
+      [-1, 1].forEach((side) => {
+        const smBaseX = side < 0 ? igLPx + side * 8 * s : igRPx + side * 8 * s;
+        const smBaseY = side < 0 ? igLPy - 22 * s : igRPy - 22 * s;
+        for (let si = 0; si < 3; si++) {
+          const smPh = decorTime * 0.6 + si * 1.1 + side;
+          const smAlpha = Math.max(
+            0,
+            0.08 - ((decorTime * 4 + si * 5 + Math.abs(side) * 3) % 18) * 0.005,
+          );
+          if (smAlpha > 0.01) {
+            const smX = smBaseX + Math.sin(smPh * 0.5) * 4 * s;
+            const smY = smBaseY - ((decorTime * 5 + si * 6) % 25) * s;
+            ctx.fillStyle = `rgba(30,20,20,${smAlpha})`;
+            ctx.beginPath();
+            ctx.ellipse(smX, smY, (2.5 + si) * s, (1.5 + si * 0.5) * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
 
       break;
     }

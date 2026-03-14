@@ -152,7 +152,7 @@ import {
   ENEMY_LANE_SHIFT_MS,
 } from "../game/enemyFormation";
 import { applyEnemyAbilities, buildAbilityCooldowns } from "../game/enemyAbilities";
-import { findClosestRoadPoint } from "../game/barracks";
+import { findClosestRoadPoint, getBarracksOwnerId, isBarracksOwnerId } from "../game/barracks";
 import {
   getPrioritizedEnemiesInRange,
   getClosestEnemyInRange,
@@ -891,8 +891,8 @@ export function usePrincetonTowerDefenseRuntime() {
   towersRef.current = towers;
   pawPointsRef.current = pawPoints;
 
-  // Track last spawn time for frontier barracks to prevent double-spawning on restart
-  const lastBarracksSpawnRef = useRef<number>(0);
+  // Track per-barracks spawn time to prevent double-spawning on restart
+  const lastBarracksSpawnRef = useRef<Map<string, number>>(new Map());
   // Track per-structure strike cooldowns for sentinel nexus challenge towers
   const lastSentinelStrikeRef = useRef<Map<string, number>>(new Map());
   // Track per-structure cadence for orange sunforge offensive barrages.
@@ -1665,7 +1665,7 @@ export function usePrincetonTowerDefenseRuntime() {
       totalPausedTimeRef.current = 0;
       pausableTimeoutsRef.current = [];
       // Reset spawn timing refs
-      lastBarracksSpawnRef.current = 0;
+      lastBarracksSpawnRef.current = new Map();
       lastSentinelStrikeRef.current.clear();
       lastSunforgeBarrageRef.current.clear();
       // Mark reset time to prevent stale state race conditions
@@ -2296,11 +2296,9 @@ export function usePrincetonTowerDefenseRuntime() {
       const sunforgeOrreries = specialTowers.filter(
         (tower) => tower.type === "sunforge_orrery"
       );
-      const barracksTower =
-        specialTowers.find((tower) => tower.type === "barracks") ?? null;
-      const barracksWorldPos = barracksTower
-        ? gridToWorld(barracksTower.pos)
-        : null;
+      const barracksTowers = specialTowers.filter(
+        (tower) => tower.type === "barracks"
+      );
       const vaultWorldPositions = specialTowers
         .filter((tower) => tower.type === "vault")
         .map((tower) => gridToWorld(tower.pos));
@@ -2832,102 +2830,106 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // C. BARRACKS: Capped & spread deployment (max 3 knights).
-      if (barracksTower && barracksWorldPos && !isInResetTransition) {
-        const barracksTroops = troops.filter((t) => t.ownerId === "special_barracks");
+      // C. BARRACKS: Capped & spread deployment (max 3 knights per barracks).
+      if (barracksTowers.length > 0 && !isInResetTransition) {
+        const spawnTimings = lastBarracksSpawnRef.current;
 
-        const spawnCycle = now % 12000;
-        const isInSpawnWindow = spawnCycle < 1500;
-        const wasInSpawnWindow =
-          lastBarracksSpawnRef.current > 0 &&
-          (lastBarracksSpawnRef.current % 12000) < 1500;
+        for (const barracks of barracksTowers) {
+          const bOwnerId = getBarracksOwnerId(barracks.pos);
+          const bWorldPos = gridToWorld(barracks.pos);
+          const bTroops = troops.filter((t) => t.ownerId === bOwnerId);
+          const lastSpawn = spawnTimings.get(bOwnerId) ?? 0;
 
-        const justEnteredSpawnWindow =
-          isInSpawnWindow &&
-          (lastBarracksSpawnRef.current === 0 ||
-            !wasInSpawnWindow ||
-            now - lastBarracksSpawnRef.current > 10500);
+          const spawnCycle = now % 12000;
+          const isInSpawnWindow = spawnCycle < 1500;
+          const wasInSpawnWindow =
+            lastSpawn > 0 && (lastSpawn % 12000) < 1500;
 
-        if (justEnteredSpawnWindow && barracksTroops.length < 3) {
-          lastBarracksSpawnRef.current = now;
+          const justEnteredSpawnWindow =
+            isInSpawnWindow &&
+            (lastSpawn === 0 || !wasInSpawnWindow || now - lastSpawn > 10500);
 
-          const existingRallyTroop = barracksTroops.find((t) => t.userTargetPos);
-          const rallyPoint =
-            existingRallyTroop?.userTargetPos || findClosestRoadPoint(barracksWorldPos, activeWaveSpawnPaths, selectedMap);
+          if (justEnteredSpawnWindow && bTroops.length < 3) {
+            spawnTimings.set(bOwnerId, now);
 
-          const occupiedSlots = new Set(barracksTroops.map((t) => t.spawnSlot ?? 0));
-          const availableSlot =
-            [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? barracksTroops.length;
+            const existingRallyTroop = bTroops.find((t) => t.userTargetPos);
+            const rallyPoint =
+              existingRallyTroop?.userTargetPos || findClosestRoadPoint(bWorldPos, activeWaveSpawnPaths, selectedMap);
 
-          const futureCount = barracksTroops.length + 1;
-          const formationOffsets = getFormationOffsets(futureCount);
-          const slotOffset = formationOffsets[availableSlot] || { x: 0, y: 0 };
-          const targetPos = {
-            x: rallyPoint.x + slotOffset.x,
-            y: rallyPoint.y + slotOffset.y,
-          };
+            const occupiedSlots = new Set(bTroops.map((t) => t.spawnSlot ?? 0));
+            const availableSlot =
+              [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? bTroops.length;
 
-          const newTroop: Troop = {
-            id: generateId("barracks_unit"),
-            ownerId: "special_barracks",
-            ownerType: "barracks",
-            type: "knight",
-            pos: { ...barracksWorldPos },
-            hp: TROOP_DATA.knight.hp,
-            maxHp: TROOP_DATA.knight.hp,
-            moving: true,
-            targetPos,
-            userTargetPos: targetPos,
-            lastAttack: 0,
-            rotation: Math.atan2(
-              targetPos.y - barracksWorldPos.y,
-              targetPos.x - barracksWorldPos.x,
-            ),
-            facingRight: getFacingRightFromDelta(
-              targetPos.x - barracksWorldPos.x,
-              targetPos.y - barracksWorldPos.y,
-            ),
-            attackAnim: 0,
-            selected: false,
-            spawnPoint: rallyPoint,
-            moveRadius: BARRACKS_TROOP_RANGE,
-            spawnSlot: availableSlot,
-          };
+            const futureCount = bTroops.length + 1;
+            const formationOffsets = getFormationOffsets(futureCount);
+            const slotOffset = formationOffsets[availableSlot] || { x: 0, y: 0 };
+            const targetPos = {
+              x: rallyPoint.x + slotOffset.x,
+              y: rallyPoint.y + slotOffset.y,
+            };
 
-          setTroops((prev) => {
-            const currentBarracksTroops = prev.filter(
-              (troop) => troop.ownerId === "special_barracks"
-            );
-            const troopIdToFormationIndex = new Map<string, number>();
-            currentBarracksTroops.forEach((troop, idx) => {
-              troopIdToFormationIndex.set(troop.id, idx);
+            const newTroop: Troop = {
+              id: generateId("barracks_unit"),
+              ownerId: bOwnerId,
+              ownerType: "barracks",
+              type: "knight",
+              pos: { ...bWorldPos },
+              hp: TROOP_DATA.knight.hp,
+              maxHp: TROOP_DATA.knight.hp,
+              moving: true,
+              targetPos,
+              userTargetPos: targetPos,
+              lastAttack: 0,
+              rotation: Math.atan2(
+                targetPos.y - bWorldPos.y,
+                targetPos.x - bWorldPos.x,
+              ),
+              facingRight: getFacingRightFromDelta(
+                targetPos.x - bWorldPos.x,
+                targetPos.y - bWorldPos.y,
+              ),
+              attackAnim: 0,
+              selected: false,
+              spawnPoint: rallyPoint,
+              moveRadius: BARRACKS_TROOP_RANGE,
+              spawnSlot: availableSlot,
+            };
+
+            setTroops((prev) => {
+              const currentBTroops = prev.filter(
+                (troop) => troop.ownerId === bOwnerId
+              );
+              const troopIdToFormationIndex = new Map<string, number>();
+              currentBTroops.forEach((troop, idx) => {
+                troopIdToFormationIndex.set(troop.id, idx);
+              });
+
+              const updated = prev.map((troop) => {
+                if (troop.ownerId !== bOwnerId) return troop;
+                const newFormation = getFormationOffsets(futureCount);
+                const formationIndex = troopIdToFormationIndex.get(troop.id) ?? 0;
+                const offset = newFormation[formationIndex] || { x: 0, y: 0 };
+                const newTarget = {
+                  x: rallyPoint.x + offset.x,
+                  y: rallyPoint.y + offset.y,
+                };
+                if (troop.engaging) return troop;
+                return {
+                  ...troop,
+                  targetPos: newTarget,
+                  moving: true,
+                  userTargetPos: newTarget,
+                  spawnPoint: rallyPoint,
+                  facingRight: getFacingRightFromDelta(
+                    newTarget.x - troop.pos.x,
+                    newTarget.y - troop.pos.y,
+                  ),
+                };
+              });
+              return [...updated, newTroop];
             });
-
-            const updated = prev.map((troop) => {
-              if (troop.ownerId !== "special_barracks") return troop;
-              const newFormation = getFormationOffsets(futureCount);
-              const formationIndex = troopIdToFormationIndex.get(troop.id) ?? 0;
-              const offset = newFormation[formationIndex] || { x: 0, y: 0 };
-              const newTarget = {
-                x: rallyPoint.x + offset.x,
-                y: rallyPoint.y + offset.y,
-              };
-              if (troop.engaging) return troop;
-              return {
-                ...troop,
-                targetPos: newTarget,
-                moving: true,
-                userTargetPos: newTarget,
-                spawnPoint: rallyPoint,
-                facingRight: getFacingRightFromDelta(
-                  newTarget.x - troop.pos.x,
-                  newTarget.y - troop.pos.y,
-                ),
-              };
-            });
-            return [...updated, newTroop];
-          });
-          addParticles(barracksWorldPos, "smoke", 12);
+            addParticles(bWorldPos, "smoke", 12);
+          }
         }
       }
 
@@ -8310,7 +8312,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "effect",
         data: eff,
-        isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR,
+        isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR - 0.01,
       });
     });
     // Read active particles from pool (ref-based, no React state)
@@ -9625,7 +9627,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const issueTroopFormationMoveCommand = useCallback(
     (ownerId: string, targetPos: Position) => {
       const station = towers.find((tower) => tower.id === ownerId && tower.type === "station");
-      const isBarracksTroop = ownerId === "special_barracks";
+      const isBarracksTroop = isBarracksOwnerId(ownerId);
       const isSpellTroop = ownerId.startsWith("spell");
       setTroops((prev) => {
         const formationTroops = prev.filter((troop) => troop.ownerId === ownerId);
@@ -9907,10 +9909,7 @@ export function usePrincetonTowerDefenseRuntime() {
             cameraOffset,
             cameraZoom
           );
-          const spec =
-            getLevelSpecialTowers(selectedMap).find(
-              (tower) => tower.type === "barracks"
-            ) ?? undefined;
+          const barracksSpecialTowers = getLevelSpecialTowers(selectedMap);
 
           if (
             draggingUnit.kind === "hero" &&
@@ -9925,7 +9924,7 @@ export function usePrincetonTowerDefenseRuntime() {
           } else if (draggingUnit.kind === "troop") {
             const draggedTroop = troops.find((t) => t.id === draggingUnit.troopId);
             if (draggedTroop) {
-              const moveInfo = getTroopMoveInfo(draggedTroop, towers, spec);
+              const moveInfo = getTroopMoveInfo(draggedTroop, towers, barracksSpecialTowers);
               const targetPos = resolveTroopCommandTarget(clickWorldPos, moveInfo);
               if (targetPos) {
                 issueTroopFormationMoveCommand(draggingUnit.ownerId, targetPos);
@@ -10278,10 +10277,6 @@ export function usePrincetonTowerDefenseRuntime() {
       const selectedTroopUnit = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
       const levelSpecialTowers = getLevelSpecialTowers(selectedMap);
-      const spec =
-        levelSpecialTowers.find(
-          (tower) => tower.type === "barracks"
-        ) ?? undefined;
 
       // Convert to world coordinates for touch-based path calculation
       const clickWorldPos = screenToWorld(
@@ -10440,7 +10435,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
         // For touch: calculate path on-the-fly since there's no hover preview
         if (isTouch) {
-          const moveInfo = getTroopMoveInfo(selectedTroopUnit, towers, spec);
+          const moveInfo = getTroopMoveInfo(selectedTroopUnit, towers, levelSpecialTowers);
           const touchTarget = resolveTroopCommandTarget(clickWorldPos, moveInfo);
           if (touchTarget) {
             issueTroopFormationMoveCommand(selectedTroopUnit.ownerId, touchTarget);
@@ -10727,10 +10722,7 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom
         );
-        const spec =
-          getLevelSpecialTowers(selectedMap).find(
-            (tower) => tower.type === "barracks"
-          ) ?? undefined;
+        const pointerMoveSpecialTowers = getLevelSpecialTowers(selectedMap);
 
         if (draggingUnit.kind === "hero") {
           setSelectedUnitMoveInfo({
@@ -10761,7 +10753,7 @@ export function usePrincetonTowerDefenseRuntime() {
             return;
           }
 
-          const moveInfo = getTroopMoveInfo(draggedTroop, towers, spec);
+          const moveInfo = getTroopMoveInfo(draggedTroop, towers, pointerMoveSpecialTowers);
           setSelectedUnitMoveInfo(moveInfo);
           const pathResult = findClosestPathPointWithinRadius(
             mouseWorldPos,
@@ -11057,14 +11049,11 @@ export function usePrincetonTowerDefenseRuntime() {
       // ========== MOVEMENT TARGET INDICATOR CALCULATION ==========
       const selectedTroop = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
-      const spec =
-        getLevelSpecialTowers(selectedMap).find(
-          (tower) => tower.type === "barracks"
-        ) ?? undefined;
+      const hoverSpecialTowers = getLevelSpecialTowers(selectedMap);
 
       if (selectedTroop) {
         // Get move info for this troop
-        const moveInfo = getTroopMoveInfo(selectedTroop, towers, spec);
+        const moveInfo = getTroopMoveInfo(selectedTroop, towers, hoverSpecialTowers);
         setSelectedUnitMoveInfo(moveInfo);
 
         // Find the valid path point within the troop's move radius

@@ -122,6 +122,7 @@ const LEVEL_ICON_MAP: Record<number, { Icon: LucideIcon; label: string }> = {
   3: { Icon: Swords, label: "Surge" },
   4: { Icon: Sparkles, label: "Apex" },
   5: { Icon: Crown, label: "Mastery" },
+  6: { Icon: Star, label: "Supremacy" },
 };
 
 const UPGRADE_ICON_MAP: Record<string, LucideIcon> = {
@@ -130,30 +131,35 @@ const UPGRADE_ICON_MAP: Record<string, LucideIcon> = {
   "fireball-3": Clock,
   "fireball-4": Zap,
   "fireball-5": Crown,
+  "fireball-6": Flame,
 
   "lightning-1": GitBranch,
   "lightning-2": Crosshair,
   "lightning-3": Clock,
   "lightning-4": Link2,
   "lightning-5": Zap,
+  "lightning-6": GitBranch,
 
   "freeze-1": Clock,
   "freeze-2": Snowflake,
   "freeze-3": Zap,
   "freeze-4": Shield,
   "freeze-5": Globe,
+  "freeze-6": Snowflake,
 
   "payday-1": Banknote,
   "payday-2": TrendingUp,
   "payday-3": Clock,
   "payday-4": Gem,
   "payday-5": Crown,
+  "payday-6": Gem,
 
   "reinforcements-1": Swords,
   "reinforcements-2": Heart,
   "reinforcements-3": Flag,
   "reinforcements-4": Shield,
   "reinforcements-5": Target,
+  "reinforcements-6": Crown,
 };
 
 const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
@@ -174,6 +180,10 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
   "fireball-5": [
     { label: "+3 Meteors", icon: Crown, accent: "#fb923c" },
   ],
+  "fireball-6": [
+    { label: "2× Burn DPS", icon: Flame, accent: "#f87171" },
+    { label: "Searing Trails", icon: Flame, accent: "#fb923c", special: true },
+  ],
 
   "lightning-1": [
     { label: "+2 Chain Bolts", icon: GitBranch, accent: "#fde047" },
@@ -192,6 +202,10 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
     { label: "+120 Damage", icon: Zap, accent: "#fde047" },
     { label: "+0.35s Stun", icon: Clock, accent: "#fde047" },
   ],
+  "lightning-6": [
+    { label: "+2 Chain Bolts", icon: GitBranch, accent: "#fde047" },
+    { label: "+100 Damage", icon: Zap, accent: "#fde047" },
+  ],
 
   "freeze-1": [
     { label: "+0.6s Freeze", icon: Clock, accent: "#67e8f9" },
@@ -208,6 +222,10 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
   "freeze-5": [
     { label: "+0.6s Freeze", icon: Snowflake, accent: "#67e8f9" },
     { label: "Full Map Lockdown", icon: Globe, accent: "#06b6d4", special: true },
+  ],
+  "freeze-6": [
+    { label: "+0.6s Freeze", icon: Snowflake, accent: "#67e8f9" },
+    { label: "Lingering Slow", icon: Clock, accent: "#06b6d4", special: true },
   ],
 
   "payday-1": [
@@ -227,6 +245,10 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
     { label: "+2 per Enemy", icon: TrendingUp, accent: "#fcd34d" },
     { label: "+3s Aura Duration", icon: Clock, accent: "#fcd34d" },
   ],
+  "payday-6": [
+    { label: "+10 Base Payout", icon: Gem, accent: "#fcd34d" },
+    { label: "+20 Max Bonus", icon: TrendingUp, accent: "#fcd34d" },
+  ],
 
   "reinforcements-1": [
     { label: "+10 Knight Damage", icon: Swords, accent: "#6ee7b7" },
@@ -242,6 +264,10 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
   ],
   "reinforcements-5": [
     { label: "Ranged Formation", icon: Target, accent: "#a78bfa", special: true },
+  ],
+  "reinforcements-6": [
+    { label: "+150 Knight Health", icon: Heart, accent: "#6ee7b7" },
+    { label: "+10 Knight Damage", icon: Swords, accent: "#6ee7b7" },
   ],
 };
 

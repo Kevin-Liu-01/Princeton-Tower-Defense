@@ -48,7 +48,7 @@ export const SPELL_OPTIONS: SpellType[] = [
   "reinforcements",
 ];
 
-export const SPELL_UPGRADE_COSTS = [2, 2, 3, 3, 3] as const;
+export const SPELL_UPGRADE_COSTS = [2, 2, 3, 3, 3, 2] as const;
 export const MAX_SPELL_UPGRADE_LEVEL = SPELL_UPGRADE_COSTS.length;
 export const SPELL_MAX_UPGRADE_STARS_PER_SPELL = SPELL_UPGRADE_COSTS.reduce(
   (sum, cost) => sum + cost,
@@ -97,6 +97,12 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       description: "+3 meteors and tighter terminal spread",
       cost: SPELL_UPGRADE_COSTS[4],
     },
+    {
+      level: 6,
+      title: "Inferno Dominion",
+      description: "Burn DPS doubled with searing ground trails",
+      cost: SPELL_UPGRADE_COSTS[5],
+    },
   ],
   lightning: [
     {
@@ -128,6 +134,12 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       title: "Tempest Mandate",
       description: "+120 damage and +0.35s stun",
       cost: SPELL_UPGRADE_COSTS[4],
+    },
+    {
+      level: 6,
+      title: "Thunderlord's Decree",
+      description: "+2 chain bolts and +100 total damage",
+      cost: SPELL_UPGRADE_COSTS[5],
     },
   ],
   freeze: [
@@ -161,6 +173,12 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       description: "Freeze duration +0.6s and full map lockdown",
       cost: SPELL_UPGRADE_COSTS[4],
     },
+    {
+      level: 6,
+      title: "Eternal Winter",
+      description: "Freeze duration +0.6s with lingering slow aura",
+      cost: SPELL_UPGRADE_COSTS[5],
+    },
   ],
   payday: [
     {
@@ -193,6 +211,12 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       description: "+2 payout per enemy and +3s aura",
       cost: SPELL_UPGRADE_COSTS[4],
     },
+    {
+      level: 6,
+      title: "Infinite Dividend",
+      description: "+10 base payout and +20 max bonus",
+      cost: SPELL_UPGRADE_COSTS[5],
+    },
   ],
   reinforcements: [
     {
@@ -224,6 +248,12 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       title: "Warhost Doctrine",
       description: "Unlocks mixed melee and ranged formation",
       cost: SPELL_UPGRADE_COSTS[4],
+    },
+    {
+      level: 6,
+      title: "Legion Commander",
+      description: "Knights gain +150 health and +10 damage",
+      cost: SPELL_UPGRADE_COSTS[5],
     },
   ],
 };
@@ -377,13 +407,14 @@ export const getFireballSpellStats = (level: number): FireballSpellStats => {
   const meteorCount =
     10 + (normalizedLevel >= 2 ? 2 : 0) + (normalizedLevel >= 5 ? 3 : 0);
   const burnDurationMs = 4000 + (normalizedLevel >= 3 ? 1000 : 0);
+  const burnDamagePerSecond = 30 + (normalizedLevel >= 6 ? 30 : 0);
 
   return {
     meteorCount,
     damagePerMeteor,
     impactRadius: 100,
     burnDurationMs,
-    burnDamagePerSecond: 30,
+    burnDamagePerSecond,
     fallDurationMs: 1200,
   };
 };
@@ -392,9 +423,9 @@ export const getLightningSpellStats = (level: number): LightningSpellStats => {
   const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
   return {
     chainCount:
-      8 + (normalizedLevel >= 1 ? 2 : 0) + (normalizedLevel >= 4 ? 2 : 0),
+      8 + (normalizedLevel >= 1 ? 2 : 0) + (normalizedLevel >= 4 ? 2 : 0) + (normalizedLevel >= 6 ? 2 : 0),
     totalDamage:
-      900 + (normalizedLevel >= 2 ? 120 : 0) + (normalizedLevel >= 5 ? 120 : 0),
+      900 + (normalizedLevel >= 2 ? 120 : 0) + (normalizedLevel >= 5 ? 120 : 0) + (normalizedLevel >= 6 ? 100 : 0),
     stunDurationMs:
       500 + (normalizedLevel >= 3 ? 250 : 0) + (normalizedLevel >= 5 ? 350 : 0),
   };
@@ -411,11 +442,11 @@ export const getPaydaySpellStats = (level: number): PaydaySpellStats => {
   const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
   return {
     basePayout:
-      80 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 4 ? 10 : 0),
+      80 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 4 ? 10 : 0) + (normalizedLevel >= 6 ? 10 : 0),
     bonusPerEnemy:
       5 + (normalizedLevel >= 2 ? 2 : 0) + (normalizedLevel >= 5 ? 2 : 0),
     maxBonus:
-      50 + (normalizedLevel >= 2 ? 15 : 0) + (normalizedLevel >= 5 ? 15 : 0),
+      50 + (normalizedLevel >= 2 ? 15 : 0) + (normalizedLevel >= 5 ? 15 : 0) + (normalizedLevel >= 6 ? 20 : 0),
     auraDurationMs:
       10000 +
       (normalizedLevel >= 3 ? 2000 : 0) +
@@ -430,9 +461,9 @@ export const getReinforcementSpellStats = (
   return {
     knightCount: 3,
     knightHp:
-      500 + (normalizedLevel >= 2 ? 150 : 0) + (normalizedLevel >= 4 ? 150 : 0),
+      500 + (normalizedLevel >= 2 ? 150 : 0) + (normalizedLevel >= 4 ? 150 : 0) + (normalizedLevel >= 6 ? 150 : 0),
     knightDamage:
-      30 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 3 ? 10 : 0),
+      30 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 3 ? 10 : 0) + (normalizedLevel >= 6 ? 10 : 0),
     knightAttackSpeedMs: 1000,
     moveRadius: 200,
     rangedUnlocked: normalizedLevel >= 5,
