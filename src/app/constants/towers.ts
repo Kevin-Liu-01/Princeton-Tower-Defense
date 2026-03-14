@@ -288,7 +288,7 @@ export const TOWER_TAG_DEFS: Record<TowerTag, TowerTagDef> = {
   support: { label: "Support", icon: "heart-pulse", textClass: "text-emerald-300", bgClass: "bg-emerald-950/60", borderClass: "border-emerald-700/40" },
   anti_air: { label: "Hits Air", icon: "feather", textClass: "text-sky-300", bgClass: "bg-sky-950/60", borderClass: "border-sky-700/40" },
   ground_only: { label: "Ground Only", icon: "footprints", textClass: "text-stone-400", bgClass: "bg-stone-800/60", borderClass: "border-stone-600/40" },
-  aoe: { label: "AoE", icon: "circle-dot", textClass: "text-orange-300", bgClass: "bg-orange-950/60", borderClass: "border-orange-700/40" },
+  aoe: { label: "Splash", icon: "circle-dot", textClass: "text-orange-300", bgClass: "bg-orange-950/60", borderClass: "border-orange-700/40" },
   single_target: { label: "Single Target", icon: "crosshair", textClass: "text-red-200", bgClass: "bg-red-950/40", borderClass: "border-red-800/30" },
   chain: { label: "Chain", icon: "zap", textClass: "text-cyan-300", bgClass: "bg-cyan-950/60", borderClass: "border-cyan-700/40" },
   ramp_up: { label: "Ramp Up", icon: "trending-up", textClass: "text-green-300", bgClass: "bg-green-950/60", borderClass: "border-green-700/40" },
@@ -298,11 +298,11 @@ export const TOWER_TAG_DEFS: Record<TowerTag, TowerTagDef> = {
 export const TOWER_TAGS: Record<TowerType, TowerTag[]> = {
   cannon: ["attacker", "single_target", "anti_air"],
   library: ["crowd_control", "anti_air"],
-  lab: ["attacker", "chain", "anti_air"],
-  arch: ["attacker", "ramp_up", "anti_air"],
+  lab: ["chain", "attacker", "anti_air"],
+  arch: ["ramp_up", "attacker", "anti_air"],
   club: ["economy"],
   station: ["spawner", "blocker"],
-  mortar: ["attacker", "aoe", "ground_only"],
+  mortar: ["aoe", "attacker", "ground_only"],
 };
 
 export const TOWER_QUICK_SUMMARY: Record<TowerType, string> = {
