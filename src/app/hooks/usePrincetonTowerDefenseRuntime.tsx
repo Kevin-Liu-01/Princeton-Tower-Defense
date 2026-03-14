@@ -12440,7 +12440,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}
           />
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] p-2 ">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] ">
             <TopHUD
               pawPoints={pawPoints}
               lives={lives}
@@ -12473,7 +12473,7 @@ export function usePrincetonTowerDefenseRuntime() {
               devMenuOpen={devMenuOpen}
             />
             {!cameraModeActive && (
-              <div className="mt-2 flex items-start justify-between gap-2 sm:gap-3">
+              <div className="mt-2 flex px-2 items-start justify-between gap-2 sm:gap-3">
                 <EnemyInspector
                   isActive={inspectorActive}
                   setIsActive={setInspectorActive}
@@ -12497,8 +12497,6 @@ export function usePrincetonTowerDefenseRuntime() {
                   setCameraOffset={setCameraOffset}
                   setCameraZoom={setCameraZoom}
                   defaultOffset={selectedLevelData?.camera?.offset}
-                  showCameraDpad={getGameSettings().ui.showCameraDpad}
-                  showControlsReference={getGameSettings().ui.showControlsReference}
                 />
               </div>
             )}

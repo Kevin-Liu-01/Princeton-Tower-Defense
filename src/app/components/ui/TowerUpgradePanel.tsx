@@ -40,7 +40,7 @@ import {
 import type { Tower, Position } from "../../types";
 import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR } from "../../constants";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
-import { getTowerFoundationSize } from "../../rendering/towers/towerHelpers";
+import { getTowerFoundationSize, getTowerVisualMetrics } from "../../rendering/towers/towerHelpers";
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, panelGradient } from "./theme";
@@ -646,12 +646,15 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const lastRowRemainder = statsToShow.length > gridCols ? statsToShow.length % gridCols : 0;
   const lastRowStartIdx = lastRowRemainder > 0 ? statsToShow.length - lastRowRemainder : -1;
 
-  // ---- Circle geometry (derived from foundation size, scales with type + level + zoom) ----
+  // ---- Circle geometry (derived from foundation size + visual height, scales with type + level + zoom) ----
   const fndSize = getTowerFoundationSize(tower);
   const towerFootprint = Math.max(fndSize.w, fndSize.d);
-  const baseOrbit = towerFootprint * 0.9 + 20;
+  const visual = getTowerVisualMetrics(tower);
+  const horizontalOrbit = towerFootprint * 0.9 + 20;
+  const verticalOrbit = visual.visualHeight * 0.55 + 20;
+  const baseOrbit = Math.max(horizontalOrbit, verticalOrbit);
   const circleCenterX = screenPos.x;
-  const circleCenterY = screenPos.y + 0.25 * towerFootprint * cameraZoom;
+  const circleCenterY = screenPos.y - visual.centerOffsetY * cameraZoom;
   const circleRadius = Math.round(baseOrbit * cameraZoom);
   const btnOrbitRadius = circleRadius;
   const btnSize = 44;

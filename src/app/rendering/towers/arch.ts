@@ -24,7 +24,7 @@ export function renderArchTower(
 
   ctx.save();
   // Shift the entire building up slightly
-  screenPos = { x: screenPos.x, y: screenPos.y - 8 * zoom };
+  screenPos = { x: screenPos.x, y: screenPos.y - 5 * zoom };
   const baseWidth = 38 + tower.level * 5;
   const baseDepth = 30 + tower.level * 4;
   const w = baseWidth * zoom * ISO_PRISM_W_FACTOR;
@@ -968,7 +968,7 @@ export function renderArchTower(
 
   // === MYSTICAL PILLARS WITH RUNES ===
   const pillarWidth = 14 + tower.level * 2;
-  const pillarHeight = 25 + tower.level * 6;
+  const pillarHeight = 22 + tower.level * 5;
   const pillarX =
     screenPos.x - baseWidth * zoom * 0.35 - archVibrate * 0.3 - pillarSpread;
   const pillarXR =

@@ -18,7 +18,7 @@ import { renderArchTower } from "./arch";
 import { renderClubTower } from "./club";
 import { renderStationTower } from "./station";
 
-export { getTowerFoundationSize } from "./towerHelpers";
+export { getTowerFoundationSize, getTowerVisualMetrics } from "./towerHelpers";
 export {
   renderStationRange,
   renderTowerRange,

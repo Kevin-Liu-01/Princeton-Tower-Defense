@@ -29,7 +29,7 @@ export function renderTeslaCoil(
   void cameraOffset;
   void cameraZoom;
 
-  const coilHeight = (35 + tower.level * 8) * zoom;
+  const coilHeight = (30 + tower.level * 6) * zoom;
   const isAttacking = Date.now() - tower.lastAttack < 300;
   const attackIntensity = isAttacking
     ? Math.max(0, 1 - (Date.now() - tower.lastAttack) / 300)
@@ -1094,7 +1094,7 @@ export function renderFocusedBeam(
   void cameraOffset;
   void cameraZoom;
 
-  const coilHeight = 65 * zoom;
+  const coilHeight = 52 * zoom;
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 400;
   const attackPulse = isAttacking
@@ -2080,7 +2080,7 @@ export function renderChainLightning(
   zoom: number,
   time: number,
 ) {
-  const coilHeight = 65 * zoom;
+  const coilHeight = 52 * zoom;
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 400;
   const attackPulse = isAttacking

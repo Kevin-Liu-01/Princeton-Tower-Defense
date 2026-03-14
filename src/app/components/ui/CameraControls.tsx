@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import {
   ArrowUpCircle,
   ArrowDownCircle,
@@ -8,9 +8,12 @@ import {
   ZoomIn,
   ZoomOut,
   X,
+  Gamepad2,
+  Keyboard,
 } from "lucide-react";
 import type { Position } from "../../types";
 import { PANEL, GOLD, panelGradient } from "./theme";
+import { useSettings } from "../../hooks/useSettings";
 
 // =============================================================================
 // CAMERA CONTROLS COMPONENT
@@ -20,8 +23,6 @@ interface CameraControlsProps {
   setCameraOffset: React.Dispatch<React.SetStateAction<Position>>;
   setCameraZoom: React.Dispatch<React.SetStateAction<number>>;
   defaultOffset?: Position;
-  showCameraDpad?: boolean;
-  showControlsReference?: boolean;
 }
 
 const dpadBtnStyle: React.CSSProperties = {
@@ -30,174 +31,205 @@ const dpadBtnStyle: React.CSSProperties = {
   boxShadow: `inset 0 0 6px ${GOLD.glow04}`,
 };
 
+const drawerTabStyle: React.CSSProperties = {
+  background: panelGradient,
+  border: `1.5px solid ${GOLD.border25}`,
+  boxShadow: `0 0 10px ${GOLD.glow07}, inset 0 0 6px ${GOLD.glow04}`,
+};
+
 export const CameraControls: React.FC<CameraControlsProps> = ({
   setCameraOffset,
   setCameraZoom,
   defaultOffset = { x: -40, y: -60 },
-  showCameraDpad = true,
-  showControlsReference = true,
 }) => {
-  const [dpadDismissed, setDpadDismissed] = useState(false);
-  const [controlsDismissed, setControlsDismissed] = useState(false);
+  const { settings, updateCategory } = useSettings();
+  const showDpad = settings.ui.showCameraDpad;
+  const showControls = settings.ui.showControlsReference;
 
-  const cameraDpadVisible = showCameraDpad && !dpadDismissed;
-  const controlsRefVisible = showControlsReference && !controlsDismissed;
+  const hideDpad = () => updateCategory("ui", { showCameraDpad: false });
+  const showDpadPanel = () => updateCategory("ui", { showCameraDpad: true });
+  const hideControls = () => updateCategory("ui", { showControlsReference: false });
+  const showControlsPanel = () => updateCategory("ui", { showControlsReference: true });
 
-  if (!cameraDpadVisible && !controlsRefVisible) return null;
+  const hasDrawerTabs = !showDpad || !showControls;
+  const hasVisiblePanels = showDpad || showControls;
+
+  if (!hasVisiblePanels && !hasDrawerTabs) return null;
 
   return (
-    <div
-      className="pointer-events-auto hidden sm:flex flex-col gap-1.5"
-    >
-      {/* Camera Panel */}
-      {cameraDpadVisible && (
-      <div
-        className="p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
-        style={{
-          background: panelGradient,
-          border: `1.5px solid ${GOLD.border30}`,
-          boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
-        }}
-      >
-        {/* Inner ghost border */}
-        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-
-        <button
-          onClick={() => setDpadDismissed(true)}
-          className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
-          title="Hide camera controls"
-        >
-          <X size={10} className="text-amber-500/60 hover:text-amber-300" />
-        </button>
-
-        <div
-          className="text-[9px] text-amber-200 mb-1.5 font-bold text-center tracking-[0.15em] uppercase relative z-10"
-          style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
-        >
-          Camera
+    <div className="pointer-events-auto hidden sm:flex flex-col gap-1.5">
+      {/* Drawer tabs for hidden panels */}
+      {hasDrawerTabs && (
+        <div className="flex justify-end gap-1">
+          {!showDpad && (
+            <button
+              onClick={showDpadPanel}
+              className="p-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
+              style={drawerTabStyle}
+              title="Show camera D-pad"
+            >
+              <Gamepad2 size={14} className="text-amber-400/70" />
+            </button>
+          )}
+          {!showControls && (
+            <button
+              onClick={showControlsPanel}
+              className="p-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
+              style={drawerTabStyle}
+              title="Show controls reference"
+            >
+              <Keyboard size={14} className="text-amber-400/70" />
+            </button>
+          )}
         </div>
+      )}
 
-        {/* D-pad grid */}
+      {/* Camera Panel */}
+      {showDpad && (
         <div
-          className="grid grid-cols-3 gap-0.5 p-1 rounded-lg relative z-10"
+          className="p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
           style={{
-            background: PANEL.bgDeep,
-            border: `1px solid ${GOLD.border25}`,
-            boxShadow: `inset 0 0 8px rgba(0,0,0,0.3)`,
+            background: panelGradient,
+            border: `1.5px solid ${GOLD.border30}`,
+            boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
           }}
         >
-          <div></div>
-          <button
-            onClick={() => setCameraOffset((p) => ({ ...p, y: p.y + 30 }))}
-            className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
-          >
-            <ArrowUpCircle size={14} className="text-amber-400" />
-          </button>
-          <div></div>
-          <button
-            onClick={() => setCameraOffset((p) => ({ ...p, x: p.x + 30 }))}
-            className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
-          >
-            <ArrowLeftCircle size={14} className="text-amber-400" />
-          </button>
-          <button
-            onClick={() => setCameraOffset(defaultOffset)}
-            className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center text-amber-300 text-[10px]"
-            style={dpadBtnStyle}
-          >
-            ●
-          </button>
-          <button
-            onClick={() => setCameraOffset((p) => ({ ...p, x: p.x - 30 }))}
-            className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
-          >
-            <ArrowRightCircle size={14} className="text-amber-400" />
-          </button>
-          <div></div>
-          <button
-            onClick={() => setCameraOffset((p) => ({ ...p, y: p.y - 30 }))}
-            className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
-          >
-            <ArrowDownCircle size={14} className="text-amber-400" />
-          </button>
-          <div></div>
-        </div>
+          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
 
-        {/* Zoom buttons */}
-        <div className="flex gap-1 mt-1.5 relative z-10">
           <button
-            onClick={() => setCameraZoom((z) => Math.min(z + 0.15, 2.5))}
-            className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
+            onClick={hideDpad}
+            className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
+            title="Hide camera controls"
           >
-            <ZoomIn size={14} className="text-amber-400" />
+            <X size={10} className="text-amber-500/60 hover:text-amber-300" />
           </button>
-          <button
-            onClick={() => setCameraZoom((z) => Math.max(z - 0.15, 0.6))}
-            className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-            style={dpadBtnStyle}
-          >
-            <ZoomOut size={14} className="text-amber-400" />
-          </button>
-        </div>
 
-      </div>
+          <div
+            className="text-[9px] text-amber-200 mb-1.5 font-bold text-center tracking-[0.15em] uppercase relative z-10"
+            style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
+          >
+            Camera
+          </div>
+
+          {/* D-pad grid */}
+          <div
+            className="grid grid-cols-3 gap-0.5 p-1 rounded-lg relative z-10"
+            style={{
+              background: PANEL.bgDeep,
+              border: `1px solid ${GOLD.border25}`,
+              boxShadow: `inset 0 0 8px rgba(0,0,0,0.3)`,
+            }}
+          >
+            <div></div>
+            <button
+              onClick={() => setCameraOffset((p) => ({ ...p, y: p.y + 30 }))}
+              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ArrowUpCircle size={14} className="text-amber-400" />
+            </button>
+            <div></div>
+            <button
+              onClick={() => setCameraOffset((p) => ({ ...p, x: p.x + 30 }))}
+              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ArrowLeftCircle size={14} className="text-amber-400" />
+            </button>
+            <button
+              onClick={() => setCameraOffset(defaultOffset)}
+              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center text-amber-300 text-[10px]"
+              style={dpadBtnStyle}
+            >
+              ●
+            </button>
+            <button
+              onClick={() => setCameraOffset((p) => ({ ...p, x: p.x - 30 }))}
+              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ArrowRightCircle size={14} className="text-amber-400" />
+            </button>
+            <div></div>
+            <button
+              onClick={() => setCameraOffset((p) => ({ ...p, y: p.y - 30 }))}
+              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ArrowDownCircle size={14} className="text-amber-400" />
+            </button>
+            <div></div>
+          </div>
+
+          {/* Zoom buttons */}
+          <div className="flex gap-1 mt-1.5 relative z-10">
+            <button
+              onClick={() => setCameraZoom((z) => Math.min(z + 0.15, 2.5))}
+              className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ZoomIn size={14} className="text-amber-400" />
+            </button>
+            <button
+              onClick={() => setCameraZoom((z) => Math.max(z - 0.15, 0.6))}
+              className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+              style={dpadBtnStyle}
+            >
+              <ZoomOut size={14} className="text-amber-400" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Controls help panel */}
-      {controlsRefVisible && (
-      <div
-        className="hidden sm:block p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
-        style={{
-          background: panelGradient,
-          border: `1.5px solid ${GOLD.border25}`,
-          boxShadow: `0 0 15px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
-        }}
-      >
-        {/* Inner ghost border */}
-        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-
-        <button
-          onClick={() => setControlsDismissed(true)}
-          className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
-          title="Hide controls reference"
-        >
-          <X size={10} className="text-amber-500/60 hover:text-amber-300" />
-        </button>
-
+      {showControls && (
         <div
-          className="text-[9px] text-amber-200 font-bold tracking-[0.15em] mb-1.5 text-center uppercase relative z-10"
-          style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
+          className="hidden sm:block p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
+          style={{
+            background: panelGradient,
+            border: `1.5px solid ${GOLD.border25}`,
+            boxShadow: `0 0 15px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
+          }}
         >
-          Controls
-        </div>
+          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
 
-        <div className="flex flex-col gap-1 relative z-10">
-          {[
-            { key: "WASD", desc: "Move Camera" },
-            { key: "+/−", desc: "Zoom In / Out" },
-            { key: "ESC", desc: "Unselect" },
-            { key: "F2", desc: "Photo Mode" },
-          ].map((item) => (
-            <div key={item.key} className="flex items-center gap-2 text-[9px]">
-              <span
-                className="font-mono px-1.5 py-0.5 rounded text-amber-200 text-[8px] font-bold"
-                style={{
-                  background: PANEL.bgDeep,
-                  border: `1px solid ${GOLD.border25}`,
-                }}
-              >
-                {item.key}
-              </span>
-              <span className="text-amber-300/80">{item.desc}</span>
-            </div>
-          ))}
+          <button
+            onClick={hideControls}
+            className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
+            title="Hide controls reference"
+          >
+            <X size={10} className="text-amber-500/60 hover:text-amber-300" />
+          </button>
+
+          <div
+            className="text-[9px] text-amber-200 font-bold tracking-[0.15em] mb-1.5 text-center uppercase relative z-10"
+            style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
+          >
+            Controls
+          </div>
+
+          <div className="flex flex-col gap-1 relative z-10">
+            {[
+              { key: "WASD", desc: "Move Camera" },
+              { key: "+/−", desc: "Zoom In / Out" },
+              { key: "ESC", desc: "Unselect" },
+              { key: "F2", desc: "Photo Mode" },
+            ].map((item) => (
+              <div key={item.key} className="flex items-center gap-2 text-[9px]">
+                <span
+                  className="font-mono px-1.5 py-0.5 rounded text-amber-200 text-[8px] font-bold"
+                  style={{
+                    background: PANEL.bgDeep,
+                    border: `1px solid ${GOLD.border25}`,
+                  }}
+                >
+                  {item.key}
+                </span>
+                <span className="text-amber-300/80">{item.desc}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

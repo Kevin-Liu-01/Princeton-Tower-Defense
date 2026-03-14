@@ -10,11 +10,7 @@ import {
 import { drawIsoFlushSlit } from "../isoFlush";
 import { LEVEL_DATA, REGION_THEMES } from "../../constants/maps";
 import type { MapTheme } from "../../constants/maps";
-import {
-  gridToWorld,
-  lightenColor,
-  darkenColor,
-} from "../../utils";
+import { gridToWorld, lightenColor, darkenColor } from "../../utils";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
   generateIsoHexVertices,
@@ -410,7 +406,14 @@ export function drawMerlon(
 }
 
 // Re-exported from unified flush element system
-export { drawIsoGothicWindow, drawIsoFlushSlit, drawIsoFlushRect, drawIsoFlushDoor, drawIsoFlushVent, drawIsoFlushPanel } from "../isoFlush";
+export {
+  drawIsoGothicWindow,
+  drawIsoFlushSlit,
+  drawIsoFlushRect,
+  drawIsoFlushDoor,
+  drawIsoFlushVent,
+  drawIsoFlushPanel,
+} from "../isoFlush";
 export type { IsoFace } from "../isoFlush";
 
 // ============================================================================
@@ -2217,6 +2220,54 @@ export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
     }
     default:
       return { w: 60, d: 60 };
+  }
+}
+
+/**
+ * Returns vertical metrics for centering the upgrade circle on a tower.
+ * - centerOffsetY: how far above screenPos.y the visual center is (pre-zoom px)
+ * - visualHeight: total visual height of the tower (pre-zoom px), used for radius
+ */
+export function getTowerVisualMetrics(tower: Tower): {
+  centerOffsetY: number;
+  visualHeight: number;
+} {
+  const level = tower.level;
+  switch (tower.type) {
+    case "cannon": {
+      const h = 24 + level * 8;
+      return { centerOffsetY: 10 + h * 0.38, visualHeight: h + 40 };
+    }
+    case "library": {
+      const body = 28 + level * 8;
+      const spire = 24 + level * 5;
+      const total = body + spire * 0.7 + 40;
+      return { centerOffsetY: total * 0.38, visualHeight: total };
+    }
+    case "lab": {
+      const body = 23 + level * 7;
+      const coil = level === 4 ? 52 : 30 + level * 6;
+      const total = body + coil * 0.7 + 38;
+      return { centerOffsetY: total * 0.38, visualHeight: total };
+    }
+    case "arch": {
+      const pillarH = 22 + level * 5;
+      return { centerOffsetY: 20 + pillarH * 0.45, visualHeight: pillarH + 80 };
+    }
+    case "club": {
+      const h = 23 + level * 7;
+      return { centerOffsetY: 18 + h * 0.38, visualHeight: h + 14 };
+    }
+    case "station": {
+      const totalH = 30 + level * 6;
+      return { centerOffsetY: 6 + totalH * 0.32, visualHeight: totalH + 50 };
+    }
+    case "mortar": {
+      const depotH = (22 + level * 10) * 0.42;
+      return { centerOffsetY: depotH * 0.5 + 8, visualHeight: depotH + 28 };
+    }
+    default:
+      return { centerOffsetY: 20, visualHeight: 60 };
   }
 }
 

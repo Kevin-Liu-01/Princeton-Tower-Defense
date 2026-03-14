@@ -99,7 +99,7 @@ export function renderCannonTower(
   ctx.save();
   const level = tower.level;
   const baseWidth = 36 + level * 5;
-  const baseHeight = 24 + level * 10;
+  const baseHeight = 24 + level * 8;
 
   // ========== BASE RAILING SETUP & BACK HALF (behind building body) ==========
   const canBalW = baseWidth * zoom * 0.5;
@@ -1968,7 +1968,7 @@ export function renderStandardCannon(
   const foreshorten = Math.abs(cosR);
 
   // Larger barrel dimensions
-  const baseBarrelLength = (42 + level * 14) * zoom;
+  const baseBarrelLength = (38 + level * 12) * zoom;
   const barrelLength =
     baseBarrelLength * (0.4 + foreshorten * 0.6) - recoilOffset;
   const barrelWidth = (12 + level * 3) * zoom;
@@ -3642,7 +3642,7 @@ export function renderHeavyCannon(
   const facingAway = sinR < -0.3;
 
   // Larger barrel for heavy cannon
-  const baseBarrelLength = 82 * zoom;
+  const baseBarrelLength = 70 * zoom;
   const barrelLength =
     baseBarrelLength * (0.4 + foreshorten * 0.6) - recoilOffset;
   const barrelWidth = 18 * zoom;
@@ -5470,7 +5470,7 @@ export function drawGatlingBarrels(
   const upY = -1;
 
   // Barrel geometry
-  const barrelLen = (56 - recoilOffset * 0.8) * zoom;
+  const barrelLen = (48 - recoilOffset * 0.8) * zoom;
   const housingDist = 12 * zoom - recoilOffset * 0.3;
   const barrelCount = 6;
   const barrelSpread = 7 * zoom;

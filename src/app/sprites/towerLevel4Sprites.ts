@@ -950,7 +950,7 @@ export function drawLibraryBlizzard(ctx: Ctx, cx: number, cy: number, s: number,
 
 // ═════════════════════════════════════════════════════════════════════
 // LAB 4A: FOCUSED BEAM
-// Blue-gray industrial building with red laser emitter
+// Blue-gray industrial building with yellow laser emitter
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
@@ -998,10 +998,10 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
     ctx.beginPath(); ctx.moveTo(cx + 4 * s + i * 3 * s, cy + 10 * s); ctx.lineTo(cx + 3 * s + i * 3 * s, cy); ctx.stroke();
   }
 
-  // RED glowing windows (laser-themed)
+  // Yellow glowing windows (beam-themed)
   const labGlow = animated ? 0.6 + Math.sin(t * 2) * 0.25 : 0.7;
-  drawGlowingWindow(ctx, cx - 9 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 60, 60", "#ff3030", labGlow);
-  drawGlowingWindow(ctx, cx + 4 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 60, 60", "#ff3030", labGlow);
+  drawGlowingWindow(ctx, cx - 9 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 220, 50", "#ffdd30", labGlow);
+  drawGlowingWindow(ctx, cx + 4 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 220, 50", "#ffdd30", labGlow);
 
   // Ventilation unit on top
   ctx.fillStyle = "#3a4a55";
@@ -1017,17 +1017,17 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
     ctx.fillRect(cx - 4 * s + i * 3 * s, cy - 7 * s, 2 * s, 2 * s);
   }
 
-  // Laser emitter tower (red-accented)
+  // Laser emitter tower (yellow-accented)
   ctx.fillStyle = "#2a3a45";
   ctx.fillRect(cx - 2 * s, cy - 17 * s, 4 * s, 9 * s);
   ctx.fillStyle = "#3a4a55";
   ctx.fillRect(cx, cy - 17 * s, 2 * s, 9 * s);
 
-  // Focusing rings (copper with red glow)
+  // Focusing rings (copper with yellow glow)
   for (let i = 0; i < 5; i++) {
     const ringY = cy - 7 * s - i * 2.5 * s;
     const rr = (5.5 - i * 0.4) * s;
-    ctx.strokeStyle = i % 2 === 0 ? "#b8860b" : "#8a6020";
+    ctx.strokeStyle = i % 2 === 0 ? "#c9a227" : "#a08020";
     ctx.lineWidth = 1.5 * s;
     ctx.beginPath();
     ctx.ellipse(cx, ringY, rr, 1.5 * s, 0, 0, Math.PI * 2);
@@ -1038,16 +1038,16 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
   const orbY = cy - 19 * s;
   const beamPulse = animated ? 0.7 + Math.sin(t * 4) * 0.3 : 0.8;
   const emitGrad = ctx.createRadialGradient(cx, orbY, 0, cx, orbY, 7 * s);
-  emitGrad.addColorStop(0, `rgba(255, 80, 80, ${beamPulse})`);
-  emitGrad.addColorStop(0.4, `rgba(255, 30, 30, ${beamPulse * 0.6})`);
-  emitGrad.addColorStop(1, "rgba(200, 0, 0, 0)");
+  emitGrad.addColorStop(0, `rgba(255, 240, 80, ${beamPulse})`);
+  emitGrad.addColorStop(0.4, `rgba(255, 200, 30, ${beamPulse * 0.6})`);
+  emitGrad.addColorStop(1, "rgba(200, 160, 0, 0)");
   ctx.fillStyle = emitGrad;
   ctx.beginPath();
   ctx.arc(cx, orbY, 7 * s, 0, Math.PI * 2);
   ctx.fill();
   // Core
-  ctx.fillStyle = "#ff4040";
-  ctx.shadowColor = "#ff2020";
+  ctx.fillStyle = "#ffdd44";
+  ctx.shadowColor = "#ffcc00";
   ctx.shadowBlur = 15 * s;
   ctx.beginPath();
   ctx.arc(cx, orbY, 4.5 * s, 0, Math.PI * 2);
@@ -1059,7 +1059,7 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
   ctx.shadowBlur = 0;
 
   // Targeting reticle
-  ctx.strokeStyle = `rgba(255, 80, 80, ${beamPulse * 0.5})`;
+  ctx.strokeStyle = `rgba(255, 220, 50, ${beamPulse * 0.5})`;
   ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
   ctx.arc(cx, orbY, 6 * s, 0, Math.PI * 2);
@@ -1074,10 +1074,10 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
   // Beam extending upward
   if (animated) {
     const bA = 0.3 + Math.sin(t * 5) * 0.2;
-    ctx.strokeStyle = `rgba(255, 50, 50, ${bA})`;
+    ctx.strokeStyle = `rgba(255, 220, 50, ${bA})`;
     ctx.lineWidth = 2 * s;
     ctx.beginPath(); ctx.moveTo(cx, orbY); ctx.lineTo(cx, orbY - 10 * s); ctx.stroke();
-    ctx.strokeStyle = `rgba(255, 100, 100, ${bA * 0.4})`;
+    ctx.strokeStyle = `rgba(255, 240, 100, ${bA * 0.4})`;
     ctx.lineWidth = 5 * s;
     ctx.beginPath(); ctx.moveTo(cx, orbY); ctx.lineTo(cx, orbY - 10 * s); ctx.stroke();
   }
@@ -1089,8 +1089,8 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
   ctx.beginPath(); ctx.moveTo(cx + 2 * s, cy - 4.5 * s); ctx.lineTo(cx + 6 * s, cy + 2 * s); ctx.stroke();
 
   // Engineering emblem
-  ctx.fillStyle = "#ff4040";
-  ctx.shadowColor = "#ff4040";
+  ctx.fillStyle = "#ffdd44";
+  ctx.shadowColor = "#ffcc00";
   ctx.shadowBlur = 4 * s;
   ctx.beginPath();
   ctx.arc(cx, cy + 10 * s, 2.5 * s, 0, Math.PI * 2);
@@ -1101,12 +1101,12 @@ export function drawLabFocusedBeam(ctx: Ctx, cx: number, cy: number, s: number, 
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#ff5050", "A");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#ffdd44", "A");
 }
 
 // ═════════════════════════════════════════════════════════════════════
 // LAB 4B: CHAIN LIGHTNING
-// Blue-gray industrial building with gold multi-node Tesla system
+// Blue-gray industrial building with lavender multi-node Tesla system
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
@@ -1153,10 +1153,10 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
     ctx.beginPath(); ctx.moveTo(cx + 4 * s + i * 3 * s, cy + 10 * s); ctx.lineTo(cx + 3 * s + i * 3 * s, cy); ctx.stroke();
   }
 
-  // GOLD/YELLOW glowing windows (chain lightning energy)
+  // Lavender glowing windows (chain lightning energy)
   const labGlow = animated ? 0.6 + Math.sin(t * 2) * 0.25 : 0.7;
-  drawGlowingWindow(ctx, cx - 9 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 220, 50", "#ffdd44", labGlow);
-  drawGlowingWindow(ctx, cx + 4 * s, cy + 4 * s, 5, 5, s, "#0a1520", "255, 220, 50", "#ffdd44", labGlow);
+  drawGlowingWindow(ctx, cx - 9 * s, cy + 4 * s, 5, 5, s, "#0a1520", "180, 140, 255", "#b080ff", labGlow);
+  drawGlowingWindow(ctx, cx + 4 * s, cy + 4 * s, 5, 5, s, "#0a1520", "180, 140, 255", "#b080ff", labGlow);
 
   // Ventilation unit
   ctx.fillStyle = "#3a4a55";
@@ -1174,8 +1174,8 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
   ctx.fillStyle = "#3a4a55";
   ctx.fillRect(cx, cy - 17 * s, 2 * s, 9 * s);
 
-  // Coil rings (gold - more rings for chain lightning)
-  ctx.strokeStyle = "#c9a227";
+  // Coil rings (lavender)
+  ctx.strokeStyle = "#9070cc";
   ctx.lineWidth = 2 * s;
   ctx.beginPath();
   ctx.ellipse(cx, cy - 4.5 * s, 6 * s, 1.5 * s, 0, 0, Math.PI * 2);
@@ -1188,19 +1188,19 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
     ctx.stroke();
   }
 
-  // Main orb (golden-yellow)
+  // Main orb (lavender)
   const orbY = cy - 19 * s;
   const orbPulse = animated ? 1 + Math.sin(t * 3) * 0.15 : 1;
   const mainGrad = ctx.createRadialGradient(cx, orbY, 0, cx, orbY, 7 * s * orbPulse);
-  mainGrad.addColorStop(0, `rgba(255, 240, 100, ${labGlow})`);
-  mainGrad.addColorStop(0.4, `rgba(255, 200, 30, ${labGlow * 0.6})`);
-  mainGrad.addColorStop(1, "rgba(200, 150, 0, 0)");
+  mainGrad.addColorStop(0, `rgba(210, 180, 255, ${labGlow})`);
+  mainGrad.addColorStop(0.4, `rgba(160, 120, 240, ${labGlow * 0.6})`);
+  mainGrad.addColorStop(1, "rgba(100, 60, 180, 0)");
   ctx.fillStyle = mainGrad;
   ctx.beginPath();
   ctx.arc(cx, orbY, 7 * s * orbPulse, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ffee44";
-  ctx.shadowColor = "#ffee44";
+  ctx.fillStyle = "#c0a0ff";
+  ctx.shadowColor = "#b090ee";
   ctx.shadowBlur = 12 * s;
   ctx.beginPath();
   ctx.arc(cx, orbY, 4.5 * s * orbPulse, 0, Math.PI * 2);
@@ -1227,15 +1227,15 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
     ctx.lineTo(sat.x, sat.y);
     ctx.stroke();
     // Mini coil ring
-    ctx.strokeStyle = "#c9a227";
+    ctx.strokeStyle = "#9070cc";
     ctx.lineWidth = 1 * s;
     ctx.beginPath();
     ctx.ellipse(sat.x, sat.y + 1 * s, 3 * s, 1 * s, 0, 0, Math.PI * 2);
     ctx.stroke();
     // Satellite orb
     const sPulse = animated ? 0.7 + Math.sin(t * 4 + si) * 0.3 : 0.8;
-    ctx.fillStyle = `rgba(255, 220, 60, ${sPulse})`;
-    ctx.shadowColor = "#ffdd44";
+    ctx.fillStyle = `rgba(190, 160, 255, ${sPulse})`;
+    ctx.shadowColor = "#b080ff";
     ctx.shadowBlur = 8 * s;
     ctx.beginPath();
     ctx.arc(sat.x, sat.y, 2.5 * s, 0, Math.PI * 2);
@@ -1248,7 +1248,7 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
 
     // Lightning chain to main orb
     if (animated) {
-      ctx.strokeStyle = `rgba(255, 240, 80, ${0.5 + Math.sin(t * 6 + si) * 0.3})`;
+      ctx.strokeStyle = `rgba(200, 170, 255, ${0.5 + Math.sin(t * 6 + si) * 0.3})`;
       ctx.lineWidth = 1.2 * s;
       ctx.beginPath();
       ctx.moveTo(sat.x, sat.y);
@@ -1264,7 +1264,7 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
 
   // Ground electricity
   if (animated) {
-    ctx.strokeStyle = `rgba(255, 220, 50, ${0.3 + Math.sin(t * 8) * 0.2})`;
+    ctx.strokeStyle = `rgba(180, 150, 255, ${0.3 + Math.sin(t * 8) * 0.2})`;
     ctx.lineWidth = 1 * s;
     for (let i = 0; i < 3; i++) {
       const bx = cx - 8 * s + i * 8 * s;
@@ -1283,9 +1283,9 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
   ctx.beginPath(); ctx.moveTo(cx - 2 * s, cy - 4.5 * s); ctx.lineTo(cx - 6 * s, cy + 2 * s); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(cx + 2 * s, cy - 4.5 * s); ctx.lineTo(cx + 6 * s, cy + 2 * s); ctx.stroke();
 
-  // Engineering emblem (gold)
-  ctx.fillStyle = "#ffdd44";
-  ctx.shadowColor = "#ffdd44";
+  // Engineering emblem (lavender)
+  ctx.fillStyle = "#b080ff";
+  ctx.shadowColor = "#a070ee";
   ctx.shadowBlur = 4 * s;
   ctx.beginPath();
   ctx.arc(cx, cy + 10 * s, 2.5 * s, 0, Math.PI * 2);
@@ -1296,7 +1296,7 @@ export function drawLabChainLightning(ctx: Ctx, cx: number, cy: number, s: numbe
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#ffdd44", "B");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#b080ff", "B");
 }
 
 // ═════════════════════════════════════════════════════════════════════
@@ -1637,17 +1637,17 @@ export function drawArchSymphony(ctx: Ctx, cx: number, cy: number, s: number, t:
 
 // ═════════════════════════════════════════════════════════════════════
 // CLUB 4A: INVESTMENT BANK
-// Luxurious bank building with vault door and gold accents
+// Space blue and lavender bank building with gold accents
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
   drawGroundShadow(ctx, cx, cy, s, 16, 7);
-  drawHexPlatform(ctx, cx, cy, s, 16, 17, 14, "#4a4530", "#5a5540");
+  drawHexPlatform(ctx, cx, cy, s, 16, 17, 14, "#1a2240", "#2a3250");
 
-  // Building body - elegant gray-gold with gradients
+  // Building body - space blue with lavender tints
   const lGrad = ctx.createLinearGradient(cx - 12 * s, cy, cx, cy);
-  lGrad.addColorStop(0, "#2a2820");
-  lGrad.addColorStop(1, "#3a3830");
+  lGrad.addColorStop(0, "#10183a");
+  lGrad.addColorStop(1, "#1a2550");
   ctx.fillStyle = lGrad;
   ctx.beginPath();
   ctx.moveTo(cx - 12 * s, cy + 12 * s); ctx.lineTo(cx - 10 * s, cy - 2 * s);
@@ -1655,15 +1655,15 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
   ctx.closePath();
   ctx.fill();
   const rGrad = ctx.createLinearGradient(cx, cy, cx + 12 * s, cy);
-  rGrad.addColorStop(0, "#3a3830");
-  rGrad.addColorStop(1, "#4a4840");
+  rGrad.addColorStop(0, "#1a2550");
+  rGrad.addColorStop(1, "#253268");
   ctx.fillStyle = rGrad;
   ctx.beginPath();
   ctx.moveTo(cx + 12 * s, cy + 12 * s); ctx.lineTo(cx + 10 * s, cy - 2 * s);
   ctx.lineTo(cx, cy + 2 * s); ctx.lineTo(cx, cy + 16 * s);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#4a4840";
+  ctx.fillStyle = "#253268";
   ctx.beginPath();
   ctx.moveTo(cx - 10 * s, cy - 2 * s); ctx.lineTo(cx, cy - 6 * s);
   ctx.lineTo(cx + 10 * s, cy - 2 * s); ctx.lineTo(cx, cy + 2 * s);
@@ -1677,12 +1677,12 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
   ctx.fillRect(cx - 10 * s, cy - 1 * s, 9 * s, 1.5 * s);
   ctx.fillRect(cx + 1 * s, cy - 1 * s, 9 * s, 1.5 * s);
 
-  // Marble columns
+  // Lavender marble columns
   for (const colX of [-5, 3.5]) {
     const cGrad = ctx.createLinearGradient(cx + colX * s, 0, cx + (colX + 1.5) * s, 0);
-    cGrad.addColorStop(0, "#c0b8a0");
-    cGrad.addColorStop(0.5, "#e0d8c0");
-    cGrad.addColorStop(1, "#c0b8a0");
+    cGrad.addColorStop(0, "#9a8cc0");
+    cGrad.addColorStop(0.5, "#c0b4dd");
+    cGrad.addColorStop(1, "#9a8cc0");
     ctx.fillStyle = cGrad;
     ctx.fillRect(cx + colX * s, cy + 3 * s, 1.5 * s, 11 * s);
     ctx.fillStyle = "#c9a227";
@@ -1690,13 +1690,13 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
     ctx.fillRect(cx + (colX - 0.3) * s, cy + 13 * s, 2 * s, 1 * s);
   }
 
-  // Grand pediment roof
-  ctx.fillStyle = "#2a2520";
+  // Grand pediment roof - deep space blue
+  ctx.fillStyle = "#0e1430";
   ctx.beginPath();
   ctx.moveTo(cx - 14 * s, cy - 4 * s); ctx.lineTo(cx, cy - 16 * s);
   ctx.lineTo(cx + 14 * s, cy - 4 * s); ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#3a3530";
+  ctx.fillStyle = "#182045";
   ctx.beginPath();
   ctx.moveTo(cx, cy - 16 * s); ctx.lineTo(cx + 14 * s, cy - 4 * s);
   ctx.lineTo(cx + 10 * s, cy - 4 * s); ctx.lineTo(cx, cy - 12 * s);
@@ -1708,13 +1708,13 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
   ctx.moveTo(cx - 12 * s, cy - 4 * s); ctx.lineTo(cx, cy - 14 * s);
   ctx.lineTo(cx + 12 * s, cy - 4 * s); ctx.stroke();
 
-  // Gold-tinted display windows
+  // Lavender-tinted display windows
   const wGlow = animated ? 0.6 + Math.sin(t * 2) * 0.2 : 0.7;
   for (const wx of [-10, 6]) {
-    ctx.fillStyle = "#0a0a05";
+    ctx.fillStyle = "#060a1a";
     ctx.fillRect(cx + wx * s, cy + 3 * s, 4 * s, 7 * s);
-    ctx.fillStyle = `rgba(255, 215, 50, ${wGlow * 0.9})`;
-    ctx.shadowColor = "#ffd700";
+    ctx.fillStyle = `rgba(180, 160, 255, ${wGlow * 0.9})`;
+    ctx.shadowColor = "#a090dd";
     ctx.shadowBlur = 5 * s;
     ctx.fillRect(cx + (wx + 0.5) * s, cy + 3.5 * s, 3 * s, 6 * s);
     ctx.shadowBlur = 0;
@@ -1726,21 +1726,21 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
   }
 
   // Vault door
-  ctx.fillStyle = "#6a6a6a";
+  ctx.fillStyle = "#5a5a7a";
   ctx.beginPath();
   ctx.arc(cx, cy + 11 * s, 3.5 * s, Math.PI, 0);
   ctx.lineTo(cx + 3.5 * s, cy + 15 * s);
   ctx.lineTo(cx - 3.5 * s, cy + 15 * s);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#4a4a4a";
+  ctx.strokeStyle = "#3a3a5a";
   ctx.lineWidth = 0.5 * s;
   ctx.stroke();
-  ctx.fillStyle = "#888888";
+  ctx.fillStyle = "#7878aa";
   ctx.beginPath();
   ctx.arc(cx, cy + 12 * s, 1.5 * s, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#aaaaaa";
+  ctx.fillStyle = "#9a9acc";
   ctx.beginPath();
   ctx.arc(cx, cy + 12 * s, 0.8 * s, 0, Math.PI * 2);
   ctx.fill();
@@ -1800,17 +1800,17 @@ export function drawClubInvestmentBank(ctx: Ctx, cx: number, cy: number, s: numb
 
 // ═════════════════════════════════════════════════════════════════════
 // CLUB 4B: RECRUITMENT CENTER
-// Military-styled green building with blue accents and damage buff
+// Crimson base building with orange/gold highlights and damage buff
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawClubRecruitmentCenter(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
   drawGroundShadow(ctx, cx, cy, s, 16, 7);
-  drawHexPlatform(ctx, cx, cy, s, 16, 17, 14, "#2a3a2a", "#3a4a3a");
+  drawHexPlatform(ctx, cx, cy, s, 16, 17, 14, "#3a1418", "#4a2028");
 
-  // Building body - dark green with blue military accents
+  // Building body - crimson with gradients
   const lGrad = ctx.createLinearGradient(cx - 12 * s, cy, cx, cy);
-  lGrad.addColorStop(0, "#1a3a1a");
-  lGrad.addColorStop(1, "#2a4a2a");
+  lGrad.addColorStop(0, "#2a0a10");
+  lGrad.addColorStop(1, "#3e1420");
   ctx.fillStyle = lGrad;
   ctx.beginPath();
   ctx.moveTo(cx - 12 * s, cy + 12 * s); ctx.lineTo(cx - 10 * s, cy - 2 * s);
@@ -1818,67 +1818,67 @@ export function drawClubRecruitmentCenter(ctx: Ctx, cx: number, cy: number, s: n
   ctx.closePath();
   ctx.fill();
   const rGrad = ctx.createLinearGradient(cx, cy, cx + 12 * s, cy);
-  rGrad.addColorStop(0, "#2a4a2a");
-  rGrad.addColorStop(1, "#3a5a3a");
+  rGrad.addColorStop(0, "#3e1420");
+  rGrad.addColorStop(1, "#521a2a");
   ctx.fillStyle = rGrad;
   ctx.beginPath();
   ctx.moveTo(cx + 12 * s, cy + 12 * s); ctx.lineTo(cx + 10 * s, cy - 2 * s);
   ctx.lineTo(cx, cy + 2 * s); ctx.lineTo(cx, cy + 16 * s);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#3a5a3a";
+  ctx.fillStyle = "#521a2a";
   ctx.beginPath();
   ctx.moveTo(cx - 10 * s, cy - 2 * s); ctx.lineTo(cx, cy - 6 * s);
   ctx.lineTo(cx + 10 * s, cy - 2 * s); ctx.lineTo(cx, cy + 2 * s);
   ctx.closePath();
   ctx.fill();
 
-  // Blue military trim bands
-  ctx.fillStyle = "#3080c0";
+  // Orange/gold trim bands
+  ctx.fillStyle = "#d4880a";
   ctx.fillRect(cx - 11 * s, cy + 6 * s, 10 * s, 1 * s);
   ctx.fillRect(cx + 1 * s, cy + 6 * s, 10 * s, 1 * s);
   ctx.fillRect(cx - 10 * s, cy - 1 * s, 9 * s, 1 * s);
   ctx.fillRect(cx + 1 * s, cy - 1 * s, 9 * s, 1 * s);
 
-  // Roof
-  ctx.fillStyle = "#1a3a1a";
+  // Roof - deep crimson
+  ctx.fillStyle = "#1e0810";
   ctx.beginPath();
   ctx.moveTo(cx - 14 * s, cy - 4 * s); ctx.lineTo(cx, cy - 16 * s);
   ctx.lineTo(cx + 14 * s, cy - 4 * s); ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#2a4a2a";
+  ctx.fillStyle = "#2e1018";
   ctx.beginPath();
   ctx.moveTo(cx, cy - 16 * s); ctx.lineTo(cx + 14 * s, cy - 4 * s);
   ctx.lineTo(cx + 10 * s, cy - 4 * s); ctx.lineTo(cx, cy - 12 * s);
   ctx.closePath();
   ctx.fill();
 
-  // Military flag
-  ctx.fillStyle = "#3a3a3a";
+  // Military flag - orange/gold
+  ctx.fillStyle = "#3a2a1a";
   ctx.fillRect(cx + 2 * s, cy - 22 * s, 1 * s, 10 * s);
   const fw = animated ? Math.sin(t * 3) * 0.5 : 0;
-  ctx.fillStyle = "#3080c0";
+  ctx.fillStyle = "#cc4420";
   ctx.beginPath();
   ctx.moveTo(cx + 3 * s, cy - 22 * s);
   ctx.quadraticCurveTo(cx + 8 * s, cy - 21 * s + fw * s, cx + 11 * s, cy - 19 * s);
   ctx.lineTo(cx + 3 * s, cy - 16 * s);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#ffd700";
   drawStar(ctx, cx + 6.5 * s, cy - 19 * s, 1.5 * s, 0.6 * s);
 
-  // Blue strategic display windows
+  // Orange-tinted strategic display windows
   const bGlow = animated ? 0.6 + Math.sin(t * 2) * 0.2 : 0.7;
   for (const wx of [-10, 6]) {
-    ctx.fillStyle = "#0a1a0a";
+    ctx.fillStyle = "#0a0508";
     ctx.fillRect(cx + wx * s, cy + 3 * s, 4 * s, 7 * s);
-    ctx.fillStyle = `rgba(50, 140, 255, ${bGlow})`;
-    ctx.shadowColor = "#3080ff";
+    ctx.fillStyle = `rgba(255, 160, 40, ${bGlow})`;
+    ctx.shadowColor = "#e08820";
     ctx.shadowBlur = 5 * s;
     ctx.fillRect(cx + (wx + 0.5) * s, cy + 3.5 * s, 3 * s, 6 * s);
     ctx.shadowBlur = 0;
     // Grid pattern
-    ctx.strokeStyle = `rgba(100, 200, 255, ${bGlow * 0.4})`;
+    ctx.strokeStyle = `rgba(255, 200, 100, ${bGlow * 0.4})`;
     ctx.lineWidth = 0.3 * s;
     for (let gy = 0; gy < 3; gy++) {
       ctx.beginPath();
@@ -1889,19 +1889,19 @@ export function drawClubRecruitmentCenter(ctx: Ctx, cx: number, cy: number, s: n
   }
 
   // Entrance door with shield emblem
-  ctx.fillStyle = "#2a4a2a";
+  ctx.fillStyle = "#3e1420";
   ctx.beginPath();
   ctx.moveTo(cx - 3 * s, cy + 15 * s); ctx.lineTo(cx - 3 * s, cy + 8 * s);
   ctx.arc(cx, cy + 8 * s, 3 * s, Math.PI, 0);
   ctx.lineTo(cx + 3 * s, cy + 15 * s); ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#3080c0";
+  ctx.fillStyle = "#d4880a";
   ctx.beginPath();
   ctx.moveTo(cx, cy + 8 * s); ctx.lineTo(cx - 1.5 * s, cy + 9.5 * s);
   ctx.lineTo(cx, cy + 12 * s); ctx.lineTo(cx + 1.5 * s, cy + 9.5 * s);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#ffd700";
   drawStar(ctx, cx, cy + 10 * s, 0.8 * s, 0.3 * s);
 
   // Floating $ sign
@@ -1915,22 +1915,22 @@ export function drawClubRecruitmentCenter(ctx: Ctx, cx: number, cy: number, s: n
   ctx.fillText("$", cx, dollarY);
   ctx.shadowBlur = 0;
 
-  // Damage buff aura (red/orange ring)
+  // Damage buff aura (orange/gold ring)
   const aPulse = animated ? 0.25 + Math.sin(t * 2) * 0.12 : 0.3;
-  ctx.strokeStyle = `rgba(255, 100, 80, ${aPulse})`;
+  ctx.strokeStyle = `rgba(220, 140, 20, ${aPulse})`;
   ctx.lineWidth = 1.5 * s;
   ctx.beginPath();
   ctx.ellipse(cx, cy + 8 * s, 15 * s, 7 * s, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Buff indicator arrows
+  // Buff indicator arrows (orange/gold)
   if (animated) {
     for (let i = 0; i < 4; i++) {
       const bAngle = t * 1.5 + (i * Math.PI) / 2;
       const br = 13 * s;
       const bx = cx + Math.cos(bAngle) * br;
       const by = cy + 8 * s + Math.sin(bAngle) * br * 0.45;
-      ctx.fillStyle = `rgba(255, 100, 80, ${0.5 + Math.sin(t * 3 + i) * 0.2})`;
+      ctx.fillStyle = `rgba(220, 140, 20, ${0.5 + Math.sin(t * 3 + i) * 0.2})`;
       ctx.beginPath();
       ctx.moveTo(bx, by - 1.5 * s);
       ctx.lineTo(bx + 1 * s, by + 0.5 * s);
@@ -1940,7 +1940,7 @@ export function drawClubRecruitmentCenter(ctx: Ctx, cx: number, cy: number, s: n
     }
   }
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#4ecdc4", "B");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#d4880a", "B");
 }
 
 // ═════════════════════════════════════════════════════════════════════
@@ -2023,7 +2023,7 @@ export function drawStationCentaurStables(ctx: Ctx, cx: number, cy: number, s: n
   // Hay loft window
   ctx.fillStyle = "#2a1808";
   ctx.fillRect(cx - 3 * s, cy - 10 * s, 4 * s, 4 * s);
-  ctx.fillStyle = `rgba(200, 180, 80, ${animated ? 0.4 + Math.sin(t * 2) * 0.15 : 0.45})`;
+  ctx.fillStyle = `rgba(100, 200, 80, ${animated ? 0.4 + Math.sin(t * 2) * 0.15 : 0.45})`;
   ctx.fillRect(cx - 2.5 * s, cy - 9.5 * s, 3 * s, 3 * s);
 
   // Gold horseshoe above door
@@ -2058,25 +2058,25 @@ export function drawStationCentaurStables(ctx: Ctx, cx: number, cy: number, s: n
   ctx.moveTo(cx + 5 * s, cy + 7 * s); ctx.lineTo(cx + 0.5 * s, cy + 15 * s);
   ctx.stroke();
 
-  // Interior amber glow
+  // Interior leaf-green glow
   const iGlow = animated ? 0.4 + Math.sin(t * 2) * 0.2 : 0.5;
-  ctx.fillStyle = `rgba(255, 160, 40, ${iGlow})`;
-  ctx.shadowColor = "#ff8800";
+  ctx.fillStyle = `rgba(80, 200, 60, ${iGlow})`;
+  ctx.shadowColor = "#40aa30";
   ctx.shadowBlur = 8 * s;
   ctx.fillRect(cx - 3 * s, cy + 9 * s, 6 * s, 5 * s);
   ctx.shadowBlur = 0;
 
-  // Side windows with amber glow
+  // Side windows with leaf-green glow
   for (const wx of [-11, 8]) {
     ctx.fillStyle = "#1a1008";
     ctx.fillRect(cx + wx * s, cy + 5 * s, 3 * s, 4 * s);
-    ctx.fillStyle = `rgba(255, 160, 40, ${iGlow})`;
+    ctx.fillStyle = `rgba(80, 200, 60, ${iGlow})`;
     ctx.fillRect(cx + (wx + 0.5) * s, cy + 5.5 * s, 2 * s, 3 * s);
   }
 
-  // Amber magical particles
+  // Leaf-green magical particles
   if (animated) {
-    ctx.fillStyle = `rgba(255, 180, 60, ${0.5 + Math.sin(t * 3) * 0.25})`;
+    ctx.fillStyle = `rgba(100, 220, 80, ${0.5 + Math.sin(t * 3) * 0.25})`;
     for (let i = 0; i < 6; i++) {
       const pa = t * 0.8 + (i * Math.PI * 2) / 6;
       const pr = (8 + Math.sin(t + i) * 2) * s;
@@ -2098,7 +2098,7 @@ export function drawStationCentaurStables(ctx: Ctx, cx: number, cy: number, s: n
   ctx.lineTo(cx, cy - 20.5 * s); ctx.closePath();
   ctx.fill();
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#ff8c28", "A");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#60bb40", "A");
 }
 
 // ═════════════════════════════════════════════════════════════════════
@@ -2292,16 +2292,16 @@ export function drawStationRoyalCavalry(ctx: Ctx, cx: number, cy: number, s: num
 
 // ═════════════════════════════════════════════════════════════════════
 // MORTAR 4A: MISSILE BATTERY
-// Modern 6-pod missile launcher on iron foundation
+// Army-green 6-pod missile launcher on military foundation
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
   drawGroundShadow(ctx, cx, cy, s, 20, 9);
 
-  // Iron hex foundation wall
+  // Army green hex foundation wall
   const sbGrad = ctx.createLinearGradient(cx - 16 * s, 0, cx + 16 * s, 0);
-  sbGrad.addColorStop(0, "#2a2a32"); sbGrad.addColorStop(0.35, "#4a4a52");
-  sbGrad.addColorStop(0.65, "#3e3e46"); sbGrad.addColorStop(1, "#222228");
+  sbGrad.addColorStop(0, "#1e2a1a"); sbGrad.addColorStop(0.35, "#3a4a30");
+  sbGrad.addColorStop(0.65, "#2e3e26"); sbGrad.addColorStop(1, "#1a2616");
   ctx.fillStyle = sbGrad;
   ctx.beginPath();
   ctx.ellipse(cx, cy + 14 * s, 17 * s, 8.5 * s, 0, 0, Math.PI);
@@ -2309,17 +2309,17 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
   ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, Math.PI, 0, true);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#5a5a62";
+  ctx.fillStyle = "#4a5a3e";
   ctx.beginPath();
   ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#3a3a42";
+  ctx.fillStyle = "#2e3e24";
   ctx.beginPath();
   ctx.ellipse(cx, cy + 9 * s, 15 * s, 7.5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Support pylons
-  for (const [side, color] of [[-1, "#3a3a44"], [1, "#4a4a54"]] as const) {
+  for (const [side, color] of [[-1, "#2a3a22"], [1, "#3a4a32"]] as const) {
     ctx.fillStyle = color as string;
     ctx.beginPath();
     ctx.moveTo(cx + (side as number) * 12 * s, cy + 8 * s);
@@ -2329,7 +2329,7 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
     ctx.closePath();
     ctx.fill();
     // Pylon rivets
-    ctx.fillStyle = "#6a6a72";
+    ctx.fillStyle = "#5a6a4e";
     ctx.beginPath();
     ctx.arc(cx + (side as number) * 9 * s, cy - 2 * s, 0.8 * s, 0, Math.PI * 2);
     ctx.fill();
@@ -2340,8 +2340,8 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
 
   // Launcher rack body
   const rackGrad = ctx.createLinearGradient(cx - 9 * s, 0, cx + 9 * s, 0);
-  rackGrad.addColorStop(0, "#2a3040"); rackGrad.addColorStop(0.5, "#3a4555");
-  rackGrad.addColorStop(1, "#2a3040");
+  rackGrad.addColorStop(0, "#1e2e1a"); rackGrad.addColorStop(0.5, "#2e4028");
+  rackGrad.addColorStop(1, "#1e2e1a");
   ctx.fillStyle = rackGrad;
   ctx.beginPath();
   ctx.moveTo(cx - 9 * s, cy - 4 * s); ctx.lineTo(cx - 7 * s, cy - 14 * s);
@@ -2349,52 +2349,67 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
   ctx.closePath();
   ctx.fill();
   // Rack border
-  ctx.strokeStyle = "#505060";
+  ctx.strokeStyle = "#4a5a3a";
   ctx.lineWidth = 0.6 * s;
   ctx.stroke();
 
-  // 6 missile pods (2x3)
-  const podCols = [-3, 3];
-  const podRows = [-12, -9, -6];
+  // 6 missile tubes (2x3) — full cylindrical tubes filling the rack
+  const podCols = [-3.5, 3.5];
+  const podRows = [-12.5, -9, -5.5];
+  const tubeW = 3.2;
+  const tubeH = 2;
   for (const col of podCols) {
     for (const row of podRows) {
       const px = cx + col * s;
       const py = cy + row * s;
-      // Pod housing
-      ctx.fillStyle = "#1a2030";
+      // Tube outer housing (dark steel cylinder wall)
+      const tGrad = ctx.createLinearGradient(px - tubeW * s, 0, px + tubeW * s, 0);
+      tGrad.addColorStop(0, "#0e1a0c");
+      tGrad.addColorStop(0.3, "#2a3a22");
+      tGrad.addColorStop(0.7, "#223018");
+      tGrad.addColorStop(1, "#0e1a0c");
+      ctx.fillStyle = tGrad;
       ctx.beginPath();
-      ctx.ellipse(px, py, 2.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py + tubeH * s, tubeW * s, tubeH * s, 0, 0, Math.PI);
+      ctx.lineTo(px - tubeW * s, py - tubeH * s);
+      ctx.ellipse(px, py - tubeH * s, tubeW * s, tubeH * s, 0, Math.PI, 0, true);
+      ctx.closePath();
       ctx.fill();
-      // Pod inner ring
-      ctx.fillStyle = "#5a6a7a";
+      // Tube top cap ring
+      ctx.fillStyle = "#3a4a30";
       ctx.beginPath();
-      ctx.ellipse(px, py, 2 * s, 1.2 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py - tubeH * s, tubeW * s, tubeH * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Missile nose cone (red)
-      ctx.fillStyle = "#cc3030";
+      // Tube bore (dark interior)
+      ctx.fillStyle = "#0a0e08";
       ctx.beginPath();
-      ctx.ellipse(px, py, 1 * s, 0.6 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py - tubeH * s, tubeW * 0.75 * s, tubeH * 0.75 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Highlight
-      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      // Missile nose cone visible inside bore (olive-red)
+      ctx.fillStyle = "#8a3020";
       ctx.beginPath();
-      ctx.ellipse(px - 0.3 * s, py - 0.2 * s, 0.4 * s, 0.25 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(px, py - tubeH * s, tubeW * 0.45 * s, tubeH * 0.45 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Specular highlight on tube
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.ellipse(px - 0.8 * s, py - tubeH * 0.5 * s, 0.6 * s, tubeH * 0.8 * s, -0.15, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // Blue targeting reticle
+  // Green targeting reticle
   const tPulse = animated ? 0.5 + Math.sin(t * 4) * 0.3 : 0.6;
-  ctx.strokeStyle = `rgba(80, 160, 255, ${tPulse * 0.7})`;
+  ctx.strokeStyle = `rgba(80, 200, 80, ${tPulse * 0.7})`;
   ctx.lineWidth = 1 * s;
   ctx.beginPath();
   ctx.ellipse(cx, cy - 9 * s, 7 * s, 3.5 * s, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   // Radar dish
-  ctx.fillStyle = "#505060";
+  ctx.fillStyle = "#3a4a30";
   ctx.fillRect(cx + 10 * s, cy - 10 * s, 1 * s, 6 * s);
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#4a5a40";
   ctx.beginPath();
   ctx.arc(cx + 10.5 * s, cy - 10 * s, 3 * s, -Math.PI * 0.8, Math.PI * 0.2);
   ctx.lineTo(cx + 10.5 * s, cy - 10 * s);
@@ -2402,7 +2417,7 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
   ctx.fill();
   if (animated) {
     const ra = t * 4;
-    ctx.strokeStyle = `rgba(80, 180, 255, ${tPulse})`;
+    ctx.strokeStyle = `rgba(80, 200, 80, ${tPulse})`;
     ctx.lineWidth = 0.8 * s;
     ctx.beginPath();
     ctx.moveTo(cx + 10.5 * s, cy - 10 * s);
@@ -2410,9 +2425,9 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
     ctx.stroke();
   }
 
-  // Blue HUD ground targeting
+  // Green HUD ground targeting
   if (animated) {
-    ctx.strokeStyle = `rgba(80, 180, 255, ${tPulse * 0.4})`;
+    ctx.strokeStyle = `rgba(80, 200, 80, ${tPulse * 0.4})`;
     ctx.lineWidth = 1 * s;
     ctx.setLineDash([2 * s, 2 * s]);
     ctx.beginPath();
@@ -2428,35 +2443,35 @@ export function drawMortarMissileBattery(ctx: Ctx, cx: number, cy: number, s: nu
   ctx.beginPath();
   ctx.arc(cx - 8 * s, cy - 2 * s, 1 * s, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#00aaff";
-  ctx.shadowColor = "#00aaff";
+  ctx.fillStyle = "#88cc44";
+  ctx.shadowColor = "#88cc44";
   ctx.beginPath();
   ctx.arc(cx - 8 * s, cy + 1 * s, 0.7 * s, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#64b4ff", "A");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#6aaa44", "A");
 }
 
 // ═════════════════════════════════════════════════════════════════════
 // MORTAR 4B: EMBER FOUNDRY
-// Triple-barrel revolver cannon with molten forge aesthetic
+// Triple-barrel revolver cannon with sand-orange forge aesthetic
 // ═════════════════════════════════════════════════════════════════════
 
 export function drawMortarEmberFoundry(ctx: Ctx, cx: number, cy: number, s: number, t: number, animated: boolean, _size: number) {
   drawGroundShadow(ctx, cx, cy, s, 20, 9);
 
-  // Scorched ground
+  // Scorched sand ground
   const sA = animated ? 0.25 + Math.sin(t * 2) * 0.1 : 0.3;
-  ctx.fillStyle = `rgba(80, 30, 0, ${sA})`;
+  ctx.fillStyle = `rgba(120, 70, 20, ${sA})`;
   ctx.beginPath();
   ctx.ellipse(cx, cy + 14 * s, 18 * s, 8 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Dark iron foundation
+  // Sand-toned foundation
   const sbGrad = ctx.createLinearGradient(cx - 16 * s, 0, cx + 16 * s, 0);
-  sbGrad.addColorStop(0, "#1a1a1e"); sbGrad.addColorStop(0.35, "#3a3a3e");
-  sbGrad.addColorStop(0.65, "#2e2e32"); sbGrad.addColorStop(1, "#141418");
+  sbGrad.addColorStop(0, "#3a2a18"); sbGrad.addColorStop(0.35, "#5a4a30");
+  sbGrad.addColorStop(0.65, "#4a3a26"); sbGrad.addColorStop(1, "#302214");
   ctx.fillStyle = sbGrad;
   ctx.beginPath();
   ctx.ellipse(cx, cy + 14 * s, 17 * s, 8.5 * s, 0, 0, Math.PI);
@@ -2464,29 +2479,29 @@ export function drawMortarEmberFoundry(ctx: Ctx, cx: number, cy: number, s: numb
   ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, Math.PI, 0, true);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#4a4a4e";
+  ctx.fillStyle = "#6a5a3e";
   ctx.beginPath();
   ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#2a2a2e";
+  ctx.fillStyle = "#4a3a24";
   ctx.beginPath();
   ctx.ellipse(cx, cy + 9 * s, 15 * s, 7.5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Molten cracks
-  ctx.strokeStyle = `rgba(255, 100, 20, ${animated ? 0.4 + Math.sin(t * 3) * 0.2 : 0.5})`;
+  // Molten cracks (sand-orange)
+  ctx.strokeStyle = `rgba(240, 160, 40, ${animated ? 0.4 + Math.sin(t * 3) * 0.2 : 0.5})`;
   ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
   ctx.moveTo(cx - 10 * s, cy + 9 * s); ctx.lineTo(cx - 5 * s, cy + 7 * s);
   ctx.lineTo(cx + 1 * s, cy + 10 * s); ctx.lineTo(cx + 6 * s, cy + 8 * s);
   ctx.stroke();
 
-  // Cradle arms (dark iron with rivets)
+  // Cradle arms (warm iron with rivets)
   for (const side of [-1, 1] as const) {
     const armX = cx + side * 14 * s;
     const aGrad = ctx.createLinearGradient(armX - 3 * s, 0, armX + 3 * s, 0);
-    aGrad.addColorStop(0, side === -1 ? "#222226" : "#2e2e32");
-    aGrad.addColorStop(1, side === -1 ? "#2e2e32" : "#3a3a3e");
+    aGrad.addColorStop(0, side === -1 ? "#2e2218" : "#3a2e20");
+    aGrad.addColorStop(1, side === -1 ? "#3a2e20" : "#4a3a28");
     ctx.fillStyle = aGrad;
     ctx.beginPath();
     ctx.moveTo(armX, cy + 8 * s);
@@ -2497,7 +2512,7 @@ export function drawMortarEmberFoundry(ctx: Ctx, cx: number, cy: number, s: numb
     ctx.fill();
     // Rivets
     for (const ry of [-4, 0, 4]) {
-      ctx.fillStyle = "#6a6a6e";
+      ctx.fillStyle = "#7a6a4e";
       ctx.beginPath();
       ctx.arc(armX + side * -3 * s, cy + ry * s, 0.7 * s, 0, Math.PI * 2);
       ctx.fill();
@@ -2507,94 +2522,123 @@ export function drawMortarEmberFoundry(ctx: Ctx, cx: number, cy: number, s: numb
   // Triple barrel revolver assembly
   const barrelAngles = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3];
   const revSpin = animated ? t * 0.5 : 0;
+  const bW = 5.5;
+  const bHalfH = 2.8;
+  const bLen = 10;
 
-  // Housing base
-  ctx.fillStyle = "#2a2a30";
+  // Housing base (wider to match barrels)
+  ctx.fillStyle = "#3a2a1a";
   ctx.beginPath();
-  ctx.ellipse(cx, cy - 2 * s, 10 * s, 5 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy - 1 * s, 12 * s, 6 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#2a1c10";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 1 * s, 10 * s, 5 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Three barrels
-  for (let bi = 0; bi < 3; bi++) {
-    const bAngle = barrelAngles[bi] + revSpin;
-    const bx = cx + Math.cos(bAngle) * 4 * s;
-    const by = cy - 4 * s + Math.sin(bAngle) * 2 * s;
-    const bDepth = Math.sin(bAngle) > 0 ? 0.8 : 1;
+  // Three full barrels (sorted back-to-front)
+  const barrelData = barrelAngles.map((base, bi) => {
+    const bAngle = base + revSpin;
+    return { bi, bAngle, depth: Math.sin(bAngle) };
+  });
+  barrelData.sort((a, b) => a.depth - b.depth);
+
+  for (const { bi, bAngle, depth } of barrelData) {
+    const bx = cx + Math.cos(bAngle) * 4.5 * s;
+    const by = cy - 3.5 * s + Math.sin(bAngle) * 2.5 * s;
+    const bDepth = depth > 0 ? 0.75 : 1;
 
     // Barrel cylinder with gradient
-    const bGrad = ctx.createLinearGradient(bx - 4 * s, 0, bx + 4 * s, 0);
-    bGrad.addColorStop(0, `rgba(25, 25, 30, ${bDepth})`);
-    bGrad.addColorStop(0.3, `rgba(55, 55, 62, ${bDepth})`);
-    bGrad.addColorStop(0.7, `rgba(50, 50, 58, ${bDepth})`);
-    bGrad.addColorStop(1, `rgba(20, 20, 25, ${bDepth})`);
+    const bGrad = ctx.createLinearGradient(bx - bW * s, 0, bx + bW * s, 0);
+    bGrad.addColorStop(0, `rgba(35, 24, 12, ${bDepth})`);
+    bGrad.addColorStop(0.25, `rgba(65, 50, 30, ${bDepth})`);
+    bGrad.addColorStop(0.5, `rgba(75, 60, 38, ${bDepth})`);
+    bGrad.addColorStop(0.75, `rgba(60, 45, 28, ${bDepth})`);
+    bGrad.addColorStop(1, `rgba(30, 20, 10, ${bDepth})`);
     ctx.fillStyle = bGrad;
     ctx.beginPath();
-    ctx.ellipse(bx, by, 4 * s, 2 * s, 0, 0, Math.PI);
-    ctx.lineTo(bx - 4 * s, by - 8 * s);
-    ctx.ellipse(bx, by - 8 * s, 4 * s, 2 * s, 0, Math.PI, 0, true);
+    ctx.ellipse(bx, by, bW * s, bHalfH * s, 0, 0, Math.PI);
+    ctx.lineTo(bx - bW * s, by - bLen * s);
+    ctx.ellipse(bx, by - bLen * s, bW * s, bHalfH * s, 0, Math.PI, 0, true);
     ctx.closePath();
     ctx.fill();
 
-    // Barrel top ring
-    ctx.fillStyle = `rgba(90, 85, 95, ${bDepth})`;
+    // Reinforcement bands along barrel
+    for (const bandY of [0.25, 0.55, 0.85]) {
+      const bby = by - bLen * bandY * s;
+      ctx.strokeStyle = `rgba(180, 120, 40, ${bDepth * 0.35})`;
+      ctx.lineWidth = 0.7 * s;
+      ctx.beginPath();
+      ctx.ellipse(bx, bby, bW * s, bHalfH * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Barrel top cap
+    ctx.fillStyle = `rgba(90, 72, 48, ${bDepth})`;
     ctx.beginPath();
-    ctx.ellipse(bx, by - 8 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx, by - bLen * s, bW * s, bHalfH * s, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Gold reinforcement ring
-    ctx.strokeStyle = `rgba(201, 162, 39, ${bDepth * 0.5})`;
-    ctx.lineWidth = 0.8 * s;
+    // Copper rim ring
+    ctx.strokeStyle = `rgba(200, 140, 50, ${bDepth * 0.6})`;
+    ctx.lineWidth = 1 * s;
     ctx.beginPath();
-    ctx.ellipse(bx, by - 8 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx, by - bLen * s, bW * s, bHalfH * s, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Dark bore
-    ctx.fillStyle = `rgba(10, 8, 8, ${bDepth})`;
+    ctx.fillStyle = `rgba(8, 6, 4, ${bDepth})`;
     ctx.beginPath();
-    ctx.ellipse(bx, by - 8 * s, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx, by - bLen * s, bW * 0.7 * s, bHalfH * 0.7 * s, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Molten glow from bore
     const mGlow = animated ? 0.4 + Math.sin(t * 4 + bi * 2) * 0.3 : 0.5;
-    ctx.fillStyle = `rgba(255, 80, 0, ${mGlow * bDepth})`;
-    ctx.shadowColor = "#ff4400";
+    ctx.fillStyle = `rgba(240, 140, 20, ${mGlow * bDepth})`;
+    ctx.shadowColor = "#e08820";
     ctx.shadowBlur = 6 * s;
     ctx.beginPath();
-    ctx.ellipse(bx, by - 8 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(bx, by - bLen * s, bW * 0.4 * s, bHalfH * 0.4 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Specular highlight on barrel wall
+    ctx.fillStyle = `rgba(255, 220, 160, ${0.08 * bDepth})`;
+    ctx.beginPath();
+    ctx.ellipse(bx - bW * 0.4 * s, by - bLen * 0.5 * s, 1 * s, bLen * 0.35 * s, -0.1, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  // Center spindle
-  ctx.fillStyle = "#4a4a50";
+  // Center spindle cap
+  ctx.fillStyle = "#5a4a30";
   ctx.beginPath();
-  ctx.arc(cx, cy - 4 * s, 2 * s, 0, Math.PI * 2);
+  ctx.arc(cx, cy - 3.5 * s, 2.5 * s, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#6a6a70";
+  ctx.fillStyle = "#7a6a48";
   ctx.beginPath();
-  ctx.arc(cx, cy - 4 * s, 1 * s, 0, Math.PI * 2);
+  ctx.arc(cx, cy - 3.5 * s, 1.2 * s, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ember particles rising
+  // Ember particles rising (sand-orange tones)
   if (animated) {
     for (let i = 0; i < 8; i++) {
       const ey = cy - 8 * s - ((t * 5 + i * 3) % 16) * s;
       const ex = cx + Math.sin(t * 2 + i * 1.5) * 6 * s;
       const eAlpha = Math.max(0, 1 - ((t * 5 + i * 3) % 16) / 16);
-      ctx.fillStyle = `rgba(255, ${60 + i * 22}, 0, ${eAlpha * 0.7})`;
+      ctx.fillStyle = `rgba(240, ${100 + i * 18}, 20, ${eAlpha * 0.7})`;
       ctx.beginPath();
       ctx.arc(ex, ey, (1.2 - eAlpha * 0.4) * s, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // Forge furnace glow
-  ctx.fillStyle = `rgba(255, 80, 0, ${animated ? 0.5 + Math.sin(t * 3) * 0.25 : 0.6})`;
-  ctx.shadowColor = "#ff4400";
+  // Forge furnace glow (sand-orange)
+  ctx.fillStyle = `rgba(240, 140, 20, ${animated ? 0.5 + Math.sin(t * 3) * 0.25 : 0.6})`;
+  ctx.shadowColor = "#e08820";
   ctx.shadowBlur = 8 * s;
   ctx.beginPath();
   ctx.ellipse(cx, cy + 8 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  drawLevelIndicator(ctx, cx, cy, s, 4, "#ff6600", "B");
+  drawLevelIndicator(ctx, cx, cy, s, 4, "#e0a030", "B");
 }

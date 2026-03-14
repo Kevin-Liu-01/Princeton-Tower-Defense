@@ -40,13 +40,24 @@ import {
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 import { useIsTouchDevice } from "./hooks";
-import { PANEL, GOLD, NEUTRAL, RED_CARD, SELECTED, OVERLAY, SPELL_THEME } from "./theme";
+import { PANEL, NEUTRAL, OVERLAY, SPELL_THEME } from "./theme";
 import { HudTooltip } from "./HudTooltip";
 import { MobileHeroSpellBar } from "./MobileHeroSpellBar";
 
 // =============================================================================
 // HP THEME — transitions green → yellow → red by hero health %
 // =============================================================================
+
+function getHpRingColor(percent: number, heroColor: string): string {
+  if (percent <= 25) return "#ef4444";
+  if (percent <= 50) return "#eab308";
+  return heroColor;
+}
+
+const DESKTOP_HERO_SIZE = 84;
+const DESKTOP_HERO_RING_R = DESKTOP_HERO_SIZE / 2 - 3;
+const DESKTOP_HERO_RING_C = 2 * Math.PI * DESKTOP_HERO_RING_R;
+const DESKTOP_ABILITY_SIZE = 64;
 
 function getHeroHpTheme(percent: number) {
   if (percent <= 25) {
@@ -263,281 +274,214 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
       {/* Desktop: Full card layout */}
       <div className="hidden xl:flex p-2 pr-4 items-end justify-between gap-3">
-        {/* Hero Section */}
-        <div
-          role="button"
-          tabIndex={0}
-          className="flex-shrink-0 pointer-events-auto cursor-pointer"
-          onClick={toggleHeroSelection}
-          onKeyDown={(e) => {
-            if ((e.key === "Enter" || e.key === " ") && hero) {
-              e.preventDefault();
-              toggleHeroSelection();
-            }
-          }}
-        >
-          {hero && (
-            <div className="flex items-stretch gap-2">
-              {hero.dead ? (
-                <>
-                  {/* Dead hero card */}
-                  <div className="relative rounded-2xl overflow-hidden" style={{
-                    background: `linear-gradient(180deg, ${NEUTRAL.bgLightAlt}, ${NEUTRAL.bgDarkAlt})`,
-                    border: `2px solid ${NEUTRAL.borderMid}`,
-                    boxShadow: `inset 0 0 20px ${NEUTRAL.glow}`,
-                    padding: '10px 14px',
-                  }}>
-                    <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorderMid}` }} />
-                    <div className="relative z-10 flex items-center gap-3 mb-2">
-                      <div className="w-14 h-14 rounded-full border-3 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-30 grayscale shrink-0">
-                        <HeroSprite type={hero.type} size={40} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-black text-stone-400 uppercase tracking-wider leading-tight">
-                          {HERO_DATA[hero.type].name}
-                        </div>
-                        <div className="flex gap-2 mt-1 text-[9px] opacity-40">
-                          <span className="text-stone-500 flex items-center gap-0.5"><Swords size={10} /> {HERO_DATA[hero.type].damage}</span>
-                          <span className="text-stone-500 flex items-center gap-0.5"><Target size={10} /> {HERO_DATA[hero.type].range}</span>
-                          <span className="text-stone-500 flex items-center gap-0.5"><Gauge size={10} /> {HERO_DATA[hero.type].speed}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="relative z-10">
-                      <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(100,100,100,0.2)' }}>
-                        <div className="h-full w-0 rounded-full bg-stone-700" />
-                      </div>
-                      <div className="flex justify-between items-center mt-1 px-0.5">
-                        <span className="text-[9px] font-bold text-stone-500 tabular-nums">0/{hero.maxHp}</span>
-                        <span className="text-[8px] text-stone-600">0%</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Respawn timer */}
-                  <HudTooltip label={`Hero respawning in ${Math.ceil(hero.respawnTimer / 1000)}s`} position="top">
-                    <div className="relative rounded-2xl flex flex-col items-center justify-center overflow-hidden" style={{
-                      background: "linear-gradient(180deg, rgba(55,18,18,0.92), rgba(35,10,10,0.9))",
-                      border: `2px solid ${RED_CARD.border25}`,
-                      boxShadow: `inset 0 0 20px rgba(239,68,68,0.06), 0 0 12px rgba(239,68,68,0.08)`,
-                      padding: '12px 20px',
-                    }}>
-                      <div className="absolute inset-0 pointer-events-none transition-all duration-300 ease-linear"
-                        style={{
-                          background: "linear-gradient(0deg, rgba(239,68,68,0.18), rgba(239,68,68,0.04))",
-                          clipPath: `inset(${Math.max(0, (hero.respawnTimer / 5000) * 100)}% 0 0 0)`,
-                        }}
-                      />
-                      <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
-                      <div className="relative z-10 flex flex-col items-center">
-                        <span className="flex items-center gap-1.5 text-[12px] text-red-300 font-bold">
-                          {getHeroAbilityIcon(hero.type, 16, "text-red-400/60")}
-                          {HERO_DATA[hero.type].ability}
-                        </span>
-                        <div className="flex items-center gap-1 mt-1.5">
-                          <Timer size={14} className="text-red-400" />
-                          <span className="text-[14px] text-red-400 font-black tabular-nums">{Math.ceil(hero.respawnTimer / 1000)}s</span>
-                        </div>
-                        <span className="text-[8px] text-stone-500 uppercase tracking-widest mt-1">Respawning</span>
-                      </div>
-                    </div>
-                  </HudTooltip>
-                </>
-              ) : (
-                <>
-                  {(() => {
-                    const hpPercent = Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100));
-                    const hpTheme = getHeroHpTheme(hpPercent);
-                    const hc = HERO_DATA[hero.type].color;
-                    return (
-                      <div
-                        className="relative rounded-2xl overflow-hidden transition-all"
-                        style={{
-                          background: hero.selected
-                            ? `linear-gradient(180deg, rgba(100,68,18,0.55), rgba(60,40,12,0.5))`
-                            : `linear-gradient(180deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                          border: hero.selected
-                            ? `2px solid ${GOLD.accentBorder50}`
-                            : `2px solid ${GOLD.border30}`,
-                          boxShadow: hero.selected
-                            ? `inset 0 0 20px ${GOLD.accentGlow08}, 0 0 16px ${GOLD.accentGlow10}`
-                            : `inset 0 0 15px ${GOLD.glow04}, 0 0 12px rgba(0,0,0,0.3)`,
-                          padding: '10px 14px',
-                        }}
-                      >
-                        <div className="absolute inset-0 pointer-events-none transition-all duration-500 ease-out"
-                          style={{ background: hpTheme.fillGradient, clipPath: `inset(0 ${100 - hpPercent}% 0 0)` }}
-                        />
-                        <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{
-                          border: hero.selected ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${GOLD.innerBorder10}`,
-                        }} />
-                        <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
-                          <div className="absolute top-0 -right-1 z-20">
-                            {hero.selected ? (
-                              <Grab size={16} className="text-amber-300 rounded-md p-0.5" style={{ background: 'rgba(180,140,60,0.3)' }} />
-                            ) : (
-                              <Pointer size={16} className="text-amber-400 rounded-md p-0.5" style={{ background: 'rgba(180,140,60,0.2)' }} />
-                            )}
-                          </div>
-                        </HudTooltip>
+        {/* Hero Section — circle aesthetic matching spell orbs */}
+        <div className="flex-shrink-0 pointer-events-auto">
+          {hero && (() => {
+            const isAlive = !hero.dead;
+            const hc = HERO_DATA[hero.type].color;
+            const heroData = HERO_DATA[hero.type];
+            const hpPercent = isAlive ? Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100)) : 0;
+            const hpRingColor = getHpRingColor(hpPercent, hc);
+            const hpTheme = getHeroHpTheme(hpPercent);
+            const hpStrokeOffset = DESKTOP_HERO_RING_C * (1 - hpPercent / 100);
+            const isReady = hero.abilityReady && isAlive;
+            const cdTotal = HERO_ABILITY_COOLDOWNS[hero.type];
+            const cdFrac = hero.dead ? hero.respawnTimer / 5000 : hero.abilityCooldown / cdTotal;
+            const readyAngle = (1 - cdFrac) * 360;
 
-                        <div className="relative z-10 flex items-center gap-3 mb-2">
-                          <div
-                            className="relative w-14 h-14 rounded-full flex items-center justify-center overflow-hidden shrink-0 pt-0.5"
-                            style={{
-                              border: `3px solid ${hc}`,
-                              background: `radial-gradient(circle at 35% 35%, ${hc}35, ${hc}10)`,
-                              boxShadow: `0 0 16px ${hc}25, inset 0 0 10px ${hc}15`,
-                              animation: hpTheme.heartbeat ? `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` : "none",
-                            }}
-                          >
-                            <div
-                              className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
-                              style={{
-                                backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
-                              }}
-                            />
-                            <div
-                              className="absolute inset-0 rounded-full pointer-events-none"
-                              style={{
-                                background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, ${hc}25 45%, rgba(0,0,0,0.5) 100%)`,
-                              }}
-                            />
-                            <div className="relative z-10 flex items-center justify-center">
-                              <HeroSprite type={hero.type} size={40} />
-                            </div>
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-xs font-black text-amber-200 uppercase tracking-wider leading-tight">
-                              {HERO_DATA[hero.type].name}
-                            </div>
-                            <div className="flex gap-1.5 mt-1">
-                              {[
-                                { icon: <Swords size={10} />, val: HERO_DATA[hero.type].damage, color: 'text-orange-300', bg: 'rgba(180,80,20,0.2)', border: 'rgba(180,80,20,0.15)' },
-                                { icon: <Target size={10} />, val: HERO_DATA[hero.type].range, color: 'text-blue-300', bg: 'rgba(40,80,160,0.2)', border: 'rgba(40,80,160,0.15)' },
-                                { icon: <Gauge size={10} />, val: HERO_DATA[hero.type].speed, color: 'text-green-300', bg: 'rgba(20,120,60,0.2)', border: 'rgba(20,120,60,0.15)' },
-                              ].map((s, i) => (
-                                <span key={i} className={`${s.color} text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md`}
-                                  style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                                  {s.icon} {s.val}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="relative z-10">
-                          <div className="w-full h-3 rounded-full overflow-hidden" style={{
-                            background: 'rgba(0,0,0,0.5)',
-                            border: `1px solid rgba(180,140,60,0.12)`,
-                            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.4)',
-                          }}>
-                            <div
-                              className={`h-full rounded-full bg-gradient-to-r ${hpTheme.barColor} transition-all duration-300`}
-                              style={{
-                                width: `${hpPercent}%`,
-                                boxShadow: `0 0 8px ${hpTheme.glowColor.replace('shadow-', '').replace('/50', '').replace('/40', '')}40`,
-                              }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center mt-1 px-0.5">
-                            <span className={`text-[9px] font-bold tabular-nums ${hpTheme.textColor}`}>
-                              {Math.floor(hero.hp)}/{hero.maxHp}
-                            </span>
-                            <span className="text-[8px] text-amber-500/70 font-medium tabular-nums">{Math.round(hpPercent)}%</span>
-                          </div>
+            return (
+              <div className="flex items-end sm:ml-2 gap-3">
+                {/* Hero Portrait Circle */}
+                <div className="flex flex-col items-center">
+                  <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
+                    <button
+                      onClick={toggleHeroSelection}
+                      className="relative flex items-center justify-center transition-all active:scale-95"
+                      style={{ width: DESKTOP_HERO_SIZE, height: DESKTOP_HERO_SIZE }}
+                    >
+                      {/* SVG HP ring */}
+                      <svg className="absolute inset-0" width={DESKTOP_HERO_SIZE} height={DESKTOP_HERO_SIZE} overflow="visible" style={{ transform: "rotate(-90deg)" }}>
+                        <circle cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R} fill="none" stroke="rgba(80,60,40,0.35)" strokeWidth={4} />
+                        {isAlive && (
+                          <circle
+                            cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R}
+                            fill="none" stroke={hpRingColor} strokeWidth={4}
+                            strokeDasharray={DESKTOP_HERO_RING_C} strokeDashoffset={hpStrokeOffset}
+                            strokeLinecap="round" className="transition-all duration-300"
+                            style={{ filter: `drop-shadow(0 0 4px ${hpRingColor})` }}
+                          />
+                        )}
+                      </svg>
+                      {/* Hero color border ring */}
+                      <div className="absolute inset-[4px] rounded-full pointer-events-none transition-all duration-300" style={{
+                        border: `2px solid ${hero.selected ? hc + "80" : isAlive ? hc + "40" : "rgba(80,60,40,0.3)"}`,
+                        boxShadow: hero.selected ? `0 0 14px ${hc}35` : "none",
+                      }} />
+                      {/* Portrait */}
+                      <div className="absolute inset-[7px] rounded-full overflow-hidden" style={{
+                        background: isAlive
+                          ? `radial-gradient(circle at 35% 35%, ${hc}30, ${hc}10)`
+                          : "linear-gradient(135deg, rgba(50,40,35,0.95), rgba(30,25,20,0.95))",
+                        filter: isAlive ? "none" : "grayscale(0.8) brightness(0.5)",
+                      }}>
+                        <div className="absolute inset-0 rounded-full bg-cover bg-center" style={{
+                          backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
+                          opacity: isAlive ? 0.6 : 0.2,
+                        }} />
+                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                          background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 15%, ${hc}20 40%, rgba(0,0,0,0.5) 100%)`,
+                        }} />
+                        <div className="relative z-10 flex items-center justify-center h-full">
+                          <HeroSprite type={hero.type} size={54} />
                         </div>
                       </div>
-                    );
-                  })()}
-                  {(() => {
-                    const hc = HERO_DATA[hero.type].color;
-                    const cdFrac = hero.abilityCooldown / HERO_ABILITY_COOLDOWNS[hero.type];
-                    return (
-                      <HudTooltip
-                        label={hero.abilityReady
-                          ? `${HERO_DATA[hero.type].ability} — Ready! Click to activate`
-                          : `${HERO_DATA[hero.type].ability} — ${Math.ceil(hero.abilityCooldown / 1000)}s cooldown`
-                        }
-                        position="top"
-                      >
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onUseHeroAbility(); }}
-                          disabled={!hero.abilityReady}
-                          className="relative transition-all font-bold rounded-2xl flex flex-col items-center justify-center overflow-hidden hover:brightness-110"
-                          style={{
-                            background: hero.abilityReady
-                              ? `linear-gradient(180deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
-                              : `linear-gradient(180deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                            border: hero.abilityReady
-                              ? `2px solid ${GOLD.accentBorder50}`
-                              : `2px solid ${NEUTRAL.border25}`,
-                            boxShadow: hero.abilityReady
-                              ? `inset 0 0 16px ${GOLD.accentGlow08}, 0 0 12px ${hexToRgba(hc, 0.2)}`
-                              : "inset 0 0 10px rgba(0,0,0,0.2)",
-                            cursor: hero.abilityReady ? "pointer" : "not-allowed",
-                            padding: '12px 20px',
-                          }}
-                        >
-                          <div className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: hero.abilityReady
-                                ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.2)}, ${hexToRgba(hc, 0.04)} 70%, transparent)`
-                                : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.08)}, transparent 70%)`,
-                            }}
-                          />
-                          {!hero.abilityReady && (
-                            <>
-                              <div className="absolute inset-0 pointer-events-none"
-                                style={{ background: `linear-gradient(0deg, ${hexToRgba(hc, 0.2)}, rgba(180,140,50,0.08))`, clipPath: `inset(${cdFrac * 100}% 0 0 0)` }}
-                              />
-                              <div className="absolute inset-0 pointer-events-none"
-                                style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.65), rgba(0,0,0,0.45))", clipPath: `inset(${(1 - cdFrac) * 100}% 0 0 0)` }}
-                              />
-                            </>
-                          )}
-                          <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{
-                            border: hero.abilityReady ? `1px solid ${GOLD.accentBorder12}` : `1px solid ${NEUTRAL.innerBorder}`,
-                          }} />
-                          {hero.abilityReady ? (
-                            <div className="relative z-10 flex flex-col items-center justify-center">
-                              <span className="flex items-center gap-1.5 text-[12px] text-amber-200 font-bold leading-tight">
-                                {getHeroAbilityIcon(hero.type, 16, "inline")}
-                                {HERO_DATA[hero.type].ability}
-                              </span>
-                              <div className="text-[9px] max-w-28 my-2 text-center text-amber-100/50 leading-snug">
-                                {HERO_DATA[hero.type].abilityDesc}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-extrabold text-[10px] text-amber-300/90 uppercase tracking-wider">Ready</span>
-                                <span className="w-px h-3" style={{ background: "rgba(180,140,50,0.3)" }} />
-                                <span className="flex items-center gap-0.5 text-xs text-amber-400/80 tabular-nums">
-                                  <Clock size={9} className="text-amber-400/70" />
-                                  {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="relative z-10 flex flex-col items-center justify-center">
-                              <span className="flex items-center gap-1.5 text-[12px] text-stone-400 font-bold leading-tight">
-                                {getHeroAbilityIcon(hero.type, 16, "text-stone-500 opacity-60 inline")}
-                                {HERO_DATA[hero.type].ability}
-                              </span>
-                              <div className="text-[9px] max-w-28 my-2 text-center text-stone-500/50 leading-snug">
-                                {HERO_DATA[hero.type].abilityDesc}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Timer size={14} className="text-stone-400" />
-                                <span className="text-[14px] text-stone-300 font-black tabular-nums">{Math.ceil(hero.abilityCooldown / 1000)}s</span>
-                              </div>
-                            </div>
-                          )}
-                        </button>
-                      </HudTooltip>
-                    );
-                  })()}
-                </>
-              )}
-            </div>
-          )}
+                      {/* Selection indicator badge */}
+                      <div className="absolute top-1 right-1 z-20 rounded-full flex items-center justify-center" style={{
+                        width: 20, height: 20,
+                        background: hero.selected ? "rgba(120,90,20,0.85)" : "rgba(20,16,10,0.85)",
+                        border: `1.5px solid ${hero.selected ? "rgba(250,204,21,0.5)" : "rgba(80,60,40,0.4)"}`,
+                      }}>
+                        {hero.selected ? <Grab size={11} className="text-amber-300" /> : <Pointer size={11} className="text-amber-500/70" />}
+                      </div>
+                      {/* Selected glow pulse */}
+                      {hero.selected && isAlive && (
+                        <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse" style={{ boxShadow: `0 0 20px ${hc}40` }} />
+                      )}
+                      {/* Low-HP heartbeat */}
+                      {isAlive && hpTheme.heartbeat && (
+                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{ animation: `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` }} />
+                      )}
+                      {/* Name tag on circle bottom */}
+                      <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                        background: "rgba(20,16,10,0.92)",
+                        border: `1px solid ${isAlive ? hc + "50" : "rgba(80,60,40,0.35)"}`,
+                        color: isAlive ? "#fde68a" : "rgba(160,140,100,0.6)",
+                      }}>
+                        {heroData.name}
+                      </div>
+                    </button>
+                  </HudTooltip>
+
+                  {isAlive ? (
+                    <>
+                      {/* HP fraction */}
+                      <div className="text-[8px] font-bold tabular-nums mt-3.5" style={{ color: hpRingColor }}>
+                        {Math.floor(hero.hp)}/{hero.maxHp}
+                      </div>
+                      {/* Stats */}
+                      {/* <div className="flex mt-0.5">
+                        {[
+                          { icon: <Swords size={8} />, val: heroData.damage, color: "text-orange-300", bg: "rgba(180,80,20,0.25)", border: "rgba(180,80,20,0.15)" },
+                          { icon: <Target size={8} />, val: heroData.range, color: "text-blue-300", bg: "rgba(40,80,160,0.25)", border: "rgba(40,80,160,0.15)" },
+                          { icon: <Gauge size={8} />, val: heroData.speed, color: "text-green-300", bg: "rgba(20,120,60,0.25)", border: "rgba(20,120,60,0.15)" },
+                        ].map((s, i) => (
+                          <span key={i} className={`${s.color} text-[7px] font-semibold flex items-center gap-px px-1 py-px rounded`}
+                            style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                            {s.icon} {s.val}
+                          </span>
+                        ))}
+                      </div> */}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-1 mt-3.5">
+                      <Timer size={10} className="text-red-400" />
+                      <span className="text-[9px] text-red-400 font-bold tabular-nums">{Math.ceil(hero.respawnTimer / 1000)}s</span>
+                      <span className="text-[7px] text-stone-600 uppercase tracking-wider">respawn</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ability Circle */}
+                <div className="flex flex-col items-center">
+                  <HudTooltip
+                    label={isReady
+                      ? `${heroData.ability} — Ready! Click to activate`
+                      : hero.dead
+                        ? `${heroData.ability} — Hero is dead`
+                        : `${heroData.ability} — ${Math.ceil(hero.abilityCooldown / 1000)}s cooldown`
+                    }
+                    position="top"
+                  >
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onUseHeroAbility(); }}
+                      disabled={!isReady}
+                      className="relative rounded-full flex items-center justify-center transition-all active:scale-95 hover:brightness-110"
+                      style={{
+                        width: DESKTOP_ABILITY_SIZE, height: DESKTOP_ABILITY_SIZE,
+                        background: isReady
+                          ? "linear-gradient(135deg, rgba(120,90,20,0.5), rgba(80,60,15,0.35))"
+                          : "linear-gradient(135deg, rgba(38,32,24,0.95), rgba(24,20,14,0.95))",
+                        border: `2px solid ${isReady ? "rgba(250,204,21,0.6)" : "rgba(80,60,40,0.35)"}`,
+                        boxShadow: isReady
+                          ? `0 0 16px rgba(250,204,21,0.3), inset 0 1px 0 rgba(255,255,255,0.1)`
+                          : "inset 0 1px 0 rgba(255,255,255,0.05)",
+                        cursor: isReady ? "pointer" : "not-allowed",
+                      }}
+                    >
+                      {/* Hero color tint */}
+                      <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                        background: isReady
+                          ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.25)}, ${hexToRgba(hc, 0.05)} 70%, transparent)`
+                          : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.1)}, transparent 70%)`,
+                      }} />
+                      {/* Cooldown conic sweep */}
+                      {!isReady && cdFrac > 0 && (
+                        <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                          background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.55) ${readyAngle}deg, rgba(0,0,0,0.55) 360deg)`,
+                        }} />
+                      )}
+                      {/* Fill progress underneath cooldown */}
+                      {!isReady && cdFrac > 0 && (
+                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                          background: `linear-gradient(0deg, ${hexToRgba(hc, 0.18)}, rgba(180,140,50,0.06))`,
+                          clipPath: `inset(${cdFrac * 100}% 0 0 0)`,
+                        }} />
+                      )}
+                      {/* Inner border */}
+                      <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                        border: `1px solid ${isReady ? "rgba(250,204,21,0.12)" : "rgba(80,60,40,0.1)"}`,
+                      }} />
+                      {/* Ability icon */}
+                      <div className="relative z-10 flex items-center justify-center">
+                        {getHeroAbilityIcon(hero.type, 24, isReady ? "" : "opacity-50")}
+                      </div>
+                      {/* Ready pulse */}
+                      {isReady && (
+                        <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+                          style={{ boxShadow: "0 0 18px rgba(250,204,21,0.4)" }} />
+                      )}
+                      {/* Ability name tag on circle bottom */}
+                      <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                        background: "rgba(20,16,10,0.92)",
+                        border: `1px solid ${isReady ? "rgba(250,204,21,0.45)" : "rgba(80,60,40,0.35)"}`,
+                        color: isReady ? "#fbbf24" : "rgba(160,140,100,0.6)",
+                      }}>
+                        {heroData.ability}
+                      </div>
+                    </button>
+                  </HudTooltip>
+                  {/* Cooldown tag */}
+                  <div className="flex items-center justify-center gap-1 mt-3.5 px-2 py-0.5 rounded-full" style={{
+                    background: hero.dead
+                      ? "rgba(127,29,29,0.35)"
+                      : isReady
+                        ? "rgba(120,90,20,0.4)"
+                        : "rgba(30,30,30,0.7)",
+                    border: `1px solid ${hero.dead ? "rgba(239,68,68,0.3)" : isReady ? "rgba(250,204,21,0.35)" : "rgba(80,60,40,0.25)"}`,
+                  }}>
+                    <Clock size={9} className={hero.dead ? "text-red-400" : isReady ? "text-amber-400" : "text-stone-400"} />
+                    <span className={`text-[10px] font-bold tabular-nums ${hero.dead ? "text-red-400" : isReady ? "text-amber-300" : "text-stone-300"}`}>
+                      {hero.dead
+                        ? `${Math.ceil(hero.respawnTimer / 1000)}s`
+                        : isReady
+                          ? `${cdTotal / 1000}s`
+                          : `${Math.ceil(hero.abilityCooldown / 1000)}s`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Spell Section */}
@@ -656,28 +600,30 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       />
                     )}
                   </button>
+                  {/* Spell name tag on orb bottom */}
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 px-1.5 py-px rounded-full text-[7px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                    background: "rgba(20,16,10,0.92)",
+                    border: `1px solid ${(canCast || isTargeting) ? spellAccent.replace("0.5)", "0.45)") : "rgba(80,60,40,0.3)"}`,
+                    color: (canCast || isTargeting) ? (theme?.panelBorder?.replace("0.5)", "1)") || "#d4d4d4") : "rgba(160,140,100,0.5)",
+                  }}>
+                    {spellData.shortName}
+                  </div>
                 </div>
-                {/* Spell name */}
-                <div className={`mt-1.5 text-[9px] font-bold uppercase tracking-wider ${(canCast || isTargeting) ? (theme?.nameColor || "text-purple-200") : "text-stone-500"}`}>
-                  {spellData.shortName}
-                </div>
-                {/* Cost / Cooldown row */}
-                <div className="flex items-center justify-center gap-1 mt-0.5 h-[16px]">
+                {/* Cost / Cooldown tag */}
+                <div className="flex items-center justify-center gap-1 mt-3 px-1.5 py-0.5 rounded-full" style={{
+                  background: spell.cooldown > 0 ? "rgba(127,29,29,0.3)" : spellData.cost > 0 ? "rgba(100,68,18,0.35)" : "rgba(20,83,45,0.3)",
+                  border: `1px solid ${spell.cooldown > 0 ? "rgba(239,68,68,0.3)" : spellData.cost > 0 ? "rgba(180,140,60,0.2)" : "rgba(34,197,94,0.2)"}`,
+                }}>
                   {spell.cooldown > 0 ? (
-                    <span className="text-[10px] font-bold text-red-400 tabular-nums">{Math.ceil(spell.cooldown / 1000)}s</span>
+                    <>
+                      <Timer size={8} className="text-red-400" />
+                      <span className="text-[9px] font-bold text-red-400 tabular-nums">{Math.ceil(spell.cooldown / 1000)}s</span>
+                    </>
                   ) : (
                     <>
-                      <span className="text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md"
-                        style={{ background: spellData.cost > 0 ? 'rgba(100,68,18,0.4)' : 'rgba(20,83,45,0.35)', border: '1px solid rgba(180,140,60,0.1)' }}>
-                        <Coins size={8} className={spellData.cost > 0 ? "text-amber-400/80" : "text-green-400/80"} />
-                        <span className={spellData.cost > 0 ? "text-amber-300" : "text-green-300"}>
-                          {spellData.cost > 0 ? spellData.cost : "Free"}
-                        </span>
-                      </span>
-                      <span className="text-[9px] font-semibold flex items-center gap-0.5 px-1.5 py-px rounded-md"
-                        style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(60,100,180,0.1)' }}>
-                        <Clock size={8} className="text-blue-400/80" />
-                        <span className="text-blue-300">{spellData.cooldown / 1000}s</span>
+                      <Coins size={8} className={spellData.cost > 0 ? "text-amber-400/80" : "text-green-400/80"} />
+                      <span className={`text-[9px] font-bold ${spellData.cost > 0 ? "text-amber-300" : "text-green-300"}`}>
+                        {spellData.cost > 0 ? spellData.cost : "Free"}
                       </span>
                     </>
                   )}

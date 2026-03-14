@@ -2341,548 +2341,807 @@ export function renderEffect(
     // ========== NEW HERO ABILITY EFFECTS ==========
 
     case "roar_wave": {
-      // Tiger's roar shockwave
       const roarRadius = effect.size * zoom * (0.2 + progress * 0.8);
+      const time = Date.now() / 1000;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
 
-      // Orange fear energy
       ctx.save();
-      ctx.shadowColor = "#ff6600";
-      ctx.shadowBlur = 20 * zoom;
 
-      for (let ring = 0; ring < 4; ring++) {
-        const ringProgress = (progress + ring * 0.1) % 1;
-        const ringRadius = roarRadius * (0.4 + ringProgress * 0.6);
-        const ringAlpha = (1 - ringProgress) * alpha * 0.5;
+      // Ground-slam distortion — dark radial crater
+      const craterAlpha = alpha * (1 - progress) * 0.4;
+      const craterGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, roarRadius * 0.6);
+      craterGrad.addColorStop(0, `rgba(60, 20, 0, ${craterAlpha})`);
+      craterGrad.addColorStop(0.4, `rgba(40, 12, 0, ${craterAlpha * 0.6})`);
+      craterGrad.addColorStop(1, "rgba(30, 10, 0, 0)");
+      ctx.fillStyle = craterGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, roarRadius * 0.6, roarRadius * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        ctx.strokeStyle = `rgba(255, 150, 50, ${ringAlpha})`;
-        ctx.lineWidth = (4 - ring) * zoom;
+      // Layered shockwave rings with thickness variation
+      for (let ring = 0; ring < 6; ring++) {
+        const ringPhase = (progress + ring * 0.07) % 1;
+        const ringR = roarRadius * (0.3 + ringPhase * 0.7);
+        const ringA = (1 - ringPhase) * alpha * (ring < 3 ? 0.6 : 0.3);
+        const thickness = (5 - ring * 0.6) * zoom;
+
+        // Outer glow layer
+        ctx.strokeStyle = `rgba(255, 100, 0, ${ringA * 0.4})`;
+        ctx.lineWidth = thickness + 3 * zoom;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          ringRadius,
-          ringRadius * 0.5,
-          0,
-          0,
-          Math.PI * 2,
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Bright core layer
+        ctx.strokeStyle = `rgba(255, 180, 60, ${ringA})`;
+        ctx.lineWidth = thickness;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Fear energy streaks radiating outward
+      const streakCount = 18;
+      for (let s = 0; s < streakCount; s++) {
+        const angle = (s / streakCount) * Math.PI * 2;
+        const wobble = Math.sin(time * 8 + s * 1.7) * 0.1;
+        const innerR = 15 * zoom;
+        const outerR = roarRadius * (0.7 + wobble) * progress;
+        const streakA = alpha * (1 - progress) * 0.5;
+
+        const grad = ctx.createLinearGradient(
+          sx + Math.cos(angle) * innerR, sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
+          sx + Math.cos(angle) * outerR, sy + Math.sin(angle) * outerR * ISO_Y_RATIO
+        );
+        grad.addColorStop(0, `rgba(255, 200, 80, ${streakA})`);
+        grad.addColorStop(0.5, `rgba(255, 120, 20, ${streakA * 0.6})`);
+        grad.addColorStop(1, `rgba(200, 50, 0, 0)`);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = (2.5 - progress * 1.5) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx + Math.cos(angle) * innerR, sy + Math.sin(angle) * innerR * ISO_Y_RATIO);
+        ctx.lineTo(sx + Math.cos(angle) * outerR, sy + Math.sin(angle) * outerR * ISO_Y_RATIO);
+        ctx.stroke();
+      }
+
+      // Fear particle sparks flying outward
+      for (let p = 0; p < 20; p++) {
+        const pAngle = (p / 20) * Math.PI * 2 + time * 2;
+        const pDist = roarRadius * (0.2 + progress * 0.8) * (0.6 + seededNoise(hashString32(effect.id) + p * 7) * 0.4);
+        const pX = sx + Math.cos(pAngle) * pDist;
+        const pY = sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - progress * 8 * zoom;
+        const pA = alpha * (1 - progress) * (0.4 + Math.sin(time * 6 + p) * 0.3);
+        const pSize = (3 + Math.sin(time * 5 + p * 0.8) * 1.5) * zoom * (1 - progress * 0.5);
+
+        const sparkGrad = ctx.createRadialGradient(pX, pY, 0, pX, pY, pSize * 2);
+        sparkGrad.addColorStop(0, `rgba(255, 220, 120, ${pA})`);
+        sparkGrad.addColorStop(0.5, `rgba(255, 140, 30, ${pA * 0.5})`);
+        sparkGrad.addColorStop(1, "rgba(200, 60, 0, 0)");
+        ctx.fillStyle = sparkGrad;
+        ctx.beginPath();
+        ctx.arc(pX, pY, pSize * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Central burst core — intense orange-white flash
+      const coreA = alpha * Math.max(0, 1 - progress * 2) * 0.8;
+      if (coreA > 0.01) {
+        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, roarRadius * 0.3);
+        coreGrad.addColorStop(0, `rgba(255, 255, 220, ${coreA})`);
+        coreGrad.addColorStop(0.3, `rgba(255, 200, 80, ${coreA * 0.7})`);
+        coreGrad.addColorStop(0.7, `rgba(255, 120, 20, ${coreA * 0.3})`);
+        coreGrad.addColorStop(1, "rgba(200, 60, 0, 0)");
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, roarRadius * 0.3, roarRadius * 0.3 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Ground crack lines
+      const crackA = alpha * (1 - progress * 0.5) * 0.4;
+      const crackSeed = hashString32(effect.id);
+      for (let c = 0; c < 8; c++) {
+        const cAngle = seededNoise(crackSeed + c * 11) * Math.PI * 2;
+        const cLen = roarRadius * (0.3 + seededNoise(crackSeed + c * 17) * 0.4) * progress;
+        ctx.strokeStyle = `rgba(80, 30, 0, ${crackA})`;
+        ctx.lineWidth = (2 - progress) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        const midJitter = (seededNoise(crackSeed + c * 23) - 0.5) * 8 * zoom;
+        ctx.quadraticCurveTo(
+          sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
+          sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
+          sx + Math.cos(cAngle) * cLen,
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
         );
         ctx.stroke();
       }
 
-      // Roar lines radiating outward
-      for (let line = 0; line < 12; line++) {
-        const angle = (line / 12) * Math.PI * 2;
-        const lineAlpha = alpha * 0.6;
-        ctx.strokeStyle = `rgba(255, 200, 100, ${lineAlpha})`;
-        ctx.lineWidth = 2 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(
-          screenPos.x + Math.cos(angle) * 20 * zoom,
-          screenPos.y + Math.sin(angle) * 10 * zoom,
-        );
-        ctx.lineTo(
-          screenPos.x + Math.cos(angle) * roarRadius * 0.8,
-          screenPos.y + Math.sin(angle) * roarRadius * 0.4,
-        );
-        ctx.stroke();
-      }
-      ctx.shadowBlur = 0;
       ctx.restore();
       break;
     }
 
     case "high_note": {
-      // Tenor's sonic blast with musical notes
       const noteRadius = effect.size * zoom * (0.3 + progress * 0.7);
+      const time = Date.now() / 1000;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const eSeed = hashString32(effect.id);
 
       ctx.save();
-      ctx.shadowColor = "#aa66ff";
-      ctx.shadowBlur = 15 * zoom;
 
-      // Purple sonic waves
-      for (let wave = 0; wave < 5; wave++) {
-        const waveProgress = (progress + wave * 0.08) % 1;
-        const waveRadius = noteRadius * (0.3 + waveProgress * 0.7);
-        const waveAlpha = (1 - waveProgress) * alpha * 0.4;
+      // Ground resonance field — purple radial glow
+      const fieldA = alpha * (1 - progress * 0.3) * 0.25;
+      const fieldGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, noteRadius * 0.7);
+      fieldGrad.addColorStop(0, `rgba(160, 80, 255, ${fieldA})`);
+      fieldGrad.addColorStop(0.5, `rgba(120, 50, 200, ${fieldA * 0.5})`);
+      fieldGrad.addColorStop(1, "rgba(80, 20, 160, 0)");
+      ctx.fillStyle = fieldGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, noteRadius * 0.7, noteRadius * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        ctx.strokeStyle = `rgba(180, 100, 255, ${waveAlpha})`;
-        ctx.lineWidth = (3 - wave * 0.4) * zoom;
+      // Sonic wave arcs — crescent-shaped sound pulses
+      for (let wave = 0; wave < 7; wave++) {
+        const wavePhase = (progress + wave * 0.06) % 1;
+        const waveR = noteRadius * (0.25 + wavePhase * 0.75);
+        const waveA = (1 - wavePhase) * alpha * 0.55;
+        const thickness = (4 - wave * 0.4) * zoom;
+
+        // Outer glow
+        ctx.strokeStyle = `rgba(140, 60, 220, ${waveA * 0.35})`;
+        ctx.lineWidth = thickness + 3 * zoom;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          waveRadius,
-          waveRadius * 0.5,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        ctx.ellipse(sx, sy, waveR, waveR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Bright violet core
+        ctx.strokeStyle = `rgba(200, 140, 255, ${waveA})`;
+        ctx.lineWidth = thickness;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, waveR, waveR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Floating musical notes
-      for (let n = 0; n < 8; n++) {
-        const noteAngle = (n / 8) * Math.PI * 2 + progress * Math.PI;
-        const noteDist =
-          noteRadius * 0.6 * (0.5 + Math.sin(progress * Math.PI * 2 + n) * 0.3);
-        const noteX = screenPos.x + Math.cos(noteAngle) * noteDist;
-        const noteY =
-          screenPos.y +
-          Math.sin(noteAngle) * noteDist * 0.5 -
-          progress * 20 * zoom;
-        const noteAlpha = alpha * 0.8;
+      // Harmonic resonance lines — concentric partial arcs that shimmer
+      for (let arc = 0; arc < 5; arc++) {
+        const arcR = noteRadius * (0.35 + arc * 0.12);
+        const arcStart = time * (1.5 + arc * 0.3) + arc * 0.9;
+        const arcLen = Math.PI * (0.4 + Math.sin(time * 2 + arc) * 0.15);
+        const arcA = alpha * (0.4 - arc * 0.05) * (1 - progress * 0.5);
 
-        ctx.fillStyle = `rgba(200, 150, 255, ${noteAlpha})`;
-        ctx.font = `${14 * zoom}px Arial`;
-        ctx.fillText("♪", noteX, noteY);
+        ctx.strokeStyle = `rgba(220, 180, 255, ${arcA})`;
+        ctx.lineWidth = (2.5 - arc * 0.3) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, arcR, arcR * ISO_Y_RATIO, 0, arcStart, arcStart + arcLen);
+        ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+
+      // Drawn musical note shapes (not text) — eighth notes
+      for (let n = 0; n < 10; n++) {
+        const nAngle = (n / 10) * Math.PI * 2 + progress * Math.PI * 1.2;
+        const nDist = noteRadius * (0.35 + Math.sin(time * 2.5 + n * 1.3) * 0.15);
+        const nX = sx + Math.cos(nAngle) * nDist;
+        const nY = sy + Math.sin(nAngle) * nDist * ISO_Y_RATIO - progress * 18 * zoom;
+        const nA = alpha * (0.6 + Math.sin(time * 3 + n * 0.7) * 0.25) * (1 - progress * 0.3);
+        const nSize = (5 + Math.sin(time * 4 + n) * 1.5) * zoom;
+
+        // Note head (filled ellipse)
+        ctx.fillStyle = `rgba(220, 170, 255, ${nA})`;
+        ctx.beginPath();
+        ctx.ellipse(nX, nY, nSize * 0.7, nSize * 0.5, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Note stem
+        ctx.strokeStyle = `rgba(220, 170, 255, ${nA})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(nX + nSize * 0.55, nY);
+        ctx.lineTo(nX + nSize * 0.55, nY - nSize * 2.2);
+        ctx.stroke();
+
+        // Note flag
+        ctx.beginPath();
+        ctx.moveTo(nX + nSize * 0.55, nY - nSize * 2.2);
+        ctx.quadraticCurveTo(
+          nX + nSize * 1.5, nY - nSize * 1.5,
+          nX + nSize * 0.55, nY - nSize * 1.0
+        );
+        ctx.strokeStyle = `rgba(220, 170, 255, ${nA * 0.8})`;
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.stroke();
+
+        // Note glow
+        const noteGlow = ctx.createRadialGradient(nX, nY, 0, nX, nY, nSize * 2.5);
+        noteGlow.addColorStop(0, `rgba(180, 120, 255, ${nA * 0.25})`);
+        noteGlow.addColorStop(1, "rgba(140, 80, 220, 0)");
+        ctx.fillStyle = noteGlow;
+        ctx.beginPath();
+        ctx.arc(nX, nY, nSize * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Healing sparkle particles rising upward
+      for (let h = 0; h < 14; h++) {
+        const hPhase = (time * 0.6 + h * 0.071) % 1;
+        const hAngle = seededNoise(eSeed + h * 13) * Math.PI * 2;
+        const hDist = noteRadius * (0.15 + seededNoise(eSeed + h * 19) * 0.5);
+        const hX = sx + Math.cos(hAngle) * hDist + Math.sin(time * 1.5 + h) * 4 * zoom;
+        const hY = sy + Math.sin(hAngle) * hDist * ISO_Y_RATIO - hPhase * 35 * zoom;
+        const hA = alpha * (1 - hPhase) * 0.5;
+        const hSize = (1.5 + seededNoise(eSeed + h * 23) * 2) * zoom * (1 - hPhase * 0.5);
+
+        // 4-pointed star sparkle
+        ctx.fillStyle = `rgba(200, 255, 200, ${hA})`;
+        ctx.beginPath();
+        for (let pt = 0; pt < 8; pt++) {
+          const ptAngle = (pt / 8) * Math.PI * 2;
+          const ptR = pt % 2 === 0 ? hSize * 1.5 : hSize * 0.4;
+          const px = hX + Math.cos(ptAngle) * ptR;
+          const py = hY + Math.sin(ptAngle) * ptR;
+          if (pt === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Central sonic burst — bright core flash
+      const coreA = alpha * Math.max(0, 1 - progress * 1.8) * 0.7;
+      if (coreA > 0.01) {
+        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, noteRadius * 0.25);
+        coreGrad.addColorStop(0, `rgba(255, 240, 255, ${coreA})`);
+        coreGrad.addColorStop(0.3, `rgba(220, 170, 255, ${coreA * 0.7})`);
+        coreGrad.addColorStop(0.7, `rgba(160, 80, 240, ${coreA * 0.3})`);
+        coreGrad.addColorStop(1, "rgba(120, 40, 200, 0)");
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, noteRadius * 0.25, noteRadius * 0.25 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
       break;
     }
 
     case "fortress_shield": {
-      // Mathey Knight's FORTRESS SHIELD - Impenetrable blue defensive barrier
       const shieldRadius = effect.size * zoom;
       const time = Date.now() / 1000;
       const pulsePhase = 0.85 + Math.sin(time * 3) * 0.15;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
 
       ctx.save();
 
-      // === OUTER DEFENSIVE RIPPLES (expanding waves) ===
-      for (let wave = 0; wave < 4; wave++) {
-        const wavePhase = (time * 0.6 + wave * 0.25) % 1;
-        const waveRadius = shieldRadius * (0.6 + wavePhase * 0.5);
-        const waveAlpha = alpha * 0.35 * (1 - wavePhase);
+      // Outer defensive ripples — expanding barrier waves
+      for (let wave = 0; wave < 5; wave++) {
+        const wavePhase = (time * 0.6 + wave * 0.2) % 1;
+        const waveR = shieldRadius * (0.6 + wavePhase * 0.5);
+        const waveA = alpha * 0.4 * (1 - wavePhase);
 
-        ctx.strokeStyle = `rgba(59, 130, 246, ${waveAlpha})`;
-        ctx.lineWidth = (2.5 - wave * 0.5) * zoom;
+        ctx.strokeStyle = `rgba(59, 130, 246, ${waveA * 0.3})`;
+        ctx.lineWidth = (3.5 - wave * 0.5) * zoom + 2 * zoom;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          waveRadius,
-          waveRadius * 0.5,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        ctx.ellipse(sx, sy, waveR, waveR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(147, 197, 253, ${waveA})`;
+        ctx.lineWidth = (3.5 - wave * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, waveR, waveR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // === HEXAGONAL SHIELD LATTICE (multiple layers) ===
+      // Hexagonal shield lattice — multi-layer rotating hexagons
       const hexPoints = 6;
-      for (let layer = 0; layer < 3; layer++) {
-        const layerRadius = shieldRadius * (0.6 + layer * 0.15);
-        const layerRotation =
-          time * (layer % 2 === 0 ? 0.5 : -0.3) + layer * 0.2;
-        const layerAlpha = alpha * (0.5 - layer * 0.1);
+      for (let layer = 0; layer < 4; layer++) {
+        const layerR = shieldRadius * (0.55 + layer * 0.12);
+        const layerRot = time * (layer % 2 === 0 ? 0.5 : -0.35) + layer * 0.25;
+        const layerA = alpha * (0.5 - layer * 0.08);
 
-        ctx.strokeStyle = `rgba(96, 165, 250, ${layerAlpha})`;
-        ctx.lineWidth = (3 - layer * 0.5) * zoom;
+        // Outer glow hex
+        ctx.strokeStyle = `rgba(37, 99, 235, ${layerA * 0.3})`;
+        ctx.lineWidth = (4 - layer * 0.5) * zoom;
         ctx.beginPath();
         for (let i = 0; i <= hexPoints; i++) {
-          const angle =
-            (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRotation;
-          const x = screenPos.x + Math.cos(angle) * layerRadius;
-          const y = screenPos.y + Math.sin(angle) * layerRadius * 0.5;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRot;
+          const hx = sx + Math.cos(angle) * layerR;
+          const hy = sy + Math.sin(angle) * layerR * ISO_Y_RATIO;
+          if (i === 0) ctx.moveTo(hx, hy);
+          else ctx.lineTo(hx, hy);
         }
         ctx.stroke();
+
+        // Bright hex core
+        ctx.strokeStyle = `rgba(147, 197, 253, ${layerA})`;
+        ctx.lineWidth = (2.5 - layer * 0.3) * zoom;
+        ctx.beginPath();
+        for (let i = 0; i <= hexPoints; i++) {
+          const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRot;
+          const hx = sx + Math.cos(angle) * layerR;
+          const hy = sy + Math.sin(angle) * layerR * ISO_Y_RATIO;
+          if (i === 0) ctx.moveTo(hx, hy);
+          else ctx.lineTo(hx, hy);
+        }
+        ctx.stroke();
+
+        // Hex vertex energy dots
+        for (let i = 0; i < hexPoints; i++) {
+          const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRot;
+          const vx = sx + Math.cos(angle) * layerR;
+          const vy = sy + Math.sin(angle) * layerR * ISO_Y_RATIO;
+          const dotA = layerA * (0.6 + Math.sin(time * 4 + i + layer) * 0.3);
+          const dotGrad = ctx.createRadialGradient(vx, vy, 0, vx, vy, 4 * zoom);
+          dotGrad.addColorStop(0, `rgba(220, 240, 255, ${dotA})`);
+          dotGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+          ctx.fillStyle = dotGrad;
+          ctx.beginPath();
+          ctx.arc(vx, vy, 4 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
-      // === INNER ENERGY FIELD (layered blue gradients) ===
-      // Outer azure glow
-      const outerShield = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        shieldRadius * 0.85,
-      );
-      outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.1})`);
-      outerShield.addColorStop(
-        0.5,
-        `rgba(59, 130, 246, ${alpha * 0.15 * pulsePhase})`,
-      );
-      outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.1})`);
+      // Inner energy field — layered blue radial gradients
+      const outerShield = ctx.createRadialGradient(sx, sy, 0, sx, sy, shieldRadius * 0.85);
+      outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.12})`);
+      outerShield.addColorStop(0.5, `rgba(59, 130, 246, ${alpha * 0.18 * pulsePhase})`);
+      outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.08})`);
       outerShield.addColorStop(1, "rgba(37, 99, 235, 0)");
       ctx.fillStyle = outerShield;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        shieldRadius * 0.85,
-        shieldRadius * 0.42,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, shieldRadius * 0.85, shieldRadius * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner bright core
-      const coreShield = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        shieldRadius * 0.35,
-      );
-      coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.4})`);
+      // Bright inner core
+      const coreShield = ctx.createRadialGradient(sx, sy, 0, sx, sy, shieldRadius * 0.35);
+      coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.45})`);
       coreShield.addColorStop(0.5, `rgba(147, 197, 253, ${alpha * 0.25})`);
       coreShield.addColorStop(1, "rgba(96, 165, 250, 0)");
       ctx.fillStyle = coreShield;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        shieldRadius * 0.35,
-        shieldRadius * 0.17,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, shieldRadius * 0.35, shieldRadius * 0.35 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // === DEFENSIVE RUNE CIRCLE ===
+      // Defensive rune circle — dashed rotating ring
       ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.5})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.lineDashOffset = -time * 30;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        shieldRadius * 0.5,
-        shieldRadius * 0.25,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, shieldRadius * 0.5, shieldRadius * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // === ORBITING SHIELD RUNES ===
-      ctx.shadowColor = "#3b82f6";
-      ctx.shadowBlur = 10 * zoom;
-      const runeSymbols = ["🛡️", "⚔️", "🏰", "✦", "🛡️", "⚔️"];
-      ctx.font = `${10 * zoom}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
+      // Orbiting ward runes — drawn geometric shapes instead of emoji
       for (let r = 0; r < 6; r++) {
         const runeAngle = time * 1.2 + (r / 6) * Math.PI * 2;
-        const runeRadius = shieldRadius * 0.65;
-        const runeX = screenPos.x + Math.cos(runeAngle) * runeRadius;
-        const runeY = screenPos.y + Math.sin(runeAngle) * runeRadius * 0.5;
-        const runeAlpha = 0.6 + Math.sin(time * 2.5 + r * 1.2) * 0.25;
+        const runeR = shieldRadius * 0.65;
+        const rx = sx + Math.cos(runeAngle) * runeR;
+        const ry = sy + Math.sin(runeAngle) * runeR * ISO_Y_RATIO;
+        const runeA = alpha * (0.55 + Math.sin(time * 2.5 + r * 1.2) * 0.25);
+        const runeSize = 6 * zoom;
 
-        ctx.globalAlpha = alpha * runeAlpha;
-        ctx.fillStyle = `rgba(191, 219, 254, ${runeAlpha})`;
-        ctx.fillText(runeSymbols[r], runeX, runeY);
-      }
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
+        ctx.globalAlpha = runeA;
 
-      // === ENERGY SPARKS (floating around shield) ===
-      for (let spark = 0; spark < 12; spark++) {
-        const sparkAngle = (spark / 12) * Math.PI * 2 + time * 0.9;
-        const sparkWobble = Math.sin(time * 4 + spark * 0.7) * 8 * zoom;
-        const sparkDist = shieldRadius * 0.7 + sparkWobble;
-        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
-        const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
-        const sparkAlpha = alpha * (0.4 + Math.sin(time * 5 + spark) * 0.3);
-        const sparkSize = (2 + Math.sin(time * 6 + spark * 0.9) * 1) * zoom;
+        if (r % 3 === 0) {
+          // Shield shape — pointed at bottom
+          ctx.fillStyle = `rgba(147, 197, 253, 0.8)`;
+          ctx.strokeStyle = `rgba(220, 240, 255, 0.6)`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - runeSize);
+          ctx.lineTo(rx + runeSize * 0.8, ry - runeSize * 0.3);
+          ctx.lineTo(rx + runeSize * 0.8, ry + runeSize * 0.2);
+          ctx.lineTo(rx, ry + runeSize);
+          ctx.lineTo(rx - runeSize * 0.8, ry + runeSize * 0.2);
+          ctx.lineTo(rx - runeSize * 0.8, ry - runeSize * 0.3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        } else if (r % 3 === 1) {
+          // Sword/cross shape
+          ctx.fillStyle = `rgba(191, 219, 254, 0.7)`;
+          ctx.fillRect(rx - 1 * zoom, ry - runeSize, 2 * zoom, runeSize * 2);
+          ctx.fillRect(rx - runeSize * 0.6, ry - runeSize * 0.3, runeSize * 1.2, 2 * zoom);
+        } else {
+          // Diamond ward
+          ctx.fillStyle = `rgba(96, 165, 250, 0.7)`;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - runeSize);
+          ctx.lineTo(rx + runeSize * 0.6, ry);
+          ctx.lineTo(rx, ry + runeSize);
+          ctx.lineTo(rx - runeSize * 0.6, ry);
+          ctx.closePath();
+          ctx.fill();
+        }
 
-        ctx.fillStyle = `rgba(147, 197, 253, ${sparkAlpha})`;
-        ctx.shadowColor = "#93c5fd";
-        ctx.shadowBlur = 5 * zoom;
+        // Rune glow
+        const runeGlow = ctx.createRadialGradient(rx, ry, 0, rx, ry, runeSize * 2.5);
+        runeGlow.addColorStop(0, `rgba(96, 165, 250, 0.2)`);
+        runeGlow.addColorStop(1, "rgba(59, 130, 246, 0)");
+        ctx.fillStyle = runeGlow;
         ctx.beginPath();
-        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+        ctx.arc(rx, ry, runeSize * 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.shadowBlur = 0;
-
-      // === CENTRAL SHIELD ICON ===
-      ctx.globalAlpha = alpha * (0.7 + Math.sin(time * 2) * 0.2);
-      ctx.font = `bold ${18 * zoom}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.shadowColor = "#3b82f6";
-      ctx.shadowBlur = 15 * zoom;
-      ctx.fillText("🛡️", screenPos.x, screenPos.y - 2 * zoom);
       ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
 
+      // Energy sparks orbiting the shield
+      for (let spark = 0; spark < 16; spark++) {
+        const sparkAngle = (spark / 16) * Math.PI * 2 + time * 0.9;
+        const sparkWobble = Math.sin(time * 4 + spark * 0.7) * 8 * zoom;
+        const sparkDist = shieldRadius * 0.7 + sparkWobble;
+        const sparkX = sx + Math.cos(sparkAngle) * sparkDist;
+        const sparkY = sy + Math.sin(sparkAngle) * sparkDist * ISO_Y_RATIO;
+        const sparkA = alpha * (0.35 + Math.sin(time * 5 + spark) * 0.25);
+        const sparkSize = (2 + Math.sin(time * 6 + spark * 0.9) * 1) * zoom;
+
+        const sGrad = ctx.createRadialGradient(sparkX, sparkY, 0, sparkX, sparkY, sparkSize * 2);
+        sGrad.addColorStop(0, `rgba(220, 240, 255, ${sparkA})`);
+        sGrad.addColorStop(0.5, `rgba(147, 197, 253, ${sparkA * 0.5})`);
+        sGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, sparkSize * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Central shield icon — drawn as a proper shield shape
+      const csA = alpha * (0.7 + Math.sin(time * 2) * 0.2);
+      const csSize = 12 * zoom;
+      ctx.globalAlpha = csA;
+
+      // Shield glow
+      const shGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, csSize * 2.5);
+      shGlow.addColorStop(0, `rgba(147, 197, 253, 0.4)`);
+      shGlow.addColorStop(0.5, `rgba(59, 130, 246, 0.15)`);
+      shGlow.addColorStop(1, "rgba(37, 99, 235, 0)");
+      ctx.fillStyle = shGlow;
+      ctx.beginPath();
+      ctx.arc(sx, sy - 2 * zoom, csSize * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Shield body
+      ctx.fillStyle = `rgba(96, 165, 250, 0.85)`;
+      ctx.strokeStyle = `rgba(220, 240, 255, 0.7)`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - csSize * 1.2 - 2 * zoom);
+      ctx.lineTo(sx + csSize, sy - csSize * 0.4 - 2 * zoom);
+      ctx.lineTo(sx + csSize, sy + csSize * 0.2 - 2 * zoom);
+      ctx.lineTo(sx, sy + csSize * 1.2 - 2 * zoom);
+      ctx.lineTo(sx - csSize, sy + csSize * 0.2 - 2 * zoom);
+      ctx.lineTo(sx - csSize, sy - csSize * 0.4 - 2 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Shield cross emblem
+      ctx.fillStyle = `rgba(220, 240, 255, 0.6)`;
+      ctx.fillRect(sx - 1.5 * zoom, sy - csSize * 0.7 - 2 * zoom, 3 * zoom, csSize * 1.3);
+      ctx.fillRect(sx - csSize * 0.5, sy - csSize * 0.15 - 2 * zoom, csSize, 3 * zoom);
+
+      ctx.globalAlpha = 1;
       ctx.restore();
       break;
     }
 
     case "meteor_strike": {
-      // Rocky's meteor ability (similar to spell but hero-sized)
       const strikeRadius = effect.size * zoom * (0.4 + progress * 0.6);
+      const time = Date.now() / 1000;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const mSeed = hashString32(effect.id);
 
       ctx.save();
-      ctx.shadowColor = "#996633";
-      ctx.shadowBlur = 25 * zoom;
 
-      // Ground impact crater
-      ctx.fillStyle = `rgba(80, 60, 40, ${alpha * 0.5})`;
+      // Deep impact crater with layered depth
+      const craterA = alpha * 0.6;
+      const craterGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, strikeRadius * 0.7);
+      craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterA})`);
+      craterGrad.addColorStop(0.25, `rgba(50, 25, 10, ${craterA * 0.7})`);
+      craterGrad.addColorStop(0.5, `rgba(80, 50, 25, ${craterA * 0.4})`);
+      craterGrad.addColorStop(0.75, `rgba(60, 40, 20, ${craterA * 0.15})`);
+      craterGrad.addColorStop(1, "rgba(50, 30, 15, 0)");
+      ctx.fillStyle = craterGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        strikeRadius * 0.6,
-        strikeRadius * 0.3,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, strikeRadius * 0.7, strikeRadius * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dust cloud
-      const dustGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        strikeRadius,
-      );
-      dustGrad.addColorStop(0, `rgba(150, 120, 80, ${alpha * 0.7})`);
-      dustGrad.addColorStop(0.5, `rgba(120, 90, 60, ${alpha * 0.4})`);
-      dustGrad.addColorStop(1, `rgba(80, 60, 40, 0)`);
-      ctx.fillStyle = dustGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 10 * zoom * progress,
-        strikeRadius,
-        strikeRadius * 0.6,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Rock fragments
-      for (let rock = 0; rock < 8; rock++) {
-        const rockAngle = (rock / 8) * Math.PI * 2;
-        const rockDist = strikeRadius * 0.5 * progress;
-        const rockX = screenPos.x + Math.cos(rockAngle) * rockDist;
-        const rockY =
-          screenPos.y +
-          Math.sin(rockAngle) * rockDist * 0.5 -
-          progress * 15 * zoom;
-
-        ctx.fillStyle = `rgba(100, 80, 60, ${alpha})`;
+      // Fire ring expanding outward from impact
+      const fireRingA = alpha * Math.max(0, 1 - progress * 1.5) * 0.6;
+      if (fireRingA > 0.01) {
+        const fireRingR = strikeRadius * (0.3 + progress * 0.7);
+        ctx.strokeStyle = `rgba(255, 120, 20, ${fireRingA * 0.3})`;
+        ctx.lineWidth = 6 * zoom;
         ctx.beginPath();
-        ctx.arc(rockX, rockY, (4 - progress * 2) * zoom, 0, Math.PI * 2);
+        ctx.ellipse(sx, sy, fireRingR, fireRingR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255, 200, 80, ${fireRingA})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, fireRingR, fireRingR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Dust cloud — layered billowing upward
+      const dustA = alpha * (1 - progress * 0.5);
+      for (let d = 0; d < 5; d++) {
+        const dAngle = seededNoise(mSeed + d * 7) * Math.PI * 2;
+        const dDist = strikeRadius * (0.1 + seededNoise(mSeed + d * 13) * 0.5);
+        const dX = sx + Math.cos(dAngle) * dDist;
+        const dY = sy + Math.sin(dAngle) * dDist * ISO_Y_RATIO - progress * (15 + d * 5) * zoom;
+        const dR = (8 + seededNoise(mSeed + d * 17) * 10) * zoom * (0.5 + progress * 0.5);
+        const dCloudA = dustA * (0.3 + seededNoise(mSeed + d * 19) * 0.2) * (1 - progress * 0.4);
+
+        const cloudGrad = ctx.createRadialGradient(dX, dY, 0, dX, dY, dR);
+        cloudGrad.addColorStop(0, `rgba(140, 110, 70, ${dCloudA})`);
+        cloudGrad.addColorStop(0.5, `rgba(110, 85, 50, ${dCloudA * 0.5})`);
+        cloudGrad.addColorStop(1, "rgba(80, 60, 35, 0)");
+        ctx.fillStyle = cloudGrad;
+        ctx.beginPath();
+        ctx.ellipse(dX, dY, dR, dR * 0.7, 0, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.shadowBlur = 0;
+
+      // Rock fragments flying outward with proper shading
+      for (let rock = 0; rock < 14; rock++) {
+        const rAngle = seededNoise(mSeed + rock * 23) * Math.PI * 2;
+        const rSpeed = 0.4 + seededNoise(mSeed + rock * 29) * 0.6;
+        const rDist = strikeRadius * rSpeed * progress;
+        const rX = sx + Math.cos(rAngle) * rDist;
+        const rArc = Math.sin(progress * Math.PI) * (20 + seededNoise(mSeed + rock * 31) * 15) * zoom;
+        const rY = sy + Math.sin(rAngle) * rDist * ISO_Y_RATIO - rArc;
+        const rSize = (2.5 + seededNoise(mSeed + rock * 37) * 3) * zoom * (1 - progress * 0.5);
+        const rA = alpha * (1 - progress * 0.8);
+
+        // Rock body
+        const rGrad = ctx.createRadialGradient(rX - rSize * 0.3, rY - rSize * 0.3, 0, rX, rY, rSize);
+        rGrad.addColorStop(0, `rgba(160, 130, 90, ${rA})`);
+        rGrad.addColorStop(0.5, `rgba(100, 75, 45, ${rA})`);
+        rGrad.addColorStop(1, `rgba(60, 45, 25, ${rA * 0.7})`);
+        ctx.fillStyle = rGrad;
+        ctx.beginPath();
+        const rockVerts = 5 + Math.floor(seededNoise(mSeed + rock * 41) * 3);
+        for (let v = 0; v < rockVerts; v++) {
+          const vAngle = (v / rockVerts) * Math.PI * 2;
+          const variance = 0.7 + seededNoise(mSeed + rock * 43 + v * 3) * 0.3;
+          const vr = rSize * variance;
+          if (v === 0) ctx.moveTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
+          else ctx.lineTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Ground crack lines radiating from center
+      const crackLineA = alpha * 0.5 * (1 - progress * 0.3);
+      for (let c = 0; c < 10; c++) {
+        const cAngle = seededNoise(mSeed + c * 47) * Math.PI * 2;
+        const cLen = strikeRadius * (0.4 + seededNoise(mSeed + c * 53) * 0.4) * Math.min(1, progress * 2);
+        const midJitter = (seededNoise(mSeed + c * 59) - 0.5) * 8 * zoom;
+
+        ctx.strokeStyle = `rgba(40, 25, 10, ${crackLineA})`;
+        ctx.lineWidth = (2 - progress * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(
+          sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
+          sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
+          sx + Math.cos(cAngle) * cLen,
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
+        );
+        ctx.stroke();
+      }
+
+      // Central flash on early frames
+      const flashA = alpha * Math.max(0, 1 - progress * 3);
+      if (flashA > 0.01) {
+        const flashGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, strikeRadius * 0.4);
+        flashGrad.addColorStop(0, `rgba(255, 240, 200, ${flashA})`);
+        flashGrad.addColorStop(0.3, `rgba(255, 180, 80, ${flashA * 0.6})`);
+        flashGrad.addColorStop(1, "rgba(200, 100, 20, 0)");
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, strikeRadius * 0.4, strikeRadius * 0.4 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
       break;
     }
 
     case "boulder_strike": {
-      // Rocky's boulder throw ability - boulder flies from pos to targetPos
       ctx.save();
 
       const targetPos = effect.targetPos || effect.pos;
-      const targetScreenPos = worldToScreen(
-        targetPos,
-        canvasWidth,
-        canvasHeight,
-        dpr,
-        cameraOffset,
-        cameraZoom,
-      );
-
-      // Calculate current boulder position along the arc
+      const targetScreenPos = worldToScreen(targetPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
       const startX = screenPos.x;
       const startY = screenPos.y;
       const endX = targetScreenPos.x;
       const endY = targetScreenPos.y;
+      const bSeed = hashString32(effect.id);
 
-      // Boulder travels in an arc
-      const travelProgress = Math.min(progress * 1.5, 1); // Boulder reaches target at 66% of effect duration
+      const travelProgress = Math.min(progress * 1.5, 1);
       const currentX = startX + (endX - startX) * travelProgress;
-      const arcHeight = 80 * zoom; // Height of the arc
+      const arcHeight = 90 * zoom;
       const arcY = -Math.sin(travelProgress * Math.PI) * arcHeight;
       const currentY = startY + (endY - startY) * travelProgress + arcY;
-
-      const boulderSize = effect.size * zoom * 0.4;
-      const rotation = travelProgress * Math.PI * 4; // Boulder rotates as it flies
+      const boulderSize = effect.size * zoom * 0.45;
+      const rotation = travelProgress * Math.PI * 4;
 
       if (travelProgress < 1) {
-        // Draw shadow on ground
+        // Ground shadow — scales with altitude
         const shadowX = currentX;
         const shadowY = startY + (endY - startY) * travelProgress;
-        const shadowScale = 1 - Math.abs(arcY) / (arcHeight * 2);
-        ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * alpha * shadowScale})`;
+        const shadowScale = 0.4 + 0.6 * (1 - Math.abs(arcY) / arcHeight);
+        const shadowGrad = ctx.createRadialGradient(shadowX, shadowY + 4 * zoom, 0, shadowX, shadowY + 4 * zoom, boulderSize * shadowScale);
+        shadowGrad.addColorStop(0, `rgba(0, 0, 0, ${0.35 * alpha * shadowScale})`);
+        shadowGrad.addColorStop(0.7, `rgba(0, 0, 0, ${0.1 * alpha * shadowScale})`);
+        shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = shadowGrad;
         ctx.beginPath();
-        ctx.ellipse(
-          shadowX,
-          shadowY + 5 * zoom,
-          boulderSize * 0.8,
-          boulderSize * 0.3,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        ctx.ellipse(shadowX, shadowY + 4 * zoom, boulderSize * shadowScale, boulderSize * shadowScale * ISO_Y_RATIO * 0.6, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw the flying boulder
+        // Motion trail — streaked dust behind the boulder
+        for (let t = 0; t < 6; t++) {
+          const trailT = Math.max(0, travelProgress - t * 0.06);
+          const trailX = startX + (endX - startX) * trailT;
+          const trailArc = -Math.sin(trailT * Math.PI) * arcHeight;
+          const trailY = startY + (endY - startY) * trailT + trailArc;
+          const trailA = alpha * 0.25 * (1 - t / 6);
+          const trailSize = boulderSize * (0.5 - t * 0.06);
+
+          const tGrad = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, trailSize);
+          tGrad.addColorStop(0, `rgba(160, 130, 90, ${trailA})`);
+          tGrad.addColorStop(1, "rgba(120, 95, 60, 0)");
+          ctx.fillStyle = tGrad;
+          ctx.beginPath();
+          ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Flying boulder — multi-layer rock with texture
         ctx.save();
         ctx.translate(currentX, currentY);
         ctx.rotate(rotation);
 
-        // Boulder shadow/depth
-        ctx.shadowColor = "#4a3a2a";
-        ctx.shadowBlur = 8 * zoom;
-        ctx.shadowOffsetY = 3 * zoom;
-
-        // Main boulder body - irregular rock shape
-        const bGrad = ctx.createRadialGradient(
-          -boulderSize * 0.3,
-          -boulderSize * 0.3,
-          0,
-          0,
-          0,
-          boulderSize,
-        );
-        bGrad.addColorStop(0, "#a08060");
-        bGrad.addColorStop(0.4, "#7a6040");
-        bGrad.addColorStop(0.8, "#5a4030");
-        bGrad.addColorStop(1, "#3a2820");
+        // Outer rock body
+        const bGrad = ctx.createRadialGradient(-boulderSize * 0.3, -boulderSize * 0.3, 0, 0, 0, boulderSize);
+        bGrad.addColorStop(0, "#b09070");
+        bGrad.addColorStop(0.3, "#907050");
+        bGrad.addColorStop(0.6, "#6a4a30");
+        bGrad.addColorStop(1, "#3a2818");
         ctx.fillStyle = bGrad;
 
-        // Draw irregular rock shape
         ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          const variance = 0.7 + Math.sin(i * 2.7 + rotation * 0.1) * 0.3;
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2;
+          const variance = 0.7 + seededNoise(bSeed + i * 3) * 0.35;
           const r = boulderSize * variance;
-          if (i === 0) {
-            ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
-          } else {
-            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
-          }
+          if (i === 0) ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          else ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
         }
         ctx.closePath();
         ctx.fill();
 
-        // Rock texture/cracks
-        ctx.strokeStyle = `rgba(40, 30, 20, 0.5)`;
+        // Rock edge definition
+        ctx.strokeStyle = `rgba(30, 20, 10, 0.5)`;
         ctx.lineWidth = 1.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(-boulderSize * 0.3, -boulderSize * 0.2);
-        ctx.lineTo(boulderSize * 0.2, boulderSize * 0.3);
-        ctx.moveTo(boulderSize * 0.1, -boulderSize * 0.4);
-        ctx.lineTo(-boulderSize * 0.1, boulderSize * 0.1);
         ctx.stroke();
 
-        // Highlight
-        ctx.fillStyle = `rgba(180, 150, 120, 0.4)`;
+        // Crack texture lines
+        ctx.strokeStyle = `rgba(40, 28, 15, 0.55)`;
+        ctx.lineWidth = 1.2 * zoom;
+        for (let cr = 0; cr < 4; cr++) {
+          const crStart = seededNoise(bSeed + cr * 61) * Math.PI * 2;
+          const crLen = boulderSize * (0.3 + seededNoise(bSeed + cr * 67) * 0.5);
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(crStart) * boulderSize * 0.1, Math.sin(crStart) * boulderSize * 0.1);
+          ctx.lineTo(Math.cos(crStart) * crLen, Math.sin(crStart) * crLen);
+          ctx.stroke();
+        }
+
+        // Top-light highlight
+        ctx.fillStyle = `rgba(200, 170, 130, 0.35)`;
         ctx.beginPath();
-        ctx.ellipse(
-          -boulderSize * 0.25,
-          -boulderSize * 0.25,
-          boulderSize * 0.3,
-          boulderSize * 0.2,
-          -0.5,
-          0,
-          Math.PI * 2,
-        );
+        ctx.ellipse(-boulderSize * 0.2, -boulderSize * 0.25, boulderSize * 0.35, boulderSize * 0.2, -0.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
 
-        // Trailing dust particles
-        for (let i = 0; i < 3; i++) {
-          const trailProgress = Math.max(0, travelProgress - i * 0.1);
-          const trailX = startX + (endX - startX) * trailProgress;
-          const trailArcY = -Math.sin(trailProgress * Math.PI) * arcHeight;
-          const trailY = startY + (endY - startY) * trailProgress + trailArcY;
-          const dustAlpha = alpha * 0.3 * (1 - i * 0.3);
-          const dustSize = boulderSize * 0.2 * (1 - i * 0.2);
-
-          ctx.fillStyle = `rgba(150, 130, 100, ${dustAlpha})`;
+        // Small rock fragments trailing
+        for (let f = 0; f < 4; f++) {
+          const fT = Math.max(0, travelProgress - 0.03 - f * 0.04);
+          const fX = startX + (endX - startX) * fT + (seededNoise(bSeed + f * 71) - 0.5) * 12 * zoom;
+          const fArc = -Math.sin(fT * Math.PI) * arcHeight * (0.8 + seededNoise(bSeed + f * 73) * 0.2);
+          const fY = startY + (endY - startY) * fT + fArc + (seededNoise(bSeed + f * 77) - 0.5) * 8 * zoom;
+          const fSize = (1.5 + seededNoise(bSeed + f * 79) * 2) * zoom;
+          ctx.fillStyle = `rgba(130, 100, 65, ${alpha * 0.5})`;
           ctx.beginPath();
-          ctx.arc(trailX, trailY, dustSize, 0, Math.PI * 2);
+          ctx.arc(fX, fY, fSize, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // Impact effect (when boulder lands)
-      if (travelProgress >= 0.9) {
-        const impactProgress = (travelProgress - 0.9) / 0.1;
-        const impactAlpha = alpha * (1 - impactProgress);
-        const impactRadius = boulderSize * (1 + impactProgress * 2);
+      // Impact effect — dramatic shockwave and debris
+      if (travelProgress >= 0.85) {
+        const impactP = Math.min(1, (travelProgress - 0.85) / 0.15);
+        const impactA = alpha * (1 - impactP * 0.7);
+        const impactR = boulderSize * (1 + impactP * 3);
 
-        // Dust cloud
-        const dustGrad = ctx.createRadialGradient(
-          endX,
-          endY,
-          0,
-          endX,
-          endY,
-          impactRadius * 2,
-        );
-        dustGrad.addColorStop(0, `rgba(140, 110, 70, ${impactAlpha * 0.8})`);
-        dustGrad.addColorStop(0.5, `rgba(110, 85, 50, ${impactAlpha * 0.5})`);
-        dustGrad.addColorStop(1, `rgba(80, 60, 35, 0)`);
-        ctx.fillStyle = dustGrad;
+        // Ground shockwave ring
+        const shockA = impactA * (1 - impactP) * 0.7;
+        ctx.strokeStyle = `rgba(180, 140, 80, ${shockA * 0.3})`;
+        ctx.lineWidth = 5 * zoom;
         ctx.beginPath();
-        ctx.ellipse(
-          endX,
-          endY,
-          impactRadius * 2,
-          impactRadius,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Ground crack/crater
-        ctx.strokeStyle = `rgba(60, 45, 30, ${impactAlpha})`;
+        ctx.ellipse(endX, endY, impactR * 1.5, impactR * 1.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(220, 180, 120, ${shockA})`;
         ctx.lineWidth = 2 * zoom;
-        for (let c = 0; c < 6; c++) {
-          const crackAngle = (c / 6) * Math.PI * 2;
-          const crackLen = impactRadius * (0.8 + Math.random() * 0.4);
+        ctx.beginPath();
+        ctx.ellipse(endX, endY, impactR * 1.5, impactR * 1.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Dust cloud — multi-layer
+        for (let dc = 0; dc < 4; dc++) {
+          const dcAngle = seededNoise(bSeed + dc * 81) * Math.PI * 2;
+          const dcDist = impactR * impactP * (0.5 + seededNoise(bSeed + dc * 83) * 0.8);
+          const dcX = endX + Math.cos(dcAngle) * dcDist;
+          const dcY = endY + Math.sin(dcAngle) * dcDist * ISO_Y_RATIO - impactP * 10 * zoom;
+          const dcR = (6 + seededNoise(bSeed + dc * 87) * 8) * zoom;
+          const dcA = impactA * (1 - impactP) * 0.4;
+
+          const dcGrad = ctx.createRadialGradient(dcX, dcY, 0, dcX, dcY, dcR);
+          dcGrad.addColorStop(0, `rgba(150, 120, 75, ${dcA})`);
+          dcGrad.addColorStop(1, "rgba(100, 75, 40, 0)");
+          ctx.fillStyle = dcGrad;
+          ctx.beginPath();
+          ctx.arc(dcX, dcY, dcR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Ground cracks
+        for (let c = 0; c < 8; c++) {
+          const crAngle = seededNoise(bSeed + c * 89) * Math.PI * 2;
+          const crLen = impactR * (0.7 + seededNoise(bSeed + c * 91) * 0.5) * impactP;
+          const crJitter = (seededNoise(bSeed + c * 93) - 0.5) * 6 * zoom;
+          ctx.strokeStyle = `rgba(50, 35, 20, ${impactA * 0.5})`;
+          ctx.lineWidth = (2 - impactP * 0.8) * zoom;
           ctx.beginPath();
           ctx.moveTo(endX, endY);
-          ctx.lineTo(
-            endX + Math.cos(crackAngle) * crackLen,
-            endY + Math.sin(crackAngle) * crackLen * 0.5,
+          ctx.quadraticCurveTo(
+            endX + Math.cos(crAngle) * crLen * 0.5 + crJitter,
+            endY + Math.sin(crAngle) * crLen * 0.5 * ISO_Y_RATIO + crJitter * 0.3,
+            endX + Math.cos(crAngle) * crLen,
+            endY + Math.sin(crAngle) * crLen * ISO_Y_RATIO
           );
           ctx.stroke();
         }
 
-        // Flying debris
-        for (let d = 0; d < 5; d++) {
-          const debrisAngle = (d / 5) * Math.PI * 2 + impactProgress;
-          const debrisDist = impactRadius * impactProgress * 1.5;
-          const debrisX = endX + Math.cos(debrisAngle) * debrisDist;
-          const debrisY =
-            endY +
-            Math.sin(debrisAngle) * debrisDist * 0.5 -
-            impactProgress * 20 * zoom;
+        // Flying debris with arcs
+        for (let d = 0; d < 8; d++) {
+          const dAngle = seededNoise(bSeed + d * 97) * Math.PI * 2;
+          const dDist = impactR * 1.5 * impactP * (0.5 + seededNoise(bSeed + d * 101) * 0.5);
+          const dArc = Math.sin(impactP * Math.PI) * 15 * zoom * (0.5 + seededNoise(bSeed + d * 103) * 0.5);
+          const dX = endX + Math.cos(dAngle) * dDist;
+          const dY = endY + Math.sin(dAngle) * dDist * ISO_Y_RATIO - dArc;
+          const dSize = (2 + seededNoise(bSeed + d * 107) * 2.5) * zoom * (1 - impactP * 0.5);
 
-          ctx.fillStyle = `rgba(90, 70, 45, ${impactAlpha})`;
+          ctx.fillStyle = `rgba(110, 85, 50, ${impactA * 0.7})`;
           ctx.beginPath();
-          ctx.arc(
-            debrisX,
-            debrisY,
-            (3 - impactProgress * 2) * zoom,
-            0,
-            Math.PI * 2,
-          );
+          const dVerts = 4 + Math.floor(seededNoise(bSeed + d * 109) * 3);
+          for (let v = 0; v < dVerts; v++) {
+            const vA = (v / dVerts) * Math.PI * 2;
+            const vr = dSize * (0.7 + seededNoise(bSeed + d * 111 + v) * 0.3);
+            if (v === 0) ctx.moveTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
+            else ctx.lineTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
+          }
+          ctx.closePath();
           ctx.fill();
         }
       }
@@ -2892,159 +3151,193 @@ export function renderEffect(
     }
 
     case "inspiration": {
-      // F. Scott's INSPIRATION - Literary brilliance empowering towers
       const time = Date.now() / 1000;
       const auraRadius = effect.size * zoom * (0.6 + progress * 0.25);
       const pulsePhase = Math.sin(time * 2) * 0.15;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const iSeed = hashString32(effect.id);
 
       ctx.save();
 
-      // === OUTER TEAL ENERGY RING (expanding waves) ===
-      for (let ring = 0; ring < 3; ring++) {
-        const ringPhase = (time * 0.8 + ring * 0.33) % 1;
-        const ringRadius = auraRadius * (0.5 + ringPhase * 0.5);
-        const ringAlpha = alpha * 0.4 * (1 - ringPhase);
+      // Outer teal energy rings — expanding empowerment waves
+      for (let ring = 0; ring < 4; ring++) {
+        const ringPhase = (time * 0.8 + ring * 0.25) % 1;
+        const ringR = auraRadius * (0.5 + ringPhase * 0.5);
+        const ringA = alpha * 0.45 * (1 - ringPhase);
 
-        ctx.strokeStyle = `rgba(20, 184, 166, ${ringAlpha})`;
-        ctx.lineWidth = (3 - ring) * zoom;
+        ctx.strokeStyle = `rgba(20, 184, 166, ${ringA * 0.3})`;
+        ctx.lineWidth = (4 - ring * 0.5) * zoom + 2 * zoom;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          ringRadius,
-          ringRadius * 0.5,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(94, 234, 212, ${ringA})`;
+        ctx.lineWidth = (3 - ring * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // === LITERARY ENERGY SPIRAL (book pages / manuscript swirl) ===
-      ctx.strokeStyle = `rgba(255, 248, 220, ${alpha * 0.5})`;
-      ctx.lineWidth = 2 * zoom;
-      for (let arm = 0; arm < 4; arm++) {
+      // Literary energy spiral — manuscript page swirls
+      for (let arm = 0; arm < 5; arm++) {
+        const armA = alpha * (0.4 - arm * 0.04);
+        ctx.lineWidth = (2.5 - arm * 0.2) * zoom;
         ctx.beginPath();
-        for (let i = 0; i < 30; i++) {
-          const t = i / 30;
-          const spiralAngle =
-            time * 1.5 + arm * Math.PI * 0.5 + t * Math.PI * 1.5;
-          const spiralDist = auraRadius * (0.15 + t * 0.65);
-          const x = screenPos.x + Math.cos(spiralAngle) * spiralDist;
-          const y = screenPos.y + Math.sin(spiralAngle) * spiralDist * 0.5;
+        for (let i = 0; i < 40; i++) {
+          const t = i / 40;
+          const spiralAngle = time * 1.5 + arm * Math.PI * 0.4 + t * Math.PI * 2;
+          const spiralDist = auraRadius * (0.12 + t * 0.7);
+          const x = sx + Math.cos(spiralAngle) * spiralDist;
+          const y = sy + Math.sin(spiralAngle) * spiralDist * ISO_Y_RATIO;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
+        const spiralGrad = ctx.createLinearGradient(sx - auraRadius, sy, sx + auraRadius, sy);
+        spiralGrad.addColorStop(0, `rgba(255, 248, 220, ${armA})`);
+        spiralGrad.addColorStop(0.5, `rgba(255, 230, 150, ${armA * 0.7})`);
+        spiralGrad.addColorStop(1, `rgba(255, 248, 220, ${armA})`);
+        ctx.strokeStyle = spiralGrad;
         ctx.stroke();
       }
 
-      // === FLOATING GOLDEN QUILL SPARKS ===
-      for (let spark = 0; spark < 16; spark++) {
-        const sparkAngle = (spark / 16) * Math.PI * 2 + time * 0.7;
-        const sparkDist =
-          auraRadius * (0.3 + Math.sin(time * 3 + spark * 0.8) * 0.15);
-        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
-        const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
-        const sparkAlpha = alpha * (0.5 + Math.sin(time * 4 + spark) * 0.3);
-        const sparkSize = (2 + Math.sin(time * 5 + spark * 1.3) * 1) * zoom;
+      // Floating golden quill sparks with trails
+      for (let spark = 0; spark < 20; spark++) {
+        const sAngle = (spark / 20) * Math.PI * 2 + time * 0.7;
+        const sDist = auraRadius * (0.25 + Math.sin(time * 3 + spark * 0.8) * 0.18);
+        const sX = sx + Math.cos(sAngle) * sDist;
+        const sY = sy + Math.sin(sAngle) * sDist * ISO_Y_RATIO;
+        const sA = alpha * (0.45 + Math.sin(time * 4 + spark) * 0.25);
+        const sSize = (2 + Math.sin(time * 5 + spark * 1.3) * 1) * zoom;
 
-        ctx.fillStyle = `rgba(255, 215, 0, ${sparkAlpha})`;
-        ctx.shadowColor = "#ffd700";
-        ctx.shadowBlur = 8 * zoom;
+        const sGrad = ctx.createRadialGradient(sX, sY, 0, sX, sY, sSize * 3);
+        sGrad.addColorStop(0, `rgba(255, 225, 100, ${sA})`);
+        sGrad.addColorStop(0.4, `rgba(255, 200, 50, ${sA * 0.5})`);
+        sGrad.addColorStop(1, "rgba(255, 180, 0, 0)");
+        ctx.fillStyle = sGrad;
         ctx.beginPath();
-        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+        ctx.arc(sX, sY, sSize * 3, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.shadowBlur = 0;
 
-      // === CENTRAL INSPIRATION GLOW (teal + gold layered) ===
-      // Outer teal aura
-      const outerGlow = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.5,
-      );
-      outerGlow.addColorStop(
-        0,
-        `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`,
-      );
-      outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.1})`);
+      // Central teal + gold layered glow
+      const outerGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, auraRadius * 0.5);
+      outerGlow.addColorStop(0, `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`);
+      outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.12})`);
       outerGlow.addColorStop(1, "rgba(20, 184, 166, 0)");
       ctx.fillStyle = outerGlow;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.5,
-        auraRadius * 0.25,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, auraRadius * 0.5, auraRadius * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner golden core
-      const coreGlow = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.2,
-      );
-      coreGlow.addColorStop(0, `rgba(255, 230, 150, ${alpha * 0.6})`);
-      coreGlow.addColorStop(0.6, `rgba(255, 215, 0, ${alpha * 0.3})`);
+      const coreGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, auraRadius * 0.22);
+      coreGlow.addColorStop(0, `rgba(255, 240, 170, ${alpha * 0.55})`);
+      coreGlow.addColorStop(0.5, `rgba(255, 215, 0, ${alpha * 0.3})`);
       coreGlow.addColorStop(1, "rgba(255, 215, 0, 0)");
       ctx.fillStyle = coreGlow;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.2,
-        auraRadius * 0.1,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy, auraRadius * 0.22, auraRadius * 0.22 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // === ORBITING BOOK SYMBOLS ===
-      ctx.font = `bold ${12 * zoom}px serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      const symbols = ["📖", "✒️", "📜", "💫"];
-      for (let sym = 0; sym < 4; sym++) {
-        const symAngle = time * 0.8 + (sym / 4) * Math.PI * 2;
+      // Orbiting literary symbols — drawn shapes instead of emoji
+      for (let sym = 0; sym < 6; sym++) {
+        const symAngle = time * 0.8 + (sym / 6) * Math.PI * 2;
         const symDist = auraRadius * 0.55;
-        const symX = screenPos.x + Math.cos(symAngle) * symDist;
-        const symY =
-          screenPos.y + Math.sin(symAngle) * symDist * 0.5 - 5 * zoom;
-        const symAlpha = 0.6 + Math.sin(time * 2.5 + sym) * 0.2;
+        const symX = sx + Math.cos(symAngle) * symDist;
+        const symY = sy + Math.sin(symAngle) * symDist * ISO_Y_RATIO - 4 * zoom;
+        const symA = alpha * (0.55 + Math.sin(time * 2.5 + sym) * 0.2);
+        const symSize = 5 * zoom;
+        ctx.globalAlpha = symA;
 
-        ctx.globalAlpha = alpha * symAlpha;
-        ctx.fillText(symbols[sym], symX, symY);
+        if (sym % 3 === 0) {
+          // Open book shape
+          ctx.strokeStyle = `rgba(255, 230, 150, 0.8)`;
+          ctx.fillStyle = `rgba(255, 248, 220, 0.5)`;
+          ctx.lineWidth = 1 * zoom;
+          // Left page
+          ctx.beginPath();
+          ctx.moveTo(symX, symY - symSize * 0.2);
+          ctx.lineTo(symX - symSize, symY - symSize * 0.6);
+          ctx.lineTo(symX - symSize, symY + symSize * 0.4);
+          ctx.lineTo(symX, symY + symSize * 0.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // Right page
+          ctx.beginPath();
+          ctx.moveTo(symX, symY - symSize * 0.2);
+          ctx.lineTo(symX + symSize, symY - symSize * 0.6);
+          ctx.lineTo(symX + symSize, symY + symSize * 0.4);
+          ctx.lineTo(symX, symY + symSize * 0.2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          // Spine
+          ctx.beginPath();
+          ctx.moveTo(symX, symY - symSize * 0.2);
+          ctx.lineTo(symX, symY + symSize * 0.2);
+          ctx.stroke();
+        } else if (sym % 3 === 1) {
+          // Quill pen shape
+          ctx.fillStyle = `rgba(255, 220, 100, 0.7)`;
+          ctx.strokeStyle = `rgba(200, 160, 50, 0.6)`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(symX - symSize * 0.6, symY + symSize * 0.8);
+          ctx.lineTo(symX + symSize * 0.3, symY - symSize * 0.5);
+          ctx.quadraticCurveTo(symX + symSize * 0.8, symY - symSize * 0.8, symX + symSize * 0.5, symY - symSize);
+          ctx.quadraticCurveTo(symX + symSize * 0.2, symY - symSize * 0.7, symX - symSize * 0.6, symY + symSize * 0.8);
+          ctx.fill();
+          ctx.stroke();
+        } else {
+          // Scroll shape
+          ctx.fillStyle = `rgba(255, 240, 200, 0.5)`;
+          ctx.strokeStyle = `rgba(220, 190, 120, 0.7)`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.fillRect(symX - symSize * 0.5, symY - symSize * 0.5, symSize, symSize * 1.2);
+          ctx.strokeRect(symX - symSize * 0.5, symY - symSize * 0.5, symSize, symSize * 1.2);
+          // Scroll curl top
+          ctx.beginPath();
+          ctx.arc(symX - symSize * 0.5, symY - symSize * 0.5, symSize * 0.15, 0, Math.PI, true);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(symX + symSize * 0.5, symY - symSize * 0.5, symSize * 0.15, 0, Math.PI, true);
+          ctx.stroke();
+        }
+
+        // Symbol glow
+        const symGlow = ctx.createRadialGradient(symX, symY, 0, symX, symY, symSize * 2.5);
+        symGlow.addColorStop(0, `rgba(255, 215, 0, 0.15)`);
+        symGlow.addColorStop(1, "rgba(255, 200, 0, 0)");
+        ctx.fillStyle = symGlow;
+        ctx.beginPath();
+        ctx.arc(symX, symY, symSize * 2.5, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.globalAlpha = 1;
 
-      // === RISING INSPIRATION PARTICLES ===
-      for (let p = 0; p < 8; p++) {
-        const pPhase = (time * 0.5 + p * 0.125) % 1;
-        const pAngle = (p / 8) * Math.PI * 2;
-        const pDist = auraRadius * 0.3;
-        const pX =
-          screenPos.x +
-          Math.cos(pAngle) * pDist +
-          Math.sin(time * 2 + p) * 5 * zoom;
-        const pY =
-          screenPos.y + Math.sin(pAngle) * pDist * 0.5 - pPhase * 40 * zoom;
-        const pAlpha = alpha * (1 - pPhase) * 0.7;
+      // Rising inspiration motes — 4-pointed star sparkles floating upward
+      for (let p = 0; p < 12; p++) {
+        const pPhase = (time * 0.5 + p * 0.083) % 1;
+        const pAngle = seededNoise(iSeed + p * 7) * Math.PI * 2;
+        const pDist = auraRadius * (0.1 + seededNoise(iSeed + p * 11) * 0.5);
+        const pX = sx + Math.cos(pAngle) * pDist + Math.sin(time * 1.8 + p) * 5 * zoom;
+        const pY = sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - pPhase * 40 * zoom;
+        const pA = alpha * (1 - pPhase) * 0.65;
+        const pSize = (2 + (1 - pPhase) * 2.5) * zoom;
 
-        ctx.fillStyle = `rgba(255, 248, 220, ${pAlpha})`;
+        // 4-pointed star
+        ctx.fillStyle = `rgba(255, 248, 220, ${pA})`;
         ctx.beginPath();
-        ctx.arc(pX, pY, (2 + (1 - pPhase) * 2) * zoom, 0, Math.PI * 2);
+        for (let pt = 0; pt < 8; pt++) {
+          const ptAngle = (pt / 8) * Math.PI * 2 + time * 2;
+          const ptR = pt % 2 === 0 ? pSize : pSize * 0.3;
+          const px = pX + Math.cos(ptAngle) * ptR;
+          const py = pY + Math.sin(ptAngle) * ptR;
+          if (pt === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
         ctx.fill();
       }
 
@@ -3053,100 +3346,334 @@ export function renderEffect(
     }
 
     case "knight_summon": {
-      // Captain's knight summoning effect
       const summonRadius = effect.size * zoom;
+      const time = Date.now() / 1000;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const kSeed = hashString32(effect.id);
 
       ctx.save();
-      ctx.shadowColor = "#ffaa00";
-      ctx.shadowBlur = 15 * zoom;
 
-      // Summoning circle
-      ctx.strokeStyle = `rgba(255, 200, 100, ${alpha})`;
-      ctx.lineWidth = 3 * zoom;
+      // Ground summoning circle — dark arcane base
+      const baseA = alpha * 0.3;
+      const baseGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, summonRadius);
+      baseGrad.addColorStop(0, `rgba(80, 50, 10, ${baseA})`);
+      baseGrad.addColorStop(0.6, `rgba(60, 35, 5, ${baseA * 0.5})`);
+      baseGrad.addColorStop(1, "rgba(40, 20, 0, 0)");
+      ctx.fillStyle = baseGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        summonRadius,
-        summonRadius * 0.5,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
+      ctx.ellipse(sx, sy, summonRadius, summonRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Rising energy pillars for each knight
-      for (let k = 0; k < 3; k++) {
-        const pillarAngle = (k / 3) * Math.PI * 2 - Math.PI / 2;
-        const pillarX =
-          screenPos.x + Math.cos(pillarAngle) * summonRadius * 0.6;
-        const pillarY =
-          screenPos.y + Math.sin(pillarAngle) * summonRadius * 0.3;
-        const pillarHeight = 40 * zoom * (1 - progress);
+      // Double summoning circle rings
+      for (let ring = 0; ring < 2; ring++) {
+        const ringR = summonRadius * (0.85 + ring * 0.15);
+        const ringA = alpha * (0.7 - ring * 0.2);
 
-        const pillarGrad = ctx.createLinearGradient(
-          pillarX,
-          pillarY,
-          pillarX,
-          pillarY - pillarHeight,
-        );
-        pillarGrad.addColorStop(0, `rgba(255, 200, 100, ${alpha})`);
-        pillarGrad.addColorStop(1, `rgba(255, 200, 100, 0)`);
-        ctx.fillStyle = pillarGrad;
-        ctx.fillRect(
-          pillarX - 4 * zoom,
-          pillarY - pillarHeight,
-          8 * zoom,
-          pillarHeight,
-        );
+        ctx.strokeStyle = `rgba(255, 180, 50, ${ringA * 0.25})`;
+        ctx.lineWidth = (4 - ring) * zoom + 2 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255, 215, 100, ${ringA})`;
+        ctx.lineWidth = (2.5 - ring * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+
+      // Rotating rune ring — dashed with animated offset
+      ctx.strokeStyle = `rgba(255, 220, 130, ${alpha * 0.5})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.setLineDash([6 * zoom, 3 * zoom]);
+      ctx.lineDashOffset = -time * 40;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, summonRadius * 0.65, summonRadius * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Inner pentagram-style ward lines
+      const wardPoints = 5;
+      const wardR = summonRadius * 0.55;
+      const wardRot = time * 0.4;
+      ctx.strokeStyle = `rgba(255, 200, 80, ${alpha * 0.35})`;
+      ctx.lineWidth = 1.5 * zoom;
+      for (let i = 0; i < wardPoints; i++) {
+        const a1 = (i / wardPoints) * Math.PI * 2 + wardRot;
+        const a2 = ((i + 2) / wardPoints) * Math.PI * 2 + wardRot;
+        ctx.beginPath();
+        ctx.moveTo(sx + Math.cos(a1) * wardR, sy + Math.sin(a1) * wardR * ISO_Y_RATIO);
+        ctx.lineTo(sx + Math.cos(a2) * wardR, sy + Math.sin(a2) * wardR * ISO_Y_RATIO);
+        ctx.stroke();
+      }
+
+      // Ward vertex dots
+      for (let i = 0; i < wardPoints; i++) {
+        const a = (i / wardPoints) * Math.PI * 2 + wardRot;
+        const vx = sx + Math.cos(a) * wardR;
+        const vy = sy + Math.sin(a) * wardR * ISO_Y_RATIO;
+        const dotA = alpha * (0.6 + Math.sin(time * 3 + i) * 0.2);
+        const dotGrad = ctx.createRadialGradient(vx, vy, 0, vx, vy, 4 * zoom);
+        dotGrad.addColorStop(0, `rgba(255, 240, 180, ${dotA})`);
+        dotGrad.addColorStop(1, "rgba(255, 200, 80, 0)");
+        ctx.fillStyle = dotGrad;
+        ctx.beginPath();
+        ctx.arc(vx, vy, 4 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Rising energy pillars for each knight — with glow and particles
+      const knightCount = 3;
+      for (let k = 0; k < knightCount; k++) {
+        const pillarAngle = (k / knightCount) * Math.PI * 2 - Math.PI / 2;
+        const pillarX = sx + Math.cos(pillarAngle) * summonRadius * 0.55;
+        const pillarY = sy + Math.sin(pillarAngle) * summonRadius * 0.55 * ISO_Y_RATIO;
+        const pillarH = 55 * zoom * Math.max(0, 1 - progress * 0.8);
+        const pillarW = 10 * zoom;
+
+        // Pillar glow halo at base
+        const haloA = alpha * 0.4 * (1 - progress * 0.5);
+        const haloGrad = ctx.createRadialGradient(pillarX, pillarY, 0, pillarX, pillarY, pillarW * 2);
+        haloGrad.addColorStop(0, `rgba(255, 200, 80, ${haloA})`);
+        haloGrad.addColorStop(1, "rgba(255, 180, 50, 0)");
+        ctx.fillStyle = haloGrad;
+        ctx.beginPath();
+        ctx.ellipse(pillarX, pillarY, pillarW * 2, pillarW * 2 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Energy pillar — layered gradient column
+        const pillarGrad = ctx.createLinearGradient(pillarX, pillarY, pillarX, pillarY - pillarH);
+        pillarGrad.addColorStop(0, `rgba(255, 210, 100, ${alpha * 0.8})`);
+        pillarGrad.addColorStop(0.3, `rgba(255, 180, 60, ${alpha * 0.5})`);
+        pillarGrad.addColorStop(0.7, `rgba(255, 160, 30, ${alpha * 0.2})`);
+        pillarGrad.addColorStop(1, "rgba(255, 140, 20, 0)");
+
+        // Outer glow pillar
+        ctx.fillStyle = pillarGrad;
+        ctx.beginPath();
+        ctx.moveTo(pillarX - pillarW * 0.8, pillarY);
+        ctx.lineTo(pillarX - pillarW * 0.3, pillarY - pillarH);
+        ctx.lineTo(pillarX + pillarW * 0.3, pillarY - pillarH);
+        ctx.lineTo(pillarX + pillarW * 0.8, pillarY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bright inner pillar
+        const innerGrad = ctx.createLinearGradient(pillarX, pillarY, pillarX, pillarY - pillarH);
+        innerGrad.addColorStop(0, `rgba(255, 240, 180, ${alpha * 0.6})`);
+        innerGrad.addColorStop(0.5, `rgba(255, 220, 120, ${alpha * 0.3})`);
+        innerGrad.addColorStop(1, "rgba(255, 200, 80, 0)");
+        ctx.fillStyle = innerGrad;
+        ctx.beginPath();
+        ctx.moveTo(pillarX - pillarW * 0.3, pillarY);
+        ctx.lineTo(pillarX - pillarW * 0.1, pillarY - pillarH * 0.9);
+        ctx.lineTo(pillarX + pillarW * 0.1, pillarY - pillarH * 0.9);
+        ctx.lineTo(pillarX + pillarW * 0.3, pillarY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pillar sparks rising
+        for (let s = 0; s < 4; s++) {
+          const sPhase = (time * 1.2 + s * 0.25 + k * 0.33) % 1;
+          const sX = pillarX + (seededNoise(kSeed + k * 7 + s * 11) - 0.5) * pillarW;
+          const sY = pillarY - sPhase * pillarH;
+          const sA = alpha * (1 - sPhase) * 0.6;
+          const sSize = (1.5 + seededNoise(kSeed + k * 13 + s * 17) * 1.5) * zoom;
+
+          ctx.fillStyle = `rgba(255, 240, 180, ${sA})`;
+          ctx.beginPath();
+          ctx.arc(sX, sY, sSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Knight silhouette forming (fading in as progress increases)
+        if (progress > 0.3) {
+          const formA = alpha * Math.min(1, (progress - 0.3) / 0.4) * 0.25;
+          const formY = pillarY - 15 * zoom;
+          // Simple armored figure silhouette
+          ctx.fillStyle = `rgba(255, 220, 120, ${formA})`;
+          // Head
+          ctx.beginPath();
+          ctx.arc(pillarX, formY - 12 * zoom, 3 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          // Body
+          ctx.fillRect(pillarX - 3 * zoom, formY - 9 * zoom, 6 * zoom, 12 * zoom);
+          // Shield arm
+          ctx.fillRect(pillarX - 6 * zoom, formY - 7 * zoom, 3 * zoom, 8 * zoom);
+        }
+      }
+
+      // Ambient golden motes floating around the circle
+      for (let m = 0; m < 10; m++) {
+        const mAngle = (m / 10) * Math.PI * 2 + time * 0.5;
+        const mDist = summonRadius * (0.3 + Math.sin(time * 2 + m * 1.1) * 0.2);
+        const mX = sx + Math.cos(mAngle) * mDist;
+        const mY = sy + Math.sin(mAngle) * mDist * ISO_Y_RATIO - Math.sin(time * 3 + m) * 5 * zoom;
+        const mA = alpha * (0.3 + Math.sin(time * 4 + m * 0.7) * 0.2);
+        const mSize = (1.5 + Math.sin(time * 5 + m) * 0.8) * zoom;
+
+        ctx.fillStyle = `rgba(255, 215, 80, ${mA})`;
+        ctx.beginPath();
+        ctx.arc(mX, mY, mSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
       break;
     }
 
     case "turret_deploy": {
-      // Engineer's turret deployment effect
       const deployRadius = effect.size * zoom;
+      const time = Date.now() / 1000;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const tSeed = hashString32(effect.id);
 
       ctx.save();
-      ctx.shadowColor = "#ffcc00";
-      ctx.shadowBlur = 12 * zoom;
 
-      // Construction sparks
-      for (let spark = 0; spark < 8; spark++) {
-        const sparkAngle = (spark / 8) * Math.PI * 2 + progress * Math.PI * 4;
-        const sparkDist = deployRadius * 0.5 * (1 - progress * 0.5);
-        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
-        const sparkY =
-          screenPos.y +
-          Math.sin(sparkAngle) * sparkDist * 0.5 -
-          progress * 10 * zoom;
+      // Ground deployment pad — dark construction zone
+      const padA = alpha * 0.25;
+      const padGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, deployRadius);
+      padGrad.addColorStop(0, `rgba(60, 50, 20, ${padA})`);
+      padGrad.addColorStop(0.6, `rgba(40, 35, 15, ${padA * 0.5})`);
+      padGrad.addColorStop(1, "rgba(30, 25, 10, 0)");
+      ctx.fillStyle = padGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, deployRadius, deployRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        ctx.fillStyle = `rgba(255, 220, 100, ${alpha * (1 - progress)})`;
+      // Holographic construction grid — converging dashed rings
+      for (let ring = 0; ring < 3; ring++) {
+        const ringR = deployRadius * (1 - progress * 0.4) * (1 - ring * 0.2);
+        const ringA = alpha * (0.5 + ring * 0.1);
+        const dashLen = (4 + ring * 2) * zoom;
+
+        ctx.strokeStyle = `rgba(255, 200, 50, ${ringA * 0.25})`;
+        ctx.lineWidth = (3 - ring * 0.5) * zoom + 1.5 * zoom;
+        ctx.setLineDash([dashLen, dashLen * 0.6]);
+        ctx.lineDashOffset = -(time * (25 + ring * 10));
         ctx.beginPath();
-        ctx.arc(sparkX, sparkY, 2 * zoom, 0, Math.PI * 2);
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(255, 230, 120, ${ringA})`;
+        ctx.lineWidth = (2 - ring * 0.3) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, ringR, ringR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Energy beam convergence lines — pointing inward
+      const beamCount = 8;
+      for (let b = 0; b < beamCount; b++) {
+        const bAngle = (b / beamCount) * Math.PI * 2 + time * 0.5;
+        const outerR = deployRadius * (1 - progress * 0.3);
+        const innerR = deployRadius * 0.1 * progress;
+        const bA = alpha * (0.4 + Math.sin(time * 3 + b * 1.1) * 0.15) * (1 - progress * 0.3);
+
+        const beamGrad = ctx.createLinearGradient(
+          sx + Math.cos(bAngle) * outerR, sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
+          sx + Math.cos(bAngle) * innerR, sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO
+        );
+        beamGrad.addColorStop(0, `rgba(255, 200, 50, 0)`);
+        beamGrad.addColorStop(0.3, `rgba(255, 220, 80, ${bA * 0.5})`);
+        beamGrad.addColorStop(0.8, `rgba(255, 240, 150, ${bA})`);
+        beamGrad.addColorStop(1, `rgba(255, 255, 200, ${bA * 0.8})`);
+
+        ctx.strokeStyle = beamGrad;
+        ctx.lineWidth = (1.5 + Math.sin(time * 4 + b) * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx + Math.cos(bAngle) * outerR, sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO);
+        ctx.lineTo(sx + Math.cos(bAngle) * innerR, sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO);
+        ctx.stroke();
+      }
+
+      // Gear/cog particles orbiting — drawn shapes
+      for (let g = 0; g < 6; g++) {
+        const gAngle = (g / 6) * Math.PI * 2 + time * 1.5;
+        const gDist = deployRadius * (0.5 - progress * 0.15);
+        const gX = sx + Math.cos(gAngle) * gDist;
+        const gY = sy + Math.sin(gAngle) * gDist * ISO_Y_RATIO - progress * 5 * zoom;
+        const gA = alpha * (0.5 + Math.sin(time * 3 + g) * 0.2) * (1 - progress * 0.4);
+        const gSize = 3.5 * zoom;
+        const gRot = time * 3 + g * 1.2;
+
+        ctx.globalAlpha = gA;
+        ctx.save();
+        ctx.translate(gX, gY);
+        ctx.rotate(gRot);
+
+        // Gear shape — circle with teeth
+        ctx.fillStyle = `rgba(255, 220, 100, 0.7)`;
+        ctx.strokeStyle = `rgba(200, 160, 50, 0.5)`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        const teeth = 6;
+        for (let t = 0; t < teeth * 2; t++) {
+          const tAngle = (t / (teeth * 2)) * Math.PI * 2;
+          const tR = t % 2 === 0 ? gSize : gSize * 0.65;
+          if (t === 0) ctx.moveTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
+          else ctx.lineTo(Math.cos(tAngle) * tR, Math.sin(tAngle) * tR);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Center hole
+        ctx.fillStyle = `rgba(40, 30, 10, 0.5)`;
+        ctx.beginPath();
+        ctx.arc(0, 0, gSize * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      // Construction sparks — bright welding flashes
+      for (let spark = 0; spark < 12; spark++) {
+        const sAngle = seededNoise(tSeed + spark * 7) * Math.PI * 2;
+        const sPhase = (time * 2 + spark * 0.2) % 1;
+        const sDist = deployRadius * (0.1 + sPhase * 0.5) * (1 - progress * 0.3);
+        const sX = sx + Math.cos(sAngle) * sDist;
+        const sY = sy + Math.sin(sAngle) * sDist * ISO_Y_RATIO - sPhase * 15 * zoom;
+        const sA = alpha * (1 - sPhase) * 0.6 * (1 - progress * 0.3);
+        const sSize = (1.5 + seededNoise(tSeed + spark * 11) * 2) * zoom * (1 - sPhase * 0.5);
+
+        // Spark glow
+        const sGrad = ctx.createRadialGradient(sX, sY, 0, sX, sY, sSize * 2.5);
+        sGrad.addColorStop(0, `rgba(255, 240, 180, ${sA})`);
+        sGrad.addColorStop(0.4, `rgba(255, 200, 80, ${sA * 0.5})`);
+        sGrad.addColorStop(1, "rgba(255, 180, 40, 0)");
+        ctx.fillStyle = sGrad;
+        ctx.beginPath();
+        ctx.arc(sX, sY, sSize * 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Build-up circle
-      ctx.strokeStyle = `rgba(255, 200, 50, ${alpha})`;
-      ctx.lineWidth = 2 * zoom;
-      ctx.setLineDash([5, 5]);
+      // Central construction core — bright build-up glow
+      const coreScale = Math.min(1, progress * 2);
+      const coreA = alpha * 0.5 * coreScale;
+      const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, deployRadius * 0.25 * coreScale);
+      coreGrad.addColorStop(0, `rgba(255, 250, 220, ${coreA})`);
+      coreGrad.addColorStop(0.4, `rgba(255, 220, 100, ${coreA * 0.6})`);
+      coreGrad.addColorStop(1, "rgba(255, 200, 60, 0)");
+      ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        deployRadius * (1 - progress * 0.5),
-        deployRadius * 0.5 * (1 - progress * 0.5),
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.ellipse(sx, sy, deployRadius * 0.25 * coreScale, deployRadius * 0.25 * coreScale * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      ctx.shadowBlur = 0;
+      // Build progress ring — fills clockwise as progress advances
+      if (progress > 0.1) {
+        const progressAngle = (progress - 0.1) / 0.9 * Math.PI * 2;
+        ctx.strokeStyle = `rgba(100, 255, 100, ${alpha * 0.6})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, deployRadius * 0.35, deployRadius * 0.35 * ISO_Y_RATIO, 0, -Math.PI / 2, -Math.PI / 2 + progressAngle);
+        ctx.stroke();
+      }
+
       ctx.restore();
       break;
     }

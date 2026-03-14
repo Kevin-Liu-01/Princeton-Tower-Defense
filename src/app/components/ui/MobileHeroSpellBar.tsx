@@ -270,46 +270,52 @@ function MobileSpellCircle({
     <button
       onClick={onClick}
       disabled={!active}
-      className="relative rounded-full flex items-center justify-center overflow-hidden transition-all active:scale-95"
+      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
       style={{
         width: CIRCLE_SIZE,
         height: CIRCLE_SIZE,
-        background: active
-          ? `linear-gradient(135deg, ${accent.bg}, ${accent.bg.replace("0.3)", "0.15)")})`
-          : "linear-gradient(135deg, rgba(38,32,28,0.95), rgba(24,20,16,0.95))",
-        border: `2px solid ${isTargeting ? accent.border : active ? accent.border + "90" : "rgba(80,60,40,0.3)"}`,
-        boxShadow: isTargeting
-          ? `0 0 16px ${accent.glow}, 0 0 0 2px ${accent.border}60`
-          : active
-            ? `0 0 10px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
-            : "inset 0 1px 0 rgba(255,255,255,0.05)",
         opacity: active ? 1 : 0.45,
         cursor: active ? "pointer" : "not-allowed",
       }}
     >
-      {active && (
-        <>
+      {/* Inner circle — clips background imagery & cooldown to the circle */}
+      <div
+        className="absolute inset-0 rounded-full overflow-hidden"
+        style={{
+          background: active
+            ? `linear-gradient(135deg, ${accent.bg}, ${accent.bg.replace("0.3)", "0.15)")})`
+            : "linear-gradient(135deg, rgba(38,32,28,0.95), rgba(24,20,16,0.95))",
+          border: `2px solid ${isTargeting ? accent.border : active ? accent.border + "90" : "rgba(80,60,40,0.3)"}`,
+          boxShadow: isTargeting
+            ? `0 0 16px ${accent.glow}, 0 0 0 2px ${accent.border}60`
+            : active
+              ? `0 0 10px ${accent.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
+              : "inset 0 1px 0 rgba(255,255,255,0.05)",
+        }}
+      >
+        {active && (
+          <>
+            <div
+              className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
+              style={{ backgroundImage: `url(/images/spells/${spell.type}-action.png)` }}
+            />
+            <div
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.6) 100%)",
+              }}
+            />
+          </>
+        )}
+        {onCooldown && (
           <div
-            className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
-            style={{ backgroundImage: `url(/images/spells/${spell.type}-action.png)` }}
-          />
-          <div
-            className="absolute inset-0 rounded-full pointer-events-none"
+            className="absolute inset-[2px] rounded-full pointer-events-none z-10"
             style={{
-              background: "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 20%, rgba(0,0,0,0.4) 55%, rgba(0,0,0,0.6) 100%)",
+              background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.6) ${readyAngle}deg, rgba(0,0,0,0.6) 360deg)`,
             }}
           />
-        </>
-      )}
-      {/* Cooldown sweep */}
-      {onCooldown && (
-        <div
-          className="absolute inset-[2px] rounded-full pointer-events-none z-10"
-          style={{
-            background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.6) ${readyAngle}deg, rgba(0,0,0,0.6) 360deg)`,
-          }}
-        />
-      )}
+        )}
+      </div>
 
       {/* Spell icon */}
       <div className="relative z-[5] flex items-center justify-center">

@@ -25,6 +25,7 @@ import {
   Settings,
   Maximize,
   Minimize,
+  Info,
 } from "lucide-react";
 import type {
   GameState,
@@ -1462,18 +1463,29 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   {loadoutCompact ? (
                     /* ── Compact: wheel carousels ── */
                     <div className="flex items-stretch gap-2 px-3 py-2">
-                      {/* Guide / Codex Quick Links — horizontal row */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0 self-center">
+                      {/* Guide / Codex Quick Links — 2×3 grid */}
+                      <div className="grid grid-cols-3 gap-1.5 flex-shrink-0 self-center overflow-visible">
                         {([
                           { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
                           { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
                           { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
                           { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
+                          { label: "FAQ", tab: "guide" as CodexTabId, icon: <Info size={13} />, color: "#93c5fd", bg: "rgba(30,60,120,0.4)", border: "rgba(60,100,200,0.35)", glow: "rgba(60,100,200,0.2)" },
+                          { label: "Battle", tab: null as CodexTabId | null, icon: <Swords size={13} />, color: "#fbbf24", bg: "rgba(160,110,25,0.6)", border: "rgba(200,160,60,0.5)", glow: "rgba(200,160,60,0.2)" },
                         ]).map((item) => (
                           <button
-                            key={item.tab}
-                            onClick={() => openCodexTo(item.tab)}
-                            className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
+                            key={item.label}
+                            onClick={() => {
+                              if (item.tab) {
+                                openCodexTo(item.tab);
+                              } else {
+                                const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
+                                if (unlockedLevelsList.length > 0) {
+                                  handleLevelClick(unlockedLevelsList[unlockedLevelsList.length - 1].id);
+                                }
+                              }
+                            }}
+                            className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
                             style={{
                               background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
                               border: `1.5px solid ${item.border}`,
@@ -1483,35 +1495,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             title={item.label}
                           >
                             {item.icon}
-                            <span className="absolute bottom-full mb-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                              style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
-                              {item.label}
-                            </span>
                           </button>
                         ))}
-                        <button
-                          onClick={() => {
-                            const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
-                            if (unlockedLevelsList.length > 0) {
-                              const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                              handleLevelClick(farthestLevel.id);
-                            }
-                          }}
-                          className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                          style={{
-                            background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
-                            border: '1.5px solid rgba(200,160,60,0.5)',
-                            boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
-                            color: '#fbbf24',
-                          }}
-                          title="Defend the Realm"
-                        >
-                          <Swords size={13} />
-                          <span className="absolute bottom-full mb-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                            style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
-                            Battle
-                          </span>
-                        </button>
                       </div>
 
                       {/* Divider */}

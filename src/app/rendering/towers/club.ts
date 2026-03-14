@@ -131,7 +131,7 @@ export function renderClubTower(
 
   ctx.save();
   const baseWidth = 34 + tower.level * 5;
-  const baseHeight = 25 + tower.level * 8;
+  const baseHeight = 23 + tower.level * 7;
   const w = baseWidth * zoom * 0.5;
   const d = baseWidth * zoom * ISO_PRISM_D_FACTOR;
   const h = baseHeight * zoom;

@@ -4,7 +4,7 @@ import {
   PawPrint,
   Heart,
 
-  Crown,
+  Skull,
   Pause,
   Play,
   RefreshCcw,
@@ -333,7 +333,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const leftStatsContent = (
     <>
       <div
-        className={`relative flex h-8 min-w-[60px] shrink-0 items-center justify-center gap-1 rounded-lg px-2 py-1.5 transition-all duration-200 sm:h-10 sm:min-w-[88px] sm:gap-1.5 sm:px-3 sm:py-2 ${ppPulse ? "scale-110" : "scale-100"}`}
+        className={`relative flex h-8 min-w-[60px] shrink-0 items-center justify-center gap-1 rounded-lg px-2 py-1.5 transition-all duration-200 sm:h-9 sm:min-w-[88px] sm:gap-1.5 sm:px-3 ${ppPulse ? "scale-110" : "scale-100"}`}
         style={{
           background: goldSpellActive
             ? "linear-gradient(135deg, rgba(140,100,20,0.7), rgba(100,68,15,0.5))"
@@ -407,18 +407,18 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <PawPrint
           size={14}
           className={`shrink-0 transition-colors duration-200 ${goldSpellActive
-              ? "text-yellow-300"
-              : eatingClubFlash
-                ? "text-emerald-300"
-                : "text-amber-400"
+            ? "text-yellow-300"
+            : eatingClubFlash
+              ? "text-emerald-300"
+              : "text-amber-400"
             }`}
         />
         <span
           className={`text-sm font-black tabular-nums transition-colors duration-200 sm:text-base ${goldSpellActive
-              ? "text-yellow-200"
-              : eatingClubFlash
-                ? "text-emerald-200"
-                : "text-amber-200"
+            ? "text-yellow-200"
+            : eatingClubFlash
+              ? "text-emerald-200"
+              : "text-amber-200"
             }`}
         >
           {Math.round(pawPoints)}
@@ -435,7 +435,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </div>
 
       <div
-        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg transition-all sm:h-10 sm:min-w-[88px]"
+        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg transition-all sm:h-9 sm:min-w-[88px]"
         style={{
           background: livesTheme.bg,
           border: livesTheme.border,
@@ -488,7 +488,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </div>
 
       <div
-        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-10 sm:min-w-[88px]"
+        className="relative flex h-8 min-w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-9 sm:min-w-[88px]"
         style={{
           background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
           border: `1.5px solid ${AMBER_CARD.border}`,
@@ -508,7 +508,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }}
         />
         <div className="relative z-10 flex items-center justify-center gap-1.5">
-          <Crown size={13} className="shrink-0 text-amber-400" />
+          <Skull size={13} className="shrink-0 text-amber-400" />
           <span className="text-sm font-black leading-none tabular-nums text-amber-200 sm:text-base">
             {Math.min(currentWave + 1, totalWaves)}
           </span>
@@ -545,8 +545,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             }}
             disabled={pauseLocked}
             className={`relative z-10 rounded-md p-0.5 transition-colors sm:p-1 ${pauseLocked
-                ? "cursor-not-allowed opacity-40"
-                : "hover:bg-green-800/40"
+              ? "cursor-not-allowed opacity-40"
+              : "hover:bg-green-800/40"
               }`}
             style={{ border: "1px solid rgba(80,120,60,0.3)" }}
           >
@@ -574,8 +574,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             }}
             disabled={pauseLocked}
             className={`relative z-10 rounded-md p-0.5 transition-colors sm:p-1 ${pauseLocked
-                ? "cursor-not-allowed opacity-40"
-                : "hover:bg-green-800/40"
+              ? "cursor-not-allowed opacity-40"
+              : "hover:bg-green-800/40"
               }`}
             style={{ border: "1px solid rgba(80,120,60,0.3)" }}
           >
@@ -662,10 +662,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             {gameSettings.ui.showFpsCounter && (
               <span
                 className={`absolute -bottom-1 -right-1 rounded px-0.5 text-[7px] font-bold ${currentFps >= 55
-                    ? "bg-green-700 text-green-100"
-                    : currentFps >= 45
-                      ? "bg-yellow-700 text-yellow-100"
-                      : "bg-red-700 text-red-100"
+                  ? "bg-green-700 text-green-100"
+                  : currentFps >= 45
+                    ? "bg-yellow-700 text-yellow-100"
+                    : "bg-red-700 text-red-100"
                   }`}
               >
                 {currentFps}
@@ -809,7 +809,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <div className="flex items-start justify-between gap-3">
             <HudSurface
               className="min-w-0"
-              contentClassName="relative px-3 py-2"
+              contentClassName="relative px-3 py-2 rounded-br-xl"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className="flex items-center shrink-0">

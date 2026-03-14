@@ -25,7 +25,7 @@ export function renderLabTower(
 ) {
   ctx.save();
   const baseWidth = 30 + tower.level * 4;
-  const baseHeight = 25 + tower.level * 8;
+  const baseHeight = 23 + tower.level * 7;
   const w = baseWidth * zoom * 0.5;
   const d = baseWidth * zoom * 0.25;
   const h = baseHeight * zoom;

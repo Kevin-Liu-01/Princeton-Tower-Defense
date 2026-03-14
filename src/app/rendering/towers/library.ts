@@ -412,7 +412,7 @@ export function renderLibraryTower(
   ctx.save();
   const sX = screenPos.x;
   const baseWidth = 34 + tower.level * 5;
-  const baseHeight = 30 + tower.level * 10;
+  const baseHeight = 28 + tower.level * 8;
   const w = baseWidth * zoom * 0.5;
   const d = baseWidth * zoom * ISO_PRISM_D_FACTOR;
 
@@ -2548,7 +2548,7 @@ export function renderLibraryTower(
   ctx.stroke();
 
   // Compute spireHeight early so orbital effects can reference it
-  const spireHeight = (28 + tower.level * 6) * zoom;
+  const spireHeight = (24 + tower.level * 5) * zoom;
 
   // Back halves of orbital effects (drawn behind the spire)
   drawLibraryOrbitalEffects(
