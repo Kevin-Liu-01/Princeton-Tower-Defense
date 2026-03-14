@@ -83,7 +83,9 @@ import {
   ENEMY_CATEGORY_ORDER,
   groupEnemiesByCategory,
   TOWER_CATEGORIES,
+  TOWER_TAGS,
 } from "../../constants";
+import { TagBadge } from "../ui/TagBadge";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
   TowerSprite,
@@ -1623,6 +1625,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     <p className="text-[11px] text-stone-400 line-clamp-2 mt-0.5 leading-relaxed">
                                       {tower.desc}
                                     </p>
+                                    <div className="flex flex-wrap gap-0.5 mt-1.5">
+                                      {TOWER_TAGS[type].map((tag) => (
+                                        <TagBadge key={tag} tag={tag} size={9} />
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
 
@@ -1884,7 +1891,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                   <h3 className="text-3xl font-bold text-amber-200 mb-1">
                                     {tower.name}
                                   </h3>
-                                  <p className="text-stone-400 mb-4 text-sm leading-relaxed">{tower.desc}</p>
+                                  <p className="text-stone-400 mb-2 text-sm leading-relaxed">{tower.desc}</p>
+                                  <div className="flex flex-wrap gap-1 mb-3">
+                                    {TOWER_TAGS[selectedTower as keyof typeof TOWER_DATA].map((tag) => (
+                                      <TagBadge key={tag} tag={tag} size={10} />
+                                    ))}
+                                  </div>
                                   <div className="flex flex-wrap gap-3">
                                     <div className="px-4 py-2.5 bg-amber-950/50 rounded-lg border border-amber-800/40">
                                       <div className="text-[10px] text-amber-500 uppercase tracking-wider">Base Cost</div>

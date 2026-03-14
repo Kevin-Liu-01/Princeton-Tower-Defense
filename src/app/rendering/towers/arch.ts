@@ -2089,6 +2089,7 @@ export function renderArchTower(
 
   // === PORTAL EFFECT ===
   const portalCenterY = archCenterY + 6 * zoom;
+  tower._portalScreenY = portalCenterY;
   const glowIntensity = 0.5 + Math.sin(time * 3) * 0.3 + attackPulse;
   const portalSizeX = 14 * zoom + portalExpand * 0.5;
   const portalSizeY = 18 * zoom + portalExpand * 0.6;

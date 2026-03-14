@@ -138,6 +138,7 @@ export interface Tower {
   mortarAutoAim?: boolean;
   // Rendering-only transient fields
   _orbScreenY?: number;
+  _portalScreenY?: number;
   spawnEffect?: number;
   // UI state
   selected?: boolean;
@@ -988,7 +989,7 @@ export interface SpecialTower {
   hp?: number;
 }
 
-export type LevelKind = "campaign" | "challenge" | "custom";
+export type LevelKind = "campaign" | "challenge" | "custom" | "sandbox";
 
 // Level data definition
 export interface LevelData {

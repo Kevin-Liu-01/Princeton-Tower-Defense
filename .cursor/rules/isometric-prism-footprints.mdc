@@ -1,0 +1,53 @@
+---
+description: Enforce square footprints for drawIsometricPrism on structural elements
+globs:
+  - src/app/rendering/**/*.ts
+alwaysApply: false
+---
+
+# Isometric Prism Footprints Must Be Square
+
+When calling `drawIsometricPrism(ctx, x, y, width, depth, height, ...)` for **structural elements** (foundations, platforms, pedestals, altars, tower bases, building bases), the `width` and `depth` parameters **MUST be equal** (square footprint).
+
+## Why
+
+A 2:1 isometric grid produces diamond edges at 26.57°. When `width ≠ depth`, the diamond edges tilt to non-standard angles (e.g., ~20.6° for 32×24), causing visible misalignment with the rest of the isometric scene.
+
+Only a **square footprint** (`width === depth`) guarantees the correct 2:1 isometric diamond angle.
+
+## Allowed Exceptions
+
+Rectangular footprints (`width ≠ depth`) are acceptable ONLY for elements that are **intentionally non-square by design**:
+
+- Walls and fences (long and thin)
+- Sign boards and plaques (wide and shallow)
+- Beams and lintels (elongated)
+- Crates and boxes (slight variation is fine)
+- Cannon bodies and similar equipment
+- Rubble and debris (irregular shapes)
+- Arch blocks / voussoirs
+
+## Examples
+
+```typescript
+// GOOD — square footprint for a foundation
+drawIsometricPrism(ctx, cx, cy, 28 * s, 28 * s, 5 * s, topColor, leftColor, rightColor);
+
+// GOOD — square footprint for an altar base
+const altarSize = 7 * s;
+drawIsometricPrism(ctx, ax, ay, altarSize, altarSize, 3 * s, topColor, leftColor, rightColor);
+
+// BAD — non-square foundation causes misaligned iso diamond
+drawIsometricPrism(ctx, cx, cy, 32 * s, 24 * s, 5 * s, topColor, leftColor, rightColor);
+
+// OK — intentionally rectangular wall
+drawIsometricPrism(ctx, wx, wy, 16 * s, 3 * s, 8 * s, topColor, leftColor, rightColor);
+```
+
+## Quick Check
+
+When adding or reviewing a `drawIsometricPrism` call, ask:
+
+1. Is this a structural/base element? → **width must equal depth**
+2. Is this intentionally elongated (wall, beam, sign)? → rectangular is fine
+3. Does the foundation use symmetric overhang? → e.g., `(W + 2) * s` for both width and depth, not `(W + 2, D + 1)`

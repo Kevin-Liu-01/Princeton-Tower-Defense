@@ -250,6 +250,7 @@ import { getDecorationCategories } from "../rendering/decorations/decorationCate
 import { renderDecorationTransitions, renderSpecialTowerTransitions } from "../rendering/decorations/landmarkTransition";
 import {
   renderStaticMapLayer,
+  renderChallengeMountainBackdrop,
   type StaticMapFogEndpoint,
 } from "../rendering/maps/staticLayer";
 import { setPerformanceSettings, updateScenePressure, interceptShadows, getPerformanceSettings } from "../rendering/performance";
@@ -397,6 +398,11 @@ interface FogLayerCache {
   canvas: HTMLCanvasElement;
   renderedAtMs: number;
   anchorOffset: Position;
+}
+
+interface BackdropCache {
+  key: string;
+  canvas: HTMLCanvasElement;
 }
 
 interface AmbientLayerCache {
@@ -728,6 +734,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
   // Bounty income events (from enemy kills)
   const [bountyIncomeEvents, setBountyIncomeEvents] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean }>>([]);
+  // Leaked enemy bounty events (enemies that reached the end still award paw points)
+  const [leakedBountyEvents, setLeakedBountyEvents] = useState<Array<{ id: string; amount: number }>>([]);
   // UI state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
@@ -813,6 +821,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
+  const backdropCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTouchTimeRef = useRef<number>(0); // Track touch to prevent duplicate click events
   const isTouchDeviceRef = useRef<boolean>(false); // Track if user is using touch input
@@ -855,6 +864,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const cachedStaticDecorationLayerRef =
     useRef<StaticDecorationLayerCache | null>(null);
   const cachedFogLayerRef = useRef<FogLayerCache | null>(null);
+  const cachedBackdropRef = useRef<BackdropCache | null>(null);
   const cachedAmbientLayerRef = useRef<AmbientLayerCache | null>(null);
   const stableZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
   const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
@@ -1561,6 +1571,16 @@ export function usePrincetonTowerDefenseRuntime() {
         const bgDeltaY = (anchor.y - cameraOffset.y) * cameraZoom;
         const srcX = (BG_OVERSCAN_X / 2 + bgDeltaX) * dpr;
         const srcY = (BG_OVERSCAN_Y / 3 + bgDeltaY) * dpr;
+        const bdCanvas = backdropCanvasRef.current;
+        if (bdCanvas) {
+          const bdSrcX = (BG_OVERSCAN_X / 2) * dpr;
+          const bdSrcY = (BG_OVERSCAN_Y / 3) * dpr;
+          compositeCtx.drawImage(
+            bdCanvas,
+            bdSrcX, bdSrcY, canvas.width, canvas.height,
+            0, 0, canvas.width, canvas.height,
+          );
+        }
         compositeCtx.drawImage(
           bgCanvas,
           srcX, srcY, canvas.width, canvas.height,
@@ -1836,7 +1856,15 @@ export function usePrincetonTowerDefenseRuntime() {
           bgCanvas.style.width = `${rect.width + BG_OVERSCAN_X}px`;
           bgCanvas.style.height = `${rect.height + BG_OVERSCAN_Y}px`;
         }
+        const bdCanvas = backdropCanvasRef.current;
+        if (bdCanvas) {
+          bdCanvas.width = (rect.width + BG_OVERSCAN_X) * dpr;
+          bdCanvas.height = (rect.height + BG_OVERSCAN_Y) * dpr;
+          bdCanvas.style.width = `${rect.width + BG_OVERSCAN_X}px`;
+          bdCanvas.style.height = `${rect.height + BG_OVERSCAN_Y}px`;
+        }
         cachedStaticMapLayerRef.current = null;
+        cachedBackdropRef.current = null;
         cachedFogLayerRef.current = null;
       }
     };
@@ -3281,9 +3309,19 @@ export function usePrincetonTowerDefenseRuntime() {
               if (nextPathIndex >= path.length - 1) {
                 if (!handledEnemyIdsRef.current.has(enemy.id)) {
                   handledEnemyIdsRef.current.add(enemy.id);
-                  const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
+                  const eData = ENEMY_DATA[enemy.type];
+                  const liveCost = eData.liveCost || 1;
                   setLives((l) => Math.max(0, l - liveCost));
-                  gameEventLogRef.current.log("enemy_leaked", `${ENEMY_DATA[enemy.type].name || enemy.type} reached the end (-${liveCost} life)`, { enemyType: enemy.type, liveCost });
+
+                  const leakedBounty = eData.bounty;
+                  addPawPoints(leakedBounty);
+                  const leakEventId = `leaked-${Date.now()}-${enemy.id}`;
+                  setLeakedBountyEvents((prev) => {
+                    if (prev.some(e => e.id === leakEventId)) return prev;
+                    return [...prev, { id: leakEventId, amount: leakedBounty }];
+                  });
+
+                  gameEventLogRef.current.log("enemy_leaked", `${eData.name || enemy.type} reached the end (-${liveCost} life, +${leakedBounty} PP)`, { enemyType: enemy.type, liveCost, bounty: leakedBounty });
                 }
                 return null;
               }
@@ -6758,9 +6796,44 @@ export function usePrincetonTowerDefenseRuntime() {
     // BACKGROUND CANVAS — static map + fog with overscan so panning is free
     // =========================================================================
     const bgCanvas = bgCanvasRef.current;
+    const backdropCanvas = backdropCanvasRef.current;
     let fogEndpoints: StaticMapFogEndpoint[] = [];
     const overscanCssW = width + BG_OVERSCAN_X;
     const overscanCssH = height + BG_OVERSCAN_Y;
+
+    // Backdrop canvas — rendered once per map/resize, never zoom-scaled.
+    const backdropKey = [selectedMap, overscanCssW, overscanCssH, dpr].join("|");
+    if (backdropCanvas && (!cachedBackdropRef.current || cachedBackdropRef.current.key !== backdropKey)) {
+      const bdCtx = backdropCanvas.getContext("2d");
+      if (bdCtx) {
+        bdCtx.setTransform(1, 0, 0, 1, 0, 0);
+        bdCtx.clearRect(0, 0, backdropCanvas.width, backdropCanvas.height);
+        bdCtx.scale(dpr, dpr);
+        if (isChallengeTerrainLevel) {
+          const mapThemeKeyForBackdrop = (levelData?.theme ?? "grassland") as
+            | "grassland" | "swamp" | "desert" | "winter" | "volcanic";
+          renderChallengeMountainBackdrop(
+            bdCtx,
+            overscanCssW,
+            overscanCssH,
+            mapSeed,
+            mapThemeKeyForBackdrop,
+          );
+        } else {
+          const gradient = bdCtx.createRadialGradient(
+            overscanCssW / 2, overscanCssH / 2, 0,
+            overscanCssW / 2, overscanCssH / 2, overscanCssW,
+          );
+          gradient.addColorStop(0, theme.ground[0]);
+          gradient.addColorStop(0.5, theme.ground[1]);
+          gradient.addColorStop(1, theme.ground[2]);
+          bdCtx.fillStyle = gradient;
+          bdCtx.fillRect(0, 0, overscanCssW, overscanCssH);
+        }
+        cachedBackdropRef.current = { key: backdropKey, canvas: backdropCanvas };
+      }
+    }
+    const hasBackdropCanvas = !!cachedBackdropRef.current;
 
     const cachedStaticMapLayer = cachedStaticMapLayerRef.current;
     const staticAnchor = cachedStaticMapLayer?.anchorOffset;
@@ -6810,6 +6883,7 @@ export function usePrincetonTowerDefenseRuntime() {
             cameraOffset,
             cameraZoom: cacheZoomForKey,
             preRoadCallback: preRoadCb,
+            skipBackdrop: hasBackdropCanvas,
           });
           fogEndpoints = staticLayerResult.fogEndpoints;
           cachedStaticMapLayerRef.current = {
@@ -6844,6 +6918,7 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom: cacheZoomForKey,
           preRoadCallback: preRoadCb,
+          skipBackdrop: hasBackdropCanvas,
         });
         fogEndpoints = staticLayerResult.fogEndpoints;
       }
@@ -6934,8 +7009,25 @@ export function usePrincetonTowerDefenseRuntime() {
         bgCanvas.style.transform = `translate(${-translateX}px,${-translateY}px)`;
       }
     }
+    // Backdrop canvas — pan only, never zoom-scaled.
+    if (backdropCanvas) {
+      const translateX = BG_OVERSCAN_X / 2;
+      const translateY = BG_OVERSCAN_Y / 3;
+      backdropCanvas.style.transformOrigin = "";
+      backdropCanvas.style.transform = `translate(${-translateX}px,${-translateY}px)`;
+    }
     // Fallback: if no bg canvas, extract visible portion from oversized cache
     if (!bgCanvas) {
+      // Draw backdrop without zoom compensation (it's zoom-independent)
+      if (hasBackdropCanvas && cachedBackdropRef.current) {
+        const bdSrcX = (BG_OVERSCAN_X / 2) * dpr;
+        const bdSrcY = (BG_OVERSCAN_Y / 3) * dpr;
+        ctx.drawImage(
+          cachedBackdropRef.current.canvas,
+          bdSrcX, bdSrcY, canvas.width, canvas.height,
+          0, 0, width, height,
+        );
+      }
       const fbAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
       const fbDeltaX = (fbAnchor.x - cameraOffset.x) * cameraZoom;
       const fbDeltaY = (fbAnchor.y - cameraOffset.y) * cameraZoom;
@@ -11269,7 +11361,7 @@ export function usePrincetonTowerDefenseRuntime() {
       const cost = SPELL_DATA[spellType]?.cost ?? 0;
       if (!canAffordPawPoints(cost)) return;
       if (
-        (spellType === "fireball" || spellType === "lightning" || spellType === "freeze" || spellType === "payday") &&
+        (spellType === "fireball" || spellType === "lightning" || spellType === "freeze") &&
         enemies.length === 0
       ) {
         return;
@@ -12414,6 +12506,11 @@ export function usePrincetonTowerDefenseRuntime() {
           style={{ background: fadeOverlayBackground }}
         >
           <canvas
+            ref={backdropCanvasRef}
+            className="absolute pointer-events-none game-start-fade"
+            style={{ top: 0, left: 0, willChange: "transform" }}
+          />
+          <canvas
             ref={bgCanvasRef}
             className="absolute pointer-events-none game-start-fade"
             style={{ top: 0, left: 0, willChange: "transform" }}
@@ -12449,6 +12546,10 @@ export function usePrincetonTowerDefenseRuntime() {
               bountyIncomeEvents={bountyIncomeEvents}
               onBountyEventComplete={(id) =>
                 setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))
+              }
+              leakedBountyEvents={leakedBountyEvents}
+              onLeakedBountyEventComplete={(id) =>
+                setLeakedBountyEvents((prev) => prev.filter((e) => e.id !== id))
               }
               inspectorActive={inspectorActive}
               setInspectorActive={setInspectorActive}

@@ -430,13 +430,6 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.55) ${readyAngle}deg, rgba(0,0,0,0.55) 360deg)`,
                         }} />
                       )}
-                      {/* Fill progress underneath cooldown */}
-                      {!isReady && cdFrac > 0 && (
-                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
-                          background: `linear-gradient(0deg, ${hexToRgba(hc, 0.18)}, rgba(180,140,50,0.06))`,
-                          clipPath: `inset(${cdFrac * 100}% 0 0 0)`,
-                        }} />
-                      )}
                       {/* Inner border */}
                       <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
                         border: `1px solid ${isReady ? "rgba(250,204,21,0.12)" : "rgba(80,60,40,0.1)"}`,
@@ -451,7 +444,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           style={{ boxShadow: "0 0 18px rgba(250,204,21,0.4)" }} />
                       )}
                       {/* Ability name tag on circle bottom */}
-                      <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-lg text-[7px] font-black uppercase tracking-wider text-center leading-tight max-w-[72px]" style={{
                         background: "rgba(20,16,10,0.92)",
                         border: `1px solid ${isReady ? "rgba(250,204,21,0.45)" : "rgba(80,60,40,0.35)"}`,
                         color: isReady ? "#fbbf24" : "rgba(160,140,100,0.6)",
@@ -494,21 +487,21 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               spell.cooldown <= 0 &&
               pawPoints >= spellData.cost &&
               !(
-                (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze" || spell.type === "payday") &&
+                (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze") &&
                 enemies.length === 0
               );
             const isHovered = hoveredSpell === spell.type;
             const isTargeting = targetingSpell === spell.type || (spell.type === "reinforcements" && placingTroop);
             const isAimableSpell = spell.type === "fireball" || spell.type === "lightning";
             const hasUnlockedAim = isAimableSpell && spellLevel >= 2;
-            const autoAimOn = isAimableSpell && !!spellAutoAim[spell.type];
-            const autoAimTooltip = !isAimableSpell
-              ? "You can only auto aim meteor or lightning"
+            const manualAimOn = hasUnlockedAim && !spellAutoAim[spell.type];
+            const aimTooltip = !isAimableSpell
+              ? ""
               : !hasUnlockedAim
-                ? "Unlock auto aiming spells by upgrading"
-                : autoAimOn
-                  ? "Auto-aim ON. click to switch to manual targeting"
-                  : "Auto-aim OFF. click to enable auto targeting";
+                ? "Unlock manual targeting by upgrading"
+                : manualAimOn
+                  ? "Manual targeting ON — click to switch to auto-aim"
+                  : "Auto-aim ON — click for manual targeting";
             const spellAccent = theme?.panelBorder || "rgba(140,80,180,0.5)";
             const ORBS = 72;
             return (
@@ -517,21 +510,21 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <div className="relative" ref={getOrbRef(spell.type)}>
                   {/* Auto-aim toggle — on left of border ring */}
                   {isAimableSpell && (
-                    <HudTooltip label={autoAimTooltip} position="top">
+                    <HudTooltip label={aimTooltip} position="top">
                       <button
                         onClick={(e) => { e.stopPropagation(); if (hasUnlockedAim) onToggleSpellAutoAim(spell.type); }}
                         className="absolute z-30 flex items-center justify-center rounded-full transition-all"
                         style={{
                           width: 22, height: 22,
                           top: 1, left: -2,
-                          background: hasUnlockedAim && autoAimOn ? (theme?.panelBg || "rgba(80,60,20,0.8)") : "rgba(24,22,18,0.9)",
-                          border: `2px solid ${hasUnlockedAim && autoAimOn ? spellAccent : hasUnlockedAim ? "rgba(180,140,60,0.3)" : "rgba(60,55,45,0.25)"}`,
-                          boxShadow: hasUnlockedAim && autoAimOn ? `0 0 8px ${spellAccent}` : "none",
+                          background: manualAimOn ? (theme?.panelBg || "rgba(80,60,20,0.8)") : "rgba(24,22,18,0.9)",
+                          border: `2px solid ${manualAimOn ? spellAccent : hasUnlockedAim ? "rgba(180,140,60,0.3)" : "rgba(60,55,45,0.25)"}`,
+                          boxShadow: manualAimOn ? `0 0 8px ${spellAccent}` : "none",
                           cursor: hasUnlockedAim ? "pointer" : "not-allowed",
                           opacity: hasUnlockedAim ? 1 : 0.35,
                         }}
                       >
-                        <Crosshair size={12} className={hasUnlockedAim && autoAimOn ? (theme?.nameColor || "text-amber-200") : "text-stone-500"} />
+                        <Crosshair size={12} className={manualAimOn ? (theme?.nameColor || "text-amber-200") : "text-stone-500"} />
                       </button>
                     </HudTooltip>
                   )}

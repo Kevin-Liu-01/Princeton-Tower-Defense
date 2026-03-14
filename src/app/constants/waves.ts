@@ -2229,6 +2229,52 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     ],
   ],
   // =====================
+  // SANDBOX
+  // =====================
+  sandbox: [
+    [
+      { type: "frosh", count: 8, interval: 800 },
+    ],
+    [
+      { type: "sophomore", count: 6, interval: 700 },
+      { type: "frosh", count: 4, interval: 600, delay: 2000 },
+    ],
+    [
+      { type: "junior", count: 5, interval: 800 },
+      { type: "sophomore", count: 5, interval: 700, delay: 2500 },
+    ],
+    [
+      { type: "senior", count: 4, interval: 900 },
+      { type: "junior", count: 4, interval: 800, delay: 2000 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 1000 },
+      { type: "senior", count: 5, interval: 800, delay: 2500 },
+    ],
+    [
+      { type: "professor", count: 2, interval: 1200 },
+      { type: "gradstudent", count: 4, interval: 900, delay: 3000 },
+    ],
+    [
+      { type: "frosh", count: 15, interval: 400 },
+      { type: "sophomore", count: 10, interval: 500, delay: 3000 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 1000 },
+      { type: "senior", count: 6, interval: 700, delay: 2000 },
+      { type: "junior", count: 8, interval: 600, delay: 4000 },
+    ],
+    [
+      { type: "dean", count: 1, interval: 1000 },
+      { type: "professor", count: 4, interval: 900, delay: 3000 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 1200 },
+      { type: "gradstudent", count: 6, interval: 700, delay: 2500 },
+      { type: "frosh", count: 20, interval: 300, delay: 5000 },
+    ],
+  ],
+  // =====================
   // DEV TEST LEVELS
   // =====================
   dev_enemy_showcase: [

@@ -18,7 +18,8 @@ import {
   FramedSprite,
   TOWER_SPRITE_FRAME_THEME,
 } from "../../sprites";
-import { TOWER_DATA, HERO_DATA } from "../../constants";
+import { TOWER_DATA, HERO_DATA, TOWER_TAGS, TOWER_QUICK_SUMMARY } from "../../constants";
+import { TagBadge } from "./TagBadge";
 import { TOWER_STATS } from "../../constants/towerStats";
 import type { TowerType, SpellType, HeroType } from "../../types";
 
@@ -99,99 +100,44 @@ function getPanelPosition(
 }
 
 // =============================================================================
-// TOWER CATALOG CARDS (for the build-towers step)
+// TOWER CATALOG (for the build-towers step) — uses centralized tags
 // =============================================================================
 
-interface TowerCardInfo {
-  type: TowerType;
-  role: string;
-  tagline: string;
-  detail: string;
-  roleColor: string;
-}
-
-const TOWER_CARDS: TowerCardInfo[] = [
-  {
-    type: "cannon",
-    role: "DPS",
-    tagline: "Heavy single-target artillery",
-    detail: "High damage cannonballs punish ground enemies. Evolves into rapid-fire Gatling Gun or devastating Flamethrower.",
-    roleColor: "bg-red-900/60 text-red-300 border-red-700/40",
-  },
-  {
-    type: "library",
-    role: "Control",
-    tagline: "Slows enemies with arcane knowledge",
-    detail: "Reduces enemy speed in a wide area. Upgrades into the earth-shattering EQ Smasher or the icy Blizzard.",
-    roleColor: "bg-cyan-900/60 text-cyan-300 border-cyan-700/40",
-  },
-  {
-    type: "lab",
-    role: "DPS",
-    tagline: "Fast electric zaps, hits air & ground",
-    detail: "Rapid lightning attacks chain between foes. Becomes a lock-on Focused Beam or multi-target Chain Lightning.",
-    roleColor: "bg-red-900/60 text-red-300 border-red-700/40",
-  },
-  {
-    type: "arch",
-    role: "Anti-Air",
-    tagline: "Sonic waves hit flying & ground",
-    detail: "The only tower that naturally targets air. Evolves into stunning Shockwave Siren or multi-hit Symphony Hall.",
-    roleColor: "bg-purple-900/60 text-purple-300 border-purple-700/40",
-  },
-  {
-    type: "club",
-    role: "Economy",
-    tagline: "Generates Paw Points passively",
-    detail: "Your income engine — earns PP over time. Becomes an Investment Bank (range aura) or Recruitment Center (damage aura).",
-    roleColor: "bg-amber-900/60 text-amber-300 border-amber-700/40",
-  },
-  {
-    type: "station",
-    role: "Blocker",
-    tagline: "Spawns troops to block the path",
-    detail: "Soldiers physically block enemies, buying time for your towers. Upgrades to ranged Centaur Stables or tanky Royal Cavalry.",
-    roleColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40",
-  },
-  {
-    type: "mortar",
-    role: "AoE",
-    tagline: "Long-range bombardment, splash damage",
-    detail: "Lobs explosive shells into crowds. Evolves into the precision Missile Battery or fire-spreading Ember Foundry.",
-    roleColor: "bg-orange-900/60 text-orange-300 border-orange-700/40",
-  },
-];
+const TOWER_DISPLAY_ORDER: TowerType[] = ["cannon", "library", "lab", "arch", "club", "station", "mortar"];
 
 function TowerCatalog() {
   return (
     <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
-      {TOWER_CARDS.map((card) => {
-        const theme = TOWER_SPRITE_FRAME_THEME[card.type];
-        const data = TOWER_DATA[card.type];
+      {TOWER_DISPLAY_ORDER.map((towerType) => {
+        const theme = TOWER_SPRITE_FRAME_THEME[towerType];
+        const data = TOWER_DATA[towerType];
+        const tags = TOWER_TAGS[towerType];
+        const summary = TOWER_QUICK_SUMMARY[towerType];
         return (
           <div
-            key={card.type}
-            className="flex items-start gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2 transition-colors"
+            key={towerType}
+            className="flex items-center gap-2 sm:gap-2.5 rounded-lg p-1.5 sm:p-2"
             style={{
               background: "rgba(10,10,16,0.5)",
               border: `1px solid ${theme.border}`,
             }}
           >
-            <div className="flex-shrink-0 mt-0.5">
-              <FramedSprite size={42} theme={theme}>
-                <TowerSprite type={card.type} size={32} level={1} />
+            <div className="flex-shrink-0">
+              <FramedSprite size={38} theme={theme}>
+                <TowerSprite type={towerType} size={28} level={1} />
               </FramedSprite>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-                <span className="text-xs sm:text-sm font-bold text-amber-200">{data.name}</span>
-                <span className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
-                  {card.role}
-                </span>
-                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto">{data.cost} PP</span>
+              <div className="flex items-center gap-1 sm:gap-1.5">
+                <span className="text-xs sm:text-sm font-bold text-amber-200 truncate">{data.name}</span>
+                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto flex-shrink-0">{data.cost} PP</span>
               </div>
-              <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
-              <p className="text-[10px] sm:text-xs text-amber-200/40 leading-snug mt-0.5 hidden sm:block">{card.detail}</p>
+              <p className="text-[10px] sm:text-[12px] text-amber-100/70 leading-snug">{summary}</p>
+              <div className="flex flex-wrap gap-0.5 mt-1">
+                {tags.map((tag) => (
+                  <TagBadge key={tag} tag={tag} size={8} />
+                ))}
+              </div>
             </div>
           </div>
         );

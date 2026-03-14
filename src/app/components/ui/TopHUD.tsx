@@ -113,6 +113,8 @@ interface TopHUDProps {
   onEatingClubEventComplete?: (id: string) => void;
   bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
   onBountyEventComplete?: (id: string) => void;
+  leakedBountyEvents?: Array<{ id: string; amount: number }>;
+  onLeakedBountyEventComplete?: (id: string) => void;
   inspectorActive?: boolean;
   setInspectorActive?: (active: boolean) => void;
   setSelectedInspectEnemy?: (enemy: null) => void;
@@ -139,6 +141,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   onEatingClubEventComplete,
   bountyIncomeEvents = [],
   onBountyEventComplete,
+  leakedBountyEvents = [],
+  onLeakedBountyEventComplete,
   inspectorActive = false,
   setInspectorActive,
   setSelectedInspectEnemy,
@@ -220,6 +224,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const [ppPulse, setPpPulse] = useState(false);
   const [livesShake, setLivesShake] = useState(false);
   const [livesFlash, setLivesFlash] = useState(false);
+  const livesShakeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const livesFlashTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [activeEatingClubFloaters, setActiveEatingClubFloaters] = useState<Array<{ id: string; amount: number; startTime: number }>>([]);
   const [eatingClubFlash, setEatingClubFlash] = useState(false);
@@ -227,6 +233,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   const [activeBountyFloaters, setActiveBountyFloaters] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean; startTime: number }>>([]);
   const processedBountyEventsRef = useRef<Set<string>>(new Set());
+
+  const [activeLeakedFloaters, setActiveLeakedFloaters] = useState<Array<{ id: string; amount: number; startTime: number }>>([]);
+  const processedLeakedEventsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const currentIds = new Set(eatingClubIncomeEvents.map(e => e.id));
@@ -296,19 +305,60 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     return () => timers.forEach(t => clearTimeout(t));
   }, [activeBountyFloaters, onBountyEventComplete]);
 
+  useEffect(() => {
+    const currentIds = new Set(leakedBountyEvents.map(e => e.id));
+    Array.from(processedLeakedEventsRef.current).forEach(id => {
+      if (!currentIds.has(id)) processedLeakedEventsRef.current.delete(id);
+    });
+
+    const newEvents = leakedBountyEvents.filter(e => !processedLeakedEventsRef.current.has(e.id));
+
+    if (newEvents.length > 0) {
+      setPpPulse(true);
+      setTimeout(() => setPpPulse(false), 300);
+
+      const now = Date.now();
+      const newFloaters = newEvents.map((event, idx) => {
+        processedLeakedEventsRef.current.add(event.id);
+        return { id: event.id, amount: event.amount, startTime: now + idx * 50 };
+      });
+      setActiveLeakedFloaters(prev => [...prev, ...newFloaters]);
+    }
+  }, [leakedBountyEvents]);
+
+  useEffect(() => {
+    if (activeLeakedFloaters.length === 0) return;
+    const timers = activeLeakedFloaters.map(floater => {
+      const elapsed = Date.now() - floater.startTime;
+      const remaining = Math.max(0, 1200 - elapsed);
+      return setTimeout(() => {
+        setActiveLeakedFloaters(prev => prev.filter(f => f.id !== floater.id));
+        onLeakedBountyEventComplete?.(floater.id);
+      }, remaining);
+    });
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [activeLeakedFloaters, onLeakedBountyEventComplete]);
+
   useEffect(() => { prevPawPoints.current = pawPoints; }, [pawPoints]);
 
   useEffect(() => {
     if (lives < prevLives.current) {
       setLivesShake(true);
       setLivesFlash(true);
-      const t1 = setTimeout(() => setLivesShake(false), 500);
-      const t2 = setTimeout(() => setLivesFlash(false), 300);
-      prevLives.current = lives;
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+      clearTimeout(livesShakeTimerRef.current);
+      clearTimeout(livesFlashTimerRef.current);
+      livesShakeTimerRef.current = setTimeout(() => setLivesShake(false), 500);
+      livesFlashTimerRef.current = setTimeout(() => setLivesFlash(false), 300);
     }
     prevLives.current = lives;
   }, [lives]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(livesShakeTimerRef.current);
+      clearTimeout(livesFlashTimerRef.current);
+    };
+  }, []);
 
   const livesPercent = maxLives > 0 ? (lives / maxLives) * 100 : 100;
   const livesTheme = useMemo(() => getLivesTheme(livesPercent, livesFlash), [livesPercent, livesFlash]);
@@ -401,6 +451,23 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 +{floater.amount}
               </span>
               <Landmark size={10} className="ml-0.5 inline-block text-emerald-400" />
+            </div>
+          ))}
+          {activeLeakedFloaters.map((floater, index) => (
+            <div
+              key={floater.id}
+              className="absolute left-1/2 whitespace-nowrap font-bold text-xs sm:text-sm pointer-events-none"
+              style={{
+                animation: "leakedFloat 1.2s ease-out forwards",
+                animationDelay: `${index * 40}ms`,
+                bottom: -8,
+                zIndex: 80 - index,
+              }}
+            >
+              <span className="text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]">
+                +{floater.amount}
+              </span>
+              <Skull size={10} className="ml-0.5 inline-block text-red-400" />
             </div>
           ))}
           <span
@@ -935,6 +1002,16 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                       <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">+{floater.amount}</span>
                     </div>
                   ))}
+                  {activeLeakedFloaters.map((floater, index) => (
+                    <div
+                      key={floater.id}
+                      className="absolute left-1/2 whitespace-nowrap font-bold text-xs pointer-events-none"
+                      style={{ animation: "leakedFloat 1.2s ease-out forwards", animationDelay: `${index * 40}ms`, bottom: -8, zIndex: 80 - index }}
+                    >
+                      <span className="text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]">+{floater.amount}</span>
+                      <Skull size={9} className="ml-0.5 inline-block text-red-400" />
+                    </div>
+                  ))}
                   <PawPrint size={12} className={`shrink-0 ${goldSpellActive ? "text-yellow-300" : eatingClubFlash ? "text-emerald-300" : "text-amber-400"}`} />
                   <span className={`text-sm font-black tabular-nums ${goldSpellActive ? "text-yellow-200" : eatingClubFlash ? "text-emerald-200" : "text-amber-200"}`}>
                     {Math.round(pawPoints)}
@@ -1067,6 +1144,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             12% { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
             25% { transform: translateX(-50%) translateY(-28px) scale(1); }
             100% { opacity: 0; transform: translateX(-50%) translateY(-55px) scale(0.9); }
+          }
+          @keyframes leakedFloat {
+            0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(0.5); }
+            12% { opacity: 1; transform: translateX(-50%) translateY(-16px) scale(1.2); }
+            25% { transform: translateX(-50%) translateY(-22px) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-50px) scale(0.85); }
           }
           @keyframes eatingClubGlow {
             0% { opacity: 0.8; transform: scale(1); }

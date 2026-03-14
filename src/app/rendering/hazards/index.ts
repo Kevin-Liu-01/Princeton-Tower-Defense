@@ -469,6 +469,7 @@ function drawLavaGeyserHazard(
   drawLavaGeyserCracks(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
   drawLavaGeyserFlows(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
   drawLavaGeyserSecondaryPools(ctx, sRad, lavaIso, layout, time, cycle, cameraZoom);
+  drawLavaGeyserVentRim(ctx, ventWidth, lavaIso, hazSeed, cycle, cameraZoom);
   drawLavaGeyserBackRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
   drawLavaGeyserMagmaPool(ctx, ventWidth, lavaIso, hazSeed, time, cycle, cameraZoom);
   drawLavaGeyserFrontRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
@@ -678,44 +679,148 @@ function drawLavaGeyserVentRock(
   cameraZoom: number,
   isFront: boolean,
 ): void {
-  const baseColor = isFront ? 28 : 22;
-  const highlightColor = isFront ? 42 : 36;
+  const iso = ISO_Y_RATIO;
+  const hw = rockW;
+  const hd = hw * iso * 0.7;
+  const topHw = hw * taper;
+  const topHd = topHw * iso * 0.7;
+  const topY = rockY - rockH;
+  const base = isFront ? 42 : 30;
 
-  // Main body
-  ctx.fillStyle = `rgb(${baseColor}, ${baseColor - 4}, ${baseColor - 8})`;
+  // Left face (lit - brighter, facing upper-left light)
+  const lR = base + 16;
+  ctx.fillStyle = `rgb(${lR}, ${Math.floor(lR * 0.63)}, ${Math.floor(lR * 0.38)})`;
   ctx.beginPath();
-  ctx.moveTo(rockX - rockW, rockY);
-  ctx.lineTo(rockX - rockW * taper, rockY - rockH);
-  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
-  ctx.lineTo(rockX + rockW, rockY);
+  ctx.moveTo(rockX - hw, rockY);
+  ctx.lineTo(rockX, rockY + hd);
+  ctx.lineTo(rockX, topY + topHd);
+  ctx.lineTo(rockX - topHw, topY);
   ctx.closePath();
   ctx.fill();
 
-  // Lit face (right side highlight)
-  ctx.fillStyle = `rgb(${highlightColor}, ${highlightColor - 6}, ${highlightColor - 12})`;
+  // Right face (shadow - darker)
+  const rR = Math.max(0, base - 2);
+  ctx.fillStyle = `rgb(${rR}, ${Math.floor(rR * 0.58)}, ${Math.floor(rR * 0.33)})`;
   ctx.beginPath();
-  ctx.moveTo(rockX + rockW * 0.2, rockY - 2 * cameraZoom);
-  ctx.lineTo(rockX + rockW * taper * 0.5, rockY - rockH + 1 * cameraZoom);
-  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
-  ctx.lineTo(rockX + rockW, rockY);
+  ctx.moveTo(rockX, rockY + hd);
+  ctx.lineTo(rockX + hw, rockY);
+  ctx.lineTo(rockX + topHw, topY);
+  ctx.lineTo(rockX, topY + topHd);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face (brightest - catches overhead light)
+  const tR = base + 26;
+  ctx.fillStyle = `rgb(${tR}, ${Math.floor(tR * 0.58)}, ${Math.floor(tR * 0.33)})`;
+  ctx.beginPath();
+  ctx.moveTo(rockX - topHw, topY);
+  ctx.lineTo(rockX, topY + topHd);
+  ctx.lineTo(rockX + topHw, topY);
+  ctx.lineTo(rockX, topY - topHd);
   ctx.closePath();
   ctx.fill();
 
   // Inner edge glow from magma heat
-  ctx.strokeStyle = `rgba(255, 80, 10, ${glowAlpha})`;
-  ctx.lineWidth = 1.8 * cameraZoom;
-  ctx.beginPath();
-  ctx.moveTo(rockX - rockW, rockY);
-  ctx.lineTo(rockX - rockW * taper, rockY - rockH);
-  ctx.stroke();
+  if (glowAlpha > 0.01) {
+    ctx.strokeStyle = `rgba(255, 80, 10, ${glowAlpha})`;
+    ctx.lineWidth = 1.8 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(rockX - topHw, topY);
+    ctx.lineTo(rockX - hw, rockY);
+    ctx.stroke();
 
-  // Top edge hot rim
-  ctx.strokeStyle = `rgba(255, 140, 40, ${glowAlpha * 0.6})`;
-  ctx.lineWidth = 1.2 * cameraZoom;
-  ctx.beginPath();
-  ctx.moveTo(rockX - rockW * taper, rockY - rockH);
-  ctx.lineTo(rockX + rockW * taper, rockY - rockH);
-  ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 140, 40, ${glowAlpha * 0.6})`;
+    ctx.lineWidth = 1.2 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(rockX - topHw, topY);
+    ctx.lineTo(rockX, topY - topHd);
+    ctx.lineTo(rockX + topHw, topY);
+    ctx.stroke();
+  }
+}
+
+function drawLavaGeyserVentRim(
+  ctx: CanvasRenderingContext2D,
+  ventWidth: number,
+  lavaIso: number,
+  hazSeed: number,
+  cycle: LavaGeyserCycleState,
+  cameraZoom: number,
+): void {
+  const outerRx = ventWidth * 0.56;
+  const outerRy = outerRx * lavaIso;
+  const innerRx = ventWidth * 0.42;
+  const innerRy = innerRx * lavaIso;
+  const rimH = 6 * cameraZoom;
+  const rimBaseY = -2 * cameraZoom;
+  const rimTopY = rimBaseY - rimH;
+  const segs = 16;
+  const glowBoost = cycle.eruptionIntensity * 0.12 + (cycle.buildUp ? 0.08 : 0);
+
+  for (let pass = 0; pass < 2; pass++) {
+    const startI = pass === 0 ? segs / 2 : 0;
+    const endI = pass === 0 ? segs : segs / 2;
+
+    for (let i = startI; i < endI; i++) {
+      const a0 = (i / segs) * Math.PI * 2;
+      const a1 = ((i + 1) / segs) * Math.PI * 2;
+      const midA = (a0 + a1) / 2;
+      const isFront = Math.sin(midA) > 0;
+
+      const ox0 = Math.cos(a0) * outerRx;
+      const oy0b = rimBaseY + Math.sin(a0) * outerRy;
+      const oy0t = rimTopY + Math.sin(a0) * outerRy;
+      const ox1 = Math.cos(a1) * outerRx;
+      const oy1b = rimBaseY + Math.sin(a1) * outerRy;
+      const oy1t = rimTopY + Math.sin(a1) * outerRy;
+
+      const ix0 = Math.cos(a0) * innerRx;
+      const iy0t = rimTopY + Math.sin(a0) * innerRy;
+      const ix1 = Math.cos(a1) * innerRx;
+      const iy1t = rimTopY + Math.sin(a1) * innerRy;
+
+      const lr = -Math.cos(midA);
+      const light = 0.5 + lr * 0.3;
+
+      if (isFront) {
+        const oR = Math.floor(38 * light + 14);
+        const oG = Math.floor(24 * light + 8);
+        const oB = Math.floor(14 * light + 4);
+        ctx.fillStyle = `rgb(${oR}, ${oG}, ${oB})`;
+        ctx.beginPath();
+        ctx.moveTo(ox0, oy0b);
+        ctx.lineTo(ox1, oy1b);
+        ctx.lineTo(ox1, oy1t);
+        ctx.lineTo(ox0, oy0t);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      const tR = Math.floor(48 * light + 18);
+      const tG = Math.floor(30 * light + 10);
+      const tB = Math.floor(18 * light + 5);
+      ctx.fillStyle = `rgb(${tR}, ${tG}, ${tB})`;
+      ctx.beginPath();
+      ctx.moveTo(ox0, oy0t);
+      ctx.lineTo(ox1, oy1t);
+      ctx.lineTo(ix1, iy1t);
+      ctx.lineTo(ix0, iy0t);
+      ctx.closePath();
+      ctx.fill();
+
+      if (isFront && glowBoost > 0.01) {
+        const glowH = rimH * 0.5;
+        ctx.fillStyle = `rgba(255, 100, 20, ${glowBoost * 0.35})`;
+        ctx.beginPath();
+        ctx.moveTo(ix0, iy0t);
+        ctx.lineTo(ix1, iy1t);
+        ctx.lineTo(ix1, iy1t + glowH);
+        ctx.lineTo(ix0, iy0t + glowH);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  }
 }
 
 function drawLavaGeyserBackRocks(
@@ -729,8 +834,9 @@ function drawLavaGeyserBackRocks(
   const glowAlpha = 0.25 + cycle.eruptionIntensity * 0.4 + (cycle.buildUp ? 0.15 : 0) + cycle.dormantGlow * 0.1;
 
   for (const rock of layout.backRocks) {
-    const rx = Math.cos(rock.angle) * ventWidth * (0.5 + rock.offset);
-    const ry = Math.sin(rock.angle) * ventWidth * (0.3 + rock.offset * 0.5) * lavaIso;
+    const rd = 0.52 + rock.offset;
+    const rx = Math.cos(rock.angle) * ventWidth * rd;
+    const ry = Math.sin(rock.angle) * ventWidth * rd * lavaIso;
     drawLavaGeyserVentRock(
       ctx, rx, ry,
       rock.w * cameraZoom, rock.h * cameraZoom,
@@ -838,8 +944,9 @@ function drawLavaGeyserFrontRocks(
   const glowAlpha = 0.3 + cycle.eruptionIntensity * 0.45 + (cycle.buildUp ? 0.2 : 0) + cycle.dormantGlow * 0.15;
 
   for (const rock of layout.frontRocks) {
-    const rx = Math.cos(rock.angle) * ventWidth * (0.5 + rock.offset);
-    const ry = Math.sin(rock.angle) * ventWidth * (0.3 + rock.offset * 0.5) * lavaIso;
+    const rd = 0.52 + rock.offset;
+    const rx = Math.cos(rock.angle) * ventWidth * rd;
+    const ry = Math.sin(rock.angle) * ventWidth * rd * lavaIso;
     drawLavaGeyserVentRock(
       ctx, rx, ry,
       rock.w * cameraZoom, rock.h * cameraZoom,
@@ -1091,179 +1198,386 @@ function drawVolcanoHazard(
   cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 23.7;
-  const lavaIsoRatio = ISO_Y_RATIO * 0.95;
+  const iso = ISO_Y_RATIO;
 
-  // Fireball summon cycle: 7s period, fireball appears at 0-2s
   const cycleTime = (time + seededNoise(hazSeed) * 7) % 7;
   const isSummoning = cycleTime < 2.0;
   const buildUp = cycleTime > 5.5;
   const summonIntensity = isSummoning ? Math.sin((cycleTime / 2.0) * Math.PI) : 0;
 
-  // 1. Volcanic base - dark scorched crater
+  const baseRx = sRad * 0.72;
+  const baseRy = baseRx * iso;
+  const rimRx = sRad * 0.28;
+  const rimRy = rimRx * iso;
+  const coneHeight = 38 * cameraZoom;
+  const baseY = 5 * cameraZoom;
+  const rimY = baseY - coneHeight;
+
+  drawVolcanoScorchedBase(ctx, sRad, iso, hazSeed);
+  drawVolcanoLavaVeins(ctx, sRad, iso, hazSeed, time, buildUp, summonIntensity);
+  drawVolcanoRubble(ctx, baseRx, baseY, iso, hazSeed, cameraZoom);
+  drawVolcanoConeBody(ctx, baseRx, baseRy, rimRx, rimRy, baseY, rimY, cameraZoom, buildUp, isSummoning, summonIntensity);
+  drawVolcanoStrata(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, cameraZoom);
+  drawVolcanoRockOutcrops(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, cameraZoom);
+  drawVolcanoCrater(ctx, rimRx, rimRy, rimY, iso, cameraZoom, buildUp, isSummoning, summonIntensity);
+  drawVolcanoFireball(ctx, sRad, rimY, hazSeed, cycleTime, cameraZoom, isSummoning, summonIntensity);
+  drawVolcanoEmbers(ctx, sRad, rimY, hazSeed, time, cameraZoom);
+  drawVolcanoHeatShimmer(ctx, sRad, iso, buildUp, isSummoning, summonIntensity);
+}
+
+function drawVolcanoScorchedBase(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  iso: number,
+  hazSeed: number,
+): void {
   const baseGrad = ctx.createRadialGradient(0, 0, sRad * 0.15, 0, 0, sRad * 1.3);
   baseGrad.addColorStop(0, "rgba(80, 35, 10, 0.95)");
   baseGrad.addColorStop(0.35, "rgba(50, 22, 8, 0.88)");
   baseGrad.addColorStop(0.7, "rgba(35, 15, 5, 0.6)");
   baseGrad.addColorStop(1, "transparent");
   ctx.fillStyle = baseGrad;
-  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.2 * lavaIsoRatio, hazSeed, 0.22);
+  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.2 * iso, hazSeed, 0.22);
   ctx.fill();
+}
 
-  // 2. Lava veins radiating outward
+function drawVolcanoLavaVeins(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  iso: number,
+  hazSeed: number,
+  time: number,
+  buildUp: boolean,
+  summonIntensity: number,
+): void {
   for (let vein = 0; vein < 8; vein++) {
     const veinAngle = (vein / 8) * Math.PI * 2 + Math.sin(hazSeed + vein * 3) * 0.25;
     const veinLen = sRad * (0.5 + seededNoise(hazSeed + vein * 7) * 0.4);
     const pulse = 0.3 + Math.sin(time * 2 + vein * 0.9) * 0.15;
     ctx.strokeStyle = `rgba(255, 100, 0, ${pulse + (buildUp ? 0.2 : 0) + summonIntensity * 0.3})`;
-    ctx.lineWidth = (2 + Math.sin(hazSeed + vein) * 0.8) * cameraZoom;
+    ctx.lineWidth = (2 + Math.sin(hazSeed + vein) * 0.8);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     const midR = veinLen * 0.5;
     const midAngle = veinAngle + (seededNoise(hazSeed + vein * 11) - 0.5) * 0.3;
     ctx.quadraticCurveTo(
       Math.cos(midAngle) * midR,
-      Math.sin(midAngle) * midR * lavaIsoRatio,
+      Math.sin(midAngle) * midR * iso,
       Math.cos(veinAngle) * veinLen,
-      Math.sin(veinAngle) * veinLen * lavaIsoRatio
+      Math.sin(veinAngle) * veinLen * iso,
     );
     ctx.stroke();
   }
+}
 
-  // 3. Volcanic cone structure (layered trapezoids for 3D effect)
-  const coneBase = sRad * 0.7;
-  const coneTop = sRad * 0.3;
-  const coneHeight = 35 * cameraZoom;
+function drawVolcanoRubble(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  baseY: number,
+  iso: number,
+  hazSeed: number,
+  cameraZoom: number,
+): void {
+  for (let rub = 0; rub < 12; rub++) {
+    const rubAngle = (rub / 12) * Math.PI * 2 + seededNoise(hazSeed + rub * 7.3) * 0.3;
+    const rubDist = baseRx * (0.9 + seededNoise(hazSeed + rub * 4.1) * 0.35);
+    const rx = Math.cos(rubAngle) * rubDist;
+    const ry = baseY + Math.sin(rubAngle) * rubDist * iso;
+    const rubSize = (2.5 + seededNoise(hazSeed + rub * 9) * 3.5) * cameraZoom;
+    const rubIso = rubSize * iso;
+    const rubLr = -Math.cos(rubAngle);
+    const rubLight = 0.5 + rubLr * 0.3;
+    const rr = Math.floor(42 * rubLight + 18);
+    const rg = Math.floor(26 * rubLight + 10);
+    const rb = Math.floor(15 * rubLight + 5);
 
-  // Back face of cone
-  ctx.fillStyle = "#2a1a0a";
-  ctx.beginPath();
-  ctx.moveTo(-coneBase, 5 * cameraZoom * lavaIsoRatio);
-  ctx.lineTo(-coneTop, -coneHeight);
-  ctx.lineTo(coneTop, -coneHeight);
-  ctx.lineTo(coneBase, 5 * cameraZoom * lavaIsoRatio);
-  ctx.closePath();
-  ctx.fill();
-
-  // Rocky texture on cone
-  for (let rock = 0; rock < 6; rock++) {
-    const rx = (seededNoise(hazSeed + rock * 5) - 0.5) * coneBase * 1.2;
-    const ry = -seededNoise(hazSeed + rock * 8) * coneHeight * 0.7;
-    ctx.fillStyle = `rgba(${40 + rock * 5}, ${25 + rock * 3}, ${10 + rock * 2}, 0.6)`;
+    ctx.fillStyle = `rgb(${rr}, ${rg}, ${rb})`;
     ctx.beginPath();
-    ctx.arc(rx, ry, (4 + rock % 3) * cameraZoom, 0, Math.PI * 2);
+    ctx.moveTo(rx - rubSize, ry);
+    ctx.lineTo(rx, ry + rubIso);
+    ctx.lineTo(rx + rubSize, ry);
+    ctx.lineTo(rx, ry - rubIso);
+    ctx.closePath();
     ctx.fill();
   }
+}
 
-  // Cone highlight edge
-  ctx.strokeStyle = "rgba(90, 50, 20, 0.5)";
-  ctx.lineWidth = 1.5 * cameraZoom;
+function drawVolcanoConeBody(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  baseRy: number,
+  rimRx: number,
+  rimRy: number,
+  baseY: number,
+  rimY: number,
+  cameraZoom: number,
+  buildUp: boolean,
+  isSummoning: boolean,
+  summonIntensity: number,
+): void {
+  const CONE_SEGS = 20;
+
+  for (let pass = 0; pass < 2; pass++) {
+    const startI = pass === 0 ? CONE_SEGS / 2 : 0;
+    const endI = pass === 0 ? CONE_SEGS : CONE_SEGS / 2;
+
+    for (let i = startI; i < endI; i++) {
+      const a0 = (i / CONE_SEGS) * Math.PI * 2;
+      const a1 = ((i + 1) / CONE_SEGS) * Math.PI * 2;
+      const midA = (a0 + a1) / 2;
+
+      const bx0 = Math.cos(a0) * baseRx;
+      const by0 = baseY + Math.sin(a0) * baseRy;
+      const bx1 = Math.cos(a1) * baseRx;
+      const by1 = baseY + Math.sin(a1) * baseRy;
+
+      const tx0 = Math.cos(a0) * rimRx;
+      const ty0 = rimY + Math.sin(a0) * rimRy;
+      const tx1 = Math.cos(a1) * rimRx;
+      const ty1 = rimY + Math.sin(a1) * rimRy;
+
+      const lr = -Math.cos(midA);
+      const fb = Math.sin(midA);
+      const lightness = 0.48 + lr * 0.32 + fb * 0.06;
+
+      const cr = Math.floor(52 * lightness + 16);
+      const cg = Math.floor(32 * lightness + 8);
+      const cb = Math.floor(18 * lightness + 4);
+      const heatR = Math.floor(buildUp ? 25 : (isSummoning ? 35 * summonIntensity : 0));
+      const heatG = Math.floor(buildUp ? 6 : (isSummoning ? 10 * summonIntensity : 0));
+
+      ctx.fillStyle = `rgb(${Math.min(255, cr + heatR)}, ${cg + heatG}, ${cb})`;
+      ctx.beginPath();
+      ctx.moveTo(bx0, by0);
+      ctx.lineTo(bx1, by1);
+      ctx.lineTo(tx1, ty1);
+      ctx.lineTo(tx0, ty0);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.06 + Math.abs(lr) * 0.05})`;
+      ctx.lineWidth = 0.5 * cameraZoom;
+      ctx.stroke();
+    }
+  }
+}
+
+function drawVolcanoStrata(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  rimRx: number,
+  baseY: number,
+  rimY: number,
+  iso: number,
+  hazSeed: number,
+  cameraZoom: number,
+): void {
+  for (let stratum = 0; stratum < 4; stratum++) {
+    const t = 0.2 + stratum * 0.2;
+    const stratRx = baseRx + (rimRx - baseRx) * t;
+    const stratRy = stratRx * iso;
+    const stratY = baseY + (rimY - baseY) * t;
+    const jitter = (seededNoise(hazSeed + stratum * 17) * 2 - 1) * cameraZoom;
+
+    ctx.strokeStyle = `rgba(20, 8, 3, ${0.2 + stratum * 0.04})`;
+    ctx.lineWidth = (0.8 + seededNoise(hazSeed + stratum * 17) * 0.6) * cameraZoom;
+    ctx.beginPath();
+    for (let j = 0; j <= 10; j++) {
+      const a = (j / 10) * Math.PI;
+      const sx = Math.cos(a) * stratRx;
+      const sy = stratY + Math.sin(a) * stratRy + jitter;
+      if (j === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawVolcanoRockOutcrops(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  rimRx: number,
+  baseY: number,
+  rimY: number,
+  iso: number,
+  hazSeed: number,
+  cameraZoom: number,
+): void {
+  for (let rock = 0; rock < 8; rock++) {
+    const rockAngle = (rock / 8) * Math.PI + seededNoise(hazSeed + rock * 5.3) * 0.3;
+    const rockT = 0.15 + seededNoise(hazSeed + rock * 8.7) * 0.55;
+    const interpRx = baseRx + (rimRx - baseRx) * rockT;
+    const interpY = baseY + (rimY - baseY) * rockT;
+    const rcx = Math.cos(rockAngle) * interpRx * 1.03;
+    const rcy = interpY + Math.sin(rockAngle) * interpRx * iso * 1.03;
+    const rockSize = (2.5 + seededNoise(hazSeed + rock * 3.1) * 3) * cameraZoom;
+
+    const lr = -Math.cos(rockAngle);
+    const rockLight = 0.5 + lr * 0.3;
+    const crr = Math.floor(55 * rockLight + 15);
+    const crg = Math.floor(35 * rockLight + 8);
+    const crb = Math.floor(20 * rockLight + 4);
+
+    ctx.fillStyle = `rgb(${crr}, ${crg}, ${crb})`;
+    ctx.beginPath();
+    ctx.arc(rcx, rcy, rockSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawVolcanoCrater(
+  ctx: CanvasRenderingContext2D,
+  rimRx: number,
+  rimRy: number,
+  rimY: number,
+  iso: number,
+  cameraZoom: number,
+  buildUp: boolean,
+  isSummoning: boolean,
+  summonIntensity: number,
+): void {
+  const craterDepth = 5 * cameraZoom;
+
+  const innerGrad = ctx.createLinearGradient(0, rimY - 2 * cameraZoom, 0, rimY + craterDepth);
+  innerGrad.addColorStop(0, "rgba(50, 22, 8, 0.9)");
+  innerGrad.addColorStop(0.5, "rgba(100, 35, 10, 0.85)");
+  innerGrad.addColorStop(1, "rgba(180, 70, 15, 0.9)");
+  ctx.fillStyle = innerGrad;
   ctx.beginPath();
-  ctx.moveTo(coneBase, 5 * cameraZoom * lavaIsoRatio);
-  ctx.lineTo(coneTop, -coneHeight);
-  ctx.stroke();
+  ctx.ellipse(0, rimY, rimRx, rimRy, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // 4. Crater opening with glowing magma
-  const craterGrad = ctx.createRadialGradient(0, -coneHeight, 0, 0, -coneHeight, coneTop);
   const glowIntensity = buildUp ? 1.4 : (isSummoning ? 1.6 : 1);
-  craterGrad.addColorStop(0, `rgba(255, 220, ${buildUp ? 100 : 60}, ${glowIntensity})`);
-  craterGrad.addColorStop(0.4, "rgba(255, 120, 0, 0.9)");
-  craterGrad.addColorStop(0.7, "rgba(200, 60, 0, 0.7)");
-  craterGrad.addColorStop(1, "rgba(100, 30, 0, 0.3)");
+  const magmaRx = rimRx * 0.7;
+  const magmaRy = magmaRx * iso;
 
   ctx.save();
   if (buildUp || isSummoning) {
     ctx.shadowColor = "#ff4400";
     ctx.shadowBlur = (15 + summonIntensity * 25) * cameraZoom;
   }
+
+  const craterGrad = ctx.createRadialGradient(
+    0, rimY + craterDepth * 0.3, 0,
+    0, rimY + craterDepth * 0.3, magmaRx,
+  );
+  craterGrad.addColorStop(0, `rgba(255, 220, ${buildUp ? 100 : 60}, ${glowIntensity})`);
+  craterGrad.addColorStop(0.4, "rgba(255, 120, 0, 0.9)");
+  craterGrad.addColorStop(0.7, "rgba(200, 60, 0, 0.7)");
+  craterGrad.addColorStop(1, "rgba(100, 30, 0, 0.3)");
   ctx.fillStyle = craterGrad;
   ctx.beginPath();
-  ctx.ellipse(0, -coneHeight, coneTop, coneTop * 0.4 * lavaIsoRatio, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, rimY + craterDepth * 0.3, magmaRx, magmaRy, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  // 5. Fireball summon effect
-  if (isSummoning) {
-    const fireballPhase = cycleTime / 2.0;
-    // Fireball rises from crater, arcs upward, then plummets down
-    const risePhase = Math.min(1, fireballPhase * 2);
-    const arcHeight = 90 * cameraZoom * Math.sin(risePhase * Math.PI);
-    const fireballY = -coneHeight - arcHeight;
-    const driftX = Math.sin(fireballPhase * Math.PI * 3) * sRad * 0.3 * fireballPhase;
-    const fireballSize = (8 + summonIntensity * 6) * cameraZoom;
+  ctx.strokeStyle = "rgba(90, 50, 20, 0.5)";
+  ctx.lineWidth = 1.5 * cameraZoom;
+  ctx.beginPath();
+  ctx.ellipse(0, rimY, rimRx * 1.02, rimRy * 1.02, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
 
-    // Fireball trail
-    ctx.save();
-    for (let trail = 4; trail >= 0; trail--) {
-      const trailT = Math.max(0, risePhase - trail * 0.05);
-      const trailArc = 90 * cameraZoom * Math.sin(trailT * Math.PI);
-      const trailY = -coneHeight - trailArc;
-      const trailX = Math.sin(trailT * Math.PI * 3) * sRad * 0.3 * trailT;
-      const trailAlpha = (1 - trail * 0.2) * summonIntensity * 0.5;
-      const trailSize = fireballSize * (1 - trail * 0.15);
+function drawVolcanoFireball(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  rimY: number,
+  hazSeed: number,
+  cycleTime: number,
+  cameraZoom: number,
+  isSummoning: boolean,
+  summonIntensity: number,
+): void {
+  if (!isSummoning) return;
 
-      ctx.fillStyle = `rgba(255, ${100 + trail * 30}, 0, ${trailAlpha})`;
-      ctx.beginPath();
-      ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  const fireballPhase = cycleTime / 2.0;
+  const risePhase = Math.min(1, fireballPhase * 2);
+  const arcHeight = 90 * cameraZoom * Math.sin(risePhase * Math.PI);
+  const fireballY = rimY - arcHeight;
+  const driftX = Math.sin(fireballPhase * Math.PI * 3) * sRad * 0.3 * fireballPhase;
+  const fireballSize = (8 + summonIntensity * 6) * cameraZoom;
 
-    // Main fireball
-    ctx.shadowColor = "#ff6600";
-    ctx.shadowBlur = 20 * cameraZoom;
-    const fbGrad = ctx.createRadialGradient(driftX, fireballY, 0, driftX, fireballY, fireballSize);
-    fbGrad.addColorStop(0, "rgba(255, 255, 200, 1)");
-    fbGrad.addColorStop(0.3, "rgba(255, 180, 50, 0.95)");
-    fbGrad.addColorStop(0.6, "rgba(255, 100, 0, 0.8)");
-    fbGrad.addColorStop(1, "rgba(200, 50, 0, 0.3)");
-    ctx.fillStyle = fbGrad;
+  ctx.save();
+  for (let trail = 4; trail >= 0; trail--) {
+    const trailT = Math.max(0, risePhase - trail * 0.05);
+    const trailArc = 90 * cameraZoom * Math.sin(trailT * Math.PI);
+    const trailYPos = rimY - trailArc;
+    const trailX = Math.sin(trailT * Math.PI * 3) * sRad * 0.3 * trailT;
+    const trailAlpha = (1 - trail * 0.2) * summonIntensity * 0.5;
+    const trailSize = fireballSize * (1 - trail * 0.15);
+
+    ctx.fillStyle = `rgba(255, ${100 + trail * 30}, 0, ${trailAlpha})`;
     ctx.beginPath();
-    ctx.arc(driftX, fireballY, fireballSize, 0, Math.PI * 2);
+    ctx.arc(trailX, trailYPos, trailSize, 0, Math.PI * 2);
     ctx.fill();
-    ctx.restore();
-
-    // Smoke trail from fireball
-    for (let smoke = 0; smoke < 5; smoke++) {
-      const smokeT = Math.max(0, fireballPhase - smoke * 0.06);
-      const smokeX = driftX + (seededNoise(hazSeed + smoke * 3) - 0.5) * 15 * cameraZoom;
-      const smokeY = fireballY + smoke * 8 * cameraZoom;
-      const smokeAlpha = (0.4 - smoke * 0.07) * summonIntensity;
-
-      ctx.fillStyle = `rgba(80, 60, 40, ${smokeAlpha})`;
-      ctx.beginPath();
-      ctx.arc(smokeX, smokeY, (3 + smoke * 1.5) * cameraZoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 
-  // 6. Ambient smoke and embers
+  ctx.shadowColor = "#ff6600";
+  ctx.shadowBlur = 20 * cameraZoom;
+  const fbGrad = ctx.createRadialGradient(driftX, fireballY, 0, driftX, fireballY, fireballSize);
+  fbGrad.addColorStop(0, "rgba(255, 255, 200, 1)");
+  fbGrad.addColorStop(0.3, "rgba(255, 180, 50, 0.95)");
+  fbGrad.addColorStop(0.6, "rgba(255, 100, 0, 0.8)");
+  fbGrad.addColorStop(1, "rgba(200, 50, 0, 0.3)");
+  ctx.fillStyle = fbGrad;
+  ctx.beginPath();
+  ctx.arc(driftX, fireballY, fireballSize, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  for (let smoke = 0; smoke < 5; smoke++) {
+    const smokeX = driftX + (seededNoise(hazSeed + smoke * 3) - 0.5) * 15 * cameraZoom;
+    const smokeY = fireballY + smoke * 8 * cameraZoom;
+    const smokeAlpha = (0.4 - smoke * 0.07) * summonIntensity;
+
+    ctx.fillStyle = `rgba(80, 60, 40, ${smokeAlpha})`;
+    ctx.beginPath();
+    ctx.arc(smokeX, smokeY, (3 + smoke * 1.5) * cameraZoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawVolcanoEmbers(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  rimY: number,
+  hazSeed: number,
+  time: number,
+  cameraZoom: number,
+): void {
   for (let ember = 0; ember < 10; ember++) {
     const emberPhase = (time * 0.5 + ember * 0.35 + seededNoise(hazSeed + ember) * 2) % 3;
     const emberAngle = ember * 0.63 + hazSeed * 0.01;
     const emberDist = sRad * 0.15 + seededNoise(hazSeed + ember * 5) * sRad * 0.2;
     const emberX = Math.cos(emberAngle) * emberDist + (seededNoise(hazSeed + ember * 9) - 0.5) * 10 * cameraZoom;
-    const emberY = -coneHeight - emberPhase * 35 * cameraZoom;
+    const emberYPos = rimY - emberPhase * 35 * cameraZoom;
     const emberSize = (1.8 + (ember % 3) * 0.6) * cameraZoom * (1 - emberPhase / 3);
 
     if (ember < 5) {
-      // Embers
       ctx.fillStyle = `rgba(255, ${160 + ember * 15}, ${50 - ember * 8}, ${0.7 * (1 - emberPhase / 3)})`;
     } else {
-      // Smoke
       ctx.fillStyle = `rgba(60, 50, 40, ${0.3 * (1 - emberPhase / 3)})`;
     }
     ctx.beginPath();
-    ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+    ctx.arc(emberX, emberYPos, emberSize, 0, Math.PI * 2);
     ctx.fill();
   }
+}
 
-  // 7. Heat shimmer around base
-  if (buildUp || isSummoning) {
-    const shimmerAlpha = buildUp ? 0.12 : summonIntensity * 0.15;
-    ctx.fillStyle = `rgba(255, 150, 50, ${shimmerAlpha})`;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, sRad * 0.9, sRad * 0.5 * lavaIsoRatio, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+function drawVolcanoHeatShimmer(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  iso: number,
+  buildUp: boolean,
+  isSummoning: boolean,
+  summonIntensity: number,
+): void {
+  if (!buildUp && !isSummoning) return;
+  const shimmerAlpha = buildUp ? 0.12 : summonIntensity * 0.15;
+  ctx.fillStyle = `rgba(255, 150, 50, ${shimmerAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.9, sRad * 0.9 * iso, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 // ============================================================================

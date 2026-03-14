@@ -215,25 +215,28 @@ export function renderEffect(
             cameraZoom,
           );
 
-          // Calculate orb position based on tower level and upgrade
-          const towerLevel = effect.towerLevel || sourceTower.level;
-          const towerUpgrade = effect.towerUpgrade || sourceTower.upgrade;
-          const baseHeight = (25 + towerLevel * 8) * zoom;
-          const topY = towerScreen.y - baseHeight;
-          let coilHeight = (35 + towerLevel * 8) * zoom;
-
-          // Adjust for level 3 upgrades
-          if (towerLevel === 3) {
-            if (towerUpgrade === "A") {
-              coilHeight = 50 * zoom; // Focused beam
-            } else if (towerUpgrade === "B") {
-              coilHeight = 45 * zoom; // Chain lightning
-            }
-          }
-
-          // Set source to orb position at top of coil
           sourceX = towerScreen.x;
-          sourceY = topY - coilHeight + 5 * zoom;
+
+          // Prefer the exact orb position stored during tower rendering
+          if (sourceTower._orbScreenY != null) {
+            sourceY = sourceTower._orbScreenY;
+          } else {
+            // Fallback: recalculate to match lab.ts / tesla.ts formulas
+            const towerLevel = effect.towerLevel || sourceTower.level;
+            const towerUpgrade = effect.towerUpgrade || sourceTower.upgrade;
+            const baseHeight = (23 + towerLevel * 7) * zoom;
+            const topY = towerScreen.y - baseHeight;
+            let coilHeight = (30 + towerLevel * 6) * zoom;
+
+            if (towerLevel === 4) {
+              coilHeight = 52 * zoom;
+            }
+
+            let orbOffset = 5;
+            if (towerLevel === 4 && towerUpgrade === "A") orbOffset = 7;
+            else if (towerLevel === 4 && towerUpgrade === "B") orbOffset = 4;
+            sourceY = topY - coilHeight + orbOffset * zoom;
+          }
         }
 
         ctx.save();
@@ -605,14 +608,18 @@ export function renderEffect(
             cameraZoom,
           );
 
-          // Calculate portal position (arch center)
-          const towerLevel = effect.towerLevel || sourceTower.level;
-          const pillarHeight = (35 + towerLevel * 8) * zoom;
-          const archTopY = towerScreen.y - pillarHeight - 6 * zoom;
-          const archCenterY = archTopY + 8 * zoom;
-
           sourceX = towerScreen.x;
-          sourceY = archCenterY;
+
+          if (sourceTower._portalScreenY != null) {
+            sourceY = sourceTower._portalScreenY;
+          } else {
+            // Fallback: approximate arch center from pillar geometry
+            const towerLevel = effect.towerLevel || sourceTower.level;
+            const pillarHeight = (22 + towerLevel * 5) * zoom;
+            const pillarBottomY = towerScreen.y - 27 * zoom;
+            const archBaseY = pillarBottomY - pillarHeight;
+            sourceY = archBaseY - 4 * zoom;
+          }
         }
 
         const glowColor =
@@ -722,9 +729,9 @@ export function renderEffect(
             cameraZoom,
           );
 
-          // Calculate turret position
+          // Calculate turret position (must match cannon.ts formulas)
           const towerLevel = effect.towerLevel || sourceTower.level;
-          const baseHeight = (24 + towerLevel * 10) * zoom;
+          const baseHeight = (24 + towerLevel * 8) * zoom;
           const turretY = towerScreen.y - baseHeight - 12 * zoom;
 
           // Calculate barrel end position based on rotation
@@ -736,8 +743,8 @@ export function renderEffect(
           // Turret radius - barrel starts from inside the turret
           const turretRadius = (towerLevel >= 3 ? 10 : 8) * zoom;
 
-          // Barrel length varies by level
-          const baseBarrelLength = (30 + towerLevel * 12) * zoom;
+          // Barrel length varies by level (must match cannon.ts)
+          const baseBarrelLength = (38 + towerLevel * 12) * zoom;
           const barrelLength = baseBarrelLength * (0.4 + foreshorten * 0.6);
 
           // Barrel pitch — towers are elevated, barrels aim down at enemies

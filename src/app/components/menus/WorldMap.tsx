@@ -159,7 +159,7 @@ type SelectableLevel = {
   description: string;
   region: (typeof WORLD_LEVELS)[number]["region"];
   difficulty: 1 | 2 | 3;
-  kind?: "campaign" | "challenge" | "custom";
+  kind?: "campaign" | "challenge" | "custom" | "sandbox";
   tags: string[];
   isCustom?: boolean;
 };
@@ -569,6 +569,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const isCurrentCustomLevel = Boolean(currentLevel?.isCustom);
   const isCurrentChallengeLevel =
     Boolean(currentLevel?.kind === "challenge") && !isCurrentCustomLevel;
+  const isCurrentSandboxLevel =
+    Boolean(currentLevel?.kind === "sandbox") && !isCurrentCustomLevel;
   const challengeBadgeStyle: React.CSSProperties =
     currentLevel?.region === "grassland"
       ? {
@@ -1059,7 +1061,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                     : "linear-gradient(135deg, rgba(45,20,15,0.55), rgba(35,15,10,0.4))"
                           }} />
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <RegionIcon type={currentLevel.region} size={56} framed challenge={isCurrentChallengeLevel} />
+                            <RegionIcon type={currentLevel.region} size={56} framed challenge={isCurrentChallengeLevel} sandbox={isCurrentSandboxLevel} />
                             <p className="mt-2 text-amber-300/70 text-[10px] font-bold uppercase tracking-widest drop-shadow-lg">
                               {currentLevel.name}
                             </p>
@@ -1164,14 +1166,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                 }} />
                                 <div className="relative z-10 w-8 h-8 flex items-center justify-center">
                                   {isLevelUnlocked(l.id)
-                                    ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} />
-                                    : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} />
+                                    ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} sandbox={l.kind === "sandbox"} />
+                                    : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} sandbox={l.kind === "sandbox"} />
                                   }
                                 </div>
                                 <div className="relative z-10 flex-1 min-w-0">
                                   <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
                                     {l.name}
-                                    {l.kind === "challenge" ? " • Challenge" : ""}
+                                    {l.kind === "challenge" ? " • Challenge" : l.kind === "sandbox" ? " • Sandbox" : ""}
                                   </div>
                                 </div>
                                 <div className="relative z-10 flex gap-0.5">

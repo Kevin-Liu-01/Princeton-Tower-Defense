@@ -20,6 +20,8 @@ const SIDE_OFFSET = 38;
 const VIEW_MARGIN_X = 28;
 const VIEW_MARGIN_Y = 28;
 const TOP_SAFE_Y = 90;
+const LEFT_SAFE_X = 60;
+const RIGHT_SAFE_X = 180;
 const CORNER_MARGIN = 34;
 
 export { HIT_RADIUS as WAVE_START_BUBBLE_HIT_RADIUS };
@@ -128,8 +130,8 @@ export function getWaveStartBubblesScreenData(
       cameraZoom,
     );
 
-    const minX = VIEW_MARGIN_X + radius;
-    const maxX = viewportWidth - (VIEW_MARGIN_X + radius);
+    const minX = Math.max(VIEW_MARGIN_X + radius, LEFT_SAFE_X + radius);
+    const maxX = viewportWidth - (RIGHT_SAFE_X + radius);
     const minY = Math.max(VIEW_MARGIN_Y + radius, TOP_SAFE_Y + radius);
     const maxY = viewportHeight - (VIEW_MARGIN_Y + radius);
 

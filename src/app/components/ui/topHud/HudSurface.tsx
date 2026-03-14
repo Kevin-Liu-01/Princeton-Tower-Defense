@@ -24,7 +24,7 @@ export function HudSurface({
 }: HudSurfaceProps) {
   return (
     <OrnateFrame
-      className={`pointer-events-auto border border-amber-700/35 shadow-xl ${className}`}
+      className={`pointer-events-auto ${className}`}
       cornerSize={22}
       cornerVariant="compact"
       sideBorderVariant="compact"
@@ -32,7 +32,6 @@ export function HudSurface({
       showBorders={true}
       showTopBottomBorders={true}
     >
-      <div className="h-px bg-gradient-to-r from-transparent via-amber-300/35 to-transparent" />
       <div className={contentClassName} style={OVERLAY_SURFACE_STYLE}>
         {children}
       </div>

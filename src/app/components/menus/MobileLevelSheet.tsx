@@ -69,7 +69,7 @@ interface LevelInfo {
   description: string;
   region: LevelNode["region"];
   difficulty: 1 | 2 | 3;
-  kind?: "campaign" | "challenge" | "custom";
+  kind?: "campaign" | "challenge" | "custom" | "sandbox";
   tags: string[];
   isCustom?: boolean;
 }
@@ -169,6 +169,7 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
             size={18}
             framed
             challenge={isChallenge}
+            sandbox={Boolean(level?.kind === "sandbox") && !level?.isCustom}
           />
         ) : undefined
       }

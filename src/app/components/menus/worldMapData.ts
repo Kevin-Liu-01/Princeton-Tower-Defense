@@ -7,7 +7,7 @@ export interface LevelNode {
   description: string;
   region: "grassland" | "swamp" | "desert" | "winter" | "volcanic";
   difficulty: 1 | 2 | 3;
-  kind?: "campaign" | "challenge";
+  kind?: "campaign" | "challenge" | "sandbox";
   tags: string[];
   x: number;
   y: number;
@@ -26,6 +26,19 @@ export const WORLD_LEVELS: LevelNode[] = [
     x: 100,
     y: 66,
     connectsTo: ["carnegie"],
+  },
+  {
+    id: "sandbox",
+    name: "Sandbox Arena",
+    description:
+      "Ancient colosseum with limitless resources.\nBuild anything, test everything.",
+    region: "grassland",
+    difficulty: 1,
+    kind: "sandbox",
+    tags: ["Sandbox", "Unlimited"],
+    x: 220,
+    y: 63,
+    connectsTo: [],
   },
   {
     id: "carnegie",
@@ -335,6 +348,11 @@ export const DEV_LEVEL_IDS: ReadonlySet<string> = new Set([
   "dev_enemy_showcase",
 ]);
 
+export const ALWAYS_UNLOCKED_IDS: ReadonlySet<string> = new Set([
+  "poe",
+  "sandbox",
+]);
+
 export const DEV_LEVELS: LevelNode[] = [
   {
     id: "dev_enemy_showcase",
@@ -344,8 +362,8 @@ export const DEV_LEVELS: LevelNode[] = [
     region: "grassland",
     difficulty: 1,
     tags: ["Dev", "All Enemies"],
-    x: 200,
-    y: 62,
+    x: 60,
+    y: 25,
     connectsTo: [],
   },
 ];

@@ -5,6 +5,9 @@ const SHADOW_DIR_X = 0.78;
 const SHADOW_DIR_Y = 0.36;
 const SHADOW_LEN_RATIO = 0.5;
 
+export const MAX_SHADOW_RX = 90;
+export const MAX_SHADOW_RY = 40;
+
 function fmtA(a: number): string {
   return Math.max(0, Math.min(1, a)).toFixed(3);
 }
@@ -32,8 +35,8 @@ export function drawDirectionalShadow(
 
   const scx = x + offX * 0.45;
   const scy = y + offY * 0.45;
-  const srx = footprintRx + offX * 0.38;
-  const sry = footprintRy + offY * 0.28;
+  const srx = Math.min(footprintRx + offX * 0.38, MAX_SHADOW_RX);
+  const sry = Math.min(footprintRy + offY * 0.28, MAX_SHADOW_RY);
   const rot = 0.12;
 
   // Outer penumbra

@@ -25,16 +25,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "welcome",
     title: "Welcome to Princeton TD!",
     description:
-      "Enemies are marching toward campus — build towers, command your hero, and cast devastating spells to hold the line.\n\n" +
-      "This quick guide will walk you through everything you need. Let's go!",
+      "Build towers, command your hero, and cast spells to stop enemy waves from reaching campus.",
     position: "center",
   },
   {
     id: "build-towers",
     title: "Building Towers",
     description:
-      "Drag a tower from the build menu and drop it on any open build spot. " +
-      "Each tower fills a different role — mix and match for the best defense.",
+      "Drag a tower onto any open build spot. Each tower has unique tags showing what it does — look for Attacker, Spawner, Hits Air, and more.",
     highlight: "build-menu",
     position: "bottom-left",
   },
@@ -42,16 +40,14 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "upgrade-towers",
     title: "Upgrading Towers",
     description:
-      "Tap any placed tower to open its upgrade ring. Each tower has 3 linear upgrades that boost its stats, " +
-      "then a final choice between two powerful specializations at level 4. Choose wisely — you can't switch!",
+      "Tap a placed tower to upgrade it. Three stat upgrades, then choose one of two Lv.4 specializations.",
     position: "center",
   },
   {
     id: "move-hero",
     title: "Your Hero",
     description:
-      "You bring one hero into each battle. Click the map to move them — they'll auto-attack nearby enemies and can " +
-      "activate a powerful special ability. Each hero has a unique playstyle:",
+      "Click the map to move your hero. They auto-attack and have a special ability. Pick one before each battle:",
     highlight: "hero-spell-bar",
     position: "bottom-center",
   },
@@ -59,9 +55,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "use-spells",
     title: "Casting Spells",
     description:
-      "Equip 3 spells before each battle. Spells cost Paw Points and recharge on a cooldown. " +
-      "Use them from the spell bar at the bottom of the screen.\n\n" +
-      "Tip: Upgrade Fireball or Lightning to level 2 on the world map to unlock manual targeting!",
+      "Equip up to 3 spells. They cost Paw Points and recharge on cooldown. Use the spell bar at the bottom of screen.",
     highlight: "hero-spell-bar",
     position: "bottom-center",
   },
@@ -69,8 +63,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "send-waves",
     title: "Sending Waves",
     description:
-      "Tap the glowing wave bubble on the path to send the next wave early. " +
-      "If you wait, waves auto-send after a countdown. Sending early is riskier but keeps the pressure on!",
+      "Tap the glowing bubble on the path to send the next wave early, or wait for the countdown.",
     highlight: "canvas-center",
     position: "center",
   },
@@ -78,8 +71,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "settings",
     title: "Settings & Controls",
     description:
-      "Hit the gear icon (top-right) to tweak game speed, graphics quality, audio, and controls. " +
-      "You can also toggle the mini-map and adjust accessibility options from here.",
+      "Gear icon (top-right) for game speed, graphics, audio, and controls.",
     highlight: "top-hud",
     position: "top-right",
   },
@@ -87,8 +79,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "camera-mode",
     title: "Camera Mode",
     description:
-      "Press F2 to enter Camera Mode — the game pauses and you can pan freely to scout the map or take screenshots. " +
-      "Press Space to snap a photo, Esc to exit.",
+      "F2 to pause and scout the map freely. Space for screenshots, Esc to exit.",
     highlight: "top-hud",
     position: "top-right",
   },
@@ -96,8 +87,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "good-luck",
     title: "You're Ready!",
     description:
-      "That's everything! Experiment with tower combos, hero positioning, and spell timing to find your playstyle. " +
-      "Every map plays differently — adapt your strategy and good luck defending Princeton!",
+      "Mix tower combos, position your hero, and time your spells. Every map plays differently — good luck!",
     position: "center",
   },
 ];

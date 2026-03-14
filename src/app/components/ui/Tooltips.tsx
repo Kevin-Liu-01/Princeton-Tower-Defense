@@ -36,7 +36,8 @@ import {
 } from "lucide-react";
 import type { Tower, TowerType, Position, SpellType, Decoration } from "../../types";
 import { getDecorationVolumeSpec } from "../../utils";
-import { STATION_TROOP_RANGE, TOWER_DATA } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA, TOWER_TAGS } from "../../constants";
+import { TagBadge } from "./TagBadge";
 import { calculateTowerStats } from "../../constants/towerStats";
 import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
 
@@ -116,6 +117,11 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
         {tower.level === 4 && tower.upgrade && (
           <div className="text-[9px] text-amber-400">{tData.upgrades[tower.upgrade].name}</div>
         )}
+        <div className="flex flex-wrap gap-0.5 mt-1">
+          {TOWER_TAGS[tower.type].map((tag) => (
+            <TagBadge key={tag} tag={tag} size={8} />
+          ))}
+        </div>
       </div>
 
       {/* Content */}

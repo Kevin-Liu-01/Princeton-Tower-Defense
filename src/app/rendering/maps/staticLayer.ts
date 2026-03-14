@@ -51,6 +51,7 @@ export interface RenderStaticMapLayerParams {
   cameraOffset: Position;
   cameraZoom: number;
   preRoadCallback?: (ctx: CanvasRenderingContext2D) => void;
+  skipBackdrop?: boolean;
 }
 
 export interface RoadGeometry {
@@ -618,6 +619,243 @@ function drawFlatRidge(
   ctx.fill();
 }
 
+type TerraceDecoKind = "tree" | "bush" | "rock" | "grass";
+
+const TERRACE_DECO_WEIGHTS: Record<ChallengeThemeKey, { kind: TerraceDecoKind; w: number }[]> = {
+  grassland: [
+    { kind: "tree", w: 0.35 },
+    { kind: "bush", w: 0.25 },
+    { kind: "rock", w: 0.15 },
+    { kind: "grass", w: 0.25 },
+  ],
+  swamp: [
+    { kind: "tree", w: 0.2 },
+    { kind: "bush", w: 0.35 },
+    { kind: "rock", w: 0.2 },
+    { kind: "grass", w: 0.25 },
+  ],
+  desert: [
+    { kind: "bush", w: 0.2 },
+    { kind: "rock", w: 0.5 },
+    { kind: "grass", w: 0.3 },
+  ],
+  winter: [
+    { kind: "tree", w: 0.4 },
+    { kind: "rock", w: 0.25 },
+    { kind: "grass", w: 0.15 },
+    { kind: "bush", w: 0.2 },
+  ],
+  volcanic: [
+    { kind: "rock", w: 0.55 },
+    { kind: "grass", w: 0.25 },
+    { kind: "bush", w: 0.2 },
+  ],
+};
+
+function pickTerraceDecoKind(
+  weights: { kind: TerraceDecoKind; w: number }[],
+  roll: number,
+): TerraceDecoKind {
+  let cumulative = 0;
+  for (const entry of weights) {
+    cumulative += entry.w;
+    if (roll < cumulative) return entry.kind;
+  }
+  return weights[weights.length - 1].kind;
+}
+
+function drawTerraceTree(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  palette: ChallengeBackdropPalette,
+  rng: () => number,
+): void {
+  const trunkH = s * (2.2 + rng() * 1.2);
+  ctx.strokeStyle = shadeHexColor(palette.mountainLeft, 12);
+  ctx.lineWidth = Math.max(0.5, s * 0.28);
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(cx + s * (rng() - 0.5) * 0.3, cy - trunkH);
+  ctx.stroke();
+
+  const canopy = blendHexColors(
+    palette.mountainTop,
+    palette.landHighlight,
+    0.25 + rng() * 0.45,
+  );
+  const rx = s * (0.9 + rng() * 0.5);
+  const ry = s * (0.6 + rng() * 0.3);
+  ctx.fillStyle = shadeHexColor(canopy, Math.round((rng() - 0.5) * 18));
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - trunkH - ry * 0.3, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = shadeHexColor(canopy, 14);
+  ctx.beginPath();
+  ctx.ellipse(
+    cx - rx * 0.25,
+    cy - trunkH - ry * 0.6,
+    rx * 0.45,
+    ry * 0.35,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+}
+
+function drawTerraceBush(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  palette: ChallengeBackdropPalette,
+  rng: () => number,
+): void {
+  const bushColor = blendHexColors(
+    palette.mountainTop,
+    palette.landHighlight,
+    0.35 + rng() * 0.3,
+  );
+  const lobes = 2 + Math.floor(rng() * 2);
+  for (let i = 0; i < lobes; i++) {
+    const ox = (rng() - 0.5) * s * 1.2;
+    const oy = (rng() - 0.5) * s * 0.6;
+    const lr = s * (0.5 + rng() * 0.4);
+    ctx.fillStyle = shadeHexColor(bushColor, Math.round((rng() - 0.5) * 14));
+    ctx.beginPath();
+    ctx.ellipse(cx + ox, cy + oy - lr * 0.4, lr, lr * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawTerraceRock(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  palette: ChallengeBackdropPalette,
+  rng: () => number,
+): void {
+  const rockBase = blendHexColors(
+    palette.mountainRight,
+    palette.mountainFacetA,
+    0.3 + rng() * 0.3,
+  );
+  const hw = s * (0.7 + rng() * 0.6);
+  const hh = s * (0.4 + rng() * 0.3);
+  const topShift = (rng() - 0.5) * hw * 0.3;
+
+  ctx.fillStyle = shadeHexColor(rockBase, -6);
+  ctx.beginPath();
+  ctx.moveTo(cx + topShift, cy - hh);
+  ctx.lineTo(cx + hw, cy);
+  ctx.lineTo(cx + hw * 0.2, cy + hh * 0.5);
+  ctx.lineTo(cx - hw, cy + hh * 0.1);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = shadeHexColor(rockBase, 8);
+  ctx.beginPath();
+  ctx.moveTo(cx + topShift, cy - hh);
+  ctx.lineTo(cx - hw, cy + hh * 0.1);
+  ctx.lineTo(cx - hw * 0.6, cy - hh * 0.3);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawTerraceGrass(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  palette: ChallengeBackdropPalette,
+  rng: () => number,
+): void {
+  const grassColor = blendHexColors(
+    palette.mountainTop,
+    palette.landHighlight,
+    0.4 + rng() * 0.3,
+  );
+  const blades = 3 + Math.floor(rng() * 3);
+  ctx.strokeStyle = shadeHexColor(grassColor, Math.round((rng() - 0.5) * 12));
+  ctx.lineWidth = Math.max(0.4, s * 0.18);
+  ctx.lineCap = "round";
+  for (let i = 0; i < blades; i++) {
+    const bx = cx + (rng() - 0.5) * s * 1.4;
+    const lean = (rng() - 0.5) * s * 0.7;
+    const bh = s * (0.8 + rng() * 0.8);
+    ctx.beginPath();
+    ctx.moveTo(bx, cy);
+    ctx.quadraticCurveTo(bx + lean, cy - bh * 0.6, bx + lean * 0.8, cy - bh);
+    ctx.stroke();
+  }
+  ctx.lineCap = "butt";
+}
+
+function drawTerraceDecorations(
+  ctx: CanvasRenderingContext2D,
+  cells: {
+    cell: { gx: number; gy: number; layerIndex: number };
+    topX: number;
+    topY: number;
+  }[],
+  tileWidth: number,
+  tileHeight: number,
+  mapSeed: number,
+  maxLayerIndex: number,
+  palette: ChallengeBackdropPalette,
+  themeKey: ChallengeThemeKey,
+): void {
+  const weights = TERRACE_DECO_WEIGHTS[themeKey];
+  for (const d of cells) {
+    if (d.cell.layerIndex <= 0) continue;
+
+    const rng = createSeededRandom(
+      mapSeed + d.cell.gx * 73 + d.cell.gy * 137 + 9001,
+    );
+    const layerNorm = d.cell.layerIndex / Math.max(1, maxLayerIndex);
+    const decorChance = 0.45 * (1 - layerNorm * 0.6);
+    if (rng() > decorChance) continue;
+
+    const count = 1 + Math.floor(rng() * 2);
+    for (let i = 0; i < count; i++) {
+      let u = rng() * 2 - 1;
+      let v = rng() * 2 - 1;
+      const sum = Math.abs(u) + Math.abs(v);
+      if (sum > 0.78) {
+        const f = 0.78 / sum;
+        u *= f;
+        v *= f;
+      }
+
+      const cx = d.topX + u * tileWidth * 0.45;
+      const cy = d.topY + tileHeight * 0.5 + v * tileHeight * 0.45;
+
+      const sizeScale = (0.35 + rng() * 0.45) * (1 - layerNorm * 0.4);
+      const s = tileWidth * 0.1 * sizeScale;
+      const kind = pickTerraceDecoKind(weights, rng());
+
+      switch (kind) {
+        case "tree":
+          drawTerraceTree(ctx, cx, cy, s, palette, rng);
+          break;
+        case "bush":
+          drawTerraceBush(ctx, cx, cy, s, palette, rng);
+          break;
+        case "rock":
+          drawTerraceRock(ctx, cx, cy, s, palette, rng);
+          break;
+        case "grass":
+          drawTerraceGrass(ctx, cx, cy, s, palette, rng);
+          break;
+      }
+    }
+  }
+}
+
 function drawIsoTile(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1128,7 +1366,7 @@ function drawIsometricMountainMass(
   }
 }
 
-function renderChallengeMountainBackdrop(
+export function renderChallengeMountainBackdrop(
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
@@ -1271,8 +1509,9 @@ function renderChallengeWorldMountain(
   });
 
   const maxLayerIndex = Math.max(0, ...towerLayerIndexByCell.values());
+  const zoom = tileWidth / TILE_SIZE;
   const blockHeight =
-    CHALLENGE_MOUNTAIN_DEPTH.terraceStep * CHALLENGE_TERRACE_BLOCK_SCALE;
+    CHALLENGE_MOUNTAIN_DEPTH.terraceStep * CHALLENGE_TERRACE_BLOCK_SCALE * zoom;
   const layerDepthByIndex = new Array<number>(maxLayerIndex + 1).fill(0);
   const depthProfileRandom = createSeededRandom(mapSeed + 1883);
   let cumulativeLayerDepth = 0;
@@ -1308,7 +1547,7 @@ function renderChallengeWorldMountain(
     return lastDepth + (layerIndex - maxLayerIndex) * fallbackStepDepth;
   };
   const voidDepth = Math.max(
-    CHALLENGE_MOUNTAIN_DEPTH.baseShadow,
+    CHALLENGE_MOUNTAIN_DEPTH.baseShadow * zoom,
     depthForLayer(maxLayerIndex + 2),
   );
   const seamOverlap = Math.max(1.5, tileHeight * 0.14);
@@ -1719,6 +1958,18 @@ function renderChallengeWorldMountain(
       drawTopTile(d);
       drawFrontFaces(d);
     }
+    if (layerIdx > 0) {
+      drawTerraceDecorations(
+        ctx,
+        layerCells,
+        tileWidth,
+        tileHeight,
+        mapSeed,
+        maxLayerIndex,
+        palette,
+        themeKey,
+      );
+    }
   }
 
   const distanceByCell = new Array<number>(GRID_WIDTH * GRID_HEIGHT);
@@ -1746,6 +1997,7 @@ export function renderStaticMapLayer({
   cameraOffset,
   cameraZoom,
   preRoadCallback,
+  skipBackdrop,
 }: RenderStaticMapLayerParams): { fogEndpoints: StaticMapFogEndpoint[] } {
   const mapSeed = selectedMap
     .split("")
@@ -1777,13 +2029,15 @@ export function renderStaticMapLayer({
   let challengeDistanceByCell: number[] | null = null;
 
   if (isChallengeMountainLevel && mapThemeKey) {
-    renderChallengeMountainBackdrop(
-      ctx,
-      cssWidth,
-      cssHeight,
-      mapSeed,
-      mapThemeKey,
-    );
+    if (!skipBackdrop) {
+      renderChallengeMountainBackdrop(
+        ctx,
+        cssWidth,
+        cssHeight,
+        mapSeed,
+        mapThemeKey,
+      );
+    }
 
     challengeDistanceByCell = renderChallengeWorldMountain(
       ctx,
@@ -1795,19 +2049,21 @@ export function renderStaticMapLayer({
       mapThemeKey,
     );
   } else {
-    const gradient = ctx.createRadialGradient(
-      cssWidth / 2,
-      cssHeight / 2,
-      0,
-      cssWidth / 2,
-      cssHeight / 2,
-      cssWidth,
-    );
-    gradient.addColorStop(0, theme.ground[0]);
-    gradient.addColorStop(0.5, theme.ground[1]);
-    gradient.addColorStop(1, theme.ground[2]);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, cssWidth, cssHeight);
+    if (!skipBackdrop) {
+      const gradient = ctx.createRadialGradient(
+        cssWidth / 2,
+        cssHeight / 2,
+        0,
+        cssWidth / 2,
+        cssHeight / 2,
+        cssWidth,
+      );
+      gradient.addColorStop(0, theme.ground[0]);
+      gradient.addColorStop(0.5, theme.ground[1]);
+      gradient.addColorStop(1, theme.ground[2]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, cssWidth, cssHeight);
+    }
   }
 
   const gridRandom = createSeededRandom(mapSeed);

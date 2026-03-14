@@ -255,6 +255,90 @@ export const TOWER_CATEGORIES: Record<TowerType, TowerCategory> = {
 };
 
 // =============================================================================
+// TOWER TAGS — centralized capability tags for at-a-glance clarity
+// =============================================================================
+
+export type TowerTag =
+  | "attacker"
+  | "spawner"
+  | "economy"
+  | "crowd_control"
+  | "support"
+  | "anti_air"
+  | "ground_only"
+  | "aoe"
+  | "single_target"
+  | "chain"
+  | "ramp_up"
+  | "blocker";
+
+export interface TowerTagDef {
+  label: string;
+  icon: string;
+  textClass: string;
+  bgClass: string;
+  borderClass: string;
+}
+
+export const TOWER_TAG_DEFS: Record<TowerTag, TowerTagDef> = {
+  attacker: { label: "Attacker", icon: "swords", textClass: "text-red-300", bgClass: "bg-red-950/60", borderClass: "border-red-700/40" },
+  spawner: { label: "Spawner", icon: "users", textClass: "text-fuchsia-300", bgClass: "bg-fuchsia-950/60", borderClass: "border-fuchsia-700/40" },
+  economy: { label: "Economy", icon: "coins", textClass: "text-amber-300", bgClass: "bg-amber-950/60", borderClass: "border-amber-700/40" },
+  crowd_control: { label: "Control", icon: "snowflake", textClass: "text-purple-300", bgClass: "bg-purple-950/60", borderClass: "border-purple-700/40" },
+  support: { label: "Support", icon: "heart-pulse", textClass: "text-emerald-300", bgClass: "bg-emerald-950/60", borderClass: "border-emerald-700/40" },
+  anti_air: { label: "Hits Air", icon: "feather", textClass: "text-sky-300", bgClass: "bg-sky-950/60", borderClass: "border-sky-700/40" },
+  ground_only: { label: "Ground Only", icon: "footprints", textClass: "text-stone-400", bgClass: "bg-stone-800/60", borderClass: "border-stone-600/40" },
+  aoe: { label: "AoE", icon: "circle-dot", textClass: "text-orange-300", bgClass: "bg-orange-950/60", borderClass: "border-orange-700/40" },
+  single_target: { label: "Single Target", icon: "crosshair", textClass: "text-red-200", bgClass: "bg-red-950/40", borderClass: "border-red-800/30" },
+  chain: { label: "Chain", icon: "zap", textClass: "text-cyan-300", bgClass: "bg-cyan-950/60", borderClass: "border-cyan-700/40" },
+  ramp_up: { label: "Ramp Up", icon: "trending-up", textClass: "text-green-300", bgClass: "bg-green-950/60", borderClass: "border-green-700/40" },
+  blocker: { label: "Blocker", icon: "shield", textClass: "text-emerald-300", bgClass: "bg-emerald-950/60", borderClass: "border-emerald-700/40" },
+};
+
+export const TOWER_TAGS: Record<TowerType, TowerTag[]> = {
+  cannon: ["attacker", "single_target", "anti_air"],
+  library: ["crowd_control", "anti_air"],
+  lab: ["attacker", "chain", "anti_air"],
+  arch: ["attacker", "ramp_up", "anti_air"],
+  club: ["economy"],
+  station: ["spawner", "blocker"],
+  mortar: ["attacker", "aoe", "ground_only"],
+};
+
+export const TOWER_QUICK_SUMMARY: Record<TowerType, string> = {
+  cannon: "High single-target damage vs ground enemies",
+  library: "Slows all enemies in range, including flying",
+  lab: "Chain lightning bounces between air & ground foes",
+  arch: "Sonic attacks ramp up speed; hits air & ground",
+  club: "Generates Paw Points passively — no combat",
+  station: "Spawns troops that physically block enemies",
+  mortar: "Slow explosive shells with large splash radius",
+};
+
+// =============================================================================
+// TOWER ROLE STYLES — visual styling for role badges in UI
+// =============================================================================
+
+export interface TowerRoleStyle {
+  label: string;
+  accent: string;
+  text: string;
+  bg: string;
+  border: string;
+  statColor: string;
+}
+
+export const TOWER_ROLE_STYLES: Record<TowerType, TowerRoleStyle> = {
+  cannon: { label: "DPS", accent: "rgba(239,68,68,0.7)", text: "rgb(252,165,165)", bg: "rgba(127,29,29,0.35)", border: "rgba(153,27,27,0.3)", statColor: "rgb(252,165,165)" },
+  mortar: { label: "AoE", accent: "rgba(249,115,22,0.7)", text: "rgb(253,186,116)", bg: "rgba(124,45,18,0.35)", border: "rgba(154,52,18,0.3)", statColor: "rgb(253,186,116)" },
+  lab: { label: "Chain", accent: "rgba(56,189,248,0.7)", text: "rgb(125,211,252)", bg: "rgba(12,74,110,0.35)", border: "rgba(14,116,144,0.3)", statColor: "rgb(125,211,252)" },
+  arch: { label: "Ramp", accent: "rgba(74,222,128,0.7)", text: "rgb(134,239,172)", bg: "rgba(20,83,45,0.35)", border: "rgba(22,101,52,0.3)", statColor: "rgb(134,239,172)" },
+  station: { label: "Troops", accent: "rgba(232,121,249,0.7)", text: "rgb(240,171,252)", bg: "rgba(112,26,117,0.35)", border: "rgba(134,25,143,0.3)", statColor: "rgb(240,171,252)" },
+  library: { label: "Slow", accent: "rgba(168,85,247,0.7)", text: "rgb(216,180,254)", bg: "rgba(88,28,135,0.35)", border: "rgba(107,33,168,0.3)", statColor: "rgb(216,180,254)" },
+  club: { label: "Econ", accent: "rgba(250,204,21,0.7)", text: "rgb(253,224,71)", bg: "rgba(113,63,18,0.35)", border: "rgba(133,77,14,0.3)", statColor: "rgb(253,224,71)" },
+};
+
+// =============================================================================
 // TOWER RENDERING COLORS
 // =============================================================================
 

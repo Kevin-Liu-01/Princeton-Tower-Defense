@@ -14119,7 +14119,51 @@ export const drawWorldMapCanvas = ({
       ctx.translate(x, y);
       ctx.globalAlpha = 1;
 
-      if (isChallenge) {
+      if (level.kind === "sandbox") {
+        // Sandbox icon: sandcastle turret with flag
+        const s = 1.0;
+        // Base mound
+        ctx.fillStyle = "#D4A84B";
+        ctx.beginPath();
+        ctx.ellipse(0, 7 * s, 11 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Castle body
+        const bodyGrad = ctx.createLinearGradient(-7 * s, -6 * s, 7 * s, 6 * s);
+        bodyGrad.addColorStop(0, "#E8C45A");
+        bodyGrad.addColorStop(1, "#C49030");
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(-7 * s, -4 * s, 14 * s, 10 * s);
+        // Crenellations
+        ctx.fillStyle = "#D4A84B";
+        for (let i = -3; i <= 3; i++) {
+          ctx.fillRect(i * 3.2 * s - 1.2 * s, -7 * s, 2.4 * s, 3 * s);
+        }
+        // Door arch
+        ctx.fillStyle = "#6B4020";
+        ctx.beginPath();
+        ctx.arc(0, 4 * s, 2.5 * s, Math.PI, 0);
+        ctx.lineTo(2.5 * s, 6 * s);
+        ctx.lineTo(-2.5 * s, 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Flag
+        const wave = Math.sin(time * 3.5) * 1.5;
+        ctx.fillStyle = "#8B5020";
+        ctx.fillRect(-0.5 * s, -12 * s, 1 * s, 6 * s);
+        ctx.fillStyle = "#FF6830";
+        ctx.beginPath();
+        ctx.moveTo(0.5 * s, -12 * s);
+        ctx.quadraticCurveTo(4 * s, -11 * s + wave, 7 * s, -11.5 * s + wave * 0.7);
+        ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
+        ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Star on flag
+        ctx.fillStyle = "#FFE870";
+        ctx.beginPath();
+        ctx.arc(3.5 * s, -10 * s + wave * 0.5, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (isChallenge) {
         // Challenge marker icon: regional sigil with crossed blades
         const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
         ctx.fillStyle = `${challengePalette.sigilGlow}${challengeGlow})`;
@@ -14876,7 +14920,11 @@ export const drawWorldMapCanvas = ({
 
       // Draw first tag badge in top-right corner
       const tagText =
-        level.kind === "challenge" ? "Challenge" : (level.tags[0] ?? "");
+        level.kind === "challenge"
+          ? "Challenge"
+          : level.kind === "sandbox"
+            ? "Sandbox"
+            : (level.tags[0] ?? "");
       if (tagText) {
         ctx.save();
         ctx.font = "bold 8px 'bc-novatica-cyr', sans-serif";
@@ -14887,10 +14935,13 @@ export const drawWorldMapCanvas = ({
         const tagX = cardX + cardWidth - 4 - tagW;
         const tagY = cardY + 4;
 
+        const isSandbox = level.kind === "sandbox";
         const isChallenge = level.kind === "challenge";
-        ctx.fillStyle = isChallenge
-          ? "rgba(160,60,40,0.92)"
-          : "rgba(20,18,14,0.85)";
+        ctx.fillStyle = isSandbox
+          ? "rgba(180,120,30,0.92)"
+          : isChallenge
+            ? "rgba(160,60,40,0.92)"
+            : "rgba(20,18,14,0.85)";
         ctx.beginPath();
         ctx.roundRect(tagX, tagY, tagW, tagH, 3);
         ctx.fill();

@@ -1,4 +1,4 @@
-import { WORLD_LEVELS, DEV_LEVELS, type LevelNode } from "./worldMapData";
+import { WORLD_LEVELS, DEV_LEVELS, ALWAYS_UNLOCKED_IDS, type LevelNode } from "./worldMapData";
 
 export const getWorldMapY = (pct: number, mapHeight: number): number => {
   const topMargin = 55;
@@ -20,4 +20,4 @@ export const getWorldLevelById = (id: string): LevelNode | undefined =>
 export const isWorldLevelUnlocked = (
   levelId: string,
   unlockedMaps: readonly string[],
-): boolean => unlockedMaps.includes(levelId);
+): boolean => ALWAYS_UNLOCKED_IDS.has(levelId) || unlockedMaps.includes(levelId);

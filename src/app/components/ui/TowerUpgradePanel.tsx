@@ -38,7 +38,8 @@ import {
   Rocket,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
-import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR, TOWER_TAGS } from "../../constants";
+import { TagBadge } from "./TagBadge";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { getTowerFoundationSize, getTowerVisualMetrics } from "../../rendering/towers/towerHelpers";
 import { TowerSprite } from "../../sprites";
@@ -777,6 +778,11 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 {tower.level === 4 && tower.upgrade
                   ? towerData.upgrades[tower.upgrade].desc
                   : towerData.desc}
+              </div>
+              <div className="flex flex-wrap gap-0.5 mt-1">
+                {TOWER_TAGS[tower.type].map((tag) => (
+                  <TagBadge key={tag} tag={tag} size={8} />
+                ))}
               </div>
             </div>
           </div>

@@ -184,7 +184,7 @@ export interface GameProgress {
  * Default game progress
  */
 export const DEFAULT_GAME_PROGRESS: GameProgress = {
-  unlockedMaps: ["poe", "dev_enemy_showcase"],
+  unlockedMaps: ["poe", "dev_enemy_showcase", "sandbox"],
   levelStars: {
     poe: 0,
     carnegie: 0,

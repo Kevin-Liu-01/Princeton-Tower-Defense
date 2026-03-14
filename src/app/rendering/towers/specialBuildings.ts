@@ -3,6 +3,178 @@ import type { MapTheme } from "../../constants/maps";
 import { drawIsoFlushSlit, drawIsoFlushDoor } from "../isoFlush";
 import { getBarracksBuildingPalette } from "./barracksTheme";
 
+// === SHARED MECHANICAL DRAWING HELPERS for special buildings ===
+
+function drawSpecialGear(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  teeth: number,
+  rotation: number,
+  s: number,
+  bodyColor: string,
+  rimColor: string,
+  hubColor: string,
+): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, ISO_Y_RATIO);
+  ctx.rotate(rotation);
+  const tw = (Math.PI / teeth) * 0.55;
+  for (let i = 0; i < teeth; i++) {
+    const a = (i / teeth) * Math.PI * 2;
+    ctx.fillStyle = rimColor;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a - tw) * radius * 0.8, Math.sin(a - tw) * radius * 0.8);
+    ctx.lineTo(Math.cos(a - tw * 0.35) * radius, Math.sin(a - tw * 0.35) * radius);
+    ctx.lineTo(Math.cos(a + tw * 0.35) * radius, Math.sin(a + tw * 0.35) * radius);
+    ctx.lineTo(Math.cos(a + tw) * radius * 0.8, Math.sin(a + tw) * radius * 0.8);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.8 * s;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(25, 22, 20, 0.85)";
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = hubColor;
+  ctx.beginPath();
+  ctx.arc(0, 0, radius * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rimColor;
+  ctx.lineWidth = 1.3 * s;
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * radius * 0.24, Math.sin(a) * radius * 0.24);
+    ctx.lineTo(Math.cos(a) * radius * 0.74, Math.sin(a) * radius * 0.74);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHydraulicPiston(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  baseY: number,
+  length: number,
+  extension: number,
+  s: number,
+  cylinderColor: string,
+  rodColor: string,
+  glowRgb: string,
+): void {
+  const cylW = 4.5 * s;
+  const rodW = 2.2 * s;
+  const cylLen = length * 0.48;
+  const rodLen = length * (0.12 + extension * 0.4);
+  ctx.fillStyle = cylinderColor;
+  ctx.fillRect(x - cylW / 2, baseY - cylLen, cylW, cylLen);
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.7 * s;
+  ctx.strokeRect(x - cylW / 2, baseY - cylLen, cylW, cylLen);
+  ctx.strokeStyle = "rgba(100, 95, 88, 0.5)";
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.moveTo(x - cylW / 2, baseY - cylLen * 0.3);
+  ctx.lineTo(x + cylW / 2, baseY - cylLen * 0.3);
+  ctx.moveTo(x - cylW / 2, baseY - cylLen * 0.7);
+  ctx.lineTo(x + cylW / 2, baseY - cylLen * 0.7);
+  ctx.stroke();
+  const rodGrad = ctx.createLinearGradient(x - rodW / 2, 0, x + rodW / 2, 0);
+  rodGrad.addColorStop(0, rodColor);
+  rodGrad.addColorStop(0.35, "rgba(175, 170, 160, 0.9)");
+  rodGrad.addColorStop(0.65, "rgba(180, 175, 165, 0.9)");
+  rodGrad.addColorStop(1, rodColor);
+  ctx.fillStyle = rodGrad;
+  ctx.fillRect(x - rodW / 2, baseY - cylLen - rodLen, rodW, rodLen);
+  ctx.fillStyle = "rgba(95, 90, 82, 0.9)";
+  ctx.beginPath();
+  ctx.ellipse(x, baseY - cylLen - rodLen, rodW * 0.9, rodW * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(70, 65, 58, 0.85)";
+  ctx.beginPath();
+  ctx.ellipse(x, baseY, cylW * 0.6, cylW * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(${glowRgb}, ${0.06 + extension * 0.2})`;
+  ctx.beginPath();
+  ctx.arc(x, baseY - cylLen, 3.5 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawExpandingShieldPlate(
+  ctx: CanvasRenderingContext2D,
+  anchorX: number,
+  anchorY: number,
+  dir: number,
+  expansion: number,
+  plateH: number,
+  s: number,
+  darkFace: string,
+  lightFace: string,
+  topFace: string,
+  glowRgb: string,
+): void {
+  const plateW = (5 + expansion * 16) * s;
+  const thickness = 3.2 * s;
+  const deployX = anchorX + dir * expansion * 8 * s;
+  const tanA = ISO_TAN;
+  ctx.fillStyle = dir < 0 ? darkFace : lightFace;
+  ctx.beginPath();
+  ctx.moveTo(deployX, anchorY);
+  ctx.lineTo(deployX + dir * plateW, anchorY - plateW * tanA * 0.25);
+  ctx.lineTo(deployX + dir * plateW, anchorY - plateW * tanA * 0.25 - plateH);
+  ctx.lineTo(deployX, anchorY - plateH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.7 * s;
+  ctx.stroke();
+  ctx.fillStyle = topFace;
+  ctx.beginPath();
+  ctx.moveTo(deployX, anchorY - plateH);
+  ctx.lineTo(deployX + dir * plateW, anchorY - plateW * tanA * 0.25 - plateH);
+  ctx.lineTo(
+    deployX + dir * plateW + dir * thickness,
+    anchorY - plateW * tanA * 0.25 - plateH - thickness * tanA,
+  );
+  ctx.lineTo(deployX + dir * thickness, anchorY - plateH - thickness * tanA);
+  ctx.closePath();
+  ctx.fill();
+  if (expansion > 0.12) {
+    ctx.strokeStyle = `rgba(${glowRgb}, ${expansion * 0.45})`;
+    ctx.lineWidth = 1.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(deployX + dir * plateW, anchorY - plateW * tanA * 0.25);
+    ctx.lineTo(deployX + dir * plateW, anchorY - plateW * tanA * 0.25 - plateH);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "rgba(130, 120, 108, 0.6)";
+  for (let i = 0; i < 3; i++) {
+    const t = 0.2 + i * 0.3;
+    ctx.beginPath();
+    ctx.arc(
+      deployX + dir * plateW * t,
+      anchorY - plateH * 0.5 - plateW * tanA * 0.125 * t,
+      1.3 * s,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(80, 75, 68, 0.8)";
+  ctx.beginPath();
+  ctx.arc(anchorX, anchorY - plateH * 0.5, 2.5 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 // Special Building Types rendering
 function drawChronoRelayBuilding(
   ctx: CanvasRenderingContext2D,
@@ -198,68 +370,230 @@ function drawChronoRelayBuilding(
   ctx.restore();
   ctx.restore();
 
-  // Giant color-shifting crystal
+  // Giant 3D isometric faceted crystal — uses game's iso convention:
+  // front=(0,y), left=(-w,y-w*tanA), back=(0,y-2w*tanA), right=(w,y-w*tanA)
   const crystalBaseY = upperY - upperH;
-  const crystalLeft = ctx.createLinearGradient(
-    -crystalW,
-    crystalBaseY,
-    -3 * s2,
-    crystalTopY,
-  );
-  crystalLeft.addColorStop(0, `hsl(${hue - 26}, 58%, 50%)`);
-  crystalLeft.addColorStop(1, `hsl(${hue + 8}, 84%, 66%)`);
-  ctx.fillStyle = crystalLeft;
+
+  // Cross-section widths at 3 levels + apex
+  const midCY = crystalBaseY - crystalH * 0.33;
+  const tapCY = crystalBaseY - crystalH * 0.82;
+  const midCW = crystalW * 1.12;
+  const tapCW = crystalW * 0.3;
+
+  // Isometric diamond vertices at each level (same convention as base body)
+  const bF = { x: 0, y: crystalBaseY };
+  const bL = { x: -crystalW, y: crystalBaseY - crystalW * tanA };
+  const bB = { x: 0, y: crystalBaseY - 2 * crystalW * tanA };
+  const bR = { x: crystalW, y: crystalBaseY - crystalW * tanA };
+
+  const mF = { x: 0, y: midCY };
+  const mL = { x: -midCW, y: midCY - midCW * tanA };
+  const mB = { x: 0, y: midCY - 2 * midCW * tanA };
+  const mR = { x: midCW, y: midCY - midCW * tanA };
+
+  const tF = { x: 0, y: tapCY };
+  const tL = { x: -tapCW, y: tapCY - tapCW * tanA };
+  const tB = { x: 0, y: tapCY - 2 * tapCW * tanA };
+  const tR = { x: tapCW, y: tapCY - tapCW * tanA };
+
+  const apx = { x: 0, y: crystalTopY };
+
+  // Hue offsets — left face darker (less light), right face brighter
+  const leftH = hue - 18;
+  const rightH = hue + 14;
+
+  let cg: CanvasGradient;
+
+  // === LEFT FACE (front→left edge, darker) ===
+  // Lower section (base → mid-bulge)
+  cg = ctx.createLinearGradient(bL.x, bL.y, mL.x, mL.y);
+  cg.addColorStop(0, `hsl(${leftH}, 46%, 36%)`);
+  cg.addColorStop(1, `hsl(${leftH + 6}, 56%, 44%)`);
+  ctx.fillStyle = cg;
   ctx.beginPath();
-  ctx.moveTo(0, crystalBaseY);
-  ctx.lineTo(-crystalW, crystalBaseY - crystalW * tanA);
-  ctx.lineTo(-crystalW, crystalBaseY - crystalW * tanA - crystalH * 0.76);
-  ctx.lineTo(-3.2 * s2, crystalTopY + 9 * s2);
-  ctx.lineTo(0, crystalTopY);
+  ctx.moveTo(bF.x, bF.y);
+  ctx.lineTo(bL.x, bL.y);
+  ctx.lineTo(mL.x, mL.y);
+  ctx.lineTo(mF.x, mF.y);
+  ctx.closePath();
+  ctx.fill();
+  // Upper section (mid → taper)
+  cg = ctx.createLinearGradient(mL.x, mL.y, tL.x, tL.y);
+  cg.addColorStop(0, `hsl(${leftH + 6}, 56%, 44%)`);
+  cg.addColorStop(1, `hsl(${leftH + 12}, 66%, 54%)`);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(mF.x, mF.y);
+  ctx.lineTo(mL.x, mL.y);
+  ctx.lineTo(tL.x, tL.y);
+  ctx.lineTo(tF.x, tF.y);
+  ctx.closePath();
+  ctx.fill();
+  // Apex section (taper → apex)
+  cg = ctx.createLinearGradient(tL.x, tL.y, apx.x, apx.y);
+  cg.addColorStop(0, `hsl(${leftH + 12}, 66%, 54%)`);
+  cg.addColorStop(1, `hsl(${leftH + 20}, 78%, 66%)`);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(tF.x, tF.y);
+  ctx.lineTo(tL.x, tL.y);
+  ctx.lineTo(apx.x, apx.y);
   ctx.closePath();
   ctx.fill();
 
-  const crystalRight = ctx.createLinearGradient(
-    0,
-    crystalBaseY,
-    crystalW,
-    crystalTopY,
-  );
-  crystalRight.addColorStop(0, `hsl(${hue + 6}, 56%, 58%)`);
-  crystalRight.addColorStop(1, `hsl(${hue + 34}, 90%, 78%)`);
-  ctx.fillStyle = crystalRight;
+  // === RIGHT FACE (right→front edge, brighter) ===
+  // Lower section
+  cg = ctx.createLinearGradient(bR.x, bR.y, mR.x, mR.y);
+  cg.addColorStop(0, `hsl(${rightH}, 52%, 48%)`);
+  cg.addColorStop(1, `hsl(${rightH + 8}, 64%, 56%)`);
+  ctx.fillStyle = cg;
   ctx.beginPath();
-  ctx.moveTo(0, crystalBaseY);
-  ctx.lineTo(crystalW, crystalBaseY - crystalW * tanA);
-  ctx.lineTo(crystalW, crystalBaseY - crystalW * tanA - crystalH * 0.76);
-  ctx.lineTo(3.2 * s2, crystalTopY + 9 * s2);
-  ctx.lineTo(0, crystalTopY);
+  ctx.moveTo(bF.x, bF.y);
+  ctx.lineTo(bR.x, bR.y);
+  ctx.lineTo(mR.x, mR.y);
+  ctx.lineTo(mF.x, mF.y);
+  ctx.closePath();
+  ctx.fill();
+  // Upper section
+  cg = ctx.createLinearGradient(mR.x, mR.y, tR.x, tR.y);
+  cg.addColorStop(0, `hsl(${rightH + 8}, 64%, 56%)`);
+  cg.addColorStop(1, `hsl(${rightH + 16}, 76%, 66%)`);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(mF.x, mF.y);
+  ctx.lineTo(mR.x, mR.y);
+  ctx.lineTo(tR.x, tR.y);
+  ctx.lineTo(tF.x, tF.y);
+  ctx.closePath();
+  ctx.fill();
+  // Apex section
+  cg = ctx.createLinearGradient(tR.x, tR.y, apx.x, apx.y);
+  cg.addColorStop(0, `hsl(${rightH + 16}, 76%, 66%)`);
+  cg.addColorStop(1, `hsl(${rightH + 26}, 92%, 80%)`);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(tF.x, tF.y);
+  ctx.lineTo(tR.x, tR.y);
+  ctx.lineTo(apx.x, apx.y);
   ctx.closePath();
   ctx.fill();
 
-  const crystalTop = ctx.createLinearGradient(
-    -8 * s2,
-    crystalTopY + 4 * s2,
-    8 * s2,
-    crystalTopY - 8 * s2,
-  );
-  crystalTop.addColorStop(0, `hsl(${hue + 14}, 94%, 78%)`);
-  crystalTop.addColorStop(1, `hsl(${hue + 34}, 100%, 92%)`);
-  ctx.fillStyle = crystalTop;
+  // === MID-LEVEL TOP DIAMOND (widest belt ring) ===
+  cg = ctx.createLinearGradient(mL.x, mL.y, mR.x, mR.y);
+  cg.addColorStop(0, `hsl(${hue + 4}, 68%, 52%)`);
+  cg.addColorStop(0.5, `hsl(${hue + 16}, 82%, 66%)`);
+  cg.addColorStop(1, `hsl(${hue + 28}, 90%, 76%)`);
+  ctx.fillStyle = cg;
+  ctx.beginPath();
+  ctx.moveTo(mF.x, mF.y);
+  ctx.lineTo(mL.x, mL.y);
+  ctx.lineTo(mB.x, mB.y);
+  ctx.lineTo(mR.x, mR.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // === TAPER-LEVEL TOP DIAMOND ===
+  ctx.fillStyle = `hsl(${hue + 20}, 86%, 72%)`;
+  ctx.beginPath();
+  ctx.moveTo(tF.x, tF.y);
+  ctx.lineTo(tL.x, tL.y);
+  ctx.lineTo(tB.x, tB.y);
+  ctx.lineTo(tR.x, tR.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // === APEX CAP (tiny bright diamond) ===
+  const apxCW = 2.5 * s2;
+  ctx.fillStyle = `hsl(${hue + 32}, 96%, 88%)`;
   ctx.beginPath();
   ctx.moveTo(0, crystalTopY);
-  ctx.lineTo(-3.2 * s2, crystalTopY + 9 * s2);
-  ctx.lineTo(0, crystalTopY + 15 * s2);
-  ctx.lineTo(3.2 * s2, crystalTopY + 9 * s2);
+  ctx.lineTo(-apxCW, crystalTopY - apxCW * tanA);
+  ctx.lineTo(0, crystalTopY - 2 * apxCW * tanA);
+  ctx.lineTo(apxCW, crystalTopY - apxCW * tanA);
   ctx.closePath();
   ctx.fill();
 
+  // === EDGE OUTLINES ===
+  ctx.strokeStyle = `rgba(${glowRgb}, ${0.35 + pulse * 0.2})`;
+  ctx.lineWidth = 1.3 * s2;
+  // Front ridge (all front vertices from base to apex)
+  ctx.beginPath();
+  ctx.moveTo(bF.x, bF.y);
+  ctx.lineTo(mF.x, mF.y);
+  ctx.lineTo(tF.x, tF.y);
+  ctx.lineTo(apx.x, apx.y);
+  ctx.stroke();
+  // Left ridge
+  ctx.beginPath();
+  ctx.moveTo(bL.x, bL.y);
+  ctx.lineTo(mL.x, mL.y);
+  ctx.lineTo(tL.x, tL.y);
+  ctx.lineTo(apx.x, apx.y);
+  ctx.stroke();
+  // Right ridge
+  ctx.beginPath();
+  ctx.moveTo(bR.x, bR.y);
+  ctx.lineTo(mR.x, mR.y);
+  ctx.lineTo(tR.x, tR.y);
+  ctx.lineTo(apx.x, apx.y);
+  ctx.stroke();
+  // Horizontal diamond rings
+  ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + pulse * 0.15})`;
+  ctx.lineWidth = 1 * s2;
+  // Base ring
+  ctx.beginPath();
+  ctx.moveTo(bF.x, bF.y);
+  ctx.lineTo(bL.x, bL.y);
+  ctx.lineTo(bB.x, bB.y);
+  ctx.lineTo(bR.x, bR.y);
+  ctx.closePath();
+  ctx.stroke();
+  // Mid ring
+  ctx.beginPath();
+  ctx.moveTo(mF.x, mF.y);
+  ctx.lineTo(mL.x, mL.y);
+  ctx.lineTo(mB.x, mB.y);
+  ctx.lineTo(mR.x, mR.y);
+  ctx.closePath();
+  ctx.stroke();
+  // Taper ring
+  ctx.beginPath();
+  ctx.moveTo(tF.x, tF.y);
+  ctx.lineTo(tL.x, tL.y);
+  ctx.lineTo(tB.x, tB.y);
+  ctx.lineTo(tR.x, tR.y);
+  ctx.closePath();
+  ctx.stroke();
+
+  // === SPECULAR HIGHLIGHTS ===
+  const specPhase = Math.sin(time * 1.8) * 0.5 + 0.5;
+  const specSY = mR.y + (tR.y - mR.y) * specPhase;
+  const specSX = mR.x * 0.35 * (1 - specPhase * 0.55);
+  const specGrad = ctx.createRadialGradient(specSX, specSY, 0, specSX, specSY, 10 * s2);
+  specGrad.addColorStop(0, `rgba(255, 255, 255, ${0.28 + pulse * 0.14})`);
+  specGrad.addColorStop(0.4, `rgba(${glowRgb}, ${0.12 + pulse * 0.08})`);
+  specGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = specGrad;
+  ctx.beginPath();
+  ctx.arc(specSX, specSY, 10 * s2, 0, Math.PI * 2);
+  ctx.fill();
+  // Secondary on left face
+  const spec2Phase = Math.sin(time * 1.3 + 1.6) * 0.5 + 0.5;
+  const spec2SY = mL.y + (tL.y - mL.y) * spec2Phase;
+  const spec2SX = mL.x * 0.3 * (1 - spec2Phase * 0.5);
+  const spec2Grad = ctx.createRadialGradient(spec2SX, spec2SY, 0, spec2SX, spec2SY, 7 * s2);
+  spec2Grad.addColorStop(0, `rgba(255, 255, 255, ${0.18 + pulse * 0.1})`);
+  spec2Grad.addColorStop(0.5, `rgba(${glowRgb}, ${0.08 + pulse * 0.06})`);
+  spec2Grad.addColorStop(1, "transparent");
+  ctx.fillStyle = spec2Grad;
+  ctx.beginPath();
+  ctx.arc(spec2SX, spec2SY, 7 * s2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === INNER CORE GLOW ===
   const coreGlow = ctx.createRadialGradient(
-    0,
-    crystalTopY + 24 * s2,
-    0,
-    0,
-    crystalTopY + 24 * s2,
-    30 * s2,
+    0, crystalTopY + 24 * s2, 0,
+    0, crystalTopY + 24 * s2, 30 * s2,
   );
   coreGlow.addColorStop(
     0,
@@ -272,16 +606,25 @@ function drawChronoRelayBuilding(
   ctx.arc(0, crystalTopY + 24 * s2, 30 * s2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Glowing seams on crystal
-  ctx.strokeStyle = `rgba(240, 245, 255, ${0.65 + fastPulse * 0.22})`;
-  ctx.lineWidth = 1.5 * s2;
+  // Inner light veins
+  ctx.strokeStyle = `rgba(240, 245, 255, ${0.4 + fastPulse * 0.25})`;
+  ctx.lineWidth = 1.2 * s2;
   ctx.beginPath();
-  ctx.moveTo(0, crystalBaseY - 3 * s2);
-  ctx.lineTo(0, crystalTopY + 8 * s2);
-  ctx.moveTo(-crystalW * 0.44, crystalBaseY - crystalW * tanA - 6 * s2);
-  ctx.lineTo(-2.5 * s2, crystalTopY + 12 * s2);
-  ctx.moveTo(crystalW * 0.44, crystalBaseY - crystalW * tanA - 6 * s2);
-  ctx.lineTo(2.5 * s2, crystalTopY + 12 * s2);
+  ctx.moveTo(bF.x, bF.y);
+  ctx.lineTo(mF.x, mF.y);
+  ctx.lineTo(tF.x, tF.y);
+  ctx.lineTo(apx.x, apx.y);
+  ctx.stroke();
+  // Cross veins at mid and taper
+  ctx.strokeStyle = `rgba(220, 230, 255, ${0.22 + fastPulse * 0.18})`;
+  ctx.lineWidth = 0.9 * s2;
+  ctx.beginPath();
+  ctx.moveTo(mL.x * 0.55, mL.y + (mF.y - mL.y) * 0.4);
+  ctx.lineTo(mR.x * 0.55, mR.y + (mF.y - mR.y) * 0.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(tL.x * 0.6, tL.y + (tF.y - tL.y) * 0.35);
+  ctx.lineTo(tR.x * 0.6, tR.y + (tF.y - tR.y) * 0.35);
   ctx.stroke();
 
   // Front half on top sells the 3D railing depth.
@@ -522,6 +865,44 @@ function drawSentinelNexusBuilding(
   ctx.closePath();
   ctx.fill();
 
+  // === SPINNING GEARS on base flanks ===
+  const gearSpeed = 0.5 + charge * 2.2;
+  const gearRimColor = `rgba(${charge > 0.3 ? glowRgb : grayRgb}, ${0.35 + charge * 0.35})`;
+  const gearHubColor = `rgba(${glowRgb}, ${0.3 + charge * 0.4})`;
+  drawSpecialGear(
+    ctx, -baseW * 0.72, -baseW * tanA - baseH * 0.4,
+    9 * s2, 10, time * gearSpeed, s2,
+    "rgba(65, 38, 34, 0.85)", gearRimColor, gearHubColor,
+  );
+  drawSpecialGear(
+    ctx, baseW * 0.72, -baseW * tanA - baseH * 0.4,
+    9 * s2, 10, -time * gearSpeed + Math.PI / 10, s2,
+    "rgba(65, 38, 34, 0.85)", gearRimColor, gearHubColor,
+  );
+  drawSpecialGear(
+    ctx, -baseW * 0.38, -baseW * tanA - baseH * 0.25,
+    5.5 * s2, 8, -time * gearSpeed * 1.6, s2,
+    "rgba(55, 32, 28, 0.8)", gearRimColor, gearHubColor,
+  );
+  drawSpecialGear(
+    ctx, baseW * 0.38, -baseW * tanA - baseH * 0.25,
+    5.5 * s2, 8, time * gearSpeed * 1.6, s2,
+    "rgba(55, 32, 28, 0.8)", gearRimColor, gearHubColor,
+  );
+
+  // === EXPANDING SIDE SHIELDS ===
+  const shieldExp = charge * (0.7 + Math.sin(time * 1.5) * 0.15);
+  drawExpandingShieldPlate(
+    ctx, -upperW * 0.5, upperY - upperW * tanA * 0.45,
+    -1, shieldExp, 18 * s2, s2,
+    "#3a2422", "#5a3430", "#4d2d28", glowRgb,
+  );
+  drawExpandingShieldPlate(
+    ctx, upperW * 0.5, upperY - upperW * tanA * 0.45,
+    1, shieldExp, 18 * s2, s2,
+    "#5a3430", "#6b3a35", "#5a3430", glowRgb,
+  );
+
   // Side generators with charge-reactive crystals
   const generators = [
     { x: -upperW * 0.95, y: upperY - upperW * tanA * 0.65, h: 25 * s2 },
@@ -603,6 +984,51 @@ function drawSentinelNexusBuilding(
   ctx.lineTo(towerW, towerBaseY - towerW * tanA - towerH);
   ctx.closePath();
   ctx.fill();
+
+  // === VERTICAL HYDRAULIC PISTONS on tower flanks ===
+  const pistonBob = Math.sin(time * 2.8) * 0.5 + 0.5;
+  const pistonExt = 0.25 + charge * 0.45 + pistonBob * 0.3;
+  drawHydraulicPiston(
+    ctx, -towerW - 5 * s2, towerBaseY - 3 * s2,
+    towerH * 0.55, pistonExt, s2,
+    "#3d2422", "rgba(130, 125, 115, 0.85)", glowRgb,
+  );
+  drawHydraulicPiston(
+    ctx, towerW + 5 * s2, towerBaseY - 3 * s2,
+    towerH * 0.55, pistonExt, s2,
+    "#643532", "rgba(130, 125, 115, 0.85)", glowRgb,
+  );
+
+  // === HYDRAULIC STABILIZER ARMS to generators ===
+  generators.forEach((g, idx) => {
+    const armPulse = Math.sin(time * 3.2 + idx * Math.PI) * 0.5 + 0.5;
+    const armAlpha = 0.3 + charge * 0.4 + armPulse * 0.12;
+    const armW = (2.2 + charge * 1.5) * s2;
+    const sx = (idx === 0 ? -1 : 1) * towerW * 0.85;
+    const sy = towerBaseY - towerH * 0.35;
+    const ex = g.x + (idx === 0 ? -3 : 3) * s2;
+    const ey = g.y - g.h * 0.45;
+    ctx.strokeStyle = `rgba(55, 38, 32, ${armAlpha + 0.25})`;
+    ctx.lineWidth = armW + 2.5 * s2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo((sx + ex) * 0.5, Math.min(sy, ey) - 6 * s2, ex, ey);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(${glowRgb}, ${armAlpha * 0.55})`;
+    ctx.lineWidth = armW * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo((sx + ex) * 0.5, Math.min(sy, ey) - 6 * s2, ex, ey);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(95, 88, 78, 0.7)";
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2.2 * s2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2.2 * s2, 0, Math.PI * 2);
+    ctx.fill();
+  });
 
   // Charge conduit lines running up the tower face - always visible
   const conduitAlpha = 0.12 + charge * 0.5 + readyFlash;
@@ -1037,6 +1463,26 @@ function drawSunforgeOrreryBuilding(
   ctx.closePath();
   ctx.fill();
 
+  // === SPINNING GEARS at base mechanism ===
+  const orrGearSpeed = 0.4 + charge * 2.0;
+  const orrGearRim = `rgba(${charge > 0.3 ? glowRgb : grayRgb}, ${0.3 + charge * 0.4})`;
+  const orrGearHub = `rgba(${glowRgb}, ${0.25 + charge * 0.45})`;
+  drawSpecialGear(
+    ctx, -baseW * 0.68, -baseW * tanA - baseH * 0.35,
+    10 * s2, 12, time * orrGearSpeed, s2,
+    "rgba(58, 39, 28, 0.85)", orrGearRim, orrGearHub,
+  );
+  drawSpecialGear(
+    ctx, baseW * 0.68, -baseW * tanA - baseH * 0.35,
+    10 * s2, 12, -time * orrGearSpeed + Math.PI / 12, s2,
+    "rgba(58, 39, 28, 0.85)", orrGearRim, orrGearHub,
+  );
+  drawSpecialGear(
+    ctx, 0, -baseW * tanA * 2 - baseH * 0.6,
+    6 * s2, 8, time * orrGearSpeed * 1.5, s2,
+    "rgba(50, 34, 24, 0.8)", orrGearRim, orrGearHub,
+  );
+
   // Upper crucible
   const upperY = -baseH;
   ctx.fillStyle = "#2a1a15";
@@ -1061,6 +1507,33 @@ function drawSunforgeOrreryBuilding(
   ctx.lineTo(upperW, upperY - upperW * tanA - upperH);
   ctx.closePath();
   ctx.fill();
+
+  // === EXPANDING HEAT SHIELDS from crucible ===
+  const heatShieldExp = charge * (0.65 + Math.sin(time * 1.2) * 0.18);
+  drawExpandingShieldPlate(
+    ctx, -upperW * 0.55, upperY - upperW * tanA * 0.4,
+    -1, heatShieldExp, 16 * s2, s2,
+    "#2a1a15", "#4d2a1d", "#3d2219", glowRgb,
+  );
+  drawExpandingShieldPlate(
+    ctx, upperW * 0.55, upperY - upperW * tanA * 0.4,
+    1, heatShieldExp, 16 * s2, s2,
+    "#4d2a1d", "#6a3a28", "#4d2a1d", glowRgb,
+  );
+
+  // === VERTICAL ACTUATORS with bobbing motion ===
+  const orrPistonBob = Math.sin(time * 2.2) * 0.5 + 0.5;
+  const orrPistonExt = 0.2 + charge * 0.5 + orrPistonBob * 0.3;
+  drawHydraulicPiston(
+    ctx, -upperW - 6 * s2, upperY - upperH - 2 * s2,
+    28 * s2, orrPistonExt, s2,
+    "#2a1a15", "rgba(130, 120, 105, 0.85)", glowRgb,
+  );
+  drawHydraulicPiston(
+    ctx, upperW + 6 * s2, upperY - upperH - 2 * s2,
+    28 * s2, orrPistonExt, s2,
+    "#4d2a1d", "rgba(130, 120, 105, 0.85)", glowRgb,
+  );
 
   // Rotating orrery rings - always visible, gray→colored
   const ringSpeed = 0.4 + charge * 1.4;
@@ -1173,6 +1646,37 @@ function drawSunforgeOrreryBuilding(
     ctx.fillStyle = haloGrad;
     ctx.beginPath();
     ctx.arc(p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, haloR, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // === HYDRAULIC STABILIZER ARMS to pylons ===
+  pylons.forEach((p, idx) => {
+    const stabPulse = Math.sin(time * 2.8 + idx * Math.PI) * 0.5 + 0.5;
+    const stabAlpha = 0.25 + charge * 0.4 + stabPulse * 0.15;
+    const stabW = (2 + charge * 1.8) * s2;
+    const sx = (idx === 0 ? -1 : 1) * upperW * 0.6;
+    const sy = upperY - upperW * tanA * 0.5 - upperH;
+    const ex = p.x + (idx === 0 ? -1 : 1) * 3 * s2;
+    const ey = p.y - p.h * 0.4;
+    ctx.strokeStyle = `rgba(50, 33, 24, ${stabAlpha + 0.2})`;
+    ctx.lineWidth = stabW + 2.5 * s2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo((sx + ex) * 0.5, Math.min(sy, ey) - 5 * s2, ex, ey);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(${glowRgb}, ${stabAlpha * 0.5})`;
+    ctx.lineWidth = stabW * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo((sx + ex) * 0.5, Math.min(sy, ey) - 5 * s2, ex, ey);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(90, 82, 72, 0.7)";
+    ctx.beginPath();
+    ctx.arc(sx, sy, 2 * s2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(ex, ey, 2 * s2, 0, Math.PI * 2);
     ctx.fill();
   });
 

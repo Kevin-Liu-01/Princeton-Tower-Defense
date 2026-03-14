@@ -499,13 +499,13 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     {(() => {
                       const isAimable = spellType === "fireball" || spellType === "lightning";
                       const hasUnlocked = isAimable && spellLevel >= 2;
-                      const autoOn = isAimable && !!spellAutoAim[spellType];
+                      const manualOn = hasUnlocked && !spellAutoAim[spellType];
                       if (!isAimable) return null;
                       const tooltipLabel = !hasUnlocked
-                        ? "Unlock auto-aim by upgrading"
-                        : autoOn
-                          ? "Auto-aim ON — click to switch to manual"
-                          : "Manual targeting — click to enable auto-aim";
+                        ? "Unlock manual targeting by upgrading"
+                        : manualOn
+                          ? "Manual targeting ON — click to switch to auto-aim"
+                          : "Auto-aim ON — click for manual targeting";
                       return (
                         <HudTooltip label={tooltipLabel} position="top">
                           <button
@@ -517,10 +517,10 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                             style={{
                               width: 16,
                               height: 16,
-                              background: hasUnlocked && autoOn
+                              background: manualOn
                                 ? `${label.borderColor.replace("0.4)", "0.2)")}`
                                 : "rgba(40,30,50,0.4)",
-                              border: `1px solid ${hasUnlocked && autoOn
+                              border: `1px solid ${manualOn
                                 ? label.borderColor
                                 : hasUnlocked
                                   ? "rgba(140,100,60,0.3)"
@@ -533,7 +533,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                             <Crosshair
                               size={9}
                               className={
-                                hasUnlocked && autoOn
+                                manualOn
                                   ? label.nameColor
                                   : "text-stone-500"
                               }

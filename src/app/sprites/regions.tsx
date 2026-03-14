@@ -181,7 +181,8 @@ export const RegionIcon: React.FC<{
   locked?: boolean;
   framed?: boolean;
   challenge?: boolean;
-}> = ({ type, size = 60, locked = false, framed = false, challenge = false }) => {
+  sandbox?: boolean;
+}> = ({ type, size = 60, locked = false, framed = false, challenge = false, sandbox = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -197,6 +198,45 @@ export const RegionIcon: React.FC<{
 
     if (locked && !framed) {
       ctx.globalAlpha = 0.35;
+    }
+
+    if (sandbox) {
+      const s = framed ? size / 52 : size / 36;
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (locked) ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#D4A84B";
+      ctx.beginPath();
+      ctx.ellipse(0, 7 * s, 10 * s, 3.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const bodyGrad = ctx.createLinearGradient(-6 * s, -5 * s, 6 * s, 5 * s);
+      bodyGrad.addColorStop(0, "#E8C45A");
+      bodyGrad.addColorStop(1, "#C49030");
+      ctx.fillStyle = bodyGrad;
+      ctx.fillRect(-6 * s, -3 * s, 12 * s, 9 * s);
+      ctx.fillStyle = "#D4A84B";
+      for (let i = -2; i <= 2; i++) {
+        ctx.fillRect(i * 3.5 * s - 1.2 * s, -6 * s, 2.4 * s, 3 * s);
+      }
+      ctx.fillStyle = "#6B4020";
+      ctx.beginPath();
+      ctx.arc(0, 3 * s, 2 * s, Math.PI, 0);
+      ctx.lineTo(2 * s, 5.5 * s);
+      ctx.lineTo(-2 * s, 5.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#8B5020";
+      ctx.fillRect(-0.4 * s, -10 * s, 0.8 * s, 5 * s);
+      ctx.fillStyle = "#FF6830";
+      ctx.beginPath();
+      ctx.moveTo(0.4 * s, -10 * s);
+      ctx.lineTo(5.5 * s, -9 * s);
+      ctx.lineTo(5 * s, -7 * s);
+      ctx.lineTo(0.4 * s, -6.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      return;
     }
 
     if (challenge) {

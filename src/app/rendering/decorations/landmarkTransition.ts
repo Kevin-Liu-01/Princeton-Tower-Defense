@@ -142,14 +142,16 @@ interface TransitionRadii {
   innerH: number;
 }
 
+const MAX_TRANSITION_BASE = 100;
+
 function getDecorationTransitionRadii(
   decorType: string,
   decorScale: number,
   zoom: number,
 ): TransitionRadii {
   const volume = getDecorationVolumeSpec(decorType);
-  const baseW = volume.width * 0.42 * decorScale * zoom;
-  const baseH = volume.length * 0.42 * decorScale * zoom;
+  const baseW = Math.min(volume.width * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
+  const baseH = Math.min(volume.length * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
   return {
     outerW: baseW * ISO_PRISM_W_FACTOR * 2.4,
     outerH: baseH * ISO_PRISM_D_FACTOR * 2.4,

@@ -46,8 +46,7 @@ function canCastSpell(
   const requiresEnemies =
     spell.type === "fireball" ||
     spell.type === "lightning" ||
-    spell.type === "freeze" ||
-    spell.type === "payday";
+    spell.type === "freeze";
   if (requiresEnemies && enemies.length === 0) return false;
   return true;
 }
