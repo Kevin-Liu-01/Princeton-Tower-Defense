@@ -37,11 +37,9 @@ function hexToRgba(hex: string, a: number): string {
 }
 
 const SEL_FRAME = 58;
-const SEL_PAD = (SEL_FRAME - CIRCLE) / 2;
 const SEL_CX = SEL_FRAME / 2;
 
 const ACT_FRAME = 54;
-const ACT_PAD = (ACT_FRAME - 38) / 2;
 const ACT_CX = ACT_FRAME / 2;
 
 function circularDiff(idx: number, center: number, len: number): number {
@@ -61,11 +59,13 @@ interface HeroSelectorProps {
 export const HeroSelector: React.FC<HeroSelectorProps> = ({
   selectedHero,
   setSelectedHero,
+  hoveredHero,
   setHoveredHero,
   onOpenCodex,
   compact = false,
 }) => {
   const [showHallOfHeroes, setShowHallOfHeroes] = React.useState(false);
+  const [hohHovered, setHohHovered] = React.useState(false);
   const [centerIdx, setCenterIdx] = React.useState(() =>
     selectedHero ? heroOptions.indexOf(selectedHero) : 0
   );
@@ -78,13 +78,16 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
     setCenterIdx(prev => (prev + dir + heroOptions.length) % heroOptions.length);
   }, []);
 
-  const selectHero = useCallback((heroType: HeroType) => {
-    if (heroType === selectedHero) {
-      setShowHallOfHeroes(true);
+  const handleHeroClick = useCallback((heroType: HeroType, isCenter: boolean) => {
+    if (!isCenter) {
+      setCenterIdx(heroOptions.indexOf(heroType));
       return;
     }
-    setSelectedHero(heroType);
-    setCenterIdx(heroOptions.indexOf(heroType));
+    if (heroType === selectedHero) {
+      setShowHallOfHeroes(true);
+    } else {
+      setSelectedHero(heroType);
+    }
   }, [setSelectedHero, selectedHero]);
 
   if (compact) {
@@ -94,7 +97,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
     return (
       <>
         <div
-          className="flex-1 relative rounded-xl flex items-center min-w-0 gap-1.5 px-2 py-1"
+          className="flex-1 relative rounded-xl flex items-center min-w-0 gap-1.5 p-2 pr-3 py-1"
           style={{
             background: 'linear-gradient(180deg, rgba(38,32,24,0.97), rgba(24,20,14,0.99))',
             border: '1.5px solid rgba(180,140,60,0.4)',
@@ -142,7 +145,9 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                 return (
                   <button
                     key={heroType}
-                    onClick={() => selectHero(heroType)}
+                    onClick={() => handleHeroClick(heroType, isCenter)}
+                    onMouseEnter={() => setHoveredHero(heroType)}
+                    onMouseLeave={() => setHoveredHero(null)}
                     title={`${hero.name} — ${HERO_ROLES[heroType].label}${isSel ? ' (Equipped)' : ''}`}
                     className="absolute flex items-center justify-center rounded-full"
                     style={{
@@ -167,16 +172,18 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                     }}
                   >
                     {/* Hero frame */}
-                    <svg className="absolute pointer-events-none z-0" style={{ top: -SEL_PAD, left: -SEL_PAD }} width={SEL_FRAME} height={SEL_FRAME} overflow="visible">
-                      {(isCenter || isSel) ? heroFrameElements({
+                    <svg className="absolute pointer-events-none z-0" style={{
+                      top: '50%', left: '50%',
+                      transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease',
+                      transform: `translate(-50%, -50%)${hoveredHero === heroType ? ' rotate(45deg) scale(1.06)' : ''}`,
+                      filter: hoveredHero === heroType ? `drop-shadow(0 0 5px ${hexToRgba(hero.color, 0.35)})` : 'none',
+                    }} width={SEL_FRAME} height={SEL_FRAME} overflow="visible">
+                      {heroFrameElements({
                         cx: SEL_CX, outerR: SEL_CX - 2, midR: SEL_CX - 4,
-                        color: hexToRgba(hero.color, isSel ? 0.3 : 0.15),
-                        dimColor: hexToRgba(hero.color, isSel ? 0.15 : 0.07),
+                        color: hexToRgba(hero.color, hoveredHero === heroType ? 0.45 : isSel ? 0.3 : isCenter ? 0.2 : 0.14),
+                        dimColor: hexToRgba(hero.color, hoveredHero === heroType ? 0.22 : isSel ? 0.15 : isCenter ? 0.1 : 0.07),
                         prefix: `hc-${heroType}`,
-                      }) : (
-                        <circle cx={SEL_CX} cy={SEL_CX} r={SEL_CX - 2} fill="none"
-                          stroke={hexToRgba(hero.color, 0.04)} strokeWidth={0.5} />
-                      )}
+                      })}
                     </svg>
                     <div className="absolute inset-[1px] rounded-full pointer-events-none z-[1]" style={{
                       borderTop: `1px solid rgba(255,255,255,${isSel || isCenter ? '0.08' : '0.03'})`,
@@ -218,7 +225,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
           </div>
 
           {/* Hero info + Hall of Heroes button */}
-          <div className="relative z-10 flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden px-1 py-1.5">
+          <div className="relative z-10 flex-1 flex items-center gap-1.5 min-w-0 px-1 py-1.5">
             <div className="flex flex-col justify-center gap-[3px] min-w-0 flex-1 overflow-hidden">
               {/* Row 1: Name + Role */}
               <div className="flex items-center gap-1 min-w-0">
@@ -284,19 +291,26 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowHallOfHeroes(true)}
+                    onMouseEnter={() => setHohHovered(true)}
+                    onMouseLeave={() => setHohHovered(false)}
                     className="flex-shrink-0 ml-auto relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
                   >
                     {/* Hero frame */}
                     <svg
                       className="absolute pointer-events-none"
-                      style={{ top: -ACT_PAD, left: -ACT_PAD }}
+                      style={{
+                        top: '50%', left: '50%',
+                        transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease',
+                        transform: `translate(-50%, -50%)${hohHovered ? ' rotate(45deg) scale(1.07)' : ''}`,
+                        filter: hohHovered ? 'drop-shadow(0 0 6px rgba(180,140,60,0.35))' : 'none',
+                      }}
                       width={ACT_FRAME} height={ACT_FRAME} overflow="visible"
                     >
                       {heroFrameElements({
                         cx: ACT_CX, outerR: ACT_CX - 2, midR: ACT_CX - 4,
-                        color: "rgba(180,140,60,0.25)",
-                        dimColor: "rgba(180,140,60,0.12)",
+                        color: hohHovered ? "rgba(180,140,60,0.4)" : "rgba(180,140,60,0.25)",
+                        dimColor: hohHovered ? "rgba(180,140,60,0.2)" : "rgba(180,140,60,0.12)",
                         prefix: "hoh",
                       })}
                     </svg>

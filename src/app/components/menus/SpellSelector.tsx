@@ -46,11 +46,9 @@ function hexToRgba(hex: string, a: number): string {
 }
 
 const SEL_FRAME = 58;
-const SEL_PAD = (SEL_FRAME - CIRCLE) / 2;
 const SEL_CX = SEL_FRAME / 2;
 
 const ACT_FRAME = 54;
-const ACT_PAD = (ACT_FRAME - 38) / 2;
 const ACT_CX = ACT_FRAME / 2;
 
 function circularDiff(idx: number, center: number, len: number): number {
@@ -77,6 +75,7 @@ interface SpellSelectorProps {
 export const SpellSelector: React.FC<SpellSelectorProps> = ({
   selectedSpells,
   toggleSpell,
+  hoveredSpell,
   setHoveredSpell,
   availableSpellStars,
   totalSpellStarsEarned,
@@ -92,6 +91,8 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   const [showSpellbook, setShowSpellbook] = React.useState(false);
   const [spellbookInitialSpell, setSpellbookInitialSpell] = React.useState<SpellType | undefined>(undefined);
   const [centerIdx, setCenterIdx] = React.useState(0);
+  const [sbHovered, setSbHovered] = React.useState(false);
+  const [ugHovered, setUgHovered] = React.useState(false);
 
   const navigate = useCallback((dir: -1 | 1) => {
     setCenterIdx(prev => (prev + dir + spellOptions.length) % spellOptions.length);
@@ -104,7 +105,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
     return (
       <>
         <div
-          className="flex-1 relative rounded-xl flex items-center min-w-0 gap-1.5 px-2 py-1"
+          className="flex-1 relative rounded-xl flex items-center min-w-0 gap-1.5 p-2 pr-3 py-1"
           style={{
             background: 'linear-gradient(180deg, rgba(30,22,40,0.97), rgba(20,14,30,0.99))',
             border: '1.5px solid rgba(140,80,200,0.35)',
@@ -146,7 +147,6 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   const halfVisible = Math.floor(VISIBLE_COUNT / 2);
                   const isVisible = absDiff <= halfVisible;
                   const isSel = selectedSpells.includes(spellType);
-                  const canToggle = isSel || selectedSpells.length < 3;
                   const scale = isCenter ? 1.15 : 0.82;
                   const x = VP_CX + diff * STEP - CIRCLE / 2;
                   const y = VP_CY - CIRCLE / 2;
@@ -154,14 +154,15 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   return (
                     <button
                       key={spellType}
+                      onMouseEnter={() => setHoveredSpell(spellType)}
+                      onMouseLeave={() => setHoveredSpell(null)}
                       onClick={() => {
                         if (isCenter) {
-                          if (canToggle || isSel) toggleSpell(spellType);
+                          toggleSpell(spellType);
                         } else {
                           setCenterIdx(idx);
                         }
                       }}
-                      disabled={isCenter && !canToggle && !isSel}
                       title={`${SPELL_DATA[spellType].shortName}${isSel ? ` (Slot ${selectedSpells.indexOf(spellType) + 1})` : ''}`}
                       className="absolute flex items-center justify-center rounded-full"
                       style={{
@@ -181,22 +182,24 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                         boxShadow: isSel
                           ? `0 0 14px ${accent}30, inset 0 0 8px ${accent}12`
                           : isCenter ? `0 0 10px ${accent}18` : 'none',
-                        cursor: isCenter && !canToggle && !isSel ? 'not-allowed' : 'pointer',
+                        cursor: 'pointer',
                         transition: 'transform 0.35s cubic-bezier(0.4,0,0.15,1), opacity 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease',
                         zIndex: isCenter ? 3 : 1,
                       }}
                     >
                       {/* Spell frame */}
-                      <svg className="absolute pointer-events-none z-0" style={{ top: -SEL_PAD, left: -SEL_PAD }} width={SEL_FRAME} height={SEL_FRAME} overflow="visible">
-                        {(isCenter || isSel) ? spellFrameElements({
+                      <svg className="absolute pointer-events-none z-0" style={{
+                        top: '50%', left: '50%',
+                        transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease',
+                        transform: `translate(-50%, -50%)${hoveredSpell === spellType ? ' rotate(45deg) scale(1.06)' : ''}`,
+                        filter: hoveredSpell === spellType ? `drop-shadow(0 0 5px ${hexToRgba(accent, 0.35)})` : 'none',
+                      }} width={SEL_FRAME} height={SEL_FRAME} overflow="visible">
+                        {spellFrameElements({
                           cx: SEL_CX, outerR: SEL_CX - 2, midR: SEL_CX - 4,
-                          color: hexToRgba(accent, isSel ? 0.3 : 0.15),
-                          dimColor: hexToRgba(accent, isSel ? 0.15 : 0.07),
+                          color: hexToRgba(accent, hoveredSpell === spellType ? 0.45 : isSel ? 0.3 : isCenter ? 0.2 : 0.14),
+                          dimColor: hexToRgba(accent, hoveredSpell === spellType ? 0.22 : isSel ? 0.15 : isCenter ? 0.1 : 0.07),
                           prefix: `sc-${spellType}`,
-                        }) : (
-                          <circle cx={SEL_CX} cy={SEL_CX} r={SEL_CX - 2} fill="none"
-                            stroke={hexToRgba(accent, 0.04)} strokeWidth={0.5} />
-                        )}
+                        })}
                       </svg>
                       <div className="absolute inset-[1px] rounded-full pointer-events-none z-[1]" style={{
                         borderTop: `1px solid rgba(255,255,255,${isSel || isCenter ? '0.08' : '0.03'})`,
@@ -254,7 +257,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           </div>
 
           {/* Spell info + upgrade */}
-          <div className="relative z-10 flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden px-1 py-1.5">
+          <div className="relative z-10 flex-1 flex items-center gap-1.5 min-w-0 px-1 py-1.5">
             <div className="flex flex-col justify-center gap-[3px] min-w-0 flex-1 overflow-hidden">
               {/* Row 1: Name */}
               <span
@@ -308,6 +311,8 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 <HudTooltip label="Spellbook" position="top">
                   <button
                     type="button"
+                    onMouseEnter={() => setSbHovered(true)}
+                    onMouseLeave={() => setSbHovered(false)}
                     onClick={() => { setSpellbookInitialSpell(centeredSpell); setShowSpellbook(true); }}
                     className="flex-shrink-0 ml-auto relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
@@ -315,13 +320,18 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     {/* Spell frame */}
                     <svg
                       className="absolute pointer-events-none"
-                      style={{ top: -ACT_PAD, left: -ACT_PAD }}
+                      style={{
+                        top: '50%', left: '50%',
+                        transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease',
+                        transform: `translate(-50%, -50%)${sbHovered ? ' rotate(45deg) scale(1.07)' : ''}`,
+                        filter: sbHovered ? 'drop-shadow(0 0 6px rgba(140,80,200,0.35))' : 'none',
+                      }}
                       width={ACT_FRAME} height={ACT_FRAME} overflow="visible"
                     >
                       {spellFrameElements({
                         cx: ACT_CX, outerR: ACT_CX - 2, midR: ACT_CX - 4,
-                        color: "rgba(140,80,200,0.25)",
-                        dimColor: "rgba(140,80,200,0.12)",
+                        color: sbHovered ? "rgba(140,80,200,0.4)" : "rgba(140,80,200,0.25)",
+                        dimColor: sbHovered ? "rgba(140,80,200,0.2)" : "rgba(140,80,200,0.12)",
                         prefix: "sb",
                       })}
                     </svg>
@@ -373,6 +383,8 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
                   <button
                     type="button"
+                    onMouseEnter={() => setUgHovered(true)}
+                    onMouseLeave={() => setUgHovered(false)}
                     onClick={() => setShowUpgradeModal(true)}
                     className="flex-shrink-0 relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
@@ -380,13 +392,18 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     {/* Spell frame */}
                     <svg
                       className="absolute pointer-events-none"
-                      style={{ top: -ACT_PAD, left: -ACT_PAD }}
+                      style={{
+                        top: '50%', left: '50%',
+                        transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease',
+                        transform: `translate(-50%, -50%)${ugHovered ? ' rotate(45deg) scale(1.07)' : ''}`,
+                        filter: ugHovered ? 'drop-shadow(0 0 6px rgba(180,140,60,0.35))' : 'none',
+                      }}
                       width={ACT_FRAME} height={ACT_FRAME} overflow="visible"
                     >
                       {spellFrameElements({
                         cx: ACT_CX, outerR: ACT_CX - 2, midR: ACT_CX - 4,
-                        color: "rgba(180,140,60,0.25)",
-                        dimColor: "rgba(180,140,60,0.12)",
+                        color: ugHovered ? "rgba(180,140,60,0.4)" : "rgba(180,140,60,0.25)",
+                        dimColor: ugHovered ? "rgba(180,140,60,0.2)" : "rgba(180,140,60,0.12)",
                         prefix: "ug",
                       })}
                     </svg>
@@ -525,7 +542,6 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             <div className="flex gap-1.5">
               {spellOptions.map((spellType) => {
                 const isSelected = selectedSpells.includes(spellType);
-                const canSelect = isSelected || selectedSpells.length < 3;
                 const spellIndex = selectedSpells.indexOf(spellType);
                 const label = { ...spellLabelExtras[spellType], ...SPELL_TRAITS[spellType] };
                 const spellData = SPELL_DATA[spellType];
@@ -538,19 +554,14 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     onClick={() => toggleSpell(spellType)}
                     onMouseEnter={() => setHoveredSpell(spellType)}
                     onMouseLeave={() => setHoveredSpell(null)}
-                    disabled={!canSelect && !isSelected}
                     className={`relative w-full p-1.5 pb-1 flex flex-col items-center gap-0.5 rounded-lg transition-all duration-200 ${isSelected
                       ? "z-10"
-                      : canSelect
-                        ? "hover:scale-105 hover:brightness-110"
-                        : "opacity-35 cursor-not-allowed"
+                      : "hover:scale-105 hover:brightness-110"
                       }`}
                     style={{
                       background: isSelected
                         ? 'linear-gradient(135deg, rgba(120,50,200,0.25), rgba(80,20,150,0.15))'
-                        : !canSelect
-                          ? 'linear-gradient(135deg, rgba(24,18,30,0.6), rgba(16,12,22,0.6))'
-                          : 'linear-gradient(135deg, rgba(36,28,44,0.95), rgba(24,18,30,0.95))',
+                        : 'linear-gradient(135deg, rgba(36,28,44,0.95), rgba(24,18,30,0.95))',
                       border: `1.5px solid ${isSelected ? (label?.borderColor || '#a855f7') : 'rgba(80,60,100,0.25)'}`,
                       boxShadow: isSelected
                         ? `0 0 14px rgba(168,85,247,0.25), inset 0 0 12px rgba(168,85,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06)`

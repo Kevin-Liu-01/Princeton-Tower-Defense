@@ -256,6 +256,8 @@ export function SetupScreen({
       setSelectedSpells(selectedSpells.filter((s) => s !== spell));
     } else if (selectedSpells.length < 3) {
       setSelectedSpells([...selectedSpells, spell]);
+    } else {
+      setSelectedSpells([...selectedSpells.slice(1), spell]);
     }
   };
 
@@ -666,19 +668,15 @@ export function SetupScreen({
                   const spell = SPELL_DATA[spellType];
                   const isSelected = selectedSpells.includes(spellType);
                   const selectionIndex = selectedSpells.indexOf(spellType);
-                  const canSelect = isSelected || selectedSpells.length < 3;
                   const info = spellInfo[spellType];
 
                   return (
                     <button
                       key={spellType}
                       onClick={() => toggleSpell(spellType)}
-                      disabled={!canSelect && !isSelected}
                       className={`relative w-14 h-14 rounded-lg transition-all duration-200 group ${isSelected
                         ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-stone-900 scale-110 z-10"
-                        : canSelect
-                          ? "hover:scale-105 hover:brightness-110"
-                          : "opacity-40 cursor-not-allowed"
+                        : "hover:scale-105 hover:brightness-110"
                         }`}
                       style={{
                         background: isSelected

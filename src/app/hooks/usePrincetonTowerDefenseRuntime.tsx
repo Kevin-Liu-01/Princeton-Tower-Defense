@@ -734,6 +734,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const [vaultFlash, setVaultFlash] = useState<Record<string, number>>({});
   // HUD Animation state
   const [goldSpellActive, setGoldSpellActive] = useState(false);
+  const [paydayEndTime, setPaydayEndTime] = useState<number | null>(null);
+  const [paydayPawPointsEarned, setPaydayPawPointsEarned] = useState(0);
   // Eating club income events for stacking floaters
   const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
   // Bounty income events (from enemy kills)
@@ -1400,6 +1402,9 @@ export function usePrincetonTowerDefenseRuntime() {
         return [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }];
       });
       addPawPoints(totalBounty);
+      if (hasGoldAura && goldBonus > 0) {
+        setPaydayPawPointsEarned((prev) => prev + goldBonus);
+      }
       return totalBounty;
     },
     [addPawPoints]
@@ -1688,6 +1693,8 @@ export function usePrincetonTowerDefenseRuntime() {
       setSpells([]);
       setGameSpeed(1);
       setGoldSpellActive(false);
+      setPaydayEndTime(null);
+      setPaydayPawPointsEarned(0);
       setSpecialTowerHp(getVaultHpMap(selectedMap));
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
@@ -4773,6 +4780,8 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       // Hero HP regeneration - with combat buffer
+      // Uses prev state inside setHero so hazard damage (which also sets
+      // lastCombatTime via setHero) is correctly visible through React batching.
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
         const now = Date.now();
 
@@ -4785,21 +4794,20 @@ export function usePrincetonTowerDefenseRuntime() {
         if (inCombat) {
           setHero((prev) => prev ? { ...prev, lastCombatTime: now, healFlash: undefined } : null);
         } else {
-          const timeSinceCombat = now - (hero.lastCombatTime || 0);
-          if (timeSinceCombat >= HERO_HEAL_DELAY_MS) {
-            setHero((prev) => {
-              if (!prev || prev.hp >= prev.maxHp) return prev;
-              const needsNewHealFlash = !prev.healFlash || now - prev.healFlash > 800;
-              return {
-                ...prev,
-                hp: Math.min(
-                  prev.maxHp,
-                  prev.hp + (prev.maxHp * HERO_HEAL_RATE * deltaTime) / 1000
-                ),
-                healFlash: needsNewHealFlash ? now : prev.healFlash,
-              };
-            });
-          }
+          setHero((prev) => {
+            if (!prev || prev.dead || prev.hp >= prev.maxHp) return prev;
+            const timeSinceCombat = now - (prev.lastCombatTime || 0);
+            if (timeSinceCombat < HERO_HEAL_DELAY_MS) return prev;
+            const needsNewHealFlash = !prev.healFlash || now - prev.healFlash > 800;
+            return {
+              ...prev,
+              hp: Math.min(
+                prev.maxHp,
+                prev.hp + (prev.maxHp * HERO_HEAL_RATE * deltaTime) / 1000
+              ),
+              healFlash: needsNewHealFlash ? now : prev.healFlash,
+            };
+          });
         }
       }
       // ========== PROCESS TOWER DEBUFFS FROM ENEMIES ==========
@@ -11652,6 +11660,10 @@ export function usePrincetonTowerDefenseRuntime() {
 
           addPawPoints(totalPayout);
 
+          // Track payday info for the active notification
+          setPaydayPawPointsEarned(totalPayout);
+          setPaydayEndTime(Date.now() + paydayStats.auraDurationMs);
+
           // Apply gold aura effect to all enemies and activate HUD animation
           setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: true })));
           setGoldSpellActive(true);
@@ -11676,10 +11688,10 @@ export function usePrincetonTowerDefenseRuntime() {
             addParticles(pos, "gold", 12);
           });
 
-          // Clear gold aura after 10 seconds
           setTimeout(() => {
             setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: false })));
             setGoldSpellActive(false);
+            setPaydayEndTime(null);
           }, paydayStats.auraDurationMs);
           break;
         }
@@ -12765,6 +12777,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 setGameSpeed(nextSpeed);
               }}
               goldSpellActive={goldSpellActive}
+              paydayEndTime={paydayEndTime}
+              paydayPawPointsEarned={paydayPawPointsEarned}
               eatingClubIncomeEvents={eatingClubIncomeEvents}
               onEatingClubEventComplete={(id) =>
                 setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))
@@ -12887,10 +12901,10 @@ export function usePrincetonTowerDefenseRuntime() {
                     />
                   );
                 })()}
-              {placingTroop && <PlacingTroopIndicator />}
-              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
-              {activeSentinelTargetKey && <SentinelTargetingIndicator />}
-              {missileMortarTargetingId && <MissileTargetingIndicator />}
+              {placingTroop && <PlacingTroopIndicator paydayActive={goldSpellActive} />}
+              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} paydayActive={goldSpellActive} />}
+              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={goldSpellActive} />}
+              {missileMortarTargetingId && <MissileTargetingIndicator paydayActive={goldSpellActive} />}
               {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
                 <SpecialBuildingTooltip
                   type={hoveredSpecialTower.type}
@@ -12909,6 +12923,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     activeSentinelTargetKey ===
                     getSpecialTowerKey(hoveredSpecialTower)
                   }
+                  mapTheme={LEVEL_DATA[selectedMap]?.theme || "grassland"}
                 />
               )}
               {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !hoveredHero && !hoveredSpecialTower && !selectedTower && (

@@ -220,7 +220,7 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
 
   return (
     <div
-      className="fixed top-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none"
+      className="fixed top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none"
       style={{ zIndex: 200 }}
     >
       {notifications.map((n) => (

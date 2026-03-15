@@ -76,7 +76,7 @@ export const OBJECTIVE_TYPE_STATS: Record<SpecialTowerType, ObjectiveTypeStats> 
     risk: "Losing it slows your local DPS cadence.",
   },
   sentinel_nexus: {
-    title: "Imperial Red Sentinel",
+    title: "Imperial Sentinel",
     effect: "Lightning strikes locked target every 10s.",
     risk: "Losing it removes controllable map pressure.",
   },

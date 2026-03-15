@@ -267,7 +267,7 @@ const SPECIAL_TOWER_INFO: Record<
     tip: "Best with high base DPS towers, especially chain and splash builds.",
   },
   sentinel_nexus: {
-    name: "Imperial Red Sentinel",
+    name: "Imperial Sentinel",
     role: "Retargetable Strike",
     icon: <Target size={16} />,
     color: "text-rose-300",

@@ -427,6 +427,7 @@ export function calculateFriendlyHazardEffects(
 
 /**
  * Applies a hazard effect to a troop and returns the updated troop.
+ * Environmental damage resets the out-of-combat heal timer.
  */
 export function applyHazardEffectToTroop(
   troop: Troop,
@@ -441,14 +442,18 @@ export function applyHazardEffectToTroop(
     newHp = Math.max(0, newHp - effect.lavaDamage);
   }
 
+  const tookDamage = newHp < troop.hp;
+  const now = Date.now();
+
   const updated: Troop = {
     ...troop,
     hp: newHp,
     dead: newHp <= 0 ? true : troop.dead,
+    lastCombatTime: tookDamage ? now : troop.lastCombatTime,
+    healFlash: tookDamage ? undefined : troop.healFlash,
   };
 
   if (effect.environmentalSlow > 0) {
-    const now = Date.now();
     const currentSlow = troop.slowed && troop.slowUntil && troop.slowUntil > now
       ? (troop.slowIntensity ?? 0)
       : 0;
@@ -464,6 +469,7 @@ export function applyHazardEffectToTroop(
 
 /**
  * Applies a hazard effect to the hero and returns the updated hero.
+ * Environmental damage resets the out-of-combat heal timer.
  */
 export function applyHazardEffectToHero(
   hero: Hero,
@@ -478,14 +484,18 @@ export function applyHazardEffectToHero(
     newHp = Math.max(0, newHp - effect.lavaDamage);
   }
 
+  const tookDamage = newHp < hero.hp;
+  const now = Date.now();
+
   const updated: Hero = {
     ...hero,
     hp: newHp,
     dead: newHp <= 0 ? true : hero.dead,
+    lastCombatTime: tookDamage ? now : hero.lastCombatTime,
+    healFlash: tookDamage ? undefined : hero.healFlash,
   };
 
   if (effect.environmentalSlow > 0) {
-    const now = Date.now();
     const currentSlow = hero.slowed && hero.slowUntil && hero.slowUntil > now
       ? (hero.slowIntensity ?? 0)
       : 0;

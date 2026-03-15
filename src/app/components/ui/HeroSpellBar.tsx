@@ -301,7 +301,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </div>
 
       {/* Desktop: Full card layout */}
-      <div className="hidden xl:flex p-2 pr-4 items-end justify-between gap-6">
+      <div className="hidden xl:flex p-2 pl-4 pr-5 items-end justify-between gap-6">
         {/* Hero Section — circle aesthetic matching spell orbs */}
         <div className="flex-shrink-0 pointer-events-auto">
           {hero && (() => {
@@ -551,7 +551,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           filter: abilityHovered && isReady
                             ? "drop-shadow(0 0 8px rgba(250,204,21,0.4))"
                             : abilityHovered
-                              ? "drop-shadow(0 0 4px rgba(180,140,60,0.25))"
+                              ? "drop-shadow(0 0 4px rgba(140,140,140,0.2))"
                               : "none",
                         }}
                         width={ORNATE_FRAME_SIZE}
@@ -567,8 +567,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                             </feMerge>
                           </filter>
                           <linearGradient id="ornateTickGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={isReady ? "rgba(250,204,21,0.5)" : abilityHovered ? "rgba(80,60,40,0.4)" : "rgba(80,60,40,0.25)"} />
-                            <stop offset="100%" stopColor={isReady ? "rgba(250,204,21,0.15)" : abilityHovered ? "rgba(80,60,40,0.15)" : "rgba(80,60,40,0.08)"} />
+                            <stop offset="0%" stopColor={isReady ? "rgba(250,204,21,0.5)" : abilityHovered ? "rgba(130,130,130,0.3)" : "rgba(110,110,110,0.18)"} />
+                            <stop offset="100%" stopColor={isReady ? "rgba(250,204,21,0.15)" : abilityHovered ? "rgba(130,130,130,0.12)" : "rgba(110,110,110,0.07)"} />
                           </linearGradient>
                         </defs>
 
@@ -576,7 +576,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         <circle
                           cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_OUTER_R}
                           fill="none"
-                          stroke={isReady ? "rgba(250,204,21,0.22)" : abilityHovered ? "rgba(80,60,40,0.2)" : "rgba(80,60,40,0.12)"}
+                          stroke={isReady ? "rgba(250,204,21,0.22)" : abilityHovered ? "rgba(130,130,130,0.18)" : "rgba(110,110,110,0.14)"}
                           strokeWidth={1}
                           strokeDasharray="2 4 6 4"
                         />
@@ -585,7 +585,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         <circle
                           cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
                           fill="none"
-                          stroke={isReady ? "rgba(250,204,21,0.14)" : abilityHovered ? "rgba(80,60,40,0.12)" : "rgba(80,60,40,0.07)"}
+                          stroke={isReady ? "rgba(250,204,21,0.14)" : abilityHovered ? "rgba(130,130,130,0.1)" : "rgba(110,110,110,0.07)"}
                           strokeWidth={0.5}
                         />
 
@@ -620,8 +620,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                               x={cx - 3.5} y={cy - 3.5} width={7} height={7}
                               rx={1}
                               transform={`rotate(45 ${cx} ${cy})`}
-                              fill={isReady ? hexToRgba(hc, 0.85) : abilityHovered ? "rgba(55,45,30,0.75)" : "rgba(55,45,30,0.6)"}
-                              stroke={isReady ? "rgba(250,204,21,0.7)" : abilityHovered ? "rgba(80,60,40,0.45)" : "rgba(80,60,40,0.3)"}
+                              fill={isReady ? hexToRgba(hc, 0.85) : abilityHovered ? "rgba(120,120,120,0.45)" : "rgba(100,100,100,0.3)"}
+                              stroke={isReady ? "rgba(250,204,21,0.7)" : abilityHovered ? "rgba(130,130,130,0.3)" : "rgba(110,110,110,0.2)"}
                               strokeWidth={1}
                               filter={isReady || abilityHovered ? "url(#abilityGemGlow)" : undefined}
                             />
@@ -637,7 +637,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                               cx={ORNATE_CX + ORNATE_GEM_R * Math.cos(rad)}
                               cy={ORNATE_CX + ORNATE_GEM_R * Math.sin(rad)}
                               r={1.8}
-                              fill={isReady ? "rgba(250,204,21,0.45)" : abilityHovered ? "rgba(80,60,40,0.35)" : "rgba(80,60,40,0.2)"}
+                              fill={isReady ? "rgba(250,204,21,0.45)" : abilityHovered ? "rgba(130,130,130,0.22)" : "rgba(110,110,110,0.12)"}
                             />
                           );
                         })}
@@ -662,7 +662,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           <circle
                             cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
                             fill="none"
-                            stroke="rgba(180,140,60,0.15)"
+                            stroke="rgba(140,140,140,0.12)"
                             strokeWidth={1.5}
                             filter="url(#abilityGemGlow)"
                           />
@@ -807,7 +807,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         </div>
 
         {/* Spell Section */}
-        <div className="flex items-end gap-7 pointer-events-auto">
+        <div className="flex items-end gap-5 pointer-events-auto">
           {spells.map((spell) => {
             const spellData = SPELL_DATA[spell.type];
             const spellLevel = spellUpgradeLevels[spell.type] ?? 0;

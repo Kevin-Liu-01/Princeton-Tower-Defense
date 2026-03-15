@@ -35,6 +35,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { HudTooltip } from "./HudTooltip";
 import { ConfirmModal } from "./ConfirmModal";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { PaydayNotification } from "./PaydayNotification";
 
 // =============================================================================
 // LIVES CARD THEME — transitions red → yellow → dark red by health %
@@ -111,6 +112,8 @@ interface TopHUDProps {
   retryLevel: () => void;
   quitLevel: () => void;
   goldSpellActive?: boolean;
+  paydayEndTime?: number | null;
+  paydayPawPointsEarned?: number;
   eatingClubIncomeEvents?: Array<{ id: string; amount: number }>;
   onEatingClubEventComplete?: (id: string) => void;
   bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
@@ -139,6 +142,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   retryLevel,
   quitLevel,
   goldSpellActive = false,
+  paydayEndTime = null,
+  paydayPawPointsEarned = 0,
   eatingClubIncomeEvents = [],
   onEatingClubEventComplete,
   bountyIncomeEvents = [],
@@ -1131,6 +1136,14 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </HudSurface>
         )}
 
+        <div className="absolute left-0 right-0 top-full z-[70] pt-3">
+          <PaydayNotification
+            active={goldSpellActive}
+            endTime={paydayEndTime}
+            pawPointsEarned={paydayPawPointsEarned}
+          />
+        </div>
+
         <style jsx>{`
           @keyframes floatUp {
             0% { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1173,6 +1186,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           }
         `}</style>
       </div>
+
 
       {showSettings && (
         <SettingsModal

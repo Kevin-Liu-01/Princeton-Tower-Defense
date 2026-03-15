@@ -1213,16 +1213,19 @@ function drawVolcanoHazard(
   const baseY = 5 * cameraZoom;
   const rimY = baseY - coneHeight;
 
-  drawVolcanoScorchedBase(ctx, sRad, iso, hazSeed);
-  drawVolcanoLavaVeins(ctx, sRad, iso, hazSeed, time, buildUp, summonIntensity);
+  drawVolcanoScorchedBase(ctx, sRad, iso, hazSeed, time, buildUp, summonIntensity);
+  drawVolcanoLavaVeins(ctx, sRad, iso, hazSeed, time, buildUp, summonIntensity, cameraZoom);
   drawVolcanoRubble(ctx, baseRx, baseY, iso, hazSeed, cameraZoom);
   drawVolcanoConeBody(ctx, baseRx, baseRy, rimRx, rimRy, baseY, rimY, cameraZoom, buildUp, isSummoning, summonIntensity);
+  drawVolcanoGlowingFissures(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, time, cameraZoom, buildUp, summonIntensity);
   drawVolcanoStrata(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, cameraZoom);
+  drawVolcanoLavaFlows(ctx, baseRx, baseY, rimRx, rimY, iso, hazSeed, time, cameraZoom, buildUp, summonIntensity);
   drawVolcanoRockOutcrops(ctx, baseRx, rimRx, baseY, rimY, iso, hazSeed, cameraZoom);
-  drawVolcanoCrater(ctx, rimRx, rimRy, rimY, iso, cameraZoom, buildUp, isSummoning, summonIntensity);
+  drawVolcanoCrater(ctx, rimRx, rimRy, rimY, iso, cameraZoom, time, hazSeed, buildUp, isSummoning, summonIntensity);
   drawVolcanoFireball(ctx, sRad, rimY, hazSeed, cycleTime, cameraZoom, isSummoning, summonIntensity);
-  drawVolcanoEmbers(ctx, sRad, rimY, hazSeed, time, cameraZoom);
-  drawVolcanoHeatShimmer(ctx, sRad, iso, buildUp, isSummoning, summonIntensity);
+  drawVolcanoEmbers(ctx, sRad, rimY, hazSeed, time, cameraZoom, isSummoning, summonIntensity);
+  drawVolcanoAshCloud(ctx, sRad, rimY, hazSeed, time, cameraZoom, isSummoning, summonIntensity);
+  drawVolcanoHeatShimmer(ctx, sRad, iso, time, hazSeed, buildUp, isSummoning, summonIntensity, cameraZoom);
 }
 
 function drawVolcanoScorchedBase(
@@ -1230,15 +1233,32 @@ function drawVolcanoScorchedBase(
   sRad: number,
   iso: number,
   hazSeed: number,
+  time: number,
+  buildUp: boolean,
+  summonIntensity: number,
 ): void {
-  const baseGrad = ctx.createRadialGradient(0, 0, sRad * 0.15, 0, 0, sRad * 1.3);
-  baseGrad.addColorStop(0, "rgba(80, 35, 10, 0.95)");
-  baseGrad.addColorStop(0.35, "rgba(50, 22, 8, 0.88)");
-  baseGrad.addColorStop(0.7, "rgba(35, 15, 5, 0.6)");
+  const heatBoost = buildUp ? 0.08 : summonIntensity * 0.1;
+  const baseGrad = ctx.createRadialGradient(0, 0, sRad * 0.1, 0, 0, sRad * 1.4);
+  baseGrad.addColorStop(0, `rgba(${90 + Math.floor(heatBoost * 100)}, 38, 12, 0.96)`);
+  baseGrad.addColorStop(0.25, "rgba(65, 28, 10, 0.92)");
+  baseGrad.addColorStop(0.5, "rgba(45, 20, 7, 0.75)");
+  baseGrad.addColorStop(0.75, "rgba(30, 14, 4, 0.4)");
   baseGrad.addColorStop(1, "transparent");
   ctx.fillStyle = baseGrad;
-  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.2 * iso, hazSeed, 0.22);
+  drawOrganicBlob(ctx, sRad * 1.4, sRad * 1.3 * iso, hazSeed, 0.24);
   ctx.fill();
+
+  for (let soot = 0; soot < 8; soot++) {
+    const sSeed = hazSeed + soot * 13.7;
+    const sAngle = seededNoise(sSeed) * Math.PI * 2;
+    const sDist = sRad * (0.6 + seededNoise(sSeed + 1) * 0.5);
+    const sx = Math.cos(sAngle) * sDist;
+    const sy = Math.sin(sAngle) * sDist * iso;
+    const sSize = sRad * (0.04 + seededNoise(sSeed + 2) * 0.05);
+    ctx.fillStyle = `rgba(20, 10, 4, ${0.2 + seededNoise(sSeed + 3) * 0.15})`;
+    drawOrganicBlobAt(ctx, sx, sy, sSize * 1.3, sSize * iso, sSeed + 10, 0.3);
+    ctx.fill();
+  }
 }
 
 function drawVolcanoLavaVeins(
@@ -1249,24 +1269,40 @@ function drawVolcanoLavaVeins(
   time: number,
   buildUp: boolean,
   summonIntensity: number,
+  cameraZoom: number,
 ): void {
-  for (let vein = 0; vein < 8; vein++) {
-    const veinAngle = (vein / 8) * Math.PI * 2 + Math.sin(hazSeed + vein * 3) * 0.25;
-    const veinLen = sRad * (0.5 + seededNoise(hazSeed + vein * 7) * 0.4);
-    const pulse = 0.3 + Math.sin(time * 2 + vein * 0.9) * 0.15;
-    ctx.strokeStyle = `rgba(255, 100, 0, ${pulse + (buildUp ? 0.2 : 0) + summonIntensity * 0.3})`;
-    ctx.lineWidth = (2 + Math.sin(hazSeed + vein) * 0.8);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    const midR = veinLen * 0.5;
-    const midAngle = veinAngle + (seededNoise(hazSeed + vein * 11) - 0.5) * 0.3;
-    ctx.quadraticCurveTo(
-      Math.cos(midAngle) * midR,
-      Math.sin(midAngle) * midR * iso,
-      Math.cos(veinAngle) * veinLen,
-      Math.sin(veinAngle) * veinLen * iso,
-    );
-    ctx.stroke();
+  for (let vein = 0; vein < 10; vein++) {
+    const vSeed = hazSeed + vein * 7;
+    const veinAngle = (vein / 10) * Math.PI * 2 + Math.sin(hazSeed + vein * 3) * 0.25;
+    const veinLen = sRad * (0.5 + seededNoise(vSeed) * 0.45);
+    const pulse = 0.3 + Math.sin(time * 2.5 + vein * 0.9) * 0.18;
+    const intensity = pulse + (buildUp ? 0.25 : 0) + summonIntensity * 0.35;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(255, 80, 0, ${intensity * 0.3})`;
+    ctx.shadowBlur = 4 * cameraZoom;
+
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0
+        ? `rgba(200, 60, 0, ${intensity * 0.4})`
+        : `rgba(255, 120, 10, ${intensity})`;
+      ctx.lineWidth = (pass === 0 ? 3.5 : 1.8 + Math.sin(hazSeed + vein) * 0.6) * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+
+      let cx = 0;
+      let cy = 0;
+      const segs = 4;
+      for (let seg = 1; seg <= segs; seg++) {
+        const t = seg / segs;
+        const jit = (seededNoise(vSeed + seg * 5) - 0.5) * 0.2;
+        cx = Math.cos(veinAngle + jit) * veinLen * t;
+        cy = Math.sin(veinAngle + jit) * veinLen * t * iso;
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 
@@ -1278,18 +1314,18 @@ function drawVolcanoRubble(
   hazSeed: number,
   cameraZoom: number,
 ): void {
-  for (let rub = 0; rub < 12; rub++) {
-    const rubAngle = (rub / 12) * Math.PI * 2 + seededNoise(hazSeed + rub * 7.3) * 0.3;
-    const rubDist = baseRx * (0.9 + seededNoise(hazSeed + rub * 4.1) * 0.35);
+  for (let rub = 0; rub < 14; rub++) {
+    const rubAngle = (rub / 14) * Math.PI * 2 + seededNoise(hazSeed + rub * 7.3) * 0.3;
+    const rubDist = baseRx * (0.88 + seededNoise(hazSeed + rub * 4.1) * 0.4);
     const rx = Math.cos(rubAngle) * rubDist;
     const ry = baseY + Math.sin(rubAngle) * rubDist * iso;
-    const rubSize = (2.5 + seededNoise(hazSeed + rub * 9) * 3.5) * cameraZoom;
+    const rubSize = (2.5 + seededNoise(hazSeed + rub * 9) * 4) * cameraZoom;
     const rubIso = rubSize * iso;
     const rubLr = -Math.cos(rubAngle);
     const rubLight = 0.5 + rubLr * 0.3;
-    const rr = Math.floor(42 * rubLight + 18);
-    const rg = Math.floor(26 * rubLight + 10);
-    const rb = Math.floor(15 * rubLight + 5);
+    const rr = Math.floor(45 * rubLight + 20);
+    const rg = Math.floor(28 * rubLight + 12);
+    const rb = Math.floor(16 * rubLight + 6);
 
     ctx.fillStyle = `rgb(${rr}, ${rg}, ${rb})`;
     ctx.beginPath();
@@ -1299,6 +1335,10 @@ function drawVolcanoRubble(
     ctx.lineTo(rx, ry - rubIso);
     ctx.closePath();
     ctx.fill();
+
+    ctx.strokeStyle = `rgba(${rr - 10}, ${rg - 5}, ${rb - 3}, 0.3)`;
+    ctx.lineWidth = 0.5 * cameraZoom;
+    ctx.stroke();
   }
 }
 
@@ -1315,7 +1355,7 @@ function drawVolcanoConeBody(
   isSummoning: boolean,
   summonIntensity: number,
 ): void {
-  const CONE_SEGS = 20;
+  const CONE_SEGS = 24;
 
   for (let pass = 0; pass < 2; pass++) {
     const startI = pass === 0 ? CONE_SEGS / 2 : 0;
@@ -1338,13 +1378,13 @@ function drawVolcanoConeBody(
 
       const lr = -Math.cos(midA);
       const fb = Math.sin(midA);
-      const lightness = 0.48 + lr * 0.32 + fb * 0.06;
+      const lightness = 0.5 + lr * 0.34 + fb * 0.08;
 
-      const cr = Math.floor(52 * lightness + 16);
-      const cg = Math.floor(32 * lightness + 8);
-      const cb = Math.floor(18 * lightness + 4);
-      const heatR = Math.floor(buildUp ? 25 : (isSummoning ? 35 * summonIntensity : 0));
-      const heatG = Math.floor(buildUp ? 6 : (isSummoning ? 10 * summonIntensity : 0));
+      const cr = Math.floor(55 * lightness + 18);
+      const cg = Math.floor(34 * lightness + 10);
+      const cb = Math.floor(20 * lightness + 5);
+      const heatR = Math.floor(buildUp ? 30 : (isSummoning ? 40 * summonIntensity : 0));
+      const heatG = Math.floor(buildUp ? 8 : (isSummoning ? 12 * summonIntensity : 0));
 
       ctx.fillStyle = `rgb(${Math.min(255, cr + heatR)}, ${cg + heatG}, ${cb})`;
       ctx.beginPath();
@@ -1355,10 +1395,60 @@ function drawVolcanoConeBody(
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = `rgba(0, 0, 0, ${0.06 + Math.abs(lr) * 0.05})`;
-      ctx.lineWidth = 0.5 * cameraZoom;
+      ctx.strokeStyle = `rgba(0, 0, 0, ${0.05 + Math.abs(lr) * 0.06})`;
+      ctx.lineWidth = 0.4 * cameraZoom;
       ctx.stroke();
     }
+  }
+}
+
+function drawVolcanoGlowingFissures(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  rimRx: number,
+  baseY: number,
+  rimY: number,
+  iso: number,
+  hazSeed: number,
+  time: number,
+  cameraZoom: number,
+  buildUp: boolean,
+  summonIntensity: number,
+): void {
+  const fissureGlow = 0.3 + (buildUp ? 0.3 : summonIntensity * 0.4);
+
+  for (let fis = 0; fis < 6; fis++) {
+    const fSeed = hazSeed + fis * 19.7;
+    const fAngle = (fis / 6) * Math.PI + seededNoise(fSeed) * 0.4;
+    const startT = 0.1 + seededNoise(fSeed + 1) * 0.2;
+    const endT = 0.7 + seededNoise(fSeed + 2) * 0.25;
+    const pulse = Math.sin(time * 2 + fis * 1.3) * 0.15;
+    const alpha = fissureGlow + pulse;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(255, 100, 0, ${alpha * 0.6})`;
+    ctx.shadowBlur = 6 * cameraZoom;
+
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0
+        ? `rgba(255, 60, 0, ${alpha * 0.4})`
+        : `rgba(255, 160, 40, ${alpha})`;
+      ctx.lineWidth = (pass === 0 ? 3 : 1.2) * cameraZoom;
+      ctx.beginPath();
+
+      for (let seg = 0; seg <= 6; seg++) {
+        const t = startT + (endT - startT) * (seg / 6);
+        const interpRx = baseRx + (rimRx - baseRx) * t;
+        const interpY = baseY + (rimY - baseY) * t;
+        const jit = (seededNoise(fSeed + seg * 7) - 0.5) * 3 * cameraZoom;
+        const x = Math.cos(fAngle) * interpRx * 1.01 + jit;
+        const y = interpY + Math.sin(fAngle) * interpRx * iso * 1.01;
+        if (seg === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 }
 
@@ -1372,24 +1462,92 @@ function drawVolcanoStrata(
   hazSeed: number,
   cameraZoom: number,
 ): void {
-  for (let stratum = 0; stratum < 4; stratum++) {
-    const t = 0.2 + stratum * 0.2;
+  for (let stratum = 0; stratum < 5; stratum++) {
+    const t = 0.15 + stratum * 0.17;
     const stratRx = baseRx + (rimRx - baseRx) * t;
     const stratRy = stratRx * iso;
     const stratY = baseY + (rimY - baseY) * t;
     const jitter = (seededNoise(hazSeed + stratum * 17) * 2 - 1) * cameraZoom;
 
-    ctx.strokeStyle = `rgba(20, 8, 3, ${0.2 + stratum * 0.04})`;
-    ctx.lineWidth = (0.8 + seededNoise(hazSeed + stratum * 17) * 0.6) * cameraZoom;
+    ctx.strokeStyle = `rgba(20, 8, 3, ${0.18 + stratum * 0.04})`;
+    ctx.lineWidth = (0.7 + seededNoise(hazSeed + stratum * 17) * 0.5) * cameraZoom;
     ctx.beginPath();
-    for (let j = 0; j <= 10; j++) {
-      const a = (j / 10) * Math.PI;
+    for (let j = 0; j <= 12; j++) {
+      const a = (j / 12) * Math.PI;
       const sx = Math.cos(a) * stratRx;
       const sy = stratY + Math.sin(a) * stratRy + jitter;
       if (j === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
     ctx.stroke();
+  }
+}
+
+function drawVolcanoLavaFlows(
+  ctx: CanvasRenderingContext2D,
+  baseRx: number,
+  baseY: number,
+  rimRx: number,
+  rimY: number,
+  iso: number,
+  hazSeed: number,
+  time: number,
+  cameraZoom: number,
+  buildUp: boolean,
+  summonIntensity: number,
+): void {
+  const flowIntensity = 0.4 + (buildUp ? 0.3 : summonIntensity * 0.5);
+
+  for (let flow = 0; flow < 4; flow++) {
+    const fSeed = hazSeed + flow * 31.7;
+    const fAngle = (flow / 4) * Math.PI + 0.3 + seededNoise(fSeed) * 0.4;
+    const flowWidth = (3 + seededNoise(fSeed + 1) * 2) * cameraZoom;
+    const flowLen = 0.5 + seededNoise(fSeed + 2) * 0.35;
+    const flowPulse = Math.sin(time * 1.5 + flow * 1.7) * 0.1;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(255, 80, 0, ${(flowIntensity + flowPulse) * 0.4})`;
+    ctx.shadowBlur = 5 * cameraZoom;
+
+    const segs = 8;
+    const points: { x: number; y: number }[] = [];
+    for (let seg = 0; seg <= segs; seg++) {
+      const t = seg / segs;
+      const lerpT = t * flowLen;
+      const interpRx = rimRx + (baseRx - rimRx) * lerpT;
+      const interpY = rimY + (baseY - rimY) * lerpT;
+      const jit = (seededNoise(fSeed + seg * 5) - 0.5) * 4 * cameraZoom * t;
+      points.push({
+        x: Math.cos(fAngle) * interpRx * 1.02 + jit,
+        y: interpY + Math.sin(fAngle) * interpRx * iso * 1.02,
+      });
+    }
+
+    for (let pass = 0; pass < 2; pass++) {
+      const w = pass === 0 ? flowWidth * 1.8 : flowWidth;
+      const alpha = flowIntensity + flowPulse;
+      ctx.strokeStyle = pass === 0
+        ? `rgba(200, 50, 0, ${alpha * 0.35})`
+        : `rgba(255, 150, 30, ${alpha * 0.8})`;
+      ctx.lineWidth = w;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let p = 1; p < points.length; p++) {
+        ctx.lineTo(points[p].x, points[p].y);
+      }
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = `rgba(255, 230, 100, ${(flowIntensity + flowPulse) * 0.4})`;
+    ctx.lineWidth = flowWidth * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let p = 1; p < points.length - 1; p++) {
+      ctx.lineTo(points[p].x, points[p].y);
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -1403,25 +1561,38 @@ function drawVolcanoRockOutcrops(
   hazSeed: number,
   cameraZoom: number,
 ): void {
-  for (let rock = 0; rock < 8; rock++) {
-    const rockAngle = (rock / 8) * Math.PI + seededNoise(hazSeed + rock * 5.3) * 0.3;
+  for (let rock = 0; rock < 10; rock++) {
+    const rockAngle = (rock / 10) * Math.PI + seededNoise(hazSeed + rock * 5.3) * 0.3;
     const rockT = 0.15 + seededNoise(hazSeed + rock * 8.7) * 0.55;
     const interpRx = baseRx + (rimRx - baseRx) * rockT;
     const interpY = baseY + (rimY - baseY) * rockT;
-    const rcx = Math.cos(rockAngle) * interpRx * 1.03;
-    const rcy = interpY + Math.sin(rockAngle) * interpRx * iso * 1.03;
-    const rockSize = (2.5 + seededNoise(hazSeed + rock * 3.1) * 3) * cameraZoom;
+    const rcx = Math.cos(rockAngle) * interpRx * 1.04;
+    const rcy = interpY + Math.sin(rockAngle) * interpRx * iso * 1.04;
+    const rockSize = (2.5 + seededNoise(hazSeed + rock * 3.1) * 3.5) * cameraZoom;
 
     const lr = -Math.cos(rockAngle);
     const rockLight = 0.5 + lr * 0.3;
-    const crr = Math.floor(55 * rockLight + 15);
-    const crg = Math.floor(35 * rockLight + 8);
-    const crb = Math.floor(20 * rockLight + 4);
+    const crr = Math.floor(58 * rockLight + 16);
+    const crg = Math.floor(36 * rockLight + 9);
+    const crb = Math.floor(22 * rockLight + 5);
 
     ctx.fillStyle = `rgb(${crr}, ${crg}, ${crb})`;
     ctx.beginPath();
-    ctx.arc(rcx, rcy, rockSize, 0, Math.PI * 2);
+    const rSegs = 5 + Math.floor(seededNoise(hazSeed + rock * 2.1) * 3);
+    for (let seg = 0; seg < rSegs; seg++) {
+      const a = (seg / rSegs) * Math.PI * 2;
+      const r = rockSize * (0.7 + seededNoise(hazSeed + rock * 7 + seg * 3) * 0.3);
+      const px = rcx + Math.cos(a) * r;
+      const py = rcy + Math.sin(a) * r * iso;
+      if (seg === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
     ctx.fill();
+
+    ctx.strokeStyle = `rgba(${crr - 15}, ${crg - 8}, ${crb - 3}, 0.25)`;
+    ctx.lineWidth = 0.5 * cameraZoom;
+    ctx.stroke();
   }
 }
 
@@ -1432,47 +1603,67 @@ function drawVolcanoCrater(
   rimY: number,
   iso: number,
   cameraZoom: number,
+  time: number,
+  hazSeed: number,
   buildUp: boolean,
   isSummoning: boolean,
   summonIntensity: number,
 ): void {
-  const craterDepth = 5 * cameraZoom;
+  const craterDepth = 6 * cameraZoom;
 
   const innerGrad = ctx.createLinearGradient(0, rimY - 2 * cameraZoom, 0, rimY + craterDepth);
-  innerGrad.addColorStop(0, "rgba(50, 22, 8, 0.9)");
-  innerGrad.addColorStop(0.5, "rgba(100, 35, 10, 0.85)");
-  innerGrad.addColorStop(1, "rgba(180, 70, 15, 0.9)");
+  innerGrad.addColorStop(0, "rgba(45, 20, 7, 0.92)");
+  innerGrad.addColorStop(0.4, "rgba(90, 32, 10, 0.88)");
+  innerGrad.addColorStop(0.7, "rgba(160, 60, 12, 0.9)");
+  innerGrad.addColorStop(1, "rgba(200, 80, 18, 0.92)");
   ctx.fillStyle = innerGrad;
   ctx.beginPath();
   ctx.ellipse(0, rimY, rimRx, rimRy, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const glowIntensity = buildUp ? 1.4 : (isSummoning ? 1.6 : 1);
-  const magmaRx = rimRx * 0.7;
+  const glowIntensity = buildUp ? 1.5 : (isSummoning ? 1.7 : 1);
+  const magmaRx = rimRx * 0.72;
   const magmaRy = magmaRx * iso;
 
   ctx.save();
-  if (buildUp || isSummoning) {
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = (15 + summonIntensity * 25) * cameraZoom;
-  }
+  const glowAlpha = 0.3 + (buildUp ? 0.3 : summonIntensity * 0.4);
+  ctx.shadowColor = `rgba(255, 80, 0, ${glowAlpha})`;
+  ctx.shadowBlur = (18 + summonIntensity * 30) * cameraZoom;
 
   const craterGrad = ctx.createRadialGradient(
     0, rimY + craterDepth * 0.3, 0,
     0, rimY + craterDepth * 0.3, magmaRx,
   );
-  craterGrad.addColorStop(0, `rgba(255, 220, ${buildUp ? 100 : 60}, ${glowIntensity})`);
-  craterGrad.addColorStop(0.4, "rgba(255, 120, 0, 0.9)");
-  craterGrad.addColorStop(0.7, "rgba(200, 60, 0, 0.7)");
-  craterGrad.addColorStop(1, "rgba(100, 30, 0, 0.3)");
+  craterGrad.addColorStop(0, `rgba(255, 230, ${buildUp ? 120 : 70}, ${glowIntensity})`);
+  craterGrad.addColorStop(0.3, "rgba(255, 150, 10, 0.92)");
+  craterGrad.addColorStop(0.55, "rgba(230, 80, 0, 0.8)");
+  craterGrad.addColorStop(0.8, "rgba(180, 45, 0, 0.5)");
+  craterGrad.addColorStop(1, "rgba(100, 25, 0, 0.15)");
   ctx.fillStyle = craterGrad;
   ctx.beginPath();
   ctx.ellipse(0, rimY + craterDepth * 0.3, magmaRx, magmaRy, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  ctx.strokeStyle = "rgba(90, 50, 20, 0.5)";
-  ctx.lineWidth = 1.5 * cameraZoom;
+  for (let bubble = 0; bubble < 5; bubble++) {
+    const bSeed = hazSeed + bubble * 7.3;
+    const bPhase = (time * 0.8 + seededNoise(bSeed) * 2) % 2;
+    if (bPhase > 0.6) continue;
+    const bAngle = seededNoise(bSeed + 1) * Math.PI * 2;
+    const bDist = magmaRx * 0.4 * seededNoise(bSeed + 2);
+    const bx = Math.cos(bAngle) * bDist;
+    const by = rimY + craterDepth * 0.3 + Math.sin(bAngle) * bDist * iso;
+    const bLife = Math.sin((bPhase / 0.6) * Math.PI);
+    const bSize = (2 + seededNoise(bSeed + 3) * 2) * cameraZoom * bLife;
+
+    ctx.fillStyle = `rgba(255, 220, 80, ${0.6 * bLife})`;
+    ctx.beginPath();
+    ctx.arc(bx, by - bPhase * 4 * cameraZoom, bSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = "rgba(85, 45, 18, 0.55)";
+  ctx.lineWidth = 1.8 * cameraZoom;
   ctx.beginPath();
   ctx.ellipse(0, rimY, rimRx * 1.02, rimRy * 1.02, 0, 0, Math.PI * 2);
   ctx.stroke();
@@ -1492,47 +1683,49 @@ function drawVolcanoFireball(
 
   const fireballPhase = cycleTime / 2.0;
   const risePhase = Math.min(1, fireballPhase * 2);
-  const arcHeight = 90 * cameraZoom * Math.sin(risePhase * Math.PI);
+  const arcHeight = 95 * cameraZoom * Math.sin(risePhase * Math.PI);
   const fireballY = rimY - arcHeight;
   const driftX = Math.sin(fireballPhase * Math.PI * 3) * sRad * 0.3 * fireballPhase;
-  const fireballSize = (8 + summonIntensity * 6) * cameraZoom;
+  const fireballSize = (9 + summonIntensity * 7) * cameraZoom;
 
   ctx.save();
-  for (let trail = 4; trail >= 0; trail--) {
-    const trailT = Math.max(0, risePhase - trail * 0.05);
-    const trailArc = 90 * cameraZoom * Math.sin(trailT * Math.PI);
+  for (let trail = 6; trail >= 0; trail--) {
+    const trailT = Math.max(0, risePhase - trail * 0.04);
+    const trailArc = 95 * cameraZoom * Math.sin(trailT * Math.PI);
     const trailYPos = rimY - trailArc;
     const trailX = Math.sin(trailT * Math.PI * 3) * sRad * 0.3 * trailT;
-    const trailAlpha = (1 - trail * 0.2) * summonIntensity * 0.5;
-    const trailSize = fireballSize * (1 - trail * 0.15);
+    const trailAlpha = (1 - trail * 0.14) * summonIntensity * 0.45;
+    const trailSize = fireballSize * (1 - trail * 0.12);
 
-    ctx.fillStyle = `rgba(255, ${100 + trail * 30}, 0, ${trailAlpha})`;
+    ctx.fillStyle = `rgba(255, ${80 + trail * 25}, 0, ${trailAlpha})`;
     ctx.beginPath();
     ctx.arc(trailX, trailYPos, trailSize, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  ctx.shadowColor = "#ff6600";
-  ctx.shadowBlur = 20 * cameraZoom;
+  ctx.shadowColor = "#ff5500";
+  ctx.shadowBlur = 25 * cameraZoom;
   const fbGrad = ctx.createRadialGradient(driftX, fireballY, 0, driftX, fireballY, fireballSize);
-  fbGrad.addColorStop(0, "rgba(255, 255, 200, 1)");
-  fbGrad.addColorStop(0.3, "rgba(255, 180, 50, 0.95)");
-  fbGrad.addColorStop(0.6, "rgba(255, 100, 0, 0.8)");
-  fbGrad.addColorStop(1, "rgba(200, 50, 0, 0.3)");
+  fbGrad.addColorStop(0, "rgba(255, 255, 210, 1)");
+  fbGrad.addColorStop(0.2, "rgba(255, 220, 80, 0.96)");
+  fbGrad.addColorStop(0.45, "rgba(255, 140, 20, 0.85)");
+  fbGrad.addColorStop(0.7, "rgba(230, 70, 0, 0.6)");
+  fbGrad.addColorStop(1, "rgba(180, 40, 0, 0.15)");
   ctx.fillStyle = fbGrad;
   ctx.beginPath();
   ctx.arc(driftX, fireballY, fireballSize, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
-  for (let smoke = 0; smoke < 5; smoke++) {
-    const smokeX = driftX + (seededNoise(hazSeed + smoke * 3) - 0.5) * 15 * cameraZoom;
-    const smokeY = fireballY + smoke * 8 * cameraZoom;
-    const smokeAlpha = (0.4 - smoke * 0.07) * summonIntensity;
+  for (let smoke = 0; smoke < 6; smoke++) {
+    const smokeX = driftX + (seededNoise(hazSeed + smoke * 3) - 0.5) * 18 * cameraZoom;
+    const smokeY = fireballY + smoke * 7 * cameraZoom;
+    const smokeAlpha = (0.35 - smoke * 0.05) * summonIntensity;
+    const smokeSize = (3 + smoke * 1.8) * cameraZoom;
 
-    ctx.fillStyle = `rgba(80, 60, 40, ${smokeAlpha})`;
+    ctx.fillStyle = `rgba(70, 55, 40, ${smokeAlpha})`;
     ctx.beginPath();
-    ctx.arc(smokeX, smokeY, (3 + smoke * 1.5) * cameraZoom, 0, Math.PI * 2);
+    ctx.ellipse(smokeX, smokeY, smokeSize * 1.2, smokeSize * 0.8, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1544,22 +1737,65 @@ function drawVolcanoEmbers(
   hazSeed: number,
   time: number,
   cameraZoom: number,
+  isSummoning: boolean,
+  summonIntensity: number,
 ): void {
-  for (let ember = 0; ember < 10; ember++) {
-    const emberPhase = (time * 0.5 + ember * 0.35 + seededNoise(hazSeed + ember) * 2) % 3;
-    const emberAngle = ember * 0.63 + hazSeed * 0.01;
-    const emberDist = sRad * 0.15 + seededNoise(hazSeed + ember * 5) * sRad * 0.2;
-    const emberX = Math.cos(emberAngle) * emberDist + (seededNoise(hazSeed + ember * 9) - 0.5) * 10 * cameraZoom;
-    const emberYPos = rimY - emberPhase * 35 * cameraZoom;
-    const emberSize = (1.8 + (ember % 3) * 0.6) * cameraZoom * (1 - emberPhase / 3);
+  const emberCount = isSummoning ? 18 : 12;
+  for (let ember = 0; ember < emberCount; ember++) {
+    const eSeed = hazSeed + ember * 3.7;
+    const emberPhase = (time * 0.6 + ember * 0.3 + seededNoise(eSeed) * 2) % 3;
+    const emberAngle = ember * 0.5 + hazSeed * 0.01 + seededNoise(eSeed + 1) * 0.5;
+    const baseDist = sRad * 0.12 + seededNoise(eSeed + 2) * sRad * 0.25;
+    const spreadFactor = isSummoning ? 1.3 + summonIntensity * 0.5 : 1;
+    const emberDist = baseDist * spreadFactor;
+    const emberX = Math.cos(emberAngle) * emberDist + (seededNoise(eSeed + 3) - 0.5) * 12 * cameraZoom;
+    const riseSpeed = (35 + seededNoise(eSeed + 4) * 15) * cameraZoom;
+    const emberYPos = rimY - emberPhase * riseSpeed;
+    const emberSize = (1.5 + (ember % 4) * 0.5) * cameraZoom * (1 - emberPhase / 3);
+    const emberAlpha = (1 - emberPhase / 3);
 
-    if (ember < 5) {
-      ctx.fillStyle = `rgba(255, ${160 + ember * 15}, ${50 - ember * 8}, ${0.7 * (1 - emberPhase / 3)})`;
+    if (ember < emberCount * 0.6) {
+      ctx.save();
+      ctx.shadowColor = `rgba(255, 150, 0, ${emberAlpha * 0.4})`;
+      ctx.shadowBlur = 3 * cameraZoom;
+      ctx.fillStyle = `rgba(255, ${150 + ember * 8}, ${40 - (ember % 5) * 8}, ${0.75 * emberAlpha})`;
+      ctx.beginPath();
+      ctx.arc(emberX, emberYPos, emberSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     } else {
-      ctx.fillStyle = `rgba(60, 50, 40, ${0.3 * (1 - emberPhase / 3)})`;
+      ctx.fillStyle = `rgba(55, 45, 35, ${0.3 * emberAlpha})`;
+      ctx.beginPath();
+      ctx.arc(emberX, emberYPos, emberSize * 1.2, 0, Math.PI * 2);
+      ctx.fill();
     }
+  }
+}
+
+function drawVolcanoAshCloud(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  rimY: number,
+  hazSeed: number,
+  time: number,
+  cameraZoom: number,
+  isSummoning: boolean,
+  summonIntensity: number,
+): void {
+  if (!isSummoning || summonIntensity < 0.3) return;
+
+  const cloudAlpha = (summonIntensity - 0.3) * 0.5;
+  for (let puff = 0; puff < 5; puff++) {
+    const pSeed = hazSeed + puff * 11.3;
+    const pPhase = (time * 0.4 + seededNoise(pSeed) * 3) % 3;
+    const px = (seededNoise(pSeed + 1) - 0.5) * sRad * 0.6 + Math.sin(time * 0.3 + puff) * 8 * cameraZoom;
+    const py = rimY - 50 * cameraZoom - pPhase * 25 * cameraZoom;
+    const pSize = sRad * (0.1 + pPhase * 0.05 + seededNoise(pSeed + 2) * 0.06);
+    const pAlpha = cloudAlpha * (1 - pPhase / 3);
+
+    ctx.fillStyle = `rgba(60, 50, 45, ${pAlpha})`;
     ctx.beginPath();
-    ctx.arc(emberX, emberYPos, emberSize, 0, Math.PI * 2);
+    ctx.ellipse(px, py, pSize * 1.4, pSize * 0.7, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1568,16 +1804,38 @@ function drawVolcanoHeatShimmer(
   ctx: CanvasRenderingContext2D,
   sRad: number,
   iso: number,
+  time: number,
+  hazSeed: number,
   buildUp: boolean,
   isSummoning: boolean,
   summonIntensity: number,
+  cameraZoom: number,
 ): void {
-  if (!buildUp && !isSummoning) return;
-  const shimmerAlpha = buildUp ? 0.12 : summonIntensity * 0.15;
-  ctx.fillStyle = `rgba(255, 150, 50, ${shimmerAlpha})`;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, sRad * 0.9, sRad * 0.9 * iso, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const baseAlpha = 0.04 + (buildUp ? 0.1 : (isSummoning ? summonIntensity * 0.12 : 0));
+
+  for (let ring = 0; ring < 3; ring++) {
+    const ringPhase = (time * 0.5 + ring * 0.9 + hazSeed * 0.01) % 2.5;
+    const ringR = sRad * (0.4 + ringPhase * 0.25);
+    const ringAlpha = baseAlpha * (1 - ringPhase / 2.5);
+
+    ctx.strokeStyle = `rgba(255, 160, 60, ${ringAlpha})`;
+    ctx.lineWidth = (2 - ringPhase * 0.5) * cameraZoom;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, ringR, ringR * iso, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (buildUp || isSummoning) {
+    const glowAlpha = buildUp ? 0.08 : summonIntensity * 0.1;
+    const glowGrad = ctx.createRadialGradient(0, -10 * cameraZoom, 0, 0, -10 * cameraZoom, sRad * 0.7);
+    glowGrad.addColorStop(0, `rgba(255, 120, 30, ${glowAlpha})`);
+    glowGrad.addColorStop(0.5, `rgba(255, 80, 10, ${glowAlpha * 0.4})`);
+    glowGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, -10 * cameraZoom, sRad * 0.7, sRad * 0.5 * iso, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 // ============================================================================
@@ -2645,137 +2903,328 @@ function drawSwampHazard(
 ): void {
   const hazSeed = (pos.x || 0) * 29.3 + (pos.y || 0) * 47.1;
 
-  // 1. Damp earth/mud transition ring
-  const wetGrad = ctx.createRadialGradient(0, 0, sRad * 0.45, 0, 0, sRad * 1.35);
-  wetGrad.addColorStop(0, "rgba(30, 42, 15, 0.5)");
-  wetGrad.addColorStop(0.35, "rgba(40, 55, 22, 0.38)");
-  wetGrad.addColorStop(0.7, "rgba(28, 38, 14, 0.2)");
+  // 1. Wide damp earth/mud transition with organic edges
+  const wetGrad = ctx.createRadialGradient(0, 0, sRad * 0.4, 0, 0, sRad * 1.4);
+  wetGrad.addColorStop(0, "rgba(28, 40, 12, 0.55)");
+  wetGrad.addColorStop(0.3, "rgba(38, 52, 18, 0.42)");
+  wetGrad.addColorStop(0.55, "rgba(32, 44, 16, 0.28)");
+  wetGrad.addColorStop(0.8, "rgba(22, 32, 10, 0.12)");
   wetGrad.addColorStop(1, "transparent");
   ctx.fillStyle = wetGrad;
-  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.25 * isoRatio, hazSeed, 0.24);
+  drawOrganicBlob(ctx, sRad * 1.38, sRad * 1.32 * isoRatio, hazSeed, 0.26);
   ctx.fill();
 
   // Mud cracks in transition zone
-  ctx.strokeStyle = "rgba(60, 85, 30, 0.3)";
-  ctx.lineWidth = 1 * cameraZoom;
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2 + seededNoise(hazSeed + i * 3.1) * 0.35;
-    const start = sRad * (0.7 + seededNoise(hazSeed + i * 5.3) * 0.2);
-    const end = sRad * (1.0 + seededNoise(hazSeed + i * 7.1) * 0.25);
+  for (let i = 0; i < 10; i++) {
+    const cSeed = hazSeed + i * 3.1;
+    const angle = (i / 10) * Math.PI * 2 + seededNoise(cSeed) * 0.35;
+    const start = sRad * (0.7 + seededNoise(cSeed + 1) * 0.2);
+    const end = sRad * (1.0 + seededNoise(cSeed + 2) * 0.3);
+    ctx.strokeStyle = `rgba(55, 75, 28, ${0.25 + seededNoise(cSeed + 3) * 0.12})`;
+    ctx.lineWidth = (0.8 + seededNoise(cSeed + 4) * 0.5) * cameraZoom;
     ctx.beginPath();
     ctx.moveTo(Math.cos(angle) * start, Math.sin(angle) * start * isoRatio);
-    ctx.lineTo(Math.cos(angle + 0.08) * end, Math.sin(angle + 0.08) * end * isoRatio);
+    const midR = (start + end) * 0.5;
+    const midAngle = angle + (seededNoise(cSeed + 5) - 0.5) * 0.15;
+    ctx.quadraticCurveTo(
+      Math.cos(midAngle) * midR, Math.sin(midAngle) * midR * isoRatio,
+      Math.cos(angle + 0.06) * end, Math.sin(angle + 0.06) * end * isoRatio
+    );
     ctx.stroke();
   }
 
-  // 2. Main murky water body with depth gradient
+  // 2. Main murky water body with rich depth
   const swampGrad = ctx.createRadialGradient(
-    -sRad * 0.12, -sRad * 0.08 * isoRatio, 0, 0, 0, sRad
+    -sRad * 0.1, -sRad * 0.06 * isoRatio, 0, 0, 0, sRad * 1.05
   );
-  swampGrad.addColorStop(0, "rgba(50, 70, 28, 0.94)");
-  swampGrad.addColorStop(0.3, "rgba(42, 60, 22, 0.92)");
-  swampGrad.addColorStop(0.6, "rgba(32, 48, 16, 0.94)");
-  swampGrad.addColorStop(1, "rgba(18, 28, 8, 0.9)");
+  swampGrad.addColorStop(0, "rgba(48, 68, 25, 0.95)");
+  swampGrad.addColorStop(0.2, "rgba(40, 58, 20, 0.94)");
+  swampGrad.addColorStop(0.45, "rgba(30, 48, 14, 0.95)");
+  swampGrad.addColorStop(0.7, "rgba(22, 38, 10, 0.95)");
+  swampGrad.addColorStop(1, "rgba(15, 25, 6, 0.92)");
   ctx.fillStyle = swampGrad;
-  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 30, 0.18);
+  drawOrganicBlob(ctx, sRad * 1.02, sRad * isoRatio, hazSeed + 30, 0.18);
   ctx.fill();
 
-  // 3. Deeper center
-  const depthGrad = ctx.createRadialGradient(0, 2 * cameraZoom, 0, 0, 2 * cameraZoom, sRad * 0.4);
-  depthGrad.addColorStop(0, "rgba(12, 20, 5, 0.9)");
-  depthGrad.addColorStop(1, "rgba(20, 30, 10, 0.1)");
+  // 3. Deep murky center pool
+  const depthGrad = ctx.createRadialGradient(0, 2 * cameraZoom, 0, 0, 2 * cameraZoom, sRad * 0.42);
+  depthGrad.addColorStop(0, "rgba(8, 15, 3, 0.92)");
+  depthGrad.addColorStop(0.6, "rgba(15, 25, 8, 0.5)");
+  depthGrad.addColorStop(1, "rgba(22, 35, 12, 0.05)");
   ctx.fillStyle = depthGrad;
-  drawOrganicBlob(ctx, sRad * 0.38, sRad * 0.3 * isoRatio, hazSeed + 80, 0.14);
+  drawOrganicBlob(ctx, sRad * 0.4, sRad * 0.32 * isoRatio, hazSeed + 80, 0.14);
   ctx.fill();
 
-  // 4. Floating algae/vegetation patches
-  for (let patch = 0; patch < 7; patch++) {
-    const pSeed = hazSeed + patch * 19.7;
-    const pAngle = seededNoise(pSeed) * Math.PI * 2;
-    const pDist = sRad * (0.18 + seededNoise(pSeed + 1) * 0.48);
-    const drift = Math.sin(time * 0.25 + patch * 1.4) * 3 * cameraZoom;
-    const px = Math.cos(pAngle) * pDist + drift;
-    const py = Math.sin(pAngle) * pDist * isoRatio;
-    const pSize = sRad * (0.06 + seededNoise(pSeed + 2) * 0.1);
-    ctx.fillStyle = `rgba(${55 + (patch % 3) * 12}, ${85 + (patch % 4) * 10}, ${25 + (patch % 2) * 10}, ${0.5 + seededNoise(pSeed + 3) * 0.3})`;
-    drawOrganicBlobAt(ctx, px, py, pSize, pSize * isoRatio * 0.8, pSeed + 10, 0.28);
+  // 4. Bioluminescent glow spots beneath surface
+  for (let glow = 0; glow < 8; glow++) {
+    const gSeed = hazSeed + glow * 11.7;
+    const gAngle = seededNoise(gSeed) * Math.PI * 2 + Math.sin(time * 0.3 + glow * 0.8) * 0.15;
+    const gDist = sRad * (0.12 + seededNoise(gSeed + 1) * 0.5);
+    const gx = Math.cos(gAngle) * gDist;
+    const gy = Math.sin(gAngle) * gDist * isoRatio;
+    const glowSize = sRad * (0.04 + seededNoise(gSeed + 2) * 0.05);
+    const glowPulse = Math.sin(time * 2 + glow * 1.5 + hazSeed) * 0.5 + 0.5;
+    const glowAlpha = 0.08 + glowPulse * 0.14;
+
+    const bioGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, glowSize);
+    bioGrad.addColorStop(0, `rgba(80, 220, 60, ${glowAlpha})`);
+    bioGrad.addColorStop(0.4, `rgba(60, 180, 40, ${glowAlpha * 0.5})`);
+    bioGrad.addColorStop(1, "rgba(40, 140, 20, 0)");
+    ctx.fillStyle = bioGrad;
+    ctx.beginPath();
+    ctx.ellipse(gx, gy, glowSize, glowSize * isoRatio * 0.7, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // 5. Dead vegetation silhouettes at edges
-  for (let twig = 0; twig < 5; twig++) {
+  // 5. Iridescent oil-slick surface film
+  const iridShift = time * 0.5;
+  for (let film = 0; film < 4; film++) {
+    const fSeed = hazSeed + film * 23.1;
+    const fAngle = seededNoise(fSeed) * Math.PI * 2;
+    const fDist = sRad * (0.1 + seededNoise(fSeed + 1) * 0.4);
+    const fx = Math.cos(fAngle) * fDist + Math.sin(time * 0.2 + film) * 3 * cameraZoom;
+    const fy = Math.sin(fAngle) * fDist * isoRatio;
+    const filmSize = sRad * (0.12 + seededNoise(fSeed + 2) * 0.15);
+    const hue = (film * 60 + iridShift * 40 + seededNoise(fSeed + 3) * 80) % 360;
+
+    ctx.fillStyle = `hsla(${hue}, 50%, 45%, ${0.06 + Math.sin(time * 0.8 + film * 1.3) * 0.03})`;
+    drawOrganicBlobAt(ctx, fx, fy, filmSize, filmSize * isoRatio * 0.7, fSeed + 10, 0.2);
+    ctx.fill();
+  }
+
+  // 6. Lily pad-like toxic flora
+  for (let pad = 0; pad < 6; pad++) {
+    const pSeed = hazSeed + pad * 19.7;
+    const pAngle = seededNoise(pSeed) * Math.PI * 2;
+    const pDist = sRad * (0.2 + seededNoise(pSeed + 1) * 0.45);
+    const drift = Math.sin(time * 0.2 + pad * 1.4) * 3 * cameraZoom;
+    const px = Math.cos(pAngle) * pDist + drift;
+    const py = Math.sin(pAngle) * pDist * isoRatio;
+    const padSize = sRad * (0.06 + seededNoise(pSeed + 2) * 0.08);
+    const padRot = seededNoise(pSeed + 3) * Math.PI * 2 + time * 0.05;
+
+    const darkFactor = 0.8 + seededNoise(pSeed + 4) * 0.2;
+    const padR = Math.floor(45 * darkFactor + 10);
+    const padG = Math.floor(75 * darkFactor + 15);
+    const padB = Math.floor(22 * darkFactor + 5);
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.scale(1, isoRatio * 0.85);
+    ctx.rotate(padRot);
+
+    ctx.fillStyle = `rgba(${padR}, ${padG}, ${padB}, ${0.7 + seededNoise(pSeed + 5) * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, padSize, 0.15, Math.PI * 2 - 0.15);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(${padR - 10}, ${padG + 10}, ${padB}, 0.3)`;
+    ctx.lineWidth = 0.6 * cameraZoom;
+    for (let vein = 0; vein < 4; vein++) {
+      const vAngle = 0.15 + (vein / 4) * (Math.PI * 2 - 0.3);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(vAngle) * padSize * 0.85, Math.sin(vAngle) * padSize * 0.85);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 7. Floating algae patches
+  for (let patch = 0; patch < 5; patch++) {
+    const aSeed = hazSeed + patch * 27.3;
+    const aAngle = seededNoise(aSeed) * Math.PI * 2;
+    const aDist = sRad * (0.15 + seededNoise(aSeed + 1) * 0.5);
+    const drift = Math.sin(time * 0.3 + patch * 1.1) * 4 * cameraZoom;
+    const ax = Math.cos(aAngle) * aDist + drift;
+    const ay = Math.sin(aAngle) * aDist * isoRatio;
+    const aSize = sRad * (0.04 + seededNoise(aSeed + 2) * 0.07);
+    ctx.fillStyle = `rgba(${50 + (patch % 3) * 15}, ${80 + (patch % 4) * 12}, ${22 + (patch % 2) * 8}, ${0.45 + seededNoise(aSeed + 3) * 0.3})`;
+    drawOrganicBlobAt(ctx, ax, ay, aSize, aSize * isoRatio * 0.75, aSeed + 10, 0.3);
+    ctx.fill();
+  }
+
+  // 8. Dead tree/reed silhouettes at edges
+  for (let twig = 0; twig < 7; twig++) {
     const twigSeed = hazSeed + twig * 13.3;
     const tAngle = seededNoise(twigSeed) * Math.PI * 2;
-    const tDist = sRad * (0.65 + seededNoise(twigSeed + 1) * 0.25);
+    const tDist = sRad * (0.6 + seededNoise(twigSeed + 1) * 0.3);
     const tx = Math.cos(tAngle) * tDist;
     const ty = Math.sin(tAngle) * tDist * isoRatio;
-    const tHeight = (8 + seededNoise(twigSeed + 2) * 8) * cameraZoom;
-    ctx.strokeStyle = `rgba(35, 50, 18, ${0.5 + seededNoise(twigSeed + 3) * 0.2})`;
-    ctx.lineWidth = (1 + seededNoise(twigSeed + 4) * 0.8) * cameraZoom;
+    const tHeight = (8 + seededNoise(twigSeed + 2) * 10) * cameraZoom;
+    const lean = (seededNoise(twigSeed + 5) - 0.5) * 6 * cameraZoom;
+    const sway = Math.sin(time * 0.6 + twig * 1.2) * 1.5 * cameraZoom;
+
+    ctx.strokeStyle = `rgba(30, 45, 15, ${0.5 + seededNoise(twigSeed + 3) * 0.25})`;
+    ctx.lineWidth = (1.2 + seededNoise(twigSeed + 4) * 1) * cameraZoom;
+    ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(tx, ty);
-    const lean = (seededNoise(twigSeed + 5) - 0.5) * 6 * cameraZoom;
-    ctx.lineTo(tx + lean, ty - tHeight);
-    if (seededNoise(twigSeed + 6) > 0.4) {
-      ctx.moveTo(tx + lean * 0.5, ty - tHeight * 0.6);
-      ctx.lineTo(tx + lean * 0.5 + 4 * cameraZoom, ty - tHeight * 0.75);
+    ctx.quadraticCurveTo(
+      tx + lean * 0.5 + sway, ty - tHeight * 0.5,
+      tx + lean + sway, ty - tHeight
+    );
+    ctx.stroke();
+
+    if (seededNoise(twigSeed + 6) > 0.35) {
+      const branchH = tHeight * (0.5 + seededNoise(twigSeed + 7) * 0.3);
+      const branchX = tx + lean * (branchH / tHeight) + sway * (branchH / tHeight);
+      const branchY = ty - branchH;
+      const branchDir = seededNoise(twigSeed + 8) > 0.5 ? 1 : -1;
+      ctx.lineWidth = 0.8 * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(branchX, branchY);
+      ctx.lineTo(branchX + branchDir * 5 * cameraZoom, branchY - 4 * cameraZoom);
+      ctx.stroke();
+    }
+
+    if (seededNoise(twigSeed + 9) > 0.5) {
+      const branchH2 = tHeight * (0.3 + seededNoise(twigSeed + 10) * 0.2);
+      const branchX2 = tx + lean * (branchH2 / tHeight) + sway * (branchH2 / tHeight);
+      const branchY2 = ty - branchH2;
+      ctx.lineWidth = 0.7 * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(branchX2, branchY2);
+      ctx.lineTo(branchX2 - 4 * cameraZoom, branchY2 - 3 * cameraZoom);
+      ctx.stroke();
+    }
+  }
+
+  // 9. Toxic bubbles with pop effect
+  for (let bubble = 0; bubble < 12; bubble++) {
+    const bSeed = hazSeed + bubble * 2.1;
+    const bPhase = (time * 0.7 + seededNoise(bSeed) * 3) % 3;
+    if (bPhase > 1.6) continue;
+    const bAngle = seededNoise(bSeed + 1) * Math.PI * 2;
+    const bDist = sRad * (0.08 + seededNoise(bSeed + 2) * 0.55);
+    const bx = Math.cos(bAngle) * bDist;
+    const by = Math.sin(bAngle) * bDist * isoRatio - bPhase * 16 * cameraZoom;
+    const bLife = Math.sin((bPhase / 1.6) * Math.PI);
+    const bSize = (2 + (bubble % 4) * 1.2) * cameraZoom * bLife;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(80, 180, 40, ${bLife * 0.2})`;
+    ctx.shadowBlur = 3 * cameraZoom;
+
+    const bubbleGrad = ctx.createRadialGradient(
+      bx - bSize * 0.3, by - bSize * 0.3, 0, bx, by, bSize
+    );
+    bubbleGrad.addColorStop(0, `rgba(120, 200, 80, ${0.15 * bLife})`);
+    bubbleGrad.addColorStop(0.5, `rgba(80, 150, 45, ${0.4 * bLife})`);
+    bubbleGrad.addColorStop(0.85, `rgba(60, 120, 30, ${0.35 * bLife})`);
+    bubbleGrad.addColorStop(1, `rgba(40, 90, 20, ${0.1 * bLife})`);
+    ctx.fillStyle = bubbleGrad;
+    ctx.beginPath();
+    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(130, 200, 70, ${0.3 * bLife})`;
+    ctx.lineWidth = 0.5 * cameraZoom;
+    ctx.beginPath();
+    ctx.arc(bx - bSize * 0.25, by - bSize * 0.25, bSize * 0.3, -0.5, 0.8);
+    ctx.stroke();
+    ctx.restore();
+
+    if (bPhase > 1.4) {
+      const popAlpha = (bPhase - 1.4) / 0.2;
+      const popR = bSize * (1.5 + popAlpha * 2);
+      ctx.strokeStyle = `rgba(100, 180, 50, ${0.2 * (1 - popAlpha)})`;
+      ctx.lineWidth = 0.8 * cameraZoom;
+      ctx.beginPath();
+      ctx.arc(bx, by, popR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // 10. Toxic mist/fog layer above surface
+  for (let fog = 0; fog < 5; fog++) {
+    const fSeed = hazSeed + fog * 9.7;
+    const fogAngle = seededNoise(fSeed) * Math.PI * 2;
+    const fogDist = sRad * (0.1 + seededNoise(fSeed + 1) * 0.45);
+    const fogDrift = Math.sin(time * 0.3 + fog * 1.3) * 8 * cameraZoom;
+    const fx = Math.cos(fogAngle) * fogDist + fogDrift;
+    const fy = Math.sin(fogAngle) * fogDist * isoRatio - 6 * cameraZoom;
+    const fogSize = sRad * (0.15 + seededNoise(fSeed + 2) * 0.15);
+    const fogAlpha = 0.06 + Math.sin(time * 0.5 + fog * 1.7) * 0.03;
+
+    const fogGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fogSize);
+    fogGrad.addColorStop(0, `rgba(60, 140, 30, ${fogAlpha})`);
+    fogGrad.addColorStop(0.6, `rgba(50, 120, 25, ${fogAlpha * 0.5})`);
+    fogGrad.addColorStop(1, "rgba(40, 100, 20, 0)");
+    ctx.fillStyle = fogGrad;
+    ctx.beginPath();
+    ctx.ellipse(fx, fy, fogSize, fogSize * 0.5 * isoRatio, fogDrift * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 11. Toxic wisps rising with S-curve paths
+  for (let wisp = 0; wisp < 7; wisp++) {
+    const wSeed = hazSeed + wisp * 4.1;
+    const wPhase = (time * 0.35 + seededNoise(wSeed) * 4) % 4;
+    if (wPhase > 3) continue;
+    const wAngle = seededNoise(wSeed + 1) * Math.PI * 2;
+    const wDist = sRad * (0.12 + seededNoise(wSeed + 2) * 0.4);
+    const wAlpha = 0.12 * (1 - wPhase / 3);
+
+    ctx.strokeStyle = `rgba(70, 160, 35, ${wAlpha})`;
+    ctx.lineWidth = (2 - wPhase * 0.4) * cameraZoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let seg = 0; seg <= 8; seg++) {
+      const t = seg / 8;
+      const rise = t * wPhase * 20 * cameraZoom;
+      const sCurve = Math.sin(t * Math.PI * 2 + time * 1.5 + wisp) * 5 * cameraZoom * t;
+      const x = Math.cos(wAngle) * wDist + sCurve;
+      const y = Math.sin(wAngle) * wDist * isoRatio - rise;
+      if (seg === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
 
-  // 6. Toxic bubbles rising from depths
-  for (let bubble = 0; bubble < 10; bubble++) {
-    const bPhase = (time * 0.6 + seededNoise(hazSeed + bubble * 2.1) * 3) % 3;
-    if (bPhase > 1.4) continue;
-    const bAngle = seededNoise(hazSeed + bubble * 3.7) * Math.PI * 2;
-    const bDist = sRad * (0.1 + seededNoise(hazSeed + bubble * 5.3) * 0.55);
-    const bx = Math.cos(bAngle) * bDist;
-    const by = Math.sin(bAngle) * bDist * isoRatio - bPhase * 14 * cameraZoom;
-    const bSize = (2.5 + (bubble % 3) * 1.2) * cameraZoom * Math.sin((bPhase / 1.4) * Math.PI);
-    ctx.fillStyle = `rgba(90, 130, 50, ${0.55 * Math.sin((bPhase / 1.4) * Math.PI)})`;
-    ctx.beginPath();
-    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 7. Toxic wisps rising
-  for (let wisp = 0; wisp < 5; wisp++) {
-    const wPhase = (time * 0.3 + seededNoise(hazSeed + wisp * 4.1) * 4) % 4;
-    if (wPhase > 2.5) continue;
-    const wAngle = seededNoise(hazSeed + wisp * 6.3) * Math.PI * 2;
-    const wDist = sRad * (0.15 + seededNoise(hazSeed + wisp * 8.7) * 0.35);
-    const wx = Math.cos(wAngle) * wDist + Math.sin(time * 0.4 + wisp) * 4 * cameraZoom;
-    const wy = Math.sin(wAngle) * wDist * isoRatio - wPhase * 18 * cameraZoom;
-    const wSize = sRad * (0.05 + (wisp % 3) * 0.015) * (1 - wPhase / 4);
-    ctx.fillStyle = `rgba(80, 160, 40, ${0.14 * (1 - wPhase / 2.5)})`;
-    ctx.beginPath();
-    ctx.ellipse(wx, wy, wSize, wSize * 0.55, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 8. Surface caustic bands
-  for (let band = 0; band < 3; band++) {
-    const bR = sRad * (0.25 + band * 0.18);
-    const wobble = 1 + Math.sin(time * 0.6 + band * 1.2 + hazSeed * 0.02) * 0.05;
-    ctx.strokeStyle = `rgba(100, 160, 55, ${0.12 + (2 - band) * 0.03})`;
-    ctx.lineWidth = (1.8 - band * 0.3) * cameraZoom;
+  // 12. Surface caustic ripple bands
+  for (let band = 0; band < 4; band++) {
+    const bR = sRad * (0.2 + band * 0.16);
+    const wobble = 1 + Math.sin(time * 0.7 + band * 1.2 + hazSeed * 0.02) * 0.06;
+    ctx.strokeStyle = `rgba(90, 155, 50, ${0.1 + (3 - band) * 0.025})`;
+    ctx.lineWidth = (1.6 - band * 0.25) * cameraZoom;
     drawOrganicBlob(ctx, bR * wobble, bR * isoRatio * wobble, hazSeed + band * 25, 0.1);
     ctx.stroke();
   }
 
-  // 9. Toxic sheen highlight
+  // 13. Iridescent toxic sheen highlight
   const sheenGrad = ctx.createRadialGradient(
-    -sRad * 0.28, -sRad * 0.16 * isoRatio, 0,
-    -sRad * 0.28, -sRad * 0.16 * isoRatio, sRad * 0.42
+    -sRad * 0.25, -sRad * 0.14 * isoRatio, 0,
+    -sRad * 0.25, -sRad * 0.14 * isoRatio, sRad * 0.45
   );
-  const sheenAlpha = 0.14 + Math.sin(time * 1.5 + hazSeed) * 0.07;
-  sheenGrad.addColorStop(0, `rgba(140, 200, 60, ${sheenAlpha})`);
-  sheenGrad.addColorStop(0.5, "rgba(100, 160, 40, 0.04)");
+  const sheenAlpha = 0.16 + Math.sin(time * 1.5 + hazSeed) * 0.08;
+  const sheenHue = (time * 15 + hazSeed * 3) % 60;
+  sheenGrad.addColorStop(0, `hsla(${90 + sheenHue}, 60%, 55%, ${sheenAlpha})`);
+  sheenGrad.addColorStop(0.4, `hsla(${120 + sheenHue}, 50%, 45%, ${sheenAlpha * 0.4})`);
   sheenGrad.addColorStop(1, "transparent");
   ctx.fillStyle = sheenGrad;
   ctx.beginPath();
-  ctx.ellipse(-sRad * 0.22, -sRad * 0.12 * isoRatio, sRad * 0.42, sRad * 0.22 * isoRatio, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(-sRad * 0.2, -sRad * 0.1 * isoRatio, sRad * 0.45, sRad * 0.24 * isoRatio, -0.3, 0, Math.PI * 2);
   ctx.fill();
+
+  // 14. Subtle water surface ripples
+  for (let ripple = 0; ripple < 3; ripple++) {
+    const rPhase = (time * 0.4 + ripple * 1.1 + seededNoise(hazSeed + ripple * 7) * 3) % 3;
+    const rAngle = seededNoise(hazSeed + ripple * 11) * Math.PI * 2;
+    const rDist = sRad * seededNoise(hazSeed + ripple * 13) * 0.4;
+    const rx = Math.cos(rAngle) * rDist;
+    const ry = Math.sin(rAngle) * rDist * isoRatio;
+    const rSize = sRad * (0.03 + rPhase * 0.04);
+    const rAlpha = 0.1 * (1 - rPhase / 3);
+
+    ctx.strokeStyle = `rgba(80, 140, 45, ${rAlpha})`;
+    ctx.lineWidth = 0.8 * cameraZoom;
+    ctx.beginPath();
+    ctx.ellipse(rx, ry, rSize, rSize * isoRatio * 0.7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 }
 
 function drawIceHazard(
@@ -3082,137 +3531,289 @@ function drawHellfireHazard(
 ): void {
   const hazSeed = (pos.x || 0) * 43.1 + (pos.y || 0) * 31.7;
   const emberGlow = Math.sin(time * 3 + hazSeed) * 0.5 + 0.5;
+  const infernalPulse = Math.sin(time * 1.5 + hazSeed * 0.5) * 0.5 + 0.5;
 
-  // 1. Scorched/blackened earth transition
-  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 1.3);
-  scorchGrad.addColorStop(0, "rgba(55, 28, 12, 0.88)");
-  scorchGrad.addColorStop(0.4, "rgba(45, 22, 8, 0.72)");
-  scorchGrad.addColorStop(0.7, "rgba(30, 15, 5, 0.4)");
+  // 1. Wide scorched/blackened earth with heat distortion edge
+  const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.2, 0, 0, sRad * 1.4);
+  scorchGrad.addColorStop(0, `rgba(65, 30, 10, ${0.9 + infernalPulse * 0.08})`);
+  scorchGrad.addColorStop(0.3, "rgba(50, 25, 8, 0.78)");
+  scorchGrad.addColorStop(0.55, "rgba(35, 18, 5, 0.5)");
+  scorchGrad.addColorStop(0.8, "rgba(25, 10, 3, 0.22)");
   scorchGrad.addColorStop(1, "transparent");
   ctx.fillStyle = scorchGrad;
-  drawOrganicBlob(ctx, sRad * 1.25, sRad * 1.2 * isoRatio, hazSeed, 0.22);
+  drawOrganicBlob(ctx, sRad * 1.35, sRad * 1.3 * isoRatio, hazSeed, 0.24);
   ctx.fill();
 
-  // Charred crack lines radiating outward
-  ctx.strokeStyle = "rgba(80, 35, 10, 0.35)";
-  ctx.lineWidth = 1 * cameraZoom;
-  for (let i = 0; i < 10; i++) {
-    const angle = (i / 10) * Math.PI * 2 + seededNoise(hazSeed + i * 3.7) * 0.3;
-    const len = sRad * (0.6 + seededNoise(hazSeed + i * 5.9) * 0.55);
+  // Charred crack network with branching
+  for (let i = 0; i < 12; i++) {
+    const cSeed = hazSeed + i * 3.7;
+    const angle = (i / 12) * Math.PI * 2 + seededNoise(cSeed) * 0.3;
+    const len = sRad * (0.55 + seededNoise(cSeed + 1) * 0.6);
+
+    ctx.strokeStyle = `rgba(90, 40, 12, ${0.3 + seededNoise(cSeed + 2) * 0.15})`;
+    ctx.lineWidth = (1 + seededNoise(cSeed + 3) * 0.6) * cameraZoom;
     ctx.beginPath();
-    ctx.moveTo(Math.cos(angle) * sRad * 0.4, Math.sin(angle) * sRad * 0.4 * isoRatio);
-    ctx.quadraticCurveTo(
-      Math.cos(angle + 0.12) * len * 0.7,
-      Math.sin(angle + 0.12) * len * 0.7 * isoRatio,
-      Math.cos(angle - 0.04) * len,
-      Math.sin(angle - 0.04) * len * isoRatio
-    );
+    let cx = Math.cos(angle) * sRad * 0.35;
+    let cy = Math.sin(angle) * sRad * 0.35 * isoRatio;
+    ctx.moveTo(cx, cy);
+    for (let seg = 1; seg <= 4; seg++) {
+      const t = seg / 4;
+      const jitter = (seededNoise(cSeed + seg * 5) - 0.5) * 0.2;
+      cx = Math.cos(angle + jitter) * len * t + Math.cos(angle) * sRad * 0.35 * (1 - t);
+      cy = (Math.sin(angle + jitter) * len * t + Math.sin(angle) * sRad * 0.35 * (1 - t)) * isoRatio;
+      ctx.lineTo(cx, cy);
+    }
     ctx.stroke();
   }
 
-  // 2. Ember bed with glowing cracks
-  const emberGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.92);
-  emberGrad.addColorStop(0, `rgba(200, 70, 12, ${0.55 + emberGlow * 0.22})`);
-  emberGrad.addColorStop(0.35, `rgba(150, 45, 8, ${0.42 + emberGlow * 0.18})`);
-  emberGrad.addColorStop(0.7, `rgba(90, 25, 4, ${0.3 + emberGlow * 0.1})`);
-  emberGrad.addColorStop(1, "rgba(50, 12, 0, 0.12)");
-  ctx.fillStyle = emberGrad;
-  drawOrganicBlob(ctx, sRad * 0.92, sRad * 0.85 * isoRatio, hazSeed + 25, 0.16);
-  ctx.fill();
+  // 2. Molten lava pools between cracks
+  for (let pool = 0; pool < 5; pool++) {
+    const pSeed = hazSeed + pool * 17.3;
+    const pAngle = seededNoise(pSeed) * Math.PI * 2;
+    const pDist = sRad * (0.2 + seededNoise(pSeed + 1) * 0.35);
+    const px = Math.cos(pAngle) * pDist;
+    const py = Math.sin(pAngle) * pDist * isoRatio;
+    const poolSize = sRad * (0.06 + seededNoise(pSeed + 2) * 0.06);
+    const poolPulse = Math.sin(time * 2 + pool * 1.7 + hazSeed) * 0.5 + 0.5;
 
-  // Glowing cracks in the ember bed
-  for (let crack = 0; crack < 8; crack++) {
-    const cSeed = hazSeed + crack * 7.3;
-    const cAngle = seededNoise(cSeed) * Math.PI * 2;
-    const cLen = sRad * (0.2 + seededNoise(cSeed + 1) * 0.4);
-    const crackGlow = 0.35 + emberGlow * 0.35 + Math.sin(time * 2.5 + crack * 1.3) * 0.15;
     ctx.save();
-    ctx.shadowColor = `rgba(255, 120, 20, ${crackGlow * 0.6})`;
-    ctx.shadowBlur = 6 * cameraZoom;
-    ctx.strokeStyle = `rgba(255, 160, 40, ${crackGlow})`;
-    ctx.lineWidth = (1.5 + seededNoise(cSeed + 2) * 1) * cameraZoom;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    const midX = Math.cos(cAngle + 0.1) * cLen * 0.5;
-    const midY = Math.sin(cAngle + 0.1) * cLen * 0.5 * isoRatio;
-    ctx.lineTo(midX, midY);
-    ctx.lineTo(Math.cos(cAngle) * cLen, Math.sin(cAngle) * cLen * isoRatio);
-    ctx.stroke();
+    ctx.shadowColor = `rgba(255, 100, 0, ${0.3 + poolPulse * 0.3})`;
+    ctx.shadowBlur = 8 * cameraZoom;
+    const poolGrad = ctx.createRadialGradient(px, py, 0, px, py, poolSize);
+    poolGrad.addColorStop(0, `rgba(255, 220, 80, ${0.85 + poolPulse * 0.15})`);
+    poolGrad.addColorStop(0.3, `rgba(255, 140, 20, ${0.75 + poolPulse * 0.15})`);
+    poolGrad.addColorStop(0.6, `rgba(220, 60, 0, ${0.6 + poolPulse * 0.1})`);
+    poolGrad.addColorStop(1, "rgba(120, 25, 0, 0.2)");
+    ctx.fillStyle = poolGrad;
+    drawOrganicBlobAt(ctx, px, py, poolSize, poolSize * isoRatio * 0.8, pSeed + 10, 0.25);
+    ctx.fill();
     ctx.restore();
   }
 
-  // 3. Multiple flame plumes with proper shape
-  for (let flame = 0; flame < 9; flame++) {
+  // 3. Ember bed with glowing cracks and heat veins
+  const emberGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.95);
+  emberGrad.addColorStop(0, `rgba(220, 80, 15, ${0.58 + emberGlow * 0.22})`);
+  emberGrad.addColorStop(0.3, `rgba(170, 50, 10, ${0.45 + emberGlow * 0.18})`);
+  emberGrad.addColorStop(0.6, `rgba(100, 30, 5, ${0.32 + emberGlow * 0.12})`);
+  emberGrad.addColorStop(0.85, `rgba(60, 18, 2, ${0.18 + emberGlow * 0.06})`);
+  emberGrad.addColorStop(1, "rgba(40, 10, 0, 0.05)");
+  ctx.fillStyle = emberGrad;
+  drawOrganicBlob(ctx, sRad * 0.95, sRad * 0.88 * isoRatio, hazSeed + 25, 0.16);
+  ctx.fill();
+
+  // Glowing heat veins/cracks with pulsing
+  for (let crack = 0; crack < 10; crack++) {
+    const cSeed = hazSeed + crack * 7.3;
+    const cAngle = seededNoise(cSeed) * Math.PI * 2;
+    const cLen = sRad * (0.2 + seededNoise(cSeed + 1) * 0.45);
+    const crackGlow = 0.35 + emberGlow * 0.35 + Math.sin(time * 2.5 + crack * 1.3) * 0.15;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(255, 120, 20, ${crackGlow * 0.7})`;
+    ctx.shadowBlur = 8 * cameraZoom;
+
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0
+        ? `rgba(255, 80, 10, ${crackGlow * 0.5})`
+        : `rgba(255, 180, 60, ${crackGlow})`;
+      ctx.lineWidth = (pass === 0 ? 3 : 1.5 + seededNoise(cSeed + 2) * 0.8) * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      let cx = 0;
+      let cy = 0;
+      for (let seg = 1; seg <= 3; seg++) {
+        const t = seg / 3;
+        const jit = (seededNoise(cSeed + seg * 4.7) - 0.5) * 0.3;
+        cx = Math.cos(cAngle + jit) * cLen * t;
+        cy = Math.sin(cAngle + jit) * cLen * t * isoRatio;
+        ctx.lineTo(cx, cy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 4. Infernal rune/sigil pattern on the ground
+  ctx.save();
+  const runeAlpha = 0.12 + infernalPulse * 0.18;
+  ctx.shadowColor = `rgba(255, 80, 0, ${runeAlpha * 0.8})`;
+  ctx.shadowBlur = 10 * cameraZoom;
+  ctx.strokeStyle = `rgba(255, 120, 30, ${runeAlpha})`;
+  ctx.lineWidth = 1.5 * cameraZoom;
+
+  const runeR = sRad * 0.55;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, runeR, runeR * isoRatio, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const innerRuneR = sRad * 0.35;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, innerRuneR, innerRuneR * isoRatio, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  for (let sym = 0; sym < 6; sym++) {
+    const symAngle = (sym / 6) * Math.PI * 2 + time * 0.15;
+    const ox = Math.cos(symAngle) * runeR;
+    const oy = Math.sin(symAngle) * runeR * isoRatio;
+    const ix = Math.cos(symAngle) * innerRuneR;
+    const iy = Math.sin(symAngle) * innerRuneR * isoRatio;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ix, iy);
+    ctx.stroke();
+
+    const crossAngle = symAngle + Math.PI / 6;
+    const cx1 = Math.cos(crossAngle) * runeR * 0.85;
+    const cy1 = Math.sin(crossAngle) * runeR * 0.85 * isoRatio;
+    const crossAngle2 = symAngle - Math.PI / 6;
+    const cx2 = Math.cos(crossAngle2) * runeR * 0.85;
+    const cy2 = Math.sin(crossAngle2) * runeR * 0.85 * isoRatio;
+    ctx.beginPath();
+    ctx.moveTo(cx1, cy1);
+    ctx.lineTo(ix, iy);
+    ctx.lineTo(cx2, cy2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 5. Multi-layered flame plumes with inner/outer color and corona
+  for (let flame = 0; flame < 12; flame++) {
     const fSeed = hazSeed + flame * 11.3;
     const fAngle = seededNoise(fSeed) * Math.PI * 2;
-    const fDist = sRad * (0.1 + seededNoise(fSeed + 1) * 0.5);
+    const fDist = sRad * (0.08 + seededNoise(fSeed + 1) * 0.55);
     const fx = Math.cos(fAngle) * fDist;
     const fy = Math.sin(fAngle) * fDist * isoRatio;
-    const baseHeight = (10 + seededNoise(fSeed + 2) * 16) * cameraZoom;
-    const fHeight = baseHeight + Math.sin(time * 5 + flame * 1.3) * 5 * cameraZoom;
-    const fWidth = (2.5 + seededNoise(fSeed + 3) * 3.5) * cameraZoom;
-    const sway = Math.sin(time * 7 + flame * 1.9 + hazSeed) * 2.5 * cameraZoom;
+    const baseHeight = (12 + seededNoise(fSeed + 2) * 20) * cameraZoom;
+    const fHeight = baseHeight + Math.sin(time * 6 + flame * 1.3) * 6 * cameraZoom;
+    const fWidth = (3 + seededNoise(fSeed + 3) * 4) * cameraZoom;
+    const sway = Math.sin(time * 8 + flame * 1.9 + hazSeed) * 3 * cameraZoom;
 
-    const flameGrad = ctx.createLinearGradient(fx, fy, fx + sway, fy - fHeight);
-    flameGrad.addColorStop(0, "rgba(255, 60, 0, 0.92)");
-    flameGrad.addColorStop(0.25, "rgba(255, 130, 0, 0.8)");
-    flameGrad.addColorStop(0.55, "rgba(255, 200, 0, 0.55)");
-    flameGrad.addColorStop(0.8, "rgba(255, 240, 120, 0.25)");
-    flameGrad.addColorStop(1, "rgba(255, 255, 220, 0)");
-    ctx.fillStyle = flameGrad;
+    ctx.save();
+    ctx.shadowColor = `rgba(255, 100, 0, ${0.2 + Math.sin(time * 4 + flame) * 0.1})`;
+    ctx.shadowBlur = 6 * cameraZoom;
+
+    const outerGrad = ctx.createLinearGradient(fx, fy, fx + sway, fy - fHeight);
+    outerGrad.addColorStop(0, "rgba(200, 30, 0, 0.85)");
+    outerGrad.addColorStop(0.2, "rgba(255, 60, 0, 0.75)");
+    outerGrad.addColorStop(0.45, "rgba(255, 130, 0, 0.55)");
+    outerGrad.addColorStop(0.7, "rgba(255, 200, 30, 0.3)");
+    outerGrad.addColorStop(0.9, "rgba(255, 240, 120, 0.1)");
+    outerGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = outerGrad;
 
     ctx.beginPath();
-    ctx.moveTo(fx - fWidth, fy);
+    ctx.moveTo(fx - fWidth * 1.3, fy);
     ctx.bezierCurveTo(
-      fx - fWidth * 0.7 + sway * 0.3, fy - fHeight * 0.35,
-      fx - fWidth * 0.3 + sway * 0.6, fy - fHeight * 0.7,
+      fx - fWidth + sway * 0.3, fy - fHeight * 0.35,
+      fx - fWidth * 0.4 + sway * 0.6, fy - fHeight * 0.7,
       fx + sway, fy - fHeight
     );
     ctx.bezierCurveTo(
-      fx + fWidth * 0.3 + sway * 0.6, fy - fHeight * 0.7,
-      fx + fWidth * 0.7 + sway * 0.3, fy - fHeight * 0.35,
-      fx + fWidth, fy
+      fx + fWidth * 0.4 + sway * 0.6, fy - fHeight * 0.7,
+      fx + fWidth + sway * 0.3, fy - fHeight * 0.35,
+      fx + fWidth * 1.3, fy
     );
     ctx.fill();
+
+    const innerGrad = ctx.createLinearGradient(fx, fy, fx + sway * 0.8, fy - fHeight * 0.75);
+    innerGrad.addColorStop(0, "rgba(255, 200, 50, 0.7)");
+    innerGrad.addColorStop(0.3, "rgba(255, 255, 120, 0.5)");
+    innerGrad.addColorStop(0.6, "rgba(255, 255, 200, 0.25)");
+    innerGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = innerGrad;
+
+    ctx.beginPath();
+    ctx.moveTo(fx - fWidth * 0.5, fy);
+    ctx.bezierCurveTo(
+      fx - fWidth * 0.3 + sway * 0.4, fy - fHeight * 0.3,
+      fx - fWidth * 0.1 + sway * 0.7, fy - fHeight * 0.55,
+      fx + sway * 0.8, fy - fHeight * 0.75
+    );
+    ctx.bezierCurveTo(
+      fx + fWidth * 0.1 + sway * 0.7, fy - fHeight * 0.55,
+      fx + fWidth * 0.3 + sway * 0.4, fy - fHeight * 0.3,
+      fx + fWidth * 0.5, fy
+    );
+    ctx.fill();
+    ctx.restore();
   }
 
-  // 4. Smoke wisps above flames
-  for (let smoke = 0; smoke < 4; smoke++) {
-    const smPhase = (time * 0.25 + seededNoise(hazSeed + smoke * 5.1) * 4) % 4;
-    if (smPhase > 3) continue;
-    const smAngle = seededNoise(hazSeed + smoke * 7.3) * Math.PI * 2;
-    const smDist = sRad * (0.1 + seededNoise(hazSeed + smoke * 9.7) * 0.3);
-    const smx = Math.cos(smAngle) * smDist + Math.sin(time * 0.3 + smoke) * 6 * cameraZoom;
-    const smy = Math.sin(smAngle) * smDist * isoRatio - 20 * cameraZoom - smPhase * 14 * cameraZoom;
-    const smSize = sRad * (0.04 + smPhase * 0.015) * (1 - smPhase / 4);
-    ctx.fillStyle = `rgba(80, 60, 50, ${0.12 * (1 - smPhase / 3)})`;
+  // 6. Smoke columns rising with volumetric feel
+  for (let smoke = 0; smoke < 6; smoke++) {
+    const smSeed = hazSeed + smoke * 5.1;
+    const smPhase = (time * 0.3 + seededNoise(smSeed) * 4) % 4;
+    if (smPhase > 3.2) continue;
+    const smAngle = seededNoise(smSeed + 1) * Math.PI * 2;
+    const smDist = sRad * (0.1 + seededNoise(smSeed + 2) * 0.35);
+    const windDrift = Math.sin(time * 0.4 + smoke * 0.7) * 8 * cameraZoom;
+    const smx = Math.cos(smAngle) * smDist + windDrift * (smPhase / 3);
+    const smy = Math.sin(smAngle) * smDist * isoRatio - 22 * cameraZoom - smPhase * 16 * cameraZoom;
+    const smSize = sRad * (0.04 + smPhase * 0.025) * (1 - smPhase / 4);
+    const smAlpha = 0.18 * (1 - smPhase / 3.2);
+
+    ctx.fillStyle = `rgba(60, 45, 35, ${smAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(smx, smy, smSize * 1.3, smSize * 0.8, 0, 0, Math.PI * 2);
+    ctx.ellipse(smx, smy, smSize * 1.5, smSize, windDrift * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(100, 70, 50, ${smAlpha * 0.5})`;
+    ctx.beginPath();
+    ctx.ellipse(smx + 2 * cameraZoom, smy + 1 * cameraZoom, smSize * 1.2, smSize * 0.7, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // 5. Spark trails
-  for (let spark = 0; spark < 10; spark++) {
-    const sPhase = (time * 1.2 + seededNoise(hazSeed + spark * 2.3) * 2) % 2;
-    const sAngle = seededNoise(hazSeed + spark * 4.7) * Math.PI * 2;
-    const sDist = sRad * (0.08 + seededNoise(hazSeed + spark * 6.1) * 0.45);
-    const windDrift = Math.sin(time * 2.5 + spark * 0.9) * 3 * cameraZoom;
-    const sx = Math.cos(sAngle) * sDist + windDrift;
-    const sy = Math.sin(sAngle) * sDist * isoRatio - sPhase * 26 * cameraZoom;
-    const sSize = (1.1 + (spark % 3) * 0.5) * cameraZoom * (1 - sPhase / 2);
-    ctx.fillStyle = `rgba(255, ${200 - spark * 12}, 50, ${0.75 * (1 - sPhase / 2)})`;
-    ctx.beginPath();
-    ctx.arc(sx, sy, sSize, 0, Math.PI * 2);
-    ctx.fill();
+  // 7. Floating ash and cinder particles
+  for (let ash = 0; ash < 14; ash++) {
+    const aSeed = hazSeed + ash * 2.3;
+    const aPhase = (time * 0.8 + seededNoise(aSeed) * 3) % 3;
+    const aAngle = seededNoise(aSeed + 1) * Math.PI * 2;
+    const aDist = sRad * (0.05 + seededNoise(aSeed + 2) * 0.55);
+    const drift = Math.sin(time * 1.5 + ash * 0.7) * 5 * cameraZoom;
+    const ax = Math.cos(aAngle) * aDist + drift;
+    const ay = Math.sin(aAngle) * aDist * isoRatio - aPhase * 28 * cameraZoom;
+    const aSize = (0.8 + (ash % 4) * 0.4) * cameraZoom * (1 - aPhase / 3);
+    const aAlpha = (1 - aPhase / 3);
+
+    if (ash < 8) {
+      ctx.save();
+      ctx.shadowColor = `rgba(255, ${140 + ash * 10}, 30, ${aAlpha * 0.4})`;
+      ctx.shadowBlur = 3 * cameraZoom;
+      ctx.fillStyle = `rgba(255, ${180 - ash * 12}, 40, ${0.7 * aAlpha})`;
+      ctx.beginPath();
+      ctx.arc(ax, ay, aSize, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.fillStyle = `rgba(80, 65, 55, ${0.35 * aAlpha})`;
+      ctx.beginPath();
+      ctx.arc(ax, ay, aSize * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  // 6. Heat shimmer above the zone
-  const shimmerGrad = ctx.createRadialGradient(0, -15 * cameraZoom, 0, 0, -15 * cameraZoom, sRad * 0.5);
-  shimmerGrad.addColorStop(0, `rgba(255, 200, 100, ${0.06 + emberGlow * 0.04})`);
-  shimmerGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = shimmerGrad;
+  // 8. Heat wave distortion ripples
+  for (let ripple = 0; ripple < 3; ripple++) {
+    const ripplePhase = (time * 0.5 + ripple * 1.0 + hazSeed * 0.01) % 2.5;
+    const rippleR = sRad * (0.3 + ripplePhase * 0.3);
+    const rippleY = -12 * cameraZoom - ripplePhase * 10 * cameraZoom;
+    const rippleAlpha = 0.08 * (1 - ripplePhase / 2.5);
+
+    ctx.strokeStyle = `rgba(255, 180, 80, ${rippleAlpha})`;
+    ctx.lineWidth = (2.5 - ripplePhase * 0.6) * cameraZoom;
+    ctx.beginPath();
+    ctx.ellipse(0, rippleY, rippleR, rippleR * 0.3 * isoRatio, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 9. Central hellfire glow
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.4);
+  const coreAlpha = 0.15 + emberGlow * 0.15 + infernalPulse * 0.08;
+  coreGrad.addColorStop(0, `rgba(255, 180, 60, ${coreAlpha})`);
+  coreGrad.addColorStop(0.5, `rgba(255, 100, 20, ${coreAlpha * 0.4})`);
+  coreGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+  ctx.fillStyle = coreGrad;
   ctx.beginPath();
-  ctx.ellipse(0, -15 * cameraZoom, sRad * 0.5, sRad * 0.25 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, -5 * cameraZoom, sRad * 0.4, sRad * 0.25 * isoRatio, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -3226,168 +3827,352 @@ function drawLightningFieldHazard(
 ): void {
   const hazSeed = (pos.x || 0) * 47.7 + (pos.y || 0) * 23.3;
   const pulse = Math.sin(time * 3.4 + hazSeed) * 0.5 + 0.5;
+  const stormPulse = Math.sin(time * 1.2 + hazSeed * 0.3) * 0.5 + 0.5;
 
-  // 1. Ionized ground with darkened tint and edge transition
-  const ionGrad = ctx.createRadialGradient(0, 0, sRad * 0.2, 0, 0, sRad * 1.3);
-  ionGrad.addColorStop(0, "rgba(40, 65, 140, 0.85)");
-  ionGrad.addColorStop(0.35, "rgba(32, 52, 115, 0.72)");
-  ionGrad.addColorStop(0.65, "rgba(22, 35, 80, 0.48)");
-  ionGrad.addColorStop(0.85, "rgba(12, 18, 45, 0.22)");
-  ionGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = ionGrad;
-  drawOrganicBlob(ctx, sRad * 1.2, sRad * 1.15 * isoRatio, hazSeed, 0.22);
+  // 1. Wide ionized atmosphere glow
+  const atmoGrad = ctx.createRadialGradient(0, 0, sRad * 0.1, 0, 0, sRad * 1.45);
+  atmoGrad.addColorStop(0, `rgba(60, 100, 200, ${0.65 + stormPulse * 0.2})`);
+  atmoGrad.addColorStop(0.25, `rgba(40, 70, 160, ${0.55 + stormPulse * 0.12})`);
+  atmoGrad.addColorStop(0.5, "rgba(25, 45, 110, 0.4)");
+  atmoGrad.addColorStop(0.75, "rgba(15, 25, 65, 0.2)");
+  atmoGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = atmoGrad;
+  drawOrganicBlob(ctx, sRad * 1.35, sRad * 1.3 * isoRatio, hazSeed, 0.22);
   ctx.fill();
 
-  // Ground scorch marks from previous strikes
-  for (let scorch = 0; scorch < 5; scorch++) {
-    const sSeed = hazSeed + scorch * 13.7;
-    const sAngle = seededNoise(sSeed) * Math.PI * 2;
-    const sDist = sRad * (0.15 + seededNoise(sSeed + 1) * 0.45);
-    const sx = Math.cos(sAngle) * sDist;
-    const sy = Math.sin(sAngle) * sDist * isoRatio;
-    const sSize = sRad * (0.04 + seededNoise(sSeed + 2) * 0.04);
-    ctx.fillStyle = `rgba(20, 15, 40, ${0.25 + seededNoise(sSeed + 3) * 0.2})`;
-    drawOrganicBlobAt(ctx, sx, sy, sSize * 1.3, sSize * isoRatio, sSeed + 10, 0.3);
-    ctx.fill();
+  // 2. Lichtenberg fractal burn patterns on ground
+  for (let branch = 0; branch < 6; branch++) {
+    const bSeed = hazSeed + branch * 19.3;
+    const bAngle = (branch / 6) * Math.PI * 2 + seededNoise(bSeed) * 0.5;
+    const bLen = sRad * (0.45 + seededNoise(bSeed + 1) * 0.45);
+    const glowPhase = Math.sin(time * 2.2 + branch * 1.1 + hazSeed) * 0.5 + 0.5;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(80, 160, 255, ${glowPhase * 0.3})`;
+    ctx.shadowBlur = 4 * cameraZoom;
+    ctx.strokeStyle = `rgba(30, 20, 50, ${0.3 + glowPhase * 0.15})`;
+    ctx.lineWidth = (1.8 + seededNoise(bSeed + 2) * 0.8) * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+
+    let cx = 0;
+    let cy = 0;
+    const segs = 6;
+    for (let seg = 1; seg <= segs; seg++) {
+      const jitter = (seededNoise(bSeed + seg * 5.7) - 0.5) * 0.4;
+      const segAngle = bAngle + jitter;
+      cx += Math.cos(segAngle) * (bLen / segs);
+      cy += Math.sin(segAngle) * (bLen / segs) * isoRatio;
+      ctx.lineTo(cx, cy);
+
+      if (seg >= 2 && seededNoise(bSeed + seg * 11.3) > 0.45) {
+        const subAngle = segAngle + (seededNoise(bSeed + seg * 13) - 0.5) * 1.4;
+        const subLen = bLen * (0.15 + seededNoise(bSeed + seg * 15) * 0.2);
+        ctx.moveTo(cx, cy);
+        let scx = cx;
+        let scy = cy;
+        for (let sub = 1; sub <= 3; sub++) {
+          const subJit = (seededNoise(bSeed + seg * 20 + sub * 3) - 0.5) * 0.3;
+          scx += Math.cos(subAngle + subJit) * (subLen / 3);
+          scy += Math.sin(subAngle + subJit) * (subLen / 3) * isoRatio;
+          ctx.lineTo(scx, scy);
+        }
+        ctx.moveTo(cx, cy);
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 
-  // 2. Charged field inner body
+  // 3. Charged field inner body with plasma effect
   const fieldGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.95);
-  fieldGrad.addColorStop(0, `rgba(55, 85, 170, ${0.5 + pulse * 0.15})`);
-  fieldGrad.addColorStop(0.5, `rgba(38, 60, 130, ${0.35 + pulse * 0.1})`);
-  fieldGrad.addColorStop(1, "rgba(20, 35, 75, 0.08)");
+  fieldGrad.addColorStop(0, `rgba(70, 110, 210, ${0.55 + pulse * 0.2})`);
+  fieldGrad.addColorStop(0.3, `rgba(45, 75, 170, ${0.4 + pulse * 0.12})`);
+  fieldGrad.addColorStop(0.65, `rgba(28, 48, 120, ${0.25 + pulse * 0.08})`);
+  fieldGrad.addColorStop(1, "rgba(15, 25, 60, 0.05)");
   ctx.fillStyle = fieldGrad;
   drawOrganicBlob(ctx, sRad * 0.92, sRad * 0.85 * isoRatio, hazSeed + 30, 0.15);
   ctx.fill();
 
-  // 3. Pulsing energy ring
-  const fieldR = sRad * (0.68 + pulse * 0.12);
-  ctx.strokeStyle = `rgba(140, 210, 255, ${0.22 + pulse * 0.18})`;
-  ctx.lineWidth = 2.2 * cameraZoom;
-  drawOrganicBlob(ctx, fieldR, fieldR * isoRatio, hazSeed + 40, 0.12);
-  ctx.stroke();
+  // 4. Conductor nodes (glowing tesla orbs at fixed positions)
+  const nodeCount = 5;
+  const nodePositions: { x: number; y: number }[] = [];
+  for (let n = 0; n < nodeCount; n++) {
+    const nSeed = hazSeed + n * 31.7;
+    const nAngle = (n / nodeCount) * Math.PI * 2 + seededNoise(nSeed) * 0.6;
+    const nDist = sRad * (0.4 + seededNoise(nSeed + 1) * 0.3);
+    const nx = Math.cos(nAngle) * nDist;
+    const ny = Math.sin(nAngle) * nDist * isoRatio;
+    nodePositions.push({ x: nx, y: ny });
 
-  // Inner energy ring
-  const innerR = sRad * (0.35 + pulse * 0.06);
-  ctx.strokeStyle = `rgba(180, 230, 255, ${0.15 + pulse * 0.1})`;
-  ctx.lineWidth = 1.4 * cameraZoom;
-  drawOrganicBlob(ctx, innerR, innerR * isoRatio, hazSeed + 55, 0.1);
-  ctx.stroke();
+    const nodePulse = Math.sin(time * 4 + n * 1.7 + hazSeed) * 0.5 + 0.5;
+    const nodeSize = (3 + nodePulse * 2.5) * cameraZoom;
 
-  // 4. Ground-level arc crawlers (small bolts along the surface)
-  for (let arc = 0; arc < 4; arc++) {
-    const arcSeed = hazSeed + arc * 23.1;
-    const arcPhase = (time * 2 + seededNoise(arcSeed) * 2) % 2;
-    if (arcPhase > 0.3) continue;
-    const arcAlpha = 1 - arcPhase / 0.3;
-    const arcAngle = seededNoise(arcSeed + Math.floor(time * 2) * 3.1) * Math.PI * 2;
-    const arcR = sRad * (0.3 + seededNoise(arcSeed + 2) * 0.35);
     ctx.save();
-    ctx.shadowColor = `rgba(130, 200, 255, ${arcAlpha * 0.5})`;
-    ctx.shadowBlur = 8 * cameraZoom;
-    ctx.strokeStyle = `rgba(160, 220, 255, ${arcAlpha * 0.65})`;
-    ctx.lineWidth = 1.3 * cameraZoom;
+    ctx.shadowColor = `rgba(130, 200, 255, ${0.6 + nodePulse * 0.4})`;
+    ctx.shadowBlur = (10 + nodePulse * 8) * cameraZoom;
+
+    const nodeGrad = ctx.createRadialGradient(nx, ny, 0, nx, ny, nodeSize);
+    nodeGrad.addColorStop(0, `rgba(220, 245, 255, ${0.9 + nodePulse * 0.1})`);
+    nodeGrad.addColorStop(0.4, `rgba(140, 210, 255, ${0.7 + nodePulse * 0.2})`);
+    nodeGrad.addColorStop(0.7, `rgba(80, 150, 255, ${0.3 + nodePulse * 0.15})`);
+    nodeGrad.addColorStop(1, "rgba(40, 100, 255, 0)");
+    ctx.fillStyle = nodeGrad;
     ctx.beginPath();
-    for (let seg = 0; seg <= 5; seg++) {
-      const t = seg / 5;
-      const theta = arcAngle + t * 1.2;
-      const r = arcR * (0.6 + t * 0.4);
-      const jit = (seededNoise(arcSeed + seg * 7.7) - 0.5) * sRad * 0.06;
-      const x = Math.cos(theta) * r + jit;
-      const y = Math.sin(theta) * r * isoRatio + jit * isoRatio;
-      if (seg === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
+    ctx.arc(nx, ny, nodeSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    const coronaSize = nodeSize * (1.8 + nodePulse * 0.6);
+    const coronaGrad = ctx.createRadialGradient(nx, ny, nodeSize * 0.5, nx, ny, coronaSize);
+    coronaGrad.addColorStop(0, `rgba(100, 180, 255, ${0.15 + nodePulse * 0.1})`);
+    coronaGrad.addColorStop(1, "rgba(60, 130, 255, 0)");
+    ctx.fillStyle = coronaGrad;
+    ctx.beginPath();
+    ctx.arc(nx, ny, coronaSize, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
-  // 5. Lightning bolt flashes (major strikes)
-  for (let slot = 0; slot < 3; slot++) {
+  // 5. Tesla arcs between conductor nodes
+  for (let i = 0; i < nodeCount; i++) {
+    const j = (i + 1) % nodeCount;
+    const arcSeed = hazSeed + i * 47.1 + j * 23.3;
+    const arcPhase = (time * 3.5 + seededNoise(arcSeed) * 3) % 3;
+    if (arcPhase > 0.55) continue;
+
+    const arcAlpha = Math.sin((arcPhase / 0.55) * Math.PI);
+    const n1 = nodePositions[i];
+    const n2 = nodePositions[j];
+    const dx = n2.x - n1.x;
+    const dy = n2.y - n1.y;
+    const arcTimeSeed = arcSeed + Math.floor(time * 3.5 / 3) * 11.1;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(120, 200, 255, ${arcAlpha * 0.7})`;
+    ctx.shadowBlur = 12 * cameraZoom;
+
+    for (let pass = 0; pass < 3; pass++) {
+      const widths = [3.5, 1.8, 0.7];
+      const colors = [
+        `rgba(80, 150, 255, ${arcAlpha * 0.35})`,
+        `rgba(160, 220, 255, ${arcAlpha * 0.7})`,
+        `rgba(230, 248, 255, ${arcAlpha * 0.55})`,
+      ];
+      ctx.strokeStyle = colors[pass];
+      ctx.lineWidth = widths[pass] * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(n1.x, n1.y);
+      const arcSegs = 8;
+      for (let seg = 1; seg < arcSegs; seg++) {
+        const t = seg / arcSegs;
+        const baseX = n1.x + dx * t;
+        const baseY = n1.y + dy * t;
+        const jitScale = Math.sin(t * Math.PI) * sRad * 0.1;
+        const jx = (seededNoise(arcTimeSeed + seg * 7 + pass * 0.1) - 0.5) * jitScale;
+        const jy = (seededNoise(arcTimeSeed + seg * 13 + pass * 0.1) - 0.5) * jitScale;
+        ctx.lineTo(baseX + jx, baseY + jy);
+      }
+      ctx.lineTo(n2.x, n2.y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 6. Pulsing energy rings with electric shimmer
+  for (let ring = 0; ring < 3; ring++) {
+    const ringR = sRad * (0.3 + ring * 0.2 + pulse * 0.06);
+    const ringAlpha = (0.18 + pulse * 0.12) * (1 - ring * 0.25);
+    ctx.save();
+    ctx.shadowColor = `rgba(100, 180, 255, ${ringAlpha * 0.5})`;
+    ctx.shadowBlur = 6 * cameraZoom;
+    ctx.strokeStyle = `rgba(140, 210, 255, ${ringAlpha})`;
+    ctx.lineWidth = (2.2 - ring * 0.4) * cameraZoom;
+    ctx.setLineDash([4 * cameraZoom, 3 * cameraZoom]);
+    ctx.lineDashOffset = time * 30 * (ring % 2 === 0 ? 1 : -1);
+    drawOrganicBlob(ctx, ringR, ringR * isoRatio, hazSeed + 40 + ring * 15, 0.1);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // 7. Ground-level arc crawlers with forked paths
+  for (let arc = 0; arc < 6; arc++) {
+    const arcSeed = hazSeed + arc * 23.1;
+    const arcPhase = (time * 2.5 + seededNoise(arcSeed) * 2) % 2;
+    if (arcPhase > 0.4) continue;
+    const arcAlpha = Math.sin((arcPhase / 0.4) * Math.PI);
+    const arcAngle = seededNoise(arcSeed + Math.floor(time * 2.5) * 3.1) * Math.PI * 2;
+    const arcR = sRad * (0.25 + seededNoise(arcSeed + 2) * 0.4);
+
+    ctx.save();
+    ctx.shadowColor = `rgba(130, 200, 255, ${arcAlpha * 0.6})`;
+    ctx.shadowBlur = 10 * cameraZoom;
+
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.strokeStyle = pass === 0
+        ? `rgba(80, 160, 255, ${arcAlpha * 0.4})`
+        : `rgba(200, 235, 255, ${arcAlpha * 0.7})`;
+      ctx.lineWidth = (pass === 0 ? 2.8 : 1.2) * cameraZoom;
+      ctx.beginPath();
+      for (let seg = 0; seg <= 7; seg++) {
+        const t = seg / 7;
+        const theta = arcAngle + t * 1.5;
+        const r = arcR * (0.5 + t * 0.5);
+        const jit = (seededNoise(arcSeed + seg * 7.7 + Math.floor(time * 6) * 2) - 0.5) * sRad * 0.08;
+        const x = Math.cos(theta) * r + jit;
+        const y = Math.sin(theta) * r * isoRatio + jit * isoRatio;
+        if (seg === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 8. Lightning bolt flashes with multi-branch forking
+  for (let slot = 0; slot < 4; slot++) {
     const slotSeed = hazSeed + slot * 97.3;
-    const cyclePeriod = 1.8 + seededNoise(slotSeed + 10) * 1.2;
+    const cyclePeriod = 1.4 + seededNoise(slotSeed + 10) * 1.0;
     const cyclePhase = (time + seededNoise(slotSeed) * cyclePeriod) % cyclePeriod;
-    const flashDuration = 0.24;
+    const flashDuration = 0.32;
     if (cyclePhase > flashDuration) continue;
 
-    const flashAlpha = 1 - cyclePhase / flashDuration;
-    const boltSeed = slotSeed + Math.floor(time / cyclePeriod) * 7.1;
-    const boltAngle = seededNoise(boltSeed) * Math.PI * 2;
-    const boltLen = sRad * (0.3 + seededNoise(boltSeed + 1) * 0.55);
-    const startX = Math.cos(boltAngle) * boltLen * 0.1;
-    const startY = Math.sin(boltAngle) * boltLen * 0.1 * isoRatio;
+    const flashAlpha = Math.pow(1 - cyclePhase / flashDuration, 1.5);
+    const boltTimeSeed = slotSeed + Math.floor(time / cyclePeriod) * 7.1;
+    const boltAngle = seededNoise(boltTimeSeed) * Math.PI * 2;
+    const boltLen = sRad * (0.35 + seededNoise(boltTimeSeed + 1) * 0.55);
+    const startX = Math.cos(boltAngle) * boltLen * 0.08;
+    const startY = Math.sin(boltAngle) * boltLen * 0.08 * isoRatio;
     const endX = Math.cos(boltAngle) * boltLen;
     const endY = Math.sin(boltAngle) * boltLen * isoRatio;
 
     ctx.save();
-    ctx.shadowColor = `rgba(120, 200, 255, ${flashAlpha * 0.85})`;
-    ctx.shadowBlur = 16 * cameraZoom;
+    ctx.shadowColor = `rgba(120, 200, 255, ${flashAlpha * 0.9})`;
+    ctx.shadowBlur = 20 * cameraZoom;
 
-    // Outer glow bolt
-    ctx.strokeStyle = `rgba(100, 180, 255, ${flashAlpha * 0.5})`;
-    ctx.lineWidth = (3.5 + slot * 0.5) * cameraZoom;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    for (let seg = 1; seg <= 5; seg++) {
-      const t = seg / 5;
+    const boltSegs = 8;
+    const boltPoints: { x: number; y: number }[] = [{ x: startX, y: startY }];
+    for (let seg = 1; seg <= boltSegs; seg++) {
+      const t = seg / boltSegs;
       const baseX = startX + (endX - startX) * t;
       const baseY = startY + (endY - startY) * t;
-      const jitter = (1 - Math.abs(t - 0.5) * 2) * sRad * 0.14;
-      ctx.lineTo(
-        baseX + (seededNoise(boltSeed + seg * 11) - 0.5) * jitter,
-        baseY + (seededNoise(boltSeed + seg * 17) - 0.5) * jitter * isoRatio
-      );
+      const jitter = Math.sin(t * Math.PI) * sRad * 0.16;
+      boltPoints.push({
+        x: baseX + (seededNoise(boltTimeSeed + seg * 11) - 0.5) * jitter,
+        y: baseY + (seededNoise(boltTimeSeed + seg * 17) - 0.5) * jitter * isoRatio,
+      });
     }
-    ctx.stroke();
 
-    // Bright core bolt
-    ctx.strokeStyle = `rgba(200, 240, 255, ${flashAlpha * 0.9})`;
-    ctx.lineWidth = (1.8 + slot * 0.3) * cameraZoom;
-    ctx.stroke();
+    const layers = [
+      { width: 5, color: `rgba(60, 120, 255, ${flashAlpha * 0.3})` },
+      { width: 3, color: `rgba(140, 200, 255, ${flashAlpha * 0.6})` },
+      { width: 1.5, color: `rgba(220, 245, 255, ${flashAlpha * 0.85})` },
+      { width: 0.6, color: `rgba(255, 255, 255, ${flashAlpha * 0.7})` },
+    ];
 
-    // White-hot center
-    ctx.strokeStyle = `rgba(255, 255, 255, ${flashAlpha * 0.6})`;
-    ctx.lineWidth = 0.8 * cameraZoom;
-    ctx.stroke();
-
-    // Branch bolt
-    if (seededNoise(boltSeed + 30) > 0.4) {
-      const branchStart = 0.4 + seededNoise(boltSeed + 31) * 0.3;
-      const bsx = startX + (endX - startX) * branchStart;
-      const bsy = startY + (endY - startY) * branchStart;
-      const branchAngle = boltAngle + (seededNoise(boltSeed + 32) - 0.5) * 1.2;
-      const branchLen = boltLen * 0.4;
-      ctx.strokeStyle = `rgba(160, 220, 255, ${flashAlpha * 0.6})`;
-      ctx.lineWidth = 1.2 * cameraZoom;
+    for (const layer of layers) {
+      ctx.strokeStyle = layer.color;
+      ctx.lineWidth = layer.width * cameraZoom;
       ctx.beginPath();
-      ctx.moveTo(bsx, bsy);
-      ctx.lineTo(
-        bsx + Math.cos(branchAngle) * branchLen,
-        bsy + Math.sin(branchAngle) * branchLen * isoRatio
-      );
+      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
+      for (let p = 1; p < boltPoints.length; p++) {
+        ctx.lineTo(boltPoints[p].x, boltPoints[p].y);
+      }
       ctx.stroke();
     }
 
+    for (let b = 0; b < 3; b++) {
+      if (seededNoise(boltTimeSeed + 30 + b * 7) > 0.35) {
+        const branchIdx = 2 + Math.floor(seededNoise(boltTimeSeed + 31 + b * 7) * (boltSegs - 3));
+        const bp = boltPoints[branchIdx];
+        const branchAngle = boltAngle + (seededNoise(boltTimeSeed + 32 + b * 7) - 0.5) * 1.6;
+        const branchLen = boltLen * (0.2 + seededNoise(boltTimeSeed + 33 + b * 7) * 0.2);
+
+        ctx.strokeStyle = `rgba(140, 210, 255, ${flashAlpha * 0.5})`;
+        ctx.lineWidth = 1.5 * cameraZoom;
+        ctx.beginPath();
+        ctx.moveTo(bp.x, bp.y);
+        let bx = bp.x;
+        let by = bp.y;
+        for (let seg = 1; seg <= 4; seg++) {
+          const subJit = (seededNoise(boltTimeSeed + 40 + b * 20 + seg * 5) - 0.5) * branchLen * 0.2;
+          bx += Math.cos(branchAngle) * (branchLen / 4) + subJit;
+          by += Math.sin(branchAngle) * (branchLen / 4) * isoRatio + subJit * isoRatio * 0.5;
+          ctx.lineTo(bx, by);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(230, 248, 255, ${flashAlpha * 0.35})`;
+        ctx.lineWidth = 0.6 * cameraZoom;
+        ctx.stroke();
+      }
+    }
+
+    if (cyclePhase < 0.08) {
+      const impactAlpha = (1 - cyclePhase / 0.08) * 0.35;
+      const impactGrad = ctx.createRadialGradient(endX, endY, 0, endX, endY, sRad * 0.25);
+      impactGrad.addColorStop(0, `rgba(200, 230, 255, ${impactAlpha})`);
+      impactGrad.addColorStop(0.5, `rgba(100, 170, 255, ${impactAlpha * 0.4})`);
+      impactGrad.addColorStop(1, "rgba(60, 120, 255, 0)");
+      ctx.fillStyle = impactGrad;
+      ctx.beginPath();
+      ctx.ellipse(endX, endY, sRad * 0.25, sRad * 0.15 * isoRatio, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 
-  // 6. Floating charged particles
-  for (let mote = 0; mote < 12; mote++) {
-    const mPhase = (time * 0.9 + seededNoise(hazSeed + mote * 2.1) * 2) % 2;
-    const mAngle = seededNoise(hazSeed + mote * 4.3) * Math.PI * 2 + time * 0.4;
-    const mDist = sRad * (0.12 + seededNoise(hazSeed + mote * 6.7) * 0.6);
+  // 9. Electric ripple waves emanating from center
+  for (let ripple = 0; ripple < 3; ripple++) {
+    const ripplePhase = (time * 0.8 + ripple * 1.1 + hazSeed * 0.01) % 3;
+    const rippleR = sRad * (0.15 + ripplePhase * 0.35);
+    const rippleAlpha = 0.2 * (1 - ripplePhase / 3);
+    ctx.strokeStyle = `rgba(120, 190, 255, ${rippleAlpha})`;
+    ctx.lineWidth = (2 - ripplePhase * 0.5) * cameraZoom;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rippleR, rippleR * isoRatio, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // 10. Floating charged particles with trails
+  for (let mote = 0; mote < 16; mote++) {
+    const mPhase = (time * 1.1 + seededNoise(hazSeed + mote * 2.1) * 2) % 2;
+    const mAngle = seededNoise(hazSeed + mote * 4.3) * Math.PI * 2 + time * 0.5;
+    const mDist = sRad * (0.1 + seededNoise(hazSeed + mote * 6.7) * 0.65);
     const mx = Math.cos(mAngle) * mDist;
-    const my = Math.sin(mAngle) * mDist * isoRatio - mPhase * 16 * cameraZoom;
-    const mSize = (1.2 + (mote % 3) * 0.6) * cameraZoom * (1 - mPhase / 2);
+    const my = Math.sin(mAngle) * mDist * isoRatio - mPhase * 18 * cameraZoom;
+    const mSize = (1.5 + (mote % 4) * 0.5) * cameraZoom * (1 - mPhase / 2);
+    const mAlpha = 0.65 * (1 - mPhase / 2);
+
     ctx.save();
-    ctx.shadowColor = "rgba(130, 200, 255, 0.65)";
-    ctx.shadowBlur = 5 * cameraZoom;
-    ctx.fillStyle = `rgba(180, 230, 255, ${0.55 * (1 - mPhase / 2)})`;
+    ctx.shadowColor = `rgba(130, 200, 255, ${mAlpha * 0.8})`;
+    ctx.shadowBlur = 6 * cameraZoom;
+    ctx.fillStyle = `rgba(190, 235, 255, ${mAlpha})`;
     ctx.beginPath();
     ctx.arc(mx, my, mSize, 0, Math.PI * 2);
     ctx.fill();
+
+    const trailLen = 8 * cameraZoom * (1 - mPhase / 2);
+    ctx.strokeStyle = `rgba(140, 210, 255, ${mAlpha * 0.3})`;
+    ctx.lineWidth = mSize * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx, my + trailLen);
+    ctx.stroke();
     ctx.restore();
   }
+
+  // 11. Central corona discharge glow
+  const coronaGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.3);
+  const coronaPulse = 0.12 + stormPulse * 0.1 + pulse * 0.06;
+  coronaGrad.addColorStop(0, `rgba(180, 220, 255, ${coronaPulse})`);
+  coronaGrad.addColorStop(0.5, `rgba(100, 170, 255, ${coronaPulse * 0.4})`);
+  coronaGrad.addColorStop(1, "rgba(60, 120, 255, 0)");
+  ctx.fillStyle = coronaGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.3, sRad * 0.2 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawVoidRiftHazard(
@@ -3399,156 +4184,329 @@ function drawVoidRiftHazard(
   cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 53.3 + (pos.y || 0) * 37.7;
+  const voidPulse = Math.sin(time * 0.8 + hazSeed) * 0.5 + 0.5;
 
-  // 1. Reality distortion ring (warped terrain transition)
-  const distortGrad = ctx.createRadialGradient(0, 0, sRad * 0.45, 0, 0, sRad * 1.35);
-  distortGrad.addColorStop(0, "rgba(55, 25, 90, 0.45)");
-  distortGrad.addColorStop(0.35, "rgba(45, 18, 75, 0.3)");
-  distortGrad.addColorStop(0.65, "rgba(35, 12, 60, 0.15)");
+  // 1. Wide reality distortion field with warped terrain
+  const distortGrad = ctx.createRadialGradient(0, 0, sRad * 0.35, 0, 0, sRad * 1.45);
+  distortGrad.addColorStop(0, `rgba(65, 20, 110, ${0.5 + voidPulse * 0.1})`);
+  distortGrad.addColorStop(0.25, "rgba(50, 15, 85, 0.38)");
+  distortGrad.addColorStop(0.5, "rgba(35, 10, 60, 0.22)");
+  distortGrad.addColorStop(0.75, "rgba(20, 5, 40, 0.1)");
   distortGrad.addColorStop(1, "transparent");
   ctx.fillStyle = distortGrad;
-  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.25 * isoRatio, hazSeed, 0.24);
+  drawOrganicBlob(ctx, sRad * 1.4, sRad * 1.35 * isoRatio, hazSeed, 0.26);
   ctx.fill();
 
-  // Warping fracture lines at edge
-  for (let frac = 0; frac < 8; frac++) {
+  // 2. Reality crack network at edges
+  for (let frac = 0; frac < 12; frac++) {
     const fSeed = hazSeed + frac * 5.7;
     const fAngle = seededNoise(fSeed) * Math.PI * 2;
-    const fStart = sRad * (0.65 + seededNoise(fSeed + 1) * 0.2);
-    const fEnd = sRad * (0.95 + seededNoise(fSeed + 2) * 0.3);
-    const wobble = Math.sin(time * 1.5 + frac * 1.1) * 3 * cameraZoom;
-    ctx.strokeStyle = `rgba(120, 60, 200, ${0.2 + Math.sin(time * 2 + frac) * 0.08})`;
-    ctx.lineWidth = 1 * cameraZoom;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(fAngle) * fStart, Math.sin(fAngle) * fStart * isoRatio);
-    ctx.quadraticCurveTo(
-      Math.cos(fAngle + 0.1) * (fStart + fEnd) * 0.5 + wobble,
-      Math.sin(fAngle + 0.1) * (fStart + fEnd) * 0.5 * isoRatio,
-      Math.cos(fAngle) * fEnd,
-      Math.sin(fAngle) * fEnd * isoRatio
-    );
-    ctx.stroke();
-  }
-
-  // 2. Deep void body (near-black center)
-  const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad);
-  voidGrad.addColorStop(0, "rgba(0, 0, 0, 0.98)");
-  voidGrad.addColorStop(0.2, "rgba(8, 2, 18, 0.96)");
-  voidGrad.addColorStop(0.45, "rgba(20, 8, 38, 0.94)");
-  voidGrad.addColorStop(0.72, "rgba(38, 16, 62, 0.9)");
-  voidGrad.addColorStop(1, "rgba(50, 25, 80, 0.82)");
-  ctx.fillStyle = voidGrad;
-  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 45, 0.18);
-  ctx.fill();
-
-  // 3. Abyssal depth center
-  const depthGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.35);
-  depthGrad.addColorStop(0, "rgba(0, 0, 0, 1)");
-  depthGrad.addColorStop(0.7, "rgba(5, 0, 12, 0.8)");
-  depthGrad.addColorStop(1, "rgba(12, 4, 25, 0.1)");
-  ctx.fillStyle = depthGrad;
-  drawOrganicBlob(ctx, sRad * 0.32, sRad * 0.25 * isoRatio, hazSeed + 100, 0.1);
-  ctx.fill();
-
-  // 4. Event horizon ring with energy
-  const horizonR = sRad * (0.52 + Math.sin(time * 1.2 + hazSeed) * 0.04);
-  ctx.save();
-  ctx.shadowColor = `rgba(160, 80, 255, ${0.3 + Math.sin(time * 2) * 0.15})`;
-  ctx.shadowBlur = 12 * cameraZoom;
-  ctx.strokeStyle = `rgba(170, 90, 255, ${0.4 + Math.sin(time * 2 + hazSeed) * 0.18})`;
-  ctx.lineWidth = 2.8 * cameraZoom;
-  drawOrganicBlob(ctx, horizonR, horizonR * isoRatio, hazSeed + 80, 0.12);
-  ctx.stroke();
-  ctx.restore();
-
-  // Inner event horizon shimmer
-  const innerHorizonR = sRad * (0.28 + Math.sin(time * 1.6 + hazSeed + 1) * 0.03);
-  ctx.strokeStyle = `rgba(200, 130, 255, ${0.2 + Math.sin(time * 2.5 + hazSeed) * 0.1})`;
-  ctx.lineWidth = 1.5 * cameraZoom;
-  drawOrganicBlob(ctx, innerHorizonR, innerHorizonR * isoRatio, hazSeed + 110, 0.1);
-  ctx.stroke();
-
-  // 5. Orbiting dimensional particles (multi-colored, gravity-pulled)
-  for (let p = 0; p < 16; p++) {
-    const pAngle = (p / 16) * Math.PI * 2 + time * 1.4;
-    const orbitR = sRad * (0.38 + Math.sin(time * 0.7 + p * 1.3 + hazSeed) * 0.1);
-    const px = Math.cos(pAngle) * orbitR;
-    const py = Math.sin(pAngle) * orbitR * isoRatio;
-    const pSize = (1.3 + (p % 4) * 0.45) * cameraZoom;
-    const hueShift = (p * 22 + time * 25) % 60;
-    ctx.fillStyle = `hsla(${270 + hueShift - 30}, 82%, 62%, ${0.48 + Math.sin(time * 3 + p) * 0.2})`;
-    ctx.beginPath();
-    ctx.arc(px, py, pSize, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 6. Star-like pinpoints inside the void
-  for (let star = 0; star < 10; star++) {
-    const sSeed = hazSeed + star * 3.7;
-    const sAngle = seededNoise(sSeed) * Math.PI * 2 + time * 0.25;
-    const sDist = sRad * seededNoise(sSeed + 1) * 0.42;
-    const sx = Math.cos(sAngle) * sDist;
-    const sy = Math.sin(sAngle) * sDist * isoRatio;
-    const twinkle = Math.sin(time * 4.5 + star * 2.1 + hazSeed) * 0.5 + 0.5;
-    ctx.fillStyle = `rgba(225, 190, 255, ${0.25 + twinkle * 0.55})`;
-    ctx.beginPath();
-    ctx.arc(sx, sy, (0.7 + twinkle * 0.9) * cameraZoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // 7. Dimensional tears (crack-like glowing fissures)
-  for (let tear = 0; tear < 4; tear++) {
-    const tSeed = hazSeed + tear * 4.7;
-    const tPhase = (time * 0.28 + seededNoise(tSeed) * 4) % 4;
-    if (tPhase > 1.8) continue;
-    const tAngle = seededNoise(tSeed + 1) * Math.PI * 2;
-    const tDist = sRad * (0.18 + seededNoise(tSeed + 2) * 0.38);
-    const tx = Math.cos(tAngle) * tDist;
-    const ty = Math.sin(tAngle) * tDist * isoRatio;
-    const tLen = sRad * (0.12 + seededNoise(tSeed + 3) * 0.1) * Math.sin((tPhase / 1.8) * Math.PI);
-    const tRot = seededNoise(tSeed + 4) * Math.PI;
-    const tearAlpha = Math.sin((tPhase / 1.8) * Math.PI);
+    const fStart = sRad * (0.6 + seededNoise(fSeed + 1) * 0.25);
+    const fEnd = sRad * (0.9 + seededNoise(fSeed + 2) * 0.35);
+    const wobble = Math.sin(time * 1.8 + frac * 0.9) * 4 * cameraZoom;
+    const fracAlpha = 0.15 + Math.sin(time * 2.2 + frac * 1.1) * 0.1;
 
     ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(tRot);
-    ctx.shadowColor = `rgba(180, 100, 255, ${tearAlpha * 0.65})`;
-    ctx.shadowBlur = 10 * cameraZoom;
-    // Outer glow
-    ctx.strokeStyle = `rgba(160, 80, 255, ${tearAlpha * 0.4})`;
-    ctx.lineWidth = 3.5 * cameraZoom;
+    ctx.shadowColor = `rgba(140, 60, 220, ${fracAlpha * 0.5})`;
+    ctx.shadowBlur = 4 * cameraZoom;
+    ctx.strokeStyle = `rgba(120, 60, 200, ${fracAlpha})`;
+    ctx.lineWidth = (1 + seededNoise(fSeed + 3) * 0.8) * cameraZoom;
     ctx.beginPath();
-    ctx.moveTo(-tLen, 0);
-    ctx.quadraticCurveTo(0, (seededNoise(tSeed + 5) - 0.5) * 4 * cameraZoom, tLen, 0);
-    ctx.stroke();
-    // Bright core
-    ctx.strokeStyle = `rgba(220, 160, 255, ${tearAlpha * 0.7})`;
-    ctx.lineWidth = 1.5 * cameraZoom;
+    ctx.moveTo(Math.cos(fAngle) * fStart, Math.sin(fAngle) * fStart * isoRatio);
+    const midR = (fStart + fEnd) * 0.5;
+    ctx.quadraticCurveTo(
+      Math.cos(fAngle + 0.15) * midR + wobble,
+      Math.sin(fAngle + 0.15) * midR * isoRatio,
+      Math.cos(fAngle - 0.05) * fEnd,
+      Math.sin(fAngle - 0.05) * fEnd * isoRatio
+    );
     ctx.stroke();
     ctx.restore();
   }
 
-  // 8. Gravitational pull wisps (streaks being sucked inward)
-  for (let wisp = 0; wisp < 6; wisp++) {
-    const wSeed = hazSeed + wisp * 8.3;
-    const wPhase = (time * 0.5 + seededNoise(wSeed) * 3) % 3;
-    if (wPhase > 2) continue;
-    const wAngle = seededNoise(wSeed + 1) * Math.PI * 2;
-    const wStartR = sRad * (0.55 + (1 - wPhase / 2) * 0.35);
-    const wEndR = sRad * (0.15 + wPhase * 0.05);
-    const wAlpha = 0.18 * (1 - wPhase / 2);
-    ctx.strokeStyle = `rgba(180, 130, 255, ${wAlpha})`;
-    ctx.lineWidth = (1.5 - wPhase * 0.3) * cameraZoom;
+  // 3. Deep void body with extreme darkness
+  const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 1.05);
+  voidGrad.addColorStop(0, "rgba(0, 0, 0, 0.99)");
+  voidGrad.addColorStop(0.15, "rgba(3, 0, 10, 0.98)");
+  voidGrad.addColorStop(0.35, "rgba(10, 3, 25, 0.96)");
+  voidGrad.addColorStop(0.55, "rgba(22, 8, 42, 0.94)");
+  voidGrad.addColorStop(0.75, "rgba(38, 15, 65, 0.9)");
+  voidGrad.addColorStop(0.9, "rgba(50, 22, 82, 0.85)");
+  voidGrad.addColorStop(1, "rgba(55, 28, 88, 0.7)");
+  ctx.fillStyle = voidGrad;
+  drawOrganicBlob(ctx, sRad * 1.02, sRad * isoRatio, hazSeed + 45, 0.18);
+  ctx.fill();
+
+  // 4. Swirling accretion disk (spiral arms of energy)
+  ctx.save();
+  for (let arm = 0; arm < 3; arm++) {
+    const armOffset = (arm / 3) * Math.PI * 2;
+    const armAlpha = 0.12 + Math.sin(time * 1.5 + arm * 2.1) * 0.06;
+
+    ctx.strokeStyle = `rgba(140, 80, 220, ${armAlpha})`;
+    ctx.lineWidth = (3 + arm * 0.5) * cameraZoom;
     ctx.beginPath();
-    ctx.moveTo(Math.cos(wAngle) * wStartR, Math.sin(wAngle) * wStartR * isoRatio);
-    ctx.quadraticCurveTo(
-      Math.cos(wAngle + 0.2) * (wStartR + wEndR) * 0.4,
-      Math.sin(wAngle + 0.2) * (wStartR + wEndR) * 0.4 * isoRatio,
-      Math.cos(wAngle + 0.5) * wEndR,
-      Math.sin(wAngle + 0.5) * wEndR * isoRatio
-    );
+
+    for (let seg = 0; seg <= 40; seg++) {
+      const t = seg / 40;
+      const spiralAngle = armOffset + t * Math.PI * 3 + time * 0.6;
+      const spiralR = sRad * (0.12 + t * 0.62);
+      const x = Math.cos(spiralAngle) * spiralR;
+      const y = Math.sin(spiralAngle) * spiralR * isoRatio;
+      if (seg === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(200, 140, 255, ${armAlpha * 0.6})`;
+    ctx.lineWidth = (1.2 + arm * 0.3) * cameraZoom;
     ctx.stroke();
   }
+  ctx.restore();
+
+  // 5. Abyssal depth center with pulsing darkness
+  const depthGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.4);
+  depthGrad.addColorStop(0, "rgba(0, 0, 0, 1)");
+  depthGrad.addColorStop(0.5, `rgba(3, 0, 8, ${0.95 + voidPulse * 0.05})`);
+  depthGrad.addColorStop(0.8, "rgba(8, 2, 18, 0.6)");
+  depthGrad.addColorStop(1, "rgba(15, 5, 30, 0.1)");
+  ctx.fillStyle = depthGrad;
+  drawOrganicBlob(ctx, sRad * 0.38, sRad * 0.3 * isoRatio, hazSeed + 100, 0.12);
+  ctx.fill();
+
+  // 6. Multi-layered event horizon rings
+  for (let ring = 0; ring < 3; ring++) {
+    const ringR = sRad * (0.42 + ring * 0.12 + Math.sin(time * 1.2 + ring * 0.8 + hazSeed) * 0.04);
+    const ringAlpha = (0.4 - ring * 0.1) + Math.sin(time * 2 + ring * 1.3 + hazSeed) * 0.12;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(160, 80, 255, ${ringAlpha * 0.6})`;
+    ctx.shadowBlur = (14 - ring * 3) * cameraZoom;
+
+    ctx.strokeStyle = `rgba(${170 + ring * 20}, ${80 + ring * 25}, 255, ${ringAlpha})`;
+    ctx.lineWidth = (3 - ring * 0.6) * cameraZoom;
+    drawOrganicBlob(ctx, ringR, ringR * isoRatio, hazSeed + 80 + ring * 15, 0.12);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Energy blobs along event horizon
+  const horizonR = sRad * 0.52;
+  for (let blob = 0; blob < 8; blob++) {
+    const bAngle = (blob / 8) * Math.PI * 2 + time * 0.9;
+    const bR = horizonR + Math.sin(time * 3 + blob * 2.5) * sRad * 0.04;
+    const bx = Math.cos(bAngle) * bR;
+    const by = Math.sin(bAngle) * bR * isoRatio;
+    const bSize = (2.5 + Math.sin(time * 4 + blob * 1.7) * 1) * cameraZoom;
+    const bAlpha = 0.5 + Math.sin(time * 3.5 + blob * 1.3) * 0.25;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(180, 100, 255, ${bAlpha * 0.6})`;
+    ctx.shadowBlur = 8 * cameraZoom;
+    const bGrad = ctx.createRadialGradient(bx, by, 0, bx, by, bSize);
+    bGrad.addColorStop(0, `rgba(230, 180, 255, ${bAlpha})`);
+    bGrad.addColorStop(0.5, `rgba(160, 80, 255, ${bAlpha * 0.5})`);
+    bGrad.addColorStop(1, "rgba(100, 40, 200, 0)");
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 7. Void tendrils reaching outward
+  for (let tendril = 0; tendril < 6; tendril++) {
+    const tSeed = hazSeed + tendril * 17.3;
+    const tBaseAngle = (tendril / 6) * Math.PI * 2 + seededNoise(tSeed) * 0.5;
+    const tLen = sRad * (0.5 + seededNoise(tSeed + 1) * 0.4);
+    const tPhase = (time * 0.4 + seededNoise(tSeed + 2) * 4) % 4;
+    const tExtend = Math.min(1, tPhase < 2 ? tPhase / 2 : (4 - tPhase) / 2);
+    const tAlpha = 0.15 + tExtend * 0.2;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(100, 40, 180, ${tAlpha * 0.4})`;
+    ctx.shadowBlur = 6 * cameraZoom;
+
+    const tendrilGrad = ctx.createLinearGradient(0, 0,
+      Math.cos(tBaseAngle) * tLen * tExtend,
+      Math.sin(tBaseAngle) * tLen * tExtend * isoRatio
+    );
+    tendrilGrad.addColorStop(0, `rgba(60, 20, 100, ${tAlpha * 0.6})`);
+    tendrilGrad.addColorStop(0.5, `rgba(100, 50, 160, ${tAlpha})`);
+    tendrilGrad.addColorStop(1, "rgba(80, 30, 140, 0)");
+    ctx.strokeStyle = tendrilGrad;
+    ctx.lineWidth = (3 + seededNoise(tSeed + 3) * 2) * cameraZoom;
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    let tcx = 0;
+    let tcy = 0;
+    ctx.moveTo(tcx, tcy);
+    const tSegs = 8;
+    for (let seg = 1; seg <= tSegs; seg++) {
+      const t = seg / tSegs;
+      const sway = Math.sin(time * 2 + tendril * 1.3 + t * 3) * sRad * 0.06 * t;
+      const perpAngle = tBaseAngle + Math.PI * 0.5;
+      tcx = Math.cos(tBaseAngle) * tLen * t * tExtend + Math.cos(perpAngle) * sway;
+      tcy = Math.sin(tBaseAngle) * tLen * t * tExtend * isoRatio + Math.sin(perpAngle) * sway * isoRatio;
+      ctx.lineTo(tcx, tcy);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 8. Orbiting debris particles being consumed
+  for (let p = 0; p < 20; p++) {
+    const pSeed = hazSeed + p * 7.1;
+    const orbitSpeed = 0.8 + seededNoise(pSeed) * 1.2;
+    const pAngle = (p / 20) * Math.PI * 2 + time * orbitSpeed;
+    const baseOrbitR = sRad * (0.3 + seededNoise(pSeed + 1) * 0.35);
+    const spiralIn = Math.sin(time * 0.15 + seededNoise(pSeed + 2) * 6.28) * 0.5 + 0.5;
+    const orbitR = baseOrbitR * (0.6 + spiralIn * 0.4);
+    const px = Math.cos(pAngle) * orbitR;
+    const py = Math.sin(pAngle) * orbitR * isoRatio;
+    const pSize = (1.2 + (p % 5) * 0.4) * cameraZoom;
+    const hueShift = (p * 18 + time * 20) % 80;
+
+    ctx.save();
+    ctx.shadowColor = `hsla(${260 + hueShift}, 80%, 60%, 0.4)`;
+    ctx.shadowBlur = 4 * cameraZoom;
+    ctx.fillStyle = `hsla(${260 + hueShift}, 82%, 65%, ${0.5 + Math.sin(time * 3 + p) * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    const trailAngle = pAngle - 0.3;
+    ctx.strokeStyle = `hsla(${260 + hueShift}, 70%, 55%, 0.15)`;
+    ctx.lineWidth = pSize * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(
+      Math.cos(trailAngle) * orbitR * 1.05,
+      Math.sin(trailAngle) * orbitR * 1.05 * isoRatio
+    );
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 9. Deep void star field with twinkling
+  for (let star = 0; star < 16; star++) {
+    const sSeed = hazSeed + star * 3.7;
+    const sAngle = seededNoise(sSeed) * Math.PI * 2 + time * 0.15;
+    const sDist = sRad * seededNoise(sSeed + 1) * 0.45;
+    const sx = Math.cos(sAngle) * sDist;
+    const sy = Math.sin(sAngle) * sDist * isoRatio;
+    const twinkle = Math.sin(time * 5 + star * 2.1 + hazSeed) * 0.5 + 0.5;
+    const starSize = (0.6 + twinkle * 1.2) * cameraZoom;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(220, 190, 255, ${twinkle * 0.6})`;
+    ctx.shadowBlur = 4 * cameraZoom;
+    ctx.fillStyle = `rgba(230, 200, 255, ${0.2 + twinkle * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, starSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (twinkle > 0.7) {
+      ctx.strokeStyle = `rgba(240, 220, 255, ${(twinkle - 0.7) * 1.5})`;
+      ctx.lineWidth = 0.5 * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(sx - starSize * 2, sy);
+      ctx.lineTo(sx + starSize * 2, sy);
+      ctx.moveTo(sx, sy - starSize * 2);
+      ctx.lineTo(sx, sy + starSize * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 10. Dimensional tears with energy bleed
+  for (let tear = 0; tear < 5; tear++) {
+    const tSeed = hazSeed + tear * 4.7;
+    const tPhase = (time * 0.32 + seededNoise(tSeed) * 4) % 4;
+    if (tPhase > 2.2) continue;
+    const tAngle = seededNoise(tSeed + 1) * Math.PI * 2;
+    const tDist = sRad * (0.15 + seededNoise(tSeed + 2) * 0.4);
+    const tx = Math.cos(tAngle) * tDist;
+    const ty = Math.sin(tAngle) * tDist * isoRatio;
+    const tearLife = Math.sin((tPhase / 2.2) * Math.PI);
+    const tLen = sRad * (0.1 + seededNoise(tSeed + 3) * 0.12) * tearLife;
+    const tRot = seededNoise(tSeed + 4) * Math.PI;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(tRot);
+    ctx.shadowColor = `rgba(200, 120, 255, ${tearLife * 0.7})`;
+    ctx.shadowBlur = 14 * cameraZoom;
+
+    for (let pass = 0; pass < 3; pass++) {
+      const widths = [5, 2.5, 0.8];
+      const colors = [
+        `rgba(120, 50, 200, ${tearLife * 0.3})`,
+        `rgba(180, 100, 255, ${tearLife * 0.6})`,
+        `rgba(240, 200, 255, ${tearLife * 0.5})`,
+      ];
+      ctx.strokeStyle = colors[pass];
+      ctx.lineWidth = widths[pass] * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(-tLen, 0);
+      ctx.quadraticCurveTo(
+        0, (seededNoise(tSeed + 5) - 0.5) * 6 * cameraZoom * tearLife,
+        tLen, 0
+      );
+      ctx.stroke();
+    }
+
+    const bleedAlpha = tearLife * 0.2;
+    const bleedGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, tLen * 1.5);
+    bleedGrad.addColorStop(0, `rgba(160, 80, 255, ${bleedAlpha})`);
+    bleedGrad.addColorStop(1, "rgba(100, 40, 200, 0)");
+    ctx.fillStyle = bleedGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, tLen * 1.5, tLen * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // 11. Gravitational pull wisps spiraling inward
+  for (let wisp = 0; wisp < 10; wisp++) {
+    const wSeed = hazSeed + wisp * 8.3;
+    const wPhase = (time * 0.6 + seededNoise(wSeed) * 3) % 3;
+    if (wPhase > 2.5) continue;
+    const wAngle = seededNoise(wSeed + 1) * Math.PI * 2 + wPhase * 0.5;
+    const wStartR = sRad * (0.6 + (1 - wPhase / 2.5) * 0.4);
+    const wEndR = sRad * (0.1 + wPhase * 0.03);
+    const wAlpha = 0.22 * (1 - wPhase / 2.5);
+
+    ctx.strokeStyle = `rgba(160, 110, 240, ${wAlpha})`;
+    ctx.lineWidth = (2 - wPhase * 0.4) * cameraZoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+
+    const wSegs = 10;
+    for (let seg = 0; seg <= wSegs; seg++) {
+      const t = seg / wSegs;
+      const r = wStartR + (wEndR - wStartR) * t;
+      const angle = wAngle + t * 1.2;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r * isoRatio;
+      if (seg === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // 12. Central eye glow
+  const eyeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.15);
+  const eyeAlpha = 0.15 + voidPulse * 0.12;
+  eyeGrad.addColorStop(0, `rgba(180, 100, 255, ${eyeAlpha})`);
+  eyeGrad.addColorStop(0.5, `rgba(120, 50, 200, ${eyeAlpha * 0.4})`);
+  eyeGrad.addColorStop(1, "rgba(80, 20, 160, 0)");
+  ctx.fillStyle = eyeGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.15, sRad * 0.1 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawGenericHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {

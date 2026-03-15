@@ -20,6 +20,19 @@ import { HeroHelmetIcon } from "../../sprites/custom-icons";
 import { BaseModal } from "../ui/BaseModal";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { heroFrameElements } from "../ui/ornateFrameHelpers";
+
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+const SHOWCASE_FRAME = 152;
+const SHOWCASE_CX = SHOWCASE_FRAME / 2;
+const SHOWCASE_MID_R = SHOWCASE_CX - 5;
+
+const ROSTER_FRAME = 56;
+const ROSTER_CX = ROSTER_FRAME / 2;
 
 const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
   tiger: <Swords size={10} />,
@@ -250,6 +263,17 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
                         boxShadow: `0 0 40px ${hero.color}30, 0 0 80px ${hero.color}15, inset 0 0 25px ${hero.color}12`,
                       }}
                     >
+                      <svg className="absolute pointer-events-none" style={{
+                        top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                      }} width={SHOWCASE_FRAME} height={SHOWCASE_FRAME} overflow="visible">
+                        {heroFrameElements({
+                          cx: SHOWCASE_CX, outerR: SHOWCASE_CX - 2, midR: SHOWCASE_MID_R,
+                          color: hexToRgba(hero.color, 0.3),
+                          dimColor: hexToRgba(hero.color, 0.15),
+                          prefix: "hoh-show",
+                        })}
+                      </svg>
                       <HeroSprite type={focusedHero} size={76} />
                     </div>
                     {/* Equipped badge */}
@@ -392,7 +416,18 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `radial-gradient(circle at 50% 30%, ${h.color}10, transparent 70%)` }} />
                         </div>
 
-                        <div className="relative">
+                        <div className="relative flex items-center justify-center" style={{ width: 42, height: 42 }}>
+                          <svg className="absolute pointer-events-none" style={{
+                            top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                          }} width={ROSTER_FRAME} height={ROSTER_FRAME} overflow="visible">
+                            {heroFrameElements({
+                              cx: ROSTER_CX, outerR: ROSTER_CX - 2, midR: ROSTER_CX - 4,
+                              color: hexToRgba(h.color, isFocused ? 0.35 : isSel ? 0.22 : 0.12),
+                              dimColor: hexToRgba(h.color, isFocused ? 0.18 : isSel ? 0.1 : 0.06),
+                              prefix: `hr-${ht}`,
+                            })}
+                          </svg>
                           <HeroSprite type={ht} size={38} />
                           {isFocused && (
                             <div className="absolute -inset-1 rounded-full" style={{ boxShadow: `0 0 12px ${h.color}30` }} />

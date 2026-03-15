@@ -302,14 +302,14 @@ function MobileAbilityCircle({
         <circle
           cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_OUTER_R}
           fill="none"
-          stroke={isReady ? "rgba(250,204,21,0.2)" : "rgba(80,60,40,0.07)"}
+          stroke={isReady ? "rgba(250,204,21,0.2)" : "rgba(110,110,110,0.12)"}
           strokeWidth={0.8}
           strokeDasharray="2 3 4 3"
         />
         <circle
           cx={M_ORB_CX} cy={M_ORB_CX} r={M_ORB_MID_R}
           fill="none"
-          stroke={isReady ? "rgba(250,204,21,0.1)" : "rgba(80,60,40,0.04)"}
+          stroke={isReady ? "rgba(250,204,21,0.1)" : "rgba(110,110,110,0.06)"}
           strokeWidth={0.5}
         />
 
@@ -325,7 +325,7 @@ function MobileAbilityCircle({
               y1={M_ORB_CX + M_ORB_TICK_IN * sin}
               x2={M_ORB_CX + M_ORB_TICK_OUT * cos}
               y2={M_ORB_CX + M_ORB_TICK_OUT * sin}
-              stroke={isReady ? "rgba(250,204,21,0.28)" : "rgba(80,60,40,0.1)"}
+              stroke={isReady ? "rgba(250,204,21,0.28)" : "rgba(110,110,110,0.1)"}
               strokeWidth={isCard ? 1.8 : 0.6}
               strokeLinecap="round"
             />
@@ -342,8 +342,8 @@ function MobileAbilityCircle({
               x={cx - 2.5} y={cy - 2.5} width={5} height={5}
               rx={0.7}
               transform={`rotate(45 ${cx} ${cy})`}
-              fill={isReady ? hexToRgba(hc, 0.75) : "rgba(55,45,30,0.45)"}
-              stroke={isReady ? "rgba(250,204,21,0.55)" : "rgba(80,60,40,0.2)"}
+              fill={isReady ? hexToRgba(hc, 0.75) : "rgba(100,100,100,0.25)"}
+              stroke={isReady ? "rgba(250,204,21,0.55)" : "rgba(110,110,110,0.16)"}
               strokeWidth={0.7}
               filter={isReady ? "url(#mAbilityGlow)" : undefined}
             />
@@ -358,7 +358,7 @@ function MobileAbilityCircle({
               cx={M_ORB_CX + M_ORB_GEM_R * Math.cos(rad)}
               cy={M_ORB_CX + M_ORB_GEM_R * Math.sin(rad)}
               r={1.2}
-              fill={isReady ? "rgba(250,204,21,0.35)" : "rgba(80,60,40,0.12)"}
+              fill={isReady ? "rgba(250,204,21,0.35)" : "rgba(110,110,110,0.1)"}
             />
           );
         })}

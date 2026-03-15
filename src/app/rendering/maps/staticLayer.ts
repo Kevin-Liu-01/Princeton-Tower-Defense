@@ -28,15 +28,7 @@ import {
 import { drawPathDecorations } from "./pathDecorations";
 import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
-import {
-  drawRidgeTreeSilhouettes,
-  drawRidgeStrata,
-  drawMistLayer,
-  drawMountainRockDetail,
-  drawVolumetricCloud,
-  drawDistantPeaks,
-  drawGodRays,
-} from "./mountainBackdropDetails";
+import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
 
 export interface RegionTheme {
   ground: string[];
@@ -601,82 +593,6 @@ function getFogEndpoints(geometry: RoadGeometry): StaticMapFogEndpoint[] {
   ];
 }
 
-function drawFlatRidge(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  baseY: number,
-  amplitude: number,
-  segments: number,
-  color: string,
-  seed: number,
-  jaggedness: number = 1,
-  themeKey?: ChallengeThemeKey,
-  darkerColor?: string,
-  enableDetail: boolean = true,
-): { x: number; y: number }[] {
-  const rand = createSeededRandom(seed);
-  const ridgePoints: { x: number; y: number }[] = [];
-
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments;
-    const x = -40 + t * (width + 80);
-    const wave = Math.sin(t * Math.PI * (2.6 + rand() * 1.7)) * amplitude;
-    const jitter = (rand() - 0.5) * amplitude * jaggedness;
-    ridgePoints.push({ x, y: baseY + wave + jitter });
-  }
-
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(-60, height + 60);
-  for (const p of ridgePoints) ctx.lineTo(p.x, p.y);
-  ctx.lineTo(width + 60, height + 60);
-  ctx.closePath();
-  ctx.fill();
-
-  if (enableDetail && darkerColor) {
-    const innerShade = ctx.createLinearGradient(
-      0,
-      baseY,
-      0,
-      baseY + amplitude * 4,
-    );
-    innerShade.addColorStop(0, "rgba(0,0,0,0)");
-    innerShade.addColorStop(1, hexToRgba(darkerColor, 0.08));
-    ctx.fillStyle = innerShade;
-    ctx.beginPath();
-    ctx.moveTo(-60, height + 60);
-    for (const p of ridgePoints) ctx.lineTo(p.x, p.y);
-    ctx.lineTo(width + 60, height + 60);
-    ctx.closePath();
-    ctx.fill();
-
-    drawRidgeStrata(
-      ctx,
-      ridgePoints,
-      baseY + amplitude * 3,
-      color,
-      seed + 500,
-      2,
-    );
-  }
-
-  if (enableDetail && themeKey) {
-    drawRidgeTreeSilhouettes(
-      ctx,
-      ridgePoints,
-      width,
-      themeKey,
-      color,
-      seed + 700,
-      0.35,
-      2,
-      amplitude * 0.6,
-    );
-  }
-
-  return ridgePoints;
-}
 
 const TERRACE_DECO_TYPES: Record<ChallengeThemeKey, string[]> = {
   grassland: ["tree", "bush", "rock", "grass", "hedge", "flowers"],
@@ -870,29 +786,15 @@ function renderChallengeSkyDecorations(
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
   if (themeKey === "grassland") {
-    for (let i = 0; i < 4; i++) {
-      const cx = width * (0.1 + i * 0.22) + (skyRandom() - 0.5) * 40;
-      const cy = height * (0.08 + skyRandom() * 0.12);
-      drawVolumetricCloud(
-        ctx,
-        cx,
-        cy,
-        width * (0.1 + skyRandom() * 0.08),
-        height * 0.07,
-        palette.skyAccent,
-        palette.skyDecor,
-        mapSeed + 1500 + i * 37,
-      );
-    }
-    for (let i = 0; i < 6; i++) {
-      const x = width * (0.1 + i * 0.16) + (skyRandom() - 0.5) * 30;
-      const y = height * (0.11 + skyRandom() * 0.18);
+    for (let i = 0; i < 8; i++) {
+      const x = width * (0.05 + i * 0.12) + (skyRandom() - 0.5) * 30;
+      const y = height * (0.06 + skyRandom() * 0.14);
       drawSoftCloud(
         ctx,
         x,
         y,
-        width * (0.08 + skyRandom() * 0.05),
-        height * 0.06,
+        width * (0.08 + skyRandom() * 0.06),
+        height * (0.05 + skyRandom() * 0.02),
         palette.skyAccent,
       );
     }
@@ -1213,252 +1115,6 @@ function renderChallengeSkyDecorations(
   }
 }
 
-function drawIsometricMountainMass(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  mapSeed: number,
-  themeKey: ChallengeThemeKey,
-  palette: ChallengeBackdropPalette,
-): void {
-  const rand = createSeededRandom(mapSeed + 1601);
-  const ridgeSegments =
-    themeKey === "volcanic" ? 12 : themeKey === "desert" ? 10 : 9;
-  const ridgeBaseY =
-    themeKey === "winter"
-      ? height * 0.29
-      : themeKey === "volcanic"
-        ? height * 0.31
-        : themeKey === "desert"
-          ? height * 0.34
-          : height * 0.33;
-  const ridgeAmplitude =
-    themeKey === "winter"
-      ? height * 0.12
-      : themeKey === "volcanic"
-        ? height * 0.135
-        : themeKey === "desert"
-          ? height * 0.095
-          : height * 0.105;
-
-  const ridgePoints: Position[] = [];
-  for (let i = 0; i <= ridgeSegments; i++) {
-    const t = i / ridgeSegments;
-    const x = -width * 0.1 + t * width * 1.2;
-    const wave = Math.sin((t * 2.7 + rand() * 0.3) * Math.PI) * ridgeAmplitude;
-    const shoulder = Math.abs(t - 0.5) * height * 0.07;
-    const jitter = (rand() - 0.5) * height * 0.03;
-    ridgePoints.push({
-      x,
-      y: ridgeBaseY + shoulder - wave + jitter,
-    });
-  }
-
-  const basePoints = ridgePoints.map((p, i) => {
-    const t = i / ridgeSegments;
-    return {
-      x: p.x + (rand() - 0.5) * width * 0.05,
-      y: height * (0.93 + Math.abs(t - 0.5) * 0.11 + rand() * 0.03),
-    };
-  });
-
-  const mountainShadow = ctx.createRadialGradient(
-    width * 0.5,
-    height * 0.9,
-    width * 0.08,
-    width * 0.5,
-    height * 0.9,
-    width * 0.6,
-  );
-  mountainShadow.addColorStop(0, hexToRgba(palette.mountainShadow, 0.45));
-  mountainShadow.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = mountainShadow;
-  ctx.beginPath();
-  ctx.ellipse(
-    width * 0.5,
-    height * 0.9,
-    width * 0.54,
-    height * 0.16,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  for (let i = 0; i < ridgePoints.length - 1; i++) {
-    const topLeft = ridgePoints[i];
-    const topRight = ridgePoints[i + 1];
-    const bottomLeft = basePoints[i];
-    const bottomRight = basePoints[i + 1];
-    ctx.fillStyle =
-      i % 2 === 0 ? palette.mountainFacetA : palette.mountainFacetB;
-    ctx.beginPath();
-    ctx.moveTo(topLeft.x, topLeft.y);
-    ctx.lineTo(topRight.x, topRight.y);
-    ctx.lineTo(bottomRight.x, bottomRight.y);
-    ctx.lineTo(bottomLeft.x, bottomLeft.y);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  const crestDepth = themeKey === "desert" ? height * 0.07 : height * 0.08;
-  ctx.fillStyle = palette.mountainTop;
-  ctx.beginPath();
-  ctx.moveTo(ridgePoints[0].x, ridgePoints[0].y);
-  for (let i = 1; i < ridgePoints.length; i++) {
-    ctx.lineTo(ridgePoints[i].x, ridgePoints[i].y);
-  }
-  for (let i = ridgePoints.length - 1; i >= 0; i--) {
-    const p = ridgePoints[i];
-    const t = i / ridgeSegments - 0.5;
-    ctx.lineTo(p.x - t * width * 0.06, p.y + crestDepth);
-  }
-  ctx.closePath();
-  ctx.fill();
-
-  const leftShade = ctx.createLinearGradient(
-    0,
-    height * 0.24,
-    width * 0.5,
-    height,
-  );
-  leftShade.addColorStop(0, hexToRgba(palette.mountainLeft, 0.38));
-  leftShade.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = leftShade;
-  ctx.beginPath();
-  ctx.moveTo(-40, height);
-  ctx.lineTo(ridgePoints[0].x, ridgePoints[0].y + 8);
-  for (let i = 1; i <= Math.floor(ridgeSegments / 2); i++) {
-    ctx.lineTo(ridgePoints[i].x, ridgePoints[i].y + 2);
-  }
-  ctx.lineTo(width * 0.48, height * 1.02);
-  ctx.closePath();
-  ctx.fill();
-
-  const rightShade = ctx.createLinearGradient(
-    width,
-    height * 0.23,
-    width * 0.5,
-    height,
-  );
-  rightShade.addColorStop(0, hexToRgba(palette.mountainRight, 0.42));
-  rightShade.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = rightShade;
-  ctx.beginPath();
-  ctx.moveTo(width + 40, height);
-  ctx.lineTo(
-    ridgePoints[ridgePoints.length - 1].x,
-    ridgePoints[ridgePoints.length - 1].y + 10,
-  );
-  for (let i = ridgePoints.length - 2; i >= Math.ceil(ridgeSegments / 2); i--) {
-    ctx.lineTo(ridgePoints[i].x, ridgePoints[i].y + 2);
-  }
-  ctx.lineTo(width * 0.52, height * 1.02);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.35);
-  ctx.lineWidth = 1;
-  for (let i = 1; i < ridgePoints.length - 1; i += 2) {
-    const top = ridgePoints[i];
-    const bottom = basePoints[Math.min(i + 1, basePoints.length - 1)];
-    ctx.beginPath();
-    ctx.moveTo(top.x, top.y + 2);
-    ctx.lineTo(bottom.x, bottom.y);
-    ctx.stroke();
-  }
-
-  if (themeKey === "winter" && palette.mountainSnow) {
-    const topPeaks = ridgePoints
-      .map((point, index) => ({ point, index }))
-      .sort((a, b) => a.point.y - b.point.y)
-      .slice(0, 4);
-    ctx.fillStyle = palette.mountainSnow;
-    topPeaks.forEach(({ point, index }) => {
-      const next = ridgePoints[Math.min(index + 1, ridgePoints.length - 1)];
-      const prev = ridgePoints[Math.max(0, index - 1)];
-      ctx.beginPath();
-      ctx.moveTo(point.x, point.y + 3);
-      ctx.lineTo(
-        prev.x + (point.x - prev.x) * 0.42,
-        point.y + crestDepth * 0.55,
-      );
-      ctx.lineTo(
-        next.x - (next.x - point.x) * 0.42,
-        point.y + crestDepth * 0.6,
-      );
-      ctx.closePath();
-      ctx.fill();
-    });
-  } else if (themeKey === "desert") {
-    ctx.strokeStyle = hexToRgba(palette.landHighlight, 0.24);
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 9; i++) {
-      const y = height * (0.57 + i * 0.033);
-      ctx.beginPath();
-      ctx.ellipse(
-        width * (0.22 + i * 0.065),
-        y,
-        width * (0.12 + i * 0.03),
-        height * 0.05,
-        -0.2,
-        Math.PI * 0.95,
-        Math.PI * 1.86,
-      );
-      ctx.stroke();
-    }
-  } else if (themeKey === "swamp") {
-    for (let i = 0; i < 4; i++) {
-      const fogY = height * (0.62 + i * 0.07);
-      const fog = ctx.createLinearGradient(0, fogY - 24, 0, fogY + 24);
-      fog.addColorStop(0, "rgba(215,245,224,0)");
-      fog.addColorStop(0.5, "rgba(170,206,183,0.16)");
-      fog.addColorStop(1, "rgba(215,245,224,0)");
-      ctx.fillStyle = fog;
-      ctx.fillRect(-30, fogY - 24, width + 60, 48);
-    }
-  } else if (themeKey === "volcanic") {
-    ctx.strokeStyle = "rgba(255,118,66,0.3)";
-    ctx.lineWidth = 1.3;
-    for (let i = 0; i < 6; i++) {
-      const x = width * (0.44 + i * 0.022);
-      const y = height * (0.48 + i * 0.04);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + (i % 2 === 0 ? 9 : -9), y + 36 + i * 9);
-      ctx.stroke();
-    }
-  } else {
-    ctx.strokeStyle = hexToRgba(palette.landHighlight, 0.22);
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 7; i++) {
-      const y = height * (0.6 + i * 0.04);
-      ctx.beginPath();
-      ctx.ellipse(
-        width * (0.23 + i * 0.08),
-        y,
-        width * (0.1 + i * 0.026),
-        height * 0.045,
-        -0.15,
-        Math.PI * 0.95,
-        Math.PI * 1.86,
-      );
-      ctx.stroke();
-    }
-  }
-
-  drawMountainRockDetail(
-    ctx,
-    ridgePoints,
-    basePoints,
-    width,
-    height,
-    palette,
-    themeKey,
-    mapSeed,
-  );
-}
-
 export function renderChallengeMountainBackdrop(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -1467,6 +1123,8 @@ export function renderChallengeMountainBackdrop(
   themeKey: ChallengeThemeKey,
 ): void {
   const palette = CHALLENGE_BACKDROP_PALETTES[themeKey];
+
+  // sky gradient
   const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
   skyGrad.addColorStop(0, palette.skyTop);
   skyGrad.addColorStop(0.5, palette.skyMid);
@@ -1474,6 +1132,7 @@ export function renderChallengeMountainBackdrop(
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, width, height);
 
+  // haze overlay
   const hazeGrad = ctx.createLinearGradient(0, height * 0.15, 0, height * 0.72);
   hazeGrad.addColorStop(0, "rgba(255,255,255,0)");
   hazeGrad.addColorStop(0.5, palette.haze);
@@ -1481,102 +1140,18 @@ export function renderChallengeMountainBackdrop(
   ctx.fillStyle = hazeGrad;
   ctx.fillRect(0, 0, width, height);
 
+  // sky decorations (theme-specific: clouds, aurora, sun, smoke)
   renderChallengeSkyDecorations(ctx, width, height, mapSeed, themeKey, palette);
 
-  drawGodRays(ctx, width, height, themeKey, mapSeed + 1550);
+  // theme-specific silhouettes (the main visual content)
+  renderThemedBackdropSilhouettes(ctx, width, height, mapSeed, themeKey, palette);
 
-  drawDistantPeaks(
-    ctx,
-    width,
-    height * 0.22,
-    height * 0.025,
-    hexToRgba(palette.farRidge, 0.18),
-    mapSeed + 850,
-    7,
-  );
-
-  drawFlatRidge(
-    ctx,
-    width,
-    height,
-    height * 0.29,
-    height * 0.04,
-    11,
-    palette.farRidge,
-    mapSeed + 901,
-    1,
-    themeKey,
-    palette.midRidge,
-    true,
-  );
-
-  drawMistLayer(
-    ctx,
-    width,
-    height * 0.32,
-    height * 0.02,
-    palette.skyBottom,
-    0.06,
-    mapSeed + 910,
-  );
-
-  drawFlatRidge(
-    ctx,
-    width,
-    height,
-    height * 0.37,
-    height * 0.055,
-    13,
-    palette.midRidge,
-    mapSeed + 947,
-    1.2,
-    themeKey,
-    palette.nearRidge,
-    true,
-  );
-
-  drawMistLayer(
-    ctx,
-    width,
-    height * 0.42,
-    height * 0.025,
-    palette.skyBottom,
-    0.07,
-    mapSeed + 955,
-  );
-
-  drawFlatRidge(
-    ctx,
-    width,
-    height,
-    height * 0.47,
-    height * 0.07,
-    15,
-    palette.nearRidge,
-    mapSeed + 983,
-    1.35,
-    themeKey,
-    palette.nearRidge,
-    true,
-  );
-
-  drawMistLayer(
-    ctx,
-    width,
-    height * 0.51,
-    height * 0.015,
-    palette.skyBottom,
-    0.05,
-    mapSeed + 990,
-  );
-
-  drawIsometricMountainMass(ctx, width, height, mapSeed, themeKey, palette);
-
+  // atmospheric depth overlay
   const atmosphere = ctx.createLinearGradient(0, height * 0.44, 0, height);
   atmosphere.addColorStop(0, "rgba(0,0,0,0)");
-  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, 0.06));
-  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.1));
-  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.28));
+  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, 0.05));
+  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.08));
+  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.22));
   ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, width, height);
 }

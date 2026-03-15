@@ -2,6 +2,7 @@ import type { MapTheme } from "../../constants/maps";
 import type { ReticleColor } from "../ui/reticles";
 
 export interface SentinelPalette {
+  stoneName: string;
   // Crystal / energy accent (the "hot" color — region-specific)
   hotRgb: string;
   hotHex: string;
@@ -20,6 +21,7 @@ export interface SentinelPalette {
 
 // ── Grassland — verdant cyan-teal ──────────────────────────────────────────
 const SENTINEL_GRASSLAND: SentinelPalette = {
+  stoneName: "Emerald",
   hotRgb: "80, 220, 180",
   hotHex: "#50DCB4",
   crystalR: 80,
@@ -34,6 +36,7 @@ const SENTINEL_GRASSLAND: SentinelPalette = {
 
 // ── Desert — amber gold ────────────────────────────────────────────────────
 const SENTINEL_DESERT: SentinelPalette = {
+  stoneName: "Amber",
   hotRgb: "255, 185, 60",
   hotHex: "#FFB93C",
   crystalR: 255,
@@ -48,6 +51,7 @@ const SENTINEL_DESERT: SentinelPalette = {
 
 // ── Winter — icy blue ──────────────────────────────────────────────────────
 const SENTINEL_WINTER: SentinelPalette = {
+  stoneName: "Sapphire",
   hotRgb: "130, 200, 255",
   hotHex: "#82C8FF",
   crystalR: 130,
@@ -62,6 +66,7 @@ const SENTINEL_WINTER: SentinelPalette = {
 
 // ── Volcanic — crimson red (original) ──────────────────────────────────────
 const SENTINEL_VOLCANIC: SentinelPalette = {
+  stoneName: "Ruby",
   hotRgb: "255, 110, 96",
   hotHex: "#FF6E60",
   crystalR: 255,
@@ -76,6 +81,7 @@ const SENTINEL_VOLCANIC: SentinelPalette = {
 
 // ── Swamp — sickly green ──────────────────────────────────────────────────
 const SENTINEL_SWAMP: SentinelPalette = {
+  stoneName: "Jade",
   hotRgb: "160, 230, 80",
   hotHex: "#A0E650",
   crystalR: 160,
@@ -103,6 +109,10 @@ export function getSentinelPalette(theme?: MapTheme): SentinelPalette {
     default:
       return SENTINEL_VOLCANIC;
   }
+}
+
+export function getSentinelName(theme?: MapTheme): string {
+  return `Imperial ${getSentinelPalette(theme).stoneName} Sentinel`;
 }
 
 // Consistent metal colors used regardless of region

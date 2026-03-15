@@ -22,6 +22,19 @@ import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 import { BaseModal } from "../ui/BaseModal";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { spellFrameElements } from "../ui/ornateFrameHelpers";
+
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+const SHOWCASE_FRAME = 152;
+const SHOWCASE_CX = SHOWCASE_FRAME / 2;
+const SHOWCASE_MID_R = SHOWCASE_CX - 5;
+
+const ROSTER_FRAME = 50;
+const ROSTER_CX = ROSTER_FRAME / 2;
 
 const spellOptions: SpellType[] = [
   "fireball",
@@ -191,7 +204,6 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
   const spell = SPELL_DATA[focusedSpell];
   const meta = SPELL_META[focusedSpell];
   const isSelected = selectedSpells.includes(focusedSpell);
-  const canSelect = isSelected || selectedSpells.length < 3;
   const spellLevel = spellUpgradeLevels[focusedSpell] ?? 0;
   const focusedIdx = spellOptions.indexOf(focusedSpell);
 
@@ -226,7 +238,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
 
             {/* Header */}
             <div
-              className="relative px-6 py-4 flex-shrink-0 flex items-center justify-between"
+              className="relative px-6 pr-14 py-4 flex-shrink-0 flex items-center justify-between"
               style={{ background: "linear-gradient(90deg, rgba(120,60,180,0.18), rgba(80,30,140,0.08), transparent)" }}
             >
               <div className="flex items-center gap-3">
@@ -357,6 +369,17 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                           boxShadow: `0 0 40px ${meta.accent}25, 0 0 80px ${meta.accent}12, inset 0 0 25px ${meta.accent}08`,
                         }}
                       >
+                        <svg className="absolute pointer-events-none" style={{
+                          top: '50%', left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                        }} width={SHOWCASE_FRAME} height={SHOWCASE_FRAME} overflow="visible">
+                          {spellFrameElements({
+                            cx: SHOWCASE_CX, outerR: SHOWCASE_CX - 2, midR: SHOWCASE_MID_R,
+                            color: hexToRgba(meta.accent, 0.3),
+                            dimColor: hexToRgba(meta.accent, 0.15),
+                            prefix: "sb-show",
+                          })}
+                        </svg>
                         <SpellSprite type={focusedSpell} size={64} />
                       </div>
                       {/* Equipped badge */}
@@ -472,8 +495,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                     {/* Equip button */}
                     <button
                       onClick={() => toggleSpell(focusedSpell)}
-                      disabled={!canSelect && !isSelected}
-                      className="mt-6 px-10 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 hover:brightness-110 duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 relative overflow-hidden group"
+                      className="mt-6 px-10 py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 hover:brightness-110 duration-200 relative overflow-hidden group"
                       style={{
                         background: isSelected
                           ? "linear-gradient(180deg, rgba(100,40,160,0.9), rgba(60,20,100,0.9))"
@@ -491,7 +513,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)" }} />
                       </div>
                       <span className="relative z-10">
-                        {isSelected ? "Unequip" : canSelect ? "Equip Spell" : "Slots Full"}
+                        {isSelected ? "Unequip" : "Equip Spell"}
                       </span>
                     </button>
                   </div>
@@ -533,7 +555,18 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `radial-gradient(circle at 30% 50%, ${sm.accent}08, transparent 70%)` }} />
                           </div>
 
-                          <div className="relative flex-shrink-0">
+                          <div className="relative flex-shrink-0 flex items-center justify-center" style={{ width: 38, height: 38 }}>
+                            <svg className="absolute pointer-events-none" style={{
+                              top: '50%', left: '50%',
+                              transform: 'translate(-50%, -50%)',
+                            }} width={ROSTER_FRAME} height={ROSTER_FRAME} overflow="visible">
+                              {spellFrameElements({
+                                cx: ROSTER_CX, outerR: ROSTER_CX - 2, midR: ROSTER_CX - 4,
+                                color: hexToRgba(sm.accent, isFocused ? 0.35 : isSel ? 0.22 : 0.12),
+                                dimColor: hexToRgba(sm.accent, isFocused ? 0.18 : isSel ? 0.1 : 0.06),
+                                prefix: `sr-${st}`,
+                              })}
+                            </svg>
                             <SpellSprite type={st} size={34} />
                             {isFocused && (
                               <div className="absolute -inset-1 rounded-full" style={{ boxShadow: `0 0 10px ${sm.accent}25` }} />

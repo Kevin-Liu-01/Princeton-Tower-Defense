@@ -376,6 +376,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       setSelectedSpells(selectedSpells.filter((s) => s !== spell));
     else if (selectedSpells.length < 3)
       setSelectedSpells([...selectedSpells, spell]);
+    else
+      setSelectedSpells([...selectedSpells.slice(1), spell]);
   };
 
   const drawMapRef = useRef<() => void>(() => { });

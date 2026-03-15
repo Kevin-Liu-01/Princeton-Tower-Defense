@@ -1,6 +1,11 @@
 import { ISO_TAN, ISO_Y_RATIO } from "../../constants";
 import type { MapTheme } from "../../constants/maps";
-import { drawIsoFlushSlit } from "../isoFlush";
+import {
+  drawIsoFlushSlit,
+  drawIsoFlushVent,
+  drawIsoFlushPanel,
+  drawIsoGothicWindow,
+} from "../isoFlush";
 import { getBarracksBuildingPalette } from "./barracksTheme";
 import { getSentinelPalette, SENTINEL_METAL, type SentinelPalette } from "./sentinelTheme";
 
@@ -707,17 +712,40 @@ function drawSentinelNexusBuilding(
     }
   }
 
-  // Exhaust vents on base front
+  // Exhaust vents flush with base faces
   for (let v = 0; v < 3; v++) {
-    const vx = -baseW * (0.15 + v * 0.25);
-    const vy = -baseW * tanA * (0.15 + v * 0.25) - baseH * 0.3;
-    ctx.fillStyle = M.darkest;
-    ctx.fillRect(vx - 2 * s2, vy - 1.5 * s2, 4 * s2, 3 * s2);
-    const ventGlow = wu > 0.3 ? (0.05 + charge * 0.2) * wuMechDeploy : 0;
-    if (ventGlow > 0) {
-      ctx.fillStyle = `rgba(${hotRgb}, ${ventGlow})`;
-      ctx.fillRect(vx - 1.5 * s2, vy - 1 * s2, 3 * s2, 2 * s2);
-    }
+    const leftVx = -baseW * (0.15 + v * 0.25);
+    const leftVy = -baseW * tanA * (0.15 + v * 0.25) - baseH * 0.3;
+    const ventGlowL = wu > 0.3 ? (0.05 + charge * 0.2) * wuMechDeploy : 0;
+    drawIsoFlushVent(ctx, leftVx, leftVy, 4, 3, "left", s2, {
+      frameColor: M.dark,
+      bgColor: M.darkest,
+      slatColor: ventGlowL > 0 ? `rgba(${hotRgb}, ${ventGlowL + 0.15})` : M.mid,
+      slats: 3,
+    });
+  }
+  for (let v = 0; v < 2; v++) {
+    const rightVx = baseW * (0.25 + v * 0.3);
+    const rightVy = -baseW * tanA * (0.25 + v * 0.3) - baseH * 0.4;
+    const ventGlowR = wu > 0.3 ? (0.04 + charge * 0.15) * wuMechDeploy : 0;
+    drawIsoFlushVent(ctx, rightVx, rightVy, 3.5, 2.5, "right", s2, {
+      frameColor: M.mid,
+      bgColor: M.darkest,
+      slatColor: ventGlowR > 0 ? `rgba(${hotRgb}, ${ventGlowR + 0.1})` : M.light,
+      slats: 2,
+    });
+  }
+  // Decorative flush panels on base faces
+  for (let side = -1; side <= 1; side += 2) {
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    const panelX = side * baseW * 0.7;
+    const panelY = -baseW * tanA * 0.7 - baseH * 0.55;
+    drawIsoFlushPanel(ctx, panelX, panelY, 5, 3, face, s2, {
+      fill: M.darkest,
+      borderColor: M.band,
+      recessDepth: 0.5,
+      innerGlow: `rgba(${glowRgb}, ${(0.03 + charge * 0.08) * wu})`,
+    });
   }
 
   // === ANIMATED MECHANICAL GEARS on base sides - spin up during warmup ===
@@ -783,31 +811,60 @@ function drawSentinelNexusBuilding(
   // === MID SECTION ===
   const midY = -baseH;
   drawShadedIsoBox(ctx, midY, midW, midH, M.darkest, M.dark, M.mid, M.light, M.lightest);
-  const slitH = 6 * s2;
-  const slitW = 1.5 * s2;
+
+  // Flush slits on mid-section left face
   for (let i = 0; i < 3; i++) {
     const sx = -midW * (0.3 + i * 0.22);
     const sy = midY - midW * tanA * (0.3 + i * 0.22) - midH * 0.4;
-    ctx.fillStyle = "rgba(8, 3, 5, 0.9)";
-    ctx.fillRect(sx - slitW / 2, sy - slitH, slitW, slitH);
     const slitGlow = wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
-    ctx.fillStyle = `rgba(${glowRgb}, ${slitGlow})`;
-    ctx.fillRect(sx - slitW / 2 + 0.4 * s2, sy - slitH + s2 * 0.5, slitW - 0.8 * s2, slitH - s2);
+    drawIsoFlushSlit(ctx, sx, sy, 1.5, 6, "left", s2, {
+      voidColor: "rgba(8, 3, 5, 0.9)",
+      glowColor: slitGlow > 0.05 ? `rgba(${glowRgb}` : null,
+      glowAlpha: slitGlow,
+    });
   }
+  // Flush slits on mid-section right face
   for (let i = 0; i < 3; i++) {
     const sx = midW * (0.3 + i * 0.22);
     const sy = midY - midW * tanA * (0.3 + i * 0.22) - midH * 0.4;
-    ctx.fillStyle = "rgba(8, 3, 5, 0.9)";
-    ctx.fillRect(sx - slitW / 2, sy - slitH, slitW, slitH);
     const slitGlow = wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
-    ctx.fillStyle = `rgba(${glowRgb}, ${slitGlow})`;
-    ctx.fillRect(sx - slitW / 2 + 0.4 * s2, sy - slitH + s2 * 0.5, slitW - 0.8 * s2, slitH - s2);
+    drawIsoFlushSlit(ctx, sx, sy, 1.5, 6, "right", s2, {
+      voidColor: "rgba(8, 3, 5, 0.9)",
+      glowColor: slitGlow > 0.05 ? `rgba(${glowRgb}` : null,
+      glowAlpha: slitGlow,
+    });
+  }
+  // Decorative flush panels between slits on mid faces
+  for (let side = -1; side <= 1; side += 2) {
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    for (let p = 0; p < 2; p++) {
+      const px = side * midW * (0.42 + p * 0.28);
+      const py = midY - midW * tanA * (0.42 + p * 0.28) - midH * 0.72;
+      drawIsoFlushPanel(ctx, px, py, 3.5, 2.5, face, s2, {
+        fill: M.darkest,
+        borderColor: M.band,
+        recessDepth: 0.6,
+        innerGlow: `rgba(${glowRgb}, ${(0.04 + charge * 0.12) * wu})`,
+      });
+    }
   }
   ctx.strokeStyle = M.band;
   ctx.lineWidth = 2 * s2;
   ctx.beginPath();
   ctx.moveTo(0, midY);
   ctx.lineTo(0, midY - midH);
+  ctx.stroke();
+  // Horizontal trim band on mid section for definition
+  ctx.strokeStyle = M.highlight;
+  ctx.lineWidth = 0.8 * s2;
+  const midBandY = midY - midH * 0.5;
+  ctx.beginPath();
+  ctx.moveTo(0, midBandY);
+  ctx.lineTo(-midW, -midW * tanA + midBandY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, midBandY);
+  ctx.lineTo(midW, -midW * tanA + midBandY);
   ctx.stroke();
 
   // Power coupling bolts on mid section
@@ -941,20 +998,43 @@ function drawSentinelNexusBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Arrow slits on tower
-  const tsH = 7 * s2;
-  const tsW = 1.2 * s2;
+  // Arrow slits flush with tower faces
   for (let row = 0; row < 3; row++) {
     const rowY = towerBaseY - towerH * (0.22 + row * 0.24);
-    ctx.fillStyle = "rgba(6, 2, 4, 0.92)";
-    ctx.fillRect(-towerW * 0.48, rowY - tsH, tsW, tsH);
     const slitAlpha = wu > 0.3 ? 0.06 + charge * 0.3 : 0.03;
-    ctx.fillStyle = `rgba(${glowRgb}, ${slitAlpha})`;
-    ctx.fillRect(-towerW * 0.48 + 0.3 * s2, rowY - tsH + 0.5 * s2, tsW - 0.6 * s2, tsH - s2);
-    ctx.fillStyle = "rgba(6, 2, 4, 0.92)";
-    ctx.fillRect(towerW * 0.48 - tsW, rowY - tsH, tsW, tsH);
-    ctx.fillStyle = `rgba(${glowRgb}, ${slitAlpha})`;
-    ctx.fillRect(towerW * 0.48 - tsW + 0.3 * s2, rowY - tsH + 0.5 * s2, tsW - 0.6 * s2, tsH - s2);
+    const slitCY = rowY - 3.5 * s2;
+    drawIsoFlushSlit(ctx, -towerW * 0.48, slitCY, 1.2, 7, "left", s2, {
+      voidColor: "rgba(6, 2, 4, 0.92)",
+      glowColor: slitAlpha > 0.03 ? `rgba(${glowRgb}` : null,
+      glowAlpha: slitAlpha,
+    });
+    drawIsoFlushSlit(ctx, towerW * 0.48, slitCY, 1.2, 7, "right", s2, {
+      voidColor: "rgba(6, 2, 4, 0.92)",
+      glowColor: slitAlpha > 0.03 ? `rgba(${glowRgb}` : null,
+      glowAlpha: slitAlpha,
+    });
+  }
+  // Gothic arch windows on tower faces (between slit rows)
+  const winGlow = wu > 0.3 ? 0.15 + charge * 0.4 + readyFlash * 0.2 : 0.08;
+  const winY1 = towerBaseY - towerH * 0.34;
+  const winY2 = towerBaseY - towerH * 0.58;
+  drawIsoGothicWindow(ctx, -towerW * 0.35, winY1, 3, 5, "left", s2,
+    `rgba(${glowRgb}`, winGlow, { frame: M.dark, void: M.darkest, sill: M.highlight });
+  drawIsoGothicWindow(ctx, towerW * 0.35, winY1, 3, 5, "right", s2,
+    `rgba(${glowRgb}`, winGlow, { frame: M.mid, void: M.darkest, sill: M.highlight });
+  drawIsoGothicWindow(ctx, -towerW * 0.25, winY2, 2.5, 4.5, "left", s2,
+    `rgba(${glowRgb}`, winGlow * 0.8, { frame: M.dark, void: M.darkest, sill: M.highlight });
+  drawIsoGothicWindow(ctx, towerW * 0.25, winY2, 2.5, 4.5, "right", s2,
+    `rgba(${glowRgb}`, winGlow * 0.8, { frame: M.mid, void: M.darkest, sill: M.highlight });
+  // Flush tech panels on tower faces
+  for (let side = -1; side <= 1; side += 2) {
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    drawIsoFlushPanel(ctx, side * towerW * 0.3, towerBaseY - towerH * 0.82, 4, 3, face, s2, {
+      fill: M.darkest,
+      borderColor: M.band,
+      recessDepth: 0.5,
+      innerGlow: `rgba(${glowRgb}, ${(0.05 + charge * 0.15) * wu})`,
+    });
   }
 
   // Iron rivet bands with bolts
@@ -984,19 +1064,26 @@ function drawSentinelNexusBuilding(
   ctx.lineTo(0, towerBaseY - towerH);
   ctx.stroke();
 
-  // Reinforcing plates on tower corners
+  // Reinforcing plates on tower corners with flush rendering
   for (let side = -1; side <= 1; side += 2) {
-    const plateX = side * towerW * 0.92;
-    const plateTopY = towerBaseY - towerH * 0.15 - towerW * tanA * 0.92;
-    const plateBotY = towerBaseY - towerH * 0.85 - towerW * tanA * 0.92;
-    ctx.fillStyle = side < 0 ? M.dark : M.light;
-    ctx.fillRect(plateX - 1.5 * s2, plateBotY, 3 * s2, plateTopY - plateBotY);
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    const plateX = side * towerW * 0.85;
+    const plateMidY = towerBaseY - towerH * 0.5 - towerW * tanA * 0.85;
+    const plateH = towerH * 0.6;
+    drawIsoFlushPanel(ctx, plateX, plateMidY, 2.5, plateH / s2, face, s2, {
+      fill: side < 0 ? M.dark : M.light,
+      borderColor: "rgba(0,0,0,0.25)",
+      recessDepth: 0.3,
+    });
     ctx.fillStyle = M.highlight;
     ctx.beginPath();
-    ctx.arc(plateX, plateTopY - 2 * s2, 0.7 * s2, 0, Math.PI * 2);
+    ctx.arc(plateX, plateMidY - plateH * 0.4, 0.8 * s2, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(plateX, plateBotY + 2 * s2, 0.7 * s2, 0, Math.PI * 2);
+    ctx.arc(plateX, plateMidY + plateH * 0.4, 0.8 * s2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(plateX, plateMidY, 0.8 * s2, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1060,23 +1147,26 @@ function drawSentinelNexusBuilding(
     ctx.restore();
   }
 
-  // === RETRACTING ARMOR PLATES - open during warmup ===
+  // === RETRACTING ARMOR PLATES - open during warmup (flush with faces) ===
   if (wuMechDeploy > 0) {
     const plateOpen = wuMechDeploy * charge * 8 * s2;
     const plateY = towerBaseY - towerH * 0.4;
     for (let side = -1; side <= 1; side += 2) {
+      const face: "left" | "right" = side < 0 ? "left" : "right";
       const px = side * (towerW * 0.5 + plateOpen);
-      const pw = 3 * s2;
-      const ph = 8 * s2;
-      ctx.fillStyle = side < 0 ? M.darkest : M.mid;
-      ctx.fillRect(px - pw / 2, plateY - ph, pw, ph);
-      ctx.strokeStyle = `rgba(${glowRgb}, ${0.1 + charge * 0.35})`;
-      ctx.lineWidth = 0.8 * s2;
-      ctx.strokeRect(px - pw / 2, plateY - ph, pw, ph);
+      const plateCY = plateY - 4 * s2;
+      ctx.globalAlpha = wuMechDeploy;
+      drawIsoFlushPanel(ctx, px, plateCY, 3, 8, face, s2, {
+        fill: side < 0 ? M.darkest : M.mid,
+        borderColor: `rgba(${glowRgb}, ${0.1 + charge * 0.35})`,
+        recessDepth: 0.4,
+        innerGlow: `rgba(${glowRgb}, ${(0.03 + charge * 0.12) * wuMechDeploy})`,
+      });
       ctx.fillStyle = M.rivet;
       ctx.beginPath();
-      ctx.arc(side * towerW * 0.5, plateY - ph / 2, 1.2 * s2, 0, Math.PI * 2);
+      ctx.arc(side * towerW * 0.5, plateCY, 1.2 * s2, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -1766,87 +1856,180 @@ function drawSunforgeOrreryBuilding(
 
   // === BASE PLATFORM ===
   drawShadedIsoBox(ctx, 0, baseW, baseH, "#241a0e", "#342a16", "#44361e", "#544628", "#645630");
-  ctx.strokeStyle = "rgba(140, 110, 60, 0.5)";
-  ctx.lineWidth = 1.3 * s2;
-  const baseBandY = -baseH * 0.5;
-  ctx.beginPath();
-  ctx.moveTo(0, baseBandY);
-  ctx.lineTo(-baseW, -baseW * tanA + baseBandY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(0, baseBandY);
-  ctx.lineTo(baseW, -baseW * tanA + baseBandY);
-  ctx.stroke();
+
+  // Multiple trim bands for richer detail
+  for (let bandIdx = 0; bandIdx < 3; bandIdx++) {
+    const bandFrac = [0.2, 0.5, 0.82][bandIdx];
+    const bandY = -baseH * bandFrac;
+    const bandAlpha = [0.35, 0.5, 0.35][bandIdx];
+    const bandWidth = [0.8, 1.3, 0.9][bandIdx];
+    ctx.strokeStyle = `rgba(140, 110, 60, ${bandAlpha})`;
+    ctx.lineWidth = bandWidth * s2;
+    ctx.beginPath();
+    ctx.moveTo(0, bandY);
+    ctx.lineTo(-baseW, -baseW * tanA + bandY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, bandY);
+    ctx.lineTo(baseW, -baseW * tanA + bandY);
+    ctx.stroke();
+  }
+  // Center spine line
   ctx.strokeStyle = "rgba(160, 120, 60, 0.4)";
   ctx.lineWidth = 1 * s2;
   ctx.beginPath();
   ctx.moveTo(0, 0);
   ctx.lineTo(0, -baseH);
   ctx.stroke();
+  // Edge highlight on top edges for bevel effect
+  ctx.strokeStyle = "rgba(180, 150, 80, 0.3)";
+  ctx.lineWidth = 0.6 * s2;
+  ctx.beginPath();
+  ctx.moveTo(0, -baseH);
+  ctx.lineTo(-baseW, -baseW * tanA - baseH);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(200, 170, 100, 0.25)";
+  ctx.beginPath();
+  ctx.moveTo(0, -baseH);
+  ctx.lineTo(baseW, -baseW * tanA - baseH);
+  ctx.stroke();
 
-  // Rivet studs along base
+  // Rivet studs along base (both faces, staggered)
   for (let side = -1; side <= 1; side += 2) {
+    for (let r = 0; r < 4; r++) {
+      const frac = 0.18 + r * 0.2;
+      const rx = side * baseW * frac;
+      const ry = -baseW * tanA * frac * Math.abs(side) - baseH * 0.25;
+      ctx.fillStyle = "#8a7840";
+      ctx.beginPath();
+      ctx.arc(rx, ry, 1.2 * s2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#5a4820";
+      ctx.beginPath();
+      ctx.arc(rx + 0.3 * s2, ry + 0.3 * s2, 0.5 * s2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     for (let r = 0; r < 3; r++) {
-      const rx = side * baseW * (0.25 + r * 0.25);
-      const ry = -baseW * tanA * (0.25 + r * 0.25) * Math.abs(side) - baseH * 0.3;
+      const frac = 0.25 + r * 0.25;
+      const rx = side * baseW * frac;
+      const ry = -baseW * tanA * frac * Math.abs(side) - baseH * 0.72;
       ctx.fillStyle = "#7a6838";
       ctx.beginPath();
-      ctx.arc(rx, ry, 1.1 * s2, 0, Math.PI * 2);
+      ctx.arc(rx, ry, 1 * s2, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
-  // Vent grating on left face
+  // Flush vent gratings on base faces
   for (let v = 0; v < 2; v++) {
-    const vx = -baseW * (0.3 + v * 0.3);
-    const vy = -baseW * tanA * (0.3 + v * 0.3) - baseH * 0.65;
-    ctx.fillStyle = "rgba(10, 6, 2, 0.85)";
-    ctx.fillRect(vx - 2.5 * s2, vy - 2 * s2, 5 * s2, 4 * s2);
-    ctx.strokeStyle = "rgba(120, 90, 40, 0.3)";
-    ctx.lineWidth = 0.6 * s2;
-    for (let sl = 0; sl < 3; sl++) {
-      const slx = vx - 1.5 * s2 + sl * 1.5 * s2;
-      ctx.beginPath();
-      ctx.moveTo(slx, vy - 1.5 * s2);
-      ctx.lineTo(slx, vy + 1.5 * s2);
-      ctx.stroke();
-    }
+    const leftVx = -baseW * (0.3 + v * 0.3);
+    const leftVy = -baseW * tanA * (0.3 + v * 0.3) - baseH * 0.65;
+    drawIsoFlushVent(ctx, leftVx, leftVy, 5, 4, "left", s2, {
+      frameColor: "#38260e",
+      bgColor: "rgba(10, 6, 2, 0.85)",
+      slatColor: `rgba(${glowRgb}, ${0.08 + charge * 0.2})`,
+      slats: 3,
+    });
+  }
+  for (let v = 0; v < 2; v++) {
+    const rightVx = baseW * (0.25 + v * 0.35);
+    const rightVy = -baseW * tanA * (0.25 + v * 0.35) - baseH * 0.5;
+    drawIsoFlushVent(ctx, rightVx, rightVy, 4, 3, "right", s2, {
+      frameColor: "#584020",
+      bgColor: "rgba(10, 6, 2, 0.85)",
+      slatColor: `rgba(${glowRgb}, ${0.06 + charge * 0.15})`,
+      slats: 2,
+    });
+  }
+  // Decorative bronze panels on base faces
+  for (let side = -1; side <= 1; side += 2) {
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    const px = side * baseW * 0.65;
+    const py = -baseW * tanA * 0.65 - baseH * 0.35;
+    drawIsoFlushPanel(ctx, px, py, 4, 2.5, face, s2, {
+      fill: "#2a1c0c",
+      borderColor: "rgba(140, 110, 60, 0.4)",
+      recessDepth: 0.5,
+      innerGlow: `rgba(${glowRgb}, ${(0.03 + charge * 0.1) * wu})`,
+    });
+  }
+  // Flush slits on base for added detail
+  for (let side = -1; side <= 1; side += 2) {
+    const face: "left" | "right" = side < 0 ? "left" : "right";
+    const sx = side * baseW * 0.45;
+    const sy = -baseW * tanA * 0.45 - baseH * 0.5;
+    drawIsoFlushSlit(ctx, sx, sy, 1, 4, face, s2, {
+      voidColor: "rgba(10, 6, 2, 0.8)",
+      glowColor: wu > 0.1 ? `rgba(${glowRgb}` : null,
+      glowAlpha: (0.08 + charge * 0.15) * wu,
+    });
   }
 
   // === ROTATING BASE GEAR PLATE - spins up during wuGearSpin ===
   if (wuGearSpin > 0) {
     const gearPlateY = -baseH - baseW * tanA + 1 * s2;
     const gearPlateR = 16 * s2;
-    const gearTeethCount = 12;
+    const gearTeethCount = 16;
     const gearAngle = time * (0.2 + charge * 0.6) * wuGearSpin;
     ctx.save();
     ctx.translate(0, gearPlateY);
     ctx.scale(1, ISO_Y_RATIO);
     ctx.rotate(gearAngle);
     ctx.globalAlpha = wuGearSpin;
-    ctx.fillStyle = "rgba(80, 60, 30, 0.4)";
+    // Gear body with gradient
+    const gearGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, gearPlateR);
+    gearGrad.addColorStop(0, "rgba(100, 80, 40, 0.5)");
+    gearGrad.addColorStop(0.7, "rgba(80, 60, 30, 0.45)");
+    gearGrad.addColorStop(1, "rgba(60, 45, 22, 0.4)");
+    ctx.fillStyle = gearGrad;
     ctx.beginPath();
     ctx.arc(0, 0, gearPlateR, 0, Math.PI * 2);
     ctx.fill();
+    // Gear teeth
     ctx.strokeStyle = `rgba(${glowRgb}, ${0.15 + charge * 0.25})`;
     ctx.lineWidth = 1.2 * s2;
     for (let gt = 0; gt < gearTeethCount; gt++) {
       const gta = (gt / gearTeethCount) * Math.PI * 2;
-      const iR = gearPlateR * 0.8;
-      const oR = gearPlateR;
+      const iR = gearPlateR * 0.78;
+      const oR = gearPlateR * 1.08;
+      const toothHalfWidth = 0.1;
+      ctx.fillStyle = gt % 2 === 0
+        ? "rgba(100, 80, 40, 0.5)"
+        : "rgba(80, 60, 30, 0.45)";
       ctx.beginPath();
-      ctx.moveTo(Math.cos(gta - 0.08) * iR, Math.sin(gta - 0.08) * iR);
-      ctx.lineTo(Math.cos(gta - 0.06) * oR, Math.sin(gta - 0.06) * oR);
-      ctx.lineTo(Math.cos(gta + 0.06) * oR, Math.sin(gta + 0.06) * oR);
-      ctx.lineTo(Math.cos(gta + 0.08) * iR, Math.sin(gta + 0.08) * iR);
+      ctx.moveTo(Math.cos(gta - toothHalfWidth) * iR, Math.sin(gta - toothHalfWidth) * iR);
+      ctx.lineTo(Math.cos(gta - toothHalfWidth * 0.7) * oR, Math.sin(gta - toothHalfWidth * 0.7) * oR);
+      ctx.lineTo(Math.cos(gta + toothHalfWidth * 0.7) * oR, Math.sin(gta + toothHalfWidth * 0.7) * oR);
+      ctx.lineTo(Math.cos(gta + toothHalfWidth) * iR, Math.sin(gta + toothHalfWidth) * iR);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
     }
-    ctx.strokeStyle = "rgba(120, 90, 40, 0.5)";
-    ctx.lineWidth = 1.5 * s2;
+    // Inner ring
+    ctx.strokeStyle = "rgba(120, 90, 40, 0.55)";
+    ctx.lineWidth = 1.8 * s2;
     ctx.beginPath();
-    ctx.arc(0, 0, gearPlateR * 0.45, 0, Math.PI * 2);
+    ctx.arc(0, 0, gearPlateR * 0.55, 0, Math.PI * 2);
+    ctx.stroke();
+    // Spoke lines
+    ctx.strokeStyle = "rgba(100, 80, 40, 0.35)";
+    ctx.lineWidth = 0.8 * s2;
+    for (let sp = 0; sp < 6; sp++) {
+      const spa = (sp / 6) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(spa) * gearPlateR * 0.2, Math.sin(spa) * gearPlateR * 0.2);
+      ctx.lineTo(Math.cos(spa) * gearPlateR * 0.53, Math.sin(spa) * gearPlateR * 0.53);
+      ctx.stroke();
+    }
+    // Center hub
+    ctx.fillStyle = `rgba(${glowRgb}, ${0.12 + charge * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, gearPlateR * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(140, 110, 50, 0.6)";
+    ctx.lineWidth = 1 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, gearPlateR * 0.18, 0, Math.PI * 2);
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -1854,6 +2037,7 @@ function drawSunforgeOrreryBuilding(
 
   // === CIRCULAR BRONZE PEDESTAL ===
   const pedCY = -baseH - baseW * tanA;
+  // Back half of cylinder wall (darker)
   ctx.fillStyle = "#2a1c0c";
   ctx.beginPath();
   ctx.ellipse(0, pedCY, pedRX, pedRY, 0, Math.PI, Math.PI * 2);
@@ -1861,11 +2045,14 @@ function drawSunforgeOrreryBuilding(
   ctx.ellipse(0, pedCY - pedH, pedRX, pedRY, 0, 0, Math.PI, true);
   ctx.closePath();
   ctx.fill();
+  // Front half with richer gradient
   const pedGrad = ctx.createLinearGradient(-pedRX, 0, pedRX, 0);
   pedGrad.addColorStop(0, "#38260e");
-  pedGrad.addColorStop(0.3, "#584020");
-  pedGrad.addColorStop(0.6, "#6a5030");
-  pedGrad.addColorStop(1, "#584020");
+  pedGrad.addColorStop(0.2, "#4e3618");
+  pedGrad.addColorStop(0.4, "#6a5030");
+  pedGrad.addColorStop(0.6, "#7a6038");
+  pedGrad.addColorStop(0.8, "#6a5030");
+  pedGrad.addColorStop(1, "#4e3618");
   ctx.fillStyle = pedGrad;
   ctx.beginPath();
   ctx.ellipse(0, pedCY, pedRX, pedRY, 0, 0, Math.PI);
@@ -1873,7 +2060,8 @@ function drawSunforgeOrreryBuilding(
   ctx.ellipse(0, pedCY - pedH, pedRX, pedRY, 0, Math.PI, 0, true);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  // Edge lines
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(-pedRX, pedCY);
@@ -1886,12 +2074,22 @@ function drawSunforgeOrreryBuilding(
   ctx.beginPath();
   ctx.ellipse(0, pedCY, pedRX, pedRY, 0, 0, Math.PI);
   ctx.stroke();
+  // Top surface with concentric detail rings
   ctx.fillStyle = "#7a5c34";
   ctx.beginPath();
   ctx.ellipse(0, pedCY - pedH, pedRX, pedRY, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.strokeStyle = "rgba(100, 80, 40, 0.35)";
+  ctx.lineWidth = 0.7 * s2;
+  ctx.beginPath();
+  ctx.ellipse(0, pedCY - pedH, pedRX * 0.9, pedRY * 0.9, 0, 0, Math.PI * 2);
   ctx.stroke();
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(0, pedCY - pedH, pedRX, pedRY, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Energy rings on top surface (warmup-dependent)
   if (wu > 0.1) {
     ctx.strokeStyle = `rgba(${glowRgb}, ${(0.2 + charge * 0.3) * wu})`;
     ctx.lineWidth = 1.2 * s2;
@@ -1902,16 +2100,50 @@ function drawSunforgeOrreryBuilding(
     ctx.beginPath();
     ctx.ellipse(0, pedCY - pedH, pedRX * 0.45, pedRY * 0.45, 0, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.strokeStyle = `rgba(${glowRgb}, ${(0.08 + charge * 0.15) * wu})`;
+    ctx.lineWidth = 0.6 * s2;
+    ctx.setLineDash([3 * s2, 3 * s2]);
+    ctx.beginPath();
+    ctx.ellipse(0, pedCY - pedH, pedRX * 0.6, pedRY * 0.6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
-  ctx.strokeStyle = "rgba(170, 130, 70, 0.6)";
-  ctx.lineWidth = 2 * s2;
-  ctx.beginPath();
-  ctx.ellipse(0, pedCY - pedH * 0.5, pedRX + 1.5 * s2, pedRY + 0.75 * s2, 0, 0, Math.PI);
-  ctx.stroke();
+  // Multiple decorative band rings on cylinder wall (front arc)
+  const bandPositions = [0.25, 0.5, 0.75];
+  for (const bfrac of bandPositions) {
+    const bandY = pedCY - pedH * bfrac;
+    const bandR = pedRX + (bfrac === 0.5 ? 1.5 : 0.8) * s2;
+    const bandRy = pedRY + (bfrac === 0.5 ? 0.75 : 0.4) * s2;
+    ctx.strokeStyle = bfrac === 0.5
+      ? "rgba(170, 130, 70, 0.6)"
+      : "rgba(140, 110, 55, 0.4)";
+    ctx.lineWidth = (bfrac === 0.5 ? 2 : 1.2) * s2;
+    ctx.beginPath();
+    ctx.ellipse(0, bandY, bandR, bandRy, 0, 0, Math.PI);
+    ctx.stroke();
+  }
+  // Engraved solar glyphs on pedestal front
+  if (wu > 0.05) {
+    const glyphAlpha = Math.min(1, wu * 1.5);
+    const glyphCount = 6;
+    for (let gi = 0; gi < glyphCount; gi++) {
+      const ga = (gi / glyphCount) * Math.PI + 0.15;
+      const gx = Math.cos(ga) * pedRX * 0.8;
+      const gy = Math.sin(ga) * pedRY * 0.8 + pedCY - pedH * 0.5;
+      const lit = gi / glyphCount < charge;
+      ctx.fillStyle = lit
+        ? `rgba(${hotRgb}, ${(0.3 + charge * 0.3 + readyFlash) * glyphAlpha})`
+        : `rgba(120, 90, 45, ${0.15 * glyphAlpha})`;
+      ctx.font = `bold ${4.5 * s2}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(runeSet[gi % runeSet.length], gx, gy);
+    }
+  }
 
   // Pedestal mechanical coupling nodes (visible front arc)
-  for (let i = 0; i < 5; i++) {
-    const nodeA = (i / 5) * Math.PI + 0.1;
+  for (let i = 0; i < 7; i++) {
+    const nodeA = (i / 7) * Math.PI + 0.08;
     const nR = pedRX + 1.5 * s2;
     const nRy = pedRY + 0.75 * s2;
     const nxp = Math.cos(nodeA) * nR;
@@ -1924,22 +2156,46 @@ function drawSunforgeOrreryBuilding(
     ctx.beginPath();
     ctx.arc(nxp, nyp, 0.7 * s2, 0, Math.PI * 2);
     ctx.fill();
+    // Highlight dot
+    ctx.fillStyle = "rgba(180, 150, 80, 0.3)";
+    ctx.beginPath();
+    ctx.arc(nxp - 0.4 * s2, nyp - 0.4 * s2, 0.4 * s2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  // Hydraulic brace struts on pedestal sides
+  // Hydraulic brace struts on pedestal sides with pistons
   for (let side = -1; side <= 1; side += 2) {
     const strutX = side * pedRX * 0.65;
     const strutTop = pedCY - pedH * 0.9;
     const strutBot = pedCY - pedH * 0.1;
-    ctx.strokeStyle = "rgba(100, 80, 40, 0.5)";
-    ctx.lineWidth = 1.5 * s2;
+    const strutMid = (strutTop + strutBot) * 0.5;
+    // Outer cylinder
+    ctx.strokeStyle = "rgba(100, 80, 40, 0.55)";
+    ctx.lineWidth = 2 * s2;
     ctx.beginPath();
     ctx.moveTo(strutX, strutBot);
     ctx.lineTo(strutX * 0.9, strutTop);
     ctx.stroke();
-    ctx.fillStyle = `rgba(${glowRgb}, ${(0.08 + charge * 0.15) * wu})`;
+    // Inner piston rod
+    ctx.strokeStyle = "rgba(150, 120, 65, 0.4)";
+    ctx.lineWidth = 0.8 * s2;
     ctx.beginPath();
-    ctx.arc(strutX * 0.95, (strutTop + strutBot) * 0.5, 1.3 * s2, 0, Math.PI * 2);
+    ctx.moveTo(strutX * 0.97, strutBot + (strutMid - strutBot) * 0.2);
+    ctx.lineTo(strutX * 0.92, strutMid);
+    ctx.stroke();
+    // Pivot joint
+    ctx.fillStyle = "#8a6c38";
+    ctx.beginPath();
+    ctx.arc(strutX, strutBot, 1.5 * s2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#342610";
+    ctx.beginPath();
+    ctx.arc(strutX, strutBot, 0.6 * s2, 0, Math.PI * 2);
+    ctx.fill();
+    // Energy glow at center
+    ctx.fillStyle = `rgba(${glowRgb}, ${(0.08 + charge * 0.2) * wu})`;
+    ctx.beginPath();
+    ctx.arc(strutX * 0.95, strutMid, 1.5 * s2, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1985,6 +2241,7 @@ function drawSunforgeOrreryBuilding(
 
   // === CENTRAL BRONZE COLUMN - telescopes up during wuColumnRise ===
   const colBY = pedCY - pedH;
+  // Back half of column
   ctx.fillStyle = "#2a1c0c";
   ctx.beginPath();
   ctx.ellipse(0, colBY, colRX, colRY, 0, Math.PI, Math.PI * 2);
@@ -1992,11 +2249,14 @@ function drawSunforgeOrreryBuilding(
   ctx.ellipse(0, colBY - colH, colRX, colRY, 0, 0, Math.PI, true);
   ctx.closePath();
   ctx.fill();
+  // Front half with richer gradient and specular highlight
   const colGrad = ctx.createLinearGradient(-colRX, 0, colRX, 0);
   colGrad.addColorStop(0, "#38240e");
-  colGrad.addColorStop(0.3, "#5e4420");
-  colGrad.addColorStop(0.55, "#7a5c30");
-  colGrad.addColorStop(0.75, "#5e4420");
+  colGrad.addColorStop(0.2, "#5e4420");
+  colGrad.addColorStop(0.4, "#7a5c30");
+  colGrad.addColorStop(0.55, "#8a6c3a");
+  colGrad.addColorStop(0.7, "#7a5c30");
+  colGrad.addColorStop(0.85, "#5e4420");
   colGrad.addColorStop(1, "#483418");
   ctx.fillStyle = colGrad;
   ctx.beginPath();
@@ -2005,16 +2265,60 @@ function drawSunforgeOrreryBuilding(
   ctx.ellipse(0, colBY - colH, colRX, colRY, 0, Math.PI, 0, true);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  // Specular highlight stripe
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(0, colBY, colRX, colRY, 0, 0, Math.PI);
+  ctx.lineTo(-colRX, colBY - colH);
+  ctx.ellipse(0, colBY - colH, colRX, colRY, 0, Math.PI, 0, true);
+  ctx.closePath();
+  ctx.clip();
+  const specGrad = ctx.createLinearGradient(colRX * 0.1, 0, colRX * 0.5, 0);
+  specGrad.addColorStop(0, "rgba(255, 230, 180, 0)");
+  specGrad.addColorStop(0.4, "rgba(255, 230, 180, 0.12)");
+  specGrad.addColorStop(0.6, "rgba(255, 230, 180, 0.08)");
+  specGrad.addColorStop(1, "rgba(255, 230, 180, 0)");
+  ctx.fillStyle = specGrad;
+  ctx.fillRect(-colRX, colBY - colH - colRY, colRX * 2, colH + colRY * 2);
+  ctx.restore();
+  // Edge lines with subtle shadow
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.moveTo(-colRX, colBY);
   ctx.lineTo(-colRX, colBY - colH);
   ctx.stroke();
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
   ctx.beginPath();
   ctx.moveTo(colRX, colBY);
   ctx.lineTo(colRX, colBY - colH);
   ctx.stroke();
+  // Decorative fluting lines along column
+  ctx.strokeStyle = "rgba(60, 45, 20, 0.25)";
+  ctx.lineWidth = 0.5 * s2;
+  for (let fl = 0; fl < 4; fl++) {
+    const flAngle = (fl / 5 + 0.1) * Math.PI;
+    const flx = Math.cos(flAngle) * colRX;
+    ctx.beginPath();
+    ctx.moveTo(flx, colBY + Math.sin(flAngle) * colRY);
+    ctx.lineTo(flx, colBY - colH + Math.sin(flAngle) * colRY);
+    ctx.stroke();
+  }
+  // Static ring bands at column joints
+  for (let ri = 0; ri < 3; ri++) {
+    const ringFrac = [0.15, 0.5, 0.85][ri];
+    const ringY = colBY - colH * ringFrac;
+    ctx.strokeStyle = "rgba(140, 110, 55, 0.45)";
+    ctx.lineWidth = 1.5 * s2;
+    ctx.beginPath();
+    ctx.ellipse(0, ringY, colRX + 1 * s2, colRY + 0.5 * s2, 0, 0, Math.PI);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(90, 70, 35, 0.3)";
+    ctx.lineWidth = 0.6 * s2;
+    ctx.beginPath();
+    ctx.ellipse(0, ringY + 1.2 * s2, colRX + 0.5 * s2, colRY + 0.25 * s2, 0, 0, Math.PI);
+    ctx.stroke();
+  }
 
   // Animated pulsing ring bands along column
   if (wuColumnRise > 0.2) {

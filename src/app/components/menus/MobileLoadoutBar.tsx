@@ -475,7 +475,6 @@ function SpellSelectionContent({
       {SPELL_OPTIONS.map((spellType) => {
         const spell = SPELL_DATA[spellType];
         const isSelected = selectedSpells.includes(spellType);
-        const canSelect = isSelected || selectedSpells.length < 3;
         const selectionIndex = selectedSpells.indexOf(spellType);
         const colors = SPELL_COLORS[spellType];
         const spellLevel = spellUpgradeLevels[spellType] ?? 0;
@@ -484,11 +483,8 @@ function SpellSelectionContent({
         return (
           <button
             key={spellType}
-            onClick={() => canSelect && toggleSpell(spellType)}
-            disabled={!canSelect && !isSelected}
-            className={`w-full rounded-xl p-2.5 transition-all active:scale-[0.98] text-left ${
-              !canSelect && !isSelected ? "opacity-40" : ""
-            }`}
+            onClick={() => toggleSpell(spellType)}
+            className="w-full rounded-xl p-2.5 transition-all active:scale-[0.98] text-left"
             style={{
               background: isSelected
                 ? `linear-gradient(135deg, ${colors.bg}, ${colors.bg})`
@@ -542,14 +538,14 @@ function SpellSelectionContent({
                 >
                   {selectionIndex + 1}
                 </div>
-              ) : canSelect ? (
+              ) : (
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border border-dashed"
                   style={{ borderColor: "rgba(140,80,200,0.3)" }}
                 >
                   <span className="text-[8px] text-purple-500/40">+</span>
                 </div>
-              ) : null}
+              )}
             </div>
 
             {/* Stats grid */}

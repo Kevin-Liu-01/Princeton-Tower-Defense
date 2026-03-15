@@ -42,6 +42,8 @@ import { STATION_TROOP_RANGE, TOWER_DATA, TOWER_TAGS } from "../../constants";
 import { TagBadge } from "./TagBadge";
 import { calculateTowerStats } from "../../constants/towerStats";
 import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
+import { getSentinelName } from "../../rendering/towers/sentinelTheme";
+import type { MapTheme } from "../../constants/maps";
 
 // =============================================================================
 // TOOLTIP COMPONENT
@@ -409,14 +411,27 @@ export const BuildTowerTooltip: React.FC<BuildTowerTooltipProps> = ({ towerType,
 };
 
 // =============================================================================
+// TARGETING INDICATOR POSITIONING
+// =============================================================================
+
+const INDICATOR_TOP_BASE = 80;
+const INDICATOR_TOP_PAYDAY_OFFSET = 68;
+
+function getIndicatorTop(paydayActive: boolean): number {
+  return paydayActive ? INDICATOR_TOP_BASE + INDICATOR_TOP_PAYDAY_OFFSET : INDICATOR_TOP_BASE;
+}
+
+const INDICATOR_CLASS = "absolute left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm";
+
+// =============================================================================
 // PLACING TROOP INDICATOR
 // =============================================================================
 
-export const PlacingTroopIndicator: React.FC = () => {
+export const PlacingTroopIndicator: React.FC<{ paydayActive?: boolean }> = ({ paydayActive = false }) => {
   return (
     <div
-      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
-      style={{ zIndex: 150, background: panelGradient, border: '1.5px solid ' + GOLD.border30, boxShadow: '0 0 20px ' + GOLD.glow07 }}
+      className={INDICATOR_CLASS}
+      style={{ top: getIndicatorTop(paydayActive), zIndex: 150, background: panelGradient, border: '1.5px solid ' + GOLD.border30, boxShadow: '0 0 20px ' + GOLD.glow07 }}
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
         <Users size={16} className="text-purple-400" />
@@ -452,13 +467,13 @@ const SPELL_TARGET_CONFIG: Record<string, { label: string; color: string; icon: 
   },
 };
 
-export const TargetingSpellIndicator: React.FC<{ spellType: SpellType }> = ({ spellType }) => {
+export const TargetingSpellIndicator: React.FC<{ spellType: SpellType; paydayActive?: boolean }> = ({ spellType, paydayActive = false }) => {
   const config = SPELL_TARGET_CONFIG[spellType];
   if (!config) return null;
   return (
     <div
-      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
-      style={{ zIndex: 150, background: config.bgGrad, border: `1.5px solid ${config.borderColor}`, boxShadow: config.glowColor }}
+      className={INDICATOR_CLASS}
+      style={{ top: getIndicatorTop(paydayActive), zIndex: 150, background: config.bgGrad, border: `1.5px solid ${config.borderColor}`, boxShadow: config.glowColor }}
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
         {config.icon}
@@ -473,11 +488,12 @@ export const TargetingSpellIndicator: React.FC<{ spellType: SpellType }> = ({ sp
 // MISSILE BATTERY TARGETING INDICATOR
 // =============================================================================
 
-export const MissileTargetingIndicator: React.FC = () => {
+export const MissileTargetingIndicator: React.FC<{ paydayActive?: boolean }> = ({ paydayActive = false }) => {
   return (
     <div
-      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
+      className={INDICATOR_CLASS}
       style={{
+        top: getIndicatorTop(paydayActive),
         zIndex: 150,
         background: "linear-gradient(135deg, rgba(120,55,0,0.94), rgba(60,28,0,0.9))",
         border: "1.5px solid rgba(255,140,0,0.6)",
@@ -498,11 +514,12 @@ export const MissileTargetingIndicator: React.FC = () => {
 // SENTINEL NEXUS TARGETING INDICATOR
 // =============================================================================
 
-export const SentinelTargetingIndicator: React.FC = () => {
+export const SentinelTargetingIndicator: React.FC<{ paydayActive?: boolean }> = ({ paydayActive = false }) => {
   return (
     <div
-      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
+      className={INDICATOR_CLASS}
       style={{
+        top: getIndicatorTop(paydayActive),
         zIndex: 150,
         background: "linear-gradient(135deg, rgba(100,10,30,0.94), rgba(55,5,15,0.9))",
         border: "1.5px solid rgba(251,113,133,0.6)",
@@ -537,6 +554,7 @@ interface SpecialBuildingTooltipProps {
   position: Position;
   sentinelTarget?: Position | null;
   sentinelTargeting?: boolean;
+  mapTheme?: MapTheme;
 }
 
 export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
@@ -546,6 +564,7 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
   position,
   sentinelTarget,
   sentinelTargeting,
+  mapTheme,
 }) => {
   const info = {
     vault: {
@@ -589,9 +608,9 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
       borderColor: "border-indigo-400",
     },
     sentinel_nexus: {
-      name: "Imperial Red Sentinel",
+      name: getSentinelName(mapTheme),
       icon: <Activity className="text-rose-300" size={18} />,
-      desc: "Ancient laser-guided strike core. Every 10s it calls lightning at a locked map coordinate.",
+      desc: "Ancient laser-guided strike core. Periodically calls lightning at a locked map coordinate.",
       stat: "Retargetable Strike Beacon",
       color: "from-rose-900/90 to-red-950/90",
       borderColor: "border-rose-400",
