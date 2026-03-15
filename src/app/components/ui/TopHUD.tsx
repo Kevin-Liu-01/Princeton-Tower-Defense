@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   PawPrint,
   Heart,
-
   Skull,
   Pause,
   Play,
@@ -11,13 +10,15 @@ import {
   FastForward,
   Rewind,
   Activity,
-  X,
   Sparkles,
   Landmark,
   Settings,
   Camera,
   Lock,
   TerminalSquare,
+  LogOut,
+  Shield,
+  RotateCcw,
 } from "lucide-react";
 import {
   getPerformanceSettings,
@@ -32,6 +33,7 @@ import {
 import { SettingsModal } from "../menus/SettingsModal";
 import { useSettings } from "../../hooks/useSettings";
 import { HudTooltip } from "./HudTooltip";
+import { ConfirmModal } from "./ConfirmModal";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 
 // =============================================================================
@@ -158,6 +160,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   });
 
   const [showSettings, setShowSettings] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"restart" | "quit" | null>(null);
   const { settings: gameSettings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
 
   const [currentFps, setCurrentFps] = useState(60);
@@ -910,7 +913,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </HudTooltip>
       <HudTooltip label="Restart level">
         <button
-          onClick={retryLevel}
+          onClick={() => setConfirmAction("restart")}
           className={CIRCLE_BTN}
           style={{
             background: "linear-gradient(180deg, rgba(25,95,48,0.6), rgba(12,60,28,0.4))",
@@ -923,7 +926,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       </HudTooltip>
       <HudTooltip label="Quit to world map">
         <button
-          onClick={quitLevel}
+          onClick={() => setConfirmAction("quit")}
           className={CIRCLE_BTN}
           style={{
             background: "linear-gradient(180deg, rgba(110,22,22,0.6), rgba(75,12,12,0.4))",
@@ -931,7 +934,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             boxShadow: CIRCLE_BTN_SHADOW,
           }}
         >
-          <X size={14} className="text-red-300" />
+          <LogOut size={14} className="text-red-300" />
         </button>
       </HudTooltip>
     </div>
@@ -1109,18 +1112,18 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     {pauseLocked ? <Lock size={12} className="text-amber-300/60" /> : gameSpeed === 0 ? <Play size={12} className="text-amber-300" /> : <Pause size={12} className="text-amber-300" />}
                   </button>
                   <button
-                    onClick={retryLevel}
+                    onClick={() => setConfirmAction("restart")}
                     className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
                     style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.5), rgba(10,55,25,0.3))", border: "1px solid rgba(60,140,80,0.35)" }}
                   >
                     <RefreshCcw size={12} className="text-emerald-300" />
                   </button>
                   <button
-                    onClick={quitLevel}
+                    onClick={() => setConfirmAction("quit")}
                     className="relative z-10 rounded-md p-1 transition-colors hover:brightness-125"
                     style={{ background: "linear-gradient(135deg, rgba(100,20,20,0.5), rgba(70,10,10,0.3))", border: "1px solid rgba(200,60,60,0.45)" }}
                   >
-                    <X size={12} className="text-red-300" />
+                    <LogOut size={12} className="text-red-300" />
                   </button>
                 </div>
               </div>
@@ -1181,6 +1184,34 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           resetCategory={resetCategory}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmAction === "restart"}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={retryLevel}
+        title="Restart Level?"
+        description="All progress on this level will be lost. Are you sure you want to restart?"
+        confirmLabel="Restart"
+        cancelLabel="Cancel"
+        variant="warning"
+        titleIcon={RotateCcw}
+        confirmIcon={RefreshCcw}
+        cancelIcon={Shield}
+      />
+
+      <ConfirmModal
+        isOpen={confirmAction === "quit"}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={quitLevel}
+        title="Quit to World Map?"
+        description="You will lose all progress on this level and return to the world map."
+        confirmLabel="Quit"
+        cancelLabel="Continue"
+        variant="danger"
+        titleIcon={LogOut}
+        confirmIcon={LogOut}
+        cancelIcon={Play}
+      />
     </>
   );
 };

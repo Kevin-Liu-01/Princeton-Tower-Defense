@@ -56,6 +56,7 @@ export interface DecorationRenderParams {
   // Optional split-pass controls used for large landmarks with ground shadows.
   shadowOnly?: boolean;
   skipShadow?: boolean;
+  zoom?: number;
 }
 
 /**
@@ -109,7 +110,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     mapTheme = "",
     shadowOnly = false,
     skipShadow = false,
+    zoom: paramZoom,
   } = params;
+  const zoom = paramZoom ?? 1;
 
   const dec = { x: decorX, y: decorY };
 
@@ -124,6 +127,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       decorY,
       shadowOnly,
       skipShadow,
+      zoom,
     });
     return;
   }
@@ -155,6 +159,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -15596,6 +15601,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -21796,6 +21802,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -33808,6 +33815,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -33824,6 +33832,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -33840,6 +33849,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -33856,6 +33866,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }
@@ -33872,6 +33883,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         variant,
         skipShadow,
         shadowOnly,
+        zoom,
       });
       break;
     }

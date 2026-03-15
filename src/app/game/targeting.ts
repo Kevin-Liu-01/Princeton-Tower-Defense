@@ -126,21 +126,32 @@ export function findNearestTroopInRange(
   return closest;
 }
 
+export interface VaultEntry {
+  worldPos: Position;
+  key: string;
+}
+
+export interface VaultImpactResult {
+  worldPos: Position;
+  key: string;
+}
+
 /**
- * Finds the closest vault position to an enemy within `maxDistance`.
+ * Finds the closest vault to an enemy within `maxDistance`,
+ * returning its world position and position key.
  */
 export function getVaultImpactPos(
   enemyPos: Position,
-  vaultWorldPositions: Position[],
+  vaultEntries: VaultEntry[],
   maxDistance: number
-): Position | null {
-  let closest: Position | null = null;
+): VaultImpactResult | null {
+  let closest: VaultImpactResult | null = null;
   let closestDist = maxDistance;
-  for (const pos of vaultWorldPositions) {
-    const distToVault = distance(enemyPos, pos);
+  for (const entry of vaultEntries) {
+    const distToVault = distance(enemyPos, entry.worldPos);
     if (distToVault <= closestDist) {
       closestDist = distToVault;
-      closest = pos;
+      closest = entry;
     }
   }
   return closest;

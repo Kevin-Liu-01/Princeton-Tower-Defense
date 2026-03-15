@@ -14,6 +14,7 @@ export interface PathDecorationParams {
   cameraZoom: number;
   mapSeed: number;
   toScreen: (pos: Position) => Position;
+  skipPathShadows?: boolean;
 }
 
 function lerpPos(a: Position, b: Position, t: number): Position {
@@ -830,7 +831,9 @@ function drawSwampAccents(p: PathDecorationParams): void {
 export function drawPathDecorations(params: PathDecorationParams): void {
   if (params.screenCenter.length < 2) return;
 
-  drawPathWearGradient(params);
+  if (!params.skipPathShadows) {
+    drawPathWearGradient(params);
+  }
   drawSurfaceTexture(params);
   drawEdgeBorderStones(params);
 

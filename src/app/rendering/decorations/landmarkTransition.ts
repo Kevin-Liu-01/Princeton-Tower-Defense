@@ -133,6 +133,83 @@ const GROUND_TRANSITION_PALETTES: Record<
   },
 };
 
+const CHALLENGE_GROUND_TRANSITION_PALETTES: Record<
+  MapTheme,
+  {
+    outerBlend: string;
+    midEarth: string;
+    innerBase: string;
+    detailLight: string;
+    detailDark: string;
+    edgeAccent: string;
+    glowColor: string;
+    glowAlpha: number;
+    groundEdge: string;
+    groundFar: string;
+  }
+> = {
+  grassland: {
+    outerBlend: "#3e5a30",
+    midEarth: "#34482a",
+    innerBase: "#2a3a20",
+    detailLight: "#5a8a50",
+    detailDark: "#2e3818",
+    edgeAccent: "#4a7548",
+    glowColor: "rgba(70, 120, 50, 0.08)",
+    glowAlpha: 0.06,
+    groundEdge: "#3a5a30",
+    groundFar: "#30522c",
+  },
+  desert: {
+    outerBlend: "#9a8050",
+    midEarth: "#806840",
+    innerBase: "#6a5530",
+    detailLight: "#c4a060",
+    detailDark: "#7a5e3a",
+    edgeAccent: "#a88860",
+    glowColor: "rgba(190, 160, 70, 0.06)",
+    glowAlpha: 0.05,
+    groundEdge: "#8b7355",
+    groundFar: "#7a5530",
+  },
+  winter: {
+    outerBlend: "#4a6070",
+    midEarth: "#3e5262",
+    innerBase: "#324454",
+    detailLight: "#6ba3be",
+    detailDark: "#2e3e50",
+    edgeAccent: "#7ab0cc",
+    glowColor: "rgba(140, 180, 210, 0.08)",
+    glowAlpha: 0.07,
+    groundEdge: "#4a5a6a",
+    groundFar: "#3a5068",
+  },
+  volcanic: {
+    outerBlend: "#3a2020",
+    midEarth: "#301818",
+    innerBase: "#241010",
+    detailLight: "#5a2828",
+    detailDark: "#200e0e",
+    edgeAccent: "#6a2818",
+    glowColor: "rgba(220, 60, 0, 0.06)",
+    glowAlpha: 0.05,
+    groundEdge: "#3a2424",
+    groundFar: "#2a1a1a",
+  },
+  swamp: {
+    outerBlend: "#1e3a1e",
+    midEarth: "#182e16",
+    innerBase: "#12240e",
+    detailLight: "#3a6a3a",
+    detailDark: "#12200e",
+    edgeAccent: "#2a4a2a",
+    glowColor: "rgba(50, 110, 50, 0.08)",
+    glowAlpha: 0.06,
+    groundEdge: "#1e3020",
+    groundFar: "#142418",
+  },
+};
+
 interface TransitionRadii {
   outerW: number;
   outerH: number;
@@ -203,9 +280,19 @@ function drawTransitionBlob(
   seedY: number,
   selectedMap: string,
   decorScale: number = 1,
+  isChallenge = false,
 ): void {
-  const palette = GROUND_TRANSITION_PALETTES[mapTheme];
+  const palette = isChallenge
+    ? CHALLENGE_GROUND_TRANSITION_PALETTES[mapTheme]
+    : GROUND_TRANSITION_PALETTES[mapTheme];
   const regionTheme = REGION_THEMES[mapTheme];
+
+  const outerEdgeColor = isChallenge
+    ? (palette as typeof CHALLENGE_GROUND_TRANSITION_PALETTES[MapTheme]).groundEdge
+    : regionTheme.ground[1];
+  const clumpEdgeColor = isChallenge
+    ? (palette as typeof CHALLENGE_GROUND_TRANSITION_PALETTES[MapTheme]).groundFar
+    : regionTheme.ground[2];
 
   const { outerW, outerH, midW, midH, innerW, innerH } = radii;
 
@@ -231,7 +318,7 @@ function drawTransitionBlob(
   );
   outerGrad.addColorStop(0, "rgba(0,0,0,0)");
   outerGrad.addColorStop(0.4, palette.outerBlend);
-  outerGrad.addColorStop(1, regionTheme.ground[1]);
+  outerGrad.addColorStop(1, outerEdgeColor);
   ctx.fillStyle = outerGrad;
   drawOrganicBlobAt(ctx, cx, cy, outerW, outerH, blobSeed, 0.18, 28);
   ctx.fill();
@@ -244,7 +331,7 @@ function drawTransitionBlob(
     const clX = cx + Math.cos(angle) * dist;
     const clY = cy + Math.sin(angle) * dist * (outerH / outerW);
     const clR = (1.2 + ((blobSeed * (i + 3)) % 13) / 9) * zoom;
-    ctx.fillStyle = i % 3 === 0 ? palette.outerBlend : regionTheme.ground[2];
+    ctx.fillStyle = i % 3 === 0 ? palette.outerBlend : clumpEdgeColor;
     ctx.beginPath();
     ctx.ellipse(clX, clY, clR * 1.4, clR * 0.65, angle, 0, Math.PI * 2);
     ctx.fill();
@@ -517,6 +604,7 @@ export function renderDecorationTransitions(
   if (!levelData?.decorations) return;
 
   const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  const isChallenge = levelData.levelKind === "challenge";
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
 
@@ -555,6 +643,7 @@ export function renderDecorationTransitions(
       deco.pos.y,
       selectedMap,
       resolvedPlacement.scale,
+      isChallenge,
     );
   }
 }
@@ -570,6 +659,7 @@ export function renderSpecialTowerTransitions(
 ): void {
   const levelData = LEVEL_DATA[selectedMap];
   const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  const isChallenge = levelData?.levelKind === "challenge";
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
 
@@ -596,6 +686,8 @@ export function renderSpecialTowerTransitions(
       spec.pos.x,
       spec.pos.y,
       selectedMap,
+      1,
+      isChallenge,
     );
   }
 }

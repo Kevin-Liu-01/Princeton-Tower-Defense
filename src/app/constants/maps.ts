@@ -2315,7 +2315,7 @@ export const LEVEL_DATA: Record<
       { type: "ice_sheet", pos: { x: 28, y: 10 }, radius: 1.5 },
     ],
     decorations: [
-      { type: "frontier_outpost", pos: { x: 16, y: 4 }, variant: 1, size: 1.8 },
+      { type: "frontier_outpost", pos: { x: 18, y: 4 }, variant: 1, size: 3 },
       { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
       { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
       { type: "ice_throne", pos: { x: 16, y: 28 }, variant: 0, size: 1.2 },
@@ -2513,7 +2513,7 @@ export const LEVEL_DATA: Record<
     name: "Sandbox Arena",
     position: { x: 200, y: 62 },
     description:
-      "An ancient colosseum reclaimed by nature.\nUnlimited resources — build anything, test everything.",
+      "An ancient colosseum reclaimed by nature. Unlimited resources. Build anything, test everything.",
     camera: { offset: { x: -120, y: -360 }, zoom: 0.88 },
     region: "grassland",
     theme: "grassland",
@@ -2589,6 +2589,7 @@ export const LEVEL_DATA: Record<
       { type: "frozen_pond", pos: { x: 10, y: 2 }, variant: 0, size: 1.2 },
       { type: "deep_water", pos: { x: 16, y: 10 }, variant: 0, size: 1.5 },
     ],
+    previewImage: "/images/previews/sandbox.png",
   },
   dev_enemy_showcase: {
     name: "Enemy Showcase",

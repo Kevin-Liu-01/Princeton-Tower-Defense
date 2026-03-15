@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Hazard Game Logic Module
-// Handles calculation of hazard effects on enemies
+// Handles calculation of hazard effects on enemies, troops, and heroes
 
-import type { Position, Enemy, MapHazard, Particle, SlowSourceType } from "../../types";
+import type { Position, Enemy, Troop, Hero, MapHazard, Particle, SlowSourceType } from "../../types";
 import { gridToWorld, distance } from "../../utils";
 import { TILE_SIZE } from "../../constants";
 
@@ -371,4 +371,130 @@ export function applyHazardEffect(
     speed: baseSpeed * effect.environmentalSpeed,
     dead: newHp <= 0,
   };
+}
+
+// ============================================================================
+// FRIENDLY UNIT HAZARD LOGIC (Troops & Heroes)
+// ============================================================================
+
+export interface FriendlyHazardResult {
+  troopEffects: Map<string, HazardEffect>;
+  heroEffect: HazardEffect | null;
+  particles: HazardParticle[];
+}
+
+/**
+ * Calculates hazard effects for friendly troops and the hero.
+ * Uses the same per-hazard logic as enemies so environmental zones
+ * are truly universal.
+ */
+export function calculateFriendlyHazardEffects(
+  hazards: MapHazard[],
+  troops: Troop[],
+  hero: Hero | null,
+  deltaTime: number,
+): FriendlyHazardResult {
+  const nowSeconds = Date.now() / 1000;
+  const hazardData = prepareHazardData(hazards, nowSeconds);
+  const troopEffects = new Map<string, HazardEffect>();
+  const particles: HazardParticle[] = [];
+
+  for (const troop of troops) {
+    if (troop.dead || (troop.respawnTimer && troop.respawnTimer > 0)) continue;
+
+    let effect = createDefaultEffect();
+    for (const hazard of hazardData) {
+      effect = calculateSingleHazardEffect(hazard, troop.pos, effect, deltaTime, particles);
+    }
+    if (hasEffect(effect)) {
+      troopEffects.set(troop.id, effect);
+    }
+  }
+
+  let heroEffect: HazardEffect | null = null;
+  if (hero && !hero.dead && hero.respawnTimer <= 0) {
+    let effect = createDefaultEffect();
+    for (const hazard of hazardData) {
+      effect = calculateSingleHazardEffect(hazard, hero.pos, effect, deltaTime, particles);
+    }
+    if (hasEffect(effect)) {
+      heroEffect = effect;
+    }
+  }
+
+  return { troopEffects, heroEffect, particles };
+}
+
+/**
+ * Applies a hazard effect to a troop and returns the updated troop.
+ */
+export function applyHazardEffectToTroop(
+  troop: Troop,
+  effect: HazardEffect,
+): Troop {
+  let newHp = troop.hp;
+
+  if (effect.poisonDamage > 0) {
+    newHp = Math.max(0, newHp - effect.poisonDamage);
+  }
+  if (effect.lavaDamage > 0) {
+    newHp = Math.max(0, newHp - effect.lavaDamage);
+  }
+
+  const updated: Troop = {
+    ...troop,
+    hp: newHp,
+    dead: newHp <= 0 ? true : troop.dead,
+  };
+
+  if (effect.environmentalSlow > 0) {
+    const now = Date.now();
+    const currentSlow = troop.slowed && troop.slowUntil && troop.slowUntil > now
+      ? (troop.slowIntensity ?? 0)
+      : 0;
+    if (effect.environmentalSlow > currentSlow) {
+      updated.slowed = true;
+      updated.slowIntensity = effect.environmentalSlow;
+      updated.slowUntil = now + 500;
+    }
+  }
+
+  return updated;
+}
+
+/**
+ * Applies a hazard effect to the hero and returns the updated hero.
+ */
+export function applyHazardEffectToHero(
+  hero: Hero,
+  effect: HazardEffect,
+): Hero {
+  let newHp = hero.hp;
+
+  if (effect.poisonDamage > 0) {
+    newHp = Math.max(0, newHp - effect.poisonDamage);
+  }
+  if (effect.lavaDamage > 0) {
+    newHp = Math.max(0, newHp - effect.lavaDamage);
+  }
+
+  const updated: Hero = {
+    ...hero,
+    hp: newHp,
+    dead: newHp <= 0 ? true : hero.dead,
+  };
+
+  if (effect.environmentalSlow > 0) {
+    const now = Date.now();
+    const currentSlow = hero.slowed && hero.slowUntil && hero.slowUntil > now
+      ? (hero.slowIntensity ?? 0)
+      : 0;
+    if (effect.environmentalSlow > currentSlow) {
+      updated.slowed = true;
+      updated.slowIntensity = effect.environmentalSlow;
+      updated.slowUntil = now + 500;
+    }
+  }
+
+  return updated;
 }

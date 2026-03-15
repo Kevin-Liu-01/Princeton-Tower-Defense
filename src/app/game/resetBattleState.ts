@@ -57,7 +57,7 @@ export interface BattleStateSetters {
   setInspectorActive: Setter<boolean>;
   setSelectedInspectEnemy: Setter<Enemy | null>;
   setPreviousGameSpeed: Setter<number>;
-  setSpecialTowerHp: Setter<number | null>;
+  setSpecialTowerHp: Setter<Record<string, number>>;
   setLevelStartTime: Setter<number>;
   setCameraOffset: Setter<Position>;
   setCameraZoom: Setter<number>;
@@ -79,7 +79,7 @@ export interface ResetBattleStateOptions {
   startingPawPoints: number;
   targetGameState: GameState;
   levelStartTime: number;
-  specialTowerHp: number | null;
+  specialTowerHp: Record<string, number>;
   resetCamera: boolean;
   resetResultStats: boolean;
 }

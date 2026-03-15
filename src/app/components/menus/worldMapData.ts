@@ -36,8 +36,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     difficulty: 1,
     kind: "sandbox",
     tags: ["Sandbox", "Unlimited"],
-    x: 220,
-    y: 63,
+    x: 190,
+    y: 62,
     connectsTo: [],
   },
   {

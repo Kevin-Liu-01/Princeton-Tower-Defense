@@ -4,6 +4,11 @@
 
 import { getPerformanceSettings } from "../performance";
 
+function atmosHash(n: number): number {
+  const x = Math.sin(n * 127.1 + n * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 // ---------------------------------------------------------------------------
 // GOD RAYS – Volumetric light beams from a point source
 // ---------------------------------------------------------------------------
@@ -156,7 +161,6 @@ export function renderAuroraEffect(
       intensity * (0.4 + Math.sin(time * 0.18 + band * 1.5) * 0.6);
     if (alpha < 0.005) continue;
 
-    // Top edge (wavy)
     ctx.beginPath();
     for (let x = 0; x <= canvasWidth; x += 12) {
       const y =
@@ -166,7 +170,6 @@ export function renderAuroraEffect(
       if (x === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
-    // Bottom edge (reverse, slightly different wave)
     for (let x = canvasWidth; x >= 0; x -= 12) {
       const y =
         baseY +
@@ -243,4 +246,282 @@ export function renderScreenGlow(
   ctx.beginPath();
   ctx.arc(x, y, size, 0, Math.PI * 2);
   ctx.fill();
+}
+
+// ---------------------------------------------------------------------------
+// DAPPLED LIGHT – Shifting pools of light like sun through a canopy
+// ---------------------------------------------------------------------------
+
+export function renderDappledLight(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  time: number,
+  r: number,
+  g: number,
+  b: number,
+  baseAlpha: number,
+  spotCount: number
+): void {
+  if (!getPerformanceSettings().showScreenGlow) return;
+
+  for (let i = 0; i < spotCount; i++) {
+    const seedX = atmosHash(i * 73.1 + 11.3);
+    const seedY = atmosHash(i * 41.7 + 23.9);
+    const driftX = Math.sin(time * 0.15 + i * 1.9) * canvasWidth * 0.06;
+    const driftY = Math.cos(time * 0.12 + i * 2.3) * canvasHeight * 0.04;
+    const x = seedX * canvasWidth + driftX;
+    const y = seedY * canvasHeight + driftY;
+    const sizePulse = 0.7 + Math.sin(time * 0.25 + i * 1.4) * 0.3;
+    const spotSize = (40 + atmosHash(i * 17.3) * 80) * sizePulse;
+    const alpha =
+      baseAlpha * (0.3 + Math.sin(time * 0.2 + i * 2.1) * 0.7);
+    if (alpha < 0.003) continue;
+
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, spotSize);
+    grad.addColorStop(0, `rgba(${r},${g},${b},${alpha.toFixed(4)})`);
+    grad.addColorStop(0.4, `rgba(${r},${g},${b},${(alpha * 0.4).toFixed(4)})`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, spotSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LIGHT SHAFTS – Vertical columns of light (e.g. moonlight, crevasse light)
+// ---------------------------------------------------------------------------
+
+export function renderLightShafts(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  time: number,
+  r: number,
+  g: number,
+  b: number,
+  baseAlpha: number,
+  shaftCount: number
+): void {
+  if (!getPerformanceSettings().showGodRays) return;
+
+  for (let i = 0; i < shaftCount; i++) {
+    const seedX = atmosHash(i * 53.7 + 7.1);
+    const driftX = Math.sin(time * 0.08 + i * 2.7) * canvasWidth * 0.03;
+    const x = seedX * canvasWidth + driftX;
+    const halfWidth = 15 + atmosHash(i * 29.3) * 30;
+    const alpha =
+      baseAlpha * (0.3 + Math.sin(time * 0.15 + i * 1.8) * 0.7);
+    if (alpha < 0.003) continue;
+
+    const grad = ctx.createLinearGradient(x - halfWidth, 0, x + halfWidth, 0);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+    grad.addColorStop(0.3, `rgba(${r},${g},${b},${(alpha * 0.5).toFixed(4)})`);
+    grad.addColorStop(0.5, `rgba(${r},${g},${b},${alpha.toFixed(4)})`);
+    grad.addColorStop(0.7, `rgba(${r},${g},${b},${(alpha * 0.5).toFixed(4)})`);
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+
+    const vGrad = ctx.createLinearGradient(x, 0, x, canvasHeight);
+    vGrad.addColorStop(0, `rgba(${r},${g},${b},${alpha.toFixed(4)})`);
+    vGrad.addColorStop(0.3, `rgba(${r},${g},${b},${(alpha * 0.6).toFixed(4)})`);
+    vGrad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - halfWidth, 0, halfWidth * 2, canvasHeight * 0.8);
+    ctx.fillStyle = vGrad;
+    ctx.fillRect(x - halfWidth, 0, halfWidth * 2, canvasHeight * 0.8);
+    ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FROST VIGNETTE – Icy crystalline overlay creeping from screen edges
+// ---------------------------------------------------------------------------
+
+export function renderFrostVignette(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  time: number,
+  intensity: number
+): void {
+  if (intensity < 0.003) return;
+
+  const edgeDepth = Math.min(canvasWidth, canvasHeight) * 0.18;
+  const pulse = 1 + Math.sin(time * 0.3) * 0.08;
+  const depth = edgeDepth * pulse;
+
+  // Top frost band
+  const topGrad = ctx.createLinearGradient(0, 0, 0, depth);
+  topGrad.addColorStop(0, `rgba(200,230,255,${(intensity * 0.5).toFixed(4)})`);
+  topGrad.addColorStop(0.4, `rgba(180,210,240,${(intensity * 0.2).toFixed(4)})`);
+  topGrad.addColorStop(1, "rgba(180,210,240,0)");
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, canvasWidth, depth);
+
+  // Bottom frost band
+  const botGrad = ctx.createLinearGradient(0, canvasHeight, 0, canvasHeight - depth);
+  botGrad.addColorStop(0, `rgba(200,230,255,${(intensity * 0.4).toFixed(4)})`);
+  botGrad.addColorStop(0.4, `rgba(180,210,240,${(intensity * 0.15).toFixed(4)})`);
+  botGrad.addColorStop(1, "rgba(180,210,240,0)");
+  ctx.fillStyle = botGrad;
+  ctx.fillRect(0, canvasHeight - depth, canvasWidth, depth);
+
+  // Left/right frost
+  const sideGradL = ctx.createLinearGradient(0, 0, depth, 0);
+  sideGradL.addColorStop(0, `rgba(200,230,255,${(intensity * 0.35).toFixed(4)})`);
+  sideGradL.addColorStop(1, "rgba(180,210,240,0)");
+  ctx.fillStyle = sideGradL;
+  ctx.fillRect(0, 0, depth, canvasHeight);
+
+  const sideGradR = ctx.createLinearGradient(canvasWidth, 0, canvasWidth - depth, 0);
+  sideGradR.addColorStop(0, `rgba(200,230,255,${(intensity * 0.35).toFixed(4)})`);
+  sideGradR.addColorStop(1, "rgba(180,210,240,0)");
+  ctx.fillStyle = sideGradR;
+  ctx.fillRect(canvasWidth - depth, 0, depth, canvasHeight);
+
+  // Ice crystal speckles along edges
+  const crystalCount = 20;
+  ctx.strokeStyle = `rgba(220,240,255,${(intensity * 0.3).toFixed(4)})`;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < crystalCount; i++) {
+    const edge = i % 4;
+    let cx: number, cy: number;
+    const h = atmosHash(i * 37.1 + 99.3);
+    const armLen = 3 + h * 8;
+    switch (edge) {
+      case 0: cx = h * canvasWidth; cy = atmosHash(i * 13.7) * depth * 0.6; break;
+      case 1: cx = h * canvasWidth; cy = canvasHeight - atmosHash(i * 13.7) * depth * 0.6; break;
+      case 2: cx = atmosHash(i * 13.7) * depth * 0.6; cy = h * canvasHeight; break;
+      default: cx = canvasWidth - atmosHash(i * 13.7) * depth * 0.6; cy = h * canvasHeight; break;
+    }
+    const rot = time * 0.05 + i * 1.047;
+    ctx.beginPath();
+    for (let a = 0; a < 6; a++) {
+      const angle = rot + (a * Math.PI) / 3;
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * armLen, cy + Math.sin(angle) * armLen);
+    }
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// MAGMA CRACKS – Glowing ground fissure lines
+// ---------------------------------------------------------------------------
+
+export function renderMagmaCracks(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  time: number,
+  intensity: number
+): void {
+  if (intensity < 0.003) return;
+  const crackCount = 6;
+
+  for (let i = 0; i < crackCount; i++) {
+    const startX = atmosHash(i * 71.3 + 5.7) * canvasWidth;
+    const startY = canvasHeight * (0.5 + atmosHash(i * 33.1) * 0.45);
+    const segments = 4 + Math.floor(atmosHash(i * 19.7) * 4);
+    const pulse = 0.5 + Math.sin(time * 1.5 + i * 2.1) * 0.5;
+    const alpha = intensity * pulse;
+    if (alpha < 0.01) continue;
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    let px = startX;
+    let py = startY;
+    for (let s = 0; s < segments; s++) {
+      const angle = atmosHash(i * 11.3 + s * 7.9) * Math.PI * 2;
+      const len = 20 + atmosHash(i * 5.1 + s * 13.3) * 60;
+      px += Math.cos(angle) * len;
+      py += Math.sin(angle) * len * 0.4;
+      ctx.lineTo(px, py);
+    }
+
+    ctx.strokeStyle = `rgba(255,200,50,${(alpha * 0.6).toFixed(4)})`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(255,120,20,${alpha.toFixed(4)})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(255,255,200,${(alpha * 0.8).toFixed(4)})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// CLOUD SHADOWS – Slow-moving dark patches that drift across the ground
+// ---------------------------------------------------------------------------
+
+export function renderCloudShadows(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  time: number,
+  baseAlpha: number,
+  cloudCount: number
+): void {
+  for (let i = 0; i < cloudCount; i++) {
+    const seedX = atmosHash(i * 61.7 + 3.1);
+    const seedY = atmosHash(i * 47.3 + 17.9);
+    const driftSpeed = 0.02 + atmosHash(i * 83.1) * 0.03;
+    const rawX = (seedX * canvasWidth + time * driftSpeed * canvasWidth) % (canvasWidth * 1.5) - canvasWidth * 0.25;
+    const y = seedY * canvasHeight + Math.sin(time * 0.1 + i * 2.0) * 20;
+    const sizeX = canvasWidth * (0.15 + atmosHash(i * 29.7) * 0.2);
+    const sizeY = sizeX * 0.4;
+    const alpha = baseAlpha * (0.5 + Math.sin(time * 0.12 + i * 1.5) * 0.5);
+    if (alpha < 0.005) continue;
+
+    const grad = ctx.createRadialGradient(rawX, y, 0, rawX, y, sizeX);
+    grad.addColorStop(0, `rgba(0,0,0,${alpha.toFixed(4)})`);
+    grad.addColorStop(0.5, `rgba(0,0,0,${(alpha * 0.5).toFixed(4)})`);
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(rawX, y, sizeX, sizeY, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// COLOR GRADE – Full-screen tint with highlight/shadow split-toning
+// ---------------------------------------------------------------------------
+
+export function renderColorGrade(
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  shadowR: number,
+  shadowG: number,
+  shadowB: number,
+  shadowAlpha: number,
+  highlightR: number,
+  highlightG: number,
+  highlightB: number,
+  highlightAlpha: number
+): void {
+  if (shadowAlpha > 0.003) {
+    const sGrad = ctx.createLinearGradient(0, canvasHeight * 0.3, 0, canvasHeight);
+    sGrad.addColorStop(0, `rgba(${shadowR},${shadowG},${shadowB},0)`);
+    sGrad.addColorStop(1, `rgba(${shadowR},${shadowG},${shadowB},${shadowAlpha.toFixed(4)})`);
+    ctx.fillStyle = sGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  }
+
+  if (highlightAlpha > 0.003) {
+    const hGrad = ctx.createLinearGradient(0, 0, 0, canvasHeight * 0.6);
+    hGrad.addColorStop(0, `rgba(${highlightR},${highlightG},${highlightB},${highlightAlpha.toFixed(4)})`);
+    hGrad.addColorStop(1, `rgba(${highlightR},${highlightG},${highlightB},0)`);
+    ctx.fillStyle = hGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+  }
 }

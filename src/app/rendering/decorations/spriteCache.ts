@@ -46,6 +46,7 @@ export function prerenderDecorationSprite(
   heightTag?: DecorationHeightTag,
   shadowOnly?: boolean,
   skipShadow?: boolean,
+  zoom?: number,
 ): DecorationSprite | null {
   if (typeof document === "undefined") return null;
 
@@ -83,6 +84,7 @@ export function prerenderDecorationSprite(
     mapTheme,
     shadowOnly: !!shadowOnly,
     skipShadow: !!skipShadow,
+    zoom,
   });
   ctx.restore();
 

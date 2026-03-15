@@ -296,7 +296,13 @@ type CodexHazardType =
   | "quicksand"
   | "ice_sheet"
   | "ice_spikes"
-  | "lava_geyser";
+  | "lava_geyser"
+  | "volcano"
+  | "swamp"
+  | "fire"
+  | "lightning"
+  | "void"
+  | "lava";
 
 const HAZARD_ORDER: CodexHazardType[] = [
   "poison_fog",
@@ -307,6 +313,12 @@ const HAZARD_ORDER: CodexHazardType[] = [
   "ice_sheet",
   "ice_spikes",
   "lava_geyser",
+  "volcano",
+  "swamp",
+  "fire",
+  "lightning",
+  "void",
+  "lava",
 ];
 
 const HAZARD_INFO: Record<
@@ -326,7 +338,7 @@ const HAZARD_INFO: Record<
     icon: <Droplets size={16} />,
     color: "text-green-300",
     panelClass: "bg-green-950/35 border-green-800/40",
-    effect: "Constant damage-over-time zone.",
+    effect: "Constant damage-over-time zone affecting all units.",
     numbers: "15 DPS while inside",
     counterplay: "Use slows/stuns at fog edge so enemies exit slowly while still taking damage.",
   },
@@ -335,25 +347,25 @@ const HAZARD_INFO: Record<
     icon: <Droplets size={16} />,
     color: "text-blue-300",
     panelClass: "bg-blue-950/35 border-blue-800/40",
-    effect: "Drags and drowns enemies moving through water.",
+    effect: "Drags and drowns all units moving through water.",
     numbers: "4-9 DPS and up to 38% slow",
-    counterplay: "Cover entry/exit points so enemies stay in water longer.",
+    counterplay: "Cover entry/exit points so enemies stay in water longer. Keep troops clear.",
   },
   maelstrom: {
     name: "Maelstrom",
     icon: <Wind size={16} />,
     color: "text-cyan-300",
     panelClass: "bg-cyan-950/35 border-cyan-800/40",
-    effect: "Heavy vortex with strong crush damage and movement loss.",
+    effect: "Heavy vortex with strong crush damage and movement loss to all units.",
     numbers: "8-20 DPS and up to 55% slow",
-    counterplay: "Route boss pressure through maelstrom zones whenever possible.",
+    counterplay: "Route boss pressure through maelstrom zones — but keep friendlies away.",
   },
   storm_field: {
     name: "Storm Field",
     icon: <Zap size={16} />,
     color: "text-sky-300",
     panelClass: "bg-sky-950/35 border-sky-800/40",
-    effect: "Electrified air hastens movement but shocks units.",
+    effect: "Electrified air hastens movement but shocks all units.",
     numbers: "+15% move speed and 6 DPS",
     counterplay: "Place burst towers right after storm exits for fast-moving enemies.",
   },
@@ -362,7 +374,7 @@ const HAZARD_INFO: Record<
     icon: <TrendingDown size={16} />,
     color: "text-yellow-300",
     panelClass: "bg-yellow-950/35 border-yellow-800/40",
-    effect: "Movement suppression zone.",
+    effect: "Movement suppression zone affecting all units.",
     numbers: "50% movement slow",
     counterplay: "Use as pseudo-chokepoints for artillery and chain towers.",
   },
@@ -371,7 +383,7 @@ const HAZARD_INFO: Record<
     icon: <Snowflake size={16} />,
     color: "text-cyan-300",
     panelClass: "bg-cyan-950/35 border-cyan-800/40",
-    effect: "Slick terrain that accelerates enemy movement.",
+    effect: "Slick terrain that accelerates all unit movement.",
     numbers: "+60% movement speed",
     counterplay: "Preload damage before the sheet and finish immediately after it.",
   },
@@ -380,7 +392,7 @@ const HAZARD_INFO: Record<
     icon: <Snowflake size={16} />,
     color: "text-blue-300",
     panelClass: "bg-blue-950/35 border-blue-800/40",
-    effect: "Phase-based burst trap that rises and retracts in cycles.",
+    effect: "Phase-based burst trap that damages and slows all units in cycles.",
     numbers: "Up to ~30 DPS and up to 45% slow when fully extended",
     counterplay: "Time freezes/stuns so enemies remain on spikes during active phases.",
   },
@@ -389,9 +401,63 @@ const HAZARD_INFO: Record<
     icon: <Flame size={16} />,
     color: "text-orange-300",
     panelClass: "bg-orange-950/35 border-orange-800/40",
-    effect: "Random eruptions apply burst fire damage.",
+    effect: "Random eruptions apply burst fire damage to all units.",
     numbers: "5 fire damage per eruption tick",
     counterplay: "Treat as bonus chip damage and avoid relying on it for consistent clears.",
+  },
+  volcano: {
+    name: "Volcano",
+    icon: <Flame size={16} />,
+    color: "text-red-400",
+    panelClass: "bg-red-950/35 border-red-800/40",
+    effect: "Devastating eruptions hurl molten rock at all nearby units.",
+    numbers: "15 fire damage per eruption burst",
+    counterplay: "Keep troops and heroes clear — this is lethal to friendlies too.",
+  },
+  swamp: {
+    name: "Toxic Swamp",
+    icon: <Droplets size={16} />,
+    color: "text-lime-300",
+    panelClass: "bg-lime-950/35 border-lime-800/40",
+    effect: "Corrosive mire poisons and bogs down all units.",
+    numbers: "6 DPS poison + 35% movement slow",
+    counterplay: "Combines damage with slow — position towers to exploit the dwell time.",
+  },
+  fire: {
+    name: "Hellfire Zone",
+    icon: <Flame size={16} />,
+    color: "text-orange-400",
+    panelClass: "bg-orange-950/35 border-orange-700/40",
+    effect: "Continuous flames scorch everything in the area.",
+    numbers: "10 fire DPS to all units",
+    counterplay: "High sustained damage — keep friendlies out and let enemies burn.",
+  },
+  lightning: {
+    name: "Lightning Field",
+    icon: <Zap size={16} />,
+    color: "text-yellow-300",
+    panelClass: "bg-yellow-950/35 border-yellow-700/40",
+    effect: "Sporadic high-voltage strikes blast all units in the zone.",
+    numbers: "18 burst damage per lightning strike",
+    counterplay: "Unpredictable burst — avoid stationing troops in the strike zone.",
+  },
+  void: {
+    name: "Void Rift",
+    icon: <CircleOff size={16} />,
+    color: "text-purple-300",
+    panelClass: "bg-purple-950/35 border-purple-800/40",
+    effect: "Dimensional tear drains life and slows all units.",
+    numbers: "8 DPS + 30% movement slow",
+    counterplay: "Treat like a weaker maelstrom — towers near exits maximize damage on slowed foes.",
+  },
+  lava: {
+    name: "Lava Pool",
+    icon: <Flame size={16} />,
+    color: "text-red-300",
+    panelClass: "bg-red-950/35 border-red-700/40",
+    effect: "Bubbling magma periodically splashes all nearby units.",
+    numbers: "4 fire damage per splash tick",
+    counterplay: "Low but persistent damage — avoid leaving troops on it long-term.",
   },
 };
 
@@ -399,9 +465,7 @@ const normalizeHazardType = (type: HazardType): CodexHazardType | null => {
   if (type === "spikes") return "ice_spikes";
   if (type === "eruption_zone") return "lava_geyser";
   if (type === "slippery_ice" || type === "ice") return "ice_sheet";
-  if (type === "lava" || type === "fire") return "lava_geyser";
-  if (type === "poison" || type === "swamp") return "poison_fog";
-  if (type === "lightning" || type === "void") return "storm_field";
+  if (type === "poison") return "poison_fog";
   if (type in HAZARD_INFO) return type as CodexHazardType;
   return null;
 };
@@ -540,6 +604,42 @@ const HAZARD_SPRITE_THEME: Record<
       "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.28), rgba(218,99,41,0.18) 42%, rgba(110,37,22,0.96) 100%)",
     border: "rgba(251,146,60,0.74)",
     glow: "rgba(251,146,60,0.45)",
+  },
+  volcano: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.28), rgba(220,38,38,0.18) 42%, rgba(127,29,29,0.96) 100%)",
+    border: "rgba(248,113,113,0.74)",
+    glow: "rgba(248,113,113,0.45)",
+  },
+  swamp: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(217,249,157,0.26), rgba(101,163,13,0.18) 42%, rgba(54,83,20,0.96) 100%)",
+    border: "rgba(163,230,53,0.7)",
+    glow: "rgba(163,230,53,0.38)",
+  },
+  fire: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.3), rgba(234,88,12,0.2) 42%, rgba(124,45,18,0.96) 100%)",
+    border: "rgba(251,146,60,0.76)",
+    glow: "rgba(251,146,60,0.48)",
+  },
+  lightning: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,249,195,0.28), rgba(202,138,4,0.18) 42%, rgba(113,63,18,0.96) 100%)",
+    border: "rgba(250,204,21,0.74)",
+    glow: "rgba(250,204,21,0.44)",
+  },
+  void: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(233,213,255,0.26), rgba(147,51,234,0.18) 42%, rgba(59,7,100,0.96) 100%)",
+    border: "rgba(192,132,252,0.72)",
+    glow: "rgba(192,132,252,0.42)",
+  },
+  lava: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.26), rgba(185,28,28,0.18) 42%, rgba(99,18,18,0.96) 100%)",
+    border: "rgba(239,68,68,0.72)",
+    glow: "rgba(239,68,68,0.42)",
   },
 };
 
@@ -725,6 +825,79 @@ const renderHazardGlyph = (type: CodexHazardType): React.ReactNode => {
           <circle cx="22.3" cy="21.8" r="2.2" fill="#fdba74" />
           <circle cx="40.8" cy="17.8" r="2.5" fill="#fdba74" />
           <circle cx="46.2" cy="25.2" r="1.9" fill="#fca5a5" />
+        </>
+      );
+    case "volcano":
+      return (
+        <>
+          <polygon points="16,50 32,14 48,50" fill="#7f1d1d" stroke="#f87171" strokeWidth="1.4" />
+          <polygon points="24,50 32,26 40,50" fill="#991b1b" />
+          <ellipse cx="32" cy="24" rx="6" ry="4" fill="#ef4444" />
+          <path d="M28 24 C27 18 30 13 32 10 C34 13 37 18 36 24" fill="#fb923c" />
+          <path d="M30 24 C30 20 31 16 32 14 C33 16 34 20 34 24" fill="#fde68a" opacity={0.8} />
+          <circle cx="24" cy="16" r="2" fill="#fdba74" />
+          <circle cx="40" cy="14" r="2.4" fill="#fca5a5" />
+          <circle cx="38" cy="20" r="1.5" fill="#fdba74" />
+        </>
+      );
+    case "swamp":
+      return (
+        <>
+          <ellipse cx="32" cy="40" rx="18" ry="10" fill="rgba(101,163,13,0.35)" />
+          <ellipse cx="32" cy="40" rx="12" ry="6.5" fill="rgba(163,230,53,0.25)" />
+          <circle cx="24" cy="38" r="2.8" fill="rgba(163,230,53,0.4)" />
+          <circle cx="38" cy="36" r="2.2" fill="rgba(163,230,53,0.35)" />
+          <circle cx="32" cy="42" r="1.8" fill="rgba(217,249,157,0.5)" />
+          <path d="M22 30 C24 25 26 28 28 24 C30 28 30 26 32 22" fill="none" stroke="#a3e635" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M36 28 C38 24 40 27 42 23" fill="none" stroke="#84cc16" strokeWidth="1.4" strokeLinecap="round" />
+          <circle cx="26" cy="44" r="1.2" fill="#d9f99d" />
+          <circle cx="40" cy="43" r="1.4" fill="#d9f99d" />
+        </>
+      );
+    case "fire":
+      return (
+        <>
+          <ellipse cx="32" cy="46" rx="16" ry="5.5" fill="rgba(234,88,12,0.32)" />
+          <path d="M20 46 C18 36 24 28 28 20 C30 26 32 22 34 18 C36 24 40 28 44 36 C46 42 42 46 32 46 C22 46 20 44 20 46 Z" fill="#f97316" stroke="#fb923c" strokeWidth="1.2" />
+          <path d="M26 46 C26 38 30 30 32 24 C34 30 38 38 38 46 Z" fill="#fde68a" opacity={0.75} />
+          <path d="M30 46 C30 40 31 34 32 30 C33 34 34 40 34 46 Z" fill="#fef3c7" opacity={0.6} />
+        </>
+      );
+    case "lightning":
+      return (
+        <>
+          <ellipse cx="32" cy="44" rx="14" ry="4.5" fill="rgba(250,204,21,0.2)" />
+          <circle cx="24" cy="20" r="8" fill="#e0e7ff" />
+          <circle cx="32" cy="17" r="9.5" fill="#f1f5f9" />
+          <circle cx="40" cy="21" r="7.5" fill="#e0e7ff" />
+          <path d="M30 22 L24 34 L31 34 L26 48 L40 30 L33 30 L37 22 Z" fill="#facc15" stroke="#eab308" strokeWidth="1.3" strokeLinejoin="round" />
+          <path d="M18 15 L20 17 M44 15 L42 17 M32 8 L32 11" stroke="#fde68a" strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      );
+    case "void":
+      return (
+        <>
+          <ellipse cx="32" cy="34" rx="16" ry="16" fill="rgba(88,28,135,0.3)" />
+          <circle cx="32" cy="34" r="12" fill="none" stroke="rgba(192,132,252,0.5)" strokeWidth="1.5" />
+          <circle cx="32" cy="34" r="7" fill="none" stroke="rgba(216,180,254,0.6)" strokeWidth="1.2" />
+          <circle cx="32" cy="34" r="3" fill="#581c87" stroke="#c084fc" strokeWidth="1" />
+          <path d="M20 22 Q26 18 32 22 Q38 18 44 22" fill="none" stroke="rgba(192,132,252,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M20 46 Q26 50 32 46 Q38 50 44 46" fill="none" stroke="rgba(192,132,252,0.4)" strokeWidth="1.2" strokeLinecap="round" />
+          <circle cx="22" cy="28" r="1.5" fill="#d8b4fe" />
+          <circle cx="42" cy="40" r="1.3" fill="#d8b4fe" />
+        </>
+      );
+    case "lava":
+      return (
+        <>
+          <ellipse cx="32" cy="40" rx="17" ry="10" fill="rgba(239,68,68,0.3)" />
+          <ellipse cx="32" cy="40" rx="12" ry="6.5" fill="rgba(185,28,28,0.45)" />
+          <circle cx="25" cy="38" r="3.5" fill="rgba(251,146,60,0.5)" />
+          <circle cx="38" cy="36" r="3" fill="rgba(251,146,60,0.45)" />
+          <circle cx="32" cy="42" r="2.5" fill="rgba(253,224,71,0.4)" />
+          <circle cx="28" cy="40" r="1.2" fill="#fde68a" />
+          <circle cx="36" cy="39" r="1" fill="#fde68a" />
+          <circle cx="32" cy="36" r="0.9" fill="#fef3c7" />
         </>
       );
     default:

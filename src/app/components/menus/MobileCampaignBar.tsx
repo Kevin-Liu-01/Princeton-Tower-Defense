@@ -66,7 +66,7 @@ function computeRegionStats(
   isDevMode: boolean,
 ) {
   const levels = WORLD_LEVELS.filter(
-    (l) => l.region === region && (isDevMode || !DEV_LEVEL_IDS.has(l.id)),
+    (l) => l.region === region && l.kind !== "sandbox" && (isDevMode || !DEV_LEVEL_IDS.has(l.id)),
   );
   const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
   const maxStars = levels.length * 3;
@@ -88,8 +88,9 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
-  const maxStars = WORLD_LEVELS.length * 3;
+  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
+  const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
+  const maxStars = campaignLevels.length * 3;
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
 
   const activeRegion = useMemo(() => {

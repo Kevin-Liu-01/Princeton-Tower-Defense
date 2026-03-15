@@ -21,6 +21,7 @@ import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 import { HudTooltip } from "../ui/HudTooltip";
 import { SpellbookModal } from "./SpellbookModal";
+import { spellFrameElements } from "../ui/ornateFrameHelpers";
 
 const spellOptions: SpellType[] = [
   "fireball",
@@ -38,6 +39,19 @@ const VP_W = VISIBLE_COUNT * CIRCLE + (VISIBLE_COUNT - 1) * GAP;
 const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
 const VP_CY = VP_H / 2;
+
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+const SEL_FRAME = 58;
+const SEL_PAD = (SEL_FRAME - CIRCLE) / 2;
+const SEL_CX = SEL_FRAME / 2;
+
+const ACT_FRAME = 54;
+const ACT_PAD = (ACT_FRAME - 38) / 2;
+const ACT_CX = ACT_FRAME / 2;
 
 function circularDiff(idx: number, center: number, len: number): number {
   const raw = ((idx - center) % len + len) % len;
@@ -172,6 +186,30 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                         zIndex: isCenter ? 3 : 1,
                       }}
                     >
+                      {/* Spell frame */}
+                      <svg className="absolute pointer-events-none z-0" style={{ top: -SEL_PAD, left: -SEL_PAD }} width={SEL_FRAME} height={SEL_FRAME} overflow="visible">
+                        {(isCenter || isSel) ? spellFrameElements({
+                          cx: SEL_CX, outerR: SEL_CX - 2, midR: SEL_CX - 4,
+                          color: hexToRgba(accent, isSel ? 0.3 : 0.15),
+                          dimColor: hexToRgba(accent, isSel ? 0.15 : 0.07),
+                          prefix: `sc-${spellType}`,
+                        }) : (
+                          <circle cx={SEL_CX} cy={SEL_CX} r={SEL_CX - 2} fill="none"
+                            stroke={hexToRgba(accent, 0.04)} strokeWidth={0.5} />
+                        )}
+                      </svg>
+                      <div className="absolute inset-[1px] rounded-full pointer-events-none z-[1]" style={{
+                        borderTop: `1px solid rgba(255,255,255,${isSel || isCenter ? '0.08' : '0.03'})`,
+                        borderBottom: `1px solid rgba(0,0,0,${isSel || isCenter ? '0.12' : '0.05'})`,
+                        borderLeft: '1px solid transparent', borderRight: '1px solid transparent',
+                      }} />
+                      {isCenter && (
+                        <div className="absolute rounded-full pointer-events-none z-[1]" style={{
+                          top: 2, left: 3, width: '36%', height: '30%',
+                          background: `radial-gradient(ellipse at 50% 60%, rgba(255,255,255,${isSel ? '0.1' : '0.06'}), transparent 55%)`,
+                          filter: 'blur(1px)',
+                        }} />
+                      )}
                       <SpellSprite type={spellType} size={isCenter ? 30 : 22} />
                       {(spellUpgradeLevels[spellType] ?? 0) > 0 && (
                         <div
@@ -216,22 +254,20 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           </div>
 
           {/* Spell info + upgrade */}
-          <div className="relative z-10 flex-1 flex items-center gap-2 min-w-0 px-1 py-1.5">
-            <div className="flex flex-col justify-center gap-[5px] min-w-0 flex-1">
+          <div className="relative z-10 flex-1 flex items-center gap-1.5 min-w-0 overflow-hidden px-1 py-1.5">
+            <div className="flex flex-col justify-center gap-[3px] min-w-0 flex-1 overflow-hidden">
               {/* Row 1: Name */}
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span
-                  className="text-[12px] font-bold leading-tight truncate drop-shadow-sm"
-                  style={{ color: SPELL_ACCENTS[centeredSpell] }}
-                >
-                  {centeredData.shortName}
-                </span>
-              </div>
+              <span
+                className="text-[11px] font-bold leading-tight truncate drop-shadow-sm"
+                style={{ color: SPELL_ACCENTS[centeredSpell] }}
+              >
+                {centeredData.shortName}
+              </span>
 
-              {/* Row 2: Trait + Level */}
-              <div className="flex items-center gap-1.5">
+              {/* Row 2: Trait */}
+              <div className="flex items-center min-w-0">
                 <span
-                  className="text-[7px] font-semibold px-1.5 py-[1px] rounded"
+                  className="text-[7px] font-semibold px-1 py-[1px] rounded"
                   style={{
                     background: SPELL_TRAITS[centeredSpell].bg,
                     border: `1px solid ${SPELL_TRAITS[centeredSpell].border}`,
@@ -239,20 +275,10 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 >
                   <span className={SPELL_TRAITS[centeredSpell].color}>{SPELL_TRAITS[centeredSpell].trait}</span>
                 </span>
-                <span
-                  className="flex items-center gap-[2px] rounded px-1 py-[1px] text-[7px] font-bold text-yellow-200"
-                  style={{
-                    background: 'rgba(120,53,15,0.4)',
-                    border: '1px solid rgba(250,190,60,0.3)',
-                  }}
-                >
-                  <Star size={7} className="fill-yellow-300 text-yellow-300" />
-                  {(spellUpgradeLevels[centeredSpell] ?? 0) + 1}
-                </span>
               </div>
 
               {/* Row 3: Cost + Cooldown */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-[3px]">
                 <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
                   style={{
                     background: centeredData.cost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)',
@@ -260,7 +286,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   }}>
                   <Coins size={7} className={centeredData.cost > 0 ? "text-amber-400" : "text-green-400"} />
                   <span className={centeredData.cost > 0 ? "text-amber-300/90" : "text-green-300/90"}>
-                    {centeredData.cost > 0 ? `${centeredData.cost} PP` : "Free"}
+                    {centeredData.cost > 0 ? `${centeredData.cost}` : "Free"}
                   </span>
                 </span>
                 <span className="flex items-center gap-[2px] text-[7px] font-semibold rounded px-1 py-[1px]"
@@ -271,10 +297,10 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               </div>
             </div>
 
-            {/* Spellbook button — circle with slot-fill ring */}
+            {/* Spellbook button — ornate circle with slot-fill ring */}
             {(() => {
-              const SIZE = 50;
-              const STROKE = 3;
+              const SIZE = 38;
+              const STROKE = 2.5;
               const R = (SIZE - STROKE) / 2;
               const C = 2 * Math.PI * R;
               const fillFrac = selectedSpells.length / 3;
@@ -286,6 +312,20 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     className="flex-shrink-0 ml-auto relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
                   >
+                    {/* Spell frame */}
+                    <svg
+                      className="absolute pointer-events-none"
+                      style={{ top: -ACT_PAD, left: -ACT_PAD }}
+                      width={ACT_FRAME} height={ACT_FRAME} overflow="visible"
+                    >
+                      {spellFrameElements({
+                        cx: ACT_CX, outerR: ACT_CX - 2, midR: ACT_CX - 4,
+                        color: "rgba(140,80,200,0.25)",
+                        dimColor: "rgba(140,80,200,0.12)",
+                        prefix: "sb",
+                      })}
+                    </svg>
+                    {/* Slot-fill ring */}
                     <svg className="absolute inset-0 -rotate-90" width={SIZE} height={SIZE}>
                       <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="rgba(60,30,100,0.35)" strokeWidth={STROKE} />
                       <circle
@@ -302,26 +342,32 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                         </linearGradient>
                       </defs>
                     </svg>
+                    {/* Inner circle */}
                     <div
-                      className="absolute rounded-full flex items-center justify-center"
+                      className="absolute rounded-full flex items-center justify-center overflow-hidden"
                       style={{
                         inset: STROKE + 1,
-                        background: "radial-gradient(circle at 35% 30%, rgba(120,60,180,0.95), rgba(70,30,120,0.9))",
-                        border: "1.5px solid rgba(168,85,247,0.45)",
-                        boxShadow: "0 0 10px rgba(168,85,247,0.1), inset 0 0 8px rgba(168,85,247,0.08)",
+                        background: "radial-gradient(circle at 32% 28%, rgba(130,65,190,0.95), rgba(75,32,125,0.9))",
+                        border: "1.5px solid rgba(168,85,247,0.5)",
+                        boxShadow: "0 0 12px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.2)",
                       }}
                     >
-                      <SpellOrbIcon size={28} />
+                      <div className="absolute rounded-full pointer-events-none" style={{
+                        top: 1, left: 2, width: '45%', height: '38%',
+                        background: "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.12), transparent 55%)",
+                        filter: "blur(1px)",
+                      }} />
+                      <SpellOrbIcon size={22} />
                     </div>
                   </button>
                 </HudTooltip>
               );
             })()}
 
-            {/* Upgrade button — golden aura ring */}
+            {/* Upgrade button — ornate golden aura ring */}
             {(() => {
-              const SIZE = 50;
-              const STROKE = 3;
+              const SIZE = 38;
+              const STROKE = 2.5;
               const R = (SIZE - STROKE) / 2;
               return (
                 <HudTooltip label={`Spell Upgrades — ${availableSpellStars} stars available`} position="top">
@@ -331,6 +377,20 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                     className="flex-shrink-0 relative transition-all hover:scale-110 hover:brightness-110"
                     style={{ width: SIZE, height: SIZE }}
                   >
+                    {/* Spell frame */}
+                    <svg
+                      className="absolute pointer-events-none"
+                      style={{ top: -ACT_PAD, left: -ACT_PAD }}
+                      width={ACT_FRAME} height={ACT_FRAME} overflow="visible"
+                    >
+                      {spellFrameElements({
+                        cx: ACT_CX, outerR: ACT_CX - 2, midR: ACT_CX - 4,
+                        color: "rgba(180,140,60,0.25)",
+                        dimColor: "rgba(180,140,60,0.12)",
+                        prefix: "ug",
+                      })}
+                    </svg>
+                    {/* Aura ring */}
                     <svg className="absolute inset-0" width={SIZE} height={SIZE}>
                       <defs>
                         <linearGradient id="upgradeAuraGrad" gradientTransform="rotate(75)">
@@ -342,27 +402,33 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                       </defs>
                       <circle cx={SIZE / 2} cy={SIZE / 2} r={R} fill="none" stroke="url(#upgradeAuraGrad)" strokeWidth={STROKE} opacity={0.7} />
                     </svg>
+                    {/* Inner circle */}
                     <div
-                      className="absolute rounded-full flex items-center justify-center"
+                      className="absolute rounded-full flex items-center justify-center overflow-hidden"
                       style={{
                         inset: STROKE + 1,
-                        background: "radial-gradient(circle at 35% 30%, rgba(160,115,30,0.95), rgba(88,62,14,0.9))",
-                        border: "1.5px solid rgba(250,204,21,0.45)",
-                        boxShadow: "0 0 10px rgba(250,204,21,0.1), inset 0 0 8px rgba(250,204,21,0.08)",
+                        background: "radial-gradient(circle at 32% 28%, rgba(170,125,35,0.95), rgba(95,68,16,0.9))",
+                        border: "1.5px solid rgba(250,204,21,0.5)",
+                        boxShadow: "0 0 12px rgba(250,204,21,0.12), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.2)",
                       }}
                     >
-                      <EnchantedAnvilIcon size={30} />
+                      <div className="absolute rounded-full pointer-events-none" style={{
+                        top: 1, left: 2, width: '45%', height: '38%',
+                        background: "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.14), transparent 55%)",
+                        filter: "blur(1px)",
+                      }} />
+                      <EnchantedAnvilIcon size={24} />
                     </div>
                     {/* Star count badge */}
                     <div
-                      className="absolute -top-1 -right-1 flex items-center gap-[1px] rounded-full px-[5px] py-[1px] text-[8px] font-bold text-yellow-100 z-20"
+                      className="absolute -top-1 -right-1 flex items-center gap-[1px] rounded-full px-[4px] py-[1px] text-[7px] font-bold text-yellow-100 z-20"
                       style={{
                         background: "linear-gradient(135deg, rgba(120,80,10,0.95), rgba(90,60,8,0.9))",
                         border: "1.5px solid rgba(250,204,21,0.6)",
                         boxShadow: "0 1px 4px rgba(0,0,0,0.5), 0 0 6px rgba(250,204,21,0.25)",
                       }}
                     >
-                      <Star size={8} className="fill-yellow-300 text-yellow-300" />
+                      <Star size={7} className="fill-yellow-300 text-yellow-300" />
                       {availableSpellStars}
                     </div>
                   </button>

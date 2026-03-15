@@ -521,7 +521,7 @@ const CategoryRatingRow: React.FC<{
   emptyClass: string;
 }> = ({ icon: Icon, label, stars, iconColor, fillClass, emptyClass }) => (
   <div
-    className="rounded-lg px-3 py-2 flex items-center justify-between"
+    className="rounded-lg px-3 py-1.5 flex items-center justify-between"
     style={{
       background:
         "linear-gradient(90deg, rgba(120,80,20,0.14), rgba(180,140,60,0.16), rgba(120,80,20,0.14))",
@@ -623,7 +623,7 @@ export function VictoryScreen({
       )}
 
       {/* Main panel */}
-      <div className={`relative z-10 max-w-xl w-full mx-4 transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+      <div className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
         <OrnateFrame
           className="rounded-2xl border-2 border-amber-800/50 shadow-2xl"
           cornerSize={48}
@@ -640,13 +640,13 @@ export function VictoryScreen({
             <div className="absolute inset-[3px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder12}` }} />
 
             {/* ===== Trophy + Title Header ===== */}
-            <div className="flex flex-col items-center pt-5 sm:pt-8 pb-2 sm:pb-3 relative"
+            <div className="flex flex-col items-center pt-4 sm:pt-5 pb-1 sm:pb-2 relative"
               style={{ background: "linear-gradient(180deg, rgba(180,140,60,0.1) 0%, transparent 100%)" }}
             >
-              <TrophySprite size={80} />
+              <TrophySprite size={64} />
 
               <h1
-                className="text-3xl sm:text-5xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-2"
+                className="text-3xl sm:text-4xl font-black tracking-[0.15em] sm:tracking-[0.25em] mt-1"
                 style={{
                   color: "#fcd34d",
                   textShadow: "0 0 50px rgba(252,211,77,0.4), 0 0 20px rgba(252,211,77,0.25), 0 3px 0 #7a5c10, 0 4px 8px rgba(0,0,0,0.7)",
@@ -656,7 +656,7 @@ export function VictoryScreen({
               </h1>
 
               {/* Ornate divider with crown */}
-              <div className="flex items-center gap-3 mt-3 w-full px-6 sm:px-10">
+              <div className="flex items-center gap-3 mt-2 w-full px-6 sm:px-10">
                 <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold50} 30%, ${GOLD.bright60} 100%)` }} />
                 <div className="p-1.5 rounded-full" style={{ background: `linear-gradient(135deg, ${GOLD.border30}, rgba(120,80,20,0.2))`, border: `1px solid ${GOLD.border40}` }}>
                   <Crown size={12} className="text-amber-400" />
@@ -665,14 +665,14 @@ export function VictoryScreen({
               </div>
 
               {/* Level name */}
-              <p className="text-sm text-amber-300/85 tracking-[0.3em] uppercase mt-2 font-semibold">
+              <p className="text-xs sm:text-sm text-amber-300/85 tracking-[0.3em] uppercase mt-1.5 font-semibold">
                 {levelName}
               </p>
             </div>
 
             {/* ===== Star Rating ===== */}
-            <div className="flex justify-center py-1">
-              <StarRating earned={displayStars} size={55} />
+            <div className="flex justify-center py-0.5">
+              <StarRating earned={displayStars} size={45} />
             </div>
 
             {/* Rating label */}
@@ -688,7 +688,7 @@ export function VictoryScreen({
             </div>
 
             {/* Flavor text */}
-            <p className="text-[11px] sm:text-xs text-amber-400/65 italic text-center px-5 sm:px-10 mb-2 sm:mb-3 leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-amber-400/65 italic text-center px-5 sm:px-10 mb-1.5 sm:mb-2 leading-relaxed">
               &ldquo;{victoryMessage}&rdquo;
             </p>
 
@@ -698,19 +698,19 @@ export function VictoryScreen({
             </div>
 
             {/* ===== Stats Grid ===== */}
-            <div className="px-3 sm:px-5 py-3 sm:py-4">
-              <div className="grid grid-cols-2 gap-2.5">
+            <div className="px-3 sm:px-5 py-2.5 sm:py-3">
+              <div className="grid grid-cols-2 gap-2">
                 {/* Time */}
-                <div className="rounded-xl p-3 relative" style={{
+                <div className="rounded-xl p-2.5 relative" style={{
                   background: `linear-gradient(135deg, ${VICTORY.blueCardBg}, ${VICTORY.blueCardBgDark})`,
                   border: `1.5px solid rgba(100,120,180,0.35)`,
                   boxShadow: "inset 0 0 12px rgba(80,100,160,0.08)",
                 }}>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Clock size={12} className="text-blue-400/80" />
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Clock size={11} className="text-blue-400/80" />
                     <span className="text-[10px] font-bold text-blue-400/70 tracking-[0.2em] uppercase">Time</span>
                   </div>
-                  <div className="text-2xl font-black text-blue-300" style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}>
+                  <div className="text-xl sm:text-2xl font-black text-blue-300" style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}>
                     {formatTime(timeSpent)}
                   </div>
                   {isNewBestTime ? (
@@ -724,16 +724,16 @@ export function VictoryScreen({
                 </div>
 
                 {/* Lives */}
-                <div className="rounded-xl p-3 relative" style={{
+                <div className="rounded-xl p-2.5 relative" style={{
                   background: `linear-gradient(135deg, ${VICTORY.redCardBg}, ${VICTORY.redCardBgDark})`,
                   border: `1.5px solid rgba(180,80,80,0.35)`,
                   boxShadow: "inset 0 0 12px rgba(160,60,60,0.08)",
                 }}>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <Heart size={12} className="text-red-400/80" />
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Heart size={11} className="text-red-400/80" />
                     <span className="text-[10px] font-bold text-red-400/70 tracking-[0.2em] uppercase">Lives</span>
                   </div>
-                  <div className={`text-2xl font-black ${lives >= 15 ? "text-emerald-400" : lives >= 7 ? "text-yellow-400" : "text-red-400"}`}>
+                  <div className={`text-xl sm:text-2xl font-black ${lives >= 15 ? "text-emerald-400" : lives >= 7 ? "text-yellow-400" : "text-red-400"}`}>
                     {lives}/20
                   </div>
                   {isNewBestHearts ? (
@@ -748,7 +748,7 @@ export function VictoryScreen({
               </div>
 
               {/* Category rating breakdown */}
-              <div className="mt-2.5 flex flex-col gap-1.5">
+              <div className="mt-2 flex flex-col gap-1">
                 {CATEGORY_CONFIG.map((cat) => (
                   <CategoryRatingRow
                     key={cat.key}
@@ -769,10 +769,10 @@ export function VictoryScreen({
             </div>
 
             {/* ===== Continue Button ===== */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 flex justify-center">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-center">
               <button
                 onClick={() => resetGame()}
-                className="group relative px-6 sm:px-10 py-2.5 sm:py-3 rounded-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-xs sm:text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
+                className="group relative px-6 sm:px-10 py-2 sm:py-2.5 rounded-xl font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-xs sm:text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
                 style={{
                   background: `linear-gradient(180deg, ${VICTORY.btnLight} 0%, ${VICTORY.btnDark} 100%)`,
                   border: `1.5px solid ${GOLD.bright60}`,

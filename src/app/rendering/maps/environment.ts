@@ -27,6 +27,12 @@ import {
   renderFogBanks,
   renderAuroraEffect,
   renderScreenGlow,
+  renderDappledLight,
+  renderLightShafts,
+  renderFrostVignette,
+  renderMagmaCracks,
+  renderCloudShadows,
+  renderColorGrade,
 } from "../effects/atmospheric";
 
 // ============================================================================
@@ -106,6 +112,17 @@ function getGlowTemplates(): Map<string, HTMLCanvasElement> {
     ["sparkle", createSoftGlow(s, 170, 220, 255)],
     ["spore", createSoftGlow(s, 136, 204, 136)],
     ["sand", createSoftGlow(s, 212, 168, 118)],
+    ["petal_pink", createSoftGlow(s, 255, 180, 200)],
+    ["petal_white", createSoftGlow(s, 255, 250, 240)],
+    ["dandelion", createSoftGlow(s, 255, 255, 220)],
+    ["dust_mote", createSoftGlow(s, 255, 240, 180)],
+    ["wisp_blue", createSoftGlow(s, 100, 180, 255)],
+    ["wisp_green", createSoftGlow(s, 80, 255, 120)],
+    ["lava_red", createSoftGlow(s, 255, 60, 20)],
+    ["ash_hot", createSoftGlow(s, 200, 100, 60)],
+    ["ice_prism", createSoftGlow(s, 200, 220, 255)],
+    ["toxic", createSoftGlow(s, 120, 200, 60)],
+    ["biolum", createSoftGlow(s, 60, 220, 160)],
   ]);
   return _glowTemplates;
 }
@@ -268,11 +285,12 @@ function spawnFromRandomEdge(
 }
 
 // ============================================================================
-// GRASSLAND – Gentle wind, floating pollen, butterflies, god rays, leaves
+// GRASSLAND – Dappled sunlight, pollen, petals, butterflies, leaves, motes
 // ============================================================================
 
 const LEAF_COLORS = ["#5a8a4a", "#4a7a3a", "#6a9a5a", "#8aaa6a"];
 const BUTTERFLY_COLORS = ["#ff88cc", "#88ccff", "#ffcc44", "#ff8844"];
+const PETAL_COLORS = ["#ffb8cc", "#ffc8d8", "#ffe0e8", "#ffffff"];
 
 export function renderGrasslandEnvironment(
   ctx: CanvasRenderingContext2D,
@@ -283,28 +301,33 @@ export function renderGrasslandEnvironment(
   const settings = getPerformanceSettings();
   const pool = getParticlePool(
     "grassland",
-    getAdjustedParticleCount(180)
+    getAdjustedParticleCount(280)
   );
+
+  // Dappled sunlight – shifting pools of golden light through canopy
+  if (!settings.reducedParticles) {
+    renderDappledLight(
+      ctx, canvasWidth, canvasHeight, time,
+      255, 240, 180, 0.035, 10
+    );
+  }
+
+  // Cloud shadows drifting across the ground
+  if (!settings.reducedParticles) {
+    renderCloudShadows(ctx, canvasWidth, canvasHeight, time, 0.04, 3);
+  }
 
   // God rays from upper-left – warm golden beams across the screen
   if (!settings.reducedParticles) {
     renderGodRays(
-      ctx,
-      canvasWidth,
-      canvasHeight,
-      time,
-      -canvasWidth * 0.05,
-      -canvasHeight * 0.05,
-      255,
-      230,
-      170,
-      0.035,
-      5
+      ctx, canvasWidth, canvasHeight, time,
+      -canvasWidth * 0.05, -canvasHeight * 0.05,
+      255, 230, 170, 0.04, 7
     );
   }
 
   // Pollen / seeds from edges
-  if (shouldSpawnParticle(0.12)) {
+  if (shouldSpawnParticle(0.14)) {
     const spawnY = Math.random() * canvasHeight;
     const spawnX = Math.random() > 0.5 ? -10 : canvasWidth + 10;
     const windDir = spawnX < 0 ? 1 : -1;
@@ -319,6 +342,54 @@ export function renderGrasslandEnvironment(
       maxLife: 1,
       color: Math.random() > 0.5 ? "#ffffff" : "#ffffcc",
       type: "pollen",
+    });
+  }
+
+  // Dandelion seeds – float gently upward with slow horizontal drift
+  if (shouldSpawnParticle(0.04)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: canvasHeight * (0.5 + Math.random() * 0.5),
+      vx: (Math.random() - 0.3) * 12,
+      vy: -8 - Math.random() * 12,
+      size: 2 + Math.random() * 2.5,
+      alpha: 0.15 + Math.random() * 0.15,
+      life: 1,
+      maxLife: 1,
+      color: "#fffff0",
+      type: "dandelion",
+    });
+  }
+
+  // Flower petals – slow spiral drift from top
+  if (shouldSpawnParticle(0.05)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: -10,
+      vx: 8 + Math.random() * 18,
+      vy: 10 + Math.random() * 15,
+      size: 2.5 + Math.random() * 3,
+      alpha: 0.12 + Math.random() * 0.1,
+      life: 1,
+      maxLife: 1,
+      color: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
+      type: "petal",
+    });
+  }
+
+  // Dust motes caught in sunbeams
+  if (shouldSpawnParticle(0.1)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: Math.random() * canvasHeight * 0.6,
+      vx: (Math.random() - 0.5) * 6,
+      vy: 2 + Math.random() * 5,
+      size: 1 + Math.random() * 1.5,
+      alpha: 0.06 + Math.random() * 0.08,
+      life: 1,
+      maxLife: 1,
+      color: "#ffeedd",
+      type: "mote",
     });
   }
 
@@ -339,7 +410,7 @@ export function renderGrasslandEnvironment(
   }
 
   // Butterflies (rare)
-  if (shouldSpawnParticle(0.005)) {
+  if (shouldSpawnParticle(0.007)) {
     const spawn = spawnFromRandomEdge(canvasWidth, canvasHeight);
     pool.push({
       x: spawn.x,
@@ -361,6 +432,10 @@ export function renderGrasslandEnvironment(
   // --- Update & render (swap-and-pop removal) ---
   const grassTmpls = getGlowTemplates();
   const pollenGlow = grassTmpls.get("warm");
+  const dandelionGlow = grassTmpls.get("dandelion");
+  const moteGlow = grassTmpls.get("dust_mote");
+  const petalPink = grassTmpls.get("petal_pink");
+  const petalWhite = grassTmpls.get("petal_white");
 
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
@@ -377,6 +452,19 @@ export function renderGrasslandEnvironment(
       p.x += Math.sin(time * 1.2 + i * 0.6) * 1.2;
       p.y += Math.cos(time * 0.8 + i * 0.4) * 0.6;
       p.alpha *= 0.999;
+    } else if (p.type === "dandelion") {
+      p.x += Math.sin(time * 0.8 + i * 1.3) * 1.5;
+      p.y += Math.cos(time * 0.6 + i * 0.9) * 0.8;
+      p.alpha *= 0.998;
+    } else if (p.type === "petal") {
+      const spiral = time * 2.5 + i * 1.8;
+      p.x += Math.sin(spiral) * 1.8;
+      p.y += Math.cos(spiral * 0.7) * 0.5;
+      p.alpha *= 0.998;
+    } else if (p.type === "mote") {
+      p.x += Math.sin(time * 1.8 + i * 2.1) * 0.3;
+      p.y += Math.sin(time * 1.2 + i * 0.7) * 0.2;
+      p.alpha *= 0.997;
     }
 
     if (
@@ -398,24 +486,14 @@ export function renderGrasslandEnvironment(
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.7);
       ctx.beginPath();
       ctx.ellipse(
-        -p.size * 0.5,
-        0,
-        p.size * 0.4,
-        p.size * (0.3 + wingFlap * 0.2),
-        -0.3,
-        0,
-        Math.PI * 2
+        -p.size * 0.5, 0, p.size * 0.4,
+        p.size * (0.3 + wingFlap * 0.2), -0.3, 0, Math.PI * 2
       );
       ctx.fill();
       ctx.beginPath();
       ctx.ellipse(
-        p.size * 0.5,
-        0,
-        p.size * 0.4,
-        p.size * (0.3 + wingFlap * 0.2),
-        0.3,
-        0,
-        Math.PI * 2
+        p.size * 0.5, 0, p.size * 0.4,
+        p.size * (0.3 + wingFlap * 0.2), 0.3, 0, Math.PI * 2
       );
       ctx.fill();
       ctx.fillStyle = "rgba(51,51,51,0.5)";
@@ -439,30 +517,83 @@ export function renderGrasslandEnvironment(
       ctx.lineTo(p.size * 0.7, 0);
       ctx.stroke();
       ctx.restore();
+    } else if (p.type === "petal") {
+      const petalAngle = time * 1.5 + i * 2.4;
+      const tmpl = p.color === "#ffffff" ? petalWhite : petalPink;
+      if (tmpl) {
+        drawGlow(ctx, tmpl, p.x, p.y, p.size * 3, p.alpha * 0.4);
+      }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(petalAngle);
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI);
+      ctx.fill();
+      ctx.restore();
+    } else if (p.type === "dandelion") {
+      if (dandelionGlow) {
+        drawGlow(ctx, dandelionGlow, p.x, p.y, p.size * 6, p.alpha * 0.35);
+      }
+      ctx.strokeStyle = colorWithAlpha("#fffff0", p.alpha * 0.6);
+      ctx.lineWidth = 0.6;
+      const armCount = 5;
+      for (let a = 0; a < armCount; a++) {
+        const angle = (a / armCount) * Math.PI * 2 + time * 0.2 + i;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(
+          p.x + Math.cos(angle) * p.size * 1.5,
+          p.y + Math.sin(angle) * p.size * 1.5
+        );
+        ctx.stroke();
+      }
+      ctx.fillStyle = colorWithAlpha("#fffff0", p.alpha * 0.8);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.type === "mote" && moteGlow) {
+      const flicker = 0.5 + Math.sin(time * 6 + i * 3.7) * 0.5;
+      drawGlow(ctx, moteGlow, p.x, p.y, p.size * 5, p.alpha * flicker);
     } else if (pollenGlow) {
       drawGlow(ctx, pollenGlow, p.x, p.y, p.size * 4.5, p.alpha * 0.55);
     }
   }
 
   // Warm center glow
-  const glowAlpha = 0.025 + Math.sin(time * 0.4) * 0.01;
+  const glowAlpha = 0.03 + Math.sin(time * 0.4) * 0.012;
   renderScreenGlow(
     ctx,
     canvasWidth * 0.5,
-    canvasHeight * 0.4,
-    255,
-    240,
-    200,
+    canvasHeight * 0.35,
+    255, 240, 200,
     glowAlpha,
-    Math.min(canvasWidth, canvasHeight) * 0.45
+    Math.min(canvasWidth, canvasHeight) * 0.5
+  );
+
+  // Secondary warm glow from sun direction (upper-left)
+  renderScreenGlow(
+    ctx,
+    canvasWidth * 0.15,
+    canvasHeight * 0.1,
+    255, 220, 150,
+    0.02 + Math.sin(time * 0.3) * 0.008,
+    Math.min(canvasWidth, canvasHeight) * 0.4
+  );
+
+  // Color grading – warm golden highlights, cool green shadows
+  renderColorGrade(
+    ctx, canvasWidth, canvasHeight,
+    40, 60, 30, 0.03,
+    255, 240, 200, 0.02
   );
 
   renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 50, 70, 40, 0.65);
-  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.55);
+  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.5);
 }
 
 // ============================================================================
-// DESERT – Heat shimmer, sand particles, dust devils, sun corona, streaks
+// DESERT – Scorching sun, sand storms, dust devils, mirage, tumbleweeds
 // ============================================================================
 
 export function renderDesertEnvironment(
@@ -474,41 +605,39 @@ export function renderDesertEnvironment(
   const settings = getPerformanceSettings();
   const pool = getParticlePool(
     "desert",
-    getAdjustedParticleCount(220)
+    getAdjustedParticleCount(300)
   );
 
-  // Sun corona glow from above
-  const coronaAlpha = 0.06 + Math.sin(time * 0.5) * 0.02;
+  // Sun corona with pulsing halo from above
+  const coronaAlpha = 0.07 + Math.sin(time * 0.5) * 0.025;
   renderScreenGlow(
     ctx,
-    canvasWidth * 0.5,
-    -canvasHeight * 0.08,
-    255,
-    240,
-    200,
+    canvasWidth * 0.5, -canvasHeight * 0.08,
+    255, 240, 200,
     coronaAlpha,
-    canvasWidth * 0.5
+    canvasWidth * 0.55
   );
 
-  // God rays from upper-center – harsh desert sun
+  // Secondary sun halo ring – simulates atmospheric scattering
+  renderScreenGlow(
+    ctx,
+    canvasWidth * 0.5, -canvasHeight * 0.05,
+    255, 200, 120,
+    0.02 + Math.sin(time * 0.7) * 0.008,
+    canvasWidth * 0.7
+  );
+
+  // God rays from upper-center – harsh desert sun, more rays
   if (!settings.reducedParticles) {
     renderGodRays(
-      ctx,
-      canvasWidth,
-      canvasHeight,
-      time,
-      canvasWidth * 0.5,
-      -canvasHeight * 0.1,
-      255,
-      220,
-      160,
-      0.03,
-      6
+      ctx, canvasWidth, canvasHeight, time,
+      canvasWidth * 0.5, -canvasHeight * 0.1,
+      255, 220, 160, 0.04, 8
     );
   }
 
   // Sand particles blown by wind – full screen coverage
-  if (shouldSpawnParticle(0.18)) {
+  if (shouldSpawnParticle(0.2)) {
     const spawnY = Math.random() * canvasHeight;
     pool.push({
       x: -10,
@@ -525,15 +654,13 @@ export function renderDesertEnvironment(
   }
 
   // Sand from top/bottom for vertical spread
-  if (shouldSpawnParticle(0.08)) {
+  if (shouldSpawnParticle(0.1)) {
     const fromTop = Math.random() > 0.5;
     pool.push({
       x: Math.random() * canvasWidth,
       y: fromTop ? -10 : canvasHeight + 10,
       vx: 30 + Math.random() * 40,
-      vy: fromTop
-        ? 20 + Math.random() * 30
-        : -20 - Math.random() * 30,
+      vy: fromTop ? 20 + Math.random() * 30 : -20 - Math.random() * 30,
       size: 1 + Math.random() * 2,
       alpha: 0.35 + Math.random() * 0.25,
       life: 1,
@@ -544,7 +671,7 @@ export function renderDesertEnvironment(
   }
 
   // Sand streaks – thin elongated particles for wind lines
-  if (shouldSpawnParticle(0.07)) {
+  if (shouldSpawnParticle(0.09)) {
     pool.push({
       x: -20,
       y: Math.random() * canvasHeight,
@@ -559,12 +686,27 @@ export function renderDesertEnvironment(
     });
   }
 
+  // Tumbleweed (rare) – large, slow-rolling silhouettes
+  if (shouldSpawnParticle(0.003)) {
+    pool.push({
+      x: -30,
+      y: canvasHeight * (0.5 + Math.random() * 0.4),
+      vx: 30 + Math.random() * 40,
+      vy: (Math.random() - 0.5) * 8,
+      size: 10 + Math.random() * 8,
+      alpha: 0.15 + Math.random() * 0.1,
+      life: 1,
+      maxLife: 1,
+      color: "#8b7355",
+      type: "tumbleweed",
+    });
+  }
+
   // Dust devils (rare)
-  if (shouldSpawnParticle(0.004)) {
+  if (shouldSpawnParticle(0.005)) {
     const devilX = Math.random() * canvasWidth;
-    const devilY =
-      canvasHeight * 0.5 + Math.random() * canvasHeight * 0.5;
-    const burstCount = settings.reducedParticles ? 12 : 25;
+    const devilY = canvasHeight * 0.5 + Math.random() * canvasHeight * 0.5;
+    const burstCount = settings.reducedParticles ? 12 : 28;
     for (let j = 0; j < burstCount; j++) {
       pool.push({
         x: devilX + (Math.random() - 0.5) * 40,
@@ -579,6 +721,22 @@ export function renderDesertEnvironment(
         type: "dustdevil",
       });
     }
+  }
+
+  // Distant dust plumes on horizon
+  if (shouldSpawnParticle(0.02)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: canvasHeight * (0.55 + Math.random() * 0.15),
+      vx: 5 + Math.random() * 15,
+      vy: -2 - Math.random() * 4,
+      size: 15 + Math.random() * 25,
+      alpha: 0.04 + Math.random() * 0.03,
+      life: 1,
+      maxLife: 1,
+      color: "#d4b896",
+      type: "dustcloud",
+    });
   }
 
   // --- Update & render ---
@@ -596,16 +754,21 @@ export function renderDesertEnvironment(
       p.vy -= 0.6;
     } else if (p.type === "streak") {
       p.alpha *= 0.992;
+    } else if (p.type === "tumbleweed") {
+      p.y += Math.sin(time * 2 + i * 3) * 0.8;
+    } else if (p.type === "dustcloud") {
+      p.size += 0.15;
+      p.alpha *= 0.994;
     } else {
       p.y += Math.sin(time * 3 + i * 0.3 + p.x * 0.01) * 0.5;
     }
 
     if (
-      p.x > canvasWidth + 20 ||
-      p.x < -20 ||
-      p.y < -20 ||
-      p.y > canvasHeight + 20 ||
-      p.alpha < 0.05
+      p.x > canvasWidth + 40 ||
+      p.x < -40 ||
+      p.y < -40 ||
+      p.y > canvasHeight + 40 ||
+      p.alpha < 0.02
     ) {
       pool[i] = pool[pool.length - 1];
       pool.pop();
@@ -613,7 +776,6 @@ export function renderDesertEnvironment(
     }
 
     if (p.type === "streak") {
-      // Motion-blur elongated streak with tapered glow
       const streakAngle = Math.atan2(p.vy, p.vx);
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -622,16 +784,47 @@ export function renderDesertEnvironment(
       ctx.beginPath();
       ctx.ellipse(0, 0, p.size * 6, p.size * 0.35, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Bright core
       ctx.fillStyle = colorWithAlpha("#e8c89a", p.alpha * 0.4);
       ctx.beginPath();
       ctx.ellipse(0, 0, p.size * 3, p.size * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
+    } else if (p.type === "tumbleweed") {
+      const roll = time * 3 + i * 5;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(roll);
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha);
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let b = 0; b < 5; b++) {
+        const bAngle = (b / 5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        const bx = Math.cos(bAngle) * p.size * 0.8;
+        const by = Math.sin(bAngle) * p.size * 0.8;
+        ctx.quadraticCurveTo(
+          Math.cos(bAngle + 0.3) * p.size * 0.5,
+          Math.sin(bAngle + 0.3) * p.size * 0.5,
+          bx, by
+        );
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else if (p.type === "dustcloud") {
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grad.addColorStop(0, colorWithAlpha(p.color, p.alpha));
+      grad.addColorStop(0.5, colorWithAlpha(p.color, p.alpha * 0.4));
+      grad.addColorStop(1, colorWithAlpha(p.color, 0));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size, p.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
     } else if (p.type === "dustdevil" && sandGlow) {
       drawGlow(ctx, sandGlow, p.x, p.y, p.size * 4, p.alpha * 0.6);
     } else if (sandGlow) {
-      // Sand particles – elongated in velocity direction for motion blur
       const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
       const stretch = Math.min(speed * 0.02, 2.5);
       if (stretch > 0.3) {
@@ -655,58 +848,70 @@ export function renderDesertEnvironment(
     }
   }
 
-  // Heat shimmer gradient
-  const shimmerGrad = ctx.createLinearGradient(
-    0,
-    canvasHeight * 0.3,
-    0,
-    canvasHeight
-  );
+  // Heat shimmer gradient – stronger layered effect
+  const shimmerGrad = ctx.createLinearGradient(0, canvasHeight * 0.2, 0, canvasHeight);
   shimmerGrad.addColorStop(0, "rgba(255,200,150,0)");
-  shimmerGrad.addColorStop(
-    0.4,
-    `rgba(255,220,180,${(0.04 + Math.sin(time * 2) * 0.015).toFixed(4)})`
-  );
+  shimmerGrad.addColorStop(0.3, `rgba(255,220,180,${(0.03 + Math.sin(time * 1.8) * 0.012).toFixed(4)})`);
+  shimmerGrad.addColorStop(0.6, `rgba(255,210,170,${(0.05 + Math.sin(time * 2.2) * 0.018).toFixed(4)})`);
   shimmerGrad.addColorStop(1, "rgba(255,200,150,0)");
   ctx.fillStyle = shimmerGrad;
-  ctx.fillRect(0, canvasHeight * 0.3, canvasWidth, canvasHeight * 0.7);
+  ctx.fillRect(0, canvasHeight * 0.2, canvasWidth, canvasHeight * 0.8);
 
-  // Heat wave lines across full screen
-  ctx.strokeStyle = "rgba(255,220,180,0.06)";
-  ctx.lineWidth = 2;
-  const waveCount = settings.reducedParticles ? 5 : 8;
+  // Heat wave lines across full screen – thicker, more animated
+  const waveCount = settings.reducedParticles ? 6 : 10;
   for (let i = 0; i < waveCount; i++) {
-    const waveY = canvasHeight * (0.15 + i * 0.1);
+    const waveY = canvasHeight * (0.1 + i * 0.08);
+    const waveAlpha = 0.04 + Math.sin(time * 0.5 + i * 0.7) * 0.02;
+    ctx.strokeStyle = `rgba(255,220,180,${waveAlpha.toFixed(4)})`;
+    ctx.lineWidth = 1.5 + Math.sin(time * 0.3 + i) * 0.5;
     ctx.beginPath();
-    for (let x = 0; x < canvasWidth; x += 15) {
-      const y =
-        waveY + Math.sin(x * 0.015 + time * 3 + i * 1.5) * 10;
+    for (let x = 0; x < canvasWidth; x += 12) {
+      const y = waveY +
+        Math.sin(x * 0.015 + time * 3 + i * 1.5) * 10 +
+        Math.sin(x * 0.008 + time * 1.8 + i * 0.8) * 5;
       if (x === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
 
-  // Mirage shimmer at horizon
-  const mirageAlpha = 0.08 + Math.sin(time * 1.5) * 0.03;
-  ctx.fillStyle = `rgba(135,206,250,${mirageAlpha.toFixed(4)})`;
-  ctx.beginPath();
-  for (let x = 0; x < canvasWidth; x += 25) {
-    const y = canvasHeight * 0.7 + Math.sin(x * 0.025 + time * 2) * 6;
-    ctx.ellipse(x, y, 50, 6, 0, 0, Math.PI * 2);
+  // Mirage shimmer at horizon – more convincing with layered ellipses
+  const mirageBase = canvasHeight * 0.68;
+  for (let layer = 0; layer < 3; layer++) {
+    const mirageAlpha = (0.05 + Math.sin(time * 1.5 + layer * 0.5) * 0.02) * (1 - layer * 0.3);
+    ctx.fillStyle = `rgba(135,206,250,${mirageAlpha.toFixed(4)})`;
+    ctx.beginPath();
+    for (let x = 0; x < canvasWidth; x += 30) {
+      const y = mirageBase + layer * 8 + Math.sin(x * 0.025 + time * 2 + layer) * 6;
+      ctx.ellipse(x, y, 55, 5 + layer * 2, 0, 0, Math.PI * 2);
+    }
+    ctx.fill();
   }
-  ctx.fill();
 
-  // Sand haze – full-screen low-alpha overlay for atmosphere
-  ctx.fillStyle = `rgba(210,180,140,${(0.02 + Math.sin(time * 0.6) * 0.008).toFixed(4)})`;
+  // Sun dogs (parhelion) – bright spots flanking the sun
+  if (!settings.reducedParticles) {
+    const sunDogAlpha = 0.025 + Math.sin(time * 0.4) * 0.01;
+    renderScreenGlow(ctx, canvasWidth * 0.25, canvasHeight * 0.05, 255, 200, 130, sunDogAlpha, 60);
+    renderScreenGlow(ctx, canvasWidth * 0.75, canvasHeight * 0.05, 255, 200, 130, sunDogAlpha, 60);
+  }
+
+  // Sand haze – full-screen low-alpha overlay
+  ctx.fillStyle = `rgba(210,180,140,${(0.025 + Math.sin(time * 0.6) * 0.01).toFixed(4)})`;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 120, 90, 50, 0.65);
-  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.55);
+  // Color grading – warm amber highlights, deep brown shadows
+  renderColorGrade(
+    ctx, canvasWidth, canvasHeight,
+    100, 60, 20, 0.04,
+    255, 220, 160, 0.025
+  );
+
+  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 120, 90, 50, 0.7);
+  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.5);
 }
 
 // ============================================================================
-// WINTER – Falling snow, ice sparkles, cold mist, animated aurora, gusts
+// WINTER – Blizzard layers, prismatic ice, aurora, frost, moonlight
 // ============================================================================
 
 export function renderWinterEnvironment(
@@ -718,11 +923,39 @@ export function renderWinterEnvironment(
   const settings = getPerformanceSettings();
   const pool = getParticlePool(
     "winter",
-    getAdjustedParticleCount(220)
+    getAdjustedParticleCount(300)
   );
 
-  // Snowflakes with wind
-  if (shouldSpawnParticle(0.28)) {
+  // Moonlight glow from upper-right with halo
+  renderScreenGlow(
+    ctx,
+    canvasWidth * 0.8, canvasHeight * 0.05,
+    200, 220, 255,
+    0.04 + Math.sin(time * 0.25) * 0.012,
+    Math.min(canvasWidth, canvasHeight) * 0.35
+  );
+
+  // Moon halo ring
+  if (!settings.reducedParticles) {
+    renderScreenGlow(
+      ctx,
+      canvasWidth * 0.8, canvasHeight * 0.05,
+      180, 200, 240,
+      0.02 + Math.sin(time * 0.3) * 0.008,
+      Math.min(canvasWidth, canvasHeight) * 0.55
+    );
+  }
+
+  // Light shafts from moonlight
+  if (!settings.reducedParticles) {
+    renderLightShafts(
+      ctx, canvasWidth, canvasHeight, time,
+      180, 210, 255, 0.012, 3
+    );
+  }
+
+  // Snowflakes with wind – heavier snowfall
+  if (shouldSpawnParticle(0.32)) {
     pool.push({
       x: Math.random() * (canvasWidth + 150) - 75,
       y: -10,
@@ -733,7 +966,25 @@ export function renderWinterEnvironment(
       life: 1,
       maxLife: 1,
       color: "#ffffff",
-      type: Math.random() > 0.88 ? "crystal" : "snow",
+      type: Math.random() > 0.85 ? "crystal" : "snow",
+    });
+  }
+
+  // Prismatic ice sparkles – catch moonlight with rainbow refraction
+  if (shouldSpawnParticle(0.08)) {
+    const spawn = spawnFromRandomEdge(canvasWidth, canvasHeight);
+    const prismColors = ["#aaddff", "#ccaaff", "#aaffcc", "#ffccaa", "#ffaacc"];
+    pool.push({
+      x: spawn.x,
+      y: spawn.y,
+      vx: spawn.vx * 0.6,
+      vy: spawn.vy * 0.6,
+      size: 1.5 + Math.random() * 3,
+      alpha: 0.5,
+      life: 1,
+      maxLife: 1,
+      color: prismColors[Math.floor(Math.random() * prismColors.length)],
+      type: "prism",
     });
   }
 
@@ -754,16 +1005,16 @@ export function renderWinterEnvironment(
     });
   }
 
-  // Periodic wind gusts – horizontal snow bursts
+  // Blizzard wind gusts – more dramatic
   const gustPhase = Math.sin(time * 0.4);
-  if (gustPhase > 0.92 && shouldSpawnParticle(0.5)) {
-    const burstCount = settings.reducedParticles ? 3 : 5;
+  if (gustPhase > 0.88 && shouldSpawnParticle(0.6)) {
+    const burstCount = settings.reducedParticles ? 4 : 8;
     for (let j = 0; j < burstCount; j++) {
       pool.push({
         x: -10,
         y: Math.random() * canvasHeight,
         vx: 100 + Math.random() * 80,
-        vy: (Math.random() - 0.5) * 20,
+        vy: (Math.random() - 0.5) * 25,
         size: 2 + Math.random() * 3,
         alpha: 0.25 + Math.random() * 0.15,
         life: 1,
@@ -774,10 +1025,27 @@ export function renderWinterEnvironment(
     }
   }
 
+  // Ice dust – very fine particles that catch light
+  if (shouldSpawnParticle(0.12)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: Math.random() * canvasHeight * 0.8,
+      vx: -5 + Math.random() * 3,
+      vy: 1 + Math.random() * 3,
+      size: 0.8 + Math.random() * 1.2,
+      alpha: 0.08 + Math.random() * 0.1,
+      life: 1,
+      maxLife: 1,
+      color: "#ddeeff",
+      type: "icedust",
+    });
+  }
+
   // --- Update & render ---
   const winterTmpls = getGlowTemplates();
   const snowGlow = winterTmpls.get("white");
   const sparkleGlow = winterTmpls.get("sparkle");
+  const prismGlow = winterTmpls.get("ice_prism");
 
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
@@ -786,11 +1054,14 @@ export function renderWinterEnvironment(
 
     if (p.type === "snow" || p.type === "crystal") {
       p.x += Math.sin(time * 2 + i * 0.3 + p.y * 0.008) * 1.0;
-    } else if (p.type === "sparkle") {
+    } else if (p.type === "sparkle" || p.type === "prism") {
       p.alpha *= 0.97;
     } else if (p.type === "gust") {
       p.alpha *= 0.985;
       p.y += Math.sin(time * 4 + i * 0.5) * 0.8;
+    } else if (p.type === "icedust") {
+      p.x += Math.sin(time * 1.5 + i * 2.3) * 0.3;
+      p.alpha *= 0.996;
     }
 
     if (
@@ -798,7 +1069,7 @@ export function renderWinterEnvironment(
       p.y < -20 ||
       p.x < -30 ||
       p.x > canvasWidth + 30 ||
-      p.alpha < 0.05
+      p.alpha < 0.03
     ) {
       pool[i] = pool[pool.length - 1];
       pool.pop();
@@ -806,11 +1077,9 @@ export function renderWinterEnvironment(
     }
 
     if (p.type === "crystal") {
-      // Glow halo behind crystal
       if (sparkleGlow) {
         drawGlow(ctx, sparkleGlow, p.x, p.y, p.size * 5, p.alpha * 0.25);
       }
-      // 6-pointed crystal with branch details
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(time * 0.3 + i);
@@ -821,7 +1090,6 @@ export function renderWinterEnvironment(
         ctx.moveTo(0, 0);
         ctx.lineTo(0, -p.size);
         ctx.stroke();
-        // Side branches at 60% of arm
         ctx.beginPath();
         ctx.moveTo(0, -p.size * 0.55);
         ctx.lineTo(p.size * 0.22, -p.size * 0.78);
@@ -831,8 +1099,29 @@ export function renderWinterEnvironment(
         ctx.rotate(Math.PI / 3);
       }
       ctx.restore();
+    } else if (p.type === "prism") {
+      if (prismGlow) {
+        drawGlow(ctx, prismGlow, p.x, p.y, p.size * 7, p.alpha * 0.3);
+      }
+      const flicker = 0.5 + Math.sin(time * 12 + i * 7) * 0.5;
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * flicker * 0.8);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * flicker * 0.5);
+      ctx.lineWidth = 0.6;
+      const armLen = p.size * 2.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x - armLen, p.y);
+      ctx.lineTo(p.x + armLen, p.y);
+      ctx.moveTo(p.x, p.y - armLen);
+      ctx.lineTo(p.x, p.y + armLen);
+      ctx.moveTo(p.x - armLen * 0.7, p.y - armLen * 0.7);
+      ctx.lineTo(p.x + armLen * 0.7, p.y + armLen * 0.7);
+      ctx.moveTo(p.x + armLen * 0.7, p.y - armLen * 0.7);
+      ctx.lineTo(p.x - armLen * 0.7, p.y + armLen * 0.7);
+      ctx.stroke();
     } else if (p.type === "sparkle") {
-      // Radial glow + 4-pointed star cross
       if (sparkleGlow) {
         drawGlow(ctx, sparkleGlow, p.x, p.y, p.size * 6, p.alpha * 0.45);
       }
@@ -846,58 +1135,41 @@ export function renderWinterEnvironment(
       ctx.lineTo(p.x, p.y + arm);
       ctx.stroke();
     } else if (p.type === "gust") {
-      // Wind gust: elongated glow with motion trail
       if (snowGlow) {
         const trailX = p.x - p.vx * 0.01;
         const trailY = p.y - p.vy * 0.01;
         drawGlow(ctx, snowGlow, trailX, trailY, p.size * 3.5, p.alpha * 0.2);
         drawGlow(ctx, snowGlow, p.x, p.y, p.size * 4, p.alpha * 0.5);
       }
+    } else if (p.type === "icedust" && sparkleGlow) {
+      const flicker = 0.3 + Math.sin(time * 8 + i * 4.3) * 0.7;
+      drawGlow(ctx, sparkleGlow, p.x, p.y, p.size * 4, p.alpha * flicker);
     } else if (snowGlow) {
-      // Snow: soft atmospheric glow (larger particles = more diffuse)
       drawGlow(ctx, snowGlow, p.x, p.y, p.size * 4, p.alpha * 0.55);
     }
   }
 
-  // Cold mist at bottom
-  const mistGrad = ctx.createLinearGradient(
-    0,
-    canvasHeight * 0.6,
-    0,
-    canvasHeight
-  );
+  // Cold mist at bottom – deeper, more layered
+  const mistGrad = ctx.createLinearGradient(0, canvasHeight * 0.5, 0, canvasHeight);
   mistGrad.addColorStop(0, "rgba(200,220,255,0)");
-  mistGrad.addColorStop(
-    0.5,
-    `rgba(200,220,255,${(0.1 + Math.sin(time * 0.8) * 0.03).toFixed(4)})`
-  );
-  mistGrad.addColorStop(1, "rgba(180,200,240,0.15)");
+  mistGrad.addColorStop(0.3, `rgba(200,220,255,${(0.06 + Math.sin(time * 0.6) * 0.02).toFixed(4)})`);
+  mistGrad.addColorStop(0.6, `rgba(190,210,250,${(0.12 + Math.sin(time * 0.8) * 0.03).toFixed(4)})`);
+  mistGrad.addColorStop(1, "rgba(180,200,240,0.18)");
   ctx.fillStyle = mistGrad;
-  ctx.fillRect(0, canvasHeight * 0.5, canvasWidth, canvasHeight * 0.5);
+  ctx.fillRect(0, canvasHeight * 0.45, canvasWidth, canvasHeight * 0.55);
 
-  // Breath-like fog patches
-  const fogPatchCount = settings.reducedParticles ? 4 : 6;
+  // Breath-like fog patches – more numerous
+  const fogPatchCount = settings.reducedParticles ? 5 : 8;
   for (let i = 0; i < fogPatchCount; i++) {
     const fogX =
-      (canvasWidth * 0.18 * i +
-        time * 12 +
-        Math.sin(time + i) * 60) %
-        (canvasWidth + 250) -
-      125;
-    const fogY =
-      canvasHeight * (0.7 + Math.sin(time * 0.5 + i) * 0.08);
-    const fogSize = 90 + Math.sin(time * 2 + i) * 25;
+      (canvasWidth * 0.14 * i + time * 10 + Math.sin(time + i) * 55) %
+      (canvasWidth + 250) - 125;
+    const fogY = canvasHeight * (0.65 + Math.sin(time * 0.5 + i) * 0.1);
+    const fogSize = 80 + Math.sin(time * 2 + i) * 30;
 
-    const fogGrad = ctx.createRadialGradient(
-      fogX,
-      fogY,
-      0,
-      fogX,
-      fogY,
-      fogSize
-    );
-    fogGrad.addColorStop(0, "rgba(220,235,255,0.14)");
-    fogGrad.addColorStop(0.5, "rgba(200,220,250,0.07)");
+    const fogGrad = ctx.createRadialGradient(fogX, fogY, 0, fogX, fogY, fogSize);
+    fogGrad.addColorStop(0, "rgba(220,235,255,0.16)");
+    fogGrad.addColorStop(0.5, "rgba(200,220,250,0.08)");
     fogGrad.addColorStop(1, "rgba(180,200,240,0)");
     ctx.fillStyle = fogGrad;
     ctx.beginPath();
@@ -905,50 +1177,47 @@ export function renderWinterEnvironment(
     ctx.fill();
   }
 
-  // Animated aurora bands (replaces old simple gradient)
+  // Animated aurora bands
   if (!settings.reducedParticles) {
-    renderAuroraEffect(ctx, canvasWidth, canvasHeight, time, 0.055);
+    renderAuroraEffect(ctx, canvasWidth, canvasHeight, time, 0.065);
   } else {
-    // Fallback: simple aurora gradient
     const auroraAlpha = 0.035 + Math.sin(time * 0.3) * 0.012;
-    const auroraGrad = ctx.createLinearGradient(
-      0,
-      0,
-      canvasWidth,
-      canvasHeight * 0.35
-    );
+    const auroraGrad = ctx.createLinearGradient(0, 0, canvasWidth, canvasHeight * 0.35);
     auroraGrad.addColorStop(0, `rgba(100,255,200,${auroraAlpha.toFixed(4)})`);
-    auroraGrad.addColorStop(
-      0.3,
-      `rgba(100,200,255,${(auroraAlpha * 0.75).toFixed(4)})`
-    );
-    auroraGrad.addColorStop(
-      0.6,
-      `rgba(150,100,255,${(auroraAlpha * 0.55).toFixed(4)})`
-    );
+    auroraGrad.addColorStop(0.3, `rgba(100,200,255,${(auroraAlpha * 0.75).toFixed(4)})`);
+    auroraGrad.addColorStop(0.6, `rgba(150,100,255,${(auroraAlpha * 0.55).toFixed(4)})`);
     auroraGrad.addColorStop(1, "rgba(100,150,255,0)");
     ctx.fillStyle = auroraGrad;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight * 0.45);
   }
 
+  // Frost vignette – icy crystals creeping from edges
+  if (!settings.reducedParticles) {
+    renderFrostVignette(ctx, canvasWidth, canvasHeight, time, 0.12);
+  }
+
   // Cold blue glow at top
   renderScreenGlow(
     ctx,
-    canvasWidth * 0.5,
-    0,
-    180,
-    220,
-    255,
-    0.03 + Math.sin(time * 0.35) * 0.01,
-    canvasHeight * 0.35
+    canvasWidth * 0.5, 0,
+    180, 220, 255,
+    0.035 + Math.sin(time * 0.35) * 0.012,
+    canvasHeight * 0.4
   );
 
-  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 120, 140, 180, 0.65);
-  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.55);
+  // Color grading – cold blue highlights, deep indigo shadows
+  renderColorGrade(
+    ctx, canvasWidth, canvasHeight,
+    30, 40, 80, 0.04,
+    180, 210, 255, 0.02
+  );
+
+  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 120, 140, 180, 0.7);
+  renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.5);
 }
 
 // ============================================================================
-// VOLCANIC – Embers, ash, heat distortion, lava glow, pulsing underglow
+// VOLCANIC – Magma cracks, pyroclastic smoke, ash lightning, ember storms
 // ============================================================================
 
 export function renderVolcanicEnvironment(
@@ -960,38 +1229,94 @@ export function renderVolcanicEnvironment(
   const settings = getPerformanceSettings();
   const pool = getParticlePool(
     "volcanic",
-    getAdjustedParticleCount(200)
+    getAdjustedParticleCount(300)
   );
 
-  // Rising embers
-  if (shouldSpawnParticle(0.15)) {
+  // Magma cracks glowing through the ground
+  if (!settings.reducedParticles) {
+    renderMagmaCracks(ctx, canvasWidth, canvasHeight, time, 0.15);
+  }
+
+  // Rising embers – denser, with varied colors
+  if (shouldSpawnParticle(0.2)) {
+    const colorRoll = Math.random();
+    const emberColor = colorRoll > 0.6 ? "#ff6600" : colorRoll > 0.3 ? "#ffcc00" : "#ff3300";
     pool.push({
       x: Math.random() * canvasWidth,
       y: canvasHeight + 10,
-      vx: (Math.random() - 0.5) * 8,
-      vy: -50 - Math.random() * 60,
+      vx: (Math.random() - 0.5) * 12,
+      vy: -50 - Math.random() * 70,
       size: 2 + Math.random() * 4,
-      alpha: 0.6 + Math.random() * 0.25,
+      alpha: 0.6 + Math.random() * 0.3,
       life: 1,
       maxLife: 1,
-      color: Math.random() > 0.3 ? "#ff6600" : "#ffcc00",
+      color: emberColor,
       type: "ember",
     });
   }
 
-  // Falling ash
-  if (shouldSpawnParticle(0.12)) {
+  // Cinder rain – hot ash falling from eruption plumes
+  if (shouldSpawnParticle(0.08)) {
     pool.push({
       x: Math.random() * canvasWidth,
       y: -10,
-      vx: (Math.random() - 0.5) * 5,
+      vx: (Math.random() - 0.5) * 15,
+      vy: 25 + Math.random() * 35,
+      size: 1.5 + Math.random() * 2.5,
+      alpha: 0.3 + Math.random() * 0.2,
+      life: 1,
+      maxLife: 1,
+      color: Math.random() > 0.5 ? "#8b4513" : "#6b3410",
+      type: "cinder",
+    });
+  }
+
+  // Falling ash – more varied
+  if (shouldSpawnParticle(0.15)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: -10,
+      vx: (Math.random() - 0.5) * 8,
       vy: 18 + Math.random() * 25,
       size: 1 + Math.random() * 2,
       alpha: 0.35 + Math.random() * 0.2,
       life: 1,
       maxLife: 1,
-      color: "#555",
+      color: Math.random() > 0.5 ? "#555" : "#444",
       type: "ash",
+    });
+  }
+
+  // Smoke particles rising from ground
+  if (shouldSpawnParticle(0.06)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: canvasHeight * (0.6 + Math.random() * 0.4),
+      vx: (Math.random() - 0.5) * 6,
+      vy: -15 - Math.random() * 20,
+      size: 8 + Math.random() * 15,
+      alpha: 0.08 + Math.random() * 0.06,
+      life: 1,
+      maxLife: 1,
+      color: "#3a3a3a",
+      type: "smoke",
+    });
+  }
+
+  // Lava sparks (small, fast, short-lived)
+  if (shouldSpawnParticle(0.1)) {
+    const sparkX = Math.random() * canvasWidth;
+    pool.push({
+      x: sparkX,
+      y: canvasHeight * (0.7 + Math.random() * 0.3),
+      vx: (Math.random() - 0.5) * 40,
+      vy: -30 - Math.random() * 50,
+      size: 1 + Math.random() * 1.5,
+      alpha: 0.7 + Math.random() * 0.3,
+      life: 1,
+      maxLife: 1,
+      color: "#ffdd44",
+      type: "spark",
     });
   }
 
@@ -999,6 +1324,8 @@ export function renderVolcanicEnvironment(
   const volcanicTmpls = getGlowTemplates();
   const emberOrange = volcanicTmpls.get("ember_orange");
   const emberYellow = volcanicTmpls.get("ember_yellow");
+  const lavaRedGlow = volcanicTmpls.get("lava_red");
+  const ashHotGlow = volcanicTmpls.get("ash_hot");
 
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
@@ -1006,16 +1333,27 @@ export function renderVolcanicEnvironment(
     p.y += p.vy * 0.016;
 
     if (p.type === "ember") {
-      p.alpha *= 0.994;
+      p.alpha *= 0.993;
       p.size *= 0.997;
+      p.x += Math.sin(time * 3 + i * 1.7) * 0.8;
+    } else if (p.type === "spark") {
+      p.alpha *= 0.97;
+      p.vy += 2;
+    } else if (p.type === "smoke") {
+      p.size += 0.3;
+      p.alpha *= 0.992;
+      p.x += Math.sin(time * 0.5 + i * 1.3) * 0.5;
+    } else if (p.type === "cinder") {
+      p.alpha *= 0.995;
+      p.x += Math.sin(time * 2 + i * 2.1) * 0.4;
     }
 
     if (
-      p.y < -20 ||
-      p.y > canvasHeight + 20 ||
-      p.x < -20 ||
-      p.x > canvasWidth + 20 ||
-      p.alpha < 0.05
+      p.y < -30 ||
+      p.y > canvasHeight + 30 ||
+      p.x < -30 ||
+      p.x > canvasWidth + 30 ||
+      p.alpha < 0.02
     ) {
       pool[i] = pool[pool.length - 1];
       pool.pop();
@@ -1023,18 +1361,43 @@ export function renderVolcanicEnvironment(
     }
 
     if (p.type === "ember") {
-      const tmpl =
-        p.color === "#ffcc00" ? emberYellow : emberOrange;
+      const tmpl = p.color === "#ffcc00" ? emberYellow : p.color === "#ff3300" ? lavaRedGlow : emberOrange;
       if (tmpl) {
-        // Motion trail behind ember
-        const trailX = p.x - p.vx * 0.012;
-        const trailY = p.y - p.vy * 0.012;
+        const trailX = p.x - p.vx * 0.015;
+        const trailY = p.y - p.vy * 0.015;
+        const trail2X = p.x - p.vx * 0.03;
+        const trail2Y = p.y - p.vy * 0.03;
+        drawGlow(ctx, tmpl, trail2X, trail2Y, p.size * 3, p.alpha * 0.1);
         drawGlow(ctx, tmpl, trailX, trailY, p.size * 4, p.alpha * 0.2);
-        // Bright core glow
         drawGlow(ctx, tmpl, p.x, p.y, p.size * 5, p.alpha * 0.75);
       }
+    } else if (p.type === "spark") {
+      if (emberYellow) {
+        drawGlow(ctx, emberYellow, p.x, p.y, p.size * 4, p.alpha * 0.6);
+      }
+    } else if (p.type === "cinder" && ashHotGlow) {
+      const hotFade = Math.max(0, p.alpha - 0.2) * 2;
+      if (hotFade > 0) {
+        drawGlow(ctx, ashHotGlow, p.x, p.y, p.size * 3, hotFade * 0.3);
+      }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(time * 2 + i * 3);
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.size, p.size * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (p.type === "smoke") {
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grad.addColorStop(0, colorWithAlpha(p.color, p.alpha));
+      grad.addColorStop(0.5, colorWithAlpha(p.color, p.alpha * 0.4));
+      grad.addColorStop(1, colorWithAlpha(p.color, 0));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size, p.size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
     } else {
-      // Ash: tumbling irregular flakes
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(time * 2.2 + i * 3.7);
@@ -1046,105 +1409,107 @@ export function renderVolcanicEnvironment(
     }
   }
 
-  // Pulsing lava underglow
-  const lavaGlow = ctx.createLinearGradient(
-    0,
-    canvasHeight * 0.5,
-    0,
-    canvasHeight
-  );
-  const glowPulse = 0.15 + Math.sin(time * 3) * 0.05;
-  const deepPulse =
-    glowPulse + Math.sin(time * 1.7) * 0.03;
+  // Pulsing lava underglow – stronger, layered
+  const lavaGlow = ctx.createLinearGradient(0, canvasHeight * 0.4, 0, canvasHeight);
+  const glowPulse = 0.18 + Math.sin(time * 3) * 0.06;
+  const deepPulse = glowPulse + Math.sin(time * 1.7) * 0.04;
   lavaGlow.addColorStop(0, "rgba(255,100,0,0)");
-  lavaGlow.addColorStop(
-    0.4,
-    `rgba(255,80,0,${(glowPulse * 0.4).toFixed(4)})`
-  );
-  lavaGlow.addColorStop(
-    1,
-    `rgba(255,50,0,${deepPulse.toFixed(4)})`
-  );
+  lavaGlow.addColorStop(0.3, `rgba(255,80,0,${(glowPulse * 0.3).toFixed(4)})`);
+  lavaGlow.addColorStop(0.6, `rgba(255,60,0,${(glowPulse * 0.5).toFixed(4)})`);
+  lavaGlow.addColorStop(1, `rgba(255,40,0,${deepPulse.toFixed(4)})`);
   ctx.fillStyle = lavaGlow;
-  ctx.fillRect(0, canvasHeight * 0.4, canvasWidth, canvasHeight * 0.6);
+  ctx.fillRect(0, canvasHeight * 0.35, canvasWidth, canvasHeight * 0.65);
 
-  // Red underglow screen glow (pulsing)
-  const underglowAlpha = 0.04 + Math.sin(time * 2.5) * 0.02;
-  renderScreenGlow(
-    ctx,
-    canvasWidth * 0.5,
-    canvasHeight * 1.1,
-    255,
-    60,
-    20,
-    underglowAlpha,
-    canvasHeight * 0.7
-  );
+  // Red underglow screen glow (pulsing) – multiple sources
+  const underglowAlpha = 0.05 + Math.sin(time * 2.5) * 0.02;
+  renderScreenGlow(ctx, canvasWidth * 0.5, canvasHeight * 1.1, 255, 60, 20, underglowAlpha, canvasHeight * 0.7);
+  renderScreenGlow(ctx, canvasWidth * 0.2, canvasHeight * 0.9, 255, 80, 10, underglowAlpha * 0.6, canvasHeight * 0.35);
+  renderScreenGlow(ctx, canvasWidth * 0.8, canvasHeight * 0.85, 255, 80, 10, underglowAlpha * 0.6, canvasHeight * 0.35);
 
-  // Heat distortion waves
-  ctx.strokeStyle = "rgba(255,150,50,0.055)";
-  ctx.lineWidth = 3;
-  const distortionCount = settings.reducedParticles ? 5 : 8;
+  // Heat distortion waves – stronger, more varied
+  const distortionCount = settings.reducedParticles ? 6 : 10;
   for (let i = 0; i < distortionCount; i++) {
-    const waveY = canvasHeight * (0.2 + i * 0.1);
+    const waveY = canvasHeight * (0.15 + i * 0.08);
+    const waveAlpha = 0.04 + Math.sin(time * 0.8 + i * 0.6) * 0.02;
+    ctx.strokeStyle = `rgba(255,150,50,${waveAlpha.toFixed(4)})`;
+    ctx.lineWidth = 2 + Math.sin(time + i) * 1;
     ctx.beginPath();
-    for (let x = 0; x < canvasWidth; x += 12) {
-      const y =
-        waveY + Math.sin(x * 0.012 + time * 4 + i * 2) * 14;
+    for (let x = 0; x < canvasWidth; x += 10) {
+      const y = waveY +
+        Math.sin(x * 0.012 + time * 4 + i * 2) * 14 +
+        Math.sin(x * 0.006 + time * 2.5 + i) * 8;
       if (x === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
 
-  // Smoke plumes
-  const plumeCount = settings.reducedParticles ? 2 : 4;
+  // Pyroclastic smoke plumes – more dramatic billowing clouds
+  const plumeCount = settings.reducedParticles ? 3 : 5;
   for (let i = 0; i < plumeCount; i++) {
-    const smokeX = canvasWidth * (0.15 + i * (0.7 / Math.max(1, plumeCount - 1)));
-    const smokeY =
-      canvasHeight * 0.35 - Math.sin(time * 0.5 + i) * 35;
-    const smokeGrad = ctx.createRadialGradient(
-      smokeX,
-      smokeY,
-      0,
-      smokeX,
-      smokeY,
-      120
-    );
-    smokeGrad.addColorStop(0, "rgba(80,80,80,0.14)");
-    smokeGrad.addColorStop(0.5, "rgba(60,60,60,0.07)");
-    smokeGrad.addColorStop(1, "rgba(40,40,40,0)");
-    ctx.fillStyle = smokeGrad;
+    const smokeX = canvasWidth * (0.1 + i * (0.8 / Math.max(1, plumeCount - 1)));
+    const smokeBaseY = canvasHeight * 0.3;
+    for (let layer = 0; layer < 3; layer++) {
+      const smokeY = smokeBaseY - layer * 35 - Math.sin(time * 0.5 + i + layer * 0.5) * 25;
+      const smokeSize = 100 + layer * 30 + Math.sin(time + i + layer) * 20;
+      const smokeAlpha = (0.12 - layer * 0.03) * (0.7 + Math.sin(time * 0.3 + i * 1.5) * 0.3);
+      const smokeGrad = ctx.createRadialGradient(smokeX, smokeY, 0, smokeX, smokeY, smokeSize);
+      smokeGrad.addColorStop(0, `rgba(70,60,55,${smokeAlpha.toFixed(4)})`);
+      smokeGrad.addColorStop(0.4, `rgba(60,50,45,${(smokeAlpha * 0.6).toFixed(4)})`);
+      smokeGrad.addColorStop(1, "rgba(40,35,30,0)");
+      ctx.fillStyle = smokeGrad;
+      ctx.beginPath();
+      ctx.ellipse(smokeX, smokeY, smokeSize, smokeSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Ash-cloud lightning (rare, dramatic flash)
+  const lightningPhase = Math.sin(time * 11.3) * Math.sin(time * 7.7) * Math.sin(time * 4.1);
+  if (lightningPhase > 0.95 && !settings.reducedParticles) {
+    const lx = canvasWidth * (0.2 + Math.random() * 0.6);
+    const ly = canvasHeight * 0.15;
+    const flash = (lightningPhase - 0.95) * 15;
+    ctx.strokeStyle = `rgba(255,220,180,${Math.min(0.6, flash).toFixed(4)})`;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(
-      smokeX,
-      smokeY,
-      120 + Math.sin(time + i) * 25,
-      70,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+    ctx.moveTo(lx, ly);
+    let cx = lx;
+    let cy = ly;
+    for (let seg = 0; seg < 5; seg++) {
+      cx += (Math.random() - 0.5) * 40;
+      cy += 15 + Math.random() * 25;
+      ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+    ctx.fillStyle = `rgba(255,200,100,${(flash * 0.05).toFixed(4)})`;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   }
 
   // Red-tinted atmosphere
-  ctx.fillStyle = "rgba(255,50,0,0.03)";
+  ctx.fillStyle = "rgba(255,50,0,0.035)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  // Rare volcanic flash (brief bright flicker)
+  // Rare volcanic flash
   const flashPhase = Math.sin(time * 7.3) * Math.sin(time * 3.1);
   if (flashPhase > 0.97) {
     ctx.fillStyle = `rgba(255,200,100,${((flashPhase - 0.97) * 1.5).toFixed(4)})`;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
   }
 
-  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 70, 20, 5, 0.7);
+  // Color grading – deep crimson shadows, hot orange highlights
+  renderColorGrade(
+    ctx, canvasWidth, canvasHeight,
+    80, 15, 5, 0.05,
+    255, 120, 40, 0.03
+  );
+
+  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 70, 20, 5, 0.75);
   renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.6);
 }
 
 // ============================================================================
-// SWAMP – Fog layers, fireflies, bubbles, mist, fog banks, moss
+// SWAMP – Will-o-wisps, bioluminescence, toxic gas, water ripples, deep fog
 // ============================================================================
 
 export function renderSwampEnvironment(
@@ -1156,26 +1521,24 @@ export function renderSwampEnvironment(
   const settings = getPerformanceSettings();
   const pool = getParticlePool(
     "swamp",
-    getAdjustedParticleCount(180)
+    getAdjustedParticleCount(280)
   );
 
-  // Rolling fog banks – large slow-drifting formations
+  // Rolling fog banks – more dramatic, denser
   if (!settings.reducedParticles) {
-    renderFogBanks(
-      ctx,
-      canvasWidth,
-      canvasHeight,
-      time,
-      60,
-      90,
-      60,
-      0.08,
-      4
+    renderFogBanks(ctx, canvasWidth, canvasHeight, time, 60, 90, 60, 0.1, 6);
+  }
+
+  // Bioluminescent ground glow patches – eerie pulsing light
+  if (!settings.reducedParticles) {
+    renderDappledLight(
+      ctx, canvasWidth, canvasHeight, time,
+      40, 180, 80, 0.02, 7
     );
   }
 
-  // Fireflies from edges
-  if (shouldSpawnParticle(0.07)) {
+  // Fireflies from edges – more numerous
+  if (shouldSpawnParticle(0.09)) {
     const spawn = spawnFromRandomEdge(canvasWidth, canvasHeight);
     pool.push({
       x: spawn.x,
@@ -1191,8 +1554,26 @@ export function renderSwampEnvironment(
     });
   }
 
+  // Will-o-wisps – larger ghostly lights that drift with trailing glow
+  if (shouldSpawnParticle(0.012)) {
+    const spawn = spawnFromRandomEdge(canvasWidth, canvasHeight);
+    const wispColors = ["#66ffaa", "#44ccff", "#aaffcc"];
+    pool.push({
+      x: spawn.x,
+      y: spawn.y,
+      vx: spawn.vx * 0.3,
+      vy: spawn.vy * 0.2,
+      size: 5 + Math.random() * 5,
+      alpha: 0.35 + Math.random() * 0.2,
+      life: 1,
+      maxLife: 1,
+      color: wispColors[Math.floor(Math.random() * wispColors.length)],
+      type: "wisp",
+    });
+  }
+
   // Bubbles (favor bottom)
-  if (shouldSpawnParticle(0.09)) {
+  if (shouldSpawnParticle(0.1)) {
     const fromBottom = Math.random() > 0.4;
     if (fromBottom) {
       pool.push({
@@ -1224,8 +1605,24 @@ export function renderSwampEnvironment(
     }
   }
 
+  // Toxic gas puffs – slowly rising green clouds
+  if (shouldSpawnParticle(0.04)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: canvasHeight * (0.6 + Math.random() * 0.4),
+      vx: (Math.random() - 0.5) * 4,
+      vy: -5 - Math.random() * 8,
+      size: 10 + Math.random() * 20,
+      alpha: 0.06 + Math.random() * 0.04,
+      life: 1,
+      maxLife: 1,
+      color: "#5a8a40",
+      type: "toxicgas",
+    });
+  }
+
   // Spores from edges
-  if (shouldSpawnParticle(0.08)) {
+  if (shouldSpawnParticle(0.09)) {
     const spawn = spawnFromRandomEdge(canvasWidth, canvasHeight);
     pool.push({
       x: spawn.x,
@@ -1241,8 +1638,24 @@ export function renderSwampEnvironment(
     });
   }
 
+  // Water ripple rings – expand and fade at random bottom-half positions
+  if (shouldSpawnParticle(0.03)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: canvasHeight * (0.5 + Math.random() * 0.45),
+      vx: 0,
+      vy: 0,
+      size: 2,
+      alpha: 0.2 + Math.random() * 0.1,
+      life: 1,
+      maxLife: 1,
+      color: "#6a9a7a",
+      type: "ripple",
+    });
+  }
+
   // Hanging moss particles – drift down from top
-  if (shouldSpawnParticle(0.04)) {
+  if (shouldSpawnParticle(0.05)) {
     pool.push({
       x: Math.random() * canvasWidth,
       y: -10,
@@ -1257,10 +1670,30 @@ export function renderSwampEnvironment(
     });
   }
 
+  // Dripping particles – small drops falling from above
+  if (shouldSpawnParticle(0.06)) {
+    pool.push({
+      x: Math.random() * canvasWidth,
+      y: -5,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 40 + Math.random() * 50,
+      size: 1 + Math.random() * 1.5,
+      alpha: 0.2 + Math.random() * 0.15,
+      life: 1,
+      maxLife: 1,
+      color: "#7aaa8a",
+      type: "drip",
+    });
+  }
+
   // --- Update & render ---
   const swampTmpls = getGlowTemplates();
   const fireflyGlow = swampTmpls.get("firefly");
   const sporeGlow = swampTmpls.get("spore");
+  const wispGreenGlow = swampTmpls.get("wisp_green");
+  const wispBlueGlow = swampTmpls.get("wisp_blue");
+  const toxicGlow = swampTmpls.get("toxic");
+  const biolumGlow = swampTmpls.get("biolum");
 
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
@@ -1273,6 +1706,13 @@ export function renderSwampEnvironment(
       p.vy += (Math.random() - 0.5) * 6;
       p.vx *= 0.94;
       p.vy *= 0.94;
+    } else if (p.type === "wisp") {
+      const wispPhase = time * 0.8 + i * 2.7;
+      p.vx += Math.sin(wispPhase) * 0.8;
+      p.vy += Math.cos(wispPhase * 0.7) * 0.5;
+      p.vx *= 0.97;
+      p.vy *= 0.97;
+      p.alpha *= 0.998;
     } else if (p.type === "bubble") {
       p.x += Math.sin(time * 3 + i) * 0.6;
       p.alpha *= 0.992;
@@ -1282,12 +1722,21 @@ export function renderSwampEnvironment(
     } else if (p.type === "moss") {
       p.x += Math.sin(time * 0.8 + i * 1.1) * 0.5;
       p.alpha *= 0.998;
+    } else if (p.type === "toxicgas") {
+      p.size += 0.2;
+      p.alpha *= 0.993;
+      p.x += Math.sin(time * 0.4 + i * 1.5) * 0.4;
+    } else if (p.type === "ripple") {
+      p.size += 0.6;
+      p.alpha *= 0.98;
+    } else if (p.type === "drip") {
+      p.alpha *= 0.99;
     }
 
     if (
       p.y < -20 ||
       p.y > canvasHeight + 20 ||
-      p.alpha < 0.05 ||
+      p.alpha < 0.02 ||
       p.x < -20 ||
       p.x > canvasWidth + 20
     ) {
@@ -1297,37 +1746,72 @@ export function renderSwampEnvironment(
     }
 
     if (p.type === "firefly") {
-      // Large ethereal glow – no shadowBlur needed
       if (p.alpha > 0.1 && fireflyGlow) {
         drawGlow(ctx, fireflyGlow, p.x, p.y, p.size * 8, p.alpha * 0.6);
       }
+    } else if (p.type === "wisp") {
+      const tmpl = p.color === "#44ccff" ? wispBlueGlow : wispGreenGlow;
+      if (tmpl) {
+        const trail1X = p.x - p.vx * 0.08;
+        const trail1Y = p.y - p.vy * 0.08;
+        const trail2X = p.x - p.vx * 0.18;
+        const trail2Y = p.y - p.vy * 0.18;
+        drawGlow(ctx, tmpl, trail2X, trail2Y, p.size * 6, p.alpha * 0.1);
+        drawGlow(ctx, tmpl, trail1X, trail1Y, p.size * 8, p.alpha * 0.2);
+        drawGlow(ctx, tmpl, p.x, p.y, p.size * 10, p.alpha * 0.5);
+      }
+      const pulse = 0.5 + Math.sin(time * 3 + i * 2.1) * 0.5;
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * pulse * 0.6);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
+      ctx.fill();
     } else if (p.type === "bubble") {
-      // Translucent sphere with highlight and rim
       ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.8);
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.stroke();
-      // Interior gradient for depth
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.12);
       ctx.fill();
-      // Specular highlight
       ctx.fillStyle = colorWithAlpha("#ffffff", p.alpha * 0.5);
       ctx.beginPath();
       ctx.ellipse(
-        p.x - p.size * 0.28,
-        p.y - p.size * 0.28,
-        p.size * 0.3,
-        p.size * 0.2,
-        -0.5,
-        0,
-        Math.PI * 2
+        p.x - p.size * 0.28, p.y - p.size * 0.28,
+        p.size * 0.3, p.size * 0.2, -0.5, 0, Math.PI * 2
       );
+      ctx.fill();
+    } else if (p.type === "toxicgas") {
+      if (toxicGlow) {
+        drawGlow(ctx, toxicGlow, p.x, p.y, p.size * 2, p.alpha * 0.4);
+      }
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grad.addColorStop(0, colorWithAlpha(p.color, p.alpha));
+      grad.addColorStop(0.5, colorWithAlpha(p.color, p.alpha * 0.4));
+      grad.addColorStop(1, colorWithAlpha(p.color, 0));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (p.type === "ripple") {
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha);
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size, p.size * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      if (p.size > 8) {
+        ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.5);
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, p.size * 0.6, p.size * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else if (p.type === "drip") {
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size * 0.5, p.size * 1.2, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (p.type === "spore" && sporeGlow) {
       drawGlow(ctx, sporeGlow, p.x, p.y, p.size * 4, p.alpha * 0.55);
     } else if (p.type === "moss") {
-      // Wispy elongated tendril
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(time * 0.3 + i * 1.4);
@@ -1339,98 +1823,94 @@ export function renderSwampEnvironment(
     }
   }
 
-  // Layered fog
-  const fogLayerCount = settings.reducedParticles ? 3 : 5;
-  for (let layer = 0; layer < fogLayerCount; layer++) {
-    const fogY = canvasHeight * (0.4 + layer * 0.12);
-    const fogAlpha = 0.09 - layer * 0.015;
-    const drift = Math.sin(time * 0.3 + layer) * 35;
+  // Bioluminescent ground glow spots
+  if (!settings.reducedParticles && biolumGlow) {
+    const bioCount = 5;
+    for (let i = 0; i < bioCount; i++) {
+      const bx = (canvasWidth * 0.15 + i * canvasWidth * 0.17 +
+        Math.sin(time * 0.2 + i * 1.9) * 30) % canvasWidth;
+      const by = canvasHeight * (0.55 + Math.sin(time * 0.15 + i * 2.3) * 0.15);
+      const pulse = 0.3 + Math.sin(time * 0.6 + i * 1.7) * 0.7;
+      drawGlow(ctx, biolumGlow, bx, by, 50 + pulse * 30, 0.04 * pulse);
+    }
+  }
 
-    const fogGrad = ctx.createLinearGradient(
-      0,
-      fogY - 90,
-      0,
-      fogY + 90
-    );
+  // Layered fog – more layers, better depth
+  const fogLayerCount = settings.reducedParticles ? 4 : 7;
+  for (let layer = 0; layer < fogLayerCount; layer++) {
+    const fogY = canvasHeight * (0.35 + layer * 0.09);
+    const fogAlpha = 0.1 - layer * 0.012;
+    const drift = Math.sin(time * 0.3 + layer * 0.8) * 40;
+
+    const fogGrad = ctx.createLinearGradient(0, fogY - 100, 0, fogY + 100);
     fogGrad.addColorStop(0, "rgba(60,80,60,0)");
-    fogGrad.addColorStop(
-      0.5,
-      `rgba(70,100,70,${fogAlpha.toFixed(4)})`
-    );
+    fogGrad.addColorStop(0.5, `rgba(70,100,70,${fogAlpha.toFixed(4)})`);
     fogGrad.addColorStop(1, "rgba(60,80,60,0)");
     ctx.fillStyle = fogGrad;
 
     ctx.beginPath();
-    ctx.moveTo(-50, fogY + 90);
-    for (let x = 0; x <= canvasWidth + 50; x += 40) {
-      const y =
-        fogY +
-        Math.sin(
-          x * 0.012 + time * 0.5 + layer * 2 + drift * 0.01
-        ) *
-          35;
+    ctx.moveTo(-50, fogY + 100);
+    for (let x = 0; x <= canvasWidth + 50; x += 30) {
+      const y = fogY +
+        Math.sin(x * 0.012 + time * 0.5 + layer * 2 + drift * 0.01) * 35 +
+        Math.sin(x * 0.006 + time * 0.3 + layer * 1.3) * 20;
       ctx.lineTo(x, y);
     }
-    ctx.lineTo(canvasWidth + 50, fogY + 90);
+    ctx.lineTo(canvasWidth + 50, fogY + 100);
     ctx.closePath();
     ctx.fill();
   }
 
   // Eerie green tint
-  ctx.fillStyle = "rgba(50,100,50,0.045)";
+  ctx.fillStyle = "rgba(50,100,50,0.05)";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  // Mist patches
-  const mistCount = settings.reducedParticles ? 4 : 7;
+  // Mist patches – larger, more numerous
+  const mistCount = settings.reducedParticles ? 5 : 9;
   for (let i = 0; i < mistCount; i++) {
     const mistX =
-      (canvasWidth * 0.14 * i +
-        time * 6 +
-        Math.sin(time * 0.3 + i) * 50) %
-        (canvasWidth + 250) -
-      125;
-    const mistY =
-      canvasHeight * (0.5 + Math.sin(time * 0.4 + i * 0.7) * 0.12);
-    const mistSize = 75 + Math.sin(time + i * 2) * 25;
+      (canvasWidth * 0.12 * i + time * 5 + Math.sin(time * 0.3 + i) * 50) %
+      (canvasWidth + 300) - 150;
+    const mistY = canvasHeight * (0.45 + Math.sin(time * 0.4 + i * 0.7) * 0.15);
+    const mistSize = 85 + Math.sin(time + i * 2) * 30;
 
-    const mistGrad = ctx.createRadialGradient(
-      mistX,
-      mistY,
-      0,
-      mistX,
-      mistY,
-      mistSize
-    );
-    mistGrad.addColorStop(0, "rgba(100,150,100,0.18)");
-    mistGrad.addColorStop(0.6, "rgba(80,120,80,0.09)");
+    const mistGrad = ctx.createRadialGradient(mistX, mistY, 0, mistX, mistY, mistSize);
+    mistGrad.addColorStop(0, "rgba(100,150,100,0.2)");
+    mistGrad.addColorStop(0.4, "rgba(80,130,80,0.1)");
+    mistGrad.addColorStop(0.7, "rgba(70,120,70,0.04)");
     mistGrad.addColorStop(1, "rgba(60,100,60,0)");
     ctx.fillStyle = mistGrad;
     ctx.beginPath();
-    ctx.ellipse(
-      mistX,
-      mistY,
-      mistSize,
-      mistSize * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2
-    );
+    ctx.ellipse(mistX, mistY, mistSize, mistSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Eerie green underglow
+  // Eerie green underglow – pulsing
+  const swampGlowAlpha = 0.04 + Math.sin(time * 0.3) * 0.015;
+  renderScreenGlow(ctx, canvasWidth * 0.5, canvasHeight * 1.05, 50, 120, 50, swampGlowAlpha, canvasHeight * 0.55);
+
+  // Secondary glow spots from "below the water"
   renderScreenGlow(
     ctx,
-    canvasWidth * 0.5,
-    canvasHeight * 1.05,
-    50,
-    120,
-    50,
-    0.03 + Math.sin(time * 0.3) * 0.01,
-    canvasHeight * 0.5
+    canvasWidth * 0.25, canvasHeight * 0.8,
+    40, 150, 60, 0.015 + Math.sin(time * 0.5 + 1.0) * 0.008,
+    canvasHeight * 0.25
+  );
+  renderScreenGlow(
+    ctx,
+    canvasWidth * 0.75, canvasHeight * 0.75,
+    40, 150, 60, 0.015 + Math.sin(time * 0.5 + 2.5) * 0.008,
+    canvasHeight * 0.25
   );
 
-  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 30, 50, 30, 0.7);
+  // Color grading – murky green shadows, sickly yellow-green highlights
+  renderColorGrade(
+    ctx, canvasWidth, canvasHeight,
+    20, 40, 20, 0.05,
+    100, 130, 60, 0.02
+  );
+
+  renderEdgeFog(ctx, canvasWidth, canvasHeight, time, 30, 50, 30, 0.75);
   renderBlackVignette(ctx, canvasWidth, canvasHeight, 0.6);
 }
 

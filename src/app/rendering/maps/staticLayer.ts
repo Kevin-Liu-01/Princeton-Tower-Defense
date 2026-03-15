@@ -8,7 +8,7 @@ import {
   ISO_TILE_HEIGHT_FACTOR,
   getLevelPathKeys,
 } from "../../constants";
-import type { GridPosition, Position } from "../../types";
+import type { DecorationType, GridPosition, Position } from "../../types";
 import {
   gridToWorld,
   gridToWorldPath,
@@ -26,7 +26,17 @@ import {
   isChallengeMountainTopCell,
 } from "./challengeTerrain";
 import { drawPathDecorations } from "./pathDecorations";
+import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
+import {
+  drawRidgeTreeSilhouettes,
+  drawRidgeStrata,
+  drawMistLayer,
+  drawMountainRockDetail,
+  drawVolumetricCloud,
+  drawDistantPeaks,
+  drawGodRays,
+} from "./mountainBackdropDetails";
 
 export interface RegionTheme {
   ground: string[];
@@ -354,10 +364,7 @@ function addPathWobble(
  * Resamples a polyline at uniform arc-length intervals so point density stays
  * consistent regardless of how many input points exist.
  */
-function resampleByArcLength(
-  points: Position[],
-  spacing: number,
-): Position[] {
+function resampleByArcLength(points: Position[], spacing: number): Position[] {
   if (points.length < 2) return points;
 
   const arcLengths = [0];
@@ -425,6 +432,7 @@ function drawRoad(
   topLayerBlend: number,
   includePatches: boolean,
   toScreen: (pos: Position) => Position,
+  skipPathShadows = false,
 ): void {
   const { smoothPath, screenCenter, screenLeft, screenRight } = geometry;
 
@@ -432,19 +440,21 @@ function drawRoad(
     return;
   }
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  ctx.beginPath();
-  ctx.moveTo(screenLeft[0].x + 4, screenLeft[0].y + 4);
-  for (let i = 1; i < screenLeft.length; i++) {
-    ctx.lineTo(screenLeft[i].x + 4, screenLeft[i].y + 4);
+  if (!skipPathShadows) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(screenLeft[0].x + 4, screenLeft[0].y + 4);
+    for (let i = 1; i < screenLeft.length; i++) {
+      ctx.lineTo(screenLeft[i].x + 4, screenLeft[i].y + 4);
+    }
+    for (let i = screenRight.length - 1; i >= 0; i--) {
+      ctx.lineTo(screenRight[i].x + 4, screenRight[i].y + 4);
+    }
+    ctx.closePath();
+    ctx.fill();
   }
-  for (let i = screenRight.length - 1; i >= 0; i--) {
-    ctx.lineTo(screenRight[i].x + 4, screenRight[i].y + 4);
-  }
-  ctx.closePath();
-  ctx.fill();
 
-  ctx.fillStyle = theme.path[2];
+  ctx.fillStyle = skipPathShadows ? theme.path[0] : theme.path[2];
   ctx.beginPath();
   ctx.moveTo(screenLeft[0].x, screenLeft[0].y);
   for (let i = 1; i < screenLeft.length; i++) {
@@ -526,7 +536,7 @@ function drawRoad(
     }
   }
 
-  ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
+  ctx.strokeStyle = hexToRgba(theme.path[2], skipPathShadows ? 0.06 : 0.18);
   ctx.lineWidth = 3 * cameraZoom;
   for (let track = -1; track <= 1; track += 2) {
     ctx.beginPath();
@@ -601,258 +611,136 @@ function drawFlatRidge(
   color: string,
   seed: number,
   jaggedness: number = 1,
-): void {
+  themeKey?: ChallengeThemeKey,
+  darkerColor?: string,
+  enableDetail: boolean = true,
+): { x: number; y: number }[] {
   const rand = createSeededRandom(seed);
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(-60, height + 60);
+  const ridgePoints: { x: number; y: number }[] = [];
+
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const x = -40 + t * (width + 80);
     const wave = Math.sin(t * Math.PI * (2.6 + rand() * 1.7)) * amplitude;
     const jitter = (rand() - 0.5) * amplitude * jaggedness;
-    const y = baseY + wave + jitter;
-    ctx.lineTo(x, y);
+    ridgePoints.push({ x, y: baseY + wave + jitter });
   }
+
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-60, height + 60);
+  for (const p of ridgePoints) ctx.lineTo(p.x, p.y);
   ctx.lineTo(width + 60, height + 60);
   ctx.closePath();
   ctx.fill();
+
+  if (enableDetail && darkerColor) {
+    const innerShade = ctx.createLinearGradient(
+      0,
+      baseY,
+      0,
+      baseY + amplitude * 4,
+    );
+    innerShade.addColorStop(0, "rgba(0,0,0,0)");
+    innerShade.addColorStop(1, hexToRgba(darkerColor, 0.08));
+    ctx.fillStyle = innerShade;
+    ctx.beginPath();
+    ctx.moveTo(-60, height + 60);
+    for (const p of ridgePoints) ctx.lineTo(p.x, p.y);
+    ctx.lineTo(width + 60, height + 60);
+    ctx.closePath();
+    ctx.fill();
+
+    drawRidgeStrata(
+      ctx,
+      ridgePoints,
+      baseY + amplitude * 3,
+      color,
+      seed + 500,
+      2,
+    );
+  }
+
+  if (enableDetail && themeKey) {
+    drawRidgeTreeSilhouettes(
+      ctx,
+      ridgePoints,
+      width,
+      themeKey,
+      color,
+      seed + 700,
+      0.35,
+      2,
+      amplitude * 0.6,
+    );
+  }
+
+  return ridgePoints;
 }
 
-type TerraceDecoKind = "tree" | "bush" | "rock" | "grass";
-
-const TERRACE_DECO_WEIGHTS: Record<ChallengeThemeKey, { kind: TerraceDecoKind; w: number }[]> = {
-  grassland: [
-    { kind: "tree", w: 0.35 },
-    { kind: "bush", w: 0.25 },
-    { kind: "rock", w: 0.15 },
-    { kind: "grass", w: 0.25 },
-  ],
-  swamp: [
-    { kind: "tree", w: 0.2 },
-    { kind: "bush", w: 0.35 },
-    { kind: "rock", w: 0.2 },
-    { kind: "grass", w: 0.25 },
-  ],
-  desert: [
-    { kind: "bush", w: 0.2 },
-    { kind: "rock", w: 0.5 },
-    { kind: "grass", w: 0.3 },
-  ],
-  winter: [
-    { kind: "tree", w: 0.4 },
-    { kind: "rock", w: 0.25 },
-    { kind: "grass", w: 0.15 },
-    { kind: "bush", w: 0.2 },
-  ],
-  volcanic: [
-    { kind: "rock", w: 0.55 },
-    { kind: "grass", w: 0.25 },
-    { kind: "bush", w: 0.2 },
-  ],
+const TERRACE_DECO_TYPES: Record<ChallengeThemeKey, string[]> = {
+  grassland: ["tree", "bush", "rock", "grass", "hedge", "flowers"],
+  swamp: ["swamp_tree", "mushroom", "rock", "grass", "bush"],
+  desert: ["palm", "cactus", "rock", "dune", "sand_pile"],
+  winter: ["pine", "pine_tree", "rock", "snow_pile", "grass"],
+  volcanic: ["charred_tree", "rock", "ember_rock", "grass"],
 };
 
-function pickTerraceDecoKind(
-  weights: { kind: TerraceDecoKind; w: number }[],
-  roll: number,
-): TerraceDecoKind {
-  let cumulative = 0;
-  for (const entry of weights) {
-    cumulative += entry.w;
-    if (roll < cumulative) return entry.kind;
-  }
-  return weights[weights.length - 1].kind;
-}
-
-function drawTerraceTree(
+function drawCellTerraceDecorations(
   ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  s: number,
-  palette: ChallengeBackdropPalette,
-  rng: () => number,
-): void {
-  const trunkH = s * (2.2 + rng() * 1.2);
-  ctx.strokeStyle = shadeHexColor(palette.mountainLeft, 12);
-  ctx.lineWidth = Math.max(0.5, s * 0.28);
-  ctx.beginPath();
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + s * (rng() - 0.5) * 0.3, cy - trunkH);
-  ctx.stroke();
-
-  const canopy = blendHexColors(
-    palette.mountainTop,
-    palette.landHighlight,
-    0.25 + rng() * 0.45,
-  );
-  const rx = s * (0.9 + rng() * 0.5);
-  const ry = s * (0.6 + rng() * 0.3);
-  ctx.fillStyle = shadeHexColor(canopy, Math.round((rng() - 0.5) * 18));
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - trunkH - ry * 0.3, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = shadeHexColor(canopy, 14);
-  ctx.beginPath();
-  ctx.ellipse(
-    cx - rx * 0.25,
-    cy - trunkH - ry * 0.6,
-    rx * 0.45,
-    ry * 0.35,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-}
-
-function drawTerraceBush(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  s: number,
-  palette: ChallengeBackdropPalette,
-  rng: () => number,
-): void {
-  const bushColor = blendHexColors(
-    palette.mountainTop,
-    palette.landHighlight,
-    0.35 + rng() * 0.3,
-  );
-  const lobes = 2 + Math.floor(rng() * 2);
-  for (let i = 0; i < lobes; i++) {
-    const ox = (rng() - 0.5) * s * 1.2;
-    const oy = (rng() - 0.5) * s * 0.6;
-    const lr = s * (0.5 + rng() * 0.4);
-    ctx.fillStyle = shadeHexColor(bushColor, Math.round((rng() - 0.5) * 14));
-    ctx.beginPath();
-    ctx.ellipse(cx + ox, cy + oy - lr * 0.4, lr, lr * 0.6, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawTerraceRock(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  s: number,
-  palette: ChallengeBackdropPalette,
-  rng: () => number,
-): void {
-  const rockBase = blendHexColors(
-    palette.mountainRight,
-    palette.mountainFacetA,
-    0.3 + rng() * 0.3,
-  );
-  const hw = s * (0.7 + rng() * 0.6);
-  const hh = s * (0.4 + rng() * 0.3);
-  const topShift = (rng() - 0.5) * hw * 0.3;
-
-  ctx.fillStyle = shadeHexColor(rockBase, -6);
-  ctx.beginPath();
-  ctx.moveTo(cx + topShift, cy - hh);
-  ctx.lineTo(cx + hw, cy);
-  ctx.lineTo(cx + hw * 0.2, cy + hh * 0.5);
-  ctx.lineTo(cx - hw, cy + hh * 0.1);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = shadeHexColor(rockBase, 8);
-  ctx.beginPath();
-  ctx.moveTo(cx + topShift, cy - hh);
-  ctx.lineTo(cx - hw, cy + hh * 0.1);
-  ctx.lineTo(cx - hw * 0.6, cy - hh * 0.3);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawTerraceGrass(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  s: number,
-  palette: ChallengeBackdropPalette,
-  rng: () => number,
-): void {
-  const grassColor = blendHexColors(
-    palette.mountainTop,
-    palette.landHighlight,
-    0.4 + rng() * 0.3,
-  );
-  const blades = 3 + Math.floor(rng() * 3);
-  ctx.strokeStyle = shadeHexColor(grassColor, Math.round((rng() - 0.5) * 12));
-  ctx.lineWidth = Math.max(0.4, s * 0.18);
-  ctx.lineCap = "round";
-  for (let i = 0; i < blades; i++) {
-    const bx = cx + (rng() - 0.5) * s * 1.4;
-    const lean = (rng() - 0.5) * s * 0.7;
-    const bh = s * (0.8 + rng() * 0.8);
-    ctx.beginPath();
-    ctx.moveTo(bx, cy);
-    ctx.quadraticCurveTo(bx + lean, cy - bh * 0.6, bx + lean * 0.8, cy - bh);
-    ctx.stroke();
-  }
-  ctx.lineCap = "butt";
-}
-
-function drawTerraceDecorations(
-  ctx: CanvasRenderingContext2D,
-  cells: {
-    cell: { gx: number; gy: number; layerIndex: number };
-    topX: number;
-    topY: number;
-  }[],
+  cell: { gx: number; gy: number; layerIndex: number },
+  topX: number,
+  topY: number,
   tileWidth: number,
   tileHeight: number,
   mapSeed: number,
   maxLayerIndex: number,
-  palette: ChallengeBackdropPalette,
   themeKey: ChallengeThemeKey,
+  selectedMap: string,
 ): void {
-  const weights = TERRACE_DECO_WEIGHTS[themeKey];
-  for (const d of cells) {
-    if (d.cell.layerIndex <= 0) continue;
+  if (cell.layerIndex <= 0) return;
 
-    const rng = createSeededRandom(
-      mapSeed + d.cell.gx * 73 + d.cell.gy * 137 + 9001,
-    );
-    const layerNorm = d.cell.layerIndex / Math.max(1, maxLayerIndex);
-    const decorChance = 0.45 * (1 - layerNorm * 0.6);
-    if (rng() > decorChance) continue;
+  const types = TERRACE_DECO_TYPES[themeKey];
+  const rng = createSeededRandom(mapSeed + cell.gx * 73 + cell.gy * 137 + 9001);
+  const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
+  const decorChance = 0.45 * (1 - layerNorm * 0.6);
+  if (rng() > decorChance) return;
 
-    const count = 1 + Math.floor(rng() * 2);
-    for (let i = 0; i < count; i++) {
-      let u = rng() * 2 - 1;
-      let v = rng() * 2 - 1;
-      const sum = Math.abs(u) + Math.abs(v);
-      if (sum > 0.78) {
-        const f = 0.78 / sum;
-        u *= f;
-        v *= f;
-      }
-
-      const cx = d.topX + u * tileWidth * 0.45;
-      const cy = d.topY + tileHeight * 0.5 + v * tileHeight * 0.45;
-
-      const sizeScale = (0.35 + rng() * 0.45) * (1 - layerNorm * 0.4);
-      const s = tileWidth * 0.1 * sizeScale;
-      const kind = pickTerraceDecoKind(weights, rng());
-
-      switch (kind) {
-        case "tree":
-          drawTerraceTree(ctx, cx, cy, s, palette, rng);
-          break;
-        case "bush":
-          drawTerraceBush(ctx, cx, cy, s, palette, rng);
-          break;
-        case "rock":
-          drawTerraceRock(ctx, cx, cy, s, palette, rng);
-          break;
-        case "grass":
-          drawTerraceGrass(ctx, cx, cy, s, palette, rng);
-          break;
-      }
+  const count = 1 + Math.floor(rng() * 2);
+  for (let i = 0; i < count; i++) {
+    let u = rng() * 2 - 1;
+    let v = rng() * 2 - 1;
+    const sum = Math.abs(u) + Math.abs(v);
+    if (sum > 0.78) {
+      const f = 0.78 / sum;
+      u *= f;
+      v *= f;
     }
+
+    const cx = topX + u * tileWidth * 0.45;
+    const cy = topY + tileHeight * 0.5 + v * tileHeight * 0.45;
+
+    const sizeScale = (0.35 + rng() * 0.45) * (1 - layerNorm * 0.4);
+    const scale = tileWidth * 0.05 * sizeScale;
+    const typeIdx = Math.floor(rng() * types.length);
+    const type = types[typeIdx] as DecorationType;
+    const variant = Math.floor(rng() * 4);
+    const rotation = rng() * Math.PI * 2;
+
+    renderDecorationItem({
+      ctx,
+      screenPos: { x: cx, y: cy },
+      scale,
+      type,
+      rotation,
+      variant,
+      decorTime: 0,
+      decorX: cell.gx + rng(),
+      decorY: cell.gy + rng(),
+      selectedMap,
+      mapTheme: themeKey,
+      skipShadow: true,
+    });
   }
 }
 
@@ -982,6 +870,20 @@ function renderChallengeSkyDecorations(
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
   if (themeKey === "grassland") {
+    for (let i = 0; i < 4; i++) {
+      const cx = width * (0.1 + i * 0.22) + (skyRandom() - 0.5) * 40;
+      const cy = height * (0.08 + skyRandom() * 0.12);
+      drawVolumetricCloud(
+        ctx,
+        cx,
+        cy,
+        width * (0.1 + skyRandom() * 0.08),
+        height * 0.07,
+        palette.skyAccent,
+        palette.skyDecor,
+        mapSeed + 1500 + i * 37,
+      );
+    }
     for (let i = 0; i < 6; i++) {
       const x = width * (0.1 + i * 0.16) + (skyRandom() - 0.5) * 30;
       const y = height * (0.11 + skyRandom() * 0.18);
@@ -994,34 +896,53 @@ function renderChallengeSkyDecorations(
         palette.skyAccent,
       );
     }
-    ctx.strokeStyle = "rgba(70, 90, 70, 0.45)";
-    ctx.lineWidth = 1.2;
-    for (let i = 0; i < 10; i++) {
-      const bx = width * (0.08 + skyRandom() * 0.84);
-      const by = height * (0.17 + skyRandom() * 0.2);
-      ctx.beginPath();
-      ctx.moveTo(bx - 3, by);
-      ctx.quadraticCurveTo(bx, by - 3, bx + 3, by);
-      ctx.stroke();
-    }
     return;
   }
 
   if (themeKey === "swamp") {
-    for (let i = 0; i < 5; i++) {
-      const fogY = height * (0.22 + i * 0.08);
-      const fog = ctx.createLinearGradient(0, fogY - 28, 0, fogY + 28);
+    for (let i = 0; i < 7; i++) {
+      const fogY = height * (0.18 + i * 0.07);
+      const fogThickness = 24 + i * 6;
+      const fog = ctx.createLinearGradient(
+        0,
+        fogY - fogThickness,
+        0,
+        fogY + fogThickness,
+      );
       fog.addColorStop(0, "rgba(216,240,220,0)");
-      fog.addColorStop(0.55, "rgba(176,214,185,0.2)");
+      fog.addColorStop(0.35, `rgba(176,214,185,${0.12 + i * 0.02})`);
+      fog.addColorStop(0.55, `rgba(150,200,165,${0.18 + i * 0.02})`);
+      fog.addColorStop(0.75, `rgba(176,214,185,${0.12 + i * 0.02})`);
       fog.addColorStop(1, "rgba(216,240,220,0)");
       ctx.fillStyle = fog;
-      ctx.fillRect(-30, fogY - 28, width + 60, 56);
+      ctx.fillRect(-30, fogY - fogThickness, width + 60, fogThickness * 2);
     }
+
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = "rgba(120,180,130,1)";
+    for (let i = 0; i < 12; i++) {
+      const cx = skyRandom() * width;
+      const cy = height * (0.15 + skyRandom() * 0.3);
+      ctx.beginPath();
+      ctx.ellipse(
+        cx,
+        cy,
+        20 + skyRandom() * 40,
+        8 + skyRandom() * 15,
+        skyRandom() * 0.5,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+
     ctx.fillStyle = palette.skyDecor;
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 25; i++) {
       const x = skyRandom() * width;
       const y = skyRandom() * height * 0.42;
-      const s = 0.5 + skyRandom() * 1.6;
+      const s = 0.5 + skyRandom() * 1.2;
       ctx.beginPath();
       ctx.arc(x, y, s, 0, Math.PI * 2);
       ctx.fill();
@@ -1032,15 +953,33 @@ function renderChallengeSkyDecorations(
   if (themeKey === "desert") {
     const sunX = width * 0.82;
     const sunY = height * 0.14;
+
+    const outerGlow = ctx.createRadialGradient(
+      sunX,
+      sunY,
+      width * 0.04,
+      sunX,
+      sunY,
+      width * 0.22,
+    );
+    outerGlow.addColorStop(0, "rgba(255,240,190,0.1)");
+    outerGlow.addColorStop(0.5, "rgba(255,225,160,0.04)");
+    outerGlow.addColorStop(1, "rgba(255,220,150,0)");
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, width * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+
     const sunGrad = ctx.createRadialGradient(
       sunX,
       sunY,
-      4,
+      2,
       sunX,
       sunY,
       width * 0.1,
     );
-    sunGrad.addColorStop(0, "rgba(255,245,200,0.92)");
+    sunGrad.addColorStop(0, "rgba(255,252,230,0.95)");
+    sunGrad.addColorStop(0.2, "rgba(255,245,200,0.85)");
     sunGrad.addColorStop(0.45, "rgba(255,212,138,0.45)");
     sunGrad.addColorStop(1, "rgba(255,212,138,0)");
     ctx.fillStyle = sunGrad;
@@ -1048,21 +987,65 @@ function renderChallengeSkyDecorations(
     ctx.arc(sunX, sunY, width * 0.1, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(215,165,95,0.22)";
-    ctx.lineWidth = 1.1;
-    for (let i = 0; i < 22; i++) {
-      const y = height * (0.15 + skyRandom() * 0.34);
-      const x = width * (-0.1 + skyRandom() * 1.2);
-      const len = width * (0.02 + skyRandom() * 0.08);
+    for (let i = 0; i < 3; i++) {
+      const hx = width * (0.1 + i * 0.3) + (skyRandom() - 0.5) * 40;
+      const hy = height * (0.06 + skyRandom() * 0.1);
+      drawSoftCloud(
+        ctx,
+        hx,
+        hy,
+        width * (0.06 + skyRandom() * 0.04),
+        height * 0.035,
+        "rgba(255,235,190,0.12)",
+      );
+    }
+
+    ctx.strokeStyle = "rgba(215,175,115,0.12)";
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < 16; i++) {
+      const sy = height * (0.14 + skyRandom() * 0.34);
+      const sx = width * (-0.05 + skyRandom() * 1.1);
+      const len = width * (0.03 + skyRandom() * 0.08);
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + len, y + len * 0.08);
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(
+        sx + len * 0.33,
+        sy + (skyRandom() - 0.5) * 2,
+        sx + len * 0.66,
+        sy + (skyRandom() - 0.5) * 2,
+        sx + len,
+        sy + (skyRandom() - 0.5) * 3,
+      );
       ctx.stroke();
     }
     return;
   }
 
   if (themeKey === "winter") {
+    const auroraGreen = ctx.createLinearGradient(
+      0,
+      height * 0.02,
+      width,
+      height * 0.35,
+    );
+    auroraGreen.addColorStop(0, "rgba(100, 240, 180, 0)");
+    auroraGreen.addColorStop(0.15, "rgba(100, 240, 180, 0.08)");
+    auroraGreen.addColorStop(0.45, "rgba(130, 255, 200, 0.12)");
+    auroraGreen.addColorStop(1, "rgba(100, 240, 180, 0)");
+    ctx.strokeStyle = auroraGreen;
+    ctx.lineWidth = height * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.1, height * 0.14);
+    ctx.bezierCurveTo(
+      width * 0.32,
+      height * 0.06,
+      width * 0.6,
+      height * 0.22,
+      width * 0.88,
+      height * 0.1,
+    );
+    ctx.stroke();
+
     const aurora = ctx.createLinearGradient(
       0,
       height * 0.03,
@@ -1070,11 +1053,11 @@ function renderChallengeSkyDecorations(
       height * 0.42,
     );
     aurora.addColorStop(0, "rgba(128, 215, 255, 0)");
-    aurora.addColorStop(0.2, "rgba(128, 215, 255, 0.14)");
-    aurora.addColorStop(0.55, "rgba(170, 244, 232, 0.18)");
+    aurora.addColorStop(0.2, "rgba(128, 215, 255, 0.16)");
+    aurora.addColorStop(0.55, "rgba(170, 244, 232, 0.2)");
     aurora.addColorStop(1, "rgba(128, 215, 255, 0)");
     ctx.strokeStyle = aurora;
-    ctx.lineWidth = height * 0.04;
+    ctx.lineWidth = height * 0.045;
     ctx.beginPath();
     ctx.moveTo(width * 0.05, height * 0.19);
     ctx.bezierCurveTo(
@@ -1087,44 +1070,143 @@ function renderChallengeSkyDecorations(
     );
     ctx.stroke();
 
+    const auroraPurple = ctx.createLinearGradient(
+      width * 0.3,
+      height * 0.05,
+      width * 0.8,
+      height * 0.3,
+    );
+    auroraPurple.addColorStop(0, "rgba(180, 130, 255, 0)");
+    auroraPurple.addColorStop(0.3, "rgba(180, 130, 255, 0.06)");
+    auroraPurple.addColorStop(0.6, "rgba(200, 160, 255, 0.08)");
+    auroraPurple.addColorStop(1, "rgba(180, 130, 255, 0)");
+    ctx.strokeStyle = auroraPurple;
+    ctx.lineWidth = height * 0.025;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.2, height * 0.22);
+    ctx.bezierCurveTo(
+      width * 0.4,
+      height * 0.15,
+      width * 0.65,
+      height * 0.26,
+      width * 0.85,
+      height * 0.18,
+    );
+    ctx.stroke();
+
+    for (let i = 0; i < 2; i++) {
+      const cx = width * (0.15 + i * 0.45) + (skyRandom() - 0.5) * 60;
+      const cy = height * (0.08 + skyRandom() * 0.08);
+      drawSoftCloud(
+        ctx,
+        cx,
+        cy,
+        width * (0.07 + skyRandom() * 0.04),
+        height * 0.04,
+        "rgba(200,225,255,0.1)",
+      );
+    }
+
     ctx.fillStyle = "rgba(226,243,255,0.62)";
-    for (let i = 0; i < 65; i++) {
+    for (let i = 0; i < 90; i++) {
       const x = skyRandom() * width;
       const y = skyRandom() * height * 0.55;
-      const size = 0.45 + skyRandom() * 1.25;
+      const size = 0.35 + skyRandom() * 1.4;
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    for (let i = 0; i < 25; i++) {
+      const x = skyRandom() * width;
+      const y = skyRandom() * height * 0.45;
+      const size = 0.2 + skyRandom() * 0.5;
+      ctx.save();
+      ctx.globalAlpha = 0.4 + skyRandom() * 0.4;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
     return;
   }
 
   // volcanic
   const smokeRandom = createSeededRandom(mapSeed + 1437);
+
+  ctx.save();
+  const underGlow = ctx.createLinearGradient(0, height * 0.3, 0, height * 0.55);
+  underGlow.addColorStop(0, "rgba(255,60,10,0)");
+  underGlow.addColorStop(0.5, "rgba(255,60,10,0.025)");
+  underGlow.addColorStop(1, "rgba(255,40,0,0)");
+  ctx.fillStyle = underGlow;
+  ctx.fillRect(0, height * 0.3, width, height * 0.25);
+  ctx.restore();
+
   for (let p = 0; p < 4; p++) {
-    const baseX = width * (0.28 + p * 0.14);
-    const baseY = height * (0.18 + smokeRandom() * 0.08);
-    for (let i = 0; i < 9; i++) {
-      const drift = i * 9;
-      ctx.fillStyle = `rgba(70, 65, 65, ${0.16 - i * 0.012})`;
+    const baseX = width * (0.22 + p * 0.15);
+    const baseY = height * (0.18 + smokeRandom() * 0.1);
+    const plumeSize = 0.8 + smokeRandom() * 0.4;
+    for (let i = 0; i < 10; i++) {
+      const drift = i * 8 * plumeSize;
+      const spread = (10 + i * 2.5) * plumeSize;
+      const alpha = 0.1 - i * 0.008;
+      if (alpha <= 0) break;
+
+      const r = 60 + i * 3;
+      const g = 45 + i * 3;
+      const b = 40 + i * 3;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
       ctx.beginPath();
       ctx.ellipse(
         baseX + Math.sin(i * 0.7 + p) * 10,
         baseY - drift,
-        10 + i * 2.4,
-        6 + i * 1.8,
-        0.1,
+        spread,
+        spread * 0.6,
+        0.1 + smokeRandom() * 0.1,
         0,
         Math.PI * 2,
       );
       ctx.fill();
     }
+
+    if (smokeRandom() > 0.5) {
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+      const glowGrad = ctx.createRadialGradient(
+        baseX,
+        baseY + 8,
+        0,
+        baseX,
+        baseY + 8,
+        16,
+      );
+      glowGrad.addColorStop(0, "rgba(255,100,40,1)");
+      glowGrad.addColorStop(1, "rgba(255,70,20,0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(baseX, baseY + 8, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
+
   ctx.fillStyle = palette.skyDecor;
   for (let i = 0; i < 70; i++) {
     const x = smokeRandom() * width;
     const y = smokeRandom() * height * 0.58;
-    const size = 0.5 + smokeRandom() * 1.5;
+    const size = 0.4 + smokeRandom() * 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "rgba(255,140,50,0.25)";
+  for (let i = 0; i < 14; i++) {
+    const x = smokeRandom() * width;
+    const y = height * (0.22 + smokeRandom() * 0.32);
+    const size = 0.2 + smokeRandom() * 0.6;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
@@ -1364,6 +1446,17 @@ function drawIsometricMountainMass(
       ctx.stroke();
     }
   }
+
+  drawMountainRockDetail(
+    ctx,
+    ridgePoints,
+    basePoints,
+    width,
+    height,
+    palette,
+    themeKey,
+    mapSeed,
+  );
 }
 
 export function renderChallengeMountainBackdrop(
@@ -1390,6 +1483,18 @@ export function renderChallengeMountainBackdrop(
 
   renderChallengeSkyDecorations(ctx, width, height, mapSeed, themeKey, palette);
 
+  drawGodRays(ctx, width, height, themeKey, mapSeed + 1550);
+
+  drawDistantPeaks(
+    ctx,
+    width,
+    height * 0.22,
+    height * 0.025,
+    hexToRgba(palette.farRidge, 0.18),
+    mapSeed + 850,
+    7,
+  );
+
   drawFlatRidge(
     ctx,
     width,
@@ -1399,7 +1504,22 @@ export function renderChallengeMountainBackdrop(
     11,
     palette.farRidge,
     mapSeed + 901,
+    1,
+    themeKey,
+    palette.midRidge,
+    true,
   );
+
+  drawMistLayer(
+    ctx,
+    width,
+    height * 0.32,
+    height * 0.02,
+    palette.skyBottom,
+    0.06,
+    mapSeed + 910,
+  );
+
   drawFlatRidge(
     ctx,
     width,
@@ -1410,7 +1530,21 @@ export function renderChallengeMountainBackdrop(
     palette.midRidge,
     mapSeed + 947,
     1.2,
+    themeKey,
+    palette.nearRidge,
+    true,
   );
+
+  drawMistLayer(
+    ctx,
+    width,
+    height * 0.42,
+    height * 0.025,
+    palette.skyBottom,
+    0.07,
+    mapSeed + 955,
+  );
+
   drawFlatRidge(
     ctx,
     width,
@@ -1421,14 +1555,28 @@ export function renderChallengeMountainBackdrop(
     palette.nearRidge,
     mapSeed + 983,
     1.35,
+    themeKey,
+    palette.nearRidge,
+    true,
+  );
+
+  drawMistLayer(
+    ctx,
+    width,
+    height * 0.51,
+    height * 0.015,
+    palette.skyBottom,
+    0.05,
+    mapSeed + 990,
   );
 
   drawIsometricMountainMass(ctx, width, height, mapSeed, themeKey, palette);
 
   const atmosphere = ctx.createLinearGradient(0, height * 0.44, 0, height);
   atmosphere.addColorStop(0, "rgba(0,0,0,0)");
-  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.08));
-  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.24));
+  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, 0.06));
+  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.1));
+  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.28));
   ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, width, height);
 }
@@ -1945,6 +2093,8 @@ function renderChallengeWorldMountain(
     }
   };
 
+  let deferredEdgeDecos: PrecomputedCell[] = [];
+
   for (const layerIdx of sortedLayerIndices) {
     const layerCells = cellsByLayer.get(layerIdx)!;
     layerCells.sort((a, b) => {
@@ -1953,23 +2103,68 @@ function renderChallengeWorldMountain(
       if (Math.abs(ay - by) > 0.001) return ay - by;
       return a.topX - b.topX;
     });
+
     for (const d of layerCells) {
       drawBackFaces(d);
       drawTopTile(d);
+      if (layerIdx > 0 && d.southDrop <= 0.5 && d.rightDrop <= 0.5) {
+        drawCellTerraceDecorations(
+          ctx,
+          d.cell,
+          d.topX,
+          d.topY,
+          tileWidth,
+          tileHeight,
+          mapSeed,
+          maxLayerIndex,
+          themeKey,
+          selectedMap,
+        );
+      }
       drawFrontFaces(d);
     }
-    if (layerIdx > 0) {
-      drawTerraceDecorations(
+
+    // Deferred camera-facing decorations from the previous outer layer.
+    // They now render after this inner layer's cliff faces, so they're visible.
+    for (const d of deferredEdgeDecos) {
+      drawCellTerraceDecorations(
         ctx,
-        layerCells,
+        d.cell,
+        d.topX,
+        d.topY,
         tileWidth,
         tileHeight,
         mapSeed,
         maxLayerIndex,
-        palette,
         themeKey,
+        selectedMap,
       );
     }
+
+    deferredEdgeDecos = [];
+    if (layerIdx > 0) {
+      for (const d of layerCells) {
+        if (d.southDrop > 0.5 || d.rightDrop > 0.5) {
+          deferredEdgeDecos.push(d);
+        }
+      }
+    }
+  }
+
+  // Draw any remaining deferred decos from the innermost terrace layer.
+  for (const d of deferredEdgeDecos) {
+    drawCellTerraceDecorations(
+      ctx,
+      d.cell,
+      d.topX,
+      d.topY,
+      tileWidth,
+      tileHeight,
+      mapSeed,
+      maxLayerIndex,
+      themeKey,
+      selectedMap,
+    );
   }
 
   const distanceByCell = new Array<number>(GRID_WIDTH * GRID_HEIGHT);
@@ -2135,7 +2330,17 @@ export function renderStaticMapLayer({
     if (!road) continue;
 
     roads.push(road);
-    drawRoad(ctx, road, theme, cameraZoom, mapSeed, 0.72, true, toScreen);
+    drawRoad(
+      ctx,
+      road,
+      theme,
+      cameraZoom,
+      mapSeed,
+      0.72,
+      true,
+      toScreen,
+      isChallengeMountainLevel,
+    );
     fogEndpoints.push(...getFogEndpoints(road));
   }
 
@@ -2153,6 +2358,7 @@ export function renderStaticMapLayer({
         cameraZoom,
         mapSeed,
         toScreen,
+        skipPathShadows: isChallengeMountainLevel,
       });
     }
   }

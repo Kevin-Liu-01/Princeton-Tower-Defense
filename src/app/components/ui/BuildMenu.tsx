@@ -24,6 +24,8 @@ interface BuildMenuProps {
   hoveredTower: string | null;
   setHoveredTower: (tower: string | null) => void;
   setDraggingTower: (dragging: DraggingTower | null) => void;
+  onTouchDragMove: (clientX: number, clientY: number, towerType: TowerType) => void;
+  onTouchDragEnd: (clientX: number, clientY: number) => void;
   placedTowers: Record<TowerType, number>;
   allowedTowers?: TowerType[] | null;
 }
@@ -37,6 +39,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   // hoveredTower — kept in props interface for parent but unused here
   setHoveredTower,
   setDraggingTower,
+  onTouchDragMove,
+  onTouchDragEnd,
   placedTowers,
   allowedTowers,
 }) => {
@@ -108,11 +112,19 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       }
                       setIsBuildDragging(true);
                     }}
-                    onPointerUp={() => {
+                    onPointerMove={(e) => {
+                      if (e.pointerType !== "touch") return;
+                      onTouchDragMove(e.clientX, e.clientY, towerType);
+                    }}
+                    onPointerUp={(e) => {
+                      if (e.pointerType === "touch") {
+                        onTouchDragEnd(e.clientX, e.clientY);
+                      }
                       setIsBuildDragging(false);
                     }}
                     onPointerCancel={() => {
                       setIsBuildDragging(false);
+                      setDraggingTower(null);
                       pointerDownTowerRef.current = null;
                     }}
                     onClick={() => {
@@ -155,7 +167,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       }
                     }}
                     disabled={!canUse}
-                    className={`relative w-full transition-all rounded-xl whitespace-nowrap ${isSelected
+                    className={`relative w-full transition-all rounded-xl whitespace-nowrap touch-none ${isSelected
                       ? "scale-105"
                       : canUse
                         ? "hover:brightness-110 hover:scale-[1.02]"
@@ -212,7 +224,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
                     {/* ── Desktop: horizontal detail card ── */}
                     <div className="hidden sm:flex items-center gap-2.5 px-2.5 py-2">
-                      <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+                      <div className="w-8 h-10 flex-shrink-0 flex items-center justify-center">
                         <TowerSprite type={towerType} size={sizes.towerIcon} />
                       </div>
                       <div className="flex flex-col items-start min-w-0">
@@ -227,7 +239,12 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                             const def = TOWER_TAG_DEFS[tag];
                             if (i === 0) {
                               return (
-                                <span key={tag} className={`flex items-center gap-[2px] text-[7px] font-bold uppercase tracking-wider ${def.textClass}`}>
+                                <span key={tag} className={`flex items-center gap-[2px] text-[7px] font-bold uppercase tracking-wider ${def.textClass}
+                                rounded-full px-1 py-0.5 border ${def.borderClass}
+                                bg-${def.bgClass}
+                                text-${def.textClass}
+                                
+                                `}>
                                   <TagIcon tag={tag} size={9} />
                                   {def.label}
                                 </span>

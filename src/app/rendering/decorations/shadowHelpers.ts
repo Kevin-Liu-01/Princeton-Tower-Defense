@@ -28,6 +28,7 @@ export function drawDirectionalShadow(
   objectHeight: number,
   intensity: number = 0.3,
   tint: string = "0,0,0",
+  zoom: number = 1,
 ): void {
   const shadowLen = objectHeight * SHADOW_LEN_RATIO;
   const offX = shadowLen * SHADOW_DIR_X;
@@ -35,8 +36,8 @@ export function drawDirectionalShadow(
 
   const scx = x + offX * 0.45;
   const scy = y + offY * 0.45;
-  const srx = Math.min(footprintRx + offX * 0.38, MAX_SHADOW_RX);
-  const sry = Math.min(footprintRy + offY * 0.28, MAX_SHADOW_RY);
+  const srx = Math.min(footprintRx + offX * 0.38, MAX_SHADOW_RX * zoom);
+  const sry = Math.min(footprintRy + offY * 0.28, MAX_SHADOW_RY * zoom);
   const rot = 0.12;
 
   // Outer penumbra

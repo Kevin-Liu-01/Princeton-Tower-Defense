@@ -13,6 +13,7 @@ export interface LandmarkParams {
   screenY: number;
   s: number;
   time: number;
+  zoom?: number;
   seedX: number;
   seedY: number;
   variant: number;
@@ -291,6 +292,7 @@ export function renderIceFortress(p: LandmarkParams): void {
     variant,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
 
   if (!skipShadow) {
@@ -304,6 +306,7 @@ export function renderIceFortress(p: LandmarkParams): void {
       65 * s,
       0.35,
       "0,50,70",
+      z,
     );
   }
   if (shadowOnly) return;
@@ -962,12 +965,12 @@ export function renderIceFortress(p: LandmarkParams): void {
 // =========================================================================
 
 export function renderSkullThrone(p: LandmarkParams): void {
-  const { ctx, screenX: cx, screenY: cy, s, time, skipShadow, shadowOnly } = p;
+  const { ctx, screenX: cx, screenY: cy, s, time, skipShadow, shadowOnly, zoom: z = 1 } = p;
 
   if (!skipShadow) {
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.beginPath();
-    ctx.ellipse(cx + 3 * s, cy + 8 * s, Math.min(30 * s, MAX_SHADOW_RX), Math.min(14 * s, MAX_SHADOW_RY), 0.1, 0, Math.PI * 2);
+    ctx.ellipse(cx + 3 * s, cy + 8 * s, Math.min(30 * s, MAX_SHADOW_RX * z), Math.min(14 * s, MAX_SHADOW_RY * z), 0.1, 0, Math.PI * 2);
     ctx.fill();
   }
   if (shadowOnly) return;
@@ -1285,11 +1288,12 @@ export function renderWarMonument(p: LandmarkParams): void {
     seedX,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
 
   if (!skipShadow) {
-    const shRx = Math.min(55 * s, MAX_SHADOW_RX);
-    const shRy = Math.min(24 * s, MAX_SHADOW_RY);
+    const shRx = Math.min(55 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(24 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx + 4 * s, cy + 10 * s, 0,
       cx + 4 * s, cy + 10 * s, shRx,
@@ -1742,12 +1746,13 @@ export function renderBoneAltar(p: LandmarkParams): void {
     seedY,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
   const cy = rawCy - 8 * s;
 
   if (!skipShadow) {
-    const shRx = Math.min(50 * s, MAX_SHADOW_RX);
-    const shRy = Math.min(22 * s, MAX_SHADOW_RY);
+    const shRx = Math.min(50 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(22 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx, cy + 8 * s, 0,
       cx, cy + 8 * s, shRx,
@@ -2105,11 +2110,12 @@ export function renderSunObelisk(p: LandmarkParams): void {
     seedX,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
 
   if (!skipShadow) {
-    const shRx = Math.min(50 * s, MAX_SHADOW_RX);
-    const shRy = Math.min(22 * s, MAX_SHADOW_RY);
+    const shRx = Math.min(50 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(22 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx + 5 * s, cy + 10 * s, 0,
       cx + 5 * s, cy + 10 * s, shRx,
@@ -2493,12 +2499,13 @@ export function renderFrostCitadel(p: LandmarkParams): void {
     seedX,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
   const cy = rawCy - 18 * s;
 
   if (!skipShadow) {
-    const shRx = Math.min(45 * s, MAX_SHADOW_RX);
-    const shRy = Math.min(20 * s, MAX_SHADOW_RY);
+    const shRx = Math.min(45 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(20 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx + 4 * s, cy + 12 * s, 0,
       cx + 4 * s, cy + 12 * s, shRx,
@@ -2798,11 +2805,12 @@ export function renderInfernalGate(p: LandmarkParams): void {
     seedX,
     skipShadow,
     shadowOnly,
+    zoom: z = 1,
   } = p;
 
   if (!skipShadow) {
-    const shRx = Math.min(60 * s, MAX_SHADOW_RX);
-    const shRy = Math.min(26 * s, MAX_SHADOW_RY);
+    const shRx = Math.min(60 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(26 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx, cy + 10 * s, 0,
       cx, cy + 10 * s, shRx,
@@ -3889,7 +3897,7 @@ function drawWingSection(
 }
 
 export function renderNassauHall(p: LandmarkParams): void {
-  const { ctx, screenX: cx, screenY: cy, s: sRaw, time, skipShadow, shadowOnly } = p;
+  const { ctx, screenX: cx, screenY: cy, s: sRaw, time, skipShadow, shadowOnly, zoom: z = 1 } = p;
   const s = sRaw * 1.25;
 
   // === DIMENSIONS ===
@@ -3956,6 +3964,7 @@ export function renderNassauHall(p: LandmarkParams): void {
       70 * s,
       0.3,
       "0,0,0",
+      z,
     );
   }
   if (shadowOnly) return;

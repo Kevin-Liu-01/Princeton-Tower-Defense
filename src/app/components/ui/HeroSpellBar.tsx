@@ -6,7 +6,6 @@ import {
   Timer,
   Swords,
   Target,
-  Gauge,
   Shield,
   Pointer,
   Grab,
@@ -43,6 +42,7 @@ import { useIsTouchDevice } from "./hooks";
 import { PANEL, NEUTRAL, OVERLAY, SPELL_THEME } from "./theme";
 import { HudTooltip } from "./HudTooltip";
 import { MobileHeroSpellBar } from "./MobileHeroSpellBar";
+import { heroFrameElements, spellFrameElements } from "./ornateFrameHelpers";
 
 // =============================================================================
 // HP THEME — transitions green → yellow → red by hero health %
@@ -58,6 +58,32 @@ const DESKTOP_HERO_SIZE = 84;
 const DESKTOP_HERO_RING_R = DESKTOP_HERO_SIZE / 2 - 3;
 const DESKTOP_HERO_RING_C = 2 * Math.PI * DESKTOP_HERO_RING_R;
 const DESKTOP_ABILITY_SIZE = 64;
+const ORNATE_FRAME_SIZE = 92;
+const ORNATE_PAD = (ORNATE_FRAME_SIZE - DESKTOP_ABILITY_SIZE) / 2;
+const ORNATE_CX = ORNATE_FRAME_SIZE / 2;
+const ORNATE_OUTER_R = ORNATE_CX - 2;
+const ORNATE_MID_R = ORNATE_CX - 5;
+const ORNATE_GEM_R = ORNATE_CX - 2;
+const ORNATE_TICK_INNER = ORNATE_CX - 8;
+const ORNATE_TICK_OUTER = ORNATE_CX - 1;
+const ORNATE_RING_CIRCUM = 2 * Math.PI * ORNATE_MID_R;
+const DEG_TO_RAD = Math.PI / 180;
+const ORNATE_ANGLES_ALL = [0, 45, 90, 135, 180, 225, 270, 315];
+const ORNATE_ANGLES_CARDINAL = [0, 90, 180, 270];
+const ORNATE_ANGLES_INTERCARDINAL = [45, 135, 225, 315];
+
+const HERO_ORNATE_SIZE = 112;
+const HERO_ORNATE_PAD = (HERO_ORNATE_SIZE - DESKTOP_HERO_SIZE) / 2;
+const HERO_ORNATE_CX = HERO_ORNATE_SIZE / 2;
+const HERO_ORNATE_MID_R = HERO_ORNATE_CX - 5;
+const HERO_ORNATE_MID_CIRCUM = 2 * Math.PI * HERO_ORNATE_MID_R;
+
+const SPELL_ORB_SIZE = 72;
+const SPELL_ORNATE_SIZE = 96;
+const SPELL_ORNATE_PAD = (SPELL_ORNATE_SIZE - SPELL_ORB_SIZE) / 2;
+const SPELL_ORNATE_CX = SPELL_ORNATE_SIZE / 2;
+const SPELL_ORNATE_MID_R = SPELL_ORNATE_CX - 5;
+const SPELL_ORNATE_RING_CIRCUM = 2 * Math.PI * SPELL_ORNATE_MID_R;
 
 function getHeroHpTheme(percent: number) {
   if (percent <= 25) {
@@ -167,6 +193,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   castSpell,
 }) => {
   const [hoveredSpell, setHoveredSpell] = React.useState<SpellType | null>(null);
+  const [heroHovered, setHeroHovered] = React.useState(false);
+  const [abilityHovered, setAbilityHovered] = React.useState(false);
   const orbRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const getOrbRef = useCallback((type: string) => (el: HTMLDivElement | null) => { orbRefs.current[type] = el; }, []);
   const isTouchDevice = useIsTouchDevice();
@@ -273,7 +301,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </div>
 
       {/* Desktop: Full card layout */}
-      <div className="hidden xl:flex p-2 pr-4 items-end justify-between gap-3">
+      <div className="hidden xl:flex p-2 pr-4 items-end justify-between gap-6">
         {/* Hero Section — circle aesthetic matching spell orbs */}
         <div className="flex-shrink-0 pointer-events-auto">
           {hero && (() => {
@@ -290,100 +318,207 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
             const readyAngle = (1 - cdFrac) * 360;
 
             return (
-              <div className="flex items-end sm:ml-2 gap-3">
-                {/* Hero Portrait Circle */}
+              <div className="flex items-end sm:ml-2 gap-8">
+                {/* Hero Portrait Circle — Ornate */}
                 <div className="flex flex-col items-center">
                   <HudTooltip label={hero.selected ? "Click map to move hero" : "Click to select hero"} position="top">
-                    <button
-                      onClick={toggleHeroSelection}
-                      className="relative flex items-center justify-center transition-all active:scale-95"
-                      style={{ width: DESKTOP_HERO_SIZE, height: DESKTOP_HERO_SIZE }}
-                    >
-                      {/* SVG HP ring */}
-                      <svg className="absolute inset-0" width={DESKTOP_HERO_SIZE} height={DESKTOP_HERO_SIZE} overflow="visible" style={{ transform: "rotate(-90deg)" }}>
-                        <circle cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R} fill="none" stroke="rgba(80,60,40,0.35)" strokeWidth={4} />
+                    <div className="relative" style={{ width: DESKTOP_HERO_SIZE, height: DESKTOP_HERO_SIZE }}>
+                      {/* ─── Ornate SVG portrait frame ─── */}
+                      <svg
+                        className="absolute pointer-events-none"
+                        style={{
+                          top: -HERO_ORNATE_PAD,
+                          left: -HERO_ORNATE_PAD,
+                          transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease",
+                          transform: heroHovered && isAlive
+                            ? "rotate(45deg) scale(1.06)"
+                            : "rotate(0deg) scale(1)",
+                          filter: heroHovered && isAlive
+                            ? `drop-shadow(0 0 6px ${hexToRgba(hc, 0.4)})`
+                            : "none",
+                        }}
+                        width={HERO_ORNATE_SIZE}
+                        height={HERO_ORNATE_SIZE}
+                        overflow="visible"
+                      >
+                        <defs>
+                          <filter id="heroGemGlow">
+                            <feGaussianBlur stdDeviation="2.5" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+
+                        {heroFrameElements({
+                          cx: HERO_ORNATE_CX,
+                          outerR: HERO_ORNATE_CX - 2,
+                          midR: HERO_ORNATE_MID_R,
+                          color: isAlive
+                            ? hexToRgba(hc, heroHovered ? 0.4 : 0.25)
+                            : "rgba(110,110,110,0.18)",
+                          dimColor: isAlive
+                            ? hexToRgba(hc, heroHovered ? 0.2 : 0.12)
+                            : "rgba(110,110,110,0.09)",
+                          prefix: "hp",
+                          glowFilter: isAlive && (hero.selected || heroHovered) ? "url(#heroGemGlow)" : undefined,
+                        })}
+
+                        {/* HP progress arc on outer ring */}
                         {isAlive && (
                           <circle
-                            cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R}
-                            fill="none" stroke={hpRingColor} strokeWidth={4}
-                            strokeDasharray={DESKTOP_HERO_RING_C} strokeDashoffset={hpStrokeOffset}
-                            strokeLinecap="round" className="transition-all duration-300"
-                            style={{ filter: `drop-shadow(0 0 4px ${hpRingColor})` }}
+                            cx={HERO_ORNATE_CX} cy={HERO_ORNATE_CX} r={HERO_ORNATE_MID_R}
+                            fill="none"
+                            stroke={hpRingColor}
+                            strokeWidth={2.5}
+                            strokeDasharray={HERO_ORNATE_MID_CIRCUM}
+                            strokeDashoffset={HERO_ORNATE_MID_CIRCUM * (1 - hpPercent / 100)}
+                            strokeLinecap="round"
+                            transform={`rotate(-90 ${HERO_ORNATE_CX} ${HERO_ORNATE_CX})`}
+                            className="transition-all duration-300"
+                            opacity={0.4}
+                          />
+                        )}
+
+                        {/* Hover: soft glowing ring */}
+                        {heroHovered && isAlive && !hero.selected && (
+                          <circle
+                            cx={HERO_ORNATE_CX} cy={HERO_ORNATE_CX} r={HERO_ORNATE_MID_R}
+                            fill="none"
+                            stroke={hexToRgba(hc, 0.2)}
+                            strokeWidth={1.5}
+                            filter="url(#heroGemGlow)"
+                          />
+                        )}
+
+                        {/* Selected: full glowing outer ring */}
+                        {hero.selected && isAlive && (
+                          <circle
+                            cx={HERO_ORNATE_CX} cy={HERO_ORNATE_CX} r={HERO_ORNATE_MID_R}
+                            fill="none"
+                            stroke={hexToRgba(hc, 0.25)}
+                            strokeWidth={2}
+                            filter="url(#heroGemGlow)"
                           />
                         )}
                       </svg>
-                      {/* Hero color border ring */}
-                      <div className="absolute inset-[4px] rounded-full pointer-events-none transition-all duration-300" style={{
-                        border: `2px solid ${hero.selected ? hc + "80" : isAlive ? hc + "40" : "rgba(80,60,40,0.3)"}`,
-                        boxShadow: hero.selected ? `0 0 14px ${hc}35` : "none",
-                      }} />
-                      {/* Portrait */}
-                      <div className="absolute inset-[7px] rounded-full overflow-hidden" style={{
-                        background: isAlive
-                          ? `radial-gradient(circle at 35% 35%, ${hc}30, ${hc}10)`
-                          : "linear-gradient(135deg, rgba(50,40,35,0.95), rgba(30,25,20,0.95))",
-                        filter: isAlive ? "none" : "grayscale(0.8) brightness(0.5)",
-                      }}>
-                        <div className="absolute inset-0 rounded-full bg-cover bg-center" style={{
-                          backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
-                          opacity: isAlive ? 0.6 : 0.2,
+
+                      {/* ─── Main hero portrait button ─── */}
+                      <button
+                        onClick={toggleHeroSelection}
+                        onMouseEnter={() => !isTouchDevice && setHeroHovered(true)}
+                        onMouseLeave={() => setHeroHovered(false)}
+                        className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
+                      >
+                        {/* SVG HP ring */}
+                        <svg className="absolute inset-0" width={DESKTOP_HERO_SIZE} height={DESKTOP_HERO_SIZE} overflow="visible" style={{ transform: "rotate(-90deg)" }}>
+                          <circle cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R} fill="none" stroke="rgba(80,60,40,0.35)" strokeWidth={4} />
+                          {isAlive && (
+                            <circle
+                              cx={DESKTOP_HERO_SIZE / 2} cy={DESKTOP_HERO_SIZE / 2} r={DESKTOP_HERO_RING_R}
+                              fill="none" stroke={hpRingColor} strokeWidth={4}
+                              strokeDasharray={DESKTOP_HERO_RING_C} strokeDashoffset={hpStrokeOffset}
+                              strokeLinecap="round" className="transition-all duration-300"
+                              style={{ filter: `drop-shadow(0 0 5px ${hpRingColor})` }}
+                            />
+                          )}
+                        </svg>
+
+                        {/* Bevel ring — top bright, bottom dark for 3D emboss */}
+                        <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                          borderTop: `1px solid ${isAlive ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.03)"}`,
+                          borderBottom: `1px solid ${isAlive ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.1)"}`,
+                          borderLeft: "1px solid transparent",
+                          borderRight: "1px solid transparent",
                         }} />
-                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
-                          background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 15%, ${hc}20 40%, rgba(0,0,0,0.5) 100%)`,
+
+                        {/* Hero color border ring */}
+                        <div className="absolute inset-[4px] rounded-full pointer-events-none transition-all duration-300" style={{
+                          border: `2.5px solid ${hero.selected ? hc + "90" : isAlive ? hc + "45" : "rgba(80,60,40,0.3)"}`,
+                          boxShadow: hero.selected
+                            ? `0 0 20px ${hc}40, inset 0 0 10px ${hc}15`
+                            : isAlive ? `inset 0 0 4px ${hc}10` : "none",
                         }} />
-                        <div className="relative z-10 flex items-center justify-center h-full">
-                          <HeroSprite type={hero.type} size={54} />
+
+                        {/* Portrait area */}
+                        <div className="absolute inset-[7px] rounded-full overflow-hidden" style={{
+                          background: isAlive
+                            ? `radial-gradient(circle at 32% 32%, ${hc}35, ${hc}12)`
+                            : "linear-gradient(135deg, rgba(50,40,35,0.95), rgba(30,25,20,0.95))",
+                          filter: isAlive ? "none" : "grayscale(0.8) brightness(0.5)",
+                        }}>
+                          <div className="absolute inset-0 rounded-full bg-cover bg-center" style={{
+                            backgroundImage: `url(/images/heroes/${hero.type}-action.png)`,
+                            opacity: isAlive ? 0.6 : 0.2,
+                          }} />
+                          {/* Enhanced vignette */}
+                          <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                            background: `radial-gradient(ellipse 70% 70% at 50% 50%, transparent 10%, ${hc}22 35%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.7) 100%)`,
+                          }} />
+                          {/* Specular highlight on portrait */}
+                          {isAlive && (
+                            <div className="absolute rounded-full pointer-events-none" style={{
+                              top: 3, left: 5, width: '44%', height: '38%',
+                              background: "radial-gradient(ellipse at 50% 60%, rgba(255,255,255,0.12), transparent 55%)",
+                              filter: "blur(2px)",
+                            }} />
+                          )}
+                          <div className="relative z-10 flex items-center justify-center h-full">
+                            <HeroSprite type={hero.type} size={54} />
+                          </div>
                         </div>
-                      </div>
-                      {/* Selection indicator badge */}
-                      <div className="absolute top-1 right-1 z-20 rounded-full flex items-center justify-center" style={{
-                        width: 20, height: 20,
-                        background: hero.selected ? "rgba(120,90,20,0.85)" : "rgba(20,16,10,0.85)",
-                        border: `1.5px solid ${hero.selected ? "rgba(250,204,21,0.5)" : "rgba(80,60,40,0.4)"}`,
-                      }}>
-                        {hero.selected ? <Grab size={11} className="text-amber-300" /> : <Pointer size={11} className="text-amber-500/70" />}
-                      </div>
-                      {/* Selected glow pulse */}
-                      {hero.selected && isAlive && (
-                        <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse" style={{ boxShadow: `0 0 20px ${hc}40` }} />
-                      )}
-                      {/* Low-HP heartbeat */}
-                      {isAlive && hpTheme.heartbeat && (
-                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{ animation: `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` }} />
-                      )}
-                      {/* Name tag on circle bottom */}
-                      <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
-                        background: "rgba(20,16,10,0.92)",
-                        border: `1px solid ${isAlive ? hc + "50" : "rgba(80,60,40,0.35)"}`,
+
+                        {/* Engraved inner ring */}
+                        <div className="absolute inset-[9px] rounded-full pointer-events-none" style={{
+                          border: `1px solid ${isAlive ? hexToRgba(hc, 0.1) : "rgba(80,60,40,0.05)"}`,
+                        }} />
+
+                        {/* Selection indicator badge */}
+                        <div className="absolute top-0.5 right-0.5 z-20 rounded-full flex items-center justify-center" style={{
+                          width: 22, height: 22,
+                          background: hero.selected
+                            ? "linear-gradient(135deg, rgba(130,100,25,0.92), rgba(90,68,15,0.92))"
+                            : "rgba(20,16,10,0.88)",
+                          border: `2px solid ${hero.selected ? "rgba(250,204,21,0.55)" : "rgba(80,60,40,0.4)"}`,
+                          boxShadow: hero.selected ? "0 0 8px rgba(250,204,21,0.2)" : "none",
+                        }}>
+                          {hero.selected ? <Grab size={11} className="text-amber-300" /> : <Pointer size={11} className="text-amber-500/70" />}
+                        </div>
+
+                        {/* Selected glow pulse */}
+                        {hero.selected && isAlive && (
+                          <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse" style={{ boxShadow: `0 0 26px ${hc}45, 0 0 52px ${hc}15` }} />
+                        )}
+
+                        {/* Low-HP heartbeat */}
+                        {isAlive && hpTheme.heartbeat && (
+                          <div className="absolute inset-0 rounded-full pointer-events-none" style={{ animation: `heroHeartbeat ${hpTheme.beatSpeed} ease-in-out infinite` }} />
+                        )}
+                      </button>
+
+                      {/* Name tag */}
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                        background: isAlive
+                          ? `linear-gradient(180deg, ${hexToRgba(hc, 0.15)}, rgba(20,16,10,0.92))`
+                          : "rgba(20,16,10,0.92)",
+                        border: `1px solid ${isAlive ? hc + "55" : "rgba(80,60,40,0.35)"}`,
                         color: isAlive ? "#fde68a" : "rgba(160,140,100,0.6)",
+                        boxShadow: isAlive ? `0 0 6px ${hc}15` : "none",
                       }}>
                         {heroData.name}
                       </div>
-                    </button>
+                    </div>
                   </HudTooltip>
 
                   {isAlive ? (
                     <>
-                      {/* HP fraction */}
-                      <div className="text-[8px] font-bold tabular-nums mt-3.5" style={{ color: hpRingColor }}>
+                      <div className="text-[8px] font-bold tabular-nums mt-4" style={{ color: hpRingColor }}>
                         {Math.floor(hero.hp)}/{hero.maxHp}
                       </div>
-                      {/* Stats */}
-                      {/* <div className="flex mt-0.5">
-                        {[
-                          { icon: <Swords size={8} />, val: heroData.damage, color: "text-orange-300", bg: "rgba(180,80,20,0.25)", border: "rgba(180,80,20,0.15)" },
-                          { icon: <Target size={8} />, val: heroData.range, color: "text-blue-300", bg: "rgba(40,80,160,0.25)", border: "rgba(40,80,160,0.15)" },
-                          { icon: <Gauge size={8} />, val: heroData.speed, color: "text-green-300", bg: "rgba(20,120,60,0.25)", border: "rgba(20,120,60,0.15)" },
-                        ].map((s, i) => (
-                          <span key={i} className={`${s.color} text-[7px] font-semibold flex items-center gap-px px-1 py-px rounded`}
-                            style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                            {s.icon} {s.val}
-                          </span>
-                        ))}
-                      </div> */}
                     </>
                   ) : (
-                    <div className="flex items-center gap-1 mt-3.5">
+                    <div className="flex items-center gap-1 mt-4">
                       <Timer size={10} className="text-red-400" />
                       <span className="text-[9px] text-red-400 font-bold tabular-nums">{Math.ceil(hero.respawnTimer / 1000)}s</span>
                       <span className="text-[7px] text-stone-600 uppercase tracking-wider">respawn</span>
@@ -391,7 +526,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   )}
                 </div>
 
-                {/* Ability Circle */}
+                {/* Ability Circle — Ornate */}
                 <div className="flex flex-col items-center">
                   <HudTooltip
                     label={isReady
@@ -402,65 +537,259 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     }
                     position="top"
                   >
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onUseHeroAbility(); }}
-                      disabled={!isReady}
-                      className="relative rounded-full flex items-center justify-center transition-all active:scale-95 hover:brightness-110"
-                      style={{
-                        width: DESKTOP_ABILITY_SIZE, height: DESKTOP_ABILITY_SIZE,
-                        background: isReady
-                          ? "linear-gradient(135deg, rgba(120,90,20,0.5), rgba(80,60,15,0.35))"
-                          : "linear-gradient(135deg, rgba(38,32,24,0.95), rgba(24,20,14,0.95))",
-                        border: `2px solid ${isReady ? "rgba(250,204,21,0.6)" : "rgba(80,60,40,0.35)"}`,
-                        boxShadow: isReady
-                          ? `0 0 16px rgba(250,204,21,0.3), inset 0 1px 0 rgba(255,255,255,0.1)`
-                          : "inset 0 1px 0 rgba(255,255,255,0.05)",
-                        cursor: isReady ? "pointer" : "not-allowed",
-                      }}
-                    >
-                      {/* Hero color tint */}
-                      <div className="absolute inset-0 rounded-full pointer-events-none" style={{
-                        background: isReady
-                          ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.25)}, ${hexToRgba(hc, 0.05)} 70%, transparent)`
-                          : `radial-gradient(ellipse at 50% 70%, ${hexToRgba(hc, 0.1)}, transparent 70%)`,
-                      }} />
-                      {/* Cooldown conic sweep */}
-                      {!isReady && cdFrac > 0 && (
-                        <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
-                          background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.55) ${readyAngle}deg, rgba(0,0,0,0.55) 360deg)`,
+                    <div className="relative" style={{ width: DESKTOP_ABILITY_SIZE, height: DESKTOP_ABILITY_SIZE }}>
+                      {/* ─── Ornate SVG frame ─── */}
+                      <svg
+                        className="absolute pointer-events-none"
+                        style={{
+                          top: -ORNATE_PAD,
+                          left: -ORNATE_PAD,
+                          transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease",
+                          transform: abilityHovered
+                            ? "rotate(45deg) scale(1.07)"
+                            : "rotate(0deg) scale(1)",
+                          filter: abilityHovered && isReady
+                            ? "drop-shadow(0 0 8px rgba(250,204,21,0.4))"
+                            : abilityHovered
+                              ? "drop-shadow(0 0 4px rgba(180,140,60,0.25))"
+                              : "none",
+                        }}
+                        width={ORNATE_FRAME_SIZE}
+                        height={ORNATE_FRAME_SIZE}
+                        overflow="visible"
+                      >
+                        <defs>
+                          <filter id="abilityGemGlow">
+                            <feGaussianBlur stdDeviation="2" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                          <linearGradient id="ornateTickGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={isReady ? "rgba(250,204,21,0.5)" : abilityHovered ? "rgba(80,60,40,0.4)" : "rgba(80,60,40,0.25)"} />
+                            <stop offset="100%" stopColor={isReady ? "rgba(250,204,21,0.15)" : abilityHovered ? "rgba(80,60,40,0.15)" : "rgba(80,60,40,0.08)"} />
+                          </linearGradient>
+                        </defs>
+
+                        {/* Outermost decorative dashed ring */}
+                        <circle
+                          cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_OUTER_R}
+                          fill="none"
+                          stroke={isReady ? "rgba(250,204,21,0.22)" : abilityHovered ? "rgba(80,60,40,0.2)" : "rgba(80,60,40,0.12)"}
+                          strokeWidth={1}
+                          strokeDasharray="2 4 6 4"
+                        />
+
+                        {/* Secondary thin solid ring */}
+                        <circle
+                          cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
+                          fill="none"
+                          stroke={isReady ? "rgba(250,204,21,0.14)" : abilityHovered ? "rgba(80,60,40,0.12)" : "rgba(80,60,40,0.07)"}
+                          strokeWidth={0.5}
+                        />
+
+                        {/* 8 tick marks at 45° intervals */}
+                        {ORNATE_ANGLES_ALL.map((deg) => {
+                          const rad = (deg - 90) * DEG_TO_RAD;
+                          const cos = Math.cos(rad);
+                          const sin = Math.sin(rad);
+                          const isCard = deg % 90 === 0;
+                          return (
+                            <line
+                              key={`tick-${deg}`}
+                              x1={ORNATE_CX + ORNATE_TICK_INNER * cos}
+                              y1={ORNATE_CX + ORNATE_TICK_INNER * sin}
+                              x2={ORNATE_CX + ORNATE_TICK_OUTER * cos}
+                              y2={ORNATE_CX + ORNATE_TICK_OUTER * sin}
+                              stroke="url(#ornateTickGrad)"
+                              strokeWidth={isCard ? 2.5 : 1}
+                              strokeLinecap="round"
+                            />
+                          );
+                        })}
+
+                        {/* 4 cardinal diamond gems */}
+                        {ORNATE_ANGLES_CARDINAL.map((deg) => {
+                          const rad = (deg - 90) * DEG_TO_RAD;
+                          const cx = ORNATE_CX + ORNATE_GEM_R * Math.cos(rad);
+                          const cy = ORNATE_CX + ORNATE_GEM_R * Math.sin(rad);
+                          return (
+                            <rect
+                              key={`gem-${deg}`}
+                              x={cx - 3.5} y={cy - 3.5} width={7} height={7}
+                              rx={1}
+                              transform={`rotate(45 ${cx} ${cy})`}
+                              fill={isReady ? hexToRgba(hc, 0.85) : abilityHovered ? "rgba(55,45,30,0.75)" : "rgba(55,45,30,0.6)"}
+                              stroke={isReady ? "rgba(250,204,21,0.7)" : abilityHovered ? "rgba(80,60,40,0.45)" : "rgba(80,60,40,0.3)"}
+                              strokeWidth={1}
+                              filter={isReady || abilityHovered ? "url(#abilityGemGlow)" : undefined}
+                            />
+                          );
+                        })}
+
+                        {/* 4 intercardinal small dot ornaments */}
+                        {ORNATE_ANGLES_INTERCARDINAL.map((deg) => {
+                          const rad = (deg - 90) * DEG_TO_RAD;
+                          return (
+                            <circle
+                              key={`dot-${deg}`}
+                              cx={ORNATE_CX + ORNATE_GEM_R * Math.cos(rad)}
+                              cy={ORNATE_CX + ORNATE_GEM_R * Math.sin(rad)}
+                              r={1.8}
+                              fill={isReady ? "rgba(250,204,21,0.45)" : abilityHovered ? "rgba(80,60,40,0.35)" : "rgba(80,60,40,0.2)"}
+                            />
+                          );
+                        })}
+
+                        {/* Cooldown progress arc on outer ring */}
+                        {!isReady && cdFrac > 0 && (
+                          <circle
+                            cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
+                            fill="none"
+                            stroke="rgba(250,204,21,0.25)"
+                            strokeWidth={2}
+                            strokeDasharray={ORNATE_RING_CIRCUM}
+                            strokeDashoffset={ORNATE_RING_CIRCUM * cdFrac}
+                            strokeLinecap="round"
+                            transform={`rotate(-90 ${ORNATE_CX} ${ORNATE_CX})`}
+                            className="transition-all duration-300"
+                          />
+                        )}
+
+                        {/* Hover: soft glowing ring */}
+                        {abilityHovered && !isReady && (
+                          <circle
+                            cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
+                            fill="none"
+                            stroke="rgba(180,140,60,0.15)"
+                            strokeWidth={1.5}
+                            filter="url(#abilityGemGlow)"
+                          />
+                        )}
+
+                        {/* Ready state: full glowing outer ring */}
+                        {isReady && (
+                          <circle
+                            cx={ORNATE_CX} cy={ORNATE_CX} r={ORNATE_MID_R}
+                            fill="none"
+                            stroke="rgba(250,204,21,0.3)"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            filter="url(#abilityGemGlow)"
+                          />
+                        )}
+                      </svg>
+
+                      {/* ─── Main ability button ─── */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onUseHeroAbility(); }}
+                        disabled={!isReady}
+                        onMouseEnter={() => !isTouchDevice && setAbilityHovered(true)}
+                        onMouseLeave={() => setAbilityHovered(false)}
+                        className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95 hover:brightness-110"
+                        style={{
+                          background: isReady
+                            ? `radial-gradient(ellipse 90% 90% at 38% 32%, rgba(150,115,30,0.6), rgba(100,75,20,0.45) 45%, rgba(55,40,14,0.5) 100%)`
+                            : `radial-gradient(ellipse 90% 90% at 38% 32%, rgba(45,38,28,0.95), rgba(30,26,20,0.95) 45%, rgba(22,18,14,0.95) 100%)`,
+                          border: `2.5px solid ${isReady ? "rgba(250,204,21,0.65)" : "rgba(80,60,40,0.4)"}`,
+                          boxShadow: isReady
+                            ? `0 0 24px rgba(250,204,21,0.3), 0 0 48px rgba(250,204,21,0.08), inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.3)`
+                            : "inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.2)",
+                          cursor: isReady ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        {/* Hero color tint */}
+                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                          background: isReady
+                            ? `radial-gradient(ellipse at 50% 30%, ${hexToRgba(hc, 0.3)}, ${hexToRgba(hc, 0.08)} 55%, transparent 80%)`
+                            : `radial-gradient(ellipse at 50% 65%, ${hexToRgba(hc, 0.12)}, transparent 70%)`,
                         }} />
-                      )}
-                      {/* Inner border */}
-                      <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
-                        border: `1px solid ${isReady ? "rgba(250,204,21,0.12)" : "rgba(80,60,40,0.1)"}`,
-                      }} />
-                      {/* Ability icon */}
-                      <div className="relative z-10 flex items-center justify-center">
-                        {getHeroAbilityIcon(hero.type, 24, isReady ? "" : "opacity-50")}
-                      </div>
-                      {/* Ready pulse */}
-                      {isReady && (
-                        <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
-                          style={{ boxShadow: "0 0 18px rgba(250,204,21,0.4)" }} />
-                      )}
-                      {/* Ability name tag on circle bottom */}
-                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-lg text-[7px] font-black uppercase tracking-wider text-center leading-tight max-w-[72px]" style={{
-                        background: "rgba(20,16,10,0.92)",
-                        border: `1px solid ${isReady ? "rgba(250,204,21,0.45)" : "rgba(80,60,40,0.35)"}`,
+
+                        {/* Vignette — darkened edges for jewel-like depth */}
+                        <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                          background: "radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.5) 100%)",
+                        }} />
+
+                        {/* Specular highlight — top-left gem gleam */}
+                        <div className="absolute rounded-full pointer-events-none" style={{
+                          top: 4, left: 6, width: '42%', height: '38%',
+                          background: isReady
+                            ? "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.2), rgba(255,255,255,0.05) 55%, transparent 100%)"
+                            : "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.06), transparent 55%)",
+                          filter: "blur(1px)",
+                        }} />
+
+                        {/* Bevel ring — top bright, bottom dark */}
+                        <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
+                          borderTop: `1px solid ${isReady ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.04)"}`,
+                          borderBottom: `1px solid ${isReady ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.12)"}`,
+                          borderLeft: "1px solid transparent",
+                          borderRight: "1px solid transparent",
+                        }} />
+
+                        {/* Engraved inner ring */}
+                        <div className="absolute inset-[7px] rounded-full pointer-events-none" style={{
+                          border: `1px solid ${isReady ? "rgba(250,204,21,0.12)" : "rgba(80,60,40,0.06)"}`,
+                          boxShadow: isReady ? "inset 0 0 6px rgba(250,204,21,0.06)" : "none",
+                        }} />
+
+                        {/* Innermost rune-like dashed ring */}
+                        <div className="absolute inset-[11px] rounded-full pointer-events-none" style={{
+                          border: `1px dashed ${isReady ? "rgba(250,204,21,0.08)" : "rgba(80,60,40,0.04)"}`,
+                        }} />
+
+                        {/* Cooldown conic sweep */}
+                        {!isReady && cdFrac > 0 && (
+                          <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                            background: `conic-gradient(from -90deg, transparent 0deg, transparent ${readyAngle}deg, rgba(0,0,0,0.6) ${readyAngle}deg, rgba(0,0,0,0.6) 360deg)`,
+                          }} />
+                        )}
+
+                        {/* Rotating shimmer (ready only) */}
+                        {isReady && (
+                          <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                            background: "conic-gradient(from 0deg, transparent 0deg, rgba(250,204,21,0.1) 12deg, transparent 24deg, transparent 120deg, rgba(250,204,21,0.07) 132deg, transparent 144deg, transparent 240deg, rgba(250,204,21,0.07) 252deg, transparent 264deg, transparent 360deg)",
+                            animation: "abilityShimmer 5s linear infinite",
+                          }} />
+                        )}
+
+                        {/* Ability icon */}
+                        <div className="relative z-10 flex items-center justify-center" style={{
+                          filter: isReady ? `drop-shadow(0 0 6px ${hexToRgba(hc, 0.5)})` : "none",
+                        }}>
+                          {getHeroAbilityIcon(hero.type, 26, isReady ? "" : "opacity-40")}
+                        </div>
+
+                        {/* Ready pulse glow */}
+                        {isReady && (
+                          <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+                            style={{ boxShadow: `0 0 24px rgba(250,204,21,0.45), 0 0 10px ${hexToRgba(hc, 0.25)}` }} />
+                        )}
+                      </button>
+
+                      {/* Ability name tag */}
+                      <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 z-20 px-2.5 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-wider text-center leading-tight max-w-[76px]" style={{
+                        background: isReady
+                          ? "linear-gradient(180deg, rgba(65,48,16,0.95), rgba(32,24,8,0.95))"
+                          : "rgba(20,16,10,0.92)",
+                        border: `1px solid ${isReady ? "rgba(250,204,21,0.5)" : "rgba(80,60,40,0.35)"}`,
                         color: isReady ? "#fbbf24" : "rgba(160,140,100,0.6)",
+                        boxShadow: isReady ? "0 0 8px rgba(250,204,21,0.15)" : "none",
                       }}>
                         {heroData.ability}
                       </div>
-                    </button>
+                    </div>
                   </HudTooltip>
                   {/* Cooldown tag */}
-                  <div className="flex items-center justify-center gap-1 mt-3.5 px-2 py-0.5 rounded-full" style={{
+                  <div className="flex items-center justify-center gap-1 mt-4 px-2 py-0.5 rounded-full" style={{
                     background: hero.dead
                       ? "rgba(127,29,29,0.35)"
                       : isReady
-                        ? "rgba(120,90,20,0.4)"
+                        ? "linear-gradient(135deg, rgba(120,90,20,0.45), rgba(80,60,15,0.35))"
                         : "rgba(30,30,30,0.7)",
-                    border: `1px solid ${hero.dead ? "rgba(239,68,68,0.3)" : isReady ? "rgba(250,204,21,0.35)" : "rgba(80,60,40,0.25)"}`,
+                    border: `1px solid ${hero.dead ? "rgba(239,68,68,0.3)" : isReady ? "rgba(250,204,21,0.4)" : "rgba(80,60,40,0.25)"}`,
+                    boxShadow: isReady ? "0 0 6px rgba(250,204,21,0.08)" : "none",
                   }}>
                     <Clock size={9} className={hero.dead ? "text-red-400" : isReady ? "text-amber-400" : "text-stone-400"} />
                     <span className={`text-[10px] font-bold tabular-nums ${hero.dead ? "text-red-400" : isReady ? "text-amber-300" : "text-stone-300"}`}>
@@ -478,7 +807,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         </div>
 
         {/* Spell Section */}
-        <div className="flex items-end gap-3 pointer-events-auto">
+        <div className="flex items-end gap-7 pointer-events-auto">
           {spells.map((spell) => {
             const spellData = SPELL_DATA[spell.type];
             const spellLevel = spellUpgradeLevels[spell.type] ?? 0;
@@ -503,7 +832,6 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   ? "Manual targeting ON — click to switch to auto-aim"
                   : "Auto-aim ON — click for manual targeting";
             const spellAccent = theme?.panelBorder || "rgba(140,80,180,0.5)";
-            const ORBS = 72;
             return (
               <div key={spell.type} className="flex flex-col items-center">
                 {/* Orb wrapper — badges position relative to this */}
@@ -535,6 +863,86 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       {spellLevel}
                     </div>
                   )}
+                  {/* ─── Ornate SVG frame for spell ─── */}
+                  <svg
+                    className="absolute pointer-events-none"
+                    style={{
+                      top: -SPELL_ORNATE_PAD,
+                      left: -SPELL_ORNATE_PAD,
+                      transition: "transform 0.5s cubic-bezier(0.4,0,0.2,1), filter 0.4s ease",
+                      transform: isHovered && (canCast || isTargeting)
+                        ? "rotate(45deg) scale(1.08)"
+                        : "rotate(0deg) scale(1)",
+                      filter: isHovered && (canCast || isTargeting)
+                        ? `drop-shadow(0 0 6px ${spellAccent.replace("0.5)", "0.35)")})`
+                        : "none",
+                    }}
+                    width={SPELL_ORNATE_SIZE}
+                    height={SPELL_ORNATE_SIZE}
+                    overflow="visible"
+                  >
+                    <defs>
+                      <filter id={`spellGlow-${spell.type}`}>
+                        <feGaussianBlur stdDeviation="2" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    {spellFrameElements({
+                      cx: SPELL_ORNATE_CX,
+                      outerR: SPELL_ORNATE_CX - 2,
+                      midR: SPELL_ORNATE_MID_R,
+                      color: (canCast || isTargeting)
+                        ? spellAccent.replace("0.5)", isHovered ? "0.45)" : "0.25)")
+                        : "rgba(110,110,110,0.16)",
+                      dimColor: (canCast || isTargeting)
+                        ? spellAccent.replace("0.5)", isHovered ? "0.25)" : "0.12)")
+                        : "rgba(110,110,110,0.08)",
+                      prefix: `sp-${spell.type}`,
+                      glowFilter: (canCast || isTargeting) ? `url(#spellGlow-${spell.type})` : undefined,
+                    })}
+
+                    {/* Cooldown progress arc on outer ring */}
+                    {spell.cooldown > 0 && (
+                      <circle
+                        cx={SPELL_ORNATE_CX} cy={SPELL_ORNATE_CX} r={SPELL_ORNATE_MID_R}
+                        fill="none"
+                        stroke={spellAccent.replace("0.5)", "0.25)")}
+                        strokeWidth={2}
+                        strokeDasharray={SPELL_ORNATE_RING_CIRCUM}
+                        strokeDashoffset={SPELL_ORNATE_RING_CIRCUM * (spell.cooldown / spell.maxCooldown)}
+                        strokeLinecap="round"
+                        transform={`rotate(-90 ${SPELL_ORNATE_CX} ${SPELL_ORNATE_CX})`}
+                        className="transition-all duration-300"
+                      />
+                    )}
+
+                    {/* Hover: soft glowing ring */}
+                    {isHovered && (canCast || isTargeting) && !isTargeting && (
+                      <circle
+                        cx={SPELL_ORNATE_CX} cy={SPELL_ORNATE_CX} r={SPELL_ORNATE_MID_R}
+                        fill="none"
+                        stroke={spellAccent.replace("0.5)", "0.2)")}
+                        strokeWidth={1.5}
+                        filter={`url(#spellGlow-${spell.type})`}
+                      />
+                    )}
+
+                    {/* Targeting: full glowing ring */}
+                    {isTargeting && (
+                      <circle
+                        cx={SPELL_ORNATE_CX} cy={SPELL_ORNATE_CX} r={SPELL_ORNATE_MID_R}
+                        fill="none"
+                        stroke={spellAccent.replace("0.5)", "0.35)")}
+                        strokeWidth={2}
+                        filter={`url(#spellGlow-${spell.type})`}
+                      />
+                    )}
+                  </svg>
+
                   {/* Spell orb button */}
                   <button
                     onClick={() => castSpell(spell.type)}
@@ -543,42 +951,67 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
                     className="relative rounded-full overflow-hidden transition-all hover:brightness-115 hover:scale-105 active:scale-95"
                     style={{
-                      width: ORBS, height: ORBS,
+                      width: SPELL_ORB_SIZE, height: SPELL_ORB_SIZE,
                       background: (canCast || isTargeting)
-                        ? `radial-gradient(circle at 35% 35%, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, ${PANEL.bgDeep})`
-                        : `radial-gradient(circle at 35% 35%, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                        ? `radial-gradient(ellipse 90% 90% at 34% 32%, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, ${PANEL.bgDeep})`
+                        : `radial-gradient(ellipse 90% 90% at 34% 32%, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
                       border: isTargeting
                         ? `3px solid ${spellAccent}`
                         : (canCast ? `3px solid ${spellAccent}` : `3px solid ${NEUTRAL.border}`),
                       boxShadow: isTargeting
-                        ? `0 0 20px ${spellAccent}, inset 0 0 15px rgba(255,255,255,0.04)`
+                        ? `0 0 24px ${spellAccent}, 0 0 48px ${spellAccent.replace('0.5', '0.1')}, inset 0 1px 0 rgba(255,255,255,0.1)`
                         : canCast
-                          ? `0 0 12px ${spellAccent.replace('0.5', '0.2')}, inset 0 0 12px rgba(255,255,255,0.03)`
+                          ? `0 0 16px ${spellAccent.replace('0.5', '0.2')}, inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.2)`
                           : 'inset 0 0 8px rgba(0,0,0,0.3)',
                       opacity: (canCast || isTargeting) ? 1 : 0.45,
                       cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
                     }}
                   >
+                    {/* Spell action BG image */}
                     <div
                       className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
                       style={{
                         backgroundImage: (canCast || isTargeting) ? `url(/images/spells/${spell.type}-action.png)` : undefined,
                       }}
                     />
-                    <div
-                      className="absolute inset-0 rounded-full pointer-events-none"
-                      style={{
-                        background: (canCast || isTargeting)
-                          ? "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 25%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.6) 100%)"
-                          : undefined,
-                      }}
-                    />
-                    <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
-                      border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.08)' : 'rgba(80,80,80,0.1)'}`,
+
+                    {/* Vignette — dark edges for depth */}
+                    <div className="absolute inset-0 rounded-full pointer-events-none" style={{
+                      background: (canCast || isTargeting)
+                        ? "radial-gradient(ellipse 70% 70% at 50% 50%, transparent 18%, rgba(0,0,0,0.3) 52%, rgba(0,0,0,0.6) 100%)"
+                        : undefined,
                     }} />
-                    <div className="relative z-10 flex items-center justify-center w-full h-full">
+
+                    {/* Specular highlight — top-left gleam */}
+                    {(canCast || isTargeting) && (
+                      <div className="absolute rounded-full pointer-events-none" style={{
+                        top: 4, left: 5, width: '40%', height: '35%',
+                        background: "radial-gradient(ellipse at 50% 65%, rgba(255,255,255,0.14), rgba(255,255,255,0.03) 55%, transparent 100%)",
+                        filter: "blur(1px)",
+                      }} />
+                    )}
+
+                    {/* Bevel ring — top bright, bottom dark */}
+                    <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{
+                      borderTop: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.1)' : 'rgba(80,80,80,0.04)'}`,
+                      borderBottom: `1px solid ${(canCast || isTargeting) ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.08)'}`,
+                      borderLeft: "1px solid transparent",
+                      borderRight: "1px solid transparent",
+                    }} />
+
+                    {/* Engraved inner ring */}
+                    <div className="absolute inset-[6px] rounded-full pointer-events-none" style={{
+                      border: `1px solid ${(canCast || isTargeting) ? 'rgba(255,255,255,0.06)' : 'rgba(80,80,80,0.03)'}`,
+                    }} />
+
+                    {/* Spell icon */}
+                    <div className="relative z-10 flex items-center justify-center w-full h-full" style={{
+                      filter: (canCast || isTargeting) ? `drop-shadow(0 0 4px ${spellAccent.replace('0.5', '0.4')})` : "none",
+                    }}>
                       <SpellSprite type={spell.type} size={36} />
                     </div>
+
+                    {/* Cooldown overlay */}
                     {spell.cooldown > 0 && (
                       <div className="absolute inset-0 pointer-events-none rounded-full"
                         style={{
@@ -587,17 +1020,29 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         }}
                       />
                     )}
+
+                    {/* Targeting effects */}
                     {isTargeting && (
-                      <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
-                        style={{ boxShadow: `inset 0 0 25px ${spellAccent}` }}
-                      />
+                      <>
+                        <div className="absolute inset-0 rounded-full pointer-events-none animate-pulse"
+                          style={{ boxShadow: `inset 0 0 25px ${spellAccent}` }}
+                        />
+                        <div className="absolute inset-[2px] rounded-full pointer-events-none" style={{
+                          background: `conic-gradient(from 0deg, transparent 0deg, ${spellAccent.replace("0.5)", "0.08)")} 15deg, transparent 30deg, transparent 180deg, ${spellAccent.replace("0.5)", "0.06)")} 195deg, transparent 210deg, transparent 360deg)`,
+                          animation: "abilityShimmer 5s linear infinite",
+                        }} />
+                      </>
                     )}
                   </button>
-                  {/* Spell name tag on orb bottom */}
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 z-20 px-1.5 py-px rounded-full text-[7px] font-black uppercase tracking-wider whitespace-nowrap" style={{
-                    background: "rgba(20,16,10,0.92)",
-                    border: `1px solid ${(canCast || isTargeting) ? spellAccent.replace("0.5)", "0.45)") : "rgba(80,60,40,0.3)"}`,
+
+                  {/* Spell name tag */}
+                  <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 z-20 px-2 py-px rounded-full text-[7px] font-black uppercase tracking-wider whitespace-nowrap" style={{
+                    background: (canCast || isTargeting)
+                      ? `linear-gradient(180deg, ${theme?.panelBg || 'rgba(50,30,60,0.9)'}, rgba(20,16,10,0.92))`
+                      : "rgba(20,16,10,0.92)",
+                    border: `1px solid ${(canCast || isTargeting) ? spellAccent.replace("0.5)", "0.5)") : "rgba(80,60,40,0.3)"}`,
                     color: (canCast || isTargeting) ? (theme?.panelBorder?.replace("0.5)", "1)") || "#d4d4d4") : "rgba(160,140,100,0.5)",
+                    boxShadow: (canCast || isTargeting) ? `0 0 6px ${spellAccent.replace("0.5)", "0.1)")}` : "none",
                   }}>
                     {spellData.shortName}
                   </div>
@@ -704,6 +1149,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
           24% { transform: scale(1); }
           36% { transform: scale(1.05); }
           48% { transform: scale(1); }
+        }
+        @keyframes abilityShimmer {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>

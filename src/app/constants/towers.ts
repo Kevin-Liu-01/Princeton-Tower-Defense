@@ -260,6 +260,7 @@ export const TOWER_CATEGORIES: Record<TowerType, TowerCategory> = {
 
 export type TowerTag =
   | "attacker"
+  | "dps"
   | "spawner"
   | "economy"
   | "crowd_control"
@@ -282,6 +283,7 @@ export interface TowerTagDef {
 
 export const TOWER_TAG_DEFS: Record<TowerTag, TowerTagDef> = {
   attacker: { label: "Attacker", icon: "swords", textClass: "text-red-300", bgClass: "bg-red-950/60", borderClass: "border-red-700/40" },
+  dps: { label: "DPS", icon: "flame", textClass: "text-red-400", bgClass: "bg-red-950/60", borderClass: "border-red-700/40" },
   spawner: { label: "Spawner", icon: "users", textClass: "text-fuchsia-300", bgClass: "bg-fuchsia-950/60", borderClass: "border-fuchsia-700/40" },
   economy: { label: "Economy", icon: "coins", textClass: "text-amber-300", bgClass: "bg-amber-950/60", borderClass: "border-amber-700/40" },
   crowd_control: { label: "Control", icon: "snowflake", textClass: "text-purple-300", bgClass: "bg-purple-950/60", borderClass: "border-purple-700/40" },
@@ -296,7 +298,7 @@ export const TOWER_TAG_DEFS: Record<TowerTag, TowerTagDef> = {
 };
 
 export const TOWER_TAGS: Record<TowerType, TowerTag[]> = {
-  cannon: ["attacker", "single_target", "anti_air"],
+  cannon: ["dps", "attacker", "anti_air"],
   library: ["crowd_control", "anti_air"],
   lab: ["chain", "attacker", "anti_air"],
   arch: ["ramp_up", "attacker", "anti_air"],

@@ -108,6 +108,7 @@ import {
   HERO_SUMMON_RANGE,
   SENTINEL_NEXUS_STATS,
   SUNFORGE_ORRERY_STATS,
+  SPECIAL_TOWER_WARMUP_MS,
 } from "../constants";
 // Utils
 import {
@@ -160,6 +161,7 @@ import {
   getTroopCellKey,
   findNearestTroopInRange,
   getVaultImpactPos,
+  type VaultEntry,
 } from "../game/targeting";
 import { createEnemyPosCache } from "../game/enemyPosition";
 import { getImpactEffect } from "../game/projectileEffects";
@@ -238,6 +240,7 @@ import {
   computeFogCounts,
 } from "../rendering";
 import { renderEnemyDeath } from "../rendering/effects/deathAnimations";
+import { getSentinelPalette } from "../rendering/towers/sentinelTheme";
 import {
   getWaveStartBubblesScreenData as computeWaveStartBubbles,
   drawWaveStartBubble,
@@ -269,7 +272,7 @@ import {
   isWorldPosInChallengeDecorationFootprint,
 } from "../rendering/maps/challengeTerrain";
 // Hazard game logic
-import { calculateHazardEffects, applyHazardEffect } from "../game/hazards";
+import { calculateHazardEffects, applyHazardEffect, calculateFriendlyHazardEffects, applyHazardEffectToTroop, applyHazardEffectToHero } from "../game/hazards";
 import { getEnemyDamageTaken } from "../game/combat";
 import { renderSpellReticle, renderTargetingReticle, RETICLE_COLORS, type SpellReticleVariant } from "../rendering/ui/reticles";
 import { emitDamageNumber, renderDamageNumbers, clearDamageNumbers } from "../rendering/ui/damageNumbers";
@@ -294,9 +297,10 @@ import {
   getLevelWaves,
   getBlockedPositionsForMap,
   getLevelStartingPawPoints,
-  getLevelSpecialTowerHp,
   getLevelSpecialTowers,
   getLevelAllowedTowers,
+  getVaultHpMap,
+  vaultPosKey,
 } from "../game/pageHelpers";
 import {
   clampPositionToRadius,
@@ -725,9 +729,9 @@ export function usePrincetonTowerDefenseRuntime() {
     initParticlePool();
     particlePoolInitRef.current = true;
   }
-  // Special Objectives State
-  const [specialTowerHp, setSpecialTowerHp] = useState<number | null>(null);
-  const [vaultFlash, setVaultFlash] = useState(0);
+  // Special Objectives State – keyed by vault position (e.g. "3,5")
+  const [specialTowerHp, setSpecialTowerHp] = useState<Record<string, number>>({});
+  const [vaultFlash, setVaultFlash] = useState<Record<string, number>>({});
   // HUD Animation state
   const [goldSpellActive, setGoldSpellActive] = useState(false);
   // Eating club income events for stacking floaters
@@ -907,6 +911,12 @@ export function usePrincetonTowerDefenseRuntime() {
   const lastSentinelStrikeRef = useRef<Map<string, number>>(new Map());
   // Track per-structure cadence for orange sunforge offensive barrages.
   const lastSunforgeBarrageRef = useRef<Map<string, number>>(new Map());
+  // Track the sunforge orrery's current aim position (for non-interactable reticle)
+  const sunforgeAimRef = useRef<Map<string, Position>>(new Map());
+  // Track the missile battery auto-aim position per tower (for non-interactable reticle)
+  const missileAutoAimRef = useRef<Map<string, Position>>(new Map());
+  // Track when enemies first appeared on the field (for special tower warmup delay)
+  const enemiesFirstAppearedRef = useRef<number>(0);
   const sentinelTargetsRef = useRef<Record<string, Position>>({});
   // Track when game was reset to prevent stale state race conditions
   const gameResetTimeRef = useRef<number>(0);
@@ -1678,7 +1688,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setSpells([]);
       setGameSpeed(1);
       setGoldSpellActive(false);
-      setSpecialTowerHp(getLevelSpecialTowerHp(selectedMap));
+      setSpecialTowerHp(getVaultHpMap(selectedMap));
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
       pausedAtRef.current = null;
@@ -1688,6 +1698,9 @@ export function usePrincetonTowerDefenseRuntime() {
       lastBarracksSpawnRef.current = new Map();
       lastSentinelStrikeRef.current.clear();
       lastSunforgeBarrageRef.current.clear();
+      sunforgeAimRef.current.clear();
+      missileAutoAimRef.current.clear();
+      enemiesFirstAppearedRef.current = 0;
       // Mark reset time to prevent stale state race conditions
       gameResetTimeRef.current = Date.now();
     }
@@ -2327,9 +2340,9 @@ export function usePrincetonTowerDefenseRuntime() {
       const barracksTowers = specialTowers.filter(
         (tower) => tower.type === "barracks"
       );
-      const vaultWorldPositions = specialTowers
+      const vaultEntries: VaultEntry[] = specialTowers
         .filter((tower) => tower.type === "vault")
-        .map((tower) => gridToWorld(tower.pos));
+        .map((tower) => ({ worldPos: gridToWorld(tower.pos), key: vaultPosKey(tower.pos) }));
       // Wave timer - check outside setState to avoid race conditions
       // Freeze the timer while tutorial or encounter overlays are active
       if (!waveInProgress && currentWave < levelWaves.length && !tutorialBlockingRef.current) {
@@ -2385,7 +2398,7 @@ export function usePrincetonTowerDefenseRuntime() {
       ) =>
         findNearestTroopInRange(origin, range, troopBuckets, troopCellSize, predicate);
       const getClosestVault = (enemyPos: Position, maxDistance: number) =>
-        getVaultImpactPos(enemyPos, vaultWorldPositions, maxDistance);
+        getVaultImpactPos(enemyPos, vaultEntries, maxDistance);
 
       // =========================================================================
       // DYNAMIC BUFF REGISTRATION
@@ -2510,6 +2523,42 @@ export function usePrincetonTowerDefenseRuntime() {
 
         // Spawn hazard environment particles (throttled)
         hazardParticles.forEach((p) => addParticles(p.pos, p.type, p.count));
+
+        // Friendly unit hazard effects (troops + hero)
+        const friendlyResult = calculateFriendlyHazardEffects(
+          hazards,
+          troops,
+          hero,
+          deltaTime,
+        );
+
+        if (friendlyResult.troopEffects.size > 0) {
+          setTroops((prev) =>
+            prev.map((t) => {
+              const effect = friendlyResult.troopEffects.get(t.id);
+              if (!effect) return t;
+              return applyHazardEffectToTroop(t, effect);
+            })
+          );
+
+          friendlyResult.troopEffects.forEach((effect) => {
+            if (effect.fireParticlePos) {
+              addParticles(effect.fireParticlePos, "fire", 4);
+            }
+          });
+        }
+
+        if (friendlyResult.heroEffect) {
+          setHero((prev) => {
+            if (!prev) return null;
+            return applyHazardEffectToHero(prev, friendlyResult.heroEffect!);
+          });
+          if (friendlyResult.heroEffect.fireParticlePos) {
+            addParticles(friendlyResult.heroEffect.fireParticlePos, "fire", 4);
+          }
+        }
+
+        friendlyResult.particles.forEach((p) => addParticles(p.pos, p.type, p.count));
       }
 
       // =========================================================================
@@ -2569,6 +2618,14 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
 
+      // Track when enemies first appear on the field for special tower warmup
+      if (enemies.length > 0 && enemiesFirstAppearedRef.current === 0) {
+        enemiesFirstAppearedRef.current = now;
+      }
+      const specialTowerWarmedUp =
+        enemiesFirstAppearedRef.current > 0 &&
+        now - enemiesFirstAppearedRef.current >= SPECIAL_TOWER_WARMUP_MS;
+
       // B2. SENTINEL NEXUS: Locked-coordinate lightning strike.
       if (sentinelNexuses.length > 0) {
         const baseStrikeIntervalMs = SENTINEL_NEXUS_STATS.strikeIntervalMs;
@@ -2606,6 +2663,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const strikeKey = getSpecialTowerKey(nexus);
           const lastStrike = lastSentinelStrikeRef.current.get(strikeKey) ?? 0;
           if (now - lastStrike < strikeIntervalMs) continue;
+          if (!specialTowerWarmedUp) continue;
 
           const targetPos = nextTargets[strikeKey];
           if (!targetPos) continue;
@@ -2688,6 +2746,9 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       // B3. SUNFORGE ORRERY: Offensive tri-plasma barrage on dense enemy clusters.
+      if (sunforgeOrreries.length > 0 && enemies.length === 0) {
+        sunforgeAimRef.current.clear();
+      }
       if (sunforgeOrreries.length > 0 && enemies.length > 0) {
         const { barrageIntervalMs, clusterScanRadius, strikeRadius, directDamage, burnDps, burnDurationMs, stunDuration: sunforgeStunMs } = SUNFORGE_ORRERY_STATS;
         const sunforgeKeys = new Set<string>();
@@ -2700,9 +2761,8 @@ export function usePrincetonTowerDefenseRuntime() {
         for (const orrery of sunforgeOrreries) {
           const key = getSpecialTowerKey(orrery);
           sunforgeKeys.add(key);
-          const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
-          if (now - lastBarrage < barrageIntervalMs) continue;
 
+          // Always compute best cluster target for the reticle tracking
           let bestTarget: Position | null = null;
           let bestScore = -Infinity;
           for (const pivotEnemy of enemiesByProgress) {
@@ -2724,7 +2784,15 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           }
 
+          if (bestTarget) {
+            sunforgeAimRef.current.set(key, bestTarget);
+          }
+
+          const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
+          if (now - lastBarrage < barrageIntervalMs) continue;
+          if (!specialTowerWarmedUp) continue;
           if (!bestTarget) continue;
+          const fireTarget = bestTarget;
           lastSunforgeBarrageRef.current.set(key, now);
 
           const orreryWorldPos = gridToWorld(orrery.pos);
@@ -2752,14 +2820,14 @@ export function usePrincetonTowerDefenseRuntime() {
                 TILE_SIZE,
                 Math.min(
                   GRID_WIDTH * TILE_SIZE - TILE_SIZE,
-                  bestTarget.x + offset.x
+                  fireTarget.x + offset.x
                 )
               ),
               y: Math.max(
                 TILE_SIZE,
                 Math.min(
                   GRID_HEIGHT * TILE_SIZE - TILE_SIZE,
-                  bestTarget.y + offset.y
+                  fireTarget.y + offset.y
                 )
               ),
             };
@@ -2856,6 +2924,12 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           });
         }
+        // Clean stale aim entries
+        sunforgeAimRef.current.forEach((_value, key) => {
+          if (!sunforgeKeys.has(key)) {
+            sunforgeAimRef.current.delete(key);
+          }
+        });
       }
 
       // C. BARRACKS: Capped & spread deployment (max 3 knights per barracks).
@@ -2961,16 +3035,15 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // D. VAULT: targetable objective.
-      if (
-        vaultWorldPositions.length > 0 &&
-        specialTowerHp !== null &&
-        specialTowerHp > 0
-      ) {
+      // D. VAULT: targetable objective (per-vault HP).
+      const anyVaultAlive = vaultEntries.some((v) => (specialTowerHp[v.key] ?? 0) > 0);
+      if (vaultEntries.length > 0 && anyVaultAlive) {
         enemies.forEach((enemy) => {
           const enemyPos = getEnemyPosCached(enemy);
-          const vaultImpactPos = getClosestVault(enemyPos, 60);
-          if (!vaultImpactPos) return;
+          const vaultHit = getClosestVault(enemyPos, 60);
+          if (!vaultHit) return;
+          const vaultHp = specialTowerHp[vaultHit.key] ?? 0;
+          if (vaultHp <= 0) return;
           const effectiveEnemyAttackInterval =
             gameSpeed > 0 ? 1000 / gameSpeed : 1000;
           if (
@@ -2982,14 +3055,14 @@ export function usePrincetonTowerDefenseRuntime() {
 
           const dmg = 20;
           setSpecialTowerHp((prev) => {
-            if (prev === null || prev <= 0) return prev;
-            const newVal = prev - dmg;
+            const cur = prev[vaultHit.key] ?? 0;
+            if (cur <= 0) return prev;
+            const newVal = Math.max(0, cur - dmg);
             if (newVal <= 0) {
               setLives((life) => Math.max(0, life - 5));
-              addParticles(vaultImpactPos, "explosion", 40);
-              return 0;
+              addParticles(vaultHit.worldPos, "explosion", 40);
             }
-            return newVal;
+            return { ...prev, [vaultHit.key]: newVal };
           });
           setEnemies((prev) =>
             prev.map((entry) =>
@@ -2999,8 +3072,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   inCombat: true,
                   lastTroopAttack: now,
                   facingRight: getFacingRightFromDelta(
-                    vaultImpactPos.x - enemyPos.x,
-                    vaultImpactPos.y - enemyPos.y,
+                    vaultHit.worldPos.x - enemyPos.x,
+                    vaultHit.worldPos.y - enemyPos.y,
                     entry.facingRight,
                   ),
                 }
@@ -3008,14 +3081,24 @@ export function usePrincetonTowerDefenseRuntime() {
             )
           );
         });
-
-        if (specialTowerHp <= 0) setSpecialTowerHp(null);
       }
 
       // =========================================================================
       // ENEMY AI: VAULT TARGETING & COMBAT
       // =========================================================================
-      if (vaultFlash > 0) setVaultFlash((v) => Math.max(0, v - deltaTime));
+      setVaultFlash((prev) => {
+        let changed = false;
+        const next: Record<string, number> = {};
+        for (const key in prev) {
+          if (prev[key] > 0) {
+            next[key] = Math.max(0, prev[key] - deltaTime);
+            changed = true;
+          } else {
+            next[key] = 0;
+          }
+        }
+        return changed ? next : prev;
+      });
 
       setEnemies((prev) =>
         prev
@@ -3114,39 +3197,32 @@ export function usePrincetonTowerDefenseRuntime() {
               }
             }
 
-            // 2. CHECK FOR VAULT LOGIC (Second Priority)
-            if (
-              vaultWorldPositions.length > 0 &&
-              specialTowerHp !== null &&
-              specialTowerHp > 0
-            ) {
-              const vaultImpactPos = getClosestVault(enemyPos, 70);
-              if (vaultImpactPos) {
-                // Scale enemy attack interval with game speed - skip when paused
+            // 2. CHECK FOR VAULT LOGIC (Second Priority) – per-vault HP
+            if (vaultEntries.length > 0 && anyVaultAlive) {
+              const vaultHit = getClosestVault(enemyPos, 70);
+              if (vaultHit && (specialTowerHp[vaultHit.key] ?? 0) > 0) {
                 const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
                 if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
                   setSpecialTowerHp((prev) => {
-                    // Skip if vault already destroyed
-                    if (prev === null || prev <= 0) return prev;
-                    const newVal = Math.max(0, prev - 25);
+                    const cur = prev[vaultHit.key] ?? 0;
+                    if (cur <= 0) return prev;
+                    const newVal = Math.max(0, cur - 25);
                     if (newVal <= 0) {
-                      // Only subtract lives once when transitioning to destroyed
                       setLives((l) => Math.max(0, l - 5));
-                      addParticles(vaultImpactPos, "explosion", 40);
-                      return 0;
+                      addParticles(vaultHit.worldPos, "explosion", 40);
                     }
-                    return newVal;
+                    return { ...prev, [vaultHit.key]: newVal };
                   });
-                  setVaultFlash(150);
-                  addParticles(vaultImpactPos, "smoke", 3);
+                  setVaultFlash((prev) => ({ ...prev, [vaultHit.key]: 150 }));
+                  addParticles(vaultHit.worldPos, "smoke", 3);
                   return {
                     ...enemy,
                     inCombat: true,
                     combatTarget: "vault_objective",
                     lastTroopAttack: now,
                     facingRight: getFacingRightFromDelta(
-                      vaultImpactPos.x - enemyPos.x,
-                      vaultImpactPos.y - enemyPos.y,
+                      vaultHit.worldPos.x - enemyPos.x,
+                      vaultHit.worldPos.y - enemyPos.y,
                       enemy.facingRight,
                     ),
                   };
@@ -3156,8 +3232,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   inCombat: true,
                   combatTarget: "vault_objective",
                   facingRight: getFacingRightFromDelta(
-                    vaultImpactPos.x - enemyPos.x,
-                    vaultImpactPos.y - enemyPos.y,
+                    vaultHit.worldPos.x - enemyPos.x,
+                    vaultHit.worldPos.y - enemyPos.y,
                     enemy.facingRight,
                   ),
                 };
@@ -5768,6 +5844,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (autoEnemies.length > 0) {
                 const autoTarget = autoEnemies[0];
                 const autoPos = getEnemyAimPosCached(autoTarget);
+                missileAutoAimRef.current.set(tower.id, { x: autoPos.x, y: autoPos.y });
                 const aDx = autoPos.x - towerWorldPos.x;
                 const aDy = autoPos.y - towerWorldPos.y;
                 const aRot = Math.atan2(aDx + aDy, aDx - aDy);
@@ -5810,6 +5887,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   queueTowerPatch(tower.id, { lastAttack: now });
                   addParticles(barrelOrigin.from, "smoke", 6);
                 }
+              } else {
+                missileAutoAimRef.current.delete(tower.id);
               }
             } else {
               // Non-missile mortar types need enemies in range (cannot hit flying)
@@ -7852,6 +7931,7 @@ export function usePrincetonTowerDefenseRuntime() {
           mapTheme,
           shadowOnly: !!entry.shadowOnly,
           skipShadow: hasBackgroundShadowPass && !entry.shadowOnly,
+          zoom: scaleZoom,
         });
         ctx.restore();
       }
@@ -8148,6 +8228,7 @@ export function usePrincetonTowerDefenseRuntime() {
             dec.heightTag,
             false,
             vol.backgroundShadowOnly,
+            cacheZoomForKey,
           ) ?? undefined;
           spriteCachedDepthDecorations.push(entry);
         }
@@ -8168,6 +8249,7 @@ export function usePrincetonTowerDefenseRuntime() {
           dec.heightTag,
           !!entry.shadowOnly,
           false,
+          cacheZoomForKey,
         ) ?? undefined;
       }
 
@@ -8198,6 +8280,7 @@ export function usePrincetonTowerDefenseRuntime() {
               mapTheme,
               skipShadow: getDecorationVolumeSpec(dec.type, dec.heightTag)
                 .backgroundShadowOnly,
+              zoom: cacheZoomForKey,
             });
             layerCtx.restore();
           }
@@ -8439,21 +8522,28 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       let chargeProgress = 0;
-      if (spec.type === "sentinel_nexus") {
+      const warmupElapsed = enemiesFirstAppearedRef.current > 0
+        ? Date.now() - enemiesFirstAppearedRef.current
+        : 0;
+      const inWarmup = enemiesFirstAppearedRef.current > 0 && warmupElapsed < SPECIAL_TOWER_WARMUP_MS;
+      const warmupProgress = enemiesFirstAppearedRef.current === 0
+        ? 0
+        : Math.min(1, warmupElapsed / SPECIAL_TOWER_WARMUP_MS);
+      if (inWarmup) {
+        chargeProgress = warmupProgress;
+      } else if (spec.type === "sentinel_nexus") {
         const key = getSpecialTowerKey(spec);
         const lastStrike = lastSentinelStrikeRef.current.get(key) ?? 0;
-        const strikeInterval = 10000;
-        chargeProgress = lastStrike === 0 ? 1 : Math.min(1, (Date.now() - lastStrike) / strikeInterval);
+        chargeProgress = lastStrike === 0 ? 1 : Math.min(1, (Date.now() - lastStrike) / SENTINEL_NEXUS_STATS.strikeIntervalMs);
       } else if (spec.type === "sunforge_orrery") {
         const key = getSpecialTowerKey(spec);
         const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
-        const barrageInterval = 9000;
-        chargeProgress = lastBarrage === 0 ? 1 : Math.min(1, (Date.now() - lastBarrage) / barrageInterval);
+        chargeProgress = lastBarrage === 0 ? 1 : Math.min(1, (Date.now() - lastBarrage) / SUNFORGE_ORRERY_STATS.barrageIntervalMs);
       }
 
       renderables.push({
         type: "special-building",
-        data: { ...spec, boostedTowerCount, chargeProgress, __towerIndex: index },
+        data: { ...spec, boostedTowerCount, chargeProgress, warmupProgress, __towerIndex: index },
         isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
       });
     });
@@ -8629,9 +8719,10 @@ export function usePrincetonTowerDefenseRuntime() {
     // When actively retargeting, the overlay follows the cursor instead of the stored position.
     const sentinelStrikeRadiusWorld = 140;
     const sentinelSpeed = gameSpeedRef.current;
-    const sentinelVisualInterval = sentinelSpeed > 0 ? 10000 / sentinelSpeed : 10000;
+    const sentinelVisualInterval = sentinelSpeed > 0 ? SENTINEL_NEXUS_STATS.strikeIntervalMs / sentinelSpeed : SENTINEL_NEXUS_STATS.strikeIntervalMs;
     const sentinelReticleNow = Date.now();
     const sentinelCursorPos = mousePosRef.current;
+    const sentinelPal = getSentinelPalette(mapTheme);
     levelSpecialTowersForRenderable.forEach((spec) => {
       if (spec.type !== "sentinel_nexus") return;
       const key = getSpecialTowerKey(spec);
@@ -8654,8 +8745,8 @@ export function usePrincetonTowerDefenseRuntime() {
         y: targetScreenPos.y,
         zoom: cameraZoom,
         time: nowSeconds,
-        color: RETICLE_COLORS.red,
-        glowColor: { r: 220, g: 30, b: 30 },
+        color: sentinelPal.reticleColor,
+        glowColor: sentinelPal.reticleGlow,
         radius: 58,
         aoeRadius: sentinelStrikeRadiusWorld,
         laserLine: {
@@ -8664,6 +8755,41 @@ export function usePrincetonTowerDefenseRuntime() {
         },
         active: isActiveTargeting,
         cooldownProgress: sentinelCooldown,
+        cooldownColor: sentinelPal.reticleColor,
+      });
+    });
+
+    // Sunforge orrery aim reticle — non-interactable, tracks current best cluster target
+    const sunforgeStrikeRadiusWorld = SUNFORGE_ORRERY_STATS.strikeRadius;
+    const sunforgeReticleNow = Date.now();
+    levelSpecialTowersForRenderable.forEach((spec) => {
+      if (spec.type !== "sunforge_orrery") return;
+      const key = getSpecialTowerKey(spec);
+      const aimPos = sunforgeAimRef.current.get(key);
+      if (!aimPos) return;
+      const sourceScreenPos = toScreen(gridToWorld(spec.pos));
+      const targetScreenPos = toScreen(aimPos);
+
+      const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
+      const sunforgeCooldown = lastBarrage === 0
+        ? 1
+        : Math.min(1, (sunforgeReticleNow - lastBarrage) / SUNFORGE_ORRERY_STATS.barrageIntervalMs);
+
+      renderTargetingReticle(ctx, {
+        x: targetScreenPos.x,
+        y: targetScreenPos.y,
+        zoom: cameraZoom,
+        time: nowSeconds,
+        color: RETICLE_COLORS.orange,
+        glowColor: { r: 255, g: 120, b: 30 },
+        radius: 50,
+        aoeRadius: sunforgeStrikeRadiusWorld,
+        laserLine: {
+          fromX: sourceScreenPos.x,
+          fromY: sourceScreenPos.y - 40 * cameraZoom,
+        },
+        active: false,
+        cooldownProgress: sunforgeCooldown,
       });
     });
 
@@ -8754,6 +8880,40 @@ export function usePrincetonTowerDefenseRuntime() {
         const cooldownProgress = Math.min(1, elapsed / cd);
         renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds, cooldownProgress);
       }
+    }
+
+    // 4b. Missile battery auto-aim reticle (tracks current auto-target, non-interactable)
+    for (const tower of towers) {
+      if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") continue;
+      if (tower.mortarAutoAim === false) continue;
+      const aimPos = missileAutoAimRef.current.get(tower.id);
+      if (!aimPos) continue;
+      const towerWorldPos = gridToWorld(tower.pos);
+      const sourceScreenPos = worldToScreen(towerWorldPos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const targetScreenPos = worldToScreen(aimPos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+      const missileSpeed = gameSpeedRef.current;
+      const cd = missileSpeed > 0
+        ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
+        : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
+      const elapsed = missileReticleNow - tower.lastAttack;
+      const cooldownProgress = Math.min(1, elapsed / cd);
+      renderTargetingReticle(ctx, {
+        x: targetScreenPos.x,
+        y: targetScreenPos.y,
+        zoom: cameraZoom,
+        time: nowSeconds,
+        color: RETICLE_COLORS.gold,
+        glowColor: { r: 255, g: 180, b: 40 },
+        radius: 50,
+        laserLine: {
+          fromX: sourceScreenPos.x,
+          fromY: sourceScreenPos.y - 20 * cameraZoom,
+        },
+        active: false,
+        cooldownProgress,
+        cooldownColor: RETICLE_COLORS.gold,
+      });
     }
 
     // 5. Cursor-following reticles (spell, troop placement, sentinel retarget)
@@ -8998,22 +9158,27 @@ export function usePrincetonTowerDefenseRuntime() {
     renderables.forEach((r) => {
       switch (r.type) {
         case "special-building": {
-          const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number; chargeProgress?: number };
+          const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number; chargeProgress?: number; warmupProgress?: number };
           const sPos = toScreen(gridToWorld(spec.pos));
-          const maxHp = spec.type === "vault"
-            ? getLevelSpecialTowerHp(selectedMap) ?? spec.hp
-            : spec.hp;
+          const vKey = vaultPosKey(spec.pos);
+          const perVaultHp = spec.type === "vault"
+            ? (specialTowerHp[vKey] ?? null)
+            : null;
+          const perVaultFlash = spec.type === "vault"
+            ? (vaultFlash[vKey] ?? 0)
+            : 0;
           renderSpecialBuilding(
             ctx,
             sPos.x,
             sPos.y,
             cameraZoom,
             spec.type,
-            maxHp,
-            specialTowerHp,
-            vaultFlash,
+            spec.hp,
+            perVaultHp,
+            perVaultFlash,
             spec.boostedTowerCount || 0,
             spec.chargeProgress ?? 0,
+            spec.warmupProgress ?? 1,
             mapTheme
           );
           break;
@@ -9069,6 +9234,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 decData.type,
                 decData.heightTag
               ).backgroundShadowOnly,
+              zoom: cameraZoom,
             });
             ctx.restore();
           }
@@ -9827,7 +9993,8 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
 
-      // Check if clicking on a tower to start repositioning
+      // When a tower's upgrade panel is open, don't allow repositioning it.
+      // The upgrade overlay is the primary interaction for already-placed towers.
       if (selectedTower) {
         const tower = towers.find((t) => t.id === selectedTower);
         if (tower) {
@@ -9842,10 +10009,7 @@ export function usePrincetonTowerDefenseRuntime() {
           );
           const hitboxRadius = getTowerHitboxRadius(tower, cameraZoom);
 
-          // If clicking on the selected tower, start repositioning
           if (distance(clickPos, screenPos) < hitboxRadius) {
-            setRepositioningTower(selectedTower);
-            setRepositionPreviewPos(clickPos);
             return;
           }
         }
@@ -10543,7 +10707,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // ========== RETICLE CLICK — click on a target reticle to retarget ==========
       const RETICLE_HIT_RADIUS = 52;
 
-      // Missile battery reticles
+      // Missile battery reticles (manual mode — click to retarget)
       for (const tower of towers) {
         if (
           tower.type === "mortar" && tower.level === 4 &&
@@ -10558,6 +10722,29 @@ export function usePrincetonTowerDefenseRuntime() {
             setSelectedTower(null);
             return;
           }
+        }
+      }
+
+      // Missile battery reticles (auto-aim mode — click to switch to manual)
+      for (const tower of towers) {
+        if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") continue;
+        if (tower.mortarAutoAim === false) continue;
+        const aimPos = missileAutoAimRef.current.get(tower.id);
+        if (!aimPos) continue;
+        const reticleScreen = worldToScreen(
+          aimPos, width, height, dpr, cameraOffset, cameraZoom,
+        );
+        if (distance(clickPos, reticleScreen) < RETICLE_HIT_RADIUS * cameraZoom) {
+          setTowers((prev) =>
+            prev.map((t) =>
+              t.id === tower.id
+                ? { ...t, mortarAutoAim: false, mortarTarget: { ...aimPos } }
+                : t
+            )
+          );
+          setMissileMortarTargetingId(tower.id);
+          setSelectedTower(null);
+          return;
         }
       }
 
@@ -11219,6 +11406,42 @@ export function usePrincetonTowerDefenseRuntime() {
   const handleCanvasPointerLeave = useCallback(() => {
     setHoveredWaveBubblePathKey(null);
   }, []);
+
+  // Touch drags from BuildMenu buttons are implicitly captured to the button,
+  // so canvas pointer handlers never fire. These callbacks let the BuildMenu
+  // relay touch-drag events into the canvas coordinate space.
+  const handleBuildTouchDragMove = useCallback(
+    (clientX: number, clientY: number, towerType: TowerType) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      setDraggingTower({ type: towerType, pos: { x: clientX - rect.left, y: clientY - rect.top } });
+    },
+    []
+  );
+
+  const handleBuildTouchDragEnd = useCallback(
+    (clientX: number, clientY: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      if (x >= 0 && y >= 0 && x <= rect.width && y <= rect.height) {
+        canvas.dispatchEvent(
+          new PointerEvent('pointerup', {
+            clientX,
+            clientY,
+            pointerType: 'touch',
+            bubbles: true,
+          })
+        );
+      } else {
+        setDraggingTower(null);
+      }
+    },
+    []
+  );
 
   // Game actions
   const upgradeTower = useCallback(
@@ -12119,7 +12342,7 @@ export function usePrincetonTowerDefenseRuntime() {
       levelStartTimeValue: number;
       resetCamera: boolean;
       resetResultStats: boolean;
-      specialTowerHpValue: number | null;
+      specialTowerHpValue: Record<string, number>;
     }) => {
       resetBattleState({
         clearAllTimers,
@@ -12183,6 +12406,9 @@ export function usePrincetonTowerDefenseRuntime() {
       setSentinelTargets({});
       lastSentinelStrikeRef.current.clear();
       lastSunforgeBarrageRef.current.clear();
+      sunforgeAimRef.current.clear();
+      missileAutoAimRef.current.clear();
+      enemiesFirstAppearedRef.current = 0;
     },
     [
       clearAllTimers,
@@ -12203,7 +12429,7 @@ export function usePrincetonTowerDefenseRuntime() {
       levelStartTimeValue: 0,
       resetCamera: true,
       resetResultStats: true,
-      specialTowerHpValue: getLevelSpecialTowerHp(selectedMap),
+      specialTowerHpValue: getVaultHpMap(selectedMap),
     });
   }, [performBattleReset, selectedMap]);
 
@@ -12214,7 +12440,7 @@ export function usePrincetonTowerDefenseRuntime() {
       levelStartTimeValue: Date.now(),
       resetCamera: false,
       resetResultStats: false,
-      specialTowerHpValue: getLevelSpecialTowerHp(selectedMap),
+      specialTowerHpValue: getVaultHpMap(selectedMap),
     });
   }, [performBattleReset, selectedMap]);
 
@@ -12668,12 +12894,8 @@ export function usePrincetonTowerDefenseRuntime() {
               {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
                 <SpecialBuildingTooltip
                   type={hoveredSpecialTower.type}
-                  hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
-                  maxHp={
-                    hoveredSpecialTower.type === "vault"
-                      ? getLevelSpecialTowerHp(selectedMap) ?? hoveredSpecialTower.hp
-                      : hoveredSpecialTower.hp
-                  }
+                  hp={hoveredSpecialTower.type === "vault" ? (specialTowerHp[vaultPosKey(hoveredSpecialTower.pos)] ?? null) : null}
+                  maxHp={hoveredSpecialTower.hp}
                   position={mousePos}
                   sentinelTarget={
                     hoveredSpecialTower.type === "sentinel_nexus"
@@ -12808,6 +13030,8 @@ export function usePrincetonTowerDefenseRuntime() {
             hoveredTower={hoveredTower}
             setHoveredTower={setHoveredTower}
             setDraggingTower={setDraggingTower}
+            onTouchDragMove={handleBuildTouchDragMove}
+            onTouchDragEnd={handleBuildTouchDragEnd}
             placedTowers={towers.reduce((acc, t) => {
               acc[t.type] = (acc[t.type] || 0) + 1;
               return acc;

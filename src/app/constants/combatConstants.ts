@@ -63,12 +63,14 @@ export const LEVEL_3_RANGE_MULT = 1.25;
 export const LEVEL_4_RANGE_MULT = 1.5;
 
 // --- Special Tower Stats ---
+export const SPECIAL_TOWER_WARMUP_MS = 5000;
+
 export const SENTINEL_NEXUS_STATS = {
-  damage: 240,
+  damage: 100,
   radius: 140,
-  strikeIntervalMs: 10000,
-  stunDuration: 450,
-  damageFlash: 240,
+  strikeIntervalMs: 3000,
+  stunDuration: 300,
+  damageFlash: 120,
 } as const;
 
 export const SUNFORGE_ORRERY_STATS = {

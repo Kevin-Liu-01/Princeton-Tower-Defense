@@ -184,6 +184,19 @@ export const getLevelSpecialTowers = (levelId: string): SpecialTower[] => {
   return level.specialTower ? [level.specialTower] : [];
 };
 
+export const vaultPosKey = (pos: { x: number; y: number }): string =>
+  `${pos.x},${pos.y}`;
+
+export const getVaultHpMap = (levelId: string): Record<string, number> => {
+  const map: Record<string, number> = {};
+  for (const tower of getLevelSpecialTowers(levelId)) {
+    if (tower.type === "vault" && typeof tower.hp === "number") {
+      map[vaultPosKey(tower.pos)] = tower.hp;
+    }
+  }
+  return map;
+};
+
 export const getLevelSpecialTowerHp = (levelId: string): number | null =>
   (() => {
     const totalVaultHp = getLevelSpecialTowers(levelId)

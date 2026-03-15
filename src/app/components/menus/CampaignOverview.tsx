@@ -124,7 +124,7 @@ function computeRegionData(
   unlockedMaps: Set<string>
 ) {
   return REGION_ORDER.map((region) => {
-    const levels = WORLD_LEVELS.filter((l) => l.region === region);
+    const levels = WORLD_LEVELS.filter((l) => l.region === region && l.kind !== "sandbox");
     const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
     const maxStars = levels.length * 3;
     const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
@@ -140,12 +140,13 @@ function findRecommendedLevel(
   levelStars: LevelStars,
   unlockedMaps: Set<string>
 ): LevelNode | null {
-  for (const level of WORLD_LEVELS) {
+  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
+  for (const level of campaignLevels) {
     if (unlockedMaps.has(level.id) && (levelStars[level.id] || 0) === 0) {
       return level;
     }
   }
-  for (const level of WORLD_LEVELS) {
+  for (const level of campaignLevels) {
     if (unlockedMaps.has(level.id) && (levelStars[level.id] || 0) < 3) {
       return level;
     }
@@ -182,10 +183,11 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
     [levelStars, unlockedSet]
   );
 
-  const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
-  const maxStars = WORLD_LEVELS.length * 3;
-  const completedLevels = WORLD_LEVELS.filter((l) => (levelStars[l.id] || 0) > 0).length;
-  const totalLevels = WORLD_LEVELS.length;
+  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
+  const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
+  const maxStars = campaignLevels.length * 3;
+  const completedLevels = campaignLevels.filter((l) => (levelStars[l.id] || 0) > 0).length;
+  const totalLevels = campaignLevels.length;
 
   const recommended = useMemo(
     () => findRecommendedLevel(levelStars, unlockedSet),
@@ -195,7 +197,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const totalBattles = Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0);
   const totalWins = Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0);
   const totalHearts = Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0);
-  const maxHearts = WORLD_LEVELS.length * 20;
+  const maxHearts = campaignLevels.length * 20;
 
   const lastPlayed = useMemo(() => findLastPlayedLevel(levelStats), [levelStats]);
   const lastPlayedLevel = lastPlayed

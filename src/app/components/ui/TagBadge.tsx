@@ -3,6 +3,7 @@
 import React from "react";
 import {
   Swords,
+  Flame,
   UsersIcon,
   CoinsIcon,
   Snowflake,
@@ -21,6 +22,7 @@ import { TOWER_TAG_DEFS } from "../../constants";
 
 const TAG_ICON_MAP: Record<string, LucideIcon> = {
   swords: Swords,
+  flame: Flame,
   users: UsersIcon,
   coins: CoinsIcon,
   snowflake: Snowflake,

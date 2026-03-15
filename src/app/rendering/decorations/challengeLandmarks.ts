@@ -19,6 +19,7 @@ export interface ChallengeLandmarkRenderParams {
   decorY: number;
   shadowOnly?: boolean;
   skipShadow?: boolean;
+  zoom?: number;
 }
 
 export const CHALLENGE_LANDMARK_TYPES = new Set<DecorationType>([
@@ -140,8 +141,9 @@ function drawSmoke(
     const sx = x + Math.sin(sw * 2.5 + t) * spread * s;
     const sy = y - phase * rise * s;
     const alpha = (1 - phase) * maxAlpha;
-    ctx.fillStyle =
-      color.includes("rgba") ? color : `rgba(${color},${alpha.toFixed(3)})`;
+    ctx.fillStyle = color.includes("rgba")
+      ? color
+      : `rgba(${color},${alpha.toFixed(3)})`;
     if (!color.includes("rgba")) {
       ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
     }
@@ -205,13 +207,22 @@ function drawDetailedCannon(
   }
 
   drawIsometricPrism(
-    ctx, x, y + 2 * s,
-    5 * s, 4.5 * s, 4 * s,
-    "#6a5035", "#3d2919", "#54391f",
+    ctx,
+    x,
+    y + 2 * s,
+    5 * s,
+    4.5 * s,
+    4 * s,
+    "#6a5035",
+    "#3d2919",
+    "#54391f",
   );
 
   const barrelGrad = ctx.createLinearGradient(
-    x - 2.4 * s, y - 4 * s, muzzleX, muzzleY,
+    x - 2.4 * s,
+    y - 4 * s,
+    muzzleX,
+    muzzleY,
   );
   barrelGrad.addColorStop(0, "#3a3a3a");
   barrelGrad.addColorStop(0.4, "#2a2a2a");
@@ -236,7 +247,13 @@ function drawDetailedCannon(
   ctx.fill();
 
   ctx.fillStyle = "#0e0e0e";
-  fillIsoEllipse(ctx, muzzleX, muzzleY - 0.5 * s, 1.5 * s, 1.5 * s * ISO_Y_RATIO);
+  fillIsoEllipse(
+    ctx,
+    muzzleX,
+    muzzleY - 0.5 * s,
+    1.5 * s,
+    1.5 * s * ISO_Y_RATIO,
+  );
 
   for (const bandT of [0.3, 0.6, 0.85]) {
     const bx = x + (muzzleX - x) * bandT;
@@ -258,14 +275,30 @@ function drawDetailedCannon(
       const sy = muzzleY - phase * 6 * s;
       ctx.fillStyle = `rgba(120,110,100,${alpha})`;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, (2 + phase * 3) * s, (1 + phase * 1.5) * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        (2 + phase * 3) * s,
+        (1 + phase * 1.5) * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
 }
 
 function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -293,12 +326,30 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   const foundBaseY = bermBaseY + 3 * s;
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 8 * s, s, 40 * s, 18 * s, 48 * s, 0.38);
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 8 * s,
+      s,
+      40 * s,
+      18 * s,
+      48 * s,
+      0.38,
+      "0,0,0",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground scorch marks from cannon fire
-  const gGrad = ctx.createRadialGradient(cx, cy + 8 * s, 0, cx, cy + 8 * s, 36 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 8 * s,
+    0,
+    cx,
+    cy + 8 * s,
+    36 * s,
+  );
   gGrad.addColorStop(0, "rgba(120,95,55,0.3)");
   gGrad.addColorStop(0.4, "rgba(100,80,45,0.18)");
   gGrad.addColorStop(1, "transparent");
@@ -306,9 +357,18 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   drawOrganicBlobAt(ctx, cx, cy + 8 * s, 36 * s, 18 * s, 18.4, 0.14, 22);
   ctx.fill();
 
-  for (const [sx, sy, sr] of [[-18, 12, 5], [2, 16, 6], [18, 13, 4.5]] as const) {
+  for (const [sx, sy, sr] of [
+    [-18, 12, 5],
+    [2, 16, 6],
+    [18, 13, 4.5],
+  ] as const) {
     const scorchGrad = ctx.createRadialGradient(
-      cx + sx * s, cy + sy * s, 0, cx + sx * s, cy + sy * s, sr * s,
+      cx + sx * s,
+      cy + sy * s,
+      0,
+      cx + sx * s,
+      cy + sy * s,
+      sr * s,
     );
     scorchGrad.addColorStop(0, "rgba(30,20,10,0.25)");
     scorchGrad.addColorStop(0.6, "rgba(50,35,15,0.1)");
@@ -318,12 +378,32 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   }
 
   // Foundation platform (square iso footprint)
-  drawIsometricPrism(ctx, cx, foundBaseY, foundSize, foundSize, foundH, stoneTop, stoneLeft, stoneRight);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    foundBaseY,
+    foundSize,
+    foundSize,
+    foundH,
+    stoneTop,
+    stoneLeft,
+    stoneRight,
+  );
   drawStoneRows(ctx, cx, foundBaseY, fI, fD, foundH, 4, 0.12);
   drawEdgeHighlights(ctx, cx, foundBaseY, fI, fD, foundH, stoneHi);
 
   // Earthwork berm (square iso footprint)
-  drawIsometricPrism(ctx, cx, bermBaseY, bermSize, bermSize, bermH, bermTop, bermLeft, bermRight);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    bermBaseY,
+    bermSize,
+    bermSize,
+    bermH,
+    bermTop,
+    bermLeft,
+    bermRight,
+  );
   ctx.strokeStyle = "rgba(0,0,0,0.08)";
   ctx.lineWidth = 0.35 * s;
   for (let r = 1; r < 5; r++) {
@@ -342,11 +422,31 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   const merlW = 2.8 * s;
   for (let i = 0; i < 4; i++) {
     const mt = (i + 0.5) / 4;
-    drawIsometricPrism(ctx, cx - bI * (1 - mt), bermTopBackY + bD + bD * mt, merlW, merlW, merlH, bermEdge, bermTop, bermRight);
+    drawIsometricPrism(
+      ctx,
+      cx - bI * (1 - mt),
+      bermTopBackY + bD + bD * mt,
+      merlW,
+      merlW,
+      merlH,
+      bermEdge,
+      bermTop,
+      bermRight,
+    );
   }
   for (let i = 0; i < 4; i++) {
     const mt = (i + 0.5) / 4;
-    drawIsometricPrism(ctx, cx + bI * mt, bermTopBackY + bD * 2 - bD * mt, merlW, merlW, merlH, bermEdge, bermTop, bermRight);
+    drawIsometricPrism(
+      ctx,
+      cx + bI * mt,
+      bermTopBackY + bD * 2 - bD * mt,
+      merlW,
+      merlW,
+      merlH,
+      bermEdge,
+      bermTop,
+      bermRight,
+    );
   }
 
   // Sandbag perimeter — iso ellipse centered on berm surface
@@ -357,9 +457,17 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
     for (let bag = 0; bag < bagCount; bag++) {
       const ang = Math.PI * 0.6 + (bag / bagCount) * Math.PI * 0.8;
       const pos = getIsoOrbitPoint(cx, cy + 2 * s, ang, bagRadius, bagRadiusY);
-      const bagShade = bag % 3 === 0 ? "#9e8a5e" : bag % 3 === 1 ? "#887450" : "#78663e";
+      const bagShade =
+        bag % 3 === 0 ? "#9e8a5e" : bag % 3 === 1 ? "#887450" : "#78663e";
       ctx.fillStyle = bagShade;
-      fillIsoEllipse(ctx, pos.x, pos.y + ring * 2 * s, 3.5 * s, 2 * s, ang * 0.15);
+      fillIsoEllipse(
+        ctx,
+        pos.x,
+        pos.y + ring * 2 * s,
+        3.5 * s,
+        2 * s,
+        ang * 0.15,
+      );
       ctx.strokeStyle = "rgba(0,0,0,0.12)";
       ctx.lineWidth = 0.3 * s;
       ctx.beginPath();
@@ -379,25 +487,72 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   const wtY = cy + 2 * s;
   const wtW = 5.5 * s;
   const wtH = 18 * s;
-  drawIsometricPrism(ctx, wtX, wtY, wtW, wtW, wtH, stoneTop, stoneLeft, stoneRight);
+  drawIsometricPrism(
+    ctx,
+    wtX,
+    wtY,
+    wtW,
+    wtW,
+    wtH,
+    stoneTop,
+    stoneLeft,
+    stoneRight,
+  );
   const wtI = wtW * ISO_COS;
   const wtD = wtW * ISO_SIN;
   drawStoneRows(ctx, wtX, wtY, wtI, wtD, wtH, 5, 0.1);
   drawEdgeHighlights(ctx, wtX, wtY, wtI, wtD, wtH, stoneHi);
-  drawIsometricPrism(ctx, wtX, wtY - wtH, wtW + 1.5 * s, wtW + 1.5 * s, 2 * s, stoneHi, stoneTop, stoneRight);
-  drawIsometricPyramid(ctx, wtX, wtY - wtH - 2 * s, 4.5 * s, 8 * s, "#5a3e28", "#2e1c10", "#3e2a18");
+  drawIsometricPrism(
+    ctx,
+    wtX,
+    wtY - wtH,
+    wtW + 1.5 * s,
+    wtW + 1.5 * s,
+    2 * s,
+    stoneHi,
+    stoneTop,
+    stoneRight,
+  );
+  drawIsometricPyramid(
+    ctx,
+    wtX,
+    wtY - wtH - 2 * s,
+    4.5 * s,
+    8 * s,
+    "#5a3e28",
+    "#2e1c10",
+    "#3e2a18",
+  );
 
   // Watchtower window glow
   setShadowBlur(ctx, 4 * s, "#ffaa44");
   ctx.fillStyle = `rgba(255,170,60,${0.3 + Math.sin(t * 2.8) * 0.12})`;
-  traceIsoFlushRect(ctx, wtX - wtI * 0.4, wtY - wtH * 0.4 + wtD * 0.5, 1.4, 3.5, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    wtX - wtI * 0.4,
+    wtY - wtH * 0.4 + wtD * 0.5,
+    1.4,
+    3.5,
+    "left",
+    s,
+  );
   ctx.fill();
   clearShadow(ctx);
 
   // Ammunition crate — on berm surface, front-right
   const crateX = cx + 10 * s;
   const crateY = cy + 6 * s;
-  drawIsometricPrism(ctx, crateX, crateY, 5.5 * s, 4.5 * s, 4.5 * s, "#5a4227", "#3c2817", "#4a331d");
+  drawIsometricPrism(
+    ctx,
+    crateX,
+    crateY,
+    5.5 * s,
+    4.5 * s,
+    4.5 * s,
+    "#5a4227",
+    "#3c2817",
+    "#4a331d",
+  );
   const crateI = 5.5 * s * ISO_COS;
   const crateD = 4.5 * s * ISO_SIN;
   const crateTopY = crateY - 4.5 * s;
@@ -416,7 +571,10 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   ctx.stroke();
 
   // Powder kegs — on berm surface
-  for (const [kx, ky] of [[-8, 5], [-5, 6.5]] as const) {
+  for (const [kx, ky] of [
+    [-8, 5],
+    [-5, 6.5],
+  ] as const) {
     const kegX = cx + kx * s;
     const kegY = cy + ky * s;
     ctx.fillStyle = "#3e2818";
@@ -457,26 +615,58 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
   // Command flag pole — on berm surface, right side
   const flagX = cx + 20 * s;
   const flagY = cy + 2 * s;
-  drawIsometricPrism(ctx, flagX, flagY + 4 * s, 1.6 * s, 1.6 * s, 26 * s, "#5b4330", "#3a2818", "#4a3420");
+  drawIsometricPrism(
+    ctx,
+    flagX,
+    flagY + 4 * s,
+    1.6 * s,
+    1.6 * s,
+    26 * s,
+    "#5b4330",
+    "#3a2818",
+    "#4a3420",
+  );
   const wave = Math.sin(t * 3.2 + 0.02 * flagX) * 2 * s;
   ctx.fillStyle = "#c84b36";
   ctx.beginPath();
   ctx.moveTo(flagX + 1 * s, flagY - 21 * s);
-  ctx.quadraticCurveTo(flagX + 9 * s, flagY - 19 * s + wave, flagX + 13 * s, flagY - 14 * s + wave);
+  ctx.quadraticCurveTo(
+    flagX + 9 * s,
+    flagY - 19 * s + wave,
+    flagX + 13 * s,
+    flagY - 14 * s + wave,
+  );
   ctx.lineTo(flagX + 1 * s, flagY - 10 * s);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = "#a83828";
   ctx.beginPath();
   ctx.moveTo(flagX + 1 * s, flagY - 20 * s);
-  ctx.quadraticCurveTo(flagX + 7 * s, flagY - 18 * s + wave * 0.8, flagX + 10 * s, flagY - 14 * s + wave * 0.9);
+  ctx.quadraticCurveTo(
+    flagX + 7 * s,
+    flagY - 18 * s + wave * 0.8,
+    flagX + 10 * s,
+    flagY - 14 * s + wave * 0.9,
+  );
   ctx.lineTo(flagX + 1 * s, flagY - 11 * s);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = "#f0cb56";
-  fillIsoEllipse(ctx, flagX + 6 * s, flagY - 15.5 * s + wave * 0.35, 1.8 * s, 1.2 * s);
+  fillIsoEllipse(
+    ctx,
+    flagX + 6 * s,
+    flagY - 15.5 * s + wave * 0.35,
+    1.8 * s,
+    1.2 * s,
+  );
   ctx.fillStyle = "#d4a840";
-  fillIsoEllipse(ctx, flagX + 6 * s, flagY - 15.5 * s + wave * 0.35, 1 * s, 0.7 * s);
+  fillIsoEllipse(
+    ctx,
+    flagX + 6 * s,
+    flagY - 15.5 * s + wave * 0.35,
+    1 * s,
+    0.7 * s,
+  );
 
   // Gunpowder smoke rising from berm surface
   for (let p = 0; p < 8; p++) {
@@ -486,7 +676,15 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
     const alpha = (1 - phase) * 0.1;
     ctx.fillStyle = `rgba(140,120,90,${alpha})`;
     ctx.beginPath();
-    ctx.ellipse(px, py, (3 + phase * 4) * s, (1.5 + phase * 2) * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      px,
+      py,
+      (3 + phase * 4) * s,
+      (1.5 + phase * 2) * s,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }
@@ -495,8 +693,18 @@ function drawCannonCrestLandmark(params: ChallengeLandmarkRenderParams): void {
 // Ivy Crossroads
 // ---------------------------------------------------------------------------
 
-function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+function drawIvyCrossroadsLandmark(
+  params: ChallengeLandmarkRenderParams,
+): void {
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -512,12 +720,30 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
   const mossColor = "rgba(80,130,55,0.35)";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 30 * s, 14 * s, 48 * s, 0.32);
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 4 * s,
+      s,
+      30 * s,
+      14 * s,
+      48 * s,
+      0.32,
+      "0,0,0",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground blend
-  const gGrad = ctx.createRadialGradient(cx, cy + 6 * s, 0, cx, cy + 6 * s, 26 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 6 * s,
+    0,
+    cx,
+    cy + 6 * s,
+    26 * s,
+  );
   gGrad.addColorStop(0, "rgba(80,110,55,0.25)");
   gGrad.addColorStop(0.5, "rgba(95,75,50,0.12)");
   gGrad.addColorStop(1, "transparent");
@@ -527,13 +753,24 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
 
   // Cobblestone path hints radiating from center
   ctx.fillStyle = "rgba(130,120,100,0.18)";
-  for (const [pathAng, pathLen] of [[0.3, 28], [Math.PI * 0.55, 24], [Math.PI * 1.15, 26], [Math.PI * 1.7, 22]] as const) {
+  for (const [pathAng, pathLen] of [
+    [0.3, 28],
+    [Math.PI * 0.55, 24],
+    [Math.PI * 1.15, 26],
+    [Math.PI * 1.7, 22],
+  ] as const) {
     for (let stone = 0; stone < 8; stone++) {
-      const dist = 6 + stone * (pathLen - 6) / 8;
-      const sx = cx + Math.cos(pathAng) * dist * s + Math.sin(stone * 3.7) * 1.5 * s;
+      const dist = 6 + (stone * (pathLen - 6)) / 8;
+      const sx =
+        cx + Math.cos(pathAng) * dist * s + Math.sin(stone * 3.7) * 1.5 * s;
       const sy = cy + 4 * s + Math.sin(pathAng) * dist * s * ISO_Y_RATIO;
       const stoneSize = (1.5 + Math.sin(stone * 2.1) * 0.5) * s;
-      ctx.fillStyle = stone % 3 === 0 ? "rgba(140,130,110,0.2)" : stone % 3 === 1 ? "rgba(120,115,95,0.18)" : "rgba(150,140,120,0.15)";
+      ctx.fillStyle =
+        stone % 3 === 0
+          ? "rgba(140,130,110,0.2)"
+          : stone % 3 === 1
+            ? "rgba(120,115,95,0.18)"
+            : "rgba(150,140,120,0.15)";
       fillIsoEllipse(ctx, sx, sy, stoneSize, stoneSize * 0.6, stone * 0.4);
     }
   }
@@ -547,28 +784,89 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
   const rightPY = cy - 1 * s;
 
   // Left pillar footing
-  drawIsometricPrism(ctx, leftPX, leftPY + 1 * s, pillarW + 2 * s, pillarW + 2 * s, 2 * s, sDark, sLeft, sRight);
-  drawIsometricPrism(ctx, leftPX, leftPY, pillarW, pillarW, pillarH, sTop, sLeft, sRight);
+  drawIsometricPrism(
+    ctx,
+    leftPX,
+    leftPY + 1 * s,
+    pillarW + 2 * s,
+    pillarW + 2 * s,
+    2 * s,
+    sDark,
+    sLeft,
+    sRight,
+  );
+  drawIsometricPrism(
+    ctx,
+    leftPX,
+    leftPY,
+    pillarW,
+    pillarW,
+    pillarH,
+    sTop,
+    sLeft,
+    sRight,
+  );
   const pI = pillarW * ISO_COS;
   const pD = pillarW * ISO_SIN;
   drawStoneRows(ctx, leftPX, leftPY, pI, pD, pillarH, 7, 0.1);
   drawEdgeHighlights(ctx, leftPX, leftPY, pI, pD, pillarH, sEdge);
 
   // Right pillar footing
-  drawIsometricPrism(ctx, rightPX, rightPY + 1 * s, pillarW + 2 * s, pillarW + 2 * s, 2 * s, sDark, sLeft, sRight);
-  drawIsometricPrism(ctx, rightPX, rightPY, pillarW, pillarW, pillarH, sTop, sLeft, sRight);
+  drawIsometricPrism(
+    ctx,
+    rightPX,
+    rightPY + 1 * s,
+    pillarW + 2 * s,
+    pillarW + 2 * s,
+    2 * s,
+    sDark,
+    sLeft,
+    sRight,
+  );
+  drawIsometricPrism(
+    ctx,
+    rightPX,
+    rightPY,
+    pillarW,
+    pillarW,
+    pillarH,
+    sTop,
+    sLeft,
+    sRight,
+  );
   drawStoneRows(ctx, rightPX, rightPY, pI, pD, pillarH, 7, 0.1);
   drawEdgeHighlights(ctx, rightPX, rightPY, pI, pD, pillarH, sEdge);
 
   // Pillar capitals (ornate tops)
-  drawIsometricPrism(ctx, leftPX, leftPY - pillarH, pillarW + 2 * s, pillarW + 2 * s, 2.5 * s, sHi, sTop, sRight);
-  drawIsometricPrism(ctx, rightPX, rightPY - pillarH, pillarW + 2 * s, pillarW + 2 * s, 2.5 * s, sHi, sTop, sRight);
+  drawIsometricPrism(
+    ctx,
+    leftPX,
+    leftPY - pillarH,
+    pillarW + 2 * s,
+    pillarW + 2 * s,
+    2.5 * s,
+    sHi,
+    sTop,
+    sRight,
+  );
+  drawIsometricPrism(
+    ctx,
+    rightPX,
+    rightPY - pillarH,
+    pillarW + 2 * s,
+    pillarW + 2 * s,
+    2.5 * s,
+    sHi,
+    sTop,
+    sRight,
+  );
   // Decorative carved band on capitals
   ctx.strokeStyle = "rgba(0,0,0,0.12)";
   ctx.lineWidth = 0.4 * s;
   for (const px of [leftPX, rightPX]) {
     const capI = (pillarW + 2 * s) * ISO_COS;
-    const capY = px === leftPX ? leftPY - pillarH - 1 * s : rightPY - pillarH - 1 * s;
+    const capY =
+      px === leftPX ? leftPY - pillarH - 1 * s : rightPY - pillarH - 1 * s;
     ctx.beginPath();
     ctx.moveTo(px - capI, capY + pD + 0.5 * s);
     ctx.lineTo(px, capY + pD * 2 + 0.5 * s);
@@ -599,9 +897,15 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
     const shadeR = i === 2 ? sHi : i % 2 === 0 ? sRight : "#7a7468";
     const blockH = i === 2 ? 4.5 * s : 3.5 * s;
     drawIsometricPrism(
-      ctx, cx + block.x * s, cy + block.y * s,
-      block.w * s, block.d * s, blockH,
-      shade, shadeL, shadeR,
+      ctx,
+      cx + block.x * s,
+      cy + block.y * s,
+      block.w * s,
+      block.d * s,
+      blockH,
+      shade,
+      shadeL,
+      shadeR,
     );
   }
   // Keystone carving mark
@@ -614,11 +918,37 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
   ctx.stroke();
 
   // Horizontal lintel beam
-  drawIsometricPrism(ctx, cx, cy - 15 * s, 16 * s, 6 * s, 3.5 * s, sHi, sLeft, sRight);
-  drawStoneRows(ctx, cx, cy - 15 * s, 16 * s * ISO_COS, 6 * s * ISO_SIN, 3.5 * s, 2, 0.08);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    cy - 15 * s,
+    16 * s,
+    6 * s,
+    3.5 * s,
+    sHi,
+    sLeft,
+    sRight,
+  );
+  drawStoneRows(
+    ctx,
+    cx,
+    cy - 15 * s,
+    16 * s * ISO_COS,
+    6 * s * ISO_SIN,
+    3.5 * s,
+    2,
+    0.08,
+  );
 
   // Main vines with branching
-  const vines: Array<{ sx: number; sy: number; ex: number; ey: number; thick: number; branches: number }> = [
+  const vines: Array<{
+    sx: number;
+    sy: number;
+    ex: number;
+    ey: number;
+    thick: number;
+    branches: number;
+  }> = [
     { sx: -11, sy: -19, ex: -12, ey: 1, thick: 1.4, branches: 3 },
     { sx: -9, sy: -17, ex: -7, ey: 3, thick: 1.0, branches: 2 },
     { sx: 10, sy: -16, ex: 11, ey: -2, thick: 1.3, branches: 3 },
@@ -637,7 +967,12 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
     const midY = cy + (vine.sy + vine.ey) * 0.5 * s;
     ctx.beginPath();
     ctx.moveTo(cx + vine.sx * s, cy + vine.sy * s);
-    ctx.quadraticCurveTo(midX, midY, cx + vine.ex * s + sway * 0.5, cy + vine.ey * s);
+    ctx.quadraticCurveTo(
+      midX,
+      midY,
+      cx + vine.ex * s + sway * 0.5,
+      cy + vine.ey * s,
+    );
     ctx.stroke();
 
     for (let b = 0; b < vine.branches; b++) {
@@ -649,7 +984,12 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
       ctx.lineWidth = vine.thick * 0.5 * s;
       ctx.beginPath();
       ctx.moveTo(bx, by);
-      ctx.quadraticCurveTo(bx + bDir * 3 * s, by + 2 * s, bx + bDir * 5 * s + sway * 0.3, by + 4 * s);
+      ctx.quadraticCurveTo(
+        bx + bDir * 3 * s,
+        by + 2 * s,
+        bx + bDir * 5 * s + sway * 0.3,
+        by + 4 * s,
+      );
       ctx.stroke();
     }
   }
@@ -675,8 +1015,22 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
     const ly = pillarY2 - pillarH * (0.15 + idx * 0.1);
     const side = idx % 2 === 0 ? -1 : 1;
     const sway = Math.sin(t * 1.8 + leaf) * 0.6 * s;
-    ctx.fillStyle = leaf % 4 === 0 ? ivyBright : leaf % 4 === 1 ? ivyMid : leaf % 4 === 2 ? "#358a2a" : ivyDark;
-    fillIsoEllipse(ctx, pillar + side * 4.8 * s + sway, ly, 2.2 * s, 1.1 * s, 0.4 * side);
+    ctx.fillStyle =
+      leaf % 4 === 0
+        ? ivyBright
+        : leaf % 4 === 1
+          ? ivyMid
+          : leaf % 4 === 2
+            ? "#358a2a"
+            : ivyDark;
+    fillIsoEllipse(
+      ctx,
+      pillar + side * 4.8 * s + sway,
+      ly,
+      2.2 * s,
+      1.1 * s,
+      0.4 * side,
+    );
   }
 
   // Flowers with petal detail
@@ -684,13 +1038,21 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
     const fx = cx + Math.sin(flower * 2.3) * 9 * s;
     const fy = cy - 17 * s + Math.cos(flower * 1.7) * 5 * s;
     const fSway = Math.sin(t * 1.5 + flower * 0.9) * 0.5 * s;
-    const flowerColors = ["rgba(220,180,220,0.7)", "rgba(255,220,140,0.65)", "rgba(200,160,210,0.6)"];
+    const flowerColors = [
+      "rgba(220,180,220,0.7)",
+      "rgba(255,220,140,0.65)",
+      "rgba(200,160,210,0.6)",
+    ];
     ctx.fillStyle = flowerColors[flower % 3];
     for (let petal = 0; petal < 4; petal++) {
       const pAng = (petal / 4) * Math.PI * 2 + flower * 0.8;
       fillIsoEllipse(
-        ctx, fx + fSway + Math.cos(pAng) * 0.8 * s, fy + Math.sin(pAng) * 0.5 * s,
-        1.2 * s, 0.7 * s, pAng,
+        ctx,
+        fx + fSway + Math.cos(pAng) * 0.8 * s,
+        fy + Math.sin(pAng) * 0.5 * s,
+        1.2 * s,
+        0.7 * s,
+        pAng,
       );
     }
     ctx.fillStyle = "rgba(255,240,100,0.8)";
@@ -698,7 +1060,10 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
   }
 
   // Hanging lanterns from the arch
-  for (const [lx, ly] of [[-4, -18], [4, -18]] as const) {
+  for (const [lx, ly] of [
+    [-4, -18],
+    [4, -18],
+  ] as const) {
     const lanternX = cx + lx * s;
     const lanternY = cy + ly * s;
     const lanSway = Math.sin(t * 1.2 + lx) * 0.8 * s;
@@ -712,7 +1077,13 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
     ctx.fillRect(lanternX + lanSway - 1 * s, lanternY, 2 * s, 3 * s);
     setShadowBlur(ctx, 6 * s, "#ddcc66");
     ctx.fillStyle = `rgba(255,230,120,${0.35 + Math.sin(t * 3.5 + lx) * 0.12})`;
-    fillIsoEllipse(ctx, lanternX + lanSway, lanternY + 1.5 * s, 1.2 * s, 1.5 * s);
+    fillIsoEllipse(
+      ctx,
+      lanternX + lanSway,
+      lanternY + 1.5 * s,
+      1.2 * s,
+      1.5 * s,
+    );
     clearShadow(ctx);
   }
 
@@ -724,14 +1095,48 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
   ctx.fillStyle = "#4a3520";
   ctx.fillRect(signX - 0.5 * s, signY - 11 * s, 1 * s, 14 * s);
 
-  drawIsometricPrism(ctx, signX + 2.5 * s, signY - 6 * s, 6.5 * s, 2.5 * s, 2 * s, "#8a7050", "#5c4a32", "#6e5840");
-  drawIsometricPrism(ctx, signX + 2 * s, signY - 1.5 * s, 6 * s, 2.2 * s, 1.8 * s, "#907558", "#604e36", "#72593e");
-  drawIsometricPrism(ctx, signX + 1.5 * s, signY - 9 * s, 5.5 * s, 2 * s, 1.5 * s, "#7e6548", "#52402c", "#64503a");
+  drawIsometricPrism(
+    ctx,
+    signX + 2.5 * s,
+    signY - 6 * s,
+    6.5 * s,
+    2.5 * s,
+    2 * s,
+    "#8a7050",
+    "#5c4a32",
+    "#6e5840",
+  );
+  drawIsometricPrism(
+    ctx,
+    signX + 2 * s,
+    signY - 1.5 * s,
+    6 * s,
+    2.2 * s,
+    1.8 * s,
+    "#907558",
+    "#604e36",
+    "#72593e",
+  );
+  drawIsometricPrism(
+    ctx,
+    signX + 1.5 * s,
+    signY - 9 * s,
+    5.5 * s,
+    2 * s,
+    1.5 * s,
+    "#7e6548",
+    "#52402c",
+    "#64503a",
+  );
 
   // Arrow carvings on sign boards
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
   ctx.lineWidth = 0.4 * s;
-  for (const [ay, dir] of [[-6, 1], [-1.5, -1], [-9, 1]] as const) {
+  for (const [ay, dir] of [
+    [-6, 1],
+    [-1.5, -1],
+    [-9, 1],
+  ] as const) {
     const arrowY = signY + ay * s;
     ctx.beginPath();
     ctx.moveTo(signX + (1 + dir) * s, arrowY);
@@ -764,7 +1169,15 @@ function drawIvyCrossroadsLandmark(params: ChallengeLandmarkRenderParams): void 
 // ---------------------------------------------------------------------------
 
 function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -777,12 +1190,30 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
   const altarStone = "#3a3530";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 36 * s, 16 * s, 35 * s, 0.32, "15,30,10");
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 4 * s,
+      s,
+      36 * s,
+      16 * s,
+      35 * s,
+      0.32,
+      "15,30,10",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground corruption spread
-  const gGrad = ctx.createRadialGradient(cx, cy + 2 * s, 0, cx, cy + 2 * s, 34 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 2 * s,
+    0,
+    cx,
+    cy + 2 * s,
+    34 * s,
+  );
   gGrad.addColorStop(0, "rgba(40,80,20,0.38)");
   gGrad.addColorStop(0.35, "rgba(30,60,15,0.22)");
   gGrad.addColorStop(0.7, "rgba(20,40,10,0.1)");
@@ -792,9 +1223,22 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
   ctx.fill();
 
   // Corrupted earth patches
-  for (const [px, py, pr] of [[-8, 7, 6], [10, 6, 5], [-18, 4, 4]] as const) {
+  for (const [px, py, pr] of [
+    [-8, 7, 6],
+    [10, 6, 5],
+    [-18, 4, 4],
+  ] as const) {
     ctx.fillStyle = "rgba(25,35,15,0.3)";
-    drawOrganicBlobAt(ctx, cx + px * s, cy + py * s, pr * s, pr * 0.5 * s, 80 + px, 0.2, 10);
+    drawOrganicBlobAt(
+      ctx,
+      cx + px * s,
+      cy + py * s,
+      pr * s,
+      pr * 0.5 * s,
+      80 + px,
+      0.2,
+      10,
+    );
     ctx.fill();
   }
 
@@ -819,17 +1263,44 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
     pGrad.addColorStop(0.75, `rgba(35,100,18,0.08)`);
     pGrad.addColorStop(1, "transparent");
     ctx.fillStyle = pGrad;
-    drawOrganicBlobAt(ctx, px, py, radius * s, radius * s * ISO_Y_RATIO * 1.05, 40 + idx, 0.22, 16);
+    drawOrganicBlobAt(
+      ctx,
+      px,
+      py,
+      radius * s,
+      radius * s * ISO_Y_RATIO * 1.05,
+      40 + idx,
+      0.22,
+      16,
+    );
     ctx.fill();
 
     // Pool depth (darker center)
     ctx.fillStyle = "rgba(15,40,8,0.5)";
-    drawOrganicBlobAt(ctx, px, py, radius * 0.6 * s, radius * 0.3 * s, 55 + idx, 0.15, 12);
+    drawOrganicBlobAt(
+      ctx,
+      px,
+      py,
+      radius * 0.6 * s,
+      radius * 0.3 * s,
+      55 + idx,
+      0.15,
+      12,
+    );
     ctx.fill();
 
     // Surface sheen
     ctx.fillStyle = `rgba(140,255,100,${0.08 + Math.sin(t * 0.8 + idx * 2) * 0.04})`;
-    drawOrganicBlobAt(ctx, px + 1 * s, py - 0.5 * s, radius * 0.4 * s, radius * 0.2 * s, 62 + idx, 0.1, 10);
+    drawOrganicBlobAt(
+      ctx,
+      px + 1 * s,
+      py - 0.5 * s,
+      radius * 0.4 * s,
+      radius * 0.2 * s,
+      62 + idx,
+      0.1,
+      10,
+    );
     ctx.fill();
 
     // Pool rim glow
@@ -886,7 +1357,9 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
           ctx,
           px + Math.cos(rAng) * rLen,
           py + Math.sin(rAng) * rLen * ISO_Y_RATIO - 1 * s,
-          1.5 * s, 0.8 * s, rAng,
+          1.5 * s,
+          0.8 * s,
+          rAng,
         );
       }
     }
@@ -934,9 +1407,21 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
 
     // Knothole
     ctx.fillStyle = "#1a1008";
-    fillIsoEllipse(ctx, 0.3 * s, -trunkH * 0.45, 1.2 * s * treeScale, 0.8 * s * treeScale);
+    fillIsoEllipse(
+      ctx,
+      0.3 * s,
+      -trunkH * 0.45,
+      1.2 * s * treeScale,
+      0.8 * s * treeScale,
+    );
     ctx.fillStyle = "rgba(100,200,50,0.2)";
-    fillIsoEllipse(ctx, 0.3 * s, -trunkH * 0.45, 0.8 * s * treeScale, 0.5 * s * treeScale);
+    fillIsoEllipse(
+      ctx,
+      0.3 * s,
+      -trunkH * 0.45,
+      0.8 * s * treeScale,
+      0.5 * s * treeScale,
+    );
 
     // Branches (gnarled, twisted)
     ctx.lineWidth = 0.9 * s * treeScale;
@@ -947,7 +1432,14 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
       ctx.strokeStyle = barkDark;
       ctx.beginPath();
       ctx.moveTo(0, by);
-      ctx.bezierCurveTo(bDir * bLen * 0.3, by - 1 * s, bDir * bLen * 0.7, by - 3 * s, bDir * bLen, by - 4 * s);
+      ctx.bezierCurveTo(
+        bDir * bLen * 0.3,
+        by - 1 * s,
+        bDir * bLen * 0.7,
+        by - 3 * s,
+        bDir * bLen,
+        by - 4 * s,
+      );
       ctx.stroke();
     }
 
@@ -962,7 +1454,12 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
       const mY = treeCy - trunkH * (0.4 + moss * 0.1);
       ctx.beginPath();
       ctx.moveTo(mStart, mY);
-      ctx.quadraticCurveTo(mStart + mSway, mY + 4 * s, mStart + mSway * 1.3, mY + 7 * s);
+      ctx.quadraticCurveTo(
+        mStart + mSway,
+        mY + 4 * s,
+        mStart + mSway * 1.3,
+        mY + 7 * s,
+      );
       ctx.stroke();
     }
   }
@@ -970,8 +1467,28 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
   // Corrupted altar (central feature)
   const altarX = cx + 2 * s;
   const altarY = cy - 1 * s;
-  drawIsometricPrism(ctx, altarX, altarY + 2 * s, 7 * s, 7 * s, 3 * s, "#3e3830", "#252220", "#302c28");
-  drawIsometricPrism(ctx, altarX, altarY, 5 * s, 5 * s, 5 * s, altarStone, "#252220", "#302c28");
+  drawIsometricPrism(
+    ctx,
+    altarX,
+    altarY + 2 * s,
+    7 * s,
+    7 * s,
+    3 * s,
+    "#3e3830",
+    "#252220",
+    "#302c28",
+  );
+  drawIsometricPrism(
+    ctx,
+    altarX,
+    altarY,
+    5 * s,
+    5 * s,
+    5 * s,
+    altarStone,
+    "#252220",
+    "#302c28",
+  );
   const aI = 5 * s * ISO_COS;
   const aD = 5 * s * ISO_SIN;
   drawStoneRows(ctx, altarX, altarY, aI, aD, 5 * s, 3, 0.12);
@@ -1003,9 +1520,16 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Enhanced mushroom clusters with bioluminescent veins
   const mushroomClusters: Array<[number, number, number, number]> = [
-    [-20, 3, 0.8, 0], [-16, 5, 0.65, 1], [-12, 3.5, 0.9, 2],
-    [14, 5, 0.75, 3], [18, 3, 0.85, 4], [22, 4.5, 0.6, 5],
-    [-5, 8, 0.7, 6], [8, 8, 0.8, 7], [0, 10, 0.55, 8], [4, 9, 0.65, 9],
+    [-20, 3, 0.8, 0],
+    [-16, 5, 0.65, 1],
+    [-12, 3.5, 0.9, 2],
+    [14, 5, 0.75, 3],
+    [18, 3, 0.85, 4],
+    [22, 4.5, 0.6, 5],
+    [-5, 8, 0.7, 6],
+    [8, 8, 0.8, 7],
+    [0, 10, 0.55, 8],
+    [4, 9, 0.65, 9],
   ];
   for (const [mx, my, mScale, mSeed] of mushroomClusters) {
     const mX = cx + mx * s;
@@ -1018,7 +1542,12 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
     ctx.beginPath();
     ctx.moveTo(mX - 0.7 * ms, mY + 3.5 * ms);
     ctx.quadraticCurveTo(mX + stemLean * 0.5, mY + 1.5 * ms, mX + stemLean, mY);
-    ctx.quadraticCurveTo(mX + stemLean + 0.7 * ms, mY + 1.5 * ms, mX + 0.7 * ms, mY + 3.5 * ms);
+    ctx.quadraticCurveTo(
+      mX + stemLean + 0.7 * ms,
+      mY + 1.5 * ms,
+      mX + 0.7 * ms,
+      mY + 3.5 * ms,
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -1034,7 +1563,15 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
     // Cap underside (gills)
     ctx.fillStyle = `rgba(60,140,30,${capGlow * 0.4})`;
     ctx.beginPath();
-    ctx.ellipse(mX + stemLean, mY + 0.5 * ms, 2.5 * ms, 0.8 * ms, 0, 0, Math.PI);
+    ctx.ellipse(
+      mX + stemLean,
+      mY + 0.5 * ms,
+      2.5 * ms,
+      0.8 * ms,
+      0,
+      0,
+      Math.PI,
+    );
     ctx.fill();
 
     // Bioluminescent veins on cap
@@ -1046,8 +1583,10 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
       ctx.beginPath();
       ctx.moveTo(mX + stemLean, mY - 0.3 * ms);
       ctx.quadraticCurveTo(
-        mX + stemLean + Math.cos(vAng) * 1.5 * ms, mY - 0.5 * ms,
-        mX + stemLean + Math.cos(vAng) * 2.5 * ms, mY + Math.sin(vAng) * 0.8 * ms,
+        mX + stemLean + Math.cos(vAng) * 1.5 * ms,
+        mY - 0.5 * ms,
+        mX + stemLean + Math.cos(vAng) * 2.5 * ms,
+        mY + Math.sin(vAng) * 0.8 * ms,
       );
       ctx.stroke();
     }
@@ -1061,13 +1600,19 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
         ctx,
         mX + stemLean + Math.cos(dAng) * 1.5 * ms,
         mY - 0.2 * ms + Math.sin(dAng) * 0.6 * ms,
-        0.4 * ms, 0.25 * ms,
+        0.4 * ms,
+        0.25 * ms,
       );
     }
   }
 
   // Bone piles with more anatomical detail
-  const bonePiles: Array<[number, number, number]> = [[-24, 6, 0.3], [24, 4, -0.2], [-6, 10, 0.5], [14, 9, -0.4]];
+  const bonePiles: Array<[number, number, number]> = [
+    [-24, 6, 0.3],
+    [24, 4, -0.2],
+    [-6, 10, 0.5],
+    [14, 9, -0.4],
+  ];
   for (const [bx, by, rot] of bonePiles) {
     const px = cx + bx * s;
     const py = cy + by * s;
@@ -1139,7 +1684,15 @@ function drawBlightBasinLandmark(params: ChallengeLandmarkRenderParams): void {
 // ---------------------------------------------------------------------------
 
 function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -1156,12 +1709,30 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
   const mossColor = "rgba(60,90,40,0.25)";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 2 * s, s, 38 * s, 18 * s, 60 * s, 0.4, "10,25,15");
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 2 * s,
+      s,
+      38 * s,
+      18 * s,
+      60 * s,
+      0.4,
+      "10,25,15",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground blend
-  const gGrad = ctx.createRadialGradient(cx, cy + 6 * s, 0, cx, cy + 6 * s, 30 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 6 * s,
+    0,
+    cx,
+    cy + 6 * s,
+    30 * s,
+  );
   gGrad.addColorStop(0, "rgba(25,55,35,0.3)");
   gGrad.addColorStop(0.5, "rgba(30,50,30,0.14)");
   gGrad.addColorStop(1, "transparent");
@@ -1179,7 +1750,17 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Foundation platform (square iso footprint for proper 2:1 diamond)
   const fSize = 30 * s;
-  drawIsometricPrism(ctx, cx, cy + 4 * s, fSize, fSize, 9 * s, wTop, wLeft, wRight);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    cy - 8 * s,
+    fSize,
+    fSize,
+    9 * s,
+    wTop,
+    wLeft,
+    wRight,
+  );
   const fI = fSize * ISO_COS;
   const fD = fSize * ISO_SIN;
   drawStoneRows(ctx, cx, cy + 4 * s, fI, fD, 9 * s, 5, 0.1);
@@ -1187,7 +1768,12 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Moss weathering on lower foundation
   ctx.fillStyle = mossColor;
-  for (const [mx, my] of [[-18, 8], [-8, 10], [6, 11], [16, 9]] as const) {
+  for (const [mx, my] of [
+    [-18, 8],
+    [-8, 10],
+    [6, 11],
+    [16, 9],
+  ] as const) {
     fillIsoEllipse(ctx, cx + mx * s, cy + my * s, 4 * s, 2 * s);
   }
 
@@ -1195,7 +1781,17 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
   const keepW = 14 * s;
   const keepH = 32 * s;
   const keepBase = cy - 18 * s;
-  drawIsometricPrism(ctx, cx, keepBase, keepW, keepW, keepH, wTop, wLeft, wRight);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    keepBase,
+    keepW,
+    keepW,
+    keepH,
+    wTop,
+    wLeft,
+    wRight,
+  );
   const kI = keepW * ISO_COS;
   const kD = keepW * ISO_SIN;
   const kTop = keepBase - keepH;
@@ -1203,7 +1799,17 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
   drawEdgeHighlights(ctx, cx, keepBase, kI, kD, keepH, wEdge);
 
   // Keep parapet with battlements
-  drawIsometricPrism(ctx, cx, kTop, keepW + 3 * s, keepW + 3 * s, 3.5 * s, wHi, wTop, wRight);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    kTop,
+    keepW + 3 * s,
+    keepW + 3 * s,
+    3.5 * s,
+    wHi,
+    wTop,
+    wRight,
+  );
   const parI = (keepW + 3 * s) * ISO_COS;
   const parD = (keepW + 3 * s) * ISO_SIN;
   const parTop2 = kTop - 3.5 * s;
@@ -1226,19 +1832,67 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
   setShadowBlur(ctx, 7 * s, torchGlow);
   ctx.fillStyle = `rgba(255,150,50,${0.32 + Math.sin(t * 2.5) * 0.15})`;
   const winY1 = keepBase - keepH * 0.32;
-  traceIsoFlushRect(ctx, cx - kI * 0.5, winY1 + kD * 0.5 + 3 * s, 2.4, 7, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    cx - kI * 0.5,
+    winY1 + kD * 0.5 + 3 * s,
+    2.4,
+    7,
+    "left",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, cx + kI * 0.4, winY1 + kD * 0.5 + 1.5 * s, 2.2, 7, "right", s);
+  traceIsoFlushRect(
+    ctx,
+    cx + kI * 0.4,
+    winY1 + kD * 0.5 + 1.5 * s,
+    2.2,
+    7,
+    "right",
+    s,
+  );
   ctx.fill();
   const winY2 = keepBase - keepH * 0.55;
-  traceIsoFlushRect(ctx, cx - kI * 0.4, winY2 + kD * 0.5 + 2.5 * s, 2, 5.5, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    cx - kI * 0.4,
+    winY2 + kD * 0.5 + 2.5 * s,
+    2,
+    5.5,
+    "left",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, cx + kI * 0.45, winY2 + kD * 0.5 + 1 * s, 2, 5.5, "right", s);
+  traceIsoFlushRect(
+    ctx,
+    cx + kI * 0.45,
+    winY2 + kD * 0.5 + 1 * s,
+    2,
+    5.5,
+    "right",
+    s,
+  );
   ctx.fill();
   const winY3 = keepBase - keepH * 0.75;
-  traceIsoFlushRect(ctx, cx - kI * 0.35, winY3 + kD * 0.5 + 2 * s, 1.6, 4, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    cx - kI * 0.35,
+    winY3 + kD * 0.5 + 2 * s,
+    1.6,
+    4,
+    "left",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, cx + kI * 0.4, winY3 + kD * 0.5 + 0.5 * s, 1.6, 4, "right", s);
+  traceIsoFlushRect(
+    ctx,
+    cx + kI * 0.4,
+    winY3 + kD * 0.5 + 0.5 * s,
+    1.6,
+    4,
+    "right",
+    s,
+  );
   ctx.fill();
   clearShadow(ctx);
 
@@ -1266,7 +1920,13 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
   ctx.fill();
   // Banner emblem
   ctx.fillStyle = "#95d46c";
-  fillIsoEllipse(ctx, bannerX + bannerSway * 0.3, bannerY + 6 * s, 1.5 * s, 1.2 * s);
+  fillIsoEllipse(
+    ctx,
+    bannerX + bannerSway * 0.3,
+    bannerY + 6 * s,
+    1.5 * s,
+    1.2 * s,
+  );
 
   // Flanking turrets
   const turretOffsets: Array<{ x: number; y: number; side: number }> = [
@@ -1287,35 +1947,83 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
     drawEdgeHighlights(ctx, ttx, tty, tI, tD2, tH, wEdge);
 
     // Turret parapet
-    drawIsometricPrism(ctx, ttx, tty - tH, tW + 2 * s, tW + 2 * s, 2.5 * s, wHi, wTop, wRight);
+    drawIsometricPrism(
+      ctx,
+      ttx,
+      tty - tH,
+      tW + 2 * s,
+      tW + 2 * s,
+      2.5 * s,
+      wHi,
+      wTop,
+      wRight,
+    );
 
     // Turret roof
-    drawIsometricPyramid(ctx, ttx, tty - tH - 2.5 * s, 5.5 * s, 12 * s, roofLight, roofDark, roofMid);
+    drawIsometricPyramid(
+      ctx,
+      ttx,
+      tty - tH - 2.5 * s,
+      5.5 * s,
+      12 * s,
+      roofLight,
+      roofDark,
+      roofMid,
+    );
 
     // Turret window
     setShadowBlur(ctx, 5 * s, torchGlow);
     ctx.fillStyle = `rgba(255,150,50,${0.38 + Math.sin(t * 2.2 + ti) * 0.15})`;
-    const tFace = ti === 0 ? "left" as const : "right" as const;
+    const tFace = ti === 0 ? ("left" as const) : ("right" as const);
     traceIsoFlushRect(ctx, ttx, tty - tH * 0.35 + tD2 * 0.5, 1.8, 5, tFace, s);
     ctx.fill();
-    traceIsoFlushRect(ctx, ttx, tty - tH * 0.65 + tD2 * 0.5, 1.4, 3.5, tFace, s);
+    traceIsoFlushRect(
+      ctx,
+      ttx,
+      tty - tH * 0.65 + tD2 * 0.5,
+      1.4,
+      3.5,
+      tFace,
+      s,
+    );
     ctx.fill();
     clearShadow(ctx);
 
     // Turret flag (isometric pole)
     const flagX2 = ttx;
     const flagY2 = tty - tH - 2.5 * s;
-    drawIsometricPrism(ctx, flagX2, flagY2, 1.2 * s, 1.2 * s, 16 * s, "#5a4530", "#4a3520", "#4e3a28");
+    drawIsometricPrism(
+      ctx,
+      flagX2,
+      flagY2,
+      1.2 * s,
+      1.2 * s,
+      16 * s,
+      "#5a4530",
+      "#4a3520",
+      "#4e3a28",
+    );
     const wave2 = Math.sin(t * 3 + ti * 2) * 2 * s;
     ctx.fillStyle = "#3f8b43";
     ctx.beginPath();
     ctx.moveTo(flagX2 + 0.8 * s, flagY2 - 15 * s);
-    ctx.quadraticCurveTo(flagX2 + 6 * s, flagY2 - 13 * s + wave2, flagX2 + 9 * s, flagY2 - 9 * s + wave2);
+    ctx.quadraticCurveTo(
+      flagX2 + 6 * s,
+      flagY2 - 13 * s + wave2,
+      flagX2 + 9 * s,
+      flagY2 - 9 * s + wave2,
+    );
     ctx.lineTo(flagX2 + 0.8 * s, flagY2 - 6 * s);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#95d46c";
-    fillIsoEllipse(ctx, flagX2 + 4.5 * s, flagY2 - 11 * s + wave2 * 0.35, 1.2 * s, 0.8 * s);
+    fillIsoEllipse(
+      ctx,
+      flagX2 + 4.5 * s,
+      flagY2 - 11 * s + wave2 * 0.35,
+      1.2 * s,
+      0.8 * s,
+    );
   }
 
   // Curtain walls connecting turrets to keep
@@ -1331,21 +2039,48 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
     const cwI = cwW * ISO_COS;
     const cwD = cwW * ISO_SIN;
     drawStoneRows(ctx, cwX, cwY, cwI, cwD, cwH, 4, 0.1);
-    drawIsometricPrism(ctx, cwX, cwY - cwH, cwW + 1.5 * s, cwW + 1.5 * s, 2 * s, wHi, wTop, wRight);
+    drawIsometricPrism(
+      ctx,
+      cwX,
+      cwY - cwH,
+      cwW + 1.5 * s,
+      cwW + 1.5 * s,
+      2 * s,
+      wHi,
+      wTop,
+      wRight,
+    );
 
     // Arrow slits on curtain walls
-    const slitFace = ti === 0 ? "left" as const : "right" as const;
+    const slitFace = ti === 0 ? ("left" as const) : ("right" as const);
     ctx.fillStyle = wDark;
-    traceIsoFlushRect(ctx, cwX, cwY - cwH * 0.4 + cwD * 0.5, 0.6, 3.5, slitFace, s);
+    traceIsoFlushRect(
+      ctx,
+      cwX,
+      cwY - cwH * 0.4 + cwD * 0.5,
+      0.6,
+      3.5,
+      slitFace,
+      s,
+    );
     ctx.fill();
-    traceIsoFlushRect(ctx, cwX, cwY - cwH * 0.7 + cwD * 0.5, 0.6, 3, slitFace, s);
+    traceIsoFlushRect(
+      ctx,
+      cwX,
+      cwY - cwH * 0.7 + cwD * 0.5,
+      0.6,
+      3,
+      slitFace,
+      s,
+    );
     ctx.fill();
 
     // Mini merlons on curtain wall
     for (let m = 0; m < 2; m++) {
       const mt = (m + 0.5) / 2;
       const mx = cwX + (ti === 0 ? -cwI * (1 - mt) : cwI * mt);
-      const my = cwY - cwH - 2 * s + cwD + (ti === 0 ? cwD * mt : cwD * (1 - mt));
+      const my =
+        cwY - cwH - 2 * s + cwD + (ti === 0 ? cwD * mt : cwD * (1 - mt));
       drawIsometricPrism(ctx, mx, my, 2 * s, 2 * s, 3 * s, wEdge, wHi, wTop);
     }
   }
@@ -1401,34 +2136,74 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
     ctx.fillStyle = `rgba(255,120,20,${torchPulse * 0.7})`;
     ctx.beginPath();
     ctx.moveTo(tox - 1.5 * s, toy - 3.5 * s);
-    ctx.quadraticCurveTo(tox + Math.sin(t * 8 + side) * 1 * s, toy - 7 * s, tox, toy - 10 * s);
-    ctx.quadraticCurveTo(tox - Math.sin(t * 7 + side) * 1 * s, toy - 6.5 * s, tox + 1.5 * s, toy - 3.5 * s);
+    ctx.quadraticCurveTo(
+      tox + Math.sin(t * 8 + side) * 1 * s,
+      toy - 7 * s,
+      tox,
+      toy - 10 * s,
+    );
+    ctx.quadraticCurveTo(
+      tox - Math.sin(t * 7 + side) * 1 * s,
+      toy - 6.5 * s,
+      tox + 1.5 * s,
+      toy - 3.5 * s,
+    );
     ctx.closePath();
     ctx.fill();
     // Inner flame (brighter core)
     ctx.fillStyle = `rgba(255,200,80,${torchPulse * 0.6})`;
     ctx.beginPath();
     ctx.moveTo(tox - 0.8 * s, toy - 4 * s);
-    ctx.quadraticCurveTo(tox + Math.sin(t * 10 + side) * 0.5 * s, toy - 6.5 * s, tox, toy - 8.5 * s);
-    ctx.quadraticCurveTo(tox - Math.sin(t * 9 + side) * 0.5 * s, toy - 6 * s, tox + 0.8 * s, toy - 4 * s);
+    ctx.quadraticCurveTo(
+      tox + Math.sin(t * 10 + side) * 0.5 * s,
+      toy - 6.5 * s,
+      tox,
+      toy - 8.5 * s,
+    );
+    ctx.quadraticCurveTo(
+      tox - Math.sin(t * 9 + side) * 0.5 * s,
+      toy - 6 * s,
+      tox + 0.8 * s,
+      toy - 4 * s,
+    );
     ctx.closePath();
     ctx.fill();
     // Flame tip
     ctx.fillStyle = `rgba(255,240,180,${torchPulse * 0.3})`;
     ctx.beginPath();
-    ctx.arc(tox + Math.sin(t * 12 + side) * 0.3 * s, toy - 9 * s, 0.8 * s, 0, Math.PI * 2);
+    ctx.arc(
+      tox + Math.sin(t * 12 + side) * 0.3 * s,
+      toy - 9 * s,
+      0.8 * s,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   clearShadow(ctx);
 
   // Stone step before gate
-  drawIsometricPrism(ctx, cx, gateY + 3 * s, 8 * s, 8 * s, 3 * s, "#5a4128", "#3a2817", "#49311d");
+  drawIsometricPrism(
+    ctx,
+    cx,
+    gateY + 3 * s,
+    8 * s,
+    8 * s,
+    3 * s,
+    "#5a4128",
+    "#3a2817",
+    "#49311d",
+  );
 
   // Rubble and debris
   const rubble: Array<{ x: number; y: number; sz: number }> = [
-    { x: -26, y: 10 }, { x: -18, y: 12 }, { x: 20, y: 11 }, { x: 26, y: 9 },
-    { x: -22, y: 8 }, { x: 23, y: 7 },
-  ].map(r => ({ ...r, sz: 2 + Math.sin(r.x) * 0.6 }));
+    { x: -26, y: 10 },
+    { x: -18, y: 12 },
+    { x: 20, y: 11 },
+    { x: 26, y: 9 },
+    { x: -22, y: 8 },
+    { x: 23, y: 7 },
+  ].map((r) => ({ ...r, sz: 2 + Math.sin(r.x) * 0.6 }));
   for (let ri = 0; ri < rubble.length; ri++) {
     const rb = rubble[ri];
     const rx = cx + rb.x * s;
@@ -1446,7 +2221,13 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Moss on lower keep walls
   ctx.fillStyle = mossColor;
-  fillIsoEllipse(ctx, cx - kI * 0.6, keepBase + kD * 0.5 - 2 * s, 3 * s, 1.5 * s);
+  fillIsoEllipse(
+    ctx,
+    cx - kI * 0.6,
+    keepBase + kD * 0.5 - 2 * s,
+    3 * s,
+    1.5 * s,
+  );
   fillIsoEllipse(ctx, cx + kI * 0.5, keepBase + kD * 0.3, 2.5 * s, 1.2 * s);
 
   // Chimney smoke
@@ -1457,8 +2238,18 @@ function drawTriadKeepLandmark(params: ChallengeLandmarkRenderParams): void {
 // Sunscorch Labyrinth
 // ---------------------------------------------------------------------------
 
-function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+function drawSunscorchLabyrinthLandmark(
+  params: ChallengeLandmarkRenderParams,
+): void {
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -1472,12 +2263,30 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
   const brassColor = "#b8952a";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 38 * s, 16 * s, 32 * s, 0.3);
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 4 * s,
+      s,
+      38 * s,
+      16 * s,
+      32 * s,
+      0.3,
+      "0,0,0",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground sand expanse
-  const gGrad = ctx.createRadialGradient(cx, cy + 3 * s, 0, cx, cy + 3 * s, 36 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 3 * s,
+    0,
+    cx,
+    cy + 3 * s,
+    36 * s,
+  );
   gGrad.addColorStop(0, "rgba(200,170,100,0.25)");
   gGrad.addColorStop(0.4, "rgba(185,148,88,0.12)");
   gGrad.addColorStop(1, "transparent");
@@ -1487,17 +2296,36 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
 
   // Sand drifts against walls
   const drifts: Array<[number, number, number, number]> = [
-    [-20, 5, 8, 3], [12, 8, 7, 2.5], [-10, 12, 9, 3], [18, 2, 6, 2],
-    [-16, -5, 5, 2], [8, -6, 6, 2.5],
+    [-20, 5, 8, 3],
+    [12, 8, 7, 2.5],
+    [-10, 12, 9, 3],
+    [18, 2, 6, 2],
+    [-16, -5, 5, 2],
+    [8, -6, 6, 2.5],
   ];
   for (const [dx, dy, dw, dh] of drifts) {
     ctx.fillStyle = "rgba(210,185,130,0.25)";
-    drawOrganicBlobAt(ctx, cx + dx * s, cy + dy * s, dw * s, dh * s, dx * 3.7, 0.18, 10);
+    drawOrganicBlobAt(
+      ctx,
+      cx + dx * s,
+      cy + dy * s,
+      dw * s,
+      dh * s,
+      dx * 3.7,
+      0.18,
+      10,
+    );
     ctx.fill();
   }
 
   // Maze walls — thinner (2-unit depth) and shorter for a labyrinth feel
-  const mazeWalls: Array<{ x: number; y: number; w: number; d: number; h: number }> = [
+  const mazeWalls: Array<{
+    x: number;
+    y: number;
+    w: number;
+    d: number;
+    h: number;
+  }> = [
     // Outer perimeter (partial)
     { x: -20, y: -11, w: 18, d: 2, h: 4.5 },
     { x: -20, y: -11, w: 2, d: 18, h: 4 },
@@ -1523,7 +2351,17 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
     const leftShade = i % 2 === 0 ? sandLeft : sandDark;
     const rightShade = i % 2 === 0 ? sandRight : sandLeft;
 
-    drawIsometricPrism(ctx, wx, wy, wall.w * s, wall.d * s, wall.h * s, topShade, leftShade, rightShade);
+    drawIsometricPrism(
+      ctx,
+      wx,
+      wy,
+      wall.w * s,
+      wall.d * s,
+      wall.h * s,
+      topShade,
+      leftShade,
+      rightShade,
+    );
 
     const wI = wall.w * s * ISO_COS;
     const wD = wall.d * s * ISO_SIN;
@@ -1626,13 +2464,42 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
   const obY = cy - 3 * s;
   const obSize = 4 * s;
   const obH = 12 * s;
-  drawIsometricPrism(ctx, obX, obY + 2 * s, obSize + 1.5 * s, obSize + 1.5 * s, 2.5 * s, sandHi, sandLeft, sandRight);
-  drawIsometricPrism(ctx, obX, obY, obSize, obSize, obH, sandTop, sandDark, sandLeft);
+  drawIsometricPrism(
+    ctx,
+    obX,
+    obY + 2 * s,
+    obSize + 1.5 * s,
+    obSize + 1.5 * s,
+    2.5 * s,
+    sandHi,
+    sandLeft,
+    sandRight,
+  );
+  drawIsometricPrism(
+    ctx,
+    obX,
+    obY,
+    obSize,
+    obSize,
+    obH,
+    sandTop,
+    sandDark,
+    sandLeft,
+  );
   const obI = obSize * ISO_COS;
   const obD = obSize * ISO_SIN;
   drawStoneRows(ctx, obX, obY, obI, obD, obH, 4, 0.1);
   drawEdgeHighlights(ctx, obX, obY, obI, obD, obH, sandEdge);
-  drawIsometricPyramid(ctx, obX, obY - obH, 3 * s, 5 * s, sandHi, sandDark, sandLeft);
+  drawIsometricPyramid(
+    ctx,
+    obX,
+    obY - obH,
+    3 * s,
+    5 * s,
+    sandHi,
+    sandDark,
+    sandLeft,
+  );
 
   // Sun disc on obelisk — centered on the shaft
   const sunY = obY - obH * 0.6;
@@ -1652,7 +2519,10 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
   for (let ray = 0; ray < 8; ray++) {
     const rayAng = (ray / 8) * Math.PI * 2 + t * 0.3;
     ctx.beginPath();
-    ctx.moveTo(obX + Math.cos(rayAng) * 2.5 * s, sunY + Math.sin(rayAng) * 2.5 * s);
+    ctx.moveTo(
+      obX + Math.cos(rayAng) * 2.5 * s,
+      sunY + Math.sin(rayAng) * 2.5 * s,
+    );
     ctx.lineTo(obX + Math.cos(rayAng) * 4 * s, sunY + Math.sin(rayAng) * 4 * s);
     ctx.stroke();
   }
@@ -1660,13 +2530,26 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
 
   // Fire bowls at wall junctions — 3D brass bowls on pedestals
   const fireBowlPositions: Array<[number, number]> = [
-    [-18, -4], [10, -2], [-14, 6], [14, 8],
+    [-18, -4],
+    [10, -2],
+    [-14, 6],
+    [14, 8],
   ];
   for (const [fbx, fby] of fireBowlPositions) {
     const bowlX = cx + fbx * s;
     const bowlY = cy + fby * s;
     // Pedestal
-    drawIsometricPrism(ctx, bowlX, bowlY + 1 * s, 2 * s, 2 * s, 2 * s, sandHi, sandDark, sandLeft);
+    drawIsometricPrism(
+      ctx,
+      bowlX,
+      bowlY + 1 * s,
+      2 * s,
+      2 * s,
+      2 * s,
+      sandHi,
+      sandDark,
+      sandLeft,
+    );
     // Brass bowl (layered ellipses)
     ctx.fillStyle = "#7a5a18";
     fillIsoEllipse(ctx, bowlX, bowlY - 0.8 * s, 2.2 * s);
@@ -1680,8 +2563,18 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
     ctx.fillStyle = `rgba(255,130,20,${firePulse * 0.7})`;
     ctx.beginPath();
     ctx.moveTo(bowlX - 1 * s, bowlY - 1.5 * s);
-    ctx.quadraticCurveTo(bowlX + Math.sin(t * 7 + fbx) * 0.6 * s, bowlY - 4.5 * s, bowlX, bowlY - 6 * s);
-    ctx.quadraticCurveTo(bowlX - Math.sin(t * 8 + fbx) * 0.4 * s, bowlY - 3.5 * s, bowlX + 1 * s, bowlY - 1.5 * s);
+    ctx.quadraticCurveTo(
+      bowlX + Math.sin(t * 7 + fbx) * 0.6 * s,
+      bowlY - 4.5 * s,
+      bowlX,
+      bowlY - 6 * s,
+    );
+    ctx.quadraticCurveTo(
+      bowlX - Math.sin(t * 8 + fbx) * 0.4 * s,
+      bowlY - 3.5 * s,
+      bowlX + 1 * s,
+      bowlY - 1.5 * s,
+    );
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = `rgba(255,200,60,${firePulse * 0.5})`;
@@ -1695,11 +2588,25 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
   }
 
   // Broken columns at labyrinth perimeter
-  for (const [colX, colY, colH] of [[-22, 2, 6], [20, 0, 5], [-14, -8, 4]] as const) {
+  for (const [colX, colY, colH] of [
+    [-22, 2, 6],
+    [20, 0, 5],
+    [-14, -8, 4],
+  ] as const) {
     const cX = cx + colX * s;
     const cY = cy + colY * s;
     const colW = 2.5 * s;
-    drawIsometricPrism(ctx, cX, cY, colW, colW, colH * s, sandHi, sandDark, sandLeft);
+    drawIsometricPrism(
+      ctx,
+      cX,
+      cY,
+      colW,
+      colW,
+      colH * s,
+      sandHi,
+      sandDark,
+      sandLeft,
+    );
     // Broken top — short isometric stub to suggest fracture
     const cI = colW * ISO_COS;
     const cD = colW * ISO_SIN;
@@ -1730,7 +2637,17 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
   // Skull on pole — closer to labyrinth entrance
   const skullX = cx - 22 * s;
   const skullY = cy + 6 * s;
-  drawIsometricPrism(ctx, skullX, skullY + 1 * s, 1 * s, 1 * s, 8 * s, "#6a5038", "#5b4330", "#4a3520");
+  drawIsometricPrism(
+    ctx,
+    skullX,
+    skullY + 1 * s,
+    1 * s,
+    1 * s,
+    8 * s,
+    "#6a5038",
+    "#5b4330",
+    "#4a3520",
+  );
   ctx.fillStyle = "#cfbfab";
   fillIsoEllipse(ctx, skullX, skullY - 7.2 * s, 2 * s, 2.4 * s);
   ctx.fillStyle = "#b8a896";
@@ -1743,7 +2660,10 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
 
   // Scattered bones
   const bones: Array<[number, number, number]> = [
-    [-18, 10, 0.3], [16, 11, -0.2], [-8, 12, 0.5], [20, 7, -0.4],
+    [-18, 10, 0.3],
+    [16, 11, -0.2],
+    [-8, 12, 0.5],
+    [20, 7, -0.4],
   ];
   for (const [bx, by, rot] of bones) {
     ctx.save();
@@ -1772,7 +2692,15 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
     const alpha = (1 - phase) * 0.06;
     ctx.fillStyle = `rgba(200,170,100,${alpha})`;
     ctx.beginPath();
-    ctx.ellipse(px, py, (2.5 + phase * 3) * s, (1.2 + phase * 1.5) * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      px,
+      py,
+      (2.5 + phase * 3) * s,
+      (1.2 + phase * 1.5) * s,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }
@@ -1781,8 +2709,18 @@ function drawSunscorchLabyrinthLandmark(params: ChallengeLandmarkRenderParams): 
 // Frontier Outpost
 // ---------------------------------------------------------------------------
 
-function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+function drawFrontierOutpostLandmark(
+  params: ChallengeLandmarkRenderParams,
+): void {
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -1796,17 +2734,34 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   const stoneHi = "#706c66";
   const roofColor = "#2e1d13";
   const snowColor = "rgba(235,242,250,0.55)";
-  const snowSolid = "#e8f0f8";
   const fireGlow = "#ff8c24";
   const iceColor = "rgba(200,225,255,0.4)";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 36 * s, 16 * s, 55 * s, 0.35);
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 4 * s,
+      s,
+      36 * s,
+      16 * s,
+      55 * s,
+      0.35,
+      "0,0,0",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Snowy ground
-  const gGrad = ctx.createRadialGradient(cx, cy + 6 * s, 0, cx, cy + 6 * s, 28 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 6 * s,
+    0,
+    cx,
+    cy + 6 * s,
+    28 * s,
+  );
   gGrad.addColorStop(0, "rgba(220,230,240,0.18)");
   gGrad.addColorStop(0.5, "rgba(200,210,220,0.08)");
   gGrad.addColorStop(1, "transparent");
@@ -1815,7 +2770,12 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   ctx.fill();
 
   // Snow patches on ground
-  for (const [sx, sy, sr] of [[-10, 10, 6], [8, 8, 5], [-4, 12, 4], [14, 11, 3.5]] as const) {
+  for (const [sx, sy, sr] of [
+    [-10, 10, 6],
+    [8, 8, 5],
+    [-4, 12, 4],
+    [14, 11, 3.5],
+  ] as const) {
     ctx.fillStyle = "rgba(230,238,248,0.12)";
     fillIsoEllipse(ctx, cx + sx * s, cy + sy * s, sr * s, sr * 0.5 * s);
   }
@@ -1836,12 +2796,17 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
     for (let post = 0; post <= palisadePosts; post++) {
       const angle = (post / palisadePosts) * Math.PI * 2;
       const angleDiff = Math.abs(angle - gateAngle);
-      if (angleDiff < gateWidth) { started = false; continue; }
+      if (angleDiff < gateWidth) {
+        started = false;
+        continue;
+      }
       const pos = getIsoOrbitPoint(cx, cy + 1.5 * s, angle, ringX, ringY);
       const postHeight = (11 + Math.sin(post * 1.3) * 2.5) * s;
       const beamY = pos.y - postHeight * beamFactor;
-      if (!started) { ctx.moveTo(pos.x, beamY); started = true; }
-      else ctx.lineTo(pos.x, beamY);
+      if (!started) {
+        ctx.moveTo(pos.x, beamY);
+        started = true;
+      } else ctx.lineTo(pos.x, beamY);
     }
     ctx.stroke();
   }
@@ -1855,9 +2820,15 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
     const postHeight = (11 + Math.sin(post * 1.3) * 2.5) * s;
     const postW = 2.4 * s;
 
-    const woodShade = post % 3 === 0 ? woodDark : post % 3 === 1 ? woodMid : woodLight;
+    const woodShade =
+      post % 3 === 0 ? woodDark : post % 3 === 1 ? woodMid : woodLight;
 
-    const pGrad = ctx.createLinearGradient(pos.x - postW * 0.5, 0, pos.x + postW * 0.5, 0);
+    const pGrad = ctx.createLinearGradient(
+      pos.x - postW * 0.5,
+      0,
+      pos.x + postW * 0.5,
+      0,
+    );
     pGrad.addColorStop(0, woodShade);
     pGrad.addColorStop(0.4, woodHi);
     pGrad.addColorStop(1, woodDark);
@@ -1888,9 +2859,19 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
     ctx.fillStyle = snowColor;
     ctx.beginPath();
     ctx.moveTo(pos.x - 1.8 * s, pos.y - postHeight - 0.5 * s);
-    ctx.quadraticCurveTo(pos.x, pos.y - postHeight - 4 * s, pos.x + 1.8 * s, pos.y - postHeight - 0.5 * s);
+    ctx.quadraticCurveTo(
+      pos.x,
+      pos.y - postHeight - 4 * s,
+      pos.x + 1.8 * s,
+      pos.y - postHeight - 0.5 * s,
+    );
     ctx.lineTo(pos.x + 1.2 * s, pos.y - postHeight);
-    ctx.quadraticCurveTo(pos.x, pos.y - postHeight - 2.5 * s, pos.x - 1.2 * s, pos.y - postHeight);
+    ctx.quadraticCurveTo(
+      pos.x,
+      pos.y - postHeight - 2.5 * s,
+      pos.x - 1.2 * s,
+      pos.y - postHeight,
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -1912,8 +2893,20 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   }
 
   // Gate opening with crossbeam
-  const gatePos1 = getIsoOrbitPoint(cx, cy + 1.5 * s, gateAngle - gateWidth, ringX, ringY);
-  const gatePos2 = getIsoOrbitPoint(cx, cy + 1.5 * s, gateAngle + gateWidth, ringX, ringY);
+  const gatePos1 = getIsoOrbitPoint(
+    cx,
+    cy + 1.5 * s,
+    gateAngle - gateWidth,
+    ringX,
+    ringY,
+  );
+  const gatePos2 = getIsoOrbitPoint(
+    cx,
+    cy + 1.5 * s,
+    gateAngle + gateWidth,
+    ringX,
+    ringY,
+  );
   ctx.strokeStyle = woodMid;
   ctx.lineWidth = 1.5 * s;
   ctx.beginPath();
@@ -1930,8 +2923,18 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   // Watchtower
   const towerW = 7 * s;
   const towerH = 28 * s;
-  const towerBase = cy - 18 * s;
-  drawIsometricPrism(ctx, cx, towerBase, towerW, towerW, towerH, stoneLight, stoneDark, stoneMid);
+  const towerBase = cy - 3 * s;
+  drawIsometricPrism(
+    ctx,
+    cx,
+    towerBase,
+    towerW,
+    towerW,
+    towerH,
+    stoneLight,
+    stoneDark,
+    stoneMid,
+  );
   const ttI = towerW * ISO_COS;
   const ttD = towerW * ISO_SIN;
   const ttTop = towerBase - towerH;
@@ -1939,10 +2942,29 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   drawEdgeHighlights(ctx, cx, towerBase, ttI, ttD, towerH, stoneHi);
 
   // Observation platform
-  drawIsometricPrism(ctx, cx, ttTop, 13 * s, 13 * s, 3.5 * s, woodLight, woodDark, woodMid);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    ttTop,
+    13 * s,
+    13 * s,
+    3.5 * s,
+    woodLight,
+    woodDark,
+    woodMid,
+  );
 
   // Roof
-  drawIsometricPyramid(ctx, cx, ttTop - 3.5 * s, 9 * s, 13 * s, roofColor, "#100a06", "#1c120c");
+  drawIsometricPyramid(
+    ctx,
+    cx,
+    ttTop - 3.5 * s,
+    9 * s,
+    13 * s,
+    roofColor,
+    "#100a06",
+    "#1c120c",
+  );
 
   // Snow on roof
   ctx.fillStyle = snowColor;
@@ -1971,11 +2993,35 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   // Tower windows with warm glow
   setShadowBlur(ctx, 6 * s, fireGlow);
   ctx.fillStyle = `rgba(255,150,50,${0.38 + Math.sin(t * 2.5) * 0.15})`;
-  traceIsoFlushRect(ctx, cx - ttI * 0.5, towerBase - towerH * 0.32 + ttD * 0.5, 2, 5.5, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    cx - ttI * 0.5,
+    towerBase - towerH * 0.32 + ttD * 0.5,
+    2,
+    5.5,
+    "left",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, cx + ttI * 0.4, towerBase - towerH * 0.32 + ttD * 0.5, 1.8, 5.5, "right", s);
+  traceIsoFlushRect(
+    ctx,
+    cx + ttI * 0.4,
+    towerBase - towerH * 0.32 + ttD * 0.5,
+    1.8,
+    5.5,
+    "right",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, cx - ttI * 0.4, towerBase - towerH * 0.6 + ttD * 0.5, 1.5, 4, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    cx - ttI * 0.4,
+    towerBase - towerH * 0.6 + ttD * 0.5,
+    1.5,
+    4,
+    "left",
+    s,
+  );
   ctx.fill();
   clearShadow(ctx);
 
@@ -2021,7 +3067,11 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   ctx.fill();
 
   // Supply barrels
-  for (const [bx, by] of [[13, 3], [15, 4.5], [14, 6]] as const) {
+  for (const [bx, by] of [
+    [13, 3],
+    [15, 4.5],
+    [14, 6],
+  ] as const) {
     const barrelX = cx + bx * s;
     const barrelY = cy + by * s;
     ctx.fillStyle = "#4a3520";
@@ -2045,7 +3095,13 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   // Fire ring stones
   for (let stone = 0; stone < 8; stone++) {
     const sAngle = (stone / 8) * Math.PI * 2;
-    const sPos = getIsoOrbitPoint(fireX, fireY + 0.5 * s, sAngle, 3 * s, 1.8 * s);
+    const sPos = getIsoOrbitPoint(
+      fireX,
+      fireY + 0.5 * s,
+      sAngle,
+      3 * s,
+      1.8 * s,
+    );
     ctx.fillStyle = stone % 2 === 0 ? "#4f4748" : "#5a5254";
     fillIsoEllipse(ctx, sPos.x, sPos.y, 1.1 * s, 0.75 * s);
   }
@@ -2060,16 +3116,36 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   ctx.fillStyle = `rgba(255,120,15,${0.55 + firePulse * 0.2})`;
   ctx.beginPath();
   ctx.moveTo(fireX - 2 * s, fireY);
-  ctx.quadraticCurveTo(fireX + Math.sin(t * 7) * 1.8 * s, fireY - 6 * s, fireX, fireY - 10 * s);
-  ctx.quadraticCurveTo(fireX - Math.sin(t * 8) * 1.5 * s, fireY - 5 * s, fireX + 2 * s, fireY);
+  ctx.quadraticCurveTo(
+    fireX + Math.sin(t * 7) * 1.8 * s,
+    fireY - 6 * s,
+    fireX,
+    fireY - 10 * s,
+  );
+  ctx.quadraticCurveTo(
+    fireX - Math.sin(t * 8) * 1.5 * s,
+    fireY - 5 * s,
+    fireX + 2 * s,
+    fireY,
+  );
   ctx.closePath();
   ctx.fill();
   // Mid flame
   ctx.fillStyle = `rgba(255,180,40,${0.45 + firePulse * 0.15})`;
   ctx.beginPath();
   ctx.moveTo(fireX - 1.2 * s, fireY - 1 * s);
-  ctx.quadraticCurveTo(fireX + Math.sin(t * 9) * 1 * s, fireY - 4.5 * s, fireX, fireY - 7 * s);
-  ctx.quadraticCurveTo(fireX - Math.sin(t * 10) * 0.8 * s, fireY - 4 * s, fireX + 1.2 * s, fireY - 1 * s);
+  ctx.quadraticCurveTo(
+    fireX + Math.sin(t * 9) * 1 * s,
+    fireY - 4.5 * s,
+    fireX,
+    fireY - 7 * s,
+  );
+  ctx.quadraticCurveTo(
+    fireX - Math.sin(t * 10) * 0.8 * s,
+    fireY - 4 * s,
+    fireX + 1.2 * s,
+    fireY - 1 * s,
+  );
   ctx.closePath();
   ctx.fill();
   // Inner flame (bright core)
@@ -2077,7 +3153,12 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   ctx.beginPath();
   ctx.moveTo(fireX - 0.6 * s, fireY - 1.5 * s);
   ctx.quadraticCurveTo(fireX, fireY - 3 * s, fireX, fireY - 5 * s);
-  ctx.quadraticCurveTo(fireX, fireY - 2.5 * s, fireX + 0.6 * s, fireY - 1.5 * s);
+  ctx.quadraticCurveTo(
+    fireX,
+    fireY - 2.5 * s,
+    fireX + 0.6 * s,
+    fireY - 1.5 * s,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -2105,13 +3186,23 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
   ctx.fillStyle = "#6a5a42";
   ctx.beginPath();
   ctx.moveTo(rackX - 3 * s, rackY - 5.5 * s);
-  ctx.quadraticCurveTo(rackX - 2 * s, rackY - 2 * s, rackX - 1 * s, rackY - 5.5 * s);
+  ctx.quadraticCurveTo(
+    rackX - 2 * s,
+    rackY - 2 * s,
+    rackX - 1 * s,
+    rackY - 5.5 * s,
+  );
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = "#7a6a50";
   ctx.beginPath();
   ctx.moveTo(rackX + 0.5 * s, rackY - 5.5 * s);
-  ctx.quadraticCurveTo(rackX + 1.5 * s, rackY - 1.5 * s, rackX + 2.5 * s, rackY - 5.5 * s);
+  ctx.quadraticCurveTo(
+    rackX + 1.5 * s,
+    rackY - 1.5 * s,
+    rackX + 2.5 * s,
+    rackY - 5.5 * s,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -2146,7 +3237,15 @@ function drawFrontierOutpostLandmark(params: ChallengeLandmarkRenderParams): voi
 // ---------------------------------------------------------------------------
 
 function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
-  const { ctx, screenPos, scale: s, decorTime: t, shadowOnly = false, skipShadow = false } = params;
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
   const cx = screenPos.x;
   const cy = screenPos.y;
 
@@ -2161,12 +3260,30 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
   const obsidianHi = "#2a2238";
 
   if (!skipShadow) {
-    drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 36 * s, 16 * s, 40 * s, 0.38, "20,10,5");
+    drawDirectionalShadow(
+      ctx,
+      cx,
+      cy + 4 * s,
+      s,
+      36 * s,
+      16 * s,
+      40 * s,
+      0.38,
+      "20,10,5",
+      z,
+    );
   }
   if (shadowOnly) return;
 
   // Ground: scorched earth with lava underglow
-  const gGrad = ctx.createRadialGradient(cx, cy + 2 * s, 0, cx, cy + 2 * s, 34 * s);
+  const gGrad = ctx.createRadialGradient(
+    cx,
+    cy + 2 * s,
+    0,
+    cx,
+    cy + 2 * s,
+    34 * s,
+  );
   gGrad.addColorStop(0, "rgba(255,90,30,0.2)");
   gGrad.addColorStop(0.25, "rgba(180,60,15,0.12)");
   gGrad.addColorStop(0.5, "rgba(40,20,10,0.2)");
@@ -2229,7 +3346,7 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
   // Flowing lava dots along spiral
   ctx.lineWidth = 1;
   for (let dot = 0; dot < 12; dot++) {
-    const dotAngle = ((t * 0.5 + dot * 0.35) % (Math.PI * 4.5));
+    const dotAngle = (t * 0.5 + dot * 0.35) % (Math.PI * 4.5);
     const dotRadius = 3 * s + dotAngle * 2.6 * s;
     const dx = cx + Math.cos(dotAngle) * dotRadius;
     const dy = cy + Math.sin(dotAngle) * dotRadius * ISO_Y_RATIO;
@@ -2245,9 +3362,29 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
   const altarX = cx;
   const altarY = cy - 3 * s;
   // Foundation
-  drawIsometricPrism(ctx, altarX, altarY + 2 * s, 8 * s, 8 * s, 4 * s, ashLight, ashDark, ashMid);
+  drawIsometricPrism(
+    ctx,
+    altarX,
+    altarY + 2 * s,
+    8 * s,
+    8 * s,
+    4 * s,
+    ashLight,
+    ashDark,
+    ashMid,
+  );
   // Main tower
-  drawIsometricPrism(ctx, altarX, altarY, 6 * s, 6 * s, 16 * s, ashLight, ashDark, ashMid);
+  drawIsometricPrism(
+    ctx,
+    altarX,
+    altarY,
+    6 * s,
+    6 * s,
+    16 * s,
+    ashLight,
+    ashDark,
+    ashMid,
+  );
   const aI = 6 * s * ISO_COS;
   const aD = 6 * s * ISO_SIN;
   const aTop = altarY - 16 * s;
@@ -2273,9 +3410,25 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Altar windows
   ctx.fillStyle = `rgba(255,90,30,${0.35 + Math.sin(t * 2.5) * 0.15})`;
-  traceIsoFlushRect(ctx, altarX - aI * 0.5, altarY - 10 * s + aD * 0.5, 1.8, 5, "left", s);
+  traceIsoFlushRect(
+    ctx,
+    altarX - aI * 0.5,
+    altarY - 10 * s + aD * 0.5,
+    1.8,
+    5,
+    "left",
+    s,
+  );
   ctx.fill();
-  traceIsoFlushRect(ctx, altarX + aI * 0.4, altarY - 10 * s + aD * 0.5, 1.6, 5, "right", s);
+  traceIsoFlushRect(
+    ctx,
+    altarX + aI * 0.4,
+    altarY - 10 * s + aD * 0.5,
+    1.6,
+    5,
+    "right",
+    s,
+  );
   ctx.fill();
   clearShadow(ctx);
 
@@ -2292,7 +3445,13 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
   ctx.fill();
 
   // Flanking ruins
-  const flanks: Array<{ x: number; y: number; w: number; d: number; h: number }> = [
+  const flanks: Array<{
+    x: number;
+    y: number;
+    w: number;
+    d: number;
+    h: number;
+  }> = [
     { x: -6, y: 0, w: 4, d: 4, h: 9 },
     { x: 6, y: -1, w: 4, d: 4, h: 10 },
   ];
@@ -2300,10 +3459,29 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
     const ruin = flanks[ri];
     const rx = cx + ruin.x * s;
     const ry = cy + ruin.y * s;
-    drawIsometricPrism(ctx, rx, ry, ruin.w * s, ruin.d * s, ruin.h * s, ashLight, ashDark, ashMid);
+    drawIsometricPrism(
+      ctx,
+      rx,
+      ry,
+      ruin.w * s,
+      ruin.d * s,
+      ruin.h * s,
+      ashLight,
+      ashDark,
+      ashMid,
+    );
     const rI = ruin.w * s * ISO_COS;
     const rD = ruin.d * s * ISO_SIN;
-    drawStoneRows(ctx, rx, ry, rI, rD, ruin.h * s, Math.max(2, Math.floor(ruin.h / 2)), 0.15);
+    drawStoneRows(
+      ctx,
+      rx,
+      ry,
+      rI,
+      rD,
+      ruin.h * s,
+      Math.max(2, Math.floor(ruin.h / 2)),
+      0.15,
+    );
     drawEdgeHighlights(ctx, rx, ry, rI, rD, ruin.h * s, ashHi);
 
     // Broken top jagged
@@ -2320,8 +3498,12 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Obsidian crystal formations
   const crystals: Array<[number, number, number, number]> = [
-    [-14, 4, 1.0, 0], [16, 2, 0.9, 1], [-8, -7, 0.75, 2],
-    [12, -5, 0.85, 3], [-18, -1, 0.7, 4], [20, -3, 0.65, 5],
+    [-14, 4, 1.0, 0],
+    [16, 2, 0.9, 1],
+    [-8, -7, 0.75, 2],
+    [12, -5, 0.85, 3],
+    [-18, -1, 0.7, 4],
+    [20, -3, 0.65, 5],
   ];
   for (const [crx, cry, crScale, crSeed] of crystals) {
     const crystalX = cx + crx * s;
@@ -2418,15 +3600,30 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
       ctx.fillStyle = `rgba(255,185,60,${burstAlpha})`;
       ctx.beginPath();
       ctx.moveTo(vx - 1.5 * s, vy);
-      ctx.quadraticCurveTo(vx + Math.sin(t * 6 + vent) * 2 * s, vy - burstHeight * 0.5, vx, vy - burstHeight);
-      ctx.quadraticCurveTo(vx - Math.sin(t * 7 + vent) * 2 * s, vy - burstHeight * 0.45, vx + 1.5 * s, vy);
+      ctx.quadraticCurveTo(
+        vx + Math.sin(t * 6 + vent) * 2 * s,
+        vy - burstHeight * 0.5,
+        vx,
+        vy - burstHeight,
+      );
+      ctx.quadraticCurveTo(
+        vx - Math.sin(t * 7 + vent) * 2 * s,
+        vy - burstHeight * 0.45,
+        vx + 1.5 * s,
+        vy,
+      );
       ctx.closePath();
       ctx.fill();
 
       ctx.fillStyle = `rgba(255,220,100,${burstAlpha * 0.5})`;
       ctx.beginPath();
       ctx.moveTo(vx - 0.8 * s, vy);
-      ctx.quadraticCurveTo(vx, vy - burstHeight * 0.4, vx, vy - burstHeight * 0.7);
+      ctx.quadraticCurveTo(
+        vx,
+        vy - burstHeight * 0.4,
+        vx,
+        vy - burstHeight * 0.7,
+      );
       ctx.quadraticCurveTo(vx, vy - burstHeight * 0.3, vx + 0.8 * s, vy);
       ctx.closePath();
       ctx.fill();
@@ -2436,15 +3633,37 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Broken pillars with more detail
   const brokenPillars: Array<[number, number, number]> = [
-    [-17, 6, 7], [19, 4, 5.5], [-11, -9, 4.5], [15, -7, 6],
+    [-17, 6, 7],
+    [19, 4, 5.5],
+    [-11, -9, 4.5],
+    [15, -7, 6],
   ];
   for (const [px, py, ph] of brokenPillars) {
     const pillX = cx + px * s;
     const pillY = cy + py * s;
-    drawIsometricPrism(ctx, pillX, pillY, 3 * s, 3 * s, ph * s, ashLight, ashDark, ashMid);
+    drawIsometricPrism(
+      ctx,
+      pillX,
+      pillY,
+      3 * s,
+      3 * s,
+      ph * s,
+      ashLight,
+      ashDark,
+      ashMid,
+    );
     const pI = 3 * s * ISO_COS;
     const pD = 3 * s * ISO_SIN;
-    drawStoneRows(ctx, pillX, pillY, pI, pD, ph * s, Math.max(2, Math.floor(ph / 2)), 0.12);
+    drawStoneRows(
+      ctx,
+      pillX,
+      pillY,
+      pI,
+      pD,
+      ph * s,
+      Math.max(2, Math.floor(ph / 2)),
+      0.12,
+    );
 
     // Jagged broken top
     ctx.fillStyle = ashHi;
@@ -2464,7 +3683,11 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
   }
 
   // Volcanic rock formations
-  for (const [rx, ry, rScale] of [[-22, 1, 1.2], [24, -1, 1.0], [-15, -5, 0.8]] as const) {
+  for (const [rx, ry, rScale] of [
+    [-22, 1, 1.2],
+    [24, -1, 1.0],
+    [-15, -5, 0.8],
+  ] as const) {
     const rockX = cx + rx * s;
     const rockY = cy + ry * s;
     ctx.fillStyle = ashDark;
@@ -2514,7 +3737,18 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
 
   // Heavy smoke plumes
   drawSmoke(ctx, cx, aTop - 4 * s, s, t, 5, 10, 30, "50,30,20", 0.12);
-  drawSmoke(ctx, cx + 6 * s, cy - 12 * s, s, t * 1.1, 3, 6, 20, "60,35,25", 0.08);
+  drawSmoke(
+    ctx,
+    cx + 6 * s,
+    cy - 12 * s,
+    s,
+    t * 1.1,
+    3,
+    6,
+    20,
+    "60,35,25",
+    0.08,
+  );
 }
 
 // ---------------------------------------------------------------------------
