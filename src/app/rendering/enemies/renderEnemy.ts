@@ -94,6 +94,37 @@ import {
   drawEmberGuardEnemy,
 } from "./volcanic";
 import {
+  drawSkeletonFootmanEnemy,
+  drawSkeletonKnightEnemy,
+  drawSkeletonArcherEnemy,
+  drawSkeletonKingEnemy,
+  drawZombieShamblerEnemy,
+  drawZombieBruteEnemy,
+  drawZombieSpitterEnemy,
+  drawGhoulEnemy,
+  drawDarkKnightEnemy,
+  drawDeathKnightEnemy,
+} from "./darkfantasy";
+import {
+  drawFallenPaladinEnemy,
+  drawBlackGuardEnemy,
+  drawLichEnemy,
+  drawWraithEnemy,
+  drawBoneMageEnemy,
+  drawDarkPriestEnemy,
+  drawRevenantEnemy,
+  drawAbominationEnemy,
+  drawHellhoundEnemy,
+  drawDoomHeraldEnemy,
+} from "./darkfantasyB";
+import {
+  drawTitanOfNassauEnemy,
+  drawSwampLeviathanEnemy,
+  drawSphinxGuardianEnemy,
+  drawFrostColossusEnemy,
+  drawInfernoWyrmEnemy,
+} from "./regionbosses";
+import {
   getAbilityActivationPhase,
   renderAbilityActivation,
 } from "./abilityEffects";
@@ -1107,6 +1138,81 @@ function drawEnemySprite(
       break;
     case "ember_guard":
       drawEmberGuardEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "skeleton_footman":
+      drawSkeletonFootmanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "skeleton_knight":
+      drawSkeletonKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "skeleton_archer":
+      drawSkeletonArcherEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "skeleton_king":
+      drawSkeletonKingEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "zombie_shambler":
+      drawZombieShamblerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "zombie_brute":
+      drawZombieBruteEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "zombie_spitter":
+      drawZombieSpitterEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "ghoul":
+      drawGhoulEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "dark_knight":
+      drawDarkKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "death_knight":
+      drawDeathKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "fallen_paladin":
+      drawFallenPaladinEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "black_guard":
+      drawBlackGuardEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "lich":
+      drawLichEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "wraith":
+      drawWraithEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "bone_mage":
+      drawBoneMageEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "dark_priest":
+      drawDarkPriestEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "revenant":
+      drawRevenantEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "abomination":
+      drawAbominationEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "hellhound":
+      drawHellhoundEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "doom_herald":
+      drawDoomHeraldEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "titan_of_nassau":
+      drawTitanOfNassauEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "swamp_leviathan":
+      drawSwampLeviathanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "sphinx_guardian":
+      drawSphinxGuardianEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "frost_colossus":
+      drawFrostColossusEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      break;
+    case "inferno_wyrm":
+      drawInfernoWyrmEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
       break;
     default:
       drawDefaultEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);

@@ -74,6 +74,20 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "hexer", count: 4, interval: 650, delay: 2200 },
       { type: "berserker", count: 4, interval: 600, delay: 2200 },
     ],
+    // Wave 9: Skeleton march
+    [
+      { type: "skeleton_footman", count: 6, interval: 650 },
+      { type: "zombie_shambler", count: 4, interval: 750, delay: 3000 },
+      { type: "skeleton_archer", count: 3, interval: 800, delay: 2800 },
+      { type: "athlete", count: 4, interval: 650, delay: 2800 },
+    ],
+    // Wave 10: Ghoul ambush
+    [
+      { type: "ghoul", count: 5, interval: 600 },
+      { type: "skeleton_knight", count: 3, interval: 900, delay: 2800 },
+      { type: "tiger_fan", count: 5, interval: 600, delay: 2500 },
+      { type: "bone_mage", count: 2, interval: 1200, delay: 2500 },
+    ],
   ],
 
   carnegie: [
@@ -147,6 +161,21 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "tiger_fan", count: 7, interval: 500, delay: 2000 },
       { type: "wyvern", count: 4, interval: 900, delay: 2000 },
       { type: "infernal", count: 4, interval: 800, delay: 2000 },
+    ],
+    // Wave 11: Undead vanguard
+    [
+      { type: "skeleton_knight", count: 4, interval: 800 },
+      { type: "dark_knight", count: 3, interval: 1000, delay: 2800 },
+      { type: "zombie_brute", count: 3, interval: 1100, delay: 2600 },
+      { type: "frosh", count: 6, interval: 500, delay: 2500 },
+    ],
+    // Wave 12: Dark sorcery
+    [
+      { type: "bone_mage", count: 3, interval: 1100 },
+      { type: "dark_priest", count: 3, interval: 1000, delay: 2600 },
+      { type: "skeleton_footman", count: 6, interval: 550, delay: 2400 },
+      { type: "zombie_spitter", count: 3, interval: 900, delay: 2400 },
+      { type: "tiger_fan", count: 5, interval: 600, delay: 2400 },
     ],
   ],
 
@@ -238,6 +267,31 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "banshee", count: 6, interval: 600, delay: 2000 },
       { type: "berserker", count: 5, interval: 550, delay: 2000 },
     ],
+    // Wave 13: Death Knight assault
+    [
+      { type: "death_knight", count: 1, interval: 3000 },
+      { type: "dark_knight", count: 4, interval: 1000, delay: 2200 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2200 },
+      { type: "skeleton_king", count: 1, interval: 2800, delay: 2000 },
+      { type: "skeleton_knight", count: 5, interval: 700, delay: 2000 },
+    ],
+    // Wave 14: Legion of the damned
+    [
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "lich", count: 1, interval: 2800, delay: 2200 },
+      { type: "hellhound", count: 4, interval: 800, delay: 2200 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 2000 },
+      { type: "revenant", count: 4, interval: 900, delay: 2000 },
+      { type: "athlete", count: 6, interval: 500, delay: 2000 },
+    ],
+    // Wave 15: THE NASSAU COLOSSUS
+    [
+      { type: "titan_of_nassau", count: 1, interval: 5000 },
+      { type: "death_knight", count: 2, interval: 1800, delay: 3000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 2000 },
+      { type: "dark_knight", count: 4, interval: 1000, delay: 2000 },
+      { type: "skeleton_footman", count: 8, interval: 450, delay: 2000 },
+    ],
   ],
 
   // =====================
@@ -315,6 +369,20 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1200, delay: 2000 },
       { type: "wyvern", count: 4, interval: 900, delay: 2000 },
       { type: "will_o_wisp", count: 7, interval: 450, delay: 2000 },
+    ],
+    // Wave 9: Shambling horde
+    [
+      { type: "zombie_shambler", count: 6, interval: 600 },
+      { type: "zombie_spitter", count: 3, interval: 900, delay: 3000 },
+      { type: "bog_creature", count: 5, interval: 650, delay: 2800 },
+      { type: "skeleton_archer", count: 3, interval: 800, delay: 2800 },
+    ],
+    // Wave 10: Ghoul hunt
+    [
+      { type: "ghoul", count: 5, interval: 600 },
+      { type: "skeleton_knight", count: 3, interval: 900, delay: 2600 },
+      { type: "will_o_wisp", count: 5, interval: 550, delay: 2500 },
+      { type: "dark_priest", count: 2, interval: 1200, delay: 2500 },
     ],
   ],
 
@@ -420,6 +488,22 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "swamp_troll", count: 6, interval: 700, delay: 2000 },
       { type: "wyvern", count: 4, interval: 850, delay: 2000 },
       { type: "infernal", count: 5, interval: 700, delay: 2000 },
+    ],
+    // Wave 15: Dark ritual
+    [
+      { type: "dark_priest", count: 3, interval: 1100 },
+      { type: "bone_mage", count: 3, interval: 1000, delay: 2600 },
+      { type: "wraith", count: 3, interval: 1000, delay: 2500 },
+      { type: "swamp_troll", count: 5, interval: 800, delay: 2400 },
+      { type: "zombie_spitter", count: 4, interval: 800, delay: 2400 },
+    ],
+    // Wave 16: Black guard siege
+    [
+      { type: "black_guard", count: 3, interval: 1200 },
+      { type: "zombie_brute", count: 4, interval: 1000, delay: 2400 },
+      { type: "skeleton_knight", count: 5, interval: 750, delay: 2200 },
+      { type: "bog_creature", count: 7, interval: 450, delay: 2200 },
+      { type: "ghoul", count: 4, interval: 650, delay: 2200 },
     ],
   ],
 
@@ -558,6 +642,31 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 5, interval: 800, delay: 2000 },
       { type: "professor", count: 3, interval: 1400, delay: 2000 },
     ],
+    // Wave 19: Lich council
+    [
+      { type: "lich", count: 1, interval: 3000 },
+      { type: "death_knight", count: 2, interval: 1600, delay: 2200 },
+      { type: "wraith", count: 4, interval: 900, delay: 2200 },
+      { type: "bone_mage", count: 3, interval: 1000, delay: 2000 },
+      { type: "swamp_troll", count: 6, interval: 700, delay: 2000 },
+    ],
+    // Wave 20: Abomination unleashed
+    [
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "doom_herald", count: 1, interval: 2800, delay: 2200 },
+      { type: "hellhound", count: 4, interval: 800, delay: 2200 },
+      { type: "revenant", count: 3, interval: 1000, delay: 2000 },
+      { type: "zombie_brute", count: 4, interval: 900, delay: 2000 },
+      { type: "will_o_wisp", count: 7, interval: 450, delay: 2000 },
+    ],
+    // Wave 21: THE THESIS HYDRA
+    [
+      { type: "swamp_leviathan", count: 1, interval: 5000 },
+      { type: "lich", count: 2, interval: 2000, delay: 3000 },
+      { type: "zombie_brute", count: 5, interval: 850, delay: 2000 },
+      { type: "dark_priest", count: 3, interval: 1000, delay: 2000 },
+      { type: "zombie_shambler", count: 8, interval: 400, delay: 2000 },
+    ],
   ],
 
   // =====================
@@ -635,6 +744,20 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "sandworm", count: 4, interval: 1000, delay: 2000 },
       { type: "harpy", count: 5, interval: 650, delay: 2000 },
       { type: "scarab", count: 8, interval: 400, delay: 2000 },
+    ],
+    // Wave 11: Bone legion
+    [
+      { type: "skeleton_footman", count: 6, interval: 600 },
+      { type: "skeleton_knight", count: 3, interval: 900, delay: 2800 },
+      { type: "nomad", count: 5, interval: 650, delay: 2600 },
+      { type: "skeleton_archer", count: 4, interval: 750, delay: 2600 },
+    ],
+    // Wave 12: Revenant wrath
+    [
+      { type: "revenant", count: 3, interval: 1000 },
+      { type: "dark_knight", count: 3, interval: 1100, delay: 2600 },
+      { type: "scarab", count: 7, interval: 450, delay: 2400 },
+      { type: "zombie_brute", count: 2, interval: 1200, delay: 2400 },
     ],
   ],
 
@@ -726,6 +849,22 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 5, interval: 800, delay: 2000 },
       { type: "shadow_knight", count: 4, interval: 900, delay: 2000 },
       { type: "catapult", count: 3, interval: 1100, delay: 2000 },
+    ],
+    // Wave 13: Tomb guardians
+    [
+      { type: "skeleton_king", count: 1, interval: 3000 },
+      { type: "bone_mage", count: 3, interval: 1000, delay: 2600 },
+      { type: "wraith", count: 3, interval: 1000, delay: 2400 },
+      { type: "scorpion", count: 5, interval: 800, delay: 2400 },
+      { type: "skeleton_knight", count: 5, interval: 700, delay: 2200 },
+    ],
+    // Wave 14: Fallen paladin charge
+    [
+      { type: "fallen_paladin", count: 3, interval: 1100 },
+      { type: "black_guard", count: 3, interval: 1200, delay: 2400 },
+      { type: "dark_priest", count: 3, interval: 1000, delay: 2200 },
+      { type: "nomad", count: 7, interval: 450, delay: 2200 },
+      { type: "scarab", count: 6, interval: 500, delay: 2200 },
     ],
   ],
 
@@ -834,6 +973,30 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "catapult", count: 4, interval: 1000, delay: 2000 },
       { type: "juggernaut", count: 1, interval: 3200, delay: 18000 },
     ],
+    // Wave 15: Desert death march
+    [
+      { type: "death_knight", count: 2, interval: 1800 },
+      { type: "lich", count: 1, interval: 2800, delay: 2200 },
+      { type: "hellhound", count: 4, interval: 800, delay: 2200 },
+      { type: "skeleton_knight", count: 5, interval: 700, delay: 2000 },
+      { type: "nomad", count: 7, interval: 450, delay: 2000 },
+    ],
+    // Wave 16: Herald of doom
+    [
+      { type: "doom_herald", count: 1, interval: 3000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2200 },
+      { type: "revenant", count: 4, interval: 900, delay: 2200 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2000 },
+      { type: "scarab", count: 8, interval: 400, delay: 2000 },
+    ],
+    // Wave 17: THE MIDTERM SPHINX
+    [
+      { type: "sphinx_guardian", count: 1, interval: 5000 },
+      { type: "death_knight", count: 2, interval: 1800, delay: 3000 },
+      { type: "skeleton_king", count: 1, interval: 2800, delay: 2000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 2000 },
+      { type: "scorpion", count: 6, interval: 700, delay: 2000 },
+    ],
   ],
 
   // =====================
@@ -926,6 +1089,21 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "snow_goblin", count: 8, interval: 450, delay: 2000 },
       { type: "banshee", count: 5, interval: 650, delay: 2000 },
       { type: "ice_witch", count: 4, interval: 700, delay: 2000 },
+    ],
+    // Wave 13: Frozen bones
+    [
+      { type: "skeleton_footman", count: 6, interval: 600 },
+      { type: "zombie_shambler", count: 4, interval: 750, delay: 2800 },
+      { type: "snow_goblin", count: 5, interval: 600, delay: 2600 },
+      { type: "skeleton_archer", count: 3, interval: 800, delay: 2600 },
+    ],
+    // Wave 14: Wraith patrol
+    [
+      { type: "wraith", count: 3, interval: 1000 },
+      { type: "dark_knight", count: 3, interval: 1100, delay: 2600 },
+      { type: "frostling", count: 5, interval: 550, delay: 2400 },
+      { type: "bone_mage", count: 2, interval: 1200, delay: 2400 },
+      { type: "yeti", count: 4, interval: 900, delay: 2400 },
     ],
   ],
 
@@ -1033,6 +1211,23 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dragon", count: 1, interval: 2800, delay: 2000 },
       { type: "necromancer", count: 4, interval: 1000, delay: 2000 },
       { type: "juggernaut", count: 1, interval: 3200, delay: 15000 },
+    ],
+    // Wave 15: Undead siege
+    [
+      { type: "skeleton_knight", count: 5, interval: 750 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2400 },
+      { type: "zombie_brute", count: 3, interval: 1000, delay: 2200 },
+      { type: "yeti", count: 5, interval: 800, delay: 2200 },
+      { type: "dark_knight", count: 3, interval: 1000, delay: 2200 },
+    ],
+    // Wave 16: Dark convergence
+    [
+      { type: "lich", count: 1, interval: 2800 },
+      { type: "bone_mage", count: 3, interval: 1000, delay: 2400 },
+      { type: "dark_priest", count: 3, interval: 1000, delay: 2200 },
+      { type: "revenant", count: 3, interval: 1000, delay: 2200 },
+      { type: "frostling", count: 6, interval: 500, delay: 2000 },
+      { type: "snow_goblin", count: 7, interval: 450, delay: 2000 },
     ],
   ],
 
@@ -1157,6 +1352,31 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dean", count: 3, interval: 2000, delay: 2000 },
       { type: "juggernaut", count: 3, interval: 2400, delay: 15000 },
     ],
+    // Wave 17: Death knight vanguard
+    [
+      { type: "death_knight", count: 2, interval: 1800 },
+      { type: "black_guard", count: 3, interval: 1200, delay: 2200 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2200 },
+      { type: "skeleton_knight", count: 5, interval: 700, delay: 2000 },
+      { type: "yeti", count: 6, interval: 750, delay: 2000 },
+    ],
+    // Wave 18: Abomination rampage
+    [
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "doom_herald", count: 1, interval: 2800, delay: 2200 },
+      { type: "hellhound", count: 4, interval: 800, delay: 2200 },
+      { type: "revenant", count: 3, interval: 1000, delay: 2000 },
+      { type: "ice_witch", count: 5, interval: 700, delay: 2000 },
+      { type: "snow_goblin", count: 8, interval: 400, delay: 2000 },
+    ],
+    // Wave 19: THE JANUARY TITAN
+    [
+      { type: "frost_colossus", count: 1, interval: 5000 },
+      { type: "death_knight", count: 2, interval: 1800, delay: 3000 },
+      { type: "lich", count: 1, interval: 2800, delay: 2000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 2000 },
+      { type: "frostling", count: 8, interval: 400, delay: 2000 },
+    ],
   ],
 
   // =====================
@@ -1267,6 +1487,21 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 7, interval: 600, delay: 2000 },
       { type: "juggernaut", count: 1, interval: 3200, delay: 2000 },
       { type: "golem", count: 1, interval: 2600, delay: 18000 },
+    ],
+    // Wave 15: Hellhound pack
+    [
+      { type: "hellhound", count: 4, interval: 850 },
+      { type: "revenant", count: 3, interval: 1000, delay: 2600 },
+      { type: "fire_imp", count: 6, interval: 500, delay: 2400 },
+      { type: "skeleton_knight", count: 4, interval: 800, delay: 2400 },
+    ],
+    // Wave 16: Dark knight charge
+    [
+      { type: "dark_knight", count: 4, interval: 1000 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2400 },
+      { type: "ember_guard", count: 5, interval: 750, delay: 2200 },
+      { type: "zombie_brute", count: 3, interval: 1000, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 600, delay: 2200 },
     ],
   ],
 
@@ -1390,6 +1625,22 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 8, interval: 550, delay: 2000 },
       { type: "dean", count: 3, interval: 2000, delay: 2000 },
       { type: "juggernaut", count: 1, interval: 3200, delay: 18000 },
+    ],
+    // Wave 17: Fallen army
+    [
+      { type: "fallen_paladin", count: 3, interval: 1100 },
+      { type: "death_knight", count: 2, interval: 1600, delay: 2200 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 650, delay: 2000 },
+      { type: "dark_knight", count: 4, interval: 1000, delay: 2000 },
+    ],
+    // Wave 18: Doom herald descent
+    [
+      { type: "doom_herald", count: 1, interval: 3000 },
+      { type: "lich", count: 1, interval: 2800, delay: 2200 },
+      { type: "hellhound", count: 4, interval: 800, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 700, delay: 2000 },
+      { type: "revenant", count: 4, interval: 900, delay: 2000 },
     ],
   ],
 
@@ -1529,6 +1780,31 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dragon", count: 4, interval: 1800, delay: 2000 },
       { type: "juggernaut", count: 3, interval: 2400, delay: 2000 },
       { type: "ember_guard", count: 10, interval: 400, delay: 2000 },
+    ],
+    // Wave 19: Infernal legion
+    [
+      { type: "death_knight", count: 3, interval: 1600 },
+      { type: "black_guard", count: 3, interval: 1200, delay: 2200 },
+      { type: "hellhound", count: 5, interval: 750, delay: 2200 },
+      { type: "revenant", count: 4, interval: 900, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 500, delay: 2000 },
+    ],
+    // Wave 20: Apocalypse
+    [
+      { type: "doom_herald", count: 2, interval: 2400 },
+      { type: "abomination", count: 2, interval: 2800, delay: 2200 },
+      { type: "lich", count: 2, interval: 2400, delay: 2200 },
+      { type: "skeleton_king", count: 1, interval: 2800, delay: 2000 },
+      { type: "fallen_paladin", count: 4, interval: 1000, delay: 2000 },
+      { type: "fire_imp", count: 10, interval: 350, delay: 2000 },
+    ],
+    // Wave 21: THE BURNOUT WYRM
+    [
+      { type: "inferno_wyrm", count: 1, interval: 5000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 3000 },
+      { type: "hellhound", count: 5, interval: 750, delay: 2000 },
+      { type: "death_knight", count: 3, interval: 1400, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 500, delay: 2000 },
     ],
   ],
 
@@ -2232,9 +2508,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // SANDBOX
   // =====================
   sandbox: [
-    [
-      { type: "frosh", count: 8, interval: 800 },
-    ],
+    [{ type: "frosh", count: 8, interval: 800 }],
     [
       { type: "sophomore", count: 6, interval: 700 },
       { type: "frosh", count: 4, interval: 600, delay: 2000 },
@@ -2279,8 +2553,40 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   dev_enemy_showcase: [
     [
+      // Regional Giant Bosses
+      { type: "titan_of_nassau", count: 1, interval: 1000, delay: 3000 },
+      { type: "swamp_leviathan", count: 1, interval: 1000, delay: 3000 },
+      { type: "sphinx_guardian", count: 1, interval: 1000, delay: 3000 },
+      { type: "frost_colossus", count: 1, interval: 1000, delay: 3000 },
+      { type: "inferno_wyrm", count: 1, interval: 1000, delay: 3000 },
+      // Dark Fantasy - Skeletons
+      { type: "skeleton_footman", count: 1, interval: 1000 },
+      { type: "skeleton_knight", count: 1, interval: 1000, delay: 3000 },
+      { type: "skeleton_archer", count: 1, interval: 1000, delay: 3000 },
+      { type: "skeleton_king", count: 1, interval: 1000, delay: 3000 },
+      // Dark Fantasy - Zombies
+      { type: "zombie_shambler", count: 1, interval: 1000, delay: 3000 },
+      { type: "zombie_brute", count: 1, interval: 1000, delay: 3000 },
+      { type: "zombie_spitter", count: 1, interval: 1000, delay: 3000 },
+      { type: "ghoul", count: 1, interval: 1000, delay: 3000 },
+      // Dark Fantasy - Dark Knights
+      { type: "dark_knight", count: 1, interval: 1000, delay: 3000 },
+      { type: "death_knight", count: 1, interval: 1000, delay: 3000 },
+      { type: "fallen_paladin", count: 1, interval: 1000, delay: 3000 },
+      { type: "black_guard", count: 1, interval: 1000, delay: 3000 },
+      // Dark Fantasy - Dark Casters
+      { type: "lich", count: 1, interval: 1000, delay: 3000 },
+      { type: "wraith", count: 1, interval: 1000, delay: 3000 },
+      { type: "bone_mage", count: 1, interval: 1000, delay: 3000 },
+      { type: "dark_priest", count: 1, interval: 1000, delay: 3000 },
+      // Dark Fantasy - Monstrous
+      { type: "revenant", count: 1, interval: 1000, delay: 3000 },
+      { type: "abomination", count: 1, interval: 1000, delay: 3000 },
+      { type: "hellhound", count: 1, interval: 1000, delay: 3000 },
+      { type: "doom_herald", count: 1, interval: 1000, delay: 3000 },
+
       // Academic progression
-      { type: "frosh", count: 1, interval: 1000 },
+      { type: "frosh", count: 1, interval: 1000, delay: 3000 },
       { type: "sophomore", count: 1, interval: 1000, delay: 3000 },
       { type: "junior", count: 1, interval: 1000, delay: 3000 },
       { type: "senior", count: 1, interval: 1000, delay: 3000 },

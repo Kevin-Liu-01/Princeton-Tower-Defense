@@ -214,7 +214,34 @@ export type EnemyType =
   // Region-specific common troops - Volcanic
   | "magma_spawn"
   | "fire_imp"
-  | "ember_guard";
+  | "ember_guard"
+  // Dark Fantasy enemies
+  | "skeleton_footman"
+  | "skeleton_knight"
+  | "skeleton_archer"
+  | "skeleton_king"
+  | "zombie_shambler"
+  | "zombie_brute"
+  | "zombie_spitter"
+  | "ghoul"
+  | "dark_knight"
+  | "death_knight"
+  | "fallen_paladin"
+  | "black_guard"
+  | "lich"
+  | "wraith"
+  | "bone_mage"
+  | "dark_priest"
+  | "revenant"
+  | "abomination"
+  | "hellhound"
+  | "doom_herald"
+  // Regional Giant Bosses
+  | "titan_of_nassau"
+  | "swamp_leviathan"
+  | "sphinx_guardian"
+  | "frost_colossus"
+  | "inferno_wyrm";
 
 // Enemy categories for organization
 export type EnemyCategory =

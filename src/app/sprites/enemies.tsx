@@ -54,7 +54,34 @@ export type EnemyType =
   // Region-specific common troops - Volcanic
   | "magma_spawn"
   | "fire_imp"
-  | "ember_guard";
+  | "ember_guard"
+  // Dark Fantasy enemies
+  | "skeleton_footman"
+  | "skeleton_knight"
+  | "skeleton_archer"
+  | "skeleton_king"
+  | "zombie_shambler"
+  | "zombie_brute"
+  | "zombie_spitter"
+  | "ghoul"
+  | "dark_knight"
+  | "death_knight"
+  | "fallen_paladin"
+  | "black_guard"
+  | "lich"
+  | "wraith"
+  | "bone_mage"
+  | "dark_priest"
+  | "revenant"
+  | "abomination"
+  | "hellhound"
+  | "doom_herald"
+  // Regional Giant Bosses
+  | "titan_of_nassau"
+  | "swamp_leviathan"
+  | "sphinx_guardian"
+  | "frost_colossus"
+  | "inferno_wyrm";
 export const ENEMY_COLORS: Record<string, string> = {
   frosh: "#4ade80",
   sophomore: "#3b82f6",
@@ -78,6 +105,31 @@ export const ENEMY_COLORS: Record<string, string> = {
   golem: "#a8a29e",
   necromancer: "#22c55e",
   shadow_knight: "#6366f1",
+  skeleton_footman: "#d4c5a0",
+  skeleton_knight: "#8b8068",
+  skeleton_archer: "#c4b590",
+  skeleton_king: "#daa520",
+  zombie_shambler: "#5a7247",
+  zombie_brute: "#4a5d3a",
+  zombie_spitter: "#7cb342",
+  ghoul: "#6b5b73",
+  dark_knight: "#2d2d3d",
+  death_knight: "#1a1a2e",
+  fallen_paladin: "#4a3f6b",
+  black_guard: "#1c1c2e",
+  lich: "#4fc3f7",
+  wraith: "#b39ddb",
+  bone_mage: "#ce93d8",
+  dark_priest: "#5c1a1a",
+  revenant: "#c62828",
+  abomination: "#4e342e",
+  hellhound: "#ff6f00",
+  doom_herald: "#311b92",
+  titan_of_nassau: "#e65100",
+  swamp_leviathan: "#1b5e20",
+  sphinx_guardian: "#f9a825",
+  frost_colossus: "#4dd0e1",
+  inferno_wyrm: "#d50000",
 };
 export const EnemySprite: React.FC<{
   type: EnemyType;
@@ -11295,6 +11347,2284 @@ export const EnemySprite: React.FC<{
         ctx.restore();
         break;
       }
+      case "skeleton_footman": {
+        // Bone-white skeleton soldier with rusty sword
+        const boneColor = "#d4c5a0";
+        const boneDark = "#b8a882";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Legs
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY);
+        ctx.lineTo(cx - 5 * scale, baseY + 10 * scale);
+        ctx.moveTo(cx + 3 * scale, baseY);
+        ctx.lineTo(cx + 5 * scale, baseY + 10 * scale);
+        ctx.stroke();
+
+        // Ribcage body
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 4 * scale, 6 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 1 * scale;
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 4 * scale, baseY - 4 * scale + i * 2 * scale);
+          ctx.lineTo(cx + 4 * scale, baseY - 4 * scale + i * 2 * scale);
+          ctx.stroke();
+        }
+
+        // Arms
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx - 10 * scale, baseY + 2 * scale);
+        ctx.moveTo(cx + 6 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY - 4 * scale);
+        ctx.stroke();
+
+        // Skull
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, baseY - 15 * scale, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, baseY - 15 * scale, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 1.5 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx, baseY - 11 * scale);
+        ctx.lineTo(cx + 1.5 * scale, baseY - 12 * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Jaw
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx, baseY - 9 * scale);
+        ctx.lineTo(cx + 3 * scale, baseY - 10 * scale);
+        ctx.stroke();
+
+        // Rusty sword in right hand
+        ctx.fillStyle = "#8b6914";
+        ctx.fillRect(cx + 9 * scale, baseY - 12 * scale, 2 * scale, 4 * scale);
+        ctx.fillStyle = "#a0a0a0";
+        ctx.fillRect(cx + 9.5 * scale, baseY - 20 * scale, 1.5 * scale, 9 * scale);
+
+        break;
+      }
+      case "skeleton_knight": {
+        // Armored skeleton with iron-gray plates, red eye slits, shield
+        const armorColor = "#8b8068";
+        const armorDark = "#5a5347";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Legs with greaves
+        ctx.fillStyle = armorDark;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 3 * scale, 9 * scale);
+        ctx.fillRect(cx + 2 * scale, baseY + 2 * scale, 3 * scale, 9 * scale);
+
+        // Armored torso
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY - 2 * scale);
+        ctx.lineTo(cx - 7 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY - 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = armorDark;
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        // Pauldrons
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.ellipse(cx - 8 * scale, baseY - 11 * scale, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 8 * scale, baseY - 11 * scale, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Helmet
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = armorDark;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6 * scale, Math.PI * 0.8, Math.PI * 2.2);
+        ctx.fill();
+
+        // Red eye slits
+        ctx.fillStyle = "#ff2222";
+        ctx.fillRect(cx - 3.5 * scale, baseY - 17 * scale, 2.5 * scale, 1.2 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY - 17 * scale, 2.5 * scale, 1.2 * scale);
+        if (animated) {
+          ctx.fillStyle = `rgba(255, 50, 50, ${0.3 + Math.sin(t * 2) * 0.2})`;
+          ctx.beginPath();
+          ctx.arc(cx - 2 * scale, baseY - 16.5 * scale, 3 * scale, 0, Math.PI * 2);
+          ctx.arc(cx + 2 * scale, baseY - 16.5 * scale, 3 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Shield (left side)
+        ctx.fillStyle = armorDark;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx - 15 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx - 12 * scale, baseY + 4 * scale);
+        ctx.lineTo(cx - 9 * scale, baseY - 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = armorColor;
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        break;
+      }
+      case "skeleton_archer": {
+        // Lean skeleton with drawn bow, green eye glow
+        const boneColor = "#c4b590";
+        const boneDark = "#a09070";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Legs
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY);
+        ctx.lineTo(cx - 4 * scale, baseY + 10 * scale);
+        ctx.moveTo(cx + 3 * scale, baseY);
+        ctx.lineTo(cx + 5 * scale, baseY + 10 * scale);
+        ctx.stroke();
+
+        // Lean ribcage
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 4 * scale, 5 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = boneDark;
+        ctx.lineWidth = 0.8 * scale;
+        for (let i = -2; i <= 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 3.5 * scale, baseY - 4 * scale + i * 2 * scale);
+          ctx.lineTo(cx + 3.5 * scale, baseY - 4 * scale + i * 2 * scale);
+          ctx.stroke();
+        }
+
+        // Skull
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 13 * scale, 5.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green glowing eyes
+        const eyeGlow = animated ? 0.6 + Math.sin(t * 3) * 0.3 : 0.7;
+        ctx.fillStyle = `rgba(76, 175, 80, ${eyeGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 14 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 14 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(76, 255, 80, ${eyeGlow * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 14 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 14 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bow (left side)
+        ctx.strokeStyle = "#6d4c21";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.arc(cx - 10 * scale, baseY - 6 * scale, 10 * scale, -Math.PI * 0.4, Math.PI * 0.4);
+        ctx.stroke();
+        // Bowstring
+        ctx.strokeStyle = "#ccc";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale + 10 * scale * Math.cos(-Math.PI * 0.4), baseY - 6 * scale + 10 * scale * Math.sin(-Math.PI * 0.4));
+        ctx.lineTo(cx - 4 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx - 10 * scale + 10 * scale * Math.cos(Math.PI * 0.4), baseY - 6 * scale + 10 * scale * Math.sin(Math.PI * 0.4));
+        ctx.stroke();
+
+        // Arrow
+        ctx.strokeStyle = "#8d6e32";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY - 6 * scale);
+        ctx.stroke();
+        ctx.fillStyle = "#aaa";
+        ctx.beginPath();
+        ctx.moveTo(cx + 10 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 12 * scale, baseY - 7 * scale);
+        ctx.lineTo(cx + 12 * scale, baseY - 5 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        break;
+      }
+      case "skeleton_king": {
+        // BOSS: Golden crown, purple robe, scepter, purple eye flames
+        const boneColor = "#d4c5a0";
+        const robeColor = "#4a1a6b";
+        const crownColor = "#daa520";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Purple robe (wide bottom)
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, baseY + 12 * scale);
+        ctx.lineTo(cx - 7 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY + 12 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#6a2a8b";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 6 * scale);
+        ctx.lineTo(cx, baseY + 12 * scale);
+        ctx.stroke();
+
+        // Bone shoulders
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.ellipse(cx - 8 * scale, baseY - 8 * scale, 3.5 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 8 * scale, baseY - 8 * scale, 3.5 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Skull
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Purple eye flames
+        const flamePulse = animated ? 0.6 + Math.sin(t * 4) * 0.4 : 0.8;
+        ctx.fillStyle = `rgba(130, 50, 200, ${flamePulse})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2.5 * scale, baseY - 15 * scale, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2.5 * scale, baseY - 15 * scale, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        if (animated) {
+          ctx.fillStyle = `rgba(180, 80, 255, ${flamePulse * 0.4})`;
+          ctx.beginPath();
+          ctx.ellipse(cx - 2.5 * scale, baseY - 17 * scale, 1.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+          ctx.ellipse(cx + 2.5 * scale, baseY - 17 * scale, 1.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Nose hole
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 1 * scale, baseY - 12.5 * scale);
+        ctx.lineTo(cx, baseY - 11.5 * scale);
+        ctx.lineTo(cx + 1 * scale, baseY - 12.5 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Golden crown
+        ctx.fillStyle = crownColor;
+        ctx.fillRect(cx - 6 * scale, baseY - 20 * scale, 12 * scale, 3 * scale);
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, baseY - 20 * scale);
+        ctx.lineTo(cx - 4 * scale, baseY - 24 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY - 21 * scale);
+        ctx.lineTo(cx, baseY - 25 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY - 21 * scale);
+        ctx.lineTo(cx + 4 * scale, baseY - 24 * scale);
+        ctx.lineTo(cx + 5 * scale, baseY - 20 * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Crown gems
+        ctx.fillStyle = "#e040fb";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 23.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Scepter (right hand)
+        ctx.fillStyle = "#6d4c21";
+        ctx.fillRect(cx + 12 * scale, baseY - 18 * scale, 2 * scale, 20 * scale);
+        ctx.fillStyle = `rgba(180, 80, 255, ${flamePulse})`;
+        ctx.beginPath();
+        ctx.arc(cx + 13 * scale, baseY - 20 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 255, ${flamePulse * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(cx + 13 * scale, baseY - 20 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        break;
+      }
+      case "zombie_shambler": {
+        // Green-gray zombie, hunched, torn clothes, lopsided head
+        const skinColor = "#5a7247";
+        const skinDark = "#3e5030";
+        const clothColor = "#3d3d2e";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Legs (uneven)
+        ctx.fillStyle = skinDark;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 3.5 * scale, 9 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 3 * scale, 3.5 * scale, 8 * scale);
+
+        // Hunched body
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx + 1 * scale, baseY - 2 * scale, 7 * scale, 9 * scale, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Torn shirt
+        ctx.fillStyle = clothColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 6 * scale, baseY - 7 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY + 3 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY + 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Arms (different lengths - zombie asymmetry)
+        ctx.fillStyle = skinDark;
+        ctx.save();
+        ctx.translate(cx - 7 * scale, baseY - 6 * scale);
+        ctx.rotate(0.3 + (animated ? Math.sin(t * 1.5) * 0.1 : 0));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 10 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 7 * scale, baseY - 5 * scale);
+        ctx.rotate(-0.2 + (animated ? Math.sin(t * 1.2) * 0.1 : 0));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 12 * scale);
+        ctx.restore();
+
+        // Lopsided head
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx + 2 * scale, baseY - 12 * scale, 5.5 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hollow eyes
+        ctx.fillStyle = "#1a1a0a";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 13 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 4 * scale, baseY - 12.5 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Drooling mouth
+        ctx.strokeStyle = skinDark;
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 1 * scale, baseY - 9 * scale);
+        ctx.quadraticCurveTo(cx + 2 * scale, baseY - 8 * scale, cx + 4 * scale, baseY - 9.5 * scale);
+        ctx.stroke();
+
+        break;
+      }
+      case "zombie_brute": {
+        // Large armored zombie, bloated, chains, massive arms
+        const skinColor = "#4a5d3a";
+        const skinDark = "#2e3d20";
+        const chainColor = "#808080";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Thick legs
+        ctx.fillStyle = skinDark;
+        ctx.fillRect(cx - 6 * scale, baseY + 4 * scale, 5 * scale, 8 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 4 * scale, 5 * scale, 8 * scale);
+
+        // Bloated body
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 2 * scale, 10 * scale, 11 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stitches
+        ctx.strokeStyle = "#2a2a2a";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY + 6 * scale);
+        ctx.stroke();
+        for (let i = 0; i < 5; i++) {
+          const py = baseY - 8 * scale + i * 3 * scale;
+          const px = cx - 2.5 * scale + i * 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(px - 1.5 * scale, py - 1 * scale);
+          ctx.lineTo(px + 1.5 * scale, py + 1 * scale);
+          ctx.stroke();
+        }
+
+        // Chains across chest
+        ctx.strokeStyle = chainColor;
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY + 2 * scale);
+        ctx.stroke();
+
+        // Massive arms
+        ctx.fillStyle = skinColor;
+        ctx.save();
+        ctx.translate(cx - 10 * scale, baseY - 6 * scale);
+        ctx.rotate(0.2);
+        ctx.fillRect(-3 * scale, 0, 5 * scale, 14 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 10 * scale, baseY - 6 * scale);
+        ctx.rotate(-0.2);
+        ctx.fillRect(-2 * scale, 0, 5 * scale, 14 * scale);
+        ctx.restore();
+
+        // Small head on big body
+        ctx.fillStyle = skinDark;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ff4444";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        break;
+      }
+      case "zombie_spitter": {
+        // Ranged zombie with distended jaw, green bile dripping
+        const skinColor = "#5a7247";
+        const skinDark = "#3e5030";
+        const bileColor = "#7cb342";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Legs
+        ctx.fillStyle = skinDark;
+        ctx.fillRect(cx - 4 * scale, baseY + 2 * scale, 3 * scale, 8 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 2 * scale, 3 * scale, 8 * scale);
+
+        // Hunched body
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 2 * scale, 7 * scale, 9 * scale, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms
+        ctx.fillStyle = skinDark;
+        ctx.save();
+        ctx.translate(cx - 7 * scale, baseY - 6 * scale);
+        ctx.rotate(0.4);
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 10 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 7 * scale, baseY - 6 * scale);
+        ctx.rotate(-0.4);
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 10 * scale);
+        ctx.restore();
+
+        // Head
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 13 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wide open distended jaw
+        ctx.fillStyle = "#2a1a10";
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 9 * scale, 4 * scale, 3.5 * scale, 0, 0, Math.PI);
+        ctx.fill();
+
+        // Bile drip
+        const dripPhase = animated ? (t * 2) % 1 : 0.5;
+        ctx.fillStyle = `rgba(124, 179, 66, ${0.8 - dripPhase * 0.5})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 6 * scale + dripPhase * 8 * scale, 2 * scale, 1.5 * scale + dripPhase * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bileColor;
+        ctx.beginPath();
+        ctx.arc(cx - 1 * scale, baseY - 8 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 1 * scale, baseY - 7.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing yellow-green eyes
+        ctx.fillStyle = `rgba(200, 230, 50, ${animated ? 0.7 + Math.sin(t * 3) * 0.3 : 0.8})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 14 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 14 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        break;
+      }
+      case "ghoul": {
+        // Fast feral creature, low crouching, long claws, wild eyes
+        const skinColor = "#6b5b73";
+        const skinDark = "#4a3d50";
+        const baseY = cy + 10 * scale - bounce;
+
+        // Low crouching body
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 4 * scale, 8 * scale, 6 * scale, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bent legs
+        ctx.fillStyle = skinDark;
+        ctx.save();
+        ctx.translate(cx - 5 * scale, baseY);
+        ctx.rotate(-0.3);
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 8 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 5 * scale, baseY);
+        ctx.rotate(0.3);
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 8 * scale);
+        ctx.restore();
+
+        // Long claw arms
+        ctx.strokeStyle = skinDark;
+        ctx.lineWidth = 2 * scale;
+        const clawSwing = animated ? Math.sin(t * 4) * 0.15 : 0;
+        ctx.save();
+        ctx.translate(cx - 8 * scale, baseY - 6 * scale);
+        ctx.rotate(0.5 + clawSwing);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 12 * scale);
+        ctx.stroke();
+        // Claws
+        ctx.strokeStyle = "#aaa";
+        ctx.lineWidth = 1 * scale;
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 12 * scale);
+          ctx.lineTo(i * 2 * scale, 15 * scale);
+          ctx.stroke();
+        }
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 8 * scale, baseY - 6 * scale);
+        ctx.rotate(-0.5 - clawSwing);
+        ctx.beginPath();
+        ctx.strokeStyle = skinDark;
+        ctx.lineWidth = 2 * scale;
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 12 * scale);
+        ctx.stroke();
+        ctx.strokeStyle = "#aaa";
+        ctx.lineWidth = 1 * scale;
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 12 * scale);
+          ctx.lineTo(i * 2 * scale, 15 * scale);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Head
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 10 * scale, 5 * scale, 4.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wild glowing eyes
+        const eyeIntensity = animated ? 0.7 + Math.sin(t * 5) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(255, 200, 50, ${eyeIntensity})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, baseY - 11 * scale, 2 * scale, 1.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, baseY - 11 * scale, 2 * scale, 1.5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fanged mouth
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 3 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY - 6.5 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY - 6.5 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#ddd";
+        ctx.beginPath();
+        ctx.moveTo(cx - 1.5 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx - 1 * scale, baseY - 6.5 * scale);
+        ctx.lineTo(cx - 0.5 * scale, baseY - 8 * scale);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 0.5 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 1 * scale, baseY - 6.5 * scale);
+        ctx.lineTo(cx + 1.5 * scale, baseY - 8 * scale);
+        ctx.fill();
+
+        break;
+      }
+      case "dark_knight": {
+        // Heavy obsidian plate armor, red visor glow, cape, greatsword
+        const armorColor = "#2d2d3d";
+        const armorHighlight = "#3d3d55";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Cape
+        ctx.fillStyle = "#1a0a0a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, baseY - 10 * scale);
+        ctx.quadraticCurveTo(cx - 10 * scale, baseY + 5 * scale, cx - 8 * scale, baseY + 12 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY + 12 * scale);
+        ctx.quadraticCurveTo(cx + 10 * scale, baseY + 5 * scale, cx + 7 * scale, baseY - 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Legs
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+
+        // Heavy torso
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, baseY);
+        ctx.lineTo(cx - 8 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 9 * scale, baseY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = armorHighlight;
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 12 * scale);
+        ctx.lineTo(cx, baseY);
+        ctx.stroke();
+
+        // Large pauldrons
+        ctx.fillStyle = armorHighlight;
+        ctx.beginPath();
+        ctx.ellipse(cx - 10 * scale, baseY - 11 * scale, 5 * scale, 3.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 10 * scale, baseY - 11 * scale, 5 * scale, 3.5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Helmet
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = armorHighlight;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 22 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY - 17 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY - 17 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Red visor glow
+        const visorGlow = animated ? 0.7 + Math.sin(t * 2.5) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(200, 30, 30, ${visorGlow})`;
+        ctx.fillRect(cx - 4 * scale, baseY - 17 * scale, 8 * scale, 2 * scale);
+        ctx.fillStyle = `rgba(255, 50, 50, ${visorGlow * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Greatsword (right side)
+        ctx.fillStyle = "#333";
+        ctx.fillRect(cx + 12 * scale, baseY - 24 * scale, 2 * scale, 28 * scale);
+        ctx.fillStyle = armorHighlight;
+        ctx.fillRect(cx + 9 * scale, baseY - 1 * scale, 8 * scale, 2 * scale);
+
+        break;
+      }
+      case "death_knight": {
+        // BOSS: Skull-faced helm, flaming sword, dark aura, massive pauldrons
+        const armorColor = "#1a1a2e";
+        const armorLight = "#2d2d44";
+        const flameColor = "#fb923c";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Dark aura
+        if (animated) {
+          const auraAlpha = 0.15 + Math.sin(t * 2) * 0.08;
+          ctx.fillStyle = `rgba(26, 26, 46, ${auraAlpha})`;
+          ctx.beginPath();
+          ctx.arc(cx, baseY - 6 * scale, 20 * scale + Math.sin(t * 3) * 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Cape with tattered edge
+        ctx.fillStyle = "#0d0d1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY - 10 * scale);
+        ctx.quadraticCurveTo(cx - 12 * scale, baseY + 6 * scale, cx - 10 * scale, baseY + 14 * scale);
+        ctx.lineTo(cx - 6 * scale, baseY + 12 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY + 14 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY + 12 * scale);
+        ctx.lineTo(cx + 6 * scale, baseY + 14 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY + 12 * scale);
+        ctx.quadraticCurveTo(cx + 12 * scale, baseY + 6 * scale, cx + 8 * scale, baseY - 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Legs
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+
+        // Heavy torso
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, baseY + 2 * scale);
+        ctx.lineTo(cx - 9 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 9 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY + 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Massive pauldrons with skull trophies
+        ctx.fillStyle = armorLight;
+        ctx.beginPath();
+        ctx.ellipse(cx - 12 * scale, baseY - 11 * scale, 6 * scale, 4 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx + 12 * scale, baseY - 11 * scale, 6 * scale, 4 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Trophy skulls on pauldrons
+        ctx.fillStyle = "#d4c5a0";
+        ctx.beginPath();
+        ctx.arc(cx - 12 * scale, baseY - 12 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 12 * scale, baseY - 12 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cx - 13 * scale, baseY - 12.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(cx - 11 * scale, baseY - 12.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 11 * scale, baseY - 12.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 13 * scale, baseY - 12.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Skull helm
+        ctx.fillStyle = "#d4c5a0";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6.5 * scale, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.fill();
+
+        // Burning orange eyes
+        const eyeBurn = animated ? 0.7 + Math.sin(t * 4) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(251, 146, 60, ${eyeBurn})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2.5 * scale, baseY - 17 * scale, 2 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2.5 * scale, baseY - 17 * scale, 2 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flaming sword
+        ctx.save();
+        ctx.translate(cx + 14 * scale, baseY);
+        ctx.rotate(-0.15);
+        ctx.fillStyle = "#444";
+        ctx.fillRect(-1 * scale, -3 * scale, 2 * scale, 6 * scale);
+        ctx.fillStyle = "#888";
+        ctx.fillRect(-1.5 * scale, -22 * scale, 3 * scale, 20 * scale);
+        ctx.fillStyle = "#666";
+        ctx.fillRect(-4 * scale, -4 * scale, 8 * scale, 2 * scale);
+        if (animated) {
+          const sFlame = 0.5 + Math.sin(t * 6) * 0.3;
+          ctx.fillStyle = `rgba(251, 146, 60, ${sFlame})`;
+          ctx.beginPath();
+          ctx.moveTo(-2 * scale, -22 * scale);
+          ctx.quadraticCurveTo(-3 * scale + Math.sin(t * 8) * scale, -28 * scale, 0, -30 * scale + Math.sin(t * 7) * 2 * scale);
+          ctx.quadraticCurveTo(3 * scale - Math.sin(t * 8) * scale, -28 * scale, 2 * scale, -22 * scale);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = `rgba(255, 220, 100, ${sFlame * 0.6})`;
+          ctx.beginPath();
+          ctx.arc(0, -25 * scale, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        break;
+      }
+      case "fallen_paladin": {
+        // Corrupted knight, cracked white armor with purple veins, broken halo
+        const armorColor = "#c0b8d0";
+        const corruptColor = "#4a3f6b";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Legs
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+        // Corruption veins on legs
+        ctx.strokeStyle = corruptColor;
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, baseY + 3 * scale);
+        ctx.lineTo(cx - 4 * scale, baseY + 9 * scale);
+        ctx.moveTo(cx + 3 * scale, baseY + 3 * scale);
+        ctx.lineTo(cx + 2 * scale, baseY + 9 * scale);
+        ctx.stroke();
+
+        // Torso
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY);
+        ctx.lineTo(cx - 7 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Corruption cracks
+        ctx.strokeStyle = corruptColor;
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx - 5 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx - 3 * scale, baseY);
+        ctx.moveTo(cx + 1 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 4 * scale, baseY - 2 * scale);
+        ctx.stroke();
+
+        // Purple glow from cracks
+        if (animated) {
+          ctx.fillStyle = `rgba(74, 63, 107, ${0.2 + Math.sin(t * 2) * 0.1})`;
+          ctx.beginPath();
+          ctx.ellipse(cx, baseY - 5 * scale, 8 * scale, 10 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Helmet
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Visor
+        ctx.fillStyle = corruptColor;
+        ctx.fillRect(cx - 4 * scale, baseY - 17 * scale, 8 * scale, 2 * scale);
+
+        // Broken halo
+        ctx.strokeStyle = `rgba(255, 215, 0, ${animated ? 0.4 + Math.sin(t * 2) * 0.2 : 0.5})`;
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 22 * scale, 5 * scale, Math.PI * 0.2, Math.PI * 1.3);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(100, 60, 180, ${animated ? 0.5 + Math.sin(t * 3) * 0.2 : 0.5})`;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 22 * scale, 5 * scale, Math.PI * 1.5, Math.PI * 2.1);
+        ctx.stroke();
+
+        // Weapon
+        ctx.fillStyle = "#888";
+        ctx.fillRect(cx + 10 * scale, baseY - 20 * scale, 2 * scale, 24 * scale);
+        ctx.fillStyle = corruptColor;
+        ctx.fillRect(cx + 7 * scale, baseY - 2 * scale, 8 * scale, 2 * scale);
+
+        break;
+      }
+      case "black_guard": {
+        // Tank with tower shield, midnight armor, enclosed helm
+        const armorColor = "#1c1c2e";
+        const armorLight = "#2a2a40";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Legs
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+        ctx.fillRect(cx + 1 * scale, baseY + 2 * scale, 4 * scale, 9 * scale);
+
+        // Bulky torso
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, baseY + 2 * scale);
+        ctx.lineTo(cx - 8 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 8 * scale, baseY - 12 * scale);
+        ctx.lineTo(cx + 9 * scale, baseY + 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = armorLight;
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx + 6 * scale, baseY - 10 * scale);
+        ctx.moveTo(cx - 7 * scale, baseY - 6 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY - 6 * scale);
+        ctx.stroke();
+
+        // Pauldrons
+        ctx.fillStyle = armorLight;
+        ctx.beginPath();
+        ctx.ellipse(cx - 9 * scale, baseY - 11 * scale, 4.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 9 * scale, baseY - 11 * scale, 4.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Enclosed helmet
+        ctx.fillStyle = armorColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = armorLight;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 22 * scale);
+        ctx.lineTo(cx - 1.5 * scale, baseY - 17 * scale);
+        ctx.lineTo(cx + 1.5 * scale, baseY - 17 * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Thin visor slit
+        ctx.fillStyle = `rgba(100, 100, 140, ${animated ? 0.5 + Math.sin(t * 2) * 0.2 : 0.6})`;
+        ctx.fillRect(cx - 4 * scale, baseY - 17 * scale, 8 * scale, 1.5 * scale);
+
+        // TOWER SHIELD (left side, massive)
+        ctx.fillStyle = armorLight;
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, baseY - 14 * scale);
+        ctx.lineTo(cx - 10 * scale, baseY - 16 * scale);
+        ctx.lineTo(cx - 10 * scale, baseY + 8 * scale);
+        ctx.lineTo(cx - 13 * scale, baseY + 10 * scale);
+        ctx.lineTo(cx - 16 * scale, baseY + 8 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = armorColor;
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+        // Shield cross emblem
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 13 * scale, baseY - 10 * scale);
+        ctx.lineTo(cx - 13 * scale, baseY + 4 * scale);
+        ctx.moveTo(cx - 16 * scale, baseY - 3 * scale);
+        ctx.lineTo(cx - 10 * scale, baseY - 3 * scale);
+        ctx.stroke();
+
+        break;
+      }
+      case "lich": {
+        // BOSS undead mage: skeletal in grand robes, floating gem, icy blue eyes
+        const robeColor = "#1a1a3e";
+        const boneColor = "#d4c5a0";
+        const icyBlue = "#4fc3f7";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Magical aura
+        if (animated) {
+          ctx.fillStyle = `rgba(79, 195, 247, ${0.08 + Math.sin(t * 2) * 0.04})`;
+          ctx.beginPath();
+          ctx.arc(cx, baseY - 6 * scale, 22 * scale + Math.sin(t * 3) * 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Grand robes (wide, flowing)
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, baseY + 14 * scale);
+        ctx.quadraticCurveTo(cx - 10 * scale, baseY + 2 * scale, cx - 7 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY - 8 * scale);
+        ctx.quadraticCurveTo(cx + 10 * scale, baseY + 2 * scale, cx + 12 * scale, baseY + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Robe trim
+        ctx.strokeStyle = "#4fc3f733";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, baseY + 14 * scale);
+        ctx.lineTo(cx + 12 * scale, baseY + 14 * scale);
+        ctx.stroke();
+
+        // Bone hands
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx - 10 * scale, baseY - 2 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 10 * scale, baseY - 2 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hood/skull
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Icy blue eyes
+        const eyeGlow = animated ? 0.7 + Math.sin(t * 3) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(79, 195, 247, ${eyeGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale, 1.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale, 1.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(79, 195, 247, ${eyeGlow * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Staff (right side)
+        ctx.fillStyle = "#4a3628";
+        ctx.fillRect(cx + 13 * scale, baseY - 22 * scale, 2 * scale, 30 * scale);
+
+        // Floating gem at staff top
+        const gemPhase = animated ? Math.sin(t * 4) * 2 * scale : 0;
+        ctx.fillStyle = `rgba(79, 195, 247, ${eyeGlow})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + 14 * scale, baseY - 26 * scale + gemPhase);
+        ctx.lineTo(cx + 11 * scale, baseY - 23 * scale + gemPhase);
+        ctx.lineTo(cx + 14 * scale, baseY - 20 * scale + gemPhase);
+        ctx.lineTo(cx + 17 * scale, baseY - 23 * scale + gemPhase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(cx + 14 * scale, baseY - 23 * scale + gemPhase, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        break;
+      }
+      case "wraith": {
+        // Ethereal spirit, semi-transparent, no legs, chains, purple eyes
+        const baseY = cy + 4 * scale - bounce;
+        const floatOff = animated ? Math.sin(t * 2) * 3 * scale : 0;
+
+        // Ghostly trail below (no legs)
+        ctx.fillStyle = `rgba(179, 157, 219, 0.15)`;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, baseY + 4 * scale + floatOff);
+        ctx.quadraticCurveTo(cx - 8 * scale, baseY + 14 * scale + floatOff, cx - 4 * scale, baseY + 18 * scale + floatOff);
+        ctx.lineTo(cx + 4 * scale, baseY + 18 * scale + floatOff);
+        ctx.quadraticCurveTo(cx + 8 * scale, baseY + 14 * scale + floatOff, cx + 6 * scale, baseY + 4 * scale + floatOff);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ethereal body
+        ctx.fillStyle = `rgba(179, 157, 219, 0.3)`;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 2 * scale + floatOff, 7 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(179, 157, 219, 0.5)`;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 2 * scale + floatOff, 5 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Chains
+        ctx.strokeStyle = `rgba(150, 150, 150, 0.5)`;
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY - 4 * scale + floatOff);
+        ctx.lineTo(cx - 12 * scale, baseY + 6 * scale + floatOff);
+        ctx.moveTo(cx + 8 * scale, baseY - 4 * scale + floatOff);
+        ctx.lineTo(cx + 12 * scale, baseY + 6 * scale + floatOff);
+        ctx.stroke();
+
+        // Hooded head
+        ctx.fillStyle = `rgba(100, 80, 130, 0.6)`;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 12 * scale + floatOff, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Purple glowing eyes
+        const eyePulse = animated ? 0.6 + Math.sin(t * 3.5) * 0.4 : 0.7;
+        ctx.fillStyle = `rgba(179, 157, 219, ${eyePulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 13 * scale + floatOff, 1.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 13 * scale + floatOff, 1.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(220, 200, 255, ${eyePulse * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 13 * scale + floatOff, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 13 * scale + floatOff, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spectral wisps
+        if (animated) {
+          for (let i = 0; i < 3; i++) {
+            const wispPhase = (t * 2 + i * 1.2) % 1;
+            const wx = cx + Math.sin(t * 3 + i * 2) * 8 * scale;
+            const wy = baseY - 4 * scale + floatOff - wispPhase * 16 * scale;
+            ctx.fillStyle = `rgba(179, 157, 219, ${(1 - wispPhase) * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(wx, wy, (1 - wispPhase) * 2 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        break;
+      }
+      case "bone_mage": {
+        // Skeleton mage with purple energy, skull-topped staff, spell circle
+        const boneColor = "#d4c5a0";
+        const magicColor = "#ce93d8";
+        const baseY = cy + 8 * scale - bounce;
+
+        // Spell circle on ground
+        if (animated) {
+          ctx.strokeStyle = `rgba(206, 147, 216, ${0.3 + Math.sin(t * 2) * 0.15})`;
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.ellipse(cx, baseY + 10 * scale, 12 * scale, 4 * scale, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          const circRot = t * 0.5;
+          for (let i = 0; i < 6; i++) {
+            const a = circRot + (i * Math.PI * 2) / 6;
+            const rx = cx + Math.cos(a) * 10 * scale;
+            const ry = baseY + 10 * scale + Math.sin(a) * 3 * scale;
+            ctx.moveTo(rx, ry);
+            const na = circRot + ((i + 2) * Math.PI * 2) / 6;
+            ctx.lineTo(cx + Math.cos(na) * 10 * scale, baseY + 10 * scale + Math.sin(na) * 3 * scale);
+          }
+          ctx.stroke();
+        }
+
+        // Robe bottom
+        ctx.fillStyle = "#2a1a3a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, baseY + 10 * scale);
+        ctx.lineTo(cx - 5 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx + 5 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx + 7 * scale, baseY + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bone torso
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 6 * scale, 5 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Skull head
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 5.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Eyes with purple glow
+        const mageGlow = animated ? 0.6 + Math.sin(t * 3) * 0.4 : 0.8;
+        ctx.fillStyle = `rgba(206, 147, 216, ${mageGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Skull-topped staff
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx - 13 * scale, baseY - 20 * scale, 2 * scale, 26 * scale);
+        ctx.fillStyle = boneColor;
+        ctx.beginPath();
+        ctx.arc(cx - 12 * scale, baseY - 22 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cx - 13 * scale, baseY - 22.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx - 11 * scale, baseY - 22.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Purple energy orb in hand
+        ctx.fillStyle = `rgba(206, 147, 216, ${mageGlow * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(cx + 8 * scale, baseY - 6 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 220, 255, ${mageGlow * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(cx + 8 * scale, baseY - 6 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        break;
+      }
+      case "dark_priest": {
+        // Hooded dark robes, glowing red symbol, censer
+        const robeColor = "#1a0a0a";
+        const symbolColor = "#5c1a1a";
+        const baseY = cy + 6 * scale - bounce;
+
+        // Robes (full length, no visible legs)
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, baseY + 12 * scale);
+        ctx.quadraticCurveTo(cx - 8 * scale, baseY, cx - 6 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 6 * scale, baseY - 8 * scale);
+        ctx.quadraticCurveTo(cx + 8 * scale, baseY, cx + 9 * scale, baseY + 12 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing red symbol on chest
+        const symbolGlow = animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.7;
+        ctx.strokeStyle = `rgba(200, 50, 50, ${symbolGlow})`;
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 6 * scale);
+        ctx.lineTo(cx - 3 * scale, baseY);
+        ctx.lineTo(cx + 3 * scale, baseY);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY + 1 * scale);
+        ctx.lineTo(cx - 3 * scale, baseY - 5 * scale);
+        ctx.lineTo(cx + 3 * scale, baseY - 5 * scale);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = `rgba(200, 50, 50, ${symbolGlow * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 3 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Deep hood
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#0a0505";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 13 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Red eyes from hood
+        ctx.fillStyle = `rgba(200, 50, 50, ${symbolGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 14 * scale, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 14 * scale, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Censer (swinging from right hand)
+        const censerSwing = animated ? Math.sin(t * 2) * 0.3 : 0;
+        ctx.save();
+        ctx.translate(cx + 10 * scale, baseY - 4 * scale);
+        ctx.rotate(censerSwing);
+        ctx.strokeStyle = "#808080";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 10 * scale);
+        ctx.stroke();
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.arc(0, 11 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Smoke
+        if (animated) {
+          for (let i = 0; i < 3; i++) {
+            const smokePhase = (t * 1.5 + i * 0.5) % 1;
+            ctx.fillStyle = `rgba(100, 50, 50, ${(1 - smokePhase) * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(
+              Math.sin(t * 2 + i) * 2 * scale,
+              10 * scale - smokePhase * 10 * scale,
+              (1 + smokePhase) * 1.5 * scale,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        break;
+      }
+      case "revenant": {
+        // Vengeful warrior, spectral translucent armor, red eyes, ghostly weapon
+        const ghostColor = "rgba(180, 180, 200, 0.4)";
+        const fireColor = "#c62828";
+        const baseY = cy + 6 * scale - bounce;
+        const floatOff = animated ? Math.sin(t * 2.5) * 2 * scale : 0;
+
+        // Spectral fire aura
+        if (animated) {
+          ctx.fillStyle = `rgba(198, 40, 40, ${0.1 + Math.sin(t * 3) * 0.05})`;
+          ctx.beginPath();
+          ctx.arc(cx, baseY - 4 * scale + floatOff, 16 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Translucent legs
+        ctx.fillStyle = ghostColor;
+        ctx.fillRect(cx - 5 * scale, baseY + 2 * scale + floatOff, 3.5 * scale, 8 * scale);
+        ctx.fillRect(cx + 1.5 * scale, baseY + 2 * scale + floatOff, 3.5 * scale, 8 * scale);
+
+        // Spectral armor torso
+        ctx.fillStyle = "rgba(160, 160, 180, 0.45)";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY + 2 * scale + floatOff);
+        ctx.lineTo(cx - 7 * scale, baseY - 12 * scale + floatOff);
+        ctx.lineTo(cx + 7 * scale, baseY - 12 * scale + floatOff);
+        ctx.lineTo(cx + 8 * scale, baseY + 2 * scale + floatOff);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pauldrons
+        ctx.fillStyle = "rgba(140, 140, 160, 0.5)";
+        ctx.beginPath();
+        ctx.ellipse(cx - 9 * scale, baseY - 11 * scale + floatOff, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 9 * scale, baseY - 11 * scale + floatOff, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Helm
+        ctx.fillStyle = "rgba(150, 150, 170, 0.5)";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 16 * scale + floatOff, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Burning red eyes
+        const redGlow = animated ? 0.7 + Math.sin(t * 4) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(198, 40, 40, ${redGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 17 * scale + floatOff, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 17 * scale + floatOff, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye trail
+        if (animated) {
+          ctx.fillStyle = `rgba(198, 40, 40, ${redGlow * 0.2})`;
+          ctx.beginPath();
+          ctx.moveTo(cx - 3 * scale, baseY - 17 * scale + floatOff);
+          ctx.lineTo(cx - 6 * scale, baseY - 19 * scale + floatOff);
+          ctx.lineTo(cx - 2 * scale, baseY - 18 * scale + floatOff);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(cx + 3 * scale, baseY - 17 * scale + floatOff);
+          ctx.lineTo(cx + 6 * scale, baseY - 19 * scale + floatOff);
+          ctx.lineTo(cx + 2 * scale, baseY - 18 * scale + floatOff);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Ghostly greatsword
+        ctx.fillStyle = `rgba(198, 40, 40, 0.4)`;
+        ctx.fillRect(cx + 11 * scale, baseY - 22 * scale + floatOff, 2 * scale, 26 * scale);
+        ctx.fillStyle = `rgba(255, 100, 100, ${redGlow * 0.3})`;
+        ctx.fillRect(cx + 8 * scale, baseY - 2 * scale + floatOff, 8 * scale, 2 * scale);
+
+        break;
+      }
+      case "abomination": {
+        // BOSS monster: Multiple arms (4), mismatched body, stitches, chains, hulking
+        const skinColor = "#4e342e";
+        const skinDark = "#3a2520";
+        const stitchColor = "#222";
+        const baseY = cy + 4 * scale - bounce;
+
+        // Massive legs
+        ctx.fillStyle = skinDark;
+        ctx.fillRect(cx - 7 * scale, baseY + 4 * scale, 5 * scale, 10 * scale);
+        ctx.fillRect(cx + 2 * scale, baseY + 4 * scale, 5 * scale, 10 * scale);
+
+        // Hulking body
+        ctx.fillStyle = skinColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 4 * scale, 12 * scale, 14 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stitches across body
+        ctx.strokeStyle = stitchColor;
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, baseY - 16 * scale);
+        ctx.lineTo(cx - 2 * scale, baseY + 8 * scale);
+        ctx.stroke();
+        for (let i = 0; i < 7; i++) {
+          const sy = baseY - 14 * scale + i * 3 * scale;
+          const sx = cx - 1 * scale + (i * -0.3) * scale;
+          ctx.beginPath();
+          ctx.moveTo(sx - 2 * scale, sy - 1 * scale);
+          ctx.lineTo(sx + 2 * scale, sy + 1 * scale);
+          ctx.stroke();
+        }
+
+        // Chains
+        ctx.strokeStyle = "#808080";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, baseY - 8 * scale);
+        ctx.lineTo(cx + 10 * scale, baseY);
+        ctx.stroke();
+
+        // 4 Arms (2 upper massive, 2 lower smaller)
+        ctx.fillStyle = skinColor;
+        // Upper left
+        ctx.save();
+        ctx.translate(cx - 12 * scale, baseY - 10 * scale);
+        ctx.rotate(0.3 + (animated ? Math.sin(t * 2) * 0.1 : 0));
+        ctx.fillRect(-3 * scale, 0, 5 * scale, 14 * scale);
+        ctx.fillStyle = skinDark;
+        ctx.beginPath();
+        ctx.arc(0, 15 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Upper right
+        ctx.fillStyle = skinColor;
+        ctx.save();
+        ctx.translate(cx + 12 * scale, baseY - 10 * scale);
+        ctx.rotate(-0.3 + (animated ? Math.sin(t * 2 + 1) * 0.1 : 0));
+        ctx.fillRect(-2 * scale, 0, 5 * scale, 14 * scale);
+        ctx.fillStyle = skinDark;
+        ctx.beginPath();
+        ctx.arc(0, 15 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // Lower left (smaller)
+        ctx.fillStyle = skinDark;
+        ctx.save();
+        ctx.translate(cx - 10 * scale, baseY - 2 * scale);
+        ctx.rotate(0.5 + (animated ? Math.sin(t * 2.5) * 0.1 : 0));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 10 * scale);
+        ctx.restore();
+        // Lower right (smaller)
+        ctx.save();
+        ctx.translate(cx + 10 * scale, baseY - 2 * scale);
+        ctx.rotate(-0.5 + (animated ? Math.sin(t * 2.5 + 1) * 0.1 : 0));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 10 * scale);
+        ctx.restore();
+
+        // Small misshapen head
+        ctx.fillStyle = skinDark;
+        ctx.beginPath();
+        ctx.ellipse(cx + 2 * scale, baseY - 18 * scale, 5 * scale, 4.5 * scale, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Asymmetric eyes
+        ctx.fillStyle = "#ff4444";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 19 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffaa00";
+        ctx.beginPath();
+        ctx.arc(cx + 4 * scale, baseY - 18.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Drooling mouth
+        ctx.fillStyle = "#1a0a0a";
+        ctx.beginPath();
+        ctx.ellipse(cx + 2 * scale, baseY - 15.5 * scale, 3 * scale, 1.5 * scale, 0, 0, Math.PI);
+        ctx.fill();
+
+        break;
+      }
+      case "hellhound": {
+        // Demonic quadruped, flaming mane, red eyes, fangs, fiery tail
+        const bodyColor = "#3a1a0a";
+        const fireColor = "#ff6f00";
+        const baseY = cy + 10 * scale - bounce;
+
+        // Body (horizontal quadruped)
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 4 * scale, 10 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs (4)
+        ctx.fillStyle = "#2a0a00";
+        ctx.fillRect(cx - 8 * scale, baseY, 2.5 * scale, 8 * scale);
+        ctx.fillRect(cx - 4 * scale, baseY + 1 * scale, 2.5 * scale, 7 * scale);
+        ctx.fillRect(cx + 3 * scale, baseY + 1 * scale, 2.5 * scale, 7 * scale);
+        ctx.fillRect(cx + 7 * scale, baseY, 2.5 * scale, 8 * scale);
+
+        // Head
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.ellipse(cx - 10 * scale, baseY - 6 * scale, 5 * scale, 4.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snout
+        ctx.fillStyle = "#2a0a00";
+        ctx.beginPath();
+        ctx.ellipse(cx - 14 * scale, baseY - 5 * scale, 3 * scale, 2 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fangs
+        ctx.fillStyle = "#ddd";
+        ctx.beginPath();
+        ctx.moveTo(cx - 15 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx - 15.5 * scale, baseY - 2 * scale);
+        ctx.lineTo(cx - 14.5 * scale, baseY - 2.5 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx - 13 * scale, baseY - 4 * scale);
+        ctx.lineTo(cx - 13.5 * scale, baseY - 2 * scale);
+        ctx.lineTo(cx - 12.5 * scale, baseY - 2.5 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Red glowing eyes
+        const eyeFire = animated ? 0.7 + Math.sin(t * 5) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(255, 50, 0, ${eyeFire})`;
+        ctx.beginPath();
+        ctx.arc(cx - 11 * scale, baseY - 7.5 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx - 9 * scale, baseY - 7.5 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flaming mane
+        if (animated) {
+          for (let i = 0; i < 5; i++) {
+            const fPhase = (t * 4 + i * 0.5) % 1;
+            const fx = cx - 6 * scale + i * 3 * scale;
+            const fy = baseY - 8 * scale - fPhase * 6 * scale;
+            ctx.fillStyle = `rgba(255, 111, 0, ${(1 - fPhase) * 0.6})`;
+            ctx.beginPath();
+            ctx.ellipse(fx, fy, 2 * scale, (2 + fPhase * 2) * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else {
+          ctx.fillStyle = fireColor;
+          for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.ellipse(cx - 5 * scale + i * 3 * scale, baseY - 10 * scale, 2 * scale, 3 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Fiery tail
+        ctx.strokeStyle = fireColor;
+        ctx.lineWidth = 2 * scale;
+        const tailSwing = animated ? Math.sin(t * 3) * 0.3 : 0;
+        ctx.beginPath();
+        ctx.moveTo(cx + 10 * scale, baseY - 4 * scale);
+        ctx.quadraticCurveTo(cx + 14 * scale, baseY - 8 * scale + tailSwing * 4 * scale, cx + 16 * scale, baseY - 12 * scale);
+        ctx.stroke();
+        if (animated) {
+          ctx.fillStyle = `rgba(255, 200, 50, ${0.5 + Math.sin(t * 6) * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(cx + 16 * scale, baseY - 12 * scale, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        break;
+      }
+      case "doom_herald": {
+        // BOSS flying dark angel: Large dark wings, void halo, robes, staff, trails
+        const robeColor = "#1a0a2e";
+        const wingColor = "#0d0d1a";
+        const voidColor = "#311b92";
+        const baseY = cy + 4 * scale - bounce;
+        const floatOff = animated ? Math.sin(t * 2) * 3 * scale : 0;
+
+        // Void aura
+        if (animated) {
+          ctx.fillStyle = `rgba(49, 27, 146, ${0.1 + Math.sin(t * 2) * 0.05})`;
+          ctx.beginPath();
+          ctx.arc(cx, baseY - 6 * scale + floatOff, 24 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Large dark wings
+        const wingFlap = animated ? Math.sin(t * 3) * 0.15 : 0;
+        ctx.fillStyle = wingColor;
+        // Left wing
+        ctx.save();
+        ctx.translate(cx - 6 * scale, baseY - 10 * scale + floatOff);
+        ctx.rotate(-0.3 + wingFlap);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-14 * scale, -8 * scale, -20 * scale, -2 * scale);
+        ctx.quadraticCurveTo(-16 * scale, 4 * scale, -10 * scale, 6 * scale);
+        ctx.quadraticCurveTo(-6 * scale, 4 * scale, 0, 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        // Right wing
+        ctx.save();
+        ctx.translate(cx + 6 * scale, baseY - 10 * scale + floatOff);
+        ctx.rotate(0.3 - wingFlap);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(14 * scale, -8 * scale, 20 * scale, -2 * scale);
+        ctx.quadraticCurveTo(16 * scale, 4 * scale, 10 * scale, 6 * scale);
+        ctx.quadraticCurveTo(6 * scale, 4 * scale, 0, 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Flowing robes
+        ctx.fillStyle = robeColor;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, baseY + 14 * scale + floatOff);
+        ctx.quadraticCurveTo(cx - 7 * scale, baseY + 2 * scale + floatOff, cx - 5 * scale, baseY - 8 * scale + floatOff);
+        ctx.lineTo(cx + 5 * scale, baseY - 8 * scale + floatOff);
+        ctx.quadraticCurveTo(cx + 7 * scale, baseY + 2 * scale + floatOff, cx + 8 * scale, baseY + 14 * scale + floatOff);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hooded face
+        ctx.fillStyle = "#0a0520";
+        ctx.beginPath();
+        ctx.arc(cx, baseY - 14 * scale + floatOff, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Void eyes
+        const voidPulse = animated ? 0.6 + Math.sin(t * 3) * 0.4 : 0.8;
+        ctx.fillStyle = `rgba(49, 27, 146, ${voidPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale + floatOff, 1.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale + floatOff, 1.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(120, 80, 255, ${voidPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, baseY - 15 * scale + floatOff, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, baseY - 15 * scale + floatOff, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Void halo (dark, inverted)
+        ctx.strokeStyle = `rgba(49, 27, 146, ${voidPulse * 0.7})`;
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 22 * scale + floatOff, 7 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(80, 50, 180, ${voidPulse * 0.3})`;
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.ellipse(cx, baseY - 22 * scale + floatOff, 8 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Staff
+        ctx.fillStyle = "#1a0a2e";
+        ctx.fillRect(cx + 10 * scale, baseY - 20 * scale + floatOff, 2 * scale, 28 * scale);
+        ctx.fillStyle = `rgba(49, 27, 146, ${voidPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx + 11 * scale, baseY - 22 * scale + floatOff, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(180, 140, 255, ${voidPulse * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(cx + 11 * scale, baseY - 22 * scale + floatOff, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shadow trails
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const trailPhase = (t * 1.5 + i * 0.4) % 1;
+            ctx.fillStyle = `rgba(49, 27, 146, ${(1 - trailPhase) * 0.15})`;
+            ctx.beginPath();
+            ctx.ellipse(
+              cx + Math.sin(t * 2 + i) * 4 * scale,
+              baseY + 10 * scale + floatOff + trailPhase * 10 * scale,
+              (3 - trailPhase * 2) * scale,
+              (1.5 - trailPhase) * scale,
+              0,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+        }
+
+        break;
+      }
+
+      // =====================================================
+      // REGIONAL BOSS ENEMIES
+      // =====================================================
+
+      case "titan_of_nassau": {
+        const bossColor = "#e65100";
+        const stoneColor = "#6d6d6d";
+        const runeGlow = 0.5 + Math.sin(t * 3) * 0.5;
+        const auraPulse = 0.6 + Math.sin(t * 1.5) * 0.4;
+        const crackFlicker = 0.3 + Math.sin(t * 5) * 0.2;
+
+        // Ground cracks
+        ctx.strokeStyle = `rgba(230, 81, 0, ${crackFlicker})`;
+        ctx.lineWidth = 1.2 * scale;
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2 + t * 0.3;
+          const len = (8 + Math.sin(t * 2 + i) * 3) * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + 8 * scale);
+          ctx.lineTo(cx + Math.cos(angle) * len, cy + 8 * scale + Math.sin(angle) * len * 0.4);
+          ctx.stroke();
+        }
+
+        // Princeton orange aura
+        const auraGrad = ctx.createRadialGradient(cx, cy - bounce, 2 * scale, cx, cy - bounce, 18 * scale);
+        auraGrad.addColorStop(0, `rgba(230, 81, 0, ${auraPulse * 0.3})`);
+        auraGrad.addColorStop(0.6, `rgba(255, 152, 0, ${auraPulse * 0.15})`);
+        auraGrad.addColorStop(1, "rgba(230, 81, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Quadruped body (stone)
+        ctx.fillStyle = stoneColor;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 2 * scale - bounce, 12 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#555";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Stone legs
+        const legPositions = [-8, -3, 3, 8];
+        for (let i = 0; i < 4; i++) {
+          const legSway = Math.sin(t * 3 + i * Math.PI * 0.5) * 1.5 * scale;
+          ctx.fillStyle = stoneColor;
+          ctx.fillRect(cx + legPositions[i] * scale - 1.5 * scale, cy + 6 * scale - bounce + legSway, 3 * scale, 7 * scale);
+          ctx.fillStyle = "#555";
+          ctx.fillRect(cx + legPositions[i] * scale - 2 * scale, cy + 12 * scale - bounce + legSway, 4 * scale, 2 * scale);
+        }
+
+        // Stone mane with energy
+        for (let i = 0; i < 8; i++) {
+          const maneAngle = -Math.PI * 0.8 + (i / 7) * Math.PI * 0.6;
+          const maneLen = (6 + Math.sin(t * 2 + i) * 2) * scale;
+          const energyAlpha = 0.4 + Math.sin(t * 4 + i * 0.8) * 0.3;
+          ctx.strokeStyle = `rgba(255, 152, 0, ${energyAlpha})`;
+          ctx.lineWidth = 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 2 * scale, cy - 4 * scale - bounce);
+          ctx.lineTo(
+            cx - 2 * scale + Math.cos(maneAngle) * maneLen,
+            cy - 4 * scale - bounce + Math.sin(maneAngle) * maneLen,
+          );
+          ctx.stroke();
+        }
+
+        // Tiger head
+        ctx.fillStyle = stoneColor;
+        ctx.beginPath();
+        ctx.arc(cx - 1 * scale, cy - 5 * scale - bounce, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#555";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Golden rune veins (animated glow)
+        ctx.strokeStyle = `rgba(255, 215, 0, ${runeGlow})`;
+        ctx.lineWidth = 1 * scale;
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 4 * scale * runeGlow;
+        for (let i = 0; i < 4; i++) {
+          const rx = cx + (Math.cos(i * 1.5 + 0.5) * 8 - 4) * scale;
+          const ry = cy + (Math.sin(i * 1.2) * 4 - 1) * scale - bounce;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry);
+          ctx.quadraticCurveTo(rx + 3 * scale, ry - 2 * scale, rx + 5 * scale, ry + 1 * scale);
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+
+        // Fire eyes
+        const eyeGlow = 0.8 + Math.sin(t * 6) * 0.2;
+        ctx.fillStyle = `rgba(255, 100, 0, ${eyeGlow})`;
+        ctx.shadowColor = bossColor;
+        ctx.shadowBlur = 6 * scale;
+        ctx.beginPath();
+        ctx.arc(cx - 4 * scale, cy - 6.5 * scale - bounce, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 1.5 * scale, cy - 6.5 * scale - bounce, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        break;
+      }
+
+      case "swamp_leviathan": {
+        const bossColor = "#1b5e20";
+        const scaleColor = "#2e7d32";
+        const bileGreen = "#76ff03";
+        const toxicPulse = 0.5 + Math.sin(t * 2) * 0.5;
+        const mistAlpha = 0.15 + Math.sin(t * 1.2) * 0.1;
+
+        // Toxic mist aura
+        for (let ring = 3; ring >= 0; ring--) {
+          ctx.fillStyle = `rgba(27, 94, 32, ${mistAlpha * (1 - ring * 0.2)})`;
+          ctx.beginPath();
+          ctx.arc(cx, cy - bounce, (14 + ring * 3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Dripping bile particles
+        for (let i = 0; i < 6; i++) {
+          const px = cx + (Math.sin(t * 1.5 + i * 1.2) * 10) * scale;
+          const py = cy + ((t * 8 + i * 12) % 24 - 12) * scale - bounce;
+          const pAlpha = 0.3 + Math.sin(t * 3 + i) * 0.2;
+          ctx.fillStyle = `rgba(118, 255, 3, ${pAlpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, (1 + Math.sin(t + i) * 0.5) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Coiled serpent body
+        ctx.strokeStyle = scaleColor;
+        ctx.lineWidth = 6 * scale;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        for (let i = 0; i <= 20; i++) {
+          const frac = i / 20;
+          const bx = cx + Math.sin(frac * Math.PI * 3 + t) * 8 * scale;
+          const by = cy + (frac * 16 - 6) * scale - bounce;
+          if (i === 0) ctx.moveTo(bx, by);
+          else ctx.lineTo(bx, by);
+        }
+        ctx.stroke();
+
+        // Scales texture overlay
+        ctx.strokeStyle = `rgba(56, 142, 60, 0.5)`;
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 12; i++) {
+          const frac = i / 12;
+          const sx = cx + Math.sin(frac * Math.PI * 3 + t) * 8 * scale;
+          const sy = cy + (frac * 16 - 6) * scale - bounce;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 3 * scale, 0, Math.PI, true);
+          ctx.stroke();
+        }
+
+        // Three necks + heads
+        for (let h = 0; h < 3; h++) {
+          const neckAngle = (h - 1) * 0.5 + Math.sin(t * 2 + h * 2) * 0.2;
+          const neckLen = (10 + Math.sin(t * 1.5 + h) * 2) * scale;
+          const headX = cx + Math.sin(neckAngle) * neckLen;
+          const headY = cy - 8 * scale - bounce - Math.cos(neckAngle) * neckLen;
+
+          // Neck
+          ctx.strokeStyle = scaleColor;
+          ctx.lineWidth = 3.5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx + (h - 1) * 3 * scale, cy - 4 * scale - bounce);
+          ctx.quadraticCurveTo(
+            cx + (h - 1) * 5 * scale,
+            cy - 10 * scale - bounce,
+            headX,
+            headY,
+          );
+          ctx.stroke();
+
+          // Head
+          ctx.fillStyle = scaleColor;
+          ctx.beginPath();
+          ctx.ellipse(headX, headY, 4 * scale, 3 * scale, neckAngle, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Jaw
+          ctx.fillStyle = "#1b5e20";
+          ctx.beginPath();
+          ctx.ellipse(
+            headX + Math.sin(neckAngle) * 2.5 * scale,
+            headY - Math.cos(neckAngle) * 2.5 * scale,
+            3 * scale,
+            1.5 * scale,
+            neckAngle,
+            0,
+            Math.PI,
+          );
+          ctx.fill();
+
+          // Glowing eyes
+          ctx.fillStyle = `rgba(118, 255, 3, ${toxicPulse})`;
+          ctx.shadowColor = bileGreen;
+          ctx.shadowBlur = 5 * scale;
+          ctx.beginPath();
+          ctx.arc(headX - 1.5 * scale, headY - 1 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(headX + 1.5 * scale, headY - 1 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        break;
+      }
+
+      case "sphinx_guardian": {
+        const goldColor = "#f9a825";
+        const darkGold = "#c17900";
+        const eyePulse = 0.6 + Math.sin(t * 4) * 0.4;
+        const symbolOrbit = t * 1.5;
+        const wingFold = 0.1 + Math.sin(t * 1) * 0.05;
+
+        // Stone base / pedestal glow
+        ctx.fillStyle = `rgba(249, 168, 37, 0.12)`;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 10 * scale - bounce, 14 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sitting lion body
+        ctx.fillStyle = goldColor;
+        ctx.beginPath();
+        ctx.ellipse(cx + 1 * scale, cy + 3 * scale - bounce, 10 * scale, 6 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = darkGold;
+        ctx.lineWidth = 0.6 * scale;
+        ctx.stroke();
+
+        // Front legs (tucked)
+        ctx.fillStyle = goldColor;
+        ctx.fillRect(cx - 7 * scale, cy + 5 * scale - bounce, 4 * scale, 6 * scale);
+        ctx.fillRect(cx + 3 * scale, cy + 5 * scale - bounce, 4 * scale, 6 * scale);
+        ctx.strokeStyle = darkGold;
+        ctx.lineWidth = 0.5 * scale;
+        ctx.strokeRect(cx - 7 * scale, cy + 5 * scale - bounce, 4 * scale, 6 * scale);
+        ctx.strokeRect(cx + 3 * scale, cy + 5 * scale - bounce, 4 * scale, 6 * scale);
+
+        // Paws
+        ctx.fillStyle = darkGold;
+        ctx.fillRect(cx - 8 * scale, cy + 10 * scale - bounce, 6 * scale, 2 * scale);
+        ctx.fillRect(cx + 2 * scale, cy + 10 * scale - bounce, 6 * scale, 2 * scale);
+
+        // Stone wings (folded at sides)
+        for (let side = -1; side <= 1; side += 2) {
+          ctx.fillStyle = `rgba(193, 121, 0, 0.5)`;
+          ctx.beginPath();
+          ctx.moveTo(cx + side * 9 * scale, cy - 2 * scale - bounce);
+          ctx.quadraticCurveTo(
+            cx + side * 16 * scale,
+            cy - 6 * scale - bounce + Math.sin(t + side) * wingFold * 20 * scale,
+            cx + side * 14 * scale,
+            cy + 4 * scale - bounce,
+          );
+          ctx.lineTo(cx + side * 9 * scale, cy + 5 * scale - bounce);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = darkGold;
+          ctx.lineWidth = 0.5 * scale;
+          ctx.stroke();
+        }
+
+        // Human pharaoh head
+        ctx.fillStyle = goldColor;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 7 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = darkGold;
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Nemes headdress
+        ctx.fillStyle = "#1565c0";
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy - 7 * scale - bounce);
+        ctx.lineTo(cx, cy - 13 * scale - bounce);
+        ctx.lineTo(cx + 6 * scale, cy - 7 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = goldColor;
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+
+        // Headdress side flaps
+        ctx.fillStyle = "#1565c0";
+        for (let side = -1; side <= 1; side += 2) {
+          ctx.beginPath();
+          ctx.moveTo(cx + side * 5.5 * scale, cy - 6 * scale - bounce);
+          ctx.lineTo(cx + side * 7 * scale, cy + 0 * scale - bounce);
+          ctx.lineTo(cx + side * 4 * scale, cy + 0 * scale - bounce);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Face details
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 8 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 2 * scale, cy - 8 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Third eye glow
+        ctx.fillStyle = `rgba(255, 235, 59, ${eyePulse})`;
+        ctx.shadowColor = "#ffeb3b";
+        ctx.shadowBlur = 8 * scale * eyePulse;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 10 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Orbiting hieroglyphic symbols
+        for (let i = 0; i < 5; i++) {
+          const orbitAngle = symbolOrbit + (i / 5) * Math.PI * 2;
+          const orbitR = 16 * scale;
+          const sx = cx + Math.cos(orbitAngle) * orbitR;
+          const sy = cy - 2 * scale - bounce + Math.sin(orbitAngle) * orbitR * 0.4;
+          const symAlpha = 0.4 + Math.sin(t * 2 + i) * 0.3;
+          ctx.fillStyle = `rgba(255, 215, 0, ${symAlpha})`;
+          ctx.font = `${3 * scale}px serif`;
+          const symbols = ["𓂀", "𓁹", "𓆣", "𓋴", "𓊝"];
+          ctx.fillText(symbols[i], sx, sy);
+        }
+
+        break;
+      }
+
+      case "frost_colossus": {
+        const iceBlue = "#4dd0e1";
+        const deepIce = "#00838f";
+        const frostAlpha = 0.4 + Math.sin(t * 1.5) * 0.2;
+        const crystalRotate = t * 0.8;
+        const crownPulse = 0.6 + Math.sin(t * 2.5) * 0.4;
+
+        // Frost particle aura
+        for (let i = 0; i < 10; i++) {
+          const angle = (i / 10) * Math.PI * 2 + t * 0.5;
+          const dist = (12 + Math.sin(t * 2 + i * 1.3) * 4) * scale;
+          const px = cx + Math.cos(angle) * dist;
+          const py = cy - 2 * scale - bounce + Math.sin(angle) * dist * 0.5;
+          const pAlpha = 0.2 + Math.sin(t * 3 + i) * 0.15;
+          ctx.fillStyle = `rgba(255, 255, 255, ${pAlpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, (1 + Math.sin(t * 2 + i) * 0.5) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Translucent ice body
+        const bodyGrad = ctx.createLinearGradient(cx, cy - 14 * scale - bounce, cx, cy + 10 * scale - bounce);
+        bodyGrad.addColorStop(0, `rgba(77, 208, 225, 0.7)`);
+        bodyGrad.addColorStop(0.5, `rgba(0, 131, 143, 0.8)`);
+        bodyGrad.addColorStop(1, `rgba(77, 208, 225, 0.6)`);
+
+        // Torso
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx - 10 * scale, cy + 6 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy + 6 * scale - bounce);
+        ctx.lineTo(cx + 8 * scale, cy - 4 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(255, 255, 255, 0.4)`;
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Legs
+        ctx.fillStyle = bodyGrad;
+        ctx.fillRect(cx - 7 * scale, cy + 6 * scale - bounce, 5 * scale, 8 * scale);
+        ctx.fillRect(cx + 2 * scale, cy + 6 * scale - bounce, 5 * scale, 8 * scale);
+
+        // Floating crystal armor plates
+        for (let i = 0; i < 4; i++) {
+          const plateAngle = crystalRotate + (i / 4) * Math.PI * 2;
+          const plateDist = 6 * scale;
+          const px = cx + Math.cos(plateAngle) * plateDist;
+          const py = cy - bounce + Math.sin(plateAngle) * plateDist * 0.3;
+          ctx.fillStyle = `rgba(77, 208, 225, ${0.4 + Math.sin(t + i) * 0.2})`;
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.rotate(plateAngle);
+          ctx.beginPath();
+          ctx.moveTo(0, -3 * scale);
+          ctx.lineTo(2 * scale, 0);
+          ctx.lineTo(0, 3 * scale);
+          ctx.lineTo(-2 * scale, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 0.5 * scale;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Arms
+        const armSwing = Math.sin(t * 1.5) * 0.3;
+        for (let side = -1; side <= 1; side += 2) {
+          ctx.fillStyle = `rgba(77, 208, 225, 0.7)`;
+          ctx.save();
+          ctx.translate(cx + side * 9 * scale, cy - 2 * scale - bounce);
+          ctx.rotate(side * 0.2 + armSwing * side);
+          ctx.fillRect(-2 * scale, 0, 4 * scale, 10 * scale);
+          ctx.restore();
+        }
+
+        // Head
+        ctx.fillStyle = `rgba(77, 208, 225, 0.8)`;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 8 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Icicle beard
+        for (let i = 0; i < 5; i++) {
+          const bx = cx + (i - 2) * 2 * scale;
+          const bLen = (3 + Math.sin(t + i) * 1) * scale;
+          ctx.fillStyle = `rgba(200, 240, 255, 0.7)`;
+          ctx.beginPath();
+          ctx.moveTo(bx - 0.8 * scale, cy - 4 * scale - bounce);
+          ctx.lineTo(bx + 0.8 * scale, cy - 4 * scale - bounce);
+          ctx.lineTo(bx, cy - 4 * scale - bounce + bLen);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Ice crown (jagged)
+        ctx.fillStyle = `rgba(200, 240, 255, ${crownPulse})`;
+        ctx.shadowColor = iceBlue;
+        ctx.shadowBlur = 6 * scale * crownPulse;
+        for (let i = 0; i < 5; i++) {
+          const crownX = cx + (i - 2) * 2.5 * scale;
+          const crownH = (4 + Math.sin(i * 1.5) * 2) * scale;
+          ctx.beginPath();
+          ctx.moveTo(crownX - 1.2 * scale, cy - 12 * scale - bounce);
+          ctx.lineTo(crownX, cy - 12 * scale - bounce - crownH);
+          ctx.lineTo(crownX + 1.2 * scale, cy - 12 * scale - bounce);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Glowing blue eyes
+        ctx.fillStyle = `rgba(200, 240, 255, 0.95)`;
+        ctx.shadowColor = "#e0f7fa";
+        ctx.shadowBlur = 6 * scale;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 9 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + 2 * scale, cy - 9 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        break;
+      }
+
+      case "inferno_wyrm": {
+        const lavaRed = "#d50000";
+        const moltenOrange = "#ff6d00";
+        const emberYellow = "#ffd600";
+        const firePulse = 0.5 + Math.sin(t * 3) * 0.5;
+        const magmaGlow = 0.6 + Math.sin(t * 2) * 0.4;
+
+        // Ember particles rising
+        for (let i = 0; i < 12; i++) {
+          const ex = cx + (Math.sin(t * 1.2 + i * 2.1) * 14) * scale;
+          const ey = cy - ((t * 10 + i * 8) % 30) * scale - bounce;
+          const eAlpha = 0.5 - ((t * 10 + i * 8) % 30) / 60;
+          if (eAlpha > 0) {
+            ctx.fillStyle = `rgba(255, 214, 0, ${eAlpha})`;
+            ctx.beginPath();
+            ctx.arc(ex, ey, (0.8 + Math.sin(t * 4 + i) * 0.4) * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Heat distortion aura
+        const heatGrad = ctx.createRadialGradient(cx, cy - bounce, 3 * scale, cx, cy - bounce, 18 * scale);
+        heatGrad.addColorStop(0, `rgba(213, 0, 0, ${magmaGlow * 0.25})`);
+        heatGrad.addColorStop(0.5, `rgba(255, 109, 0, ${magmaGlow * 0.12})`);
+        heatGrad.addColorStop(1, "rgba(213, 0, 0, 0)");
+        ctx.fillStyle = heatGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Coiling serpentine body
+        ctx.lineWidth = 7 * scale;
+        ctx.lineCap = "round";
+        const bodyPath: Array<[number, number]> = [];
+        for (let i = 0; i <= 24; i++) {
+          const frac = i / 24;
+          const bx = cx + Math.sin(frac * Math.PI * 4 + t * 1.5) * 10 * scale;
+          const by = cy + (frac * 20 - 8) * scale - bounce;
+          bodyPath.push([bx, by]);
+        }
+
+        // Body shadow
+        ctx.strokeStyle = `rgba(100, 0, 0, 0.4)`;
+        ctx.lineWidth = 8 * scale;
+        ctx.beginPath();
+        bodyPath.forEach(([bx, by], i) => (i === 0 ? ctx.moveTo(bx + 1, by + 1) : ctx.lineTo(bx + 1, by + 1)));
+        ctx.stroke();
+
+        // Main body
+        const bodyGrad2 = ctx.createLinearGradient(cx - 10 * scale, cy - bounce, cx + 10 * scale, cy - bounce);
+        bodyGrad2.addColorStop(0, lavaRed);
+        bodyGrad2.addColorStop(0.5, "#b71c1c");
+        bodyGrad2.addColorStop(1, lavaRed);
+        ctx.strokeStyle = bodyGrad2;
+        ctx.lineWidth = 7 * scale;
+        ctx.beginPath();
+        bodyPath.forEach(([bx, by], i) => (i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by)));
+        ctx.stroke();
+
+        // Glowing orange scale gaps
+        ctx.strokeStyle = `rgba(255, 109, 0, ${firePulse * 0.7})`;
+        ctx.lineWidth = 2 * scale;
+        ctx.setLineDash([2 * scale, 3 * scale]);
+        ctx.beginPath();
+        bodyPath.forEach(([bx, by], i) => (i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by)));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Fire mane along spine
+        for (let i = 0; i < 10; i++) {
+          const idx = Math.floor((i / 10) * bodyPath.length);
+          if (idx >= bodyPath.length) continue;
+          const [fx, fy] = bodyPath[idx];
+          const flameH = (4 + Math.sin(t * 5 + i * 0.9) * 2) * scale;
+          const flameAlpha = 0.5 + Math.sin(t * 4 + i) * 0.3;
+          const flameGrad = ctx.createLinearGradient(fx, fy, fx, fy - flameH);
+          flameGrad.addColorStop(0, `rgba(255, 109, 0, ${flameAlpha})`);
+          flameGrad.addColorStop(1, `rgba(255, 214, 0, 0)`);
+          ctx.fillStyle = flameGrad;
+          ctx.beginPath();
+          ctx.moveTo(fx - 2 * scale, fy);
+          ctx.lineTo(fx + Math.sin(t * 6 + i) * 1 * scale, fy - flameH);
+          ctx.lineTo(fx + 2 * scale, fy);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Wyrm head
+        const headX = bodyPath[0][0];
+        const headY = bodyPath[0][1];
+        ctx.fillStyle = lavaRed;
+        ctx.beginPath();
+        ctx.ellipse(headX, headY, 5 * scale, 4 * scale, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#b71c1c";
+        ctx.lineWidth = 0.6 * scale;
+        ctx.stroke();
+
+        // Volcanic horns
+        for (let side = -1; side <= 1; side += 2) {
+          ctx.fillStyle = "#4e342e";
+          ctx.beginPath();
+          ctx.moveTo(headX + side * 3 * scale, headY - 2 * scale);
+          ctx.lineTo(headX + side * 5 * scale, headY - 8 * scale);
+          ctx.lineTo(headX + side * 2 * scale, headY - 3 * scale);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = `rgba(255, 109, 0, ${firePulse})`;
+          ctx.beginPath();
+          ctx.arc(headX + side * 5 * scale, headY - 8 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Molten eyes
+        ctx.fillStyle = `rgba(255, 214, 0, 0.95)`;
+        ctx.shadowColor = emberYellow;
+        ctx.shadowBlur = 8 * scale;
+        ctx.beginPath();
+        ctx.arc(headX - 2 * scale, headY - 1.5 * scale, 1.3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(headX + 2 * scale, headY - 1.5 * scale, 1.3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Magma dripping from jaw
+        for (let i = 0; i < 3; i++) {
+          const dx = headX + (i - 1) * 2 * scale;
+          const dripLen = (2 + Math.sin(t * 3 + i * 2) * 2) * scale;
+          const dripAlpha = 0.5 + Math.sin(t * 4 + i) * 0.3;
+          ctx.fillStyle = `rgba(255, 109, 0, ${dripAlpha})`;
+          ctx.beginPath();
+          ctx.ellipse(dx, headY + 3 * scale + dripLen * 0.5, 0.8 * scale, dripLen, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        break;
+      }
+
       default: {
         // Fallback generic enemy - simple skull/creature
         const genericPulse = 0.5 + Math.sin(t * 2) * 0.3;
