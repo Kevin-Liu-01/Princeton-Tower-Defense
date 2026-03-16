@@ -31,11 +31,11 @@ export const TROOP_MASTERWORK_STYLES: Record<
     crest: "#f27f2f",
   },
   armored: {
-    rimLight: "rgba(180, 206, 230, 0.68)",
-    aura: "rgba(126, 180, 228, ",
-    rune: "rgba(168, 214, 255, ",
-    metalSheen: "rgba(225, 239, 255, ",
-    crest: "#7ab4e0",
+    rimLight: "rgba(230, 210, 160, 0.62)",
+    aura: "rgba(230, 160, 70, ",
+    rune: "rgba(240, 200, 140, ",
+    metalSheen: "rgba(240, 235, 215, ",
+    crest: "#d9a040",
   },
   elite: {
     rimLight: "rgba(255, 227, 162, 0.72)",

@@ -26,6 +26,7 @@ import type {
   SpecialTower,
   SpellUpgradeLevels,
   DeathCause,
+  EnemyAbilityType,
 } from "../types";
 // Constants
 import {
@@ -121,6 +122,7 @@ import {
   isValidBuildPosition,
   generateId,
   getPathSegmentLength,
+  getEnemyRemainingDistance,
   findClosestPathPoint,
   findClosestPathPointWithinRadius,
   getTroopMoveInfo,
@@ -269,6 +271,7 @@ import {
 } from "../constants/settings";
 import {
   getChallengePathSegments,
+  isMountainTerrainKind,
   isWorldPosInChallengeDecorationFootprint,
 } from "../rendering/maps/challengeTerrain";
 // Hazard game logic
@@ -1843,7 +1846,7 @@ export function usePrincetonTowerDefenseRuntime() {
       if (levelSettings?.camera) {
         setCameraOffset(levelSettings.camera.offset);
         const targetZoom =
-          levelSettings.levelKind === "challenge"
+          isMountainTerrainKind(levelSettings.levelKind)
             ? Math.min(levelSettings.camera.zoom, 0.72)
             : levelSettings.camera.zoom;
         setCameraZoom(targetZoom);
@@ -3496,6 +3499,12 @@ export function usePrincetonTowerDefenseRuntime() {
           stun?: { until: number };
         }
       } = {};
+      const troopCombatAbilityUpdates: { [enemyId: string]: {
+        lastAbilityUse: number;
+        lastAbilityType: EnemyAbilityType;
+        abilityCooldowns: Record<string, number>;
+        lastTroopAttack?: number;
+      } } = {};
 
       if (!isPaused) {
         // Scale enemy attack interval with game speed
@@ -3538,9 +3547,11 @@ export function usePrincetonTowerDefenseRuntime() {
               }
               troopAbilityEffects[nearbyTroop.id] = existing;
 
-              enemy.lastAbilityUse = now;
-              enemy.lastAbilityType = troopAbils.activatedTypes[0];
-              enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, troopAbils.activatedTypes, now);
+              troopCombatAbilityUpdates[enemy.id] = {
+                lastAbilityUse: now,
+                lastAbilityType: troopAbils.activatedTypes[0],
+                abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, troopAbils.activatedTypes, now),
+              };
             }
           }
         });
@@ -3549,7 +3560,6 @@ export function usePrincetonTowerDefenseRuntime() {
         enemies.forEach((enemy) => {
           if (enemy.frozen || now < enemy.stunUntil) return;
           const flyingData = ENEMY_DATA[enemy.type];
-          // Only process non-ranged flying enemies (ranged flyers use the projectile path)
           if (!flyingData.flying || !flyingData.targetsTroops || flyingData.isRanged) return;
 
           const attackSpeed = flyingData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED;
@@ -3558,14 +3568,12 @@ export function usePrincetonTowerDefenseRuntime() {
 
           const enemyPos = getEnemyPosCached(enemy);
 
-          // Flying enemies can attack troops within a larger range (swooping attacks)
           const attackRange = DEFAULT_ENEMY_FLYING_ATTACK_RANGE;
           const nearbyTroop = getNearestTroop(enemyPos, attackRange);
           if (nearbyTroop) {
             const damage = flyingData.troopDamage || DEFAULT_ENEMY_TROOP_DAMAGE;
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
-            enemy.lastTroopAttack = now;
 
             const flyAbils = applyEnemyAbilities(enemy, 'troop', now);
             if (flyAbils) {
@@ -3584,9 +3592,17 @@ export function usePrincetonTowerDefenseRuntime() {
               }
               troopAbilityEffects[nearbyTroop.id] = existing;
 
-              enemy.lastAbilityUse = now;
-              enemy.lastAbilityType = flyAbils.activatedTypes[0];
-              enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, flyAbils.activatedTypes, now);
+              troopCombatAbilityUpdates[enemy.id] = {
+                lastAbilityUse: now,
+                lastAbilityType: flyAbils.activatedTypes[0],
+                abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, flyAbils.activatedTypes, now),
+                lastTroopAttack: now,
+              };
+            } else {
+              troopCombatAbilityUpdates[enemy.id] = {
+                ...(troopCombatAbilityUpdates[enemy.id] || {}),
+                lastTroopAttack: now,
+              } as typeof troopCombatAbilityUpdates[string];
             }
           }
         });
@@ -3810,6 +3826,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 enemy.facingRight,
               );
               if (attackedThisFrame) {
+                const abilityPatch = troopCombatAbilityUpdates[enemy.id];
                 return {
                   ...enemy,
                   inCombat: true,
@@ -3817,6 +3834,11 @@ export function usePrincetonTowerDefenseRuntime() {
                   lastTroopAttack: now,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
                   facingRight: troopFacing,
+                  ...(abilityPatch && {
+                    lastAbilityUse: abilityPatch.lastAbilityUse,
+                    lastAbilityType: abilityPatch.lastAbilityType,
+                    abilityCooldowns: abilityPatch.abilityCooldowns,
+                  }),
                 };
               }
               return {
@@ -4057,6 +4079,31 @@ export function usePrincetonTowerDefenseRuntime() {
           })
           .filter(isDefined)
       );
+      // Apply deferred ability cooldown updates for flying enemies attacking troops
+      // (ground enemies already had their updates applied in the attackedThisFrame path)
+      const flyingAbilityIds = Object.keys(troopCombatAbilityUpdates).filter(
+        (id) => {
+          const e = enemies.find((en) => en.id === id);
+          return e && ENEMY_DATA[e.type].flying;
+        }
+      );
+      if (flyingAbilityIds.length > 0) {
+        setEnemies((prev) =>
+          prev.map((enemy) => {
+            const update = troopCombatAbilityUpdates[enemy.id];
+            if (!update || !ENEMY_DATA[enemy.type].flying) return enemy;
+            return {
+              ...enemy,
+              ...(update.lastTroopAttack !== undefined && { lastTroopAttack: update.lastTroopAttack }),
+              ...(update.lastAbilityUse && {
+                lastAbilityUse: update.lastAbilityUse,
+                lastAbilityType: update.lastAbilityType,
+                abilityCooldowns: update.abilityCooldowns,
+              }),
+            };
+          })
+        );
+      }
       // Soft-repulsion lane spreading: push nearby same-layer enemies apart
       // laterally instead of hard blocking. Enemies always move forward at
       // their natural speed; only the lateral (perpendicular) offset changes.
@@ -4241,6 +4288,10 @@ export function usePrincetonTowerDefenseRuntime() {
       if (hero && !hero.dead) {
         setHero((prev) => {
           if (!prev || prev.dead) return prev;
+
+          if (prev.stunned && prev.stunUntil && now < prev.stunUntil) {
+            return { ...prev, moving: false, aggroTarget: undefined };
+          }
 
           const heroData = HERO_DATA[prev.type];
           const slowMultiplier =
@@ -4450,13 +4501,36 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
       // Update troop movement - with sight-based engagement
+      const dotDeaths: Array<{
+        ownerId: string;
+        slot: number;
+        respawnPos: Position;
+        troopType: string;
+        troopId: string;
+        pos: Position;
+      }> = [];
       setTroops((prev) => {
         // Update positions with sight-based engagement
-        return prev.map((troop) => {
+        return prev.filter((troop) => {
+          if (!troop.type) return true;
+          if (troop.hp > 0) return true;
+          addParticles(troop.pos, "explosion", 8);
+          if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
+            dotDeaths.push({
+              ownerId: troop.ownerId,
+              slot: troop.spawnSlot ?? 0,
+              respawnPos: troop.userTargetPos || troop.spawnPoint || troop.pos,
+              troopType: troop.type || "footsoldier",
+              troopId: troop.id,
+              pos: troop.pos,
+            });
+          }
+          return false;
+        }).map((troop) => {
           const updated = { ...troop };
-          if (!troop.type) return updated; // Skip troops without type
+          if (!troop.type) return updated;
           const troopData = TROOP_DATA[troop.type];
-          if (!troopData) return updated; // Skip if no troop data
+          if (!troopData) return updated;
 
           // ========== PROCESS STATUS EFFECTS ==========
           const currentTime = Date.now();
@@ -4482,7 +4556,7 @@ export function usePrincetonTowerDefenseRuntime() {
           }
 
           // Apply damage-over-time effects (once per second, scaled by deltaTime)
-          const dotTick = deltaTime / 1000; // Normalize to per-second
+          const dotTick = deltaTime / 1000;
           if (updated.burning && updated.burnDamage) {
             updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
           }
@@ -4739,6 +4813,41 @@ export function usePrincetonTowerDefenseRuntime() {
           return updated;
         });
       });
+      // Queue respawns for troops killed by DoT (burn/poison)
+      if (dotDeaths.length > 0) {
+        const dotDeathsByOwner = new Map<string, (typeof dotDeaths)[number][]>();
+        dotDeaths.forEach((death) => {
+          const ownerDeaths = dotDeathsByOwner.get(death.ownerId);
+          if (ownerDeaths) {
+            ownerDeaths.push(death);
+          } else {
+            dotDeathsByOwner.set(death.ownerId, [death]);
+          }
+        });
+        setTowers((prevTowers) =>
+          prevTowers.map((t) => {
+            const deaths = dotDeathsByOwner.get(t.id);
+            if (!deaths || deaths.length === 0) return t;
+            const existing = t.pendingRespawns || [];
+            const newRespawns = deaths.filter(
+              (d) => !existing.some((e) => e.slot === d.slot)
+            );
+            if (newRespawns.length === 0) return t;
+            return {
+              ...t,
+              pendingRespawns: [
+                ...existing,
+                ...newRespawns.map((d) => ({
+                  slot: d.slot,
+                  timer: TROOP_RESPAWN_TIME,
+                  respawnPos: d.respawnPos,
+                  troopType: d.troopType,
+                })),
+              ],
+            };
+          })
+        );
+      }
       // ========== HERO STATUS EFFECTS PROCESSING ==========
       if (hero && !hero.dead) {
         setHero((prev) => {
@@ -4811,7 +4920,13 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
       // ========== PROCESS TOWER DEBUFFS FROM ENEMIES ==========
-      // Apply debuffs from enemies with tower-affecting abilities
+      // Collect enemy ability mutations to apply via setEnemies (avoid direct mutation)
+      const towerDebuffEnemyUpdates = new Map<string, {
+        lastAbilityUse: number;
+        lastAbilityType: EnemyAbilityType;
+        activatedTypes: EnemyAbilityType[];
+      }>();
+
       setTowers((prevTowers) => prevTowers.map((tower) => {
         const towerWorldPos = gridToWorld(tower.pos);
         const updated = { ...tower };
@@ -4833,21 +4948,24 @@ export function usePrincetonTowerDefenseRuntime() {
           const enemyPos = getEnemyPosCached(enemy);
           const distToTower = distance(enemyPos, towerWorldPos);
 
-          // Check each ability
           for (const ability of eData.abilities) {
             if (!ability.type.startsWith('tower_')) continue;
 
             const abilityRange = ability.radius || 80;
             if (distToTower > abilityRange) continue;
 
-            // Check cooldown and chance
+            // Use per-type cooldowns instead of global lastAbilityUse
             const abilityCooldown = ability.cooldown || 3000;
-            if (enemy.lastAbilityUse && now - enemy.lastAbilityUse < abilityCooldown) continue;
+            const cooldowns = enemy.abilityCooldowns || {};
+            const priorUpdates = towerDebuffEnemyUpdates.get(enemy.id);
+            const lastUse = priorUpdates?.activatedTypes.includes(ability.type)
+              ? now
+              : cooldowns[ability.type] || 0;
+            if (now - lastUse < abilityCooldown) continue;
 
             const chance = ability.chance || 0.15;
             if (Math.random() > chance) continue;
 
-            // Apply the debuff
             const duration = ability.duration || 2000;
             const intensity = ability.intensity || 0.25;
 
@@ -4870,7 +4988,6 @@ export function usePrincetonTowerDefenseRuntime() {
               case 'tower_disable': {
                 updated.disabled = true;
                 updated.disabledUntil = now + duration;
-                // Also add to debuffs array for UI/rendering visibility
                 updated.debuffs = updated.debuffs || [];
                 updated.debuffs = updated.debuffs.filter(d =>
                   d.until > now && d.type !== 'disable'
@@ -4891,14 +5008,37 @@ export function usePrincetonTowerDefenseRuntime() {
               }
             }
 
-            enemy.lastAbilityUse = now;
-            enemy.lastAbilityType = ability.type;
-            enemy.abilityCooldowns = buildAbilityCooldowns(enemy.abilityCooldowns, [ability.type], now);
+            // Collect mutation instead of mutating directly
+            const existing = towerDebuffEnemyUpdates.get(enemy.id);
+            if (existing) {
+              existing.lastAbilityType = ability.type;
+              existing.activatedTypes.push(ability.type);
+            } else {
+              towerDebuffEnemyUpdates.set(enemy.id, {
+                lastAbilityUse: now,
+                lastAbilityType: ability.type,
+                activatedTypes: [ability.type],
+              });
+            }
           }
         }
 
         return updated;
       }));
+
+      // Apply collected enemy ability mutations immutably
+      if (towerDebuffEnemyUpdates.size > 0) {
+        setEnemies((prev) => prev.map((enemy) => {
+          const update = towerDebuffEnemyUpdates.get(enemy.id);
+          if (!update) return enemy;
+          return {
+            ...enemy,
+            lastAbilityUse: update.lastAbilityUse,
+            lastAbilityType: update.lastAbilityType,
+            abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, update.activatedTypes, now),
+          };
+        }));
+      }
 
       const queuedTowerPatches = new Map<string, Partial<Tower>>();
       const queueTowerPatch = (towerId: string, patch: Partial<Tower>) => {
@@ -6075,8 +6215,8 @@ export function usePrincetonTowerDefenseRuntime() {
         addProjectileEntities(queuedTowerProjectiles);
       }
 
-      // Hero attacks - skip when paused
-      if (!isPaused && hero && !hero.dead && hero.attackAnim === 0) {
+      // Hero attacks - skip when paused or stunned
+      if (!isPaused && hero && !hero.dead && !hero.stunned && hero.attackAnim === 0) {
         const heroData = HERO_DATA[hero.type];
         // Scale hero attack speed with game speed
         const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroData.attackSpeed / gameSpeed : heroData.attackSpeed;
@@ -6280,9 +6420,10 @@ export function usePrincetonTowerDefenseRuntime() {
       // Troop attacks - with ranged support for centaurs and turrets - skip when paused
       if (!isPaused) {
         troops.forEach((troop) => {
-          if (!troop.type) return; // Skip troops without a type
+          if (!troop.type) return;
+          if (troop.stunned && troop.stunUntil && now < troop.stunUntil) return;
           const troopData = TROOP_DATA[troop.type];
-          if (!troopData) return; // Skip if troop data not found
+          if (!troopData) return;
           const isRanged = troop.overrideIsRanged ?? troopData.isRanged ?? false;
           const attackRange = isRanged
             ? troop.overrideRange ?? troopData.range ?? DEFAULT_TROOP_RANGED_RANGE
@@ -6847,7 +6988,7 @@ export function usePrincetonTowerDefenseRuntime() {
     const theme = REGION_THEMES[mapTheme];
 
     const levelData = LEVEL_DATA[selectedMap];
-    const isChallengeTerrainLevel = levelData?.levelKind === "challenge";
+    const isChallengeTerrainLevel = isMountainTerrainKind(levelData?.levelKind);
     const challengePathSegments = isChallengeTerrainLevel
       ? getChallengePathSegments(selectedMap)
       : [];
@@ -11610,10 +11751,13 @@ export function usePrincetonTowerDefenseRuntime() {
             setTargetingSpell(spellType);
             enteredTargeting = true;
           } else {
-            const enemyPositions = enemies.map((e) => getEnemyPosWithPath(e, selectedMap));
-            const avgX = enemyPositions.reduce((s, p) => s + p.x, 0) / enemyPositions.length;
-            const avgY = enemyPositions.reduce((s, p) => s + p.y, 0) / enemyPositions.length;
-            executeTargetedSpellRef.current(spellType, { x: avgX, y: avgY });
+            const leadEnemy = enemies.reduce((best, e) => {
+              const eDist = getEnemyRemainingDistance(e, selectedMap);
+              const bestDist = getEnemyRemainingDistance(best, selectedMap);
+              return eDist < bestDist ? e : best;
+            });
+            const targetPos = getEnemyPosWithPath(leadEnemy, selectedMap);
+            executeTargetedSpellRef.current(spellType, targetPos);
           }
           break;
         }
@@ -12621,6 +12765,26 @@ export function usePrincetonTowerDefenseRuntime() {
     clearEnemies();
   }, [gameState, battleOutcome, clearAllTimers, clearEnemies, totalWaves]);
 
+  const skipWaveFromDevMenu = useCallback(() => {
+    if (gameState !== "playing" || battleOutcome) return;
+    if (currentWave >= totalWaves) return;
+    clearAllTimers();
+    clearEnemies();
+    setWaveInProgress(false);
+    setCurrentWave((w) => w + 1);
+    setNextWaveTimer(WAVE_TIMER_BASE);
+  }, [gameState, battleOutcome, currentWave, totalWaves, clearAllTimers, clearEnemies]);
+
+  const killAllEnemiesFromDevMenu = useCallback(() => {
+    if (gameState !== "playing" || battleOutcome) return;
+    for (const enemy of enemies) {
+      if (enemy.dead || enemy.hp <= 0) continue;
+      const pos = getEnemyPosWithPath(enemy, selectedMap);
+      onEnemyKill(enemy, pos, 10, "default");
+    }
+    clearEnemies();
+  }, [gameState, battleOutcome, enemies, selectedMap, onEnemyKill, clearEnemies]);
+
   const instantLoseFromDevMenu = useCallback(() => {
     if (gameState !== "playing" || battleOutcome) return;
     clearAllTimers();
@@ -12642,6 +12806,9 @@ export function usePrincetonTowerDefenseRuntime() {
       devPerfEnabled={devPerfEnabled}
       setDevPerfEnabled={setDevPerfEnabled}
       devPerfSnapshot={devPerfSnapshot}
+      currentWave={currentWave}
+      totalWaves={totalWaves}
+      waveInProgress={waveInProgress}
       onUnlockLevel={unlockLevel}
       onLockLevel={lockLevelFromDevMenu}
       onUnlockAllLevels={unlockAllLevels}
@@ -12651,6 +12818,8 @@ export function usePrincetonTowerDefenseRuntime() {
       onAdjustLives={adjustLivesFromDevMenu}
       onInstantVictory={instantVictoryFromDevMenu}
       onInstantLose={instantLoseFromDevMenu}
+      onSkipWave={skipWaveFromDevMenu}
+      onKillAllEnemies={killAllEnemiesFromDevMenu}
     />
   ) : null;
 

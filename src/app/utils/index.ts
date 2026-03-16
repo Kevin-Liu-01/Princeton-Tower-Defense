@@ -1259,6 +1259,32 @@ export function getPathSegmentLength(
   return distance(p1, p2) * scale;
 }
 
+/**
+ * Remaining world-space distance from an enemy's current position to the end
+ * of its path.  Uses raw geometric distance (no speed scale) so values are
+ * comparable across different paths.
+ */
+export function getEnemyRemainingDistance(
+  enemy: { pathIndex: number; progress: number; pathKey?: string },
+  defaultMapKey: string,
+): number {
+  const mapKey = enemy.pathKey || defaultMapKey;
+  const path = MAP_PATHS[mapKey];
+  if (!path || path.length < 2) return Infinity;
+
+  const idx = Math.min(enemy.pathIndex, path.length - 2);
+
+  const cur = gridToWorldPath(path[idx]);
+  const nxt = gridToWorldPath(path[idx + 1]);
+  let remaining = (1 - enemy.progress) * distance(cur, nxt);
+
+  for (let i = idx + 1; i < path.length - 1; i++) {
+    remaining += distance(gridToWorldPath(path[i]), gridToWorldPath(path[i + 1]));
+  }
+
+  return remaining;
+}
+
 // Clamp utility
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

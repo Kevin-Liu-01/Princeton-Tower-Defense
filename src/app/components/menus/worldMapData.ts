@@ -31,13 +31,13 @@ export const WORLD_LEVELS: LevelNode[] = [
     id: "sandbox",
     name: "Sandbox Arena",
     description:
-      "Ancient colosseum with limitless resources.\nBuild anything, test everything.",
+      "Mountaintop colosseum with limitless resources. Build anything, test everything.",
     region: "grassland",
     difficulty: 1,
     kind: "sandbox",
     tags: ["Sandbox", "Unlimited"],
-    x: 190,
-    y: 62,
+    x: 205,
+    y: 59,
     connectsTo: [],
   },
   {

@@ -1960,99 +1960,262 @@ export function drawCannonAmmoBelt(
   );
   ctx.stroke();
 
-  // Belt channel
-  ctx.strokeStyle = "#2a2a32";
-  ctx.lineWidth = 6 * zoom;
+  // === BELT TRACK — layered 3D groove ===
   ctx.lineCap = "round";
+
+  // Drop shadow underneath belt
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.lineWidth = 9 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(beltExitX, beltExitY + 1.5 * zoom);
+  ctx.quadraticCurveTo(beltMidX, beltMidY + 1.5 * zoom, beltEntryX, beltEntryY + 1.5 * zoom);
+  ctx.stroke();
+
+  // Outer channel (dark steel rim)
+  ctx.strokeStyle = "#22222a";
+  ctx.lineWidth = 8 * zoom;
   ctx.beginPath();
   ctx.moveTo(beltExitX, beltExitY);
   ctx.quadraticCurveTo(beltMidX, beltMidY, beltEntryX, beltEntryY);
   ctx.stroke();
 
-  // Inner track
-  ctx.strokeStyle = "#3a3a44";
-  ctx.lineWidth = 4 * zoom;
+  // Inner channel body
+  ctx.strokeStyle = "#35353e";
+  ctx.lineWidth = 6 * zoom;
   ctx.beginPath();
   ctx.moveTo(beltExitX, beltExitY);
   ctx.quadraticCurveTo(beltMidX, beltMidY, beltEntryX, beltEntryY);
   ctx.stroke();
 
-  const beltBulletCount = 12;
+  // Channel floor (recessed center)
+  ctx.strokeStyle = "#2a2a33";
+  ctx.lineWidth = 3.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(beltExitX, beltExitY);
+  ctx.quadraticCurveTo(beltMidX, beltMidY, beltEntryX, beltEntryY);
+  ctx.stroke();
+
+  // Top edge highlight (catches light)
+  ctx.strokeStyle = "rgba(120, 120, 135, 0.35)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(beltExitX, beltExitY - 3.5 * zoom);
+  ctx.quadraticCurveTo(beltMidX, beltMidY - 3.5 * zoom, beltEntryX, beltEntryY - 3.5 * zoom);
+  ctx.stroke();
+
+  // Bottom edge dark bevel
+  ctx.strokeStyle = "rgba(10, 10, 15, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(beltExitX, beltExitY + 3.5 * zoom);
+  ctx.quadraticCurveTo(beltMidX, beltMidY + 3.5 * zoom, beltEntryX, beltEntryY + 3.5 * zoom);
+  ctx.stroke();
+
+  // === CARTRIDGES & LINK PLATES ===
+  const beltBulletCount = 14;
   const speed = isAttacking ? time * 6 : time * 1.5;
+
+  const evalBezier = (t: number) => {
+    const u = 1 - t;
+    return {
+      x: u * u * beltExitX + 2 * u * t * beltMidX + t * t * beltEntryX,
+      y: u * u * beltExitY + 2 * u * t * beltMidY + t * t * beltEntryY,
+    };
+  };
+  const evalTangent = (t: number) => {
+    const u = 1 - t;
+    return {
+      x: 2 * u * (beltMidX - beltExitX) + 2 * t * (beltEntryX - beltMidX),
+      y: 2 * u * (beltMidY - beltExitY) + 2 * t * (beltEntryY - beltMidY),
+    };
+  };
+
   for (let i = 0; i < beltBulletCount; i++) {
     const beltProgress = (i / beltBulletCount + speed) % 1;
-    const t = beltProgress;
-    const oneMinusT = 1 - t;
 
-    const bulletX =
-      oneMinusT * oneMinusT * beltExitX +
-      2 * oneMinusT * t * beltMidX +
-      t * t * beltEntryX;
-    const bulletY =
-      oneMinusT * oneMinusT * beltExitY +
-      2 * oneMinusT * t * beltMidY +
-      t * t * beltEntryY;
-
-    const tangentX =
-      2 * oneMinusT * (beltMidX - beltExitX) + 2 * t * (beltEntryX - beltMidX);
-    const tangentY =
-      2 * oneMinusT * (beltMidY - beltExitY) + 2 * t * (beltEntryY - beltMidY);
-    const bulletAngle = Math.atan2(tangentY, tangentX);
+    const pos = evalBezier(beltProgress);
+    const tan = evalTangent(beltProgress);
+    const bulletAngle = Math.atan2(tan.y, tan.x);
+    const cosA = Math.cos(bulletAngle);
+    const sinA = Math.sin(bulletAngle);
+    const perpCos = Math.cos(bulletAngle + Math.PI * 0.5);
+    const perpSin = Math.sin(bulletAngle + Math.PI * 0.5);
 
     const shakeIntensity = isAttacking ? attackPulse * 0.3 : 0;
-    const bulletShakeX =
-      Math.sin(time * 70 + i * 1.3) * 1 * zoom * shakeIntensity;
-    const bulletShakeY =
-      Math.cos(time * 55 + i * 1.7) * 0.7 * zoom * shakeIntensity;
+    const shakeX = Math.sin(time * 70 + i * 1.3) * 1 * zoom * shakeIntensity;
+    const shakeY = Math.cos(time * 55 + i * 1.7) * 0.7 * zoom * shakeIntensity;
+    const fx = pos.x + shakeX;
+    const fy = pos.y + shakeY;
 
-    const fx = bulletX + bulletShakeX;
-    const fy = bulletY + bulletShakeY;
+    // Position-based lighting: bullets near top of arc are brighter
+    const arcLight = 0.7 + 0.3 * (1 - Math.abs(beltProgress - 0.5) * 2);
 
-    // Metal link
-    ctx.fillStyle = "#6a6a72";
+    // --- Link plate (rectangular metal connector between rounds) ---
+    const linkW = 3.2 * zoom;
+    const linkH = 1.6 * zoom;
+    const linkLit = Math.floor(75 * arcLight);
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(bulletAngle);
+
+    ctx.fillStyle = `rgb(${linkLit + 10}, ${linkLit + 10}, ${linkLit + 18})`;
+    ctx.fillRect(-linkW, -linkH, linkW * 2, linkH * 2);
+
+    // Link plate edge highlight
+    ctx.strokeStyle = `rgba(140, 140, 155, ${0.25 * arcLight})`;
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeRect(-linkW, -linkH, linkW * 2, linkH * 2);
+
+    // Rivet holes on link plate
+    const rivetR = 0.6 * zoom;
+    ctx.fillStyle = `rgba(40, 40, 48, ${0.7 * arcLight})`;
     ctx.beginPath();
-    ctx.ellipse(fx, fy, 2 * zoom, 1.3 * zoom, bulletAngle, 0, Math.PI * 2);
+    ctx.arc(-linkW * 0.6, 0, rivetR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(linkW * 0.6, 0, rivetR, 0, Math.PI * 2);
+    ctx.fill();
+    // Rivet cap highlights
+    ctx.fillStyle = `rgba(110, 110, 125, ${0.5 * arcLight})`;
+    ctx.beginPath();
+    ctx.arc(-linkW * 0.6, -0.3 * zoom, rivetR * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(linkW * 0.6, -0.3 * zoom, rivetR * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Brass casing
-    const brassGrad = ctx.createLinearGradient(
-      fx - 2 * zoom,
-      fy - 2.5 * zoom,
-      fx + 2 * zoom,
-      fy + 2.5 * zoom,
+    ctx.restore();
+
+    // --- Cartridge casing ---
+    const casingLen = 4.2 * zoom;
+    const casingW = 2.4 * zoom;
+
+    // Casing body with metallic gradient along its length
+    const casingGrad = ctx.createLinearGradient(
+      fx - perpCos * casingLen * 0.5,
+      fy - perpSin * casingLen * 0.5,
+      fx + perpCos * casingLen * 0.5,
+      fy + perpSin * casingLen * 0.5,
     );
-    brassGrad.addColorStop(0, "#e6c54a");
-    brassGrad.addColorStop(0.3, "#daa520");
-    brassGrad.addColorStop(0.7, "#b8860b");
-    brassGrad.addColorStop(1, "#8b6914");
-    ctx.fillStyle = brassGrad;
+    const brassBase = arcLight;
+    casingGrad.addColorStop(0, `rgba(${Math.floor(200 * brassBase)}, ${Math.floor(170 * brassBase)}, ${Math.floor(50 * brassBase)}, 1)`);
+    casingGrad.addColorStop(0.2, `rgba(${Math.floor(230 * brassBase)}, ${Math.floor(197 * brassBase)}, ${Math.floor(74 * brassBase)}, 1)`);
+    casingGrad.addColorStop(0.45, `rgba(${Math.floor(240 * brassBase)}, ${Math.floor(210 * brassBase)}, ${Math.floor(95 * brassBase)}, 1)`);
+    casingGrad.addColorStop(0.55, `rgba(${Math.floor(218 * brassBase)}, ${Math.floor(165 * brassBase)}, ${Math.floor(32 * brassBase)}, 1)`);
+    casingGrad.addColorStop(0.8, `rgba(${Math.floor(184 * brassBase)}, ${Math.floor(134 * brassBase)}, ${Math.floor(11 * brassBase)}, 1)`);
+    casingGrad.addColorStop(1, `rgba(${Math.floor(150 * brassBase)}, ${Math.floor(110 * brassBase)}, ${Math.floor(20 * brassBase)}, 1)`);
+
+    ctx.fillStyle = casingGrad;
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(bulletAngle + Math.PI * 0.5);
     ctx.beginPath();
-    ctx.ellipse(
-      fx,
-      fy,
-      2.8 * zoom,
-      3.8 * zoom,
-      bulletAngle + Math.PI * 0.5,
-      0,
-      Math.PI * 2,
-    );
+    ctx.roundRect(-casingW, -casingLen * 0.45, casingW * 2, casingLen, 0.6 * zoom);
+    ctx.fill();
+    ctx.restore();
+
+    // Casing rim (raised ring at base)
+    const rimDist = -casingLen * 0.48;
+    const rimX = fx + perpCos * rimDist;
+    const rimY = fy + perpSin * rimDist;
+    ctx.fillStyle = `rgba(${Math.floor(195 * arcLight)}, ${Math.floor(155 * arcLight)}, ${Math.floor(35 * arcLight)}, 1)`;
+    ctx.beginPath();
+    ctx.ellipse(rimX, rimY, casingW + 0.6 * zoom, 1.2 * zoom, bulletAngle + Math.PI * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Rim highlight
+    ctx.strokeStyle = `rgba(255, 230, 140, ${0.3 * arcLight})`;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(rimX, rimY, casingW + 0.6 * zoom, 1.2 * zoom, bulletAngle + Math.PI * 0.5, Math.PI * 0.9, Math.PI * 1.6);
+    ctx.stroke();
+
+    // Primer circle (small dot on cartridge base)
+    ctx.fillStyle = `rgba(${Math.floor(120 * arcLight)}, ${Math.floor(90 * arcLight)}, ${Math.floor(50 * arcLight)}, 1)`;
+    ctx.beginPath();
+    ctx.arc(rimX, rimY, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
-    // Bullet tip
-    const tipOffsetX = Math.cos(bulletAngle + Math.PI * 0.5) * 2.5 * zoom;
-    const tipOffsetY = Math.sin(bulletAngle + Math.PI * 0.5) * 2.5 * zoom;
-    ctx.fillStyle = "#8b4513";
+    // Casing neck (tapered section near bullet)
+    const neckDist = casingLen * 0.3;
+    const neckX = fx + perpCos * neckDist;
+    const neckY = fy + perpSin * neckDist;
+    ctx.fillStyle = `rgba(${Math.floor(210 * arcLight)}, ${Math.floor(175 * arcLight)}, ${Math.floor(55 * arcLight)}, 1)`;
     ctx.beginPath();
-    ctx.ellipse(
-      fx + tipOffsetX,
-      fy + tipOffsetY,
-      1.8 * zoom,
-      2 * zoom,
-      bulletAngle + Math.PI * 0.5,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(neckX, neckY, casingW * 0.7, 1 * zoom, bulletAngle + Math.PI * 0.5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Specular highlight streak along casing
+    ctx.strokeStyle = `rgba(255, 245, 200, ${0.18 * arcLight})`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(
+      fx + cosA * casingW * 0.4 + perpCos * (-casingLen * 0.3),
+      fy + sinA * casingW * 0.4 + perpSin * (-casingLen * 0.3),
+    );
+    ctx.lineTo(
+      fx + cosA * casingW * 0.4 + perpCos * (casingLen * 0.2),
+      fy + sinA * casingW * 0.4 + perpSin * (casingLen * 0.2),
+    );
+    ctx.stroke();
+
+    // --- Bullet ogive tip ---
+    const tipDist = casingLen * 0.55;
+    const tipX = fx + perpCos * tipDist;
+    const tipY = fy + perpSin * tipDist;
+    const tipLen = 2.2 * zoom;
+    const tipW = casingW * 0.65;
+
+    // Copper jacket gradient
+    const tipGrad = ctx.createLinearGradient(
+      tipX - cosA * tipW,
+      tipY - sinA * tipW,
+      tipX + cosA * tipW,
+      tipY + sinA * tipW,
+    );
+    const copperLit = arcLight;
+    tipGrad.addColorStop(0, `rgba(${Math.floor(120 * copperLit)}, ${Math.floor(65 * copperLit)}, ${Math.floor(25 * copperLit)}, 1)`);
+    tipGrad.addColorStop(0.3, `rgba(${Math.floor(165 * copperLit)}, ${Math.floor(95 * copperLit)}, ${Math.floor(40 * copperLit)}, 1)`);
+    tipGrad.addColorStop(0.6, `rgba(${Math.floor(180 * copperLit)}, ${Math.floor(110 * copperLit)}, ${Math.floor(50 * copperLit)}, 1)`);
+    tipGrad.addColorStop(1, `rgba(${Math.floor(110 * copperLit)}, ${Math.floor(55 * copperLit)}, ${Math.floor(20 * copperLit)}, 1)`);
+
+    ctx.fillStyle = tipGrad;
+    ctx.save();
+    ctx.translate(tipX, tipY);
+    ctx.rotate(bulletAngle + Math.PI * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(-tipW, -tipLen * 0.3);
+    ctx.quadraticCurveTo(-tipW * 0.3, tipLen, 0, tipLen * 1.2);
+    ctx.quadraticCurveTo(tipW * 0.3, tipLen, tipW, -tipLen * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Tip specular dot
+    const specX = tipX + perpCos * tipLen * 0.4 + cosA * tipW * 0.2;
+    const specY = tipY + perpSin * tipLen * 0.4 + sinA * tipW * 0.2;
+    ctx.fillStyle = `rgba(255, 220, 180, ${0.25 * arcLight})`;
+    ctx.beginPath();
+    ctx.arc(specX, specY, 0.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- Link connector tab to next round ---
+    if (i < beltBulletCount - 1) {
+      const nextProgress = ((i + 1) / beltBulletCount + speed) % 1;
+      const nextPos = evalBezier(nextProgress);
+      const midLinkX = (fx + nextPos.x) * 0.5;
+      const midLinkY = (fy + nextPos.y) * 0.5;
+      ctx.strokeStyle = `rgba(${Math.floor(80 * arcLight)}, ${Math.floor(80 * arcLight)}, ${Math.floor(90 * arcLight)}, 0.5)`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(fx + cosA * linkW, fy + sinA * linkW);
+      ctx.lineTo(midLinkX, midLinkY);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(${Math.floor(80 * arcLight)}, ${Math.floor(80 * arcLight)}, ${Math.floor(90 * arcLight)}, 0.5)`;
+      ctx.beginPath();
+      ctx.moveTo(fx - cosA * linkW, fy - sinA * linkW);
+      ctx.lineTo(midLinkX, midLinkY);
+      ctx.stroke();
+    }
   }
 }
 

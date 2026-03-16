@@ -24,6 +24,7 @@ import {
   getChallengeMountainGridBounds,
   getChallengePathSegments,
   isChallengeMountainTopCell,
+  isMountainTerrainKind,
 } from "./challengeTerrain";
 import { drawPathDecorations } from "./pathDecorations";
 import { renderDecorationItem } from "../decorations/renderDecorationItem";
@@ -786,18 +787,38 @@ function renderChallengeSkyDecorations(
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
   if (themeKey === "grassland") {
-    for (let i = 0; i < 8; i++) {
-      const x = width * (0.05 + i * 0.12) + (skyRandom() - 0.5) * 30;
-      const y = height * (0.06 + skyRandom() * 0.14);
-      drawSoftCloud(
-        ctx,
-        x,
-        y,
-        width * (0.08 + skyRandom() * 0.06),
-        height * (0.05 + skyRandom() * 0.02),
-        palette.skyAccent,
-      );
+    // layered cumulus clouds — large fluffy shapes with varied sizes
+    for (let i = 0; i < 12; i++) {
+      const cx = width * (-0.05 + (i / 11) * 1.1) + (skyRandom() - 0.5) * 40;
+      const cy = height * (0.04 + skyRandom() * 0.12);
+      const cw = width * (0.06 + skyRandom() * 0.08);
+      const ch = height * (0.03 + skyRandom() * 0.02);
+      const puffs = 4 + Math.floor(skyRandom() * 4);
+      ctx.fillStyle = palette.skyAccent;
+      for (let p = 0; p < puffs; p++) {
+        const offX = (skyRandom() - 0.5) * cw * 0.8;
+        const offY = (skyRandom() - 0.5) * ch * 0.5;
+        const pr = cw * (0.2 + skyRandom() * 0.25);
+        const ph = ch * (0.4 + skyRandom() * 0.4);
+        ctx.beginPath();
+        ctx.ellipse(cx + offX, cy + offY, pr, ph, skyRandom() * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
+
+    // golden sunlight glow near horizon
+    ctx.save();
+    const sunGlowX = width * (0.75 + skyRandom() * 0.15);
+    const sunGlowY = height * 0.17;
+    const sunGlow = ctx.createRadialGradient(sunGlowX, sunGlowY, 0, sunGlowX, sunGlowY, width * 0.18);
+    sunGlow.addColorStop(0, "rgba(255,250,210,0.08)");
+    sunGlow.addColorStop(0.4, "rgba(255,240,180,0.04)");
+    sunGlow.addColorStop(1, "rgba(255,235,160,0)");
+    ctx.fillStyle = sunGlow;
+    ctx.beginPath();
+    ctx.arc(sunGlowX, sunGlowY, width * 0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
     return;
   }
 
@@ -1034,85 +1055,107 @@ function renderChallengeSkyDecorations(
     return;
   }
 
-  // volcanic
+  // volcanic — organic smoke, red glow, and ember motes
   const smokeRandom = createSeededRandom(mapSeed + 1437);
 
+  // red-sky ambient under-glow from below
   ctx.save();
-  const underGlow = ctx.createLinearGradient(0, height * 0.3, 0, height * 0.55);
-  underGlow.addColorStop(0, "rgba(255,60,10,0)");
-  underGlow.addColorStop(0.5, "rgba(255,60,10,0.025)");
+  const underGlow = ctx.createLinearGradient(0, height * 0.2, 0, height * 0.6);
+  underGlow.addColorStop(0, "rgba(255,40,5,0)");
+  underGlow.addColorStop(0.3, "rgba(255,50,10,0.03)");
+  underGlow.addColorStop(0.6, "rgba(255,60,15,0.04)");
   underGlow.addColorStop(1, "rgba(255,40,0,0)");
   ctx.fillStyle = underGlow;
-  ctx.fillRect(0, height * 0.3, width, height * 0.25);
+  ctx.fillRect(0, height * 0.2, width, height * 0.4);
   ctx.restore();
 
-  for (let p = 0; p < 4; p++) {
-    const baseX = width * (0.22 + p * 0.15);
-    const baseY = height * (0.18 + smokeRandom() * 0.1);
-    const plumeSize = 0.8 + smokeRandom() * 0.4;
-    for (let i = 0; i < 10; i++) {
-      const drift = i * 8 * plumeSize;
-      const spread = (10 + i * 2.5) * plumeSize;
-      const alpha = 0.1 - i * 0.008;
+  // organic smoke plumes — irregular lobed puffs instead of ellipses
+  for (let p = 0; p < 5; p++) {
+    const baseX = width * (0.12 + p * 0.18 + (smokeRandom() - 0.5) * 0.05);
+    const baseY = height * (0.2 + smokeRandom() * 0.1);
+    const plumeSize = 0.7 + smokeRandom() * 0.5;
+    for (let i = 0; i < 12; i++) {
+      const drift = i * 7 * plumeSize;
+      const spread = (8 + i * 3) * plumeSize;
+      const alpha = 0.09 - i * 0.006;
       if (alpha <= 0) break;
 
-      const r = 60 + i * 3;
-      const g = 45 + i * 3;
-      const b = 40 + i * 3;
+      const r = 55 + i * 4;
+      const g = 40 + i * 3;
+      const b = 35 + i * 3;
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
       ctx.beginPath();
-      ctx.ellipse(
-        baseX + Math.sin(i * 0.7 + p) * 10,
-        baseY - drift,
-        spread,
-        spread * 0.6,
-        0.1 + smokeRandom() * 0.1,
-        0,
-        Math.PI * 2,
-      );
+
+      // organic puff shape with lobes
+      const puffCx = baseX + Math.sin(i * 0.8 + p) * 12;
+      const puffCy = baseY - drift;
+      const lobes = 4 + Math.floor(smokeRandom() * 3);
+      for (let l = 0; l <= lobes * 2; l++) {
+        const angle = (l / (lobes * 2)) * Math.PI * 2;
+        const wobble = 0.75 + smokeRandom() * 0.45;
+        const px = puffCx + Math.cos(angle) * spread * wobble;
+        const py = puffCy + Math.sin(angle) * spread * 0.55 * wobble;
+        if (l === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          const midAngle = ((l - 0.5) / (lobes * 2)) * Math.PI * 2;
+          ctx.quadraticCurveTo(
+            puffCx + Math.cos(midAngle) * spread * (0.6 + smokeRandom() * 0.2),
+            puffCy + Math.sin(midAngle) * spread * 0.55 * (0.6 + smokeRandom() * 0.2),
+            px, py,
+          );
+        }
+      }
+      ctx.closePath();
       ctx.fill();
     }
 
-    if (smokeRandom() > 0.5) {
+    // base glow from lava below
+    if (smokeRandom() > 0.4) {
       ctx.save();
-      ctx.globalAlpha = 0.04;
-      const glowGrad = ctx.createRadialGradient(
-        baseX,
-        baseY + 8,
-        0,
-        baseX,
-        baseY + 8,
-        16,
-      );
+      ctx.globalAlpha = 0.05;
+      const glowGrad = ctx.createRadialGradient(baseX, baseY + 10, 0, baseX, baseY + 10, 20);
       glowGrad.addColorStop(0, "rgba(255,100,40,1)");
-      glowGrad.addColorStop(1, "rgba(255,70,20,0)");
+      glowGrad.addColorStop(0.5, "rgba(255,70,20,0.5)");
+      glowGrad.addColorStop(1, "rgba(255,40,10,0)");
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
-      ctx.arc(baseX, baseY + 8, 16, 0, Math.PI * 2);
+      ctx.arc(baseX, baseY + 10, 20, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
   }
 
+  // ember motes with glow halos drifting upward
+  ctx.save();
+  for (let i = 0; i < 25; i++) {
+    const ex = smokeRandom() * width;
+    const ey = height * (0.15 + smokeRandom() * 0.4);
+    const emberR = 0.3 + smokeRandom() * 1;
+    ctx.globalAlpha = 0.04 + smokeRandom() * 0.06;
+    const glow = ctx.createRadialGradient(ex, ey, 0, ex, ey, emberR * 3);
+    glow.addColorStop(0, "rgba(255,140,50,0.5)");
+    glow.addColorStop(0.4, "rgba(255,80,20,0.15)");
+    glow.addColorStop(1, "rgba(255,40,0,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(ex, ey, emberR * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // ash particles — tiny organic specks
   ctx.fillStyle = palette.skyDecor;
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 50; i++) {
     const x = smokeRandom() * width;
     const y = smokeRandom() * height * 0.58;
-    const size = 0.4 + smokeRandom() * 1.5;
+    const size = 0.3 + smokeRandom() * 1.2;
+    ctx.globalAlpha = 0.3 + smokeRandom() * 0.4;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  ctx.fillStyle = "rgba(255,140,50,0.25)";
-  for (let i = 0; i < 14; i++) {
-    const x = smokeRandom() * width;
-    const y = height * (0.22 + smokeRandom() * 0.32);
-    const size = 0.2 + smokeRandom() * 0.6;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.globalAlpha = 1;
 }
 
 export function renderChallengeMountainBackdrop(
@@ -1781,7 +1824,7 @@ export function renderStaticMapLayer({
     | "volcanic"
     | undefined;
   const isChallengeMountainLevel =
-    levelData?.levelKind === "challenge" &&
+    isMountainTerrainKind(levelData?.levelKind) &&
     !!mapThemeKey &&
     mapThemeKey in CHALLENGE_BACKDROP_PALETTES;
   const toScreen = (p: Position) =>

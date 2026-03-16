@@ -2,8 +2,6 @@ import type { Position } from "../../types";
 import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
   drawHorseTail,
   drawMuscularHorseBody,
   drawMuscularHorseLeg,
@@ -839,43 +837,63 @@ export function drawCavalryTroop(
   ctx.lineTo(x + size * 0.165, y - size * 0.35 + riderBob * 0.65);
   ctx.stroke();
 
-  // Arms for better mounted silhouette readability.
-  const rightArmBaseX = x + size * 0.23;
-  const rightArmBaseY = y - size * 0.28 + riderBob * 0.55;
-  const rightArmBaseAngle = isAttacking
-    ? -1.24 + attackPhase * 0.65
-    : -0.92 + Math.sin(time * 2.1) * 0.06;
-  const rightArmAngle = resolveWeaponRotation(
-    targetPos,
-    rightArmBaseX,
-    rightArmBaseY,
-    rightArmBaseAngle,
-    Math.PI / 2,
-    isAttacking ? 0.95 : 0.52,
-    WEAPON_LIMITS.rightArm,
+  // Arms connecting to weapons (lance + shield)
+  // Positions computed later; store shoulder refs for arm-to-grip angles
+  const cavRShoulderX = x + size * 0.2;
+  const cavRShoulderY = y - size * 0.28 + riderBob * 0.55;
+  const cavLShoulderX = x - size * 0.2;
+  const cavLShoulderY = y - size * 0.28 + riderBob * 0.55;
+
+  // Lance grip world position (will be computed in lance section; use estimated position here)
+  const lanceLungeEst = isAttacking
+    ? size * 0.32 * Math.sin(attackPhase * Math.PI)
+    : 0;
+  const lanceGripEstX = x + size * 0.26 + lanceLungeEst * 0.5;
+  const lanceGripEstY = y - size * 0.32 + gallop * 0.12 - lanceLungeEst * 0.3;
+  const cavArmToLanceAngle = Math.atan2(
+    lanceGripEstY - cavRShoulderY,
+    lanceGripEstX - cavRShoulderX,
   );
+
+  // Right arm → lance grip
   ctx.save();
-  ctx.translate(rightArmBaseX, rightArmBaseY);
-  ctx.rotate(rightArmAngle);
+  ctx.translate(cavRShoulderX, cavRShoulderY);
+  ctx.rotate(cavArmToLanceAngle);
   ctx.fillStyle = "#5e697b";
-  ctx.fillRect(-size * 0.045, 0, size * 0.09, size * 0.19);
+  ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
   ctx.fillStyle = "#8693a8";
-  ctx.fillRect(-size * 0.052, size * 0.135, size * 0.104, size * 0.07);
+  ctx.fillRect(size * 0.1, -size * 0.04, size * 0.09, size * 0.08);
   ctx.strokeStyle = `rgba(214, 172, 69, 0.72)`;
   ctx.lineWidth = 1 * zoom;
-  ctx.strokeRect(-size * 0.052, size * 0.135, size * 0.104, size * 0.07);
+  ctx.strokeRect(size * 0.1, -size * 0.04, size * 0.09, size * 0.08);
+  ctx.fillStyle = "#7a839a";
+  ctx.beginPath();
+  ctx.arc(size * 0.19, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
+  // Left arm → shield
+  const cavShieldX = x - size * 0.26;
+  const cavShieldY = y - size * 0.18 + gallop * 0.12;
+  const cavArmToShieldAngle = Math.atan2(
+    cavShieldY - cavLShoulderY,
+    cavShieldX - cavLShoulderX,
+  );
+
   ctx.save();
-  ctx.translate(x - size * 0.24, y - size * 0.28 + riderBob * 0.55);
-  ctx.rotate(-0.36 + Math.sin(time * 1.8) * 0.05);
+  ctx.translate(cavLShoulderX, cavLShoulderY);
+  ctx.rotate(cavArmToShieldAngle);
   ctx.fillStyle = "#5b6678";
-  ctx.fillRect(-size * 0.043, 0, size * 0.086, size * 0.18);
+  ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.16, size * 0.07);
   ctx.fillStyle = "#7d8ca2";
-  ctx.fillRect(-size * 0.05, size * 0.13, size * 0.1, size * 0.068);
+  ctx.fillRect(size * 0.08, -size * 0.04, size * 0.09, size * 0.08);
   ctx.strokeStyle = `rgba(214, 172, 69, 0.65)`;
   ctx.lineWidth = 0.95 * zoom;
-  ctx.strokeRect(-size * 0.05, size * 0.13, size * 0.1, size * 0.068);
+  ctx.strokeRect(size * 0.08, -size * 0.04, size * 0.09, size * 0.08);
+  ctx.fillStyle = "#6a7388";
+  ctx.beginPath();
+  ctx.arc(size * 0.17, 0, size * 0.028, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
   // Tabard with subtle trim (less extreme gold).
@@ -1123,67 +1141,229 @@ export function drawCavalryTroop(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Streamlined plume.
-  const plumeWave = Math.sin(time * 4.8) * 2.4;
-  const plumeWave2 = Math.sin(time * 5.3 + 0.5) * 1.8;
-  ctx.fillStyle = royalPurpleDark;
+  // === ROYAL HORSEHAIR PLUME (tall flowing crest) ===
+  const plumeWind = Math.sin(time * 4.2) * 1.8 + gallop * 0.3;
+  const plumeWhip = Math.sin(time * 5.5 + 0.6) * 1.0;
+  const plumeGusts = Math.sin(time * 3.3) * 0.5;
+  const plumeBaseY = helmY - size * 0.19;
+  const plumePeakH = size * 0.38;
+  const plumeSpread = size * 0.2;
+
+  // Rear drape (hair cascading behind helmet)
+  ctx.fillStyle = "rgba(25, 12, 40, 0.5)";
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.01, helmY - size * 0.18);
-  for (let i = 0; i < 6; i++) {
-    const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw = size * (0.04 + i * 0.017) + Math.sin(time * 6.8 + i * 0.8) * 2;
-    ctx.lineTo(x - pw + plumeWave + size * 0.01, py);
-  }
-  for (let i = 5; i >= 0; i--) {
-    const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw = size * (0.04 + i * 0.017) + Math.sin(time * 6.8 + i * 0.8) * 2;
-    ctx.lineTo(x + pw + plumeWave + size * 0.01, py);
-  }
-  ctx.closePath();
-  ctx.fill();
-  const plumeGrad = ctx.createLinearGradient(
-    x,
-    helmY - size * 0.18,
-    x,
-    helmY - size * 0.47,
+  ctx.moveTo(x + plumeSpread * 0.35, plumeBaseY);
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.55 + plumeWind * 0.5,
+    plumeBaseY + size * 0.03,
+    x + plumeSpread * 0.45 + plumeWind * 1.0 + plumeGusts,
+    plumeBaseY + size * 0.18,
   );
-  plumeGrad.addColorStop(0, royalPurpleMid);
-  plumeGrad.addColorStop(0.45, royalPurpleLight);
-  plumeGrad.addColorStop(1, royalPurpleDark);
-  ctx.fillStyle = plumeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x, helmY - size * 0.18);
-  for (let i = 0; i < 6; i++) {
-    const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw =
-      size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
-    ctx.lineTo(x - pw + plumeWave2, py);
-  }
-  for (let i = 5; i >= 0; i--) {
-    const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw =
-      size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
-    ctx.lineTo(x + pw + plumeWave2, py);
-  }
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.15 + plumeWind * 0.3,
+    plumeBaseY + size * 0.1,
+    x - plumeSpread * 0.1,
+    plumeBaseY + size * 0.02,
+  );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(215, 197, 252, 0.58)";
-  ctx.lineWidth = 1 * zoom;
-  ctx.globalAlpha = 0.6;
-  for (let feather = 0; feather < 4; feather++) {
-    const offset = (feather - 1.5) * size * 0.015;
-    const fw = Math.sin(time * 7 + feather * 0.7) * 1.7;
+
+  // Shadow body
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.beginPath();
+  ctx.moveTo(x - plumeSpread * 0.4, plumeBaseY + size * 0.01);
+  ctx.quadraticCurveTo(
+    x - plumeSpread * 0.15 + plumeWind * 0.25,
+    plumeBaseY - plumePeakH * 0.88,
+    x + plumeWind * 0.4 + plumeWhip * 0.3,
+    plumeBaseY - plumePeakH + size * 0.01,
+  );
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.25 + plumeWind * 0.7,
+    plumeBaseY - plumePeakH * 0.7,
+    x + plumeSpread * 0.5 + plumeWind * 0.9,
+    plumeBaseY + size * 0.01,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Base layer (deep royal purple)
+  const plumeBaseGrad = ctx.createLinearGradient(
+    x,
+    plumeBaseY,
+    x,
+    plumeBaseY - plumePeakH,
+  );
+  plumeBaseGrad.addColorStop(0, "#1a0e2a");
+  plumeBaseGrad.addColorStop(0.25, "#2a1844");
+  plumeBaseGrad.addColorStop(0.5, "#3a2460");
+  plumeBaseGrad.addColorStop(0.75, "#4a3078");
+  plumeBaseGrad.addColorStop(1, "#5a3c90");
+  ctx.fillStyle = plumeBaseGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - plumeSpread * 0.38, plumeBaseY);
+  ctx.quadraticCurveTo(
+    x - plumeSpread * 0.14 + plumeWind * 0.28,
+    plumeBaseY - plumePeakH * 0.9,
+    x + plumeWind * 0.45 + plumeWhip * 0.25,
+    plumeBaseY - plumePeakH,
+  );
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.24 + plumeWind * 0.72,
+    plumeBaseY - plumePeakH * 0.72,
+    x + plumeSpread * 0.48 + plumeWind * 0.88,
+    plumeBaseY,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Main body (rich purple with gradient)
+  const plumeMainGrad = ctx.createLinearGradient(
+    x,
+    plumeBaseY,
+    x + plumeWind * 0.3,
+    plumeBaseY - plumePeakH,
+  );
+  plumeMainGrad.addColorStop(0, royalPurpleDark);
+  plumeMainGrad.addColorStop(0.2, royalPurpleMid);
+  plumeMainGrad.addColorStop(0.5, royalPurpleLight);
+  plumeMainGrad.addColorStop(0.8, "#8a6cc8");
+  plumeMainGrad.addColorStop(1, royalPurpleMid);
+  ctx.fillStyle = plumeMainGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - plumeSpread * 0.3, plumeBaseY);
+  ctx.quadraticCurveTo(
+    x - plumeSpread * 0.08 + plumeWind * 0.32,
+    plumeBaseY - plumePeakH * 0.93,
+    x + plumeWind * 0.5 + plumeWhip * 0.2,
+    plumeBaseY - plumePeakH * 0.96,
+  );
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.18 + plumeWind * 0.68,
+    plumeBaseY - plumePeakH * 0.68,
+    x + plumeSpread * 0.4 + plumeWind * 0.82,
+    plumeBaseY,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Bright highlight layer (inner shimmer)
+  const plumeHiGrad = ctx.createLinearGradient(
+    x,
+    plumeBaseY - plumePeakH * 0.3,
+    x,
+    plumeBaseY - plumePeakH * 0.95,
+  );
+  plumeHiGrad.addColorStop(0, "rgba(140, 110, 210, 0.0)");
+  plumeHiGrad.addColorStop(0.3, "rgba(160, 130, 230, 0.5)");
+  plumeHiGrad.addColorStop(0.7, "rgba(180, 160, 240, 0.55)");
+  plumeHiGrad.addColorStop(1, "rgba(200, 180, 255, 0.4)");
+  ctx.fillStyle = plumeHiGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - plumeSpread * 0.18, plumeBaseY - plumePeakH * 0.15);
+  ctx.quadraticCurveTo(
+    x - plumeSpread * 0.04 + plumeWind * 0.35,
+    plumeBaseY - plumePeakH * 0.9,
+    x + plumeWind * 0.45 + plumeWhip * 0.15,
+    plumeBaseY - plumePeakH * 0.88,
+  );
+  ctx.quadraticCurveTo(
+    x + plumeSpread * 0.12 + plumeWind * 0.55,
+    plumeBaseY - plumePeakH * 0.6,
+    x + plumeSpread * 0.25 + plumeWind * 0.6,
+    plumeBaseY - plumePeakH * 0.1,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Individual horsehair strands for texture
+  for (let strand = 0; strand < 7; strand++) {
+    const strandT = strand / 6;
+    const strandPhase = time * (4.2 + strand * 0.5) + strand * 1.2;
+    const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 2.2);
+    const strandAlpha = 0.2 + Math.sin(time * 2.8 + strand * 0.8) * 0.1;
+    const startX =
+      x - plumeSpread * 0.28 + strandT * plumeSpread * 0.56;
+    const startY = plumeBaseY;
+    const peakScale = 0.7 + Math.sin(strandT * Math.PI) * 0.3;
+
+    ctx.strokeStyle =
+      strand % 2 === 0
+        ? `rgba(190, 170, 240, ${strandAlpha})`
+        : `rgba(150, 120, 210, ${strandAlpha})`;
+    ctx.lineWidth = (0.8 + strandT * 0.3) * zoom;
     ctx.beginPath();
-    ctx.moveTo(x + offset, helmY - size * 0.2);
+    ctx.moveTo(startX, startY);
     ctx.quadraticCurveTo(
-      x + offset + fw,
-      helmY - size * 0.31,
-      x + offset + plumeWave2 * 0.5,
-      helmY - size * 0.46,
+      startX + plumeWind * (0.3 + strandT * 0.5) + strandBend,
+      plumeBaseY - plumePeakH * peakScale,
+      startX +
+        plumeSpread * (0.1 + strandT * 0.2) +
+        plumeWind * (0.6 + strandT * 0.4) +
+        strandBend * 1.3,
+      plumeBaseY - plumePeakH * peakScale * 0.2,
     );
     ctx.stroke();
   }
-  ctx.globalAlpha = 1;
+
+  // Tip wisps at the peak
+  for (let wisp = 0; wisp < 4; wisp++) {
+    const wispT = wisp / 3;
+    const wispPhase = Math.sin(time * 7 + wisp * 1.8);
+    const wispAlpha = 0.25 + wispPhase * 0.12;
+    const wispX =
+      x -
+      plumeSpread * 0.04 +
+      wispT * plumeSpread * 0.18 +
+      plumeWind * (0.35 + wispT * 0.2);
+    const wispY = plumeBaseY - plumePeakH * (0.85 + wispT * 0.1);
+
+    ctx.strokeStyle = `rgba(200, 180, 255, ${wispAlpha})`;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(wispX, wispY);
+    ctx.quadraticCurveTo(
+      wispX + plumeWind * 0.7 + wispPhase * size * 0.04,
+      wispY - size * 0.04,
+      wispX + plumeWind * 1.1 + wispPhase * size * 0.06,
+      wispY + size * 0.02,
+    );
+    ctx.stroke();
+  }
+
+  // Gold crest clamp at base of plume
+  const clampGrad = ctx.createLinearGradient(
+    x - plumeSpread * 0.3,
+    plumeBaseY,
+    x + plumeSpread * 0.3,
+    plumeBaseY,
+  );
+  clampGrad.addColorStop(0, "#6a5020");
+  clampGrad.addColorStop(0.3, "#b09030");
+  clampGrad.addColorStop(0.5, "#d4b450");
+  clampGrad.addColorStop(0.7, "#b09030");
+  clampGrad.addColorStop(1, "#6a5020");
+  ctx.fillStyle = clampGrad;
+  ctx.beginPath();
+  ctx.roundRect(
+    x - plumeSpread * 0.3,
+    plumeBaseY - size * 0.01,
+    plumeSpread * 0.6,
+    size * 0.03,
+    size * 0.007,
+  );
+  ctx.fill();
+  ctx.strokeStyle = `rgba(255, 230, 160, ${0.2 + shimmer * 0.15})`;
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.stroke();
+  // Clamp gem
+  ctx.fillStyle = `rgba(140, 100, 220, ${0.6 + shimmer * 0.3})`;
+  ctx.shadowColor = "rgba(140, 100, 220, 0.4)";
+  ctx.shadowBlur = 3 * zoom;
+  ctx.beginPath();
+  ctx.arc(x, plumeBaseY + size * 0.005, size * 0.008, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
 
   // === ORNATE ROYAL LANCE ===
   ctx.save();
@@ -1536,14 +1716,4 @@ export function drawCavalryTroop(
   ctx.fill();
 
   ctx.restore();
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.cavalry,
-    { mounted: true, vanguard: true },
-  );
 }

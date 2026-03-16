@@ -11,6 +11,7 @@ import {
 import { worldToScreen } from "../../utils";
 import { drawOrganicBlobAt } from "../helpers";
 import { getLevelSpecialTowers } from "../../game/pageHelpers";
+import { isMountainTerrainKind } from "../maps/challengeTerrain";
 
 // Decoration types that receive an organic ground-transition blob.
 // Only manually-placed decorations (from LEVEL_DATA) are considered, so
@@ -604,7 +605,7 @@ export function renderDecorationTransitions(
   if (!levelData?.decorations) return;
 
   const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
-  const isChallenge = levelData.levelKind === "challenge";
+  const isChallenge = isMountainTerrainKind(levelData.levelKind);
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
 
@@ -659,7 +660,7 @@ export function renderSpecialTowerTransitions(
 ): void {
   const levelData = LEVEL_DATA[selectedMap];
   const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
-  const isChallenge = levelData?.levelKind === "challenge";
+  const isChallenge = isMountainTerrainKind(levelData?.levelKind);
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
 

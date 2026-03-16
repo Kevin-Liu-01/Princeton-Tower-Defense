@@ -4,8 +4,17 @@ import {
   TILE_SIZE,
   getLevelUniquePathSegments,
 } from "../../constants";
-import type { Position } from "../../types";
+import type { LevelKind, Position } from "../../types";
 import { distanceToLineSegment, gridToWorld, gridToWorldPath } from "../../utils";
+
+const MOUNTAIN_TERRAIN_KINDS: ReadonlySet<LevelKind> = new Set([
+  "challenge",
+  "sandbox",
+]);
+
+export function isMountainTerrainKind(kind: LevelKind | undefined): boolean {
+  return !!kind && MOUNTAIN_TERRAIN_KINDS.has(kind);
+}
 
 export interface ChallengePathSegment {
   start: Position;

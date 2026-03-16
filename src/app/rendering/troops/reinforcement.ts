@@ -302,19 +302,31 @@ export function drawReinforcementTroop(
     ctx.stroke();
   }
 
-  // Left arm and shield
+  // Left arm + shield
+  const reinfShieldX = x - size * 0.36;
+  const reinfShieldY = y + size * 0.07 + breathe * 0.6;
+  const reinfLShoulderX = x - size * 0.24;
+  const reinfLShoulderY = y + size * 0.03 + breathe * 0.5;
+  const reinfArmToShieldAngle = !isLancerTier
+    ? Math.atan2(reinfShieldY - reinfLShoulderY, reinfShieldX - reinfLShoulderX)
+    : -0.24;
+
   ctx.save();
-  ctx.translate(x - size * 0.28, y + size * 0.03 + breathe * 0.5);
-  ctx.rotate(-0.24);
+  ctx.translate(reinfLShoulderX, reinfLShoulderY);
+  ctx.rotate(reinfArmToShieldAngle);
   ctx.fillStyle = palette.armorMid;
-  ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.23);
+  ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.18, size * 0.08);
   ctx.fillStyle = palette.armorLight;
-  ctx.fillRect(-size * 0.065, size * 0.16, size * 0.13, size * 0.1);
+  ctx.fillRect(size * 0.1, -size * 0.045, size * 0.1, size * 0.09);
+  ctx.fillStyle = palette.armorMid;
+  ctx.beginPath();
+  ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
   if (!isLancerTier) {
     ctx.save();
-    ctx.translate(x - size * 0.36, y + size * 0.07 + breathe * 0.6);
+    ctx.translate(reinfShieldX, reinfShieldY);
     ctx.rotate(-0.42 + stride * 0.03);
     const shieldGrad = ctx.createLinearGradient(
       -size * 0.08,
@@ -346,34 +358,11 @@ export function drawReinforcementTroop(
     ctx.restore();
   }
 
-  // Right arm
-  ctx.save();
-  const armBaseAngle = isLancerTier
-    ? isAttacking
-      ? -1.18 + attackPhase * 2.2
-      : -0.46 + stride * 0.05
-    : isAttacking
-      ? -1.25 + attackPhase * 2.9
-      : 0.18 + stride * 0.04;
-  const armX = x + size * 0.29 + (isAttacking ? attackSwing * size * 0.08 : 0);
-  const armY = y + size * 0.02 + breathe * 0.5;
-  const armAngle = resolveWeaponRotation(
-    targetPos,
-    armX,
-    armY,
-    armBaseAngle,
-    Math.PI / 2,
-    isAttacking ? 1.0 : 0.58,
-  );
-  ctx.translate(armX, armY);
-  ctx.rotate(armAngle);
-  ctx.fillStyle = palette.armorMid;
-  ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.23);
-  ctx.fillStyle = palette.armorLight;
-  ctx.fillRect(-size * 0.065, size * 0.16, size * 0.13, size * 0.09);
-  ctx.restore();
+  // Right arm + weapon
+  // Compute weapon position first so arm can connect to grip
+  const reinfRShoulderX = x + size * 0.24;
+  const reinfRShoulderY = y + size * 0.02 + breathe * 0.5;
 
-  // Weapon
   ctx.save();
   if (isLancerTier) {
     const spearBaseAngle = isAttacking
@@ -390,6 +379,30 @@ export function drawReinforcementTroop(
       isAttacking ? 1.28 : 0.72,
       WEAPON_LIMITS.rightPole,
     );
+
+    // Spear grip at local (0, size*0.1) → world
+    const spearGripY = size * 0.1;
+    const spearGripWX = spearX - Math.sin(spearAngle) * spearGripY;
+    const spearGripWY = spearY + Math.cos(spearAngle) * spearGripY;
+    const reinfArmToSpearAngle = Math.atan2(
+      spearGripWY - reinfRShoulderY,
+      spearGripWX - reinfRShoulderX,
+    );
+
+    // Arm to spear
+    ctx.save();
+    ctx.translate(reinfRShoulderX, reinfRShoulderY);
+    ctx.rotate(reinfArmToSpearAngle);
+    ctx.fillStyle = palette.armorMid;
+    ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.18, size * 0.08);
+    ctx.fillStyle = palette.armorLight;
+    ctx.fillRect(size * 0.1, -size * 0.045, size * 0.1, size * 0.09);
+    ctx.fillStyle = palette.armorMid;
+    ctx.beginPath();
+    ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     ctx.translate(spearX, spearY);
     ctx.rotate(spearAngle);
 
@@ -447,6 +460,30 @@ export function drawReinforcementTroop(
       isAttacking ? 1.38 : 0.78,
       WEAPON_LIMITS.rightMelee,
     );
+
+    // Sword grip at local (0, size*0.14) → world
+    const sGripY = size * 0.14;
+    const sGripWX = swordX - Math.sin(swordAngle) * sGripY;
+    const sGripWY = swordY + Math.cos(swordAngle) * sGripY;
+    const reinfArmToSwordAngle = Math.atan2(
+      sGripWY - reinfRShoulderY,
+      sGripWX - reinfRShoulderX,
+    );
+
+    // Arm to sword
+    ctx.save();
+    ctx.translate(reinfRShoulderX, reinfRShoulderY);
+    ctx.rotate(reinfArmToSwordAngle);
+    ctx.fillStyle = palette.armorMid;
+    ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.18, size * 0.08);
+    ctx.fillStyle = palette.armorLight;
+    ctx.fillRect(size * 0.1, -size * 0.045, size * 0.1, size * 0.09);
+    ctx.fillStyle = palette.armorMid;
+    ctx.beginPath();
+    ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     ctx.translate(swordX, swordY);
     ctx.rotate(swordAngle);
     ctx.fillStyle = "#2d1f16";
@@ -576,28 +613,255 @@ export function drawReinforcementTroop(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Crest progression
-  if (tier >= 1) {
-    ctx.fillStyle = palette.trim;
+  // === CREST / PLUME PROGRESSION ===
+  const crestBaseY = y - size * 0.54 + breathe * 0.2 + headYOffset;
+  const crestWind = Math.sin(time * 4.5) * 1.5 + (isAttacking ? attackDrive * 2.0 : 0);
+  const crestWhip = Math.sin(time * 5.6 + 0.5) * 0.9;
+
+  if (tier >= 1 && tier < 3) {
+    // Tier 1-2: Short pointed crest with gradient
+    const crestH = size * 0.1 + tier * size * 0.02;
+    const crestW = size * 0.035;
+    const smallCrestGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x,
+      crestBaseY - crestH,
+    );
+    smallCrestGrad.addColorStop(0, palette.armorMid);
+    smallCrestGrad.addColorStop(0.5, palette.trim);
+    smallCrestGrad.addColorStop(1, palette.armorLight);
+    ctx.fillStyle = smallCrestGrad;
     ctx.beginPath();
-    ctx.moveTo(x, y - size * 0.58 + breathe * 0.2 + headYOffset);
-    ctx.lineTo(x - size * 0.022, y - size * 0.52 + breathe * 0.2 + headYOffset);
-    ctx.lineTo(x + size * 0.022, y - size * 0.52 + breathe * 0.2 + headYOffset);
+    ctx.moveTo(x, crestBaseY - crestH + crestWind * 0.3);
+    ctx.quadraticCurveTo(
+      x - crestW * 1.2,
+      crestBaseY - crestH * 0.4,
+      x - crestW,
+      crestBaseY + size * 0.01,
+    );
+    ctx.lineTo(x + crestW, crestBaseY + size * 0.01);
+    ctx.quadraticCurveTo(
+      x + crestW * 1.2,
+      crestBaseY - crestH * 0.4,
+      x,
+      crestBaseY - crestH + crestWind * 0.3,
+    );
     ctx.closePath();
     ctx.fill();
+    ctx.strokeStyle = palette.trim;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
   }
 
   if (tier >= 3) {
-    ctx.strokeStyle = palette.trim;
-    ctx.lineWidth = 1.7 * zoom;
+    // Tier 3+: Full flowing horsehair plume that grows with tier
+    const plumePeakH = size * (0.22 + (tier - 3) * 0.06);
+    const plumeWidth = size * (0.13 + (tier - 3) * 0.025);
+
+    // Rear hair drape
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
     ctx.beginPath();
-    ctx.moveTo(x, y - size * 0.54 + breathe * 0.2 + headYOffset);
+    ctx.moveTo(x + plumeWidth * 0.25, crestBaseY);
     ctx.quadraticCurveTo(
-      x + size * 0.14 + stride * 0.8,
-      y - size * 0.66 + headYOffset,
-      x + size * 0.1 + stride * 0.5,
-      y - size * 0.46 + breathe * 0.2 + headYOffset,
+      x + plumeWidth * 0.5 + crestWind * 0.4,
+      crestBaseY + size * 0.03,
+      x + plumeWidth * 0.4 + crestWind * 0.8,
+      crestBaseY + size * 0.15,
     );
+    ctx.quadraticCurveTo(
+      x + plumeWidth * 0.1 + crestWind * 0.2,
+      crestBaseY + size * 0.08,
+      x - plumeWidth * 0.1,
+      crestBaseY + size * 0.01,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Shadow body
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.moveTo(x - plumeWidth * 0.9, crestBaseY + size * 0.01);
+    ctx.quadraticCurveTo(
+      x - plumeWidth * 0.35 + crestWind * 0.2,
+      crestBaseY - plumePeakH * 0.88,
+      x + crestWind * 0.35,
+      crestBaseY - plumePeakH + size * 0.01,
+    );
+    ctx.quadraticCurveTo(
+      x + plumeWidth * 0.5 + crestWind * 0.6,
+      crestBaseY - plumePeakH * 0.65,
+      x + plumeWidth * 1.0 + crestWind * 0.8,
+      crestBaseY + size * 0.01,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Base layer (dark armor tones)
+    const plumeBaseGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x,
+      crestBaseY - plumePeakH,
+    );
+    plumeBaseGrad.addColorStop(0, palette.armorDark);
+    plumeBaseGrad.addColorStop(0.3, palette.armorMid);
+    plumeBaseGrad.addColorStop(0.6, palette.armorLight);
+    plumeBaseGrad.addColorStop(1, palette.armorMid);
+    ctx.fillStyle = plumeBaseGrad;
+    ctx.beginPath();
+    ctx.moveTo(x - plumeWidth * 0.85, crestBaseY);
+    ctx.quadraticCurveTo(
+      x - plumeWidth * 0.3 + crestWind * 0.22,
+      crestBaseY - plumePeakH * 0.92,
+      x + crestWind * 0.38 + crestWhip * 0.2,
+      crestBaseY - plumePeakH,
+    );
+    ctx.quadraticCurveTo(
+      x + plumeWidth * 0.45 + crestWind * 0.62,
+      crestBaseY - plumePeakH * 0.68,
+      x + plumeWidth * 0.95 + crestWind * 0.8,
+      crestBaseY,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Main body (trim-colored rich gradient)
+    const plumeMainGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY,
+      x + crestWind * 0.2,
+      crestBaseY - plumePeakH,
+    );
+    plumeMainGrad.addColorStop(0, palette.armorMid);
+    plumeMainGrad.addColorStop(0.2, palette.armorLight);
+    plumeMainGrad.addColorStop(0.45, palette.trim);
+    plumeMainGrad.addColorStop(0.7, palette.armorLight);
+    plumeMainGrad.addColorStop(1, palette.armorMid);
+    ctx.fillStyle = plumeMainGrad;
+    ctx.beginPath();
+    ctx.moveTo(x - plumeWidth * 0.7, crestBaseY);
+    ctx.quadraticCurveTo(
+      x - plumeWidth * 0.2 + crestWind * 0.26,
+      crestBaseY - plumePeakH * 0.94,
+      x + crestWind * 0.42 + crestWhip * 0.15,
+      crestBaseY - plumePeakH * 0.97,
+    );
+    ctx.quadraticCurveTo(
+      x + plumeWidth * 0.35 + crestWind * 0.58,
+      crestBaseY - plumePeakH * 0.64,
+      x + plumeWidth * 0.8 + crestWind * 0.74,
+      crestBaseY,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner highlight shimmer
+    const plumeHiGrad = ctx.createLinearGradient(
+      x,
+      crestBaseY - plumePeakH * 0.2,
+      x,
+      crestBaseY - plumePeakH * 0.9,
+    );
+    plumeHiGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+    plumeHiGrad.addColorStop(0.35, "rgba(255, 250, 220, 0.3)");
+    plumeHiGrad.addColorStop(0.65, "rgba(255, 250, 220, 0.25)");
+    plumeHiGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = plumeHiGrad;
+    ctx.beginPath();
+    ctx.moveTo(x - plumeWidth * 0.35, crestBaseY - plumePeakH * 0.1);
+    ctx.quadraticCurveTo(
+      x - plumeWidth * 0.1 + crestWind * 0.3,
+      crestBaseY - plumePeakH * 0.9,
+      x + crestWind * 0.4 + crestWhip * 0.1,
+      crestBaseY - plumePeakH * 0.86,
+    );
+    ctx.quadraticCurveTo(
+      x + plumeWidth * 0.2 + crestWind * 0.45,
+      crestBaseY - plumePeakH * 0.55,
+      x + plumeWidth * 0.4 + crestWind * 0.5,
+      crestBaseY - plumePeakH * 0.06,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Hair strands (more at higher tiers)
+    const strandCount = 4 + tier;
+    for (let strand = 0; strand < strandCount; strand++) {
+      const strandT = strand / (strandCount - 1);
+      const strandPhase = time * (3.8 + strand * 0.5) + strand * 1.1;
+      const strandBend = Math.sin(strandPhase) * (1.0 + strandT * 2.0);
+      const strandAlpha = 0.15 + Math.sin(time * 2.5 + strand * 0.8) * 0.08;
+      const startX = x - plumeWidth * 0.6 + strandT * plumeWidth * 1.2;
+      const startY = crestBaseY;
+      const peakScale = 0.6 + Math.sin(strandT * Math.PI) * 0.4;
+
+      ctx.strokeStyle = `rgba(255, 250, 230, ${strandAlpha})`;
+      ctx.lineWidth = (0.6 + strandT * 0.3) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(
+        startX + crestWind * (0.2 + strandT * 0.5) + strandBend,
+        crestBaseY - plumePeakH * peakScale,
+        startX +
+          plumeWidth * (0.06 + strandT * 0.2) +
+          crestWind * (0.5 + strandT * 0.4) +
+          strandBend * 1.3,
+        crestBaseY - plumePeakH * peakScale * 0.15,
+      );
+      ctx.stroke();
+    }
+
+    // Tip wisps (tier 4+)
+    if (tier >= 4) {
+      for (let wisp = 0; wisp < 3; wisp++) {
+        const wispT = wisp / 2;
+        const wispPhase = Math.sin(time * 7.2 + wisp * 1.7);
+        const wispAlpha = 0.18 + wispPhase * 0.08;
+        const wispX =
+          x - plumeWidth * 0.05 +
+          wispT * plumeWidth * 0.15 +
+          crestWind * (0.28 + wispT * 0.15);
+        const wispY = crestBaseY - plumePeakH * (0.8 + wispT * 0.12);
+
+        ctx.strokeStyle = `rgba(255, 248, 225, ${wispAlpha})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(wispX, wispY);
+        ctx.quadraticCurveTo(
+          wispX + crestWind * 0.55 + wispPhase * size * 0.035,
+          wispY - size * 0.04,
+          wispX + crestWind * 0.9 + wispPhase * size * 0.05,
+          wispY + size * 0.02,
+        );
+        ctx.stroke();
+      }
+    }
+
+    // Gold crest clamp at base
+    const clampGrad = ctx.createLinearGradient(
+      x - plumeWidth * 0.7,
+      crestBaseY,
+      x + plumeWidth * 0.7,
+      crestBaseY,
+    );
+    clampGrad.addColorStop(0, "#5a4518");
+    clampGrad.addColorStop(0.3, "#a08028");
+    clampGrad.addColorStop(0.5, "#c4a440");
+    clampGrad.addColorStop(0.7, "#a08028");
+    clampGrad.addColorStop(1, "#5a4518");
+    ctx.fillStyle = clampGrad;
+    ctx.beginPath();
+    ctx.roundRect(
+      x - plumeWidth * 0.7,
+      crestBaseY - size * 0.006,
+      plumeWidth * 1.4,
+      size * 0.022,
+      size * 0.005,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 230, 160, 0.2)";
+    ctx.lineWidth = 0.4 * zoom;
     ctx.stroke();
   }
 
@@ -662,8 +926,6 @@ export function drawReinforcementTroop(
     ctx.restore();
   }
 
-  ctx.restore();
-
   const reinforcementFinishStyle =
     tier >= 5
       ? TROOP_MASTERWORK_STYLES.cavalry
@@ -680,4 +942,5 @@ export function drawReinforcementTroop(
     reinforcementFinishStyle,
     { vanguard: tier >= 3 },
   );
+  ctx.restore();
 }

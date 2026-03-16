@@ -25,6 +25,31 @@ interface DecorationCache {
   timeBucket: number;
 }
 
+interface FogOverlayCache {
+  canvas: HTMLCanvasElement | null;
+  w: number;
+  h: number;
+}
+
+interface PathCache {
+  canvas: HTMLCanvasElement | null;
+  w: number;
+  h: number;
+  timeBucket: number;
+  unlockedKey: string;
+}
+
+interface NodeCache {
+  canvas: HTMLCanvasElement | null;
+  w: number;
+  h: number;
+  timeBucket: number;
+  hoveredLevel: string | null;
+  selectedLevel: string | null;
+  starsKey: string;
+  unlockedKey: string;
+}
+
 interface DrawWorldMapParams {
   canvasRef: RefObject<HTMLCanvasElement>;
   mapHeight: number;
@@ -40,6 +65,9 @@ interface DrawWorldMapParams {
   isMobile?: boolean;
   staticBgCache?: MutableRefObject<StaticBgCache>;
   decorationCache?: MutableRefObject<DecorationCache>;
+  fogOverlayCache?: MutableRefObject<FogOverlayCache>;
+  pathCache?: MutableRefObject<PathCache>;
+  nodeCache?: MutableRefObject<NodeCache>;
 }
 
 export const drawWorldMapCanvas = ({
@@ -57,6 +85,9 @@ export const drawWorldMapCanvas = ({
   isMobile = false,
   staticBgCache,
   decorationCache,
+  fogOverlayCache,
+  pathCache,
+  nodeCache,
 }: DrawWorldMapParams): void => {
   const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
@@ -70,7 +101,7 @@ export const drawWorldMapCanvas = ({
   let ctx: CanvasRenderingContext2D = rawCtx;
 
   const rawDpr = window.devicePixelRatio || 1;
-  const dpr = Math.min(rawDpr, isMobile ? 1.5 : 2);
+  const dpr = Math.min(rawDpr, isMobile ? 1 : 2);
   const width = MAP_WIDTH;
   const height = mapHeight;
   const mapScale = Math.max(1.0, Math.min(1.5, containerWidth / MAP_WIDTH));
@@ -9956,8 +9987,8 @@ export const drawWorldMapCanvas = ({
     ctx.restore();
   };
 
-  // --- Decoration layer caching (ground + structures at ~5fps) ---
-  const DECOR_FPS = 50;
+  // --- Decoration layer caching ---
+  const DECOR_FPS = isMobile ? 30 : 50;
   const decorTimeBucket = Math.floor(time * DECOR_FPS);
   const decorCacheValid =
     decorationCache != null &&
@@ -10976,7 +11007,42 @@ export const drawWorldMapCanvas = ({
     ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
   }
 
-  // --- PATH CONNECTIONS ---
+  // --- PATH CONNECTIONS (cached at reduced fps) ---
+  const PATH_FPS = isMobile ? 5 : 10;
+  const pathTimeBucket = Math.floor(time * PATH_FPS);
+  const pathUnlockedKey = unlockedMaps.join(",");
+  const pathCacheValid =
+    pathCache != null &&
+    pathCache.current.canvas !== null &&
+    pathCache.current.w === displayW &&
+    pathCache.current.h === displayH &&
+    pathCache.current.timeBucket === pathTimeBucket &&
+    pathCache.current.unlockedKey === pathUnlockedKey;
+
+  let _pathSavedCtx: CanvasRenderingContext2D | undefined;
+
+  if (pathCache && !pathCacheValid) {
+    const pc =
+      pathCache.current.canvas ?? document.createElement("canvas");
+    pc.width = displayW * dpr;
+    pc.height = displayH * dpr;
+    const pCtx = pc.getContext("2d");
+    if (pCtx) {
+      pCtx.clearRect(0, 0, pc.width, pc.height);
+      _pathSavedCtx = ctx;
+      ctx = pCtx;
+      ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+      pathCache.current = {
+        canvas: pc,
+        w: displayW,
+        h: displayH,
+        timeBucket: pathTimeBucket,
+        unlockedKey: pathUnlockedKey,
+      };
+    }
+  }
+
+  if (!pathCacheValid) {
   const LOCKED_PATH_COLORS: Record<
     string,
     { partial: string; locked: string }
@@ -11082,7 +11148,8 @@ export const drawWorldMapCanvas = ({
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        for (let orb = 0; orb < 3; orb++) {
+        const orbCount = isMobile ? 1 : 3;
+        for (let orb = 0; orb < orbCount; orb++) {
           const dotPos = (time * 0.4 + orb * 0.33) % 1;
           const t = dotPos;
           const mt = 1 - t;
@@ -11126,6 +11193,19 @@ export const drawWorldMapCanvas = ({
       }
     });
   });
+
+  } // end !pathCacheValid
+
+  if (_pathSavedCtx) {
+    ctx = _pathSavedCtx;
+  }
+  if (pathCache?.current.canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(pathCache.current.canvas, 0, 0);
+    ctx.restore();
+    ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+  }
 
   type NodePalette = {
     glowSelected: string;
@@ -13827,7 +13907,49 @@ export const drawWorldMapCanvas = ({
     ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
   }
 
-  // --- LEVEL NODES ---
+  // --- LEVEL NODES (cached at reduced fps + state invalidation) ---
+  const NODE_FPS = isMobile ? 5 : 15;
+  const nodeTimeBucket = Math.floor(time * NODE_FPS);
+  const nodeStarsKey = JSON.stringify(levelStars);
+  const nodeUnlockedKey = unlockedMaps.join(",");
+  const nodeCacheValid =
+    nodeCache != null &&
+    nodeCache.current.canvas !== null &&
+    nodeCache.current.w === displayW &&
+    nodeCache.current.h === displayH &&
+    nodeCache.current.timeBucket === nodeTimeBucket &&
+    nodeCache.current.hoveredLevel === hoveredLevel &&
+    nodeCache.current.selectedLevel === selectedLevel &&
+    nodeCache.current.starsKey === nodeStarsKey &&
+    nodeCache.current.unlockedKey === nodeUnlockedKey;
+
+  let _nodeSavedCtx: CanvasRenderingContext2D | undefined;
+
+  if (nodeCache && !nodeCacheValid) {
+    const nc =
+      nodeCache.current.canvas ?? document.createElement("canvas");
+    nc.width = displayW * dpr;
+    nc.height = displayH * dpr;
+    const nCtx = nc.getContext("2d");
+    if (nCtx) {
+      nCtx.clearRect(0, 0, nc.width, nc.height);
+      _nodeSavedCtx = ctx;
+      ctx = nCtx;
+      ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+      nodeCache.current = {
+        canvas: nc,
+        w: displayW,
+        h: displayH,
+        timeBucket: nodeTimeBucket,
+        hoveredLevel,
+        selectedLevel,
+        starsKey: nodeStarsKey,
+        unlockedKey: nodeUnlockedKey,
+      };
+    }
+  }
+
+  if (!nodeCacheValid) {
   allLevels.forEach((level) => {
     const x = level.x;
     const y = getY(level.y);
@@ -14153,7 +14275,12 @@ export const drawWorldMapCanvas = ({
         ctx.fillStyle = "#FF6830";
         ctx.beginPath();
         ctx.moveTo(0.5 * s, -12 * s);
-        ctx.quadraticCurveTo(4 * s, -11 * s + wave, 7 * s, -11.5 * s + wave * 0.7);
+        ctx.quadraticCurveTo(
+          4 * s,
+          -11 * s + wave,
+          7 * s,
+          -11.5 * s + wave * 0.7,
+        );
         ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
         ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
         ctx.closePath();
@@ -14777,14 +14904,28 @@ export const drawWorldMapCanvas = ({
     }
   });
 
+  } // end !nodeCacheValid
+
+  if (_nodeSavedCtx) {
+    ctx = _nodeSavedCtx;
+  }
+  if (nodeCache?.current.canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(nodeCache.current.canvas, 0, 0);
+    ctx.restore();
+    ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
+  }
+
   // --- MARCHING ENEMIES near selected level ---
   if (selectedLevel) {
     const level = getLevelById(selectedLevel);
     if (level) {
       const lx = level.x;
       const ly = getY(level.y);
+      const marchCount = isMobile ? 3 : 5;
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < marchCount; i++) {
         const offset = i * 18;
         const marchPhase = time * 3 + i * 1.2;
         const ex = lx + 50 + offset + Math.sin(marchPhase) * 3;
@@ -14970,7 +15111,7 @@ export const drawWorldMapCanvas = ({
 
   // === ATMOSPHERIC CLOUD LAYER ===
   ctx.save();
-  for (let c = 0; c < (isMobile ? 5 : 12); c++) {
+  for (let c = 0; c < (isMobile ? 3 : 12); c++) {
     const cloudBaseX =
       seededRandom(c * 37) * width + Math.sin(time * 0.15 + c * 2) * 40;
     const cloudBaseY = 30 + seededRandom(c * 37 + 1) * (height * 0.25);
@@ -14988,7 +15129,7 @@ export const drawWorldMapCanvas = ({
     ctx.fillStyle = cloudTint + "1)";
 
     // Cloud is several overlapping ellipses
-    for (let blob = 0; blob < 4; blob++) {
+    for (let blob = 0; blob < (isMobile ? 2 : 4); blob++) {
       const blobX = cloudBaseX + (blob - 1.5) * cloudW * 0.25;
       const blobY = cloudBaseY + Math.sin(blob * 1.5) * cloudH * 0.3;
       const blobW = cloudW * (0.3 + seededRandom(c + blob * 7) * 0.25);
@@ -15004,7 +15145,7 @@ export const drawWorldMapCanvas = ({
   // === FLYING CREATURES ===
   // Birds in grassland/swamp, bats in volcanic
   ctx.save();
-  for (let b = 0; b < (isMobile ? 3 : 8); b++) {
+  for (let b = 0; b < (isMobile ? 2 : 8); b++) {
     const birdBaseX = seededRandom(b * 53) * width;
     const birdBaseY = 15 + seededRandom(b * 53 + 1) * 35;
     const birdX =
@@ -15049,7 +15190,7 @@ export const drawWorldMapCanvas = ({
 
   // === ANIMATED DUST MOTES / PARTICLES ===
   ctx.save();
-  for (let d = 0; d < (isMobile ? 10 : 30); d++) {
+  for (let d = 0; d < (isMobile ? 5 : 30); d++) {
     const dustX =
       seededRandom(d * 67) * width + Math.sin(time * 0.4 + d * 1.3) * 20;
     const dustY =
@@ -15071,73 +15212,87 @@ export const drawWorldMapCanvas = ({
   }
   ctx.restore();
 
-  // === ENHANCED FOG EDGES ===
-  // Left fog - deep green tint for grassland
-  const leftFog = ctx.createLinearGradient(0, 0, 70, 0);
-  leftFog.addColorStop(0, "rgba(15, 20, 8, 0.98)");
-  leftFog.addColorStop(0.4, "rgba(20, 25, 10, 0.6)");
-  leftFog.addColorStop(0.7, "rgba(25, 30, 12, 0.25)");
-  leftFog.addColorStop(1, "rgba(25, 30, 12, 0)");
-  ctx.fillStyle = leftFog;
-  ctx.fillRect(0, 0, 70, height);
+  // === ENHANCED FOG EDGES (cached — purely static overlay) ===
+  const fogCacheValid =
+    fogOverlayCache != null &&
+    fogOverlayCache.current.canvas !== null &&
+    fogOverlayCache.current.w === displayW &&
+    fogOverlayCache.current.h === displayH;
 
-  // Right fog - red/volcanic tint
-  const rightFog = ctx.createLinearGradient(width - 70, 0, width, 0);
-  rightFog.addColorStop(0, "rgba(30, 10, 5, 0)");
-  rightFog.addColorStop(0.3, "rgba(35, 12, 5, 0.25)");
-  rightFog.addColorStop(0.6, "rgba(40, 15, 8, 0.6)");
-  rightFog.addColorStop(1, "rgba(30, 8, 3, 0.98)");
-  ctx.fillStyle = rightFog;
-  ctx.fillRect(width - 70, 0, 70, height);
+  if (fogOverlayCache && !fogCacheValid) {
+    const fc =
+      fogOverlayCache.current.canvas ?? document.createElement("canvas");
+    fc.width = displayW * dpr;
+    fc.height = displayH * dpr;
+    const fCtx = fc.getContext("2d");
+    if (fCtx) {
+      fCtx.clearRect(0, 0, fc.width, fc.height);
+      fCtx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
 
-  // Top fog - dark atmospheric
-  const topFog = ctx.createLinearGradient(0, 0, 0, 45);
-  topFog.addColorStop(0, "rgba(10, 5, 2, 0.85)");
-  topFog.addColorStop(0.5, "rgba(15, 8, 4, 0.35)");
-  topFog.addColorStop(1, "rgba(20, 10, 5, 0)");
-  ctx.fillStyle = topFog;
-  ctx.fillRect(0, 0, width, 45);
+      const leftFog = fCtx.createLinearGradient(0, 0, 70, 0);
+      leftFog.addColorStop(0, "rgba(15, 20, 8, 0.98)");
+      leftFog.addColorStop(0.4, "rgba(20, 25, 10, 0.6)");
+      leftFog.addColorStop(0.7, "rgba(25, 30, 12, 0.25)");
+      leftFog.addColorStop(1, "rgba(25, 30, 12, 0)");
+      fCtx.fillStyle = leftFog;
+      fCtx.fillRect(0, 0, 70, height);
 
-  // Bottom fog - deep ground shadow
-  const bottomFog = ctx.createLinearGradient(0, height - 50, 0, height);
-  bottomFog.addColorStop(0, "rgba(15, 8, 3, 0)");
-  bottomFog.addColorStop(0.3, "rgba(15, 8, 3, 0.2)");
-  bottomFog.addColorStop(0.6, "rgba(12, 6, 2, 0.55)");
-  bottomFog.addColorStop(1, "rgba(10, 5, 2, 0.95)");
-  ctx.fillStyle = bottomFog;
-  ctx.fillRect(0, height - 50, width, 50);
+      const rightFog = fCtx.createLinearGradient(width - 70, 0, width, 0);
+      rightFog.addColorStop(0, "rgba(30, 10, 5, 0)");
+      rightFog.addColorStop(0.3, "rgba(35, 12, 5, 0.25)");
+      rightFog.addColorStop(0.6, "rgba(40, 15, 8, 0.6)");
+      rightFog.addColorStop(1, "rgba(30, 8, 3, 0.98)");
+      fCtx.fillStyle = rightFog;
+      fCtx.fillRect(width - 70, 0, 70, height);
 
-  // Corner darkening for frame effect
-  const cornerSize = 120;
-  // Top-left
-  const tlGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, cornerSize);
-  tlGrad.addColorStop(0, "rgba(5,3,1,0.5)");
-  tlGrad.addColorStop(1, "rgba(5,3,1,0)");
-  ctx.fillStyle = tlGrad;
-  ctx.fillRect(0, 0, cornerSize, cornerSize);
-  // Top-right
-  const trGrad = ctx.createRadialGradient(width, 0, 0, width, 0, cornerSize);
-  trGrad.addColorStop(0, "rgba(5,3,1,0.5)");
-  trGrad.addColorStop(1, "rgba(5,3,1,0)");
-  ctx.fillStyle = trGrad;
-  ctx.fillRect(width - cornerSize, 0, cornerSize, cornerSize);
-  // Bottom-left
-  const blGrad = ctx.createRadialGradient(0, height, 0, 0, height, cornerSize);
-  blGrad.addColorStop(0, "rgba(5,3,1,0.5)");
-  blGrad.addColorStop(1, "rgba(5,3,1,0)");
-  ctx.fillStyle = blGrad;
-  ctx.fillRect(0, height - cornerSize, cornerSize, cornerSize);
-  // Bottom-right
-  const brGrad = ctx.createRadialGradient(
-    width,
-    height,
-    0,
-    width,
-    height,
-    cornerSize,
-  );
-  brGrad.addColorStop(0, "rgba(5,3,1,0.5)");
-  brGrad.addColorStop(1, "rgba(5,3,1,0)");
-  ctx.fillStyle = brGrad;
-  ctx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
+      const topFog = fCtx.createLinearGradient(0, 0, 0, 45);
+      topFog.addColorStop(0, "rgba(10, 5, 2, 0.85)");
+      topFog.addColorStop(0.5, "rgba(15, 8, 4, 0.35)");
+      topFog.addColorStop(1, "rgba(20, 10, 5, 0)");
+      fCtx.fillStyle = topFog;
+      fCtx.fillRect(0, 0, width, 45);
+
+      const bottomFog = fCtx.createLinearGradient(0, height - 50, 0, height);
+      bottomFog.addColorStop(0, "rgba(15, 8, 3, 0)");
+      bottomFog.addColorStop(0.3, "rgba(15, 8, 3, 0.2)");
+      bottomFog.addColorStop(0.6, "rgba(12, 6, 2, 0.55)");
+      bottomFog.addColorStop(1, "rgba(10, 5, 2, 0.95)");
+      fCtx.fillStyle = bottomFog;
+      fCtx.fillRect(0, height - 50, width, 50);
+
+      const cornerSize = 120;
+      const tlGrad = fCtx.createRadialGradient(0, 0, 0, 0, 0, cornerSize);
+      tlGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+      tlGrad.addColorStop(1, "rgba(5,3,1,0)");
+      fCtx.fillStyle = tlGrad;
+      fCtx.fillRect(0, 0, cornerSize, cornerSize);
+
+      const trGrad = fCtx.createRadialGradient(width, 0, 0, width, 0, cornerSize);
+      trGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+      trGrad.addColorStop(1, "rgba(5,3,1,0)");
+      fCtx.fillStyle = trGrad;
+      fCtx.fillRect(width - cornerSize, 0, cornerSize, cornerSize);
+
+      const blGrad = fCtx.createRadialGradient(0, height, 0, 0, height, cornerSize);
+      blGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+      blGrad.addColorStop(1, "rgba(5,3,1,0)");
+      fCtx.fillStyle = blGrad;
+      fCtx.fillRect(0, height - cornerSize, cornerSize, cornerSize);
+
+      const brGrad = fCtx.createRadialGradient(width, height, 0, width, height, cornerSize);
+      brGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+      brGrad.addColorStop(1, "rgba(5,3,1,0)");
+      fCtx.fillStyle = brGrad;
+      fCtx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
+
+      fogOverlayCache.current = { canvas: fc, w: displayW, h: displayH };
+    }
+  }
+
+  if (fogOverlayCache?.current.canvas) {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(fogOverlayCache.current.canvas, 0, 0);
+    ctx.restore();
+  }
 };

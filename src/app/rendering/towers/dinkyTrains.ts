@@ -1,7 +1,11 @@
 import type { Tower, Position } from "../../types";
 import { ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { drawIsometricPrism } from "./towerHelpers";
-import { drawIsoGothicWindow, drawIsoFlushSlit, drawIsoFlushRect } from "../isoFlush";
+import {
+  drawIsoGothicWindow,
+  drawIsoFlushSlit,
+  drawIsoFlushRect,
+} from "../isoFlush";
 
 export function renderDinkyTrains(
   ctx: CanvasRenderingContext2D,
@@ -373,9 +377,14 @@ export function renderDinkyTrains(
 
     // Draws a single wheel disc at (wx, wy)
     const drawSingleWheel = (
-      wx: number, wy: number,
-      iRx: number, iRy: number, rz: number,
-      mainColor: string, rimColor: string, accentColor: string | undefined,
+      wx: number,
+      wy: number,
+      iRx: number,
+      iRy: number,
+      rz: number,
+      mainColor: string,
+      rimColor: string,
+      accentColor: string | undefined,
     ) => {
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.4)";
@@ -399,8 +408,12 @@ export function renderDinkyTrains(
       ctx.shadowOffsetY = 0;
 
       const faceGrad = ctx.createRadialGradient(
-        wx - iRx * 0.15, wy - iRy * 0.15, 0,
-        wx, wy, rz * 0.85,
+        wx - iRx * 0.15,
+        wy - iRy * 0.15,
+        0,
+        wx,
+        wy,
+        rz * 0.85,
       );
       faceGrad.addColorStop(0, accentColor || mainColor);
       faceGrad.addColorStop(0.6, mainColor);
@@ -422,8 +435,14 @@ export function renderDinkyTrains(
         const angle = (i / spokeCount) * Math.PI * 2 + time * 3;
         ctx.strokeStyle = i % 2 === 0 ? mainColor : rimColor;
         ctx.beginPath();
-        ctx.moveTo(wx + Math.cos(angle) * iRx * 0.18, wy + Math.sin(angle) * iRy * 0.18);
-        ctx.lineTo(wx + Math.cos(angle) * iRx * 0.72, wy + Math.sin(angle) * iRy * 0.72);
+        ctx.moveTo(
+          wx + Math.cos(angle) * iRx * 0.18,
+          wy + Math.sin(angle) * iRy * 0.18,
+        );
+        ctx.lineTo(
+          wx + Math.cos(angle) * iRx * 0.72,
+          wy + Math.sin(angle) * iRy * 0.72,
+        );
         ctx.stroke();
       }
 
@@ -442,7 +461,15 @@ export function renderDinkyTrains(
       ctx.strokeStyle = "rgba(255,255,255,0.35)";
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, iRx * 0.95, iRy * 0.95, 0, Math.PI * 1.1, Math.PI * 1.9);
+      ctx.ellipse(
+        wx,
+        wy,
+        iRx * 0.95,
+        iRy * 0.95,
+        0,
+        Math.PI * 1.1,
+        Math.PI * 1.9,
+      );
       ctx.stroke();
 
       ctx.restore();
@@ -450,8 +477,12 @@ export function renderDinkyTrains(
 
     // Draws a wheel PAIR (far + near side) with an axle between them.
     const drawWheel = (
-      wx: number, wy: number, r: number,
-      mainColor: string, rimColor: string, accentColor?: string,
+      wx: number,
+      wy: number,
+      r: number,
+      mainColor: string,
+      rimColor: string,
+      accentColor?: string,
     ) => {
       const rz = r * zoom;
       const iRx = rz * ISO_SIN;
@@ -461,7 +492,16 @@ export function renderDinkyTrains(
       // Far-side wheel (away from viewer — upper-left offset, dimmed)
       ctx.save();
       ctx.globalAlpha = (ctx.globalAlpha ?? 1) * 0.6;
-      drawSingleWheel(wx - ch, wy - ch * 0.5, iRx, iRy, rz, mainColor, rimColor, accentColor);
+      drawSingleWheel(
+        wx - ch,
+        wy - ch * 0.5,
+        iRx,
+        iRy,
+        rz,
+        mainColor,
+        rimColor,
+        accentColor,
+      );
       ctx.restore();
 
       // Axle connecting near ↔ far
@@ -473,13 +513,23 @@ export function renderDinkyTrains(
       ctx.stroke();
 
       // Near-side wheel (toward viewer — lower-right offset)
-      drawSingleWheel(wx + ch, wy + ch * 0.5, iRx, iRy, rz, mainColor, rimColor, accentColor);
+      drawSingleWheel(
+        wx + ch,
+        wy + ch * 0.5,
+        iRx,
+        iRy,
+        rz,
+        mainColor,
+        rimColor,
+        accentColor,
+      );
     };
 
     // Connecting rods between drive wheels on the near side.
     const drawConnectingRods = (
       positions: number[],
-      baseX: number, baseY: number,
+      baseX: number,
+      baseY: number,
       rodColor: string,
     ) => {
       if (positions.length < 2) return;
@@ -495,7 +545,8 @@ export function renderDinkyTrains(
         const wp = isoOffset(baseX, baseY, positions[i]);
         const px = wp.x + ch + Math.sin(phase) * crankR * ISO_SIN;
         const py = wp.y + ch * 0.5 + Math.cos(phase) * crankR;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
       }
       ctx.stroke();
 
@@ -520,7 +571,8 @@ export function renderDinkyTrains(
         const wp = isoOffset(baseX, baseY, positions[i]);
         const px = wp.x - ch + Math.sin(phase) * crankR * ISO_SIN;
         const py = wp.y - ch * 0.5 + Math.cos(phase) * crankR;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
       }
       ctx.stroke();
       ctx.restore();
@@ -528,10 +580,13 @@ export function renderDinkyTrains(
 
     // Isometric headlight — elliptical housing with glow, bracket to anchor.
     const drawIsoHeadlight = (
-      anchorX: number, anchorY: number,
-      cx: number, cy: number,
+      anchorX: number,
+      anchorY: number,
+      cx: number,
+      cy: number,
       r: number,
-      housingColor: string, bracketColor: string,
+      housingColor: string,
+      bracketColor: string,
       glowAlpha: number,
     ) => {
       const hlRx = r * zoom * ISO_SIN;
@@ -562,9 +617,14 @@ export function renderDinkyTrains(
     // cx,cy = base center. forwardOff = how far tip extends along track.
     // halfW = cross-track half-width at base (in world units).
     const drawIsoCowcatcher = (
-      cx: number, cy: number,
-      forwardOff: number, halfW: number, barH: number,
-      mainCol: string, darkCol: string, barCol: string,
+      cx: number,
+      cy: number,
+      forwardOff: number,
+      halfW: number,
+      barH: number,
+      mainCol: string,
+      darkCol: string,
+      barCol: string,
       barCount: number = 4,
     ) => {
       const tip = isoOffset(cx, cy, forwardOff);
@@ -632,15 +692,20 @@ export function renderDinkyTrains(
       }
     };
 
-    // Draws the complete front-of-train assembly (bumper beam, cowcatcher,
-    // headlight) flush with the cab prism's right face (the isometric "front").
-    // Forward projection uses isoOffset (track direction) so elements extend
-    // in the correct isometric "forward" rather than along the 2D face normal.
+    // Draws the front-of-train assembly (bumper beam, cowcatcher, headlight)
+    // flush with the front car's left wall (the isometric face visible to the
+    // viewer). Elements project outward toward the viewer via negative isoOffset.
     const drawTrainFront = (
-      cabX: number, cabY: number,
-      pw: number, pd: number, ph: number,
-      mainCol: string, darkCol: string, accentCol: string,
-      hlHousingCol: string, hlBracketCol: string,
+      cabX: number,
+      cabY: number,
+      pw: number,
+      pd: number,
+      ph: number,
+      mainCol: string,
+      darkCol: string,
+      accentCol: string,
+      hlHousingCol: string,
+      hlBracketCol: string,
       hlGlowAlpha: number,
       scale: number,
       cowBarCount: number,
@@ -650,54 +715,55 @@ export function renderDinkyTrains(
       const h = ph * zoom;
       const s = scale;
 
-      // Right face (front of train) corners
-      const br = { x: cabX + w, y: cabY };
+      // Front-left face (left wall) — flush with the viewer-facing side of the
+      // front car. The train's leading end faces the viewer (negative isoOffset).
+      const bl = { x: cabX - w, y: cabY };
       const bf = { x: cabX, y: cabY + d };
-      const tr = { x: cabX + w, y: cabY - h };
+      const tl = { x: cabX - w, y: cabY - h };
       const tf = { x: cabX, y: cabY - h + d };
 
-      // Edge direction along bottom (br → bf)
-      const edx = bf.x - br.x;
-      const edy = bf.y - br.y;
+      // Edge direction along bottom (bl → bf)
+      const edx = bf.x - bl.x;
+      const edy = bf.y - bl.y;
 
       // Face midpoints (bottom & top edges)
-      const botMid = { x: (br.x + bf.x) / 2, y: (br.y + bf.y) / 2 };
-      const topMid = { x: (tr.x + tf.x) / 2, y: (tr.y + tf.y) / 2 };
+      const botMid = { x: (bl.x + bf.x) / 2, y: (bl.y + bf.y) / 2 };
+      const topMid = { x: (tl.x + tf.x) / 2, y: (tl.y + tf.y) / 2 };
 
       // === 3D BUMPER BEAM along front-face bottom edge ===
-      // Project outer edge forward along the track via isoOffset
+      // Project outward from the left wall toward the viewer (negative isoOffset)
       const beamH = 1.5 * zoom * s;
       const beamFwd = 0.7 * s;
-      const brO = isoOffset(br.x, br.y, beamFwd);
-      const bfO = isoOffset(bf.x, bf.y, beamFwd);
+      const blO = isoOffset(bl.x, bl.y, -beamFwd);
+      const bfO = isoOffset(bf.x, bf.y, -beamFwd);
 
       // Top face of beam (accent strip)
       ctx.fillStyle = accentCol;
       ctx.beginPath();
-      ctx.moveTo(br.x, br.y);
+      ctx.moveTo(bl.x, bl.y);
       ctx.lineTo(bf.x, bf.y);
       ctx.lineTo(bfO.x, bfO.y);
-      ctx.lineTo(brO.x, brO.y);
+      ctx.lineTo(blO.x, blO.y);
       ctx.closePath();
       ctx.fill();
 
       // Front face of beam (vertical drop from outer edge)
       ctx.fillStyle = mainCol;
       ctx.beginPath();
-      ctx.moveTo(brO.x, brO.y);
+      ctx.moveTo(blO.x, blO.y);
       ctx.lineTo(bfO.x, bfO.y);
       ctx.lineTo(bfO.x, bfO.y + beamH);
-      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.lineTo(blO.x, blO.y + beamH);
       ctx.closePath();
       ctx.fill();
 
       // Bottom face of beam
       ctx.fillStyle = darkCol;
       ctx.beginPath();
-      ctx.moveTo(br.x, br.y + beamH);
+      ctx.moveTo(bl.x, bl.y + beamH);
       ctx.lineTo(bf.x, bf.y + beamH);
       ctx.lineTo(bfO.x, bfO.y + beamH);
-      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.lineTo(blO.x, blO.y + beamH);
       ctx.closePath();
       ctx.fill();
 
@@ -705,10 +771,10 @@ export function renderDinkyTrains(
       ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(brO.x, brO.y);
+      ctx.moveTo(blO.x, blO.y);
       ctx.lineTo(bfO.x, bfO.y);
       ctx.lineTo(bfO.x, bfO.y + beamH);
-      ctx.lineTo(brO.x, brO.y + beamH);
+      ctx.lineTo(blO.x, blO.y + beamH);
       ctx.closePath();
       ctx.stroke();
 
@@ -716,7 +782,7 @@ export function renderDinkyTrains(
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(br.x + edx * 0.15, br.y + edy * 0.15);
+      ctx.moveTo(bl.x + edx * 0.15, bl.y + edy * 0.15);
       ctx.lineTo(bf.x - edx * 0.15, bf.y - edy * 0.15);
       ctx.stroke();
 
@@ -724,8 +790,8 @@ export function renderDinkyTrains(
       ctx.fillStyle = accentCol;
       for (let bi = 0; bi < 3; bi++) {
         const bt = (bi + 1) / 4;
-        const bx = brO.x + edx * bt;
-        const by = brO.y + edy * bt + beamH * 0.35;
+        const bx = blO.x + edx * bt;
+        const by = blO.y + edy * bt + beamH * 0.35;
         ctx.beginPath();
         ctx.arc(bx, by, 0.5 * zoom * s, 0, Math.PI * 2);
         ctx.fill();
@@ -733,26 +799,38 @@ export function renderDinkyTrains(
 
       // === COWCATCHER V-plow flush below bumper ===
       const cowBase = {
-        x: (brO.x + bfO.x) / 2,
-        y: (brO.y + bfO.y) / 2 + beamH,
+        x: (blO.x + bfO.x) / 2,
+        y: (blO.y + bfO.y) / 2 + beamH,
       };
       drawIsoCowcatcher(
-        cowBase.x, cowBase.y,
-        2.5 * s, 2 * s, 2.5 * s,
-        mainCol, darkCol, accentCol, cowBarCount);
+        cowBase.x,
+        cowBase.y,
+        -2.5 * s,
+        2 * s,
+        2.5 * s,
+        mainCol,
+        darkCol,
+        accentCol,
+        cowBarCount,
+      );
 
       // === HEADLIGHT mounted on upper front face ===
       const hlAnchor = {
         x: botMid.x + (topMid.x - botMid.x) * 0.7,
         y: botMid.y + (topMid.y - botMid.y) * 0.7,
       };
-      // Project headlight center forward along track by a small amount
-      const hlCenter = isoOffset(hlAnchor.x, hlAnchor.y, 1 * s);
+      // Project headlight center outward from face toward viewer
+      const hlCenter = isoOffset(hlAnchor.x, hlAnchor.y, -1 * s);
       drawIsoHeadlight(
-        hlAnchor.x, hlAnchor.y,
-        hlCenter.x, hlCenter.y,
+        hlAnchor.x,
+        hlAnchor.y,
+        hlCenter.x,
+        hlCenter.y,
         1.8 * s,
-        hlHousingCol, hlBracketCol, hlGlowAlpha);
+        hlHousingCol,
+        hlBracketCol,
+        hlGlowAlpha,
+      );
     };
 
     if (tower.level === 1) {
@@ -870,26 +948,20 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Wooden plank texture on left face with alternating shades
+      // Wooden plank texture — isometric slopes (+0.45 left, -0.45 right)
       for (let p = 0; p < 6; p++) {
         const py = cabPos.y - 2 * zoom - p * 2.3 * zoom;
-        const pL = isoOffset(cabPos.x, py, -5.5);
-        const pR = isoOffset(cabPos.x, py, 0);
         ctx.strokeStyle = p % 2 === 0 ? "#5a2a08" : "#4a2006";
         ctx.lineWidth = 0.8 * zoom;
         ctx.beginPath();
-        ctx.moveTo(pL.x - 5.5 * zoom, pL.y);
-        ctx.lineTo(pR.x - 5.5 * zoom, pR.y);
+        ctx.moveTo(cabPos.x - 5.5 * zoom, py);
+        ctx.lineTo(cabPos.x, py + 2.5 * zoom);
         ctx.stroke();
-      }
-      // Plank texture on right face
-      for (let p = 0; p < 6; p++) {
-        const py = cabPos.y - 2 * zoom - p * 2.3 * zoom;
         ctx.strokeStyle = p % 2 === 0 ? "#3a1a04" : "#4a2408";
         ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
-        ctx.moveTo(cabPos.x + 1 * zoom, py + 0.5 * p * zoom);
-        ctx.lineTo(cabPos.x + 5.5 * zoom, py - 1.8 * zoom + 0.5 * p * zoom);
+        ctx.moveTo(cabPos.x, py + 2.5 * zoom);
+        ctx.lineTo(cabPos.x + 5.5 * zoom, py);
         ctx.stroke();
       }
 
@@ -924,6 +996,7 @@ export function renderDinkyTrains(
         roofTop + 1 * zoom,
       );
       ctx.lineTo(cabPos.x + roofW, roofTop + 2 * zoom);
+      ctx.lineTo(cabPos.x, roofTop + 2 * zoom + 2.5 * zoom);
       ctx.lineTo(cabPos.x - roofW, roofTop + 2 * zoom);
       ctx.closePath();
       ctx.fill();
@@ -931,6 +1004,7 @@ export function renderDinkyTrains(
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x - roofW, roofTop + 2 * zoom);
+      ctx.lineTo(cabPos.x, roofTop + 2 * zoom + 2.5 * zoom);
       ctx.lineTo(cabPos.x + roofW, roofTop + 2 * zoom);
       ctx.stroke();
       // Roof highlight arc
@@ -951,12 +1025,12 @@ export function renderDinkyTrains(
       );
       ctx.stroke();
 
-      // Arched window on right face with warm oil lamp glow
+      // Arched window on right face — slope -d/w = -2.5/5.5
       const cabGlow = 0.55 + Math.sin(time * 2) * 0.2;
       ctx.fillStyle = "#2a1808";
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 5.5 * zoom);
+      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 5.6 * zoom);
       ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 12 * zoom);
       ctx.quadraticCurveTo(
         cabPos.x + 3.2 * zoom,
@@ -971,7 +1045,7 @@ export function renderDinkyTrains(
       ctx.shadowBlur = 8 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 4.5 * zoom);
-      ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 6 * zoom);
+      ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 5.64 * zoom);
       ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 11.5 * zoom);
       ctx.quadraticCurveTo(
         cabPos.x + 3.2 * zoom,
@@ -982,12 +1056,12 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
-      // Window mullion (cross)
+      // Window mullion — isometric slope on right face
       ctx.strokeStyle = "#B87333";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 1.8 * zoom, cabPos.y - 8 * zoom);
-      ctx.lineTo(cabPos.x + 4.8 * zoom, cabPos.y - 9 * zoom);
+      ctx.lineTo(cabPos.x + 4.8 * zoom, cabPos.y - 9.36 * zoom);
       ctx.stroke();
 
       // Porthole window on left face
@@ -1059,19 +1133,19 @@ export function renderDinkyTrains(
       );
       ctx.fill();
 
-      // Cab steps with handrail
+      // Cab steps — isometric slope -d/w = -0.45 on right face
       ctx.fillStyle = "#5a3818";
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 2 * zoom);
-      ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 0.5 * zoom);
+      ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 0.86 * zoom);
       ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 2 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y + 3.5 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y + 3.14 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y + 4 * zoom);
-      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 2.5 * zoom);
-      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 3.5 * zoom);
+      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 2.86 * zoom);
+      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 3.86 * zoom);
       ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y + 5 * zoom);
       ctx.closePath();
       ctx.fill();
@@ -1198,28 +1272,40 @@ export function renderDinkyTrains(
 
       // === SMOKESTACK: Victorian diamond-stack with spark catcher ===
       const stackPos = isoOffset(boilerPos.x, boilerPos.y - 14 * zoom, 3.5);
-      // Base (narrow)
+      // Base (narrow) — V-shaped top/bottom for isometric
       ctx.fillStyle = "#3a2a1a";
       ctx.beginPath();
       ctx.moveTo(stackPos.x - 1.8 * zoom, stackPos.y);
       ctx.lineTo(stackPos.x - 1.5 * zoom, stackPos.y - 4 * zoom);
+      ctx.lineTo(stackPos.x, stackPos.y - 3.25 * zoom);
       ctx.lineTo(stackPos.x + 1.5 * zoom, stackPos.y - 4 * zoom);
       ctx.lineTo(stackPos.x + 1.8 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x, stackPos.y + 0.9 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Flared top (diamond shape)
+      // Flared top (diamond shape) — V-shaped top
       ctx.fillStyle = "#4a3a2a";
       ctx.beginPath();
       ctx.moveTo(stackPos.x - 1.5 * zoom, stackPos.y - 4 * zoom);
       ctx.lineTo(stackPos.x - 4 * zoom, stackPos.y - 12 * zoom);
+      ctx.lineTo(stackPos.x, stackPos.y - 10 * zoom);
       ctx.lineTo(stackPos.x + 4 * zoom, stackPos.y - 12 * zoom);
       ctx.lineTo(stackPos.x + 1.5 * zoom, stackPos.y - 4 * zoom);
+      ctx.lineTo(stackPos.x, stackPos.y - 3.25 * zoom);
       ctx.closePath();
       ctx.fill();
       // Spark catcher mesh dome — isometric elliptical
       ctx.fillStyle = "rgba(90, 80, 60, 0.5)";
       ctx.beginPath();
-      ctx.ellipse(stackPos.x, stackPos.y - 13.5 * zoom, 3.5 * zoom * ISO_SIN, 3.5 * zoom, 0, Math.PI, 0);
+      ctx.ellipse(
+        stackPos.x,
+        stackPos.y - 13.5 * zoom,
+        3.5 * zoom * ISO_SIN,
+        3.5 * zoom,
+        0,
+        Math.PI,
+        0,
+      );
       ctx.fill();
       ctx.strokeStyle = "#6a5a3a";
       ctx.lineWidth = 0.6 * zoom;
@@ -1323,9 +1409,15 @@ export function renderDinkyTrains(
       {
         const hlPos = isoOffset(boilerPos.x, boilerPos.y - 5.5 * zoom, 5);
         drawIsoHeadlight(
-          boilerPos.x + 4 * zoom, boilerPos.y - 6 * zoom,
-          hlPos.x, hlPos.y, 2.5,
-          "#C9A227", "#8B5E3C", 0.75 + Math.sin(time * 3) * 0.2);
+          boilerPos.x + 4 * zoom,
+          boilerPos.y - 6 * zoom,
+          hlPos.x,
+          hlPos.y,
+          2.5,
+          "#C9A227",
+          "#8B5E3C",
+          0.75 + Math.sin(time * 3) * 0.2,
+        );
       }
 
       // Bell on bracket with brass shine
@@ -1443,27 +1535,28 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Plank texture on faces
+      // Plank texture on faces — isometric slopes (+0.45 left, -0.45 right)
       for (let p = 0; p < 4; p++) {
         const py = tenderPos.y - 1 * zoom - p * 2 * zoom;
-        ctx.strokeStyle = p % 2 === 0 ? "#5a2a08" : "#4a2006";
+        ctx.strokeStyle = "#3a1a04";
         ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
-        ctx.moveTo(tenderPos.x - 5.5 * zoom - 5 * zoom, py + 2.5 * zoom);
-        ctx.lineTo(tenderPos.x - 5.5 * zoom, py);
+        ctx.moveTo(tenderPos.x - 5.5 * zoom, py);
+        ctx.lineTo(tenderPos.x, py + 2.5 * zoom);
         ctx.stroke();
-        ctx.strokeStyle = "#3a1a04";
+        ctx.strokeStyle = p % 2 === 0 ? "#5a2a08" : "#4a2006";
         ctx.beginPath();
-        ctx.moveTo(tenderPos.x + 1 * zoom, py + 0.5 * zoom);
-        ctx.lineTo(tenderPos.x + 5.5 * zoom, py - 1.8 * zoom);
+        ctx.moveTo(tenderPos.x, py + 2.5 * zoom);
+        ctx.lineTo(tenderPos.x + 5.5 * zoom, py);
         ctx.stroke();
       }
 
-      // Copper edge banding
+      // Copper edge banding — follows top face V-edge
       ctx.strokeStyle = "#B87333";
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(tenderPos.x - 5.5 * zoom, tenderPos.y - 9 * zoom);
+      ctx.lineTo(tenderPos.x, tenderPos.y - 9 * zoom + 2.5 * zoom);
       ctx.lineTo(tenderPos.x + 5.5 * zoom, tenderPos.y - 9 * zoom);
       ctx.stroke();
 
@@ -1492,7 +1585,15 @@ export function renderDinkyTrains(
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(tenderPos.x, tenderPos.y - 9 * zoom, 4 * zoom * ISO_SIN, 4 * zoom, 0, Math.PI, 0);
+      ctx.ellipse(
+        tenderPos.x,
+        tenderPos.y - 9 * zoom,
+        4 * zoom * ISO_SIN,
+        4 * zoom,
+        0,
+        Math.PI,
+        0,
+      );
       ctx.fill();
 
       // Deterministic coal chunks with faceted shading
@@ -1575,45 +1676,58 @@ export function renderDinkyTrains(
       );
       ctx.stroke();
 
-      // Water level gauge on left face
-      const tankPos = isoOffset(tenderPos.x, tenderPos.y - 3.5 * zoom, -4.5);
+      // Water level gauge on right face — isometric parallelogram (slope -0.45)
+      const tankPos = isoOffset(tenderPos.x, tenderPos.y - 3.5 * zoom, 4.5);
+      const gSlope = 0.4545;
+      const gx = tankPos.x + 4 * zoom;
+      const gy = tankPos.y + 2.5 * zoom;
+      const gw = 3 * zoom;
+      const gh = 5 * zoom;
+      const gSkew = gw * gSlope;
       ctx.fillStyle = "#B87333";
-      ctx.fillRect(
-        tankPos.x - 7 * zoom,
-        tankPos.y - 2 * zoom,
-        3 * zoom,
-        5 * zoom,
-      );
+      ctx.beginPath();
+      ctx.moveTo(gx, gy);
+      ctx.lineTo(gx + gw, gy - gSkew);
+      ctx.lineTo(gx + gw, gy - gSkew - gh);
+      ctx.lineTo(gx, gy - gh);
+      ctx.closePath();
+      ctx.fill();
       ctx.strokeStyle = "#8B5E3C";
       ctx.lineWidth = 0.8 * zoom;
-      ctx.strokeRect(
-        tankPos.x - 7 * zoom,
-        tankPos.y - 2 * zoom,
-        3 * zoom,
-        5 * zoom,
-      );
+      ctx.stroke();
       const waterLvl = 0.6 + Math.sin(time * 0.3) * 0.1;
+      const wgx = gx + 0.3 * zoom;
+      const wgy = gy - 0.3 * zoom;
+      const wgw = 2.4 * zoom;
+      const wgSkew = wgw * gSlope;
+      const wgh = 4.4 * zoom;
+      const wEmptyH = (1 - waterLvl) * wgh;
       ctx.fillStyle = "#4488bb";
-      ctx.fillRect(
-        tankPos.x - 6.7 * zoom,
-        tankPos.y - 1.7 * zoom + (1 - waterLvl) * 4.4 * zoom,
-        2.4 * zoom,
-        waterLvl * 4.4 * zoom,
-      );
+      ctx.beginPath();
+      ctx.moveTo(wgx, wgy - wEmptyH);
+      ctx.lineTo(wgx + wgw, wgy - wgSkew - wEmptyH);
+      ctx.lineTo(wgx + wgw, wgy - wgSkew - wgh);
+      ctx.lineTo(wgx, wgy - wgh);
+      ctx.closePath();
+      ctx.fill();
       // Glass tube highlight
+      const hlx = gx + 0.8 * zoom;
+      const hlw = 0.6 * zoom;
+      const hlSkew = hlw * gSlope;
       ctx.fillStyle = "rgba(255,255,255,0.2)";
-      ctx.fillRect(
-        tankPos.x - 6.2 * zoom,
-        tankPos.y - 1.7 * zoom,
-        0.6 * zoom,
-        4.4 * zoom,
-      );
+      ctx.beginPath();
+      ctx.moveTo(hlx, gy - 0.3 * zoom);
+      ctx.lineTo(hlx + hlw, gy - 0.3 * zoom - hlSkew);
+      ctx.lineTo(hlx + hlw, gy - 0.3 * zoom - hlSkew - wgh);
+      ctx.lineTo(hlx, gy - 0.3 * zoom - wgh);
+      ctx.closePath();
+      ctx.fill();
 
-      // Brass side railing
+      // Brass side railing (left face)
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1 * zoom;
       for (let i = 0; i < 3; i++) {
-        const postX = tenderPos.x + 1 * zoom + i * 2.2 * zoom;
+        const postX = tenderPos.x - 1 * zoom - i * 2.2 * zoom;
         const postBase = tenderPos.y - 4.5 * zoom - i * 1.1 * zoom;
         ctx.beginPath();
         ctx.moveTo(postX, postBase + 4.5 * zoom);
@@ -1625,8 +1739,8 @@ export function renderDinkyTrains(
         ctx.fill();
       }
       ctx.beginPath();
-      ctx.moveTo(tenderPos.x + 1 * zoom, tenderPos.y - 4.5 * zoom);
-      ctx.lineTo(tenderPos.x + 5.4 * zoom, tenderPos.y - 6.7 * zoom);
+      ctx.moveTo(tenderPos.x - 1 * zoom, tenderPos.y - 4.5 * zoom);
+      ctx.lineTo(tenderPos.x - 5.4 * zoom, tenderPos.y - 6.7 * zoom);
       ctx.stroke();
 
       // === COUPLINGS between cars (brass chain links) ===
@@ -1678,11 +1792,22 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Front assembly: bumper beam, cowcatcher, headlight flush with cab face
-      drawTrainFront(cabPos.x, cabPos.y, 11, 10, 16,
-        "#B87333", "#8B5E3C", "#C9A227",
-        "#C9A227", "#B87333",
-        0.75 + Math.sin(time * 3) * 0.2, 1.0, 4);
+      // Front assembly on tender (viewer-facing end of train)
+      drawTrainFront(
+        tenderPos.x,
+        tenderPos.y,
+        11,
+        10,
+        9,
+        "#B87333",
+        "#8B5E3C",
+        "#C9A227",
+        "#C9A227",
+        "#B87333",
+        0.75 + Math.sin(time * 3) * 0.2,
+        1.0,
+        4,
+      );
 
       // "DINKY" nameplate on boiler side — 3D raised brass plaque
       const npPos = isoOffset(boilerPos.x, boilerPos.y - 3 * zoom, -4);
@@ -1763,16 +1888,20 @@ export function renderDinkyTrains(
       ctx.quadraticCurveTo(npX, npY, npX + npBevel, npY);
       ctx.stroke();
 
-      // Inner frame line
+      // Inner frame line — isometric parallelogram on left face (slope +0.45)
       ctx.strokeStyle = "rgba(255,220,120,0.3)";
       ctx.lineWidth = 0.5 * zoom;
       const inset = 0.8 * zoom;
-      ctx.strokeRect(
-        npX + inset,
-        npY + inset,
-        npW - inset * 2,
-        npH - inset * 2,
-      );
+      const ifW = npW - inset * 2;
+      const ifH = npH - inset * 2;
+      const ifSkew = ifW * 0.4545;
+      ctx.beginPath();
+      ctx.moveTo(npX + inset, npY + inset);
+      ctx.lineTo(npX + inset + ifW, npY + inset + ifSkew);
+      ctx.lineTo(npX + inset + ifW, npY + inset + ifSkew + ifH);
+      ctx.lineTo(npX + inset, npY + inset + ifH);
+      ctx.closePath();
+      ctx.stroke();
 
       // Engraved text with shadow
       ctx.font = `bold ${1.6 * zoom}px serif`;
@@ -1924,18 +2053,18 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Welded armor plate seams on both faces
+      // Welded armor plate seams — isometric slopes (+0.46 left, -0.46 right)
       ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 0.8 * zoom;
       for (let s = 0; s < 3; s++) {
         const sy = cabPos.y - 3 * zoom - s * 4.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(cabPos.x - 6 * zoom, sy + 3 * zoom);
-        ctx.lineTo(cabPos.x, sy);
+        ctx.moveTo(cabPos.x - 6 * zoom, sy);
+        ctx.lineTo(cabPos.x, sy + 2.75 * zoom);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(cabPos.x + 1 * zoom, sy);
-        ctx.lineTo(cabPos.x + 6 * zoom, sy - 3 * zoom);
+        ctx.moveTo(cabPos.x, sy + 2.75 * zoom);
+        ctx.lineTo(cabPos.x + 6 * zoom, sy);
         ctx.stroke();
       }
 
@@ -1970,7 +2099,7 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Angled front armor plate (deflector wedge)
+      // Angled front armor plate — isometric slope -d/w = -0.46
       const frontArmor = isoOffset(cabPos.x, cabPos.y, 8);
       const armorGrad = ctx.createLinearGradient(
         frontArmor.x - 5 * zoom,
@@ -1984,28 +2113,28 @@ export function renderDinkyTrains(
       ctx.fillStyle = armorGrad;
       ctx.beginPath();
       ctx.moveTo(frontArmor.x - 5 * zoom, frontArmor.y - 4 * zoom);
-      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 10 * zoom);
-      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 1 * zoom);
+      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 8.58 * zoom);
+      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y + 0.42 * zoom);
       ctx.lineTo(frontArmor.x - 5 * zoom, frontArmor.y + 5 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Welded seam on armor plate
+      // Welded seam on armor plate — same isometric slope
       ctx.strokeStyle = "rgba(120,130,150,0.5)";
       ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
       ctx.moveTo(frontArmor.x - 5 * zoom, frontArmor.y - 4 * zoom);
-      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 10 * zoom);
+      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 8.58 * zoom);
       ctx.stroke();
 
-      // Green-lit vision slit
+      // Green-lit vision slit — isometric slope -d/w = -2.75/6 on right face
       ctx.fillStyle = "#0a0e14";
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 9.5 * zoom);
-      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 12 * zoom);
-      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 10 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 11.56 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 9.56 * zoom);
       ctx.lineTo(cabPos.x + 1.5 * zoom, cabPos.y - 7.5 * zoom);
       ctx.closePath();
       ctx.fill();
@@ -2015,8 +2144,8 @@ export function renderDinkyTrains(
       ctx.shadowBlur = 8 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 9.2 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 11.5 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 10.2 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 10.8 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 9.5 * zoom);
       ctx.lineTo(cabPos.x + 2 * zoom, cabPos.y - 7.9 * zoom);
       ctx.closePath();
       ctx.fill();
@@ -2113,14 +2242,16 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Industrial exhaust stack with deflector cap
+      // Industrial exhaust stack — V-shaped top for isometric
       const stackPos = isoOffset(locoPos.x, locoPos.y - 13 * zoom, 0);
       ctx.fillStyle = "#2a3040";
       ctx.beginPath();
       ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y);
       ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 9 * zoom);
+      ctx.lineTo(stackPos.x, stackPos.y - 7.75 * zoom);
       ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 9 * zoom);
       ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x, stackPos.y + 1.5 * zoom);
       ctx.closePath();
       ctx.fill();
       drawIsometricPrism(
@@ -2210,9 +2341,15 @@ export function renderDinkyTrains(
       {
         const hlPos = { x: locoPos.x + 7 * zoom, y: locoPos.y - 9 * zoom };
         drawIsoHeadlight(
-          locoPos.x + 6 * zoom, locoPos.y - 8.5 * zoom,
-          hlPos.x, hlPos.y, 2.5,
-          "#3a4050", "#3a4050", 0.55 + Math.sin(time * 3) * 0.2);
+          locoPos.x + 6 * zoom,
+          locoPos.y - 8.5 * zoom,
+          hlPos.x,
+          hlPos.y,
+          2.5,
+          "#3a4050",
+          "#3a4050",
+          0.55 + Math.sin(time * 3) * 0.2,
+        );
       }
 
       // === WEAPONS/CARGO CAR (back) ===
@@ -2241,23 +2378,23 @@ export function renderDinkyTrains(
         }
       }
 
-      // Arrow/gun slits with orange interior glow
+      // Arrow/gun slits — isometric slope -d/w=-0.42 on right face
       for (let s = 0; s < 2; s++) {
         const slitX = cargoPos.x + (1 + s * 3) * zoom;
         const slitY = cargoPos.y - (3.5 + s * 1.5) * zoom;
         ctx.fillStyle = "#0a0e14";
         ctx.beginPath();
         ctx.moveTo(slitX, slitY - 4 * zoom);
-        ctx.lineTo(slitX + 1 * zoom, slitY - 4.3 * zoom);
-        ctx.lineTo(slitX + 1 * zoom, slitY - 0.3 * zoom);
+        ctx.lineTo(slitX + 1 * zoom, slitY - 4.42 * zoom);
+        ctx.lineTo(slitX + 1 * zoom, slitY - 0.42 * zoom);
         ctx.lineTo(slitX, slitY);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = `rgba(231, 117, 0, ${0.3 + Math.sin(time * 2 + s) * 0.15})`;
         ctx.beginPath();
         ctx.moveTo(slitX + 0.2 * zoom, slitY - 3.7 * zoom);
-        ctx.lineTo(slitX + 0.8 * zoom, slitY - 3.9 * zoom);
-        ctx.lineTo(slitX + 0.8 * zoom, slitY - 0.6 * zoom);
+        ctx.lineTo(slitX + 0.8 * zoom, slitY - 3.95 * zoom);
+        ctx.lineTo(slitX + 0.8 * zoom, slitY - 0.55 * zoom);
         ctx.lineTo(slitX + 0.2 * zoom, slitY - 0.3 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -2520,11 +2657,22 @@ export function renderDinkyTrains(
       ctx.arc(chain2.x + 2.5 * zoom, chain2.y, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Front assembly: armored bumper, plow, headlight flush with cab face
-      drawTrainFront(cabPos.x, cabPos.y, 12, 11, 16,
-        "#4a5060", "#2a3040", "#5a6070",
-        "#3a4050", "#3a4050",
-        0.7 + Math.sin(time * 3) * 0.2, 1.1, 4);
+      // Front assembly on cargo car (viewer-facing end of train)
+      drawTrainFront(
+        cargoPos.x,
+        cargoPos.y,
+        13,
+        11,
+        11,
+        "#4a5060",
+        "#2a3040",
+        "#5a6070",
+        "#3a4050",
+        "#3a4050",
+        0.7 + Math.sin(time * 3) * 0.2,
+        1.1,
+        4,
+      );
 
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
@@ -2681,7 +2829,7 @@ export function renderDinkyTrains(
         }
       }
 
-      // Fire-glow arrow slit on right face
+      // Fire-glow arrow slit on right face — slope -3.0/6.5
       const slitCx = cabPos.x + 3 * zoom;
       const slitCy = cabPos.y - 11 * zoom;
       ctx.fillStyle = "rgba(255, 120, 20, 0.8)";
@@ -2689,8 +2837,8 @@ export function renderDinkyTrains(
       ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
       ctx.moveTo(slitCx, slitCy - 2.5 * zoom);
-      ctx.lineTo(slitCx + 3.5 * zoom, slitCy - 2.5 * zoom - 1.8 * zoom);
-      ctx.lineTo(slitCx + 3.5 * zoom, slitCy + 0.5 * zoom - 1.8 * zoom);
+      ctx.lineTo(slitCx + 3.5 * zoom, slitCy - 4.12 * zoom);
+      ctx.lineTo(slitCx + 3.5 * zoom, slitCy - 1.12 * zoom);
       ctx.lineTo(slitCx, slitCy + 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
@@ -2897,34 +3045,26 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Armor plate welded seams on left face
+      // Armor plate welded seams — isometric slopes (+0.43 left, -0.43 right)
       ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 0.9 * zoom;
       for (let ps = 0; ps < 3; ps++) {
         const psY = locoPos.y - (3 + ps * 4.5) * zoom;
-        const psL = isoOffset(locoPos.x, psY, -7.5);
-        const psR = isoOffset(locoPos.x, psY, 0);
         ctx.beginPath();
-        ctx.moveTo(psL.x - 7.5 * zoom, psL.y);
-        ctx.lineTo(psR.x - 7.5 * zoom, psR.y);
+        ctx.moveTo(locoPos.x - 7.5 * zoom, psY);
+        ctx.lineTo(locoPos.x, psY + 3.25 * zoom);
         ctx.stroke();
-        // Welded seam highlight
         ctx.strokeStyle = "rgba(100,110,130,0.35)";
         ctx.lineWidth = 0.4 * zoom;
         ctx.beginPath();
-        ctx.moveTo(psL.x - 7.5 * zoom, psL.y - 0.5 * zoom);
-        ctx.lineTo(psR.x - 7.5 * zoom, psR.y - 0.5 * zoom);
+        ctx.moveTo(locoPos.x - 7.5 * zoom, psY - 0.5 * zoom);
+        ctx.lineTo(locoPos.x, psY + 2.75 * zoom);
         ctx.stroke();
         ctx.strokeStyle = "#5a6070";
         ctx.lineWidth = 0.9 * zoom;
-      }
-
-      // Armor plate seams on right face
-      for (let ps = 0; ps < 3; ps++) {
-        const psY = locoPos.y - (3 + ps * 4.5) * zoom;
         ctx.beginPath();
-        ctx.moveTo(locoPos.x + 1 * zoom, psY);
-        ctx.lineTo(locoPos.x + 7.5 * zoom, psY - 3.5 * zoom);
+        ctx.moveTo(locoPos.x, psY + 3.25 * zoom);
+        ctx.lineTo(locoPos.x + 7.5 * zoom, psY);
         ctx.stroke();
       }
 
@@ -2965,34 +3105,49 @@ export function renderDinkyTrains(
         const ventW = 2.5 * zoom;
         const ventH = 1.8 * zoom;
 
-        // Vent recess
+        // Vent recess — isometric parallelogram on left face (slope +0.43)
+        const vSkew = ventW * 0.5 * 0.433;
         ctx.fillStyle = "#1a2030";
-        ctx.fillRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
+        ctx.beginPath();
+        ctx.moveTo(ventX - ventW * 0.5, ventY - ventH * 0.5);
+        ctx.lineTo(ventX + ventW * 0.5, ventY - ventH * 0.5 + vSkew * 2);
+        ctx.lineTo(ventX + ventW * 0.5, ventY + ventH * 0.5 + vSkew * 2);
+        ctx.lineTo(ventX - ventW * 0.5, ventY + ventH * 0.5);
+        ctx.closePath();
+        ctx.fill();
 
-        // Louvered slats
+        // Louvered slats — left face slope
         ctx.strokeStyle = "#4a5060";
         ctx.lineWidth = 0.6 * zoom;
         for (let si = 0; si < 3; si++) {
           const sy = ventY - ventH * 0.35 + si * ventH * 0.35;
           ctx.beginPath();
           ctx.moveTo(ventX - ventW * 0.4, sy);
-          ctx.lineTo(ventX + ventW * 0.4, sy);
+          ctx.lineTo(ventX + ventW * 0.4, sy + ventW * 0.4 * 0.433);
           ctx.stroke();
         }
 
         // Inner warm glow
+        const glowSkew = ventW * 0.35 * 0.433;
         ctx.fillStyle = `rgba(255, 120, 40, ${0.2 + Math.sin(time * 3 + vi) * 0.1})`;
-        ctx.fillRect(
-          ventX - ventW * 0.35,
-          ventY - ventH * 0.35,
-          ventW * 0.7,
-          ventH * 0.7,
-        );
+        ctx.beginPath();
+        ctx.moveTo(ventX - ventW * 0.35, ventY - ventH * 0.35);
+        ctx.lineTo(ventX + ventW * 0.35, ventY - ventH * 0.35 + glowSkew * 2);
+        ctx.lineTo(ventX + ventW * 0.35, ventY + ventH * 0.35 + glowSkew * 2);
+        ctx.lineTo(ventX - ventW * 0.35, ventY + ventH * 0.35);
+        ctx.closePath();
+        ctx.fill();
 
-        // Vent frame
+        // Vent frame — isometric parallelogram
         ctx.strokeStyle = "#5a6070";
         ctx.lineWidth = 0.8 * zoom;
-        ctx.strokeRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
+        ctx.beginPath();
+        ctx.moveTo(ventX - ventW * 0.5, ventY - ventH * 0.5);
+        ctx.lineTo(ventX + ventW * 0.5, ventY - ventH * 0.5 + vSkew * 2);
+        ctx.lineTo(ventX + ventW * 0.5, ventY + ventH * 0.5 + vSkew * 2);
+        ctx.lineTo(ventX - ventW * 0.5, ventY + ventH * 0.5);
+        ctx.closePath();
+        ctx.stroke();
       }
 
       // Side-mounted war lanterns on brackets
@@ -3043,7 +3198,7 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Arrow slits on tower with fire glow
+      // Arrow slits on tower — isometric slope ±0.5 (tower 8×8)
       for (const side of [1, -1]) {
         const tSlitPos = {
           x: towerPos.x + side * 2.5 * zoom,
@@ -3054,8 +3209,8 @@ export function renderDinkyTrains(
         ctx.shadowBlur = 4 * zoom;
         ctx.beginPath();
         ctx.moveTo(tSlitPos.x, tSlitPos.y - 2.5 * zoom);
-        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y - 3 * zoom);
-        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y + 0.5 * zoom);
+        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y - 3.75 * zoom);
+        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y - 0.25 * zoom);
         ctx.lineTo(tSlitPos.x, tSlitPos.y + 1 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -3140,7 +3295,15 @@ export function renderDinkyTrains(
       // Spark catcher mesh dome — isometric elliptical
       ctx.fillStyle = "rgba(70, 80, 90, 0.6)";
       ctx.beginPath();
-      ctx.ellipse(stackPos.x, stackPos.y - 15.5 * zoom, 3.5 * zoom * ISO_SIN, 3.5 * zoom, 0, Math.PI, 0);
+      ctx.ellipse(
+        stackPos.x,
+        stackPos.y - 15.5 * zoom,
+        3.5 * zoom * ISO_SIN,
+        3.5 * zoom,
+        0,
+        Math.PI,
+        0,
+      );
       ctx.fill();
       ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 0.7 * zoom;
@@ -3255,14 +3418,15 @@ export function renderDinkyTrains(
         );
       }
 
-      // Portcullis gate (isometric grid on right face)
+      // Portcullis gate — isometric slope -d/w = -3.25/7.5 = -0.433 on right face
       const portX = fortressPos.x + 2 * zoom;
       const portY = fortressPos.y - 3.5 * zoom;
+      const portSlope = 3.25 / 7.5;
       ctx.fillStyle = "#1a2030";
       ctx.beginPath();
       ctx.moveTo(portX, portY - 7 * zoom);
-      ctx.lineTo(portX + 5 * zoom, portY - 7 * zoom - 2.5 * zoom);
-      ctx.lineTo(portX + 5 * zoom, portY - 2.5 * zoom);
+      ctx.lineTo(portX + 5 * zoom, portY - 7 * zoom - 5 * portSlope * zoom);
+      ctx.lineTo(portX + 5 * zoom, portY - 5 * portSlope * zoom);
       ctx.lineTo(portX, portY);
       ctx.closePath();
       ctx.fill();
@@ -3272,14 +3436,15 @@ export function renderDinkyTrains(
         const gy = portY - gi * 1.4 * zoom;
         ctx.beginPath();
         ctx.moveTo(portX + 0.3 * zoom, gy);
-        ctx.lineTo(portX + 4.7 * zoom, gy - 2.3 * zoom);
+        ctx.lineTo(portX + 4.7 * zoom, gy - 4.7 * portSlope * zoom);
         ctx.stroke();
       }
       for (let gi = 0; gi < 4; gi++) {
         const gx = portX + (gi + 1) * 1.1 * zoom;
+        const gOff = (gi + 1) * 1.1 * portSlope;
         ctx.beginPath();
-        ctx.moveTo(gx, portY - 7 * zoom - (gi + 1) * 0.55 * zoom);
-        ctx.lineTo(gx, portY - (gi + 1) * 0.55 * zoom);
+        ctx.moveTo(gx, portY - 7 * zoom - gOff * zoom);
+        ctx.lineTo(gx, portY - gOff * zoom);
         ctx.stroke();
       }
 
@@ -3401,11 +3566,22 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Front assembly: fortress bumper, battering ram, headlight flush with cab
-      drawTrainFront(cabPos.x, cabPos.y, 13, 12, 18,
-        "#3a4050", "#1a2030", "#5a6070",
-        "#3a4050", "#3a4050",
-        0.75 + Math.sin(time * 3) * 0.2, 1.15, 3);
+      // Front assembly on fortress car (viewer-facing end of train)
+      drawTrainFront(
+        fortressPos.x,
+        fortressPos.y,
+        15,
+        13,
+        13,
+        "#3a4050",
+        "#1a2030",
+        "#5a6070",
+        "#3a4050",
+        "#3a4050",
+        0.75 + Math.sin(time * 3) * 0.2,
+        1.15,
+        3,
+      );
 
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
@@ -3442,8 +3618,16 @@ export function renderDinkyTrains(
       const wheelY = trainY + 4.5 * zoom;
 
       // Ornate gold-trimmed chassis — isometric beam
-      drawIsometricPrism(ctx, trainX, trainY + 3 * zoom, 26, 5, 2,
-        { top: "#F0ECE4", left: "#E0DCD0", right: "#D0CCC0" }, zoom);
+      drawIsometricPrism(
+        ctx,
+        trainX,
+        trainY + 3 * zoom,
+        26,
+        5,
+        2,
+        { top: "#F0ECE4", left: "#E0DCD0", right: "#D0CCC0" },
+        zoom,
+      );
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.5 * zoom;
       const chL4a = isoOffset(trainX, trainY + 2 * zoom, 13);
@@ -3457,7 +3641,15 @@ export function renderDinkyTrains(
       for (let sci = 0; sci < 4; sci++) {
         const scPos = isoOffset(trainX, trainY + 2.5 * zoom, -7 + sci * 5);
         ctx.beginPath();
-        ctx.ellipse(scPos.x, scPos.y + 1 * zoom, 1.5 * zoom * ISO_SIN, 1.5 * zoom, 0, 0, Math.PI);
+        ctx.ellipse(
+          scPos.x,
+          scPos.y + 1 * zoom,
+          1.5 * zoom * ISO_SIN,
+          1.5 * zoom,
+          0,
+          0,
+          Math.PI,
+        );
         ctx.stroke();
       }
 
@@ -3507,7 +3699,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#D8D4CC";
         ctx.beginPath();
         ctx.moveTo(cabPos.x, dBaseY + dRy);
-        ctx.quadraticCurveTo(cabPos.x + dRx * 0.95, dBaseY - (dPeakY - dBaseY) * 0.2, cabPos.x + dRx * 0.15, dPeakY);
+        ctx.quadraticCurveTo(
+          cabPos.x + dRx * 0.95,
+          dBaseY - (dPeakY - dBaseY) * 0.2,
+          cabPos.x + dRx * 0.15,
+          dPeakY,
+        );
         ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -3516,7 +3713,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#F0ECE4";
         ctx.beginPath();
         ctx.moveTo(cabPos.x, dBaseY + dRy);
-        ctx.quadraticCurveTo(cabPos.x - dRx * 0.95, dBaseY - (dPeakY - dBaseY) * 0.2, cabPos.x - dRx * 0.15, dPeakY);
+        ctx.quadraticCurveTo(
+          cabPos.x - dRx * 0.95,
+          dBaseY - (dPeakY - dBaseY) * 0.2,
+          cabPos.x - dRx * 0.15,
+          dPeakY,
+        );
         ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -3525,7 +3727,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#E8E4DC";
         ctx.beginPath();
         ctx.moveTo(cabPos.x - dRx, dBaseY);
-        ctx.quadraticCurveTo(cabPos.x, dBaseY - dRy * 1.5, cabPos.x + dRx, dBaseY);
+        ctx.quadraticCurveTo(
+          cabPos.x,
+          dBaseY - dRy * 1.5,
+          cabPos.x + dRx,
+          dBaseY,
+        );
         ctx.lineTo(cabPos.x, dBaseY + dRy);
         ctx.closePath();
         ctx.fill();
@@ -3546,7 +3753,15 @@ export function renderDinkyTrains(
           const arcRx = dRx * (1 - t * 0.85);
           const arcRy = dRy * (1 - t * 0.85);
           ctx.beginPath();
-          ctx.ellipse(cabPos.x, arcY, arcRx, arcRy, 0, Math.PI * 0.1, Math.PI * 0.9);
+          ctx.ellipse(
+            cabPos.x,
+            arcY,
+            arcRx,
+            arcRy,
+            0,
+            Math.PI * 0.1,
+            Math.PI * 0.9,
+          );
           ctx.stroke();
         }
       }
@@ -3570,17 +3785,31 @@ export function renderDinkyTrains(
       {
         const cabGlow = 0.55 + Math.sin(time * 2) * 0.18;
         // Right face window
-        drawIsoGothicWindow(ctx,
-          cabPos.x + 3 * zoom, cabPos.y - 7.5 * zoom,
-          4, 6.5, "right", zoom,
-          "rgba(255, 250, 230", cabGlow,
-          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" });
+        drawIsoGothicWindow(
+          ctx,
+          cabPos.x + 3 * zoom,
+          cabPos.y - 7.5 * zoom,
+          4,
+          6.5,
+          "right",
+          zoom,
+          "rgba(255, 250, 230",
+          cabGlow,
+          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" },
+        );
         // Left face window
-        drawIsoGothicWindow(ctx,
-          cabPos.x - 3 * zoom, cabPos.y - 7.5 * zoom,
-          4, 6.5, "left", zoom,
-          "rgba(255, 250, 230", cabGlow,
-          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" });
+        drawIsoGothicWindow(
+          ctx,
+          cabPos.x - 3 * zoom,
+          cabPos.y - 7.5 * zoom,
+          4,
+          6.5,
+          "left",
+          zoom,
+          "rgba(255, 250, 230",
+          cabGlow,
+          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" },
+        );
       }
 
       // Balcony railing with balusters
@@ -3597,7 +3826,7 @@ export function renderDinkyTrains(
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(balWinR.x - 2.5 * zoom, balWinR.y + 0.5 * zoom);
-      ctx.lineTo(balWinR.x + 2.5 * zoom, balWinR.y + 0.5 * zoom);
+      ctx.lineTo(balWinR.x + 2.5 * zoom, balWinR.y - 2 * zoom);
       ctx.stroke();
 
       // Decorative scrollwork cornices
@@ -3627,14 +3856,15 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Wide ornate gold bands
+      // Wide ornate gold bands — V-shaped to follow both faces
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 3.5 * zoom;
       for (let bi = 0; bi < 2; bi++) {
         const bandY = locoPos.y - 4.5 * zoom - bi * 5.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(locoPos.x - 6 * zoom, bandY + 3 * zoom);
-        ctx.lineTo(locoPos.x + 6 * zoom, bandY - 3 * zoom);
+        ctx.moveTo(locoPos.x - 6.5 * zoom, bandY);
+        ctx.lineTo(locoPos.x, bandY + 2.75 * zoom);
+        ctx.lineTo(locoPos.x + 6.5 * zoom, bandY);
         ctx.stroke();
       }
 
@@ -3648,7 +3878,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#D0CCC4";
         ctx.beginPath();
         ctx.moveTo(locoPos.x, ldBaseY + ldRy);
-        ctx.quadraticCurveTo(locoPos.x + ldRx * 0.9, ldBaseY - 2 * zoom, locoPos.x + ldRx * 0.1, ldPeakY);
+        ctx.quadraticCurveTo(
+          locoPos.x + ldRx * 0.9,
+          ldBaseY - 2 * zoom,
+          locoPos.x + ldRx * 0.1,
+          ldPeakY,
+        );
         ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -3656,7 +3891,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#F0ECE4";
         ctx.beginPath();
         ctx.moveTo(locoPos.x, ldBaseY + ldRy);
-        ctx.quadraticCurveTo(locoPos.x - ldRx * 0.9, ldBaseY - 2 * zoom, locoPos.x - ldRx * 0.1, ldPeakY);
+        ctx.quadraticCurveTo(
+          locoPos.x - ldRx * 0.9,
+          ldBaseY - 2 * zoom,
+          locoPos.x - ldRx * 0.1,
+          ldPeakY,
+        );
         ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -3664,7 +3904,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#E0DCD4";
         ctx.beginPath();
         ctx.moveTo(locoPos.x - ldRx, ldBaseY);
-        ctx.quadraticCurveTo(locoPos.x, ldBaseY - ldRy * 1.5, locoPos.x + ldRx, ldBaseY);
+        ctx.quadraticCurveTo(
+          locoPos.x,
+          ldBaseY - ldRy * 1.5,
+          locoPos.x + ldRx,
+          ldBaseY,
+        );
         ctx.lineTo(locoPos.x, ldBaseY + ldRy);
         ctx.closePath();
         ctx.fill();
@@ -3678,10 +3923,25 @@ export function renderDinkyTrains(
         // Safety valve on dome
         ctx.fillStyle = "#B8860B";
         ctx.beginPath();
-        ctx.ellipse(locoPos.x + 1.5 * zoom, ldPeakY + 1 * zoom, 1.2 * zoom * ISO_SIN, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          locoPos.x + 1.5 * zoom,
+          ldPeakY + 1 * zoom,
+          1.2 * zoom * ISO_SIN,
+          1.2 * zoom,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = "#DAA520";
-        ctx.fillRect(locoPos.x + 1 * zoom, ldPeakY - 2.5 * zoom, 1 * zoom, 2.5 * zoom);
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x + 1 * zoom, ldPeakY - 2.5 * zoom);
+        ctx.lineTo(locoPos.x + 2 * zoom, ldPeakY - 2.5 * zoom - 0.42 * zoom);
+        ctx.lineTo(locoPos.x + 2 * zoom, ldPeakY - 0.42 * zoom);
+        ctx.lineTo(locoPos.x + 1 * zoom, ldPeakY);
+        ctx.closePath();
+        ctx.fill(
+        );
       }
 
       // Isometric fluted gold smokestack
@@ -3729,14 +3989,30 @@ export function renderDinkyTrains(
         ctx.shadowColor = "#C9A227";
         ctx.shadowBlur = 7 * zoom;
         ctx.beginPath();
-        ctx.ellipse(stackPos.x, stackPos.y - stH, stErTop * 1.3, stRTop * ISO_SIN * 1.3, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          stackPos.x,
+          stackPos.y - stH,
+          stErTop * 1.3,
+          stRTop * ISO_SIN * 1.3,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.shadowBlur = 0;
 
         // Finial on top
         ctx.fillStyle = "#C9A227";
         ctx.beginPath();
-        ctx.ellipse(stackPos.x, stackPos.y - stH - 2 * zoom, 1.2 * zoom * ISO_SIN, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          stackPos.x,
+          stackPos.y - stH - 2 * zoom,
+          1.2 * zoom * ISO_SIN,
+          1.2 * zoom,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
         // Golden-tinted steam
@@ -3767,9 +4043,15 @@ export function renderDinkyTrains(
       {
         const hlPos = { x: locoPos.x + 7 * zoom, y: locoPos.y - 8.5 * zoom };
         drawIsoHeadlight(
-          locoPos.x + 5.5 * zoom, locoPos.y - 8 * zoom,
-          hlPos.x, hlPos.y, 3,
-          "#B8860B", "#B8860B", 0.9);
+          locoPos.x + 5.5 * zoom,
+          locoPos.y - 8 * zoom,
+          hlPos.x,
+          hlPos.y,
+          3,
+          "#B8860B",
+          "#B8860B",
+          0.9,
+        );
       }
 
       // === PASSENGER CAR (back) - Royal coach ===
@@ -3788,7 +4070,11 @@ export function renderDinkyTrains(
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.2 * zoom;
       for (let ci = 0; ci < 4; ci++) {
-        const colPos = isoOffset(passengerPos.x, passengerPos.y, -3.5 + ci * 2.5);
+        const colPos = isoOffset(
+          passengerPos.x,
+          passengerPos.y,
+          -3.5 + ci * 2.5,
+        );
         const colX = colPos.x + 2.5 * zoom;
         const colTopY = colPos.y - 11 * zoom;
         const slope = -ISO_Y_RATIO;
@@ -3797,20 +4083,51 @@ export function renderDinkyTrains(
         ctx.lineTo(colX, colPos.y);
         ctx.stroke();
         // Capital and base — isometric flush rects
-        drawIsoFlushRect(ctx, colX, colTopY + 0.6 * zoom, 2.5, 1, "right", zoom, { fill: "#C9A227" });
-        drawIsoFlushRect(ctx, colX, colPos.y - 0.6 * zoom, 2, 1, "right", zoom, { fill: "#C9A227" });
+        drawIsoFlushRect(
+          ctx,
+          colX,
+          colTopY + 0.6 * zoom,
+          2.5,
+          1,
+          "right",
+          zoom,
+          { fill: "#C9A227" },
+        );
+        drawIsoFlushRect(
+          ctx,
+          colX,
+          colPos.y - 0.6 * zoom,
+          2,
+          1,
+          "right",
+          zoom,
+          { fill: "#C9A227" },
+        );
       }
 
       // Arched windows — isometric gothic flush with right wall
       {
         const winGlow = 0.5 + Math.sin(time * 2) * 0.18;
         for (let wi = 0; wi < 3; wi++) {
-          const wPos4a = isoOffset(passengerPos.x, passengerPos.y - 5.5 * zoom, -2.5 + wi * 2.5);
+          const wPos4a = isoOffset(
+            passengerPos.x,
+            passengerPos.y - 5.5 * zoom,
+            -2.5 + wi * 2.5,
+          );
           const wx = wPos4a.x + 2.5 * zoom;
           const wy = wPos4a.y;
-          drawIsoGothicWindow(ctx, wx, wy, 2.8, 4.5, "right", zoom,
-            "rgba(255, 250, 230", winGlow,
-            { frame: "#C0A060", void: "#1a1008", sill: "#C9A227" });
+          drawIsoGothicWindow(
+            ctx,
+            wx,
+            wy,
+            2.8,
+            4.5,
+            "right",
+            zoom,
+            "rgba(255, 250, 230",
+            winGlow,
+            { frame: "#C0A060", void: "#1a1008", sill: "#C9A227" },
+          );
         }
       }
 
@@ -3947,11 +4264,22 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Front assembly: ornate gold bumper, cowcatcher, headlight flush with cab
-      drawTrainFront(cabPos.x, cabPos.y, 11, 11, 14,
-        "#C9A227", "#B89227", "#E8C847",
-        "#C9A227", "#C9A227",
-        0.75 + Math.sin(time * 3) * 0.15, 1.0, 4);
+      // Front assembly on passenger car (viewer-facing end of train)
+      drawTrainFront(
+        passengerPos.x,
+        passengerPos.y,
+        13,
+        11,
+        11,
+        "#C9A227",
+        "#B89227",
+        "#E8C847",
+        "#C9A227",
+        "#C9A227",
+        0.75 + Math.sin(time * 3) * 0.15,
+        1.0,
+        4,
+      );
     } else {
       // ========== LEVEL 4B: Dark Royal Armored War Train ==========
       ctx.shadowColor = "rgba(0,0,0,0.7)";
@@ -3963,8 +4291,16 @@ export function renderDinkyTrains(
       const wheelY = trainY + 4.5 * zoom;
 
       // Heavy reinforced chassis — isometric beam
-      drawIsometricPrism(ctx, trainX, trainY + 3 * zoom, 30, 6, 2.5,
-        { top: "#3a3e45", left: "#2a2e35", right: "#1a1e25" }, zoom);
+      drawIsometricPrism(
+        ctx,
+        trainX,
+        trainY + 3 * zoom,
+        30,
+        6,
+        2.5,
+        { top: "#3a3e45", left: "#2a2e35", right: "#1a1e25" },
+        zoom,
+      );
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.2 * zoom;
       const chL4b = isoOffset(trainX, trainY + 2 * zoom, 15);
@@ -4021,14 +4357,14 @@ export function renderDinkyTrains(
       ctx.lineTo(cabPos.x - cW4b, cabPos.y - cH4b);
       ctx.stroke();
 
-      // Armor plate panels with gold border (both faces)
+      // Armor plate panels with gold border — isometric slope ±0.5
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1 * zoom;
       for (const side of [1, -1]) {
         ctx.beginPath();
         ctx.moveTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 4 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 4.5 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 15 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 6 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 16.5 * zoom);
         ctx.lineTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 14.5 * zoom);
         ctx.closePath();
         ctx.stroke();
@@ -4060,14 +4396,21 @@ export function renderDinkyTrains(
       // Vision slit — isometric flush with right face
       {
         const vsGlow = 0.4 + Math.sin(time * 2) * 0.15;
-        drawIsoFlushSlit(ctx,
-          cabPos.x + 4.5 * zoom, cabPos.y - 9 * zoom,
-          2, 5, "right", zoom, {
+        drawIsoFlushSlit(
+          ctx,
+          cabPos.x + 4.5 * zoom,
+          cabPos.y - 9 * zoom,
+          2,
+          5,
+          "right",
+          zoom,
+          {
             voidColor: "#0a0e14",
             frameColor: "#C9A227",
             glowColor: "rgba(60, 220, 80",
             glowAlpha: vsGlow,
-          });
+          },
+        );
       }
 
       // Isometric crown on top — skewed to match cab top face
@@ -4089,26 +4432,25 @@ export function renderDinkyTrains(
         ctx.closePath();
         ctx.fill();
 
-        // Crown tines — isometric: front-left & front-right edges
+        // Crown tines — follow edge slopes (right edge slope +d/w, left edge -d/w)
         const tines = 4;
+        const tineSlope = crHd / crHw;
         for (let ti = 0; ti < tines; ti++) {
           const t = (ti + 0.5) / tines;
-          // Along the right edge: from (cx, cy-crHd) to (cx+crHw, cy)
           const tx = cabPos.x + crHw * t;
           const ty = crownY - crHd * (1 - t);
           ctx.beginPath();
-          ctx.moveTo(tx - 1 * zoom, ty + 0.5 * zoom);
+          ctx.moveTo(tx - 1 * zoom, ty + 0.5 * zoom - 1 * zoom * tineSlope);
           ctx.lineTo(tx, ty - crH);
-          ctx.lineTo(tx + 1 * zoom, ty + 0.5 * zoom);
+          ctx.lineTo(tx + 1 * zoom, ty + 0.5 * zoom + 1 * zoom * tineSlope);
           ctx.closePath();
           ctx.fill();
-          // Mirror on left edge
           const tx2 = cabPos.x - crHw * t;
           const ty2 = crownY - crHd * (1 - t);
           ctx.beginPath();
-          ctx.moveTo(tx2 - 1 * zoom, ty2 + 0.5 * zoom);
+          ctx.moveTo(tx2 - 1 * zoom, ty2 + 0.5 * zoom + 1 * zoom * tineSlope);
           ctx.lineTo(tx2, ty2 - crH);
-          ctx.lineTo(tx2 + 1 * zoom, ty2 + 0.5 * zoom);
+          ctx.lineTo(tx2 + 1 * zoom, ty2 + 0.5 * zoom - 1 * zoom * tineSlope);
           ctx.closePath();
           ctx.fill();
         }
@@ -4154,14 +4496,15 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Wide gold bands
+      // Wide gold bands — V-shaped to follow both faces
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 3.5 * zoom;
       for (let bi = 0; bi < 2; bi++) {
         const bandY = locoPos.y - 5.5 * zoom - bi * 6.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(locoPos.x - 7 * zoom, bandY + 3.5 * zoom);
-        ctx.lineTo(locoPos.x + 7 * zoom, bandY - 3.5 * zoom);
+        ctx.moveTo(locoPos.x - 7.5 * zoom, bandY);
+        ctx.lineTo(locoPos.x, bandY + 3.25 * zoom);
+        ctx.lineTo(locoPos.x + 7.5 * zoom, bandY);
         ctx.stroke();
       }
 
@@ -4175,7 +4518,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#2a3040";
         ctx.beginPath();
         ctx.moveTo(locoPos.x, adBaseY + adRy);
-        ctx.quadraticCurveTo(locoPos.x + adRx * 0.9, adBaseY - 1.5 * zoom, locoPos.x + adRx * 0.1, adPeakY);
+        ctx.quadraticCurveTo(
+          locoPos.x + adRx * 0.9,
+          adBaseY - 1.5 * zoom,
+          locoPos.x + adRx * 0.1,
+          adPeakY,
+        );
         ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -4183,7 +4531,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#4a5060";
         ctx.beginPath();
         ctx.moveTo(locoPos.x, adBaseY + adRy);
-        ctx.quadraticCurveTo(locoPos.x - adRx * 0.9, adBaseY - 1.5 * zoom, locoPos.x - adRx * 0.1, adPeakY);
+        ctx.quadraticCurveTo(
+          locoPos.x - adRx * 0.9,
+          adBaseY - 1.5 * zoom,
+          locoPos.x - adRx * 0.1,
+          adPeakY,
+        );
         ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
@@ -4191,7 +4544,12 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#3a4050";
         ctx.beginPath();
         ctx.moveTo(locoPos.x - adRx, adBaseY);
-        ctx.quadraticCurveTo(locoPos.x, adBaseY - adRy * 1.5, locoPos.x + adRx, adBaseY);
+        ctx.quadraticCurveTo(
+          locoPos.x,
+          adBaseY - adRy * 1.5,
+          locoPos.x + adRx,
+          adBaseY,
+        );
         ctx.lineTo(locoPos.x, adBaseY + adRy);
         ctx.closePath();
         ctx.fill();
@@ -4202,14 +4560,15 @@ export function renderDinkyTrains(
         ctx.ellipse(locoPos.x, adBaseY, adRx, adRy, 0, 0, Math.PI);
         ctx.stroke();
 
-        // Mini crown trim on dome — isometric tines
+        // Mini crown trim on dome — bases follow face slopes ±0.433
         ctx.fillStyle = "#C9A227";
         for (let ci = 0; ci < 3; ci++) {
           const cpx = locoPos.x - 2.5 * zoom + ci * 2.5 * zoom;
+          const tSlope = ci < 1 ? 0.433 : ci > 1 ? -0.433 : 0;
           ctx.beginPath();
-          ctx.moveTo(cpx - 1 * zoom, adPeakY + 0.5 * zoom);
+          ctx.moveTo(cpx - 1 * zoom, adPeakY + 0.5 * zoom - tSlope * zoom);
           ctx.lineTo(cpx, adPeakY - 2.5 * zoom);
-          ctx.lineTo(cpx + 1 * zoom, adPeakY + 0.5 * zoom);
+          ctx.lineTo(cpx + 1 * zoom, adPeakY + 0.5 * zoom + tSlope * zoom);
           ctx.closePath();
           ctx.fill();
         }
@@ -4225,24 +4584,56 @@ export function renderDinkyTrains(
         ctx.beginPath();
         ctx.moveTo(epPos.x - pipeRx, epPos.y - 3.5 * zoom);
         ctx.lineTo(epPos.x - pipeRx, epPos.y + 3.5 * zoom);
-        ctx.ellipse(epPos.x, epPos.y + 3.5 * zoom, pipeRx, pipeRy * 0.6, 0, Math.PI, 0);
+        ctx.ellipse(
+          epPos.x,
+          epPos.y + 3.5 * zoom,
+          pipeRx,
+          pipeRy * 0.6,
+          0,
+          Math.PI,
+          0,
+        );
         ctx.lineTo(epPos.x + pipeRx, epPos.y - 3.5 * zoom);
         ctx.closePath();
         ctx.fill();
         // Pipe cap
         ctx.fillStyle = "#4a5060";
         ctx.beginPath();
-        ctx.ellipse(epPos.x, epPos.y - 3.5 * zoom, pipeRx, pipeRy * 0.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          epPos.x,
+          epPos.y - 3.5 * zoom,
+          pipeRx,
+          pipeRy * 0.6,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Gold valve wheel
         ctx.strokeStyle = "#C9A227";
         ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
-        ctx.ellipse(epPos.x, epPos.y, pipeRx * 1.5, pipeRy * 1.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          epPos.x,
+          epPos.y,
+          pipeRx * 1.5,
+          pipeRy * 1.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
         ctx.fillStyle = "#C9A227";
         ctx.beginPath();
-        ctx.ellipse(epPos.x, epPos.y, pipeRx * 0.4, pipeRy * 0.4, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          epPos.x,
+          epPos.y,
+          pipeRx * 0.4,
+          pipeRy * 0.4,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -4276,13 +4667,21 @@ export function renderDinkyTrains(
         // Top cap ellipse
         ctx.fillStyle = "#3a4050";
         ctx.beginPath();
-        ctx.ellipse(stackPos.x, stackPos.y - stH, stErTop * 1.2, stRTop * ISO_SIN * 1.2, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          stackPos.x,
+          stackPos.y - stH,
+          stErTop * 1.2,
+          stRTop * ISO_SIN * 1.2,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.strokeStyle = "#C9A227";
         ctx.lineWidth = 2.5 * zoom;
         ctx.stroke();
 
-        // Mini crown tines on stack
+        // Mini crown tines on stack — bases follow local ellipse tangent
         ctx.fillStyle = "#C9A227";
         ctx.shadowColor = "#C9A227";
         ctx.shadowBlur = 6 * zoom;
@@ -4290,10 +4689,11 @@ export function renderDinkyTrains(
           const a = (ci / 3) * Math.PI * 2;
           const tx = stackPos.x + Math.cos(a) * stErTop * 0.8;
           const ty = stackPos.y - stH + Math.sin(a) * stRTop * ISO_SIN * 0.8;
+          const tSlope = -Math.cos(a) * 0.5;
           ctx.beginPath();
-          ctx.moveTo(tx - 0.8 * zoom, ty);
+          ctx.moveTo(tx - 0.8 * zoom, ty - 0.8 * tSlope * zoom);
           ctx.lineTo(tx, ty - 4 * zoom);
-          ctx.lineTo(tx + 0.8 * zoom, ty);
+          ctx.lineTo(tx + 0.8 * zoom, ty + 0.8 * tSlope * zoom);
           ctx.closePath();
           ctx.fill();
         }
@@ -4302,7 +4702,8 @@ export function renderDinkyTrains(
         for (let ci = 0; ci < 3; ci++) {
           const a = (ci / 3) * Math.PI * 2;
           const tx = stackPos.x + Math.cos(a) * stErTop * 0.8;
-          const ty = stackPos.y - stH + Math.sin(a) * stRTop * ISO_SIN * 0.8 - 4 * zoom;
+          const ty =
+            stackPos.y - stH + Math.sin(a) * stRTop * ISO_SIN * 0.8 - 4 * zoom;
           ctx.beginPath();
           ctx.arc(tx, ty, 0.8 * zoom, 0, Math.PI * 2);
           ctx.fill();
@@ -4327,9 +4728,15 @@ export function renderDinkyTrains(
       {
         const hlPos = { x: locoPos.x + 7.5 * zoom, y: locoPos.y - 10.5 * zoom };
         drawIsoHeadlight(
-          locoPos.x + 6 * zoom, locoPos.y - 10 * zoom,
-          hlPos.x, hlPos.y, 3.2,
-          "#C9A227", "#C9A227", 0.9);
+          locoPos.x + 6 * zoom,
+          locoPos.y - 10 * zoom,
+          hlPos.x,
+          hlPos.y,
+          3.2,
+          "#C9A227",
+          "#C9A227",
+          0.9,
+        );
         // Decorative spokes — isometric elliptical
         const hlRx = 3.2 * zoom * ISO_SIN;
         const hlRy = 3.2 * zoom;
@@ -4338,8 +4745,14 @@ export function renderDinkyTrains(
         for (let ri = 0; ri < 8; ri++) {
           const ra = (ri / 8) * Math.PI * 2;
           ctx.beginPath();
-          ctx.moveTo(hlPos.x + Math.cos(ra) * hlRx * 0.75, hlPos.y + Math.sin(ra) * hlRy * 0.75);
-          ctx.lineTo(hlPos.x + Math.cos(ra) * hlRx * 1.1, hlPos.y + Math.sin(ra) * hlRy * 1.1);
+          ctx.moveTo(
+            hlPos.x + Math.cos(ra) * hlRx * 0.75,
+            hlPos.y + Math.sin(ra) * hlRy * 0.75,
+          );
+          ctx.lineTo(
+            hlPos.x + Math.cos(ra) * hlRx * 1.1,
+            hlPos.y + Math.sin(ra) * hlRy * 1.1,
+          );
           ctx.stroke();
         }
       }
@@ -4377,10 +4790,15 @@ export function renderDinkyTrains(
 
       // Gun ports — isometric flush slits on right face
       for (let gi = 0; gi < 2; gi++) {
-        const gpPos = isoOffset(armoredPos.x, armoredPos.y - 4.5 * zoom, -3.5 + gi * 7);
+        const gpPos = isoOffset(
+          armoredPos.x,
+          armoredPos.y - 4.5 * zoom,
+          -3.5 + gi * 7,
+        );
         const gpX = gpPos.x + 2.5 * zoom;
         drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "right", zoom, {
-          voidColor: "#0a0e14", frameColor: "#C9A227",
+          voidColor: "#0a0e14",
+          frameColor: "#C9A227",
         });
       }
 
@@ -4397,8 +4815,10 @@ export function renderDinkyTrains(
         for (let i = 0; i <= 16; i++) {
           const a = (i / 16) * Math.PI * 2;
           const px = armoredPos.x + Math.cos(a) * rwR * 0.6;
-          const py = rwCY + Math.sin(a) * rwR - Math.cos(a) * rwR * 0.6 * rwSlope;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          const py =
+            rwCY + Math.sin(a) * rwR - Math.cos(a) * rwR * 0.6 * rwSlope;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
         ctx.closePath();
         ctx.fill();
@@ -4414,8 +4834,12 @@ export function renderDinkyTrains(
         for (let i = 0; i <= 16; i++) {
           const a = (i / 16) * Math.PI * 2;
           const px = armoredPos.x + Math.cos(a) * rwR * 0.55;
-          const py = rwCY + Math.sin(a) * rwR * 0.92 - Math.cos(a) * rwR * 0.55 * rwSlope;
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          const py =
+            rwCY +
+            Math.sin(a) * rwR * 0.92 -
+            Math.cos(a) * rwR * 0.55 * rwSlope;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
         ctx.closePath();
         ctx.fill();
@@ -4427,7 +4851,10 @@ export function renderDinkyTrains(
         for (let pi = 0; pi < 8; pi++) {
           const pAngle = (pi / 8) * Math.PI * 2;
           const ppx = armoredPos.x + Math.cos(pAngle) * rwR * 0.25;
-          const ppy = rwCY + Math.sin(pAngle) * rwR * 0.42 - Math.cos(pAngle) * rwR * 0.25 * rwSlope;
+          const ppy =
+            rwCY +
+            Math.sin(pAngle) * rwR * 0.42 -
+            Math.cos(pAngle) * rwR * 0.25 * rwSlope;
           ctx.beginPath();
           ctx.ellipse(ppx, ppy, rwR * 0.12, rwR * 0.22, 0, 0, Math.PI * 2);
           ctx.stroke();
@@ -4436,7 +4863,15 @@ export function renderDinkyTrains(
         // Center jewel
         ctx.fillStyle = "#fff4e0";
         ctx.beginPath();
-        ctx.ellipse(armoredPos.x, rwCY, 1.2 * zoom * 0.6, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          armoredPos.x,
+          rwCY,
+          1.2 * zoom * 0.6,
+          1.2 * zoom,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -4452,32 +4887,35 @@ export function renderDinkyTrains(
         { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
+      // Crown finial — V-shaped base matching turret top face (slope ±0.5)
       ctx.fillStyle = "#C9A227";
       ctx.shadowColor = "#C9A227";
       ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
       ctx.moveTo(turretPos4b.x - 2.5 * zoom, turretPos4b.y - 6 * zoom);
       ctx.lineTo(turretPos4b.x - 1.2 * zoom, turretPos4b.y - 9 * zoom);
-      ctx.lineTo(turretPos4b.x, turretPos4b.y - 7 * zoom);
+      ctx.lineTo(turretPos4b.x, turretPos4b.y - 7.5 * zoom);
       ctx.lineTo(turretPos4b.x + 1.2 * zoom, turretPos4b.y - 9 * zoom);
       ctx.lineTo(turretPos4b.x + 2.5 * zoom, turretPos4b.y - 6 * zoom);
+      ctx.lineTo(turretPos4b.x, turretPos4b.y - 4.75 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Gold crown emblem with cross on left face
+      // Gold crown emblem with cross — left face slope +0.433
       ctx.fillStyle = "#C9A227";
       ctx.shadowColor = "#C9A227";
       ctx.shadowBlur = 7 * zoom;
       const crownPos = isoOffset(armoredPos.x, armoredPos.y - 11 * zoom, -7);
+      const csL = 0.433;
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 4.5 * zoom, crownPos.y);
-      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom);
-      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom);
+      ctx.moveTo(crownPos.x - 4.5 * zoom, crownPos.y - 4.5 * csL * zoom);
+      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom - 3.5 * csL * zoom);
+      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom - 1.8 * csL * zoom);
       ctx.lineTo(crownPos.x, crownPos.y - 4 * zoom);
-      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom);
-      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom);
-      ctx.lineTo(crownPos.x + 4.5 * zoom, crownPos.y);
+      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom + 1.8 * csL * zoom);
+      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom + 3.5 * csL * zoom);
+      ctx.lineTo(crownPos.x + 4.5 * zoom, crownPos.y + 4.5 * csL * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#C9A227";
@@ -4487,8 +4925,8 @@ export function renderDinkyTrains(
       ctx.lineTo(crownPos.x, crownPos.y - 7 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom);
-      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom);
+      ctx.moveTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom - 1.8 * csL * zoom);
+      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom + 1.8 * csL * zoom);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
@@ -4587,11 +5025,22 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Front assembly: armored ram, headlight flush with cab face
-      drawTrainFront(cabPos.x, cabPos.y, 13, 13, 18,
-        "#3a4050", "#1a2030", "#C9A227",
-        "#3a4050", "#3a4050",
-        0.75 + Math.sin(time * 3) * 0.2, 1.2, 4);
+      // Front assembly on armored car (viewer-facing end of train)
+      drawTrainFront(
+        armoredPos.x,
+        armoredPos.y,
+        15,
+        13,
+        13,
+        "#3a4050",
+        "#1a2030",
+        "#C9A227",
+        "#3a4050",
+        "#3a4050",
+        0.75 + Math.sin(time * 3) * 0.2,
+        1.2,
+        4,
+      );
     }
 
     ctx.restore();

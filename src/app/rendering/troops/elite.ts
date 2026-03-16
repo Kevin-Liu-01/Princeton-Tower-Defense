@@ -2,8 +2,6 @@ import type { Position } from "../../types";
 import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
 } from "./troopHelpers";
 
 export function drawEliteTroop(
@@ -618,6 +616,54 @@ export function drawEliteTroop(
     size * 0.045,
   );
 
+  // === ARMS (connecting to shield and halberd) ===
+  // Left arm → shield grip
+  const eliteShieldX = x - size * 0.3;
+  const eliteShieldY = y + size * 0.04 + breathe * 0.55 + hipBounce * 0.4;
+  const eliteLShoulderX = x - size * 0.2;
+  const eliteLShoulderY = y - size * 0.02 + breathe;
+  const eliteArmToShieldAngle = Math.atan2(
+    eliteShieldY - eliteLShoulderY,
+    eliteShieldX - eliteLShoulderX,
+  );
+
+  ctx.save();
+  ctx.translate(eliteLShoulderX, eliteLShoulderY);
+  ctx.rotate(eliteArmToShieldAngle);
+  ctx.fillStyle = "#5a5a6a";
+  ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
+  ctx.fillStyle = "#7a7a8a";
+  ctx.fillRect(size * 0.1, -size * 0.04, size * 0.1, size * 0.08);
+  ctx.fillStyle = "#6a6a7a";
+  ctx.beginPath();
+  ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Right arm → halberd grip (shaft at local (0, size*0.1))
+  const halbGripLocalY = size * 0.1;
+  const halbGripWX = halberdX - Math.sin(halberdAngle) * halbGripLocalY;
+  const halbGripWY = halberdY + Math.cos(halberdAngle) * halbGripLocalY;
+  const eliteRShoulderX = x + size * 0.2;
+  const eliteRShoulderY = y - size * 0.02 + breathe;
+  const eliteArmToHalbAngle = Math.atan2(
+    halbGripWY - eliteRShoulderY,
+    halbGripWX - eliteRShoulderX,
+  );
+
+  ctx.save();
+  ctx.translate(eliteRShoulderX, eliteRShoulderY);
+  ctx.rotate(eliteArmToHalbAngle);
+  ctx.fillStyle = "#5a5a6a";
+  ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
+  ctx.fillStyle = "#7a7a8a";
+  ctx.fillRect(size * 0.1, -size * 0.04, size * 0.1, size * 0.08);
+  ctx.fillStyle = "#6a6a7a";
+  ctx.beginPath();
+  ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
   // === SHOULDERS (elaborate layered pauldrons) ===
   // Left pauldron - multiple layers
   ctx.save();
@@ -1028,10 +1074,11 @@ export function drawEliteTroop(
   const eliteShieldGlow = 0.68 + Math.sin(time * 4.2) * 0.32;
   ctx.save();
   ctx.translate(
-    x - size * 0.4,
+    x - size * 0.3,
     y + size * 0.04 + breathe * 0.55 + hipBounce * 0.4,
   );
-  ctx.rotate(-0.42 + stance * 0.03 - attackDrive * 0.08);
+  ctx.rotate(-0.22 + stance * 0.03 - attackDrive * 0.08);
+  ctx.scale(0.75, 0.75);
 
   // Shield shadow
   ctx.fillStyle = "rgba(0,0,0,0.32)";
@@ -1275,12 +1322,7 @@ export function drawEliteTroop(
     (isAttacking ? 0.05 : 0.03);
 
   // Halberd shaft (drawn first so blade elements render on top)
-  const shaftGrad = ctx.createLinearGradient(
-    -size * 0.03,
-    0,
-    size * 0.03,
-    0,
-  );
+  const shaftGrad = ctx.createLinearGradient(-size * 0.03, 0, size * 0.03, 0);
   shaftGrad.addColorStop(0, "#3e2510");
   shaftGrad.addColorStop(0.3, "#6b4422");
   shaftGrad.addColorStop(0.55, "#7d5530");
@@ -1290,7 +1332,7 @@ export function drawEliteTroop(
   ctx.fillRect(-size * 0.028, -size * 0.53, size * 0.056, size * 0.88);
   // Wood grain highlight
   ctx.fillStyle = "rgba(160, 120, 65, 0.22)";
-  ctx.fillRect(-size * 0.008, -size * 0.50, size * 0.016, size * 0.82);
+  ctx.fillRect(-size * 0.008, -size * 0.5, size * 0.016, size * 0.82);
   // Metal grip bands
   const bandColor = "#9a8a60";
   const bandHighlight = "#c4b47a";
@@ -1440,15 +1482,4 @@ export function drawEliteTroop(
   ctx.restore();
 
   ctx.restore();
-
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.elite,
-    { vanguard: true },
-  );
 }

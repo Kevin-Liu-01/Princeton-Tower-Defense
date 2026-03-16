@@ -1,5 +1,12 @@
 import type { Tower, Position } from "../../types";
-import { ISO_ANGLE, ISO_PRISM_D_FACTOR, ISO_Y_RATIO } from "../../constants";
+import {
+  ISO_ANGLE,
+  ISO_COS,
+  ISO_PRISM_D_FACTOR,
+  ISO_PRISM_W_FACTOR,
+  ISO_SIN,
+  ISO_Y_RATIO,
+} from "../../constants";
 import { darkenColor } from "../../utils";
 import {
   drawIsometricPrism,
@@ -8989,98 +8996,131 @@ export function renderStationTower(
     ctx.fill();
   }
 
-  // "ON TIME" sign board
+  // "ON TIME" sign board — isometric flat panel
   const signX = screenPos.x + 27 * zoom;
   const signY = screenPos.y - 12 * zoom;
 
-  // Sign post (3D isometric)
-  const spW = 1 * zoom;
-  const spD = 0.8 * zoom;
-  const spH = 18 * zoom;
-  const spColor =
-    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#5a4a3a";
-  const spDark =
-    tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#4a3a2a";
-  ctx.fillStyle = spDark;
-  ctx.beginPath();
-  ctx.moveTo(signX - spW, signY + spH);
-  ctx.lineTo(signX - spW, signY);
-  ctx.lineTo(signX, signY - spD * 0.5);
-  ctx.lineTo(signX, signY + spH - spD * 0.5);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = spColor;
-  ctx.beginPath();
-  ctx.moveTo(signX, signY + spH - spD * 0.5);
-  ctx.lineTo(signX, signY - spD * 0.5);
-  ctx.lineTo(signX + spW, signY);
-  ctx.lineTo(signX + spW, signY + spH);
-  ctx.closePath();
-  ctx.fill();
+  // Isometric sign post (world: W=2, D=2, H=18)
+  {
+    const pw = 2 * zoom * ISO_PRISM_W_FACTOR;
+    const pd = 2 * zoom * ISO_PRISM_D_FACTOR;
+    const ph = 18 * zoom;
+    const postColor =
+      tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#5a4a3a";
+    const postDark =
+      tower.level >= 4 ? uc("#a08020", "#6878a0", "#a08020") : "#4a3a2a";
+    ctx.fillStyle = postDark;
+    ctx.beginPath();
+    ctx.moveTo(signX - pw, signY + ph);
+    ctx.lineTo(signX - pw, signY);
+    ctx.lineTo(signX, signY + pd);
+    ctx.lineTo(signX, signY + ph + pd);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = postColor;
+    ctx.beginPath();
+    ctx.moveTo(signX + pw, signY + ph);
+    ctx.lineTo(signX + pw, signY);
+    ctx.lineTo(signX, signY + pd);
+    ctx.lineTo(signX, signY + ph + pd);
+    ctx.closePath();
+    ctx.fill();
+  }
 
-  // Sign board (3D isometric)
-  const sbW = 16 * zoom;
-  const sbH = 8 * zoom;
-  const sbD = 2 * zoom;
-  const sbLeft = signX - sbW * 0.5;
-  const sbTop = signY - sbH;
+  // Sign board — isometric flat panel with standard 2:1 lean
+  const sbFaceW = 12 * zoom;
+  const sbFaceH = 7 * zoom;
+  const sbHalfW = sbFaceW * 0.5;
+  const sbThickX = 1 * zoom;
+  const sbThickY = 0.5 * zoom;
+
+  // Face parallelogram: edges lean at standard isometric slope (ISO_SIN/ISO_COS = 0.5)
+  const sbBL = {
+    x: signX - sbHalfW,
+    y: signY - sbHalfW * ISO_SIN / ISO_COS,
+  };
+  const sbBR = {
+    x: signX + sbHalfW,
+    y: signY + sbHalfW * ISO_SIN / ISO_COS,
+  };
+  const sbTL = { x: sbBL.x, y: sbBL.y - sbFaceH };
+  const sbTR = { x: sbBR.x, y: sbBR.y - sbFaceH };
+
+  // Main face
   ctx.fillStyle =
     tower.level >= 4 ? uc("#302820", "#1e2838", "#2a2a32") : "#3a3a3a";
   ctx.beginPath();
-  ctx.moveTo(sbLeft, sbTop);
-  ctx.lineTo(sbLeft + sbW, sbTop);
-  ctx.lineTo(sbLeft + sbW, sbTop + sbH);
-  ctx.lineTo(sbLeft, sbTop + sbH);
+  ctx.moveTo(sbTL.x, sbTL.y);
+  ctx.lineTo(sbTR.x, sbTR.y);
+  ctx.lineTo(sbBR.x, sbBR.y);
+  ctx.lineTo(sbBL.x, sbBL.y);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle =
-    tower.level >= 4 ? uc("#423830", "#1e2d55", "#3a3a42") : "#4a4a4a";
-  ctx.beginPath();
-  ctx.moveTo(sbLeft, sbTop);
-  ctx.lineTo(sbLeft + sbD * 0.5, sbTop - sbD * 0.25);
-  ctx.lineTo(sbLeft + sbW + sbD * 0.5, sbTop - sbD * 0.25);
-  ctx.lineTo(sbLeft + sbW, sbTop);
-  ctx.closePath();
-  ctx.fill();
+
+  // Right edge strip (board thickness)
   ctx.fillStyle =
     tower.level >= 4 ? uc("#201810", "#121828", "#1a1a22") : "#2a2a2a";
   ctx.beginPath();
-  ctx.moveTo(sbLeft + sbW, sbTop);
-  ctx.lineTo(sbLeft + sbW + sbD * 0.5, sbTop - sbD * 0.25);
-  ctx.lineTo(sbLeft + sbW + sbD * 0.5, sbTop + sbH - sbD * 0.25);
-  ctx.lineTo(sbLeft + sbW, sbTop + sbH);
+  ctx.moveTo(sbTR.x, sbTR.y);
+  ctx.lineTo(sbBR.x, sbBR.y);
+  ctx.lineTo(sbBR.x - sbThickX, sbBR.y + sbThickY);
+  ctx.lineTo(sbTR.x - sbThickX, sbTR.y + sbThickY);
   ctx.closePath();
   ctx.fill();
+
+  // Top edge strip (board thickness from above)
+  ctx.fillStyle =
+    tower.level >= 4 ? uc("#423830", "#1e2d55", "#3a3a42") : "#4a4a4a";
+  ctx.beginPath();
+  ctx.moveTo(sbTL.x, sbTL.y);
+  ctx.lineTo(sbTR.x, sbTR.y);
+  ctx.lineTo(sbTR.x - sbThickX, sbTR.y + sbThickY);
+  ctx.lineTo(sbTL.x - sbThickX, sbTL.y + sbThickY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Border on face
   ctx.strokeStyle =
     tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#e06000";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(sbLeft, sbTop);
-  ctx.lineTo(sbLeft + sbW, sbTop);
-  ctx.lineTo(sbLeft + sbW, sbTop + sbH);
-  ctx.lineTo(sbLeft, sbTop + sbH);
+  ctx.moveTo(sbTL.x, sbTL.y);
+  ctx.lineTo(sbTR.x, sbTR.y);
+  ctx.lineTo(sbBR.x, sbBR.y);
+  ctx.lineTo(sbBL.x, sbBL.y);
   ctx.closePath();
   ctx.stroke();
 
-  // "ON TIME" text with glow
+  // "ON TIME" text — isometric lean matching face slope
+  const textCX = signX;
+  const textCY = signY - sbFaceH * 0.55;
   const onTimeGlow = 0.7 + Math.sin(time * 3) * 0.3;
+  ctx.save();
+  ctx.translate(textCX, textCY);
+  ctx.transform(ISO_COS, ISO_SIN, 0, 1, 0, 0);
   ctx.fillStyle = `rgba(0, 255, 100, ${onTimeGlow})`;
   ctx.shadowColor = "#00ff64";
   ctx.shadowBlur = 4 * zoom;
-  ctx.font = `bold ${3.5 * zoom}px monospace`;
+  ctx.font = `bold ${2.5 * zoom}px monospace`;
   ctx.textAlign = "center";
-  ctx.fillText("ON TIME", signX, signY - 3 * zoom);
+  ctx.fillText("ON TIME", 0, 0);
+  ctx.restore();
   ctx.shadowBlur = 0;
 
-  // Small indicator lights on sign
+  // Indicator lights on face (follow the isometric slope)
   for (let i = 0; i < 3; i++) {
-    const lightX = signX - 5 * zoom + i * 5 * zoom;
-    const lightY = signY - 1 * zoom;
+    const lt = i - 1;
+    const indX = signX + lt * 3 * zoom;
+    const indY = signY - 1.2 * zoom + lt * 1.5 * zoom;
     const lightOn = Math.sin(time * 4 + i * 0.5) > 0;
     ctx.fillStyle = lightOn ? "#00ff64" : "#1a3a1a";
+    ctx.save();
+    ctx.translate(indX, indY);
+    ctx.transform(ISO_COS, ISO_SIN, 0, 1, 0, 0);
     ctx.beginPath();
-    ctx.arc(lightX, lightY, 1 * zoom, 0, Math.PI * 2);
+    ctx.arc(0, 0, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
 
   // Level-specific station extras
@@ -11442,80 +11482,126 @@ export function renderStationTower(
 
   // ========== ENHANCED ANIMATED OVERLAYS ==========
 
-  // ---- SIGNAL LIGHTS (cycling red/green/amber) ----
+  // ---- SIGNAL LIGHTS (cycling red/green/amber) — proper isometric ----
   const signalBaseX = screenPos.x - 30 * zoom;
   const signalBaseY = screenPos.y - (6 + tower.level * 2) * zoom;
-  const sigPostW = 2.5 * zoom;
-  const sigPostD = 1.5 * zoom;
 
-  // 3D signal post (left face)
-  ctx.fillStyle = "#2a2a32";
-  ctx.beginPath();
-  ctx.moveTo(signalBaseX - sigPostW * 0.5, signalBaseY + 16 * zoom);
-  ctx.lineTo(signalBaseX - sigPostW * 0.5, signalBaseY);
-  ctx.lineTo(signalBaseX, signalBaseY - sigPostD * 0.5);
-  ctx.lineTo(signalBaseX, signalBaseY + 16 * zoom - sigPostD * 0.5);
-  ctx.closePath();
-  ctx.fill();
-
-  // 3D signal post (right face)
-  ctx.fillStyle = "#3a3a42";
-  ctx.beginPath();
-  ctx.moveTo(signalBaseX, signalBaseY + 16 * zoom - sigPostD * 0.5);
-  ctx.lineTo(signalBaseX, signalBaseY - sigPostD * 0.5);
-  ctx.lineTo(signalBaseX + sigPostW * 0.5, signalBaseY);
-  ctx.lineTo(signalBaseX + sigPostW * 0.5, signalBaseY + 16 * zoom);
-  ctx.closePath();
-  ctx.fill();
-
-  // 3D signal housing (left face)
-  const shY = signalBaseY - 12 * zoom;
-  const shW = 4 * zoom;
-  const shH = 14 * zoom;
-  const shD = 3 * zoom;
-
-  ctx.fillStyle = "#1a1a22";
-  ctx.beginPath();
-  ctx.moveTo(signalBaseX - shW, shY + shH);
-  ctx.lineTo(signalBaseX - shW, shY);
-  ctx.lineTo(signalBaseX - shW + shD * 0.5, shY - shD * 0.25);
-  ctx.lineTo(signalBaseX - shW + shD * 0.5, shY + shH - shD * 0.25);
-  ctx.closePath();
-  ctx.fill();
-
-  // 3D signal housing (right face)
-  ctx.fillStyle = "#2a2a2e";
-  ctx.beginPath();
-  ctx.moveTo(signalBaseX - shW + shD * 0.5, shY + shH - shD * 0.25);
-  ctx.lineTo(signalBaseX - shW + shD * 0.5, shY - shD * 0.25);
-  ctx.lineTo(signalBaseX + shW, shY);
-  ctx.lineTo(signalBaseX + shW, shY + shH);
-  ctx.closePath();
-  ctx.fill();
-
-  // 3D signal housing (top face)
-  ctx.fillStyle = "#3a3a42";
-  ctx.beginPath();
-  ctx.moveTo(signalBaseX - shW, shY);
-  ctx.lineTo(signalBaseX - shW + shD * 0.5, shY - shD * 0.25);
-  ctx.lineTo(signalBaseX + shW, shY);
-  ctx.lineTo(signalBaseX + shW - shD * 0.5, shY + shD * 0.25);
-  ctx.closePath();
-  ctx.fill();
-
-  // Housing visor hoods over each light
-  ctx.fillStyle = "#1a1a1e";
-  for (let vi = 0; vi < 3; vi++) {
-    const visorY = shY + 1.5 * zoom + vi * 4.5 * zoom;
+  // Isometric signal post (world: W=3, D=3, H=16)
+  {
+    const pw = 3 * zoom * ISO_PRISM_W_FACTOR;
+    const pd = 3 * zoom * ISO_PRISM_D_FACTOR;
+    const ph = 16 * zoom;
+    ctx.fillStyle = "#2a2a32";
     ctx.beginPath();
-    ctx.moveTo(signalBaseX - shW - 1.5 * zoom, visorY);
-    ctx.lineTo(signalBaseX - shW, visorY - 1 * zoom);
-    ctx.lineTo(signalBaseX + shW, visorY - 1 * zoom);
-    ctx.lineTo(signalBaseX + shW + 1.5 * zoom, visorY);
+    ctx.moveTo(signalBaseX - pw, signalBaseY + ph);
+    ctx.lineTo(signalBaseX - pw, signalBaseY);
+    ctx.lineTo(signalBaseX, signalBaseY + pd);
+    ctx.lineTo(signalBaseX, signalBaseY + ph + pd);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.moveTo(signalBaseX + pw, signalBaseY + ph);
+    ctx.lineTo(signalBaseX + pw, signalBaseY);
+    ctx.lineTo(signalBaseX, signalBaseY + pd);
+    ctx.lineTo(signalBaseX, signalBaseY + ph + pd);
     ctx.closePath();
     ctx.fill();
   }
 
+  // Isometric signal housing (world: W=8, D=8, H=14)
+  const shW = 8 * zoom * ISO_PRISM_W_FACTOR;
+  const shD = 8 * zoom * ISO_PRISM_D_FACTOR;
+  const shH = 14 * zoom;
+  const shBotY = signalBaseY + 2 * zoom;
+  const shTL = { x: signalBaseX - shW, y: shBotY - shH };
+  const shTF = { x: signalBaseX, y: shBotY - shH + shD };
+  const shTR = { x: signalBaseX + shW, y: shBotY - shH };
+  const shTB = { x: signalBaseX, y: shBotY - shH - shD };
+  const shBL = { x: signalBaseX - shW, y: shBotY };
+  const shBF = { x: signalBaseX, y: shBotY + shD };
+  const shBR = { x: signalBaseX + shW, y: shBotY };
+
+  // Front-left face (darker, lights face)
+  ctx.fillStyle = "#1a1a22";
+  ctx.beginPath();
+  ctx.moveTo(shTL.x, shTL.y);
+  ctx.lineTo(shTF.x, shTF.y);
+  ctx.lineTo(shBF.x, shBF.y);
+  ctx.lineTo(shBL.x, shBL.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front-right face
+  ctx.fillStyle = "#2a2a2e";
+  ctx.beginPath();
+  ctx.moveTo(shTR.x, shTR.y);
+  ctx.lineTo(shTF.x, shTF.y);
+  ctx.lineTo(shBF.x, shBF.y);
+  ctx.lineTo(shBR.x, shBR.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face (diamond)
+  ctx.fillStyle = "#3a3a42";
+  ctx.beginPath();
+  ctx.moveTo(shTB.x, shTB.y);
+  ctx.lineTo(shTL.x, shTL.y);
+  ctx.lineTo(shTF.x, shTF.y);
+  ctx.lineTo(shTR.x, shTR.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Light positions on front-left face center (s=0.5)
+  const lightCX = signalBaseX - shW * 0.5;
+  const lightR = 1.5 * zoom;
+
+  // Isometric visor hoods above each light
+  for (let vi = 0; vi < 3; vi++) {
+    const lightCY = signalBaseY - 10 * zoom + vi * 4.5 * zoom;
+    const visorY = lightCY - lightR - 0.5 * zoom;
+    const vhw = 1.5 * zoom;
+    const vout = 1 * zoom;
+    const vthick = 0.4 * zoom;
+    // Visor underside
+    ctx.fillStyle = "#0e0e12";
+    ctx.beginPath();
+    ctx.moveTo(lightCX - vhw * ISO_COS, visorY - vhw * ISO_SIN);
+    ctx.lineTo(lightCX + vhw * ISO_COS, visorY + vhw * ISO_SIN);
+    ctx.lineTo(lightCX + vhw * ISO_COS, visorY + vhw * ISO_SIN - vout);
+    ctx.lineTo(lightCX - vhw * ISO_COS, visorY - vhw * ISO_SIN - vout);
+    ctx.closePath();
+    ctx.fill();
+    // Visor top
+    ctx.fillStyle = "#1a1a1e";
+    ctx.beginPath();
+    ctx.moveTo(lightCX - vhw * ISO_COS, visorY - vhw * ISO_SIN - vout);
+    ctx.lineTo(lightCX + vhw * ISO_COS, visorY + vhw * ISO_SIN - vout);
+    ctx.lineTo(
+      lightCX + vhw * ISO_COS - vthick,
+      visorY + vhw * ISO_SIN - vout - vthick * 0.5,
+    );
+    ctx.lineTo(
+      lightCX - vhw * ISO_COS - vthick,
+      visorY - vhw * ISO_SIN - vout - vthick * 0.5,
+    );
+    ctx.closePath();
+    ctx.fill();
+    // Visor front lip
+    ctx.fillStyle = "#141418";
+    ctx.beginPath();
+    ctx.moveTo(lightCX - vhw * ISO_COS, visorY - vhw * ISO_SIN);
+    ctx.lineTo(lightCX - vhw * ISO_COS, visorY - vhw * ISO_SIN - vout);
+    ctx.lineTo(
+      lightCX - vhw * ISO_COS - vthick,
+      visorY - vhw * ISO_SIN - vout - vthick * 0.5,
+    );
+    ctx.lineTo(lightCX - vhw * ISO_COS - vthick, visorY - vhw * ISO_SIN);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Signal light cycle
   const signalCycle = (time * 0.5) % 3;
   const signalColors = [
     { color: "#ff3333", glowColor: "#ff0000", label: "red" },
@@ -11523,26 +11609,37 @@ export function renderStationTower(
     { color: "#33ff33", glowColor: "#00ff00", label: "green" },
   ];
 
+  // Isometric signal lights on front-left face
   for (let si = 0; si < 3; si++) {
-    const lightY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
+    const lightCY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
     const isActive = Math.floor(signalCycle) === si;
     const brightness = isActive ? 0.8 + Math.sin(time * 6) * 0.2 : 0.15;
     const sc = signalColors[si];
 
+    ctx.save();
+    ctx.translate(lightCX, lightCY);
+    ctx.transform(ISO_COS, ISO_SIN, 0, 1, 0, 0);
+    // Dark recess
+    ctx.fillStyle = "#111115";
+    ctx.beginPath();
+    ctx.arc(0, 0, lightR + 0.3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    // Light bulb
     if (isActive) {
       ctx.shadowColor = sc.glowColor;
       ctx.shadowBlur = 8 * zoom;
     }
-    ctx.fillStyle = isActive ? sc.color : `rgba(40, 40, 40, 0.8)`;
+    ctx.fillStyle = isActive ? sc.color : "rgba(40, 40, 40, 0.8)";
     ctx.globalAlpha = isActive ? brightness : 0.5;
     ctx.beginPath();
-    ctx.arc(signalBaseX, lightY, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(0, 0, lightR, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
-  // During active state (spawn or attack), all lights flash
+  // Alert mode: all lights flash during active state
   if (stationActive) {
     const alertRate = isStationAttacking ? 8 : 6;
     const alertFlash = Math.sin(time * alertRate) > 0 ? 0.9 : 0.2;
@@ -11553,10 +11650,14 @@ export function renderStationTower(
     ctx.shadowColor = isStationAttacking ? "#ff3220" : "#ff6c00";
     ctx.shadowBlur = 10 * zoom;
     for (let si = 0; si < 3; si++) {
-      const lightY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
+      const lightCY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
+      ctx.save();
+      ctx.translate(lightCX, lightCY);
+      ctx.transform(ISO_COS, ISO_SIN, 0, 1, 0, 0);
       ctx.beginPath();
-      ctx.arc(signalBaseX, lightY, 2.5 * zoom, 0, Math.PI * 2);
+      ctx.arc(0, 0, lightR, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
     ctx.shadowBlur = 0;
   }

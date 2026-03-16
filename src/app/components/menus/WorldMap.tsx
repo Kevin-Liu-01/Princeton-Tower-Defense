@@ -227,6 +227,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     h: number;
     timeBucket: number;
   }>({ groundCanvas: null, structureCanvas: null, w: 0, h: 0, timeBucket: -1 });
+  const fogOverlayCacheRef = useRef<{
+    canvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+  }>({ canvas: null, w: 0, h: 0 });
+  const pathCacheRef = useRef<{
+    canvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+    timeBucket: number;
+    unlockedKey: string;
+  }>({ canvas: null, w: 0, h: 0, timeBucket: -1, unlockedKey: "" });
+  const nodeCacheRef = useRef<{
+    canvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+    timeBucket: number;
+    hoveredLevel: string | null;
+    selectedLevel: string | null;
+    starsKey: string;
+    unlockedKey: string;
+  }>({ canvas: null, w: 0, h: 0, timeBucket: -1, hoveredLevel: null, selectedLevel: null, starsKey: "", unlockedKey: "" });
   const dragRef = useRef({
     hasDragged: false,
     isDragging: false,
@@ -398,6 +420,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       isMobile,
       staticBgCache: staticBgCacheRef,
       decorationCache: decorationCacheRef,
+      fogOverlayCache: fogOverlayCacheRef,
+      pathCache: pathCacheRef,
+      nodeCache: nodeCacheRef,
     });
   };
 

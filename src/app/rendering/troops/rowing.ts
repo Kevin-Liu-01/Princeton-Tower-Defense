@@ -1,8 +1,4 @@
 import type { Position } from "../../types";
-import {
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
-} from "./troopHelpers";
 import { drawSoldierTroop } from "./soldier";
 
 export function drawRowingTroop(
@@ -91,15 +87,4 @@ export function drawRowingTroop(
   ctx.stroke();
   ctx.restore();
   ctx.restore();
-
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.rowing,
-    { vanguard: true },
-  );
 }

@@ -36,6 +36,7 @@ import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
+import { heroFrameElements, spellFrameElements } from "../ui/ornateFrameHelpers";
 
 const HERO_OPTIONS: HeroType[] = [
   "tiger",
@@ -158,6 +159,16 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
 // ── Circle Buttons ─────────────────────────────────────────────────────────
 
 const CIRCLE_SIZE = 56;
+const FRAME_SIZE = CIRCLE_SIZE + 20;
+const FRAME_PAD = (FRAME_SIZE - CIRCLE_SIZE) / 2;
+const FRAME_CX = FRAME_SIZE / 2;
+const FRAME_OUTER_R = FRAME_CX - 2;
+const FRAME_MID_R = FRAME_CX - 4;
+
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
 
 function HeroCircleButton({
   selectedHero,
@@ -167,39 +178,56 @@ function HeroCircleButton({
   onClick: () => void;
 }) {
   const hero = selectedHero ? HERO_DATA[selectedHero] : null;
-  const borderColor = hero ? hero.color : "rgba(180,140,60,0.5)";
+  const hc = hero ? hero.color : "#b4a04a";
 
   return (
-    <button
-      onClick={onClick}
-      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
-      style={{
-        width: CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        background: hero
-          ? `linear-gradient(135deg, ${hero.color}30, ${hero.color}10)`
-          : "linear-gradient(135deg, rgba(38,32,24,0.95), rgba(24,20,14,0.95))",
-        border: `2px solid ${borderColor}`,
-        boxShadow: `0 0 20px ${borderColor}30, 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
-      }}
-    >
-      {selectedHero ? (
-        <HeroSprite type={selectedHero} size={38} />
-      ) : (
-        <Shield size={24} className="text-amber-400/60" />
-      )}
-      {/* Label */}
-      <div
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
+    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <svg
+        className="absolute pointer-events-none"
+        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
+        overflow="visible"
+      >
+        {heroFrameElements({
+          cx: FRAME_CX,
+          outerR: FRAME_OUTER_R,
+          midR: FRAME_MID_R,
+          color: hexToRgba(hc, 0.3),
+          dimColor: hexToRgba(hc, 0.12),
+          prefix: "lh",
+        })}
+      </svg>
+
+      <button
+        onClick={onClick}
+        className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
         style={{
-          background: "rgba(20,16,10,0.9)",
-          border: `1px solid ${borderColor}60`,
-          color: hero ? hero.color : "rgba(180,140,60,0.7)",
+          background: hero
+            ? `radial-gradient(circle at 32% 32%, ${hc}35, ${hc}12)`
+            : "linear-gradient(135deg, rgba(38,32,24,0.95), rgba(24,20,14,0.95))",
+          border: `2px solid ${hexToRgba(hc, 0.5)}`,
+          boxShadow: `0 0 16px ${hexToRgba(hc, 0.15)}, 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
+        }}
+      >
+        {selectedHero ? (
+          <HeroSprite type={selectedHero} size={38} />
+        ) : (
+          <Shield size={24} className="text-amber-400/60" />
+        )}
+      </button>
+
+      <div
+        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap z-20"
+        style={{
+          background: `linear-gradient(180deg, ${hexToRgba(hc, 0.1)}, rgba(20,16,10,0.92))`,
+          border: `1px solid ${hexToRgba(hc, 0.35)}`,
+          color: hc,
         }}
       >
         {selectedHero ? getHeroRoleLabel(selectedHero) : "Hero"}
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -211,25 +239,43 @@ function SpellCircleButton({
   onClick: () => void;
 }) {
   const isFull = selectedCount === 3;
+  const sc = "#a855f7";
 
   return (
-    <button
-      onClick={onClick}
-      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
-      style={{
-        width: CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        background: isFull
-          ? "linear-gradient(135deg, rgba(120,50,200,0.25), rgba(80,20,150,0.15))"
-          : "linear-gradient(135deg, rgba(30,22,40,0.95), rgba(20,14,30,0.95))",
-        border: `2px solid ${isFull ? "rgba(168,85,247,0.6)" : "rgba(140,80,200,0.4)"}`,
-        boxShadow: `0 0 20px rgba(140,80,200,0.2), 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
-      }}
-    >
-      <SpellOrbIcon size={30} active={isFull} />
-      {/* Count badge */}
+    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <svg
+        className="absolute pointer-events-none"
+        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
+        overflow="visible"
+      >
+        {spellFrameElements({
+          cx: FRAME_CX,
+          outerR: FRAME_OUTER_R,
+          midR: FRAME_MID_R,
+          color: isFull ? hexToRgba(sc, 0.35) : hexToRgba(sc, 0.18),
+          dimColor: isFull ? hexToRgba(sc, 0.15) : hexToRgba(sc, 0.08),
+          prefix: "ls",
+        })}
+      </svg>
+
+      <button
+        onClick={onClick}
+        className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
+        style={{
+          background: isFull
+            ? "radial-gradient(ellipse 90% 90% at 34% 32%, rgba(120,50,200,0.25), rgba(80,20,150,0.15))"
+            : "radial-gradient(ellipse 90% 90% at 34% 32%, rgba(30,22,40,0.95), rgba(20,14,30,0.95))",
+          border: `2px solid ${isFull ? "rgba(168,85,247,0.6)" : "rgba(140,80,200,0.4)"}`,
+          boxShadow: `0 0 16px rgba(140,80,200,0.15), 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)`,
+        }}
+      >
+        <SpellOrbIcon size={30} active={isFull} />
+      </button>
+
       <div
-        className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2"
+        className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2 z-20"
         style={{
           background: isFull
             ? "linear-gradient(135deg, #22c55e, #16a34a)"
@@ -243,18 +289,20 @@ function SpellCircleButton({
       >
         {selectedCount}
       </div>
-      {/* Label */}
+
       <div
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
+        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap z-20"
         style={{
-          background: "rgba(20,14,30,0.9)",
-          border: "1px solid rgba(140,80,200,0.4)",
+          background: isFull
+            ? `linear-gradient(180deg, rgba(120,50,200,0.15), rgba(20,14,30,0.92))`
+            : "rgba(20,14,30,0.92)",
+          border: `1px solid ${isFull ? "rgba(168,85,247,0.45)" : "rgba(140,80,200,0.3)"}`,
           color: isFull ? "#a855f7" : "rgba(168,85,247,0.6)",
         }}
       >
         Spells
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -266,28 +314,46 @@ function UpgradeCircleButton({
   onClick: () => void;
 }) {
   const hasStars = availableStars > 0;
+  const gc = "#facc15";
 
   return (
-    <button
-      onClick={onClick}
-      className="relative rounded-full flex items-center justify-center transition-all active:scale-95"
-      style={{
-        width: CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        background: hasStars
-          ? "linear-gradient(135deg, rgba(98,72,18,0.45), rgba(72,52,12,0.35))"
-          : "linear-gradient(135deg, rgba(38,34,20,0.95), rgba(24,20,12,0.95))",
-        border: `2px solid ${hasStars ? "rgba(250,204,21,0.5)" : "rgba(180,150,60,0.3)"}`,
-        boxShadow: hasStars
-          ? "0 0 20px rgba(250,204,21,0.2), 0 4px 16px rgba(0,0,0,0.5), inset 0 0 12px rgba(250,204,21,0.08)"
-          : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-      }}
-    >
-      <EnchantedAnvilIcon size={28} active={hasStars} />
-      {/* Star badge */}
+    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <svg
+        className="absolute pointer-events-none"
+        style={{ top: -FRAME_PAD, left: -FRAME_PAD }}
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
+        overflow="visible"
+      >
+        {spellFrameElements({
+          cx: FRAME_CX,
+          outerR: FRAME_OUTER_R,
+          midR: FRAME_MID_R,
+          color: hasStars ? hexToRgba(gc, 0.3) : "rgba(180,150,60,0.14)",
+          dimColor: hasStars ? hexToRgba(gc, 0.12) : "rgba(180,150,60,0.06)",
+          prefix: "lu",
+        })}
+      </svg>
+
+      <button
+        onClick={onClick}
+        className="absolute inset-0 rounded-full flex items-center justify-center transition-all active:scale-95"
+        style={{
+          background: hasStars
+            ? "radial-gradient(ellipse 90% 90% at 34% 32%, rgba(98,72,18,0.45), rgba(72,52,12,0.35))"
+            : "radial-gradient(ellipse 90% 90% at 34% 32%, rgba(38,34,20,0.95), rgba(24,20,12,0.95))",
+          border: `2px solid ${hasStars ? "rgba(250,204,21,0.5)" : "rgba(180,150,60,0.3)"}`,
+          boxShadow: hasStars
+            ? "0 0 16px rgba(250,204,21,0.15), 0 4px 16px rgba(0,0,0,0.5), inset 0 0 12px rgba(250,204,21,0.08)"
+            : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+        }}
+      >
+        <EnchantedAnvilIcon size={28} active={hasStars} />
+      </button>
+
       {hasStars && (
         <div
-          className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2"
+          className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold border-2 z-20"
           style={{
             background: "linear-gradient(135deg, #fbbf24, #d97706)",
             borderColor: "rgba(38,34,20,0.9)",
@@ -298,18 +364,20 @@ function UpgradeCircleButton({
           {availableStars}
         </div>
       )}
-      {/* Label */}
+
       <div
-        className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap"
+        className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 py-px rounded-full text-[6px] font-bold uppercase tracking-wider whitespace-nowrap z-20"
         style={{
-          background: "rgba(24,20,12,0.9)",
+          background: hasStars
+            ? "linear-gradient(180deg, rgba(98,72,18,0.15), rgba(24,20,12,0.92))"
+            : "rgba(24,20,12,0.9)",
           border: `1px solid ${hasStars ? "rgba(250,204,21,0.4)" : "rgba(180,150,60,0.25)"}`,
           color: hasStars ? "#fbbf24" : "rgba(180,150,60,0.5)",
         }}
       >
         Upgrade
       </div>
-    </button>
+    </div>
   );
 }
 

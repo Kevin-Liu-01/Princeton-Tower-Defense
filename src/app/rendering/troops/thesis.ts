@@ -1,8 +1,4 @@
 import type { Position } from "../../types";
-import {
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
-} from "./troopHelpers";
 import { drawEliteTroop } from "./elite";
 
 export function drawThesisTroop(
@@ -98,15 +94,4 @@ export function drawThesisTroop(
     ctx.stroke();
   }
   ctx.restore();
-
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.thesis,
-    { scholar: true, vanguard: true },
-  );
 }

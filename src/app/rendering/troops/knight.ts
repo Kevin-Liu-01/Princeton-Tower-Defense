@@ -4,8 +4,6 @@ import { getKnightTheme } from "./knightThemes";
 import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
 } from "./troopHelpers";
 
 export function drawKnightTroop(
@@ -464,45 +462,7 @@ export function drawKnightTroop(
   ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
   ctx.restore();
 
-  // Right arm (sword arm - swings dramatically)
-  ctx.save();
-  const armBaseSwing = isAttacking
-    ? -1.2 + attackPhase * 2.8
-    : 0.2 + stance * 0.03;
-  const armSwingX = x + size * 0.3;
-  const armSwingY =
-    y +
-    size * 0.02 +
-    breathe * 0.5 -
-    (isAttacking ? size * 0.12 * swordSwing * 0.3 : 0);
-  const armSwing = resolveWeaponRotation(
-    targetPos,
-    armSwingX,
-    armSwingY,
-    armBaseSwing,
-    Math.PI / 2,
-    isAttacking ? 1.02 : 0.6,
-    WEAPON_LIMITS.rightArm,
-  );
-  ctx.translate(armSwingX, armSwingY);
-  ctx.rotate(armSwing);
-  const rightArmGrad = ctx.createLinearGradient(
-    -size * 0.055,
-    0,
-    size * 0.055,
-    0,
-  );
-  rightArmGrad.addColorStop(0, armorDark);
-  rightArmGrad.addColorStop(0.45, armorMid);
-  rightArmGrad.addColorStop(1, armorHigh);
-  ctx.fillStyle = rightArmGrad;
-  ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.22);
-  ctx.fillStyle = armorPeak;
-  ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
-  ctx.restore();
-
-  // === SOUL-FORGED GREATSWORD ===
-  ctx.save();
+  // === RIGHT ARM + SOUL-FORGED GREATSWORD ===
   const swordScale = 0.82;
   const swordBaseAngle = isAttacking
     ? -0.55 + attackPhase * 3.2
@@ -522,6 +482,44 @@ export function drawKnightTroop(
     isAttacking ? 1.45 : 0.82,
     WEAPON_LIMITS.rightMelee,
   );
+
+  // Grip center in sword's local coords → world space
+  const knightGripLocalY = size * 0.15 * swordScale;
+  const knightGripWorldX = swordX - Math.sin(swordAngle) * knightGripLocalY;
+  const knightGripWorldY = swordY + Math.cos(swordAngle) * knightGripLocalY;
+
+  const knightShoulderX = x + size * 0.26;
+  const knightShoulderY = y + size * 0.02 + breathe * 0.5;
+  const armToSwordAngle = Math.atan2(
+    knightGripWorldY - knightShoulderY,
+    knightGripWorldX - knightShoulderX,
+  );
+
+  ctx.save();
+  ctx.translate(knightShoulderX, knightShoulderY);
+  ctx.rotate(armToSwordAngle);
+  const rightArmGrad = ctx.createLinearGradient(
+    -size * 0.055,
+    0,
+    size * 0.055,
+    0,
+  );
+  rightArmGrad.addColorStop(0, armorDark);
+  rightArmGrad.addColorStop(0.45, armorMid);
+  rightArmGrad.addColorStop(1, armorHigh);
+  ctx.fillStyle = rightArmGrad;
+  ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.2, size * 0.08);
+  ctx.fillStyle = armorPeak;
+  ctx.fillRect(size * 0.12, -size * 0.045, size * 0.1, size * 0.09);
+  // Gauntlet fist
+  ctx.fillStyle = armorMid;
+  ctx.beginPath();
+  ctx.arc(size * 0.22, 0, size * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Sword
+  ctx.save();
   ctx.translate(swordX, swordY);
   ctx.rotate(swordAngle);
 
@@ -805,6 +803,240 @@ export function drawKnightTroop(
   }
   ctx.restore();
 
+  const helmY = y - size * 0.32 + breathe * 0.2;
+
+  // === SWEEPING HORSEHAIR PLUME (rendered behind helmet) - THEMED ===
+  {
+    const plumeBaseY = helmY - size * 0.18;
+    const plumeWind = Math.sin(time * 3.8) * 2.5 + (isAttacking ? swordSwing * 2.0 : 0);
+    const plumeWhip = Math.sin(time * 5.2 + 0.5) * 1.4;
+    const plumeGust = Math.sin(time * 2.8) * 0.7;
+
+    const crownX = x;
+    const crownY = plumeBaseY;
+    const sweepLen = size * 0.7;
+    const sweepAngle = 1.8 + Math.sin(time * 2.0) * 0.12;
+    const tipX = crownX + Math.cos(sweepAngle) * sweepLen + plumeWind * 1.5;
+    const tipY = crownY + Math.sin(sweepAngle) * sweepLen * 0.45 + plumeGust * 2;
+    const midX = (crownX + tipX) * 0.5 + plumeWind * 0.6;
+    const midY = crownY - size * 0.32 + plumeWhip * 0.5;
+
+    // Deep shadow behind plume
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.beginPath();
+    ctx.moveTo(crownX - size * 0.04, crownY + size * 0.02);
+    ctx.bezierCurveTo(
+      midX + size * 0.04,
+      midY + size * 0.04,
+      tipX + size * 0.04,
+      tipY - size * 0.02,
+      tipX + size * 0.06,
+      tipY + size * 0.12,
+    );
+    ctx.bezierCurveTo(
+      tipX - size * 0.02,
+      tipY + size * 0.06,
+      midX - size * 0.02,
+      midY + size * 0.12,
+      crownX + size * 0.04,
+      crownY + size * 0.04,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Base layer (wide, dark backdrop)
+    const plumeBaseGrad = ctx.createLinearGradient(
+      crownX,
+      crownY - size * 0.15,
+      tipX,
+      tipY,
+    );
+    plumeBaseGrad.addColorStop(0, theme.plumeDark);
+    plumeBaseGrad.addColorStop(0.35, theme.plume);
+    plumeBaseGrad.addColorStop(0.7, theme.plumeDark);
+    plumeBaseGrad.addColorStop(1, theme.plumeDark);
+    ctx.fillStyle = plumeBaseGrad;
+    ctx.beginPath();
+    ctx.moveTo(crownX - size * 0.06, crownY);
+    ctx.bezierCurveTo(
+      midX - size * 0.02,
+      midY - size * 0.12,
+      tipX - size * 0.06,
+      tipY - size * 0.14,
+      tipX + size * 0.04,
+      tipY + size * 0.02,
+    );
+    ctx.bezierCurveTo(
+      tipX + size * 0.02,
+      tipY + size * 0.1,
+      midX + size * 0.03,
+      midY + size * 0.1,
+      crownX + size * 0.06,
+      crownY + size * 0.02,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Main body (rich themed gradient)
+    const plumeMainGrad = ctx.createLinearGradient(
+      crownX,
+      crownY - size * 0.1,
+      tipX,
+      tipY,
+    );
+    plumeMainGrad.addColorStop(0, theme.plumeDark);
+    plumeMainGrad.addColorStop(0.15, theme.plume);
+    plumeMainGrad.addColorStop(0.4, theme.plumeLight);
+    plumeMainGrad.addColorStop(0.65, theme.plume);
+    plumeMainGrad.addColorStop(0.85, theme.plumeLight);
+    plumeMainGrad.addColorStop(1, theme.plumeDark);
+    ctx.fillStyle = plumeMainGrad;
+    ctx.beginPath();
+    ctx.moveTo(crownX - size * 0.045, crownY);
+    ctx.bezierCurveTo(
+      midX - size * 0.015,
+      midY - size * 0.1,
+      tipX - size * 0.05,
+      tipY - size * 0.12,
+      tipX + size * 0.02,
+      tipY + size * 0.01,
+    );
+    ctx.bezierCurveTo(
+      tipX,
+      tipY + size * 0.07,
+      midX + size * 0.02,
+      midY + size * 0.08,
+      crownX + size * 0.045,
+      crownY + size * 0.015,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner highlight shimmer (bright ribbon along center)
+    const plumeHiGrad = ctx.createLinearGradient(
+      crownX,
+      crownY,
+      tipX,
+      tipY,
+    );
+    plumeHiGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+    plumeHiGrad.addColorStop(0.15, theme.plumeHighlight + "55");
+    plumeHiGrad.addColorStop(0.4, theme.plumeHighlight + "77");
+    plumeHiGrad.addColorStop(0.65, theme.plumeHighlight + "55");
+    plumeHiGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = plumeHiGrad;
+    ctx.beginPath();
+    ctx.moveTo(crownX - size * 0.02, crownY + size * 0.005);
+    ctx.bezierCurveTo(
+      midX - size * 0.008,
+      midY - size * 0.05,
+      tipX - size * 0.04,
+      tipY - size * 0.06,
+      tipX,
+      tipY + size * 0.02,
+    );
+    ctx.bezierCurveTo(
+      tipX - size * 0.01,
+      tipY + size * 0.04,
+      midX + size * 0.01,
+      midY + size * 0.04,
+      crownX + size * 0.02,
+      crownY + size * 0.01,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Individual horsehair strands flowing backward
+    for (let strand = 0; strand < 10; strand++) {
+      const strandT = strand / 9;
+      const strandPhase = time * (3.5 + strand * 0.4) + strand * 1.1;
+      const strandBend = Math.sin(strandPhase) * (1.5 + strandT * 3.0);
+      const strandAlpha = 0.15 + Math.sin(time * 2.5 + strand * 0.8) * 0.1;
+      const strandSpread = (strandT - 0.5) * size * 0.08;
+      const strandStartX = crownX + strandSpread * 0.4;
+      const strandStartY = crownY + Math.abs(strandSpread) * 0.3;
+
+      ctx.strokeStyle =
+        strand % 3 === 0
+          ? theme.plumeHighlight + Math.round(strandAlpha * 255).toString(16).padStart(2, "0")
+          : strand % 3 === 1
+            ? theme.plumeLight + Math.round(strandAlpha * 255).toString(16).padStart(2, "0")
+            : theme.plume + Math.round((strandAlpha * 0.8) * 255).toString(16).padStart(2, "0");
+      ctx.lineWidth = (0.6 + (1 - Math.abs(strandT - 0.5) * 2) * 0.5) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(strandStartX, strandStartY);
+      const strandMidX = midX + strandSpread + strandBend;
+      const strandMidY = midY - size * 0.05 + Math.abs(strandSpread) * 0.8;
+      const strandEndX = tipX + strandSpread * 1.5 + strandBend * 1.6 + plumeWind * 0.4;
+      const strandEndY = tipY + strandSpread * 0.6 + Math.abs(strandSpread) * 0.5;
+      ctx.bezierCurveTo(
+        strandMidX,
+        strandMidY,
+        strandEndX - size * 0.06,
+        strandEndY - size * 0.04,
+        strandEndX,
+        strandEndY,
+      );
+      ctx.stroke();
+    }
+
+    // Tip wisps at trailing edge
+    for (let wisp = 0; wisp < 5; wisp++) {
+      const wispT = wisp / 4;
+      const wispPhase = Math.sin(time * 7 + wisp * 1.5);
+      const wispAlpha = 0.2 + wispPhase * 0.1;
+      const wispSpread = (wispT - 0.5) * size * 0.1;
+      const wispX = tipX + wispSpread + plumeWind * 0.3;
+      const wispY = tipY + wispSpread * 0.4;
+
+      ctx.strokeStyle = theme.plumeHighlight + Math.round(wispAlpha * 255).toString(16).padStart(2, "0");
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wispX, wispY);
+      ctx.quadraticCurveTo(
+        wispX + size * 0.06 + wispPhase * size * 0.03,
+        wispY - size * 0.02,
+        wispX + size * 0.1 + wispPhase * size * 0.05,
+        wispY + size * 0.03,
+      );
+      ctx.stroke();
+    }
+
+    // Gold crest clamp at base (sits on helmet crown)
+    const clampGrad = ctx.createLinearGradient(
+      crownX - size * 0.06,
+      crownY,
+      crownX + size * 0.06,
+      crownY,
+    );
+    clampGrad.addColorStop(0, "#5a4518");
+    clampGrad.addColorStop(0.3, "#a08028");
+    clampGrad.addColorStop(0.5, "#c4a440");
+    clampGrad.addColorStop(0.7, "#a08028");
+    clampGrad.addColorStop(1, "#5a4518");
+    ctx.fillStyle = clampGrad;
+    ctx.beginPath();
+    ctx.roundRect(
+      crownX - size * 0.06,
+      crownY - size * 0.008,
+      size * 0.12,
+      size * 0.025,
+      size * 0.005,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 230, 160, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+    // Clamp gem (themed)
+    ctx.fillStyle = theme.plume;
+    ctx.shadowColor = theme.plume;
+    ctx.shadowBlur = 3 * zoom;
+    ctx.beginPath();
+    ctx.arc(crownX, crownY + size * 0.004, size * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
   // === ARMORED GORGET ===
   const gorgetGrad = ctx.createLinearGradient(
     x - size * 0.14,
@@ -833,8 +1065,6 @@ export function drawKnightTroop(
   ctx.stroke();
 
   // === GREAT HELM ===
-  const helmY = y - size * 0.32 + breathe * 0.2;
-
   // Helm base dome
   const helmGrad = ctx.createRadialGradient(
     x - size * 0.04,
@@ -949,52 +1179,6 @@ export function drawKnightTroop(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Dramatic plume - THEMED
-  ctx.fillStyle = theme.plume;
-  ctx.beginPath();
-  const plumeBaseY = helmY - size * 0.14;
-  ctx.fillStyle = armorHigh;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.028, helmY - size * 0.155);
-  ctx.lineTo(x - size * 0.022, plumeBaseY + size * 0.01);
-  ctx.lineTo(x + size * 0.022, plumeBaseY + size * 0.01);
-  ctx.lineTo(x + size * 0.028, helmY - size * 0.155);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = theme.plume;
-  ctx.moveTo(x, plumeBaseY);
-  const crestWave =
-    Math.sin(time * 5) * 1.5 + (isAttacking ? swordSwing * 1.2 : 0);
-  for (let i = 0; i < 7; i++) {
-    const t = i / 6;
-    const cx = x + (t - 0.5) * size * 0.25 + crestWave * 2.5 * (1 - t);
-    const cy =
-      plumeBaseY - t * size * 0.28 - Math.sin(t * Math.PI) * size * 0.1;
-    ctx.lineTo(cx, cy);
-  }
-  for (let i = 6; i >= 0; i--) {
-    const t = i / 6;
-    const cx = x + (t - 0.5) * size * 0.25 + crestWave * 2.5 * (1 - t);
-    const cy =
-      plumeBaseY - t * size * 0.24 - Math.sin(t * Math.PI) * size * 0.06;
-    ctx.lineTo(cx, cy);
-  }
-  ctx.closePath();
-  ctx.fill();
-  // Plume base mount
-  ctx.fillStyle = armorPeak;
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    plumeBaseY + size * 0.012,
-    size * 0.048,
-    size * 0.026,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
   // Battle cry shockwave during attack - THEMED
   if (isAttacking && attackPhase > 0.25 && attackPhase < 0.65) {
     const cryAlpha = Math.sin(((attackPhase - 0.25) / 0.4) * Math.PI) * 0.5;
@@ -1008,14 +1192,4 @@ export function drawKnightTroop(
   }
 
   ctx.restore();
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.knight,
-    { vanguard: true },
-  );
 }

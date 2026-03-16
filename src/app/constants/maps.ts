@@ -2513,8 +2513,8 @@ export const LEVEL_DATA: Record<
     name: "Sandbox Arena",
     position: { x: 200, y: 62 },
     description:
-      "An ancient colosseum reclaimed by nature. Unlimited resources. Build anything, test everything.",
-    camera: { offset: { x: -120, y: -360 }, zoom: 0.88 },
+      "A mountaintop colosseum above the clouds. Unlimited resources. Build anything, test everything.",
+    camera: { offset: { x: -20, y: -260 }, zoom: 0.72 },
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
@@ -2526,7 +2526,6 @@ export const LEVEL_DATA: Record<
     decorations: [
       // Big ruins and landmarks scattered around the arena
       { type: "ruined_temple", pos: { x: 16, y: 16 }, variant: 0, size: 2.5 },
-      { type: "nassau_hall", pos: { x: 14, y: -2 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 2, y: 2 }, variant: 0, size: 1.8 },
       { type: "ruined_temple", pos: { x: 28, y: 2 }, variant: 1, size: 1.6 },
       { type: "ruined_temple", pos: { x: 26, y: 28 }, variant: 2, size: 1.4 },

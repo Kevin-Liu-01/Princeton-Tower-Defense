@@ -6517,6 +6517,95 @@ export function renderFlamethrower(
   ctx.arc(tankCX, tankTopCapY - 1 * zoom, 2 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
+  // === MAIN TANK MOUNTING STRAPS ===
+  const strapCount = 2;
+  for (let s = 0; s < strapCount; s++) {
+    const strapY = tankTopCapY + 10 * zoom + s * 10 * zoom;
+    // Strap band (front-facing arc)
+    ctx.strokeStyle = "#4a4a55";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      tankCX,
+      strapY,
+      tankRX + 1.5 * zoom,
+      tankRY + 1 * zoom,
+      0,
+      -0.15,
+      Math.PI + 0.15,
+      false,
+    );
+    ctx.stroke();
+    // Strap highlight
+    ctx.strokeStyle = "rgba(120, 120, 135, 0.3)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      tankCX,
+      strapY - 0.8 * zoom,
+      tankRX + 1.5 * zoom,
+      tankRY + 1 * zoom,
+      0,
+      0.1,
+      Math.PI - 0.1,
+      false,
+    );
+    ctx.stroke();
+    // Strap bolts
+    for (const boltAngle of [-0.3, Math.PI + 0.3]) {
+      const bx = tankCX + Math.cos(boltAngle) * (tankRX + 1.5 * zoom);
+      const by = strapY + Math.sin(boltAngle) * (tankRY + 1 * zoom);
+      ctx.fillStyle = "#6a6a78";
+      ctx.beginPath();
+      ctx.arc(bx, by, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(140, 140, 155, 0.4)";
+      ctx.beginPath();
+      ctx.arc(bx - 0.3 * zoom, by - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === PRESSURE RELIEF VALVE (side of main tank) ===
+  const prvX = tankCX + tankRX * 0.7;
+  const prvY = tankTopCapY + 5 * zoom;
+  // Valve body
+  ctx.fillStyle = "#5a5a65";
+  ctx.beginPath();
+  ctx.ellipse(prvX, prvY, 2.5 * zoom, 1.8 * zoom, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#3a3a45";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.stroke();
+  // Valve stem
+  ctx.strokeStyle = "#7a7a88";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(prvX + 2 * zoom, prvY - 1 * zoom);
+  ctx.lineTo(prvX + 5 * zoom, prvY - 3 * zoom);
+  ctx.stroke();
+  // Valve cap
+  ctx.fillStyle = "#cc2020";
+  ctx.beginPath();
+  ctx.arc(prvX + 5 * zoom, prvY - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
+  ctx.beginPath();
+  ctx.arc(prvX + 4.6 * zoom, prvY - 3.4 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === FUEL OUTLET FITTING (bottom of main tank) ===
+  const outletX = tankCX + tankRX * 0.3;
+  const outletY = tankBotCapY + 1 * zoom;
+  ctx.fillStyle = "#4a4a55";
+  ctx.beginPath();
+  ctx.ellipse(outletX, outletY, 3 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3a3a45";
+  ctx.beginPath();
+  ctx.ellipse(outletX, outletY, 1.8 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   // Pressure gauge on visible side
   const gaugeX = turretX + 2 * zoom;
   const gaugeY = turretY - 6 * zoom;
@@ -6678,18 +6767,536 @@ export function renderFlamethrower(
   ctx.arc(secCX, secTopY - 0.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Fuel lines
-  ctx.strokeStyle = "#555";
-  ctx.lineWidth = 3 * zoom;
+  // === SECONDARY TANK MOUNTING STRAP ===
+  {
+    const secStrapY = secTopY + 6 * zoom;
+    ctx.strokeStyle = "#4a4a55";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      secCX,
+      secStrapY,
+      secRX + 1 * zoom,
+      secRY + 0.8 * zoom,
+      0,
+      -0.15,
+      Math.PI + 0.15,
+      false,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(120, 120, 135, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      secCX,
+      secStrapY - 0.6 * zoom,
+      secRX + 1 * zoom,
+      secRY + 0.8 * zoom,
+      0,
+      0.15,
+      Math.PI - 0.15,
+      false,
+    );
+    ctx.stroke();
+    // Strap rivets
+    for (const boltA of [-0.25, Math.PI + 0.25]) {
+      const rbx = secCX + Math.cos(boltA) * (secRX + 1 * zoom);
+      const rby = secStrapY + Math.sin(boltA) * (secRY + 0.8 * zoom);
+      ctx.fillStyle = "#6a6a78";
+      ctx.beginPath();
+      ctx.arc(rbx, rby, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === SECONDARY TANK OUTLET FITTING ===
+  {
+    const secOutX = secCX - secRX * 0.4;
+    const secOutY = secBotY + 0.5 * zoom;
+    ctx.fillStyle = "#4a4a55";
+    ctx.beginPath();
+    ctx.ellipse(secOutX, secOutY, 2.2 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#3a3a45";
+    ctx.beginPath();
+    ctx.ellipse(secOutX, secOutY, 1.3 * zoom, 0.9 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === MULTI-TUBE FUEL SYSTEM ===
+  // Shared tube endpoints
+  const mainTankOutX = tankCX + tankRX * 0.3;
+  const mainTankOutY = tankBotCapY + 1 * zoom;
+  const secTankOutX = secCX - secRX * 0.4;
+  const secTankOutY = secBotY + 0.5 * zoom;
+  const igniterInX = turretX;
+  const igniterInY = turretY - 10 * zoom;
+
+  // Valve manifold block position (between tanks and igniter)
+  const manifoldX = turretX + 1 * zoom;
+  const manifoldY = turretY - 3 * zoom;
+  const manifoldW = 8 * zoom;
+  const manifoldH = 5 * zoom;
+  const manifoldD = 3 * zoom;
+
+  // --- Primary fuel tube (thick, red tint — from main tank to manifold) ---
+  ctx.strokeStyle = "#3a2828";
+  ctx.lineWidth = 4 * zoom;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(turretX - 2 * zoom, turretY - 8 * zoom);
+  ctx.moveTo(mainTankOutX, mainTankOutY);
   ctx.quadraticCurveTo(
-    turretX + 4 * zoom,
-    turretY - 14 * zoom,
-    turretX + 6 * zoom,
-    turretY - 10 * zoom,
+    mainTankOutX + 4 * zoom,
+    manifoldY + 4 * zoom,
+    manifoldX - manifoldW * 0.35,
+    manifoldY + manifoldD * 0.5,
   );
   ctx.stroke();
+  // Tube highlight
+  ctx.strokeStyle = "rgba(180, 80, 70, 0.25)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(mainTankOutX + 0.5 * zoom, mainTankOutY - 0.8 * zoom);
+  ctx.quadraticCurveTo(
+    mainTankOutX + 4.5 * zoom,
+    manifoldY + 3.2 * zoom,
+    manifoldX - manifoldW * 0.35 + 0.5 * zoom,
+    manifoldY + manifoldD * 0.5 - 0.8 * zoom,
+  );
+  ctx.stroke();
+
+  // --- Secondary oxidizer tube (medium, green tint — from sec tank to manifold) ---
+  ctx.strokeStyle = "#1a3320";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(secTankOutX, secTankOutY);
+  ctx.quadraticCurveTo(
+    secTankOutX - 2 * zoom,
+    manifoldY + 5 * zoom,
+    manifoldX + manifoldW * 0.3,
+    manifoldY + manifoldD * 0.5,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(80, 180, 90, 0.2)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(secTankOutX + 0.4 * zoom, secTankOutY - 0.6 * zoom);
+  ctx.quadraticCurveTo(
+    secTankOutX - 1.6 * zoom,
+    manifoldY + 4.4 * zoom,
+    manifoldX + manifoldW * 0.3 + 0.4 * zoom,
+    manifoldY + manifoldD * 0.5 - 0.6 * zoom,
+  );
+  ctx.stroke();
+
+  // --- Pilot gas tube (thin, blue — from main tank cap to igniter) ---
+  ctx.strokeStyle = "#222838";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(tankCX + 3 * zoom, tankTopCapY + 1 * zoom);
+  ctx.bezierCurveTo(
+    tankCX + 10 * zoom,
+    tankTopCapY - 4 * zoom,
+    igniterInX - 6 * zoom,
+    igniterInY - 8 * zoom,
+    igniterInX - 3 * zoom,
+    igniterInY - 2 * zoom,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(80, 120, 200, 0.2)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(tankCX + 3 * zoom, tankTopCapY + 0.3 * zoom);
+  ctx.bezierCurveTo(
+    tankCX + 10 * zoom,
+    tankTopCapY - 4.7 * zoom,
+    igniterInX - 6 * zoom,
+    igniterInY - 8.7 * zoom,
+    igniterInX - 3 * zoom,
+    igniterInY - 2.7 * zoom,
+  );
+  ctx.stroke();
+
+  // --- Tube clamps on primary fuel line ---
+  for (let tc = 0; tc < 2; tc++) {
+    const clampT = 0.3 + tc * 0.35;
+    const clX =
+      (1 - clampT) * (1 - clampT) * mainTankOutX +
+      2 * (1 - clampT) * clampT * (mainTankOutX + 4 * zoom) +
+      clampT * clampT * (manifoldX - manifoldW * 0.35);
+    const clY =
+      (1 - clampT) * (1 - clampT) * mainTankOutY +
+      2 * (1 - clampT) * clampT * (manifoldY + 4 * zoom) +
+      clampT * clampT * (manifoldY + manifoldD * 0.5);
+    ctx.fillStyle = "#5a5a68";
+    ctx.beginPath();
+    ctx.ellipse(clX, clY, 3 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a3a45";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+    // Clamp bolt
+    ctx.fillStyle = "#7a7a88";
+    ctx.beginPath();
+    ctx.arc(clX + 1.5 * zoom, clY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // --- Tube clamp on oxidizer line ---
+  {
+    const oxClampT = 0.45;
+    const oxClX =
+      (1 - oxClampT) * (1 - oxClampT) * secTankOutX +
+      2 * (1 - oxClampT) * oxClampT * (secTankOutX - 2 * zoom) +
+      oxClampT * oxClampT * (manifoldX + manifoldW * 0.3);
+    const oxClY =
+      (1 - oxClampT) * (1 - oxClampT) * secTankOutY +
+      2 * (1 - oxClampT) * oxClampT * (manifoldY + 5 * zoom) +
+      oxClampT * oxClampT * (manifoldY + manifoldD * 0.5);
+    ctx.fillStyle = "#5a5a68";
+    ctx.beginPath();
+    ctx.ellipse(oxClX, oxClY, 2.5 * zoom, 1.8 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a3a45";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+
+  // === VALVE MANIFOLD BLOCK ===
+  {
+    // 3D block: top face
+    const mTopGrad = ctx.createLinearGradient(
+      manifoldX - manifoldW * 0.5,
+      manifoldY - manifoldH,
+      manifoldX + manifoldW * 0.5,
+      manifoldY - manifoldH,
+    );
+    mTopGrad.addColorStop(0, "#505058");
+    mTopGrad.addColorStop(0.4, "#5e5e66");
+    mTopGrad.addColorStop(1, "#48484f");
+    ctx.fillStyle = mTopGrad;
+    ctx.beginPath();
+    ctx.moveTo(manifoldX, manifoldY - manifoldH - manifoldD);
+    ctx.lineTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
+    ctx.lineTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a65";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+
+    // Left face
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.moveTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
+    ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
+    ctx.lineTo(manifoldX - manifoldW * 0.5, manifoldY - manifoldD * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#2a2a32";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Right face
+    ctx.fillStyle = "#44444c";
+    ctx.beginPath();
+    ctx.moveTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldH - manifoldD * 0.4);
+    ctx.lineTo(manifoldX, manifoldY - manifoldH + manifoldD * 0.2);
+    ctx.lineTo(manifoldX, manifoldY + manifoldD * 0.2);
+    ctx.lineTo(manifoldX + manifoldW * 0.5, manifoldY - manifoldD * 0.4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#2a2a32";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Inlet port circles on the block faces
+    // Primary inlet (left face)
+    ctx.fillStyle = "#2a2a32";
+    ctx.beginPath();
+    ctx.ellipse(
+      manifoldX - manifoldW * 0.22,
+      manifoldY - manifoldH * 0.45,
+      1.5 * zoom,
+      1.2 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a65";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Secondary inlet (right face)
+    ctx.fillStyle = "#2a2a32";
+    ctx.beginPath();
+    ctx.ellipse(
+      manifoldX + manifoldW * 0.22,
+      manifoldY - manifoldH * 0.45,
+      1.5 * zoom,
+      1.2 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a65";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Valve handle on top
+    const handleY = manifoldY - manifoldH - manifoldD * 0.8;
+    ctx.strokeStyle = "#6a6a78";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(manifoldX - 2 * zoom, handleY);
+    ctx.lineTo(manifoldX + 2 * zoom, handleY);
+    ctx.stroke();
+    // Handle knob
+    ctx.fillStyle = "#dd3030";
+    ctx.beginPath();
+    ctx.arc(manifoldX, handleY, 1.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255, 120, 120, 0.35)";
+    ctx.beginPath();
+    ctx.arc(manifoldX - 0.4 * zoom, handleY - 0.4 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bolts on manifold top face corners
+    const mBolts = [
+      { x: manifoldX - manifoldW * 0.35, y: manifoldY - manifoldH - manifoldD * 0.3 },
+      { x: manifoldX + manifoldW * 0.35, y: manifoldY - manifoldH - manifoldD * 0.3 },
+      { x: manifoldX, y: manifoldY - manifoldH + manifoldD * 0.05 },
+    ];
+    for (const bolt of mBolts) {
+      ctx.fillStyle = "#58585e";
+      ctx.beginPath();
+      ctx.arc(bolt.x, bolt.y, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(140, 140, 155, 0.3)";
+      ctx.beginPath();
+      ctx.arc(bolt.x - 0.2 * zoom, bolt.y - 0.2 * zoom, 0.4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === INLINE FUEL PUMP (between manifold and igniter) ===
+  {
+    const pumpX = manifoldX - 1 * zoom;
+    const pumpY = manifoldY - manifoldH - 3 * zoom;
+    const pumpR = 4 * zoom;
+
+    // Feed tube from manifold top to pump
+    ctx.strokeStyle = "#3a2828";
+    ctx.lineWidth = 3 * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(manifoldX, manifoldY - manifoldH - manifoldD * 0.5);
+    ctx.lineTo(pumpX, pumpY + pumpR * 0.5);
+    ctx.stroke();
+
+    // Pump cylindrical housing (bottom ellipse of body)
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.ellipse(
+      pumpX,
+      pumpY + 2 * zoom,
+      pumpR,
+      pumpR * 0.5,
+      0,
+      0,
+      Math.PI,
+      false,
+    );
+    ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
+    ctx.ellipse(
+      pumpX,
+      pumpY - 1 * zoom,
+      pumpR,
+      pumpR * 0.5,
+      0,
+      Math.PI,
+      Math.PI * 2,
+      false,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Pump body gradient
+    const pumpGrad = ctx.createLinearGradient(
+      pumpX - pumpR,
+      pumpY,
+      pumpX + pumpR,
+      pumpY,
+    );
+    pumpGrad.addColorStop(0, "#353540");
+    pumpGrad.addColorStop(0.35, "#4a4a55");
+    pumpGrad.addColorStop(0.65, "#555560");
+    pumpGrad.addColorStop(1, "#3a3a42");
+    ctx.fillStyle = pumpGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      pumpX,
+      pumpY + 2 * zoom,
+      pumpR,
+      pumpR * 0.5,
+      0,
+      0,
+      Math.PI,
+      false,
+    );
+    ctx.lineTo(pumpX - pumpR, pumpY - 1 * zoom);
+    ctx.ellipse(
+      pumpX,
+      pumpY - 1 * zoom,
+      pumpR,
+      pumpR * 0.5,
+      0,
+      Math.PI,
+      Math.PI * 2,
+      false,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Pump top cap
+    const pTopGrad = ctx.createRadialGradient(
+      pumpX - 1 * zoom,
+      pumpY - 1 * zoom,
+      0,
+      pumpX,
+      pumpY - 1 * zoom,
+      pumpR,
+    );
+    pTopGrad.addColorStop(0, "#5a5a65");
+    pTopGrad.addColorStop(0.5, "#4e4e58");
+    pTopGrad.addColorStop(1, "#3a3a45");
+    ctx.fillStyle = pTopGrad;
+    ctx.beginPath();
+    ctx.ellipse(pumpX, pumpY - 1 * zoom, pumpR, pumpR * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a68";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+
+    // Motor housing (small cylinder on the side)
+    const motorX = pumpX + pumpR * 0.8;
+    const motorY = pumpY;
+    ctx.fillStyle = "#44444c";
+    ctx.beginPath();
+    ctx.ellipse(motorX, motorY, 2.5 * zoom, 2 * zoom, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a65";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+    // Motor shaft dot
+    ctx.fillStyle = "#7a7a88";
+    ctx.beginPath();
+    ctx.arc(motorX, motorY, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spinning indicator on pump cap (shows it's running)
+    const pumpSpin = time * 4;
+    ctx.strokeStyle = "rgba(100, 100, 115, 0.5)";
+    ctx.lineWidth = 0.7 * zoom;
+    for (let ps = 0; ps < 3; ps++) {
+      const psAngle = pumpSpin + (ps / 3) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(pumpX, pumpY - 1 * zoom);
+      ctx.lineTo(
+        pumpX + Math.cos(psAngle) * pumpR * 0.7,
+        pumpY - 1 * zoom + Math.sin(psAngle) * pumpR * 0.35,
+      );
+      ctx.stroke();
+    }
+    // Center hub
+    ctx.fillStyle = "#4a4a55";
+    ctx.beginPath();
+    ctx.arc(pumpX, pumpY - 1 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Feed tube from pump to igniter
+    ctx.strokeStyle = "#3a2828";
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pumpX, pumpY - 1 * zoom - pumpR * 0.5);
+    ctx.quadraticCurveTo(
+      pumpX - 2 * zoom,
+      igniterInY + 2 * zoom,
+      igniterInX,
+      igniterInY + 2 * zoom,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(180, 80, 70, 0.2)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pumpX + 0.4 * zoom, pumpY - 1 * zoom - pumpR * 0.5 - 0.6 * zoom);
+    ctx.quadraticCurveTo(
+      pumpX - 1.6 * zoom,
+      igniterInY + 1.4 * zoom,
+      igniterInX + 0.4 * zoom,
+      igniterInY + 1.4 * zoom,
+    );
+    ctx.stroke();
+
+    // Oxidizer tube from manifold to igniter (goes around the other side)
+    ctx.strokeStyle = "#1a3320";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(manifoldX + manifoldW * 0.25, manifoldY - manifoldH - manifoldD * 0.3);
+    ctx.bezierCurveTo(
+      manifoldX + manifoldW * 0.6,
+      manifoldY - manifoldH - 5 * zoom,
+      igniterInX + 6 * zoom,
+      igniterInY + 3 * zoom,
+      igniterInX + 3 * zoom,
+      igniterInY + 1 * zoom,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(80, 180, 90, 0.15)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(manifoldX + manifoldW * 0.25 + 0.3 * zoom, manifoldY - manifoldH - manifoldD * 0.3 - 0.5 * zoom);
+    ctx.bezierCurveTo(
+      manifoldX + manifoldW * 0.6 + 0.3 * zoom,
+      manifoldY - manifoldH - 5.5 * zoom,
+      igniterInX + 6.3 * zoom,
+      igniterInY + 2.5 * zoom,
+      igniterInX + 3.3 * zoom,
+      igniterInY + 0.5 * zoom,
+    );
+    ctx.stroke();
+  }
+
+  // === PRESSURE REGULATOR FITTING (on output tube near igniter) ===
+  {
+    const regX = igniterInX - 1 * zoom;
+    const regY = igniterInY + 4 * zoom;
+    // Hex nut body
+    ctx.fillStyle = "#50505a";
+    const regR = 2.5 * zoom;
+    ctx.beginPath();
+    for (let rh = 0; rh < 6; rh++) {
+      const a = (rh / 6) * Math.PI * 2 - Math.PI / 6;
+      const rx = regX + Math.cos(a) * regR;
+      const ry = regY + Math.sin(a) * regR * 0.65;
+      if (rh === 0) ctx.moveTo(rx, ry);
+      else ctx.lineTo(rx, ry);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#3a3a45";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+    // Central bore
+    ctx.fillStyle = "#2a2a32";
+    ctx.beginPath();
+    ctx.arc(regX, regY, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // === 3D IGNITER HOUSING (isometric cylinder) ===
   const igniterY = turretY - 10 * zoom;
@@ -6904,6 +7511,154 @@ export function renderFlamethrower(
   ctx.beginPath();
   ctx.ellipse(turretX, igniterY, 6 * zoom, 4.5 * zoom, 0, 0, Math.PI * 2);
   ctx.stroke();
+
+  // === IGNITION COIL / TRANSFORMER ===
+  {
+    const coilX = turretX + 10 * zoom;
+    const coilY = igniterY - 3 * zoom;
+    const coilW = 4 * zoom;
+    const coilH = 6 * zoom;
+
+    // Coil housing (dark box)
+    ctx.fillStyle = "#2a2a35";
+    ctx.save();
+    ctx.translate(coilX, coilY);
+    ctx.beginPath();
+    ctx.rect(-coilW * 0.5, -coilH * 0.5, coilW, coilH);
+    ctx.fill();
+    ctx.strokeStyle = "#3a3a45";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    ctx.restore();
+
+    // Copper winding coils (visible wire loops)
+    ctx.strokeStyle = "#b87333";
+    ctx.lineWidth = 0.8 * zoom;
+    const coilCount = 5;
+    for (let cw = 0; cw < coilCount; cw++) {
+      const cwY = coilY - coilH * 0.35 + (cw / (coilCount - 1)) * coilH * 0.7;
+      ctx.beginPath();
+      ctx.ellipse(
+        coilX,
+        cwY,
+        coilW * 0.55,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI,
+        false,
+      );
+      ctx.stroke();
+    }
+    // Copper highlight
+    ctx.strokeStyle = "rgba(220, 160, 80, 0.3)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let cw = 0; cw < coilCount; cw++) {
+      const cwY = coilY - coilH * 0.35 + (cw / (coilCount - 1)) * coilH * 0.7;
+      ctx.beginPath();
+      ctx.ellipse(
+        coilX,
+        cwY - 0.3 * zoom,
+        coilW * 0.5,
+        0.8 * zoom,
+        0,
+        0.3,
+        Math.PI - 0.3,
+        false,
+      );
+      ctx.stroke();
+    }
+
+    // Terminal posts on top
+    ctx.fillStyle = "#8a8a95";
+    ctx.beginPath();
+    ctx.arc(coilX - 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(coilX + 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wiring harness from coil to igniter center
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(coilX - 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom);
+    ctx.quadraticCurveTo(
+      turretX + 5 * zoom,
+      igniterY - 5 * zoom,
+      turretX + 2 * zoom,
+      igniterY - 1 * zoom,
+    );
+    ctx.stroke();
+    // Second wire
+    ctx.strokeStyle = "#882222";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(coilX + 1.2 * zoom, coilY - coilH * 0.5 - 1 * zoom);
+    ctx.quadraticCurveTo(
+      turretX + 7 * zoom,
+      igniterY - 6 * zoom,
+      turretX + 3 * zoom,
+      igniterY,
+    );
+    ctx.stroke();
+
+    // Spark indicator near coil (flickering)
+    const sparkAlpha = 0.3 + Math.sin(time * 15) * 0.2;
+    ctx.fillStyle = `rgba(100, 180, 255, ${sparkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(
+      coilX - 1.2 * zoom,
+      coilY - coilH * 0.5 - 1 * zoom,
+      1.5 * zoom,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // === WIRING CONDUIT (bundled cable run along the housing) ===
+  {
+    ctx.strokeStyle = "#2a2a32";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(turretX - 8 * zoom, igniterY + 2 * zoom);
+    ctx.quadraticCurveTo(
+      turretX - 4 * zoom,
+      igniterY + 5 * zoom,
+      turretX + 2 * zoom,
+      igniterY + 3 * zoom,
+    );
+    ctx.stroke();
+    // Conduit highlight
+    ctx.strokeStyle = "rgba(80, 80, 90, 0.3)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(turretX - 8 * zoom, igniterY + 1.4 * zoom);
+    ctx.quadraticCurveTo(
+      turretX - 4 * zoom,
+      igniterY + 4.4 * zoom,
+      turretX + 2 * zoom,
+      igniterY + 2.4 * zoom,
+    );
+    ctx.stroke();
+    // Cable ties
+    for (const tieT of [0.3, 0.7]) {
+      const u = 1 - tieT;
+      const tieX =
+        u * u * (turretX - 8 * zoom) +
+        2 * u * tieT * (turretX - 4 * zoom) +
+        tieT * tieT * (turretX + 2 * zoom);
+      const tieY =
+        u * u * (igniterY + 2 * zoom) +
+        2 * u * tieT * (igniterY + 5 * zoom) +
+        tieT * tieT * (igniterY + 3 * zoom);
+      ctx.fillStyle = "#4a4a55";
+      ctx.beginPath();
+      ctx.ellipse(tieX, tieY, 1.5 * zoom, 2.2 * zoom, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   // Nozzle mounting collar with depth ring
   const nozzleCollarX = turretX + cosR * 4 * zoom;

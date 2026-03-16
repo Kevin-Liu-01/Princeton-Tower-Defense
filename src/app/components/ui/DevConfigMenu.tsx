@@ -36,6 +36,9 @@ interface DevConfigMenuProps {
   devPerfEnabled: boolean;
   setDevPerfEnabled: (enabled: boolean) => void;
   devPerfSnapshot: DevPerfSnapshot;
+  currentWave: number;
+  totalWaves: number;
+  waveInProgress: boolean;
   onUnlockLevel: (levelId: string) => void;
   onLockLevel: (levelId: string) => void;
   onUnlockAllLevels: () => void;
@@ -45,6 +48,8 @@ interface DevConfigMenuProps {
   onAdjustLives: (delta: number) => void;
   onInstantVictory: () => void;
   onInstantLose: () => void;
+  onSkipWave: () => void;
+  onKillAllEnemies: () => void;
 }
 
 const clampStars = (value: number): number =>
@@ -57,6 +62,9 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   devPerfEnabled,
   setDevPerfEnabled,
   devPerfSnapshot,
+  currentWave,
+  totalWaves,
+  waveInProgress,
   onUnlockLevel,
   onLockLevel,
   onUnlockAllLevels,
@@ -66,6 +74,8 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   onAdjustLives,
   onInstantVictory,
   onInstantLose,
+  onSkipWave,
+  onKillAllEnemies,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState<string>(
@@ -221,6 +231,38 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     In-Game Cheats
                   </div>
 
+                  <div className="mb-2 flex items-center justify-between rounded border border-blue-300/20 bg-blue-900/20 px-2 py-1">
+                    <span className="font-mono text-[11px] text-blue-100">
+                      Wave {Math.min(currentWave + 1, totalWaves)}/{totalWaves}
+                      {waveInProgress ? " (spawning)" : currentWave >= totalWaves ? " (done)" : " (idle)"}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={currentWave >= totalWaves}
+                      onClick={() => {
+                        onSkipWave();
+                        setFeedback({
+                          message: `Skipped to wave ${Math.min(currentWave + 2, totalWaves)}/${totalWaves}.`,
+                          isError: false,
+                        });
+                      }}
+                      className="rounded border border-cyan-300/40 bg-cyan-900/40 px-2 py-0.5 text-[11px] font-semibold text-cyan-100 hover:bg-cyan-800/50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Skip Wave
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onKillAllEnemies();
+                      setFeedback({ message: "Killed all enemies on screen.", isError: false });
+                    }}
+                    className="mb-2 w-full rounded border border-rose-300/40 bg-rose-900/40 px-2 py-1 font-semibold text-rose-100 hover:bg-rose-800/50"
+                  >
+                    Kill All Enemies
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -296,7 +338,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
 
               <section className="rounded border border-amber-300/30 bg-amber-950/30 p-2">
                 <div className="mb-2 font-semibold uppercase tracking-wide text-amber-200">
-                  Progress Controls
+                  Save &amp; Progress
                 </div>
 
                 <div className="mb-2 grid grid-cols-[1fr_auto_auto] gap-2">

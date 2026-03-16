@@ -31,7 +31,10 @@ export interface KnightTheme {
   swingTrailAlt: string; // Secondary swing trail
   // Shield and helm
   shieldEmblem: string; // Shield emblem color
-  plume: string; // Helmet plume
+  plume: string; // Helmet plume main color
+  plumeDark: string; // Plume deep shadow
+  plumeLight: string; // Plume highlight
+  plumeHighlight: string; // Plume bright shimmer
   eyeGlow: string; // Glowing eye color
   eyeShadow: string; // Eye shadow/glow
   // Effects
@@ -60,6 +63,9 @@ export const KNIGHT_THEME_ORANGE: KnightTheme = {
   swingTrailAlt: "rgba(255, 200, 100, ",
   shieldEmblem: "#cc4400",
   plume: "#dd4400",
+  plumeDark: "#6a1e00",
+  plumeLight: "#ff7733",
+  plumeHighlight: "#ffaa66",
   eyeGlow: "rgba(255, 150, 50, ",
   eyeShadow: "#ff6600",
   shockwave: "rgba(255, 100, 50, ",
@@ -87,6 +93,9 @@ export const KNIGHT_THEME_BLUE: KnightTheme = {
   swingTrailAlt: "rgba(150, 210, 255, ",
   shieldEmblem: "#2266aa",
   plume: "#3388dd",
+  plumeDark: "#183c66",
+  plumeLight: "#66aaee",
+  plumeHighlight: "#99ccff",
   eyeGlow: "rgba(120, 200, 255, ",
   eyeShadow: "#4499ff",
   shockwave: "rgba(80, 160, 255, ",
@@ -114,6 +123,9 @@ export const KNIGHT_THEME_RED: KnightTheme = {
   swingTrailAlt: "rgba(255, 150, 150, ",
   shieldEmblem: "#aa2222",
   plume: "#dd3333",
+  plumeDark: "#661515",
+  plumeLight: "#ee6666",
+  plumeHighlight: "#ff9999",
   eyeGlow: "rgba(255, 120, 120, ",
   eyeShadow: "#ff4444",
   shockwave: "rgba(255, 80, 80, ",
@@ -141,6 +153,9 @@ export const KNIGHT_THEME_PURPLE: KnightTheme = {
   swingTrailAlt: "rgba(220, 170, 255, ",
   shieldEmblem: "#7A30AA",
   plume: "#9B44DD",
+  plumeDark: "#3e1a5c",
+  plumeLight: "#bb77ee",
+  plumeHighlight: "#d4aaff",
   eyeGlow: "rgba(200, 140, 255, ",
   eyeShadow: "#B366FF",
   shockwave: "rgba(180, 100, 255, ",

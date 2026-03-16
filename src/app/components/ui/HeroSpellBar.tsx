@@ -500,7 +500,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       {/* Name tag */}
                       <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider whitespace-nowrap" style={{
                         background: isAlive
-                          ? `linear-gradient(180deg, ${hexToRgba(hc, 0.15)}, rgba(20,16,10,0.92))`
+                          ? `linear-gradient(180deg, ${hexToRgba(hc, 0.45)}, rgba(20,16,10,0.92))`
                           : "rgba(20,16,10,0.92)",
                         border: `1px solid ${isAlive ? hc + "55" : "rgba(80,60,40,0.35)"}`,
                         color: isAlive ? "#fde68a" : "rgba(160,140,100,0.6)",
