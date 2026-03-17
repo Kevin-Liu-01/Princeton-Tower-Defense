@@ -91,6 +91,7 @@ const SMOOTH_PATH_SPACING = 24;
 const ROAD_BASE_WIDTH = Math.round(ROAD_EXCLUSION_BUFFER * 1.3);
 const ROAD_WOBBLE = 10;
 const ROAD_TRACK_OFFSET = 18;
+const ROAD_TRACK_WOBBLE = 2;
 const FOG_DIRECTION_OFFSET = 30;
 const CHALLENGE_TERRACE_BLOCK_SCALE = 0.72;
 const CHALLENGE_TOP_TIER_MIN_BLOCKS = 3;
@@ -512,18 +513,40 @@ function drawRoad(
 
   if (includePatches) {
     const patchRandom = createSeededRandom(mapSeed + 200);
-    ctx.fillStyle = hexToRgba(theme.ground[2], 0.12);
     for (let i = 0; i < smoothPath.length; i += 3) {
       if (i >= screenCenter.length) break;
       const sp = screenCenter[i];
       const patchSize = (3 + patchRandom() * 6) * cameraZoom;
+      const ox = sp.x + (patchRandom() - 0.5) * 35 * cameraZoom;
+      const oy = sp.y + (patchRandom() - 0.5) * 18 * cameraZoom;
+      const rotation = patchRandom() * Math.PI;
+
+      ctx.fillStyle = hexToRgba(theme.ground[2], 0.06 + patchRandom() * 0.04);
       ctx.beginPath();
       ctx.ellipse(
-        sp.x + (patchRandom() - 0.5) * 35 * cameraZoom,
-        sp.y + (patchRandom() - 0.5) * 18 * cameraZoom,
+        ox + 1.5 * cameraZoom,
+        oy + 0.9 * cameraZoom,
         patchSize,
         patchSize * 0.5,
-        patchRandom() * Math.PI,
+        rotation,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      ctx.fillStyle = hexToRgba(theme.ground[2], 0.1 + patchRandom() * 0.05);
+      ctx.beginPath();
+      ctx.ellipse(ox, oy, patchSize, patchSize * 0.5, rotation, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = hexToRgba(theme.path[0], 0.03 + patchRandom() * 0.02);
+      ctx.beginPath();
+      ctx.ellipse(
+        ox - patchSize * 0.25,
+        oy - patchSize * 0.12,
+        patchSize * 0.42,
+        patchSize * 0.16,
+        rotation,
         0,
         Math.PI * 2,
       );
@@ -538,12 +561,11 @@ function drawRoad(
     for (let i = 0; i < smoothPath.length; i++) {
       const p = smoothPath[i];
       const { perpX, perpY } = getSmoothedPerpendicular(smoothPath, i, 3);
-      const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
+      const wobblePx = Math.sin(i * 0.5 + mapSeed) * ROAD_TRACK_WOBBLE;
+      const trackOffset = (ROAD_TRACK_OFFSET * track + wobblePx) / cameraZoom;
       const screenP = {
-        x: p.x + perpX * ((ROAD_TRACK_OFFSET * track) / cameraZoom + wobble),
-        y:
-          p.y +
-          perpY * ((ROAD_TRACK_OFFSET * track) / cameraZoom + wobble) * 0.75,
+        x: p.x + perpX * trackOffset,
+        y: p.y + perpY * trackOffset * 0.75,
       };
       const trackScreenPoint = toScreen(screenP);
       if (i === 0) {

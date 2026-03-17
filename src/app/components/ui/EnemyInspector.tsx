@@ -528,9 +528,24 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
                 <AlertTriangle size={10} /> Taunted
               </span>
             )}
-            {!enemy.burning && !enemy.slowed && !enemy.frozen && enemy.stunUntil <= Date.now() && !enemy.taunted && (
-              <span className="text-[9px] text-purple-400/60">No active effects</span>
+            {enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > Date.now() && (
+              <span className="flex items-center gap-1 px-2 py-1 bg-fuchsia-950/50 rounded text-fuchsia-300 text-[9px]">
+                <Sparkles size={10} /> Hexed
+                {enemy.hexWardDamageAmp ? (
+                  <span className="text-fuchsia-400/80 ml-1">
+                    (+{Math.round(enemy.hexWardDamageAmp * 100)}% DMG)
+                  </span>
+                ) : null}
+              </span>
             )}
+            {!enemy.burning &&
+              !enemy.slowed &&
+              !enemy.frozen &&
+              enemy.stunUntil <= Date.now() &&
+              !enemy.taunted &&
+              !(enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > Date.now()) && (
+              <span className="text-[9px] text-purple-400/60">No active effects</span>
+              )}
           </div>
         </div>
       </div>
@@ -654,6 +669,9 @@ export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
               <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/60 rounded text-blue-300 font-bold">TROOP</span>
               {troop.ownerType && (
                 <span className="text-[9px] px-1.5 py-0.5 bg-slate-800/60 rounded text-slate-300">{troop.ownerType.toUpperCase()}</span>
+              )}
+              {troop.isHexGhost && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-fuchsia-950/60 rounded text-fuchsia-300 font-bold">HEX GHOST</span>
               )}
               {(troop.overrideIsRanged || tData.isRanged) && (
                 <span className="text-[9px] px-1.5 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>

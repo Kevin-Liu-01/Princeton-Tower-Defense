@@ -5,6 +5,7 @@ import {
   Coins,
   Clock,
   Star,
+  Eye,
   Flame,
   Zap,
   Snowflake,
@@ -15,7 +16,14 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { SpellType, SpellUpgradeLevels } from "../../types";
-import { SPELL_DATA, SPELL_ACCENTS, SPELL_TRAITS, MAX_SPELL_UPGRADE_LEVEL } from "../../constants";
+import {
+  SPELL_DATA,
+  SPELL_ACCENTS,
+  SPELL_TRAITS,
+  MAX_SPELL_UPGRADE_LEVEL,
+  SPELL_OPTIONS,
+  getSpellActionImagePath,
+} from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
@@ -35,14 +43,6 @@ const SHOWCASE_MID_R = SHOWCASE_CX - 5;
 
 const ROSTER_FRAME = 50;
 const ROSTER_CX = ROSTER_FRAME / 2;
-
-const spellOptions: SpellType[] = [
-  "fireball",
-  "lightning",
-  "freeze",
-  "payday",
-  "reinforcements",
-];
 
 const SPELL_META: Record<
   SpellType,
@@ -86,6 +86,16 @@ const SPELL_META: Record<
     icon: <Snowflake size={14} className="text-cyan-400" />,
     element: "Ice",
     auraGradient: "conic-gradient(from 0deg, transparent, rgba(6,182,212,0.2), transparent, rgba(34,211,238,0.15), transparent)",
+  },
+  hex_ward: {
+    nameColor: "text-fuchsia-200",
+    accent: SPELL_ACCENTS.hex_ward,
+    bg: "rgba(34,16,46,0.98)",
+    border: "rgba(168,85,247,0.5)",
+    trait: SPELL_TRAITS.hex_ward.trait,
+    icon: <Eye size={14} className="text-fuchsia-400" />,
+    element: "Shadow",
+    auraGradient: "conic-gradient(from 0deg, transparent, rgba(168,85,247,0.22), transparent, rgba(232,121,249,0.16), transparent)",
   },
   payday: {
     nameColor: "text-amber-200",
@@ -207,11 +217,11 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
   const meta = SPELL_META[focusedSpell];
   const isSelected = selectedSpells.includes(focusedSpell);
   const spellLevel = spellUpgradeLevels[focusedSpell] ?? 0;
-  const focusedIdx = spellOptions.indexOf(focusedSpell);
+  const focusedIdx = SPELL_OPTIONS.indexOf(focusedSpell);
 
   const navigate = (dir: -1 | 1) => {
-    const next = (focusedIdx + dir + spellOptions.length) % spellOptions.length;
-    setFocusedSpell(spellOptions[next]);
+    const next = (focusedIdx + dir + SPELL_OPTIONS.length) % SPELL_OPTIONS.length;
+    setFocusedSpell(SPELL_OPTIONS[next]);
   };
 
   return (
@@ -319,7 +329,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                   <div
                     className="absolute inset-0 opacity-[0.06]"
                     style={{
-                      backgroundImage: `url('/images/spells/${focusedSpell}-action.png')`,
+                      backgroundImage: `url('${getSpellActionImagePath(focusedSpell)}')`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}
@@ -528,11 +538,11 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       Grimoire
                     </span>
                     <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(140,80,200,0.15), transparent)" }} />
-                    <span className="text-[8px] text-purple-600/30 font-medium">{spellOptions.length} spells</span>
+                    <span className="text-[8px] text-purple-600/30 font-medium">{SPELL_OPTIONS.length} spells</span>
                   </div>
 
                   <div className="grid grid-cols-3 lg:grid-cols-1 gap-2">
-                    {spellOptions.map((st) => {
+                    {SPELL_OPTIONS.map((st) => {
                       const sd = SPELL_DATA[st];
                       const sm = SPELL_META[st];
                       const isFocused = focusedSpell === st;

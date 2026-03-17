@@ -15,6 +15,7 @@ import {
   SPELL_DATA,
   SPELL_ACCENTS,
   SPELL_TRAITS,
+  SPELL_OPTIONS,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
@@ -22,14 +23,6 @@ import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 import { HudTooltip } from "../ui/HudTooltip";
 import { SpellbookModal } from "./SpellbookModal";
 import { spellFrameElements } from "../ui/ornateFrameHelpers";
-
-const spellOptions: SpellType[] = [
-  "fireball",
-  "lightning",
-  "freeze",
-  "payday",
-  "reinforcements",
-];
 
 const CIRCLE = 42;
 const GAP = 6;
@@ -97,11 +90,11 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   const [ugHovered, setUgHovered] = React.useState(false);
 
   const navigate = useCallback((dir: -1 | 1) => {
-    setCenterIdx(prev => (prev + dir + spellOptions.length) % spellOptions.length);
+    setCenterIdx(prev => (prev + dir + SPELL_OPTIONS.length) % SPELL_OPTIONS.length);
   }, []);
 
   if (compact) {
-    const centeredSpell = spellOptions[centerIdx];
+    const centeredSpell = SPELL_OPTIONS[centerIdx];
     const centeredData = SPELL_DATA[centeredSpell];
 
     return (
@@ -141,9 +134,9 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 className="relative overflow-hidden flex-shrink-0"
                 style={{ width: VP_W, height: VP_H }}
               >
-                {spellOptions.map((spellType, idx) => {
+                {SPELL_OPTIONS.map((spellType, idx) => {
                   const accent = SPELL_ACCENTS[spellType];
-                  const diff = circularDiff(idx, centerIdx, spellOptions.length);
+                  const diff = circularDiff(idx, centerIdx, SPELL_OPTIONS.length);
                   const absDiff = Math.abs(diff);
                   const isCenter = diff === 0;
                   const halfVisible = Math.floor(VISIBLE_COUNT / 2);
@@ -539,12 +532,13 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             fireball: { nameColor: "text-orange-300", borderColor: "rgba(234,88,12,0.4)" },
             lightning: { nameColor: "text-yellow-300", borderColor: "rgba(234,179,8,0.4)" },
             freeze: { nameColor: "text-cyan-300", borderColor: "rgba(6,182,212,0.4)" },
+            hex_ward: { nameColor: "text-fuchsia-300", borderColor: "rgba(168,85,247,0.4)" },
             payday: { nameColor: "text-amber-300", borderColor: "rgba(245,158,11,0.4)" },
             reinforcements: { nameColor: "text-emerald-300", borderColor: "rgba(16,185,129,0.4)" },
           };
           return (
             <div className="flex gap-1.5">
-              {spellOptions.map((spellType) => {
+              {SPELL_OPTIONS.map((spellType) => {
                 const isSelected = selectedSpells.includes(spellType);
                 const spellIndex = selectedSpells.indexOf(spellType);
                 const label = { ...spellLabelExtras[spellType], ...SPELL_TRAITS[spellType] };

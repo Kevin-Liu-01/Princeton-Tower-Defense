@@ -58,6 +58,7 @@ import {
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
+  getHexWardSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
   getNextSpellUpgradeCost,
@@ -106,6 +107,7 @@ import {
   ATTACK_SPEED_BUFF_CAP,
   STATION_TROOP_RANGE,
   BARRACKS_TROOP_RANGE,
+  SPELL_TROOP_RANGE,
   HERO_SUMMON_RANGE,
   SENTINEL_NEXUS_STATS,
   SUNFORGE_ORRERY_STATS,
@@ -168,6 +170,13 @@ import {
 import { createEnemyPosCache } from "../game/enemyPosition";
 import { getImpactEffect } from "../game/projectileEffects";
 import { addOrRefreshDebuff } from "../game/debuffs";
+import {
+  getHexWardGhostProfile,
+  getHexWardGhostStrengthFromEnemy,
+  getHexWardGhostStrengthFromHero,
+  getHexWardGhostStrengthFromTroop,
+  isHexWardGhostHarvestActive,
+} from "../game/hexWardGhosts";
 import {
   isInSpecialTowerZone,
   isInLandmarkCore,
@@ -739,6 +748,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const [goldSpellActive, setGoldSpellActive] = useState(false);
   const [paydayEndTime, setPaydayEndTime] = useState<number | null>(null);
   const [paydayPawPointsEarned, setPaydayPawPointsEarned] = useState(0);
+  const [hexWardEndTime, setHexWardEndTime] = useState<number | null>(null);
+  const [hexWardTargetCount, setHexWardTargetCount] = useState(0);
+  const [hexWardDamageAmpPct, setHexWardDamageAmpPct] = useState(0);
   // Eating club income events for stacking floaters
   const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
   // Bounty income events (from enemy kills)
@@ -1288,6 +1300,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const effectsUpdateAccumulator = useRef<number>(0); // Accumulate time between effects updates for throttling
   const pendingDeathEffectsRef = useRef<Effect[]>([]); // Ref-based queue so render sees death effects immediately
   const handledEnemyIdsRef = useRef<Set<string>>(new Set()); // Dedup guard for kills/leaks (React Strict Mode double-invokes updaters)
+  const handledHexGhostSourceIdsRef = useRef<Set<string>>(new Set());
   const handledWaveCompletionRef = useRef<number>(-1); // Last wave index whose completion was logged
 
   // Queue particle bursts and flush once per frame to avoid many setState calls during heavy combat.
@@ -1413,6 +1426,125 @@ export function usePrincetonTowerDefenseRuntime() {
     [addPawPoints]
   );
 
+  const spawnHexWardGhostTroop = useCallback(
+    (
+      sourceKey: string,
+      strength: "weak" | "medium" | "strong" | "apex",
+      deathPos: Position,
+    ) => {
+      const now = Date.now();
+      if (!isHexWardGhostHarvestActive(hexWardEndTime, now)) return;
+      if (handledHexGhostSourceIdsRef.current.has(sourceKey)) return;
+      handledHexGhostSourceIdsRef.current.add(sourceKey);
+
+      const profile = getHexWardGhostProfile(strength);
+      const anchorPos = findClosestRoadPoint(
+        deathPos,
+        activeWaveSpawnPaths,
+        selectedMap,
+      );
+      const shouldMoveToAnchor = distance(deathPos, anchorPos) > 18;
+      const ghostTroop: Troop = {
+        id: generateId("troop"),
+        ownerId: generateId("spell-hexghost"),
+        ownerType: "spell",
+        type: profile.troopType,
+        isHexGhost: true,
+        pos: deathPos,
+        targetPos: shouldMoveToAnchor ? anchorPos : undefined,
+        hp: profile.hp,
+        maxHp: profile.hp,
+        moving: shouldMoveToAnchor,
+        lastAttack: 0,
+        overrideDamage: profile.damage,
+        overrideAttackSpeed: profile.attackSpeed,
+        overrideIsRanged: profile.isRanged,
+        overrideRange: profile.range,
+        overrideCanTargetFlying: profile.canTargetFlying,
+        hexGhostDecayPerSecond: profile.decayPerSecond,
+        hexGhostExpireTime: now + profile.lifetimeMs,
+        rotation: 0,
+        facingRight: getFacingRightFromDelta(
+          anchorPos.x - deathPos.x,
+          anchorPos.y - deathPos.y,
+          true,
+        ),
+        attackAnim: 0,
+        selected: false,
+        spawnPoint: anchorPos,
+        moveRadius: SPELL_TROOP_RANGE + 40,
+        userTargetPos: anchorPos,
+      };
+
+      addTroopEntities([ghostTroop]);
+      addParticles(deathPos, "magic", 14);
+      addParticles(anchorPos, "glow", 8);
+    },
+    [
+      activeWaveSpawnPaths,
+      addParticles,
+      addTroopEntities,
+      hexWardEndTime,
+      selectedMap,
+    ],
+  );
+
+  const raiseHexWardGhostFromEnemyDeath = useCallback(
+    (enemy: Enemy, deathPos: Position) => {
+      spawnHexWardGhostTroop(
+        `enemy:${enemy.id}`,
+        getHexWardGhostStrengthFromEnemy(enemy),
+        deathPos,
+      );
+    },
+    [spawnHexWardGhostTroop],
+  );
+
+  const raiseHexWardGhostFromTroopDeath = useCallback(
+    (troop: Troop, deathPos: Position) => {
+      if (troop.isHexGhost) return;
+      spawnHexWardGhostTroop(
+        `troop:${troop.id}`,
+        getHexWardGhostStrengthFromTroop(troop),
+        deathPos,
+      );
+    },
+    [spawnHexWardGhostTroop],
+  );
+
+  const raiseHexWardGhostFromHeroDeath = useCallback(
+    (fallenHero: Hero) => {
+      spawnHexWardGhostTroop(
+        `hero:${fallenHero.id}`,
+        getHexWardGhostStrengthFromHero(fallenHero),
+        fallenHero.pos,
+      );
+    },
+    [spawnHexWardGhostTroop],
+  );
+
+  const killHero = useCallback(
+    (
+      fallenHero: Hero,
+      respawnTimerMs: number,
+      lastCombatTime?: number,
+    ): Hero => {
+      raiseHexWardGhostFromHeroDeath(fallenHero);
+      addParticles(fallenHero.pos, "explosion", 20);
+      addParticles(fallenHero.pos, "smoke", 10);
+      return {
+        ...fallenHero,
+        hp: 0,
+        dead: true,
+        respawnTimer: respawnTimerMs,
+        selected: false,
+        moving: false,
+        lastCombatTime: lastCombatTime ?? fallenHero.lastCombatTime,
+      };
+    },
+    [addParticles, raiseHexWardGhostFromHeroDeath],
+  );
+
   // Centralized enemy death handler - awards bounty, particles, and death animation effect.
   // Deduped by enemy ID because this is called inside setEnemies updaters which
   // React Strict Mode double-invokes.
@@ -1424,6 +1556,7 @@ export function usePrincetonTowerDefenseRuntime() {
       const eData = ENEMY_DATA[enemy.type];
       const baseBounty = eData.bounty;
       awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
+      raiseHexWardGhostFromEnemyDeath(enemy, pos);
       addParticles(pos, "explosion", particleCount);
       gameEventLogRef.current.log("enemy_killed", `${eData.name || enemy.type} killed (${deathCause}) +${baseBounty} PP`, { enemyType: enemy.type, bounty: baseBounty, deathCause });
       if (enemy.goldAura) addParticles(pos, "gold", 6);
@@ -1460,7 +1593,13 @@ export function usePrincetonTowerDefenseRuntime() {
         addEffectEntity(deathEffect);
       }
     },
-    [awardBounty, addParticles, addEffectEntity, selectedMap]
+    [
+      awardBounty,
+      addParticles,
+      addEffectEntity,
+      raiseHexWardGhostFromEnemyDeath,
+      selectedMap,
+    ]
   );
 
   // Keyboard controls for camera
@@ -1698,6 +1837,9 @@ export function usePrincetonTowerDefenseRuntime() {
       setGoldSpellActive(false);
       setPaydayEndTime(null);
       setPaydayPawPointsEarned(0);
+      setHexWardEndTime(null);
+      setHexWardTargetCount(0);
+      setHexWardDamageAmpPct(0);
       setSpecialTowerHp(getVaultHpMap(selectedMap));
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
@@ -1936,9 +2078,11 @@ export function usePrincetonTowerDefenseRuntime() {
             const updates: Partial<typeof enemy> = {};
             if (enemy.burnUntil) updates.burnUntil = enemy.burnUntil + pauseDuration;
             if (enemy.stunUntil) updates.stunUntil = enemy.stunUntil + pauseDuration;
+            if (enemy.hexWardUntil) updates.hexWardUntil = enemy.hexWardUntil + pauseDuration;
             return Object.keys(updates).length > 0 ? { ...enemy, ...updates } : enemy;
           })
         );
+        setHexWardEndTime((prev) => (prev ? prev + pauseDuration : prev));
         setTowers((prev) =>
           prev.map((tower) => {
             const updates: Partial<typeof tower> = {};
@@ -2234,6 +2378,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const updateGame = useCallback(
     (deltaTime: number) => {
       handledEnemyIdsRef.current.clear();
+      handledHexGhostSourceIdsRef.current.clear();
       const now = Date.now();
       const isPaused = gameSpeed === 0;
       const levelWaves = getLevelWaves(selectedMap);
@@ -2605,7 +2750,7 @@ export function usePrincetonTowerDefenseRuntime() {
             const isInShrineRange = shrineWorldPositions.some(
               (pos) => distance(troop.pos, pos) < healRadius
             );
-            if (!isInShrineRange) return troop;
+            if (!isInShrineRange || troop.isHexGhost) return troop;
             return {
               ...troop,
               hp: Math.min(troop.maxHp, troop.hp + healAmount),
@@ -3430,24 +3575,12 @@ export function usePrincetonTowerDefenseRuntime() {
       if (hero && !hero.dead) {
         if (hero.hp <= 0) {
           setHero((prev) =>
-            prev
-              ? {
-                ...prev,
-                hp: 0,
-                dead: true,
-                respawnTimer: HERO_RESPAWN_TIME,
-                selected: false,
-                moving: false,
-              }
-              : null
+            prev ? killHero(prev, HERO_RESPAWN_TIME) : null
           );
           // Clear taunts when hero dies
           setEnemies((prev) =>
             prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
           );
-
-          addParticles(hero.pos, "explosion", 20);
-          addParticles(hero.pos, "smoke", 10);
         }
         // Shield Expiration Logic
         if (hero.shieldActive && now > (hero.shieldEnd || 0)) {
@@ -3622,6 +3755,7 @@ export function usePrincetonTowerDefenseRuntime() {
         const damage = troopDamage[troop.id] || 0;
         if (damage > 0 && troop.hp - damage <= 0) {
           troopsThatWillDie.add(troop.id);
+          raiseHexWardGhostFromTroopDeath(troop, troop.pos);
           addParticles(troop.pos, "explosion", 8);
           if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
             deathsToQueue.push({
@@ -3726,7 +3860,11 @@ export function usePrincetonTowerDefenseRuntime() {
             // Process burning damage (skip when paused so effects freeze)
             if (!isPaused) {
               if (enemy.burning && enemy.burnUntil && now < enemy.burnUntil) {
-                const burnDmg = ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000;
+                const burnDmg = getEnemyDamageTaken(
+                  enemy,
+                  ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000,
+                  "fire"
+                );
                 const newHp = enemy.hp - burnDmg;
                 if (newHp <= 0) {
                   onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
@@ -3740,6 +3878,19 @@ export function usePrincetonTowerDefenseRuntime() {
               ) {
                 enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
               }
+            }
+            if (
+              !isPaused &&
+              enemy.hexWard &&
+              enemy.hexWardUntil &&
+              now >= enemy.hexWardUntil
+            ) {
+              enemy = {
+                ...enemy,
+                hexWard: false,
+                hexWardUntil: 0,
+                hexWardDamageAmp: 0,
+              };
             }
             // Regenerating enemies heal 1.5% max HP/sec when not in combat
             const eTraits = ENEMY_DATA[enemy.type].traits;
@@ -3776,13 +3927,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   const heroDamage = ENEMY_DATA[enemy.type].troopDamage ?? DEFAULT_ENEMY_HERO_DAMAGE;
                   const newHp = prevHero.hp - heroDamage;
                   if (newHp <= 0) {
-                    addParticles(prevHero.pos, "explosion", 12);
-                    return {
-                      ...prevHero,
-                      hp: 0,
-                      dead: true,
-                      respawnTimer: HERO_RESPAWN_TIME,
-                    };
+                    return killHero(prevHero, HERO_RESPAWN_TIME);
                   }
                   return { ...prevHero, hp: newHp };
                 });
@@ -4516,6 +4661,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return prev.filter((troop) => {
           if (!troop.type) return true;
           if (troop.hp > 0) return true;
+          raiseHexWardGhostFromTroopDeath(troop, troop.pos);
           addParticles(troop.pos, "explosion", 8);
           if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
             dotDeaths.push({
@@ -4564,6 +4710,20 @@ export function usePrincetonTowerDefenseRuntime() {
             }
             if (updated.poisoned && updated.poisonDamage) {
               updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
+            }
+            if (updated.isHexGhost) {
+              if (updated.hexGhostDecayPerSecond) {
+                updated.hp = Math.max(
+                  0,
+                  updated.hp - updated.hexGhostDecayPerSecond * dotTick
+                );
+              }
+              if (
+                updated.hexGhostExpireTime &&
+                currentTime >= updated.hexGhostExpireTime
+              ) {
+                updated.hp = 0;
+              }
             }
           }
 
@@ -4770,7 +4930,12 @@ export function usePrincetonTowerDefenseRuntime() {
           }
 
           const timeSinceCombat = now - (updated.lastCombatTime || 0);
-          if (!inCombat && troop.hp < troop.maxHp && timeSinceCombat >= TROOP_HEAL_DELAY_MS) {
+          if (
+            !updated.isHexGhost &&
+            !inCombat &&
+            troop.hp < troop.maxHp &&
+            timeSinceCombat >= TROOP_HEAL_DELAY_MS
+          ) {
             updated.hp = Math.min(
               troop.maxHp,
               troop.hp + (troop.maxHp * TROOP_HEAL_RATE * deltaTime) / 1000
@@ -6748,13 +6913,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (!prevHero || prevHero.dead) return prevHero;
               const newHp = prevHero.hp - heroDamageTotal;
               if (newHp <= 0) {
-                return {
-                  ...prevHero,
-                  hp: 0,
-                  dead: true,
-                  respawnTimer: 15000,
-                  lastCombatTime: nowMs,
-                };
+                return killHero(prevHero, 15000, nowMs);
               }
               return { ...prevHero, hp: newHp, lastCombatTime: nowMs };
             });
@@ -6910,6 +7069,7 @@ export function usePrincetonTowerDefenseRuntime() {
       unlockedMaps,
       unlockLevel,
       awardBounty,
+      killHero,
       onEnemyKill,
       addPawPoints,
       addEffectEntities,
@@ -6924,6 +7084,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setTowers,
       setTroops,
       activeWaveSpawnPaths,
+      raiseHexWardGhostFromTroopDeath,
     ]
   );
   const getWaveStartBubblesScreenData = useCallback(
@@ -11815,6 +11976,74 @@ export function usePrincetonTowerDefenseRuntime() {
           break;
         }
 
+        case "hex_ward": {
+          if (enemies.length === 0) return;
+
+          const hexStats = getHexWardSpellStats(spellUpgradeLevels.hex_ward);
+          const hexUntil = Date.now() + hexStats.durationMs;
+          const targetEnemies = [...enemies]
+            .sort(
+              (a, b) =>
+                getEnemyRemainingDistance(a, selectedMap) -
+                getEnemyRemainingDistance(b, selectedMap)
+            )
+            .slice(0, hexStats.maxTargets);
+
+          if (targetEnemies.length === 0) return;
+
+          const targetIds = new Set(targetEnemies.map((enemy) => enemy.id));
+          const centerPos =
+            targetEnemies.length === 1
+              ? getEnemyPosWithPath(targetEnemies[0], selectedMap)
+              : {
+                  x:
+                    targetEnemies.reduce(
+                      (sum, enemy) => sum + getEnemyPosWithPath(enemy, selectedMap).x,
+                      0
+                    ) / targetEnemies.length,
+                  y:
+                    targetEnemies.reduce(
+                      (sum, enemy) => sum + getEnemyPosWithPath(enemy, selectedMap).y,
+                      0
+                    ) / targetEnemies.length,
+                };
+
+          setEnemies((prev) =>
+            prev.map((enemy) =>
+              targetIds.has(enemy.id)
+                ? {
+                    ...enemy,
+                    hexWard: true,
+                    hexWardUntil: hexUntil,
+                    hexWardDamageAmp: hexStats.damageAmp,
+                  }
+                : enemy
+            )
+          );
+
+          setHexWardEndTime(hexUntil);
+          setHexWardTargetCount(targetEnemies.length);
+          setHexWardDamageAmpPct(Math.round(hexStats.damageAmp * 100));
+
+          setEffects((ef) => [
+            ...ef,
+            {
+              id: generateId("hex_ward_aura"),
+              pos: centerPos,
+              type: "hex_ward_aura",
+              progress: 0,
+              size: 220,
+              duration: hexStats.durationMs,
+            },
+          ]);
+
+          targetEnemies.forEach((enemy) => {
+            const pos = getEnemyPosWithPath(enemy, selectedMap);
+            addParticles(pos, "magic", 14);
+          });
+          break;
+        }
+
         case "payday": {
           // ENHANCED PAYDAY - Creates money aura around all enemies for duration
           // Enemies killed while gold aura active give +50% bounty
@@ -11886,7 +12115,6 @@ export function usePrincetonTowerDefenseRuntime() {
       gameSpeed,
       targetingSpell,
       placingTroop,
-      onEnemyKill,
       canAffordPawPoints,
       spendPawPoints,
       addPawPoints,
@@ -12216,7 +12444,7 @@ export function usePrincetonTowerDefenseRuntime() {
         // Heal nearby troops with inspiring melody
         setTroops((prev) =>
           prev.map((t) => {
-            if (!t.dead && distance(t.pos, hero.pos) < healRadius) {
+            if (!t.dead && !t.isHexGhost && distance(t.pos, hero.pos) < healRadius) {
               addParticles(t.pos, "heal", 6);
               return {
                 ...t,
@@ -13005,6 +13233,9 @@ export function usePrincetonTowerDefenseRuntime() {
               goldSpellActive={goldSpellActive}
               paydayEndTime={paydayEndTime}
               paydayPawPointsEarned={paydayPawPointsEarned}
+              hexWardEndTime={hexWardEndTime}
+              hexWardTargetCount={hexWardTargetCount}
+              hexWardDamageAmpPct={hexWardDamageAmpPct}
               eatingClubIncomeEvents={eatingClubIncomeEvents}
               onEatingClubEventComplete={(id) =>
                 setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))
@@ -13127,10 +13358,10 @@ export function usePrincetonTowerDefenseRuntime() {
                     />
                   );
                 })()}
-              {placingTroop && <PlacingTroopIndicator paydayActive={goldSpellActive} />}
-              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} paydayActive={goldSpellActive} />}
-              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={goldSpellActive} />}
-              {missileMortarTargetingId && <MissileTargetingIndicator paydayActive={goldSpellActive} />}
+              {placingTroop && <PlacingTroopIndicator paydayActive={goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now())} />}
+              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} paydayActive={goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now())} />}
+              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now())} />}
+              {missileMortarTargetingId && <MissileTargetingIndicator paydayActive={goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now())} />}
               {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
                 <SpecialBuildingTooltip
                   type={hoveredSpecialTower.type}

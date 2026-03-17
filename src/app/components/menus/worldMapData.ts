@@ -1,4 +1,4 @@
-import { LEVEL_WAVES } from "../../constants";
+import { LEVEL_WAVES, SPELL_OPTIONS } from "../../constants";
 import type { HeroType, SpellType } from "../../types";
 
 export interface LevelNode {
@@ -385,10 +385,4 @@ export const heroOptions: HeroType[] = [
   "engineer",
 ];
 
-export const spellOptions: SpellType[] = [
-  "fireball",
-  "lightning",
-  "freeze",
-  "payday",
-  "reinforcements",
-];
+export const spellOptions: SpellType[] = [...SPELL_OPTIONS];

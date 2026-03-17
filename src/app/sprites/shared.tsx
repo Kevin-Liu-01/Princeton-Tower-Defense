@@ -76,6 +76,7 @@ export const SPELL_SPRITE_FRAME_THEME: Record<SpellType, SpriteFrameTheme> = {
   fireball: buildThemeFromAccent("#fb923c"),
   lightning: buildThemeFromAccent("#facc15"),
   freeze: buildThemeFromAccent("#67e8f9"),
+  hex_ward: buildThemeFromAccent("#c084fc"),
   payday: buildThemeFromAccent("#34d399"),
   reinforcements: buildThemeFromAccent("#a78bfa"),
 };

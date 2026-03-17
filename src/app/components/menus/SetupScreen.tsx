@@ -6,7 +6,7 @@ import {
   Shield, Zap, ChevronRight, Swords, X, Crown, Heart, Target,
   Wind, Timer, Sparkles, Crosshair, Flame, Snowflake, Coins,
   Users, Gauge, TrendingUp, Star, Info, Wrench, Volume2,
-  Mountain, Building, Check, TrendingDown, Droplets,
+  Mountain, Building, Check, TrendingDown, Droplets, Eye,
   Ban, EyeOff, AlertTriangle, Footprints, Flag
 } from "lucide-react";
 import type {
@@ -32,6 +32,7 @@ import {
   DEFAULT_ENEMY_TROOP_ATTACK_SPEED,
   DEFAULT_ENEMY_TROOP_DAMAGE,
   HERO_ROLES,
+  SPELL_OPTIONS,
   SPELL_TRAITS,
   ENEMY_TRAIT_META,
   ENEMY_ABILITY_META,
@@ -270,13 +271,7 @@ export function SetupScreen({
     "captain",
     "engineer",
   ];
-  const spellOptions: SpellType[] = [
-    "fireball",
-    "lightning",
-    "freeze",
-    "payday",
-    "reinforcements",
-  ];
+  const spellOptions: SpellType[] = [...SPELL_OPTIONS];
 
   // Hero role icons (JSX must be local)
   const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
@@ -305,11 +300,12 @@ export function SetupScreen({
     fireball: <Flame size={12} />,
     lightning: <Zap size={12} />,
     freeze: <Snowflake size={12} />,
+    hex_ward: <Eye size={12} />,
     payday: <Coins size={12} />,
     reinforcements: <Users size={12} />,
   };
   const SPELL_COLOR_MAP: Record<SpellType, string> = {
-    fireball: "orange", lightning: "yellow", freeze: "cyan",
+    fireball: "orange", lightning: "yellow", freeze: "cyan", hex_ward: "purple",
     payday: "amber", reinforcements: "green",
   };
   const spellInfo = Object.fromEntries(

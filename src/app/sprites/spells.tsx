@@ -441,6 +441,118 @@ export const SpellSprite: React.FC<{
         ctx.fill();
         break;
       }
+      case "hex_ward": {
+        // === HEX WARD - occult curse sigil with watchful eye ===
+        const rotationAngle = animated ? t * 0.7 : 0;
+        const pulseScale = animated ? 1 + Math.sin(t * 3.5) * 0.06 : 1;
+        const runePulse = animated ? 0.7 + Math.sin(t * 5.5) * 0.3 : 1;
+
+        const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        auraGrad.addColorStop(0, `rgba(232, 121, 249, ${0.28 * pulseScale})`);
+        auraGrad.addColorStop(0.5, `rgba(168, 85, 247, ${0.16 * pulseScale})`);
+        auraGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotationAngle);
+        ctx.strokeStyle = `rgba(232, 121, 249, ${0.8 * runePulse})`;
+        ctx.shadowColor = "#d946ef";
+        ctx.shadowBlur = 8 * scale * runePulse;
+        ctx.lineWidth = 1.6 * scale;
+
+        // Outer hexagon
+        ctx.beginPath();
+        for (let i = 0; i <= 6; i++) {
+          const angle = -Math.PI / 2 + (i * Math.PI) / 3;
+          const px = Math.cos(angle) * 15 * scale * pulseScale;
+          const py = Math.sin(angle) * 15 * scale * pulseScale;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Inner triangle lattice
+        ctx.beginPath();
+        for (let i = 0; i <= 3; i++) {
+          const angle = -Math.PI / 2 + (i * Math.PI * 2) / 3;
+          const px = Math.cos(angle) * 9.5 * scale;
+          const py = Math.sin(angle) * 9.5 * scale;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.rotate(Math.PI);
+        ctx.beginPath();
+        for (let i = 0; i <= 3; i++) {
+          const angle = -Math.PI / 2 + (i * Math.PI * 2) / 3;
+          const px = Math.cos(angle) * 9.5 * scale;
+          const py = Math.sin(angle) * 9.5 * scale;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Orbiting rune shards
+        if (animated) {
+          for (let i = 0; i < 6; i++) {
+            const shardAngle = t * 1.6 + (i * Math.PI * 2) / 6;
+            const sx = cx + Math.cos(shardAngle) * 14 * scale;
+            const sy = cy + Math.sin(shardAngle) * 8 * scale;
+            const shardSize = (1.8 + Math.sin(t * 6 + i) * 0.4) * scale;
+            ctx.fillStyle = `rgba(244, 114, 182, ${0.65 + Math.sin(t * 4 + i) * 0.15})`;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - shardSize);
+            ctx.lineTo(sx + shardSize * 0.7, sy);
+            ctx.lineTo(sx, sy + shardSize);
+            ctx.lineTo(sx - shardSize * 0.7, sy);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        // Central eye
+        const eyeGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy);
+        eyeGrad.addColorStop(0, "#4c1d95");
+        eyeGrad.addColorStop(0.5, "#c084fc");
+        eyeGrad.addColorStop(1, "#4c1d95");
+        ctx.fillStyle = eyeGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 9 * scale, 5.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#1f1135";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 4.5 * scale, 4.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const irisGrad = ctx.createRadialGradient(
+          cx - 1.2 * scale,
+          cy - 1.2 * scale,
+          0,
+          cx,
+          cy,
+          3.4 * scale,
+        );
+        irisGrad.addColorStop(0, "rgba(255,255,255,0.95)");
+        irisGrad.addColorStop(0.35, "#f5d0fe");
+        irisGrad.addColorStop(0.7, "#e879f9");
+        irisGrad.addColorStop(1, "#7e22ce");
+        ctx.fillStyle = irisGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx - 1.2 * scale, cy - 1.4 * scale, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
       case "payday": {
         // === FORTUNE'S BLESSING - Divine golden treasure magic ===
         const rotationAngle = animated ? t * 0.5 : 0;

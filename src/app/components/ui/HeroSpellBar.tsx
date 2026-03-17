@@ -15,6 +15,7 @@ import {
   Zap,
   Snowflake,
   Sparkles,
+  Eye,
   Users,
   TrendingUp,
   Crosshair,
@@ -31,9 +32,11 @@ import {
   SPELL_DATA,
   HERO_ABILITY_COOLDOWNS,
   MAX_SPELL_UPGRADE_LEVEL,
+  getSpellActionImagePath,
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
+  getHexWardSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
 } from "../../constants";
@@ -201,6 +204,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
   const lightningStats = getLightningSpellStats(spellUpgradeLevels.lightning);
   const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
+  const hexWardStats = getHexWardSpellStats(spellUpgradeLevels.hex_ward);
   const paydayStats = getPaydaySpellStats(spellUpgradeLevels.payday);
   const reinforcementStats = getReinforcementSpellStats(
     spellUpgradeLevels.reinforcements
@@ -250,6 +254,18 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       effect: freezeStats.isGlobal
         ? `Expanding ice wave freezes ALL enemies on the map for ${(freezeStats.freezeDurationMs / 1000).toFixed(1)} seconds. Great for emergencies.`
         : `Expanding ice wave freezes up to ${freezeStats.maxTargets} enemies for ${(freezeStats.freezeDurationMs / 1000).toFixed(1)} seconds, prioritizing the most advanced threats.`,
+    },
+    hex_ward: {
+      border: "border-fuchsia-600", bg: "from-fuchsia-800/90 to-purple-950/90", activeBg: "from-fuchsia-700/90 to-purple-900/90", glow: "shadow-fuchsia-500/30",
+      nameColor: "text-fuchsia-200", icon: <Eye size={10} className="text-fuchsia-400" />, accentColor: "text-fuchsia-300",
+      panelBg: "linear-gradient(135deg, rgba(88,28,135,0.25), rgba(49,18,73,0.15))", panelBorder: "rgba(192,132,252,0.5)", headerBg: "linear-gradient(90deg, rgba(126,34,206,0.25), transparent)",
+      stats: [
+        { label: "Targets", value: `${hexWardStats.maxTargets}`, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)", icon: <Eye size={9} className="text-fuchsia-400" /> },
+        { label: "Amp", value: `+${Math.round(hexWardStats.damageAmp * 100)}%`, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)", icon: <Sparkles size={9} className="text-purple-400" /> },
+        { label: "Duration", value: `${(hexWardStats.durationMs / 1000).toFixed(0)}s`, color: "text-violet-300", bg: "rgba(91,33,182,0.3)", border: "rgba(91,33,182,0.2)", icon: <Timer size={9} className="text-violet-400" /> },
+      ],
+      effectBg: "rgba(88,28,135,0.15)", effectLabel: "text-fuchsia-500/80", effectText: "text-fuchsia-200/90",
+      effect: `Hexes the ${hexWardStats.maxTargets} most advanced enemies for ${(hexWardStats.durationMs / 1000).toFixed(0)} seconds. Hexed enemies take +${Math.round(hexWardStats.damageAmp * 100)}% damage, and any unit that dies during the curse can rise as a controllable ghost ally.`,
     },
     payday: {
       border: "border-amber-600", bg: "from-amber-800/90 to-amber-950/90", activeBg: "from-amber-700/90 to-amber-900/90", glow: "shadow-amber-500/30",
@@ -818,7 +834,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               spell.cooldown <= 0 &&
               pawPoints >= spellData.cost &&
               !(
-                (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze") &&
+                (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze" || spell.type === "hex_ward") &&
                 enemies.length === 0
               );
             const isHovered = hoveredSpell === spell.type;
@@ -971,7 +987,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     <div
                       className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
                       style={{
-                        backgroundImage: (canCast || isTargeting) ? `url(/images/spells/${spell.type}-action.png)` : undefined,
+                        backgroundImage:
+                          canCast || isTargeting
+                            ? `url(${getSpellActionImagePath(spell.type)})`
+                            : undefined,
                       }}
                     />
 

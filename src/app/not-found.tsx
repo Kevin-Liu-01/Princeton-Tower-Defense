@@ -9,7 +9,7 @@ import { SCREENSHOTS, SCREENSHOT_LABELS } from "@/app/constants/notFoundScreensh
 
 export default function NotFound() {
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+    <div className="relative h-screen w-screen overflow-hidden bg-black">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/new/gameplay_grounds_ui.png"
@@ -32,13 +32,13 @@ export default function NotFound() {
       </div>
 
       <OrnateFrame
-        className="absolute inset-0 z-10"
+        className="fixed inset-0 z-10 h-screen w-screen"
         cornerSize={56}
         cornerVariant="standard"
         borderVariant="standard"
       >
         <div
-          className="flex flex-col items-center justify-center h-full w-full px-6 py-8 sm:px-10 sm:py-10"
+          className="flex h-full w-full flex-col items-center justify-center px-6 py-8 sm:px-10 sm:py-10"
           style={{
             background: panelGradient,
             border: `1px solid ${GOLD.border30}`,
@@ -129,7 +129,8 @@ export default function NotFound() {
               style={{
                 background:
                   "linear-gradient(180deg, rgba(180,130,30,0.92) 0%, rgba(120,78,15,0.95) 100%)",
-                color: "#000",
+                color: "rgba(41, 24, 8, 0.96)",
+                textShadow: "0 1px 0 rgba(255, 235, 180, 0.18)",
                 border: `1px solid ${GOLD.border35}`,
                 boxShadow: `0 0 12px ${GOLD.glow07}, 0 4px 12px rgba(0,0,0,0.4)`,
               }}

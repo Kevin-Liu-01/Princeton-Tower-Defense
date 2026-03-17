@@ -87,6 +87,71 @@ function clampIdx(i: number, arr: Position[]): number {
   return Math.min(i, arr.length - 1);
 }
 
+function drawLayeredPathEllipse(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  rx: number,
+  ry: number,
+  rotation: number,
+  colors: {
+    shadow: string;
+    base: string;
+    inner?: string;
+    highlight?: string;
+  },
+  shadowOffsetX: number,
+  shadowOffsetY: number,
+): void {
+  ctx.fillStyle = colors.shadow;
+  ctx.beginPath();
+  ctx.ellipse(
+    x + shadowOffsetX,
+    y + shadowOffsetY,
+    rx,
+    ry,
+    rotation,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  ctx.fillStyle = colors.base;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, rotation, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (colors.inner) {
+    ctx.fillStyle = colors.inner;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + rx * 0.08,
+      y + ry * 0.06,
+      rx * 0.62,
+      ry * 0.58,
+      rotation,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  if (colors.highlight) {
+    ctx.fillStyle = colors.highlight;
+    ctx.beginPath();
+    ctx.ellipse(
+      x - rx * 0.22,
+      y - ry * 0.18,
+      rx * 0.42,
+      ry * 0.32,
+      rotation,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+}
+
 // ─── Common Decorations ──────────────────────────────────────────────────────
 
 function drawPathWearGradient(p: PathDecorationParams): void {
@@ -335,19 +400,26 @@ function drawWornDirtPatches(p: PathDecorationParams): void {
     );
     const patchW = (8 + rand() * 10) * cameraZoom;
     const patchH = (5 + rand() * 7) * cameraZoom;
+    const ox = pos.x + (rand() - 0.5) * 5 * cameraZoom;
+    const oy = pos.y + (rand() - 0.5) * 3 * cameraZoom;
+    const rotation = rand() * 0.4;
 
-    ctx.fillStyle = hexToRgba(theme.ground[1], 0.08 + rand() * 0.05);
-    ctx.beginPath();
-    ctx.ellipse(
-      pos.x + (rand() - 0.5) * 5 * cameraZoom,
-      pos.y + (rand() - 0.5) * 3 * cameraZoom,
+    drawLayeredPathEllipse(
+      ctx,
+      ox,
+      oy,
       patchW,
       patchH * 0.4,
-      rand() * 0.4,
-      0,
-      Math.PI * 2,
+      rotation,
+      {
+        shadow: hexToRgba(theme.ground[2], 0.05 + rand() * 0.04),
+        base: hexToRgba(theme.ground[1], 0.09 + rand() * 0.05),
+        inner: hexToRgba(theme.ground[2], 0.03 + rand() * 0.03),
+        highlight: hexToRgba(theme.path[0], 0.03 + rand() * 0.03),
+      },
+      1.2 * cameraZoom,
+      0.7 * cameraZoom,
     );
-    ctx.fill();
   }
 }
 
@@ -604,19 +676,26 @@ function drawPackedSnowTexture(p: PathDecorationParams): void {
       t,
     );
     const size = (1.5 + rand() * 2.5) * cameraZoom;
+    const ox = pos.x + (rand() - 0.5) * 8 * cameraZoom;
+    const oy = pos.y + (rand() - 0.5) * 4 * cameraZoom;
+    const rotation = rand() * Math.PI;
 
-    ctx.fillStyle = `rgba(200, 215, 235, ${0.05 + rand() * 0.04})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      pos.x + (rand() - 0.5) * 8 * cameraZoom,
-      pos.y + (rand() - 0.5) * 4 * cameraZoom,
+    drawLayeredPathEllipse(
+      ctx,
+      ox,
+      oy,
       size,
       size * 0.5,
-      rand() * Math.PI,
-      0,
-      Math.PI * 2,
+      rotation,
+      {
+        shadow: `rgba(150, 170, 195, ${0.03 + rand() * 0.03})`,
+        base: `rgba(200, 215, 235, ${0.05 + rand() * 0.04})`,
+        inner: `rgba(215, 228, 245, ${0.03 + rand() * 0.03})`,
+        highlight: `rgba(255, 255, 255, ${0.05 + rand() * 0.04})`,
+      },
+      0.8 * cameraZoom,
+      0.45 * cameraZoom,
     );
-    ctx.fill();
   }
 }
 
@@ -765,19 +844,26 @@ function drawAshPatches(p: PathDecorationParams): void {
     );
     const patchW = (6 + rand() * 10) * cameraZoom;
     const patchH = (4 + rand() * 6) * cameraZoom;
+    const ox = pos.x + (rand() - 0.5) * 6 * cameraZoom;
+    const oy = pos.y + (rand() - 0.5) * 3 * cameraZoom;
+    const rotation = rand() * Math.PI;
 
-    ctx.fillStyle = `rgba(60, 55, 50, ${0.07 + rand() * 0.05})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      pos.x + (rand() - 0.5) * 6 * cameraZoom,
-      pos.y + (rand() - 0.5) * 3 * cameraZoom,
+    drawLayeredPathEllipse(
+      ctx,
+      ox,
+      oy,
       patchW,
       patchH * 0.4,
-      rand() * Math.PI,
-      0,
-      Math.PI * 2,
+      rotation,
+      {
+        shadow: `rgba(20, 18, 16, ${0.04 + rand() * 0.03})`,
+        base: `rgba(60, 55, 50, ${0.07 + rand() * 0.05})`,
+        inner: `rgba(42, 38, 35, ${0.04 + rand() * 0.03})`,
+        highlight: `rgba(120, 110, 100, ${0.025 + rand() * 0.02})`,
+      },
+      1.1 * cameraZoom,
+      0.6 * cameraZoom,
     );
-    ctx.fill();
   }
 }
 

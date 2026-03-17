@@ -11,6 +11,8 @@ import { drawEliteTroop } from "./elite";
 import { drawArmoredTroop } from "./armored";
 import { drawThesisTroop } from "./thesis";
 import { drawRowingTroop } from "./rowing";
+import { drawHexlingTroop } from "./hexling";
+import { drawHexseerTroop } from "./hexseer";
 import { drawReinforcementTroop } from "./reinforcement";
 import { drawKnightTroop } from "./knight";
 import { drawTurretTroop } from "./turret";
@@ -41,6 +43,60 @@ export function renderTroop(
   const troopType = troop.type || "footsoldier";
   const tData = TROOP_DATA[troopType];
   const time = Date.now() / 1000;
+  const ghostRemainingRatio =
+    troop.isHexGhost && troop.hexGhostExpireTime
+      ? Math.max(0, Math.min(1, (troop.hexGhostExpireTime - Date.now()) / 8000))
+      : 1;
+  const ghostAlpha =
+    troop.isHexGhost
+      ? 0.42 + ghostRemainingRatio * 0.5 + Math.sin(time * 7.5) * 0.04
+      : 1;
+
+  ctx.save();
+  if (troop.isHexGhost) {
+    ctx.globalAlpha = Math.max(0.22, Math.min(0.95, ghostAlpha));
+  }
+
+  if (troop.isHexGhost) {
+    const ghostPulse = 0.72 + Math.sin(time * 4.5) * 0.2;
+    const ghostAura = ctx.createRadialGradient(
+      screenPos.x,
+      screenPos.y - 3 * zoom,
+      0,
+      screenPos.x,
+      screenPos.y - 3 * zoom,
+      30 * zoom,
+    );
+    ghostAura.addColorStop(0, `rgba(244, 114, 182, ${0.22 * ghostPulse})`);
+    ghostAura.addColorStop(0.5, `rgba(168, 85, 247, ${0.18 * ghostPulse})`);
+    ghostAura.addColorStop(1, "rgba(76, 29, 149, 0)");
+    ctx.fillStyle = ghostAura;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y - 4 * zoom,
+      24 * zoom,
+      18 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    for (let i = 0; i < 3; i++) {
+      const wispAngle = time * (1.2 + i * 0.35) + i * 2.1;
+      const wispX = screenPos.x + Math.cos(wispAngle) * 13 * zoom;
+      const wispY =
+        screenPos.y -
+        16 * zoom +
+        Math.sin(wispAngle * 1.4) * 8 * zoom -
+        i * 4 * zoom;
+      ctx.fillStyle = `rgba(251, 113, 133, ${0.18 + ghostRemainingRatio * 0.16})`;
+      ctx.beginPath();
+      ctx.arc(wispX, wispY, (2.2 + i * 0.8) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   if (troop.selected) {
     ctx.strokeStyle = "#c9a227";
@@ -65,8 +121,8 @@ export function renderTroop(
   ctx.ellipse(
     screenPos.x,
     screenPos.y + 5 * zoom,
-    15 * zoom,
-    7 * zoom,
+    (troop.isHexGhost ? 11 : 15) * zoom,
+    (troop.isHexGhost ? 4.5 : 7) * zoom,
     0,
     0,
     Math.PI * 2,
@@ -227,9 +283,11 @@ export function renderTroop(
       footsoldier: 1.1,
       soldier: 1.2,
       rowing: 1.1,
+      hexling: 1.28,
       armored: 1.55,
       elite: 1.75,
       thesis: 1.4,
+      hexseer: 1.42,
       reinforcement: 1.55,
       cavalry: 2.4,
       centaur: 2.0,
@@ -335,6 +393,7 @@ export function renderTroop(
     );
     ctx.stroke();
   }
+  ctx.restore();
 }
 
 function drawTroopSprite(
@@ -357,9 +416,11 @@ function drawTroopSprite(
     footsoldier: 1.15,
     soldier: 1.25,
     rowing: 1.15,
+    hexling: 1.2,
     armored: 1.5,
     elite: 1.7,
     thesis: 1.35,
+    hexseer: 1.28,
     reinforcement: 1.25,
     cavalry: 1.6,
     centaur: 1.6,
@@ -451,6 +512,19 @@ function drawTroopSprite(
         targetPos,
       );
       break;
+    case "hexling":
+      drawHexlingTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
+      break;
     case "reinforcement":
       drawReinforcementTroop(
         ctx,
@@ -467,6 +541,19 @@ function drawTroopSprite(
       break;
     case "rowing":
       drawRowingTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
+      break;
+    case "hexseer":
+      drawHexseerTroop(
         ctx,
         x,
         scaledY,

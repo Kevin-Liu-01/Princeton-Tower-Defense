@@ -867,6 +867,38 @@ export function renderEffect(
       }
       break;
 
+    case "hex_ward_aura":
+      const hexRadius = (effect.size * (0.45 + progress * 0.55)) * zoom;
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(progress * Math.PI * 1.6);
+      ctx.strokeStyle = `rgba(232, 121, 249, ${alpha * 0.65})`;
+      ctx.lineWidth = 2.6 * zoom * (1 - progress * 0.35);
+      ctx.beginPath();
+      for (let i = 0; i <= 6; i++) {
+        const angle = -Math.PI / 2 + (i * Math.PI) / 3;
+        const px = Math.cos(angle) * hexRadius;
+        const py = Math.sin(angle) * hexRadius * ISO_Y_RATIO;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      ctx.rotate(-progress * Math.PI * 2.4);
+      ctx.strokeStyle = `rgba(192, 132, 252, ${alpha * 0.45})`;
+      ctx.lineWidth = 1.4 * zoom;
+      ctx.beginPath();
+      ctx.arc(0, 0, hexRadius * 0.46, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = `rgba(245, 208, 254, ${alpha * 0.8})`;
+      ctx.font = `bold ${Math.max(12, hexRadius * 0.2)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⌬", screenPos.x, screenPos.y - hexRadius * 0.85 * ISO_Y_RATIO);
+      break;
+
     case "inspiration":
       // Buff aura
       const inspireRadius = effect.size * zoom;

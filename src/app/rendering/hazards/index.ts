@@ -244,213 +244,120 @@ function drawPoisonFogHazard(
 ): void {
   const hazSeed = (pos.x || 0) * 17.3 + (pos.y || 0) * 31.7;
 
-  // 1. Contaminated ground — sickly yellow-green earth with decay patches
+  // 1. Ground contamination layer - corroded earth with organic edges
   ctx.save();
-  const soilGrad = ctx.createRadialGradient(
-    0,
-    3 * cameraZoom,
-    0,
-    0,
-    3 * cameraZoom,
-    sRad * 1.15,
-  );
-  soilGrad.addColorStop(0, "rgba(30, 50, 18, 0.8)");
-  soilGrad.addColorStop(0.35, "rgba(40, 58, 22, 0.6)");
-  soilGrad.addColorStop(0.7, "rgba(35, 48, 20, 0.3)");
+  const soilGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 1.1);
+  soilGrad.addColorStop(0, "rgba(25, 45, 25, 0.85)");
+  soilGrad.addColorStop(0.4, "rgba(35, 55, 30, 0.7)");
+  soilGrad.addColorStop(0.7, "rgba(45, 65, 35, 0.4)");
   soilGrad.addColorStop(1, "transparent");
   ctx.fillStyle = soilGrad;
-  drawOrganicBlob(ctx, sRad * 1.1, sRad * 1.05 * isoRatio, hazSeed, 0.2);
+  drawOrganicBlob(ctx, sRad * 1.1, sRad * 1.1 * isoRatio, hazSeed, 0.2);
   ctx.fill();
 
-  // Discolored acid-eaten patches on ground
-  for (let patch = 0; patch < 6; patch++) {
-    const pSeed = hazSeed + patch * 19.3;
-    const pAngle = seededNoise(pSeed) * Math.PI * 2;
-    const pDist = sRad * (0.25 + seededNoise(pSeed + 1) * 0.45);
-    const px = Math.cos(pAngle) * pDist;
-    const py = Math.sin(pAngle) * pDist * isoRatio + 3 * cameraZoom;
-    const pSize = sRad * (0.06 + seededNoise(pSeed + 2) * 0.06);
-    ctx.fillStyle = `rgba(90, 130, 30, ${0.25 + seededNoise(pSeed + 3) * 0.15})`;
+  // Corrupted veins/cracks in ground
+  ctx.strokeStyle = "rgba(80, 200, 80, 0.4)";
+  ctx.lineWidth = 1.5 * cameraZoom;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2 + Math.sin(hazSeed + i) * 0.3;
+    const len = sRad * (0.5 + Math.sin(time * 0.3 + i) * 0.2);
     ctx.beginPath();
-    ctx.ellipse(
-      px,
-      py,
-      pSize * 1.4,
-      pSize * 0.7 * isoRatio,
-      seededNoise(pSeed + 4) * 0.5,
-      0,
-      Math.PI * 2,
+    ctx.moveTo(0, 0);
+    const midX = Math.cos(angle) * len * 0.5;
+    const midY = Math.sin(angle) * len * 0.5 * isoRatio;
+    ctx.quadraticCurveTo(
+      midX + Math.sin(i * 2 + hazSeed) * 12 * cameraZoom,
+      midY + Math.cos(i * 2 + hazSeed) * 6 * cameraZoom,
+      Math.cos(angle) * len,
+      Math.sin(angle) * len * isoRatio,
     );
-    ctx.fill();
+    ctx.stroke();
   }
   ctx.restore();
 
-  // 2. Small bubbling fissures — narrow vents releasing gas
-  for (let vent = 0; vent < 5; vent++) {
-    const vSeed = hazSeed + vent * 23.7;
-    const vAngle = seededNoise(vSeed) * Math.PI * 2;
-    const vDist = sRad * (0.2 + seededNoise(vSeed + 1) * 0.45);
-    const vx = Math.cos(vAngle) * vDist;
-    const vy = Math.sin(vAngle) * vDist * isoRatio;
-    const ventSize = sRad * (0.04 + seededNoise(vSeed + 2) * 0.04);
-
-    // Vent hole
-    ctx.fillStyle = "rgba(20, 35, 10, 0.7)";
-    ctx.beginPath();
-    ctx.ellipse(vx, vy, ventSize, ventSize * isoRatio, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Gas jet stream rising from vent
-    const jetH = (35 + seededNoise(vSeed + 3) * 20) * cameraZoom;
-    for (let jl = 0; jl < 6; jl++) {
-      const jt = jl / 6;
-      const jDrift =
-        Math.sin(time * 1.2 + vent * 1.5 + jt * 3) * 6 * cameraZoom * jt;
-      const jy = vy - jt * jetH;
-      const jx = vx + jDrift;
-      const jw = ventSize * (1 + jt * 2.5);
-      const jh = jw * isoRatio * 0.7;
-      const jAlpha =
-        (0.18 - jt * 0.02) * (0.8 + Math.sin(time * 2 + vent) * 0.2);
-
-      ctx.fillStyle = `rgba(100, 180, 50, ${jAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(jx, jy, jw, jh, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Vent bubbles
-    for (let b = 0; b < 3; b++) {
-      const bPhase = (time * 1.2 + vent + b * 0.4) % 1.2;
-      if (bPhase > 0.9) continue;
-      const bSize = (2 + b) * cameraZoom * (1 - bPhase / 0.9);
-      const bAlpha = (1 - bPhase / 0.9) * 0.5;
-      ctx.fillStyle = `rgba(150, 240, 80, ${bAlpha})`;
-      ctx.beginPath();
-      ctx.arc(
-        vx + Math.sin(time * 3 + b + vSeed) * 3 * cameraZoom,
-        vy - bPhase * 18 * cameraZoom,
-        bSize,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-  }
-
-  // 3. Tall fog columns — dense vertical plumes rising high and spreading
-  const fogCols = [
-    { angle: 0.4, dist: 0.1, width: 0.5, height: 70 },
-    { angle: 2.0, dist: 0.2, width: 0.4, height: 60 },
-    { angle: 3.8, dist: 0.15, width: 0.45, height: 65 },
-    { angle: 5.2, dist: 0.25, width: 0.35, height: 50 },
-  ];
-  for (let col = 0; col < fogCols.length; col++) {
-    const fc = fogCols[col];
-    const baseX = Math.cos(fc.angle + hazSeed * 0.005) * sRad * fc.dist;
-    const baseY =
-      Math.sin(fc.angle + hazSeed * 0.005) * sRad * fc.dist * isoRatio;
-
-    for (let layer = 0; layer < 10; layer++) {
-      const t = layer / 10;
-      const drift =
-        Math.sin(time * 0.4 + col * 1.7 + t * 2.5) * 12 * cameraZoom * t;
-      const spread = 1 + t * 1.5;
-      const ly = baseY - t * fc.height * cameraZoom;
-      const lx = baseX + drift;
-      const w = sRad * fc.width * spread * (0.6 + (1 - t) * 0.4);
-      const h = w * isoRatio * 0.7;
-
-      // Green-purple fog with layered color shifting
-      const purpleBlend = t * 0.6;
-      const r = Math.floor(70 + purpleBlend * 50);
-      const g = Math.floor(160 - purpleBlend * 80);
-      const b = Math.floor(50 + purpleBlend * 120);
-      const alpha = 0.18 - t * 0.015;
-
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      ctx.beginPath();
-      ctx.ellipse(lx, ly, w, h, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // 4. Wispy tendrils of fog curling at edges — animated S-curves
-  for (let tendril = 0; tendril < 6; tendril++) {
-    const tSeed = hazSeed + tendril * 11.3;
-    const tAngle = (tendril / 6) * Math.PI * 2 + seededNoise(tSeed) * 0.5;
-    const tLen = sRad * (0.6 + seededNoise(tSeed + 1) * 0.3);
-    const tH = (30 + seededNoise(tSeed + 2) * 20) * cameraZoom;
-    const tAlpha = 0.12 + Math.sin(time * 0.6 + tendril * 0.9) * 0.04;
+  // 2. Bubbling toxic pools
+  for (let pool = 0; pool < 4; pool++) {
+    const poolSeed = hazSeed + pool * 23.7;
+    const poolAngle = (pool / 4) * Math.PI * 2 + Math.sin(poolSeed) * 0.5;
+    const poolDist = sRad * (0.4 + Math.sin(poolSeed * 1.3) * 0.15);
+    const poolX = Math.cos(poolAngle) * poolDist;
+    const poolY = Math.sin(poolAngle) * poolDist * isoRatio;
+    const poolSize = sRad * (0.15 + Math.sin(poolSeed * 2.1) * 0.05);
 
     ctx.save();
-    ctx.strokeStyle = `rgba(90, 170, 60, ${tAlpha})`;
-    ctx.lineWidth = (3 + seededNoise(tSeed + 3) * 2) * cameraZoom;
-    ctx.lineCap = "round";
-    ctx.beginPath();
+    ctx.translate(poolX, poolY);
+    const poolGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, poolSize);
+    poolGrad.addColorStop(0, "rgba(100, 220, 100, 0.8)");
+    poolGrad.addColorStop(0.6, "rgba(60, 180, 60, 0.6)");
+    poolGrad.addColorStop(1, "rgba(40, 100, 40, 0.3)");
+    ctx.fillStyle = poolGrad;
+    drawOrganicBlob(ctx, poolSize, poolSize * isoRatio, poolSeed, 0.25);
+    ctx.fill();
+    ctx.restore();
 
-    for (let seg = 0; seg <= 10; seg++) {
-      const st = seg / 10;
-      const cx = Math.cos(tAngle) * tLen * st;
-      const cy = Math.sin(tAngle) * tLen * st * isoRatio;
-      const curl =
-        Math.sin(time * 0.8 + st * 4 + tendril * 2) * 8 * cameraZoom * st;
-      const rise = -st * tH;
-      if (seg === 0) ctx.moveTo(cx, cy);
-      else ctx.lineTo(cx + curl, cy + rise);
+    for (let b = 0; b < 3; b++) {
+      const bubblePhase = (time * 1.5 + pool + b * 0.3) % 1;
+      const bubbleSize = (3 + b) * cameraZoom * (1 - bubblePhase * 0.5);
+      const bubbleY = poolY - bubblePhase * 25 * cameraZoom;
+      const bubbleX =
+        poolX + Math.sin(time * 3 + b + poolSeed) * 5 * cameraZoom;
+
+      ctx.fillStyle = `rgba(150, 255, 150, ${0.6 * (1 - bubblePhase)})`;
+      ctx.beginPath();
+      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.stroke();
+  }
+
+  // 3. Soft volumetric fog layers
+  for (let layer = 0; layer < 5; layer++) {
+    const layerHeight = -layer * 12 * cameraZoom;
+    const layerScale = 1 - layer * 0.1;
+    const layerAlpha = 0.25 - layer * 0.04;
+    const drift = Math.sin(time * 0.5 + layer) * 15 * cameraZoom;
+
+    ctx.save();
+    ctx.translate(drift, layerHeight);
+
+    const fogGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * layerScale);
+    fogGrad.addColorStop(0, `rgba(120, 40, 180, ${layerAlpha})`);
+    fogGrad.addColorStop(0.3, `rgba(80, 180, 80, ${layerAlpha * 0.8})`);
+    fogGrad.addColorStop(0.6, `rgba(60, 140, 60, ${layerAlpha * 0.5})`);
+    fogGrad.addColorStop(1, "transparent");
+
+    ctx.fillStyle = fogGrad;
+    drawOrganicBlob(
+      ctx,
+      sRad * layerScale,
+      sRad * layerScale * isoRatio * 0.8,
+      hazSeed + layer * 7,
+      0.18,
+    );
+    ctx.fill();
     ctx.restore();
   }
 
-  // 5. Floating spore particles drifting upward through the fog
-  for (let j = 0; j < 16; j++) {
+  // 4. Toxic spore particles
+  for (let j = 0; j < 12; j++) {
     const seed = j * 0.618;
-    const particleLife = (time * 0.4 + seed * 2) % 3;
-    const t = particleLife / 3;
-    const baseAngle = seededNoise(hazSeed + j * 3.1) * Math.PI * 2;
-    const baseDist = sRad * (0.1 + seededNoise(hazSeed + j * 5.7) * 0.5);
-    const drift = Math.sin(time * 0.5 + j * 1.1) * 8 * cameraZoom * t;
-    const px = Math.cos(baseAngle) * baseDist + drift;
-    const py = Math.sin(baseAngle) * baseDist * isoRatio - t * 65 * cameraZoom;
-    const pSize = (1 - t * 0.5) * (2 + (j % 3)) * cameraZoom;
-    const pAlpha = (1 - t) * 0.65;
+    const particleLife = (time + seed * 2) % 2.5;
+    const px =
+      Math.sin(seed * 17.3 + hazSeed) * sRad * 0.7 +
+      Math.sin(time + j) * 10 * cameraZoom;
+    const py =
+      -particleLife * 35 * cameraZoom +
+      Math.cos(seed * 23.7 + hazSeed) * sRad * 0.3 * isoRatio;
+    const pSize = (1 - particleLife / 2.5) * (3 + (j % 3)) * cameraZoom;
 
     ctx.save();
-    ctx.shadowColor = `rgba(100, 255, 100, ${pAlpha * 0.4})`;
-    ctx.shadowBlur = 5 * cameraZoom;
-    ctx.fillStyle = `rgba(150, 255, 120, ${pAlpha})`;
+    ctx.shadowColor = "rgba(100, 255, 100, 0.8)";
+    ctx.shadowBlur = 8 * cameraZoom;
+    ctx.fillStyle = `rgba(150, 255, 150, ${(1 - particleLife / 2.5) * 0.8})`;
     ctx.beginPath();
     ctx.arc(px, py, pSize, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
-
-  // 6. Eerie green glow from the ground
-  const glow = Math.sin(time * 1.5 + hazSeed) * 0.3 + 0.5;
-  const glowGrad = ctx.createRadialGradient(
-    0,
-    0,
-    0,
-    0,
-    -15 * cameraZoom,
-    sRad * 0.8,
-  );
-  glowGrad.addColorStop(0, `rgba(100, 220, 60, ${0.1 + glow * 0.08})`);
-  glowGrad.addColorStop(0.4, "rgba(80, 180, 40, 0.03)");
-  glowGrad.addColorStop(1, "transparent");
-  ctx.fillStyle = glowGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    0,
-    -10 * cameraZoom,
-    sRad * 0.8,
-    sRad * 0.8 * isoRatio,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 }
 
 // ============================================================================
@@ -615,7 +522,6 @@ function drawLavaGeyserHazard(
     layout,
     time,
     cycle,
-    cameraZoom,
   );
   drawLavaGeyserVentRim(ctx, ventWidth, lavaIso, hazSeed, cycle, cameraZoom);
   drawLavaGeyserBackRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
@@ -818,7 +724,6 @@ function drawLavaGeyserSecondaryPools(
   layout: LavaGeyserLayout,
   time: number,
   cycle: LavaGeyserCycleState,
-  cameraZoom: number,
 ): void {
   const poolGlow =
     0.7 + Math.sin(time * 1.4) * 0.1 + cycle.eruptionIntensity * 0.2;
@@ -1063,19 +968,6 @@ function drawLavaGeyserMagmaPool(
 
   ctx.save();
   ctx.translate(0, poolY);
-
-  // Depth shadow beneath magma
-  ctx.fillStyle = "rgba(20, 5, 0, 0.6)";
-  drawOrganicBlobAt(
-    ctx,
-    0,
-    4 * cameraZoom,
-    poolRx * 1.05,
-    poolRy * 0.9,
-    hazSeed + 110,
-    0.08,
-  );
-  ctx.fill();
 
   // Main magma body
   if (cycle.buildUp || cycle.isErupting) {
@@ -2642,20 +2534,6 @@ function drawIceSpikesHazard(
     const baseBackX = x + lean * 0.25;
     const baseBackY = y - width * 0.75;
 
-    // Ground shadow for depth anchoring
-    ctx.fillStyle = "rgba(24, 44, 72, 0.3)";
-    ctx.beginPath();
-    ctx.ellipse(
-      x + lean * 0.4,
-      y + 8 * cameraZoom,
-      width * 1.3,
-      width * 0.5,
-      lean * 0.01,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
     // Rear face
     ctx.fillStyle = `rgba(95, 150, 215, ${0.7 * shimmer})`;
     ctx.beginPath();
@@ -3080,6 +2958,32 @@ function drawDeepWaterHazard(
   drawOrganicBlob(ctx, sRad * 0.48, sRad * 0.4 * isoRatio, hazSeed + 120, 0.12);
   ctx.fill();
 
+  // 3b. Submerged shelves and rock shadows to sell depth
+  for (let shelf = 0; shelf < 3; shelf++) {
+    const sSeed = hazSeed + shelf * 21.3;
+    const shelfAngle = seededNoise(sSeed) * Math.PI * 2;
+    const shelfDist = sRad * (0.22 + seededNoise(sSeed + 1) * 0.42);
+    const sx = Math.cos(shelfAngle) * shelfDist;
+    const sy = Math.sin(shelfAngle) * shelfDist * isoRatio;
+    const shelfSize = sRad * (0.12 + seededNoise(sSeed + 2) * 0.12);
+    const shelfGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, shelfSize);
+    shelfGrad.addColorStop(0, "rgba(18, 60, 88, 0.18)");
+    shelfGrad.addColorStop(0.7, "rgba(10, 34, 58, 0.22)");
+    shelfGrad.addColorStop(1, "rgba(8, 18, 32, 0)");
+    ctx.fillStyle = shelfGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      sx,
+      sy,
+      shelfSize * 1.2,
+      shelfSize * isoRatio * 0.9,
+      seededNoise(sSeed + 3) * 0.4,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
   // 4. Surface caustics and moving wave bands
   for (let band = 0; band < 5; band++) {
     const phase = time * 0.9 + band * 0.95 + hazSeed * 0.02;
@@ -3110,6 +3014,52 @@ function drawDeepWaterHazard(
     ctx.fillStyle = `rgba(225, 245, 255, ${0.35 + pulse * 0.3})`;
     ctx.beginPath();
     ctx.arc(fx, fy, bubbleSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 5b. Underwater reeds and kelp fronds around the edge
+  for (let reed = 0; reed < 8; reed++) {
+    const rSeed = hazSeed + reed * 17.9;
+    const angle = seededNoise(rSeed) * Math.PI * 2;
+    const dist = sRad * (0.58 + seededNoise(rSeed + 1) * 0.3);
+    const rx = Math.cos(angle) * dist;
+    const ry = Math.sin(angle) * dist * isoRatio;
+    const height = (16 + seededNoise(rSeed + 2) * 16) * cameraZoom;
+    const sway = Math.sin(time * 0.9 + reed * 1.4) * 5 * cameraZoom;
+    ctx.strokeStyle = `rgba(50, 115, 92, ${0.18 + seededNoise(rSeed + 3) * 0.12})`;
+    ctx.lineWidth = (1 + seededNoise(rSeed + 4) * 0.8) * cameraZoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(rx, ry + 2 * cameraZoom);
+    ctx.quadraticCurveTo(
+      rx + sway * 0.4,
+      ry - height * 0.45,
+      rx + sway,
+      ry - height,
+    );
+    ctx.stroke();
+  }
+
+  // 5c. Slow drifting highlights and tiny floating debris
+  for (let drift = 0; drift < 6; drift++) {
+    const dSeed = hazSeed + drift * 13.1;
+    const angle = seededNoise(dSeed) * Math.PI * 2 + time * 0.08;
+    const dist = sRad * (0.12 + seededNoise(dSeed + 1) * 0.5);
+    const dx = Math.cos(angle) * dist + Math.sin(time * 0.35 + drift) * 5 * cameraZoom;
+    const dy = Math.sin(angle) * dist * isoRatio;
+    const size = sRad * (0.03 + seededNoise(dSeed + 2) * 0.04);
+
+    ctx.fillStyle = `rgba(180, 210, 190, ${0.12 + seededNoise(dSeed + 3) * 0.08})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      dx,
+      dy,
+      size * 1.4,
+      size * isoRatio * 0.75,
+      seededNoise(dSeed + 4) * Math.PI,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -4062,6 +4012,62 @@ function drawSwampHazard(
     }
   }
 
+  // 8b. Extra overgrown swamp clumps: cattails, reeds, and bulb growths
+  for (let cluster = 0; cluster < 6; cluster++) {
+    const cSeed = hazSeed + cluster * 29.1;
+    const baseAngle = seededNoise(cSeed) * Math.PI * 2;
+    const baseDist = sRad * (0.45 + seededNoise(cSeed + 1) * 0.42);
+    const cx = Math.cos(baseAngle) * baseDist;
+    const cy = Math.sin(baseAngle) * baseDist * isoRatio;
+    const stalkCount = 3 + (cluster % 3);
+
+    for (let stalk = 0; stalk < stalkCount; stalk++) {
+      const offset = (stalk - (stalkCount - 1) / 2) * 3.2 * cameraZoom;
+      const height = (16 + seededNoise(cSeed + stalk * 3.3) * 18) * cameraZoom;
+      const lean = (seededNoise(cSeed + stalk * 5.1) - 0.5) * 8 * cameraZoom;
+      ctx.strokeStyle = `rgba(58, 92, 24, ${0.45 + seededNoise(cSeed + stalk * 7.7) * 0.2})`;
+      ctx.lineWidth = (1.1 + seededNoise(cSeed + stalk * 9.1) * 0.9) * cameraZoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx + offset, cy + 1 * cameraZoom);
+      ctx.quadraticCurveTo(
+        cx + offset + lean * 0.4,
+        cy - height * 0.45,
+        cx + offset + lean,
+        cy - height,
+      );
+      ctx.stroke();
+
+      if (stalk % 2 === 0) {
+        ctx.fillStyle = `rgba(85, 68, 24, ${0.65 + seededNoise(cSeed + stalk * 11.3) * 0.18})`;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx + offset + lean,
+          cy - height,
+          2.4 * cameraZoom,
+          4.2 * cameraZoom,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+
+    const bulbSize = sRad * (0.045 + seededNoise(cSeed + 40) * 0.03);
+    ctx.fillStyle = `rgba(64, 96, 26, ${0.4 + seededNoise(cSeed + 41) * 0.15})`;
+    drawOrganicBlobAt(
+      ctx,
+      cx - 2 * cameraZoom,
+      cy + 3 * cameraZoom,
+      bulbSize * 1.4,
+      bulbSize * isoRatio,
+      cSeed + 42,
+      0.25,
+    );
+    ctx.fill();
+  }
+
   // 9. Toxic bubbles with pop effect
   for (let bubble = 0; bubble < 12; bubble++) {
     const bSeed = hazSeed + bubble * 2.1;
@@ -4529,6 +4535,47 @@ function drawPoisonPoolHazard(
     ctx.stroke();
   }
 
+  // 2b. Corrosive veins and ooze channels around the pool
+  ctx.strokeStyle = "rgba(120, 235, 70, 0.2)";
+  ctx.lineWidth = 1.2 * cameraZoom;
+  for (let vein = 0; vein < 8; vein++) {
+    const vSeed = hazSeed + vein * 8.1;
+    const vAngle = (vein / 8) * Math.PI * 2 + seededNoise(vSeed) * 0.25;
+    const vStartR = sRad * (0.18 + seededNoise(vSeed + 1) * 0.12);
+    const vEndR = sRad * (0.55 + seededNoise(vSeed + 2) * 0.22);
+    ctx.beginPath();
+    ctx.moveTo(
+      Math.cos(vAngle) * vStartR,
+      Math.sin(vAngle) * vStartR * isoRatio,
+    );
+    const midAngle = vAngle + (seededNoise(vSeed + 3) - 0.5) * 0.28;
+    ctx.quadraticCurveTo(
+      Math.cos(midAngle) * (vStartR + vEndR) * 0.55,
+      Math.sin(midAngle) * (vStartR + vEndR) * 0.55 * isoRatio,
+      Math.cos(vAngle + 0.08) * vEndR,
+      Math.sin(vAngle + 0.08) * vEndR * isoRatio,
+    );
+    ctx.stroke();
+  }
+
+  // 2c. Secondary bubbling sub-pools around the edge
+  for (let subPool = 0; subPool < 3; subPool++) {
+    const spSeed = hazSeed + subPool * 17.7;
+    const spAngle = seededNoise(spSeed) * Math.PI * 2;
+    const spDist = sRad * (0.42 + seededNoise(spSeed + 1) * 0.18);
+    const sx = Math.cos(spAngle) * spDist;
+    const sy = Math.sin(spAngle) * spDist * isoRatio;
+    const spSize = sRad * (0.1 + seededNoise(spSeed + 2) * 0.05);
+
+    const subGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, spSize);
+    subGrad.addColorStop(0, "rgba(145, 255, 95, 0.65)");
+    subGrad.addColorStop(0.6, "rgba(75, 195, 42, 0.52)");
+    subGrad.addColorStop(1, "rgba(40, 120, 25, 0)");
+    ctx.fillStyle = subGrad;
+    drawOrganicBlobAt(ctx, sx, sy, spSize, spSize * isoRatio, spSeed + 10, 0.26);
+    ctx.fill();
+  }
+
   // 3. Erupting toxic bubbles — large, slow, popping
   for (let bubble = 0; bubble < 8; bubble++) {
     const bSeed = hazSeed + bubble * 11.7;
@@ -4618,20 +4665,6 @@ function drawPoisonPoolHazard(
     const capW = fg.capW * cameraZoom;
     const capH = fg.capH * cameraZoom;
     const lean = fg.lean * cameraZoom + sway;
-
-    // Stem shadow on ground
-    ctx.fillStyle = "rgba(15, 30, 8, 0.25)";
-    ctx.beginPath();
-    ctx.ellipse(
-      baseX + lean * 0.5,
-      baseY + 3 * cameraZoom,
-      capW * 0.6,
-      capW * 0.6 * isoRatio,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
 
     // Stem — slightly curved, thicker at base
     ctx.save();
@@ -4796,6 +4829,35 @@ function drawPoisonPoolHazard(
       Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  // 5b. Toxic tendrils and wisps curling upward from the surface
+  for (let tendril = 0; tendril < 7; tendril++) {
+    const tSeed = hazSeed + tendril * 4.1;
+    const tPhase = (time * 0.35 + seededNoise(tSeed) * 4) % 4;
+    if (tPhase > 3) continue;
+    const tAngle = seededNoise(tSeed + 1) * Math.PI * 2;
+    const tDist = sRad * (0.14 + seededNoise(tSeed + 2) * 0.42);
+    const tAlpha = 0.12 * (1 - tPhase / 3);
+
+    ctx.strokeStyle = `rgba(90, 185, 45, ${tAlpha})`;
+    ctx.lineWidth = (2.2 - tPhase * 0.35) * cameraZoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (let seg = 0; seg <= 8; seg++) {
+      const progress = seg / 8;
+      const rise = progress * tPhase * 22 * cameraZoom;
+      const sCurve =
+        Math.sin(progress * Math.PI * 2 + time * 1.4 + tendril) *
+        5 *
+        cameraZoom *
+        progress;
+      const x = Math.cos(tAngle) * tDist + sCurve;
+      const y = Math.sin(tAngle) * tDist * isoRatio - rise;
+      if (seg === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
   }
 
   // 6. Dripping toxic stalactites — floating goo drops falling back

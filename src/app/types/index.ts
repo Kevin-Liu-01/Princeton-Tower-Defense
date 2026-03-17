@@ -353,6 +353,9 @@ export interface Enemy {
   tauntTarget?: string;
   tauntOffset?: Position; // Offset from path position when moving toward taunt target
   goldAura?: boolean; // Gold Rush spell glowing effect
+  hexWard?: boolean; // Hex Ward curse visual marker
+  hexWardUntil?: number; // Curse expiration time
+  hexWardDamageAmp?: number; // Additional damage taken multiplier (0.25 = +25%)
   // Ability cooldowns (tracks when enemy can use abilities again)
   abilityCooldowns?: Record<string, number>;
   lastAbilityUse?: number;
@@ -461,6 +464,8 @@ export type TroopType =
   | "cavalry"
   | "thesis"
   | "rowing"
+  | "hexling"
+  | "hexseer"
   | "turret";
 
 // Troop data definition
@@ -499,6 +504,9 @@ export interface Troop {
   overrideRange?: number;
   overrideCanTargetFlying?: boolean;
   overrideHybridMelee?: boolean;
+  isHexGhost?: boolean;
+  hexGhostDecayPerSecond?: number;
+  hexGhostExpireTime?: number;
   visualTier?: number;
   type?: TroopType;
   pos: Position;
@@ -546,6 +554,7 @@ export type SpellType =
   | "fireball"
   | "lightning"
   | "freeze"
+  | "hex_ward"
   | "payday"
   | "reinforcements";
 
@@ -648,6 +657,7 @@ export type EffectType =
   | "bullet_stream"
   | "flame_burst"
   | "payday_aura"
+  | "hex_ward_aura"
   | "roar_wave"
   | "meteor_strike"
   | "boulder_strike"

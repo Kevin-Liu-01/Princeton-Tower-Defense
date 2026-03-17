@@ -8,14 +8,24 @@ export function getEnemyArmor(enemyType: EnemyType): number {
 }
 
 export function getEnemyDamageTaken(
-  enemy: Pick<Enemy, "type">,
+  enemy: Pick<Enemy, "type" | "hexWard" | "hexWardUntil" | "hexWardDamageAmp">,
   rawDamage: number,
   damageType: EnemyDamageType = "default",
 ): number {
   const safeDamage = Math.max(0, rawDamage);
   if (safeDamage <= 0) return 0;
-  if (damageType === "fire" || damageType === "poison") return safeDamage;
+  const baseDamage =
+    damageType === "fire" || damageType === "poison"
+      ? safeDamage
+      : safeDamage * Math.max(0, 1 - getEnemyArmor(enemy.type));
 
-  const armorMultiplier = Math.max(0, 1 - getEnemyArmor(enemy.type));
-  return safeDamage * armorMultiplier;
+  const hexMultiplier =
+    enemy.hexWard &&
+    enemy.hexWardUntil &&
+    enemy.hexWardUntil > Date.now() &&
+    enemy.hexWardDamageAmp
+      ? 1 + enemy.hexWardDamageAmp
+      : 1;
+
+  return baseDamage * hexMultiplier;
 }

@@ -23,6 +23,13 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     cooldown: 20000,
     desc: "Freezes up to 5 enemies for 3 seconds",
   },
+  hex_ward: {
+    name: "Hex Ward",
+    shortName: "Hex Ward",
+    cost: 55,
+    cooldown: 18000,
+    desc: "Hexes advanced enemies for 8s, amplifies damage, and raises ghost allies from deaths during the curse",
+  },
   payday: {
     name: "Paw Point Payday",
     shortName: "Payday",
@@ -44,9 +51,23 @@ export const SPELL_OPTIONS: SpellType[] = [
   "fireball",
   "lightning",
   "freeze",
+  "hex_ward",
   "payday",
   "reinforcements",
 ];
+
+const SPELL_ACTION_IMAGE_NAMES: Record<SpellType, string> = {
+  fireball: "fireball",
+  lightning: "lightning",
+  freeze: "freeze",
+  hex_ward: "hex-ward",
+  payday: "payday",
+  reinforcements: "reinforcements",
+};
+
+export function getSpellActionImagePath(spellType: SpellType): string {
+  return `/images/spells/${SPELL_ACTION_IMAGE_NAMES[spellType]}-action.png`;
+}
 
 export const SPELL_UPGRADE_COSTS = [2, 2, 3, 3, 3, 2] as const;
 export const MAX_SPELL_UPGRADE_LEVEL = SPELL_UPGRADE_COSTS.length;
@@ -180,6 +201,44 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       cost: SPELL_UPGRADE_COSTS[5],
     },
   ],
+  hex_ward: [
+    {
+      level: 1,
+      title: "Coven Census",
+      description: "Hex Ward affects +2 additional enemies",
+      cost: SPELL_UPGRADE_COSTS[0],
+    },
+    {
+      level: 2,
+      title: "Ruin Script",
+      description: "Hexed enemies take +10% more damage",
+      cost: SPELL_UPGRADE_COSTS[1],
+    },
+    {
+      level: 3,
+      title: "Lingering Malison",
+      description: "Hex duration lasts +2s",
+      cost: SPELL_UPGRADE_COSTS[2],
+    },
+    {
+      level: 4,
+      title: "Coven Lattice",
+      description: "Hex Ward affects +3 additional enemies",
+      cost: SPELL_UPGRADE_COSTS[3],
+    },
+    {
+      level: 5,
+      title: "Withering Decree",
+      description: "Hexed enemies take +15% more damage",
+      cost: SPELL_UPGRADE_COSTS[4],
+    },
+    {
+      level: 6,
+      title: "Doom Constellation",
+      description: "+2 targets, +10% damage amp, and +2s duration",
+      cost: SPELL_UPGRADE_COSTS[5],
+    },
+  ],
   payday: [
     {
       level: 1,
@@ -262,6 +321,7 @@ export const SPELL_ACCENTS: Record<SpellType, string> = {
   fireball: "#ea580c",
   lightning: "#eab308",
   freeze: "#06b6d4",
+  hex_ward: "#a855f7",
   payday: "#f59e0b",
   reinforcements: "#10b981",
 };
@@ -292,6 +352,12 @@ export const SPELL_TRAITS: Record<SpellType, SpellTrait> = {
     bg: "rgba(49,46,129,0.25)",
     border: "rgba(49,46,129,0.2)",
   },
+  hex_ward: {
+    trait: "Hex Necromancy",
+    color: "text-fuchsia-300/80",
+    bg: "rgba(88,28,135,0.25)",
+    border: "rgba(88,28,135,0.2)",
+  },
   payday: {
     trait: "Gold Boost",
     color: "text-yellow-300/80",
@@ -310,6 +376,7 @@ export const DEFAULT_SPELL_UPGRADES: SpellUpgradeLevels = {
   fireball: 0,
   lightning: 0,
   freeze: 0,
+  hex_ward: 0,
   payday: 0,
   reinforcements: 0,
 };
@@ -389,6 +456,12 @@ export interface FreezeSpellStats {
   isGlobal: boolean;
 }
 
+export interface HexWardSpellStats {
+  maxTargets: number;
+  damageAmp: number;
+  durationMs: number;
+}
+
 export interface PaydaySpellStats {
   basePayout: number;
   bonusPerEnemy: number;
@@ -447,6 +520,26 @@ export const getFreezeSpellStats = (level: number): FreezeSpellStats => {
     freezeDurationMs: 3000 + normalizedLevel * 600,
     maxTargets,
     isGlobal: !Number.isFinite(maxTargets),
+  };
+};
+
+export const getHexWardSpellStats = (level: number): HexWardSpellStats => {
+  const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
+  return {
+    maxTargets:
+      5 +
+      (normalizedLevel >= 1 ? 2 : 0) +
+      (normalizedLevel >= 4 ? 3 : 0) +
+      (normalizedLevel >= 6 ? 2 : 0),
+    damageAmp:
+      0.25 +
+      (normalizedLevel >= 2 ? 0.10 : 0) +
+      (normalizedLevel >= 5 ? 0.15 : 0) +
+      (normalizedLevel >= 6 ? 0.10 : 0),
+    durationMs:
+      8000 +
+      (normalizedLevel >= 3 ? 2000 : 0) +
+      (normalizedLevel >= 6 ? 2000 : 0),
   };
 };
 

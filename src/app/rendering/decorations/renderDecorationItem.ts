@@ -42,6 +42,30 @@ import {
   renderNassauHall,
 } from "./landmarkBuildings";
 
+const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
+  "pyramid",
+  "sphinx",
+  "giant_sphinx",
+  "nassau_hall",
+  "glacier",
+  "ice_fortress",
+  "ice_throne",
+  "obsidian_castle",
+  "witch_cottage",
+  "cannon_crest",
+  "ivy_crossroads",
+  "blight_basin",
+  "triad_keep",
+  "sunscorch_labyrinth",
+  "frontier_outpost",
+  "ashen_spiral",
+  "war_monument",
+  "bone_altar",
+  "sun_obelisk",
+  "frost_citadel",
+  "infernal_gate",
+]);
+
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
   screenPos: Position;
@@ -114,6 +138,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     zoom: paramZoom,
   } = params;
   const zoom = paramZoom ?? 1;
+  const landmarkSkipShadow =
+    skipShadow || LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW.has(type);
 
   const dec = { x: decorX, y: decorY };
 
@@ -127,7 +153,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       decorX,
       decorY,
       shadowOnly,
-      skipShadow,
+      skipShadow: landmarkSkipShadow,
       zoom,
     });
     return;
@@ -158,7 +184,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -8079,50 +8105,52 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const shadowApexX = pyrX + 42 * s;
       const shadowApexY = baseCy + 18 * s;
 
-      // Soft outer penumbra layer
-      ctx.beginPath();
-      ctx.moveTo(backX - 1 * s, backY - 2 * s);
-      ctx.lineTo(leftX - 4 * s, leftY + 2 * s);
-      ctx.lineTo(frontX - 1 * s, frontY + 5 * s);
-      ctx.lineTo(shadowApexX + 7 * s, shadowApexY + 4 * s);
-      ctx.lineTo(rightX + 7 * s, rightY - 1 * s);
-      ctx.lineTo(backX + 3 * s, backY - 3 * s);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(0,0,0,0.05)";
-      ctx.fill();
+      if (!landmarkSkipShadow) {
+        // Soft outer penumbra layer
+        ctx.beginPath();
+        ctx.moveTo(backX - 1 * s, backY - 2 * s);
+        ctx.lineTo(leftX - 4 * s, leftY + 2 * s);
+        ctx.lineTo(frontX - 1 * s, frontY + 5 * s);
+        ctx.lineTo(shadowApexX + 7 * s, shadowApexY + 4 * s);
+        ctx.lineTo(rightX + 7 * s, rightY - 1 * s);
+        ctx.lineTo(backX + 3 * s, backY - 3 * s);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(0,0,0,0.05)";
+        ctx.fill();
 
-      // Mid penumbra layer
-      ctx.beginPath();
-      ctx.moveTo(backX, backY - 1 * s);
-      ctx.lineTo(leftX - 2 * s, leftY + 1 * s);
-      ctx.lineTo(frontX, frontY + 3 * s);
-      ctx.lineTo(shadowApexX + 4 * s, shadowApexY + 2 * s);
-      ctx.lineTo(rightX + 4 * s, rightY);
-      ctx.lineTo(backX + 1 * s, backY - 2 * s);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(0,0,0,0.08)";
-      ctx.fill();
+        // Mid penumbra layer
+        ctx.beginPath();
+        ctx.moveTo(backX, backY - 1 * s);
+        ctx.lineTo(leftX - 2 * s, leftY + 1 * s);
+        ctx.lineTo(frontX, frontY + 3 * s);
+        ctx.lineTo(shadowApexX + 4 * s, shadowApexY + 2 * s);
+        ctx.lineTo(rightX + 4 * s, rightY);
+        ctx.lineTo(backX + 1 * s, backY - 2 * s);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(0,0,0,0.08)";
+        ctx.fill();
 
-      // Core shadow with gradient fade toward tip
-      ctx.beginPath();
-      ctx.moveTo(backX, backY);
-      ctx.lineTo(leftX, leftY);
-      ctx.lineTo(frontX, frontY);
-      ctx.lineTo(shadowApexX, shadowApexY);
-      ctx.lineTo(rightX, rightY);
-      ctx.closePath();
-      const pyrShadowGrad = ctx.createLinearGradient(
-        pyrX - pyrHW * 0.5,
-        baseCy,
-        shadowApexX,
-        shadowApexY,
-      );
-      pyrShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
-      pyrShadowGrad.addColorStop(0.35, "rgba(0,0,0,0.22)");
-      pyrShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.10)");
-      pyrShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = pyrShadowGrad;
-      ctx.fill();
+        // Core shadow with gradient fade toward tip
+        ctx.beginPath();
+        ctx.moveTo(backX, backY);
+        ctx.lineTo(leftX, leftY);
+        ctx.lineTo(frontX, frontY);
+        ctx.lineTo(shadowApexX, shadowApexY);
+        ctx.lineTo(rightX, rightY);
+        ctx.closePath();
+        const pyrShadowGrad = ctx.createLinearGradient(
+          pyrX - pyrHW * 0.5,
+          baseCy,
+          shadowApexX,
+          shadowApexY,
+        );
+        pyrShadowGrad.addColorStop(0, "rgba(0,0,0,0.30)");
+        pyrShadowGrad.addColorStop(0.35, "rgba(0,0,0,0.22)");
+        pyrShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.10)");
+        pyrShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = pyrShadowGrad;
+        ctx.fill();
+      }
 
       // Left face (shadow) with gradient
       const leftFaceGrad = ctx.createLinearGradient(leftX, leftY, pyrX, tipY);
@@ -8631,16 +8659,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const mysticPulse = 0.6 + Math.sin(time * 1.5) * 0.2;
 
       // ========== GROUND SHADOW ==========
-      drawDirectionalShadow(
-        ctx,
-        screenPos.x,
-        screenPos.y + 12 * s,
-        s,
-        42 * s,
-        17 * s,
-        60 * s,
-        0.35,
-      );
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(
+          ctx,
+          screenPos.x,
+          screenPos.y + 12 * s,
+          s,
+          42 * s,
+          17 * s,
+          60 * s,
+          0.35,
+        );
+      }
 
       // ========== SAND AROUND BASE ==========
       const sandGrad = ctx.createRadialGradient(
@@ -9985,16 +10015,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const hd = bodyW * 0.5 * ISO_SIN * 0.5;
 
       // === GROUND SHADOW ===
-      drawDirectionalShadow(
-        ctx,
-        sx,
-        sy + 3 * s,
-        s,
-        28 * s,
-        10 * s,
-        35 * s,
-        0.25,
-      );
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(
+          ctx,
+          sx,
+          sy + 3 * s,
+          s,
+          28 * s,
+          10 * s,
+          35 * s,
+          0.25,
+        );
+      }
 
       // === PEDESTAL ===
       const pdW = 32 * s,
@@ -15261,17 +15293,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const gVar = variant % 3;
 
       // Ground shadow
-      drawDirectionalShadow(
-        ctx,
-        screenPos.x,
-        screenPos.y + 3 * s,
-        s,
-        32 * s,
-        14 * s,
-        45 * s,
-        0.3,
-        "0,70,100",
-      );
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(
+          ctx,
+          screenPos.x,
+          screenPos.y + 3 * s,
+          s,
+          32 * s,
+          14 * s,
+          45 * s,
+          0.3,
+          "0,70,100",
+        );
+      }
 
       // Snow mound base with gradient
       const glSnowG = ctx.createRadialGradient(
@@ -15539,7 +15573,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -15685,17 +15719,19 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const TRUE_ISO = 1 / Math.sqrt(3);
 
       // Ground shadow
-      drawDirectionalShadow(
-        ctx,
-        screenPos.x,
-        screenPos.y + 10 * s,
-        s,
-        32 * s,
-        14 * s,
-        55 * s,
-        0.35,
-        "0,50,70",
-      );
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(
+          ctx,
+          screenPos.x,
+          screenPos.y + 10 * s,
+          s,
+          32 * s,
+          14 * s,
+          55 * s,
+          0.35,
+          "0,50,70",
+        );
+      }
 
       // Snow base mound
       const itSnowG = ctx.createRadialGradient(
@@ -19338,7 +19374,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cPulse = 0.5 + Math.sin(decorTime * 2.4) * 0.25;
       const fY = oy - 16 * s;
 
-      drawDirectionalShadow(ctx, ox, fY, s, 36 * s, 16 * s, 60 * s, 0.4);
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(ctx, ox, fY, s, 36 * s, 16 * s, 60 * s, 0.4);
+      }
       // Lava underglow at base
       const gGrad = ctx.createRadialGradient(
         ox,
@@ -22395,16 +22433,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ambientPulse = 0.6 + Math.sin(time * 2) * 0.15;
 
       // ========== GROUND SHADOW ==========
-      drawDirectionalShadow(
-        ctx,
-        screenPos.x,
-        screenPos.y + 2 * s,
-        s,
-        32 * s,
-        14 * s,
-        45 * s,
-        0.4,
-      );
+      if (!landmarkSkipShadow) {
+        drawDirectionalShadow(
+          ctx,
+          screenPos.x,
+          screenPos.y + 2 * s,
+          s,
+          32 * s,
+          14 * s,
+          45 * s,
+          0.4,
+        );
+      }
 
       // ========== DEAD GROUND / CORRUPTION ==========
       // Corrupted earth around cottage
@@ -33619,7 +33659,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -33636,7 +33676,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -33653,7 +33693,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -33670,7 +33710,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });
@@ -33687,7 +33727,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         seedX: decorX,
         seedY: decorY,
         variant,
-        skipShadow,
+        skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
       });

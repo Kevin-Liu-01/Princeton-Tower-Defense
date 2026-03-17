@@ -35,7 +35,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { HudTooltip } from "./HudTooltip";
 import { ConfirmModal } from "./ConfirmModal";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
-import { PaydayNotification } from "./PaydayNotification";
+import { HexWardNotification, PaydayNotification } from "./PaydayNotification";
 
 // =============================================================================
 // LIVES CARD THEME — transitions red → yellow → dark red by health %
@@ -114,6 +114,9 @@ interface TopHUDProps {
   goldSpellActive?: boolean;
   paydayEndTime?: number | null;
   paydayPawPointsEarned?: number;
+  hexWardEndTime?: number | null;
+  hexWardTargetCount?: number;
+  hexWardDamageAmpPct?: number;
   eatingClubIncomeEvents?: Array<{ id: string; amount: number }>;
   onEatingClubEventComplete?: (id: string) => void;
   bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
@@ -144,6 +147,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   goldSpellActive = false,
   paydayEndTime = null,
   paydayPawPointsEarned = 0,
+  hexWardEndTime = null,
+  hexWardTargetCount = 0,
+  hexWardDamageAmpPct = 0,
   eatingClubIncomeEvents = [],
   onEatingClubEventComplete,
   bountyIncomeEvents = [],
@@ -1141,6 +1147,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             active={goldSpellActive}
             endTime={paydayEndTime}
             pawPointsEarned={paydayPawPointsEarned}
+          />
+          <HexWardNotification
+            endTime={hexWardEndTime}
+            targetCount={hexWardTargetCount}
+            damageAmpPct={hexWardDamageAmpPct}
           />
         </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import {
+  Eye,
   Shield,
   Sparkles,
   Heart,
@@ -24,9 +25,11 @@ import {
   HERO_DATA,
   HERO_ABILITY_COOLDOWNS,
   SPELL_DATA,
+  SPELL_OPTIONS,
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
+  getHexWardSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
   HERO_ROLES,
@@ -46,14 +49,6 @@ const HERO_OPTIONS: HeroType[] = [
   "scott",
   "captain",
   "engineer",
-];
-
-const SPELL_OPTIONS: SpellType[] = [
-  "fireball",
-  "lightning",
-  "freeze",
-  "payday",
-  "reinforcements",
 ];
 
 const getHeroRoleLabel = (type: HeroType): string => HERO_ROLES[type].label;
@@ -695,6 +690,14 @@ function getSpellStatsForType(spellType: SpellType, level: number): SpellStatDis
       return [
         { icon: <Snowflake size={8} className="text-cyan-400/70" />, value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
         { icon: <Target size={8} className="text-indigo-400/70" />, value: s.isGlobal ? "Global" : `${s.maxTargets} max`, textColor: "text-indigo-300/80", bg: "rgba(49,46,129,0.15)" },
+      ];
+    }
+    case "hex_ward": {
+      const s = getHexWardSpellStats(level);
+      return [
+        { icon: <Eye size={8} className="text-fuchsia-400/70" />, value: `${s.maxTargets} hex`, textColor: "text-fuchsia-300/80", bg: "rgba(88,28,135,0.15)" },
+        { icon: <Sparkles size={8} className="text-purple-400/70" />, value: `+${Math.round(s.damageAmp * 100)}%`, textColor: "text-purple-300/80", bg: "rgba(76,29,149,0.15)" },
+        { icon: <Timer size={8} className="text-violet-400/70" />, value: `${(s.durationMs / 1000).toFixed(0)}s`, textColor: "text-violet-300/80", bg: "rgba(91,33,182,0.15)" },
       ];
     }
     case "payday": {

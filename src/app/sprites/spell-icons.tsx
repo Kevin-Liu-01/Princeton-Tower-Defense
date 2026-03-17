@@ -2,6 +2,7 @@
 import React from "react";
 import type { SpellType } from "../types";
 import {
+  Eye,
   Flame,
   Zap,
   Snowflake,
@@ -13,6 +14,7 @@ export const SPELL_ICON_COLORS: Record<SpellType, string> = {
   fireball: "text-orange-400",
   lightning: "text-yellow-400",
   freeze: "text-cyan-400",
+  hex_ward: "text-fuchsia-400",
   payday: "text-amber-400",
   reinforcements: "text-purple-400",
 };
@@ -21,6 +23,7 @@ const SPELL_ICON_MAP: Record<SpellType, React.FC<{ size?: number; className?: st
   fireball: ({ size = 16, className }) => <Flame size={size} className={className} />,
   lightning: ({ size = 16, className }) => <Zap size={size} className={className} />,
   freeze: ({ size = 16, className }) => <Snowflake size={size} className={className} />,
+  hex_ward: ({ size = 16, className }) => <Eye size={size} className={className} />,
   payday: ({ size = 16, className }) => <Coins size={size} className={className} />,
   reinforcements: ({ size = 16, className }) => <Swords size={size} className={className} />,
 };

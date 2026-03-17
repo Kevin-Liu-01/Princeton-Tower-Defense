@@ -14,6 +14,7 @@ import {
   SPELL_DATA,
   HERO_ABILITY_COOLDOWNS,
   SPELL_FULL_THEMES,
+  getSpellActionImagePath,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 import { heroFrameElements, spellFrameElements } from "./ornateFrameHelpers";
@@ -75,7 +76,8 @@ function canCastSpell(
   const requiresEnemies =
     spell.type === "fireball" ||
     spell.type === "lightning" ||
-    spell.type === "freeze";
+    spell.type === "freeze" ||
+    spell.type === "hex_ward";
   if (requiresEnemies && enemies.length === 0) return false;
   return true;
 }
@@ -592,7 +594,7 @@ function MobileSpellCircle({
             <>
               <div
                 className="absolute inset-0 rounded-full bg-cover bg-center opacity-40"
-                style={{ backgroundImage: `url(/images/spells/${spell.type}-action.png)` }}
+                style={{ backgroundImage: `url(${getSpellActionImagePath(spell.type)})` }}
               />
               <div
                 className="absolute inset-0 rounded-full pointer-events-none"

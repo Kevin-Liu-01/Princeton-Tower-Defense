@@ -11,6 +11,7 @@ import {
   Coins,
   Crosshair,
   Crown,
+  Eye,
   Flag,
   Flame,
   Gem,
@@ -43,6 +44,7 @@ import {
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
+  getHexWardSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
 } from "../../constants";
@@ -105,6 +107,12 @@ const SPELL_THEMES: Record<SpellType, SpellTheme> = {
     boardBg: "linear-gradient(180deg, rgba(24,62,80,0.56), rgba(12,22,44,0.74))",
     connector: "#22d3ee",
   },
+  hex_ward: {
+    accent: "#a855f7",
+    glow: "#d8b4fe",
+    boardBg: "linear-gradient(180deg, rgba(64,28,92,0.56), rgba(24,10,44,0.74))",
+    connector: "#c084fc",
+  },
   payday: {
     accent: "#f59e0b",
     glow: "#fcd34d",
@@ -149,6 +157,13 @@ const UPGRADE_ICON_MAP: Record<string, LucideIcon> = {
   "freeze-4": Shield,
   "freeze-5": Globe,
   "freeze-6": Snowflake,
+
+  "hex_ward-1": Eye,
+  "hex_ward-2": Sparkles,
+  "hex_ward-3": Clock,
+  "hex_ward-4": Users,
+  "hex_ward-5": Sparkles,
+  "hex_ward-6": Crown,
 
   "payday-1": Banknote,
   "payday-2": TrendingUp,
@@ -233,6 +248,28 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
   "freeze-6": [
     { label: "+0.6s Freeze", icon: Snowflake, accent: "#67e8f9" },
     { label: "Lingering Slow", icon: Clock, accent: "#06b6d4", special: true },
+  ],
+
+  "hex_ward-1": [
+    { label: "+2 Max Targets", icon: Users, accent: "#d8b4fe" },
+  ],
+  "hex_ward-2": [
+    { label: "+10% Damage Amp", icon: Sparkles, accent: "#f0abfc" },
+  ],
+  "hex_ward-3": [
+    { label: "+2s Duration", icon: Clock, accent: "#c084fc" },
+  ],
+  "hex_ward-4": [
+    { label: "+3 Max Targets", icon: Users, accent: "#d8b4fe" },
+  ],
+  "hex_ward-5": [
+    { label: "+15% Damage Amp", icon: Sparkles, accent: "#f0abfc" },
+    { label: "Deeper Curse", icon: Eye, accent: "#a855f7", special: true },
+  ],
+  "hex_ward-6": [
+    { label: "+2 Targets", icon: Users, accent: "#d8b4fe" },
+    { label: "+10% Amp", icon: Sparkles, accent: "#f0abfc" },
+    { label: "+2s Duration", icon: Clock, accent: "#c084fc", special: true },
   ],
 
   "payday-1": [
@@ -530,6 +567,14 @@ const getSpellStatsForDisplay = (
         { label: "Duration", value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, Icon: Timer, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)" },
         { label: "Targets", value: s.isGlobal ? "Global" : `${s.maxTargets}`, Icon: s.isGlobal ? Globe : Users, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)" },
         { label: "Slow", value: "100%", Icon: Snowflake, color: "text-indigo-300", bg: "rgba(49,46,129,0.3)", border: "rgba(49,46,129,0.2)" },
+      ];
+    }
+    case "hex_ward": {
+      const s = getHexWardSpellStats(level);
+      return [
+        { label: "Targets", value: `${s.maxTargets}`, Icon: Eye, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)" },
+        { label: "Amp", value: `+${Math.round(s.damageAmp * 100)}%`, Icon: Sparkles, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)" },
+        { label: "Duration", value: `${(s.durationMs / 1000).toFixed(0)}s`, Icon: Timer, color: "text-violet-300", bg: "rgba(91,33,182,0.3)", border: "rgba(91,33,182,0.2)" },
       ];
     }
     case "payday": {

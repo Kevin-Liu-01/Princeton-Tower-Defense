@@ -37,6 +37,7 @@ import {
   Music,
   Droplets,
   Ban,
+  Eye,
   EyeOff,
   AlertTriangle,
   Footprints,
@@ -64,6 +65,7 @@ import {
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
+  getHexWardSpellStats,
   getPaydaySpellStats,
   getReinforcementSpellStats,
   INITIAL_LIVES,
@@ -1246,7 +1248,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
       ? spellEntries.reduce((sum, spell) => sum + spell.cost, 0) / spellEntries.length
       : 0;
   const controlSpellCount = spellTypes.filter(
-    (type) => type === "freeze" || type === "reinforcements"
+    (type) => type === "freeze" || type === "hex_ward" || type === "reinforcements"
   ).length;
 
   const rangedEnemyCount = enemyTypes.filter((type) => {
@@ -1422,6 +1424,37 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
             "Pairs well with Sunforge, Sentinel, and Barracks bursts.",
           ],
           tip: "Cast right before your burst windows.",
+        };
+      }
+      case "hex_ward": {
+        const stats = getHexWardSpellStats(0);
+        return {
+          category: "Curse",
+          color: "purple",
+          icon: <Eye size={14} />,
+          stats: [
+            {
+              label: "Targets",
+              value: `${stats.maxTargets}`,
+              icon: <Users size={12} />,
+            },
+            {
+              label: "Damage Amp",
+              value: `+${Math.round(stats.damageAmp * 100)}%`,
+              icon: <Sparkles size={12} />,
+            },
+            {
+              label: "Duration",
+              value: `${(stats.durationMs / 1000).toFixed(0)}s`,
+              icon: <Timer size={12} />,
+            },
+          ],
+          details: [
+            "Marks the most advanced enemies with a lingering curse sigil.",
+            "Hexed enemies take increased damage from all sources.",
+            "Any enemy, troop, or hero that dies during the curse can rise as a ghost ally.",
+          ],
+          tip: "Cast on dense, dangerous pushes before your burst damage lands.",
         };
       }
       case "payday": {

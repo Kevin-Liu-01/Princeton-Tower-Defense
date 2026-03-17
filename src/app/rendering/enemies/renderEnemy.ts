@@ -703,6 +703,86 @@ export function renderEnemy(
     }
   }
 
+  // Hex Ward aura effect
+  if (enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
+    const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
+    const remainingRatio = Math.max(0.35, Math.min(1, (enemy.hexWardUntil - now) / 4000));
+
+    const hexGlow = ctx.createRadialGradient(
+      screenPos.x,
+      drawY,
+      0,
+      screenPos.x,
+      drawY,
+      size * 0.95,
+    );
+    hexGlow.addColorStop(0, `rgba(168, 85, 247, ${0.18 * cursePulse})`);
+    hexGlow.addColorStop(0.55, `rgba(147, 51, 234, ${0.12 * remainingRatio})`);
+    hexGlow.addColorStop(1, "rgba(88, 28, 135, 0)");
+    ctx.fillStyle = hexGlow;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.92,
+      size * 0.92 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(screenPos.x, drawY - size * 0.08);
+    ctx.rotate(time * 0.9);
+    ctx.strokeStyle = `rgba(217, 70, 239, ${0.7 * cursePulse})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const angle = -Math.PI / 2 + (i * Math.PI) / 3;
+      const px = Math.cos(angle) * size * 0.78;
+      const py = Math.sin(angle) * size * 0.52;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.rotate(-time * 1.7);
+    ctx.strokeStyle = `rgba(244, 114, 182, ${0.5 * cursePulse})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.34, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    for (let i = 0; i < 4; i++) {
+      const runeAngle = time * 1.8 + (i * Math.PI * 2) / 4;
+      const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
+      const ry = drawY - size * 0.12 + Math.sin(runeAngle) * size * 0.32;
+      const runeSize = size * 0.08;
+
+      ctx.fillStyle = `rgba(232, 121, 249, ${0.55 + Math.sin(time * 6 + i) * 0.18})`;
+      ctx.beginPath();
+      ctx.moveTo(rx, ry - runeSize);
+      ctx.lineTo(rx + runeSize * 0.7, ry);
+      ctx.lineTo(rx, ry + runeSize);
+      ctx.lineTo(rx - runeSize * 0.7, ry);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = `rgba(245, 208, 254, ${0.9 * cursePulse})`;
+    ctx.font = `bold ${Math.max(10, size * 0.22)}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("⌬", screenPos.x, drawY - size * 0.82);
+  }
+
   // Gold aura effect
   if (enemy.goldAura) {
     for (let i = 0; i < 5; i++) {
