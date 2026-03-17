@@ -93,13 +93,19 @@ export const PaydayNotification: React.FC<PaydayNotificationProps> = ({
 interface HexWardNotificationProps {
   endTime: number | null;
   targetCount: number;
+  raiseCap: number;
+  raisesRemaining: number;
   damageAmpPct: number;
+  blocksHealing: boolean;
 }
 
 export const HexWardNotification: React.FC<HexWardNotificationProps> = ({
   endTime,
   targetCount,
+  raiseCap,
+  raisesRemaining,
   damageAmpPct,
+  blocksHealing,
 }) => {
   const [timeLeft, setTimeLeft] = useState("");
   const [visible, setVisible] = useState(false);
@@ -150,17 +156,28 @@ export const HexWardNotification: React.FC<HexWardNotificationProps> = ({
         </div>
         <div className="flex flex-col">
           <span className="text-sm font-bold tracking-wide text-fuchsia-100">
-            Hex Ward Active
+            Hex Ward Harvest
           </span>
           <div className="flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1 text-fuchsia-300">
-              <Eye size={10} />
-              <span className="font-semibold">{targetCount} hexed</span>
+              <Sparkles size={10} />
+              <span className="font-semibold">
+                {raisesRemaining}/{raiseCap} raises left
+              </span>
             </span>
             <span className="flex items-center gap-1 text-purple-300">
-              <Sparkles size={10} />
-              <span className="font-semibold">+{damageAmpPct}% damage</span>
+              <Eye size={10} />
+              <span className="font-semibold">{targetCount} marked</span>
             </span>
+            {(damageAmpPct > 0 || blocksHealing) && (
+              <span className="flex items-center gap-1 text-violet-200">
+                <Sparkles size={10} />
+                <span className="font-semibold">
+                  {damageAmpPct > 0 ? `+${damageAmpPct}% dmg` : "no-heal"}
+                  {damageAmpPct > 0 && blocksHealing ? " + no-heal" : ""}
+                </span>
+              </span>
+            )}
             <span
               className="flex items-center gap-1 font-medium"
               style={{ color: "rgba(233,213,255,0.85)" }}

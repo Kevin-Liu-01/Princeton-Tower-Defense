@@ -116,7 +116,10 @@ interface TopHUDProps {
   paydayPawPointsEarned?: number;
   hexWardEndTime?: number | null;
   hexWardTargetCount?: number;
+  hexWardRaiseCap?: number;
+  hexWardRaisesRemaining?: number;
   hexWardDamageAmpPct?: number;
+  hexWardBlocksHealing?: boolean;
   eatingClubIncomeEvents?: Array<{ id: string; amount: number }>;
   onEatingClubEventComplete?: (id: string) => void;
   bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
@@ -149,7 +152,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   paydayPawPointsEarned = 0,
   hexWardEndTime = null,
   hexWardTargetCount = 0,
+  hexWardRaiseCap = 0,
+  hexWardRaisesRemaining = 0,
   hexWardDamageAmpPct = 0,
+  hexWardBlocksHealing = false,
   eatingClubIncomeEvents = [],
   onEatingClubEventComplete,
   bountyIncomeEvents = [],
@@ -1151,7 +1157,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <HexWardNotification
             endTime={hexWardEndTime}
             targetCount={hexWardTargetCount}
+            raiseCap={hexWardRaiseCap}
+            raisesRemaining={hexWardRaisesRemaining}
             damageAmpPct={hexWardDamageAmpPct}
+            blocksHealing={hexWardBlocksHealing}
           />
         </div>
 

@@ -356,6 +356,7 @@ export interface Enemy {
   hexWard?: boolean; // Hex Ward curse visual marker
   hexWardUntil?: number; // Curse expiration time
   hexWardDamageAmp?: number; // Additional damage taken multiplier (0.25 = +25%)
+  hexWardBlocksHealing?: boolean; // Prevents regen/healing while Hex Ward is active
   // Ability cooldowns (tracks when enemy can use abilities again)
   abilityCooldowns?: Record<string, number>;
   lastAbilityUse?: number;

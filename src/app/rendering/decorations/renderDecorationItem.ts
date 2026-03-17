@@ -23804,6 +23804,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         decorX,
         decorY,
         decorTime,
+        true,
       );
       break;
     }

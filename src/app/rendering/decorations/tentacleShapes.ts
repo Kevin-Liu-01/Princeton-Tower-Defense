@@ -143,6 +143,32 @@ function drawBubbles(
   ctx.globalAlpha = 1;
 }
 
+function drawTentacleShadow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  footprintRx: number,
+  footprintRy: number,
+  objectHeight: number,
+  intensity: number,
+  tint: string,
+  skipShadow: boolean,
+): void {
+  if (skipShadow) return;
+  drawDirectionalShadow(
+    ctx,
+    x,
+    y,
+    s,
+    footprintRx,
+    footprintRy,
+    objectHeight,
+    intensity,
+    tint,
+  );
+}
+
 function buildTentaclePath(
   cx: number,
   cy: number,
@@ -503,6 +529,7 @@ function drawClassicTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
+  skipShadow: boolean,
 ): void {
   const sway = Math.sin(decorTime * 1.5 + decorX) * 12 * s;
   const secondarySway = Math.cos(decorTime * 2.3 + decorX * 1.5) * 6 * s;
@@ -514,7 +541,18 @@ function drawClassicTentacle(
 
   const pts = buildTentaclePath(cx(x), cy(y), s, 14, 65, 12, 2.5, sway, secondarySway);
 
-  drawDirectionalShadow(ctx, x + 10 * s, y + 10 * s, s, 28 * s, 14 * s, 60 * s, 0.25, "26,15,33");
+  drawTentacleShadow(
+    ctx,
+    x + 10 * s,
+    y + 10 * s,
+    s,
+    28 * s,
+    14 * s,
+    60 * s,
+    0.25,
+    "26,15,33",
+    skipShadow,
+  );
 
   drawTentacleBody(ctx, pts, s, decorTime, pal, x, y);
   drawSuckers(ctx, pts, s, pal, STANDARD_SUCKERS);
@@ -533,6 +571,7 @@ function drawForkedTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
+  skipShadow: boolean,
 ): void {
   const sway = Math.sin(decorTime * 1.3 + decorX) * 10 * s;
   const secondarySway = Math.cos(decorTime * 2.0 + decorX * 1.3) * 5 * s;
@@ -544,7 +583,18 @@ function drawForkedTentacle(
 
   const mainPts = buildTentaclePath(x, y, s, 10, 50, 13, 5, sway, secondarySway);
 
-  drawDirectionalShadow(ctx, x + 10 * s, y + 10 * s, s, 30 * s, 15 * s, 55 * s, 0.25, "26,15,33");
+  drawTentacleShadow(
+    ctx,
+    x + 10 * s,
+    y + 10 * s,
+    s,
+    30 * s,
+    15 * s,
+    55 * s,
+    0.25,
+    "26,15,33",
+    skipShadow,
+  );
 
   drawTentacleBody(ctx, mainPts, s, decorTime, pal, x, y);
 
@@ -602,6 +652,7 @@ function drawWhipTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
+  skipShadow: boolean,
 ): void {
   const sway = Math.sin(decorTime * 2.2 + decorX) * 18 * s;
   const secondarySway = Math.cos(decorTime * 3.0 + decorX * 1.7) * 10 * s;
@@ -613,7 +664,18 @@ function drawWhipTentacle(
 
   const pts = buildTentaclePath(x, y, s, 18, 85, 8, 1.2, sway, secondarySway);
 
-  drawDirectionalShadow(ctx, x + 8 * s, y + 8 * s, s, 20 * s, 10 * s, 75 * s, 0.2, "26,15,33");
+  drawTentacleShadow(
+    ctx,
+    x + 8 * s,
+    y + 8 * s,
+    s,
+    20 * s,
+    10 * s,
+    75 * s,
+    0.2,
+    "26,15,33",
+    skipShadow,
+  );
 
   drawTentacleBody(ctx, pts, s, decorTime, pal, x, y);
 
@@ -659,6 +721,7 @@ function drawCoiledTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
+  skipShadow: boolean,
 ): void {
   const sway = Math.sin(decorTime * 1.0 + decorX) * 6 * s;
   const holeW = 22 * s;
@@ -667,7 +730,18 @@ function drawCoiledTentacle(
   drawWaterBase(ctx, x, y, s, decorTime, decorX, pal, holeW, holeD);
   drawBubbles(ctx, x, y, s, decorTime, decorX, 6);
 
-  drawDirectionalShadow(ctx, x + 12 * s, y + 12 * s, s, 32 * s, 16 * s, 50 * s, 0.25, "26,15,33");
+  drawTentacleShadow(
+    ctx,
+    x + 12 * s,
+    y + 12 * s,
+    s,
+    32 * s,
+    16 * s,
+    50 * s,
+    0.25,
+    "26,15,33",
+    skipShadow,
+  );
 
   const segments = 20;
   const pts: TentaclePoint[] = [];
@@ -719,6 +793,7 @@ function drawClusterTentacle(
   decorX: number,
   decorY: number,
   pal: TentaclePalette,
+  skipShadow: boolean,
 ): void {
   const armCount = 2 + Math.floor(seededRand(decorX, decorY, 77) * 2); // 2 or 3
   const holeW = 24 * s;
@@ -727,7 +802,18 @@ function drawClusterTentacle(
   drawWaterBase(ctx, x, y, s, decorTime, decorX, pal, holeW, holeD);
   drawBubbles(ctx, x, y, s, decorTime, decorX, 5 + armCount);
 
-  drawDirectionalShadow(ctx, x + 12 * s, y + 12 * s, s, 34 * s, 17 * s, 55 * s, 0.28, "26,15,33");
+  drawTentacleShadow(
+    ctx,
+    x + 12 * s,
+    y + 12 * s,
+    s,
+    34 * s,
+    17 * s,
+    55 * s,
+    0.28,
+    "26,15,33",
+    skipShadow,
+  );
 
   for (let a = 0; a < armCount; a++) {
     const angleOffset = ((a - (armCount - 1) / 2) / Math.max(armCount - 1, 1)) * 0.9;
@@ -780,28 +866,29 @@ export function drawTentacle(
   decorX: number,
   decorY: number,
   decorTime: number,
+  skipShadow: boolean = false,
 ): void {
   const pal = getPalette(variant);
   const shape = getShapeIndex(decorX, decorY);
 
   switch (shape) {
     case 0:
-      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
     case 1:
-      drawForkedTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawForkedTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
     case 2:
-      drawWhipTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawWhipTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
     case 3:
-      drawCoiledTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawCoiledTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
     case 4:
-      drawClusterTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawClusterTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
     default:
-      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal);
+      drawClassicTentacle(ctx, x, y, s, decorTime, decorX, decorY, pal, skipShadow);
       break;
   }
 }

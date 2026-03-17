@@ -750,7 +750,10 @@ export function usePrincetonTowerDefenseRuntime() {
   const [paydayPawPointsEarned, setPaydayPawPointsEarned] = useState(0);
   const [hexWardEndTime, setHexWardEndTime] = useState<number | null>(null);
   const [hexWardTargetCount, setHexWardTargetCount] = useState(0);
+  const [hexWardRaiseCap, setHexWardRaiseCap] = useState(0);
+  const [hexWardRaisesRemaining, setHexWardRaisesRemaining] = useState(0);
   const [hexWardDamageAmpPct, setHexWardDamageAmpPct] = useState(0);
+  const [hexWardBlocksHealing, setHexWardBlocksHealing] = useState(false);
   // Eating club income events for stacking floaters
   const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
   // Bounty income events (from enemy kills)
@@ -1301,6 +1304,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const pendingDeathEffectsRef = useRef<Effect[]>([]); // Ref-based queue so render sees death effects immediately
   const handledEnemyIdsRef = useRef<Set<string>>(new Set()); // Dedup guard for kills/leaks (React Strict Mode double-invokes updaters)
   const handledHexGhostSourceIdsRef = useRef<Set<string>>(new Set());
+  const hexWardRaisesRemainingRef = useRef(0);
   const handledWaveCompletionRef = useRef<number>(-1); // Last wave index whose completion was logged
 
   // Queue particle bursts and flush once per frame to avoid many setState calls during heavy combat.
@@ -1434,8 +1438,11 @@ export function usePrincetonTowerDefenseRuntime() {
     ) => {
       const now = Date.now();
       if (!isHexWardGhostHarvestActive(hexWardEndTime, now)) return;
+      if (hexWardRaisesRemainingRef.current <= 0) return;
       if (handledHexGhostSourceIdsRef.current.has(sourceKey)) return;
       handledHexGhostSourceIdsRef.current.add(sourceKey);
+      hexWardRaisesRemainingRef.current -= 1;
+      setHexWardRaisesRemaining(hexWardRaisesRemainingRef.current);
 
       const profile = getHexWardGhostProfile(strength);
       const anchorPos = findClosestRoadPoint(
@@ -1485,6 +1492,7 @@ export function usePrincetonTowerDefenseRuntime() {
       addParticles,
       addTroopEntities,
       hexWardEndTime,
+      setHexWardRaisesRemaining,
       selectedMap,
     ],
   );
@@ -1839,7 +1847,11 @@ export function usePrincetonTowerDefenseRuntime() {
       setPaydayPawPointsEarned(0);
       setHexWardEndTime(null);
       setHexWardTargetCount(0);
+      setHexWardRaiseCap(0);
+      setHexWardRaisesRemaining(0);
       setHexWardDamageAmpPct(0);
+      setHexWardBlocksHealing(false);
+      hexWardRaisesRemainingRef.current = 0;
       setSpecialTowerHp(getVaultHpMap(selectedMap));
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
@@ -3890,11 +3902,17 @@ export function usePrincetonTowerDefenseRuntime() {
                 hexWard: false,
                 hexWardUntil: 0,
                 hexWardDamageAmp: 0,
+                hexWardBlocksHealing: false,
               };
             }
             // Regenerating enemies heal 1.5% max HP/sec when not in combat
             const eTraits = ENEMY_DATA[enemy.type].traits;
-            if (eTraits?.includes("regenerating") && !enemy.inCombat && enemy.hp < enemy.maxHp) {
+            if (
+              eTraits?.includes("regenerating") &&
+              !enemy.inCombat &&
+              enemy.hp < enemy.maxHp &&
+              !enemy.hexWardBlocksHealing
+            ) {
               const regenAmount = (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
               enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
             }
@@ -12016,14 +12034,19 @@ export function usePrincetonTowerDefenseRuntime() {
                     hexWard: true,
                     hexWardUntil: hexUntil,
                     hexWardDamageAmp: hexStats.damageAmp,
+                    hexWardBlocksHealing: hexStats.blocksHealing,
                   }
                 : enemy
             )
           );
 
+          hexWardRaisesRemainingRef.current = hexStats.maxReanimations;
           setHexWardEndTime(hexUntil);
           setHexWardTargetCount(targetEnemies.length);
+          setHexWardRaiseCap(hexStats.maxReanimations);
+          setHexWardRaisesRemaining(hexStats.maxReanimations);
           setHexWardDamageAmpPct(Math.round(hexStats.damageAmp * 100));
+          setHexWardBlocksHealing(hexStats.blocksHealing);
 
           setEffects((ef) => [
             ...ef,
@@ -13235,7 +13258,10 @@ export function usePrincetonTowerDefenseRuntime() {
               paydayPawPointsEarned={paydayPawPointsEarned}
               hexWardEndTime={hexWardEndTime}
               hexWardTargetCount={hexWardTargetCount}
+              hexWardRaiseCap={hexWardRaiseCap}
+              hexWardRaisesRemaining={hexWardRaisesRemaining}
               hexWardDamageAmpPct={hexWardDamageAmpPct}
+              hexWardBlocksHealing={hexWardBlocksHealing}
               eatingClubIncomeEvents={eatingClubIncomeEvents}
               onEatingClubEventComplete={(id) =>
                 setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))

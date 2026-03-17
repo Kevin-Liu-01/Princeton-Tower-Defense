@@ -1429,19 +1429,19 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
       case "hex_ward": {
         const stats = getHexWardSpellStats(0);
         return {
-          category: "Curse",
+          category: "Necromancy",
           color: "purple",
           icon: <Eye size={14} />,
           stats: [
             {
-              label: "Targets",
-              value: `${stats.maxTargets}`,
+              label: "Raises",
+              value: `${stats.maxReanimations}`,
               icon: <Users size={12} />,
             },
             {
-              label: "Damage Amp",
-              value: `+${Math.round(stats.damageAmp * 100)}%`,
-              icon: <Sparkles size={12} />,
+              label: "Marked",
+              value: `${stats.maxTargets}`,
+              icon: <Eye size={12} />,
             },
             {
               label: "Duration",
@@ -1450,11 +1450,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
             },
           ],
           details: [
-            "Marks the most advanced enemies with a lingering curse sigil.",
-            "Hexed enemies take increased damage from all sources.",
-            "Any enemy, troop, or hero that dies during the curse can rise as a ghost ally.",
+            "Marks the most advanced enemies with a lingering harvest sigil.",
+            `Can reanimate up to ${stats.maxReanimations} fallen enemies, troops, or heroes as ghost allies during the ward.`,
+            "Higher upgrade tiers add curse debuffs like damage amplification and healing denial.",
           ],
-          tip: "Cast on dense, dangerous pushes before your burst damage lands.",
+          tip: "Use it before messy engagements where multiple units are likely to die quickly.",
         };
       }
       case "payday": {

@@ -2533,7 +2533,7 @@ export const LEVEL_DATA: Record<
     difficulty: 1,
     levelKind: "sandbox",
     startingPawPoints: 10000,
-    heroSpawn: { x: 16, y: 16 },
+    heroSpawn: { x: 29, y: 16 },
     dualPath: true,
     secondaryPath: "sandbox_b",
     decorations: [
@@ -2599,11 +2599,11 @@ export const LEVEL_DATA: Record<
       // Lava and ice for visual variety
       { type: "lava_pool", pos: { x: 22, y: 28 }, variant: 0, size: 1.2 },
       { type: "lava_pool", pos: { x: 10, y: 2 }, variant: 0, size: 1.2 },
-      { type: "deep_water", pos: { x: 16, y: 10 }, variant: 0, size: 1.5 },
+      { type: "deep_water", pos: { x: 18, y: 7 }, variant: 0, size: 1.5 },
       //tentacle in the deep water
-      { type: "tentacle", pos: { x: 16, y: 10 }, variant: 0, size: 1.2 },
-      { type: "tentacle", pos: { x: 16, y: 10 }, variant: 0, size: 1.2 },
-      { type: "tentacle", pos: { x: 16, y: 10 }, variant: 0, size: 1.2 },
+      { type: "tentacle", pos: { x: 18, y: 7 }, variant: 0, size: 1.2 },
+      { type: "tentacle", pos: { x: 18, y: 7 }, variant: 0, size: 1.2 },
+      { type: "tentacle", pos: { x: 18, y: 7 }, variant: 0, size: 1.2 },
     ],
     previewImage: "/images/previews/sandbox.png",
   },

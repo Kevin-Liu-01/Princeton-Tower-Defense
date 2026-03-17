@@ -1642,11 +1642,6 @@ export function drawSoldierTroop(
   ctx.beginPath();
   ctx.arc(x, y + size * 0.08 + breathe * 0.5, size * 0.08, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = `bold ${9 * zoom}px Georgia`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("P", x, y + size * 0.09 + breathe * 0.5);
   ctx.strokeStyle = `rgba(201, 162, 39, ${0.5 + shimmer * 0.3})`;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
@@ -1664,6 +1659,11 @@ export function drawSoldierTroop(
     Math.PI * 2,
   );
   ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = `bold ${9 * zoom}px Georgia`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("P", x, y + size * 0.09 + breathe * 0.5);
 
   ctx.restore();
 }

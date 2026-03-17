@@ -24,7 +24,6 @@ export function drawCentaurTroop(
   const legCycle = Math.sin(time * 7.4) * 0.44;
   const breathe = Math.sin(time * 2) * 0.5;
   const hairFlow = Math.sin(time * 4.6);
-  const shimmer = Math.sin(time * 5) * 0.5 + 0.5;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
   const centaurBrownDark = "#2b1c13";
   const centaurBrownMid = "#5a3d24";
@@ -313,20 +312,52 @@ export function drawCentaurTroop(
     trimColor: centaurGoldMid,
   };
   drawMuscularHorseLeg(
-    ctx, x - size * 0.2, y + size * 0.33 + gallop * 0.1,
-    size, zoom, time, legCycle * 1.12, 0.1, 7, centaurLegColors,
+    ctx,
+    x - size * 0.2,
+    y + size * 0.33 + gallop * 0.1,
+    size,
+    zoom,
+    time,
+    legCycle * 1.12,
+    0.1,
+    7,
+    centaurLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x - size * 0.05, y + size * 0.34 + gallop * 0.1,
-    size, zoom, time, -legCycle * 0.9, 1.15, 7, centaurLegColors,
+    ctx,
+    x - size * 0.05,
+    y + size * 0.34 + gallop * 0.1,
+    size,
+    zoom,
+    time,
+    -legCycle * 0.9,
+    1.15,
+    7,
+    centaurLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x + size * 0.22, y + size * 0.34 + gallop * 0.1,
-    size, zoom, time, -legCycle * 1.03, 2.15, 7, centaurLegColors,
+    ctx,
+    x + size * 0.22,
+    y + size * 0.34 + gallop * 0.1,
+    size,
+    zoom,
+    time,
+    -legCycle * 1.03,
+    2.15,
+    7,
+    centaurLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x + size * 0.37, y + size * 0.33 + gallop * 0.1,
-    size, zoom, time, legCycle * 0.86, 3.0, 7, centaurLegColors,
+    ctx,
+    x + size * 0.37,
+    y + size * 0.33 + gallop * 0.1,
+    size,
+    zoom,
+    time,
+    legCycle * 0.86,
+    3.0,
+    7,
+    centaurLegColors,
   );
 
   // === MAJESTIC FLOWING TAIL ===
@@ -359,7 +390,12 @@ export function drawCentaurTroop(
   ctx.rotate(0.12);
 
   // Quiver body — leather cylinder
-  const quiverBodyGrad = ctx.createLinearGradient(-size * 0.04, 0, size * 0.04, 0);
+  const quiverBodyGrad = ctx.createLinearGradient(
+    -size * 0.04,
+    0,
+    size * 0.04,
+    0,
+  );
   quiverBodyGrad.addColorStop(0, "#3a2414");
   quiverBodyGrad.addColorStop(0.25, "#5c3e24");
   quiverBodyGrad.addColorStop(0.55, "#6e4e30");
@@ -367,7 +403,13 @@ export function drawCentaurTroop(
   quiverBodyGrad.addColorStop(1, "#3a2414");
   ctx.fillStyle = quiverBodyGrad;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.04, -size * 0.28, size * 0.08, size * 0.34, size * 0.015);
+  ctx.roundRect(
+    -size * 0.04,
+    -size * 0.28,
+    size * 0.08,
+    size * 0.34,
+    size * 0.015,
+  );
   ctx.fill();
 
   // Leather stitching lines
@@ -383,7 +425,13 @@ export function drawCentaurTroop(
   // Green decorative band at top
   ctx.fillStyle = centaurLeafMid;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.045, -size * 0.29, size * 0.09, size * 0.035, size * 0.008);
+  ctx.roundRect(
+    -size * 0.045,
+    -size * 0.29,
+    size * 0.09,
+    size * 0.035,
+    size * 0.008,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 0.7 * zoom;
@@ -392,7 +440,13 @@ export function drawCentaurTroop(
   // Gold band at middle
   ctx.fillStyle = centaurGoldDark;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.045, -size * 0.12, size * 0.09, size * 0.025, size * 0.005);
+  ctx.roundRect(
+    -size * 0.045,
+    -size * 0.12,
+    size * 0.09,
+    size * 0.025,
+    size * 0.005,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 0.6 * zoom;
@@ -401,7 +455,13 @@ export function drawCentaurTroop(
   // Bottom cap
   ctx.fillStyle = "#2e1c0f";
   ctx.beginPath();
-  ctx.roundRect(-size * 0.042, size * 0.03, size * 0.084, size * 0.025, size * 0.006);
+  ctx.roundRect(
+    -size * 0.042,
+    size * 0.03,
+    size * 0.084,
+    size * 0.025,
+    size * 0.006,
+  );
   ctx.fill();
 
   // Arrow shafts sticking out of quiver
@@ -432,8 +492,10 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(quiverX + quiverSway + size * 0.02, quiverY - size * 0.22);
   ctx.quadraticCurveTo(
-    x + size * 0.04, y - size * 0.34 + gallop * 0.05,
-    x - size * 0.08, y - size * 0.28 + gallop * 0.05 + breathe * 0.4,
+    x + size * 0.04,
+    y - size * 0.34 + gallop * 0.05,
+    x - size * 0.08,
+    y - size * 0.28 + gallop * 0.05 + breathe * 0.4,
   );
   ctx.stroke();
   // Strap highlight
@@ -442,8 +504,10 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(quiverX + quiverSway + size * 0.015, quiverY - size * 0.21);
   ctx.quadraticCurveTo(
-    x + size * 0.035, y - size * 0.33 + gallop * 0.05,
-    x - size * 0.075, y - size * 0.27 + gallop * 0.05 + breathe * 0.4,
+    x + size * 0.035,
+    y - size * 0.33 + gallop * 0.05,
+    x - size * 0.075,
+    y - size * 0.27 + gallop * 0.05 + breathe * 0.4,
   );
   ctx.stroke();
 
@@ -457,13 +521,24 @@ export function drawCentaurTroop(
   const crestPeakH = size * 0.22;
 
   // Crest holder — raised bronze ridge
-  const crestHolderGrad = ctx.createLinearGradient(earlyHelmCx - size * 0.015, 0, earlyHelmCx + size * 0.015, 0);
+  const crestHolderGrad = ctx.createLinearGradient(
+    earlyHelmCx - size * 0.015,
+    0,
+    earlyHelmCx + size * 0.015,
+    0,
+  );
   crestHolderGrad.addColorStop(0, centaurGoldDark);
   crestHolderGrad.addColorStop(0.5, centaurGoldLight);
   crestHolderGrad.addColorStop(1, centaurGoldDark);
   ctx.fillStyle = crestHolderGrad;
   ctx.beginPath();
-  ctx.roundRect(earlyHelmCx - size * 0.015, crestBaseY, size * 0.03, size * 0.06, size * 0.006);
+  ctx.roundRect(
+    earlyHelmCx - size * 0.015,
+    crestBaseY,
+    size * 0.03,
+    size * 0.06,
+    size * 0.006,
+  );
   ctx.fill();
 
   // Shadow under plume
@@ -471,18 +546,25 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(earlyHelmCx - size * 0.04, crestBaseY);
   ctx.quadraticCurveTo(
-    earlyHelmCx + crestWind * 0.3, crestBaseY - crestPeakH * 0.85,
-    earlyHelmCx + size * 0.06 + crestWind * 0.8, crestBaseY + size * 0.01,
+    earlyHelmCx + crestWind * 0.3,
+    crestBaseY - crestPeakH * 0.85,
+    earlyHelmCx + size * 0.06 + crestWind * 0.8,
+    crestBaseY + size * 0.01,
   );
   ctx.closePath();
   ctx.fill();
 
   // Crest base layer (dark)
-  const crestBaseGrad = ctx.createLinearGradient(earlyHelmCx, crestBaseY, earlyHelmCx, crestBaseY - crestPeakH);
-  crestBaseGrad.addColorStop(0, "#7a3a10");
-  crestBaseGrad.addColorStop(0.3, "#a04418");
-  crestBaseGrad.addColorStop(0.6, "#c25820");
-  crestBaseGrad.addColorStop(1, "#a04418");
+  const crestBaseGrad = ctx.createLinearGradient(
+    earlyHelmCx,
+    crestBaseY,
+    earlyHelmCx,
+    crestBaseY - crestPeakH,
+  );
+  crestBaseGrad.addColorStop(0, "#17351f");
+  crestBaseGrad.addColorStop(0.3, "#24512f");
+  crestBaseGrad.addColorStop(0.6, "#3a7243");
+  crestBaseGrad.addColorStop(1, "#20472a");
   ctx.fillStyle = crestBaseGrad;
   ctx.beginPath();
   ctx.moveTo(earlyHelmCx - size * 0.035, crestBaseY);
@@ -501,12 +583,17 @@ export function drawCentaurTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Crest main body (bright crimson-gold)
-  const crestMainGrad = ctx.createLinearGradient(earlyHelmCx, crestBaseY, earlyHelmCx + crestWind * 0.3, crestBaseY - crestPeakH);
-  crestMainGrad.addColorStop(0, "#b04818");
-  crestMainGrad.addColorStop(0.3, "#d46028");
-  crestMainGrad.addColorStop(0.6, "#e87838");
-  crestMainGrad.addColorStop(1, "#d06028");
+  // Crest main body (royal green with warm highlights)
+  const crestMainGrad = ctx.createLinearGradient(
+    earlyHelmCx,
+    crestBaseY,
+    earlyHelmCx + crestWind * 0.3,
+    crestBaseY - crestPeakH,
+  );
+  crestMainGrad.addColorStop(0, "#2f5e36");
+  crestMainGrad.addColorStop(0.28, centaurLeafMid);
+  crestMainGrad.addColorStop(0.62, "#78a256");
+  crestMainGrad.addColorStop(1, "#3a6a3c");
   ctx.fillStyle = crestMainGrad;
   ctx.beginPath();
   ctx.moveTo(earlyHelmCx - size * 0.025, crestBaseY);
@@ -530,7 +617,7 @@ export function drawCentaurTroop(
   for (let cs = 0; cs < 5; cs++) {
     const csT = cs / 4;
     const csWave = Math.sin(time * 5.5 + cs * 1.1) * 1.5;
-    ctx.strokeStyle = cs % 2 === 0 ? "#f0a050" : "#d88040";
+    ctx.strokeStyle = cs % 2 === 0 ? "#a7c76a" : "#4b7a46";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(earlyHelmCx - size * 0.02 + csT * size * 0.04, crestBaseY);
@@ -669,8 +756,14 @@ export function drawCentaurTroop(
   ctx.lineTo(x + size * 0.095, y - size * 0.1 + gallop * 0.07 + breathe * 0.7);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.075, y - size * 0.02 + gallop * 0.08 + breathe * 0.85);
-  ctx.lineTo(x + size * 0.075, y - size * 0.02 + gallop * 0.08 + breathe * 0.85);
+  ctx.moveTo(
+    x - size * 0.075,
+    y - size * 0.02 + gallop * 0.08 + breathe * 0.85,
+  );
+  ctx.lineTo(
+    x + size * 0.075,
+    y - size * 0.02 + gallop * 0.08 + breathe * 0.85,
+  );
   ctx.stroke();
 
   // Oblique cuts and six-pack shadow masses
@@ -678,7 +771,10 @@ export function drawCentaurTroop(
   ctx.lineWidth = 0.8 * zoom;
   for (const side of [-1, 1] as const) {
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.13, y - size * 0.22 + gallop * 0.06 + breathe * 0.45);
+    ctx.moveTo(
+      x + side * size * 0.13,
+      y - size * 0.22 + gallop * 0.06 + breathe * 0.45,
+    );
     ctx.quadraticCurveTo(
       x + side * size * 0.07,
       y - size * 0.14 + gallop * 0.07 + breathe * 0.55,
@@ -688,11 +784,14 @@ export function drawCentaurTroop(
     ctx.stroke();
   }
   for (let row = 0; row < 3; row++) {
-    const absY = y - size * (0.205 - row * 0.085) + gallop * (0.06 + row * 0.01) + breathe * (0.52 + row * 0.12);
+    const absY =
+      y -
+      size * (0.205 - row * 0.085) +
+      gallop * (0.06 + row * 0.01) +
+      breathe * (0.52 + row * 0.12);
     for (const side of [-1, 1] as const) {
-      ctx.fillStyle = row === 0
-        ? "rgba(118, 67, 36, 0.16)"
-        : "rgba(104, 60, 32, 0.14)";
+      ctx.fillStyle =
+        row === 0 ? "rgba(118, 67, 36, 0.16)" : "rgba(104, 60, 32, 0.14)";
       ctx.beginPath();
       ctx.ellipse(
         x + side * size * 0.045,
@@ -714,7 +813,12 @@ export function drawCentaurTroop(
   const cmHalfW = size * 0.225;
 
   // Leather-backed mail shirt for more material contrast
-  const cmLeatherGrad = ctx.createLinearGradient(cmCx - cmHalfW, cmTopY, cmCx + cmHalfW, cmBotY);
+  const cmLeatherGrad = ctx.createLinearGradient(
+    cmCx - cmHalfW,
+    cmTopY,
+    cmCx + cmHalfW,
+    cmBotY,
+  );
   cmLeatherGrad.addColorStop(0, "rgba(74, 44, 24, 0.58)");
   cmLeatherGrad.addColorStop(0.5, "rgba(112, 70, 36, 0.62)");
   cmLeatherGrad.addColorStop(1, "rgba(68, 40, 20, 0.56)");
@@ -722,13 +826,23 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(cmCx - cmHalfW, cmBotY);
   ctx.lineTo(cmCx - cmHalfW - size * 0.045, cmTopY + size * 0.01);
-  ctx.quadraticCurveTo(cmCx, cmTopY - size * 0.13, cmCx + cmHalfW + size * 0.045, cmTopY + size * 0.01);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.13,
+    cmCx + cmHalfW + size * 0.045,
+    cmTopY + size * 0.01,
+  );
   ctx.lineTo(cmCx + cmHalfW, cmBotY);
   ctx.closePath();
   ctx.fill();
 
   // Gold-edged leather yoke to break up the flat mail surface
-  const yokeGrad = ctx.createLinearGradient(cmCx - cmHalfW, cmTopY - size * 0.015, cmCx + cmHalfW, cmTopY + size * 0.07);
+  const yokeGrad = ctx.createLinearGradient(
+    cmCx - cmHalfW,
+    cmTopY - size * 0.015,
+    cmCx + cmHalfW,
+    cmTopY + size * 0.07,
+  );
   yokeGrad.addColorStop(0, "#3e2415");
   yokeGrad.addColorStop(0.35, "#6b4125");
   yokeGrad.addColorStop(0.6, "#8d5530");
@@ -736,16 +850,31 @@ export function drawCentaurTroop(
   ctx.fillStyle = yokeGrad;
   ctx.beginPath();
   ctx.moveTo(cmCx - size * 0.19, cmTopY + size * 0.015);
-  ctx.quadraticCurveTo(cmCx, cmTopY - size * 0.06, cmCx + size * 0.19, cmTopY + size * 0.015);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.06,
+    cmCx + size * 0.19,
+    cmTopY + size * 0.015,
+  );
   ctx.lineTo(cmCx + size * 0.12, cmTopY + size * 0.085);
-  ctx.quadraticCurveTo(cmCx, cmTopY + size * 0.045, cmCx - size * 0.12, cmTopY + size * 0.085);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY + size * 0.045,
+    cmCx - size * 0.12,
+    cmTopY + size * 0.085,
+  );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 1.2 * zoom;
   ctx.stroke();
 
-  const cmGrad = ctx.createLinearGradient(cmCx - cmHalfW, cmTopY, cmCx + cmHalfW, cmBotY);
+  const cmGrad = ctx.createLinearGradient(
+    cmCx - cmHalfW,
+    cmTopY,
+    cmCx + cmHalfW,
+    cmBotY,
+  );
   cmGrad.addColorStop(0, "rgba(144, 114, 34, 0.72)");
   cmGrad.addColorStop(0.2, "rgba(204, 170, 62, 0.78)");
   cmGrad.addColorStop(0.5, "rgba(242, 214, 116, 0.84)");
@@ -755,7 +884,12 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(cmCx - cmHalfW + size * 0.01, cmBotY);
   ctx.lineTo(cmCx - cmHalfW - size * 0.03, cmTopY + size * 0.03);
-  ctx.quadraticCurveTo(cmCx, cmTopY - size * 0.07, cmCx + cmHalfW + size * 0.03, cmTopY + size * 0.03);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.07,
+    cmCx + cmHalfW + size * 0.03,
+    cmTopY + size * 0.03,
+  );
   ctx.lineTo(cmCx + cmHalfW - size * 0.01, cmBotY);
   ctx.closePath();
   ctx.fill();
@@ -767,7 +901,12 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(cmCx - cmHalfW + size * 0.01, cmBotY);
   ctx.lineTo(cmCx - cmHalfW - size * 0.03, cmTopY + size * 0.03);
-  ctx.quadraticCurveTo(cmCx, cmTopY - size * 0.07, cmCx + cmHalfW + size * 0.03, cmTopY + size * 0.03);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.07,
+    cmCx + cmHalfW + size * 0.03,
+    cmTopY + size * 0.03,
+  );
   ctx.lineTo(cmCx + cmHalfW - size * 0.01, cmBotY);
   ctx.closePath();
   ctx.clip();
@@ -778,7 +917,8 @@ export function drawCentaurTroop(
     const rowOffset = row % 2 === 0 ? 0 : ringSpacingX * 0.5;
     for (let col = -11; col <= 11; col++) {
       const rx = cmCx + col * ringSpacingX + rowOffset;
-      if (rx < cmCx - cmHalfW - ringR * 2 || rx > cmCx + cmHalfW + ringR * 2) continue;
+      if (rx < cmCx - cmHalfW - ringR * 2 || rx > cmCx + cmHalfW + ringR * 2)
+        continue;
 
       const shimmer = Math.sin(time * 2.7 + row * 0.7 + col * 0.85) * 0.08;
       ctx.strokeStyle = `rgba(${180 + Math.floor(shimmer * 120)}, ${152 + Math.floor(shimmer * 90)}, ${58 + Math.floor(shimmer * 60)}, ${0.5 + shimmer})`;
@@ -794,12 +934,23 @@ export function drawCentaurTroop(
 
       ctx.fillStyle = "rgba(255, 240, 186, 0.22)";
       ctx.beginPath();
-      ctx.arc(rx - ringR * 0.28, ry - ringR * 0.28, ringR * 0.22, 0, Math.PI * 2);
+      ctx.arc(
+        rx - ringR * 0.28,
+        ry - ringR * 0.28,
+        ringR * 0.22,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
 
-  const cmHighlight = ctx.createLinearGradient(cmCx - cmHalfW * 0.75, cmTopY + size * 0.04, cmCx + cmHalfW * 0.75, cmTopY + size * 0.1);
+  const cmHighlight = ctx.createLinearGradient(
+    cmCx - cmHalfW * 0.75,
+    cmTopY + size * 0.04,
+    cmCx + cmHalfW * 0.75,
+    cmTopY + size * 0.1,
+  );
   cmHighlight.addColorStop(0, "rgba(255, 240, 180, 0)");
   cmHighlight.addColorStop(0.28, "rgba(255, 240, 180, 0.22)");
   cmHighlight.addColorStop(0.5, "rgba(255, 248, 210, 0.32)");
@@ -822,7 +973,12 @@ export function drawCentaurTroop(
   ctx.lineWidth = 1.35 * zoom;
   ctx.beginPath();
   ctx.moveTo(cmCx - cmHalfW - size * 0.03, cmTopY + size * 0.03);
-  ctx.quadraticCurveTo(cmCx, cmTopY - size * 0.07, cmCx + cmHalfW + size * 0.03, cmTopY + size * 0.03);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.07,
+    cmCx + cmHalfW + size * 0.03,
+    cmTopY + size * 0.03,
+  );
   ctx.stroke();
   ctx.strokeStyle = centaurGoldDark;
   ctx.lineWidth = 1.2 * zoom;
@@ -874,8 +1030,10 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(x + size * 0.18, y - size * 0.26 + gallop * 0.05);
   ctx.quadraticCurveTo(
-    x + size * 0.04, y - size * 0.14 + strapBob,
-    x - size * 0.2, y - size * 0.24 + gallop * 0.05,
+    x + size * 0.04,
+    y - size * 0.14 + strapBob,
+    x - size * 0.2,
+    y - size * 0.24 + gallop * 0.05,
   );
   ctx.stroke();
   ctx.strokeStyle = "rgba(110, 80, 45, 0.35)";
@@ -883,21 +1041,34 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(x + size * 0.17, y - size * 0.255 + gallop * 0.05);
   ctx.quadraticCurveTo(
-    x + size * 0.04, y - size * 0.135 + strapBob,
-    x - size * 0.19, y - size * 0.235 + gallop * 0.05,
+    x + size * 0.04,
+    y - size * 0.135 + strapBob,
+    x - size * 0.19,
+    y - size * 0.235 + gallop * 0.05,
   );
   ctx.stroke();
 
   // Leather belt at waist
   const beltY = y - size * 0.04 + gallop * 0.08 + breathe;
-  const beltGrad = ctx.createLinearGradient(x - size * 0.24, beltY, x + size * 0.24, beltY + size * 0.05);
+  const beltGrad = ctx.createLinearGradient(
+    x - size * 0.24,
+    beltY,
+    x + size * 0.24,
+    beltY + size * 0.05,
+  );
   beltGrad.addColorStop(0, "#3c2212");
   beltGrad.addColorStop(0.35, "#6d4125");
   beltGrad.addColorStop(0.65, "#875130");
   beltGrad.addColorStop(1, "#3c2212");
   ctx.fillStyle = beltGrad;
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.235, beltY - size * 0.004, size * 0.47, size * 0.045, size * 0.01);
+  ctx.roundRect(
+    x - size * 0.235,
+    beltY - size * 0.004,
+    size * 0.47,
+    size * 0.045,
+    size * 0.01,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldDark;
   ctx.lineWidth = 0.9 * zoom;
@@ -913,15 +1084,25 @@ export function drawCentaurTroop(
 
   // Belt buckle
   const buckleGrad = ctx.createRadialGradient(
-    x - size * 0.01, beltY + size * 0.02, size * 0.006,
-    x, beltY + size * 0.02, size * 0.03,
+    x - size * 0.01,
+    beltY + size * 0.02,
+    size * 0.006,
+    x,
+    beltY + size * 0.02,
+    size * 0.03,
   );
   buckleGrad.addColorStop(0, centaurGoldLight);
   buckleGrad.addColorStop(0.5, centaurGoldMid);
   buckleGrad.addColorStop(1, centaurGoldDark);
   ctx.fillStyle = buckleGrad;
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.04, beltY - size * 0.012, size * 0.08, size * 0.058, size * 0.01);
+  ctx.roundRect(
+    x - size * 0.04,
+    beltY - size * 0.012,
+    size * 0.08,
+    size * 0.058,
+    size * 0.01,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldLight;
   ctx.lineWidth = 0.8 * zoom;
@@ -941,14 +1122,140 @@ export function drawCentaurTroop(
     ctx.fillStyle = "#4a2a15";
     ctx.beginPath();
     ctx.roundRect(
-      x + side * size * 0.13 - size * 0.028, beltY + size * 0.025,
-      size * 0.056, size * 0.044, size * 0.008,
+      x + side * size * 0.13 - size * 0.028,
+      beltY + size * 0.025,
+      size * 0.056,
+      size * 0.044,
+      size * 0.008,
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(90, 60, 30, 0.6)";
     ctx.lineWidth = 0.5 * zoom;
     ctx.stroke();
   }
+
+  // Lower waist transition so the human torso reads as seated into the horse body.
+  const joinY = beltY + size * 0.048;
+  const joinBottomY = y + size * 0.11 + gallop * 0.09 + breathe * 0.8;
+
+  const joinShadowGrad = ctx.createLinearGradient(x, beltY + size * 0.01, x, joinBottomY);
+  joinShadowGrad.addColorStop(0, "rgba(64, 34, 18, 0.34)");
+  joinShadowGrad.addColorStop(0.45, "rgba(88, 48, 26, 0.2)");
+  joinShadowGrad.addColorStop(1, "rgba(64, 34, 18, 0)");
+  ctx.fillStyle = joinShadowGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.17, beltY + size * 0.01);
+  ctx.quadraticCurveTo(
+    x - size * 0.22,
+    beltY + size * 0.055,
+    x - size * 0.14,
+    joinBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x,
+    joinBottomY + size * 0.035,
+    x + size * 0.14,
+    joinBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    beltY + size * 0.055,
+    x + size * 0.17,
+    beltY + size * 0.01,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  const fauldGrad = ctx.createLinearGradient(x - size * 0.1, joinY, x + size * 0.1, joinBottomY);
+  fauldGrad.addColorStop(0, "#5a351d");
+  fauldGrad.addColorStop(0.35, "#7b4a29");
+  fauldGrad.addColorStop(0.7, "#915933");
+  fauldGrad.addColorStop(1, "#55311a");
+  ctx.fillStyle = fauldGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.09, joinY);
+  ctx.quadraticCurveTo(
+    x,
+    beltY + size * 0.018,
+    x + size * 0.09,
+    joinY,
+  );
+  ctx.lineTo(x + size * 0.065, joinBottomY);
+  ctx.quadraticCurveTo(
+    x,
+    joinBottomY + size * 0.028,
+    x - size * 0.065,
+    joinBottomY,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = centaurGoldDark;
+  ctx.lineWidth = 0.85 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(236, 198, 116, 0.28)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.07, joinY + size * 0.004);
+  ctx.quadraticCurveTo(
+    x,
+    joinY - size * 0.01,
+    x + size * 0.07,
+    joinY + size * 0.004,
+  );
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(94, 54, 28, 0.4)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, joinY + size * 0.012);
+  ctx.lineTo(x, joinBottomY + size * 0.006);
+  ctx.moveTo(x - size * 0.045, joinY + size * 0.03);
+  ctx.quadraticCurveTo(
+    x - size * 0.07,
+    joinY + size * 0.058,
+    x - size * 0.05,
+    joinBottomY - size * 0.002,
+  );
+  ctx.moveTo(x + size * 0.045, joinY + size * 0.03);
+  ctx.quadraticCurveTo(
+    x + size * 0.07,
+    joinY + size * 0.058,
+    x + size * 0.05,
+    joinBottomY - size * 0.002,
+  );
+  ctx.stroke();
+
+  ctx.fillStyle = centaurGoldMid;
+  for (const side of [-1, 1] as const) {
+    ctx.beginPath();
+    ctx.arc(x + side * size * 0.048, joinY + size * 0.018, size * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Bring the collar/yoke forward in the torso stack so it stays readable,
+  // while the upcoming pauldrons still overlap it.
+  ctx.fillStyle = yokeGrad;
+  ctx.beginPath();
+  ctx.moveTo(cmCx - size * 0.19, cmTopY + size * 0.015);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY - size * 0.06,
+    cmCx + size * 0.19,
+    cmTopY + size * 0.015,
+  );
+  ctx.lineTo(cmCx + size * 0.12, cmTopY + size * 0.085);
+  ctx.quadraticCurveTo(
+    cmCx,
+    cmTopY + size * 0.045,
+    cmCx - size * 0.12,
+    cmTopY + size * 0.085,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = centaurGoldMid;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
 
   // === GOLDEN SHOULDER PAULDRONS ===
   for (const side of [-1, 1] as const) {
@@ -960,7 +1267,12 @@ export function drawCentaurTroop(
     ctx.rotate(side * 0.15);
 
     // Leather base layer under pauldron
-    const pauldLeatherGrad = ctx.createLinearGradient(0, -size * 0.05, 0, size * 0.08);
+    const pauldLeatherGrad = ctx.createLinearGradient(
+      0,
+      -size * 0.05,
+      0,
+      size * 0.08,
+    );
     pauldLeatherGrad.addColorStop(0, "#4e2f1b");
     pauldLeatherGrad.addColorStop(0.45, "#714427");
     pauldLeatherGrad.addColorStop(1, "#3c2415");
@@ -976,13 +1288,25 @@ export function drawCentaurTroop(
     ctx.strokeStyle = "rgba(220, 185, 120, 0.28)";
     ctx.lineWidth = 0.55 * zoom;
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.016, size * 0.07, size * 0.03, side * -0.15, Math.PI * 0.05, Math.PI * 0.95);
+    ctx.ellipse(
+      0,
+      size * 0.016,
+      size * 0.07,
+      size * 0.03,
+      side * -0.15,
+      Math.PI * 0.05,
+      Math.PI * 0.95,
+    );
     ctx.stroke();
 
     // Main pauldron plate — golden cap over leather
     const pauldGrad = ctx.createRadialGradient(
-      -side * size * 0.015, -size * 0.01, size * 0.01,
-      0, 0, size * 0.08,
+      -side * size * 0.015,
+      -size * 0.01,
+      size * 0.01,
+      0,
+      0,
+      size * 0.08,
     );
     pauldGrad.addColorStop(0, "#e8d088");
     pauldGrad.addColorStop(0.3, centaurGoldLight);
@@ -1000,14 +1324,30 @@ export function drawCentaurTroop(
     ctx.strokeStyle = "rgba(240, 225, 170, 0.5)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.ellipse(0, -size * 0.002, size * 0.045, size * 0.02, side * -0.18, Math.PI * 0.9, Math.PI * 2.1);
+    ctx.ellipse(
+      0,
+      -size * 0.002,
+      size * 0.045,
+      size * 0.02,
+      side * -0.18,
+      Math.PI * 0.9,
+      Math.PI * 2.1,
+    );
     ctx.stroke();
 
     // Green inlay band
     ctx.fillStyle = centaurLeafMid;
     ctx.globalAlpha = 0.7;
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.018, size * 0.053, size * 0.016, side * -0.12, 0, Math.PI * 2);
+    ctx.ellipse(
+      0,
+      size * 0.018,
+      size * 0.053,
+      size * 0.016,
+      side * -0.12,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.globalAlpha = 1;
 
@@ -1054,7 +1394,13 @@ export function drawCentaurTroop(
     // Small leather strap tying the gold cap down
     ctx.fillStyle = "#4b2b17";
     ctx.beginPath();
-    ctx.roundRect(-size * 0.018, size * 0.03, size * 0.036, size * 0.026, size * 0.005);
+    ctx.roundRect(
+      -size * 0.018,
+      size * 0.03,
+      size * 0.036,
+      size * 0.026,
+      size * 0.005,
+    );
     ctx.fill();
     ctx.strokeStyle = centaurGoldDark;
     ctx.lineWidth = 0.45 * zoom;
@@ -1187,9 +1533,24 @@ export function drawCentaurTroop(
   ctx.fillStyle = "#6a5010";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, headY - size * 0.09);
-  ctx.quadraticCurveTo(x - size * 0.2, headY + size * 0.03, x - size * 0.17 + hairFlow * 2.2, headY + size * 0.2);
-  ctx.quadraticCurveTo(x, headY + size * 0.24, x + size * 0.18 + hairFlow * 1.8, headY + size * 0.19);
-  ctx.quadraticCurveTo(x + size * 0.2, headY + size * 0.02, x + size * 0.14, headY - size * 0.09);
+  ctx.quadraticCurveTo(
+    x - size * 0.2,
+    headY + size * 0.03,
+    x - size * 0.17 + hairFlow * 2.2,
+    headY + size * 0.2,
+  );
+  ctx.quadraticCurveTo(
+    x,
+    headY + size * 0.24,
+    x + size * 0.18 + hairFlow * 1.8,
+    headY + size * 0.19,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.2,
+    headY + size * 0.02,
+    x + size * 0.14,
+    headY - size * 0.09,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -1211,160 +1572,8 @@ export function drawCentaurTroop(
     size * 0.12,
   );
 
-  // Coif and aventail drape in front of the neck
-  const neckGuardTopY = y - size * 0.398 + gallop * 0.04;
-  const neckGuardBottomY = y - size * 0.248 + gallop * 0.05 + breathe * 0.3;
-  const coifTrimGrad = ctx.createLinearGradient(x - size * 0.1, neckGuardTopY, x + size * 0.1, neckGuardTopY + size * 0.04);
-  coifTrimGrad.addColorStop(0, "#5d371d");
-  coifTrimGrad.addColorStop(0.5, "#8b5830");
-  coifTrimGrad.addColorStop(1, "#4f2d18");
-  ctx.fillStyle = coifTrimGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.09, neckGuardTopY + size * 0.01);
-  ctx.quadraticCurveTo(x, neckGuardTopY - size * 0.02, x + size * 0.09, neckGuardTopY + size * 0.01);
-  ctx.lineTo(x + size * 0.078, neckGuardTopY + size * 0.032);
-  ctx.quadraticCurveTo(x, neckGuardTopY + size * 0.008, x - size * 0.078, neckGuardTopY + size * 0.032);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = centaurGoldMid;
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
-
-  const aventailGrad = ctx.createLinearGradient(x - size * 0.11, neckGuardTopY, x + size * 0.11, neckGuardBottomY);
-  aventailGrad.addColorStop(0, "rgba(92, 72, 24, 0.78)");
-  aventailGrad.addColorStop(0.32, "rgba(168, 138, 48, 0.86)");
-  aventailGrad.addColorStop(0.58, "rgba(230, 198, 102, 0.88)");
-  aventailGrad.addColorStop(1, "rgba(122, 94, 28, 0.8)");
-  ctx.save();
-  ctx.fillStyle = aventailGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.quadraticCurveTo(x - size * 0.1, neckGuardTopY + size * 0.07, x - size * 0.082, neckGuardBottomY - size * 0.01);
-  ctx.quadraticCurveTo(x - size * 0.03, neckGuardBottomY + size * 0.028, x, neckGuardBottomY + size * 0.02);
-  ctx.quadraticCurveTo(x + size * 0.03, neckGuardBottomY + size * 0.028, x + size * 0.082, neckGuardBottomY - size * 0.01);
-  ctx.quadraticCurveTo(x + size * 0.1, neckGuardTopY + size * 0.07, x + size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.quadraticCurveTo(x, neckGuardTopY - size * 0.004, x - size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.quadraticCurveTo(x - size * 0.1, neckGuardTopY + size * 0.07, x - size * 0.082, neckGuardBottomY - size * 0.01);
-  ctx.quadraticCurveTo(x - size * 0.03, neckGuardBottomY + size * 0.028, x, neckGuardBottomY + size * 0.02);
-  ctx.quadraticCurveTo(x + size * 0.03, neckGuardBottomY + size * 0.028, x + size * 0.082, neckGuardBottomY - size * 0.01);
-  ctx.quadraticCurveTo(x + size * 0.1, neckGuardTopY + size * 0.07, x + size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.quadraticCurveTo(x, neckGuardTopY - size * 0.004, x - size * 0.094, neckGuardTopY + size * 0.022);
-  ctx.closePath();
-  ctx.clip();
-
-  const neckRingR = size * 0.0092;
-  const neckRingSpacingX = neckRingR * 1.95;
-  const neckRingSpacingY = neckRingR * 1.62;
-  for (let row = 0; row < 10; row++) {
-    const ringY = neckGuardTopY + size * 0.028 + row * neckRingSpacingY;
-    const rowOffset = row % 2 === 0 ? 0 : neckRingSpacingX * 0.52;
-    for (let col = -7; col <= 7; col++) {
-      const ringX = x + col * neckRingSpacingX + rowOffset;
-      const shimmer = Math.sin(time * 2.8 + row * 0.7 + col * 0.55) * 0.07;
-      ctx.strokeStyle = `rgba(${204 + Math.floor(shimmer * 96)}, ${178 + Math.floor(shimmer * 84)}, ${74 + Math.floor(shimmer * 52)}, ${0.62 + shimmer})`;
-      ctx.lineWidth = 0.52 * zoom;
-      ctx.beginPath();
-      ctx.arc(ringX, ringY, neckRingR, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 240, 186, 0.22)";
-      ctx.beginPath();
-      ctx.arc(ringX - neckRingR * 0.22, ringY - neckRingR * 0.18, neckRingR * 0.18, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.restore();
-
-  // Coif fold lines and trim
-  ctx.strokeStyle = "rgba(92, 68, 22, 0.34)";
-  ctx.lineWidth = 0.8 * zoom;
-  for (const side of [-1, 1] as const) {
-    ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.04, neckGuardTopY + size * 0.03);
-    ctx.quadraticCurveTo(
-      x + side * size * 0.06,
-      neckGuardTopY + size * 0.08,
-      x + side * size * 0.05,
-      neckGuardBottomY + size * 0.008,
-    );
-    ctx.stroke();
-  }
-  ctx.strokeStyle = centaurGoldLight;
-  ctx.lineWidth = 0.95 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.09, neckGuardTopY + size * 0.022);
-  ctx.quadraticCurveTo(x, neckGuardTopY - size * 0.004, x + size * 0.09, neckGuardTopY + size * 0.022);
-  ctx.stroke();
-
-  // Face with gradient
-  const faceGrad = ctx.createRadialGradient(
-    x - size * 0.02,
-    y - size * 0.52 + gallop * 0.04,
-    0,
-    x,
-    y - size * 0.5 + gallop * 0.04,
-    size * 0.15,
-  );
-  faceGrad.addColorStop(0, "#f0c890");
-  faceGrad.addColorStop(0.6, "#e8b878");
-  faceGrad.addColorStop(1, "#d8a060");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.52 + gallop * 0.04, size * 0.15, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Mail cheek curtains in front of the face edges so the coif remains visible
-  for (const side of [-1, 1] as const) {
-    const cheekClipX = x + side * size * 0.095;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cheekClipX, y - size * 0.61 + gallop * 0.04);
-    ctx.quadraticCurveTo(
-      x + side * size * 0.17,
-      y - size * 0.54 + gallop * 0.04,
-      x + side * size * 0.13,
-      y - size * 0.42 + gallop * 0.05,
-    );
-    ctx.quadraticCurveTo(
-      x + side * size * 0.09,
-      y - size * 0.39 + gallop * 0.05,
-      x + side * size * 0.045,
-      y - size * 0.46 + gallop * 0.05,
-    );
-    ctx.quadraticCurveTo(
-      x + side * size * 0.055,
-      y - size * 0.55 + gallop * 0.04,
-      cheekClipX,
-      y - size * 0.61 + gallop * 0.04,
-    );
-    ctx.closePath();
-    ctx.clip();
-
-    for (let row = 0; row < 9; row++) {
-      const ringY = y - size * 0.585 + gallop * 0.04 + row * size * 0.018;
-      const rowOffset = row % 2 === 0 ? 0 : size * 0.008;
-      for (let col = 0; col < 5; col++) {
-        const ringX = x + side * (size * (0.07 + col * 0.016) + rowOffset);
-        ctx.strokeStyle = "rgba(214, 186, 88, 0.72)";
-        ctx.lineWidth = 0.5 * zoom;
-        ctx.beginPath();
-        ctx.arc(ringX, ringY, size * 0.0082, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = "rgba(255, 244, 196, 0.2)";
-        ctx.beginPath();
-        ctx.arc(ringX - side * size * 0.0015, ringY - size * 0.0015, size * 0.0018, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
-  // === FLOWING GOLDEN HAIR (uniform curtain) ===
-  const hairSway = Math.sin(time * 4.2) * 2.8 + hairFlow * 3.4 + size * 0.012;
+  // === FLOWING GOLDEN HAIR (rendered behind face and helm) ===
+  const hairSway = Math.sin(time * 4.2) * 2.5 + hairFlow * 2.9 + size * 0.01;
   const hairTipLift = Math.sin(time * 5.1 + 0.4) * 1.8;
   const hairCurl = Math.sin(time * 6.4 + 0.3) * 1.5;
 
@@ -1382,37 +1591,37 @@ export function drawCentaurTroop(
   hairCurtainGrad.addColorStop(1, "#8c5d1c");
   ctx.fillStyle = hairCurtainGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.14, headY - size * 0.11);
+  ctx.moveTo(x - size * 0.06, headY - size * 0.12);
   ctx.quadraticCurveTo(
-    x - size * 0.24,
-    headY + size * 0.02,
-    x - size * 0.17 + hairSway * 0.4,
-    hairBaseY + size * 0.17,
+    x - size * 0.22,
+    headY - size * 0.01,
+    x - size * 0.17 + hairSway * 0.14,
+    hairBaseY + size * 0.12,
   );
   ctx.quadraticCurveTo(
-    x + size * 0.08,
-    hairBaseY + size * 0.31 + hairTipLift,
-    x + size * 0.24 + hairSway * 0.95,
-    hairBaseY + size * 0.14,
+    x + size * 0.05,
+    hairBaseY + size * 0.28 + hairTipLift,
+    x + size * 0.19 + hairSway * 0.78,
+    hairBaseY + size * 0.13,
   );
   ctx.quadraticCurveTo(
-    x + size * 0.28 + hairSway * 0.55,
+    x + size * 0.22 + hairSway * 0.4,
     headY - size * 0.005,
-    x + size * 0.1,
+    x + size * 0.07,
     headY - size * 0.12,
   );
   ctx.closePath();
   ctx.fill();
 
   const strandGroups = [
-    { startAngle: -1.08, len: 0.3, phase: 0.0, thick: 0.033, sway: 0.72, drift: 0.38 },
-    { startAngle: -0.82, len: 0.32, phase: 0.45, thick: 0.036, sway: 0.82, drift: 0.55 },
-    { startAngle: -0.56, len: 0.34, phase: 0.9, thick: 0.038, sway: 0.95, drift: 0.72 },
-    { startAngle: -0.26, len: 0.36, phase: 1.35, thick: 0.041, sway: 1.05, drift: 0.92 },
-    { startAngle: 0.02, len: 0.37, phase: 1.8, thick: 0.042, sway: 1.08, drift: 1.06 },
-    { startAngle: 0.26, len: 0.37, phase: 2.25, thick: 0.04, sway: 1.04, drift: 1.16 },
-    { startAngle: 0.48, len: 0.36, phase: 2.7, thick: 0.038, sway: 1.0, drift: 1.28 },
-    { startAngle: 0.7, len: 0.35, phase: 3.15, thick: 0.035, sway: 0.96, drift: 1.42 },
+    { startAngle: -0.9, len: 0.26, phase: 0.0, thick: 0.033, sway: 0.62, drift: 0.16 },
+    { startAngle: -0.69, len: 0.28, phase: 0.45, thick: 0.036, sway: 0.72, drift: 0.26 },
+    { startAngle: -0.47, len: 0.3, phase: 0.9, thick: 0.038, sway: 0.82, drift: 0.38 },
+    { startAngle: -0.21, len: 0.31, phase: 1.35, thick: 0.041, sway: 0.9, drift: 0.48 },
+    { startAngle: 0.02, len: 0.32, phase: 1.8, thick: 0.042, sway: 0.92, drift: 0.58 },
+    { startAngle: 0.19, len: 0.32, phase: 2.25, thick: 0.04, sway: 0.9, drift: 0.66 },
+    { startAngle: 0.34, len: 0.31, phase: 2.7, thick: 0.038, sway: 0.86, drift: 0.74 },
+    { startAngle: 0.48, len: 0.3, phase: 3.15, thick: 0.035, sway: 0.82, drift: 0.82 },
   ];
 
   for (let g = 0; g < strandGroups.length; g++) {
@@ -1421,11 +1630,21 @@ export function drawCentaurTroop(
     const localLift = Math.sin(time * 5.6 + sg.phase + 0.35) * 1.3;
     const kinkA = Math.sin(time * 7.1 + sg.phase * 1.8) * size * 0.018;
     const kinkB = Math.cos(time * 6.3 + sg.phase * 2.1) * size * 0.014;
-    const rootX = x + Math.cos(sg.startAngle) * size * 0.12;
-    const rootY = headY - size * 0.07;
-    const tipX = rootX + Math.cos(sg.startAngle + 0.28) * size * sg.len + localSway * 0.62 + size * 0.11 * sg.drift;
-    const tipY = rootY + size * 0.23 + Math.sin(g * 0.36) * size * 0.02 + localLift;
-    const midX = (rootX + tipX) * 0.5 + localSway * 0.34 + size * 0.04 * sg.drift + kinkA;
+    const isLeftHair = sg.startAngle < -0.05;
+    const rootX =
+      x +
+      Math.cos(sg.startAngle) * size * 0.092 +
+      (isLeftHair ? -size * 0.012 : -size * 0.002);
+    const rootY = headY - size * 0.07 + (isLeftHair ? -size * 0.012 : 0);
+    const tipX =
+      rootX +
+      Math.cos(sg.startAngle + 0.24) * size * sg.len +
+      localSway * 0.42 +
+      size * 0.064 * sg.drift;
+    const tipY =
+      rootY + size * 0.23 + Math.sin(g * 0.36) * size * 0.02 + localLift;
+    const midX =
+      (rootX + tipX) * 0.5 + localSway * 0.2 + size * 0.02 * sg.drift + kinkA;
     const midY = (rootY + tipY) * 0.5 - size * 0.034 + kinkB * 0.25;
     const nearTipX = (midX + tipX) * 0.5 + kinkB + hairCurl * 0.6;
     const nearTipY = (midY + tipY) * 0.5 + kinkA * 0.18;
@@ -1436,8 +1655,18 @@ export function drawCentaurTroop(
       rootX - Math.cos(sg.startAngle + 1.57) * size * sg.thick * 0.52,
       rootY - Math.sin(sg.startAngle + 1.57) * size * sg.thick * 0.52,
     );
-    ctx.quadraticCurveTo(midX - size * 0.01, midY + size * 0.01, nearTipX, nearTipY);
-    ctx.quadraticCurveTo(nearTipX + kinkB * 0.5, nearTipY + size * 0.012, tipX + size * 0.004, tipY + size * 0.004);
+    ctx.quadraticCurveTo(
+      midX - size * 0.01,
+      midY + size * 0.01,
+      nearTipX,
+      nearTipY,
+    );
+    ctx.quadraticCurveTo(
+      nearTipX + kinkB * 0.5,
+      nearTipY + size * 0.012,
+      tipX + size * 0.004,
+      tipY + size * 0.004,
+    );
     ctx.quadraticCurveTo(
       midX + size * 0.01,
       midY - size * 0.004,
@@ -1460,7 +1689,12 @@ export function drawCentaurTroop(
       rootY - Math.sin(sg.startAngle + 1.57) * size * sg.thick * 0.42,
     );
     ctx.quadraticCurveTo(midX, midY, nearTipX, nearTipY);
-    ctx.quadraticCurveTo(nearTipX + kinkB * 0.36, nearTipY + size * 0.01, tipX, tipY);
+    ctx.quadraticCurveTo(
+      nearTipX + kinkB * 0.36,
+      nearTipY + size * 0.01,
+      tipX,
+      tipY,
+    );
     ctx.quadraticCurveTo(
       midX + size * 0.008,
       midY - size * 0.008,
@@ -1477,12 +1711,17 @@ export function drawCentaurTroop(
     const hAngle = -0.95 + hT * 1.55;
     const hWave = Math.sin(time * 4.9 + h * 0.55) * 2.2 + hairSway * 0.75;
     const hKink = Math.sin(time * 7.4 + h * 1.1) * size * 0.016;
-    const hRootX = x + Math.cos(hAngle) * size * 0.098;
+    const hRootX = x + Math.cos(hAngle) * size * 0.088;
     const hRootY = headY - size * 0.082;
-    const hTipX = hRootX + Math.cos(hAngle + 0.22) * size * 0.26 + hWave * 0.7 + size * 0.06 * hT;
+    const hTipX =
+      hRootX +
+      Math.cos(hAngle + 0.22) * size * 0.22 +
+      hWave * 0.56 +
+      size * 0.04 * hT;
     const hTipY = hRootY + size * 0.225 + Math.sin(hT * Math.PI) * size * 0.02;
 
-    ctx.strokeStyle = h % 2 === 0 ? "rgba(246, 222, 138, 0.52)" : "rgba(230, 198, 100, 0.44)";
+    ctx.strokeStyle =
+      h % 2 === 0 ? "rgba(246, 222, 138, 0.52)" : "rgba(230, 198, 100, 0.44)";
     ctx.lineWidth = (0.95 + Math.sin(h * 1.4) * 0.08) * zoom;
     ctx.beginPath();
     ctx.moveTo(hRootX, hRootY);
@@ -1499,8 +1738,10 @@ export function drawCentaurTroop(
 
   // Shimmer on the lower curtain
   for (let sp = 0; sp < 5; sp++) {
-    const spX = x - size * 0.08 + sp * size * 0.075 + hairSway * 0.26 + sp * size * 0.016;
-    const spY = hairBaseY + size * 0.15 + Math.sin(time * 4.5 + sp) * size * 0.012;
+    const spX =
+      x - size * 0.055 + sp * size * 0.058 + hairSway * 0.18 + sp * size * 0.012;
+    const spY =
+      hairBaseY + size * 0.15 + Math.sin(time * 4.5 + sp) * size * 0.012;
     const spAlpha = 0.24 + Math.sin(time * 5.8 + sp * 0.9) * 0.12;
     ctx.fillStyle = `rgba(255, 232, 145, ${spAlpha})`;
     ctx.beginPath();
@@ -1510,12 +1751,17 @@ export function drawCentaurTroop(
 
   // Dramatic flyaway tails at the windward edge
   for (let f = 0; f < 3; f++) {
-    const fRootX = x + size * (0.02 + f * 0.04);
+    const fRootX = x + size * (0.01 + f * 0.028);
     const fRootY = headY - size * (0.03 - f * 0.008);
-    const fTipX = fRootX + size * (0.18 + f * 0.05) + hairSway * (0.9 + f * 0.1);
-    const fTipY = fRootY + size * (0.1 + f * 0.035) + Math.sin(time * 5.2 + f) * size * 0.01;
+    const fTipX =
+      fRootX + size * (0.13 + f * 0.04) + hairSway * (0.62 + f * 0.08);
+    const fTipY =
+      fRootY +
+      size * (0.1 + f * 0.035) +
+      Math.sin(time * 5.2 + f) * size * 0.01;
     const fKink = Math.sin(time * 8 + f * 1.2) * size * 0.018;
-    ctx.strokeStyle = f === 0 ? "rgba(233, 201, 110, 0.44)" : "rgba(197, 154, 70, 0.34)";
+    ctx.strokeStyle =
+      f === 0 ? "rgba(233, 201, 110, 0.44)" : "rgba(197, 154, 70, 0.34)";
     ctx.lineWidth = (0.85 - f * 0.12) * zoom;
     ctx.beginPath();
     ctx.moveTo(fRootX, fRootY);
@@ -1530,6 +1776,23 @@ export function drawCentaurTroop(
     ctx.stroke();
   }
 
+  // Face with gradient
+  const faceGrad = ctx.createRadialGradient(
+    x - size * 0.02,
+    y - size * 0.52 + gallop * 0.04,
+    0,
+    x,
+    y - size * 0.5 + gallop * 0.04,
+    size * 0.15,
+  );
+  faceGrad.addColorStop(0, "#f0c890");
+  faceGrad.addColorStop(0.6, "#e8b878");
+  faceGrad.addColorStop(1, "#d8a060");
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.52 + gallop * 0.04, size * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
   // === CHALCIDIAN BRONZE HELM (open-faced Greco-Roman) ===
   const helmCx = x;
   const helmCy = headY - size * 0.05;
@@ -1537,8 +1800,12 @@ export function drawCentaurTroop(
 
   // Helm skull dome — radial gradient for bronze 3D shape
   const helmDomeGrad = ctx.createRadialGradient(
-    helmCx - size * 0.03, helmCy - size * 0.08 + helmBob, size * 0.02,
-    helmCx, helmCy - size * 0.04 + helmBob, size * 0.18,
+    helmCx - size * 0.03,
+    helmCy - size * 0.08 + helmBob,
+    size * 0.02,
+    helmCx,
+    helmCy - size * 0.04 + helmBob,
+    size * 0.18,
   );
   helmDomeGrad.addColorStop(0, "#d4b45a");
   helmDomeGrad.addColorStop(0.25, "#c4a044");
@@ -1549,8 +1816,18 @@ export function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(helmCx - size * 0.15, helmCy + size * 0.04 + helmBob);
   ctx.lineTo(helmCx - size * 0.155, helmCy - size * 0.06 + helmBob);
-  ctx.quadraticCurveTo(helmCx - size * 0.12, helmCy - size * 0.18 + helmBob, helmCx, helmCy - size * 0.2 + helmBob);
-  ctx.quadraticCurveTo(helmCx + size * 0.12, helmCy - size * 0.18 + helmBob, helmCx + size * 0.155, helmCy - size * 0.06 + helmBob);
+  ctx.quadraticCurveTo(
+    helmCx - size * 0.12,
+    helmCy - size * 0.18 + helmBob,
+    helmCx,
+    helmCy - size * 0.2 + helmBob,
+  );
+  ctx.quadraticCurveTo(
+    helmCx + size * 0.12,
+    helmCy - size * 0.18 + helmBob,
+    helmCx + size * 0.155,
+    helmCy - size * 0.06 + helmBob,
+  );
   ctx.lineTo(helmCx + size * 0.15, helmCy + size * 0.04 + helmBob);
   ctx.closePath();
   ctx.fill();
@@ -1558,8 +1835,10 @@ export function drawCentaurTroop(
   // Cheek guards — angled plates framing the face
   for (const side of [-1, 1] as const) {
     const cheekGrad = ctx.createLinearGradient(
-      helmCx + side * size * 0.08, helmCy + helmBob,
-      helmCx + side * size * 0.17, helmCy + size * 0.12 + helmBob,
+      helmCx + side * size * 0.08,
+      helmCy + helmBob,
+      helmCx + side * size * 0.17,
+      helmCy + size * 0.12 + helmBob,
     );
     cheekGrad.addColorStop(0, "#b8962e");
     cheekGrad.addColorStop(0.5, centaurGoldMid);
@@ -1569,8 +1848,10 @@ export function drawCentaurTroop(
     ctx.moveTo(helmCx + side * size * 0.13, helmCy - size * 0.02 + helmBob);
     ctx.lineTo(helmCx + side * size * 0.16, helmCy + size * 0.06 + helmBob);
     ctx.quadraticCurveTo(
-      helmCx + side * size * 0.14, helmCy + size * 0.13 + helmBob,
-      helmCx + side * size * 0.08, helmCy + size * 0.12 + helmBob,
+      helmCx + side * size * 0.14,
+      helmCy + size * 0.13 + helmBob,
+      helmCx + side * size * 0.08,
+      helmCy + size * 0.12 + helmBob,
     );
     ctx.lineTo(helmCx + side * size * 0.06, helmCy + size * 0.04 + helmBob);
     ctx.closePath();
@@ -1579,24 +1860,43 @@ export function drawCentaurTroop(
     // Cheek guard hinge rivet
     ctx.fillStyle = centaurGoldLight;
     ctx.beginPath();
-    ctx.arc(helmCx + side * size * 0.12, helmCy + size * 0.01 + helmBob, size * 0.007, 0, Math.PI * 2);
+    ctx.arc(
+      helmCx + side * size * 0.12,
+      helmCy + size * 0.01 + helmBob,
+      size * 0.007,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   // Nose guard — vertical strip
-  const noseGrad = ctx.createLinearGradient(helmCx - size * 0.012, 0, helmCx + size * 0.012, 0);
+  const noseGrad = ctx.createLinearGradient(
+    helmCx - size * 0.012,
+    0,
+    helmCx + size * 0.012,
+    0,
+  );
   noseGrad.addColorStop(0, centaurGoldDark);
   noseGrad.addColorStop(0.5, "#d4b85a");
   noseGrad.addColorStop(1, centaurGoldDark);
   ctx.fillStyle = noseGrad;
   ctx.beginPath();
-  ctx.roundRect(helmCx - size * 0.012, helmCy - size * 0.14 + helmBob, size * 0.024, size * 0.16, size * 0.005);
+  ctx.roundRect(
+    helmCx - size * 0.012,
+    helmCy - size * 0.14 + helmBob,
+    size * 0.024,
+    size * 0.16,
+    size * 0.005,
+  );
   ctx.fill();
 
   // Brow band — decorative ridge across forehead
   const browGrad = ctx.createLinearGradient(
-    helmCx - size * 0.14, helmCy - size * 0.04 + helmBob,
-    helmCx + size * 0.14, helmCy - size * 0.04 + helmBob,
+    helmCx - size * 0.14,
+    helmCy - size * 0.04 + helmBob,
+    helmCx + size * 0.14,
+    helmCy - size * 0.04 + helmBob,
   );
   browGrad.addColorStop(0, centaurGoldDark);
   browGrad.addColorStop(0.2, centaurGoldMid);
@@ -1606,8 +1906,18 @@ export function drawCentaurTroop(
   ctx.fillStyle = browGrad;
   ctx.beginPath();
   ctx.moveTo(helmCx - size * 0.15, helmCy - size * 0.02 + helmBob);
-  ctx.quadraticCurveTo(helmCx, helmCy - size * 0.08 + helmBob, helmCx + size * 0.15, helmCy - size * 0.02 + helmBob);
-  ctx.quadraticCurveTo(helmCx, helmCy - size * 0.05 + helmBob, helmCx - size * 0.15, helmCy - size * 0.02 + helmBob);
+  ctx.quadraticCurveTo(
+    helmCx,
+    helmCy - size * 0.08 + helmBob,
+    helmCx + size * 0.15,
+    helmCy - size * 0.02 + helmBob,
+  );
+  ctx.quadraticCurveTo(
+    helmCx,
+    helmCy - size * 0.05 + helmBob,
+    helmCx - size * 0.15,
+    helmCy - size * 0.02 + helmBob,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -1618,8 +1928,10 @@ export function drawCentaurTroop(
     ctx.beginPath();
     ctx.moveTo(helmCx + side * size * 0.03, helmCy - size * 0.04 + helmBob);
     ctx.quadraticCurveTo(
-      helmCx + side * size * 0.07, helmCy - size * 0.06 + helmBob,
-      helmCx + side * size * 0.11, helmCy - size * 0.035 + helmBob,
+      helmCx + side * size * 0.07,
+      helmCy - size * 0.06 + helmBob,
+      helmCx + side * size * 0.11,
+      helmCy - size * 0.035 + helmBob,
     );
     ctx.stroke();
   }
@@ -1630,8 +1942,13 @@ export function drawCentaurTroop(
   for (const side of [-1, 1] as const) {
     ctx.beginPath();
     ctx.ellipse(
-      helmCx + side * size * 0.07, helmCy - size * 0.042 + helmBob,
-      size * 0.018, size * 0.007, side * 0.3, 0, Math.PI * 2,
+      helmCx + side * size * 0.07,
+      helmCy - size * 0.042 + helmBob,
+      size * 0.018,
+      size * 0.007,
+      side * 0.3,
+      0,
+      Math.PI * 2,
     );
     ctx.fill();
   }
@@ -1642,7 +1959,15 @@ export function drawCentaurTroop(
   ctx.globalAlpha = 0.18;
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.ellipse(helmCx - size * 0.05, helmCy - size * 0.12 + helmBob, size * 0.025, size * 0.06, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    helmCx - size * 0.05,
+    helmCy - size * 0.12 + helmBob,
+    size * 0.025,
+    size * 0.06,
+    -0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.restore();
 
@@ -1653,8 +1978,10 @@ export function drawCentaurTroop(
     ctx.beginPath();
     ctx.moveTo(helmCx + side * size * 0.03, helmCy - size * 0.19 + helmBob);
     ctx.quadraticCurveTo(
-      helmCx + side * size * 0.06, helmCy - size * 0.08 + helmBob,
-      helmCx + side * size * 0.1, helmCy + size * 0.03 + helmBob,
+      helmCx + side * size * 0.06,
+      helmCy - size * 0.08 + helmBob,
+      helmCx + side * size * 0.1,
+      helmCy + size * 0.03 + helmBob,
     );
     ctx.stroke();
   }
@@ -1671,6 +1998,162 @@ export function drawCentaurTroop(
   ctx.lineTo(helmCx + size * 0.13, helmCy + size * 0.02 + helmBob);
   ctx.stroke();
 
+  // Cavalry-style coif & aventail adapted for the centaur
+  const aventailSway = Math.sin(time * 4.2 + 0.3) * size * 0.008;
+  const aventailBaseY = helmCy + size * 0.115 + helmBob;
+  const aventailBottomY = helmCy + size * 0.28 + helmBob;
+
+  const coifGrad = ctx.createRadialGradient(
+    x,
+    helmCy + size * 0.045 + helmBob,
+    size * 0.035,
+    x,
+    helmCy + size * 0.12 + helmBob,
+    size * 0.14,
+  );
+  coifGrad.addColorStop(0, "#c6a34a");
+  coifGrad.addColorStop(0.28, "#ad8736");
+  coifGrad.addColorStop(0.6, "#7c5b24");
+  coifGrad.addColorStop(1, "#4a3117");
+  ctx.fillStyle = coifGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.135, helmCy + size * 0.055 + helmBob);
+  ctx.quadraticCurveTo(
+    x,
+    helmCy + size * 0.145 + helmBob,
+    x + size * 0.135,
+    helmCy + size * 0.055 + helmBob,
+  );
+  ctx.lineTo(x + size * 0.144, aventailBaseY);
+  ctx.lineTo(x - size * 0.144, aventailBaseY);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(90, 65, 28, 0.34)";
+  ctx.lineWidth = 0.48 * zoom;
+  for (let row = 0; row < 3; row++) {
+    const ringY = helmCy + size * 0.075 + helmBob + row * size * 0.03;
+    const rowWidth = size * (0.054 + row * 0.0216);
+    const offset = row % 2 === 0 ? 0 : size * 0.013;
+    for (let col = -6; col <= 6; col++) {
+      const ringX = x + col * size * 0.025 + offset;
+      if (Math.abs(ringX - x) <= rowWidth) {
+        ctx.beginPath();
+        ctx.arc(ringX, ringY, size * 0.01, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  const aventailGrad = ctx.createLinearGradient(
+    x - size * 0.18,
+    aventailBaseY,
+    x + size * 0.18,
+    aventailBottomY,
+  );
+  aventailGrad.addColorStop(0, "#9a7730");
+  aventailGrad.addColorStop(0.3, "#7e5f25");
+  aventailGrad.addColorStop(0.7, "#5e431b");
+  aventailGrad.addColorStop(1, "#3e2815");
+  ctx.fillStyle = aventailGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.144, aventailBaseY);
+  ctx.lineTo(x + size * 0.144, aventailBaseY);
+  ctx.quadraticCurveTo(
+    x + size * 0.171 + aventailSway,
+    aventailBottomY - size * 0.03,
+    x + size * 0.1368 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x + aventailSway * 0.45,
+    aventailBottomY + size * 0.018,
+    x - size * 0.1368 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.171 + aventailSway,
+    aventailBottomY - size * 0.03,
+    x - size * 0.144,
+    aventailBaseY,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.144, aventailBaseY);
+  ctx.lineTo(x + size * 0.144, aventailBaseY);
+  ctx.quadraticCurveTo(
+    x + size * 0.171 + aventailSway,
+    aventailBottomY - size * 0.03,
+    x + size * 0.1368 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x + aventailSway * 0.45,
+    aventailBottomY + size * 0.018,
+    x - size * 0.1368 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.171 + aventailSway,
+    aventailBottomY - size * 0.03,
+    x - size * 0.144,
+    aventailBaseY,
+  );
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.strokeStyle = "rgba(214, 182, 88, 0.34)";
+  ctx.lineWidth = 0.42 * zoom;
+  for (let row = 0; row < 5; row++) {
+    const ringY = aventailBaseY + row * size * 0.032 + size * 0.018;
+    const rowHalfW = size * (0.1404 - row * 0.0045);
+    const offset = row % 2 === 0 ? 0 : size * 0.013;
+    const sway = aventailSway * (row / 4);
+    for (let col = -5; col <= 5; col++) {
+      const ringX = x + col * size * 0.036 + offset + sway;
+      if (Math.abs(ringX - x - sway) <= rowHalfW) {
+        ctx.beginPath();
+        ctx.arc(ringX, ringY, size * 0.0095, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+
+  const mountStripGrad = ctx.createLinearGradient(
+    x - size * 0.144,
+    aventailBaseY - size * 0.01,
+    x + size * 0.144,
+    aventailBaseY + size * 0.01,
+  );
+  mountStripGrad.addColorStop(0, "#4a2b18");
+  mountStripGrad.addColorStop(0.5, "#734425");
+  mountStripGrad.addColorStop(1, "#4a2b18");
+  ctx.fillStyle = mountStripGrad;
+  ctx.beginPath();
+  ctx.roundRect(
+    x - size * 0.144,
+    aventailBaseY - size * 0.01,
+    size * 0.288,
+    size * 0.02,
+    size * 0.005,
+  );
+  ctx.fill();
+  ctx.strokeStyle = "rgba(179, 135, 63, 0.55)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = centaurGoldMid;
+  for (let v = 0; v < 6; v++) {
+    const vx = x - size * 0.1188 + v * size * 0.04752;
+    ctx.beginPath();
+    ctx.arc(vx, aventailBaseY, size * 0.0046, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // === LAUREL WREATH (integrated with helm) ===
   const wreathRadius = size * 0.155;
   const wreathCy = helmCy - size * 0.04 + helmBob;
@@ -1685,16 +2168,20 @@ export function drawCentaurTroop(
   // Leaves along the wreath — alternating sizes, dual-toned
   for (const side of [-1, 1] as const) {
     for (let i = 0; i < 8; i++) {
-      const leafAngle = side === -1
-        ? Math.PI * 0.72 - i * 0.09
-        : Math.PI * 0.28 + i * 0.09;
+      const leafAngle =
+        side === -1 ? Math.PI * 0.72 - i * 0.09 : Math.PI * 0.28 + i * 0.09;
       const leafX = helmCx + Math.cos(leafAngle) * wreathRadius;
       const leafY = wreathCy + Math.sin(leafAngle) * wreathRadius;
       const lSize = size * (0.028 - i * 0.0012);
       const leafRot = leafAngle + Math.PI * 0.5 * side;
 
       // Leaf body
-      ctx.fillStyle = i % 3 === 0 ? centaurLeafLight : i % 3 === 1 ? centaurLeafMid : centaurLeafDark;
+      ctx.fillStyle =
+        i % 3 === 0
+          ? centaurLeafLight
+          : i % 3 === 1
+            ? centaurLeafMid
+            : centaurLeafDark;
       ctx.beginPath();
       ctx.ellipse(leafX, leafY, lSize, lSize * 0.4, leafRot, 0, Math.PI * 2);
       ctx.fill();
@@ -1716,7 +2203,15 @@ export function drawCentaurTroop(
       // Highlight on leaf
       ctx.fillStyle = "rgba(160, 210, 120, 0.25)";
       ctx.beginPath();
-      ctx.ellipse(leafX - Math.cos(leafRot) * lSize * 0.1, leafY - Math.sin(leafRot) * lSize * 0.1, lSize * 0.4, lSize * 0.18, leafRot, 0, Math.PI * 2);
+      ctx.ellipse(
+        leafX - Math.cos(leafRot) * lSize * 0.1,
+        leafY - Math.sin(leafRot) * lSize * 0.1,
+        lSize * 0.4,
+        lSize * 0.18,
+        leafRot,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -1726,7 +2221,13 @@ export function drawCentaurTroop(
   ctx.shadowColor = centaurGoldLight;
   ctx.shadowBlur = 6 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(helmCx, wreathCy - wreathRadius - size * 0.01, size * 0.016, 0, Math.PI * 2);
+  ctx.arc(
+    helmCx,
+    wreathCy - wreathRadius - size * 0.01,
+    size * 0.016,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -1734,7 +2235,13 @@ export function drawCentaurTroop(
   ctx.fillStyle = centaurGoldMid;
   for (const side of [-1, 1] as const) {
     ctx.beginPath();
-    ctx.arc(helmCx + side * size * 0.13, wreathCy - size * 0.08, size * 0.01, 0, Math.PI * 2);
+    ctx.arc(
+      helmCx + side * size * 0.13,
+      wreathCy - size * 0.08,
+      size * 0.01,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -1865,7 +2372,10 @@ export function drawCentaurTroop(
 
   // Wood core with gradient
   const limbGrad = ctx.createLinearGradient(
-    -bowRadius, -bowRadius * 0.5, -bowRadius * 0.3, bowRadius * 0.5,
+    -bowRadius,
+    -bowRadius * 0.5,
+    -bowRadius * 0.3,
+    bowRadius * 0.5,
   );
   limbGrad.addColorStop(0, "#5c3818");
   limbGrad.addColorStop(0.25, "#8a5e34");
@@ -1939,7 +2449,10 @@ export function drawCentaurTroop(
   const gripH = size * 0.055;
   const gripW = size * 0.05;
   const gripGrad = ctx.createLinearGradient(
-    gripCx - gripW * 0.5, -gripH, gripCx + gripW * 0.5, gripH,
+    gripCx - gripW * 0.5,
+    -gripH,
+    gripCx + gripW * 0.5,
+    gripH,
   );
   gripGrad.addColorStop(0, "#2e1c0f");
   gripGrad.addColorStop(0.4, "#4a2a15");
@@ -1956,7 +2469,7 @@ export function drawCentaurTroop(
   ctx.strokeStyle = "rgba(80, 50, 25, 0.55)";
   ctx.lineWidth = 0.5 * zoom;
   for (let w = 0; w < 3; w++) {
-    const wy = -gripH + (w + 0.5) * (gripH * 2) / 3;
+    const wy = -gripH + ((w + 0.5) * (gripH * 2)) / 3;
     ctx.beginPath();
     ctx.moveTo(gripCx - gripW * 0.35, wy);
     ctx.lineTo(gripCx + gripW * 0.35, wy + size * 0.006);
@@ -2023,7 +2536,12 @@ export function drawCentaurTroop(
 
     // Nock (string notch)
     ctx.fillStyle = "#221408";
-    ctx.fillRect(shaftEnd - size * 0.004, -shaftW * 1.3, size * 0.008, shaftW * 2.6);
+    ctx.fillRect(
+      shaftEnd - size * 0.004,
+      -shaftW * 1.3,
+      size * 0.008,
+      shaftW * 2.6,
+    );
 
     // Arrowhead - broadhead style
     const headX = shaftStart;

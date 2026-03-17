@@ -4311,6 +4311,16 @@ export function renderDinkyTrains(
       ctx.shadowColor = "rgba(0,0,0,0.7)";
       ctx.shadowBlur = 7 * zoom;
 
+      const royalGold = "#B89227";
+      const royalGoldLight = "#E3C86B";
+      const royalGoldDark = "#7A5A18";
+      const royalSteel = "#576277";
+      const royalSteelLight = "#7D8AA4";
+      const royalSteelDark = "#1C2230";
+      const royalPurple = "#5A426F";
+      const royalPurpleDark = "#342444";
+      const royalPurpleGlow = "#9B5FC0";
+
       const cabPos = isoOffset(trainX, trainY, 9);
       const locoPos = isoOffset(trainX, trainY, 0);
       const armoredPos = isoOffset(trainX, trainY, -9);
@@ -4327,22 +4337,28 @@ export function renderDinkyTrains(
         { top: "#3a3e45", left: "#2a2e35", right: "#1a1e25" },
         zoom,
       );
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.2 * zoom;
+      ctx.strokeStyle = royalSteelLight;
+      ctx.lineWidth = 1.1 * zoom;
       const chL4b = isoOffset(trainX, trainY + 2 * zoom, 15);
       const chR4b = isoOffset(trainX, trainY + 2 * zoom, -15);
       ctx.beginPath();
       ctx.moveTo(chL4b.x, chL4b.y);
       ctx.lineTo(chR4b.x, chR4b.y);
       ctx.stroke();
+      ctx.strokeStyle = royalGoldDark;
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(chL4b.x, chL4b.y - 0.8 * zoom);
+      ctx.lineTo(chR4b.x, chR4b.y - 0.8 * zoom);
+      ctx.stroke();
 
       // Dark steel wheels with gold hub caps
       const wPositions4b = [13, 4, -4, -13];
       for (const wp of wPositions4b) {
         const wPos = isoOffset(trainX, wheelY, wp);
-        drawWheel(wPos.x, wPos.y, 5, "#3a4050", "#1a1e25", "#C9A227");
+        drawWheel(wPos.x, wPos.y, 5, "#3a4050", "#1a1e25", royalGold);
       }
-      drawConnectingRods(wPositions4b, trainX, wheelY, "#C9A227");
+      drawConnectingRods(wPositions4b, trainX, wheelY, royalSteelLight);
 
       // === ARMORED CAB (front) - War command car with crown ===
       drawIsometricPrism(
@@ -4356,9 +4372,9 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Gold trim on all edges
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.8 * zoom;
+      // Gold trim on major edges only
+      ctx.strokeStyle = royalGold;
+      ctx.lineWidth = 1.1 * zoom;
       const cW4b = 13 * zoom * 0.5;
       const cD4b = 13 * zoom * 0.25;
       const cH4b = 18 * zoom;
@@ -4383,9 +4399,21 @@ export function renderDinkyTrains(
       ctx.lineTo(cabPos.x - cW4b, cabPos.y - cH4b);
       ctx.stroke();
 
-      // Armor plate panels with gold border — isometric slope ±0.5
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1 * zoom;
+      // Inset purple command panels help the cab read from gameplay distance.
+      ctx.fillStyle = royalPurpleDark;
+      for (const side of [1, -1]) {
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x + side * 2.1 * zoom, cabPos.y - 4.8 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - 1.5 * zoom), cabPos.y - 6.2 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - 1.5 * zoom), cabPos.y - 15.4 * zoom);
+        ctx.lineTo(cabPos.x + side * 2.1 * zoom, cabPos.y - 14 * zoom);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Armor plate panels with thin gold pinstripe — isometric slope ±0.5
+      ctx.strokeStyle = royalGold;
+      ctx.lineWidth = 0.9 * zoom;
       for (const side of [1, -1]) {
         ctx.beginPath();
         ctx.moveTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 4 * zoom);
@@ -4397,7 +4425,7 @@ export function renderDinkyTrains(
       }
 
       // Gold decorative rivets
-      ctx.fillStyle = "#C9A227";
+      ctx.fillStyle = royalGoldDark;
       for (const r of [
         { dx: 2.5, dy: -7 },
         { dx: 4.5, dy: -7.5 },
@@ -4412,11 +4440,22 @@ export function renderDinkyTrains(
         ctx.arc(
           cabPos.x + r.dx * zoom,
           cabPos.y + r.dy * zoom,
-          0.7 * zoom,
+          0.55 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
+        ctx.fillStyle = "rgba(255, 240, 180, 0.25)";
+        ctx.beginPath();
+        ctx.arc(
+          cabPos.x + r.dx * zoom - 0.12 * zoom,
+          cabPos.y + r.dy * zoom - 0.12 * zoom,
+          0.18 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = royalGoldDark;
       }
 
       // Vision slit — isometric flush with right face
@@ -4432,7 +4471,7 @@ export function renderDinkyTrains(
           zoom,
           {
             voidColor: "#0a0e14",
-            frameColor: "#C9A227",
+            frameColor: royalGold,
             glowColor: "rgba(60, 220, 80",
             glowAlpha: vsGlow,
           },
@@ -4483,8 +4522,8 @@ export function renderDinkyTrains(
         ctx.shadowBlur = 0;
 
         // Amethyst jewels at each crown peak
-        ctx.fillStyle = "#9B5FC0";
-        ctx.shadowColor = "#9B5FC0";
+        ctx.fillStyle = royalPurpleGlow;
+        ctx.shadowColor = royalPurpleGlow;
         ctx.shadowBlur = 4 * zoom;
         for (let ti = 0; ti < tines; ti++) {
           const t = (ti + 0.5) / tines;
@@ -4522,15 +4561,36 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Wide gold bands — V-shaped to follow both faces
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 3.5 * zoom;
+      // Royal purple service band separates the armored body from the gold trim.
+      ctx.fillStyle = royalPurple;
+      ctx.beginPath();
+      ctx.moveTo(locoPos.x - 6.4 * zoom, locoPos.y - 6.4 * zoom);
+      ctx.lineTo(locoPos.x, locoPos.y - 3.4 * zoom);
+      ctx.lineTo(locoPos.x + 6.4 * zoom, locoPos.y - 6.4 * zoom);
+      ctx.lineTo(locoPos.x + 6.4 * zoom, locoPos.y - 10.3 * zoom);
+      ctx.lineTo(locoPos.x, locoPos.y - 7.3 * zoom);
+      ctx.lineTo(locoPos.x - 6.4 * zoom, locoPos.y - 10.3 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Narrow gold bands — enough to read as regal without flattening the body.
+      ctx.strokeStyle = royalGold;
+      ctx.lineWidth = 1.45 * zoom;
       for (let bi = 0; bi < 2; bi++) {
         const bandY = locoPos.y - 5.5 * zoom - bi * 6.5 * zoom;
         ctx.beginPath();
         ctx.moveTo(locoPos.x - 7.5 * zoom, bandY);
         ctx.lineTo(locoPos.x, bandY + 3.25 * zoom);
         ctx.lineTo(locoPos.x + 7.5 * zoom, bandY);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = royalSteelLight;
+      ctx.lineWidth = 0.8 * zoom;
+      for (let vi = 0; vi < 4; vi++) {
+        const ventY = locoPos.y - 5.2 * zoom - vi * 2.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x + 1.8 * zoom, ventY);
+        ctx.lineTo(locoPos.x + 6 * zoom, ventY - 1.9 * zoom);
         ctx.stroke();
       }
 
@@ -4580,14 +4640,14 @@ export function renderDinkyTrains(
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = "#C9A227";
-        ctx.lineWidth = 2.5 * zoom;
+        ctx.strokeStyle = royalGold;
+        ctx.lineWidth = 1.4 * zoom;
         ctx.beginPath();
         ctx.ellipse(locoPos.x, adBaseY, adRx, adRy, 0, 0, Math.PI);
         ctx.stroke();
 
         // Mini crown trim on dome — bases follow face slopes ±0.433
-        ctx.fillStyle = "#C9A227";
+        ctx.fillStyle = royalGold;
         for (let ci = 0; ci < 3; ci++) {
           const cpx = locoPos.x - 2.5 * zoom + ci * 2.5 * zoom;
           const tSlope = ci < 1 ? 0.433 : ci > 1 ? -0.433 : 0;
@@ -4636,7 +4696,7 @@ export function renderDinkyTrains(
         );
         ctx.fill();
         // Gold valve wheel
-        ctx.strokeStyle = "#C9A227";
+        ctx.strokeStyle = royalGold;
         ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
         ctx.ellipse(
@@ -4649,7 +4709,7 @@ export function renderDinkyTrains(
           Math.PI * 2,
         );
         ctx.stroke();
-        ctx.fillStyle = "#C9A227";
+        ctx.fillStyle = royalGold;
         ctx.beginPath();
         ctx.ellipse(
           epPos.x,
@@ -4759,14 +4819,14 @@ export function renderDinkyTrains(
           hlPos.x,
           hlPos.y,
           3.2,
-          "#C9A227",
-          "#C9A227",
+          royalSteel,
+          royalSteelDark,
           0.9,
         );
         // Decorative spokes — isometric elliptical
         const hlRx = 3.2 * zoom * ISO_SIN;
         const hlRy = 3.2 * zoom;
-        ctx.strokeStyle = "#DAA520";
+        ctx.strokeStyle = royalGold;
         ctx.lineWidth = 1 * zoom;
         for (let ri = 0; ri < 8; ri++) {
           const ra = (ri / 8) * Math.PI * 2;
@@ -4796,8 +4856,8 @@ export function renderDinkyTrains(
       );
 
       // Gold borders on panel edges
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2 * zoom;
+      ctx.strokeStyle = royalGold;
+      ctx.lineWidth = 1.1 * zoom;
       const aW4b = 15 * zoom * 0.5;
       const aD4b = 13 * zoom * 0.25;
       const aH4b = 13 * zoom;
@@ -4814,6 +4874,23 @@ export function renderDinkyTrains(
       ctx.lineTo(armoredPos.x, armoredPos.y + aD4b - aH4b);
       ctx.stroke();
 
+      // Large inset side panels break up the silhouette and preserve detail.
+      ctx.fillStyle = royalPurpleDark;
+      ctx.beginPath();
+      ctx.moveTo(armoredPos.x - 5.9 * zoom, armoredPos.y - 2.2 * zoom);
+      ctx.lineTo(armoredPos.x, armoredPos.y + 0.7 * zoom);
+      ctx.lineTo(armoredPos.x, armoredPos.y - 10.8 * zoom);
+      ctx.lineTo(armoredPos.x - 5.9 * zoom, armoredPos.y - 13.7 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(armoredPos.x + 1.8 * zoom, armoredPos.y - 2.8 * zoom);
+      ctx.lineTo(armoredPos.x + 5.9 * zoom, armoredPos.y - 4.7 * zoom);
+      ctx.lineTo(armoredPos.x + 5.9 * zoom, armoredPos.y - 12 * zoom);
+      ctx.lineTo(armoredPos.x + 1.8 * zoom, armoredPos.y - 10.1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
       // Gun ports — isometric flush slits on left face
       for (let gi = 0; gi < 2; gi++) {
         const gpPos = isoOffset(
@@ -4824,7 +4901,7 @@ export function renderDinkyTrains(
         const gpX = gpPos.x - 2.5 * zoom;
         drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "left", zoom, {
           voidColor: "#0a0e14",
-          frameColor: "#C9A227",
+          frameColor: royalGold,
         });
       }
 
@@ -4849,8 +4926,8 @@ export function renderDinkyTrains(
         }
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = "#C9A227";
-        ctx.lineWidth = 2.5 * zoom;
+        ctx.strokeStyle = royalGold;
+        ctx.lineWidth = 1.5 * zoom;
         ctx.stroke();
 
         // Purple glow fill
@@ -4945,7 +5022,7 @@ export function renderDinkyTrains(
       ctx.lineTo(crownPos.x - 4.5 * zoom, crownPos.y + 4.5 * csL * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#C9A227";
+      ctx.strokeStyle = royalGold;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(crownPos.x, crownPos.y - 4 * zoom);
@@ -4958,8 +5035,8 @@ export function renderDinkyTrains(
       ctx.shadowBlur = 0;
 
       // Gold-plated chains between cars
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
+      ctx.strokeStyle = royalSteel;
+      ctx.lineWidth = 1.4 * zoom;
       for (const cOff of [5, -5]) {
         const ca = isoOffset(trainX, trainY - 2 * zoom, cOff);
         const cb = isoOffset(
@@ -4980,17 +5057,17 @@ export function renderDinkyTrains(
 
       // Royal standard flag (3D isometric with gold trim)
       const rsPole4b = isoOffset(armoredPos.x, armoredPos.y - 19 * zoom, 0);
-      ctx.strokeStyle = "#A08020";
+      ctx.strokeStyle = royalGoldDark;
       ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(rsPole4b.x, rsPole4b.y + 6 * zoom);
       ctx.lineTo(rsPole4b.x, rsPole4b.y - 5 * zoom);
       ctx.stroke();
-      ctx.fillStyle = "#DAA520";
+      ctx.fillStyle = royalGold;
       ctx.beginPath();
       ctx.arc(rsPole4b.x, rsPole4b.y - 5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#E8C847";
+      ctx.fillStyle = royalGoldLight;
       ctx.beginPath();
       ctx.moveTo(rsPole4b.x, rsPole4b.y - 7 * zoom);
       ctx.lineTo(rsPole4b.x + 1 * zoom, rsPole4b.y - 5.5 * zoom);
@@ -5023,7 +5100,7 @@ export function renderDinkyTrains(
       ctx.lineTo(rsPole4b.x, rsPole4b.y - 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#C9A227";
+      ctx.strokeStyle = royalGold;
       ctx.lineWidth = 0.8 * zoom;
       ctx.stroke();
 
@@ -5060,10 +5137,10 @@ export function renderDinkyTrains(
         13,
         13,
         "#3a4050",
-        "#1a2030",
-        "#C9A227",
-        "#3a4050",
-        "#3a4050",
+        royalSteelDark,
+        royalGoldDark,
+        royalSteel,
+        royalSteelDark,
         0.75 + Math.sin(time * 3) * 0.2,
         1.2,
         4,

@@ -158,11 +158,11 @@ const UPGRADE_ICON_MAP: Record<string, LucideIcon> = {
   "freeze-5": Globe,
   "freeze-6": Snowflake,
 
-  "hex_ward-1": Eye,
-  "hex_ward-2": Sparkles,
-  "hex_ward-3": Clock,
+  "hex_ward-1": Users,
+  "hex_ward-2": Users,
+  "hex_ward-3": Sparkles,
   "hex_ward-4": Users,
-  "hex_ward-5": Sparkles,
+  "hex_ward-5": Shield,
   "hex_ward-6": Crown,
 
   "payday-1": Banknote,
@@ -251,24 +251,23 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
   ],
 
   "hex_ward-1": [
-    { label: "+2 Max Targets", icon: Users, accent: "#d8b4fe" },
+    { label: "+1 Reanimation", icon: Users, accent: "#d8b4fe" },
   ],
   "hex_ward-2": [
-    { label: "+10% Damage Amp", icon: Sparkles, accent: "#f0abfc" },
+    { label: "+1 Reanimation", icon: Users, accent: "#d8b4fe" },
   ],
   "hex_ward-3": [
-    { label: "+2s Duration", icon: Clock, accent: "#c084fc" },
+    { label: "+15% Damage Amp", icon: Sparkles, accent: "#f0abfc" },
   ],
   "hex_ward-4": [
-    { label: "+3 Max Targets", icon: Users, accent: "#d8b4fe" },
+    { label: "+2 Reanimations", icon: Users, accent: "#d8b4fe" },
   ],
   "hex_ward-5": [
-    { label: "+15% Damage Amp", icon: Sparkles, accent: "#f0abfc" },
-    { label: "Deeper Curse", icon: Eye, accent: "#a855f7", special: true },
+    { label: "No Healing", icon: Shield, accent: "#f0abfc" },
+    { label: "Mortality Seal", icon: Eye, accent: "#a855f7", special: true },
   ],
   "hex_ward-6": [
-    { label: "+2 Targets", icon: Users, accent: "#d8b4fe" },
-    { label: "+10% Amp", icon: Sparkles, accent: "#f0abfc" },
+    { label: "+2 Reanimations", icon: Users, accent: "#d8b4fe" },
     { label: "+2s Duration", icon: Clock, accent: "#c084fc", special: true },
   ],
 
@@ -572,9 +571,10 @@ const getSpellStatsForDisplay = (
     case "hex_ward": {
       const s = getHexWardSpellStats(level);
       return [
-        { label: "Targets", value: `${s.maxTargets}`, Icon: Eye, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)" },
-        { label: "Amp", value: `+${Math.round(s.damageAmp * 100)}%`, Icon: Sparkles, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)" },
+        { label: "Raises", value: `${s.maxReanimations}`, Icon: Users, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)" },
+        { label: "Marked", value: `${s.maxTargets}`, Icon: Eye, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)" },
         { label: "Duration", value: `${(s.durationMs / 1000).toFixed(0)}s`, Icon: Timer, color: "text-violet-300", bg: "rgba(91,33,182,0.3)", border: "rgba(91,33,182,0.2)" },
+        { label: "Debuff", value: s.blocksHealing ? (s.damageAmp > 0 ? `+${Math.round(s.damageAmp * 100)}% + No Heal` : "No Heal") : s.damageAmp > 0 ? `+${Math.round(s.damageAmp * 100)}%` : "Harvest Only", Icon: s.blocksHealing ? Shield : Sparkles, color: "text-pink-300", bg: "rgba(112,26,117,0.3)", border: "rgba(112,26,117,0.2)" },
       ];
     }
     case "payday": {

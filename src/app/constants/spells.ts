@@ -28,7 +28,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     shortName: "Hex Ward",
     cost: 55,
     cooldown: 18000,
-    desc: "Hexes advanced enemies for 8s, amplifies damage, and raises ghost allies from deaths during the curse",
+    desc: "Marks dangerous enemies for 8s and reanimates fallen units as ghost allies during the ward",
   },
   payday: {
     name: "Paw Point Payday",
@@ -69,14 +69,9 @@ export function getSpellActionImagePath(spellType: SpellType): string {
   return `/images/spells/${SPELL_ACTION_IMAGE_NAMES[spellType]}-action.png`;
 }
 
-export const SPELL_UPGRADE_COSTS = [2, 2, 3, 3, 3, 2] as const;
+export const SPELL_UPGRADE_COSTS = [2, 2, 2, 2, 2, 2] as const;
 export const MAX_SPELL_UPGRADE_LEVEL = SPELL_UPGRADE_COSTS.length;
-export const SPELL_MAX_UPGRADE_STARS_PER_SPELL = SPELL_UPGRADE_COSTS.reduce(
-  (sum, cost) => sum + cost,
-  0,
-);
-export const SPELL_TOTAL_MAX_UPGRADE_STARS =
-  SPELL_MAX_UPGRADE_STARS_PER_SPELL * SPELL_OPTIONS.length;
+const SPELL_MAJOR_UPGRADE_COST = 3;
 
 export interface SpellUpgradeNode {
   level: number;
@@ -192,7 +187,7 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       level: 5,
       title: "Absolute Zero Covenant",
       description: "Freeze duration +0.6s and full map lockdown — freezes ALL enemies",
-      cost: SPELL_UPGRADE_COSTS[4],
+      cost: SPELL_MAJOR_UPGRADE_COST,
     },
     {
       level: 6,
@@ -204,38 +199,38 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
   hex_ward: [
     {
       level: 1,
-      title: "Coven Census",
-      description: "Hex Ward affects +2 additional enemies",
+      title: "Grave Tithe",
+      description: "Hex Ward can reanimate +1 additional ghost",
       cost: SPELL_UPGRADE_COSTS[0],
     },
     {
       level: 2,
-      title: "Ruin Script",
-      description: "Hexed enemies take +10% more damage",
+      title: "Mass Recall",
+      description: "Hex Ward can reanimate +1 additional ghost",
       cost: SPELL_UPGRADE_COSTS[1],
     },
     {
       level: 3,
-      title: "Lingering Malison",
-      description: "Hex duration lasts +2s",
+      title: "Ruin Brand",
+      description: "Hexed enemies take +15% more damage",
       cost: SPELL_UPGRADE_COSTS[2],
     },
     {
       level: 4,
-      title: "Coven Lattice",
-      description: "Hex Ward affects +3 additional enemies",
+      title: "Open Sepulcher",
+      description: "Hex Ward can reanimate +2 additional ghosts",
       cost: SPELL_UPGRADE_COSTS[3],
     },
     {
       level: 5,
-      title: "Withering Decree",
-      description: "Hexed enemies take +15% more damage",
-      cost: SPELL_UPGRADE_COSTS[4],
+      title: "Mortality Seal",
+      description: "Hexed enemies cannot heal or regenerate",
+      cost: SPELL_MAJOR_UPGRADE_COST,
     },
     {
       level: 6,
-      title: "Doom Constellation",
-      description: "+2 targets, +10% damage amp, and +2s duration",
+      title: "Black Procession",
+      description: "+2 reanimations and +2s ward duration",
       cost: SPELL_UPGRADE_COSTS[5],
     },
   ],
@@ -306,7 +301,7 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
       level: 5,
       title: "Warhost Doctrine",
       description: "Unlocks mixed melee and ranged formation",
-      cost: SPELL_UPGRADE_COSTS[4],
+      cost: SPELL_MAJOR_UPGRADE_COST,
     },
     {
       level: 6,
@@ -316,6 +311,18 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
     },
   ],
 };
+
+const getSpellTreeCostTotal = (spellType: SpellType): number =>
+  SPELL_TECH_TREE[spellType].reduce((sum, node) => sum + node.cost, 0);
+
+export const SPELL_MAX_UPGRADE_STARS_PER_SPELL = Math.max(
+  ...SPELL_OPTIONS.map(getSpellTreeCostTotal),
+);
+
+export const SPELL_TOTAL_MAX_UPGRADE_STARS = SPELL_OPTIONS.reduce(
+  (sum, spellType) => sum + getSpellTreeCostTotal(spellType),
+  0,
+);
 
 export const SPELL_ACCENTS: Record<SpellType, string> = {
   fireball: "#ea580c",
@@ -458,8 +465,10 @@ export interface FreezeSpellStats {
 
 export interface HexWardSpellStats {
   maxTargets: number;
+  maxReanimations: number;
   damageAmp: number;
   durationMs: number;
+  blocksHealing: boolean;
 }
 
 export interface PaydaySpellStats {
@@ -526,20 +535,16 @@ export const getFreezeSpellStats = (level: number): FreezeSpellStats => {
 export const getHexWardSpellStats = (level: number): HexWardSpellStats => {
   const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
   return {
-    maxTargets:
-      5 +
-      (normalizedLevel >= 1 ? 2 : 0) +
-      (normalizedLevel >= 4 ? 3 : 0) +
+    maxTargets: 5,
+    maxReanimations:
+      3 +
+      (normalizedLevel >= 1 ? 1 : 0) +
+      (normalizedLevel >= 2 ? 1 : 0) +
+      (normalizedLevel >= 4 ? 2 : 0) +
       (normalizedLevel >= 6 ? 2 : 0),
-    damageAmp:
-      0.25 +
-      (normalizedLevel >= 2 ? 0.10 : 0) +
-      (normalizedLevel >= 5 ? 0.15 : 0) +
-      (normalizedLevel >= 6 ? 0.10 : 0),
-    durationMs:
-      8000 +
-      (normalizedLevel >= 3 ? 2000 : 0) +
-      (normalizedLevel >= 6 ? 2000 : 0),
+    damageAmp: normalizedLevel >= 3 ? 0.15 : 0,
+    durationMs: 8000 + (normalizedLevel >= 6 ? 2000 : 0),
+    blocksHealing: normalizedLevel >= 5,
   };
 };
 

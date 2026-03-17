@@ -4,6 +4,7 @@
 const SHADOW_DIR_X = 0.78;
 const SHADOW_DIR_Y = 0.36;
 const SHADOW_LEN_RATIO = 0.5;
+const ENABLE_DECORATION_GROUND_SHADOWS = true;
 
 export const MAX_SHADOW_RX = 90;
 export const MAX_SHADOW_RY = 40;
@@ -30,6 +31,10 @@ export function drawDirectionalShadow(
   tint: string = "0,0,0",
   zoom: number = 1,
 ): void {
+  if (!ENABLE_DECORATION_GROUND_SHADOWS) {
+    return;
+  }
+
   const shadowLen = objectHeight * SHADOW_LEN_RATIO;
   const offX = shadowLen * SHADOW_DIR_X;
   const offY = shadowLen * SHADOW_DIR_Y;

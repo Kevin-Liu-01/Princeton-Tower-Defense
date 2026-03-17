@@ -695,8 +695,8 @@ function getSpellStatsForType(spellType: SpellType, level: number): SpellStatDis
     case "hex_ward": {
       const s = getHexWardSpellStats(level);
       return [
-        { icon: <Eye size={8} className="text-fuchsia-400/70" />, value: `${s.maxTargets} hex`, textColor: "text-fuchsia-300/80", bg: "rgba(88,28,135,0.15)" },
-        { icon: <Sparkles size={8} className="text-purple-400/70" />, value: `+${Math.round(s.damageAmp * 100)}%`, textColor: "text-purple-300/80", bg: "rgba(76,29,149,0.15)" },
+        { icon: <Users size={8} className="text-fuchsia-400/70" />, value: `${s.maxReanimations} raise`, textColor: "text-fuchsia-300/80", bg: "rgba(88,28,135,0.15)" },
+        { icon: <Eye size={8} className="text-purple-400/70" />, value: `${s.maxTargets} mark`, textColor: "text-purple-300/80", bg: "rgba(76,29,149,0.15)" },
         { icon: <Timer size={8} className="text-violet-400/70" />, value: `${(s.durationMs / 1000).toFixed(0)}s`, textColor: "text-violet-300/80", bg: "rgba(91,33,182,0.15)" },
       ];
     }

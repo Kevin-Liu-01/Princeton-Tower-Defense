@@ -260,12 +260,12 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       nameColor: "text-fuchsia-200", icon: <Eye size={10} className="text-fuchsia-400" />, accentColor: "text-fuchsia-300",
       panelBg: "linear-gradient(135deg, rgba(88,28,135,0.25), rgba(49,18,73,0.15))", panelBorder: "rgba(192,132,252,0.5)", headerBg: "linear-gradient(90deg, rgba(126,34,206,0.25), transparent)",
       stats: [
-        { label: "Targets", value: `${hexWardStats.maxTargets}`, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)", icon: <Eye size={9} className="text-fuchsia-400" /> },
-        { label: "Amp", value: `+${Math.round(hexWardStats.damageAmp * 100)}%`, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)", icon: <Sparkles size={9} className="text-purple-400" /> },
+        { label: "Raises", value: `${hexWardStats.maxReanimations}`, color: "text-fuchsia-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)", icon: <Users size={9} className="text-fuchsia-400" /> },
+        { label: "Marked", value: `${hexWardStats.maxTargets}`, color: "text-purple-300", bg: "rgba(76,29,149,0.3)", border: "rgba(76,29,149,0.2)", icon: <Eye size={9} className="text-purple-400" /> },
         { label: "Duration", value: `${(hexWardStats.durationMs / 1000).toFixed(0)}s`, color: "text-violet-300", bg: "rgba(91,33,182,0.3)", border: "rgba(91,33,182,0.2)", icon: <Timer size={9} className="text-violet-400" /> },
       ],
       effectBg: "rgba(88,28,135,0.15)", effectLabel: "text-fuchsia-500/80", effectText: "text-fuchsia-200/90",
-      effect: `Hexes the ${hexWardStats.maxTargets} most advanced enemies for ${(hexWardStats.durationMs / 1000).toFixed(0)} seconds. Hexed enemies take +${Math.round(hexWardStats.damageAmp * 100)}% damage, and any unit that dies during the curse can rise as a controllable ghost ally.`,
+      effect: `Marks ${hexWardStats.maxTargets} dangerous enemies for ${(hexWardStats.durationMs / 1000).toFixed(0)} seconds and can reanimate up to ${hexWardStats.maxReanimations} fallen units as controllable ghosts.${hexWardStats.damageAmp > 0 ? ` Hexed enemies also take +${Math.round(hexWardStats.damageAmp * 100)}% damage.` : ""}${hexWardStats.blocksHealing ? " Hexed enemies also cannot heal." : ""}`,
     },
     payday: {
       border: "border-amber-600", bg: "from-amber-800/90 to-amber-950/90", activeBg: "from-amber-700/90 to-amber-900/90", glow: "shadow-amber-500/30",

@@ -11349,8 +11349,8 @@ export const drawWorldMapCanvas = ({
     ctx.setTransform(mapScale * dpr, 0, 0, mapScale * dpr, 0, 0);
   }
 
-  // --- PATH CONNECTIONS (cached at reduced fps) ---
-  const PATH_FPS = isMobile ? 5 : 10;
+  // --- PATH CONNECTIONS (desktop keeps full 50fps animation, mobile stays throttled) ---
+  const PATH_FPS = isMobile ? 5 : 50;
   const pathTimeBucket = Math.floor(time * PATH_FPS);
   const pathUnlockedKey = unlockedMaps.join(",");
   const pathCacheValid =

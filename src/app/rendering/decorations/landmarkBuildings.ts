@@ -968,9 +968,15 @@ export function renderSkullThrone(p: LandmarkParams): void {
   const { ctx, screenX: cx, screenY: cy, s, time, skipShadow, shadowOnly, zoom: z = 1 } = p;
 
   if (!skipShadow) {
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    const shRx = Math.min(34 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(16 * s, MAX_SHADOW_RY * z);
+    const shGrad = ctx.createRadialGradient(cx + 2 * s, cy + 8 * s, 0, cx + 2 * s, cy + 8 * s, shRx);
+    shGrad.addColorStop(0, "rgba(60,10,10,0.4)");
+    shGrad.addColorStop(0.35, "rgba(0,0,0,0.3)");
+    shGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = shGrad;
     ctx.beginPath();
-    ctx.ellipse(cx + 3 * s, cy + 8 * s, Math.min(30 * s, MAX_SHADOW_RX * z), Math.min(14 * s, MAX_SHADOW_RY * z), 0.1, 0, Math.PI * 2);
+    ctx.ellipse(cx + 2 * s, cy + 8 * s, shRx, shRy, 0.08, 0, Math.PI * 2);
     ctx.fill();
   }
   if (shadowOnly) return;
@@ -981,50 +987,132 @@ export function renderSkullThrone(p: LandmarkParams): void {
   const bM = "#c0b0a0";
   const bD = "#a09080";
   const bSh = "#786858";
-  const deep = "#2a1a0c";
+  const bVDk = "#5a4a38";
   const redGl = "#cc2020";
 
-  // Dark aura glow
-  const auraG = ctx.createRadialGradient(cx, cy, 0, cx, cy, 35 * s);
-  auraG.addColorStop(0, `rgba(200,30,30,${0.1 + pulse * 0.06})`);
-  auraG.addColorStop(1, "transparent");
-  ctx.fillStyle = auraG;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - 10 * s, 35 * s, 18 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Dark crimson aura glow
+  drawThroneAura(ctx, cx, cy, s, pulse);
 
-  // Base tier 1
-  drawIsometricPrism(ctx, cx, cy, 28 * s, 28 * s, 5 * s, bD, bSh, bSh);
-  drawMortarLines(ctx, cx, cy, 28 * s, 5 * s, 3, "rgba(90,70,55,0.2)", s);
-
-  // Base tier 2
-  drawIsometricPrism(ctx, cx, cy - 5 * s, 22 * s, 22 * s, 4 * s, bM, bSh, bD);
-
-  // Base skulls scattered around platform
-  const baseSkulls = [
-    [-14, 3, 3.2, 1],
-    [14, 3, 3.2, -1],
-    [-8, 6, 3.5, 1],
-    [8, 6, 3.5, -1],
-    [0, 8, 3.8, 1],
-    [-18, 0, 2.8, 1],
-    [18, 0, 2.8, -1],
-    [-5, -1, 3, 1],
-    [5, -1, 3, -1],
-  ] as const;
-  for (const [dx, dy, sz, f] of baseSkulls) {
-    drawIsoSkull3D(ctx, cx + dx * s, cy + dy * s, sz * s, f, bW, bM, bD);
-  }
+  // Base platform (two stepped tiers)
+  drawThroneBase(ctx, cx, cy, s, pulse, bW, bM, bD, bSh, bVDk);
 
   // Throne seat
-  const seatW = 14 * s;
-  const seatH = 10 * s;
   const seatBase = cy - 9 * s;
+  const seatW = 15 * s;
+  const seatH = 10 * s;
+  drawThroneSeat(ctx, cx, seatBase, seatW, seatH, s, bM, bD, bSh, bL);
+
+  const seatTop = seatBase - seatH;
+  const seatI = seatW * ISO_COS;
+  const seatD = seatW * ISO_SIN;
+
+  // Red velvet cushion
+  drawThroneCushion(ctx, cx, seatTop, seatI, seatD, s);
+
+  // Backrest
+  const bkW = 16 * s;
+  const bkTW = 7 * s;
+  const bkH = 55 * s;
+  const bkTop = seatTop - bkH;
+  drawThroneBackrest(ctx, cx, seatTop, bkTop, bkW, bkTW, bkH, s, bW, bL, bM, bD, bSh);
+
+  // Armrests with skull caps
+  drawThroneArmrests(ctx, cx, seatTop, seatI, seatD, s, pulse, bL, bM, bD);
+
+  // Crown spikes and skull
+  const bkTD = bkTW * ISO_SIN;
+  drawThroneCrown(ctx, cx, bkTop, bkTD, s, pulse, bW, bM, bD, bSh, redGl);
+
+  // Red energy spine running up the backrest
+  const bkD2 = bkW * ISO_SIN;
+  drawThroneEnergySpine(ctx, cx, seatTop, bkTop, bkD2, bkTD, s, pulse, redGl);
+
+  // Iron chains hanging from crown spikes
+  drawThroneChains(ctx, cx, bkTop, bkTD, s, time);
+
+  // Red soul particles
+  drawThroneSouls(ctx, cx, bkTop, s, time);
+}
+
+function drawThroneAura(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, s: number, pulse: number,
+): void {
+  const auraG = ctx.createRadialGradient(cx, cy - 12 * s, 2 * s, cx, cy - 12 * s, 38 * s);
+  auraG.addColorStop(0, `rgba(180,20,20,${0.1 + pulse * 0.06})`);
+  auraG.addColorStop(0.4, `rgba(100,10,10,${0.05 + pulse * 0.03})`);
+  auraG.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = auraG;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - 12 * s, 38 * s, 20 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawThroneBase(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, s: number, pulse: number,
+  bW: string, bM: string, bD: string, bSh: string, bVDk: string,
+): void {
+  // Tier 1: Wide base
+  drawIsometricPrism(ctx, cx, cy, 30 * s, 30 * s, 4 * s, bD, bSh, bVDk);
+  drawMortarLines(ctx, cx, cy, 30 * s, 4 * s, 2, "rgba(90,70,55,0.18)", s);
+
+  // Tier 2: Inset step
+  drawIsometricPrism(ctx, cx, cy - 4 * s, 24 * s, 24 * s, 5 * s, bM, bSh, bD);
+  drawMortarLines(ctx, cx, cy - 4 * s, 24 * s, 5 * s, 3, "rgba(80,65,50,0.15)", s);
+
+  // Bone sheen on tier 2 left face
+  const t2Sheen = ctx.createLinearGradient(cx, cy - 4 * s, cx, cy - 9 * s);
+  t2Sheen.addColorStop(0, "rgba(200,185,165,0.08)");
+  t2Sheen.addColorStop(1, "rgba(180,165,145,0)");
+  prismFaceOverlay(ctx, cx, cy - 4 * s, 24 * s, 5 * s, "left", t2Sheen);
+
+  // Skulls scattered on the base tier ledge
+  const baseSkulls: Array<[number, number, number, number]> = [
+    [-16, 1, 2.8, 1], [16, 1, 2.8, -1],
+    [-9, 5, 3.2, 1], [9, 5, 3.2, -1],
+    [0, 7, 3.5, 1],
+    [-20, -2, 2.4, 1], [20, -2, 2.4, -1],
+  ];
+  for (const [dx, dy, sz, f] of baseSkulls) {
+    drawIsoSkull3D(ctx, cx + dx * s, cy + dy * s, sz * s, f, bW, bM, bD,
+      "#cc2020", 0.08 + pulse * 0.06);
+  }
+
+  // Small scattered bones between skulls
+  ctx.lineCap = "round";
+  const scatteredBones: Array<[number, number, number]> = [
+    [-12, 4, 0.8], [12, 4, 1.2], [-5, 6, 0.5], [5, 2, 0.9], [-17, 3, 0.6], [17, -1, 0.7],
+  ];
+  for (const [dx, dy, ang] of scatteredBones) {
+    const bx = cx + dx * s;
+    const by = cy + dy * s;
+    ctx.strokeStyle = bSh;
+    ctx.lineWidth = 0.9 * s;
+    ctx.beginPath();
+    ctx.moveTo(bx - Math.cos(ang) * 2.5 * s, by - Math.sin(ang) * 1 * s);
+    ctx.lineTo(bx + Math.cos(ang) * 2.5 * s, by + Math.sin(ang) * 1 * s);
+    ctx.stroke();
+    ctx.fillStyle = bM;
+    ctx.beginPath();
+    ctx.arc(bx - Math.cos(ang) * 2.5 * s, by - Math.sin(ang) * 1 * s, 0.7 * s, 0, Math.PI * 2);
+    ctx.arc(bx + Math.cos(ang) * 2.5 * s, by + Math.sin(ang) * 1 * s, 0.7 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawThroneSeat(
+  ctx: CanvasRenderingContext2D,
+  cx: number, seatBase: number, seatW: number, seatH: number, s: number,
+  bM: string, bD: string, bSh: string, bL: string,
+): void {
   drawIsometricPrism(ctx, cx, seatBase, seatW, seatW, seatH, bM, bSh, bD);
+  drawMortarLines(ctx, cx, seatBase, seatW, seatH, 3, bSh, s);
+
+  // Bone texture highlight line on seat
   const seatI = seatW * ISO_COS;
   const seatD = seatW * ISO_SIN;
   const seatTop = seatBase - seatH;
-  drawMortarLines(ctx, cx, seatBase, seatW, seatH, 3, bSh, s);
   ctx.strokeStyle = bL;
   ctx.lineWidth = 0.5 * s;
   ctx.beginPath();
@@ -1032,10 +1120,22 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.lineTo(cx, seatTop + seatD * 2);
   ctx.stroke();
 
-  // Red velvet cushion
+  // Subtle sheen on seat left face
+  const seatSheen = ctx.createLinearGradient(cx - seatI, seatBase + seatD, cx, seatTop + seatD * 2);
+  seatSheen.addColorStop(0, "rgba(200,185,165,0.08)");
+  seatSheen.addColorStop(1, "rgba(160,145,125,0)");
+  prismFaceOverlay(ctx, cx, seatBase, seatW, seatH, "left", seatSheen);
+}
+
+function drawThroneCushion(
+  ctx: CanvasRenderingContext2D,
+  cx: number, seatTop: number, seatI: number, seatD: number, s: number,
+): void {
+  // Cushion base
   const cushG = ctx.createLinearGradient(cx, seatTop, cx, seatTop + 3 * s);
-  cushG.addColorStop(0, "#6a1020");
-  cushG.addColorStop(0.5, "#901838");
+  cushG.addColorStop(0, "#7a1828");
+  cushG.addColorStop(0.4, "#a02040");
+  cushG.addColorStop(0.8, "#701828");
   cushG.addColorStop(1, "#501018");
   ctx.fillStyle = cushG;
   ctx.beginPath();
@@ -1046,26 +1146,29 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.closePath();
   ctx.fill();
 
-  // Backrest (tapered bone tower)
-  const bkW = 16 * s;
-  const bkTW = 8 * s;
-  const bkH = 55 * s;
-  const bkBase = seatTop;
-  const bkTop = bkBase - bkH;
+  // Cushion highlight
+  ctx.fillStyle = "rgba(200,80,100,0.12)";
+  ctx.beginPath();
+  ctx.ellipse(cx - seatI * 0.2, seatTop + seatD * 0.6, seatI * 0.3, seatD * 0.25, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawThroneBackrest(
+  ctx: CanvasRenderingContext2D,
+  cx: number, bkBase: number, bkTop: number,
+  bkW: number, bkTW: number, bkH: number, s: number,
+  bW: string, bL: string, bM: string, bD: string, bSh: string,
+): void {
   const bkI = bkW * ISO_COS;
   const bkD2 = bkW * ISO_SIN;
   const bkTI = bkTW * ISO_COS;
   const bkTD = bkTW * ISO_SIN;
 
-  // Backrest left face with gradient
-  const bkLG = ctx.createLinearGradient(
-    cx - bkI,
-    bkBase + bkD2,
-    cx,
-    bkTop + bkTD,
-  );
+  // Left face with rich gradient
+  const bkLG = ctx.createLinearGradient(cx - bkI, bkBase + bkD2, cx, bkTop + bkTD);
   bkLG.addColorStop(0, bSh);
-  bkLG.addColorStop(0.4, "#8a7a6a");
+  bkLG.addColorStop(0.3, "#8a7a6a");
+  bkLG.addColorStop(0.6, "#7a6a5a");
   bkLG.addColorStop(1, "#6a5a4a");
   ctx.fillStyle = bkLG;
   ctx.beginPath();
@@ -1075,15 +1178,12 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.lineTo(cx - bkTI, bkTop + bkTD);
   ctx.closePath();
   ctx.fill();
+
   // Right face
-  const bkRG = ctx.createLinearGradient(
-    cx + bkI,
-    bkBase + bkD2,
-    cx,
-    bkTop + bkTD,
-  );
+  const bkRG = ctx.createLinearGradient(cx + bkI, bkBase + bkD2, cx, bkTop + bkTD);
   bkRG.addColorStop(0, bD);
-  bkRG.addColorStop(0.4, "#9a8a7a");
+  bkRG.addColorStop(0.3, "#9a8a7a");
+  bkRG.addColorStop(0.6, "#8a7a6a");
   bkRG.addColorStop(1, "#7a6a5a");
   ctx.fillStyle = bkRG;
   ctx.beginPath();
@@ -1093,8 +1193,13 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.lineTo(cx + bkTI, bkTop + bkTD);
   ctx.closePath();
   ctx.fill();
-  // Front face
-  ctx.fillStyle = bM;
+
+  // Front face (viewer-facing)
+  const bkFG = ctx.createLinearGradient(cx, bkBase + bkD2, cx, bkTop + bkTD);
+  bkFG.addColorStop(0, bM);
+  bkFG.addColorStop(0.5, "#b0a090");
+  bkFG.addColorStop(1, "#a09080");
+  ctx.fillStyle = bkFG;
   ctx.beginPath();
   ctx.moveTo(cx - bkI, bkBase + bkD2);
   ctx.lineTo(cx + bkI, bkBase + bkD2);
@@ -1104,13 +1209,15 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.closePath();
   ctx.fill();
 
-  // Spine ridge lines on backrest
+  // Spine ridge and edge lines
   ctx.strokeStyle = bL;
   ctx.lineWidth = 0.6 * s;
   ctx.beginPath();
   ctx.moveTo(cx, bkBase + bkD2 * 2);
   ctx.lineTo(cx, bkTop + bkTD * 2);
   ctx.stroke();
+  ctx.strokeStyle = "rgba(200,185,165,0.3)";
+  ctx.lineWidth = 0.4 * s;
   ctx.beginPath();
   ctx.moveTo(cx - bkI, bkBase + bkD2);
   ctx.lineTo(cx - bkTI, bkTop + bkTD);
@@ -1120,15 +1227,28 @@ export function renderSkullThrone(p: LandmarkParams): void {
   ctx.lineTo(cx + bkTI, bkTop + bkTD);
   ctx.stroke();
 
-  // Embedded skulls on backrest
-  const embSkulls = [
-    [0.25, -0.3, 3.5],
-    [0.45, 0.2, 3],
-    [0.65, -0.2, 3.2],
-    [0.35, 0.4, 2.8],
-    [0.55, -0.45, 2.8],
-    [0.8, 0.1, 2.5],
-  ] as const;
+  // Horizontal bone bands across the backrest
+  ctx.strokeStyle = bL;
+  ctx.lineWidth = 0.5 * s;
+  for (const frac of [0.2, 0.4, 0.6, 0.8]) {
+    const bandI = bkI + (bkTI - bkI) * frac;
+    const bandD = bkD2 + (bkTD - bkD2) * frac;
+    const bandY = bkBase + (bkTop - bkBase) * frac;
+    ctx.beginPath();
+    ctx.moveTo(cx - bandI, bandY + bandD);
+    ctx.lineTo(cx, bandY + bandD * 2);
+    ctx.stroke();
+  }
+
+  // Embedded skulls on backrest faces
+  const embSkulls: Array<[number, number, number]> = [
+    [0.2, -0.35, 3.2],
+    [0.4, 0.25, 2.8],
+    [0.6, -0.2, 3.0],
+    [0.35, 0.45, 2.6],
+    [0.55, -0.45, 2.6],
+    [0.78, 0.1, 2.3],
+  ];
   for (const [ht, xOff, sz] of embSkulls) {
     const esy = bkBase + (bkTop - bkBase) * ht;
     const eI = bkI + (bkTI - bkI) * ht;
@@ -1137,139 +1257,195 @@ export function renderSkullThrone(p: LandmarkParams): void {
     const esy2 = esy + eD * (1 + xOff * 0.5);
     drawIsoSkull3D(ctx, esx, esy2, sz * s, xOff < 0 ? -1 : 1, bW, bM, bD);
   }
+}
 
-  // Armrests with skull caps
+function drawThroneArmrests(
+  ctx: CanvasRenderingContext2D,
+  cx: number, seatTop: number, seatI: number, seatD: number, s: number,
+  pulse: number, bL: string, bM: string, bD: string,
+): void {
   for (const side of [-1, 1]) {
-    const ax = cx + side * seatI * 1.05;
+    const ax = cx + side * seatI * 1.08;
     const ay = seatTop + seatD + 1 * s;
-    ctx.fillStyle = bD;
+
+    // Armrest body with gradient
+    const armGrad = ctx.createLinearGradient(
+      cx + side * seatI * 0.8, seatTop + seatD * 0.8,
+      ax, ay - 5 * s,
+    );
+    armGrad.addColorStop(0, "#8a7a6a");
+    armGrad.addColorStop(1, "#a09080");
+    ctx.fillStyle = armGrad;
     ctx.beginPath();
     ctx.moveTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8);
     ctx.lineTo(ax, ay - 2 * s);
-    ctx.lineTo(ax, ay - 8 * s);
-    ctx.lineTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8 - 5 * s);
+    ctx.lineTo(ax, ay - 9 * s);
+    ctx.lineTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8 - 6 * s);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = bM;
-    ctx.lineWidth = 0.5 * s;
+
+    // Armrest edge highlight
+    ctx.strokeStyle = bL;
+    ctx.lineWidth = 0.4 * s;
+    ctx.beginPath();
+    ctx.moveTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8 - 6 * s);
+    ctx.lineTo(ax, ay - 9 * s);
     ctx.stroke();
-    drawIsoSkull3D(
-      ctx,
-      ax,
-      ay - 5 * s,
-      2.5 * s,
-      side,
-      bL,
-      bM,
-      bD,
-      `rgba(200,30,30,1)`,
-      0.4 + pulse * 0.25,
-    );
+
+    // Skull cap on armrest
+    drawIsoSkull3D(ctx, ax, ay - 6 * s, 2.8 * s, side, bL, bM, bD,
+      "#cc2020", 0.35 + pulse * 0.3);
+  }
+}
+
+function drawThroneCrown(
+  ctx: CanvasRenderingContext2D,
+  cx: number, bkTop: number, bkTD: number, s: number, pulse: number,
+  bW: string, bM: string, bD: string, bSh: string, redGl: string,
+): void {
+  // Bone spike crown (taller center, descending outward)
+  const spikeData: Array<[number, number, number]> = [
+    [-12, 4, 8], [-6, 2, 11], [0, 0, 16], [6, 2, 11], [12, 4, 8],
+  ];
+  for (const [xOff, yOff, h] of spikeData) {
+    drawIsometricPyramid(ctx, cx + xOff * s, bkTop + bkTD + yOff * s, h === 16 ? 2.8 * s : 2 * s, h * s, bW, bSh, bM);
   }
 
-  // Bone spikes at crown
-  [-10, -5, 0, 5, 10].forEach((off, idx) => {
-    const spkH = idx === 2 ? 16 * s : 10 * s;
-    const spkW = idx === 2 ? 2.5 * s : 1.8 * s;
-    const spkY = bkTop + bkTD + (idx === 2 ? -1 * s : 3 * s);
-    drawIsometricPyramid(ctx, cx + off * s, spkY, spkW, spkH, bW, bSh, bM);
-  });
-
-  // Crown skull with glowing eyes
+  // Crown skull — large with glowing red eyes
   const cSkY = bkTop + bkTD + 10 * s;
-  drawIsoSkull3D(ctx, cx, cSkY, 5.5 * s, 1, bW, bM, bD);
-  ctx.fillStyle = deep;
-  const crEyeOff = 5.5 * 0.36 * s;
+  drawIsoSkull3D(ctx, cx, cSkY, 6 * s, 1, bW, bM, bD);
+
+  // Cranium highlight
+  ctx.fillStyle = "#ede4d6";
   ctx.beginPath();
-  ctx.ellipse(
-    cx - crEyeOff,
-    cSkY + 5.5 * 0.04 * s,
-    1.3 * s,
-    1.8 * s,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    cx + crEyeOff,
-    cSkY + 5.5 * 0.04 * s,
-    1.3 * s,
-    1.8 * s,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(cx - 1 * s, cSkY - 2.5 * s, 3.8 * s, 4.2 * s, -0.08, 0, Math.PI * 2);
   ctx.fill();
-  setShadowBlur(ctx, 12 * s, redGl);
-  ctx.fillStyle = `rgba(220,30,30,${0.5 + pulse * 0.3})`;
+
+  // Deep eye sockets
+  const crEyeOff = 6 * 0.36 * s;
+  const crEyeY = cSkY + 6 * 0.04 * s;
+  ctx.fillStyle = "#1a0a04";
   ctx.beginPath();
-  ctx.arc(cx - crEyeOff, cSkY + 5.5 * 0.04 * s, 1.6 * s, 0, Math.PI * 2);
-  ctx.arc(cx + crEyeOff, cSkY + 5.5 * 0.04 * s, 1.6 * s, 0, Math.PI * 2);
+  ctx.ellipse(cx - crEyeOff, crEyeY, 1.4 * s, 1.9 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx + crEyeOff, crEyeY, 1.4 * s, 1.9 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing red eyes
+  setShadowBlur(ctx, 14 * s, redGl);
+  ctx.fillStyle = `rgba(220,30,30,${0.55 + pulse * 0.35})`;
+  ctx.beginPath();
+  ctx.arc(cx - crEyeOff, crEyeY, 1.1 * s, 0, Math.PI * 2);
+  ctx.arc(cx + crEyeOff, crEyeY, 1.1 * s, 0, Math.PI * 2);
+  ctx.fill();
+  // Bright core
+  ctx.fillStyle = `rgba(255,100,80,${0.3 + pulse * 0.25})`;
+  ctx.beginPath();
+  ctx.arc(cx - crEyeOff, crEyeY, 0.5 * s, 0, Math.PI * 2);
+  ctx.arc(cx + crEyeOff, crEyeY, 0.5 * s, 0, Math.PI * 2);
   ctx.fill();
   clearShadow(ctx);
+}
 
-  // Red energy line on backrest
+function drawThroneEnergySpine(
+  ctx: CanvasRenderingContext2D,
+  cx: number, bkBase: number, bkTop: number,
+  bkD2: number, bkTD: number, s: number, pulse: number, redGl: string,
+): void {
   setShadowBlur(ctx, 6 * s, redGl);
-  ctx.strokeStyle = `rgba(200,30,30,${0.3 + pulse * 0.2})`;
-  ctx.lineWidth = 1 * s;
+  ctx.strokeStyle = `rgba(200,30,30,${0.25 + pulse * 0.2})`;
+  ctx.lineWidth = 1.2 * s;
   ctx.beginPath();
   ctx.moveTo(cx, bkBase + bkD2 * 0.3);
   ctx.lineTo(cx, bkTop + bkTD + 18 * s);
   ctx.stroke();
+
+  // Diamond motif
   ctx.lineWidth = 0.8 * s;
   ctx.beginPath();
   ctx.moveTo(cx - 2.5 * s, bkTop + bkTD + 22 * s);
   ctx.lineTo(cx, bkTop + bkTD + 16 * s);
   ctx.lineTo(cx + 2.5 * s, bkTop + bkTD + 22 * s);
   ctx.stroke();
-  clearShadow(ctx);
 
-  // Iron chains hanging from backrest spikes
+  // Additional smaller V shapes along the spine
+  const spineLen = bkBase + bkD2 * 0.3 - (bkTop + bkTD + 18 * s);
+  for (let i = 0; i < 3; i++) {
+    const t = (i + 1) / 4;
+    const vy = bkTop + bkTD + 18 * s + spineLen * t;
+    const vSize = (1.5 + i * 0.3) * s;
+    ctx.lineWidth = 0.5 * s;
+    ctx.beginPath();
+    ctx.moveTo(cx - vSize, vy + 2 * s);
+    ctx.lineTo(cx, vy);
+    ctx.lineTo(cx + vSize, vy + 2 * s);
+    ctx.stroke();
+  }
+  clearShadow(ctx);
+}
+
+function drawThroneChains(
+  ctx: CanvasRenderingContext2D,
+  cx: number, bkTop: number, bkTD: number, s: number, time: number,
+): void {
   ctx.lineCap = "round";
-  for (const xOff of [-8, 0, 8]) {
-    const chainTop = bkTop + bkTD + 4 * s;
-    const chainLen = 18 + Math.abs(xOff) * 0.5;
-    const chainSway = Math.sin(time * 1.2 + xOff * 0.3) * 1.5 * s;
-    ctx.strokeStyle = "#4a4a50";
-    ctx.lineWidth = 0.9 * s;
-    for (let link = 0; link < 6; link++) {
-      const ly = chainTop + link * 3 * s;
-      const lx = cx + xOff * s + chainSway * (link / 6);
+  for (const xOff of [-9, 0, 9]) {
+    const chainTop = bkTop + bkTD + 3 * s;
+    const chainLen = 16 + Math.abs(xOff) * 0.4;
+    const chainSway = Math.sin(time * 1.0 + xOff * 0.3) * 1.2 * s;
+
+    for (let link = 0; link < 5; link++) {
+      const ly = chainTop + link * 3.2 * s;
+      const lx = cx + xOff * s + chainSway * (link / 5);
+      // Dark outline first
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 1.1 * s;
       ctx.beginPath();
-      ctx.ellipse(
-        lx,
-        ly,
-        link % 2 === 0 ? 1.2 * s : 1.8 * s,
-        link % 2 === 0 ? 1.8 * s : 1.2 * s,
-        link % 2 === 1 ? 0.3 : 0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(lx, ly,
+        link % 2 === 0 ? 1.3 * s : 0.7 * s,
+        link % 2 === 0 ? 0.7 * s : 1.5 * s,
+        link % 2 === 1 ? 0.25 : 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // Lighter link body
+      ctx.strokeStyle = "#505058";
+      ctx.lineWidth = 0.65 * s;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly,
+        link % 2 === 0 ? 1.3 * s : 0.7 * s,
+        link % 2 === 0 ? 0.7 * s : 1.5 * s,
+        link % 2 === 1 ? 0.25 : 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    ctx.fillStyle = "#3a3a40";
-    ctx.beginPath();
-    ctx.arc(
-      cx + xOff * s + chainSway,
-      chainTop + chainLen * s,
-      1.5 * s,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
 
-  // Red soul particles
-  for (let i = 0; i < 5; i++) {
-    const pt = (time * 0.5 + i * 0.5) % 2;
-    const ang = (i / 5) * Math.PI * 2 + time * 0.25;
-    const dr = 16 * s + Math.sin(pt * Math.PI) * 6 * s;
-    const px = cx + Math.cos(ang) * dr;
-    const py = bkTop + 8 * s - pt * 10 * s;
-    const pa = Math.max(0, (1 - pt / 2) * 0.35);
-    ctx.fillStyle = `rgba(150,20,20,${pa})`;
+    // Weight at chain end
+    ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
-    ctx.arc(px, py, (1.8 - pt * 0.5) * s, 0, Math.PI * 2);
+    ctx.arc(cx + xOff * s + chainSway, chainTop + chainLen * s, 1.3 * s, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#505058";
+    ctx.lineWidth = 0.4 * s;
+    ctx.stroke();
+  }
+}
+
+function drawThroneSouls(
+  ctx: CanvasRenderingContext2D,
+  cx: number, bkTop: number, s: number, time: number,
+): void {
+  for (let i = 0; i < 6; i++) {
+    const pt = (time * 0.45 + i * 0.45) % 2.5;
+    const ang = (i / 6) * Math.PI * 2 + time * 0.2;
+    const dr = 14 * s + Math.sin(pt * Math.PI) * 8 * s;
+    const px = cx + Math.cos(ang) * dr;
+    const py = bkTop + 10 * s - pt * 12 * s;
+    const pa = Math.max(0, (1 - pt / 2.5) * 0.35);
+    ctx.fillStyle = `rgba(200,30,30,${pa})`;
+    ctx.beginPath();
+    ctx.arc(px, py, (1.5 - pt * 0.4) * s, 0, Math.PI * 2);
+    ctx.fill();
+    // Bright core on particle
+    ctx.fillStyle = `rgba(255,100,80,${pa * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(px, py, (0.6 - pt * 0.15) * s, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -2863,7 +3039,7 @@ export function renderInfernalGate(p: LandmarkParams): void {
 
   // Flipped over Y axis: right pillar is now the "near" one (lower/right),
   // left pillar is the "far" one (upper/left)
-  const flip = -1;
+  const flip = 1;
 
   if (!skipShadow) {
     const shRx = Math.min(60 * s, MAX_SHADOW_RX * z);
@@ -2893,26 +3069,26 @@ export function renderInfernalGate(p: LandmarkParams): void {
   // --- Corrupted ground with dark energy ---
   drawInfernalGround(ctx, cx, cy, s, pulse);
 
-  // --- Obsidian base platform (two tiers) ---
-  drawIsometricPrism(ctx, cx, cy, 42 * s, 42 * s, 5 * s, obsMd, obsDk, obsCore);
-  drawIsometricPrism(ctx, cx, cy - 5 * s, 36 * s, 36 * s, 3 * s, obsLt, obsMd, obsDk);
+  // --- Obsidian foundation (wide stepped base) ---
+  drawInfernalFoundation(ctx, cx, cy, s, time, pulse, obsCore, obsDk, obsMd, obsLt, obsSheen);
 
   // Rune circle on the platform
-  drawInfernalRuneCircle(ctx, cx, cy - 8 * s, s, time, pulse);
+  drawInfernalRuneCircle(ctx, cx, cy - 14 * s, s, time, pulse);
 
   // --- Twin obsidian pillars (flipped) ---
   const pW = 12 * s;
   const pH = 70 * s;
-  const pillarOff = 20 * s;
+  const foundationH = 14 * s;
+  const pillarOff = 18 * s;
   const lPx = cx + flip * pillarOff;
-  const lPy = cy - flip * pillarOff * ISO_Y_RATIO;
+  const lPy = cy - foundationH - flip * pillarOff * ISO_Y_RATIO;
   const rPx = cx - flip * pillarOff;
-  const rPy = cy + flip * pillarOff * ISO_Y_RATIO;
+  const rPy = cy - foundationH + flip * pillarOff * ISO_Y_RATIO;
 
   // Back pillar first (further from viewer)
-  drawInfernalPillar(ctx, lPx, lPy, pW, pH, s, time, pulse, obsLt, obsMd, obsDk, obsCore, obsSheen, seedX, 0);
+  drawInfernalPillar(ctx, lPx, lPy, pW, pH, s, time, pulse, obsLt, obsMd, obsDk, obsCore);
   // Front pillar
-  drawInfernalPillar(ctx, rPx, rPy, pW, pH, s, time, pulse, obsLt, obsMd, obsDk, obsCore, obsSheen, seedX, 1);
+  drawInfernalPillar(ctx, rPx, rPy, pW, pH, s, time, pulse, obsLt, obsMd, obsDk, obsCore);
 
   // --- Archway connecting pillars ---
   const archTopL = lPy - pH;
@@ -2935,6 +3111,95 @@ export function renderInfernalGate(p: LandmarkParams): void {
 
   // --- Ambient particles ---
   drawInfernalParticles(ctx, cx, cy, portalCy, s, time, seedX, pulse);
+}
+
+function drawInfernalFoundation(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  time: number,
+  pulse: number,
+  obsCore: string,
+  obsDk: string,
+  obsMd: string,
+  obsLt: string,
+  obsSheen: string,
+): void {
+  // Tier 1: Wide base slab
+  drawIsometricPrism(ctx, cx, cy, 48 * s, 48 * s, 4 * s, obsMd, obsDk, obsCore);
+  // Beveled edge detail on tier 1
+  const t1I = 48 * s * ISO_COS;
+  const t1D = 48 * s * ISO_SIN;
+  ctx.strokeStyle = obsSheen;
+  ctx.lineWidth = 0.5 * s;
+  ctx.beginPath();
+  ctx.moveTo(cx - t1I, cy - 4 * s + t1D);
+  ctx.lineTo(cx, cy - 4 * s + t1D * 2);
+  ctx.lineTo(cx + t1I, cy - 4 * s + t1D);
+  ctx.stroke();
+
+  // Tier 2: Inset step
+  drawIsometricPrism(ctx, cx, cy - 4 * s, 42 * s, 42 * s, 4 * s, obsLt, obsMd, obsDk);
+  const t2I = 42 * s * ISO_COS;
+  const t2D = 42 * s * ISO_SIN;
+  ctx.strokeStyle = "rgba(60,60,90,0.15)";
+  ctx.lineWidth = 0.4 * s;
+  ctx.beginPath();
+  ctx.moveTo(cx - t2I, cy - 8 * s + t2D);
+  ctx.lineTo(cx, cy - 8 * s + t2D * 2);
+  ctx.lineTo(cx + t2I, cy - 8 * s + t2D);
+  ctx.stroke();
+
+  // Tier 3: Inner platform where pillars sit
+  drawIsometricPrism(ctx, cx, cy - 8 * s, 36 * s, 36 * s, 6 * s, obsLt, obsMd, obsDk);
+
+  // Obsidian sheen overlays on the inner platform faces
+  const platSheen = ctx.createLinearGradient(cx, cy - 8 * s, cx, cy - 14 * s);
+  platSheen.addColorStop(0, "rgba(50,50,80,0.12)");
+  platSheen.addColorStop(0.5, "rgba(40,40,65,0.04)");
+  platSheen.addColorStop(1, "rgba(55,55,85,0.1)");
+  prismFaceOverlay(ctx, cx, cy - 8 * s, 36 * s, 6 * s, "left", platSheen);
+  prismFaceOverlay(ctx, cx, cy - 8 * s, 36 * s, 6 * s, "right", platSheen);
+
+  // Carved rune grooves on the base faces
+  const t3I = 36 * s * ISO_COS;
+  const t3D = 36 * s * ISO_SIN;
+  ctx.strokeStyle = `rgba(120,50,180,${0.06 + pulse * 0.04})`;
+  ctx.lineWidth = 0.4 * s;
+  for (let i = 0; i < 3; i++) {
+    const t = (i + 0.5) / 3;
+    // Left face runes
+    const lx = cx - t3I * (1 - t);
+    const ly = cy - 8 * s + t3D * (2 * t);
+    ctx.beginPath();
+    ctx.moveTo(lx, ly - 1.5 * s);
+    ctx.lineTo(lx + 1 * s, ly - 3.5 * s);
+    ctx.lineTo(lx - 1 * s, ly - 5 * s);
+    ctx.stroke();
+    // Right face runes
+    const rx = cx + t3I * t;
+    const ry = cy - 8 * s + t3D * (2 - 2 * t);
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - 1.5 * s);
+    ctx.lineTo(rx - 1 * s, ry - 3.5 * s);
+    ctx.lineTo(rx + 1 * s, ry - 5 * s);
+    ctx.stroke();
+  }
+
+  // Corner skull ornaments on tier 2 edges
+  const cornerSkulls: Array<{ x: number; y: number; f: number }> = [
+    { x: cx - t2I, y: cy - 8 * s + t2D - 2 * s, f: 1 },
+    { x: cx + t2I, y: cy - 8 * s + t2D - 2 * s, f: -1 },
+    { x: cx, y: cy - 8 * s + t2D * 2 - 2 * s, f: 1 },
+    { x: cx, y: cy - 8 * s - 2 * s, f: -1 },
+  ];
+  for (const csk of cornerSkulls) {
+    drawIsoSkull3D(ctx, csk.x, csk.y, 2.5 * s, csk.f,
+      "#b0a090", "#908070", "#605040",
+      "#aa44ff", 0.15 + pulse * 0.15,
+    );
+  }
 }
 
 function drawInfernalGround(
@@ -3017,52 +3282,45 @@ function drawInfernalPillar(
   obsMd: string,
   obsDk: string,
   obsCore: string,
-  obsSheen: string,
-  seedX: number,
-  idx: number,
 ): void {
+  // Pillar base plinth (wider footing)
+  drawIsometricPrism(ctx, px, py, pW + 4 * s, pW + 4 * s, 3 * s, obsMd, obsDk, obsCore);
   // Main pillar body
-  drawIsometricPrism(ctx, px, py, pW, pW, pH, obsLt, obsDk, obsCore);
+  drawIsometricPrism(ctx, px, py - 3 * s, pW, pW, pH - 3 * s, obsLt, obsDk, obsCore);
 
   // Obsidian reflective sheen
-  const sheen = ctx.createLinearGradient(px, py, px, py - pH);
+  const sheen = ctx.createLinearGradient(px, py - 3 * s, px, py - pH);
   sheen.addColorStop(0, "rgba(50,50,80,0.15)");
   sheen.addColorStop(0.3, "rgba(40,40,65,0.05)");
   sheen.addColorStop(0.6, "rgba(60,60,90,0.1)");
   sheen.addColorStop(1, "rgba(50,50,80,0.08)");
-  prismFaceOverlay(ctx, px, py, pW, pH, "left", sheen);
+  prismFaceOverlay(ctx, px, py - 3 * s, pW, pH - 3 * s, "left", sheen);
 
-  // Skull ornaments on pillar faces
+  // Horizontal carved bands on pillar
+  const pI = pW * ISO_COS;
+  const pD = pW * ISO_SIN;
+  ctx.strokeStyle = "rgba(60,60,100,0.12)";
+  ctx.lineWidth = 0.4 * s;
+  for (const bandFrac of [0.2, 0.4, 0.6, 0.8]) {
+    const bandY = py - 3 * s - (pH - 3 * s) * bandFrac;
+    ctx.beginPath();
+    ctx.moveTo(px - pI, bandY + pD);
+    ctx.lineTo(px, bandY + pD * 2);
+    ctx.lineTo(px + pI, bandY + pD);
+    ctx.stroke();
+  }
+
+  // Skull ornaments on pillar faces (3 per pillar, well-spaced)
   setShadowBlur(ctx, 3 * s, "#9944dd");
-  for (let i = 0; i < 4; i++) {
-    const skullY = py - pH * ((i + 1) / 5);
-    const skD = pW * ISO_SIN;
+  for (let i = 0; i < 3; i++) {
+    const skullY = py - 3 * s - (pH - 3 * s) * ((i + 1) / 4);
     drawIsoSkull3D(
-      ctx, px, skullY + skD * 2, 3.2 * s, 1,
+      ctx, px, skullY + pD * 2, 3.2 * s, 1,
       "#b8a898", "#988878", "#685848",
       "#aa44ff", 0.25 + pulse * 0.35,
     );
   }
   clearShadow(ctx);
-
-  // Vertical chain hanging down the pillar face
-  const chainX = px + (idx === 0 ? -1 : 1) * pW * ISO_COS * 0.5;
-  const chainBaseY = py - pH * 0.85;
-  ctx.strokeStyle = "#3a3a4a";
-  ctx.lineWidth = 0.7 * s;
-  for (let link = 0; link < 10; link++) {
-    const ly = chainBaseY + link * 4.5 * s;
-    const linkSway = Math.sin(time * 0.6 + link * 0.4 + idx) * 1.2 * s;
-    ctx.beginPath();
-    ctx.ellipse(
-      chainX + linkSway,
-      ly + 2.25 * s,
-      link % 2 === 0 ? 1.8 * s : 0.8 * s,
-      link % 2 === 0 ? 0.8 * s : 2 * s,
-      0, 0, Math.PI * 2,
-    );
-    ctx.stroke();
-  }
 
   // Obsidian spike cap
   drawIsometricPyramid(ctx, px, py - pH, pW * 0.45, 18 * s, obsLt, obsDk, obsMd);
@@ -4080,7 +4338,7 @@ export function renderNassauHall(p: LandmarkParams): void {
   ctx.closePath();
   ctx.fill();
 
-  // === CUPOLA + DOME + SPIRE + FLAG (drawn BEFORE pediment so gable covers cupola base) ===
+  // === CUPOLA + DOME (drawn before pediment so gable covers cupola base) ===
   const cupolaY = pavWallTop + pID - pedH * s - 1 * s;
   const cupSize = 8;
   const cupH = 14 * s;
@@ -4128,7 +4386,6 @@ export function renderNassauHall(p: LandmarkParams): void {
   ctx.moveTo(bx - domeRx, domeBase);
   ctx.quadraticCurveTo(bx - domeRx * 0.55, domePeak + domeH * 0.08, bx, domePeak);
   ctx.quadraticCurveTo(bx + domeRx * 0.55, domePeak + domeH * 0.08, bx + domeRx, domeBase);
-  ctx.ellipse(bx, domeBase, domeRx, domeRy, 0, 0, Math.PI);
   ctx.closePath();
   ctx.fill();
 
@@ -4155,18 +4412,6 @@ export function renderNassauHall(p: LandmarkParams): void {
   ctx.quadraticCurveTo(bx + domeRx * 0.55, domePeak + domeH * 0.08, bx + domeRx, domeBase);
   ctx.stroke();
 
-  // Dome ribs
-  ctx.strokeStyle = "rgba(0,0,0,0.1)";
-  ctx.lineWidth = 0.4 * s;
-  for (let r = 0; r < 5; r++) {
-    const t = (r + 1) / 6;
-    const rx = bx + (t - 0.5) * domeRx * 2;
-    ctx.beginPath();
-    ctx.moveTo(rx, domeBase);
-    ctx.quadraticCurveTo(rx * 0.25 + bx * 0.75, domePeak + domeH * 0.15, bx, domePeak);
-    ctx.stroke();
-  }
-
   // Dome base ring
   ctx.strokeStyle = C.rfSide;
   ctx.lineWidth = 0.8 * s;
@@ -4174,12 +4419,81 @@ export function renderNassauHall(p: LandmarkParams): void {
   ctx.ellipse(bx, domeBase, domeRx, domeRy, 0, 0, Math.PI * 2);
   ctx.stroke();
 
+  // Dome ribs (from base ring to near peak)
+  ctx.strokeStyle = "rgba(0,0,0,0.1)";
+  ctx.lineWidth = 0.4 * s;
+  for (let r = 0; r < 5; r++) {
+    const t = (r + 1) / 6;
+    const ribStartX = bx + Math.cos(Math.PI + t * Math.PI) * domeRx;
+    const ribStartY = domeBase + Math.sin(Math.PI + t * Math.PI) * domeRy;
+    ctx.beginPath();
+    ctx.moveTo(ribStartX, ribStartY);
+    ctx.quadraticCurveTo(
+      ribStartX * 0.25 + bx * 0.75,
+      domePeak + domeH * 0.15,
+      bx,
+      domePeak + domeH * 0.05,
+    );
+    ctx.stroke();
+  }
+
   // Lantern atop dome
   const lanternH = 4 * s;
   const lanternR = 2.5 * s;
   drawIsometricPrism(ctx, bx, domePeak + lanternH, lanternR, lanternR, lanternH, "#F5F5F5", "#E0E0E0", "#CCCCCC");
 
-  // Spire
+  // Pediment (left face triangular gable)
+  const pavLT = { x: bx - pIW, y: pavWallTop + pID };
+  const pavFT = { x: bx, y: pavWallTop + 2 * pID };
+  const pedApex = {
+    x: (pavLT.x + pavFT.x) / 2,
+    y: (pavLT.y + pavFT.y) / 2 - pedH * s,
+  };
+
+  const pedG = ctx.createLinearGradient(pedApex.x, pedApex.y, pavFT.x, pavFT.y);
+  pedG.addColorStop(0, C.rfTop);
+  pedG.addColorStop(0.5, C.rfFront);
+  pedG.addColorStop(1, C.rfSide);
+  ctx.fillStyle = pedG;
+  ctx.beginPath();
+  ctx.moveTo(pavLT.x, pavLT.y);
+  ctx.lineTo(pavFT.x, pavFT.y);
+  ctx.lineTo(pedApex.x, pedApex.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pediment right face
+  const pavRT = { x: bx + pIW, y: pavWallTop + pID };
+  const pedApexR = {
+    x: (pavRT.x + pavFT.x) / 2,
+    y: (pavRT.y + pavFT.y) / 2 - pedH * s,
+  };
+  ctx.fillStyle = C.rfDark;
+  ctx.beginPath();
+  ctx.moveTo(pavRT.x, pavRT.y);
+  ctx.lineTo(pavFT.x, pavFT.y);
+  ctx.lineTo(pedApexR.x, pedApexR.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Ridge line between apexes
+  ctx.strokeStyle = C.rfTop;
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.moveTo(pedApex.x, pedApex.y);
+  ctx.lineTo(pedApexR.x, pedApexR.y);
+  ctx.stroke();
+
+  // Pediment border (drawn after both faces so it sits on top)
+  ctx.strokeStyle = C.sCornice;
+  ctx.lineWidth = 1.5 * s;
+  ctx.beginPath();
+  ctx.moveTo(pavLT.x - 0.5 * s, pavLT.y + 0.5 * s);
+  ctx.lineTo(pedApex.x, pedApex.y - 1 * s);
+  ctx.lineTo(pavFT.x + 0.5 * s, pavFT.y + 0.5 * s);
+  ctx.stroke();
+
+  // === SPIRE + FLAG (drawn after pediment so they render above the green roofs) ===
   const spireBase = domePeak;
   const spireH = 18 * s;
   const spireTop = spireBase - spireH;
@@ -4258,57 +4572,6 @@ export function renderNassauHall(p: LandmarkParams): void {
   ctx.lineTo(bx + 1 * s, flagAttachY - flagH);
   ctx.closePath();
   ctx.fill();
-
-  // Pediment (left face triangular gable)
-  const pavLT = { x: bx - pIW, y: pavWallTop + pID };
-  const pavFT = { x: bx, y: pavWallTop + 2 * pID };
-  const pedApex = {
-    x: (pavLT.x + pavFT.x) / 2,
-    y: (pavLT.y + pavFT.y) / 2 - pedH * s,
-  };
-
-  const pedG = ctx.createLinearGradient(pedApex.x, pedApex.y, pavFT.x, pavFT.y);
-  pedG.addColorStop(0, C.rfTop);
-  pedG.addColorStop(0.5, C.rfFront);
-  pedG.addColorStop(1, C.rfSide);
-  ctx.fillStyle = pedG;
-  ctx.beginPath();
-  ctx.moveTo(pavLT.x, pavLT.y);
-  ctx.lineTo(pavFT.x, pavFT.y);
-  ctx.lineTo(pedApex.x, pedApex.y);
-  ctx.closePath();
-  ctx.fill();
-
-  // Pediment right face
-  const pavRT = { x: bx + pIW, y: pavWallTop + pID };
-  const pedApexR = {
-    x: (pavRT.x + pavFT.x) / 2,
-    y: (pavRT.y + pavFT.y) / 2 - pedH * s,
-  };
-  ctx.fillStyle = C.rfDark;
-  ctx.beginPath();
-  ctx.moveTo(pavRT.x, pavRT.y);
-  ctx.lineTo(pavFT.x, pavFT.y);
-  ctx.lineTo(pedApexR.x, pedApexR.y);
-  ctx.closePath();
-  ctx.fill();
-
-  // Ridge line between apexes
-  ctx.strokeStyle = C.rfTop;
-  ctx.lineWidth = 1.2 * s;
-  ctx.beginPath();
-  ctx.moveTo(pedApex.x, pedApex.y);
-  ctx.lineTo(pedApexR.x, pedApexR.y);
-  ctx.stroke();
-
-  // Pediment border (drawn after both faces so it sits on top)
-  ctx.strokeStyle = C.sCornice;
-  ctx.lineWidth = 1.5 * s;
-  ctx.beginPath();
-  ctx.moveTo(pavLT.x - 0.5 * s, pavLT.y + 0.5 * s);
-  ctx.lineTo(pedApex.x, pedApex.y - 1 * s);
-  ctx.lineTo(pavFT.x + 0.5 * s, pavFT.y + 0.5 * s);
-  ctx.stroke();
 
   // Oculus
   const ocCx = (pavLT.x + pavFT.x + pedApex.x) / 3;
@@ -4573,8 +4836,8 @@ export function renderNassauHall(p: LandmarkParams): void {
   const sideX = ISO_COS;
   const sideY = ISO_SIN;
   // Door center on the left face (u≈0.5), offset slightly outward from face
-  const entrX = bx - pIW * 0.5 + fwdX * 4 * s;
-  const entrY = by + 1.5 * pID + fwdY * 4 * s;
+  const entrX = bx - pIW * 0.6 + fwdX * 4 * s;
+  const entrY = by + 1.4 * pID + fwdY * 4 * s;
 
   // Stacked iso platforms: largest at ground, shrinking upward
   const stepH = 1.2 * s;

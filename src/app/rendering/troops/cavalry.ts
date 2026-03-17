@@ -902,6 +902,78 @@ export function drawCavalryTroop(
   ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
 
+  // Raised collar plate so the gorget reads more like layered neck armor.
+  const collarPlateGrad = ctx.createLinearGradient(
+    x - size * 0.11,
+    gorgetY - size * 0.05,
+    x + size * 0.11,
+    gorgetY + size * 0.005,
+  );
+  collarPlateGrad.addColorStop(0, "#566273");
+  collarPlateGrad.addColorStop(0.5, "#8a97aa");
+  collarPlateGrad.addColorStop(1, "#4e596a");
+  ctx.fillStyle = collarPlateGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.115, gorgetY - size * 0.002);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.043,
+    x + size * 0.115,
+    gorgetY - size * 0.002,
+  );
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.016,
+    x - size * 0.115,
+    gorgetY - size * 0.002,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(214, 172, 69, 0.52)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  // Central throat lame / bevor
+  const bevorGrad = ctx.createLinearGradient(
+    x - size * 0.024,
+    gorgetY - size * 0.06,
+    x + size * 0.024,
+    gorgetY + size * 0.045,
+  );
+  bevorGrad.addColorStop(0, "#95a2b5");
+  bevorGrad.addColorStop(0.45, "#6f7b8d");
+  bevorGrad.addColorStop(1, "#46505f");
+  ctx.fillStyle = bevorGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.022, gorgetY - size * 0.055);
+  ctx.lineTo(x + size * 0.022, gorgetY - size * 0.055);
+  ctx.lineTo(x + size * 0.028, gorgetY + size * 0.03);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY + size * 0.05,
+    x - size * 0.028,
+    gorgetY + size * 0.03,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(179, 135, 63, 0.6)`;
+  ctx.lineWidth = 0.65 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(238, 244, 255, 0.22)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, gorgetY - size * 0.01);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.032,
+    x + size * 0.08,
+    gorgetY - size * 0.01,
+  );
+  ctx.moveTo(x, gorgetY - size * 0.045);
+  ctx.lineTo(x, gorgetY + size * 0.03);
+  ctx.stroke();
+
   // Specular highlights — bright spots mimicking curved steel
   ctx.save();
   ctx.globalAlpha = 0.12;
@@ -1121,6 +1193,160 @@ export function drawCavalryTroop(
     ctx.fill();
     ctx.beginPath();
     ctx.arc(x + sx * size * 0.1 + tabWave, tabBotY - size * 0.02, size * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Repaint the collar stack after the tabard so it stays visible,
+  // but still remains underneath the later pauldrons.
+  ctx.fillStyle = gorgetGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, gorgetY);
+  ctx.quadraticCurveTo(x, gorgetY - size * 0.06, x + size * 0.15, gorgetY);
+  ctx.quadraticCurveTo(x, gorgetY - size * 0.02, x - size * 0.15, gorgetY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = brassMid;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = collarPlateGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.115, gorgetY - size * 0.002);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.043,
+    x + size * 0.115,
+    gorgetY - size * 0.002,
+  );
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.016,
+    x - size * 0.115,
+    gorgetY - size * 0.002,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(214, 172, 69, 0.52)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = bevorGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.022, gorgetY - size * 0.055);
+  ctx.lineTo(x + size * 0.022, gorgetY - size * 0.055);
+  ctx.lineTo(x + size * 0.028, gorgetY + size * 0.03);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY + size * 0.05,
+    x - size * 0.028,
+    gorgetY + size * 0.03,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(179, 135, 63, 0.6)`;
+  ctx.lineWidth = 0.65 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(238, 244, 255, 0.22)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, gorgetY - size * 0.01);
+  ctx.quadraticCurveTo(
+    x,
+    gorgetY - size * 0.032,
+    x + size * 0.08,
+    gorgetY - size * 0.01,
+  );
+  ctx.moveTo(x, gorgetY - size * 0.045);
+  ctx.lineTo(x, gorgetY + size * 0.03);
+  ctx.stroke();
+
+  // Waist transition between rider torso and mounted lower body.
+  const cavJoinY = tabBotY - size * 0.008;
+  const cavJoinBottomY = y + size * 0.055 + riderBob * 0.9;
+  const cavJoinShadowGrad = ctx.createLinearGradient(
+    x,
+    cavJoinY - size * 0.01,
+    x,
+    cavJoinBottomY + size * 0.03,
+  );
+  cavJoinShadowGrad.addColorStop(0, "rgba(15, 10, 28, 0.34)");
+  cavJoinShadowGrad.addColorStop(0.5, "rgba(36, 22, 58, 0.2)");
+  cavJoinShadowGrad.addColorStop(1, "rgba(15, 10, 28, 0)");
+  ctx.fillStyle = cavJoinShadowGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15 + tabWave * 0.6, cavJoinY);
+  ctx.quadraticCurveTo(
+    x - size * 0.22,
+    y - size * 0.005 + riderBob * 0.8,
+    x - size * 0.135,
+    cavJoinBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x,
+    cavJoinBottomY + size * 0.03,
+    x + size * 0.135,
+    cavJoinBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    y - size * 0.005 + riderBob * 0.8,
+    x + size * 0.15 + tabWave * 0.6,
+    cavJoinY,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  const cavWaistPlateGrad = ctx.createLinearGradient(
+    x - size * 0.09,
+    cavJoinY,
+    x + size * 0.09,
+    cavJoinBottomY,
+  );
+  cavWaistPlateGrad.addColorStop(0, "#655573");
+  cavWaistPlateGrad.addColorStop(0.35, royalPurpleMid);
+  cavWaistPlateGrad.addColorStop(0.7, royalPurpleDark);
+  cavWaistPlateGrad.addColorStop(1, "#22123f");
+  ctx.fillStyle = cavWaistPlateGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.085 + tabWave * 0.5, cavJoinY);
+  ctx.quadraticCurveTo(
+    x,
+    cavJoinY - size * 0.02,
+    x + size * 0.085 + tabWave * 0.5,
+    cavJoinY,
+  );
+  ctx.lineTo(x + size * 0.062, cavJoinBottomY);
+  ctx.quadraticCurveTo(
+    x,
+    cavJoinBottomY + size * 0.022,
+    x - size * 0.062,
+    cavJoinBottomY,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(179, 135, 63, 0.62)`;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = `rgba(224, 190, 122, 0.3)`;
+  ctx.lineWidth = 0.55 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.065, cavJoinY + size * 0.004);
+  ctx.quadraticCurveTo(
+    x,
+    cavJoinY - size * 0.008,
+    x + size * 0.065,
+    cavJoinY + size * 0.004,
+  );
+  ctx.moveTo(x, cavJoinY + size * 0.012);
+  ctx.lineTo(x, cavJoinBottomY + size * 0.004);
+  ctx.stroke();
+
+  ctx.fillStyle = brassLight;
+  for (const side of [-1, 1] as const) {
+    ctx.beginPath();
+    ctx.arc(x + side * size * 0.045, cavJoinY + size * 0.018, size * 0.006, 0, Math.PI * 2);
     ctx.fill();
   }
 
