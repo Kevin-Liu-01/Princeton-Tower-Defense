@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { resolveWeaponRotation, WEAPON_LIMITS } from "./troopHelpers";
+import { WEAPON_LIMITS, anchorWeaponToHand } from "./troopHelpers";
 
 export function drawSoldierTroop(
   ctx: CanvasRenderingContext2D,
@@ -699,39 +699,39 @@ export function drawSoldierTroop(
   ctx.restore();
 
   // === GLADIUS SWORD ARM + MASTERWORK GLADIUS ===
-  // Compute sword transform first so we can connect the arm to the grip
+  // Anchor sword to hand — arm swing drives hand position
+  const soldierArmLen = size * 0.22;
+  const soldierGripLocalY = size * 0.1;
+  const swordShoulderX = x + size * 0.24;
+  const swordShoulderY = y + breathe * 0.3;
+
+  const soldierArmSwing = isAttacking
+    ? -0.4 + (1 - attackPhase) * 0.8
+    : 0.0 + stance * 0.03;
+
   const swordBaseAngle = isAttacking
     ? -1.02 + attackPhase * 2.04
     : -0.24 + stance * 0.04;
-  const swordX = x + size * 0.41 + (isAttacking ? attackLunge * 1.7 : 0);
-  const swordY =
-    y - size * 0.06 - (isAttacking ? size * 0.28 * (1 - attackPhase) : 0);
-  const swordAngle = resolveWeaponRotation(
-    targetPos,
-    swordX,
-    swordY,
+
+  const soldierSword = anchorWeaponToHand(
+    swordShoulderX,
+    swordShoulderY,
+    soldierArmLen,
+    soldierArmSwing,
+    soldierGripLocalY,
     swordBaseAngle,
+    targetPos,
     Math.PI / 2,
     isAttacking ? 1.45 : 0.7,
     WEAPON_LIMITS.rightMelee,
   );
-
-  // Sword grip center in local coords is at (0, size*0.1); project to world
-  const gripLocalY = size * 0.1;
-  const gripWorldX = swordX - Math.sin(swordAngle) * gripLocalY;
-  const gripWorldY = swordY + Math.cos(swordAngle) * gripLocalY;
-
-  // Arm from shoulder to grip
-  const swordShoulderX = x + size * 0.24;
-  const swordShoulderY = y + size * 0.0 + breathe * 0.3;
-  const armToGripAngle = Math.atan2(
-    gripWorldY - swordShoulderY,
-    gripWorldX - swordShoulderX,
-  );
+  const swordX = soldierSword.weaponX;
+  const swordY = soldierSword.weaponY;
+  const swordAngle = soldierSword.weaponAngle;
 
   ctx.save();
   ctx.translate(swordShoulderX, swordShoulderY);
-  ctx.rotate(armToGripAngle);
+  ctx.rotate(soldierArmSwing);
 
   // Upper arm (skin)
   ctx.fillStyle = "#dbb896";
@@ -752,7 +752,7 @@ export function drawSoldierTroop(
   // Fist gripping the pommel
   ctx.fillStyle = "#d0a87a";
   ctx.beginPath();
-  ctx.arc(size * 0.22, 0, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(soldierArmLen, 0, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
@@ -998,12 +998,7 @@ export function drawSoldierTroop(
   // Skull + jawline (not just a circle)
   ctx.beginPath();
   ctx.moveTo(x - size * 0.13, y - size * 0.36);
-  ctx.quadraticCurveTo(
-    x - size * 0.16,
-    y - size * 0.44,
-    x,
-    y - size * 0.46,
-  );
+  ctx.quadraticCurveTo(x - size * 0.16, y - size * 0.44, x, y - size * 0.46);
   ctx.quadraticCurveTo(
     x + size * 0.16,
     y - size * 0.44,
@@ -1012,7 +1007,12 @@ export function drawSoldierTroop(
   );
   ctx.lineTo(x + size * 0.12, y - size * 0.24);
   ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.18, x, y - size * 0.17);
-  ctx.quadraticCurveTo(x - size * 0.08, y - size * 0.18, x - size * 0.12, y - size * 0.24);
+  ctx.quadraticCurveTo(
+    x - size * 0.08,
+    y - size * 0.18,
+    x - size * 0.12,
+    y - size * 0.24,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -1290,13 +1290,26 @@ export function drawSoldierTroop(
   ctx.fillStyle = helmetGrad;
   // Bowl
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.4, size * 0.175, size * 0.12, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y - size * 0.4,
+    size * 0.175,
+    size * 0.12,
+    0,
+    Math.PI,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Crown (taller dome)
   ctx.beginPath();
   ctx.moveTo(x - size * 0.175, y - size * 0.4);
   ctx.quadraticCurveTo(x - size * 0.19, y - size * 0.5, x, y - size * 0.54);
-  ctx.quadraticCurveTo(x + size * 0.19, y - size * 0.5, x + size * 0.175, y - size * 0.4);
+  ctx.quadraticCurveTo(
+    x + size * 0.19,
+    y - size * 0.5,
+    x + size * 0.175,
+    y - size * 0.4,
+  );
   ctx.fill();
 
   // Center ridge (raised dorsal fin)
@@ -1322,12 +1335,28 @@ export function drawSoldierTroop(
   // Primary specular highlight (top-left)
   ctx.fillStyle = `rgba(220, 220, 240, ${0.15 + shimmer * 0.12})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.06, y - size * 0.48, size * 0.045, size * 0.03, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.06,
+    y - size * 0.48,
+    size * 0.045,
+    size * 0.03,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Secondary specular (smaller, brighter)
   ctx.fillStyle = `rgba(255, 255, 255, ${0.1 + shimmer * 0.1})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.04, y - size * 0.5, size * 0.02, size * 0.012, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.04,
+    y - size * 0.5,
+    size * 0.02,
+    size * 0.012,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Crest holder bracket (ornate, not a plain rectangle)
@@ -1585,39 +1614,13 @@ export function drawSoldierTroop(
   ctx.ellipse(x, y - size * 0.2, size * 0.06, size * 0.04, 0, 0, Math.PI);
   ctx.fill();
 
-  // Face guard overlay keeps the cheek guards visibly forward-facing.
-  ctx.fillStyle = "rgba(87, 91, 109, 0.93)";
+  // Chin strap shadow under jaw
+  ctx.strokeStyle = "rgba(60, 50, 40, 0.25)";
+  ctx.lineWidth = 1.0 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.052, y - size * 0.31);
-  ctx.lineTo(x - size * 0.038, y - size * 0.17);
-  ctx.lineTo(x + size * 0.038, y - size * 0.17);
-  ctx.lineTo(x + size * 0.052, y - size * 0.31);
-  ctx.closePath();
-  ctx.fill();
-
-  // Eye slit and vent holes.
-  ctx.fillStyle = "#12131d";
-  ctx.beginPath();
-  ctx.roundRect(
-    x - size * 0.062,
-    y - size * 0.33,
-    size * 0.124,
-    size * 0.028,
-    size * 0.008,
-  );
-  ctx.fill();
-  ctx.fillStyle = "#2a2d3f";
-  for (let vent = -1; vent <= 1; vent++) {
-    ctx.beginPath();
-    ctx.arc(
-      x + vent * size * 0.02,
-      y - size * 0.235,
-      size * 0.006,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
+  ctx.moveTo(x - size * 0.04, y - size * 0.18);
+  ctx.quadraticCurveTo(x, y - size * 0.16, x + size * 0.04, y - size * 0.18);
+  ctx.stroke();
 
   // === PRINCETON "P" EMBLEM (rendered above everything) ===
   ctx.fillStyle = "#1a1a1a";

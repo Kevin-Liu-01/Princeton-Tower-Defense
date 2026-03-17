@@ -857,12 +857,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     </HudTooltip>
                   )}
                   {/* Level badge — on right of border ring */}
-                  {spellLevel > 0 && (
-                    <div className="absolute z-30 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-yellow-100 border-2 border-stone-900"
-                      style={{ top: 1, right: -2, background: 'linear-gradient(135deg, #d97706, #92400e)', boxShadow: '0 0 6px rgba(217,119,6,0.5)' }}>
-                      {spellLevel}
-                    </div>
-                  )}
+                  <div className="absolute z-30 flex items-center gap-[2px] rounded-full px-[5px] py-[1px] text-[8px] font-bold text-yellow-100 border-2 border-stone-900"
+                    style={{ top: -3, right: -8, background: 'linear-gradient(135deg, #d97706, #92400e)', boxShadow: '0 0 6px rgba(217,119,6,0.5)' }}>
+                    <span className="text-[6px] font-semibold text-yellow-300/70 uppercase tracking-wide">Lv</span>{spellLevel + 1}
+                  </div>
                   {/* ─── Ornate SVG frame for spell ─── */}
                   <svg
                     className="absolute pointer-events-none"

@@ -8190,24 +8190,24 @@ export function renderStationTower(
       ctx.fill();
     }
 
-    // Decorative crossed spears emblem on wall
+    // Decorative crossed spears emblem on wall (centered with gauge)
     ctx.strokeStyle = "#a88217";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(bX - 10 * zoom, bY - 18 * zoom);
-    ctx.lineTo(bX - 4 * zoom, bY - 30 * zoom);
+    ctx.moveTo(bX - 6 * zoom, bY - 18 * zoom);
+    ctx.lineTo(bX, bY - 30 * zoom);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(bX + 2 * zoom, bY - 18 * zoom);
-    ctx.lineTo(bX - 4 * zoom, bY - 30 * zoom);
+    ctx.moveTo(bX + 6 * zoom, bY - 18 * zoom);
+    ctx.lineTo(bX, bY - 30 * zoom);
     ctx.stroke();
     // Shield behind spears
     ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
-    ctx.moveTo(bX - 4 * zoom, bY - 33 * zoom);
-    ctx.lineTo(bX - 8 * zoom, bY - 22 * zoom);
-    ctx.lineTo(bX - 4 * zoom, bY - 16 * zoom);
-    ctx.lineTo(bX, bY - 22 * zoom);
+    ctx.moveTo(bX, bY - 33 * zoom);
+    ctx.lineTo(bX - 4 * zoom, bY - 22 * zoom);
+    ctx.lineTo(bX, bY - 16 * zoom);
+    ctx.lineTo(bX + 4 * zoom, bY - 22 * zoom);
     ctx.closePath();
     ctx.fill();
 
@@ -9037,11 +9037,11 @@ export function renderStationTower(
   // Face parallelogram: edges lean at standard isometric slope (ISO_SIN/ISO_COS = 0.5)
   const sbBL = {
     x: signX - sbHalfW,
-    y: signY - sbHalfW * ISO_SIN / ISO_COS,
+    y: signY - (sbHalfW * ISO_SIN) / ISO_COS,
   };
   const sbBR = {
     x: signX + sbHalfW,
-    y: signY + sbHalfW * ISO_SIN / ISO_COS,
+    y: signY + (sbHalfW * ISO_SIN) / ISO_COS,
   };
   const sbTL = { x: sbBL.x, y: sbBL.y - sbFaceH };
   const sbTR = { x: sbBR.x, y: sbBR.y - sbFaceH };
@@ -13072,16 +13072,28 @@ export function renderStationTower(
     drawPoleFlag(rtX + 3 * zoom, rtTopY + 3 * zoom, 12, 6, 9, purpleMid, 1);
 
     // =============================================
-    // 2. TOWER-TO-TOWER BUNTING (high string between tower tops)
+    // 2. TOWER-TO-KEEP BUNTING (two strings from each tower to central keep top)
     // =============================================
+    const keepTopY = bY - 45 * zoom;
     drawIsoBunting(
       ltX,
       ltTopY + 6 * zoom,
+      bX,
+      keepTopY - 10 * zoom,
+      4,
+      4,
+      [purpleMid, purpleDark, purpleLight],
+      5,
+      3,
+    );
+    drawIsoBunting(
+      bX,
+      keepTopY - 10 * zoom,
       rtX,
       rtTopY + 6 * zoom,
-      7,
-      7,
-      [purpleMid, purpleDark, purpleLight],
+      4,
+      4,
+      [purpleLight, purpleDark, purpleMid],
       5,
       3,
     );

@@ -5,8 +5,6 @@
 import { drawRadialAura } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawGlowingEyes,
   drawShadowWisps,
   drawPoisonBubbles,
@@ -22,6 +20,7 @@ import {
   drawArcaneSparkles,
   drawFrostCrystals,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs, drawTatteredCloak, drawShoulderOverlay, drawBeltOverlay, drawGorget, drawArmorSkirt } from "./darkFantasyHelpers";
 
 const TAU = Math.PI * 2;
 
@@ -41,7 +40,7 @@ export function drawFallenPaladinEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.55;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 4;
   const breath = getBreathScale(time, 1.3, 0.015);
@@ -170,6 +169,8 @@ export function drawFallenPaladinEnemy(
   // === ARMORED TORSO ===
   const torsoY = y - size * 0.1 - bodyBob;
 
+  drawTatteredCloak(ctx, cx0, torsoY - size * 0.15 - bodyBob, size, size * 0.3, size * 0.35, "#4a3040", "#2a1520", time);
+
   ctx.save();
   ctx.translate(cx0, torsoY);
   ctx.scale(breath, breath);
@@ -234,75 +235,62 @@ export function drawFallenPaladinEnemy(
     ctx.fill();
   }
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, holyGold, holyGoldDark, 'plate');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, corruptPurple, corruptDark, 'plate');
+  drawGorget(ctx, cx0, torsoY - size * 0.18 - bodyBob, size, size * 0.2, holyWhite, "#a8a090");
+  drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.14, size * 0.08, "#c8c0b0", "#a8a090", 5);
+
   // === HOLY SWORD (half-corrupted) ===
-  ctx.save();
-  const swordArmX = cx0 - size * 0.17;
-  const swordArmY = torsoY - size * 0.12 - bodyBob;
-  ctx.translate(swordArmX, swordArmY);
   const swordSwing = -0.2 + Math.sin(walkPhase) * 0.08 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.8 : 0);
-  ctx.rotate(swordSwing);
+  drawPathArm(ctx, cx0 - size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, -1, {
+    color: "#c8c0b0", colorDark: "#a8a090", handColor: "#a8a090",
+    upperLen: 0.14, foreLen: 0.12,
+    shoulderAngle: swordSwing,
+    elbowAngle: 0.3,
+    style: 'armored',
+    onWeapon: (ctx) => {
+      const sLen = size * 0.38;
+      const sW = size * 0.036;
 
-  // Arm
-  ctx.fillStyle = "#c8c0b0";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.08, size * 0.025, size * 0.08, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.14);
-  ctx.rotate(0.3);
-  ctx.fillStyle = "#a8a090";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.022, size * 0.065, 0, 0, TAU);
-  ctx.fill();
+      ctx.fillStyle = "#c8b060";
+      ctx.beginPath();
+      ctx.moveTo(-sW, size * 0.1);
+      ctx.lineTo(-sW * 0.3, size * 0.1 + sLen);
+      ctx.lineTo(0, size * 0.1 + sLen);
+      ctx.lineTo(0, size * 0.1);
+      ctx.closePath();
+      ctx.fill();
 
-  // Sword blade - left half gold, right half purple
-  const sLen = size * 0.38;
-  const sW = size * 0.024;
+      ctx.fillStyle = "#5a2070";
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.1);
+      ctx.lineTo(0, size * 0.1 + sLen);
+      ctx.lineTo(sW * 0.3, size * 0.1 + sLen);
+      ctx.lineTo(sW, size * 0.1);
+      ctx.closePath();
+      ctx.fill();
 
-  // Gold half
-  ctx.fillStyle = "#c8b060";
-  ctx.beginPath();
-  ctx.moveTo(-sW, size * 0.1);
-  ctx.lineTo(-sW * 0.3, size * 0.1 + sLen);
-  ctx.lineTo(0, size * 0.1 + sLen);
-  ctx.lineTo(0, size * 0.1);
-  ctx.closePath();
-  ctx.fill();
+      ctx.strokeStyle = `rgba(160, 60, 200, ${corruptPulse * 0.4})`;
+      ctx.lineWidth = size * 0.006;
+      ctx.beginPath();
+      ctx.moveTo(sW, size * 0.1);
+      ctx.lineTo(sW * 0.3, size * 0.1 + sLen);
+      ctx.stroke();
 
-  // Corrupted half
-  ctx.fillStyle = "#5a2070";
-  ctx.beginPath();
-  ctx.moveTo(0, size * 0.1);
-  ctx.lineTo(0, size * 0.1 + sLen);
-  ctx.lineTo(sW * 0.3, size * 0.1 + sLen);
-  ctx.lineTo(sW, size * 0.1);
-  ctx.closePath();
-  ctx.fill();
+      ctx.strokeStyle = "rgba(255, 215, 0, 0.3)";
+      ctx.lineWidth = size * 0.006;
+      ctx.beginPath();
+      ctx.moveTo(-sW, size * 0.1);
+      ctx.lineTo(-sW * 0.3, size * 0.1 + sLen);
+      ctx.stroke();
 
-  // Corruption glow edge
-  ctx.strokeStyle = `rgba(160, 60, 200, ${corruptPulse * 0.4})`;
-  ctx.lineWidth = size * 0.006;
-  ctx.beginPath();
-  ctx.moveTo(sW, size * 0.1);
-  ctx.lineTo(sW * 0.3, size * 0.1 + sLen);
-  ctx.stroke();
+      ctx.fillStyle = holyGold;
+      ctx.fillRect(-size * 0.07, size * 0.08, size * 0.14, size * 0.024);
 
-  // Gold glow edge
-  ctx.strokeStyle = "rgba(255, 215, 0, 0.3)";
-  ctx.lineWidth = size * 0.006;
-  ctx.beginPath();
-  ctx.moveTo(-sW, size * 0.1);
-  ctx.lineTo(-sW * 0.3, size * 0.1 + sLen);
-  ctx.stroke();
-
-  // Crossguard
-  ctx.fillStyle = holyGold;
-  ctx.fillRect(-size * 0.045, size * 0.08, size * 0.09, size * 0.018);
-
-  // Grip
-  ctx.fillStyle = "#5a4a30";
-  ctx.fillRect(-size * 0.01, size * 0.0, size * 0.02, size * 0.08);
-
-  ctx.restore();
+      ctx.fillStyle = "#5a4a30";
+      ctx.fillRect(-size * 0.015, size * 0.0, size * 0.03, size * 0.08);
+    },
+  });
 
   // Energy arcs between corruption points when attacking
   if (isAttacking) {
@@ -312,10 +300,11 @@ export function drawFallenPaladinEnemy(
   }
 
   // === RIGHT ARM ===
-  drawAnimatedArm(ctx, cx0 + size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
     color: "#c8c0b0", colorDark: "#a8a090", handColor: "#a8a090",
     swingSpeed: 4, swingAmt: 0.15, baseAngle: 0.25,
     elbowBend: 0.35, upperLen: 0.16, foreLen: 0.13,
+    style: 'armored',
   });
 
   // === GOLDEN HELM WITH CORRUPTION ===
@@ -405,7 +394,7 @@ export function drawBlackGuardEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.5;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3.5;
   const breath = getBreathScale(time, 1.0, 0.012);
@@ -434,10 +423,11 @@ export function drawBlackGuardEnemy(
   }
 
   // === HEAVY ARMORED LEGS ===
-  drawAnimatedLegs(ctx, cx0, y + size * 0.16 + bodyBob, size, time, zoom, {
-    legLen: 0.09, width: 0.06, strideSpeed: 3.5, strideAmt: 0.2,
+  drawPathLegs(ctx, cx0, y + size * 0.16 + bodyBob, size, time, zoom, {
+    legLen: 0.11, width: 0.085, strideSpeed: 3.5, strideAmt: 0.2,
     color: steelMid, colorDark: steelDark, footColor: steelDark, footLen: 0.08,
     shuffle: true,
+    style: 'armored',
   });
 
   // === ARMORED TORSO ===
@@ -514,13 +504,19 @@ export function drawBlackGuardEnemy(
     ctx.fill();
   }
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, steelMid, steelDark, 'plate');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, steelMid, steelDark, 'plate');
+  drawGorget(ctx, cx0, torsoY - size * 0.18 - bodyBob, size, size * 0.2, steelMid, steelDark);
+  drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.14, size * 0.08, steelDark, steelDark, 4);
+  drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, steelMid, steelDark, steelHighlight);
+
   // === TOWER SHIELD (left) ===
   ctx.save();
   ctx.translate(cx0 - size * 0.22, torsoY - size * 0.02 - bodyBob);
   ctx.rotate(-0.08 + Math.sin(walkPhase) * 0.03);
 
-  const shW = size * 0.14;
-  const shH = size * 0.28;
+  const shW = size * 0.18;
+  const shH = size * 0.36;
   const shieldGrad = ctx.createLinearGradient(-shW, -shH / 2, shW, shH / 2);
   shieldGrad.addColorStop(0, steelDark);
   shieldGrad.addColorStop(0.3, steelMid);
@@ -531,22 +527,22 @@ export function drawBlackGuardEnemy(
 
   // Shield rim
   ctx.strokeStyle = steelHighlight;
-  ctx.lineWidth = size * 0.008;
+  ctx.lineWidth = size * 0.011;
   ctx.strokeRect(-shW / 2, -shH / 2, shW, shH);
 
   // Shield boss
   ctx.fillStyle = steelHighlight;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.03, 0, TAU);
+  ctx.arc(0, 0, size * 0.04, 0, TAU);
   ctx.fill();
   ctx.fillStyle = steelDark;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.015, 0, TAU);
+  ctx.arc(0, 0, size * 0.02, 0, TAU);
   ctx.fill();
 
   // Dark cross emblem
   ctx.strokeStyle = "rgba(40, 40, 80, 0.6)";
-  ctx.lineWidth = size * 0.012;
+  ctx.lineWidth = size * 0.016;
   ctx.beginPath();
   ctx.moveTo(0, -shH * 0.35);
   ctx.lineTo(0, shH * 0.35);
@@ -567,53 +563,40 @@ export function drawBlackGuardEnemy(
   ctx.restore();
 
   // === MACE ARM (right) ===
-  ctx.save();
-  ctx.translate(cx0 + size * 0.2, torsoY - size * 0.12 - bodyBob);
   const maceSwing = Math.sin(walkPhase) * 0.12 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.7 : 0);
-  ctx.rotate(0.25 + maceSwing);
+  drawPathArm(ctx, cx0 + size * 0.2, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
+    color: steelMid, colorDark: steelDark, handColor: steelDark,
+    upperLen: 0.14, foreLen: 0.12,
+    shoulderAngle: 0.25 + maceSwing,
+    elbowAngle: 0.3,
+    style: 'armored',
+    onWeapon: (ctx) => {
+      ctx.fillStyle = "#3a3530";
+      ctx.fillRect(-size * 0.015, size * 0.06, size * 0.03, size * 0.15);
 
-  // Armored arm
-  ctx.fillStyle = steelMid;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.08, size * 0.03, size * 0.08, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.14);
-  ctx.rotate(0.3);
-  ctx.fillStyle = steelDark;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.027, size * 0.065, 0, 0, TAU);
-  ctx.fill();
+      const maceY = size * 0.06;
+      ctx.fillStyle = steelHighlight;
+      ctx.beginPath();
+      ctx.arc(0, maceY, size * 0.035, 0, TAU);
+      ctx.fill();
 
-  // Mace shaft
-  ctx.fillStyle = "#3a3530";
-  ctx.fillRect(-size * 0.01, size * 0.06, size * 0.02, size * 0.15);
+      for (let f = 0; f < 6; f++) {
+        const fAngle = f * (TAU / 6);
+        ctx.fillStyle = steelMid;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(fAngle) * size * 0.028, maceY + Math.sin(fAngle) * size * 0.028);
+        ctx.lineTo(Math.cos(fAngle) * size * 0.055, maceY + Math.sin(fAngle) * size * 0.055);
+        ctx.lineTo(Math.cos(fAngle + 0.3) * size * 0.028, maceY + Math.sin(fAngle + 0.3) * size * 0.028);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-  // Flanged mace head
-  const maceY = size * 0.06;
-  ctx.fillStyle = steelHighlight;
-  ctx.beginPath();
-  ctx.arc(0, maceY, size * 0.025, 0, TAU);
-  ctx.fill();
-
-  // Flanges (6)
-  for (let f = 0; f < 6; f++) {
-    const fAngle = f * (TAU / 6);
-    ctx.fillStyle = steelMid;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(fAngle) * size * 0.02, maceY + Math.sin(fAngle) * size * 0.02);
-    ctx.lineTo(Math.cos(fAngle) * size * 0.04, maceY + Math.sin(fAngle) * size * 0.04);
-    ctx.lineTo(Math.cos(fAngle + 0.3) * size * 0.02, maceY + Math.sin(fAngle + 0.3) * size * 0.02);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Blood splatter on mace
-  ctx.fillStyle = "rgba(120, 20, 20, 0.4)";
-  ctx.beginPath();
-  ctx.arc(size * 0.02, maceY - size * 0.01, size * 0.008, 0, TAU);
-  ctx.fill();
-
-  ctx.restore();
+      ctx.fillStyle = "rgba(120, 20, 20, 0.4)";
+      ctx.beginPath();
+      ctx.arc(size * 0.025, maceY - size * 0.012, size * 0.011, 0, TAU);
+      ctx.fill();
+    },
+  });
 
   // === GREAT HELM ===
   const helmX = cx0;
@@ -686,7 +669,7 @@ export function drawLichEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.45;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3;
   const breath = getBreathScale(time, 1.5, 0.02);
@@ -755,6 +738,8 @@ export function drawLichEnemy(
   // === GRAND ROBES ===
   const torsoY = y - size * 0.05 - bodyBob;
 
+  drawTatteredCloak(ctx, cx0, torsoY - size * 0.15 - bodyBob, size, size * 0.3, size * 0.35, "#1a1a3a", "#0a0a1a", time);
+
   ctx.save();
   ctx.translate(cx0, torsoY);
   ctx.scale(breath, breath);
@@ -803,12 +788,16 @@ export function drawLichEnemy(
 
   ctx.restore();
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, boneMid, boneDark, 'tattered');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, boneMid, boneDark, 'tattered');
+
   // === CASTING ARM (left) ===
-  drawAnimatedArm(ctx, cx0 - size * 0.14, torsoY - size * 0.16, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.14, torsoY - size * 0.16, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     swingSpeed: 3, swingAmt: 0.2, baseAngle: 0.5,
     attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
     upperLen: 0.15, foreLen: 0.13,
+    style: 'bone',
   });
 
   // Arcane crackling from hand when attacking
@@ -821,47 +810,35 @@ export function drawLichEnemy(
   }
 
   // === STAFF ARM (right) ===
-  ctx.save();
   const staffArmX = cx0 + size * 0.14;
   const staffArmY = torsoY - size * 0.16;
-  ctx.translate(staffArmX, staffArmY);
-  ctx.rotate(0.15);
+  drawPathArm(ctx, staffArmX, staffArmY, size, time, zoom, 1, {
+    color: boneMid, colorDark: boneDark, handColor: boneDark,
+    upperLen: 0.12, foreLen: 0.1,
+    shoulderAngle: 0.15,
+    elbowAngle: 0.2,
+    style: 'bone',
+    onWeapon: (ctx) => {
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(-size * 0.012, size * 0.03, size * 0.024, size * 0.35);
 
-  // Arm bone
-  ctx.fillStyle = boneMid;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.07, size * 0.018, size * 0.07, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.12);
-  ctx.rotate(0.2);
-  ctx.fillStyle = boneDark;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.05, size * 0.015, size * 0.055, 0, 0, TAU);
-  ctx.fill();
+      const orbY = size * 0.025;
+      const orbGrad = ctx.createRadialGradient(0, orbY, 0, 0, orbY, size * 0.055);
+      orbGrad.addColorStop(0, arcaneBright);
+      orbGrad.addColorStop(0.4, arcaneBlue);
+      orbGrad.addColorStop(1, "#203060");
+      ctx.fillStyle = orbGrad;
+      ctx.beginPath();
+      ctx.arc(0, orbY, size * 0.055, 0, TAU);
+      ctx.fill();
 
-  // Staff shaft
-  ctx.fillStyle = "#3a2a1a";
-  ctx.fillRect(-size * 0.008, size * 0.03, size * 0.016, size * 0.35);
-
-  // Crystal orb at top
-  const orbY = size * 0.025;
-  const orbGrad = ctx.createRadialGradient(0, orbY, 0, 0, orbY, size * 0.04);
-  orbGrad.addColorStop(0, arcaneBright);
-  orbGrad.addColorStop(0.4, arcaneBlue);
-  orbGrad.addColorStop(1, "#203060");
-  ctx.fillStyle = orbGrad;
-  ctx.beginPath();
-  ctx.arc(0, orbY, size * 0.04, 0, TAU);
-  ctx.fill();
-
-  // Orb glow
-  const orbPulse = 0.5 + Math.sin(time * 3) * 0.3;
-  ctx.fillStyle = `rgba(100, 180, 255, ${orbPulse * 0.4})`;
-  ctx.beginPath();
-  ctx.arc(0, orbY, size * 0.06, 0, TAU);
-  ctx.fill();
-
-  ctx.restore();
+      const orbPulse = 0.5 + Math.sin(time * 3) * 0.3;
+      ctx.fillStyle = `rgba(100, 180, 255, ${orbPulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(0, orbY, size * 0.08, 0, TAU);
+      ctx.fill();
+    },
+  });
 
   // Orbiting energy around staff
   drawShiftingSegments(ctx, staffArmX + size * 0.03, staffArmY + size * 0.15, size * 0.5, time, zoom, {
@@ -1014,7 +991,7 @@ export function drawWraithEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.4;
   const isAttacking = attackPhase > 0;
   const breath = getBreathScale(time, 2, 0.025);
   const sway = getIdleSway(time, 1.5, size * 0.008, size * 0.005);
@@ -1103,14 +1080,18 @@ export function drawWraithEnemy(
 
   ctx.restore();
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, y - size * 0.23 + floatBob, size, -1, "rgba(100, 60, 160, 0.4)", "rgba(60, 30, 100, 0.3)", 'tattered');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, y - size * 0.23 + floatBob, size, 1, "rgba(100, 60, 160, 0.4)", "rgba(60, 30, 100, 0.3)", 'tattered');
+
   // === SPECTRAL CLAWS ===
   for (const side of [-1, 1] as (-1 | 1)[]) {
-    drawAnimatedArm(ctx, cx0 + side * size * 0.12, y - size * 0.15 + floatBob, size, time, zoom, side, {
+    drawPathArm(ctx, cx0 + side * size * 0.12, y - size * 0.15 + floatBob, size, time, zoom, side, {
       color: "rgba(100, 60, 160, 0.4)", colorDark: "rgba(60, 30, 100, 0.3)",
-      handColor: "rgba(140, 80, 200, 0.5)", handRadius: 0.03,
+      handColor: "rgba(140, 80, 200, 0.5)", handRadius: 0.04,
       swingSpeed: 2, swingAmt: 0.3, baseAngle: 0.4,
       attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
       upperLen: 0.16, foreLen: 0.14,
+      style: 'ghostly',
     });
   }
 
@@ -1211,7 +1192,7 @@ export function drawBoneMageEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.4;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 4;
   const breath = getBreathScale(time, 1.5, 0.018);
@@ -1252,9 +1233,10 @@ export function drawBoneMageEnemy(
   });
 
   // === BONE LEGS ===
-  drawAnimatedLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
-    legLen: 0.08, width: 0.035, strideSpeed: 4, strideAmt: 0.22,
-    color: boneMid, colorDark: boneDark, footColor: boneDark, footLen: 0.06,
+  drawPathLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
+    legLen: 0.1, width: 0.065, strideSpeed: 4, strideAmt: 0.22,
+    color: boneMid, colorDark: boneDark, footColor: boneDark, footLen: 0.08,
+    style: 'bone',
   });
 
   // Bone dust from feet
@@ -1328,12 +1310,17 @@ export function drawBoneMageEnemy(
 
   ctx.restore();
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, boneMid, boneDark, 'round');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, boneMid, boneDark, 'round');
+  drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, "#3a2a1a", "#1a0a10");
+
   // === CASTING ARM (left) ===
-  drawAnimatedArm(ctx, cx0 - size * 0.13, torsoY - size * 0.14, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.14, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     swingSpeed: 4, swingAmt: 0.25, baseAngle: 0.45,
     attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
     upperLen: 0.14, foreLen: 0.12,
+    style: 'bone',
   });
 
   // Energy arc between staff and hand when attacking
@@ -1344,49 +1331,38 @@ export function drawBoneMageEnemy(
   }
 
   // === STAFF ARM (right) ===
-  ctx.save();
-  ctx.translate(cx0 + size * 0.13, torsoY - size * 0.14);
-  ctx.rotate(0.15);
+  drawPathArm(ctx, cx0 + size * 0.13, torsoY - size * 0.14, size, time, zoom, 1, {
+    color: boneMid, colorDark: boneDark, handColor: boneDark,
+    upperLen: 0.1, foreLen: 0.09,
+    shoulderAngle: 0.15,
+    elbowAngle: 0.2,
+    style: 'bone',
+    onWeapon: (ctx) => {
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(-size * 0.011, size * 0.02, size * 0.022, size * 0.3);
 
-  ctx.fillStyle = boneMid;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.016, size * 0.06, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.1);
-  ctx.rotate(0.2);
-  ctx.fillStyle = boneDark;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.045, size * 0.014, size * 0.05, 0, 0, TAU);
-  ctx.fill();
+      ctx.fillStyle = boneWhite;
+      ctx.beginPath();
+      ctx.ellipse(0, size * 0.015, size * 0.028, size * 0.03, 0, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = "#1a0a20";
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(side * size * 0.011, size * 0.015, size * 0.007, 0, TAU);
+        ctx.fill();
+      }
 
-  // Staff
-  ctx.fillStyle = "#3a2a1a";
-  ctx.fillRect(-size * 0.007, size * 0.02, size * 0.014, size * 0.3);
-
-  // Skull top
-  ctx.fillStyle = boneWhite;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.015, size * 0.02, size * 0.022, 0, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "#1a0a20";
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.arc(side * size * 0.008, size * 0.015, size * 0.005, 0, TAU);
-    ctx.fill();
-  }
-
-  // Purple orb above skull
-  const orbPulse = 0.5 + Math.sin(time * 3.5) * 0.3;
-  ctx.fillStyle = `rgba(140, 60, 220, ${orbPulse * 0.6})`;
-  ctx.beginPath();
-  ctx.arc(0, -size * 0.01, size * 0.025, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = `rgba(200, 140, 255, ${orbPulse * 0.8})`;
-  ctx.beginPath();
-  ctx.arc(0, -size * 0.01, size * 0.012, 0, TAU);
-  ctx.fill();
-
-  ctx.restore();
+      const orbPulse = 0.5 + Math.sin(time * 3.5) * 0.3;
+      ctx.fillStyle = `rgba(140, 60, 220, ${orbPulse * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(0, -size * 0.01, size * 0.035, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(200, 140, 255, ${orbPulse * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(0, -size * 0.01, size * 0.017, 0, TAU);
+      ctx.fill();
+    },
+  });
 
   // === SKULL HEAD IN HOOD ===
   const headX = cx0;
@@ -1450,7 +1426,7 @@ export function drawDarkPriestEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.45;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3.5;
   const breath = getBreathScale(time, 1.2, 0.015);
@@ -1475,13 +1451,16 @@ export function drawDarkPriestEnemy(
   });
 
   // === LEGS (mostly hidden by robes) ===
-  drawAnimatedLegs(ctx, cx0, y + size * 0.18 + bodyBob, size, time, zoom, {
-    legLen: 0.06, width: 0.035, strideSpeed: 3.5, strideAmt: 0.18,
-    color: "#2a0a0a", colorDark: "#1a0505", footColor: "#1a0505", footLen: 0.06,
+  drawPathLegs(ctx, cx0, y + size * 0.18 + bodyBob, size, time, zoom, {
+    legLen: 0.06, width: 0.065, strideSpeed: 3.5, strideAmt: 0.18,
+    color: "#2a0a0a", colorDark: "#1a0505", footColor: "#1a0505", footLen: 0.08,
+    style: 'armored',
   });
 
   // === CRIMSON ROBES ===
   const torsoY = y - size * 0.05 - bodyBob;
+
+  drawTatteredCloak(ctx, cx0, torsoY - size * 0.15 - bodyBob, size, size * 0.3, size * 0.35, "#3a0808", "#1a0404", time);
 
   ctx.save();
   ctx.translate(cx0, torsoY);
@@ -1547,102 +1526,79 @@ export function drawDarkPriestEnemy(
 
   ctx.restore();
 
+  drawGorget(ctx, cx0, torsoY - size * 0.18 - bodyBob, size, size * 0.2, "#3a0808", "#1a0404");
+
   // === CENSER ARM (left) ===
-  ctx.save();
-  const censerArmX = cx0 - size * 0.15;
-  const censerArmY = torsoY - size * 0.14;
-  ctx.translate(censerArmX, censerArmY);
   const censerSwing = Math.sin(time * 2) * 0.2;
-  ctx.rotate(-0.3 + censerSwing);
+  drawPathArm(ctx, cx0 - size * 0.15, torsoY - size * 0.14, size, time, zoom, -1, {
+    color: "#3a0808", colorDark: boneDark, handColor: boneDark,
+    upperLen: 0.12, foreLen: 0.1,
+    shoulderAngle: -0.3 + censerSwing,
+    elbowAngle: 0.25 + censerSwing * 0.5,
+    style: 'bone',
+    onWeapon: (ctx) => {
+      ctx.strokeStyle = "#8a8a90";
+      ctx.lineWidth = size * 0.008;
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.08);
+      ctx.lineTo(0, size * 0.2);
+      ctx.stroke();
 
-  // Arm
-  ctx.fillStyle = "#3a0808";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.07, size * 0.02, size * 0.07, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.12);
-  ctx.rotate(0.25 + censerSwing * 0.5);
-  ctx.fillStyle = boneDark;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.05, size * 0.017, size * 0.055, 0, 0, TAU);
-  ctx.fill();
+      const censerY = size * 0.22;
+      ctx.fillStyle = "#6a5a40";
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.022, censerY);
+      ctx.lineTo(-size * 0.03, censerY + size * 0.035);
+      ctx.lineTo(size * 0.03, censerY + size * 0.035);
+      ctx.lineTo(size * 0.022, censerY);
+      ctx.closePath();
+      ctx.fill();
 
-  // Censer chain
-  ctx.strokeStyle = "#8a8a90";
-  ctx.lineWidth = size * 0.005;
-  ctx.beginPath();
-  ctx.moveTo(0, size * 0.08);
-  ctx.lineTo(0, size * 0.2);
-  ctx.stroke();
-
-  // Censer body
-  const censerY = size * 0.22;
-  ctx.fillStyle = "#6a5a40";
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.015, censerY);
-  ctx.lineTo(-size * 0.02, censerY + size * 0.025);
-  ctx.lineTo(size * 0.02, censerY + size * 0.025);
-  ctx.lineTo(size * 0.015, censerY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Smoke from censer
-  for (let s = 0; s < 4; s++) {
-    const sPhase = (time * 0.6 + s * 0.25) % 1;
-    ctx.globalAlpha = (1 - sPhase) * 0.2;
-    ctx.fillStyle = "rgba(140, 130, 120, 0.4)";
-    const smokeX = Math.sin(time * 2 + s * 1.5) * size * 0.02;
-    ctx.beginPath();
-    ctx.arc(smokeX, censerY - sPhase * size * 0.12, size * 0.01 * (1 + sPhase), 0, TAU);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-
-  ctx.restore();
+      for (let s = 0; s < 4; s++) {
+        const sPhase = (time * 0.6 + s * 0.25) % 1;
+        ctx.globalAlpha = (1 - sPhase) * 0.2;
+        ctx.fillStyle = "rgba(140, 130, 120, 0.4)";
+        const smokeX = Math.sin(time * 2 + s * 1.5) * size * 0.02;
+        ctx.beginPath();
+        ctx.arc(smokeX, censerY - sPhase * size * 0.12, size * 0.01 * (1 + sPhase), 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    },
+  });
 
   // === STAFF WITH LANTERN (right) ===
-  ctx.save();
-  ctx.translate(cx0 + size * 0.15, torsoY - size * 0.14);
-  ctx.rotate(0.12);
+  drawPathArm(ctx, cx0 + size * 0.15, torsoY - size * 0.14, size, time, zoom, 1, {
+    color: "#3a0808", colorDark: boneDark, handColor: boneDark,
+    upperLen: 0.1, foreLen: 0.09,
+    shoulderAngle: 0.12,
+    elbowAngle: 0.15,
+    style: 'bone',
+    onWeapon: (ctx) => {
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(-size * 0.011, size * 0.02, size * 0.022, size * 0.3);
 
-  ctx.fillStyle = "#3a0808";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.018, size * 0.06, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.1);
-  ctx.rotate(0.15);
-  ctx.fillStyle = boneDark;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.045, size * 0.015, size * 0.05, 0, 0, TAU);
-  ctx.fill();
+      const lanternY = size * 0.01;
+      ctx.fillStyle = "#4a3a20";
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.022, lanternY);
+      ctx.lineTo(-size * 0.03, lanternY + size * 0.04);
+      ctx.lineTo(size * 0.03, lanternY + size * 0.04);
+      ctx.lineTo(size * 0.022, lanternY);
+      ctx.closePath();
+      ctx.fill();
 
-  // Staff shaft
-  ctx.fillStyle = "#3a2a1a";
-  ctx.fillRect(-size * 0.007, size * 0.02, size * 0.014, size * 0.3);
-
-  // Lantern at top
-  const lanternY = size * 0.01;
-  ctx.fillStyle = "#4a3a20";
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.015, lanternY);
-  ctx.lineTo(-size * 0.02, lanternY + size * 0.03);
-  ctx.lineTo(size * 0.02, lanternY + size * 0.03);
-  ctx.lineTo(size * 0.015, lanternY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Lantern flame
-  const flameFlicker = 0.6 + Math.sin(time * 8) * 0.2;
-  ctx.fillStyle = `rgba(255, 120, 40, ${flameFlicker * 0.6})`;
-  ctx.beginPath();
-  ctx.arc(0, lanternY + size * 0.015, size * 0.01, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = `rgba(255, 200, 100, ${flameFlicker * 0.3})`;
-  ctx.beginPath();
-  ctx.arc(0, lanternY + size * 0.015, size * 0.02, 0, TAU);
-  ctx.fill();
-
-  ctx.restore();
+      const flameFlicker = 0.6 + Math.sin(time * 8) * 0.2;
+      ctx.fillStyle = `rgba(255, 120, 40, ${flameFlicker * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(0, lanternY + size * 0.02, size * 0.014, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 200, 100, ${flameFlicker * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(0, lanternY + size * 0.02, size * 0.028, 0, TAU);
+      ctx.fill();
+    },
+  });
 
   // Ember sparks from lantern
   drawEmberSparks(ctx, cx0 + size * 0.16, torsoY - size * 0.12, size * 0.15, time, zoom, {
@@ -1746,7 +1702,7 @@ export function drawRevenantEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.5;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 5;
   const breath = getBreathScale(time, 2, 0.02);
@@ -1786,10 +1742,11 @@ export function drawRevenantEnemy(
 
   // === SPECTRAL ARMORED LEGS ===
   ctx.globalAlpha = flicker * 0.7;
-  drawAnimatedLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
-    legLen: 0.08, width: 0.04, strideSpeed: 5, strideAmt: 0.28,
+  drawPathLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
+    legLen: 0.1, width: 0.07, strideSpeed: 5, strideAmt: 0.28,
     color: "rgba(140, 80, 40, 0.6)", colorDark: "rgba(100, 50, 25, 0.5)",
-    footColor: "rgba(80, 40, 20, 0.5)", footLen: 0.07,
+    footColor: "rgba(80, 40, 20, 0.5)", footLen: 0.09,
+    style: 'armored',
   });
   ctx.globalAlpha = 1;
 
@@ -1827,6 +1784,10 @@ export function drawRevenantEnemy(
 
   // === SPECTRAL ARMORED BODY ===
   const torsoY = y - size * 0.08 - bodyBob;
+
+  ctx.globalAlpha = flicker * 0.5;
+  drawTatteredCloak(ctx, cx0, torsoY - size * 0.15 - bodyBob, size, size * 0.3, size * 0.35, "rgba(180, 80, 30, 0.4)", "rgba(100, 40, 15, 0.3)", time);
+  ctx.globalAlpha = 1;
 
   ctx.save();
   ctx.globalAlpha = flicker * 0.8;
@@ -1874,73 +1835,63 @@ export function drawRevenantEnemy(
     ctx.globalAlpha = 1;
   }
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, "rgba(200, 120, 60, 0.5)", "rgba(100, 50, 25, 0.3)", 'plate');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, "rgba(200, 120, 60, 0.5)", "rgba(100, 50, 25, 0.3)", 'plate');
+
   // === LEFT ARM ===
   ctx.globalAlpha = flicker * 0.7;
-  drawAnimatedArm(ctx, cx0 - size * 0.15, torsoY - size * 0.1 - bodyBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.15, torsoY - size * 0.1 - bodyBob, size, time, zoom, -1, {
     color: "rgba(150, 80, 40, 0.5)", colorDark: "rgba(100, 50, 25, 0.4)",
     handColor: "rgba(120, 60, 30, 0.5)",
     swingSpeed: 5, swingAmt: 0.2, baseAngle: 0.3,
     elbowBend: 0.35, upperLen: 0.15, foreLen: 0.13,
+    style: 'armored',
   });
   ctx.globalAlpha = 1;
 
   // === FIRE-WREATHED GREATSWORD (right) ===
-  ctx.save();
-  ctx.translate(cx0 + size * 0.16, torsoY - size * 0.1 - bodyBob);
   const swordSwing = Math.sin(walkPhase) * 0.1 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.9 : 0);
-  ctx.rotate(0.25 + swordSwing);
   ctx.globalAlpha = flicker * 0.8;
+  drawPathArm(ctx, cx0 + size * 0.16, torsoY - size * 0.1 - bodyBob, size, time, zoom, 1, {
+    color: "rgba(150, 80, 40, 0.5)", colorDark: "rgba(100, 50, 25, 0.4)", handColor: "rgba(100, 50, 25, 0.4)",
+    upperLen: 0.14, foreLen: 0.12,
+    shoulderAngle: 0.25 + swordSwing,
+    elbowAngle: 0.3 + (isAttacking ? -0.4 : 0),
+    style: 'armored',
+    onWeapon: (ctx) => {
+      const gsLen = size * 0.38;
+      const gsW = size * 0.035;
+      ctx.fillStyle = "rgba(180, 120, 60, 0.6)";
+      ctx.beginPath();
+      ctx.moveTo(-gsW, size * 0.1);
+      ctx.lineTo(-gsW * 0.3, size * 0.1 + gsLen);
+      ctx.lineTo(gsW * 0.3, size * 0.1 + gsLen);
+      ctx.lineTo(gsW, size * 0.1);
+      ctx.closePath();
+      ctx.fill();
 
-  // Spectral arm
-  ctx.fillStyle = "rgba(150, 80, 40, 0.5)";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.08, size * 0.025, size * 0.08, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.14);
-  ctx.rotate(0.3 + (isAttacking ? -0.4 : 0));
+      for (let f = 0; f < 5; f++) {
+        const fy = size * 0.13 + f * gsLen * 0.18;
+        const fPhase = Math.sin(time * 10 + f * 2);
+        ctx.fillStyle = `rgba(255, 130, 40, ${0.25 + fPhase * 0.1})`;
+        ctx.beginPath();
+        ctx.ellipse(gsW * 0.6 + fPhase * size * 0.012, fy, size * 0.022 * (1 + fPhase * 0.3), size * 0.02, fPhase * 0.3, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 220, 100, ${0.15 + fPhase * 0.08})`;
+        ctx.beginPath();
+        ctx.ellipse(gsW * 0.6 + fPhase * size * 0.012, fy, size * 0.01, size * 0.011, 0, 0, TAU);
+        ctx.fill();
+      }
 
-  ctx.fillStyle = "rgba(100, 50, 25, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.022, size * 0.065, 0, 0, TAU);
-  ctx.fill();
+      drawEnergyArc(ctx, 0, size * 0.15, 0, size * 0.1 + gsLen * 0.8, time, zoom, {
+        color: "rgba(255, 150, 50, 0.5)", segments: 4, amplitude: 5, width: 1.2,
+      });
 
-  // Sword blade
-  const gsLen = size * 0.38;
-  const gsW = size * 0.023;
-  ctx.fillStyle = "rgba(180, 120, 60, 0.6)";
-  ctx.beginPath();
-  ctx.moveTo(-gsW, size * 0.1);
-  ctx.lineTo(-gsW * 0.3, size * 0.1 + gsLen);
-  ctx.lineTo(gsW * 0.3, size * 0.1 + gsLen);
-  ctx.lineTo(gsW, size * 0.1);
-  ctx.closePath();
-  ctx.fill();
-
-  // Fire wreath on blade
-  for (let f = 0; f < 5; f++) {
-    const fy = size * 0.13 + f * gsLen * 0.18;
-    const fPhase = Math.sin(time * 10 + f * 2);
-    ctx.fillStyle = `rgba(255, 130, 40, ${0.25 + fPhase * 0.1})`;
-    ctx.beginPath();
-    ctx.ellipse(gsW * 0.6 + fPhase * size * 0.008, fy, size * 0.015 * (1 + fPhase * 0.3), size * 0.015, fPhase * 0.3, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = `rgba(255, 220, 100, ${0.15 + fPhase * 0.08})`;
-    ctx.beginPath();
-    ctx.ellipse(gsW * 0.6 + fPhase * size * 0.008, fy, size * 0.007, size * 0.008, 0, 0, TAU);
-    ctx.fill();
-  }
-
-  // Energy arc on blade
-  drawEnergyArc(ctx, 0, size * 0.15, 0, size * 0.1 + gsLen * 0.8, time, zoom, {
-    color: "rgba(255, 150, 50, 0.5)", segments: 4, amplitude: 5, width: 1.2,
+      ctx.fillStyle = "rgba(180, 120, 60, 0.6)";
+      ctx.fillRect(-size * 0.06, size * 0.08, size * 0.12, size * 0.02);
+    },
   });
-
-  // Crossguard
-  ctx.fillStyle = "rgba(180, 120, 60, 0.6)";
-  ctx.fillRect(-size * 0.04, size * 0.08, size * 0.08, size * 0.015);
-
   ctx.globalAlpha = 1;
-  ctx.restore();
 
   // === BURNING HEAD ===
   const headX = cx0;
@@ -2028,7 +1979,7 @@ export function drawAbominationEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.7;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 2;
   const breath = getBreathScale(time, 0.7, 0.025);
@@ -2079,10 +2030,11 @@ export function drawAbominationEnemy(
 
   // === MISMATCHED LEGS ===
   // Left leg (thicker)
-  drawAnimatedLegs(ctx, cx0 - size * 0.03, y + size * 0.15 + bodyBob, size, time, zoom, {
-    legLen: 0.09, width: 0.08, strideSpeed: 2, strideAmt: 0.15,
+  drawPathLegs(ctx, cx0 - size * 0.03, y + size * 0.15 + bodyBob, size, time, zoom, {
+    legLen: 0.11, width: 0.1, strideSpeed: 2, strideAmt: 0.15,
     color: bodyColor, colorDark: bodyColorDark, footColor: "#3a3530", footLen: 0.1,
     shuffle: true, phaseOffset: 0,
+    style: 'fleshy',
   });
 
   // === BLOATED TORSO ===
@@ -2182,25 +2134,31 @@ export function drawAbominationEnemy(
 
   ctx.restore();
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, bodyColor, bodyColorDark, 'round');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, bodyColor, bodyColorDark, 'round');
+  drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, "#5a5a60", "#3a3a40", "#8a8a90");
+
   // === FOUR ARMS ===
   // Upper large arms
   for (const side of [-1, 1] as (-1 | 1)[]) {
-    drawAnimatedArm(ctx, cx0 + side * size * 0.2, torsoY - size * 0.12 - bodyBob, size, time, zoom, side, {
+    drawPathArm(ctx, cx0 + side * size * 0.2, torsoY - size * 0.12 - bodyBob, size, time, zoom, side, {
       color: bodyColor, colorDark: bodyColorDark, handColor: bodyColorDark,
       swingSpeed: 2, swingAmt: 0.25, baseAngle: 0.35,
       attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.4,
-      upperLen: 0.2, foreLen: 0.18, width: 0.08, handRadius: 0.045,
+      upperLen: 0.2, foreLen: 0.18, width: 0.1, handRadius: 0.055,
+      style: 'fleshy',
     });
   }
 
   // Lower smaller arms
   for (const side of [-1, 1] as (-1 | 1)[]) {
-    drawAnimatedArm(ctx, cx0 + side * size * 0.15, torsoY + size * 0.02 - bodyBob, size, time, zoom, side, {
+    drawPathArm(ctx, cx0 + side * size * 0.15, torsoY + size * 0.02 - bodyBob, size, time, zoom, side, {
       color: bodyColorDark, colorDark: "#3a2a18", handColor: "#3a2a18",
       swingSpeed: 2.5, swingAmt: 0.2, baseAngle: 0.5,
       attackExtra: isAttacking ? 0.3 : 0, elbowBend: 0.5,
-      upperLen: 0.14, foreLen: 0.12, width: 0.05, handRadius: 0.03,
+      upperLen: 0.14, foreLen: 0.12, width: 0.08, handRadius: 0.04,
       phaseOffset: Math.PI / 2,
+      style: 'fleshy',
     });
   }
 
@@ -2282,7 +2240,7 @@ export function drawHellhoundEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.5;
   const isAttacking = attackPhase > 0;
   const gallopPhase = time * 7;
   const bodyBob = Math.abs(Math.sin(gallopPhase)) * size * 0.02;
@@ -2581,7 +2539,7 @@ export function drawDoomHeraldEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 2;
+  size *= 1.65;
   const isAttacking = attackPhase > 0;
   const breath = getBreathScale(time, 1.5, 0.02);
   const sway = getIdleSway(time, 0.8, size * 0.006, size * 0.005);
@@ -2689,6 +2647,8 @@ export function drawDoomHeraldEnemy(
   // === ETHEREAL ROBES (no legs) ===
   const torsoY = y - size * 0.05 + floatBob;
 
+  drawTatteredCloak(ctx, cx0, torsoY - size * 0.15 - floatBob, size, size * 0.3, size * 0.35, "#1a0a2a", "#0a0515", time);
+
   ctx.save();
   ctx.translate(cx0, torsoY);
   ctx.scale(breath, breath);
@@ -2734,6 +2694,10 @@ export function drawDoomHeraldEnemy(
 
   ctx.restore();
 
+  drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - floatBob, size, -1, "#c8b8a0", "#a89880", 'plate');
+  drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - floatBob, size, 1, "#c8b8a0", "#a89880", 'plate');
+  drawGorget(ctx, cx0, torsoY - size * 0.18 - floatBob, size, size * 0.2, "#c8b8a0", "#a89880");
+
   // Trailing robe tendrils
   for (let t = 0; t < 4; t++) {
     const angle = Math.PI / 2 + (t - 1.5) * 0.3;
@@ -2744,64 +2708,50 @@ export function drawDoomHeraldEnemy(
   }
 
   // === STAFF OF DOOM ARM (right) ===
-  ctx.save();
-  const staffX = cx0 + size * 0.14;
-  const staffY = torsoY - size * 0.15 + floatBob;
-  ctx.translate(staffX, staffY);
-  ctx.rotate(0.15);
+  drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.15 + floatBob, size, time, zoom, 1, {
+    color: "#c8b8a0", colorDark: "#a89880", handColor: "#a89880",
+    upperLen: 0.1, foreLen: 0.09,
+    shoulderAngle: 0.15,
+    elbowAngle: 0.2,
+    style: 'bone',
+    onWeapon: (ctx) => {
+      ctx.fillStyle = "#2a1a3a";
+      ctx.fillRect(-size * 0.013, size * 0.02, size * 0.026, size * 0.35);
 
-  // Skeletal arm
-  ctx.fillStyle = "#c8b8a0";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.06, size * 0.016, size * 0.06, 0, 0, TAU);
-  ctx.fill();
-  ctx.translate(0, size * 0.1);
-  ctx.rotate(0.2);
-  ctx.fillStyle = "#a89880";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.045, size * 0.014, size * 0.05, 0, 0, TAU);
-  ctx.fill();
+      const doomOrbY = size * 0.01;
+      const doomPulse = 0.5 + Math.sin(time * 3) * 0.3;
+      const doomGrad = ctx.createRadialGradient(0, doomOrbY, 0, 0, doomOrbY, size * 0.065);
+      doomGrad.addColorStop(0, `rgba(180, 80, 255, ${doomPulse})`);
+      doomGrad.addColorStop(0.4, "#6030a0");
+      doomGrad.addColorStop(1, "#200a40");
+      ctx.fillStyle = doomGrad;
+      ctx.beginPath();
+      ctx.arc(0, doomOrbY, size * 0.065, 0, TAU);
+      ctx.fill();
 
-  // Staff shaft
-  ctx.fillStyle = "#2a1a3a";
-  ctx.fillRect(-size * 0.008, size * 0.02, size * 0.016, size * 0.35);
+      ctx.fillStyle = `rgba(140, 60, 220, ${doomPulse * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(0, doomOrbY, size * 0.09, 0, TAU);
+      ctx.fill();
 
-  // Doom orb at top
-  const doomOrbY = size * 0.01;
-  const doomPulse = 0.5 + Math.sin(time * 3) * 0.3;
-  const doomGrad = ctx.createRadialGradient(0, doomOrbY, 0, 0, doomOrbY, size * 0.045);
-  doomGrad.addColorStop(0, `rgba(180, 80, 255, ${doomPulse})`);
-  doomGrad.addColorStop(0.4, "#6030a0");
-  doomGrad.addColorStop(1, "#200a40");
-  ctx.fillStyle = doomGrad;
-  ctx.beginPath();
-  ctx.arc(0, doomOrbY, size * 0.045, 0, TAU);
-  ctx.fill();
-
-  // Orb outer glow
-  ctx.fillStyle = `rgba(140, 60, 220, ${doomPulse * 0.3})`;
-  ctx.beginPath();
-  ctx.arc(0, doomOrbY, size * 0.065, 0, TAU);
-  ctx.fill();
-
-  // Energy crackling from orb
-  if (isAttacking) {
-    drawEnergyArc(ctx, 0, doomOrbY, size * 0.1, doomOrbY - size * 0.1, time, zoom, {
-      color: "rgba(180, 80, 255, 0.6)", segments: 4, amplitude: 6, width: 1.5,
-    });
-    drawEnergyArc(ctx, 0, doomOrbY, -size * 0.08, doomOrbY + size * 0.08, time, zoom, {
-      color: "rgba(140, 60, 200, 0.5)", segments: 3, amplitude: 5, width: 1,
-    });
-  }
-
-  ctx.restore();
+      if (isAttacking) {
+        drawEnergyArc(ctx, 0, doomOrbY, size * 0.1, doomOrbY - size * 0.1, time, zoom, {
+          color: "rgba(180, 80, 255, 0.6)", segments: 4, amplitude: 6, width: 1.5,
+        });
+        drawEnergyArc(ctx, 0, doomOrbY, -size * 0.08, doomOrbY + size * 0.08, time, zoom, {
+          color: "rgba(140, 60, 200, 0.5)", segments: 3, amplitude: 5, width: 1,
+        });
+      }
+    },
+  });
 
   // === LEFT ARM ===
-  drawAnimatedArm(ctx, cx0 - size * 0.13, torsoY - size * 0.15 + floatBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.15 + floatBob, size, time, zoom, -1, {
     color: "#c8b8a0", colorDark: "#a89880", handColor: "#a89880",
     swingSpeed: 2, swingAmt: 0.2, baseAngle: 0.4,
     attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.45,
     upperLen: 0.15, foreLen: 0.13,
+    style: 'armored',
   });
 
   // Spectral chains on wrists

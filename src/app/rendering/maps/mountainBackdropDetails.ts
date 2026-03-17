@@ -52,12 +52,13 @@ function drawMistBand(
   color: string,
   alpha: number,
 ): void {
+  const transparent = hexToRgba(color, 0);
   const grad = ctx.createLinearGradient(0, y - thickness, 0, y + thickness);
-  grad.addColorStop(0, "rgba(255,255,255,0)");
+  grad.addColorStop(0, transparent);
   grad.addColorStop(0.4, hexToRgba(color, alpha * 0.5));
   grad.addColorStop(0.5, hexToRgba(color, alpha));
   grad.addColorStop(0.6, hexToRgba(color, alpha * 0.5));
-  grad.addColorStop(1, "rgba(255,255,255,0)");
+  grad.addColorStop(1, transparent);
   ctx.fillStyle = grad;
   ctx.fillRect(-20, y - thickness, width + 40, thickness * 2);
 }

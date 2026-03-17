@@ -634,7 +634,7 @@ function MobileSpellCircle({
 
       {/* Level badge */}
       <div
-        className="absolute -top-0.5 -right-0.5 px-1 py-px rounded-full text-[7px] font-bold z-20"
+        className="absolute -top-0.5 -right-0.5 flex items-center gap-[1px] px-1 py-px rounded-full text-[7px] font-bold z-20"
         style={{
           background: active
             ? "linear-gradient(135deg, rgba(100,75,18,0.92), rgba(60,45,10,0.92))"
@@ -644,7 +644,7 @@ function MobileSpellCircle({
           boxShadow: active ? `0 0 4px ${accent.glow}` : "none",
         }}
       >
-        {spellLevel + 1}
+        <span className="text-[5px] font-semibold opacity-60 uppercase">Lv</span>{spellLevel + 1}
       </div>
 
       {/* Bottom label */}

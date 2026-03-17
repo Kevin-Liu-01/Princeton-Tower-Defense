@@ -1,7 +1,7 @@
 import type { Position } from "../../types";
 import {
-  resolveWeaponRotation,
   WEAPON_LIMITS,
+  anchorWeaponToHand,
 } from "./troopHelpers";
 
 export function drawEliteTroop(
@@ -38,20 +38,27 @@ export function drawEliteTroop(
   const halberdSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.5) * 1.8
     : 0;
-  const halberdX =
-    x + size * 0.27 + (isAttacking ? halberdSwing * size * 0.18 : 0);
-  const halberdY =
-    y - size * 0.12 - (isAttacking ? Math.abs(halberdSwing) * size * 0.12 : 0);
+
+  // Anchor halberd to hand — arm swing drives hand position
+  const eliteHalbArmLen = size * 0.2;
+  const eliteHalbGripLocalY = size * 0.1;
+  const eliteHalbShoulderX = x + size * 0.2;
+  const eliteHalbShoulderY = y - size * 0.02 + breathe;
+  const eliteHalbArmSwing = isAttacking
+    ? -0.2 + halberdSwing * 0.4
+    : -0.1 + stance * 0.02;
   const halberdBaseAngle = 0.15 + stance * 0.02 + halberdSwing;
-  const halberdAngle = resolveWeaponRotation(
-    targetPos,
-    halberdX,
-    halberdY,
-    halberdBaseAngle,
-    Math.PI / 2,
+  const halbAnchor = anchorWeaponToHand(
+    eliteHalbShoulderX, eliteHalbShoulderY,
+    eliteHalbArmLen, eliteHalbArmSwing,
+    eliteHalbGripLocalY, halberdBaseAngle,
+    targetPos, Math.PI / 2,
     isAttacking ? 1.15 : 0.62,
     WEAPON_LIMITS.rightPole,
   );
+  const halberdX = halbAnchor.weaponX;
+  const halberdY = halbAnchor.weaponY;
+  const halberdAngle = halbAnchor.weaponAngle;
 
   // === ELITE AURA (always present, stronger during attack) ===
   const auraIntensity = isAttacking ? 0.6 : 0.3;
@@ -640,27 +647,17 @@ export function drawEliteTroop(
   ctx.fill();
   ctx.restore();
 
-  // Right arm → halberd grip (shaft at local (0, size*0.1))
-  const halbGripLocalY = size * 0.1;
-  const halbGripWX = halberdX - Math.sin(halberdAngle) * halbGripLocalY;
-  const halbGripWY = halberdY + Math.cos(halberdAngle) * halbGripLocalY;
-  const eliteRShoulderX = x + size * 0.2;
-  const eliteRShoulderY = y - size * 0.02 + breathe;
-  const eliteArmToHalbAngle = Math.atan2(
-    halbGripWY - eliteRShoulderY,
-    halbGripWX - eliteRShoulderX,
-  );
-
+  // Right arm → halberd (anchored to hand)
   ctx.save();
-  ctx.translate(eliteRShoulderX, eliteRShoulderY);
-  ctx.rotate(eliteArmToHalbAngle);
+  ctx.translate(eliteHalbShoulderX, eliteHalbShoulderY);
+  ctx.rotate(eliteHalbArmSwing);
   ctx.fillStyle = "#5a5a6a";
   ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
   ctx.fillStyle = "#7a7a8a";
   ctx.fillRect(size * 0.1, -size * 0.04, size * 0.1, size * 0.08);
   ctx.fillStyle = "#6a6a7a";
   ctx.beginPath();
-  ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(eliteHalbArmLen, 0, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 

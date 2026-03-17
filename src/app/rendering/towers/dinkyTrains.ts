@@ -2364,48 +2364,48 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Heavy rivets on cargo car
+      // Heavy rivets on cargo car (right face)
       ctx.fillStyle = "#6a7080";
       for (let row = 0; row < 3; row++) {
         for (let col = 0; col < 6; col++) {
           const rx =
-            cargoPos.x - 6.5 * zoom - col * 0.7 * zoom + row * 0.2 * zoom;
+            cargoPos.x + 6.5 * zoom + col * 0.7 * zoom - row * 0.2 * zoom;
           const ry =
-            cargoPos.y - 1.5 * zoom - row * 4 * zoom + col * 0.35 * zoom;
+            cargoPos.y - 1.5 * zoom - row * 4 * zoom - col * 0.35 * zoom;
           ctx.beginPath();
           ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // Arrow/gun slits — isometric slope -d/w=-0.42 on right face
+      // Arrow/gun slits — isometric slope +d/w=+0.42 on left face
       for (let s = 0; s < 2; s++) {
-        const slitX = cargoPos.x + (1 + s * 3) * zoom;
-        const slitY = cargoPos.y - (3.5 + s * 1.5) * zoom;
+        const slitX = cargoPos.x - (1 + s * 3) * zoom;
+        const slitY = cargoPos.y - (3.5 - s * 1.5) * zoom;
         ctx.fillStyle = "#0a0e14";
         ctx.beginPath();
         ctx.moveTo(slitX, slitY - 4 * zoom);
-        ctx.lineTo(slitX + 1 * zoom, slitY - 4.42 * zoom);
-        ctx.lineTo(slitX + 1 * zoom, slitY - 0.42 * zoom);
+        ctx.lineTo(slitX - 1 * zoom, slitY - 4 * zoom + 0.42 * zoom);
+        ctx.lineTo(slitX - 1 * zoom, slitY + 0.42 * zoom);
         ctx.lineTo(slitX, slitY);
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = `rgba(231, 117, 0, ${0.3 + Math.sin(time * 2 + s) * 0.15})`;
         ctx.beginPath();
-        ctx.moveTo(slitX + 0.2 * zoom, slitY - 3.7 * zoom);
-        ctx.lineTo(slitX + 0.8 * zoom, slitY - 3.95 * zoom);
-        ctx.lineTo(slitX + 0.8 * zoom, slitY - 0.55 * zoom);
-        ctx.lineTo(slitX + 0.2 * zoom, slitY - 0.3 * zoom);
+        ctx.moveTo(slitX - 0.2 * zoom, slitY - 3.7 * zoom);
+        ctx.lineTo(slitX - 0.8 * zoom, slitY - 3.7 * zoom + 0.25 * zoom);
+        ctx.lineTo(slitX - 0.8 * zoom, slitY - 0.3 * zoom + 0.25 * zoom);
+        ctx.lineTo(slitX - 0.2 * zoom, slitY - 0.3 * zoom);
         ctx.closePath();
         ctx.fill();
       }
 
-      // Shield/emblem on left face (raised Princeton medallion)
-      const shield = isoOffset(cargoPos.x, cargoPos.y - 5.5 * zoom, -4.5);
+      // Shield/emblem on right face (raised Princeton medallion)
+      const shield = isoOffset(cargoPos.x, cargoPos.y - 5.5 * zoom, 4.5);
       ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       ctx.ellipse(
-        shield.x - 5.5 * zoom,
+        shield.x + 5.5 * zoom,
         shield.y,
         3.5 * zoom,
         1.8 * zoom,
@@ -2418,10 +2418,10 @@ export function renderDinkyTrains(
       ctx.shadowColor = "#E77500";
       ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(shield.x - 5.5 * zoom, shield.y - 2.5 * zoom);
-      ctx.lineTo(shield.x - 5.5 * zoom - 2.5 * zoom, shield.y);
-      ctx.lineTo(shield.x - 5.5 * zoom, shield.y + 2.5 * zoom);
-      ctx.lineTo(shield.x - 5.5 * zoom + 2.5 * zoom, shield.y);
+      ctx.moveTo(shield.x + 5.5 * zoom, shield.y - 2.5 * zoom);
+      ctx.lineTo(shield.x + 5.5 * zoom + 2.5 * zoom, shield.y);
+      ctx.lineTo(shield.x + 5.5 * zoom, shield.y + 2.5 * zoom);
+      ctx.lineTo(shield.x + 5.5 * zoom - 2.5 * zoom, shield.y);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -2482,13 +2482,13 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Turret armor rivets
+      // Turret armor rivets (left face)
       ctx.fillStyle = "#6a7080";
       for (let ri = 0; ri < 3; ri++) {
         ctx.beginPath();
         ctx.arc(
-          cargoPos.x + (1 + ri * 1.8) * zoom,
-          turretBaseY - (2 + ri * 0.9) * zoom,
+          cargoPos.x - (1 + ri * 1.8) * zoom,
+          turretBaseY - (2 - ri * 0.9) * zoom,
           0.5 * zoom,
           0,
           Math.PI * 2,
@@ -3418,15 +3418,15 @@ export function renderDinkyTrains(
         );
       }
 
-      // Portcullis gate — isometric slope -d/w = -3.25/7.5 = -0.433 on right face
-      const portX = fortressPos.x + 2 * zoom;
+      // Portcullis gate — isometric slope +d/w = +3.25/7.5 = +0.433 on left face
+      const portX = fortressPos.x - 2 * zoom;
       const portY = fortressPos.y - 3.5 * zoom;
       const portSlope = 3.25 / 7.5;
       ctx.fillStyle = "#1a2030";
       ctx.beginPath();
       ctx.moveTo(portX, portY - 7 * zoom);
-      ctx.lineTo(portX + 5 * zoom, portY - 7 * zoom - 5 * portSlope * zoom);
-      ctx.lineTo(portX + 5 * zoom, portY - 5 * portSlope * zoom);
+      ctx.lineTo(portX - 5 * zoom, portY - 7 * zoom + 5 * portSlope * zoom);
+      ctx.lineTo(portX - 5 * zoom, portY + 5 * portSlope * zoom);
       ctx.lineTo(portX, portY);
       ctx.closePath();
       ctx.fill();
@@ -3435,57 +3435,84 @@ export function renderDinkyTrains(
       for (let gi = 0; gi < 5; gi++) {
         const gy = portY - gi * 1.4 * zoom;
         ctx.beginPath();
-        ctx.moveTo(portX + 0.3 * zoom, gy);
-        ctx.lineTo(portX + 4.7 * zoom, gy - 4.7 * portSlope * zoom);
+        ctx.moveTo(portX - 0.3 * zoom, gy);
+        ctx.lineTo(portX - 4.7 * zoom, gy + 4.7 * portSlope * zoom);
         ctx.stroke();
       }
       for (let gi = 0; gi < 4; gi++) {
-        const gx = portX + (gi + 1) * 1.1 * zoom;
+        const gx = portX - (gi + 1) * 1.1 * zoom;
         const gOff = (gi + 1) * 1.1 * portSlope;
         ctx.beginPath();
-        ctx.moveTo(gx, portY - 7 * zoom - gOff * zoom);
-        ctx.lineTo(gx, portY - gOff * zoom);
+        ctx.moveTo(gx, portY - 7 * zoom + gOff * zoom);
+        ctx.lineTo(gx, portY + gOff * zoom);
         ctx.stroke();
       }
 
-      // Rose window with stained glass effect (fiery orange)
+      // Rose window with stained glass — isometric ellipse flush with right face
       const roseGlow = 0.65 + Math.sin(time * 2) * 0.25;
-      const rosePos = isoOffset(
-        fortressPos.x,
-        fortressPos.y - 7.5 * zoom,
-        -5.5,
-      );
+      const rwCX3 = fortressPos.x + 3.75 * zoom;
+      const rwCY3 = fortressPos.y - 6.5 * zoom;
+      const rwR3 = 3.5 * zoom;
+      const rwSlope3 = -ISO_Y_RATIO;
+
       ctx.fillStyle = "#3a4050";
       ctx.beginPath();
-      ctx.arc(rosePos.x, rosePos.y, 4.5 * zoom, 0, Math.PI * 2);
+      for (let i = 0; i <= 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const px = rwCX3 + Math.cos(a) * rwR3 * 0.6;
+        const py =
+          rwCY3 + Math.sin(a) * rwR3 - Math.cos(a) * rwR3 * 0.6 * rwSlope3;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.fill();
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.stroke();
+
       ctx.fillStyle = `rgba(255, 108, 0, ${roseGlow})`;
       ctx.shadowColor = "#ff6600";
       ctx.shadowBlur = 12 * zoom;
       ctx.beginPath();
-      ctx.arc(rosePos.x, rosePos.y, 4 * zoom, 0, Math.PI * 2);
+      for (let i = 0; i <= 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const px = rwCX3 + Math.cos(a) * rwR3 * 0.55;
+        const py =
+          rwCY3 +
+          Math.sin(a) * rwR3 * 0.92 -
+          Math.cos(a) * rwR3 * 0.55 * rwSlope3;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
+
       ctx.strokeStyle = "rgba(180, 60, 0, 0.5)";
       ctx.lineWidth = 0.8 * zoom;
       for (let pi = 0; pi < 8; pi++) {
         const pAngle = (pi / 8) * Math.PI * 2;
-        const px = rosePos.x + Math.cos(pAngle) * 1.8 * zoom;
-        const py = rosePos.y + Math.sin(pAngle) * 1.8 * zoom;
+        const ppx = rwCX3 + Math.cos(pAngle) * rwR3 * 0.25;
+        const ppy =
+          rwCY3 +
+          Math.sin(pAngle) * rwR3 * 0.42 -
+          Math.cos(pAngle) * rwR3 * 0.25 * rwSlope3;
         ctx.beginPath();
-        ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
+        ctx.ellipse(ppx, ppy, rwR3 * 0.12, rwR3 * 0.22, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
+
       ctx.fillStyle = "#fff4e0";
       ctx.beginPath();
-      ctx.arc(rosePos.x, rosePos.y, 0.9 * zoom, 0, Math.PI * 2);
+      ctx.ellipse(rwCX3, rwCY3, 0.9 * zoom * 0.6, 0.9 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // War banner on fortress car (3D isometric)
+      // War banner on fortress car (3D isometric) — right face
       const bannerPole = isoOffset(
         fortressPos.x,
         fortressPos.y - 13 * zoom,
-        -7,
+        7,
       );
       ctx.strokeStyle = "#3a4050";
       ctx.lineWidth = 2 * zoom;
@@ -3506,15 +3533,15 @@ export function renderDinkyTrains(
       const bFlagWave = Math.sin(time * 2.5 + 0.5) * 0.6;
       ctx.fillStyle = "#c04000";
       ctx.beginPath();
-      ctx.moveTo(bannerPole.x - 1 * zoom, bannerPole.y - 9 * zoom + 0.5 * zoom);
+      ctx.moveTo(bannerPole.x + 1 * zoom, bannerPole.y - 9 * zoom + 0.5 * zoom);
       ctx.quadraticCurveTo(
-        bannerPole.x - 4 * zoom - 1 * zoom,
+        bannerPole.x + 4 * zoom + 1 * zoom,
         bannerPole.y - 8 * zoom + bFlagWave * zoom + 0.5 * zoom,
-        bannerPole.x - 6 * zoom - 1 * zoom,
+        bannerPole.x + 6 * zoom + 1 * zoom,
         bannerPole.y - 7 * zoom + bFlagWave * zoom + 0.5 * zoom,
       );
       ctx.lineTo(
-        bannerPole.x - 1 * zoom,
+        bannerPole.x + 1 * zoom,
         bannerPole.y - 5.5 * zoom + 0.5 * zoom,
       );
       ctx.closePath();
@@ -3523,9 +3550,9 @@ export function renderDinkyTrains(
       ctx.beginPath();
       ctx.moveTo(bannerPole.x, bannerPole.y - 9 * zoom);
       ctx.quadraticCurveTo(
-        bannerPole.x - 4 * zoom,
+        bannerPole.x + 4 * zoom,
         bannerPole.y - 8 * zoom + bFlagWave * zoom,
-        bannerPole.x - 6 * zoom,
+        bannerPole.x + 6 * zoom,
         bannerPole.y - 7 * zoom + bFlagWave * zoom,
       );
       ctx.lineTo(bannerPole.x, bannerPole.y - 5.5 * zoom);
@@ -4066,7 +4093,7 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Gold columns on right face — isometric flush lines
+      // Gold columns on left face — isometric flush lines
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.2 * zoom;
       for (let ci = 0; ci < 4; ci++) {
@@ -4075,9 +4102,8 @@ export function renderDinkyTrains(
           passengerPos.y,
           -3.5 + ci * 2.5,
         );
-        const colX = colPos.x + 2.5 * zoom;
+        const colX = colPos.x - 3.25 * zoom;
         const colTopY = colPos.y - 11 * zoom;
-        const slope = -ISO_Y_RATIO;
         ctx.beginPath();
         ctx.moveTo(colX, colTopY);
         ctx.lineTo(colX, colPos.y);
@@ -4089,7 +4115,7 @@ export function renderDinkyTrains(
           colTopY + 0.6 * zoom,
           2.5,
           1,
-          "right",
+          "left",
           zoom,
           { fill: "#C9A227" },
         );
@@ -4099,13 +4125,13 @@ export function renderDinkyTrains(
           colPos.y - 0.6 * zoom,
           2,
           1,
-          "right",
+          "left",
           zoom,
           { fill: "#C9A227" },
         );
       }
 
-      // Arched windows — isometric gothic flush with right wall
+      // Arched windows — isometric gothic flush with left wall
       {
         const winGlow = 0.5 + Math.sin(time * 2) * 0.18;
         for (let wi = 0; wi < 3; wi++) {
@@ -4114,7 +4140,7 @@ export function renderDinkyTrains(
             passengerPos.y - 5.5 * zoom,
             -2.5 + wi * 2.5,
           );
-          const wx = wPos4a.x + 2.5 * zoom;
+          const wx = wPos4a.x - 3.25 * zoom;
           const wy = wPos4a.y;
           drawIsoGothicWindow(
             ctx,
@@ -4122,7 +4148,7 @@ export function renderDinkyTrains(
             wy,
             2.8,
             4.5,
-            "right",
+            "left",
             zoom,
             "rgba(255, 250, 230",
             winGlow,
@@ -4131,7 +4157,7 @@ export function renderDinkyTrains(
         }
       }
 
-      // Decorative roof balustrade
+      // Decorative roof balustrade (left face)
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 0.7 * zoom;
       for (let bi = 0; bi < 6; bi++) {
@@ -4141,45 +4167,45 @@ export function renderDinkyTrains(
           -5 + bi * 2,
         );
         ctx.beginPath();
-        ctx.moveTo(bpPos.x + 2.5 * zoom, bpPos.y - 0.5 * zoom);
-        ctx.lineTo(bpPos.x + 2.5 * zoom, bpPos.y - 3 * zoom);
+        ctx.moveTo(bpPos.x - 3.25 * zoom, bpPos.y - 0.5 * zoom);
+        ctx.lineTo(bpPos.x - 3.25 * zoom, bpPos.y - 3 * zoom);
         ctx.stroke();
       }
       const balL4a = isoOffset(passengerPos.x, passengerPos.y - 14 * zoom, -5);
       const balR4a = isoOffset(passengerPos.x, passengerPos.y - 14 * zoom, 5);
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.moveTo(balL4a.x + 2.5 * zoom, balL4a.y);
-      ctx.lineTo(balR4a.x + 2.5 * zoom, balR4a.y);
+      ctx.moveTo(balL4a.x - 3.25 * zoom, balL4a.y);
+      ctx.lineTo(balR4a.x - 3.25 * zoom, balR4a.y);
       ctx.stroke();
 
-      // Horse/centaur emblem (gold relief)
+      // Horse/centaur emblem (gold relief) — right face
       ctx.fillStyle = "#C9A227";
       ctx.shadowColor = "#C9A227";
       ctx.shadowBlur = 6 * zoom;
       const horsePos = isoOffset(
         passengerPos.x,
         passengerPos.y - 5.5 * zoom,
-        -4.5,
+        4.5,
       );
       ctx.beginPath();
-      ctx.moveTo(horsePos.x - 1 * zoom, horsePos.y + 3 * zoom);
-      ctx.lineTo(horsePos.x - 0.5 * zoom, horsePos.y + 1 * zoom);
-      ctx.lineTo(horsePos.x - 1.5 * zoom, horsePos.y - 1 * zoom);
+      ctx.moveTo(horsePos.x + 1 * zoom, horsePos.y + 3 * zoom);
+      ctx.lineTo(horsePos.x + 0.5 * zoom, horsePos.y + 1 * zoom);
+      ctx.lineTo(horsePos.x + 1.5 * zoom, horsePos.y - 1 * zoom);
       ctx.quadraticCurveTo(
-        horsePos.x - 1 * zoom,
+        horsePos.x + 1 * zoom,
         horsePos.y - 3.5 * zoom,
         horsePos.x,
         horsePos.y - 3 * zoom,
       );
-      ctx.lineTo(horsePos.x + 0.5 * zoom, horsePos.y - 4 * zoom);
+      ctx.lineTo(horsePos.x - 0.5 * zoom, horsePos.y - 4 * zoom);
       ctx.quadraticCurveTo(
-        horsePos.x + 2 * zoom,
+        horsePos.x - 2 * zoom,
         horsePos.y - 2.5 * zoom,
-        horsePos.x + 1 * zoom,
+        horsePos.x - 1 * zoom,
         horsePos.y,
       );
-      ctx.lineTo(horsePos.x + 1.5 * zoom, horsePos.y + 3 * zoom);
+      ctx.lineTo(horsePos.x - 1.5 * zoom, horsePos.y + 3 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
@@ -4788,25 +4814,26 @@ export function renderDinkyTrains(
       ctx.lineTo(armoredPos.x, armoredPos.y + aD4b - aH4b);
       ctx.stroke();
 
-      // Gun ports — isometric flush slits on right face
+      // Gun ports — isometric flush slits on left face
       for (let gi = 0; gi < 2; gi++) {
         const gpPos = isoOffset(
           armoredPos.x,
           armoredPos.y - 4.5 * zoom,
           -3.5 + gi * 7,
         );
-        const gpX = gpPos.x + 2.5 * zoom;
-        drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "right", zoom, {
+        const gpX = gpPos.x - 2.5 * zoom;
+        drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "left", zoom, {
           voidColor: "#0a0e14",
           frameColor: "#C9A227",
         });
       }
 
-      // Rose window — isometric ellipse flush with left face
+      // Rose window — isometric ellipse flush with right face
       {
+        const rwCX = armoredPos.x + 3.75 * zoom;
         const rwCY = armoredPos.y - 6.5 * zoom;
-        const rwR = 5.5 * zoom;
-        const rwSlope = ISO_Y_RATIO;
+        const rwR = 3.5 * zoom;
+        const rwSlope = -ISO_Y_RATIO;
         const sgGlow = 0.65 + Math.sin(time * 2) * 0.25;
 
         // Outer frame
@@ -4814,7 +4841,7 @@ export function renderDinkyTrains(
         ctx.beginPath();
         for (let i = 0; i <= 16; i++) {
           const a = (i / 16) * Math.PI * 2;
-          const px = armoredPos.x + Math.cos(a) * rwR * 0.6;
+          const px = rwCX + Math.cos(a) * rwR * 0.6;
           const py =
             rwCY + Math.sin(a) * rwR - Math.cos(a) * rwR * 0.6 * rwSlope;
           if (i === 0) ctx.moveTo(px, py);
@@ -4833,7 +4860,7 @@ export function renderDinkyTrains(
         ctx.beginPath();
         for (let i = 0; i <= 16; i++) {
           const a = (i / 16) * Math.PI * 2;
-          const px = armoredPos.x + Math.cos(a) * rwR * 0.55;
+          const px = rwCX + Math.cos(a) * rwR * 0.55;
           const py =
             rwCY +
             Math.sin(a) * rwR * 0.92 -
@@ -4850,7 +4877,7 @@ export function renderDinkyTrains(
         ctx.lineWidth = 0.8 * zoom;
         for (let pi = 0; pi < 8; pi++) {
           const pAngle = (pi / 8) * Math.PI * 2;
-          const ppx = armoredPos.x + Math.cos(pAngle) * rwR * 0.25;
+          const ppx = rwCX + Math.cos(pAngle) * rwR * 0.25;
           const ppy =
             rwCY +
             Math.sin(pAngle) * rwR * 0.42 -
@@ -4864,7 +4891,7 @@ export function renderDinkyTrains(
         ctx.fillStyle = "#fff4e0";
         ctx.beginPath();
         ctx.ellipse(
-          armoredPos.x,
+          rwCX,
           rwCY,
           1.2 * zoom * 0.6,
           1.2 * zoom,
@@ -4902,20 +4929,20 @@ export function renderDinkyTrains(
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Gold crown emblem with cross — left face slope +0.433
+      // Gold crown emblem with cross — right face slope -0.433
       ctx.fillStyle = "#C9A227";
       ctx.shadowColor = "#C9A227";
       ctx.shadowBlur = 7 * zoom;
-      const crownPos = isoOffset(armoredPos.x, armoredPos.y - 11 * zoom, -7);
+      const crownPos = isoOffset(armoredPos.x, armoredPos.y - 11 * zoom, 7);
       const csL = 0.433;
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 4.5 * zoom, crownPos.y - 4.5 * csL * zoom);
-      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom - 3.5 * csL * zoom);
-      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom - 1.8 * csL * zoom);
+      ctx.moveTo(crownPos.x + 4.5 * zoom, crownPos.y - 4.5 * csL * zoom);
+      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom - 3.5 * csL * zoom);
+      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom - 1.8 * csL * zoom);
       ctx.lineTo(crownPos.x, crownPos.y - 4 * zoom);
-      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom + 1.8 * csL * zoom);
-      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom + 3.5 * csL * zoom);
-      ctx.lineTo(crownPos.x + 4.5 * zoom, crownPos.y + 4.5 * csL * zoom);
+      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom + 1.8 * csL * zoom);
+      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom + 3.5 * csL * zoom);
+      ctx.lineTo(crownPos.x - 4.5 * zoom, crownPos.y + 4.5 * csL * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#C9A227";
@@ -4925,8 +4952,8 @@ export function renderDinkyTrains(
       ctx.lineTo(crownPos.x, crownPos.y - 7 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom - 1.8 * csL * zoom);
-      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom + 1.8 * csL * zoom);
+      ctx.moveTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom - 1.8 * csL * zoom);
+      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom + 1.8 * csL * zoom);
       ctx.stroke();
       ctx.shadowBlur = 0;
 

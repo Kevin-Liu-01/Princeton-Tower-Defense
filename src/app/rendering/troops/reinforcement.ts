@@ -5,6 +5,84 @@ import {
   TROOP_MASTERWORK_STYLES,
   drawTroopMasterworkFinish,
 } from "./troopHelpers";
+import { getReinforcementVariation } from "./reinforcementThemes";
+import type { ReinforcementPalette } from "./reinforcementHelpers";
+import {
+  drawReinforcementHelmet,
+  drawChestMotif,
+  drawPauldrons,
+  drawBelt,
+  drawGreaves,
+} from "./reinforcementHelpers";
+
+const PALETTES: readonly ReinforcementPalette[] = [
+  {
+    armorDark: "#3b3046",
+    armorMid: "#5a4b6e",
+    armorLight: "#8f7ab2",
+    trim: "#b39261",
+    cape: "#2a1d3f",
+    capeShadow: "#1b112d",
+    glow: "rgba(156, 108, 232, ",
+    eye: "rgba(197, 169, 255, ",
+    eyeShadow: "#8d63d6",
+  },
+  {
+    armorDark: "#383855",
+    armorMid: "#5a5e88",
+    armorLight: "#9198c8",
+    trim: "#c2a36f",
+    cape: "#2a2752",
+    capeShadow: "#1a1536",
+    glow: "rgba(132, 152, 236, ",
+    eye: "rgba(184, 206, 255, ",
+    eyeShadow: "#5e79cf",
+  },
+  {
+    armorDark: "#2f3f57",
+    armorMid: "#4e6d93",
+    armorLight: "#87a8d0",
+    trim: "#d6bb81",
+    cape: "#20324e",
+    capeShadow: "#142138",
+    glow: "rgba(104, 182, 236, ",
+    eye: "rgba(162, 224, 255, ",
+    eyeShadow: "#3b8bbf",
+  },
+  {
+    armorDark: "#2e3f44",
+    armorMid: "#4d6f79",
+    armorLight: "#7fb2be",
+    trim: "#e0c890",
+    cape: "#1f3d41",
+    capeShadow: "#10272b",
+    glow: "rgba(109, 224, 203, ",
+    eye: "rgba(183, 255, 236, ",
+    eyeShadow: "#36a58d",
+  },
+  {
+    armorDark: "#3d3b2f",
+    armorMid: "#706648",
+    armorLight: "#b39d66",
+    trim: "#f2dd9d",
+    cape: "#4d3e21",
+    capeShadow: "#2c220f",
+    glow: "rgba(246, 212, 110, ",
+    eye: "rgba(255, 238, 170, ",
+    eyeShadow: "#d39d34",
+  },
+  {
+    armorDark: "#3a3422",
+    armorMid: "#6f5e2b",
+    armorLight: "#c7ab56",
+    trim: "#ffe8a6",
+    cape: "#4f2f15",
+    capeShadow: "#301b0b",
+    glow: "rgba(255, 195, 88, ",
+    eye: "rgba(255, 241, 189, ",
+    eyeShadow: "#e0aa3f",
+  },
+];
 
 export function drawReinforcementTroop(
   ctx: CanvasRenderingContext2D,
@@ -16,6 +94,7 @@ export function drawReinforcementTroop(
   attackPhase: number = 0,
   tierInput: number = 0,
   targetPos?: Position,
+  troopId?: string,
 ) {
   const tier = Math.max(0, Math.min(5, Math.floor(tierInput)));
   const isAttacking = attackPhase > 0;
@@ -23,84 +102,14 @@ export function drawReinforcementTroop(
   const breathe = Math.sin(time * 2.35) * 0.6;
   const stride = Math.sin(time * 3.1) * 0.8;
   const attackDrive = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
-  const attackSwing = isAttacking
-    ? Math.sin(attackPhase * Math.PI * 1.25) * 1.8
-    : 0;
-  const headYOffset = size * 0.04;
   const attackBodyOffsetX = isAttacking ? attackDrive * size * 0.09 : 0;
   const attackBodyOffsetY = isAttacking ? -attackDrive * size * 0.04 : 0;
 
-  const palettes = [
-    {
-      armorDark: "#3b3046",
-      armorMid: "#5a4b6e",
-      armorLight: "#8f7ab2",
-      trim: "#b39261",
-      cape: "#2a1d3f",
-      capeShadow: "#1b112d",
-      glow: "rgba(156, 108, 232, ",
-      eye: "rgba(197, 169, 255, ",
-      eyeShadow: "#8d63d6",
-    },
-    {
-      armorDark: "#383855",
-      armorMid: "#5a5e88",
-      armorLight: "#9198c8",
-      trim: "#c2a36f",
-      cape: "#2a2752",
-      capeShadow: "#1a1536",
-      glow: "rgba(132, 152, 236, ",
-      eye: "rgba(184, 206, 255, ",
-      eyeShadow: "#5e79cf",
-    },
-    {
-      armorDark: "#2f3f57",
-      armorMid: "#4e6d93",
-      armorLight: "#87a8d0",
-      trim: "#d6bb81",
-      cape: "#20324e",
-      capeShadow: "#142138",
-      glow: "rgba(104, 182, 236, ",
-      eye: "rgba(162, 224, 255, ",
-      eyeShadow: "#3b8bbf",
-    },
-    {
-      armorDark: "#2e3f44",
-      armorMid: "#4d6f79",
-      armorLight: "#7fb2be",
-      trim: "#e0c890",
-      cape: "#1f3d41",
-      capeShadow: "#10272b",
-      glow: "rgba(109, 224, 203, ",
-      eye: "rgba(183, 255, 236, ",
-      eyeShadow: "#36a58d",
-    },
-    {
-      armorDark: "#3d3b2f",
-      armorMid: "#706648",
-      armorLight: "#b39d66",
-      trim: "#f2dd9d",
-      cape: "#4d3e21",
-      capeShadow: "#2c220f",
-      glow: "rgba(246, 212, 110, ",
-      eye: "rgba(255, 238, 170, ",
-      eyeShadow: "#d39d34",
-    },
-    {
-      armorDark: "#3a3422",
-      armorMid: "#6f5e2b",
-      armorLight: "#c7ab56",
-      trim: "#ffe8a6",
-      cape: "#4f2f15",
-      capeShadow: "#301b0b",
-      glow: "rgba(255, 195, 88, ",
-      eye: "rgba(255, 241, 189, ",
-      eyeShadow: "#e0aa3f",
-    },
-  ] as const;
-  const palette = palettes[tier];
+  const palette = PALETTES[tier];
+  const variation = getReinforcementVariation(troopId);
+  const { helmet, armor } = variation;
 
-  // Tier aura
+  // ── Tier aura ──
   const auraStrength = Math.min(0.88, 0.2 + tier * 0.08 + attackDrive * 0.25);
   const auraPulse = 0.86 + Math.sin(time * 3.7) * 0.14;
   const auraGrad = ctx.createRadialGradient(
@@ -119,11 +128,31 @@ export function drawReinforcementTroop(
   ctx.ellipse(x, y + size * 0.1, size * 0.65, size * 0.48, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Keep body parts, helm lines, and head in the same attack translation.
+  // Attack energy rings
+  if (isAttacking && tier >= 3) {
+    for (let ring = 0; ring < 2; ring++) {
+      const ringPhase = (attackPhase * 2 + ring * 0.2) % 1;
+      const ringAlpha = (1 - ringPhase) * 0.35 * attackDrive;
+      ctx.strokeStyle = `${palette.glow}${ringAlpha})`;
+      ctx.lineWidth = (2.5 - ring) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        y,
+        size * (0.5 + ringPhase * 0.3),
+        size * (0.6 + ringPhase * 0.3),
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
+
   ctx.save();
   ctx.translate(attackBodyOffsetX, attackBodyOffsetY);
 
-  // Cape back
+  // ── Cape ──
   const capeWave = Math.sin(time * 3.9) * size * 0.07;
   ctx.fillStyle = palette.cape;
   ctx.beginPath();
@@ -163,43 +192,28 @@ export function drawReinforcementTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Legs
+  // Cape edge trim (tier 2+)
+  if (tier >= 2) {
+    ctx.strokeStyle = palette.trim;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.28 + capeWave * 1.2, y + size * 0.48);
+    ctx.lineTo(x + size * 0.14 + capeWave * 0.5, y + size * 0.45);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ── Legs with varied greaves ──
   for (let side = -1; side <= 1; side += 2) {
     ctx.save();
     ctx.translate(x + side * size * 0.09, y + size * 0.3 + breathe);
     ctx.rotate(side * (-0.08 + stride * 0.02));
-    const legGrad = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
-    legGrad.addColorStop(0, palette.armorDark);
-    legGrad.addColorStop(0.45, palette.armorMid);
-    legGrad.addColorStop(1, palette.armorDark);
-    ctx.fillStyle = legGrad;
-    ctx.fillRect(-size * 0.06, 0, size * 0.12, size * 0.24);
-
-    ctx.fillStyle = palette.armorLight;
-    ctx.beginPath();
-    ctx.roundRect(
-      -size * 0.065,
-      size * 0.11,
-      size * 0.13,
-      size * 0.06,
-      size * 0.025,
-    );
-    ctx.fill();
-
-    ctx.fillStyle = "#2a2335";
-    ctx.beginPath();
-    ctx.roundRect(
-      -size * 0.075,
-      size * 0.2,
-      size * 0.15,
-      size * 0.1,
-      size * 0.025,
-    );
-    ctx.fill();
+    drawGreaves(ctx, 0, 0, size, zoom, palette, armor.greaveStyle);
     ctx.restore();
   }
 
-  // Torso
+  // ── Torso ──
   const chestGrad = ctx.createLinearGradient(
     x - size * 0.24,
     y - size * 0.22,
@@ -207,8 +221,8 @@ export function drawReinforcementTroop(
     y + size * 0.28,
   );
   chestGrad.addColorStop(0, palette.armorDark);
-  chestGrad.addColorStop(0.45, palette.armorMid);
-  chestGrad.addColorStop(0.85, palette.armorLight);
+  chestGrad.addColorStop(0.35, palette.armorMid);
+  chestGrad.addColorStop(0.7, palette.armorLight);
   chestGrad.addColorStop(1, palette.armorDark);
   ctx.fillStyle = chestGrad;
   ctx.beginPath();
@@ -224,7 +238,33 @@ export function drawReinforcementTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Torso trim by tier
+  // Plate seam lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.2 + breathe * 0.3);
+  ctx.lineTo(x, y + size * 0.16 + breathe);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y + breathe * 0.7, size * 0.12, 0.3, Math.PI - 0.3);
+  ctx.stroke();
+
+  // Plate edge glow
+  ctx.strokeStyle = `${palette.glow}0.1)`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y + size * 0.34 + breathe);
+  ctx.lineTo(x - size * 0.24, y - size * 0.14 + breathe * 0.4);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.25 + breathe * 0.2,
+    x + size * 0.24,
+    y - size * 0.14 + breathe * 0.4,
+  );
+  ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
+  ctx.stroke();
+
+  // Torso trim line
   ctx.strokeStyle = palette.trim;
   ctx.lineWidth = (1.4 + tier * 0.16) * zoom;
   ctx.beginPath();
@@ -232,66 +272,67 @@ export function drawReinforcementTroop(
   ctx.lineTo(x + size * 0.16, y - size * 0.02 + breathe);
   ctx.stroke();
 
+  // ── Chest motif (varies per troop) ──
+  drawChestMotif(
+    ctx,
+    x,
+    y,
+    size,
+    zoom,
+    time,
+    breathe,
+    palette,
+    armor.chestMotif,
+    tier,
+    attackDrive,
+  );
+
+  // ── Belt (varies per troop) ──
+  drawBelt(ctx, x, y, size, zoom, breathe, palette, armor.beltDetail);
+
+  // ── Pauldrons (varies per troop, tier 2+) ──
+  drawPauldrons(
+    ctx,
+    x,
+    y,
+    size,
+    zoom,
+    breathe,
+    palette,
+    armor.pauldronShape,
+    tier,
+  );
+
+  // Gorget
   if (tier >= 1) {
-    ctx.fillStyle = "rgba(235, 225, 205, 0.28)";
-    for (let i = 0; i < 4; i++) {
-      const segX = x - size * 0.14 + i * size * 0.09;
-      ctx.beginPath();
-      ctx.roundRect(
-        segX,
-        y + size * 0.08 + breathe,
-        size * 0.06,
-        size * 0.09,
-        size * 0.015,
-      );
-      ctx.fill();
-    }
-  }
-
-  if (tier >= 2) {
-    for (let side = -1; side <= 1; side += 2) {
-      ctx.fillStyle = palette.armorLight;
-      ctx.beginPath();
-      ctx.ellipse(
-        x + side * size * 0.29,
-        y - size * 0.07 + breathe * 0.4,
-        size * 0.12,
-        size * 0.09,
-        side * 0.28,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = palette.trim;
-      ctx.beginPath();
-      ctx.moveTo(x + side * size * 0.31, y - size * 0.14 + breathe * 0.4);
-      ctx.lineTo(x + side * size * 0.38, y - size * 0.08 + breathe * 0.4);
-      ctx.lineTo(x + side * size * 0.3, y - size * 0.02 + breathe * 0.4);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
-
-  if (tier >= 3) {
-    ctx.strokeStyle = `${palette.glow}${0.5 + attackDrive * 0.35})`;
-    ctx.lineWidth = 2 * zoom;
+    const gorgetGrad = ctx.createLinearGradient(
+      x - size * 0.12,
+      0,
+      x + size * 0.12,
+      0,
+    );
+    gorgetGrad.addColorStop(0, palette.armorDark);
+    gorgetGrad.addColorStop(0.3, palette.armorMid);
+    gorgetGrad.addColorStop(0.7, palette.armorLight);
+    gorgetGrad.addColorStop(1, palette.armorDark);
+    ctx.fillStyle = gorgetGrad;
     ctx.beginPath();
-    ctx.arc(x, y + size * 0.09 + breathe, size * 0.06, 0, Math.PI * 2);
+    ctx.moveTo(x - size * 0.13, y - size * 0.15 + breathe * 0.3);
+    ctx.lineTo(x - size * 0.1, y - size * 0.21 + breathe * 0.25);
+    ctx.lineTo(x + size * 0.1, y - size * 0.21 + breathe * 0.25);
+    ctx.lineTo(x + size * 0.13, y - size * 0.15 + breathe * 0.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = palette.armorLight;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.1, y - size * 0.21 + breathe * 0.25);
+    ctx.lineTo(x + size * 0.1, y - size * 0.21 + breathe * 0.25);
     ctx.stroke();
   }
 
-  if (tier >= 4) {
-    ctx.fillStyle = `${palette.glow}${0.35 + attackDrive * 0.3})`;
-    for (let i = 0; i < 2; i++) {
-      const sigilX = x + (i === 0 ? -1 : 1) * size * 0.09;
-      ctx.beginPath();
-      ctx.arc(sigilX, y - size * 0.02 + breathe, size * 0.018, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
+  // ── Lancer mantle (tier 5) ──
   if (tier >= 5) {
-    // Scale mantle to signal elite lancer upgrade.
     ctx.strokeStyle = "rgba(255, 234, 171, 0.85)";
     ctx.lineWidth = 2.2 * zoom;
     ctx.beginPath();
@@ -302,7 +343,7 @@ export function drawReinforcementTroop(
     ctx.stroke();
   }
 
-  // Left arm + shield
+  // ── Left arm + shield/second weapon ──
   const reinfShieldX = x - size * 0.36;
   const reinfShieldY = y + size * 0.07 + breathe * 0.6;
   const reinfLShoulderX = x - size * 0.24;
@@ -335,7 +376,8 @@ export function drawReinforcementTroop(
       size * 0.16,
     );
     shieldGrad.addColorStop(0, palette.armorDark);
-    shieldGrad.addColorStop(0.5, palette.armorMid);
+    shieldGrad.addColorStop(0.35, palette.armorMid);
+    shieldGrad.addColorStop(0.65, palette.armorLight);
     shieldGrad.addColorStop(1, palette.armorDark);
     ctx.fillStyle = shieldGrad;
     ctx.beginPath();
@@ -347,526 +389,580 @@ export function drawReinforcementTroop(
     ctx.lineTo(size * 0.11, -size * 0.12);
     ctx.closePath();
     ctx.fill();
+
+    // Shield rim
+    ctx.strokeStyle = palette.armorLight;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.18);
+    ctx.lineTo(-size * 0.095, -size * 0.11);
+    ctx.lineTo(-size * 0.075, size * 0.12);
+    ctx.lineTo(0, size * 0.16);
+    ctx.lineTo(size * 0.075, size * 0.12);
+    ctx.lineTo(size * 0.095, -size * 0.11);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Shield motif (matches chest motif for cohesion)
     ctx.strokeStyle = palette.trim;
     ctx.lineWidth = 1.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(0, -size * 0.14);
-    ctx.lineTo(0, size * 0.13);
-    ctx.moveTo(-size * 0.05, -size * 0.02);
-    ctx.lineTo(size * 0.05, -size * 0.02);
-    ctx.stroke();
+    switch (armor.chestMotif) {
+      case "cross":
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.14);
+        ctx.lineTo(0, size * 0.13);
+        ctx.moveTo(-size * 0.06, -size * 0.01);
+        ctx.lineTo(size * 0.06, -size * 0.01);
+        ctx.stroke();
+        break;
+      case "diamond":
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.1);
+        ctx.lineTo(-size * 0.05, 0);
+        ctx.lineTo(0, size * 0.1);
+        ctx.lineTo(size * 0.05, 0);
+        ctx.closePath();
+        ctx.stroke();
+        break;
+      default:
+        ctx.beginPath();
+        ctx.moveTo(0, -size * 0.14);
+        ctx.lineTo(0, size * 0.13);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.05, -size * 0.02);
+        ctx.lineTo(size * 0.05, -size * 0.02);
+        ctx.stroke();
+        break;
+    }
     ctx.restore();
   }
 
-  // Right arm + weapon
-  // Compute weapon position first so arm can connect to grip
+  // ── Right arm + weapon ──
+  // Anchor system: weapon grip is always locked to the hand (end of arm).
+  // 1. armSwingAngle drives where the hand goes (animation-controlled)
+  // 2. hand = shoulder + armLength * direction(armSwingAngle)
+  // 3. weaponOrigin = hand + gripOffset rotated by weaponAngle
+  const armLength = size * 0.1;
   const reinfRShoulderX = x + size * 0.24;
   const reinfRShoulderY = y + size * 0.02 + breathe * 0.5;
 
   ctx.save();
   if (isLancerTier) {
+    const spearGripLocalY = size * 0.1;
+
+    // Arm swing: reaches back at start, thrusts forward at end
+    const armSwingAngle = isAttacking
+      ? 0.3 - (1 - attackPhase) * 0.8
+      : -0.3 + stride * 0.04;
+
+    const handX = reinfRShoulderX + Math.cos(armSwingAngle) * armLength;
+    const handY = reinfRShoulderY + Math.sin(armSwingAngle) * armLength;
+
+    // Spear blade orientation
     const spearBaseAngle = isAttacking
       ? -1.18 + attackPhase * 2.4
       : -0.68 + stride * 0.05;
-    const spearX = x + size * 0.38 + attackDrive * size * 0.12;
-    const spearY = y - size * 0.1 + breathe * 0.45 - attackDrive * size * 0.1;
     const spearAngle = resolveWeaponRotation(
       targetPos,
-      spearX,
-      spearY,
+      handX,
+      handY,
       spearBaseAngle,
       Math.PI / 2,
       isAttacking ? 1.28 : 0.72,
       WEAPON_LIMITS.rightPole,
     );
 
-    // Spear grip at local (0, size*0.1) → world
-    const spearGripY = size * 0.1;
-    const spearGripWX = spearX - Math.sin(spearAngle) * spearGripY;
-    const spearGripWY = spearY + Math.cos(spearAngle) * spearGripY;
-    const reinfArmToSpearAngle = Math.atan2(
-      spearGripWY - reinfRShoulderY,
-      spearGripWX - reinfRShoulderX,
-    );
+    // Derive spear origin so grip lands exactly on the hand
+    const spearX = handX + Math.sin(spearAngle) * spearGripLocalY;
+    const spearY = handY - Math.cos(spearAngle) * spearGripLocalY;
 
-    // Arm to spear
+    // Draw arm (fixed length, rotated by armSwingAngle)
     ctx.save();
     ctx.translate(reinfRShoulderX, reinfRShoulderY);
-    ctx.rotate(reinfArmToSpearAngle);
+    ctx.rotate(armSwingAngle);
     ctx.fillStyle = palette.armorMid;
     ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.18, size * 0.08);
     ctx.fillStyle = palette.armorLight;
     ctx.fillRect(size * 0.1, -size * 0.045, size * 0.1, size * 0.09);
     ctx.fillStyle = palette.armorMid;
     ctx.beginPath();
-    ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+    ctx.arc(armLength, 0, size * 0.03, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     ctx.translate(spearX, spearY);
     ctx.rotate(spearAngle);
 
-    ctx.fillStyle = "#5a3a1b";
-    ctx.fillRect(-size * 0.03, -size * 0.66, size * 0.06, size * 1.2);
+    // Shaft with wood-grain gradient
+    const shaftGrad = ctx.createLinearGradient(-size * 0.03, 0, size * 0.03, 0);
+    shaftGrad.addColorStop(0, "#3a2510");
+    shaftGrad.addColorStop(0.25, "#5a3a1b");
+    shaftGrad.addColorStop(0.5, "#7a5228");
+    shaftGrad.addColorStop(0.75, "#5a3a1b");
+    shaftGrad.addColorStop(1, "#3a2510");
+    ctx.fillStyle = shaftGrad;
+    ctx.fillRect(-size * 0.028, -size * 0.66, size * 0.056, size * 1.2);
 
-    ctx.fillStyle = palette.trim;
-    ctx.fillRect(-size * 0.042, -size * 0.08, size * 0.084, size * 0.12);
+    // Shaft highlight
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.01, -size * 0.6);
+    ctx.lineTo(-size * 0.01, size * 0.5);
+    ctx.stroke();
 
+    // Metal ferrule bands
+    for (let band = 0; band < 3; band++) {
+      const bandY = -size * 0.08 + band * size * 0.04;
+      const ferruleGrad = ctx.createLinearGradient(
+        -size * 0.04,
+        bandY,
+        size * 0.04,
+        bandY,
+      );
+      ferruleGrad.addColorStop(0, "#6a5520");
+      ferruleGrad.addColorStop(0.3, palette.trim);
+      ferruleGrad.addColorStop(0.7, "#e8d090");
+      ferruleGrad.addColorStop(1, "#6a5520");
+      ctx.fillStyle = ferruleGrad;
+      ctx.fillRect(-size * 0.038, bandY, size * 0.076, size * 0.025);
+    }
+
+    // Spearhead — leaf-shaped with proper steel gradient
     const tipGrad = ctx.createLinearGradient(
-      -size * 0.06,
-      -size * 0.86,
-      size * 0.06,
-      -size * 0.62,
+      -size * 0.08,
+      -size * 0.96,
+      size * 0.08,
+      -size * 0.66,
     );
-    tipGrad.addColorStop(0, "#c8aa5a");
-    tipGrad.addColorStop(0.5, "#fff0c4");
-    tipGrad.addColorStop(1, "#a07d34");
+    tipGrad.addColorStop(0, "#e8e0d0");
+    tipGrad.addColorStop(0.15, "#fff4dc");
+    tipGrad.addColorStop(0.5, "#ffe8a6");
+    tipGrad.addColorStop(0.85, "#c8aa5a");
+    tipGrad.addColorStop(1, "#8a6a2a");
     ctx.fillStyle = tipGrad;
     ctx.beginPath();
-    ctx.moveTo(0, -size * 0.96);
-    ctx.lineTo(-size * 0.09, -size * 0.66);
-    ctx.lineTo(size * 0.09, -size * 0.66);
+    ctx.moveTo(0, -size * 0.98);
+    ctx.quadraticCurveTo(
+      -size * 0.1,
+      -size * 0.82,
+      -size * 0.085,
+      -size * 0.68,
+    );
+    ctx.lineTo(-size * 0.02, -size * 0.64);
+    ctx.lineTo(size * 0.02, -size * 0.64);
+    ctx.lineTo(size * 0.085, -size * 0.68);
+    ctx.quadraticCurveTo(size * 0.1, -size * 0.82, 0, -size * 0.98);
     ctx.closePath();
     ctx.fill();
 
-    // Pennant
-    ctx.fillStyle = isAttacking ? "#ffd67a" : "#f0c15d";
+    // Spearhead midrib
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(size * 0.03, -size * 0.36);
-    ctx.lineTo(size * 0.26 + attackDrive * size * 0.12, -size * 0.31);
-    ctx.lineTo(size * 0.13 + attackDrive * size * 0.06, -size * 0.23);
-    ctx.lineTo(size * 0.27 + attackDrive * size * 0.08, -size * 0.14);
-    ctx.lineTo(size * 0.03, -size * 0.11);
+    ctx.moveTo(0, -size * 0.96);
+    ctx.lineTo(0, -size * 0.66);
+    ctx.stroke();
+
+    // Spearhead edge highlights
+    ctx.strokeStyle = "rgba(255, 248, 220, 0.35)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.97);
+    ctx.quadraticCurveTo(
+      -size * 0.09,
+      -size * 0.81,
+      -size * 0.075,
+      -size * 0.69,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.97);
+    ctx.quadraticCurveTo(size * 0.09, -size * 0.81, size * 0.075, -size * 0.69);
+    ctx.stroke();
+
+    // Butt spike
+    ctx.fillStyle = "#8a6a2a";
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.02, size * 0.52);
+    ctx.lineTo(0, size * 0.6);
+    ctx.lineTo(size * 0.02, size * 0.52);
     ctx.closePath();
     ctx.fill();
+
+    // ── Pennant / Banner ──
+    const flagWave = Math.sin(time * 5.2) * size * 0.02;
+    const flagWave2 = Math.sin(time * 7.1 + 0.8) * size * 0.012;
+    const flagDrive = attackDrive * size * 0.08;
+
+    // Banner shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.moveTo(size * 0.035, -size * 0.38);
+    ctx.quadraticCurveTo(
+      size * 0.18 + flagDrive * 0.6 + flagWave,
+      -size * 0.35 + flagWave2,
+      size * 0.28 + flagDrive + flagWave * 1.3,
+      -size * 0.32,
+    );
+    ctx.quadraticCurveTo(
+      size * 0.2 + flagDrive * 0.7 + flagWave * 0.8,
+      -size * 0.24 + flagWave2 * 0.5,
+      size * 0.29 + flagDrive * 0.9 + flagWave * 1.1,
+      -size * 0.18,
+    );
+    ctx.lineTo(size * 0.035, -size * 0.1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Banner body — gradient from palette
+    const bannerGrad = ctx.createLinearGradient(
+      size * 0.03,
+      -size * 0.38,
+      size * 0.28 + flagDrive,
+      -size * 0.18,
+    );
+    bannerGrad.addColorStop(0, palette.cape);
+    bannerGrad.addColorStop(0.4, palette.capeShadow);
+    bannerGrad.addColorStop(1, palette.cape);
+    ctx.fillStyle = bannerGrad;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.032, -size * 0.37);
+    ctx.quadraticCurveTo(
+      size * 0.17 + flagDrive * 0.5 + flagWave,
+      -size * 0.345 + flagWave2,
+      size * 0.27 + flagDrive + flagWave * 1.2,
+      -size * 0.315,
+    );
+    // Swallowtail notch
+    ctx.lineTo(size * 0.22 + flagDrive * 0.8 + flagWave * 0.9, -size * 0.25);
+    ctx.quadraticCurveTo(
+      size * 0.19 + flagDrive * 0.6 + flagWave * 0.6,
+      -size * 0.235 + flagWave2 * 0.3,
+      size * 0.28 + flagDrive * 0.85 + flagWave * 1.0,
+      -size * 0.19,
+    );
+    ctx.lineTo(size * 0.032, -size * 0.11);
+    ctx.closePath();
+    ctx.fill();
+
+    // Banner trim border
+    ctx.strokeStyle = palette.trim;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.032, -size * 0.37);
+    ctx.quadraticCurveTo(
+      size * 0.17 + flagDrive * 0.5 + flagWave,
+      -size * 0.345 + flagWave2,
+      size * 0.27 + flagDrive + flagWave * 1.2,
+      -size * 0.315,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.032, -size * 0.11);
+    ctx.quadraticCurveTo(
+      size * 0.15 + flagDrive * 0.5 + flagWave * 0.7,
+      -size * 0.13 + flagWave2 * 0.4,
+      size * 0.28 + flagDrive * 0.85 + flagWave * 1.0,
+      -size * 0.19,
+    );
+    ctx.stroke();
+
+    // Banner emblem — central motif
+    ctx.fillStyle = palette.trim;
+    ctx.globalAlpha = 0.7;
+    const emblemX = size * 0.14 + flagDrive * 0.4 + flagWave * 0.5;
+    const emblemY = -size * 0.245 + flagWave2 * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(emblemX, emblemY - size * 0.04);
+    ctx.lineTo(emblemX - size * 0.025, emblemY);
+    ctx.lineTo(emblemX, emblemY + size * 0.04);
+    ctx.lineTo(emblemX + size * 0.025, emblemY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Banner wave folds (light/shadow)
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let fold = 0; fold < 3; fold++) {
+      const foldT = (fold + 1) / 4;
+      const fY = -size * 0.37 + foldT * size * 0.26;
+      ctx.beginPath();
+      ctx.moveTo(size * 0.04, fY);
+      ctx.quadraticCurveTo(
+        size * 0.14 + flagDrive * foldT + flagWave * foldT,
+        fY + flagWave2 * foldT * 0.5,
+        size * 0.24 + flagDrive * foldT * 0.8,
+        fY - size * 0.01,
+      );
+      ctx.stroke();
+    }
   } else {
     const bladeLength = size * (0.56 + tier * 0.08);
+    const swordGripLocalY = size * 0.14;
+
+    // Arm swing: overhead chop (up → forward → down)
+    const armSwingAngle = isAttacking
+      ? -0.3 + (1 - attackPhase) * 1.0
+      : 0.15 + stride * 0.03;
+
+    const handX = reinfRShoulderX + Math.cos(armSwingAngle) * armLength;
+    const handY = reinfRShoulderY + Math.sin(armSwingAngle) * armLength;
+
+    // Blade orientation
     const swordBaseAngle = isAttacking
-      ? -1.28 + attackPhase * 3.05
-      : -0.32 + stride * 0.04;
-    const swordX =
-      x + size * 0.37 + (isAttacking ? attackSwing * size * 0.16 : 0);
-    const swordY =
-      y -
-      size * 0.08 +
-      breathe * 0.5 -
-      (isAttacking ? attackDrive * size * 0.09 : 0);
+      ? 1.28 + attackPhase * 3.05
+      : 0.32 + stride * 0.04;
     const swordAngle = resolveWeaponRotation(
       targetPos,
-      swordX,
-      swordY,
+      handX,
+      handY,
       swordBaseAngle,
       Math.PI / 2,
       isAttacking ? 1.38 : 0.78,
       WEAPON_LIMITS.rightMelee,
     );
 
-    // Sword grip at local (0, size*0.14) → world
-    const sGripY = size * 0.14;
-    const sGripWX = swordX - Math.sin(swordAngle) * sGripY;
-    const sGripWY = swordY + Math.cos(swordAngle) * sGripY;
-    const reinfArmToSwordAngle = Math.atan2(
-      sGripWY - reinfRShoulderY,
-      sGripWX - reinfRShoulderX,
-    );
+    // Derive sword origin so grip lands exactly on the hand
+    const swordX = handX + Math.sin(swordAngle) * swordGripLocalY;
+    const swordY = handY - Math.cos(swordAngle) * swordGripLocalY;
 
-    // Arm to sword
+    // Draw arm (fixed length, rotated by armSwingAngle)
     ctx.save();
     ctx.translate(reinfRShoulderX, reinfRShoulderY);
-    ctx.rotate(reinfArmToSwordAngle);
+    ctx.rotate(armSwingAngle);
     ctx.fillStyle = palette.armorMid;
     ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.18, size * 0.08);
     ctx.fillStyle = palette.armorLight;
     ctx.fillRect(size * 0.1, -size * 0.045, size * 0.1, size * 0.09);
     ctx.fillStyle = palette.armorMid;
     ctx.beginPath();
-    ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
+    ctx.arc(armLength, 0, size * 0.03, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     ctx.translate(swordX, swordY);
     ctx.rotate(swordAngle);
-    ctx.fillStyle = "#2d1f16";
-    ctx.fillRect(-size * 0.028, size * 0.08, size * 0.056, size * 0.2);
-    ctx.fillStyle = palette.trim;
-    ctx.fillRect(-size * 0.12, size * 0.05, size * 0.24, size * 0.05);
-    ctx.fillStyle = palette.armorDark;
-    ctx.beginPath();
-    ctx.arc(-size * 0.12, size * 0.075, size * 0.028, 0, Math.PI * 2);
-    ctx.arc(size * 0.12, size * 0.075, size * 0.028, 0, Math.PI * 2);
-    ctx.fill();
 
-    const bladeGrad = ctx.createLinearGradient(
-      -size * 0.05,
-      -bladeLength,
-      size * 0.05,
-      size * 0.08,
-    );
-    bladeGrad.addColorStop(0, "#f2f2f2");
-    bladeGrad.addColorStop(0.35, "#d2d8e4");
-    bladeGrad.addColorStop(0.75, "#a2aab8");
-    bladeGrad.addColorStop(1, "#7a828f");
-    ctx.fillStyle = bladeGrad;
+    // ── Pommel ──
+    ctx.fillStyle = "#3a2a1a";
     ctx.beginPath();
-    ctx.moveTo(-size * 0.05, size * 0.06);
-    ctx.lineTo(-size * 0.055, -bladeLength * 0.8);
-    ctx.lineTo(0, -bladeLength);
-    ctx.lineTo(size * 0.055, -bladeLength * 0.8);
-    ctx.lineTo(size * 0.05, size * 0.06);
+    ctx.arc(0, size * 0.28, size * 0.032, 0, Math.PI * 2);
+    ctx.fill();
+    // Pommel face gradient
+    const pommelGrad = ctx.createRadialGradient(
+      -size * 0.008,
+      size * 0.275,
+      0,
+      0,
+      size * 0.28,
+      size * 0.03,
+    );
+    pommelGrad.addColorStop(0, "#6a5530");
+    pommelGrad.addColorStop(0.5, "#4a3520");
+    pommelGrad.addColorStop(1, "#2a1a10");
+    ctx.fillStyle = pommelGrad;
+    ctx.beginPath();
+    ctx.arc(0, size * 0.28, size * 0.028, 0, Math.PI * 2);
+    ctx.fill();
+    // Pommel gem
+    ctx.fillStyle = `${palette.glow}0.55)`;
+    ctx.shadowColor = palette.eyeShadow;
+    ctx.shadowBlur = 3 * zoom;
+    ctx.beginPath();
+    ctx.arc(0, size * 0.28, size * 0.013, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // ── Handle with leather wrap ──
+    const handleGrad = ctx.createLinearGradient(
+      -size * 0.03,
+      0,
+      size * 0.03,
+      0,
+    );
+    handleGrad.addColorStop(0, "#1a0f08");
+    handleGrad.addColorStop(0.3, "#3a2510");
+    handleGrad.addColorStop(0.7, "#3a2510");
+    handleGrad.addColorStop(1, "#1a0f08");
+    ctx.fillStyle = handleGrad;
+    ctx.fillRect(-size * 0.03, size * 0.08, size * 0.06, size * 0.2);
+    // Leather wrapping
+    ctx.strokeStyle = "#5a4020";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let w = 0; w < 6; w++) {
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.03, size * (0.095 + w * 0.03));
+      ctx.lineTo(size * 0.03, size * (0.11 + w * 0.03));
+      ctx.stroke();
+    }
+    // Handle highlight
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.012, size * 0.09);
+    ctx.lineTo(-size * 0.012, size * 0.27);
+    ctx.stroke();
+
+    // ── Ornate crossguard ──
+    // Crossguard body — shaped, not rectangular
+    ctx.fillStyle = palette.trim;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.14, size * 0.06);
+    ctx.lineTo(-size * 0.155, size * 0.075);
+    ctx.lineTo(-size * 0.14, size * 0.095);
+    ctx.lineTo(size * 0.14, size * 0.095);
+    ctx.lineTo(size * 0.155, size * 0.075);
+    ctx.lineTo(size * 0.14, size * 0.06);
     ctx.closePath();
     ctx.fill();
+    // Crossguard shading
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.13, size * 0.09);
+    ctx.lineTo(size * 0.13, size * 0.09);
+    ctx.stroke();
+    // Crossguard end caps
+    ctx.fillStyle = palette.armorMid;
+    ctx.beginPath();
+    ctx.arc(-size * 0.14, size * 0.077, size * 0.03, 0, Math.PI * 2);
+    ctx.arc(size * 0.14, size * 0.077, size * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    // Crossguard gems
+    const gemPulse = 0.5 + Math.sin(time * 3.5) * 0.2 + attackDrive * 0.3;
+    ctx.fillStyle = `${palette.glow}${gemPulse})`;
+    ctx.shadowColor = palette.eyeShadow;
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(-size * 0.14, size * 0.077, size * 0.015, 0, Math.PI * 2);
+    ctx.arc(size * 0.14, size * 0.077, size * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Center guard jewel
+    ctx.fillStyle = palette.armorLight;
+    ctx.beginPath();
+    ctx.arc(0, size * 0.077, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
 
-    if (tier >= 4) {
-      ctx.strokeStyle = `${palette.glow}${0.45 + attackDrive * 0.3})`;
-      ctx.lineWidth = 1.6 * zoom;
+    // ── Blade ──
+    // Attack glow shadow
+    if (isAttacking) {
+      ctx.shadowColor = palette.eyeShadow;
+      ctx.shadowBlur = (10 + attackDrive * 8) * zoom;
+    }
+    const bladeW = size * 0.055;
+    // Cross-blade gradient for steel look
+    const bladeGrad = ctx.createLinearGradient(-bladeW, 0, bladeW, 0);
+    bladeGrad.addColorStop(0, "#707080");
+    bladeGrad.addColorStop(0.12, "#b0b0c0");
+    bladeGrad.addColorStop(0.35, "#d8d8e4");
+    bladeGrad.addColorStop(0.5, "#eeeef6");
+    bladeGrad.addColorStop(0.65, "#d8d8e4");
+    bladeGrad.addColorStop(0.88, "#b0b0c0");
+    bladeGrad.addColorStop(1, "#707080");
+    ctx.fillStyle = bladeGrad;
+    ctx.beginPath();
+    ctx.moveTo(-bladeW, size * 0.06);
+    ctx.lineTo(-bladeW * 1.04, -bladeLength * 0.78);
+    ctx.lineTo(-bladeW * 0.5, -bladeLength * 0.92);
+    ctx.lineTo(0, -bladeLength);
+    ctx.lineTo(bladeW * 0.5, -bladeLength * 0.92);
+    ctx.lineTo(bladeW * 1.04, -bladeLength * 0.78);
+    ctx.lineTo(bladeW, size * 0.06);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Fuller (central channel) with depth
+    ctx.strokeStyle = "rgba(60, 60, 80, 0.5)";
+    ctx.lineWidth = 2.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, size * 0.04);
+    ctx.lineTo(0, -bladeLength * 0.65);
+    ctx.stroke();
+    // Fuller highlight edge
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.004, size * 0.04);
+    ctx.lineTo(-size * 0.004, -bladeLength * 0.64);
+    ctx.stroke();
+
+    // Blade edge highlights — sharp bevels
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.lineWidth = 0.9 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-bladeW * 0.85, size * 0.04);
+    ctx.lineTo(-bladeW * 0.92, -bladeLength * 0.76);
+    ctx.lineTo(0, -bladeLength * 0.98);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bladeW * 0.85, size * 0.04);
+    ctx.lineTo(bladeW * 0.92, -bladeLength * 0.76);
+    ctx.lineTo(0, -bladeLength * 0.98);
+    ctx.stroke();
+
+    // Blade dark edge — opposite side shadow
+    ctx.strokeStyle = "rgba(40, 40, 60, 0.25)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bladeW * 0.6, size * 0.03);
+    ctx.lineTo(bladeW * 0.7, -bladeLength * 0.6);
+    ctx.stroke();
+
+    // Blade runes (tier 3+)
+    if (tier >= 3) {
+      const runeGlow = 0.25 + Math.sin(time * 4) * 0.15 + attackDrive * 0.45;
+      ctx.fillStyle = `${palette.glow}${runeGlow})`;
+      const runeCount = tier >= 4 ? 5 : 3;
+      for (let i = 0; i < runeCount; i++) {
+        const runeY = -size * 0.04 - i * bladeLength * 0.17;
+        // Diamond-shaped rune marks instead of rectangles
+        ctx.beginPath();
+        ctx.moveTo(0, runeY - size * 0.022);
+        ctx.lineTo(-size * 0.012, runeY);
+        ctx.lineTo(0, runeY + size * 0.022);
+        ctx.lineTo(size * 0.012, runeY);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // Swing trail — dual layered
+    if (isAttacking && attackPhase > 0.15 && attackPhase < 0.85) {
+      const trailAlpha = Math.sin(((attackPhase - 0.15) / 0.7) * Math.PI) * 0.6;
+      ctx.strokeStyle = `${palette.glow}${trailAlpha})`;
+      ctx.lineWidth = 5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(0, -bladeLength * 0.88);
-      ctx.lineTo(0, -bladeLength * 0.2);
+      ctx.moveTo(0, -bladeLength);
+      ctx.quadraticCurveTo(
+        size * 0.32,
+        -bladeLength * 0.6,
+        size * 0.28,
+        -size * 0.08,
+      );
+      ctx.stroke();
+      // Secondary shimmer trail
+      ctx.strokeStyle = `rgba(255, 255, 255, ${trailAlpha * 0.35})`;
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(0, -bladeLength);
+      ctx.quadraticCurveTo(
+        size * 0.36,
+        -bladeLength * 0.65,
+        size * 0.32,
+        -size * 0.12,
+      );
       ctx.stroke();
     }
   }
   ctx.restore();
 
-  if (tier >= 4) {
-    // Heroic over-helm arcs: render behind the helmet/head.
-    ctx.strokeStyle = `${palette.glow}${0.55})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.arc(
-      x,
-      y - size * 0.39 + breathe * 0.2 + headYOffset,
-      size * 0.23,
-      -2.5,
-      -0.65,
-    );
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(
-      x,
-      y - size * 0.39 + breathe * 0.2 + headYOffset,
-      size * 0.23,
-      -2.5 + Math.PI,
-      -0.65 + Math.PI,
-    );
-    ctx.stroke();
-  }
-
-  // Helmet
-  const helmGrad = ctx.createRadialGradient(
-    x - size * 0.05,
-    y - size * 0.43 + headYOffset,
-    0,
-    x,
-    y - size * 0.38 + headYOffset,
-    size * 0.2,
-  );
-  helmGrad.addColorStop(0, palette.armorLight);
-  helmGrad.addColorStop(0.4, palette.armorMid);
-  helmGrad.addColorStop(1, palette.armorDark);
-  ctx.fillStyle = helmGrad;
-  ctx.beginPath();
-  ctx.arc(
-    x,
-    y - size * 0.39 + breathe * 0.25 + headYOffset,
-    size * 0.18,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  ctx.fillStyle = palette.armorDark;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.14, y - size * 0.44 + breathe * 0.2 + headYOffset);
-  ctx.lineTo(x - size * 0.16, y - size * 0.33 + breathe * 0.2 + headYOffset);
-  ctx.lineTo(x, y - size * 0.25 + breathe * 0.2 + headYOffset);
-  ctx.lineTo(x + size * 0.16, y - size * 0.33 + breathe * 0.2 + headYOffset);
-  ctx.lineTo(x + size * 0.14, y - size * 0.44 + breathe * 0.2 + headYOffset);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#18151f";
-  ctx.fillRect(
-    x - size * 0.12,
-    y - size * 0.42 + breathe * 0.2 + headYOffset,
-    size * 0.24,
-    size * 0.048,
-  );
-  const eyeGlow = 0.58 + Math.sin(time * 3.8) * 0.2 + attackDrive * 0.35;
-  ctx.fillStyle = `${palette.eye}${eyeGlow})`;
-  ctx.shadowColor = palette.eyeShadow;
-  ctx.shadowBlur = 8 * zoom;
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.052,
-    y - size * 0.4 + breathe * 0.2 + headYOffset,
-    size * 0.018,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.052,
-    y - size * 0.4 + breathe * 0.2 + headYOffset,
-    size * 0.018,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // === CREST / PLUME PROGRESSION ===
-  const crestBaseY = y - size * 0.54 + breathe * 0.2 + headYOffset;
-  const crestWind = Math.sin(time * 4.5) * 1.5 + (isAttacking ? attackDrive * 2.0 : 0);
-  const crestWhip = Math.sin(time * 5.6 + 0.5) * 0.9;
-
-  if (tier >= 1 && tier < 3) {
-    // Tier 1-2: Short pointed crest with gradient
-    const crestH = size * 0.1 + tier * size * 0.02;
-    const crestW = size * 0.035;
-    const smallCrestGrad = ctx.createLinearGradient(
-      x,
-      crestBaseY,
-      x,
-      crestBaseY - crestH,
-    );
-    smallCrestGrad.addColorStop(0, palette.armorMid);
-    smallCrestGrad.addColorStop(0.5, palette.trim);
-    smallCrestGrad.addColorStop(1, palette.armorLight);
-    ctx.fillStyle = smallCrestGrad;
-    ctx.beginPath();
-    ctx.moveTo(x, crestBaseY - crestH + crestWind * 0.3);
-    ctx.quadraticCurveTo(
-      x - crestW * 1.2,
-      crestBaseY - crestH * 0.4,
-      x - crestW,
-      crestBaseY + size * 0.01,
-    );
-    ctx.lineTo(x + crestW, crestBaseY + size * 0.01);
-    ctx.quadraticCurveTo(
-      x + crestW * 1.2,
-      crestBaseY - crestH * 0.4,
-      x,
-      crestBaseY - crestH + crestWind * 0.3,
-    );
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = palette.trim;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
-  }
-
-  if (tier >= 3) {
-    // Tier 3+: Full flowing horsehair plume that grows with tier
-    const plumePeakH = size * (0.22 + (tier - 3) * 0.06);
-    const plumeWidth = size * (0.13 + (tier - 3) * 0.025);
-
-    // Rear hair drape
-    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-    ctx.beginPath();
-    ctx.moveTo(x + plumeWidth * 0.25, crestBaseY);
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.5 + crestWind * 0.4,
-      crestBaseY + size * 0.03,
-      x + plumeWidth * 0.4 + crestWind * 0.8,
-      crestBaseY + size * 0.15,
-    );
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.1 + crestWind * 0.2,
-      crestBaseY + size * 0.08,
-      x - plumeWidth * 0.1,
-      crestBaseY + size * 0.01,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Shadow body
-    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-    ctx.beginPath();
-    ctx.moveTo(x - plumeWidth * 0.9, crestBaseY + size * 0.01);
-    ctx.quadraticCurveTo(
-      x - plumeWidth * 0.35 + crestWind * 0.2,
-      crestBaseY - plumePeakH * 0.88,
-      x + crestWind * 0.35,
-      crestBaseY - plumePeakH + size * 0.01,
-    );
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.5 + crestWind * 0.6,
-      crestBaseY - plumePeakH * 0.65,
-      x + plumeWidth * 1.0 + crestWind * 0.8,
-      crestBaseY + size * 0.01,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Base layer (dark armor tones)
-    const plumeBaseGrad = ctx.createLinearGradient(
-      x,
-      crestBaseY,
-      x,
-      crestBaseY - plumePeakH,
-    );
-    plumeBaseGrad.addColorStop(0, palette.armorDark);
-    plumeBaseGrad.addColorStop(0.3, palette.armorMid);
-    plumeBaseGrad.addColorStop(0.6, palette.armorLight);
-    plumeBaseGrad.addColorStop(1, palette.armorMid);
-    ctx.fillStyle = plumeBaseGrad;
-    ctx.beginPath();
-    ctx.moveTo(x - plumeWidth * 0.85, crestBaseY);
-    ctx.quadraticCurveTo(
-      x - plumeWidth * 0.3 + crestWind * 0.22,
-      crestBaseY - plumePeakH * 0.92,
-      x + crestWind * 0.38 + crestWhip * 0.2,
-      crestBaseY - plumePeakH,
-    );
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.45 + crestWind * 0.62,
-      crestBaseY - plumePeakH * 0.68,
-      x + plumeWidth * 0.95 + crestWind * 0.8,
-      crestBaseY,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Main body (trim-colored rich gradient)
-    const plumeMainGrad = ctx.createLinearGradient(
-      x,
-      crestBaseY,
-      x + crestWind * 0.2,
-      crestBaseY - plumePeakH,
-    );
-    plumeMainGrad.addColorStop(0, palette.armorMid);
-    plumeMainGrad.addColorStop(0.2, palette.armorLight);
-    plumeMainGrad.addColorStop(0.45, palette.trim);
-    plumeMainGrad.addColorStop(0.7, palette.armorLight);
-    plumeMainGrad.addColorStop(1, palette.armorMid);
-    ctx.fillStyle = plumeMainGrad;
-    ctx.beginPath();
-    ctx.moveTo(x - plumeWidth * 0.7, crestBaseY);
-    ctx.quadraticCurveTo(
-      x - plumeWidth * 0.2 + crestWind * 0.26,
-      crestBaseY - plumePeakH * 0.94,
-      x + crestWind * 0.42 + crestWhip * 0.15,
-      crestBaseY - plumePeakH * 0.97,
-    );
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.35 + crestWind * 0.58,
-      crestBaseY - plumePeakH * 0.64,
-      x + plumeWidth * 0.8 + crestWind * 0.74,
-      crestBaseY,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner highlight shimmer
-    const plumeHiGrad = ctx.createLinearGradient(
-      x,
-      crestBaseY - plumePeakH * 0.2,
-      x,
-      crestBaseY - plumePeakH * 0.9,
-    );
-    plumeHiGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
-    plumeHiGrad.addColorStop(0.35, "rgba(255, 250, 220, 0.3)");
-    plumeHiGrad.addColorStop(0.65, "rgba(255, 250, 220, 0.25)");
-    plumeHiGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
-    ctx.fillStyle = plumeHiGrad;
-    ctx.beginPath();
-    ctx.moveTo(x - plumeWidth * 0.35, crestBaseY - plumePeakH * 0.1);
-    ctx.quadraticCurveTo(
-      x - plumeWidth * 0.1 + crestWind * 0.3,
-      crestBaseY - plumePeakH * 0.9,
-      x + crestWind * 0.4 + crestWhip * 0.1,
-      crestBaseY - plumePeakH * 0.86,
-    );
-    ctx.quadraticCurveTo(
-      x + plumeWidth * 0.2 + crestWind * 0.45,
-      crestBaseY - plumePeakH * 0.55,
-      x + plumeWidth * 0.4 + crestWind * 0.5,
-      crestBaseY - plumePeakH * 0.06,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    // Hair strands (more at higher tiers)
-    const strandCount = 4 + tier;
-    for (let strand = 0; strand < strandCount; strand++) {
-      const strandT = strand / (strandCount - 1);
-      const strandPhase = time * (3.8 + strand * 0.5) + strand * 1.1;
-      const strandBend = Math.sin(strandPhase) * (1.0 + strandT * 2.0);
-      const strandAlpha = 0.15 + Math.sin(time * 2.5 + strand * 0.8) * 0.08;
-      const startX = x - plumeWidth * 0.6 + strandT * plumeWidth * 1.2;
-      const startY = crestBaseY;
-      const peakScale = 0.6 + Math.sin(strandT * Math.PI) * 0.4;
-
-      ctx.strokeStyle = `rgba(255, 250, 230, ${strandAlpha})`;
-      ctx.lineWidth = (0.6 + strandT * 0.3) * zoom;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.quadraticCurveTo(
-        startX + crestWind * (0.2 + strandT * 0.5) + strandBend,
-        crestBaseY - plumePeakH * peakScale,
-        startX +
-          plumeWidth * (0.06 + strandT * 0.2) +
-          crestWind * (0.5 + strandT * 0.4) +
-          strandBend * 1.3,
-        crestBaseY - plumePeakH * peakScale * 0.15,
-      );
-      ctx.stroke();
-    }
-
-    // Tip wisps (tier 4+)
-    if (tier >= 4) {
-      for (let wisp = 0; wisp < 3; wisp++) {
-        const wispT = wisp / 2;
-        const wispPhase = Math.sin(time * 7.2 + wisp * 1.7);
-        const wispAlpha = 0.18 + wispPhase * 0.08;
-        const wispX =
-          x - plumeWidth * 0.05 +
-          wispT * plumeWidth * 0.15 +
-          crestWind * (0.28 + wispT * 0.15);
-        const wispY = crestBaseY - plumePeakH * (0.8 + wispT * 0.12);
-
-        ctx.strokeStyle = `rgba(255, 248, 225, ${wispAlpha})`;
-        ctx.lineWidth = 0.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(wispX, wispY);
-        ctx.quadraticCurveTo(
-          wispX + crestWind * 0.55 + wispPhase * size * 0.035,
-          wispY - size * 0.04,
-          wispX + crestWind * 0.9 + wispPhase * size * 0.05,
-          wispY + size * 0.02,
-        );
-        ctx.stroke();
-      }
-    }
-
-    // Gold crest clamp at base
-    const clampGrad = ctx.createLinearGradient(
-      x - plumeWidth * 0.7,
-      crestBaseY,
-      x + plumeWidth * 0.7,
-      crestBaseY,
-    );
-    clampGrad.addColorStop(0, "#5a4518");
-    clampGrad.addColorStop(0.3, "#a08028");
-    clampGrad.addColorStop(0.5, "#c4a440");
-    clampGrad.addColorStop(0.7, "#a08028");
-    clampGrad.addColorStop(1, "#5a4518");
-    ctx.fillStyle = clampGrad;
-    ctx.beginPath();
-    ctx.roundRect(
-      x - plumeWidth * 0.7,
-      crestBaseY - size * 0.006,
-      plumeWidth * 1.4,
-      size * 0.022,
-      size * 0.005,
-    );
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255, 230, 160, 0.2)";
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.stroke();
-  }
-
+  // ── Lancer back shield (tier 5) ──
   if (tier >= 5) {
-    // Lancer-tier back shield (replaces spare left spear).
     ctx.save();
     ctx.translate(x - size * 0.34, y + size * 0.06 + breathe * 0.45);
     ctx.rotate(-0.5 + stride * 0.02);
@@ -891,7 +987,6 @@ export function drawReinforcementTroop(
     ctx.closePath();
     ctx.fill();
 
-    // Rim + central motif for readability at small sizes.
     ctx.strokeStyle = "rgba(255, 233, 171, 0.85)";
     ctx.lineWidth = 1.6 * zoom;
     ctx.beginPath();
@@ -924,6 +1019,59 @@ export function drawReinforcementTroop(
     );
     ctx.fill();
     ctx.restore();
+  }
+
+  // ── Heroic over-helm arcs (tier 4+) ──
+  if (tier >= 4) {
+    const headYOffset = size * 0.04;
+    ctx.strokeStyle = `${palette.glow}${0.55})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(
+      x,
+      y - size * 0.39 + breathe * 0.2 + headYOffset,
+      size * 0.23,
+      -2.5,
+      -0.65,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(
+      x,
+      y - size * 0.39 + breathe * 0.2 + headYOffset,
+      size * 0.23,
+      -2.5 + Math.PI,
+      -0.65 + Math.PI,
+    );
+    ctx.stroke();
+  }
+
+  // ── Helmet (varies per troop) ──
+  const helmY = y - size * 0.32 + breathe * 0.2;
+  drawReinforcementHelmet(
+    ctx,
+    x,
+    helmY,
+    size,
+    zoom,
+    time,
+    breathe,
+    attackDrive,
+    palette,
+    helmet,
+    tier,
+  );
+
+  // Battle cry shockwave (during attack)
+  if (isAttacking && attackPhase > 0.25 && attackPhase < 0.65) {
+    const cryAlpha = Math.sin(((attackPhase - 0.25) / 0.4) * Math.PI) * 0.4;
+    ctx.strokeStyle = `${palette.glow}${cryAlpha})`;
+    ctx.lineWidth = 2 * zoom;
+    for (let r = 1; r <= 2; r++) {
+      ctx.beginPath();
+      ctx.arc(x, helmY + size * 0.04, size * (0.2 + r * 0.1), -0.9, 0.9);
+      ctx.stroke();
+    }
   }
 
   const reinforcementFinishStyle =

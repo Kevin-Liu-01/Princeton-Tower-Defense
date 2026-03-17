@@ -1,8 +1,55 @@
+import type { Position } from "../../types";
+
 export {
   normalizeSignedAngle,
   resolveWeaponRotation,
   WEAPON_LIMITS,
 } from "../weaponRotation";
+
+import { resolveWeaponRotation as _resolveWeaponRotation } from "../weaponRotation";
+
+export interface AnchoredWeapon {
+  handX: number;
+  handY: number;
+  weaponX: number;
+  weaponY: number;
+  weaponAngle: number;
+  armAngle: number;
+}
+
+/**
+ * Anchor a weapon so its grip is always locked to the hand (end of the arm).
+ *
+ * Flow:
+ *   1. armSwingAngle → hand position (fixed distance from shoulder)
+ *   2. weaponBaseAngle + target → final weapon angle
+ *   3. weapon origin derived so that gripLocalY lands exactly on the hand
+ */
+export function anchorWeaponToHand(
+  shoulderX: number,
+  shoulderY: number,
+  armLength: number,
+  armSwingAngle: number,
+  gripLocalY: number,
+  weaponBaseAngle: number,
+  targetPos: Position | undefined,
+  forwardOffset: number,
+  maxTurn: number,
+  limits: readonly [number, number],
+): AnchoredWeapon {
+  const handX = shoulderX + Math.cos(armSwingAngle) * armLength;
+  const handY = shoulderY + Math.sin(armSwingAngle) * armLength;
+
+  const weaponAngle = _resolveWeaponRotation(
+    targetPos, handX, handY, weaponBaseAngle,
+    forwardOffset, maxTurn, limits,
+  );
+
+  const weaponX = handX + Math.sin(weaponAngle) * gripLocalY;
+  const weaponY = handY - Math.cos(weaponAngle) * gripLocalY;
+
+  return { handX, handY, weaponX, weaponY, weaponAngle, armAngle: armSwingAngle };
+}
 
 export interface TroopMasterworkStyle {
   rimLight: string;

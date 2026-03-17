@@ -129,6 +129,7 @@ export function renderTroop(
     troop.ownerType,
     troop.visualTier,
     mapTheme,
+    troop.id,
   );
 
   ctx.restore();
@@ -222,9 +223,23 @@ export function renderTroop(
   }
 
   if (getPerformanceSettings().showHealthBars && troop.hp < troop.maxHp) {
+    const TROOP_HP_BAR_HEIGHT: Record<string, number> = {
+      footsoldier: 1.1,
+      soldier: 1.2,
+      rowing: 1.1,
+      armored: 1.55,
+      elite: 1.75,
+      thesis: 1.4,
+      reinforcement: 1.55,
+      cavalry: 2.4,
+      centaur: 2.0,
+      knight: 1.65,
+      turret: 1.75,
+    };
+    const hpBarHeightMul = TROOP_HP_BAR_HEIGHT[troopType] ?? 1.0;
     const barWidth = 32 * zoom;
     const barHeight = 5 * zoom;
-    const barY = screenPos.y - size - 10 * zoom;
+    const barY = screenPos.y - size * hpBarHeightMul - 10 * zoom;
     const barX = screenPos.x - barWidth / 2;
     const cornerRadius = 2.5 * zoom;
 
@@ -336,18 +351,19 @@ function drawTroopSprite(
   ownerType?: TroopOwnerType,
   visualTier?: number,
   mapTheme?: MapTheme,
+  troopId?: string,
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
-    footsoldier: 1.0,
-    soldier: 1.15,
+    footsoldier: 1.15,
+    soldier: 1.25,
     rowing: 1.15,
-    armored: 1.3,
-    elite: 1.5,
+    armored: 1.5,
+    elite: 1.7,
     thesis: 1.35,
-    reinforcement: 1.5,
-    cavalry: 1.5,
-    centaur: 1.5,
-    knight: 1.6,
+    reinforcement: 1.25,
+    cavalry: 1.6,
+    centaur: 1.6,
+    knight: 1.25,
     turret: 1.7,
   };
 
@@ -446,6 +462,7 @@ function drawTroopSprite(
         attackPhase,
         visualTier,
         targetPos,
+        troopId,
       );
       break;
     case "rowing":

@@ -3723,21 +3723,23 @@ export function usePrincetonTowerDefenseRuntime() {
       setEnemies((prev) =>
         prev
           .map((enemy) => {
-            // Process burning damage
-            if (enemy.burning && enemy.burnUntil && now < enemy.burnUntil) {
-              const burnDmg = ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000;
-              const newHp = enemy.hp - burnDmg;
-              if (newHp <= 0) {
-                onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
-                return null;
+            // Process burning damage (skip when paused so effects freeze)
+            if (!isPaused) {
+              if (enemy.burning && enemy.burnUntil && now < enemy.burnUntil) {
+                const burnDmg = ((enemy.burnDamage || DEFAULT_ENEMY_BURN_DAMAGE) * deltaTime) / 1000;
+                const newHp = enemy.hp - burnDmg;
+                if (newHp <= 0) {
+                  onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
+                  return null;
+                }
+                enemy = { ...enemy, hp: newHp };
+              } else if (
+                enemy.burning &&
+                enemy.burnUntil &&
+                now >= enemy.burnUntil
+              ) {
+                enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
               }
-              enemy = { ...enemy, hp: newHp };
-            } else if (
-              enemy.burning &&
-              enemy.burnUntil &&
-              now >= enemy.burnUntil
-            ) {
-              enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
             }
             // Regenerating enemies heal 1.5% max HP/sec when not in combat
             const eTraits = ENEMY_DATA[enemy.type].traits;
@@ -3745,8 +3747,8 @@ export function usePrincetonTowerDefenseRuntime() {
               const regenAmount = (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
               enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
             }
-            // Clear frozen state when stun duration expires
-            if (enemy.frozen && enemy.stunUntil && now >= enemy.stunUntil) {
+            // Clear frozen state when stun duration expires (skip when paused)
+            if (!isPaused && enemy.frozen && enemy.stunUntil && now >= enemy.stunUntil) {
               enemy = { ...enemy, frozen: false };
             }
             if (enemy.frozen || now < enemy.stunUntil) {
@@ -4533,39 +4535,40 @@ export function usePrincetonTowerDefenseRuntime() {
           if (!troopData) return updated;
 
           // ========== PROCESS STATUS EFFECTS ==========
-          const currentTime = Date.now();
-          // Clear expired effects
-          if (updated.burnUntil && currentTime > updated.burnUntil) {
-            updated.burning = false;
-            updated.burnDamage = undefined;
-            updated.burnUntil = undefined;
-          }
-          if (updated.slowUntil && currentTime > updated.slowUntil) {
-            updated.slowed = false;
-            updated.slowIntensity = undefined;
-            updated.slowUntil = undefined;
-          }
-          if (updated.poisonUntil && currentTime > updated.poisonUntil) {
-            updated.poisoned = false;
-            updated.poisonDamage = undefined;
-            updated.poisonUntil = undefined;
-          }
-          if (updated.stunUntil && currentTime > updated.stunUntil) {
-            updated.stunned = false;
-            updated.stunUntil = undefined;
-          }
+          // Skip expiry and DoT when paused so effects freeze in place
+          if (!isPaused) {
+            const currentTime = Date.now();
+            if (updated.burnUntil && currentTime > updated.burnUntil) {
+              updated.burning = false;
+              updated.burnDamage = undefined;
+              updated.burnUntil = undefined;
+            }
+            if (updated.slowUntil && currentTime > updated.slowUntil) {
+              updated.slowed = false;
+              updated.slowIntensity = undefined;
+              updated.slowUntil = undefined;
+            }
+            if (updated.poisonUntil && currentTime > updated.poisonUntil) {
+              updated.poisoned = false;
+              updated.poisonDamage = undefined;
+              updated.poisonUntil = undefined;
+            }
+            if (updated.stunUntil && currentTime > updated.stunUntil) {
+              updated.stunned = false;
+              updated.stunUntil = undefined;
+            }
 
-          // Apply damage-over-time effects (once per second, scaled by deltaTime)
-          const dotTick = deltaTime / 1000;
-          if (updated.burning && updated.burnDamage) {
-            updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
-          }
-          if (updated.poisoned && updated.poisonDamage) {
-            updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
+            const dotTick = deltaTime / 1000;
+            if (updated.burning && updated.burnDamage) {
+              updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
+            }
+            if (updated.poisoned && updated.poisonDamage) {
+              updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
+            }
           }
 
           // If stunned, skip movement/engagement
-          if (updated.stunned && updated.stunUntil && currentTime < updated.stunUntil) {
+          if (updated.stunned && updated.stunUntil && Date.now() < updated.stunUntil) {
             // Stunned - can't move or attack, just stand there
             updated.engaging = false;
             updated.moving = false;
@@ -4849,12 +4852,12 @@ export function usePrincetonTowerDefenseRuntime() {
         );
       }
       // ========== HERO STATUS EFFECTS PROCESSING ==========
-      if (hero && !hero.dead) {
+      // Skip expiry and DoT when paused so effects freeze in place
+      if (hero && !hero.dead && !isPaused) {
         setHero((prev) => {
           if (!prev || prev.dead) return prev;
           const updated = { ...prev };
 
-          // Clear expired effects
           if (updated.burnUntil && now > updated.burnUntil) {
             updated.burning = false;
             updated.burnDamage = undefined;
@@ -4875,7 +4878,6 @@ export function usePrincetonTowerDefenseRuntime() {
             updated.stunUntil = undefined;
           }
 
-          // Apply damage-over-time effects
           const dotTick = deltaTime / 1000;
           if (updated.burning && updated.burnDamage) {
             updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
@@ -4931,13 +4933,15 @@ export function usePrincetonTowerDefenseRuntime() {
         const towerWorldPos = gridToWorld(tower.pos);
         const updated = { ...tower };
 
-        // Clear expired debuffs
-        if (updated.debuffs && updated.debuffs.length > 0) {
-          updated.debuffs = updated.debuffs.filter((d) => now < d.until);
-        }
-        if (updated.disabledUntil && now > updated.disabledUntil) {
-          updated.disabled = false;
-          updated.disabledUntil = undefined;
+        // Clear expired debuffs (skip when paused so effects freeze)
+        if (!isPaused) {
+          if (updated.debuffs && updated.debuffs.length > 0) {
+            updated.debuffs = updated.debuffs.filter((d) => now < d.until);
+          }
+          if (updated.disabledUntil && now > updated.disabledUntil) {
+            updated.disabled = false;
+            updated.disabledUntil = undefined;
+          }
         }
 
         // Check for enemies with tower debuff abilities nearby
@@ -12617,10 +12621,20 @@ export function usePrincetonTowerDefenseRuntime() {
   );
 
   const unlockAllLevels = useCallback(() => {
+    const allLevelIds = Object.keys(LEVEL_DATA);
+    const allStars: Record<string, number> = {};
+    for (const id of allLevelIds) {
+      allStars[id] = 3;
+    }
     setProgress((prev) => ({
       ...prev,
       unlockedMaps: Array.from(
-        new Set([...prev.unlockedMaps, ...Object.keys(LEVEL_DATA)])
+        new Set([...prev.unlockedMaps, ...allLevelIds])
+      ),
+      levelStars: { ...prev.levelStars, ...allStars },
+      totalStarsEarned: Object.values({ ...prev.levelStars, ...allStars }).reduce(
+        (sum, s) => sum + (Number.isFinite(s) ? s : 0),
+        0
       ),
     }));
   }, [setProgress]);

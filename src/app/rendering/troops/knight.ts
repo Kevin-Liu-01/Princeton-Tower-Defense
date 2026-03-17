@@ -463,41 +463,43 @@ export function drawKnightTroop(
   ctx.restore();
 
   // === RIGHT ARM + SOUL-FORGED GREATSWORD ===
+  // Anchor system: grip locked to hand, hand locked to arm end
   const swordScale = 0.82;
+  const knightArmLength = size * 0.22;
+  const knightGripLocalY = size * 0.15 * swordScale;
+
+  const knightShoulderX = x + size * 0.26;
+  const knightShoulderY = y + size * 0.02 + breathe * 0.5;
+
+  // Arm swing: overhead chop (up-back → forward → down-forward)
+  const knightArmSwing = isAttacking
+    ? -0.6 + (1 - attackPhase) * 1.4
+    : 0.6 + stance * 0.03;
+
+  const knightHandX = knightShoulderX + Math.cos(knightArmSwing) * knightArmLength;
+  const knightHandY = knightShoulderY + Math.sin(knightArmSwing) * knightArmLength;
+
+  // Blade orientation
   const swordBaseAngle = isAttacking
     ? -0.55 + attackPhase * 3.2
     : 0.5 + stance * 0.04;
-  const swordX = x + size * 0.4 + (isAttacking ? swordSwing * size * 0.22 : 0);
-  const swordY =
-    y -
-    size * 0.01 +
-    breathe * 0.5 -
-    (isAttacking ? Math.abs(swordSwing) * size * 0.18 : 0);
   const swordAngle = resolveWeaponRotation(
     targetPos,
-    swordX,
-    swordY,
+    knightHandX,
+    knightHandY,
     swordBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.45 : 0.82,
     WEAPON_LIMITS.rightMelee,
   );
 
-  // Grip center in sword's local coords → world space
-  const knightGripLocalY = size * 0.15 * swordScale;
-  const knightGripWorldX = swordX - Math.sin(swordAngle) * knightGripLocalY;
-  const knightGripWorldY = swordY + Math.cos(swordAngle) * knightGripLocalY;
-
-  const knightShoulderX = x + size * 0.26;
-  const knightShoulderY = y + size * 0.02 + breathe * 0.5;
-  const armToSwordAngle = Math.atan2(
-    knightGripWorldY - knightShoulderY,
-    knightGripWorldX - knightShoulderX,
-  );
+  // Derive sword origin so grip lands exactly on the hand
+  const swordX = knightHandX + Math.sin(swordAngle) * knightGripLocalY;
+  const swordY = knightHandY - Math.cos(swordAngle) * knightGripLocalY;
 
   ctx.save();
   ctx.translate(knightShoulderX, knightShoulderY);
-  ctx.rotate(armToSwordAngle);
+  ctx.rotate(knightArmSwing);
   const rightArmGrad = ctx.createLinearGradient(
     -size * 0.055,
     0,
@@ -511,10 +513,9 @@ export function drawKnightTroop(
   ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.2, size * 0.08);
   ctx.fillStyle = armorPeak;
   ctx.fillRect(size * 0.12, -size * 0.045, size * 0.1, size * 0.09);
-  // Gauntlet fist
   ctx.fillStyle = armorMid;
   ctx.beginPath();
-  ctx.arc(size * 0.22, 0, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(knightArmLength, 0, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 

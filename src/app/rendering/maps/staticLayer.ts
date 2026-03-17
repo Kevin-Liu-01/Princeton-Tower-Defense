@@ -1175,11 +1175,13 @@ export function renderChallengeMountainBackdrop(
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0, 0, width, height);
 
-  // haze overlay
+  // haze overlay — use transparent version of skyBottom to avoid premultiplied
+  // alpha artifacts (transparent white bleeds into visible color fringe)
+  const hazeTransparent = hexToRgba(palette.skyBottom, 0);
   const hazeGrad = ctx.createLinearGradient(0, height * 0.15, 0, height * 0.72);
-  hazeGrad.addColorStop(0, "rgba(255,255,255,0)");
+  hazeGrad.addColorStop(0, hazeTransparent);
   hazeGrad.addColorStop(0.5, palette.haze);
-  hazeGrad.addColorStop(1, "rgba(255,255,255,0)");
+  hazeGrad.addColorStop(1, hazeTransparent);
   ctx.fillStyle = hazeGrad;
   ctx.fillRect(0, 0, width, height);
 
@@ -1190,8 +1192,9 @@ export function renderChallengeMountainBackdrop(
   renderThemedBackdropSilhouettes(ctx, width, height, mapSeed, themeKey, palette);
 
   // atmospheric depth overlay
+  const shadowTransparent = hexToRgba(palette.mountainShadow, 0);
   const atmosphere = ctx.createLinearGradient(0, height * 0.44, 0, height);
-  atmosphere.addColorStop(0, "rgba(0,0,0,0)");
+  atmosphere.addColorStop(0, shadowTransparent);
   atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, 0.05));
   atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.08));
   atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.22));
