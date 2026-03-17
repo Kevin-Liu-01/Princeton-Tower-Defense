@@ -1815,7 +1815,7 @@ export function usePrincetonTowerDefenseRuntime() {
         id: "hero",
         type: selectedHero,
         pos: startPos,
-        homePos: startPos, // Add this line
+        homePos: startPos,
         hp: heroData.hp,
         maxHp: heroData.hp,
         moving: false,
@@ -11769,10 +11769,27 @@ export function usePrincetonTowerDefenseRuntime() {
         case "freeze": {
           const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
           const freezeUntil = Date.now() + freezeStats.freezeDurationMs;
+
+          const freezeTargetIds: Set<string> | null = freezeStats.isGlobal
+            ? null
+            : new Set(
+                [...enemies]
+                  .sort(
+                    (a, b) =>
+                      getEnemyRemainingDistance(a, selectedMap) -
+                      getEnemyRemainingDistance(b, selectedMap)
+                  )
+                  .slice(0, freezeStats.maxTargets)
+                  .map((e) => e.id)
+              );
+
           setEnemies((prev) =>
-            prev.map((e) => ({ ...e, frozen: true, stunUntil: freezeUntil }))
+            prev.map((e) => {
+              if (freezeTargetIds && !freezeTargetIds.has(e.id)) return e;
+              return { ...e, frozen: true, stunUntil: freezeUntil };
+            })
           );
-          // Create freeze wave effect
+
           if (enemies.length > 0) {
             const centerEnemy = enemies[Math.floor(enemies.length / 2)];
             const centerPos = getEnemyPosWithPath(centerEnemy, selectedMap);
@@ -11787,7 +11804,11 @@ export function usePrincetonTowerDefenseRuntime() {
               },
             ]);
           }
-          enemies.forEach((e) => {
+
+          const particleEnemies = freezeTargetIds
+            ? enemies.filter((e) => freezeTargetIds.has(e.id))
+            : enemies;
+          particleEnemies.forEach((e) => {
             const pos = getEnemyPosWithPath(e, selectedMap);
             addParticles(pos, "ice", 8);
           });
@@ -12093,6 +12114,27 @@ export function usePrincetonTowerDefenseRuntime() {
     },
     [setProgress]
   );
+  const downgradeSpell = useCallback(
+    (spellType: SpellType) => {
+      setProgress((prev) => {
+        const normalizedUpgrades = normalizeSpellUpgradeLevels(
+          prev.spellUpgrades ?? DEFAULT_SPELL_UPGRADES
+        );
+        const currentLevel = normalizedUpgrades[spellType] ?? 0;
+        if (currentLevel <= 0) return prev;
+
+        return {
+          ...prev,
+          spellUpgrades: {
+            ...normalizedUpgrades,
+            [spellType]: currentLevel - 1,
+          },
+        };
+      });
+    },
+    [setProgress]
+  );
+
   const toggleHeroSelection = useCallback(() => {
     setHero((prev) =>
       prev && !prev.dead
@@ -12875,6 +12917,7 @@ export function usePrincetonTowerDefenseRuntime() {
           spentSpellStars={spentSpellStars}
           spellUpgradeLevels={spellUpgradeLevels}
           upgradeSpell={upgradeSpell}
+          downgradeSpell={downgradeSpell}
           spellAutoAim={spellAutoAim}
           onToggleSpellAutoAim={toggleSpellAutoAim}
           unlockedMaps={unlockedMaps}

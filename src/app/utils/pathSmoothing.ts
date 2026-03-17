@@ -1,6 +1,6 @@
 type PathPoint = { x: number; y: number };
 
-const DEFAULT_CORNER_RADIUS = 1.0;
+const DEFAULT_CORNER_RADIUS = 1.6;
 const DEFAULT_ARC_POINTS = 5;
 
 /**

@@ -340,12 +340,12 @@ export function renderEnemy(
     const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
     ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.52, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Animated frost ring
@@ -356,7 +356,7 @@ export function renderEnemy(
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([5 * zoom, 3 * zoom]);
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.78, size * 0.47, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -432,7 +432,7 @@ export function renderEnemy(
     heatGrad.addColorStop(1, "rgba(255, 40, 0, 0)");
     ctx.fillStyle = heatGrad;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Fire ring at base
@@ -440,7 +440,7 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.25, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Main flames (5 for better coverage)
@@ -542,7 +542,7 @@ export function renderEnemy(
     ctx.lineWidth = 2.5 * zoom;
     ctx.setLineDash([8 * zoom, 4 * zoom]);
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.8, size * 0.48, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
 
@@ -551,14 +551,14 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * 0.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Orbiting rune diamonds with glow
     for (let i = 0; i < 6; i++) {
       const runeAngle = time * 0.8 + (i / 6) * Math.PI * 2;
       const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
-      const ry = drawY + Math.sin(runeAngle) * size * 0.47;
+      const ry = drawY + Math.sin(runeAngle) * size * 0.78 * ISO_Y_RATIO;
       const runeSize = 4.5 * zoom;
       const runeGlow = 0.85 + Math.sin(time * 5 + i * 1.1) * 0.15;
 

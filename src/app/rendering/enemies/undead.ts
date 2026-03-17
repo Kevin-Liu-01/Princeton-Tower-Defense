@@ -6,6 +6,7 @@ import {
   drawRobeBody,
 } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
   drawAnimatedArm,
   drawAnimatedLegs,
@@ -60,7 +61,7 @@ export function drawSpecterEnemy(
   voidGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = voidGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.6, size * 0.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.5, size * 0.6, size * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Void tendrils reaching up
@@ -895,7 +896,7 @@ export function drawBerserkerEnemy(
     x,
     y + size * 0.48,
     size * 0.55 * furyScale,
-    size * 0.18 * furyScale,
+    size * 0.55 * furyScale * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -914,7 +915,7 @@ export function drawBerserkerEnemy(
       x,
       y + size * 0.48,
       ringRadius,
-      ringRadius * 0.32,
+      ringRadius * ISO_Y_RATIO,
       0,
       0,
       Math.PI * 2,
@@ -983,7 +984,7 @@ export function drawBerserkerEnemy(
   rageGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = rageGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.85 * furyScale, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.85 * furyScale, size * 0.85 * furyScale * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Rage particles (orbit faster during attack)
@@ -2015,7 +2016,7 @@ export function drawGolemEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Ground cracks from weight
@@ -2645,6 +2646,41 @@ export function drawGolemEnemy(
     ctx.arc(dustX, dustY, size * 0.015 * (1 - dustPhase / 2), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  if (isAttacking) {
+    const shockPhase = 1 - attackIntensity;
+    for (let ring = 0; ring < 3; ring++) {
+      const rPhase = Math.min(1, shockPhase + ring * 0.15);
+      const rR = size * (0.3 + rPhase * 0.8);
+      const rAlpha = (1 - rPhase) * 0.5 * attackIntensity;
+      ctx.strokeStyle = `rgba(251, 191, 36, ${rAlpha})`;
+      ctx.lineWidth = (3 - rPhase * 2) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(x, y + size * 0.45, rR, rR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let d = 0; d < 8; d++) {
+      const dAngle = (d * Math.PI) / 4 + time * 2;
+      const dDist = size * (0.2 + shockPhase * 0.6);
+      const dAlpha = (1 - shockPhase) * 0.7 * attackIntensity;
+      ctx.fillStyle = `rgba(168, 162, 158, ${dAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        x + Math.cos(dAngle) * dDist,
+        y + size * 0.3 + Math.sin(dAngle) * dDist * ISO_Y_RATIO - shockPhase * size * 0.3,
+        size * 0.025 * (1 - shockPhase),
+        0, Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    const flashAlpha = attackIntensity > 0.7 ? (attackIntensity - 0.7) * 3.3 : 0;
+    if (flashAlpha > 0) {
+      ctx.fillStyle = `rgba(251, 191, 36, ${flashAlpha * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(x, y, size * 0.4, size * 0.4 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 }
 
 export function drawNecromancerEnemy(
@@ -2681,7 +2717,7 @@ export function drawNecromancerEnemy(
       x,
       y + size * 0.48,
       ringSize,
-      ringSize * 0.25,
+      ringSize * ISO_Y_RATIO,
       0,
       0,
       Math.PI * 2,
@@ -2697,7 +2733,7 @@ export function drawNecromancerEnemy(
   deathGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = deathGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Floating skull spirits - more detailed
@@ -3099,6 +3135,47 @@ export function drawNecromancerEnemy(
   ctx.lineTo(x - size * 0.44, y - size * 0.48 + hover);
   ctx.fill();
   clearShadow(ctx);
+
+  if (isAttacking) {
+    const staffX = x - size * 0.4;
+    const staffTopY = y - size * 0.32 + hover;
+    for (let arc = 0; arc < 4; arc++) {
+      const arcAngle = (arc * Math.PI) / 2 + time * 6;
+      const arcDist = size * (0.1 + attackIntensity * 0.25);
+      const arcEnd = size * (0.3 + attackIntensity * 0.4);
+      ctx.strokeStyle = `rgba(74, 222, 128, ${attackIntensity * 0.5})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(staffX, staffTopY);
+      ctx.quadraticCurveTo(
+        staffX + Math.cos(arcAngle) * arcDist,
+        staffTopY + Math.sin(arcAngle) * arcDist,
+        staffX + Math.cos(arcAngle + 0.5) * arcEnd,
+        staffTopY + Math.sin(arcAngle + 0.5) * arcEnd,
+      );
+      ctx.stroke();
+    }
+    for (let s = 0; s < 5; s++) {
+      const sPhase = (attackIntensity + s * 0.2) % 1;
+      const sAngle = s * Math.PI * 0.4 + time * 3;
+      const sDist = size * (0.5 - sPhase * 0.4);
+      const soulX = x + Math.cos(sAngle) * sDist;
+      const soulY = y + hover + Math.sin(sAngle) * sDist * 0.5;
+      ctx.fillStyle = `rgba(74, 222, 128, ${attackIntensity * 0.6 * sPhase})`;
+      ctx.beginPath();
+      ctx.arc(soulX, soulY, size * 0.02 * sPhase, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const runeFlash = attackIntensity > 0.6 ? (attackIntensity - 0.6) * 2.5 : 0;
+    if (runeFlash > 0) {
+      ctx.strokeStyle = `rgba(74, 222, 128, ${runeFlash * 0.4})`;
+      ctx.lineWidth = 2 * zoom;
+      const rR = size * 0.4;
+      ctx.beginPath();
+      ctx.ellipse(x, y + size * 0.48, rR, rR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
 }
 export function drawShadowKnightEnemy(
   ctx: CanvasRenderingContext2D,
@@ -3141,7 +3218,7 @@ export function drawShadowKnightEnemy(
     let cx = x,
       cy = y + size * 0.48;
     for (let seg = 0; seg < 3; seg++) {
-      cx += Math.cos(corruptAngle + (Math.random() - 0.5) * 0.5) * size * 0.12;
+      cx += Math.cos(corruptAngle + Math.sin(corrupt * 3.7 + seg * 2.1) * 0.25) * size * 0.12;
       cy += size * 0.025;
       ctx.lineTo(cx, cy);
     }
@@ -3156,7 +3233,7 @@ export function drawShadowKnightEnemy(
   shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Void particles orbiting
@@ -3763,6 +3840,46 @@ export function drawShadowKnightEnemy(
     shape: "diamond",
     rotateWithOrbit: true,
   });
+
+  if (isAttacking) {
+    const slashAngle = (1 - attackIntensity) * Math.PI * 1.5 - Math.PI * 0.5;
+    const slashR = size * 0.5;
+    ctx.strokeStyle = `rgba(139, 92, 246, ${attackIntensity * 0.7})`;
+    ctx.lineWidth = (3 + attackIntensity * 4) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    const slashStart = slashAngle - 0.6;
+    const slashEnd = slashAngle + 0.6;
+    ctx.arc(x + size * 0.15, y - size * 0.1 + stance, slashR, slashStart, slashEnd);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+
+    for (let sp = 0; sp < 6; sp++) {
+      const spAngle = slashAngle + (sp - 2.5) * 0.2;
+      const spDist = slashR * (0.8 + Math.sin(time * 10 + sp) * 0.2);
+      const spAlpha = attackIntensity * 0.5 * (1 - Math.abs(sp - 2.5) / 3);
+      ctx.fillStyle = `rgba(139, 92, 246, ${spAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        x + size * 0.15 + Math.cos(spAngle) * spDist,
+        y - size * 0.1 + stance + Math.sin(spAngle) * spDist,
+        size * 0.015, 0, Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    const voidBurst = attackIntensity > 0.8 ? (attackIntensity - 0.8) * 5 : 0;
+    if (voidBurst > 0) {
+      const burstGrad = ctx.createRadialGradient(x, y + stance, 0, x, y + stance, size * 0.5 * voidBurst);
+      burstGrad.addColorStop(0, `rgba(139, 92, 246, ${voidBurst * 0.3})`);
+      burstGrad.addColorStop(0.5, `rgba(88, 28, 135, ${voidBurst * 0.15})`);
+      burstGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = burstGrad;
+      ctx.beginPath();
+      ctx.ellipse(x, y + stance, size * 0.5 * voidBurst, size * 0.5 * voidBurst * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 }
 
 // ============================================================================
@@ -3842,7 +3959,7 @@ export function drawCultistEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Attack: dark energy pulse radiates outward
@@ -3860,7 +3977,7 @@ export function drawCultistEnemy(
     pulseGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = pulseGrad;
     ctx.beginPath();
-    ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+    ctx.ellipse(x, y, pulseSize, pulseSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 

@@ -1,5 +1,6 @@
 // Desert region enemy sprites
 
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawRadialAura } from "./helpers";
 import {
@@ -114,7 +115,7 @@ export function drawNomadEnemy(
   veilGrad.addColorStop(1, "rgba(194, 154, 108, 0)");
   ctx.fillStyle = veilGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.7, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 
@@ -674,11 +675,12 @@ export function drawNomadEnemy(
       ctx.fill();
     }
 
-    // Sand shockwave ring
+    // Sand shockwave ring (isometric ground ellipse)
+    const shockR = attackPhase * size * 0.6;
     ctx.strokeStyle = `rgba(194, 154, 108, ${(1 - attackPhase) * 0.4})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.arc(x, y, attackPhase * size * 0.6, 0, Math.PI * 2);
+    ctx.ellipse(x, y, shockR, shockR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 }
@@ -1110,7 +1112,7 @@ export function drawScorpionEnemy(
   ctx.beginPath();
   ctx.ellipse(
     tailX + size * 0.15, y + size * 0.32,
-    size * 0.06, size * 0.025, 0, 0, Math.PI * 2,
+    size * 0.06, size * 0.06 * ISO_Y_RATIO, 0, 0, Math.PI * 2,
   );
   ctx.fill();
 
@@ -1256,7 +1258,7 @@ export function drawScarabEnemy(
   auraGrad.addColorStop(1, "rgba(180, 83, 9, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y + hoverFloat, size * 0.7, 0, Math.PI * 2);
+  ctx.ellipse(x, y + hoverFloat, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
 

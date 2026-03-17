@@ -1,3 +1,4 @@
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawPoisonBubbles, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
@@ -29,7 +30,7 @@ export function drawBogCreatureEnemy(
   auraGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Toxic drip pool beneath
@@ -43,7 +44,7 @@ export function drawBogCreatureEnemy(
   poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.6, size * 0.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.52, size * 0.6, size * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
 
@@ -55,7 +56,7 @@ export function drawBogCreatureEnemy(
     const ripRadius = size * (0.15 + ripPhase * 0.35);
     ctx.globalAlpha = (1 - ripPhase) * 0.4;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.5, ripRadius, ripRadius * 0.35, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.5, ripRadius, ripRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -65,7 +66,7 @@ export function drawBogCreatureEnemy(
   ctx.beginPath();
   ctx.ellipse(
     x + size * 0.1, y + size * 0.48,
-    size * 0.25, size * 0.08, 0.2, 0, Math.PI * 2,
+    size * 0.25, size * 0.25 * ISO_Y_RATIO, 0.2, 0, Math.PI * 2,
   );
   ctx.fill();
 
@@ -678,7 +679,7 @@ export function drawWillOWispEnemy(
   reflPoolGrad.addColorStop(1, `${shiftColor}, 0)`);
   ctx.fillStyle = reflPoolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, poolY, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, poolY, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = `${shiftColor}, ${reflectPulse * 0.3})`;
   ctx.lineWidth = 1 * zoom;
@@ -687,7 +688,7 @@ export function drawWillOWispEnemy(
     const rrRadius = size * (0.1 + rrPhase * 0.35);
     ctx.globalAlpha = (1 - rrPhase) * reflectPulse;
     ctx.beginPath();
-    ctx.ellipse(x, poolY, rrRadius, rrRadius * 0.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, poolY, rrRadius, rrRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -1171,7 +1172,7 @@ export function drawSwampTrollEnemy(
     x - size * 0.25,
     y + size * 0.5,
     size * 0.15,
-    size * 0.06,
+    size * 0.15 * ISO_Y_RATIO,
     -0.2,
     0,
     Math.PI * 2,
@@ -1180,7 +1181,7 @@ export function drawSwampTrollEnemy(
     x + size * 0.3,
     y + size * 0.48,
     size * 0.12,
-    size * 0.05,
+    size * 0.12 * ISO_Y_RATIO,
     0.3,
     0,
     Math.PI * 2,
@@ -1709,15 +1710,44 @@ export function drawSwampTrollEnemy(
     bobSpeed: 2.5, bobAmt: 0.025,
   });
 
-  // Rage steam/breath when attacking
+  // Rage attack: ground-shaking slam with shockwave and flying debris
   if (isAttacking) {
+    const slamIntensity = Math.sin(attackPhase * Math.PI);
+
+    // Ground shockwave ring
+    const shockRadius = size * (0.3 + attackPhase * 0.8);
+    const shockAlpha = (1 - attackPhase) * 0.4 * slamIntensity;
+    ctx.strokeStyle = `rgba(100, 150, 80, ${shockAlpha})`;
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.5, shockRadius, shockRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Flying rock/mud debris from slam
+    for (let debris = 0; debris < 8; debris++) {
+      const debrisAngle = (debris / 8) * Math.PI * 2;
+      const debrisDist = attackPhase * size * 0.6;
+      const debrisY = y + size * 0.3 - attackPhase * size * 0.3 + Math.sin(debrisAngle) * size * 0.1;
+      const debrisAlpha = (1 - attackPhase) * 0.7;
+      ctx.fillStyle = `rgba(60, 80, 30, ${debrisAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        x + Math.cos(debrisAngle) * debrisDist,
+        debrisY,
+        size * 0.025 * (1 - attackPhase * 0.5),
+        0, Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    // Rage steam from nostrils
     ctx.fillStyle = `rgba(100, 150, 80, ${attackPhase * 0.4})`;
-    for (let steam = 0; steam < 3; steam++) {
+    for (let steam = 0; steam < 5; steam++) {
       const steamX = x + Math.sin(time * 8 + steam) * size * 0.15;
       const steamY =
-        y - size * 0.45 - attackPhase * size * 0.2 - steam * size * 0.08;
+        y - size * 0.45 - attackPhase * size * 0.25 - steam * size * 0.07;
       ctx.beginPath();
-      ctx.arc(steamX, steamY, size * 0.06 * (1 - steam * 0.2), 0, Math.PI * 2);
+      ctx.arc(steamX, steamY, size * 0.05 * (1 - steam * 0.15), 0, Math.PI * 2);
       ctx.fill();
     }
   }

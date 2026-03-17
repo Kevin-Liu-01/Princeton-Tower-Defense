@@ -1,7 +1,9 @@
 import type { Position } from "../../types";
 import type { RegionTheme } from "./staticLayer";
-import { hexToRgba } from "../../utils";
+import { hexToRgb, hexToRgba } from "../../utils";
 import { createSeededRandom } from "../../utils/seededRandom";
+
+const ISO_T = 0.5;
 
 export interface PathDecorationParams {
   ctx: CanvasRenderingContext2D;
@@ -15,6 +17,66 @@ export interface PathDecorationParams {
   mapSeed: number;
   toScreen: (pos: Position) => Position;
   skipPathShadows?: boolean;
+}
+
+export interface IsoStonePalette {
+  top: string;
+  left: string;
+  right: string;
+}
+
+export function buildStonePalettes(
+  pathColors: string[],
+  alpha: number,
+): IsoStonePalette[] {
+  return pathColors.map((hex) => {
+    const { r, g, b } = hexToRgb(hex);
+    return {
+      top: `rgba(${Math.min(255, r + 22)},${Math.min(255, g + 22)},${Math.min(255, b + 22)},${alpha})`,
+      left: `rgba(${Math.max(0, r - 12)},${Math.max(0, g - 12)},${Math.max(0, b - 12)},${alpha * 0.85})`,
+      right: `rgba(${Math.max(0, r - 32)},${Math.max(0, g - 32)},${Math.max(0, b - 32)},${alpha * 0.72})`,
+    };
+  });
+}
+
+export function drawIsoPathStone(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  hw: number,
+  h: number,
+  topColor: string,
+  leftColor: string,
+  rightColor: string,
+): void {
+  const hd = hw * ISO_T;
+
+  ctx.fillStyle = leftColor;
+  ctx.beginPath();
+  ctx.moveTo(cx - hw, cy);
+  ctx.lineTo(cx, cy + hd);
+  ctx.lineTo(cx, cy + hd - h);
+  ctx.lineTo(cx - hw, cy - h);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = rightColor;
+  ctx.beginPath();
+  ctx.moveTo(cx + hw, cy);
+  ctx.lineTo(cx, cy + hd);
+  ctx.lineTo(cx, cy + hd - h);
+  ctx.lineTo(cx + hw, cy - h);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - hd - h);
+  ctx.lineTo(cx + hw, cy - h);
+  ctx.lineTo(cx, cy + hd - h);
+  ctx.lineTo(cx - hw, cy - h);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function lerpPos(a: Position, b: Position, t: number): Position {
@@ -69,7 +131,7 @@ function drawPathWearGradient(p: PathDecorationParams): void {
 }
 
 function drawSurfaceTexture(p: PathDecorationParams): void {
-  const { ctx, screenLeft, screenRight, cameraZoom, mapSeed } = p;
+  const { ctx, screenLeft, screenRight, theme, cameraZoom, mapSeed } = p;
   const len = p.screenCenter.length;
   const rand = createSeededRandom(mapSeed + 600);
 
@@ -81,19 +143,30 @@ function drawSurfaceTexture(p: PathDecorationParams): void {
       screenRight[clampIdx(i, screenRight)],
       t,
     );
-    const size = (1 + rand() * 2) * cameraZoom;
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.04 + rand() * 0.05})`;
+    const ox = pos.x + (rand() - 0.5) * 8 * cameraZoom;
+    const oy = pos.y + (rand() - 0.5) * 4 * cameraZoom;
+    const hw = (1.2 + rand() * 2) * cameraZoom;
+    const hd = hw * ISO_T;
+    const alpha = 0.05 + rand() * 0.05;
+
+    ctx.fillStyle = `rgba(0,0,0,${alpha})`;
     ctx.beginPath();
-    ctx.ellipse(
-      pos.x + (rand() - 0.5) * 8 * cameraZoom,
-      pos.y + (rand() - 0.5) * 4 * cameraZoom,
-      size,
-      size * 0.6,
-      rand() * Math.PI,
-      0,
-      Math.PI * 2,
-    );
+    ctx.moveTo(ox, oy - hd);
+    ctx.lineTo(ox + hw, oy);
+    ctx.lineTo(ox, oy + hd);
+    ctx.lineTo(ox - hw, oy);
+    ctx.closePath();
     ctx.fill();
+
+    if (rand() > 0.6) {
+      ctx.fillStyle = hexToRgba(theme.path[0], 0.05 + rand() * 0.04);
+      ctx.beginPath();
+      ctx.moveTo(ox, oy - hd);
+      ctx.lineTo(ox - hw * 0.5, oy - hd * 0.25);
+      ctx.lineTo(ox, oy + hd * 0.3);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 }
 
@@ -101,6 +174,7 @@ function drawEdgeBorderStones(p: PathDecorationParams): void {
   const { ctx, screenCenter, screenLeft, screenRight, theme, cameraZoom, mapSeed } = p;
   const len = screenCenter.length;
   const rand = createSeededRandom(mapSeed + 500);
+  const palettes = buildStonePalettes(theme.path, 0.72);
 
   for (let i = 0; i < len; i += 3) {
     if (rand() > 0.5) continue;
@@ -109,25 +183,32 @@ function drawEdgeBorderStones(p: PathDecorationParams): void {
 
     const edgeP = side[i];
     const centerP = screenCenter[i];
-    const px = edgeP.x + (centerP.x - edgeP.x) * 0.08;
-    const py = edgeP.y + (centerP.y - edgeP.y) * 0.06;
-    const size = (3 + rand() * 5) * cameraZoom;
-    const rotation = rand() * Math.PI;
+    const inset = 0.05 + rand() * 0.08;
+    const px = edgeP.x + (centerP.x - edgeP.x) * inset;
+    const py = edgeP.y + (centerP.y - edgeP.y) * inset * 0.75;
+    const hw = (2.5 + rand() * 3.5) * cameraZoom;
+    const h = (1.2 + rand() * 2) * cameraZoom;
+    const hd = hw * ISO_T;
+    const pal = palettes[Math.floor(rand() * palettes.length)];
+    const shOff = 1.2 * cameraZoom;
 
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.18 + rand() * 0.08})`;
+    ctx.fillStyle = `rgba(0,0,0,${0.18 + rand() * 0.08})`;
     ctx.beginPath();
-    ctx.ellipse(px + 1.5 * cameraZoom, py + 1 * cameraZoom, size, size * 0.5, rotation, 0, Math.PI * 2);
+    ctx.moveTo(px + shOff, py + shOff * 0.5 - hd);
+    ctx.lineTo(px + shOff + hw, py + shOff * 0.5);
+    ctx.lineTo(px + shOff, py + shOff * 0.5 + hd);
+    ctx.lineTo(px + shOff - hw, py + shOff * 0.5);
+    ctx.closePath();
     ctx.fill();
 
-    const colorIdx = Math.floor(rand() * theme.path.length);
-    ctx.fillStyle = hexToRgba(theme.path[colorIdx], 0.65 + rand() * 0.15);
-    ctx.beginPath();
-    ctx.ellipse(px, py, size, size * 0.5, rotation, 0, Math.PI * 2);
-    ctx.fill();
+    drawIsoPathStone(ctx, px, py, hw, h, pal.top, pal.left, pal.right);
 
-    ctx.fillStyle = `rgba(255, 255, 255, ${0.06 + rand() * 0.05})`;
+    ctx.fillStyle = `rgba(255,255,255,${0.06 + rand() * 0.05})`;
     ctx.beginPath();
-    ctx.ellipse(px - size * 0.2, py - size * 0.12, size * 0.45, size * 0.25, rotation, 0, Math.PI * 2);
+    ctx.moveTo(px, py - hd - h);
+    ctx.lineTo(px - hw * 0.6, py - h - hd * 0.2);
+    ctx.lineTo(px, py + hd * 0.3 - h);
+    ctx.closePath();
     ctx.fill();
   }
 }
@@ -158,18 +239,17 @@ function drawCobblestonePattern(p: PathDecorationParams): void {
         screenRight[clampIdx(i, screenRight)],
         t,
       );
-      const stoneW = (6 + rand() * 8) * cameraZoom;
-      const stoneH = (4 + rand() * 5) * cameraZoom;
+      const stoneHW = (4 + rand() * 5) * cameraZoom;
+      const stoneHD = stoneHW * ISO_T;
+      const ox = pos.x + (rand() - 0.5) * 6 * cameraZoom;
+      const oy = pos.y + (rand() - 0.5) * 3 * cameraZoom;
+
       ctx.beginPath();
-      ctx.ellipse(
-        pos.x + (rand() - 0.5) * 6 * cameraZoom,
-        pos.y + (rand() - 0.5) * 3 * cameraZoom,
-        stoneW,
-        stoneH * 0.45,
-        rand() * 0.4 - 0.2,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(ox, oy - stoneHD);
+      ctx.lineTo(ox + stoneHW, oy);
+      ctx.lineTo(ox, oy + stoneHD);
+      ctx.lineTo(ox - stoneHW, oy);
+      ctx.closePath();
       ctx.stroke();
     }
   }
@@ -638,17 +718,34 @@ function drawCharredEdgeRocks(p: PathDecorationParams): void {
     const centerP = screenCenter[i];
     const rx = edgeP.x + (centerP.x - edgeP.x) * 0.05;
     const ry = edgeP.y + (centerP.y - edgeP.y) * 0.03;
-    const rockSize = (3 + rand() * 5) * cameraZoom;
-    const rot = rand() * Math.PI;
+    const hw = (2.5 + rand() * 4) * cameraZoom;
+    const h = (1.5 + rand() * 2.5) * cameraZoom;
+    const hd = hw * ISO_T;
+    const a = 0.55 + rand() * 0.2;
 
-    ctx.fillStyle = `rgba(30, 15, 10, ${0.55 + rand() * 0.2})`;
+    const shOff = 1 * cameraZoom;
+    ctx.fillStyle = `rgba(0,0,0,${0.2 + rand() * 0.1})`;
     ctx.beginPath();
-    ctx.ellipse(rx, ry, rockSize, rockSize * 0.45, rot, 0, Math.PI * 2);
+    ctx.moveTo(rx + shOff, ry + shOff * 0.5 - hd);
+    ctx.lineTo(rx + shOff + hw, ry + shOff * 0.5);
+    ctx.lineTo(rx + shOff, ry + shOff * 0.5 + hd);
+    ctx.lineTo(rx + shOff - hw, ry + shOff * 0.5);
+    ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = `rgba(200, 60, 20, ${0.12 + rand() * 0.12})`;
+    drawIsoPathStone(
+      ctx, rx, ry, hw, h,
+      `rgba(45,25,15,${a})`,
+      `rgba(30,15,10,${a})`,
+      `rgba(20,8,5,${a})`,
+    );
+
+    ctx.fillStyle = `rgba(200,60,20,${0.1 + rand() * 0.1})`;
     ctx.beginPath();
-    ctx.ellipse(rx + rockSize * 0.3, ry, rockSize * 0.35, rockSize * 0.2, rot, 0, Math.PI * 2);
+    ctx.moveTo(rx, ry - hd - h);
+    ctx.lineTo(rx + hw * 0.6, ry - h);
+    ctx.lineTo(rx, ry + hd * 0.4 - h);
+    ctx.closePath();
     ctx.fill();
   }
 }

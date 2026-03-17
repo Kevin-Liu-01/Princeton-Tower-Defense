@@ -82,6 +82,17 @@ const PALETTES: readonly ReinforcementPalette[] = [
     eye: "rgba(255, 241, 189, ",
     eyeShadow: "#e0aa3f",
   },
+  {
+    armorDark: "#4a4e5a",
+    armorMid: "#8a90a4",
+    armorLight: "#d0d6e8",
+    trim: "#e8eaf6",
+    cape: "#3a3854",
+    capeShadow: "#24223a",
+    glow: "rgba(210, 220, 255, ",
+    eye: "rgba(230, 240, 255, ",
+    eyeShadow: "#8890cc",
+  },
 ];
 
 export function drawReinforcementTroop(
@@ -96,7 +107,7 @@ export function drawReinforcementTroop(
   targetPos?: Position,
   troopId?: string,
 ) {
-  const tier = Math.max(0, Math.min(5, Math.floor(tierInput)));
+  const tier = Math.max(0, Math.min(6, Math.floor(tierInput)));
   const isAttacking = attackPhase > 0;
   const isLancerTier = tier >= 5;
   const breathe = Math.sin(time * 2.35) * 0.6;
@@ -333,7 +344,8 @@ export function drawReinforcementTroop(
 
   // ── Lancer mantle (tier 5) ──
   if (tier >= 5) {
-    ctx.strokeStyle = "rgba(255, 234, 171, 0.85)";
+    const mantleColor = tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 234, 171, 0.85)";
+    ctx.strokeStyle = mantleColor;
     ctx.lineWidth = 2.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.2, y - size * 0.16 + breathe * 0.4);
@@ -341,6 +353,59 @@ export function drawReinforcementTroop(
     ctx.lineTo(x + size * 0.08, y - size * 0.26 + breathe * 0.4);
     ctx.lineTo(x + size * 0.2, y - size * 0.16 + breathe * 0.4);
     ctx.stroke();
+  }
+
+  // ── Platinum jewel decorations (tier 6) ──
+  if (tier >= 6) {
+    const jewelPulse = 0.6 + Math.sin(time * 3.2) * 0.25 + attackDrive * 0.15;
+    const jewelSparkle = Math.sin(time * 5.8) * 0.2;
+
+    const drawJewel = (jx: number, jy: number, r: number, hue: string) => {
+      ctx.save();
+      ctx.shadowColor = hue;
+      ctx.shadowBlur = (4 + jewelSparkle * 2) * zoom;
+      const jGrad = ctx.createRadialGradient(jx - r * 0.3, jy - r * 0.3, 0, jx, jy, r);
+      jGrad.addColorStop(0, "#ffffff");
+      jGrad.addColorStop(0.3, hue);
+      jGrad.addColorStop(1, "rgba(80, 80, 120, 0.6)");
+      ctx.fillStyle = jGrad;
+      ctx.beginPath();
+      ctx.moveTo(jx, jy - r);
+      ctx.lineTo(jx + r * 0.7, jy);
+      ctx.lineTo(jx, jy + r);
+      ctx.lineTo(jx - r * 0.7, jy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${jewelPulse * 0.6})`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const s = size;
+    const by = breathe;
+    // Chest centerpiece
+    drawJewel(x, y - s * 0.06 + by * 0.5, s * 0.035, "rgba(180, 200, 255, 0.9)");
+    // Pauldron jewels
+    drawJewel(x - s * 0.22, y - s * 0.1 + by * 0.4, s * 0.025, "rgba(220, 180, 255, 0.85)");
+    drawJewel(x + s * 0.22, y - s * 0.1 + by * 0.4, s * 0.025, "rgba(220, 180, 255, 0.85)");
+    // Belt jewels
+    drawJewel(x - s * 0.1, y + s * 0.18 + by * 0.8, s * 0.018, "rgba(180, 230, 255, 0.8)");
+    drawJewel(x + s * 0.1, y + s * 0.18 + by * 0.8, s * 0.018, "rgba(180, 230, 255, 0.8)");
+
+    // Crystal shimmer lines on armor plates
+    ctx.globalAlpha = 0.25 + jewelSparkle * 0.15;
+    ctx.strokeStyle = "rgba(210, 220, 255, 0.6)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - s * 0.15, y - s * 0.12 + by * 0.4);
+    ctx.lineTo(x - s * 0.05, y + s * 0.08 + by * 0.7);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.15, y - s * 0.12 + by * 0.4);
+    ctx.lineTo(x + s * 0.05, y + s * 0.08 + by * 0.7);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
 
   // ── Left arm + shield/second weapon ──
@@ -700,7 +765,7 @@ export function drawReinforcementTroop(
       ctx.stroke();
     }
   } else {
-    const bladeLength = size * (0.56 + tier * 0.08);
+    const bladeLength = size * (0.44 + tier * 0.06);
     const swordGripLocalY = size * 0.14;
 
     // Arm swing: overhead chop (up → forward → down)
@@ -987,7 +1052,8 @@ export function drawReinforcementTroop(
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(255, 233, 171, 0.85)";
+    const shieldRimColor = tier >= 6 ? "rgba(210, 220, 255, 0.9)" : "rgba(255, 233, 171, 0.85)";
+    ctx.strokeStyle = shieldRimColor;
     ctx.lineWidth = 1.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.18);
@@ -1018,6 +1084,31 @@ export function drawReinforcementTroop(
       size * 0.01,
     );
     ctx.fill();
+
+    // Shield center jewel (tier 6)
+    if (tier >= 6) {
+      const sJewelPulse = 0.5 + Math.sin(time * 4.1) * 0.3;
+      ctx.save();
+      ctx.shadowColor = "rgba(180, 200, 255, 0.8)";
+      ctx.shadowBlur = 4 * zoom;
+      const sJGrad = ctx.createRadialGradient(-size * 0.005, -size * 0.01, 0, 0, 0, size * 0.03);
+      sJGrad.addColorStop(0, "#ffffff");
+      sJGrad.addColorStop(0.4, "rgba(180, 200, 255, 0.9)");
+      sJGrad.addColorStop(1, "rgba(100, 110, 160, 0.5)");
+      ctx.fillStyle = sJGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.03);
+      ctx.lineTo(size * 0.02, 0);
+      ctx.lineTo(0, size * 0.03);
+      ctx.lineTo(-size * 0.02, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255, 255, 255, ${sJewelPulse * 0.5})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
@@ -1061,6 +1152,33 @@ export function drawReinforcementTroop(
     helmet,
     tier,
   );
+
+  // ── Helmet crown jewel (tier 6) ──
+  if (tier >= 6) {
+    const crownPulse = 0.65 + Math.sin(time * 3.8) * 0.2 + attackDrive * 0.15;
+    ctx.save();
+    ctx.shadowColor = "rgba(200, 210, 255, 0.9)";
+    ctx.shadowBlur = (5 + Math.sin(time * 6) * 2) * zoom;
+    const crownGrad = ctx.createRadialGradient(
+      x - size * 0.01, helmY - size * 0.12, 0,
+      x, helmY - size * 0.1, size * 0.03,
+    );
+    crownGrad.addColorStop(0, "#ffffff");
+    crownGrad.addColorStop(0.35, "rgba(200, 215, 255, 0.95)");
+    crownGrad.addColorStop(1, "rgba(120, 130, 180, 0.5)");
+    ctx.fillStyle = crownGrad;
+    ctx.beginPath();
+    ctx.moveTo(x, helmY - size * 0.16);
+    ctx.lineTo(x + size * 0.025, helmY - size * 0.1);
+    ctx.lineTo(x, helmY - size * 0.06);
+    ctx.lineTo(x - size * 0.025, helmY - size * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${crownPulse * 0.5})`;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    ctx.restore();
+  }
 
   // Battle cry shockwave (during attack)
   if (isAttacking && attackPhase > 0.25 && attackPhase < 0.65) {

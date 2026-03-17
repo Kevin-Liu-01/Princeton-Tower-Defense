@@ -3379,15 +3379,15 @@ export function drawCaptainHero(
       ctx.closePath();
     };
 
-    // Bright red void behind grille (visible through every slit/gap)
+    // Dark red void behind grille (visible through every slit/gap)
     const visorGlow = isAttacking ? 1.0 : 0.8;
-    ctx.fillStyle = `rgba(180, 20, 10, ${visorGlow})`;
+    ctx.fillStyle = `rgba(90, 8, 4, ${visorGlow})`;
     drawVisorPath();
     ctx.fill();
     const voidG = ctx.createRadialGradient(x, (visorTopY + visorBotY) * 0.5, 0, x, (visorTopY + visorBotY) * 0.5, size * 0.18);
-    voidG.addColorStop(0, `rgba(255, 50, 20, ${visorGlow * 0.9})`);
-    voidG.addColorStop(0.4, `rgba(220, 30, 12, ${visorGlow * 0.7})`);
-    voidG.addColorStop(1, `rgba(160, 15, 8, ${visorGlow * 0.5})`);
+    voidG.addColorStop(0, `rgba(140, 22, 10, ${visorGlow * 0.9})`);
+    voidG.addColorStop(0.4, `rgba(100, 12, 5, ${visorGlow * 0.7})`);
+    voidG.addColorStop(1, `rgba(50, 5, 2, ${visorGlow * 0.5})`);
     ctx.fillStyle = voidG;
     drawVisorPath();
     ctx.fill();

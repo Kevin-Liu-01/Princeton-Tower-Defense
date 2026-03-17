@@ -1461,6 +1461,120 @@ export function drawCavalryTroop(
   // === ROYAL ARMET HELMET (faceted plates with ornamental detail) ===
   const helmY = y - size * 0.6 + gallop * 0.08 + breathe * 0.2;
 
+  // === COIF & AVENTAIL (chainmail behind helmet) ===
+  const aventailSway = Math.sin(time * 4.2 + 0.3) * size * 0.008;
+  const aventailBaseY = helmY + size * 0.06;
+  const aventailBottomY = helmY + size * 0.28;
+
+  // Coif — chainmail hood shape behind and around helmet
+  const coifGrad = ctx.createRadialGradient(
+    x, helmY - size * 0.04, size * 0.06,
+    x, helmY + size * 0.04, size * 0.24,
+  );
+  coifGrad.addColorStop(0, "#5a5e68");
+  coifGrad.addColorStop(0.4, "#484c56");
+  coifGrad.addColorStop(0.8, "#3a3e48");
+  coifGrad.addColorStop(1, "#2e3238");
+  ctx.fillStyle = coifGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16, helmY - size * 0.06);
+  ctx.quadraticCurveTo(x, helmY - size * 0.28, x + size * 0.16, helmY - size * 0.06);
+  ctx.lineTo(x + size * 0.17, aventailBaseY);
+  ctx.lineTo(x - size * 0.17, aventailBaseY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Coif chainmail ring texture
+  ctx.strokeStyle = "rgba(120, 125, 140, 0.35)";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let row = 0; row < 4; row++) {
+    const ringY = helmY - size * 0.18 + row * size * 0.06;
+    const rowWidth = size * (0.08 + row * 0.025);
+    const offset = row % 2 === 0 ? 0 : size * 0.015;
+    for (let col = -3; col <= 3; col++) {
+      const ringX = x + col * size * 0.03 + offset;
+      if (Math.abs(ringX - x) <= rowWidth) {
+        ctx.beginPath();
+        ctx.arc(ringX, ringY, size * 0.012, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Aventail — chainmail curtain hanging from helmet base
+  const aventailGrad = ctx.createLinearGradient(
+    x - size * 0.18, aventailBaseY,
+    x + size * 0.18, aventailBottomY,
+  );
+  aventailGrad.addColorStop(0, "#4a4e58");
+  aventailGrad.addColorStop(0.3, "#3e4250");
+  aventailGrad.addColorStop(0.7, "#353944");
+  aventailGrad.addColorStop(1, "#2c3038");
+  ctx.fillStyle = aventailGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16, aventailBaseY);
+  ctx.lineTo(x + size * 0.16, aventailBaseY);
+  ctx.quadraticCurveTo(
+    x + size * 0.18 + aventailSway,
+    aventailBottomY - size * 0.04,
+    x + size * 0.14 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x + aventailSway * 0.5,
+    aventailBottomY + size * 0.02,
+    x - size * 0.14 + aventailSway,
+    aventailBottomY,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.18 + aventailSway,
+    aventailBottomY - size * 0.04,
+    x - size * 0.16,
+    aventailBaseY,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Aventail chainmail ring rows
+  ctx.strokeStyle = "rgba(105, 112, 128, 0.32)";
+  ctx.lineWidth = 0.45 * zoom;
+  for (let row = 0; row < 5; row++) {
+    const ringY = aventailBaseY + row * size * 0.04 + size * 0.02;
+    const rowHalfW = size * (0.14 - row * 0.005);
+    const offset = row % 2 === 0 ? 0 : size * 0.014;
+    const sway = aventailSway * (row / 4);
+    for (let col = -5; col <= 5; col++) {
+      const ringX = x + col * size * 0.028 + offset + sway;
+      if (Math.abs(ringX - x - sway) <= rowHalfW) {
+        ctx.beginPath();
+        ctx.arc(ringX, ringY, size * 0.011, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Aventail top mounting strip (leather vervelles)
+  ctx.fillStyle = "#3a2a1a";
+  ctx.beginPath();
+  ctx.roundRect(
+    x - size * 0.155, aventailBaseY - size * 0.012,
+    size * 0.31, size * 0.024,
+    size * 0.006,
+  );
+  ctx.fill();
+  ctx.strokeStyle = `rgba(179, 135, 63, 0.55)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  // Brass vervelles (mounting studs)
+  ctx.fillStyle = brassMid;
+  for (let v = 0; v < 7; v++) {
+    const vx = x - size * 0.13 + v * size * 0.043;
+    ctx.beginPath();
+    ctx.arc(vx, aventailBaseY, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Skull dome — radial gradient for 3D sphere
   const helmGrad = ctx.createRadialGradient(
     x - size * 0.03, helmY - size * 0.1, 0,
@@ -2152,9 +2266,10 @@ export function drawCavalryTroop(
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Double gold trim
-  ctx.strokeStyle = brassLight;
-  ctx.lineWidth = 2.5 * zoom;
+  // Filled border band — outer rim (dark edge for depth)
+  ctx.strokeStyle = "#2a1a08";
+  ctx.lineWidth = 3.5 * zoom;
+  ctx.lineJoin = "round";
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.26);
   ctx.lineTo(-size * 0.15, -size * 0.14);
@@ -2164,53 +2279,151 @@ export function drawCavalryTroop(
   ctx.lineTo(size * 0.15, -size * 0.14);
   ctx.closePath();
   ctx.stroke();
-  ctx.strokeStyle = brassDark;
-  ctx.lineWidth = 1 * zoom;
+
+  // Main gold border — gradient that follows the shield perimeter
+  const borderGradOuter = ctx.createLinearGradient(
+    -size * 0.15, -size * 0.14, size * 0.15, size * 0.2,
+  );
+  borderGradOuter.addColorStop(0, "#c4a240");
+  borderGradOuter.addColorStop(0.15, "#e8d088");
+  borderGradOuter.addColorStop(0.3, "#d4b458");
+  borderGradOuter.addColorStop(0.5, "#f0e0a0");
+  borderGradOuter.addColorStop(0.7, "#d4b458");
+  borderGradOuter.addColorStop(0.85, "#e8d088");
+  borderGradOuter.addColorStop(1, "#c4a240");
+  ctx.strokeStyle = borderGradOuter;
+  ctx.lineWidth = 2.2 * zoom;
+  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.23);
-  ctx.lineTo(-size * 0.12, -size * 0.12);
-  ctx.lineTo(-size * 0.1, size * 0.17);
-  ctx.lineTo(0, size * 0.24);
-  ctx.lineTo(size * 0.1, size * 0.17);
-  ctx.lineTo(size * 0.12, -size * 0.12);
+  ctx.moveTo(0, -size * 0.26);
+  ctx.lineTo(-size * 0.15, -size * 0.14);
+  ctx.lineTo(-size * 0.13, size * 0.2);
+  ctx.lineTo(0, size * 0.28);
+  ctx.lineTo(size * 0.13, size * 0.2);
+  ctx.lineTo(size * 0.15, -size * 0.14);
   ctx.closePath();
   ctx.stroke();
 
-  // Corner gems on shield
-  ctx.fillStyle = royalPurpleLight;
-  ctx.shadowColor = royalPurpleLight;
-  ctx.shadowBlur = 4 * zoom * gemPulse;
+  // Inner highlight line — bright specular along left/top edge
+  ctx.strokeStyle = "rgba(255, 245, 210, 0.55)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.arc(0, -size * 0.22, size * 0.018, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(-size * 0.1, size * 0.12, size * 0.012, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(size * 0.1, size * 0.12, size * 0.012, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.moveTo(0, -size * 0.255);
+  ctx.lineTo(-size * 0.145, -size * 0.135);
+  ctx.lineTo(-size * 0.125, size * 0.195);
+  ctx.stroke();
 
-  // Ornate "P" emblem with shadow
-  ctx.fillStyle = "#0a0a0a";
+  // Inner shadow line — darker along right/bottom for bevel
+  ctx.strokeStyle = "rgba(80, 60, 20, 0.5)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, size * 0.275);
+  ctx.lineTo(size * 0.125, size * 0.195);
+  ctx.lineTo(size * 0.145, -size * 0.135);
+  ctx.stroke();
+
+  // Inset border line — separates field from rim
+  const borderGradInner = ctx.createLinearGradient(
+    -size * 0.12, -size * 0.1, size * 0.12, size * 0.18,
+  );
+  borderGradInner.addColorStop(0, "#8a6e28");
+  borderGradInner.addColorStop(0.3, "#b09030");
+  borderGradInner.addColorStop(0.5, "#c4a240");
+  borderGradInner.addColorStop(0.7, "#b09030");
+  borderGradInner.addColorStop(1, "#8a6e28");
+  ctx.strokeStyle = borderGradInner;
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.205);
+  ctx.lineTo(-size * 0.113, -size * 0.094);
+  ctx.lineTo(-size * 0.094, size * 0.155);
+  ctx.lineTo(0, size * 0.215);
+  ctx.lineTo(size * 0.094, size * 0.155);
+  ctx.lineTo(size * 0.113, -size * 0.094);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Corner gems on shield — with proper gem facets
+  const gemPositions: [number, number, number][] = [
+    [0, -size * 0.228, size * 0.018],
+    [-size * 0.12, -size * 0.05, size * 0.013],
+    [size * 0.12, -size * 0.05, size * 0.013],
+    [-size * 0.1, size * 0.12, size * 0.012],
+    [size * 0.1, size * 0.12, size * 0.012],
+    [0, size * 0.24, size * 0.011],
+  ];
+  for (const [gx, gy, gr] of gemPositions) {
+    // Gem bezel
+    ctx.fillStyle = "#7a5e1a";
+    ctx.beginPath();
+    ctx.arc(gx, gy, gr * 1.35, 0, Math.PI * 2);
+    ctx.fill();
+    // Gem body
+    const gemGrad = ctx.createRadialGradient(
+      gx - gr * 0.3, gy - gr * 0.3, gr * 0.1,
+      gx, gy, gr,
+    );
+    gemGrad.addColorStop(0, "#c9a0f0");
+    gemGrad.addColorStop(0.4, royalPurpleLight);
+    gemGrad.addColorStop(1, "#3a1a68");
+    ctx.fillStyle = gemGrad;
+    ctx.shadowColor = royalPurpleLight;
+    ctx.shadowBlur = 4 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // Facet highlight
+    ctx.fillStyle = "rgba(255, 240, 255, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(gx - gr * 0.25, gy - gr * 0.25, gr * 0.35, gr * 0.22, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Ornate "P" emblem — layered with glow
   ctx.font = `bold ${size * 0.12}px serif`;
   ctx.textAlign = "center";
-  ctx.fillText("P", size * 0.005, size * 0.065);
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillText("P", 0, size * 0.06);
-  // Gold outline on P
+  ctx.textBaseline = "middle";
+  // Soft glow behind letter
+  ctx.fillStyle = `rgba(214, 172, 69, 0.2)`;
+  ctx.shadowColor = "rgba(214, 172, 69, 0.35)";
+  ctx.shadowBlur = 6 * zoom;
+  ctx.fillText("P", 0, size * 0.04);
+  ctx.shadowBlur = 0;
+  // Dark shadow
+  ctx.fillStyle = "#0a0510";
+  ctx.fillText("P", size * 0.003, size * 0.043);
+  // Main letter
+  ctx.fillStyle = "#1a1020";
+  ctx.fillText("P", 0, size * 0.04);
+  // Gold outline
   ctx.strokeStyle = brassMid;
-  ctx.lineWidth = 0.6;
-  ctx.strokeText("P", 0, size * 0.06);
+  ctx.lineWidth = 0.7;
+  ctx.strokeText("P", 0, size * 0.04);
+  ctx.textBaseline = "alphabetic";
 
-  // Shield boss (center boss)
-  ctx.fillStyle = brassMid;
+  // Shield boss — layered dome with radial gradient
+  const bossGrad = ctx.createRadialGradient(
+    -size * 0.008, size * 0.015, size * 0.003,
+    0, size * 0.02, size * 0.028,
+  );
+  bossGrad.addColorStop(0, "#f0e8c8");
+  bossGrad.addColorStop(0.3, brassLight);
+  bossGrad.addColorStop(0.6, brassMid);
+  bossGrad.addColorStop(1, brassDark);
+  ctx.fillStyle = bossGrad;
   ctx.beginPath();
-  ctx.arc(0, size * 0.02, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(0, size * 0.02, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = brassLight;
+  ctx.strokeStyle = "#6a5420";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+  // Boss highlight
+  ctx.fillStyle = "rgba(255, 250, 230, 0.45)";
   ctx.beginPath();
-  ctx.arc(0, size * 0.02, size * 0.015, 0, Math.PI * 2);
+  ctx.ellipse(-size * 0.008, size * 0.013, size * 0.01, size * 0.006, -0.3, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();

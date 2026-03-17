@@ -8,6 +8,14 @@ export const getWorldMapY = (pct: number, mapHeight: number): number => {
   return topMargin + remapped * usableHeight;
 };
 
+export const getLevelNodeY = (pct: number, mapHeight: number): number => {
+  const topMargin = 70;
+  const bottomMargin = 35;
+  const usableHeight = mapHeight - topMargin - bottomMargin;
+  const remapped = (pct - 20) / 60;
+  return topMargin + remapped * usableHeight;
+};
+
 export const seededRandom = (seed: number): number => {
   const x = Math.sin(seed * 9999) * 10000;
   return x - Math.floor(x);

@@ -1,4 +1,5 @@
 import type { EnemyAbilityType } from "../../types";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 
 const TAU = Math.PI * 2;
 const ABILITY_ACTIVATION_DURATION_MS = 600;
@@ -123,26 +124,26 @@ function renderUnitAbilityActivation(
   const fadeAlpha = phase < 0.3 ? phase / 0.3 : 1;
   const burstRadius = size * (0.6 + (1 - easeOut) * 1.2);
 
-  // Outer glow burst
+  // Outer glow burst (isometric ground-plane ellipse)
   const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, burstRadius);
   glowGrad.addColorStop(0, `rgba(${config.glow}, ${0.5 * fadeAlpha * phase})`);
   glowGrad.addColorStop(0.4, `rgba(${config.primary}, ${0.3 * fadeAlpha * phase})`);
   glowGrad.addColorStop(1, `rgba(${config.secondary}, 0)`);
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
-  ctx.arc(x, y, burstRadius, 0, TAU);
+  ctx.ellipse(x, y, burstRadius, burstRadius * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
-  // Expanding ring
+  // Expanding ring (isometric)
   const ringRadius = size * (0.4 + (1 - phase) * 0.8);
   const ringWidth = (2.5 + phase * 1.5) * zoom;
   ctx.strokeStyle = `rgba(${config.primary}, ${0.9 * phase * fadeAlpha})`;
   ctx.lineWidth = ringWidth;
   ctx.beginPath();
-  ctx.arc(x, y, ringRadius, 0, TAU);
+  ctx.ellipse(x, y, ringRadius, ringRadius * ISO_Y_RATIO, 0, 0, TAU);
   ctx.stroke();
 
-  // Inner bright core
+  // Inner bright core (isometric)
   if (phase > 0.4) {
     const corePhase = (phase - 0.4) / 0.6;
     const coreSize = size * 0.2 * corePhase;
@@ -152,7 +153,7 @@ function renderUnitAbilityActivation(
     coreGrad.addColorStop(1, `rgba(${config.primary}, 0)`);
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(x, y, coreSize, 0, TAU);
+    ctx.ellipse(x, y, coreSize, coreSize * ISO_Y_RATIO, 0, 0, TAU);
     ctx.fill();
   }
 
@@ -176,7 +177,7 @@ function renderTowerAbilityActivation(
   const easeOut = 1 - (1 - phase) * (1 - phase);
   const fadeAlpha = phase < 0.3 ? phase / 0.3 : 1;
 
-  // Dark oppressive aura emanating from enemy
+  // Dark oppressive aura emanating from enemy (isometric)
   const auraRadius = size * (0.8 + (1 - easeOut) * 1.5);
   const auraGrad = ctx.createRadialGradient(x, y, size * 0.2, x, y, auraRadius);
   auraGrad.addColorStop(0, `rgba(${config.secondary}, ${0.4 * fadeAlpha * phase})`);
@@ -184,7 +185,7 @@ function renderTowerAbilityActivation(
   auraGrad.addColorStop(1, `rgba(${config.secondary}, 0)`);
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, auraRadius, 0, TAU);
+  ctx.ellipse(x, y, auraRadius, auraRadius * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
   // Pulsing hex/rune ring
@@ -193,7 +194,7 @@ function renderTowerAbilityActivation(
   for (let i = 0; i < runeCount; i++) {
     const angle = time * 2 + (i / runeCount) * TAU;
     const rx = x + Math.cos(angle) * ringR;
-    const ry = y + Math.sin(angle) * ringR * 0.6;
+    const ry = y + Math.sin(angle) * ringR * ISO_Y_RATIO;
     const runeSize = (4 + phase * 2) * zoom;
 
     ctx.fillStyle = `rgba(${config.glow}, ${0.9 * phase * fadeAlpha})`;
@@ -223,7 +224,7 @@ function renderTowerAbilityActivation(
     for (let s = 1; s <= segments; s++) {
       const t = s / segments;
       const px = x + Math.cos(angle) * len * t + Math.sin(time * 8 + i + s) * size * 0.05;
-      const py = y + Math.sin(angle) * len * t * 0.6 + Math.cos(time * 6 + i + s) * size * 0.03;
+      const py = y + Math.sin(angle) * len * t * ISO_Y_RATIO + Math.cos(time * 6 + i + s) * size * 0.03;
       ctx.lineTo(px, py);
     }
     ctx.stroke();
@@ -364,7 +365,7 @@ function renderActivationParticles(
     const dist = size * (0.3 + spread * 0.9);
     const wobble = Math.sin(time * 8 + i * 2.3) * size * 0.06;
     const px = x + Math.cos(angle) * dist + wobble;
-    const py = y + Math.sin(angle) * dist * 0.6;
+    const py = y + Math.sin(angle) * dist * ISO_Y_RATIO;
     const pSize = (2 + phase * 2.5) * zoom;
     const alpha = phase * (0.6 + Math.sin(time * 6 + i) * 0.3);
 

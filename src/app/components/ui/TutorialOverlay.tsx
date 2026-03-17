@@ -160,7 +160,7 @@ interface SpellCardInfo {
 const SPELL_CARDS: SpellCardInfo[] = [
   { type: "fireball", name: "Fireball", tagline: "Meteor shower dealing heavy AoE fire damage", color: "border-red-700/40" },
   { type: "lightning", name: "Lightning", tagline: "Chain lightning leaps between enemies", color: "border-blue-700/40" },
-  { type: "freeze", name: "Freeze", tagline: "Freezes all enemies in a radius for several seconds", color: "border-cyan-700/40" },
+  { type: "freeze", name: "Freeze", tagline: "Freezes the most advanced enemies for several seconds", color: "border-cyan-700/40" },
   { type: "payday", name: "Payday", tagline: "Instantly grants bonus Paw Points", color: "border-amber-700/40" },
   { type: "reinforcements", name: "Reinforcements", tagline: "Drops soldiers anywhere on the map", color: "border-emerald-700/40" },
 ];

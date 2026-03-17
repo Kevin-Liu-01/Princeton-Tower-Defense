@@ -42,7 +42,7 @@ export function drawEliteTroop(
   // Anchor halberd to hand — arm swing drives hand position
   const eliteHalbArmLen = size * 0.2;
   const eliteHalbGripLocalY = size * 0.1;
-  const eliteHalbShoulderX = x + size * 0.2;
+  const eliteHalbShoulderX = x + size * 0.12;
   const eliteHalbShoulderY = y - size * 0.02 + breathe;
   const eliteHalbArmSwing = isAttacking
     ? -0.2 + halberdSwing * 0.4

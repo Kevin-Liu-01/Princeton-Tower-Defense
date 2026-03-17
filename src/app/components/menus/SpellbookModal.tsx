@@ -173,6 +173,7 @@ interface SpellbookModalProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  downgradeSpell: (spellType: SpellType) => void;
   initialSpell?: SpellType;
 }
 
@@ -186,6 +187,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  downgradeSpell,
   initialSpell,
 }) => {
   const [focusedSpell, setFocusedSpell] = React.useState<SpellType>("fireball");
@@ -672,6 +674,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
         spentStars={spentSpellStars}
         spellUpgradeLevels={spellUpgradeLevels}
         onUpgradeSpell={upgradeSpell}
+        onDowngradeSpell={downgradeSpell}
       />
     </>
   );

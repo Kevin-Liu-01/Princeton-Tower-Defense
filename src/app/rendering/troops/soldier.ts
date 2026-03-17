@@ -711,7 +711,7 @@ export function drawSoldierTroop(
 
   const swordBaseAngle = isAttacking
     ? -1.02 + attackPhase * 2.04
-    : -0.24 + stance * 0.04;
+    : -0.42 + stance * 0.04;
 
   const soldierSword = anchorWeaponToHand(
     swordShoulderX,

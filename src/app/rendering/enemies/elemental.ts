@@ -1,6 +1,7 @@
 // Princeton Tower Defense - Elemental/Nature Enemy Sprite Functions
 // Extracted from enemies/index.ts
 
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
@@ -821,14 +822,14 @@ export function drawSandwormEnemy(
   holeGrad.addColorStop(1, "rgba(161, 98, 7, 0.2)");
   ctx.fillStyle = holeGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.4, size * 0.55, size * 0.22, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.4, size * 0.55, size * 0.55 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Burrow rim texture
   ctx.strokeStyle = "rgba(120, 53, 15, 0.4)";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.4, size * 0.5, size * 0.2, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.4, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   // Stinger/tail tip visible at the back
@@ -1290,7 +1291,7 @@ export function drawSandwormEnemy(
         x,
         y + size * 0.4,
         waveRadius,
-        waveRadius * 0.3,
+        waveRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1330,7 +1331,7 @@ export function drawFrostlingEnemy(
   // Ground frost ring that spreads beneath
   ctx.save();
   ctx.translate(x, y + size * 0.5);
-  ctx.scale(1, 0.3);
+  ctx.scale(1, ISO_Y_RATIO);
   const frostRingRadius =
     size * (0.4 + Math.sin(time * 2) * 0.05 + (isAttacking ? attackIntensity * 0.25 : 0));
   const frostRingGrad = ctx.createRadialGradient(
@@ -1408,7 +1409,7 @@ export function drawFrostlingEnemy(
   auroraGrad.addColorStop(1, "rgba(56, 189, 248, 0)");
   ctx.fillStyle = auroraGrad;
   ctx.beginPath();
-  ctx.arc(x, y + floatOffset, size * 0.6, 0, Math.PI * 2);
+  ctx.ellipse(x, y + floatOffset, size * 0.6, size * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
   // Aurora shimmer bands
   for (let a = 0; a < 3; a++) {
@@ -1488,7 +1489,7 @@ export function drawFrostlingEnemy(
   outerBodyGrad.addColorStop(1, "rgba(125, 211, 252, 0)");
   ctx.fillStyle = outerBodyGrad;
   ctx.beginPath();
-  ctx.arc(x, y + floatOffset, size * 0.5, 0, Math.PI * 2);
+  ctx.ellipse(x, y + floatOffset, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Main ghostly body
@@ -1848,7 +1849,7 @@ export function drawInfernalEnemy(
   heatGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = heatGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Scorch cracks on ground
@@ -2467,7 +2468,7 @@ export function drawInfernalEnemy(
     engulfGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = engulfGrad;
     ctx.beginPath();
-    ctx.arc(x, y, size * 0.6, 0, Math.PI * 2);
+    ctx.ellipse(x, y, size * 0.6, size * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
 
     const fireballX = x + rageShake;
@@ -3190,7 +3191,7 @@ export function drawJuggernautEnemy(
     x,
     y + size * 0.52,
     tremorRadius,
-    tremorRadius * 0.35,
+    tremorRadius * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -3211,7 +3212,7 @@ export function drawJuggernautEnemy(
         x + groundShake,
         y + size * 0.52,
         ringR,
-        ringR * 0.3,
+        ringR * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -3296,7 +3297,7 @@ export function drawJuggernautEnemy(
       x + groundShake,
       y + size * 0.52,
       shockR,
-      shockR * 0.25,
+      shockR * ISO_Y_RATIO,
       0,
       0,
       Math.PI * 2,
@@ -4298,7 +4299,7 @@ export function drawAssassinEnemy(
   auraGrad.addColorStop(1, "rgba(30, 27, 75, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.65, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Quick-moving animated arms (fast swing)
@@ -4917,7 +4918,7 @@ export function drawAssassinEnemy(
       pmx,
       pmy,
       size * 0.05,
-      size * 0.02,
+      size * 0.05 * ISO_Y_RATIO,
       0,
       0,
       Math.PI * 2,

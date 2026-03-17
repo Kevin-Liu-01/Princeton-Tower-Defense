@@ -70,6 +70,7 @@ interface MobileLoadoutBarProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  downgradeSpell: (spellType: SpellType) => void;
 }
 
 export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
@@ -82,6 +83,7 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  downgradeSpell,
 }) => {
   const [showHeroSheet, setShowHeroSheet] = useState(false);
   const [showSpellSheet, setShowSpellSheet] = useState(false);
@@ -151,6 +153,7 @@ export const MobileLoadoutBar: React.FC<MobileLoadoutBarProps> = ({
         spentStars={spentSpellStars}
         spellUpgradeLevels={spellUpgradeLevels}
         onUpgradeSpell={upgradeSpell}
+        onDowngradeSpell={downgradeSpell}
       />
     </>
   );
@@ -691,7 +694,7 @@ function getSpellStatsForType(spellType: SpellType, level: number): SpellStatDis
       const s = getFreezeSpellStats(level);
       return [
         { icon: <Snowflake size={8} className="text-cyan-400/70" />, value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, textColor: "text-cyan-300/80", bg: "rgba(22,78,99,0.15)" },
-        { icon: <Target size={8} className="text-indigo-400/70" />, value: "Global", textColor: "text-indigo-300/80", bg: "rgba(49,46,129,0.15)" },
+        { icon: <Target size={8} className="text-indigo-400/70" />, value: s.isGlobal ? "Global" : `${s.maxTargets} max`, textColor: "text-indigo-300/80", bg: "rgba(49,46,129,0.15)" },
       ];
     }
     case "payday": {

@@ -1,5 +1,6 @@
 // Volcanic region enemy sprites
 
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawAnimatedArm, drawAnimatedLegs, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 
@@ -36,7 +37,7 @@ export function drawMagmaSpawnEnemy(
   heatGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
   ctx.fillStyle = heatGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
 
@@ -54,7 +55,7 @@ export function drawMagmaSpawnEnemy(
   poolGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.32, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.32, size * 0.4, size * 0.4 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Dripping lava trails to ground
@@ -493,22 +494,46 @@ export function drawMagmaSpawnEnemy(
     trailLen: 4,
   });
 
-  // Attack eruption effect
+  // Attack eruption: lava burst with expanding ground wave and flying magma
   if (isAttacking) {
-    ctx.fillStyle = `rgba(251, 191, 36, ${attackPhase * 0.7})`;
-    for (let erupt = 0; erupt < 6; erupt++) {
-      const eruptAngle = -Math.PI * 0.8 + erupt * 0.25;
-      const eruptDist = attackPhase * size * 0.5;
+    const eruptIntensity = Math.sin(attackPhase * Math.PI);
+
+    // Expanding lava shockwave on ground
+    const lavaWaveR = size * (0.2 + attackPhase * 0.6);
+    ctx.strokeStyle = `rgba(251, 191, 36, ${(1 - attackPhase) * 0.5})`;
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.3, lavaWaveR, lavaWaveR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Bright eruption core flash
+    const coreFlashGrad = ctx.createRadialGradient(
+      x, y - size * 0.15, 0,
+      x, y - size * 0.15, size * eruptIntensity * 0.4,
+    );
+    coreFlashGrad.addColorStop(0, `rgba(255, 255, 230, ${eruptIntensity * 0.6})`);
+    coreFlashGrad.addColorStop(0.5, `rgba(251, 191, 36, ${eruptIntensity * 0.3})`);
+    coreFlashGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+    ctx.fillStyle = coreFlashGrad;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.15, size * eruptIntensity * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flying magma globs in arc patterns
+    setShadowBlur(ctx, 6 * zoom, "#fbbf24");
+    for (let erupt = 0; erupt < 10; erupt++) {
+      const eruptAngle = (erupt / 10) * Math.PI * 2;
+      const eruptDist = attackPhase * size * 0.55;
+      const arcHeight = Math.sin(attackPhase * Math.PI) * size * 0.3;
+      const ex = x + Math.cos(eruptAngle) * eruptDist;
+      const ey = y - size * 0.2 + Math.sin(eruptAngle) * eruptDist * 0.4 - arcHeight;
+      const globSize = size * 0.035 * (1 - attackPhase * 0.4);
+      ctx.fillStyle = `rgba(251, 191, 36, ${(1 - attackPhase) * 0.8})`;
       ctx.beginPath();
-      ctx.arc(
-        x + Math.cos(eruptAngle) * eruptDist,
-        y - size * 0.35 + Math.sin(eruptAngle) * eruptDist * 0.6,
-        size * 0.04,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(ex, ey, globSize, 0, Math.PI * 2);
       ctx.fill();
     }
+    clearShadow(ctx);
   }
 }
 
@@ -548,14 +573,14 @@ export function drawFireImpEnemy(
   auraGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y - hop, size * 0.7, 0, Math.PI * 2);
+  ctx.ellipse(x, y - hop, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
 
   // Ember trail on ground
   ctx.fillStyle = `rgba(251, 146, 60, ${0.4 + flameFlicker * 0.2})`;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.32, size * 0.15, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.32, size * 0.15, size * 0.15 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Burning fire footprints
@@ -565,21 +590,21 @@ export function drawFireImpEnemy(
   if (leftFootGlow > 0.1) {
     ctx.fillStyle = `rgba(251, 146, 60, ${leftFootGlow * 0.35})`;
     ctx.beginPath();
-    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.06, size * 0.03, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.06, size * 0.06 * ISO_Y_RATIO, -0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = `rgba(251, 191, 36, ${leftFootGlow * 0.2})`;
     ctx.beginPath();
-    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.035, size * 0.015, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(x - size * 0.12, y + size * 0.32, size * 0.035, size * 0.035 * ISO_Y_RATIO, -0.2, 0, Math.PI * 2);
     ctx.fill();
   }
   if (rightFootGlow > 0.1) {
     ctx.fillStyle = `rgba(251, 146, 60, ${rightFootGlow * 0.35})`;
     ctx.beginPath();
-    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.06, size * 0.03, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.06, size * 0.06 * ISO_Y_RATIO, 0.2, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = `rgba(251, 191, 36, ${rightFootGlow * 0.2})`;
     ctx.beginPath();
-    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.035, size * 0.015, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(x + size * 0.12, y + size * 0.32, size * 0.035, size * 0.035 * ISO_Y_RATIO, 0.2, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -1184,7 +1209,7 @@ export function drawEmberGuardEnemy(
   heatGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
   ctx.fillStyle = heatGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Fire glow pool underneath
@@ -1201,7 +1226,7 @@ export function drawEmberGuardEnemy(
   poolGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.5, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.48, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Heat shimmer distortion lines rising from armor

@@ -468,7 +468,7 @@ export function drawKnightTroop(
   const knightArmLength = size * 0.22;
   const knightGripLocalY = size * 0.15 * swordScale;
 
-  const knightShoulderX = x + size * 0.26;
+  const knightShoulderX = x + size * 0.18;
   const knightShoulderY = y + size * 0.02 + breathe * 0.5;
 
   // Arm swing: overhead chop (up-back → forward → down-forward)
@@ -482,7 +482,7 @@ export function drawKnightTroop(
   // Blade orientation
   const swordBaseAngle = isAttacking
     ? -0.55 + attackPhase * 3.2
-    : 0.5 + stance * 0.04;
+    : 0.7 + stance * 0.04;
   const swordAngle = resolveWeaponRotation(
     targetPos,
     knightHandX,

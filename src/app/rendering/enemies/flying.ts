@@ -1,3 +1,4 @@
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { drawAnimatedArm, drawAnimatedLegs, drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
 
 export function drawHarpyEnemy(
@@ -75,32 +76,6 @@ export function drawHarpyEnemy(
     ctx.arc(swirlX, swirlY, size * 0.025, swirlAngle, swirlAngle + Math.PI);
     ctx.stroke();
   }
-
-  // === LAYER 2B: WING SHADOWS ON GROUND ===
-  const shadowAlpha = 0.1 + Math.abs(wingFlap) * 0.06;
-  ctx.fillStyle = `rgba(30, 15, 60, ${shadowAlpha})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.15,
-    y + size * 0.55,
-    size * (0.45 + wingFlap * 0.15),
-    size * 0.06,
-    -0.2 - wingFlap * 0.1,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.15,
-    y + size * 0.55,
-    size * (0.45 + wingFlap * 0.15),
-    size * 0.06,
-    0.2 + wingFlap * 0.1,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
   // === LAYER 3: MAGNIFICENT LEFT WING ===
   ctx.save();
@@ -900,7 +875,7 @@ export function drawWyvernEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + hoverBob, size * 0.85, size * 0.55, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + hoverBob, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // === LAYER 2: MASSIVE SEGMENTED TAIL ===

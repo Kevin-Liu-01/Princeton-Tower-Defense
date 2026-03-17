@@ -58,7 +58,7 @@ import { MobileCampaignBar } from "./MobileCampaignBar";
 import { MobileLevelSheet } from "./MobileLevelSheet";
 import { CreatorModal } from "../creator";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
-import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
+import { getWorldLevelById, getLevelNodeY } from "./worldMapUtils";
 import { SettingsModal } from "./SettingsModal";
 import { useSettings } from "../../hooks/useSettings";
 import { CreditsModal } from "./CreditsModal";
@@ -144,6 +144,7 @@ interface WorldMapProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  downgradeSpell: (spellType: SpellType) => void;
   spellAutoAim: Partial<Record<SpellType, boolean>>;
   onToggleSpellAutoAim: (spellType: SpellType) => void;
   gameState: GameState;
@@ -182,6 +183,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  downgradeSpell,
   spellAutoAim,
   onToggleSpellAutoAim,
   onStartWithRandomLoadout,
@@ -273,10 +275,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       const cw = containerRef.current.clientWidth;
       const ch = containerRef.current.clientHeight;
       const scale = Math.max(1.0, Math.min(1.5, cw / MAP_WIDTH));
-      const minMapH = MAP_WIDTH * 0.29;
-      const desiredMapH = ch / scale;
       setContainerWidth(cw);
-      setMapHeight(Math.max(minMapH, desiredMapH));
+      setMapHeight(ch / scale);
     };
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
@@ -335,7 +335,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const displayH = Math.round(mapHeight * mapScale);
 
   const getY = useCallback(
-    (pct: number) => getWorldMapY(pct, mapHeight),
+    (pct: number) => getLevelNodeY(pct, mapHeight),
     [mapHeight]
   );
 
@@ -361,7 +361,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     if (!furthestLevel) return;
 
     requestAnimationFrame(() => {
-      const ly = getWorldMapY(furthestLevel.y, mapHeight);
+      const ly = getLevelNodeY(furthestLevel.y, mapHeight);
       const targetX =
         furthestLevel.x * mapScale - scrollContainer.clientWidth / 2;
       const targetY =
@@ -682,13 +682,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     : undefined;
 
   function goToNextLevel() {
-    // If no level is selected, go to level 1
-    if (!currentLevel || isCurrentCustomLevel) {
+    if (!currentLevel || isCurrentCustomLevel || isCurrentSandboxLevel) {
       handleLevelClick(visibleWorldLevels[0].id);
       return;
     }
     const unlockedLevels = visibleWorldLevels.filter((lvl) =>
-      isLevelUnlocked(lvl.id)
+      isLevelUnlocked(lvl.id) && lvl.kind !== "sandbox"
     ).map((lvl) => lvl.id);
     const currentIndex = unlockedLevels.indexOf(currentLevel.id);
     if (currentIndex === unlockedLevels.length - 1) {
@@ -702,23 +701,19 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     }
   }
   function goToPreviousLevel() {
-    // If no level is selected, go to level 1
-    if (!currentLevel || isCurrentCustomLevel) {
+    if (!currentLevel || isCurrentCustomLevel || isCurrentSandboxLevel) {
       handleLevelClick(visibleWorldLevels[0].id);
       return;
     }
-    if (currentLevel.id === visibleWorldLevels[0].id) {
-      const unlockedLevels = visibleWorldLevels.filter((lvl) =>
-        isLevelUnlocked(lvl.id)
-      ).map((lvl) => lvl.id);
+    const unlockedLevels = visibleWorldLevels.filter((lvl) =>
+      isLevelUnlocked(lvl.id) && lvl.kind !== "sandbox"
+    ).map((lvl) => lvl.id);
+    const currentIndex = unlockedLevels.indexOf(currentLevel.id);
+    if (currentIndex === 0) {
       const lastLevelId = unlockedLevels[unlockedLevels.length - 1];
       handleLevelClick(lastLevelId);
       return;
     }
-    const unlockedLevels = visibleWorldLevels.filter((lvl) =>
-      isLevelUnlocked(lvl.id)
-    ).map((lvl) => lvl.id);
-    const currentIndex = unlockedLevels.indexOf(currentLevel.id);
     if (currentIndex > 0) {
       const prevLevelId = unlockedLevels[currentIndex - 1];
       handleLevelClick(prevLevelId);
@@ -1395,7 +1390,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               >
                 <div
                   ref={scrollContainerRef}
-                  className="absolute h-full inset-0 overflow-auto z-10"
+                  className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
                   style={{ cursor: dragCursor ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
                   onMouseDown={handleDragStart}
                   onMouseMove={handleDragMove}
@@ -1500,6 +1495,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       spentSpellStars={spentSpellStars}
                       spellUpgradeLevels={spellUpgradeLevels}
                       upgradeSpell={upgradeSpell}
+                      downgradeSpell={downgradeSpell}
                     />
                   </div>
                 </div>
@@ -1593,6 +1589,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         spentSpellStars={spentSpellStars}
                         spellUpgradeLevels={spellUpgradeLevels}
                         upgradeSpell={upgradeSpell}
+                        downgradeSpell={downgradeSpell}
                         spellAutoAim={spellAutoAim}
                         onToggleSpellAutoAim={onToggleSpellAutoAim}
                         onOpenCodex={() => openCodexTo("spells")}
@@ -1690,6 +1687,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         spentSpellStars={spentSpellStars}
                         spellUpgradeLevels={spellUpgradeLevels}
                         upgradeSpell={upgradeSpell}
+                        downgradeSpell={downgradeSpell}
                         spellAutoAim={spellAutoAim}
                         onToggleSpellAutoAim={onToggleSpellAutoAim}
                         onOpenCodex={() => openCodexTo("spells")}

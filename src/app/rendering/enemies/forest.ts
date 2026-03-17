@@ -1,3 +1,5 @@
+import { setShadowBlur, clearShadow } from "../performance";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
   drawLeafSwirl,
   drawShiftingSegments,
@@ -518,6 +520,30 @@ export function drawAthleteEnemy(
     orbitSpeed: 1.8,
     shape: "circle",
   });
+
+  // Sweatband glow
+  setShadowBlur(ctx, 5 * zoom, bodyColorLight);
+  ctx.fillStyle = bodyColorLight;
+  ctx.beginPath();
+  ctx.arc(x, headY - size * 0.15, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Attack: sprint burst impact ring
+  if (isAttacking) {
+    const sprintForce = attackPhase;
+    const burstR = size * 0.2 + (1 - sprintForce) * size * 0.5;
+    ctx.strokeStyle = `rgba(255, 200, 100, ${sprintForce * 0.35})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.35, burstR, burstR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    // Forward lunge effect
+    ctx.fillStyle = `rgba(255, 255, 255, ${sprintForce * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(x + size * 0.15 * sprintForce, y - size * 0.1 - bounce, size * 0.1, size * 0.15, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export function drawTigerFanEnemy(
@@ -1156,4 +1182,35 @@ export function drawTigerFanEnemy(
     }
   }
 
+  // "Go Tigers!" cheer aura (ability: slow nearby defenders)
+  ctx.strokeStyle = `rgba(239, 68, 68, ${0.12 + Math.abs(chantPhase) * 0.08})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let wave = 0; wave < 2; wave++) {
+    const wavePhase = (time * 0.6 + wave * 0.5) % 1.5;
+    const waveR = size * 0.2 + wavePhase * size * 0.3;
+    ctx.globalAlpha = 0.2 * (1 - wavePhase / 1.5);
+    ctx.beginPath();
+    ctx.ellipse(headX, headY + size * 0.12, waveR, waveR * ISO_Y_RATIO * 0.6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Pom-pom glow
+  setShadowBlur(ctx, 6 * zoom, bodyColor);
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(headX, headY - size * 0.3, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Attack: vigorous sign slam
+  if (isAttacking) {
+    const slamForce = attackPhase;
+    ctx.strokeStyle = `rgba(239, 68, 68, ${slamForce * 0.4})`;
+    ctx.lineWidth = 2 * zoom;
+    const impactR = size * 0.3 + (1 - slamForce) * size * 0.4;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.3, impactR, impactR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 }

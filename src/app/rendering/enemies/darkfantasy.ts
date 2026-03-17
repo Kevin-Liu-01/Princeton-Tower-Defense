@@ -4,6 +4,7 @@
 
 import { drawRadialAura } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
   drawGlowingEyes,
   drawShadowWisps,
@@ -39,7 +40,7 @@ export function drawSkeletonFootmanEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.4;
+  size *= 1.8;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 5;
   const breath = getBreathScale(time, 1.5, 0.015);
@@ -47,19 +48,13 @@ export function drawSkeletonFootmanEnemy(
   const bodyBob = Math.abs(Math.sin(walkPhase)) * size * 0.014;
   const rattle = Math.sin(time * 12) * size * 0.006 + (isAttacking ? Math.sin(time * 25) * size * 0.02 : 0);
   const jawRattle = Math.sin(time * 8) * size * 0.009 + (isAttacking ? Math.sin(time * 18) * size * 0.015 : 0);
-  const leftLegPhase = Math.sin(walkPhase);
-  const rightLegPhase = Math.sin(walkPhase + Math.PI);
-  const leftThighAngle = leftLegPhase * 0.3;
-  const rightThighAngle = rightLegPhase * 0.3;
-  const leftKneeBend = Math.max(0, -leftLegPhase) * 0.38;
-  const rightKneeBend = Math.max(0, -rightLegPhase) * 0.38;
   const armSwingAngle = Math.sin(walkPhase) * 0.18;
 
   const boneWhite = bodyColorLight;
   const boneMid = bodyColor;
   const boneDark = bodyColorDark;
   const cx0 = x + sway.dx;
-  const headY = y - size * 0.4 - bodyBob;
+  const headY = y - size * 0.28 - bodyBob;
 
   // === BONE DUST PARTICLES ===
   for (let i = 0; i < 5; i++) {
@@ -97,95 +92,12 @@ export function drawSkeletonFootmanEnemy(
     count: 3, speed: 0.8, color: "rgba(60, 40, 70, 0.5)", maxAlpha: 0.15, wispLength: 0.3,
   });
 
-  // === ARTICULATED BONE LEGS ===
-  const thighLen = size * 0.09;
-  const shinLen = size * 0.08;
-
-  for (const [side, thighAngle, kneeBend] of [[-1, leftThighAngle, leftKneeBend], [1, rightThighAngle, rightKneeBend]] as [number, number, number][]) {
-    ctx.save();
-    ctx.translate(cx0 + side * size * 0.1 + rattle, y + size * 0.18 + bodyBob);
-    ctx.rotate(thighAngle);
-
-    const femurGrad = ctx.createLinearGradient(-size * 0.025, 0, size * 0.025, thighLen);
-    femurGrad.addColorStop(0, boneWhite);
-    femurGrad.addColorStop(0.3, boneMid);
-    femurGrad.addColorStop(0.7, boneWhite);
-    femurGrad.addColorStop(1, boneDark);
-    ctx.fillStyle = femurGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.028, 0);
-    ctx.quadraticCurveTo(-size * 0.032, thighLen * 0.5, -size * 0.022, thighLen);
-    ctx.lineTo(size * 0.022, thighLen);
-    ctx.quadraticCurveTo(size * 0.032, thighLen * 0.5, size * 0.028, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Weathered crack on bone
-    ctx.strokeStyle = boneDark;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(size * 0.005, thighLen * 0.2);
-    ctx.lineTo(-size * 0.008, thighLen * 0.45);
-    ctx.lineTo(size * 0.003, thighLen * 0.55);
-    ctx.stroke();
-
-    // Hip joint bulge
-    ctx.fillStyle = boneMid;
-    ctx.beginPath();
-    ctx.arc(0, 0, size * 0.033, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = boneWhite;
-    ctx.beginPath();
-    ctx.arc(-size * 0.008, -size * 0.005, size * 0.012, 0, TAU);
-    ctx.fill();
-
-    // Knee joint
-    ctx.fillStyle = boneWhite;
-    ctx.beginPath();
-    ctx.arc(0, thighLen, size * 0.03, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = boneDark;
-    ctx.beginPath();
-    ctx.arc(0, thighLen, size * 0.015, 0, TAU);
-    ctx.fill();
-
-    ctx.translate(0, thighLen);
-    ctx.rotate(kneeBend);
-
-    const tibiaGrad = ctx.createLinearGradient(0, 0, 0, shinLen);
-    tibiaGrad.addColorStop(0, boneMid);
-    tibiaGrad.addColorStop(0.4, boneWhite);
-    tibiaGrad.addColorStop(0.8, boneMid);
-    tibiaGrad.addColorStop(1, boneDark);
-    ctx.fillStyle = tibiaGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.022, 0);
-    ctx.quadraticCurveTo(-size * 0.018, shinLen * 0.5, -size * 0.016, shinLen);
-    ctx.lineTo(size * 0.016, shinLen);
-    ctx.quadraticCurveTo(size * 0.018, shinLen * 0.5, size * 0.022, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Dark discoloration spot
-    ctx.fillStyle = boneDark;
-    ctx.globalAlpha = 0.3;
-    ctx.beginPath();
-    ctx.ellipse(size * 0.005 * side, shinLen * 0.35, size * 0.012, size * 0.018, 0.2, 0, TAU);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Bony foot
-    ctx.fillStyle = boneMid;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, shinLen + size * 0.008, size * 0.042, size * 0.02, side * 0.15, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = boneWhite;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.02, shinLen + size * 0.005, size * 0.015, size * 0.008, 0, 0, TAU);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  // === BONE LEGS ===
+  drawPathLegs(ctx, cx0 + rattle, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.28, width: 0.1, strideSpeed: 5, strideAmt: 0.3,
+    color: boneMid, colorDark: boneDark, footColor: boneDark, footLen: 0.12,
+    style: 'bone',
+  });
 
   // === TATTERED WAIST CLOTH ===
   const clothGrad = ctx.createLinearGradient(cx0 - size * 0.15, 0, cx0 + size * 0.15, 0);
@@ -327,10 +239,11 @@ export function drawSkeletonFootmanEnemy(
   const shieldSwing = -armSwingAngle * 0.4;
   const armLen = size * 0.16;
 
-  drawPathArm(ctx, cx0 - size * 0.14 + rattle, torsoY - size * 0.12, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.14 + rattle, torsoY - size * 0.08, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.16, foreLen: 0.128,
+    upperLen: 0.27, foreLen: 0.22,
     shoulderAngle: shieldSwing - 0.15,
+    elbowBend: 0.7,
     elbowAngle: 0.3,
     style: 'bone',
     onWeapon: (ctx) => {
@@ -404,10 +317,11 @@ export function drawSkeletonFootmanEnemy(
   const swordSwing = armSwingAngle + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.8 : 0);
   const foreLen = armLen * 0.8;
 
-  drawPathArm(ctx, cx0 + size * 0.14 + rattle, torsoY - size * 0.12, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.14 + rattle, torsoY - size * 0.08, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.16, foreLen: 0.128,
+    upperLen: 0.27, foreLen: 0.22,
     shoulderAngle: swordSwing + 0.2,
+    elbowBend: 0.5,
     elbowAngle: 0.35 + (isAttacking ? -0.5 : 0),
     style: 'bone',
     onWeapon: (ctx) => {
@@ -587,6 +501,34 @@ export function drawSkeletonFootmanEnemy(
     ctx.closePath();
     ctx.fill();
   }
+
+  if (isAttacking) {
+    const swingArc = (1 - attackPhase) * Math.PI * 1.2 - Math.PI * 0.3;
+    const arcR = size * 0.35;
+    ctx.strokeStyle = `rgba(200, 180, 140, ${attackPhase * 0.6})`;
+    ctx.lineWidth = (2 + attackPhase * 3) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx0 + size * 0.1, headY + size * 0.15, arcR, swingArc - 0.5, swingArc + 0.5);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+
+    if (attackPhase > 0.6) {
+      const flashIntensity = (attackPhase - 0.6) * 2.5;
+      for (let b = 0; b < 4; b++) {
+        const bAngle = swingArc + (b - 1.5) * 0.3;
+        const bDist = arcR * (0.9 + Math.sin(time * 15 + b) * 0.15);
+        ctx.fillStyle = `rgba(220, 200, 160, ${flashIntensity * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(
+          cx0 + size * 0.1 + Math.cos(bAngle) * bDist,
+          headY + size * 0.15 + Math.sin(bAngle) * bDist,
+          size * 0.012, 0, TAU,
+        );
+        ctx.fill();
+      }
+    }
+  }
 }
 
 // ============================================================================
@@ -605,7 +547,7 @@ export function drawSkeletonKnightEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.5;
+  size *= 1.85;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 4.5;
   const breath = getBreathScale(time, 1.2, 0.012);
@@ -675,80 +617,12 @@ export function drawSkeletonKnightEnemy(
 
   ctx.restore();
 
-  // === ARTICULATED ARMORED LEGS ===
-  const thighLen = size * 0.08;
-  const shinLen = size * 0.07;
-
-  for (const [side, legPhase] of [[-1, walkPhase], [1, walkPhase + Math.PI]] as [number, number][]) {
-    const swing = Math.sin(legPhase) * 0.28;
-    const knee = Math.max(0, -Math.sin(legPhase)) * 0.35;
-
-    ctx.save();
-    ctx.translate(cx0 + side * size * 0.1, y + size * 0.18 + bodyBob);
-    ctx.rotate(swing);
-
-    // Thigh plate
-    const thighGrad = ctx.createLinearGradient(-size * 0.035, 0, size * 0.035, thighLen);
-    thighGrad.addColorStop(0, steelLight);
-    thighGrad.addColorStop(0.4, steelMid);
-    thighGrad.addColorStop(0.8, steelDark);
-    thighGrad.addColorStop(1, steelMid);
-    ctx.fillStyle = thighGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.035, 0);
-    ctx.lineTo(-size * 0.03, thighLen);
-    ctx.lineTo(size * 0.03, thighLen);
-    ctx.lineTo(size * 0.035, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Dark energy vein on armor
-    ctx.strokeStyle = "rgba(180, 50, 80, 0.4)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(side * size * 0.01, thighLen * 0.15);
-    ctx.quadraticCurveTo(side * size * 0.02, thighLen * 0.5, 0, thighLen * 0.8);
-    ctx.stroke();
-
-    // Knee guard
-    ctx.fillStyle = steelHighlight;
-    ctx.beginPath();
-    ctx.ellipse(0, thighLen, size * 0.035, size * 0.025, 0, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = steelDark;
-    ctx.beginPath();
-    ctx.arc(0, thighLen, size * 0.015, 0, TAU);
-    ctx.fill();
-
-    ctx.translate(0, thighLen);
-    ctx.rotate(knee);
-
-    // Greave
-    const greaveGrad = ctx.createLinearGradient(0, 0, 0, shinLen);
-    greaveGrad.addColorStop(0, steelMid);
-    greaveGrad.addColorStop(0.5, steelLight);
-    greaveGrad.addColorStop(1, steelDark);
-    ctx.fillStyle = greaveGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.028, 0);
-    ctx.lineTo(-size * 0.025, shinLen);
-    ctx.lineTo(size * 0.025, shinLen);
-    ctx.lineTo(size * 0.028, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Armored boot
-    ctx.fillStyle = steelDark;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, shinLen + size * 0.01, size * 0.04, size * 0.022, side * 0.15, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = steelMid;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.015, shinLen + size * 0.005, size * 0.02, size * 0.012, 0, 0, TAU);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  // === ARMORED LEGS ===
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.26, width: 0.11, strideSpeed: 4.5, strideAmt: 0.28,
+    color: steelMid, colorDark: steelDark, footColor: steelDark, footLen: 0.12,
+    style: 'armored', trimColor: steelHighlight,
+  });
 
   // === CHAINMAIL SKIRT ===
   ctx.fillStyle = steelDark;
@@ -866,10 +740,11 @@ export function drawSkeletonKnightEnemy(
   drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.14, size * 0.06, steelMid, steelDark, 4);
 
   // === SHIELD ARM (left) ===
-  drawPathArm(ctx, cx0 - size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: steelMid, colorDark: steelDark, handColor: steelDark,
-    upperLen: 0.14, foreLen: 0.12,
+    upperLen: 0.24, foreLen: 0.20,
     shoulderAngle: -0.2 + Math.sin(walkPhase) * 0.1,
+    elbowBend: 0.6,
     elbowAngle: 0.3,
     style: 'armored',
     onWeapon: (ctx) => {
@@ -915,16 +790,17 @@ export function drawSkeletonKnightEnemy(
   });
 
   // === SWORD ARM (right) ===
-  drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: steelMid, colorDark: steelDark, handColor: bodyColor,
     swingSpeed: 4.5, swingAmt: 0.2, baseAngle: 0.25,
-    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.35,
+    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.55,
+    upperLen: 0.24, foreLen: 0.20,
     style: 'bone',
   });
 
   // === GREAT HELM ===
   const helmX = cx0;
-  const helmY = y - size * 0.42 - bodyBob;
+  const helmY = y - size * 0.3 - bodyBob;
 
   // Helm body
   const helmGrad = ctx.createRadialGradient(helmX, helmY, 0, helmX, helmY, size * 0.11);
@@ -981,6 +857,41 @@ export function drawSkeletonKnightEnemy(
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  if (isAttacking) {
+    const swingProgress = 1 - attackPhase;
+    const sweepAngle = swingProgress * Math.PI * 1.8 - Math.PI * 0.6;
+    const sweepR = size * 0.4;
+    ctx.strokeStyle = `rgba(200, 40, 60, ${attackPhase * 0.7})`;
+    ctx.lineWidth = (3 + attackPhase * 5) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx0, y - size * 0.05 + bodyBob, sweepR, sweepAngle - 0.7, sweepAngle + 0.7);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+
+    const trailLen = 5;
+    for (let t = 0; t < trailLen; t++) {
+      const tAngle = sweepAngle - t * 0.15;
+      const tAlpha = attackPhase * 0.3 * (1 - t / trailLen);
+      ctx.strokeStyle = `rgba(200, 40, 60, ${tAlpha})`;
+      ctx.lineWidth = (2 - t * 0.3) * zoom;
+      ctx.beginPath();
+      ctx.arc(cx0, y - size * 0.05 + bodyBob, sweepR, tAngle - 0.3, tAngle + 0.3);
+      ctx.stroke();
+    }
+
+    if (attackPhase > 0.7) {
+      const impactFlash = (attackPhase - 0.7) * 3.3;
+      const flashGrad = ctx.createRadialGradient(cx0 + size * 0.2, y, 0, cx0 + size * 0.2, y, size * 0.3 * impactFlash);
+      flashGrad.addColorStop(0, `rgba(200, 40, 60, ${impactFlash * 0.3})`);
+      flashGrad.addColorStop(1, "rgba(200, 40, 60, 0)");
+      ctx.fillStyle = flashGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx0 + size * 0.2, y, size * 0.3 * impactFlash, size * 0.3 * impactFlash * ISO_Y_RATIO, 0, 0, TAU);
+      ctx.fill();
+    }
+  }
 }
 
 // ============================================================================
@@ -999,7 +910,7 @@ export function drawSkeletonArcherEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.35;
+  size *= 1.75;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 5.5;
   const breath = getBreathScale(time, 1.8, 0.012);
@@ -1010,7 +921,7 @@ export function drawSkeletonArcherEnemy(
   const boneWhite = bodyColorLight;
   const boneMid = bodyColor;
   const boneDark = bodyColorDark;
-  const headY = y - size * 0.38 - bodyBob;
+  const headY = y - size * 0.27 - bodyBob;
 
 
   // === SHADOW WISPS ===
@@ -1019,9 +930,9 @@ export function drawSkeletonArcherEnemy(
   });
 
   // === BONE LEGS WITH LEATHER WRAPS ===
-  drawPathLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
-    legLen: 0.11, width: 0.065, strideSpeed: 5.5, strideAmt: 0.28,
-    color: boneMid, colorDark: boneDark, footColor: "#5a4a35", footLen: 0.09,
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.28, width: 0.12, strideSpeed: 5.5, strideAmt: 0.28,
+    color: boneMid, colorDark: boneDark, footColor: "#5a4a35", footLen: 0.12,
     style: 'bone',
   });
 
@@ -1169,8 +1080,9 @@ export function drawSkeletonArcherEnemy(
 
   drawPathArm(ctx, bowArmX, bowArmY, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.13, foreLen: 0.1,
+    upperLen: 0.22, foreLen: 0.17,
     shoulderAngle: bowAngle,
+    elbowBend: 0.45,
     elbowAngle: 0.25,
     style: 'bone',
     onWeapon: (ctx) => {
@@ -1243,11 +1155,11 @@ export function drawSkeletonArcherEnemy(
   });
 
   // === DRAW ARM (right side) ===
-  drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.1 - bodyBob, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     swingSpeed: 5.5, swingAmt: 0.15, baseAngle: 0.2,
-    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.3,
-    upperLen: 0.14, foreLen: 0.12,
+    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.45,
+    upperLen: 0.22, foreLen: 0.17,
     style: 'bone',
   });
 
@@ -1350,7 +1262,7 @@ export function drawSkeletonKingEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.6;
+  size *= 2.0;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3.5;
   const breath = getBreathScale(time, 1.5, 0.02);
@@ -1383,7 +1295,7 @@ export function drawSkeletonKingEnemy(
   ctx.lineWidth = 1.2 * zoom;
   const runeRadius = size * 0.5 + Math.sin(time * 1.5) * size * 0.03;
   ctx.beginPath();
-  ctx.ellipse(cx0, y + size * 0.5, runeRadius, runeRadius * 0.35, 0, 0, TAU);
+  ctx.ellipse(cx0, y + size * 0.5, runeRadius, runeRadius * ISO_Y_RATIO, 0, 0, TAU);
   ctx.stroke();
 
   // Arcane runes on the ground
@@ -1465,9 +1377,9 @@ export function drawSkeletonKingEnemy(
   ctx.restore();
 
   // === LEGS (bone with gold trim) ===
-  drawPathLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
-    legLen: 0.11, width: 0.07, strideSpeed: 3.5, strideAmt: 0.22,
-    color: boneMid, colorDark: boneDark, footColor: goldDark, footLen: 0.09,
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.28, width: 0.1, strideSpeed: 3.5, strideAmt: 0.22,
+    color: boneMid, colorDark: boneDark, footColor: goldDark, footLen: 0.12,
     style: 'bone',
   });
 
@@ -1568,12 +1480,13 @@ export function drawSkeletonKingEnemy(
 
   // === SCEPTER ARM (left) ===
   const scepterArmX = cx0 - size * 0.17;
-  const scepterArmY = torsoY - size * 0.12 - bodyBob;
+  const scepterArmY = torsoY - size * 0.08 - bodyBob;
 
   drawPathArm(ctx, scepterArmX, scepterArmY, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.13, foreLen: 0.1,
+    upperLen: 0.22, foreLen: 0.17,
     shoulderAngle: -0.25 + Math.sin(walkPhase) * 0.08,
+    elbowBend: 0.55,
     elbowAngle: 0.2,
     style: 'bone',
     onWeapon: (ctx) => {
@@ -1617,16 +1530,17 @@ export function drawSkeletonKingEnemy(
   });
 
   // === RIGHT ARM ===
-  drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     swingSpeed: 3.5, swingAmt: 0.12, baseAngle: 0.2,
-    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.3,
+    upperLen: 0.22, foreLen: 0.17,
+    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.55,
     style: 'bone',
   });
 
   // === SKULL HEAD ===
   const skullX = cx0;
-  const skullY = y - size * 0.42 - bodyBob;
+  const skullY = y - size * 0.3 - bodyBob;
 
   // Skull
   const craniumGrad = ctx.createRadialGradient(skullX, skullY, 0, skullX, skullY, size * 0.1);
@@ -1734,7 +1648,7 @@ export function drawZombieShamblerEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.35;
+  size *= 1.8;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3;
   const breath = getBreathScale(time, 1, 0.018);
@@ -1766,88 +1680,13 @@ export function drawZombieShamblerEnemy(
     color: "#2a2a2a", glowColor: "rgba(40, 40, 40, 0.2)", trailLen: 1,
   });
 
-  // === ARTICULATED LEGS ===
-  const thighLen = size * 0.08;
-  const shinLen = size * 0.07;
-
-  for (const [side, legPhase] of [[-1, walkPhase], [1, walkPhase + Math.PI]] as [number, number][]) {
-    const swing = Math.sin(legPhase) * 0.2;
-    const knee = Math.max(0, -Math.sin(legPhase)) * 0.25;
-
-    ctx.save();
-    ctx.translate(cx0 + side * size * 0.1, y + size * 0.17 + bodyBob);
-    ctx.rotate(swing);
-
-    // Rotting thigh with torn pants
-    const thighGrad = ctx.createLinearGradient(0, 0, 0, thighLen);
-    thighGrad.addColorStop(0, fleshMid);
-    thighGrad.addColorStop(0.4, fleshDark);
-    thighGrad.addColorStop(1, fleshMid);
-    ctx.fillStyle = thighGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.035, 0);
-    ctx.lineTo(-size * 0.03, thighLen);
-    ctx.lineTo(size * 0.03, thighLen);
-    ctx.lineTo(size * 0.035, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Torn pants fragment
-    ctx.fillStyle = "#4a4a5a";
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.04, 0);
-    ctx.lineTo(-size * 0.035, thighLen * 0.5);
-    ctx.lineTo(-size * 0.02, thighLen * 0.55);
-    ctx.lineTo(-size * 0.03, thighLen * 0.3);
-    ctx.closePath();
-    ctx.fill();
-
-    // Exposed bone patch
-    if (side === -1) {
-      ctx.fillStyle = "#d0c8b0";
-      ctx.beginPath();
-      ctx.ellipse(size * 0.015, thighLen * 0.4, size * 0.015, size * 0.025, 0.3, 0, TAU);
-      ctx.fill();
-    }
-
-    // Wound
-    ctx.fillStyle = "rgba(120, 30, 30, 0.6)";
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, thighLen * 0.65, size * 0.012, size * 0.008, 0, 0, TAU);
-    ctx.fill();
-    // Infection glow
-    ctx.fillStyle = "rgba(180, 200, 60, 0.15)";
-    ctx.beginPath();
-    ctx.arc(side * size * 0.01, thighLen * 0.65, size * 0.025, 0, TAU);
-    ctx.fill();
-
-    // Knee
-    ctx.fillStyle = fleshDark;
-    ctx.beginPath();
-    ctx.arc(0, thighLen, size * 0.03, 0, TAU);
-    ctx.fill();
-
-    ctx.translate(0, thighLen);
-    ctx.rotate(knee);
-
-    // Shin
-    ctx.fillStyle = fleshMid;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.028, 0);
-    ctx.lineTo(-size * 0.024, shinLen);
-    ctx.lineTo(size * 0.024, shinLen);
-    ctx.lineTo(size * 0.028, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Bare foot
-    ctx.fillStyle = fleshDark;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, shinLen + size * 0.01, size * 0.04, size * 0.02, side * 0.1, 0, TAU);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  // === SHAMBLING LEGS ===
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.3, width: 0.12, strideSpeed: 3, strideAmt: 0.2,
+    color: fleshMid, colorDark: fleshDark, footColor: fleshDark, footLen: 0.11,
+    shuffle: true,
+    style: 'fleshy',
+  });
 
   // === HUNCHED TORSO ===
   const torsoY = y - size * 0.08 - bodyBob;
@@ -1916,11 +1755,11 @@ export function drawZombieShamblerEnemy(
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.08, size, size * 0.13, "#3a3a4a", "#2a2a3a");
 
   // === REACHING ARM (left) ===
-  drawPathArm(ctx, cx0 - size * 0.16, torsoY - size * 0.1 - bodyBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.16, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
     swingSpeed: 3, swingAmt: 0.3, baseAngle: 0.5,
     attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
-    upperLen: 0.17, foreLen: 0.14, handRadius: 0.04,
+    upperLen: 0.28, foreLen: 0.24, handRadius: 0.052,
     style: 'fleshy',
   });
 
@@ -1928,13 +1767,13 @@ export function drawZombieShamblerEnemy(
   drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: fleshMid, colorDark: fleshDark, handColor: "#d0c8b0",
     swingSpeed: 3, swingAmt: 0.15, baseAngle: 0.6,
-    elbowBend: 0.7, upperLen: 0.16, foreLen: 0.13,
+    elbowBend: 0.7, upperLen: 0.27, foreLen: 0.22,
     style: 'fleshy',
   });
 
   // === LOPSIDED HEAD ===
   const headX = cx0 + size * 0.02;
-  const headY = y - size * 0.32 - bodyBob;
+  const headY = y - size * 0.24 - bodyBob;
 
   // Head shape (slightly lopsided)
   const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.1);
@@ -2013,6 +1852,34 @@ export function drawZombieShamblerEnemy(
   ctx.moveTo(headX + size * 0.01, headY + size * 0.07 + jawOffset);
   ctx.quadraticCurveTo(headX + size * 0.015, headY + size * 0.1 + jawOffset + droolPhase * size * 0.04, headX + size * 0.008, headY + size * 0.12 + jawOffset + droolPhase * size * 0.06);
   ctx.stroke();
+
+  if (isAttacking) {
+    const lungeOffset = attackPhase * size * 0.08;
+    const clawSpread = (1 - attackPhase) * Math.PI * 0.6;
+    for (const side of [-1, 1]) {
+      const clawX = cx0 + side * size * 0.2 + lungeOffset;
+      const clawY = y - size * 0.05;
+      for (let c = 0; c < 3; c++) {
+        const cAngle = side * (0.3 + c * 0.25) + clawSpread * side * 0.3;
+        ctx.strokeStyle = `rgba(140, 80, 60, ${attackPhase * 0.6})`;
+        ctx.lineWidth = (1.5 + attackPhase) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(clawX, clawY);
+        ctx.lineTo(
+          clawX + Math.cos(cAngle) * size * 0.1,
+          clawY + Math.sin(cAngle) * size * 0.08,
+        );
+        ctx.stroke();
+      }
+    }
+    if (attackPhase > 0.5) {
+      const biteAlpha = (attackPhase - 0.5) * 2;
+      ctx.fillStyle = `rgba(130, 20, 20, ${biteAlpha * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(cx0 + lungeOffset, y - size * 0.1, size * 0.12 * biteAlpha, 0, TAU);
+      ctx.fill();
+    }
+  }
 }
 
 // ============================================================================
@@ -2031,7 +1898,7 @@ export function drawZombieBruteEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.55;
+  size *= 2.0;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 2.5;
   const breath = getBreathScale(time, 0.8, 0.02);
@@ -2064,9 +1931,9 @@ export function drawZombieBruteEnemy(
   });
 
   // === THICK LEGS WITH HEAVY BOOTS ===
-  drawPathLegs(ctx, cx0, y + size * 0.15 + bodyBob, size, time, zoom, {
-    legLen: 0.1, width: 0.09, strideSpeed: 2.5, strideAmt: 0.18,
-    color: fleshDark, colorDark: "#2a2a20", footColor: "#3a3530", footLen: 0.09,
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.26, width: 0.11, strideSpeed: 2.5, strideAmt: 0.18,
+    color: fleshDark, colorDark: "#2a2a20", footColor: "#3a3530", footLen: 0.12,
     shuffle: true,
     style: 'fleshy',
   });
@@ -2181,18 +2048,18 @@ export function drawZombieBruteEnemy(
 
   // === SPIKED GAUNTLET ARMS ===
   for (const side of [-1, 1] as (-1 | 1)[]) {
-    drawPathArm(ctx, cx0 + side * size * 0.18, torsoY - size * 0.1 - bodyBob, size, time, zoom, side, {
+    drawPathArm(ctx, cx0 + side * size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: "#4a4a50",
       swingSpeed: 2.5, swingAmt: 0.2, baseAngle: 0.35,
-      attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.4,
-      upperLen: 0.2, foreLen: 0.17, width: 0.1, handRadius: 0.055,
+      attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.55,
+      upperLen: 0.34, foreLen: 0.29, width: 0.12, handRadius: 0.06,
       style: 'fleshy',
     });
   }
 
   // === SMALL ANGRY HEAD ===
   const headX = cx0;
-  const headY = y - size * 0.28 - bodyBob;
+  const headY = y - size * 0.22 - bodyBob;
 
   const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.07);
   headGrad.addColorStop(0, fleshLight);
@@ -2240,6 +2107,36 @@ export function drawZombieBruteEnemy(
     ctx.closePath();
     ctx.fill();
   }
+
+  if (isAttacking) {
+    const slamProgress = 1 - attackPhase;
+    const slamDropY = slamProgress * size * 0.08;
+    for (let ring = 0; ring < 3; ring++) {
+      const rPhase = Math.min(1, slamProgress + ring * 0.12);
+      const rR = size * (0.15 + rPhase * 0.4);
+      const rAlpha = (1 - rPhase) * 0.4 * attackPhase;
+      ctx.strokeStyle = `rgba(100, 70, 50, ${rAlpha})`;
+      ctx.lineWidth = (2.5 - rPhase * 1.5) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(cx0, y + size * 0.48, rR, rR * ISO_Y_RATIO, 0, 0, TAU);
+      ctx.stroke();
+    }
+    if (attackPhase > 0.6) {
+      const impact = (attackPhase - 0.6) * 2.5;
+      for (let d = 0; d < 6; d++) {
+        const dAngle = d * Math.PI / 3 + time * 2;
+        const dDist = size * 0.1 * (1 - impact * 0.5);
+        ctx.fillStyle = `rgba(80, 60, 40, ${impact * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(
+          cx0 + Math.cos(dAngle) * dDist,
+          y + size * 0.45 + Math.sin(dAngle) * dDist * ISO_Y_RATIO - slamDropY,
+          size * 0.018 * impact, 0, TAU,
+        );
+        ctx.fill();
+      }
+    }
+  }
 }
 
 // ============================================================================
@@ -2258,7 +2155,7 @@ export function drawZombieSpitterEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.35;
+  size *= 1.8;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3.5;
   const breath = getBreathScale(time, 1.5, 0.025);
@@ -2289,9 +2186,9 @@ export function drawZombieSpitterEnemy(
   ctx.globalAlpha = 1;
 
   // === LEGS ===
-  drawPathLegs(ctx, cx0, y + size * 0.17 + bodyBob, size, time, zoom, {
-    legLen: 0.1, width: 0.07, strideSpeed: 3.5, strideAmt: 0.2,
-    color: fleshMid, colorDark: fleshDark, footColor: fleshDark, footLen: 0.08,
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.25, width: 0.13, strideSpeed: 3.5, strideAmt: 0.2,
+    color: fleshMid, colorDark: fleshDark, footColor: fleshDark, footLen: 0.12,
     style: 'fleshy',
   });
 
@@ -2362,14 +2259,14 @@ export function drawZombieSpitterEnemy(
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       swingSpeed: 3.5, swingAmt: 0.2, baseAngle: 0.4,
       attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.45,
-      upperLen: 0.15, foreLen: 0.12,
+      upperLen: 0.25, foreLen: 0.20,
       style: 'fleshy',
     });
   }
 
   // === HEAD WITH DISTENDED JAW ===
   const headX = cx0;
-  const headY = y - size * 0.3 - bodyBob;
+  const headY = y - size * 0.24 - bodyBob;
 
   // Head
   const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.08);
@@ -2464,7 +2361,7 @@ export function drawGhoulEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.4;
+  size *= 1.8;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 8;
   const breath = getBreathScale(time, 3, 0.015);
@@ -2507,8 +2404,8 @@ export function drawGhoulEnemy(
 
   // === CROUCHED LEGS WITH CLAWED FEET ===
   drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
-    legLen: 0.09, width: 0.07, strideSpeed: 8, strideAmt: 0.35,
-    color: fleshMid, colorDark: fleshDark, footColor: fleshDark, footLen: 0.08,
+    legLen: 0.23, width: 0.13, strideSpeed: 8, strideAmt: 0.35,
+    color: fleshMid, colorDark: fleshDark, footColor: fleshDark, footLen: 0.12,
     style: 'fleshy',
   });
 
@@ -2584,7 +2481,7 @@ export function drawGhoulEnemy(
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       swingSpeed: 8, swingAmt: 0.4, baseAngle: 0.5,
       attackExtra: isAttacking ? 0.8 : 0, elbowBend: 0.6,
-      upperLen: 0.18, foreLen: 0.16, handRadius: 0.035,
+      upperLen: 0.30, foreLen: 0.27, handRadius: 0.046,
       style: 'fleshy',
     });
   }
@@ -2603,7 +2500,7 @@ export function drawGhoulEnemy(
 
   // === ELONGATED HEAD ===
   const headX = cx0;
-  const headY = y - size * 0.2 - bodyBob;
+  const headY = y - size * 0.18 - bodyBob;
 
   const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.08);
   headGrad.addColorStop(0, fleshLight);
@@ -2685,7 +2582,7 @@ export function drawDarkKnightEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.55;
+  size *= 1.9;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 4;
   const breath = getBreathScale(time, 1.2, 0.015);
@@ -2739,65 +2636,11 @@ export function drawDarkKnightEnemy(
   ctx.restore();
 
   // === ARMORED LEGS ===
-  for (const [side, legPhase] of [[-1, walkPhase], [1, walkPhase + Math.PI]] as [number, number][]) {
-    const swing = Math.sin(legPhase) * 0.25;
-    const knee = Math.max(0, -Math.sin(legPhase)) * 0.3;
-    const thighLen = size * 0.08;
-    const shinLen = size * 0.07;
-
-    ctx.save();
-    ctx.translate(cx0 + side * size * 0.1, y + size * 0.18 + bodyBob);
-    ctx.rotate(swing);
-
-    // Thigh plate with red trim
-    const thighGrad = ctx.createLinearGradient(-size * 0.035, 0, size * 0.035, thighLen);
-    thighGrad.addColorStop(0, armorLight);
-    thighGrad.addColorStop(0.5, armorMid);
-    thighGrad.addColorStop(1, armorDark);
-    ctx.fillStyle = thighGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.035, 0);
-    ctx.lineTo(-size * 0.03, thighLen);
-    ctx.lineTo(size * 0.03, thighLen);
-    ctx.lineTo(size * 0.035, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Red trim stripe
-    ctx.strokeStyle = redTrim;
-    ctx.lineWidth = size * 0.005;
-    ctx.beginPath();
-    ctx.moveTo(side * size * 0.025, 0);
-    ctx.lineTo(side * size * 0.02, thighLen);
-    ctx.stroke();
-
-    // Knee guard
-    ctx.fillStyle = armorHighlight;
-    ctx.beginPath();
-    ctx.ellipse(0, thighLen, size * 0.035, size * 0.028, 0, 0, TAU);
-    ctx.fill();
-
-    ctx.translate(0, thighLen);
-    ctx.rotate(knee);
-
-    // Greave
-    ctx.fillStyle = armorMid;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.028, 0);
-    ctx.lineTo(-size * 0.025, shinLen);
-    ctx.lineTo(size * 0.025, shinLen);
-    ctx.lineTo(size * 0.028, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Boot
-    ctx.fillStyle = armorDark;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, shinLen + size * 0.01, size * 0.04, size * 0.022, side * 0.15, 0, TAU);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.28, width: 0.1, strideSpeed: 4, strideAmt: 0.25,
+    color: armorMid, colorDark: armorDark, footColor: armorDark, footLen: 0.12,
+    style: 'armored', trimColor: redTrim,
+  });
 
   const torsoY = y - size * 0.1 - bodyBob;
 
@@ -2881,20 +2724,21 @@ export function drawDarkKnightEnemy(
   drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.14, size * 0.06, armorMid, armorDark, 5);
 
   // === SHIELD ARM (left) ===
-  drawPathArm(ctx, cx0 - size * 0.18, torsoY - size * 0.12 - bodyBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
     swingSpeed: 4, swingAmt: 0.15, baseAngle: 0.3,
-    elbowBend: 0.35, upperLen: 0.16, foreLen: 0.13,
+    elbowBend: 0.6, upperLen: 0.27, foreLen: 0.22,
     style: 'armored',
   });
 
   // === GREATSWORD ARM (right) ===
   const swordSwing = Math.sin(walkPhase) * 0.12 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.9 : 0);
 
-  drawPathArm(ctx, cx0 + size * 0.18, torsoY - size * 0.12 - bodyBob, size, time, zoom, 1, {
+  drawPathArm(ctx, cx0 + size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
-    upperLen: 0.14, foreLen: 0.12,
+    upperLen: 0.24, foreLen: 0.20,
     shoulderAngle: 0.25 + swordSwing,
+    elbowBend: 0.5,
     elbowAngle: 0.35 + (isAttacking ? -0.4 : 0),
     style: 'armored',
     onWeapon: (ctx) => {
@@ -2968,7 +2812,7 @@ export function drawDarkKnightEnemy(
 
   // === GREAT HELM ===
   const helmX = cx0;
-  const helmY = y - size * 0.42 - bodyBob;
+  const helmY = y - size * 0.3 - bodyBob;
 
   const helmGrad = ctx.createRadialGradient(helmX, helmY, 0, helmX, helmY, size * 0.11);
   helmGrad.addColorStop(0, armorHighlight);
@@ -3044,7 +2888,7 @@ export function drawDeathKnightEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
-  size *= 1.65;
+  size *= 2.1;
   const isAttacking = attackPhase > 0;
   const walkPhase = time * 3;
   const breath = getBreathScale(time, 1, 0.018);
@@ -3073,7 +2917,7 @@ export function drawDeathKnightEnemy(
   ctx.strokeStyle = "rgba(120, 40, 80, 0.25)";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(cx0, y + size * 0.5, corruptRadius, corruptRadius * 0.35, 0, 0, TAU);
+  ctx.ellipse(cx0, y + size * 0.5, corruptRadius, corruptRadius * ISO_Y_RATIO, 0, 0, TAU);
   ctx.stroke();
 
   // Corruption runes
@@ -3162,69 +3006,11 @@ export function drawDeathKnightEnemy(
   ctx.restore();
 
   // === HEAVY ARMORED LEGS ===
-  for (const [side, legPhase] of [[-1, walkPhase], [1, walkPhase + Math.PI]] as [number, number][]) {
-    const swing = Math.sin(legPhase) * 0.22;
-    const knee = Math.max(0, -Math.sin(legPhase)) * 0.3;
-    const thighLen = size * 0.09;
-    const shinLen = size * 0.08;
-
-    ctx.save();
-    ctx.translate(cx0 + side * size * 0.1, y + size * 0.17 + bodyBob);
-    ctx.rotate(swing);
-
-    // Thigh plate (black + gold)
-    const thighGrad = ctx.createLinearGradient(-size * 0.038, 0, size * 0.038, thighLen);
-    thighGrad.addColorStop(0, armorLight);
-    thighGrad.addColorStop(0.5, armorMid);
-    thighGrad.addColorStop(1, armorDark);
-    ctx.fillStyle = thighGrad;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.038, 0);
-    ctx.lineTo(-size * 0.033, thighLen);
-    ctx.lineTo(size * 0.033, thighLen);
-    ctx.lineTo(size * 0.038, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Gold trim
-    ctx.strokeStyle = goldDark;
-    ctx.lineWidth = size * 0.005;
-    ctx.beginPath();
-    ctx.moveTo(side * size * 0.03, 0);
-    ctx.lineTo(side * size * 0.025, thighLen);
-    ctx.stroke();
-
-    // Knee guard with gold
-    ctx.fillStyle = armorHighlight;
-    ctx.beginPath();
-    ctx.ellipse(0, thighLen, size * 0.037, size * 0.028, 0, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = goldDark;
-    ctx.beginPath();
-    ctx.arc(0, thighLen, size * 0.012, 0, TAU);
-    ctx.fill();
-
-    ctx.translate(0, thighLen);
-    ctx.rotate(knee);
-
-    // Greave
-    ctx.fillStyle = armorMid;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.03, 0);
-    ctx.lineTo(-size * 0.027, shinLen);
-    ctx.lineTo(size * 0.027, shinLen);
-    ctx.lineTo(size * 0.03, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Boot
-    ctx.fillStyle = armorDark;
-    ctx.beginPath();
-    ctx.ellipse(side * size * 0.01, shinLen + size * 0.012, size * 0.042, size * 0.024, side * 0.15, 0, TAU);
-    ctx.fill();
-
-    ctx.restore();
-  }
+  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
+    legLen: 0.3, width: 0.1, strideSpeed: 3, strideAmt: 0.22,
+    color: armorMid, colorDark: armorDark, footColor: armorDark, footLen: 0.13,
+    style: 'armored', trimColor: goldDark,
+  });
 
   const torsoY = y - size * 0.1 - bodyBob;
 
@@ -3358,22 +3144,23 @@ export function drawDeathKnightEnemy(
   drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.15, size * 0.07, armorMid, armorDark, 5);
 
   // === LEFT ARM ===
-  drawPathArm(ctx, cx0 - size * 0.2, torsoY - size * 0.12 - bodyBob, size, time, zoom, -1, {
+  drawPathArm(ctx, cx0 - size * 0.2, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
     swingSpeed: 3, swingAmt: 0.12, baseAngle: 0.3,
-    elbowBend: 0.35, upperLen: 0.17, foreLen: 0.14,
+    elbowBend: 0.6, upperLen: 0.28, foreLen: 0.24,
     style: 'armored',
   });
 
   // === FLAMING SWORD ARM (right) ===
   const fsArmX = cx0 + size * 0.2;
-  const fsArmY = torsoY - size * 0.12 - bodyBob;
+  const fsArmY = torsoY - size * 0.08 - bodyBob;
   const fsSwing = Math.sin(walkPhase) * 0.1 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 1.0 : 0);
 
   drawPathArm(ctx, fsArmX, fsArmY, size, time, zoom, 1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
-    upperLen: 0.15, foreLen: 0.13,
+    upperLen: 0.25, foreLen: 0.22,
     shoulderAngle: 0.3 + fsSwing,
+    elbowBend: 0.55,
     elbowAngle: 0.35 + (isAttacking ? -0.5 : 0),
     style: 'armored',
     onWeapon: (ctx) => {
@@ -3453,7 +3240,7 @@ export function drawDeathKnightEnemy(
 
   // === CROWN-HELM WITH HORNS ===
   const helmX = cx0;
-  const helmY = y - size * 0.44 - bodyBob;
+  const helmY = y - size * 0.32 - bodyBob;
 
   // Helm body
   const helmGrad = ctx.createRadialGradient(helmX, helmY, 0, helmX, helmY, size * 0.12);
@@ -3548,4 +3335,56 @@ export function drawDeathKnightEnemy(
   drawArcaneSparkles(ctx, cx0, y - size * 0.3, size * 0.5, time, zoom, {
     count: 6, speed: 1.5, color: "rgba(200, 120, 255, 0.7)", maxAlpha: 0.4, sparkleSize: 0.05,
   });
+
+  if (isAttacking) {
+    const slashProgress = 1 - attackPhase;
+    const slashArc = slashProgress * Math.PI * 2 - Math.PI * 0.8;
+    const slashR = size * 0.5;
+
+    ctx.strokeStyle = `rgba(180, 60, 160, ${attackPhase * 0.8})`;
+    ctx.lineWidth = (4 + attackPhase * 6) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.arc(cx0, y - size * 0.15 + bodyBob, slashR, slashArc - 0.8, slashArc + 0.8);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+
+    const trailCount = 6;
+    for (let t = 0; t < trailCount; t++) {
+      const tOff = t * 0.12;
+      const tAlpha = attackPhase * 0.25 * (1 - t / trailCount);
+      ctx.strokeStyle = `rgba(120, 40, 100, ${tAlpha})`;
+      ctx.lineWidth = (3 - t * 0.4) * zoom;
+      ctx.beginPath();
+      ctx.arc(cx0, y - size * 0.15 + bodyBob, slashR, slashArc - 0.5 - tOff, slashArc + 0.5 - tOff);
+      ctx.stroke();
+    }
+
+    for (let s = 0; s < 8; s++) {
+      const sAngle = slashArc + (s - 3.5) * 0.25;
+      const sDist = slashR * (0.85 + Math.sin(time * 12 + s) * 0.15);
+      const sAlpha = attackPhase * 0.5 * (1 - Math.abs(s - 3.5) / 4);
+      ctx.fillStyle = `rgba(200, 120, 255, ${sAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        cx0 + Math.cos(sAngle) * sDist,
+        y - size * 0.15 + bodyBob + Math.sin(sAngle) * sDist,
+        size * 0.012, 0, TAU,
+      );
+      ctx.fill();
+    }
+
+    if (attackPhase > 0.75) {
+      const burstAlpha = (attackPhase - 0.75) * 4;
+      const burstR = size * 0.35 * burstAlpha;
+      const burstGrad = ctx.createRadialGradient(cx0, y + bodyBob, 0, cx0, y + bodyBob, burstR);
+      burstGrad.addColorStop(0, `rgba(180, 60, 160, ${burstAlpha * 0.25})`);
+      burstGrad.addColorStop(0.6, `rgba(100, 20, 80, ${burstAlpha * 0.1})`);
+      burstGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = burstGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx0, y + bodyBob, burstR, burstR * ISO_Y_RATIO, 0, 0, TAU);
+      ctx.fill();
+    }
+  }
 }

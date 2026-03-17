@@ -6,6 +6,7 @@ import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import {
   drawIsometricPrism,
   drawIsometricPyramid,
+  drawIsometricCrystalSpire,
   drawBrickFace as sharedBrickFace,
   drawOrganicBlobAt,
 } from "../helpers";
@@ -14856,90 +14857,31 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.fill();
 
-      // Main crystal spires - 3D faceted shapes
+      // Main crystal spires - proper isometric 4-faced crystals
       const spires = [
-        { x: 0, y: 0, h: 35, w: 8, angle: 0 },
-        { x: -8, y: 2, h: 22, w: 5, angle: -0.15 },
-        { x: 10, y: 1, h: 25, w: 6, angle: 0.12 },
-        { x: -4, y: 3, h: 18, w: 4, angle: -0.08 },
-        { x: 6, y: 3, h: 16, w: 4, angle: 0.2 },
-        { x: -12, y: 4, h: 14, w: 3, angle: -0.25 },
+        { x: 0, y: 0, h: 35, base: 8, tilt: 0 },
+        { x: -8, y: 2, h: 22, base: 5, tilt: -0.15 },
+        { x: 10, y: 1, h: 25, base: 6, tilt: 0.12 },
+        { x: -4, y: 3, h: 18, base: 4, tilt: -0.08 },
+        { x: 6, y: 3, h: 16, base: 4, tilt: 0.2 },
+        { x: -12, y: 4, h: 14, base: 3, tilt: -0.25 },
       ];
 
-      // Sort by y position for proper layering (back to front)
       spires.sort((a, b) => a.y - b.y);
 
-      spires.forEach((spire) => {
-        const sx = screenPos.x + spire.x * s;
-        const sy = screenPos.y + spire.y * s;
-        const sh = spire.h * s;
-        const sw = spire.w * s;
-
-        ctx.save();
-        ctx.translate(sx, sy);
-        ctx.rotate(spire.angle);
-
-        // Back face (darkest)
-        ctx.fillStyle = crystalDeep;
-        ctx.beginPath();
-        ctx.moveTo(-sw * 0.3, 0);
-        ctx.lineTo(0, -sh);
-        ctx.lineTo(sw * 0.3, 0);
-        ctx.closePath();
-        ctx.fill();
-
-        // Left face
-        const leftGrad = ctx.createLinearGradient(-sw, 0, 0, -sh * 0.5);
-        leftGrad.addColorStop(0, crystalDark);
-        leftGrad.addColorStop(0.5, crystalMid);
-        leftGrad.addColorStop(1, crystalLight);
-        ctx.fillStyle = leftGrad;
-        ctx.beginPath();
-        ctx.moveTo(-sw, 0);
-        ctx.lineTo(-sw * 0.3, -sh * 0.15);
-        ctx.lineTo(0, -sh);
-        ctx.lineTo(-sw * 0.3, 0);
-        ctx.closePath();
-        ctx.fill();
-
-        // Right face
-        const rightGrad = ctx.createLinearGradient(0, -sh, sw, 0);
-        rightGrad.addColorStop(0, crystalLight);
-        rightGrad.addColorStop(0.3, crystalMid);
-        rightGrad.addColorStop(1, crystalDark);
-        ctx.fillStyle = rightGrad;
-        ctx.beginPath();
-        ctx.moveTo(sw, 0);
-        ctx.lineTo(sw * 0.3, -sh * 0.15);
-        ctx.lineTo(0, -sh);
-        ctx.lineTo(sw * 0.3, 0);
-        ctx.closePath();
-        ctx.fill();
-
-        // Center highlight facet
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
-        ctx.beginPath();
-        ctx.moveTo(0, -sh);
-        ctx.lineTo(-sw * 0.2, -sh * 0.6);
-        ctx.lineTo(0, -sh * 0.5);
-        ctx.lineTo(sw * 0.15, -sh * 0.65);
-        ctx.closePath();
-        ctx.fill();
-
-        // Edge highlight
-        ctx.strokeStyle = "rgba(255,255,255,0.6)";
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(0, -sh);
-        ctx.lineTo(-sw * 0.3, -sh * 0.15);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, -sh);
-        ctx.lineTo(sw * 0.3, -sh * 0.15);
-        ctx.stroke();
-
-        ctx.restore();
-      });
+      for (const spire of spires) {
+        drawIsometricCrystalSpire(
+          ctx,
+          screenPos.x + spire.x * s,
+          screenPos.y + spire.y * s,
+          spire.base * s,
+          spire.h * s,
+          crystalLight,
+          crystalMid,
+          crystalDeep,
+          spire.tilt,
+        );
+      }
 
       // Inner glow at center
       const centerGlow = ctx.createRadialGradient(
@@ -15217,8 +15159,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       }
 
-      // Frost crystals scattered on surface
-      ctx.fillStyle = "rgba(220, 240, 255, 0.7)";
+      // Frost crystals scattered on surface — tiny isometric spires
       const crystalSpots = [
         { x: -20, y: -18 },
         { x: -8, y: -24 },
@@ -15227,22 +15168,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         { x: 25, y: -8 },
         { x: -15, y: -8 },
       ];
-      crystalSpots.forEach((cp, idx) => {
-        const cx = snowBaseX + cp.x * s;
-        const cy = snowBaseY + cp.y * s;
-        const crystalSize =
-          (1.2 + Math.sin(snowSeed + idx * 1.7) * 0.4) * s;
-        ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2 - Math.PI / 2;
-          const px = cx + Math.cos(angle) * crystalSize;
-          const py = cy + Math.sin(angle) * crystalSize * ISO_Y_RATIO;
-          if (i === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fill();
-      });
+      for (let idx = 0; idx < crystalSpots.length; idx++) {
+        const cp = crystalSpots[idx];
+        const cBase = (1.2 + Math.sin(snowSeed + idx * 1.7) * 0.4) * s;
+        const cHeight = cBase * (3 + Math.sin(snowSeed + idx * 2.3) * 1.2);
+        drawIsometricCrystalSpire(
+          ctx,
+          snowBaseX + cp.x * s,
+          snowBaseY + cp.y * s,
+          cBase,
+          cHeight,
+          "rgba(220, 240, 255, 0.85)",
+          "rgba(180, 215, 240, 0.7)",
+          "rgba(130, 175, 210, 0.6)",
+        );
+      }
 
       // Animated sparkles
       const sparkleTime = decorTime * 2.5;
@@ -15608,13 +15548,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
     case "ice_spire": {
       const isVar = variant % 3;
-      const TRUE_ISO = 1 / Math.sqrt(3);
+      const cx = screenPos.x;
+      const cy = screenPos.y;
+
+      // Ice color palette
+      const iceLight = "#e1f5fe";
+      const iceMid = "#81d4fa";
+      const iceDark = "#0277BD";
+      const iceDeep = "#01579B";
 
       // Ground shadow
       drawDirectionalShadow(
         ctx,
-        screenPos.x,
-        screenPos.y + 6 * s,
+        cx,
+        cy + 6 * s,
         s,
         18 * s,
         8 * s,
@@ -15623,183 +15570,48 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "0,60,80",
       );
 
-      // Isometric base platform helper (proper 30° isometric)
-      const isDrawBase = (bw: number) => {
-        const bd = bw * TRUE_ISO;
-        // Top face
-        const btG = ctx.createLinearGradient(
-          screenPos.x - bw,
-          screenPos.y,
-          screenPos.x + bw,
-          screenPos.y + bd,
+      // Isometric base platform using standard ISO ratios
+      const drawIceBase = (baseHalf: number) => {
+        const platformH = 8 * s;
+        drawIsometricPrism(
+          ctx,
+          cx,
+          cy + 4 * s,
+          baseHalf,
+          baseHalf,
+          platformH,
+          "#b3e5fc",
+          "#4fc3f7",
+          "#0288D1",
         );
-        btG.addColorStop(0, "#b3e5fc");
-        btG.addColorStop(0.5, "#81d4fa");
-        btG.addColorStop(1, "#4fc3f7");
-        ctx.fillStyle = btG;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - bw, screenPos.y + 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
-        ctx.lineTo(screenPos.x + bw, screenPos.y + 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s - bd);
-        ctx.closePath();
-        ctx.fill();
-        // Left face
-        const blG = ctx.createLinearGradient(
-          screenPos.x - bw,
-          screenPos.y,
-          screenPos.x,
-          screenPos.y + 18 * s,
-        );
-        blG.addColorStop(0, "#4fc3f7");
-        blG.addColorStop(1, "#0277BD");
-        ctx.fillStyle = blG;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - bw, screenPos.y + 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd + 8 * s);
-        ctx.lineTo(screenPos.x - bw, screenPos.y + 12 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Right face
-        const brG = ctx.createLinearGradient(
-          screenPos.x,
-          screenPos.y,
-          screenPos.x + bw,
-          screenPos.y + 18 * s,
-        );
-        brG.addColorStop(0, "#0288D1");
-        brG.addColorStop(1, "#01579B");
-        ctx.fillStyle = brG;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x + bw, screenPos.y + 4 * s);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
-        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd + 8 * s);
-        ctx.lineTo(screenPos.x + bw, screenPos.y + 12 * s);
-        ctx.closePath();
-        ctx.fill();
-      };
-
-      // Gradient spire helper
-      const isDrawSpire = (
-        sx: number,
-        sy: number,
-        sh: number,
-        sw: number,
-        bright: boolean,
-      ) => {
-        // Left face gradient
-        const slG = ctx.createLinearGradient(sx - sw, sy, sx, sy - sh);
-        slG.addColorStop(0, bright ? "#81d4fa" : "#4fc3f7");
-        slG.addColorStop(0.5, bright ? "#b3e5fc" : "#81d4fa");
-        slG.addColorStop(1, "#e1f5fe");
-        ctx.fillStyle = slG;
-        ctx.beginPath();
-        ctx.moveTo(sx - sw, sy);
-        ctx.lineTo(sx, sy - sh);
-        ctx.lineTo(sx + sw * 0.15, sy);
-        ctx.closePath();
-        ctx.fill();
-        // Right face gradient
-        const srG = ctx.createLinearGradient(sx, sy - sh, sx + sw, sy);
-        srG.addColorStop(0, "#b3e5fc");
-        srG.addColorStop(0.4, "#29B6F6");
-        srG.addColorStop(1, "#0277BD");
-        ctx.fillStyle = srG;
-        ctx.beginPath();
-        ctx.moveTo(sx + sw * 0.15, sy);
-        ctx.lineTo(sx, sy - sh);
-        ctx.lineTo(sx + sw, sy);
-        ctx.closePath();
-        ctx.fill();
-        // Center edge highlight
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy - sh);
-        ctx.lineTo(sx + sw * 0.15, sy);
-        ctx.stroke();
-        // Internal fracture veins
-        ctx.strokeStyle = "rgba(255,255,255,0.2)";
-        ctx.lineWidth = 0.6 * s;
-        ctx.beginPath();
-        ctx.moveTo(sx - sw * 0.4, sy - sh * 0.3);
-        ctx.lineTo(sx, sy - sh * 0.6);
-        ctx.lineTo(sx + sw * 0.3, sy - sh * 0.35);
-        ctx.stroke();
-        // Snow cap
-        if (sh > 30 * s) {
-          ctx.fillStyle = "rgba(240,248,255,0.5)";
-          ctx.beginPath();
-          ctx.moveTo(sx - sw * 0.3, sy - sh * 0.85);
-          ctx.quadraticCurveTo(
-            sx,
-            sy - sh * 0.9,
-            sx + sw * 0.2,
-            sy - sh * 0.85,
-          );
-          ctx.lineTo(sx + sw * 0.15, sy - sh * 0.8);
-          ctx.quadraticCurveTo(
-            sx - sw * 0.1,
-            sy - sh * 0.82,
-            sx - sw * 0.25,
-            sy - sh * 0.8,
-          );
-          ctx.closePath();
-          ctx.fill();
-        }
       };
 
       if (isVar === 0) {
-        isDrawBase(16 * s);
-        isDrawSpire(screenPos.x - 12 * s, screenPos.y, 32 * s, 7 * s, false);
-        isDrawSpire(
-          screenPos.x + 5 * s,
-          screenPos.y - 2 * s,
-          30 * s,
-          8 * s,
-          false,
-        );
-        isDrawSpire(screenPos.x, screenPos.y - 4 * s, 58 * s, 8 * s, true);
+        drawIceBase(16 * s);
+        drawIsometricCrystalSpire(ctx, cx - 10 * s, cy, 7 * s, 32 * s, iceLight, iceMid, iceDark);
+        drawIsometricCrystalSpire(ctx, cx + 6 * s, cy - 2 * s, 7 * s, 30 * s, iceLight, iceMid, iceDeep);
+        drawIsometricCrystalSpire(ctx, cx, cy - 4 * s, 8 * s, 58 * s, iceLight, iceMid, iceDark);
         // Rune marking on main spire
         ctx.strokeStyle = "rgba(128,222,234,0.3)";
         ctx.lineWidth = 1 * s;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 20 * s);
-        ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 25 * s);
-        ctx.lineTo(screenPos.x - 1 * s, screenPos.y - 30 * s);
+        ctx.moveTo(cx - 2 * s, cy - 20 * s);
+        ctx.lineTo(cx + 2 * s, cy - 25 * s);
+        ctx.lineTo(cx - 1 * s, cy - 30 * s);
         ctx.stroke();
       } else if (isVar === 1) {
-        isDrawBase(19 * s);
+        drawIceBase(19 * s);
         // Twin spires
-        isDrawSpire(screenPos.x - 10 * s, screenPos.y, 48 * s, 7 * s, true);
-        isDrawSpire(
-          screenPos.x + 10 * s,
-          screenPos.y - 2 * s,
-          48 * s,
-          7 * s,
-          true,
-        );
-        isDrawSpire(
-          screenPos.x - 3 * s,
-          screenPos.y + 2 * s,
-          22 * s,
-          5 * s,
-          false,
-        );
-        isDrawSpire(
-          screenPos.x + 15 * s,
-          screenPos.y + 1 * s,
-          20 * s,
-          4 * s,
-          false,
-        );
+        drawIsometricCrystalSpire(ctx, cx - 10 * s, cy, 7 * s, 48 * s, iceLight, iceMid, iceDark);
+        drawIsometricCrystalSpire(ctx, cx + 10 * s, cy - 2 * s, 7 * s, 48 * s, iceLight, iceMid, iceDark);
+        drawIsometricCrystalSpire(ctx, cx - 3 * s, cy + 2 * s, 5 * s, 22 * s, iceMid, iceDark, iceDeep);
+        drawIsometricCrystalSpire(ctx, cx + 15 * s, cy + 1 * s, 4 * s, 20 * s, iceMid, iceDark, iceDeep);
         // Connecting arch with gradient
         const archG = ctx.createLinearGradient(
-          screenPos.x - 10 * s,
-          screenPos.y - 28 * s,
-          screenPos.x + 10 * s,
-          screenPos.y - 28 * s,
+          cx - 10 * s,
+          cy - 28 * s,
+          cx + 10 * s,
+          cy - 28 * s,
         );
         archG.addColorStop(0, "#b3e5fc");
         archG.addColorStop(0.5, "#e1f5fe");
@@ -15807,51 +15619,45 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.strokeStyle = archG;
         ctx.lineWidth = 3.5 * s;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 28 * s);
-        ctx.quadraticCurveTo(
-          screenPos.x,
-          screenPos.y - 38 * s,
-          screenPos.x + 10 * s,
-          screenPos.y - 28 * s,
-        );
+        ctx.moveTo(cx - 10 * s, cy - 28 * s);
+        ctx.quadraticCurveTo(cx, cy - 38 * s, cx + 10 * s, cy - 28 * s);
         ctx.stroke();
         // Rune on arch
         ctx.strokeStyle = "rgba(128,222,234,0.35)";
         ctx.lineWidth = 0.8 * s;
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - 32 * s, 3 * s, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 32 * s, 3 * s, 0, Math.PI * 2);
         ctx.stroke();
       } else {
         // Clustered crystal formation
-        isDrawBase(17 * s);
-        isDrawSpire(screenPos.x, screenPos.y - 2 * s, 54 * s, 7 * s, true);
+        drawIceBase(17 * s);
+        drawIsometricCrystalSpire(ctx, cx, cy - 2 * s, 7 * s, 54 * s, iceLight, iceMid, iceDark);
         const csAngles = [0.7, 1.9, 3.3, 4.8];
         const csHeights = [34, 28, 38, 24];
-        const csWidths = [5, 4, 6, 4];
+        const csBases = [5, 4, 6, 4];
         csAngles.forEach((ca, ci) => {
-          isDrawSpire(
-            screenPos.x + Math.cos(ca) * 11 * s,
-            screenPos.y + 2 * s + Math.sin(ca) * 5 * s,
+          drawIsometricCrystalSpire(
+            ctx,
+            cx + Math.cos(ca) * 11 * s,
+            cy + 2 * s + Math.sin(ca) * 5 * s,
+            csBases[ci] * s,
             csHeights[ci] * s,
-            csWidths[ci] * s,
-            ci % 2 === 0,
+            ci % 2 === 0 ? iceLight : iceMid,
+            iceMid,
+            iceDeep,
           );
         });
         // Glowing core
         const isCore = ctx.createRadialGradient(
-          screenPos.x,
-          screenPos.y - 16 * s,
-          0,
-          screenPos.x,
-          screenPos.y - 16 * s,
-          14 * s,
+          cx, cy - 16 * s, 0,
+          cx, cy - 16 * s, 14 * s,
         );
         isCore.addColorStop(0, "rgba(128,222,234,0.4)");
         isCore.addColorStop(0.4, "rgba(179,229,252,0.15)");
         isCore.addColorStop(1, "transparent");
         ctx.fillStyle = isCore;
         ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - 16 * s, 14 * s, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 16 * s, 14 * s, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -15863,8 +15669,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const spSize = (0.8 + Math.sin(decorTime + isp) * 0.3) * s;
         ctx.beginPath();
         ctx.arc(
-          screenPos.x + Math.cos(spA) * spR,
-          screenPos.y - 22 * s + Math.sin(spA) * spR * 0.35,
+          cx + Math.cos(spA) * spR,
+          cy - 22 * s + Math.sin(spA) * spR * 0.35,
           spSize,
           0,
           Math.PI * 2,

@@ -26,7 +26,7 @@ import {
   isChallengeMountainTopCell,
   isMountainTerrainKind,
 } from "./challengeTerrain";
-import { drawPathDecorations } from "./pathDecorations";
+import { drawPathDecorations, drawIsoPathStone, buildStonePalettes } from "./pathDecorations";
 import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
 import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
@@ -434,14 +434,15 @@ function drawRoad(
   }
 
   if (!skipPathShadows) {
+    const shadowOff = 4 * cameraZoom;
     ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
     ctx.beginPath();
-    ctx.moveTo(screenLeft[0].x + 4, screenLeft[0].y + 4);
+    ctx.moveTo(screenLeft[0].x + shadowOff, screenLeft[0].y + shadowOff);
     for (let i = 1; i < screenLeft.length; i++) {
-      ctx.lineTo(screenLeft[i].x + 4, screenLeft[i].y + 4);
+      ctx.lineTo(screenLeft[i].x + shadowOff, screenLeft[i].y + shadowOff);
     }
     for (let i = screenRight.length - 1; i >= 0; i--) {
-      ctx.lineTo(screenRight[i].x + 4, screenRight[i].y + 4);
+      ctx.lineTo(screenRight[i].x + shadowOff, screenRight[i].y + shadowOff);
     }
     ctx.closePath();
     ctx.fill();
@@ -480,6 +481,7 @@ function drawRoad(
   ctx.closePath();
   ctx.fill();
 
+  const topLayerLift = 2 * cameraZoom;
   ctx.fillStyle = theme.path[1];
   ctx.beginPath();
   for (let i = 0; i < screenCenter.length; i++) {
@@ -488,7 +490,7 @@ function drawRoad(
     const ly =
       screenCenter[i].y +
       (screenLeft[i].y - screenCenter[i].y) * topLayerBlend -
-      2;
+      topLayerLift;
     if (i === 0) {
       ctx.moveTo(lx, ly);
     } else {
@@ -502,7 +504,7 @@ function drawRoad(
     const ry =
       screenCenter[i].y +
       (screenRight[i].y - screenCenter[i].y) * topLayerBlend -
-      2;
+      topLayerLift;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
@@ -554,22 +556,27 @@ function drawRoad(
   }
 
   const pebbleRandom = createSeededRandom(mapSeed + 300);
-  ctx.fillStyle = theme.path[0];
+  const stonePalettes = buildStonePalettes(theme.path, 0.75);
   for (let i = 0; i < smoothPath.length; i += 2) {
     if (i >= screenLeft.length || pebbleRandom() > 0.5) continue;
     const side = pebbleRandom() > 0.5 ? screenLeft : screenRight;
     const p = side[i];
+    const hw = (2 + pebbleRandom() * 3) * cameraZoom;
+    const h = (1 + pebbleRandom() * 1.8) * cameraZoom;
+    const hd = hw * 0.5;
+    const pal = stonePalettes[Math.floor(pebbleRandom() * stonePalettes.length)];
+    const shOff = 1 * cameraZoom;
+
+    ctx.fillStyle = `rgba(0,0,0,${0.15 + pebbleRandom() * 0.08})`;
     ctx.beginPath();
-    ctx.ellipse(
-      p.x,
-      p.y,
-      (2 + pebbleRandom() * 3) * cameraZoom,
-      (1.5 + pebbleRandom() * 2) * cameraZoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.moveTo(p.x + shOff, p.y + shOff * 0.5 - hd);
+    ctx.lineTo(p.x + shOff + hw, p.y + shOff * 0.5);
+    ctx.lineTo(p.x + shOff, p.y + shOff * 0.5 + hd);
+    ctx.lineTo(p.x + shOff - hw, p.y + shOff * 0.5);
+    ctx.closePath();
     ctx.fill();
+
+    drawIsoPathStone(ctx, p.x, p.y, hw, h, pal.top, pal.left, pal.right);
   }
 }
 

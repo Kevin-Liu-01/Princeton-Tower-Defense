@@ -27,6 +27,7 @@ import {
   Target,
   Timer,
   TrendingUp,
+  Undo2,
   Users,
   X,
   Zap,
@@ -38,6 +39,7 @@ import {
   SPELL_TOTAL_MAX_UPGRADE_STARS,
   MAX_SPELL_UPGRADE_LEVEL,
   getSpellUpgradeNodes,
+  getSpellDowngradeRefund,
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
@@ -58,6 +60,7 @@ interface SpellUpgradeModalProps {
   spentStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   onUpgradeSpell: (spellType: SpellType) => void;
+  onDowngradeSpell: (spellType: SpellType) => void;
 }
 
 interface SelectedNode {
@@ -209,15 +212,19 @@ const UPGRADE_TAGS: Record<string, UpgradeTag[]> = {
 
   "freeze-1": [
     { label: "+0.6s Freeze", icon: Clock, accent: "#67e8f9" },
+    { label: "+3 Max Targets", icon: Users, accent: "#67e8f9" },
   ],
   "freeze-2": [
     { label: "+0.6s Freeze", icon: Snowflake, accent: "#67e8f9" },
+    { label: "+4 Max Targets", icon: Users, accent: "#67e8f9" },
   ],
   "freeze-3": [
     { label: "+0.6s Freeze", icon: Zap, accent: "#67e8f9" },
+    { label: "+4 Max Targets", icon: Users, accent: "#67e8f9" },
   ],
   "freeze-4": [
     { label: "+0.6s Freeze", icon: Shield, accent: "#67e8f9" },
+    { label: "+6 Max Targets", icon: Users, accent: "#67e8f9" },
   ],
   "freeze-5": [
     { label: "+0.6s Freeze", icon: Snowflake, accent: "#67e8f9" },
@@ -521,7 +528,7 @@ const getSpellStatsForDisplay = (
       const s = getFreezeSpellStats(level);
       return [
         { label: "Duration", value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, Icon: Timer, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)" },
-        { label: "Range", value: "Global", Icon: Globe, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)" },
+        { label: "Targets", value: s.isGlobal ? "Global" : `${s.maxTargets}`, Icon: s.isGlobal ? Globe : Users, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)" },
         { label: "Slow", value: "100%", Icon: Snowflake, color: "text-indigo-300", bg: "rgba(49,46,129,0.3)", border: "rgba(49,46,129,0.2)" },
       ];
     }
@@ -618,11 +625,13 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
   spentStars,
   spellUpgradeLevels,
   onUpgradeSpell,
+  onDowngradeSpell,
 }) => {
   const [selectedNode, setSelectedNode] = React.useState<SelectedNode>(() =>
     getDefaultSelection(spellUpgradeLevels),
   );
   const [justUpgraded, setJustUpgraded] = React.useState<SelectedNode | null>(null);
+  const [confirmingSell, setConfirmingSell] = React.useState<SelectedNode | null>(null);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -642,6 +651,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     return () => clearTimeout(timer);
   }, [justUpgraded]);
 
+  React.useEffect(() => {
+    setConfirmingSell(null);
+  }, [selectedNode.spellType, selectedNode.tier]);
+
   if (!isOpen) return null;
 
   const columnCount = SPELL_OPTIONS.length;
@@ -656,6 +669,14 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
   const selectedState = getNodeState(selectedSpellLevel, selectedNode.tier);
   const canBuySelected =
     selectedState === "next" && availableStars >= selectedNodeDef.cost;
+  const canSellSelected =
+    selectedState === "unlocked" && selectedNode.tier === selectedSpellLevel;
+  const sellRefund = canSellSelected
+    ? getSpellDowngradeRefund(selectedNode.spellType, selectedSpellLevel)
+    : 0;
+  const isConfirmingSellThisNode =
+    confirmingSell?.spellType === selectedNode.spellType &&
+    confirmingSell?.tier === selectedNode.tier;
   const selectedTheme = SPELL_THEMES[selectedNode.spellType];
   const selectedTags = getUpgradeTags(selectedNode.spellType, selectedNode.tier);
   const selectedSpellStats = getSpellStatsForDisplay(selectedNode.spellType, selectedSpellLevel);
@@ -673,11 +694,25 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     const upgradedTier = selectedNode.tier;
     onUpgradeSpell(upgradedSpell);
     setJustUpgraded({ spellType: upgradedSpell, tier: upgradedTier });
+    setConfirmingSell(null);
     setTimeout(() => {
       if (upgradedTier < MAX_SPELL_UPGRADE_LEVEL) {
         setSelectedNode({ spellType: upgradedSpell, tier: upgradedTier + 1 });
       }
     }, 800);
+  };
+
+  const handleSell = () => {
+    if (!canSellSelected) return;
+    if (!isConfirmingSellThisNode) {
+      setConfirmingSell({ spellType: selectedNode.spellType, tier: selectedNode.tier });
+      return;
+    }
+    onDowngradeSpell(selectedNode.spellType);
+    setConfirmingSell(null);
+    if (selectedNode.tier > 1) {
+      setSelectedNode({ spellType: selectedNode.spellType, tier: selectedNode.tier - 1 });
+    }
   };
 
   return (
@@ -798,7 +833,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                       >
                         Base
                       </div>
-                      {[1, 2, 3, 4, 5].map((tier) => (
+                      {Array.from({ length: MAX_SPELL_UPGRADE_LEVEL }, (_, i) => i + 1).map((tier) => (
                         <div
                           key={tier}
                           className="absolute right-0 text-right text-[10px] font-semibold text-amber-300/65"
@@ -1387,7 +1422,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     <>
                       <Check size={13} className="text-emerald-400 shrink-0" />
                       <span className="text-emerald-300">
-                        Already unlocked for this spell.
+                        {canSellSelected
+                          ? "Unlocked. Sell to recover stars."
+                          : "Already unlocked for this spell."}
                       </span>
                     </>
                   )}
@@ -1411,24 +1448,43 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                   )}
                 </div>
 
-                {/* Action button */}
-                <button
-                  type="button"
-                  onClick={handleUpgrade}
-                  disabled={!canBuySelected}
-                  className={`mt-3 w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${canBuySelected
-                    ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70 hover:shadow-[0_0_20px_rgba(250,204,21,0.15)]"
-                    : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
-                    }`}
-                >
-                  {selectedState === "unlocked"
-                    ? "Unlocked"
-                    : selectedState === "locked"
-                      ? "Tier Locked"
-                      : canBuySelected
-                        ? `Upgrade · ${selectedNodeDef.cost} ★`
-                        : `Need ${selectedNodeDef.cost - availableStars} more ★`}
-                </button>
+                {/* Action buttons */}
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleUpgrade}
+                    disabled={!canBuySelected}
+                    className={`w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${canBuySelected
+                      ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70 hover:shadow-[0_0_20px_rgba(250,204,21,0.15)]"
+                      : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
+                      }`}
+                  >
+                    {selectedState === "unlocked"
+                      ? "Unlocked"
+                      : selectedState === "locked"
+                        ? "Tier Locked"
+                        : canBuySelected
+                          ? `Upgrade · ${selectedNodeDef.cost} ★`
+                          : `Need ${selectedNodeDef.cost - availableStars} more ★`}
+                  </button>
+
+                  {canSellSelected && (
+                    <button
+                      type="button"
+                      onClick={handleSell}
+                      className={`w-full rounded-lg border px-3 py-2 text-xs font-semibold tracking-wide transition-all inline-flex items-center justify-center gap-1.5 ${
+                        isConfirmingSellThisNode
+                          ? "border-red-500/60 bg-red-900/35 text-red-200 hover:bg-red-900/50"
+                          : "border-stone-500/40 bg-stone-800/30 text-stone-300 hover:bg-stone-700/40 hover:border-stone-400/50"
+                      }`}
+                    >
+                      <Undo2 size={12} />
+                      {isConfirmingSellThisNode
+                        ? `Confirm Sell · Refund ${sellRefund} ★`
+                        : `Sell Tier ${selectedNode.tier} · +${sellRefund} ★`}
+                    </button>
+                  )}
+                </div>
 
                 {/* Upgrade celebration banner */}
                 {justUpgraded && (

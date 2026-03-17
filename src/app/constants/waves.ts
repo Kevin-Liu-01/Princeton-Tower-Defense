@@ -104,12 +104,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "tiger_fan", count: 4, interval: 700, delay: 3500 },
       { type: "mage", count: 3, interval: 850, delay: 3500 },
     ],
-    // Wave 3: Flying wave
+    // Wave 3: Assassin strike (moved up from typical wave 5 position)
     [
-      { type: "harpy", count: 4, interval: 750 },
-      { type: "banshee", count: 3, interval: 900, delay: 3500 },
-      { type: "frosh", count: 5, interval: 650, delay: 3200 },
-      { type: "specter", count: 3, interval: 800, delay: 3200 },
+      { type: "assassin", count: 4, interval: 700 },
+      { type: "berserker", count: 4, interval: 700, delay: 3200 },
+      { type: "athlete", count: 5, interval: 600, delay: 2800 },
+      { type: "tiger_fan", count: 4, interval: 650, delay: 2800 },
     ],
     // Wave 4: Tank push
     [
@@ -118,12 +118,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "cultist", count: 4, interval: 700, delay: 3000 },
       { type: "berserker", count: 4, interval: 700, delay: 3000 },
     ],
-    // Wave 5: Assassin strike
+    // Wave 5: Flying ambush (delayed, more dangerous)
     [
-      { type: "assassin", count: 4, interval: 750 },
-      { type: "athlete", count: 5, interval: 600, delay: 3000 },
-      { type: "archer", count: 5, interval: 650, delay: 2800 },
-      { type: "mascot", count: 4, interval: 700, delay: 2800 },
+      { type: "wyvern", count: 3, interval: 1100 },
+      { type: "harpy", count: 5, interval: 600, delay: 2800 },
+      { type: "banshee", count: 4, interval: 750, delay: 2600 },
+      { type: "specter", count: 4, interval: 700, delay: 2600 },
     ],
     // Wave 6: Plague wave
     [
@@ -421,12 +421,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "will_o_wisp", count: 6, interval: 550, delay: 2800 },
       { type: "thornwalker", count: 3, interval: 800, delay: 2800 },
     ],
-    // Wave 6: Plague and shadow
+    // Wave 6: Surprise dean - early boss appearance
     [
-      { type: "plaguebearer", count: 4, interval: 900 },
-      { type: "shadow_knight", count: 3, interval: 1200, delay: 2800 },
-      { type: "bog_creature", count: 6, interval: 550, delay: 2600 },
-      { type: "infernal", count: 3, interval: 950, delay: 2600 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "swamp_troll", count: 5, interval: 850, delay: 2800 },
+      { type: "bog_creature", count: 7, interval: 500, delay: 2500 },
+      { type: "thornwalker", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 7: Air superiority
     [
@@ -810,19 +810,18 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "scarab", count: 6, interval: 500, delay: 2400 },
       { type: "infernal", count: 3, interval: 950, delay: 2400 },
     ],
-    // Wave 8: Professor boss
-    [
-      { type: "professor", count: 3, interval: 2000 },
-      { type: "gradstudent", count: 3, interval: 1300, delay: 2400 },
-      { type: "wyvern", count: 4, interval: 950, delay: 2200 },
-      { type: "sandworm", count: 3, interval: 1100, delay: 2200 },
-    ],
-    // Wave 9: Dean arrives
+    // Wave 8: Dean arrives early
     [
       { type: "dean", count: 1, interval: 3200 },
-      { type: "senior", count: 5, interval: 850, delay: 2200 },
-      { type: "scorpion", count: 5, interval: 800, delay: 2200 },
-      { type: "banshee", count: 4, interval: 700, delay: 2000 },
+      { type: "senior", count: 4, interval: 900, delay: 2400 },
+      { type: "sandworm", count: 4, interval: 1000, delay: 2200 },
+      { type: "scorpion", count: 6, interval: 750, delay: 2200 },
+    ],
+    // Wave 9: Professor + catapult barrage
+    [
+      { type: "professor", count: 3, interval: 2000 },
+      { type: "catapult", count: 3, interval: 1200, delay: 2200 },
+      { type: "scarab", count: 8, interval: 400, delay: 2000 },
       { type: "nomad", count: 7, interval: 450, delay: 2000 },
     ],
     // Wave 10: Air dominance
@@ -1010,12 +1009,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "frostling", count: 3, interval: 800, delay: 4500 },
       { type: "ice_witch", count: 3, interval: 850, delay: 4000 },
     ],
-    // Wave 2: Yeti tanks
+    // Wave 2: Frost rush
     [
-      { type: "yeti", count: 3, interval: 1050 },
-      { type: "snow_goblin", count: 4, interval: 750, delay: 4000 },
-      { type: "cultist", count: 3, interval: 750, delay: 3800 },
-      { type: "hexer", count: 3, interval: 800, delay: 3800 },
+      { type: "frostling", count: 6, interval: 600 },
+      { type: "snow_goblin", count: 5, interval: 650, delay: 3800 },
+      { type: "assassin", count: 3, interval: 750, delay: 3500 },
+      { type: "ice_witch", count: 3, interval: 850, delay: 3500 },
     ],
     // Wave 3: Flying intro
     [
@@ -1128,12 +1127,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 3, interval: 1100, delay: 3200 },
       { type: "yeti", count: 3, interval: 950, delay: 3200 },
     ],
-    // Wave 4: Tank push
+    // Wave 4: Blizzard air raid
     [
-      { type: "junior", count: 4, interval: 850 },
-      { type: "yeti", count: 4, interval: 950, delay: 3200 },
-      { type: "plaguebearer", count: 3, interval: 900, delay: 3000 },
-      { type: "ice_witch", count: 4, interval: 800, delay: 3000 },
+      { type: "wyvern", count: 4, interval: 1000 },
+      { type: "harpy", count: 5, interval: 650, delay: 3200 },
+      { type: "banshee", count: 4, interval: 750, delay: 3000 },
+      { type: "ice_witch", count: 4, interval: 800, delay: 2800 },
     ],
     // Wave 5: Speed assault
     [
@@ -1397,12 +1396,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "hexer", count: 3, interval: 800, delay: 3800 },
       { type: "infernal", count: 3, interval: 900, delay: 3800 },
     ],
-    // Wave 3: Flying wave
+    // Wave 3: Berserker rush
     [
-      { type: "harpy", count: 4, interval: 750 },
-      { type: "banshee", count: 3, interval: 900, delay: 3500 },
-      { type: "magma_spawn", count: 4, interval: 800, delay: 3200 },
-      { type: "fire_imp", count: 5, interval: 650, delay: 3200 },
+      { type: "berserker", count: 5, interval: 650 },
+      { type: "assassin", count: 4, interval: 750, delay: 3200 },
+      { type: "fire_imp", count: 6, interval: 550, delay: 3000 },
+      { type: "magma_spawn", count: 4, interval: 800, delay: 3000 },
     ],
     // Wave 4: Ranged barrage
     [
@@ -1596,18 +1595,18 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 13: Double Dean
     [
       { type: "dean", count: 3, interval: 2200 },
-      { type: "professor", count: 3, interval: 1600, delay: 2000 },
-      { type: "ember_guard", count: 6, interval: 700, delay: 2000 },
-      { type: "wyvern", count: 5, interval: 800, delay: 2000 },
-      { type: "infernal", count: 5, interval: 700, delay: 2000 },
+      { type: "professor", count: 3, interval: 1600, delay: 2400 },
+      { type: "ember_guard", count: 6, interval: 700, delay: 1800 },
+      { type: "wyvern", count: 5, interval: 800, delay: 2200 },
+      { type: "infernal", count: 5, interval: 700, delay: 1600 },
     ],
     // Wave 14: Golem awakens
     [
       { type: "golem", count: 1, interval: 2600 },
-      { type: "trustee", count: 1, interval: 2800, delay: 2000 },
-      { type: "dragon", count: 1, interval: 2800, delay: 2000 },
-      { type: "shadow_knight", count: 5, interval: 900, delay: 2000 },
-      { type: "magma_spawn", count: 6, interval: 650, delay: 2000 },
+      { type: "trustee", count: 1, interval: 2800, delay: 2800 },
+      { type: "dragon", count: 1, interval: 2800, delay: 1400 },
+      { type: "shadow_knight", count: 5, interval: 900, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 650, delay: 1600 },
     ],
     // Wave 15: Double Trustee
     [
@@ -1808,700 +1807,894 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     ],
   ],
 
+  // IVY CROSSROADS - "Pincer Siege" (dual-path, alternating pressure)
   ivy_crossroads: [
+    // W1: Intro rush from both paths
     [
       { type: "athlete", count: 7, interval: 700 },
       { type: "tiger_fan", count: 6, interval: 680, delay: 2800 },
       { type: "crossbowman", count: 4, interval: 780, delay: 2600 },
     ],
+    // W2: Flying screen + caster support
     [
-      { type: "harpy", count: 4, interval: 700 },
-      { type: "frosh", count: 8, interval: 520, delay: 2500 },
-      { type: "specter", count: 4, interval: 760, delay: 2300 },
-      { type: "mage", count: 4, interval: 780, delay: 2200 },
+      { type: "harpy", count: 5, interval: 650 },
+      { type: "mage", count: 4, interval: 780, delay: 2300 },
+      { type: "frosh", count: 8, interval: 520, delay: 2100 },
     ],
+    // W3: All-speed blitz - tight intervals, fast enemies
     [
-      { type: "assassin", count: 5, interval: 680 },
-      { type: "junior", count: 4, interval: 900, delay: 2400 },
-      { type: "cultist", count: 5, interval: 700, delay: 2200 },
-      { type: "banshee", count: 4, interval: 740, delay: 2200 },
+      { type: "assassin", count: 6, interval: 550 },
+      { type: "berserker", count: 5, interval: 600, delay: 1800 },
+      { type: "athlete", count: 10, interval: 400, delay: 1600 },
     ],
+    // W4: Tank wall with ranged backline
     [
-      { type: "hexer", count: 5, interval: 760 },
-      { type: "athlete", count: 9, interval: 500, delay: 2300 },
-      { type: "harpy", count: 5, interval: 650, delay: 2100 },
-      { type: "warlock", count: 4, interval: 840, delay: 2100 },
+      { type: "junior", count: 5, interval: 900 },
+      { type: "skeleton_knight", count: 3, interval: 1100, delay: 2400 },
+      { type: "crossbowman", count: 6, interval: 620, delay: 2200 },
+      { type: "bone_mage", count: 3, interval: 900, delay: 2000 },
     ],
+    // W5: Air superiority - all flying, forces anti-air
     [
-      { type: "plaguebearer", count: 4, interval: 860 },
-      { type: "shadow_knight", count: 4, interval: 1050, delay: 2200 },
-      { type: "tiger_fan", count: 10, interval: 470, delay: 2100 },
-      { type: "wyvern", count: 4, interval: 980, delay: 2100 },
+      { type: "wyvern", count: 5, interval: 900 },
+      { type: "harpy", count: 6, interval: 580, delay: 2200 },
+      { type: "banshee", count: 5, interval: 650, delay: 1900 },
+      { type: "specter", count: 6, interval: 600, delay: 1700 },
     ],
-    [
-      { type: "necromancer", count: 4, interval: 1250 },
-      { type: "senior", count: 5, interval: 900, delay: 2200 },
-      { type: "athlete", count: 10, interval: 450, delay: 2000 },
-      { type: "assassin", count: 6, interval: 620, delay: 2000 },
-    ],
-    [
-      { type: "gradstudent", count: 3, interval: 1450 },
-      { type: "professor", count: 2, interval: 1900, delay: 2200 },
-      { type: "banshee", count: 6, interval: 620, delay: 2000 },
-      { type: "crossbowman", count: 7, interval: 600, delay: 1900 },
-    ],
+    // W6: Surprise early dean + dark knight vanguard
     [
       { type: "dean", count: 1, interval: 3000 },
-      { type: "shadow_knight", count: 5, interval: 900, delay: 2100 },
-      { type: "athlete", count: 12, interval: 420, delay: 1900 },
-      { type: "infernal", count: 4, interval: 820, delay: 1900 },
+      { type: "dark_knight", count: 4, interval: 950, delay: 2600 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2200 },
+      { type: "tiger_fan", count: 12, interval: 400, delay: 1800 },
     ],
+    // W7: Necromantic tide - caster-heavy, healing-disruption
     [
-      { type: "dragon", count: 1, interval: 2800 },
-      { type: "gradstudent", count: 4, interval: 1200, delay: 2100 },
-      { type: "wyvern", count: 5, interval: 860, delay: 1900 },
-      { type: "assassin", count: 7, interval: 580, delay: 1800 },
+      { type: "lich", count: 1, interval: 2600 },
+      { type: "dark_priest", count: 4, interval: 850, delay: 2400 },
+      { type: "wraith", count: 8, interval: 480, delay: 1800 },
+      { type: "skeleton_archer", count: 6, interval: 600, delay: 1600 },
     ],
+    // W8: Breaker wave - one mega-tank + speed flankers
     [
-      { type: "trustee", count: 1, interval: 3200 },
-      { type: "dean", count: 1, interval: 2600, delay: 1900 },
-      { type: "professor", count: 3, interval: 1500, delay: 1800 },
-      { type: "athlete", count: 14, interval: 380, delay: 1700 },
-      { type: "harpy", count: 7, interval: 560, delay: 1700 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "hellhound", count: 14, interval: 340, delay: 2800 },
+      { type: "revenant", count: 6, interval: 550, delay: 1500 },
     ],
+    // W9: Full dark fantasy army - balanced and relentless
     [
-      { type: "golem", count: 1, interval: 2900 },
-      { type: "shadow_knight", count: 6, interval: 840, delay: 1800 },
-      { type: "banshee", count: 7, interval: 560, delay: 1700 },
-      { type: "tiger_fan", count: 16, interval: 360, delay: 1600 },
+      { type: "death_knight", count: 2, interval: 2200 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 2400 },
+      { type: "black_guard", count: 5, interval: 720, delay: 1800 },
+      { type: "zombie_brute", count: 3, interval: 1200, delay: 1600 },
+      { type: "skeleton_footman", count: 14, interval: 360, delay: 1400 },
     ],
+    // W10: Doom wave - overlapping bosses
     [
-      { type: "trustee", count: 2, interval: 2400 },
-      { type: "dragon", count: 2, interval: 2200, delay: 1800 },
-      { type: "dean", count: 2, interval: 2200, delay: 1700 },
-      { type: "assassin", count: 8, interval: 520, delay: 1600 },
-      { type: "athlete", count: 18, interval: 340, delay: 1600 },
+      { type: "doom_herald", count: 2, interval: 2400 },
+      { type: "death_knight", count: 2, interval: 2000, delay: 1200 },
+      { type: "dark_knight", count: 6, interval: 700, delay: 1800 },
+      { type: "athlete", count: 20, interval: 280, delay: 1400 },
+    ],
+    // W11: Desperate defense - everything at once
+    [
+      { type: "skeleton_king", count: 2, interval: 2400 },
+      { type: "lich", count: 2, interval: 2000, delay: 1600 },
+      { type: "fallen_paladin", count: 5, interval: 800, delay: 1400 },
+      { type: "bone_mage", count: 6, interval: 580, delay: 1200 },
+      { type: "zombie_shambler", count: 20, interval: 260, delay: 1000 },
+    ],
+    // W12: TITAN FINALE - region boss + elite escort
+    [
+      { type: "titan_of_nassau", count: 1, interval: 3500 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 4000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2000 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1800 },
+      { type: "skeleton_footman", count: 24, interval: 250, delay: 1400 },
     ],
   ],
 
+  // BLIGHT BASIN - "Toxic Attrition" (plague/poison grind, tanky swamp waves)
   blight_basin: [
+    // W1: Swamp crawlers intro
     [
       { type: "bog_creature", count: 7, interval: 730 },
       { type: "will_o_wisp", count: 7, interval: 620, delay: 2800 },
       { type: "thornwalker", count: 5, interval: 760, delay: 2600 },
     ],
-    [
-      { type: "specter", count: 5, interval: 760 },
-      { type: "swamp_troll", count: 5, interval: 900, delay: 2500 },
-      { type: "hexer", count: 5, interval: 760, delay: 2300 },
-      { type: "harpy", count: 4, interval: 700, delay: 2200 },
-    ],
+    // W2: Plaguebearer vanguard - poison theme early
     [
       { type: "plaguebearer", count: 5, interval: 820 },
-      { type: "cultist", count: 6, interval: 660, delay: 2300 },
+      { type: "zombie_spitter", count: 4, interval: 780, delay: 2500 },
       { type: "bog_creature", count: 10, interval: 460, delay: 2100 },
-      { type: "banshee", count: 4, interval: 740, delay: 2100 },
     ],
+    // W3: Troll wall - heavy armor, slow but durable
     [
-      { type: "necromancer", count: 4, interval: 1250 },
-      { type: "shadow_knight", count: 4, interval: 1050, delay: 2200 },
-      { type: "will_o_wisp", count: 12, interval: 430, delay: 2000 },
-      { type: "wyvern", count: 4, interval: 980, delay: 2000 },
+      { type: "swamp_troll", count: 7, interval: 800 },
+      { type: "zombie_brute", count: 2, interval: 1400, delay: 2600 },
+      { type: "thornwalker", count: 8, interval: 600, delay: 2200 },
     ],
+    // W4: Spectral swarm - fast ghosts, hard to pin down
     [
-      { type: "swamp_troll", count: 6, interval: 840 },
-      { type: "thornwalker", count: 7, interval: 680, delay: 2100 },
-      { type: "plaguebearer", count: 5, interval: 780, delay: 1900 },
-      { type: "assassin", count: 6, interval: 620, delay: 1900 },
+      { type: "wraith", count: 6, interval: 550 },
+      { type: "specter", count: 7, interval: 520, delay: 1800 },
+      { type: "banshee", count: 5, interval: 600, delay: 1600 },
+      { type: "will_o_wisp", count: 10, interval: 380, delay: 1400 },
     ],
+    // W5: Necromancer council - casters behind meat shields
     [
-      { type: "gradstudent", count: 3, interval: 1450 },
-      { type: "professor", count: 2, interval: 1900, delay: 2200 },
-      { type: "specter", count: 7, interval: 560, delay: 1900 },
-      { type: "swamp_troll", count: 6, interval: 760, delay: 1800 },
+      { type: "necromancer", count: 5, interval: 1100 },
+      { type: "dark_priest", count: 3, interval: 950, delay: 2600 },
+      { type: "zombie_shambler", count: 14, interval: 350, delay: 2000 },
+      { type: "skeleton_footman", count: 10, interval: 420, delay: 1600 },
     ],
+    // W6: Air ambush after ground-heavy waves
     [
-      { type: "dean", count: 1, interval: 3000 },
-      { type: "necromancer", count: 5, interval: 1100, delay: 2000 },
-      { type: "will_o_wisp", count: 14, interval: 380, delay: 1800 },
-      { type: "banshee", count: 6, interval: 580, delay: 1700 },
+      { type: "wyvern", count: 6, interval: 850 },
+      { type: "harpy", count: 7, interval: 550, delay: 2000 },
+      { type: "banshee", count: 6, interval: 600, delay: 1700 },
     ],
+    // W7: Zombie apocalypse - sheer numbers
     [
-      { type: "dragon", count: 1, interval: 2800 },
-      { type: "shadow_knight", count: 6, interval: 820, delay: 1900 },
-      { type: "wyvern", count: 6, interval: 860, delay: 1700 },
-      { type: "thornwalker", count: 9, interval: 540, delay: 1700 },
+      { type: "zombie_brute", count: 4, interval: 1100 },
+      { type: "zombie_shambler", count: 20, interval: 280, delay: 2400 },
+      { type: "zombie_spitter", count: 6, interval: 600, delay: 1800 },
+      { type: "ghoul", count: 8, interval: 500, delay: 1400 },
     ],
+    // W8: Dark knight garrison - armored elite push
     [
-      { type: "trustee", count: 1, interval: 3200 },
-      { type: "dean", count: 1, interval: 2600, delay: 1900 },
-      { type: "swamp_troll", count: 7, interval: 740, delay: 1700 },
-      { type: "plaguebearer", count: 7, interval: 660, delay: 1600 },
-      { type: "will_o_wisp", count: 16, interval: 350, delay: 1600 },
+      { type: "death_knight", count: 1, interval: 3000 },
+      { type: "black_guard", count: 5, interval: 720, delay: 2600 },
+      { type: "dark_knight", count: 4, interval: 900, delay: 2000 },
+      { type: "swamp_troll", count: 8, interval: 650, delay: 1600 },
     ],
+    // W9: Lich king's court - caster bosses + skeleton army
     [
-      { type: "golem", count: 1, interval: 2900 },
-      { type: "necromancer", count: 5, interval: 950, delay: 1800 },
-      { type: "banshee", count: 7, interval: 540, delay: 1600 },
-      { type: "specter", count: 9, interval: 500, delay: 1600 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 2800 },
+      { type: "bone_mage", count: 5, interval: 680, delay: 2000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 1600 },
+      { type: "bog_creature", count: 16, interval: 320, delay: 1200 },
     ],
+    // W10: Double threat - simultaneous boss + swarm
     [
-      { type: "trustee", count: 2, interval: 2400 },
-      { type: "dragon", count: 2, interval: 2200, delay: 1800 },
-      { type: "dean", count: 2, interval: 2200, delay: 1700 },
-      { type: "shadow_knight", count: 7, interval: 760, delay: 1600 },
-      { type: "bog_creature", count: 20, interval: 320, delay: 1600 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 800 },
+      { type: "revenant", count: 8, interval: 480, delay: 2400 },
+      { type: "hellhound", count: 10, interval: 380, delay: 1600 },
     ],
+    // W11: Last stand - everything toxic and undead
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "golem", count: 2, interval: 2500, delay: 1800 },
-      { type: "necromancer", count: 6, interval: 900, delay: 1700 },
-      { type: "wyvern", count: 8, interval: 780, delay: 1600 },
-      { type: "will_o_wisp", count: 22, interval: 300, delay: 1500 },
+      { type: "death_knight", count: 3, interval: 1800 },
+      { type: "lich", count: 2, interval: 2000, delay: 1400 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 1800 },
+      { type: "plaguebearer", count: 8, interval: 520, delay: 1200 },
+      { type: "will_o_wisp", count: 20, interval: 260, delay: 1000 },
+    ],
+    // W12: LEVIATHAN FINALE - grinding mega-boss
+    [
+      { type: "swamp_leviathan", count: 1, interval: 3500 },
+      { type: "abomination", count: 1, interval: 3200, delay: 5000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 3000 },
+      { type: "zombie_brute", count: 5, interval: 1000, delay: 2000 },
+      { type: "zombie_shambler", count: 24, interval: 240, delay: 1400 },
     ],
   ],
 
+  // SUNSCORCH LABYRINTH - "Sandstorm Blitz" (speed-focused, overwhelming numbers)
   sunscorch_labyrinth: [
+    // W1: Desert swarm - fast fodder from the start
     [
-      { type: "nomad", count: 8, interval: 660 },
-      { type: "scorpion", count: 7, interval: 620, delay: 2700 },
-      { type: "scarab", count: 9, interval: 520, delay: 2400 },
+      { type: "scarab", count: 12, interval: 420 },
+      { type: "nomad", count: 8, interval: 550, delay: 2200 },
     ],
+    // W2: Ranged ambush with scorpion tanks
     [
-      { type: "archer", count: 6, interval: 700 },
-      { type: "crossbowman", count: 5, interval: 720, delay: 2400 },
-      { type: "nomad", count: 10, interval: 460, delay: 2200 },
-      { type: "harpy", count: 4, interval: 680, delay: 2100 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "scorpion", count: 6, interval: 780, delay: 2400 },
+      { type: "skeleton_archer", count: 4, interval: 700, delay: 2000 },
+      { type: "scarab", count: 10, interval: 380, delay: 1800 },
     ],
+    // W3: Sandworm gauntlet - burrowers demand AoE
     [
-      { type: "sandworm", count: 4, interval: 980 },
-      { type: "hexer", count: 5, interval: 740, delay: 2200 },
-      { type: "scorpion", count: 10, interval: 440, delay: 2000 },
-      { type: "wyvern", count: 4, interval: 940, delay: 2000 },
+      { type: "sandworm", count: 6, interval: 850 },
+      { type: "scorpion", count: 8, interval: 580, delay: 2400 },
+      { type: "nomad", count: 10, interval: 420, delay: 1800 },
     ],
+    // W4: Hellhound stampede - pure speed wave
     [
-      { type: "assassin", count: 6, interval: 620 },
-      { type: "mage", count: 5, interval: 760, delay: 2100 },
-      { type: "scarab", count: 12, interval: 400, delay: 1900 },
-      { type: "banshee", count: 5, interval: 620, delay: 1800 },
+      { type: "hellhound", count: 12, interval: 350 },
+      { type: "assassin", count: 6, interval: 520, delay: 1600 },
+      { type: "wraith", count: 5, interval: 550, delay: 1400 },
+      { type: "scarab", count: 14, interval: 320, delay: 1200 },
     ],
+    // W5: Dark knight caravan - armored column
     [
-      { type: "plaguebearer", count: 5, interval: 780 },
-      { type: "shadow_knight", count: 5, interval: 980, delay: 2100 },
-      { type: "sandworm", count: 5, interval: 900, delay: 1900 },
-      { type: "nomad", count: 12, interval: 420, delay: 1800 },
+      { type: "dark_knight", count: 5, interval: 900 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2400 },
+      { type: "black_guard", count: 4, interval: 800, delay: 2000 },
+      { type: "sandworm", count: 5, interval: 900, delay: 1600 },
     ],
+    // W6: Flying sandstorm - all air
     [
-      { type: "gradstudent", count: 3, interval: 1500 },
-      { type: "professor", count: 2, interval: 1850, delay: 2100 },
-      { type: "scorpion", count: 13, interval: 390, delay: 1800 },
-      { type: "harpy", count: 6, interval: 560, delay: 1700 },
+      { type: "wyvern", count: 6, interval: 800 },
+      { type: "harpy", count: 8, interval: 500, delay: 2000 },
+      { type: "banshee", count: 6, interval: 580, delay: 1500 },
     ],
+    // W7: Bone mage artillery + meat shield
     [
-      { type: "dean", count: 1, interval: 3000 },
-      { type: "necromancer", count: 5, interval: 1000, delay: 1900 },
-      { type: "scarab", count: 16, interval: 340, delay: 1700 },
-      { type: "wyvern", count: 6, interval: 820, delay: 1700 },
+      { type: "lich", count: 1, interval: 2800 },
+      { type: "bone_mage", count: 6, interval: 600, delay: 2400 },
+      { type: "zombie_brute", count: 4, interval: 1000, delay: 2000 },
+      { type: "skeleton_footman", count: 16, interval: 300, delay: 1400 },
     ],
+    // W8: Death knight charge - elite melee
     [
-      { type: "dragon", count: 1, interval: 2800 },
-      { type: "shadow_knight", count: 6, interval: 780, delay: 1800 },
-      { type: "assassin", count: 8, interval: 500, delay: 1700 },
-      { type: "sandworm", count: 6, interval: 860, delay: 1600 },
+      { type: "death_knight", count: 2, interval: 2200 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 2600 },
+      { type: "revenant", count: 8, interval: 460, delay: 1800 },
+      { type: "nomad", count: 14, interval: 340, delay: 1400 },
     ],
+    // W9: Dual-boss ambush
     [
-      { type: "trustee", count: 1, interval: 3200 },
-      { type: "dean", count: 1, interval: 2600, delay: 1800 },
-      { type: "professor", count: 3, interval: 1450, delay: 1700 },
-      { type: "nomad", count: 16, interval: 340, delay: 1600 },
-      { type: "banshee", count: 7, interval: 540, delay: 1600 },
+      { type: "doom_herald", count: 1, interval: 3000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 600 },
+      { type: "dark_knight", count: 5, interval: 780, delay: 2400 },
+      { type: "hellhound", count: 10, interval: 380, delay: 1600 },
     ],
+    // W10: Endless scarab swarm - survive the flood
     [
-      { type: "golem", count: 1, interval: 2900 },
-      { type: "necromancer", count: 6, interval: 940, delay: 1700 },
-      { type: "dragon", count: 2, interval: 2200, delay: 1600 },
-      { type: "scorpion", count: 18, interval: 320, delay: 1500 },
+      { type: "death_knight", count: 2, interval: 2000 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 1800 },
+      { type: "fallen_paladin", count: 5, interval: 800, delay: 1400 },
+      { type: "scarab", count: 30, interval: 200, delay: 1000 },
     ],
+    // W11: Dark convergence
     [
-      { type: "trustee", count: 2, interval: 2400 },
-      { type: "golem", count: 2, interval: 2600, delay: 1700 },
-      { type: "dean", count: 2, interval: 2200, delay: 1600 },
-      { type: "sandworm", count: 7, interval: 780, delay: 1500 },
-      { type: "scarab", count: 20, interval: 300, delay: 1500 },
+      { type: "lich", count: 2, interval: 2000 },
+      { type: "doom_herald", count: 2, interval: 2400, delay: 1400 },
+      { type: "dark_priest", count: 4, interval: 800, delay: 2000 },
+      { type: "bone_mage", count: 6, interval: 580, delay: 1200 },
+      { type: "scorpion", count: 16, interval: 320, delay: 1000 },
     ],
+    // W12: SPHINX FINALE - guardian + relentless swarm
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "dragon", count: 3, interval: 2000, delay: 1700 },
-      { type: "golem", count: 2, interval: 2400, delay: 1600 },
-      { type: "shadow_knight", count: 8, interval: 720, delay: 1500 },
-      { type: "nomad", count: 24, interval: 280, delay: 1500 },
+      { type: "sphinx_guardian", count: 1, interval: 3500 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 4000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2000 },
+      { type: "skeleton_footman", count: 20, interval: 260, delay: 1600 },
+      { type: "scarab", count: 26, interval: 220, delay: 1200 },
     ],
   ],
 
+  // WHITEOUT PASS - "Frozen Fortress" (armored, tanky, endurance test)
   whiteout_pass: [
+    // W1: Blizzard scouts
     [
       { type: "snow_goblin", count: 9, interval: 620 },
       { type: "frostling", count: 7, interval: 610, delay: 2600 },
       { type: "ice_witch", count: 4, interval: 760, delay: 2400 },
     ],
+    // W2: Yeti vanguard - heavy hitters early
     [
-      { type: "yeti", count: 5, interval: 900 },
-      { type: "archer", count: 6, interval: 680, delay: 2400 },
-      { type: "snow_goblin", count: 12, interval: 420, delay: 2200 },
-      { type: "harpy", count: 4, interval: 660, delay: 2100 },
+      { type: "yeti", count: 6, interval: 850 },
+      { type: "snow_goblin", count: 12, interval: 420, delay: 2400 },
+      { type: "skeleton_knight", count: 3, interval: 1000, delay: 2000 },
     ],
+    // W3: Ice witch barrage - ranged magic pressure
     [
-      { type: "ice_witch", count: 6, interval: 720 },
-      { type: "frostling", count: 10, interval: 430, delay: 2200 },
-      { type: "crossbowman", count: 5, interval: 700, delay: 2000 },
-      { type: "wyvern", count: 4, interval: 930, delay: 2000 },
+      { type: "ice_witch", count: 8, interval: 650 },
+      { type: "bone_mage", count: 4, interval: 800, delay: 2400 },
+      { type: "frostling", count: 10, interval: 430, delay: 1800 },
     ],
+    // W4: Surprise speed wave - breaks the tank pattern
     [
-      { type: "assassin", count: 6, interval: 620 },
-      { type: "yeti", count: 6, interval: 820, delay: 2100 },
-      { type: "snow_goblin", count: 14, interval: 380, delay: 1900 },
-      { type: "banshee", count: 5, interval: 600, delay: 1800 },
+      { type: "wraith", count: 8, interval: 450 },
+      { type: "assassin", count: 6, interval: 520, delay: 1600 },
+      { type: "hellhound", count: 8, interval: 400, delay: 1200 },
     ],
+    // W5: Armored column - pure tank test
     [
-      { type: "plaguebearer", count: 5, interval: 760 },
-      { type: "shadow_knight", count: 5, interval: 980, delay: 2000 },
-      { type: "frostling", count: 12, interval: 390, delay: 1800 },
-      { type: "ice_witch", count: 7, interval: 660, delay: 1700 },
+      { type: "black_guard", count: 5, interval: 800 },
+      { type: "dark_knight", count: 4, interval: 950, delay: 2600 },
+      { type: "yeti", count: 8, interval: 700, delay: 2000 },
+      { type: "zombie_brute", count: 3, interval: 1200, delay: 1600 },
     ],
+    // W6: Catapult siege - ranged devastation
     [
-      { type: "gradstudent", count: 3, interval: 1500 },
-      { type: "professor", count: 2, interval: 1850, delay: 2000 },
-      { type: "yeti", count: 7, interval: 780, delay: 1800 },
-      { type: "harpy", count: 6, interval: 540, delay: 1700 },
+      { type: "catapult", count: 4, interval: 1200 },
+      { type: "skeleton_archer", count: 6, interval: 600, delay: 2400 },
+      { type: "crossbowman", count: 6, interval: 620, delay: 1800 },
+      { type: "snow_goblin", count: 14, interval: 360, delay: 1400 },
     ],
+    // W7: Death knight frost guard
     [
-      { type: "dean", count: 1, interval: 3000 },
-      { type: "necromancer", count: 5, interval: 980, delay: 1800 },
-      { type: "snow_goblin", count: 18, interval: 320, delay: 1700 },
-      { type: "wyvern", count: 6, interval: 780, delay: 1600 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 2400 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 1800 },
+      { type: "frostling", count: 14, interval: 340, delay: 1400 },
     ],
+    // W8: Lich blizzard - casters behind yeti wall
     [
-      { type: "dragon", count: 1, interval: 2800 },
-      { type: "shadow_knight", count: 6, interval: 760, delay: 1700 },
-      { type: "assassin", count: 8, interval: 500, delay: 1600 },
-      { type: "ice_witch", count: 8, interval: 620, delay: 1500 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "dark_priest", count: 3, interval: 950, delay: 2600 },
+      { type: "yeti", count: 8, interval: 680, delay: 2000 },
+      { type: "ice_witch", count: 6, interval: 620, delay: 1400 },
     ],
+    // W9: Solo mega-boss test
     [
-      { type: "trustee", count: 1, interval: 3200 },
-      { type: "dean", count: 1, interval: 2600, delay: 1700 },
-      { type: "professor", count: 3, interval: 1400, delay: 1600 },
-      { type: "frostling", count: 16, interval: 320, delay: 1500 },
-      { type: "banshee", count: 7, interval: 520, delay: 1500 },
+      { type: "skeleton_king", count: 2, interval: 2800 },
+      { type: "abomination", count: 1, interval: 3200, delay: 3000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 2000 },
     ],
+    // W10: Frozen horde - massive numbers
     [
-      { type: "golem", count: 1, interval: 2900 },
-      { type: "necromancer", count: 6, interval: 920, delay: 1700 },
-      { type: "dragon", count: 2, interval: 2200, delay: 1600 },
-      { type: "yeti", count: 9, interval: 700, delay: 1500 },
+      { type: "death_knight", count: 3, interval: 1800 },
+      { type: "dark_knight", count: 5, interval: 780, delay: 1600 },
+      { type: "skeleton_footman", count: 18, interval: 280, delay: 1800 },
+      { type: "snow_goblin", count: 20, interval: 260, delay: 1200 },
     ],
+    // W11: Everything armored, nothing fast
     [
-      { type: "trustee", count: 2, interval: 2400 },
-      { type: "golem", count: 2, interval: 2600, delay: 1700 },
-      { type: "dean", count: 2, interval: 2200, delay: 1600 },
-      { type: "shadow_knight", count: 8, interval: 700, delay: 1500 },
-      { type: "snow_goblin", count: 22, interval: 280, delay: 1500 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "zombie_brute", count: 5, interval: 1000, delay: 2400 },
+      { type: "black_guard", count: 6, interval: 700, delay: 1800 },
+      { type: "fallen_paladin", count: 5, interval: 800, delay: 1400 },
+      { type: "yeti", count: 10, interval: 600, delay: 1000 },
     ],
+    // W12: COLOSSUS FINALE - frozen titan + armored escort
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "dragon", count: 3, interval: 2000, delay: 1700 },
-      { type: "golem", count: 2, interval: 2400, delay: 1600 },
-      { type: "ice_witch", count: 9, interval: 560, delay: 1500 },
-      { type: "frostling", count: 24, interval: 260, delay: 1500 },
+      { type: "frost_colossus", count: 1, interval: 3500 },
+      { type: "doom_herald", count: 2, interval: 2400, delay: 4000 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 2000 },
+      { type: "lich", count: 2, interval: 2000, delay: 1600 },
+      { type: "frostling", count: 22, interval: 260, delay: 1200 },
     ],
   ],
 
+  // ASHEN SPIRAL - "Infernal Gauntlet" (15 waves, escalating boss parade)
   ashen_spiral: [
+    // W1: Volcanic vanguard
     [
       { type: "fire_imp", count: 10, interval: 560 },
       { type: "magma_spawn", count: 8, interval: 620, delay: 2600 },
       { type: "ember_guard", count: 5, interval: 860, delay: 2400 },
     ],
+    // W2: Infernal charge + warlock support
     [
-      { type: "infernal", count: 5, interval: 780 },
+      { type: "infernal", count: 6, interval: 720 },
       { type: "warlock", count: 5, interval: 760, delay: 2300 },
-      { type: "fire_imp", count: 12, interval: 380, delay: 2100 },
-      { type: "harpy", count: 5, interval: 640, delay: 2000 },
+      { type: "fire_imp", count: 12, interval: 380, delay: 2000 },
     ],
+    // W3: All flying - air dominance
     [
-      { type: "wyvern", count: 5, interval: 900 },
-      { type: "banshee", count: 5, interval: 680, delay: 2200 },
-      { type: "magma_spawn", count: 10, interval: 420, delay: 2000 },
-      { type: "shadow_knight", count: 5, interval: 940, delay: 1900 },
+      { type: "wyvern", count: 6, interval: 850 },
+      { type: "harpy", count: 7, interval: 550, delay: 2000 },
+      { type: "banshee", count: 6, interval: 600, delay: 1600 },
     ],
+    // W4: Surprise skeleton army - not volcanic themed
     [
-      { type: "assassin", count: 7, interval: 560 },
-      { type: "ember_guard", count: 7, interval: 680, delay: 2100 },
-      { type: "plaguebearer", count: 5, interval: 740, delay: 1900 },
-      { type: "infernal", count: 6, interval: 720, delay: 1800 },
+      { type: "skeleton_knight", count: 5, interval: 900 },
+      { type: "skeleton_footman", count: 14, interval: 340, delay: 2200 },
+      { type: "skeleton_archer", count: 6, interval: 600, delay: 1800 },
+      { type: "bone_mage", count: 3, interval: 900, delay: 1400 },
     ],
+    // W5: Speed nightmare - fastest possible
     [
-      { type: "necromancer", count: 5, interval: 1050 },
-      { type: "dragon", count: 1, interval: 2700, delay: 2100 },
-      { type: "fire_imp", count: 16, interval: 320, delay: 1800 },
-      { type: "wyvern", count: 6, interval: 780, delay: 1700 },
+      { type: "hellhound", count: 10, interval: 360 },
+      { type: "revenant", count: 6, interval: 500, delay: 1400 },
+      { type: "assassin", count: 8, interval: 480, delay: 1200 },
+      { type: "fire_imp", count: 16, interval: 280, delay: 1000 },
     ],
+    // W6: Death knight vanguard - first big boss
     [
-      { type: "gradstudent", count: 4, interval: 1300 },
-      { type: "professor", count: 3, interval: 1600, delay: 2100 },
-      { type: "shadow_knight", count: 6, interval: 820, delay: 1800 },
-      { type: "magma_spawn", count: 13, interval: 360, delay: 1700 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "dark_knight", count: 5, interval: 800, delay: 2600 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 620, delay: 1600 },
     ],
+    // W7: Lich tower - caster devastation
     [
-      { type: "dean", count: 2, interval: 2300 },
-      { type: "catapult", count: 4, interval: 1150, delay: 1900 },
-      { type: "infernal", count: 7, interval: 660, delay: 1700 },
-      { type: "fire_imp", count: 18, interval: 300, delay: 1600 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "dark_priest", count: 4, interval: 850, delay: 2400 },
+      { type: "bone_mage", count: 6, interval: 600, delay: 1800 },
+      { type: "wraith", count: 8, interval: 460, delay: 1400 },
     ],
+    // W8: Zombie siege - slow but overwhelming
     [
-      { type: "trustee", count: 1, interval: 3200 },
-      { type: "dean", count: 2, interval: 2200, delay: 1900 },
-      { type: "dragon", count: 2, interval: 2200, delay: 1700 },
-      { type: "ember_guard", count: 9, interval: 620, delay: 1600 },
-      { type: "assassin", count: 9, interval: 500, delay: 1500 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "zombie_brute", count: 5, interval: 1000, delay: 2800 },
+      { type: "zombie_shambler", count: 20, interval: 260, delay: 2000 },
+      { type: "magma_spawn", count: 12, interval: 400, delay: 1400 },
     ],
+    // W9: Breather... then surprise boss
     [
-      { type: "golem", count: 1, interval: 2900 },
-      { type: "juggernaut", count: 1, interval: 3000, delay: 1900 },
-      { type: "necromancer", count: 6, interval: 900, delay: 1700 },
-      { type: "magma_spawn", count: 15, interval: 330, delay: 1500 },
+      { type: "fire_imp", count: 20, interval: 300 },
+      { type: "ember_guard", count: 6, interval: 700, delay: 3000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 6000 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 1000 },
     ],
+    // W10: Dual boss gauntlet
     [
-      { type: "trustee", count: 2, interval: 2400 },
-      { type: "dragon", count: 2, interval: 2100, delay: 1800 },
-      { type: "dean", count: 2, interval: 2100, delay: 1700 },
-      { type: "shadow_knight", count: 8, interval: 700, delay: 1500 },
-      { type: "fire_imp", count: 22, interval: 260, delay: 1500 },
+      { type: "death_knight", count: 3, interval: 1800 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 2000 },
+      { type: "black_guard", count: 6, interval: 700, delay: 2400 },
+      { type: "dark_knight", count: 6, interval: 740, delay: 1600 },
     ],
+    // W11: Abomination rampage
     [
-      { type: "golem", count: 2, interval: 2600 },
-      { type: "trustee", count: 2, interval: 2200, delay: 1800 },
-      { type: "juggernaut", count: 2, interval: 2600, delay: 1700 },
-      { type: "wyvern", count: 8, interval: 720, delay: 1500 },
-      { type: "ember_guard", count: 11, interval: 560, delay: 1500 },
+      { type: "abomination", count: 2, interval: 2800 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 1200 },
+      { type: "hellhound", count: 12, interval: 350, delay: 2400 },
+      { type: "revenant", count: 8, interval: 480, delay: 1600 },
     ],
+    // W12: Full dark fantasy war
     [
-      { type: "trustee", count: 3, interval: 2100 },
-      { type: "dragon", count: 3, interval: 1900, delay: 1700 },
-      { type: "dean", count: 3, interval: 1900, delay: 1600 },
-      { type: "necromancer", count: 7, interval: 820, delay: 1500 },
-      { type: "magma_spawn", count: 20, interval: 260, delay: 1500 },
+      { type: "lich", count: 3, interval: 1800 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1200 },
+      { type: "fallen_paladin", count: 6, interval: 740, delay: 2000 },
+      { type: "skeleton_footman", count: 18, interval: 280, delay: 1400 },
+      { type: "fire_imp", count: 20, interval: 260, delay: 1000 },
     ],
+    // W13: Triple boss mayhem
     [
-      { type: "trustee", count: 4, interval: 2000 },
-      { type: "golem", count: 2, interval: 2400, delay: 1700 },
-      { type: "dragon", count: 3, interval: 1900, delay: 1600 },
-      { type: "juggernaut", count: 2, interval: 2400, delay: 1500 },
-      { type: "ember_guard", count: 14, interval: 520, delay: 1500 },
+      { type: "doom_herald", count: 2, interval: 2400 },
+      { type: "abomination", count: 1, interval: 3000, delay: 1000 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 800 },
+      { type: "zombie_brute", count: 5, interval: 1000, delay: 2200 },
+      { type: "ember_guard", count: 10, interval: 540, delay: 1400 },
     ],
+    // W14: Endgame onslaught - everything at once
     [
-      { type: "trustee", count: 5, interval: 1900 },
-      { type: "dragon", count: 4, interval: 1800, delay: 1700 },
-      { type: "golem", count: 3, interval: 2200, delay: 1600 },
-      { type: "dean", count: 3, interval: 1800, delay: 1500 },
-      { type: "magma_spawn", count: 24, interval: 240, delay: 1500 },
-      { type: "fire_imp", count: 28, interval: 200, delay: 1450 },
+      { type: "death_knight", count: 4, interval: 1600 },
+      { type: "lich", count: 3, interval: 1800, delay: 1000 },
+      { type: "doom_herald", count: 2, interval: 2200, delay: 800 },
+      { type: "dark_knight", count: 8, interval: 640, delay: 1600 },
+      { type: "magma_spawn", count: 20, interval: 260, delay: 1200 },
+    ],
+    // W15: WYRM FINALE - inferno titan + army of the damned
+    [
+      { type: "inferno_wyrm", count: 1, interval: 3500 },
+      { type: "abomination", count: 2, interval: 2600, delay: 5000 },
+      { type: "doom_herald", count: 2, interval: 2400, delay: 3000 },
+      { type: "death_knight", count: 4, interval: 1600, delay: 2000 },
+      { type: "hellhound", count: 14, interval: 320, delay: 1600 },
+      { type: "fire_imp", count: 28, interval: 200, delay: 1200 },
     ],
   ],
 
+  // CANNON CREST - "All-Out Assault" (surprise early bosses, varied pressure)
   cannon_crest: [
+    // W1: Standard grassland intro
     [
       { type: "athlete", count: 8, interval: 620 },
       { type: "tiger_fan", count: 7, interval: 580, delay: 2600 },
       { type: "crossbowman", count: 5, interval: 720, delay: 2400 },
     ],
+    // W2: Immediate tank test - no easing in
     [
-      { type: "berserker", count: 6, interval: 620 },
-      { type: "frosh", count: 12, interval: 420, delay: 2400 },
-      { type: "cultist", count: 6, interval: 700, delay: 2200 },
+      { type: "zombie_brute", count: 2, interval: 1400 },
+      { type: "skeleton_knight", count: 4, interval: 900, delay: 2800 },
+      { type: "athlete", count: 10, interval: 440, delay: 2000 },
     ],
+    // W3: All-ranged barrage
     [
-      { type: "junior", count: 6, interval: 860 },
-      { type: "assassin", count: 7, interval: 560, delay: 2300 },
-      { type: "athlete", count: 12, interval: 400, delay: 2100 },
+      { type: "skeleton_archer", count: 6, interval: 600 },
+      { type: "bone_mage", count: 4, interval: 800, delay: 2400 },
+      { type: "crossbowman", count: 6, interval: 620, delay: 1800 },
+      { type: "mage", count: 5, interval: 700, delay: 1400 },
     ],
+    // W4: Surprise dean + speed flankers
     [
-      { type: "plaguebearer", count: 6, interval: 760 },
-      { type: "hexer", count: 7, interval: 640, delay: 2200 },
-      { type: "tiger_fan", count: 14, interval: 360, delay: 2000 },
+      { type: "dean", count: 1, interval: 3000 },
+      { type: "assassin", count: 8, interval: 480, delay: 2800 },
+      { type: "berserker", count: 7, interval: 540, delay: 2000 },
     ],
+    // W5: Dark knight column
     [
-      { type: "senior", count: 4, interval: 980 },
-      { type: "mage", count: 8, interval: 660, delay: 2100 },
-      { type: "berserker", count: 9, interval: 520, delay: 1900 },
+      { type: "dark_knight", count: 4, interval: 950 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2600 },
+      { type: "black_guard", count: 4, interval: 800, delay: 2000 },
+      { type: "tiger_fan", count: 14, interval: 360, delay: 1600 },
     ],
+    // W6: Wraith ambush - all-fast ghost wave
     [
-      { type: "gradstudent", count: 3, interval: 1500 },
-      { type: "assassin", count: 9, interval: 520, delay: 2100 },
-      { type: "crossbowman", count: 9, interval: 620, delay: 1900 },
+      { type: "wraith", count: 8, interval: 450 },
+      { type: "hellhound", count: 10, interval: 380, delay: 1600 },
+      { type: "revenant", count: 6, interval: 520, delay: 1200 },
     ],
+    // W7: Lich + necromancer caster tower
     [
-      { type: "professor", count: 3, interval: 1650 },
-      { type: "shadow_knight", count: 6, interval: 780, delay: 2000 },
-      { type: "athlete", count: 18, interval: 320, delay: 1800 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "dark_priest", count: 3, interval: 950, delay: 2600 },
+      { type: "skeleton_footman", count: 16, interval: 320, delay: 2000 },
+      { type: "athlete", count: 14, interval: 380, delay: 1400 },
     ],
+    // W8: Double death knight push
     [
-      { type: "dean", count: 2, interval: 2300 },
-      { type: "golem", count: 2, interval: 2500, delay: 1900 },
-      { type: "tiger_fan", count: 18, interval: 300, delay: 1700 },
-      { type: "assassin", count: 10, interval: 480, delay: 1600 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 2800 },
+      { type: "dark_knight", count: 5, interval: 780, delay: 2000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 1400 },
     ],
+    // W9: Boss rush - multiple heavies simultaneous
     [
-      { type: "trustee", count: 2, interval: 2500 },
-      { type: "juggernaut", count: 1, interval: 3000, delay: 1900 },
-      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
-      { type: "frosh", count: 24, interval: 260, delay: 1600 },
+      { type: "doom_herald", count: 1, interval: 3000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 800 },
+      { type: "zombie_brute", count: 4, interval: 1000, delay: 2400 },
+      { type: "bone_mage", count: 6, interval: 600, delay: 1600 },
     ],
+    // W10: Overwhelming swarm + elites
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "dean", count: 2, interval: 2100, delay: 1700 },
-      { type: "golem", count: 2, interval: 2400, delay: 1600 },
-      { type: "athlete", count: 24, interval: 250, delay: 1500 },
-      { type: "berserker", count: 12, interval: 460, delay: 1450 },
+      { type: "death_knight", count: 3, interval: 1800 },
+      { type: "fallen_paladin", count: 5, interval: 800, delay: 1600 },
+      { type: "skeleton_footman", count: 20, interval: 260, delay: 2000 },
+      { type: "tiger_fan", count: 20, interval: 280, delay: 1200 },
+    ],
+    // W11: Everything undead
+    [
+      { type: "skeleton_king", count: 2, interval: 2400 },
+      { type: "lich", count: 2, interval: 2000, delay: 1200 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 1000 },
+      { type: "dark_knight", count: 6, interval: 700, delay: 1800 },
+      { type: "hellhound", count: 12, interval: 340, delay: 1200 },
+    ],
+    // W12: TITAN FINALE
+    [
+      { type: "titan_of_nassau", count: 1, interval: 3500 },
+      { type: "abomination", count: 1, interval: 3200, delay: 4000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 2000 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1800 },
+      { type: "athlete", count: 24, interval: 240, delay: 1400 },
     ],
   ],
 
+  // TRIAD KEEP - "Necromantic Ritual" (caster-heavy, undead summoning theme)
   triad_keep: [
+    // W1: Swamp scouts
     [
       { type: "bog_creature", count: 9, interval: 640 },
       { type: "thornwalker", count: 6, interval: 700, delay: 2600 },
       { type: "cultist", count: 5, interval: 760, delay: 2400 },
     ],
+    // W2: Troll tanks + plague cloud
     [
-      { type: "swamp_troll", count: 6, interval: 920 },
-      { type: "bog_creature", count: 12, interval: 430, delay: 2400 },
-      { type: "hexer", count: 6, interval: 700, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 850 },
+      { type: "plaguebearer", count: 5, interval: 780, delay: 2400 },
+      { type: "bog_creature", count: 12, interval: 430, delay: 2000 },
     ],
+    // W3: First dark casters appear
     [
-      { type: "plaguebearer", count: 6, interval: 800 },
-      { type: "thornwalker", count: 8, interval: 660, delay: 2300 },
-      { type: "assassin", count: 6, interval: 560, delay: 2100 },
+      { type: "dark_priest", count: 3, interval: 1000 },
+      { type: "bone_mage", count: 3, interval: 950, delay: 2600 },
+      { type: "zombie_spitter", count: 4, interval: 750, delay: 2000 },
+      { type: "thornwalker", count: 8, interval: 600, delay: 1600 },
     ],
+    // W4: Ghost raid - ethereal enemies only
     [
-      { type: "junior", count: 7, interval: 860 },
-      { type: "mage", count: 7, interval: 700, delay: 2200 },
-      { type: "bog_creature", count: 16, interval: 360, delay: 2000 },
+      { type: "wraith", count: 6, interval: 520 },
+      { type: "specter", count: 6, interval: 550, delay: 1800 },
+      { type: "banshee", count: 5, interval: 600, delay: 1400 },
+      { type: "will_o_wisp", count: 12, interval: 380, delay: 1200 },
     ],
+    // W5: Lich arrives with skeleton army
     [
-      { type: "shadow_knight", count: 5, interval: 900 },
-      { type: "swamp_troll", count: 7, interval: 820, delay: 2100 },
-      { type: "plaguebearer", count: 7, interval: 700, delay: 1900 },
+      { type: "lich", count: 1, interval: 2600 },
+      { type: "skeleton_knight", count: 5, interval: 800, delay: 2800 },
+      { type: "skeleton_footman", count: 14, interval: 340, delay: 2000 },
+      { type: "skeleton_archer", count: 5, interval: 650, delay: 1600 },
     ],
+    // W6: Zombie flood - pure numbers test
     [
-      { type: "gradstudent", count: 3, interval: 1500 },
-      { type: "thornwalker", count: 10, interval: 600, delay: 2100 },
-      { type: "assassin", count: 8, interval: 500, delay: 1900 },
+      { type: "zombie_brute", count: 3, interval: 1200 },
+      { type: "zombie_shambler", count: 22, interval: 250, delay: 2400 },
+      { type: "ghoul", count: 8, interval: 480, delay: 1600 },
     ],
+    // W7: Death knight + air support
     [
-      { type: "professor", count: 3, interval: 1650 },
-      { type: "necromancer", count: 5, interval: 980, delay: 1900 },
-      { type: "bog_creature", count: 18, interval: 320, delay: 1800 },
+      { type: "death_knight", count: 1, interval: 3000 },
+      { type: "wyvern", count: 6, interval: 800, delay: 2600 },
+      { type: "harpy", count: 7, interval: 550, delay: 1800 },
+      { type: "dark_knight", count: 4, interval: 900, delay: 1400 },
     ],
+    // W8: Necromancer ritual - caster onslaught
     [
-      { type: "dean", count: 2, interval: 2300 },
-      { type: "golem", count: 2, interval: 2500, delay: 1800 },
-      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
-      { type: "thornwalker", count: 12, interval: 480, delay: 1600 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "dark_priest", count: 4, interval: 850, delay: 2400 },
+      { type: "bone_mage", count: 6, interval: 600, delay: 1800 },
+      { type: "wraith", count: 8, interval: 460, delay: 1400 },
     ],
+    // W9: Skeleton king + dark knight escort
     [
-      { type: "trustee", count: 2, interval: 2500 },
-      { type: "juggernaut", count: 1, interval: 3000, delay: 1800 },
-      { type: "swamp_troll", count: 10, interval: 700, delay: 1700 },
-      { type: "plaguebearer", count: 10, interval: 560, delay: 1600 },
+      { type: "skeleton_king", count: 2, interval: 2600 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 2400 },
+      { type: "black_guard", count: 5, interval: 720, delay: 1800 },
+      { type: "bog_creature", count: 16, interval: 320, delay: 1200 },
     ],
+    // W10: Abomination + doom herald pair
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "dean", count: 2, interval: 2100, delay: 1700 },
-      { type: "golem", count: 2, interval: 2400, delay: 1600 },
-      { type: "bog_creature", count: 26, interval: 250, delay: 1500 },
-      { type: "shadow_knight", count: 9, interval: 680, delay: 1450 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 1000 },
+      { type: "hellhound", count: 10, interval: 380, delay: 2800 },
+      { type: "revenant", count: 8, interval: 480, delay: 1600 },
+    ],
+    // W11: Undead council - all boss casters
+    [
+      { type: "lich", count: 3, interval: 1800 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 1400 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1200 },
+      { type: "bone_mage", count: 6, interval: 580, delay: 1800 },
+      { type: "thornwalker", count: 16, interval: 340, delay: 1000 },
+    ],
+    // W12: LEVIATHAN FINALE
+    [
+      { type: "swamp_leviathan", count: 1, interval: 3500 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 4000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2000 },
+      { type: "dark_priest", count: 4, interval: 800, delay: 2400 },
+      { type: "zombie_shambler", count: 24, interval: 240, delay: 1400 },
     ],
   ],
 
+  // FRONTIER OUTPOST - "Blizzard Rush" (speed-focused, wraiths + hellhounds)
   frontier_outpost: [
+    // W1: Blizzard scouts
     [
       { type: "snow_goblin", count: 10, interval: 600 },
       { type: "frostling", count: 8, interval: 580, delay: 2600 },
       { type: "ice_witch", count: 5, interval: 760, delay: 2400 },
     ],
+    // W2: Speed rush - everything fast
     [
-      { type: "yeti", count: 6, interval: 900 },
-      { type: "snow_goblin", count: 14, interval: 400, delay: 2400 },
-      { type: "crossbowman", count: 6, interval: 700, delay: 2200 },
+      { type: "assassin", count: 7, interval: 500 },
+      { type: "frostling", count: 12, interval: 380, delay: 2000 },
+      { type: "hellhound", count: 6, interval: 450, delay: 1600 },
     ],
+    // W3: Yeti fortress + ice witch artillery
     [
-      { type: "ice_witch", count: 7, interval: 700 },
-      { type: "frostling", count: 12, interval: 400, delay: 2300 },
-      { type: "assassin", count: 7, interval: 540, delay: 2100 },
+      { type: "yeti", count: 7, interval: 780 },
+      { type: "ice_witch", count: 6, interval: 650, delay: 2600 },
+      { type: "skeleton_archer", count: 5, interval: 650, delay: 2000 },
     ],
+    // W4: Wraith swarm - ethereal blitz
     [
-      { type: "swamp_troll", count: 7, interval: 820 },
-      { type: "snow_goblin", count: 18, interval: 340, delay: 2200 },
-      { type: "plaguebearer", count: 7, interval: 680, delay: 2000 },
+      { type: "wraith", count: 10, interval: 400 },
+      { type: "specter", count: 6, interval: 520, delay: 1600 },
+      { type: "snow_goblin", count: 16, interval: 320, delay: 1200 },
     ],
+    // W5: Dark knight frozen march
     [
-      { type: "shadow_knight", count: 5, interval: 900 },
-      { type: "yeti", count: 8, interval: 760, delay: 2100 },
-      { type: "ice_witch", count: 8, interval: 620, delay: 1900 },
+      { type: "dark_knight", count: 4, interval: 950 },
+      { type: "skeleton_knight", count: 5, interval: 800, delay: 2400 },
+      { type: "black_guard", count: 4, interval: 800, delay: 1800 },
+      { type: "frostling", count: 12, interval: 380, delay: 1400 },
     ],
+    // W6: All flying blizzard
     [
-      { type: "gradstudent", count: 3, interval: 1500 },
-      { type: "frostling", count: 16, interval: 320, delay: 2100 },
-      { type: "assassin", count: 9, interval: 500, delay: 1900 },
+      { type: "wyvern", count: 6, interval: 850 },
+      { type: "harpy", count: 8, interval: 500, delay: 2000 },
+      { type: "banshee", count: 7, interval: 560, delay: 1500 },
     ],
+    // W7: Death knight + hellhound pack
     [
-      { type: "professor", count: 3, interval: 1600 },
-      { type: "necromancer", count: 5, interval: 980, delay: 1900 },
-      { type: "snow_goblin", count: 20, interval: 300, delay: 1800 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "hellhound", count: 14, interval: 320, delay: 2600 },
+      { type: "revenant", count: 6, interval: 520, delay: 1800 },
+      { type: "wraith", count: 6, interval: 480, delay: 1200 },
     ],
+    // W8: Lich frost ritual
     [
-      { type: "dean", count: 2, interval: 2300 },
-      { type: "golem", count: 2, interval: 2500, delay: 1800 },
-      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
-      { type: "yeti", count: 11, interval: 680, delay: 1600 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "bone_mage", count: 5, interval: 680, delay: 2400 },
+      { type: "yeti", count: 8, interval: 680, delay: 1800 },
+      { type: "ice_witch", count: 6, interval: 620, delay: 1200 },
     ],
+    // W9: Solo mega-tank challenge
     [
-      { type: "trustee", count: 2, interval: 2500 },
-      { type: "juggernaut", count: 1, interval: 3000, delay: 1800 },
-      { type: "ice_witch", count: 11, interval: 560, delay: 1700 },
-      { type: "frostling", count: 20, interval: 280, delay: 1600 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "zombie_brute", count: 4, interval: 1000, delay: 3000 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 2000 },
     ],
+    // W10: Speed massacre - fastest wave
     [
-      { type: "trustee", count: 3, interval: 2200 },
-      { type: "dean", count: 2, interval: 2100, delay: 1700 },
-      { type: "golem", count: 2, interval: 2400, delay: 1600 },
-      { type: "snow_goblin", count: 28, interval: 240, delay: 1500 },
-      { type: "shadow_knight", count: 10, interval: 660, delay: 1450 },
+      { type: "hellhound", count: 16, interval: 300 },
+      { type: "wraith", count: 10, interval: 380, delay: 1200 },
+      { type: "assassin", count: 8, interval: 440, delay: 1000 },
+      { type: "frostling", count: 16, interval: 300, delay: 800 },
+    ],
+    // W11: Dark convergence
+    [
+      { type: "doom_herald", count: 2, interval: 2400 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1400 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 1200 },
+      { type: "dark_knight", count: 6, interval: 700, delay: 1800 },
+      { type: "snow_goblin", count: 18, interval: 280, delay: 1000 },
+    ],
+    // W12: COLOSSUS FINALE
+    [
+      { type: "frost_colossus", count: 1, interval: 3500 },
+      { type: "abomination", count: 1, interval: 3200, delay: 4000 },
+      { type: "doom_herald", count: 1, interval: 3000, delay: 2000 },
+      { type: "hellhound", count: 14, interval: 320, delay: 2400 },
+      { type: "frostling", count: 20, interval: 260, delay: 1400 },
     ],
   ],
+
+  // SUN OBELISK - "Pyramid Siege" (siege theme, catapults + golems + brutes)
   sun_obelisk: [
+    // W1: Desert scouts
     [
       { type: "nomad", count: 9, interval: 640 },
       { type: "scarab", count: 8, interval: 560, delay: 2600 },
       { type: "scorpion", count: 6, interval: 660, delay: 2400 },
     ],
+    // W2: Catapult siege - ranged from the start
     [
-      { type: "archer", count: 6, interval: 680 },
-      { type: "nomad", count: 10, interval: 480, delay: 2300 },
-      { type: "crossbowman", count: 5, interval: 700, delay: 2100 },
-      { type: "scarab", count: 8, interval: 520, delay: 2000 },
+      { type: "catapult", count: 3, interval: 1200 },
+      { type: "archer", count: 6, interval: 600, delay: 2800 },
+      { type: "nomad", count: 10, interval: 420, delay: 2000 },
     ],
+    // W3: Sandworm ambush
     [
-      { type: "sandworm", count: 4, interval: 960 },
-      { type: "scorpion", count: 10, interval: 460, delay: 2100 },
-      { type: "hexer", count: 5, interval: 720, delay: 1900 },
-      { type: "harpy", count: 4, interval: 700, delay: 1800 },
+      { type: "sandworm", count: 6, interval: 850 },
+      { type: "scorpion", count: 8, interval: 600, delay: 2400 },
+      { type: "scarab", count: 12, interval: 380, delay: 1800 },
     ],
+    // W4: Skeleton siege engineers
     [
-      { type: "mage", count: 5, interval: 740 },
-      { type: "assassin", count: 6, interval: 600, delay: 2000 },
-      { type: "nomad", count: 12, interval: 420, delay: 1800 },
-      { type: "wyvern", count: 4, interval: 900, delay: 1700 },
+      { type: "skeleton_knight", count: 5, interval: 850 },
+      { type: "bone_mage", count: 4, interval: 800, delay: 2600 },
+      { type: "skeleton_footman", count: 12, interval: 380, delay: 2000 },
+      { type: "skeleton_archer", count: 5, interval: 650, delay: 1600 },
     ],
+    // W5: All-air ambush
     [
-      { type: "plaguebearer", count: 5, interval: 760 },
-      { type: "shadow_knight", count: 5, interval: 940, delay: 2000 },
-      { type: "sandworm", count: 5, interval: 880, delay: 1800 },
-      { type: "scarab", count: 14, interval: 380, delay: 1700 },
+      { type: "wyvern", count: 6, interval: 800 },
+      { type: "harpy", count: 7, interval: 550, delay: 2000 },
+      { type: "banshee", count: 5, interval: 620, delay: 1600 },
     ],
+    // W6: Zombie brute battering ram
     [
-      { type: "gradstudent", count: 3, interval: 1400 },
-      { type: "professor", count: 2, interval: 1800, delay: 2000 },
-      { type: "scorpion", count: 14, interval: 380, delay: 1700 },
-      { type: "banshee", count: 5, interval: 600, delay: 1600 },
+      { type: "zombie_brute", count: 5, interval: 1000 },
+      { type: "dark_knight", count: 4, interval: 950, delay: 2800 },
+      { type: "fallen_paladin", count: 3, interval: 1100, delay: 2000 },
+      { type: "nomad", count: 14, interval: 360, delay: 1400 },
     ],
+    // W7: Lich artillery + meat shield
     [
-      { type: "dean", count: 1, interval: 2800 },
-      { type: "necromancer", count: 5, interval: 980, delay: 1800 },
-      { type: "nomad", count: 16, interval: 340, delay: 1600 },
-      { type: "harpy", count: 6, interval: 580, delay: 1500 },
+      { type: "lich", count: 2, interval: 2200 },
+      { type: "catapult", count: 3, interval: 1200, delay: 2600 },
+      { type: "black_guard", count: 5, interval: 720, delay: 2000 },
+      { type: "scarab", count: 16, interval: 320, delay: 1400 },
     ],
+    // W8: Death knight vanguard
     [
-      { type: "dragon", count: 1, interval: 2600 },
-      { type: "shadow_knight", count: 6, interval: 760, delay: 1700 },
-      { type: "sandworm", count: 6, interval: 840, delay: 1600 },
-      { type: "assassin", count: 8, interval: 480, delay: 1500 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 2800 },
+      { type: "dark_knight", count: 5, interval: 780, delay: 2000 },
+      { type: "sandworm", count: 6, interval: 800, delay: 1400 },
     ],
+    // W9: Doom herald + golem test
     [
-      { type: "trustee", count: 1, interval: 3000 },
-      { type: "dean", count: 1, interval: 2500, delay: 1700 },
-      { type: "professor", count: 3, interval: 1400, delay: 1600 },
-      { type: "scarab", count: 18, interval: 320, delay: 1500 },
-      { type: "wyvern", count: 6, interval: 780, delay: 1500 },
+      { type: "doom_herald", count: 1, interval: 3200 },
+      { type: "golem", count: 1, interval: 2800, delay: 1200 },
+      { type: "zombie_brute", count: 4, interval: 1000, delay: 2600 },
+      { type: "scorpion", count: 16, interval: 340, delay: 1600 },
     ],
+    // W10: Dark caster barrage
     [
-      { type: "golem", count: 1, interval: 2800 },
-      { type: "trustee", count: 2, interval: 2300, delay: 1700 },
-      { type: "dragon", count: 2, interval: 2100, delay: 1600 },
-      { type: "scorpion", count: 20, interval: 300, delay: 1500 },
-      { type: "nomad", count: 18, interval: 320, delay: 1500 },
+      { type: "lich", count: 2, interval: 2000 },
+      { type: "dark_priest", count: 4, interval: 800, delay: 2200 },
+      { type: "bone_mage", count: 6, interval: 580, delay: 1600 },
+      { type: "wraith", count: 8, interval: 460, delay: 1200 },
+      { type: "nomad", count: 16, interval: 320, delay: 1000 },
+    ],
+    // W11: Abomination siege
+    [
+      { type: "abomination", count: 2, interval: 2800 },
+      { type: "death_knight", count: 3, interval: 1800, delay: 1600 },
+      { type: "fallen_paladin", count: 5, interval: 800, delay: 2000 },
+      { type: "hellhound", count: 10, interval: 380, delay: 1400 },
+    ],
+    // W12: SPHINX FINALE
+    [
+      { type: "sphinx_guardian", count: 1, interval: 3500 },
+      { type: "doom_herald", count: 2, interval: 2400, delay: 4000 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 2000 },
+      { type: "dark_knight", count: 6, interval: 700, delay: 2000 },
+      { type: "scarab", count: 24, interval: 220, delay: 1400 },
     ],
   ],
+
+  // INFERNAL GATE - "Apocalypse" (hardest challenge, overlapping bosses)
   infernal_gate: [
+    // W1: Volcanic vanguard
     [
       { type: "fire_imp", count: 10, interval: 540 },
       { type: "magma_spawn", count: 8, interval: 600, delay: 2500 },
       { type: "ember_guard", count: 5, interval: 840, delay: 2300 },
     ],
+    // W2: Dark knight ambush - skips the normal warmup
     [
-      { type: "infernal", count: 5, interval: 760 },
-      { type: "fire_imp", count: 12, interval: 400, delay: 2200 },
-      { type: "warlock", count: 5, interval: 740, delay: 2000 },
-      { type: "harpy", count: 5, interval: 620, delay: 1900 },
+      { type: "dark_knight", count: 3, interval: 1000 },
+      { type: "skeleton_knight", count: 4, interval: 900, delay: 2600 },
+      { type: "fire_imp", count: 12, interval: 400, delay: 2000 },
+      { type: "hellhound", count: 6, interval: 450, delay: 1600 },
     ],
+    // W3: Caster devastation early
     [
-      { type: "wyvern", count: 5, interval: 880 },
-      { type: "magma_spawn", count: 10, interval: 440, delay: 2100 },
-      { type: "shadow_knight", count: 5, interval: 920, delay: 1900 },
-      { type: "banshee", count: 5, interval: 660, delay: 1800 },
+      { type: "lich", count: 1, interval: 2600 },
+      { type: "bone_mage", count: 4, interval: 800, delay: 2600 },
+      { type: "dark_priest", count: 3, interval: 950, delay: 2000 },
+      { type: "magma_spawn", count: 10, interval: 440, delay: 1600 },
     ],
+    // W4: All-speed panic wave
     [
-      { type: "assassin", count: 7, interval: 540 },
-      { type: "ember_guard", count: 7, interval: 660, delay: 2000 },
-      { type: "infernal", count: 6, interval: 700, delay: 1800 },
-      { type: "plaguebearer", count: 5, interval: 720, delay: 1700 },
+      { type: "hellhound", count: 12, interval: 340 },
+      { type: "wraith", count: 8, interval: 420, delay: 1400 },
+      { type: "revenant", count: 6, interval: 500, delay: 1200 },
+      { type: "assassin", count: 8, interval: 460, delay: 1000 },
     ],
+    // W5: Death knight early - first boss at wave 5
     [
-      { type: "necromancer", count: 5, interval: 1020 },
-      { type: "dragon", count: 1, interval: 2600, delay: 2000 },
-      { type: "fire_imp", count: 16, interval: 340, delay: 1700 },
-      { type: "wyvern", count: 6, interval: 760, delay: 1600 },
+      { type: "death_knight", count: 2, interval: 2400 },
+      { type: "fallen_paladin", count: 4, interval: 900, delay: 2600 },
+      { type: "black_guard", count: 5, interval: 720, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 620, delay: 1400 },
     ],
+    // W6: Air supremacy - flying nightmare
     [
-      { type: "gradstudent", count: 4, interval: 1250 },
-      { type: "professor", count: 3, interval: 1550, delay: 2000 },
-      { type: "magma_spawn", count: 14, interval: 360, delay: 1700 },
-      { type: "shadow_knight", count: 6, interval: 800, delay: 1600 },
+      { type: "wyvern", count: 7, interval: 780 },
+      { type: "harpy", count: 8, interval: 500, delay: 1800 },
+      { type: "banshee", count: 7, interval: 560, delay: 1400 },
+      { type: "dragon", count: 1, interval: 2800, delay: 3000 },
     ],
+    // W7: Skeleton king's court
     [
-      { type: "dean", count: 2, interval: 2200 },
-      { type: "catapult", count: 4, interval: 1100, delay: 1800 },
-      { type: "ember_guard", count: 8, interval: 620, delay: 1600 },
-      { type: "infernal", count: 7, interval: 640, delay: 1500 },
+      { type: "skeleton_king", count: 2, interval: 2600 },
+      { type: "lich", count: 2, interval: 2200, delay: 2000 },
+      { type: "skeleton_knight", count: 6, interval: 700, delay: 2400 },
+      { type: "skeleton_footman", count: 16, interval: 300, delay: 1600 },
     ],
+    // W8: Abomination vanguard + zombie flood
     [
-      { type: "trustee", count: 1, interval: 3000 },
-      { type: "dean", count: 2, interval: 2100, delay: 1800 },
-      { type: "dragon", count: 2, interval: 2100, delay: 1600 },
-      { type: "fire_imp", count: 20, interval: 280, delay: 1500 },
-      { type: "assassin", count: 8, interval: 520, delay: 1500 },
+      { type: "abomination", count: 1, interval: 3200 },
+      { type: "zombie_brute", count: 5, interval: 1000, delay: 2800 },
+      { type: "zombie_shambler", count: 18, interval: 280, delay: 2000 },
+      { type: "fire_imp", count: 16, interval: 300, delay: 1400 },
     ],
+    // W9: Triple boss simultaneous spawn
     [
-      { type: "golem", count: 1, interval: 2800 },
-      { type: "juggernaut", count: 1, interval: 2900, delay: 1800 },
-      { type: "necromancer", count: 6, interval: 880, delay: 1600 },
-      { type: "magma_spawn", count: 16, interval: 320, delay: 1500 },
+      { type: "doom_herald", count: 1, interval: 3000 },
+      { type: "skeleton_king", count: 1, interval: 3000, delay: 500 },
+      { type: "abomination", count: 1, interval: 3200, delay: 500 },
+      { type: "dark_knight", count: 6, interval: 700, delay: 3000 },
+      { type: "hellhound", count: 12, interval: 360, delay: 1800 },
     ],
+    // W10: Everything dark fantasy at once
     [
-      { type: "trustee", count: 2, interval: 2300 },
-      { type: "golem", count: 2, interval: 2500, delay: 1700 },
-      { type: "dragon", count: 3, interval: 1900, delay: 1600 },
-      { type: "ember_guard", count: 12, interval: 540, delay: 1500 },
-      { type: "fire_imp", count: 24, interval: 240, delay: 1500 },
+      { type: "death_knight", count: 4, interval: 1600 },
+      { type: "lich", count: 3, interval: 1800, delay: 1200 },
+      { type: "fallen_paladin", count: 6, interval: 740, delay: 1600 },
+      { type: "bone_mage", count: 6, interval: 580, delay: 1400 },
+      { type: "magma_spawn", count: 18, interval: 300, delay: 1000 },
+    ],
+    // W11: Penultimate - doom heralds + abominations
+    [
+      { type: "doom_herald", count: 3, interval: 2200 },
+      { type: "abomination", count: 2, interval: 2600, delay: 1200 },
+      { type: "skeleton_king", count: 2, interval: 2400, delay: 1000 },
+      { type: "revenant", count: 10, interval: 420, delay: 2000 },
+      { type: "ember_guard", count: 10, interval: 520, delay: 1200 },
+    ],
+    // W12: WYRM APOCALYPSE - everything burns
+    [
+      { type: "inferno_wyrm", count: 1, interval: 3500 },
+      { type: "doom_herald", count: 2, interval: 2400, delay: 4000 },
+      { type: "abomination", count: 1, interval: 3200, delay: 2000 },
+      { type: "death_knight", count: 4, interval: 1600, delay: 1800 },
+      { type: "dark_knight", count: 8, interval: 600, delay: 1400 },
+      { type: "fire_imp", count: 26, interval: 220, delay: 1200 },
     ],
   ],
   // =====================

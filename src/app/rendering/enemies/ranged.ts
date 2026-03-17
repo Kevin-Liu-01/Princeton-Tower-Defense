@@ -1,3 +1,4 @@
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawRadialAura,
@@ -50,7 +51,7 @@ export function drawArcherEnemy(
   poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.55, size * 0.16, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.48, size * 0.55, size * 0.55 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Rippling soul rings on ground
@@ -61,7 +62,7 @@ export function drawArcherEnemy(
     ctx.strokeStyle = `rgba(52, 211, 153, ${ringAlpha})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.48, ringSize, ringSize * 0.28, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.48, ringSize, ringSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -604,7 +605,7 @@ export function drawMageEnemy(
   // Arcane circle on the ground (spins faster as charge builds)
   ctx.save();
   ctx.translate(x, y + size * 0.48);
-  ctx.scale(1, 0.35);
+  ctx.scale(1, ISO_Y_RATIO);
   ctx.rotate(time * (0.5 + chargeLevel * 1.5) + (isAttacking ? time * 2 : 0));
   const circleRadius =
     size * (0.45 + chargeLevel * 0.12 + (isAttacking ? attackIntensity * 0.2 : 0));
@@ -1207,7 +1208,7 @@ export function drawCatapultEnemy(
   fireGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = fireGrad;
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.3, size * 0.7, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.3, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Hellfire ripple rings
@@ -1218,7 +1219,7 @@ export function drawCatapultEnemy(
     ctx.strokeStyle = `rgba(220, 38, 38, ${ringAlpha})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.48, ringSize, ringSize * 0.25, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.48, ringSize, ringSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -1683,7 +1684,7 @@ export function drawWarlockEnemy(
       x,
       y + size * 0.45,
       ringSize,
-      ringSize * 0.25,
+      ringSize * ISO_Y_RATIO,
       0,
       0,
       Math.PI * 2,
@@ -1707,7 +1708,7 @@ export function drawWarlockEnemy(
   voidGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = voidGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Captured soul wisps orbiting (faster as charge builds)
@@ -2107,7 +2108,7 @@ export function drawCrossbowmanEnemy(
   curseAura.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = curseAura;
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.1, size * 0.65, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.1, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Curse rune circles orbiting (speed up as charge builds)
@@ -2164,7 +2165,7 @@ export function drawCrossbowmanEnemy(
   poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.45, size * 0.14, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.48, size * 0.45, size * 0.45 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // === ANIMATED LEGS (marching stride) ===
@@ -2652,7 +2653,7 @@ export function drawHexerEnemy(
   poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.5, size * 0.55, size * 0.55 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Rippling curse rings on ground
@@ -2663,7 +2664,7 @@ export function drawHexerEnemy(
     ctx.strokeStyle = `rgba(190, 24, 93, ${ringAlpha})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.5, ringSize, ringSize * 0.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.5, ringSize, ringSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 

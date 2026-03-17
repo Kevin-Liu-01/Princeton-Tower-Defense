@@ -1,4 +1,5 @@
 import { setShadowBlur, clearShadow } from "../performance";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
   drawFaceCircle,
 } from "./helpers";
@@ -50,6 +51,7 @@ export function drawMascotEnemy(
 
   // Lightning bolts in aura
   if (lightningFlash > 0.5) {
+    setShadowBlur(ctx, 8 * zoom, "#67e8f9");
     ctx.strokeStyle = `rgba(103, 232, 249, ${lightningFlash})`;
     ctx.lineWidth = 2 * zoom;
     for (let bolt = 0; bolt < 3; bolt++) {
@@ -65,6 +67,7 @@ export function drawMascotEnemy(
       }
       ctx.stroke();
     }
+    clearShadow(ctx);
   }
 
   // Blazing chaos aura - more intense
@@ -75,7 +78,7 @@ export function drawMascotEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Spectral fire particles (optimized - no shadowBlur in loop)
@@ -553,19 +556,6 @@ export function drawDefaultEnemy(
   }
   ctx.globalAlpha = 1;
 
-  // Shadow pool beneath
-  const poolGrad = ctx.createRadialGradient(
-    x, y + size * 0.45, size * 0.05,
-    x, y + size * 0.45, size * 0.5,
-  );
-  poolGrad.addColorStop(0, `rgba(30, 27, 75, ${voidPulse * 0.4})`);
-  poolGrad.addColorStop(0.6, `rgba(55, 48, 163, ${voidPulse * 0.15})`);
-  poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = poolGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Dark void aura - layered
   for (let layer = 2; layer >= 0; layer--) {
     const layerSize = size * (0.7 + layer * 0.15);
@@ -829,17 +819,18 @@ export function drawDefaultEnemy(
   );
   ctx.fill();
   // Inner eye glow
+  setShadowBlur(ctx, 6 * zoom, "#6366f1");
   ctx.fillStyle = `rgba(99, 102, 241, ${eyeFlicker})`;
   ctx.beginPath();
   ctx.arc(x - size * 0.06, y - size * 0.42 + bob, size * 0.022, 0, Math.PI * 2);
   ctx.arc(x + size * 0.06, y - size * 0.42 + bob, size * 0.022, 0, Math.PI * 2);
   ctx.fill();
-  // Eye core bright point
   ctx.fillStyle = `rgba(199, 210, 254, ${eyeFlicker * 0.8})`;
   ctx.beginPath();
   ctx.arc(x - size * 0.06, y - size * 0.42 + bob, size * 0.008, 0, Math.PI * 2);
   ctx.arc(x + size * 0.06, y - size * 0.42 + bob, size * 0.008, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
 
   // Spectral mouth - thin ethereal line
   ctx.strokeStyle = `rgba(67, 56, 202, ${0.5 + Math.sin(time * 6) * 0.2})`;
@@ -1080,7 +1071,7 @@ export function drawTrusteeEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.95, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.95, size * 0.95 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Orbiting treasure - elaborate display of wealth with magical auras
@@ -1709,6 +1700,18 @@ export function drawTrusteeEnemy(
   ctx.stroke();
   clearShadow(ctx);
   ctx.restore();
+
+  // Budget Cuts / Fiery Decree aura (abilities: tower_weaken + burn)
+  for (let flame = 0; flame < 3; flame++) {
+    const flamePhase = (time * 1.5 + flame * 0.5) % 1.2;
+    const flameX = x + Math.sin(time * 2 + flame * 2.1) * size * 0.15;
+    const flameY = y + size * 0.4 - flamePhase * size * 0.25;
+    const flameAlpha = (1 - flamePhase / 1.2) * 0.25;
+    ctx.fillStyle = `rgba(234, 179, 8, ${flameAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(flameX, flameY, size * 0.02, size * 0.035, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Golden glow rings around head
   drawPulsingGlowRings(ctx, x, y - size * 0.5 + float, size * 0.3, time, zoom, {

@@ -523,6 +523,108 @@ export function drawIsometricPyramid(
   ctx.fill();
 }
 
+/**
+ * Draws a proper isometric 4-faced crystal spire.
+ * The base is an isometric diamond using ISO_COS / ISO_SIN,
+ * tapering to a single point at the top.
+ *
+ * @param x        Screen-space center X of the base diamond
+ * @param y        Screen-space center Y of the base diamond
+ * @param baseSize Half-diagonal of the diamond base (world units, pre-scaled)
+ * @param height   Crystal height from base center to tip (pre-scaled)
+ * @param light    Brightest face color  (front-left, catches light)
+ * @param mid      Medium face color     (front-right)
+ * @param dark     Darkest face color    (back faces)
+ * @param tilt     Optional rotation in radians to lean the crystal
+ */
+export function drawIsometricCrystalSpire(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  baseSize: number,
+  height: number,
+  light: string,
+  mid: string,
+  dark: string,
+  tilt: number = 0,
+): void {
+  const iW = baseSize * ISO_COS;
+  const iD = baseSize * ISO_SIN;
+
+  ctx.save();
+  if (tilt !== 0) {
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    ctx.translate(-x, -y);
+  }
+
+  const bk = y - iD;
+  const fr = y + iD;
+  const lx = x - iW;
+  const rx = x + iW;
+  const ty = y - height;
+
+  // Back-left face
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(x, bk);
+  ctx.lineTo(lx, y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Back-right face
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(rx, y);
+  ctx.lineTo(x, bk);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front-left face (brightest)
+  const flGrad = ctx.createLinearGradient(lx, y, x, ty);
+  flGrad.addColorStop(0, mid);
+  flGrad.addColorStop(0.55, light);
+  flGrad.addColorStop(1, light);
+  ctx.fillStyle = flGrad;
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(lx, y);
+  ctx.lineTo(x, fr);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front-right face
+  const frGrad = ctx.createLinearGradient(rx, y, x, ty);
+  frGrad.addColorStop(0, dark);
+  frGrad.addColorStop(0.45, mid);
+  frGrad.addColorStop(1, light);
+  ctx.fillStyle = frGrad;
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(x, fr);
+  ctx.lineTo(rx, y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front ridge highlight
+  ctx.strokeStyle = "rgba(255,255,255,0.45)";
+  ctx.lineWidth = Math.max(0.5, baseSize * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(x, fr);
+  ctx.stroke();
+
+  // Left ridge highlight
+  ctx.strokeStyle = "rgba(255,255,255,0.22)";
+  ctx.beginPath();
+  ctx.moveTo(x, ty);
+  ctx.lineTo(lx, y);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 export function drawGear(
   ctx: CanvasRenderingContext2D,
   x: number,

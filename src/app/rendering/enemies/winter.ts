@@ -1,5 +1,6 @@
 // Winter region enemy sprites
 
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawAnimatedArm, drawAnimatedLegs, drawFrostCrystals, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
 
@@ -41,7 +42,7 @@ export function drawSnowGoblinEnemy(
   frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
   ctx.fillStyle = frostGrad;
   ctx.beginPath();
-  ctx.arc(x, y - hop, size * 0.7, 0, Math.PI * 2);
+  ctx.ellipse(x, y - hop, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
 
@@ -52,7 +53,7 @@ export function drawSnowGoblinEnemy(
     x - size * 0.15,
     y + size * 0.35,
     size * 0.08,
-    size * 0.04,
+    size * 0.08 * ISO_Y_RATIO,
     -0.2,
     0,
     Math.PI * 2,
@@ -61,7 +62,7 @@ export function drawSnowGoblinEnemy(
     x + size * 0.15,
     y + size * 0.33,
     size * 0.08,
-    size * 0.04,
+    size * 0.08 * ISO_Y_RATIO,
     0.2,
     0,
     Math.PI * 2,
@@ -76,10 +77,10 @@ export function drawSnowGoblinEnemy(
     ctx.strokeStyle = `rgba(147, 197, 253, ${ringAlpha})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.arc(x - size * 0.15, y + size * 0.35, ringRadius, 0, Math.PI * 2);
+    ctx.ellipse(x - size * 0.15, y + size * 0.35, ringRadius, ringRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(x + size * 0.15, y + size * 0.33, ringRadius, 0, Math.PI * 2);
+    ctx.ellipse(x + size * 0.15, y + size * 0.33, ringRadius, ringRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -526,22 +527,40 @@ export function drawSnowGoblinEnemy(
     shape: "shard",
   });
 
-  // Attack ice shards
+  // Attack ice shards with frost burst
   if (isAttacking) {
+    const burstIntensity = Math.sin(attackPhase * Math.PI);
+
+    // Frost burst flash from body
+    const burstGrad = ctx.createRadialGradient(
+      x, y - size * 0.3 - hop, 0,
+      x, y - size * 0.3 - hop, size * attackPhase * 0.5,
+    );
+    burstGrad.addColorStop(0, `rgba(200, 230, 255, ${burstIntensity * 0.4})`);
+    burstGrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+    ctx.fillStyle = burstGrad;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.3 - hop, size * attackPhase * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Radiating ice shard projectiles
     ctx.fillStyle = `rgba(147, 197, 253, ${attackPhase * 0.7})`;
-    for (let shard = 0; shard < 5; shard++) {
-      const shardAngle = -Math.PI * 0.5 + shard * 0.25 - 0.5;
+    setShadowBlur(ctx, 4 * zoom, "#93c5fd");
+    for (let shard = 0; shard < 8; shard++) {
+      const shardAngle = (shard / 8) * Math.PI * 2 + time * 2;
       const shardDist = attackPhase * size * 0.6;
       const shardX = x + Math.cos(shardAngle) * shardDist;
-      const shardY = y - size * 0.3 - hop + Math.sin(shardAngle) * shardDist;
+      const shardY = y - size * 0.3 - hop + Math.sin(shardAngle) * shardDist * 0.5;
+      const shardSize = size * 0.04 * (1 - attackPhase * 0.3);
       ctx.beginPath();
-      ctx.moveTo(shardX, shardY - size * 0.04);
-      ctx.lineTo(shardX + size * 0.02, shardY);
-      ctx.lineTo(shardX, shardY + size * 0.04);
-      ctx.lineTo(shardX - size * 0.02, shardY);
+      ctx.moveTo(shardX, shardY - shardSize);
+      ctx.lineTo(shardX + shardSize * 0.4, shardY);
+      ctx.lineTo(shardX, shardY + shardSize * 0.6);
+      ctx.lineTo(shardX - shardSize * 0.4, shardY);
       ctx.closePath();
       ctx.fill();
     }
+    clearShadow(ctx);
   }
 }
 
@@ -1278,13 +1297,13 @@ export function drawIceWitchEnemy(
   auraGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y + float, size * 0.9, 0, Math.PI * 2);
+  ctx.ellipse(x, y + float, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Frozen ground beneath - ice patch
   ctx.fillStyle = "rgba(147, 197, 253, 0.3)";
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Ice cracks in frozen ground

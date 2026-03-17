@@ -1,6 +1,8 @@
 // Princeton Tower Defense - Enemy Animation Helpers
 // Reusable animated body part and effect functions for enemy sprites.
 
+import { ISO_Y_RATIO } from "../../constants/isometric";
+
 const TAU = Math.PI * 2;
 
 // ============================================================================
@@ -224,7 +226,7 @@ export function drawShiftingSegments(
     const angle = (i / count) * TAU + time * oSpeed;
     const bob = Math.sin(time * bSpeed + i * 1.7) * bAmt;
     const px = cx + Math.cos(angle) * (orbit + bob);
-    const py = cy + Math.sin(angle) * (orbit * 0.6 + bob * 0.5);
+    const py = cy + Math.sin(angle) * (orbit * ISO_Y_RATIO + bob * ISO_Y_RATIO);
 
     ctx.save();
     ctx.translate(px, py);
@@ -343,7 +345,7 @@ export function drawOrbitingDebris(
     const angle = time * speed + i * (TAU / count);
     const r = minR + (maxR - minR) * (0.5 + Math.sin(time * 1.5 + i * 2.3) * 0.5);
     const px = cx + Math.cos(angle) * r;
-    const py = cy + Math.sin(angle) * r * 0.55;
+    const py = cy + Math.sin(angle) * r * ISO_Y_RATIO;
 
     if (trail > 0 && opts.glowColor) {
       ctx.strokeStyle = opts.glowColor;
@@ -353,7 +355,7 @@ export function drawOrbitingDebris(
       for (let t = 1; t <= trail; t++) {
         const ta = angle - t * 0.15;
         const tr = r - t * pSize * 0.5;
-        ctx.lineTo(cx + Math.cos(ta) * tr, cy + Math.sin(ta) * tr * 0.55);
+        ctx.lineTo(cx + Math.cos(ta) * tr, cy + Math.sin(ta) * tr * ISO_Y_RATIO);
       }
       ctx.stroke();
     }
@@ -833,7 +835,7 @@ export function drawShadowWisps(
     const angle = seed + Math.sin(time * speed + i * 1.5) * 0.6;
     const startR = baseRadius * 0.4;
     const sx = cx + Math.cos(angle) * startR;
-    const sy = cy + Math.sin(angle) * startR * 0.55;
+    const sy = cy + Math.sin(angle) * startR * ISO_Y_RATIO;
 
     ctx.save();
     ctx.globalAlpha = maxAlpha * (0.5 + Math.sin(time * 2 + seed) * 0.3);
@@ -849,7 +851,7 @@ export function drawShadowWisps(
       const endAngle = angle + Math.sin(time * speed * 1.5 + seed + s * 0.8) * 0.4;
       const r = startR + wispLen * t;
       const wx = cx + Math.cos(endAngle) * r + Math.sin(time * 2.5 + s) * baseRadius * 0.05;
-      const wy = cy + Math.sin(endAngle) * r * 0.55;
+      const wy = cy + Math.sin(endAngle) * r * ISO_Y_RATIO;
       ctx.lineTo(wx, wy);
     }
     ctx.stroke();
@@ -861,7 +863,7 @@ export function drawShadowWisps(
     ctx.beginPath();
     ctx.arc(
       cx + Math.cos(tipAngle) * tipDist,
-      cy + Math.sin(tipAngle) * tipDist * 0.55,
+      cy + Math.sin(tipAngle) * tipDist * ISO_Y_RATIO,
       tipR,
       0,
       TAU,
@@ -902,7 +904,7 @@ export function drawArcaneSparkles(
     const angle = time * speed * 0.3 + seed;
     const r = baseRadius * (0.3 + Math.sin(time * 0.7 + seed * 1.4) * 0.35);
     const px = cx + Math.cos(angle) * r;
-    const py = cy + Math.sin(angle) * r * 0.55;
+    const py = cy + Math.sin(angle) * r * ISO_Y_RATIO;
     const twinkle = Math.sin(time * 6 + seed * 3.7);
     const alpha = maxAlpha * Math.max(0, twinkle);
     const sz = sparkleSize * (0.3 + Math.max(0, twinkle) * 0.7) * zoom;
@@ -962,7 +964,7 @@ export function drawLeafSwirl(
     const angle = time * speed + seed;
     const orbitR = baseRadius * (0.5 + Math.sin(time * 0.6 + seed) * 0.25);
     const px = cx + Math.cos(angle) * orbitR;
-    const py = cy + Math.sin(angle) * orbitR * 0.45;
+    const py = cy + Math.sin(angle) * orbitR * ISO_Y_RATIO;
     const flutter = Math.sin(time * 5 + seed * 2.3);
     const alpha = maxAlpha * (0.4 + Math.sin(time * 1.5 + seed * 3) * 0.3);
     const ls = leafSize * (0.7 + flutter * 0.15) * zoom;

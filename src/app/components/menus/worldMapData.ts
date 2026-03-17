@@ -187,8 +187,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     difficulty: 3,
     kind: "challenge",
     tags: ["Solar Hazards", "Dual Lane"],
-    x: 870,
-    y: 28,
+    x: 910,
+    y: 25,
     connectsTo: [],
   },
   {

@@ -66,6 +66,7 @@ interface SpellSelectorProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  downgradeSpell: (spellType: SpellType) => void;
   spellAutoAim: Partial<Record<SpellType, boolean>>;
   onToggleSpellAutoAim: (spellType: SpellType) => void;
   onOpenCodex?: () => void;
@@ -82,6 +83,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  downgradeSpell,
   spellAutoAim,
   onToggleSpellAutoAim,
   onOpenCodex,
@@ -467,6 +469,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             spentSpellStars={spentSpellStars}
             spellUpgradeLevels={spellUpgradeLevels}
             upgradeSpell={upgradeSpell}
+            downgradeSpell={downgradeSpell}
             initialSpell={spellbookInitialSpell}
           />
         )}
@@ -478,6 +481,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           spentStars={spentSpellStars}
           spellUpgradeLevels={spellUpgradeLevels}
           onUpgradeSpell={upgradeSpell}
+          onDowngradeSpell={downgradeSpell}
         />
       </>
     );
@@ -733,6 +737,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
         spentStars={spentSpellStars}
         spellUpgradeLevels={spellUpgradeLevels}
         onUpgradeSpell={upgradeSpell}
+        onDowngradeSpell={downgradeSpell}
       />
     </div>
   );

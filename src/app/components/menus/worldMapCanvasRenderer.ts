@@ -4,6 +4,7 @@ import { LEVEL_DATA } from "../../constants";
 import type { LevelNode } from "./worldMapData";
 import { MAP_WIDTH, WORLD_LEVELS } from "./worldMapData";
 import {
+  getLevelNodeY,
   getWorldLevelById,
   getWorldMapY,
   isWorldLevelUnlocked,
@@ -91,6 +92,7 @@ export const drawWorldMapCanvas = ({
 }: DrawWorldMapParams): void => {
   const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
+  const getLevelY = (pct: number) => getLevelNodeY(pct, mapHeight);
   const isLevelUnlocked = (levelId: string) =>
     isWorldLevelUnlocked(levelId, unlockedMaps);
   const getLevelById = (id: string) => getWorldLevelById(id);
@@ -172,7 +174,7 @@ export const drawWorldMapCanvas = ({
     vGrad.addColorStop(0.3, "rgba(0,0,0,0.05)");
     vGrad.addColorStop(0.5, "rgba(0,0,0,0)");
     vGrad.addColorStop(0.7, "rgba(0,0,0,0.05)");
-    vGrad.addColorStop(0.7, "rgba(0,0,0,0.35)");
+    vGrad.addColorStop(1.0, "rgba(0,0,0,0.35)");
     ctx.fillStyle = vGrad;
     ctx.fillRect(0, 0, width, height);
 
@@ -268,27 +270,60 @@ export const drawWorldMapCanvas = ({
     }
     ctx.globalAlpha = 1;
 
-    // Layer 3: Region-aware small pebbles and debris
-    ctx.globalAlpha = 0.18;
+    // Layer 3: Region-aware small pebbles and debris with 3D shading
     for (let i = 0; i < (isMobile ? 150 : 500); i++) {
       const sx = seededRandom(i * 13) * width;
       const sy = seededRandom(i * 13 + 1) * height;
-      const ss = 1 + seededRandom(i * 13 + 2) * 3.5;
+      const ss = 1.2 + seededRandom(i * 13 + 2) * 3.0;
+      const sh = ss * (0.3 + seededRandom(i * 13 + 4) * 0.25);
+      const rot = seededRandom(i * 13 + 5) * Math.PI;
 
-      let pebbleColors = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"];
-      if (sx > 1440)
-        pebbleColors = ["#4a2020", "#3a1010", "#5a2a1a", "#2a0a0a"];
-      else if (sx > 1080)
-        pebbleColors = ["#8a9aa8", "#b0c0d0", "#6a7a88", "#a0b0c0"];
-      else if (sx > 720)
-        pebbleColors = ["#a0905a", "#c0b080", "#8a7a4a", "#b0a070"];
-      else if (sx > 380)
-        pebbleColors = ["#2a4a2a", "#3a5a3a", "#1a3a1a", "#2a5a2a"];
-      else pebbleColors = ["#4a5a2a", "#5a6a3a", "#3a4a1a", "#4a5a2a"];
+      let pebbleBody: string[];
+      let pebbleHL: string;
+      let pebbleSH: string;
+      if (sx > 1440) {
+        pebbleBody = ["#4a2020", "#3a1010", "#5a2a1a", "#2a0a0a"];
+        pebbleHL = "#7a4040";
+        pebbleSH = "#1a0000";
+      } else if (sx > 1080) {
+        pebbleBody = ["#8a9aa8", "#b0c0d0", "#6a7a88", "#a0b0c0"];
+        pebbleHL = "#d0e0f0";
+        pebbleSH = "#4a5a68";
+      } else if (sx > 720) {
+        pebbleBody = ["#a0905a", "#c0b080", "#8a7a4a", "#b0a070"];
+        pebbleHL = "#e0d0a0";
+        pebbleSH = "#605030";
+      } else if (sx > 380) {
+        pebbleBody = ["#2a4a2a", "#3a5a3a", "#1a3a1a", "#2a5a2a"];
+        pebbleHL = "#5a8a5a";
+        pebbleSH = "#0a2a0a";
+      } else {
+        pebbleBody = ["#4a5a2a", "#5a6a3a", "#3a4a1a", "#4a5a2a"];
+        pebbleHL = "#7a8a5a";
+        pebbleSH = "#1a2a00";
+      }
 
-      ctx.fillStyle = pebbleColors[Math.floor(seededRandom(i * 13 + 3) * 4)];
+      const cIdx = Math.floor(seededRandom(i * 13 + 3) * pebbleBody.length);
+
+      // Shadow offset
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = pebbleSH;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, ss, ss * 0.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(sx + 0.4, sy + 0.5, ss * 1.1, sh * 1.15, rot, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stone body
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = pebbleBody[cIdx];
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, ss, sh, rot, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Highlight
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = pebbleHL;
+      ctx.beginPath();
+      ctx.ellipse(sx - 0.3, sy - 0.3, ss * 0.5, sh * 0.4, rot, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -751,52 +786,74 @@ export const drawWorldMapCanvas = ({
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // Catmull-Rom to cubic Bézier spline for ultra-smooth roads
+      const pts = points.map((p) => [p[0], getLevelY(p[1])]);
+      const ROAD_TENSION = 0.35;
+
       const tracePath = (ox: number, oy: number) => {
         ctx.beginPath();
-        const pts = points.map((p) => [p[0] + ox, getY(p[1]) + oy]);
-        ctx.moveTo(pts[0][0], pts[0][1]);
+        ctx.moveTo(pts[0][0] + ox, pts[0][1] + oy);
         if (pts.length === 2) {
-          ctx.lineTo(pts[1][0], pts[1][1]);
+          ctx.lineTo(pts[1][0] + ox, pts[1][1] + oy);
         } else {
-          const tension = 0.35;
           for (let i = 0; i < pts.length - 1; i++) {
             const p0 = pts[Math.max(0, i - 1)];
             const p1 = pts[i];
             const p2 = pts[Math.min(pts.length - 1, i + 1)];
             const p3 = pts[Math.min(pts.length - 1, i + 2)];
-            const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
-            const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
-            const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
-            const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
-            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
+            const cp1x = p1[0] + (p2[0] - p0[0]) * ROAD_TENSION;
+            const cp1y = p1[1] + (p2[1] - p0[1]) * ROAD_TENSION;
+            const cp2x = p2[0] - (p3[0] - p1[0]) * ROAD_TENSION;
+            const cp2y = p2[1] - (p3[1] - p1[1]) * ROAD_TENSION;
+            ctx.bezierCurveTo(
+              cp1x + ox,
+              cp1y + oy,
+              cp2x + ox,
+              cp2y + oy,
+              p2[0] + ox,
+              p2[1] + oy,
+            );
           }
         }
       };
 
-      // Region-aware dirt colors
       const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
       let dirtLight: string, dirtMid: string, dirtDark: string;
+      let stoneBody: string[], stoneHighlight: string, stoneShadow: string;
       if (avgX < 380) {
         dirtLight = "rgba(105, 85, 55, 0.28)";
         dirtMid = "rgba(85, 70, 40, 0.32)";
         dirtDark = "rgba(55, 45, 25, 0.35)";
+        stoneBody = ["#7a6a4a", "#6a5a38", "#5a4a28", "#8a7a58"];
+        stoneHighlight = "#b0a080";
+        stoneShadow = "#3a2a10";
       } else if (avgX < 720) {
         dirtLight = "rgba(80, 70, 50, 0.3)";
         dirtMid = "rgba(60, 55, 38, 0.35)";
         dirtDark = "rgba(40, 35, 22, 0.38)";
+        stoneBody = ["#5a6050", "#4a5040", "#3a4030", "#6a7058"];
+        stoneHighlight = "#8a9a80";
+        stoneShadow = "#1a2010";
       } else if (avgX < 1080) {
         dirtLight = "rgba(130, 105, 65, 0.3)";
         dirtMid = "rgba(110, 85, 50, 0.32)";
         dirtDark = "rgba(80, 60, 30, 0.35)";
+        stoneBody = ["#b09860", "#a08848", "#c0a870", "#907838"];
+        stoneHighlight = "#d8c898";
+        stoneShadow = "#604820";
       } else if (avgX < 1440) {
         dirtLight = "rgba(90, 85, 80, 0.28)";
         dirtMid = "rgba(70, 65, 60, 0.32)";
         dirtDark = "rgba(45, 42, 38, 0.35)";
+        stoneBody = ["#7888a0", "#687890", "#586878", "#889ab0"];
+        stoneHighlight = "#a8b8d0";
+        stoneShadow = "#384858";
       } else {
         dirtLight = "rgba(70, 45, 35, 0.3)";
         dirtMid = "rgba(55, 30, 22, 0.35)";
         dirtDark = "rgba(35, 18, 12, 0.38)";
+        stoneBody = ["#6a3525", "#5a2518", "#7a4535", "#4a1508"];
+        stoneHighlight = "#9a6550";
+        stoneShadow = "#2a0a00";
       }
 
       // Ground shadow
@@ -811,11 +868,207 @@ export const drawWorldMapCanvas = ({
       ctx.lineWidth = 13;
       ctx.stroke();
 
-      // Main surface (flat color instead of gradient)
+      // Main surface
       tracePath(0, 0);
       ctx.strokeStyle = dirtMid;
       ctx.lineWidth = 10;
       ctx.stroke();
+
+      // Cobblestone / pebble texture scattered across road surface
+      const ROAD_HW = 4;
+      let sIdx = 0;
+      const sampleSegment = (
+        p1: number[],
+        c1: number[],
+        c2: number[],
+        p2: number[],
+      ) => {
+        const segLen = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+        const count = Math.max(3, Math.ceil(segLen / 7));
+        for (let s = 0; s < count; s++) {
+          const t = (s + 0.5) / count;
+          const mt = 1 - t;
+          const bx =
+            mt * mt * mt * p1[0] +
+            3 * mt * mt * t * c1[0] +
+            3 * mt * t * t * c2[0] +
+            t * t * t * p2[0];
+          const by =
+            mt * mt * mt * p1[1] +
+            3 * mt * mt * t * c1[1] +
+            3 * mt * t * t * c2[1] +
+            t * t * t * p2[1];
+          const tdx =
+            3 * mt * mt * (c1[0] - p1[0]) +
+            6 * mt * t * (c2[0] - c1[0]) +
+            3 * t * t * (p2[0] - c2[0]);
+          const tdy =
+            3 * mt * mt * (c1[1] - p1[1]) +
+            6 * mt * t * (c2[1] - c1[1]) +
+            3 * t * t * (p2[1] - c2[1]);
+          const tLen = Math.hypot(tdx, tdy) || 1;
+          const px = -tdy / tLen;
+          const py = tdx / tLen;
+          const tx = tdx / tLen;
+          const ty = tdy / tLen;
+
+          const baseSeed = sIdx * 997 + Math.round(bx * 7.3);
+          const nStones = 2 + Math.floor(seededRandom(baseSeed) * 3);
+
+          for (let j = 0; j < nStones; j++) {
+            const lat = (seededRandom(baseSeed + j * 37) - 0.5) * ROAD_HW * 2;
+            const lon = (seededRandom(baseSeed + j * 53) - 0.5) * 3.5;
+            const sx = bx + px * lat + tx * lon;
+            const sy = by + py * lat + ty * lon;
+            const sw = 0.7 + seededRandom(baseSeed + j * 71) * 1.4;
+            const sh = sw * (0.35 + seededRandom(baseSeed + j * 79) * 0.3);
+            const rot = seededRandom(baseSeed + j * 89) * Math.PI;
+            const cIdx = Math.floor(
+              seededRandom(baseSeed + j * 97) * stoneBody.length,
+            );
+
+            ctx.globalAlpha = 0.18;
+            ctx.fillStyle = stoneShadow;
+            ctx.beginPath();
+            ctx.ellipse(
+              sx + 0.3,
+              sy + 0.35,
+              sw * 1.1,
+              sh * 1.15,
+              rot,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+
+            ctx.globalAlpha = 0.5;
+            ctx.fillStyle = stoneBody[cIdx];
+            ctx.beginPath();
+            ctx.ellipse(sx, sy, sw, sh, rot, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.globalAlpha = 0.14;
+            ctx.fillStyle = stoneHighlight;
+            ctx.beginPath();
+            ctx.ellipse(
+              sx - 0.2,
+              sy - 0.2,
+              sw * 0.55,
+              sh * 0.45,
+              rot,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+          sIdx++;
+        }
+      };
+
+      if (pts.length === 2) {
+        sampleSegment(pts[0], pts[0], pts[1], pts[1]);
+      } else {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[Math.max(0, i - 1)];
+          const p1 = pts[i];
+          const p2 = pts[Math.min(pts.length - 1, i + 1)];
+          const p3 = pts[Math.min(pts.length - 1, i + 2)];
+          sampleSegment(
+            p1,
+            [
+              p1[0] + (p2[0] - p0[0]) * ROAD_TENSION,
+              p1[1] + (p2[1] - p0[1]) * ROAD_TENSION,
+            ],
+            [
+              p2[0] - (p3[0] - p1[0]) * ROAD_TENSION,
+              p2[1] - (p3[1] - p1[1]) * ROAD_TENSION,
+            ],
+            p2,
+          );
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Edge pebbles along road borders for a natural, worn look
+      sIdx = 5000;
+      const sampleEdge = (
+        p1: number[],
+        c1: number[],
+        c2: number[],
+        p2: number[],
+      ) => {
+        const segLen = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+        const count = Math.max(2, Math.ceil(segLen / 12));
+        for (let s = 0; s < count; s++) {
+          const t = (s + 0.3) / count;
+          const mt = 1 - t;
+          const bx =
+            mt * mt * mt * p1[0] +
+            3 * mt * mt * t * c1[0] +
+            3 * mt * t * t * c2[0] +
+            t * t * t * p2[0];
+          const by =
+            mt * mt * mt * p1[1] +
+            3 * mt * mt * t * c1[1] +
+            3 * mt * t * t * c2[1] +
+            t * t * t * p2[1];
+          const tdx =
+            3 * mt * mt * (c1[0] - p1[0]) +
+            6 * mt * t * (c2[0] - c1[0]) +
+            3 * t * t * (p2[0] - c2[0]);
+          const tdy =
+            3 * mt * mt * (c1[1] - p1[1]) +
+            6 * mt * t * (c2[1] - c1[1]) +
+            3 * t * t * (p2[1] - c2[1]);
+          const tLen = Math.hypot(tdx, tdy) || 1;
+          const px = -tdy / tLen;
+          const py = tdx / tLen;
+
+          for (let side = -1; side <= 1; side += 2) {
+            const eSeed = sIdx * 773 + side * 500;
+            const offset = ROAD_HW + 1.5 + seededRandom(eSeed) * 2.5;
+            const ex = bx + px * offset * side;
+            const ey = by + py * offset * side;
+            const ew = 0.5 + seededRandom(eSeed + 11) * 1.0;
+            const eh = ew * (0.4 + seededRandom(eSeed + 23) * 0.2);
+            const eRot = seededRandom(eSeed + 31) * Math.PI;
+
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle =
+              stoneBody[
+                Math.floor(seededRandom(eSeed + 41) * stoneBody.length)
+              ];
+            ctx.beginPath();
+            ctx.ellipse(ex, ey, ew, eh, eRot, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          sIdx++;
+        }
+      };
+
+      if (pts.length === 2) {
+        sampleEdge(pts[0], pts[0], pts[1], pts[1]);
+      } else {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p0 = pts[Math.max(0, i - 1)];
+          const p1 = pts[i];
+          const p2 = pts[Math.min(pts.length - 1, i + 1)];
+          const p3 = pts[Math.min(pts.length - 1, i + 2)];
+          sampleEdge(
+            p1,
+            [
+              p1[0] + (p2[0] - p0[0]) * ROAD_TENSION,
+              p1[1] + (p2[1] - p0[1]) * ROAD_TENSION,
+            ],
+            [
+              p2[0] - (p3[0] - p1[0]) * ROAD_TENSION,
+              p2[1] - (p3[1] - p1[1]) * ROAD_TENSION,
+            ],
+            p2,
+          );
+        }
+      }
+      ctx.globalAlpha = 1;
 
       // Worn center highlight
       tracePath(0, 0);
@@ -896,6 +1149,95 @@ export const drawWorldMapCanvas = ({
       [1710, 46],
       [1740, 48],
       [MAP_WIDTH - 70, 50],
+    ]);
+
+    // Road segments following challenge-level connector paths
+    // nassau (320,58) → ivy_crossroads (370,30)
+    drawRoadSegment([
+      [320, 58],
+      [328, 50],
+      [338, 43],
+      [348, 37],
+      [360, 32],
+      [370, 30],
+    ]);
+    // ivy_crossroads (370,30) → cannon_crest (175,26)
+    drawRoadSegment([
+      [370, 30],
+      [335, 28],
+      [295, 24],
+      [255, 23],
+      [215, 24],
+      [175, 26],
+    ]);
+    // sunken_temple (650,56) → blight_basin (540,70)
+    drawRoadSegment([
+      [650, 56],
+      [625, 60],
+      [600, 65],
+      [575, 68],
+      [555, 70],
+      [540, 70],
+    ]);
+    // sunken_temple (650,56) → triad_keep (680,28)
+    drawRoadSegment([
+      [650, 56],
+      [658, 48],
+      [665, 40],
+      [672, 34],
+      [678, 30],
+      [680, 28],
+    ]);
+    // pyramid (910,38) → sun_obelisk (910,25)
+    drawRoadSegment([
+      [910, 38],
+      [913, 34],
+      [912, 30],
+      [910, 27],
+      [910, 25],
+    ]);
+    // sphinx (968,53) → sunscorch_labyrinth (1000,67)
+    drawRoadSegment([
+      [968, 53],
+      [976, 57],
+      [985, 61],
+      [993, 64],
+      [998, 66],
+      [1000, 67],
+    ]);
+    // peak (1365,48) → whiteout_pass (1210,32)
+    drawRoadSegment([
+      [1365, 48],
+      [1338, 42],
+      [1305, 37],
+      [1270, 34],
+      [1240, 32],
+      [1210, 32],
+    ]);
+    // whiteout_pass (1210,32) → frontier_outpost (1332,28)
+    drawRoadSegment([
+      [1210, 32],
+      [1240, 31],
+      [1270, 30],
+      [1300, 29],
+      [1332, 28],
+    ]);
+    // crater (1592,37) → infernal_gate (1530,28)
+    drawRoadSegment([
+      [1592, 37],
+      [1575, 33],
+      [1558, 30],
+      [1544, 28],
+      [1530, 28],
+    ]);
+    // throne (1702,59) → ashen_spiral (1612,72)
+    drawRoadSegment([
+      [1702, 59],
+      [1678, 63],
+      [1655, 67],
+      [1635, 70],
+      [1620, 72],
+      [1612, 72],
     ]);
   } // end !bgCacheValid (static background section)
 
@@ -1662,7 +2004,7 @@ export const drawWorldMapCanvas = ({
   };
 
   const drawWatchTower = (tx: number, tyPct: number) => {
-    const ty = getY(tyPct);
+    const ty = getLevelY(tyPct);
 
     // Tower shadow
     ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -3954,7 +4296,7 @@ export const drawWorldMapCanvas = ({
       ctx.lineWidth = 1.2;
     }
 
-    // Palm fronds — pinnate leaves with individual leaflets drooping from an arching midrib
+    // Palm fronds — pinnate leaves radiating from crown, gravity always pulls screen-down
     const frondColorPairs: [string, string][] = [
       ["#1d6b2c", "#2a8838"],
       ["#2d8b3c", "#3a9e4a"],
@@ -3965,7 +4307,7 @@ export const drawWorldMapCanvas = ({
       ["#1a6028", "#288a35"],
       ["#226830", "#2e9040"],
     ];
-    const frondAngles = [-1.2, -0.75, -0.35, 0.0, 0.35, 0.75, 1.15, 1.5];
+    const frondAngles = [-2.4, -1.6, -0.9, -0.2, 0.5, 1.2, 1.9, 2.6];
     const frondLengths = [0.95, 1.05, 1.12, 1.0, 1.1, 1.05, 0.92, 0.82];
     const crownX = tx + 4 * scale;
     const crownY = ty - 40 * scale;
@@ -3982,15 +4324,17 @@ export const drawWorldMapCanvas = ({
       ctx.translate(crownX, crownY);
       ctx.rotate(ang);
 
-      // Midrib: arches up then droops under gravity (local coords: X = along frond, Y = perpendicular)
+      // Midrib with gravity applied in screen-down direction (converted to rotated local space)
       const segments = 10;
       const ribPts: { x: number; y: number }[] = [];
+      const sinAng = Math.sin(ang);
+      const cosAng = Math.cos(ang);
       for (let s = 0; s <= segments; s++) {
         const t = s / segments;
         const rx = t * len;
         const arch = -Math.sin(t * Math.PI * 0.7) * len * 0.08;
-        const gravity = t * t * len * 0.25;
-        ribPts.push({ x: rx, y: arch + gravity });
+        const grav = t * t * len * 0.22;
+        ribPts.push({ x: rx + grav * sinAng, y: arch + grav * cosAng });
       }
 
       // Draw midrib stroke
@@ -4009,12 +4353,10 @@ export const drawWorldMapCanvas = ({
         const t = s / segments;
         const pt = ribPts[s];
 
-        // Leaflets taper: longest at ~40% along the frond, shorter at base and tip
         const taper = 1 - Math.abs(t - 0.4) * 1.6;
         const leafLen = Math.max(0, (4 + taper * 7) * scale);
         if (leafLen < 1.5 * scale) continue;
 
-        // Leaflets angle slightly backward along the frond and droop (positive Y = down in local rotated space)
         const backAngle = 0.35;
         for (const side of [-1, 1] as const) {
           const baseAng = (Math.PI / 2) * side + backAngle;
@@ -8400,7 +8742,7 @@ export const drawWorldMapCanvas = ({
     length: number,
     angle: number,
   ) => {
-    const by = getY(byPct);
+    const by = getLevelY(byPct);
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(angle);
@@ -8807,7 +9149,7 @@ export const drawWorldMapCanvas = ({
   };
 
   const drawKingdomCastle = (x: number, yPct: number) => {
-    const y = getY(yPct);
+    const y = getLevelY(yPct);
     const sL = "#7a6a54";
     const sM = "#5a4a38";
     const sD = "#3e2e1e";
@@ -9493,7 +9835,7 @@ export const drawWorldMapCanvas = ({
   };
 
   const drawEnemyLair = (x: number, yPct: number) => {
-    const y = getY(yPct);
+    const y = getLevelY(yPct);
     const ob1 = "#1a1020";
     const ob2 = "#0e0815";
     const ob3 = "#221430";
@@ -9963,7 +10305,7 @@ export const drawWorldMapCanvas = ({
     label: string,
     isEnemy: boolean,
   ) => {
-    const cy = getY(cyPct);
+    const cy = getLevelY(cyPct);
     const labelY = cy + 22;
     ctx.save();
     ctx.font = "bold 9px 'bc-novatica-cyr', serif";
@@ -11022,8 +11364,7 @@ export const drawWorldMapCanvas = ({
   let _pathSavedCtx: CanvasRenderingContext2D | undefined;
 
   if (pathCache && !pathCacheValid) {
-    const pc =
-      pathCache.current.canvas ?? document.createElement("canvas");
+    const pc = pathCache.current.canvas ?? document.createElement("canvas");
     pc.width = displayW * dpr;
     pc.height = displayH * dpr;
     const pCtx = pc.getContext("2d");
@@ -11043,157 +11384,160 @@ export const drawWorldMapCanvas = ({
   }
 
   if (!pathCacheValid) {
-  const LOCKED_PATH_COLORS: Record<
-    string,
-    { partial: string; locked: string }
-  > = {
-    grassland: { partial: "#9a8a72", locked: "#6a5e44" },
-    swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
-    desert: { partial: "#c4a878", locked: "#9a7e52" },
-    winter: { partial: "#8aa8c4", locked: "#5a7a98" },
-    volcanic: { partial: "#b07060", locked: "#7a4838" },
-  };
-  allLevels.forEach((level) => {
-    const fromX = level.x;
-    const fromY = getY(level.y);
+    const LOCKED_PATH_COLORS: Record<
+      string,
+      { partial: string; locked: string }
+    > = {
+      grassland: { partial: "#9a8a72", locked: "#6a5e44" },
+      swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
+      desert: { partial: "#c4a878", locked: "#9a7e52" },
+      winter: { partial: "#8aa8c4", locked: "#5a7a98" },
+      volcanic: { partial: "#b07060", locked: "#7a4838" },
+    };
+    allLevels.forEach((level) => {
+      const fromX = level.x;
+      const fromY = getLevelY(level.y);
 
-    level.connectsTo.forEach((toId) => {
-      const toLevel = getLevelById(toId);
-      if (!toLevel) return;
-      const toX = toLevel.x;
-      const toY = getY(toLevel.y);
-      const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
-      const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
+      level.connectsTo.forEach((toId) => {
+        const toLevel = getLevelById(toId);
+        if (!toLevel) return;
+        const toX = toLevel.x;
+        const toY = getLevelY(toLevel.y);
+        const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
+        const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
 
-      const connectionSeed = `${level.id}->${toId}`
-        .split("")
-        .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
-      const segmentLength = Math.hypot(toX - fromX, toY - fromY);
-      const dy = toY - fromY;
-      const dx = toX - fromX;
-      const avgY = (fromY + toY) / 2;
+        const connectionSeed = `${level.id}->${toId}`
+          .split("")
+          .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
+        const segmentLength = Math.hypot(toX - fromX, toY - fromY);
+        const dy = toY - fromY;
+        const dx = toX - fromX;
+        const avgY = (fromY + toY) / 2;
 
-      const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
-      const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
-      const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
+        const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
+        const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
+        const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
 
-      const baseDirection =
-        Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
-      const flipChance =
-        Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
-      const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
-      let arcDirection = shouldFlip ? -baseDirection : baseDirection;
-      if (Math.abs(dy) < 8) {
-        const edgeBias = avgY < height * 0.5 ? 1 : -1;
-        arcDirection =
-          seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
-      }
-
-      const angle = Math.atan2(dy, dx);
-      const perpX = -Math.sin(angle);
-      const perpY = Math.cos(angle);
-      const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
-      const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
-      const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
-
-      const cp1x =
-        fromX + dx * tension + perpX * arcLift * arcDirection * 0.75 + jitter1;
-      const cp1y = fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
-      const cp2x =
-        toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
-      const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
-
-      const traceCubic = (ox: number, oy: number) => {
-        ctx.beginPath();
-        ctx.moveTo(fromX + ox, fromY + oy);
-        ctx.bezierCurveTo(
-          cp1x + ox,
-          cp1y + oy,
-          cp2x + ox,
-          cp2y + oy,
-          toX + ox,
-          toY + oy,
-        );
-      };
-
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      if (isUnlocked) {
-        traceCubic(2, 3);
-        ctx.strokeStyle = "rgba(0,0,0,0.35)";
-        ctx.lineWidth = 12;
-        ctx.stroke();
-      } else {
-        traceCubic(1, 2);
-        ctx.strokeStyle = "rgba(0,0,0,0.30)";
-        ctx.lineWidth = 8;
-        ctx.stroke();
-      }
-
-      if (isUnlocked) {
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#8B6914";
-        ctx.lineWidth = 10;
-        ctx.stroke();
-
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#D4A828";
-        ctx.lineWidth = 7;
-        ctx.stroke();
-
-        traceCubic(0, 0);
-        ctx.strokeStyle = "#F0C840";
-        ctx.lineWidth = 3;
-        ctx.globalAlpha = 0.6;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-
-        const orbCount = isMobile ? 1 : 3;
-        for (let orb = 0; orb < orbCount; orb++) {
-          const dotPos = (time * 0.4 + orb * 0.33) % 1;
-          const t = dotPos;
-          const mt = 1 - t;
-          const ox =
-            mt * mt * mt * fromX +
-            3 * mt * mt * t * cp1x +
-            3 * mt * t * t * cp2x +
-            t * t * t * toX;
-          const oy =
-            mt * mt * mt * fromY +
-            3 * mt * mt * t * cp1y +
-            3 * mt * t * t * cp2y +
-            t * t * t * toY;
-          ctx.fillStyle = "#ffd700";
-          ctx.globalAlpha = 0.3;
-          ctx.beginPath();
-          ctx.arc(ox, oy, 6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 0.9;
-          ctx.fillStyle = "#FFE060";
-          ctx.beginPath();
-          ctx.arc(ox, oy, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#FFFAC0";
-          ctx.beginPath();
-          ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
+        const baseDirection =
+          Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
+        const flipChance =
+          Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
+        const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
+        let arcDirection = shouldFlip ? -baseDirection : baseDirection;
+        if (Math.abs(dy) < 8) {
+          const edgeBias = avgY < height * 0.5 ? 1 : -1;
+          arcDirection =
+            seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
         }
-      } else {
-        const lockedColors =
-          LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
-        ctx.strokeStyle = isPartial
-          ? lockedColors.partial
-          : lockedColors.locked;
-        ctx.lineWidth = isPartial ? 6 : 4;
-        ctx.setLineDash([8, 6]);
-        traceCubic(0, 0);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    });
-  });
 
+        const angle = Math.atan2(dy, dx);
+        const perpX = -Math.sin(angle);
+        const perpY = Math.cos(angle);
+        const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
+        const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
+        const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
+
+        const cp1x =
+          fromX +
+          dx * tension +
+          perpX * arcLift * arcDirection * 0.75 +
+          jitter1;
+        const cp1y =
+          fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
+        const cp2x =
+          toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
+        const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
+
+        const traceCubic = (ox: number, oy: number) => {
+          ctx.beginPath();
+          ctx.moveTo(fromX + ox, fromY + oy);
+          ctx.bezierCurveTo(
+            cp1x + ox,
+            cp1y + oy,
+            cp2x + ox,
+            cp2y + oy,
+            toX + ox,
+            toY + oy,
+          );
+        };
+
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        if (isUnlocked) {
+          traceCubic(2, 3);
+          ctx.strokeStyle = "rgba(0,0,0,0.35)";
+          ctx.lineWidth = 12;
+          ctx.stroke();
+        } else {
+          traceCubic(1, 2);
+          ctx.strokeStyle = "rgba(0,0,0,0.30)";
+          ctx.lineWidth = 8;
+          ctx.stroke();
+        }
+
+        if (isUnlocked) {
+          traceCubic(0, 0);
+          ctx.strokeStyle = "#8B6914";
+          ctx.lineWidth = 10;
+          ctx.stroke();
+
+          traceCubic(0, 0);
+          ctx.strokeStyle = "#D4A828";
+          ctx.lineWidth = 7;
+          ctx.stroke();
+
+          traceCubic(0, 0);
+          ctx.strokeStyle = "#F0C840";
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 0.6;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          const orbCount = isMobile ? 1 : 3;
+          for (let orb = 0; orb < orbCount; orb++) {
+            const dotPos = (time * 0.4 + orb * 0.33) % 1;
+            const t = dotPos;
+            const mt = 1 - t;
+            const ox =
+              mt * mt * mt * fromX +
+              3 * mt * mt * t * cp1x +
+              3 * mt * t * t * cp2x +
+              t * t * t * toX;
+            const oy =
+              mt * mt * mt * fromY +
+              3 * mt * mt * t * cp1y +
+              3 * mt * t * t * cp2y +
+              t * t * t * toY;
+            ctx.fillStyle = "#ffd700";
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = "#FFE060";
+            ctx.beginPath();
+            ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#FFFAC0";
+            ctx.beginPath();
+            ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        } else {
+          const lockedColors =
+            LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
+          ctx.strokeStyle = isPartial
+            ? lockedColors.partial
+            : lockedColors.locked;
+          ctx.lineWidth = isPartial ? 6 : 4;
+          ctx.setLineDash([8, 6]);
+          traceCubic(0, 0);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+    });
   } // end !pathCacheValid
 
   if (_pathSavedCtx) {
@@ -11412,23 +11756,23 @@ export const drawWorldMapCanvas = ({
     // === ABOVE-PATH STRUCTURES (rendered over connection paths) ===
 
     drawCamp(100, 25);
-    drawCamp(180, 55);
+    drawCamp(180, 42);
     drawCamp(290, 78);
     drawCamp(620, 78);
-    drawCamp(540, 28);
-    drawCamp(860, 34);
-    drawCamp(1020, 75);
+    drawCamp(540, 21);
+    drawCamp(780, 20);
+    drawCamp(1020, 82);
     drawCamp(1580, 82);
     drawCamp(350, 35);
-    drawCamp(470, 48);
+    drawCamp(470, 38);
     drawCamp(750, 78);
-    drawCamp(1150, 38);
-    drawCamp(1310, 72);
-    drawCamp(1680, 45);
-    drawRuins(145, 72, 0.5);
+    drawCamp(1150, 28);
+    drawCamp(1310, 82);
+    drawCamp(1680, 38);
+    drawRuins(145, 82, 0.5);
     drawRuins(265, 28, 0.45);
     drawRuins(345, 80, 0.55);
-    drawRuins(455, 62, 0.5, "#3a4a3a");
+    drawRuins(455, 72, 0.5, "#3a4a3a");
     drawRuins(590, 42, 0.6, "#3a4a3a");
     drawRuins(680, 72, 0.5, "#3a4a3a");
     drawRuins(820, 62, 0.5, "#8a7a5a");
@@ -11440,23 +11784,23 @@ export const drawWorldMapCanvas = ({
     drawRuins(1510, 42, 0.5, "#4a2a1a");
     drawRuins(1640, 80, 0.55, "#4a2a1a");
     drawRuins(1740, 38, 0.45, "#4a2a1a");
-    drawWatchTower(55, 66);
+    drawWatchTower(45, 78);
     drawWatchTower(220, 25);
-    drawWatchTower(230, 70);
+    drawWatchTower(240, 78);
     drawWatchTower(330, 42);
     drawWatchTower(490, 70);
-    drawWatchTower(867, 33);
+    drawWatchTower(860, 33);
     drawWatchTower(1240, 52);
-    drawWatchTower(1180, 25);
+    drawWatchTower(1140, 22);
     drawWatchTower(1620, 30);
     drawWatchTower(140, 85);
     drawWatchTower(305, 30);
     drawWatchTower(640, 48);
-    drawWatchTower(760, 68);
+    drawWatchTower(830, 78);
     drawWatchTower(1000, 28);
     drawWatchTower(1350, 78);
     drawWatchTower(1500, 52);
-    drawWatchTower(1700, 72);
+    drawWatchTower(1710, 80);
     drawCrater(180, 60, 15);
     drawCrater(260, 32, 12);
     drawCrater(320, 80, 10);
@@ -11769,7 +12113,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Carnegie Lake (near Poe Field → Carnegie Lake path) ===
     {
       const lkX = 268,
-        lkY = getY(44);
+        lkY = getLevelY(44);
       const lkW = 36,
         lkH = 16;
       // Grassy bank
@@ -11891,7 +12235,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Nassau Hall courtyard walls ===
     {
       const nhX = 312,
-        nhY = getY(70);
+        nhY = getLevelY(70);
       const s = 1.8;
       // Courtyard floor — flagstones
       ctx.fillStyle = "rgba(90,80,65,0.18)";
@@ -11980,7 +12324,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Cannon Crest artillery ===
     {
       const ccX = 168,
-        ccY = getY(18);
+        ccY = getLevelY(18);
       // Earthwork / berm
       ctx.fillStyle = "rgba(60,50,30,0.25)";
       ctx.beginPath();
@@ -12104,7 +12448,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Ivy Crossroads arch ===
     {
       const ivX = 380,
-        ivY = getY(22);
+        ivY = getLevelY(22);
       const s = 1.8;
       // Cobblestone path beneath
       ctx.fillStyle = "rgba(80,70,55,0.15)";
@@ -12222,7 +12566,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Witch's Domain hut (near x:535, y:33) ===
     {
       const whX = 481,
-        whY = getY(30);
+        whY = getLevelY(30);
       const s = 1.6;
       // Ground — dead grass and moss
       ctx.fillStyle = "rgba(25,40,20,0.25)";
@@ -12409,7 +12753,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Sunken Temple ruins (near x:650, y:56) ===
     {
       const stX = 666,
-        stY = getY(68);
+        stY = getLevelY(68);
       const s = 1.7;
       // Flooded base — large murky pool
       ctx.fillStyle = "rgba(20,45,35,0.3)";
@@ -12598,7 +12942,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Blight Basin poison pools (near x:540, y:70) ===
     {
       const bbX = 550,
-        bbY = getY(58);
+        bbY = getLevelY(58);
       const s = 1.6;
       // Tainted ground
       ctx.fillStyle = "rgba(30,40,15,0.2)";
@@ -12744,7 +13088,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Triad Keep fortified structure (near x:640, y:28) ===
     {
       const tkX = 618,
-        tkY = getY(25);
+        tkY = getLevelY(25);
       const s = 1.7;
       // Moat
       ctx.fillStyle = "rgba(20,40,30,0.25)";
@@ -12882,7 +13226,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Sunscorch Labyrinth maze walls (near x:1000, y:67) ===
     {
       const lbX = 910,
-        lbY = getY(63);
+        lbY = getLevelY(63);
       const s = 1.7;
       const wallC = "#9a8050";
       const wallD = "#6a5a30";
@@ -12998,7 +13342,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Frost Fortress walls (near x:1268, y:67) ===
     {
       const ffX = 1200,
-        ffY = getY(76);
+        ffY = getLevelY(76);
       const s = 1.8;
       const stoneC = "#6a7a8a";
       const stoneD = "#4a5a6a";
@@ -13175,7 +13519,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Frontier Outpost palisade (near x:1332, y:28) ===
     {
       const foX = 1340,
-        foY = getY(42);
+        foY = getLevelY(42);
       const s = 1.6;
       // Cleared ground around outpost
       ctx.fillStyle = "rgba(200,215,230,0.12)";
@@ -13343,7 +13687,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Glacier formations (near x:1142, y:48) ===
     {
       const glX = 1125,
-        glY = getY(36);
+        glY = getLevelY(36);
       const s = 1.8;
       // Glacier base — wide ice sheet
       ctx.fillStyle = "rgba(160,200,230,0.15)";
@@ -13477,7 +13821,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Obsidian Throne (near x:1702, y:59) ===
     {
       const otX = 1738,
-        otY = getY(70);
+        otY = getLevelY(70);
       const s = 1.8;
       // Lava moat ring
       const moatGlow = ctx.createRadialGradient(
@@ -13655,7 +13999,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Ashen Spiral geyser vents (near x:1612, y:72) ===
     {
       const gsX = 1580,
-        gsY = getY(61);
+        gsY = getLevelY(61);
       const s = 1.6;
       // Scorched spiral crack pattern on ground
       ctx.strokeStyle = "rgba(180,60,10,0.15)";
@@ -13768,7 +14112,7 @@ export const drawWorldMapCanvas = ({
     // === LANDMARK: Caldera Basin vent (near x:1592, y:37) ===
     {
       const cbX = 1584,
-        cbY = getY(30);
+        cbY = getLevelY(30);
       const s = 1.7;
       // Outer rocky rim
       ctx.fillStyle = "#2a1a08";
@@ -13926,8 +14270,7 @@ export const drawWorldMapCanvas = ({
   let _nodeSavedCtx: CanvasRenderingContext2D | undefined;
 
   if (nodeCache && !nodeCacheValid) {
-    const nc =
-      nodeCache.current.canvas ?? document.createElement("canvas");
+    const nc = nodeCache.current.canvas ?? document.createElement("canvas");
     nc.width = displayW * dpr;
     nc.height = displayH * dpr;
     const nCtx = nc.getContext("2d");
@@ -13950,960 +14293,1258 @@ export const drawWorldMapCanvas = ({
   }
 
   if (!nodeCacheValid) {
-  allLevels.forEach((level) => {
-    const x = level.x;
-    const y = getY(level.y);
-    const isChallenge = level.kind === "challenge";
-    const isUnlocked = isLevelUnlocked(level.id);
-    const isHovered = hoveredLevel === level.id;
-    const isSelected = selectedLevel === level.id;
-    const stars = levelStars[level.id] || 0;
-    const size =
-      isHovered || isSelected ? (isChallenge ? 30 : 28) : isChallenge ? 26 : 24;
-    const challengePalette = challengePalettes[level.region];
-    const nodePalette = isChallenge
-      ? challengePalette
-      : campaignPalettes[level.region];
+    allLevels.forEach((level) => {
+      const x = level.x;
+      const y = getLevelY(level.y);
+      const isChallenge = level.kind === "challenge";
+      const isUnlocked = isLevelUnlocked(level.id);
+      const isHovered = hoveredLevel === level.id;
+      const isSelected = selectedLevel === level.id;
+      const stars = levelStars[level.id] || 0;
+      const size =
+        isHovered || isSelected
+          ? isChallenge
+            ? 30
+            : 28
+          : isChallenge
+            ? 26
+            : 24;
+      const challengePalette = challengePalettes[level.region];
+      const nodePalette = isChallenge
+        ? challengePalette
+        : campaignPalettes[level.region];
 
-    // Glow (use radial gradient instead of expensive shadowBlur)
-    if (isSelected || (isHovered && isUnlocked)) {
-      const glowRadius = isSelected ? 44 : 32;
-      const glowColor = isSelected ? "rgba(255,200,50," : nodePalette.glowHover;
-      const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
-      glow.addColorStop(0, glowColor + "0.45)");
-      glow.addColorStop(0.4, glowColor + "0.25)");
-      glow.addColorStop(0.7, glowColor + "0.1)");
-      glow.addColorStop(1, glowColor + "0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Victory flag (upgraded: ornate pole with waving banner)
-    if (stars > 0) {
-      const flagPoleX = x + 1;
-      const flagPoleTop = y - size - 22;
-      const flagPoleBot = y - size + 4;
-      // Pole shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.fillRect(
-        flagPoleX - 1,
-        flagPoleTop + 2,
-        4,
-        flagPoleBot - flagPoleTop,
-      );
-      // Pole
-      const poleGrad = ctx.createLinearGradient(
-        flagPoleX - 1.5,
-        0,
-        flagPoleX + 1.5,
-        0,
-      );
-      poleGrad.addColorStop(0, "#6B4520");
-      poleGrad.addColorStop(0.4, "#C89050");
-      poleGrad.addColorStop(0.6, "#A87040");
-      poleGrad.addColorStop(1, "#5A3818");
-      ctx.fillStyle = poleGrad;
-      ctx.fillRect(flagPoleX - 1.5, flagPoleTop, 3, flagPoleBot - flagPoleTop);
-      // Finial (gold ornament on top)
-      ctx.fillStyle = "#FFD700";
-      ctx.beginPath();
-      ctx.arc(flagPoleX, flagPoleTop - 2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#FFF0A0";
-      ctx.beginPath();
-      ctx.arc(flagPoleX - 0.5, flagPoleTop - 2.5, 1.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#B8960A";
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.arc(flagPoleX, flagPoleTop - 2, 3, 0, Math.PI * 2);
-      ctx.stroke();
-      // Flag colors per region
-      const flagPrimary =
-        level.region === "grassland"
-          ? "#30A830"
-          : level.region === "swamp"
-            ? "#6ABCB0"
-            : level.region === "desert"
-              ? "#E8B020"
-              : level.region === "winter"
-                ? "#5090C8"
-                : "#C83030";
-      const flagSecondary =
-        level.region === "grassland"
-          ? "#50D050"
-          : level.region === "swamp"
-            ? "#90E0D0"
-            : level.region === "desert"
-              ? "#FFD850"
-              : level.region === "winter"
-                ? "#80C0F0"
-                : "#FF5050";
-      // Waving flag shape
-      const wave = Math.sin(time * 3 + x * 0.05) * 2;
-      const wave2 = Math.sin(time * 3 + x * 0.05 + 1) * 1.5;
-      ctx.fillStyle = flagPrimary;
-      ctx.beginPath();
-      ctx.moveTo(flagPoleX + 1.5, flagPoleTop);
-      ctx.quadraticCurveTo(
-        flagPoleX + 10,
-        flagPoleTop + 3 + wave,
-        flagPoleX + 18,
-        flagPoleTop + 2 + wave2,
-      );
-      ctx.lineTo(flagPoleX + 17, flagPoleTop + 7 + wave2);
-      ctx.quadraticCurveTo(
-        flagPoleX + 9,
-        flagPoleTop + 8 + wave,
-        flagPoleX + 1.5,
-        flagPoleTop + 14,
-      );
-      ctx.closePath();
-      ctx.fill();
-      // Flag highlight stripe
-      ctx.fillStyle = flagSecondary;
-      ctx.globalAlpha = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(flagPoleX + 1.5, flagPoleTop + 2);
-      ctx.quadraticCurveTo(
-        flagPoleX + 8,
-        flagPoleTop + 4 + wave * 0.7,
-        flagPoleX + 14,
-        flagPoleTop + 3.5 + wave2 * 0.7,
-      );
-      ctx.lineTo(flagPoleX + 13, flagPoleTop + 5.5 + wave2 * 0.7);
-      ctx.quadraticCurveTo(
-        flagPoleX + 7,
-        flagPoleTop + 6 + wave * 0.7,
-        flagPoleX + 1.5,
-        flagPoleTop + 6,
-      );
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      // Flag outline
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(flagPoleX + 1.5, flagPoleTop);
-      ctx.quadraticCurveTo(
-        flagPoleX + 10,
-        flagPoleTop + 3 + wave,
-        flagPoleX + 18,
-        flagPoleTop + 2 + wave2,
-      );
-      ctx.lineTo(flagPoleX + 17, flagPoleTop + 7 + wave2);
-      ctx.quadraticCurveTo(
-        flagPoleX + 9,
-        flagPoleTop + 8 + wave,
-        flagPoleX + 1.5,
-        flagPoleTop + 14,
-      );
-      ctx.closePath();
-      ctx.stroke();
-      // Small star emblem on flag
-      ctx.fillStyle = "#FFE870";
-      ctx.globalAlpha = 0.8;
-      const embX = flagPoleX + 8;
-      const embY = flagPoleTop + 5.5 + wave * 0.5;
-      ctx.beginPath();
-      for (let i = 0; i < 5; i++) {
-        const a = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-        const px = embX + Math.cos(a) * 2.5;
-        const py = embY + Math.sin(a) * 2.5;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-
-    // Node shadow (deeper, offset)
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.beginPath();
-    ctx.arc(x + 2, y + 3, size + 2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Outer decorative ring (metallic beveled)
-    const outerRing = ctx.createRadialGradient(
-      x - 3,
-      y - 3,
-      size - 6,
-      x,
-      y,
-      size + 2,
-    );
-    if (isUnlocked) {
-      outerRing.addColorStop(0, nodePalette.ringLight);
-      outerRing.addColorStop(0.5, nodePalette.ringMid);
-      outerRing.addColorStop(1, nodePalette.ringDark);
-    } else {
-      outerRing.addColorStop(0, "#4A4A4A");
-      outerRing.addColorStop(0.5, "#3A3A3A");
-      outerRing.addColorStop(1, "#2A2A2A");
-    }
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fillStyle = outerRing;
-    ctx.fill();
-
-    // Gold outer glow rings when selected
-    if (isSelected) {
-      const goldPulse = 0.75 + 0.25 * Math.sin(time * 2.5);
-      ctx.strokeStyle = `rgba(255, 215, 0, ${0.12 * goldPulse})`;
-      ctx.lineWidth = 7;
-      ctx.beginPath();
-      ctx.arc(x, y, size + 5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255, 210, 0, ${0.25 * goldPulse})`;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(x, y, size + 3, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.strokeStyle = `rgba(255, 200, 0, ${0.5 * goldPulse})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, size + 1.5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Metallic border strokes (double ring for bevel effect)
-    ctx.strokeStyle = isSelected
-      ? "#FFD700"
-      : isHovered
-        ? nodePalette.border
-        : isUnlocked
-          ? nodePalette.border
-          : "#505050";
-    ctx.lineWidth = isSelected ? 3.5 : 2.5;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.stroke();
-    // Inner bright edge (bevel highlight)
-    ctx.strokeStyle = isUnlocked ? nodePalette.edge : "rgba(100,100,100,0.15)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x, y, size - 2, 0, Math.PI * 2);
-    ctx.stroke();
-    // Outer dark edge (bevel shadow)
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(x, y, size + 0.5, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Ornamental notches (8 evenly spaced around ring)
-    if (isUnlocked) {
-      ctx.fillStyle = nodePalette.notch;
-      for (let n = 0; n < 8; n++) {
-        const na = (n * Math.PI) / 4;
-        const nx = x + Math.cos(na) * (size - 0.5);
-        const ny = y + Math.sin(na) * (size - 0.5);
-        ctx.beginPath();
-        ctx.arc(nx, ny, isSelected ? 2.5 : 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Inner circle (recessed)
-    const innerGrad = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, size - 5);
-    if (isUnlocked) {
-      innerGrad.addColorStop(0, nodePalette.innerLight);
-      innerGrad.addColorStop(1, nodePalette.innerDark);
-    } else {
-      innerGrad.addColorStop(0, "#333028");
-      innerGrad.addColorStop(1, "#201D18");
-    }
-    ctx.beginPath();
-    ctx.arc(x, y, size - 6, 0, Math.PI * 2);
-    ctx.fillStyle = innerGrad;
-    ctx.fill();
-    // Inner recess shadow ring
-    ctx.strokeStyle = "rgba(0,0,0,0.35)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(x, y, size - 6, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Region icon
-    if (isUnlocked) {
-      // Dark vignette behind icon for consistent contrast
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.arc(x, y, size - 7, 0, Math.PI * 2);
-      ctx.fill();
-
-      // All icons drawn centered at origin via translate
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.globalAlpha = 1;
-
-      if (level.kind === "sandbox") {
-        // Sandbox icon: sandcastle turret with flag
-        const s = 1.0;
-        // Base mound
-        ctx.fillStyle = "#D4A84B";
-        ctx.beginPath();
-        ctx.ellipse(0, 7 * s, 11 * s, 4 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Castle body
-        const bodyGrad = ctx.createLinearGradient(-7 * s, -6 * s, 7 * s, 6 * s);
-        bodyGrad.addColorStop(0, "#E8C45A");
-        bodyGrad.addColorStop(1, "#C49030");
-        ctx.fillStyle = bodyGrad;
-        ctx.fillRect(-7 * s, -4 * s, 14 * s, 10 * s);
-        // Crenellations
-        ctx.fillStyle = "#D4A84B";
-        for (let i = -3; i <= 3; i++) {
-          ctx.fillRect(i * 3.2 * s - 1.2 * s, -7 * s, 2.4 * s, 3 * s);
-        }
-        // Door arch
-        ctx.fillStyle = "#6B4020";
-        ctx.beginPath();
-        ctx.arc(0, 4 * s, 2.5 * s, Math.PI, 0);
-        ctx.lineTo(2.5 * s, 6 * s);
-        ctx.lineTo(-2.5 * s, 6 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Flag
-        const wave = Math.sin(time * 3.5) * 1.5;
-        ctx.fillStyle = "#8B5020";
-        ctx.fillRect(-0.5 * s, -12 * s, 1 * s, 6 * s);
-        ctx.fillStyle = "#FF6830";
-        ctx.beginPath();
-        ctx.moveTo(0.5 * s, -12 * s);
-        ctx.quadraticCurveTo(
-          4 * s,
-          -11 * s + wave,
-          7 * s,
-          -11.5 * s + wave * 0.7,
+      // Glow (use radial gradient instead of expensive shadowBlur)
+      if (isSelected || (isHovered && isUnlocked)) {
+        const glowRadius = isSelected ? 44 : 32;
+        const glowColor = isSelected
+          ? "rgba(255,200,50,"
+          : nodePalette.glowHover;
+        const glow = ctx.createRadialGradient(
+          x,
+          y,
+          size * 0.5,
+          x,
+          y,
+          glowRadius,
         );
-        ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
-        ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Star on flag
-        ctx.fillStyle = "#FFE870";
+        glow.addColorStop(0, glowColor + "0.45)");
+        glow.addColorStop(0.4, glowColor + "0.25)");
+        glow.addColorStop(0.7, glowColor + "0.1)");
+        glow.addColorStop(1, glowColor + "0)");
+        ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(3.5 * s, -10 * s + wave * 0.5, 1.2 * s, 0, Math.PI * 2);
+        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
         ctx.fill();
-      } else if (isChallenge) {
-        // Challenge marker icon: regional sigil with crossed blades
-        const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
-        ctx.fillStyle = `${challengePalette.sigilGlow}${challengeGlow})`;
-        ctx.beginPath();
-        ctx.arc(0, 0, 11, 0, Math.PI * 2);
-        ctx.fill();
+      }
 
-        ctx.fillStyle = challengePalette.sigilFill;
-        ctx.beginPath();
-        ctx.moveTo(0, -11);
-        ctx.lineTo(9, 0);
-        ctx.lineTo(0, 11);
-        ctx.lineTo(-9, 0);
-        ctx.closePath();
-        ctx.fill();
+      // Victory flag (heraldic banner with swallowtail)
+      if (stars > 0) {
+        const flagPoleX = x;
+        const flagPoleTop = y - size - 30;
+        const flagPoleBot = y - size + 4;
+        const poleHeight = flagPoleBot - flagPoleTop;
 
-        ctx.strokeStyle = challengePalette.sigilStroke;
-        ctx.lineWidth = 1.1;
-        ctx.beginPath();
-        ctx.moveTo(-6.5, 6);
-        ctx.lineTo(6.5, -6);
-        ctx.moveTo(-6.5, -6);
-        ctx.lineTo(6.5, 6);
-        ctx.stroke();
+        // Pole shadow
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.fillRect(flagPoleX, flagPoleTop + 2, 4, poleHeight);
 
-        ctx.fillStyle = challengePalette.badgeText;
-        ctx.beginPath();
-        ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (level.region === "grassland") {
-        // --- Centered Oak Tree ---
-        // Trunk
-        ctx.fillStyle = "#A07040";
-        ctx.beginPath();
-        ctx.moveTo(-2, 2);
-        ctx.lineTo(-1.5, 10);
-        ctx.lineTo(1.5, 10);
-        ctx.lineTo(2, 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#C89858";
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
-        // Trunk highlight
-        ctx.fillStyle = "#C89050";
-        ctx.fillRect(-0.3, 2.5, 1.2, 6);
-        // Canopy - layered bright circles
-        ctx.fillStyle = "#38A838";
-        ctx.beginPath();
-        ctx.arc(0, -1, 9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#48C848";
-        ctx.beginPath();
-        ctx.arc(-3, -3, 6.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(3.5, -1, 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#60E060";
-        ctx.beginPath();
-        ctx.arc(-1, -4.5, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(2, -3.5, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-        // Bright highlight spots
-        ctx.fillStyle = "#90FF80";
-        ctx.beginPath();
-        ctx.arc(-2, -6, 2.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#80FF70";
-        ctx.beginPath();
-        ctx.arc(3, -5, 2, 0, Math.PI * 2);
-        ctx.fill();
-        // Canopy edge glow
-        ctx.strokeStyle = "#80FF68";
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.4;
-        ctx.beginPath();
-        ctx.arc(0, -1, 9, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      } else if (level.region === "swamp") {
-        // --- Centered Poison Mushroom ---
-        // Murky water puddle
-        ctx.fillStyle = "#2a6858";
-        ctx.globalAlpha = 0.7;
-        ctx.beginPath();
-        ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        // Stem
-        ctx.fillStyle = "#D8C8B0";
-        ctx.beginPath();
-        ctx.moveTo(-2.5, 3);
-        ctx.lineTo(-2, -2);
-        ctx.lineTo(2, -2);
-        ctx.lineTo(2.5, 3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#E8D8C0";
-        ctx.lineWidth = 0.6;
-        ctx.stroke();
-        // Stem highlight
-        ctx.fillStyle = "#F0E0D0";
-        ctx.fillRect(-0.5, -1, 1, 4);
-        // Cap - large centered dome
-        ctx.fillStyle = "#C040E8";
-        ctx.beginPath();
-        ctx.ellipse(0, -2.6, 10, 8, 0, Math.PI, 0);
-        ctx.fill();
-        // Cap shading - darker underside
-        ctx.fillStyle = "#A030C8";
-        ctx.beginPath();
-        ctx.ellipse(0, -2.5, 9, 2.5, 0, 0, Math.PI);
-        ctx.fill();
-        // Cap bright spots
-        ctx.fillStyle = "#E8A0FF";
-        ctx.beginPath();
-        ctx.arc(-4, -6, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(2, -7, 1.3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(5, -4.5, 1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#F0C8FF";
-        ctx.beginPath();
-        ctx.arc(-1, -8, 1, 0, Math.PI * 2);
-        ctx.fill();
-        // Cap outline for pop
-        ctx.strokeStyle = "#D868FF";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(0, -3.5, 10, 7, 0, Math.PI, 0);
-        ctx.stroke();
-        // Glowing bubbles
-        ctx.fillStyle = "#80FFD0";
-        ctx.globalAlpha = 0.85;
-        ctx.beginPath();
-        ctx.arc(-6, 5, 1.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#70FFBB";
-        ctx.beginPath();
-        ctx.arc(5, 6, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#90FFE0";
-        ctx.beginPath();
-        ctx.arc(-2, 7, 0.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        // Toxic drip from cap
-        ctx.fillStyle = "#B050E0";
-        ctx.globalAlpha = 0.7;
-        ctx.beginPath();
-        ctx.ellipse(-5, -0.5, 1, 2, 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(6, 0, 0.8, 1.5, -0.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else if (level.region === "desert") {
-        // --- Centered Sun Icon ---
-        // Outer glow
+        // Pole (metallic gradient)
+        const poleGrad = ctx.createLinearGradient(
+          flagPoleX - 1.5,
+          0,
+          flagPoleX + 2,
+          0,
+        );
+        poleGrad.addColorStop(0, "#5A3818");
+        poleGrad.addColorStop(0.3, "#C89050");
+        poleGrad.addColorStop(0.5, "#DCA868");
+        poleGrad.addColorStop(0.7, "#A87040");
+        poleGrad.addColorStop(1, "#4A2810");
+        ctx.fillStyle = poleGrad;
+        ctx.fillRect(flagPoleX - 0.5, flagPoleTop, 2.5, poleHeight);
+
+        // Finial (ornate spearhead)
         ctx.fillStyle = "#FFD700";
-        ctx.globalAlpha = 0.2;
         ctx.beginPath();
-        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.moveTo(flagPoleX + 0.5, flagPoleTop - 7);
+        ctx.lineTo(flagPoleX + 3.5, flagPoleTop - 1);
+        ctx.lineTo(flagPoleX + 0.5, flagPoleTop + 1);
+        ctx.lineTo(flagPoleX - 2.5, flagPoleTop - 1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#FFF8D0";
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(flagPoleX + 0.5, flagPoleTop - 6);
+        ctx.lineTo(flagPoleX + 1.5, flagPoleTop - 1);
+        ctx.lineTo(flagPoleX + 0.5, flagPoleTop);
+        ctx.lineTo(flagPoleX - 0.5, flagPoleTop - 1);
+        ctx.closePath();
         ctx.fill();
         ctx.globalAlpha = 1;
-        // Sun rays (8 bold rays)
-        ctx.strokeStyle = "#FFB800";
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = "round";
-        for (let r = 0; r < 8; r++) {
-          const a = (r * Math.PI) / 4 + Math.PI / 8;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
-          ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
-          ctx.stroke();
-        }
-        // Ray tips (bright flare)
-        ctx.strokeStyle = "#FFD860";
-        ctx.lineWidth = 1.2;
-        for (let r = 0; r < 8; r++) {
-          const a = (r * Math.PI) / 4 + Math.PI / 8;
-          ctx.beginPath();
-          ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
-          ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
-          ctx.stroke();
-        }
-        // Sun body
-        ctx.fillStyle = "#FFAA00";
+        ctx.strokeStyle = "#B8960A";
+        ctx.lineWidth = 0.7;
         ctx.beginPath();
-        ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
-        ctx.fill();
-        // Sun body gradient ring
-        ctx.fillStyle = "#FFC830";
+        ctx.moveTo(flagPoleX + 0.5, flagPoleTop - 7);
+        ctx.lineTo(flagPoleX + 3.5, flagPoleTop - 1);
+        ctx.lineTo(flagPoleX + 0.5, flagPoleTop + 1);
+        ctx.lineTo(flagPoleX - 2.5, flagPoleTop - 1);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Flag colors per region
+        const flagPrimary =
+          level.region === "grassland"
+            ? "#2A8A2A"
+            : level.region === "swamp"
+              ? "#508A80"
+              : level.region === "desert"
+                ? "#C89818"
+                : level.region === "winter"
+                  ? "#4078A8"
+                  : "#A82828";
+        const flagSecondary =
+          level.region === "grassland"
+            ? "#50D050"
+            : level.region === "swamp"
+              ? "#80D8C0"
+              : level.region === "desert"
+                ? "#FFD040"
+                : level.region === "winter"
+                  ? "#80C0F0"
+                  : "#FF5050";
+        const flagTrim =
+          level.region === "grassland"
+            ? "#1A6A1A"
+            : level.region === "swamp"
+              ? "#3A6A5A"
+              : level.region === "desert"
+                ? "#9A7010"
+                : level.region === "winter"
+                  ? "#305878"
+                  : "#7A1818";
+
+        // Waving animation
+        const wave = Math.sin(time * 3 + x * 0.04) * 2.5;
+        const wave2 = Math.sin(time * 3 + x * 0.04 + 1.2) * 2;
+        const wave3 = Math.sin(time * 3 + x * 0.04 + 2.4) * 1.5;
+
+        // Banner dimensions
+        const bTop = flagPoleTop - 2;
+        const bW = 22;
+        const bH = 18;
+        // Banner body (swallowtail shape)
+        ctx.fillStyle = flagPrimary;
         ctx.beginPath();
-        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.moveTo(flagPoleX + 1.5, bTop);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + 1.5 + wave * 0.5,
+          flagPoleX + bW,
+          bTop + 1 + wave2 * 0.4,
+        );
+        ctx.lineTo(flagPoleX + bW - 2, bTop + bH * 0.5 + wave3 * 0.3);
+        ctx.lineTo(flagPoleX + bW, bTop + bH + wave2 * 0.4);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + bH - 1 + wave * 0.5,
+          flagPoleX + 1.5,
+          bTop + bH,
+        );
+        ctx.closePath();
         ctx.fill();
-        // Bright core
-        ctx.fillStyle = "#FFE870";
+
+        // Horizontal stripe
+        ctx.fillStyle = flagTrim;
+        ctx.globalAlpha = 0.5;
         ctx.beginPath();
-        ctx.arc(0, -0.5, 3.5, 0, Math.PI * 2);
+        ctx.moveTo(flagPoleX + 1.5, bTop + bH * 0.35);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + bH * 0.35 + wave * 0.35,
+          flagPoleX + bW,
+          bTop + bH * 0.35 + wave2 * 0.3,
+        );
+        ctx.lineTo(flagPoleX + bW, bTop + bH * 0.65 + wave2 * 0.3);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + bH * 0.65 + wave * 0.35,
+          flagPoleX + 1.5,
+          bTop + bH * 0.65,
+        );
+        ctx.closePath();
         ctx.fill();
-        // White-hot center
-        ctx.fillStyle = "#FFF8D0";
-        ctx.beginPath();
-        ctx.arc(0, -1, 2, 0, Math.PI * 2);
-        ctx.fill();
-        // Subtle face-like warmth (two small eye dots for character)
-        ctx.fillStyle = "#CC8800";
+        ctx.globalAlpha = 1;
+
+        // Top highlight
+        ctx.fillStyle = flagSecondary;
         ctx.globalAlpha = 0.35;
         ctx.beginPath();
-        ctx.arc(-1.5, -0.5, 0.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(1.5, -0.5, 0.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else if (level.region === "winter") {
-        // --- Centered Crystal Snowflake ---
-        // Outer glow
-        ctx.fillStyle = "#88d0ff";
-        ctx.globalAlpha = 0.25;
-        ctx.beginPath();
-        ctx.arc(0, 0, 13, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        // Six main branches
-        for (let i = 0; i < 6; i++) {
-          ctx.save();
-          ctx.rotate((i * Math.PI) / 3);
-          // Main branch - white
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.moveTo(-1.2, 0);
-          ctx.lineTo(-0.5, -9.5);
-          ctx.lineTo(0.5, -9.5);
-          ctx.lineTo(1.2, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#a0d8ff";
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          // Diamond tip
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.moveTo(0, -12);
-          ctx.lineTo(-2, -9.5);
-          ctx.lineTo(0, -8);
-          ctx.lineTo(2, -9.5);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#b0e0ff";
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          // Lower sub-branches
-          ctx.fillStyle = "#d0f0ff";
-          ctx.beginPath();
-          ctx.moveTo(0, -4);
-          ctx.lineTo(-4.5, -7);
-          ctx.lineTo(-3.5, -5.5);
-          ctx.lineTo(0, -3.2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(0, -4);
-          ctx.lineTo(4.5, -7);
-          ctx.lineTo(3.5, -5.5);
-          ctx.lineTo(0, -3.2);
-          ctx.closePath();
-          ctx.fill();
-          // Upper sub-branches
-          ctx.fillStyle = "#e0f4ff";
-          ctx.beginPath();
-          ctx.moveTo(0, -6.5);
-          ctx.lineTo(-3, -8.5);
-          ctx.lineTo(-2.2, -7.5);
-          ctx.lineTo(0, -6);
-          ctx.closePath();
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(0, -6.5);
-          ctx.lineTo(3, -8.5);
-          ctx.lineTo(2.2, -7.5);
-          ctx.lineTo(0, -6);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-        // Center crystal
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(0, 0, 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#d8f0ff";
-        ctx.beginPath();
-        ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (level.region === "volcanic") {
-        // --- Centered Flame Icon ---
-        // Outer fire glow
-        ctx.fillStyle = "#ff4400";
-        ctx.globalAlpha = 0.25;
-        ctx.beginPath();
-        ctx.arc(0, 0, 14, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        // Main flame body (outer - dark red)
-        ctx.fillStyle = "#DD2200";
-        ctx.beginPath();
-        ctx.moveTo(0, -12);
-        ctx.quadraticCurveTo(5, -8, 7, -3);
-        ctx.quadraticCurveTo(9, 2, 6, 6);
-        ctx.quadraticCurveTo(3, 10, 0, 10);
-        ctx.quadraticCurveTo(-3, 10, -6, 6);
-        ctx.quadraticCurveTo(-9, 2, -7, -3);
-        ctx.quadraticCurveTo(-5, -8, 0, -12);
-        ctx.fill();
-        // Flame left tendril
-        ctx.fillStyle = "#EE4400";
-        ctx.beginPath();
-        ctx.moveTo(-3, -5);
-        ctx.quadraticCurveTo(-7, -9, -4, -11);
-        ctx.quadraticCurveTo(-2, -8, -1, -6);
+        ctx.moveTo(flagPoleX + 1.5, bTop + 1);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + 2.5 + wave * 0.4,
+          flagPoleX + bW - 2,
+          bTop + 2 + wave2 * 0.3,
+        );
+        ctx.lineTo(flagPoleX + bW - 3, bTop + 5 + wave2 * 0.3);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.3,
+          bTop + 4 + wave * 0.3,
+          flagPoleX + 1.5,
+          bTop + 4,
+        );
         ctx.closePath();
         ctx.fill();
-        // Flame right tendril
+        ctx.globalAlpha = 1;
+
+        // Banner outline
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
-        ctx.moveTo(3, -4);
-        ctx.quadraticCurveTo(6, -7, 5, -10);
-        ctx.quadraticCurveTo(3, -7, 2, -5);
+        ctx.moveTo(flagPoleX + 1.5, bTop);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + 1.5 + wave * 0.5,
+          flagPoleX + bW,
+          bTop + 1 + wave2 * 0.4,
+        );
+        ctx.lineTo(flagPoleX + bW - 2, bTop + bH * 0.5 + wave3 * 0.3);
+        ctx.lineTo(flagPoleX + bW, bTop + bH + wave2 * 0.4);
+        ctx.quadraticCurveTo(
+          flagPoleX + bW * 0.4,
+          bTop + bH - 1 + wave * 0.5,
+          flagPoleX + 1.5,
+          bTop + bH,
+        );
         ctx.closePath();
-        ctx.fill();
-        // Middle layer (orange)
-        ctx.fillStyle = "#FF6600";
-        ctx.beginPath();
-        ctx.moveTo(0, -9);
-        ctx.quadraticCurveTo(3.5, -5, 5, -1);
-        ctx.quadraticCurveTo(6, 3, 4, 6);
-        ctx.quadraticCurveTo(2, 9, 0, 9);
-        ctx.quadraticCurveTo(-2, 9, -4, 6);
-        ctx.quadraticCurveTo(-6, 3, -5, -1);
-        ctx.quadraticCurveTo(-3.5, -5, 0, -9);
-        ctx.fill();
-        // Inner layer (bright orange-yellow)
-        ctx.fillStyle = "#FFAA00";
-        ctx.beginPath();
-        ctx.moveTo(0, -6);
-        ctx.quadraticCurveTo(2.5, -3, 3, 1);
-        ctx.quadraticCurveTo(3.5, 5, 0, 7);
-        ctx.quadraticCurveTo(-3.5, 5, -3, 1);
-        ctx.quadraticCurveTo(-2.5, -3, 0, -6);
-        ctx.fill();
-        // Core (bright yellow)
-        ctx.fillStyle = "#FFD800";
-        ctx.beginPath();
-        ctx.moveTo(0, -3);
-        ctx.quadraticCurveTo(1.5, -1, 1.8, 2);
-        ctx.quadraticCurveTo(2, 5, 0, 6);
-        ctx.quadraticCurveTo(-2, 5, -1.8, 2);
-        ctx.quadraticCurveTo(-1.5, -1, 0, -3);
-        ctx.fill();
-        // White-hot center
-        ctx.fillStyle = "#FFF4B0";
+        ctx.stroke();
+
+        // Star emblem on banner
+        const embX = flagPoleX + bW * 0.45;
+        const embY = bTop + bH * 0.5 + wave * 0.3;
+        ctx.fillStyle = "#FFE870";
         ctx.globalAlpha = 0.85;
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(0.8, 1, 0.8, 3);
-        ctx.quadraticCurveTo(0.5, 5, 0, 5);
-        ctx.quadraticCurveTo(-0.5, 5, -0.8, 3);
-        ctx.quadraticCurveTo(-0.8, 1, 0, 0);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        // Animated spark particles
-        const bob = Math.sin(time * 4) * 1.5;
-        ctx.fillStyle = "#FFDD00";
-        ctx.beginPath();
-        ctx.arc(-3, -10 + bob, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#FF8800";
-        ctx.beginPath();
-        ctx.arc(3.5, -9 - bob * 0.6, 0.9, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#FFCC00";
-        ctx.beginPath();
-        ctx.arc(0.5, -12 + bob * 0.4, 0.7, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Fallback - bright gem
-        ctx.fillStyle = "#FFB840";
-        ctx.beginPath();
-        ctx.moveTo(0, -8);
-        ctx.lineTo(6, 0);
-        ctx.lineTo(0, 8);
-        ctx.lineTo(-6, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#FFD870";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.fillStyle = "#FFE880";
-        ctx.beginPath();
-        ctx.moveTo(0, -5);
-        ctx.lineTo(3, 0);
-        ctx.lineTo(0, 5);
-        ctx.lineTo(-3, 0);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.restore();
-      ctx.globalAlpha = 1;
-
-      // Difficulty skulls/pips
-      const diffColors =
-        level.difficulty === 1
-          ? ["#50E080", "#30A858"]
-          : level.difficulty === 2
-            ? ["#FFD040", "#D0A020"]
-            : ["#FF5050", "#C83030"];
-      for (let d = 0; d < 3; d++) {
-        const dx = x - 7 + d * 7;
-        const dy = y + size + 7;
-        if (d < level.difficulty) {
-          // Glow
-          ctx.fillStyle = diffColors[0];
-          ctx.globalAlpha = 0.25;
-          ctx.beginPath();
-          ctx.arc(dx, dy, 5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Filled pip
-          ctx.fillStyle = diffColors[0];
-          ctx.beginPath();
-          ctx.arc(dx, dy, 3, 0, Math.PI * 2);
-          ctx.fill();
-          // Highlight
-          ctx.fillStyle = "#ffffff";
-          ctx.globalAlpha = 0.4;
-          ctx.beginPath();
-          ctx.arc(dx - 0.5, dy - 0.8, 1.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Ring
-          ctx.strokeStyle = diffColors[1];
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.arc(dx, dy, 3, 0, Math.PI * 2);
-          ctx.stroke();
-        } else {
-          // Empty pip
-          ctx.fillStyle = "#2A2520";
-          ctx.beginPath();
-          ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.strokeStyle = "#4a4540";
-          ctx.lineWidth = 0.6;
-          ctx.beginPath();
-          ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-
-      // Stars (proper 10-point stars with inner/outer radius)
-      for (let s = 0; s < 3; s++) {
-        const sx = x - 11 + s * 11;
-        const sy = y + size + 18;
-        const earned = stars > s;
-        const outerR = 5.5;
-        const innerR = 2.2;
-
-        // Star glow for earned
-        if (earned) {
-          ctx.fillStyle = "#ffd700";
-          ctx.globalAlpha = 0.3;
-          ctx.beginPath();
-          ctx.arc(sx, sy, 8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        }
-        // Star shape (10 points: alternating outer/inner)
-        ctx.beginPath();
         for (let i = 0; i < 10; i++) {
-          const angle = (i * Math.PI) / 5 - Math.PI / 2;
-          const r = i % 2 === 0 ? outerR : innerR;
-          const px = sx + Math.cos(angle) * r;
-          const py = sy + Math.sin(angle) * r;
+          const a = (i * Math.PI) / 5 - Math.PI / 2;
+          const r = i % 2 === 0 ? 3 : 1.2;
+          const px = embX + Math.cos(a) * r;
+          const py = embY + Math.sin(a) * r;
           if (i === 0) ctx.moveTo(px, py);
           else ctx.lineTo(px, py);
         }
         ctx.closePath();
-        if (earned) {
-          ctx.fillStyle = "#FFD700";
-          ctx.fill();
-          // Star highlight
-          ctx.fillStyle = "#FFF0A0";
-          ctx.globalAlpha = 0.5;
-          ctx.beginPath();
-          for (let i = 0; i < 10; i++) {
-            const angle = (i * Math.PI) / 5 - Math.PI / 2;
-            const r = (i % 2 === 0 ? outerR : innerR) * 0.55;
-            const px = sx - 0.5 + Math.cos(angle) * r;
-            const py = sy - 0.5 + Math.sin(angle) * r;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Crossbar
+        ctx.fillStyle = "#A87040";
+        ctx.fillRect(flagPoleX - 1, bTop - 0.5, 3, 1.5);
+        ctx.fillRect(flagPoleX - 1, bTop + bH - 1, 3, 1.5);
+      }
+
+      // === BANNER RIBBON (difficulty + stars) — rendered below node circle ===
+      if (isUnlocked) {
+        const bannerTop = y + size - 8;
+        const bannerW = 36;
+        const bannerH = 36;
+        const notchDepth = 6;
+        const bx = x - bannerW / 2;
+
+        // Region-tinted banner colors
+        const bannerColors = {
+          grassland: {
+            top: "#2A3A1A",
+            mid: "#1E2A14",
+            bot: "#243018",
+            border: "#5A7838",
+          },
+          swamp: {
+            top: "#1A2A28",
+            mid: "#142220",
+            bot: "#182820",
+            border: "#3D7467",
+          },
+          desert: {
+            top: "#3A2A18",
+            mid: "#2A2010",
+            bot: "#322818",
+            border: "#82622F",
+          },
+          winter: {
+            top: "#1A2430",
+            mid: "#141C28",
+            bot: "#182230",
+            border: "#43688A",
+          },
+          volcanic: {
+            top: "#301A14",
+            mid: "#24120E",
+            bot: "#2A1810",
+            border: "#742C1C",
+          },
+        };
+        const bc = bannerColors[level.region];
+
+        // Banner shadow
+        ctx.fillStyle = "rgba(0,0,0,0.45)";
+        ctx.beginPath();
+        ctx.moveTo(bx + 3 + 1, bannerTop + 1);
+        ctx.lineTo(bx + bannerW - 3 + 1, bannerTop + 1);
+        ctx.quadraticCurveTo(
+          bx + bannerW + 1,
+          bannerTop + 1,
+          bx + bannerW + 1,
+          bannerTop + 3 + 1,
+        );
+        ctx.lineTo(bx + bannerW + 1, bannerTop + bannerH + 1);
+        ctx.lineTo(x + 1, bannerTop + bannerH - notchDepth + 1);
+        ctx.lineTo(bx + 1, bannerTop + bannerH + 1);
+        ctx.lineTo(bx + 1, bannerTop + 3 + 1);
+        ctx.quadraticCurveTo(bx + 1, bannerTop + 1, bx + 3 + 1, bannerTop + 1);
+        ctx.closePath();
+        ctx.fill();
+
+        // Banner body — region-tinted gradient
+        const bannerGrad = ctx.createLinearGradient(
+          x,
+          bannerTop,
+          x,
+          bannerTop + bannerH,
+        );
+        bannerGrad.addColorStop(0, bc.top);
+        bannerGrad.addColorStop(0.35, bc.mid);
+        bannerGrad.addColorStop(0.7, bc.mid);
+        bannerGrad.addColorStop(1, bc.bot);
+        ctx.fillStyle = bannerGrad;
+        ctx.beginPath();
+        ctx.moveTo(bx + 3, bannerTop);
+        ctx.lineTo(bx + bannerW - 3, bannerTop);
+        ctx.quadraticCurveTo(
+          bx + bannerW,
+          bannerTop,
+          bx + bannerW,
+          bannerTop + 3,
+        );
+        ctx.lineTo(bx + bannerW, bannerTop + bannerH);
+        ctx.lineTo(x, bannerTop + bannerH - notchDepth);
+        ctx.lineTo(bx, bannerTop + bannerH);
+        ctx.lineTo(bx, bannerTop + 3);
+        ctx.quadraticCurveTo(bx, bannerTop, bx + 3, bannerTop);
+        ctx.closePath();
+        ctx.fill();
+
+        // Subtle inner glow from region color
+        ctx.fillStyle = nodePalette.edge;
+        ctx.globalAlpha = 0.1;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Banner border — region-tinted
+        ctx.globalAlpha = 0.55;
+        ctx.strokeStyle = stars > 0 ? "#C8AA3C" : bc.border;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 3, bannerTop);
+        ctx.lineTo(bx + bannerW - 3, bannerTop);
+        ctx.quadraticCurveTo(
+          bx + bannerW,
+          bannerTop,
+          bx + bannerW,
+          bannerTop + 3,
+        );
+        ctx.lineTo(bx + bannerW, bannerTop + bannerH);
+        ctx.lineTo(x, bannerTop + bannerH - notchDepth);
+        ctx.lineTo(bx, bannerTop + bannerH);
+        ctx.lineTo(bx, bannerTop + 3);
+        ctx.quadraticCurveTo(bx, bannerTop, bx + 3, bannerTop);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        // --- Difficulty diamonds (positioned in visible area below node) ---
+        const diffColors =
+          level.difficulty === 1
+            ? { fill: "#50E080", stroke: "#30A858", glow: "rgba(80,224,128," }
+            : level.difficulty === 2
+              ? { fill: "#FFD040", stroke: "#D0A020", glow: "rgba(255,208,64," }
+              : { fill: "#FF5050", stroke: "#C83030", glow: "rgba(255,80,80," };
+        const diffY = bannerTop + 15;
+        const diamondSpacing = 8;
+
+        for (let d = 0; d < 3; d++) {
+          const dx = x - diamondSpacing + d * diamondSpacing;
+          const active = d < level.difficulty;
+
+          if (active) {
+            ctx.fillStyle = diffColors.glow + "0.3)";
+            ctx.beginPath();
+            ctx.arc(dx, diffY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = diffColors.fill;
+            ctx.beginPath();
+            ctx.moveTo(dx, diffY - 3.5);
+            ctx.lineTo(dx + 2.5, diffY);
+            ctx.lineTo(dx, diffY + 3.5);
+            ctx.lineTo(dx - 2.5, diffY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath();
+            ctx.moveTo(dx, diffY - 2.5);
+            ctx.lineTo(dx + 1.5, diffY - 0.5);
+            ctx.lineTo(dx, diffY + 0.5);
+            ctx.lineTo(dx - 1.5, diffY - 0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = diffColors.stroke;
+            ctx.lineWidth = 0.7;
+            ctx.beginPath();
+            ctx.moveTo(dx, diffY - 3.5);
+            ctx.lineTo(dx + 2.5, diffY);
+            ctx.lineTo(dx, diffY + 3.5);
+            ctx.lineTo(dx - 2.5, diffY);
+            ctx.closePath();
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = "#1A1815";
+            ctx.beginPath();
+            ctx.moveTo(dx, diffY - 2.5);
+            ctx.lineTo(dx + 1.8, diffY);
+            ctx.lineTo(dx, diffY + 2.5);
+            ctx.lineTo(dx - 1.8, diffY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(80,70,60,0.5)";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
           }
-          ctx.closePath();
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Gold outline
-          ctx.strokeStyle = "#B89A10";
-          ctx.lineWidth = 0.8;
+        }
+
+        // --- Separator line ---
+        ctx.strokeStyle = "rgba(160,140,90,0.15)";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, bannerTop + 20);
+        ctx.lineTo(bx + bannerW - 4, bannerTop + 20);
+        ctx.stroke();
+
+        // --- Stars ---
+        const starY = bannerTop + 27;
+        const starSpacing = 9;
+        for (let s = 0; s < 3; s++) {
+          const sx = x - starSpacing + s * starSpacing;
+          const earned = stars > s;
+          const outerR = 4.8;
+          const innerR = 1.9;
+
+          if (earned) {
+            ctx.fillStyle = "#ffd700";
+            ctx.globalAlpha = 0.35;
+            ctx.beginPath();
+            ctx.arc(sx, starY, 6.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+
           ctx.beginPath();
           for (let i = 0; i < 10; i++) {
             const angle = (i * Math.PI) / 5 - Math.PI / 2;
             const r = i % 2 === 0 ? outerR : innerR;
             const px = sx + Math.cos(angle) * r;
-            const py = sy + Math.sin(angle) * r;
+            const py = starY + Math.sin(angle) * r;
             if (i === 0) ctx.moveTo(px, py);
             else ctx.lineTo(px, py);
           }
           ctx.closePath();
-          ctx.stroke();
-        } else {
-          // Unearned: dark with subtle outline
-          ctx.fillStyle = "#2A2520";
-          ctx.fill();
-          ctx.strokeStyle = "#4a4030";
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
+
+          if (earned) {
+            const starGrad = ctx.createRadialGradient(
+              sx - 1,
+              starY - 1,
+              0,
+              sx,
+              starY,
+              outerR,
+            );
+            starGrad.addColorStop(0, "#FFF0A0");
+            starGrad.addColorStop(0.5, "#FFD700");
+            starGrad.addColorStop(1, "#C8A010");
+            ctx.fillStyle = starGrad;
+            ctx.fill();
+            ctx.strokeStyle = "#B89A10";
+            ctx.lineWidth = 0.7;
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = "#1A1815";
+            ctx.fill();
+            ctx.strokeStyle = "rgba(80,70,50,0.4)";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
         }
       }
 
-      if (isChallenge) {
-        const tagY = y - size - 8;
-        ctx.fillStyle = challengePalette.badgeFill;
-        ctx.beginPath();
-        ctx.moveTo(x - 10, tagY + 2);
-        ctx.lineTo(x, tagY - 6);
-        ctx.lineTo(x + 10, tagY + 2);
-        ctx.lineTo(x, tagY + 10);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = challengePalette.badgeStroke;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.fillStyle = challengePalette.badgeText;
-        ctx.font = "bold 8px serif";
-        ctx.textAlign = "center";
-        ctx.fillText("!", x, tagY + 4);
+      // Node shadow (deeper, offset)
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.arc(x + 2, y + 3, size + 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer decorative ring (metallic beveled)
+      const outerRing = ctx.createRadialGradient(
+        x - 3,
+        y - 3,
+        size - 6,
+        x,
+        y,
+        size + 2,
+      );
+      if (isUnlocked) {
+        outerRing.addColorStop(0, nodePalette.ringLight);
+        outerRing.addColorStop(0.5, nodePalette.ringMid);
+        outerRing.addColorStop(1, nodePalette.ringDark);
+      } else {
+        outerRing.addColorStop(0, "#4A4A4A");
+        outerRing.addColorStop(0.5, "#3A3A3A");
+        outerRing.addColorStop(1, "#2A2A2A");
       }
-    } else {
-      // Lock icon (detailed padlock)
-      ctx.save();
-      ctx.translate(x, y);
-      // Lock body shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
       ctx.beginPath();
-      ctx.roundRect(-6, 0.5, 12, 10, 2);
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = outerRing;
       ctx.fill();
-      // Lock body
-      const lockGrad = ctx.createLinearGradient(-6, 0, 6, 0);
-      lockGrad.addColorStop(0, "#5A5858");
-      lockGrad.addColorStop(0.4, "#787878");
-      lockGrad.addColorStop(0.6, "#686868");
-      lockGrad.addColorStop(1, "#4A4848");
-      ctx.fillStyle = lockGrad;
+
+      // Gold outer glow rings when selected
+      if (isSelected) {
+        const goldPulse = 0.75 + 0.25 * Math.sin(time * 2.5);
+        ctx.strokeStyle = `rgba(255, 215, 0, ${0.12 * goldPulse})`;
+        ctx.lineWidth = 7;
+        ctx.beginPath();
+        ctx.arc(x, y, size + 5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255, 210, 0, ${0.25 * goldPulse})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(x, y, size + 3, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(255, 200, 0, ${0.5 * goldPulse})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, size + 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Metallic border strokes (double ring for bevel effect)
+      ctx.strokeStyle = isSelected
+        ? "#FFD700"
+        : isHovered
+          ? nodePalette.border
+          : isUnlocked
+            ? nodePalette.border
+            : "#505050";
+      ctx.lineWidth = isSelected ? 3.5 : 2.5;
       ctx.beginPath();
-      ctx.roundRect(-6, -1, 12, 10, 2);
-      ctx.fill();
-      // Lock body border
-      ctx.strokeStyle = "#888888";
-      ctx.lineWidth = 0.8;
-      ctx.beginPath();
-      ctx.roundRect(-6, -1, 12, 10, 2);
+      ctx.arc(x, y, size, 0, Math.PI * 2);
       ctx.stroke();
-      // Lock body highlight
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
-      ctx.beginPath();
-      ctx.roundRect(-5, -0.5, 10, 3, [2, 2, 0, 0]);
-      ctx.fill();
-      // Shackle
-      ctx.strokeStyle = "#808080";
-      ctx.lineWidth = 3;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.arc(0, -2, 5, Math.PI, 0);
-      ctx.stroke();
-      // Shackle highlight
-      ctx.strokeStyle = "#A0A0A0";
+      // Inner bright edge (bevel highlight)
+      ctx.strokeStyle = isUnlocked
+        ? nodePalette.edge
+        : "rgba(100,100,100,0.15)";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(0, -2, 4, Math.PI + 0.3, -0.3);
+      ctx.arc(x, y, size - 2, 0, Math.PI * 2);
       ctx.stroke();
-      // Keyhole
-      ctx.fillStyle = "#2A2828";
+      // Outer dark edge (bevel shadow)
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(0, 3, 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(-1, 3.5, 2, 3);
-      // Keyhole highlight
-      ctx.fillStyle = "#404040";
-      ctx.beginPath();
-      ctx.arc(0, 2.5, 1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-  });
+      ctx.arc(x, y, size + 0.5, 0, Math.PI * 2);
+      ctx.stroke();
 
+      // Ornamental notches (8 evenly spaced around ring)
+      if (isUnlocked) {
+        ctx.fillStyle = nodePalette.notch;
+        for (let n = 0; n < 8; n++) {
+          const na = (n * Math.PI) / 4;
+          const nx = x + Math.cos(na) * (size - 0.5);
+          const ny = y + Math.sin(na) * (size - 0.5);
+          ctx.beginPath();
+          ctx.arc(nx, ny, isSelected ? 2.5 : 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Inner circle (recessed)
+      const innerGrad = ctx.createRadialGradient(
+        x - 2,
+        y - 2,
+        0,
+        x,
+        y,
+        size - 5,
+      );
+      if (isUnlocked) {
+        innerGrad.addColorStop(0, nodePalette.innerLight);
+        innerGrad.addColorStop(1, nodePalette.innerDark);
+      } else {
+        innerGrad.addColorStop(0, "#333028");
+        innerGrad.addColorStop(1, "#201D18");
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, size - 6, 0, Math.PI * 2);
+      ctx.fillStyle = innerGrad;
+      ctx.fill();
+      // Inner recess shadow ring
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, size - 6, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Region icon
+      if (isUnlocked) {
+        // Dark vignette behind icon for consistent contrast
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath();
+        ctx.arc(x, y, size - 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // All icons drawn centered at origin via translate
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.globalAlpha = 1;
+
+        if (level.kind === "sandbox") {
+          // Sandbox icon: sandcastle turret with flag
+          const s = 1.0;
+          // Base mound
+          ctx.fillStyle = "#D4A84B";
+          ctx.beginPath();
+          ctx.ellipse(0, 7 * s, 11 * s, 4 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Castle body
+          const bodyGrad = ctx.createLinearGradient(
+            -7 * s,
+            -6 * s,
+            7 * s,
+            6 * s,
+          );
+          bodyGrad.addColorStop(0, "#E8C45A");
+          bodyGrad.addColorStop(1, "#C49030");
+          ctx.fillStyle = bodyGrad;
+          ctx.fillRect(-7 * s, -4 * s, 14 * s, 10 * s);
+          // Crenellations
+          ctx.fillStyle = "#D4A84B";
+          for (let i = -3; i <= 3; i++) {
+            ctx.fillRect(i * 3.2 * s - 1.2 * s, -7 * s, 2.4 * s, 3 * s);
+          }
+          // Door arch
+          ctx.fillStyle = "#6B4020";
+          ctx.beginPath();
+          ctx.arc(0, 4 * s, 2.5 * s, Math.PI, 0);
+          ctx.lineTo(2.5 * s, 6 * s);
+          ctx.lineTo(-2.5 * s, 6 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Flag
+          const wave = Math.sin(time * 3.5) * 1.5;
+          ctx.fillStyle = "#8B5020";
+          ctx.fillRect(-0.5 * s, -12 * s, 1 * s, 6 * s);
+          ctx.fillStyle = "#FF6830";
+          ctx.beginPath();
+          ctx.moveTo(0.5 * s, -12 * s);
+          ctx.quadraticCurveTo(
+            4 * s,
+            -11 * s + wave,
+            7 * s,
+            -11.5 * s + wave * 0.7,
+          );
+          ctx.lineTo(6.5 * s, -9 * s + wave * 0.7);
+          ctx.quadraticCurveTo(3.5 * s, -9.5 * s + wave, 0.5 * s, -8 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Star on flag
+          ctx.fillStyle = "#FFE870";
+          ctx.beginPath();
+          ctx.arc(3.5 * s, -10 * s + wave * 0.5, 1.2 * s, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (isChallenge) {
+          // Challenge marker icon: regional sigil with crossed blades
+          const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
+          ctx.fillStyle = `${challengePalette.sigilGlow}${challengeGlow})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 11, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = challengePalette.sigilFill;
+          ctx.beginPath();
+          ctx.moveTo(0, -11);
+          ctx.lineTo(9, 0);
+          ctx.lineTo(0, 11);
+          ctx.lineTo(-9, 0);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = challengePalette.sigilStroke;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(-6.5, 6);
+          ctx.lineTo(6.5, -6);
+          ctx.moveTo(-6.5, -6);
+          ctx.lineTo(6.5, 6);
+          ctx.stroke();
+
+          ctx.fillStyle = challengePalette.badgeText;
+          ctx.beginPath();
+          ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (level.region === "grassland") {
+          // --- Centered Oak Tree ---
+          // Trunk
+          ctx.fillStyle = "#A07040";
+          ctx.beginPath();
+          ctx.moveTo(-2, 2);
+          ctx.lineTo(-1.5, 10);
+          ctx.lineTo(1.5, 10);
+          ctx.lineTo(2, 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#C89858";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          // Trunk highlight
+          ctx.fillStyle = "#C89050";
+          ctx.fillRect(-0.3, 2.5, 1.2, 6);
+          // Canopy - layered bright circles
+          ctx.fillStyle = "#38A838";
+          ctx.beginPath();
+          ctx.arc(0, -1, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#48C848";
+          ctx.beginPath();
+          ctx.arc(-3, -3, 6.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(3.5, -1, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#60E060";
+          ctx.beginPath();
+          ctx.arc(-1, -4.5, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(2, -3.5, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          // Bright highlight spots
+          ctx.fillStyle = "#90FF80";
+          ctx.beginPath();
+          ctx.arc(-2, -6, 2.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#80FF70";
+          ctx.beginPath();
+          ctx.arc(3, -5, 2, 0, Math.PI * 2);
+          ctx.fill();
+          // Canopy edge glow
+          ctx.strokeStyle = "#80FF68";
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath();
+          ctx.arc(0, -1, 9, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (level.region === "swamp") {
+          // --- Centered Poison Mushroom ---
+          // Murky water puddle
+          ctx.fillStyle = "#2a6858";
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Stem
+          ctx.fillStyle = "#D8C8B0";
+          ctx.beginPath();
+          ctx.moveTo(-2.5, 3);
+          ctx.lineTo(-2, -2);
+          ctx.lineTo(2, -2);
+          ctx.lineTo(2.5, 3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#E8D8C0";
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+          // Stem highlight
+          ctx.fillStyle = "#F0E0D0";
+          ctx.fillRect(-0.5, -1, 1, 4);
+          // Cap - large centered dome
+          ctx.fillStyle = "#C040E8";
+          ctx.beginPath();
+          ctx.ellipse(0, -2.6, 10, 8, 0, Math.PI, 0);
+          ctx.fill();
+          // Cap shading - darker underside
+          ctx.fillStyle = "#A030C8";
+          ctx.beginPath();
+          ctx.ellipse(0, -2.5, 9, 2.5, 0, 0, Math.PI);
+          ctx.fill();
+          // Cap bright spots
+          ctx.fillStyle = "#E8A0FF";
+          ctx.beginPath();
+          ctx.arc(-4, -6, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(2, -7, 1.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(5, -4.5, 1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#F0C8FF";
+          ctx.beginPath();
+          ctx.arc(-1, -8, 1, 0, Math.PI * 2);
+          ctx.fill();
+          // Cap outline for pop
+          ctx.strokeStyle = "#D868FF";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(0, -3.5, 10, 7, 0, Math.PI, 0);
+          ctx.stroke();
+          // Glowing bubbles
+          ctx.fillStyle = "#80FFD0";
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.arc(-6, 5, 1.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#70FFBB";
+          ctx.beginPath();
+          ctx.arc(5, 6, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#90FFE0";
+          ctx.beginPath();
+          ctx.arc(-2, 7, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Toxic drip from cap
+          ctx.fillStyle = "#B050E0";
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.ellipse(-5, -0.5, 1, 2, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(6, 0, 0.8, 1.5, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        } else if (level.region === "desert") {
+          // --- Centered Sun Icon ---
+          // Outer glow
+          ctx.fillStyle = "#FFD700";
+          ctx.globalAlpha = 0.2;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Sun rays (8 bold rays)
+          ctx.strokeStyle = "#FFB800";
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = "round";
+          for (let r = 0; r < 8; r++) {
+            const a = (r * Math.PI) / 4 + Math.PI / 8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
+            ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
+            ctx.stroke();
+          }
+          // Ray tips (bright flare)
+          ctx.strokeStyle = "#FFD860";
+          ctx.lineWidth = 1.2;
+          for (let r = 0; r < 8; r++) {
+            const a = (r * Math.PI) / 4 + Math.PI / 8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
+            ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+            ctx.stroke();
+          }
+          // Sun body
+          ctx.fillStyle = "#FFAA00";
+          ctx.beginPath();
+          ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
+          ctx.fill();
+          // Sun body gradient ring
+          ctx.fillStyle = "#FFC830";
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fill();
+          // Bright core
+          ctx.fillStyle = "#FFE870";
+          ctx.beginPath();
+          ctx.arc(0, -0.5, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          // White-hot center
+          ctx.fillStyle = "#FFF8D0";
+          ctx.beginPath();
+          ctx.arc(0, -1, 2, 0, Math.PI * 2);
+          ctx.fill();
+          // Subtle face-like warmth (two small eye dots for character)
+          ctx.fillStyle = "#CC8800";
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          ctx.arc(-1.5, -0.5, 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(1.5, -0.5, 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+        } else if (level.region === "winter") {
+          // --- Centered Crystal Snowflake ---
+          // Outer glow
+          ctx.fillStyle = "#88d0ff";
+          ctx.globalAlpha = 0.25;
+          ctx.beginPath();
+          ctx.arc(0, 0, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Six main branches
+          for (let i = 0; i < 6; i++) {
+            ctx.save();
+            ctx.rotate((i * Math.PI) / 3);
+            // Main branch - white
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(-1.2, 0);
+            ctx.lineTo(-0.5, -9.5);
+            ctx.lineTo(0.5, -9.5);
+            ctx.lineTo(1.2, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#a0d8ff";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            // Diamond tip
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(0, -12);
+            ctx.lineTo(-2, -9.5);
+            ctx.lineTo(0, -8);
+            ctx.lineTo(2, -9.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#b0e0ff";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            // Lower sub-branches
+            ctx.fillStyle = "#d0f0ff";
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.lineTo(-4.5, -7);
+            ctx.lineTo(-3.5, -5.5);
+            ctx.lineTo(0, -3.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, -4);
+            ctx.lineTo(4.5, -7);
+            ctx.lineTo(3.5, -5.5);
+            ctx.lineTo(0, -3.2);
+            ctx.closePath();
+            ctx.fill();
+            // Upper sub-branches
+            ctx.fillStyle = "#e0f4ff";
+            ctx.beginPath();
+            ctx.moveTo(0, -6.5);
+            ctx.lineTo(-3, -8.5);
+            ctx.lineTo(-2.2, -7.5);
+            ctx.lineTo(0, -6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, -6.5);
+            ctx.lineTo(3, -8.5);
+            ctx.lineTo(2.2, -7.5);
+            ctx.lineTo(0, -6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          // Center crystal
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, 0, 3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#d8f0ff";
+          ctx.beginPath();
+          ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (level.region === "volcanic") {
+          // --- Centered Flame Icon ---
+          // Outer fire glow
+          ctx.fillStyle = "#ff4400";
+          ctx.globalAlpha = 0.25;
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Main flame body (outer - dark red)
+          ctx.fillStyle = "#DD2200";
+          ctx.beginPath();
+          ctx.moveTo(0, -12);
+          ctx.quadraticCurveTo(5, -8, 7, -3);
+          ctx.quadraticCurveTo(9, 2, 6, 6);
+          ctx.quadraticCurveTo(3, 10, 0, 10);
+          ctx.quadraticCurveTo(-3, 10, -6, 6);
+          ctx.quadraticCurveTo(-9, 2, -7, -3);
+          ctx.quadraticCurveTo(-5, -8, 0, -12);
+          ctx.fill();
+          // Flame left tendril
+          ctx.fillStyle = "#EE4400";
+          ctx.beginPath();
+          ctx.moveTo(-3, -5);
+          ctx.quadraticCurveTo(-7, -9, -4, -11);
+          ctx.quadraticCurveTo(-2, -8, -1, -6);
+          ctx.closePath();
+          ctx.fill();
+          // Flame right tendril
+          ctx.beginPath();
+          ctx.moveTo(3, -4);
+          ctx.quadraticCurveTo(6, -7, 5, -10);
+          ctx.quadraticCurveTo(3, -7, 2, -5);
+          ctx.closePath();
+          ctx.fill();
+          // Middle layer (orange)
+          ctx.fillStyle = "#FF6600";
+          ctx.beginPath();
+          ctx.moveTo(0, -9);
+          ctx.quadraticCurveTo(3.5, -5, 5, -1);
+          ctx.quadraticCurveTo(6, 3, 4, 6);
+          ctx.quadraticCurveTo(2, 9, 0, 9);
+          ctx.quadraticCurveTo(-2, 9, -4, 6);
+          ctx.quadraticCurveTo(-6, 3, -5, -1);
+          ctx.quadraticCurveTo(-3.5, -5, 0, -9);
+          ctx.fill();
+          // Inner layer (bright orange-yellow)
+          ctx.fillStyle = "#FFAA00";
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.quadraticCurveTo(2.5, -3, 3, 1);
+          ctx.quadraticCurveTo(3.5, 5, 0, 7);
+          ctx.quadraticCurveTo(-3.5, 5, -3, 1);
+          ctx.quadraticCurveTo(-2.5, -3, 0, -6);
+          ctx.fill();
+          // Core (bright yellow)
+          ctx.fillStyle = "#FFD800";
+          ctx.beginPath();
+          ctx.moveTo(0, -3);
+          ctx.quadraticCurveTo(1.5, -1, 1.8, 2);
+          ctx.quadraticCurveTo(2, 5, 0, 6);
+          ctx.quadraticCurveTo(-2, 5, -1.8, 2);
+          ctx.quadraticCurveTo(-1.5, -1, 0, -3);
+          ctx.fill();
+          // White-hot center
+          ctx.fillStyle = "#FFF4B0";
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(0.8, 1, 0.8, 3);
+          ctx.quadraticCurveTo(0.5, 5, 0, 5);
+          ctx.quadraticCurveTo(-0.5, 5, -0.8, 3);
+          ctx.quadraticCurveTo(-0.8, 1, 0, 0);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Animated spark particles
+          const bob = Math.sin(time * 4) * 1.5;
+          ctx.fillStyle = "#FFDD00";
+          ctx.beginPath();
+          ctx.arc(-3, -10 + bob, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FF8800";
+          ctx.beginPath();
+          ctx.arc(3.5, -9 - bob * 0.6, 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FFCC00";
+          ctx.beginPath();
+          ctx.arc(0.5, -12 + bob * 0.4, 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Fallback - bright gem
+          ctx.fillStyle = "#FFB840";
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.lineTo(6, 0);
+          ctx.lineTo(0, 8);
+          ctx.lineTo(-6, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#FFD870";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = "#FFE880";
+          ctx.beginPath();
+          ctx.moveTo(0, -5);
+          ctx.lineTo(3, 0);
+          ctx.lineTo(0, 5);
+          ctx.lineTo(-3, 0);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.restore();
+        ctx.globalAlpha = 1;
+
+        // Challenge diamond badge
+        if (isChallenge) {
+          const tagY = y - size - 8;
+          ctx.fillStyle = challengePalette.badgeFill;
+          ctx.beginPath();
+          ctx.moveTo(x - 10, tagY + 2);
+          ctx.lineTo(x, tagY - 6);
+          ctx.lineTo(x + 10, tagY + 2);
+          ctx.lineTo(x, tagY + 10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = challengePalette.badgeStroke;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = challengePalette.badgeText;
+          ctx.font = "bold 8px serif";
+          ctx.textAlign = "center";
+          ctx.fillText("!", x, tagY + 4);
+        }
+
+        // Pennant flag for unlocked levels without victory flag
+        if (stars === 0) {
+          const pennantX = x + size * 0.6;
+          const pennantTop = y - size - 16;
+          const pennantBot = y - size + 2;
+          const pennantLen = 14;
+          const pWave = Math.sin(time * 2.5 + x * 0.07) * 1.5;
+
+          // Pole shadow
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.fillRect(pennantX, pennantTop + 1, 2.5, pennantBot - pennantTop);
+          // Pole
+          const ppGrad = ctx.createLinearGradient(
+            pennantX - 0.5,
+            0,
+            pennantX + 2,
+            0,
+          );
+          ppGrad.addColorStop(0, "#5A4520");
+          ppGrad.addColorStop(0.5, "#8A7040");
+          ppGrad.addColorStop(1, "#5A4520");
+          ctx.fillStyle = ppGrad;
+          ctx.fillRect(pennantX, pennantTop, 2, pennantBot - pennantTop);
+          // Pole cap
+          ctx.fillStyle = "#B8960A";
+          ctx.beginPath();
+          ctx.arc(pennantX + 1, pennantTop - 1, 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#FFD700";
+          ctx.beginPath();
+          ctx.arc(pennantX + 0.5, pennantTop - 1.5, 0.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Triangular pennant
+          const pennantColor = nodePalette.ringMid ?? "#6a6a6a";
+          ctx.fillStyle = pennantColor;
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.moveTo(pennantX + 2, pennantTop + 1);
+          ctx.quadraticCurveTo(
+            pennantX + pennantLen * 0.6,
+            pennantTop + 3 + pWave,
+            pennantX + pennantLen,
+            pennantTop + 5 + pWave * 0.8,
+          );
+          ctx.lineTo(pennantX + 2, pennantTop + 10);
+          ctx.closePath();
+          ctx.fill();
+          // Pennant highlight
+          ctx.fillStyle = "#ffffff";
+          ctx.globalAlpha = 0.12;
+          ctx.beginPath();
+          ctx.moveTo(pennantX + 2, pennantTop + 2);
+          ctx.quadraticCurveTo(
+            pennantX + pennantLen * 0.4,
+            pennantTop + 3.5 + pWave * 0.7,
+            pennantX + pennantLen * 0.7,
+            pennantTop + 4.5 + pWave * 0.6,
+          );
+          ctx.lineTo(pennantX + 2, pennantTop + 5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Pennant outline
+          ctx.strokeStyle = "rgba(0,0,0,0.25)";
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(pennantX + 2, pennantTop + 1);
+          ctx.quadraticCurveTo(
+            pennantX + pennantLen * 0.6,
+            pennantTop + 3 + pWave,
+            pennantX + pennantLen,
+            pennantTop + 5 + pWave * 0.8,
+          );
+          ctx.lineTo(pennantX + 2, pennantTop + 10);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      } else {
+        // Lock icon (detailed padlock)
+        ctx.save();
+        ctx.translate(x, y);
+        // Lock body shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath();
+        ctx.roundRect(-6, 0.5, 12, 10, 2);
+        ctx.fill();
+        // Lock body
+        const lockGrad = ctx.createLinearGradient(-6, 0, 6, 0);
+        lockGrad.addColorStop(0, "#5A5858");
+        lockGrad.addColorStop(0.4, "#787878");
+        lockGrad.addColorStop(0.6, "#686868");
+        lockGrad.addColorStop(1, "#4A4848");
+        ctx.fillStyle = lockGrad;
+        ctx.beginPath();
+        ctx.roundRect(-6, -1, 12, 10, 2);
+        ctx.fill();
+        // Lock body border
+        ctx.strokeStyle = "#888888";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.roundRect(-6, -1, 12, 10, 2);
+        ctx.stroke();
+        // Lock body highlight
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.beginPath();
+        ctx.roundRect(-5, -0.5, 10, 3, [2, 2, 0, 0]);
+        ctx.fill();
+        // Shackle
+        ctx.strokeStyle = "#808080";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.arc(0, -2, 5, Math.PI, 0);
+        ctx.stroke();
+        // Shackle highlight
+        ctx.strokeStyle = "#A0A0A0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, -2, 4, Math.PI + 0.3, -0.3);
+        ctx.stroke();
+        // Keyhole
+        ctx.fillStyle = "#2A2828";
+        ctx.beginPath();
+        ctx.arc(0, 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(-1, 3.5, 2, 3);
+        // Keyhole highlight
+        ctx.fillStyle = "#404040";
+        ctx.beginPath();
+        ctx.arc(0, 2.5, 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    });
   } // end !nodeCacheValid
 
   if (_nodeSavedCtx) {
@@ -14922,7 +15563,7 @@ export const drawWorldMapCanvas = ({
     const level = getLevelById(selectedLevel);
     if (level) {
       const lx = level.x;
-      const ly = getY(level.y);
+      const ly = getLevelY(level.y);
       const marchCount = isMobile ? 3 : 5;
 
       for (let i = 0; i < marchCount; i++) {
@@ -14990,7 +15631,7 @@ export const drawWorldMapCanvas = ({
     const level = getLevelById(tooltipLevelId);
     if (level && isLevelUnlocked(level.id)) {
       const x = level.x;
-      const y = getY(level.y);
+      const y = getLevelY(level.y);
       const size = 28;
 
       const cardWidth = 150;
@@ -15267,23 +15908,49 @@ export const drawWorldMapCanvas = ({
       fCtx.fillStyle = tlGrad;
       fCtx.fillRect(0, 0, cornerSize, cornerSize);
 
-      const trGrad = fCtx.createRadialGradient(width, 0, 0, width, 0, cornerSize);
+      const trGrad = fCtx.createRadialGradient(
+        width,
+        0,
+        0,
+        width,
+        0,
+        cornerSize,
+      );
       trGrad.addColorStop(0, "rgba(5,3,1,0.5)");
       trGrad.addColorStop(1, "rgba(5,3,1,0)");
       fCtx.fillStyle = trGrad;
       fCtx.fillRect(width - cornerSize, 0, cornerSize, cornerSize);
 
-      const blGrad = fCtx.createRadialGradient(0, height, 0, 0, height, cornerSize);
+      const blGrad = fCtx.createRadialGradient(
+        0,
+        height,
+        0,
+        0,
+        height,
+        cornerSize,
+      );
       blGrad.addColorStop(0, "rgba(5,3,1,0.5)");
       blGrad.addColorStop(1, "rgba(5,3,1,0)");
       fCtx.fillStyle = blGrad;
       fCtx.fillRect(0, height - cornerSize, cornerSize, cornerSize);
 
-      const brGrad = fCtx.createRadialGradient(width, height, 0, width, height, cornerSize);
+      const brGrad = fCtx.createRadialGradient(
+        width,
+        height,
+        0,
+        width,
+        height,
+        cornerSize,
+      );
       brGrad.addColorStop(0, "rgba(5,3,1,0.5)");
       brGrad.addColorStop(1, "rgba(5,3,1,0)");
       fCtx.fillStyle = brGrad;
-      fCtx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
+      fCtx.fillRect(
+        width - cornerSize,
+        height - cornerSize,
+        cornerSize,
+        cornerSize,
+      );
 
       fogOverlayCache.current = { canvas: fc, w: displayW, h: displayH };
     }

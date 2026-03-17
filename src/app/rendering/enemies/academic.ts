@@ -1,3 +1,5 @@
+import { setShadowBlur, clearShadow } from "../performance";
+import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
   drawFaceCircle,
   drawEyes,
@@ -59,7 +61,7 @@ export function drawFreshmanEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Floating corruption particles with trails
@@ -431,17 +433,16 @@ export function drawFreshmanEnemy(
     ctx.globalAlpha = 1;
   }
 
-  // Eldritch sigil above head
+  // Eldritch sigil above head (glowing)
   ctx.save();
   ctx.translate(x, y - size * 0.65 + bobble + Math.sin(time * 2) * size * 0.02);
   ctx.rotate(time * 0.5);
+  setShadowBlur(ctx, 8 * zoom, "#4ade80");
   ctx.strokeStyle = `rgba(74, 222, 128, ${runeGlow * 0.6})`;
   ctx.lineWidth = 1.5 * zoom;
-  // Outer ring
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.08, 0, Math.PI * 2);
   ctx.stroke();
-  // Inner triangle
   ctx.beginPath();
   for (let i = 0; i < 3; i++) {
     const angle = (i * Math.PI * 2) / 3 - Math.PI / 2;
@@ -452,6 +453,7 @@ export function drawFreshmanEnemy(
   }
   ctx.closePath();
   ctx.stroke();
+  clearShadow(ctx);
   ctx.restore();
 
   // Pulsing green glow rings around hands
@@ -529,7 +531,7 @@ export function drawSophomoreEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Lightning bolts crackling around
@@ -819,20 +821,20 @@ export function drawSophomoreEnemy(
   ctx.stroke();
 
   // Massive glowing storm orb in hand
-  // Magic orb (optimized - layered glow instead of shadowBlur)
   ctx.fillStyle = `rgba(59, 130, 246, ${magicPulse * 0.3})`;
   ctx.beginPath();
   ctx.arc(x + size * 0.42, y + swagger * 0.1, size * 0.18, 0, Math.PI * 2);
   ctx.fill();
+  setShadowBlur(ctx, 12 * zoom, "#60a5fa");
   ctx.fillStyle = `rgba(96, 165, 250, ${magicPulse * 0.9})`;
   ctx.beginPath();
   ctx.arc(x + size * 0.42, y + swagger * 0.1, size * 0.13, 0, Math.PI * 2);
   ctx.fill();
-  // Inner storm core
   ctx.fillStyle = "#dbeafe";
   ctx.beginPath();
   ctx.arc(x + size * 0.42, y + swagger * 0.1, size * 0.05, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
   // Mini lightning in orb
   ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 1.5 * zoom;
@@ -882,6 +884,19 @@ export function drawSophomoreEnemy(
     maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.3 : 0),
     expansion: 2.0,
   });
+
+  // Demotivation slow aura (ability: "Demotivation" - slows troops)
+  ctx.strokeStyle = `rgba(80, 90, 120, ${0.15 + stormIntensity * 0.1})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let i = 0; i < 2; i++) {
+    const auraPhase = (time * 0.4 + i * 0.6) % 2;
+    const auraR = size * 0.3 + auraPhase * size * 0.35;
+    ctx.globalAlpha = 0.25 * (1 - auraPhase / 2);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.3, auraR, auraR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   // Floating storm fragments
   drawShiftingSegments(ctx, x, y - size * 0.15, size, time, zoom, {
@@ -953,7 +968,7 @@ export function drawJuniorEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Floating ancient tomes orbiting with chains
@@ -1390,6 +1405,19 @@ export function drawJuniorEnemy(
     maxAlpha: 0.4 + (isAttacking ? attackIntensity * 0.35 : 0),
     expansion: 1.6,
   });
+
+  // Brain Fog aura (ability: "Brain Fog" - weakens nearby towers)
+  for (let fog = 0; fog < 4; fog++) {
+    const fogAngle = time * 0.3 + fog * Math.PI * 0.5;
+    const fogDist = size * 0.35 + Math.sin(time * 0.8 + fog) * size * 0.1;
+    const fogX = x + Math.cos(fogAngle) * fogDist;
+    const fogY = y + size * 0.3 + Math.sin(fogAngle) * fogDist * ISO_Y_RATIO;
+    const fogAlpha = 0.12 + Math.sin(time * 1.5 + fog) * 0.06;
+    ctx.fillStyle = `rgba(120, 100, 160, ${fogAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(fogX, fogY, size * 0.12, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Floating crystal pieces
   drawShiftingSegments(ctx, x, y - size * 0.05, size, time, zoom, {
@@ -1984,10 +2012,12 @@ export function drawSeniorEnemy(
   }
 
   // Glowing seal
+  setShadowBlur(ctx, 8 * zoom, "#db2777");
   ctx.fillStyle = `rgba(219, 39, 119, ${0.8 + powerSurge * 0.2})`;
   ctx.beginPath();
   ctx.arc(0, size * 0.15, size * 0.045, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
 
   // Seal emblem
   ctx.fillStyle = "#fcd34d";
@@ -2027,7 +2057,8 @@ export function drawSeniorEnemy(
     ctx.strokeStyle = `rgba(219, 39, 119, ${attackIntensity * 0.6})`;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.arc(x, y, size * 0.6 + attackIntensity * size * 0.3, 0, Math.PI * 2);
+    const attackRadius = size * 0.6 + attackIntensity * size * 0.3;
+    ctx.ellipse(x, y, attackRadius, attackRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Academic power words
@@ -2061,6 +2092,14 @@ export function drawSeniorEnemy(
     );
     ctx.fill();
   }
+
+  // Thesis Defense stun aura (ability: "Thesis Defense" - stuns defenders)
+  const stunPulse = Math.sin(time * 2) * 0.5 + 0.5;
+  ctx.strokeStyle = `rgba(219, 39, 119, ${stunPulse * 0.12})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.2, size * 0.4, size * 0.4 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.stroke();
 
   // Intense glow rings
   drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.12, time, zoom, {
@@ -2312,7 +2351,8 @@ export function drawGradStudentEnemy(
     Math.PI * 2,
   );
   ctx.fill();
-  // Dimensional residue (optimized - no shadowBlur)
+  // Dimensional residue (glowing void burn)
+  setShadowBlur(ctx, 6 * zoom, "#fb923c");
   ctx.fillStyle = `rgba(255, 180, 100, ${insanityPulse * 0.6})`;
   ctx.beginPath();
   ctx.ellipse(
@@ -2325,6 +2365,7 @@ export function drawGradStudentEnemy(
     Math.PI * 2,
   );
   ctx.fill();
+  clearShadow(ctx);
 
   // Multiple pockets overflowing with tools
   ctx.fillStyle = "#e5e5e5";
@@ -2581,6 +2622,18 @@ export function drawGradStudentEnemy(
     ctx.restore();
   }
 
+  // Soul Drain aura (ability: "Soul Drain" - poison damage over time)
+  for (let soul = 0; soul < 3; soul++) {
+    const soulPhase = (time * 0.8 + soul * 0.4) % 1.5;
+    const soulX = x + Math.sin(time * 1.2 + soul * 2.1) * size * 0.15;
+    const soulY = y + size * 0.2 - soulPhase * size * 0.5;
+    const soulAlpha = (1 - soulPhase / 1.5) * 0.3;
+    ctx.fillStyle = `rgba(80, 40, 100, ${soulAlpha})`;
+    ctx.beginPath();
+    ctx.arc(soulX, soulY, size * (0.015 + soulPhase * 0.01), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Research glow rings around hands
   drawPulsingGlowRings(ctx, x - size * 0.35, y + size * 0.15, size * 0.07, time, zoom, {
     color: "rgba(251, 146, 60, 0.5)",
@@ -2626,7 +2679,7 @@ export function drawProfessorEnemy(
   const breathe = Math.sin(time * 1.5) * 0.02;
   size *= 1.2;
 
-  // Spectral knowledge distortion field
+  // Spectral knowledge distortion field (isometric ground plane)
   ctx.strokeStyle = `rgba(239, 68, 68, ${powerPulse * 0.2})`;
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 3; i++) {
@@ -2634,12 +2687,12 @@ export function drawProfessorEnemy(
     const distSize = size * 0.35 + distPhase * size * 0.35;
     ctx.globalAlpha = 0.3 * (1 - distPhase / 2);
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.45, distSize, distSize * 0.28, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.45, distSize, distSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
-  // Crimson knowledge pool beneath
+  // Crimson knowledge aura (isometric ground plane)
   const poolGrad = ctx.createRadialGradient(
     x, y + size * 0.45, size * 0.05,
     x, y + size * 0.45, size * 0.5,
@@ -2649,7 +2702,7 @@ export function drawProfessorEnemy(
   poolGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = poolGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.45, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Layered crimson power aura
@@ -3029,6 +3082,7 @@ export function drawProfessorEnemy(
     ctx.fill();
   }
   // Magical spark at index fingertip
+  setShadowBlur(ctx, 10 * zoom, "#ef4444");
   const sparkGrad = ctx.createRadialGradient(0, -size * 0.18, 0, 0, -size * 0.18, size * 0.05);
   sparkGrad.addColorStop(0, `rgba(255, 200, 200, ${powerPulse})`);
   sparkGrad.addColorStop(0.5, `rgba(239, 68, 68, ${powerPulse * 0.5})`);
@@ -3041,6 +3095,7 @@ export function drawProfessorEnemy(
   ctx.beginPath();
   ctx.arc(0, -size * 0.18, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
   ctx.restore();
 
   // Ancient tome floating beside - more detailed
@@ -3112,6 +3167,19 @@ export function drawProfessorEnemy(
       ctx.stroke();
     }
   }
+
+  // Bureaucracy aura (ability: "Bureaucracy" - slows tower attack speed)
+  ctx.strokeStyle = `rgba(180, 80, 80, ${0.1 + knowledgeGlow * 0.08})`;
+  ctx.lineWidth = 1 * zoom;
+  for (let b = 0; b < 2; b++) {
+    const bPhase = (time * 0.3 + b * 0.6) % 2;
+    const bR = size * 0.35 + bPhase * size * 0.3;
+    ctx.globalAlpha = 0.18 * (1 - bPhase / 2);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.35, bR, bR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   // Powerful arcane glow
   drawPulsingGlowRings(ctx, x - size * 0.35, y - size * 0.2 + hover, size * 0.08, time, zoom, {
@@ -3212,7 +3280,7 @@ export function drawDeanEnemy(
   auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.95, 0, Math.PI * 2);
+  ctx.ellipse(x, y, size * 0.95, size * 0.95 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Orbiting void shards with trails
@@ -3388,7 +3456,8 @@ export function drawDeanEnemy(
     y - size * 0.08 + hover * 0.15,
   );
   ctx.fill();
-  // Central void gem (optimized - layered glow)
+  // Central void gem (glowing)
+  setShadowBlur(ctx, 10 * zoom, "#a855f7");
   ctx.fillStyle = "rgba(168, 85, 247, 0.4)";
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.32 + hover * 0.15);
@@ -3403,11 +3472,11 @@ export function drawDeanEnemy(
   ctx.lineTo(x, y - size * 0.08 + hover * 0.15);
   ctx.lineTo(x - size * 0.07, y - size * 0.18 + hover * 0.15);
   ctx.fill();
-  // Inner gem glow
   ctx.fillStyle = "#e9d5ff";
   ctx.beginPath();
   ctx.arc(x, y - size * 0.19 + hover * 0.15, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
 
   // Commanding face - otherworldly beauty
   drawFaceCircle(ctx, x, y - size * 0.55 + hover, size * 0.26, [
@@ -3634,20 +3703,21 @@ export function drawDeanEnemy(
   ctx.lineTo(size * 0.07, -size * 0.4);
   ctx.closePath();
   ctx.fill();
-  // Massive void power orb (optimized - layered glow)
+  // Massive void power orb (glowing)
   ctx.fillStyle = "rgba(168, 85, 247, 0.3)";
   ctx.beginPath();
   ctx.arc(0, -size * 0.62, size * 0.12, 0, Math.PI * 2);
   ctx.fill();
+  setShadowBlur(ctx, 15 * zoom, "#a855f7");
   ctx.fillStyle = "#c084fc";
   ctx.beginPath();
   ctx.arc(0, -size * 0.62, size * 0.08, 0, Math.PI * 2);
   ctx.fill();
-  // Inner orb details
   ctx.fillStyle = "#e9d5ff";
   ctx.beginPath();
   ctx.arc(-size * 0.02, -size * 0.64, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
+  clearShadow(ctx);
   // Void energy swirling in orb
   ctx.strokeStyle = "#1e1b4b";
   ctx.lineWidth = 1.5 * zoom;
@@ -3655,6 +3725,19 @@ export function drawDeanEnemy(
   ctx.arc(0, -size * 0.62, size * 0.05, time * 3, time * 3 + Math.PI);
   ctx.stroke();
   ctx.restore();
+
+  // Administrative Hold aura (ability: disables towers + Paperwork slow)
+  ctx.strokeStyle = `rgba(140, 70, 200, ${0.1 + authorityAura * 0.08})`;
+  ctx.lineWidth = 2 * zoom;
+  for (let adm = 0; adm < 3; adm++) {
+    const admPhase = (time * 0.4 + adm * 0.45) % 2;
+    const admR = size * 0.3 + admPhase * size * 0.4;
+    ctx.globalAlpha = 0.2 * (1 - admPhase / 2);
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.35, admR, admR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   // Dark powerful glow rings
   drawPulsingGlowRings(ctx, x, y - size * 0.15 + hover, size * 0.12, time, zoom, {

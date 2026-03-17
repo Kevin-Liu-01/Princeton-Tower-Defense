@@ -21,7 +21,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     shortName: "Freeze",
     cost: 60,
     cooldown: 20000,
-    desc: "Freezes ALL enemies for 3 seconds",
+    desc: "Freezes up to 5 enemies for 3 seconds",
   },
   payday: {
     name: "Paw Point Payday",
@@ -146,31 +146,31 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
     {
       level: 1,
       title: "Rime Seal",
-      description: "Freeze duration +0.6s",
+      description: "Freeze duration +0.6s, max targets 5→8",
       cost: SPELL_UPGRADE_COSTS[0],
     },
     {
       level: 2,
       title: "Permafrost Channel",
-      description: "Freeze duration +0.6s and stronger chill lock",
+      description: "Freeze duration +0.6s, max targets 8→12",
       cost: SPELL_UPGRADE_COSTS[1],
     },
     {
       level: 3,
       title: "Glacial Vectors",
-      description: "Freeze duration +0.6s, wave reaches sooner",
+      description: "Freeze duration +0.6s, max targets 12→16",
       cost: SPELL_UPGRADE_COSTS[2],
     },
     {
       level: 4,
       title: "Hail Bastion",
-      description: "Freeze duration +0.6s with longer ice linger",
+      description: "Freeze duration +0.6s, max targets 16→22",
       cost: SPELL_UPGRADE_COSTS[3],
     },
     {
       level: 5,
       title: "Absolute Zero Covenant",
-      description: "Freeze duration +0.6s and full map lockdown",
+      description: "Freeze duration +0.6s and full map lockdown — freezes ALL enemies",
       cost: SPELL_UPGRADE_COSTS[4],
     },
     {
@@ -287,7 +287,7 @@ export const SPELL_TRAITS: Record<SpellType, SpellTrait> = {
     border: "rgba(22,78,99,0.2)",
   },
   freeze: {
-    trait: "Global Freeze",
+    trait: "Area Freeze",
     color: "text-indigo-300/80",
     bg: "rgba(49,46,129,0.25)",
     border: "rgba(49,46,129,0.2)",
@@ -350,6 +350,11 @@ export const getNextSpellUpgradeCost = (
   currentLevel: number,
 ): number => getSpellUpgradeCost(spellType, currentLevel + 1);
 
+export const getSpellDowngradeRefund = (
+  spellType: SpellType,
+  currentLevel: number,
+): number => getSpellUpgradeCost(spellType, currentLevel);
+
 export const getSpentSpellUpgradeStars = (
   upgrades?: Partial<SpellUpgradeLevels> | null,
 ): number => {
@@ -380,6 +385,8 @@ export interface LightningSpellStats {
 
 export interface FreezeSpellStats {
   freezeDurationMs: number;
+  maxTargets: number;
+  isGlobal: boolean;
 }
 
 export interface PaydaySpellStats {
@@ -431,10 +438,15 @@ export const getLightningSpellStats = (level: number): LightningSpellStats => {
   };
 };
 
+const FREEZE_MAX_TARGETS_BY_LEVEL = [5, 8, 12, 16, 22, Infinity, Infinity] as const;
+
 export const getFreezeSpellStats = (level: number): FreezeSpellStats => {
   const normalizedLevel = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, level));
+  const maxTargets = FREEZE_MAX_TARGETS_BY_LEVEL[normalizedLevel];
   return {
     freezeDurationMs: 3000 + normalizedLevel * 600,
+    maxTargets,
+    isGlobal: !Number.isFinite(maxTargets),
   };
 };
 

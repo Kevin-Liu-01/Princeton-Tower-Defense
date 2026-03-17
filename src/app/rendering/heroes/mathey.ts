@@ -14,8 +14,12 @@ function drawFurMantle(
   const mantleHalfH = size * 0.22;
 
   const mantleGrad = ctx.createRadialGradient(
-    x, mantleCenterY, size * 0.08,
-    x, mantleCenterY, mantleHalfW,
+    x,
+    mantleCenterY,
+    size * 0.08,
+    x,
+    mantleCenterY,
+    mantleHalfW,
   );
   mantleGrad.addColorStop(0, "#5e4e3c");
   mantleGrad.addColorStop(0.35, "#4e3e2c");
@@ -31,13 +35,21 @@ function drawFurMantle(
     const angle = (i / clumpCount) * Math.PI * 2;
     const wobble = Math.sin(time * 1.0 + i * 2.1) * size * 0.006;
     const baseX = x + Math.cos(angle) * (mantleHalfW + wobble);
-    const baseY = mantleCenterY + Math.sin(angle) * (mantleHalfH + wobble * 0.5);
+    const baseY =
+      mantleCenterY + Math.sin(angle) * (mantleHalfH + wobble * 0.5);
     const tuftLen = size * (0.07 + Math.sin(i * 1.9 + 0.5) * 0.03);
     const tuftAngle = angle + Math.sin(time * 1.3 + i * 0.7) * 0.12;
     const dirX = Math.cos(tuftAngle);
     const dirY = Math.sin(tuftAngle) * 0.5;
 
-    ctx.strokeStyle = i % 4 === 0 ? "#6e5e4a" : i % 4 === 1 ? "#4e3e28" : i % 4 === 2 ? "#5e4e3a" : "#584832";
+    ctx.strokeStyle =
+      i % 4 === 0
+        ? "#6e5e4a"
+        : i % 4 === 1
+          ? "#4e3e28"
+          : i % 4 === 2
+            ? "#5e4e3a"
+            : "#584832";
     ctx.lineWidth = (2.8 - (i % 3) * 0.6) * zoom;
     ctx.beginPath();
     ctx.moveTo(baseX, baseY);
@@ -51,15 +63,27 @@ function drawFurMantle(
   }
 
   const innerGrad = ctx.createRadialGradient(
-    x, mantleCenterY, size * 0.04,
-    x, mantleCenterY, mantleHalfW * 0.72,
+    x,
+    mantleCenterY,
+    size * 0.04,
+    x,
+    mantleCenterY,
+    mantleHalfW * 0.72,
   );
   innerGrad.addColorStop(0, "#6e5e4c");
   innerGrad.addColorStop(0.4, "#5e4e3c");
   innerGrad.addColorStop(1, "#4e3e2c");
   ctx.fillStyle = innerGrad;
   ctx.beginPath();
-  ctx.ellipse(x, mantleCenterY, mantleHalfW * 0.75, mantleHalfH * 0.7, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    mantleCenterY,
+    mantleHalfW * 0.75,
+    mantleHalfH * 0.7,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   ctx.strokeStyle = "rgba(110, 95, 72, 0.35)";
@@ -85,12 +109,19 @@ function drawFurMantle(
   for (let i = 0; i < puffCount; i++) {
     const t = (i / (puffCount - 1)) * 2 - 1;
     const puffX = x + t * mantleHalfW * 0.85;
-    const puffY = mantleCenterY - mantleHalfH * 0.4 * (1 - t * t) + Math.sin(time * 1.1 + i * 1.5) * size * 0.005;
+    const puffY =
+      mantleCenterY -
+      mantleHalfH * 0.4 * (1 - t * t) +
+      Math.sin(time * 1.1 + i * 1.5) * size * 0.005;
     const puffR = size * (0.06 + (1 - Math.abs(t)) * 0.04);
 
     const puffGrad = ctx.createRadialGradient(
-      puffX - size * 0.01, puffY - size * 0.01, 0,
-      puffX, puffY, puffR,
+      puffX - size * 0.01,
+      puffY - size * 0.01,
+      0,
+      puffX,
+      puffY,
+      puffR,
     );
     puffGrad.addColorStop(0, "#6e5e4c");
     puffGrad.addColorStop(0.5, "#564636");
@@ -131,15 +162,23 @@ function drawFurCollar(
     const angle = (i / clumpCount) * Math.PI * 2 + furHash(i, 1) * 0.35;
     const radW = baseW * (0.75 + furHash(i, 2) * 0.45);
     const radH = baseH * (0.6 + furHash(i, 3) * 0.7);
-    const cx = x + Math.cos(angle) * radW * 0.55 + (furHash(i, 4) - 0.5) * size * 0.08;
-    const cy = collarY + Math.sin(angle) * radH * 0.5 + (furHash(i, 5) - 0.5) * size * 0.04;
+    const cx =
+      x + Math.cos(angle) * radW * 0.55 + (furHash(i, 4) - 0.5) * size * 0.08;
+    const cy =
+      collarY +
+      Math.sin(angle) * radH * 0.5 +
+      (furHash(i, 5) - 0.5) * size * 0.04;
     const clumpR = size * (0.07 + furHash(i, 6) * 0.06);
     const squash = 0.5 + furHash(i, 7) * 0.8;
     const tilt = (furHash(i, 8) - 0.5) * 1.2;
 
     const cGrad = ctx.createRadialGradient(
-      cx - size * 0.01, cy - size * 0.01, 0,
-      cx, cy, clumpR,
+      cx - size * 0.01,
+      cy - size * 0.01,
+      0,
+      cx,
+      cy,
+      clumpR,
     );
     const shade = 40 + Math.floor(furHash(i, 9) * 30);
     cGrad.addColorStop(0, `rgb(${shade + 30}, ${shade + 18}, ${shade + 6})`);
@@ -157,8 +196,10 @@ function drawFurCollar(
     const angle = (i / puffCount) * Math.PI * 2 + furHash(i, 20) * 0.5;
     const distW = baseW * (0.5 + furHash(i, 21) * 0.55);
     const distH = baseH * (0.35 + furHash(i, 22) * 0.65);
-    const px = x + Math.cos(angle) * distW + (furHash(i, 23) - 0.5) * size * 0.06;
-    const py = collarY + Math.sin(angle) * distH + (furHash(i, 24) - 0.5) * size * 0.035;
+    const px =
+      x + Math.cos(angle) * distW + (furHash(i, 23) - 0.5) * size * 0.06;
+    const py =
+      collarY + Math.sin(angle) * distH + (furHash(i, 24) - 0.5) * size * 0.035;
     const pr = size * (0.035 + furHash(i, 25) * 0.045);
     const psquash = 0.4 + furHash(i, 26) * 0.9;
     const ptilt = (furHash(i, 27) - 0.5) * 1.5;
@@ -176,11 +217,15 @@ function drawFurCollar(
     const angle = (i / tuftCount) * Math.PI * 2 + furHash(i, 40) * 0.6;
     const edgeW = baseW * (0.8 + furHash(i, 41) * 0.4);
     const edgeH = baseH * (0.7 + furHash(i, 42) * 0.5);
-    const bx = x + Math.cos(angle) * edgeW + (furHash(i, 43) - 0.5) * size * 0.05;
+    const bx =
+      x + Math.cos(angle) * edgeW + (furHash(i, 43) - 0.5) * size * 0.05;
     const by = collarY + Math.sin(angle) * edgeH;
     const tuftLen = size * (0.04 + furHash(i, 44) * 0.06);
     const curve = (furHash(i, 45) - 0.5) * size * 0.04;
-    const tuftAngle = angle + (furHash(i, 46) - 0.5) * 0.8 + Math.sin(time * 1.3 + i * 0.9) * 0.1;
+    const tuftAngle =
+      angle +
+      (furHash(i, 46) - 0.5) * 0.8 +
+      Math.sin(time * 1.3 + i * 0.9) * 0.1;
     const dx = Math.cos(tuftAngle);
     const dy = Math.sin(tuftAngle) * 0.5;
 
@@ -210,7 +255,10 @@ function drawFurCollar(
     ctx.strokeStyle = `rgba(${shade + 20}, ${shade + 10}, ${shade}, 0.4)`;
     ctx.beginPath();
     ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + Math.cos(sAngle) * sLen, sy + Math.sin(sAngle) * sLen * 0.5);
+    ctx.lineTo(
+      sx + Math.cos(sAngle) * sLen,
+      sy + Math.sin(sAngle) * sLen * 0.5,
+    );
     ctx.stroke();
   }
 
@@ -225,8 +273,12 @@ function drawFurCollar(
     const htilt = furHash(i, 85) * Math.PI;
 
     const hGrad = ctx.createRadialGradient(
-      hx - size * 0.005, hy - size * 0.005, 0,
-      hx, hy, hr,
+      hx - size * 0.005,
+      hy - size * 0.005,
+      0,
+      hx,
+      hy,
+      hr,
     );
     hGrad.addColorStop(0, "rgba(120, 105, 85, 0.6)");
     hGrad.addColorStop(0.5, "rgba(95, 80, 60, 0.35)");
@@ -249,15 +301,41 @@ function drawFrostSkirtArmor(
   attackIntensity: number,
   gemPulse: number,
 ) {
-  const skirtTop = y + size * 0.30;
+  const skirtTop = y + size * 0.3;
   const bandCount = 5;
   const totalHeight = size * 0.38;
   const gapHalf = size * 0.12;
 
-  drawFrostCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, gemPulse);
+  drawFrostCenterBanner(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    skirtTop,
+    totalHeight,
+    gapHalf,
+    gemPulse,
+  );
 
   for (let side = -1; side <= 1; side += 2) {
-    drawFrostTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, bandCount, totalHeight, gapHalf, gemPulse, isAttacking, attackIntensity);
+    drawFrostTassetSide(
+      ctx,
+      x,
+      y,
+      size,
+      time,
+      zoom,
+      side,
+      skirtTop,
+      bandCount,
+      totalHeight,
+      gapHalf,
+      gemPulse,
+      isAttacking,
+      attackIntensity,
+    );
   }
 
   drawFrostChain(ctx, x, size, zoom, skirtTop, gapHalf, gemPulse, time);
@@ -292,12 +370,20 @@ function drawFrostTassetSide(
     const outerW = size * (0.42 + band * 0.035);
     const innerGap = gapHalf + band * size * 0.008;
     const sway =
-      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) *
+      size *
+      0.003 *
+      (band + 1);
 
     const innerX = x + side * innerGap + sway;
     const outerX = x + side * outerW + sway;
 
-    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    const plateG = ctx.createLinearGradient(
+      innerX,
+      innerTopY,
+      outerX,
+      outerBotY,
+    );
     if (side === -1) {
       plateG.addColorStop(0, "#454560");
       plateG.addColorStop(0.25, "#353548");
@@ -345,10 +431,15 @@ function drawFrostTassetSide(
 
     const rivetMidT = 0.75;
     const rivetX = innerX + rivetMidT * (outerX - innerX);
-    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rivetY =
+      innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
     const rg = ctx.createRadialGradient(
-      rivetX - size * 0.002, rivetY - size * 0.002, 0,
-      rivetX, rivetY, size * 0.009,
+      rivetX - size * 0.002,
+      rivetY - size * 0.002,
+      0,
+      rivetX,
+      rivetY,
+      size * 0.009,
     );
     rg.addColorStop(0, "#d0e8f5");
     rg.addColorStop(0.4, "#a0c0d8");
@@ -364,12 +455,23 @@ function drawFrostTassetSide(
       for (let sc = 0; sc < scaleCount; sc++) {
         const t = (sc + 0.5) / scaleCount;
         const scaleX = innerX + t * (outerX - innerX);
-        const scaleYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        const scaleYBase =
+          innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
         const scaleSize = size * 0.026;
         ctx.beginPath();
         ctx.moveTo(scaleX, scaleYBase - scaleSize * 0.3);
-        ctx.quadraticCurveTo(scaleX + scaleSize, scaleYBase, scaleX, scaleYBase + scaleSize * 0.6);
-        ctx.quadraticCurveTo(scaleX - scaleSize, scaleYBase, scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.quadraticCurveTo(
+          scaleX + scaleSize,
+          scaleYBase,
+          scaleX,
+          scaleYBase + scaleSize * 0.6,
+        );
+        ctx.quadraticCurveTo(
+          scaleX - scaleSize,
+          scaleYBase,
+          scaleX,
+          scaleYBase - scaleSize * 0.3,
+        );
         ctx.fill();
       }
     }
@@ -422,17 +524,23 @@ function drawFrostCenterBanner(
   ctx.moveTo(x - bannerHalfW, bannerTop);
   ctx.lineTo(x + bannerHalfW, bannerTop);
   ctx.bezierCurveTo(
-    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
-    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
-    x + bannerHalfW * 0.85, bannerBottom,
+    x + bannerHalfW + wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85,
+    bannerBottom,
   );
   ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
   ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
   ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
   ctx.bezierCurveTo(
-    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
-    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
-    x - bannerHalfW, bannerTop,
+    x - bannerHalfW * 0.9 - wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW,
+    bannerTop,
   );
   ctx.closePath();
   ctx.fill();
@@ -496,8 +604,12 @@ function drawFrostChain(
     const ly = chainY + sag * sagT;
 
     const linkGrad = ctx.createRadialGradient(
-      lx - size * 0.002, ly - size * 0.002, 0,
-      lx, ly, size * 0.012,
+      lx - size * 0.002,
+      ly - size * 0.002,
+      0,
+      lx,
+      ly,
+      size * 0.012,
     );
     linkGrad.addColorStop(0, "#a0c0d8");
     linkGrad.addColorStop(0.5, "#80b0c8");
@@ -552,7 +664,10 @@ function drawFrostSkirtBelt(
   const vDip = size * 0.08;
 
   const beltGrad = ctx.createLinearGradient(
-    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+    x - beltHalfW,
+    skirtTop,
+    x + beltHalfW,
+    skirtTop,
   );
   beltGrad.addColorStop(0, "#303048");
   beltGrad.addColorStop(0.25, "#505070");
@@ -577,8 +692,14 @@ function drawFrostSkirtBelt(
   ctx.strokeStyle = "#80c0ff";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
-  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.moveTo(
+    x - beltHalfW + size * 0.01,
+    skirtTop - beltThick * 0.5 + size * 0.004,
+  );
+  ctx.lineTo(
+    x + beltHalfW - size * 0.01,
+    skirtTop - beltThick * 0.5 + size * 0.004,
+  );
   ctx.stroke();
 
   ctx.fillStyle = "#80c0ff";
@@ -589,7 +710,13 @@ function drawFrostSkirtBelt(
   ctx.fill();
   ctx.fillStyle = "#a0e0ff";
   ctx.beginPath();
-  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.008,
+    skirtTop + vDip * 0.35 - size * 0.008,
+    size * 0.013,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 }
@@ -603,7 +730,7 @@ export function drawMatheyKnightHero(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // COLOSSAL JUGGERNAUT KNIGHT - Massive heavily armored warrior with devastating war hammer
   const isAttacking = attackPhase > 0;
@@ -618,16 +745,37 @@ export function drawMatheyKnightHero(
   for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
     const layerOffset = auraLayer * 0.1;
     const auraGrad = ctx.createRadialGradient(
-      x, y, size * (0.12 + layerOffset),
-      x, y, size * (1.0 + layerOffset * 0.3)
+      x,
+      y,
+      size * (0.12 + layerOffset),
+      x,
+      y,
+      size * (1.0 + layerOffset * 0.3),
     );
-    auraGrad.addColorStop(0, `rgba(100, 180, 255, ${auraIntensity * auraPulse * (0.45 - auraLayer * 0.1)})`);
-    auraGrad.addColorStop(0.4, `rgba(150, 200, 255, ${auraIntensity * auraPulse * (0.3 - auraLayer * 0.06)})`);
-    auraGrad.addColorStop(0.7, `rgba(200, 220, 255, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.03)})`);
+    auraGrad.addColorStop(
+      0,
+      `rgba(100, 180, 255, ${auraIntensity * auraPulse * (0.45 - auraLayer * 0.1)})`,
+    );
+    auraGrad.addColorStop(
+      0.4,
+      `rgba(150, 200, 255, ${auraIntensity * auraPulse * (0.3 - auraLayer * 0.06)})`,
+    );
+    auraGrad.addColorStop(
+      0.7,
+      `rgba(200, 220, 255, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.03)})`,
+    );
     auraGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
     ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.ellipse(x, y, size * (0.95 + layerOffset * 0.2), size * (0.65 + layerOffset * 0.15), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      size * (0.95 + layerOffset * 0.2),
+      size * (0.65 + layerOffset * 0.15),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -639,7 +787,10 @@ export function drawMatheyKnightHero(
     const py = y + Math.sin(pAngle) * pDist * 0.5;
     const pAlpha = 0.55 + Math.sin(time * 3 + p * 0.4) * 0.3;
     // Ice crystal particle
-    ctx.fillStyle = p % 3 === 0 ? `rgba(200, 230, 255, ${pAlpha})` : `rgba(100, 180, 255, ${pAlpha})`;
+    ctx.fillStyle =
+      p % 3 === 0
+        ? `rgba(200, 230, 255, ${pAlpha})`
+        : `rgba(100, 180, 255, ${pAlpha})`;
     ctx.beginPath();
     ctx.save();
     ctx.translate(px, py);
@@ -654,10 +805,14 @@ export function drawMatheyKnightHero(
     ctx.restore();
   }
 
-
   // === MASSIVE BULKY PLATE ARMOR BODY ===
   // This knight is significantly wider and heavier
-  const armorGrad = ctx.createLinearGradient(x - size * 0.55, y - size * 0.35, x + size * 0.55, y + size * 0.45);
+  const armorGrad = ctx.createLinearGradient(
+    x - size * 0.55,
+    y - size * 0.35,
+    x + size * 0.55,
+    y + size * 0.45,
+  );
   armorGrad.addColorStop(0, "#252535");
   armorGrad.addColorStop(0.1, "#404058");
   armorGrad.addColorStop(0.25, "#505070");
@@ -729,14 +884,34 @@ export function drawMatheyKnightHero(
   // Left ornate pattern
   ctx.beginPath();
   ctx.moveTo(x - size * 0.38, y - size * 0.2);
-  ctx.quadraticCurveTo(x - size * 0.45, y - size * 0.05, x - size * 0.38, y + size * 0.08);
-  ctx.quadraticCurveTo(x - size * 0.32, y + size * 0.15, x - size * 0.38, y + size * 0.25);
+  ctx.quadraticCurveTo(
+    x - size * 0.45,
+    y - size * 0.05,
+    x - size * 0.38,
+    y + size * 0.08,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.32,
+    y + size * 0.15,
+    x - size * 0.38,
+    y + size * 0.25,
+  );
   ctx.stroke();
   // Right ornate pattern
   ctx.beginPath();
   ctx.moveTo(x + size * 0.38, y - size * 0.2);
-  ctx.quadraticCurveTo(x + size * 0.45, y - size * 0.05, x + size * 0.38, y + size * 0.08);
-  ctx.quadraticCurveTo(x + size * 0.32, y + size * 0.15, x + size * 0.38, y + size * 0.25);
+  ctx.quadraticCurveTo(
+    x + size * 0.45,
+    y - size * 0.05,
+    x + size * 0.38,
+    y + size * 0.08,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.32,
+    y + size * 0.15,
+    x + size * 0.38,
+    y + size * 0.25,
+  );
   ctx.stroke();
   // Center frost rune pattern
   ctx.beginPath();
@@ -763,7 +938,13 @@ export function drawMatheyKnightHero(
       // Rivet highlight
       ctx.fillStyle = "#707098";
       ctx.beginPath();
-      ctx.arc(rivetX - size * 0.008, rivetY - size * 0.008, size * 0.012, 0, Math.PI * 2);
+      ctx.arc(
+        rivetX - size * 0.008,
+        rivetY - size * 0.008,
+        size * 0.012,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Rivet border
       ctx.strokeStyle = "#252535";
@@ -820,7 +1001,17 @@ export function drawMatheyKnightHero(
   ctx.textAlign = "center";
   ctx.fillText("M", x, y + size * 0.14);
 
-  drawFrostSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, gemPulse);
+  drawFrostSkirtArmor(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    gemPulse,
+  );
 
   // === FUR MANTLE ABOVE SHOULDERS (behind head) ===
   drawFurMantle(ctx, x, y, size, time, zoom);
@@ -831,18 +1022,33 @@ export function drawMatheyKnightHero(
   // === COLOSSAL SHOULDER PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
     const pauldronX = x + side * size * 0.62;
-    
+
     // Massive pauldron base with gradient
-    const pauldronGrad = ctx.createRadialGradient(pauldronX, y - size * 0.18, 0, pauldronX, y - size * 0.18, size * 0.3);
+    const pauldronGrad = ctx.createRadialGradient(
+      pauldronX,
+      y - size * 0.18,
+      0,
+      pauldronX,
+      y - size * 0.18,
+      size * 0.3,
+    );
     pauldronGrad.addColorStop(0, "#707098");
     pauldronGrad.addColorStop(0.4, "#505070");
     pauldronGrad.addColorStop(0.7, "#404058");
     pauldronGrad.addColorStop(1, "#303048");
     ctx.fillStyle = pauldronGrad;
     ctx.beginPath();
-    ctx.ellipse(pauldronX, y - size * 0.16, size * 0.28, size * 0.22, side * 0.35, 0, Math.PI * 2);
+    ctx.ellipse(
+      pauldronX,
+      y - size * 0.16,
+      size * 0.28,
+      size * 0.22,
+      side * 0.35,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
-    
+
     // Pauldron layered plates (3 layers for heavy look)
     for (let layer = 0; layer < 3; layer++) {
       const layerY = y - size * 0.1 + layer * size * 0.08;
@@ -850,19 +1056,35 @@ export function drawMatheyKnightHero(
       const layerHeight = size * (0.14 - layer * 0.03);
       ctx.fillStyle = `rgb(${80 + layer * 15}, ${80 + layer * 15}, ${100 + layer * 15})`;
       ctx.beginPath();
-      ctx.ellipse(pauldronX + side * size * 0.04, layerY, layerWidth, layerHeight, side * 0.25, 0, Math.PI * 2);
+      ctx.ellipse(
+        pauldronX + side * size * 0.04,
+        layerY,
+        layerWidth,
+        layerHeight,
+        side * 0.25,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Layer edge
       ctx.strokeStyle = "#252535";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-    
+
     // Ice blue trim
     ctx.strokeStyle = "#80c0ff";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(pauldronX, y - size * 0.16, size * 0.28, size * 0.22, side * 0.35, 0, Math.PI * 2);
+    ctx.ellipse(
+      pauldronX,
+      y - size * 0.16,
+      size * 0.28,
+      size * 0.22,
+      side * 0.35,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Triple spike crown on each pauldron
@@ -884,7 +1106,7 @@ export function drawMatheyKnightHero(
       ctx.lineTo(spikeX, y - size * 0.28 - spikeLen + size * 0.02);
       ctx.stroke();
     }
-    
+
     // Pauldron frost gem
     ctx.fillStyle = "#40a0ff";
     ctx.shadowColor = "#60c0ff";
@@ -895,7 +1117,13 @@ export function drawMatheyKnightHero(
     // Gem inner glow
     ctx.fillStyle = "#a0e0ff";
     ctx.beginPath();
-    ctx.arc(pauldronX - size * 0.01, y - size * 0.19, size * 0.015, 0, Math.PI * 2);
+    ctx.arc(
+      pauldronX - size * 0.01,
+      y - size * 0.19,
+      size * 0.015,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -903,8 +1131,12 @@ export function drawMatheyKnightHero(
   // === HEAVY BARREL HELM ===
   // Different from Captain's - this is a brutal bucket helm
   const helmGrad = ctx.createRadialGradient(
-    x - size * 0.06, y - size * 0.58, size * 0.06,
-    x, y - size * 0.52, size * 0.42
+    x - size * 0.06,
+    y - size * 0.58,
+    size * 0.06,
+    x,
+    y - size * 0.52,
+    size * 0.42,
   );
   helmGrad.addColorStop(0, "#707098");
   helmGrad.addColorStop(0.25, "#606080");
@@ -917,7 +1149,12 @@ export function drawMatheyKnightHero(
   ctx.moveTo(x - size * 0.3, y - size * 0.3);
   ctx.lineTo(x - size * 0.32, y - size * 0.7);
   ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.92, x, y - size * 0.95);
-  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.92, x + size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x + size * 0.32,
+    y - size * 0.92,
+    x + size * 0.32,
+    y - size * 0.7,
+  );
   ctx.lineTo(x + size * 0.3, y - size * 0.3);
   ctx.closePath();
   ctx.fill();
@@ -947,7 +1184,12 @@ export function drawMatheyKnightHero(
   ctx.moveTo(x - size * 0.3, y - size * 0.32);
   ctx.lineTo(x - size * 0.32, y - size * 0.7);
   ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.9, x, y - size * 0.93);
-  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.9, x + size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x + size * 0.32,
+    y - size * 0.9,
+    x + size * 0.32,
+    y - size * 0.7,
+  );
   ctx.lineTo(x + size * 0.3, y - size * 0.32);
   ctx.stroke();
 
@@ -958,13 +1200,18 @@ export function drawMatheyKnightHero(
   ctx.moveTo(x - size * 0.3, y - size * 0.3);
   ctx.lineTo(x - size * 0.32, y - size * 0.7);
   ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.92, x, y - size * 0.95);
-  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.92, x + size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x + size * 0.32,
+    y - size * 0.92,
+    x + size * 0.32,
+    y - size * 0.7,
+  );
   ctx.lineTo(x + size * 0.3, y - size * 0.3);
   ctx.closePath();
   ctx.stroke();
 
   // T-Visor (brutal, intimidating)
-  ctx.fillStyle = "#0a0a15";
+  ctx.fillStyle = "#030308";
   ctx.beginPath();
   // Horizontal slit
   ctx.moveTo(x - size * 0.26, y - size * 0.58);
@@ -984,8 +1231,8 @@ export function drawMatheyKnightHero(
 
   // Glowing eyes in T-visor
   ctx.fillStyle = isAttacking
-    ? `rgba(100, 200, 255, ${0.8 + attackIntensity * 0.2})`
-    : "rgba(80, 160, 220, 0.6)";
+    ? `rgba(60, 140, 210, ${0.8 + attackIntensity * 0.2})`
+    : "rgba(40, 100, 170, 0.6)";
   if (isAttacking) {
     ctx.shadowColor = "#60c0ff";
     ctx.shadowBlur = 10 * zoom;
@@ -1001,14 +1248,26 @@ export function drawMatheyKnightHero(
   ctx.shadowBlur = 0;
 
   // Visor breathing holes
-  ctx.fillStyle = "#0a0a15";
+  ctx.fillStyle = "#030308";
   for (let row = 0; row < 3; row++) {
     for (let col = 0; col < 4; col++) {
       ctx.beginPath();
-      ctx.arc(x - size * 0.18 + col * size * 0.04, y - size * 0.4 + row * size * 0.025, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(
+        x - size * 0.18 + col * size * 0.04,
+        y - size * 0.4 + row * size * 0.025,
+        size * 0.008,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(x + size * 0.06 + col * size * 0.04, y - size * 0.4 + row * size * 0.025, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(
+        x + size * 0.06 + col * size * 0.04,
+        y - size * 0.4 + row * size * 0.025,
+        size * 0.008,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -1039,7 +1298,12 @@ export function drawMatheyKnightHero(
     const spikeHeight = size * (0.1 + 0.14 * centerFactor);
     const halfW = size * 0.022;
 
-    const spikeGrad = ctx.createLinearGradient(spikeX, baseY, spikeX, baseY - spikeHeight);
+    const spikeGrad = ctx.createLinearGradient(
+      spikeX,
+      baseY,
+      spikeX,
+      baseY - spikeHeight,
+    );
     spikeGrad.addColorStop(0, "#505068");
     spikeGrad.addColorStop(0.4, "#404058");
     spikeGrad.addColorStop(1, "#303045");
@@ -1067,7 +1331,13 @@ export function drawMatheyKnightHero(
     ctx.shadowColor = "#80e0ff";
     ctx.shadowBlur = (isCenterSpike ? 8 : 5) * zoom;
     ctx.beginPath();
-    ctx.arc(spikeX, baseY - spikeHeight, size * (isCenterSpike ? 0.02 : 0.013), 0, Math.PI * 2);
+    ctx.arc(
+      spikeX,
+      baseY - spikeHeight,
+      size * (isCenterSpike ? 0.02 : 0.013),
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
   }
@@ -1200,7 +1470,7 @@ export function drawMatheyKnightHero(
   let hammerAngle: number;
   let hammerX: number;
   let hammerY: number;
-  
+
   if (isAttacking) {
     // Phase 1 (0-0.3): Wind-up - hammer goes back and up
     // Phase 2 (0.3-0.6): Overhead swing - hammer arcs over
@@ -1246,7 +1516,12 @@ export function drawMatheyKnightHero(
   ctx.rotate(hammerAngle);
 
   // Hammer handle - thick reinforced shaft
-  const shaftGrad = ctx.createLinearGradient(-size * 0.05, -size * 0.1, size * 0.05, -size * 0.1);
+  const shaftGrad = ctx.createLinearGradient(
+    -size * 0.05,
+    -size * 0.1,
+    size * 0.05,
+    -size * 0.1,
+  );
   shaftGrad.addColorStop(0, "#2a1a10");
   shaftGrad.addColorStop(0.3, "#4a3020");
   shaftGrad.addColorStop(0.5, "#5a4030");
@@ -1276,7 +1551,12 @@ export function drawMatheyKnightHero(
   }
 
   // Hammer head main body
-  const headGrad = ctx.createLinearGradient(-size * 0.22, -size * 0.95, size * 0.22, -size * 0.95);
+  const headGrad = ctx.createLinearGradient(
+    -size * 0.22,
+    -size * 0.95,
+    size * 0.22,
+    -size * 0.95,
+  );
   headGrad.addColorStop(0, "#252540");
   headGrad.addColorStop(0.15, "#404060");
   headGrad.addColorStop(0.35, "#505078");
@@ -1336,7 +1616,8 @@ export function drawMatheyKnightHero(
   ctx.shadowBlur = 0;
 
   // Frost runes on hammer head (glowing intensely during attack)
-  const runeGlow = isAttacking && attackPhase > 0.4 ? 0.8 + attackIntensity * 0.2 : 0.5;
+  const runeGlow =
+    isAttacking && attackPhase > 0.4 ? 0.8 + attackIntensity * 0.2 : 0.5;
   ctx.fillStyle = `rgba(100, 200, 255, ${runeGlow})`;
   ctx.shadowColor = "#60c0ff";
   ctx.shadowBlur = isAttacking && attackPhase > 0.4 ? 12 * zoom : 4 * zoom;
@@ -1393,66 +1674,80 @@ export function drawMatheyKnightHero(
 
   // === EPIC IMPACT EFFECTS (during slam phase) ===
   if (isAttacking && attackPhase > 0.55) {
-    const slamIntensity = attackPhase > 0.6 ? ((attackPhase - 0.6) / 0.4) : 0;
+    const slamIntensity = attackPhase > 0.6 ? (attackPhase - 0.6) / 0.4 : 0;
     const impactX = x + size * 0.4;
     const impactY = y + size * 0.55;
-    
+
     // Screen shake effect simulation via offset particles
     const shakeOffset = slamIntensity * 3 * Math.sin(time * 50);
-    
+
     // Massive shockwave rings
     for (let ring = 0; ring < 5; ring++) {
       const ringSize = size * 0.2 + ring * size * 0.25 * slamIntensity;
       const ringAlpha = (0.8 - ring * 0.15) * slamIntensity;
-      ctx.strokeStyle = ring % 2 === 0 
-        ? `rgba(100, 180, 255, ${ringAlpha})` 
-        : `rgba(200, 230, 255, ${ringAlpha * 0.7})`;
+      ctx.strokeStyle =
+        ring % 2 === 0
+          ? `rgba(100, 180, 255, ${ringAlpha})`
+          : `rgba(200, 230, 255, ${ringAlpha * 0.7})`;
       ctx.lineWidth = (4 - ring * 0.5) * zoom;
       ctx.beginPath();
-      ctx.ellipse(impactX + shakeOffset, impactY, ringSize, ringSize * 0.25, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        impactX + shakeOffset,
+        impactY,
+        ringSize,
+        ringSize * 0.25,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
     }
-    
+
     // Ground crack lines radiating outward
     for (let crack = 0; crack < 12; crack++) {
-      const crackAngle = crack * Math.PI / 6 + Math.sin(crack * 0.7) * 0.2;
+      const crackAngle = (crack * Math.PI) / 6 + Math.sin(crack * 0.7) * 0.2;
       const crackLen = size * (0.4 + Math.random() * 0.3) * slamIntensity;
       const crackWidth = (3 - crack * 0.15) * zoom;
-      
+
       // Main crack
       ctx.strokeStyle = `rgba(80, 150, 220, ${0.8 * slamIntensity})`;
       ctx.lineWidth = crackWidth;
       ctx.beginPath();
       ctx.moveTo(impactX, impactY);
       // Jagged crack path
-      const midX = impactX + Math.cos(crackAngle) * crackLen * 0.5 + Math.sin(crack * 2) * size * 0.05;
+      const midX =
+        impactX +
+        Math.cos(crackAngle) * crackLen * 0.5 +
+        Math.sin(crack * 2) * size * 0.05;
       const midY = impactY + Math.sin(crackAngle) * crackLen * 0.15;
       ctx.lineTo(midX, midY);
       ctx.lineTo(
         impactX + Math.cos(crackAngle) * crackLen,
-        impactY + Math.sin(crackAngle) * crackLen * 0.25
+        impactY + Math.sin(crackAngle) * crackLen * 0.25,
       );
       ctx.stroke();
-      
+
       // Crack glow
       ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 * slamIntensity})`;
       ctx.lineWidth = crackWidth * 2;
       ctx.stroke();
     }
-    
+
     // Flying debris and ice shards
     for (let debris = 0; debris < 20; debris++) {
-      const debrisAngle = debris * Math.PI / 10 + time * 2;
+      const debrisAngle = (debris * Math.PI) / 10 + time * 2;
       const debrisDist = size * 0.1 + debris * size * 0.04 * slamIntensity;
-      const debrisHeight = Math.sin((attackPhase - 0.6) * Math.PI * 2 + debris * 0.3) * size * 0.4;
+      const debrisHeight =
+        Math.sin((attackPhase - 0.6) * Math.PI * 2 + debris * 0.3) * size * 0.4;
       const debrisX = impactX + Math.cos(debrisAngle) * debrisDist;
       const debrisY = impactY - Math.abs(debrisHeight) * slamIntensity;
       const debrisAlpha = 0.9 * slamIntensity * (1 - debris * 0.04);
-      
+
       // Ice shard shape
-      ctx.fillStyle = debris % 3 === 0 
-        ? `rgba(200, 230, 255, ${debrisAlpha})` 
-        : `rgba(100, 180, 255, ${debrisAlpha * 0.7})`;
+      ctx.fillStyle =
+        debris % 3 === 0
+          ? `rgba(200, 230, 255, ${debrisAlpha})`
+          : `rgba(100, 180, 255, ${debrisAlpha * 0.7})`;
       ctx.save();
       ctx.translate(debrisX, debrisY);
       ctx.rotate(debrisAngle + time * 5);
@@ -1465,13 +1760,23 @@ export function drawMatheyKnightHero(
       ctx.fill();
       ctx.restore();
     }
-    
+
     // Central impact flash
     if (attackPhase > 0.58 && attackPhase < 0.75) {
-      const flashIntensity = Math.sin((attackPhase - 0.58) / 0.17 * Math.PI);
-      const flashGrad = ctx.createRadialGradient(impactX, impactY, 0, impactX, impactY, size * 0.4);
+      const flashIntensity = Math.sin(((attackPhase - 0.58) / 0.17) * Math.PI);
+      const flashGrad = ctx.createRadialGradient(
+        impactX,
+        impactY,
+        0,
+        impactX,
+        impactY,
+        size * 0.4,
+      );
       flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity * 0.8})`);
-      flashGrad.addColorStop(0.3, `rgba(150, 220, 255, ${flashIntensity * 0.5})`);
+      flashGrad.addColorStop(
+        0.3,
+        `rgba(150, 220, 255, ${flashIntensity * 0.5})`,
+      );
       flashGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
       ctx.fillStyle = flashGrad;
       ctx.beginPath();
@@ -1483,9 +1788,14 @@ export function drawMatheyKnightHero(
   // === ARMORED LEGS/GREAVES ===
   for (let side = -1; side <= 1; side += 2) {
     const legX = x + side * size * 0.22;
-    
+
     // Heavy greave
-    const greaveGrad = ctx.createLinearGradient(legX - size * 0.08, y + size * 0.3, legX + size * 0.08, y + size * 0.3);
+    const greaveGrad = ctx.createLinearGradient(
+      legX - size * 0.08,
+      y + size * 0.3,
+      legX + size * 0.08,
+      y + size * 0.3,
+    );
     greaveGrad.addColorStop(0, "#303048");
     greaveGrad.addColorStop(0.5, "#505070");
     greaveGrad.addColorStop(1, "#303048");
@@ -1497,11 +1807,19 @@ export function drawMatheyKnightHero(
     ctx.lineTo(legX + size * 0.1, y + size * 0.52);
     ctx.closePath();
     ctx.fill();
-    
+
     // Knee guard
     ctx.fillStyle = "#505068";
     ctx.beginPath();
-    ctx.ellipse(legX, y + size * 0.34, size * 0.08, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      legX,
+      y + size * 0.34,
+      size * 0.08,
+      size * 0.06,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#40a0ff";
     ctx.shadowColor = "#60c0ff";
@@ -1510,7 +1828,7 @@ export function drawMatheyKnightHero(
     ctx.arc(legX, y + size * 0.34, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-    
+
     // Armored boot
     ctx.fillStyle = "#404058";
     ctx.beginPath();
