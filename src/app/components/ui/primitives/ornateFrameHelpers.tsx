@@ -5,6 +5,12 @@ const CARDINAL = [0, 90, 180, 270];
 const INTERCARDINAL = [45, 135, 225, 315];
 const CLOCK_ANGLES = Array.from({ length: 12 }, (_, index) => index * 30);
 
+const PRECISION = 2;
+
+function fix(n: number): string {
+  return n.toFixed(PRECISION);
+}
+
 interface FrameOpts {
   cx: number;
   outerR: number;
@@ -55,7 +61,7 @@ export function heroFrameElements(options: FrameOpts): React.ReactElement[] {
     elements.push(
       <path
         key={`${prefix}cv${degree}`}
-        d={`M${leftX.toFixed(1)},${leftY.toFixed(1)} L${tipX.toFixed(1)},${tipY.toFixed(1)} L${rightX.toFixed(1)},${rightY.toFixed(1)}`}
+        d={`M${fix(leftX)},${fix(leftY)} L${fix(tipX)},${fix(tipY)} L${fix(rightX)},${fix(rightY)}`}
         fill="none"
         stroke={color}
         strokeWidth={chevronWidth}
@@ -71,8 +77,8 @@ export function heroFrameElements(options: FrameOpts): React.ReactElement[] {
     elements.push(
       <circle
         key={`${prefix}sd${degree}`}
-        cx={cx + outerR * Math.cos(radians)}
-        cy={cx + outerR * Math.sin(radians)}
+        cx={fix(cx + outerR * Math.cos(radians))}
+        cy={fix(cx + outerR * Math.sin(radians))}
         r={studRadius}
         fill={dimColor}
       />,
@@ -113,10 +119,10 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
     elements.push(
       <line
         key={`${prefix}wk${degree}`}
-        x1={cx + whiskerInner * cos}
-        y1={cx + whiskerInner * sin}
-        x2={cx + whiskerOuter * cos}
-        y2={cx + whiskerOuter * sin}
+        x1={fix(cx + whiskerInner * cos)}
+        y1={fix(cx + whiskerInner * sin)}
+        x2={fix(cx + whiskerOuter * cos)}
+        y2={fix(cx + whiskerOuter * sin)}
         stroke={dimColor}
         strokeWidth={0.4}
         strokeLinecap="round"
@@ -130,8 +136,8 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
     const pointY = cx + outerR * Math.sin(radians);
     elements.push(
       <g key={`${prefix}sk${degree}`} filter={glowFilter}>
-        <line x1={pointX - starArm} y1={pointY} x2={pointX + starArm} y2={pointY} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
-        <line x1={pointX} y1={pointY - starArm} x2={pointX} y2={pointY + starArm} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
+        <line x1={fix(pointX - starArm)} y1={fix(pointY)} x2={fix(pointX + starArm)} y2={fix(pointY)} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
+        <line x1={fix(pointX)} y1={fix(pointY - starArm)} x2={fix(pointX)} y2={fix(pointY + starArm)} stroke={color} strokeWidth={starWidth} strokeLinecap="round" />
       </g>,
     );
   }
@@ -140,12 +146,14 @@ export function spellFrameElements(options: FrameOpts): React.ReactElement[] {
     const radians = (degree - 90) * D2R;
     const pointX = cx + outerR * Math.cos(radians);
     const pointY = cx + outerR * Math.sin(radians);
+    const pxStr = fix(pointX);
+    const pyStr = fix(pointY);
     elements.push(
       <polygon
         key={`${prefix}tp${degree}`}
-        points={`${pointX},${(pointY - triangleSize).toFixed(1)} ${(pointX + triangleSize * 0.8).toFixed(1)},${(pointY + triangleSize * 0.5).toFixed(1)} ${(pointX - triangleSize * 0.8).toFixed(1)},${(pointY + triangleSize * 0.5).toFixed(1)}`}
+        points={`${pxStr},${fix(pointY - triangleSize)} ${fix(pointX + triangleSize * 0.8)},${fix(pointY + triangleSize * 0.5)} ${fix(pointX - triangleSize * 0.8)},${fix(pointY + triangleSize * 0.5)}`}
         fill={dimColor}
-        transform={`rotate(${degree} ${pointX} ${pointY})`}
+        transform={`rotate(${degree} ${pxStr} ${pyStr})`}
       />,
     );
   }

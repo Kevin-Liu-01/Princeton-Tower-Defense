@@ -167,7 +167,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
             title="Open dev config"
           >
             <Wrench size={14} />
-            Dev Config
+
             <ChevronDown size={14} />
           </button>
         ) : (
@@ -197,11 +197,10 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <button
                     type="button"
                     onClick={() => setDevPerfEnabled(!devPerfEnabled)}
-                    className={`rounded border px-2 py-1 font-mono ${
-                      devPerfEnabled
+                    className={`rounded border px-2 py-1 font-mono ${devPerfEnabled
                         ? "border-emerald-400/70 bg-emerald-900/60 text-emerald-100"
                         : "border-zinc-400/60 bg-zinc-900/60 text-zinc-200"
-                    }`}
+                      }`}
                   >
                     {devPerfEnabled ? "ON" : "OFF"}
                   </button>
@@ -442,11 +441,10 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
 
               {feedback ? (
                 <div
-                  className={`rounded border px-2 py-1 text-[11px] ${
-                    feedback.isError
+                  className={`rounded border px-2 py-1 text-[11px] ${feedback.isError
                       ? "border-red-400/50 bg-red-950/50 text-red-200"
                       : "border-emerald-400/50 bg-emerald-950/50 text-emerald-200"
-                  }`}
+                    }`}
                 >
                   {feedback.message}
                 </div>

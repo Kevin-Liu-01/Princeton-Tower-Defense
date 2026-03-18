@@ -11381,15 +11381,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const bhx = cx + 18 * s;
       const bhy = cy - 20 * s;
       const bhW = 10 * s,
-        bhD = 9 * s,
+        bhD = bhW,
         bhH = 13 * s;
+      const bhDI = bhD * ISO_SIN;
+      const bhDF = bhDI * 2;
 
       // Stone foundation — layered stone blocks with mortar
       {
         const fndH = 3 * s;
-        const fndLeft = { x: bhx - bhW * ISO, y: bhy + bhD * 0.5 };
-        const fndFront = { x: bhx, y: bhy + bhD };
-        const fndRight = { x: bhx + bhW * ISO, y: bhy + bhD * 0.5 };
+        const fndLeft = { x: bhx - bhW * ISO, y: bhy + bhDI };
+        const fndFront = { x: bhx, y: bhy + bhDF };
+        const fndRight = { x: bhx + bhW * ISO, y: bhy + bhDI };
 
         // Foundation base (dark)
         ctx.fillStyle = "#3a2a1a";
@@ -11409,7 +11411,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(fndLeft.x, fndLeft.y - 1 * s);
         ctx.lineTo(fndFront.x, fndFront.y - 1 * s);
         ctx.lineTo(fndRight.x, fndRight.y - 1 * s);
-        ctx.lineTo(bhx, bhy + bhD - fndH - 1 * s);
+        ctx.lineTo(bhx, bhy + bhDF - fndH - 1 * s);
         ctx.closePath();
         ctx.fill();
 
@@ -11457,9 +11459,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Dock/pier extending into water — improved with 3D planks
       {
         const dockStartX = bhx - 2 * s,
-          dockStartY = bhy + bhD + 2 * s;
+          dockStartY = bhy + bhDF + 2 * s;
         const dockEndX = bhx - 10 * s,
-          dockEndY = bhy + bhD + 14 * s;
+          dockEndY = bhy + bhDF + 14 * s;
         const dockW = 2.5 * s;
 
         // Dock shadow on water
@@ -11555,10 +11557,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Left wall (shadowed) — with plaster + timber frame
       {
-        const wallTL = { x: bhx - bhW * ISO, y: bhy - bhH + bhD * 0.5 };
-        const wallBL = { x: bhx - bhW * ISO, y: bhy + bhD * 0.5 };
-        const wallTR = { x: bhx, y: bhy - bhH + bhD };
-        const wallBR = { x: bhx, y: bhy + bhD };
+        const wallTL = { x: bhx - bhW * ISO, y: bhy - bhH + bhDI };
+        const wallBL = { x: bhx - bhW * ISO, y: bhy + bhDI };
+        const wallTR = { x: bhx, y: bhy - bhH + bhDF };
+        const wallBR = { x: bhx, y: bhy + bhDF };
 
         // Plaster fill
         const bwlGrad = ctx.createLinearGradient(
@@ -11638,10 +11640,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Right wall (lit) — with plaster + timber frame
       {
-        const wallTL2 = { x: bhx, y: bhy - bhH + bhD };
-        const wallBL2 = { x: bhx, y: bhy + bhD };
-        const wallTR2 = { x: bhx + bhW * ISO, y: bhy - bhH + bhD * 0.5 };
-        const wallBR2 = { x: bhx + bhW * ISO, y: bhy + bhD * 0.5 };
+        const wallTL2 = { x: bhx, y: bhy - bhH + bhDF };
+        const wallBL2 = { x: bhx, y: bhy + bhDF };
+        const wallTR2 = { x: bhx + bhW * ISO, y: bhy - bhH + bhDI };
+        const wallBR2 = { x: bhx + bhW * ISO, y: bhy + bhDI };
 
         // Plaster fill (lighter — lit side)
         const bwrGrad = ctx.createLinearGradient(
@@ -11716,109 +11718,94 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       }
 
-      // Proper 2:1 iso hip roof with ridge
+      // Gable roof — isometric triangular prism
       {
-        const roofW = bhW + 2 * s;
-        const roofI = roofW * ISO;
-        const roofD = roofW * ISO_SIN;
-        const roofBaseY = bhy - bhH;
-        const ridgeH = 6 * s;
-        const ridgeLen = roofI * 0.6;
-        const ridgeTop = roofBaseY - ridgeH;
+        const ov = 2 * s;
+        const roofHW = bhW + ov;
+        const eW = roofHW * ISO_COS;
+        const eD = roofHW * ISO_SIN;
+        const midY = bhy - bhH + bhDI;
+        const drop = 1 * s;
+        const ridgeH = 7 * s;
 
-        // Left slope (dark)
-        const roofDarkG = ctx.createLinearGradient(
-          bhx - roofI,
-          roofBaseY + roofD,
-          bhx,
-          ridgeTop,
-        );
-        roofDarkG.addColorStop(0, "#3a2008");
-        roofDarkG.addColorStop(0.5, "#4a2a10");
-        roofDarkG.addColorStop(1, "#5a3518");
-        ctx.fillStyle = roofDarkG;
+        // Eave diamond (wall-top + overhang)
+        const eB = { x: bhx, y: midY - eD + drop };
+        const eR = { x: bhx + eW, y: midY + drop };
+        const eF = { x: bhx, y: midY + eD + drop };
+        const eL = { x: bhx - eW, y: midY + drop };
+
+        // Ridge runs full length along the "right" iso axis,
+        // above the midpoints of the B-L and R-F eave edges
+        const rL = { x: bhx - eW, y: midY - eD + drop - ridgeH };
+        const rR = { x: bhx + eW, y: midY + eD + drop - ridgeH };
+
+        // Front slope (drawn first — behind everything else)
+        const darkG = ctx.createLinearGradient(rL.x, rL.y, eF.x, eF.y);
+        darkG.addColorStop(0, "#4a3018");
+        darkG.addColorStop(1, "#3a2008");
+        ctx.fillStyle = darkG;
         ctx.beginPath();
-        ctx.moveTo(bhx - ridgeLen, ridgeTop + (ridgeLen * ISO_SIN) / ISO);
-        ctx.lineTo(bhx - roofI, roofBaseY + roofD);
-        ctx.lineTo(bhx, roofBaseY + roofD * 2);
-        ctx.lineTo(
-          bhx + ridgeLen,
-          ridgeTop + (ridgeLen * ISO_SIN) / ISO + roofD * 2,
-        );
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(eL.x, eL.y);
+        ctx.lineTo(eF.x, eF.y);
+        ctx.lineTo(rR.x, rR.y);
         ctx.closePath();
         ctx.fill();
 
-        // Right slope (lit)
-        const roofLitG = ctx.createLinearGradient(
-          bhx,
-          ridgeTop,
-          bhx + roofI,
-          roofBaseY + roofD,
-        );
-        roofLitG.addColorStop(0, "#6b4a28");
-        roofLitG.addColorStop(0.5, "#5a3a18");
-        roofLitG.addColorStop(1, "#4a2a10");
-        ctx.fillStyle = roofLitG;
+        // Back slope (covers most of front slope, upper lit face)
+        const litG = ctx.createLinearGradient(rL.x, rL.y, eB.x, eB.y);
+        litG.addColorStop(0, "#6b4a28");
+        litG.addColorStop(1, "#5a3a18");
+        ctx.fillStyle = litG;
         ctx.beginPath();
-        ctx.moveTo(
-          bhx + ridgeLen,
-          ridgeTop + (ridgeLen * ISO_SIN) / ISO + roofD * 2,
-        );
-        ctx.lineTo(bhx, roofBaseY + roofD * 2);
-        ctx.lineTo(bhx + roofI, roofBaseY + roofD);
-        ctx.lineTo(bhx + ridgeLen, ridgeTop + (ridgeLen * ISO_SIN) / ISO);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(rR.x, rR.y);
+        ctx.lineTo(eR.x, eR.y);
+        ctx.lineTo(eB.x, eB.y);
         ctx.closePath();
         ctx.fill();
 
-        // Back face (top visible)
-        ctx.fillStyle = "#5a4030";
+        // Left gable end (triangle, shadow — drawn on top)
+        ctx.fillStyle = "#3a2a15";
         ctx.beginPath();
-        ctx.moveTo(bhx - ridgeLen, ridgeTop + (ridgeLen * ISO_SIN) / ISO);
-        ctx.lineTo(bhx - roofI, roofBaseY + roofD);
-        ctx.lineTo(bhx + roofI, roofBaseY + roofD);
-        ctx.lineTo(bhx + ridgeLen, ridgeTop + (ridgeLen * ISO_SIN) / ISO);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(eB.x, eB.y);
+        ctx.lineTo(eL.x, eL.y);
         ctx.closePath();
         ctx.fill();
 
-        // Shingle rows on lit side
+        // Right gable end (triangle, lit — closest to viewer)
+        ctx.fillStyle = "#7a5a35";
+        ctx.beginPath();
+        ctx.moveTo(rR.x, rR.y);
+        ctx.lineTo(eF.x, eF.y);
+        ctx.lineTo(eR.x, eR.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle rows on back slope
         ctx.strokeStyle = "rgba(30,15,5,0.3)";
         ctx.lineWidth = 0.5 * s;
-        const rRB = {
-          x: bhx + ridgeLen,
-          y: ridgeTop + (ridgeLen * ISO_SIN) / ISO,
-        };
-        const rRF = { x: bhx + ridgeLen, y: rRB.y + roofD * 2 };
-        const eR = { x: bhx + roofI, y: roofBaseY + roofD };
-        const eF = { x: bhx, y: roofBaseY + roofD * 2 };
         for (let sh = 1; sh < 6; sh++) {
           const t = sh / 6;
           ctx.beginPath();
-          ctx.moveTo(rRF.x + (eF.x - rRF.x) * t, rRF.y + (eF.y - rRF.y) * t);
-          ctx.lineTo(rRB.x + (eR.x - rRB.x) * t, rRB.y + (eR.y - rRB.y) * t);
+          ctx.moveTo(
+            rL.x + (eB.x - rL.x) * t,
+            rL.y + (eB.y - rL.y) * t,
+          );
+          ctx.lineTo(
+            rR.x + (eR.x - rR.x) * t,
+            rR.y + (eR.y - rR.y) * t,
+          );
           ctx.stroke();
         }
 
-        // Shingle rows on dark side
-        const rLB = {
-          x: bhx - ridgeLen,
-          y: ridgeTop + (ridgeLen * ISO_SIN) / ISO,
-        };
-        const rLF = { x: bhx - ridgeLen, y: rLB.y + roofD * 2 };
-        const eL = { x: bhx - roofI, y: roofBaseY + roofD };
-        for (let sh = 1; sh < 6; sh++) {
-          const t = sh / 6;
-          ctx.beginPath();
-          ctx.moveTo(rLF.x + (eF.x - rLF.x) * t, rLF.y + (eF.y - rLF.y) * t);
-          ctx.lineTo(rLB.x + (eL.x - rLB.x) * t, rLB.y + (eL.y - rLB.y) * t);
-          ctx.stroke();
-        }
-
-        // Ridge line
+        // Ridge cap
         ctx.strokeStyle = "#7a5a30";
         ctx.lineWidth = 1.2 * s;
         ctx.beginPath();
-        ctx.moveTo(rLB.x, rLB.y);
-        ctx.lineTo(rRB.x, rRB.y);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(rR.x, rR.y);
         ctx.stroke();
 
         // Eave shadow
@@ -11910,7 +11897,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Arched doorway using iso flush door system
       {
         const doorCx = bhx;
-        const doorBaseY = bhy + bhD * 0.35 + 4 * s;
+        const doorBaseY = bhy + bhDF * 0.35 + 4 * s;
         drawIsoFlushDoor(ctx, doorCx, doorBaseY - 3.5 * s, 4.5, 7, "front", s, {
           frameColor: "#4a3828",
           bodyDark: "#1a0a00",
@@ -11930,10 +11917,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           y: number;
           face: "left" | "right";
         }> = [
-          { x: bhx + 4 * s, y: bhy - bhH + bhD * 0.6, face: "right" },
-          { x: bhx + 6.5 * s, y: bhy - bhH + bhD * 0.78, face: "right" },
-          { x: bhx - 3.5 * s, y: bhy - bhH + bhD * 0.55, face: "left" },
-          { x: bhx - 5.5 * s, y: bhy - bhH + bhD * 0.45, face: "left" },
+          { x: bhx + 4 * s, y: bhy - bhH + bhDF * 0.6, face: "right" },
+          { x: bhx + 6.5 * s, y: bhy - bhH + bhDF * 0.78, face: "right" },
+          { x: bhx - 3.5 * s, y: bhy - bhH + bhDF * 0.55, face: "left" },
+          { x: bhx - 5.5 * s, y: bhy - bhH + bhDF * 0.45, face: "left" },
         ];
         for (const w of bhWinPositions) {
           drawIsoGothicWindow(
@@ -11955,8 +11942,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const gx = cx - 15 * s;
       const gy = cy - 22 * s;
       const gW = 11 * s,
-        gD = 10 * s,
+        gD = gW,
         gH = 15 * s;
+      const gDI = gD * ISO_SIN;
+      const gDF = gDI * 2;
 
       // Stepped stone platform (3 steps)
       {
@@ -11965,36 +11954,38 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let st = 0; st < 3; st++) {
           const stW = gW + (2 - st) * stepInset;
           const stD = gD + (2 - st) * stepInset * 0.5;
-          const stY = gy + gD + (2 - st) * stepH;
+          const stY = gy + gDF + (2 - st) * stepH;
           const stIso = ISO;
+          const stDI2 = stD * ISO_SIN;
+          const stDF2 = stDI2 * 2;
 
           // Step front-left face
           ctx.fillStyle = st % 2 === 0 ? "#5a4a38" : "#6a5a48";
           ctx.beginPath();
-          ctx.moveTo(gx - stW * stIso, stY - stD * 0.5);
+          ctx.moveTo(gx - stW * stIso, stY - stDI2);
           ctx.lineTo(gx, stY);
           ctx.lineTo(gx, stY + stepH);
-          ctx.lineTo(gx - stW * stIso, stY - stD * 0.5 + stepH);
+          ctx.lineTo(gx - stW * stIso, stY - stDI2 + stepH);
           ctx.closePath();
           ctx.fill();
 
           // Step front-right face
           ctx.fillStyle = st % 2 === 0 ? "#6a5a48" : "#7a6a58";
           ctx.beginPath();
-          ctx.moveTo(gx + stW * stIso, stY - stD * 0.5);
+          ctx.moveTo(gx + stW * stIso, stY - stDI2);
           ctx.lineTo(gx, stY);
           ctx.lineTo(gx, stY + stepH);
-          ctx.lineTo(gx + stW * stIso, stY - stD * 0.5 + stepH);
+          ctx.lineTo(gx + stW * stIso, stY - stDI2 + stepH);
           ctx.closePath();
           ctx.fill();
 
           // Step top face
           ctx.fillStyle = st % 2 === 0 ? "#7a6a55" : "#8a7a65";
           ctx.beginPath();
-          ctx.moveTo(gx, stY - stD);
-          ctx.lineTo(gx + stW * stIso, stY - stD * 0.5);
+          ctx.moveTo(gx, stY - stDF2);
+          ctx.lineTo(gx + stW * stIso, stY - stDI2);
           ctx.lineTo(gx, stY);
-          ctx.lineTo(gx - stW * stIso, stY - stD * 0.5);
+          ctx.lineTo(gx - stW * stIso, stY - stDI2);
           ctx.closePath();
           ctx.fill();
         }
@@ -12012,10 +12003,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         interiorGrad.addColorStop(1, "#4a4038");
         ctx.fillStyle = interiorGrad;
         ctx.beginPath();
-        ctx.moveTo(gx - gW * ISO, gy - gH + gD * 0.5);
-        ctx.lineTo(gx, gy - gH + gD);
-        ctx.lineTo(gx, gy + gD);
-        ctx.lineTo(gx - gW * ISO, gy + gD * 0.5);
+        ctx.moveTo(gx - gW * ISO, gy - gH + gDI);
+        ctx.lineTo(gx, gy - gH + gDF);
+        ctx.lineTo(gx, gy + gDF);
+        ctx.lineTo(gx - gW * ISO, gy + gDI);
         ctx.closePath();
         ctx.fill();
 
@@ -12025,8 +12016,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let row = 1; row < 8; row++) {
           const rf = row / 8;
           const ry1 =
-            gy - gH + gD * 0.5 + (gy + gD * 0.5 - gy + gH - gD * 0.5) * rf;
-          const ry2 = gy - gH + gD + (gy + gD - gy + gH - gD) * rf;
+            gy - gH + gDI + (gy + gDI - gy + gH - gDI) * rf;
+          const ry2 = gy - gH + gDF + (gy + gDF - gy + gH - gDF) * rf;
           ctx.beginPath();
           ctx.moveTo(gx - gW * ISO, ry1);
           ctx.lineTo(gx, ry2);
@@ -12042,10 +12033,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         rwGrad.addColorStop(1, "#6a5a48");
         ctx.fillStyle = rwGrad;
         ctx.beginPath();
-        ctx.moveTo(gx + gW * ISO, gy - gH + gD * 0.5);
-        ctx.lineTo(gx, gy - gH + gD);
-        ctx.lineTo(gx, gy + gD);
-        ctx.lineTo(gx + gW * ISO, gy + gD * 0.5);
+        ctx.moveTo(gx + gW * ISO, gy - gH + gDI);
+        ctx.lineTo(gx, gy - gH + gDF);
+        ctx.lineTo(gx, gy + gDF);
+        ctx.lineTo(gx + gW * ISO, gy + gDI);
         ctx.closePath();
         ctx.fill();
 
@@ -12055,8 +12046,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let row = 1; row < 8; row++) {
           const rf = row / 8;
           const ry1 =
-            gy - gH + gD * 0.5 + (gy + gD * 0.5 - gy + gH - gD * 0.5) * rf;
-          const ry2 = gy - gH + gD + (gy + gD - gy + gH - gD) * rf;
+            gy - gH + gDI + (gy + gDI - gy + gH - gDI) * rf;
+          const ry2 = gy - gH + gDF + (gy + gDF - gy + gH - gDF) * rf;
           ctx.beginPath();
           ctx.moveTo(gx + gW * ISO, ry1);
           ctx.lineTo(gx, ry2);
@@ -12068,8 +12059,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const cf = col / 5;
           const cx1 = gx + gW * ISO * cf;
           ctx.beginPath();
-          ctx.moveTo(cx1, gy - gH + gD * (0.5 + cf * 0.5));
-          ctx.lineTo(cx1, gy + gD * (0.5 + cf * 0.5) * 0.96);
+          ctx.moveTo(cx1, gy - gH + gDI + (gDF - gDI) * cf);
+          ctx.lineTo(cx1, gy + (gDI + (gDF - gDI) * cf) * 0.96);
           ctx.stroke();
         }
       }
@@ -12080,7 +12071,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let p = 0; p < colCount; p++) {
           const pf = (p + 0.5) / colCount;
           const colBaseX = gx + gW * ISO * pf;
-          const colBaseY = gy + gD * 0.5 * (1 - pf * 0.78);
+          const colBaseY = gy + gDI * (1 - pf * 0.78);
           const colH2 = gH - 3.5 * s;
           const colW = 1.4 * s;
           const colTopX = colBaseX;
@@ -12193,8 +12184,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Entablature (horizontal band above columns)
       {
-        const entY = gy - gH + gD * 0.5;
-        const entY2 = gy - gH + gD;
+        const entY = gy - gH + gDI;
+        const entY2 = gy - gH + gDF;
         const entH2 = 2 * s;
 
         // Architrave
@@ -12244,106 +12235,101 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       }
 
-      // Proper 2:1 iso hip roof for grandstand
+      // Gable roof — isometric triangular prism (classical low pitch)
       {
-        const grW = gW + 1.5 * s;
-        const grI = grW * ISO;
-        const grD = grW * ISO_SIN;
-        const grBaseY = gy - gH;
-        const grRidgeH = 5 * s;
-        const grRidgeLen = grI * 0.55;
-        const grRidgeTop = grBaseY - grRidgeH;
+        const ov = 1.5 * s;
+        const roofHW = gW + ov;
+        const eW = roofHW * ISO_COS;
+        const eD = roofHW * ISO_SIN;
+        const midY = gy - gH + gDI;
+        const drop = 1 * s;
+        const ridgeH = 5 * s;
 
-        // Left slope (dark)
-        const slopeG = ctx.createLinearGradient(
-          gx - grI,
-          grBaseY + grD,
-          gx,
-          grRidgeTop,
-        );
-        slopeG.addColorStop(0, "#4a3a2d");
-        slopeG.addColorStop(1, "#5a4a38");
+        // Eave diamond
+        const eB = { x: gx, y: midY - eD + drop };
+        const eR = { x: gx + eW, y: midY + drop };
+        const eF = { x: gx, y: midY + eD + drop };
+        const eL = { x: gx - eW, y: midY + drop };
+
+        // Ridge runs full length along "right" iso axis
+        const rL = { x: gx - eW, y: midY - eD + drop - ridgeH };
+        const rR = { x: gx + eW, y: midY + eD + drop - ridgeH };
+
+        // Front slope (drawn first — behind everything else)
+        const slopeG = ctx.createLinearGradient(rL.x, rL.y, eF.x, eF.y);
+        slopeG.addColorStop(0, "#5a4a38");
+        slopeG.addColorStop(1, "#4a3a2d");
         ctx.fillStyle = slopeG;
         ctx.beginPath();
-        ctx.moveTo(gx - grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
-        ctx.lineTo(gx - grI, grBaseY + grD);
-        ctx.lineTo(gx, grBaseY + grD * 2);
-        ctx.lineTo(
-          gx + grRidgeLen,
-          grRidgeTop + (grRidgeLen * ISO_SIN) / ISO + grD * 2,
-        );
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(eL.x, eL.y);
+        ctx.lineTo(eF.x, eF.y);
+        ctx.lineTo(rR.x, rR.y);
         ctx.closePath();
         ctx.fill();
 
-        // Right slope (lit)
-        const pedG = ctx.createLinearGradient(
-          gx,
-          grRidgeTop,
-          gx + grI,
-          grBaseY + grD,
-        );
+        // Back slope (covers most of front slope, upper lit face)
+        const pedG = ctx.createLinearGradient(rL.x, rL.y, eB.x, eB.y);
         pedG.addColorStop(0, "#8a7a65");
         pedG.addColorStop(1, "#6a5a48");
         ctx.fillStyle = pedG;
         ctx.beginPath();
-        ctx.moveTo(
-          gx + grRidgeLen,
-          grRidgeTop + (grRidgeLen * ISO_SIN) / ISO + grD * 2,
-        );
-        ctx.lineTo(gx, grBaseY + grD * 2);
-        ctx.lineTo(gx + grI, grBaseY + grD);
-        ctx.lineTo(gx + grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(rR.x, rR.y);
+        ctx.lineTo(eR.x, eR.y);
+        ctx.lineTo(eB.x, eB.y);
         ctx.closePath();
         ctx.fill();
 
-        // Back face (top)
-        ctx.fillStyle = "#6a5a48";
+        // Left gable end (triangle, shadow — drawn on top)
+        ctx.fillStyle = "#4a3a2d";
         ctx.beginPath();
-        ctx.moveTo(gx - grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
-        ctx.lineTo(gx - grI, grBaseY + grD);
-        ctx.lineTo(gx + grI, grBaseY + grD);
-        ctx.lineTo(gx + grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(eB.x, eB.y);
+        ctx.lineTo(eL.x, eL.y);
         ctx.closePath();
         ctx.fill();
 
-        // Shingle rows on right slope
+        // Right gable end (triangle, lit — closest to viewer)
+        ctx.fillStyle = "#7a6a55";
+        ctx.beginPath();
+        ctx.moveTo(rR.x, rR.y);
+        ctx.lineTo(eF.x, eF.y);
+        ctx.lineTo(eR.x, eR.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle rows on back slope
         ctx.strokeStyle = "rgba(30,15,5,0.25)";
         ctx.lineWidth = 0.5 * s;
-        const grRB = {
-          x: gx + grRidgeLen,
-          y: grRidgeTop + (grRidgeLen * ISO_SIN) / ISO,
-        };
-        const grRF = { x: gx + grRidgeLen, y: grRB.y + grD * 2 };
-        const grER = { x: gx + grI, y: grBaseY + grD };
-        const grEF = { x: gx, y: grBaseY + grD * 2 };
         for (let sh = 1; sh < 5; sh++) {
           const t = sh / 5;
           ctx.beginPath();
           ctx.moveTo(
-            grRF.x + (grEF.x - grRF.x) * t,
-            grRF.y + (grEF.y - grRF.y) * t,
+            rL.x + (eB.x - rL.x) * t,
+            rL.y + (eB.y - rL.y) * t,
           );
           ctx.lineTo(
-            grRB.x + (grER.x - grRB.x) * t,
-            grRB.y + (grER.y - grRB.y) * t,
+            rR.x + (eR.x - rR.x) * t,
+            rR.y + (eR.y - rR.y) * t,
           );
           ctx.stroke();
         }
 
-        // Ridge line
+        // Ridge cap
         ctx.strokeStyle = "#7a6a55";
         ctx.lineWidth = 1 * s;
         ctx.beginPath();
-        ctx.moveTo(gx - grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
-        ctx.lineTo(gx + grRidgeLen, grRidgeTop + (grRidgeLen * ISO_SIN) / ISO);
+        ctx.moveTo(rL.x, rL.y);
+        ctx.lineTo(rR.x, rR.y);
         ctx.stroke();
 
         // Acroterion finial at ridge midpoint
-        const grPeakX = gx;
-        const grPeakY = grRidgeTop;
+        const peakX = (rL.x + rR.x) / 2;
+        const peakY = (rL.y + rR.y) / 2;
         ctx.fillStyle = "#8a7a65";
         ctx.beginPath();
-        ctx.arc(grPeakX, grPeakY - 1 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.arc(peakX, peakY - 1 * s, 1.2 * s, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -12352,7 +12338,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let w = 0; w < 3; w++) {
           const wf = (w + 1) / 4;
           const wCx = gx + gW * ISO * wf;
-          const wCy = gy - gH * 0.35 + gD * (0.5 + wf * 0.3);
+          const wCy = gy - gH * 0.35 + gDI * (1 + wf * 0.6);
           drawIsoGothicWindow(
             ctx,
             wCx,
@@ -12371,7 +12357,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Grand entrance using iso flush door system
       {
         const archCx = gx + gW * ISO * 0.3;
-        const archBaseY = gy + gD * 0.25 + 5 * s;
+        const archBaseY = gy + gDF * 0.25 + 5 * s;
         drawIsoFlushDoor(ctx, archCx, archBaseY - 4 * s, 5, 8, "right", s, {
           frameColor: "#5a4a38",
           bodyDark: "#0a0500",
@@ -12390,7 +12376,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let bl = 0; bl < balCount; bl++) {
           const blf = (bl + 0.5) / balCount;
           const blx = gx - gW * ISO + gW * ISO * blf;
-          const bly = gy + gD * 0.5 * (1 - blf) + gD * blf;
+          const bly = gy + gDI * (1 - blf) + gDF * blf;
 
           // Baluster
           ctx.fillStyle = "#7a6a55";
@@ -12406,10 +12392,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#8a7a65";
         ctx.lineWidth = 1 * s;
         ctx.beginPath();
-        ctx.moveTo(gx - gW * ISO, gy + gD * 0.5 - 4 * s);
-        ctx.lineTo(gx, gy + gD - 4 * s);
-        ctx.lineTo(gx, gy + gD - 3 * s);
-        ctx.lineTo(gx - gW * ISO, gy + gD * 0.5 - 3 * s);
+        ctx.moveTo(gx - gW * ISO, gy + gDI - 4 * s);
+        ctx.lineTo(gx, gy + gDF - 4 * s);
+        ctx.lineTo(gx, gy + gDF - 3 * s);
+        ctx.lineTo(gx - gW * ISO, gy + gDI - 3 * s);
         ctx.closePath();
         ctx.fill();
       }
@@ -12419,6 +12405,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ty = cy - 28 * s;
       const tW = 5 * s,
         tH = 20 * s;
+      const tDI = tW * ISO_SIN;
+      const tDF = tDI * 2;
 
       // (no separate shadow — tower sits directly on embankment)
 
@@ -12430,10 +12418,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         twlG.addColorStop(1, "#4a3a2a");
         ctx.fillStyle = twlG;
         ctx.beginPath();
-        ctx.moveTo(tx - tW * ISO, ty - tH + tW * 0.5);
-        ctx.lineTo(tx, ty - tH + tW);
-        ctx.lineTo(tx, ty + tW);
-        ctx.lineTo(tx - tW * ISO, ty + tW * 0.5);
+        ctx.moveTo(tx - tW * ISO, ty - tH + tDI);
+        ctx.lineTo(tx, ty - tH + tDF);
+        ctx.lineTo(tx, ty + tDF);
+        ctx.lineTo(tx - tW * ISO, ty + tDI);
         ctx.closePath();
         ctx.fill();
 
@@ -12442,9 +12430,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = 0.3 * s;
         for (let row = 1; row < 10; row++) {
           const rf = row / 10;
-          const ry1 =
-            ty - tH + tW * 0.5 + (ty + tW * 0.5 - ty + tH - tW * 0.5) * rf;
-          const ry2 = ty - tH + tW + (ty + tW - ty + tH - tW) * rf;
+          const ry1 = ty - tH + tDI + tH * rf;
+          const ry2 = ty - tH + tDF + tH * rf;
           ctx.beginPath();
           ctx.moveTo(tx - tW * ISO, ry1);
           ctx.lineTo(tx, ry2);
@@ -12460,10 +12447,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         twrG.addColorStop(1, "#6a5a48");
         ctx.fillStyle = twrG;
         ctx.beginPath();
-        ctx.moveTo(tx + tW * ISO, ty - tH + tW * 0.5);
-        ctx.lineTo(tx, ty - tH + tW);
-        ctx.lineTo(tx, ty + tW);
-        ctx.lineTo(tx + tW * ISO, ty + tW * 0.5);
+        ctx.moveTo(tx + tW * ISO, ty - tH + tDI);
+        ctx.lineTo(tx, ty - tH + tDF);
+        ctx.lineTo(tx, ty + tDF);
+        ctx.lineTo(tx + tW * ISO, ty + tDI);
         ctx.closePath();
         ctx.fill();
 
@@ -12472,9 +12459,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = 0.3 * s;
         for (let row = 1; row < 10; row++) {
           const rf = row / 10;
-          const ry1 =
-            ty - tH + tW * 0.5 + (ty + tW * 0.5 - ty + tH - tW * 0.5) * rf;
-          const ry2 = ty - tH + tW + (ty + tW - ty + tH - tW) * rf;
+          const ry1 = ty - tH + tDI + tH * rf;
+          const ry2 = ty - tH + tDF + tH * rf;
           ctx.beginPath();
           ctx.moveTo(tx + tW * ISO, ry1);
           ctx.lineTo(tx, ry2);
@@ -12487,12 +12473,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#7a6a55";
         for (let q = 0; q < 6; q++) {
           const qf = q / 6;
-          const qy = ty - tH + tW + (tH - tW) * qf;
+          const qy = ty - tH + tDF + (tH - tDF) * qf;
           if (q % 2 === 0) {
             // Right edge quoin
             ctx.fillRect(
               tx + tW * ISO - 1.5 * s,
-              qy + tW * 0.5 * (1 - qf) - 0.5 * s,
+              qy + tDI * (1 - qf) - 0.5 * s,
               1.5 * s,
               2.5 * s,
             );
@@ -12502,9 +12488,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Belfry openings (arched louver windows near top)
       {
-        const belY = ty - tH + tW * 0.5 + 2 * s;
+        const belY = ty - tH + tDI + 2 * s;
         const belCxR = tx + tW * ISO * 0.5;
-        const belCyR = belY + tW * 0.25 + 2 * s;
+        const belCyR = belY + tDI * 0.5 + 2 * s;
         const belW = 2 * s,
           belH2 = 3 * s;
 
@@ -12541,9 +12527,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#7A6A55";
         ctx.beginPath();
         ctx.moveTo(tx, ty - tH);
-        ctx.lineTo(tx + tW * ISO, ty - tH + tW * 0.5);
-        ctx.lineTo(tx, ty - tH + tW);
-        ctx.lineTo(tx - tW * ISO, ty - tH + tW * 0.5);
+        ctx.lineTo(tx + tW * ISO, ty - tH + tDI);
+        ctx.lineTo(tx, ty - tH + tDF);
+        ctx.lineTo(tx - tW * ISO, ty - tH + tDI);
         ctx.closePath();
         ctx.fill();
 
@@ -12552,7 +12538,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let m = 0; m < merlonCount; m++) {
           const mf = (m + 0.3) / merlonCount;
           const mx = tx + tW * ISO * mf;
-          const my = ty - tH + tW * 0.5 * mf;
+          const my = ty - tH + tDI * mf;
 
           ctx.fillStyle = "#6a5a48";
           ctx.fillRect(mx - 0.8 * s, my - 2.5 * s, 1.6 * s, 2.5 * s);
@@ -12565,14 +12551,17 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       {
         const spireH = 11 * s;
         const spireTip = { x: tx, y: ty - tH - spireH };
-        const spireBase = tW * ISO * 0.85;
+        const spireScale = 0.85;
+        const spireBase = tW * ISO * spireScale;
+        const spireSideY = tDI * spireScale;
+        const spireFrontY = tDF * spireScale;
 
         // Spire dark side (left)
         const spireDG = ctx.createLinearGradient(
           spireTip.x,
           spireTip.y,
           tx - spireBase,
-          ty - tH + tW * 0.4,
+          ty - tH + spireSideY,
         );
         spireDG.addColorStop(0, "#2a4a3a");
         spireDG.addColorStop(0.5, "#1a3a2a");
@@ -12580,8 +12569,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = spireDG;
         ctx.beginPath();
         ctx.moveTo(spireTip.x, spireTip.y);
-        ctx.lineTo(tx - spireBase, ty - tH + tW * 0.4);
-        ctx.lineTo(tx, ty - tH + tW * 0.8);
+        ctx.lineTo(tx - spireBase, ty - tH + spireSideY);
+        ctx.lineTo(tx, ty - tH + spireFrontY);
         ctx.closePath();
         ctx.fill();
 
@@ -12590,7 +12579,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           spireTip.x,
           spireTip.y,
           tx + spireBase,
-          ty - tH + tW * 0.4,
+          ty - tH + spireSideY,
         );
         spireLG.addColorStop(0, "#3a5a4a");
         spireLG.addColorStop(0.5, "#4a6a58");
@@ -12598,21 +12587,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = spireLG;
         ctx.beginPath();
         ctx.moveTo(spireTip.x, spireTip.y);
-        ctx.lineTo(tx + spireBase, ty - tH + tW * 0.4);
-        ctx.lineTo(tx, ty - tH + tW * 0.8);
+        ctx.lineTo(tx + spireBase, ty - tH + spireSideY);
+        ctx.lineTo(tx, ty - tH + spireFrontY);
         ctx.closePath();
         ctx.fill();
 
         // Spire ridge seams
         ctx.strokeStyle = "rgba(0,0,0,0.12)";
         ctx.lineWidth = 0.4 * s;
+        const spireMidY = (spireSideY + spireFrontY) * 0.5;
         for (let sr = 1; sr < 6; sr++) {
           const srf = sr / 6;
           const srx =
             spireTip.x +
             (tx + spireBase - spireTip.x) * srf * 0.5 +
             (tx - spireBase - spireTip.x) * srf * 0.5;
-          const sry = spireTip.y + (ty - tH + tW * 0.6 - spireTip.y) * srf;
+          const sry = spireTip.y + (ty - tH + spireMidY - spireTip.y) * srf;
           ctx.beginPath();
           ctx.moveTo(spireTip.x, spireTip.y);
           ctx.lineTo(srx + srf * 3 * s, sry);
@@ -12662,7 +12652,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Clock face (detailed, on right wall)
       {
         const clkCx = tx + tW * ISO * 0.5;
-        const clkCy = ty - tH * 0.48;
+        const clkCy = ty - tH * 0.48 + tDI * 0.5;
         const clkR = 2.5 * s;
 
         // Clock face plate
@@ -12750,9 +12740,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Tower gothic windows using iso flush window system
       {
         for (let tw = 0; tw < 3; tw++) {
-          const twY = ty - tH + tW + 4 * s + tw * 7 * s;
+          const twY = ty - tH + tDF + 4 * s + tw * 7 * s;
           const twCx = tx + tW * ISO * 0.45;
-          const twCy = twY + tW * 0.22;
+          const twCy = twY + tDI * 0.45;
           const twGlowA = tw === 1 ? 0.4 : 0.2;
           drawIsoGothicWindow(
             ctx,
