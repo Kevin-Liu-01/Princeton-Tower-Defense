@@ -10,15 +10,9 @@ import {
   Wind,
   Flame,
 } from "lucide-react";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { GOLD, DEFEAT, OVERLAY, RED_CARD } from "../ui/theme";
-
-// Helper to format time as mm:ss
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { GOLD, DEFEAT, OVERLAY, RED_CARD } from "../ui/system/theme";
+import { formatDuration } from "./shared/menuMath";
 
 interface DefeatScreenProps {
   resetGame: () => void;
@@ -557,10 +551,10 @@ export function DefeatScreen({
                     <span className="text-[10px] font-bold text-stone-400/70 tracking-[0.2em] uppercase">Time</span>
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-stone-300/90">
-                    {formatTime(timeSpent)}
+                    {formatDuration(timeSpent)}
                   </div>
                   {bestTime ? (
-                    <span className="text-[9px] text-stone-400/50 mt-1 block">Best: {formatTime(bestTime)}</span>
+                    <span className="text-[9px] text-stone-400/50 mt-1 block">Best: {formatDuration(bestTime)}</span>
                   ) : null}
                 </div>
 

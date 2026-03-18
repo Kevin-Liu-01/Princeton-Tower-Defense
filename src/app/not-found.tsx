@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { OrnateFrame } from "@/app/components/ui/OrnateFrame";
-import PrincetonTDLogo from "@/app/components/ui/PrincetonTDLogo";
-import { GOLD, dividerGradient, panelGradient } from "@/app/components/ui/theme";
+import { OrnateFrame } from "@/app/components/ui/primitives/OrnateFrame";
+import PrincetonTDLogo from "@/app/components/ui/primitives/PrincetonTDLogo";
+import { GOLD, dividerGradient, panelGradient } from "@/app/components/ui/system/theme";
 import { SCREENSHOTS, SCREENSHOT_LABELS } from "@/app/constants/notFoundScreenshots";
 
 export default function NotFound() {

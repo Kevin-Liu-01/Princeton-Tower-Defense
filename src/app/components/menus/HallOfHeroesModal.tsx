@@ -17,15 +17,13 @@ import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS, HERO_ROLES } from "../../constants";
 import { HeroSprite, HeroAbilityIcon } from "../../sprites";
 import { HeroHelmetIcon } from "../../sprites/custom-icons";
-import { BaseModal } from "../ui/BaseModal";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-import { heroFrameElements } from "../ui/ornateFrameHelpers";
-
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
+import { BaseModal } from "../ui/primitives/BaseModal";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
+import { heroFrameElements } from "../ui/primitives/ornateFrameHelpers";
+import { HERO_OPTIONS } from "./shared/loadoutOptions";
+import { hexToRgba } from "./shared/colorUtils";
+import { FloatingParticles, RuneBackground } from "./shared/showcaseEffects";
 
 const SHOWCASE_FRAME = 152;
 const SHOWCASE_CX = SHOWCASE_FRAME / 2;
@@ -43,10 +41,6 @@ const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
   captain: <Sparkles size={10} />,
   engineer: <Target size={10} />,
 };
-
-const heroOptions: HeroType[] = [
-  "tiger", "tenor", "mathey", "rocky", "scott", "captain", "engineer",
-];
 
 const STAT_MAX: Record<string, number> = { HP: 5600, DMG: 90, RNG: 250, SPD: 3.5 };
 
@@ -84,45 +78,6 @@ function HeroStatCard({ icon, value, label, bg, barColor, maxValue }: {
   );
 }
 
-function FloatingParticles({ color, count = 6 }: { color: string; count?: number }) {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full animate-float-particle"
-          style={{
-            background: color,
-            left: `${15 + (i * 70) / count}%`,
-            bottom: `${10 + (i % 3) * 15}%`,
-            animationDelay: `${i * 0.5}s`,
-            animationDuration: `${2.5 + (i % 3) * 0.5}s`,
-            boxShadow: `0 0 6px ${color}`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function RuneBackground() {
-  return (
-    <div className="absolute inset-0 pointer-events-none animate-rune-fade overflow-hidden">
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="rune-grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M30 5 L30 15 M25 10 L35 10" stroke="rgba(180,140,60,0.4)" strokeWidth="0.5" fill="none" />
-            <circle cx="30" cy="10" r="2" stroke="rgba(180,140,60,0.3)" strokeWidth="0.3" fill="none" />
-            <path d="M5 30 L15 30 M10 25 L10 35" stroke="rgba(180,140,60,0.3)" strokeWidth="0.5" fill="none" />
-            <path d="M50 50 L55 45 L55 55 Z" stroke="rgba(180,140,60,0.25)" strokeWidth="0.3" fill="none" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#rune-grid)" />
-      </svg>
-    </div>
-  );
-}
-
 export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
   isOpen,
   onClose,
@@ -140,11 +95,11 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
   const hero = HERO_DATA[focusedHero];
   const role = HERO_ROLES[focusedHero];
   const isEquipped = selectedHero === focusedHero;
-  const focusedIdx = heroOptions.indexOf(focusedHero);
+  const focusedIdx = HERO_OPTIONS.indexOf(focusedHero);
 
   const navigate = (dir: -1 | 1) => {
-    const next = (focusedIdx + dir + heroOptions.length) % heroOptions.length;
-    setFocusedHero(heroOptions[next]);
+    const next = (focusedIdx + dir + HERO_OPTIONS.length) % HERO_OPTIONS.length;
+    setFocusedHero(HERO_OPTIONS[next]);
   };
 
   return (
@@ -159,7 +114,12 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
       >
         <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={52} showSideBorders={false}>
           <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-          <RuneBackground />
+          <RuneBackground patternId="hero-rune-grid">
+            <path d="M30 5 L30 15 M25 10 L35 10" stroke="rgba(180,140,60,0.4)" strokeWidth="0.5" fill="none" />
+            <circle cx="30" cy="10" r="2" stroke="rgba(180,140,60,0.3)" strokeWidth="0.3" fill="none" />
+            <path d="M5 30 L15 30 M10 25 L10 35" stroke="rgba(180,140,60,0.3)" strokeWidth="0.5" fill="none" />
+            <path d="M50 50 L55 45 L55 55 Z" stroke="rgba(180,140,60,0.25)" strokeWidth="0.3" fill="none" />
+          </RuneBackground>
 
           {/* Close */}
           <button
@@ -386,11 +346,11 @@ export const HallOfHeroesModal: React.FC<HallOfHeroesModalProps> = ({
                     Roster
                   </span>
                   <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(180,140,60,0.15), transparent)" }} />
-                  <span className="text-[8px] text-amber-600/30 font-medium">{heroOptions.length} heroes</span>
+                  <span className="text-[8px] text-amber-600/30 font-medium">{HERO_OPTIONS.length} heroes</span>
                 </div>
 
                 <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
-                  {heroOptions.map((ht) => {
+                  {HERO_OPTIONS.map((ht) => {
                     const h = HERO_DATA[ht];
                     const r = HERO_ROLES[ht];
                     const isFocused = focusedHero === ht;

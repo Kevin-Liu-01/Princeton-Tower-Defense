@@ -1,5 +1,24 @@
 // Princeton Tower Defense - Decoration Item Rendering
 // Contains all decoration rendering switch cases for various decoration types
+//
+// ──────────────────────────────────────────────────────────────────────
+// MIGRATION PLAN — switch/case → registry-based dispatch
+// ──────────────────────────────────────────────────────────────────────
+// This file contains a ~33k-line switch statement with ~100 case branches.
+// We are incrementally migrating each case into its own renderer function
+// registered via `decorationRegistry.ts`.
+//
+// How to migrate a case:
+//   1. Create a new file (or add to an existing group file) under
+//      `src/app/rendering/decorations/renderers/`.
+//   2. Export a function matching `DecorationRenderFn` from the registry.
+//   3. Call `registerDecorationRenderer("<type>", yourFn)` at module scope.
+//   4. Delete the corresponding case from the switch below.
+//
+// The dispatcher in `renderDecorationItem` checks the registry first;
+// if a renderer is found it is called and the switch is skipped entirely.
+// This lets us move cases one-at-a-time without breaking anything.
+// ──────────────────────────────────────────────────────────────────────
 
 import type { DecorationType, Position } from "../../types";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
@@ -31,6 +50,7 @@ import { drawTentacle } from "./tentacleShapes";
 import { drawBench } from "./benchShapes";
 import { drawBrokenWallDecoration } from "./wallShapes";
 import { CHALLENGE_LANDMARK_TYPES, renderChallengeLandmark } from "./challengeLandmarks";
+import { getDecorationRenderer } from "./decorationRegistry";
 import {
   renderIceFortress,
   renderSkullThrone,
@@ -156,6 +176,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       skipShadow: landmarkSkipShadow,
       zoom,
     });
+    return;
+  }
+
+  const registeredRenderer = getDecorationRenderer(type);
+  if (registeredRenderer) {
+    registeredRenderer(params);
     return;
   }
 

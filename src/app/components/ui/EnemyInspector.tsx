@@ -39,7 +39,7 @@ import {
   ENEMY_ABILITY_META,
 } from "../../constants";
 import { EnemySprite, HeroIcon } from "../../sprites";
-import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./theme";
+import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./system/theme";
 
 // =============================================================================
 // ENEMY INSPECTOR COMPONENT

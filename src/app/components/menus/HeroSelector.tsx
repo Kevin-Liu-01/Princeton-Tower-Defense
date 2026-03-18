@@ -14,13 +14,12 @@ import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS, HERO_ROLES } from "../../constants";
 import { HeroSprite, HeroAbilityIcon, HeroIcon } from "../../sprites";
 import { HeroHelmetIcon } from "../../sprites/custom-icons";
-import { HudTooltip } from "../ui/HudTooltip";
+import { HudTooltip } from "../ui/tooltips/HudTooltip";
 import { HallOfHeroesModal } from "./HallOfHeroesModal";
-import { heroFrameElements } from "../ui/ornateFrameHelpers";
-
-const heroOptions: HeroType[] = [
-  "tiger", "tenor", "mathey", "rocky", "scott", "captain", "engineer",
-];
+import { heroFrameElements } from "../ui/primitives/ornateFrameHelpers";
+import { HERO_OPTIONS } from "./shared/loadoutOptions";
+import { hexToRgba } from "./shared/colorUtils";
+import { circularDiff } from "./shared/menuMath";
 
 const CIRCLE = 42;
 const GAP = 6;
@@ -31,21 +30,11 @@ const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
 const VP_CY = VP_H / 2;
 
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 const SEL_FRAME = 58;
 const SEL_CX = SEL_FRAME / 2;
 
 const ACT_FRAME = 54;
 const ACT_CX = ACT_FRAME / 2;
-
-function circularDiff(idx: number, center: number, len: number): number {
-  const raw = ((idx - center) % len + len) % len;
-  return raw > len / 2 ? raw - len : raw;
-}
 
 interface HeroSelectorProps {
   selectedHero: HeroType | null;
@@ -67,20 +56,20 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
   const [showHallOfHeroes, setShowHallOfHeroes] = React.useState(false);
   const [hohHovered, setHohHovered] = React.useState(false);
   const [centerIdx, setCenterIdx] = React.useState(() =>
-    selectedHero ? heroOptions.indexOf(selectedHero) : 0
+    selectedHero ? HERO_OPTIONS.indexOf(selectedHero) : 0
   );
 
   useEffect(() => {
-    if (selectedHero) setCenterIdx(heroOptions.indexOf(selectedHero));
+    if (selectedHero) setCenterIdx(HERO_OPTIONS.indexOf(selectedHero));
   }, [selectedHero]);
 
   const navigate = useCallback((dir: -1 | 1) => {
-    setCenterIdx(prev => (prev + dir + heroOptions.length) % heroOptions.length);
+    setCenterIdx(prev => (prev + dir + HERO_OPTIONS.length) % HERO_OPTIONS.length);
   }, []);
 
   const handleHeroClick = useCallback((heroType: HeroType, isCenter: boolean) => {
     if (!isCenter) {
-      setCenterIdx(heroOptions.indexOf(heroType));
+      setCenterIdx(HERO_OPTIONS.indexOf(heroType));
       return;
     }
     if (heroType === selectedHero) {
@@ -91,7 +80,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
   }, [setSelectedHero, selectedHero]);
 
   if (compact) {
-    const centeredHero = heroOptions[centerIdx];
+    const centeredHero = HERO_OPTIONS[centerIdx];
     const centeredData = HERO_DATA[centeredHero];
 
     return (
@@ -130,9 +119,9 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
               className="relative overflow-hidden flex-shrink-0"
               style={{ width: VP_W, height: VP_H }}
             >
-              {heroOptions.map((heroType, idx) => {
+              {HERO_OPTIONS.map((heroType, idx) => {
                 const hero = HERO_DATA[heroType];
-                const diff = circularDiff(idx, centerIdx, heroOptions.length);
+                const diff = circularDiff(idx, centerIdx, HERO_OPTIONS.length);
                 const absDiff = Math.abs(diff);
                 const isCenter = diff === 0;
                 const halfVisible = Math.floor(VISIBLE_COUNT / 2);
@@ -390,7 +379,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
       </div>
       <div className="p-3 flex-1 flex flex-col justify-between">
         <div className="flex gap-1.5 mb-2 w-full">
-          {heroOptions.map((heroType) => {
+          {HERO_OPTIONS.map((heroType) => {
             const hero = HERO_DATA[heroType];
             const isSelected = selectedHero === heroType;
             return (

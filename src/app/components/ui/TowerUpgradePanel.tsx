@@ -39,13 +39,13 @@ import {
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
 import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR, TOWER_TAGS } from "../../constants";
-import { TagBadge } from "./TagBadge";
+import { TagBadge } from "./primitives/TagBadge";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { getTowerFoundationSize, getTowerVisualMetrics } from "../../rendering/towers/towerHelpers";
 import { TowerSprite } from "../../sprites";
-import { useResponsiveSizes } from "./hooks";
-import { PANEL, GOLD, panelGradient } from "./theme";
-import { CircleActionButton } from "./CircleActionButton";
+import { useResponsiveSizes } from "./system/hooks";
+import { PANEL, GOLD, panelGradient } from "./system/theme";
+import { CircleActionButton } from "./primitives/CircleActionButton";
 
 // ---------------------------------------------------------------------------
 // Types

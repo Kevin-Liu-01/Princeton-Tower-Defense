@@ -2,8 +2,8 @@
 import React, { useRef, useEffect, useState, lazy, Suspense } from "react";
 import Image from "next/image";
 import { MapPin, Lock, Clapperboard } from "lucide-react";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { PANEL, GOLD, NEUTRAL, SELECTED, dividerGradient, panelGradient } from "../ui/theme";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { PANEL, GOLD, NEUTRAL, SELECTED, dividerGradient, panelGradient } from "../ui/system/theme";
 
 const BattlefieldPreviewCanvas = lazy(
   () =>

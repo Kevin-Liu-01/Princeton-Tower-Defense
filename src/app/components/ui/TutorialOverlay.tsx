@@ -2,13 +2,13 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { ChevronRight, SkipForward, BookOpen, ArrowRight } from "lucide-react";
-import { OrnateFrame } from "./OrnateFrame";
+import { OrnateFrame } from "./primitives/OrnateFrame";
 import {
   GOLD,
   PANEL,
   panelGradient,
   dividerGradient,
-} from "./theme";
+} from "./system/theme";
 import type { TutorialStep } from "../../constants/tutorial";
 import { TUTORIAL_STEPS } from "../../constants/tutorial";
 import {
@@ -19,7 +19,7 @@ import {
   TOWER_SPRITE_FRAME_THEME,
 } from "../../sprites";
 import { TOWER_DATA, HERO_DATA, TOWER_TAGS, TOWER_QUICK_SUMMARY } from "../../constants";
-import { TagBadge } from "./TagBadge";
+import { TagBadge } from "./primitives/TagBadge";
 import { TOWER_STATS } from "../../constants/towerStats";
 import type { TowerType, SpellType, HeroType } from "../../types";
 
@@ -110,7 +110,7 @@ function TowerCatalog() {
     <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {TOWER_DISPLAY_ORDER.map((towerType) => {
         const theme = TOWER_SPRITE_FRAME_THEME[towerType];
-        const data = TOWER_DATA[towerType];
+        const towerData = TOWER_DATA[towerType];
         const tags = TOWER_TAGS[towerType];
         const summary = TOWER_QUICK_SUMMARY[towerType];
         return (
@@ -129,8 +129,8 @@ function TowerCatalog() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <span className="text-xs sm:text-sm font-bold text-amber-200 truncate">{data.name}</span>
-                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto flex-shrink-0">{data.cost} PP</span>
+                <span className="text-xs sm:text-sm font-bold text-amber-200 truncate">{towerData.name}</span>
+                <span className="text-[10px] sm:text-xs text-amber-400/50 ml-auto flex-shrink-0">{towerData.cost} PP</span>
               </div>
               <p className="text-[10px] sm:text-[12px] text-amber-100/70 leading-snug">{summary}</p>
               <div className="flex flex-wrap gap-0.5 mt-1">
@@ -243,8 +243,8 @@ function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType |
   return (
     <div className="mt-2 sm:mt-3 mb-1 space-y-1 sm:space-y-1.5">
       {HERO_CARDS.map((card) => {
-        const data = HERO_DATA[card.type];
-        const heroColor = data.color;
+        const heroData = HERO_DATA[card.type];
+        const heroColor = heroData.color;
         const isSelected = selectedHero === card.type;
         return (
           <button
@@ -281,7 +281,7 @@ function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType |
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-                <span className="text-xs sm:text-sm font-bold text-amber-200">{data.name}</span>
+                <span className="text-xs sm:text-sm font-bold text-amber-200">{heroData.name}</span>
                 <span className={`text-[8px] sm:text-[10px] font-semibold px-1 sm:px-1.5 py-[1px] rounded-full border ${card.roleColor}`}>
                   {card.role}
                 </span>
@@ -289,7 +289,7 @@ function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType |
               <p className="text-[11px] sm:text-[13px] text-amber-100/70 leading-snug">{card.tagline}</p>
               <div className="hidden sm:flex items-center gap-2 mt-1">
                 <span className="text-[11px] text-amber-400/50">
-                  <span className="font-semibold text-amber-300/60">{data.ability}</span> — {data.abilityDesc}
+                  <span className="font-semibold text-amber-300/60">{heroData.ability}</span> — {heroData.abilityDesc}
                 </span>
               </div>
             </div>

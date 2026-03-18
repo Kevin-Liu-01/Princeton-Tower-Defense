@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Coins, Eye, Sparkles, Timer } from "lucide-react";
-import { AMBER_CARD, PURPLE_CARD } from "./theme";
+import { AMBER_CARD, PURPLE_CARD } from "./system/theme";
 
 interface PaydayNotificationProps {
   active: boolean;

@@ -17,7 +17,7 @@ import {
   getSpellActionImagePath,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
-import { heroFrameElements, spellFrameElements } from "./ornateFrameHelpers";
+import { heroFrameElements, spellFrameElements } from "./primitives/ornateFrameHelpers";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -32,10 +32,7 @@ const SPELL_ACCENT: Record<string, { border: string; glow: string; bg: string }>
 
 // ── Ornate Frame Constants ──────────────────────────────────────────────────
 
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
+import { hexToRgba } from "../../utils/colorUtils";
 
 const DEG_TO_RAD = Math.PI / 180;
 const ANGLES_ALL = [0, 45, 90, 135, 180, 225, 270, 315];

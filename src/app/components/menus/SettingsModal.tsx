@@ -45,9 +45,9 @@ import {
   Gamepad2,
   Keyboard,
 } from "lucide-react";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-import { BaseModal } from "../ui/BaseModal";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
+import { BaseModal } from "../ui/primitives/BaseModal";
 import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 import type {
   GameSettings,
@@ -798,7 +798,7 @@ const PRESET_BUTTONS: { value: QualityPreset; label: string; desc: string }[] = 
 // SETTINGS MODAL
 // =============================================================================
 
-export interface SettingsModalProps {
+interface SettingsModalProps {
   onClose: () => void;
   settings: GameSettings;
   updateCategory: <K extends SettingsCategory>(

@@ -1,6 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
+import React, { useRef, useCallback } from "react";
 import {
   Heart,
   Timer,
@@ -41,130 +40,51 @@ import {
   getReinforcementSpellStats,
 } from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
-import { useIsTouchDevice } from "./hooks";
-import { PANEL, NEUTRAL, OVERLAY, SPELL_THEME } from "./theme";
-import { HudTooltip } from "./HudTooltip";
+import { useIsTouchDevice } from "./system/hooks";
+import { PANEL, NEUTRAL, OVERLAY, SPELL_THEME } from "./system/theme";
+import { HudTooltip } from "./tooltips/HudTooltip";
 import { MobileHeroSpellBar } from "./MobileHeroSpellBar";
-import { heroFrameElements, spellFrameElements } from "./ornateFrameHelpers";
+import { heroFrameElements, spellFrameElements } from "./primitives/ornateFrameHelpers";
+import {
+  DEG_TO_RAD,
+  DESKTOP_ABILITY_SIZE,
+  DESKTOP_HERO_RING_C,
+  DESKTOP_HERO_RING_R,
+  DESKTOP_HERO_SIZE,
+  HERO_ORNATE_CX,
+  HERO_ORNATE_MID_CIRCUM,
+  HERO_ORNATE_MID_R,
+  HERO_ORNATE_PAD,
+  HERO_ORNATE_SIZE,
+  ORNATE_ANGLES_ALL,
+  ORNATE_ANGLES_CARDINAL,
+  ORNATE_ANGLES_INTERCARDINAL,
+  ORNATE_CX,
+  ORNATE_FRAME_SIZE,
+  ORNATE_GEM_R,
+  ORNATE_MID_R,
+  ORNATE_OUTER_R,
+  ORNATE_PAD,
+  ORNATE_RING_CIRCUM,
+  ORNATE_TICK_INNER,
+  ORNATE_TICK_OUTER,
+  SPELL_ORB_SIZE,
+  SPELL_ORNATE_CX,
+  SPELL_ORNATE_MID_R,
+  SPELL_ORNATE_PAD,
+  SPELL_ORNATE_RING_CIRCUM,
+  SPELL_ORNATE_SIZE,
+} from "./hud/heroSpellBar/constants";
+import {
+  getHeroHpTheme,
+  getHpRingColor,
+  hexToRgba,
+} from "./hud/heroSpellBar/helpers";
+import { SpellInfoPortal } from "./hud/heroSpellBar/SpellInfoPortal";
 
 // =============================================================================
 // HP THEME — transitions green → yellow → red by hero health %
 // =============================================================================
-
-function getHpRingColor(percent: number, heroColor: string): string {
-  if (percent <= 25) return "#ef4444";
-  if (percent <= 50) return "#eab308";
-  return heroColor;
-}
-
-const DESKTOP_HERO_SIZE = 84;
-const DESKTOP_HERO_RING_R = DESKTOP_HERO_SIZE / 2 - 3;
-const DESKTOP_HERO_RING_C = 2 * Math.PI * DESKTOP_HERO_RING_R;
-const DESKTOP_ABILITY_SIZE = 64;
-const ORNATE_FRAME_SIZE = 92;
-const ORNATE_PAD = (ORNATE_FRAME_SIZE - DESKTOP_ABILITY_SIZE) / 2;
-const ORNATE_CX = ORNATE_FRAME_SIZE / 2;
-const ORNATE_OUTER_R = ORNATE_CX - 2;
-const ORNATE_MID_R = ORNATE_CX - 5;
-const ORNATE_GEM_R = ORNATE_CX - 2;
-const ORNATE_TICK_INNER = ORNATE_CX - 8;
-const ORNATE_TICK_OUTER = ORNATE_CX - 1;
-const ORNATE_RING_CIRCUM = 2 * Math.PI * ORNATE_MID_R;
-const DEG_TO_RAD = Math.PI / 180;
-const ORNATE_ANGLES_ALL = [0, 45, 90, 135, 180, 225, 270, 315];
-const ORNATE_ANGLES_CARDINAL = [0, 90, 180, 270];
-const ORNATE_ANGLES_INTERCARDINAL = [45, 135, 225, 315];
-
-const HERO_ORNATE_SIZE = 112;
-const HERO_ORNATE_PAD = (HERO_ORNATE_SIZE - DESKTOP_HERO_SIZE) / 2;
-const HERO_ORNATE_CX = HERO_ORNATE_SIZE / 2;
-const HERO_ORNATE_MID_R = HERO_ORNATE_CX - 5;
-const HERO_ORNATE_MID_CIRCUM = 2 * Math.PI * HERO_ORNATE_MID_R;
-
-const SPELL_ORB_SIZE = 72;
-const SPELL_ORNATE_SIZE = 96;
-const SPELL_ORNATE_PAD = (SPELL_ORNATE_SIZE - SPELL_ORB_SIZE) / 2;
-const SPELL_ORNATE_CX = SPELL_ORNATE_SIZE / 2;
-const SPELL_ORNATE_MID_R = SPELL_ORNATE_CX - 5;
-const SPELL_ORNATE_RING_CIRCUM = 2 * Math.PI * SPELL_ORNATE_MID_R;
-
-function getHeroHpTheme(percent: number) {
-  if (percent <= 25) {
-    return {
-      barColor: "from-red-500 to-red-700",
-      glowColor: "shadow-red-500/50",
-      textColor: "text-red-400",
-      fillGradient: "linear-gradient(90deg, rgba(180,80,60,0.18), rgba(180,80,60,0.06))",
-      heartbeat: true,
-      beatSpeed: percent <= 10 ? "0.6s" : "0.9s",
-    };
-  }
-  if (percent <= 50) {
-    return {
-      barColor: "from-yellow-400 to-yellow-600",
-      glowColor: "shadow-yellow-500/40",
-      textColor: "text-yellow-400",
-      fillGradient: "linear-gradient(90deg, rgba(200,160,60,0.14), rgba(200,160,60,0.05))",
-      heartbeat: false,
-      beatSpeed: "0s",
-    };
-  }
-  return {
-    barColor: "from-emerald-400 to-emerald-600",
-    glowColor: "shadow-emerald-500/40",
-    textColor: "text-emerald-400",
-    fillGradient: "linear-gradient(90deg, rgba(180,140,50,0.12), rgba(180,140,50,0.04))",
-    heartbeat: false,
-    beatSpeed: "0s",
-  };
-}
-
-// =============================================================================
-// HERO ABILITY COLOR OVERLAY — subtle hero-color tint over the amber base
-// =============================================================================
-
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
-// =============================================================================
-// HERO AND SPELL BAR COMPONENT - ENHANCED
-// =============================================================================
-// SPELL INFO PORTAL — renders above the orb via portal to avoid clipping
-// =============================================================================
-
-interface SpellInfoPortalProps {
-  anchorRef: React.RefObject<HTMLDivElement | null>;
-  children: React.ReactNode;
-}
-
-const SpellInfoPortal: React.FC<SpellInfoPortalProps> = ({ anchorRef, children }) => {
-  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
-
-  useEffect(() => {
-    if (!anchorRef.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const panelW = 280;
-    let left = cx - panelW / 2;
-    if (left < 8) left = 8;
-    if (left + panelW > window.innerWidth - 8) left = window.innerWidth - 8 - panelW;
-    setPos({ left, bottom: window.innerHeight - rect.top + 10 });
-  }, [anchorRef]);
-
-  if (!pos || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div
-      className="fixed z-[85] pointer-events-none"
-      style={{ left: pos.left, bottom: pos.bottom, width: 280 }}
-    >
-      {children}
-    </div>,
-    document.body,
-  );
-};
 
 interface HeroSpellBarProps {
   hero: Hero | null;

@@ -13,7 +13,7 @@ import {
   LEVEL_DATA,
 } from "../../constants";
 import { LANDMARK_DECORATION_TYPES } from "../../utils";
-import { WORLD_LEVELS } from "../menus/worldMapData";
+import { WORLD_LEVELS } from "../menus/world-map/worldMapData";
 import type {
   DecorationCategory,
   EnemyType,

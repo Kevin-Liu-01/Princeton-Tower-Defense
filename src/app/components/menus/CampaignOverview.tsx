@@ -13,79 +13,24 @@ import {
   Crown,
 } from "lucide-react";
 import type { LevelStars } from "../../types";
-import type { LevelStats } from "../../useLocalStorage";
+import type { LevelStats } from "../../hooks/useLocalStorage";
 import { LEVEL_DATA } from "../../constants";
 import {
   PANEL,
   GOLD,
-  AMBER_CARD,
   RED_CARD,
   BLUE_CARD,
   GREEN_CARD,
-  NEUTRAL,
-} from "../ui/theme";
-import { WORLD_LEVELS, type LevelNode } from "./worldMapData";
+} from "../ui/system/theme";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
-
-interface RegionMeta {
-  displayName: string;
-  color: string;
-  bgLight: string;
-  bgDark: string;
-  border: string;
-  glow: string;
-}
-
-const REGION_META: Record<LevelNode["region"], RegionMeta> = {
-  grassland: {
-    displayName: "Princeton Grounds",
-    color: "text-green-400",
-    bgLight: "rgba(30,50,25,0.8)",
-    bgDark: "rgba(20,35,18,0.65)",
-    border: "rgba(80,160,60,0.45)",
-    glow: "rgba(80,160,60,0.08)",
-  },
-  swamp: {
-    displayName: "Mathey Marshes",
-    color: "text-teal-400",
-    bgLight: "rgba(20,40,38,0.8)",
-    bgDark: "rgba(15,30,28,0.65)",
-    border: "rgba(60,140,130,0.45)",
-    glow: "rgba(60,140,130,0.08)",
-  },
-  desert: {
-    displayName: "Stadium Sands",
-    color: "text-amber-400",
-    bgLight: "rgba(55,40,18,0.8)",
-    bgDark: "rgba(40,28,12,0.65)",
-    border: "rgba(180,140,50,0.45)",
-    glow: "rgba(180,140,50,0.08)",
-  },
-  winter: {
-    displayName: "Frist Frontier",
-    color: "text-blue-400",
-    bgLight: "rgba(25,35,50,0.8)",
-    bgDark: "rgba(18,25,40,0.65)",
-    border: "rgba(80,130,200,0.45)",
-    glow: "rgba(80,130,200,0.08)",
-  },
-  volcanic: {
-    displayName: "Dormitory Depths",
-    color: "text-red-400",
-    bgLight: "rgba(50,25,20,0.8)",
-    bgDark: "rgba(35,18,15,0.65)",
-    border: "rgba(180,70,50,0.45)",
-    glow: "rgba(180,70,50,0.08)",
-  },
-};
-
-const REGION_ORDER: LevelNode["region"][] = [
-  "grassland",
-  "swamp",
-  "desert",
-  "winter",
-  "volcanic",
-];
+import {
+  REGION_META,
+  findLastPlayedLevel,
+  findRecommendedLevel,
+  getCampaignLevels,
+  getRegionProgressList,
+} from "./shared/worldMapRegions";
 
 function getPreviewImage(levelId: string): string | undefined {
   return LEVEL_DATA[levelId]?.previewImage;
@@ -119,57 +64,6 @@ interface CampaignOverviewProps {
   onSelectLevel: (levelId: string) => void;
 }
 
-function computeRegionData(
-  levelStars: LevelStars,
-  unlockedMaps: Set<string>
-) {
-  return REGION_ORDER.map((region) => {
-    const levels = WORLD_LEVELS.filter((l) => l.region === region && l.kind !== "sandbox");
-    const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
-    const maxStars = levels.length * 3;
-    const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
-    const unlocked = levels.filter((l) => unlockedMaps.has(l.id)).length;
-    const targetLevel =
-      levels.find((l) => unlockedMaps.has(l.id) && (levelStars[l.id] || 0) < 3) ??
-      levels[0] ?? null;
-    return { region, levels, stars, maxStars, completed, unlocked, total: levels.length, targetLevel };
-  });
-}
-
-function findRecommendedLevel(
-  levelStars: LevelStars,
-  unlockedMaps: Set<string>
-): LevelNode | null {
-  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
-  for (const level of campaignLevels) {
-    if (unlockedMaps.has(level.id) && (levelStars[level.id] || 0) === 0) {
-      return level;
-    }
-  }
-  for (const level of campaignLevels) {
-    if (unlockedMaps.has(level.id) && (levelStars[level.id] || 0) < 3) {
-      return level;
-    }
-  }
-  return null;
-}
-
-function findLastPlayedLevel(
-  levelStats: Record<string, LevelStats>
-): { id: string; stats: LevelStats } | null {
-  let bestEntry: { id: string; stats: LevelStats } | null = null;
-  let bestTimestamp = 0;
-  for (const [id, stats] of Object.entries(levelStats)) {
-    if (!stats.timesPlayed || stats.timesPlayed <= 0) continue;
-    const playedAt = stats.lastPlayedAt ?? 0;
-    if (!bestEntry || playedAt > bestTimestamp) {
-      bestEntry = { id, stats };
-      bestTimestamp = playedAt;
-    }
-  }
-  return bestEntry;
-}
-
 export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   levelStars,
   levelStats,
@@ -179,11 +73,11 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
 
   const regionData = useMemo(
-    () => computeRegionData(levelStars, unlockedSet),
+    () => getRegionProgressList(levelStars, unlockedSet),
     [levelStars, unlockedSet]
   );
 
-  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
+  const campaignLevels = getCampaignLevels();
   const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
   const maxStars = campaignLevels.length * 3;
   const completedLevels = campaignLevels.filter((l) => (levelStars[l.id] || 0) > 0).length;
@@ -430,17 +324,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               <button
                 key={region}
                 onClick={() => {
-                  const firstUnbeaten = WORLD_LEVELS.find(
-                    (l) =>
-                      l.region === region &&
-                      unlockedSet.has(l.id) &&
-                      (levelStars[l.id] || 0) < 3
-                  );
-                  const firstInRegion = WORLD_LEVELS.find(
-                    (l) => l.region === region
-                  );
-                  if (firstUnbeaten) onSelectLevel(firstUnbeaten.id);
-                  else if (firstInRegion) onSelectLevel(firstInRegion.id);
+                  if (targetLevel) onSelectLevel(targetLevel.id);
                 }}
                 className="w-full text-left rounded-lg overflow-hidden transition-all hover:brightness-110 relative"
                 style={{

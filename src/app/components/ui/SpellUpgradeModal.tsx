@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { BaseModal } from "./BaseModal";
+import { BaseModal } from "./primitives/BaseModal";
 import type { LucideIcon } from "lucide-react";
 import {
   Banknote,
@@ -50,7 +50,7 @@ import {
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
-import { OrnateFrame } from "./OrnateFrame";
+import { OrnateFrame } from "./primitives/OrnateFrame";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

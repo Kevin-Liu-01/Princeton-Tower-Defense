@@ -14,7 +14,7 @@ import type {
   Tower,
   WaveGroup,
 } from "../types";
-import { useLocalStorage } from "../useLocalStorage";
+import { useLocalStorage } from "./useLocalStorage";
 import type {
   CustomLevelDefinition,
   CustomLevelDraftInput,
@@ -22,7 +22,8 @@ import type {
   GridPoint,
 } from "../customLevels/types";
 
-export const CUSTOM_LEVELS_STORAGE_KEY = "princeton-td-custom-levels";
+import { STORAGE_KEY_CUSTOM_LEVELS } from "../constants/storage";
+export const CUSTOM_LEVELS_STORAGE_KEY = STORAGE_KEY_CUSTOM_LEVELS;
 export const CUSTOM_LEVEL_PREFIX = "custom_";
 const DEFAULT_WAVE_TEMPLATE = "default";
 const PATH_MARGIN_TILES = 4;

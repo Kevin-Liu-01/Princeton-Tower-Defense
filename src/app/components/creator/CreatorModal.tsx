@@ -12,7 +12,7 @@ import { TOWER_TYPE_OPTIONS } from "./constants";
 import { useCreatorDraft } from "./hooks/useCreatorDraft";
 import { useCreatorCamera } from "./hooks/useCreatorCamera";
 import { useCreatorBoard } from "./hooks/useCreatorBoard";
-import { BaseModal } from "../ui/BaseModal";
+import { BaseModal } from "../ui/primitives/BaseModal";
 import { CreatorHeader } from "./components/CreatorHeader";
 import { CreatorCanvas } from "./components/CreatorCanvas";
 import { InspectorPanel } from "./components/InspectorPanel";

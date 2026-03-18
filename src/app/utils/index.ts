@@ -10,7 +10,7 @@ import type {
   DecorationHeightTag,
   MapDecoration,
 } from "../types";
-import { getBarracksOwnerId, isBarracksOwnerId } from "../game/barracks";
+import { getBarracksOwnerId, isBarracksOwnerId } from "../game/movement";
 import {
   TILE_SIZE,
   MAP_PATHS,
@@ -1330,11 +1330,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   return { r, g, b };
 }
 
-// Convert hex to rgba
-export function hexToRgba(hex: string, alpha: number): string {
-  const { r, g, b } = hexToRgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+export { hexToRgba } from "./colorUtils";
 
 // Calculate projectile start position from elevated tower
 export function getProjectileOrigin(

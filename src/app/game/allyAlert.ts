@@ -1,6 +1,6 @@
 import type { Position, Enemy } from "../types";
 import { distance } from "../utils";
-import { ALLY_ALERT_RANGE } from "./pageHelpers";
+import { ALLY_ALERT_RANGE } from "./setup";
 
 export interface AlertableAlly {
   pos: Position;

@@ -10,7 +10,6 @@ import {
   Target,
   Gauge,
   Timer,
-  Star,
   Check,
   Coins,
   Clock,
@@ -25,7 +24,6 @@ import {
   HERO_DATA,
   HERO_ABILITY_COOLDOWNS,
   SPELL_DATA,
-  SPELL_OPTIONS,
   getFireballSpellStats,
   getLightningSpellStats,
   getFreezeSpellStats,
@@ -39,17 +37,9 @@ import { HeroSprite, HeroAbilityIcon, SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
-import { heroFrameElements, spellFrameElements } from "../ui/ornateFrameHelpers";
-
-const HERO_OPTIONS: HeroType[] = [
-  "tiger",
-  "tenor",
-  "mathey",
-  "rocky",
-  "scott",
-  "captain",
-  "engineer",
-];
+import { heroFrameElements, spellFrameElements } from "../ui/primitives/ornateFrameHelpers";
+import { HERO_OPTIONS, MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
+import { hexToRgba } from "./shared/colorUtils";
 
 const getHeroRoleLabel = (type: HeroType): string => HERO_ROLES[type].label;
 
@@ -58,8 +48,6 @@ interface MobileLoadoutBarProps {
   setSelectedHero: (hero: HeroType) => void;
   selectedSpells: SpellType[];
   toggleSpell: (spell: SpellType) => void;
-  onOpenHeroCodex?: () => void;
-  onOpenSpellCodex?: () => void;
   availableSpellStars: number;
   totalSpellStarsEarned: number;
   spentSpellStars: number;
@@ -162,11 +150,6 @@ const FRAME_PAD = (FRAME_SIZE - CIRCLE_SIZE) / 2;
 const FRAME_CX = FRAME_SIZE / 2;
 const FRAME_OUTER_R = FRAME_CX - 2;
 const FRAME_MID_R = FRAME_CX - 4;
-
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
 
 function HeroCircleButton({
   selectedHero,
@@ -538,7 +521,7 @@ function SpellSelectionContent({
         </span>
       </div>
 
-      {SPELL_OPTIONS.map((spellType) => {
+      {MENU_SPELL_OPTIONS.map((spellType) => {
         const spell = SPELL_DATA[spellType];
         const isSelected = selectedSpells.includes(spellType);
         const selectionIndex = selectedSpells.indexOf(spellType);

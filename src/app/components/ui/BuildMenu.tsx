@@ -10,10 +10,10 @@ import {
 import type { TowerType, DraggingTower } from "../../types";
 import { TOWER_DATA, TOWER_ROLE_STYLES, TOWER_TAGS, TOWER_TAG_DEFS } from "../../constants";
 import { TowerSprite } from "../../sprites";
-import { OrnateFrame } from "./OrnateFrame";
-import { TagIcon } from "./TagBadge";
-import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
-import { PANEL, GOLD, DIVIDER, SELECTED, NEUTRAL, panelGradientReversed } from "./theme";
+import { OrnateFrame } from "./primitives/OrnateFrame";
+import { TagIcon } from "./primitives/TagBadge";
+import { useIsTouchDevice, useResponsiveSizes } from "./system/hooks";
+import { PANEL, GOLD, DIVIDER, SELECTED, NEUTRAL, panelGradientReversed } from "./system/theme";
 
 interface BuildMenuProps {
   pawPoints: number;

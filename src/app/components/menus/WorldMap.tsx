@@ -5,7 +5,6 @@ import {
   Star,
   Swords,
   Play,
-  Crown,
   X,
   Skull,
   Flag,
@@ -13,19 +12,10 @@ import {
   MapPin,
   ChevronRight,
   Trophy,
-  ChevronLeft,
   Clock,
-  Book,
   AlertTriangle,
-  Hammer,
   Eye,
   BarChart3,
-  ChessRook,
-  Sparkles,
-  Settings,
-  Maximize,
-  Minimize,
-  Info,
 } from "lucide-react";
 import type {
   GameState,
@@ -34,93 +24,31 @@ import type {
   SpellType,
   SpellUpgradeLevels,
 } from "../../types";
-import type { LevelStats } from "../../useLocalStorage";
+import type { LevelStats } from "../../hooks/useLocalStorage";
 import type {
   CustomLevelDefinition,
   CustomLevelDraftInput,
   CustomLevelUpsertResult,
 } from "../../customLevels/types";
-import { OrnateFrame } from "../ui/OrnateFrame";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import {
   LEVEL_DATA,
 } from "../../constants";
-import PrincetonTDLogo from "../ui/PrincetonTDLogo";
-import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-import { WORLD_LEVELS, MAP_WIDTH, getWaveCount, DEV_LEVELS, DEV_LEVEL_IDS } from "./worldMapData";
-import { CodexModal, type CodexTabId } from "./CodexModal";
+import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, NEUTRAL, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
+import { WORLD_LEVELS, MAP_WIDTH, getWaveCount, DEV_LEVELS, DEV_LEVEL_IDS } from "./world-map/worldMapData";
+import type { CodexTabId } from "./CodexModal";
 import { CampaignOverview } from "./CampaignOverview";
 import { BattlefieldPreview } from "./BattlefieldPreview";
 import { RegionIcon } from "../../sprites";
-import { HeroSelector } from "./HeroSelector";
-import { SpellSelector } from "./SpellSelector";
 import { MobileLoadoutBar } from "./MobileLoadoutBar";
 import { MobileCampaignBar } from "./MobileCampaignBar";
 import { MobileLevelSheet } from "./MobileLevelSheet";
-import { CreatorModal } from "../creator";
-import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
-import { getWorldLevelById, getLevelNodeY } from "./worldMapUtils";
-import { SettingsModal } from "./SettingsModal";
+import { drawWorldMapCanvas } from "./world-map/worldMapCanvasRenderer";
+import { getWorldLevelById, getLevelNodeY } from "./world-map/worldMapUtils";
 import { useSettings } from "../../hooks/useSettings";
-import { CreditsModal } from "./CreditsModal";
-import { NavMoreDropdown } from "./NavMoreDropdown";
-
-
-// =============================================================================
-// LOGO COMPONENT
-// =============================================================================
-
-const PrincetonLogo: React.FC = () => {
-  return (
-    <div className="relative flex items-center gap-1 sm:gap-2">
-      <div className="absolute -inset-4 blur-2xl opacity-60">
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40 animate-pulse"
-        />
-      </div>
-      <PrincetonTDLogo size="h-9 w-9 sm:h-11 sm:w-11" />
-      <div className="relative flex flex-col -mt-1">
-        <span
-          className="text-lg sm:text-2xl font-black tracking-wider"
-          style={{
-            background:
-              "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          PRINCETON
-        </span>
-        <div className="flex items-center gap-1 sm:gap-2 -mt-1">
-          <Swords size={14} className="text-orange-400 size-2 sm:size-auto block" />
-          <span className="text-[7px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
-            TOWER DEFENSE
-          </span>
-          <Swords
-            size={14}
-            className="text-orange-400 size-2 sm:size-auto block"
-            style={{ transform: "scaleX(-1)" }}
-          />
-        </div>
-      </div>
-
-      <div className="z-[-1] object-bottom object-contain absolute top-[-4.1rem] right-[-26rem] pointer-events-none select-none">
-        <Image
-          src="/images/new/gameplay_volcano.png"
-          alt="Battle Scene"
-          width={1200}
-          height={700}
-          priority
-          className="w-full h-full opacity-20 scale-125"
-          style={{
-            maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
-          }}
-        />
-      </div>
-
-    </div>
-  );
-};
+import { WorldMapTopBar } from "./world-map/WorldMapTopBar";
+import { WorldMapDesktopLoadout } from "./world-map/WorldMapDesktopLoadout";
+import { WorldMapModals } from "./world-map/WorldMapModals";
 
 // =============================================================================
 // WORLD MAP COMPONENT
@@ -724,154 +652,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     <div className="w-full h-dvh flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}`, paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {/* TOP BAR */}
-      <OrnateFrame
-        className="flex-shrink-0 overflow-hidden rounded-xl mx-1.5 sm:mx-3 mt-1.5 sm:mt-3 border-2 border-amber-700/50 shadow-xl"
-        cornerSize={22}
-        borderVariant="compact"
-        showBorders={true}
-        showSideBorders={true}
-        showTopBottomBorders={false}
-      >
-        <div
-          className="relative sm:px-1 z-20 overflow-hidden"
-          style={{
-            background: panelGradient,
+      <div className="mx-1.5 sm:mx-3 mt-1.5 sm:mt-3">
+        <WorldMapTopBar
+          totalStars={totalStars}
+          maxStars={maxStars}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            } else {
+              document.documentElement.requestFullscreen();
+            }
           }}
-        >
-          {/* Right-side background image */}
-          <div className="absolute top-[-2rem] right-0 w-[28rem] h-[calc(100%+4rem)] pointer-events-none select-none z-0">
-            <Image
-              src="/images/new/gameplay_winter.png"
-              alt=""
-              width={1200}
-              height={700}
-              priority
-              className="w-full h-full object-cover opacity-15 scale-110"
-              style={{
-                maskImage: "linear-gradient(to left, black 0%, black 30%, transparent 80%)",
-                WebkitMaskImage: "linear-gradient(to left, black 0%, black 30%, transparent 80%)",
-              }}
-            />
-          </div>
-
-          <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
-
-          <div className="relative px-4 sm:pl-3 sm:pr-5 py-1.5 sm:py-2 flex items-center justify-between gap-2 sm:gap-3 z-10">
-            {/* Left: Logo + Stars badge */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              <PrincetonLogo />
-
-              <div className="hidden sm:block w-px h-8 opacity-60" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
-
-              {/* Stars badge - desktop */}
-              <div className="hidden sm:flex relative items-center gap-2 px-4 py-1.5 rounded-xl" style={{
-                background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                border: `1.5px solid ${AMBER_CARD.border}`,
-                boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}, 0 0 10px rgba(180,140,50,0.08)`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                <Star size={15} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                <span className="font-black text-sm text-yellow-300">{totalStars}</span>
-                <span className="text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
-              </div>
-
-
-            </div>
-
-            {/* Center: Navigation buttons in a unified pill group */}
-            <div className="flex items-center">
-              <div className="relative flex items-center rounded-xl overflow-hidden" style={{
-                background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
-                border: `1.5px solid ${GOLD.border30}`,
-                boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-
-                <button
-                  onClick={() => openCodexTo("towers")}
-                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
-                >
-                  <Book size={14} className="text-amber-400 shrink-0" />
-                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Codex</span>
-                </button>
-
-                <div className="w-px h-4 sm:h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-
-                <button
-                  onClick={() => setShowCreator(true)}
-                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
-                >
-                  <Hammer size={14} className="text-amber-400 shrink-0" />
-                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Creator</span>
-                </button>
-
-                <div className="w-px h-4 sm:h-5 shrink-0" style={{ background: `rgba(180,140,60,0.18)` }} />
-
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
-                >
-                  <Settings size={14} className="text-amber-400 shrink-0" />
-                  <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Settings</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Right: Fullscreen + More dropdown + Nav arrows */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              {/* Fullscreen toggle */}
-              <button
-                onClick={() => {
-                  if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                  } else {
-                    document.documentElement.requestFullscreen();
-                  }
-                }}
-                className="hidden sm:flex relative items-center px-3 py-2 rounded-xl transition-all duration-150 hover:bg-amber-600/15"
-                style={{
-                  background: `linear-gradient(180deg, rgba(55,38,20,0.85), rgba(38,26,14,0.85))`,
-                  border: `1.5px solid ${GOLD.border30}`,
-                  boxShadow: `inset 0 1px 0 ${OVERLAY.white06}, inset 0 0 16px ${GOLD.glow04}`,
-                }}
-                title="Toggle Fullscreen"
-              >
-                {isFullscreen
-                  ? <Minimize size={15} className="text-amber-300/70 shrink-0" />
-                  : <Maximize size={15} className="text-amber-300/70 shrink-0" />}
-              </button>
-
-              {/* More dropdown (portal-based, no overflow clipping) */}
-              <NavMoreDropdown onShowCredits={() => setShowCredits(true)} />
-
-              {/* Nav arrows */}
-              <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
-                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                border: `1.5px solid ${GOLD.border25}`,
-                boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-              }}>
-                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                <button
-                  onClick={() => goToPreviousLevel()}
-                  className="relative z-10 px-3 py-2 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
-                >
-                  <ChevronLeft size={16} className="text-amber-500/70" />
-                </button>
-                <div className="w-px h-5" style={{ background: "rgba(180,140,60,0.2)" }} />
-                <button
-                  onClick={() => goToNextLevel()}
-                  className="relative z-10 px-3 py-2 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
-                >
-                  <ChevronRight size={16} className="text-amber-500/70" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom gradient line */}
-          <div className="h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
-        </div>
-      </OrnateFrame>
+          onOpenCodex={openCodexTo}
+          onOpenCreator={() => setShowCreator(true)}
+          onOpenSettings={() => setShowSettings(true)}
+          onShowCredits={() => setShowCredits(true)}
+          onPreviousLevel={goToPreviousLevel}
+          onNextLevel={goToNextLevel}
+        />
+      </div>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
@@ -1488,8 +1288,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       setSelectedHero={setSelectedHero}
                       selectedSpells={selectedSpells}
                       toggleSpell={toggleSpell}
-                      onOpenHeroCodex={() => openCodexTo("heroes")}
-                      onOpenSpellCodex={() => openCodexTo("spells")}
                       availableSpellStars={availableSpellStars}
                       totalSpellStarsEarned={totalSpellStarsEarned}
                       spentSpellStars={spentSpellStars}
@@ -1503,217 +1301,35 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </OrnateFrame>
           </div>
 
-          {/* DESKTOP: LOADOUT BAR (below map, inside right column) */}
-          <div className="hidden xl:block flex-shrink-0 px-1.5 sm:px-3 pb-1.5 sm:pb-3">
-            <OrnateFrame
-              className="rounded-xl border-2 border-amber-600/50 shadow-xl overflow-hidden"
-              cornerSize={20}
-              borderVariant="compact"
-              showBorders={true}
-              showSideBorders={true}
-              showTopBottomBorders={false}
-            >
-              <div
-                className="relative"
-                style={{
-                  background: panelGradient,
-                  boxShadow: `inset 0 0 20px ${GOLD.glow04}`,
-                }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: dividerGradient }} />
-
-                <div ref={bottomPanelRef}>
-                  {loadoutCompact ? (
-                    /* ── Compact: wheel carousels ── */
-                    <div className="flex items-stretch gap-2 px-3 py-2">
-                      {/* Guide / Codex Quick Links — 2×3 grid */}
-                      <div className="grid grid-cols-3 gap-1.5 flex-shrink-0 self-center overflow-visible">
-                        {([
-                          { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
-                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
-                          { label: "FAQ", tab: "guide" as CodexTabId, icon: <Info size={13} />, color: "#93c5fd", bg: "rgba(30,60,120,0.4)", border: "rgba(60,100,200,0.35)", glow: "rgba(60,100,200,0.2)" },
-                          { label: "Battle", tab: null as CodexTabId | null, icon: <Swords size={13} />, color: "#fbbf24", bg: "rgba(160,110,25,0.6)", border: "rgba(200,160,60,0.5)", glow: "rgba(200,160,60,0.2)" },
-                        ]).map((item) => (
-                          <button
-                            key={item.label}
-                            onClick={() => {
-                              if (item.tab) {
-                                openCodexTo(item.tab);
-                              } else {
-                                const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
-                                if (unlockedLevelsList.length > 0) {
-                                  handleLevelClick(unlockedLevelsList[unlockedLevelsList.length - 1].id);
-                                }
-                              }
-                            }}
-                            className="flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                            style={{
-                              background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
-                              border: `1.5px solid ${item.border}`,
-                              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
-                              color: item.color,
-                            }}
-                            title={item.label}
-                          >
-                            {item.icon}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Divider */}
-                      <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(180,140,60,0.3), transparent)' }} />
-
-                      {/* Hero Selector — wheel carousel */}
-                      <HeroSelector
-                        selectedHero={selectedHero}
-                        setSelectedHero={setSelectedHero}
-                        hoveredHero={hoveredHero}
-                        setHoveredHero={setHoveredHero}
-                        onOpenCodex={() => openCodexTo("heroes")}
-                        compact
-                      />
-
-                      {/* Divider */}
-                      <div className="w-px h-8 flex-shrink-0 self-center" style={{ background: 'linear-gradient(180deg, transparent, rgba(140,80,200,0.3), transparent)' }} />
-
-                      {/* Spell Selector — wheel carousel */}
-                      <SpellSelector
-                        selectedSpells={selectedSpells}
-                        toggleSpell={toggleSpell}
-                        hoveredSpell={hoveredSpell}
-                        setHoveredSpell={setHoveredSpell}
-                        availableSpellStars={availableSpellStars}
-                        totalSpellStarsEarned={totalSpellStarsEarned}
-                        spentSpellStars={spentSpellStars}
-                        spellUpgradeLevels={spellUpgradeLevels}
-                        upgradeSpell={upgradeSpell}
-                        downgradeSpell={downgradeSpell}
-                        spellAutoAim={spellAutoAim}
-                        onToggleSpellAutoAim={onToggleSpellAutoAim}
-                        onOpenCodex={() => openCodexTo("spells")}
-                        compact
-                      />
-
-                      {/* Toggle to expanded */}
-                      <button
-                        onClick={() => setLoadoutCompact(false)}
-                        className="absolute bottom-0 right-0 flex-shrink-0 self-center p-1 pr-2 pb-2 rounded-tl-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
-                        style={{
-                          background: 'radial-gradient(circle at 30% 30%, rgba(120,85,20,0.4), rgba(20,16,10,0.8))',
-                          border: '1.5px solid rgba(180,140,60,0.35)',
-                          boxShadow: '0 0 6px rgba(180,140,60,0.12)',
-                        }}
-                        title="Expand loadout"
-                      >
-                        <ChevronLeft size={12} className="text-amber-400/70" />
-                      </button>
-                    </div>
-                  ) : (
-                    /* ── Expanded: full two-row layout ── */
-                    <div className="flex items-stretch gap-2 pl-3 py-2">
-                      {/* Guide / Codex Quick Links — vertical column */}
-                      <div className="flex flex-col flex-shrink-0 relative">
-                        <div className="flex flex-col items-center gap-1.5 py-1">
-                          {([
-                            { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                            { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={13} />, color: "#fcd34d", bg: "rgba(120,85,20,0.45)", border: "rgba(180,140,60,0.35)", glow: "rgba(180,140,60,0.2)" },
-                            { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={13} />, color: "#d8b4fe", bg: "rgba(80,40,120,0.4)", border: "rgba(140,80,200,0.35)", glow: "rgba(140,80,200,0.2)" },
-                            { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={13} />, color: "#fca5a5", bg: "rgba(100,30,30,0.4)", border: "rgba(180,60,60,0.35)", glow: "rgba(180,60,60,0.2)" },
-                          ]).map((item) => (
-                            <button
-                              key={item.tab}
-                              onClick={() => openCodexTo(item.tab)}
-                              className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                              style={{
-                                background: `radial-gradient(circle at 30% 30%, ${item.bg}, rgba(20,16,10,0.8))`,
-                                border: `1.5px solid ${item.border}`,
-                                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px ${item.glow}`,
-                                color: item.color,
-                              }}
-                              title={item.label}
-                            >
-                              {item.icon}
-                              <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                                style={{ background: 'rgba(20,16,10,0.95)', border: `1px solid ${item.border}`, color: item.color }}>
-                                {item.label}
-                              </span>
-                            </button>
-                          ))}
-                          <button
-                            onClick={() => {
-                              const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
-                              if (unlockedLevelsList.length > 0) {
-                                const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                                handleLevelClick(farthestLevel.id);
-                              }
-                            }}
-                            className="relative group flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 hover:scale-115 hover:brightness-130"
-                            style={{
-                              background: 'radial-gradient(circle at 30% 30%, rgba(160,110,25,0.6), rgba(100,60,10,0.5))',
-                              border: '1.5px solid rgba(200,160,60,0.5)',
-                              boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.15), 0 2px 8px rgba(0,0,0,0.4), 0 0 8px rgba(200,160,60,0.2)',
-                              color: '#fbbf24',
-                            }}
-                            title="Defend the Realm"
-                          >
-                            <Swords size={13} />
-                            <span className="absolute left-full ml-2 px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-wider whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                              style={{ background: 'rgba(20,16,10,0.95)', border: '1px solid rgba(200,160,60,0.5)', color: '#fbbf24' }}>
-                              Battle
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Hero Selector — expanded */}
-                      <HeroSelector
-                        selectedHero={selectedHero}
-                        setSelectedHero={setSelectedHero}
-                        hoveredHero={hoveredHero}
-                        setHoveredHero={setHoveredHero}
-                        onOpenCodex={() => openCodexTo("heroes")}
-                      />
-
-                      {/* Spell Selector — expanded */}
-                      <SpellSelector
-                        selectedSpells={selectedSpells}
-                        toggleSpell={toggleSpell}
-                        hoveredSpell={hoveredSpell}
-                        setHoveredSpell={setHoveredSpell}
-                        availableSpellStars={availableSpellStars}
-                        totalSpellStarsEarned={totalSpellStarsEarned}
-                        spentSpellStars={spentSpellStars}
-                        spellUpgradeLevels={spellUpgradeLevels}
-                        upgradeSpell={upgradeSpell}
-                        downgradeSpell={downgradeSpell}
-                        spellAutoAim={spellAutoAim}
-                        onToggleSpellAutoAim={onToggleSpellAutoAim}
-                        onOpenCodex={() => openCodexTo("spells")}
-                      />
-
-                      {/* Toggle to compact */}
-                      <div className="flex flex-col items-center justify-center flex-shrink-0">
-                        <button
-                          onClick={() => setLoadoutCompact(true)}
-                          className="absolute bottom-0 right-0 flex-shrink-0 self-center p-1 pr-2 pb-2 rounded-tl-2xl flex items-center justify-center transition-all duration-200 hover:scale-110 hover:brightness-125"
-                          style={{
-                            background: 'radial-gradient(circle at 30% 30%, rgba(60,50,35,0.5), rgba(20,16,10,0.8))',
-                            border: '1.5px solid rgba(100,80,50,0.3)',
-                          }}
-                          title="Compact loadout"
-                        >
-                          <ChevronRight size={12} className="text-amber-400/60" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="h-px opacity-40" style={{ background: dividerGradient }} />
-              </div>
-            </OrnateFrame>
+          <div ref={bottomPanelRef}>
+            <WorldMapDesktopLoadout
+              loadoutCompact={loadoutCompact}
+              setLoadoutCompact={setLoadoutCompact}
+              selectedHero={selectedHero}
+              setSelectedHero={setSelectedHero}
+              hoveredHero={hoveredHero}
+              setHoveredHero={setHoveredHero}
+              selectedSpells={selectedSpells}
+              toggleSpell={toggleSpell}
+              hoveredSpell={hoveredSpell}
+              setHoveredSpell={setHoveredSpell}
+              availableSpellStars={availableSpellStars}
+              totalSpellStarsEarned={totalSpellStarsEarned}
+              spentSpellStars={spentSpellStars}
+              spellUpgradeLevels={spellUpgradeLevels}
+              upgradeSpell={upgradeSpell}
+              downgradeSpell={downgradeSpell}
+              spellAutoAim={spellAutoAim}
+              onToggleSpellAutoAim={onToggleSpellAutoAim}
+              onOpenCodex={openCodexTo}
+              onSelectBattleShortcut={() => {
+                const unlockedLevelsList = visibleWorldLevels.filter((level) => isLevelUnlocked(level.id));
+                const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                if (farthestLevel) {
+                  handleLevelClick(farthestLevel.id);
+                }
+              }}
+            />
           </div>
         </div>
       </div>
@@ -1736,29 +1352,23 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         />
       )}
 
-      {showCodex && <CodexModal onClose={() => setShowCodex(false)} defaultTab={codexTab} />}
-      {showSettings && (
-        <SettingsModal
-          onClose={() => setShowSettings(false)}
-          settings={settings}
-          updateCategory={updateCategory}
-          applyPreset={applyPreset}
-          resetToDefaults={resetToDefaults}
-          resetCategory={resetCategory}
-          onDevModeChange={onDevModeChange}
-        />
-      )}
-      {showCredits && <CreditsModal onClose={() => setShowCredits(false)} />}
-      {showCreator && (
-        <CreatorModal
-          isOpen={showCreator}
-          onClose={() => setShowCreator(false)}
-          customLevels={customLevels}
-          onSaveLevel={onSaveCustomLevel}
-          onDeleteLevel={onDeleteCustomLevel}
-          onPlayLevel={handleCustomLevelPlaytest}
-        />
-      )}
+      <WorldMapModals
+        showCodex={showCodex}
+        codexTab={codexTab}
+        onCloseCodex={() => setShowCodex(false)}
+        showSettings={showSettings}
+        onCloseSettings={() => setShowSettings(false)}
+        settingsState={{ settings, updateCategory, applyPreset, resetToDefaults, resetCategory }}
+        onDevModeChange={onDevModeChange}
+        showCredits={showCredits}
+        onCloseCredits={() => setShowCredits(false)}
+        showCreator={showCreator}
+        onCloseCreator={() => setShowCreator(false)}
+        customLevels={customLevels}
+        onSaveCustomLevel={onSaveCustomLevel}
+        onDeleteCustomLevel={onDeleteCustomLevel}
+        onPlayCustomLevel={handleCustomLevelPlaytest}
+      />
     </div >
   );
 };

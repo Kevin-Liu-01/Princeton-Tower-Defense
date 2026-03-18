@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
 import { X, ExternalLink, Github, Globe, Cpu, Zap, Palette, Box, Monitor, ChevronDown } from "lucide-react";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { GOLD, OVERLAY, panelGradient } from "../ui/theme";
-import { BaseModal } from "../ui/BaseModal";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
+import { BaseModal } from "../ui/primitives/BaseModal";
 
-export interface CreditsModalProps {
+interface CreditsModalProps {
   onClose: () => void;
 }
 

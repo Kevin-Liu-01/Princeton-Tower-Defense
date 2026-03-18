@@ -1,0 +1,30 @@
+export const DESKTOP_HERO_SIZE = 84;
+export const DESKTOP_HERO_RING_R = DESKTOP_HERO_SIZE / 2 - 3;
+export const DESKTOP_HERO_RING_C = 2 * Math.PI * DESKTOP_HERO_RING_R;
+export const DESKTOP_ABILITY_SIZE = 64;
+export const ORNATE_FRAME_SIZE = 92;
+export const ORNATE_PAD = (ORNATE_FRAME_SIZE - DESKTOP_ABILITY_SIZE) / 2;
+export const ORNATE_CX = ORNATE_FRAME_SIZE / 2;
+export const ORNATE_OUTER_R = ORNATE_CX - 2;
+export const ORNATE_MID_R = ORNATE_CX - 5;
+export const ORNATE_GEM_R = ORNATE_CX - 2;
+export const ORNATE_TICK_INNER = ORNATE_CX - 8;
+export const ORNATE_TICK_OUTER = ORNATE_CX - 1;
+export const ORNATE_RING_CIRCUM = 2 * Math.PI * ORNATE_MID_R;
+export const DEG_TO_RAD = Math.PI / 180;
+export const ORNATE_ANGLES_ALL = [0, 45, 90, 135, 180, 225, 270, 315];
+export const ORNATE_ANGLES_CARDINAL = [0, 90, 180, 270];
+export const ORNATE_ANGLES_INTERCARDINAL = [45, 135, 225, 315];
+
+export const HERO_ORNATE_SIZE = 112;
+export const HERO_ORNATE_PAD = (HERO_ORNATE_SIZE - DESKTOP_HERO_SIZE) / 2;
+export const HERO_ORNATE_CX = HERO_ORNATE_SIZE / 2;
+export const HERO_ORNATE_MID_R = HERO_ORNATE_CX - 5;
+export const HERO_ORNATE_MID_CIRCUM = 2 * Math.PI * HERO_ORNATE_MID_R;
+
+export const SPELL_ORB_SIZE = 72;
+export const SPELL_ORNATE_SIZE = 96;
+export const SPELL_ORNATE_PAD = (SPELL_ORNATE_SIZE - SPELL_ORB_SIZE) / 2;
+export const SPELL_ORNATE_CX = SPELL_ORNATE_SIZE / 2;
+export const SPELL_ORNATE_MID_R = SPELL_ORNATE_CX - 5;
+export const SPELL_ORNATE_RING_CIRCUM = 2 * Math.PI * SPELL_ORNATE_MID_R;

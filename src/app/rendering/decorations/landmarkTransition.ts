@@ -10,7 +10,7 @@ import {
 } from "../../utils";
 import { worldToScreen } from "../../utils";
 import { drawOrganicBlobAt } from "../helpers";
-import { getLevelSpecialTowers } from "../../game/pageHelpers";
+import { getLevelSpecialTowers } from "../../game/setup";
 import { isMountainTerrainKind } from "../maps/challengeTerrain";
 
 // Decoration types that receive an organic ground-transition blob.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useLocalStorage } from "../useLocalStorage";
+import { useLocalStorage } from "./useLocalStorage";
 import type { EnemyType, HazardType, SpecialTowerType } from "../types";
 import type { EncounterInfo } from "../constants/tutorial";
 import {
@@ -22,7 +22,8 @@ export interface TutorialState {
   seenHazards: string[];
 }
 
-const TUTORIAL_STORAGE_KEY = "princeton-td-tutorial";
+import { STORAGE_KEY_TUTORIAL } from "../constants/storage";
+const TUTORIAL_STORAGE_KEY = STORAGE_KEY_TUTORIAL;
 
 const DEFAULT_TUTORIAL_STATE: TutorialState = {
   hasCompletedTutorial: false,

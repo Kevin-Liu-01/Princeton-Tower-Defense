@@ -12,7 +12,7 @@ import {
   Keyboard,
 } from "lucide-react";
 import type { Position } from "../../types";
-import { PANEL, GOLD, panelGradient } from "./theme";
+import { PANEL, GOLD, panelGradient } from "./system/theme";
 import { useSettings } from "../../hooks/useSettings";
 
 // =============================================================================

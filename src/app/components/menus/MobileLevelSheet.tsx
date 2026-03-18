@@ -15,7 +15,7 @@ import {
   Skull,
 } from "lucide-react";
 import type { LevelStars } from "../../types";
-import type { LevelStats } from "../../useLocalStorage";
+import type { LevelStats } from "../../hooks/useLocalStorage";
 import { LEVEL_DATA } from "../../constants";
 import {
   PANEL,
@@ -25,43 +25,16 @@ import {
   BLUE_CARD,
   NEUTRAL,
   SELECTED,
-} from "../ui/theme";
+} from "../ui/system/theme";
 import {
   WORLD_LEVELS,
   DEV_LEVEL_IDS,
   getWaveCount,
   type LevelNode,
-} from "./worldMapData";
+} from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
 import { MobileBottomSheet } from "./MobileBottomSheet";
-
-const CHALLENGE_BADGE_STYLES: Record<LevelNode["region"], React.CSSProperties> = {
-  grassland: {
-    background: "linear-gradient(135deg, rgba(41,110,59,0.9), rgba(22,68,36,0.95))",
-    border: "1px solid rgba(160,242,168,0.55)",
-    color: "rgb(230,255,218)",
-  },
-  swamp: {
-    background: "linear-gradient(135deg, rgba(28,98,94,0.9), rgba(12,60,58,0.95))",
-    border: "1px solid rgba(146,232,217,0.55)",
-    color: "rgb(224,255,248)",
-  },
-  desert: {
-    background: "linear-gradient(135deg, rgba(133,99,41,0.9), rgba(84,56,21,0.95))",
-    border: "1px solid rgba(255,216,132,0.55)",
-    color: "rgb(255,242,206)",
-  },
-  winter: {
-    background: "linear-gradient(135deg, rgba(47,87,129,0.9), rgba(28,56,92,0.95))",
-    border: "1px solid rgba(169,213,255,0.55)",
-    color: "rgb(231,246,255)",
-  },
-  volcanic: {
-    background: "linear-gradient(135deg, rgba(145,38,20,0.9), rgba(90,18,10,0.95))",
-    border: "1px solid rgba(255,170,90,0.55)",
-    color: "rgb(255,225,170)",
-  },
-};
+import { REGION_CHALLENGE_BADGE_STYLES } from "./shared/worldMapRegions";
 
 interface LevelInfo {
   id: string;
@@ -175,7 +148,7 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
       }
       accentColor={
         level
-          ? CHALLENGE_BADGE_STYLES[level.region].border?.toString().replace("1px solid ", "") ?? GOLD.border35
+          ? REGION_CHALLENGE_BADGE_STYLES[level.region].border?.toString().replace("1px solid ", "") ?? GOLD.border35
           : GOLD.border35
       }
     >
@@ -212,7 +185,7 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
             {isChallenge && (
               <span
                 className="text-[9px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase"
-                style={CHALLENGE_BADGE_STYLES[level.region]}
+                style={REGION_CHALLENGE_BADGE_STYLES[level.region]}
               >
                 Challenge
               </span>

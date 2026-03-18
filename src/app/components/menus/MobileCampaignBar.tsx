@@ -3,53 +3,15 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import { Star, Map as MapIcon } from "lucide-react";
 import type { LevelStars } from "../../types";
-import { GOLD, PANEL } from "../ui/theme";
-import { WORLD_LEVELS, DEV_LEVEL_IDS, type LevelNode } from "./worldMapData";
+import { GOLD, PANEL } from "../ui/system/theme";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
-
-const REGION_ORDER: LevelNode["region"][] = [
-  "grassland",
-  "swamp",
-  "desert",
-  "winter",
-  "volcanic",
-];
-
-const REGION_META: Record<
-  LevelNode["region"],
-  { displayName: string; accent: string; border: string; bg: string }
-> = {
-  grassland: {
-    displayName: "Princeton Grounds",
-    accent: "#4ade80",
-    border: "rgba(80,160,60,0.55)",
-    bg: "rgba(30,50,25,0.85)",
-  },
-  swamp: {
-    displayName: "Mathey Marshes",
-    accent: "#2dd4bf",
-    border: "rgba(60,140,130,0.55)",
-    bg: "rgba(20,40,38,0.85)",
-  },
-  desert: {
-    displayName: "Stadium Sands",
-    accent: "#fbbf24",
-    border: "rgba(180,140,50,0.55)",
-    bg: "rgba(55,40,18,0.85)",
-  },
-  winter: {
-    displayName: "Frist Frontier",
-    accent: "#60a5fa",
-    border: "rgba(80,130,200,0.55)",
-    bg: "rgba(25,35,50,0.85)",
-  },
-  volcanic: {
-    displayName: "Dormitory Depths",
-    accent: "#f87171",
-    border: "rgba(180,70,50,0.55)",
-    bg: "rgba(50,25,20,0.85)",
-  },
-};
+import {
+  REGION_META,
+  REGION_ORDER,
+  getCampaignLevels,
+  getRegionProgressList,
+} from "./shared/worldMapRegions";
 
 interface MobileCampaignBarProps {
   levelStars: LevelStars;
@@ -57,25 +19,6 @@ interface MobileCampaignBarProps {
   selectedLevel: string | null;
   onSelectLevel: (levelId: string) => void;
   isDevMode?: boolean;
-}
-
-function computeRegionStats(
-  region: LevelNode["region"],
-  levelStars: LevelStars,
-  unlockedSet: Set<string>,
-  isDevMode: boolean,
-) {
-  const levels = WORLD_LEVELS.filter(
-    (l) => l.region === region && l.kind !== "sandbox" && (isDevMode || !DEV_LEVEL_IDS.has(l.id)),
-  );
-  const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
-  const maxStars = levels.length * 3;
-  const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
-  const target =
-    levels.find(
-      (l) => unlockedSet.has(l.id) && (levelStars[l.id] || 0) < 3,
-    ) ?? levels[0];
-  return { levels, stars, maxStars, completed, total: levels.length, target };
 }
 
 export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
@@ -88,7 +31,7 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const campaignLevels = WORLD_LEVELS.filter((l) => l.kind !== "sandbox");
+  const campaignLevels = getCampaignLevels(isDevMode);
   const totalStars = campaignLevels.reduce((a, l) => a + (levelStars[l.id] || 0), 0);
   const maxStars = campaignLevels.length * 3;
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
@@ -100,11 +43,7 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
   }, [selectedLevel]);
 
   const regionStats = useMemo(
-    () =>
-      REGION_ORDER.map((region) => ({
-        region,
-        ...computeRegionStats(region, levelStars, unlockedSet, isDevMode),
-      })),
+    () => getRegionProgressList(levelStars, unlockedSet, isDevMode),
     [levelStars, unlockedSet, isDevMode],
   );
 
@@ -165,7 +104,7 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
         className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        {regionStats.map(({ region, stars, maxStars: rMax, completed, total, target }) => {
+        {regionStats.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }) => {
           const meta = REGION_META[region];
           const isActive = activeRegion === region;
           const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
@@ -175,16 +114,16 @@ export const MobileCampaignBar: React.FC<MobileCampaignBarProps> = ({
             <button
               key={region}
               onClick={() => {
-                if (target) onSelectLevel(target.id);
+                if (targetLevel) onSelectLevel(targetLevel.id);
               }}
               className="flex-shrink-0 flex items-center gap-1.5 pl-1.5 pr-2.5 py-1.5 rounded-lg transition-all active:scale-95 relative overflow-hidden"
               style={{
                 background: isActive
-                  ? `linear-gradient(135deg, ${meta.bg}, ${meta.bg.replace("0.85", "0.95")})`
+                  ? `linear-gradient(135deg, ${meta.bg}, ${meta.bgDark})`
                   : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                 border: `1.5px solid ${isActive ? meta.border : GOLD.border25}`,
                 boxShadow: isActive
-                  ? `0 0 10px ${meta.border.replace("0.55", "0.2")}, inset 0 0 8px ${meta.border.replace("0.55", "0.1")}`
+                  ? `0 0 10px ${meta.glow}, inset 0 0 8px ${meta.glow}`
                   : "none",
               }}
             >

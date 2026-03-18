@@ -9,15 +9,9 @@ import {
   Crown,
   Swords,
 } from "lucide-react";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { GOLD, DIVIDER, VICTORY, OVERLAY, panelGradient } from "../ui/theme";
-
-// Helper to format time as mm:ss
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-};
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { GOLD, DIVIDER, VICTORY, OVERLAY, panelGradient } from "../ui/system/theme";
+import { formatDuration } from "./shared/menuMath";
 
 interface CategoryRatings {
   speed: number;
@@ -711,7 +705,7 @@ export function VictoryScreen({
                     <span className="text-[10px] font-bold text-blue-400/70 tracking-[0.2em] uppercase">Time</span>
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-blue-300" style={{ textShadow: "0 0 14px rgba(96,165,250,0.3)" }}>
-                    {formatTime(timeSpent)}
+                    {formatDuration(timeSpent)}
                   </div>
                   {isNewBestTime ? (
                     <div className="flex items-center gap-1 mt-1.5">
@@ -719,7 +713,7 @@ export function VictoryScreen({
                       <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase animate-pulse">New Best!</span>
                     </div>
                   ) : bestTime ? (
-                    <span className="text-[9px] text-blue-400/50 mt-1 block">Best: {formatTime(bestTime)}</span>
+                    <span className="text-[9px] text-blue-400/50 mt-1 block">Best: {formatDuration(bestTime)}</span>
                   ) : null}
                 </div>
 

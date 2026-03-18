@@ -15,14 +15,16 @@ import {
   SPELL_DATA,
   SPELL_ACCENTS,
   SPELL_TRAITS,
-  SPELL_OPTIONS,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
-import { HudTooltip } from "../ui/HudTooltip";
+import { HudTooltip } from "../ui/tooltips/HudTooltip";
 import { SpellbookModal } from "./SpellbookModal";
-import { spellFrameElements } from "../ui/ornateFrameHelpers";
+import { spellFrameElements } from "../ui/primitives/ornateFrameHelpers";
+import { MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
+import { hexToRgba } from "./shared/colorUtils";
+import { circularDiff } from "./shared/menuMath";
 
 const CIRCLE = 42;
 const GAP = 6;
@@ -33,21 +35,11 @@ const VP_H = CIRCLE + 20;
 const VP_CX = VP_W / 2;
 const VP_CY = VP_H / 2;
 
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 const SEL_FRAME = 58;
 const SEL_CX = SEL_FRAME / 2;
 
 const ACT_FRAME = 54;
 const ACT_CX = ACT_FRAME / 2;
-
-function circularDiff(idx: number, center: number, len: number): number {
-  const raw = ((idx - center) % len + len) % len;
-  return raw > len / 2 ? raw - len : raw;
-}
 
 interface SpellSelectorProps {
   selectedSpells: SpellType[];
@@ -90,11 +82,11 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   const [ugHovered, setUgHovered] = React.useState(false);
 
   const navigate = useCallback((dir: -1 | 1) => {
-    setCenterIdx(prev => (prev + dir + SPELL_OPTIONS.length) % SPELL_OPTIONS.length);
+    setCenterIdx(prev => (prev + dir + MENU_SPELL_OPTIONS.length) % MENU_SPELL_OPTIONS.length);
   }, []);
 
   if (compact) {
-    const centeredSpell = SPELL_OPTIONS[centerIdx];
+    const centeredSpell = MENU_SPELL_OPTIONS[centerIdx];
     const centeredData = SPELL_DATA[centeredSpell];
 
     return (
@@ -134,9 +126,9 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 className="relative overflow-hidden flex-shrink-0"
                 style={{ width: VP_W, height: VP_H }}
               >
-                {SPELL_OPTIONS.map((spellType, idx) => {
+                {MENU_SPELL_OPTIONS.map((spellType, idx) => {
                   const accent = SPELL_ACCENTS[spellType];
-                  const diff = circularDiff(idx, centerIdx, SPELL_OPTIONS.length);
+                  const diff = circularDiff(idx, centerIdx, MENU_SPELL_OPTIONS.length);
                   const absDiff = Math.abs(diff);
                   const isCenter = diff === 0;
                   const halfVisible = Math.floor(VISIBLE_COUNT / 2);
@@ -538,7 +530,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           };
           return (
             <div className="flex gap-1.5">
-              {SPELL_OPTIONS.map((spellType) => {
+              {MENU_SPELL_OPTIONS.map((spellType) => {
                 const isSelected = selectedSpells.includes(spellType);
                 const spellIndex = selectedSpells.indexOf(spellType);
                 const label = { ...spellLabelExtras[spellType], ...SPELL_TRAITS[spellType] };

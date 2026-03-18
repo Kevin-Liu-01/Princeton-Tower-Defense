@@ -25,7 +25,7 @@ import {
   EVENT_COLORS,
   EVENT_LABELS,
 } from "../../hooks/useGameEventLog";
-import { GOLD, panelGradient } from "./theme";
+import { GOLD, panelGradient } from "./system/theme";
 
 // =============================================================================
 // CONSTANTS

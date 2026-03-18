@@ -51,7 +51,7 @@ import type {
   HazardType,
   SpecialTowerType,
 } from "../../types";
-import { OrnateFrame } from "../ui/OrnateFrame";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import {
   HERO_DATA,
   SPELL_DATA,
@@ -87,7 +87,7 @@ import {
   TOWER_CATEGORIES,
   TOWER_TAGS,
 } from "../../constants";
-import { TagBadge } from "../ui/TagBadge";
+import { TagBadge } from "../ui/primitives/TagBadge";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
   TowerSprite,
@@ -106,8 +106,8 @@ import {
   FramedSprite,
   type SpriteFrameTheme,
 } from "../../sprites/shared";
-import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
-import { BaseModal } from "../ui/BaseModal";
+import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
+import { BaseModal } from "../ui/primitives/BaseModal";
 
 // =============================================================================
 // GAMEPLAY REGION IMAGES
@@ -961,7 +961,7 @@ const COLOR_MAP: Record<string, {
   stone: { headerBg: "bg-stone-950/50", headerBorder: "border-stone-800/30", text: "text-stone-400", statBg: "bg-stone-950/40", statBorder: "border-stone-800/30", statText: "text-stone-300", barBg: "bg-stone-500/70", chipBg: "bg-stone-950/50", chipBorder: "border-stone-900/40" },
 };
 
-const getCC = (color: string) => COLOR_MAP[color] || COLOR_MAP.amber;
+const getColorClasses = (color: string) => COLOR_MAP[color] || COLOR_MAP.amber;
 
 const TOWER_COLOR: Record<string, string> = Object.fromEntries(
   Object.entries(TOWER_CATEGORIES).map(([k, v]) => [k, v.colorName])
@@ -981,7 +981,7 @@ const StatBar: React.FC<{
   icon: React.ReactNode;
 }> = ({ value, max, color, label, displayValue, icon }) => {
   const pct = Math.min(100, Math.max(3, (value / max) * 100));
-  const cc = getCC(color);
+  const cc = getColorClasses(color);
   return (
     <div className="flex items-center gap-2">
       <div className={`flex items-center gap-1 w-[60px] shrink-0 ${cc.text}`}>
@@ -1029,7 +1029,7 @@ const HPBar: React.FC<{ hp: number; maxHp: number; isBoss?: boolean }> = ({ hp, 
 // CODEX MODAL
 // =============================================================================
 
-export interface CodexModalProps {
+interface CodexModalProps {
   onClose: () => void;
   defaultTab?: CodexTabId;
 }
@@ -1783,7 +1783,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                         {(() => {
-                          const cc = getCC(TOWER_COLOR[type]);
+                          const cc = getColorClasses(TOWER_COLOR[type]);
                           const dps = calculateDPS(stats.damage, stats.attackSpeed);
 
                           const cardRows: { value: number; max: number; color: string; label: string; displayValue: string; icon: React.ReactNode }[] = [];
@@ -2074,7 +2074,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       }}>
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                         {(() => {
-                          const tcc = getCC(TOWER_COLOR[selectedTower]);
+                          const tcc = getColorClasses(TOWER_COLOR[selectedTower]);
                           const baseStats = getDynamicStats(selectedTower, 1);
                           const baseDps = calculateDPS(baseStats.damage, baseStats.attackSpeed);
                           return (
@@ -2544,7 +2544,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                         {(() => {
-                          const rcc = getCC(roleInfo.color);
+                          const rcc = getColorClasses(roleInfo.color);
                           return (
                             <div className={`px-4 py-2 border-b flex items-center justify-between ${rcc.headerBg} ${rcc.headerBorder}`}>
                               <div className={`flex items-center gap-2 ${rcc.text}`}>
@@ -2746,7 +2746,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       }}>
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                         {(() => {
-                          const hcc = getCC(info.roleColor);
+                          const hcc = getColorClasses(info.roleColor);
                           return (
                             <div className={`px-6 py-3 border-b flex items-center gap-3 ${hcc.headerBg} ${hcc.headerBorder}`}>
                               <span className={hcc.text}>{info.roleIcon}</span>
@@ -2993,7 +2993,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               return { level: "Minion", color: "green", icon: <Skull size={12} /> };
                             };
                             const threat = getThreatLevel(enemy.hp, enemy.isBoss);
-                            const threatCC = getCC(threat.color);
+                            const threatCC = getColorClasses(threat.color);
 
                             const getEnemyTypeClassification = () => {
                               if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
@@ -3003,7 +3003,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               return { type: "Ground", icon: <Flag size={12} />, color: "red" };
                             };
                             const enemyTypeClass = getEnemyTypeClassification();
-                            const typeCC = getCC(enemyTypeClass.color);
+                            const typeCC = getColorClasses(enemyTypeClass.color);
 
                             return (
                               <div
@@ -3321,7 +3321,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       >
                         <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                         {(() => {
-                          const scc = getCC(info.color);
+                          const scc = getColorClasses(info.color);
                           return (
                             <div className={`px-4 py-2.5 border-b flex items-center justify-between ${scc.headerBg} ${scc.headerBorder}`}>
                               <div className={`flex items-center gap-2 ${scc.text}`}>
@@ -3369,7 +3369,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                           </div>
 
                           {(() => {
-                            const scc = getCC(info.color);
+                            const scc = getColorClasses(info.color);
                             return (
                               <>
                                 <div className="grid grid-cols-3 gap-2 mb-4">

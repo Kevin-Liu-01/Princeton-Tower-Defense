@@ -28,15 +28,15 @@ const STRONG_TROOP_SCORE = 1850;
 const APEX_TROOP_SCORE = 2900;
 
 function getEnemyStrengthScore(enemy: Enemy): number {
-  const data = ENEMY_DATA[enemy.type];
-  const traitCount = data.traits?.length ?? 0;
-  const bossBonus = data.isBoss || data.traits?.includes("boss") ? 1600 : 0;
-  const rangedBonus = data.isRanged ? 140 : 0;
-  const flyingBonus = data.flying ? 110 : 0;
+  const enemyData = ENEMY_DATA[enemy.type];
+  const traitCount = enemyData.traits?.length ?? 0;
+  const bossBonus = enemyData.isBoss || enemyData.traits?.includes("boss") ? 1600 : 0;
+  const rangedBonus = enemyData.isRanged ? 140 : 0;
+  const flyingBonus = enemyData.flying ? 110 : 0;
   return (
-    data.hp +
-    data.bounty * 45 +
-    data.armor * 900 +
+    enemyData.hp +
+    enemyData.bounty * 45 +
+    enemyData.armor * 900 +
     traitCount * 85 +
     bossBonus +
     rangedBonus +
@@ -46,13 +46,13 @@ function getEnemyStrengthScore(enemy: Enemy): number {
 
 function getTroopStrengthScore(troop: Troop): number {
   const troopType = troop.type ?? "footsoldier";
-  const data = TROOP_DATA[troopType];
-  const damage = troop.overrideDamage ?? data.damage;
-  const attackSpeed = troop.overrideAttackSpeed ?? data.attackSpeed;
-  const isRanged = troop.overrideIsRanged ?? data.isRanged ?? false;
+  const troopData = TROOP_DATA[troopType];
+  const damage = troop.overrideDamage ?? troopData.damage;
+  const attackSpeed = troop.overrideAttackSpeed ?? troopData.attackSpeed;
+  const isRanged = troop.overrideIsRanged ?? troopData.isRanged ?? false;
   const rangedBonus = isRanged ? 160 : 0;
-  const mountedBonus = data.isMounted ? 180 : 0;
-  const stationaryPenalty = data.isStationary ? -220 : 0;
+  const mountedBonus = troopData.isMounted ? 180 : 0;
+  const stationaryPenalty = troopData.isStationary ? -220 : 0;
   const speedScore = Math.max(0, 1250 - attackSpeed) * 0.25;
   return (
     troop.maxHp +

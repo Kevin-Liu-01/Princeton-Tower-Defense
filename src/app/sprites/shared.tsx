@@ -14,23 +14,7 @@ export type SpriteFrameTheme = {
   glow: string;
 };
 
-function hexToRgba(hex: string, alpha: number): string {
-  const normalized = hex.trim().replace("#", "");
-  const fullHex =
-    normalized.length === 3
-      ? normalized
-          .split("")
-          .map((char) => `${char}${char}`)
-          .join("")
-      : normalized;
-  if (fullHex.length !== 6) return `rgba(245, 158, 11, ${alpha})`;
-  const parsed = Number.parseInt(fullHex, 16);
-  if (Number.isNaN(parsed)) return `rgba(245, 158, 11, ${alpha})`;
-  const r = (parsed >> 16) & 255;
-  const g = (parsed >> 8) & 255;
-  const b = parsed & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+import { hexToRgba } from "../utils/colorUtils";
 
 export function buildThemeFromAccent(accentHex: string): SpriteFrameTheme {
   return {

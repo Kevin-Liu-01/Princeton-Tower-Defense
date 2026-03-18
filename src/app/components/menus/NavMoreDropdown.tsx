@@ -11,11 +11,12 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { GOLD, OVERLAY, panelGradient } from "../ui/theme";
+import { GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
+import { SITE_URL, GITHUB_URL, AUTHOR_URL } from "../../seo/constants";
 
 const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
   `@kevskgs made a fire free browser TD game with 23 levels, 5 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`
-)}&url=${encodeURIComponent("https://princetontd.vercel.app/")}&hashtags=${encodeURIComponent(
+)}&url=${encodeURIComponent(`${SITE_URL}/`)}&hashtags=${encodeURIComponent(
   "gamedev,indiegame,towdefense,princeton"
 )}`;
 
@@ -91,7 +92,7 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
     {
       label: "GitHub",
       icon: Github,
-      href: "https://github.com/Kevin-Liu-01/Princeton-Tower-Defense",
+      href: GITHUB_URL,
     },
     {
       label: "Share on X",
@@ -101,13 +102,13 @@ export const NavMoreDropdown: React.FC<NavMoreDropdownProps> = ({
     {
       label: "Report Bug",
       icon: Bug,
-      href: "https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues",
+      href: `${GITHUB_URL}/issues`,
     },
     "divider",
     {
       label: "More Games",
       icon: Gamepad2,
-      href: "https://www.kevin-liu.tech/",
+      href: AUTHOR_URL,
     },
   ];
 

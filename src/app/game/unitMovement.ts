@@ -188,7 +188,7 @@ export function constrainToNearPath(
   };
 }
 
-export function computeRepulsionFromNeighbors(
+function computeRepulsionFromNeighbors(
   origin: Position,
   neighbors: PositionedUnit[],
   minDistance: number,

@@ -3,7 +3,7 @@ import type { Enemy, EnemyType } from "../types";
 
 export type EnemyDamageType = "default" | "fire" | "poison";
 
-export function getEnemyArmor(enemyType: EnemyType): number {
+function getEnemyArmor(enemyType: EnemyType): number {
   return ENEMY_DATA[enemyType].armor || 0;
 }
 

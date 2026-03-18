@@ -8,6 +8,18 @@ export interface LandmarkZone extends ZoneCenter {
   fullR: number;
 }
 
+function isWithinRadius(
+  gx: number,
+  gy: number,
+  cx: number,
+  cy: number,
+  radius: number,
+): boolean {
+  const dx = gx - cx;
+  const dy = gy - cy;
+  return dx * dx + dy * dy < radius * radius;
+}
+
 export function isInSpecialTowerZone(
   gx: number,
   gy: number,
@@ -15,11 +27,9 @@ export function isInSpecialTowerZone(
   specialTowerZones: ZoneCenter[]
 ): boolean {
   if (specialTowerZones.length === 0) return false;
-  return specialTowerZones.some((zone) => {
-    const dx = gx - zone.cx;
-    const dy = gy - zone.cy;
-    return dx * dx + dy * dy < radius * radius;
-  });
+  return specialTowerZones.some((zone) =>
+    isWithinRadius(gx, gy, zone.cx, zone.cy, radius),
+  );
 }
 
 export function isInLandmarkCore(
@@ -28,9 +38,7 @@ export function isInLandmarkCore(
   landmarkZones: LandmarkZone[]
 ): boolean {
   for (const zone of landmarkZones) {
-    const dx = gx - zone.cx;
-    const dy = gy - zone.cy;
-    if (dx * dx + dy * dy < zone.coreR * zone.coreR) return true;
+    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.coreR)) return true;
   }
   return false;
 }
@@ -41,9 +49,7 @@ export function isInLandmarkFull(
   landmarkZones: LandmarkZone[]
 ): boolean {
   for (const zone of landmarkZones) {
-    const dx = gx - zone.cx;
-    const dy = gy - zone.cy;
-    if (dx * dx + dy * dy < zone.fullR * zone.fullR) return true;
+    if (isWithinRadius(gx, gy, zone.cx, zone.cy, zone.fullR)) return true;
   }
   return false;
 }

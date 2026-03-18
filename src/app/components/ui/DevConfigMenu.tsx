@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronUp, Wrench } from "lucide-react";
 import type { GameState } from "../../types";
-import type { GameProgress } from "../../useLocalStorage";
+import type { GameProgress } from "../../hooks/useLocalStorage";
 
 interface DevLevelOption {
   id: string;

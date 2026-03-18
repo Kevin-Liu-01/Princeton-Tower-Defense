@@ -21,21 +21,18 @@ import {
   SPELL_ACCENTS,
   SPELL_TRAITS,
   MAX_SPELL_UPGRADE_LEVEL,
-  SPELL_OPTIONS,
   getSpellActionImagePath,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
-import { BaseModal } from "../ui/BaseModal";
-import { OrnateFrame } from "../ui/OrnateFrame";
-import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-import { spellFrameElements } from "../ui/ornateFrameHelpers";
-
-function hexToRgba(hex: string, a: number): string {
-  const n = parseInt(hex.replace("#", ""), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
+import { BaseModal } from "../ui/primitives/BaseModal";
+import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
+import { spellFrameElements } from "../ui/primitives/ornateFrameHelpers";
+import { MENU_SPELL_OPTIONS } from "./shared/loadoutOptions";
+import { hexToRgba } from "./shared/colorUtils";
+import { FloatingParticles, RuneBackground } from "./shared/showcaseEffects";
 
 const SHOWCASE_FRAME = 152;
 const SHOWCASE_CX = SHOWCASE_FRAME / 2;
@@ -119,45 +116,6 @@ const SPELL_META: Record<
   },
 };
 
-function FloatingParticles({ color, count = 6 }: { color: string; count?: number }) {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 rounded-full animate-float-particle"
-          style={{
-            background: color,
-            left: `${15 + (i * 70) / count}%`,
-            bottom: `${10 + (i % 3) * 15}%`,
-            animationDelay: `${i * 0.5}s`,
-            animationDuration: `${2.5 + (i % 3) * 0.5}s`,
-            boxShadow: `0 0 6px ${color}`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function RuneBackground() {
-  return (
-    <div className="absolute inset-0 pointer-events-none animate-rune-fade overflow-hidden">
-      <svg className="absolute inset-0 w-full h-full opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="spell-rune-grid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
-            <circle cx="25" cy="25" r="8" stroke="rgba(140,80,200,0.25)" strokeWidth="0.3" fill="none" />
-            <circle cx="25" cy="25" r="3" stroke="rgba(140,80,200,0.2)" strokeWidth="0.3" fill="none" />
-            <path d="M25 17 L25 33 M17 25 L33 25" stroke="rgba(140,80,200,0.15)" strokeWidth="0.3" fill="none" />
-            <path d="M19 19 L31 31 M31 19 L19 31" stroke="rgba(140,80,200,0.1)" strokeWidth="0.3" fill="none" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#spell-rune-grid)" />
-      </svg>
-    </div>
-  );
-}
-
 function UpgradeStarPips({ level, maxLevel, accent }: { level: number; maxLevel: number; accent: string }) {
   return (
     <div className="flex items-center gap-0.5">
@@ -217,11 +175,11 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
   const meta = SPELL_META[focusedSpell];
   const isSelected = selectedSpells.includes(focusedSpell);
   const spellLevel = spellUpgradeLevels[focusedSpell] ?? 0;
-  const focusedIdx = SPELL_OPTIONS.indexOf(focusedSpell);
+  const focusedIdx = MENU_SPELL_OPTIONS.indexOf(focusedSpell);
 
   const navigate = (dir: -1 | 1) => {
-    const next = (focusedIdx + dir + SPELL_OPTIONS.length) % SPELL_OPTIONS.length;
-    setFocusedSpell(SPELL_OPTIONS[next]);
+    const next = (focusedIdx + dir + MENU_SPELL_OPTIONS.length) % MENU_SPELL_OPTIONS.length;
+    setFocusedSpell(MENU_SPELL_OPTIONS[next]);
   };
 
   return (
@@ -237,7 +195,12 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
         >
           <OrnateFrame className="relative w-full h-full overflow-hidden flex flex-col" cornerSize={52} showSideBorders={false}>
             <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-            <RuneBackground />
+            <RuneBackground patternId="spell-rune-grid" width={50} height={50}>
+              <circle cx="25" cy="25" r="8" stroke="rgba(140,80,200,0.25)" strokeWidth="0.3" fill="none" />
+              <circle cx="25" cy="25" r="3" stroke="rgba(140,80,200,0.2)" strokeWidth="0.3" fill="none" />
+              <path d="M25 17 L25 33 M17 25 L33 25" stroke="rgba(140,80,200,0.15)" strokeWidth="0.3" fill="none" />
+              <path d="M19 19 L31 31 M31 19 L19 31" stroke="rgba(140,80,200,0.1)" strokeWidth="0.3" fill="none" />
+            </RuneBackground>
 
             {/* Close */}
             <button
@@ -538,11 +501,11 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
                       Grimoire
                     </span>
                     <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(140,80,200,0.15), transparent)" }} />
-                    <span className="text-[8px] text-purple-600/30 font-medium">{SPELL_OPTIONS.length} spells</span>
+                    <span className="text-[8px] text-purple-600/30 font-medium">{MENU_SPELL_OPTIONS.length} spells</span>
                   </div>
 
                   <div className="grid grid-cols-3 lg:grid-cols-1 gap-2">
-                    {SPELL_OPTIONS.map((st) => {
+                    {MENU_SPELL_OPTIONS.map((st) => {
                       const sd = SPELL_DATA[st];
                       const sm = SPELL_META[st];
                       const isFocused = focusedSpell === st;

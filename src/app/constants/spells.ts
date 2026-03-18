@@ -573,7 +573,7 @@ export const getReinforcementSpellStats = (
     knightHp:
       500 + (normalizedLevel >= 2 ? 150 : 0) + (normalizedLevel >= 4 ? 150 : 0) + (normalizedLevel >= 6 ? 150 : 0),
     knightDamage:
-      30 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 3 ? 10 : 0) + (normalizedLevel >= 6 ? 10 : 0),
+      20 + (normalizedLevel >= 1 ? 10 : 0) + (normalizedLevel >= 3 ? 10 : 0) + (normalizedLevel >= 6 ? 10 : 0),
     knightAttackSpeedMs: 1000,
     moveRadius: 200,
     rangedUnlocked: normalizedLevel >= 5,
@@ -593,11 +593,7 @@ export interface SpellFullTheme {
   glow: string;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const n = hex.replace("#", "");
-  const p = Number.parseInt(n, 16);
-  return `rgba(${(p >> 16) & 255}, ${(p >> 8) & 255}, ${p & 255}, ${alpha})`;
-}
+import { hexToRgba } from "../utils/colorUtils";
 
 function darkenHex(hex: string): string {
   const n = hex.replace("#", "");
