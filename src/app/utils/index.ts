@@ -367,6 +367,8 @@ export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
   tent: "tall",
   obsidian_spike: "tall",
   fire_crystal: "tall",
+  hedge: "medium",
+  bush: "medium",
   fence: "medium",
   signpost: "medium",
   torch: "medium",
