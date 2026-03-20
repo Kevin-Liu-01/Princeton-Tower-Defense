@@ -792,9 +792,9 @@ export function drawSkeletonKnightEnemy(
   // === SWORD ARM (right) ===
   drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: steelMid, colorDark: steelDark, handColor: bodyColor,
-    swingSpeed: 4.5, swingAmt: 0.2, baseAngle: 0.25,
-    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.55,
     upperLen: 0.24, foreLen: 0.20,
+    shoulderAngle: 0.35 + Math.sin(walkPhase) * 0.12 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.5 : 0),
+    elbowAngle: -0.4 + (isAttacking ? 0.6 : Math.sin(walkPhase + 1) * 0.08),
     style: 'bone',
   });
 
@@ -1157,9 +1157,9 @@ export function drawSkeletonArcherEnemy(
   // === DRAW ARM (right side) ===
   drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    swingSpeed: 5.5, swingAmt: 0.15, baseAngle: 0.2,
-    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.45,
     upperLen: 0.22, foreLen: 0.17,
+    shoulderAngle: 0.5 + (isAttacking ? -0.35 : Math.sin(walkPhase) * 0.08),
+    elbowAngle: -0.7 + (isAttacking ? 0.3 : Math.sin(walkPhase + 1.2) * 0.08),
     style: 'bone',
   });
 
@@ -1532,9 +1532,9 @@ export function drawSkeletonKingEnemy(
   // === RIGHT ARM ===
   drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    swingSpeed: 3.5, swingAmt: 0.12, baseAngle: 0.2,
     upperLen: 0.22, foreLen: 0.17,
-    attackExtra: isAttacking ? 0.4 : 0, elbowBend: 0.55,
+    shoulderAngle: -0.5 + Math.sin(time * 1.5) * 0.1 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.4 : 0),
+    elbowAngle: -0.6 + Math.sin(time * 2.2) * 0.08,
     style: 'bone',
   });
 
@@ -1754,20 +1754,21 @@ export function drawZombieShamblerEnemy(
   }
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.08, size, size * 0.13, "#3a3a4a", "#2a2a3a");
 
-  // === REACHING ARM (left) ===
+  // === REACHING ARM (left) — zombie lurch forward ===
   drawPathArm(ctx, cx0 - size * 0.16, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
-    swingSpeed: 3, swingAmt: 0.3, baseAngle: 0.5,
-    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
     upperLen: 0.28, foreLen: 0.24, handRadius: 0.052,
+    shoulderAngle: -0.9 + Math.sin(time * 1.5) * 0.12 + (isAttacking ? -0.3 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 2) * 0.08,
     style: 'fleshy',
   });
 
-  // === HANGING ARM (right) ===
+  // === HANGING ARM (right) — limp, dragging ===
   drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: fleshMid, colorDark: fleshDark, handColor: "#d0c8b0",
-    swingSpeed: 3, swingAmt: 0.15, baseAngle: 0.6,
-    elbowBend: 0.7, upperLen: 0.27, foreLen: 0.22,
+    upperLen: 0.27, foreLen: 0.22,
+    shoulderAngle: 1.1 + Math.sin(time * 2.5) * 0.05,
+    elbowAngle: 0.9 + Math.sin(time * 1.8) * 0.04,
     style: 'fleshy',
   });
 
@@ -2050,9 +2051,9 @@ export function drawZombieBruteEnemy(
   for (const side of [-1, 1] as (-1 | 1)[]) {
     drawPathArm(ctx, cx0 + side * size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: "#4a4a50",
-      swingSpeed: 2.5, swingAmt: 0.2, baseAngle: 0.35,
-      attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.55,
       upperLen: 0.34, foreLen: 0.29, width: 0.12, handRadius: 0.06,
+      shoulderAngle: side * -0.45 + (isAttacking ? Math.sin(time * 8 + side) * 0.5 : Math.sin(time * 2.5 + side) * 0.12),
+      elbowAngle: -0.7 + (isAttacking ? side * 0.4 : Math.sin(time * 3 + side * 2) * 0.1),
       style: 'fleshy',
     });
   }
@@ -2257,9 +2258,9 @@ export function drawZombieSpitterEnemy(
   for (const side of [-1, 1] as (-1 | 1)[]) {
     drawPathArm(ctx, cx0 + side * size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
-      swingSpeed: 3.5, swingAmt: 0.2, baseAngle: 0.4,
-      attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.45,
       upperLen: 0.25, foreLen: 0.20,
+      shoulderAngle: side * -0.35 + Math.sin(time * 3.5 + side * 1.5) * 0.12 + (isAttacking ? side * -0.4 : 0),
+      elbowAngle: -0.5 + (isAttacking ? -0.3 : Math.sin(time * 4 + side) * 0.1),
       style: 'fleshy',
     });
   }
@@ -2479,9 +2480,9 @@ export function drawGhoulEnemy(
   for (const side of [-1, 1] as (-1 | 1)[]) {
     drawPathArm(ctx, cx0 + side * size * 0.13, torsoY - size * 0.05 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
-      swingSpeed: 8, swingAmt: 0.4, baseAngle: 0.5,
-      attackExtra: isAttacking ? 0.8 : 0, elbowBend: 0.6,
       upperLen: 0.30, foreLen: 0.27, handRadius: 0.046,
+      shoulderAngle: side * -0.7 + Math.sin(time * 6 + side * Math.PI) * 0.18 + (isAttacking ? -0.5 : 0),
+      elbowAngle: -0.3 + (isAttacking ? -0.4 : Math.sin(time * 7 + side) * 0.12),
       style: 'fleshy',
     });
   }
@@ -2726,8 +2727,9 @@ export function drawDarkKnightEnemy(
   // === SHIELD ARM (left) ===
   drawPathArm(ctx, cx0 - size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
-    swingSpeed: 4, swingAmt: 0.15, baseAngle: 0.3,
-    elbowBend: 0.6, upperLen: 0.27, foreLen: 0.22,
+    upperLen: 0.27, foreLen: 0.22,
+    shoulderAngle: -0.35 + Math.sin(time * 4) * 0.06,
+    elbowAngle: 0.5 + Math.sin(time * 3) * 0.08,
     style: 'armored',
   });
 
@@ -3146,8 +3148,9 @@ export function drawDeathKnightEnemy(
   // === LEFT ARM ===
   drawPathArm(ctx, cx0 - size * 0.2, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: armorMid, colorDark: armorDark, handColor: armorDark,
-    swingSpeed: 3, swingAmt: 0.12, baseAngle: 0.3,
-    elbowBend: 0.6, upperLen: 0.28, foreLen: 0.24,
+    upperLen: 0.28, foreLen: 0.24,
+    shoulderAngle: -0.45 + Math.sin(time * 3) * 0.05,
+    elbowAngle: 0.55 + Math.sin(time * 2.5 + 1) * 0.06,
     style: 'armored',
   });
 

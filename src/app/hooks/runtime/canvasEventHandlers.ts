@@ -227,7 +227,12 @@ export function handlePointerDownImpl(
 
   if (p.activeSentinelTargetKey) return;
 
-  if (p.inspectorActive && p.gameSpeed === 0 && !p.buildingTower && !p.draggingTower) {
+  const isInspecting = p.inspectorActive && p.gameSpeed === 0 && !p.buildingTower && !p.draggingTower;
+
+  if (isInspecting) {
+    p.setIsPanning(true);
+    p.setPanStart(clickPos);
+    p.setPanStartOffset({ ...p.cameraOffset });
     return;
   }
 

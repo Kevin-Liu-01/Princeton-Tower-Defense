@@ -8,8 +8,6 @@ import {
 import { setShadowBlur, clearShadow } from "../performance";
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawPulsingGlowRings,
   drawShadowWisps,
   drawPoisonBubbles,
@@ -19,6 +17,7 @@ import {
   drawFloatingPiece,
   drawGlowingEyes,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawSpecterEnemy(
   ctx: CanvasRenderingContext2D,
@@ -1064,7 +1063,7 @@ export function drawBerserkerEnemy(
   }
 
   // --- Animated stomping legs ---
-  drawAnimatedLegs(ctx, x, y + size * 0.25 - bodyBob, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.25 - bodyBob, size, time, zoom, {
     color: "#991b1b",
     colorDark: "#7f1d1d",
     footColor: "#450a0a",
@@ -1072,44 +1071,40 @@ export function drawBerserkerEnemy(
     strideAmt: 0.4,
     legLen: 0.22,
     width: 0.07,
+    style: "fleshy",
   });
 
-  // --- Animated berserker arms ---
-  drawAnimatedArm(
+  // --- Animated berserker arms — wild flailing smash ---
+  drawPathArm(
     ctx, x - size * 0.38, y - size * 0.12 - bodyBob,
     size, time, zoom, -1,
     {
       color: "#b91c1c",
       colorDark: "#7f1d1d",
-      swingSpeed: 12,
-      swingAmt: 0.6,
-      baseAngle: 0.4,
+      shoulderAngle: -0.6 + Math.sin(time * 6) * 0.35 + (isAttacking ? -attackIntensity * 0.8 : 0),
+      elbowAngle: 0.5 + Math.sin(time * 7 + 1) * 0.3,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.08,
       handColor: "#991b1b",
       handRadius: 0.04,
-      elbowBend: 0.5,
-      attackExtra: isAttacking ? attackIntensity : 0,
+      style: "fleshy",
     },
   );
-  drawAnimatedArm(
+  drawPathArm(
     ctx, x + size * 0.38, y - size * 0.12 - bodyBob,
     size, time, zoom, 1,
     {
       color: "#b91c1c",
       colorDark: "#7f1d1d",
-      swingSpeed: 12,
-      swingAmt: 0.6,
-      baseAngle: 0.4,
+      shoulderAngle: 0.6 + Math.sin(time * 6 + Math.PI) * 0.35 + (isAttacking ? attackIntensity * 0.8 : 0),
+      elbowAngle: 0.5 + Math.sin(time * 7 + 2.5) * 0.3,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.08,
       handColor: "#991b1b",
       handRadius: 0.04,
-      elbowBend: 0.5,
-      phaseOffset: Math.PI,
-      attackExtra: isAttacking ? attackIntensity : 0,
+      style: "fleshy",
     },
   );
 
@@ -2786,7 +2781,7 @@ export function drawNecromancerEnemy(
 
 
   // --- Shuffling animated legs ---
-  drawAnimatedLegs(ctx, x, y + size * 0.3 + hover * 0.3, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.3 + hover * 0.3, size, time, zoom, {
     color: "#1e1b4b",
     colorDark: "#0a0820",
     footColor: "#312e81",
@@ -2795,42 +2790,40 @@ export function drawNecromancerEnemy(
     legLen: 0.18,
     width: 0.05,
     shuffle: true,
+    style: "bone",
   });
 
-  // --- Spell-casting animated arms ---
-  drawAnimatedArm(
+  // --- Spell-casting arms — raised commanding undead ---
+  drawPathArm(
     ctx, x - size * 0.35, y - size * 0.25 + hover,
     size, time, zoom, -1,
     {
       color: "#1e1b4b",
       colorDark: "#0a0820",
-      swingSpeed: 3,
-      swingAmt: 0.3,
-      baseAngle: 0.5,
+      shoulderAngle: -1.1 + Math.sin(time * 2) * 0.1,
+      elbowAngle: -0.2 + Math.sin(time * 2.5 + 0.8) * 0.12,
       upperLen: 0.18,
       foreLen: 0.16,
       width: 0.05,
       handColor: "#e8e0d0",
       handRadius: 0.03,
-      elbowBend: 0.6,
+      style: "bone",
     },
   );
-  drawAnimatedArm(
+  drawPathArm(
     ctx, x + size * 0.35, y - size * 0.25 + hover,
     size, time, zoom, 1,
     {
       color: "#1e1b4b",
       colorDark: "#0a0820",
-      swingSpeed: 3,
-      swingAmt: 0.3,
-      baseAngle: 0.5,
+      shoulderAngle: 0.9 + Math.sin(time * 2 + 1.5) * 0.12,
+      elbowAngle: 0.3 + Math.sin(time * 2.8 + 2) * 0.1,
       upperLen: 0.18,
       foreLen: 0.16,
       width: 0.05,
       handColor: "#e8e0d0",
       handRadius: 0.03,
-      elbowBend: 0.6,
-      phaseOffset: Math.PI * 0.5,
+      style: "bone",
     },
   );
 
@@ -3445,40 +3438,37 @@ export function drawShadowKnightEnemy(
     ctx.stroke();
   }
 
-  // --- Marching animated arms ---
-  drawAnimatedArm(
+  // --- Shadow Knight arms — sword guard + shield brace ---
+  drawPathArm(
     ctx, x - size * 0.35, y - size * 0.18 + stance,
     size, time, zoom, -1,
     {
       color: "#3f3f46",
       colorDark: "#27272a",
-      swingSpeed: 5,
-      swingAmt: 0.2,
-      baseAngle: 0.35,
+      shoulderAngle: -0.5 + Math.sin(time * 2) * 0.06,
+      elbowAngle: 0.9 + Math.sin(time * 2.5 + 0.5) * 0.08,
       upperLen: 0.2,
       foreLen: 0.17,
       width: 0.07,
       handColor: "#52525b",
       handRadius: 0.035,
-      elbowBend: 0.45,
+      style: "armored",
     },
   );
-  drawAnimatedArm(
+  drawPathArm(
     ctx, x + size * 0.35, y - size * 0.18 + stance,
     size, time, zoom, 1,
     {
       color: "#3f3f46",
       colorDark: "#27272a",
-      swingSpeed: 5,
-      swingAmt: 0.2,
-      baseAngle: 0.35,
+      shoulderAngle: 0.8 + Math.sin(time * 2.5) * 0.08 + (isAttacking ? attackPhase * 0.5 : 0),
+      elbowAngle: 0.4 + Math.sin(time * 3 + 1.5) * 0.1,
       upperLen: 0.2,
       foreLen: 0.17,
       width: 0.07,
       handColor: "#52525b",
       handRadius: 0.035,
-      elbowBend: 0.45,
-      phaseOffset: Math.PI,
+      style: "armored",
     },
   );
 
@@ -4006,7 +3996,7 @@ export function drawCultistEnemy(
 
 
   // --- Slow shuffling animated legs ---
-  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.25, size, time, zoom, {
     color: "#2a1810",
     colorDark: "#1a0a05",
     footColor: "#3d1f14",
@@ -4015,42 +4005,40 @@ export function drawCultistEnemy(
     legLen: 0.16,
     width: 0.045,
     shuffle: true,
+    style: "ghostly",
   });
 
-  // --- Ritual gesture animated arms ---
-  drawAnimatedArm(
+  // --- Cultist ritual arms — asymmetric occult gesture ---
+  drawPathArm(
     ctx, x - size * 0.2, y - size * 0.15,
     size, time, zoom, -1,
     {
       color: bodyColorDark,
       colorDark: "#1a0a05",
-      swingSpeed: 2.5,
-      swingAmt: 0.25,
-      baseAngle: 0.6,
+      shoulderAngle: -0.7 + Math.sin(time * 2) * 0.12,
+      elbowAngle: -0.3 + Math.sin(time * 2.5 + 1) * 0.15,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.045,
       handColor: "#c4a882",
       handRadius: 0.03,
-      elbowBend: 0.5,
+      style: "ghostly",
     },
   );
-  drawAnimatedArm(
+  drawPathArm(
     ctx, x + size * 0.2, y - size * 0.15,
     size, time, zoom, 1,
     {
       color: bodyColorDark,
       colorDark: "#1a0a05",
-      swingSpeed: 2.5,
-      swingAmt: 0.25,
-      baseAngle: 0.6,
+      shoulderAngle: 1.0 + Math.sin(time * 1.8 + 2) * 0.1,
+      elbowAngle: 0.2 + Math.sin(time * 2.2 + 0.5) * 0.12,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.045,
       handColor: "#c4a882",
       handRadius: 0.03,
-      elbowBend: 0.5,
-      phaseOffset: Math.PI,
+      style: "ghostly",
     },
   );
 
@@ -4566,7 +4554,7 @@ export function drawPlaguebearerEnemy(
   }
 
   // --- Shambling animated legs ---
-  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.25, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: bodyColorDark,
@@ -4576,42 +4564,40 @@ export function drawPlaguebearerEnemy(
     width: 0.055,
     shuffle: true,
     phaseOffset: 0.5,
+    style: "fleshy",
   });
 
-  // --- Hunched dripping animated arms ---
-  drawAnimatedArm(
+  // --- Plaguebearer arms — hunched forward reaching/dripping ---
+  drawPathArm(
     ctx, x - size * 0.36, y - size * 0.08,
     size, time, zoom, -1,
     {
       color: bodyColor,
       colorDark: bodyColorDark,
-      swingSpeed: 2,
-      swingAmt: 0.15,
-      baseAngle: 0.5,
+      shoulderAngle: -0.9 + Math.sin(time * 1.5) * 0.08,
+      elbowAngle: 0.7 + Math.sin(time * 2 + 0.5) * 0.1,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.055,
       handColor: bodyColorDark,
       handRadius: 0.03,
-      elbowBend: 0.6,
+      style: "fleshy",
     },
   );
-  drawAnimatedArm(
+  drawPathArm(
     ctx, x + size * 0.36, y - size * 0.08,
     size, time, zoom, 1,
     {
       color: bodyColor,
       colorDark: bodyColorDark,
-      swingSpeed: 2,
-      swingAmt: 0.15,
-      baseAngle: 0.5,
+      shoulderAngle: 0.4 + Math.sin(time * 1.8 + 1) * 0.06,
+      elbowAngle: 0.8 + Math.sin(time * 2.2 + 2) * 0.1,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.055,
       handColor: bodyColorDark,
       handRadius: 0.03,
-      elbowBend: 0.6,
-      phaseOffset: Math.PI,
+      style: "fleshy",
     },
   );
 

@@ -16,6 +16,7 @@ import {
   adjustLivesImpl,
   instantVictoryImpl,
   skipWaveImpl,
+  skipToWaveImpl,
   killAllEnemiesImpl,
   instantLoseImpl,
 } from "./devMenuCallbacks";
@@ -106,6 +107,14 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
     }),
     [gameState, battleOutcome, currentWave, totalWaves, clearAllTimers, clearEnemies],
   );
+  const skipToWave = useCallback(
+    (targetWave: number) => skipToWaveImpl({
+      gameState, battleOutcome, totalWaves,
+      clearAllTimers, clearEnemies, setWaveInProgress,
+      setCurrentWave, setNextWaveTimer,
+    }, targetWave),
+    [gameState, battleOutcome, totalWaves, clearAllTimers, clearEnemies],
+  );
   const killAllEnemies = useCallback(
     () => killAllEnemiesImpl({
       gameState, battleOutcome, enemies, selectedMap,
@@ -129,6 +138,7 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
   const devConfigMenu = isDevMode ? (
     <DevConfigMenu
       gameState={gameState}
+      selectedMap={selectedMap}
       levelOptions={devLevelOptions}
       progress={progress}
       devPerfEnabled={devPerfEnabled}
@@ -147,6 +157,7 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
       onInstantVictory={instantVictory}
       onInstantLose={instantLose}
       onSkipWave={skipWave}
+      onSkipToWave={skipToWave}
       onKillAllEnemies={killAllEnemies}
     />
   ) : null;

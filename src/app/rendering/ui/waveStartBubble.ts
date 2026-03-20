@@ -23,6 +23,8 @@ const TOP_SAFE_Y = 90;
 const LEFT_SAFE_X = 60;
 const RIGHT_SAFE_X = 180;
 const CORNER_MARGIN = 34;
+const BUBBLE_SEPARATION_PAD = 6;
+const SEPARATION_ITERATIONS = 4;
 
 export { HIT_RADIUS as WAVE_START_BUBBLE_HIT_RADIUS };
 
@@ -257,7 +259,57 @@ export function getWaveStartBubblesScreenData(
     });
   }
 
+  separateOverlappingBubbles(bubbles, viewportWidth, viewportHeight);
+
   return bubbles;
+}
+
+// --------------------------------------------------------------------------
+// Overlap resolution
+// --------------------------------------------------------------------------
+
+function separateOverlappingBubbles(
+  bubbles: WaveStartBubbleScreenData[],
+  viewportWidth: number,
+  viewportHeight: number,
+): void {
+  if (bubbles.length < 2) return;
+
+  for (let iter = 0; iter < SEPARATION_ITERATIONS; iter++) {
+    for (let i = 0; i < bubbles.length; i++) {
+      for (let j = i + 1; j < bubbles.length; j++) {
+        const a = bubbles[i]!;
+        const b = bubbles[j]!;
+        const dx = b.screenPos.x - a.screenPos.x;
+        const dy = b.screenPos.y - a.screenPos.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = a.radius + b.radius + BUBBLE_SEPARATION_PAD;
+
+        if (dist >= minDist) continue;
+
+        const overlap = minDist - dist;
+        const pushX = dist > 0.01 ? (dx / dist) * overlap * 0.5 : overlap * 0.5;
+        const pushY = dist > 0.01 ? (dy / dist) * overlap * 0.5 : 0;
+
+        a.screenPos = {
+          x: a.screenPos.x - pushX,
+          y: a.screenPos.y - pushY,
+        };
+        b.screenPos = {
+          x: b.screenPos.x + pushX,
+          y: b.screenPos.y + pushY,
+        };
+      }
+    }
+
+    for (const bubble of bubbles) {
+      const r = bubble.radius;
+      bubble.screenPos = {
+        x: Math.max(VIEW_MARGIN_X + r, Math.min(viewportWidth - VIEW_MARGIN_X - r, bubble.screenPos.x)),
+        y: Math.max(TOP_SAFE_Y + r, Math.min(viewportHeight - VIEW_MARGIN_Y - r, bubble.screenPos.y)),
+      };
+    }
+  }
 }
 
 // --------------------------------------------------------------------------

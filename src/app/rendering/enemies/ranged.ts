@@ -5,14 +5,13 @@ import {
   drawRobeBody,
 } from "./helpers";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawPulsingGlowRings,
   drawArcaneSparkles,
   drawShiftingSegments,
   drawOrbitingDebris,
   drawFloatingPiece,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawArcherEnemy(
   ctx: CanvasRenderingContext2D,
@@ -169,7 +168,7 @@ export function drawArcherEnemy(
   ctx.restore();
 
   // === ANIMATED LEGS (beneath cloak) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.38, size, time, zoom, {
     color: "#064e3b",
     colorDark: "#022c22",
     footColor: "#1c1917",
@@ -177,31 +176,31 @@ export function drawArcherEnemy(
     strideAmt: 0.3,
     legLen: 0.18,
     width: 0.05,
+    style: "armored",
   });
 
-  // === ANIMATED ARMS ===
-  drawAnimatedArm(ctx, x - size * 0.2, y - size * 0.18 + stance, size, time, zoom, -1, {
+  // === ANIMATED ARMS — bow aim + draw ===
+  drawPathArm(ctx, x - size * 0.2, y - size * 0.18 + stance, size, time, zoom, -1, {
     color: "#064e3b",
     colorDark: "#022c22",
     handColor: "#d6d3d1",
-    swingSpeed: 1.5,
-    swingAmt: 0.1,
-    baseAngle: 0.6,
+    shoulderAngle: -0.9 + Math.sin(time * 1.5) * 0.05,
+    elbowAngle: 0.15 + Math.sin(time * 2 + 0.5) * 0.06,
     upperLen: 0.18,
     foreLen: 0.16,
     width: 0.055,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.2, y - size * 0.18 + stance, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.2, y - size * 0.18 + stance, size, time, zoom, 1, {
     color: "#064e3b",
     colorDark: "#022c22",
     handColor: "#d6d3d1",
-    swingSpeed: 2.5,
-    swingAmt: 0.2,
-    baseAngle: 0.4,
+    shoulderAngle: 0.2 + (isAttacking ? attackIntensity * 0.3 : 0),
+    elbowAngle: 1.2 + Math.sin(time * 2) * 0.08 + (isAttacking ? -attackIntensity * 0.6 : 0),
     upperLen: 0.17,
     foreLen: 0.14,
     width: 0.05,
-    attackExtra: isAttacking ? attackIntensity : 0,
+    style: "armored",
   });
 
   // Back cloak layer (darker, wider)
@@ -802,7 +801,7 @@ export function drawMageEnemy(
   ctx.restore();
 
   // === ANIMATED LEGS (beneath robes) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.35, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.35, size, time, zoom, {
     color: "#3b0764",
     colorDark: "#2e1065",
     footColor: "#1c1917",
@@ -811,33 +810,31 @@ export function drawMageEnemy(
     legLen: 0.16,
     width: 0.05,
     shuffle: true,
+    style: "ghostly",
   });
 
-  // === ANIMATED ARMS (mystical gesturing) ===
-  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.2 + float, size, time, zoom, -1, {
+  // === ANIMATED ARMS — arcane thrust + raised channeling ===
+  drawPathArm(ctx, x - size * 0.18, y - size * 0.2 + float, size, time, zoom, -1, {
     color: "#4c1d95",
     colorDark: "#2e1065",
     handColor: "#e0d4c4",
-    swingSpeed: 3,
-    swingAmt: 0.35,
-    baseAngle: 0.5,
+    shoulderAngle: -1.1 + Math.sin(time * 2.5) * 0.1 + (isAttacking ? -attackIntensity * 0.4 : 0),
+    elbowAngle: 0.2 + Math.sin(time * 3 + 1) * 0.12,
     upperLen: 0.2,
     foreLen: 0.17,
     width: 0.05,
-    phaseOffset: 0.5,
+    style: "ghostly",
   });
-  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.2 + float, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.18, y - size * 0.2 + float, size, time, zoom, 1, {
     color: "#4c1d95",
     colorDark: "#2e1065",
     handColor: "#e0d4c4",
-    swingSpeed: 3,
-    swingAmt: 0.3,
-    baseAngle: 0.4,
+    shoulderAngle: 0.8 + Math.sin(time * 2 + 2) * 0.1 + (isAttacking ? attackIntensity * 0.5 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 2.8 + 0.5) * 0.1,
     upperLen: 0.19,
     foreLen: 0.16,
     width: 0.05,
-    phaseOffset: 1.2,
-    attackExtra: isAttacking ? attackIntensity : 0,
+    style: "ghostly",
   });
 
   // Arcane robes
@@ -1259,7 +1256,7 @@ export function drawCatapultEnemy(
   }
 
   // === ANIMATED LEGS (crew member stance) ===
-  drawAnimatedLegs(ctx, x + size * 0.18, y + size * 0.12, size, time, zoom, {
+  drawPathLegs(ctx, x + size * 0.18, y + size * 0.12, size, time, zoom, {
     color: "#292524",
     colorDark: "#1c1917",
     footColor: "#44403c",
@@ -1267,32 +1264,31 @@ export function drawCatapultEnemy(
     strideAmt: 0.2,
     legLen: 0.16,
     width: 0.055,
+    style: "armored",
   });
 
-  // === ANIMATED ARMS (operating catapult mechanism) ===
-  drawAnimatedArm(ctx, x + size * 0.1, y - size * 0.15, size, time, zoom, -1, {
+  // === ANIMATED ARMS — cranking + bracing catapult ===
+  drawPathArm(ctx, x + size * 0.1, y - size * 0.15, size, time, zoom, -1, {
     color: "#292524",
     colorDark: "#1c1917",
     handColor: "#a8a29e",
-    swingSpeed: 2,
-    swingAmt: 0.25,
-    baseAngle: 0.8,
+    shoulderAngle: -0.5 + Math.sin(time * 2) * 0.15 + (isAttacking ? -attackIntensity * 0.5 : 0),
+    elbowAngle: 0.9 + Math.sin(time * 2.5 + 1) * 0.2,
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.06,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.26, y - size * 0.15, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.26, y - size * 0.15, size, time, zoom, 1, {
     color: "#292524",
     colorDark: "#1c1917",
     handColor: "#a8a29e",
-    swingSpeed: 2,
-    swingAmt: 0.2,
-    baseAngle: 0.5,
+    shoulderAngle: 0.3 + Math.sin(time * 1.5) * 0.06,
+    elbowAngle: 0.5 + Math.sin(time * 2 + 2) * 0.08,
     upperLen: 0.18,
     foreLen: 0.16,
     width: 0.055,
-    phaseOffset: Math.PI,
+    style: "armored",
   });
 
   // Demonic bone wheels with detailed rendering
@@ -1754,7 +1750,7 @@ export function drawWarlockEnemy(
   }
 
   // === ANIMATED LEGS (slow shuffling) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.36, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.36, size, time, zoom, {
     color: "#1e0a3c",
     colorDark: "#0f0520",
     footColor: "#0a0315",
@@ -1763,33 +1759,31 @@ export function drawWarlockEnemy(
     legLen: 0.16,
     width: 0.05,
     shuffle: true,
+    style: "ghostly",
   });
 
-  // === ANIMATED ARMS (dark channeling) ===
-  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.25 + hover, size, time, zoom, -1, {
+  // === ANIMATED ARMS — dark ominous raised channeling ===
+  drawPathArm(ctx, x - size * 0.18, y - size * 0.25 + hover, size, time, zoom, -1, {
     color: "#1e0a3c",
     colorDark: "#0f0520",
     handColor: "#a8a29e",
-    swingSpeed: 2,
-    swingAmt: 0.3,
-    baseAngle: 0.6,
+    shoulderAngle: -0.8 + Math.sin(time * 1.8) * 0.12,
+    elbowAngle: -0.3 + Math.sin(time * 2.2 + 0.7) * 0.1,
     upperLen: 0.22,
     foreLen: 0.18,
     width: 0.05,
-    phaseOffset: 0.3,
+    style: "ghostly",
   });
-  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.25 + hover, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.18, y - size * 0.25 + hover, size, time, zoom, 1, {
     color: "#1e0a3c",
     colorDark: "#0f0520",
     handColor: "#a8a29e",
-    swingSpeed: 2,
-    swingAmt: 0.25,
-    baseAngle: 0.5,
+    shoulderAngle: 0.8 + Math.sin(time * 1.8 + Math.PI) * 0.12 + (isAttacking ? attackIntensity * 0.3 : 0),
+    elbowAngle: -0.3 + Math.sin(time * 2.2 + 2.5) * 0.1,
     upperLen: 0.2,
     foreLen: 0.17,
     width: 0.05,
-    phaseOffset: 1.0,
-    attackExtra: isAttacking ? attackIntensity * 0.3 : 0,
+    style: "ghostly",
   });
 
   // Dark robes - more tattered and flowing
@@ -2169,7 +2163,7 @@ export function drawCrossbowmanEnemy(
   ctx.fill();
 
   // === ANIMATED LEGS (marching stride) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.36, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.36, size, time, zoom, {
     color: "#292524",
     colorDark: "#1c1917",
     footColor: "#3f3f46",
@@ -2177,32 +2171,31 @@ export function drawCrossbowmanEnemy(
     strideAmt: 0.28,
     legLen: 0.18,
     width: 0.06,
+    style: "armored",
   });
 
-  // === ANIMATED ARMS (armored, one aiming) ===
-  drawAnimatedArm(ctx, x - size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, -1, {
+  // === ANIMATED ARMS — crossbow support + trigger ===
+  drawPathArm(ctx, x - size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, -1, {
     color: "#3f3f46",
     colorDark: "#27272a",
     handColor: "#a8a29e",
-    swingSpeed: 2,
-    swingAmt: 0.15,
-    baseAngle: 0.7,
+    shoulderAngle: -0.7 + Math.sin(time * 1.5) * 0.04 + (isAttacking ? -attackIntensity * 0.3 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 2 + 0.5) * 0.06,
     upperLen: 0.2,
     foreLen: 0.17,
     width: 0.06,
-    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.22, y - size * 0.15 + stance * 0.2, size, time, zoom, 1, {
     color: "#3f3f46",
     colorDark: "#27272a",
     handColor: "#a8a29e",
-    swingSpeed: 4,
-    swingAmt: 0.1,
-    baseAngle: 0.3,
+    shoulderAngle: 0.4 + Math.sin(time * 1.8) * 0.05,
+    elbowAngle: 0.8 + Math.sin(time * 2.2 + 1) * 0.08 + (isAttacking ? -attackIntensity * 0.3 : 0),
     upperLen: 0.18,
     foreLen: 0.15,
     width: 0.055,
-    phaseOffset: Math.PI * 0.5,
+    style: "armored",
   });
 
   // Flowing cursed cape
@@ -2756,7 +2749,7 @@ export function drawHexerEnemy(
   }
 
   // === ANIMATED LEGS (unsteady gait) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.34, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.34, size, time, zoom, {
     color: "#6b21a8",
     colorDark: "#4c1d95",
     footColor: "#1a1a2e",
@@ -2766,35 +2759,31 @@ export function drawHexerEnemy(
     width: 0.045,
     shuffle: true,
     phaseOffset: 0.7,
+    style: "ghostly",
   });
 
-  // === ANIMATED ARMS (curse-weaving gestures) ===
-  drawAnimatedArm(ctx, x - size * 0.16, y - size * 0.2 + sway, size, time, zoom, -1, {
+  // === ANIMATED ARMS — weaving curses asymmetrically ===
+  drawPathArm(ctx, x - size * 0.16, y - size * 0.2 + sway, size, time, zoom, -1, {
     color: "#9d174d",
     colorDark: "#831843",
     handColor: "#fdf4ff",
-    swingSpeed: 4,
-    swingAmt: 0.4,
-    baseAngle: 0.5,
+    shoulderAngle: -0.6 + Math.sin(time * 3) * 0.15,
+    elbowAngle: -0.4 + Math.sin(time * 3.5 + 0.8) * 0.18,
     upperLen: 0.18,
     foreLen: 0.15,
     width: 0.04,
-    phaseOffset: 0.3,
-    elbowBend: 0.5,
+    style: "ghostly",
   });
-  drawAnimatedArm(ctx, x + size * 0.16, y - size * 0.2 + sway, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.16, y - size * 0.2 + sway, size, time, zoom, 1, {
     color: "#9d174d",
     colorDark: "#831843",
     handColor: "#fdf4ff",
-    swingSpeed: 4,
-    swingAmt: 0.35,
-    baseAngle: 0.4,
+    shoulderAngle: 0.7 + Math.sin(time * 2.5 + 2) * 0.12 + (isAttacking ? attackIntensity * 0.5 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 3.2 + 1.5) * 0.15,
     upperLen: 0.17,
     foreLen: 0.14,
     width: 0.04,
-    phaseOffset: 1.5,
-    elbowBend: 0.6,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    style: "ghostly",
   });
 
   // === LAYER 5: TATTERED DRESS WITH MAGICAL THREADS ===

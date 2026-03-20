@@ -5209,17 +5209,20 @@ export function renderGatlingGun(
     ctx.stroke();
   };
 
-  // Two belts from the same box, offset laterally — render behind belt first
-  const belt2OffX = (boxSide > 0 ? -8 : 8) * zoom;
+  // Two belts from the same box, offset along barrel perpendicular — render behind belt first
+  const beltPerpX = -sinR;
+  const beltPerpY = cosR * 0.5;
+  const beltSep = 8 * zoom;
+  const beltLateralSign = boxSide > 0 ? -1 : 1;
+  const belt2OffX = beltPerpX * beltSep * beltLateralSign;
+  const belt2OffY = beltPerpY * beltSep * beltLateralSign;
   const belt2ExitX = boxCenterX + belt2OffX;
-  const belt2ExitY = boxCenterY - 8 * zoom;
+  const belt2ExitY = boxCenterY + belt2OffY;
 
   const drawAmmoBelts = () => {
-    // Belt farther from camera drawn first. The offset is purely lateral (belt2OffX).
-    // In isometric, the perpendicular direction away from camera is (-sinR, cosR*0.5).
-    // Project the belt offset onto this to determine depth.
-    const belt2Depth = belt2OffX * -sinR;
-    const belt2Behind = belt2Depth > 0;
+    // In isometric, lower screen Y = further from camera.
+    // The belt with the negative Y offset is behind and should be drawn first.
+    const belt2Behind = belt2OffY < 0;
     if (belt2Behind) {
       drawCannonAmmoBelt(
         ctx,

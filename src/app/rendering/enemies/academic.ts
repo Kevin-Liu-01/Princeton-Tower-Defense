@@ -5,7 +5,8 @@ import {
   drawEyes,
   drawRobeBody,
 } from "./helpers";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris } from "./animationHelpers";
+import { drawPulsingGlowRings, drawShiftingSegments, drawOrbitingDebris } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawFreshmanEnemy(
   ctx: CanvasRenderingContext2D,
@@ -189,34 +190,32 @@ export function drawFreshmanEnemy(
   }
 
   // Animated legs beneath robe
-  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.38, size, time, zoom, {
     color: "#2a5a2a",
     colorDark: "#1a3a1a",
     footColor: "#0a1a0a",
     strideSpeed: 3,
     strideAmt: 0.2,
     shuffle: true,
+    style: "fleshy",
   });
 
-  // Animated arms behind robe
-  drawAnimatedArm(ctx, x - size * 0.28, y - size * 0.05, size, time, zoom, -1, {
+  // Animated arms — zombie-scholar reaching
+  drawPathArm(ctx, x - size * 0.28, y - size * 0.05, size, time, zoom, -1, {
     color: "#2a5a2a",
     colorDark: "#1a3a1a",
     handColor: "#4ade80",
-    swingSpeed: 3.5,
-    swingAmt: 0.25,
-    baseAngle: 0.35,
-    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+    shoulderAngle: -0.8 + Math.sin(time * 2) * 0.12 + (isAttacking ? -attackIntensity * 0.4 : 0),
+    elbowAngle: 0.55 + Math.sin(time * 2.5 + 1) * 0.1,
+    style: "fleshy",
   });
-  drawAnimatedArm(ctx, x + size * 0.28, y - size * 0.05, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.28, y - size * 0.05, size, time, zoom, 1, {
     color: "#2a5a2a",
     colorDark: "#1a3a1a",
     handColor: "#4ade80",
-    swingSpeed: 3.5,
-    swingAmt: 0.25,
-    baseAngle: 0.35,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.4 : 0,
+    shoulderAngle: 0.5 + Math.sin(time * 1.8 + 0.5) * 0.1 + (isAttacking ? attackIntensity * 0.3 : 0),
+    elbowAngle: -0.3 + Math.sin(time * 2.2 + 2) * 0.12,
+    style: "fleshy",
   });
 
   // Tattered robes with corruption spreading
@@ -578,34 +577,32 @@ export function drawSophomoreEnemy(
   }
 
   // Animated legs beneath robe
-  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.38, size, time, zoom, {
     color: "#1e3a5f",
     colorDark: "#0c1929",
     footColor: "#0a1525",
     strideSpeed: 4.5,
     strideAmt: 0.28,
     phaseOffset: 0.5,
+    style: "fleshy",
   });
 
-  // Animated arms behind robe
-  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.05, size, time, zoom, -1, {
+  // Animated arms — storm channeling outward
+  drawPathArm(ctx, x - size * 0.3, y - size * 0.05, size, time, zoom, -1, {
     color: "#1e3a5f",
     colorDark: "#0c1929",
     handColor: "#93c5fd",
-    swingSpeed: 4,
-    swingAmt: 0.3,
-    baseAngle: 0.3,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    shoulderAngle: -1.0 + Math.sin(time * 3) * 0.08 + (isAttacking ? -attackIntensity * 0.5 : 0),
+    elbowAngle: 0.2 + Math.sin(time * 3.5 + 1) * 0.15,
+    style: "fleshy",
   });
-  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.05, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.3, y - size * 0.05, size, time, zoom, 1, {
     color: "#1e3a5f",
     colorDark: "#0c1929",
     handColor: "#93c5fd",
-    swingSpeed: 4,
-    swingAmt: 0.3,
-    baseAngle: 0.3,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    shoulderAngle: 0.3 + Math.sin(time * 2.5 + 2) * 0.1 + (isAttacking ? attackIntensity * 0.4 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 3 + 0.8) * 0.12,
+    style: "fleshy",
   });
 
   // Flowing apprentice robes with storm patterns
@@ -1063,34 +1060,32 @@ export function drawJuniorEnemy(
   }
 
   // Animated legs beneath robe
-  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.42, size, time, zoom, {
     color: "#3b0764",
     colorDark: "#1e0a30",
     footColor: "#0f0520",
     strideSpeed: 5,
     strideAmt: 0.32,
     phaseOffset: 0.3,
+    style: "armored",
   });
 
-  // Animated arms behind robe
-  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.08, size, time, zoom, -1, {
+  // Animated arms — dark tome + arcane gesture
+  drawPathArm(ctx, x - size * 0.3, y - size * 0.08, size, time, zoom, -1, {
     color: "#3b0764",
     colorDark: "#1e0a30",
     handColor: "#c084fc",
-    swingSpeed: 4.5,
-    swingAmt: 0.28,
-    baseAngle: 0.32,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    shoulderAngle: -0.6 + Math.sin(time * 2) * 0.06,
+    elbowAngle: 1.0 + Math.sin(time * 2.5 + 0.5) * 0.08,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.08, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.3, y - size * 0.08, size, time, zoom, 1, {
     color: "#3b0764",
     colorDark: "#1e0a30",
     handColor: "#c084fc",
-    swingSpeed: 4.5,
-    swingAmt: 0.28,
-    baseAngle: 0.32,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+    shoulderAngle: 0.9 + Math.sin(time * 2.8 + 1.5) * 0.1 + (isAttacking ? attackIntensity * 0.5 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 3.2 + 2) * 0.12,
+    style: "armored",
   });
 
   // Disheveled scholar robes - worn and stained with ink
@@ -1583,34 +1578,32 @@ export function drawSeniorEnemy(
   }
 
   // Animated legs beneath cloak
-  drawAnimatedLegs(ctx, x, y + size * 0.4 + floatHeight, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.4 + floatHeight, size, time, zoom, {
     color: "#2d1832",
     colorDark: "#1f1225",
     footColor: "#150818",
     strideSpeed: 4,
     strideAmt: 0.35,
     phaseOffset: 0.2,
+    style: "armored",
   });
 
-  // Animated arms behind cloak
-  drawAnimatedArm(ctx, x - size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, -1, {
+  // Animated arms — ominous raised commanding
+  drawPathArm(ctx, x - size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, -1, {
     color: "#2d1832",
     colorDark: "#1f1225",
     handColor: "#f472b6",
-    swingSpeed: 3.5,
-    swingAmt: 0.32,
-    baseAngle: 0.35,
-    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+    shoulderAngle: -1.1 + Math.sin(time * 1.5) * 0.1 + (isAttacking ? -attackIntensity * 0.4 : 0),
+    elbowAngle: -0.3 + Math.sin(time * 2 + 0.7) * 0.08,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.32, y - size * 0.05 + floatHeight, size, time, zoom, 1, {
     color: "#2d1832",
     colorDark: "#1f1225",
     handColor: "#f472b6",
-    swingSpeed: 3.5,
-    swingAmt: 0.32,
-    baseAngle: 0.35,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+    shoulderAngle: 1.1 + Math.sin(time * 1.5 + Math.PI) * 0.1 + (isAttacking ? attackIntensity * 0.4 : 0),
+    elbowAngle: -0.3 + Math.sin(time * 2 + 2.2) * 0.08,
+    style: "armored",
   });
 
   // === LAYER 4: THE LIVING GRADUATION CLOAK ===
@@ -2243,7 +2236,7 @@ export function drawGradStudentEnemy(
   }
 
   // Animated legs beneath lab coat
-  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.42, size, time, zoom, {
     color: "#d4d4d4",
     colorDark: "#a3a3a3",
     footColor: "#57534e",
@@ -2251,27 +2244,25 @@ export function drawGradStudentEnemy(
     strideAmt: 0.18,
     shuffle: true,
     phaseOffset: 0.7,
+    style: "armored",
   });
 
-  // Animated arms behind lab coat
-  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.06, size, time, zoom, -1, {
+  // Animated arms — scientist holding beaker + gesturing
+  drawPathArm(ctx, x - size * 0.3, y - size * 0.06, size, time, zoom, -1, {
     color: "#d4d4d4",
     colorDark: "#a3a3a3",
     handColor: "#fbbf24",
-    swingSpeed: 3,
-    swingAmt: 0.2,
-    baseAngle: 0.3,
-    attackExtra: isAttacking ? attackIntensity * 0.35 : 0,
+    shoulderAngle: -0.4 + Math.sin(time * 2) * 0.06,
+    elbowAngle: 0.8 + Math.sin(time * 2.5 + 1) * 0.08,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.06, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.3, y - size * 0.06, size, time, zoom, 1, {
     color: "#d4d4d4",
     colorDark: "#a3a3a3",
     handColor: "#fbbf24",
-    swingSpeed: 3,
-    swingAmt: 0.2,
-    baseAngle: 0.3,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.35 : 0,
+    shoulderAngle: 0.7 + Math.sin(time * 2.3 + 2) * 0.1 + (isAttacking ? attackIntensity * 0.35 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 2.8 + 1.5) * 0.1,
+    style: "armored",
   });
 
   // Tattered lab coat with dimensional burns and chemical stains
@@ -2771,34 +2762,32 @@ export function drawProfessorEnemy(
   }
 
   // Animated legs beneath robes
-  drawAnimatedLegs(ctx, x, y + size * 0.38, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.38, size, time, zoom, {
     color: "#78716c",
     colorDark: "#44403c",
     footColor: "#292524",
     strideSpeed: 3.5,
     strideAmt: 0.25,
     phaseOffset: 0.4,
+    style: "ghostly",
   });
 
-  // Animated arms behind robes
-  drawAnimatedArm(ctx, x - size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, -1, {
+  // Animated arms — ghostly lecturing spread
+  drawPathArm(ctx, x - size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, -1, {
     color: "#78716c",
     colorDark: "#44403c",
     handColor: "#ef4444",
-    swingSpeed: 3,
-    swingAmt: 0.22,
-    baseAngle: 0.28,
-    attackExtra: isAttacking ? attackIntensity * 0.45 : 0,
+    shoulderAngle: -0.9 + Math.sin(time * 1.8) * 0.1 + (isAttacking ? -attackIntensity * 0.45 : 0),
+    elbowAngle: 0.1 + Math.sin(time * 2.2 + 1) * 0.12,
+    style: "ghostly",
   });
-  drawAnimatedArm(ctx, x + size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.3, y - size * 0.08 + hover * 0.2, size, time, zoom, 1, {
     color: "#78716c",
     colorDark: "#44403c",
     handColor: "#ef4444",
-    swingSpeed: 3,
-    swingAmt: 0.22,
-    baseAngle: 0.28,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.45 : 0,
+    shoulderAngle: 0.6 + Math.sin(time * 2 + 1.5) * 0.1 + (isAttacking ? attackIntensity * 0.4 : 0),
+    elbowAngle: -0.4 + Math.sin(time * 2.5 + 2.5) * 0.1,
+    style: "ghostly",
   });
 
   // Ancient tweed robes with depth
@@ -3315,34 +3304,32 @@ export function drawDeanEnemy(
   }
 
   // Animated legs beneath robes
-  drawAnimatedLegs(ctx, x, y + size * 0.42 + hover * 0.5, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.42 + hover * 0.5, size, time, zoom, {
     color: "#1e1b4b",
     colorDark: "#0f0a2a",
     footColor: "#0a0520",
     strideSpeed: 3,
     strideAmt: 0.3,
     phaseOffset: 0.1,
+    style: "armored",
   });
 
-  // Animated arms behind robes
-  drawAnimatedArm(ctx, x - size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, -1, {
+  // Animated arms — commanding reality-warp spread
+  drawPathArm(ctx, x - size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, -1, {
     color: "#1e1b4b",
     colorDark: "#0f0a2a",
     handColor: "#c084fc",
-    swingSpeed: 2.5,
-    swingAmt: 0.3,
-    baseAngle: 0.35,
-    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+    shoulderAngle: -1.2 + Math.sin(time * 1.5) * 0.12 + (isAttacking ? -attackIntensity * 0.5 : 0),
+    elbowAngle: -0.2 + Math.sin(time * 2 + 0.5) * 0.08,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.35, y - size * 0.08 + hover * 0.5, size, time, zoom, 1, {
     color: "#1e1b4b",
     colorDark: "#0f0a2a",
     handColor: "#c084fc",
-    swingSpeed: 2.5,
-    swingAmt: 0.3,
-    baseAngle: 0.35,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackIntensity * 0.6 : 0,
+    shoulderAngle: 1.2 + Math.sin(time * 1.5 + Math.PI) * 0.12 + (isAttacking ? attackIntensity * 0.5 : 0),
+    elbowAngle: -0.2 + Math.sin(time * 2 + 2.5) * 0.08,
+    style: "armored",
   });
 
   // Magnificent flowing robes with reality-warping edges

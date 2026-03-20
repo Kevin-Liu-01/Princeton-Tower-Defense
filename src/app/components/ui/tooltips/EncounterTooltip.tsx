@@ -310,8 +310,8 @@ export const EncounterTooltip: React.FC<EncounterTooltipProps> = ({
   );
 };
 
-const INLINE_PANEL_WIDTH = 380;
-const INLINE_PANEL_MAX_HEIGHT = 260;
+const INLINE_PANEL_WIDTH = 360;
+const INLINE_PANEL_MAX_HEIGHT = 280;
 
 interface InlineEncounterPanelProps extends EncounterTooltipProps {
   autoDismissMs?: number;
@@ -365,12 +365,11 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
   const style = getCategoryStyle(encounter.category);
   const remaining = encounters.length - currentIndex - 1;
 
-  const categoryGlow = style.borderColor.replace("0.5)", "0.15)");
-  const categoryTint = style.borderColor.replace("0.5)", "0.06)");
+  const categoryGlow = style.borderColor.replace("0.5)", "0.2)");
 
   return (
     <div
-      className="flex flex-col pointer-events-auto ml-2 mb-1 rounded-xl overflow-hidden"
+      className="flex flex-col pointer-events-auto rounded-xl overflow-hidden"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       style={{
@@ -379,76 +378,88 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
         maxHeight: INLINE_PANEL_MAX_HEIGHT,
         background: panelGradient,
         border: `1.5px solid ${style.borderColor}`,
-        boxShadow: `0 4px 32px rgba(0,0,0,0.6), 0 0 20px ${categoryGlow}, inset 0 1px 0 ${GOLD.innerBorder08}`,
+        boxShadow: `0 8px 40px rgba(0,0,0,0.7), 0 0 24px ${categoryGlow}, inset 0 1px 0 ${GOLD.innerBorder08}`,
         animation: exiting
           ? "encounterSlideOut 300ms ease-in forwards"
-          : "encounterSlideIn 350ms cubic-bezier(0.16, 1, 0.3, 1)",
+          : "encounterSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
+      {/* Countdown progress bar */}
+      <div className="relative h-[3px] shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+        <div
+          key={`countdown-${currentIndex}-${encounters.length}`}
+          className="absolute inset-0 origin-left"
+          style={{
+            background: `linear-gradient(90deg, ${style.borderColor.replace("0.5)", "0.9)")}, ${style.borderColor.replace("0.5)", "0.4)")})`,
+            animation: `encounterCountdown ${autoDismissMs}ms linear forwards`,
+            animationPlayState: paused ? "paused" : "running",
+          }}
+        />
+      </div>
+
+      {/* Header */}
       <div
-        className="flex items-center gap-2 px-3 py-2 shrink-0"
-        style={{
-          borderBottom: `1px solid ${GOLD.border25}`,
-          background: `linear-gradient(135deg, ${categoryTint}, transparent 60%)`,
-        }}
+        className="flex items-center gap-2.5 px-3 py-2 shrink-0"
+        style={{ borderBottom: `1px solid ${GOLD.border25}` }}
       >
         <div
-          className="flex items-center justify-center w-7 h-7 rounded-lg"
+          className="flex items-center justify-center w-8 h-8 rounded-lg"
           style={{
             background: style.iconBg,
             border: `1px solid ${GOLD.innerBorder12}`,
-            boxShadow: `0 0 8px ${categoryGlow}`,
+            boxShadow: `0 0 10px ${categoryGlow}`,
           }}
         >
-          {React.cloneElement(style.icon as React.ReactElement, { size: 14 })}
+          {React.cloneElement(style.icon as React.ReactElement, { size: 15 })}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] uppercase tracking-widest text-amber-200/40 font-medium leading-tight">
+          <p className="text-[9px] uppercase tracking-[0.15em] text-amber-200/50 font-semibold leading-tight">
             {style.label}
           </p>
           <h3 className={`text-sm font-bold ${style.accentClass} tracking-wide leading-tight`}>
             {encounter.name}
           </h3>
         </div>
-        {remaining > 0 && (
-          <span className="text-[9px] text-amber-200/40 shrink-0">
-            +{remaining} more
-          </span>
-        )}
-        <button
-          onClick={handleAcknowledge}
-          className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-amber-100 transition-all hover:brightness-125 active:scale-95 shrink-0 overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(180,125,30,0.9), rgba(120,75,15,0.95))",
-            border: `1px solid ${GOLD.border40}`,
-            boxShadow: `0 0 12px ${GOLD.glow07}, 0 2px 4px rgba(0,0,0,0.3)`,
-          }}
-        >
-          <div
-            key={`countdown-${currentIndex}-${encounters.length}`}
-            className="absolute inset-0 origin-left"
+        <div className="flex items-center gap-2 shrink-0">
+          {remaining > 0 && (
+            <span
+              className="text-[9px] font-medium px-1.5 py-0.5 rounded-full"
+              style={{
+                background: style.borderColor.replace("0.5)", "0.12)"),
+                color: style.borderColor.replace("0.5)", "0.7)"),
+                border: `1px solid ${style.borderColor.replace("0.5)", "0.2)")}`,
+              }}
+            >
+              +{remaining}
+            </span>
+          )}
+          <button
+            onClick={handleAcknowledge}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-amber-100 transition-all hover:brightness-125 active:scale-95"
             style={{
-              background: "rgba(255,255,255,0.12)",
-              animation: `encounterCountdown ${autoDismissMs}ms linear forwards`,
-              animationPlayState: paused ? "paused" : "running",
+              background: "linear-gradient(135deg, rgba(180,125,30,0.9), rgba(120,75,15,0.95))",
+              border: `1px solid ${GOLD.border40}`,
+              boxShadow: `0 0 10px ${GOLD.glow07}, 0 2px 4px rgba(0,0,0,0.3)`,
             }}
-          />
-          <Check size={12} className="relative z-10" />
-          <span className="relative z-10">{remaining > 0 ? "Next" : "Got it"}</span>
-        </button>
+          >
+            <Check size={12} />
+            {remaining > 0 ? "Next" : "Got it"}
+          </button>
+        </div>
       </div>
+
       <style>{`
         @keyframes encounterCountdown {
           from { transform: scaleX(1); }
           to { transform: scaleX(0); }
         }
         @keyframes encounterSlideIn {
-          from { opacity: 0; transform: translateY(16px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateX(-20px) scale(0.97); }
+          to { opacity: 1; transform: translateX(0) scale(1); }
         }
         @keyframes encounterSlideOut {
-          from { opacity: 1; transform: translateY(0) scale(1); }
-          to { opacity: 0; transform: translateY(16px) scale(0.97); }
+          from { opacity: 1; transform: translateX(0) scale(1); }
+          to { opacity: 0; transform: translateX(-20px) scale(0.97); }
         }
         @keyframes encounterContentSwap {
           0% { opacity: 0.3; transform: translateX(6px); }
@@ -456,6 +467,7 @@ export const InlineEncounterPanel: React.FC<InlineEncounterPanelProps> = ({
         }
       `}</style>
 
+      {/* Content */}
       <div
         key={`content-${currentIndex}`}
         className="flex-1 overflow-y-auto min-h-0"

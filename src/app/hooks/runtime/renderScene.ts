@@ -1721,7 +1721,7 @@ export function renderScene(params: RenderSceneParams): void {
     ]);
     const ALWAYS_DEPTH_SORTED_TYPES: ReadonlySet<string> = new Set([
       "broken_wall", "broken_bridge", "ruins", "hut",
-      "statue", "obelisk", "hanging_cage",
+      "statue", "obelisk", "hanging_cage", "fence",
     ]);
     const decorPathKeys =
       activeWaveSpawnPaths.length > 0
@@ -2035,6 +2035,7 @@ export function renderScene(params: RenderSceneParams): void {
       isoY: (x + y) * ISO_Y_FACTOR,
     });
   });
+  const overlayEffectTypes = new Set(["lightning", "beam", "chain", "zap"]);
   mergedEffects.forEach((eff) => {
     if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type) || eff.type === deathEffectType) return;
     const fromX = eff.pos.x;
@@ -2053,10 +2054,11 @@ export function renderScene(params: RenderSceneParams): void {
     ) {
       return;
     }
+    const depthBias = overlayEffectTypes.has(eff.type) ? 0.01 : -0.01;
     renderables.push({
       type: "effect",
       data: eff,
-      isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR - 0.01,
+      isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR + depthBias,
     });
   });
   // Read active particles from pool (ref-based, no React state)

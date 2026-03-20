@@ -1,4 +1,5 @@
 import type { MapTheme } from "../../constants/maps";
+import type { LightningColorScheme } from "../helpers";
 import type { ReticleColor } from "../ui/reticles";
 
 export interface SentinelPalette {
@@ -114,6 +115,31 @@ export function getSentinelPalette(theme?: MapTheme): SentinelPalette {
 export function getSentinelName(theme?: MapTheme): string {
   return `Imperial ${getSentinelPalette(theme).stoneName} Sentinel`;
 }
+
+export function getSentinelBoltColor(theme?: MapTheme): LightningColorScheme {
+  switch (theme) {
+    case "grassland":
+      return "teal";
+    case "desert":
+      return "yellow";
+    case "winter":
+      return "blue";
+    case "volcanic":
+      return "red";
+    case "swamp":
+      return "green";
+    default:
+      return "red";
+  }
+}
+
+// Screen-space Y offset (per unit zoom) from tower center to crystal
+// Derived from: initial translate (18*s2) + crystalRestY (-74*s2), s2=1.12
+export const SENTINEL_CRYSTAL_Y_OFFSET = -63;
+
+// Screen-space Y offset (per unit zoom) from tower center to sunforge gem
+// Derived from: initial translate (17*s2) + sunCoreRestY (-75*s2), s2=1.16
+export const SUNFORGE_GEM_Y_OFFSET = -67;
 
 // Consistent metal colors used regardless of region
 export const SENTINEL_METAL = {

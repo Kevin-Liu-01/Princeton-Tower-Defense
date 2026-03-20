@@ -30,54 +30,88 @@ export function renderGodRays(
   const diagonal = Math.sqrt(
     canvasWidth * canvasWidth + canvasHeight * canvasHeight
   );
-  const rayLength = diagonal * 1.3;
+  const rayLength = diagonal * 1.2;
   const toCenterAngle = Math.atan2(
     canvasHeight / 2 - originY,
     canvasWidth / 2 - originX
   );
-  const spreadRange = 1.0;
+  const spreadRange = 1.2;
+  const originOffset = diagonal * 0.06;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
 
   for (let i = 0; i < rayCount; i++) {
+    const seed = atmosHash(i * 47.3 + 13.7);
     const phase = (i + 0.5) / rayCount;
     const baseAngle = toCenterAngle - spreadRange / 2 + phase * spreadRange;
     const driftAngle =
-      baseAngle + Math.sin(time * 0.12 + i * 1.7) * 0.06;
+      baseAngle + Math.sin(time * 0.1 + i * 1.7) * 0.04;
+
+    const widthSeed = 0.6 + seed * 0.8;
     const spreadHalf =
-      0.03 + Math.sin(time * 0.18 + i * 2.3) * 0.012;
+      (0.025 + Math.sin(time * 0.14 + i * 2.3) * 0.008) * widthSeed;
+
+    const pulseA = Math.sin(time * 0.2 + i * 1.1);
+    const pulseB = Math.sin(time * 0.13 + i * 2.7);
     const rayAlpha =
-      baseAlpha * (0.4 + Math.sin(time * 0.25 + i * 1.1) * 0.6);
-    if (rayAlpha < 0.003) continue;
+      baseAlpha * (0.3 + pulseA * 0.35 + pulseB * 0.15) * (0.5 + seed * 0.5);
+    if (rayAlpha < 0.002) continue;
 
-    const x1 = originX + Math.cos(driftAngle - spreadHalf) * rayLength;
-    const y1 = originY + Math.sin(driftAngle - spreadHalf) * rayLength;
-    const x2 = originX + Math.cos(driftAngle + spreadHalf) * rayLength;
-    const y2 = originY + Math.sin(driftAngle + spreadHalf) * rayLength;
-    const midX = originX + Math.cos(driftAngle) * rayLength;
-    const midY = originY + Math.sin(driftAngle) * rayLength;
+    const oX = originX + Math.cos(driftAngle) * originOffset;
+    const oY = originY + Math.sin(driftAngle) * originOffset;
 
-    const grad = ctx.createLinearGradient(originX, originY, midX, midY);
-    grad.addColorStop(
-      0,
-      `rgba(${r},${g},${b},${(rayAlpha * 0.5).toFixed(4)})`
-    );
-    grad.addColorStop(
-      0.12,
-      `rgba(${r},${g},${b},${rayAlpha.toFixed(4)})`
-    );
-    grad.addColorStop(
-      0.45,
-      `rgba(${r},${g},${b},${(rayAlpha * 0.45).toFixed(4)})`
-    );
+    const midX = oX + Math.cos(driftAngle) * rayLength;
+    const midY = oY + Math.sin(driftAngle) * rayLength;
+
+    const edgeAngleL = driftAngle - spreadHalf;
+    const edgeAngleR = driftAngle + spreadHalf;
+    const x1 = oX + Math.cos(edgeAngleL) * rayLength;
+    const y1 = oY + Math.sin(edgeAngleL) * rayLength;
+    const x2 = oX + Math.cos(edgeAngleR) * rayLength;
+    const y2 = oY + Math.sin(edgeAngleR) * rayLength;
+
+    const grad = ctx.createLinearGradient(oX, oY, midX, midY);
+    grad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+    grad.addColorStop(0.06, `rgba(${r},${g},${b},${(rayAlpha * 0.6).toFixed(4)})`);
+    grad.addColorStop(0.18, `rgba(${r},${g},${b},${rayAlpha.toFixed(4)})`);
+    grad.addColorStop(0.45, `rgba(${r},${g},${b},${(rayAlpha * 0.5).toFixed(4)})`);
+    grad.addColorStop(0.75, `rgba(${r},${g},${b},${(rayAlpha * 0.12).toFixed(4)})`);
     grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
 
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(originX, originY);
+    ctx.moveTo(oX, oY);
     ctx.lineTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.closePath();
     ctx.fill();
+
+    const innerAlpha = rayAlpha * 0.35;
+    if (innerAlpha > 0.002) {
+      const innerSpread = spreadHalf * 0.4;
+      const ix1 = oX + Math.cos(driftAngle - innerSpread) * rayLength;
+      const iy1 = oY + Math.sin(driftAngle - innerSpread) * rayLength;
+      const ix2 = oX + Math.cos(driftAngle + innerSpread) * rayLength;
+      const iy2 = oY + Math.sin(driftAngle + innerSpread) * rayLength;
+
+      const innerGrad = ctx.createLinearGradient(oX, oY, midX, midY);
+      innerGrad.addColorStop(0, `rgba(${r},${g},${b},0)`);
+      innerGrad.addColorStop(0.1, `rgba(${r},${g},${b},${innerAlpha.toFixed(4)})`);
+      innerGrad.addColorStop(0.35, `rgba(${r},${g},${b},${(innerAlpha * 0.6).toFixed(4)})`);
+      innerGrad.addColorStop(0.7, `rgba(${r},${g},${b},0)`);
+
+      ctx.fillStyle = innerGrad;
+      ctx.beginPath();
+      ctx.moveTo(oX, oY);
+      ctx.lineTo(ix1, iy1);
+      ctx.lineTo(ix2, iy2);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
+
+  ctx.restore();
 }
 
 // ---------------------------------------------------------------------------

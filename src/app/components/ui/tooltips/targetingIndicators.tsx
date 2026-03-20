@@ -3,7 +3,9 @@
 import React from "react";
 import { Crosshair, Flame, Rocket, Target, Users, Zap } from "lucide-react";
 import type { SpellType } from "../../../types";
+import type { MapTheme } from "../../../constants/maps";
 import { GOLD, panelGradient } from "../system/theme";
+import { getSentinelPalette } from "../../../rendering/towers/sentinelTheme";
 
 const INDICATOR_TOP_BASE = 80;
 const INDICATOR_TOP_PAYDAY_OFFSET = 68;
@@ -126,26 +128,37 @@ export const MissileTargetingIndicator: React.FC<{ paydayActive?: boolean }> = (
 
 export const SentinelTargetingIndicator: React.FC<{
   paydayActive?: boolean;
-}> = ({ paydayActive = false }) => {
+  mapTheme?: MapTheme;
+}> = ({ paydayActive = false, mapTheme }) => {
+  const pal = getSentinelPalette(mapTheme);
+  const { crystalR: r, crystalG: g, crystalB: b } = pal;
+  const bgDark = `rgba(${Math.round(r * 0.39)},${Math.round(g * 0.09)},${Math.round(b * 0.12)},0.94)`;
+  const bgDeep = `rgba(${Math.round(r * 0.22)},${Math.round(g * 0.05)},${Math.round(b * 0.06)},0.9)`;
+  const border = `rgba(${r},${g},${b},0.6)`;
+  const shadow = `0 0 24px rgba(${r},${g},${b},0.35), inset 0 0 12px rgba(${r},${g},${b},0.08)`;
+  const iconColor = { color: `rgb(${r},${g},${b})` };
+  const textColor = { color: `rgba(${Math.min(255, r + 60)},${Math.min(255, g + 60)},${Math.min(255, b + 60)},1)` };
+  const subtextColor = { color: `rgba(${r},${g},${b},0.7)` };
+  const crosshairColor = { color: `rgba(${r},${g},${b},0.6)` };
+
   return (
     <div
       className={INDICATOR_CLASS}
       style={{
         top: getIndicatorTop(paydayActive),
         zIndex: 150,
-        background: "linear-gradient(135deg, rgba(100,10,30,0.94), rgba(55,5,15,0.9))",
-        border: "1.5px solid rgba(251,113,133,0.6)",
-        boxShadow:
-          "0 0 24px rgba(244,63,94,0.35), inset 0 0 12px rgba(251,113,133,0.08)",
+        background: `linear-gradient(135deg, ${bgDark}, ${bgDeep})`,
+        border: `1.5px solid ${border}`,
+        boxShadow: shadow,
       }}
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
-        <Target size={16} className="text-rose-400" />
-        <span className="text-rose-100">Lock Sentinel Strike Point</span>
-        <span className="text-rose-400/70 text-[10px] font-medium ml-1">
+        <Target size={16} style={iconColor} />
+        <span style={textColor}>Lock Sentinel Strike Point</span>
+        <span className="text-[10px] font-medium ml-1" style={subtextColor}>
           Click to set coordinates
         </span>
-        <Crosshair size={14} className="text-rose-500/60" />
+        <Crosshair size={14} style={crosshairColor} />
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import {
   BARRACKS_TROOP_RANGE,
   SPELL_TROOP_RANGE,
   HERO_SUMMON_RANGE,
+  ENEMY_DATA,
 } from "../constants";
 
 // Enemy lane model: lanes are normalized to [-1, 1] and projected onto path
@@ -347,8 +348,11 @@ export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
   tree: "tall",
   pine: "tall",
   palm: "tall",
+  cactus: "tall",
   swamp_tree: "tall",
   charred_tree: "tall",
+  snowman: "tall",
+  tentacle: "tall",
   hut: "tall",
   ruins: "tall",
   broken_wall: "tall",
@@ -367,8 +371,16 @@ export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
   tent: "tall",
   obsidian_spike: "tall",
   fire_crystal: "tall",
+  // Medium props
   hedge: "medium",
   bush: "medium",
+  rock: "medium",
+  gravestone: "medium",
+  bench: "medium",
+  barrel: "medium",
+  campfire: "medium",
+  treasure_chest: "medium",
+  reeds: "medium",
   fence: "medium",
   signpost: "medium",
   torch: "medium",
@@ -1127,7 +1139,7 @@ export function getTowerAccentColor(type: TowerType): string {
 }
 
 export function getEnemyColor(type: EnemyType): string {
-  const colors: Record<EnemyType, string> = {
+  const colors: Partial<Record<EnemyType, string>> = {
     frosh: "#4ade80",
     sophomore: "#60a5fa",
     junior: "#c084fc",
@@ -1138,18 +1150,18 @@ export function getEnemyColor(type: EnemyType): string {
     trustee: "#eab308",
     mascot: "#22d3d3",
   };
-  return colors[type];
+  return colors[type] ?? ENEMY_DATA[type]?.color ?? "#888888";
 }
 
 export function getHeroColor(type: HeroType): string {
-  const colors: Record<HeroType, string> = {
+  const colors: Partial<Record<HeroType, string>> = {
     tiger: "#f97316",
     tenor: "#8b5cf6",
     mathey: "#6366f1",
     rocky: "#78716c",
     scott: "#14b8a6",
   };
-  return colors[type];
+  return colors[type] ?? "#888888";
 }
 
 export function lightenColor(color: string, amount: number): string {

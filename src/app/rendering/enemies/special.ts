@@ -4,11 +4,10 @@ import {
   drawFaceCircle,
 } from "./helpers";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawPulsingGlowRings,
   drawShiftingSegments,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawMascotEnemy(
   ctx: CanvasRenderingContext2D,
@@ -479,7 +478,7 @@ export function drawMascotEnemy(
   }
 
   // Powerful clawed legs with stomping animation
-  drawAnimatedLegs(ctx, x, y + size * 0.38 + swoop * 0.15, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.38 + swoop * 0.15, size, time, zoom, {
     color: "#0891b2",
     colorDark: "#0e7490",
     footColor: "#fcd34d",
@@ -487,6 +486,7 @@ export function drawMascotEnemy(
     strideAmt: 0.45,
     legLen: 0.22,
     width: 0.07,
+    style: "fleshy",
   });
 
   // Storm glow rings around body
@@ -620,33 +620,32 @@ export function drawDefaultEnemy(
     ctx.stroke();
   }
 
-  // Basic animated arms (behind robe)
-  drawAnimatedArm(ctx, x - size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, -1, {
+  // Default arms — walking swing with character
+  drawPathArm(ctx, x - size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, -1, {
     color: "#3730a3",
     colorDark: "#1e1b4b",
     handColor: "#c7d2fe",
-    swingSpeed: 3,
-    swingAmt: 0.25,
-    baseAngle: 0.3,
+    shoulderAngle: -0.5 + Math.sin(time * 3) * 0.15,
+    elbowAngle: 0.4 + Math.sin(time * 3.5 + 1) * 0.12,
     upperLen: 0.15,
     foreLen: 0.12,
     width: 0.05,
+    style: "fleshy",
   });
-  drawAnimatedArm(ctx, x + size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, 1, {
     color: "#3730a3",
     colorDark: "#1e1b4b",
     handColor: "#c7d2fe",
-    swingSpeed: 3,
-    swingAmt: 0.25,
-    baseAngle: 0.3,
+    shoulderAngle: 0.5 + Math.sin(time * 3 + Math.PI) * 0.15,
+    elbowAngle: 0.4 + Math.sin(time * 3.5 + 2.5) * 0.12,
     upperLen: 0.15,
     foreLen: 0.12,
     width: 0.05,
-    phaseOffset: Math.PI,
+    style: "fleshy",
   });
 
   // Basic walking legs (behind robe)
-  drawAnimatedLegs(ctx, x, y + size * 0.42, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.42, size, time, zoom, {
     color: "#312e81",
     colorDark: "#1e1b4b",
     footColor: "#0f0d24",
@@ -654,6 +653,7 @@ export function drawDefaultEnemy(
     strideAmt: 0.3,
     legLen: 0.14,
     width: 0.05,
+    style: "fleshy",
   });
 
   // Shadowy robes with flowing tattered edges
@@ -1130,34 +1130,33 @@ export function drawTrusteeEnemy(
     ctx.restore();
   }
 
-  // Imposing animated arms (slow, commanding) - behind robes
+  // Trustee arms — commanding wide stance
   const armShoulderY = y - size * 0.35 + float;
-  drawAnimatedArm(ctx, x - size * 0.28, armShoulderY, size, time, zoom, -1, {
+  drawPathArm(ctx, x - size * 0.28, armShoulderY, size, time, zoom, -1, {
     color: "#d97706",
     colorDark: "#92400e",
     handColor: "#fef3c7",
-    swingSpeed: 1.5,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: -1.0 + Math.sin(time * 1.5) * 0.08,
+    elbowAngle: -0.15 + Math.sin(time * 2 + 0.5) * 0.1,
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.065,
+    style: "armored",
   });
-  drawAnimatedArm(ctx, x + size * 0.28, armShoulderY, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.28, armShoulderY, size, time, zoom, 1, {
     color: "#d97706",
     colorDark: "#92400e",
     handColor: "#fef3c7",
-    swingSpeed: 1.5,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: 1.0 + Math.sin(time * 1.5 + Math.PI) * 0.08,
+    elbowAngle: -0.15 + Math.sin(time * 2 + 2) * 0.1,
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.065,
-    phaseOffset: Math.PI,
+    style: "armored",
   });
 
   // Marching legs - behind robes
-  drawAnimatedLegs(ctx, x, y + size * 0.52, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.52, size, time, zoom, {
     color: "#78350f",
     colorDark: "#451a03",
     footColor: "#1c1917",
@@ -1165,6 +1164,7 @@ export function drawTrusteeEnemy(
     strideAmt: 0.25,
     legLen: 0.18,
     width: 0.06,
+    style: "armored",
   });
 
   // Magnificent golden robes with purple velvet lining and corruption veins

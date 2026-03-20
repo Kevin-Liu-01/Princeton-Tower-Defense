@@ -1,6 +1,19 @@
 import { ISO_Y_RATIO } from "../../constants";
 import type { Position } from "../../types";
 
+function parseRgb(rgb: string): [number, number, number] {
+  const parts = rgb.split(",").map((s) => parseInt(s.trim(), 10));
+  return [parts[0] || 255, parts[1] || 110, parts[2] || 96];
+}
+
+function tint(c: number, amount: number): number {
+  return Math.min(255, Math.round(c + (255 - c) * amount));
+}
+
+function shade(c: number, amount: number): number {
+  return Math.round(c * amount);
+}
+
 // ============================================================================
 // SENTINEL IMPACT — orbital bombardment crater with shockwave rings,
 // debris shards, ground scorch, and radial energy discharge
@@ -14,10 +27,26 @@ export function renderSentinelImpact(
   progress: number,
   alpha: number,
   size: number,
+  hotRgb?: string,
 ): void {
+  const [hr, hg, hb] = parseRgb(hotRgb || "255, 110, 96");
   const impactRadius = Math.max(24, size * zoom * progress);
   const coreRadius = Math.max(5, impactRadius * 0.18);
   const t = Date.now() / 1000;
+
+  // Derived palette from hot color
+  const shockOuter = `${tint(hr, 0.5)}, ${tint(hg, 0.5)}, ${tint(hb, 0.5)}`;
+  const midTone = `${hr}, ${hg}, ${hb}`;
+  const deepTone = `${shade(hr, 0.78)}, ${shade(hg, 0.44)}, ${shade(hb, 0.52)}`;
+  const darkTone = `${shade(hr, 0.53)}, ${shade(hg, 0.17)}, ${shade(hb, 0.41)}`;
+  const scorchDark = `${shade(hr, 0.16)}, ${shade(hg, 0.09)}, ${shade(hb, 0.11)}`;
+  const scorchMid = `${shade(hr, 0.24)}, ${shade(hg, 0.13)}, ${shade(hb, 0.15)}`;
+  const rayOuter = `${tint(hr, 0.35)}, ${tint(hg, 0.15)}, ${tint(hb, 0.25)}`;
+  const rayCore = `${tint(hr, 0.75)}, ${tint(hg, 0.7)}, ${tint(hb, 0.72)}`;
+  const shardColor = `${shade(hr, 0.7)}, ${shade(hg, 0.8)}, ${shade(hb, 0.75)}`;
+  const flashMid = `${tint(hr, 0.6)}, ${tint(hg, 0.55)}, ${tint(hb, 0.57)}`;
+  const flashEdge = `${hr}, ${shade(hg, 0.9)}, ${shade(hb, 0.9)}`;
+  const brightTint = `${tint(hr, 0.8)}, ${tint(hg, 0.75)}, ${tint(hb, 0.78)}`;
 
   ctx.save();
 
@@ -29,7 +58,7 @@ export function renderSentinelImpact(
   // Outer shockwave — fast expanding ring
   const shockR1 = impactRadius * (0.6 + progress * 0.8);
   const shockAlpha1 = alpha * Math.max(0, 1 - progress * 1.5) * 0.6;
-  ctx.strokeStyle = `rgba(255, 180, 180, ${shockAlpha1})`;
+  ctx.strokeStyle = `rgba(${shockOuter}, ${shockAlpha1})`;
   ctx.lineWidth = (3.5 - progress * 2) * zoom;
   ctx.beginPath();
   ctx.arc(0, 0, shockR1, 0, Math.PI * 2);
@@ -40,7 +69,7 @@ export function renderSentinelImpact(
   if (p2 > 0) {
     const shockR2 = impactRadius * (0.4 + p2 * 0.7);
     const shockAlpha2 = alpha * Math.max(0, 1 - p2 * 1.8) * 0.45;
-    ctx.strokeStyle = `rgba(251, 113, 133, ${shockAlpha2})`;
+    ctx.strokeStyle = `rgba(${midTone}, ${shockAlpha2})`;
     ctx.lineWidth = (2.5 - p2 * 1.5) * zoom;
     ctx.setLineDash([6 * zoom, 4 * zoom]);
     ctx.beginPath();
@@ -52,8 +81,8 @@ export function renderSentinelImpact(
   // Ground scorch mark (fades in, persists)
   const scorchAlpha = alpha * Math.min(1, progress * 3) * 0.35;
   const scorchGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius * 0.85);
-  scorchGrad.addColorStop(0, `rgba(40, 10, 15, ${scorchAlpha})`);
-  scorchGrad.addColorStop(0.5, `rgba(60, 15, 20, ${scorchAlpha * 0.6})`);
+  scorchGrad.addColorStop(0, `rgba(${scorchDark}, ${scorchAlpha})`);
+  scorchGrad.addColorStop(0.5, `rgba(${scorchMid}, ${scorchAlpha * 0.6})`);
   scorchGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = scorchGrad;
   ctx.beginPath();
@@ -62,10 +91,10 @@ export function renderSentinelImpact(
 
   // Central impact glow
   const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius);
-  glowGrad.addColorStop(0, `rgba(255, 230, 235, ${alpha * 0.55})`);
-  glowGrad.addColorStop(0.3, `rgba(251, 113, 133, ${alpha * 0.4})`);
-  glowGrad.addColorStop(0.65, `rgba(200, 50, 70, ${alpha * 0.2})`);
-  glowGrad.addColorStop(1, "rgba(136, 19, 55, 0)");
+  glowGrad.addColorStop(0, `rgba(${brightTint}, ${alpha * 0.55})`);
+  glowGrad.addColorStop(0.3, `rgba(${midTone}, ${alpha * 0.4})`);
+  glowGrad.addColorStop(0.65, `rgba(${deepTone}, ${alpha * 0.2})`);
+  glowGrad.addColorStop(1, `rgba(${darkTone}, 0)`);
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
   ctx.arc(0, 0, impactRadius, 0, Math.PI * 2);
@@ -85,16 +114,14 @@ export function renderSentinelImpact(
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle) * ISO_Y_RATIO;
 
-    // Outer glow line
-    ctx.strokeStyle = `rgba(255, 140, 160, ${rayAlpha * 0.5})`;
+    ctx.strokeStyle = `rgba(${rayOuter}, ${rayAlpha * 0.5})`;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenX + cosA * inner, screenY + sinA * inner);
     ctx.lineTo(screenX + cosA * outer, screenY + sinA * outer);
     ctx.stroke();
 
-    // Core bright line
-    ctx.strokeStyle = `rgba(255, 230, 240, ${rayAlpha})`;
+    ctx.strokeStyle = `rgba(${rayCore}, ${rayAlpha})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenX + cosA * inner, screenY + sinA * inner);
@@ -114,7 +141,7 @@ export function renderSentinelImpact(
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(shardAngle + progress * 4);
-    ctx.fillStyle = `rgba(180, 90, 100, ${alpha * (0.8 - progress * 0.6)})`;
+    ctx.fillStyle = `rgba(${shardColor}, ${alpha * (0.8 - progress * 0.6)})`;
     ctx.fillRect(-shardSize, -shardSize * 0.5, shardSize * 2, shardSize);
     ctx.restore();
   }
@@ -124,8 +151,8 @@ export function renderSentinelImpact(
   if (flashAlpha > 0) {
     const flashGrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, coreRadius * 3);
     flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashAlpha})`);
-    flashGrad.addColorStop(0.4, `rgba(255, 200, 210, ${flashAlpha * 0.6})`);
-    flashGrad.addColorStop(1, "rgba(255, 100, 120, 0)");
+    flashGrad.addColorStop(0.4, `rgba(${flashMid}, ${flashAlpha * 0.6})`);
+    flashGrad.addColorStop(1, `rgba(${flashEdge}, 0)`);
     ctx.fillStyle = flashGrad;
     ctx.beginPath();
     ctx.arc(screenX, screenY, coreRadius * 3, 0, Math.PI * 2);

@@ -4,7 +4,7 @@ import React from "react";
 import { Activity, Flame, Home, Lock, Sparkles, Timer, Zap } from "lucide-react";
 import type { Position } from "../../../types";
 import type { MapTheme } from "../../../constants/maps";
-import { getSentinelName } from "../../../rendering/towers/sentinelTheme";
+import { getSentinelName, getSentinelPalette } from "../../../rendering/towers/sentinelTheme";
 import { GOLD, PANEL, panelGradient } from "../system/theme";
 
 interface SpecialBuildingTooltipProps {
@@ -64,12 +64,15 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
       desc: "Temporal crystal lattice. Nearby towers lock to its cadence and fire faster.",
       stat: "+Attack Speed Aura",
     },
-    sentinel_nexus: {
-      name: getSentinelName(mapTheme),
-      icon: <Activity className="text-rose-300" size={18} />,
-      desc: "Ancient laser-guided strike core. Periodically calls lightning at a locked map coordinate.",
-      stat: "Retargetable Strike Beacon",
-    },
+    sentinel_nexus: (() => {
+      const sp = getSentinelPalette(mapTheme);
+      return {
+        name: getSentinelName(mapTheme),
+        icon: <Activity style={{ color: `rgb(${sp.hotRgb})` }} size={18} />,
+        desc: "Ancient laser-guided strike core. Periodically calls lightning at a locked map coordinate.",
+        stat: "Retargetable Strike Beacon",
+      };
+    })(),
     sunforge_orrery: {
       name: "Sunforge Orrery",
       icon: <Flame className="text-orange-300" size={18} />,
@@ -101,21 +104,30 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
         {info.desc}
       </p>
 
-      {type === "sentinel_nexus" && (
-        <div className="mb-2 rounded-md border border-rose-700/40 bg-rose-950/30 px-2 py-1.5">
-          <div className="text-[9px] text-rose-300/80 uppercase tracking-wider mb-1">Target</div>
-          <div className="text-[10px] text-rose-100">
-            {sentinelTarget
-              ? `(${Math.round(sentinelTarget.x)}, ${Math.round(sentinelTarget.y)})`
-              : "Acquiring random target..."}
+      {type === "sentinel_nexus" && (() => {
+        const sp = getSentinelPalette(mapTheme);
+        const { crystalR: sr, crystalG: sg, crystalB: sb } = sp;
+        return (
+          <div className="mb-2 rounded-md px-2 py-1.5"
+            style={{
+              border: `1px solid rgba(${sr},${sg},${sb},0.4)`,
+              background: `rgba(${Math.round(sr * 0.15)},${Math.round(sg * 0.1)},${Math.round(sb * 0.12)},0.3)`,
+            }}
+          >
+            <div className="text-[9px] uppercase tracking-wider mb-1" style={{ color: `rgba(${sr},${sg},${sb},0.8)` }}>Target</div>
+            <div className="text-[10px]" style={{ color: `rgba(${Math.min(255, sr + 60)},${Math.min(255, sg + 60)},${Math.min(255, sb + 60)},1)` }}>
+              {sentinelTarget
+                ? `(${Math.round(sentinelTarget.x)}, ${Math.round(sentinelTarget.y)})`
+                : "Acquiring random target..."}
+            </div>
+            <div className="text-[9px] mt-1" style={{ color: `rgba(${Math.min(255, sr + 30)},${Math.min(255, sg + 30)},${Math.min(255, sb + 30)},0.7)` }}>
+              {sentinelTargeting
+                ? "Click map to set strike target."
+                : "Click nexus, then click map to retarget."}
+            </div>
           </div>
-          <div className="text-[9px] text-rose-200/70 mt-1">
-            {sentinelTargeting
-              ? "Click map to set strike target."
-              : "Click nexus, then click map to retarget."}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {hp !== null && maxHp && (
         <div className="mb-3">

@@ -44,6 +44,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "crossbowman", count: 3, interval: 750, delay: 3200 },
       { type: "frosh", count: 5, interval: 650, delay: 3000 },
       { type: "harpy", count: 3, interval: 800, delay: 3200 },
+      { type: "timber_wolf", count: 6, interval: 500, delay: 3000 },
     ],
     // Wave 5: Speed wave
     [
@@ -58,6 +59,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "archer", count: 4, interval: 700, delay: 2800 },
       { type: "frosh", count: 6, interval: 600, delay: 2800 },
       { type: "assassin", count: 3, interval: 800, delay: 2800 },
+      { type: "giant_eagle", count: 3, interval: 800, delay: 2800 },
     ],
     // Wave 7: Boss intro
     [
@@ -73,6 +75,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "athlete", count: 6, interval: 500, delay: 2200 },
       { type: "hexer", count: 4, interval: 650, delay: 2200 },
       { type: "berserker", count: 4, interval: 600, delay: 2200 },
+      { type: "timber_wolf", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 9: Skeleton march
     [
@@ -87,6 +90,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_knight", count: 3, interval: 900, delay: 2800 },
       { type: "tiger_fan", count: 5, interval: 600, delay: 2500 },
       { type: "bone_mage", count: 2, interval: 1200, delay: 2500 },
+      { type: "forest_troll", count: 3, interval: 800, delay: 2500 },
     ],
   ],
 
@@ -124,6 +128,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "harpy", count: 5, interval: 600, delay: 2800 },
       { type: "banshee", count: 4, interval: 750, delay: 2600 },
       { type: "specter", count: 4, interval: 700, delay: 2600 },
+      { type: "giant_eagle", count: 3, interval: 750, delay: 2600 },
     ],
     // Wave 6: Plague wave
     [
@@ -138,6 +143,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 3, interval: 1200, delay: 2600 },
       { type: "tiger_fan", count: 6, interval: 550, delay: 2500 },
       { type: "hexer", count: 4, interval: 700, delay: 2500 },
+      { type: "forest_troll", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 8: Necromancer wave
     [
@@ -153,6 +159,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "harpy", count: 5, interval: 650, delay: 2200 },
       { type: "frosh", count: 7, interval: 500, delay: 2200 },
       { type: "banshee", count: 4, interval: 750, delay: 2200 },
+      { type: "dire_bear", count: 2, interval: 1200, delay: 2400 },
     ],
     // Wave 10: FINALE
     [
@@ -168,6 +175,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_knight", count: 3, interval: 1000, delay: 2800 },
       { type: "zombie_brute", count: 3, interval: 1100, delay: 2600 },
       { type: "frosh", count: 6, interval: 500, delay: 2500 },
+      { type: "ancient_ent", count: 1, interval: 1200, delay: 2600 },
     ],
     // Wave 12: Dark sorcery
     [
@@ -227,6 +235,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "infernal", count: 4, interval: 950, delay: 2600 },
       { type: "frosh", count: 6, interval: 550, delay: 2500 },
       { type: "wyvern", count: 3, interval: 1100, delay: 2500 },
+      { type: "forest_troll", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 8: Professor arrives
     [
@@ -249,6 +258,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "tiger_fan", count: 6, interval: 500, delay: 2200 },
       { type: "banshee", count: 5, interval: 700, delay: 2200 },
       { type: "infernal", count: 4, interval: 800, delay: 2200 },
+      { type: "dire_bear", count: 2, interval: 1000, delay: 2200 },
     ],
     // Wave 11: Dean's arrival
     [
@@ -266,6 +276,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "assassin", count: 5, interval: 600, delay: 2000 },
       { type: "banshee", count: 6, interval: 600, delay: 2000 },
       { type: "berserker", count: 5, interval: 550, delay: 2000 },
+      { type: "ancient_ent", count: 2, interval: 1000, delay: 2000 },
     ],
     // Wave 13: Death Knight assault
     [
@@ -283,6 +294,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "doom_herald", count: 1, interval: 3000, delay: 2000 },
       { type: "revenant", count: 4, interval: 900, delay: 2000 },
       { type: "athlete", count: 6, interval: 500, delay: 2000 },
+      { type: "dire_bear", count: 2, interval: 1000, delay: 2200 },
+      { type: "ancient_ent", count: 1, interval: 1200, delay: 2000 },
     ],
     // Wave 15: THE NASSAU COLOSSUS
     [
@@ -325,6 +338,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mage", count: 3, interval: 850, delay: 3200 },
       { type: "swamp_troll", count: 4, interval: 950, delay: 3200 },
       { type: "bog_creature", count: 5, interval: 650, delay: 3000 },
+      { type: "vine_serpent", count: 4, interval: 650, delay: 3000 },
     ],
     // Wave 5: Disease wave
     [
@@ -339,6 +353,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "senior", count: 3, interval: 1100, delay: 2800 },
       { type: "bog_creature", count: 6, interval: 550, delay: 2600 },
       { type: "berserker", count: 4, interval: 700, delay: 2600 },
+      { type: "giant_toad", count: 3, interval: 800, delay: 2600 },
     ],
     // Wave 7: Necromancer rises
     [
@@ -353,6 +368,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "harpy", count: 5, interval: 650, delay: 2500 },
       { type: "swamp_troll", count: 4, interval: 900, delay: 2400 },
       { type: "infernal", count: 4, interval: 900, delay: 2400 },
+      { type: "marsh_troll", count: 3, interval: 800, delay: 2400 },
     ],
     // Wave 9: Boss wave
     [
@@ -369,6 +385,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1200, delay: 2000 },
       { type: "wyvern", count: 4, interval: 900, delay: 2000 },
       { type: "will_o_wisp", count: 7, interval: 450, delay: 2000 },
+      { type: "giant_toad", count: 3, interval: 800, delay: 2200 },
     ],
     // Wave 9: Shambling horde
     [
@@ -420,6 +437,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "berserker", count: 4, interval: 700, delay: 3000 },
       { type: "will_o_wisp", count: 6, interval: 550, delay: 2800 },
       { type: "thornwalker", count: 3, interval: 800, delay: 2800 },
+      { type: "vine_serpent", count: 4, interval: 650, delay: 2800 },
     ],
     // Wave 6: Surprise dean - early boss appearance
     [
@@ -434,6 +452,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "harpy", count: 5, interval: 650, delay: 2600 },
       { type: "swamp_troll", count: 4, interval: 900, delay: 2500 },
       { type: "warlock", count: 4, interval: 800, delay: 2500 },
+      { type: "giant_toad", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 8: Necromancer wave
     [
@@ -455,6 +474,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1200, delay: 2200 },
       { type: "thornwalker", count: 4, interval: 750, delay: 2200 },
       { type: "bog_creature", count: 7, interval: 500, delay: 2200 },
+      { type: "marsh_troll", count: 4, interval: 700, delay: 2200 },
     ],
     // Wave 11: Dean arrives
     [
@@ -479,6 +499,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "banshee", count: 5, interval: 650, delay: 2000 },
       { type: "bog_creature", count: 8, interval: 450, delay: 2000 },
       { type: "berserker", count: 4, interval: 650, delay: 2000 },
+      { type: "swamp_hydra", count: 1, interval: 1200, delay: 2200 },
     ],
     // Wave 14: FINALE
     [
@@ -548,6 +569,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1300, delay: 2800 },
       { type: "swamp_troll", count: 4, interval: 900, delay: 2800 },
       { type: "specter", count: 4, interval: 750, delay: 2800 },
+      { type: "giant_toad", count: 4, interval: 700, delay: 2800 },
     ],
     // Wave 7: Tank wall
     [
@@ -569,6 +591,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1200, delay: 2500 },
       { type: "swamp_troll", count: 5, interval: 850, delay: 2400 },
       { type: "banshee", count: 4, interval: 750, delay: 2400 },
+      { type: "marsh_troll", count: 4, interval: 700, delay: 2400 },
     ],
     // Wave 10: Professor boss
     [
@@ -600,6 +623,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "plaguebearer", count: 4, interval: 800, delay: 2000 },
       { type: "swamp_troll", count: 5, interval: 800, delay: 2000 },
       { type: "specter", count: 5, interval: 700, delay: 2000 },
+      { type: "swamp_hydra", count: 1, interval: 1200, delay: 2200 },
     ],
     // Wave 14: Magic barrage
     [
@@ -632,6 +656,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "infernal", count: 5, interval: 750, delay: 2000 },
       { type: "harpy", count: 5, interval: 600, delay: 2000 },
       { type: "berserker", count: 5, interval: 600, delay: 2000 },
+      { type: "swamp_hydra", count: 2, interval: 1000, delay: 2200 },
+      { type: "vine_serpent", count: 5, interval: 600, delay: 2000 },
     ],
     // Wave 18: FINALE
     [
@@ -700,6 +726,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "archer", count: 4, interval: 700, delay: 3200 },
       { type: "scorpion", count: 4, interval: 950, delay: 3200 },
       { type: "specter", count: 3, interval: 800, delay: 3000 },
+      { type: "djinn", count: 3, interval: 750, delay: 3000 },
     ],
     // Wave 5: Sandworm terror
     [
@@ -714,6 +741,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "scorpion", count: 4, interval: 900, delay: 2800 },
       { type: "assassin", count: 3, interval: 800, delay: 2600 },
       { type: "plaguebearer", count: 3, interval: 900, delay: 2600 },
+      { type: "manticore", count: 3, interval: 800, delay: 2600 },
     ],
     // Wave 7: Air assault
     [
@@ -728,6 +756,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 3, interval: 1300, delay: 2400 },
       { type: "scorpion", count: 5, interval: 850, delay: 2200 },
       { type: "scarab", count: 6, interval: 500, delay: 2200 },
+      { type: "djinn", count: 3, interval: 750, delay: 2400 },
     ],
     // Wave 9: Boss wave
     [
@@ -744,6 +773,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "sandworm", count: 4, interval: 1000, delay: 2000 },
       { type: "harpy", count: 5, interval: 650, delay: 2000 },
       { type: "scarab", count: 8, interval: 400, delay: 2000 },
+      { type: "manticore", count: 3, interval: 800, delay: 2200 },
     ],
     // Wave 11: Bone legion
     [
@@ -795,6 +825,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "warlock", count: 4, interval: 800, delay: 2800 },
       { type: "archer", count: 5, interval: 650, delay: 2800 },
       { type: "nomad", count: 5, interval: 600, delay: 2600 },
+      { type: "djinn", count: 4, interval: 700, delay: 2600 },
     ],
     // Wave 6: Assassin strike
     [
@@ -809,6 +840,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 3, interval: 1200, delay: 2500 },
       { type: "scarab", count: 6, interval: 500, delay: 2400 },
       { type: "infernal", count: 3, interval: 950, delay: 2400 },
+      { type: "manticore", count: 3, interval: 800, delay: 2400 },
     ],
     // Wave 8: Dean arrives early
     [
@@ -831,6 +863,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "catapult", count: 3, interval: 1200, delay: 2000 },
       { type: "scarab", count: 8, interval: 400, delay: 2000 },
       { type: "infernal", count: 4, interval: 800, delay: 2000 },
+      { type: "basilisk", count: 2, interval: 1000, delay: 2200 },
     ],
     // Wave 11: Double Dean
     [
@@ -848,6 +881,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 5, interval: 800, delay: 2000 },
       { type: "shadow_knight", count: 4, interval: 900, delay: 2000 },
       { type: "catapult", count: 3, interval: 1100, delay: 2000 },
+      { type: "phoenix", count: 1, interval: 1200, delay: 2200 },
     ],
     // Wave 13: Tomb guardians
     [
@@ -908,6 +942,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "infernal", count: 4, interval: 900, delay: 2600 },
       { type: "assassin", count: 4, interval: 750, delay: 2500 },
       { type: "specter", count: 4, interval: 750, delay: 2500 },
+      { type: "manticore", count: 4, interval: 700, delay: 2500 },
     ],
     // Wave 7: Necromancer ritual
     [
@@ -930,6 +965,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 4, interval: 950, delay: 2200 },
       { type: "sandworm", count: 4, interval: 1000, delay: 2000 },
       { type: "scarab", count: 8, interval: 400, delay: 2000 },
+      { type: "basilisk", count: 2, interval: 1000, delay: 2200 },
     ],
     // Wave 10: Dragon awakens
     [
@@ -954,6 +990,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 5, interval: 850, delay: 2000 },
       { type: "scorpion", count: 6, interval: 700, delay: 2000 },
       { type: "berserker", count: 5, interval: 600, delay: 2000 },
+      { type: "phoenix", count: 2, interval: 1000, delay: 2200 },
     ],
     // Wave 13: Double Trustee
     [
@@ -979,6 +1016,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "hellhound", count: 4, interval: 800, delay: 2200 },
       { type: "skeleton_knight", count: 5, interval: 700, delay: 2000 },
       { type: "nomad", count: 7, interval: 450, delay: 2000 },
+      { type: "phoenix", count: 2, interval: 1000, delay: 2200 },
+      { type: "djinn", count: 4, interval: 700, delay: 2000 },
     ],
     // Wave 16: Herald of doom
     [
@@ -1029,6 +1068,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mage", count: 3, interval: 850, delay: 3200 },
       { type: "yeti", count: 4, interval: 950, delay: 3200 },
       { type: "crossbowman", count: 3, interval: 750, delay: 3000 },
+      { type: "dire_wolf", count: 6, interval: 500, delay: 3000 },
     ],
     // Wave 5: Speed wave
     [
@@ -1043,6 +1083,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "yeti", count: 4, interval: 950, delay: 2800 },
       { type: "plaguebearer", count: 3, interval: 900, delay: 2600 },
       { type: "ice_witch", count: 4, interval: 800, delay: 2600 },
+      { type: "frost_troll", count: 3, interval: 800, delay: 2600 },
     ],
     // Wave 7: Dark magic
     [
@@ -1057,6 +1098,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "banshee", count: 4, interval: 800, delay: 2500 },
       { type: "yeti", count: 4, interval: 900, delay: 2400 },
       { type: "harpy", count: 4, interval: 700, delay: 2400 },
+      { type: "dire_wolf", count: 6, interval: 500, delay: 2400 },
     ],
     // Wave 9: Professor boss
     [
@@ -1071,6 +1113,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "junior", count: 4, interval: 800, delay: 2200 },
       { type: "ice_witch", count: 5, interval: 700, delay: 2200 },
       { type: "berserker", count: 4, interval: 650, delay: 2200 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 2200 },
     ],
     // Wave 11: Dean arrives
     [
@@ -1140,6 +1183,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "berserker", count: 4, interval: 700, delay: 2800 },
       { type: "frostling", count: 5, interval: 600, delay: 2800 },
       { type: "specter", count: 3, interval: 800, delay: 2800 },
+      { type: "dire_wolf", count: 6, interval: 500, delay: 2800 },
     ],
     // Wave 6: Ranged barrage
     [
@@ -1154,6 +1198,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 3, interval: 1200, delay: 2500 },
       { type: "yeti", count: 5, interval: 850, delay: 2400 },
       { type: "infernal", count: 3, interval: 950, delay: 2400 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 2400 },
     ],
     // Wave 8: Professor boss
     [
@@ -1177,6 +1222,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "yeti", count: 5, interval: 800, delay: 2000 },
       { type: "specter", count: 5, interval: 700, delay: 2000 },
       { type: "snow_goblin", count: 7, interval: 450, delay: 2000 },
+      { type: "mammoth", count: 1, interval: 1200, delay: 2200 },
     ],
     // Wave 11: Juggernaut push
     [
@@ -1201,6 +1247,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 4, interval: 1000, delay: 2000 },
       { type: "frostling", count: 6, interval: 500, delay: 2000 },
       { type: "snow_goblin", count: 8, interval: 400, delay: 2000 },
+      { type: "wendigo", count: 2, interval: 1000, delay: 2000 },
     ],
     // Wave 14: FINALE
     [
@@ -1264,6 +1311,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "assassin", count: 4, interval: 750, delay: 3000 },
       { type: "ice_witch", count: 4, interval: 800, delay: 2800 },
       { type: "specter", count: 3, interval: 800, delay: 2800 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 2800 },
     ],
     // Wave 6: Dark magic
     [
@@ -1293,6 +1341,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "harpy", count: 5, interval: 650, delay: 2200 },
       { type: "yeti", count: 5, interval: 800, delay: 2200 },
       { type: "ice_witch", count: 4, interval: 750, delay: 2200 },
+      { type: "dire_wolf", count: 8, interval: 450, delay: 2200 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 2000 },
     ],
     // Wave 10: Dean arrives
     [
@@ -1325,6 +1375,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "yeti", count: 6, interval: 750, delay: 2000 },
       { type: "infernal", count: 4, interval: 800, delay: 2000 },
       { type: "specter", count: 5, interval: 650, delay: 2000 },
+      { type: "mammoth", count: 2, interval: 1000, delay: 2000 },
     ],
     // Wave 14: Double Trustee
     [
@@ -1350,6 +1401,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dragon", count: 3, interval: 2000, delay: 2000 },
       { type: "dean", count: 3, interval: 2000, delay: 2000 },
       { type: "juggernaut", count: 3, interval: 2400, delay: 15000 },
+      { type: "wendigo", count: 2, interval: 1000, delay: 2000 },
+      { type: "mammoth", count: 2, interval: 1000, delay: 2000 },
     ],
     // Wave 17: Death knight vanguard
     [
@@ -1409,6 +1462,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mage", count: 4, interval: 850, delay: 3200 },
       { type: "ember_guard", count: 4, interval: 900, delay: 3000 },
       { type: "warlock", count: 3, interval: 850, delay: 3000 },
+      { type: "salamander", count: 6, interval: 500, delay: 3000 },
     ],
     // Wave 5: Berserker charge
     [
@@ -1423,6 +1477,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 3, interval: 1200, delay: 2800 },
       { type: "specter", count: 4, interval: 750, delay: 2600 },
       { type: "ember_guard", count: 4, interval: 900, delay: 2600 },
+      { type: "volcanic_drake", count: 3, interval: 800, delay: 2600 },
     ],
     // Wave 7: Professor boss
     [
@@ -1438,6 +1493,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 5, interval: 800, delay: 2400 },
       { type: "plaguebearer", count: 3, interval: 900, delay: 2200 },
       { type: "fire_imp", count: 6, interval: 500, delay: 2200 },
+      { type: "salamander", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
@@ -1453,6 +1509,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 5, interval: 800, delay: 2000 },
       { type: "dragon", count: 1, interval: 2800, delay: 2000 },
       { type: "shadow_knight", count: 4, interval: 1000, delay: 2000 },
+      { type: "volcanic_drake", count: 3, interval: 800, delay: 2200 },
     ],
     // Wave 11: Shadow convergence
     [
@@ -1538,6 +1595,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "berserker", count: 5, interval: 650, delay: 2800 },
       { type: "magma_spawn", count: 4, interval: 800, delay: 2800 },
       { type: "fire_imp", count: 5, interval: 600, delay: 2600 },
+      { type: "salamander", count: 6, interval: 500, delay: 2600 },
     ],
     // Wave 6: Plague and shadow
     [
@@ -1552,6 +1610,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 5, interval: 850, delay: 2500 },
       { type: "specter", count: 4, interval: 750, delay: 2400 },
       { type: "fire_imp", count: 6, interval: 500, delay: 2400 },
+      { type: "volcanic_drake", count: 4, interval: 700, delay: 2400 },
     ],
     // Wave 8: Professor boss
     [
@@ -1575,6 +1634,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dragon", count: 1, interval: 2800, delay: 2000 },
       { type: "shadow_knight", count: 4, interval: 1000, delay: 2000 },
       { type: "fire_imp", count: 7, interval: 450, delay: 2000 },
+      { type: "lava_golem", count: 1, interval: 1200, delay: 2200 },
     ],
     // Wave 11: Air superiority
     [
@@ -1599,6 +1659,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 6, interval: 700, delay: 1800 },
       { type: "wyvern", count: 5, interval: 800, delay: 2200 },
       { type: "infernal", count: 5, interval: 700, delay: 1600 },
+      { type: "volcanic_drake", count: 4, interval: 700, delay: 1800 },
     ],
     // Wave 14: Golem awakens
     [
@@ -1684,6 +1745,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "berserker", count: 5, interval: 650, delay: 2600 },
       { type: "fire_imp", count: 6, interval: 500, delay: 2600 },
       { type: "specter", count: 4, interval: 750, delay: 2500 },
+      { type: "salamander", count: 8, interval: 450, delay: 2500 },
     ],
     // Wave 7: Dark convergence
     [
@@ -1706,6 +1768,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dragon", count: 1, interval: 2800, delay: 2200 },
       { type: "ember_guard", count: 5, interval: 750, delay: 2000 },
       { type: "fire_imp", count: 7, interval: 450, delay: 2000 },
+      { type: "volcanic_drake", count: 4, interval: 700, delay: 2000 },
     ],
     // Wave 10: Air dominance
     [
@@ -1730,6 +1793,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "necromancer", count: 4, interval: 1100, delay: 2000 },
       { type: "catapult", count: 3, interval: 1200, delay: 2000 },
       { type: "fire_imp", count: 8, interval: 400, delay: 2000 },
+      { type: "lava_golem", count: 2, interval: 1000, delay: 2200 },
     ],
     // Wave 13: Double Dean
     [
@@ -1762,6 +1826,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ember_guard", count: 8, interval: 550, delay: 2000 },
       { type: "necromancer", count: 5, interval: 1000, delay: 2000 },
       { type: "fire_imp", count: 10, interval: 350, delay: 2000 },
+      { type: "lava_golem", count: 2, interval: 1000, delay: 2000 },
+      { type: "volcanic_drake", count: 5, interval: 700, delay: 2000 },
     ],
     // Wave 17: Ultimate assault
     [
@@ -1833,6 +1899,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_knight", count: 3, interval: 1100, delay: 2400 },
       { type: "crossbowman", count: 6, interval: 620, delay: 2200 },
       { type: "bone_mage", count: 3, interval: 900, delay: 2000 },
+      { type: "forest_troll", count: 4, interval: 700, delay: 2200 },
     ],
     // W5: Air superiority - all flying, forces anti-air
     [
@@ -1847,6 +1914,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_knight", count: 4, interval: 950, delay: 2600 },
       { type: "fallen_paladin", count: 3, interval: 1100, delay: 2200 },
       { type: "tiger_fan", count: 12, interval: 400, delay: 1800 },
+      { type: "giant_eagle", count: 3, interval: 750, delay: 2000 },
     ],
     // W7: Necromantic tide - caster-heavy, healing-disruption
     [
@@ -1860,6 +1928,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "abomination", count: 1, interval: 3200 },
       { type: "hellhound", count: 14, interval: 340, delay: 2800 },
       { type: "revenant", count: 6, interval: 550, delay: 1500 },
+      { type: "dire_bear", count: 2, interval: 1000, delay: 2000 },
     ],
     // W9: Full dark fantasy army - balanced and relentless
     [
@@ -1875,6 +1944,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "death_knight", count: 2, interval: 2000, delay: 1200 },
       { type: "dark_knight", count: 6, interval: 700, delay: 1800 },
       { type: "athlete", count: 20, interval: 280, delay: 1400 },
+      { type: "ancient_ent", count: 1, interval: 1200, delay: 2000 },
     ],
     // W11: Desperate defense - everything at once
     [
@@ -1913,6 +1983,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "swamp_troll", count: 7, interval: 800 },
       { type: "zombie_brute", count: 2, interval: 1400, delay: 2600 },
       { type: "thornwalker", count: 8, interval: 600, delay: 2200 },
+      { type: "vine_serpent", count: 5, interval: 600, delay: 2200 },
     ],
     // W4: Spectral swarm - fast ghosts, hard to pin down
     [
@@ -1927,6 +1998,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_priest", count: 3, interval: 950, delay: 2600 },
       { type: "zombie_shambler", count: 14, interval: 350, delay: 2000 },
       { type: "skeleton_footman", count: 10, interval: 420, delay: 1600 },
+      { type: "giant_toad", count: 4, interval: 700, delay: 2000 },
     ],
     // W6: Air ambush after ground-heavy waves
     [
@@ -1947,6 +2019,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "black_guard", count: 5, interval: 720, delay: 2600 },
       { type: "dark_knight", count: 4, interval: 900, delay: 2000 },
       { type: "swamp_troll", count: 8, interval: 650, delay: 1600 },
+      { type: "marsh_troll", count: 4, interval: 700, delay: 1800 },
     ],
     // W9: Lich king's court - caster bosses + skeleton army
     [
@@ -1962,6 +2035,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "doom_herald", count: 1, interval: 3000, delay: 800 },
       { type: "revenant", count: 8, interval: 480, delay: 2400 },
       { type: "hellhound", count: 10, interval: 380, delay: 1600 },
+      { type: "swamp_hydra", count: 1, interval: 1200, delay: 2000 },
     ],
     // W11: Last stand - everything toxic and undead
     [
@@ -2000,6 +2074,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "sandworm", count: 6, interval: 850 },
       { type: "scorpion", count: 8, interval: 580, delay: 2400 },
       { type: "nomad", count: 10, interval: 420, delay: 1800 },
+      { type: "djinn", count: 4, interval: 700, delay: 2000 },
     ],
     // W4: Hellhound stampede - pure speed wave
     [
@@ -2014,6 +2089,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fallen_paladin", count: 3, interval: 1100, delay: 2400 },
       { type: "black_guard", count: 4, interval: 800, delay: 2000 },
       { type: "sandworm", count: 5, interval: 900, delay: 1600 },
+      { type: "manticore", count: 3, interval: 800, delay: 1800 },
     ],
     // W6: Flying sandstorm - all air
     [
@@ -2034,6 +2110,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_king", count: 1, interval: 3000, delay: 2600 },
       { type: "revenant", count: 8, interval: 460, delay: 1800 },
       { type: "nomad", count: 14, interval: 340, delay: 1400 },
+      { type: "basilisk", count: 2, interval: 1000, delay: 1800 },
     ],
     // W9: Dual-boss ambush
     [
@@ -2048,6 +2125,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_king", count: 2, interval: 2400, delay: 1800 },
       { type: "fallen_paladin", count: 5, interval: 800, delay: 1400 },
       { type: "scarab", count: 30, interval: 200, delay: 1000 },
+      { type: "phoenix", count: 1, interval: 1200, delay: 2000 },
     ],
     // W11: Dark convergence
     [
@@ -2086,6 +2164,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "ice_witch", count: 8, interval: 650 },
       { type: "bone_mage", count: 4, interval: 800, delay: 2400 },
       { type: "frostling", count: 10, interval: 430, delay: 1800 },
+      { type: "dire_wolf", count: 6, interval: 500, delay: 2000 },
     ],
     // W4: Surprise speed wave - breaks the tank pattern
     [
@@ -2099,6 +2178,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_knight", count: 4, interval: 950, delay: 2600 },
       { type: "yeti", count: 8, interval: 700, delay: 2000 },
       { type: "zombie_brute", count: 3, interval: 1200, delay: 1600 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 1800 },
     ],
     // W6: Catapult siege - ranged devastation
     [
@@ -2120,6 +2200,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_priest", count: 3, interval: 950, delay: 2600 },
       { type: "yeti", count: 8, interval: 680, delay: 2000 },
       { type: "ice_witch", count: 6, interval: 620, delay: 1400 },
+      { type: "mammoth", count: 2, interval: 1000, delay: 1800 },
     ],
     // W9: Solo mega-boss test
     [
@@ -2133,6 +2214,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_knight", count: 5, interval: 780, delay: 1600 },
       { type: "skeleton_footman", count: 18, interval: 280, delay: 1800 },
       { type: "snow_goblin", count: 20, interval: 260, delay: 1200 },
+      { type: "wendigo", count: 2, interval: 1000, delay: 1600 },
     ],
     // W11: Everything armored, nothing fast
     [
@@ -2171,6 +2253,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wyvern", count: 6, interval: 850 },
       { type: "harpy", count: 7, interval: 550, delay: 2000 },
       { type: "banshee", count: 6, interval: 600, delay: 1600 },
+      { type: "volcanic_drake", count: 4, interval: 700, delay: 1800 },
     ],
     // W4: Surprise skeleton army - not volcanic themed
     [
@@ -2185,6 +2268,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "revenant", count: 6, interval: 500, delay: 1400 },
       { type: "assassin", count: 8, interval: 480, delay: 1200 },
       { type: "fire_imp", count: 16, interval: 280, delay: 1000 },
+      { type: "salamander", count: 8, interval: 400, delay: 1200 },
     ],
     // W6: Death knight vanguard - first big boss
     [
@@ -2206,6 +2290,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "zombie_brute", count: 5, interval: 1000, delay: 2800 },
       { type: "zombie_shambler", count: 20, interval: 260, delay: 2000 },
       { type: "magma_spawn", count: 12, interval: 400, delay: 1400 },
+      { type: "lava_golem", count: 2, interval: 1000, delay: 1800 },
     ],
     // W9: Breather... then surprise boss
     [
@@ -2220,6 +2305,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_king", count: 2, interval: 2400, delay: 2000 },
       { type: "black_guard", count: 6, interval: 700, delay: 2400 },
       { type: "dark_knight", count: 6, interval: 740, delay: 1600 },
+      { type: "volcanic_drake", count: 5, interval: 700, delay: 1800 },
     ],
     // W11: Abomination rampage
     [
@@ -2283,6 +2369,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bone_mage", count: 4, interval: 800, delay: 2400 },
       { type: "crossbowman", count: 6, interval: 620, delay: 1800 },
       { type: "mage", count: 5, interval: 700, delay: 1400 },
+      { type: "timber_wolf", count: 8, interval: 400, delay: 2000 },
     ],
     // W4: Surprise dean + speed flankers
     [
@@ -2296,6 +2383,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fallen_paladin", count: 3, interval: 1100, delay: 2600 },
       { type: "black_guard", count: 4, interval: 800, delay: 2000 },
       { type: "tiger_fan", count: 14, interval: 360, delay: 1600 },
+      { type: "giant_eagle", count: 3, interval: 750, delay: 2000 },
     ],
     // W6: Wraith ambush - all-fast ghost wave
     [
@@ -2316,6 +2404,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_king", count: 1, interval: 3000, delay: 2800 },
       { type: "dark_knight", count: 5, interval: 780, delay: 2000 },
       { type: "skeleton_knight", count: 6, interval: 700, delay: 1400 },
+      { type: "forest_troll", count: 4, interval: 700, delay: 1800 },
     ],
     // W9: Boss rush - multiple heavies simultaneous
     [
@@ -2330,6 +2419,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fallen_paladin", count: 5, interval: 800, delay: 1600 },
       { type: "skeleton_footman", count: 20, interval: 260, delay: 2000 },
       { type: "tiger_fan", count: 20, interval: 280, delay: 1200 },
+      { type: "dire_bear", count: 2, interval: 1000, delay: 2000 },
     ],
     // W11: Everything undead
     [
@@ -2369,6 +2459,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bone_mage", count: 3, interval: 950, delay: 2600 },
       { type: "zombie_spitter", count: 4, interval: 750, delay: 2000 },
       { type: "thornwalker", count: 8, interval: 600, delay: 1600 },
+      { type: "vine_serpent", count: 5, interval: 600, delay: 1800 },
     ],
     // W4: Ghost raid - ethereal enemies only
     [
@@ -2383,6 +2474,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_knight", count: 5, interval: 800, delay: 2800 },
       { type: "skeleton_footman", count: 14, interval: 340, delay: 2000 },
       { type: "skeleton_archer", count: 5, interval: 650, delay: 1600 },
+      { type: "giant_toad", count: 4, interval: 700, delay: 2000 },
     ],
     // W6: Zombie flood - pure numbers test
     [
@@ -2403,6 +2495,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_priest", count: 4, interval: 850, delay: 2400 },
       { type: "bone_mage", count: 6, interval: 600, delay: 1800 },
       { type: "wraith", count: 8, interval: 460, delay: 1400 },
+      { type: "marsh_troll", count: 4, interval: 700, delay: 1600 },
     ],
     // W9: Skeleton king + dark knight escort
     [
@@ -2417,6 +2510,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "doom_herald", count: 1, interval: 3000, delay: 1000 },
       { type: "hellhound", count: 10, interval: 380, delay: 2800 },
       { type: "revenant", count: 8, interval: 480, delay: 1600 },
+      { type: "swamp_hydra", count: 1, interval: 1200, delay: 2000 },
     ],
     // W11: Undead council - all boss casters
     [
@@ -2455,6 +2549,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "yeti", count: 7, interval: 780 },
       { type: "ice_witch", count: 6, interval: 650, delay: 2600 },
       { type: "skeleton_archer", count: 5, interval: 650, delay: 2000 },
+      { type: "dire_wolf", count: 6, interval: 500, delay: 2200 },
     ],
     // W4: Wraith swarm - ethereal blitz
     [
@@ -2468,6 +2563,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_knight", count: 5, interval: 800, delay: 2400 },
       { type: "black_guard", count: 4, interval: 800, delay: 1800 },
       { type: "frostling", count: 12, interval: 380, delay: 1400 },
+      { type: "frost_troll", count: 4, interval: 700, delay: 1600 },
     ],
     // W6: All flying blizzard
     [
@@ -2488,6 +2584,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bone_mage", count: 5, interval: 680, delay: 2400 },
       { type: "yeti", count: 8, interval: 680, delay: 1800 },
       { type: "ice_witch", count: 6, interval: 620, delay: 1200 },
+      { type: "mammoth", count: 2, interval: 1000, delay: 1600 },
     ],
     // W9: Solo mega-tank challenge
     [
@@ -2501,6 +2598,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "wraith", count: 10, interval: 380, delay: 1200 },
       { type: "assassin", count: 8, interval: 440, delay: 1000 },
       { type: "frostling", count: 16, interval: 300, delay: 800 },
+      { type: "wendigo", count: 2, interval: 1000, delay: 1400 },
     ],
     // W11: Dark convergence
     [
@@ -2539,6 +2637,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "sandworm", count: 6, interval: 850 },
       { type: "scorpion", count: 8, interval: 600, delay: 2400 },
       { type: "scarab", count: 12, interval: 380, delay: 1800 },
+      { type: "djinn", count: 4, interval: 700, delay: 2000 },
     ],
     // W4: Skeleton siege engineers
     [
@@ -2559,6 +2658,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "dark_knight", count: 4, interval: 950, delay: 2800 },
       { type: "fallen_paladin", count: 3, interval: 1100, delay: 2000 },
       { type: "nomad", count: 14, interval: 360, delay: 1400 },
+      { type: "manticore", count: 3, interval: 800, delay: 1800 },
     ],
     // W7: Lich artillery + meat shield
     [
@@ -2573,6 +2673,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "skeleton_king", count: 1, interval: 3000, delay: 2800 },
       { type: "dark_knight", count: 5, interval: 780, delay: 2000 },
       { type: "sandworm", count: 6, interval: 800, delay: 1400 },
+      { type: "basilisk", count: 2, interval: 1000, delay: 1800 },
     ],
     // W9: Doom herald + golem test
     [
@@ -2588,6 +2689,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bone_mage", count: 6, interval: 580, delay: 1600 },
       { type: "wraith", count: 8, interval: 460, delay: 1200 },
       { type: "nomad", count: 16, interval: 320, delay: 1000 },
+      { type: "phoenix", count: 1, interval: 1200, delay: 2000 },
     ],
     // W11: Abomination siege
     [
@@ -2627,6 +2729,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bone_mage", count: 4, interval: 800, delay: 2600 },
       { type: "dark_priest", count: 3, interval: 950, delay: 2000 },
       { type: "magma_spawn", count: 10, interval: 440, delay: 1600 },
+      { type: "salamander", count: 8, interval: 400, delay: 1800 },
     ],
     // W4: All-speed panic wave
     [
@@ -2641,6 +2744,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fallen_paladin", count: 4, interval: 900, delay: 2600 },
       { type: "black_guard", count: 5, interval: 720, delay: 2000 },
       { type: "ember_guard", count: 8, interval: 620, delay: 1400 },
+      { type: "volcanic_drake", count: 4, interval: 700, delay: 1600 },
     ],
     // W6: Air supremacy - flying nightmare
     [
@@ -2662,6 +2766,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "zombie_brute", count: 5, interval: 1000, delay: 2800 },
       { type: "zombie_shambler", count: 18, interval: 280, delay: 2000 },
       { type: "fire_imp", count: 16, interval: 300, delay: 1400 },
+      { type: "lava_golem", count: 2, interval: 1000, delay: 1800 },
     ],
     // W9: Triple boss simultaneous spawn
     [
@@ -2678,6 +2783,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fallen_paladin", count: 6, interval: 740, delay: 1600 },
       { type: "bone_mage", count: 6, interval: 580, delay: 1400 },
       { type: "magma_spawn", count: 18, interval: 300, delay: 1000 },
+      { type: "volcanic_drake", count: 5, interval: 700, delay: 1400 },
     ],
     // W11: Penultimate - doom heralds + abominations
     [
@@ -2709,6 +2815,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "junior", count: 5, interval: 800 },
       { type: "sophomore", count: 5, interval: 700, delay: 2500 },
+      { type: "timber_wolf", count: 6, interval: 500, delay: 3000 },
     ],
     [
       { type: "senior", count: 4, interval: 900 },
@@ -2717,6 +2824,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "gradstudent", count: 3, interval: 1000 },
       { type: "senior", count: 5, interval: 800, delay: 2500 },
+      { type: "giant_eagle", count: 3, interval: 800, delay: 2800 },
     ],
     [
       { type: "professor", count: 2, interval: 1200 },
@@ -2725,6 +2833,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "frosh", count: 15, interval: 400 },
       { type: "sophomore", count: 10, interval: 500, delay: 3000 },
+      { type: "timber_wolf", count: 8, interval: 450, delay: 2500 },
     ],
     [
       { type: "professor", count: 3, interval: 1000 },
@@ -2734,6 +2843,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 1, interval: 1000 },
       { type: "professor", count: 4, interval: 900, delay: 3000 },
+      { type: "forest_troll", count: 3, interval: 800, delay: 3000 },
     ],
     [
       { type: "dean", count: 2, interval: 1200 },
@@ -2745,41 +2855,89 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // DEV TEST LEVELS
   // =====================
   dev_enemy_showcase: [
+    // Wave 1: Bugs (all regions + boss)
     [
-      // Regional Giant Bosses
-      { type: "titan_of_nassau", count: 1, interval: 1000, delay: 3000 },
+      { type: "orb_weaver", count: 1, interval: 1000 },
+      { type: "mantis", count: 1, interval: 1000, delay: 3000 },
+      { type: "bombardier_beetle", count: 1, interval: 1000, delay: 3000 },
+      { type: "mosquito", count: 1, interval: 1000, delay: 3000 },
+      { type: "centipede", count: 1, interval: 1000, delay: 3000 },
+      { type: "dragonfly", count: 1, interval: 1000, delay: 3000 },
+      { type: "silk_moth", count: 1, interval: 1000, delay: 3000 },
+      { type: "ant_soldier", count: 1, interval: 1000, delay: 3000 },
+      { type: "locust", count: 1, interval: 1000, delay: 3000 },
+      { type: "trapdoor_spider", count: 1, interval: 1000, delay: 3000 },
+      { type: "ice_beetle", count: 1, interval: 1000, delay: 3000 },
+      { type: "frost_tick", count: 1, interval: 1000, delay: 3000 },
+      { type: "snow_moth", count: 1, interval: 1000, delay: 3000 },
+      { type: "fire_ant", count: 1, interval: 1000, delay: 3000 },
+      { type: "magma_beetle", count: 1, interval: 1000, delay: 3000 },
+      { type: "ash_moth", count: 1, interval: 1000, delay: 3000 },
+      { type: "brood_mother", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 2: Fantasy Creatures — Forest & Swamp
+    [
+      { type: "dire_bear", count: 1, interval: 1000 },
+      { type: "ancient_ent", count: 1, interval: 1000, delay: 3000 },
+      { type: "forest_troll", count: 1, interval: 1000, delay: 3000 },
+      { type: "timber_wolf", count: 1, interval: 1000, delay: 3000 },
+      { type: "giant_eagle", count: 1, interval: 1000, delay: 3000 },
+      { type: "swamp_hydra", count: 1, interval: 1000, delay: 3000 },
+      { type: "giant_toad", count: 1, interval: 1000, delay: 3000 },
+      { type: "vine_serpent", count: 1, interval: 1000, delay: 3000 },
+      { type: "marsh_troll", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 3: Fantasy Creatures — Desert, Winter & Volcanic
+    [
+      { type: "phoenix", count: 1, interval: 1000 },
+      { type: "basilisk", count: 1, interval: 1000, delay: 3000 },
+      { type: "djinn", count: 1, interval: 1000, delay: 3000 },
+      { type: "manticore", count: 1, interval: 1000, delay: 3000 },
+      { type: "frost_troll", count: 1, interval: 1000, delay: 3000 },
+      { type: "dire_wolf", count: 1, interval: 1000, delay: 3000 },
+      { type: "wendigo", count: 1, interval: 1000, delay: 3000 },
+      { type: "mammoth", count: 1, interval: 1000, delay: 3000 },
+      { type: "lava_golem", count: 1, interval: 1000, delay: 3000 },
+      { type: "volcanic_drake", count: 1, interval: 1000, delay: 3000 },
+      { type: "salamander", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 4: Regional Giant Bosses
+    [
+      { type: "titan_of_nassau", count: 1, interval: 1000 },
       { type: "swamp_leviathan", count: 1, interval: 1000, delay: 3000 },
       { type: "sphinx_guardian", count: 1, interval: 1000, delay: 3000 },
       { type: "frost_colossus", count: 1, interval: 1000, delay: 3000 },
       { type: "inferno_wyrm", count: 1, interval: 1000, delay: 3000 },
-      // Dark Fantasy - Skeletons
+    ],
+    // Wave 5: Dark Fantasy — Undead (skeletons + zombies)
+    [
       { type: "skeleton_footman", count: 1, interval: 1000 },
       { type: "skeleton_knight", count: 1, interval: 1000, delay: 3000 },
       { type: "skeleton_archer", count: 1, interval: 1000, delay: 3000 },
       { type: "skeleton_king", count: 1, interval: 1000, delay: 3000 },
-      // Dark Fantasy - Zombies
       { type: "zombie_shambler", count: 1, interval: 1000, delay: 3000 },
       { type: "zombie_brute", count: 1, interval: 1000, delay: 3000 },
       { type: "zombie_spitter", count: 1, interval: 1000, delay: 3000 },
       { type: "ghoul", count: 1, interval: 1000, delay: 3000 },
-      // Dark Fantasy - Dark Knights
-      { type: "dark_knight", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 6: Dark Fantasy — Knights, Casters & Monsters
+    [
+      { type: "dark_knight", count: 1, interval: 1000 },
       { type: "death_knight", count: 1, interval: 1000, delay: 3000 },
       { type: "fallen_paladin", count: 1, interval: 1000, delay: 3000 },
       { type: "black_guard", count: 1, interval: 1000, delay: 3000 },
-      // Dark Fantasy - Dark Casters
       { type: "lich", count: 1, interval: 1000, delay: 3000 },
       { type: "wraith", count: 1, interval: 1000, delay: 3000 },
       { type: "bone_mage", count: 1, interval: 1000, delay: 3000 },
       { type: "dark_priest", count: 1, interval: 1000, delay: 3000 },
-      // Dark Fantasy - Monstrous
       { type: "revenant", count: 1, interval: 1000, delay: 3000 },
       { type: "abomination", count: 1, interval: 1000, delay: 3000 },
       { type: "hellhound", count: 1, interval: 1000, delay: 3000 },
       { type: "doom_herald", count: 1, interval: 1000, delay: 3000 },
-
-      // Academic progression
-      { type: "frosh", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 7: Academic Progression
+    [
+      { type: "frosh", count: 1, interval: 1000 },
       { type: "sophomore", count: 1, interval: 1000, delay: 3000 },
       { type: "junior", count: 1, interval: 1000, delay: 3000 },
       { type: "senior", count: 1, interval: 1000, delay: 3000 },
@@ -2787,18 +2945,21 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "professor", count: 1, interval: 1000, delay: 3000 },
       { type: "dean", count: 1, interval: 1000, delay: 3000 },
       { type: "trustee", count: 1, interval: 1000, delay: 3000 },
-      // Campus
-      { type: "mascot", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 8: Campus & Ranged
+    [
+      { type: "mascot", count: 1, interval: 1000 },
       { type: "athlete", count: 1, interval: 1000, delay: 3000 },
       { type: "tiger_fan", count: 1, interval: 1000, delay: 3000 },
-      // Ranged
       { type: "archer", count: 1, interval: 1000, delay: 3000 },
       { type: "mage", count: 1, interval: 1000, delay: 3000 },
       { type: "catapult", count: 1, interval: 1000, delay: 3000 },
       { type: "warlock", count: 1, interval: 1000, delay: 3000 },
       { type: "crossbowman", count: 1, interval: 1000, delay: 3000 },
-      // Swamp
-      { type: "hexer", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 9: Swamp Region
+    [
+      { type: "hexer", count: 1, interval: 1000 },
       { type: "harpy", count: 1, interval: 1000, delay: 3000 },
       { type: "wyvern", count: 1, interval: 1000, delay: 3000 },
       { type: "specter", count: 1, interval: 1000, delay: 3000 },
@@ -2812,23 +2973,31 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "bog_creature", count: 1, interval: 1000, delay: 3000 },
       { type: "will_o_wisp", count: 1, interval: 1000, delay: 3000 },
       { type: "swamp_troll", count: 1, interval: 1000, delay: 3000 },
-      // Desert
-      { type: "sandworm", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 10: Desert Region
+    [
+      { type: "sandworm", count: 1, interval: 1000 },
       { type: "nomad", count: 1, interval: 1000, delay: 3000 },
       { type: "scorpion", count: 1, interval: 1000, delay: 3000 },
       { type: "scarab", count: 1, interval: 1000, delay: 3000 },
-      // Winter
-      { type: "frostling", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 11: Winter Region
+    [
+      { type: "frostling", count: 1, interval: 1000 },
       { type: "snow_goblin", count: 1, interval: 1000, delay: 3000 },
       { type: "yeti", count: 1, interval: 1000, delay: 3000 },
       { type: "ice_witch", count: 1, interval: 1000, delay: 3000 },
-      // Volcanic
-      { type: "infernal", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 12: Volcanic Region
+    [
+      { type: "infernal", count: 1, interval: 1000 },
       { type: "magma_spawn", count: 1, interval: 1000, delay: 3000 },
       { type: "fire_imp", count: 1, interval: 1000, delay: 3000 },
       { type: "ember_guard", count: 1, interval: 1000, delay: 3000 },
-      // Boss / Special
-      { type: "banshee", count: 1, interval: 1000, delay: 3000 },
+    ],
+    // Wave 13: Boss / Special
+    [
+      { type: "banshee", count: 1, interval: 1000 },
       { type: "juggernaut", count: 1, interval: 1000, delay: 3000 },
       { type: "assassin", count: 1, interval: 1000, delay: 3000 },
       { type: "dragon", count: 1, interval: 1000, delay: 3000 },

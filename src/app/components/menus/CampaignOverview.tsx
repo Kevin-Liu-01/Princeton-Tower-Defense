@@ -11,6 +11,7 @@ import {
   MapPin,
   Map,
   Crown,
+  Eye,
 } from "lucide-react";
 import type { LevelStars } from "../../types";
 import type { LevelStats } from "../../hooks/useLocalStorage";
@@ -57,11 +58,69 @@ function MapPreviewBg({ src, fadeColor }: { src: string; fadeColor: string }) {
   );
 }
 
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div
+        className="flex-1 h-px"
+        style={{
+          background: `linear-gradient(90deg, ${GOLD.border25}, transparent)`,
+        }}
+      />
+      <span className="text-[9px] font-bold text-amber-500/80 uppercase tracking-[0.2em]">
+        {label}
+      </span>
+      <div
+        className="flex-1 h-px"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${GOLD.border25})`,
+        }}
+      />
+    </div>
+  );
+}
+
+interface StatPillProps {
+  icon: React.ReactNode;
+  value: number | string;
+  label: string;
+  bgLight: string;
+  bgDark: string;
+  border: string;
+  glow: string;
+  innerBorder: string;
+  textColor: string;
+  labelColor: string;
+}
+
+function StatPill({ icon, value, label, bgLight, bgDark, border, glow, innerBorder, textColor, labelColor }: StatPillProps) {
+  return (
+    <div
+      className="flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg relative flex-1"
+      style={{
+        background: `linear-gradient(135deg, ${bgLight}, ${bgDark})`,
+        border: `1px solid ${border}`,
+        boxShadow: `inset 0 0 8px ${glow}`,
+      }}
+    >
+      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${innerBorder}` }} />
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className={`text-sm font-bold ${textColor} tabular-nums`}>
+          {value}
+        </span>
+      </div>
+      <span className={`text-[8px] font-bold uppercase tracking-widest ${labelColor}`}>{label}</span>
+    </div>
+  );
+}
+
 interface CampaignOverviewProps {
   levelStars: LevelStars;
   levelStats: Record<string, LevelStats>;
   unlockedMaps: string[];
   onSelectLevel: (levelId: string) => void;
+  onTogglePreview?: () => void;
 }
 
 export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
@@ -69,6 +128,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   levelStats,
   unlockedMaps,
   onSelectLevel,
+  onTogglePreview,
 }) => {
   const unlockedSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
 
@@ -91,7 +151,6 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const totalBattles = Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0);
   const totalWins = Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0);
   const totalHearts = Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0);
-  const maxHearts = campaignLevels.length * 20;
 
   const lastPlayed = useMemo(() => findLastPlayedLevel(levelStats), [levelStats]);
   const lastPlayedLevel = lastPlayed
@@ -102,7 +161,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-auto relative">
-      {/* Decorative top-right corner image with gradient fade */}
+      {/* Decorative bg image */}
       {recommended && getPreviewImage(recommended.id) && (
         <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none z-0 overflow-hidden">
           <Image
@@ -110,12 +169,12 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             alt=""
             fill
             sizes="192px"
-            className="object-cover opacity-20"
+            className="object-cover opacity-15"
             style={{
               maskImage:
-                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.5) 30%, transparent 65%)",
+                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.4) 30%, transparent 65%)",
               WebkitMaskImage:
-                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.5) 30%, transparent 65%)",
+                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.4) 30%, transparent 65%)",
             }}
           />
         </div>
@@ -129,32 +188,46 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         }}
       />
 
-      {/* Header */}
+      {/* ═══════════════════════════════════════════════════
+          HEADER: Campaign title + star badge + progress
+          ═══════════════════════════════════════════════════ */}
       <div
-        className="flex-shrink-0 px-4 py-3 relative z-10"
+        className="flex-shrink-0 px-4 pt-4 pb-3 relative z-10"
         style={{ borderBottom: `1px solid ${GOLD.border25}` }}
       >
+        {/* Title row */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="relative">
-            <Map size={22} className="text-amber-400 drop-shadow-lg" />
-          </div>
-          <h2 className="text-lg font-bold text-amber-100 tracking-wide">
-            CAMPAIGN
+          <Map size={20} className="text-amber-400 drop-shadow-lg" />
+          <h2 className="text-base font-bold text-amber-100 tracking-wider uppercase">
+            Campaign
           </h2>
+          {onTogglePreview && (
+            <button
+              onClick={onTogglePreview}
+              className="ml-auto p-1.5 rounded-lg transition-all hover:scale-110 hover:brightness-125"
+              style={{
+                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                border: `1px solid ${GOLD.border25}`,
+              }}
+              title="Show Battle Scene"
+            >
+              <Eye size={14} className="text-amber-400/70" />
+            </button>
+          )}
         </div>
 
-        {/* Overall progress bar */}
+        {/* Progress section */}
         <div className="mb-2">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-amber-400/80 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-amber-500/70 uppercase tracking-widest">
               Overall Progress
             </span>
-            <span className="text-xs font-bold text-amber-200">
+            <span className="text-[11px] font-semibold text-amber-300/90 tabular-nums">
               {completedLevels}/{totalLevels} levels
             </span>
           </div>
           <div
-            className="h-3 rounded-full overflow-hidden relative"
+            className="h-2.5 rounded-full overflow-hidden relative"
             style={{
               background: PANEL.bgDeep,
               border: `1px solid ${GOLD.border25}`,
@@ -165,8 +238,8 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               style={{
                 width: `${progressPct}%`,
                 background:
-                  "linear-gradient(90deg, rgba(180,120,20,0.9), rgba(220,170,40,0.95), rgba(180,120,20,0.9))",
-                boxShadow: "0 0 8px rgba(220,170,40,0.4)",
+                  "linear-gradient(90deg, rgba(160,110,20,0.9), rgba(220,170,40,0.95), rgba(160,110,20,0.9))",
+                boxShadow: "0 0 10px rgba(220,170,40,0.35)",
               }}
             />
             <div
@@ -177,7 +250,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-1">
               <Star size={12} className="text-yellow-400 fill-yellow-400" />
-              <span className="text-xs text-amber-300 font-bold">
+              <span className="text-xs text-amber-300 font-bold tabular-nums">
                 {totalStars}
               </span>
               <span className="text-[10px] text-amber-600">/{maxStars}</span>
@@ -188,66 +261,59 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           </div>
         </div>
 
-        {/* Quick global stats row */}
-        <div className="grid grid-cols-3 gap-1.5 mt-2">
-          <div
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg relative"
-            style={{
-              background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
-              border: `1px solid ${BLUE_CARD.border}`,
-              boxShadow: `inset 0 0 8px ${BLUE_CARD.glow}`,
-            }}
-          >
-            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
-            <Swords size={12} className="text-blue-400/80 shrink-0" />
-            <span className="text-xs font-bold text-blue-300/90">
-              {totalBattles}
-            </span>
-            <span className="text-[7px] text-blue-500/60 font-bold uppercase tracking-wider">Played</span>
-          </div>
-          <div
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg relative"
-            style={{
-              background: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`,
-              border: `1px solid ${GREEN_CARD.border}`,
-              boxShadow: `inset 0 0 8px ${GREEN_CARD.glow}`,
-            }}
-          >
-            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
-            <Trophy size={12} className="text-emerald-400/80 shrink-0" />
-            <span className="text-xs font-bold text-emerald-300/90">
-              {totalWins}
-            </span>
-            <span className="text-[7px] text-emerald-500/60 font-bold uppercase tracking-wider">Wins</span>
-          </div>
-          <div
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg relative"
-            style={{
-              background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-              border: `1px solid ${RED_CARD.border}`,
-              boxShadow: `inset 0 0 8px ${RED_CARD.glow06}`,
-            }}
-          >
-            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-            <Heart size={12} className="text-red-400 fill-red-400 shrink-0" />
-            <span className="text-xs font-bold text-red-300/90">
-              {totalHearts}
-            </span>
-            <span className="text-[8px] text-red-700 font-semibold">/{maxHearts}</span>
-          </div>
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-1.5 mt-3">
+          <StatPill
+            icon={<Swords size={13} className="text-blue-400/90 shrink-0" />}
+            value={totalBattles}
+            label="Played"
+            bgLight={BLUE_CARD.bgLight}
+            bgDark={BLUE_CARD.bgDark}
+            border={BLUE_CARD.border}
+            glow={BLUE_CARD.glow}
+            innerBorder={BLUE_CARD.innerBorder}
+            textColor="text-blue-300"
+            labelColor="text-blue-500/60"
+          />
+          <StatPill
+            icon={<Trophy size={13} className="text-emerald-400/90 shrink-0" />}
+            value={totalWins}
+            label="Wins"
+            bgLight={GREEN_CARD.bgLight}
+            bgDark={GREEN_CARD.bgDark}
+            border={GREEN_CARD.border}
+            glow={GREEN_CARD.glow}
+            innerBorder={GREEN_CARD.innerBorder}
+            textColor="text-emerald-300"
+            labelColor="text-emerald-500/60"
+          />
+          <StatPill
+            icon={<Heart size={13} className="text-red-400 fill-red-400 shrink-0" />}
+            value={totalHearts}
+            label="Lives"
+            bgLight={RED_CARD.bgLight}
+            bgDark={RED_CARD.bgDark}
+            border={RED_CARD.border}
+            glow={RED_CARD.glow06}
+            innerBorder={RED_CARD.innerBorder12}
+            textColor="text-red-300"
+            labelColor="text-red-500/60"
+          />
         </div>
       </div>
 
-      {/* Continue Campaign CTA */}
+      {/* ═══════════════════════════════════════════════════
+          CONTINUE CAMPAIGN CTA
+          ═══════════════════════════════════════════════════ */}
       {recommended && (
-        <div className="flex-shrink-0 p-4 pb-2">
+        <div className="flex-shrink-0 px-4 pt-3 pb-1">
           <button
             onClick={() => onSelectLevel(recommended.id)}
-            className="w-full group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:brightness-110"
+            className="w-full group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99]"
             style={{
-              background: `linear-gradient(135deg, rgba(170,120,20,0.85), rgba(130,85,15,0.85))`,
+              background: `linear-gradient(135deg, rgba(170,120,20,0.85), rgba(120,78,12,0.85))`,
               border: `2px solid ${GOLD.accentBorder40}`,
-              boxShadow: `0 0 16px ${GOLD.accentGlow10}, inset 0 0 12px ${GOLD.accentGlow08}`,
+              boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
             }}
           >
             {getPreviewImage(recommended.id) && (
@@ -261,9 +327,9 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               style={{ border: `1px solid ${GOLD.accentBorder15}` }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-            <div className="relative px-3 py-3">
+            <div className="relative px-3.5 py-3">
               <div className="flex items-center gap-1.5 mb-2">
-                <Crown size={12} className="text-amber-300/80" />
+                <Crown size={11} className="text-amber-300/80" />
                 <span className="text-[9px] font-bold text-amber-300/90 uppercase tracking-[0.15em]">
                   Continue Campaign
                 </span>
@@ -274,10 +340,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     <RegionIcon type={recommended.region} size={36} framed />
                   </div>
                   <div className="flex flex-col items-start min-w-0">
-                    <div className="text-sm font-bold text-amber-100 leading-tight">
+                    <div className="text-sm font-bold text-amber-100 leading-tight truncate max-w-[140px]">
                       {recommended.name}
                     </div>
-                    <div className="text-[10px] text-amber-400/70 mt-0.5">
+                    <div className="text-[10px] text-amber-400/60 mt-0.5">
                       {REGION_META[recommended.region]?.displayName} &middot;{" "}
                       {recommended.difficulty === 1
                         ? "Easy"
@@ -287,38 +353,26 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     </div>
                   </div>
                 </div>
-                <ChevronRight size={20} className="text-amber-300/80 shrink-0" />
+                <ChevronRight size={20} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
           </button>
         </div>
       )}
 
-      {/* Region Breakdown */}
-      <div className="flex-1 overflow-y-auto p-4 pt-2">
-        <div className="flex items-center gap-2 mb-3">
-          <div
-            className="flex-1 h-px"
-            style={{
-              background: `linear-gradient(90deg, ${GOLD.border25}, transparent)`,
-            }}
-          />
-          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
-            Regions
-          </span>
-          <div
-            className="flex-1 h-px"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${GOLD.border25})`,
-            }}
-          />
+      {/* ═══════════════════════════════════════════════════
+          REGIONS LIST
+          ═══════════════════════════════════════════════════ */}
+      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4">
+        <div className="mb-2.5">
+          <SectionDivider label="Regions" />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {regionData.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }) => {
             const meta = REGION_META[region];
             const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
-            const isFullyComplete = stars === rMax;
+            const isFullyComplete = stars === rMax && rMax > 0;
             const regionPreview = targetLevel ? getPreviewImage(targetLevel.id) : undefined;
             return (
               <button
@@ -326,40 +380,40 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 onClick={() => {
                   if (targetLevel) onSelectLevel(targetLevel.id);
                 }}
-                className="w-full text-left rounded-lg overflow-hidden transition-all hover:brightness-110 relative"
+                className="w-full text-left rounded-xl overflow-hidden transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] relative"
                 style={{
                   background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
                   border: `1.5px solid ${meta.border}`,
-                  boxShadow: `inset 0 0 10px ${meta.glow}`,
+                  boxShadow: `inset 0 0 12px ${meta.glow}`,
                 }}
               >
                 {regionPreview && (
                   <MapPreviewBg src={regionPreview} fadeColor={meta.bgLight} />
                 )}
                 <div
-                  className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+                  className="absolute inset-[2px] rounded-[10px] pointer-events-none"
                   style={{
                     border: `1px solid rgba(255,255,255,0.06)`,
                   }}
                 />
-                <div className="relative px-3 py-2.5 flex items-center gap-2.5">
+                <div className="relative px-3 py-2.5 flex items-center gap-3">
                   <div className="shrink-0">
-                    <RegionIcon type={region} size={32} framed />
+                    <RegionIcon type={region} size={34} framed />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-amber-100 truncate">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[13px] font-bold text-amber-100 truncate">
                         {meta.displayName}
                       </span>
-                      <span className="text-[10px] text-amber-400/70 font-medium ml-2 shrink-0">
+                      <span className="text-[10px] text-amber-400/60 font-semibold ml-2 shrink-0 tabular-nums">
                         {completed}/{total}
                       </span>
                     </div>
                     <div
                       className="h-1.5 rounded-full overflow-hidden"
                       style={{
-                        background: "rgba(0,0,0,0.4)",
-                        border: "1px solid rgba(255,255,255,0.05)",
+                        background: "rgba(0,0,0,0.45)",
+                        border: "1px solid rgba(255,255,255,0.04)",
                       }}
                     >
                       <div
@@ -368,24 +422,24 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                           width: `${pct}%`,
                           background: isFullyComplete
                             ? "linear-gradient(90deg, rgba(220,170,40,0.9), rgba(250,200,60,0.95))"
-                            : `linear-gradient(90deg, ${meta.border}, ${meta.border})`,
+                            : `linear-gradient(90deg, ${meta.accent}cc, ${meta.accent}99)`,
                           boxShadow: isFullyComplete
                             ? "0 0 6px rgba(220,170,40,0.5)"
-                            : undefined,
+                            : `0 0 4px ${meta.accent}44`,
                         }}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-0.5 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Star
-                      size={11}
+                      size={12}
                       className={
                         stars > 0
                           ? "text-yellow-400 fill-yellow-400"
                           : "text-stone-600"
                       }
                     />
-                    <span className="text-[10px] font-bold text-amber-300/80">
+                    <span className="text-[10px] font-bold text-amber-300/70 tabular-nums">
                       {stars}/{rMax}
                     </span>
                   </div>
@@ -395,33 +449,21 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           })}
         </div>
 
-        {/* Last Played */}
+        {/* ═══════════════════════════════════════════════════
+            RECENT / LAST PLAYED
+            ═══════════════════════════════════════════════════ */}
         {lastPlayedLevel && lastPlayed && (
           <div className="mt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                className="flex-1 h-px"
-                style={{
-                  background: `linear-gradient(90deg, ${GOLD.border25}, transparent)`,
-                }}
-              />
-              <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
-                Recent
-              </span>
-              <div
-                className="flex-1 h-px"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${GOLD.border25})`,
-                }}
-              />
+            <div className="mb-2.5">
+              <SectionDivider label="Recent" />
             </div>
             <button
               onClick={() => onSelectLevel(lastPlayed.id)}
-              className="w-full text-left rounded-lg overflow-hidden transition-all hover:brightness-110 relative"
+              className="w-full text-left rounded-xl overflow-hidden transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] relative"
               style={{
                 background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                 border: `1.5px solid ${GOLD.border25}`,
-                boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
+                boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
               }}
             >
               {getPreviewImage(lastPlayed.id) && (
@@ -431,14 +473,14 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 />
               )}
               <div
-                className="absolute inset-[2px] rounded-[6px] pointer-events-none"
+                className="absolute inset-[2px] rounded-[10px] pointer-events-none"
                 style={{ border: `1px solid ${GOLD.innerBorder08}` }}
               />
-              <div className="relative px-3 py-2.5">
-                <div className="flex items-center justify-between mb-1">
+              <div className="relative px-3.5 py-2.5">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <MapPin size={13} className="text-amber-400" />
-                    <span className="text-xs font-bold text-amber-100">
+                    <MapPin size={14} className="text-amber-400/80" />
+                    <span className="text-[13px] font-bold text-amber-100">
                       {lastPlayedLevel.name}
                     </span>
                   </div>
@@ -446,7 +488,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     {[1, 2, 3].map((s) => (
                       <Star
                         key={s}
-                        size={12}
+                        size={13}
                         className={
                           (levelStars[lastPlayed.id] || 0) >= s
                             ? "text-yellow-400 fill-yellow-400"
@@ -458,20 +500,20 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 </div>
                 <div className="flex items-center gap-3 text-[10px]">
                   {lastPlayed.stats.bestHearts !== undefined && (
-                    <span className="flex items-center gap-1 text-red-300/80">
+                    <span className="flex items-center gap-1 text-red-300/70">
                       <Heart size={10} className="fill-red-400 text-red-400" />
                       {lastPlayed.stats.bestHearts}/20
                     </span>
                   )}
                   {lastPlayed.stats.bestTime !== undefined && (
-                    <span className="flex items-center gap-1 text-blue-300/80">
+                    <span className="flex items-center gap-1 text-blue-300/70">
                       <Clock size={10} />
                       {Math.floor(lastPlayed.stats.bestTime / 60)}m{" "}
                       {lastPlayed.stats.bestTime % 60}s
                     </span>
                   )}
                   {lastPlayed.stats.timesPlayed !== undefined && (
-                    <span className="flex items-center gap-1 text-amber-400/70">
+                    <span className="flex items-center gap-1 text-amber-400/60">
                       <Swords size={10} />
                       {lastPlayed.stats.timesPlayed} plays
                     </span>
@@ -482,9 +524,9 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           </div>
         )}
 
-        {/* Lore flavor at the bottom */}
+        {/* Bottom lore */}
         <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-          <p className="text-[9px] text-amber-200/40 leading-relaxed italic text-center">
+          <p className="text-[9px] text-amber-200/30 leading-relaxed italic text-center">
             &ldquo;The shadows gather at the gates. Ancient towers stand
             resolute, their arcane fires burning eternal against the
             darkness.&rdquo;

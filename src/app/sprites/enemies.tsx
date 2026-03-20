@@ -76,6 +76,54 @@ export type EnemyType =
   | "abomination"
   | "hellhound"
   | "doom_herald"
+  // Bug enemies - Grassland
+  | "orb_weaver"
+  | "mantis"
+  | "bombardier_beetle"
+  // Bug enemies - Swamp
+  | "mosquito"
+  | "centipede"
+  | "dragonfly"
+  | "silk_moth"
+  // Bug enemies - Desert
+  | "ant_soldier"
+  | "locust"
+  | "trapdoor_spider"
+  // Bug enemies - Winter
+  | "ice_beetle"
+  | "frost_tick"
+  | "snow_moth"
+  // Bug enemies - Volcanic
+  | "fire_ant"
+  | "magma_beetle"
+  | "ash_moth"
+  // Bug boss
+  | "brood_mother"
+  // Fantasy creatures - Grassland
+  | "dire_bear"
+  | "ancient_ent"
+  | "forest_troll"
+  | "timber_wolf"
+  | "giant_eagle"
+  // Fantasy creatures - Swamp
+  | "swamp_hydra"
+  | "giant_toad"
+  | "vine_serpent"
+  | "marsh_troll"
+  // Fantasy creatures - Desert
+  | "phoenix"
+  | "basilisk"
+  | "djinn"
+  | "manticore"
+  // Fantasy creatures - Winter
+  | "frost_troll"
+  | "dire_wolf"
+  | "wendigo"
+  | "mammoth"
+  // Fantasy creatures - Volcanic
+  | "lava_golem"
+  | "volcanic_drake"
+  | "salamander"
   // Regional Giant Bosses
   | "titan_of_nassau"
   | "swamp_leviathan"
@@ -130,6 +178,43 @@ export const ENEMY_COLORS: Record<string, string> = {
   sphinx_guardian: "#f9a825",
   frost_colossus: "#4dd0e1",
   inferno_wyrm: "#d50000",
+  orb_weaver: "#4a3728",
+  mantis: "#65a30d",
+  bombardier_beetle: "#1e3a5f",
+  mosquito: "#6b2142",
+  centipede: "#7c2d12",
+  dragonfly: "#0ea5e9",
+  silk_moth: "#c4b5fd",
+  ant_soldier: "#92400e",
+  locust: "#a3a323",
+  trapdoor_spider: "#78350f",
+  ice_beetle: "#67e8f9",
+  frost_tick: "#a5f3fc",
+  snow_moth: "#e0f2fe",
+  fire_ant: "#dc2626",
+  magma_beetle: "#b91c1c",
+  ash_moth: "#f97316",
+  brood_mother: "#1c1917",
+  dire_bear: "#5c3a1e",
+  ancient_ent: "#2d5016",
+  forest_troll: "#4a6741",
+  timber_wolf: "#6b6b6b",
+  giant_eagle: "#c8a050",
+  swamp_hydra: "#2e4a2e",
+  giant_toad: "#5a7a3a",
+  vine_serpent: "#3a6b3a",
+  marsh_troll: "#4a5a3a",
+  phoenix: "#ff6600",
+  basilisk: "#6b6b3a",
+  djinn: "#6a3aaa",
+  manticore: "#8b4513",
+  frost_troll: "#5a8aaa",
+  dire_wolf: "#4a4a5a",
+  wendigo: "#3a3a4a",
+  mammoth: "#8b7355",
+  lava_golem: "#8b2500",
+  volcanic_drake: "#cc3300",
+  salamander: "#ff4500",
 };
 export const EnemySprite: React.FC<{
   type: EnemyType;
@@ -141,7 +226,7 @@ export const EnemySprite: React.FC<{
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = setupSpriteCanvas(canvas, size, size);
-    if (!ctx) return;
+    if (!ctx || size <= 0) return;
     const cx = size / 2;
     let cy = size / 2;
     const scale = size / 45;
@@ -13622,6 +13707,2729 @@ export const EnemySprite: React.FC<{
           ctx.fill();
         }
 
+        break;
+      }
+
+      case "orb_weaver": {
+        const spiderColor = "#4a3728";
+        const bodyX = cx;
+        const bodyY = cy + bounce;
+
+        // 8 Legs (4 per side)
+        ctx.strokeStyle = spiderColor;
+        ctx.lineWidth = 1.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const angle = (i * 0.35 + 0.3);
+          const legLen = (8 + i * 1.5) * scale;
+          const kneeLen = legLen * 0.55;
+          const legWave = Math.sin(t * 3 + i * 1.5) * 2 * scale;
+          for (const dir of [-1, 1]) {
+            const kx = bodyX + dir * kneeLen * Math.cos(angle);
+            const ky = bodyY + kneeLen * Math.sin(angle) + legWave;
+            const ex = bodyX + dir * legLen * Math.cos(angle - 0.3);
+            const ey = bodyY + legLen * Math.sin(angle + 0.2) + legWave * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(bodyX, bodyY);
+            ctx.lineTo(kx, ky);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+          }
+        }
+
+        // Web silk trailing
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bodyX, bodyY + 6 * scale);
+        ctx.quadraticCurveTo(bodyX + Math.sin(t * 2) * 4 * scale, bodyY + 14 * scale, bodyX + Math.sin(t) * 2 * scale, bodyY + 20 * scale);
+        ctx.stroke();
+
+        // Abdomen with cross pattern
+        ctx.fillStyle = spiderColor;
+        ctx.beginPath();
+        ctx.ellipse(bodyX, bodyY + 3 * scale, 5 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#8b7355";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bodyX, bodyY - 1 * scale);
+        ctx.lineTo(bodyX, bodyY + 7 * scale);
+        ctx.moveTo(bodyX - 3 * scale, bodyY + 3 * scale);
+        ctx.lineTo(bodyX + 3 * scale, bodyY + 3 * scale);
+        ctx.stroke();
+
+        // Cephalothorax
+        ctx.fillStyle = "#5c4a3a";
+        ctx.beginPath();
+        ctx.ellipse(bodyX, bodyY - 4 * scale, 3.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Red eyes
+        ctx.fillStyle = "#ff0000";
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = 4 * scale;
+        for (const dx of [-1.5, -0.5, 0.5, 1.5]) {
+          ctx.beginPath();
+          ctx.arc(bodyX + dx * scale, bodyY - 5 * scale, 0.6 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case "mantis": {
+        const mantisColor = "#65a30d";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Abdomen
+        ctx.fillStyle = "#4d7c0f";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 6 * scale, 3 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thorax
+        ctx.fillStyle = mantisColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale, 2.5 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Triangular head
+        ctx.fillStyle = "#84cc16";
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 10 * scale);
+        ctx.lineTo(bx - 3 * scale, by - 6 * scale);
+        ctx.lineTo(bx + 3 * scale, by - 6 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Compound eyes
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(bx - 2.5 * scale, by - 8 * scale, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 2.5 * scale, by - 8 * scale, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Scythe arms (raptorial forelegs)
+        ctx.strokeStyle = mantisColor;
+        ctx.lineWidth = 2 * scale;
+        const armSwing = Math.sin(t * 4) * 0.3;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 2 * scale, by - 3 * scale);
+          ctx.lineTo(bx + dir * 7 * scale, by - 8 * scale + armSwing * 3 * scale);
+          ctx.lineTo(bx + dir * 4 * scale, by - 13 * scale + armSwing * 5 * scale);
+          ctx.stroke();
+          // Serrated edge
+          ctx.strokeStyle = "#a3e635";
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 7 * scale, by - 8 * scale + armSwing * 3 * scale);
+          ctx.lineTo(bx + dir * 4 * scale, by - 13 * scale + armSwing * 5 * scale);
+          ctx.stroke();
+          ctx.strokeStyle = mantisColor;
+          ctx.lineWidth = 2 * scale;
+        }
+
+        // Back legs
+        ctx.strokeStyle = "#4d7c0f";
+        ctx.lineWidth = 1.2 * scale;
+        for (let i = 0; i < 2; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx, by + (2 + i * 4) * scale);
+            ctx.lineTo(bx + dir * 6 * scale, by + (5 + i * 3) * scale);
+            ctx.lineTo(bx + dir * 4 * scale, by + (10 + i * 2) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "bombardier_beetle": {
+        const beetleColor = "#1e3a5f";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Elytra (wing covers) with metallic sheen
+        ctx.fillStyle = beetleColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 6 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Metallic highlight
+        const grad = ctx.createLinearGradient(bx - 4 * scale, by - 4 * scale, bx + 4 * scale, by + 6 * scale);
+        grad.addColorStop(0, "rgba(100,180,255,0.3)");
+        grad.addColorStop(0.5, "rgba(255,255,255,0.15)");
+        grad.addColorStop(1, "rgba(100,180,255,0.1)");
+        ctx.fillStyle = grad;
+        ctx.fill();
+        // Elytra split line
+        ctx.strokeStyle = "#0f2640";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 6 * scale);
+        ctx.lineTo(bx, by + 8 * scale);
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = "#162d4a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 7 * scale, 3 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = "#2a4a6f";
+        ctx.lineWidth = 0.8 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 1.5 * scale, by - 9 * scale);
+          ctx.quadraticCurveTo(bx + dir * 5 * scale, by - 14 * scale, bx + dir * 3 * scale, by - 12 * scale);
+          ctx.stroke();
+        }
+
+        // Legs
+        ctx.strokeStyle = "#1e3a5f";
+        ctx.lineWidth = 1.2 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            const ly = by + (-2 + i * 3) * scale;
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 4 * scale, ly);
+            ctx.lineTo(bx + dir * 8 * scale, ly + 3 * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Acid nozzle at rear
+        ctx.fillStyle = "#84cc16";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 8 * scale, 2 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Acid spray
+        const sprayAlpha = 0.3 + Math.sin(t * 5) * 0.2;
+        ctx.fillStyle = `rgba(132, 204, 22, ${sprayAlpha})`;
+        for (let i = 0; i < 3; i++) {
+          const sx = bx + (Math.sin(t * 4 + i * 2) * 2) * scale;
+          const sy = by + (10 + i * 2 + Math.sin(t * 3 + i) * 1) * scale;
+          ctx.beginPath();
+          ctx.arc(sx, sy, (1.5 - i * 0.3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "mosquito": {
+        const bx = cx;
+        const by = cy + bounce;
+        const wingFlap = Math.sin(t * 12) * 0.5;
+
+        // Translucent wings
+        ctx.fillStyle = "rgba(200, 200, 255, 0.25)";
+        ctx.strokeStyle = "rgba(200, 200, 255, 0.4)";
+        ctx.lineWidth = 0.5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 5 * scale, by - 3 * scale, 4 * scale, 8 * scale, dir * (0.3 + wingFlap), 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Abdomen (blood-filled, dark red)
+        ctx.fillStyle = "#6b2142";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 4 * scale, 2 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Stripes
+        ctx.strokeStyle = "#8b3a5e";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(bx - 1.5 * scale, by + (2 + i * 2) * scale);
+          ctx.lineTo(bx + 1.5 * scale, by + (2 + i * 2) * scale);
+          ctx.stroke();
+        }
+
+        // Thorax
+        ctx.fillStyle = "#4a1830";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale, 2.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#3a1228";
+        ctx.beginPath();
+        ctx.arc(bx, by - 5 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Red eyes
+        ctx.fillStyle = "#ff0000";
+        ctx.shadowColor = "#ff0000";
+        ctx.shadowBlur = 3 * scale;
+        ctx.beginPath();
+        ctx.arc(bx - 1.5 * scale, by - 5.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.5 * scale, by - 5.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Long proboscis
+        ctx.strokeStyle = "#6b2142";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 7 * scale);
+        ctx.lineTo(bx, by - 15 * scale);
+        ctx.stroke();
+
+        // 6 thin legs
+        ctx.strokeStyle = "#4a1830";
+        ctx.lineWidth = 0.6 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx, by + i * 2 * scale);
+            ctx.lineTo(bx + dir * 6 * scale, by + (4 + i * 2) * scale);
+            ctx.lineTo(bx + dir * 5 * scale, by + (8 + i * 2) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "centipede": {
+        const centColor = "#7c2d12";
+        const bx = cx;
+        const by = cy + bounce;
+        const segments = 8;
+
+        // Segmented body
+        for (let i = 0; i < segments; i++) {
+          const sx = bx + Math.sin(t * 3 + i * 0.8) * 2 * scale;
+          const sy = by + (i - segments / 2) * 2.5 * scale;
+          const segColor = i === 0 ? "#991b1b" : centColor;
+          ctx.fillStyle = segColor;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, (3 - i * 0.15) * scale, 1.3 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Legs on each segment (except head)
+          if (i > 0) {
+            ctx.strokeStyle = "#9a3412";
+            ctx.lineWidth = 0.8 * scale;
+            const legWave = Math.sin(t * 5 + i * 1.2);
+            for (const dir of [-1, 1]) {
+              ctx.beginPath();
+              ctx.moveTo(sx + dir * 2.5 * scale, sy);
+              ctx.lineTo(sx + dir * (5 + legWave) * scale, sy + 2 * scale);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Forcipules (venomous pincers)
+        const headX = bx + Math.sin(t * 3) * 2 * scale;
+        const headY = by - segments / 2 * 2.5 * scale;
+        ctx.strokeStyle = "#dc2626";
+        ctx.lineWidth = 1.2 * scale;
+        const pincerOpen = Math.sin(t * 4) * 0.3;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(headX + dir * 1.5 * scale, headY);
+          ctx.lineTo(headX + dir * (3 + pincerOpen) * scale, headY - 3 * scale);
+          ctx.stroke();
+        }
+
+        // Eyes
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(headX - 1.2 * scale, headY - 0.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(headX + 1.2 * scale, headY - 0.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Poison drip from forcipules
+        const dripAlpha = 0.4 + Math.sin(t * 6) * 0.3;
+        ctx.fillStyle = `rgba(74, 222, 128, ${dripAlpha})`;
+        ctx.beginPath();
+        ctx.arc(headX, headY - 4 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case "dragonfly": {
+        const dfColor = "#0ea5e9";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingBeat = Math.sin(t * 10) * 0.4;
+
+        // 4 iridescent wings
+        for (let pair = 0; pair < 2; pair++) {
+          const wy = by + (-2 + pair * 3) * scale;
+          for (const dir of [-1, 1]) {
+            const iridGrad = ctx.createLinearGradient(bx, wy, bx + dir * 10 * scale, wy);
+            iridGrad.addColorStop(0, "rgba(14, 165, 233, 0.35)");
+            iridGrad.addColorStop(0.5, "rgba(168, 85, 247, 0.25)");
+            iridGrad.addColorStop(1, "rgba(20, 184, 166, 0.15)");
+            ctx.fillStyle = iridGrad;
+            ctx.beginPath();
+            ctx.ellipse(bx + dir * 6 * scale, wy, (8 - pair) * scale, (2.5 - pair * 0.3) * scale, dir * wingBeat * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            // Wing veins
+            ctx.strokeStyle = "rgba(14, 165, 233, 0.3)";
+            ctx.lineWidth = 0.3 * scale;
+            ctx.beginPath();
+            ctx.moveTo(bx, wy);
+            ctx.lineTo(bx + dir * (12 - pair * 2) * scale, wy);
+            ctx.stroke();
+          }
+        }
+
+        // Long segmented abdomen
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = i % 2 === 0 ? dfColor : "#0284c7";
+          ctx.beginPath();
+          ctx.ellipse(bx, by + (3 + i * 2.2) * scale, (2.2 - i * 0.15) * scale, 1.2 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Thorax
+        ctx.fillStyle = "#0369a1";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 3 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Huge compound eyes
+        ctx.fillStyle = "#22d3ee";
+        ctx.shadowColor = "#22d3ee";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(bx - 2.5 * scale, by - 4 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 2.5 * scale, by - 4 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Eye highlights
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(bx - 3 * scale, by - 4.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 2 * scale, by - 4.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case "silk_moth": {
+        const mothColor = "#c4b5fd";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingPulse = Math.sin(t * 3) * 0.15;
+
+        // Ornate wings
+        for (const dir of [-1, 1]) {
+          // Upper wings
+          ctx.fillStyle = mothColor;
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 6 * scale, by - 2 * scale, 6 * scale, 8 * scale, dir * (0.2 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+          // Wing border
+          ctx.strokeStyle = "#a78bfa";
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 6 * scale, by - 2 * scale, 6 * scale, 8 * scale, dir * (0.2 + wingPulse), 0, Math.PI * 2);
+          ctx.stroke();
+          // Eye spots on wings
+          ctx.fillStyle = "#7c3aed";
+          ctx.beginPath();
+          ctx.arc(bx + dir * 6 * scale, by - 2 * scale, 2.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1e1b4b";
+          ctx.beginPath();
+          ctx.arc(bx + dir * 6 * scale, by - 2 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.5)";
+          ctx.beginPath();
+          ctx.arc(bx + dir * 5.5 * scale, by - 2.5 * scale, 0.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          // Lower wings
+          ctx.fillStyle = "#ddd6fe";
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 4 * scale, by + 5 * scale, 4 * scale, 5 * scale, dir * (0.4 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Fuzzy body
+        ctx.fillStyle = "#e9d5ff";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 2 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Feathery antennae
+        ctx.strokeStyle = "#c4b5fd";
+        ctx.lineWidth = 0.8 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 6 * scale);
+          ctx.quadraticCurveTo(bx + dir * 4 * scale, by - 12 * scale, bx + dir * 6 * scale, by - 14 * scale);
+          ctx.stroke();
+          // Feather branches
+          for (let f = 0; f < 3; f++) {
+            const fx = bx + dir * (2 + f * 1.5) * scale;
+            const fy = by - (8 + f * 2) * scale;
+            ctx.beginPath();
+            ctx.moveTo(fx, fy);
+            ctx.lineTo(fx + dir * 2 * scale, fy - 1.5 * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "ant_soldier": {
+        const antColor = "#92400e";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Gaster (rear)
+        ctx.fillStyle = antColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 6 * scale, 4 * scale, 4.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Petiole (waist)
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.arc(bx, by + 1 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mesosoma (thorax)
+        ctx.fillStyle = antColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 3 * scale, 3 * scale, 3.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#a0522d";
+        ctx.beginPath();
+        ctx.arc(bx, by - 8 * scale, 3.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Oversized mandibles
+        ctx.strokeStyle = "#451a03";
+        ctx.lineWidth = 2 * scale;
+        const mandibleOpen = 0.2 + Math.sin(t * 4) * 0.15;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 2 * scale, by - 9 * scale, 3 * scale, Math.PI * 0.5 - dir * mandibleOpen, Math.PI * 0.5 + 0.6 * dir);
+          ctx.stroke();
+        }
+
+        // Elbowed antennae
+        ctx.strokeStyle = antColor;
+        ctx.lineWidth = 0.8 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 2 * scale, by - 10 * scale);
+          ctx.lineTo(bx + dir * 5 * scale, by - 11 * scale);
+          ctx.lineTo(bx + dir * 4 * scale, by - 14 * scale);
+          ctx.stroke();
+        }
+
+        // Eyes
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(bx - 1.8 * scale, by - 8.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.8 * scale, by - 8.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 6 legs
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            const ly = by + (-4 + i * 3) * scale;
+            const legAnim = Math.sin(t * 4 + i * 1.5) * 1.5 * scale;
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 2.5 * scale, ly);
+            ctx.lineTo(bx + dir * 6 * scale, ly + 2 * scale + legAnim);
+            ctx.lineTo(bx + dir * 5 * scale, ly + 5 * scale + legAnim);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "locust": {
+        const locustColor = "#a3a323";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingSpread = 0.3 + Math.sin(t * 6) * 0.15;
+
+        // Spread wings
+        ctx.fillStyle = "rgba(163, 163, 35, 0.3)";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 6 * scale, by - 2 * scale, 7 * scale, 3.5 * scale, dir * wingSpread, 0, Math.PI * 2);
+          ctx.fill();
+          // Wing veins
+          ctx.strokeStyle = "rgba(163, 163, 35, 0.5)";
+          ctx.lineWidth = 0.4 * scale;
+          for (let v = 0; v < 4; v++) {
+            ctx.beginPath();
+            ctx.moveTo(bx, by - 2 * scale);
+            ctx.lineTo(bx + dir * (4 + v * 2) * scale, by + (-4 + v * 1.5) * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Abdomen
+        ctx.fillStyle = locustColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 3 * scale, 3 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thorax
+        ctx.fillStyle = "#858517";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 3 * scale, 3.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = locustColor;
+        ctx.beginPath();
+        ctx.arc(bx, by - 7 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Eyes
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(bx - 1.5 * scale, by - 7.5 * scale, 0.9 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.5 * scale, by - 7.5 * scale, 0.9 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Large hind legs
+        ctx.strokeStyle = "#6b6b12";
+        ctx.lineWidth = 1.8 * scale;
+        for (const dir of [-1, 1]) {
+          // Femur (thick upper)
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 2 * scale, by + 2 * scale);
+          ctx.lineTo(bx + dir * 7 * scale, by - 3 * scale);
+          ctx.stroke();
+          // Tibia (thin lower)
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 7 * scale, by - 3 * scale);
+          ctx.lineTo(bx + dir * 5 * scale, by + 8 * scale);
+          ctx.stroke();
+          ctx.lineWidth = 1.8 * scale;
+        }
+
+        // Front legs
+        ctx.lineWidth = 0.8 * scale;
+        for (let i = 0; i < 2; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 2 * scale, by + (-2 + i * 2) * scale);
+            ctx.lineTo(bx + dir * 5 * scale, by + (2 + i * 2) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "trapdoor_spider": {
+        const tdColor = "#78350f";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Dirt camouflage particles on body
+        for (let i = 0; i < 6; i++) {
+          const dx = bx + (Math.sin(i * 2.3) * 4) * scale;
+          const dy = by + (Math.cos(i * 1.7) * 4) * scale;
+          ctx.fillStyle = `rgba(120, 80, 40, ${0.3 + Math.random() * 0.2})`;
+          ctx.beginPath();
+          ctx.arc(dx, dy, (0.5 + Math.random() * 0.8) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Stocky legs (shorter, thicker)
+        ctx.strokeStyle = "#5c2a0a";
+        ctx.lineWidth = 2 * scale;
+        for (let i = 0; i < 4; i++) {
+          const angle = (i * 0.4 + 0.2);
+          for (const dir of [-1, 1]) {
+            const kx = bx + dir * 5 * scale * Math.cos(angle);
+            const ky = by + 4 * scale * Math.sin(angle) + Math.sin(t * 2 + i) * scale;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(kx, ky);
+            ctx.lineTo(kx + dir * 2 * scale, ky + 3 * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Stocky abdomen
+        ctx.fillStyle = tdColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 5.5 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Dirt texture
+        ctx.fillStyle = "#6b3410";
+        ctx.beginPath();
+        ctx.ellipse(bx - 2 * scale, by + 1 * scale, 1.5 * scale, 1 * scale, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(bx + 1.5 * scale, by + 3 * scale, 1 * scale, 1.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cephalothorax
+        ctx.fillStyle = "#5c2a0a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 4 * scale, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Large downward fangs
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.moveTo(bx - 1.5 * scale, by - 5 * scale);
+        ctx.lineTo(bx - 2 * scale, by - 1 * scale);
+        ctx.lineTo(bx - 0.5 * scale, by - 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(bx + 1.5 * scale, by - 5 * scale);
+        ctx.lineTo(bx + 2 * scale, by - 1 * scale);
+        ctx.lineTo(bx + 0.5 * scale, by - 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Eyes (4 in a row)
+        ctx.fillStyle = "#fbbf24";
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.arc(bx + (i - 1.5) * 1.5 * scale, by - 6 * scale, 0.6 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "ice_beetle": {
+        const iceColor = "#67e8f9";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Frost aura
+        ctx.shadowColor = "#67e8f9";
+        ctx.shadowBlur = 10 * scale;
+        const frostAlpha = 0.15 + Math.sin(t * 2) * 0.08;
+        ctx.fillStyle = `rgba(103, 232, 249, ${frostAlpha})`;
+        ctx.beginPath();
+        ctx.arc(bx, by, 10 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Crystalline elytra
+        const iceGrad = ctx.createLinearGradient(bx - 5 * scale, by - 5 * scale, bx + 5 * scale, by + 5 * scale);
+        iceGrad.addColorStop(0, "#a5f3fc");
+        iceGrad.addColorStop(0.5, "#67e8f9");
+        iceGrad.addColorStop(1, "#22d3ee");
+        ctx.fillStyle = iceGrad;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 5.5 * scale, 6.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Crystal facets
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.lineWidth = 0.6 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 5 * scale);
+        ctx.lineTo(bx, by + 7 * scale);
+        ctx.moveTo(bx - 4 * scale, by);
+        ctx.lineTo(bx + 4 * scale, by);
+        ctx.moveTo(bx - 3 * scale, by - 4 * scale);
+        ctx.lineTo(bx + 3 * scale, by + 4 * scale);
+        ctx.stroke();
+
+        // Ice horn
+        ctx.fillStyle = "#cffafe";
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 12 * scale);
+        ctx.lineTo(bx - 2 * scale, by - 5 * scale);
+        ctx.lineTo(bx + 2 * scale, by - 5 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.6)";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = "#22d3ee";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 6 * scale, 3 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(bx - 1.5 * scale, by - 6.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.5 * scale, by - 6.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Legs
+        ctx.strokeStyle = "#22d3ee";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 4 * scale, by + (-2 + i * 3) * scale);
+            ctx.lineTo(bx + dir * 8 * scale, by + (1 + i * 3) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "frost_tick": {
+        const tickColor = "#a5f3fc";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Shield-like flat body
+        const shieldGrad = ctx.createRadialGradient(bx, by, 0, bx, by, 7 * scale);
+        shieldGrad.addColorStop(0, "#e0f2fe");
+        shieldGrad.addColorStop(0.6, tickColor);
+        shieldGrad.addColorStop(1, "#67e8f9");
+        ctx.fillStyle = shieldGrad;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 6 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Shield texture lines
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 1; i <= 3; i++) {
+          ctx.beginPath();
+          ctx.ellipse(bx, by, i * 2 * scale, i * 2.3 * scale, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Barbed proboscis
+        ctx.strokeStyle = "#0891b2";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 7 * scale);
+        ctx.lineTo(bx, by - 12 * scale);
+        ctx.stroke();
+        // Barbs
+        ctx.lineWidth = 0.6 * scale;
+        for (let b = 0; b < 3; b++) {
+          const barbY = by - (8 + b * 1.5) * scale;
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx, barbY);
+            ctx.lineTo(bx + dir * 1.5 * scale, barbY + 1 * scale);
+            ctx.stroke();
+          }
+        }
+
+        // 8 short legs
+        ctx.strokeStyle = "#67e8f9";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 4; i++) {
+          for (const dir of [-1, 1]) {
+            const ly = by + (-3 + i * 2.5) * scale;
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 5 * scale, ly);
+            ctx.lineTo(bx + dir * 8 * scale, ly + 2 * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Frost particles
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        for (let i = 0; i < 4; i++) {
+          const px = bx + Math.sin(t * 2 + i * 1.5) * 8 * scale;
+          const py = by + Math.cos(t * 2 + i * 1.5) * 8 * scale;
+          ctx.beginPath();
+          ctx.arc(px, py, 0.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "snow_moth": {
+        const snowColor = "#e0f2fe";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingPulse = Math.sin(t * 3.5) * 0.12;
+
+        // Frost-patterned wings
+        for (const dir of [-1, 1]) {
+          ctx.fillStyle = snowColor;
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 6 * scale, by - 1 * scale, 6 * scale, 8 * scale, dir * (0.15 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+          // Frost pattern
+          ctx.strokeStyle = "rgba(186, 230, 253, 0.6)";
+          ctx.lineWidth = 0.6 * scale;
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 3 * scale, by - 5 * scale);
+          ctx.lineTo(bx + dir * 8 * scale, by + 2 * scale);
+          ctx.moveTo(bx + dir * 4 * scale, by - 2 * scale);
+          ctx.lineTo(bx + dir * 9 * scale, by - 4 * scale);
+          ctx.stroke();
+          // Lower wings
+          ctx.fillStyle = "#f0f9ff";
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 4 * scale, by + 5 * scale, 4 * scale, 4.5 * scale, dir * (0.3 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Body
+        ctx.fillStyle = "#bae6fd";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 1.8 * scale, 5.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = "#bae6fd";
+        ctx.lineWidth = 0.6 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 5.5 * scale);
+          ctx.quadraticCurveTo(bx + dir * 3 * scale, by - 10 * scale, bx + dir * 4 * scale, by - 12 * scale);
+          ctx.stroke();
+        }
+
+        // Snowflake particles
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        for (let i = 0; i < 5; i++) {
+          const angle = t * 0.8 + i * (Math.PI * 2 / 5);
+          const dist = (8 + Math.sin(t + i) * 3) * scale;
+          const px = bx + Math.cos(angle) * dist;
+          const py = by + Math.sin(angle) * dist;
+          ctx.beginPath();
+          ctx.arc(px, py, 0.6 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          // Tiny cross for snowflake
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 0.3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(px - scale, py);
+          ctx.lineTo(px + scale, py);
+          ctx.moveTo(px, py - scale);
+          ctx.lineTo(px, py + scale);
+          ctx.stroke();
+        }
+        break;
+      }
+
+      case "fire_ant": {
+        const fireAntColor = "#dc2626";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Fire glow abdomen
+        ctx.shadowColor = "#f97316";
+        ctx.shadowBlur = 8 * scale;
+        const glowGrad = ctx.createRadialGradient(bx, by + 6 * scale, 0, bx, by + 6 * scale, 5 * scale);
+        glowGrad.addColorStop(0, "#fbbf24");
+        glowGrad.addColorStop(0.5, fireAntColor);
+        glowGrad.addColorStop(1, "#991b1b");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 6 * scale, 4.5 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Petiole
+        ctx.fillStyle = "#b91c1c";
+        ctx.beginPath();
+        ctx.arc(bx, by + 1 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thorax
+        ctx.fillStyle = fireAntColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 3 * scale, 3 * scale, 3.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.arc(bx, by - 8 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crown (queen)
+        ctx.fillStyle = "#fbbf24";
+        ctx.strokeStyle = "#f59e0b";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 3 * scale, by - 10 * scale);
+        ctx.lineTo(bx - 2 * scale, by - 13 * scale);
+        ctx.lineTo(bx - 0.5 * scale, by - 11 * scale);
+        ctx.lineTo(bx, by - 14 * scale);
+        ctx.lineTo(bx + 0.5 * scale, by - 11 * scale);
+        ctx.lineTo(bx + 2 * scale, by - 13 * scale);
+        ctx.lineTo(bx + 3 * scale, by - 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Eyes
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(bx - 1.5 * scale, by - 8.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.5 * scale, by - 8.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = fireAntColor;
+        ctx.lineWidth = 0.7 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 2 * scale, by - 10 * scale);
+          ctx.lineTo(bx + dir * 5 * scale, by - 11 * scale);
+          ctx.lineTo(bx + dir * 4 * scale, by - 13 * scale);
+          ctx.stroke();
+        }
+
+        // 6 legs
+        ctx.strokeStyle = "#991b1b";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 2 * scale, by + (-3 + i * 3) * scale);
+            ctx.lineTo(bx + dir * 6 * scale, by + (0 + i * 3) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "magma_beetle": {
+        const magmaBase = "#b91c1c";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Ember particles
+        for (let i = 0; i < 4; i++) {
+          const ex = bx + Math.sin(t * 3 + i * 1.7) * 8 * scale;
+          const ey = by - (3 + i * 2 + Math.sin(t * 2 + i) * 2) * scale;
+          const eAlpha = 0.4 + Math.sin(t * 4 + i) * 0.3;
+          ctx.fillStyle = `rgba(251, 191, 36, ${eAlpha})`;
+          ctx.beginPath();
+          ctx.arc(ex, ey, (0.5 + Math.sin(t * 5 + i) * 0.3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Dark obsidian elytra
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 6 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Lava cracks
+        ctx.strokeStyle = magmaBase;
+        ctx.lineWidth = 1 * scale;
+        ctx.shadowColor = "#f97316";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 2 * scale, by - 4 * scale);
+        ctx.lineTo(bx - 1 * scale, by);
+        ctx.lineTo(bx - 3 * scale, by + 4 * scale);
+        ctx.moveTo(bx + 1 * scale, by - 3 * scale);
+        ctx.lineTo(bx + 2 * scale, by + 1 * scale);
+        ctx.lineTo(bx, by + 5 * scale);
+        ctx.moveTo(bx - 1 * scale, by);
+        ctx.lineTo(bx + 2 * scale, by + 1 * scale);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Lava glow through cracks
+        const lavaGlow = 0.3 + Math.sin(t * 3) * 0.15;
+        ctx.fillStyle = `rgba(249, 115, 22, ${lavaGlow})`;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 3 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#292524";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 7 * scale, 3 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#f97316";
+        ctx.shadowColor = "#f97316";
+        ctx.shadowBlur = 5 * scale;
+        ctx.beginPath();
+        ctx.arc(bx - 1.5 * scale, by - 7.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.5 * scale, by - 7.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Legs
+        ctx.strokeStyle = "#44403c";
+        ctx.lineWidth = 1.2 * scale;
+        for (let i = 0; i < 3; i++) {
+          for (const dir of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 4 * scale, by + (-2 + i * 3) * scale);
+            ctx.lineTo(bx + dir * 8 * scale, by + (1 + i * 3) * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "ash_moth": {
+        const ashColor = "#f97316";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingPulse = Math.sin(t * 4) * 0.18;
+
+        // Ember trail behind
+        for (let i = 0; i < 5; i++) {
+          const tx = bx + Math.sin(t * 2 + i * 1.3) * 3 * scale;
+          const ty = by + (8 + i * 2.5) * scale;
+          const tAlpha = 0.5 - i * 0.09;
+          ctx.fillStyle = `rgba(249, 115, 22, ${tAlpha})`;
+          ctx.beginPath();
+          ctx.arc(tx, ty, (1.2 - i * 0.15) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Fiery wings
+        for (const dir of [-1, 1]) {
+          const wingGrad = ctx.createRadialGradient(bx + dir * 5 * scale, by, 0, bx + dir * 5 * scale, by, 8 * scale);
+          wingGrad.addColorStop(0, "#fbbf24");
+          wingGrad.addColorStop(0.5, ashColor);
+          wingGrad.addColorStop(1, "#dc2626");
+          ctx.fillStyle = wingGrad;
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 5.5 * scale, by - 1 * scale, 5.5 * scale, 7 * scale, dir * (0.2 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+          // Hot edge glow
+          ctx.strokeStyle = "rgba(251, 191, 36, 0.5)";
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 5.5 * scale, by - 1 * scale, 5.5 * scale, 7 * scale, dir * (0.2 + wingPulse), 0, Math.PI * 2);
+          ctx.stroke();
+          // Lower wings
+          ctx.fillStyle = "#ea580c";
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 3.5 * scale, by + 5 * scale, 3.5 * scale, 4 * scale, dir * (0.35 + wingPulse), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Body
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 1.8 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = ashColor;
+        ctx.lineWidth = 0.7 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 5 * scale);
+          ctx.quadraticCurveTo(bx + dir * 3 * scale, by - 10 * scale, bx + dir * 5 * scale, by - 11 * scale);
+          ctx.stroke();
+        }
+
+        // Glowing eyes
+        ctx.fillStyle = "#fbbf24";
+        ctx.shadowColor = "#fbbf24";
+        ctx.shadowBlur = 3 * scale;
+        ctx.beginPath();
+        ctx.arc(bx - 1 * scale, by - 4.5 * scale, 0.6 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1 * scale, by - 4.5 * scale, 0.6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case "brood_mother": {
+        const bmColor = "#1c1917";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Boss aura
+        ctx.shadowColor = "#dc2626";
+        ctx.shadowBlur = 15 * scale;
+        const auraAlpha = 0.1 + Math.sin(t * 1.5) * 0.06;
+        ctx.fillStyle = `rgba(220, 38, 38, ${auraAlpha})`;
+        ctx.beginPath();
+        ctx.arc(bx, by, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Silk threads radiating outward
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 0.4 * scale;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 + t * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(bx + Math.cos(angle) * 8 * scale, by + Math.sin(angle) * 8 * scale);
+          ctx.lineTo(bx + Math.cos(angle) * 16 * scale, by + Math.sin(angle) * 16 * scale);
+          ctx.stroke();
+        }
+
+        // 8 huge legs
+        ctx.strokeStyle = "#292524";
+        ctx.lineWidth = 2.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const angle = (i * 0.35 + 0.25);
+          const legLen = (10 + i * 2) * scale;
+          const kneeLen = legLen * 0.5;
+          const legWave = Math.sin(t * 2 + i * 1.2) * 2 * scale;
+          for (const dir of [-1, 1]) {
+            const kx = bx + dir * kneeLen * Math.cos(angle);
+            const ky = by + kneeLen * Math.sin(angle) + legWave;
+            const ex = bx + dir * legLen * Math.cos(angle - 0.25);
+            const ey = by + legLen * Math.sin(angle + 0.15) + legWave * 0.6;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(kx, ky);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+          }
+        }
+
+        // Massive abdomen
+        ctx.fillStyle = bmColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 3 * scale, 7 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Red hourglass marking
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 1 * scale);
+        ctx.lineTo(bx - 2.5 * scale, by - 2 * scale);
+        ctx.lineTo(bx + 2.5 * scale, by - 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 1 * scale);
+        ctx.lineTo(bx - 2.5 * scale, by + 4 * scale);
+        ctx.lineTo(bx + 2.5 * scale, by + 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cephalothorax
+        ctx.fillStyle = "#292524";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 6 * scale, 5 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 8 red eyes (2 rows of 4)
+        ctx.fillStyle = "#dc2626";
+        ctx.shadowColor = "#dc2626";
+        ctx.shadowBlur = 5 * scale;
+        for (let row = 0; row < 2; row++) {
+          for (let i = 0; i < 4; i++) {
+            const ex = bx + (i - 1.5) * 1.8 * scale;
+            const ey = by - (7 + row * 1.8) * scale;
+            const er = (row === 0 ? 0.7 : 0.5) * scale;
+            ctx.beginPath();
+            ctx.arc(ex, ey, er, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.shadowBlur = 0;
+
+        // Fangs
+        ctx.fillStyle = "#f5f5f4";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 1.5 * scale, by - 5 * scale);
+          ctx.lineTo(bx + dir * 2.5 * scale, by - 1 * scale);
+          ctx.lineTo(bx + dir * 0.5 * scale, by - 4 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "dire_bear": {
+        const bearColor = "#5c3a1e";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Body
+        ctx.fillStyle = bearColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 10 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Layered fur shading
+        ctx.fillStyle = "#4a2e15";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 8 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#6b4423";
+        ctx.beginPath();
+        ctx.arc(bx, by - 9 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ears
+        for (const dir of [-1, 1]) {
+          ctx.fillStyle = bearColor;
+          ctx.beginPath();
+          ctx.arc(bx + dir * 5 * scale, by - 13 * scale, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Snout
+        ctx.fillStyle = "#8b6340";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 7 * scale, 3 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing amber eyes
+        ctx.fillStyle = "#ffbf00";
+        ctx.shadowColor = "#ffbf00";
+        ctx.shadowBlur = 6 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 2.5 * scale, by - 10 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Scars
+        ctx.strokeStyle = "#3a1a08";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 4 * scale, by - 11 * scale);
+        ctx.lineTo(bx - 1 * scale, by - 8 * scale);
+        ctx.stroke();
+
+        // Massive paws
+        ctx.fillStyle = "#4a2e15";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 7 * scale, by + 7 * scale, 3 * scale, 2 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "ancient_ent": {
+        const entColor = "#2d5016";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Trunk body
+        ctx.fillStyle = "#5a3a1e";
+        ctx.beginPath();
+        ctx.moveTo(bx - 6 * scale, by + 10 * scale);
+        ctx.lineTo(bx - 4 * scale, by - 8 * scale);
+        ctx.lineTo(bx + 4 * scale, by - 8 * scale);
+        ctx.lineTo(bx + 6 * scale, by + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bark texture lines
+        ctx.strokeStyle = "#3a2510";
+        ctx.lineWidth = 0.7 * scale;
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath();
+          ctx.moveTo(bx + i * 2 * scale, by - 6 * scale);
+          ctx.lineTo(bx + i * 2.5 * scale, by + 8 * scale);
+          ctx.stroke();
+        }
+
+        // Glowing green heartwood
+        const heartGlow = 0.5 + Math.sin(t * 2) * 0.3;
+        ctx.fillStyle = `rgba(80, 220, 60, ${heartGlow})`;
+        ctx.shadowColor = "#50dc3c";
+        ctx.shadowBlur = 8 * scale;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 2.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Branch limbs
+        ctx.strokeStyle = "#5a3a1e";
+        ctx.lineWidth = 2 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 3 * scale, by - 4 * scale);
+          ctx.lineTo(bx + dir * 10 * scale, by - 8 * scale);
+          ctx.lineTo(bx + dir * 13 * scale, by - 12 * scale);
+          ctx.stroke();
+        }
+
+        // Leaf clusters
+        ctx.fillStyle = entColor;
+        for (const dir of [-1, 1]) {
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.arc(bx + dir * (10 + i * 2) * scale, by - (10 + i * 1.5) * scale, 2.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Face - hollow eyes
+        ctx.fillStyle = "#1a1a0a";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 2 * scale, by - 5 * scale, 1.2 * scale, 1.8 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Mouth crevice
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale, 1.5 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case "forest_troll": {
+        const trollColor = "#4a6741";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Hunched body
+        ctx.fillStyle = trollColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 8 * scale, 10 * scale, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Warty bumps
+        ctx.fillStyle = "#3a5231";
+        for (let i = 0; i < 6; i++) {
+          const wx = bx + Math.cos(i * 1.1) * 5 * scale;
+          const wy = by + Math.sin(i * 1.3) * 6 * scale;
+          ctx.beginPath();
+          ctx.arc(wx, wy, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Head (small, jutting forward)
+        ctx.fillStyle = "#5a7a4a";
+        ctx.beginPath();
+        ctx.arc(bx + 2 * scale, by - 9 * scale, 4.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tusks
+        ctx.fillStyle = "#f5f0d0";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + 2 * scale + dir * 2 * scale, by - 7 * scale);
+          ctx.lineTo(bx + 2 * scale + dir * 3 * scale, by - 12 * scale);
+          ctx.lineTo(bx + 2 * scale + dir * 1 * scale, by - 8 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Beady eyes
+        ctx.fillStyle = "#ffcc00";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 2 * scale + dir * 2 * scale, by - 10 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#000";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 2 * scale + dir * 2 * scale, by - 10 * scale, 0.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Tree-trunk club (held in right hand)
+        ctx.fillStyle = "#5a3a1e";
+        ctx.beginPath();
+        ctx.moveTo(bx + 8 * scale, by - 2 * scale);
+        ctx.lineTo(bx + 12 * scale, by - 14 * scale);
+        ctx.lineTo(bx + 14 * scale, by - 13 * scale);
+        ctx.lineTo(bx + 10 * scale, by - 1 * scale);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+
+      case "timber_wolf": {
+        const wolfColor = "#6b6b6b";
+        const bx = cx;
+        const by = cy + bounce;
+        const runPhase = Math.sin(t * 4) * 2 * scale;
+
+        // Body (elongated)
+        ctx.fillStyle = wolfColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 10 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fur texture - lighter belly
+        ctx.fillStyle = "#8a8a8a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 7 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = wolfColor;
+        ctx.beginPath();
+        ctx.ellipse(bx + 8 * scale, by - 3 * scale, 4 * scale, 3.5 * scale, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snout
+        ctx.fillStyle = "#7a7a7a";
+        ctx.beginPath();
+        ctx.ellipse(bx + 12 * scale, by - 3.5 * scale, 2.5 * scale, 1.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pointed ears
+        for (const dir of [-1, 1]) {
+          ctx.fillStyle = wolfColor;
+          ctx.beginPath();
+          ctx.moveTo(bx + 7 * scale + dir * 2 * scale, by - 5 * scale);
+          ctx.lineTo(bx + 6 * scale + dir * 2 * scale, by - 10 * scale);
+          ctx.lineTo(bx + 9 * scale + dir * 2 * scale, by - 5 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Yellow eyes
+        ctx.fillStyle = "#ffd700";
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 4 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 9 * scale, by - 4 * scale + dir * 1.2 * scale, 0.8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Legs (running)
+        ctx.strokeStyle = wolfColor;
+        ctx.lineWidth = 1.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const lx = bx + (i - 1.5) * 4.5 * scale;
+          const phase = runPhase * (i % 2 === 0 ? 1 : -1);
+          ctx.beginPath();
+          ctx.moveTo(lx, by + 4 * scale);
+          ctx.lineTo(lx + phase * 0.3, by + 10 * scale + phase);
+          ctx.stroke();
+        }
+
+        // Tail
+        ctx.strokeStyle = "#7a7a7a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 9 * scale, by - 1 * scale);
+        ctx.quadraticCurveTo(bx - 13 * scale, by - 6 * scale, bx - 11 * scale, by - 9 * scale);
+        ctx.stroke();
+        break;
+      }
+
+      case "giant_eagle": {
+        const eagleColor = "#c8a050";
+        const bx = cx;
+        const by = cy + bounce;
+        const wingFlap = Math.sin(t * 3) * 0.3;
+
+        // Wing shadow
+        ctx.fillStyle = `${eagleColor}30`;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 16 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spread wings
+        ctx.fillStyle = eagleColor;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 2 * scale);
+          ctx.quadraticCurveTo(
+            bx + dir * 10 * scale, by - (10 + wingFlap * 10) * scale,
+            bx + dir * 16 * scale, by - (4 + wingFlap * 8) * scale
+          );
+          ctx.lineTo(bx + dir * 12 * scale, by + 1 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Feather edges
+        ctx.fillStyle = "#a88030";
+        for (const dir of [-1, 1]) {
+          for (let i = 0; i < 4; i++) {
+            const fx = bx + dir * (6 + i * 2.5) * scale;
+            const fy = by - (2 + wingFlap * 6 - i * 0.5) * scale;
+            ctx.beginPath();
+            ctx.ellipse(fx, fy, 2 * scale, 1 * scale, dir * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Body
+        ctx.fillStyle = "#b89040";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#f0e8d0";
+        ctx.beginPath();
+        ctx.arc(bx, by - 7 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sharp beak
+        ctx.fillStyle = "#ff8c00";
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 7 * scale);
+        ctx.lineTo(bx + 4 * scale, by - 6 * scale);
+        ctx.lineTo(bx, by - 5 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fierce eyes
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(bx - 1 * scale, by - 7.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Talons
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1 * scale;
+        for (const dir of [-1, 1]) {
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 2 * scale, by + 5 * scale);
+            ctx.lineTo(bx + dir * (2 + i - 1) * scale, by + 8 * scale);
+            ctx.stroke();
+          }
+        }
+        break;
+      }
+
+      case "swamp_hydra": {
+        const hydraColor = "#2e4a2e";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Scaled body
+        ctx.fillStyle = hydraColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 4 * scale, 8 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Scale pattern
+        ctx.fillStyle = "#1e3a1e";
+        for (let row = 0; row < 3; row++) {
+          for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.arc(bx + (i - 1.5) * 3 * scale, by + (2 + row * 2.5) * scale, 1.5 * scale, Math.PI, 0);
+            ctx.fill();
+          }
+        }
+
+        // Three snake necks
+        const neckOffsets = [-4, 0, 4];
+        const neckAngles = [-0.4, 0, 0.4];
+        for (let n = 0; n < 3; n++) {
+          const sway = Math.sin(t * 2 + n * 2) * 2 * scale;
+          const nx = bx + neckOffsets[n] * scale + sway;
+          const ny = by - 6 * scale;
+
+          // Neck
+          ctx.strokeStyle = hydraColor;
+          ctx.lineWidth = 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(bx + neckOffsets[n] * 0.5 * scale, by);
+          ctx.quadraticCurveTo(nx + neckAngles[n] * 4 * scale, ny + 4 * scale, nx, ny - 4 * scale);
+          ctx.stroke();
+
+          // Head
+          ctx.fillStyle = "#3a5a3a";
+          ctx.beginPath();
+          ctx.ellipse(nx, ny - 6 * scale, 2.5 * scale, 2 * scale, neckAngles[n], 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes
+          ctx.fillStyle = "#ff4444";
+          ctx.beginPath();
+          ctx.arc(nx - 1 * scale, ny - 7 * scale, 0.6 * scale, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Dripping venom
+          ctx.fillStyle = "#44ff44";
+          ctx.globalAlpha = 0.6;
+          const dripY = (t * 20 + n * 10) % (8 * scale);
+          ctx.beginPath();
+          ctx.arc(nx, ny - 4 * scale + dripY, 0.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+        }
+        break;
+      }
+
+      case "giant_toad": {
+        const toadColor = "#5a7a3a";
+        const bx = cx;
+        const by = cy + bounce;
+        const breathe = Math.sin(t * 1.5) * 1.5 * scale;
+
+        // Bloated body
+        ctx.fillStyle = toadColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 10 * scale + breathe, 8 * scale + breathe * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Warty bumps
+        ctx.fillStyle = "#4a6a2a";
+        for (let i = 0; i < 8; i++) {
+          const angle = i * Math.PI * 0.25;
+          const wx = bx + Math.cos(angle) * 7 * scale;
+          const wy = by + 2 * scale + Math.sin(angle) * 5 * scale;
+          ctx.beginPath();
+          ctx.arc(wx, wy, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Lighter belly
+        ctx.fillStyle = "#8aaa5a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 5 * scale, 6 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bulging eyes (on top of head)
+        for (const dir of [-1, 1]) {
+          ctx.fillStyle = "#dde830";
+          ctx.beginPath();
+          ctx.arc(bx + dir * 4 * scale, by - 6 * scale, 3 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#000";
+          ctx.beginPath();
+          ctx.arc(bx + dir * 4 * scale, by - 6 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Throat sac (inflating)
+        const sacSize = 3 + Math.sin(t * 2) * 2;
+        ctx.fillStyle = `rgba(180, 220, 120, 0.6)`;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 8 * scale, sacSize * scale, sacSize * 0.7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wide mouth line
+        ctx.strokeStyle = "#3a5a1a";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 6 * scale, by - 2 * scale);
+        ctx.quadraticCurveTo(bx, by, bx + 6 * scale, by - 2 * scale);
+        ctx.stroke();
+        break;
+      }
+
+      case "vine_serpent": {
+        const vineColor = "#3a6b3a";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Sinuous vine body
+        ctx.strokeStyle = vineColor;
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 10 * scale, by + 8 * scale);
+        for (let i = 0; i < 8; i++) {
+          const px = bx - 10 * scale + i * 2.8 * scale;
+          const py = by + Math.sin(t * 2 + i * 0.8) * 3 * scale;
+          ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Thorns along body
+        ctx.fillStyle = "#2a4a1a";
+        for (let i = 1; i < 7; i++) {
+          const tx = bx - 10 * scale + i * 2.8 * scale;
+          const ty = by + Math.sin(t * 2 + i * 0.8) * 3 * scale;
+          const side = i % 2 === 0 ? -1 : 1;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx + side * 2 * scale, ty - 2 * scale);
+          ctx.lineTo(tx + 0.5 * scale, ty);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Leaves along body
+        ctx.fillStyle = "#5a9b4a";
+        for (let i = 0; i < 3; i++) {
+          const lx = bx - 6 * scale + i * 5 * scale;
+          const ly = by + Math.sin(t * 2 + i * 1.6) * 3 * scale;
+          ctx.beginPath();
+          ctx.ellipse(lx, ly - 2 * scale, 1.5 * scale, 3 * scale, Math.PI * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Flower head
+        const hx = bx + 10 * scale;
+        const hy = by + Math.sin(t * 2 + 6) * 3 * scale;
+        ctx.fillStyle = "#ff6688";
+        for (let p = 0; p < 5; p++) {
+          const pa = (p / 5) * Math.PI * 2 + t * 0.5;
+          ctx.beginPath();
+          ctx.ellipse(
+            hx + Math.cos(pa) * 2 * scale, hy + Math.sin(pa) * 2 * scale,
+            2 * scale, 1 * scale, pa, 0, Math.PI * 2
+          );
+          ctx.fill();
+        }
+
+        // Center eye
+        ctx.fillStyle = "#ffe030";
+        ctx.beginPath();
+        ctx.arc(hx, hy, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(hx, hy, 0.6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case "marsh_troll": {
+        const mTrollColor = "#4a5a3a";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Mud-covered body
+        ctx.fillStyle = mTrollColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 8 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mud drip streaks
+        ctx.fillStyle = "#3a4a2a";
+        for (let i = 0; i < 5; i++) {
+          const mx = bx + (i - 2) * 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(mx, by - 4 * scale);
+          ctx.lineTo(mx - 0.5 * scale, by + 8 * scale);
+          ctx.lineTo(mx + 0.5 * scale, by + 8 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Head
+        ctx.fillStyle = "#5a6a4a";
+        ctx.beginPath();
+        ctx.arc(bx, by - 9 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing fungus on shoulders
+        ctx.shadowColor = "#88ff88";
+        ctx.shadowBlur = 6 * scale;
+        const fungusGlow = 0.5 + Math.sin(t * 3) * 0.3;
+        ctx.fillStyle = `rgba(120, 255, 120, ${fungusGlow})`;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 7 * scale, by - 5 * scale, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bx + dir * 6 * scale, by - 7 * scale, 1.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Glowing eyes
+        ctx.fillStyle = "#88ff44";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 2 * scale, by - 10 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Bone weapon
+        ctx.strokeStyle = "#e8e0c8";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx + 8 * scale, by + 5 * scale);
+        ctx.lineTo(bx + 10 * scale, by - 12 * scale);
+        ctx.stroke();
+        ctx.fillStyle = "#d8d0b8";
+        ctx.beginPath();
+        ctx.arc(bx + 10 * scale, by - 13 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+
+      case "phoenix": {
+        const bx = cx;
+        const by = cy + bounce;
+        const flamePulse = 0.6 + Math.sin(t * 4) * 0.4;
+
+        // Intense glow aura
+        ctx.shadowColor = "#ff6600";
+        ctx.shadowBlur = 15 * scale;
+        const auraGrad = ctx.createRadialGradient(bx, by, 0, bx, by, 14 * scale);
+        auraGrad.addColorStop(0, `rgba(255, 200, 50, ${flamePulse * 0.4})`);
+        auraGrad.addColorStop(1, "rgba(255, 100, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(bx, by, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flame body
+        const bodyGrad = ctx.createRadialGradient(bx, by, 0, bx, by, 6 * scale);
+        bodyGrad.addColorStop(0, "#ffffa0");
+        bodyGrad.addColorStop(0.4, "#ff8800");
+        bodyGrad.addColorStop(1, "#cc3300");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 5 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fire wings
+        for (const dir of [-1, 1]) {
+          const wingGrad = ctx.createLinearGradient(bx, by, bx + dir * 14 * scale, by - 6 * scale);
+          wingGrad.addColorStop(0, "#ffcc00");
+          wingGrad.addColorStop(1, "#ff4400");
+          ctx.fillStyle = wingGrad;
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 2 * scale);
+          ctx.quadraticCurveTo(
+            bx + dir * 8 * scale, by - 12 * scale,
+            bx + dir * 14 * scale, by - 6 * scale
+          );
+          ctx.quadraticCurveTo(
+            bx + dir * 10 * scale, by + 2 * scale,
+            bx, by + 3 * scale
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Head
+        ctx.fillStyle = "#ffdd44";
+        ctx.beginPath();
+        ctx.arc(bx, by - 8 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crown flames
+        for (let i = 0; i < 5; i++) {
+          const fx = bx + (i - 2) * 1.5 * scale;
+          const fh = (3 + Math.sin(t * 6 + i) * 2) * scale;
+          ctx.fillStyle = i % 2 === 0 ? "#ffaa00" : "#ff6600";
+          ctx.beginPath();
+          ctx.moveTo(fx - 0.8 * scale, by - 10 * scale);
+          ctx.lineTo(fx, by - 10 * scale - fh);
+          ctx.lineTo(fx + 0.8 * scale, by - 10 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Eyes
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(bx - 1.2 * scale, by - 8.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(bx + 1.2 * scale, by - 8.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ember particles
+        for (let i = 0; i < 6; i++) {
+          const angle = t * 2 + i * 1.05;
+          const dist = (6 + Math.sin(t * 3 + i) * 4) * scale;
+          const ex = bx + Math.cos(angle) * dist;
+          const ey = by + Math.sin(angle) * dist - 3 * scale;
+          ctx.fillStyle = `rgba(255, ${150 + i * 15}, 0, ${0.8 - i * 0.1})`;
+          ctx.beginPath();
+          ctx.arc(ex, ey, (0.5 + Math.sin(t * 5 + i) * 0.3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case "basilisk": {
+        const basColor = "#6b6b3a";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Coiled body
+        ctx.fillStyle = basColor;
+        ctx.lineWidth = 4 * scale;
+        ctx.strokeStyle = basColor;
+        ctx.beginPath();
+        ctx.arc(bx, by + 4 * scale, 6 * scale, 0, Math.PI * 1.5);
+        ctx.stroke();
+
+        // Scaled body overlay
+        ctx.fillStyle = "#5a5a2a";
+        for (let i = 0; i < 10; i++) {
+          const angle = i * 0.47;
+          const sr = 6 * scale;
+          const sx = bx + Math.cos(angle) * sr;
+          const sy = by + 4 * scale + Math.sin(angle) * sr;
+          ctx.beginPath();
+          ctx.arc(sx, sy, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Raised head
+        ctx.fillStyle = "#7a7a4a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 8 * scale, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crown crest
+        ctx.fillStyle = "#c8a030";
+        ctx.beginPath();
+        ctx.moveTo(bx - 3 * scale, by - 10 * scale);
+        ctx.lineTo(bx - 1.5 * scale, by - 15 * scale);
+        ctx.lineTo(bx, by - 12 * scale);
+        ctx.lineTo(bx + 1.5 * scale, by - 15 * scale);
+        ctx.lineTo(bx + 3 * scale, by - 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Petrifying green eyes
+        ctx.fillStyle = "#44ff44";
+        ctx.shadowColor = "#44ff44";
+        ctx.shadowBlur = 8 * scale;
+        const eyePulse = 0.6 + Math.sin(t * 3) * 0.4;
+        ctx.globalAlpha = eyePulse;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 1.8 * scale, by - 8.5 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
+
+        // Slit pupils
+        ctx.fillStyle = "#000";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 1.8 * scale, by - 8.5 * scale, 0.3 * scale, 1 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Forked tongue
+        ctx.strokeStyle = "#ff4444";
+        ctx.lineWidth = 0.5 * scale;
+        const tongueExt = Math.sin(t * 4) * 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 6 * scale);
+        ctx.lineTo(bx, by - 5 * scale + tongueExt);
+        ctx.moveTo(bx, by - 5 * scale + tongueExt);
+        ctx.lineTo(bx - 1 * scale, by - 4 * scale + tongueExt);
+        ctx.moveTo(bx, by - 5 * scale + tongueExt);
+        ctx.lineTo(bx + 1 * scale, by - 4 * scale + tongueExt);
+        ctx.stroke();
+        break;
+      }
+
+      case "djinn": {
+        const bx = cx;
+        const by = cy + bounce;
+        const floatOffset = Math.sin(t * 2) * 2 * scale;
+
+        // Smoky lower body
+        ctx.globalAlpha = 0.5;
+        const smokeGrad = ctx.createRadialGradient(bx, by + 8 * scale, 0, bx, by + 8 * scale, 8 * scale);
+        smokeGrad.addColorStop(0, "#6a3aaa");
+        smokeGrad.addColorStop(1, "rgba(106, 58, 170, 0)");
+        ctx.fillStyle = smokeGrad;
+        ctx.beginPath();
+        ctx.moveTo(bx - 6 * scale, by + 2 * scale);
+        ctx.quadraticCurveTo(bx - 8 * scale, by + 12 * scale, bx, by + 14 * scale);
+        ctx.quadraticCurveTo(bx + 8 * scale, by + 12 * scale, bx + 6 * scale, by + 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // Muscular torso
+        ctx.fillStyle = "#8a5acc";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale + floatOffset, 6 * scale, 7 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arms crossed
+        ctx.strokeStyle = "#8a5acc";
+        ctx.lineWidth = 2.5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 5 * scale, by - 3 * scale + floatOffset);
+          ctx.quadraticCurveTo(bx + dir * 9 * scale, by - 6 * scale, bx + dir * 7 * scale, by - 10 * scale);
+          ctx.stroke();
+        }
+
+        // Head
+        ctx.fillStyle = "#9a6adc";
+        ctx.beginPath();
+        ctx.arc(bx, by - 10 * scale + floatOffset, 3.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Golden turban
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(bx, by - 12 * scale + floatOffset, 4 * scale, Math.PI, 0);
+        ctx.fill();
+        ctx.fillStyle = "#ff4444";
+        ctx.beginPath();
+        ctx.arc(bx, by - 14 * scale + floatOffset, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#ffdd00";
+        ctx.shadowColor = "#ffdd00";
+        ctx.shadowBlur = 5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 1.5 * scale, by - 10 * scale + floatOffset, 0.8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Orbiting runes
+        ctx.fillStyle = "#ffd700";
+        ctx.font = `${3 * scale}px serif`;
+        for (let i = 0; i < 4; i++) {
+          const runeAngle = t * 1.5 + i * Math.PI * 0.5;
+          const rx = bx + Math.cos(runeAngle) * 10 * scale;
+          const ry = by - 4 * scale + Math.sin(runeAngle) * 6 * scale + floatOffset;
+          ctx.globalAlpha = 0.6 + Math.sin(t * 3 + i) * 0.3;
+          ctx.beginPath();
+          ctx.arc(rx, ry, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+        break;
+      }
+
+      case "manticore": {
+        const mantiColor = "#8b4513";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Lion body
+        ctx.fillStyle = mantiColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 10 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flame mane
+        const maneGrad = ctx.createRadialGradient(bx - 2 * scale, by - 5 * scale, 0, bx - 2 * scale, by - 5 * scale, 8 * scale);
+        maneGrad.addColorStop(0, "#ff8800");
+        maneGrad.addColorStop(0.6, "#cc4400");
+        maneGrad.addColorStop(1, "#881100");
+        ctx.fillStyle = maneGrad;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const r = (6 + Math.sin(t * 4 + i * 0.8) * 1.5) * scale;
+          const mx = bx - 2 * scale + Math.cos(angle) * r;
+          const my = by - 5 * scale + Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(mx, my);
+          else ctx.lineTo(mx, my);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#a0621e";
+        ctx.beginPath();
+        ctx.arc(bx - 2 * scale, by - 5 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fierce eyes
+        ctx.fillStyle = "#ff4400";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx - 2 * scale + dir * 1.5 * scale, by - 6 * scale, 0.8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Bat wings
+        ctx.fillStyle = "#5a2a0a";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 3 * scale, by - 1 * scale);
+          ctx.quadraticCurveTo(bx + dir * 12 * scale, by - 10 * scale, bx + dir * 14 * scale, by - 4 * scale);
+          ctx.quadraticCurveTo(bx + dir * 11 * scale, by - 2 * scale, bx + dir * 10 * scale, by + 2 * scale);
+          ctx.lineTo(bx + dir * 3 * scale, by + 1 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Scorpion tail curling overhead
+        ctx.strokeStyle = "#6b3010";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx + 8 * scale, by + 4 * scale);
+        ctx.quadraticCurveTo(bx + 12 * scale, by - 4 * scale, bx + 8 * scale, by - 12 * scale);
+        ctx.quadraticCurveTo(bx + 4 * scale, by - 16 * scale, bx + 2 * scale, by - 14 * scale);
+        ctx.stroke();
+        // Stinger
+        ctx.fillStyle = "#222";
+        ctx.beginPath();
+        ctx.moveTo(bx + 2 * scale, by - 14 * scale);
+        ctx.lineTo(bx + 1 * scale, by - 17 * scale);
+        ctx.lineTo(bx + 3 * scale, by - 15 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Legs
+        ctx.strokeStyle = mantiColor;
+        ctx.lineWidth = 1.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const lx = bx + (i - 1.5) * 4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(lx, by + 7 * scale);
+          ctx.lineTo(lx, by + 12 * scale);
+          ctx.stroke();
+        }
+        break;
+      }
+
+      case "frost_troll": {
+        const fTrollColor = "#5a8aaa";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Bulky body
+        ctx.fillStyle = fTrollColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 9 * scale, 11 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ice crystals on body
+        ctx.fillStyle = "#aaddff";
+        ctx.globalAlpha = 0.7;
+        const crystalPositions = [
+          [-5, -3], [4, -1], [-3, 4], [6, 2], [0, -6]
+        ];
+        for (const [ox, oy] of crystalPositions) {
+          ctx.beginPath();
+          ctx.moveTo(bx + ox * scale, by + (oy - 2) * scale);
+          ctx.lineTo(bx + (ox + 1) * scale, by + oy * scale);
+          ctx.lineTo(bx + ox * scale, by + (oy + 2) * scale);
+          ctx.lineTo(bx + (ox - 1) * scale, by + oy * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Head
+        ctx.fillStyle = "#6a9aba";
+        ctx.beginPath();
+        ctx.arc(bx, by - 10 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Brow ridge
+        ctx.fillStyle = "#4a7a9a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 12 * scale, 5 * scale, 1.5 * scale, 0, 0, Math.PI);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#88ddff";
+        ctx.shadowColor = "#88ddff";
+        ctx.shadowBlur = 5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 2 * scale, by - 10 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Frozen breath
+        ctx.globalAlpha = 0.3 + Math.sin(t * 3) * 0.2;
+        ctx.fillStyle = "#ccf0ff";
+        for (let i = 0; i < 4; i++) {
+          const bDist = (3 + i * 2) * scale;
+          ctx.beginPath();
+          ctx.arc(bx + bDist, by - 8 * scale + Math.sin(t + i) * scale, (1.5 - i * 0.2) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Ice club
+        ctx.fillStyle = "#aaddee";
+        ctx.strokeStyle = "#77bbdd";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 8 * scale, by + 5 * scale);
+        ctx.lineTo(bx - 10 * scale, by - 8 * scale);
+        ctx.lineTo(bx - 12 * scale, by - 12 * scale);
+        ctx.lineTo(bx - 8 * scale, by - 10 * scale);
+        ctx.lineTo(bx - 6 * scale, by - 8 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      }
+
+      case "dire_wolf": {
+        const dWolfColor = "#c8c8d8";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Large body
+        ctx.fillStyle = dWolfColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 11 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Frost-white fur overlay
+        ctx.fillStyle = "#e8e8f0";
+        ctx.beginPath();
+        ctx.ellipse(bx - 2 * scale, by - 1 * scale, 8 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = dWolfColor;
+        ctx.beginPath();
+        ctx.ellipse(bx + 9 * scale, by - 3 * scale, 5 * scale, 4 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snout
+        ctx.fillStyle = "#d8d8e8";
+        ctx.beginPath();
+        ctx.ellipse(bx + 14 * scale, by - 3 * scale, 3 * scale, 2 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pointed ears
+        for (const dir of [-1, 1]) {
+          ctx.fillStyle = dWolfColor;
+          ctx.beginPath();
+          ctx.moveTo(bx + 8 * scale + dir * 2 * scale, by - 6 * scale);
+          ctx.lineTo(bx + 7 * scale + dir * 2.5 * scale, by - 12 * scale);
+          ctx.lineTo(bx + 10 * scale + dir * 2 * scale, by - 6 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Icy blue eyes
+        ctx.fillStyle = "#44aaff";
+        ctx.shadowColor = "#44aaff";
+        ctx.shadowBlur = 6 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 10 * scale, by - 4 * scale + dir * 1.5 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Frost breath
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = "#aaddff";
+        for (let i = 0; i < 5; i++) {
+          const bd = (4 + i * 2.5) * scale;
+          ctx.beginPath();
+          ctx.arc(bx + 14 * scale + bd, by - 3 * scale + Math.sin(t * 2 + i) * 1.5 * scale, (2 - i * 0.3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Legs
+        ctx.strokeStyle = dWolfColor;
+        ctx.lineWidth = 1.8 * scale;
+        for (let i = 0; i < 4; i++) {
+          const lx = bx + (i - 1.5) * 5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(lx, by + 5 * scale);
+          ctx.lineTo(lx, by + 11 * scale);
+          ctx.stroke();
+        }
+
+        // Bushy tail
+        ctx.fillStyle = "#e0e0f0";
+        ctx.beginPath();
+        ctx.moveTo(bx - 10 * scale, by - 1 * scale);
+        ctx.quadraticCurveTo(bx - 16 * scale, by - 6 * scale, bx - 13 * scale, by - 10 * scale);
+        ctx.quadraticCurveTo(bx - 10 * scale, by - 7 * scale, bx - 9 * scale, by - 1 * scale);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+
+      case "wendigo": {
+        const wendigoColor = "#3a3a4a";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Gaunt skeletal body
+        ctx.fillStyle = wendigoColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 2 * scale, 5 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Visible ribs
+        ctx.strokeStyle = "#2a2a3a";
+        ctx.lineWidth = 0.8 * scale;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.ellipse(bx, by - 2 * scale + i * 2.5 * scale, 4 * scale, 0.8 * scale, 0, 0, Math.PI);
+          ctx.stroke();
+        }
+
+        // Long gaunt arms
+        ctx.strokeStyle = "#4a4a5a";
+        ctx.lineWidth = 1.5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 4 * scale, by - 3 * scale);
+          ctx.lineTo(bx + dir * 10 * scale, by + 4 * scale);
+          ctx.lineTo(bx + dir * 12 * scale, by + 8 * scale);
+          ctx.stroke();
+          // Claws
+          for (let c = 0; c < 3; c++) {
+            ctx.beginPath();
+            ctx.moveTo(bx + dir * 12 * scale, by + 8 * scale);
+            ctx.lineTo(bx + dir * (13 + c * 0.5) * scale, by + (10 + c * 0.3) * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Deer skull head
+        ctx.fillStyle = "#d8d0c0";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 12 * scale, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Skull snout
+        ctx.fillStyle = "#c8c0b0";
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 8 * scale, 2 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antlers
+        ctx.strokeStyle = "#b0a890";
+        ctx.lineWidth = 1.5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 3 * scale, by - 15 * scale);
+          ctx.lineTo(bx + dir * 6 * scale, by - 20 * scale);
+          ctx.lineTo(bx + dir * 8 * scale, by - 22 * scale);
+          ctx.moveTo(bx + dir * 6 * scale, by - 20 * scale);
+          ctx.lineTo(bx + dir * 5 * scale, by - 23 * scale);
+          ctx.moveTo(bx + dir * 4 * scale, by - 17 * scale);
+          ctx.lineTo(bx + dir * 7 * scale, by - 18 * scale);
+          ctx.stroke();
+        }
+
+        // Glowing eye sockets
+        ctx.fillStyle = "#ff3300";
+        ctx.shadowColor = "#ff3300";
+        ctx.shadowBlur = 8 * scale;
+        const eyeFlicker = 0.5 + Math.sin(t * 5) * 0.5;
+        ctx.globalAlpha = eyeFlicker;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 1.5 * scale, by - 13 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
+        break;
+      }
+
+      case "mammoth": {
+        const mammothColor = "#8b7355";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Massive body with fur
+        ctx.fillStyle = mammothColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 12 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shaggy fur lines
+        ctx.strokeStyle = "#7a6245";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 8; i++) {
+          const fx = bx + (i - 3.5) * 2.5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(fx, by + 2 * scale);
+          ctx.lineTo(fx + Math.sin(i) * scale, by + 8 * scale);
+          ctx.stroke();
+        }
+
+        // Head
+        ctx.fillStyle = "#9b8365";
+        ctx.beginPath();
+        ctx.arc(bx, by - 9 * scale, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trunk
+        ctx.strokeStyle = "#8b7355";
+        ctx.lineWidth = 3 * scale;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 5 * scale);
+        ctx.quadraticCurveTo(bx + 2 * scale, by + 2 * scale, bx - 1 * scale, by + 8 * scale);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+
+        // Curved tusks
+        ctx.strokeStyle = "#f0e8d0";
+        ctx.lineWidth = 2 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 3 * scale, by - 6 * scale);
+          ctx.quadraticCurveTo(bx + dir * 8 * scale, by - 2 * scale, bx + dir * 6 * scale, by + 4 * scale);
+          ctx.stroke();
+        }
+
+        // Small eyes
+        ctx.fillStyle = "#1a1a1a";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 3 * scale, by - 10 * scale, 0.8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Bone armor plates
+        ctx.fillStyle = "#d8d0b8";
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale, 8 * scale, 4 * scale, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+
+        // Thick legs
+        ctx.fillStyle = mammothColor;
+        for (let i = 0; i < 4; i++) {
+          const lx = bx + (i - 1.5) * 5 * scale;
+          ctx.beginPath();
+          ctx.fillRect(lx - 2 * scale, by + 7 * scale, 4 * scale, 6 * scale);
+        }
+        break;
+      }
+
+      case "lava_golem": {
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Dark obsidian body
+        ctx.fillStyle = "#1a0800";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 9 * scale, 11 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing lava crack lines
+        ctx.strokeStyle = "#ff6600";
+        ctx.shadowColor = "#ff6600";
+        ctx.shadowBlur = 6 * scale;
+        ctx.lineWidth = 1.2 * scale;
+        const cracks = [
+          [[-3, -8], [-1, -3], [1, 0], [-1, 4], [-3, 8]],
+          [[2, -7], [4, -2], [3, 2], [5, 6]],
+          [[-5, -4], [-4, 0], [-6, 4]],
+          [[0, -5], [2, -1], [0, 3], [2, 7]]
+        ];
+        for (const crack of cracks) {
+          ctx.beginPath();
+          for (let i = 0; i < crack.length; i++) {
+            const [px, py] = crack[i];
+            if (i === 0) ctx.moveTo(bx + px * scale, by + py * scale);
+            else ctx.lineTo(bx + px * scale, by + py * scale);
+          }
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+
+        // Glowing core pulse
+        const corePulse = 0.4 + Math.sin(t * 2) * 0.3;
+        ctx.fillStyle = `rgba(255, 100, 0, ${corePulse})`;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - 2 * scale, 3 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#2a1200";
+        ctx.beginPath();
+        ctx.arc(bx, by - 11 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#ff8800";
+        ctx.shadowColor = "#ff8800";
+        ctx.shadowBlur = 6 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + dir * 2 * scale, by - 11 * scale, 1.2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Ember particles
+        for (let i = 0; i < 5; i++) {
+          const ex = bx + Math.sin(t * 2 + i * 1.3) * 8 * scale;
+          const ey = by - 5 * scale - ((t * 10 + i * 8) % (12 * scale));
+          ctx.fillStyle = `rgba(255, ${100 + i * 30}, 0, ${0.7 - i * 0.1})`;
+          ctx.beginPath();
+          ctx.arc(ex, ey, (0.6 + Math.sin(t * 4 + i) * 0.3) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Rocky arms
+        ctx.fillStyle = "#1a0800";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.ellipse(bx + dir * 10 * scale, by - 2 * scale, 3 * scale, 5 * scale, dir * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+
+      case "volcanic_drake": {
+        const bx = cx;
+        const by = cy + bounce;
+        const wingFlap = Math.sin(t * 3) * 0.25;
+
+        // Body
+        ctx.fillStyle = "#cc3300";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 7 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fire wings
+        for (const dir of [-1, 1]) {
+          const wingGrad = ctx.createLinearGradient(bx, by, bx + dir * 14 * scale, by - 6 * scale);
+          wingGrad.addColorStop(0, "#cc3300");
+          wingGrad.addColorStop(0.5, "#ff6600");
+          wingGrad.addColorStop(1, "#ffaa00");
+          ctx.fillStyle = wingGrad;
+          ctx.beginPath();
+          ctx.moveTo(bx + dir * 2 * scale, by - 1 * scale);
+          ctx.quadraticCurveTo(
+            bx + dir * 8 * scale, by - (10 + wingFlap * 10) * scale,
+            bx + dir * 14 * scale, by - (5 + wingFlap * 8) * scale
+          );
+          ctx.lineTo(bx + dir * 10 * scale, by + 2 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Long neck
+        ctx.strokeStyle = "#aa2200";
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx, by - 4 * scale);
+        ctx.quadraticCurveTo(bx + 3 * scale, by - 8 * scale, bx + 2 * scale, by - 12 * scale);
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = "#cc3300";
+        ctx.beginPath();
+        ctx.ellipse(bx + 2 * scale, by - 13 * scale, 3 * scale, 2.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horns
+        ctx.strokeStyle = "#441100";
+        ctx.lineWidth = 1.5 * scale;
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(bx + 2 * scale + dir * 2 * scale, by - 14 * scale);
+          ctx.lineTo(bx + 2 * scale + dir * 3.5 * scale, by - 18 * scale);
+          ctx.stroke();
+        }
+
+        // Eye
+        ctx.fillStyle = "#ffcc00";
+        ctx.shadowColor = "#ffcc00";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(bx + 3 * scale, by - 13.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Flame-tipped tail
+        ctx.strokeStyle = "#aa2200";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 6 * scale, by + 3 * scale);
+        ctx.quadraticCurveTo(bx - 12 * scale, by + 6 * scale, bx - 14 * scale, by + 3 * scale);
+        ctx.stroke();
+        // Tail flame
+        ctx.fillStyle = "#ff8800";
+        ctx.beginPath();
+        const tailFlame = Math.sin(t * 5) * 1.5 * scale;
+        ctx.moveTo(bx - 14 * scale, by + 3 * scale);
+        ctx.lineTo(bx - 16 * scale + tailFlame, by + 1 * scale);
+        ctx.lineTo(bx - 15 * scale, by + 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+
+      case "salamander": {
+        const salamanderColor = "#ff4500";
+        const bx = cx;
+        const by = cy + bounce;
+
+        // Fire glow aura
+        ctx.shadowColor = "#ff4500";
+        ctx.shadowBlur = 8 * scale;
+
+        // Sleek body
+        ctx.fillStyle = salamanderColor;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 8 * scale, 3.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fire stripe on back
+        ctx.strokeStyle = "#ffcc00";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(bx - 7 * scale, by);
+        for (let i = 0; i < 6; i++) {
+          const sx = bx - 7 * scale + i * 2.5 * scale;
+          const sy = by - 1 * scale + Math.sin(t * 4 + i) * 0.5 * scale;
+          ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+
+        // Darker belly
+        ctx.fillStyle = "#cc2200";
+        ctx.beginPath();
+        ctx.ellipse(bx, by + 1 * scale, 6 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ff5500";
+        ctx.beginPath();
+        ctx.ellipse(bx + 8 * scale, by - 1 * scale, 3 * scale, 2.5 * scale, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = "#ffdd00";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 9 * scale, by - 1.5 * scale + dir * 1 * scale, 0.7 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#000";
+        for (const dir of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(bx + 9 * scale, by - 1.5 * scale + dir * 1 * scale, 0.3 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 4 legs
+        ctx.strokeStyle = salamanderColor;
+        ctx.lineWidth = 1.5 * scale;
+        const legPositions = [[-4, 1], [-1, 1], [2, 1], [5, 1]];
+        for (const [lx, ly] of legPositions) {
+          const side = lx < 1 ? -1 : 1;
+          ctx.beginPath();
+          ctx.moveTo(bx + lx * scale, by + ly * scale + 2 * scale);
+          ctx.lineTo(bx + (lx + side * 2) * scale, by + 6 * scale);
+          ctx.stroke();
+        }
+
+        // Flame trail behind
+        ctx.globalAlpha = 0.6;
+        for (let i = 0; i < 4; i++) {
+          const fx = bx - (8 + i * 2.5) * scale;
+          const fy = by + Math.sin(t * 5 + i) * 1 * scale;
+          const fr = (2 - i * 0.4) * scale;
+          ctx.fillStyle = i % 2 === 0 ? "#ff6600" : "#ffaa00";
+          ctx.beginPath();
+          ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
         break;
       }
 

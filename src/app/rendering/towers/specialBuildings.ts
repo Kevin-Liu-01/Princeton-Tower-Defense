@@ -657,7 +657,7 @@ function drawSentinelNexusBuilding(
         : `rgba(${grayRgb}, ${runeAlpha})`;
       ctx.fillText(runes[i % runes.length], rx, ry);
       if (isLit) {
-        ctx.fillStyle = `rgba(255, 200, 180, ${(0.15 + readyFlash * 0.3) * groundAlpha})`;
+        ctx.fillStyle = `rgba(${Math.min(255, palette.crystalR + 40)}, ${Math.min(255, palette.crystalG + 40)}, ${Math.min(255, palette.crystalB + 20)}, ${(0.15 + readyFlash * 0.3) * groundAlpha})`;
         ctx.beginPath();
         ctx.arc(rx, ry, 5 * s2, 0, Math.PI * 2);
         ctx.fill();
@@ -667,7 +667,7 @@ function drawSentinelNexusBuilding(
       const a = (i / 12) * Math.PI * 2;
       const tickLit = i / 12 < charge;
       ctx.strokeStyle = tickLit
-        ? `rgba(255, 215, 205, ${(0.6 + readyFlash) * groundAlpha})`
+        ? `rgba(${Math.min(255, palette.crystalR + 50)}, ${Math.min(255, palette.crystalG + 50)}, ${Math.min(255, palette.crystalB + 40)}, ${(0.6 + readyFlash) * groundAlpha})`
         : `rgba(${grayRgb}, ${0.3 * groundAlpha})`;
       ctx.lineWidth = (i % 3 === 0 ? 2 : 1.2) * s2;
       ctx.beginPath();

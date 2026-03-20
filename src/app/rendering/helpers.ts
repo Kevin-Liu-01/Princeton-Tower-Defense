@@ -940,7 +940,7 @@ export function drawRangeIndicator(
 // EFFECT HELPERS
 // ============================================================================
 
-export type LightningColorScheme = "blue" | "yellow" | "red" | "violet";
+export type LightningColorScheme = "blue" | "yellow" | "red" | "violet" | "teal" | "green";
 
 const LIGHTNING_COLORS: Record<LightningColorScheme, {
   outerGlow: string; outerStroke: string;
@@ -976,6 +976,20 @@ const LIGHTNING_COLORS: Record<LightningColorScheme, {
     coreStroke: "215, 225, 255",
     branchStroke: "100, 100, 255", branchCore: "200, 210, 255",
     impactFill: "180, 190, 255",
+  },
+  teal: {
+    outerGlow: "#10aa88", outerStroke: "20, 150, 130",
+    midGlow: "#50dcb4", midStroke: "80, 220, 180",
+    coreStroke: "200, 255, 240",
+    branchStroke: "60, 200, 160", branchCore: "180, 255, 230",
+    impactFill: "120, 255, 210",
+  },
+  green: {
+    outerGlow: "#66aa10", outerStroke: "80, 170, 20",
+    midGlow: "#a0e650", midStroke: "160, 230, 80",
+    coreStroke: "230, 255, 200",
+    branchStroke: "120, 200, 40", branchCore: "210, 255, 180",
+    impactFill: "180, 240, 120",
   },
 };
 

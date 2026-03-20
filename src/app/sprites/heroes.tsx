@@ -678,6 +678,22 @@ export const HeroSprite: React.FC<{
         {
           const hY = cy - 20 * scale + bounce;
 
+          // Helmet dome shell (dark steel wrapping around head)
+          {
+            const hdGrad = ctx.createRadialGradient(cx, hY + 1 * scale, 0, cx, hY + 1 * scale, 16 * scale);
+            hdGrad.addColorStop(0, "#3a3a44");
+            hdGrad.addColorStop(0.5, "#2c2c36");
+            hdGrad.addColorStop(0.8, "#1e1e28");
+            hdGrad.addColorStop(1, "#14141e");
+            ctx.fillStyle = hdGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx, hY + 1 * scale, 15.5 * scale, 13.5 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#daa520";
+            ctx.lineWidth = 0.8 * scale;
+            ctx.stroke();
+          }
+
           // Back fur volume (dark undercoat behind head)
           ctx.fillStyle = "#a04800";
           ctx.beginPath();
@@ -718,87 +734,117 @@ export const HeroSprite: React.FC<{
           }
 
           // === TIGER HELMET / CROWN ===
-          // Brow guard / visor
-          const browGrad = ctx.createLinearGradient(cx - 13 * scale, hY - 4 * scale, cx + 13 * scale, hY - 4 * scale);
-          browGrad.addColorStop(0, "#b86830");
-          browGrad.addColorStop(0.3, "#d08858");
-          browGrad.addColorStop(0.5, "#e0a070");
-          browGrad.addColorStop(0.7, "#d08858");
-          browGrad.addColorStop(1, "#b86830");
-          ctx.fillStyle = browGrad;
-          ctx.beginPath();
-          ctx.moveTo(cx - 13 * scale, hY - 4 * scale);
-          ctx.lineTo(cx + 13 * scale, hY - 4 * scale);
-          ctx.lineTo(cx + 11 * scale, hY - 1 * scale);
-          ctx.lineTo(cx - 11 * scale, hY - 1 * scale);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#e0a870";
-          ctx.lineWidth = 1 * scale;
-          ctx.stroke();
-          // Brow rivets
-          ctx.fillStyle = "#f0b878";
-          for (const rx of [-9, -4.5, 0, 4.5, 9]) {
+          // Brow guard / visor (dark steel with gold trim)
+          {
+            const browGrad = ctx.createLinearGradient(cx - 14 * scale, hY - 4 * scale, cx + 14 * scale, hY - 4 * scale);
+            browGrad.addColorStop(0, "#2a2a34");
+            browGrad.addColorStop(0.3, "#3a3a44");
+            browGrad.addColorStop(0.5, "#4a4a54");
+            browGrad.addColorStop(0.7, "#3a3a44");
+            browGrad.addColorStop(1, "#2a2a34");
+            ctx.fillStyle = browGrad;
             ctx.beginPath();
-            ctx.arc(cx + rx * scale, hY - 2.5 * scale, 0.7 * scale, 0, Math.PI * 2);
+            ctx.moveTo(cx - 14 * scale, hY - 3 * scale);
+            ctx.quadraticCurveTo(cx - 15 * scale, hY - 5.5 * scale, cx - 12 * scale, hY - 6 * scale);
+            ctx.lineTo(cx + 12 * scale, hY - 6 * scale);
+            ctx.quadraticCurveTo(cx + 15 * scale, hY - 5.5 * scale, cx + 14 * scale, hY - 3 * scale);
+            ctx.lineTo(cx + 11 * scale, hY - 1 * scale);
+            ctx.lineTo(cx - 11 * scale, hY - 1 * scale);
+            ctx.closePath();
             ctx.fill();
+            ctx.strokeStyle = "#daa520";
+            ctx.lineWidth = 1 * scale;
+            ctx.stroke();
+            // Gold trim line on visor
+            ctx.strokeStyle = "#e8c840";
+            ctx.lineWidth = 0.6 * scale;
+            ctx.beginPath();
+            ctx.moveTo(cx - 11 * scale, hY - 5 * scale);
+            ctx.lineTo(cx + 11 * scale, hY - 5 * scale);
+            ctx.stroke();
+            // Gold brow rivets
+            ctx.fillStyle = "#f0d860";
+            for (const rx of [-9, -4.5, 0, 4.5, 9]) {
+              ctx.beginPath();
+              ctx.arc(cx + rx * scale, hY - 2.5 * scale, 0.8 * scale, 0, Math.PI * 2);
+              ctx.fill();
+            }
           }
 
-          // Cheek guards (ornate, curved)
+          // Cheek guards (dark steel plates with gold trim)
           for (const side of [-1, 1]) {
             const cgGrad = ctx.createLinearGradient(cx + side * 14 * scale, hY - 4 * scale, cx + side * 10 * scale, hY + 6 * scale);
-            cgGrad.addColorStop(0, "#d08858");
-            cgGrad.addColorStop(0.5, "#c07040");
-            cgGrad.addColorStop(1, "#a05828");
+            cgGrad.addColorStop(0, "#2c2c36");
+            cgGrad.addColorStop(0.5, "#222230");
+            cgGrad.addColorStop(1, "#1a1a26");
             ctx.fillStyle = cgGrad;
             ctx.beginPath();
             ctx.moveTo(cx + side * 13 * scale, hY - 4 * scale);
             ctx.bezierCurveTo(
-              cx + side * 15 * scale, hY - 2 * scale,
-              cx + side * 15 * scale, hY + 3 * scale,
-              cx + side * 13 * scale, hY + 7 * scale
+              cx + side * 16 * scale, hY - 2 * scale,
+              cx + side * 16 * scale, hY + 4 * scale,
+              cx + side * 13 * scale, hY + 8 * scale
             );
-            ctx.lineTo(cx + side * 11 * scale, hY + 5 * scale);
+            ctx.lineTo(cx + side * 11 * scale, hY + 6 * scale);
             ctx.bezierCurveTo(
-              cx + side * 12 * scale, hY + 2 * scale,
-              cx + side * 12 * scale, hY - 1 * scale,
+              cx + side * 13 * scale, hY + 3 * scale,
+              cx + side * 13 * scale, hY - 1 * scale,
               cx + side * 11 * scale, hY - 1 * scale
             );
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = "#e0a870";
+            ctx.strokeStyle = "#daa520";
             ctx.lineWidth = 0.8 * scale;
             ctx.stroke();
-            // Guard rivet
-            ctx.fillStyle = "#f0b878";
+            // Gold hinge rivet
+            ctx.fillStyle = "#f0d860";
             ctx.beginPath();
-            ctx.arc(cx + side * 12.5 * scale, hY + 1 * scale, 0.6 * scale, 0, Math.PI * 2);
+            ctx.arc(cx + side * 13 * scale, hY + 1.5 * scale, 0.7 * scale, 0, Math.PI * 2);
             ctx.fill();
           }
 
-          // Raised crest on top
-          const crestGrad = ctx.createLinearGradient(cx, hY - 16 * scale, cx, hY - 6 * scale);
-          crestGrad.addColorStop(0, "#e0a060");
-          crestGrad.addColorStop(0.5, "#d08050");
-          crestGrad.addColorStop(1, "#b06030");
-          ctx.fillStyle = crestGrad;
-          ctx.beginPath();
-          ctx.moveTo(cx - 3 * scale, hY - 6 * scale);
-          ctx.bezierCurveTo(cx - 2.5 * scale, hY - 10 * scale, cx - 1.5 * scale, hY - 14 * scale, cx, hY - 16 * scale);
-          ctx.bezierCurveTo(cx + 1.5 * scale, hY - 14 * scale, cx + 2.5 * scale, hY - 10 * scale, cx + 3 * scale, hY - 6 * scale);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#e0a870";
-          ctx.lineWidth = 1 * scale;
-          ctx.stroke();
-          // Crest gem
-          ctx.fillStyle = `rgba(240, 60, 40, ${gemGlow})`;
-          ctx.shadowColor = "#ff2200";
-          ctx.shadowBlur = 5 * scale;
-          ctx.beginPath();
-          ctx.arc(cx, hY - 8 * scale, 1.5 * scale, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+          // Nose guard (nasal strip down center of face)
+          {
+            const ngGrad = ctx.createLinearGradient(cx - 1.5 * scale, hY, cx + 1.5 * scale, hY);
+            ngGrad.addColorStop(0, "#1a1a24");
+            ngGrad.addColorStop(0.35, "#3a3a44");
+            ngGrad.addColorStop(0.5, "#4a4a54");
+            ngGrad.addColorStop(0.65, "#3a3a44");
+            ngGrad.addColorStop(1, "#1a1a24");
+            ctx.fillStyle = ngGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx - 1.5 * scale, hY - 5 * scale);
+            ctx.lineTo(cx - 1.2 * scale, hY + 1 * scale);
+            ctx.quadraticCurveTo(cx, hY + 2 * scale, cx + 1.2 * scale, hY + 1 * scale);
+            ctx.lineTo(cx + 1.5 * scale, hY - 5 * scale);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#daa520";
+            ctx.lineWidth = 0.5 * scale;
+            ctx.stroke();
+          }
+
+          // Gold crest ridge (running front to back on helmet top)
+          {
+            const crGrad = ctx.createLinearGradient(cx - 2 * scale, hY, cx + 2 * scale, hY);
+            crGrad.addColorStop(0, "#8a7010");
+            crGrad.addColorStop(0.3, "#daa520");
+            crGrad.addColorStop(0.5, "#f0d860");
+            crGrad.addColorStop(0.7, "#daa520");
+            crGrad.addColorStop(1, "#8a7010");
+            ctx.fillStyle = crGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx - 1.5 * scale, hY - 6 * scale);
+            ctx.lineTo(cx - 1.8 * scale, hY + 4 * scale);
+            ctx.quadraticCurveTo(cx, hY + 5 * scale, cx + 1.8 * scale, hY + 4 * scale);
+            ctx.lineTo(cx + 1.5 * scale, hY - 6 * scale);
+            ctx.quadraticCurveTo(cx, hY - 7 * scale, cx - 1.5 * scale, hY - 6 * scale);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#e8c840";
+            ctx.lineWidth = 0.5 * scale;
+            ctx.stroke();
+          }
 
           // Tiger ears (poking through helmet)
           for (const side of [-1, 1]) {
@@ -833,6 +879,117 @@ export const HeroSprite: React.FC<{
             ctx.moveTo(cx + side * 9.5 * scale, hY - 6.5 * scale);
             ctx.lineTo(cx + side * 10.5 * scale, hY - 5 * scale);
             ctx.stroke();
+          }
+
+          // Ear armor rings (gold)
+          for (const side of [-1, 1]) {
+            ctx.fillStyle = "#daa520";
+            ctx.beginPath();
+            ctx.arc(cx + side * 10 * scale, hY - 7 * scale, 1 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#f0d860";
+            ctx.lineWidth = 0.4 * scale;
+            ctx.stroke();
+          }
+
+          // === GOLD CROWN (5 pointed tines with red gems) ===
+          {
+            const crY = hY - 8 * scale;
+            const crHW = 9 * scale;
+            const crH = 6 * scale;
+            const crPoints = 5;
+
+            // Crown base band (gold gradient)
+            const crBaseG = ctx.createLinearGradient(cx - crHW, crY, cx + crHW, crY);
+            crBaseG.addColorStop(0, "#8a7010");
+            crBaseG.addColorStop(0.2, "#c9a227");
+            crBaseG.addColorStop(0.4, "#e8c840");
+            crBaseG.addColorStop(0.5, "#f0d860");
+            crBaseG.addColorStop(0.6, "#e8c840");
+            crBaseG.addColorStop(0.8, "#c9a227");
+            crBaseG.addColorStop(1, "#8a7010");
+            ctx.fillStyle = crBaseG;
+            ctx.beginPath();
+            ctx.moveTo(cx - crHW, crY);
+            ctx.lineTo(cx + crHW, crY);
+            ctx.lineTo(cx + crHW, crY + 2.5 * scale);
+            ctx.lineTo(cx - crHW, crY + 2.5 * scale);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#f0d860";
+            ctx.lineWidth = 0.5 * scale;
+            ctx.stroke();
+
+            // Crown pointed tines
+            const crPtG = ctx.createLinearGradient(cx, crY - crH, cx, crY);
+            crPtG.addColorStop(0, "#f8e880");
+            crPtG.addColorStop(0.3, "#e8c840");
+            crPtG.addColorStop(0.6, "#daa520");
+            crPtG.addColorStop(1, "#c9a227");
+            ctx.fillStyle = crPtG;
+            ctx.beginPath();
+            ctx.moveTo(cx - crHW, crY);
+            for (let p = 0; p < crPoints; p++) {
+              const pt = p / (crPoints - 1);
+              const px = cx - crHW + pt * crHW * 2;
+              const tipH = p === Math.floor(crPoints / 2) ? crH * 1.15 : crH * (0.75 + Math.abs(pt - 0.5) * 0.4);
+              ctx.lineTo(px, crY - tipH);
+              if (p < crPoints - 1) {
+                const midX = px + (crHW * 2 / (crPoints - 1)) * 0.5;
+                ctx.lineTo(midX, crY - crH * 0.2);
+              }
+            }
+            ctx.lineTo(cx + crHW, crY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#8a7010";
+            ctx.lineWidth = 1 * scale;
+            ctx.stroke();
+            // Crown highlight on left edge
+            ctx.strokeStyle = "rgba(255, 240, 160, 0.5)";
+            ctx.lineWidth = 0.6 * scale;
+            ctx.beginPath();
+            ctx.moveTo(cx - crHW, crY);
+            for (let p = 0; p < 3; p++) {
+              const pt = p / (crPoints - 1);
+              const px = cx - crHW + pt * crHW * 2;
+              const tipH = p === Math.floor(crPoints / 2) ? crH * 1.15 : crH * (0.75 + Math.abs(pt - 0.5) * 0.4);
+              ctx.lineTo(px, crY - tipH);
+              if (p < 2) {
+                const midX = px + (crHW * 2 / (crPoints - 1)) * 0.5;
+                ctx.lineTo(midX, crY - crH * 0.2);
+              }
+            }
+            ctx.stroke();
+
+            // Red gems on each crown point
+            ctx.shadowColor = "#ff2200";
+            ctx.shadowBlur = 4 * scale * gemGlow;
+            for (let p = 0; p < crPoints; p++) {
+              const pt = p / (crPoints - 1);
+              const gx = cx - crHW + pt * crHW * 2;
+              const tipH = p === Math.floor(crPoints / 2) ? crH * 1.15 : crH * (0.75 + Math.abs(pt - 0.5) * 0.4);
+              const gy = crY - tipH + 1.5 * scale;
+              const gemR = p === Math.floor(crPoints / 2) ? 1.2 * scale : 0.9 * scale;
+              const crGemG = ctx.createRadialGradient(gx - gemR * 0.3, gy - gemR * 0.3, 0, gx, gy, gemR);
+              crGemG.addColorStop(0, "#ff6060");
+              crGemG.addColorStop(0.4, "#ee2020");
+              crGemG.addColorStop(1, "#880000");
+              ctx.fillStyle = crGemG;
+              ctx.beginPath();
+              ctx.arc(gx, gy, gemR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+            // Crown base band rivets
+            ctx.fillStyle = "#f0d860";
+            for (let br = 0; br < 7; br++) {
+              const brX = cx - crHW + 1.5 * scale + (br * (crHW * 2 - 3 * scale)) / 6;
+              ctx.beginPath();
+              ctx.arc(brX, crY + 1.25 * scale, 0.5 * scale, 0, Math.PI * 2);
+              ctx.fill();
+            }
           }
 
           // Head stripes (curved, detailed)

@@ -4,13 +4,12 @@ import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawRadialAura } from "./helpers";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawSandDust,
   drawShiftingSegments,
   drawAnimatedTendril,
   drawFloatingPiece,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 // =====================================================
 // DESERT REGION TROOPS
@@ -134,8 +133,8 @@ export function drawNomadEnemy(
   }
 
 
-  // Animated walking legs (visible beneath robe)
-  drawAnimatedLegs(ctx, x, y + size * 0.25, size, time, zoom, {
+  // Armored legs visible beneath robe — path-based for depth
+  drawPathLegs(ctx, x, y + size * 0.25, size, time, zoom, {
     color: "#5c4a3a",
     colorDark: "#3d2e22",
     footColor: "#2a1f16",
@@ -143,34 +142,30 @@ export function drawNomadEnemy(
     strideAmt: 0.25,
     legLen: 0.2,
     width: 0.04,
+    style: 'armored',
   });
 
-  // Animated arms (sandy/brown tones, peek from beneath robe)
-  drawAnimatedArm(ctx, x - size * 0.28, y - size * 0.15, size, time, zoom, -1, {
+  // Nomad arms — scimitar guard stance
+  drawPathArm(ctx, x - size * 0.28, y - size * 0.15, size, time, zoom, -1, {
     color: "#8b7355",
     colorDark: "#5c4a3a",
     handColor: "#6b5a48",
-    swingSpeed: 2,
-    swingAmt: 0.15,
-    baseAngle: 0.4,
+    shoulderAngle: -0.5 + Math.sin(time * 2) * 0.06,
+    elbowAngle: 0.8 + Math.sin(time * 2.5 + 0.5) * 0.08,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
-    elbowBend: 0.3,
-    attackExtra: isAttacking ? 0.5 : 0,
+    style: 'armored',
   });
-  drawAnimatedArm(ctx, x + size * 0.28, y - size * 0.15, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.28, y - size * 0.15, size, time, zoom, 1, {
     color: "#8b7355",
     colorDark: "#5c4a3a",
     handColor: "#6b5a48",
-    swingSpeed: 2,
-    swingAmt: 0.1,
-    baseAngle: 0.3,
+    shoulderAngle: 0.7 + Math.sin(time * 2.2) * 0.08 + (isAttacking ? 0.5 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 2.8 + 1.5) * 0.1,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
-    phaseOffset: Math.PI,
-    elbowBend: 0.35,
   });
 
   // Outer flowing robe layer with wind
@@ -725,30 +720,37 @@ export function drawScorpionEnemy(
     ctx.fill();
   }
 
-  // Armored segmented legs (4 on each side) with isometric depth
-  // Legs fan out: front legs reach forward-up, rear legs reach backward-down
+  // Armored segmented legs (4 on each side) with tetrapod crawling gait
+  // Arachnid gait: legs 0,2 on left move with legs 1,3 on right (and vice versa)
   const legAngles = [-0.55, -0.2, 0.15, 0.5];
   const legLengths = [0.38, 0.42, 0.42, 0.36];
+  const crawlSpeed = time * 5;
   for (let side = -1; side <= 1; side += 2) {
     for (let leg = 0; leg < 4; leg++) {
-      const legPhase = legWave + leg * 0.6;
+      // Tetrapod gait: alternate phase based on leg index + side
+      const gaitOffset = ((leg % 2) ^ (side === 1 ? 1 : 0)) ? 0 : Math.PI;
+      const stride = Math.sin(crawlSpeed + gaitOffset);
+      const liftPhase = Math.max(0, stride);
+      const pushPhase = Math.max(0, -stride);
       const legAngle = legAngles[leg];
       const legLen = legLengths[leg];
 
       const legBaseX = x + side * (size * 0.12 + leg * size * 0.08);
       const legBaseY = y + size * 0.02 + leg * size * 0.05;
 
-      // Mid-joint arches upward then leg reaches to ground contact
+      // Mid-joint arches upward during lift, flattens during push
       const midSpreadX = side * size * 0.2;
       const midSpreadY = legAngle * size * 0.15;
-      const legMidX = legBaseX + midSpreadX;
-      const legMidY = legBaseY + midSpreadY - size * 0.04 + Math.sin(legPhase) * size * 0.06;
+      const liftHeight = liftPhase * size * 0.1;
+      const legMidX = legBaseX + midSpreadX + side * stride * size * 0.03;
+      const legMidY = legBaseY + midSpreadY - size * 0.04 - liftHeight;
 
-      // Foot contact point fans out in isometric perspective
+      // Foot sweeps forward on lift, backward on push (crawling motion)
+      const footStride = stride * size * 0.06;
       const endSpreadX = side * size * legLen;
       const endSpreadY = legAngle * size * 0.35;
-      const legEndX = legBaseX + endSpreadX;
-      const legEndY = legBaseY + endSpreadY + size * 0.2 + Math.sin(legPhase) * size * 0.02;
+      const legEndX = legBaseX + endSpreadX + footStride * legAngle;
+      const legEndY = legBaseY + endSpreadY + size * 0.2 - liftPhase * size * 0.04 - footStride * 0.3;
 
       // Leg segments with gradient
       const legGrad = ctx.createLinearGradient(legBaseX, legBaseY, legEndX, legEndY);
@@ -764,10 +766,10 @@ export function drawScorpionEnemy(
       ctx.lineTo(legEndX, legEndY);
       ctx.stroke();
 
-      // Leg joints
+      // Leg joints (larger when lifting)
       ctx.fillStyle = bodyColorDark;
       ctx.beginPath();
-      ctx.arc(legMidX, legMidY, size * 0.03, 0, Math.PI * 2);
+      ctx.arc(legMidX, legMidY, size * (0.03 + liftPhase * 0.008), 0, Math.PI * 2);
       ctx.fill();
 
       // Leg spikes/hairs
@@ -778,8 +780,9 @@ export function drawScorpionEnemy(
       ctx.lineTo(legMidX + side * size * 0.04, legMidY - size * 0.06);
       ctx.stroke();
 
-      // Small foot shadow at contact point
-      ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+      // Foot shadow only when grounded (push phase)
+      const groundAlpha = 0.12 * (1 - liftPhase);
+      ctx.fillStyle = `rgba(0, 0, 0, ${groundAlpha})`;
       ctx.beginPath();
       ctx.ellipse(legEndX, legEndY + size * 0.01, size * 0.025, size * 0.01, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -1171,33 +1174,29 @@ export function drawScorpionEnemy(
     tipRadius: 0.012,
   });
 
-  // Animated pincer accents via arm helper
-  drawAnimatedArm(ctx, x - size * 0.25, y - size * 0.15, size, time, zoom, -1, {
+  // Scorpion pincers — raised threatening claws
+  drawPathArm(ctx, x - size * 0.25, y - size * 0.15, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
-    swingSpeed: 3,
-    swingAmt: 0.2,
-    baseAngle: -0.6,
+    shoulderAngle: 0.6 + Math.sin(time * 2.5) * 0.12 + (isAttacking ? 0.6 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 3 + 0.5) * 0.15,
     upperLen: 0.12,
     foreLen: 0.1,
     width: 0.04,
     handColor: bodyColorDark,
     handRadius: 0.03,
-    elbowBend: -0.3,
-    attackExtra: isAttacking ? 0.6 : 0,
+    style: 'armored',
   });
-  drawAnimatedArm(ctx, x + size * 0.25, y - size * 0.15, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.25, y - size * 0.15, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
-    swingSpeed: 3,
-    swingAmt: 0.2,
-    baseAngle: -0.6,
+    shoulderAngle: -0.6 + Math.sin(time * 2.5 + Math.PI) * 0.12 + (isAttacking ? -0.6 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 3 + 2) * 0.15,
     upperLen: 0.12,
     foreLen: 0.1,
     width: 0.04,
     handColor: bodyColorDark,
     handRadius: 0.03,
-    phaseOffset: Math.PI,
     elbowBend: -0.3,
     attackExtra: isAttacking ? 0.6 : 0,
   });
@@ -1671,8 +1670,8 @@ export function drawScarabEnemy(
     }
   }
 
-  // Animated leg-like appendages (supplemental scuttle effect)
-  drawAnimatedLegs(ctx, x, y + size * 0.15 + hoverFloat, size, time, zoom, {
+  // Armored scuttling appendages — path-based with chitin plates
+  drawPathLegs(ctx, x, y + size * 0.15 + hoverFloat, size, time, zoom, {
     color: bodyColorDark,
     colorDark: "#0a0805",
     footColor: "#1a1510",
@@ -1681,6 +1680,7 @@ export function drawScarabEnemy(
     legLen: 0.12,
     width: 0.03,
     shuffle: true,
+    style: 'armored',
   });
 
   // Mandible animations (animated tendrils)

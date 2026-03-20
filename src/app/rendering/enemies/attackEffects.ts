@@ -17,6 +17,16 @@ const HEAVY_GROUND_SLAM_TYPES = new Set<EnemyType>([
   "ember_guard",
   "bog_creature",
   "tiger_fan",
+  "centipede",
+  "magma_beetle",
+  "brood_mother",
+  "dire_bear",
+  "ancient_ent",
+  "forest_troll",
+  "marsh_troll",
+  "frost_troll",
+  "mammoth",
+  "lava_golem",
 ]);
 
 const SLASH_ATTACK_TYPES = new Set<EnemyType>([
@@ -28,6 +38,7 @@ const SLASH_ATTACK_TYPES = new Set<EnemyType>([
   "athlete",
   "fire_imp",
   "snow_goblin",
+  "mantis",
 ]);
 
 const MAGIC_ATTACK_TYPES = new Set<EnemyType>([
@@ -41,6 +52,12 @@ const MAGIC_ATTACK_TYPES = new Set<EnemyType>([
   "will_o_wisp",
   "cultist",
   "plaguebearer",
+  "bombardier_beetle",
+  "silk_moth",
+  "snow_moth",
+  "ash_moth",
+  "djinn",
+  "phoenix",
 ]);
 
 const BITE_ATTACK_TYPES = new Set<EnemyType>([
@@ -50,6 +67,24 @@ const BITE_ATTACK_TYPES = new Set<EnemyType>([
   "wyvern",
   "scarab",
   "magma_spawn",
+  "orb_weaver",
+  "mosquito",
+  "dragonfly",
+  "ant_soldier",
+  "locust",
+  "trapdoor_spider",
+  "ice_beetle",
+  "frost_tick",
+  "fire_ant",
+  "timber_wolf",
+  "dire_wolf",
+  "giant_eagle",
+  "swamp_hydra",
+  "giant_toad",
+  "basilisk",
+  "manticore",
+  "volcanic_drake",
+  "salamander",
 ]);
 
 // ============================================================================
@@ -104,6 +139,26 @@ function getSlamStyle(type: EnemyType): SlamStyle {
       return { crackRgb: "180, 150, 50", glowRgb: "255, 220, 80", debrisRgb: "220, 190, 70", shockRgb: "240, 200, 80", intensity: 1.3 };
     case "bog_creature":
       return { crackRgb: "50, 90, 40", glowRgb: "90, 160, 70", debrisRgb: "70, 130, 55", shockRgb: "80, 140, 60", intensity: 1.0 };
+    case "centipede":
+      return { crackRgb: "120, 40, 20", glowRgb: "180, 50, 220", debrisRgb: "140, 60, 30", shockRgb: "160, 80, 40", intensity: 1.1 };
+    case "magma_beetle":
+      return { crackRgb: "255, 60, 10", glowRgb: "255, 120, 30", debrisRgb: "200, 80, 20", shockRgb: "255, 100, 25", intensity: 1.3 };
+    case "brood_mother":
+      return { crackRgb: "60, 20, 20", glowRgb: "180, 30, 30", debrisRgb: "100, 40, 40", shockRgb: "140, 40, 40", intensity: 1.6 };
+    case "dire_bear":
+      return { crackRgb: "80, 50, 20", glowRgb: "180, 140, 60", debrisRgb: "120, 90, 50", shockRgb: "150, 120, 60", intensity: 1.4 };
+    case "ancient_ent":
+      return { crackRgb: "40, 80, 20", glowRgb: "80, 200, 50", debrisRgb: "60, 140, 40", shockRgb: "70, 160, 45", intensity: 1.5 };
+    case "forest_troll":
+      return { crackRgb: "50, 80, 40", glowRgb: "100, 180, 80", debrisRgb: "70, 130, 60", shockRgb: "80, 150, 70", intensity: 1.2 };
+    case "marsh_troll":
+      return { crackRgb: "50, 70, 35", glowRgb: "90, 150, 70", debrisRgb: "65, 110, 50", shockRgb: "75, 130, 60", intensity: 1.2 };
+    case "frost_troll":
+      return { crackRgb: "100, 160, 200", glowRgb: "150, 200, 240", debrisRgb: "130, 180, 220", shockRgb: "140, 190, 230", intensity: 1.3 };
+    case "mammoth":
+      return { crackRgb: "100, 80, 50", glowRgb: "180, 150, 100", debrisRgb: "140, 110, 70", shockRgb: "160, 130, 90", intensity: 1.8 };
+    case "lava_golem":
+      return { crackRgb: "255, 80, 0", glowRgb: "255, 150, 30", debrisRgb: "200, 100, 20", shockRgb: "255, 120, 30", intensity: 1.6 };
     default:
       return { crackRgb: "80, 60, 40", glowRgb: "200, 160, 80", debrisRgb: "140, 120, 80", shockRgb: "160, 130, 70", intensity: 1.0 };
   }
@@ -121,6 +176,12 @@ function getSlashStyle(type: EnemyType): SlashStyle {
       return { rgb: "200, 80, 255", trailRgb: "150, 40, 200", sparkRgb: "230, 160, 255", arcWidth: 1.1, slashCount: 1 };
     case "thornwalker":
       return { rgb: "80, 200, 60", trailRgb: "50, 150, 40", sparkRgb: "140, 230, 100", arcWidth: 1.3, slashCount: 1 };
+    case "mantis":
+      return { rgb: "120, 200, 30", trailRgb: "80, 160, 20", sparkRgb: "180, 240, 80", arcWidth: 0.6, slashCount: 4 };
+    case "wendigo":
+      return { rgb: "100, 140, 180", trailRgb: "60, 100, 140", sparkRgb: "180, 220, 255", arcWidth: 1.2, slashCount: 2 };
+    case "vine_serpent":
+      return { rgb: "60, 180, 60", trailRgb: "40, 140, 40", sparkRgb: "120, 220, 100", arcWidth: 1.3, slashCount: 1 };
     case "athlete":
       return { rgb: "255, 210, 50", trailRgb: "230, 180, 30", sparkRgb: "255, 240, 150", arcWidth: 0.9, slashCount: 1 };
     case "fire_imp":
@@ -154,6 +215,18 @@ function getMagicStyle(type: EnemyType): MagicStyle {
       return { coreRgb: "80, 20, 120", glowRgb: "120, 40, 170", runeRgb: "160, 60, 220", shape: "vortex" };
     case "plaguebearer":
       return { coreRgb: "120, 180, 30", glowRgb: "150, 210, 50", runeRgb: "180, 230, 80", shape: "burst" };
+    case "bombardier_beetle":
+      return { coreRgb: "255, 120, 20", glowRgb: "255, 160, 50", runeRgb: "255, 200, 80", shape: "burst" };
+    case "silk_moth":
+      return { coreRgb: "180, 160, 240", glowRgb: "200, 185, 255", runeRgb: "220, 210, 255", shape: "wave" };
+    case "snow_moth":
+      return { coreRgb: "200, 235, 255", glowRgb: "220, 245, 255", runeRgb: "240, 250, 255", shape: "wave" };
+    case "ash_moth":
+      return { coreRgb: "255, 140, 30", glowRgb: "255, 180, 60", runeRgb: "255, 210, 100", shape: "burst" };
+    case "djinn":
+      return { coreRgb: "106, 58, 170", glowRgb: "150, 100, 220", runeRgb: "200, 160, 255", shape: "vortex" };
+    case "phoenix":
+      return { coreRgb: "255, 200, 50", glowRgb: "255, 140, 30", runeRgb: "255, 100, 0", shape: "burst" };
     default:
       return { coreRgb: "150, 100, 255", glowRgb: "180, 140, 255", runeRgb: "210, 180, 255", shape: "burst" };
   }
@@ -173,6 +246,42 @@ function getBiteStyle(type: EnemyType): BiteStyle {
       return { jawRgb: "40, 80, 40", fluidRgb: "140, 200, 80", teethRgb: "200, 210, 180", jawScale: 0.8 };
     case "magma_spawn":
       return { jawRgb: "255, 80, 20", fluidRgb: "255, 160, 40", teethRgb: "255, 220, 150", jawScale: 1.1 };
+    case "orb_weaver":
+      return { jawRgb: "60, 40, 30", fluidRgb: "120, 200, 80", teethRgb: "180, 160, 140", jawScale: 1.1 };
+    case "mosquito":
+      return { jawRgb: "80, 30, 50", fluidRgb: "200, 40, 40", teethRgb: "160, 130, 120", jawScale: 0.7 };
+    case "dragonfly":
+      return { jawRgb: "14, 130, 200", fluidRgb: "40, 180, 240", teethRgb: "200, 220, 240", jawScale: 0.6 };
+    case "ant_soldier":
+      return { jawRgb: "100, 50, 10", fluidRgb: "160, 120, 40", teethRgb: "200, 180, 150", jawScale: 1.2 };
+    case "locust":
+      return { jawRgb: "120, 120, 30", fluidRgb: "160, 160, 50", teethRgb: "200, 200, 160", jawScale: 0.7 };
+    case "trapdoor_spider":
+      return { jawRgb: "80, 50, 20", fluidRgb: "160, 200, 60", teethRgb: "180, 160, 140", jawScale: 1.3 };
+    case "ice_beetle":
+      return { jawRgb: "60, 180, 220", fluidRgb: "140, 230, 255", teethRgb: "220, 245, 255", jawScale: 1.0 };
+    case "frost_tick":
+      return { jawRgb: "100, 200, 240", fluidRgb: "165, 243, 252", teethRgb: "230, 250, 255", jawScale: 0.8 };
+    case "fire_ant":
+      return { jawRgb: "180, 30, 10", fluidRgb: "255, 100, 30", teethRgb: "255, 200, 150", jawScale: 1.2 };
+    case "timber_wolf":
+      return { jawRgb: "80, 80, 80", fluidRgb: "200, 50, 50", teethRgb: "240, 240, 230", jawScale: 0.9 };
+    case "dire_wolf":
+      return { jawRgb: "60, 60, 70", fluidRgb: "150, 200, 255", teethRgb: "240, 245, 255", jawScale: 1.0 };
+    case "giant_eagle":
+      return { jawRgb: "180, 150, 60", fluidRgb: "200, 180, 100", teethRgb: "255, 240, 200", jawScale: 0.8 };
+    case "swamp_hydra":
+      return { jawRgb: "40, 70, 40", fluidRgb: "80, 200, 60", teethRgb: "200, 220, 180", jawScale: 1.5 };
+    case "giant_toad":
+      return { jawRgb: "60, 90, 40", fluidRgb: "120, 180, 60", teethRgb: "200, 210, 180", jawScale: 1.3 };
+    case "basilisk":
+      return { jawRgb: "80, 80, 40", fluidRgb: "100, 255, 80", teethRgb: "220, 220, 200", jawScale: 1.4 };
+    case "manticore":
+      return { jawRgb: "120, 60, 20", fluidRgb: "180, 80, 200", teethRgb: "240, 230, 210", jawScale: 1.2 };
+    case "volcanic_drake":
+      return { jawRgb: "200, 50, 0", fluidRgb: "255, 140, 30", teethRgb: "255, 230, 180", jawScale: 1.3 };
+    case "salamander":
+      return { jawRgb: "200, 60, 0", fluidRgb: "255, 120, 20", teethRgb: "255, 220, 160", jawScale: 0.9 };
     default:
       return { jawRgb: "180, 80, 60", fluidRgb: "200, 200, 255", teethRgb: "240, 240, 240", jawScale: 1.0 };
   }
@@ -594,7 +703,7 @@ function renderMagicAttack(
       const sy = castY + Math.sin(sAngle) * sDist * ISO_Y_RATIO;
       ctx.fillStyle = `rgba(${style.runeRgb}, ${pulse * 0.4})`;
       ctx.beginPath();
-      ctx.arc(sx, sy, size * 0.025, 0, Math.PI * 2);
+      ctx.ellipse(sx, sy, size * 0.025, size * 0.025 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }

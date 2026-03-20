@@ -4,8 +4,6 @@
 import { drawRadialAura } from "./helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
-  drawAnimatedArm,
-  drawAnimatedLegs,
   drawGlowingEyes,
   drawShadowWisps,
   drawPoisonBubbles,
@@ -17,6 +15,7 @@ import {
   drawEmberSparks,
   drawFrostCrystals,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 import { ISO_Y_RATIO } from "../../constants/isometric";
 
 const TAU = Math.PI * 2;
@@ -2435,7 +2434,7 @@ export function drawFrostColossusEnemy(
   }
 
   // === ANIMATED LEGS ===
-  drawAnimatedLegs(ctx, x, y + size * 0.2, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.2, size, time, zoom, {
     legLen: 0.3,
     width: 0.08,
     strideSpeed: 2.5,
@@ -2444,6 +2443,7 @@ export function drawFrostColossusEnemy(
     colorDark: bodyColorDark,
     footColor: "#e0f2fe",
     footLen: 0.08,
+    style: "armored",
   });
 
   // === MASSIVE ICE BODY ===
@@ -2616,9 +2616,9 @@ export function drawFrostColossusEnemy(
     });
   }
 
-  // === ANIMATED ARMS ===
+  // === ANIMATED ARMS — frost colossus crushing spread ===
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(
+    drawPathArm(
       ctx,
       x + side * size * 0.3,
       y - size * 0.2,
@@ -2630,15 +2630,13 @@ export function drawFrostColossusEnemy(
         upperLen: 0.22,
         foreLen: 0.2,
         width: 0.07,
-        swingSpeed: 2.5,
-        swingAmt: 0.2,
-        baseAngle: 0.2,
+        shoulderAngle: side * (0.9 + Math.sin(time * 1.5 + side * 0.5) * 0.1 + (isAttacking ? attackIntensity * 0.5 : 0)),
+        elbowAngle: 0.3 + Math.sin(time * 2 + side * 1.5) * 0.1,
         color: bodyColor,
         colorDark: bodyColorDark,
         handColor: "#e0f2fe",
         handRadius: 0.04,
-        elbowBend: 0.3,
-        attackExtra: isAttacking ? attackIntensity * 0.5 : 0,
+        style: "armored",
       },
     );
   }

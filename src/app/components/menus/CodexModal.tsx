@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import type {
   HeroType,
+  TroopType,
   SpellType,
   EnemyTrait,
   EnemyCategory,
@@ -92,6 +93,7 @@ import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
   TowerSprite,
   HeroSprite,
+  TroopSprite,
   EnemySprite,
   SpellSprite,
   HeroAbilityIcon,
@@ -189,6 +191,7 @@ const CATEGORY_ICONS: Record<EnemyCategory, React.ReactNode> = {
 export type CodexTabId =
   | "towers"
   | "heroes"
+  | "troops"
   | "enemies"
   | "spells"
   | "special_towers"
@@ -648,6 +651,34 @@ const HAZARD_SPRITE_THEME: Record<
 const getHeroSpriteFrameTheme = (type: HeroType): SpriteFrameTheme =>
   buildThemeFromAccent(HERO_DATA[type].color || "#f59e0b");
 
+const getTroopSpriteFrameTheme = (type: TroopType): SpriteFrameTheme =>
+  buildThemeFromAccent(TROOP_DATA[type]?.color || "#708090");
+
+const TROOP_DISPLAY_ORDER: TroopType[] = [
+  "footsoldier", "armored", "elite", "knight",
+  "centaur", "cavalry",
+  "reinforcement", "turret",
+  "thesis", "rowing", "hexling", "hexseer",
+];
+
+const TROOP_CATEGORY_MAP: Record<string, { label: string; color: string; types: TroopType[] }> = {
+  station: {
+    label: "Station Garrison",
+    color: "text-amber-300",
+    types: ["footsoldier", "armored", "elite", "knight", "centaur", "cavalry"],
+  },
+  summoned: {
+    label: "Summoned Units",
+    color: "text-purple-300",
+    types: ["reinforcement", "turret"],
+  },
+  hex: {
+    label: "Hex Ward Spirits",
+    color: "text-fuchsia-300",
+    types: ["thesis", "rowing", "hexling", "hexseer"],
+  },
+};
+
 const FramedCodexSprite = FramedSprite;
 
 const renderSpecialTowerGlyph = (type: SpecialTowerType): React.ReactNode => {
@@ -1042,6 +1073,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   );
   const towerTypes = Object.keys(TOWER_DATA) as (keyof typeof TOWER_DATA)[];
   const heroTypes = Object.keys(HERO_DATA) as HeroType[];
+  const troopTypes = TROOP_DISPLAY_ORDER;
   const enemyTypes = Object.keys(ENEMY_DATA) as (keyof typeof ENEMY_DATA)[];
   const spellTypes = Object.keys(SPELL_DATA) as SpellType[];
   const levelEntries = Object.entries(LEVEL_DATA);
@@ -1217,10 +1249,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   const towerGlobalMaxIncomeRate = Math.max(...towerAllLevelStats.filter(s => s.incomeInterval && s.incomeInterval > 0).map(s => 1000 / (s.incomeInterval || 8000)), 0.05);
   const towerGlobalMaxSlow = Math.max(...towerAllLevelStats.map(s => (s.slowAmount || 0) * 100), 1);
 
-  const troopTypes = Object.values(TROOP_DATA);
-  const troopMaxHp = Math.max(...troopTypes.map(t => t.hp), 1);
-  const troopMaxDmg = Math.max(...troopTypes.map(t => t.damage), 1);
-  const troopMaxAtkRate = Math.max(...troopTypes.map(t => 1000 / t.attackSpeed), 0.1);
+  const troopDataValues = Object.values(TROOP_DATA);
+  const troopMaxHp = Math.max(...troopDataValues.map(t => t.hp), 1);
+  const troopMaxDmg = Math.max(...troopDataValues.map(t => t.damage), 1);
+  const troopMaxAtkRate = Math.max(...troopDataValues.map(t => 1000 / t.attackSpeed), 0.1);
 
   const enemyMaxBounty = Math.max(...enemyTypes.map(t => ENEMY_DATA[t].bounty), 1);
   const enemyMaxSpeed = Math.max(...enemyTypes.map(t => ENEMY_DATA[t].speed), 0.1);
@@ -1627,6 +1659,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                 label: "Heroes",
                 icon: <Crown size={16} />,
                 count: heroTypes.length,
+              },
+              {
+                id: "troops",
+                label: "Troops",
+                icon: <Users size={16} />,
+                count: troopTypes.length,
               },
               {
                 id: "enemies",
@@ -2878,6 +2916,137 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   </div>
                 );
               })()}
+
+            {activeTab === "troops" && (
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-1 text-blue-300">
+                      <Users size={15} />
+                      <h3 className="text-lg font-bold">Troop Roster</h3>
+                    </div>
+                    <p className="text-sm text-stone-300 leading-relaxed">
+                      Troops are spawned by Station towers, summoning spells, and Hex Ward reanimation. They block enemies on the path,
+                      buying time for your towers to deal damage.
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                      <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
+                        <div className="text-[10px] text-blue-400 uppercase tracking-wider">Total Types</div>
+                        <div className="text-lg font-bold text-blue-200">{troopTypes.length}</div>
+                      </div>
+                      <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
+                        <div className="text-[10px] text-red-400 uppercase tracking-wider">Toughest</div>
+                        <div className="text-sm font-bold text-red-200 leading-tight">
+                          {(() => {
+                            const t = troopTypes.reduce((best, cur) =>
+                              TROOP_DATA[cur].hp > TROOP_DATA[best].hp ? cur : best
+                            );
+                            return `${TROOP_DATA[t].name} ${TROOP_DATA[t].hp} HP`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-orange-800/35 bg-orange-950/30 px-2.5 py-2">
+                        <div className="text-[10px] text-orange-400 uppercase tracking-wider">Hardest Hitter</div>
+                        <div className="text-sm font-bold text-orange-200 leading-tight">
+                          {(() => {
+                            const t = troopTypes.reduce((best, cur) =>
+                              TROOP_DATA[cur].damage > TROOP_DATA[best].damage ? cur : best
+                            );
+                            return `${TROOP_DATA[t].name} ${TROOP_DATA[t].damage} DMG`;
+                          })()}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-green-800/35 bg-green-950/30 px-2.5 py-2">
+                        <div className="text-[10px] text-green-400 uppercase tracking-wider">Ranged Troops</div>
+                        <div className="text-lg font-bold text-green-200">
+                          {troopTypes.filter(t => TROOP_DATA[t].isRanged).length}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {Object.entries(TROOP_CATEGORY_MAP).map(([catKey, cat]) => (
+                  <div key={catKey}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={`text-sm font-bold ${cat.color}`}>{cat.label}</div>
+                      <div className="flex-1 h-px" style={{ background: GOLD.border25 }} />
+                      <span className="text-[10px] text-stone-500">{cat.types.length} units</span>
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {cat.types.map((type) => {
+                        const troop = TROOP_DATA[type];
+                        if (!troop) return null;
+                        const troopMaxHp = Math.max(...troopTypes.map(t => TROOP_DATA[t].hp), 1);
+                        const troopMaxDmg = Math.max(...troopTypes.map(t => TROOP_DATA[t].damage), 1);
+                        return (
+                          <div
+                            key={type}
+                            className="rounded-xl overflow-hidden relative"
+                            style={{
+                              background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                              border: `1.5px solid ${GOLD.border25}`,
+                              boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                            }}
+                          >
+                            <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                            <div className="p-3">
+                              <div className="flex items-start gap-3 mb-2.5">
+                                <FramedCodexSprite size={44} theme={getTroopSpriteFrameTheme(type)}>
+                                  <TroopSprite type={type} size={34} animated />
+                                </FramedCodexSprite>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm font-bold text-amber-200 truncate">{troop.name}</h4>
+                                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                    {troop.isMounted && <span className="text-[8px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 font-bold">MOUNTED</span>}
+                                    {troop.isRanged && <span className="text-[8px] px-1.5 py-0.5 bg-green-900/50 rounded text-green-300 font-bold">RANGED</span>}
+                                    {troop.isStationary && <span className="text-[8px] px-1.5 py-0.5 bg-stone-800/60 rounded text-stone-300 font-bold">STATIC</span>}
+                                    {troop.canTargetFlying && <span className="text-[8px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300">ANTI-AIR</span>}
+                                    {!troop.isMounted && !troop.isRanged && !troop.isStationary && <span className="text-[8px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 font-bold">MELEE</span>}
+                                  </div>
+                                  <p className="text-[10px] text-stone-400 mt-1 line-clamp-2">{troop.desc}</p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
+                                <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-1.5 mt-2">
+                                <div className="bg-blue-950/40 p-1.5 rounded-lg border border-blue-900/30 text-center">
+                                  <Timer size={10} className="mx-auto text-blue-400 mb-0.5" />
+                                  <div className="text-[7px] text-blue-500">Atk Speed</div>
+                                  <div className="text-blue-200 font-bold text-[10px]">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
+                                </div>
+                                <div className="bg-green-950/40 p-1.5 rounded-lg border border-green-900/30 text-center">
+                                  <Swords size={10} className="mx-auto text-green-400 mb-0.5" />
+                                  <div className="text-[7px] text-green-500">DPS</div>
+                                  <div className="text-green-200 font-bold text-[10px]">{Math.round(troop.damage / (troop.attackSpeed / 1000))}</div>
+                                </div>
+                                <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/30 text-center">
+                                  {troop.isRanged ? <Target size={10} className="mx-auto text-purple-400 mb-0.5" /> : <Shield size={10} className="mx-auto text-purple-400 mb-0.5" />}
+                                  <div className="text-[7px] text-purple-500">{troop.isRanged ? "Range" : "Type"}</div>
+                                  <div className="text-purple-200 font-bold text-[10px]">{troop.isRanged ? troop.range : "Melee"}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {activeTab === "enemies" && (() => {
               const groupedEnemies = groupEnemiesByCategory(enemyTypes);

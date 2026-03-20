@@ -236,6 +236,54 @@ export type EnemyType =
   | "abomination"
   | "hellhound"
   | "doom_herald"
+  // Bug enemies - Grassland
+  | "orb_weaver"
+  | "mantis"
+  | "bombardier_beetle"
+  // Bug enemies - Swamp
+  | "mosquito"
+  | "centipede"
+  | "dragonfly"
+  | "silk_moth"
+  // Bug enemies - Desert
+  | "ant_soldier"
+  | "locust"
+  | "trapdoor_spider"
+  // Bug enemies - Winter
+  | "ice_beetle"
+  | "frost_tick"
+  | "snow_moth"
+  // Bug enemies - Volcanic
+  | "fire_ant"
+  | "magma_beetle"
+  | "ash_moth"
+  // Bug boss
+  | "brood_mother"
+  // Fantasy creatures - Grassland
+  | "dire_bear"
+  | "ancient_ent"
+  | "forest_troll"
+  | "timber_wolf"
+  | "giant_eagle"
+  // Fantasy creatures - Swamp
+  | "swamp_hydra"
+  | "giant_toad"
+  | "vine_serpent"
+  | "marsh_troll"
+  // Fantasy creatures - Desert
+  | "phoenix"
+  | "basilisk"
+  | "djinn"
+  | "manticore"
+  // Fantasy creatures - Winter
+  | "frost_troll"
+  | "dire_wolf"
+  | "wendigo"
+  | "mammoth"
+  // Fantasy creatures - Volcanic
+  | "lava_golem"
+  | "volcanic_drake"
+  | "salamander"
   // Regional Giant Bosses
   | "titan_of_nassau"
   | "swamp_leviathan"
@@ -319,6 +367,10 @@ export interface EnemyData {
   breakthrough?: boolean;
   // Lives cost when enemy escapes
   liveCost?: number; // default 1
+  // Summoner: what minion type this enemy spawns
+  summonType?: EnemyType;
+  // Summoner: how many minions per summon (default 1)
+  summonCount?: number;
 }
 
 // Enemy entity - runtime state
@@ -369,6 +421,9 @@ export interface Enemy {
   facingRight?: boolean;
   // Summoner cooldown tracking
   lastSummon?: number;
+  // Summoning channel state
+  summoning?: boolean;
+  summonStartTime?: number;
   // Death animation
   dying?: boolean;
   deathTime?: number;
@@ -608,7 +663,10 @@ export type ProjectileType =
   | "wyvernBolt" // Wyvern energy ball
   | "mortarShell" // Mortar explosive shell (high arc)
   | "missile" // Missile battery projectile (4A)
-  | "ember"; // Burning ember glob (4B)
+  | "ember" // Burning ember glob (4B)
+  | "acidSpray" // Bombardier beetle acid
+  | "webBolt" // Spider silk projectile
+  | "venomSpit"; // Brood mother / fire ant ranged venom
 
 // Projectile
 export interface Projectile {
@@ -763,6 +821,7 @@ export interface Effect {
   isFlying?: boolean;
   deathCause?: DeathCause;
   regionGroundColors?: string[];
+  sourceYOffset?: number;
 }
 
 // Particle types

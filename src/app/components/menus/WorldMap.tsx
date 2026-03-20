@@ -42,10 +42,12 @@ import { BattlefieldPreview } from "./BattlefieldPreview";
 import { RegionIcon } from "../../sprites";
 import { MobileLoadoutBar } from "./MobileLoadoutBar";
 import { MobileCampaignBar } from "./MobileCampaignBar";
+import { getCampaignLevels } from "./shared/worldMapRegions";
 import { MobileLevelSheet } from "./MobileLevelSheet";
 import { drawWorldMapCanvas } from "./world-map/worldMapCanvasRenderer";
 import { getWorldLevelById, getLevelNodeY } from "./world-map/worldMapUtils";
 import { useSettings } from "../../hooks/useSettings";
+import { useUrlNavigation } from "../../hooks/useUrlNavigation";
 import { WorldMapTopBar } from "./world-map/WorldMapTopBar";
 import { WorldMapDesktopLoadout } from "./world-map/WorldMapDesktopLoadout";
 import { WorldMapModals } from "./world-map/WorldMapModals";
@@ -132,6 +134,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCredits, setShowCredits] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
+  const { getInitialNavigation, updateUrl, resetUrl } = useUrlNavigation();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
   const [animTime, setAnimTime] = useState(0);
   const animTimeRef = useRef(0);
@@ -216,8 +219,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   }, []);
 
 
-  const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
-  const maxStars = WORLD_LEVELS.length * 3;
+  const navCampaignLevels = useMemo(() => getCampaignLevels(), []);
+  const totalStars = navCampaignLevels.reduce((sum, l) => sum + (levelStars[l.id] || 0), 0);
+  const maxStars = navCampaignLevels.length * 3;
   const unlockedMapSet = useMemo(() => new Set(unlockedMaps), [unlockedMaps]);
   const customLevelById = useMemo(
     () => new Map(customLevels.map((level) => [level.id, level])),
@@ -300,11 +304,33 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     });
   }, [unlockedMaps, mapScale, mapHeight, visibleWorldLevels, unlockedMapSet]);
 
+  useEffect(() => {
+    const nav = getInitialNavigation();
+    if (!nav) return;
+
+    if (nav.level && isLevelUnlocked(nav.level)) {
+      setSelectedLevel(nav.level);
+      setSelectedMap(nav.level);
+    }
+    if (nav.codex.open) {
+      setCodexTab(nav.codex.tab);
+      setShowCodex(true);
+    } else if (nav.creator) {
+      setShowCreator(true);
+    } else if (nav.credits) {
+      setShowCredits(true);
+    } else if (nav.settings) {
+      setShowSettings(true);
+    } else {
+      resetUrl();
+    }
+  }, [getInitialNavigation, setSelectedMap, isLevelUnlocked, resetUrl]);
+
   const handleLevelClick = (levelId: string) => {
     if (isLevelUnlocked(levelId)) {
       setSelectedLevel(levelId);
       setSelectedMap(levelId);
-      setHoveredLevel(null); // Clear hover state to prevent duplicate tooltip on mobile
+      setHoveredLevel(null);
     }
   };
   const handleCustomLevelPlaytest = useCallback(
@@ -314,8 +340,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       setSelectedMap(levelId);
       setHoveredLevel(null);
       setShowCreator(false);
+      resetUrl();
     },
-    [customLevelById, setSelectedMap]
+    [customLevelById, setSelectedMap, resetUrl]
   );
   const startGame = () => {
     if (selectedLevel && selectedHero && selectedSpells.length === 3)
@@ -528,7 +555,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const openCodexTo = useCallback((tab: CodexTabId) => {
     setCodexTab(tab);
     setShowCodex(true);
-  }, []);
+    updateUrl({ type: "codex", tab });
+  }, [updateUrl]);
 
   const hasBattles = useMemo(
     () => Object.values(levelStats).some((s) => (s.timesPlayed || 0) > 0),
@@ -665,9 +693,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             }
           }}
           onOpenCodex={openCodexTo}
-          onOpenCreator={() => setShowCreator(true)}
-          onOpenSettings={() => setShowSettings(true)}
-          onShowCredits={() => setShowCredits(true)}
+          onOpenCreator={() => { setShowCreator(true); updateUrl({ type: "creator" }); }}
+          onOpenSettings={() => { setShowSettings(true); updateUrl({ type: "settings" }); }}
+          onShowCredits={() => { setShowCredits(true); updateUrl({ type: "credits" }); }}
           onPreviousLevel={goToPreviousLevel}
           onNextLevel={goToNextLevel}
         />
@@ -958,7 +986,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                   this map lives in your local creator sandbox. open creator to edit paths, landmarks, hazards, and objectives.
                                 </div>
                                 <button
-                                  onClick={() => setShowCreator(true)}
+                                  onClick={() => { setShowCreator(true); updateUrl({ type: "creator" }); }}
                                   className="rounded-md border border-amber-600/60 bg-amber-700/20 px-2.5 py-1 text-xs hover:bg-amber-700/30"
                                 >
                                   Open Creator
@@ -1137,6 +1165,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     levelStats={levelStats}
                     unlockedMaps={unlockedMaps}
                     onSelectLevel={handleLevelClick}
+                    onTogglePreview={() => setShowBattlefieldPreview(true)}
                   />
 
                   {/* BattlefieldPreview overlays on top (first-time users or manual toggle) */}
@@ -1152,25 +1181,21 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           }
                         }}
                       />
+                      {/* Toggle back to stats - only shown over the preview overlay */}
+                      <button
+                        onClick={() => setShowBattlefieldPreview(false)}
+                        className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-2 rounded-lg transition-all hover:scale-105 hover:brightness-110"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1px solid ${GOLD.border25}`,
+                          boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
+                        }}
+                        title="Show Campaign Stats"
+                      >
+                        <BarChart3 size={12} className="text-amber-400/80" />
+                      </button>
                     </div>
                   )}
-
-                  {/* Toggle button */}
-                  <button
-                    onClick={() => setShowBattlefieldPreview(!showPreview)}
-                    className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
-                    style={{
-                      background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                      border: `1px solid ${GOLD.border25}`,
-                      boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
-                    }}
-                    title={showPreview ? "Show Campaign Stats" : "Show Battle Scene"}
-                  >
-                    {showPreview
-                      ? <><BarChart3 size={12} className="text-amber-400/80" /><span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Stats</span></>
-                      : <><Eye size={12} className="text-amber-400/80" /><span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Preview</span></>
-                    }
-                  </button>
                 </div>
               )}
             </div>
@@ -1355,15 +1380,15 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       <WorldMapModals
         showCodex={showCodex}
         codexTab={codexTab}
-        onCloseCodex={() => setShowCodex(false)}
+        onCloseCodex={() => { setShowCodex(false); resetUrl(); }}
         showSettings={showSettings}
-        onCloseSettings={() => setShowSettings(false)}
+        onCloseSettings={() => { setShowSettings(false); resetUrl(); }}
         settingsState={{ settings, updateCategory, applyPreset, resetToDefaults, resetCategory }}
         onDevModeChange={onDevModeChange}
         showCredits={showCredits}
-        onCloseCredits={() => setShowCredits(false)}
+        onCloseCredits={() => { setShowCredits(false); resetUrl(); }}
         showCreator={showCreator}
-        onCloseCreator={() => setShowCreator(false)}
+        onCloseCreator={() => { setShowCreator(false); resetUrl(); }}
         customLevels={customLevels}
         onSaveCustomLevel={onSaveCustomLevel}
         onDeleteCustomLevel={onDeleteCustomLevel}

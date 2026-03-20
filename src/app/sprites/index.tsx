@@ -1,6 +1,7 @@
 export { darkenColor, lightenColor } from "./utils";
 export { TowerSprite } from "./towers";
 export { HERO_COLORS, HeroSprite } from "./heroes";
+export { TROOP_COLORS, TroopSprite } from "./troops";
 export { SpellSprite } from "./spells";
 export type { EnemyType } from "./enemies";
 export { ENEMY_COLORS, EnemySprite } from "./enemies";

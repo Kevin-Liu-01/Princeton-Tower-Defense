@@ -5,6 +5,7 @@ import {
   drawShiftingSegments,
   drawOrbitingDebris,
 } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 // =====================================================
 // FOREST REGION TROOPS
@@ -25,7 +26,6 @@ export function drawAthleteEnemy(
   // VARSITY RUNNER - Elite sprinter with dynamic running animation
   const isAttacking = attackPhase > 0;
   const attackBoost = isAttacking ? 1.3 : 1; // Run faster when attacking
-  const runCycle = Math.sin(time * 14 * attackBoost) * 0.4;
   const armSwing = Math.sin(time * 14 * attackBoost) * 0.5;
   const bounce = Math.abs(Math.sin(time * 14 * attackBoost)) * 4 * zoom;
   const leanForward = 0.15 + (isAttacking ? 0.1 : 0); // Lean more when attacking
@@ -63,102 +63,23 @@ export function drawAthleteEnemy(
     }
   }
 
-  // --- LEGS with detailed anatomy ---
+  // --- LEGS (path-based) ---
   const skinTone = "#e8c4a0";
   const skinHighlight = "#f5dcc4";
   const skinShadow = "#d4a574";
 
-  // Back leg (bent back in running stride)
-  ctx.save();
-  ctx.translate(x - size * 0.1, y + size * 0.1 - bounce);
-  ctx.rotate(runCycle * 0.6 + leanForward);
-  // Thigh
-  const thighGrad = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
-  thighGrad.addColorStop(0, skinShadow);
-  thighGrad.addColorStop(0.5, skinTone);
-  thighGrad.addColorStop(1, skinHighlight);
-  ctx.fillStyle = thighGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.12, size * 0.08, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Calf
-  ctx.fillStyle = skinTone;
-  ctx.beginPath();
-  ctx.ellipse(
-    size * 0.02,
-    size * 0.28,
-    size * 0.06,
-    size * 0.1,
-    0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Running shoe
-  ctx.fillStyle = "#1a1a2e";
-  ctx.beginPath();
-  ctx.ellipse(
-    size * 0.05,
-    size * 0.38,
-    size * 0.1,
-    size * 0.04,
-    0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Shoe accent stripe
-  ctx.strokeStyle = bodyColor;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.02, size * 0.36);
-  ctx.lineTo(size * 0.1, size * 0.38);
-  ctx.stroke();
-  ctx.restore();
-
-  // Front leg (extended forward)
-  ctx.save();
-  ctx.translate(x + size * 0.1, y + size * 0.1 - bounce);
-  ctx.rotate(-runCycle * 0.6 + leanForward);
-  // Thigh
-  ctx.fillStyle = thighGrad;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.12, size * 0.09, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Calf
-  ctx.fillStyle = skinHighlight;
-  ctx.beginPath();
-  ctx.ellipse(
-    -size * 0.02,
-    size * 0.28,
-    size * 0.065,
-    size * 0.11,
-    -0.15,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Running shoe
-  ctx.fillStyle = "#1a1a2e";
-  ctx.beginPath();
-  ctx.ellipse(
-    -size * 0.04,
-    size * 0.38,
-    size * 0.1,
-    size * 0.045,
-    -0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Shoe accent
-  ctx.strokeStyle = bodyColor;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(size * 0.04, size * 0.36);
-  ctx.lineTo(-size * 0.1, size * 0.39);
-  ctx.stroke();
-  ctx.restore();
+  drawPathLegs(ctx, x, y + size * 0.1 - bounce, size, time, zoom, {
+    color: skinTone,
+    colorDark: skinShadow,
+    footColor: "#1a1a2e",
+    trimColor: bodyColor,
+    strideSpeed: 14 * attackBoost,
+    strideAmt: 0.38,
+    legLen: 0.22,
+    width: 0.085,
+    footLen: 0.11,
+    style: "fleshy",
+  });
 
   // Dust kick-up from running shoes
   const dustIntensity = isAttacking ? 0.35 : 0.2;
@@ -263,64 +184,23 @@ export function drawAthleteEnemy(
   ctx.strokeText("23", 0, size * 0.02);
   ctx.restore();
 
-  // --- ARMS (pumping motion) ---
-  // Back arm
-  ctx.save();
-  ctx.translate(x - size * 0.28, y - size * 0.18 - bounce);
-  ctx.rotate(-armSwing * 0.7 + leanForward);
-  // Upper arm (sleeve)
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.08, size * 0.08, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm
-  ctx.fillStyle = skinTone;
-  ctx.beginPath();
-  ctx.ellipse(
-    size * 0.02,
-    size * 0.22,
-    size * 0.055,
-    size * 0.1,
-    0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Fist
-  ctx.fillStyle = skinHighlight;
-  ctx.beginPath();
-  ctx.arc(size * 0.04, size * 0.32, size * 0.045, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Front arm
-  ctx.save();
-  ctx.translate(x + size * 0.28, y - size * 0.18 - bounce);
-  ctx.rotate(armSwing * 0.7 + leanForward);
-  // Upper arm
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.08, size * 0.08, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm
-  ctx.fillStyle = skinTone;
-  ctx.beginPath();
-  ctx.ellipse(
-    -size * 0.02,
-    size * 0.22,
-    size * 0.055,
-    size * 0.1,
-    -0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Fist
-  ctx.fillStyle = skinHighlight;
-  ctx.beginPath();
-  ctx.arc(-size * 0.04, size * 0.32, size * 0.045, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // --- ARMS (path-based, pumping) ---
+  drawPathArm(ctx, x - size * 0.28, y - size * 0.18 - bounce, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: skinHighlight,
+    shoulderAngle: leanForward - armSwing * 0.7,
+    attackExtra: isAttacking ? 0.2 : 0,
+    style: "fleshy",
+  });
+  drawPathArm(ctx, x + size * 0.28, y - size * 0.18 - bounce, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: skinHighlight,
+    shoulderAngle: leanForward + armSwing * 0.7,
+    attackExtra: isAttacking ? 0.2 : 0,
+    style: "fleshy",
+  });
 
   // --- HEAD with detailed features ---
   const headY = y - size * 0.52 - bounce;
@@ -564,7 +444,6 @@ export function drawTigerFanEnemy(
   const signWave =
     Math.sin(time * 4.5 * attackIntensity) * (isAttacking ? 0.25 : 0.18);
   const marchBob = Math.abs(Math.sin(time * 7 * attackIntensity)) * 3 * zoom;
-  const legPhase = Math.sin(time * 7 * attackIntensity);
   const chantPhase = Math.sin(time * 8 * attackIntensity);
   const armRaise =
     0.1 +
@@ -572,67 +451,22 @@ export function drawTigerFanEnemy(
       (isAttacking ? 0.25 : 0.15);
 
 
-  // --- LEGS (jeans with details) ---
+  // --- LEGS (path-based, jeans) ---
   const jeansColor = "#2d4263";
   const jeansDark = "#1e2d4a";
-  const jeansLight = "#3d5273";
 
-  // Back leg
-  ctx.save();
-  ctx.translate(x - size * 0.1, y + size * 0.15 - marchBob);
-  ctx.rotate(legPhase * 0.25);
-  // Jeans leg
-  const legGrad = ctx.createLinearGradient(-size * 0.08, 0, size * 0.08, 0);
-  legGrad.addColorStop(0, jeansDark);
-  legGrad.addColorStop(0.5, jeansColor);
-  legGrad.addColorStop(1, jeansDark);
-  ctx.fillStyle = legGrad;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.1, 0);
-  ctx.lineTo(-size * 0.08, size * 0.32);
-  ctx.lineTo(size * 0.08, size * 0.32);
-  ctx.lineTo(size * 0.1, 0);
-  ctx.closePath();
-  ctx.fill();
-  // Jeans cuff
-  ctx.fillStyle = jeansLight;
-  ctx.fillRect(-size * 0.09, size * 0.28, size * 0.18, size * 0.04);
-  // Sneaker
-  ctx.fillStyle = "#f5f5f5";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.36, size * 0.09, size * 0.04, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Sneaker accent
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.arc(-size * 0.03, size * 0.35, size * 0.025, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Front leg
-  ctx.save();
-  ctx.translate(x + size * 0.1, y + size * 0.15 - marchBob);
-  ctx.rotate(-legPhase * 0.25);
-  ctx.fillStyle = legGrad;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.1, 0);
-  ctx.lineTo(-size * 0.08, size * 0.32);
-  ctx.lineTo(size * 0.08, size * 0.32);
-  ctx.lineTo(size * 0.1, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = jeansLight;
-  ctx.fillRect(-size * 0.09, size * 0.28, size * 0.18, size * 0.04);
-  // Sneaker
-  ctx.fillStyle = "#f5f5f5";
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.36, size * 0.09, size * 0.04, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.arc(-size * 0.03, size * 0.35, size * 0.025, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  drawPathLegs(ctx, x, y + size * 0.15 - marchBob, size, time, zoom, {
+    color: jeansColor,
+    colorDark: jeansDark,
+    footColor: "#f5f5f5",
+    trimColor: bodyColor,
+    strideSpeed: 7 * attackIntensity,
+    strideAmt: 0.25,
+    legLen: 0.2,
+    width: 0.09,
+    footLen: 0.1,
+    style: "fleshy",
+  });
 
   // --- HOODIE BODY with details ---
   const hoodieGrad = ctx.createLinearGradient(
@@ -827,66 +661,26 @@ export function drawTigerFanEnemy(
 
   ctx.restore();
 
-  // --- ARMS ---
+  // --- ARMS (path-based) ---
   const skinTone = "#e8c4a0";
   const skinHighlight = "#f5dcc4";
 
-  // Left arm (down, in pocket or relaxed)
-  ctx.save();
-  ctx.translate(x - size * 0.32, y - size * 0.12 - marchBob);
-  // Hoodie sleeve
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.ellipse(0, size * 0.1, size * 0.1, size * 0.12, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm
-  ctx.fillStyle = skinTone;
-  ctx.beginPath();
-  ctx.ellipse(
-    -size * 0.02,
-    size * 0.25,
-    size * 0.06,
-    size * 0.1,
-    0.1,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Hand in pocket area
-  ctx.fillStyle = skinHighlight;
-  ctx.beginPath();
-  ctx.arc(-size * 0.02, size * 0.35, size * 0.045, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  // Right arm (raised holding sign)
-  ctx.save();
-  ctx.translate(x + size * 0.28, y - size * 0.12 - marchBob);
-  ctx.rotate(-armRaise);
-  // Hoodie sleeve
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.ellipse(0, -size * 0.08, size * 0.1, size * 0.12, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm reaching up
-  ctx.fillStyle = skinTone;
-  ctx.beginPath();
-  ctx.ellipse(
-    size * 0.03,
-    -size * 0.22,
-    size * 0.055,
-    size * 0.12,
-    -0.4,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Hand gripping pole
-  ctx.fillStyle = skinHighlight;
-  ctx.beginPath();
-  ctx.arc(size * 0.05, -size * 0.34, size * 0.05, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  drawPathArm(ctx, x - size * 0.32, y - size * 0.12 - marchBob, size, time, zoom, -1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: skinHighlight,
+    shoulderAngle: 0.25 + Math.sin(time * 3) * 0.04,
+    elbowAngle: 0.35,
+    style: "fleshy",
+  });
+  drawPathArm(ctx, x + size * 0.28, y - size * 0.12 - marchBob, size, time, zoom, 1, {
+    color: bodyColor,
+    colorDark: bodyColorDark,
+    handColor: skinHighlight,
+    shoulderAngle: -(armRaise + 0.55) + Math.sin(time * 4 * attackIntensity) * 0.06,
+    elbowAngle: -0.25,
+    style: "fleshy",
+  });
 
   // --- HEAD with beanie and expressive face ---
   const headX = x - size * 0.02;

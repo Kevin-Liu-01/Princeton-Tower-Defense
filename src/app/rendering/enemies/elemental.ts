@@ -3,7 +3,8 @@
 
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 
 export function drawThornwalkerEnemy(
@@ -1447,24 +1448,24 @@ export function drawFrostlingEnemy(
     ctx.fill();
   }
 
-  // Frost animated arms
+  // Frostling arms — frost channeling spread
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.25, y + floatOffset - size * 0.1, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.25, y + floatOffset - size * 0.1, size, time, zoom, side, {
       color: "rgba(186, 230, 253, 0.6)",
       colorDark: "rgba(125, 211, 252, 0.5)",
       handColor: "rgba(224, 242, 254, 0.7)",
-      swingSpeed: 3,
-      swingAmt: 0.3,
-      baseAngle: 0.4,
+      shoulderAngle: side * (0.8 + Math.sin(time * 2.5) * 0.12),
+      elbowAngle: -0.2 + Math.sin(time * 3 + side * 1.2) * 0.15,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.04,
       handRadius: 0.025,
+      style: "armored",
     });
   }
 
   // Frost legs shuffling
-  drawAnimatedLegs(ctx, x, y + floatOffset + size * 0.25, size, time, zoom, {
+  drawPathLegs(ctx, x, y + floatOffset + size * 0.25, size, time, zoom, {
     color: "rgba(186, 230, 253, 0.4)",
     colorDark: "rgba(125, 211, 252, 0.3)",
     footColor: "rgba(224, 242, 254, 0.5)",
@@ -1473,6 +1474,7 @@ export function drawFrostlingEnemy(
     legLen: 0.14,
     width: 0.035,
     shuffle: true,
+    style: "armored",
   });
 
   // Main ghostly body with enhanced transparency layers
@@ -1960,26 +1962,24 @@ export function drawInfernalEnemy(
     ctx.restore();
   }
 
-  // Flame animated arms
+  // Infernal arms — aggressive fire punching
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.32 + rageShake, y - size * 0.08 + heatWave, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.32 + rageShake, y - size * 0.08 + heatWave, size, time, zoom, side, {
       color: bodyColorDark,
       colorDark: "#1c1917",
       handColor: `rgba(251, 146, 60, ${flamePulse})`,
-      swingSpeed: 5,
-      swingAmt: 0.4,
-      baseAngle: 0.35,
+      shoulderAngle: side * (0.6 + Math.sin(time * 4 + side * Math.PI) * 0.2 + (isAttacking ? attackPhase * 0.6 : 0)),
+      elbowAngle: 0.4 + Math.sin(time * 5 + side * 1.5) * 0.2,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.06,
       handRadius: 0.03,
-      elbowBend: 0.5,
-      attackExtra: isAttacking ? attackPhase : 0,
+      style: "armored",
     });
   }
 
   // Fire-stepping legs
-  drawAnimatedLegs(ctx, x + rageShake, y + size * 0.35 + heatWave, size, time, zoom, {
+  drawPathLegs(ctx, x + rageShake, y + size * 0.35 + heatWave, size, time, zoom, {
     color: bodyColorDark,
     colorDark: "#1c1917",
     footColor: `rgba(251, 146, 60, ${flamePulse * 0.5})`,
@@ -1987,6 +1987,7 @@ export function drawInfernalEnemy(
     strideAmt: 0.25,
     legLen: 0.18,
     width: 0.06,
+    style: "armored",
   });
 
   // Body - cracked obsidian with muscular detail
@@ -2704,20 +2705,19 @@ export function drawBansheeEnemy(
     ctx.stroke();
   }
 
-  // Ghostly animated arms (reaching/wailing)
+  // Banshee arms — wailing raised reach
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.22, y + floatOffset - size * 0.15, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.22, y + floatOffset - size * 0.15, size, time, zoom, side, {
       color: `rgba(226, 232, 240, ${wailIntensity * 0.5})`,
       colorDark: `rgba(203, 213, 225, ${wailIntensity * 0.4})`,
       handColor: `rgba(148, 163, 184, ${wailIntensity * 0.6})`,
-      swingSpeed: 2.5,
-      swingAmt: 0.5,
-      baseAngle: 0.2,
+      shoulderAngle: side * (-1.1 + Math.sin(time * 2 + side * 0.8) * 0.2),
+      elbowAngle: -0.3 + Math.sin(time * 2.5 + side * 1.5) * 0.18,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.035,
       handRadius: 0.02,
-      phaseOffset: side * 0.8,
+      style: "ghostly",
     });
   }
 
@@ -3306,7 +3306,7 @@ export function drawJuggernautEnemy(
   }
 
   // Heavy stomping animated legs
-  drawAnimatedLegs(ctx, x + groundShake, y + size * 0.38, size, time, zoom, {
+  drawPathLegs(ctx, x + groundShake, y + size * 0.38, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#3f3f46",
@@ -3316,6 +3316,7 @@ export function drawJuggernautEnemy(
     width: 0.07,
     shuffle: false,
     phaseOffset: stomp,
+    style: "armored",
   });
 
   // ── Massive legs with armored greaves ──
@@ -3764,21 +3765,19 @@ export function drawJuggernautEnemy(
     ctx.stroke();
   }
 
-  // Massive armored animated arms (slow swing)
+  // Juggernaut arms — heavy fist ground-slam ready
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.42 + groundShake, y - size * 0.12 + breathCycle * 0.5, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.42 + groundShake, y - size * 0.12 + breathCycle * 0.5, size, time, zoom, side, {
       color: bodyColor,
       colorDark: bodyColorDark,
       handColor: "#52525b",
-      swingSpeed: 2,
-      swingAmt: 0.2,
-      baseAngle: 0.3,
+      shoulderAngle: side * (0.3 + Math.sin(time * 1.5 + side) * 0.08 + (isAttacking ? attackPhase * 0.5 : 0)),
+      elbowAngle: 0.6 + Math.sin(time * 2 + side * 1.5) * 0.1,
       upperLen: 0.22,
       foreLen: 0.2,
       width: 0.07,
       handRadius: 0.04,
-      elbowBend: 0.35,
-      attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+      style: "armored",
     });
   }
 
@@ -4302,26 +4301,24 @@ export function drawAssassinEnemy(
   ctx.ellipse(x, y, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Quick-moving animated arms (fast swing)
+  // Assassin arms — blades pulled back for strike
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.18 + blurForward, y - size * 0.05, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.18 + blurForward, y - size * 0.05, size, time, zoom, side, {
       color: bodyColor,
       colorDark: bodyColorDark,
       handColor: `rgba(167, 139, 250, ${shadowFlicker})`,
-      swingSpeed: 8,
-      swingAmt: 0.45,
-      baseAngle: 0.5,
+      shoulderAngle: side * (0.9 + Math.sin(time * 6 + side * Math.PI) * 0.15 + (isAttacking ? attackPhase * 0.8 : 0)),
+      elbowAngle: 0.6 + Math.sin(time * 7 + side * 2) * 0.15,
       upperLen: 0.15,
       foreLen: 0.14,
       width: 0.04,
       handRadius: 0.02,
-      elbowBend: 0.5,
-      attackExtra: isAttacking ? attackPhase * 0.8 : 0,
+      style: "armored",
     });
   }
 
   // Agile legs
-  drawAnimatedLegs(ctx, x + blurForward, y + size * 0.32, size, time, zoom, {
+  drawPathLegs(ctx, x + blurForward, y + size * 0.32, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "rgba(30, 27, 75, 0.8)",
@@ -4329,6 +4326,7 @@ export function drawAssassinEnemy(
     strideAmt: 0.35,
     legLen: 0.14,
     width: 0.04,
+    style: "armored",
   });
 
   // Shadow clone afterimages (2-3 semi-transparent copies trailing)
@@ -5087,7 +5085,7 @@ export function drawDragonEnemy(
   };
 
   // Powerful stomping animated legs (behind body)
-  drawAnimatedLegs(ctx, x, y + size * 0.4 + hover, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.4 + hover, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#1c1917",
@@ -5096,23 +5094,22 @@ export function drawDragonEnemy(
     legLen: 0.22,
     width: 0.07,
     phaseOffset: shoulderLift,
+    style: "armored",
   });
 
-  // Powerful clawed animated arms
+  // Dragon arms — menacing forward claw reach
   for (const side of [-1, 1] as const) {
-    drawAnimatedArm(ctx, x + side * size * 0.35, y + size * 0.05 + hover, size, time, zoom, side, {
+    drawPathArm(ctx, x + side * size * 0.35, y + size * 0.05 + hover, size, time, zoom, side, {
       color: bodyColor,
       colorDark: bodyColorDark,
       handColor: "#1c1917",
-      swingSpeed: 2.5,
-      swingAmt: 0.25,
-      baseAngle: 0.35,
+      shoulderAngle: side * (0.7 + Math.sin(time * 2 + side * 0.5) * 0.1 + (isAttacking ? attackPhase * 0.4 : 0)),
+      elbowAngle: 0.3 + Math.sin(time * 2.5 + side * 1.5) * 0.12,
       upperLen: 0.22,
       foreLen: 0.2,
       width: 0.065,
       handRadius: 0.035,
-      elbowBend: 0.4,
-      attackExtra: isAttacking ? attackPhase * 0.4 : 0,
+      style: "armored",
     });
   }
 

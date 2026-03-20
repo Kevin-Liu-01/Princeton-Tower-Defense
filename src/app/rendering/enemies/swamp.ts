@@ -1,6 +1,7 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawPulsingGlowRings, drawPoisonBubbles, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawPulsingGlowRings, drawPoisonBubbles, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawBogCreatureEnemy(
   ctx: CanvasRenderingContext2D,
@@ -173,31 +174,32 @@ export function drawBogCreatureEnemy(
   ctx.lineTo(x + size * 0.25, y + size * 0.35);
   ctx.stroke();
 
-  // Animated slimy arms (behind body)
-  drawAnimatedArm(ctx, x - size * 0.4, y - size * 0.2, size, time, zoom, -1, {
+  // Bog Creature arms — lurching swamp reach
+  drawPathArm(ctx, x - size * 0.4, y - size * 0.2, size, time, zoom, -1, {
     color: bodyColor, colorDark: bodyColorDark,
-    swingSpeed: 1.8, swingAmt: 0.25, baseAngle: 0.5,
+    shoulderAngle: -0.8 + Math.sin(time * 1.5) * 0.12 + (isAttacking ? -attackPhase * 0.5 : 0),
+    elbowAngle: 0.5 + Math.sin(time * 2 + 0.5) * 0.1,
     upperLen: 0.22, foreLen: 0.18, width: 0.08,
     handColor: "#84cc16", handRadius: 0.04,
-    elbowBend: 0.3, phaseOffset: 0,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'fleshy',
   });
-  drawAnimatedArm(ctx, x + size * 0.4, y - size * 0.2, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.4, y - size * 0.2, size, time, zoom, 1, {
     color: bodyColor, colorDark: bodyColorDark,
-    swingSpeed: 1.8, swingAmt: 0.25, baseAngle: 0.5,
+    shoulderAngle: 0.4 + Math.sin(time * 1.8 + 1.2) * 0.08 + (isAttacking ? attackPhase * 0.4 : 0),
+    elbowAngle: 0.7 + Math.sin(time * 2.2 + 2) * 0.1,
     upperLen: 0.22, foreLen: 0.18, width: 0.08,
     handColor: "#84cc16", handRadius: 0.04,
-    elbowBend: 0.3, phaseOffset: 1.2,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'fleshy',
   });
 
-  // Sludge-dripping animated legs (behind body)
-  drawAnimatedLegs(ctx, x, y + size * 0.1, size, time, zoom, {
+  // Sludge-dripping fleshy legs (behind body)
+  drawPathLegs(ctx, x, y + size * 0.1, size, time, zoom, {
     color: bodyColor, colorDark: bodyColorDark,
     footColor: "#1a2e05",
     strideSpeed: 2, strideAmt: 0.2,
     legLen: 0.22, width: 0.07,
     shuffle: true, phaseOffset: 0,
+    style: 'fleshy',
   });
 
   // Main body - twisted amorphous mass (lurches forward when attacking)
@@ -1234,31 +1236,32 @@ export function drawSwampTrollEnemy(
     }
   }
 
-  // Massive animated arms (behind body)
-  drawAnimatedArm(ctx, x - size * 0.48, y - size * 0.35, size, time, zoom, -1, {
+  // Swamp Troll arms — heavy ground-slam fists
+  drawPathArm(ctx, x - size * 0.48, y - size * 0.35, size, time, zoom, -1, {
     color: bodyColor, colorDark: bodyColorDark,
-    swingSpeed: 1.5, swingAmt: 0.2, baseAngle: 0.4,
+    shoulderAngle: -0.3 + Math.sin(time * 1.2) * 0.08 + (isAttacking ? -rage * 1.5 : 0),
+    elbowAngle: 0.5 + Math.sin(time * 1.5 + 0.5) * 0.1,
     upperLen: 0.28, foreLen: 0.22, width: 0.1,
     handColor: "#2a2a1a", handRadius: 0.06,
-    elbowBend: 0.35, phaseOffset: 0,
-    attackExtra: isAttacking ? rage * 3 : 0,
+    style: 'fleshy',
   });
-  drawAnimatedArm(ctx, x + size * 0.48, y - size * 0.35, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.48, y - size * 0.35, size, time, zoom, 1, {
     color: bodyColor, colorDark: bodyColorDark,
-    swingSpeed: 1.5, swingAmt: 0.2, baseAngle: 0.4,
+    shoulderAngle: 0.3 + Math.sin(time * 1.2 + Math.PI) * 0.08 + (isAttacking ? rage * 1.5 : 0),
+    elbowAngle: 0.5 + Math.sin(time * 1.5 + 2) * 0.1,
     upperLen: 0.28, foreLen: 0.22, width: 0.1,
     handColor: "#2a2a1a", handRadius: 0.06,
-    elbowBend: 0.35, phaseOffset: 1.5,
-    attackExtra: isAttacking ? rage * 3 : 0,
+    style: 'fleshy',
   });
 
-  // Stomping animated legs (behind body)
-  drawAnimatedLegs(ctx, x, y + size * 0.15, size, time, zoom, {
+  // Stomping fleshy legs (behind body) — thick swollen organic legs
+  drawPathLegs(ctx, x, y + size * 0.15, size, time, zoom, {
     color: bodyColor, colorDark: bodyColorDark,
     footColor: "#1a1a0a",
     strideSpeed: 2.5, strideAmt: 0.25,
     legLen: 0.28, width: 0.09,
     shuffle: false, phaseOffset: 0,
+    style: 'fleshy',
   });
 
   // Massive hunched body with muscle definition

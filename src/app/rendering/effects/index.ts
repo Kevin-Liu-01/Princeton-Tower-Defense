@@ -73,7 +73,7 @@ export function renderEffect(
         const boltColor: LightningColorScheme =
           (effect.color as LightningColorScheme) ||
           (effect.type === "beam" ? "yellow" : "blue");
-        const colors = { blue: "150, 255, 255", yellow: "255, 255, 150", red: "255, 150, 130" };
+        const colors: Record<string, string> = { blue: "150, 255, 255", yellow: "255, 255, 150", red: "255, 150, 130", teal: "120, 255, 210", green: "180, 240, 120", violet: "180, 190, 255" };
         drawLightningBolt(
           ctx,
           screenPos.x,
@@ -835,37 +835,127 @@ export function renderEffect(
       }
       break;
 
-    case "freeze_wave":
-      const freezeRadius = progress * 120 * zoom;
-      ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.7})`;
-      ctx.lineWidth = 3 * zoom * (1 - progress);
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        freezeRadius,
-        freezeRadius * ISO_Y_RATIO,
-        0,
-        0,
-        Math.PI * 2,
+    case "freeze_wave": {
+      const fzR = (effect.size || 120) * zoom * progress;
+
+      ctx.save();
+
+      // Frost ground fill — layered radial gradient
+      const fzGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, fzR,
       );
+      fzGrad.addColorStop(0, `rgba(220, 245, 255, ${alpha * 0.35})`);
+      fzGrad.addColorStop(0.3, `rgba(160, 220, 255, ${alpha * 0.25})`);
+      fzGrad.addColorStop(0.6, `rgba(100, 180, 240, ${alpha * 0.15})`);
+      fzGrad.addColorStop(1, "rgba(60, 140, 220, 0)");
+      ctx.fillStyle = fzGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner bright core
+      const fzCoreR = fzR * 0.35;
+      const fzCoreGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, fzCoreR,
+      );
+      fzCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.5})`);
+      fzCoreGrad.addColorStop(0.5, `rgba(200, 240, 255, ${alpha * 0.3})`);
+      fzCoreGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
+      ctx.fillStyle = fzCoreGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzCoreR, fzCoreR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Expanding frost ring edge with glow
+      ctx.shadowColor = "#88ccff";
+      ctx.shadowBlur = 18 * zoom;
+      ctx.strokeStyle = `rgba(180, 230, 255, ${alpha * 0.8})`;
+      ctx.lineWidth = 3.5 * zoom * (1 - progress * 0.4);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Ice crystals
-      ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.5})`;
-      for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2 + Date.now() / 500;
-        const cx = screenPos.x + Math.cos(angle) * freezeRadius * 0.8;
-        const cy = screenPos.y + Math.sin(angle) * freezeRadius * 0.4;
+      // Secondary inner ring
+      ctx.shadowBlur = 10 * zoom;
+      ctx.strokeStyle = `rgba(220, 245, 255, ${alpha * 0.5})`;
+      ctx.lineWidth = 1.5 * zoom;
+      const fzInnerR = fzR * 0.65;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzInnerR, fzInnerR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Frost veins radiating from center
+      const fzTime = Date.now() / 1000;
+      for (let v = 0; v < 10; v++) {
+        const vAngle = (v / 10) * Math.PI * 2 + fzTime * 0.1;
+        const vLen = fzR * (0.5 + Math.sin(v * 3.7) * 0.3);
+        const midJitter = Math.sin(v * 5.3) * 8 * zoom;
+        const vAlpha = alpha * (0.3 + Math.sin(v * 2.1) * 0.15);
+
+        ctx.strokeStyle = `rgba(200, 240, 255, ${vAlpha})`;
+        ctx.lineWidth = (1 + Math.sin(v * 4.7) * 0.8) * zoom;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 5 * zoom);
-        ctx.lineTo(cx + 3 * zoom, cy);
-        ctx.lineTo(cx, cy + 5 * zoom);
-        ctx.lineTo(cx - 3 * zoom, cy);
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.quadraticCurveTo(
+          screenPos.x + Math.cos(vAngle) * vLen * 0.5 + midJitter,
+          screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO * 0.5 + midJitter * 0.5,
+          screenPos.x + Math.cos(vAngle) * vLen,
+          screenPos.y + Math.sin(vAngle) * vLen * ISO_Y_RATIO,
+        );
+        ctx.stroke();
+      }
+
+      // Ice crystals at the wavefront
+      for (let c = 0; c < 10; c++) {
+        const cAngle = (c / 10) * Math.PI * 2;
+        const cDist = fzR * (0.7 + Math.sin(c * 2.3) * 0.15);
+        const cx = screenPos.x + Math.cos(cAngle) * cDist;
+        const cy = screenPos.y + Math.sin(cAngle) * cDist * ISO_Y_RATIO;
+        const cSize = (4 + Math.sin(c * 3.1) * 3) * zoom * alpha;
+
+        ctx.fillStyle = `rgba(220, 245, 255, ${alpha * 0.85})`;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cSize * 1.4);
+        ctx.lineTo(cx + cSize * 0.55, cy - cSize * 0.35);
+        ctx.lineTo(cx + cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx, cy + cSize * 1.4);
+        ctx.lineTo(cx - cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx - cSize * 0.55, cy - cSize * 0.35);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+        ctx.beginPath();
+        ctx.moveTo(cx - cSize * 0.15, cy - cSize * 1.1);
+        ctx.lineTo(cx + cSize * 0.15, cy - cSize * 0.3);
+        ctx.lineTo(cx - cSize * 0.35, cy - cSize * 0.2);
         ctx.closePath();
         ctx.fill();
       }
+
+      // Ice sparkle particles
+      for (let p = 0; p < 14; p++) {
+        const pAngle = (p / 14) * Math.PI * 2 + fzTime * 0.3;
+        const pDist = Math.sin(p * 4.1 + 0.5) * fzR * 0.7 + fzR * 0.15;
+        const px = screenPos.x + Math.cos(pAngle) * pDist;
+        const py = screenPos.y + Math.sin(pAngle) * pDist * ISO_Y_RATIO;
+        const sparkleA = alpha * (0.4 + Math.sin(p * 2.7 + fzTime * 3) * 0.3);
+
+        const sparkGrad = ctx.createRadialGradient(px, py, 0, px, py, 3 * zoom);
+        sparkGrad.addColorStop(0, `rgba(255, 255, 255, ${sparkleA})`);
+        sparkGrad.addColorStop(1, "rgba(200, 240, 255, 0)");
+        ctx.fillStyle = sparkGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
       break;
+    }
 
     case "hex_ward_aura":
       const hexRadius = (effect.size * (0.45 + progress * 0.55)) * zoom;

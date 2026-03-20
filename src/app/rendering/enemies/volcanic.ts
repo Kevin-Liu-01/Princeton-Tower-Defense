@@ -2,7 +2,8 @@
 
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 // =====================================================
 // VOLCANIC REGION TROOPS
@@ -608,8 +609,8 @@ export function drawFireImpEnemy(
     ctx.fill();
   }
 
-  // Animated hopping legs - drawn before body
-  drawAnimatedLegs(ctx, x, y + size * 0.12 - hop, size, time, zoom, {
+  // Armored hopping legs — molten-edged path-based
+  drawPathLegs(ctx, x, y + size * 0.12 - hop, size, time, zoom, {
     color: "#b45309",
     colorDark: "#7c2d12",
     footColor: "#451a03",
@@ -617,36 +618,33 @@ export function drawFireImpEnemy(
     strideAmt: 0.4,
     legLen: 0.14,
     width: 0.04,
+    style: 'armored',
   });
 
-  // Animated fiery arms - drawn before body
-  drawAnimatedArm(ctx, x - size * 0.18, y - size * 0.1 - hop, size, time, zoom, -1, {
+  // Fire Imp arms — mischievous clawing
+  drawPathArm(ctx, x - size * 0.18, y - size * 0.1 - hop, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#7c2d12",
-    swingSpeed: 7,
-    swingAmt: 0.5,
-    baseAngle: 0.4,
+    shoulderAngle: -0.6 + Math.sin(time * 5) * 0.2 + (isAttacking ? -attackPhase * 0.5 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 6 + 0.8) * 0.2,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
     handRadius: 0.03,
-    phaseOffset: 0,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'armored',
   });
-  drawAnimatedArm(ctx, x + size * 0.18, y - size * 0.1 - hop, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.18, y - size * 0.1 - hop, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#7c2d12",
-    swingSpeed: 7,
-    swingAmt: 0.5,
-    baseAngle: 0.4,
+    shoulderAngle: 0.6 + Math.sin(time * 5 + Math.PI) * 0.2 + (isAttacking ? attackPhase * 0.5 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 6 + 2.5) * 0.2,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
     handRadius: 0.03,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'armored',
   });
 
   // Clawed feet with fire wisps
@@ -1248,8 +1246,8 @@ export function drawEmberGuardEnemy(
     ctx.stroke();
   }
 
-  // Animated heavy marching legs - drawn before body
-  drawAnimatedLegs(ctx, x, y + size * 0.08, size, time, zoom, {
+  // Armored heavy marching legs — volcanic plating
+  drawPathLegs(ctx, x, y + size * 0.08, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#451a03",
@@ -1259,38 +1257,34 @@ export function drawEmberGuardEnemy(
     width: 0.07,
     shuffle: false,
     phaseOffset: 0,
+    style: 'armored',
   });
 
-  // Animated powerful arms - drawn before body
-  drawAnimatedArm(ctx, x - size * 0.35, y - size * 0.32, size, time, zoom, -1, {
+  // Ember Guard arms — weapon ready / shield brace
+  drawPathArm(ctx, x - size * 0.35, y - size * 0.32, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#451a03",
-    swingSpeed: 2.2,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: -0.5 + Math.sin(time * 1.8) * 0.06,
+    elbowAngle: 0.85 + Math.sin(time * 2 + 0.5) * 0.08,
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.07,
     handRadius: 0.045,
-    elbowBend: 0.3,
-    phaseOffset: Math.PI,
-    attackExtra: isAttacking ? attackPhase * 0.3 : 0,
+    style: 'armored',
   });
-  drawAnimatedArm(ctx, x + size * 0.35, y - size * 0.32, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.35, y - size * 0.32, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#451a03",
-    swingSpeed: 2.2,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: 0.8 + Math.sin(time * 2) * 0.08 + (isAttacking ? attackPhase * 0.3 : 0),
+    elbowAngle: 0.35 + Math.sin(time * 2.5 + 1.5) * 0.1,
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.07,
     handRadius: 0.045,
-    elbowBend: 0.3,
-    phaseOffset: 0,
     attackExtra: isAttacking ? attackPhase * 0.3 : 0,
+    style: 'armored',
   });
 
   // Articulated armored legs with molten joints

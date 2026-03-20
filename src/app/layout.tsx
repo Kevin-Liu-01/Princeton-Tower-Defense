@@ -13,6 +13,7 @@ import {
   KEYWORDS,
   OG_IMAGES,
   AUTHOR_URL,
+  GITHUB_URL,
 } from "./seo/constants";
 
 export const viewport: Viewport = {
@@ -68,6 +69,7 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION_SHORT,
     images: [OG_IMAGES.primary],
     creator: "@kevskgs",
+    site: "@kevskgs",
   },
 
   robots: {
@@ -94,6 +96,10 @@ export const metadata: Metadata = {
     "mobile-web-app-capable": "yes",
     "msapplication-TileColor": "#E87722",
     "theme-color": "#E87722",
+    "github:repo": GITHUB_URL,
+    "author": SITE_AUTHOR,
+    "designer": SITE_AUTHOR,
+    "twitter:domain": "princetontd.vercel.app",
   },
 };
 

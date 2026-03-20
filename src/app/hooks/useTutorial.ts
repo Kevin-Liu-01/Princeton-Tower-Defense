@@ -127,13 +127,12 @@ export function useTutorial() {
   const getUnseenSpecialTowerEncounters = useCallback(
     (towerTypes: SpecialTowerType[]): EncounterQueueItem[] => {
       const seen = new Set(state.seenSpecialTowers);
-      return towerTypes
-        .filter((t) => !seen.has(t))
-        .map((t) => ({
-          key: `special-tower-${t}`,
-          entityType: t,
-          ...SPECIAL_TOWER_ENCOUNTERS[t],
-        }));
+      const unique = Array.from(new Set(towerTypes.filter((t) => !seen.has(t))));
+      return unique.map((t) => ({
+        key: `special-tower-${t}`,
+        entityType: t,
+        ...SPECIAL_TOWER_ENCOUNTERS[t],
+      }));
     },
     [state.seenSpecialTowers]
   );

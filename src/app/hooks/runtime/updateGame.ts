@@ -78,6 +78,9 @@ import {
   SUNFORGE_ORRERY_STATS,
   SPECIAL_TOWER_WARMUP_MS,
   WAVE_TIMER_BASE,
+  SUMMON_COOLDOWN,
+  SUMMON_CHANNEL_DURATION,
+  SUMMON_MINION_FADE_DURATION,
 } from "../../constants";
 import {
   gridToWorld,
@@ -161,6 +164,7 @@ import {
   vaultPosKey,
 } from "../../game/setup";
 import { updateParticlePool, enforceParticleCap } from "../../rendering";
+import { getSentinelBoltColor, SENTINEL_CRYSTAL_Y_OFFSET, SUNFORGE_GEM_Y_OFFSET } from "../../rendering/towers/sentinelTheme";
 import { getGameSettings } from "../useSettings";
 import { isDefined, FRIENDLY_SEPARATION_MULT } from "./runtimeConfig";
 
@@ -791,6 +795,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
       lastSentinelStrikeRef.current.set(strikeKey, now);
       const nexusWorldPos = gridToWorld(nexus.pos);
+      const mapTheme = LEVEL_DATA[selectedMap]?.theme;
       strikeEffects.push({
         id: generateId("sentinel_strike"),
         pos: nexusWorldPos,
@@ -800,7 +805,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         targetPos,
         intensity: 1.55,
         duration: 240,
-        color: "red",
+        color: getSentinelBoltColor(mapTheme),
+        sourceYOffset: SENTINEL_CRYSTAL_Y_OFFSET,
       });
       strikeEffects.push({
         id: generateId("sentinel_impact"),
@@ -964,6 +970,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           targetPos,
           intensity: 1.25 + volleyIndex * 0.12,
           duration: 260,
+          sourceYOffset: SUNFORGE_GEM_Y_OFFSET,
         });
         strikeEffects.push({
           id: generateId("sunforge_impact"),
@@ -1224,6 +1231,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   setEnemies((prev) =>
     prev
       .map((enemy) => {
+        // Fade in newly-summoned minions
+        if (enemy.spawnProgress < 1) {
+          enemy = { ...enemy, spawnProgress: Math.min(1, enemy.spawnProgress + deltaTime / SUMMON_MINION_FADE_DURATION) };
+        }
         if (enemy.frozen || now < enemy.stunUntil) return enemy;
         const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
 
@@ -1478,7 +1489,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
 
         // Movement logic - normalize speed by segment length for consistent world-space speed
-        if (!enemy.inCombat) {
+        if (!enemy.inCombat && !enemy.summoning) {
           const pathKey = enemy.pathKey || selectedMap;
           const path = MAP_PATHS[pathKey];
           if (!path || path.length < 2) return { ...enemy, inCombat: false };
@@ -2340,52 +2351,79 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     });
     return hasChanges ? updated : prev;
   });
-  // Summoner enemies spawn minions periodically
+  // Summoner enemies: 2-phase channeling system
+  // Phase 1: summoner stops moving and channels for SUMMON_CHANNEL_DURATION
+  // Phase 2: minions spawn and summoner resumes movement
   setEnemies((prev) => {
     const summoned: Enemy[] = [];
-    let hasSummonUpdates = false;
+    let hasChanges = false;
     const updated = prev.map((enemy) => {
       const eData = ENEMY_DATA[enemy.type];
       if (!eData.traits?.includes("summoner")) return enemy;
-      const SUMMON_COOLDOWN = 8000;
+
+      // Cancel channel if interrupted by combat, freeze, or stun
+      if (enemy.summoning && (enemy.inCombat || enemy.frozen || now < enemy.stunUntil)) {
+        hasChanges = true;
+        return { ...enemy, summoning: false, summonStartTime: undefined };
+      }
+
+      // Phase 2: channeling complete — spawn minions
+      if (enemy.summoning && enemy.summonStartTime) {
+        const elapsed = now - enemy.summonStartTime;
+        if (elapsed >= SUMMON_CHANNEL_DURATION) {
+          const minionType = (eData.summonType || "cultist") as EnemyType;
+          const minionData = ENEMY_DATA[minionType];
+          const count = eData.summonCount || 1;
+          for (let i = 0; i < count; i++) {
+            const minion: Enemy = {
+              id: generateId("minion"),
+              type: minionType,
+              pathIndex: Math.max(0, enemy.pathIndex - 1),
+              progress: enemy.progress,
+              hp: minionData.hp,
+              maxHp: minionData.hp,
+              speed: minionData.speed,
+              slowEffect: 0,
+              stunUntil: 0,
+              frozen: false,
+              damageFlash: 0,
+              inCombat: false,
+              lastTroopAttack: 0,
+              lastHeroAttack: 0,
+              lastRangedAttack: 0,
+              spawnProgress: 0,
+              laneOffset: clampLaneOffset(
+                enemy.laneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER * 2
+              ),
+              formationLane:
+                typeof enemy.formationLane === "number"
+                  ? clampLaneIndex(enemy.formationLane + (i % 2 === 0 ? 1 : -1))
+                  : getNearestLaneIndex(enemy.laneOffset),
+              slowed: false,
+              slowIntensity: 0,
+              pathKey: enemy.pathKey,
+            };
+            summoned.push(minion);
+          }
+          addParticles(getEnemyPosCached(enemy), "summon", 8);
+          hasChanges = true;
+          return { ...enemy, summoning: false, summonStartTime: undefined, lastSummon: now };
+        }
+        // Still channeling — emit periodic particles
+        if (elapsed % 400 < deltaTime) {
+          addParticles(getEnemyPosCached(enemy), "summon", 3);
+        }
+        return enemy;
+      }
+
+      // Phase 1: check if ready to begin channeling
       if (enemy.lastSummon && now - enemy.lastSummon < SUMMON_COOLDOWN) return enemy;
       if (enemy.inCombat || enemy.frozen || now < enemy.stunUntil) return enemy;
-      const minion: Enemy = {
-        id: generateId("minion"),
-        type: "cultist",
-        pathIndex: Math.max(0, enemy.pathIndex - 1),
-        progress: enemy.progress,
-        hp: ENEMY_DATA["cultist"].hp,
-        maxHp: ENEMY_DATA["cultist"].hp,
-        speed: ENEMY_DATA["cultist"].speed,
-        slowEffect: 0,
-        stunUntil: 0,
-        frozen: false,
-        damageFlash: 0,
-        inCombat: false,
-        lastTroopAttack: 0,
-        lastHeroAttack: 0,
-        lastRangedAttack: 0,
-        spawnProgress: 0.1,
-        laneOffset: clampLaneOffset(
-          enemy.laneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER
-        ),
-        formationLane:
-          typeof enemy.formationLane === "number"
-            ? clampLaneIndex(enemy.formationLane)
-            : getNearestLaneIndex(enemy.laneOffset),
-        slowed: false,
-        slowIntensity: 0,
-        pathKey: enemy.pathKey,
-      };
-      summoned.push(minion);
-      addParticles(getEnemyPosCached(enemy), "summon", 6);
-      hasSummonUpdates = true;
-      return { ...enemy, lastSummon: now };
+      hasChanges = true;
+      addParticles(getEnemyPosCached(enemy), "summon", 4);
+      return { ...enemy, summoning: true, summonStartTime: now };
     });
-    if (summoned.length === 0 && !hasSummonUpdates) {
-      return prev;
-    }
+    if (!hasChanges && summoned.length === 0) return prev;
     return summoned.length > 0 ? [...updated, ...summoned] : updated;
   });
 

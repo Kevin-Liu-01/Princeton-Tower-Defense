@@ -396,7 +396,7 @@ export function renderTroop(
   ctx.restore();
 }
 
-function drawTroopSprite(
+export function drawTroopSprite(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

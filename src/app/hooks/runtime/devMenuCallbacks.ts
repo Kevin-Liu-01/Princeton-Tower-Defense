@@ -206,6 +206,21 @@ export function skipWaveImpl(params: Pick<
   params.setNextWaveTimer(WAVE_TIMER_BASE);
 }
 
+export function skipToWaveImpl(params: Pick<
+  DevMenuCallbackParams,
+  "gameState" | "battleOutcome" | "totalWaves" |
+  "clearAllTimers" | "clearEnemies" | "setWaveInProgress" |
+  "setCurrentWave" | "setNextWaveTimer"
+>, targetWave: number): void {
+  if (params.gameState !== "playing" || params.battleOutcome) return;
+  if (targetWave < 0 || targetWave >= params.totalWaves) return;
+  params.clearAllTimers();
+  params.clearEnemies();
+  params.setWaveInProgress(false);
+  params.setCurrentWave(targetWave);
+  params.setNextWaveTimer(WAVE_TIMER_BASE);
+}
+
 export function killAllEnemiesImpl(params: Pick<
   DevMenuCallbackParams,
   "gameState" | "battleOutcome" | "enemies" | "selectedMap" |

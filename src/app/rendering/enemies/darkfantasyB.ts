@@ -248,8 +248,9 @@ export function drawFallenPaladinEnemy(
   // === RIGHT ARM ===
   drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: "#c8c0b0", colorDark: "#a8a090", handColor: "#a8a090",
-    swingSpeed: 4, swingAmt: 0.15, baseAngle: 0.25,
-    elbowBend: 0.65, upperLen: 0.27, foreLen: 0.22,
+    upperLen: 0.27, foreLen: 0.22,
+    shoulderAngle: 0.6 + Math.sin(time * 4) * 0.08,
+    elbowAngle: -0.5 + Math.sin(time * 3 + 1) * 0.06,
     style: 'armored',
   });
 
@@ -369,8 +370,8 @@ export function drawBlackGuardEnemy(
   }
 
   // === HEAVY ARMORED LEGS ===
-  drawPathLegs(ctx, cx0, y + size * 0.12 + bodyBob, size, time, zoom, {
-    legLen: 0.28, width: 0.12, strideSpeed: 3.5, strideAmt: 0.2,
+  drawPathLegs(ctx, cx0, y + size * 0.03 + bodyBob, size, time, zoom, {
+    legLen: 0.32, width: 0.12, strideSpeed: 3.5, strideAmt: 0.2,
     color: steelMid, colorDark: steelDark, footColor: steelDark, footLen: 0.12,
     shuffle: true,
     style: 'armored',
@@ -453,7 +454,7 @@ export function drawBlackGuardEnemy(
   drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, steelMid, steelDark, 'plate');
   drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, steelMid, steelDark, 'plate');
   drawGorget(ctx, cx0, torsoY - size * 0.18 - bodyBob, size, size * 0.2, steelMid, steelDark);
-  drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.14, size * 0.08, steelDark, steelDark, 4);
+  drawArmorSkirt(ctx, cx0, torsoY + size * 0.08, size, size * 0.16, size * 0.12, steelDark, steelDark, 4);
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, steelMid, steelDark, steelHighlight);
 
   // === TOWER SHIELD (left) ===
@@ -738,12 +739,12 @@ export function drawLichEnemy(
   drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, boneMid, boneDark, 'tattered');
   drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, boneMid, boneDark, 'tattered');
 
-  // === CASTING ARM (left) ===
+  // === CASTING ARM (left) — thrust forward in arcane pose ===
   drawPathArm(ctx, cx0 - size * 0.14, torsoY - size * 0.08, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    swingSpeed: 3, swingAmt: 0.2, baseAngle: 0.5,
-    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
     upperLen: 0.26, foreLen: 0.22,
+    shoulderAngle: -0.8 + Math.sin(time * 3) * 0.1 + (isAttacking ? -0.4 : 0),
+    elbowAngle: -0.3 + (isAttacking ? -0.3 : Math.sin(time * 4) * 0.1),
     style: 'bone',
   });
 
@@ -1066,9 +1067,9 @@ export function drawWraithEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.12, y - size * 0.15 + floatBob, size, time, zoom, side, {
       color: "rgba(100, 60, 160, 0.4)", colorDark: "rgba(60, 30, 100, 0.3)",
       handColor: "rgba(140, 80, 200, 0.5)", handRadius: 0.052,
-      swingSpeed: 2, swingAmt: 0.3, baseAngle: 0.4,
-      attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
       upperLen: 0.27, foreLen: 0.24,
+      shoulderAngle: side * -0.7 + Math.sin(time * 2 + side * Math.PI) * 0.15 + (isAttacking ? side * -0.3 : 0),
+      elbowAngle: -0.6 + Math.sin(time * 3 + side) * 0.15,
       style: 'ghostly',
     });
   }
@@ -1333,12 +1334,12 @@ export function drawBoneMageEnemy(
   drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, boneMid, boneDark, 'round');
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, "#3a2a1a", "#1a0a10");
 
-  // === CASTING ARM (left) ===
+  // === CASTING ARM (left) — arcane thrust ===
   drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.08, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    swingSpeed: 4, swingAmt: 0.25, baseAngle: 0.45,
-    attackExtra: isAttacking ? 0.6 : 0, elbowBend: 0.5,
     upperLen: 0.24, foreLen: 0.2,
+    shoulderAngle: -0.7 + Math.sin(time * 4) * 0.1 + (isAttacking ? -0.4 : 0),
+    elbowAngle: -0.3 + (isAttacking ? -0.3 : Math.sin(time * 5) * 0.08),
     style: 'bone',
   });
 
@@ -1902,13 +1903,14 @@ export function drawRevenantEnemy(
   drawShoulderOverlay(ctx, cx0 - size * 0.16, torsoY - size * 0.13 - bodyBob, size, -1, "rgba(200, 120, 60, 0.5)", "rgba(100, 50, 25, 0.3)", 'plate');
   drawShoulderOverlay(ctx, cx0 + size * 0.16, torsoY - size * 0.13 - bodyBob, size, 1, "rgba(200, 120, 60, 0.5)", "rgba(100, 50, 25, 0.3)", 'plate');
 
-  // === LEFT ARM ===
+  // === LEFT ARM — spectral reaching ===
   ctx.globalAlpha = flicker * 0.7;
   drawPathArm(ctx, cx0 - size * 0.15, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: "rgba(150, 80, 40, 0.5)", colorDark: "rgba(100, 50, 25, 0.4)",
     handColor: "rgba(120, 60, 30, 0.5)",
-    swingSpeed: 5, swingAmt: 0.2, baseAngle: 0.3,
-    elbowBend: 0.55, upperLen: 0.26, foreLen: 0.22,
+    upperLen: 0.26, foreLen: 0.22,
+    shoulderAngle: -0.55 + Math.sin(time * 5) * 0.1,
+    elbowAngle: -0.4 + Math.sin(time * 4 + 1) * 0.12,
     style: 'armored',
   });
   ctx.globalAlpha = 1;
@@ -2241,25 +2243,24 @@ export function drawAbominationEnemy(
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.06, size, size * 0.12, "#5a5a60", "#3a3a40", "#8a8a90");
 
   // === FOUR ARMS ===
-  // Upper large arms
+  // Upper large arms — aggressive reaching
   for (const side of [-1, 1] as (-1 | 1)[]) {
     drawPathArm(ctx, cx0 + side * size * 0.2, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: bodyColor, colorDark: bodyColorDark, handColor: bodyColorDark,
-      swingSpeed: 2, swingAmt: 0.25, baseAngle: 0.35,
-      attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.55,
       upperLen: 0.34, foreLen: 0.31, width: 0.12, handRadius: 0.06,
+      shoulderAngle: side * -0.5 + (isAttacking ? side * -0.4 : Math.sin(time * 2 + side) * 0.15),
+      elbowAngle: -0.6 + (isAttacking ? -0.3 : Math.sin(time * 2.5 + side * 2) * 0.1),
       style: 'fleshy',
     });
   }
 
-  // Lower smaller arms
+  // Lower smaller arms — grasping underneath
   for (const side of [-1, 1] as (-1 | 1)[]) {
     drawPathArm(ctx, cx0 + side * size * 0.15, torsoY + size * 0.02 - bodyBob, size, time, zoom, side, {
       color: bodyColorDark, colorDark: "#3a2a18", handColor: "#3a2a18",
-      swingSpeed: 2.5, swingAmt: 0.2, baseAngle: 0.5,
-      attackExtra: isAttacking ? 0.3 : 0, elbowBend: 0.5,
       upperLen: 0.24, foreLen: 0.2, width: 0.12, handRadius: 0.052,
-      phaseOffset: Math.PI / 2,
+      shoulderAngle: side * 0.8 + Math.sin(time * 2.5 + side * 1.5) * 0.12,
+      elbowAngle: 0.7 + Math.sin(time * 3 + side * Math.PI) * 0.08,
       style: 'fleshy',
     });
   }
@@ -2518,48 +2519,90 @@ export function drawHellhoundEnemy(
   }
 
   // === MUSCULAR BODY ===
-  const bodyGrad = ctx.createRadialGradient(cx0, y - size * 0.03 - bodyBob, size * 0.05, cx0, y - size * 0.03 - bodyBob, size * 0.2);
+  const bodyGrad = ctx.createRadialGradient(cx0, y - size * 0.03 - bodyBob, size * 0.05, cx0, y - size * 0.03 - bodyBob, size * 0.22);
   bodyGrad.addColorStop(0, bodyColorLight);
-  bodyGrad.addColorStop(0.5, bodyColor);
+  bodyGrad.addColorStop(0.4, bodyColor);
+  bodyGrad.addColorStop(0.8, bodyColorDark);
   bodyGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(cx0, y - size * 0.03 - bodyBob, size * 0.2, size * 0.12, 0, 0, TAU);
+  ctx.ellipse(cx0, y - size * 0.03 - bodyBob, size * 0.22, size * 0.13, 0, 0, TAU);
   ctx.fill();
 
-  // Muscle definition
+  // Magma cracks across body (hellfire beneath skin)
+  setShadowBlur(ctx, 4 * zoom, "#ff6600");
+  ctx.strokeStyle = `rgba(255, 120, 30, ${0.4 + Math.sin(time * 3) * 0.15})`;
+  ctx.lineWidth = 1 * zoom;
+  for (let cr = 0; cr < 5; cr++) {
+    const crx = cx0 - size * 0.12 + cr * size * 0.06;
+    const cry = y - size * 0.04 - bodyBob;
+    ctx.beginPath();
+    ctx.moveTo(crx, cry - size * 0.04);
+    ctx.quadraticCurveTo(crx + size * 0.02, cry, crx - size * 0.01, cry + size * 0.04);
+    ctx.stroke();
+  }
+  clearShadow(ctx);
+
+  // Muscle definition (bulging, powerful)
   ctx.strokeStyle = bodyColorDark;
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.globalAlpha = 0.3;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.globalAlpha = 0.35;
   ctx.beginPath();
-  ctx.ellipse(cx0 + size * 0.06, y - size * 0.05 - bodyBob, size * 0.06, size * 0.04, 0.3, 0, TAU);
+  ctx.ellipse(cx0 + size * 0.07, y - size * 0.06 - bodyBob, size * 0.065, size * 0.04, 0.3, 0, TAU);
   ctx.stroke();
   ctx.beginPath();
-  ctx.ellipse(cx0 - size * 0.06, y - size * 0.04 - bodyBob, size * 0.05, size * 0.035, -0.2, 0, TAU);
+  ctx.ellipse(cx0 - size * 0.06, y - size * 0.04 - bodyBob, size * 0.055, size * 0.038, -0.2, 0, TAU);
   ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // Rib outline
+  // Exposed rib cage with hellfire glowing through
   ctx.strokeStyle = bodyColorDark;
-  ctx.lineWidth = 0.5 * zoom;
-  ctx.globalAlpha = 0.2;
-  for (let r = 0; r < 3; r++) {
-    const rx = cx0 - size * 0.02 + r * size * 0.04;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let r = 0; r < 4; r++) {
+    const rx = cx0 - size * 0.03 + r * size * 0.04;
+    const ribGlow = 0.15 + Math.sin(time * 4 + r * 1.2) * 0.08;
+    ctx.globalAlpha = 0.3;
     ctx.beginPath();
-    ctx.arc(rx, y - size * 0.02 - bodyBob, size * 0.05, -0.5, 0.8);
+    ctx.arc(rx, y - size * 0.02 - bodyBob, size * 0.055, -0.6, 0.8);
     ctx.stroke();
+    ctx.globalAlpha = ribGlow;
+    ctx.strokeStyle = "rgba(255,100,20,0.5)";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(rx, y - size * 0.02 - bodyBob, size * 0.05, -0.4, 0.6);
+    ctx.stroke();
+    ctx.strokeStyle = bodyColorDark;
+    ctx.lineWidth = 0.8 * zoom;
   }
   ctx.globalAlpha = 1;
 
-  // === FLAMING MANE ===
-  for (let f = 0; f < 8; f++) {
-    const fX = cx0 - size * 0.1 + f * size * 0.03;
-    const fY = y - size * 0.1 - bodyBob;
-    const flameH = size * 0.06 + Math.sin(time * 10 + f * 1.5) * size * 0.025;
-    const flameW = size * 0.015 + Math.sin(time * 7 + f) * size * 0.005;
+  // Spinal ridges (bony protrusions along back)
+  for (let sp = 0; sp < 8; sp++) {
+    const spx = cx0 - size * 0.12 + sp * size * 0.035;
+    const spy = y - size * 0.12 - bodyBob;
+    const spH = size * 0.02 + Math.sin(time * 6 + sp * 1.1) * size * 0.005;
+    ctx.fillStyle = bodyColorDark;
+    ctx.beginPath();
+    ctx.moveTo(spx - size * 0.006, spy + size * 0.01);
+    ctx.lineTo(spx, spy - spH);
+    ctx.lineTo(spx + size * 0.006, spy + size * 0.01);
+    ctx.fill();
+    // Ember glow at tips
+    ctx.fillStyle = `rgba(255,140,40,${0.3 + Math.sin(time * 7 + sp) * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(spx, spy - spH, size * 0.004, 0, TAU);
+    ctx.fill();
+  }
+
+  // === FLAMING MANE (denser, more intense) ===
+  for (let f = 0; f < 12; f++) {
+    const fX = cx0 - size * 0.12 + f * size * 0.025;
+    const fY = y - size * 0.11 - bodyBob;
+    const flameH = size * 0.07 + Math.sin(time * 10 + f * 1.5) * size * 0.03;
+    const flameW = size * 0.017 + Math.sin(time * 7 + f) * size * 0.006;
 
     // Outer flame
-    ctx.fillStyle = `rgba(255, 100, 20, ${0.4 + Math.sin(time * 8 + f) * 0.15})`;
+    ctx.fillStyle = `rgba(255, 80, 10, ${0.45 + Math.sin(time * 8 + f) * 0.15})`;
     ctx.beginPath();
     ctx.moveTo(fX - flameW, fY);
     ctx.quadraticCurveTo(fX - flameW * 0.5, fY - flameH * 0.6, fX, fY - flameH);
@@ -2567,127 +2610,207 @@ export function drawHellhoundEnemy(
     ctx.closePath();
     ctx.fill();
 
-    // Inner flame
-    ctx.fillStyle = `rgba(255, 220, 80, ${0.3 + Math.sin(time * 9 + f * 2) * 0.15})`;
+    // Core flame (white-hot)
+    ctx.fillStyle = `rgba(255, 230, 100, ${0.35 + Math.sin(time * 9 + f * 2) * 0.15})`;
     ctx.beginPath();
-    ctx.moveTo(fX - flameW * 0.5, fY);
-    ctx.quadraticCurveTo(fX, fY - flameH * 0.7, fX + flameW * 0.5, fY);
+    ctx.moveTo(fX - flameW * 0.4, fY);
+    ctx.quadraticCurveTo(fX, fY - flameH * 0.75, fX + flameW * 0.4, fY);
     ctx.closePath();
     ctx.fill();
   }
 
-  // === BEAST HEAD ===
+  // === BEAST HEAD (larger, more monstrous) ===
   const headX = cx0 + size * 0.22;
   const headY = y - size * 0.1 - bodyBob;
 
-  // Snout
-  const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.1);
+  const headGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.11);
   headGrad.addColorStop(0, bodyColorLight);
-  headGrad.addColorStop(0.6, bodyColor);
+  headGrad.addColorStop(0.5, bodyColor);
   headGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.ellipse(headX, headY, size * 0.09, size * 0.07, 0, 0, TAU);
+  ctx.ellipse(headX, headY, size * 0.1, size * 0.08, 0, 0, TAU);
   ctx.fill();
 
-  // Snout extension
+  // Heavy brow ridge (demonic)
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.06, headY - size * 0.04);
+  ctx.quadraticCurveTo(headX, headY - size * 0.065, headX + size * 0.06, headY - size * 0.03);
+  ctx.quadraticCurveTo(headX, headY - size * 0.045, headX - size * 0.06, headY - size * 0.04);
+  ctx.fill();
+
+  // Snout extension (broader)
   ctx.fillStyle = bodyColor;
   ctx.beginPath();
-  ctx.ellipse(headX + size * 0.06, headY + size * 0.01, size * 0.05, size * 0.04, 0, 0, TAU);
+  ctx.moveTo(headX + size * 0.05, headY - size * 0.025);
+  ctx.quadraticCurveTo(headX + size * 0.12, headY - size * 0.01, headX + size * 0.13, headY + size * 0.01);
+  ctx.quadraticCurveTo(headX + size * 0.12, headY + size * 0.04, headX + size * 0.05, headY + size * 0.04);
+  ctx.closePath();
   ctx.fill();
 
-  // Ears
+  // Snarl wrinkles
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.globalAlpha = 0.3;
+  for (let w = 0; w < 3; w++) {
+    ctx.beginPath();
+    ctx.moveTo(headX + size * 0.06 + w * size * 0.02, headY - size * 0.015);
+    ctx.quadraticCurveTo(headX + size * 0.07 + w * size * 0.02, headY + size * 0.005, headX + size * 0.06 + w * size * 0.02, headY + size * 0.025);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Ears (pointed, bat-like)
   for (const side of [-1, 1]) {
     ctx.fillStyle = bodyColorDark;
     ctx.beginPath();
     ctx.moveTo(headX - size * 0.02, headY + side * size * 0.055);
-    ctx.lineTo(headX - size * 0.06, headY + side * size * 0.09);
+    ctx.lineTo(headX - size * 0.07, headY + side * size * 0.1);
     ctx.lineTo(headX + size * 0.01, headY + side * size * 0.05);
+    ctx.closePath();
+    ctx.fill();
+    // Glow inside ears
+    ctx.fillStyle = "rgba(255,80,20,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(headX - size * 0.02, headY + side * size * 0.06);
+    ctx.lineTo(headX - size * 0.05, headY + side * size * 0.085);
+    ctx.lineTo(headX + size * 0.005, headY + side * size * 0.055);
     ctx.closePath();
     ctx.fill();
   }
 
-  // Open jaws
-  const jawOpen = isAttacking ? 0.4 : 0.15 + Math.sin(time * 3) * 0.05;
+  // Open jaws (always snarling, wider)
+  const jawOpen = isAttacking ? 0.5 : 0.2 + Math.sin(time * 3) * 0.06;
+
+  // Jaw interior (hellfire glow)
+  setShadowBlur(ctx, 5 * zoom, "#ff4400");
+  ctx.fillStyle = `rgba(180, 40, 10, ${0.7 + jawOpen * 0.3})`;
+  ctx.beginPath();
+  ctx.moveTo(headX + size * 0.07, headY);
+  ctx.quadraticCurveTo(headX + size * 0.11, headY - jawOpen * size * 0.12, headX + size * 0.13, headY - jawOpen * size * 0.06);
+  ctx.lineTo(headX + size * 0.13, headY + size * 0.01 + jawOpen * size * 0.06);
+  ctx.quadraticCurveTo(headX + size * 0.11, headY + size * 0.01 + jawOpen * size * 0.12, headX + size * 0.07, headY + size * 0.02);
+  ctx.closePath();
+  ctx.fill();
+  // Inner hellfire glow
+  ctx.fillStyle = `rgba(255, 150, 30, ${jawOpen * 0.4})`;
+  ctx.beginPath();
+  ctx.ellipse(headX + size * 0.09, headY + size * 0.005, size * 0.02, size * 0.015 * jawOpen * 3, 0, 0, TAU);
+  ctx.fill();
+  clearShadow(ctx);
 
   // Upper jaw
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
-  ctx.ellipse(headX + size * 0.08, headY - size * 0.01, size * 0.04, size * 0.02, -jawOpen * 0.5, 0, TAU);
+  ctx.ellipse(headX + size * 0.09, headY - size * 0.01, size * 0.045, size * 0.022, -jawOpen * 0.5, 0, TAU);
   ctx.fill();
 
   // Lower jaw
   ctx.beginPath();
-  ctx.ellipse(headX + size * 0.08, headY + size * 0.02, size * 0.04, size * 0.02, jawOpen * 0.5, 0, TAU);
+  ctx.ellipse(headX + size * 0.09, headY + size * 0.025, size * 0.045, size * 0.022, jawOpen * 0.5, 0, TAU);
   ctx.fill();
 
-  // Fangs
+  // Massive fangs (glowing tips)
   ctx.fillStyle = "#e0d8c0";
-  for (const [fx, fy, len] of [[0.09, -0.01, 0.02], [0.07, -0.008, 0.015], [0.09, 0.02, 0.018], [0.07, 0.022, 0.013]] as [number, number, number][]) {
+  const fangData: [number, number, number][] = [
+    [0.1, -0.012, 0.025], [0.08, -0.01, 0.02], [0.12, -0.008, 0.018],
+    [0.1, 0.025, 0.022], [0.08, 0.023, 0.017], [0.12, 0.022, 0.015],
+  ];
+  for (const [fx, fy, len] of fangData) {
+    const isUpper = fy < 0;
     ctx.beginPath();
-    ctx.moveTo(headX + fx * size, headY + fy * size);
-    ctx.lineTo(headX + fx * size + size * 0.004, headY + fy * size + (fy < 0 ? -1 : 1) * len * size);
-    ctx.lineTo(headX + fx * size + size * 0.008, headY + fy * size);
+    ctx.moveTo(headX + fx * size - size * 0.005, headY + fy * size);
+    ctx.lineTo(headX + fx * size, headY + fy * size + (isUpper ? 1 : -1) * len * size);
+    ctx.lineTo(headX + fx * size + size * 0.005, headY + fy * size);
     ctx.closePath();
     ctx.fill();
   }
 
-  // Burning eyes
+  // Burning eyes (more intense, with fire trails)
   for (const side of [-1, 1]) {
-    const ex = headX + size * 0.01;
-    const ey = headY + side * size * 0.025;
-    const eyePulse = 0.6 + Math.sin(time * 5 + side) * 0.2;
+    const ex = headX + size * 0.02;
+    const ey = headY + side * size * 0.028;
+    const eyePulse = 0.7 + Math.sin(time * 5 + side) * 0.2;
 
-    const eyeGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, size * 0.025);
-    eyeGrad.addColorStop(0, `rgba(255, 200, 60, ${eyePulse})`);
-    eyeGrad.addColorStop(1, "rgba(255, 100, 20, 0)");
+    // Eye glow aura
+    setShadowBlur(ctx, 8 * zoom, "#ff6600");
+    const eyeGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, size * 0.028);
+    eyeGrad.addColorStop(0, `rgba(255, 240, 100, ${eyePulse})`);
+    eyeGrad.addColorStop(0.4, `rgba(255, 150, 30, ${eyePulse * 0.7})`);
+    eyeGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
     ctx.fillStyle = eyeGrad;
     ctx.beginPath();
-    ctx.arc(ex, ey, size * 0.025, 0, TAU);
+    ctx.arc(ex, ey, size * 0.028, 0, TAU);
     ctx.fill();
 
-    ctx.fillStyle = `rgba(255, 240, 150, ${eyePulse})`;
+    // Eye core
+    ctx.fillStyle = `rgba(255, 255, 200, ${eyePulse})`;
     ctx.beginPath();
-    ctx.arc(ex, ey, size * 0.008, 0, TAU);
+    ctx.arc(ex, ey, size * 0.01, 0, TAU);
     ctx.fill();
+    clearShadow(ctx);
 
-    // Smoke trail from eyes
-    ctx.strokeStyle = `rgba(80, 40, 20, ${eyePulse * 0.3})`;
-    ctx.lineWidth = size * 0.004;
+    // Fire trail streaming from eyes
+    ctx.strokeStyle = `rgba(255, 100, 20, ${eyePulse * 0.35})`;
+    ctx.lineWidth = size * 0.006;
     ctx.beginPath();
     ctx.moveTo(ex, ey);
-    ctx.quadraticCurveTo(ex - size * 0.02, ey + side * size * 0.01, ex - size * 0.04, ey + side * size * 0.02 - size * 0.02);
+    ctx.quadraticCurveTo(
+      ex - size * 0.03, ey + side * size * 0.015,
+      ex - size * 0.06, ey + side * size * 0.01 - size * 0.03,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 180, 60, ${eyePulse * 0.2})`;
+    ctx.lineWidth = size * 0.003;
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.quadraticCurveTo(
+      ex - size * 0.025, ey + side * size * 0.02,
+      ex - size * 0.05, ey + side * size * 0.025 - size * 0.025,
+    );
     ctx.stroke();
   }
 
-  // Nostril smoke
-  for (let n = 0; n < 2; n++) {
-    const nPhase = (time * 0.6 + n * 0.5) % 1;
-    ctx.globalAlpha = (1 - nPhase) * 0.15;
-    ctx.fillStyle = "rgba(80, 60, 40, 0.3)";
+  // Molten saliva dripping (persistent, not just when attacking)
+  ctx.strokeStyle = `rgba(255, 120, 30, ${0.25 + jawOpen * 0.3})`;
+  ctx.lineWidth = size * 0.005;
+  for (let d = 0; d < 3; d++) {
+    const dPhase = (time * 0.8 + d * 0.33) % 1;
+    const dx = headX + size * (0.08 + d * 0.015);
+    const dStartY = headY + size * 0.03;
+    const dEndY = dStartY + dPhase * size * 0.06;
+    ctx.globalAlpha = (1 - dPhase) * 0.5;
     ctx.beginPath();
-    ctx.arc(headX + size * 0.1, headY + (n - 0.5) * size * 0.015 - nPhase * size * 0.04, size * 0.008 * (1 + nPhase), 0, TAU);
+    ctx.moveTo(dx, dStartY);
+    ctx.lineTo(dx + Math.sin(time * 4 + d) * size * 0.005, dEndY);
+    ctx.stroke();
+    // Drip blob
+    ctx.fillStyle = `rgba(255, 140, 40, ${(1 - dPhase) * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(dx + Math.sin(time * 4 + d) * size * 0.005, dEndY, size * 0.004, 0, TAU);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // Drool when attacking
-  if (isAttacking) {
-    ctx.strokeStyle = "rgba(255, 100, 30, 0.3)";
-    ctx.lineWidth = size * 0.004;
+  // Nostril smoke (thicker)
+  for (let n = 0; n < 3; n++) {
+    const nPhase = (time * 0.6 + n * 0.33) % 1;
+    ctx.globalAlpha = (1 - nPhase) * 0.18;
+    ctx.fillStyle = "rgba(80, 60, 40, 0.3)";
     ctx.beginPath();
-    ctx.moveTo(headX + size * 0.08, headY + size * 0.03);
-    ctx.lineTo(headX + size * 0.08, headY + size * 0.06 + Math.sin(time * 6) * size * 0.01);
-    ctx.stroke();
+    ctx.arc(headX + size * 0.12, headY + (n - 1) * size * 0.012 - nPhase * size * 0.05, size * 0.01 * (1 + nPhase), 0, TAU);
+    ctx.fill();
   }
+  ctx.globalAlpha = 1;
 
-  // Heat shimmer above mane
-  for (let h = 0; h < 3; h++) {
-    const hPhase = (time * 0.7 + h * 0.33) % 1;
-    ctx.globalAlpha = (1 - hPhase) * 0.06;
+  // Heat shimmer above mane (more intense)
+  for (let h = 0; h < 5; h++) {
+    const hPhase = (time * 0.7 + h * 0.2) % 1;
+    ctx.globalAlpha = (1 - hPhase) * 0.08;
     ctx.fillStyle = "rgba(255, 200, 100, 0.3)";
     ctx.beginPath();
-    ctx.arc(cx0 - size * 0.05 + h * size * 0.05, y - size * 0.15 - bodyBob - hPhase * size * 0.15, size * 0.02 * (1 + hPhase), 0, TAU);
+    ctx.arc(cx0 - size * 0.08 + h * size * 0.04, y - size * 0.18 - bodyBob - hPhase * size * 0.18, size * 0.022 * (1 + hPhase), 0, TAU);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
@@ -2921,9 +3044,9 @@ export function drawDoomHeraldEnemy(
   // === LEFT ARM ===
   drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.08 + floatBob, size, time, zoom, -1, {
     color: "#c8b8a0", colorDark: "#a89880", handColor: "#a89880",
-    swingSpeed: 2, swingAmt: 0.2, baseAngle: 0.4,
-    attackExtra: isAttacking ? 0.5 : 0, elbowBend: 0.45,
     upperLen: 0.28, foreLen: 0.24,
+    shoulderAngle: -0.6 + Math.sin(time * 2) * 0.12 + (isAttacking ? -0.3 : 0),
+    elbowAngle: -0.5 + Math.sin(time * 3) * 0.1,
     style: 'armored',
   });
 

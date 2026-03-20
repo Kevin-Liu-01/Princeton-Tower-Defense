@@ -1,5 +1,10 @@
 import type { Projectile, Position } from "../../types";
 import { worldToScreen } from "../../utils";
+import {
+  ISO_X_FACTOR,
+  ISO_Y_FACTOR,
+  ISO_Y_RATIO,
+} from "../../constants/isometric";
 import { getPerformanceSettings } from "../performance";
 
 // ============================================================================
@@ -42,17 +47,26 @@ function parseColor(color: string): { r: number; g: number; b: number } {
 }
 
 // Helper: Lighten a color
-function lightenColor(color: { r: number; g: number; b: number }, amount: number): string {
+function lightenColor(
+  color: { r: number; g: number; b: number },
+  amount: number,
+): string {
   return `rgb(${Math.min(255, color.r + amount)}, ${Math.min(255, color.g + amount)}, ${Math.min(255, color.b + amount)})`;
 }
 
 // Helper: Darken a color
-function darkenColor(color: { r: number; g: number; b: number }, amount: number): string {
+function darkenColor(
+  color: { r: number; g: number; b: number },
+  amount: number,
+): string {
   return `rgb(${Math.max(0, color.r - amount)}, ${Math.max(0, color.g - amount)}, ${Math.max(0, color.b - amount)})`;
 }
 
 // Helper: Get color with alpha
-function colorWithAlpha(color: { r: number; g: number; b: number }, alpha: number): string {
+function colorWithAlpha(
+  color: { r: number; g: number; b: number },
+  alpha: number,
+): string {
   return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
 }
 
@@ -69,7 +83,7 @@ function drawTrail(
   cameraZoom: number,
   trailColor: { r: number; g: number; b: number },
   trailLength: number = 4,
-  trailSize: number = 4
+  trailSize: number = 4,
 ) {
   if (!getPerformanceSettings().projectileTrails) return;
   const t = proj.progress;
@@ -100,7 +114,7 @@ function drawTrail(
       const y = fromScreen.y + (toScreen.y - fromScreen.y) * trailT;
       ctx.fillStyle = colorWithAlpha(trailColor, alpha);
       ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.ellipse(x, y, size, size * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     return;
@@ -119,13 +133,23 @@ function drawTrail(
       cameraZoom,
     );
     // Arc and elevation are HEIGHT above ground — apply as screen-Y offset
-    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight * cameraZoom : 0;
-    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) * cameraZoom : 0;
+    const trailArc = proj.arcHeight
+      ? Math.sin(trailT * Math.PI) * proj.arcHeight * cameraZoom
+      : 0;
+    const trailElevation = proj.elevation
+      ? proj.elevation * (1 - trailT) * cameraZoom
+      : 0;
     const alpha = 0.35 * (1 - i / (trailLength + 1));
     const size = Math.max(1, (trailSize - i * 0.6) * cameraZoom);
     ctx.fillStyle = colorWithAlpha(trailColor, alpha);
     ctx.beginPath();
-    ctx.arc(trailGroundPos.x, trailGroundPos.y - trailArc - trailElevation, size, 0, Math.PI * 2);
+    ctx.arc(
+      trailGroundPos.x,
+      trailGroundPos.y - trailArc - trailElevation,
+      size,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }
@@ -136,21 +160,21 @@ function drawTrail(
 function renderArrow(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  variant: "basic" | "crossbow" | "golden" = "basic"
+  variant: "basic" | "crossbow" | "golden" = "basic",
 ) {
   const s = 0.65 * zoom;
-  
+
   const colors = {
     basic: { shaft: "#6b4423", head: "#b8b8b8", fletch: "#c44" },
     crossbow: { shaft: "#3a3a3a", head: "#707070", fletch: "#222" },
     golden: { shaft: "#8b6914", head: "#daa520", fletch: "#ff9500" },
   };
   const c = colors[variant];
-  
+
   // Shaft
   ctx.fillStyle = c.shaft;
   ctx.fillRect(-9 * s, -1 * s, 16 * s, 2 * s);
-  
+
   // Fletching
   ctx.fillStyle = c.fletch;
   ctx.beginPath();
@@ -160,7 +184,7 @@ function renderArrow(
   ctx.lineTo(-11 * s, 3.5 * s);
   ctx.closePath();
   ctx.fill();
-  
+
   // Arrowhead
   ctx.fillStyle = c.head;
   ctx.beginPath();
@@ -170,7 +194,7 @@ function renderArrow(
   ctx.lineTo(6 * s, 2.5 * s);
   ctx.closePath();
   ctx.fill();
-  
+
   // Shine
   ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
   ctx.beginPath();
@@ -188,12 +212,12 @@ function renderMagicBolt(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const pulse = 0.9 + Math.sin(time * 8) * 0.1;
   const coreSize = 5 * zoom * pulse;
   const auraSize = 10 * zoom;
-  
+
   // Outer aura glow (no shadowBlur - draw circles instead)
   const auraGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, auraSize);
   auraGrad.addColorStop(0, colorWithAlpha(baseColor, 0.5));
@@ -203,7 +227,7 @@ function renderMagicBolt(
   ctx.beginPath();
   ctx.arc(0, 0, auraSize, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Orbiting particles (only 3 for performance)
   for (let i = 0; i < 3; i++) {
     const angle = (i / 3) * Math.PI * 2 + time * 5;
@@ -215,18 +239,21 @@ function renderMagicBolt(
     ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   // Core orb with gradient
   const coreGrad = ctx.createRadialGradient(0, -1 * zoom, 0, 0, 0, coreSize);
   coreGrad.addColorStop(0, "#ffffff");
   coreGrad.addColorStop(0.35, lightenColor(baseColor, 60));
-  coreGrad.addColorStop(0.7, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(
+    0.7,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   coreGrad.addColorStop(1, darkenColor(baseColor, 40));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
   ctx.arc(0, 0, coreSize, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Inner highlight
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.beginPath();
@@ -241,10 +268,10 @@ function renderFireball(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const fireSize = 9 * zoom;
-  
+
   // Outer fire glow
   const outerGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, fireSize * 1.4);
   outerGrad.addColorStop(0, colorWithAlpha(baseColor, 0.6));
@@ -254,14 +281,14 @@ function renderFireball(
   ctx.beginPath();
   ctx.arc(0, 0, fireSize * 1.4, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Flame tongues (only 4 for performance)
   for (let i = 0; i < 4; i++) {
     const flameAngle = (i / 4) * Math.PI * 2 + time * 6;
-    const flameLen = (fireSize * 0.7 + Math.sin(time * 10 + i * 2) * 2 * zoom);
+    const flameLen = fireSize * 0.7 + Math.sin(time * 10 + i * 2) * 2 * zoom;
     const fx = Math.cos(flameAngle) * fireSize * 0.3;
     const fy = Math.sin(flameAngle) * fireSize * 0.3;
-    
+
     const flameGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, flameLen);
     flameGrad.addColorStop(0, "rgba(255, 255, 200, 0.8)");
     flameGrad.addColorStop(0.4, colorWithAlpha(baseColor, 0.5));
@@ -271,7 +298,7 @@ function renderFireball(
     ctx.arc(fx, fy, flameLen, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   // Bright core
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, fireSize * 0.5);
   coreGrad.addColorStop(0, "#ffffff");
@@ -289,27 +316,34 @@ function renderFireball(
 function renderRock(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  progress: number
+  progress: number,
 ) {
   const rotation = progress * Math.PI * 3;
   const size = 7 * zoom;
-  
+
   ctx.save();
   ctx.rotate(rotation);
-  
+
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
   ctx.beginPath();
   ctx.ellipse(1.5 * zoom, 1.5 * zoom, size, size * 0.8, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Main rock
-  const rockGrad = ctx.createRadialGradient(-2 * zoom, -2 * zoom, 0, 0, 0, size);
+  const rockGrad = ctx.createRadialGradient(
+    -2 * zoom,
+    -2 * zoom,
+    0,
+    0,
+    0,
+    size,
+  );
   rockGrad.addColorStop(0, "#a09080");
   rockGrad.addColorStop(0.5, "#706860");
   rockGrad.addColorStop(1, "#504840");
   ctx.fillStyle = rockGrad;
-  
+
   // Irregular rock shape
   ctx.beginPath();
   ctx.moveTo(size * 0.9, 0);
@@ -321,7 +355,7 @@ function renderRock(
   ctx.lineTo(size * 0.75, size * 0.45);
   ctx.closePath();
   ctx.fill();
-  
+
   // Cracks
   ctx.strokeStyle = "rgba(40, 30, 20, 0.4)";
   ctx.lineWidth = 0.8 * zoom;
@@ -329,13 +363,13 @@ function renderRock(
   ctx.moveTo(-1 * zoom, -4 * zoom);
   ctx.lineTo(0.5 * zoom, 2 * zoom);
   ctx.stroke();
-  
+
   // Highlight
   ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
   ctx.beginPath();
   ctx.ellipse(-2 * zoom, -3 * zoom, 2 * zoom, 1.5 * zoom, -0.4, 0, Math.PI * 2);
   ctx.fill();
-  
+
   ctx.restore();
 }
 
@@ -346,21 +380,21 @@ function renderSonicWave(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   // Three expanding rings
   for (let ring = 0; ring < 3; ring++) {
     const ringProgress = (progress + ring * 0.12) % 1;
     const ringSize = (4 + ringProgress * 14) * zoom;
     const ringAlpha = 0.5 * (1 - ringProgress);
-    
+
     ctx.strokeStyle = colorWithAlpha(baseColor, ringAlpha);
     ctx.lineWidth = (2.5 - ring * 0.6) * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, ringSize, ringSize * 0.45, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
-  
+
   // Core pulse
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 5 * zoom);
   coreGrad.addColorStop(0, "#ffffff");
@@ -381,7 +415,7 @@ function renderLightningOrb(
   time: number,
   baseColor: { r: number; g: number; b: number },
   lowDetail: boolean,
-  minimalDetail: boolean
+  minimalDetail: boolean,
 ) {
   const coreSize = 5 * zoom;
   const arcCount = minimalDetail ? 2 : lowDetail ? 4 : 7;
@@ -413,9 +447,19 @@ function renderLightningOrb(
   }
 
   // Ambient corona
-  const coronaGrad = ctx.createRadialGradient(0, 0, coreSize * 0.4, 0, 0, coreSize * 3.2);
+  const coronaGrad = ctx.createRadialGradient(
+    0,
+    0,
+    coreSize * 0.4,
+    0,
+    0,
+    coreSize * 3.2,
+  );
   coronaGrad.addColorStop(0, colorWithAlpha(baseColor, 0.32));
-  coronaGrad.addColorStop(0.45, colorWithAlpha(baseColor, lowDetail ? 0.1 : 0.14));
+  coronaGrad.addColorStop(
+    0.45,
+    colorWithAlpha(baseColor, lowDetail ? 0.1 : 0.14),
+  );
   coronaGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
   ctx.fillStyle = coronaGrad;
   ctx.beginPath();
@@ -473,10 +517,20 @@ function renderLightningOrb(
     ctx.shadowColor = lightenColor(baseColor, 80);
     ctx.shadowBlur = 10 * zoom;
   }
-  const coreGrad = ctx.createRadialGradient(-coreSize * 0.2, -coreSize * 0.2, 0, 0, 0, coreSize);
+  const coreGrad = ctx.createRadialGradient(
+    -coreSize * 0.2,
+    -coreSize * 0.2,
+    0,
+    0,
+    0,
+    coreSize,
+  );
   coreGrad.addColorStop(0, "#ffffff");
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 85));
-  coreGrad.addColorStop(0.75, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(
+    0.75,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   coreGrad.addColorStop(1, darkenColor(baseColor, 35));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
@@ -493,7 +547,7 @@ function renderLightningOrb(
     coreSize * 0.18,
     -0.4,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 }
@@ -515,28 +569,28 @@ function drawBoltPath(
 function renderSpear(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const s = 0.55 * zoom;
   const metal = lightenColor(baseColor, 35);
   const metalShade = darkenColor(baseColor, 35);
   const shaftWood = darkenColor(baseColor, 70);
   const accent = lightenColor(baseColor, 10);
-  
+
   // Subtle glow trail
   ctx.fillStyle = colorWithAlpha(baseColor, 0.18);
   ctx.beginPath();
   ctx.ellipse(0, 0, 10 * s, 3 * s, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Shaft
   ctx.fillStyle = shaftWood;
   ctx.fillRect(-9 * s, -1.3 * s, 18 * s, 2.6 * s);
-  
+
   // Gold band
   ctx.fillStyle = accent;
   ctx.fillRect(-1.5 * s, -1.8 * s, 3 * s, 3.6 * s);
-  
+
   // Fletching
   ctx.fillStyle = darkenColor(baseColor, 20);
   ctx.beginPath();
@@ -546,7 +600,7 @@ function renderSpear(
   ctx.lineTo(-12 * s, 3.5 * s);
   ctx.closePath();
   ctx.fill();
-  
+
   // Spearhead
   ctx.fillStyle = metal;
   ctx.beginPath();
@@ -556,7 +610,7 @@ function renderSpear(
   ctx.lineTo(7 * s, 3.5 * s);
   ctx.closePath();
   ctx.fill();
-  
+
   // Spearhead edge shadow
   ctx.strokeStyle = metalShade;
   ctx.lineWidth = 1 * zoom;
@@ -582,7 +636,7 @@ function renderSpear(
 function renderBullet(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   // Tracer trail
   const trailGrad = ctx.createLinearGradient(-12 * zoom, 0, 4 * zoom, 0);
@@ -591,7 +645,7 @@ function renderBullet(
   trailGrad.addColorStop(1, colorWithAlpha(baseColor, 0.8));
   ctx.fillStyle = trailGrad;
   ctx.fillRect(-12 * zoom, -1.5 * zoom, 16 * zoom, 3 * zoom);
-  
+
   // Bullet core
   const bulletGrad = ctx.createLinearGradient(-3 * zoom, 0, 5 * zoom, 0);
   bulletGrad.addColorStop(0, lightenColor(baseColor, 30));
@@ -609,14 +663,21 @@ function renderBullet(
 function renderCannonball(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  progress: number
+  progress: number,
 ) {
   const spin = progress * Math.PI * 2.5;
   const size = 6 * zoom;
-  
+
   // Fire trail
   const trailOffset = -6 * zoom + Math.sin(spin) * zoom;
-  const trailGrad = ctx.createRadialGradient(trailOffset, 0, 0, trailOffset, 0, 8 * zoom);
+  const trailGrad = ctx.createRadialGradient(
+    trailOffset,
+    0,
+    0,
+    trailOffset,
+    0,
+    8 * zoom,
+  );
   trailGrad.addColorStop(0, "rgba(255, 200, 50, 0.7)");
   trailGrad.addColorStop(0.5, "rgba(255, 100, 0, 0.4)");
   trailGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
@@ -624,9 +685,16 @@ function renderCannonball(
   ctx.beginPath();
   ctx.arc(trailOffset, 0, 8 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Main ball
-  const ballGrad = ctx.createRadialGradient(-1.5 * zoom, -1.5 * zoom, 0, 0, 0, size);
+  const ballGrad = ctx.createRadialGradient(
+    -1.5 * zoom,
+    -1.5 * zoom,
+    0,
+    0,
+    0,
+    size,
+  );
   ballGrad.addColorStop(0, "#555");
   ballGrad.addColorStop(0.5, "#333");
   ballGrad.addColorStop(1, "#1a1a1a");
@@ -634,11 +702,19 @@ function renderCannonball(
   ctx.beginPath();
   ctx.arc(0, 0, size, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Metallic shine
   ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
   ctx.beginPath();
-  ctx.ellipse(-1.5 * zoom, -1.5 * zoom, 2.5 * zoom, 1.8 * zoom, -0.5, 0, Math.PI * 2);
+  ctx.ellipse(
+    -1.5 * zoom,
+    -1.5 * zoom,
+    2.5 * zoom,
+    1.8 * zoom,
+    -0.5,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 }
 
@@ -675,7 +751,14 @@ function renderMortarShell(
     const tSize = (4 - i * 0.8) * zoom;
     const tAlpha = 0.6 - i * 0.12;
     const flicker = Math.sin(time * 12 + i * 3.1) * zoom * 0.6;
-    const grad = ctx.createRadialGradient(tOff, flicker, 0, tOff, flicker, tSize);
+    const grad = ctx.createRadialGradient(
+      tOff,
+      flicker,
+      0,
+      tOff,
+      flicker,
+      tSize,
+    );
     grad.addColorStop(0, `rgba(255, 220, 80, ${tAlpha})`);
     grad.addColorStop(0.4, `rgba(255, 130, 20, ${tAlpha * 0.7})`);
     grad.addColorStop(1, "rgba(200, 60, 0, 0)");
@@ -687,7 +770,14 @@ function renderMortarShell(
 
   // Exhaust flash at base
   const flashIntensity = 0.4 + Math.sin(time * 18) * 0.2;
-  const flashGrad = ctx.createRadialGradient(-size * 1.1, 0, 0, -size * 1.1, 0, 4 * zoom);
+  const flashGrad = ctx.createRadialGradient(
+    -size * 1.1,
+    0,
+    0,
+    -size * 1.1,
+    0,
+    4 * zoom,
+  );
   flashGrad.addColorStop(0, `rgba(255, 255, 200, ${flashIntensity})`);
   flashGrad.addColorStop(0.5, `rgba(255, 160, 40, ${flashIntensity * 0.5})`);
   flashGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
@@ -764,7 +854,15 @@ function renderMortarShell(
   // Top metallic highlight
   ctx.fillStyle = "rgba(255, 240, 200, 0.2)";
   ctx.beginPath();
-  ctx.ellipse(size * 0.2, -size * 0.32, size * 0.7, zoom * 1.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.2,
+    -size * 0.32,
+    size * 0.7,
+    zoom * 1.5,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Panel line
@@ -803,7 +901,12 @@ function renderMissile(
 
   // Exhaust flame cone (triangular, flickering)
   const flameLen = (8 + Math.sin(time * 20) * 2) * zoom;
-  const flameGrad = ctx.createLinearGradient(-size * 1.2 - flameLen, 0, -size * 1.2, 0);
+  const flameGrad = ctx.createLinearGradient(
+    -size * 1.2 - flameLen,
+    0,
+    -size * 1.2,
+    0,
+  );
   flameGrad.addColorStop(0, "rgba(255, 50, 0, 0)");
   flameGrad.addColorStop(0.3, "rgba(255, 120, 20, 0.5)");
   flameGrad.addColorStop(0.6, "rgba(255, 200, 50, 0.8)");
@@ -818,7 +921,14 @@ function renderMissile(
 
   // White-hot exhaust core
   const coreFlame = (4 + Math.sin(time * 25) * 1) * zoom;
-  const coreGrad = ctx.createRadialGradient(-size * 1.2, 0, 0, -size * 1.2, 0, coreFlame);
+  const coreGrad = ctx.createRadialGradient(
+    -size * 1.2,
+    0,
+    0,
+    -size * 1.2,
+    0,
+    coreFlame,
+  );
   coreGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
   coreGrad.addColorStop(0.4, "rgba(255, 255, 150, 0.6)");
   coreGrad.addColorStop(1, "rgba(255, 200, 50, 0)");
@@ -960,7 +1070,7 @@ function renderEmber(
     const sparkPhase = (time * 3 + i * 1.7) % 2;
     const sparkOff = -(4 + i * 3 + sparkPhase * 3) * zoom;
     const sparkDrift = Math.sin(time * 7 + i * 2.5) * (2 + i * 0.5) * zoom;
-    const sparkSize = Math.max(0.5, (1.8 - sparkPhase * 0.6)) * zoom;
+    const sparkSize = Math.max(0.5, 1.8 - sparkPhase * 0.6) * zoom;
     const sparkAlpha = Math.max(0, 0.7 - sparkPhase * 0.25);
     const sparkG = Math.floor(150 + Math.sin(i * 3.1) * 60);
     const sparkB = Math.floor(30 + Math.sin(i * 1.7) * 20);
@@ -1021,19 +1131,28 @@ function renderEmber(
     ctx.quadraticCurveTo(
       (fx + tipX) * 0.5 + perpX * 0.6 + Math.sin(time * 12 + i) * zoom,
       (fy + tipY) * 0.5 + perpY * 0.6 + Math.cos(time * 11 + i) * zoom,
-      tipX, tipY
+      tipX,
+      tipY,
     );
     ctx.quadraticCurveTo(
       (fx + tipX) * 0.5 - perpX * 0.6 - Math.sin(time * 12 + i) * zoom,
       (fy + tipY) * 0.5 - perpY * 0.6 - Math.cos(time * 11 + i) * zoom,
-      fx - perpX, fy - perpY
+      fx - perpX,
+      fy - perpY,
     );
     ctx.closePath();
     ctx.fill();
   }
 
   // Molten core body (irregular lava rock)
-  const coreGrad = ctx.createRadialGradient(-zoom * 0.5, -zoom * 0.5, 0, 0, 0, size);
+  const coreGrad = ctx.createRadialGradient(
+    -zoom * 0.5,
+    -zoom * 0.5,
+    0,
+    0,
+    0,
+    size,
+  );
   coreGrad.addColorStop(0, "#ffffcc");
   coreGrad.addColorStop(0.2, "#ffdd44");
   coreGrad.addColorStop(0.45, "#ff8800");
@@ -1075,7 +1194,15 @@ function renderEmber(
   // Dark cooling spots
   ctx.fillStyle = "rgba(50, 20, 0, 0.3)";
   ctx.beginPath();
-  ctx.ellipse(size * 0.3, -size * 0.15, size * 0.15, size * 0.1, 0.5, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.3,
+    -size * 0.15,
+    size * 0.15,
+    size * 0.1,
+    0.5,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   ctx.restore();
@@ -1087,14 +1214,21 @@ function renderEmber(
 function renderFlame(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  time: number
+  time: number,
 ) {
   // Flame particles (reduced count for performance)
   for (let i = 0; i < 3; i++) {
     const offset = Math.sin(time * 8 + i * 2) * 3 * zoom;
     const flameSize = (4 + Math.sin(time * 6 + i * 3) * 2) * zoom;
-    
-    const flameGrad = ctx.createRadialGradient(offset, offset * 0.4, 0, offset, offset * 0.4, flameSize);
+
+    const flameGrad = ctx.createRadialGradient(
+      offset,
+      offset * 0.4,
+      0,
+      offset,
+      offset * 0.4,
+      flameSize,
+    );
     flameGrad.addColorStop(0, "rgba(255, 255, 100, 0.85)");
     flameGrad.addColorStop(0.4, "rgba(255, 150, 0, 0.6)");
     flameGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
@@ -1111,27 +1245,30 @@ function renderFlame(
 function renderHeroProjectile(
   ctx: CanvasRenderingContext2D,
   zoom: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const size = 5 * zoom;
-  
+
   // Energy trail
   ctx.fillStyle = colorWithAlpha(baseColor, 0.25);
   ctx.beginPath();
   ctx.ellipse(-3 * zoom, 0, 8 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Main orb
   const orbGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
   orbGrad.addColorStop(0, "#ffffff");
   orbGrad.addColorStop(0.35, lightenColor(baseColor, 40));
-  orbGrad.addColorStop(0.8, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  orbGrad.addColorStop(
+    0.8,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   orbGrad.addColorStop(1, darkenColor(baseColor, 30));
   ctx.fillStyle = orbGrad;
   ctx.beginPath();
   ctx.arc(0, 0, size, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Highlight
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.beginPath();
@@ -1146,21 +1283,21 @@ function renderBansheeScream(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   progress: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   // Expanding ghostly rings
   for (let ring = 0; ring < 3; ring++) {
     const ringProgress = (progress + ring * 0.1) % 1;
     const ringSize = (3 + ringProgress * 16) * zoom;
     const ringAlpha = 0.45 * (1 - ringProgress);
-    
+
     ctx.strokeStyle = colorWithAlpha(baseColor, ringAlpha);
     ctx.lineWidth = (2.5 - ring * 0.5) * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, ringSize, ringSize * 0.4, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
-  
+
   // Ghostly core
   const ghostGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 6 * zoom);
   ghostGrad.addColorStop(0, "rgba(255, 255, 255, 0.85)");
@@ -1179,10 +1316,10 @@ function renderDragonBreath(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const size = 12 * zoom;
-  
+
   // Outer energy field
   const outerGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.3);
   outerGrad.addColorStop(0, colorWithAlpha(baseColor, 0.5));
@@ -1192,7 +1329,7 @@ function renderDragonBreath(
   ctx.beginPath();
   ctx.arc(0, 0, size * 1.3, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Swirling energy (only 5 particles for performance)
   for (let i = 0; i < 5; i++) {
     const angle = (i / 5) * Math.PI * 2 + time * 4;
@@ -1200,8 +1337,15 @@ function renderDragonBreath(
     const px = Math.cos(angle) * dist;
     const py = Math.sin(angle) * dist * 0.6;
     const particleSize = (4 + Math.sin(time * 6 + i * 2)) * zoom;
-    
-    const particleGrad = ctx.createRadialGradient(px, py, 0, px, py, particleSize);
+
+    const particleGrad = ctx.createRadialGradient(
+      px,
+      py,
+      0,
+      px,
+      py,
+      particleSize,
+    );
     particleGrad.addColorStop(0, "rgba(255, 255, 255, 0.8)");
     particleGrad.addColorStop(0.4, colorWithAlpha(baseColor, 0.6));
     particleGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
@@ -1210,12 +1354,15 @@ function renderDragonBreath(
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   // Bright core
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.6);
   coreGrad.addColorStop(0, "#ffffff");
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 80));
-  coreGrad.addColorStop(0.7, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(
+    0.7,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   coreGrad.addColorStop(1, darkenColor(baseColor, 20));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
@@ -1230,7 +1377,7 @@ function renderEnergyBall(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
 ) {
   const size = 10 * zoom;
   const pulse = 1 + Math.sin(time * 10) * 0.15;
@@ -1252,7 +1399,10 @@ function renderEnergyBall(
     const wx = Math.cos(angle) * orbitRadius;
     const wy = Math.sin(angle) * orbitRadius * 0.5;
     const wispSize = (2.5 + Math.sin(time * 12 + i * 1.7)) * zoom;
-    ctx.fillStyle = colorWithAlpha(baseColor, 0.5 + Math.sin(time * 8 + i) * 0.2);
+    ctx.fillStyle = colorWithAlpha(
+      baseColor,
+      0.5 + Math.sin(time * 8 + i) * 0.2,
+    );
     ctx.beginPath();
     ctx.arc(wx, wy, wispSize, 0, Math.PI * 2);
     ctx.fill();
@@ -1262,7 +1412,10 @@ function renderEnergyBall(
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.55 * pulse);
   coreGrad.addColorStop(0, "#ffffff");
   coreGrad.addColorStop(0.3, lightenColor(baseColor, 100));
-  coreGrad.addColorStop(0.65, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(
+    0.65,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   coreGrad.addColorStop(1, darkenColor(baseColor, 30));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
@@ -1287,12 +1440,12 @@ const COLORS = {
   arrow: { r: 139, g: 90, b: 43 },
   bolt: { r: 80, g: 80, b: 80 },
   golden: { r: 201, g: 162, b: 39 },
-  
+
   // Fire
   fire: { r: 255, g: 100, b: 0 },
   infernal: { r: 200, g: 50, b: 255 },
   dragon: { r: 50, g: 255, b: 150 },
-  
+
   // Magic
   arcane: { r: 136, g: 100, b: 255 },
   dark: { r: 170, g: 50, b: 180 },
@@ -1302,27 +1455,32 @@ const COLORS = {
   shadow: { r: 100, g: 50, b: 150 },
   nature: { r: 100, g: 200, b: 80 },
   blood: { r: 200, g: 50, b: 50 },
-  
+
   // Lightning/electric
   lightning: { r: 100, g: 220, b: 255 },
-  
+
   // Sonic
   sonic: { r: 80, g: 200, b: 120 },
-  
+
   // Bullets
   tracer: { r: 255, g: 200, b: 50 },
-  
+
   // Hero colors
   mathey: { r: 201, g: 162, b: 39 },
-  scott: { r: 201, g: 162, b: 39 },  // Golden for F. Scott
-  tenor: { r: 168, g: 85, b: 247 },  // Purple for Tenor
+  scott: { r: 201, g: 162, b: 39 }, // Golden for F. Scott
+  tenor: { r: 168, g: 85, b: 247 }, // Purple for Tenor
   rocky: { r: 120, g: 113, b: 108 },
-  
+
   // Banshee
   banshee: { r: 200, g: 150, b: 255 },
 
   // Wyvern energy
   wyvern: { r: 5, g: 200, b: 120 },
+
+  // Bug projectiles
+  acid: { r: 200, g: 255, b: 50 },
+  silk: { r: 200, g: 200, b: 220 },
+  venom: { r: 120, g: 255, b: 80 },
 };
 
 // ============================================================================
@@ -1342,7 +1500,7 @@ export function renderProjectile(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  projectileDensityHint: number = 0
+  projectileDensityHint: number = 0,
 ) {
   if (proj.spawnDelay && proj.spawnDelay > 0) return;
 
@@ -1361,12 +1519,17 @@ export function renderProjectile(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   // Arc and elevation are HEIGHT above the ground — offset in screen-Y only
-  const arcOffset = proj.arcHeight ? Math.sin(t * Math.PI) * proj.arcHeight * zoom : 0;
+  const arcOffset = proj.arcHeight
+    ? Math.sin(t * Math.PI) * proj.arcHeight * zoom
+    : 0;
   const elevationFade = proj.elevation ? proj.elevation * (1 - t) * zoom : 0;
-  const screenPos = { x: groundScreenPos.x, y: groundScreenPos.y - arcOffset - elevationFade };
+  const screenPos = {
+    x: groundScreenPos.x,
+    y: groundScreenPos.y - arcOffset - elevationFade,
+  };
 
   // Get base color - use projectile color if provided, otherwise use type default
   let baseColor: { r: number; g: number; b: number };
@@ -1375,23 +1538,69 @@ export function renderProjectile(
   } else {
     // Default colors based on type
     switch (proj.type) {
-      case "arrow": baseColor = COLORS.arrow; break;
-      case "bolt": baseColor = COLORS.bolt; break;
-      case "spear": baseColor = COLORS.arrow; break;
-      case "fireball": baseColor = COLORS.fire; break;
-      case "infernalFire": baseColor = COLORS.infernal; break;
-      case "dragonBreath": baseColor = COLORS.dragon; break;
-      case "magicBolt": baseColor = COLORS.arcane; break;
-      case "darkBolt": baseColor = COLORS.dark; break;
-      case "frostBolt": baseColor = COLORS.frost; break;
-      case "poisonBolt": baseColor = COLORS.poison; break;
-      case "lightning": case "lab": case "energyBlast": baseColor = COLORS.lightning; break;
-      case "sonicWave": case "arch": baseColor = COLORS.sonic; break;
-      case "bullet": baseColor = COLORS.tracer; break;
-      case "bansheeScream": baseColor = COLORS.banshee; break;
-      case "wyvernBolt": baseColor = COLORS.wyvern; break;
-      case "hero": baseColor = COLORS.mathey; break;
-      default: baseColor = COLORS.arcane; break;
+      case "arrow":
+        baseColor = COLORS.arrow;
+        break;
+      case "bolt":
+        baseColor = COLORS.bolt;
+        break;
+      case "spear":
+        baseColor = COLORS.arrow;
+        break;
+      case "fireball":
+        baseColor = COLORS.fire;
+        break;
+      case "infernalFire":
+        baseColor = COLORS.infernal;
+        break;
+      case "dragonBreath":
+        baseColor = COLORS.dragon;
+        break;
+      case "magicBolt":
+        baseColor = COLORS.arcane;
+        break;
+      case "darkBolt":
+        baseColor = COLORS.dark;
+        break;
+      case "frostBolt":
+        baseColor = COLORS.frost;
+        break;
+      case "poisonBolt":
+        baseColor = COLORS.poison;
+        break;
+      case "lightning":
+      case "lab":
+      case "energyBlast":
+        baseColor = COLORS.lightning;
+        break;
+      case "sonicWave":
+      case "arch":
+        baseColor = COLORS.sonic;
+        break;
+      case "bullet":
+        baseColor = COLORS.tracer;
+        break;
+      case "bansheeScream":
+        baseColor = COLORS.banshee;
+        break;
+      case "wyvernBolt":
+        baseColor = COLORS.wyvern;
+        break;
+      case "hero":
+        baseColor = COLORS.mathey;
+        break;
+      case "acidSpray":
+        baseColor = COLORS.acid;
+        break;
+      case "webBolt":
+        baseColor = COLORS.silk;
+        break;
+      case "venomSpit":
+        baseColor = COLORS.venom;
+        break;
+      default:
+        baseColor = COLORS.arcane;
+        break;
     }
   }
 
@@ -1418,14 +1627,14 @@ export function renderProjectile(
         zoom,
         trailColor,
         trailLength,
-        trailSize
+        trailSize,
       );
     }
   }
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
-  
+
   // Calculate rotation — for arcing mortar-family projectiles, follow the arc tangent
   let effectiveRotation: number;
   const arcAwareTypes = ["mortarShell", "missile", "ember"];
@@ -1435,16 +1644,29 @@ export function renderProjectile(
     const x1 = proj.from.x + (proj.to.x - proj.from.x) * t1;
     const y1 = proj.from.y + (proj.to.y - proj.from.y) * t1;
     const screen1 = worldToScreen(
-      { x: x1, y: y1 }, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom
+      { x: x1, y: y1 },
+      canvasWidth,
+      canvasHeight,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     );
     const arc1 = Math.sin(t1 * Math.PI) * proj.arcHeight * zoom;
     const elev1 = proj.elevation ? proj.elevation * (1 - t1) * zoom : 0;
     const dx = screen1.x - groundScreenPos.x;
-    const dy = (screen1.y - arc1 - elev1) - (groundScreenPos.y - arcOffset - elevationFade);
+    const dy =
+      screen1.y -
+      arc1 -
+      elev1 -
+      (groundScreenPos.y - arcOffset - elevationFade);
     effectiveRotation = Math.atan2(dy, dx);
   } else {
-    effectiveRotation = proj.rotation !== undefined ? proj.rotation :
-      Math.atan2(proj.to.y - proj.from.y, proj.to.x - proj.from.x);
+    const dx = proj.to.x - proj.from.x;
+    const dy = proj.to.y - proj.from.y;
+    effectiveRotation = Math.atan2(
+      (dx + dy) * ISO_Y_FACTOR,
+      (dx - dy) * ISO_X_FACTOR,
+    );
   }
   ctx.rotate(effectiveRotation);
 
@@ -1469,50 +1691,50 @@ export function renderProjectile(
     case "arrow":
       renderArrow(ctx, zoom, "basic");
       break;
-      
+
     case "bolt":
       renderArrow(ctx, zoom, "crossbow");
       break;
-      
+
     case "spear":
       renderSpear(ctx, zoom, baseColor);
       break;
-      
+
     case "rock":
       renderRock(ctx, zoom, t);
       break;
-      
+
     case "fireball":
     case "infernalFire":
       renderFireball(ctx, zoom, time, baseColor);
       break;
-      
+
     case "dragonBreath":
       renderDragonBreath(ctx, zoom, time, baseColor);
       break;
-      
+
     case "magicBolt":
     case "darkBolt":
     case "frostBolt":
     case "poisonBolt":
       renderMagicBolt(ctx, zoom, time, baseColor);
       break;
-      
+
     case "energyBlast":
     case "lab":
     case "lightning":
       renderLightningOrb(ctx, zoom, time, baseColor, lowDetail, minimalDetail);
       break;
-      
+
     case "sonicWave":
     case "arch":
       renderSonicWave(ctx, zoom, t, baseColor);
       break;
-      
+
     case "bullet":
       renderBullet(ctx, zoom, baseColor);
       break;
-      
+
     case "cannon":
       renderCannonball(ctx, zoom, t);
       break;
@@ -1532,11 +1754,11 @@ export function renderProjectile(
     case "flame":
       renderFlame(ctx, zoom, time);
       break;
-      
+
     case "hero":
       renderHeroProjectile(ctx, zoom, baseColor);
       break;
-      
+
     case "bansheeScream":
       renderBansheeScream(ctx, zoom, t, baseColor);
       break;
@@ -1544,7 +1766,19 @@ export function renderProjectile(
     case "wyvernBolt":
       renderEnergyBall(ctx, zoom, time, baseColor);
       break;
-      
+
+    case "acidSpray":
+      renderFireball(ctx, zoom, time, baseColor);
+      break;
+
+    case "webBolt":
+      renderMagicBolt(ctx, zoom, time, baseColor);
+      break;
+
+    case "venomSpit":
+      renderFireball(ctx, zoom, time, baseColor);
+      break;
+
     default:
       // Default to magic bolt style with the base color
       renderMagicBolt(ctx, zoom, time, baseColor);

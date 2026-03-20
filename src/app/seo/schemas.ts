@@ -8,6 +8,7 @@ import {
   TOWER_NAMES,
   REGION_NAMES,
   HERO_NAMES,
+  SPELL_NAMES,
   AUTHOR_URL,
   AUTHOR_GITHUB,
   AUTHOR_TWITTER,
@@ -27,6 +28,11 @@ function getPersonSchema() {
     url: AUTHOR_URL,
     sameAs: [...AUTHOR_SAME_AS],
     jobTitle: "Software Engineer",
+    alumniOf: {
+      "@type": "CollegeOrUniversity",
+      name: "Princeton University",
+      url: "https://www.princeton.edu",
+    },
     knowsAbout: [
       "React",
       "Next.js",
@@ -36,6 +42,9 @@ function getPersonSchema() {
       "Tower Defense",
       "Web Development",
       "Isometric Rendering",
+      "Three.js",
+      "WebGL",
+      "Full-Stack Development",
     ],
   };
 }
@@ -94,6 +103,11 @@ function getVideoGameSchema() {
       "@type": "Thing",
       name: hero,
       description: `A playable hero character in ${SITE_NAME} with unique active abilities`,
+    })),
+    potentialAction: SPELL_NAMES.map((spell) => ({
+      "@type": "PlayAction",
+      name: `Cast ${spell}`,
+      description: `Use the ${spell} spell to aid your tower defenses`,
     })),
     abstract:
       `${SITE_NAME} features ${GAME_STATS.levels} handcrafted levels across ${GAME_STATS.regions} themed regions ` +
@@ -229,10 +243,11 @@ function getFAQSchema() {
         acceptedAnswer: {
           "@type": "Answer",
           text:
-            "Princeton Tower Defense is built with Next.js 14, React 18, TypeScript, and HTML5 Canvas. " +
+            "Princeton Tower Defense is built with Next.js 16, React 19, TypeScript, and HTML5 Canvas. " +
             "The entire rendering pipeline (isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, and ambient particles) " +
             "is hand-written Canvas 2D with no game engine or sprite sheets. Static layers are cached to offscreen canvases, " +
-            "and quality-aware rendering adjusts detail based on runtime performance.",
+            "quality-aware rendering adjusts detail based on runtime performance, and the UI uses Tailwind CSS with Radix Themes. " +
+            "Created by Kevin Liu (kevin-liu.tech).",
         },
       },
     ],
@@ -249,6 +264,24 @@ function getBreadcrumbSchema() {
         name: "Home",
         item: SITE_URL,
       },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Codex",
+        item: `${SITE_URL}/codex`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Level Creator",
+        item: `${SITE_URL}/creator`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Credits",
+        item: `${SITE_URL}/credits`,
+      },
     ],
   };
 }
@@ -258,11 +291,12 @@ function getSoftwareSourceCodeSchema() {
     "@type": "SoftwareSourceCode",
     name: SITE_NAME,
     codeRepository: GITHUB_URL,
-    programmingLanguage: ["TypeScript", "React", "Next.js"],
+    programmingLanguage: ["TypeScript", "React 19", "Next.js 16"],
     runtimePlatform: "Web Browser",
     author: { "@id": PERSON_ID },
     dateCreated: "2024-12-01",
     license: "https://opensource.org/licenses/MIT",
+    targetProduct: { "@id": GAME_ID },
   };
 }
 

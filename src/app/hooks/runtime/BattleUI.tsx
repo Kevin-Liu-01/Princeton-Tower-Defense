@@ -526,7 +526,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                 })()}
               {placingTroop && <PlacingTroopIndicator paydayActive={isAnySpellActive} />}
               {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} paydayActive={isAnySpellActive} />}
-              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={isAnySpellActive} />}
+              {activeSentinelTargetKey && <SentinelTargetingIndicator paydayActive={isAnySpellActive} mapTheme={LEVEL_DATA[selectedMap]?.theme} />}
               {missileMortarTargetingId && <MissileTargetingIndicator paydayActive={isAnySpellActive} />}
               {!isTouchDeviceRef.current && hoveredSpecialTower && !hoveredTower && !hoveredHero && (
                 <SpecialBuildingTooltip
@@ -612,19 +612,19 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   />
                 );
               })()}
+              {!showTutorial && encounterQueue.length > 0 && (
+                <div className="absolute left-2 pointer-events-none" style={{ zIndex: 110, bottom: 140 }}>
+                  <InlineEncounterPanel
+                    encounters={encounterQueue}
+                    currentIndex={encounterIndex}
+                    onAcknowledge={handleEncounterAcknowledge}
+                    autoDismissMs={encounterAutoDismissMs}
+                    exiting={encounterExiting}
+                  />
+                </div>
+              )}
               <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
-                <div className="flex justify-between items-end px-0">
-                  <div className="flex-shrink-0">
-                    {!showTutorial && encounterQueue.length > 0 && (
-                      <InlineEncounterPanel
-                        encounters={encounterQueue}
-                        currentIndex={encounterIndex}
-                        onAcknowledge={handleEncounterAcknowledge}
-                        autoDismissMs={encounterAutoDismissMs}
-                        exiting={encounterExiting}
-                      />
-                    )}
-                  </div>
+                <div className="flex justify-end items-end px-0">
                   <div className="flex-shrink-0">
                     {devMenuOpen && (
                       <DevMenu

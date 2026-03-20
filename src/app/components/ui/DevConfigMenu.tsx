@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronUp, Wrench } from "lucide-react";
-import type { GameState } from "../../types";
+import { ChevronDown, ChevronRight, ChevronUp, Wrench } from "lucide-react";
+import type { GameState, WaveGroup } from "../../types";
 import type { GameProgress } from "../../hooks/useLocalStorage";
+import { LEVEL_WAVES } from "../../constants/waves";
 
 interface DevLevelOption {
   id: string;
@@ -31,6 +32,7 @@ interface DevPerfSnapshot {
 
 interface DevConfigMenuProps {
   gameState: GameState;
+  selectedMap: string;
   levelOptions: DevLevelOption[];
   progress: GameProgress;
   devPerfEnabled: boolean;
@@ -49,14 +51,26 @@ interface DevConfigMenuProps {
   onInstantVictory: () => void;
   onInstantLose: () => void;
   onSkipWave: () => void;
+  onSkipToWave: (waveIndex: number) => void;
   onKillAllEnemies: () => void;
 }
 
 const clampStars = (value: number): number =>
   Math.max(0, Math.min(3, Math.round(value)));
 
+function summarizeWaveGroups(groups: WaveGroup[]): string {
+  const counts = new Map<string, number>();
+  for (const g of groups) {
+    counts.set(g.type, (counts.get(g.type) ?? 0) + g.count);
+  }
+  return Array.from(counts.entries())
+    .map(([type, count]) => `${count} ${type}`)
+    .join(", ");
+}
+
 export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   gameState,
+  selectedMap,
   levelOptions,
   progress,
   devPerfEnabled,
@@ -75,9 +89,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   onInstantVictory,
   onInstantLose,
   onSkipWave,
+  onSkipToWave,
   onKillAllEnemies,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [waveBrowserOpen, setWaveBrowserOpen] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState<string>(
     levelOptions[0]?.id ?? ""
   );
@@ -94,6 +110,11 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
       setSelectedLevelId(levelOptions[0].id);
     }
   }, [levelOptions, selectedLevelId]);
+
+  const levelWaves = useMemo(
+    () => LEVEL_WAVES[selectedMap] ?? [],
+    [selectedMap]
+  );
 
   const levelIsUnlocked = useMemo(
     () => progress.unlockedMaps.includes(selectedLevelId),
@@ -250,6 +271,65 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                       Skip Wave
                     </button>
                   </div>
+
+                  {levelWaves.length > 0 && (
+                    <div className="mb-2 rounded border border-violet-300/20 bg-violet-900/15">
+                      <button
+                        type="button"
+                        onClick={() => setWaveBrowserOpen((prev) => !prev)}
+                        className="flex w-full items-center gap-1 px-2 py-1 text-[11px] font-semibold text-violet-200 hover:bg-violet-900/30"
+                      >
+                        {waveBrowserOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                        Wave Browser ({levelWaves.length} waves)
+                      </button>
+                      {waveBrowserOpen && (
+                        <div className="max-h-48 overflow-y-auto border-t border-violet-300/15 px-1 py-1">
+                          {levelWaves.map((groups, idx) => {
+                            const isCurrent = idx === currentWave;
+                            const isPast = idx < currentWave;
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-start gap-1.5 rounded px-1.5 py-1 ${
+                                  isCurrent
+                                    ? "bg-violet-700/30 ring-1 ring-violet-400/40"
+                                    : isPast
+                                      ? "opacity-50"
+                                      : ""
+                                }`}
+                              >
+                                <div className="flex shrink-0 flex-col items-center gap-0.5 pt-0.5">
+                                  <span className="font-mono text-[10px] font-bold text-violet-300">
+                                    {idx + 1}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    disabled={isCurrent && !waveInProgress}
+                                    onClick={() => {
+                                      onSkipToWave(idx);
+                                      setFeedback({
+                                        message: `Jumped to wave ${idx + 1}/${totalWaves}.`,
+                                        isError: false,
+                                      });
+                                    }}
+                                    className="rounded border border-violet-400/40 bg-violet-900/40 px-1.5 py-0.5 text-[9px] font-semibold text-violet-100 hover:bg-violet-800/60 disabled:cursor-not-allowed disabled:opacity-30"
+                                  >
+                                    Jump
+                                  </button>
+                                </div>
+                                <div className="min-w-0 flex-1 text-[10px] leading-snug text-violet-100/80">
+                                  {summarizeWaveGroups(groups)}
+                                  <span className="ml-1 text-violet-300/50">
+                                    ({groups.reduce((sum, g) => sum + g.count, 0)} total)
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <button
                     type="button"

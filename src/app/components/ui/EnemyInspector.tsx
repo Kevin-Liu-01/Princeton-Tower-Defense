@@ -38,11 +38,17 @@ import {
   ENEMY_TRAIT_META,
   ENEMY_ABILITY_META,
 } from "../../constants";
-import { EnemySprite, HeroIcon } from "../../sprites";
+import { EnemySprite, HeroSprite, TroopSprite } from "../../sprites";
 import { PANEL, GOLD, PURPLE_CARD, panelGradient } from "./system/theme";
+import {
+  InspectPanel,
+  ENEMY_INSPECT_THEME,
+  TROOP_INSPECT_THEME,
+  HERO_INSPECT_THEME,
+} from "./InspectOverlay";
 
 // =============================================================================
-// ENEMY INSPECTOR COMPONENT
+// ENEMY INSPECTOR COMPONENT (toggle button + status)
 // =============================================================================
 
 interface EnemyInspectorProps {
@@ -88,9 +94,7 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
   const liveTroops = troops.filter(t => !t.dead).length;
 
   return (
-    <div
-      className="pointer-events-auto flex flex-col gap-2"
-    >
+    <div className="pointer-events-auto flex flex-col gap-2">
       <button
         onClick={handleToggle}
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg shadow-lg backdrop-blur-sm transition-all relative"
@@ -161,14 +165,8 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
 };
 
 // =============================================================================
-// ENEMY DETAIL TOOLTIP - Shows when clicking on enemy in inspect mode
+// SHARED HELPERS
 // =============================================================================
-
-interface EnemyDetailTooltipProps {
-  enemy: Enemy;
-  position: Position;
-  onClose: () => void;
-}
 
 const TRAIT_ICONS: Record<EnemyTrait, (size: number) => React.ReactNode> = {
   flying: (s) => <Wind size={s} />,
@@ -184,11 +182,11 @@ const TRAIT_ICONS: Record<EnemyTrait, (size: number) => React.ReactNode> = {
   breakthrough: (s) => <Zap size={s} />,
 };
 
-const getTraitInfo = (trait: EnemyTrait, iconSize = 12) => {
+function getTraitInfo(trait: EnemyTrait, iconSize = 10) {
   const meta = ENEMY_TRAIT_META[trait] ?? { label: trait, color: "text-gray-400", desc: "Unknown trait", pillColor: "" };
   const iconFn = TRAIT_ICONS[trait];
   return { ...meta, icon: iconFn ? iconFn(iconSize) : <Info size={iconSize} /> };
-};
+}
 
 const ABILITY_ICONS: Record<string, (size: number) => React.ReactNode> = {
   burn: (s) => <Flame size={s} />,
@@ -201,407 +199,229 @@ const ABILITY_ICONS: Record<string, (size: number) => React.ReactNode> = {
   tower_disable: (s) => <Ban size={s} />,
 };
 
-const getAbilityInfo = (abilityType: string, iconSize = 14) => {
+function getAbilityInfo(abilityType: string, iconSize = 12) {
   const meta = ENEMY_ABILITY_META[abilityType as keyof typeof ENEMY_ABILITY_META] ?? ENEMY_ABILITY_META.default;
   const iconFn = ABILITY_ICONS[abilityType];
   return { ...meta, icon: iconFn ? iconFn(iconSize) : <AlertTriangle size={iconSize} /> };
-};
+}
 
-export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
-  enemy,
-  position,
-  onClose,
-}) => {
-  const eData = ENEMY_DATA[enemy.type];
-  if (!eData) return null;
-
-  const hpPercent = (enemy.hp / enemy.maxHp) * 100;
-  const hpColor = hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500";
-
-  // Get traits and abilities from enemy data
-  const traits = eData.traits || [];
-  const abilities = eData.abilities || [];
-  const hasAoE = eData.aoeRadius && eData.aoeDamage;
-
-  // Position tooltip - center it on screen for better visibility
-  const tooltipWidth = 320;
-  const tooltipHeight = 450;
-  let tooltipX = position.x - tooltipWidth / 2;
-  let tooltipY = position.y - tooltipHeight - 40;
-
-  // Keep tooltip on screen
-  tooltipX = Math.max(10, Math.min(tooltipX, window.innerWidth - tooltipWidth - 10));
-  tooltipY = Math.max(60, tooltipY);
-  if (tooltipY + tooltipHeight > window.innerHeight - 10) {
-    tooltipY = window.innerHeight - tooltipHeight - 10;
-  }
-
+function CompactHpBar({ current, max }: { current: number; max: number }) {
+  const pct = (current / max) * 100;
+  const color = pct > 50 ? "bg-green-500" : pct > 25 ? "bg-yellow-500" : "bg-red-500";
   return (
-    <div
-      className="fixed pointer-events-auto shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
-      style={{
-        left: tooltipX,
-        top: tooltipY,
-        zIndex: 300,
-        width: tooltipWidth,
-        background: panelGradient,
-        border: "2px solid rgba(239, 68, 68, 0.35)",
-        boxShadow: "0 0 24px rgba(239, 68, 68, 0.12), inset 0 0 12px rgba(239, 68, 68, 0.05)",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(239, 68, 68, 0.1)" }} />
-      <div
-        className="px-4 py-3 flex items-center justify-between"
-        style={{
-          background: "linear-gradient(90deg, rgba(30, 10, 10, 0.9), rgba(45, 15, 15, 0.7))",
-          borderBottom: "1px solid rgba(239, 68, 68, 0.25)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-12 h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden"
-            style={{ borderColor: eData.color, backgroundColor: eData.color + "15" }}
-          >
-            <EnemySprite type={enemy.type} size={44} animated />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg text-red-100">{eData.name}</h3>
-            <div className="flex items-center gap-2">
-              {eData.isBoss && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-red-900/60 rounded text-red-300 font-bold">BOSS</span>
-              )}
-              {eData.flying && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300">FLYING</span>
-              )}
-              {eData.isRanged && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2 py-1 bg-rose-950/60 rounded border border-rose-800/50">
-            <Heart size={12} className="text-rose-400" />
-            <span className="text-rose-300 font-bold text-xs">{eData.liveCost || 1}</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg transition-all hover:scale-110"
-            style={{ background: PANEL.bgWarmMid, border: "1px solid rgba(239, 68, 68, 0.25)" }}
-          >
-            <X size={18} className="text-red-400" />
-          </button>
-        </div>
+    <div className="mb-1.5">
+      <div className="flex justify-between text-[9px] mb-0.5">
+        <span className="text-red-400 font-bold flex items-center gap-0.5"><Heart size={9} /> HP</span>
+        <span className="text-white font-mono text-[8px]">{Math.ceil(current)} / {max}</span>
       </div>
-
-      {/* Content */}
-      <div className="px-4 py-3">
-        {/* Description */}
-        <p className="text-[11px] text-purple-300/90 mb-3 italic">{eData.desc}</p>
-
-        {/* HP Bar */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] mb-1">
-            <span className="text-red-400 font-bold">HP</span>
-            <span className="text-white font-mono">{Math.ceil(enemy.hp)} / {enemy.maxHp}</span>
-          </div>
-          <div className="w-full bg-black/40 h-3 rounded-full border border-white/10 overflow-hidden">
-            <div
-              className={`h-full ${hpColor} transition-all duration-300`}
-              style={{ width: `${hpPercent}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-2 mb-3">
-          <div className="bg-red-950/40 p-2 rounded-lg border border-red-900/40 text-center">
-            <Heart size={14} className="mx-auto text-red-400 mb-1" />
-            <div className="text-[8px] text-red-500">Max HP</div>
-            <div className="text-red-200 font-bold text-sm">{eData.hp}</div>
-          </div>
-          <div className="bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 text-center">
-            <Gauge size={14} className="mx-auto text-blue-400 mb-1" />
-            <div className="text-[8px] text-blue-500">Speed</div>
-            <div className="text-blue-200 font-bold text-sm">{eData.speed}</div>
-          </div>
-          <div className="bg-amber-950/40 p-2 rounded-lg border border-amber-900/40 text-center">
-            <ShieldHalf size={14} className="mx-auto text-amber-400 mb-1" />
-            <div className="text-[8px] text-amber-500">Armor</div>
-            <div className="text-amber-200 font-bold text-sm">{Math.round(eData.armor * 100)}%</div>
-          </div>
-          <div className="bg-green-950/40 p-2 rounded-lg border border-green-900/40 text-center">
-            <Coins size={14} className="mx-auto text-green-400 mb-1" />
-            <div className="text-[8px] text-green-500">Bounty</div>
-            <div className="text-green-200 font-bold text-sm">{eData.bounty}</div>
-          </div>
-        </div>
-
-        {/* Ranged Stats (if applicable) */}
-        {eData.isRanged && (
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/40 text-center">
-              <div className="text-[8px] text-purple-500">Range</div>
-              <div className="text-purple-200 font-bold text-xs">{eData.range}</div>
-            </div>
-            <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/40 text-center">
-              <div className="text-[8px] text-purple-500">Atk Speed</div>
-              <div className="text-purple-200 font-bold text-xs">{(eData.attackSpeed / 1000).toFixed(1)}s</div>
-            </div>
-            <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/40 text-center">
-              <div className="text-[8px] text-purple-500">Proj Dmg</div>
-              <div className="text-purple-200 font-bold text-xs">{eData.projectileDamage}</div>
-            </div>
-          </div>
-        )}
-
-        {/* AoE Stats (if applicable) */}
-        {hasAoE && (
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-orange-950/40 p-1.5 rounded-lg border border-orange-900/40 text-center">
-              <div className="text-[8px] text-orange-500">AoE Radius</div>
-              <div className="text-orange-200 font-bold text-xs">{eData.aoeRadius}</div>
-            </div>
-            <div className="bg-orange-950/40 p-1.5 rounded-lg border border-orange-900/40 text-center">
-              <div className="text-[8px] text-orange-500">AoE Damage</div>
-              <div className="text-orange-200 font-bold text-xs">{eData.aoeDamage}</div>
-            </div>
-          </div>
-        )}
-
-        {/* Flying Troop Attack Stats (if applicable) */}
-        {eData.targetsTroops && eData.troopDamage && (
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-900/40 text-center">
-              <Wind size={14} className="mx-auto text-cyan-400 mb-1" />
-              <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
-              <div className="text-cyan-200 font-bold text-xs">{eData.troopDamage}</div>
-            </div>
-            <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-900/40 text-center">
-              <Timer size={14} className="mx-auto text-cyan-400 mb-1" />
-              <div className="text-[8px] text-cyan-500">Atk Speed</div>
-              <div className="text-cyan-200 font-bold text-xs">{((eData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
-            </div>
-          </div>
-        )}
-
-        {/* Melee Combat Stats (for ground enemies that engage troops) */}
-        {!eData.flying && !eData.breakthrough && !eData.isRanged && (
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
-              <Swords size={14} className="mx-auto text-red-400 mb-1" />
-              <div className="text-[8px] text-red-500">Melee Dmg</div>
-              <div className="text-red-200 font-bold text-xs">{eData.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
-            </div>
-            <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
-              <Timer size={14} className="mx-auto text-red-400 mb-1" />
-              <div className="text-[8px] text-red-500">Atk Speed</div>
-              <div className="text-red-200 font-bold text-xs">1.0s</div>
-            </div>
-          </div>
-        )}
-
-        {/* Breakthrough indicator + contact damage */}
-        {eData.breakthrough && (
-          <div className="mb-3">
-            <div className="bg-sky-950/40 p-1.5 rounded-lg border border-sky-900/40 text-center">
-              <div className="text-sky-200 font-bold text-xs flex items-center justify-center gap-1">
-                <Zap size={12} className="text-sky-400" />
-                Bypasses Troops
-              </div>
-              {eData.troopDamage != null && (
-                <div className="text-[9px] text-sky-300/90 mt-1">
-                  Hero Dmg: <span className="font-bold text-sky-200">{eData.troopDamage}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Traits */}
-        {traits.length > 0 && (
-          <div className="mb-3">
-            <div className="text-[10px] text-purple-400 font-bold mb-1.5 flex items-center gap-1">
-              <Info size={10} /> TRAITS
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {traits.map((trait, i) => {
-                const traitInfo = getTraitInfo(trait);
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-1 px-2 py-1 bg-stone-800/60 rounded border border-stone-700/50 ${traitInfo.color}`}
-                    title={traitInfo.desc}
-                  >
-                    {traitInfo.icon}
-                    <span className="text-[9px] font-medium">{traitInfo.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Abilities */}
-        {abilities.length > 0 && (
-          <div>
-            <div className="text-[10px] text-purple-400 font-bold mb-1.5 flex items-center gap-1">
-              <Zap size={10} /> ABILITIES
-            </div>
-            <div className="space-y-2 max-h-36 overflow-y-auto">
-              {abilities.map((ability, i) => {
-                const abilityInfo = getAbilityInfo(ability.type);
-                return (
-                  <div
-                    key={i}
-                    className={`p-2 rounded-lg border ${abilityInfo.bgColor}`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={abilityInfo.color}>{abilityInfo.icon}</span>
-                      <span className="text-[11px] font-bold text-white">{ability.name}</span>
-                      <span className="text-[9px] px-1.5 py-0.5 bg-black/30 rounded text-white/70 ml-auto">
-                        {Math.round(ability.chance * 100)}% chance
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-white/70 mb-1">{ability.desc}</p>
-                    <div className="flex flex-wrap gap-2 text-[9px]">
-                      <span className="text-white/60">
-                        Duration: <span className="text-white">{(ability.duration / 1000).toFixed(1)}s</span>
-                      </span>
-                      {ability.intensity !== undefined && (
-                        <span className="text-white/60">
-                          {ability.type === "slow" || ability.type.includes("tower") ? "Effect: " : "DPS: "}
-                          <span className="text-white">
-                            {ability.type === "slow" || ability.type.includes("tower")
-                              ? `${Math.round(ability.intensity * 100)}%`
-                              : ability.intensity}
-                          </span>
-                        </span>
-                      )}
-                      {ability.radius && (
-                        <span className="text-white/60">
-                          Radius: <span className="text-white">{ability.radius}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* No abilities message */}
-        {abilities.length === 0 && traits.length === 0 && (
-          <div className="text-center text-[10px] text-purple-400/60 py-2">
-            This enemy has no special abilities or traits.
-          </div>
-        )}
-
-        {/* Current Status Effects */}
-        <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-          <div className="text-[10px] text-purple-400 font-bold mb-1.5">CURRENT STATUS</div>
-          <div className="flex flex-wrap gap-2">
-            {enemy.burning && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-orange-900/40 rounded text-orange-300 text-[9px]">
-                <Flame size={10} /> Burning
-              </span>
-            )}
-            {enemy.slowed && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-cyan-900/40 rounded text-cyan-300 text-[9px]">
-                <Snowflake size={10} /> Slowed
-              </span>
-            )}
-            {enemy.frozen && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-blue-900/40 rounded text-blue-300 text-[9px]">
-                <Snowflake size={10} /> Frozen
-              </span>
-            )}
-            {enemy.stunUntil > Date.now() && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-yellow-900/40 rounded text-yellow-300 text-[9px]">
-                <ZapIcon size={10} /> Stunned
-              </span>
-            )}
-            {enemy.taunted && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-red-900/40 rounded text-red-300 text-[9px]">
-                <AlertTriangle size={10} /> Taunted
-              </span>
-            )}
-            {enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > Date.now() && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-fuchsia-950/50 rounded text-fuchsia-300 text-[9px]">
-                <Sparkles size={10} /> Hexed
-                {enemy.hexWardDamageAmp ? (
-                  <span className="text-fuchsia-400/80 ml-1">
-                    (+{Math.round(enemy.hexWardDamageAmp * 100)}% DMG)
-                  </span>
-                ) : null}
-              </span>
-            )}
-            {!enemy.burning &&
-              !enemy.slowed &&
-              !enemy.frozen &&
-              enemy.stunUntil <= Date.now() &&
-              !enemy.taunted &&
-              !(enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > Date.now()) && (
-              <span className="text-[9px] text-purple-400/60">No active effects</span>
-              )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// =============================================================================
-// UNIT STATUS EFFECTS SECTION - Reusable across troop/hero tooltips
-// =============================================================================
-
-function StatusEffectsBadges({ unit }: { unit: Troop | Hero }) {
-  const now = Date.now();
-  const hasBurn = unit.burning && unit.burnUntil && unit.burnUntil > now;
-  const hasSlow = unit.slowed && unit.slowUntil && unit.slowUntil > now;
-  const hasPoison = unit.poisoned && unit.poisonUntil && unit.poisonUntil > now;
-  const hasStun = unit.stunned && unit.stunUntil && unit.stunUntil > now;
-  const hasAny = hasBurn || hasSlow || hasPoison || hasStun;
-
-  return (
-    <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-      <div className="text-[10px] text-purple-400 font-bold mb-1.5">ACTIVE EFFECTS</div>
-      <div className="flex flex-wrap gap-2">
-        {hasBurn && (
-          <span className="flex items-center gap-1 px-2 py-1 bg-orange-900/40 rounded text-orange-300 text-[9px]">
-            <Flame size={10} /> Burning
-            {unit.burnDamage && <span className="text-orange-400/80 ml-1">({unit.burnDamage} DPS)</span>}
-          </span>
-        )}
-        {hasSlow && (
-          <span className="flex items-center gap-1 px-2 py-1 bg-cyan-900/40 rounded text-cyan-300 text-[9px]">
-            <Snowflake size={10} /> Slowed
-            {unit.slowIntensity && <span className="text-cyan-400/80 ml-1">({Math.round(unit.slowIntensity * 100)}%)</span>}
-          </span>
-        )}
-        {hasPoison && (
-          <span className="flex items-center gap-1 px-2 py-1 bg-green-900/40 rounded text-green-300 text-[9px]">
-            <Droplets size={10} /> Poisoned
-            {unit.poisonDamage && <span className="text-green-400/80 ml-1">({unit.poisonDamage} DPS)</span>}
-          </span>
-        )}
-        {hasStun && (
-          <span className="flex items-center gap-1 px-2 py-1 bg-yellow-900/40 rounded text-yellow-300 text-[9px]">
-            <ZapIcon size={10} /> Stunned
-          </span>
-        )}
-        {!hasAny && (
-          <span className="text-[9px] text-purple-400/60">No active effects</span>
-        )}
+      <div className="w-full bg-black/40 h-2 rounded-full border border-white/10 overflow-hidden">
+        <div className={`h-full ${color} transition-all duration-300`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
 }
 
+function StatusBadges({ unit, isEnemy }: { unit: Enemy | Troop | Hero; isEnemy?: boolean }) {
+  const now = Date.now();
+  const enemy = isEnemy ? (unit as Enemy) : null;
+  const friendly = !isEnemy ? (unit as Troop | Hero) : null;
+
+  const badges: React.ReactNode[] = [];
+
+  if (enemy) {
+    if (enemy.burning) badges.push(<StatusBadge key="burn" icon={<Flame size={8} />} label="Burning" className="bg-orange-900/40 text-orange-300" />);
+    if (enemy.slowed) badges.push(<StatusBadge key="slow" icon={<Snowflake size={8} />} label="Slowed" className="bg-cyan-900/40 text-cyan-300" />);
+    if (enemy.frozen) badges.push(<StatusBadge key="freeze" icon={<Snowflake size={8} />} label="Frozen" className="bg-blue-900/40 text-blue-300" />);
+    if (enemy.stunUntil > now) badges.push(<StatusBadge key="stun" icon={<ZapIcon size={8} />} label="Stunned" className="bg-yellow-900/40 text-yellow-300" />);
+    if (enemy.taunted) badges.push(<StatusBadge key="taunt" icon={<AlertTriangle size={8} />} label="Taunted" className="bg-red-900/40 text-red-300" />);
+    if (enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now)
+      badges.push(<StatusBadge key="hex" icon={<Sparkles size={8} />} label={`Hexed${enemy.hexWardDamageAmp ? ` +${Math.round(enemy.hexWardDamageAmp * 100)}%` : ""}`} className="bg-fuchsia-950/50 text-fuchsia-300" />);
+  }
+
+  if (friendly) {
+    const f = friendly as unknown as Record<string, unknown>;
+    if (f.burning && f.burnUntil && (f.burnUntil as number) > now) badges.push(<StatusBadge key="burn" icon={<Flame size={8} />} label="Burning" className="bg-orange-900/40 text-orange-300" />);
+    if (f.slowed && f.slowUntil && (f.slowUntil as number) > now) badges.push(<StatusBadge key="slow" icon={<Snowflake size={8} />} label="Slowed" className="bg-cyan-900/40 text-cyan-300" />);
+    if (f.poisoned && f.poisonUntil && (f.poisonUntil as number) > now) badges.push(<StatusBadge key="poison" icon={<Droplets size={8} />} label="Poisoned" className="bg-green-900/40 text-green-300" />);
+    if (f.stunned && f.stunUntil && (f.stunUntil as number) > now) badges.push(<StatusBadge key="stun" icon={<ZapIcon size={8} />} label="Stunned" className="bg-yellow-900/40 text-yellow-300" />);
+  }
+
+  if (badges.length === 0) return null;
+  return (
+    <div className="mt-1.5 pt-1.5" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+      <div className="text-[8px] text-purple-400 font-bold mb-1">STATUS</div>
+      <div className="flex flex-wrap gap-1">{badges}</div>
+    </div>
+  );
+}
+
+function StatusBadge({ icon, label, className }: { icon: React.ReactNode; label: string; className: string }) {
+  return (
+    <span className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] ${className}`}>
+      {icon} {label}
+    </span>
+  );
+}
+
+function StatTile({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: string | number; className: string }) {
+  return (
+    <div className={`p-1 rounded-md border text-center ${className}`}>
+      <div className="flex items-center justify-center gap-0.5">
+        {icon}
+        <span className="text-[7px] opacity-80">{label}</span>
+      </div>
+      <div className="font-bold text-[11px] leading-tight">{value}</div>
+    </div>
+  );
+}
+
 // =============================================================================
-// TROOP DETAIL TOOLTIP
+// ENEMY DETAIL TOOLTIP (compact with glowing circle overlay)
+// =============================================================================
+
+interface EnemyDetailTooltipProps {
+  enemy: Enemy;
+  position: Position;
+  onClose: () => void;
+}
+
+export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({ enemy, position, onClose }) => {
+  const eData = ENEMY_DATA[enemy.type];
+  if (!eData) return null;
+
+  const traits = eData.traits || [];
+  const abilities = eData.abilities || [];
+  const hasAoE = eData.aoeRadius && eData.aoeDamage;
+
+  const header = (
+    <div className="flex items-center gap-2">
+      <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: eData.color + "15", border: `1.5px solid ${eData.color}55` }}>
+        <EnemySprite type={enemy.type} size={34} animated />
+      </div>
+      <div className="flex-1 min-w-0 pr-5">
+        <div className="flex items-center gap-1">
+          <span className="text-xs font-bold text-red-100 truncate">{eData.name}</span>
+          <div className="flex items-center gap-0.5 px-1 py-0.5 bg-rose-950/60 rounded border border-rose-800/50">
+            <Heart size={9} className="text-rose-400" />
+            <span className="text-rose-300 font-bold text-[8px]">{eData.liveCost || 1}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 mt-0.5">
+          {eData.isBoss && <span className="text-[8px] px-1 py-0.5 bg-red-900/60 rounded text-red-300 font-bold">BOSS</span>}
+          {eData.flying && <span className="text-[8px] px-1 py-0.5 bg-cyan-900/60 rounded text-cyan-300">FLYING</span>}
+          {eData.isRanged && <span className="text-[8px] px-1 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <InspectPanel unitScreenPos={position} theme={ENEMY_INSPECT_THEME} onClose={onClose} header={header}>
+      <CompactHpBar current={enemy.hp} max={enemy.maxHp} />
+
+      <div className="grid grid-cols-4 gap-1 mb-1.5">
+        <StatTile icon={<Heart size={10} className="text-red-400" />} label="HP" value={eData.hp} className="bg-red-950/40 border-red-900/40 text-red-400" />
+        <StatTile icon={<Gauge size={10} className="text-blue-400" />} label="Speed" value={eData.speed} className="bg-blue-950/40 border-blue-900/40 text-blue-400" />
+        <StatTile icon={<ShieldHalf size={10} className="text-amber-400" />} label="Armor" value={`${Math.round(eData.armor * 100)}%`} className="bg-amber-950/40 border-amber-900/40 text-amber-400" />
+        <StatTile icon={<Coins size={10} className="text-green-400" />} label="Bounty" value={eData.bounty} className="bg-green-950/40 border-green-900/40 text-green-400" />
+      </div>
+
+      {eData.isRanged && (
+        <div className="grid grid-cols-3 gap-1 mb-1.5">
+          <StatTile icon={<Target size={9} className="text-purple-400" />} label="Range" value={eData.range ?? "—"} className="bg-purple-950/40 border-purple-900/40 text-purple-400" />
+          <StatTile icon={<Timer size={9} className="text-purple-400" />} label="Atk Spd" value={`${((eData.attackSpeed ?? 1000) / 1000).toFixed(1)}s`} className="bg-purple-950/40 border-purple-900/40 text-purple-400" />
+          <StatTile icon={<Swords size={9} className="text-purple-400" />} label="Proj Dmg" value={eData.projectileDamage ?? "—"} className="bg-purple-950/40 border-purple-900/40 text-purple-400" />
+        </div>
+      )}
+
+      {hasAoE && (
+        <div className="grid grid-cols-2 gap-1 mb-1.5">
+          <StatTile icon={<Target size={9} className="text-orange-400" />} label="AoE Rad" value={eData.aoeRadius ?? 0} className="bg-orange-950/40 border-orange-900/40 text-orange-400" />
+          <StatTile icon={<Swords size={9} className="text-orange-400" />} label="AoE Dmg" value={eData.aoeDamage ?? 0} className="bg-orange-950/40 border-orange-900/40 text-orange-400" />
+        </div>
+      )}
+
+      {eData.targetsTroops && eData.troopDamage && (
+        <div className="grid grid-cols-2 gap-1 mb-1.5">
+          <StatTile icon={<Wind size={9} className="text-cyan-400" />} label="Swoop" value={eData.troopDamage} className="bg-cyan-950/40 border-cyan-900/40 text-cyan-400" />
+          <StatTile icon={<Timer size={9} className="text-cyan-400" />} label="Atk Spd" value={`${((eData.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s`} className="bg-cyan-950/40 border-cyan-900/40 text-cyan-400" />
+        </div>
+      )}
+
+      {!eData.flying && !eData.breakthrough && !eData.isRanged && (
+        <div className="grid grid-cols-2 gap-1 mb-1.5">
+          <StatTile icon={<Swords size={9} className="text-red-400" />} label="Melee" value={eData.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE} className="bg-red-950/40 border-red-900/40 text-red-400" />
+          <StatTile icon={<Timer size={9} className="text-red-400" />} label="Atk Spd" value="1.0s" className="bg-red-950/40 border-red-900/40 text-red-400" />
+        </div>
+      )}
+
+      {eData.breakthrough && (
+        <div className="mb-1.5 bg-sky-950/40 p-1 rounded-md border border-sky-900/40 text-center">
+          <div className="text-sky-200 font-bold text-[9px] flex items-center justify-center gap-1">
+            <Zap size={10} className="text-sky-400" /> Bypasses Troops
+          </div>
+          {eData.troopDamage != null && (
+            <div className="text-[8px] text-sky-300/90">Hero Dmg: <span className="font-bold text-sky-200">{eData.troopDamage}</span></div>
+          )}
+        </div>
+      )}
+
+      {traits.length > 0 && (
+        <div className="mb-1.5">
+          <div className="text-[8px] text-purple-400 font-bold mb-1 flex items-center gap-0.5"><Info size={8} /> TRAITS</div>
+          <div className="flex flex-wrap gap-1">
+            {traits.map((trait, i) => {
+              const info = getTraitInfo(trait);
+              return (
+                <div key={i} className={`flex items-center gap-0.5 px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 ${info.color}`} title={info.desc}>
+                  {info.icon}
+                  <span className="text-[8px] font-medium">{info.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {abilities.length > 0 && (
+        <div className="mb-1">
+          <div className="text-[8px] text-purple-400 font-bold mb-1 flex items-center gap-0.5"><Zap size={8} /> ABILITIES</div>
+          <div className="space-y-1 max-h-28 overflow-y-auto">
+            {abilities.map((ability, i) => {
+              const info = getAbilityInfo(ability.type);
+              return (
+                <div key={i} className={`p-1.5 rounded-md border ${info.bgColor}`}>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <span className={info.color}>{info.icon}</span>
+                    <span className="text-[9px] font-bold text-white">{ability.name}</span>
+                    <span className="text-[7px] px-1 py-0.5 bg-black/30 rounded text-white/70 ml-auto">{Math.round(ability.chance * 100)}%</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 text-[8px]">
+                    <span className="text-white/60">Dur: <span className="text-white">{(ability.duration / 1000).toFixed(1)}s</span></span>
+                    {ability.intensity !== undefined && (
+                      <span className="text-white/60">
+                        {ability.type === "slow" || ability.type.includes("tower") ? "Eff: " : "DPS: "}
+                        <span className="text-white">
+                          {ability.type === "slow" || ability.type.includes("tower") ? `${Math.round(ability.intensity * 100)}%` : ability.intensity}
+                        </span>
+                      </span>
+                    )}
+                    {ability.radius && <span className="text-white/60">Rad: <span className="text-white">{ability.radius}</span></span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <StatusBadges unit={enemy} isEnemy />
+    </InspectPanel>
+  );
+};
+
+// =============================================================================
+// TROOP DETAIL TOOLTIP (compact with glowing circle + real sprite)
 // =============================================================================
 
 interface TroopDetailTooltipProps {
@@ -610,126 +430,50 @@ interface TroopDetailTooltipProps {
   onClose: () => void;
 }
 
-export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
-  troop,
-  position,
-  onClose,
-}) => {
+export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({ troop, position, onClose }) => {
   const troopType = troop.type || "footsoldier";
   const tData = TROOP_DATA[troopType];
   if (!tData) return null;
 
-  const hpPercent = (troop.hp / troop.maxHp) * 100;
-  const hpColor = hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500";
   const damage = troop.overrideDamage ?? tData.damage;
   const atkSpeed = troop.overrideAttackSpeed ?? tData.attackSpeed;
 
-  const tooltipWidth = 280;
-  const tooltipHeight = 320;
-  let tooltipX = position.x - tooltipWidth / 2;
-  let tooltipY = position.y - tooltipHeight - 40;
-  tooltipX = Math.max(10, Math.min(tooltipX, window.innerWidth - tooltipWidth - 10));
-  tooltipY = Math.max(60, tooltipY);
-  if (tooltipY + tooltipHeight > window.innerHeight - 10) {
-    tooltipY = window.innerHeight - tooltipHeight - 10;
-  }
-
-  return (
-    <div
-      className="fixed pointer-events-auto shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
-      style={{
-        left: tooltipX,
-        top: tooltipY,
-        zIndex: 300,
-        width: tooltipWidth,
-        background: panelGradient,
-        border: "2px solid rgba(59, 130, 246, 0.4)",
-        boxShadow: "0 0 24px rgba(59, 130, 246, 0.15), inset 0 0 12px rgba(59, 130, 246, 0.06)",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(59, 130, 246, 0.12)" }} />
-      <div
-        className="px-4 py-3 flex items-center justify-between"
-        style={{
-          background: "linear-gradient(90deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7))",
-          borderBottom: "1px solid rgba(59, 130, 246, 0.25)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg border-2 flex items-center justify-center"
-            style={{ borderColor: "rgba(59, 130, 246, 0.6)", backgroundColor: "rgba(59, 130, 246, 0.12)" }}
-          >
-            <Users size={20} className="text-blue-400" />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg text-blue-100">{tData.name}</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/60 rounded text-blue-300 font-bold">TROOP</span>
-              {troop.ownerType && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-slate-800/60 rounded text-slate-300">{troop.ownerType.toUpperCase()}</span>
-              )}
-              {troop.isHexGhost && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-fuchsia-950/60 rounded text-fuchsia-300 font-bold">HEX GHOST</span>
-              )}
-              {(troop.overrideIsRanged || tData.isRanged) && (
-                <span className="text-[9px] px-1.5 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg transition-all hover:scale-110"
-          style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-        >
-          <X size={18} className="text-blue-400" />
-        </button>
+  const header = (
+    <div className="flex items-center gap-2">
+      <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "rgba(59, 130, 246, 0.12)", border: "1.5px solid rgba(59, 130, 246, 0.4)" }}>
+        <TroopSprite type={troopType} size={34} animated />
       </div>
-
-      {/* Content */}
-      <div className="px-4 py-3">
-        <p className="text-[11px] text-purple-300/90 mb-3 italic">{tData.desc}</p>
-
-        {/* HP Bar */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] mb-1">
-            <span className="text-red-400 font-bold">HP</span>
-            <span className="text-white font-mono">{Math.ceil(troop.hp)} / {troop.maxHp}</span>
-          </div>
-          <div className="w-full bg-black/40 h-3 rounded-full border border-white/10 overflow-hidden">
-            <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${hpPercent}%` }} />
-          </div>
+      <div className="flex-1 min-w-0 pr-5">
+        <span className="text-xs font-bold text-blue-100 truncate block">{tData.name}</span>
+        <div className="flex items-center gap-1 mt-0.5">
+          <span className="text-[8px] px-1 py-0.5 bg-blue-900/60 rounded text-blue-300 font-bold">TROOP</span>
+          {troop.ownerType && <span className="text-[8px] px-1 py-0.5 bg-slate-800/60 rounded text-slate-300">{troop.ownerType.toUpperCase()}</span>}
+          {troop.isHexGhost && <span className="text-[8px] px-1 py-0.5 bg-fuchsia-950/60 rounded text-fuchsia-300 font-bold">HEX</span>}
+          {(troop.overrideIsRanged || tData.isRanged) && <span className="text-[8px] px-1 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>}
         </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-2 mb-1">
-          <div className="bg-red-950/40 p-2 rounded-lg border border-red-900/40 text-center">
-            <Swords size={14} className="mx-auto text-red-400 mb-1" />
-            <div className="text-[8px] text-red-500">Damage</div>
-            <div className="text-red-200 font-bold text-sm">{damage}</div>
-          </div>
-          <div className="bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 text-center">
-            <Timer size={14} className="mx-auto text-blue-400 mb-1" />
-            <div className="text-[8px] text-blue-500">Atk Speed</div>
-            <div className="text-blue-200 font-bold text-sm">{(atkSpeed / 1000).toFixed(1)}s</div>
-          </div>
-          <div className="bg-green-950/40 p-2 rounded-lg border border-green-900/40 text-center">
-            <Heart size={14} className="mx-auto text-green-400 mb-1" />
-            <div className="text-[8px] text-green-500">Max HP</div>
-            <div className="text-green-200 font-bold text-sm">{troop.maxHp}</div>
-          </div>
-        </div>
-
-        <StatusEffectsBadges unit={troop} />
       </div>
     </div>
+  );
+
+  return (
+    <InspectPanel unitScreenPos={position} theme={TROOP_INSPECT_THEME} onClose={onClose} header={header}>
+      <CompactHpBar current={troop.hp} max={troop.maxHp} />
+
+      <div className="grid grid-cols-3 gap-1 mb-1">
+        <StatTile icon={<Swords size={10} className="text-red-400" />} label="DMG" value={damage} className="bg-red-950/40 border-red-900/40 text-red-400" />
+        <StatTile icon={<Timer size={10} className="text-blue-400" />} label="Atk Spd" value={`${(atkSpeed / 1000).toFixed(1)}s`} className="bg-blue-950/40 border-blue-900/40 text-blue-400" />
+        <StatTile icon={<Heart size={10} className="text-green-400" />} label="Max HP" value={troop.maxHp} className="bg-green-950/40 border-green-900/40 text-green-400" />
+      </div>
+
+      <div className="text-[8px] text-stone-400 italic text-center mb-1">{tData.desc}</div>
+
+      <StatusBadges unit={troop} />
+    </InspectPanel>
   );
 };
 
 // =============================================================================
-// HERO DETAIL TOOLTIP
+// HERO DETAIL TOOLTIP (compact with glowing circle + real sprite)
 // =============================================================================
 
 interface HeroDetailTooltipProps {
@@ -738,121 +482,39 @@ interface HeroDetailTooltipProps {
   onClose: () => void;
 }
 
-export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
-  hero,
-  position,
-  onClose,
-}) => {
+export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({ hero, position, onClose }) => {
   const hData = HERO_DATA[hero.type];
   if (!hData) return null;
 
-  const hpPercent = (hero.hp / hero.maxHp) * 100;
-  const hpColor = hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500";
-
-  const tooltipWidth = 300;
-  const tooltipHeight = 400;
-  let tooltipX = position.x - tooltipWidth / 2;
-  let tooltipY = position.y - tooltipHeight - 40;
-  tooltipX = Math.max(10, Math.min(tooltipX, window.innerWidth - tooltipWidth - 10));
-  tooltipY = Math.max(60, tooltipY);
-  if (tooltipY + tooltipHeight > window.innerHeight - 10) {
-    tooltipY = window.innerHeight - tooltipHeight - 10;
-  }
-
-  return (
-    <div
-      className="fixed pointer-events-auto shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
-      style={{
-        left: tooltipX,
-        top: tooltipY,
-        zIndex: 300,
-        width: tooltipWidth,
-        background: panelGradient,
-        border: "2px solid rgba(245, 158, 11, 0.4)",
-        boxShadow: "0 0 24px rgba(245, 158, 11, 0.15), inset 0 0 12px rgba(245, 158, 11, 0.06)",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: "1px solid rgba(245, 158, 11, 0.12)" }} />
-      <div
-        className="px-4 py-3 flex items-center justify-between"
-        style={{
-          background: "linear-gradient(90deg, rgba(30, 20, 10, 0.9), rgba(45, 30, 15, 0.7))",
-          borderBottom: "1px solid rgba(245, 158, 11, 0.3)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-12 h-12 rounded-lg border-2 flex items-center justify-center text-2xl"
-            style={{ borderColor: "rgba(245, 158, 11, 0.7)", backgroundColor: "rgba(245, 158, 11, 0.1)" }}
-          >
-            <HeroIcon type={hero.type} size={24} />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg text-amber-100">{hData.name}</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/60 rounded text-amber-300 font-bold">HERO</span>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg transition-all hover:scale-110"
-          style={{ background: PANEL.bgWarmMid, border: "1px solid rgba(245, 158, 11, 0.3)" }}
-        >
-          <X size={18} className="text-amber-400" />
-        </button>
+  const header = (
+    <div className="flex items-center gap-2">
+      <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "rgba(245, 158, 11, 0.1)", border: "1.5px solid rgba(245, 158, 11, 0.5)" }}>
+        <HeroSprite type={hero.type} size={34} animated />
       </div>
-
-      {/* Content */}
-      <div className="px-4 py-3">
-        <p className="text-[11px] text-purple-300/90 mb-3 italic">{hData.description}</p>
-
-        {/* HP Bar */}
-        <div className="mb-3">
-          <div className="flex justify-between text-[10px] mb-1">
-            <span className="text-red-400 font-bold">HP</span>
-            <span className="text-white font-mono">{Math.ceil(hero.hp)} / {hero.maxHp}</span>
-          </div>
-          <div className="w-full bg-black/40 h-3 rounded-full border border-white/10 overflow-hidden">
-            <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${hpPercent}%` }} />
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-4 gap-2 mb-1">
-          <div className="bg-red-950/40 p-2 rounded-lg border border-red-900/40 text-center">
-            <Swords size={14} className="mx-auto text-red-400 mb-1" />
-            <div className="text-[8px] text-red-500">Damage</div>
-            <div className="text-red-200 font-bold text-sm">{hData.damage}</div>
-          </div>
-          <div className="bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 text-center">
-            <Target size={14} className="mx-auto text-blue-400 mb-1" />
-            <div className="text-[8px] text-blue-500">Range</div>
-            <div className="text-blue-200 font-bold text-sm">{hData.range}</div>
-          </div>
-          <div className="bg-amber-950/40 p-2 rounded-lg border border-amber-900/40 text-center">
-            <Timer size={14} className="mx-auto text-amber-400 mb-1" />
-            <div className="text-[8px] text-amber-500">Atk Spd</div>
-            <div className="text-amber-200 font-bold text-sm">{(hData.attackSpeed / 1000).toFixed(1)}s</div>
-          </div>
-          <div className="bg-green-950/40 p-2 rounded-lg border border-green-900/40 text-center">
-            <Gauge size={14} className="mx-auto text-green-400 mb-1" />
-            <div className="text-[8px] text-green-500">Speed</div>
-            <div className="text-green-200 font-bold text-sm">{hData.speed}</div>
-          </div>
-        </div>
-
-        {/* Ability */}
-        <div className="mt-3 p-2 rounded-lg border" style={{ background: "rgba(139, 92, 246, 0.1)", borderColor: "rgba(139, 92, 246, 0.3)" }}>
-          <div className="text-[10px] text-purple-400 font-bold mb-1 flex items-center gap-1">
-            <Sparkles size={10} /> ABILITY
-          </div>
-          <div className="text-[11px] text-purple-200">{hData.ability}</div>
-        </div>
-
-        <StatusEffectsBadges unit={hero} />
+      <div className="flex-1 min-w-0 pr-5">
+        <span className="text-xs font-bold text-amber-100 truncate block">{hData.name}</span>
+        <span className="text-[8px] px-1 py-0.5 bg-amber-900/60 rounded text-amber-300 font-bold">HERO</span>
       </div>
     </div>
+  );
+
+  return (
+    <InspectPanel unitScreenPos={position} theme={HERO_INSPECT_THEME} onClose={onClose} header={header}>
+      <CompactHpBar current={hero.hp} max={hero.maxHp} />
+
+      <div className="grid grid-cols-4 gap-1 mb-1.5">
+        <StatTile icon={<Swords size={10} className="text-red-400" />} label="DMG" value={hData.damage} className="bg-red-950/40 border-red-900/40 text-red-400" />
+        <StatTile icon={<Target size={10} className="text-blue-400" />} label="Range" value={hData.range} className="bg-blue-950/40 border-blue-900/40 text-blue-400" />
+        <StatTile icon={<Timer size={10} className="text-amber-400" />} label="Atk Spd" value={`${(hData.attackSpeed / 1000).toFixed(1)}s`} className="bg-amber-950/40 border-amber-900/40 text-amber-400" />
+        <StatTile icon={<Gauge size={10} className="text-green-400" />} label="Speed" value={hData.speed} className="bg-green-950/40 border-green-900/40 text-green-400" />
+      </div>
+
+      <div className="p-1.5 rounded-md border mb-1" style={{ background: "rgba(139, 92, 246, 0.1)", borderColor: "rgba(139, 92, 246, 0.3)" }}>
+        <div className="text-[8px] text-purple-400 font-bold mb-0.5 flex items-center gap-0.5"><Sparkles size={8} /> ABILITY</div>
+        <div className="text-[9px] text-purple-200">{hData.ability}</div>
+      </div>
+
+      <StatusBadges unit={hero} />
+    </InspectPanel>
   );
 };

@@ -1,10 +1,11 @@
 import type { Tower, Enemy, Effect, Position } from "../types";
-import { ISO_Y_RATIO } from "../constants";
+import { ISO_Y_RATIO, LEVEL_DATA } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
 import { drawOrganicBlobAt, type LightningColorScheme } from "./helpers";
 import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 import { getScenePressure } from "./performance";
 import { renderSentinelImpact, renderSunforgeBeam, renderSunforgeImpact } from "./effects/specialTowerEffects";
+import { getSentinelPalette } from "./towers/sentinelTheme";
 
 // Performance utilities - critical for Firefox
 export {
@@ -141,11 +142,8 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = Math.max(0, effect.intensity || 1);
-        const scenePressure = getScenePressure();
-        const lightningPressure = effectDensityHint + enemies.length * 0.25
-          + (scenePressure.skipDecorativeEffects ? 40 : 0);
-        const lowDetail = lightningPressure > 60 || scenePressure.forceSimplifiedGradients;
-        const minimalDetail = lightningPressure > 90 || scenePressure.simplifyEnemies;
+        const lowDetail = effectDensityHint > 80;
+        const minimalDetail = effectDensityHint > 140;
 
         const BOLT_PALETTES: Record<LightningColorScheme, {
           outer: string; mid: string; core: string;
@@ -171,6 +169,16 @@ export function renderEffect(
             outer: "70, 65, 230", mid: "110, 110, 255", core: "215, 225, 255",
             branch: "100, 100, 255", branchCore: "200, 210, 255",
             impactCenter: "215, 225, 255", impactMid: "100, 100, 255", impactEdge: "40, 35, 180",
+          },
+          teal: {
+            outer: "20, 150, 130", mid: "80, 220, 180", core: "200, 255, 240",
+            branch: "60, 200, 160", branchCore: "180, 255, 230",
+            impactCenter: "200, 255, 240", impactMid: "60, 200, 160", impactEdge: "10, 120, 100",
+          },
+          green: {
+            outer: "80, 170, 20", mid: "160, 230, 80", core: "230, 255, 200",
+            branch: "120, 200, 40", branchCore: "210, 255, 180",
+            impactCenter: "230, 255, 200", impactMid: "120, 200, 40", impactEdge: "50, 130, 10",
           },
         };
         const boltScheme: LightningColorScheme =
@@ -240,6 +248,10 @@ export function renderEffect(
           }
         }
 
+        if (effect.sourceYOffset) {
+          sourceY += effect.sourceYOffset * zoom;
+        }
+
         ctx.save();
 
         // Lightning-specific alpha: full brightness on strike, then slow fade-out
@@ -260,11 +272,11 @@ export function renderEffect(
         const noise = (seed: number) => seededNoise(seedBase + seed);
 
         const segments = minimalDetail
-          ? Math.max(3, Math.floor(dist / 42))
+          ? Math.max(5, Math.floor(dist / 32))
           : lowDetail
-            ? Math.max(4, Math.floor(dist / 30))
+            ? Math.max(5, Math.floor(dist / 26))
             : Math.max(6, Math.floor(dist / 22));
-        const jitter = (minimalDetail ? 8 : lowDetail ? 14 : 22) * zoom * intensity;
+        const jitter = (minimalDetail ? 14 : lowDetail ? 18 : 22) * zoom * intensity;
         const mainPts: { x: number; y: number }[] = [
           { x: sourceX, y: sourceY },
         ];
@@ -373,12 +385,16 @@ export function renderEffect(
     case "sentinel_lockon": {
       const pulse = 0.55 + Math.sin(Date.now() / 60) * 0.45;
       const radius = (effect.size || 70) * zoom * (0.5 + progress * 0.3);
+      const lockonPal = getSentinelPalette(LEVEL_DATA[selectedMap]?.theme);
+      const lockonRgb = lockonPal.hotRgb;
+      const lockonTint = `${Math.min(255, lockonPal.crystalR + 40)}, ${Math.min(255, lockonPal.crystalG + 40)}, ${Math.min(255, lockonPal.crystalB + 40)}`;
+      const lockonDeep = `${Math.round(lockonPal.crystalR * 0.74)}, ${Math.round(lockonPal.crystalG * 0.21)}, ${Math.round(lockonPal.crystalB * 0.36)}`;
 
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
       ctx.scale(1, ISO_Y_RATIO);
-      ctx.strokeStyle = `rgba(255, 228, 230, ${alpha * (0.6 + pulse * 0.28)})`;
-      ctx.fillStyle = `rgba(190, 24, 93, ${alpha * (0.14 + pulse * 0.1)})`;
+      ctx.strokeStyle = `rgba(${lockonTint}, ${alpha * (0.6 + pulse * 0.28)})`;
+      ctx.fillStyle = `rgba(${lockonDeep}, ${alpha * (0.14 + pulse * 0.1)})`;
       ctx.lineWidth = 2.8 * zoom;
       ctx.setLineDash([10 * zoom, 8 * zoom]);
       ctx.beginPath();
@@ -389,7 +405,7 @@ export function renderEffect(
       ctx.restore();
 
       const cross = radius * 0.2;
-      ctx.strokeStyle = `rgba(255, 237, 213, ${alpha * (0.75 + pulse * 0.18)})`;
+      ctx.strokeStyle = `rgba(${lockonRgb}, ${alpha * (0.75 + pulse * 0.18)})`;
       ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.moveTo(screenPos.x - cross, screenPos.y);
@@ -401,7 +417,8 @@ export function renderEffect(
     }
 
     case "sentinel_impact": {
-      renderSentinelImpact(ctx, screenPos.x, screenPos.y, zoom, progress, alpha, effect.size);
+      const impactPal = getSentinelPalette(LEVEL_DATA[selectedMap]?.theme);
+      renderSentinelImpact(ctx, screenPos.x, screenPos.y, zoom, progress, alpha, effect.size, impactPal.hotRgb);
       break;
     }
 
@@ -416,8 +433,9 @@ export function renderEffect(
           cameraZoom,
         );
         const beamIntensity = Math.max(0, effect.intensity || 1);
+        const beamSourceY = screenPos.y + (effect.sourceYOffset ?? 0) * zoom;
         renderSunforgeBeam(
-          ctx, screenPos.x, screenPos.y,
+          ctx, screenPos.x, beamSourceY,
           targetScreen.x, targetScreen.y,
           zoom, progress, alpha, beamIntensity, effect.id,
         );
@@ -1908,49 +1926,178 @@ export function renderEffect(
     }
 
     case "freeze_wave": {
-      // Expanding ice wave
-      const freezeRadius = effect.size * zoom * progress;
+      const fzR = effect.size * zoom * progress;
+      const fzSeed = hashString32(effect.id);
 
-      // Ice crystals pattern
       ctx.save();
-      ctx.strokeStyle = `rgba(150, 220, 255, ${alpha * 0.6})`;
-      ctx.fillStyle = `rgba(200, 240, 255, ${alpha * 0.2})`;
-      ctx.lineWidth = 2 * zoom;
 
-      // Central frost
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        freezeRadius,
-        freezeRadius * 0.5,
-        0,
-        0,
-        Math.PI * 2,
+      // Frost ground fill — layered radial gradient
+      const frostGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, fzR,
       );
+      frostGrad.addColorStop(0, `rgba(220, 245, 255, ${alpha * 0.35})`);
+      frostGrad.addColorStop(0.3, `rgba(160, 220, 255, ${alpha * 0.25})`);
+      frostGrad.addColorStop(0.6, `rgba(100, 180, 240, ${alpha * 0.15})`);
+      frostGrad.addColorStop(1, "rgba(60, 140, 220, 0)");
+      ctx.fillStyle = frostGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * 0.5, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // Inner bright core
+      const coreR = fzR * 0.35;
+      const coreGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, coreR,
+      );
+      coreGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.5})`);
+      coreGrad.addColorStop(0.5, `rgba(200, 240, 255, ${alpha * 0.3})`);
+      coreGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, coreR, coreR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Expanding frost ring edge with glow
+      ctx.shadowColor = "#88ccff";
+      ctx.shadowBlur = 18 * zoom;
+      ctx.strokeStyle = `rgba(180, 230, 255, ${alpha * 0.8})`;
+      ctx.lineWidth = 3.5 * zoom * (1 - progress * 0.4);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fzR, fzR * 0.5, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Ice crystals radiating outward
-      for (let c = 0; c < 8; c++) {
-        const angle = (c / 8) * Math.PI * 2;
-        const crystalDist = freezeRadius * 0.8;
-        const cx = screenPos.x + Math.cos(angle) * crystalDist;
-        const cy = screenPos.y + Math.sin(angle) * crystalDist * 0.5;
+      // Secondary inner ring
+      ctx.shadowBlur = 10 * zoom;
+      ctx.strokeStyle = `rgba(220, 245, 255, ${alpha * 0.5})`;
+      ctx.lineWidth = 1.5 * zoom;
+      const innerR = fzR * 0.65;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, innerR, innerR * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
 
-        // Snowflake pattern
-        ctx.strokeStyle = `rgba(200, 240, 255, ${alpha * 0.8})`;
+      // Frost vein cracks radiating from center
+      for (let v = 0; v < 10; v++) {
+        const vAngle = seededNoise(fzSeed + v * 7) * Math.PI * 2;
+        const vLen = fzR * (0.5 + seededNoise(fzSeed + v * 13) * 0.45);
+        const midJitter = (seededNoise(fzSeed + v * 19) - 0.5) * 12 * zoom;
+        const vAlpha = alpha * (0.3 + seededNoise(fzSeed + v * 31) * 0.3);
+
+        ctx.strokeStyle = `rgba(200, 240, 255, ${vAlpha})`;
+        ctx.lineWidth = (1 + seededNoise(fzSeed + v * 37) * 1.5) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.quadraticCurveTo(
+          screenPos.x + Math.cos(vAngle) * vLen * 0.5 + midJitter,
+          screenPos.y + Math.sin(vAngle) * vLen * 0.25 + midJitter * 0.5,
+          screenPos.x + Math.cos(vAngle) * vLen,
+          screenPos.y + Math.sin(vAngle) * vLen * 0.5,
+        );
+        ctx.stroke();
+      }
+
+      // Ice crystals at the wavefront
+      for (let c = 0; c < 12; c++) {
+        const cAngle = (c / 12) * Math.PI * 2 + seededNoise(fzSeed + c * 3) * 0.3;
+        const cDist = fzR * (0.7 + seededNoise(fzSeed + c * 11) * 0.25);
+        const cx = screenPos.x + Math.cos(cAngle) * cDist;
+        const cy = screenPos.y + Math.sin(cAngle) * cDist * 0.5;
+        const cSize = (4 + seededNoise(fzSeed + c * 17) * 4) * zoom * alpha;
+
+        // Crystal body — hexagonal
+        ctx.fillStyle = `rgba(220, 245, 255, ${alpha * 0.85})`;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cSize * 1.4);
+        ctx.lineTo(cx + cSize * 0.55, cy - cSize * 0.35);
+        ctx.lineTo(cx + cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx, cy + cSize * 1.4);
+        ctx.lineTo(cx - cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx - cSize * 0.55, cy - cSize * 0.35);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crystal highlight
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+        ctx.beginPath();
+        ctx.moveTo(cx - cSize * 0.15, cy - cSize * 1.1);
+        ctx.lineTo(cx + cSize * 0.15, cy - cSize * 0.3);
+        ctx.lineTo(cx - cSize * 0.35, cy - cSize * 0.2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crystal edge stroke
+        ctx.strokeStyle = `rgba(160, 220, 255, ${alpha * 0.5})`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cSize * 1.4);
+        ctx.lineTo(cx + cSize * 0.55, cy - cSize * 0.35);
+        ctx.lineTo(cx + cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx, cy + cSize * 1.4);
+        ctx.lineTo(cx - cSize * 0.55, cy + cSize * 0.35);
+        ctx.lineTo(cx - cSize * 0.55, cy - cSize * 0.35);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // Snowflake motifs inside the frost area
+      for (let s = 0; s < 6; s++) {
+        const sAngle = (s / 6) * Math.PI * 2;
+        const sDist = fzR * 0.45;
+        const sx = screenPos.x + Math.cos(sAngle) * sDist;
+        const sy = screenPos.y + Math.sin(sAngle) * sDist * 0.5;
+        const sAlpha = alpha * 0.6;
+        const armLen = 6 * zoom;
+
+        ctx.strokeStyle = `rgba(200, 240, 255, ${sAlpha})`;
+        ctx.lineWidth = 1.2 * zoom;
         for (let arm = 0; arm < 6; arm++) {
-          const armAngle = angle + (arm / 6) * Math.PI * 2;
+          const aAngle = (arm / 6) * Math.PI * 2;
+          const ax = sx + Math.cos(aAngle) * armLen;
+          const ay = sy + Math.sin(aAngle) * armLen * 0.5;
           ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.lineTo(
-            cx + Math.cos(armAngle) * 8 * zoom,
-            cy + Math.sin(armAngle) * 4 * zoom,
-          );
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(ax, ay);
           ctx.stroke();
+
+          // Small branches on each arm
+          const branchLen = armLen * 0.4;
+          for (let b = 0; b < 2; b++) {
+            const bt = 0.45 + b * 0.3;
+            const bx = sx + Math.cos(aAngle) * armLen * bt;
+            const by = sy + Math.sin(aAngle) * armLen * 0.5 * bt;
+            const bAngle1 = aAngle + Math.PI * 0.3;
+            const bAngle2 = aAngle - Math.PI * 0.3;
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(bAngle1) * branchLen, by + Math.sin(bAngle1) * branchLen * 0.5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(bAngle2) * branchLen, by + Math.sin(bAngle2) * branchLen * 0.5);
+            ctx.stroke();
+          }
         }
       }
+
+      // Ice sparkle particles scattered across the area
+      for (let p = 0; p < 16; p++) {
+        const pAngle = seededNoise(fzSeed + p * 23) * Math.PI * 2;
+        const pDist = seededNoise(fzSeed + p * 29) * fzR * 0.9;
+        const px = screenPos.x + Math.cos(pAngle) * pDist;
+        const py = screenPos.y + Math.sin(pAngle) * pDist * 0.5;
+        const sparkleA = alpha * (0.4 + seededNoise(fzSeed + p * 43) * 0.5);
+
+        const sparkGrad = ctx.createRadialGradient(px, py, 0, px, py, 3 * zoom);
+        sparkGrad.addColorStop(0, `rgba(255, 255, 255, ${sparkleA})`);
+        sparkGrad.addColorStop(1, "rgba(200, 240, 255, 0)");
+        ctx.fillStyle = sparkGrad;
+        ctx.beginPath();
+        ctx.arc(px, py, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
       break;
     }

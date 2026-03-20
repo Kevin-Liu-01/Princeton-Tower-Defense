@@ -2318,7 +2318,13 @@ function drawSunscorchLabyrinthLandmark(
     ctx.fill();
   }
 
-  // Maze walls — thinner (2-unit depth) and shorter for a labyrinth feel
+  // Maze walls — tiled square-footprint blocks for correct isometric angles.
+  // Each original wall run is split into square prism blocks (BLOCK × BLOCK)
+  // so every diamond edge sits at the standard 26.57° iso angle.
+  const BLOCK = 2;
+  const blkI = BLOCK * s * ISO_COS;
+  const blkD = BLOCK * s * ISO_SIN;
+
   const mazeWalls: Array<{
     x: number;
     y: number;
@@ -2342,118 +2348,91 @@ function drawSunscorchLabyrinthLandmark(
     { x: -16, y: 5, w: 2, d: 6, h: 3 },
   ];
 
-  for (let i = 0; i < mazeWalls.length; i++) {
-    const wall = mazeWalls[i];
+  type WallBlock = {
+    bx: number;
+    by: number;
+    h: number;
+    wi: number;
+    bi: number;
+  };
+  const wallBlocks: WallBlock[] = [];
+
+  for (let wi = 0; wi < mazeWalls.length; wi++) {
+    const wall = mazeWalls[wi];
     const wx = cx + wall.x * s;
     const wy = cy + wall.y * s;
+    const isH = wall.w > wall.d;
+    const count = Math.max(1, Math.round((isH ? wall.w : wall.d) / BLOCK));
 
-    const topShade = i % 3 === 0 ? sandTop : i % 3 === 1 ? sandHi : sandTop;
-    const leftShade = i % 2 === 0 ? sandLeft : sandDark;
-    const rightShade = i % 2 === 0 ? sandRight : sandLeft;
+    for (let bi = 0; bi < count; bi++) {
+      wallBlocks.push({
+        bx: isH
+          ? wx + (BLOCK * (1 + 2 * bi) - wall.w) * s * ISO_COS
+          : wx,
+        by: isH ? wy : wy + bi * 2 * BLOCK * s * ISO_SIN,
+        h: wall.h * s,
+        wi,
+        bi,
+      });
+    }
+  }
+
+  wallBlocks.sort((a, b) => a.by - b.by || a.bx - b.bx);
+
+  for (const blk of wallBlocks) {
+    const { bx, by, h: bh, wi, bi } = blk;
+    const topShade = wi % 3 === 0 ? sandTop : wi % 3 === 1 ? sandHi : sandTop;
+    const leftShade = wi % 2 === 0 ? sandLeft : sandDark;
+    const rightShade = wi % 2 === 0 ? sandRight : sandLeft;
 
     drawIsometricPrism(
       ctx,
-      wx,
-      wy,
-      wall.w * s,
-      wall.d * s,
-      wall.h * s,
+      bx,
+      by,
+      BLOCK * s,
+      BLOCK * s,
+      bh,
       topShade,
       leftShade,
       rightShade,
     );
 
-    const wI = wall.w * s * ISO_COS;
-    const wD = wall.d * s * ISO_SIN;
+    // Front vertical edge highlight
+    ctx.strokeStyle = sandEdge;
+    ctx.lineWidth = 0.4 * s;
+    ctx.beginPath();
+    ctx.moveTo(bx, by + blkD * 2);
+    ctx.lineTo(bx, by - bh + blkD * 2);
+    ctx.stroke();
 
-    // Stone rows on faces
-    ctx.strokeStyle = "rgba(0,0,0,0.1)";
-    ctx.lineWidth = 0.35 * s;
-    const rows = Math.max(2, Math.floor(wall.h / 1.4));
-    for (let r = 1; r < rows; r++) {
-      const ry = wy - wall.h * s * (r / rows);
+    // Sand accumulation at block base (every other block)
+    if (bi % 2 === 0) {
+      ctx.fillStyle = "rgba(210,180,120,0.12)";
+      fillIsoEllipse(ctx, bx, by + blkD * 2 + 0.5 * s, BLOCK * 0.7 * s);
+    }
+
+    // Hieroglyph carvings on select blocks
+    if ((wi * 7 + bi * 3) % 11 === 0) {
+      ctx.strokeStyle = "rgba(90,70,35,0.18)";
+      ctx.lineWidth = 0.5 * s;
+      const midY = by - bh * 0.5 + blkD;
       ctx.beginPath();
-      ctx.moveTo(wx - wI, ry + wD);
-      ctx.lineTo(wx, ry + wD * 2);
-      ctx.lineTo(wx + wI, ry + wD);
+      ctx.moveTo(bx - 0.5 * s, midY);
+      ctx.lineTo(bx + 0.3 * s, midY - 1 * s);
+      ctx.lineTo(bx + 1.1 * s, midY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(bx + 0.3 * s, midY + 0.3 * s, 0.3 * s, 0, Math.PI * 2);
       ctx.stroke();
     }
 
-    // Brick divisions on left face (long walls only)
-    if (wall.w > 4) {
-      const brickCount = Math.max(2, Math.floor(wall.w / 2.5));
-      for (let brick = 1; brick < brickCount; brick++) {
-        const f = brick / brickCount;
-        const lx = wx - wI * (1 - f);
-        ctx.beginPath();
-        ctx.moveTo(lx, wy - wall.h * s + wD * (1 + f));
-        ctx.lineTo(lx, wy + wD * (1 + f));
-        ctx.stroke();
-      }
-    }
-    // Brick divisions on right face (long depth walls only)
-    if (wall.d > 4) {
-      const brickCount = Math.max(2, Math.floor(wall.d / 2.5));
-      for (let brick = 1; brick < brickCount; brick++) {
-        const f = brick / brickCount;
-        const rx = wx + wI * f;
-        ctx.beginPath();
-        ctx.moveTo(rx, wy - wall.h * s + wD * (2 - f));
-        ctx.lineTo(rx, wy + wD * (2 - f));
-        ctx.stroke();
-      }
-    }
-
-    // Edge highlights (three visible vertical edges)
-    ctx.strokeStyle = sandEdge;
-    ctx.lineWidth = 0.45 * s;
-    ctx.beginPath();
-    ctx.moveTo(wx, wy + wD * 2);
-    ctx.lineTo(wx, wy - wall.h * s + wD * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(wx - wI, wy + wD);
-    ctx.lineTo(wx - wI, wy - wall.h * s + wD);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(wx + wI, wy + wD);
-    ctx.lineTo(wx + wI, wy - wall.h * s + wD);
-    ctx.stroke();
-
-    // Hieroglyph carvings on longer left faces
-    if (i % 3 === 0 && wall.w > 8) {
-      ctx.strokeStyle = "rgba(90,70,35,0.18)";
-      ctx.lineWidth = 0.5 * s;
-      const hMidH = wy - wall.h * s * 0.5;
-      for (let h = 0; h < 2; h++) {
-        const hFrac = 0.3 + h * 0.3;
-        const hx = wx - wI * (1 - hFrac);
-        const hy = hMidH + wD * (1 + hFrac);
-        ctx.beginPath();
-        ctx.moveTo(hx, hy);
-        ctx.lineTo(hx + 1.2 * s, hy - 1.2 * s);
-        ctx.lineTo(hx + 2.4 * s, hy);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(hx + 1.2 * s, hy + 0.4 * s, 0.4 * s, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-
-    // Sand accumulation at wall bases
-    ctx.fillStyle = "rgba(210,180,120,0.15)";
-    fillIsoEllipse(ctx, wx, wy + wD * 2 + 1 * s, Math.min(wall.w, 7) * s);
-
-    // Crumbling top — only on some walls for variety
-    if (i % 5 === 1) {
+    // Crumbling top on occasional blocks
+    if ((wi + bi) % 9 === 3) {
       ctx.fillStyle = topShade;
-      const crumbleX = wx + wI * 0.3;
-      const crumbleY = wy - wall.h * s + wD;
       ctx.beginPath();
-      ctx.moveTo(crumbleX - 0.8 * s, crumbleY);
-      ctx.lineTo(crumbleX, crumbleY - 1 * s);
-      ctx.lineTo(crumbleX + 1.5 * s, crumbleY - 0.5 * s);
-      ctx.lineTo(crumbleX + 1.2 * s, crumbleY + 0.2 * s);
+      ctx.moveTo(bx + blkI * 0.2, by - bh + blkD);
+      ctx.lineTo(bx + blkI * 0.4, by - bh + blkD - 0.7 * s);
+      ctx.lineTo(bx + blkI * 0.8, by - bh + blkD - 0.3 * s);
       ctx.closePath();
       ctx.fill();
     }

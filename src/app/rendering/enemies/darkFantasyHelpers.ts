@@ -1,6 +1,6 @@
 // Princeton Tower Defense — Dark Fantasy Path-Based Body Helpers
 // Renders arms and legs using overlapping-plate technique matching
-// troop sprite quality. Bulky, wide, no gaps between segments.
+// troop sprite quality. Proportional segments, no gaps between joints.
 
 import { lightenColor } from "../../utils";
 
@@ -47,7 +47,7 @@ export interface PathLegOptions {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// ARMORED — bulky trapezoidal plates, wide pauldrons & knee guards
+// ARMORED — angular faceted plates, hexagonal pauldrons, diamond joints
 // ═══════════════════════════════════════════════════════════════════
 
 function renderArmoredArm(
@@ -64,14 +64,22 @@ function renderArmoredArm(
   elbowA: number,
   time: number,
 ): void {
-  // Base pauldron shadow
-  ctx.fillStyle = "rgba(0,0,0,0.4)";
+  const pulse = (Math.sin(time * 3) + 1) / 2;
+
+  // Hexagonal pauldron shadow
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
-  ctx.ellipse(0, w * 0.2, w * 1.7, w * 1.2, 0, 0, TAU);
+  ctx.moveTo(-w * 0.9, w * 0.15);
+  ctx.lineTo(-w * 0.7, -w * 0.45);
+  ctx.lineTo(w * 0.7, -w * 0.45);
+  ctx.lineTo(w * 0.9, w * 0.15);
+  ctx.lineTo(w * 0.5, w * 0.55);
+  ctx.lineTo(-w * 0.5, w * 0.55);
+  ctx.closePath();
   ctx.fill();
 
-  // Ornate Pauldron
-  const padGrad = ctx.createLinearGradient(-w * 1.8, -w * 0.5, w * 1.8, w * 0.5);
+  // Hexagonal pauldron
+  const padGrad = ctx.createLinearGradient(-w * 1.0, -w * 0.3, w * 1.0, w * 0.3);
   padGrad.addColorStop(0, colorDark);
   padGrad.addColorStop(0.3, color);
   padGrad.addColorStop(0.5, lightenColor(color, 20));
@@ -79,133 +87,151 @@ function renderArmoredArm(
   padGrad.addColorStop(1, colorDark);
   ctx.fillStyle = padGrad;
   ctx.beginPath();
-  ctx.ellipse(0, 0, w * 1.7, w * 1.15, 0, 0, TAU);
+  ctx.moveTo(-w * 0.85, w * 0.1);
+  ctx.lineTo(-w * 0.65, -w * 0.4);
+  ctx.lineTo(w * 0.65, -w * 0.4);
+  ctx.lineTo(w * 0.85, w * 0.1);
+  ctx.lineTo(w * 0.45, w * 0.5);
+  ctx.lineTo(-w * 0.45, w * 0.5);
+  ctx.closePath();
   ctx.fill();
 
-  // Pauldron Trim and Spikes
+  // Pauldron trim (hexagonal)
   ctx.strokeStyle = trimColor;
-  ctx.lineWidth = Math.max(1, zoom * 1.5);
+  ctx.lineWidth = Math.max(1, zoom * 1.2);
   ctx.beginPath();
-  ctx.ellipse(0, 0, w * 1.6, w * 1.05, 0, 0, TAU);
+  ctx.moveTo(-w * 0.75, w * 0.08);
+  ctx.lineTo(-w * 0.55, -w * 0.32);
+  ctx.lineTo(w * 0.55, -w * 0.32);
+  ctx.lineTo(w * 0.75, w * 0.08);
+  ctx.lineTo(w * 0.38, w * 0.42);
+  ctx.lineTo(-w * 0.38, w * 0.42);
+  ctx.closePath();
   ctx.stroke();
 
-  // Pauldron runes (glowing)
-  const pulse = (Math.sin(time * 3) + 1) / 2;
+  // Pauldron rune
   ctx.fillStyle = `rgba(255, 200, 50, ${0.3 + pulse * 0.5})`;
   ctx.beginPath();
-  ctx.arc(0, -w * 0.4, w * 0.15, 0, TAU);
+  ctx.arc(0, -w * 0.1, w * 0.1, 0, TAU);
   ctx.fill();
   ctx.fillStyle = trimColor;
   ctx.beginPath();
-  ctx.arc(0, -w * 0.4, w * 0.08, 0, TAU);
+  ctx.arc(0, -w * 0.1, w * 0.05, 0, TAU);
   ctx.fill();
 
-  // Spikes on pauldron
+  // Pauldron edge spikes
   ctx.fillStyle = colorDark;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.2, -w * 0.5);
-  ctx.lineTo(-w * 1.8, -w * 1.2);
-  ctx.lineTo(-w * 0.8, -w * 0.8);
+  ctx.moveTo(-w * 0.7, -w * 0.35);
+  ctx.lineTo(-w * 1.1, -w * 0.7);
+  ctx.lineTo(-w * 0.5, -w * 0.45);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(w * 1.2, -w * 0.5);
-  ctx.lineTo(w * 1.8, -w * 1.2);
-  ctx.lineTo(w * 0.8, -w * 0.8);
+  ctx.moveTo(w * 0.7, -w * 0.35);
+  ctx.lineTo(w * 1.1, -w * 0.7);
+  ctx.lineTo(w * 0.5, -w * 0.45);
   ctx.fill();
 
-  // Upper arm plate (layered)
-  const uGrad = ctx.createLinearGradient(-w * 1.2, 0, w * 1.2, 0);
+  // Upper arm plate (tapered)
+  const uGrad = ctx.createLinearGradient(-w * 0.8, 0, w * 0.8, 0);
   uGrad.addColorStop(0, colorDark);
   uGrad.addColorStop(0.5, color);
   uGrad.addColorStop(1, colorDark);
   ctx.fillStyle = uGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.2, w * 0.15);
-  ctx.lineTo(-w * 1.05, upperLen);
-  ctx.lineTo(w * 1.05, upperLen);
-  ctx.lineTo(w * 1.2, w * 0.15);
+  ctx.moveTo(-w * 0.8, w * 0.1);
+  ctx.lineTo(-w * 0.7, upperLen);
+  ctx.lineTo(w * 0.7, upperLen);
+  ctx.lineTo(w * 0.8, w * 0.1);
   ctx.closePath();
   ctx.fill();
 
-  // Center ridge with gold trim
+  // Center ridge
   ctx.strokeStyle = trimColor;
-  ctx.lineWidth = Math.max(1, zoom * 1.2);
+  ctx.lineWidth = Math.max(1, zoom * 1.0);
   ctx.beginPath();
-  ctx.moveTo(0, w * 0.4);
-  ctx.lineTo(0, upperLen - w * 0.2);
+  ctx.moveTo(0, w * 0.3);
+  ctx.lineTo(0, upperLen - w * 0.15);
   ctx.stroke();
 
-  // Overlapping plates
-  ctx.lineWidth = Math.max(0.6, zoom * 0.8);
+  // Overlapping plate lines
+  ctx.lineWidth = Math.max(0.5, zoom * 0.7);
   ctx.strokeStyle = colorDark;
-  for (let i = 1; i <= 3; i++) {
-    const py = upperLen * (i * 0.25);
+  for (let i = 1; i <= 2; i++) {
+    const py = upperLen * (i * 0.33);
     ctx.beginPath();
-    ctx.moveTo(-w * 1.1, py);
-    ctx.quadraticCurveTo(0, py + w * 0.3, w * 1.1, py);
+    ctx.moveTo(-w * 0.7, py);
+    ctx.quadraticCurveTo(0, py + w * 0.15, w * 0.7, py);
     ctx.stroke();
   }
 
-  // Elbow cop (more imposing)
-  const eCGrad = ctx.createRadialGradient(0, upperLen, 0, 0, upperLen, w * 1.5);
+  // Diamond elbow cop
+  const eCGrad = ctx.createRadialGradient(0, upperLen, 0, 0, upperLen, w * 0.85);
   eCGrad.addColorStop(0, lightenColor(color, 15));
   eCGrad.addColorStop(0.6, color);
   eCGrad.addColorStop(1, colorDark);
   ctx.fillStyle = eCGrad;
   ctx.beginPath();
-  ctx.ellipse(0, upperLen, w * 1.5, w * 1.0, 0, 0, TAU);
+  ctx.moveTo(0, upperLen - w * 0.55);
+  ctx.lineTo(w * 0.75, upperLen);
+  ctx.lineTo(0, upperLen + w * 0.55);
+  ctx.lineTo(-w * 0.75, upperLen);
+  ctx.closePath();
   ctx.fill();
-  
-  // Elbow spike
-  ctx.fillStyle = trimColor;
-  ctx.beginPath();
-  ctx.moveTo(-w * 0.4, upperLen);
-  ctx.lineTo(0, upperLen + w * 1.8);
-  ctx.lineTo(w * 0.4, upperLen);
-  ctx.fill();
+
+  // Elbow cop trim
+  ctx.strokeStyle = trimColor;
+  ctx.lineWidth = Math.max(0.8, zoom * 0.8);
+  ctx.stroke();
 
   ctx.translate(0, upperLen);
   ctx.rotate(elbowA);
 
-  // Vambrace
-  const fGrad = ctx.createLinearGradient(-w * 1.1, 0, w * 1.1, 0);
+  // Vambrace (reverse-taper)
+  const fGrad = ctx.createLinearGradient(-w * 0.7, 0, w * 0.7, 0);
   fGrad.addColorStop(0, colorDark);
   fGrad.addColorStop(0.5, color);
   fGrad.addColorStop(1, colorDark);
   ctx.fillStyle = fGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.1, -w * 0.35);
-  ctx.lineTo(-w * 0.9, foreLen);
-  ctx.lineTo(w * 0.9, foreLen);
-  ctx.lineTo(w * 1.1, -w * 0.35);
+  ctx.moveTo(-w * 0.65, -w * 0.2);
+  ctx.lineTo(-w * 0.55, foreLen * 0.4);
+  ctx.lineTo(-w * 0.6, foreLen);
+  ctx.lineTo(w * 0.6, foreLen);
+  ctx.lineTo(w * 0.55, foreLen * 0.4);
+  ctx.lineTo(w * 0.65, -w * 0.2);
   ctx.closePath();
   ctx.fill();
 
-  // Vambrace intricate trim
+  // Vambrace V-trim
   ctx.strokeStyle = trimColor;
-  ctx.lineWidth = Math.max(1, zoom * 1.2);
+  ctx.lineWidth = Math.max(1, zoom * 1.0);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.5, 0);
-  ctx.lineTo(0, foreLen - w * 0.5);
-  ctx.lineTo(w * 0.5, 0);
+  ctx.moveTo(-w * 0.3, 0);
+  ctx.lineTo(0, foreLen - w * 0.3);
+  ctx.lineTo(w * 0.3, 0);
   ctx.stroke();
 
-  // Gauntlet
+  // Angular gauntlet fingers
   ctx.fillStyle = colorDark;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.85, foreLen - w * 0.2);
-  ctx.lineTo(-w * 0.9, foreLen + hR * 1.1);
-  ctx.lineTo(w * 0.9, foreLen + hR * 1.1);
-  ctx.lineTo(w * 0.85, foreLen - w * 0.2);
+  ctx.moveTo(-w * 0.55, foreLen - w * 0.1);
+  ctx.lineTo(-w * 0.5, foreLen + hR * 0.5);
+  ctx.lineTo(-w * 0.15, foreLen + hR * 1.0);
+  ctx.lineTo(w * 0.15, foreLen + hR * 1.1);
+  ctx.lineTo(w * 0.5, foreLen + hR * 0.5);
+  ctx.lineTo(w * 0.55, foreLen - w * 0.1);
   ctx.closePath();
   ctx.fill();
-  
-  // Gauntlet armor plates
+
+  // Knuckle plate
   ctx.fillStyle = trimColor;
-  ctx.fillRect(-w * 0.8, foreLen, w * 1.6, w * 0.3);
-  ctx.fillStyle = handColor;
   ctx.beginPath();
-  ctx.arc(0, foreLen + hR * 0.8, hR * 0.9, 0, TAU);
+  ctx.moveTo(-w * 0.45, foreLen);
+  ctx.lineTo(-w * 0.4, foreLen + w * 0.15);
+  ctx.lineTo(w * 0.4, foreLen + w * 0.15);
+  ctx.lineTo(w * 0.45, foreLen);
+  ctx.closePath();
   ctx.fill();
 }
 
@@ -221,113 +247,111 @@ function renderArmoredLeg(
   trimColor: string,
   kneeBend: number,
   ls: number,
-  time: number,
+  _time: number,
 ): void {
-  // Thigh plate (detailed)
-  const tGrad = ctx.createLinearGradient(-w * 1.2, 0, w * 1.2, 0);
+  // Thigh plate
+  const tGrad = ctx.createLinearGradient(-w * 0.8, 0, w * 0.8, 0);
   tGrad.addColorStop(0, colorDark);
   tGrad.addColorStop(0.5, color);
   tGrad.addColorStop(1, colorDark);
   ctx.fillStyle = tGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.2, 0);
-  ctx.lineTo(-w * 1.05, halfLen);
-  ctx.lineTo(w * 1.05, halfLen);
-  ctx.lineTo(w * 1.2, 0);
+  ctx.moveTo(-w * 0.8, 0);
+  ctx.lineTo(-w * 0.7, halfLen);
+  ctx.lineTo(w * 0.7, halfLen);
+  ctx.lineTo(w * 0.8, 0);
   ctx.closePath();
   ctx.fill();
 
-  // Thigh trim and layers
+  // Plate overlap lines
   ctx.strokeStyle = colorDark;
-  ctx.lineWidth = Math.max(1, 1.2 * zoom);
-  for (let i = 1; i <= 3; i++) {
-    const py = halfLen * (i * 0.25);
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
+  for (let i = 1; i <= 2; i++) {
+    const py = halfLen * (i * 0.33);
     ctx.beginPath();
-    ctx.moveTo(-w * 1.1, py);
-    ctx.quadraticCurveTo(0, py + w * 0.4, w * 1.1, py);
+    ctx.moveTo(-w * 0.7, py);
+    ctx.quadraticCurveTo(0, py + w * 0.15, w * 0.7, py);
     ctx.stroke();
   }
 
   // Trim stripe
   ctx.strokeStyle = trimColor;
-  ctx.lineWidth = Math.max(1.5, 2 * zoom);
+  ctx.lineWidth = Math.max(1, 1.5 * zoom);
   ctx.beginPath();
-  ctx.moveTo(ls * w * 0.65, w * 0.2);
-  ctx.lineTo(ls * w * 0.5, halfLen - w * 0.1);
+  ctx.moveTo(ls * w * 0.45, w * 0.15);
+  ctx.lineTo(ls * w * 0.35, halfLen - w * 0.1);
   ctx.stroke();
 
-  // Knee guard (heavy)
-  const kGrad = ctx.createRadialGradient(0, halfLen, 0, 0, halfLen, w * 1.5);
+  // Diamond knee guard
+  const kGrad = ctx.createRadialGradient(0, halfLen, 0, 0, halfLen, w * 0.85);
   kGrad.addColorStop(0, lightenColor(color, 15));
   kGrad.addColorStop(0.5, color);
   kGrad.addColorStop(1, colorDark);
   ctx.fillStyle = kGrad;
   ctx.beginPath();
-  ctx.ellipse(0, halfLen, w * 1.5, w * 1.1, 0, 0, TAU);
+  ctx.moveTo(0, halfLen - w * 0.55);
+  ctx.lineTo(w * 0.75, halfLen);
+  ctx.lineTo(0, halfLen + w * 0.55);
+  ctx.lineTo(-w * 0.75, halfLen);
+  ctx.closePath();
   ctx.fill();
 
-  // Knee spike
-  ctx.fillStyle = trimColor;
-  ctx.beginPath();
-  ctx.moveTo(-w * 0.5, halfLen);
-  ctx.lineTo(0, halfLen + w * 1.6);
-  ctx.lineTo(w * 0.5, halfLen);
-  ctx.fill();
+  // Knee guard trim
+  ctx.strokeStyle = trimColor;
+  ctx.lineWidth = Math.max(0.8, zoom * 0.8);
+  ctx.stroke();
 
   ctx.translate(0, halfLen);
   ctx.rotate(kneeBend * ls * 0.5);
 
-  // Greave (flared)
-  const gGrad = ctx.createLinearGradient(-w * 1.1, 0, w * 1.1, 0);
+  // Greave (tapered)
+  const gGrad = ctx.createLinearGradient(-w * 0.75, 0, w * 0.75, 0);
   gGrad.addColorStop(0, colorDark);
   gGrad.addColorStop(0.4, color);
   gGrad.addColorStop(1, colorDark);
   ctx.fillStyle = gGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.1, -w * 0.3);
-  ctx.quadraticCurveTo(-w * 0.7, halfLen * 0.5, -w * 0.95, halfLen);
-  ctx.lineTo(w * 0.95, halfLen);
-  ctx.quadraticCurveTo(w * 0.7, halfLen * 0.5, w * 1.1, -w * 0.3);
+  ctx.moveTo(-w * 0.7, -w * 0.2);
+  ctx.lineTo(-w * 0.55, halfLen * 0.4);
+  ctx.lineTo(-w * 0.6, halfLen);
+  ctx.lineTo(w * 0.6, halfLen);
+  ctx.lineTo(w * 0.55, halfLen * 0.4);
+  ctx.lineTo(w * 0.7, -w * 0.2);
   ctx.closePath();
   ctx.fill();
 
   // Greave trim
   ctx.strokeStyle = trimColor;
-  ctx.lineWidth = Math.max(1, 1.5 * zoom);
+  ctx.lineWidth = Math.max(1, 1.2 * zoom);
   ctx.beginPath();
   ctx.moveTo(0, w * 0.1);
-  ctx.lineTo(0, halfLen - w * 0.15);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-w * 0.5, halfLen * 0.5);
-  ctx.lineTo(0, halfLen - w * 0.2);
-  ctx.lineTo(w * 0.5, halfLen * 0.5);
+  ctx.lineTo(0, halfLen - w * 0.12);
   ctx.stroke();
 
-  // Sabaton (Armored Boot)
+  // Sabaton
   ctx.fillStyle = colorDark;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.9, halfLen - w * 0.2);
-  ctx.lineTo(-w * 0.75, halfLen + w * 0.55);
-  ctx.lineTo(fl * 0.85, halfLen + w * 0.55);
-  ctx.lineTo(fl * 0.95, halfLen - w * 0.1);
+  ctx.moveTo(-w * 0.55, halfLen - w * 0.15);
+  ctx.lineTo(-w * 0.5, halfLen + w * 0.35);
+  ctx.lineTo(fl * 0.6, halfLen + w * 0.35);
+  ctx.lineTo(fl * 0.7, halfLen - w * 0.08);
   ctx.closePath();
   ctx.fill();
-  
-  // Sabaton plates
+
+  // Sabaton plate
   ctx.fillStyle = trimColor;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.5, halfLen + w * 0.1);
-  ctx.lineTo(fl * 0.6, halfLen + w * 0.2);
-  ctx.lineTo(fl * 0.7, halfLen + w * 0.55);
-  ctx.lineTo(-w * 0.6, halfLen + w * 0.55);
+  ctx.moveTo(-w * 0.35, halfLen + w * 0.08);
+  ctx.lineTo(fl * 0.4, halfLen + w * 0.12);
+  ctx.lineTo(fl * 0.5, halfLen + w * 0.35);
+  ctx.lineTo(-w * 0.4, halfLen + w * 0.35);
   ctx.closePath();
   ctx.fill();
 }
 
 
 // ═══════════════════════════════════════════════════════════════════
-// BONE — thick shafts, huge joint balls, cracks
+// BONE — irregular knobby joints, visible dual-bone forearm, condyles
 // ═══════════════════════════════════════════════════════════════════
 
 function renderBoneArm(
@@ -344,35 +368,41 @@ function renderBoneArm(
   time: number,
 ): void {
   const pulse = (Math.sin(time * 4) + 1) / 2;
-  const glowAlpha = 0.4 + pulse * 0.4;
+  const glowAlpha = 0.3 + pulse * 0.35;
   const glowColor = `rgba(120, 255, 150, ${glowAlpha})`;
 
-  // Necromantic glow behind joint
+  // Necromantic glow behind shoulder
   ctx.fillStyle = glowColor;
   ctx.beginPath();
-  ctx.arc(0, 0, w * 1.5, 0, TAU);
+  ctx.ellipse(0, 0, w * 0.95, w * 0.7, 0, 0, TAU);
   ctx.fill();
 
-  // Shoulder ball with spikes
-  const sGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 1.3);
+  // Knobby shoulder joint — two overlapping irregular lumps
+  const sGrad = ctx.createRadialGradient(-w * 0.1, -w * 0.1, 0, 0, 0, w * 0.8);
   sGrad.addColorStop(0, lightenColor(color, 20));
   sGrad.addColorStop(0.6, color);
   sGrad.addColorStop(1, colorDark);
   ctx.fillStyle = sGrad;
   ctx.beginPath();
-  ctx.arc(0, 0, w * 1.3, 0, TAU);
-  ctx.fill();
-  
-  // Shoulder bone spikes
-  ctx.fillStyle = colorDark;
-  ctx.beginPath();
-  ctx.moveTo(-w * 0.8, -w * 0.8);
-  ctx.lineTo(-w * 2.2, -w * 1.5);
-  ctx.lineTo(-w * 0.4, -w * 1.0);
+  ctx.moveTo(-w * 0.6, -w * 0.5);
+  ctx.quadraticCurveTo(-w * 0.8, -w * 0.1, -w * 0.65, w * 0.35);
+  ctx.quadraticCurveTo(-w * 0.2, w * 0.6, w * 0.3, w * 0.4);
+  ctx.quadraticCurveTo(w * 0.7, w * 0.15, w * 0.7, -w * 0.2);
+  ctx.quadraticCurveTo(w * 0.55, -w * 0.6, w * 0.1, -w * 0.55);
+  ctx.quadraticCurveTo(-w * 0.2, -w * 0.7, -w * 0.6, -w * 0.5);
+  ctx.closePath();
   ctx.fill();
 
-  // Humerus
-  const uGrad = ctx.createLinearGradient(-w * 1.1, 0, w * 1.1, 0);
+  // Shoulder bone spur
+  ctx.fillStyle = colorDark;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.5, -w * 0.4);
+  ctx.lineTo(-w * 1.1, -w * 0.8);
+  ctx.lineTo(-w * 0.3, -w * 0.55);
+  ctx.fill();
+
+  // Humerus (slightly bowed)
+  const uGrad = ctx.createLinearGradient(-w * 0.6, 0, w * 0.6, 0);
   uGrad.addColorStop(0, colorDark);
   uGrad.addColorStop(0.25, color);
   uGrad.addColorStop(0.5, lightenColor(color, 10));
@@ -380,81 +410,105 @@ function renderBoneArm(
   uGrad.addColorStop(1, colorDark);
   ctx.fillStyle = uGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.9, -w * 0.25);
-  ctx.quadraticCurveTo(-w * 0.5, upperLen * 0.5, -w * 0.9, upperLen + w * 0.2);
-  ctx.lineTo(w * 0.9, upperLen + w * 0.2);
-  ctx.quadraticCurveTo(w * 0.5, upperLen * 0.5, w * 0.9, -w * 0.25);
+  ctx.moveTo(-w * 0.5, -w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.35, upperLen * 0.3, -w * 0.5, upperLen * 0.6);
+  ctx.lineTo(-w * 0.4, upperLen + w * 0.08);
+  ctx.lineTo(w * 0.4, upperLen + w * 0.08);
+  ctx.lineTo(w * 0.5, upperLen * 0.6);
+  ctx.quadraticCurveTo(w * 0.35, upperLen * 0.3, w * 0.5, -w * 0.1);
   ctx.closePath();
   ctx.fill();
 
   // Glowing bone cracks
   ctx.strokeStyle = `rgba(120, 255, 150, ${0.5 + pulse * 0.5})`;
-  ctx.lineWidth = Math.max(1, 1.5 * zoom);
+  ctx.lineWidth = Math.max(1, 1.2 * zoom);
   ctx.beginPath();
-  ctx.moveTo(w * 0.2, upperLen * 0.2);
-  ctx.lineTo(-w * 0.15, upperLen * 0.42);
-  ctx.lineTo(w * 0.1, upperLen * 0.6);
+  ctx.moveTo(w * 0.12, upperLen * 0.2);
+  ctx.lineTo(-w * 0.1, upperLen * 0.42);
+  ctx.lineTo(w * 0.08, upperLen * 0.6);
   ctx.stroke();
 
-  // Elbow ball with glow
+  // Elbow glow
   ctx.fillStyle = glowColor;
   ctx.beginPath();
-  ctx.arc(0, upperLen, w * 1.3, 0, TAU);
+  ctx.ellipse(0, upperLen, w * 0.7, w * 0.55, 0.2, 0, TAU);
   ctx.fill();
 
-  const eGrad = ctx.createRadialGradient(0, upperLen, 0, 0, upperLen, w * 1.25);
+  // Elbow condyle — two-bump joint
+  const eGrad = ctx.createRadialGradient(0, upperLen, 0, 0, upperLen, w * 0.7);
   eGrad.addColorStop(0, lightenColor(color, 20));
   eGrad.addColorStop(0.55, color);
   eGrad.addColorStop(1, colorDark);
   ctx.fillStyle = eGrad;
   ctx.beginPath();
-  ctx.arc(0, upperLen, w * 1.25, 0, TAU);
+  ctx.moveTo(-w * 0.55, upperLen - w * 0.25);
+  ctx.quadraticCurveTo(-w * 0.75, upperLen, -w * 0.5, upperLen + w * 0.35);
+  ctx.quadraticCurveTo(-w * 0.1, upperLen + w * 0.5, w * 0.15, upperLen + w * 0.35);
+  ctx.quadraticCurveTo(w * 0.6, upperLen + w * 0.4, w * 0.7, upperLen + w * 0.1);
+  ctx.quadraticCurveTo(w * 0.65, upperLen - w * 0.25, w * 0.35, upperLen - w * 0.35);
+  ctx.quadraticCurveTo(0, upperLen - w * 0.45, -w * 0.55, upperLen - w * 0.25);
+  ctx.closePath();
   ctx.fill();
-  
-  // Elbow bone spike
+
+  // Elbow bone spur
   ctx.fillStyle = colorDark;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.5, upperLen);
-  ctx.lineTo(-w * 2.0, upperLen + w * 1.0);
-  ctx.lineTo(-w * 0.2, upperLen + w * 0.5);
+  ctx.moveTo(-w * 0.3, upperLen + w * 0.2);
+  ctx.lineTo(-w * 0.9, upperLen + w * 0.55);
+  ctx.lineTo(-w * 0.15, upperLen + w * 0.35);
   ctx.fill();
 
   ctx.translate(0, upperLen);
   ctx.rotate(elbowA);
 
-  // Radius / ulna (more jagged)
-  const fGrad = ctx.createLinearGradient(-w * 0.9, 0, w * 0.9, 0);
-  fGrad.addColorStop(0, colorDark);
-  fGrad.addColorStop(0.3, color);
-  fGrad.addColorStop(0.7, color);
-  fGrad.addColorStop(1, colorDark);
-  ctx.fillStyle = fGrad;
+  // Dual-bone forearm (radius + ulna visible)
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.8, -w * 0.35);
-  ctx.quadraticCurveTo(-w * 0.4, foreLen * 0.5, -w * 0.7, foreLen);
-  ctx.lineTo(w * 0.7, foreLen);
-  ctx.quadraticCurveTo(w * 0.4, foreLen * 0.5, w * 0.8, -w * 0.35);
+  ctx.moveTo(-w * 0.45, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 0.55, foreLen * 0.3, -w * 0.4, foreLen * 0.7);
+  ctx.lineTo(-w * 0.3, foreLen);
+  ctx.lineTo(-w * 0.05, foreLen);
+  ctx.lineTo(-w * 0.05, -w * 0.1);
   ctx.closePath();
   ctx.fill();
-  
-  // Glowing crack on forearm
-  ctx.strokeStyle = `rgba(120, 255, 150, ${0.4 + pulse * 0.4})`;
-  ctx.lineWidth = Math.max(0.8, 1.2 * zoom);
+  ctx.fillStyle = lightenColor(color, 8);
   ctx.beginPath();
-  ctx.moveTo(0, foreLen * 0.3);
-  ctx.lineTo(-w * 0.2, foreLen * 0.5);
-  ctx.lineTo(w * 0.1, foreLen * 0.7);
+  ctx.moveTo(w * 0.05, -w * 0.1);
+  ctx.lineTo(w * 0.05, foreLen);
+  ctx.lineTo(w * 0.3, foreLen);
+  ctx.quadraticCurveTo(w * 0.55, foreLen * 0.3, w * 0.45, -w * 0.15);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gap line between radius and ulna
+  ctx.strokeStyle = colorDark;
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(0, w * 0.1);
+  ctx.lineTo(0, foreLen - w * 0.1);
   ctx.stroke();
 
-  // Bony hand (sharper claws)
+  // Glowing crack on forearm
+  ctx.strokeStyle = `rgba(120, 255, 150, ${0.4 + pulse * 0.4})`;
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.2, foreLen * 0.25);
+  ctx.lineTo(-w * 0.3, foreLen * 0.45);
+  ctx.lineTo(-w * 0.15, foreLen * 0.65);
+  ctx.stroke();
+
+  // Skeletal claw hand — splayed fingers
   ctx.fillStyle = handColor;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.65, foreLen - w * 0.1);
-  ctx.lineTo(-w * 0.85, foreLen + hR * 1.2);
-  ctx.lineTo(-w * 0.2, foreLen + hR * 2.0);
-  ctx.lineTo(w * 0.2, foreLen + hR * 2.2);
-  ctx.lineTo(w * 0.8, foreLen + hR * 1.3);
-  ctx.lineTo(w * 0.6, foreLen - w * 0.1);
+  ctx.moveTo(-w * 0.35, foreLen - w * 0.05);
+  ctx.lineTo(-w * 0.45, foreLen + hR * 0.7);
+  ctx.lineTo(-w * 0.55, foreLen + hR * 1.5);
+  ctx.lineTo(-w * 0.3, foreLen + hR * 0.8);
+  ctx.lineTo(-w * 0.1, foreLen + hR * 1.7);
+  ctx.lineTo(w * 0.05, foreLen + hR * 0.9);
+  ctx.lineTo(w * 0.25, foreLen + hR * 1.5);
+  ctx.lineTo(w * 0.35, foreLen + hR * 0.65);
+  ctx.lineTo(w * 0.35, foreLen - w * 0.05);
   ctx.closePath();
   ctx.fill();
 }
@@ -473,104 +527,131 @@ function renderBoneLeg(
   time: number,
 ): void {
   const pulse = (Math.sin(time * 3.5 + 1) + 1) / 2;
-  const glowAlpha = 0.3 + pulse * 0.5;
+  const glowAlpha = 0.25 + pulse * 0.35;
   const glowColor = `rgba(120, 255, 150, ${glowAlpha})`;
 
-  // Hip ball glow
+  // Hip joint glow
   ctx.fillStyle = glowColor;
   ctx.beginPath();
-  ctx.arc(0, 0, w * 1.3, 0, TAU);
+  ctx.arc(0, 0, w * 0.75, 0, TAU);
   ctx.fill();
 
-  // Hip ball
-  const hGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 1.15);
-  hGrad.addColorStop(0, lightenColor(color, 20));
-  hGrad.addColorStop(0.6, color);
-  hGrad.addColorStop(1, colorDark);
-  ctx.fillStyle = hGrad;
+  // Hip joint — irregular knobby shape
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(0, 0, w * 1.15, 0, TAU);
+  ctx.moveTo(-w * 0.5, -w * 0.3);
+  ctx.quadraticCurveTo(-w * 0.65, -w * 0.05, -w * 0.55, w * 0.2);
+  ctx.quadraticCurveTo(-w * 0.3, w * 0.45, 0, w * 0.35);
+  ctx.quadraticCurveTo(w * 0.3, w * 0.45, w * 0.55, w * 0.2);
+  ctx.quadraticCurveTo(w * 0.65, -w * 0.05, w * 0.5, -w * 0.3);
+  ctx.quadraticCurveTo(w * 0.2, -w * 0.5, -w * 0.2, -w * 0.5);
+  ctx.closePath();
   ctx.fill();
 
-  // Femur
-  const fGrad = ctx.createLinearGradient(-w * 1.0, 0, w * 1.0, 0);
+  // Femur shaft
+  const fGrad = ctx.createLinearGradient(-w * 0.55, 0, w * 0.55, 0);
   fGrad.addColorStop(0, colorDark);
-  fGrad.addColorStop(0.25, color);
-  fGrad.addColorStop(0.5, lightenColor(color, 15));
-  fGrad.addColorStop(0.75, color);
+  fGrad.addColorStop(0.3, color);
+  fGrad.addColorStop(0.5, lightenColor(color, 12));
+  fGrad.addColorStop(0.7, color);
   fGrad.addColorStop(1, colorDark);
   ctx.fillStyle = fGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.85, -w * 0.2);
-  ctx.quadraticCurveTo(-w * 0.45, halfLen * 0.5, -w * 0.8, halfLen + w * 0.15);
-  ctx.lineTo(w * 0.8, halfLen + w * 0.15);
-  ctx.quadraticCurveTo(w * 0.45, halfLen * 0.5, w * 0.85, -w * 0.2);
+  ctx.moveTo(-w * 0.5, -w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.3, halfLen * 0.5, -w * 0.5, halfLen + w * 0.08);
+  ctx.lineTo(w * 0.5, halfLen + w * 0.08);
+  ctx.quadraticCurveTo(w * 0.3, halfLen * 0.5, w * 0.5, -w * 0.1);
   ctx.closePath();
   ctx.fill();
-  
-  // Femur glowing cracks
-  ctx.strokeStyle = `rgba(120, 255, 150, ${0.4 + pulse * 0.5})`;
-  ctx.lineWidth = Math.max(1, 1.5 * zoom);
+
+  // Femur cracks
+  ctx.strokeStyle = `rgba(120, 255, 150, ${0.3 + pulse * 0.4})`;
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.2, halfLen * 0.2);
-  ctx.lineTo(w * 0.1, halfLen * 0.5);
-  ctx.lineTo(-w * 0.1, halfLen * 0.7);
+  ctx.moveTo(-w * 0.12, halfLen * 0.2);
+  ctx.lineTo(w * 0.08, halfLen * 0.45);
+  ctx.lineTo(-w * 0.06, halfLen * 0.65);
   ctx.stroke();
 
-  // Knee ball
+  // Knee condyle — dual-bump
   ctx.fillStyle = glowColor;
   ctx.beginPath();
-  ctx.arc(0, halfLen, w * 1.2, 0, TAU);
+  ctx.ellipse(-w * 0.2, halfLen, w * 0.4, w * 0.5, 0, 0, TAU);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(w * 0.2, halfLen, w * 0.4, w * 0.5, 0, 0, TAU);
   ctx.fill();
 
-  const kGrad = ctx.createRadialGradient(0, halfLen, 0, 0, halfLen, w * 1.1);
-  kGrad.addColorStop(0, lightenColor(color, 20));
-  kGrad.addColorStop(0.55, color);
-  kGrad.addColorStop(1, colorDark);
-  ctx.fillStyle = kGrad;
+  ctx.fillStyle = color;
   ctx.beginPath();
-  ctx.arc(0, halfLen, w * 1.1, 0, TAU);
+  ctx.ellipse(-w * 0.2, halfLen, w * 0.35, w * 0.42, 0, 0, TAU);
   ctx.fill();
-  
-  // Knee spike
-  ctx.fillStyle = colorDark;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.3, halfLen);
-  ctx.lineTo(0, halfLen + w * 1.5);
-  ctx.lineTo(w * 0.3, halfLen);
+  ctx.ellipse(w * 0.2, halfLen, w * 0.35, w * 0.42, 0, 0, TAU);
   ctx.fill();
 
   ctx.translate(0, halfLen);
   ctx.rotate(kneeBend * ls * 0.5);
 
-  // Tibia
-  const tGrad = ctx.createLinearGradient(-w * 0.8, 0, w * 0.8, 0);
+  // Tibia + fibula dual bones
+  const tGrad = ctx.createLinearGradient(-w * 0.5, 0, w * 0.5, 0);
   tGrad.addColorStop(0, colorDark);
   tGrad.addColorStop(0.5, color);
   tGrad.addColorStop(1, colorDark);
   ctx.fillStyle = tGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.75, -w * 0.3);
-  ctx.quadraticCurveTo(-w * 0.3, halfLen * 0.5, -w * 0.6, halfLen);
-  ctx.lineTo(w * 0.6, halfLen);
-  ctx.quadraticCurveTo(w * 0.3, halfLen * 0.5, w * 0.75, -w * 0.3);
+  ctx.moveTo(-w * 0.45, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 0.2, halfLen * 0.5, -w * 0.35, halfLen);
+  ctx.lineTo(-w * 0.05, halfLen);
+  ctx.quadraticCurveTo(-w * 0.05, halfLen * 0.4, w * 0.0, -w * 0.15);
   ctx.closePath();
   ctx.fill();
 
-  // Skeletal foot (sharper)
-  ctx.fillStyle = footColor;
+  ctx.fillStyle = lightenColor(color, 8);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.55, halfLen - w * 0.1);
-  ctx.lineTo(-w * 0.3, halfLen + w * 0.4);
-  ctx.lineTo(fl * 0.7, halfLen + w * 0.45);
-  ctx.lineTo(fl * 0.8, halfLen + w * 0.1);
-  ctx.lineTo(w * 0.4, halfLen - w * 0.1);
+  ctx.moveTo(w * 0.05, -w * 0.1);
+  ctx.quadraticCurveTo(w * 0.2, halfLen * 0.5, w * 0.1, halfLen);
+  ctx.lineTo(w * 0.4, halfLen);
+  ctx.quadraticCurveTo(w * 0.45, halfLen * 0.4, w * 0.45, -w * 0.1);
   ctx.closePath();
   ctx.fill();
+
+  // Gap line between tibia and fibula
+  ctx.strokeStyle = colorDark;
+  ctx.lineWidth = Math.max(0.6, 0.8 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(0, w * 0.1);
+  ctx.lineTo(0, halfLen - w * 0.1);
+  ctx.stroke();
+
+  // Skeletal foot with toes
+  ctx.fillStyle = footColor;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.35, halfLen - w * 0.08);
+  ctx.lineTo(-w * 0.3, halfLen + w * 0.2);
+  ctx.lineTo(-w * 0.15, halfLen + w * 0.35);
+  ctx.lineTo(fl * 0.4, halfLen + w * 0.35);
+  ctx.lineTo(fl * 0.55, halfLen + w * 0.15);
+  ctx.lineTo(fl * 0.5, halfLen - w * 0.05);
+  ctx.lineTo(w * 0.25, halfLen - w * 0.08);
+  ctx.closePath();
+  ctx.fill();
+
+  // Toe bones
+  ctx.strokeStyle = colorDark;
+  ctx.lineWidth = Math.max(0.5, 0.7 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(0, halfLen + w * 0.1);
+  ctx.lineTo(fl * 0.2, halfLen + w * 0.35);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.15, halfLen + w * 0.08);
+  ctx.lineTo(fl * 0.4, halfLen + w * 0.3);
+  ctx.stroke();
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// FLESHY — thick organic blobs, stitch overlays, no visible joints
+// FLESHY — asymmetric organic limbs, swollen elbow, irregular claws
 // ═══════════════════════════════════════════════════════════════════
 
 function renderFleshyArm(
@@ -586,89 +667,112 @@ function renderFleshyArm(
   elbowA: number,
   time: number,
 ): void {
-  // Upper arm — thick organic slab
-  const uGrad = ctx.createLinearGradient(-w * 1.5, 0, w * 1.5, 0);
+  const pulse = Math.sin(time * 2) * 0.5 + 0.5;
+
+  // Upper arm — asymmetric (outer edge bulges more than inner)
+  const uGrad = ctx.createLinearGradient(-w * 0.9, 0, w * 0.9, 0);
   uGrad.addColorStop(0, colorDark);
   uGrad.addColorStop(0.3, color);
   uGrad.addColorStop(0.7, lightenColor(color, 10));
   uGrad.addColorStop(1, colorDark);
   ctx.fillStyle = uGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.25, -w * 0.35);
-  ctx.quadraticCurveTo(-w * 1.8, upperLen * 0.4, -w * 1.2, upperLen + w * 0.5);
-  ctx.lineTo(w * 1.2, upperLen + w * 0.5);
-  ctx.quadraticCurveTo(w * 1.8, upperLen * 0.4, w * 1.25, -w * 0.35);
+  ctx.moveTo(-w * 0.6, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 1.1, upperLen * 0.25, -w * 0.8, upperLen * 0.6);
+  ctx.quadraticCurveTo(-w * 0.7, upperLen * 0.85, -w * 0.5, upperLen + w * 0.2);
+  ctx.lineTo(w * 0.55, upperLen + w * 0.2);
+  ctx.quadraticCurveTo(w * 0.7, upperLen * 0.5, w * 0.65, -w * 0.15);
   ctx.closePath();
   ctx.fill();
 
-  // Pulsing veins
-  const pulse = Math.sin(time * 2) * 0.5 + 0.5;
+  // Pulsing veins (branching)
   ctx.strokeStyle = `rgba(80, 20, 30, ${0.4 + pulse * 0.4})`;
-  ctx.lineWidth = Math.max(1, 1.5 * zoom);
+  ctx.lineWidth = Math.max(1, 1.2 * zoom);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.5, 0);
-  ctx.quadraticCurveTo(-w * 1.0, upperLen * 0.5, 0, upperLen);
+  ctx.moveTo(-w * 0.3, w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.7, upperLen * 0.3, -w * 0.4, upperLen * 0.6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.4, upperLen * 0.35);
+  ctx.lineTo(-w * 0.15, upperLen * 0.55);
   ctx.stroke();
 
-  // Gross pustules
+  // Pustule
   ctx.fillStyle = `rgba(180, 160, 60, ${0.7 + pulse * 0.3})`;
   ctx.beginPath();
-  ctx.arc(w * 0.8, upperLen * 0.3, w * 0.4, 0, TAU);
+  ctx.ellipse(-w * 0.65, upperLen * 0.35, w * 0.2, w * 0.15, 0.3, 0, TAU);
   ctx.fill();
   ctx.fillStyle = `rgba(120, 100, 30, 0.6)`;
   ctx.beginPath();
-  ctx.arc(w * 0.9, upperLen * 0.3, w * 0.2, 0, TAU);
+  ctx.arc(-w * 0.6, upperLen * 0.35, w * 0.09, 0, TAU);
   ctx.fill();
 
   // Stitch across upper arm
   ctx.strokeStyle = colorDark;
-  ctx.lineWidth = Math.max(0.8, 1.2 * zoom);
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.8, upperLen * 0.3);
-  ctx.lineTo(w * 0.7, upperLen * 0.55);
+  ctx.moveTo(-w * 0.4, upperLen * 0.5);
+  ctx.quadraticCurveTo(0, upperLen * 0.4, w * 0.4, upperLen * 0.55);
   ctx.stroke();
-  for (let s = 0; s < 4; s++) {
-    const t = (s + 0.5) / 4;
-    const sx = -w * 0.8 + t * w * 1.5;
-    const sy = upperLen * 0.3 + t * upperLen * 0.25;
+  for (let s = 0; s < 3; s++) {
+    const t = (s + 0.5) / 3;
+    const sx = -w * 0.4 + t * w * 0.8;
+    const sy = upperLen * 0.5 + Math.sin(t * 3) * upperLen * 0.04;
     ctx.beginPath();
-    ctx.moveTo(sx - w * 0.2, sy - w * 0.2);
-    ctx.lineTo(sx + w * 0.2, sy + w * 0.2);
+    ctx.moveTo(sx - w * 0.1, sy - w * 0.12);
+    ctx.lineTo(sx + w * 0.1, sy + w * 0.12);
     ctx.stroke();
   }
+
+  // Swollen elbow lump
+  ctx.fillStyle = colorDark;
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.15, upperLen, w * 0.65, w * 0.45, 0.15, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.1, upperLen - w * 0.05, w * 0.5, w * 0.35, 0.1, 0, TAU);
+  ctx.fill();
 
   ctx.translate(0, upperLen);
   ctx.rotate(elbowA);
 
-  // Forearm — overlaps generously, mutated
-  const fGrad = ctx.createLinearGradient(-w * 1.2, 0, w * 1.2, 0);
+  // Forearm — tapers with one-sided swell
+  const fGrad = ctx.createLinearGradient(-w * 0.75, 0, w * 0.75, 0);
   fGrad.addColorStop(0, colorDark);
   fGrad.addColorStop(0.35, color);
   fGrad.addColorStop(0.65, lightenColor(color, 5));
   fGrad.addColorStop(1, colorDark);
   ctx.fillStyle = fGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.15, -w * 0.55);
-  ctx.quadraticCurveTo(-w * 1.5, foreLen * 0.35, -w * 0.9, foreLen);
-  ctx.lineTo(w * 0.9, foreLen);
-  ctx.quadraticCurveTo(w * 1.5, foreLen * 0.35, w * 1.15, -w * 0.55);
+  ctx.moveTo(-w * 0.6, -w * 0.2);
+  ctx.quadraticCurveTo(-w * 0.85, foreLen * 0.25, -w * 0.65, foreLen * 0.5);
+  ctx.quadraticCurveTo(-w * 0.5, foreLen * 0.8, -w * 0.4, foreLen);
+  ctx.lineTo(w * 0.4, foreLen);
+  ctx.quadraticCurveTo(w * 0.6, foreLen * 0.5, w * 0.55, -w * 0.2);
   ctx.closePath();
   ctx.fill();
 
-  // More veins
+  // Forearm veins
   ctx.strokeStyle = `rgba(80, 20, 30, ${0.5 + pulse * 0.3})`;
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.quadraticCurveTo(w * 0.8, foreLen * 0.5, -w * 0.2, foreLen);
+  ctx.moveTo(-w * 0.2, w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.5, foreLen * 0.4, -w * 0.15, foreLen * 0.8);
   ctx.stroke();
 
-  // Misshapen fist/claw
+  // Claw hand — irregular finger lengths
   ctx.fillStyle = handColor;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.75, foreLen - w * 0.2);
-  ctx.quadraticCurveTo(-w * 1.0, foreLen + hR * 0.8, -w * 0.3, foreLen + hR * 1.8);
-  ctx.quadraticCurveTo(w * 0.2, foreLen + hR * 2.2, w * 0.7, foreLen + hR * 0.9);
-  ctx.quadraticCurveTo(w * 0.8, foreLen, w * 0.65, foreLen - w * 0.2);
+  ctx.moveTo(-w * 0.35, foreLen - w * 0.08);
+  ctx.lineTo(-w * 0.45, foreLen + hR * 0.5);
+  ctx.lineTo(-w * 0.5, foreLen + hR * 1.4);
+  ctx.lineTo(-w * 0.25, foreLen + hR * 0.7);
+  ctx.lineTo(-w * 0.1, foreLen + hR * 1.6);
+  ctx.lineTo(w * 0.1, foreLen + hR * 0.8);
+  ctx.lineTo(w * 0.3, foreLen + hR * 1.2);
+  ctx.lineTo(w * 0.4, foreLen + hR * 0.5);
+  ctx.lineTo(w * 0.35, foreLen - w * 0.08);
   ctx.closePath();
   ctx.fill();
 }
@@ -686,78 +790,106 @@ function renderFleshyLeg(
   ls: number,
   time: number,
 ): void {
-  // Thick thigh
-  const tGrad = ctx.createLinearGradient(-w * 1.5, 0, w * 1.5, 0);
+  const pulse = Math.sin(time * 2) * 0.5 + 0.5;
+
+  // Asymmetric thigh — outer bulge, inner taper
+  const tGrad = ctx.createLinearGradient(-w * 0.85, 0, w * 0.85, 0);
   tGrad.addColorStop(0, colorDark);
   tGrad.addColorStop(0.3, color);
-  tGrad.addColorStop(0.7, lightenColor(color, 10));
+  tGrad.addColorStop(0.7, lightenColor(color, 8));
   tGrad.addColorStop(1, colorDark);
   ctx.fillStyle = tGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.25, -w * 0.2);
-  ctx.quadraticCurveTo(-w * 1.7, halfLen * 0.35, -w * 1.15, halfLen + w * 0.45);
-  ctx.lineTo(w * 1.15, halfLen + w * 0.45);
-  ctx.quadraticCurveTo(w * 1.7, halfLen * 0.35, w * 1.25, -w * 0.2);
+  ctx.moveTo(-w * 0.75, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 1.0, halfLen * 0.3, -w * 0.7, halfLen * 0.7);
+  ctx.quadraticCurveTo(-w * 0.55, halfLen, -w * 0.5, halfLen + w * 0.15);
+  ctx.lineTo(w * 0.5, halfLen + w * 0.15);
+  ctx.quadraticCurveTo(w * 0.7, halfLen * 0.6, w * 0.75, -w * 0.15);
   ctx.closePath();
   ctx.fill();
 
-  // Pulse veins
-  const pulse = Math.sin(time * 2) * 0.5 + 0.5;
-  ctx.strokeStyle = `rgba(80, 20, 30, ${0.4 + pulse * 0.4})`;
-  ctx.lineWidth = Math.max(1, 1.5 * zoom);
+  // Thigh vein
+  ctx.strokeStyle = `rgba(80, 20, 30, ${0.35 + pulse * 0.35})`;
+  ctx.lineWidth = Math.max(0.8, 1.0 * zoom);
   ctx.beginPath();
-  ctx.moveTo(w * 0.2, 0);
-  ctx.quadraticCurveTo(w * 1.0, halfLen * 0.5, 0, halfLen);
+  ctx.moveTo(w * 0.15, w * 0.1);
+  ctx.quadraticCurveTo(w * 0.55, halfLen * 0.4, w * 0.05, halfLen * 0.8);
   ctx.stroke();
 
-  // Stitch
-  ctx.strokeStyle = colorDark;
-  ctx.lineWidth = Math.max(0.6, 1.0 * zoom);
+  // Branching vein
+  ctx.lineWidth = Math.max(0.5, 0.7 * zoom);
   ctx.beginPath();
-  ctx.moveTo(-w * 0.7, halfLen * 0.4);
-  ctx.lineTo(w * 0.6, halfLen * 0.6);
+  ctx.moveTo(w * 0.35, halfLen * 0.35);
+  ctx.quadraticCurveTo(w * 0.65, halfLen * 0.5, w * 0.4, halfLen * 0.65);
+  ctx.stroke();
+
+  // Stitch scar
+  ctx.strokeStyle = colorDark;
+  ctx.lineWidth = Math.max(0.5, 0.8 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.45, halfLen * 0.35);
+  ctx.lineTo(w * 0.4, halfLen * 0.55);
   ctx.stroke();
   for (let s = 0; s < 3; s++) {
     const t = (s + 0.5) / 3;
-    const sx = -w * 0.7 + t * w * 1.3;
-    const sy = halfLen * 0.4 + t * halfLen * 0.2;
+    const sx = -w * 0.45 + t * w * 0.85;
+    const sy = halfLen * 0.35 + t * halfLen * 0.2;
     ctx.beginPath();
-    ctx.moveTo(sx - w * 0.2, sy - w * 0.2);
-    ctx.lineTo(sx + w * 0.2, sy + w * 0.2);
+    ctx.moveTo(sx - w * 0.12, sy - w * 0.12);
+    ctx.lineTo(sx + w * 0.12, sy + w * 0.12);
     ctx.stroke();
   }
+
+  // Swollen knee lump
+  ctx.fillStyle = colorDark;
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.1, halfLen, w * 0.5, w * 0.35, 0.1, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(-w * 0.05, halfLen - w * 0.05, w * 0.4, w * 0.28, 0.05, 0, TAU);
+  ctx.fill();
 
   ctx.translate(0, halfLen);
   ctx.rotate(kneeBend * ls * 0.5);
 
-  // Calf (swollen)
-  const cGrad = ctx.createLinearGradient(-w * 1.2, 0, w * 1.2, 0);
+  // Calf — tapers with one-sided swell
+  const cGrad = ctx.createLinearGradient(-w * 0.7, 0, w * 0.7, 0);
   cGrad.addColorStop(0, colorDark);
   cGrad.addColorStop(0.35, color);
   cGrad.addColorStop(0.65, lightenColor(color, 5));
   cGrad.addColorStop(1, colorDark);
   ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.1, -w * 0.5);
-  ctx.quadraticCurveTo(-w * 1.4, halfLen * 0.35, -w * 0.8, halfLen);
-  ctx.lineTo(w * 0.8, halfLen);
-  ctx.quadraticCurveTo(w * 1.4, halfLen * 0.35, w * 1.1, -w * 0.5);
+  ctx.moveTo(-w * 0.6, -w * 0.25);
+  ctx.quadraticCurveTo(-w * 0.8, halfLen * 0.25, -w * 0.55, halfLen * 0.6);
+  ctx.quadraticCurveTo(-w * 0.45, halfLen * 0.85, -w * 0.4, halfLen);
+  ctx.lineTo(w * 0.4, halfLen);
+  ctx.quadraticCurveTo(w * 0.55, halfLen * 0.5, w * 0.5, -w * 0.25);
   ctx.closePath();
   ctx.fill();
 
-  // Chunky mutated foot
+  // Calf vein
+  ctx.strokeStyle = `rgba(80, 20, 30, ${0.3 + pulse * 0.3})`;
+  ctx.lineWidth = Math.max(0.6, 0.8 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.15, w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.45, halfLen * 0.35, -w * 0.1, halfLen * 0.7);
+  ctx.stroke();
+
+  // Mutated clubfoot
   ctx.fillStyle = footColor;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.7, halfLen - w * 0.2);
-  ctx.quadraticCurveTo(-w * 0.9, halfLen + w * 0.6, fl * 0.3, halfLen + w * 0.65);
-  ctx.lineTo(fl * 0.8, halfLen + w * 0.3);
-  ctx.quadraticCurveTo(fl * 0.6, halfLen - w * 0.1, w * 0.4, halfLen - w * 0.3);
+  ctx.moveTo(-w * 0.4, halfLen - w * 0.12);
+  ctx.quadraticCurveTo(-w * 0.55, halfLen + w * 0.3, fl * 0.2, halfLen + w * 0.4);
+  ctx.lineTo(fl * 0.55, halfLen + w * 0.2);
+  ctx.quadraticCurveTo(fl * 0.4, halfLen - w * 0.05, w * 0.3, halfLen - w * 0.15);
   ctx.closePath();
   ctx.fill();
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// GHOSTLY — wide semi-transparent flowing shapes
+// GHOSTLY — flame-edged wisps, forking tendrils, ethereal claws
 // ═══════════════════════════════════════════════════════════════════
 
 function renderGhostlyArm(
@@ -773,73 +905,94 @@ function renderGhostlyArm(
   elbowA: number,
   time: number,
 ): void {
-  // Ethereal core
   const corePulse = (Math.sin(time * 5) + 1) / 2;
   const coreAlpha = 0.5 + corePulse * 0.5;
-  ctx.fillStyle = `rgba(200, 255, 255, ${coreAlpha * 0.4})`;
+  const flicker = Math.sin(time * 7) * 0.1;
+
+  // Ethereal core (tapered, not ellipse)
+  ctx.fillStyle = `rgba(200, 255, 255, ${coreAlpha * 0.3})`;
   ctx.beginPath();
-  ctx.ellipse(0, upperLen * 0.5, w * 0.5, upperLen * 0.6, 0, 0, TAU);
+  ctx.moveTo(-w * 0.15, 0);
+  ctx.quadraticCurveTo(-w * 0.35, upperLen * 0.3, -w * 0.2, upperLen * 0.7);
+  ctx.lineTo(w * 0.2, upperLen * 0.7);
+  ctx.quadraticCurveTo(w * 0.35, upperLen * 0.3, w * 0.15, 0);
+  ctx.closePath();
   ctx.fill();
 
-  // Broad upper wisp
-  const uGrad = ctx.createLinearGradient(0, -w * 0.3, 0, upperLen + w * 0.5);
+  // Upper wisp — flame-edged (jagged outer contour)
+  const uGrad = ctx.createLinearGradient(0, -w * 0.2, 0, upperLen + w * 0.3);
   uGrad.addColorStop(0, lightenColor(color, 20));
   uGrad.addColorStop(0.4, color);
   uGrad.addColorStop(0.7, colorDark);
   uGrad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = uGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.3, -w * 0.35);
-  ctx.quadraticCurveTo(-w * 1.8, upperLen * 0.3, -w * 0.85, upperLen + w * 0.5);
-  ctx.lineTo(w * 0.85, upperLen + w * 0.5);
-  ctx.quadraticCurveTo(w * 1.8, upperLen * 0.3, w * 1.3, -w * 0.35);
+  ctx.moveTo(-w * 0.6, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 1.0, upperLen * 0.15, -w * 0.7 + flicker * w, upperLen * 0.3);
+  ctx.lineTo(-w * 0.9 - flicker * w, upperLen * 0.45);
+  ctx.quadraticCurveTo(-w * 0.6, upperLen * 0.65, -w * 0.4, upperLen + w * 0.3);
+  ctx.lineTo(w * 0.4, upperLen + w * 0.25);
+  ctx.quadraticCurveTo(w * 0.8, upperLen * 0.5, w * 0.7 - flicker * w, upperLen * 0.25);
+  ctx.quadraticCurveTo(w * 0.9, upperLen * 0.1, w * 0.6, -w * 0.15);
   ctx.closePath();
   ctx.fill();
 
-  // Inner dark wisp
-  ctx.fillStyle = `rgba(0, 0, 0, 0.4)`;
+  // Side wisps trailing off
+  ctx.fillStyle = `rgba(0, 0, 0, 0.25)`;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.5, 0);
-  ctx.quadraticCurveTo(-w * 0.8, upperLen * 0.4, 0, upperLen);
-  ctx.lineTo(w * 0.2, upperLen);
-  ctx.quadraticCurveTo(w * 0.8, upperLen * 0.4, w * 0.5, 0);
+  ctx.moveTo(-w * 0.75, upperLen * 0.35);
+  ctx.quadraticCurveTo(-w * 1.1, upperLen * 0.5, -w * 0.9, upperLen * 0.7);
+  ctx.quadraticCurveTo(-w * 0.6, upperLen * 0.55, -w * 0.5, upperLen * 0.35);
   ctx.fill();
 
   ctx.translate(0, upperLen);
   ctx.rotate(elbowA);
 
   // Lower wisp core
-  ctx.fillStyle = `rgba(200, 255, 255, ${coreAlpha * 0.4})`;
+  ctx.fillStyle = `rgba(200, 255, 255, ${coreAlpha * 0.3})`;
   ctx.beginPath();
-  ctx.ellipse(0, foreLen * 0.5, w * 0.4, foreLen * 0.6, 0, 0, TAU);
+  ctx.moveTo(-w * 0.12, 0);
+  ctx.quadraticCurveTo(-w * 0.3, foreLen * 0.3, -w * 0.15, foreLen * 0.7);
+  ctx.lineTo(w * 0.15, foreLen * 0.7);
+  ctx.quadraticCurveTo(w * 0.3, foreLen * 0.3, w * 0.12, 0);
+  ctx.closePath();
   ctx.fill();
 
-  // Lower wisp — fading
-  const fGrad = ctx.createLinearGradient(0, -w * 0.5, 0, foreLen + hR * 2.0);
+  // Lower wisp — splits into 2 tendrils at the end
+  const fGrad = ctx.createLinearGradient(0, -w * 0.3, 0, foreLen + hR * 1.5);
   fGrad.addColorStop(0, color);
   fGrad.addColorStop(0.4, colorDark);
   fGrad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = fGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.1, -w * 0.5);
-  ctx.quadraticCurveTo(-w * 1.4, foreLen * 0.3, -w * 0.4, foreLen + hR * 1.5);
-  ctx.lineTo(w * 0.4, foreLen + hR * 1.5);
-  ctx.quadraticCurveTo(w * 1.4, foreLen * 0.3, w * 1.1, -w * 0.5);
+  ctx.moveTo(-w * 0.6, -w * 0.25);
+  ctx.quadraticCurveTo(-w * 0.8, foreLen * 0.2, -w * 0.5, foreLen * 0.5);
+  ctx.quadraticCurveTo(-w * 0.6, foreLen * 0.75, -w * 0.35, foreLen + hR * 0.8);
+  ctx.lineTo(-w * 0.05, foreLen * 0.7);
+  ctx.lineTo(w * 0.25, foreLen + hR * 0.9);
+  ctx.quadraticCurveTo(w * 0.7, foreLen * 0.5, w * 0.6, foreLen * 0.2);
+  ctx.quadraticCurveTo(w * 0.7, foreLen * 0.05, w * 0.55, -w * 0.25);
   ctx.closePath();
   ctx.fill();
 
-  // Wispy claws (elongated, trailing)
+  // Ethereal claw fingers — each unique length and curve
   ctx.strokeStyle = handColor;
-  ctx.lineWidth = w * 0.4;
   ctx.lineCap = 'round';
   const clawSway = Math.sin(time * 3);
-  for (let c = 0; c < 4; c++) {
-    const ca = (c - 1.5) * 0.4 + clawSway * 0.2;
+  const clawDefs = [
+    { spread: -0.6, len: 2.8, thick: 0.2, phase: 0 },
+    { spread: -0.2, len: 3.2, thick: 0.18, phase: 0.7 },
+    { spread: 0.15, len: 2.5, thick: 0.22, phase: 1.4 },
+    { spread: 0.5, len: 2.0, thick: 0.15, phase: 2.1 },
+  ];
+  for (const claw of clawDefs) {
+    const ca = claw.spread + clawSway * 0.12 + Math.sin(time * 4 + claw.phase) * 0.08;
+    ctx.lineWidth = w * claw.thick;
     ctx.beginPath();
-    ctx.moveTo(0, foreLen);
+    ctx.moveTo(ca * w * 0.5, foreLen * 0.85);
     ctx.quadraticCurveTo(
-      Math.sin(ca) * hR * 2.0, foreLen + hR * 1.5,
-      Math.sin(ca) * hR * 3.5, foreLen + hR * 3.5,
+      Math.sin(ca) * hR * 1.5, foreLen + hR * (claw.len * 0.4),
+      Math.sin(ca) * hR * 2.0, foreLen + hR * claw.len,
     );
     ctx.stroke();
   }
@@ -859,46 +1012,74 @@ function renderGhostlyLeg(
   ls: number,
   time: number,
 ): void {
-  // Upper tendril
-  const tGrad = ctx.createLinearGradient(0, -w * 0.2, 0, halfLen + w * 0.5);
-  tGrad.addColorStop(0, lightenColor(color, 20));
+  const flicker = Math.sin(time * 7) * 0.08;
+  const corePulse = (Math.sin(time * 5) + 1) / 2;
+
+  // Ethereal core
+  ctx.fillStyle = `rgba(200, 255, 255, ${corePulse * 0.2})`;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.15, 0);
+  ctx.quadraticCurveTo(-w * 0.25, halfLen * 0.4, -w * 0.1, halfLen * 0.8);
+  ctx.lineTo(w * 0.1, halfLen * 0.8);
+  ctx.quadraticCurveTo(w * 0.25, halfLen * 0.4, w * 0.15, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // Upper tendril — jagged flame edge
+  const tGrad = ctx.createLinearGradient(0, -w * 0.15, 0, halfLen + w * 0.3);
+  tGrad.addColorStop(0, lightenColor(color, 15));
   tGrad.addColorStop(0.5, color);
-  tGrad.addColorStop(0.8, colorDark);
+  tGrad.addColorStop(0.85, colorDark);
   tGrad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = tGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 1.2, -w * 0.2);
-  ctx.quadraticCurveTo(-w * 1.5, halfLen * 0.3, -w * 0.75, halfLen + w * 0.4);
-  ctx.lineTo(w * 0.75, halfLen + w * 0.4);
-  ctx.quadraticCurveTo(w * 1.5, halfLen * 0.3, w * 1.2, -w * 0.2);
+  ctx.moveTo(-w * 0.6, -w * 0.15);
+  ctx.quadraticCurveTo(-w * 0.75 - flicker * w, halfLen * 0.15, -w * 0.65, halfLen * 0.35);
+  ctx.lineTo(-w * 0.8, halfLen * 0.45);
+  ctx.quadraticCurveTo(-w * 0.55, halfLen * 0.6, -w * 0.5, halfLen + w * 0.2);
+  ctx.lineTo(w * 0.5, halfLen + w * 0.2);
+  ctx.quadraticCurveTo(w * 0.55, halfLen * 0.6, w * 0.8, halfLen * 0.45);
+  ctx.lineTo(w * 0.65, halfLen * 0.35);
+  ctx.quadraticCurveTo(w * 0.75 + flicker * w, halfLen * 0.15, w * 0.6, -w * 0.15);
   ctx.closePath();
+  ctx.fill();
+
+  // Side wisp
+  ctx.fillStyle = `rgba(0, 0, 0, 0.2)`;
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.55, halfLen * 0.3);
+  ctx.quadraticCurveTo(-w * 0.8, halfLen * 0.45, -w * 0.6, halfLen * 0.6);
+  ctx.quadraticCurveTo(-w * 0.4, halfLen * 0.5, -w * 0.35, halfLen * 0.3);
   ctx.fill();
 
   ctx.translate(0, halfLen);
   ctx.rotate(kneeBend * ls * 0.5);
 
-  // Lower tendril — fading
-  const cGrad = ctx.createLinearGradient(0, -w * 0.35, 0, halfLen + w * 1.0);
+  // Lower tendril — forking into 2
+  const cGrad = ctx.createLinearGradient(0, -w * 0.2, 0, halfLen + w * 0.6);
   cGrad.addColorStop(0, color);
   cGrad.addColorStop(0.4, colorDark);
   cGrad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.9, -w * 0.35);
-  ctx.quadraticCurveTo(-w * 1.2, halfLen * 0.3, -w * 0.2, halfLen + w * 1.0);
-  ctx.lineTo(w * 0.2, halfLen + w * 1.0);
-  ctx.quadraticCurveTo(w * 1.2, halfLen * 0.3, w * 0.9, -w * 0.35);
+  ctx.moveTo(-w * 0.5, -w * 0.2);
+  ctx.quadraticCurveTo(-w * 0.6, halfLen * 0.2, -w * 0.35, halfLen * 0.55);
+  ctx.quadraticCurveTo(-w * 0.45, halfLen * 0.75, -w * 0.25, halfLen + w * 0.5);
+  ctx.lineTo(-w * 0.05, halfLen * 0.65);
+  ctx.lineTo(w * 0.2, halfLen + w * 0.55);
+  ctx.quadraticCurveTo(w * 0.5, halfLen * 0.5, w * 0.45, halfLen * 0.2);
+  ctx.quadraticCurveTo(w * 0.55, halfLen * 0.05, w * 0.45, -w * 0.2);
   ctx.closePath();
   ctx.fill();
-  
-  // Extra phantom trails
+
+  // Phantom trail
   ctx.fillStyle = colorDark;
-  ctx.globalAlpha = 0.5;
+  ctx.globalAlpha = 0.35;
   ctx.beginPath();
-  ctx.moveTo(-w * 0.4, 0);
-  ctx.quadraticCurveTo(-w * 0.8, halfLen * 0.5, -w * 0.5, halfLen + w * 1.5);
-  ctx.lineTo(w * 0.1, halfLen + w * 1.2);
-  ctx.quadraticCurveTo(w * 0.5, halfLen * 0.5, w * 0.2, 0);
+  ctx.moveTo(-w * 0.25, halfLen * 0.1);
+  ctx.quadraticCurveTo(-w * 0.4, halfLen * 0.4, -w * 0.2, halfLen + w * 0.3);
+  ctx.lineTo(w * 0.05, halfLen + w * 0.2);
+  ctx.quadraticCurveTo(w * 0.2, halfLen * 0.35, w * 0.12, halfLen * 0.1);
   ctx.fill();
   ctx.globalAlpha = 1.0;
 }

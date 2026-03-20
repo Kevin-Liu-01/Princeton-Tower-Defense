@@ -1,5 +1,6 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
-import { drawAnimatedArm, drawAnimatedLegs, drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
+import { drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 export function drawHarpyEnemy(
   ctx: CanvasRenderingContext2D,
@@ -290,7 +291,7 @@ export function drawHarpyEnemy(
   ctx.restore();
 
   // === ANIMATED LEGS (talon-like dangling, fast kick) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.25 + swoop, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.25 + swoop, size, time, zoom, {
     color: "#78350f",
     colorDark: "#451a03",
     footColor: "#1a1a2e",
@@ -298,37 +299,34 @@ export function drawHarpyEnemy(
     strideAmt: 0.45,
     legLen: 0.2,
     width: 0.04,
+    style: "fleshy",
   });
 
-  // === ANIMATED ARMS / CLAWS ===
-  drawAnimatedArm(ctx, x - size * 0.18, y + size * 0.05 + swoop, size, time, zoom, -1, {
+  // === ANIMATED CLAWS — talons reaching forward ===
+  drawPathArm(ctx, x - size * 0.18, y + size * 0.05 + swoop, size, time, zoom, -1, {
     color: "#8b5cf6",
     colorDark: "#6d28d9",
     handColor: "#78350f",
     handRadius: 0.03,
-    swingSpeed: 8,
-    swingAmt: 0.4,
-    baseAngle: 0.2,
+    shoulderAngle: -0.8 + Math.sin(time * 4) * 0.15 + (isAttacking ? -attackIntensity * 0.5 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 5 + 0.8) * 0.15,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
-    elbowBend: 0.5,
-    attackExtra: attackIntensity,
+    style: "fleshy",
   });
-  drawAnimatedArm(ctx, x + size * 0.18, y + size * 0.05 + swoop, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.18, y + size * 0.05 + swoop, size, time, zoom, 1, {
     color: "#8b5cf6",
     colorDark: "#6d28d9",
     handColor: "#78350f",
     handRadius: 0.03,
-    swingSpeed: 8,
-    swingAmt: 0.4,
-    baseAngle: 0.2,
+    shoulderAngle: 0.8 + Math.sin(time * 4 + Math.PI) * 0.15 + (isAttacking ? attackIntensity * 0.5 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 5 + 2.5) * 0.15,
     upperLen: 0.14,
     foreLen: 0.12,
     width: 0.04,
-    elbowBend: 0.5,
-    phaseOffset: Math.PI,
     attackExtra: attackIntensity,
+    style: "fleshy",
   });
 
   // === LAYER 5: ELEGANT AVIAN BODY ===
@@ -1138,7 +1136,7 @@ export function drawWyvernEnemy(
   ctx.restore();
 
   // === ANIMATED LEGS (powerful, tucked under, slow pump) ===
-  drawAnimatedLegs(ctx, x, y + size * 0.3 + breathe + hoverBob, size, time, zoom, {
+  drawPathLegs(ctx, x, y + size * 0.3 + breathe + hoverBob, size, time, zoom, {
     color: "#059669",
     colorDark: "#047857",
     footColor: "#0f172a",
@@ -1146,6 +1144,7 @@ export function drawWyvernEnemy(
     strideAmt: 0.15,
     legLen: 0.22,
     width: 0.06,
+    style: "armored",
   });
 
   // === LAYER 4: MUSCULAR BODY ===

@@ -2,7 +2,8 @@
 
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawAnimatedArm, drawAnimatedLegs, drawFrostCrystals, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
+import { drawFrostCrystals, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece } from "./animationHelpers";
+import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 
 // =====================================================
 // WINTER REGION TROOPS
@@ -121,8 +122,8 @@ export function drawSnowGoblinEnemy(
     }
   }
 
-  // --- Animated helper legs (fast hopping stride) ---
-  drawAnimatedLegs(ctx, x + shiver, y + size * 0.05 - hop, size, time, zoom, {
+  // --- Armored legs (fast hopping stride) ---
+  drawPathLegs(ctx, x + shiver, y + size * 0.05 - hop, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#1e3a5f",
@@ -130,38 +131,34 @@ export function drawSnowGoblinEnemy(
     strideAmt: 0.4,
     legLen: 0.2,
     width: 0.05,
+    style: 'armored',
   });
 
-  // --- Animated helper arms (fast jittery swing, clawed) ---
-  drawAnimatedArm(ctx, x - size * 0.22, y - size * 0.1 - hop, size, time, zoom, -1, {
+  // --- Snow Goblin arms — frantic clawing forward ---
+  drawPathArm(ctx, x - size * 0.22, y - size * 0.1 - hop, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#93c5fd",
-    swingSpeed: 7,
-    swingAmt: 0.5,
-    baseAngle: 0.4,
+    shoulderAngle: -0.7 + Math.sin(time * 5) * 0.25 + (isAttacking ? -attackPhase * 0.5 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 6 + 0.8) * 0.2,
     upperLen: 0.15,
     foreLen: 0.12,
     width: 0.045,
     handRadius: 0.025,
-    elbowBend: 0.5,
-    phaseOffset: 0.3,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'armored',
   });
-  drawAnimatedArm(ctx, x + size * 0.22, y - size * 0.1 - hop, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.22, y - size * 0.1 - hop, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#93c5fd",
-    swingSpeed: 7,
-    swingAmt: 0.5,
-    baseAngle: 0.4,
+    shoulderAngle: 0.7 + Math.sin(time * 5 + Math.PI) * 0.25 + (isAttacking ? attackPhase * 0.5 : 0),
+    elbowAngle: 0.4 + Math.sin(time * 6 + 2.5) * 0.2,
     upperLen: 0.15,
     foreLen: 0.12,
     width: 0.045,
     handRadius: 0.025,
-    elbowBend: 0.5,
-    phaseOffset: 1.2,
     attackExtra: isAttacking ? attackPhase : 0,
+    style: 'armored',
   });
 
   // Hunched muscular body
@@ -767,8 +764,8 @@ export function drawYetiEnemy(
     }
   }
 
-  // --- Animated helper legs (heavy stomping stride) ---
-  drawAnimatedLegs(ctx, x, y + size * 0.12, size, time, zoom, {
+  // --- Massive fleshy legs (heavy stomping stride) ---
+  drawPathLegs(ctx, x, y + size * 0.12, size, time, zoom, {
     color: bodyColor,
     colorDark: bodyColorDark,
     footColor: "#1e3a5f",
@@ -776,38 +773,34 @@ export function drawYetiEnemy(
     strideAmt: 0.25,
     legLen: 0.3,
     width: 0.1,
+    style: 'fleshy',
   });
 
-  // --- Animated helper arms (massive, slow, powerful swing) ---
-  drawAnimatedArm(ctx, x - size * 0.45, y - size * 0.35, size, time, zoom, -1, {
+  // --- Yeti arms — gorilla knuckle-drag / chest pound ---
+  drawPathArm(ctx, x - size * 0.45, y - size * 0.35, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: bodyColorDark,
-    swingSpeed: 2,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: -0.3 + Math.sin(time * 1.5) * 0.1 + (isAttacking ? -attackPhase * 0.7 : 0),
+    elbowAngle: 0.6 + Math.sin(time * 2 + 0.5) * 0.12,
     upperLen: 0.25,
     foreLen: 0.22,
     width: 0.1,
     handRadius: 0.06,
-    elbowBend: 0.35,
-    phaseOffset: 0,
-    attackExtra: isAttacking ? attackPhase : 0,
+    style: 'fleshy',
   });
-  drawAnimatedArm(ctx, x + size * 0.45, y - size * 0.35, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.45, y - size * 0.35, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: bodyColorDark,
-    swingSpeed: 2,
-    swingAmt: 0.2,
-    baseAngle: 0.25,
+    shoulderAngle: 0.3 + Math.sin(time * 1.5 + Math.PI) * 0.1 + (isAttacking ? attackPhase * 0.7 : 0),
+    elbowAngle: 0.6 + Math.sin(time * 2 + 2) * 0.12,
     upperLen: 0.25,
     foreLen: 0.22,
     width: 0.1,
     handRadius: 0.06,
-    elbowBend: 0.35,
-    phaseOffset: Math.PI,
     attackExtra: isAttacking ? attackPhase : 0,
+    style: 'fleshy',
   });
 
   // Titanic furry body with muscle definition
@@ -1332,8 +1325,8 @@ export function drawIceWitchEnemy(
     ctx.fill();
   }
 
-  // --- Animated helper legs (gliding shuffle, slow) ---
-  drawAnimatedLegs(ctx, x, y + size * 0.18 + float, size, time, zoom, {
+  // --- Ghostly legs (gliding shuffle, slow) ---
+  drawPathLegs(ctx, x, y + size * 0.18 + float, size, time, zoom, {
     color: bodyColorDark,
     colorDark: "#0f172a",
     footColor: "#1e3a5f",
@@ -1342,38 +1335,34 @@ export function drawIceWitchEnemy(
     legLen: 0.18,
     width: 0.04,
     shuffle: true,
+    style: 'ghostly',
   });
 
-  // --- Animated helper arms (elegant casting gestures) ---
-  drawAnimatedArm(ctx, x - size * 0.25, y - size * 0.22 + float, size, time, zoom, -1, {
+  // --- Ice Witch arms — elegant frost channeling ---
+  drawPathArm(ctx, x - size * 0.25, y - size * 0.22 + float, size, time, zoom, -1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#c7d2fe",
-    swingSpeed: 3,
-    swingAmt: 0.4,
-    baseAngle: 0.5,
+    shoulderAngle: -1.0 + Math.sin(time * 2) * 0.12 + (isAttacking ? -attackPhase * 0.4 : 0),
+    elbowAngle: -0.2 + Math.sin(time * 2.5 + 0.8) * 0.15,
     upperLen: 0.18,
     foreLen: 0.16,
     width: 0.04,
     handRadius: 0.03,
-    elbowBend: 0.6,
-    phaseOffset: 0,
-    attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+    style: 'ghostly',
   });
-  drawAnimatedArm(ctx, x + size * 0.25, y - size * 0.22 + float, size, time, zoom, 1, {
+  drawPathArm(ctx, x + size * 0.25, y - size * 0.22 + float, size, time, zoom, 1, {
     color: bodyColor,
     colorDark: bodyColorDark,
     handColor: "#c7d2fe",
-    swingSpeed: 3,
-    swingAmt: 0.4,
-    baseAngle: 0.5,
+    shoulderAngle: 0.7 + Math.sin(time * 2 + 2) * 0.1 + (isAttacking ? attackPhase * 0.5 : 0),
+    elbowAngle: -0.4 + Math.sin(time * 2.8 + 1.5) * 0.12,
     upperLen: 0.18,
     foreLen: 0.16,
     width: 0.04,
     handRadius: 0.03,
-    elbowBend: 0.6,
-    phaseOffset: Math.PI,
     attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+    style: 'ghostly',
   });
 
   // Elaborate flowing cape/robe with multiple layers
