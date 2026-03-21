@@ -385,7 +385,7 @@ export function renderHero(
   ctx.shadowBlur = 0;
 }
 
-function drawHeroSprite(
+export function drawHeroSprite(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

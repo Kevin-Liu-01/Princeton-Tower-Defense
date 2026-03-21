@@ -1,4 +1,5 @@
 export { TopHUD } from "./TopHUD";
+export { GameTimer } from "./GameTimer";
 export { HeroSpellBar } from "../HeroSpellBar";
 export { MobileHeroSpellBar } from "../MobileHeroSpellBar";
 export { CameraControls } from "../CameraControls";

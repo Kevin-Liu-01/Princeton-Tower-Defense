@@ -7,7 +7,11 @@ import {
   drawIsoGothicWindow,
 } from "../isoFlush";
 import { getBarracksBuildingPalette } from "./barracksTheme";
-import { getSentinelPalette, SENTINEL_METAL, type SentinelPalette } from "./sentinelTheme";
+import {
+  getSentinelPalette,
+  SENTINEL_METAL,
+  type SentinelPalette,
+} from "./sentinelTheme";
 
 function drawShadedIsoBox(
   ctx: CanvasRenderingContext2D,
@@ -52,7 +56,6 @@ function drawShadedIsoBox(
   ctx.closePath();
   ctx.fill();
 }
-
 
 // Special Building Types rendering
 function drawChronoRelayBuilding(
@@ -448,7 +451,14 @@ function drawChronoRelayBuilding(
   const specPhase = Math.sin(time * 1.8) * 0.5 + 0.5;
   const specSY = mR.y + (tR.y - mR.y) * specPhase;
   const specSX = mR.x * 0.35 * (1 - specPhase * 0.55);
-  const specGrad = ctx.createRadialGradient(specSX, specSY, 0, specSX, specSY, 10 * s2);
+  const specGrad = ctx.createRadialGradient(
+    specSX,
+    specSY,
+    0,
+    specSX,
+    specSY,
+    10 * s2,
+  );
   specGrad.addColorStop(0, `rgba(255, 255, 255, ${0.28 + pulse * 0.14})`);
   specGrad.addColorStop(0.4, `rgba(${glowRgb}, ${0.12 + pulse * 0.08})`);
   specGrad.addColorStop(1, "transparent");
@@ -460,7 +470,14 @@ function drawChronoRelayBuilding(
   const spec2Phase = Math.sin(time * 1.3 + 1.6) * 0.5 + 0.5;
   const spec2SY = mL.y + (tL.y - mL.y) * spec2Phase;
   const spec2SX = mL.x * 0.3 * (1 - spec2Phase * 0.5);
-  const spec2Grad = ctx.createRadialGradient(spec2SX, spec2SY, 0, spec2SX, spec2SY, 7 * s2);
+  const spec2Grad = ctx.createRadialGradient(
+    spec2SX,
+    spec2SY,
+    0,
+    spec2SX,
+    spec2SY,
+    7 * s2,
+  );
   spec2Grad.addColorStop(0, `rgba(255, 255, 255, ${0.18 + pulse * 0.1})`);
   spec2Grad.addColorStop(0.5, `rgba(${glowRgb}, ${0.08 + pulse * 0.06})`);
   spec2Grad.addColorStop(1, "transparent");
@@ -471,8 +488,12 @@ function drawChronoRelayBuilding(
 
   // === INNER CORE GLOW ===
   const coreGlow = ctx.createRadialGradient(
-    0, crystalTopY + 24 * s2, 0,
-    0, crystalTopY + 24 * s2, 30 * s2,
+    0,
+    crystalTopY + 24 * s2,
+    0,
+    0,
+    crystalTopY + 24 * s2,
+    30 * s2,
   );
   coreGlow.addColorStop(
     0,
@@ -579,18 +600,26 @@ function drawSentinelNexusBuilding(
   const s2 = s * 1.12;
   const tanA = ISO_TAN;
   const hotRgb = palette.hotRgb;
-  const lerpR = Math.round(palette.crystalBaseR + (palette.crystalR - palette.crystalBaseR) * charge);
-  const lerpG = Math.round(palette.crystalBaseG + (palette.crystalG - palette.crystalBaseG) * charge);
-  const lerpB = Math.round(palette.crystalBaseB + (palette.crystalB - palette.crystalBaseB) * charge);
+  const lerpR = Math.round(
+    palette.crystalBaseR + (palette.crystalR - palette.crystalBaseR) * charge,
+  );
+  const lerpG = Math.round(
+    palette.crystalBaseG + (palette.crystalG - palette.crystalBaseG) * charge,
+  );
+  const lerpB = Math.round(
+    palette.crystalBaseB + (palette.crystalB - palette.crystalBaseB) * charge,
+  );
   const glowRgb = `${lerpR}, ${lerpG}, ${lerpB}`;
   const grayRgb = "145, 148, 155";
   const M = SENTINEL_METAL;
   const readyFlash =
-    charge >= 0.85 ? (Math.sin(time * 14) * 0.5 + 0.5) * 0.5 * ((charge - 0.85) / 0.15) : 0;
+    charge >= 0.85
+      ? (Math.sin(time * 14) * 0.5 + 0.5) * 0.5 * ((charge - 0.85) / 0.15)
+      : 0;
   const runes = ["ᚠ", "ᚲ", "ᚾ", "ᛗ", "ᛋ", "ᛉ", "ᛞ", "ᛟ"];
 
   // Warmup sub-phases (eased with smoothstep-like clamped ramps)
-  const wuCapOpen = Math.max(0, Math.min(1, (wu - 0.0) / 0.3));    // 0-30%: cap splits open
+  const wuCapOpen = Math.max(0, Math.min(1, (wu - 0.0) / 0.3)); // 0-30%: cap splits open
   const wuCrystalRise = Math.max(0, Math.min(1, (wu - 0.2) / 0.5)); // 20-70%: crystal elevates
   const wuMechDeploy = Math.max(0, Math.min(1, (wu - 0.3) / 0.4)); // 30-70%: gears/pistons activate
   const wuRingDeploy = Math.max(0, Math.min(1, (wu - 0.5) / 0.5)); // 50-100%: gimbal/rings/drones deploy
@@ -643,10 +672,15 @@ function drawSentinelNexusBuilding(
       const a = (i / runeCount) * Math.PI * 2 - Math.PI / 2;
       const isLit = i < litRuneCount;
       const isActivating = i === litRuneCount && charge < 1;
-      const partialBright = isActivating ? charge * runeCount - litRuneCount : 0;
-      const runeAlpha = (isLit
-        ? 0.7 + Math.sin(time * 4 + i * 0.6) * 0.2 + readyFlash
-        : 0.25 + Math.sin(time * 1.5 + i * 0.8) * 0.08 + partialBright * 0.4) * groundAlpha;
+      const partialBright = isActivating
+        ? charge * runeCount - litRuneCount
+        : 0;
+      const runeAlpha =
+        (isLit
+          ? 0.7 + Math.sin(time * 4 + i * 0.6) * 0.2 + readyFlash
+          : 0.25 +
+            Math.sin(time * 1.5 + i * 0.8) * 0.08 +
+            partialBright * 0.4) * groundAlpha;
       const rx = Math.cos(a) * 28 * s2;
       const ry = Math.sin(a) * 28 * s2;
       ctx.font = `bold ${7.2 * s2}px serif`;
@@ -679,7 +713,17 @@ function drawSentinelNexusBuilding(
   }
 
   // === WIDE BASE PLATFORM ===
-  drawShadedIsoBox(ctx, 0, baseW, baseH, M.darkest, M.dark, M.mid, M.light, M.lightest);
+  drawShadedIsoBox(
+    ctx,
+    0,
+    baseW,
+    baseH,
+    M.darkest,
+    M.dark,
+    M.mid,
+    M.light,
+    M.lightest,
+  );
   ctx.strokeStyle = M.band;
   ctx.lineWidth = 1.5 * s2;
   for (let band = 1; band <= 2; band++) {
@@ -704,7 +748,8 @@ function drawSentinelNexusBuilding(
   for (let side = -1; side <= 1; side += 2) {
     for (let r = 0; r < 4; r++) {
       const rx = side * baseW * (0.2 + r * 0.22);
-      const ry = -baseW * tanA * (0.2 + r * 0.22) * Math.abs(side) - baseH * 0.5;
+      const ry =
+        -baseW * tanA * (0.2 + r * 0.22) * Math.abs(side) - baseH * 0.5;
       ctx.fillStyle = M.highlight;
       ctx.beginPath();
       ctx.arc(rx, ry, 1.2 * s2, 0, Math.PI * 2);
@@ -731,7 +776,8 @@ function drawSentinelNexusBuilding(
     drawIsoFlushVent(ctx, rightVx, rightVy, 3.5, 2.5, "right", s2, {
       frameColor: M.mid,
       bgColor: M.darkest,
-      slatColor: ventGlowR > 0 ? `rgba(${hotRgb}, ${ventGlowR + 0.1})` : M.light,
+      slatColor:
+        ventGlowR > 0 ? `rgba(${hotRgb}, ${ventGlowR + 0.1})` : M.light,
       slats: 2,
     });
   }
@@ -800,9 +846,13 @@ function drawSentinelNexusBuilding(
       const rx = Math.cos(a) * 30 * s2;
       const ry = Math.sin(a) * 15 * s2 - baseW * tanA + 2 * s2;
       const runeCharge = i / 14 < charge ? 1 : 0;
-      const alpha = (runeCharge
-        ? 0.4 + Math.sin(time * 2.8 + i * 0.9) * 0.18 + charge * 0.3 + readyFlash
-        : 0.2 + Math.sin(time * 1.2 + i * 0.9) * 0.06) * runeOpacity;
+      const alpha =
+        (runeCharge
+          ? 0.4 +
+            Math.sin(time * 2.8 + i * 0.9) * 0.18 +
+            charge * 0.3 +
+            readyFlash
+          : 0.2 + Math.sin(time * 1.2 + i * 0.9) * 0.06) * runeOpacity;
       ctx.fillStyle = `rgba(${runeCharge ? hotRgb : grayRgb}, ${Math.max(0.12, alpha)})`;
       ctx.fillText(runes[i % runes.length], rx, ry);
     }
@@ -810,13 +860,24 @@ function drawSentinelNexusBuilding(
 
   // === MID SECTION ===
   const midY = -baseH;
-  drawShadedIsoBox(ctx, midY, midW, midH, M.darkest, M.dark, M.mid, M.light, M.lightest);
+  drawShadedIsoBox(
+    ctx,
+    midY,
+    midW,
+    midH,
+    M.darkest,
+    M.dark,
+    M.mid,
+    M.light,
+    M.lightest,
+  );
 
   // Flush slits on mid-section left face
   for (let i = 0; i < 3; i++) {
     const sx = -midW * (0.3 + i * 0.22);
     const sy = midY - midW * tanA * (0.3 + i * 0.22) - midH * 0.4;
-    const slitGlow = wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
+    const slitGlow =
+      wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
     drawIsoFlushSlit(ctx, sx, sy, 1.5, 6, "left", s2, {
       voidColor: "rgba(8, 3, 5, 0.9)",
       glowColor: slitGlow > 0.05 ? `rgba(${glowRgb}` : null,
@@ -827,7 +888,8 @@ function drawSentinelNexusBuilding(
   for (let i = 0; i < 3; i++) {
     const sx = midW * (0.3 + i * 0.22);
     const sy = midY - midW * tanA * (0.3 + i * 0.22) - midH * 0.4;
-    const slitGlow = wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
+    const slitGlow =
+      wu > 0.3 ? (0.1 + charge * 0.4 + readyFlash * 0.3) * wuMechDeploy : 0.05;
     drawIsoFlushSlit(ctx, sx, sy, 1.5, 6, "right", s2, {
       voidColor: "rgba(8, 3, 5, 0.9)",
       glowColor: slitGlow > 0.05 ? `rgba(${glowRgb}` : null,
@@ -871,7 +933,8 @@ function drawSentinelNexusBuilding(
   for (let side = -1; side <= 1; side += 2) {
     for (let b = 0; b < 2; b++) {
       const bx = side * midW * (0.35 + b * 0.3);
-      const by = midY - midW * tanA * (0.35 + b * 0.3) * Math.abs(side) - midH * 0.6;
+      const by =
+        midY - midW * tanA * (0.35 + b * 0.3) * Math.abs(side) - midH * 0.6;
       ctx.fillStyle = M.highlight;
       ctx.beginPath();
       ctx.arc(bx, by, 1.8 * s2, 0, Math.PI * 2);
@@ -949,8 +1012,18 @@ function drawSentinelNexusBuilding(
       const nodeX = b.mx;
       const nodeY = midY - midW * tanA * 0.28 - midH * 0.7;
       const nodeR = (2 + charge * 1.5) * s2 * wuMechDeploy;
-      const nGrad = ctx.createRadialGradient(nodeX, nodeY, 0, nodeX, nodeY, nodeR * 2);
-      nGrad.addColorStop(0, `rgba(${hotRgb}, ${(0.4 + charge * 0.5 + readyFlash) * wuMechDeploy})`);
+      const nGrad = ctx.createRadialGradient(
+        nodeX,
+        nodeY,
+        0,
+        nodeX,
+        nodeY,
+        nodeR * 2,
+      );
+      nGrad.addColorStop(
+        0,
+        `rgba(${hotRgb}, ${(0.4 + charge * 0.5 + readyFlash) * wuMechDeploy})`,
+      );
       nGrad.addColorStop(1, "transparent");
       ctx.fillStyle = nGrad;
       ctx.beginPath();
@@ -1018,23 +1091,72 @@ function drawSentinelNexusBuilding(
   const winGlow = wu > 0.3 ? 0.15 + charge * 0.4 + readyFlash * 0.2 : 0.08;
   const winY1 = towerBaseY - towerH * 0.34;
   const winY2 = towerBaseY - towerH * 0.58;
-  drawIsoGothicWindow(ctx, -towerW * 0.35, winY1, 3, 5, "left", s2,
-    `rgba(${glowRgb}`, winGlow, { frame: M.dark, void: M.darkest, sill: M.highlight });
-  drawIsoGothicWindow(ctx, towerW * 0.35, winY1, 3, 5, "right", s2,
-    `rgba(${glowRgb}`, winGlow, { frame: M.mid, void: M.darkest, sill: M.highlight });
-  drawIsoGothicWindow(ctx, -towerW * 0.25, winY2, 2.5, 4.5, "left", s2,
-    `rgba(${glowRgb}`, winGlow * 0.8, { frame: M.dark, void: M.darkest, sill: M.highlight });
-  drawIsoGothicWindow(ctx, towerW * 0.25, winY2, 2.5, 4.5, "right", s2,
-    `rgba(${glowRgb}`, winGlow * 0.8, { frame: M.mid, void: M.darkest, sill: M.highlight });
+  drawIsoGothicWindow(
+    ctx,
+    -towerW * 0.35,
+    winY1,
+    3,
+    5,
+    "left",
+    s2,
+    `rgba(${glowRgb}`,
+    winGlow,
+    { frame: M.dark, void: M.darkest, sill: M.highlight },
+  );
+  drawIsoGothicWindow(
+    ctx,
+    towerW * 0.35,
+    winY1,
+    3,
+    5,
+    "right",
+    s2,
+    `rgba(${glowRgb}`,
+    winGlow,
+    { frame: M.mid, void: M.darkest, sill: M.highlight },
+  );
+  drawIsoGothicWindow(
+    ctx,
+    -towerW * 0.25,
+    winY2,
+    2.5,
+    4.5,
+    "left",
+    s2,
+    `rgba(${glowRgb}`,
+    winGlow * 0.8,
+    { frame: M.dark, void: M.darkest, sill: M.highlight },
+  );
+  drawIsoGothicWindow(
+    ctx,
+    towerW * 0.25,
+    winY2,
+    2.5,
+    4.5,
+    "right",
+    s2,
+    `rgba(${glowRgb}`,
+    winGlow * 0.8,
+    { frame: M.mid, void: M.darkest, sill: M.highlight },
+  );
   // Flush tech panels on tower faces
   for (let side = -1; side <= 1; side += 2) {
     const face: "left" | "right" = side < 0 ? "left" : "right";
-    drawIsoFlushPanel(ctx, side * towerW * 0.3, towerBaseY - towerH * 0.82, 4, 3, face, s2, {
-      fill: M.darkest,
-      borderColor: M.band,
-      recessDepth: 0.5,
-      innerGlow: `rgba(${glowRgb}, ${(0.05 + charge * 0.15) * wu})`,
-    });
+    drawIsoFlushPanel(
+      ctx,
+      side * towerW * 0.3,
+      towerBaseY - towerH * 0.82,
+      4,
+      3,
+      face,
+      s2,
+      {
+        fill: M.darkest,
+        borderColor: M.band,
+        recessDepth: 0.5,
+        innerGlow: `rgba(${glowRgb}, ${(0.05 + charge * 0.15) * wu})`,
+      },
+    );
   }
 
   // Iron rivet bands with bolts
@@ -1108,7 +1230,8 @@ function drawSentinelNexusBuilding(
         const pY = towerBaseY - conduitH * pPhase;
         const pX = ((p % 3) - 1) * 4.5 * s2;
         const pSize = (1 + charge * 1.5) * s2;
-        const pAlpha = Math.sin(pPhase * Math.PI) * (0.3 + charge * 0.5) * conduitLevel;
+        const pAlpha =
+          Math.sin(pPhase * Math.PI) * (0.3 + charge * 0.5) * conduitLevel;
         ctx.fillStyle = `rgba(${hotRgb}, ${pAlpha})`;
         ctx.beginPath();
         ctx.arc(pX, pY, pSize, 0, Math.PI * 2);
@@ -1176,7 +1299,8 @@ function drawSentinelNexusBuilding(
     for (let gIdx = 0; gIdx < 2; gIdx++) {
       const gSide = gIdx === 0 ? -1 : 1;
       const gcx = gSide * towerW * 0.85;
-      const gcy = towerBaseY - towerH * (0.25 + gIdx * 0.35) - towerW * tanA * 0.5;
+      const gcy =
+        towerBaseY - towerH * (0.25 + gIdx * 0.35) - towerW * tanA * 0.5;
       const gcR = 3.5 * s2;
       const gcTeeth = 6;
       ctx.save();
@@ -1191,10 +1315,16 @@ function drawSentinelNexusBuilding(
         const gta = (gt / gcTeeth) * Math.PI * 2;
         ctx.fillStyle = gSide < 0 ? M.dark : M.mid;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(gta) * gcR * 0.5 - 1.1 * s2, Math.sin(gta) * gcR * 0.5);
+        ctx.moveTo(
+          Math.cos(gta) * gcR * 0.5 - 1.1 * s2,
+          Math.sin(gta) * gcR * 0.5,
+        );
         ctx.lineTo(Math.cos(gta) * gcR - 1.1 * s2, Math.sin(gta) * gcR);
         ctx.lineTo(Math.cos(gta) * gcR + 1.1 * s2, Math.sin(gta) * gcR);
-        ctx.lineTo(Math.cos(gta) * gcR * 0.5 + 1.1 * s2, Math.sin(gta) * gcR * 0.5);
+        ctx.lineTo(
+          Math.cos(gta) * gcR * 0.5 + 1.1 * s2,
+          Math.sin(gta) * gcR * 0.5,
+        );
         ctx.closePath();
         ctx.fill();
       }
@@ -1213,12 +1343,32 @@ function drawSentinelNexusBuilding(
   // Left half of cap
   ctx.save();
   ctx.translate(-capSplit, 0);
-  drawShadedIsoBox(ctx, capY, capW * 0.52, capH, M.darkest, M.dark, M.mid, M.light, M.lightest);
+  drawShadedIsoBox(
+    ctx,
+    capY,
+    capW * 0.52,
+    capH,
+    M.darkest,
+    M.dark,
+    M.mid,
+    M.light,
+    M.lightest,
+  );
   ctx.restore();
   // Right half of cap
   ctx.save();
   ctx.translate(capSplit, 0);
-  drawShadedIsoBox(ctx, capY, capW * 0.52, capH, M.darkest, M.dark, M.mid, M.light, M.lightest);
+  drawShadedIsoBox(
+    ctx,
+    capY,
+    capW * 0.52,
+    capH,
+    M.darkest,
+    M.dark,
+    M.mid,
+    M.light,
+    M.lightest,
+  );
   ctx.restore();
 
   // Battlements also split
@@ -1243,9 +1393,22 @@ function drawSentinelNexusBuilding(
     ctx.save();
     ctx.translate(0, shieldY);
     ctx.scale(1, ISO_Y_RATIO);
-    const shieldGrad = ctx.createRadialGradient(0, -4 * s2, 3 * s2, 0, 0, 28 * s2);
-    shieldGrad.addColorStop(0, `rgba(${glowRgb}, ${(0.18 + charge * 0.22 + readyFlash * 0.2) * shieldScale})`);
-    shieldGrad.addColorStop(0.55, `rgba(${glowRgb}, ${(0.1 + charge * 0.18) * shieldScale})`);
+    const shieldGrad = ctx.createRadialGradient(
+      0,
+      -4 * s2,
+      3 * s2,
+      0,
+      0,
+      28 * s2,
+    );
+    shieldGrad.addColorStop(
+      0,
+      `rgba(${glowRgb}, ${(0.18 + charge * 0.22 + readyFlash * 0.2) * shieldScale})`,
+    );
+    shieldGrad.addColorStop(
+      0.55,
+      `rgba(${glowRgb}, ${(0.1 + charge * 0.18) * shieldScale})`,
+    );
     shieldGrad.addColorStop(1, `rgba(${grayRgb}, 0)`);
     ctx.fillStyle = shieldGrad;
     ctx.beginPath();
@@ -1264,7 +1427,8 @@ function drawSentinelNexusBuilding(
   // At wuCrystalRise=0 crystal is hidden inside tower; at 1 it's at full height above cap
   const crystalRestY = capY - capH - 16 * s2;
   const crystalHiddenY = capY + 6 * s2;
-  const coreY = crystalHiddenY + (crystalRestY - crystalHiddenY) * wuCrystalRise;
+  const coreY =
+    crystalHiddenY + (crystalRestY - crystalHiddenY) * wuCrystalRise;
 
   // === GIMBAL HOUSING - unfolds with ringDeploy ===
   const gimbalR = 16 * s2;
@@ -1329,10 +1493,10 @@ function drawSentinelNexusBuilding(
 
     // Hexagonal prism crystal in 2:1 isometric.
     // 6 vertices on top, 6 on bottom, pointed tip above, pointed base below.
-    const cW = 7.5 * s2;     // half-width of hex at widest
-    const cH = 18 * s2;      // total body height
-    const tipH = 8 * s2;     // pointed tip height
-    const baseH = 6 * s2;    // pointed base height
+    const cW = 7.5 * s2; // half-width of hex at widest
+    const cH = 18 * s2; // total body height
+    const tipH = 8 * s2; // pointed tip height
+    const baseH = 6 * s2; // pointed base height
     const isoSq = ISO_Y_RATIO;
 
     // Hex vertices (top ring) — 6 points of a flat-top hex projected isometrically
@@ -1347,7 +1511,9 @@ function drawSentinelNexusBuilding(
     const baseY = bodyBot + baseH;
 
     // Color helpers
-    const cR = lerpR, cG = lerpG, cB = lerpB;
+    const cR = lerpR,
+      cG = lerpG,
+      cB = lerpB;
     const darkMul = 0.35 + charge * 0.15;
     const midMul = 0.55 + charge * 0.15;
     const litMul = 0.75 + charge * 0.15;
@@ -1356,7 +1522,10 @@ function drawSentinelNexusBuilding(
 
     // Outer glow halo behind crystal
     const coreGlow = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 16 * s2);
-    coreGlow.addColorStop(0, `rgba(${Math.min(255, cR + 60)}, ${Math.min(255, cG + 60)}, ${Math.min(255, cB + 60)}, ${0.4 + charge * 0.4 + readyFlash * 0.15})`);
+    coreGlow.addColorStop(
+      0,
+      `rgba(${Math.min(255, cR + 60)}, ${Math.min(255, cG + 60)}, ${Math.min(255, cB + 60)}, ${0.4 + charge * 0.4 + readyFlash * 0.15})`,
+    );
     coreGlow.addColorStop(0.5, `rgba(${glowRgb}, ${0.12 + charge * 0.2})`);
     coreGlow.addColorStop(1, `rgba(${grayRgb}, 0)`);
     ctx.fillStyle = coreGlow;
@@ -1368,9 +1537,20 @@ function drawSentinelNexusBuilding(
     for (const fi of [3, 4, 5]) {
       const ni = (fi + 1) % 6;
       const mul = fi === 4 ? darkMul : fi === 3 ? midMul : darkMul;
-      const fG = ctx.createLinearGradient(hexPts[fi].x, bodyTop, hexPts[fi].x, bodyBot);
-      fG.addColorStop(0, `rgba(${Math.round(cR * mul)}, ${Math.round(cG * mul)}, ${Math.round(cB * mul)}, ${0.7 + charge * 0.25})`);
-      fG.addColorStop(1, `rgba(${Math.round(cR * mul * 0.7)}, ${Math.round(cG * mul * 0.7)}, ${Math.round(cB * mul * 0.7)}, ${0.6 + charge * 0.3})`);
+      const fG = ctx.createLinearGradient(
+        hexPts[fi].x,
+        bodyTop,
+        hexPts[fi].x,
+        bodyBot,
+      );
+      fG.addColorStop(
+        0,
+        `rgba(${Math.round(cR * mul)}, ${Math.round(cG * mul)}, ${Math.round(cB * mul)}, ${0.7 + charge * 0.25})`,
+      );
+      fG.addColorStop(
+        1,
+        `rgba(${Math.round(cR * mul * 0.7)}, ${Math.round(cG * mul * 0.7)}, ${Math.round(cB * mul * 0.7)}, ${0.6 + charge * 0.3})`,
+      );
       ctx.fillStyle = fG;
       ctx.beginPath();
       ctx.moveTo(hexPts[fi].x, bodyTop + hexPts[fi].y);
@@ -1412,9 +1592,20 @@ function drawSentinelNexusBuilding(
     for (const fi of [2, 1, 0]) {
       const ni = (fi + 1) % 6;
       const mul = fi === 0 ? brightMul : fi === 1 ? litMul : midMul;
-      const fG = ctx.createLinearGradient(hexPts[fi].x, bodyTop, hexPts[ni].x, bodyBot);
-      fG.addColorStop(0, `rgba(${Math.min(255, Math.round(cR * mul))}, ${Math.min(255, Math.round(cG * mul))}, ${Math.min(255, Math.round(cB * mul))}, ${0.75 + charge * 0.2})`);
-      fG.addColorStop(1, `rgba(${Math.round(cR * mul * 0.8)}, ${Math.round(cG * mul * 0.8)}, ${Math.round(cB * mul * 0.8)}, ${0.65 + charge * 0.25})`);
+      const fG = ctx.createLinearGradient(
+        hexPts[fi].x,
+        bodyTop,
+        hexPts[ni].x,
+        bodyBot,
+      );
+      fG.addColorStop(
+        0,
+        `rgba(${Math.min(255, Math.round(cR * mul))}, ${Math.min(255, Math.round(cG * mul))}, ${Math.min(255, Math.round(cB * mul))}, ${0.75 + charge * 0.2})`,
+      );
+      fG.addColorStop(
+        1,
+        `rgba(${Math.round(cR * mul * 0.8)}, ${Math.round(cG * mul * 0.8)}, ${Math.round(cB * mul * 0.8)}, ${0.65 + charge * 0.25})`,
+      );
       ctx.fillStyle = fG;
       ctx.beginPath();
       ctx.moveTo(hexPts[fi].x, bodyTop + hexPts[fi].y);
@@ -1441,7 +1632,8 @@ function drawSentinelNexusBuilding(
     // Front base triangles (pointed bottom)
     for (const fi of [2, 1, 0]) {
       const ni = (fi + 1) % 6;
-      const mul = fi === 0 ? litMul * 0.8 : fi === 1 ? midMul * 0.9 : darkMul * 0.9;
+      const mul =
+        fi === 0 ? litMul * 0.8 : fi === 1 ? midMul * 0.9 : darkMul * 0.9;
       ctx.fillStyle = `rgba(${Math.round(cR * mul)}, ${Math.round(cG * mul)}, ${Math.round(cB * mul)}, ${0.6 + charge * 0.3})`;
       ctx.beginPath();
       ctx.moveTo(hexPts[fi].x, bodyBot + hexPts[fi].y);
@@ -1485,19 +1677,37 @@ function drawSentinelNexusBuilding(
 
     // Specular highlight streak on front-right face
     const specAlpha = 0.15 + charge * 0.25 + readyFlash * 0.1;
-    const specG = ctx.createLinearGradient(hexPts[0].x * 0.6, bodyTop, hexPts[1].x * 0.4, bodyBot);
+    const specG = ctx.createLinearGradient(
+      hexPts[0].x * 0.6,
+      bodyTop,
+      hexPts[1].x * 0.4,
+      bodyBot,
+    );
     specG.addColorStop(0, `rgba(255, 255, 255, ${specAlpha * 0.7})`);
     specG.addColorStop(0.3, `rgba(255, 255, 255, ${specAlpha})`);
     specG.addColorStop(0.7, `rgba(255, 255, 255, ${specAlpha * 0.5})`);
     specG.addColorStop(1, `rgba(255, 255, 255, 0)`);
     ctx.fillStyle = specG;
     ctx.beginPath();
-    const sp0 = hexPts[0], sp1 = hexPts[1];
+    const sp0 = hexPts[0],
+      sp1 = hexPts[1];
     const inset = 0.2;
-    ctx.moveTo(sp0.x * (1 - inset) + sp1.x * inset, bodyTop + sp0.y * (1 - inset) + sp1.y * inset);
-    ctx.lineTo(sp1.x * (1 - inset) + sp0.x * inset, bodyTop + sp1.y * (1 - inset) + sp0.y * inset);
-    ctx.lineTo(sp1.x * (1 - inset) + sp0.x * inset, bodyBot + sp1.y * (1 - inset) + sp0.y * inset);
-    ctx.lineTo(sp0.x * (1 - inset) + sp1.x * inset, bodyBot + sp0.y * (1 - inset) + sp1.y * inset);
+    ctx.moveTo(
+      sp0.x * (1 - inset) + sp1.x * inset,
+      bodyTop + sp0.y * (1 - inset) + sp1.y * inset,
+    );
+    ctx.lineTo(
+      sp1.x * (1 - inset) + sp0.x * inset,
+      bodyTop + sp1.y * (1 - inset) + sp0.y * inset,
+    );
+    ctx.lineTo(
+      sp1.x * (1 - inset) + sp0.x * inset,
+      bodyBot + sp1.y * (1 - inset) + sp0.y * inset,
+    );
+    ctx.lineTo(
+      sp0.x * (1 - inset) + sp1.x * inset,
+      bodyBot + sp0.y * (1 - inset) + sp1.y * inset,
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -1589,8 +1799,14 @@ function drawSentinelNexusBuilding(
       const y = coreY + 12 * s2 + Math.sin(a) * 12 * s2 * wuRingDeploy;
       const sz = (4.4 + (i % 2) * 1.3) * s2 * wuRingDeploy;
       const tetherG = ctx.createLinearGradient(0, coreY, x, y);
-      tetherG.addColorStop(0, `rgba(${glowRgb}, ${(0.08 + charge * 0.25) * wuRingDeploy})`);
-      tetherG.addColorStop(1, `rgba(${glowRgb}, ${(0.02 + charge * 0.1) * wuRingDeploy})`);
+      tetherG.addColorStop(
+        0,
+        `rgba(${glowRgb}, ${(0.08 + charge * 0.25) * wuRingDeploy})`,
+      );
+      tetherG.addColorStop(
+        1,
+        `rgba(${glowRgb}, ${(0.02 + charge * 0.1) * wuRingDeploy})`,
+      );
       ctx.strokeStyle = tetherG;
       ctx.lineWidth = 0.7 * s2;
       ctx.beginPath();
@@ -1609,7 +1825,10 @@ function drawSentinelNexusBuilding(
       ctx.lineWidth = 1.1 * s2;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(a + 0.7) * 7 * s2, y + Math.sin(a + 0.7) * 4 * s2);
+      ctx.lineTo(
+        x + Math.cos(a + 0.7) * 7 * s2,
+        y + Math.sin(a + 0.7) * 4 * s2,
+      );
       ctx.stroke();
       ctx.fillStyle = `rgba(${hotRgb}, ${(0.15 + charge * 0.3 + readyFlash * 0.2) * wuRingDeploy})`;
       ctx.beginPath();
@@ -1625,7 +1844,10 @@ function drawSentinelNexusBuilding(
     const beamX = Math.cos(sweepAng) * 44 * s2;
     const beamY = Math.sin(sweepAng) * 22 * s2;
     const beamG = ctx.createLinearGradient(0, coreY + 2 * s2, beamX, beamY);
-    beamG.addColorStop(0, `rgba(${glowRgb}, ${(0.2 + charge * 0.55 + readyFlash) * beamAlpha})`);
+    beamG.addColorStop(
+      0,
+      `rgba(${glowRgb}, ${(0.2 + charge * 0.55 + readyFlash) * beamAlpha})`,
+    );
     beamG.addColorStop(1, "transparent");
     ctx.strokeStyle = beamG;
     ctx.lineWidth = (2 + charge * 2) * s2;
@@ -1644,11 +1866,23 @@ function drawSentinelNexusBuilding(
       const indX = towerW + 3 * s2;
       const isLit = ind < litIndicators;
       const isActivating = ind === litIndicators && charge < 1;
-      const partial = isActivating ? charge * indicatorCount - litIndicators : 0;
+      const partial = isActivating
+        ? charge * indicatorCount - litIndicators
+        : 0;
       const indR = 1.8 * s2;
       if (isLit) {
-        const indGlow = ctx.createRadialGradient(indX, indY - towerW * tanA, 0, indX, indY - towerW * tanA, indR * 3);
-        indGlow.addColorStop(0, `rgba(${hotRgb}, ${(0.3 + readyFlash * 0.2) * wuMechDeploy})`);
+        const indGlow = ctx.createRadialGradient(
+          indX,
+          indY - towerW * tanA,
+          0,
+          indX,
+          indY - towerW * tanA,
+          indR * 3,
+        );
+        indGlow.addColorStop(
+          0,
+          `rgba(${hotRgb}, ${(0.3 + readyFlash * 0.2) * wuMechDeploy})`,
+        );
         indGlow.addColorStop(1, "transparent");
         ctx.fillStyle = indGlow;
         ctx.beginPath();
@@ -1668,8 +1902,14 @@ function drawSentinelNexusBuilding(
   if (charge >= 0.85 && wu >= 1) {
     const burstIntensity = (charge - 0.85) / 0.15;
     const burstG = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 35 * s2);
-    burstG.addColorStop(0, `rgba(255, 220, 200, ${(0.15 + readyFlash * 0.25) * burstIntensity})`);
-    burstG.addColorStop(0.5, `rgba(${hotRgb}, ${(0.08 + readyFlash * 0.15) * burstIntensity})`);
+    burstG.addColorStop(
+      0,
+      `rgba(255, 220, 200, ${(0.15 + readyFlash * 0.25) * burstIntensity})`,
+    );
+    burstG.addColorStop(
+      0.5,
+      `rgba(${hotRgb}, ${(0.08 + readyFlash * 0.15) * burstIntensity})`,
+    );
     burstG.addColorStop(1, "transparent");
     ctx.fillStyle = burstG;
     ctx.beginPath();
@@ -1677,8 +1917,6 @@ function drawSentinelNexusBuilding(
     ctx.fill();
   }
 }
-
-
 
 function drawSunforgeOrreryBuilding(
   ctx: CanvasRenderingContext2D,
@@ -1691,12 +1929,21 @@ function drawSunforgeOrreryBuilding(
   const charge = Math.max(0, Math.min(1, chargeProgress));
   const wu = Math.max(0, Math.min(1, warmupProgress));
   const stage =
-    enemyHeatCount === 0 ? 0 : enemyHeatCount <= 3 ? 1 : enemyHeatCount <= 6 ? 2 : 3;
+    enemyHeatCount === 0
+      ? 0
+      : enemyHeatCount <= 3
+        ? 1
+        : enemyHeatCount <= 6
+          ? 2
+          : 3;
   const surge = Math.sin(time * 7.6 + 1.1) * 0.5 + 0.5;
   const s2 = s * 1.16;
   const tanA = ISO_TAN;
   const hotRgb = [
-    "240, 131, 58", "250, 148, 66", "255, 168, 82", "255, 198, 120",
+    "240, 131, 58",
+    "250, 148, 66",
+    "255, 168, 82",
+    "255, 198, 120",
   ][stage];
   const stageR = [240, 250, 255, 255][stage];
   const stageG = [131, 148, 168, 198][stage];
@@ -1711,11 +1958,11 @@ function drawSunforgeOrreryBuilding(
   const runeSet = ["ᚠ", "ᛋ", "ᚱ", "ᛟ", "ᚲ", "ᛞ", "ᛇ", "ᚹ"];
 
   // Warmup sub-phases
-  const wuGearSpin = Math.max(0, Math.min(1, (wu - 0.0) / 0.3));       // 0-30%: base gear activates
-  const wuColumnRise = Math.max(0, Math.min(1, (wu - 0.15) / 0.45));   // 15-60%: column telescopes up
-  const wuPanelExtend = Math.max(0, Math.min(1, (wu - 0.2) / 0.4));    // 20-60%: solar panels extend
-  const wuRingExpand = Math.max(0, Math.min(1, (wu - 0.4) / 0.4));     // 40-80%: armillary rings expand
-  const wuCoreLift = Math.max(0, Math.min(1, (wu - 0.55) / 0.45));     // 55-100%: sun core rises and ignites
+  const wuGearSpin = Math.max(0, Math.min(1, (wu - 0.0) / 0.3)); // 0-30%: base gear activates
+  const wuColumnRise = Math.max(0, Math.min(1, (wu - 0.15) / 0.45)); // 15-60%: column telescopes up
+  const wuPanelExtend = Math.max(0, Math.min(1, (wu - 0.2) / 0.4)); // 20-60%: solar panels extend
+  const wuRingExpand = Math.max(0, Math.min(1, (wu - 0.4) / 0.4)); // 40-80%: armillary rings expand
+  const wuCoreLift = Math.max(0, Math.min(1, (wu - 0.55) / 0.45)); // 55-100%: sun core rises and ignites
 
   const baseW = 34 * s2;
   const baseH = 8 * s2;
@@ -1738,9 +1985,22 @@ function drawSunforgeOrreryBuilding(
 
   // Floor glow - intensifies during warmup
   if (wu > 0.05) {
-    const floorGlow = ctx.createRadialGradient(0, -baseW * tanA, 0, 0, -baseW * tanA, 66 * s2);
-    floorGlow.addColorStop(0, `rgba(${glowRgb}, ${(0.12 + charge * 0.22 + readyFlash * 0.15) * wu})`);
-    floorGlow.addColorStop(0.52, `rgba(${glowRgb}, ${(0.05 + charge * 0.1) * wu})`);
+    const floorGlow = ctx.createRadialGradient(
+      0,
+      -baseW * tanA,
+      0,
+      0,
+      -baseW * tanA,
+      66 * s2,
+    );
+    floorGlow.addColorStop(
+      0,
+      `rgba(${glowRgb}, ${(0.12 + charge * 0.22 + readyFlash * 0.15) * wu})`,
+    );
+    floorGlow.addColorStop(
+      0.52,
+      `rgba(${glowRgb}, ${(0.05 + charge * 0.1) * wu})`,
+    );
     floorGlow.addColorStop(1, "transparent");
     ctx.fillStyle = floorGlow;
     ctx.beginPath();
@@ -1760,7 +2020,13 @@ function drawSunforgeOrreryBuilding(
     ctx.strokeStyle = `rgba(${hotRgb}, ${(0.35 + charge * 0.5 + readyFlash) * wu})`;
     ctx.lineWidth = 4 * s2;
     ctx.beginPath();
-    ctx.arc(0, 0, railOuterR + 3 * s2, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+    ctx.arc(
+      0,
+      0,
+      railOuterR + 3 * s2,
+      -Math.PI / 2,
+      -Math.PI / 2 + charge * Math.PI * 2,
+    );
     ctx.stroke();
     ctx.restore();
   }
@@ -1815,10 +2081,11 @@ function drawSunforgeOrreryBuilding(
       ctx.stroke();
     }
     for (let i = 0; i < 4; i++) {
-      const a = time * (0.4 + i * 0.18 + charge * 0.5) * wu + (i * Math.PI * 2) / 4;
+      const a =
+        time * (0.4 + i * 0.18 + charge * 0.5) * wu + (i * Math.PI * 2) / 4;
       const x = Math.cos(a) * 39 * s2;
       const y = Math.sin(a) * 39 * s2;
-      if ((y >= 0) !== frontHalf) continue;
+      if (y >= 0 !== frontHalf) continue;
       ctx.fillStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.5 + readyFlash})`;
       ctx.beginPath();
       ctx.arc(x, y, (1.8 + charge * 1.2) * s2, 0, Math.PI * 2);
@@ -1839,11 +2106,15 @@ function drawSunforgeOrreryBuilding(
       const a = (i / 16) * Math.PI * 2 - time * (0.2 + charge * 0.25) * wu;
       const x = Math.cos(a) * 31.5 * s2;
       const y = Math.sin(a) * 15.7 * s2 + railY;
-      if ((Math.sin(a) >= 0) !== frontHalf) continue;
+      if (Math.sin(a) >= 0 !== frontHalf) continue;
       const isLit = i < litRunes;
-      const alpha = (isLit
-        ? 0.45 + Math.sin(time * 2.9 + i * 0.8) * 0.14 + charge * 0.3 + readyFlash
-        : 0.22 + Math.sin(time * 1.2 + i * 0.8) * 0.06) * runeOpacity;
+      const alpha =
+        (isLit
+          ? 0.45 +
+            Math.sin(time * 2.9 + i * 0.8) * 0.14 +
+            charge * 0.3 +
+            readyFlash
+          : 0.22 + Math.sin(time * 1.2 + i * 0.8) * 0.06) * runeOpacity;
       ctx.fillStyle = isLit
         ? `rgba(${hotRgb}, ${Math.max(0.14, alpha)})`
         : `rgba(${grayRgb}, ${Math.max(0.12, alpha)})`;
@@ -1855,7 +2126,17 @@ function drawSunforgeOrreryBuilding(
   drawSunforgeRunes(false);
 
   // === BASE PLATFORM ===
-  drawShadedIsoBox(ctx, 0, baseW, baseH, "#241a0e", "#342a16", "#44361e", "#544628", "#645630");
+  drawShadedIsoBox(
+    ctx,
+    0,
+    baseW,
+    baseH,
+    "#241a0e",
+    "#342a16",
+    "#44361e",
+    "#544628",
+    "#645630",
+  );
 
   // Multiple trim bands for richer detail
   for (let bandIdx = 0; bandIdx < 3; bandIdx++) {
@@ -1993,14 +2274,25 @@ function drawSunforgeOrreryBuilding(
       const iR = gearPlateR * 0.78;
       const oR = gearPlateR * 1.08;
       const toothHalfWidth = 0.1;
-      ctx.fillStyle = gt % 2 === 0
-        ? "rgba(100, 80, 40, 0.5)"
-        : "rgba(80, 60, 30, 0.45)";
+      ctx.fillStyle =
+        gt % 2 === 0 ? "rgba(100, 80, 40, 0.5)" : "rgba(80, 60, 30, 0.45)";
       ctx.beginPath();
-      ctx.moveTo(Math.cos(gta - toothHalfWidth) * iR, Math.sin(gta - toothHalfWidth) * iR);
-      ctx.lineTo(Math.cos(gta - toothHalfWidth * 0.7) * oR, Math.sin(gta - toothHalfWidth * 0.7) * oR);
-      ctx.lineTo(Math.cos(gta + toothHalfWidth * 0.7) * oR, Math.sin(gta + toothHalfWidth * 0.7) * oR);
-      ctx.lineTo(Math.cos(gta + toothHalfWidth) * iR, Math.sin(gta + toothHalfWidth) * iR);
+      ctx.moveTo(
+        Math.cos(gta - toothHalfWidth) * iR,
+        Math.sin(gta - toothHalfWidth) * iR,
+      );
+      ctx.lineTo(
+        Math.cos(gta - toothHalfWidth * 0.7) * oR,
+        Math.sin(gta - toothHalfWidth * 0.7) * oR,
+      );
+      ctx.lineTo(
+        Math.cos(gta + toothHalfWidth * 0.7) * oR,
+        Math.sin(gta + toothHalfWidth * 0.7) * oR,
+      );
+      ctx.lineTo(
+        Math.cos(gta + toothHalfWidth) * iR,
+        Math.sin(gta + toothHalfWidth) * iR,
+      );
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
@@ -2017,8 +2309,14 @@ function drawSunforgeOrreryBuilding(
     for (let sp = 0; sp < 6; sp++) {
       const spa = (sp / 6) * Math.PI * 2;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(spa) * gearPlateR * 0.2, Math.sin(spa) * gearPlateR * 0.2);
-      ctx.lineTo(Math.cos(spa) * gearPlateR * 0.53, Math.sin(spa) * gearPlateR * 0.53);
+      ctx.moveTo(
+        Math.cos(spa) * gearPlateR * 0.2,
+        Math.sin(spa) * gearPlateR * 0.2,
+      );
+      ctx.lineTo(
+        Math.cos(spa) * gearPlateR * 0.53,
+        Math.sin(spa) * gearPlateR * 0.53,
+      );
       ctx.stroke();
     }
     // Center hub
@@ -2114,9 +2412,8 @@ function drawSunforgeOrreryBuilding(
     const bandY = pedCY - pedH * bfrac;
     const bandR = pedRX + (bfrac === 0.5 ? 1.5 : 0.8) * s2;
     const bandRy = pedRY + (bfrac === 0.5 ? 0.75 : 0.4) * s2;
-    ctx.strokeStyle = bfrac === 0.5
-      ? "rgba(170, 130, 70, 0.6)"
-      : "rgba(140, 110, 55, 0.4)";
+    ctx.strokeStyle =
+      bfrac === 0.5 ? "rgba(170, 130, 70, 0.6)" : "rgba(140, 110, 55, 0.4)";
     ctx.lineWidth = (bfrac === 0.5 ? 2 : 1.2) * s2;
     ctx.beginPath();
     ctx.ellipse(0, bandY, bandR, bandRy, 0, 0, Math.PI);
@@ -2207,7 +2504,7 @@ function drawSunforgeOrreryBuilding(
       const pa = (pi / panelCount) * Math.PI * 2 + time * 0.05 * wuPanelExtend;
       const panelDist = pedRX + 2 * s2 + panelExtend;
       const px = Math.cos(pa) * panelDist;
-      const py = (pedCY - pedH * 0.5) + Math.sin(pa) * panelDist * ISO_Y_RATIO;
+      const py = pedCY - pedH * 0.5 + Math.sin(pa) * panelDist * ISO_Y_RATIO;
       const pw = 8 * s2 * wuPanelExtend;
       const ph = 4 * s2 * wuPanelExtend;
       ctx.save();
@@ -2216,9 +2513,18 @@ function drawSunforgeOrreryBuilding(
       ctx.scale(1, 0.5);
       ctx.globalAlpha = wuPanelExtend;
       const panelGrad = ctx.createLinearGradient(-pw / 2, 0, pw / 2, 0);
-      panelGrad.addColorStop(0, `rgba(${Math.round(lerpR * 0.5)}, ${Math.round(lerpG * 0.4)}, ${Math.round(lerpB * 0.3)}, ${0.5 + charge * 0.3})`);
-      panelGrad.addColorStop(0.5, `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.4 + charge * 0.3})`);
-      panelGrad.addColorStop(1, `rgba(${Math.round(lerpR * 0.5)}, ${Math.round(lerpG * 0.4)}, ${Math.round(lerpB * 0.3)}, ${0.5 + charge * 0.3})`);
+      panelGrad.addColorStop(
+        0,
+        `rgba(${Math.round(lerpR * 0.5)}, ${Math.round(lerpG * 0.4)}, ${Math.round(lerpB * 0.3)}, ${0.5 + charge * 0.3})`,
+      );
+      panelGrad.addColorStop(
+        0.5,
+        `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.4 + charge * 0.3})`,
+      );
+      panelGrad.addColorStop(
+        1,
+        `rgba(${Math.round(lerpR * 0.5)}, ${Math.round(lerpG * 0.4)}, ${Math.round(lerpB * 0.3)}, ${0.5 + charge * 0.3})`,
+      );
       ctx.fillStyle = panelGrad;
       ctx.fillRect(-pw / 2, -ph / 2, pw, ph);
       ctx.strokeStyle = `rgba(${glowRgb}, ${0.2 + charge * 0.4})`;
@@ -2233,7 +2539,10 @@ function drawSunforgeOrreryBuilding(
       ctx.strokeStyle = `rgba(120, 90, 45, ${0.5 * wuPanelExtend})`;
       ctx.lineWidth = 1 * s2;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(pa) * pedRX, (pedCY - pedH * 0.5) + Math.sin(pa) * pedRX * ISO_Y_RATIO);
+      ctx.moveTo(
+        Math.cos(pa) * pedRX,
+        pedCY - pedH * 0.5 + Math.sin(pa) * pedRX * ISO_Y_RATIO,
+      );
       ctx.lineTo(px, py);
       ctx.stroke();
     }
@@ -2316,7 +2625,15 @@ function drawSunforgeOrreryBuilding(
     ctx.strokeStyle = "rgba(90, 70, 35, 0.3)";
     ctx.lineWidth = 0.6 * s2;
     ctx.beginPath();
-    ctx.ellipse(0, ringY + 1.2 * s2, colRX + 0.5 * s2, colRY + 0.25 * s2, 0, 0, Math.PI);
+    ctx.ellipse(
+      0,
+      ringY + 1.2 * s2,
+      colRX + 0.5 * s2,
+      colRY + 0.25 * s2,
+      0,
+      0,
+      Math.PI,
+    );
     ctx.stroke();
   }
 
@@ -2325,9 +2642,13 @@ function drawSunforgeOrreryBuilding(
     const bandAlphaBase = Math.min(1, (wuColumnRise - 0.2) / 0.3);
     for (let i = 0; i < 4; i++) {
       const baseBandPos = (i + 1) / 5;
-      const pulsedPos = baseBandPos + Math.sin(time * (1.5 + charge * 2) + i * 1.2) * 0.03 * charge;
+      const pulsedPos =
+        baseBandPos +
+        Math.sin(time * (1.5 + charge * 2) + i * 1.2) * 0.03 * charge;
       const bandY = colBY - colH * Math.max(0.05, Math.min(0.95, pulsedPos));
-      const bandAlpha = (0.3 + charge * 0.4 + Math.sin(time * 2 + i * 0.8) * 0.15) * bandAlphaBase;
+      const bandAlpha =
+        (0.3 + charge * 0.4 + Math.sin(time * 2 + i * 0.8) * 0.15) *
+        bandAlphaBase;
       ctx.strokeStyle = `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${bandAlpha})`;
       ctx.lineWidth = (1.8 + charge * 0.5) * s2;
       ctx.beginPath();
@@ -2372,14 +2693,30 @@ function drawSunforgeOrreryBuilding(
   // Column top cap
   ctx.fillStyle = "#8a6a3a";
   ctx.beginPath();
-  ctx.ellipse(0, colBY - colH, colRX + 2 * s2, (colRX + 2 * s2) * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    colBY - colH,
+    colRX + 2 * s2,
+    (colRX + 2 * s2) * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Mechanical ring on top cap
   ctx.strokeStyle = "rgba(160, 130, 70, 0.5)";
   ctx.lineWidth = 1.5 * s2;
   ctx.beginPath();
-  ctx.ellipse(0, colBY - colH, colRX * 0.7, colRX * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    colBY - colH,
+    colRX * 0.7,
+    colRX * 0.7 * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.stroke();
 
   // === ARMILLARY SPHERE - rings expand from collapsed during wuRingExpand ===
@@ -2416,7 +2753,13 @@ function drawSunforgeOrreryBuilding(
       const na = aStart + ((j + 0.5) / 2) * (aEnd - aStart);
       ctx.fillStyle = `rgba(${Math.min(255, lerpR + 60)}, ${Math.min(255, lerpG + 50)}, ${Math.min(255, lerpB + 40)}, ${(0.4 + charge * 0.4) * ringScale})`;
       ctx.beginPath();
-      ctx.arc(Math.cos(na) * effectiveR / ringScale, Math.sin(na) * effectiveR / ringScale, 2.5 * s2, 0, Math.PI * 2);
+      ctx.arc(
+        (Math.cos(na) * effectiveR) / ringScale,
+        (Math.sin(na) * effectiveR) / ringScale,
+        2.5 * s2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
     ctx.restore();
@@ -2446,14 +2789,21 @@ function drawSunforgeOrreryBuilding(
       ctx.lineWidth = 0.6 * s2;
       ctx.beginPath();
       for (let tr = 0; tr < 8; tr++) {
-        const trA = orbAngle - (tr * 0.12);
+        const trA = orbAngle - tr * 0.12;
         const trx = Math.cos(trA) * orbDist;
         const tryy = armCY + Math.sin(trA) * orbDist * ISO_Y_RATIO;
         if (tr === 0) ctx.moveTo(trx, tryy);
         else ctx.lineTo(trx, tryy);
       }
       ctx.stroke();
-      const orbGrad = ctx.createRadialGradient(ox - orbR * 0.3, oy - orbR * 0.3, 0, ox, oy, orbR);
+      const orbGrad = ctx.createRadialGradient(
+        ox - orbR * 0.3,
+        oy - orbR * 0.3,
+        0,
+        ox,
+        oy,
+        orbR,
+      );
       const orbColors = ["200, 160, 80", "180, 100, 50", "150, 130, 90"][oi];
       orbGrad.addColorStop(0, `rgba(255, 230, 180, ${0.6 + charge * 0.3})`);
       orbGrad.addColorStop(0.5, `rgba(${orbColors}, ${0.5 + charge * 0.3})`);
@@ -2478,8 +2828,18 @@ function drawSunforgeOrreryBuilding(
     ctx.globalAlpha = coreAlpha;
 
     // Corona glow
-    const coronaGrad = ctx.createRadialGradient(0, sunCoreY, 0, 0, sunCoreY, coronaR);
-    coronaGrad.addColorStop(0, `rgba(${Math.min(255, lerpR + 80)}, ${Math.min(255, lerpG + 80)}, ${Math.min(255, lerpB + 60)}, ${0.5 + charge * 0.4 + readyFlash * 0.15})`);
+    const coronaGrad = ctx.createRadialGradient(
+      0,
+      sunCoreY,
+      0,
+      0,
+      sunCoreY,
+      coronaR,
+    );
+    coronaGrad.addColorStop(
+      0,
+      `rgba(${Math.min(255, lerpR + 80)}, ${Math.min(255, lerpG + 80)}, ${Math.min(255, lerpB + 60)}, ${0.5 + charge * 0.4 + readyFlash * 0.15})`,
+    );
     coronaGrad.addColorStop(0.35, `rgba(${glowRgb}, ${0.4 + charge * 0.5})`);
     coronaGrad.addColorStop(1, `rgba(${grayRgb}, 0.05)`);
     ctx.fillStyle = coronaGrad;
@@ -2495,10 +2855,15 @@ function drawSunforgeOrreryBuilding(
       const rx = Math.cos(a);
       const ry = Math.sin(a);
       const rGrad = ctx.createLinearGradient(
-        rx * innerR, sunCoreY + ry * innerR,
-        rx * (innerR + rayLen), sunCoreY + ry * (innerR + rayLen),
+        rx * innerR,
+        sunCoreY + ry * innerR,
+        rx * (innerR + rayLen),
+        sunCoreY + ry * (innerR + rayLen),
       );
-      rGrad.addColorStop(0, `rgba(${glowRgb}, ${0.3 + charge * 0.5 + readyFlash})`);
+      rGrad.addColorStop(
+        0,
+        `rgba(${glowRgb}, ${0.3 + charge * 0.5 + readyFlash})`,
+      );
       rGrad.addColorStop(1, "transparent");
       ctx.strokeStyle = rGrad;
       ctx.lineWidth = rw;
@@ -2523,7 +2888,10 @@ function drawSunforgeOrreryBuilding(
         const cpx = (sx + ex) / 2 + Math.sin(time * 5 + fi) * 6 * s2;
         const cpy = (sy + ey) / 2 - 5 * s2;
         const flareGrad = ctx.createLinearGradient(sx, sy, ex, ey);
-        flareGrad.addColorStop(0, `rgba(${hotRgb}, ${charge * 0.5 * flareAlpha + readyFlash * 0.2})`);
+        flareGrad.addColorStop(
+          0,
+          `rgba(${hotRgb}, ${charge * 0.5 * flareAlpha + readyFlash * 0.2})`,
+        );
         flareGrad.addColorStop(1, "transparent");
         ctx.strokeStyle = flareGrad;
         ctx.lineWidth = (0.8 + charge * 0.8) * s2;
@@ -2536,8 +2904,14 @@ function drawSunforgeOrreryBuilding(
 
     // Faceted sun crystal
     const sLG = ctx.createLinearGradient(-7 * s2, sunCoreY, 0, sunCoreY);
-    sLG.addColorStop(0, `rgba(${Math.round(lerpR * 0.55)}, ${Math.round(lerpG * 0.45)}, ${Math.round(lerpB * 0.3)}, ${0.7 + charge * 0.25})`);
-    sLG.addColorStop(1, `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.8 + charge * 0.15})`);
+    sLG.addColorStop(
+      0,
+      `rgba(${Math.round(lerpR * 0.55)}, ${Math.round(lerpG * 0.45)}, ${Math.round(lerpB * 0.3)}, ${0.7 + charge * 0.25})`,
+    );
+    sLG.addColorStop(
+      1,
+      `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.8 + charge * 0.15})`,
+    );
     ctx.fillStyle = sLG;
     ctx.beginPath();
     ctx.moveTo(0, sunCoreY - 10 * s2);
@@ -2547,8 +2921,14 @@ function drawSunforgeOrreryBuilding(
     ctx.closePath();
     ctx.fill();
     const sRG = ctx.createLinearGradient(0, sunCoreY, 7 * s2, sunCoreY);
-    sRG.addColorStop(0, `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.8 + charge * 0.15})`);
-    sRG.addColorStop(1, `rgba(${Math.round(lerpR * 0.7)}, ${Math.round(lerpG * 0.6)}, ${Math.round(lerpB * 0.4)}, ${0.7 + charge * 0.25})`);
+    sRG.addColorStop(
+      0,
+      `rgba(${lerpR}, ${lerpG}, ${lerpB}, ${0.8 + charge * 0.15})`,
+    );
+    sRG.addColorStop(
+      1,
+      `rgba(${Math.round(lerpR * 0.7)}, ${Math.round(lerpG * 0.6)}, ${Math.round(lerpB * 0.4)}, ${0.7 + charge * 0.25})`,
+    );
     ctx.fillStyle = sRG;
     ctx.beginPath();
     ctx.moveTo(0, sunCoreY - 10 * s2);
@@ -2601,11 +2981,21 @@ function drawSunforgeOrreryBuilding(
     }
 
     // Inner glow
-    const innerGlow = ctx.createRadialGradient(0, sunCoreY, 0, 0, sunCoreY, innerR);
+    const innerGlow = ctx.createRadialGradient(
+      0,
+      sunCoreY,
+      0,
+      0,
+      sunCoreY,
+      innerR,
+    );
     const sunEyeR = Math.round(180 + 75 * charge);
     const sunEyeG = Math.round(180 + 75 * charge);
     const sunEyeB = Math.round(185 + 55 * charge);
-    innerGlow.addColorStop(0, `rgba(${sunEyeR}, ${sunEyeG}, ${sunEyeB}, ${0.6 + charge * 0.3 + readyFlash * 0.1})`);
+    innerGlow.addColorStop(
+      0,
+      `rgba(${sunEyeR}, ${sunEyeG}, ${sunEyeB}, ${0.6 + charge * 0.3 + readyFlash * 0.1})`,
+    );
     innerGlow.addColorStop(0.5, `rgba(${glowRgb}, ${0.2 + charge * 0.3})`);
     innerGlow.addColorStop(1, `rgba(${grayRgb}, 0)`);
     ctx.fillStyle = innerGlow;
@@ -2644,14 +3034,21 @@ function drawSunforgeOrreryBuilding(
       ctx.lineWidth = 0.6 * s2;
       ctx.beginPath();
       for (let tr = 0; tr < 8; tr++) {
-        const trA = orbAngle - (tr * 0.12);
+        const trA = orbAngle - tr * 0.12;
         const trx = Math.cos(trA) * orbDist;
         const tryy = armCY + Math.sin(trA) * orbDist * ISO_Y_RATIO;
         if (tr === 0) ctx.moveTo(trx, tryy);
         else ctx.lineTo(trx, tryy);
       }
       ctx.stroke();
-      const orbGrad = ctx.createRadialGradient(ox - orbR * 0.3, oy - orbR * 0.3, 0, ox, oy, orbR);
+      const orbGrad = ctx.createRadialGradient(
+        ox - orbR * 0.3,
+        oy - orbR * 0.3,
+        0,
+        ox,
+        oy,
+        orbR,
+      );
       const orbColors = ["200, 160, 80", "180, 100, 50", "150, 130, 90"][oi];
       orbGrad.addColorStop(0, `rgba(255, 230, 180, ${0.6 + charge * 0.3})`);
       orbGrad.addColorStop(0.5, `rgba(${orbColors}, ${0.5 + charge * 0.3})`);
@@ -2673,7 +3070,9 @@ function drawSunforgeOrreryBuilding(
     const shardAlpha = Math.min(1, (wuRingExpand - 0.5) / 0.3);
     const shardCount = 6 + stage * 2;
     for (let i = 0; i < shardCount; i++) {
-      const a = (i / shardCount) * Math.PI * 2 + time * (0.5 + stage * 0.2 + charge * 0.5);
+      const a =
+        (i / shardCount) * Math.PI * 2 +
+        time * (0.5 + stage * 0.2 + charge * 0.5);
       const x = Math.cos(a) * (30 + stage * 4) * s2;
       const y = armCY + 14 * s2 + Math.sin(a * 1.32) * (12 + stage * 1.6) * s2;
       const h = (4 + (i % 3)) * s2;
@@ -2699,13 +3098,19 @@ function drawSunforgeOrreryBuilding(
       const ex = Math.cos(a + 0.35) * (36 + stage * 4) * s2;
       const ey = sunCoreY + 34 * s2 + Math.sin(a + 0.35) * 14 * s2;
       const grad = ctx.createLinearGradient(sx, sy, ex, ey);
-      grad.addColorStop(0, `rgba(${glowRgb}, ${(0.15 + charge * 0.55 + readyFlash) * arcAlpha})`);
+      grad.addColorStop(
+        0,
+        `rgba(${glowRgb}, ${(0.15 + charge * 0.55 + readyFlash) * arcAlpha})`,
+      );
       grad.addColorStop(1, "transparent");
       ctx.strokeStyle = grad;
       ctx.lineWidth = (1.2 + charge * 1.3) * s2;
       ctx.beginPath();
       ctx.moveTo(sx, sy);
-      ctx.lineTo((sx + ex) * 0.5 + Math.sin(time * 8 + i) * 4 * s2, (sy + ey) * 0.5);
+      ctx.lineTo(
+        (sx + ex) * 0.5 + Math.sin(time * 8 + i) * 4 * s2,
+        (sy + ey) * 0.5,
+      );
       ctx.lineTo(ex, ey);
       ctx.stroke();
     }
@@ -2737,14 +3142,27 @@ function drawSunforgeOrreryBuilding(
       const indA = (ind / indicatorCount) * Math.PI * 2 - Math.PI / 2;
       const indDist = pedRX + 6 * s2;
       const indX = Math.cos(indA) * indDist;
-      const indYPos = (pedCY - pedH * 0.5) + Math.sin(indA) * indDist * ISO_Y_RATIO;
+      const indYPos =
+        pedCY - pedH * 0.5 + Math.sin(indA) * indDist * ISO_Y_RATIO;
       const isLit = ind < litIndicators;
       const isActivating = ind === litIndicators && charge < 1;
-      const partial = isActivating ? charge * indicatorCount - litIndicators : 0;
+      const partial = isActivating
+        ? charge * indicatorCount - litIndicators
+        : 0;
       const indR = 1.5 * s2;
       if (isLit) {
-        const indGlow = ctx.createRadialGradient(indX, indYPos, 0, indX, indYPos, indR * 3);
-        indGlow.addColorStop(0, `rgba(${hotRgb}, ${(0.25 + readyFlash * 0.15) * indAlpha})`);
+        const indGlow = ctx.createRadialGradient(
+          indX,
+          indYPos,
+          0,
+          indX,
+          indYPos,
+          indR * 3,
+        );
+        indGlow.addColorStop(
+          0,
+          `rgba(${hotRgb}, ${(0.25 + readyFlash * 0.15) * indAlpha})`,
+        );
         indGlow.addColorStop(1, "transparent");
         ctx.fillStyle = indGlow;
         ctx.beginPath();
@@ -2762,7 +3180,14 @@ function drawSunforgeOrreryBuilding(
 
   // Ready burst halo
   if (charge >= 0.98 && wu >= 1) {
-    const burstG = ctx.createRadialGradient(0, sunCoreY, 0, 0, sunCoreY, 30 * s2);
+    const burstG = ctx.createRadialGradient(
+      0,
+      sunCoreY,
+      0,
+      0,
+      sunCoreY,
+      30 * s2,
+    );
     burstG.addColorStop(0, `rgba(255, 240, 210, ${0.12 + readyFlash * 0.2})`);
     burstG.addColorStop(0.5, `rgba(${hotRgb}, ${0.06 + readyFlash * 0.12})`);
     burstG.addColorStop(1, "transparent");
@@ -2773,9 +3198,43 @@ function drawSunforgeOrreryBuilding(
   }
 }
 
+// Per-type sprite scale overrides (multiplied with base zoom)
+const SPECIAL_SPRITE_SCALE: Partial<Record<string, number>> = {
+  vault: 1.2,
+  beacon: 0.9,
+  shrine: 1.5,
+  barracks: 1.3,
+  chrono_relay: 1.3,
+  sentinel_nexus: 1.3,
+  sunforge_orrery: 1.3,
+};
 
+// Per-type Y position multiplier (fraction of canvas size for the anchor point)
+const SPECIAL_SPRITE_Y_MULT: Partial<Record<string, number>> = {
+  vault: 0.82,
+  beacon: 0.82,
+  shrine: 0.62,
+  barracks: 0.82,
+  chrono_relay: 0.72,
+  sentinel_nexus: 0.72,
+  sunforge_orrery: 0.72,
+};
 
-// Special Building Types rendering
+export function drawSpecialBuildingSprite(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  type: string,
+  time: number,
+): void {
+  const typeScale = SPECIAL_SPRITE_SCALE[type] ?? 1.0;
+  const yMult = SPECIAL_SPRITE_Y_MULT[type] ?? 0.62;
+  const zoom = (size / 72) * typeScale;
+  const adjustedY = cy * (yMult / 0.62);
+  renderSpecialBuilding(ctx, cx, adjustedY, zoom, type, 100, 100, 0, 3, 0.5, 1);
+}
+
 export function renderSpecialBuilding(
   ctx: CanvasRenderingContext2D,
   screenX: number,
@@ -3650,7 +4109,14 @@ export function renderSpecialBuilding(
     }
 
     case "sentinel_nexus": {
-      drawSentinelNexusBuilding(ctx, s, time, chargeProgress, warmupProgress, getSentinelPalette(mapTheme));
+      drawSentinelNexusBuilding(
+        ctx,
+        s,
+        time,
+        chargeProgress,
+        warmupProgress,
+        getSentinelPalette(mapTheme),
+      );
       break;
     }
 
@@ -6846,7 +7312,7 @@ export function renderSpecialBuilding(
           const my =
             (rL.y - eaveH - parH) * (1 - t) + (rB.y - eaveH - parH) * t;
           const edx = rB.x - rL.x;
-          const edy = (rB.y - eaveH) - (rL.y - eaveH);
+          const edy = rB.y - eaveH - (rL.y - eaveH);
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
@@ -6874,7 +7340,7 @@ export function renderSpecialBuilding(
           const my =
             (rB.y - eaveH - parH) * (1 - t) + (rR.y - eaveH - parH) * t;
           const edx = rR.x - rB.x;
-          const edy = (rR.y - eaveH) - (rB.y - eaveH);
+          const edy = rR.y - eaveH - (rB.y - eaveH);
           const eLen = Math.sqrt(edx * edx + edy * edy);
           const nx = (edx / eLen) * mHW;
           const ny = (edy / eLen) * mHW;
@@ -6905,9 +7371,19 @@ export function renderSpecialBuilding(
         ctx.closePath();
         ctx.fill();
         ctx.fillStyle = bp.wallL[2];
-        ctx.fillRect(rB.x - 3.5 * s, rB.y - eaveH - parH - 6 * s - 1.5 * s, 7 * s, 1.5 * s);
+        ctx.fillRect(
+          rB.x - 3.5 * s,
+          rB.y - eaveH - parH - 6 * s - 1.5 * s,
+          7 * s,
+          1.5 * s,
+        );
         ctx.fillStyle = "#1a1a2e";
-        ctx.fillRect(rB.x - 0.8 * s, rB.y - eaveH - parH - 4.5 * s, 1.6 * s, 3 * s);
+        ctx.fillRect(
+          rB.x - 0.8 * s,
+          rB.y - eaveH - parH - 4.5 * s,
+          1.6 * s,
+          3 * s,
+        );
       }
 
       // Pyramid faces — back pair first, then front pair
@@ -7348,7 +7824,10 @@ export function renderSpecialBuilding(
         }
         const tailWaveR = Math.sin(bannerTime + 6) * 3 * s;
         ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR);
-        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        ctx.lineTo(
+          bStartX + bW * 0.5,
+          bStartY + bH + Math.sin(bannerTime + 3) * 2 * s,
+        );
         ctx.lineTo(bStartX, bStartY + bH * 0.7);
         ctx.closePath();
         ctx.fill();
@@ -7365,7 +7844,10 @@ export function renderSpecialBuilding(
         }
         const tailWaveR2 = Math.sin(bannerTime + 6) * 3 * s;
         ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR2);
-        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        ctx.lineTo(
+          bStartX + bW * 0.5,
+          bStartY + bH + Math.sin(bannerTime + 3) * 2 * s,
+        );
         ctx.lineTo(bStartX, bStartY + bH * 0.7);
         ctx.closePath();
         ctx.fill();
@@ -7373,7 +7855,12 @@ export function renderSpecialBuilding(
         // Banner overlay — richer crimson with wave-driven shading
         ctx.save();
         ctx.clip();
-        const banGrad = ctx.createLinearGradient(bStartX, bStartY, bStartX, bStartY + bH);
+        const banGrad = ctx.createLinearGradient(
+          bStartX,
+          bStartY,
+          bStartX,
+          bStartY + bH,
+        );
         banGrad.addColorStop(0, "#C62828");
         banGrad.addColorStop(0.3, "#B71C1C");
         banGrad.addColorStop(0.6, "#8B0000");
@@ -7386,9 +7873,8 @@ export function renderSpecialBuilding(
           const t = i / bW;
           const wave = Math.sin(bannerTime + t * 6);
           const alpha = wave > 0 ? wave * 0.12 : -wave * 0.15;
-          ctx.fillStyle = wave > 0
-            ? `rgba(255,200,150,${alpha})`
-            : `rgba(0,0,0,${alpha})`;
+          ctx.fillStyle =
+            wave > 0 ? `rgba(255,200,150,${alpha})` : `rgba(0,0,0,${alpha})`;
           const wy = Math.sin(bannerTime + t * 6) * 3 * s * t;
           ctx.fillRect(bStartX + i, bStartY + wy - 2 * s, s, bH);
         }
@@ -7410,7 +7896,10 @@ export function renderSpecialBuilding(
         ctx.beginPath();
         ctx.moveTo(bStartX, bStartY);
         ctx.lineTo(bStartX, bStartY + bH * 0.7);
-        ctx.lineTo(bStartX + bW * 0.5, bStartY + bH + Math.sin(bannerTime + 3) * 2 * s);
+        ctx.lineTo(
+          bStartX + bW * 0.5,
+          bStartY + bH + Math.sin(bannerTime + 3) * 2 * s,
+        );
         const tailWaveR3 = Math.sin(bannerTime + 6) * 3 * s;
         ctx.lineTo(bStartX + bW, bStartY + bH * 0.7 + tailWaveR3);
         ctx.stroke();
@@ -7442,7 +7931,12 @@ export function renderSpecialBuilding(
         ctx.moveTo(cX, cY - cR * 1.1 * si);
         ctx.lineTo(cX - cR * si, cY - cR * 0.3 * si);
         ctx.lineTo(cX - cR * si, cY + cR * 0.3 * si);
-        ctx.quadraticCurveTo(cX, cY + cR * 1.2 * si, cX + cR * si, cY + cR * 0.3 * si);
+        ctx.quadraticCurveTo(
+          cX,
+          cY + cR * 1.2 * si,
+          cX + cR * si,
+          cY + cR * 0.3 * si,
+        );
         ctx.lineTo(cX + cR * si, cY - cR * 0.3 * si);
         ctx.closePath();
         ctx.fill();
@@ -7472,15 +7966,19 @@ export function renderSpecialBuilding(
         for (let fi = 0; fi < fringeCount; fi++) {
           const ft = (fi + 0.5) / fringeCount;
           // Left tail edge
-          const flx = bStartX + (bW * 0.5) * ft;
-          const fly = bStartY + bH * 0.7 * (1 - ft) + (bH + Math.sin(bannerTime + 3) * 2 * s) * ft;
+          const flx = bStartX + bW * 0.5 * ft;
+          const fly =
+            bStartY +
+            bH * 0.7 * (1 - ft) +
+            (bH + Math.sin(bannerTime + 3) * 2 * s) * ft;
           ctx.beginPath();
           ctx.arc(flx, fly + 1 * s, 0.8 * s, 0, Math.PI * 2);
           ctx.fill();
           // Right tail edge
-          const frx = bStartX + bW * 0.5 + (bW * 0.5) * (1 - ft);
+          const frx = bStartX + bW * 0.5 + bW * 0.5 * (1 - ft);
           const frt = 1 - ft;
-          const fry = (bStartY + bH + Math.sin(bannerTime + 3) * 2 * s) * (1 - frt) +
+          const fry =
+            (bStartY + bH + Math.sin(bannerTime + 3) * 2 * s) * (1 - frt) +
             (bStartY + bH * 0.7 + tailWaveR3) * frt;
           ctx.beginPath();
           ctx.arc(frx, fry + 1 * s, 0.8 * s, 0, Math.PI * 2);
@@ -7491,7 +7989,8 @@ export function renderSpecialBuilding(
         ctx.fillStyle = "#546E7A";
         for (let ri = 0; ri < 4; ri++) {
           const rx = bStartX + (bW / 3) * ri;
-          const ry = bStartY - 1 * s + Math.sin(bannerTime + (ri / 3) * 6) * 1 * s;
+          const ry =
+            bStartY - 1 * s + Math.sin(bannerTime + (ri / 3) * 6) * 1 * s;
           ctx.beginPath();
           ctx.arc(rx, ry, 1.2 * s, 0, Math.PI * 2);
           ctx.fill();

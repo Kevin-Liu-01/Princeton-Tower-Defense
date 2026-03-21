@@ -1456,6 +1456,8 @@ export function usePrincetonTowerDefenseRuntime() {
       handleBuildTouchDragMove={handleBuildTouchDragMove}
       handleBuildTouchDragEnd={handleBuildTouchDragEnd}
       levelAllowedTowers={levelAllowedTowers}
+      levelStartTime={levelStartTime}
+      totalPausedTimeRef={totalPausedTimeRef}
       starsEarned={starsEarned}
       timeSpent={timeSpent}
       currentLevelStats={currentLevelStats}

@@ -1159,7 +1159,7 @@ export function renderEnemyInspectIndicator(
   });
 }
 
-function drawEnemySprite(
+export function drawEnemySprite(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,

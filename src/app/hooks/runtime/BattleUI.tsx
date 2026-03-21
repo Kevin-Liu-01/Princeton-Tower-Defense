@@ -213,6 +213,10 @@ export interface BattleUIProps {
   handleBuildTouchDragEnd: (clientX: number, clientY: number) => void;
   levelAllowedTowers: TowerType[] | null;
 
+  // Timer
+  levelStartTime: number;
+  totalPausedTimeRef: React.RefObject<number>;
+
   // Victory / defeat
   starsEarned: number;
   timeSpent: number;
@@ -342,6 +346,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   handleBuildTouchDragMove,
   handleBuildTouchDragEnd,
   levelAllowedTowers,
+  levelStartTime,
+  totalPausedTimeRef,
   starsEarned,
   timeSpent,
   currentLevelStats,
@@ -424,6 +430,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
               pauseLocked={pauseLocked}
               onToggleDevMenu={onToggleDevMenu}
               devMenuOpen={devMenuOpen}
+              levelStartTime={levelStartTime}
+              totalPausedTimeRef={totalPausedTimeRef}
             />
             {!cameraModeActive && (
               <div className="mt-2 flex px-2 items-start justify-between gap-2 sm:gap-3">

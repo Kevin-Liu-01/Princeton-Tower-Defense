@@ -38,7 +38,9 @@ export const useIsTouchDevice = () => {
         window.removeEventListener("pointerdown", onFirstPointerTouch);
       }
     };
-    window.addEventListener("pointerdown", onFirstPointerTouch, { passive: true });
+    window.addEventListener("pointerdown", onFirstPointerTouch, {
+      passive: true,
+    });
 
     const mediaQuery = window.matchMedia("(pointer: coarse)");
     const handleChange = (event: MediaQueryListEvent) => {
@@ -70,7 +72,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
   const [sizes, setSizes] = useState<ResponsiveSizes>({
     heroIcon: 28,
     heroIconLarge: 40,
-    towerIcon: 26,
+    towerIcon: 34,
     towerIconLarge: 40,
     spellIcon: 24,
   });
@@ -83,7 +85,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 48,
           heroIconLarge: 64,
-          towerIcon: 44,
+          towerIcon: 56,
           towerIconLarge: 60,
           spellIcon: 40,
         });
@@ -91,7 +93,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 42,
           heroIconLarge: 56,
-          towerIcon: 38,
+          towerIcon: 50,
           towerIconLarge: 52,
           spellIcon: 36,
         });
@@ -99,7 +101,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 36,
           heroIconLarge: 48,
-          towerIcon: 34,
+          towerIcon: 44,
           towerIconLarge: 48,
           spellIcon: 32,
         });
@@ -107,7 +109,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 32,
           heroIconLarge: 44,
-          towerIcon: 30,
+          towerIcon: 40,
           towerIconLarge: 44,
           spellIcon: 28,
         });
@@ -115,7 +117,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 28,
           heroIconLarge: 40,
-          towerIcon: 26,
+          towerIcon: 34,
           towerIconLarge: 40,
           spellIcon: 24,
         });
@@ -123,7 +125,7 @@ export const useResponsiveSizes = (): ResponsiveSizes => {
         setSizes({
           heroIcon: 24,
           heroIconLarge: 36,
-          towerIcon: 22,
+          towerIcon: 30,
           towerIconLarge: 36,
           spellIcon: 20,
         });

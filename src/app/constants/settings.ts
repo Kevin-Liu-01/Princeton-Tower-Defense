@@ -79,6 +79,7 @@ export interface UISettings {
   autoSendWaves: boolean;
   showCameraDpad: boolean;
   showControlsReference: boolean;
+  showGameTimer: boolean;
 }
 
 export interface AudioSettings {
@@ -165,6 +166,7 @@ export const DEFAULT_UI: UISettings = {
   autoSendWaves: true,
   showCameraDpad: true,
   showControlsReference: true,
+  showGameTimer: true,
 };
 
 export const DEFAULT_AUDIO: AudioSettings = {

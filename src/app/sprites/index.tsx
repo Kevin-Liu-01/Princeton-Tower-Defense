@@ -20,9 +20,6 @@ export {
   HAZARD_SPRITE_THEME,
   getEnemySpriteFrameTheme,
   FramedSprite,
-  SpriteShell,
   SpecialTowerSprite,
   HazardSprite,
-  renderSpecialTowerGlyph,
-  renderHazardGlyph,
 } from "./shared";

@@ -1,1 +1,1 @@
-export { renderEnemy, renderEnemyInspectIndicator } from "./renderEnemy";
+export { renderEnemy, renderEnemyInspectIndicator, drawEnemySprite } from "./renderEnemy";

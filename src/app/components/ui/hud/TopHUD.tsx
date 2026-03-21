@@ -34,6 +34,7 @@ import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { HexWardNotification, PaydayNotification } from "../PaydayNotification";
 import { PRESET_SPEEDS, getLivesTheme } from "./livesTheme";
 import { useAutoPerformanceMode } from "./useAutoPerformanceMode";
+import { GameTimer } from "./GameTimer";
 
 // =============================================================================
 // TOP HUD COMPONENT
@@ -73,6 +74,8 @@ interface TopHUDProps {
   pauseLocked?: boolean;
   onToggleDevMenu?: () => void;
   devMenuOpen?: boolean;
+  levelStartTime?: number;
+  totalPausedTimeRef?: React.RefObject<number>;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -109,6 +112,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   pauseLocked = false,
   onToggleDevMenu,
   devMenuOpen = false,
+  levelStartTime = 0,
+  totalPausedTimeRef,
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"restart" | "quit" | null>(null);
@@ -266,6 +271,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   const waveProgress = totalWaves > 0 ? ((currentWave) / totalWaves) * 100 : 0;
 
+  const fallbackPausedRef = useRef(0);
   const isDesktop = useMediaQuery("(min-width: 640px)");
 
   const exitInspectorOnSpeed = () => {
@@ -533,7 +539,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   const speedControlsContent = (
     <div
-      className="relative flex h-9 items-center gap-1 rounded-lg px-2 sm:h-10 sm:gap-1.5 sm:px-2.5"
+      className="relative flex h-9 items-center overflow-hidden rounded-lg sm:h-10"
       style={{
         background:
           "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
@@ -545,7 +551,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         className="absolute inset-[2px] rounded-[6px] pointer-events-none"
         style={{ border: "1px solid rgba(90,110,40,0.08)" }}
       />
-      <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed"}>
+
+      <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed (−0.25)"}>
         <button
           onClick={() => {
             if (pauseLocked) return;
@@ -553,36 +560,53 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             exitInspectorOnSpeed();
           }}
           disabled={pauseLocked}
-          className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full transition-all sm:h-7 sm:w-7 ${pauseLocked
+          className={`relative z-10 flex h-full w-7 items-center justify-center transition-all sm:w-8 ${pauseLocked
             ? "cursor-not-allowed opacity-40"
-            : "hover:brightness-125 active:scale-95"
+            : "hover:bg-green-900/30 active:bg-green-900/50"
             }`}
-          style={{
-            background: "linear-gradient(135deg, rgba(40,55,25,0.8), rgba(25,35,15,0.6))",
-            border: "1px solid rgba(80,120,60,0.35)",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-          }}
+          style={{ borderRight: "1px solid rgba(90,110,40,0.15)" }}
         >
-          <Rewind size={11} className="text-green-300/90" />
+          <Rewind size={10} className="text-green-400/60" />
         </button>
       </HudTooltip>
-      <HudTooltip label="Current game speed">
-        <span
-          className="relative z-10 min-w-[32px] cursor-default rounded-md px-2 py-1 text-center text-[11px] font-black tabular-nums text-green-200 sm:min-w-[36px] sm:text-xs"
-          style={{
-            background: "linear-gradient(135deg, rgba(30,45,15,0.7), rgba(18,28,8,0.5))",
-            border: "1px solid rgba(80,120,60,0.3)",
-            boxShadow: "inset 0 1px 4px rgba(0,0,0,0.3), 0 0 6px rgba(100,140,60,0.08)",
-          }}
-        >
-          {Number.isInteger(gameSpeed)
-            ? gameSpeed + "x"
-            : gameSpeed % 0.5 === 0
-              ? gameSpeed.toFixed(1) + "x"
-              : gameSpeed.toFixed(2) + "x"}
-        </span>
-      </HudTooltip>
-      <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed"}>
+
+      <div className="relative z-10 flex items-center gap-0.5 px-1 sm:px-1.5">
+        {PRESET_SPEEDS.map((speed) => {
+          const isActive = gameSpeed === speed;
+          return (
+            <HudTooltip key={speed} label={pauseLocked ? "Speed locked" : `${speed}× speed`}>
+              <button
+                onClick={() => {
+                  if (pauseLocked) return;
+                  setGameSpeed(speed);
+                  exitInspectorOnSpeed();
+                }}
+                disabled={pauseLocked}
+                className={`relative z-10 w-[38px] rounded-md py-1 text-center text-[11px] font-black tabular-nums transition-all sm:w-[42px] sm:text-xs ${pauseLocked
+                  ? "cursor-not-allowed opacity-40"
+                  : "hover:brightness-125 active:scale-95"
+                  }`}
+                style={{
+                  background: isActive
+                    ? "linear-gradient(135deg, rgba(80,110,30,0.8), rgba(55,75,20,0.6))"
+                    : "rgba(20,26,12,0.4)",
+                  border: isActive
+                    ? "1px solid rgba(130,180,50,0.55)"
+                    : "1px solid rgba(60,80,30,0.2)",
+                  color: isActive ? "#bef264" : "rgba(163,230,53,0.45)",
+                  boxShadow: isActive
+                    ? "0 0 8px rgba(130,180,50,0.2), inset 0 0 6px rgba(130,180,50,0.1)"
+                    : "none",
+                }}
+              >
+                {speed}x
+              </button>
+            </HudTooltip>
+          );
+        })}
+      </div>
+
+      <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed (+0.25)"}>
         <button
           onClick={() => {
             if (pauseLocked) return;
@@ -590,62 +614,15 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             exitInspectorOnSpeed();
           }}
           disabled={pauseLocked}
-          className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full transition-all sm:h-7 sm:w-7 ${pauseLocked
+          className={`relative z-10 flex h-full w-7 items-center justify-center transition-all sm:w-8 ${pauseLocked
             ? "cursor-not-allowed opacity-40"
-            : "hover:brightness-125 active:scale-95"
+            : "hover:bg-green-900/30 active:bg-green-900/50"
             }`}
-          style={{
-            background: "linear-gradient(135deg, rgba(40,55,25,0.8), rgba(25,35,15,0.6))",
-            border: "1px solid rgba(80,120,60,0.35)",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-          }}
+          style={{ borderLeft: "1px solid rgba(90,110,40,0.15)" }}
         >
-          <FastForward size={11} className="text-green-300/90" />
+          <FastForward size={10} className="text-green-400/60" />
         </button>
       </HudTooltip>
-      <div className="hidden sm:contents">
-        <div
-          className="mx-0.5 h-5 w-px"
-          style={{ background: "linear-gradient(180deg, transparent, rgba(90,110,40,0.3), transparent)" }}
-        />
-        {PRESET_SPEEDS.map((speed) => (
-          <HudTooltip
-            key={speed}
-            label={pauseLocked ? "Speed locked" : `Set speed to ${speed}x`}
-          >
-            <button
-              onClick={() => {
-                if (pauseLocked) return;
-                setGameSpeed(speed);
-                exitInspectorOnSpeed();
-              }}
-              disabled={pauseLocked}
-              className={`relative z-10 rounded-md px-2 py-0.5 text-[10px] font-black transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:brightness-125 active:scale-95"
-                }`}
-              style={{
-                background:
-                  gameSpeed === speed
-                    ? "linear-gradient(135deg, rgba(80,110,30,0.7), rgba(55,75,20,0.5))"
-                    : "rgba(20,26,12,0.6)",
-                border:
-                  gameSpeed === speed
-                    ? "1px solid rgba(130,180,50,0.5)"
-                    : "1px solid rgba(60,80,30,0.25)",
-                color:
-                  gameSpeed === speed
-                    ? "#bef264"
-                    : "rgba(163,230,53,0.5)",
-                boxShadow:
-                  gameSpeed === speed
-                    ? "0 0 6px rgba(130,180,50,0.15)"
-                    : "none",
-              }}
-            >
-              {speed}x
-            </button>
-          </HudTooltip>
-        ))}
-      </div>
     </div>
   );
 
@@ -969,28 +946,29 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
                   }}
                 >
-                  <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.25, 0)); exitInspectorOnSpeed(); } }}
-                    disabled={pauseLocked}
-                    className={`relative z-10 rounded-md p-0.5 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40"}`}
-                    style={{ border: "1px solid rgba(80,120,60,0.3)" }}
-                  >
-                    <Rewind size={10} className="text-green-300/80" />
-                  </button>
-                  <span
-                    className="relative z-10 w-7 cursor-default rounded-md px-1 py-0.5 text-center text-[10px] font-black tabular-nums text-green-300/90"
-                    style={{ background: "rgba(28,22,14,0.6)", border: "1px solid rgba(80,120,60,0.25)" }}
-                  >
-                    {Number.isInteger(gameSpeed) ? gameSpeed + "x" : gameSpeed % 0.5 === 0 ? gameSpeed.toFixed(1) + "x" : gameSpeed.toFixed(2) + "x"}
-                  </span>
-                  <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.25, 5)); exitInspectorOnSpeed(); } }}
-                    disabled={pauseLocked}
-                    className={`relative z-10 rounded-md p-0.5 transition-colors ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40"}`}
-                    style={{ border: "1px solid rgba(80,120,60,0.3)" }}
-                  >
-                    <FastForward size={10} className="text-green-300/80" />
-                  </button>
+                  {PRESET_SPEEDS.map((speed) => {
+                    const isActive = gameSpeed === speed;
+                    return (
+                      <button
+                        key={speed}
+                        onClick={() => { if (!pauseLocked) { setGameSpeed(speed); exitInspectorOnSpeed(); } }}
+                        disabled={pauseLocked}
+                        className={`relative z-10 w-[34px] rounded-md py-0.5 text-center text-[10px] font-black tabular-nums transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:scale-95"}`}
+                        style={{
+                          background: isActive
+                            ? "linear-gradient(135deg, rgba(80,110,30,0.8), rgba(55,75,20,0.6))"
+                            : "rgba(20,26,12,0.4)",
+                          border: isActive
+                            ? "1px solid rgba(130,180,50,0.55)"
+                            : "1px solid rgba(60,80,30,0.2)",
+                          color: isActive ? "#bef264" : "rgba(163,230,53,0.4)",
+                          boxShadow: isActive ? "0 0 6px rgba(130,180,50,0.2)" : "none",
+                        }}
+                      >
+                        {speed}x
+                      </button>
+                    );
+                  })}
                 </div>
                 {/* Game controls — compact */}
                 <div
@@ -1028,6 +1006,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             </div>
           </HudSurface>
         )}
+
+        <GameTimer
+          levelStartTime={levelStartTime}
+          totalPausedTimeRef={totalPausedTimeRef ?? fallbackPausedRef}
+          gameSpeed={gameSpeed}
+        />
 
         <div className="absolute left-0 right-0 top-full z-[70] pt-3">
           <PaydayNotification

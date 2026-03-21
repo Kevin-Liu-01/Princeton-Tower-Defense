@@ -99,10 +99,14 @@ import {
   HeroAbilityIcon,
   HeroIcon,
   SpellIcon,
+  SpecialTowerSprite,
+  HazardSprite,
 } from "../../sprites";
 import {
   buildThemeFromAccent,
   TOWER_SPRITE_FRAME_THEME,
+  SPECIAL_TOWER_SPRITE_THEME,
+  HAZARD_SPRITE_THEME,
   SPELL_SPRITE_FRAME_THEME,
   getEnemySpriteFrameTheme,
   FramedSprite,
@@ -475,178 +479,6 @@ const normalizeHazardType = (type: HazardType): CodexHazardType | null => {
   return null;
 };
 
-const SpriteShell: React.FC<{
-  size: number;
-  background: string;
-  border: string;
-  glow: string;
-  children: React.ReactNode;
-}> = ({ size, background, border, glow, children }) => (
-  <div
-    className="relative overflow-hidden rounded-xl shrink-0"
-    style={{
-      width: size,
-      height: size,
-      background,
-      border: `1.5px solid ${border}`,
-      boxShadow: `0 0 20px ${glow}, inset 0 0 18px rgba(6,6,10,0.72)`,
-    }}
-  >
-    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.14)" }} />
-    <div
-      className="absolute inset-[2px] rounded-[10px] pointer-events-none"
-      style={{
-        background:
-          "radial-gradient(circle at 26% 22%, rgba(255,255,255,0.22), rgba(255,255,255,0.03) 38%, rgba(0,0,0,0.25) 90%)",
-      }}
-    />
-    <svg viewBox="0 0 64 64" className="w-full h-full">
-      <ellipse cx="32" cy="50" rx="17" ry="5.8" fill="rgba(0,0,0,0.36)" />
-      <circle cx="22" cy="18" r="18" fill="rgba(255,255,255,0.09)" />
-      <g transform="translate(0 -1)">
-        {children}
-      </g>
-    </svg>
-  </div>
-);
-
-const SPECIAL_TOWER_SPRITE_THEME: Record<
-  SpecialTowerType,
-  { background: string; border: string; glow: string }
-> = {
-  vault: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,240,138,0.3), rgba(120,80,18,0.18) 42%, rgba(60,41,12,0.95) 100%)",
-    border: "rgba(250,204,21,0.7)",
-    glow: "rgba(250,204,21,0.42)",
-  },
-  beacon: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(165,243,252,0.28), rgba(18,92,112,0.18) 42%, rgba(12,48,60,0.96) 100%)",
-    border: "rgba(34,211,238,0.7)",
-    glow: "rgba(34,211,238,0.4)",
-  },
-  shrine: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(187,247,208,0.28), rgba(20,105,70,0.18) 42%, rgba(12,64,44,0.96) 100%)",
-    border: "rgba(34,197,94,0.7)",
-    glow: "rgba(34,197,94,0.38)",
-  },
-  barracks: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.25), rgba(158,42,42,0.2) 42%, rgba(74,22,22,0.96) 100%)",
-    border: "rgba(248,113,113,0.72)",
-    glow: "rgba(248,113,113,0.4)",
-  },
-  chrono_relay: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(199,210,254,0.28), rgba(91,94,197,0.2) 42%, rgba(38,34,96,0.96) 100%)",
-    border: "rgba(129,140,248,0.72)",
-    glow: "rgba(129,140,248,0.42)",
-  },
-  sentinel_nexus: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,205,211,0.28), rgba(160,46,78,0.2) 42%, rgba(78,24,46,0.96) 100%)",
-    border: "rgba(251,113,133,0.72)",
-    glow: "rgba(251,113,133,0.4)",
-  },
-  sunforge_orrery: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.27), rgba(174,87,30,0.2) 42%, rgba(94,38,20,0.96) 100%)",
-    border: "rgba(251,146,60,0.74)",
-    glow: "rgba(251,146,60,0.43)",
-  },
-};
-
-const HAZARD_SPRITE_THEME: Record<
-  CodexHazardType,
-  { background: string; border: string; glow: string }
-> = {
-  poison_fog: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(187,247,208,0.28), rgba(28,120,71,0.18) 42%, rgba(14,66,42,0.96) 100%)",
-    border: "rgba(74,222,128,0.7)",
-    glow: "rgba(74,222,128,0.4)",
-  },
-  deep_water: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(191,219,254,0.28), rgba(35,96,176,0.18) 42%, rgba(17,52,98,0.96) 100%)",
-    border: "rgba(96,165,250,0.7)",
-    glow: "rgba(96,165,250,0.42)",
-  },
-  maelstrom: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(186,230,253,0.27), rgba(34,124,159,0.18) 42%, rgba(12,56,77,0.96) 100%)",
-    border: "rgba(56,189,248,0.72)",
-    glow: "rgba(56,189,248,0.42)",
-  },
-  storm_field: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(219,234,254,0.26), rgba(76,107,202,0.18) 42%, rgba(31,43,100,0.96) 100%)",
-    border: "rgba(125,211,252,0.72)",
-    glow: "rgba(125,211,252,0.42)",
-  },
-  quicksand: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,249,195,0.27), rgba(188,146,47,0.18) 42%, rgba(108,78,28,0.96) 100%)",
-    border: "rgba(250,204,21,0.72)",
-    glow: "rgba(250,204,21,0.42)",
-  },
-  ice_sheet: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(224,242,254,0.28), rgba(99,159,214,0.18) 42%, rgba(32,68,98,0.96) 100%)",
-    border: "rgba(125,211,252,0.72)",
-    glow: "rgba(125,211,252,0.4)",
-  },
-  ice_spikes: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(219,234,254,0.28), rgba(90,130,218,0.18) 42%, rgba(32,58,112,0.96) 100%)",
-    border: "rgba(96,165,250,0.72)",
-    glow: "rgba(96,165,250,0.43)",
-  },
-  lava_geyser: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.28), rgba(218,99,41,0.18) 42%, rgba(110,37,22,0.96) 100%)",
-    border: "rgba(251,146,60,0.74)",
-    glow: "rgba(251,146,60,0.45)",
-  },
-  volcano: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.28), rgba(220,38,38,0.18) 42%, rgba(127,29,29,0.96) 100%)",
-    border: "rgba(248,113,113,0.74)",
-    glow: "rgba(248,113,113,0.45)",
-  },
-  swamp: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(217,249,157,0.26), rgba(101,163,13,0.18) 42%, rgba(54,83,20,0.96) 100%)",
-    border: "rgba(163,230,53,0.7)",
-    glow: "rgba(163,230,53,0.38)",
-  },
-  fire: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.3), rgba(234,88,12,0.2) 42%, rgba(124,45,18,0.96) 100%)",
-    border: "rgba(251,146,60,0.76)",
-    glow: "rgba(251,146,60,0.48)",
-  },
-  lightning: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,249,195,0.28), rgba(202,138,4,0.18) 42%, rgba(113,63,18,0.96) 100%)",
-    border: "rgba(250,204,21,0.74)",
-    glow: "rgba(250,204,21,0.44)",
-  },
-  void: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(233,213,255,0.26), rgba(147,51,234,0.18) 42%, rgba(59,7,100,0.96) 100%)",
-    border: "rgba(192,132,252,0.72)",
-    glow: "rgba(192,132,252,0.42)",
-  },
-  lava: {
-    background:
-      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.26), rgba(185,28,28,0.18) 42%, rgba(99,18,18,0.96) 100%)",
-    border: "rgba(239,68,68,0.72)",
-    glow: "rgba(239,68,68,0.42)",
-  },
-};
 
 const getHeroSpriteFrameTheme = (type: HeroType): SpriteFrameTheme =>
   buildThemeFromAccent(HERO_DATA[type].color || "#f59e0b");
@@ -681,296 +513,6 @@ const TROOP_CATEGORY_MAP: Record<string, { label: string; color: string; types: 
 
 const FramedCodexSprite = FramedSprite;
 
-const renderSpecialTowerGlyph = (type: SpecialTowerType): React.ReactNode => {
-  switch (type) {
-    case "vault":
-      return (
-        <>
-          <rect x="16" y="42" width="32" height="5" rx="2.5" fill="#3f2a0e" />
-          <rect x="16" y="23" width="32" height="21" rx="5" fill="#5e4217" stroke="#f59e0b" strokeWidth="1.8" />
-          <rect x="15" y="19" width="34" height="8" rx="3" fill="#9a6b23" stroke="#fcd34d" strokeWidth="1.4" />
-          <rect x="18" y="27" width="28" height="14" rx="3.5" fill="#6b4a18" />
-          <circle cx="32" cy="34" r="5.5" fill="#2f1f09" stroke="#fcd34d" strokeWidth="1.4" />
-          <rect x="31" y="34" width="2" height="7.5" rx="1" fill="#fcd34d" />
-          <circle cx="44.5" cy="18.5" r="2.2" fill="#fef3c7" />
-          <path d="M44.5 14.8 L45.4 17.4 L48 18.5 L45.4 19.6 L44.5 22.2 L43.6 19.6 L41 18.5 L43.6 17.4 Z" fill="#fde68a" />
-        </>
-      );
-    case "beacon":
-      return (
-        <>
-          <g transform="translate(0 10)">
-            <ellipse cx="32" cy="44" rx="15" ry="4.4" fill="rgba(6,182,212,0.22)" />
-            <rect x="26.5" y="18" width="11" height="26" rx="3" fill="#155e75" stroke="#67e8f9" strokeWidth="1.6" />
-            <polygon points="32,10 38.2,20 25.8,20" fill="#a5f3fc" stroke="#e0f2fe" strokeWidth="1.2" />
-            <circle cx="32" cy="13.4" r="4.2" fill="#67e8f9" />
-            <circle cx="32" cy="13.4" r="10" fill="none" stroke="rgba(103,232,249,0.75)" strokeWidth="1.5" strokeDasharray="2.4 2.6" />
-            <circle cx="32" cy="13.4" r="15" fill="none" stroke="rgba(103,232,249,0.35)" strokeWidth="1.2" />
-            <path d="M22 30 L42 30" stroke="#a5f3fc" strokeWidth="1.4" strokeLinecap="round" />
-          </g>
-        </>
-      );
-    case "shrine":
-      return (
-        <>
-          <rect x="15" y="42" width="34" height="5" rx="2.5" fill="#0f3f2c" />
-          <rect x="18" y="25" width="7" height="18" rx="2" fill="#166534" stroke="#86efac" strokeWidth="1.1" />
-          <rect x="39" y="25" width="7" height="18" rx="2" fill="#166534" stroke="#86efac" strokeWidth="1.1" />
-          <path d="M20 24 Q32 15 44 24" fill="none" stroke="#86efac" strokeWidth="1.5" />
-          <polygon points="32,15 38,24 32,33 26,24" fill="#86efac" stroke="#dcfce7" strokeWidth="1.3" />
-          <circle cx="32" cy="23.8" r="12" fill="none" stroke="rgba(134,239,172,0.38)" strokeWidth="1.3" />
-          <circle cx="32" cy="23.8" r="2.1" fill="#dcfce7" />
-        </>
-      );
-    case "barracks":
-      return (
-        <>
-          <rect x="14" y="42" width="36" height="5" rx="2.5" fill="#3f1616" />
-          <rect x="14" y="24" width="36" height="19" rx="4" fill="#7f1d1d" stroke="#f87171" strokeWidth="1.6" />
-          <path d="M14 24 L18 20 L22 24 L26 20 L30 24 L34 20 L38 24 L42 20 L46 24 L50 20 L50 24 Z" fill="#991b1b" />
-          <rect x="27" y="31" width="10" height="12" rx="2.5" fill="#450a0a" stroke="#fecaca" strokeWidth="1" />
-          <path d="M20 41 L24 31 M44 41 L40 31" stroke="#fecaca" strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M32 31 L32 21" stroke="#fca5a5" strokeWidth="1.3" />
-          <polygon points="32,20 38,23 32,26" fill="#f87171" />
-        </>
-      );
-    case "chrono_relay":
-      return (
-        <>
-          <circle cx="32" cy="31" r="17" fill="none" stroke="#818cf8" strokeWidth="1.8" />
-          <circle cx="32" cy="31" r="12" fill="none" stroke="#c7d2fe" strokeWidth="1.3" />
-          <polygon points="32,14 42,31 32,48 22,31" fill="#4f46e5" stroke="#c7d2fe" strokeWidth="1.4" />
-          <circle cx="32" cy="31" r="5.5" fill="#1e1b4b" stroke="#a5b4fc" strokeWidth="1.2" />
-          <path d="M32 31 L32 23 M32 31 L38 34.5" stroke="#e0e7ff" strokeWidth="1.7" strokeLinecap="round" />
-          <path d="M32 14 L32 11 M49 31 L52 31 M15 31 L12 31 M32 48 L32 51" stroke="#a5b4fc" strokeWidth="1.3" strokeLinecap="round" />
-          <circle cx="45" cy="19" r="1.8" fill="#e0e7ff" />
-        </>
-      );
-    case "sentinel_nexus":
-      return (
-        <>
-          <circle cx="32" cy="31" r="17" fill="none" stroke="#fb7185" strokeWidth="1.8" />
-          <circle cx="32" cy="31" r="10" fill="none" stroke="#fecdd3" strokeWidth="1.2" />
-          <path d="M32 10 L32 17 M32 45 L32 52 M11 31 L18 31 M46 31 L53 31" stroke="#fda4af" strokeWidth="1.7" strokeLinecap="round" />
-          <circle cx="32" cy="31" r="4.2" fill="#9f1239" stroke="#ffe4e6" strokeWidth="1.1" />
-          <path d="M36.5 20 L30.8 30.8 L35.4 30.8 L28.8 42" stroke="#ffe4e6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M21 21 Q32 14 43 21" fill="none" stroke="rgba(251,113,133,0.5)" strokeWidth="1.2" />
-        </>
-      );
-    case "sunforge_orrery":
-      return (
-        <>
-          <circle cx="32" cy="31" r="7.2" fill="#fb923c" stroke="#ffedd5" strokeWidth="1.3" />
-          <circle cx="32" cy="31" r="15" fill="none" stroke="#fdba74" strokeWidth="1.3" />
-          <ellipse cx="32" cy="31" rx="20" ry="8.2" fill="none" stroke="#fb923c" strokeWidth="1.35" />
-          <ellipse cx="32" cy="31" rx="8.2" ry="20" fill="none" stroke="#fb923c" strokeWidth="1.35" />
-          <path d="M22 21 L26 25 M42 21 L38 25 M22 41 L26 37 M42 41 L38 37" stroke="#fed7aa" strokeWidth="1.3" strokeLinecap="round" />
-          <circle cx="46.5" cy="31" r="2.3" fill="#ffedd5" />
-          <circle cx="24.5" cy="17.8" r="2" fill="#ffedd5" />
-        </>
-      );
-    default:
-      return null;
-  }
-};
-
-const renderHazardGlyph = (type: CodexHazardType): React.ReactNode => {
-  switch (type) {
-    case "poison_fog":
-      return (
-        <>
-          <circle cx="21" cy="36" r="10.5" fill="rgba(74,222,128,0.42)" />
-          <circle cx="33" cy="33" r="12" fill="rgba(74,222,128,0.52)" />
-          <circle cx="43" cy="39" r="9" fill="rgba(34,197,94,0.44)" />
-          <circle cx="30.5" cy="40" r="8" fill="rgba(22,163,74,0.36)" />
-          <circle cx="32" cy="34" r="4.9" fill="#052e16" />
-          <circle cx="30.3" cy="33" r="1.15" fill="#bbf7d0" />
-          <circle cx="33.7" cy="33" r="1.15" fill="#bbf7d0" />
-          <path d="M30.8 36.1 Q32 37.2 33.2 36.1" fill="none" stroke="#86efac" strokeWidth="1.2" strokeLinecap="round" />
-        </>
-      );
-    case "deep_water":
-      return (
-        <>
-          <ellipse cx="32" cy="33" rx="16.5" ry="9" fill="rgba(56,189,248,0.22)" />
-          <path d="M14 32 Q20 27 26 32 T38 32 T50 32" fill="none" stroke="#bae6fd" strokeWidth="1.8" strokeLinecap="round" />
-          <path d="M11 38 Q18 33 25 38 T39 38 T53 38" fill="none" stroke="#7dd3fc" strokeWidth="2.4" strokeLinecap="round" />
-          <path d="M9 44 Q17 39 25 44 T41 44 T57 44" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M32 15 C29 21 27 24 27 27 C27 30 29.2 32.4 32 32.4 C34.8 32.4 37 30 37 27 C37 24 35 21 32 15 Z" fill="#dbeafe" />
-        </>
-      );
-    case "maelstrom":
-      return (
-        <>
-          <path d="M32 12 C45 12 52 23 49 32 C46 41 36 46 27 42 C20 39 18 32 22 27 C26 22 34 22 36 27 C37.4 30.2 35.6 34 32 34" fill="none" stroke="#bae6fd" strokeWidth="2.3" strokeLinecap="round" />
-          <path d="M18 18 C14 30 18 46 32 50" fill="none" stroke="#38bdf8" strokeWidth="2.1" strokeLinecap="round" />
-          <path d="M46 19 C50 26 49 39 40 46" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="32" cy="34" r="2.7" fill="#e0f2fe" />
-        </>
-      );
-    case "storm_field":
-      return (
-        <>
-          <ellipse cx="32" cy="42" rx="16" ry="5" fill="rgba(125,211,252,0.24)" />
-          <circle cx="24" cy="26" r="7.5" fill="#dbeafe" />
-          <circle cx="32" cy="23" r="9" fill="#e0f2fe" />
-          <circle cx="40" cy="27" r="7" fill="#dbeafe" />
-          <path d="M30 28 L25 38 L31.5 38 L27.8 47 L39.2 34.2 L32.4 34.2 L36.2 28 Z" fill="#fde68a" stroke="#facc15" strokeWidth="1.2" strokeLinejoin="round" />
-          <path d="M15 36 Q22 32 29 36 M35 36 Q42 32 49 36" stroke="#93c5fd" strokeWidth="1.3" strokeLinecap="round" />
-        </>
-      );
-    case "quicksand":
-      return (
-        <>
-          <ellipse cx="32" cy="38" rx="17.5" ry="11" fill="rgba(202,138,4,0.46)" />
-          <ellipse cx="32" cy="38" rx="12" ry="7" fill="rgba(253,224,71,0.3)" />
-          <path d="M22 36 C26 32 34 32 38 36 C40 38.2 37 40.5 34.5 40.3 C32.6 40.2 31 38.3 32 36.8 C33 35.4 35.4 35.8 36.2 37" fill="none" stroke="#fde047" strokeWidth="1.8" strokeLinecap="round" />
-          <circle cx="23.5" cy="43" r="2.1" fill="#facc15" />
-          <circle cx="39.5" cy="44" r="2.4" fill="#facc15" />
-          <circle cx="32" cy="46" r="1.6" fill="#fde68a" />
-        </>
-      );
-    case "ice_sheet":
-      return (
-        <>
-          <polygon points="15,43 25,19 46,20 52,35 37,50 20,48" fill="rgba(147,197,253,0.5)" stroke="#e0f2fe" strokeWidth="1.5" />
-          <path d="M25 26 L40 34 M31 22 L29 45 M20 36 L44 30 M24 41 L37 26" stroke="#e0f2fe" strokeWidth="1.25" strokeLinecap="round" />
-          <circle cx="44.5" cy="22.5" r="1.7" fill="#f0f9ff" />
-        </>
-      );
-    case "ice_spikes":
-      return (
-        <>
-          <path d="M14 48 H50" stroke="#dbeafe" strokeWidth="1.6" />
-          <polygon points="15,48 22,25 28,48" fill="#93c5fd" stroke="#dbeafe" strokeWidth="1" />
-          <polygon points="24,48 32,16 40,48" fill="#bfdbfe" stroke="#e0f2fe" strokeWidth="1.1" />
-          <polygon points="35,48 43,27 50,48" fill="#93c5fd" stroke="#dbeafe" strokeWidth="1" />
-          <path d="M18 44 Q32 38 46 44" fill="none" stroke="rgba(186,230,253,0.6)" strokeWidth="1.2" />
-        </>
-      );
-    case "lava_geyser":
-      return (
-        <>
-          <ellipse cx="32" cy="45.5" rx="16.5" ry="6.2" fill="rgba(239,68,68,0.34)" />
-          <ellipse cx="32" cy="44" rx="11.2" ry="4" fill="rgba(153,27,27,0.5)" />
-          <path d="M23.5 44 C22 35 26 29 29.5 19 C31.5 24 33.2 26.6 34.8 19.5 C39 30 42.8 35.5 40.6 44 Z" fill="#fb923c" stroke="#f97316" strokeWidth="1.5" />
-          <path d="M29.6 44 C29.6 37 31.3 32.2 32 27.8 C32.7 32.2 34.4 37 34.4 44 Z" fill="#fde68a" opacity={0.86} />
-          <circle cx="22.3" cy="21.8" r="2.2" fill="#fdba74" />
-          <circle cx="40.8" cy="17.8" r="2.5" fill="#fdba74" />
-          <circle cx="46.2" cy="25.2" r="1.9" fill="#fca5a5" />
-        </>
-      );
-    case "volcano":
-      return (
-        <>
-          <polygon points="16,50 32,14 48,50" fill="#7f1d1d" stroke="#f87171" strokeWidth="1.4" />
-          <polygon points="24,50 32,26 40,50" fill="#991b1b" />
-          <ellipse cx="32" cy="24" rx="6" ry="4" fill="#ef4444" />
-          <path d="M28 24 C27 18 30 13 32 10 C34 13 37 18 36 24" fill="#fb923c" />
-          <path d="M30 24 C30 20 31 16 32 14 C33 16 34 20 34 24" fill="#fde68a" opacity={0.8} />
-          <circle cx="24" cy="16" r="2" fill="#fdba74" />
-          <circle cx="40" cy="14" r="2.4" fill="#fca5a5" />
-          <circle cx="38" cy="20" r="1.5" fill="#fdba74" />
-        </>
-      );
-    case "swamp":
-      return (
-        <>
-          <ellipse cx="32" cy="40" rx="18" ry="10" fill="rgba(101,163,13,0.35)" />
-          <ellipse cx="32" cy="40" rx="12" ry="6.5" fill="rgba(163,230,53,0.25)" />
-          <circle cx="24" cy="38" r="2.8" fill="rgba(163,230,53,0.4)" />
-          <circle cx="38" cy="36" r="2.2" fill="rgba(163,230,53,0.35)" />
-          <circle cx="32" cy="42" r="1.8" fill="rgba(217,249,157,0.5)" />
-          <path d="M22 30 C24 25 26 28 28 24 C30 28 30 26 32 22" fill="none" stroke="#a3e635" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M36 28 C38 24 40 27 42 23" fill="none" stroke="#84cc16" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="26" cy="44" r="1.2" fill="#d9f99d" />
-          <circle cx="40" cy="43" r="1.4" fill="#d9f99d" />
-        </>
-      );
-    case "fire":
-      return (
-        <>
-          <ellipse cx="32" cy="46" rx="16" ry="5.5" fill="rgba(234,88,12,0.32)" />
-          <path d="M20 46 C18 36 24 28 28 20 C30 26 32 22 34 18 C36 24 40 28 44 36 C46 42 42 46 32 46 C22 46 20 44 20 46 Z" fill="#f97316" stroke="#fb923c" strokeWidth="1.2" />
-          <path d="M26 46 C26 38 30 30 32 24 C34 30 38 38 38 46 Z" fill="#fde68a" opacity={0.75} />
-          <path d="M30 46 C30 40 31 34 32 30 C33 34 34 40 34 46 Z" fill="#fef3c7" opacity={0.6} />
-        </>
-      );
-    case "lightning":
-      return (
-        <>
-          <ellipse cx="32" cy="44" rx="14" ry="4.5" fill="rgba(250,204,21,0.2)" />
-          <circle cx="24" cy="20" r="8" fill="#e0e7ff" />
-          <circle cx="32" cy="17" r="9.5" fill="#f1f5f9" />
-          <circle cx="40" cy="21" r="7.5" fill="#e0e7ff" />
-          <path d="M30 22 L24 34 L31 34 L26 48 L40 30 L33 30 L37 22 Z" fill="#facc15" stroke="#eab308" strokeWidth="1.3" strokeLinejoin="round" />
-          <path d="M18 15 L20 17 M44 15 L42 17 M32 8 L32 11" stroke="#fde68a" strokeWidth="1.4" strokeLinecap="round" />
-        </>
-      );
-    case "void":
-      return (
-        <>
-          <ellipse cx="32" cy="34" rx="16" ry="16" fill="rgba(88,28,135,0.3)" />
-          <circle cx="32" cy="34" r="12" fill="none" stroke="rgba(192,132,252,0.5)" strokeWidth="1.5" />
-          <circle cx="32" cy="34" r="7" fill="none" stroke="rgba(216,180,254,0.6)" strokeWidth="1.2" />
-          <circle cx="32" cy="34" r="3" fill="#581c87" stroke="#c084fc" strokeWidth="1" />
-          <path d="M20 22 Q26 18 32 22 Q38 18 44 22" fill="none" stroke="rgba(192,132,252,0.4)" strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M20 46 Q26 50 32 46 Q38 50 44 46" fill="none" stroke="rgba(192,132,252,0.4)" strokeWidth="1.2" strokeLinecap="round" />
-          <circle cx="22" cy="28" r="1.5" fill="#d8b4fe" />
-          <circle cx="42" cy="40" r="1.3" fill="#d8b4fe" />
-        </>
-      );
-    case "lava":
-      return (
-        <>
-          <ellipse cx="32" cy="40" rx="17" ry="10" fill="rgba(239,68,68,0.3)" />
-          <ellipse cx="32" cy="40" rx="12" ry="6.5" fill="rgba(185,28,28,0.45)" />
-          <circle cx="25" cy="38" r="3.5" fill="rgba(251,146,60,0.5)" />
-          <circle cx="38" cy="36" r="3" fill="rgba(251,146,60,0.45)" />
-          <circle cx="32" cy="42" r="2.5" fill="rgba(253,224,71,0.4)" />
-          <circle cx="28" cy="40" r="1.2" fill="#fde68a" />
-          <circle cx="36" cy="39" r="1" fill="#fde68a" />
-          <circle cx="32" cy="36" r="0.9" fill="#fef3c7" />
-        </>
-      );
-    default:
-      return null;
-  }
-};
-
-const SpecialTowerSprite: React.FC<{ type: SpecialTowerType; size?: number }> = ({
-  type,
-  size = 64,
-}) => {
-  const theme = SPECIAL_TOWER_SPRITE_THEME[type];
-  return (
-    <SpriteShell
-      size={size}
-      background={theme.background}
-      border={theme.border}
-      glow={theme.glow}
-    >
-      {renderSpecialTowerGlyph(type)}
-    </SpriteShell>
-  );
-};
-
-const HazardSprite: React.FC<{ type: CodexHazardType; size?: number }> = ({
-  type,
-  size = 64,
-}) => {
-  const theme = HAZARD_SPRITE_THEME[type];
-  return (
-    <SpriteShell
-      size={size}
-      background={theme.background}
-      border={theme.border}
-      glow={theme.glow}
-    >
-      {renderHazardGlyph(type)}
-    </SpriteShell>
-  );
-};
 
 // =============================================================================
 // CODEX UI HELPERS
@@ -1782,8 +1324,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredTowerTypes.slice(0, 4).map((type, index) => (
                           <React.Fragment key={`tower-diagram-${type}`}>
-                            <FramedCodexSprite size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
-                              <TowerSprite type={type} size={33} level={2} />
+                            <FramedCodexSprite size={52} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                              <TowerSprite type={type} size={42} level={2} />
                             </FramedCodexSprite>
                             {index < Math.min(3, featuredTowerTypes.length - 1) && (
                               <ChevronRight size={13} className="text-amber-300/70" />
@@ -1853,11 +1395,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               <div className="p-4 flex flex-col flex-1">
                                 <div className="flex items-start gap-3 mb-3">
                                   <FramedCodexSprite
-                                    size={56}
+                                    size={72}
                                     theme={TOWER_SPRITE_FRAME_THEME[type]}
                                     className="group-hover:scale-105 transition-transform"
                                   >
-                                    <TowerSprite type={type} size={44} level={1} />
+                                    <TowerSprite type={type} size={58} level={1} />
                                   </FramedCodexSprite>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
@@ -2125,12 +1667,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               </div>
                               <div className="p-6 flex flex-col sm:flex-row items-start gap-6">
                                 <FramedCodexSprite
-                                  size={112}
+                                  size={128}
                                   theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
                                 >
                                   <TowerSprite
                                     type={selectedTower as keyof typeof TOWER_DATA}
-                                    size={96}
+                                    size={112}
                                     level={4}
                                   />
                                 </FramedCodexSprite>
@@ -2202,8 +1744,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               >
                                 <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
                                   <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
-                                      <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={28} level={level} />
+                                    <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                      <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={36} level={level} />
                                     </div>
                                     <div>
                                       <div className="flex items-center gap-1">
@@ -2240,8 +1782,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                           >
                                             <div className={`px-2 py-1.5 flex items-center justify-between ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"}`}>
                                               <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
-                                                  <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={22} level={4} upgrade={path as "A" | "B"} />
+                                                <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                                  <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={30} level={4} upgrade={path as "A" | "B"} />
                                                 </div>
                                                 <span className="text-[10px] font-bold">{tower.upgrades[path].name}</span>
                                               </div>
@@ -2390,12 +1932,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 {/* Path header */}
                                 <div className={`px-4 py-3 ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"} flex items-center gap-4`}>
                                   <FramedCodexSprite
-                                    size={56}
+                                    size={72}
                                     theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
                                   >
                                     <TowerSprite
                                       type={selectedTower as keyof typeof TOWER_DATA}
-                                      size={48}
+                                      size={60}
                                       level={4}
                                       upgrade={path as "A" | "B"}
                                     />
@@ -2544,8 +2086,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredHeroTypes.map((type, index) => (
                           <React.Fragment key={`hero-diagram-${type}`}>
-                            <FramedCodexSprite size={44} theme={getHeroSpriteFrameTheme(type)}>
-                              <HeroSprite type={type} size={34} />
+                            <FramedCodexSprite size={54} theme={getHeroSpriteFrameTheme(type)}>
+                              <HeroSprite type={type} size={44} />
                             </FramedCodexSprite>
                             {index < featuredHeroTypes.length - 1 && (
                               <ChevronRight size={13} className="text-indigo-300/70" />
@@ -2599,11 +2141,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         <div className="p-4">
                           <div className="flex items-start gap-4 mb-3">
                             <FramedCodexSprite
-                              size={64}
+                              size={80}
                               theme={getHeroSpriteFrameTheme(type)}
                               className="group-hover:scale-105 transition-transform"
                             >
-                              <HeroSprite type={type} size={52} />
+                              <HeroSprite type={type} size={66} />
                             </FramedCodexSprite>
                             <div className="flex-1 min-w-0">
                               <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
@@ -2797,12 +2339,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
                         <div className="p-6 flex items-start gap-6">
                           <FramedCodexSprite
-                            size={112}
+                            size={128}
                             theme={getHeroSpriteFrameTheme(selectedHeroDetail as HeroType)}
                           >
                             <HeroSprite
                               type={selectedHeroDetail as HeroType}
-                              size={96}
+                              size={112}
                             />
                           </FramedCodexSprite>
                           <div className="flex-1">
@@ -3000,8 +2542,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                             <div className="p-3">
                               <div className="flex items-start gap-3 mb-2.5">
-                                <FramedCodexSprite size={44} theme={getTroopSpriteFrameTheme(type)}>
-                                  <TroopSprite type={type} size={34} animated />
+                                <FramedCodexSprite size={72} theme={getTroopSpriteFrameTheme(type)}>
+                                  <TroopSprite type={type} size={58} />
                                 </FramedCodexSprite>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="text-sm font-bold text-amber-200 truncate">{troop.name}</h4>
@@ -3103,8 +2645,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         <div className="flex items-center justify-center gap-1.5 mb-2">
                           {featuredEnemyTypes.map((type, index) => (
                             <React.Fragment key={`enemy-diagram-${type}`}>
-                              <FramedCodexSprite size={44} theme={getEnemySpriteFrameTheme(type)}>
-                                <EnemySprite type={type} size={34} animated />
+                              <FramedCodexSprite size={54} theme={getEnemySpriteFrameTheme(type)}>
+                                <EnemySprite type={type} size={44} />
                               </FramedCodexSprite>
                               {index < featuredEnemyTypes.length - 1 && (
                                 <ChevronRight size={13} className="text-red-300/70" />
@@ -3207,10 +2749,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 <div className="p-4">
                                   <div className="flex items-start gap-4 mb-3">
                                     <FramedCodexSprite
-                                      size={64}
+                                      size={80}
                                       theme={getEnemySpriteFrameTheme(type)}
                                     >
-                                      <EnemySprite type={type} size={52} animated />
+                                      <EnemySprite type={type} size={66} />
                                     </FramedCodexSprite>
                                     <div className="flex-1 min-w-0">
                                       <h3 className="text-lg font-bold text-red-200 truncate">
@@ -3456,8 +2998,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {spellTypes.map((type, index) => (
                           <React.Fragment key={`spell-diagram-${type}`}>
-                            <FramedCodexSprite size={38} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                              <SpellSprite type={type} size={28} />
+                            <FramedCodexSprite size={48} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                              <SpellSprite type={type} size={38} />
                             </FramedCodexSprite>
                             {index < spellTypes.length - 1 && (
                               <ChevronRight size={12} className="text-purple-300/70" />
@@ -3521,10 +3063,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         <div className="p-4">
                           <div className="flex items-start gap-4 mb-4">
                             <FramedCodexSprite
-                              size={72}
+                              size={88}
                               theme={SPELL_SPRITE_FRAME_THEME[type]}
                             >
-                              <SpellSprite type={type} size={56} />
+                              <SpellSprite type={type} size={72} />
                             </FramedCodexSprite>
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-1">
@@ -3640,7 +3182,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredSpecialTowers.map((type, index) => (
                           <React.Fragment key={`special-diagram-${type}`}>
-                            <SpecialTowerSprite type={type} size={44} />
+                            <FramedCodexSprite size={56} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                              <SpecialTowerSprite type={type} size={44} />
+                            </FramedCodexSprite>
                             {index < featuredSpecialTowers.length - 1 && (
                               <ChevronRight size={13} className="text-amber-300/70" />
                             )}
@@ -3662,7 +3206,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     return (
                       <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
                         <div className="flex items-start gap-3 mb-3">
-                          <SpecialTowerSprite type={type} size={72} />
+                          <FramedCodexSprite size={88} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                            <SpecialTowerSprite type={type} size={74} />
+                          </FramedCodexSprite>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-3">
                               <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
@@ -3673,7 +3219,6 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
                               <span className="inline-flex items-center gap-1">
                                 {info.icon}
-                                Active Tooling
                               </span>
                               <span>
                                 {levels.length} level{levels.length !== 1 ? "s" : ""}
@@ -3777,7 +3322,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredHazards.map((type, index) => (
                           <React.Fragment key={`hazard-diagram-${type}`}>
-                            <HazardSprite type={type} size={44} />
+                            <FramedCodexSprite size={56} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                              <HazardSprite type={type} size={44} />
+                            </FramedCodexSprite>
                             {index < featuredHazards.length - 1 && (
                               <ChevronRight size={13} className="text-red-300/70" />
                             )}
@@ -3799,7 +3346,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     return (
                       <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
                         <div className="flex items-start gap-3 mb-3">
-                          <HazardSprite type={type} size={72} />
+                          <FramedCodexSprite size={88} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                            <HazardSprite type={type} size={74} />
+                          </FramedCodexSprite>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-3">
                               <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
@@ -3877,30 +3426,34 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       </p>
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {featuredTowerTypes.slice(0, 2).map((type) => (
-                          <FramedCodexSprite key={`guide-tower-${type}`} size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
-                            <TowerSprite type={type} size={33} level={2} />
+                          <FramedCodexSprite key={`guide-tower-${type}`} size={52} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                            <TowerSprite type={type} size={42} level={2} />
                           </FramedCodexSprite>
                         ))}
                         {featuredEnemyTypes.slice(0, 2).map((type) => (
-                          <FramedCodexSprite key={`guide-enemy-${type}`} size={42} theme={getEnemySpriteFrameTheme(type)}>
-                            <EnemySprite type={type} size={33} animated />
+                          <FramedCodexSprite key={`guide-enemy-${type}`} size={52} theme={getEnemySpriteFrameTheme(type)}>
+                            <EnemySprite type={type} size={42} />
                           </FramedCodexSprite>
                         ))}
                         {featuredHeroTypes.slice(0, 1).map((type) => (
-                          <FramedCodexSprite key={`guide-hero-${type}`} size={42} theme={getHeroSpriteFrameTheme(type)}>
-                            <HeroSprite type={type} size={33} />
+                          <FramedCodexSprite key={`guide-hero-${type}`} size={52} theme={getHeroSpriteFrameTheme(type)}>
+                            <HeroSprite type={type} size={42} />
                           </FramedCodexSprite>
                         ))}
                         {spellTypes.slice(0, 1).map((type) => (
-                          <FramedCodexSprite key={`guide-spell-${type}`} size={42} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                            <SpellSprite type={type} size={31} />
+                          <FramedCodexSprite key={`guide-spell-${type}`} size={52} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                            <SpellSprite type={type} size={40} />
                           </FramedCodexSprite>
                         ))}
                         {featuredSpecialTowers.slice(0, 1).map((type) => (
-                          <SpecialTowerSprite key={`guide-special-${type}`} type={type} size={42} />
+                          <FramedCodexSprite key={`guide-special-${type}`} size={52} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                            <SpecialTowerSprite type={type} size={40} />
+                          </FramedCodexSprite>
                         ))}
                         {featuredHazards.slice(0, 1).map((type) => (
-                          <HazardSprite key={`guide-hazard-${type}`} type={type} size={42} />
+                          <FramedCodexSprite key={`guide-hazard-${type}`} size={52} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                            <HazardSprite type={type} size={40} />
+                          </FramedCodexSprite>
                         ))}
                       </div>
                     </div>
@@ -3957,8 +3510,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {featuredEnemyTypes.map((type) => (
-                        <FramedCodexSprite key={`enemy-guide-${type}`} size={44} theme={getEnemySpriteFrameTheme(type)}>
-                          <EnemySprite type={type} size={34} animated />
+                        <FramedCodexSprite key={`enemy-guide-${type}`} size={54} theme={getEnemySpriteFrameTheme(type)}>
+                          <EnemySprite type={type} size={44} />
                         </FramedCodexSprite>
                       ))}
                     </div>
@@ -3990,8 +3543,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {towerTypes.map((type) => (
-                        <FramedCodexSprite key={`tower-guide-${type}`} size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
-                          <TowerSprite type={type} size={33} level={2} />
+                        <FramedCodexSprite key={`tower-guide-${type}`} size={52} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                          <TowerSprite type={type} size={42} level={2} />
                         </FramedCodexSprite>
                       ))}
                     </div>
@@ -4043,20 +3596,20 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="rounded-lg border border-blue-800/35 bg-blue-950/20 p-2.5 mb-3">
                       <div className="flex items-center justify-center gap-1.5">
-                        <FramedCodexSprite size={34} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[0])}>
-                          <EnemySprite type={featuredEnemyTypes[0]} size={26} animated />
+                        <FramedCodexSprite size={42} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[0])}>
+                          <EnemySprite type={featuredEnemyTypes[0]} size={34} />
                         </FramedCodexSprite>
                         <ChevronRight size={14} className="text-blue-300/80" />
-                        <FramedCodexSprite size={34} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[1] || featuredEnemyTypes[0])}>
-                          <EnemySprite type={featuredEnemyTypes[1] || featuredEnemyTypes[0]} size={26} animated />
+                        <FramedCodexSprite size={42} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[1] || featuredEnemyTypes[0])}>
+                          <EnemySprite type={featuredEnemyTypes[1] || featuredEnemyTypes[0]} size={34} />
                         </FramedCodexSprite>
                         <ChevronRight size={14} className="text-blue-300/80" />
-                        <FramedCodexSprite size={34} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[0]]}>
-                          <TowerSprite type={featuredTowerTypes[0]} size={26} level={2} />
+                        <FramedCodexSprite size={42} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[0]]}>
+                          <TowerSprite type={featuredTowerTypes[0]} size={34} level={2} />
                         </FramedCodexSprite>
                         <ChevronRight size={14} className="text-blue-300/80" />
-                        <FramedCodexSprite size={34} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[1] || featuredTowerTypes[0]]}>
-                          <TowerSprite type={featuredTowerTypes[1] || featuredTowerTypes[0]} size={26} level={3} />
+                        <FramedCodexSprite size={42} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[1] || featuredTowerTypes[0]]}>
+                          <TowerSprite type={featuredTowerTypes[1] || featuredTowerTypes[0]} size={34} level={3} />
                         </FramedCodexSprite>
                       </div>
                     </div>
@@ -4088,8 +3641,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {featuredEnemyTypes.slice(0, 3).map((type) => (
-                        <FramedCodexSprite key={`wave-enemy-${type}`} size={38} theme={getEnemySpriteFrameTheme(type)}>
-                          <EnemySprite type={type} size={30} animated />
+                        <FramedCodexSprite key={`wave-enemy-${type}`} size={48} theme={getEnemySpriteFrameTheme(type)}>
+                          <EnemySprite type={type} size={38} />
                         </FramedCodexSprite>
                       ))}
                     </div>
@@ -4144,8 +3697,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {featuredHeroTypes.map((type) => (
-                        <FramedCodexSprite key={`hero-guide-${type}`} size={42} theme={getHeroSpriteFrameTheme(type)}>
-                          <HeroSprite type={type} size={33} />
+                        <FramedCodexSprite key={`hero-guide-${type}`} size={52} theme={getHeroSpriteFrameTheme(type)}>
+                          <HeroSprite type={type} size={42} />
                         </FramedCodexSprite>
                       ))}
                       {featuredHeroTypes[0] && (
@@ -4168,8 +3721,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {spellTypes.map((type) => (
-                        <FramedCodexSprite key={`spell-guide-${type}`} size={40} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                          <SpellSprite type={type} size={30} />
+                        <FramedCodexSprite key={`spell-guide-${type}`} size={50} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                          <SpellSprite type={type} size={40} />
                         </FramedCodexSprite>
                       ))}
                     </div>
@@ -4200,20 +3753,20 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="absolute inset-0 bg-gradient-to-r from-sky-950/70 via-transparent to-sky-950/70" />
                     </div>
                     <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <FramedCodexSprite size={40} theme={TOWER_SPRITE_FRAME_THEME.arch}>
-                        <TowerSprite type="arch" size={31} level={3} />
+                      <FramedCodexSprite size={50} theme={TOWER_SPRITE_FRAME_THEME.arch}>
+                        <TowerSprite type="arch" size={40} level={3} />
                       </FramedCodexSprite>
-                      <FramedCodexSprite size={40} theme={TOWER_SPRITE_FRAME_THEME.lab}>
-                        <TowerSprite type="lab" size={31} level={3} />
+                      <FramedCodexSprite size={50} theme={TOWER_SPRITE_FRAME_THEME.lab}>
+                        <TowerSprite type="lab" size={40} level={3} />
                       </FramedCodexSprite>
-                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("archer")}>
-                        <EnemySprite type="archer" size={31} animated />
+                      <FramedCodexSprite size={50} theme={getEnemySpriteFrameTheme("archer")}>
+                        <EnemySprite type="archer" size={40} />
                       </FramedCodexSprite>
-                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("crossbowman")}>
-                        <EnemySprite type="crossbowman" size={31} animated />
+                      <FramedCodexSprite size={50} theme={getEnemySpriteFrameTheme("crossbowman")}>
+                        <EnemySprite type="crossbowman" size={40} />
                       </FramedCodexSprite>
-                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("warlock")}>
-                        <EnemySprite type="warlock" size={31} animated />
+                      <FramedCodexSprite size={50} theme={getEnemySpriteFrameTheme("warlock")}>
+                        <EnemySprite type="warlock" size={40} />
                       </FramedCodexSprite>
                     </div>
                     <p className="text-xs text-stone-300 leading-relaxed">
@@ -4230,10 +3783,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {featuredSpecialTowers.slice(0, 3).map((type) => (
-                        <SpecialTowerSprite key={`mix-special-${type}`} type={type} size={40} />
+                        <SpecialTowerSprite key={`mix-special-${type}`} type={type} size={50} />
                       ))}
                       {featuredHazards.slice(0, 3).map((type) => (
-                        <HazardSprite key={`mix-hazard-${type}`} type={type} size={40} />
+                        <FramedCodexSprite key={`mix-hazard-${type}`} size={50} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                          <HazardSprite type={type} size={38} />
+                        </FramedCodexSprite>
                       ))}
                     </div>
                     <p className="text-xs text-stone-300 leading-relaxed">

@@ -1,22 +1,24 @@
 "use client";
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
-  ArrowUpCircle,
-  ArrowDownCircle,
-  ArrowLeftCircle,
-  ArrowRightCircle,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ZoomIn,
   ZoomOut,
-  X,
+  RotateCcw,
   Gamepad2,
-  Keyboard,
+  ChevronUp,
+  Camera,
+  X as XIcon,
 } from "lucide-react";
 import type { Position } from "../../types";
 import { PANEL, GOLD, panelGradient } from "./system/theme";
 import { useSettings } from "../../hooks/useSettings";
 
 // =============================================================================
-// CAMERA CONTROLS COMPONENT
+// CAMERA CONTROLS — Compact, unified floating HUD
 // =============================================================================
 
 interface CameraControlsProps {
@@ -25,212 +27,226 @@ interface CameraControlsProps {
   defaultOffset?: Position;
 }
 
-const dpadBtnStyle: React.CSSProperties = {
-  background: PANEL.bgDeep,
-  border: `1px solid ${GOLD.border25}`,
-  boxShadow: `inset 0 0 6px ${GOLD.glow04}`,
-};
+const MOVE_STEP = 30;
+const ZOOM_STEP = 0.15;
+const ZOOM_MIN = 0.6;
+const ZOOM_MAX = 2.5;
 
-const drawerTabStyle: React.CSSProperties = {
-  background: panelGradient,
-  border: `1.5px solid ${GOLD.border25}`,
-  boxShadow: `0 0 10px ${GOLD.glow07}, inset 0 0 6px ${GOLD.glow04}`,
-};
+interface DpadButtonProps {
+  onClick: () => void;
+  icon: React.ReactNode;
+  keyHint: string;
+  className?: string;
+}
+
+function DpadButton({ onClick, icon, keyHint, className = "" }: DpadButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`group flex flex-col items-center justify-center gap-px rounded-lg transition-all
+        hover:brightness-150 hover:scale-110 active:scale-90 ${className}`}
+      style={{
+        width: 32,
+        height: 34,
+        background: PANEL.bgDeep,
+        border: `1px solid ${GOLD.border25}`,
+        boxShadow: `inset 0 0 4px ${GOLD.glow04}`,
+      }}
+    >
+      <span className="text-amber-400 group-hover:text-amber-300 mt-0.5">{icon}</span>
+      <span className="text-[7px] font-mono font-bold text-amber-500/40 group-hover:text-amber-400/60 leading-none -mt-px">
+        {keyHint}
+      </span>
+    </button>
+  );
+}
+
+interface KeyBadgeProps {
+  label: string;
+}
+
+function KeyBadge({ label }: KeyBadgeProps) {
+  return (
+    <span
+      className="inline-flex items-center justify-center px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-amber-300/70 shrink-0"
+      style={{
+        background: PANEL.bgDeep,
+        border: `1px solid ${GOLD.border25}`,
+        minWidth: 24,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+interface ShortcutRowProps {
+  keyLabel: string;
+  description: string;
+}
+
+function ShortcutRow({ keyLabel, description }: ShortcutRowProps) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <KeyBadge label={keyLabel} />
+      <span className="text-[9px] text-amber-400/60">{description}</span>
+    </div>
+  );
+}
 
 export const CameraControls: React.FC<CameraControlsProps> = ({
   setCameraOffset,
   setCameraZoom,
   defaultOffset = { x: -40, y: -60 },
 }) => {
-  const { settings, updateCategory } = useSettings();
+  const { settings } = useSettings();
   const showDpad = settings.ui.showCameraDpad;
   const showControls = settings.ui.showControlsReference;
+  const [expanded, setExpanded] = useState(false);
 
-  const hideDpad = () => updateCategory("ui", { showCameraDpad: false });
-  const showDpadPanel = () => updateCategory("ui", { showCameraDpad: true });
-  const hideControls = () => updateCategory("ui", { showControlsReference: false });
-  const showControlsPanel = () => updateCategory("ui", { showControlsReference: true });
+  const moveUp = useCallback(() => setCameraOffset((p) => ({ ...p, y: p.y + MOVE_STEP })), [setCameraOffset]);
+  const moveDown = useCallback(() => setCameraOffset((p) => ({ ...p, y: p.y - MOVE_STEP })), [setCameraOffset]);
+  const moveLeft = useCallback(() => setCameraOffset((p) => ({ ...p, x: p.x + MOVE_STEP })), [setCameraOffset]);
+  const moveRight = useCallback(() => setCameraOffset((p) => ({ ...p, x: p.x - MOVE_STEP })), [setCameraOffset]);
+  const resetCamera = useCallback(() => setCameraOffset(defaultOffset), [setCameraOffset, defaultOffset]);
+  const zoomIn = useCallback(() => setCameraZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX)), [setCameraZoom]);
+  const zoomOut = useCallback(() => setCameraZoom((z) => Math.max(z - ZOOM_STEP, ZOOM_MIN)), [setCameraZoom]);
 
-  const hasDrawerTabs = !showDpad || !showControls;
-  const hasVisiblePanels = showDpad || showControls;
+  if (!showDpad && !showControls) return null;
 
-  if (!hasVisiblePanels && !hasDrawerTabs) return null;
-
-  return (
-    <div className="pointer-events-auto hidden sm:flex flex-col gap-1.5">
-      {/* Drawer tabs for hidden panels */}
-      {hasDrawerTabs && (
-        <div className="flex justify-end gap-1">
-          {!showDpad && (
-            <button
-              onClick={showDpadPanel}
-              className="p-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
-              style={drawerTabStyle}
-              title="Show camera D-pad"
-            >
-              <Gamepad2 size={14} className="text-amber-400/70" />
-            </button>
-          )}
-          {!showControls && (
-            <button
-              onClick={showControlsPanel}
-              className="p-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
-              style={drawerTabStyle}
-              title="Show controls reference"
-            >
-              <Keyboard size={14} className="text-amber-400/70" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Camera Panel */}
-      {showDpad && (
-        <div
-          className="p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
-          style={{
-            background: panelGradient,
-            border: `1.5px solid ${GOLD.border30}`,
-            boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
-          }}
-        >
-          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-
-          <button
-            onClick={hideDpad}
-            className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
-            title="Hide camera controls"
-          >
-            <X size={10} className="text-amber-500/60 hover:text-amber-300" />
-          </button>
-
-          <div
-            className="text-[9px] text-amber-200 mb-1.5 font-bold text-center tracking-[0.15em] uppercase relative z-10"
-            style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
-          >
-            Camera
-          </div>
-
-          {/* D-pad grid */}
-          <div
-            className="grid grid-cols-3 gap-0.5 p-1 rounded-lg relative z-10"
-            style={{
-              background: PANEL.bgDeep,
-              border: `1px solid ${GOLD.border25}`,
-              boxShadow: `inset 0 0 8px rgba(0,0,0,0.3)`,
-            }}
-          >
-            <div></div>
-            <button
-              onClick={() => setCameraOffset((p) => ({ ...p, y: p.y + 30 }))}
-              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ArrowUpCircle size={14} className="text-amber-400" />
-            </button>
-            <div></div>
-            <button
-              onClick={() => setCameraOffset((p) => ({ ...p, x: p.x + 30 }))}
-              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ArrowLeftCircle size={14} className="text-amber-400" />
-            </button>
-            <button
-              onClick={() => setCameraOffset(defaultOffset)}
-              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center text-amber-300 text-[10px]"
-              style={dpadBtnStyle}
-            >
-              ●
-            </button>
-            <button
-              onClick={() => setCameraOffset((p) => ({ ...p, x: p.x - 30 }))}
-              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ArrowRightCircle size={14} className="text-amber-400" />
-            </button>
-            <div></div>
-            <button
-              onClick={() => setCameraOffset((p) => ({ ...p, y: p.y - 30 }))}
-              className="p-1.5 rounded-md transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ArrowDownCircle size={14} className="text-amber-400" />
-            </button>
-            <div></div>
-          </div>
-
-          {/* Zoom buttons */}
-          <div className="flex gap-1 mt-1.5 relative z-10">
-            <button
-              onClick={() => setCameraZoom((z) => Math.min(z + 0.15, 2.5))}
-              className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ZoomIn size={14} className="text-amber-400" />
-            </button>
-            <button
-              onClick={() => setCameraZoom((z) => Math.max(z - 0.15, 0.6))}
-              className="flex-1 p-1.5 rounded-md transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-              style={dpadBtnStyle}
-            >
-              <ZoomOut size={14} className="text-amber-400" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Controls help panel */}
-      {showControls && (
-        <div
-          className="hidden sm:block p-2.5 rounded-xl backdrop-blur-sm shadow-lg relative"
+  if (!expanded) {
+    return (
+      <div className="pointer-events-auto hidden sm:block">
+        <button
+          onClick={() => setExpanded(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg backdrop-blur-sm transition-all hover:scale-105 active:scale-95"
           style={{
             background: panelGradient,
             border: `1.5px solid ${GOLD.border25}`,
-            boxShadow: `0 0 15px ${GOLD.glow07}, inset 0 0 10px ${GOLD.glow04}`,
+            boxShadow: `0 0 12px ${GOLD.glow07}, inset 0 0 6px ${GOLD.glow04}`,
           }}
+          title="Show camera & controls"
         >
-          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+          <Gamepad2 size={13} className="text-amber-400/80" />
+          <ChevronUp size={11} className="text-amber-500/50" />
+        </button>
+      </div>
+    );
+  }
 
+  return (
+    <div className="pointer-events-auto hidden sm:block">
+      <div
+        className="rounded-xl backdrop-blur-sm shadow-lg relative overflow-hidden"
+        style={{
+          background: panelGradient,
+          border: `1.5px solid ${GOLD.border30}`,
+          boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
+          minWidth: 160,
+        }}
+      >
+        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-2.5 pt-2 pb-1 relative z-10">
+          <div className="flex items-center gap-1.5">
+            <Gamepad2 size={11} className="text-amber-400/60" />
+            <span
+              className="text-[9px] text-amber-200/90 font-bold tracking-[0.15em] uppercase"
+              style={{ textShadow: "0 0 8px rgba(180,140,60,0.3)" }}
+            >
+              Controls
+            </span>
+          </div>
           <button
-            onClick={hideControls}
-            className="absolute top-1 right-1 p-0.5 rounded-md transition-all hover:bg-amber-800/30 z-20"
-            title="Hide controls reference"
+            onClick={() => setExpanded(false)}
+            className="p-0.5 rounded-md transition-all hover:bg-amber-800/30"
+            title="Collapse"
           >
-            <X size={10} className="text-amber-500/60 hover:text-amber-300" />
+            <XIcon size={10} className="text-amber-500/60 hover:text-amber-300" />
           </button>
-
-          <div
-            className="text-[9px] text-amber-200 font-bold tracking-[0.15em] mb-1.5 text-center uppercase relative z-10"
-            style={{ textShadow: `0 0 8px rgba(180,140,60,0.3)` }}
-          >
-            Controls
-          </div>
-
-          <div className="flex flex-col gap-1 relative z-10">
-            {[
-              { key: "WASD", desc: "Move Camera" },
-              { key: "+/−", desc: "Zoom In / Out" },
-              { key: "ESC", desc: "Unselect" },
-              { key: "F2", desc: "Photo Mode" },
-            ].map((item) => (
-              <div key={item.key} className="flex items-center gap-2 text-[9px]">
-                <span
-                  className="font-mono px-1.5 py-0.5 rounded text-amber-200 text-[8px] font-bold"
-                  style={{
-                    background: PANEL.bgDeep,
-                    border: `1px solid ${GOLD.border25}`,
-                  }}
-                >
-                  {item.key}
-                </span>
-                <span className="text-amber-300/80">{item.desc}</span>
-              </div>
-            ))}
-          </div>
         </div>
-      )}
+
+        {/* Camera D-pad */}
+        {showDpad && (
+          <div className="px-2.5 pb-1.5 relative z-10">
+            <div
+              className="p-1.5 rounded-lg"
+              style={{
+                background: PANEL.bgDeep,
+                border: `1px solid ${GOLD.border25}`,
+                boxShadow: "inset 0 0 8px rgba(0,0,0,0.3)",
+              }}
+            >
+              {/* Cross-shaped D-pad */}
+              <div className="flex flex-col items-center gap-0.5">
+                <DpadButton onClick={moveUp} icon={<ArrowUp size={12} />} keyHint="W" />
+                <div className="flex items-center gap-0.5">
+                  <DpadButton onClick={moveLeft} icon={<ArrowLeft size={12} />} keyHint="A" />
+                  <button
+                    onClick={resetCamera}
+                    className="flex items-center justify-center rounded-lg transition-all hover:brightness-150 hover:scale-110 active:scale-90"
+                    style={{
+                      width: 32,
+                      height: 34,
+                      background: "rgba(180,140,60,0.08)",
+                      border: `1px solid ${GOLD.border25}`,
+                    }}
+                    title="Reset camera"
+                  >
+                    <RotateCcw size={10} className="text-amber-500/50" />
+                  </button>
+                  <DpadButton onClick={moveRight} icon={<ArrowRight size={12} />} keyHint="D" />
+                </div>
+                <DpadButton onClick={moveDown} icon={<ArrowDown size={12} />} keyHint="S" />
+              </div>
+
+              {/* Zoom row */}
+              <div className="flex items-center gap-1 mt-1.5 pt-1.5" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+                <button
+                  onClick={zoomOut}
+                  className="flex-1 flex items-center justify-center py-1 rounded-md transition-all hover:brightness-150 active:scale-95"
+                  style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
+                  title="Zoom out (−)"
+                >
+                  <ZoomOut size={12} className="text-amber-400" />
+                </button>
+                <span className="text-[7px] font-mono text-amber-500/40 px-0.5">scroll</span>
+                <button
+                  onClick={zoomIn}
+                  className="flex-1 flex items-center justify-center py-1 rounded-md transition-all hover:brightness-150 active:scale-95"
+                  style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}
+                  title="Zoom in (+)"
+                >
+                  <ZoomIn size={12} className="text-amber-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Keyboard shortcuts */}
+        {showControls && (
+          <div
+            className="px-2.5 pb-2 relative z-10"
+            style={showDpad ? { paddingTop: 2 } : { paddingTop: 0 }}
+          >
+            {showDpad && (
+              <div className="mb-1.5" style={{ borderTop: `1px solid ${GOLD.innerBorder08}` }} />
+            )}
+            <div className="flex flex-col gap-1">
+              <ShortcutRow keyLabel="ESC" description="Deselect" />
+              <ShortcutRow keyLabel="F2" description="Photo Mode" />
+              {!showDpad && (
+                <>
+                  <ShortcutRow keyLabel="WASD" description="Move Camera" />
+                  <ShortcutRow keyLabel="+/−" description="Zoom" />
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

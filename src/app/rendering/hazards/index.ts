@@ -143,6 +143,89 @@ function getIceSpikesCycleState(
 // MAIN HAZARD RENDER FUNCTION
 // ============================================================================
 
+function dispatchHazardDraw(
+  ctx: CanvasRenderingContext2D,
+  type: string,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  zoom: number,
+): void {
+  switch (type) {
+    case "poison_fog":
+      drawPoisonFogHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "lava_geyser":
+    case "eruption_zone":
+      drawLavaGeyserHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "ice_sheet":
+    case "slippery_ice":
+      drawIceSheetHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "quicksand":
+      drawQuicksandHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "deep_water":
+      drawDeepWaterHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "maelstrom":
+      drawMaelstromHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "storm_field":
+      drawStormFieldHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "volcano":
+      drawVolcanoHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "lava":
+      drawLavaPoolHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "swamp":
+      drawSwampHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "ice":
+      drawIceHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "poison":
+      drawPoisonPoolHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "fire":
+      drawHellfireHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "lightning":
+      drawLightningFieldHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "void":
+      drawVoidRiftHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    case "ice_spikes":
+    case "spikes":
+      drawIceSpikesHazard(ctx, sRad, time, pos, isoRatio, zoom);
+      break;
+    default:
+      drawGenericHazard(ctx, sRad, time, zoom);
+  }
+}
+
+export function drawHazardSprite(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  type: string,
+  time: number,
+): void {
+  const sRad = size * 0.42;
+  const isoRatio = ISO_Y_RATIO;
+  const pos: Position = { x: 5, y: 5 };
+  ctx.save();
+  ctx.translate(x, y);
+  dispatchHazardDraw(ctx, type, sRad, time, pos, isoRatio, 1);
+  ctx.restore();
+}
+
 export function renderHazard(
   ctx: CanvasRenderingContext2D,
   hazard: MapHazard,
@@ -169,64 +252,7 @@ export function renderHazard(
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
-
-  switch (hazard.type) {
-    case "poison_fog":
-      drawPoisonFogHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "lava_geyser":
-    // Legacy alias: kept for old custom level data.
-    case "eruption_zone":
-      drawLavaGeyserHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "ice_sheet":
-    case "slippery_ice":
-      drawIceSheetHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "quicksand":
-      drawQuicksandHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "deep_water":
-      drawDeepWaterHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "maelstrom":
-      drawMaelstromHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "storm_field":
-      drawStormFieldHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "volcano":
-      drawVolcanoHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "lava":
-      drawLavaPoolHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "swamp":
-      drawSwampHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "ice":
-      drawIceHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "poison":
-      drawPoisonPoolHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "fire":
-      drawHellfireHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "lightning":
-      drawLightningFieldHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "void":
-      drawVoidRiftHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    case "ice_spikes":
-    case "spikes":
-      drawIceSpikesHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
-      break;
-    default:
-      drawGenericHazard(ctx, sRad, time, zoom);
-  }
-
+  dispatchHazardDraw(ctx, hazard.type, sRad, time, hazard.pos, isoRatio, zoom);
   ctx.restore();
 }
 

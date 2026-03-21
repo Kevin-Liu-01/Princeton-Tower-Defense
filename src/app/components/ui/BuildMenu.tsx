@@ -209,8 +209,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
                     {/* ── Mobile: compact vertical card ── */}
                     <div className="flex sm:hidden flex-col items-center py-1.5 px-1 gap-0.5 relative">
-                      <div className="w-7 h-7 flex items-center justify-center">
-                        <TowerSprite type={towerType} size={sizes.towerIcon} />
+                      <div className="w-6 h-12 flex items-center justify-center relative" style={{ width: sizes.towerIcon, height: sizes.towerIcon }}>
+                        <div className="absolute inset-0 rounded-full blur-[6px] opacity-60 z-0" style={{
+                          background: `radial-gradient(circle, ${role.accent}, transparent 70%)`,
+                        }} />
+                        <div className="relative z-10">
+                          <TowerSprite type={towerType} size={sizes.towerIcon} />
+                        </div>
                       </div>
                       <span className="text-[7px] font-bold text-amber-400 flex items-center gap-0.5 leading-none">
                         <PawPrint size={7} />{data.cost}
@@ -224,8 +229,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
                     {/* ── Desktop: horizontal detail card ── */}
                     <div className="hidden sm:flex items-center gap-2.5 px-2.5 py-2">
-                      <div className="w-8 h-10 flex-shrink-0 flex items-center justify-center">
-                        <TowerSprite type={towerType} size={sizes.towerIcon} />
+                      <div className="flex-shrink-0 w-10 flex items-center justify-center relative" style={{ height: sizes.towerIcon }}>
+                        <div className="absolute inset-[-4px] rounded-full blur-[8px] opacity-50 z-0" style={{
+                          background: `radial-gradient(circle, ${role.accent}, transparent 70%)`,
+                        }} />
+                        <div className="relative z-10">
+                          <TowerSprite type={towerType} size={sizes.towerIcon} />
+                        </div>
                       </div>
                       <div className="flex flex-col items-start min-w-0">
                         <div className="font-bold text-[10px] text-amber-200 leading-tight truncate max-w-full">

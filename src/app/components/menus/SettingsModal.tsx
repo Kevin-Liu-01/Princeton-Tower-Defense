@@ -591,6 +591,9 @@ function UIPanel({ settings, updateCategory }: CategoryPanelProps) {
       <SettingRow icon={<Activity size={16} />} label="FPS Counter" description="Show frames per second">
         <ToggleControl value={u.showFpsCounter} onChange={(v) => update({ showFpsCounter: v })} />
       </SettingRow>
+      <SettingRow icon={<Clock size={16} />} label="Game Timer" description="Show elapsed time below the HUD">
+        <ToggleControl value={u.showGameTimer} onChange={(v) => update({ showGameTimer: v })} />
+      </SettingRow>
       <SettingRow icon={<PanelTop size={16} />} label="Performance Overlay" description="Show detailed performance stats" tag="coming-soon">
         <ToggleControl value={u.showPerformanceOverlay} onChange={(v) => update({ showPerformanceOverlay: v })} />
       </SettingRow>
