@@ -1925,7 +1925,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     troopDamage: 35,
     desc: "Majestic raptor with a wingspan that blots out the sun. Swoops down to rake defenders with steel talons.",
     color: "#c8a050",
-    size: 24,
+    size: 34,
     category: "nature",
     traits: ["flying", "fast"],
     abilities: [

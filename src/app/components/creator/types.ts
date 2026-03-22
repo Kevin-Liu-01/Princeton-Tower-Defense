@@ -5,7 +5,6 @@ import type {
   MapDecoration,
   MapHazard,
   MapTheme,
-  SpecialTowerType,
   TowerType,
   WaveGroup,
 } from "../../types";
@@ -80,19 +79,25 @@ export interface MapPresetTemplate {
   theme?: MapTheme;
   difficulty?: 1 | 2 | 3;
   startingPawPoints?: number;
+  primaryPath?: GridPoint[];
+  secondaryPath?: GridPoint[];
+  heroSpawn?: GridPoint;
+  specialTowers: CustomSpecialTowerConfig[];
   decorations: MapDecoration[];
   hazards: MapHazard[];
-  specialTower?: {
-    pos: GridPoint;
-    type: SpecialTowerType;
-    hp?: number;
-  };
 }
 
-export type PresetSection = "waves" | "decorations" | "hazards" | "objectives" | "theme";
+export type PresetSection =
+  | "waves"
+  | "paths"
+  | "decorations"
+  | "hazards"
+  | "objectives"
+  | "theme";
 
 export const ALL_PRESET_SECTIONS: PresetSection[] = [
   "waves",
+  "paths",
   "decorations",
   "hazards",
   "objectives",
@@ -101,6 +106,7 @@ export const ALL_PRESET_SECTIONS: PresetSection[] = [
 
 export const PRESET_SECTION_LABELS: Record<PresetSection, string> = {
   waves: "Waves",
+  paths: "Paths",
   decorations: "Decorations",
   hazards: "Hazards",
   objectives: "Objectives",

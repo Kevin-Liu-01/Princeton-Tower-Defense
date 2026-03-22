@@ -280,10 +280,11 @@ export function useCreatorDraft(
 
       const presetDecorations = cloneDecorations(preset.decorations);
       const presetHazards = cloneHazards(preset.hazards);
-
-      const specialTowers: CustomSpecialTowerConfig[] = preset.specialTower
-        ? [{ pos: { ...preset.specialTower.pos }, type: preset.specialTower.type, hp: preset.specialTower.hp }]
-        : [];
+      const specialTowers: CustomSpecialTowerConfig[] = preset.specialTowers.map((st) => ({
+        pos: { ...st.pos },
+        type: st.type,
+        hp: st.hp,
+      }));
 
       applyDraftUpdate((prev) => ({
         ...prev,
@@ -292,6 +293,13 @@ export function useCreatorDraft(
         startingPawPoints: preset.startingPawPoints ?? prev.startingPawPoints,
         waveTemplate: nextPresetId,
         customWaves: [],
+        primaryPath: preset.primaryPath
+          ? preset.primaryPath.map((p) => ({ ...p }))
+          : prev.primaryPath,
+        secondaryPath: preset.secondaryPath
+          ? preset.secondaryPath.map((p) => ({ ...p }))
+          : [],
+        heroSpawn: preset.heroSpawn ? { ...preset.heroSpawn } : prev.heroSpawn,
         specialTowers,
         decorations: presetDecorations,
         hazards: presetHazards,
@@ -328,6 +336,17 @@ export function useCreatorDraft(
           next.waveTemplate = nextPresetId;
           next.customWaves = [];
         }
+        if (sectionSet.has("paths")) {
+          if (preset.primaryPath) {
+            next.primaryPath = preset.primaryPath.map((p) => ({ ...p }));
+          }
+          next.secondaryPath = preset.secondaryPath
+            ? preset.secondaryPath.map((p) => ({ ...p }))
+            : [];
+          if (preset.heroSpawn) {
+            next.heroSpawn = { ...preset.heroSpawn };
+          }
+        }
         if (sectionSet.has("decorations")) {
           next.decorations = cloneDecorations(preset.decorations);
         }
@@ -335,9 +354,11 @@ export function useCreatorDraft(
           next.hazards = cloneHazards(preset.hazards);
         }
         if (sectionSet.has("objectives")) {
-          next.specialTowers = preset.specialTower
-            ? [{ pos: { ...preset.specialTower.pos }, type: preset.specialTower.type, hp: preset.specialTower.hp }]
-            : [];
+          next.specialTowers = preset.specialTowers.map((st) => ({
+            pos: { ...st.pos },
+            type: st.type,
+            hp: st.hp,
+          }));
         }
 
         return next;

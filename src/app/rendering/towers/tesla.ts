@@ -39,7 +39,7 @@ export function renderTeslaCoil(
   const ringPositions: { y: number; size: number; progress: number }[] = [];
   for (let ri = 0; ri < ringCount; ri++) {
     const rp = (ri + 1) / (ringCount + 1);
-    const ry = topY - rp * (coilHeight - 18 * zoom) * 1.15;
+    const ry = topY - rp * (coilHeight - 18 * zoom) * 1.4;
     const rs = 14 - rp * 8;
     ringPositions.push({ y: ry, size: rs, progress: rp });
   }
@@ -340,7 +340,14 @@ export function renderTeslaCoil(
     }
   }
 
-  // Tesla coil rings with mechanical components
+  // Precompute ring render parameters for two-pass rendering
+  const ringRenderData: {
+    ringY: number;
+    ringSize: number;
+    energyPulse: number;
+    ringRotation: number;
+    sizePulse: number;
+  }[] = [];
   for (let i = 0; i < ringCount; i++) {
     const ringBob =
       Math.sin(time * 3 + i * 0.8) * 0.6 * zoom +
@@ -359,8 +366,13 @@ export function renderTeslaCoil(
       (isAttacking ? Math.sin(time * 15 + i) * 0.3 * attackIntensity : 0);
     const ringRotation =
       time * (0.8 + (isAttacking ? 2.5 * attackIntensity : 0)) + i * 0.4;
+    ringRenderData.push({ ringY, ringSize, energyPulse, ringRotation, sizePulse });
+  }
 
-    // Blue glow effect when firing
+  // Pass 1: Ring shadows and attack glows (behind gold bodies)
+  for (let i = 0; i < ringCount; i++) {
+    const { ringY, ringSize, energyPulse } = ringRenderData[i];
+
     if (isAttacking) {
       ctx.shadowColor = "#00aaff";
       ctx.shadowBlur = (12 + attackIntensity * 8) * zoom;
@@ -379,7 +391,6 @@ export function renderTeslaCoil(
       ctx.shadowBlur = 0;
     }
 
-    // Ring shadow (back edge) - darker copper
     ctx.fillStyle = `rgb(${80 + energyPulse * 15}, ${50 + energyPulse * 10}, ${25})`;
     ctx.beginPath();
     ctx.ellipse(
@@ -392,6 +403,11 @@ export function renderTeslaCoil(
       Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  // Pass 2: Ring bodies and details (on top of all shadows)
+  for (let i = 0; i < ringCount; i++) {
+    const { ringY, ringSize, energyPulse, ringRotation, sizePulse } = ringRenderData[i];
 
     // Main ring body - copper with 3D effect and rotation animation
     const rotOffset =
@@ -489,13 +505,14 @@ export function renderTeslaCoil(
     // Energy glow between rings (every other ring)
     if (i > 0 && i % 2 === 0) {
       const glowAlpha = 0.2 + energyPulse * 0.2 + (isAttacking ? 0.4 : 0);
+      const glowRX = ringSize * zoom * 0.6;
       ctx.fillStyle = `rgba(0, 200, 255, ${glowAlpha})`;
       ctx.beginPath();
       ctx.ellipse(
         screenPos.x,
         ringY + (coilHeight / ringCount) * 0.6,
-        ringSize * zoom * 0.6,
-        ringSize * zoom * 0.25,
+        glowRX,
+        glowRX * 0.5,
         0,
         0,
         Math.PI * 2,

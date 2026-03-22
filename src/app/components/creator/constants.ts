@@ -11,6 +11,7 @@ import {
   GRID_HEIGHT,
   GRID_WIDTH,
   LEVEL_DATA,
+  MAP_PATHS,
 } from "../../constants";
 import { LANDMARK_DECORATION_TYPES } from "../../utils";
 import { WORLD_LEVELS } from "../menus/world-map/worldMapData";
@@ -24,6 +25,7 @@ import type {
   SpecialTowerType,
   TowerType,
 } from "../../types";
+import type { CustomSpecialTowerConfig } from "../../customLevels/types";
 import type {
   GridPoint,
   MapPresetTemplate,
@@ -194,6 +196,11 @@ export const TOOL_HINTS: Record<string, string> = {
   erase: "Click items to erase them.",
 };
 
+const clonePath = (points: { x: number; y: number }[] | undefined): GridPoint[] | undefined =>
+  points && points.length >= 2
+    ? points.map((p) => ({ x: p.x, y: p.y }))
+    : undefined;
+
 const cloneDecorations = (decorations: MapDecoration[] | undefined): MapDecoration[] =>
   (decorations ?? []).map((deco) => ({
     ...deco,
@@ -207,16 +214,39 @@ const cloneHazards = (hazards: MapHazard[] | undefined): MapHazard[] =>
     gridPos: hazard.gridPos ? { ...hazard.gridPos } : hazard.gridPos,
   }));
 
+const collectSpecialTowers = (
+  levelData: (typeof LEVEL_DATA)[string] | undefined,
+): CustomSpecialTowerConfig[] => {
+  if (!levelData) return [];
+  if (levelData.specialTowers && levelData.specialTowers.length > 0) {
+    return levelData.specialTowers.map((st) => ({
+      pos: { ...st.pos },
+      type: st.type,
+      hp: st.hp,
+    }));
+  }
+  if (levelData.specialTower) {
+    return [{
+      pos: { ...levelData.specialTower.pos },
+      type: levelData.specialTower.type,
+      hp: levelData.specialTower.hp,
+    }];
+  }
+  return [];
+};
+
 export const MAP_PRESET_TEMPLATES: MapPresetTemplate[] = [
   {
     id: DEFAULT_PRESET_ID,
     label: "Default",
     description: "Blank sandbox preset.",
+    specialTowers: [],
     decorations: [],
     hazards: [],
   },
   ...WORLD_LEVELS.map((level) => {
     const levelData = LEVEL_DATA[level.id];
+    const secondaryPathKey = levelData?.secondaryPath ?? `${level.id}_b`;
     return {
       id: level.id,
       label: levelData?.name ?? level.name,
@@ -224,15 +254,14 @@ export const MAP_PRESET_TEMPLATES: MapPresetTemplate[] = [
       theme: levelData?.theme ?? level.region,
       difficulty: levelData?.difficulty ?? level.difficulty,
       startingPawPoints: levelData?.startingPawPoints,
+      primaryPath: clonePath(MAP_PATHS[level.id]),
+      secondaryPath: clonePath(MAP_PATHS[secondaryPathKey]),
+      heroSpawn: levelData?.heroSpawn
+        ? { x: levelData.heroSpawn.x, y: levelData.heroSpawn.y }
+        : undefined,
+      specialTowers: collectSpecialTowers(levelData),
       decorations: cloneDecorations(levelData?.decorations),
       hazards: cloneHazards(levelData?.hazards),
-      specialTower: levelData?.specialTower
-        ? {
-          pos: { ...levelData.specialTower.pos },
-          type: levelData.specialTower.type,
-          hp: levelData.specialTower.hp,
-        }
-        : undefined,
     };
   }),
 ];

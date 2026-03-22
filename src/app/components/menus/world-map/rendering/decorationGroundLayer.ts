@@ -6,10 +6,7 @@ import {
   drawSwampGas,
   drawFireflies,
 } from "./swampDecorations";
-import {
-  drawPalmTree,
-  drawDesertCactus,
-} from "./desertDecorations";
+import { drawPalmTree, drawDesertCactus } from "./desertDecorations";
 import { drawFrostedPine } from "./winterDecorations";
 import {
   drawAshTree,
@@ -51,13 +48,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     ctx.fill();
   }
   // Flower clusters as smaller organic blobs
-  const flowerColors = [
-    "#d4a0c0",
-    "#c0a0d4",
-    "#d4c080",
-    "#a0d4a0",
-    "#d4a080",
-  ];
+  const flowerColors = ["#d4a0c0", "#c0a0d4", "#d4c080", "#a0d4a0", "#d4a080"];
   for (let i = 0; i < 20; i++) {
     const fx = 20 + seededRandom(i * 43 + 300) * 350;
     const fyPct = 20 + seededRandom(i * 43 + 301) * 65;
@@ -255,7 +246,8 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
 
   // Swamp Gas Bubbles — multiple sizes, toxic glow, pop animation
   for (let i = 0; i < 15; i++) {
-    drawSwampGas(dc, 
+    drawSwampGas(
+      dc,
       400 + seededRandom(i * 55) * 300,
       30 + seededRandom(i * 22) * 60,
     );
@@ -263,7 +255,8 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
 
   // Fireflies — figure-8 flight, trailing light, warm glow halos
   for (let i = 0; i < 10; i++) {
-    drawFireflies(dc, 
+    drawFireflies(
+      dc,
       400 + seededRandom(i * 99) * 320,
       20 + seededRandom(i * 88) * 70,
     );
@@ -394,8 +387,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     const px = 720 + seededRandom(p * 23) * 360;
     const py = height * 0.25 + seededRandom(p * 31) * height * 0.55;
     const drift =
-      Math.sin(time * 2.5 + p * 0.5) * 18 +
-      Math.cos(time * 1.2 + p * 0.3) * 6;
+      Math.sin(time * 2.5 + p * 0.5) * 18 + Math.cos(time * 1.2 + p * 0.3) * 6;
     const pSize = 0.8 + seededRandom(p) * 2.5;
     const pAlpha = 0.15 + seededRandom(p * 3) * 0.25;
     ctx.fillStyle = `rgba(210, 180, 140, ${pAlpha})`;
@@ -435,7 +427,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
   }
   ctx.restore();
 
-  // === FROZEN FRONTIER DETAILS === (Enhanced Winter Environment)
+  // === FROZEN FRONTIER DETAILS === (Winter Environment)
 
   // Snow drift mounds — soft white organic blobs
   const snowDrifts: [number, number, number, number][] = [
@@ -649,20 +641,6 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     }
   }
 
-  // Frost overlay at edges
-  ctx.save();
-  const frostGrad = ctx.createLinearGradient(1080, 0, 1100, 0);
-  frostGrad.addColorStop(0, "rgba(200, 230, 255, 0.15)");
-  frostGrad.addColorStop(1, "rgba(200, 230, 255, 0)");
-  ctx.fillStyle = frostGrad;
-  ctx.fillRect(1080, 0, 40, height);
-  const frostGrad2 = ctx.createLinearGradient(1420, 0, 1440, 0);
-  frostGrad2.addColorStop(0, "rgba(200, 230, 255, 0)");
-  frostGrad2.addColorStop(1, "rgba(200, 230, 255, 0.15)");
-  ctx.fillStyle = frostGrad2;
-  ctx.fillRect(1400, 0, 40, height);
-  ctx.restore();
-
   // === INFERNO DEPTHS DETAILS === (Enhanced Volcanic Environment)
 
   // Lava pool patches — glowing organic blobs
@@ -774,26 +752,6 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
   ];
   ashTreePositions.forEach(([atx, aty, ats]) => drawAshTree(dc, atx, aty, ats));
 
-  // Hellish sky gradient overlay with pulsing intensity
-  ctx.save();
-  const skyGrad = ctx.createLinearGradient(1440, 0, 1440, height * 0.5);
-  skyGrad.addColorStop(
-    0,
-    `rgba(80, 20, 10, ${0.35 + Math.sin(time * 0.5) * 0.08})`,
-  );
-  skyGrad.addColorStop(
-    0.3,
-    `rgba(120, 40, 20, ${0.25 + Math.sin(time * 0.7) * 0.06})`,
-  );
-  skyGrad.addColorStop(
-    0.6,
-    `rgba(90, 25, 12, ${0.15 + Math.sin(time * 0.9) * 0.04})`,
-  );
-  skyGrad.addColorStop(1, "rgba(60, 15, 8, 0)");
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(1440, 0, 380, height * 0.5);
-  ctx.restore();
-
   // Obsidian spires with reflective glass surface, geometric fractures, magical glow
   [
     [1475, 48],
@@ -855,44 +813,7 @@ export function drawDecorationGroundLayer(dc: WorldMapDrawContext): void {
     }
   }
 
-  // Heat distortion effect overlay
-  ctx.save();
-  ctx.globalAlpha = 0.03 + Math.sin(time * 2) * 0.01;
-  for (let h = 0; h < 10; h++) {
-    const heatY = height * 0.2 + h * 12;
-    ctx.fillStyle = "#ff4400";
-    ctx.beginPath();
-    for (let hx = 1440; hx < 1820; hx += 8) {
-      const distort = Math.sin(time * 5 + hx * 0.03 + h * 0.5) * 2.5;
-      const distort2 = Math.sin(time * 3 + hx * 0.05 + h * 0.3) * 1.5;
-      if (hx === 1440) ctx.moveTo(hx, heatY + distort + distort2);
-      else ctx.lineTo(hx, heatY + distort + distort2);
-    }
-    ctx.lineTo(1820, heatY + 10);
-    ctx.lineTo(1440, heatY + 10);
-    ctx.closePath();
-    ctx.fill();
-  }
   ctx.restore();
-
-  // Hellfire border glow at edges
-  const fireGlowLeft = ctx.createLinearGradient(1440, 0, 1470, 0);
-  fireGlowLeft.addColorStop(
-    0,
-    `rgba(255, 60, 20, ${0.15 + Math.sin(time * 2) * 0.05})`,
-  );
-  fireGlowLeft.addColorStop(1, "rgba(255, 60, 20, 0)");
-  ctx.fillStyle = fireGlowLeft;
-  ctx.fillRect(1440, 0, 50, height);
-
-  const fireGlowRight = ctx.createLinearGradient(1790, 0, 1820, 0);
-  fireGlowRight.addColorStop(0, "rgba(255, 60, 20, 0)");
-  fireGlowRight.addColorStop(
-    1,
-    `rgba(255, 60, 20, ${0.2 + Math.sin(time * 2.5) * 0.05})`,
-  );
-  ctx.fillStyle = fireGlowRight;
-  ctx.fillRect(1770, 0, 50, height);
 
   // === ENVIRONMENTAL DETAILS - ROADS, BRIDGES, DEBRIS ===
 

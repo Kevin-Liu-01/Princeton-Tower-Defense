@@ -714,16 +714,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         />
 
         {/* DESKTOP: LEFT SIDEBAR */}
-        <div className="hidden sm:flex sm:h-auto sm:w-80 flex-shrink-0 flex-col overflow-hidden pl-3 py-3" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+        <div className="hidden sm:flex sm:h-auto sm:w-72 flex-shrink-0 flex-col overflow-hidden pl-3 py-3" style={{ background: `linear-gradient(180deg, rgba(52,36,20,0.85) 0%, rgba(32,22,12,0.88) 100%)`, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
           <OrnateFrame
-            className="flex-1 flex flex-col overflow-hidden rounded-2xl border-2 border-amber-600/50 shadow-2xl"
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl border border-amber-600/40 shadow-xl"
             cornerSize={24}
             showBorders={true}
             showSideBorders={true}
             showTopBottomBorders={true}
             borderScale={0.4}
           >
-            <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ background: panelGradient, boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}` }}>
+            <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ background: `linear-gradient(180deg, rgba(52,36,20,0.92) 0%, rgba(32,22,12,0.95) 100%)`, boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}` }}>
               {selectedLevel && currentLevel ? (
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
                   <div className="flex-1 overflow-y-auto">

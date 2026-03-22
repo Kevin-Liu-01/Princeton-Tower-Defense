@@ -295,8 +295,13 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({ enemy, p
 
   const header = (
     <div className="flex items-center gap-2">
-      <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: eData.color + "15", border: `1.5px solid ${eData.color}55` }}>
-        <EnemySprite type={enemy.type} size={34} animated />
+      <div className="w-14 h-14 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden relative" style={{ background: eData.color + "15", border: `1.5px solid ${eData.color}55` }}>
+        <div className="absolute inset-0 rounded-md blur-[6px] opacity-60 z-0" style={{
+          background: `radial-gradient(circle, ${eData.color}99, transparent 70%)`,
+        }} />
+        <div className="relative z-10">
+          <EnemySprite type={enemy.type} size={48} animated />
+        </div>
       </div>
       <div className="flex-1 min-w-0 pr-5">
         <div className="flex items-center gap-1">
@@ -440,8 +445,13 @@ export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({ troop, p
 
   const header = (
     <div className="flex items-center gap-2">
-      <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden" style={{ background: "rgba(59, 130, 246, 0.12)", border: "1.5px solid rgba(59, 130, 246, 0.4)" }}>
-        <TroopSprite type={troopType} size={34} animated />
+      <div className="w-14 h-14 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden relative" style={{ background: "rgba(59, 130, 246, 0.12)", border: "1.5px solid rgba(59, 130, 246, 0.4)" }}>
+        <div className="absolute inset-0 rounded-md blur-[6px] opacity-60 z-0" style={{
+          background: "radial-gradient(circle, rgba(59, 130, 246, 0.6), transparent 70%)",
+        }} />
+        <div className="relative z-10">
+          <TroopSprite type={troopType} size={48} animated />
+        </div>
       </div>
       <div className="flex-1 min-w-0 pr-5">
         <span className="text-xs font-bold text-blue-100 truncate block">{tData.name}</span>

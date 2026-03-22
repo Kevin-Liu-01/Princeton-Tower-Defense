@@ -152,6 +152,9 @@ import { setupResizeListener } from "./runtime/canvasResize";
 import { handleBuildTouchDragMoveImpl, handleBuildTouchDragEndImpl } from "./runtime/buildDragHandlers";
 import { computePendingChallengeUnlocks } from "./runtime/challengeUnlocks";
 import { BattleUI } from "./runtime/BattleUI";
+import { LoadingScreen, LoadingOverlay } from "../components/menus/LoadingScreen";
+import { usePreloadGate, useBattleLoadingGate } from "./useImagePreloader";
+import { getWorldMapAssets, getBattleAssets } from "../constants/loadingAssets";
 import {
   handleCameraKeyDown,
   enterCameraModeImpl,
@@ -187,6 +190,33 @@ export function usePrincetonTowerDefenseRuntime() {
   const [selectedMap, setSelectedMap] = useState<string>("poe");
   const [selectedHero, setSelectedHero] = useLocalStorage<HeroType | null>(STORAGE_KEY_SELECTED_HERO, "tiger");
   const [selectedSpells, setSelectedSpells] = useLocalStorage<SpellType[]>(STORAGE_KEY_SELECTED_SPELLS, []);
+
+  // ── Loading screens ──
+  const worldMapAssetUrls = useMemo(() => getWorldMapAssets(), []);
+  const worldMapPreload = usePreloadGate(worldMapAssetUrls, 2400);
+
+  const getBattleUrlsForMap = useCallback(
+    () => getBattleAssets(selectedMap),
+    [selectedMap],
+  );
+  const [battleTransitioning, setBattleTransitioning] = useState(false);
+  const battleLoading = useBattleLoadingGate(
+    getBattleUrlsForMap,
+    2600,
+    useCallback(() => {
+      setBattleTransitioning(true);
+      setGameState("playing");
+    }, [setGameState]),
+  );
+
+  useEffect(() => {
+    if (battleTransitioning) {
+      const t = setTimeout(() => setBattleTransitioning(false), 200);
+      return () => clearTimeout(t);
+    }
+  }, [battleTransitioning]);
+
+  const startBattle = battleLoading.trigger;
 
   // Persistent progress (saved to localStorage)
   const {
@@ -1290,17 +1320,42 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     if (pendingStartWithRandomRef.current && selectedHero && selectedSpells.length === 3) {
       pendingStartWithRandomRef.current = false;
-      setGameState("playing");
+      startBattle();
     }
-  }, [selectedHero, selectedSpells, setGameState]);
+  }, [selectedHero, selectedSpells, startBattle]);
 
-  // Render different screens based on game state
-  // Show WorldMap for both menu and setup (combined into one screen)
+  // Wrap setGameState to intercept "playing" transitions through loading screen
+  const setGameStateWithLoading = useCallback(
+    (state: GameState) => {
+      if (state === "playing") {
+        startBattle();
+      } else {
+        setGameState(state);
+      }
+    },
+    [startBattle, setGameState],
+  );
+
+  // ── Battle loading screen (initial loading phase, before gameState → playing) ──
+  if (battleLoading.active && gameState !== "playing") {
+    const levelData = LEVEL_DATA[selectedMap];
+    return (
+      <LoadingScreen
+        progress={battleLoading.progress}
+        loaded={battleLoading.loaded}
+        total={battleLoading.total}
+        context="battle"
+        levelName={levelData?.name}
+      />
+    );
+  }
+
+  // World map + loading overlay (WorldMap renders behind and initializes canvas while loading)
   if (gameState === "menu" || gameState === "setup") {
     return (
       <>
         <WorldMap
-          setGameState={setGameState}
+          setGameState={setGameStateWithLoading}
           setSelectedMap={setSelectedMap}
           selectedHero={selectedHero}
           setSelectedHero={setSelectedHero}
@@ -1326,6 +1381,14 @@ export function usePrincetonTowerDefenseRuntime() {
           onDevModeChange={handleDevModeChange}
         />
         {devConfigMenu}
+        <LoadingOverlay visible={!worldMapPreload.isReady}>
+          <LoadingScreen
+            progress={worldMapPreload.progress}
+            loaded={worldMapPreload.loaded}
+            total={worldMapPreload.total}
+            context="worldmap"
+          />
+        </LoadingOverlay>
       </>
     );
   }
@@ -1336,138 +1399,149 @@ export function usePrincetonTowerDefenseRuntime() {
   const currentLevelStats = levelStats?.[selectedMap] || {};
 
   return (
-    <BattleUI
-      canvasRef={canvasRef}
-      bgCanvasRef={bgCanvasRef}
-      backdropCanvasRef={backdropCanvasRef}
-      containerRef={containerRef}
-      isTouchDeviceRef={isTouchDeviceRef}
-      width={width}
-      height={height}
-      dpr={dpr}
-      handlePointerDown={handlePointerDown}
-      handleCanvasClick={handleCanvasClick}
-      handleMouseMove={handleMouseMove}
-      handleCanvasPointerLeave={handleCanvasPointerLeave}
-      fadeOverlayBackground={fadeOverlayBackground}
-      isPanning={isPanning}
-      repositioningTower={repositioningTower}
-      hoveredWaveBubblePathKey={hoveredWaveBubblePathKey}
-      selectedMap={selectedMap}
-      battleOutcome={battleOutcome}
-      pauseLocked={pauseLocked}
-      cameraModeActive={cameraModeActive}
-      pawPoints={pawPoints}
-      lives={lives}
-      currentWave={currentWave}
-      totalWaves={totalWaves}
-      gameSpeed={gameSpeed}
-      setGameSpeed={setGameSpeed}
-      goldSpellActive={goldSpellActive}
-      paydayEndTime={paydayEndTime}
-      paydayPawPointsEarned={paydayPawPointsEarned}
-      hexWardEndTime={hexWardEndTime}
-      hexWardTargetCount={hexWardTargetCount}
-      hexWardRaiseCap={hexWardRaiseCap}
-      hexWardRaisesRemaining={hexWardRaisesRemaining}
-      hexWardDamageAmpPct={hexWardDamageAmpPct}
-      hexWardBlocksHealing={hexWardBlocksHealing}
-      eatingClubIncomeEvents={eatingClubIncomeEvents}
-      onEatingClubEventComplete={(id) =>
-        setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))
-      }
-      bountyIncomeEvents={bountyIncomeEvents}
-      onBountyEventComplete={(id) =>
-        setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))
-      }
-      leakedBountyEvents={leakedBountyEvents}
-      onLeakedBountyEventComplete={(id) =>
-        setLeakedBountyEvents((prev) => prev.filter((e) => e.id !== id))
-      }
-      inspectorActive={inspectorActive}
-      setInspectorActive={setInspectorActive}
-      selectedInspectEnemy={selectedInspectEnemy}
-      setSelectedInspectEnemy={setSelectedInspectEnemy}
-      selectedInspectTroop={selectedInspectTroop}
-      setSelectedInspectTroop={setSelectedInspectTroop}
-      selectedInspectHero={selectedInspectHero}
-      setSelectedInspectHero={setSelectedInspectHero}
-      hoveredInspectDecoration={hoveredInspectDecoration}
-      quitLevel={quitLevel}
-      retryLevel={retryLevel}
-      onTogglePhotoMode={toggleCameraMode}
-      onToggleDevMenu={() => setDevMenuOpen((p) => !p)}
-      devMenuOpen={devMenuOpen}
-      setCameraOffset={setCameraOffset}
-      setCameraZoom={setCameraZoom}
-      cameraOffset={cameraOffset}
-      cameraZoom={cameraZoom}
-      selectedLevelData={selectedLevelData}
-      handleCameraModeCapture={handleCameraModeCapture}
-      exitCameraMode={exitCameraMode}
-      towers={towers}
-      setTowers={setTowers}
-      enemies={enemies}
-      troops={troops}
-      setTroops={setTroops}
-      hero={hero}
-      spells={spells}
-      spellUpgradeLevels={spellUpgradeLevels}
-      selectedTower={selectedTower}
-      setSelectedTower={setSelectedTower}
-      hoveredTower={hoveredTower}
-      setHoveredTower={setHoveredTower}
-      hoveredHero={hoveredHero}
-      mousePos={mousePos}
-      upgradeTower={upgradeTower}
-      sellTower={sellTower}
-      setMissileMortarTargetingId={setMissileMortarTargetingId}
-      placingTroop={placingTroop}
-      targetingSpell={targetingSpell}
-      activeSentinelTargetKey={activeSentinelTargetKey}
-      missileMortarTargetingId={missileMortarTargetingId}
-      hoveredSpecialTower={hoveredSpecialTower}
-      specialTowerHp={specialTowerHp}
-      sentinelTargets={sentinelTargets}
-      getSpecialTowerKey={getSpecialTowerKey}
-      hoveredLandmark={hoveredLandmark}
-      hoveredHazardType={hoveredHazardType}
-      previousGameSpeed={previousGameSpeed}
-      setPreviousGameSpeed={setPreviousGameSpeed}
-      showTutorial={showTutorial}
-      encounterQueue={encounterQueue}
-      encounterIndex={encounterIndex}
-      encounterExiting={encounterExiting}
-      encounterAutoDismissMs={ENCOUNTER_AUTO_DISMISS_MS}
-      handleEncounterAcknowledge={handleEncounterAcknowledge}
-      devConfigMenu={devConfigMenu}
-      gameEventLog={gameEventLog}
-      setDevMenuOpen={setDevMenuOpen}
-      spellAutoAim={spellAutoAim}
-      toggleSpellAutoAim={toggleSpellAutoAim}
-      toggleHeroSelection={toggleHeroSelection}
-      triggerHeroAbility={triggerHeroAbility}
-      castSpell={castSpell}
-      buildingTower={buildingTower}
-      setBuildingTower={setBuildingTower}
-      setIsBuildDragging={setIsBuildDragging}
-      setHoveredBuildTower={setHoveredBuildTower}
-      setDraggingTower={setDraggingTower}
-      handleBuildTouchDragMove={handleBuildTouchDragMove}
-      handleBuildTouchDragEnd={handleBuildTouchDragEnd}
-      levelAllowedTowers={levelAllowedTowers}
-      levelStartTime={levelStartTime}
-      totalPausedTimeRef={totalPausedTimeRef}
-      starsEarned={starsEarned}
-      timeSpent={timeSpent}
-      currentLevelStats={currentLevelStats}
-      resetGame={resetGame}
-      handleTutorialComplete={handleTutorialComplete}
-      handleTutorialSkip={handleTutorialSkip}
-      selectedHero={selectedHero}
-      selectedSpells={selectedSpells}
-      handleTutorialHeroChange={handleTutorialHeroChange}
-      handleTutorialSpellToggle={handleTutorialSpellToggle}
-    />
+    <>
+      <BattleUI
+        canvasRef={canvasRef}
+        bgCanvasRef={bgCanvasRef}
+        backdropCanvasRef={backdropCanvasRef}
+        containerRef={containerRef}
+        isTouchDeviceRef={isTouchDeviceRef}
+        width={width}
+        height={height}
+        dpr={dpr}
+        handlePointerDown={handlePointerDown}
+        handleCanvasClick={handleCanvasClick}
+        handleMouseMove={handleMouseMove}
+        handleCanvasPointerLeave={handleCanvasPointerLeave}
+        fadeOverlayBackground={fadeOverlayBackground}
+        isPanning={isPanning}
+        repositioningTower={repositioningTower}
+        hoveredWaveBubblePathKey={hoveredWaveBubblePathKey}
+        selectedMap={selectedMap}
+        battleOutcome={battleOutcome}
+        pauseLocked={pauseLocked}
+        cameraModeActive={cameraModeActive}
+        pawPoints={pawPoints}
+        lives={lives}
+        currentWave={currentWave}
+        totalWaves={totalWaves}
+        gameSpeed={gameSpeed}
+        setGameSpeed={setGameSpeed}
+        goldSpellActive={goldSpellActive}
+        paydayEndTime={paydayEndTime}
+        paydayPawPointsEarned={paydayPawPointsEarned}
+        hexWardEndTime={hexWardEndTime}
+        hexWardTargetCount={hexWardTargetCount}
+        hexWardRaiseCap={hexWardRaiseCap}
+        hexWardRaisesRemaining={hexWardRaisesRemaining}
+        hexWardDamageAmpPct={hexWardDamageAmpPct}
+        hexWardBlocksHealing={hexWardBlocksHealing}
+        eatingClubIncomeEvents={eatingClubIncomeEvents}
+        onEatingClubEventComplete={(id) =>
+          setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))
+        }
+        bountyIncomeEvents={bountyIncomeEvents}
+        onBountyEventComplete={(id) =>
+          setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))
+        }
+        leakedBountyEvents={leakedBountyEvents}
+        onLeakedBountyEventComplete={(id) =>
+          setLeakedBountyEvents((prev) => prev.filter((e) => e.id !== id))
+        }
+        inspectorActive={inspectorActive}
+        setInspectorActive={setInspectorActive}
+        selectedInspectEnemy={selectedInspectEnemy}
+        setSelectedInspectEnemy={setSelectedInspectEnemy}
+        selectedInspectTroop={selectedInspectTroop}
+        setSelectedInspectTroop={setSelectedInspectTroop}
+        selectedInspectHero={selectedInspectHero}
+        setSelectedInspectHero={setSelectedInspectHero}
+        hoveredInspectDecoration={hoveredInspectDecoration}
+        quitLevel={quitLevel}
+        retryLevel={retryLevel}
+        onTogglePhotoMode={toggleCameraMode}
+        onToggleDevMenu={() => setDevMenuOpen((p) => !p)}
+        devMenuOpen={devMenuOpen}
+        setCameraOffset={setCameraOffset}
+        setCameraZoom={setCameraZoom}
+        cameraOffset={cameraOffset}
+        cameraZoom={cameraZoom}
+        selectedLevelData={selectedLevelData}
+        handleCameraModeCapture={handleCameraModeCapture}
+        exitCameraMode={exitCameraMode}
+        towers={towers}
+        setTowers={setTowers}
+        enemies={enemies}
+        troops={troops}
+        setTroops={setTroops}
+        hero={hero}
+        spells={spells}
+        spellUpgradeLevels={spellUpgradeLevels}
+        selectedTower={selectedTower}
+        setSelectedTower={setSelectedTower}
+        hoveredTower={hoveredTower}
+        setHoveredTower={setHoveredTower}
+        hoveredHero={hoveredHero}
+        mousePos={mousePos}
+        upgradeTower={upgradeTower}
+        sellTower={sellTower}
+        setMissileMortarTargetingId={setMissileMortarTargetingId}
+        placingTroop={placingTroop}
+        targetingSpell={targetingSpell}
+        activeSentinelTargetKey={activeSentinelTargetKey}
+        missileMortarTargetingId={missileMortarTargetingId}
+        hoveredSpecialTower={hoveredSpecialTower}
+        specialTowerHp={specialTowerHp}
+        sentinelTargets={sentinelTargets}
+        getSpecialTowerKey={getSpecialTowerKey}
+        hoveredLandmark={hoveredLandmark}
+        hoveredHazardType={hoveredHazardType}
+        previousGameSpeed={previousGameSpeed}
+        setPreviousGameSpeed={setPreviousGameSpeed}
+        showTutorial={showTutorial}
+        encounterQueue={encounterQueue}
+        encounterIndex={encounterIndex}
+        encounterExiting={encounterExiting}
+        encounterAutoDismissMs={ENCOUNTER_AUTO_DISMISS_MS}
+        handleEncounterAcknowledge={handleEncounterAcknowledge}
+        devConfigMenu={devConfigMenu}
+        gameEventLog={gameEventLog}
+        setDevMenuOpen={setDevMenuOpen}
+        spellAutoAim={spellAutoAim}
+        toggleSpellAutoAim={toggleSpellAutoAim}
+        toggleHeroSelection={toggleHeroSelection}
+        triggerHeroAbility={triggerHeroAbility}
+        castSpell={castSpell}
+        buildingTower={buildingTower}
+        setBuildingTower={setBuildingTower}
+        setIsBuildDragging={setIsBuildDragging}
+        setHoveredBuildTower={setHoveredBuildTower}
+        setDraggingTower={setDraggingTower}
+        handleBuildTouchDragMove={handleBuildTouchDragMove}
+        handleBuildTouchDragEnd={handleBuildTouchDragEnd}
+        levelAllowedTowers={levelAllowedTowers}
+        levelStartTime={levelStartTime}
+        totalPausedTimeRef={totalPausedTimeRef}
+        starsEarned={starsEarned}
+        timeSpent={timeSpent}
+        currentLevelStats={currentLevelStats}
+        resetGame={resetGame}
+        handleTutorialComplete={handleTutorialComplete}
+        handleTutorialSkip={handleTutorialSkip}
+        selectedHero={selectedHero}
+        selectedSpells={selectedSpells}
+        handleTutorialHeroChange={handleTutorialHeroChange}
+        handleTutorialSpellToggle={handleTutorialSpellToggle}
+      />
+      <LoadingOverlay visible={battleTransitioning} fadeDurationMs={500}>
+        <LoadingScreen
+          progress={1}
+          loaded={battleLoading.total}
+          total={battleLoading.total}
+          context="battle"
+          levelName={selectedLevelData?.name}
+        />
+      </LoadingOverlay>
+    </>
   );
 }

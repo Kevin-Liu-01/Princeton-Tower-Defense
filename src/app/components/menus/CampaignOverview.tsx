@@ -19,9 +19,6 @@ import { LEVEL_DATA } from "../../constants";
 import {
   PANEL,
   GOLD,
-  RED_CARD,
-  BLUE_CARD,
-  GREEN_CARD,
 } from "../ui/system/theme";
 import { WORLD_LEVELS } from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
@@ -80,40 +77,6 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-interface StatPillProps {
-  icon: React.ReactNode;
-  value: number | string;
-  label: string;
-  bgLight: string;
-  bgDark: string;
-  border: string;
-  glow: string;
-  innerBorder: string;
-  textColor: string;
-  labelColor: string;
-}
-
-function StatPill({ icon, value, label, bgLight, bgDark, border, glow, innerBorder, textColor, labelColor }: StatPillProps) {
-  return (
-    <div
-      className="flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg relative flex-1"
-      style={{
-        background: `linear-gradient(135deg, ${bgLight}, ${bgDark})`,
-        border: `1px solid ${border}`,
-        boxShadow: `inset 0 0 8px ${glow}`,
-      }}
-    >
-      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${innerBorder}` }} />
-      <div className="flex items-center gap-1.5">
-        {icon}
-        <span className={`text-sm font-bold ${textColor} tabular-nums`}>
-          {value}
-        </span>
-      </div>
-      <span className={`text-[8px] font-bold uppercase tracking-widest ${labelColor}`}>{label}</span>
-    </div>
-  );
-}
 
 interface CampaignOverviewProps {
   levelStars: LevelStars;
@@ -161,24 +124,6 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-auto relative">
-      {/* Decorative bg image */}
-      {recommended && getPreviewImage(recommended.id) && (
-        <div className="absolute top-0 right-0 w-48 h-48 pointer-events-none z-0 overflow-hidden">
-          <Image
-            src={getPreviewImage(recommended.id)!}
-            alt=""
-            fill
-            sizes="192px"
-            className="object-cover opacity-15"
-            style={{
-              maskImage:
-                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.4) 30%, transparent 65%)",
-              WebkitMaskImage:
-                "radial-gradient(ellipse at 100% 0%, black 0%, rgba(0,0,0,0.4) 30%, transparent 65%)",
-            }}
-          />
-        </div>
-      )}
 
       {/* Top divider */}
       <div
@@ -192,13 +137,28 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           HEADER: Campaign title + star badge + progress
           ═══════════════════════════════════════════════════ */}
       <div
-        className="flex-shrink-0 px-4 pt-4 pb-3 relative z-10"
+        className="flex-shrink-0 px-3.5 pt-3 pb-2.5 relative z-10 overflow-hidden"
         style={{ borderBottom: `1px solid ${GOLD.border25}` }}
       >
+        {/* Faint missile background image */}
+        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+          <Image
+            src="/images/new/gameplay_missile1.png"
+            alt=""
+            fill
+            sizes="300px"
+            className="object-cover opacity-[0.09] scale-110"
+            style={{
+              objectPosition: "center 40%",
+              maskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 100%)",
+            }}
+          />
+        </div>
         {/* Title row */}
-        <div className="flex items-center gap-2 mb-3">
-          <Map size={20} className="text-amber-400 drop-shadow-lg" />
-          <h2 className="text-base font-bold text-amber-100 tracking-wider uppercase">
+        <div className="flex items-center gap-2 mb-2.5 relative z-10">
+          <Map size={18} className="text-amber-400 drop-shadow-lg" />
+          <h2 className="text-sm font-bold text-amber-100 tracking-wider uppercase">
             Campaign
           </h2>
           {onTogglePreview && (
@@ -217,8 +177,8 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         </div>
 
         {/* Progress section */}
-        <div className="mb-2">
-          <div className="flex items-center justify-between mb-1.5">
+        <div className="mb-1.5 relative z-10">
+          <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-bold text-amber-500/70 uppercase tracking-widest">
               Overall Progress
             </span>
@@ -261,44 +221,31 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-1.5 mt-3">
-          <StatPill
-            icon={<Swords size={13} className="text-blue-400/90 shrink-0" />}
-            value={totalBattles}
-            label="Played"
-            bgLight={BLUE_CARD.bgLight}
-            bgDark={BLUE_CARD.bgDark}
-            border={BLUE_CARD.border}
-            glow={BLUE_CARD.glow}
-            innerBorder={BLUE_CARD.innerBorder}
-            textColor="text-blue-300"
-            labelColor="text-blue-500/60"
-          />
-          <StatPill
-            icon={<Trophy size={13} className="text-emerald-400/90 shrink-0" />}
-            value={totalWins}
-            label="Wins"
-            bgLight={GREEN_CARD.bgLight}
-            bgDark={GREEN_CARD.bgDark}
-            border={GREEN_CARD.border}
-            glow={GREEN_CARD.glow}
-            innerBorder={GREEN_CARD.innerBorder}
-            textColor="text-emerald-300"
-            labelColor="text-emerald-500/60"
-          />
-          <StatPill
-            icon={<Heart size={13} className="text-red-400 fill-red-400 shrink-0" />}
-            value={totalHearts}
-            label="Lives"
-            bgLight={RED_CARD.bgLight}
-            bgDark={RED_CARD.bgDark}
-            border={RED_CARD.border}
-            glow={RED_CARD.glow06}
-            innerBorder={RED_CARD.innerBorder12}
-            textColor="text-red-300"
-            labelColor="text-red-500/60"
-          />
+        {/* Compact stats row */}
+        <div
+          className="flex items-center justify-between mt-2.5 px-2.5 py-1.5 rounded-lg relative z-10"
+          style={{
+            background: `linear-gradient(135deg, rgba(40,28,14,0.7), rgba(30,20,10,0.55))`,
+            border: `1px solid ${GOLD.border25}`,
+          }}
+        >
+          <span className="flex items-center gap-1.5 text-[11px]">
+            <Swords size={11} className="text-blue-400/80 shrink-0" />
+            <span className="text-blue-300 font-bold tabular-nums">{totalBattles}</span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Played</span>
+          </span>
+          <span className="text-amber-700/40 text-[10px]">|</span>
+          <span className="flex items-center gap-1.5 text-[11px]">
+            <Trophy size={11} className="text-emerald-400/80 shrink-0" />
+            <span className="text-emerald-300 font-bold tabular-nums">{totalWins}</span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Wins</span>
+          </span>
+          <span className="text-amber-700/40 text-[10px]">|</span>
+          <span className="flex items-center gap-1.5 text-[11px]">
+            <Heart size={11} className="text-red-400 fill-red-400 shrink-0" />
+            <span className="text-red-300 font-bold tabular-nums">{totalHearts}</span>
+            <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Lives</span>
+          </span>
         </div>
       </div>
 
@@ -306,7 +253,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
           CONTINUE CAMPAIGN CTA
           ═══════════════════════════════════════════════════ */}
       {recommended && (
-        <div className="flex-shrink-0 px-4 pt-3 pb-1">
+        <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
           <button
             onClick={() => onSelectLevel(recommended.id)}
             className="w-full group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99]"
@@ -334,13 +281,13 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                   Continue Campaign
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <div className="shrink-0">
-                    <RegionIcon type={recommended.region} size={36} framed />
+                    <RegionIcon type={recommended.region} size={32} framed />
                   </div>
                   <div className="flex flex-col items-start min-w-0">
-                    <div className="text-sm font-bold text-amber-100 leading-tight truncate max-w-[140px]">
+                    <div className="text-[13px] font-bold text-amber-100 leading-tight truncate w-full">
                       {recommended.name}
                     </div>
                     <div className="text-[10px] text-amber-400/60 mt-0.5">
@@ -353,7 +300,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     </div>
                   </div>
                 </div>
-                <ChevronRight size={20} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight size={18} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-0.5 transition-all" />
               </div>
             </div>
           </button>
@@ -363,7 +310,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
       {/* ═══════════════════════════════════════════════════
           REGIONS LIST
           ═══════════════════════════════════════════════════ */}
-      <div className="flex-1 overflow-y-auto px-4 pt-3 pb-4">
+      <div className="flex-1 overflow-y-auto px-3.5 pt-2.5 pb-3">
         <div className="mb-2.5">
           <SectionDivider label="Regions" />
         </div>
@@ -380,7 +327,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 onClick={() => {
                   if (targetLevel) onSelectLevel(targetLevel.id);
                 }}
-                className="w-full text-left rounded-xl overflow-hidden transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] relative"
+                className="w-full text-left py-1 px-0.5 rounded-xl overflow-hidden transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] relative"
                 style={{
                   background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
                   border: `1.5px solid ${meta.border}`,
@@ -396,17 +343,27 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     border: `1px solid rgba(255,255,255,0.06)`,
                   }}
                 />
-                <div className="relative px-3 py-2.5 flex items-center gap-3">
+                <div className="relative px-2.5 py-2 flex items-center gap-2">
                   <div className="shrink-0">
-                    <RegionIcon type={region} size={34} framed />
+                    <RegionIcon type={region} size={28} framed />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[13px] font-bold text-amber-100 truncate">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[12px] font-bold text-amber-100 leading-tight">
                         {meta.displayName}
                       </span>
-                      <span className="text-[10px] text-amber-400/60 font-semibold ml-2 shrink-0 tabular-nums">
-                        {completed}/{total}
+                      <span className="flex items-center gap-1 shrink-0 ml-1.5">
+                        <Star
+                          size={10}
+                          className={
+                            stars > 0
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-stone-600"
+                          }
+                        />
+                        <span className="text-[9px] font-bold text-amber-300/70 tabular-nums">
+                          {stars}/{rMax}
+                        </span>
                       </span>
                     </div>
                     <div
@@ -429,19 +386,6 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                         }}
                       />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Star
-                      size={12}
-                      className={
-                        stars > 0
-                          ? "text-yellow-400 fill-yellow-400"
-                          : "text-stone-600"
-                      }
-                    />
-                    <span className="text-[10px] font-bold text-amber-300/70 tabular-nums">
-                      {stars}/{rMax}
-                    </span>
                   </div>
                 </div>
               </button>

@@ -2012,7 +2012,7 @@ export function drawTimberWolfEnemy(
   clearShadow(ctx);
 }
 
-// 5. GIANT EAGLE — Majestic eagle with detailed animated wing flapping
+// 5. GIANT EAGLE — Massive majestic raptor with dramatic wingspan
 export function drawGiantEagleEnemy(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, size: number,
@@ -2020,241 +2020,249 @@ export function drawGiantEagleEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ): void {
   const isAttacking = attackPhase > 0;
-  size *= 1.35;
-  const flapPhase = Math.sin(time * 4);
-  const wingAngle = flapPhase * 0.5;
-  const hover = Math.sin(time * 3) * size * 0.02;
-  const dive = isAttacking ? Math.sin(attackPhase * Math.PI) * size * 0.2 : 0;
+  size *= 1.15;
+  const flapPhase = Math.sin(time * 3.2);
+  const flapPower = 0.5 + Math.abs(flapPhase) * 0.15;
+  const wingAngle = flapPhase * 0.55;
+  const hover = Math.sin(time * 2.5) * size * 0.025;
+  const dive = isAttacking ? Math.sin(attackPhase * Math.PI) * size * 0.25 : 0;
   const by = hover - dive;
-  const bankTilt = Math.sin(time * 1.5) * 0.08;
+  const bankTilt = Math.sin(time * 1.2) * 0.1;
 
-  // Isometric ground shadow
-  ctx.fillStyle = "rgba(0,0,0,0.12)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.38, size * 0.45, size * 0.1 * ISO_Y_RATIO, bankTilt, 0, TAU);
-  ctx.fill();
-
-  // Wind current particles around wings
-  for (let w = 0; w < 8; w++) {
-    const wAngle = time * 2 + w * (TAU / 8);
-    const wDist = size * 0.4 + Math.sin(time * 3 + w) * size * 0.08;
+  // Wind current arcs around wings (stronger, more visible)
+  for (let w = 0; w < 10; w++) {
+    const wAngle = time * 1.8 + w * (TAU / 10);
+    const wDist = size * 0.52 + Math.sin(time * 2.5 + w) * size * 0.1;
     const wx = x + Math.cos(wAngle) * wDist;
-    const wy = y + by + Math.sin(wAngle) * wDist * 0.35;
-    ctx.strokeStyle = `rgba(200,220,255,${0.1 + Math.sin(time * 2 + w) * 0.05})`;
+    const wy = y + by + Math.sin(wAngle) * wDist * 0.3;
+    const wAlpha = (0.08 + Math.sin(time * 2 + w) * 0.04) * flapPower;
+    ctx.strokeStyle = `rgba(200,220,255,${wAlpha})`;
+    ctx.lineWidth = 1.0 * zoom;
+    ctx.beginPath();
+    ctx.arc(wx, wy, size * 0.04, wAngle, wAngle + 1.8);
+    ctx.stroke();
+  }
+
+  // Downdraft gusts below body
+  for (let dd = 0; dd < 5; dd++) {
+    const ddPhase = (time * 1.2 + dd * 0.4) % 1;
+    const ddx = x + (dd - 2) * size * 0.07;
+    const ddy = y + size * 0.18 + by + ddPhase * size * 0.18;
+    const ddAlpha = (1 - ddPhase) * 0.1 * flapPower;
+    ctx.strokeStyle = `rgba(180,200,230,${ddAlpha})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.arc(wx, wy, size * 0.03, wAngle, wAngle + 1.5);
-    ctx.stroke();
-  }
-  // Downdraft effect below body
-  for (let dd = 0; dd < 4; dd++) {
-    const ddPhase = (time * 1.5 + dd * 0.5) % 1;
-    const ddx = x + (dd - 1.5) * size * 0.08;
-    const ddy = y + size * 0.15 + by + ddPhase * size * 0.15;
-    const ddAlpha = (1 - ddPhase) * 0.08 * (0.5 + flapPhase * 0.5);
-    ctx.strokeStyle = `rgba(180,200,230,${ddAlpha})`;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(ddx - size * 0.02, ddy);
-    ctx.lineTo(ddx + size * 0.02, ddy);
+    ctx.moveTo(ddx - size * 0.03, ddy);
+    ctx.lineTo(ddx + size * 0.03, ddy);
     ctx.stroke();
   }
 
-  // Loose feather particles drifting down
-  for (let lf = 0; lf < 4; lf++) {
-    const lfPhase = (time * 0.3 + lf * 0.6) % 2;
-    const lfx = x + Math.sin(time * 0.8 + lf * 2) * size * 0.3;
-    const lfy = y + size * 0.1 + lfPhase * size * 0.25;
-    const lfAlpha = (1 - lfPhase * 0.5) * 0.18;
+  // Drifting feather particles
+  for (let lf = 0; lf < 5; lf++) {
+    const lfPhase = (time * 0.25 + lf * 0.5) % 2;
+    const lfx = x + Math.sin(time * 0.7 + lf * 2.1) * size * 0.4;
+    const lfy = y + size * 0.12 + lfPhase * size * 0.3;
+    const lfAlpha = (1 - lfPhase * 0.5) * 0.2;
     if (lfAlpha > 0.02) {
       ctx.fillStyle = `rgba(180,160,120,${lfAlpha})`;
       ctx.save();
       ctx.translate(lfx, lfy);
-      ctx.rotate(Math.sin(time * 2 + lf) * 0.5);
+      ctx.rotate(Math.sin(time * 1.5 + lf) * 0.6);
       ctx.beginPath();
-      ctx.ellipse(0, 0, size * 0.003, size * 0.012, 0, 0, TAU);
+      ctx.ellipse(0, 0, size * 0.005, size * 0.018, 0, 0, TAU);
       ctx.fill();
       ctx.restore();
     }
   }
 
-  // Tail feathers spread
-  for (let tf = 0; tf < 7; tf++) {
-    const tfAngle = -0.4 + tf * 0.13 + Math.sin(time * 2) * 0.05;
+  // Tail fan with wide spread
+  const tailSpread = 9;
+  for (let tf = 0; tf < tailSpread; tf++) {
+    const tfAngle = -0.55 + tf * (1.1 / (tailSpread - 1)) + Math.sin(time * 1.8) * 0.06;
     ctx.save();
-    ctx.translate(x, y + size * 0.1 + by);
+    ctx.translate(x, y + size * 0.12 + by);
     ctx.rotate(tfAngle);
-    const tfGrad = ctx.createLinearGradient(0, 0, 0, size * 0.18);
+    const tailLen = size * (0.2 + (tf === Math.floor(tailSpread / 2) ? 0.03 : 0));
+    const tfGrad = ctx.createLinearGradient(0, 0, 0, tailLen);
     tfGrad.addColorStop(0, bodyColor);
-    tfGrad.addColorStop(0.4, bodyColorDark);
-    tfGrad.addColorStop(0.8, "#2a1a0a");
-    tfGrad.addColorStop(1, "#1a0a00");
+    tfGrad.addColorStop(0.35, bodyColorDark);
+    tfGrad.addColorStop(0.7, "#3a2a18");
+    tfGrad.addColorStop(1, "#1a0e04");
     ctx.fillStyle = tfGrad;
     ctx.beginPath();
-    ctx.moveTo(-size * 0.006, 0);
-    ctx.lineTo(-size * 0.009, size * 0.16);
-    ctx.lineTo(size * 0.009, size * 0.16);
-    ctx.lineTo(size * 0.006, 0);
+    ctx.moveTo(-size * 0.008, 0);
+    ctx.quadraticCurveTo(-size * 0.012, tailLen * 0.6, -size * 0.01, tailLen);
+    ctx.lineTo(size * 0.01, tailLen);
+    ctx.quadraticCurveTo(size * 0.012, tailLen * 0.6, size * 0.008, 0);
     ctx.fill();
-    // Barb lines
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 0.3 * zoom;
+    ctx.strokeStyle = "rgba(0,0,0,0.14)";
+    ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
-    ctx.moveTo(0, size * 0.015);
-    ctx.lineTo(0, size * 0.15);
+    ctx.moveTo(0, size * 0.01);
+    ctx.lineTo(0, tailLen * 0.95);
     ctx.stroke();
-    // Barb detail
-    ctx.lineWidth = 0.2 * zoom;
-    for (let b = 0; b < 4; b++) {
-      const bby = size * 0.04 + b * size * 0.03;
+    for (let b = 0; b < 5; b++) {
+      const bby = size * 0.035 + b * tailLen * 0.17;
+      ctx.strokeStyle = "rgba(0,0,0,0.07)";
+      ctx.lineWidth = 0.25 * zoom;
       ctx.beginPath();
       ctx.moveTo(0, bby);
-      ctx.lineTo(size * 0.006, bby + size * 0.01);
+      ctx.lineTo(size * 0.008, bby + size * 0.012);
       ctx.stroke();
       ctx.beginPath();
       ctx.moveTo(0, bby);
-      ctx.lineTo(-size * 0.006, bby + size * 0.01);
+      ctx.lineTo(-size * 0.008, bby + size * 0.012);
       ctx.stroke();
     }
-    // White band near tail tip
-    if (tf >= 2 && tf <= 4) {
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
+    if (tf >= 3 && tf <= 5) {
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
       ctx.beginPath();
-      ctx.rect(-size * 0.007, size * 0.11, size * 0.014, size * 0.015);
+      ctx.rect(-size * 0.009, tailLen * 0.7, size * 0.018, size * 0.02);
       ctx.fill();
     }
     ctx.restore();
   }
 
-  // Wings with extensive feather detail
+  // Massive wings
   for (const side of [-1, 1]) {
     ctx.save();
-    ctx.translate(x + side * size * 0.1, y - size * 0.05 + by);
-    ctx.rotate(side * wingAngle + bankTilt * side * 0.3);
+    ctx.translate(x + side * size * 0.12, y - size * 0.06 + by);
+    ctx.rotate(side * wingAngle + bankTilt * side * 0.35);
 
-    const wingSpan = size * 0.5;
-    const wingBend = size * 0.3;
+    const wingSpan = size * 0.62;
+    const wingBend = size * 0.34;
 
-    // Wing bone structure visible at shoulder
+    // Upper arm bone
     ctx.strokeStyle = bodyColorDark;
-    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(side * wingBend * 0.3, -size * 0.08, side * wingBend, -size * 0.12);
+    ctx.quadraticCurveTo(side * wingBend * 0.3, -size * 0.1, side * wingBend, -size * 0.14);
     ctx.stroke();
+
+    // Shoulder muscle mass
+    const shoulderG = ctx.createRadialGradient(side * wingBend * 0.15, -size * 0.04, 0, side * wingBend * 0.15, -size * 0.04, size * 0.06);
+    shoulderG.addColorStop(0, bodyColor);
+    shoulderG.addColorStop(1, bodyColorDark);
+    ctx.fillStyle = shoulderG;
+    ctx.beginPath();
+    ctx.ellipse(side * wingBend * 0.15, -size * 0.04, size * 0.05, size * 0.035, side * 0.3, 0, TAU);
+    ctx.fill();
+
     // Elbow joint
     ctx.fillStyle = bodyColor;
     ctx.beginPath();
-    ctx.arc(side * wingBend, -size * 0.12, size * 0.018, 0, TAU);
+    ctx.arc(side * wingBend, -size * 0.14, size * 0.022, 0, TAU);
     ctx.fill();
-    // Forearm bone
+
+    // Forearm
     ctx.strokeStyle = bodyColorDark;
-    ctx.lineWidth = 2 * zoom;
+    ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(side * wingBend, -size * 0.12);
-    ctx.lineTo(side * wingSpan * 0.8, -size * 0.08);
+    ctx.moveTo(side * wingBend, -size * 0.14);
+    ctx.lineTo(side * wingSpan * 0.85, -size * 0.1);
     ctx.stroke();
 
-    // Inner wing (coverts)
-    const innerGrad = ctx.createLinearGradient(0, 0, side * wingBend, -size * 0.15);
+    // Inner wing membrane (coverts)
+    const innerGrad = ctx.createLinearGradient(0, 0, side * wingBend, -size * 0.18);
     innerGrad.addColorStop(0, bodyColor);
-    innerGrad.addColorStop(0.5, bodyColorDark);
-    innerGrad.addColorStop(1, bodyColorDark);
+    innerGrad.addColorStop(0.4, bodyColorDark);
+    innerGrad.addColorStop(1, "#3a2a1a");
     ctx.fillStyle = innerGrad;
     ctx.beginPath();
-    ctx.moveTo(0, -size * 0.01);
-    ctx.quadraticCurveTo(side * wingBend * 0.5, -size * 0.17, side * wingBend, -size * 0.19);
-    ctx.lineTo(side * wingBend, -size * 0.02);
-    ctx.quadraticCurveTo(side * wingBend * 0.5, -size * 0.01, 0, size * 0.03);
+    ctx.moveTo(0, -size * 0.015);
+    ctx.quadraticCurveTo(side * wingBend * 0.5, -size * 0.2, side * wingBend, -size * 0.22);
+    ctx.lineTo(side * wingBend, -size * 0.025);
+    ctx.quadraticCurveTo(side * wingBend * 0.5, -size * 0.01, 0, size * 0.04);
     ctx.fill();
 
     // Outer wing (primaries)
-    const outerGrad = ctx.createLinearGradient(side * wingBend, -size * 0.19, side * wingSpan, -size * 0.08);
+    const outerGrad = ctx.createLinearGradient(side * wingBend, -size * 0.22, side * wingSpan, -size * 0.1);
     outerGrad.addColorStop(0, bodyColorDark);
-    outerGrad.addColorStop(0.5, "#4a3a2a");
-    outerGrad.addColorStop(1, "#3a2a1a");
+    outerGrad.addColorStop(0.4, "#5a4a35");
+    outerGrad.addColorStop(0.8, "#3a2a1a");
+    outerGrad.addColorStop(1, "#2a1a0a");
     ctx.fillStyle = outerGrad;
     ctx.beginPath();
-    ctx.moveTo(side * wingBend, -size * 0.19);
-    ctx.quadraticCurveTo(side * (wingBend + wingSpan) * 0.55, -size * 0.22, side * wingSpan, -size * 0.1);
-    ctx.lineTo(side * wingSpan * 0.95, size * 0.01);
-    ctx.lineTo(side * wingBend, -size * 0.02);
+    ctx.moveTo(side * wingBend, -size * 0.22);
+    ctx.quadraticCurveTo(side * (wingBend + wingSpan) * 0.55, -size * 0.26, side * wingSpan, -size * 0.12);
+    ctx.lineTo(side * wingSpan * 0.96, size * 0.015);
+    ctx.lineTo(side * wingBend, -size * 0.025);
     ctx.fill();
 
-    // Iridescent sheen overlay
-    const sheenAlpha = 0.08 + Math.sin(time * 3 + side * 2) * 0.04;
-    const sheenG = ctx.createLinearGradient(side * wingBend * 0.5, -size * 0.1, side * wingSpan * 0.7, -size * 0.15);
-    sheenG.addColorStop(0, `rgba(100,150,200,${sheenAlpha})`);
-    sheenG.addColorStop(0.5, `rgba(150,100,200,${sheenAlpha * 0.7})`);
-    sheenG.addColorStop(1, `rgba(100,200,150,${sheenAlpha * 0.4})`);
+    // Iridescent sheen
+    const sheenAlpha = 0.1 + Math.sin(time * 2.5 + side * 2) * 0.05;
+    const sheenG = ctx.createLinearGradient(side * wingBend * 0.5, -size * 0.12, side * wingSpan * 0.7, -size * 0.18);
+    sheenG.addColorStop(0, `rgba(120,160,220,${sheenAlpha})`);
+    sheenG.addColorStop(0.5, `rgba(160,120,200,${sheenAlpha * 0.7})`);
+    sheenG.addColorStop(1, `rgba(120,200,160,${sheenAlpha * 0.4})`);
     ctx.fillStyle = sheenG;
     ctx.beginPath();
-    ctx.moveTo(side * size * 0.05, -size * 0.04);
-    ctx.quadraticCurveTo(side * wingBend * 0.6, -size * 0.15, side * wingSpan * 0.7, -size * 0.1);
-    ctx.lineTo(side * wingBend * 0.8, -size * 0.01);
+    ctx.moveTo(side * size * 0.06, -size * 0.05);
+    ctx.quadraticCurveTo(side * wingBend * 0.6, -size * 0.18, side * wingSpan * 0.7, -size * 0.12);
+    ctx.lineTo(side * wingBend * 0.8, -size * 0.015);
     ctx.closePath();
     ctx.fill();
 
-    // Individual covert feather rows (3 rows with increasing detail)
+    // Covert feather rows
     for (let row = 0; row < 4; row++) {
-      for (let f = 0; f < 7 - row; f++) {
-        const fFrac = f / (7 - row);
-        const rowOff = row * size * 0.022;
-        const fx = side * (size * 0.03 + fFrac * wingBend * 0.85);
-        const fy = -size * 0.04 - rowOff - fFrac * size * 0.09 + row * size * 0.005;
-        ctx.fillStyle = row === 0 ? bodyColorDark : (row === 1 ? bodyColor : (row === 2 ? bodyColorLight : bodyColor));
-        ctx.globalAlpha = 0.45 + row * 0.05;
+      const count = 8 - row;
+      for (let f = 0; f < count; f++) {
+        const fFrac = f / count;
+        const rowOff = row * size * 0.025;
+        const fx = side * (size * 0.035 + fFrac * wingBend * 0.88);
+        const fy = -size * 0.05 - rowOff - fFrac * size * 0.1 + row * size * 0.006;
+        const rowColors = [bodyColorDark, bodyColor, bodyColorLight, bodyColor];
+        ctx.fillStyle = rowColors[row];
+        ctx.globalAlpha = 0.5 + row * 0.06;
         ctx.beginPath();
-        ctx.ellipse(fx, fy, size * 0.007, size * 0.022, side * (0.2 + fFrac * 0.3), 0, TAU);
+        ctx.ellipse(fx, fy, size * 0.009, size * 0.026, side * (0.2 + fFrac * 0.3), 0, TAU);
         ctx.fill();
-        // Feather shaft line
         ctx.strokeStyle = "rgba(0,0,0,0.06)";
-        ctx.lineWidth = 0.2 * zoom;
+        ctx.lineWidth = 0.25 * zoom;
         ctx.beginPath();
-        ctx.moveTo(fx, fy - size * 0.015);
-        ctx.lineTo(fx, fy + size * 0.015);
+        ctx.moveTo(fx, fy - size * 0.018);
+        ctx.lineTo(fx, fy + size * 0.018);
         ctx.stroke();
       }
     }
     ctx.globalAlpha = 1;
 
-    // Primary flight feathers with barb detail
-    for (let pf = 0; pf < 7; pf++) {
-      const pfFrac = pf / 7;
+    // Primary flight feathers (longer, more dramatic)
+    for (let pf = 0; pf < 9; pf++) {
+      const pfFrac = pf / 9;
       const pfx = side * (wingBend + pfFrac * (wingSpan - wingBend));
-      const pfy = -size * 0.18 + pfFrac * size * 0.09 + pf * size * 0.004;
-      const pfLen = size * (0.055 - pfFrac * 0.01);
+      const pfy = -size * 0.21 + pfFrac * size * 0.1 + pf * size * 0.005;
+      const pfLen = size * (0.065 - pfFrac * 0.012);
       const pfG = ctx.createLinearGradient(pfx, pfy - pfLen, pfx, pfy + pfLen);
-      pfG.addColorStop(0, pf < 3 ? bodyColorDark : "#3a2a1a");
-      pfG.addColorStop(1, "#2a1a0a");
+      pfG.addColorStop(0, pf < 4 ? bodyColorDark : "#3a2a1a");
+      pfG.addColorStop(1, "#1a0e04");
       ctx.fillStyle = pfG;
       ctx.save();
       ctx.translate(pfx, pfy);
-      ctx.rotate(side * (0.2 + pfFrac * 0.2));
+      ctx.rotate(side * (0.18 + pfFrac * 0.22));
       ctx.beginPath();
-      ctx.moveTo(-size * 0.005, -pfLen);
-      ctx.lineTo(size * 0.005, pfLen);
-      ctx.lineTo(-size * 0.005, pfLen);
+      ctx.moveTo(-size * 0.006, -pfLen);
+      ctx.quadraticCurveTo(size * 0.003, 0, size * 0.006, pfLen);
+      ctx.lineTo(-size * 0.006, pfLen);
       ctx.fill();
-      // Feather shaft
-      ctx.strokeStyle = "rgba(0,0,0,0.18)";
-      ctx.lineWidth = 0.4 * zoom;
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(0, -pfLen);
       ctx.lineTo(0, pfLen);
       ctx.stroke();
-      // Barb lines on feather
       ctx.strokeStyle = "rgba(0,0,0,0.06)";
-      ctx.lineWidth = 0.2 * zoom;
-      for (let b = 0; b < 4; b++) {
-        const bby = -pfLen + b * pfLen * 0.5;
+      ctx.lineWidth = 0.25 * zoom;
+      for (let b = 0; b < 5; b++) {
+        const bby = -pfLen + b * pfLen * 0.4;
         ctx.beginPath();
         ctx.moveTo(0, bby);
-        ctx.lineTo(size * 0.004, bby + size * 0.008);
+        ctx.lineTo(size * 0.005, bby + size * 0.01);
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(0, bby);
-        ctx.lineTo(-size * 0.004, bby + size * 0.008);
+        ctx.lineTo(-size * 0.005, bby + size * 0.01);
         ctx.stroke();
       }
       ctx.restore();
@@ -2263,256 +2271,307 @@ export function drawGiantEagleEnemy(
     ctx.restore();
   }
 
-  // Body with rich plumage detail
-  const bodyGrad = ctx.createRadialGradient(x - size * 0.02, y - size * 0.06 + by, 0, x, y + by, size * 0.17);
+  // Muscular body
+  const bodyGrad = ctx.createRadialGradient(x - size * 0.02, y - size * 0.07 + by, 0, x, y + by, size * 0.2);
   bodyGrad.addColorStop(0, bodyColorLight);
-  bodyGrad.addColorStop(0.35, bodyColor);
-  bodyGrad.addColorStop(0.7, bodyColorDark);
+  bodyGrad.addColorStop(0.3, bodyColor);
+  bodyGrad.addColorStop(0.65, bodyColorDark);
   bodyGrad.addColorStop(1, "#2a1a0a");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.02 + by, size * 0.14, size * 0.18, 0.1 + bankTilt, 0, TAU);
+  ctx.ellipse(x, y - size * 0.02 + by, size * 0.16, size * 0.2, 0.1 + bankTilt, 0, TAU);
   ctx.fill();
 
-  // Breast plumage with layered feather scales
-  const breastGrad = ctx.createRadialGradient(x, y + size * 0.02 + by, 0, x, y + size * 0.06 + by, size * 0.11);
-  breastGrad.addColorStop(0, "#fff8e8");
-  breastGrad.addColorStop(0.3, "#f5e6c8");
-  breastGrad.addColorStop(0.7, "#e0c8a0");
+  // Chest plumage
+  const breastGrad = ctx.createRadialGradient(x, y + size * 0.02 + by, 0, x, y + size * 0.08 + by, size * 0.13);
+  breastGrad.addColorStop(0, "#fffaec");
+  breastGrad.addColorStop(0.25, "#f5e6c8");
+  breastGrad.addColorStop(0.6, "#e0c8a0");
   breastGrad.addColorStop(1, "#c8a878");
   ctx.fillStyle = breastGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.04 + by, size * 0.09, size * 0.11, 0, 0, TAU);
+  ctx.ellipse(x, y + size * 0.04 + by, size * 0.1, size * 0.13, 0, 0, TAU);
   ctx.fill();
-  // Feather scale rows on breast
-  ctx.strokeStyle = "rgba(180,150,100,0.15)";
-  ctx.lineWidth = 0.4 * zoom;
-  for (let fs = 0; fs < 7; fs++) {
-    const fsy = y + size * 0.0 + fs * size * 0.018 + by;
-    const fsWidth = size * 0.06 - Math.abs(fs - 3) * size * 0.008;
+
+  // Breast feather scale rows
+  ctx.strokeStyle = "rgba(180,150,100,0.18)";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let fs = 0; fs < 8; fs++) {
+    const fsy = y - size * 0.01 + fs * size * 0.02 + by;
+    const fsWidth = size * 0.07 - Math.abs(fs - 3.5) * size * 0.009;
     ctx.beginPath();
     ctx.moveTo(x - fsWidth, fsy);
-    ctx.quadraticCurveTo(x, fsy + size * 0.005, x + fsWidth, fsy);
+    ctx.quadraticCurveTo(x, fsy + size * 0.006, x + fsWidth, fsy);
     ctx.stroke();
   }
-  // Individual breast feather marks
-  ctx.fillStyle = "rgba(160,130,80,0.08)";
-  for (let bf = 0; bf < 8; bf++) {
-    const bfx = x + (bf - 3.5) * size * 0.018;
-    const bfy = y + size * 0.02 + Math.sin(bf * 1.5) * size * 0.03 + by;
+
+  // Breast feather marks (V-shaped streaks)
+  ctx.strokeStyle = "rgba(140,110,60,0.1)";
+  ctx.lineWidth = 0.4 * zoom;
+  for (let bf = 0; bf < 10; bf++) {
+    const bfx = x + (bf - 4.5) * size * 0.016;
+    const bfy = y + size * 0.01 + Math.sin(bf * 1.3) * size * 0.035 + by;
     ctx.beginPath();
-    ctx.ellipse(bfx, bfy, size * 0.006, size * 0.01, bf * 0.3, 0, TAU);
-    ctx.fill();
+    ctx.moveTo(bfx - size * 0.006, bfy - size * 0.005);
+    ctx.lineTo(bfx, bfy + size * 0.006);
+    ctx.lineTo(bfx + size * 0.006, bfy - size * 0.005);
+    ctx.stroke();
   }
 
-  // Head with detailed crest feathers
+  // Powerful neck
+  const neckGrad = ctx.createLinearGradient(x, y - size * 0.1 + by, x, y - size * 0.2 + by);
+  neckGrad.addColorStop(0, bodyColor);
+  neckGrad.addColorStop(0.5, bodyColorLight);
+  neckGrad.addColorStop(1, "#f0e8d0");
+  ctx.fillStyle = neckGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.07, y - size * 0.1 + by);
+  ctx.quadraticCurveTo(x - size * 0.06, y - size * 0.16 + by, x - size * 0.04, y - size * 0.2 + by);
+  ctx.lineTo(x + size * 0.04, y - size * 0.2 + by);
+  ctx.quadraticCurveTo(x + size * 0.06, y - size * 0.16 + by, x + size * 0.07, y - size * 0.1 + by);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head
   const headX = x;
-  const headY2 = y - size * 0.2 + by;
-  const headGrad = ctx.createRadialGradient(headX - size * 0.01, headY2 - size * 0.01, 0, headX, headY2, size * 0.08);
+  const headY2 = y - size * 0.24 + by;
+  const headGrad = ctx.createRadialGradient(headX - size * 0.01, headY2 - size * 0.01, 0, headX, headY2, size * 0.1);
   headGrad.addColorStop(0, "#fffff0");
-  headGrad.addColorStop(0.4, "#f5f0e0");
-  headGrad.addColorStop(0.8, "#e0d8c0");
+  headGrad.addColorStop(0.35, "#f5f0e0");
+  headGrad.addColorStop(0.75, "#e0d8c0");
   headGrad.addColorStop(1, "#c8bea0");
   ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.ellipse(headX, headY2, size * 0.08, size * 0.07, bankTilt * 0.5, 0, TAU);
+  ctx.ellipse(headX, headY2, size * 0.095, size * 0.085, bankTilt * 0.5, 0, TAU);
   ctx.fill();
 
-  // Crown feathers
-  for (let cf = 0; cf < 5; cf++) {
-    const cfAngle = -Math.PI * 0.6 + cf * 0.22;
-    ctx.fillStyle = cf % 2 === 0 ? "#e0d0b0" : "#d0c0a0";
+  // Brow ridge (fierce look)
+  ctx.fillStyle = "#d8cca8";
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.06, headY2 - size * 0.035);
+  ctx.quadraticCurveTo(headX + size * 0.02, headY2 - size * 0.065, headX + size * 0.07, headY2 - size * 0.04);
+  ctx.quadraticCurveTo(headX + size * 0.02, headY2 - size * 0.05, headX - size * 0.06, headY2 - size * 0.035);
+  ctx.fill();
+
+  // Crown feathers (larger)
+  for (let cf = 0; cf < 7; cf++) {
+    const cfAngle = -Math.PI * 0.65 + cf * 0.2;
+    const cfLen = size * (0.035 + (cf === 3 ? 0.01 : 0));
+    ctx.fillStyle = cf % 2 === 0 ? "#e8dcc0" : "#d8c8a8";
     ctx.save();
-    ctx.translate(headX + Math.cos(cfAngle) * size * 0.045, headY2 + Math.sin(cfAngle) * size * 0.035);
+    ctx.translate(headX + Math.cos(cfAngle) * size * 0.055, headY2 + Math.sin(cfAngle) * size * 0.04);
     ctx.rotate(cfAngle - Math.PI * 0.5);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(-size * 0.004, -size * 0.03);
-    ctx.lineTo(size * 0.004, -size * 0.03);
+    ctx.lineTo(-size * 0.005, -cfLen);
+    ctx.lineTo(size * 0.005, -cfLen);
     ctx.fill();
     ctx.restore();
   }
 
-  // Raptor beak with gradient detail
-  const beakG = ctx.createLinearGradient(headX + size * 0.06, headY2 - size * 0.005, headX + size * 0.14, headY2 + size * 0.035);
+  // Large hooked beak
+  const beakG = ctx.createLinearGradient(headX + size * 0.07, headY2 - size * 0.01, headX + size * 0.17, headY2 + size * 0.04);
   beakG.addColorStop(0, "#ecc040");
-  beakG.addColorStop(0.3, "#e8b830");
-  beakG.addColorStop(0.6, "#d4a020");
+  beakG.addColorStop(0.25, "#e8b830");
+  beakG.addColorStop(0.55, "#d4a020");
   beakG.addColorStop(1, "#906a10");
   ctx.fillStyle = beakG;
   ctx.beginPath();
-  ctx.moveTo(headX + size * 0.06, headY2 + size * 0.003);
-  ctx.quadraticCurveTo(headX + size * 0.11, headY2 + size * 0.008, headX + size * 0.14, headY2 + size * 0.032);
-  ctx.quadraticCurveTo(headX + size * 0.12, headY2 + size * 0.04, headX + size * 0.06, headY2 + size * 0.042);
+  ctx.moveTo(headX + size * 0.07, headY2);
+  ctx.quadraticCurveTo(headX + size * 0.13, headY2 + size * 0.005, headX + size * 0.17, headY2 + size * 0.035);
+  ctx.quadraticCurveTo(headX + size * 0.15, headY2 + size * 0.05, headX + size * 0.07, headY2 + size * 0.05);
   ctx.closePath();
   ctx.fill();
-  // Beak ridge line
-  ctx.strokeStyle = "rgba(0,0,0,0.1)";
-  ctx.lineWidth = 0.4 * zoom;
+
+  // Upper beak ridge highlight
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(headX + size * 0.065, headY2 + size * 0.01);
-  ctx.quadraticCurveTo(headX + size * 0.1, headY2 + size * 0.015, headX + size * 0.13, headY2 + size * 0.03);
+  ctx.moveTo(headX + size * 0.075, headY2 + size * 0.005);
+  ctx.quadraticCurveTo(headX + size * 0.12, headY2 + size * 0.008, headX + size * 0.16, headY2 + size * 0.03);
   ctx.stroke();
+
+  // Beak center line
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(headX + size * 0.075, headY2 + size * 0.015);
+  ctx.quadraticCurveTo(headX + size * 0.12, headY2 + size * 0.02, headX + size * 0.16, headY2 + size * 0.035);
+  ctx.stroke();
+
   // Nostril
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
   ctx.beginPath();
-  ctx.ellipse(headX + size * 0.075, headY2 + size * 0.015, size * 0.006, size * 0.004, 0, 0, TAU);
-  ctx.fill();
-  // Beak tip hook (darker, sharper)
-  const hookG = ctx.createRadialGradient(headX + size * 0.135, headY2 + size * 0.035, 0, headX + size * 0.135, headY2 + size * 0.035, size * 0.01);
-  hookG.addColorStop(0, "#8a6010");
-  hookG.addColorStop(1, "#604008");
-  ctx.fillStyle = hookG;
-  ctx.beginPath();
-  ctx.arc(headX + size * 0.135, headY2 + size * 0.035, size * 0.009, 0, TAU);
+  ctx.ellipse(headX + size * 0.09, headY2 + size * 0.018, size * 0.007, size * 0.005, 0.2, 0, TAU);
   ctx.fill();
 
-  // Detailed fierce eye with iris layers
-  setShadowBlur(ctx, 6 * zoom, "#ffaa00");
-  const eyeX = headX + size * 0.03;
-  const eyeY = headY2 - size * 0.01;
+  // Hook tip
+  const hookG = ctx.createRadialGradient(headX + size * 0.165, headY2 + size * 0.04, 0, headX + size * 0.165, headY2 + size * 0.04, size * 0.013);
+  hookG.addColorStop(0, "#7a5510");
+  hookG.addColorStop(1, "#503808");
+  ctx.fillStyle = hookG;
+  ctx.beginPath();
+  ctx.arc(headX + size * 0.165, headY2 + size * 0.04, size * 0.012, 0, TAU);
+  ctx.fill();
+
+  // Fierce golden eye
+  setShadowBlur(ctx, 8 * zoom, "#ffaa00");
+  const eyeX = headX + size * 0.035;
+  const eyeY = headY2 - size * 0.012;
+  const eyeR = size * 0.02;
+
   // Sclera
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(eyeX, eyeY, size * 0.016, 0, TAU);
+  ctx.arc(eyeX, eyeY, eyeR, 0, TAU);
   ctx.fill();
-  // Iris with gradient
-  const irisG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.013);
-  irisG.addColorStop(0, "#ffdd00");
-  irisG.addColorStop(0.3, "#ffcc00");
-  irisG.addColorStop(0.6, "#dd9900");
+
+  // Iris
+  const irisG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, eyeR * 0.82);
+  irisG.addColorStop(0, "#ffe020");
+  irisG.addColorStop(0.25, "#ffcc00");
+  irisG.addColorStop(0.55, "#dd9900");
   irisG.addColorStop(1, "#aa6600");
   ctx.fillStyle = irisG;
   ctx.beginPath();
-  ctx.arc(eyeX, eyeY, size * 0.013, 0, TAU);
+  ctx.arc(eyeX, eyeY, eyeR * 0.82, 0, TAU);
   ctx.fill();
-  // Iris texture (radial lines)
-  ctx.strokeStyle = "rgba(150,100,0,0.15)";
-  ctx.lineWidth = 0.2 * zoom;
-  for (let ir = 0; ir < 8; ir++) {
-    const irAngle = ir * (TAU / 8);
+
+  // Iris radial texture
+  ctx.strokeStyle = "rgba(150,100,0,0.18)";
+  ctx.lineWidth = 0.3 * zoom;
+  for (let ir = 0; ir < 10; ir++) {
+    const irAngle = ir * (TAU / 10);
     ctx.beginPath();
-    ctx.moveTo(eyeX + Math.cos(irAngle) * size * 0.004, eyeY + Math.sin(irAngle) * size * 0.004);
-    ctx.lineTo(eyeX + Math.cos(irAngle) * size * 0.012, eyeY + Math.sin(irAngle) * size * 0.012);
+    ctx.moveTo(eyeX + Math.cos(irAngle) * eyeR * 0.25, eyeY + Math.sin(irAngle) * eyeR * 0.25);
+    ctx.lineTo(eyeX + Math.cos(irAngle) * eyeR * 0.75, eyeY + Math.sin(irAngle) * eyeR * 0.75);
     ctx.stroke();
   }
+
   // Pupil
   ctx.fillStyle = "#111";
   ctx.beginPath();
-  ctx.arc(eyeX + size * 0.002, eyeY, size * 0.007, 0, TAU);
+  ctx.arc(eyeX + size * 0.003, eyeY, eyeR * 0.42, 0, TAU);
   ctx.fill();
-  // Light catch (two spots)
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
+
+  // Specular highlights
+  ctx.fillStyle = "rgba(255,255,255,0.8)";
   ctx.beginPath();
-  ctx.arc(eyeX - size * 0.004, eyeY - size * 0.004, size * 0.003, 0, TAU);
+  ctx.arc(eyeX - eyeR * 0.25, eyeY - eyeR * 0.25, eyeR * 0.18, 0, TAU);
   ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,0.3)";
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
   ctx.beginPath();
-  ctx.arc(eyeX + size * 0.004, eyeY + size * 0.003, size * 0.002, 0, TAU);
+  ctx.arc(eyeX + eyeR * 0.25, eyeY + eyeR * 0.2, eyeR * 0.1, 0, TAU);
   ctx.fill();
+
   // Eye ring
   ctx.strokeStyle = "#886600";
-  ctx.lineWidth = 0.6 * zoom;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.arc(eyeX, eyeY, size * 0.016, 0, TAU);
+  ctx.arc(eyeX, eyeY, eyeR, 0, TAU);
   ctx.stroke();
   clearShadow(ctx);
 
-  // Articulated talons with metallic gleam
+  // Powerful talons
   for (const side of [-1, 1]) {
-    const talonY = y + size * 0.17 + by + (isAttacking ? dive * 0.5 : 0);
-    const talonOpen = isAttacking ? attackPhase * 0.3 : 0;
-    const tx = x + side * size * 0.05;
-    // Leg with scaled texture
-    const legG = ctx.createLinearGradient(tx, y + size * 0.1 + by, tx, talonY);
+    const talonY = y + size * 0.2 + by + (isAttacking ? dive * 0.5 : 0);
+    const talonOpen = isAttacking ? attackPhase * 0.35 : 0;
+    const tx = x + side * size * 0.06;
+
+    // Leg
+    const legG = ctx.createLinearGradient(tx, y + size * 0.12 + by, tx, talonY);
     legG.addColorStop(0, "#d4a020");
     legG.addColorStop(0.5, "#c89018");
     legG.addColorStop(1, "#b88010");
     ctx.strokeStyle = legG;
-    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.moveTo(tx, y + size * 0.1 + by);
+    ctx.moveTo(tx, y + size * 0.12 + by);
     ctx.lineTo(tx, talonY);
     ctx.stroke();
-    // Scales on leg
-    for (let ls = 0; ls < 4; ls++) {
-      const lsy = y + size * 0.11 + ls * size * 0.018 + by;
-      ctx.strokeStyle = "rgba(160,120,20,0.25)";
-      ctx.lineWidth = 0.5 * zoom;
+
+    // Leg scales
+    for (let ls = 0; ls < 5; ls++) {
+      const lsy = y + size * 0.13 + ls * size * 0.016 + by;
+      ctx.strokeStyle = "rgba(160,120,20,0.3)";
+      ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(tx - size * 0.009, lsy);
-      ctx.quadraticCurveTo(tx, lsy + size * 0.003, tx + size * 0.009, lsy);
+      ctx.moveTo(tx - size * 0.012, lsy);
+      ctx.quadraticCurveTo(tx, lsy + size * 0.004, tx + size * 0.012, lsy);
       ctx.stroke();
     }
-    // Talon toes (4 toes: 3 front, 1 rear)
-    const toeAngles = [-0.4 - talonOpen, 0, 0.4 + talonOpen, Math.PI - 0.3];
+
+    // 4 toes with claws
+    const toeAngles = [-0.45 - talonOpen, 0, 0.45 + talonOpen, Math.PI - 0.3];
     for (let t = 0; t < 4; t++) {
       const tAngle = toeAngles[t];
-      const toeLen = t === 3 ? size * 0.038 : size * 0.048;
+      const toeLen = t === 3 ? size * 0.045 : size * 0.055;
       const toeEndX = tx + Math.cos(tAngle) * toeLen;
-      const toeEndY = talonY + Math.abs(Math.sin(tAngle)) * toeLen * 0.5 + (t === 3 ? -size * 0.01 : size * 0.01);
-      // Toe with gradient
+      const toeEndY = talonY + Math.abs(Math.sin(tAngle)) * toeLen * 0.5 + (t === 3 ? -size * 0.012 : size * 0.012);
+
       const toeG = ctx.createLinearGradient(tx, talonY, toeEndX, toeEndY);
       toeG.addColorStop(0, "#d4a020");
       toeG.addColorStop(1, "#c09018");
       ctx.strokeStyle = toeG;
-      ctx.lineWidth = 1.8 * zoom;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.moveTo(tx, talonY);
       ctx.lineTo(toeEndX, toeEndY);
       ctx.stroke();
-      // Toe scales
-      ctx.strokeStyle = "rgba(140,100,20,0.15)";
-      ctx.lineWidth = 0.3 * zoom;
+
+      // Toe joint bump
       const midX = (tx + toeEndX) * 0.5;
       const midY = (talonY + toeEndY) * 0.5;
+      ctx.fillStyle = "#c89018";
       ctx.beginPath();
-      ctx.arc(midX, midY, size * 0.006, tAngle - 0.5, tAngle + 0.5);
-      ctx.stroke();
-      // Metallic claw with gleam
-      const clawG = ctx.createLinearGradient(toeEndX, toeEndY, toeEndX + Math.cos(tAngle) * size * 0.018, toeEndY + size * 0.01);
+      ctx.arc(midX, midY, size * 0.006, 0, TAU);
+      ctx.fill();
+
+      // Claw
+      const clawLen = size * 0.022;
+      const clawG = ctx.createLinearGradient(toeEndX, toeEndY, toeEndX + Math.cos(tAngle) * clawLen, toeEndY + size * 0.012);
       clawG.addColorStop(0, "#4a3a20");
-      clawG.addColorStop(0.4, "#2a2010");
-      clawG.addColorStop(0.8, "#1a1008");
-      clawG.addColorStop(1, "#000");
+      clawG.addColorStop(0.5, "#2a1a08");
+      clawG.addColorStop(1, "#111");
       ctx.fillStyle = clawG;
       ctx.beginPath();
-      ctx.moveTo(toeEndX, toeEndY);
-      ctx.lineTo(toeEndX + Math.cos(tAngle) * size * 0.018, toeEndY + size * 0.01);
-      ctx.lineTo(toeEndX + Math.cos(tAngle - 0.3) * size * 0.006, toeEndY - size * 0.004);
+      ctx.moveTo(toeEndX, toeEndY - size * 0.005);
+      ctx.quadraticCurveTo(toeEndX + Math.cos(tAngle) * clawLen * 0.5, toeEndY, toeEndX + Math.cos(tAngle) * clawLen, toeEndY + size * 0.012);
+      ctx.lineTo(toeEndX - size * 0.003, toeEndY + size * 0.003);
+      ctx.closePath();
       ctx.fill();
-      // Metallic shine on claw
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.lineWidth = 0.3 * zoom;
+
+      // Claw glint
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
-      ctx.moveTo(toeEndX + Math.cos(tAngle) * size * 0.004, toeEndY + size * 0.002);
-      ctx.lineTo(toeEndX + Math.cos(tAngle) * size * 0.012, toeEndY + size * 0.006);
+      ctx.moveTo(toeEndX + Math.cos(tAngle) * clawLen * 0.15, toeEndY);
+      ctx.lineTo(toeEndX + Math.cos(tAngle) * clawLen * 0.6, toeEndY + size * 0.006);
       ctx.stroke();
     }
   }
 
-  // Diving attack — speed lines + wind burst
-  if (isAttacking && dive > size * 0.1) {
-    const diveAlpha = attackPhase * 0.4;
-    for (let l = 0; l < 6; l++) {
-      const lx = x - size * 0.1 + l * size * 0.04;
-      ctx.strokeStyle = `rgba(255,220,100,${diveAlpha * (1 - l * 0.12)})`;
-      ctx.lineWidth = (2.5 - l * 0.3) * zoom;
+  // Diving attack effects
+  if (isAttacking && dive > size * 0.12) {
+    const diveAlpha = attackPhase * 0.5;
+    for (let l = 0; l < 8; l++) {
+      const lx = x - size * 0.14 + l * size * 0.04;
+      ctx.strokeStyle = `rgba(255,220,100,${diveAlpha * (1 - l * 0.1)})`;
+      ctx.lineWidth = (3 - l * 0.3) * zoom;
       ctx.beginPath();
-      ctx.moveTo(lx, y - size * 0.25 + hover);
-      ctx.lineTo(lx, y - size * 0.25 + hover - size * 0.18);
+      ctx.moveTo(lx, y - size * 0.3 + hover);
+      ctx.lineTo(lx, y - size * 0.3 + hover - size * 0.22);
       ctx.stroke();
     }
-    // Impact ring on ground
-    const impactR = attackPhase * size * 0.28;
-    ctx.strokeStyle = `rgba(255,220,150,${diveAlpha * 0.3})`;
-    ctx.lineWidth = 1.5 * zoom;
+    const impactR = attackPhase * size * 0.32;
+    ctx.strokeStyle = `rgba(255,220,150,${diveAlpha * 0.35})`;
+    ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.35, impactR, impactR * ISO_Y_RATIO, 0, 0, TAU);
+    ctx.ellipse(x, y + size * 0.38, impactR, impactR * ISO_Y_RATIO, 0, 0, TAU);
     ctx.stroke();
-    ctx.strokeStyle = `rgba(255,200,120,${diveAlpha * 0.15})`;
+    ctx.strokeStyle = `rgba(255,200,120,${diveAlpha * 0.18})`;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.35, impactR * 1.3, impactR * 1.3 * ISO_Y_RATIO, 0, 0, TAU);
+    ctx.ellipse(x, y + size * 0.38, impactR * 1.4, impactR * 1.4 * ISO_Y_RATIO, 0, 0, TAU);
     ctx.stroke();
   }
 }

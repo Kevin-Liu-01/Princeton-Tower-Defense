@@ -1,6 +1,10 @@
 import { drawOrganicBlobAt } from "../../../../rendering/helpers";
 import { seededRandom } from "../worldMapUtils";
-import { drawGrassTuft, drawRuggedBorder } from "./backgroundHelpers";
+import {
+  drawGrassTuft,
+  drawRuggedBorder,
+  generateOrganicBorderPoints,
+} from "./backgroundHelpers";
 
 interface TerrainBackdropParams {
   ctx: CanvasRenderingContext2D;
@@ -23,10 +27,12 @@ export function drawTerrainBackdrop({
   bgGrad.addColorStop(0.22, "#1a2a1a");
   bgGrad.addColorStop(0.39, "#2a2818");
   bgGrad.addColorStop(0.41, "#4a3a22");
-  bgGrad.addColorStop(0.59, "#3a3020");
-  bgGrad.addColorStop(0.61, "#2a3848");
-  bgGrad.addColorStop(0.78, "#1a2838");
-  bgGrad.addColorStop(0.8, "#3a1a1a");
+  bgGrad.addColorStop(0.56, "#3a3020");
+  bgGrad.addColorStop(0.6, "#332c28");
+  bgGrad.addColorStop(0.64, "#2a3040");
+  bgGrad.addColorStop(0.76, "#1a2838");
+  bgGrad.addColorStop(0.79, "#2a1a20");
+  bgGrad.addColorStop(0.83, "#3a1a1a");
   bgGrad.addColorStop(1, "#2a0a0a");
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, width, height);
@@ -159,9 +165,7 @@ export function drawTerrainBackdrop({
       pebbleShadow = "#1a2a00";
     }
 
-    const colorIndex = Math.floor(
-      seededRandom(i * 13 + 3) * pebbleBody.length,
-    );
+    const colorIndex = Math.floor(seededRandom(i * 13 + 3) * pebbleBody.length);
 
     ctx.globalAlpha = 0.12;
     ctx.fillStyle = pebbleShadow;
@@ -289,55 +293,123 @@ export function drawTerrainBackdrop({
       name: "STADIUM SANDS",
       x: 720,
       w: 360,
-      colors: ["#c49a6c", "#a88050", "#7a6040"],
+      colors: ["#a08058", "#886848", "#6a5038"],
       labelColor: "#ffe060",
       labelGlow: "#aa8020",
-      accentTop: "rgba(220,180,120,0.15)",
-      accentBot: "rgba(120,90,50,0.12)",
+      accentTop: "rgba(200,160,100,0.10)",
+      accentBot: "rgba(100,80,45,0.10)",
     },
     {
       name: "FRIST FRONTIER",
       x: 1080,
       w: 360,
-      colors: ["#8ab0d0", "#6a90b8", "#4a6888"],
+      colors: ["#6a8aa0", "#506a80", "#3a5068"],
       labelColor: "#d0f0ff",
       labelGlow: "#5090c0",
-      accentTop: "rgba(150,200,240,0.12)",
-      accentBot: "rgba(60,100,150,0.15)",
+      accentTop: "rgba(120,170,210,0.08)",
+      accentBot: "rgba(50,80,120,0.10)",
     },
     {
       name: "DORMITORY DEPTHS",
       x: 1440,
       w: 380,
-      colors: ["#5a2020", "#3a1010", "#1a0505"],
+      colors: ["#4a2020", "#321010", "#1a0808"],
       labelColor: "#ff8855",
       labelGlow: "#aa3010",
-      accentTop: "rgba(200,60,30,0.12)",
-      accentBot: "rgba(80,20,10,0.15)",
+      accentTop: "rgba(160,50,25,0.08)",
+      accentBot: "rgba(70,18,10,0.10)",
     },
   ];
 
-  regions.forEach((region) => {
-    const gradient = ctx.createLinearGradient(region.x, 0, region.x + region.w, height);
+  const borderXPositions = [380, 720, 1080, 1450];
+  const borderPaths = borderXPositions.map((bx) =>
+    generateOrganicBorderPoints(bx, height),
+  );
+
+  const traceSmooth = (
+    c: CanvasRenderingContext2D,
+    pts: ReadonlyArray<{ x: number; y: number }>,
+  ) => {
+    if (pts.length < 2) return;
+    c.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const cur = pts[i];
+      const nxt = pts[i + 1];
+      c.quadraticCurveTo(
+        cur.x,
+        cur.y,
+        (cur.x + nxt.x) / 2,
+        (cur.y + nxt.y) / 2,
+      );
+    }
+    c.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+  };
+
+  regions.forEach((region, idx) => {
+    const leftBorder = idx > 0 ? borderPaths[idx - 1] : null;
+    const rightBorder = idx < borderPaths.length ? borderPaths[idx] : null;
+
+    ctx.save();
+    ctx.beginPath();
+    if (leftBorder) {
+      traceSmooth(ctx, leftBorder);
+      ctx.lineTo(
+        rightBorder
+          ? rightBorder[rightBorder.length - 1].x
+          : region.x + region.w + 40,
+        height + 4,
+      );
+    } else {
+      ctx.moveTo(-4, -4);
+      ctx.lineTo(-4, height + 4);
+    }
+    if (rightBorder) {
+      const reversed = [...rightBorder].reverse();
+      for (const pt of reversed) ctx.lineTo(pt.x, pt.y);
+      if (!leftBorder) ctx.lineTo(-4, -4);
+    } else {
+      ctx.lineTo(region.x + region.w + 40, height + 4);
+      ctx.lineTo(region.x + region.w + 40, -4);
+      if (leftBorder) ctx.lineTo(leftBorder[0].x, leftBorder[0].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    const gradient = ctx.createLinearGradient(
+      region.x,
+      0,
+      region.x + region.w,
+      height,
+    );
     gradient.addColorStop(0, region.colors[0]);
     gradient.addColorStop(0.5, region.colors[1]);
     gradient.addColorStop(1, region.colors[2]);
-    ctx.globalAlpha = 0.35;
+    ctx.globalAlpha = 0.22;
     ctx.fillStyle = gradient;
-    ctx.fillRect(region.x, 0, region.w, height);
+    ctx.fillRect(region.x - 60, 0, region.w + 120, height);
 
-    const topGlow = ctx.createLinearGradient(region.x, 0, region.x, height * 0.4);
+    const topGlow = ctx.createLinearGradient(
+      region.x,
+      0,
+      region.x,
+      height * 0.4,
+    );
     topGlow.addColorStop(0, region.accentTop);
     topGlow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.globalAlpha = 1;
     ctx.fillStyle = topGlow;
-    ctx.fillRect(region.x, 0, region.w, height * 0.4);
+    ctx.fillRect(region.x - 60, 0, region.w + 120, height * 0.4);
 
-    const bottomGlow = ctx.createLinearGradient(region.x, height * 0.6, region.x, height);
+    const bottomGlow = ctx.createLinearGradient(
+      region.x,
+      height * 0.6,
+      region.x,
+      height,
+    );
     bottomGlow.addColorStop(0, "rgba(0,0,0,0)");
     bottomGlow.addColorStop(1, region.accentBot);
     ctx.fillStyle = bottomGlow;
-    ctx.fillRect(region.x, height * 0.6, region.w, height * 0.4);
+    ctx.fillRect(region.x - 60, height * 0.6, region.w + 120, height * 0.4);
 
     const regionCenterX = region.x + region.w / 2;
     const regionCenterY = height / 2;
@@ -351,7 +423,7 @@ export function drawTerrainBackdrop({
     );
     innerGlow.addColorStop(0, region.accentTop);
     innerGlow.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.globalAlpha = 0.6;
+    ctx.globalAlpha = 0.35;
     ctx.fillStyle = innerGlow;
     ctx.beginPath();
     ctx.ellipse(
@@ -365,6 +437,8 @@ export function drawTerrainBackdrop({
     );
     ctx.fill();
     ctx.globalAlpha = 1;
+
+    ctx.restore();
 
     const labelX = region.x + region.w / 2;
     const labelY = 20;
@@ -396,7 +470,12 @@ export function drawTerrainBackdrop({
     ctx.closePath();
     ctx.fill();
 
-    const ribbonGradientLeft = ctx.createLinearGradient(bx - 10, by, bx + 5, by);
+    const ribbonGradientLeft = ctx.createLinearGradient(
+      bx - 10,
+      by,
+      bx + 5,
+      by,
+    );
     ribbonGradientLeft.addColorStop(0, region.colors[2]);
     ribbonGradientLeft.addColorStop(1, region.colors[1]);
     ctx.fillStyle = ribbonGradientLeft;
@@ -425,7 +504,12 @@ export function drawTerrainBackdrop({
     ctx.closePath();
     ctx.fill();
 
-    const bannerGradient = ctx.createLinearGradient(bx, by, bx, by + bannerHeight);
+    const bannerGradient = ctx.createLinearGradient(
+      bx,
+      by,
+      bx,
+      by + bannerHeight,
+    );
     bannerGradient.addColorStop(0, region.colors[0]);
     bannerGradient.addColorStop(0.3, region.colors[1]);
     bannerGradient.addColorStop(0.7, region.colors[1]);
@@ -471,7 +555,7 @@ export function drawTerrainBackdrop({
   });
 
   drawRuggedBorder(ctx, height, 380, "#3d5a2f", "#2a3a2a");
-  drawRuggedBorder(ctx, height, 720, "#2a3a2a", "#9a8060");
-  drawRuggedBorder(ctx, height, 1080, "#9a8060", "#5a6a7a");
-  drawRuggedBorder(ctx, height, 1450, "#5a6a7a", "#5a3030");
+  drawRuggedBorder(ctx, height, 720, "#2a3a2a", "#7a6848");
+  drawRuggedBorder(ctx, height, 1080, "#6a5a40", "#4a5560");
+  drawRuggedBorder(ctx, height, 1450, "#3a4858", "#3a2020");
 }

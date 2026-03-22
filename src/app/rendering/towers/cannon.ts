@@ -2996,6 +2996,7 @@ export function drawHexMantlet(
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
     const normal = sideNormals[i];
+    if (normal < -0.15) continue;
     const v0 = hexVerts[i];
     const v1 = hexVerts[ni];
 
@@ -4733,6 +4734,15 @@ export function renderGatlingGun(
       time,
       recoilOffset,
     );
+    drawHexMantlet(
+      ctx,
+      turretX,
+      turretY - 14 * zoom,
+      rotation,
+      zoom,
+      1.2,
+      recoilOffset,
+    );
   }
 
   // === HEAVY GUN SHIELD ===
@@ -5347,18 +5357,7 @@ export function renderGatlingGun(
     ctx.stroke();
   }
 
-  // Hex mantlet, breech — mantlet behind breech when facing away
-  if (facingAway) {
-    drawHexMantlet(
-      ctx,
-      turretX,
-      turretY - 14 * zoom,
-      rotation,
-      zoom,
-      1.2,
-      recoilOffset,
-    );
-  }
+  // Breech mechanism (hex mantlet already drawn in facing-away barrel block above)
   drawBreechMechanism(
     ctx,
     turretX,
@@ -5670,6 +5669,96 @@ export function drawGatlingBarrels(
     drawHousingBack();
   }
 
+  // === RING BAND geometry + draw closure (order depends on facing direction) ===
+  const ringBandCount = 2;
+  const ringBandR = barrelSpread + barrelW * 1.2;
+  const ringBandThick = 2.5 * zoom;
+  const ringHexSides = 6;
+  const ringBandSideNormals: number[] = [];
+  for (let ri = 0; ri < ringHexSides; ri++) {
+    const rmidA = ((ri + 0.5) / ringHexSides) * Math.PI * 2;
+    ringBandSideNormals.push(Math.cos(rmidA) * cosR + 0.5 * Math.sin(rmidA));
+  }
+  const ringBandVerts: { x: number; y: number }[] = [];
+  for (let ri = 0; ri < ringHexSides; ri++) {
+    const ra = (ri / ringHexSides) * Math.PI * 2;
+    ringBandVerts.push(
+      isoOffset(Math.cos(ra) * ringBandR, Math.sin(ra) * ringBandR),
+    );
+  }
+
+  const drawRingBands = () => {
+    for (let rb = 0; rb < ringBandCount; rb++) {
+      const rbT = (rb + 1) / (ringBandCount + 1);
+      const rbDist =
+        housingDist +
+        housingDepth +
+        (barrelLen - housingDist - housingDepth) * rbT;
+      const rbFrontPt = axisPoint(rbDist + ringBandThick * 0.5);
+      const rbBackPt = axisPoint(rbDist - ringBandThick * 0.5);
+      const rbTaper = 1 - rbT * 0.25;
+      const rbVerts = ringBandVerts.map((v) => ({
+        x: v.x * rbTaper,
+        y: v.y * rbTaper,
+      }));
+
+      const rbSorted = Array.from({ length: ringHexSides }, (_, i) => i).sort(
+        (a, b) => ringBandSideNormals[a] - ringBandSideNormals[b],
+      );
+
+      for (const ri of rbSorted) {
+        const rni = (ri + 1) % ringHexSides;
+        const rnormal = ringBandSideNormals[ri];
+        if (rnormal < -0.15) continue;
+
+        const rv0 = rbVerts[ri];
+        const rv1 = rbVerts[rni];
+        const rlit = Math.max(0.2, 0.3 + Math.max(0, rnormal) * 0.5);
+        const rgc = Math.floor(100 + rlit * 50);
+
+        ctx.fillStyle = `rgb(${rgc}, ${rgc}, ${rgc + 6})`;
+        ctx.beginPath();
+        ctx.moveTo(rbBackPt.x + rv0.x, rbBackPt.y + rv0.y);
+        ctx.lineTo(rbBackPt.x + rv1.x, rbBackPt.y + rv1.y);
+        ctx.lineTo(rbFrontPt.x + rv1.x, rbFrontPt.y + rv1.y);
+        ctx.lineTo(rbFrontPt.x + rv0.x, rbFrontPt.y + rv0.y);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(25, 25, 35, ${0.2 + Math.max(0, rnormal) * 0.15})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.stroke();
+
+        if (rnormal > -0.05) {
+          const rmidX = (rv0.x + rv1.x) * 0.5;
+          const rmidY = (rv0.y + rv1.y) * 0.5;
+          ctx.strokeStyle = `rgba(255, 130, 30, ${0.4 + Math.max(0, rnormal) * 0.35})`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(rbBackPt.x + rmidX, rbBackPt.y + rmidY);
+          ctx.lineTo(rbFrontPt.x + rmidX, rbFrontPt.y + rmidY);
+          ctx.stroke();
+        }
+      }
+
+      const rbCapPt = facingFwd ? rbFrontPt : rbBackPt;
+      ctx.strokeStyle = `rgba(140, 140, 155, 0.4)`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      for (let ri = 0; ri < ringHexSides; ri++) {
+        const rni = (ri + 1) % ringHexSides;
+        if (
+          ringBandSideNormals[ri] < -0.15 &&
+          ringBandSideNormals[rni === 0 ? ringHexSides - 1 : rni - 1] < -0.15
+        )
+          continue;
+        ctx.moveTo(rbCapPt.x + rbVerts[ri].x, rbCapPt.y + rbVerts[ri].y);
+        ctx.lineTo(rbCapPt.x + rbVerts[rni].x, rbCapPt.y + rbVerts[rni].y);
+      }
+      ctx.stroke();
+    }
+  };
+
   // === BARRELS — each as a quad strip projected with perp + up ===
   type BarrelEntry = {
     spinA: number;
@@ -5715,6 +5804,11 @@ export function drawGatlingBarrels(
       ey,
       pitchRate,
     );
+  }
+
+  // Ring bands behind barrels when facing away (barrel surfaces occlude them)
+  if (!facingFwd) {
+    drawRingBands();
   }
 
   for (const bd of barrelData) {
@@ -5780,92 +5874,9 @@ export function drawGatlingBarrels(
     }
   }
 
-  // === RING BANDS around barrel assembly ===
-  const ringBandCount = 2;
-  const ringBandR = barrelSpread + barrelW * 1.2;
-  const ringBandThick = 2.5 * zoom;
-  const ringHexSides = 6;
-  const ringBandSideNormals: number[] = [];
-  for (let ri = 0; ri < ringHexSides; ri++) {
-    const rmidA = ((ri + 0.5) / ringHexSides) * Math.PI * 2;
-    ringBandSideNormals.push(Math.cos(rmidA) * cosR + 0.5 * Math.sin(rmidA));
-  }
-  const ringBandVerts: { x: number; y: number }[] = [];
-  for (let ri = 0; ri < ringHexSides; ri++) {
-    const ra = (ri / ringHexSides) * Math.PI * 2;
-    ringBandVerts.push(
-      isoOffset(Math.cos(ra) * ringBandR, Math.sin(ra) * ringBandR),
-    );
-  }
-
-  for (let rb = 0; rb < ringBandCount; rb++) {
-    const rbT = (rb + 1) / (ringBandCount + 1);
-    const rbDist =
-      housingDist +
-      housingDepth +
-      (barrelLen - housingDist - housingDepth) * rbT;
-    const rbFrontPt = axisPoint(rbDist + ringBandThick * 0.5);
-    const rbBackPt = axisPoint(rbDist - ringBandThick * 0.5);
-    const rbTaper = 1 - rbT * 0.25;
-    const rbVerts = ringBandVerts.map((v) => ({
-      x: v.x * rbTaper,
-      y: v.y * rbTaper,
-    }));
-
-    const rbSorted = Array.from({ length: ringHexSides }, (_, i) => i).sort(
-      (a, b) => ringBandSideNormals[a] - ringBandSideNormals[b],
-    );
-
-    for (const ri of rbSorted) {
-      const rni = (ri + 1) % ringHexSides;
-      const rnormal = ringBandSideNormals[ri];
-      if (rnormal < -0.15) continue;
-
-      const rv0 = rbVerts[ri];
-      const rv1 = rbVerts[rni];
-      const rlit = Math.max(0.2, 0.3 + Math.max(0, rnormal) * 0.5);
-      const rgc = Math.floor(100 + rlit * 50);
-
-      ctx.fillStyle = `rgb(${rgc}, ${rgc}, ${rgc + 6})`;
-      ctx.beginPath();
-      ctx.moveTo(rbBackPt.x + rv0.x, rbBackPt.y + rv0.y);
-      ctx.lineTo(rbBackPt.x + rv1.x, rbBackPt.y + rv1.y);
-      ctx.lineTo(rbFrontPt.x + rv1.x, rbFrontPt.y + rv1.y);
-      ctx.lineTo(rbFrontPt.x + rv0.x, rbFrontPt.y + rv0.y);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = `rgba(25, 25, 35, ${0.2 + Math.max(0, rnormal) * 0.15})`;
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
-
-      if (rnormal > -0.05) {
-        const rmidX = (rv0.x + rv1.x) * 0.5;
-        const rmidY = (rv0.y + rv1.y) * 0.5;
-        ctx.strokeStyle = `rgba(255, 130, 30, ${0.4 + Math.max(0, rnormal) * 0.35})`;
-        ctx.lineWidth = 1 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(rbBackPt.x + rmidX, rbBackPt.y + rmidY);
-        ctx.lineTo(rbFrontPt.x + rmidX, rbFrontPt.y + rmidY);
-        ctx.stroke();
-      }
-    }
-
-    const rbCapPt = facingFwd ? rbFrontPt : rbBackPt;
-    ctx.strokeStyle = `rgba(140, 140, 155, 0.4)`;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    for (let ri = 0; ri < ringHexSides; ri++) {
-      const rni = (ri + 1) % ringHexSides;
-      if (
-        ringBandSideNormals[ri] < -0.15 &&
-        ringBandSideNormals[rni === 0 ? ringHexSides - 1 : rni - 1] < -0.15
-      )
-        continue;
-      ctx.moveTo(rbCapPt.x + rbVerts[ri].x, rbCapPt.y + rbVerts[ri].y);
-      ctx.lineTo(rbCapPt.x + rbVerts[rni].x, rbCapPt.y + rbVerts[rni].y);
-    }
-    ctx.stroke();
+  // Ring bands in front of barrels when facing camera (clamp rings visible on surface)
+  if (facingFwd) {
+    drawRingBands();
   }
 
   // Draw muzzle in front of barrels if facing camera
@@ -6105,58 +6116,59 @@ export function drawGatlingMuzzleIso(
     ctx.lineWidth = 1.5 * zoom;
     ctx.stroke();
 
-    // Inner hex (concentric, smaller)
-    const innerScale = 0.72;
-    ctx.strokeStyle = facingCamera ? "#6a6a80" : "#5a5a70";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(
-      ffx + hexVerts[0].x * innerScale,
-      ffy + hexVerts[0].y * innerScale,
-    );
-    for (let i = 1; i < hexSides; i++) {
-      ctx.lineTo(
-        ffx + hexVerts[i].x * innerScale,
-        ffy + hexVerts[i].y * innerScale,
-      );
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    // Radial spokes from center to each vertex
-    ctx.strokeStyle = facingCamera
-      ? "rgba(50, 50, 62, 0.5)"
-      : "rgba(40, 40, 52, 0.4)";
-    ctx.lineWidth = 0.6 * zoom;
-    for (let i = 0; i < hexSides; i++) {
+    // Skip detailed hex decorations when behind barrels (prevents bleed-through)
+    if (facingCamera) {
+      // Inner hex (concentric, smaller)
+      const innerScale = 0.72;
+      ctx.strokeStyle = "#6a6a80";
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.moveTo(ffx, ffy);
-      ctx.lineTo(ffx + hexVerts[i].x * 0.9, ffy + hexVerts[i].y * 0.9);
-      ctx.stroke();
-    }
-
-    // Vertex bolts on the face
-    ctx.fillStyle = facingCamera ? "#b0b0c0" : "#8a8a9a";
-    for (let i = 0; i < hexSides; i++) {
-      const bx = ffx + hexVerts[i].x * 0.88;
-      const by = ffy + hexVerts[i].y * 0.88;
-      ctx.beginPath();
-      ctx.arc(bx, by, 1.6 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      // Bolt slot
-      ctx.strokeStyle = facingCamera ? "#3a3a4a" : "#2a2a3a";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      const slotA = (i / hexSides) * Math.PI * 2;
       ctx.moveTo(
-        bx - Math.cos(slotA) * 1 * zoom,
-        by - Math.sin(slotA) * 1 * zoom,
+        ffx + hexVerts[0].x * innerScale,
+        ffy + hexVerts[0].y * innerScale,
       );
-      ctx.lineTo(
-        bx + Math.cos(slotA) * 1 * zoom,
-        by + Math.sin(slotA) * 1 * zoom,
-      );
+      for (let i = 1; i < hexSides; i++) {
+        ctx.lineTo(
+          ffx + hexVerts[i].x * innerScale,
+          ffy + hexVerts[i].y * innerScale,
+        );
+      }
+      ctx.closePath();
       ctx.stroke();
+
+      // Radial spokes from center to each vertex
+      ctx.strokeStyle = "rgba(50, 50, 62, 0.5)";
+      ctx.lineWidth = 0.6 * zoom;
+      for (let i = 0; i < hexSides; i++) {
+        ctx.beginPath();
+        ctx.moveTo(ffx, ffy);
+        ctx.lineTo(ffx + hexVerts[i].x * 0.9, ffy + hexVerts[i].y * 0.9);
+        ctx.stroke();
+      }
+
+      // Vertex bolts on the face
+      ctx.fillStyle = "#b0b0c0";
+      for (let i = 0; i < hexSides; i++) {
+        const bx = ffx + hexVerts[i].x * 0.88;
+        const by = ffy + hexVerts[i].y * 0.88;
+        ctx.beginPath();
+        ctx.arc(bx, by, 1.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        // Bolt slot
+        ctx.strokeStyle = "#3a3a4a";
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        const slotA = (i / hexSides) * Math.PI * 2;
+        ctx.moveTo(
+          bx - Math.cos(slotA) * 1 * zoom,
+          by - Math.sin(slotA) * 1 * zoom,
+        );
+        ctx.lineTo(
+          bx + Math.cos(slotA) * 1 * zoom,
+          by + Math.sin(slotA) * 1 * zoom,
+        );
+        ctx.stroke();
+      }
     }
 
     if (facingCamera) {
@@ -6262,9 +6274,18 @@ export function drawGatlingMuzzleIso(
     drawSideFaces();
     drawFrontFace();
   } else {
-    drawFrontFace();
-    drawSideFaces();
-    drawBackFace();
+    // When behind barrels, only draw a plain opaque hex fill (no side faces,
+    // no back face details) to prevent hex geometry bleeding through barrel gaps.
+    const ffx = cx + frontOffPt.x;
+    const ffy = cy + frontOffPt.y;
+    ctx.fillStyle = "#4a4a5a";
+    ctx.beginPath();
+    ctx.moveTo(ffx + hexVerts[0].x, ffy + hexVerts[0].y);
+    for (let i = 1; i < hexSides; i++) {
+      ctx.lineTo(ffx + hexVerts[i].x, ffy + hexVerts[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
   }
 
   // === Muzzle flash (always visible regardless of camera angle) ===

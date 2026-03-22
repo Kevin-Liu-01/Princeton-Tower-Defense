@@ -344,11 +344,12 @@ export function drawBogCreatureEnemy(
     const otPhase = (time * 0.8 + ot * 0.45) % 1;
     const otStartY = y + size * 0.1;
     const otEndY = otStartY + otPhase * size * 0.35;
-    const otWidth = size * (0.018 - otPhase * 0.008);
+    const otWidth = Math.max(0, size * (0.018 - otPhase * 0.008));
+    const otHeight = Math.max(0, (otEndY - otStartY) * 0.5);
     const otAlpha = (1 - otPhase) * 0.7;
     ctx.fillStyle = `rgba(110, 180, 30, ${otAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(otX, (otStartY + otEndY) * 0.5, otWidth, (otEndY - otStartY) * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(otX, (otStartY + otEndY) * 0.5, otWidth, otHeight, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = `rgba(132, 204, 22, ${otAlpha * 0.8})`;
     ctx.beginPath();

@@ -38,7 +38,7 @@ import {
   Rocket,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
-import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR, TOWER_TAGS } from "../../constants";
+import { STATION_TROOP_RANGE, TOWER_DATA, TROOP_DATA, ISO_PRISM_D_FACTOR, TOWER_TAGS, TOWER_ROLE_STYLES } from "../../constants";
 import { TagBadge } from "./primitives/TagBadge";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { getTowerFoundationSize, getTowerVisualMetrics } from "../../rendering/towers/towerHelpers";
@@ -669,7 +669,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   );
 
   // ---- Panel positioning ----
-  const panelWidth = 235;
+  const panelWidth = 260;
   let panelX = screenPos.x - panelWidth / 2;
   panelX = Math.max(10, Math.min(panelX, window.innerWidth - panelWidth - 10));
 
@@ -757,8 +757,13 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
           {/* Header */}
           <div className="flex items-center gap-2 mb-1.5 pb-1.5" style={{ borderBottom: '1px solid ' + GOLD.border25 }}>
-            <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: PANEL.bgDeep, border: '1.5px solid ' + GOLD.border30 }}>
-              <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} upgrade={tower.upgrade} />
+            <div className="rounded-md flex items-center justify-center flex-shrink-0 relative" style={{ width: sizes.towerIconLarge, height: sizes.towerIconLarge, background: PANEL.bgDeep, border: '1.5px solid ' + GOLD.border30 }}>
+              <div className="absolute inset-0 rounded-md blur-[6px] opacity-60 z-0" style={{
+                background: `radial-gradient(circle, ${TOWER_ROLE_STYLES[tower.type as keyof typeof TOWER_ROLE_STYLES].accent}, transparent 70%)`,
+              }} />
+              <div className="relative z-10">
+                <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} upgrade={tower.upgrade} />
+              </div>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">

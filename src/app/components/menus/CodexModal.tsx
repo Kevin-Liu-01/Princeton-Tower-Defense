@@ -1324,8 +1324,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredTowerTypes.slice(0, 4).map((type, index) => (
                           <React.Fragment key={`tower-diagram-${type}`}>
-                            <FramedCodexSprite size={52} theme={TOWER_SPRITE_FRAME_THEME[type]}>
-                              <TowerSprite type={type} size={42} level={2} />
+                            <FramedCodexSprite size={54} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                              <TowerSprite type={type} size={44} level={2} />
                             </FramedCodexSprite>
                             {index < Math.min(3, featuredTowerTypes.length - 1) && (
                               <ChevronRight size={13} className="text-amber-300/70" />
@@ -1395,11 +1395,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               <div className="p-4 flex flex-col flex-1">
                                 <div className="flex items-start gap-3 mb-3">
                                   <FramedCodexSprite
-                                    size={72}
+                                    size={80}
                                     theme={TOWER_SPRITE_FRAME_THEME[type]}
                                     className="group-hover:scale-105 transition-transform"
                                   >
-                                    <TowerSprite type={type} size={58} level={1} />
+                                    <TowerSprite type={type} size={66} level={1} />
                                   </FramedCodexSprite>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2">
@@ -2542,8 +2542,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                             <div className="p-3">
                               <div className="flex items-start gap-3 mb-2.5">
-                                <FramedCodexSprite size={72} theme={getTroopSpriteFrameTheme(type)}>
-                                  <TroopSprite type={type} size={58} />
+                                <FramedCodexSprite size={80} theme={getTroopSpriteFrameTheme(type)}>
+                                  <TroopSprite type={type} size={66} />
                                 </FramedCodexSprite>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="text-sm font-bold text-amber-200 truncate">{troop.name}</h4>
@@ -2998,8 +2998,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {spellTypes.map((type, index) => (
                           <React.Fragment key={`spell-diagram-${type}`}>
-                            <FramedCodexSprite size={48} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                              <SpellSprite type={type} size={38} />
+                            <FramedCodexSprite size={54} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                              <SpellSprite type={type} size={44} />
                             </FramedCodexSprite>
                             {index < spellTypes.length - 1 && (
                               <ChevronRight size={12} className="text-purple-300/70" />
@@ -3063,10 +3063,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         <div className="p-4">
                           <div className="flex items-start gap-4 mb-4">
                             <FramedCodexSprite
-                              size={88}
+                              size={80}
                               theme={SPELL_SPRITE_FRAME_THEME[type]}
                             >
-                              <SpellSprite type={type} size={72} />
+                              <SpellSprite type={type} size={66} />
                             </FramedCodexSprite>
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-1">
@@ -3182,7 +3182,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredSpecialTowers.map((type, index) => (
                           <React.Fragment key={`special-diagram-${type}`}>
-                            <FramedCodexSprite size={56} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                            <FramedCodexSprite size={54} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
                               <SpecialTowerSprite type={type} size={44} />
                             </FramedCodexSprite>
                             {index < featuredSpecialTowers.length - 1 && (
@@ -3206,8 +3206,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     return (
                       <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
                         <div className="flex items-start gap-3 mb-3">
-                          <FramedCodexSprite size={88} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
-                            <SpecialTowerSprite type={type} size={74} />
+                          <FramedCodexSprite size={80} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                            <SpecialTowerSprite type={type} size={66} />
                           </FramedCodexSprite>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-3">
@@ -3322,7 +3322,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredHazards.map((type, index) => (
                           <React.Fragment key={`hazard-diagram-${type}`}>
-                            <FramedCodexSprite size={56} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                            <FramedCodexSprite size={54} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
                               <HazardSprite type={type} size={44} />
                             </FramedCodexSprite>
                             {index < featuredHazards.length - 1 && (
@@ -3346,8 +3346,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     return (
                       <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
                         <div className="flex items-start gap-3 mb-3">
-                          <FramedCodexSprite size={88} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
-                            <HazardSprite type={type} size={74} />
+                          <FramedCodexSprite size={80} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                            <HazardSprite type={type} size={66} />
                           </FramedCodexSprite>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-3">
@@ -3442,17 +3442,17 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         ))}
                         {spellTypes.slice(0, 1).map((type) => (
                           <FramedCodexSprite key={`guide-spell-${type}`} size={52} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                            <SpellSprite type={type} size={40} />
+                            <SpellSprite type={type} size={42} />
                           </FramedCodexSprite>
                         ))}
                         {featuredSpecialTowers.slice(0, 1).map((type) => (
                           <FramedCodexSprite key={`guide-special-${type}`} size={52} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
-                            <SpecialTowerSprite type={type} size={40} />
+                            <SpecialTowerSprite type={type} size={42} />
                           </FramedCodexSprite>
                         ))}
                         {featuredHazards.slice(0, 1).map((type) => (
                           <FramedCodexSprite key={`guide-hazard-${type}`} size={52} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
-                            <HazardSprite type={type} size={40} />
+                            <HazardSprite type={type} size={42} />
                           </FramedCodexSprite>
                         ))}
                       </div>
@@ -3510,8 +3510,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {featuredEnemyTypes.map((type) => (
-                        <FramedCodexSprite key={`enemy-guide-${type}`} size={54} theme={getEnemySpriteFrameTheme(type)}>
-                          <EnemySprite type={type} size={44} />
+                        <FramedCodexSprite key={`enemy-guide-${type}`} size={52} theme={getEnemySpriteFrameTheme(type)}>
+                          <EnemySprite type={type} size={42} />
                         </FramedCodexSprite>
                       ))}
                     </div>

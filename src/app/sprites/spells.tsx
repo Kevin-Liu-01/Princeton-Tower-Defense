@@ -59,7 +59,7 @@ export const SpellSprite: React.FC<{
 
         // Main fireball core with intense glow
         ctx.shadowColor = "#ff4400";
-        ctx.shadowBlur = 28 * scale;
+        ctx.shadowBlur = 6 * scale;
         const coreGrad = ctx.createRadialGradient(
           cx - 2.5 * scale, cy - 2.5 * scale, 0,
           cx, cy, 14 * scale * pulseScale
@@ -97,7 +97,7 @@ export const SpellSprite: React.FC<{
         ctx.restore();
 
         // Rising flame tongues
-        ctx.shadowBlur = 18 * scale;
+        ctx.shadowBlur = 4 * scale;
         for (let i = 0; i < 5; i++) {
           const flameAngle = (i * Math.PI * 2) / 5 + (animated ? Math.sin(t * 2 + i) * 0.3 : 0);
           const flameHeight = (7 + (animated ? Math.sin(t * 5 + i * 2) * 3.5 : 0)) * scale;
@@ -180,7 +180,7 @@ export const SpellSprite: React.FC<{
 
         // Main lightning bolt - outer glow layer
         ctx.shadowColor = "#88aaff";
-        ctx.shadowBlur = 20 * scale * flickerIntensity;
+        ctx.shadowBlur = 6 * scale * flickerIntensity;
         ctx.strokeStyle = `rgba(150, 180, 255, ${0.8 * flickerIntensity})`;
         ctx.lineWidth = 6 * scale;
         ctx.lineCap = "round";
@@ -194,7 +194,7 @@ export const SpellSprite: React.FC<{
 
         // Middle electric layer
         ctx.shadowColor = "#aaccff";
-        ctx.shadowBlur = 12 * scale * flickerIntensity;
+        ctx.shadowBlur = 4 * scale * flickerIntensity;
         ctx.strokeStyle = `rgba(200, 220, 255, ${0.9 * flickerIntensity})`;
         ctx.lineWidth = 3.5 * scale;
         ctx.beginPath();
@@ -205,7 +205,7 @@ export const SpellSprite: React.FC<{
         ctx.stroke();
 
         // Hot white core
-        ctx.shadowBlur = 8 * scale * flickerIntensity;
+        ctx.shadowBlur = 3 * scale * flickerIntensity;
         ctx.shadowColor = "#ffffff";
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 1.5 * scale;
@@ -218,7 +218,7 @@ export const SpellSprite: React.FC<{
 
         // Secondary branching bolts
         ctx.shadowColor = "#aaccff";
-        ctx.shadowBlur = 8 * scale * flickerIntensity;
+        ctx.shadowBlur = 3 * scale * flickerIntensity;
         ctx.strokeStyle = `rgba(180, 200, 255, ${0.7 * flickerIntensity})`;
         ctx.lineWidth = 2 * scale;
 
@@ -251,7 +251,7 @@ export const SpellSprite: React.FC<{
         ctx.stroke();
 
         // Electric impact orbs at ends
-        ctx.shadowBlur = 15 * scale * flickerIntensity;
+        ctx.shadowBlur = 5 * scale * flickerIntensity;
         ctx.shadowColor = "#ffffff";
         const topOrbGrad = ctx.createRadialGradient(
           cx + 2 * scale + boltOffset, cy - 16 * scale, 0,
@@ -600,7 +600,7 @@ export const SpellSprite: React.FC<{
 
         // Coin stack with 3D effect
         ctx.shadowColor = "#ffaa00";
-        ctx.shadowBlur = 15 * scale;
+        ctx.shadowBlur = 5 * scale;
 
         for (let i = 3; i >= 0; i--) {
           const coinY = cy + 4 * scale - i * 4 * scale;
@@ -665,7 +665,7 @@ export const SpellSprite: React.FC<{
 
         // Radiant sparkle bursts
         ctx.shadowColor = "#ffdd00";
-        ctx.shadowBlur = 8 * scale;
+        ctx.shadowBlur = 3 * scale;
         const sparklePositions = [
           { x: -13, y: -8, size: 2.5, phase: 0 },
           { x: 13, y: -6, size: 2.2, phase: 1 },

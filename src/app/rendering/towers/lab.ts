@@ -917,36 +917,119 @@ export function renderLabTower(
       const coilX = screenPos.x + offsetX;
       const coilBaseY = screenPos.y - h * 0.1;
 
-      // Mini coil housing
+      const scPillarW = 6 * zoom;
+      const scPillarD = scPillarW * 0.5;
+      const scTopW = scPillarW * 0.7;
+      const scTopD = scPillarD * 0.7;
+      const miniCoilTurns = 5;
+
+      // Base platform (isometric ellipse)
       ctx.fillStyle = sm.darkest;
       ctx.beginPath();
-      ctx.moveTo(coilX - 6 * zoom, coilBaseY);
-      ctx.lineTo(coilX - 4 * zoom, coilBaseY - sideCoilHeight);
-      ctx.lineTo(coilX + 4 * zoom, coilBaseY - sideCoilHeight);
-      ctx.lineTo(coilX + 6 * zoom, coilBaseY);
-      ctx.closePath();
+      ctx.ellipse(
+        coilX,
+        coilBaseY + 2 * zoom,
+        8 * zoom,
+        4 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
-      // Copper coil rings (gradient-filled like Tesla coil rings)
-      const miniCoilTurns = 5;
+      // Pass 1: Back halves of coil ring shadows (behind pillar)
       for (let mc = 0; mc < miniCoilTurns; mc++) {
         const mcY =
           coilBaseY - (mc / miniCoilTurns) * sideCoilHeight * 0.8 - 4 * zoom;
-        const mcRadius = (5 - mc * 0.5) * zoom;
-        // Ring shadow (back edge)
+        const mcRadius = (5.5 - mc * 0.4) * zoom;
+        ctx.fillStyle = "rgb(65, 40, 20)";
+        ctx.beginPath();
+        ctx.ellipse(
+          coilX,
+          mcY + 1 * zoom,
+          mcRadius,
+          mcRadius * 0.5,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgb(100, 60, 30)";
+        ctx.beginPath();
+        ctx.ellipse(
+          coilX,
+          mcY,
+          mcRadius,
+          mcRadius * 0.5,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Isometric pillar - left face
+      ctx.fillStyle = sm.dark;
+      ctx.beginPath();
+      ctx.moveTo(coilX - scPillarW, coilBaseY);
+      ctx.lineTo(coilX, coilBaseY + scPillarD);
+      ctx.lineTo(coilX, coilBaseY - sideCoilHeight + scTopD);
+      ctx.lineTo(coilX - scTopW, coilBaseY - sideCoilHeight);
+      ctx.closePath();
+      ctx.fill();
+
+      // Isometric pillar - right face
+      ctx.fillStyle = sm.mid;
+      ctx.beginPath();
+      ctx.moveTo(coilX + scPillarW, coilBaseY);
+      ctx.lineTo(coilX, coilBaseY + scPillarD);
+      ctx.lineTo(coilX, coilBaseY - sideCoilHeight + scTopD);
+      ctx.lineTo(coilX + scTopW, coilBaseY - sideCoilHeight);
+      ctx.closePath();
+      ctx.fill();
+
+      // Edge highlights
+      ctx.strokeStyle = sm.light;
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(coilX - scPillarW, coilBaseY);
+      ctx.lineTo(coilX - scTopW, coilBaseY - sideCoilHeight);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(coilX + scPillarW, coilBaseY);
+      ctx.lineTo(coilX + scTopW, coilBaseY - sideCoilHeight);
+      ctx.stroke();
+
+      // Top cap (isometric diamond)
+      ctx.fillStyle = sm.light;
+      ctx.beginPath();
+      ctx.moveTo(coilX - scTopW, coilBaseY - sideCoilHeight);
+      ctx.lineTo(coilX, coilBaseY - sideCoilHeight + scTopD);
+      ctx.lineTo(coilX + scTopW, coilBaseY - sideCoilHeight);
+      ctx.lineTo(coilX, coilBaseY - sideCoilHeight - scTopD);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pass 2: Front halves of coil rings (in front of pillar)
+      for (let mc = 0; mc < miniCoilTurns; mc++) {
+        const mcY =
+          coilBaseY - (mc / miniCoilTurns) * sideCoilHeight * 0.8 - 4 * zoom;
+        const mcRadius = (5.5 - mc * 0.4) * zoom;
         ctx.fillStyle = "rgb(80, 50, 25)";
         ctx.beginPath();
         ctx.ellipse(
           coilX,
           mcY + 1 * zoom,
           mcRadius,
-          mcRadius * 0.4,
+          mcRadius * 0.5,
           0,
           0,
-          Math.PI * 2,
+          Math.PI,
         );
+        ctx.closePath();
         ctx.fill();
-        // Main ring body with copper gradient
         const sGrad = ctx.createLinearGradient(
           coilX - mcRadius,
           mcY,
@@ -960,9 +1043,9 @@ export function renderLabTower(
         sGrad.addColorStop(1, "rgb(120, 75, 35)");
         ctx.fillStyle = sGrad;
         ctx.beginPath();
-        ctx.ellipse(coilX, mcY, mcRadius, mcRadius * 0.4, 0, 0, Math.PI * 2);
+        ctx.ellipse(coilX, mcY, mcRadius, mcRadius * 0.5, 0, 0, Math.PI);
+        ctx.closePath();
         ctx.fill();
-        // Ring highlight
         ctx.strokeStyle = "rgba(255, 200, 120, 0.7)";
         ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
@@ -970,10 +1053,10 @@ export function renderLabTower(
           coilX,
           mcY - 0.6 * zoom,
           mcRadius * 0.85,
-          mcRadius * 0.32,
+          mcRadius * 0.4,
           0,
-          0,
-          Math.PI * 2,
+          0.15,
+          Math.PI - 0.15,
         );
         ctx.stroke();
       }
@@ -1019,16 +1102,19 @@ export function renderLabTower(
       for (let arc = 0; arc < 3; arc++) {
         const arcAngle = time * 4 + arc * ((Math.PI * 2) / 3) + offsetX;
         const arcLen = (8 + Math.sin(time * 7 + arc) * 4) * zoom;
-        ctx.strokeStyle = `rgba(${eR2}, ${0.3 + Math.random() * 0.3})`;
+        ctx.strokeStyle = `rgba(${eR2}, ${0.3 + Math.sin(time * 9 + arc * 2.1) * 0.3})`;
         ctx.lineWidth = 1 * zoom;
         ctx.beginPath();
         ctx.moveTo(coilX, miniOrbY);
         const arcEndX = coilX + Math.cos(arcAngle) * arcLen;
         const arcEndY = miniOrbY + Math.sin(arcAngle) * arcLen * 0.5;
-        ctx.lineTo(
-          (coilX + arcEndX) / 2 + (Math.random() - 0.5) * 4 * zoom,
-          (miniOrbY + arcEndY) / 2 + (Math.random() - 0.5) * 2 * zoom,
-        );
+        const arcMidX =
+          (coilX + arcEndX) / 2 +
+          Math.sin(time * 15 + arc * 3.7) * 4 * zoom;
+        const arcMidY =
+          (miniOrbY + arcEndY) / 2 +
+          Math.cos(time * 12 + arc * 2.3) * 2 * zoom;
+        ctx.lineTo(arcMidX, arcMidY);
         ctx.lineTo(arcEndX, arcEndY);
         ctx.stroke();
       }

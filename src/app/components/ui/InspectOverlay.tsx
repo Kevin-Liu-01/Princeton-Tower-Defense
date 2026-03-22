@@ -149,7 +149,7 @@ export function InspectPanel({ unitScreenPos, theme, onClose, header, children }
     return () => ro.disconnect();
   }, []);
 
-  const panelWidth = 240;
+  const panelWidth = 260;
   const panelGap = 10;
   const cx = unitScreenPos.x;
   const cy = unitScreenPos.y;

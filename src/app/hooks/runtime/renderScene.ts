@@ -2032,10 +2032,11 @@ export function renderScene(params: RenderSceneParams): void {
     renderables.push({
       type: "projectile",
       data: proj,
-      isoY: (x + y) * ISO_Y_FACTOR,
+      isoY: (x + y) * ISO_Y_FACTOR + 0.005,
     });
   });
   const overlayEffectTypes = new Set(["lightning", "beam", "chain", "zap"]);
+  const directionalTowerEffects = new Set(["flame_burst", "cannon_shot", "bullet_stream"]);
   mergedEffects.forEach((eff) => {
     if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type) || eff.type === deathEffectType) return;
     const fromX = eff.pos.x;
@@ -2054,11 +2055,24 @@ export function renderScene(params: RenderSceneParams): void {
     ) {
       return;
     }
-    const depthBias = overlayEffectTypes.has(eff.type) ? 0.01 : -0.01;
+    let depthX = fromX;
+    let depthY = fromY;
+    let depthBias: number;
+    if (overlayEffectTypes.has(eff.type)) {
+      depthBias = 0.01;
+    } else if (directionalTowerEffects.has(eff.type) && eff.targetPos) {
+      // Midpoint between source and target so the effect renders in front of
+      // the tower when aimed toward the viewer and behind when aimed away
+      depthX = (fromX + toX) * 0.5;
+      depthY = (fromY + toY) * 0.5;
+      depthBias = 0.01;
+    } else {
+      depthBias = -0.01;
+    }
     renderables.push({
       type: "effect",
       data: eff,
-      isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR + depthBias,
+      isoY: (depthX + depthY) * ISO_Y_FACTOR + depthBias,
     });
   });
   // Read active particles from pool (ref-based, no React state)

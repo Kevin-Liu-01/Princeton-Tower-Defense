@@ -134,7 +134,7 @@ export const CreatorHeader: React.FC<CreatorHeaderProps> = ({
               value={selectedPresetId}
               onChange={(event) => onApplyMapPreset(event.target.value)}
               className="rounded-lg border border-violet-600/50 bg-violet-950/40 px-2 py-1.5 text-xs text-violet-200 outline-none focus:border-violet-400/80 max-w-[140px]"
-              title="Overwrites waves, decorations, hazards, objectives, and theme from this preset"
+              title="Overwrites waves, paths, decorations, hazards, objectives, and theme from this preset"
             >
               {waveTemplateOptions.map((option) => (
                 <option key={option.value} value={option.value}>
