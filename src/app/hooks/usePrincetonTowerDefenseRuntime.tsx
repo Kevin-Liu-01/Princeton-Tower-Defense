@@ -152,9 +152,9 @@ import { setupResizeListener } from "./runtime/canvasResize";
 import { handleBuildTouchDragMoveImpl, handleBuildTouchDragEndImpl } from "./runtime/buildDragHandlers";
 import { computePendingChallengeUnlocks } from "./runtime/challengeUnlocks";
 import { BattleUI } from "./runtime/BattleUI";
-import { LoadingScreen, LoadingOverlay } from "../components/menus/LoadingScreen";
+import { LoadingScreen, LoadingOverlay, SceneTransitionOverlay } from "../components/menus/LoadingScreen";
 import { usePreloadGate, useBattleLoadingGate } from "./useImagePreloader";
-import { getWorldMapAssets, getBattleAssets } from "../constants/loadingAssets";
+import { getWorldMapAssets, getBattleAssets, resolveLoadingTheme } from "../constants/loadingAssets";
 import {
   handleCameraKeyDown,
   enterCameraModeImpl,
@@ -199,22 +199,21 @@ export function usePrincetonTowerDefenseRuntime() {
     () => getBattleAssets(selectedMap),
     [selectedMap],
   );
-  const [battleTransitioning, setBattleTransitioning] = useState(false);
+  const [sceneTransitioning, setSceneTransitioning] = useState(false);
   const battleLoading = useBattleLoadingGate(
     getBattleUrlsForMap,
     2600,
     useCallback(() => {
-      setBattleTransitioning(true);
       setGameState("playing");
     }, [setGameState]),
   );
 
   useEffect(() => {
-    if (battleTransitioning) {
-      const t = setTimeout(() => setBattleTransitioning(false), 200);
+    if (sceneTransitioning) {
+      const t = setTimeout(() => setSceneTransitioning(false), 400);
       return () => clearTimeout(t);
     }
-  }, [battleTransitioning]);
+  }, [sceneTransitioning]);
 
   const startBattle = battleLoading.trigger;
 
@@ -1257,13 +1256,14 @@ export function usePrincetonTowerDefenseRuntime() {
     onEnemyKill, addTroopEntities, addTroopEntity, setEffects, setEnemies, setTowers, setTroops,
   ]);
 
-  // Auto-trigger hero ability when HP drops below 25%
+  // Auto-trigger hero ability when HP drops below 25% while actively attacking
   useEffect(() => {
     if (!hero || hero.dead || !hero.abilityReady || hero.hp <= 0) return;
+    if (!hero.aggroTarget) return;
     if (hero.hp < hero.maxHp * HERO_AUTO_ABILITY_HP_THRESHOLD) {
       triggerHeroAbility();
     }
-  }, [hero?.hp, hero?.maxHp, hero?.abilityReady, hero?.dead, triggerHeroAbility]);
+  }, [hero?.hp, hero?.maxHp, hero?.abilityReady, hero?.dead, hero?.aggroTarget, triggerHeroAbility]);
 
   const battleResetDeps = useMemo<BattleResetDeps>(() => ({
     clearAllTimers, setPawPoints, setEffects, setEnemies, setProjectiles,
@@ -1292,7 +1292,13 @@ export function usePrincetonTowerDefenseRuntime() {
     [battleResetDeps, selectedMap],
   );
 
+  const resetGameWithTransition = useCallback(() => {
+    setSceneTransitioning(true);
+    resetGame();
+  }, [resetGame]);
+
   const quitLevel = useCallback(() => {
+    setSceneTransitioning(true);
     resetGame();
     setGameState("setup");
   }, [resetGame]);
@@ -1336,9 +1342,11 @@ export function usePrincetonTowerDefenseRuntime() {
     [startBattle, setGameState],
   );
 
-  // ── Battle loading screen (initial loading phase, before gameState → playing) ──
+  // ── Phase 1: Blocking loading screen (gameState is still "menu"/"setup") ──
+  // Visible until minDisplayMs elapses, then onReady sets gameState("playing").
   if (battleLoading.active && gameState !== "playing") {
     const levelData = LEVEL_DATA[selectedMap];
+    const battleTheme = resolveLoadingTheme(levelData?.theme, levelData?.levelKind);
     return (
       <LoadingScreen
         progress={battleLoading.progress}
@@ -1346,6 +1354,7 @@ export function usePrincetonTowerDefenseRuntime() {
         total={battleLoading.total}
         context="battle"
         levelName={levelData?.name}
+        theme={battleTheme}
       />
     );
   }
@@ -1389,6 +1398,7 @@ export function usePrincetonTowerDefenseRuntime() {
             context="worldmap"
           />
         </LoadingOverlay>
+        <SceneTransitionOverlay visible={sceneTransitioning} />
       </>
     );
   }
@@ -1525,7 +1535,7 @@ export function usePrincetonTowerDefenseRuntime() {
         starsEarned={starsEarned}
         timeSpent={timeSpent}
         currentLevelStats={currentLevelStats}
-        resetGame={resetGame}
+        resetGame={resetGameWithTransition}
         handleTutorialComplete={handleTutorialComplete}
         handleTutorialSkip={handleTutorialSkip}
         selectedHero={selectedHero}
@@ -1533,13 +1543,14 @@ export function usePrincetonTowerDefenseRuntime() {
         handleTutorialHeroChange={handleTutorialHeroChange}
         handleTutorialSpellToggle={handleTutorialSpellToggle}
       />
-      <LoadingOverlay visible={battleTransitioning} fadeDurationMs={500}>
+      <LoadingOverlay visible={battleLoading.active} fadeDurationMs={600}>
         <LoadingScreen
-          progress={1}
-          loaded={battleLoading.total}
+          progress={battleLoading.progress}
+          loaded={battleLoading.loaded}
           total={battleLoading.total}
           context="battle"
           levelName={selectedLevelData?.name}
+          theme={resolveLoadingTheme(selectedLevelData?.theme, selectedLevelData?.levelKind)}
         />
       </LoadingOverlay>
     </>

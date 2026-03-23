@@ -140,6 +140,55 @@ export function usePreloadGate(
  * Hook for managing battle loading transitions.
  * Returns controls to trigger loading and current state.
  */
+/**
+ * Progress that smoothly fills over the full display window.
+ * Accounts for asset loading AND UI render/initialization time.
+ */
+function useSyntheticProgress(
+  active: boolean,
+  minDisplayMs: number,
+): number {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef(0);
+  const startRef = useRef(0);
+
+  useEffect(() => {
+    if (!active) {
+      setDisplay(0);
+      return;
+    }
+    startRef.current = Date.now();
+
+    const tick = () => {
+      const elapsed = Date.now() - startRef.current;
+      const t = Math.min(elapsed / minDisplayMs, 1);
+      const eased = 1 - (1 - t) ** 2.2;
+      setDisplay(eased);
+
+      if (eased < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        setDisplay(1);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [active, minDisplayMs]);
+
+  return display;
+}
+
+/**
+ * Battle loading gate with two visual phases:
+ *
+ * Phase 1 (blocking): Loading screen visible while assets preload.
+ *   gameState stays "menu"/"setup". Lasts until minDisplayMs elapses.
+ *
+ * Phase 2 (overlay): onReady fires → gameState becomes "playing" →
+ *   BattleUI renders behind the still-visible LoadingOverlay.
+ *   After a grace period for UI to paint, active→false and overlay fades.
+ */
 export function useBattleLoadingGate(
   getUrls: () => string[],
   minDisplayMs = 2200,
@@ -148,15 +197,17 @@ export function useBattleLoadingGate(
   const [active, setActive] = useState(false);
   const [loaded, setLoaded] = useState(0);
   const [total, setTotal] = useState(0);
-  const [progress, setProgress] = useState(0);
   const readyCallbackRef = useRef(onReady);
   readyCallbackRef.current = onReady;
+
+  const visualProgress = useSyntheticProgress(active, minDisplayMs);
+
+  const UI_GRACE_MS = 900;
 
   const trigger = useCallback(() => {
     setActive(true);
     setLoaded(0);
     setTotal(0);
-    setProgress(0);
 
     const urls = getUrls();
     const startTime = Date.now();
@@ -164,20 +215,21 @@ export function useBattleLoadingGate(
     preloadImagesWithProgress(urls, (l, t) => {
       setLoaded(l);
       setTotal(t);
-      setProgress(t > 0 ? l / t : 1);
     }).then(() => {
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, minDisplayMs - elapsed);
+
+      // Phase 1 → Phase 2 transition: wait for minDisplayMs
       setTimeout(() => {
         readyCallbackRef.current();
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setActive(false);
-          });
-        });
+
+        // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
+        setTimeout(() => {
+          setActive(false);
+        }, UI_GRACE_MS);
       }, remaining);
     });
   }, [getUrls, minDisplayMs]);
 
-  return { active, loaded, total, progress, trigger };
+  return { active, loaded, total, progress: visualProgress, trigger };
 }

@@ -30,6 +30,8 @@ import { drawPathDecorations, drawIsoPathStone, buildStonePalettes } from "./pat
 import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
 import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
+import { renderTerrainTexture } from "./terrainTexture";
+import type { MapTheme } from "../../types";
 
 export interface RegionTheme {
   ground: string[];
@@ -1908,13 +1910,29 @@ export function renderStaticMapLayer({
       gradient.addColorStop(1, theme.ground[2]);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, cssWidth, cssHeight);
+
+      const lightGrad = ctx.createLinearGradient(0, 0, cssWidth, cssHeight);
+      lightGrad.addColorStop(0, "rgba(255,245,220,0.06)");
+      lightGrad.addColorStop(0.4, "rgba(255,255,255,0)");
+      lightGrad.addColorStop(0.7, "rgba(0,0,0,0)");
+      lightGrad.addColorStop(1, "rgba(0,0,20,0.08)");
+      ctx.fillStyle = lightGrad;
+      ctx.fillRect(0, 0, cssWidth, cssHeight);
+
+      renderTerrainTexture({
+        ctx,
+        cssWidth,
+        cssHeight,
+        themeName: (mapThemeKey || "grassland") as MapTheme,
+        mapSeed,
+      });
     }
   }
 
   const gridRandom = createSeededRandom(mapSeed);
 
   const isChallengeTopLayer = !!challengeDistanceByCell;
-  ctx.strokeStyle = hexToRgba(theme.accent, isChallengeTopLayer ? 0.07 : 0.1);
+  ctx.strokeStyle = hexToRgba(theme.accent, isChallengeTopLayer ? 0.05 : 0.07);
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let y = 0; y < GRID_HEIGHT; y++) {
@@ -1936,6 +1954,7 @@ export function renderStaticMapLayer({
   }
   ctx.stroke();
 
+  const tileColors = [theme.accent, theme.ground[0], theme.ground[1]];
   for (let y = 0; y < GRID_HEIGHT; y++) {
     for (let x = 0; x < GRID_WIDTH; x++) {
       if (challengeDistanceByCell) {
@@ -1944,13 +1963,14 @@ export function renderStaticMapLayer({
           continue;
         }
       }
-      if (gridRandom() > 0.7) {
+      if (gridRandom() > 0.45) {
         const worldPos = gridToWorld({ x, y });
         const screenPos = toScreen(worldPos);
-        const tintBaseAlpha = isChallengeTopLayer ? 0.01 : 0.02;
-        const tintVarAlpha = isChallengeTopLayer ? 0.02 : 0.03;
+        const tintBaseAlpha = isChallengeTopLayer ? 0.01 : 0.025;
+        const tintVarAlpha = isChallengeTopLayer ? 0.02 : 0.04;
+        const tileColor = tileColors[Math.floor(gridRandom() * tileColors.length)];
         ctx.fillStyle = hexToRgba(
-          theme.accent,
+          tileColor,
           tintBaseAlpha + gridRandom() * tintVarAlpha,
         );
         ctx.beginPath();

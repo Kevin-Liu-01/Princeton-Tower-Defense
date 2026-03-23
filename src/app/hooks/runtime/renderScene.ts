@@ -2036,7 +2036,7 @@ export function renderScene(params: RenderSceneParams): void {
     });
   });
   const overlayEffectTypes = new Set(["lightning", "beam", "chain", "zap"]);
-  const directionalTowerEffects = new Set(["flame_burst", "cannon_shot", "bullet_stream"]);
+  const directionalTowerEffects = new Set(["flame_burst", "cannon_shot", "bullet_stream", "music_notes"]);
   mergedEffects.forEach((eff) => {
     if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type) || eff.type === deathEffectType) return;
     const fromX = eff.pos.x;

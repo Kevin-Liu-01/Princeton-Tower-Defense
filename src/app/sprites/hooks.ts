@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 export function setupSpriteCanvas(
   canvas: HTMLCanvasElement,
@@ -18,16 +18,22 @@ export function setupSpriteCanvas(
   return ctx;
 }
 
+/**
+ * Draws the first frame synchronously before paint (useLayoutEffect) so the
+ * canvas is never visible in a blank state. Animated sprites continue with
+ * a rAF loop via useEffect.
+ */
 export function useSpriteTicker(
   animated: boolean,
   frameMs: number,
   render: (time: number) => void
 ): void {
+  useLayoutEffect(() => {
+    render(0);
+  }, [render]);
+
   useEffect(() => {
-    if (!animated) {
-      render(0);
-      return;
-    }
+    if (!animated) return;
 
     let rafId = 0;
     const start = performance.now();

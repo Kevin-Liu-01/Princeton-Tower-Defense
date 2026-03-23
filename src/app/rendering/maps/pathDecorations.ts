@@ -285,6 +285,8 @@ function drawGrasslandPathDetails(p: PathDecorationParams): void {
   drawGrassTufts(p);
   drawWildflowers(p);
   drawWornDirtPatches(p);
+  drawPathEdgeMoss(p);
+  drawScatteredLeafLitter(p);
 }
 
 function drawCobblestonePattern(p: PathDecorationParams): void {
@@ -421,6 +423,69 @@ function drawWornDirtPatches(p: PathDecorationParams): void {
       0.7 * cameraZoom,
     );
   }
+}
+
+function drawPathEdgeMoss(p: PathDecorationParams): void {
+  const { ctx, screenCenter, screenLeft, screenRight, cameraZoom, mapSeed } = p;
+  const len = screenCenter.length;
+  const rand = createSeededRandom(mapSeed + 740);
+  const mossColors = ["#3a6a28", "#2e5a1e", "#4a7a34", "#345a22"];
+
+  for (let i = 0; i < len; i += 4) {
+    if (rand() > 0.6) continue;
+    const side = rand() > 0.5 ? screenLeft : screenRight;
+    if (i >= side.length) continue;
+
+    const edgeP = side[i];
+    const centerP = screenCenter[i];
+    const mx = edgeP.x + (edgeP.x - centerP.x) * (0.02 + rand() * 0.06);
+    const my = edgeP.y + (edgeP.y - centerP.y) * 0.02;
+    const mossSize = (3 + rand() * 5) * cameraZoom;
+    const color = mossColors[Math.floor(rand() * mossColors.length)];
+
+    ctx.globalAlpha = 0.18 + rand() * 0.14;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(
+      mx, my,
+      mossSize, mossSize * 0.45,
+      rand() * Math.PI,
+      0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawScatteredLeafLitter(p: PathDecorationParams): void {
+  const { ctx, screenCenter, screenLeft, screenRight, cameraZoom, mapSeed } = p;
+  const len = screenCenter.length;
+  const rand = createSeededRandom(mapSeed + 750);
+  const leafColors = ["#5a4020", "#6a5030", "#4a3818", "#7a6a40"];
+
+  for (let i = 0; i < len; i += 7) {
+    if (rand() > 0.45) continue;
+    const side = rand() > 0.5 ? screenLeft : screenRight;
+    if (i >= side.length) continue;
+
+    const edgeP = side[i];
+    const centerP = screenCenter[i];
+    const lx = edgeP.x + (edgeP.x - centerP.x) * (0.05 + rand() * 0.12);
+    const ly = edgeP.y + (edgeP.y - centerP.y) * 0.04;
+    const leafSize = (1.5 + rand() * 2.5) * cameraZoom;
+    const color = leafColors[Math.floor(rand() * leafColors.length)];
+
+    ctx.globalAlpha = 0.12 + rand() * 0.10;
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(rand() * Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, leafSize, leafSize * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
 }
 
 // ─── DESERT ──────────────────────────────────────────────────────────────────

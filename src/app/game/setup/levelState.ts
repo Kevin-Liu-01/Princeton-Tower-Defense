@@ -17,6 +17,8 @@ import {
   resolveMapDecorationRuntimePlacement,
 } from "../../utils";
 
+const MAX_DECORATION_EXCLUSION_RANGE = 3;
+
 const LANDMARK_TOWER_EXCLUSION: Partial<Record<DecorationType, number>> = {
   pyramid: 1.0,
   nassau_hall: 1.0,
@@ -46,7 +48,7 @@ function getLandmarkTowerExclusionRange(
 ): number {
   const multiplier = LANDMARK_TOWER_EXCLUSION[decorationType as DecorationType];
   if (multiplier !== undefined) {
-    return Math.ceil(size * multiplier);
+    return Math.min(Math.ceil(size * multiplier), MAX_DECORATION_EXCLUSION_RANGE);
   }
   return 0;
 }
@@ -123,7 +125,7 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
         const worldPos = getMapDecorationWorldPos(decoration);
         const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
         const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
-        const range = Math.ceil(size);
+        const range = Math.min(Math.ceil(size), MAX_DECORATION_EXCLUSION_RANGE);
 
         for (let dx = -range; dx <= range; dx++) {
           for (let dy = -range; dy <= range; dy++) {

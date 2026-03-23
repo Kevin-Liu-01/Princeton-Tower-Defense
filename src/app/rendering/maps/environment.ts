@@ -308,13 +308,13 @@ export function renderGrasslandEnvironment(
   if (!settings.reducedParticles) {
     renderDappledLight(
       ctx, canvasWidth, canvasHeight, time,
-      255, 240, 180, 0.035, 10
+      255, 240, 180, 0.045, 14
     );
   }
 
   // Cloud shadows drifting across the ground
   if (!settings.reducedParticles) {
-    renderCloudShadows(ctx, canvasWidth, canvasHeight, time, 0.04, 3);
+    renderCloudShadows(ctx, canvasWidth, canvasHeight, time, 0.055, 4);
   }
 
   // God rays from upper-left – warm golden beams across the screen
@@ -322,7 +322,16 @@ export function renderGrasslandEnvironment(
     renderGodRays(
       ctx, canvasWidth, canvasHeight, time,
       -canvasWidth * 0.05, -canvasHeight * 0.05,
-      255, 230, 170, 0.04, 7
+      255, 230, 170, 0.05, 9
+    );
+  }
+
+  // Secondary cooler fill-light from opposite side for depth
+  if (!settings.reducedParticles) {
+    renderGodRays(
+      ctx, canvasWidth, canvasHeight, time,
+      canvasWidth * 1.1, canvasHeight * 0.3,
+      180, 220, 255, 0.015, 4
     );
   }
 
@@ -1974,15 +1983,16 @@ export function renderAmbientVisuals(
   const vignetteGrad = ctx.createRadialGradient(
     canvasWidth / 2,
     canvasHeight / 2,
-    Math.min(canvasWidth, canvasHeight) * 0.1,
+    Math.min(canvasWidth, canvasHeight) * 0.08,
     canvasWidth / 2,
     canvasHeight / 2,
     diagonal * 0.55
   );
   vignetteGrad.addColorStop(0, "rgba(0,0,0,0)");
-  vignetteGrad.addColorStop(0.4, "rgba(0,0,0,0.06)");
-  vignetteGrad.addColorStop(0.7, "rgba(0,0,0,0.15)");
-  vignetteGrad.addColorStop(1, "rgba(0,0,0,0.25)");
+  vignetteGrad.addColorStop(0.35, "rgba(0,0,0,0.04)");
+  vignetteGrad.addColorStop(0.6, "rgba(0,0,0,0.12)");
+  vignetteGrad.addColorStop(0.8, "rgba(0,0,0,0.22)");
+  vignetteGrad.addColorStop(1, "rgba(0,0,0,0.32)");
   ctx.fillStyle = vignetteGrad;
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -1990,19 +2000,19 @@ export function renderAmbientVisuals(
   let washColor = "rgba(0,0,0,0)";
   switch (theme) {
     case "grassland":
-      washColor = `rgba(100,150,80,${(0.025 + Math.sin(time * 0.5) * 0.01).toFixed(4)})`;
+      washColor = `rgba(80,130,60,${(0.03 + Math.sin(time * 0.5) * 0.012).toFixed(4)})`;
       break;
     case "desert":
-      washColor = `rgba(200,150,100,${(0.035 + Math.sin(time * 0.3) * 0.012).toFixed(4)})`;
+      washColor = `rgba(200,150,100,${(0.04 + Math.sin(time * 0.3) * 0.015).toFixed(4)})`;
       break;
     case "winter":
-      washColor = `rgba(150,180,220,${(0.04 + Math.sin(time * 0.4) * 0.015).toFixed(4)})`;
+      washColor = `rgba(150,180,220,${(0.045 + Math.sin(time * 0.4) * 0.018).toFixed(4)})`;
       break;
     case "volcanic":
-      washColor = `rgba(200,80,50,${(0.045 + Math.sin(time * 0.6) * 0.018).toFixed(4)})`;
+      washColor = `rgba(200,80,50,${(0.05 + Math.sin(time * 0.6) * 0.02).toFixed(4)})`;
       break;
     case "swamp":
-      washColor = `rgba(80,120,80,${(0.05 + Math.sin(time * 0.35) * 0.018).toFixed(4)})`;
+      washColor = `rgba(60,100,60,${(0.055 + Math.sin(time * 0.35) * 0.02).toFixed(4)})`;
       break;
   }
   ctx.fillStyle = washColor;

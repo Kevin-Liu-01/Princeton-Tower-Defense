@@ -967,7 +967,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "The final stand at the heart of campus. Defend the iconic building at all costs!",
-    camera: { offset: { x: -140, y: -270 }, zoom: 0.9 },
+    camera: { offset: { x: -100, y: -170 }, zoom: 0.9 },
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
@@ -1072,9 +1072,24 @@ export const LEVEL_DATA: Record<
     },
     decorations: [
       // Witch cottage near path start (path: x:9 to 27, y:-2 to 32)
-      { type: "witch_cottage", pos: { x: 14, y: 10 }, variant: 0, size: 1.5 },
-      { type: "deep_water", pos: { x: 14, y: 9.9 }, variant: 0, size: 3.5 },
+      { type: "witch_cottage", pos: { x: 14, y: 9 }, variant: 0, size: 2.5 },
+      { type: "deep_water", pos: { x: 14, y: 8.9 }, variant: 0, size: 3 },
       { type: "cauldron", pos: { x: 16, y: 11 }, variant: 0 },
+      { type: "ruined_temple", pos: { x: 12, y: 7 }, variant: 2, size: 1 },
+      { type: "ruined_temple", pos: { x: 14, y: 7 }, variant: 1, size: 1 },
+      { type: "ruined_temple", pos: { x: 16, y: 7 }, variant: 0, size: 1 },
+
+      { type: "ruined_temple", pos: { x: 14, y: 27 }, variant: 5, size: 1 },
+      { type: "sunken_pillar", pos: { x: 8, y: 12 }, variant: 0 },
+      { type: "sunken_pillar", pos: { x: 24, y: 22 }, variant: 1 },
+      { type: "sunken_pillar", pos: { x: 4, y: 20 }, variant: 2 },
+      { type: "sunken_pillar", pos: { x: 28, y: 10 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 12, y: 18 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 22, y: 10 }, variant: 1 },
+      { type: "tombstone", pos: { x: 6, y: 7 }, variant: 2 },
+      { type: "tombstone", pos: { x: 26, y: 8 }, variant: 0 },
+      { type: "tombstone", pos: { x: 10, y: 26 }, variant: 1 },
+      { type: "tombstone", pos: { x: 22, y: 26 }, variant: 3 },
       // Swamp trees around the map
       { type: "swamp_tree", pos: { x: 4, y: 6 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 4, y: 14 }, variant: 1 },
@@ -2635,31 +2650,31 @@ export const REGION_THEMES: Record<
   }
 > = {
   grassland: {
-    ground: ["#3a2f1f", "#2a1f0f", "#1a0f05"],
+    ground: ["#2e4a22", "#1f3518", "#152a10"],
     path: ["#8b7355", "#a0826d", "#5b4334"],
     accent: "#4a7c59",
     fog: "rgba(200, 220, 200, 0.3)",
   },
   desert: {
-    ground: ["#8b7355", "#a08060", "#6b5340"],
+    ground: ["#9a8462", "#7a6848", "#5a4830"],
     path: ["#c4a35a", "#d4b36a", "#a4833a"],
     accent: "#daa520",
     fog: "rgba(255, 230, 180, 0.25)",
   },
   winter: {
-    ground: ["#4a5a6a", "#3a4a5a", "#2a3a4a"],
+    ground: ["#506878", "#3e5468", "#2c4058"],
     path: ["#8899aa", "#99aabb", "#6677aa"],
     accent: "#6ba3be",
     fog: "rgba(200, 220, 255, 0.35)",
   },
   volcanic: {
-    ground: ["#2a1a1a", "#3a2020", "#1a0a0a"],
+    ground: ["#2a1616", "#381c1c", "#180a0a"],
     path: ["#5a3a3a", "#6a4a4a", "#4a2a2a"],
     accent: "#ff4400",
     fog: "rgba(255, 100, 50, 0.15)",
   },
   swamp: {
-    ground: ["#1a2a1a", "#0f1f0f", "#0a150a"],
+    ground: ["#1a2e1a", "#0e2210", "#081808"],
     path: ["#3a4a3a", "#4a5a4a", "#2a3a2a"],
     accent: "#4a8a4a",
     fog: "rgba(100, 150, 100, 0.4)",

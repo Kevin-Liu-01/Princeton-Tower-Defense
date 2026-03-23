@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   X,
   Monitor,
@@ -44,11 +44,12 @@ import {
   Star,
   Gamepad2,
   Keyboard,
+  RefreshCw,
 } from "lucide-react";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
 import { BaseModal } from "../ui/primitives/BaseModal";
-import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
+import { DEV_MODE_STORAGE_KEY, hasReloadRequiredChanges } from "../../constants/settings";
 import type {
   GameSettings,
   QualityPreset,
@@ -852,6 +853,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [devUnlocked, setDevUnlocked] = useState(readDevModeFromStorage);
   const [devPasswordError, setDevPasswordError] = useState(false);
 
+  const settingsSnapshot = useRef(settings);
+  const needsReload = useMemo(
+    () => hasReloadRequiredChanges(settingsSnapshot.current, settings),
+    [settings],
+  );
+
+  const handleReload = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const PanelComponent = activeTabDef.panel;
 
@@ -1124,16 +1135,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Footer hint */}
+          {/* Footer hint / reload prompt */}
           <div
-            className="px-3 sm:px-6 py-2 sm:py-2.5 text-center text-[11px] sm:text-xs border-t"
+            className="px-3 sm:px-6 py-2 sm:py-2.5 border-t transition-colors"
             style={{
-              background: PANEL.bgDeepSolid,
-              borderColor: GOLD.innerBorder08,
-              color: "rgba(253,230,138,0.3)",
+              background: needsReload ? "rgba(120,80,20,0.25)" : PANEL.bgDeepSolid,
+              borderColor: needsReload ? "rgba(251,191,36,0.25)" : GOLD.innerBorder08,
             }}
           >
-            Changes to landscaping density require reloading the map to take effect
+            {needsReload ? (
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-[11px] sm:text-xs text-amber-300/70">
+                  Some changes require a reload to take effect
+                </span>
+                <button
+                  onClick={handleReload}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all hover:brightness-110"
+                  style={{
+                    background: "linear-gradient(180deg, rgba(251,191,36,0.8), rgba(217,119,6,0.9))",
+                    color: "#1a1207",
+                    border: "1px solid rgba(251,191,36,0.5)",
+                    boxShadow: "0 0 8px rgba(251,191,36,0.2)",
+                  }}
+                >
+                  <RefreshCw size={12} />
+                  Reload Now
+                </button>
+              </div>
+            ) : (
+              <div className="text-center text-[11px] sm:text-xs" style={{ color: "rgba(253,230,138,0.3)" }}>
+                Settings tagged <span className="font-bold uppercase text-[9px] px-1 py-0.5 rounded bg-amber-900/40 text-amber-400/60 border border-amber-700/20">Restart</span> require reloading to take effect
+              </div>
+            )}
           </div>
         </OrnateFrame>
       </div>

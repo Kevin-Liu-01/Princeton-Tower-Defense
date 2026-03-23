@@ -175,6 +175,7 @@ const RIGHT_FACING_ENEMY_SPRITES = new Set([
   "timber_wolf",
   "mammoth",
   "vine_serpent",
+  "volcanic_drake",
 ]);
 
 export function renderEnemy(

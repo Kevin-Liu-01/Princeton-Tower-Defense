@@ -364,7 +364,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   const isAnySpellActive = goldSpellActive || (hexWardEndTime !== null && hexWardEndTime > Date.now());
 
   return (
-    <div className="w-full h-[100dvh] bg-black flex flex-col text-amber-100 overflow-hidden relative" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <div className="w-full h-[100dvh] flex flex-col text-amber-100 overflow-hidden relative" style={{ paddingBottom: "env(safe-area-inset-bottom)", background: fadeOverlayBackground }}>
       {!cameraModeActive && devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -393,7 +393,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}
           />
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] ">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[80] battle-ui-fade">
             <TopHUD
               pawPoints={pawPoints}
               lives={lives}
@@ -631,7 +631,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   />
                 </div>
               )}
-              <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none battle-ui-fade" style={{ zIndex: 100 }}>
                 <div className="flex justify-end items-end px-0">
                   <div className="flex-shrink-0">
                     {devMenuOpen && (
@@ -664,7 +664,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
         </div>
       </div>
       {!cameraModeActive && (
-        <div className="flex flex-col flex-shrink-0">
+        <div className="flex flex-col flex-shrink-0 battle-ui-fade">
           <BuildMenu
             pawPoints={pawPoints}
             buildingTower={buildingTower}

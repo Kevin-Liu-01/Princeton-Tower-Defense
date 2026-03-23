@@ -442,6 +442,35 @@ export const SETTINGS_CATEGORIES: SettingsCategoryMeta[] = [
 ];
 
 // -----------------------------------------------------------------------------
+// Reload-Required Settings Detection
+// -----------------------------------------------------------------------------
+
+type SettingsPath = { category: SettingsCategory; key: string };
+
+const RELOAD_REQUIRED_PATHS: SettingsPath[] = [
+  { category: "landscaping", key: "decorationDensity" },
+  { category: "landscaping", key: "treeClusterDensity" },
+  { category: "landscaping", key: "villageDensity" },
+  { category: "landscaping", key: "battleDebrisDensity" },
+  { category: "landscaping", key: "decorationScale" },
+  { category: "landscaping", key: "showPathDecorations" },
+  { category: "landscaping", key: "showLandmarks" },
+  { category: "landscaping", key: "showWaterEffects" },
+  { category: "camera", key: "defaultZoom" },
+];
+
+export function hasReloadRequiredChanges(
+  before: GameSettings,
+  after: GameSettings,
+): boolean {
+  return RELOAD_REQUIRED_PATHS.some(({ category, key }) => {
+    const a = (before[category] as Record<string, unknown>)[key];
+    const b = (after[category] as Record<string, unknown>)[key];
+    return a !== b;
+  });
+}
+
+// -----------------------------------------------------------------------------
 // Persistent Storage Key
 // -----------------------------------------------------------------------------
 

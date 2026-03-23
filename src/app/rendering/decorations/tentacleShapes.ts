@@ -192,6 +192,30 @@ function buildTentaclePath(
   return pts;
 }
 
+function drawTentacleBaseRing(
+  ctx: CanvasRenderingContext2D,
+  bp: TentaclePoint,
+  s: number,
+  pal: TentaclePalette,
+): void {
+  const baseFrontY = bp.y + bp.radius * 0.5 * ISO_Y_RATIO;
+  const rx = bp.radius * 0.9;
+  const ry = (baseFrontY - bp.y) / 2;
+  const cy = bp.y + ry;
+
+  ctx.fillStyle = blendColor(pal.dark, pal.mid, 0.4);
+  ctx.beginPath();
+  ctx.ellipse(bp.x, cy, rx, ry, 0, 0.05, Math.PI - 0.05);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = hexToRgba(pal.dark, 0.5);
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.ellipse(bp.x, cy, rx, ry, 0, 0.1, Math.PI - 0.1);
+  ctx.stroke();
+}
+
 function drawTentacleBody(
   ctx: CanvasRenderingContext2D,
   pts: TentaclePoint[],
@@ -202,6 +226,11 @@ function drawTentacleBody(
   baseY: number,
 ): void {
   const segments = pts.length - 1;
+  const bp = pts[0];
+  const baseFrontY = bp.y + bp.radius * 0.5 * ISO_Y_RATIO;
+  const capRy = (baseFrontY - bp.y) / 2;
+  const capCy = bp.y + capRy;
+  const capRx = bp.radius * 0.9;
 
   const backGrad = ctx.createLinearGradient(
     baseX - 15 * s,
@@ -215,11 +244,17 @@ function drawTentacleBody(
 
   ctx.fillStyle = backGrad;
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
+  ctx.moveTo(bp.x, bp.y);
   for (let i = 0; i <= segments; i++) {
     const p = pts[i];
     const wobble = Math.sin(i * 0.6 + decorTime * 2.5) * 0.6 * s;
-    ctx.lineTo(p.x + p.radius * 0.9 + wobble, p.y + p.radius * 0.3 * ISO_Y_RATIO);
+    const edgeX = p.x + p.radius * 0.9 + wobble;
+    const edgeY = p.y + p.radius * 0.3 * ISO_Y_RATIO;
+    if (i === 0) {
+      ctx.quadraticCurveTo(edgeX, bp.y, edgeX, edgeY);
+    } else {
+      ctx.lineTo(edgeX, edgeY);
+    }
   }
   const tipBack = pts[segments];
   ctx.quadraticCurveTo(
@@ -234,10 +269,12 @@ function drawTentacleBody(
     tipBack.x - tipBack.radius * 0.3,
     tipBack.y,
   );
-  for (let i = segments; i >= 0; i--) {
+  for (let i = segments; i >= 1; i--) {
     const p = pts[i];
     ctx.lineTo(p.x, p.y + p.radius * 0.5 * ISO_Y_RATIO);
   }
+  ctx.lineTo(bp.x, baseFrontY);
+  ctx.ellipse(bp.x, capCy, capRx, capRy, 0, Math.PI / 2, -Math.PI / 2, true);
   ctx.closePath();
   ctx.fill();
 
@@ -254,11 +291,17 @@ function drawTentacleBody(
 
   ctx.fillStyle = frontGrad;
   ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
+  ctx.moveTo(bp.x, bp.y);
   for (let i = 0; i <= segments; i++) {
     const p = pts[i];
     const wobble = Math.sin(i * 0.6 + decorTime * 2.5 + 0.5) * 0.6 * s;
-    ctx.lineTo(p.x - p.radius * 0.9 + wobble, p.y + p.radius * 0.3 * ISO_Y_RATIO);
+    const edgeX = p.x - p.radius * 0.9 + wobble;
+    const edgeY = p.y + p.radius * 0.3 * ISO_Y_RATIO;
+    if (i === 0) {
+      ctx.quadraticCurveTo(edgeX, bp.y, edgeX, edgeY);
+    } else {
+      ctx.lineTo(edgeX, edgeY);
+    }
   }
   const tipFront = pts[segments];
   ctx.quadraticCurveTo(
@@ -273,15 +316,18 @@ function drawTentacleBody(
     tipFront.x,
     tipFront.y,
   );
-  for (let i = segments; i >= 0; i--) {
+  for (let i = segments; i >= 1; i--) {
     const p = pts[i];
     ctx.lineTo(p.x, p.y + p.radius * 0.5 * ISO_Y_RATIO);
   }
+  ctx.lineTo(bp.x, baseFrontY);
+  ctx.ellipse(bp.x, capCy, capRx, capRy, 0, Math.PI / 2, Math.PI * 1.5, false);
   ctx.closePath();
   ctx.fill();
 
   drawHighlightStripe(ctx, pts, s, pal);
   drawMuscleLines(ctx, pts, s, decorTime, pal);
+  drawTentacleBaseRing(ctx, bp, s, pal);
 }
 
 function drawHighlightStripe(
