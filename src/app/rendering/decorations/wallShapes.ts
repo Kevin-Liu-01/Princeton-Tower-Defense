@@ -22,6 +22,63 @@ const RUBBLE_PALETTE = [
 ];
 
 // ---------------------------------------------------------------------------
+// Regional wall theme configuration
+// ---------------------------------------------------------------------------
+
+export interface WallRegionTheme {
+  stone: { front: string; side: string; top: string; mortar: string; inner: string };
+  baseColor: string;
+  blockColors: Array<{ top: string; left: string; right: string }>;
+}
+
+const WALL_REGION_THEMES: Record<string, WallRegionTheme> = {
+  winter: {
+    stone: { front: STONE, side: STONE_LIGHT, top: STONE_TOP, mortar: MORTAR, inner: STONE_INNER },
+    baseColor: SNOW_COLOR,
+    blockColors: [
+      { top: "#a0b0c0", left: "#6a7a8a", right: "#8a9aaa" },
+      { top: "#90a0b0", left: "#5a6a7a", right: "#7a8a9a" },
+    ],
+  },
+  grassland: {
+    stone: { front: "#8a8a7a", side: "#a0a090", top: "#b0b0a0", mortar: "rgba(40,40,30,0.3)", inner: "#7a7a6a" },
+    baseColor: "#8bac6b",
+    blockColors: [
+      { top: "#a0a090", left: "#6a7268", right: "#8a9280" },
+      { top: "#909880", left: "#5a6258", right: "#7a8270" },
+    ],
+  },
+  swamp: {
+    stone: { front: "#6a7a68", side: "#7a8a78", top: "#8a9a88", mortar: "rgba(30,50,30,0.35)", inner: "#5a6a58" },
+    baseColor: "#5a6a48",
+    blockColors: [
+      { top: "#7a8a70", left: "#4a5a40", right: "#6a7a60" },
+      { top: "#6a7a60", left: "#3a4a30", right: "#5a6a50" },
+    ],
+  },
+  desert: {
+    stone: { front: "#b0a080", side: "#c0b090", top: "#d0c0a0", mortar: "rgba(60,50,30,0.3)", inner: "#a09070" },
+    baseColor: "#d4c4a0",
+    blockColors: [
+      { top: "#c0b090", left: "#8a7a60", right: "#a09070" },
+      { top: "#b0a080", left: "#7a6a50", right: "#908060" },
+    ],
+  },
+  volcanic: {
+    stone: { front: "#5a4a4a", side: "#6a5a5a", top: "#7a6a6a", mortar: "rgba(40,20,20,0.35)", inner: "#4a3a3a" },
+    baseColor: "#3a3232",
+    blockColors: [
+      { top: "#6a5a5a", left: "#3a2a2a", right: "#5a4a4a" },
+      { top: "#5a4a4a", left: "#2a1a1a", right: "#4a3a3a" },
+    ],
+  },
+};
+
+function getWallTheme(theme: string): WallRegionTheme {
+  return WALL_REGION_THEMES[theme] ?? WALL_REGION_THEMES.winter;
+}
+
+// ---------------------------------------------------------------------------
 // Low-level isometric block
 // ---------------------------------------------------------------------------
 
@@ -327,6 +384,279 @@ function drawFrostPatch(
   ctx.globalAlpha = 1;
 }
 
+// ---------------------------------------------------------------------------
+// Regional overlay helpers
+// ---------------------------------------------------------------------------
+
+function drawMossOnWall(
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  ddx: number, ddy: number,
+  profile: number[],
+  s: number,
+  intensity: number = 1,
+): void {
+  const n = profile.length;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  ctx.fillStyle = `rgba(60,90,40,${0.25 * intensity})`;
+  for (let i = 0; i < n - 1; i++) {
+    const t = i / (n - 1);
+    const t2 = (i + 1) / (n - 1);
+    if (profile[i] < 4 * s) continue;
+    const px = x1 + t * dx;
+    const py = y1 + t * dy - profile[i];
+    const px2 = x1 + t2 * dx;
+    const py2 = y1 + t2 * dy - profile[i + 1];
+    ctx.beginPath();
+    ctx.moveTo(px + ddx, py + ddy - 1 * s);
+    ctx.lineTo(px2 + ddx, py2 + ddy - 1 * s);
+    ctx.lineTo(px2, py2 - 0.5 * s);
+    ctx.lineTo(px, py - 0.5 * s);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawHangingVines(
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  profile: number[],
+  s: number,
+): void {
+  const n = profile.length;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  ctx.strokeStyle = "rgba(50,80,30,0.5)";
+  ctx.lineWidth = 1.2 * s;
+  for (let i = 1; i < n - 1; i += 2) {
+    const t = i / (n - 1);
+    if (profile[i] < 8 * s) continue;
+    const px = x1 + t * dx;
+    const py = y1 + t * dy - profile[i];
+    const vineLen = (3 + (i % 3) * 2) * s;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.quadraticCurveTo(px + 1.5 * s, py + vineLen * 0.5, px + 0.5 * s, py + vineLen);
+    ctx.stroke();
+  }
+}
+
+function drawSandDrift(
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  ddx: number, ddy: number,
+  profile: number[],
+  s: number,
+): void {
+  const n = profile.length;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  ctx.fillStyle = "rgba(210,190,150,0.4)";
+  for (let i = 0; i < n - 1; i++) {
+    const t = i / (n - 1);
+    const t2 = (i + 1) / (n - 1);
+    if (profile[i] < 4 * s) continue;
+    const px = x1 + t * dx;
+    const py = y1 + t * dy - profile[i];
+    const px2 = x1 + t2 * dx;
+    const py2 = y1 + t2 * dy - profile[i + 1];
+    ctx.beginPath();
+    ctx.moveTo(px + ddx * 0.6, py + ddy * 0.6 - 0.5 * s);
+    ctx.lineTo(px2 + ddx * 0.6, py2 + ddy * 0.6 - 0.5 * s);
+    ctx.lineTo(px2, py2);
+    ctx.lineTo(px, py);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(200,180,140,0.3)";
+  ctx.beginPath();
+  ctx.ellipse((x1 + x2) * 0.5, (y1 + y2) * 0.5 + 4 * s, 12 * s, 4 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawAshLayer(
+  ctx: CanvasRenderingContext2D,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  ddx: number, ddy: number,
+  profile: number[],
+  s: number,
+): void {
+  const n = profile.length;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  ctx.fillStyle = "rgba(50,40,40,0.3)";
+  for (let i = 0; i < n - 1; i++) {
+    const t = i / (n - 1);
+    const t2 = (i + 1) / (n - 1);
+    if (profile[i] < 4 * s) continue;
+    const px = x1 + t * dx;
+    const py = y1 + t * dy - profile[i];
+    const px2 = x1 + t2 * dx;
+    const py2 = y1 + t2 * dy - profile[i + 1];
+    ctx.beginPath();
+    ctx.moveTo(px + ddx, py + ddy - 1 * s);
+    ctx.lineTo(px2 + ddx, py2 + ddy - 1 * s);
+    ctx.lineTo(px2, py2 - 0.5 * s);
+    ctx.lineTo(px, py - 0.5 * s);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(255,120,40,0.25)";
+  for (let i = 2; i < n - 2; i += 3) {
+    const t = i / (n - 1);
+    if (profile[i] < 6 * s) continue;
+    const px = x1 + t * dx;
+    const py = y1 + t * dy - profile[i];
+    ctx.beginPath();
+    ctx.arc(px, py - 1 * s, 1.5 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Unified theme overlay dispatcher
+// ---------------------------------------------------------------------------
+
+function applyWallOverlays(
+  ctx: CanvasRenderingContext2D,
+  theme: string,
+  x1: number, y1: number,
+  x2: number, y2: number,
+  ddx: number, ddy: number,
+  profile: number[],
+  s: number,
+  snowThickness?: number,
+): void {
+  switch (theme) {
+    case "winter":
+      drawSnowOnWall(ctx, x1, y1, x2, y2, ddx, ddy, profile, s, snowThickness ?? 2.5);
+      drawWallIcicles(ctx, x1, y1, x2, y2, profile, s);
+      break;
+    case "grassland":
+      drawMossOnWall(ctx, x1, y1, x2, y2, ddx, ddy, profile, s, 0.7);
+      break;
+    case "swamp":
+      drawMossOnWall(ctx, x1, y1, x2, y2, ddx, ddy, profile, s, 1.2);
+      drawHangingVines(ctx, x1, y1, x2, y2, profile, s);
+      break;
+    case "desert":
+      drawSandDrift(ctx, x1, y1, x2, y2, ddx, ddy, profile, s);
+      break;
+    case "volcanic":
+      drawAshLayer(ctx, x1, y1, x2, y2, ddx, ddy, profile, s);
+      break;
+    default:
+      drawMossOnWall(ctx, x1, y1, x2, y2, ddx, ddy, profile, s, 0.5);
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Theme-conditional spot overlays (replaces frost patches for non-winter)
+// ---------------------------------------------------------------------------
+
+function applySpotOverlay(
+  ctx: CanvasRenderingContext2D,
+  theme: string,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  angle: number,
+  s: number,
+): void {
+  switch (theme) {
+    case "winter":
+      drawFrostPatch(ctx, cx, cy, rx, ry, angle, s);
+      break;
+    case "grassland":
+      ctx.fillStyle = "rgba(80,120,50,0.25)";
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * s, ry * s, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      break;
+    case "swamp":
+      ctx.fillStyle = "rgba(40,70,30,0.3)";
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * s * 1.2, ry * s * 1.2, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      break;
+    case "desert":
+      ctx.fillStyle = "rgba(200,180,130,0.25)";
+      ctx.globalAlpha = 0.3;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * s, ry * s, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      break;
+    case "volcanic":
+      ctx.fillStyle = "rgba(255,100,30,0.2)";
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * s * 0.8, ry * s * 0.8, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      break;
+    default:
+      ctx.fillStyle = "rgba(80,120,50,0.2)";
+      ctx.globalAlpha = 0.25;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx * s, ry * s, angle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Theme-conditional block snow/covering (replaces snow ellipses on fallen blocks)
+// ---------------------------------------------------------------------------
+
+function drawBlockCovering(
+  ctx: CanvasRenderingContext2D,
+  theme: string,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  angle: number,
+  s: number,
+): void {
+  const cfg = getWallTheme(theme);
+  switch (theme) {
+    case "winter":
+      ctx.fillStyle = "#ffffff";
+      break;
+    case "grassland":
+      ctx.fillStyle = "rgba(100,140,60,0.4)";
+      break;
+    case "swamp":
+      ctx.fillStyle = "rgba(60,90,40,0.45)";
+      break;
+    case "desert":
+      ctx.fillStyle = "rgba(210,190,150,0.35)";
+      break;
+    case "volcanic":
+      ctx.fillStyle = "rgba(60,50,50,0.35)";
+      break;
+    default:
+      ctx.fillStyle = cfg.baseColor;
+      break;
+  }
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, angle, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 // ===========================================================================
 // PUBLIC: Complete isometric wall segment with jagged broken top
 // ===========================================================================
@@ -470,23 +800,25 @@ function drawCornerRuin(
   cx: number,
   cy: number,
   s: number,
+  theme: string,
 ): void {
+  const cfg = getWallTheme(theme);
   const cornerX = cx - 2 * s;
   const cornerY = cy + 2 * s;
   const depth = 5 * s;
   const frontColors = {
-    front: STONE,
-    side: STONE_LIGHT,
-    top: STONE_TOP,
-    mortar: MORTAR,
-    inner: STONE_INNER,
+    front: cfg.stone.front,
+    side: cfg.stone.side,
+    top: cfg.stone.top,
+    mortar: cfg.stone.mortar,
+    inner: cfg.stone.inner,
   };
   const sideColors = {
-    front: STONE_DARK,
-    side: STONE,
-    top: STONE_TOP,
+    front: cfg.stone.inner,
+    side: cfg.stone.front,
+    top: cfg.stone.top,
     mortar: MORTAR_DARK,
-    inner: STONE_INNER,
+    inner: cfg.stone.inner,
   };
 
   // Left arm (along left-axis, drawn first for correct occlusion)
@@ -546,49 +878,14 @@ function drawCornerRuin(
     { dx: 18, dy: -3, w: 1.5, h: 2.5 },
     { dx: -4, dy: -3, w: 2, h: 1.5 },
     { dx: 10, dy: 3, w: 1.5, h: 1.2 },
-  ], s);
+  ], s, cfg.blockColors);
 
-  // Snow on wall tops
-  drawSnowOnWall(ctx, rx1, ry1, rx2, ry2, -depth, -depth * T, rProfile, s, 2.5);
-  drawSnowOnWall(ctx, lx1, ly1, lx2, ly2, depth, -depth * T, lProfile, s, 2);
+  // Theme overlays on wall tops
+  applyWallOverlays(ctx, theme, rx1, ry1, rx2, ry2, -depth, -depth * T, rProfile, s, 2.5);
+  applyWallOverlays(ctx, theme, lx1, ly1, lx2, ly2, depth, -depth * T, lProfile, s, 2);
 
-  // Icicles at break points
-  drawWallIcicles(ctx, rx1, ry1, rx2, ry2, rProfile, s);
-  drawWallIcicles(ctx, lx1, ly1, lx2, ly2, lProfile, s);
-
-  // Frost buildup at corner junction
-  ctx.fillStyle = ICE_COLOR;
-  ctx.globalAlpha = 0.35;
-  ctx.beginPath();
-  ctx.moveTo(cornerX, cornerY - 38 * s);
-  ctx.quadraticCurveTo(
-    cornerX + 4 * s,
-    cornerY - 28 * s,
-    cornerX + 2 * s,
-    cornerY - 16 * s,
-  );
-  ctx.quadraticCurveTo(
-    cornerX + 3 * s,
-    cornerY - 8 * s,
-    cornerX,
-    cornerY,
-  );
-  ctx.lineTo(cornerX - 3 * s, cornerY - 2 * s);
-  ctx.quadraticCurveTo(
-    cornerX - 2 * s,
-    cornerY - 14 * s,
-    cornerX - 3 * s,
-    cornerY - 22 * s,
-  );
-  ctx.quadraticCurveTo(
-    cornerX - 1 * s,
-    cornerY - 32 * s,
-    cornerX,
-    cornerY - 38 * s,
-  );
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha = 1;
+  // Theme spot overlay at corner junction
+  applySpotOverlay(ctx, theme, cornerX, cornerY - 26 * s, 4, 12, -0.1, s);
 
   // Crack details
   drawCracks(ctx, [
@@ -603,7 +900,9 @@ function drawBreachedWall(
   cx: number,
   cy: number,
   s: number,
+  theme: string,
 ): void {
+  const cfg = getWallTheme(theme);
   const wallLen = 50 * s;
   const depth = 5 * s;
   const x1 = cx - wallLen * 0.5;
@@ -616,11 +915,11 @@ function drawBreachedWall(
   );
 
   const colors = {
-    front: STONE,
-    side: STONE_LIGHT,
-    top: STONE_TOP,
-    mortar: MORTAR,
-    inner: STONE_INNER,
+    front: cfg.stone.front,
+    side: cfg.stone.side,
+    top: cfg.stone.top,
+    mortar: cfg.stone.mortar,
+    inner: cfg.stone.inner,
   };
 
   drawIsoJaggedWall(
@@ -639,28 +938,10 @@ function drawBreachedWall(
   );
 
   // Large fallen blocks in the breach
-  drawIsoBlock(
-    ctx,
-    cx - 2 * s,
-    cy + 3 * s,
-    5 * s,
-    2.5 * s,
-    4 * s,
-    "#a0b0c0",
-    "#6a7a8a",
-    "#8a9aaa",
-  );
-  drawIsoBlock(
-    ctx,
-    cx + 6 * s,
-    cy + 1 * s,
-    4 * s,
-    2 * s,
-    3 * s,
-    "#90a0b0",
-    "#5a6a7a",
-    "#7a8a9a",
-  );
+  const bc0 = cfg.blockColors[0];
+  const bc1 = cfg.blockColors[1];
+  drawIsoBlock(ctx, cx - 2 * s, cy + 3 * s, 5 * s, 2.5 * s, 4 * s, bc0.top, bc0.left, bc0.right);
+  drawIsoBlock(ctx, cx + 6 * s, cy + 1 * s, 4 * s, 2 * s, 3 * s, bc1.top, bc1.left, bc1.right);
 
   // Scattered rubble around breach
   drawRubblePile(ctx, cx, cy, [
@@ -672,19 +953,14 @@ function drawBreachedWall(
     { dx: -2, dy: -2, w: 2, h: 2 },
     { dx: 7, dy: -1, w: 1.5, h: 1.5 },
     { dx: -6, dy: 8, w: 1.2, h: 1 },
-  ], s);
+  ], s, cfg.blockColors);
 
-  // Snow on wall tops
-  drawSnowOnWall(ctx, x1, y1, x2, y2, -depth, -depth * T, profile, s, 2.5);
+  // Theme overlays on wall tops
+  applyWallOverlays(ctx, theme, x1, y1, x2, y2, -depth, -depth * T, profile, s, 2.5);
 
-  // Icicles at break edges
-  drawWallIcicles(ctx, x1, y1, x2, y2, profile, s);
-
-  // Frost on taller left section
-  drawFrostPatch(ctx, x1 + 8 * s, y1 + (y2 - y1) * 0.12 - 22 * s, 4, 10, -0.15, s);
-
-  // Frost on taller right section
-  drawFrostPatch(ctx, x2 - 6 * s, y2 + (y1 - y2) * 0.12 - 20 * s, 3, 8, 0.1, s);
+  // Spot overlays on taller sections
+  applySpotOverlay(ctx, theme, x1 + 8 * s, y1 + (y2 - y1) * 0.12 - 22 * s, 4, 10, -0.15, s);
+  applySpotOverlay(ctx, theme, x2 - 6 * s, y2 + (y1 - y2) * 0.12 - 20 * s, 3, 8, 0.1, s);
 
   // Crack details on both sections
   drawCracks(ctx, [
@@ -693,11 +969,8 @@ function drawBreachedWall(
     { x1: x2 - 8 * s, y1: y2 + 4 * s - 14 * s, x2: x2 - 12 * s, y2: y2 + 6 * s - 10 * s },
   ], s);
 
-  // Snow on large fallen block
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.ellipse(cx - 1 * s, cy - 1.5 * s, 4 * s, 2 * s, -0.2, 0, Math.PI * 2);
-  ctx.fill();
+  // Covering on large fallen block
+  drawBlockCovering(ctx, theme, cx - 1 * s, cy - 1.5 * s, 4 * s, 2 * s, -0.2, s);
 }
 
 function drawBrokenColumns(
@@ -705,7 +978,9 @@ function drawBrokenColumns(
   cx: number,
   cy: number,
   s: number,
+  theme: string,
 ): void {
+  const cfg = getWallTheme(theme);
   const columns: Array<{
     dx: number;
     dy: number;
@@ -719,11 +994,11 @@ function drawBrokenColumns(
   ];
 
   const colors = {
-    front: STONE,
-    side: STONE_LIGHT,
-    top: STONE_TOP,
-    mortar: MORTAR,
-    inner: STONE_INNER,
+    front: cfg.stone.front,
+    side: cfg.stone.side,
+    top: cfg.stone.top,
+    mortar: cfg.stone.mortar,
+    inner: cfg.stone.inner,
   };
 
   columns.forEach((col) => {
@@ -752,18 +1027,7 @@ function drawBrokenColumns(
       2,
     );
 
-    drawSnowOnWall(
-      ctx,
-      px1,
-      py1,
-      px2,
-      py2,
-      -colDepth,
-      -colDepth * T,
-      profile,
-      s,
-      2.5,
-    );
+    applyWallOverlays(ctx, theme, px1, py1, px2, py2, -colDepth, -colDepth * T, profile, s, 2.5);
   });
 
   // Rubble between and around columns
@@ -777,24 +1041,12 @@ function drawBrokenColumns(
     { dx: 16, dy: -1, w: 2, h: 1.5 },
     { dx: -3, dy: 3, w: 1.3, h: 1 },
     { dx: 8, dy: 5, w: 1.5, h: 2 },
-  ], s);
+  ], s, cfg.blockColors);
 
-  // Icicles on tallest column only
+  // Spot overlay on tall column
   const tallCol = columns[0];
   const tallX = cx + tallCol.dx * s;
-  const tallHW = tallCol.w * 0.5 * s;
-  drawWallIcicles(
-    ctx,
-    tallX - tallHW,
-    cy + tallCol.dy * s + tallHW * T,
-    tallX + tallHW,
-    cy + tallCol.dy * s - tallHW * T,
-    tallCol.heights.map((h) => h * s),
-    s,
-  );
-
-  // Frost on tall column
-  drawFrostPatch(ctx, tallX - 2 * s, cy + tallCol.dy * s - 30 * s, 3, 8, -0.1, s);
+  applySpotOverlay(ctx, theme, tallX - 2 * s, cy + tallCol.dy * s - 30 * s, 3, 8, -0.1, s);
 
   // Crack details
   drawCracks(ctx, [
@@ -808,7 +1060,9 @@ function drawCrumblingWall(
   cx: number,
   cy: number,
   s: number,
+  theme: string,
 ): void {
+  const cfg = getWallTheme(theme);
   const wallLen = 46 * s;
   const depth = 5 * s;
   const x1 = cx - wallLen * 0.5;
@@ -821,11 +1075,11 @@ function drawCrumblingWall(
   );
 
   const colors = {
-    front: STONE,
-    side: STONE_LIGHT,
-    top: STONE_TOP,
-    mortar: MORTAR,
-    inner: STONE_INNER,
+    front: cfg.stone.front,
+    side: cfg.stone.side,
+    top: cfg.stone.top,
+    mortar: cfg.stone.mortar,
+    inner: cfg.stone.inner,
   };
 
   drawIsoJaggedWall(
@@ -844,28 +1098,10 @@ function drawCrumblingWall(
   );
 
   // Tilted fallen block near the collapsed left end
-  drawIsoBlock(
-    ctx,
-    x1 + 6 * s,
-    y1 - 3 * s + 3 * s,
-    5 * s,
-    3 * s,
-    3.5 * s,
-    "#90a0b0",
-    "#5a6a7a",
-    "#7a8a9a",
-  );
-  drawIsoBlock(
-    ctx,
-    x1 + 2 * s,
-    y1 - 1 * s + 5 * s,
-    4 * s,
-    2.5 * s,
-    2.5 * s,
-    "#a0b0c0",
-    "#6a7a8a",
-    "#8090a0",
-  );
+  const bc0 = cfg.blockColors[0];
+  const bc1 = cfg.blockColors[1];
+  drawIsoBlock(ctx, x1 + 6 * s, y1 - 3 * s + 3 * s, 5 * s, 3 * s, 3.5 * s, bc1.top, bc1.left, bc1.right);
+  drawIsoBlock(ctx, x1 + 2 * s, y1 - 1 * s + 5 * s, 4 * s, 2.5 * s, 2.5 * s, bc0.top, bc0.left, bc0.right);
 
   // Rubble at collapsed end
   drawRubblePile(ctx, x1 + 4 * s, y1 - 2 * s, [
@@ -875,16 +1111,13 @@ function drawCrumblingWall(
     { dx: 4, dy: 3, w: 1.5, h: 1 },
     { dx: -2, dy: 5, w: 2, h: 2 },
     { dx: 6, dy: 1, w: 1.5, h: 1.5 },
-  ], s);
+  ], s, cfg.blockColors);
 
-  // Snow on standing wall sections
-  drawSnowOnWall(ctx, x1, y1, x2, y2, -depth, -depth * T, profile, s, 3);
+  // Theme overlays on standing wall sections
+  applyWallOverlays(ctx, theme, x1, y1, x2, y2, -depth, -depth * T, profile, s, 3);
 
-  // Icicles at break points
-  drawWallIcicles(ctx, x1, y1, x2, y2, profile, s);
-
-  // Frost patch on the standing wall
-  drawFrostPatch(ctx, cx + 8 * s, cy - 16 * s, 5, 8, -0.15, s);
+  // Spot overlay on the standing wall
+  applySpotOverlay(ctx, theme, cx + 8 * s, cy - 16 * s, 5, 8, -0.15, s);
 
   // Crack details
   drawCracks(ctx, [
@@ -893,19 +1126,8 @@ function drawCrumblingWall(
     { x1: cx - 6 * s, y1: cy + 3 * s - 6 * s, x2: cx - 2 * s, y2: cy + 3 * s - 4 * s },
   ], s);
 
-  // Snow on fallen blocks
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.ellipse(
-    x1 + 5 * s,
-    y1 - 3 * s - 0.5 * s,
-    4 * s,
-    1.8 * s,
-    -0.15,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Covering on fallen blocks
+  drawBlockCovering(ctx, theme, x1 + 5 * s, y1 - 3 * s - 0.5 * s, 4 * s, 1.8 * s, -0.15, s);
 }
 
 // ===========================================================================
@@ -919,7 +1141,9 @@ export function drawBrokenWallDecoration(
   variant: number,
   decorX: number,
   decorY: number,
+  theme: string = "winter",
 ): void {
+  const cfg = getWallTheme(theme);
   const cx = screenPos.x;
   const cy = screenPos.y;
   const v = variant % 4;
@@ -927,28 +1151,28 @@ export function drawBrokenWallDecoration(
   // Ground shadow
   ctx.fillStyle = "rgba(0,30,50,0.2)";
   ctx.beginPath();
-  ctx.ellipse(cx, cy + 8 * s, 30 * s, 12 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy + 2 * s, 30 * s, 10 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Organic snow base
-  ctx.fillStyle = SNOW_COLOR;
+  // Organic base blob (themed)
+  ctx.fillStyle = cfg.baseColor;
   drawOrganicBlobAt(
     ctx,
     cx,
-    cy + 4 * s,
+    cy,
     28 * s,
-    10 * s,
+    8 * s,
     decorX * 7.1 + decorY * 5.3,
   );
   ctx.fill();
 
   if (v === 0) {
-    drawCornerRuin(ctx, cx, cy, s);
+    drawCornerRuin(ctx, cx, cy, s, theme);
   } else if (v === 1) {
-    drawBreachedWall(ctx, cx, cy, s);
+    drawBreachedWall(ctx, cx, cy, s, theme);
   } else if (v === 2) {
-    drawBrokenColumns(ctx, cx, cy, s);
+    drawBrokenColumns(ctx, cx, cy, s, theme);
   } else {
-    drawCrumblingWall(ctx, cx, cy, s);
+    drawCrumblingWall(ctx, cx, cy, s, theme);
   }
 }

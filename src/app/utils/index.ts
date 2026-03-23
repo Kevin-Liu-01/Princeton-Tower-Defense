@@ -73,6 +73,14 @@ export function gridToWorld(pos: GridPosition): Position {
   };
 }
 
+// World to grid coordinates (inverse of gridToWorld)
+export function worldToGrid(pos: Position): Position {
+  return {
+    x: pos.x / TILE_SIZE - 0.5,
+    y: pos.y / TILE_SIZE - 0.5,
+  };
+}
+
 // Grid to world coordinates for path waypoints (at corners/intersections)
 export function gridToWorldPath(pos: GridPosition): Position {
   return {
@@ -922,6 +930,7 @@ const MAP_DECORATION_RUNTIME_RULES: Record<string, MapDecorationRuntimeRule> = {
   cauldron: { runtimeType: "cauldron", scaleMultiplier: 0.8 },
   tentacle: { runtimeType: "tentacle", scaleMultiplier: 1.2 },
   deep_water: { runtimeType: "deep_water", scaleMultiplier: 1.3 },
+  pond: { runtimeType: "pond", scaleMultiplier: 1.3 },
   ruined_temple: { runtimeType: "ruins", scaleMultiplier: 1.5 },
   sunken_pillar: { runtimeType: "sunken_pillar", scaleMultiplier: 1.1 },
   idol_statue: { runtimeType: "idol_statue", scaleMultiplier: 1.1 },
@@ -1017,6 +1026,7 @@ export const LANDMARK_DECORATION_TYPES = new Set<string>(
 // Decoration types rendered as static background (water, lava, etc.) that block tower placement.
 export const BACKGROUND_BLOCKING_DECORATION_TYPES = new Set<string>([
   "deep_water",
+  "pond",
   "lava_pool",
 ]);
 

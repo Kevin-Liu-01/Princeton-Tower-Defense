@@ -3,7 +3,9 @@ import type { LevelStars } from "../../../../types";
 import type { LevelNode } from "../worldMapData";
 import type { NodeCache } from "./types";
 
-type RegionKey = "grassland" | "swamp" | "desert" | "winter" | "volcanic";
+import { drawRegionIcon, type RegionType } from "../../../../sprites/regionIconDrawing";
+
+type RegionKey = RegionType;
 
 export type NodePalette = {
   glowSelected: string;
@@ -970,368 +972,31 @@ export function drawLevelNodes({
           ctx.beginPath();
           ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
           ctx.fill();
-        } else if (level.region === "grassland") {
-          // --- Centered Oak Tree ---
-          // Trunk
-          ctx.fillStyle = "#A07040";
-          ctx.beginPath();
-          ctx.moveTo(-2, 2);
-          ctx.lineTo(-1.5, 10);
-          ctx.lineTo(1.5, 10);
-          ctx.lineTo(2, 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#C89858";
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-          // Trunk highlight
-          ctx.fillStyle = "#C89050";
-          ctx.fillRect(-0.3, 2.5, 1.2, 6);
-          // Canopy - layered bright circles
-          ctx.fillStyle = "#38A838";
-          ctx.beginPath();
-          ctx.arc(0, -1, 9, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#48C848";
-          ctx.beginPath();
-          ctx.arc(-3, -3, 6.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(3.5, -1, 6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#60E060";
-          ctx.beginPath();
-          ctx.arc(-1, -4.5, 5.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(2, -3.5, 4.5, 0, Math.PI * 2);
-          ctx.fill();
-          // Bright highlight spots
-          ctx.fillStyle = "#90FF80";
-          ctx.beginPath();
-          ctx.arc(-2, -6, 2.8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#80FF70";
-          ctx.beginPath();
-          ctx.arc(3, -5, 2, 0, Math.PI * 2);
-          ctx.fill();
-          // Canopy edge glow
-          ctx.strokeStyle = "#80FF68";
-          ctx.lineWidth = 1;
-          ctx.globalAlpha = 0.4;
-          ctx.beginPath();
-          ctx.arc(0, -1, 9, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        } else if (level.region === "swamp") {
-          // --- Centered Poison Mushroom ---
-          // Murky water puddle
-          ctx.fillStyle = "#2a6858";
-          ctx.globalAlpha = 0.7;
-          ctx.beginPath();
-          ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Stem
-          ctx.fillStyle = "#D8C8B0";
-          ctx.beginPath();
-          ctx.moveTo(-2.5, 3);
-          ctx.lineTo(-2, -2);
-          ctx.lineTo(2, -2);
-          ctx.lineTo(2.5, 3);
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = "#E8D8C0";
-          ctx.lineWidth = 0.6;
-          ctx.stroke();
-          // Stem highlight
-          ctx.fillStyle = "#F0E0D0";
-          ctx.fillRect(-0.5, -1, 1, 4);
-          // Cap - large centered dome
-          ctx.fillStyle = "#C040E8";
-          ctx.beginPath();
-          ctx.ellipse(0, -2.6, 10, 8, 0, Math.PI, 0);
-          ctx.fill();
-          // Cap shading - darker underside
-          ctx.fillStyle = "#A030C8";
-          ctx.beginPath();
-          ctx.ellipse(0, -2.5, 9, 2.5, 0, 0, Math.PI);
-          ctx.fill();
-          // Cap bright spots
-          ctx.fillStyle = "#E8A0FF";
-          ctx.beginPath();
-          ctx.arc(-4, -6, 1.8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(2, -7, 1.3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(5, -4.5, 1, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#F0C8FF";
-          ctx.beginPath();
-          ctx.arc(-1, -8, 1, 0, Math.PI * 2);
-          ctx.fill();
-          // Cap outline for pop
-          ctx.strokeStyle = "#D868FF";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.ellipse(0, -3.5, 10, 7, 0, Math.PI, 0);
-          ctx.stroke();
-          // Glowing bubbles
-          ctx.fillStyle = "#80FFD0";
-          ctx.globalAlpha = 0.85;
-          ctx.beginPath();
-          ctx.arc(-6, 5, 1.6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#70FFBB";
-          ctx.beginPath();
-          ctx.arc(5, 6, 1.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#90FFE0";
-          ctx.beginPath();
-          ctx.arc(-2, 7, 0.8, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Toxic drip from cap
-          ctx.fillStyle = "#B050E0";
-          ctx.globalAlpha = 0.7;
-          ctx.beginPath();
-          ctx.ellipse(-5, -0.5, 1, 2, 0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.ellipse(6, 0, 0.8, 1.5, -0.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        } else if (level.region === "desert") {
-          // --- Centered Sun Icon ---
-          // Outer glow
-          ctx.fillStyle = "#FFD700";
-          ctx.globalAlpha = 0.2;
-          ctx.beginPath();
-          ctx.arc(0, 0, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Sun rays (8 bold rays)
-          ctx.strokeStyle = "#FFB800";
-          ctx.lineWidth = 2.5;
-          ctx.lineCap = "round";
-          for (let r = 0; r < 8; r++) {
-            const a = (r * Math.PI) / 4 + Math.PI / 8;
+        } else if (
+          level.region === "grassland" ||
+          level.region === "swamp" ||
+          level.region === "desert" ||
+          level.region === "winter" ||
+          level.region === "volcanic"
+        ) {
+          drawRegionIcon(ctx, level.region);
+
+          // Animated spark overlays for volcanic
+          if (level.region === "volcanic") {
+            const bob = Math.sin(time * 4) * 1.5;
+            ctx.fillStyle = "#FFDD00";
             ctx.beginPath();
-            ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
-            ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
-            ctx.stroke();
+            ctx.arc(-3, -10 + bob, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#FF8800";
+            ctx.beginPath();
+            ctx.arc(3.5, -9 - bob * 0.6, 0.9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#FFCC00";
+            ctx.beginPath();
+            ctx.arc(0.5, -12 + bob * 0.4, 0.7, 0, Math.PI * 2);
+            ctx.fill();
           }
-          // Ray tips (bright flare)
-          ctx.strokeStyle = "#FFD860";
-          ctx.lineWidth = 1.2;
-          for (let r = 0; r < 8; r++) {
-            const a = (r * Math.PI) / 4 + Math.PI / 8;
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
-            ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
-            ctx.stroke();
-          }
-          // Sun body
-          ctx.fillStyle = "#FFAA00";
-          ctx.beginPath();
-          ctx.arc(0, 0, 6.5, 0, Math.PI * 2);
-          ctx.fill();
-          // Sun body gradient ring
-          ctx.fillStyle = "#FFC830";
-          ctx.beginPath();
-          ctx.arc(0, 0, 5, 0, Math.PI * 2);
-          ctx.fill();
-          // Bright core
-          ctx.fillStyle = "#FFE870";
-          ctx.beginPath();
-          ctx.arc(0, -0.5, 3.5, 0, Math.PI * 2);
-          ctx.fill();
-          // White-hot center
-          ctx.fillStyle = "#FFF8D0";
-          ctx.beginPath();
-          ctx.arc(0, -1, 2, 0, Math.PI * 2);
-          ctx.fill();
-          // Subtle face-like warmth (two small eye dots for character)
-          ctx.fillStyle = "#CC8800";
-          ctx.globalAlpha = 0.35;
-          ctx.beginPath();
-          ctx.arc(-1.5, -0.5, 0.6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(1.5, -0.5, 0.6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        } else if (level.region === "winter") {
-          // --- Centered Crystal Snowflake ---
-          // Outer glow
-          ctx.fillStyle = "#88d0ff";
-          ctx.globalAlpha = 0.25;
-          ctx.beginPath();
-          ctx.arc(0, 0, 13, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Six main branches
-          for (let i = 0; i < 6; i++) {
-            ctx.save();
-            ctx.rotate((i * Math.PI) / 3);
-            // Main branch - white
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.moveTo(-1.2, 0);
-            ctx.lineTo(-0.5, -9.5);
-            ctx.lineTo(0.5, -9.5);
-            ctx.lineTo(1.2, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#a0d8ff";
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-            // Diamond tip
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.moveTo(0, -12);
-            ctx.lineTo(-2, -9.5);
-            ctx.lineTo(0, -8);
-            ctx.lineTo(2, -9.5);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = "#b0e0ff";
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-            // Lower sub-branches
-            ctx.fillStyle = "#d0f0ff";
-            ctx.beginPath();
-            ctx.moveTo(0, -4);
-            ctx.lineTo(-4.5, -7);
-            ctx.lineTo(-3.5, -5.5);
-            ctx.lineTo(0, -3.2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(0, -4);
-            ctx.lineTo(4.5, -7);
-            ctx.lineTo(3.5, -5.5);
-            ctx.lineTo(0, -3.2);
-            ctx.closePath();
-            ctx.fill();
-            // Upper sub-branches
-            ctx.fillStyle = "#e0f4ff";
-            ctx.beginPath();
-            ctx.moveTo(0, -6.5);
-            ctx.lineTo(-3, -8.5);
-            ctx.lineTo(-2.2, -7.5);
-            ctx.lineTo(0, -6);
-            ctx.closePath();
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(0, -6.5);
-            ctx.lineTo(3, -8.5);
-            ctx.lineTo(2.2, -7.5);
-            ctx.lineTo(0, -6);
-            ctx.closePath();
-            ctx.fill();
-            ctx.restore();
-          }
-          // Center crystal
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(0, 0, 3, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#d8f0ff";
-          ctx.beginPath();
-          ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (level.region === "volcanic") {
-          // --- Centered Flame Icon ---
-          // Outer fire glow
-          ctx.fillStyle = "#ff4400";
-          ctx.globalAlpha = 0.25;
-          ctx.beginPath();
-          ctx.arc(0, 0, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Main flame body (outer - dark red)
-          ctx.fillStyle = "#DD2200";
-          ctx.beginPath();
-          ctx.moveTo(0, -12);
-          ctx.quadraticCurveTo(5, -8, 7, -3);
-          ctx.quadraticCurveTo(9, 2, 6, 6);
-          ctx.quadraticCurveTo(3, 10, 0, 10);
-          ctx.quadraticCurveTo(-3, 10, -6, 6);
-          ctx.quadraticCurveTo(-9, 2, -7, -3);
-          ctx.quadraticCurveTo(-5, -8, 0, -12);
-          ctx.fill();
-          // Flame left tendril
-          ctx.fillStyle = "#EE4400";
-          ctx.beginPath();
-          ctx.moveTo(-3, -5);
-          ctx.quadraticCurveTo(-7, -9, -4, -11);
-          ctx.quadraticCurveTo(-2, -8, -1, -6);
-          ctx.closePath();
-          ctx.fill();
-          // Flame right tendril
-          ctx.beginPath();
-          ctx.moveTo(3, -4);
-          ctx.quadraticCurveTo(6, -7, 5, -10);
-          ctx.quadraticCurveTo(3, -7, 2, -5);
-          ctx.closePath();
-          ctx.fill();
-          // Middle layer (orange)
-          ctx.fillStyle = "#FF6600";
-          ctx.beginPath();
-          ctx.moveTo(0, -9);
-          ctx.quadraticCurveTo(3.5, -5, 5, -1);
-          ctx.quadraticCurveTo(6, 3, 4, 6);
-          ctx.quadraticCurveTo(2, 9, 0, 9);
-          ctx.quadraticCurveTo(-2, 9, -4, 6);
-          ctx.quadraticCurveTo(-6, 3, -5, -1);
-          ctx.quadraticCurveTo(-3.5, -5, 0, -9);
-          ctx.fill();
-          // Inner layer (bright orange-yellow)
-          ctx.fillStyle = "#FFAA00";
-          ctx.beginPath();
-          ctx.moveTo(0, -6);
-          ctx.quadraticCurveTo(2.5, -3, 3, 1);
-          ctx.quadraticCurveTo(3.5, 5, 0, 7);
-          ctx.quadraticCurveTo(-3.5, 5, -3, 1);
-          ctx.quadraticCurveTo(-2.5, -3, 0, -6);
-          ctx.fill();
-          // Core (bright yellow)
-          ctx.fillStyle = "#FFD800";
-          ctx.beginPath();
-          ctx.moveTo(0, -3);
-          ctx.quadraticCurveTo(1.5, -1, 1.8, 2);
-          ctx.quadraticCurveTo(2, 5, 0, 6);
-          ctx.quadraticCurveTo(-2, 5, -1.8, 2);
-          ctx.quadraticCurveTo(-1.5, -1, 0, -3);
-          ctx.fill();
-          // White-hot center
-          ctx.fillStyle = "#FFF4B0";
-          ctx.globalAlpha = 0.85;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(0.8, 1, 0.8, 3);
-          ctx.quadraticCurveTo(0.5, 5, 0, 5);
-          ctx.quadraticCurveTo(-0.5, 5, -0.8, 3);
-          ctx.quadraticCurveTo(-0.8, 1, 0, 0);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-          // Animated spark particles
-          const bob = Math.sin(time * 4) * 1.5;
-          ctx.fillStyle = "#FFDD00";
-          ctx.beginPath();
-          ctx.arc(-3, -10 + bob, 1.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#FF8800";
-          ctx.beginPath();
-          ctx.arc(3.5, -9 - bob * 0.6, 0.9, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#FFCC00";
-          ctx.beginPath();
-          ctx.arc(0.5, -12 + bob * 0.4, 0.7, 0, Math.PI * 2);
-          ctx.fill();
         } else {
           // Fallback - bright gem
           ctx.fillStyle = "#FFB840";

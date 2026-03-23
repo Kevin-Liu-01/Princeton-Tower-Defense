@@ -125,7 +125,7 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
         const worldPos = getMapDecorationWorldPos(decoration);
         const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
         const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
-        const range = Math.min(Math.ceil(size), MAX_DECORATION_EXCLUSION_RANGE);
+        const range = Math.min(Math.ceil(size * 0.5), MAX_DECORATION_EXCLUSION_RANGE);
 
         for (let dx = -range; dx <= range; dx++) {
           for (let dy = -range; dy <= range; dy++) {

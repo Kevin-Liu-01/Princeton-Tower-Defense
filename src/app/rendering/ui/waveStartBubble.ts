@@ -305,8 +305,14 @@ function separateOverlappingBubbles(
     for (const bubble of bubbles) {
       const r = bubble.radius;
       bubble.screenPos = {
-        x: Math.max(VIEW_MARGIN_X + r, Math.min(viewportWidth - VIEW_MARGIN_X - r, bubble.screenPos.x)),
-        y: Math.max(TOP_SAFE_Y + r, Math.min(viewportHeight - VIEW_MARGIN_Y - r, bubble.screenPos.y)),
+        x: Math.max(
+          VIEW_MARGIN_X + r,
+          Math.min(viewportWidth - VIEW_MARGIN_X - r, bubble.screenPos.x),
+        ),
+        y: Math.max(
+          TOP_SAFE_Y + r,
+          Math.min(viewportHeight - VIEW_MARGIN_Y - r, bubble.screenPos.y),
+        ),
       };
     }
   }

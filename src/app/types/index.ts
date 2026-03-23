@@ -994,6 +994,7 @@ export type DecorationCategory =
   | "skeleton_pile"
   | "treasure_hoard"
   | "deep_water"
+  | "pond"
   // Additional decorations
   | "cart"
   | "tent"
@@ -1005,6 +1006,7 @@ export type DecorationCategory =
   | "candles"
   | "ritual_circle"
   | "ember"
+  | "barrel"
   // Challenge landmarks
   | "cannon_crest"
   | "ivy_crossroads"
@@ -1231,6 +1233,7 @@ export type DecorationType =
   | "statue"
   | "nassau_hall"
   | "deep_water"
+  | "pond"
   | "flowers"
   | "signpost"
   | "fountain"

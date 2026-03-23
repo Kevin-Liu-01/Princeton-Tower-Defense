@@ -3,7 +3,7 @@
 import React from "react";
 import { Eye } from "lucide-react";
 import type { Decoration, Position } from "../../../types";
-import { getDecorationVolumeSpec } from "../../../utils";
+import { getDecorationVolumeSpec, worldToGrid } from "../../../utils";
 import { GOLD, PANEL, panelGradient } from "../system/theme";
 import { getTooltipPosition } from "./tooltipPositioning";
 
@@ -35,10 +35,11 @@ export const DecorationInspectorTooltip: React.FC<
   DecorationInspectorTooltipProps
 > = ({ decoration, position }) => {
   const volume = getDecorationVolumeSpec(decoration.type, decoration.heightTag);
+  const gridPos = worldToGrid({ x: decoration.x, y: decoration.y });
   const displayName = decoration.type
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
-  const coords = getTooltipPosition(position, { width: 220, height: 170 });
+  const coords = getTooltipPosition(position, { width: 220, height: 190 });
   const tagColor = HEIGHT_TAG_COLORS[volume.heightTag] ?? "text-stone-400";
 
   return (
@@ -69,6 +70,10 @@ export const DecorationInspectorTooltip: React.FC<
         <Row label="Height" value={volume.heightTag} valueClass={tagColor} />
         <Row label="Scale" value={decoration.scale.toFixed(2)} />
         <Row label="Variant" value={String(decoration.variant)} />
+        <Row
+          label="Grid"
+          value={`(${Number(gridPos.x.toFixed(1))}, ${Number(gridPos.y.toFixed(1))})`}
+        />
         <Row
           label="World"
           value={`(${Math.round(decoration.x)}, ${Math.round(decoration.y)})`}

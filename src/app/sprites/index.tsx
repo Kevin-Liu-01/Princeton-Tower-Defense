@@ -7,6 +7,7 @@ export type { EnemyType } from "./enemies";
 export { ENEMY_COLORS, EnemySprite } from "./enemies";
 export type { RegionType } from "./regions";
 export { RegionIcon } from "./regions";
+export { drawRegionIcon } from "./regionIconDrawing";
 export { AnimatedCastle, MarchingEnemies } from "./animated";
 export { HERO_ABILITY_ICON_COLORS, HeroAbilityIcon, getHeroAbilityIcon } from "./hero-ability-icons";
 export { HERO_ICON_COLORS, HeroIcon } from "./hero-icons";

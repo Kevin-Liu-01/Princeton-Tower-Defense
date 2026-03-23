@@ -8492,51 +8492,72 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ox = screenPos.x;
       const oy = screenPos.y;
 
-      // Pre-baked palettes with derived colors
-      const obelPals = [
-        {
-          left: "#8a7a58",
-          right: "#a89870",
-          front: "#b0a068",
-          top: "#c8b888",
-          cap: "#d4a840",
-          capDk: "#be9428",
-          capFr: "#ca9e3b",
-          capHi: "#f0d060",
-          glyph: "#5a4a38",
-          pedTop: "#b8a878",
-          pedLeft: "#807048",
-          pedRight: "#988860",
-        },
-        {
-          left: "#58544a",
-          right: "#706c5e",
-          front: "#666258",
-          top: "#8a8678",
-          cap: "#c4c0b0",
-          capDk: "#b2aea0",
-          capFr: "#bdb9ab",
-          capHi: "#e4e0d4",
-          glyph: "#3a3830",
-          pedTop: "#7a766a",
-          pedLeft: "#4a4840",
-          pedRight: "#605e54",
-        },
-        {
-          left: "#28241e",
-          right: "#38342a",
-          front: "#302c24",
-          top: "#48443a",
-          cap: "#8868b8",
-          capDk: "#7a56a6",
-          capFr: "#8260b0",
-          capHi: "#a888d8",
-          glyph: "#4a3858",
-          pedTop: "#383428",
-          pedLeft: "#1a1810",
-          pedRight: "#2a2820",
-        },
-      ];
+      // Regional palettes — each region has 3 sub-variants
+      const obelRegionPals: Record<
+        string,
+        Array<{
+          left: string; right: string; front: string; top: string;
+          cap: string; capDk: string; capFr: string; capHi: string;
+          glyph: string; pedTop: string; pedLeft: string; pedRight: string;
+        }>
+      > = {
+        grassland: [
+          { left: "#8a7a58", right: "#a89870", front: "#b0a068", top: "#c8b888",
+            cap: "#d4a840", capDk: "#be9428", capFr: "#ca9e3b", capHi: "#f0d060",
+            glyph: "#5a4a38", pedTop: "#b8a878", pedLeft: "#807048", pedRight: "#988860" },
+          { left: "#58544a", right: "#706c5e", front: "#666258", top: "#8a8678",
+            cap: "#c4c0b0", capDk: "#b2aea0", capFr: "#bdb9ab", capHi: "#e4e0d4",
+            glyph: "#3a3830", pedTop: "#7a766a", pedLeft: "#4a4840", pedRight: "#605e54" },
+          { left: "#6a6248", right: "#8a8268", front: "#7a7258", top: "#a09878",
+            cap: "#c0a048", capDk: "#a88a38", capFr: "#b49840", capHi: "#dcc060",
+            glyph: "#4a4230", pedTop: "#9a9068", pedLeft: "#605838", pedRight: "#786848" },
+        ],
+        swamp: [
+          { left: "#3a5a38", right: "#4a6a48", front: "#3e5e3c", top: "#5a7a58",
+            cap: "#40a848", capDk: "#2a8a30", capFr: "#38983c", capHi: "#60d868",
+            glyph: "#1a3a18", pedTop: "#4a6a48", pedLeft: "#2a4a28", pedRight: "#3a5a38" },
+          { left: "#2a3a28", right: "#3a4a38", front: "#2e3e2c", top: "#4a5a48",
+            cap: "#58886a", capDk: "#3a6a4a", capFr: "#487a5a", capHi: "#78b88a",
+            glyph: "#0a2a08", pedTop: "#3a4a38", pedLeft: "#1a2a18", pedRight: "#2a3a28" },
+          { left: "#3a4a30", right: "#4a5a40", front: "#3c4c34", top: "#5a6a50",
+            cap: "#4a8a3a", capDk: "#2a6a22", capFr: "#3a7a2e", capHi: "#6ac04a",
+            glyph: "#1a2a10", pedTop: "#4a5a40", pedLeft: "#2a3a20", pedRight: "#3a4a30" },
+        ],
+        desert: [
+          { left: "#b09a68", right: "#c8b280", front: "#c0aa78", top: "#d8c898",
+            cap: "#e8c040", capDk: "#d0a830", capFr: "#dab438", capHi: "#f8e060",
+            glyph: "#7a6a48", pedTop: "#c8b888", pedLeft: "#9a8a58", pedRight: "#b0a068" },
+          { left: "#a08858", right: "#b8a070", front: "#b09868", top: "#c8b888",
+            cap: "#dab040", capDk: "#c09830", capFr: "#cca438", capHi: "#f0d858",
+            glyph: "#6a5a38", pedTop: "#b8a878", pedLeft: "#8a7a48", pedRight: "#a09058" },
+          { left: "#907848", right: "#a89060", front: "#9a8858", top: "#b8a878",
+            cap: "#c8a838", capDk: "#b09028", capFr: "#bc9c30", capHi: "#e0c850",
+            glyph: "#5a4a28", pedTop: "#a89868", pedLeft: "#7a6a38", pedRight: "#908048" },
+        ],
+        winter: [
+          { left: "#6a7888", right: "#8090a0", front: "#7a8898", top: "#98a8b8",
+            cap: "#b0d0e8", capDk: "#90b0c8", capFr: "#a0c0d8", capHi: "#d0e8f8",
+            glyph: "#4a5868", pedTop: "#8898a8", pedLeft: "#5a6878", pedRight: "#6a7888" },
+          { left: "#5a6878", right: "#708090", front: "#647888", top: "#8898a8",
+            cap: "#a0c4d8", capDk: "#80a4b8", capFr: "#90b4c8", capHi: "#c0dce8",
+            glyph: "#3a4858", pedTop: "#788898", pedLeft: "#4a5868", pedRight: "#5a6878" },
+          { left: "#788898", right: "#90a0b0", front: "#8898a8", top: "#a8b8c8",
+            cap: "#c0dae8", capDk: "#a0bac8", capFr: "#b0cad8", capHi: "#e0f0f8",
+            glyph: "#5a6878", pedTop: "#98a8b8", pedLeft: "#687888", pedRight: "#788898" },
+        ],
+        volcanic: [
+          { left: "#4a2828", right: "#5a3838", front: "#503030", top: "#684848",
+            cap: "#c84020", capDk: "#a03018", capFr: "#b4381c", capHi: "#f06030",
+            glyph: "#2a1010", pedTop: "#583838", pedLeft: "#3a2020", pedRight: "#4a2828" },
+          { left: "#3a2020", right: "#4a3030", front: "#402828", top: "#583838",
+            cap: "#d85828", capDk: "#b04018", capFr: "#c44820", capHi: "#f87838",
+            glyph: "#1a0808", pedTop: "#482828", pedLeft: "#2a1818", pedRight: "#3a2020" },
+          { left: "#2a1818", right: "#3a2828", front: "#302020", top: "#483030",
+            cap: "#a83820", capDk: "#882818", capFr: "#98301c", capHi: "#d05028",
+            glyph: "#180808", pedTop: "#382020", pedLeft: "#201010", pedRight: "#2a1818" },
+        ],
+      };
+      const obelPals = obelRegionPals[mapTheme] ?? obelRegionPals.grassland;
       const op = obelPals[variant % obelPals.length];
 
       const oH = 55 * s;
@@ -8688,13 +8709,352 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox + bw86, sBase + bwIso);
       ctx.stroke();
 
-      // Obsidian glow
-      if (variant === 2) {
-        ctx.fillStyle = `rgba(128,80,200,${0.3 + Math.sin(decorTime * 2) * 0.15})`;
+      // === REGIONAL TOPPER & OVERLAYS ===
+      if (mapTheme === "grassland" || !mapTheme) {
+        // Golden sun medallion floating above cap
+        const medY = cTip - 5 * s;
+        const medR = 4 * s;
+        const sunGlow = ctx.createRadialGradient(ox, medY, 0, ox, medY, medR * 1.5);
+        sunGlow.addColorStop(0, "rgba(240,210,80,0.5)");
+        sunGlow.addColorStop(0.6, "rgba(220,180,40,0.2)");
+        sunGlow.addColorStop(1, "rgba(200,160,30,0)");
+        ctx.fillStyle = sunGlow;
         ctx.beginPath();
-        ctx.arc(ox, cTip - 3 * s, 3 * s, 0, Math.PI * 2);
+        ctx.arc(ox, medY, medR * 1.5, 0, Math.PI * 2);
         ctx.fill();
+        // Solid medallion disc
+        ctx.fillStyle = op.cap;
+        ctx.beginPath();
+        ctx.arc(ox, medY, medR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = op.capHi;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.arc(ox, medY, medR, 0, Math.PI * 2);
+        ctx.stroke();
+        // Sun rays
+        ctx.strokeStyle = op.capHi;
+        ctx.lineWidth = 0.6 * s;
+        ctx.globalAlpha = 0.5;
+        for (let r = 0; r < 8; r++) {
+          const ang = (r / 8) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(ox + Math.cos(ang) * medR * 1.1, medY + Math.sin(ang) * medR * 1.1);
+          ctx.lineTo(ox + Math.cos(ang) * medR * 1.7, medY + Math.sin(ang) * medR * 1.7);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        // Ivy tendrils on shaft
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = "#4a6a3a";
+        ctx.lineWidth = 1 * s;
+        const ivyBase1 = sBase - oH * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(ox - bw86 + 1 * s, ivyBase1);
+        ctx.bezierCurveTo(
+          ox - bw86 - 1 * s, ivyBase1 - 10 * s,
+          ox - tw86 + 2 * s, ivyBase1 - 20 * s,
+          ox - tw86, ivyBase1 - 28 * s,
+        );
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "swamp") {
+        // Serpent eye ring on top — glowing eye motif
+        const eyeY = cTip - 4 * s;
+        const eyeR = 4.5 * s;
+        // Outer ring
+        ctx.strokeStyle = op.cap;
+        ctx.lineWidth = 1.8 * s;
+        ctx.beginPath();
+        ctx.arc(ox, eyeY, eyeR, 0, Math.PI * 2);
+        ctx.stroke();
+        // Inner glow
+        const eyeGlow = ctx.createRadialGradient(ox, eyeY, 0, ox, eyeY, eyeR * 0.8);
+        eyeGlow.addColorStop(0, "rgba(80,220,80,0.6)");
+        eyeGlow.addColorStop(0.5, "rgba(40,160,40,0.3)");
+        eyeGlow.addColorStop(1, "rgba(20,100,20,0)");
+        ctx.fillStyle = eyeGlow;
+        ctx.beginPath();
+        ctx.arc(ox, eyeY, eyeR * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        // Slit pupil
+        ctx.fillStyle = "#0a2a08";
+        ctx.beginPath();
+        ctx.ellipse(ox, eyeY, 1 * s, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Vine wrap spiraling up shaft
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = "#1a3a12";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        for (let vt = 0; vt <= 1; vt += 0.02) {
+          const vy = sBase + (sTop - sBase) * vt;
+          const vw = oBaseW + (oTopW - oBaseW) * vt;
+          const vx = ox + Math.sin(vt * 12) * vw * ISO_COS * 0.7;
+          if (vt === 0) ctx.moveTo(vx, vy);
+          else ctx.lineTo(vx, vy);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Moss splotches on pedestal
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = "#2a4a20";
+        ctx.beginPath();
+        ctx.ellipse(ox - 6 * s, oy - 2 * s, 4 * s, 2 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(ox + 5 * s, oy - 1 * s, 3 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "desert") {
+        // Large golden sun disc ring on top
+        const discY = cTip - 6 * s;
+        const discR = 6 * s;
+        // Outer glow
+        const discGlow = ctx.createRadialGradient(ox, discY, discR * 0.5, ox, discY, discR * 2);
+        discGlow.addColorStop(0, "rgba(240,200,60,0.3)");
+        discGlow.addColorStop(0.7, "rgba(220,180,40,0.1)");
+        discGlow.addColorStop(1, "rgba(200,160,20,0)");
+        ctx.fillStyle = discGlow;
+        ctx.beginPath();
+        ctx.arc(ox, discY, discR * 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Solid disc
+        const discFill = ctx.createRadialGradient(
+          ox - 1 * s, discY - 1 * s, 0,
+          ox, discY, discR,
+        );
+        discFill.addColorStop(0, "#f0d860");
+        discFill.addColorStop(0.7, "#d4a840");
+        discFill.addColorStop(1, "#be9428");
+        ctx.fillStyle = discFill;
+        ctx.beginPath();
+        ctx.arc(ox, discY, discR, 0, Math.PI * 2);
+        ctx.fill();
+        // Inner ring cutout
+        ctx.fillStyle = op.capFr;
+        ctx.beginPath();
+        ctx.arc(ox, discY, discR * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+        // Ring highlight
+        ctx.strokeStyle = "#f8e880";
+        ctx.lineWidth = 0.8 * s;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.arc(ox, discY, discR * 0.78, -0.8, 0.8);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Hieroglyphic band wrapping shaft midpoint
+        const bandY = sBase + (sTop - sBase) * 0.5;
+        const bandW = oBaseW + (oTopW - oBaseW) * 0.5;
+        ctx.fillStyle = op.cap;
+        ctx.globalAlpha = 0.3;
+        ctx.fillRect(
+          ox - bandW * ISO_COS,
+          bandY - 2 * s,
+          bandW * ISO_COS * 2,
+          4 * s,
+        );
+        ctx.globalAlpha = 1;
+        // Sand accumulation at base
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "rgba(190,170,130,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(ox + 3 * s, oy + 4 * s, 16 * s, 5 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "winter") {
+        // Ice crown with crystalline horns
+        const crownY = cTip;
+        // Left horn
+        const lhG = ctx.createLinearGradient(
+          ox - 6 * s, crownY - 12 * s,
+          ox - 2 * s, crownY,
+        );
+        lhG.addColorStop(0, "rgba(200,230,255,0.8)");
+        lhG.addColorStop(0.5, "rgba(160,200,240,0.6)");
+        lhG.addColorStop(1, "rgba(120,170,220,0.3)");
+        ctx.fillStyle = lhG;
+        ctx.beginPath();
+        ctx.moveTo(ox - 2 * s, crownY);
+        ctx.lineTo(ox - 7 * s, crownY - 14 * s);
+        ctx.lineTo(ox - 5 * s, crownY - 12 * s);
+        ctx.lineTo(ox - 1 * s, crownY - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Right horn
+        const rhG = ctx.createLinearGradient(
+          ox + 6 * s, crownY - 12 * s,
+          ox + 2 * s, crownY,
+        );
+        rhG.addColorStop(0, "rgba(180,215,245,0.8)");
+        rhG.addColorStop(0.5, "rgba(140,185,230,0.6)");
+        rhG.addColorStop(1, "rgba(110,160,210,0.3)");
+        ctx.fillStyle = rhG;
+        ctx.beginPath();
+        ctx.moveTo(ox + 2 * s, crownY);
+        ctx.lineTo(ox + 7 * s, crownY - 14 * s);
+        ctx.lineTo(ox + 5 * s, crownY - 12 * s);
+        ctx.lineTo(ox + 1 * s, crownY - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Center spike
+        ctx.fillStyle = "rgba(210,235,255,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(ox, crownY - 18 * s);
+        ctx.lineTo(ox - 1.5 * s, crownY - 2 * s);
+        ctx.lineTo(ox + 1.5 * s, crownY - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Frost ring connecting horns
+        ctx.strokeStyle = "rgba(180,220,250,0.5)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.ellipse(ox, crownY - 4 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        // Snow cap on pedestal
+        ctx.fillStyle = "#e4ecf6";
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(ox - pedIso, oy - pedH + pedD - 1 * s);
+        ctx.lineTo(ox, oy - pedH - 1 * s);
+        ctx.lineTo(ox + pedIso, oy - pedH + pedD - 1 * s);
+        ctx.lineTo(ox, oy - pedH + pedD * 2 - 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // Icicles from shaft bands
+        ctx.globalAlpha = 0.5;
+        for (let ii = 0; ii < 3; ii++) {
+          const iit = 0.25 + ii * 0.25;
+          const iiy = sBase + (sTop - sBase) * iit;
+          const iiw = oBaseW + (oTopW - oBaseW) * iit;
+          const iix = ox - iiw * ISO_COS;
+          const iiLen = (3 + ii) * s;
+          const icicleG = ctx.createLinearGradient(iix, iiy, iix, iiy + iiLen);
+          icicleG.addColorStop(0, "rgba(180,210,240,0.5)");
+          icicleG.addColorStop(1, "rgba(160,200,240,0)");
+          ctx.fillStyle = icicleG;
+          ctx.beginPath();
+          ctx.moveTo(iix - 0.8 * s, iiy);
+          ctx.lineTo(iix, iiy + iiLen);
+          ctx.lineTo(iix + 0.8 * s, iiy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        // Frost sparkle specks
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "#d0e8f8";
+        const frostSeed = Math.abs(decorX * 41 + decorY * 67);
+        for (let fi = 0; fi < 4; fi++) {
+          const fx = ox + ((((frostSeed + fi * 29) % 16) - 8) * s);
+          const fy = sTop + ((frostSeed + fi * 17) % 40) * s * 0.8;
+          ctx.beginPath();
+          ctx.arc(fx, fy, 0.7 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "volcanic") {
+        // Demon horns — thick curved horns rising from top
+        // Left horn
+        ctx.fillStyle = "#2a1010";
+        ctx.beginPath();
+        ctx.moveTo(ox - 2 * s, cTip);
+        ctx.bezierCurveTo(
+          ox - 5 * s, cTip - 6 * s,
+          ox - 10 * s, cTip - 10 * s,
+          ox - 8 * s, cTip - 18 * s,
+        );
+        ctx.lineTo(ox - 6 * s, cTip - 16 * s);
+        ctx.bezierCurveTo(
+          ox - 8 * s, cTip - 10 * s,
+          ox - 3 * s, cTip - 5 * s,
+          ox, cTip,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Right horn
+        ctx.beginPath();
+        ctx.moveTo(ox + 2 * s, cTip);
+        ctx.bezierCurveTo(
+          ox + 5 * s, cTip - 6 * s,
+          ox + 10 * s, cTip - 10 * s,
+          ox + 8 * s, cTip - 18 * s,
+        );
+        ctx.lineTo(ox + 6 * s, cTip - 16 * s);
+        ctx.bezierCurveTo(
+          ox + 8 * s, cTip - 10 * s,
+          ox + 3 * s, cTip - 5 * s,
+          ox, cTip,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Horn tips glow
+        ctx.globalAlpha = 0.7;
+        const ltGlow = ctx.createRadialGradient(
+          ox - 8 * s, cTip - 18 * s, 0,
+          ox - 8 * s, cTip - 18 * s, 3 * s,
+        );
+        ltGlow.addColorStop(0, "rgba(255,100,20,0.6)");
+        ltGlow.addColorStop(1, "rgba(200,50,10,0)");
+        ctx.fillStyle = ltGlow;
+        ctx.beginPath();
+        ctx.arc(ox - 8 * s, cTip - 18 * s, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        const rtGlow = ctx.createRadialGradient(
+          ox + 8 * s, cTip - 18 * s, 0,
+          ox + 8 * s, cTip - 18 * s, 3 * s,
+        );
+        rtGlow.addColorStop(0, "rgba(255,100,20,0.6)");
+        rtGlow.addColorStop(1, "rgba(200,50,10,0)");
+        ctx.fillStyle = rtGlow;
+        ctx.beginPath();
+        ctx.arc(ox + 8 * s, cTip - 18 * s, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // Pulsing ember core in cap
+        const embPulse = 0.4 + Math.sin(decorTime * 2.5) * 0.2;
+        const embG = ctx.createRadialGradient(ox, cTip - 2 * s, 0, ox, cTip - 2 * s, 5 * s);
+        embG.addColorStop(0, `rgba(255,120,30,${embPulse})`);
+        embG.addColorStop(0.5, `rgba(200,60,10,${embPulse * 0.5})`);
+        embG.addColorStop(1, "rgba(100,30,5,0)");
+        ctx.fillStyle = embG;
+        ctx.beginPath();
+        ctx.arc(ox, cTip - 2 * s, 5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Lava crack glow lines on shaft
+        ctx.globalAlpha = 0.45;
+        ctx.strokeStyle = "#d86a20";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(ox - 3 * s, sBase - 10 * s);
+        ctx.lineTo(ox - 1 * s, sBase - 25 * s);
+        ctx.lineTo(ox - 4 * s, sBase - 38 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ox + 2 * s, sBase - 15 * s);
+        ctx.lineTo(ox + 4 * s, sBase - 30 * s);
+        ctx.stroke();
+        // Glow halos
+        ctx.globalAlpha = 0.12;
+        ctx.strokeStyle = "#ff8040";
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(ox - 3 * s, sBase - 10 * s);
+        ctx.lineTo(ox - 1 * s, sBase - 25 * s);
+        ctx.lineTo(ox - 4 * s, sBase - 38 * s);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Ash particles around base
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = "rgba(60,40,30,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(ox + 2 * s, oy + 3 * s, 14 * s, 5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
       }
+
       break;
     }
     case "giant_sphinx": {
@@ -17925,7 +18285,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "broken_wall": {
-      drawBrokenWallDecoration(ctx, screenPos, s, variant, decorX, decorY);
+      drawBrokenWallDecoration(ctx, screenPos, s, variant, decorX, decorY, mapTheme);
       break;
     }
 
@@ -24413,14 +24773,211 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
 
-    case "sunken_pillar": {
-      const spStone = "#5a6a5a";
-      const spStoneDark = "#3a4a3a";
-      const spMoss = "#3a5a2a";
-      const spWater = "rgba(60,90,60,0.5)";
+    case "pond": {
+      // Teal/emerald pond matching Carnegie Lake's water palette
+      const pondSeed = (dec.x || 0) * 11.3 + (dec.y || 0) * 23.7;
+      const pondIso = ISO_Y_RATIO;
 
-      // Water around base
-      ctx.fillStyle = spWater;
+      // 1. Outer wet ground ring (earthy blend into terrain)
+      const pondWetG = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 18 * s,
+        screenPos.x, screenPos.y, 36 * s,
+      );
+      pondWetG.addColorStop(0, "transparent");
+      pondWetG.addColorStop(0.5, "rgba(58,47,31,0.3)");
+      pondWetG.addColorStop(1, "rgba(58,47,31,0.1)");
+      ctx.fillStyle = pondWetG;
+      drawOrganicWaterShape(
+        ctx, screenPos.x, screenPos.y,
+        36 * s, 36 * s * pondIso, pondSeed, 0.16,
+      );
+      ctx.fill();
+
+      // 2. Earthy stone embankment rim
+      const pondRimG = ctx.createRadialGradient(
+        screenPos.x, screenPos.y + 2 * s, 4 * s,
+        screenPos.x, screenPos.y + 2 * s, 30 * s,
+      );
+      pondRimG.addColorStop(0, "#5a4a35");
+      pondRimG.addColorStop(0.5, "#4a3d2a");
+      pondRimG.addColorStop(1, "#3a2f1f");
+      ctx.fillStyle = pondRimG;
+      drawOrganicWaterShape(
+        ctx, screenPos.x, screenPos.y,
+        30 * s, 30 * s * pondIso, pondSeed + 10, 0.14,
+      );
+      ctx.fill();
+
+      // 3. Teal water body (Carnegie Lake palette)
+      const pondWaterG = ctx.createRadialGradient(
+        screenPos.x - 4 * s, screenPos.y - 2 * s, 0,
+        screenPos.x, screenPos.y + 2 * s, 26 * s,
+      );
+      pondWaterG.addColorStop(0, "#004d6b");
+      pondWaterG.addColorStop(0.2, "#006080");
+      pondWaterG.addColorStop(0.4, "#00838f");
+      pondWaterG.addColorStop(0.6, "#0097a7");
+      pondWaterG.addColorStop(0.8, "#00acc1");
+      pondWaterG.addColorStop(1, "#26c6da");
+      ctx.fillStyle = pondWaterG;
+      drawOrganicWaterShape(
+        ctx, screenPos.x, screenPos.y,
+        26 * s, 26 * s * pondIso, pondSeed + 20, 0.12,
+      );
+      ctx.fill();
+
+      // 4. Surface reflection layer (lighter teal offset)
+      const pondSurfG = ctx.createRadialGradient(
+        screenPos.x - 6 * s, screenPos.y - 3 * s, 0,
+        screenPos.x, screenPos.y, 22 * s,
+      );
+      pondSurfG.addColorStop(0, "rgba(77,208,225,0.4)");
+      pondSurfG.addColorStop(0.4, "rgba(38,198,218,0.25)");
+      pondSurfG.addColorStop(1, "rgba(0,172,193,0.1)");
+      ctx.fillStyle = pondSurfG;
+      drawOrganicWaterShape(
+        ctx, screenPos.x, screenPos.y - 2 * s,
+        22 * s, 22 * s * pondIso, pondSeed + 30, 0.1,
+      );
+      ctx.fill();
+
+      // 5. Animated ripples (teal-tinted)
+      for (let rip = 0; rip < 3; rip++) {
+        const ripPh = (decorTime * 0.5 + rip * 0.33) % 1;
+        const ripR = (6 + ripPh * 14) * s;
+        ctx.strokeStyle = `rgba(100,220,230,${0.35 * (1 - ripPh)})`;
+        ctx.lineWidth = (1.3 - ripPh) * s;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x, screenPos.y,
+          ripR, ripR * pondIso, 0, 0, Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+
+      // 6. Shimmer highlights (warm teal)
+      ctx.fillStyle = "rgba(180,240,240,0.4)";
+      for (let sh = 0; sh < 4; sh++) {
+        const shAng = sh * 0.7 + decorTime * 0.4 + pondSeed * 0.1;
+        const shDist = (8 + Math.sin(decorTime + sh) * 4) * s;
+        const shX = screenPos.x + Math.cos(shAng) * shDist * 0.8;
+        const shY = screenPos.y + Math.sin(shAng) * shDist * 0.4 - 2 * s;
+        const shSz = (3.5 + Math.sin(decorTime * 2 + sh * 2) * 1.5) * s;
+        ctx.beginPath();
+        ctx.ellipse(shX, shY, shSz, shSz * 0.4, shAng * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 7. Subtle magical glow (teal center pulse)
+      const pondGlowPh = Math.sin(decorTime * 1.2 + pondSeed) * 0.3 + 0.7;
+      const pondGlow = ctx.createRadialGradient(
+        screenPos.x, screenPos.y + 2 * s, 0,
+        screenPos.x, screenPos.y, 18 * s,
+      );
+      pondGlow.addColorStop(0, `rgba(100,255,220,${0.12 * pondGlowPh})`);
+      pondGlow.addColorStop(0.5, `rgba(80,220,200,${0.06 * pondGlowPh})`);
+      pondGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = pondGlow;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, 16 * s, 8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 8. Natural edge stones/pebbles
+      for (let rock = 0; rock < 6; rock++) {
+        const rkAng = (rock / 6) * Math.PI * 2 + Math.sin(pondSeed + rock) * 0.4;
+        const rkDist = (24 + Math.sin(rock * 2 + pondSeed) * 3) * s;
+        const rkX = screenPos.x + Math.cos(rkAng) * rkDist;
+        const rkY = screenPos.y + Math.sin(rkAng) * rkDist * pondIso;
+        const rkSz = (2.5 + Math.sin(pondSeed + rock * 3) * 1) * s;
+        ctx.fillStyle = rock % 2 === 0 ? "#5a4a3a" : "#4a3d2d";
+        ctx.beginPath();
+        ctx.ellipse(rkX, rkY, rkSz, rkSz * 0.6, rkAng, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 9. Grass tufts at edges
+      ctx.strokeStyle = "rgba(80,120,60,0.4)";
+      ctx.lineWidth = 0.8 * s;
+      for (let gt = 0; gt < 5; gt++) {
+        const gtAng = gt * 1.3 + pondSeed * 0.1;
+        const gtDist = (27 + Math.sin(gt * 2.7 + pondSeed) * 3) * s;
+        const gtX = screenPos.x + Math.cos(gtAng) * gtDist;
+        const gtY = screenPos.y + Math.sin(gtAng) * gtDist * pondIso;
+        for (let bl = 0; bl < 3; bl++) {
+          const blAng = -Math.PI / 2 + (bl - 1) * 0.3;
+          ctx.beginPath();
+          ctx.moveTo(gtX, gtY);
+          ctx.lineTo(gtX + Math.cos(blAng) * 3 * s, gtY + Math.sin(blAng) * 3 * s);
+          ctx.stroke();
+        }
+      }
+
+      break;
+    }
+
+    case "sunken_pillar": {
+      const spPalettes: Record<
+        string,
+        {
+          stone: string;
+          stoneDark: string;
+          brokenTop: string;
+          moss: string;
+          basePool: string;
+          ripple: string;
+          bandStroke: string;
+        }
+      > = {
+        grassland: {
+          stone: "#5a6a5a",
+          stoneDark: "#3a4a3a",
+          brokenTop: "#7a8a7a",
+          moss: "#3a5a2a",
+          basePool: "rgba(60,90,60,0.5)",
+          ripple: "rgba(100,140,100,0.3)",
+          bandStroke: "rgba(0,0,0,0.15)",
+        },
+        swamp: {
+          stone: "#3a5a38",
+          stoneDark: "#1a3a18",
+          brokenTop: "#4a6a48",
+          moss: "#1a3a12",
+          basePool: "rgba(30,50,20,0.6)",
+          ripple: "rgba(50,80,40,0.35)",
+          bandStroke: "rgba(0,20,0,0.2)",
+        },
+        desert: {
+          stone: "#8a7a58",
+          stoneDark: "#6a5a40",
+          brokenTop: "#a08a68",
+          moss: "#7a6a48",
+          basePool: "rgba(160,140,100,0.35)",
+          ripple: "rgba(180,160,120,0.2)",
+          bandStroke: "rgba(60,40,10,0.15)",
+        },
+        winter: {
+          stone: "#6a7a88",
+          stoneDark: "#4a5a68",
+          brokenTop: "#8a9aa8",
+          moss: "#8aaa9a",
+          basePool: "rgba(140,180,210,0.45)",
+          ripple: "rgba(180,210,240,0.3)",
+          bandStroke: "rgba(0,10,30,0.15)",
+        },
+        volcanic: {
+          stone: "#5a3a38",
+          stoneDark: "#3a2218",
+          brokenTop: "#6a4a48",
+          moss: "#4a2a1a",
+          basePool: "rgba(120,40,10,0.45)",
+          ripple: "rgba(200,80,20,0.25)",
+          bandStroke: "rgba(40,10,0,0.2)",
+        },
+      };
+      const sp = spPalettes[mapTheme] ?? spPalettes.grassland;
+
+      // Pool around base
+      ctx.fillStyle = sp.basePool;
       ctx.beginPath();
       ctx.ellipse(
         screenPos.x,
@@ -24433,7 +24990,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.fill();
       // Ripples
-      ctx.strokeStyle = "rgba(100,140,100,0.3)";
+      ctx.strokeStyle = sp.ripple;
       ctx.lineWidth = 1 * s;
       const ripPhase = (decorTime % 2) / 2;
       ctx.beginPath();
@@ -24448,13 +25005,55 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.stroke();
 
+      // Winter: frozen pool surface
+      if (mapTheme === "winter") {
+        ctx.fillStyle = "rgba(200,220,245,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(220,235,255,0.4)";
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 4 * s);
+        ctx.lineTo(screenPos.x - 2 * s, screenPos.y + 6 * s);
+        ctx.moveTo(screenPos.x + 3 * s, screenPos.y + 3 * s);
+        ctx.lineTo(screenPos.x + 9 * s, screenPos.y + 5 * s);
+        ctx.stroke();
+      }
+
+      // Desert: sand drift instead of water
+      if (mapTheme === "desert") {
+        ctx.fillStyle = "rgba(190,170,130,0.4)";
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x + 3 * s, screenPos.y + 4 * s,
+          18 * s, 6 * s, 0.15, 0, Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Volcanic: bubbling lava glow in pool
+      if (mapTheme === "volcanic") {
+        const lavaGlow = ctx.createRadialGradient(
+          screenPos.x, screenPos.y + 5 * s, 0,
+          screenPos.x, screenPos.y + 5 * s, 14 * s,
+        );
+        lavaGlow.addColorStop(0, "rgba(255,120,20,0.25)");
+        lavaGlow.addColorStop(0.6, "rgba(200,60,10,0.1)");
+        lavaGlow.addColorStop(1, "rgba(100,20,0,0)");
+        ctx.fillStyle = lavaGlow;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       // Tilted pillar body
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
       ctx.rotate(-0.15);
 
       // Left face
-      ctx.fillStyle = spStoneDark;
+      ctx.fillStyle = sp.stoneDark;
       ctx.beginPath();
       ctx.moveTo(-6 * s, 5 * s);
       ctx.lineTo(-5 * s, -40 * s);
@@ -24464,7 +25063,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Right face
-      ctx.fillStyle = spStone;
+      ctx.fillStyle = sp.stone;
       ctx.beginPath();
       ctx.moveTo(6 * s, 5 * s);
       ctx.lineTo(5 * s, -40 * s);
@@ -24474,7 +25073,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Broken top
-      ctx.fillStyle = "#7a8a7a";
+      ctx.fillStyle = sp.brokenTop;
       ctx.beginPath();
       ctx.moveTo(-5 * s, -40 * s);
       ctx.lineTo(-3 * s, -44 * s);
@@ -24485,7 +25084,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Carved bands
-      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.strokeStyle = sp.bandStroke;
       ctx.lineWidth = 1 * s;
       for (let b = 0; b < 4; b++) {
         const by = -5 * s - b * 9 * s;
@@ -24495,14 +25094,141 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       }
 
-      // Moss/vines
-      ctx.fillStyle = spMoss;
+      // Moss/growth patches (themed)
+      ctx.fillStyle = sp.moss;
       ctx.beginPath();
       ctx.ellipse(-4 * s, -15 * s, 3 * s, 5 * s, -0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
       ctx.ellipse(3 * s, -25 * s, 2.5 * s, 4 * s, 0.2, 0, Math.PI * 2);
       ctx.fill();
+
+      // === REGIONAL OVERLAYS (inside rotated transform) ===
+      if (mapTheme === "swamp") {
+        // Dripping vines down the pillar
+        ctx.globalAlpha = 0.6;
+        ctx.strokeStyle = "#1a3a12";
+        ctx.lineWidth = 1 * s;
+        for (let vi = 0; vi < 3; vi++) {
+          const vx = -3 * s + vi * 3 * s;
+          const vy0 = -(20 + vi * 8) * s;
+          ctx.beginPath();
+          ctx.moveTo(vx, vy0);
+          ctx.bezierCurveTo(
+            vx - 2 * s, vy0 + 6 * s,
+            vx + 1 * s, vy0 + 12 * s,
+            vx - 1 * s, vy0 + 18 * s,
+          );
+          ctx.stroke();
+        }
+        // Algae splotches
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = "#2a4a18";
+        ctx.beginPath();
+        ctx.ellipse(2 * s, -8 * s, 4 * s, 2.5 * s, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-3 * s, -30 * s, 3 * s, 2 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "desert") {
+        // Sand accumulation on ledges
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "#c0a878";
+        ctx.beginPath();
+        ctx.ellipse(0, -5 * s, 5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-1 * s, -14 * s, 4 * s, 1 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Wind erosion scratches
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "#a08a60";
+        ctx.lineWidth = 0.5 * s;
+        for (let ei = 0; ei < 4; ei++) {
+          const ey = -(8 + ei * 8) * s;
+          ctx.beginPath();
+          ctx.moveTo(-5 * s, ey);
+          ctx.lineTo(5 * s, ey + 1 * s);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "winter") {
+        // Snow cap on broken top
+        ctx.fillStyle = "#e4ecf6";
+        ctx.beginPath();
+        ctx.moveTo(-5 * s, -40 * s);
+        ctx.lineTo(-4 * s, -45 * s);
+        ctx.lineTo(2 * s, -43 * s);
+        ctx.lineTo(5 * s, -40 * s);
+        ctx.lineTo(3 * s, -39 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Frost patches on body
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "#c8daea";
+        ctx.beginPath();
+        ctx.ellipse(-3 * s, -20 * s, 3 * s, 4 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(2 * s, -10 * s, 2.5 * s, 3 * s, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        // Icicles from carved bands
+        ctx.globalAlpha = 0.5;
+        for (let ii = 0; ii < 3; ii++) {
+          const ibY = -5 * s - ii * 9 * s;
+          const iceG = ctx.createLinearGradient(0, ibY, 0, ibY + 5 * s);
+          iceG.addColorStop(0, "rgba(180,210,240,0.5)");
+          iceG.addColorStop(1, "rgba(160,200,240,0)");
+          ctx.fillStyle = iceG;
+          ctx.beginPath();
+          ctx.moveTo(-3 * s + ii * 2 * s, ibY);
+          ctx.lineTo(-2.5 * s + ii * 2 * s, ibY + 5 * s);
+          ctx.lineTo(-2 * s + ii * 2 * s, ibY);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "volcanic") {
+        // Ash deposits
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "rgba(50,40,35,0.5)";
+        ctx.beginPath();
+        ctx.ellipse(0, -6 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-1 * s, -22 * s, 3.5 * s, 1.5 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Ember glow cracks in stone
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = "#d86a20";
+        ctx.lineWidth = 0.7 * s;
+        ctx.beginPath();
+        ctx.moveTo(-2 * s, -12 * s);
+        ctx.lineTo(-1 * s, -18 * s);
+        ctx.lineTo(1 * s, -22 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2 * s, -8 * s);
+        ctx.lineTo(3 * s, -14 * s);
+        ctx.stroke();
+        // Glow halo around cracks
+        ctx.globalAlpha = 0.15;
+        ctx.strokeStyle = "#ff8040";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(-2 * s, -12 * s);
+        ctx.lineTo(-1 * s, -18 * s);
+        ctx.lineTo(1 * s, -22 * s);
+        ctx.stroke();
+        // Heat shimmer above top
+        ctx.globalAlpha = 0.06;
+        ctx.fillStyle = "#ff6020";
+        ctx.beginPath();
+        ctx.ellipse(0, -48 * s, 6 * s, 10 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
 
       ctx.restore();
       break;
@@ -25719,9 +26445,80 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "ruins": {
       // 7 ruin variants: 0-3 generic, 4 sunken_temple, 5 small pillar (frost), 6 grand temple (swamp)
       const ruinVariant = selectedMap === "sunken_temple" ? 4 : variant % 7;
-      const stoneDark = "#3a3a3a";
-      const stoneLight = "#7a7a7a";
-      const mossColor = "#4a5d3a";
+
+      const ruinPalettes: Record<
+        string,
+        {
+          stoneDark: string;
+          stoneLight: string;
+          stoneMid: string;
+          stoneShadow: string;
+          mossColor: string;
+          vineColor: string;
+          highlightColor: string;
+          accentMoss: string;
+        }
+      > = {
+        grassland: {
+          stoneDark: "#3a3a3a",
+          stoneLight: "#7a7a7a",
+          stoneMid: "#5a5a5a",
+          stoneShadow: "#2a2a2a",
+          mossColor: "#4a5d3a",
+          vineColor: "#2d5a2d",
+          highlightColor: "#a0a090",
+          accentMoss: "#4a6a5a",
+        },
+        swamp: {
+          stoneDark: "#2a3a28",
+          stoneLight: "#5a7a58",
+          stoneMid: "#3a5a38",
+          stoneShadow: "#1a2a18",
+          mossColor: "#2d4a2d",
+          vineColor: "#1a3a1a",
+          highlightColor: "#6a8a6a",
+          accentMoss: "#2a4a2a",
+        },
+        desert: {
+          stoneDark: "#5a4a38",
+          stoneLight: "#a08a68",
+          stoneMid: "#7a6a50",
+          stoneShadow: "#3a3028",
+          mossColor: "#8a7a58",
+          vineColor: "#7a6a48",
+          highlightColor: "#c0aa78",
+          accentMoss: "#8a7a58",
+        },
+        winter: {
+          stoneDark: "#4a5058",
+          stoneLight: "#8a9098",
+          stoneMid: "#6a7078",
+          stoneShadow: "#2a3038",
+          mossColor: "#8aaa9a",
+          vineColor: "#7a9aaa",
+          highlightColor: "#b8d4e8",
+          accentMoss: "#6a8a9a",
+        },
+        volcanic: {
+          stoneDark: "#3a2828",
+          stoneLight: "#6a4a4a",
+          stoneMid: "#4a3838",
+          stoneShadow: "#2a1818",
+          mossColor: "#5a3a2a",
+          vineColor: "#5a2a1a",
+          highlightColor: "#d86a30",
+          accentMoss: "#4a2a1a",
+        },
+      };
+      const rp = ruinPalettes[mapTheme] ?? ruinPalettes.grassland;
+      const stoneDark = rp.stoneDark;
+      const stoneLight = rp.stoneLight;
+      const stoneMid = rp.stoneMid;
+      const stoneShadow = rp.stoneShadow;
+      const mossColor = rp.mossColor;
+      const vineColor = rp.vineColor;
+      const highlightColor = rp.highlightColor;
+      const accentMoss = rp.accentMoss;
 
       // Ground shadow for all variants
       drawDirectionalShadow(
@@ -25737,8 +26534,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       if (ruinVariant === 0) {
         // VARIANT 0: Broken column ruins — tall column, wall fragment, rubble field
-        const stoneMid = "#5a5a5a";
-        const stoneShadow = "#2a2a2a";
 
         // === HEXAGONAL BASE ===
         const hexR = 24 * s;
@@ -26257,8 +27052,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       } else if (ruinVariant === 1) {
         // VARIANT 1: Grand crumbling archway with thick pillars
-        const stoneMid = "#5a5a5a";
-        const stoneShadow = "#2a2a2a";
 
         // === LEFT PILLAR (tall, 3D cylinder) ===
         const lpX = screenPos.x - 18 * s;
@@ -26647,9 +27440,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.globalAlpha = 1;
       } else if (ruinVariant === 2) {
         // VARIANT 2: L-shaped collapsed wall with vegetation
-        const stoneMid = "#5a5a5a";
-        const stoneShadow = "#2a2a2a";
-        const vineColor = "#2d5a2d";
 
         // === BACK WALL SECTION ===
         const w1X = screenPos.x - 28 * s;
@@ -27045,8 +27835,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.globalAlpha = 1;
       } else if (ruinVariant === 3) {
         // VARIANT 3: Ruined tower base — circular 3D wall, hollow interior, spiral stairs
-        const stoneMid = "#5a5a5a";
-        const stoneShadow = "#2a2a2a";
 
         // === CIRCULAR BASE ===
         const bRx = 26 * s;
@@ -27142,19 +27930,136 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           }
         }
 
-        // === HOLLOW INTERIOR ===
-        ctx.fillStyle = "#1a1a15";
+        // === HOLLOW INTERIOR (3D depth) ===
+        const holeX = screenPos.x - 2 * s;
+        const holeY = screenPos.y + 1 * s;
+        const holeRx = 15 * s;
+        const holeRy = 9 * s;
+        const holeDepth = 7 * s;
+
+        // Inner wall (visible back face going down into the tower)
+        const innerWallG = ctx.createLinearGradient(
+          holeX - holeRx,
+          holeY,
+          holeX + holeRx,
+          holeY,
+        );
+        innerWallG.addColorStop(0, "#2e2e26");
+        innerWallG.addColorStop(0.4, "#1e1e18");
+        innerWallG.addColorStop(1, "#121210");
+        ctx.fillStyle = innerWallG;
+        ctx.beginPath();
+        ctx.ellipse(holeX, holeY, holeRx, holeRy, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(holeX + holeRx * 0.88, holeY + holeDepth);
+        ctx.ellipse(
+          holeX,
+          holeY + holeDepth,
+          holeRx * 0.88,
+          holeRy * 0.88,
+          0,
+          0,
+          Math.PI,
+          true,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone floor at bottom of interior
+        const floorG = ctx.createRadialGradient(
+          holeX,
+          holeY + holeDepth,
+          0,
+          holeX,
+          holeY + holeDepth,
+          holeRx * 0.85,
+        );
+        floorG.addColorStop(0, "#22221c");
+        floorG.addColorStop(0.7, "#1a1a15");
+        floorG.addColorStop(1, "#121210");
+        ctx.fillStyle = floorG;
         ctx.beginPath();
         ctx.ellipse(
-          screenPos.x - 2 * s,
-          screenPos.y + 1 * s,
-          15 * s,
-          9 * s,
+          holeX,
+          holeY + holeDepth,
+          holeRx * 0.85,
+          holeRy * 0.85,
           0,
           0,
           Math.PI * 2,
         );
         ctx.fill();
+
+        // Floor tile cracks
+        ctx.strokeStyle = "#2a2a22";
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(holeX - 8 * s, holeY + holeDepth);
+        ctx.lineTo(holeX + 7 * s, holeY + holeDepth + 1 * s);
+        ctx.moveTo(holeX - 1 * s, holeY + holeDepth - 5 * s);
+        ctx.lineTo(holeX - 3 * s, holeY + holeDepth + 4 * s);
+        ctx.moveTo(holeX + 4 * s, holeY + holeDepth - 3 * s);
+        ctx.lineTo(holeX + 6 * s, holeY + holeDepth + 2 * s);
+        ctx.stroke();
+
+        // Rubble inside the tower
+        [
+          { dx: -7, dy: -1, sz: 2.2 },
+          { dx: 4, dy: 1, sz: 1.8 },
+          { dx: -2, dy: -3, sz: 1.5 },
+          { dx: 8, dy: -1, sz: 1.4 },
+          { dx: -5, dy: 2, sz: 1.2 },
+        ].forEach((d) => {
+          const rx2 = holeX + d.dx * s;
+          const ry2 = holeY + holeDepth + d.dy * s;
+          ctx.fillStyle = d.sz > 1.7 ? "#3a3a2e" : "#2e2e26";
+          ctx.beginPath();
+          ctx.moveTo(rx2, ry2 - d.sz * s * 0.5);
+          ctx.lineTo(rx2 + d.sz * s * 0.5, ry2);
+          ctx.lineTo(rx2, ry2 + d.sz * s * 0.3);
+          ctx.lineTo(rx2 - d.sz * s * 0.5, ry2);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Inner wall mortar lines
+        ctx.strokeStyle = "rgba(30,30,25,0.5)";
+        ctx.lineWidth = 0.4 * s;
+        for (let iw = 0; iw < 3; iw++) {
+          const iwY = holeY + (iw + 1) * holeDepth * 0.25;
+          ctx.beginPath();
+          ctx.ellipse(
+            holeX,
+            iwY,
+            holeRx * (0.92 - iw * 0.02),
+            holeRy * (0.92 - iw * 0.02),
+            0,
+            Math.PI + 0.2,
+            Math.PI * 2 - 0.2,
+          );
+          ctx.stroke();
+        }
+
+        // Rim highlight (lit edge of the opening)
+        ctx.strokeStyle = "rgba(160,160,140,0.25)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.ellipse(
+          holeX,
+          holeY,
+          holeRx,
+          holeRy,
+          0,
+          Math.PI + 0.3,
+          Math.PI * 2 - 0.3,
+        );
+        ctx.stroke();
+
+        // Front rim shadow (bottom lip of opening)
+        ctx.strokeStyle = "rgba(10,10,8,0.4)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.ellipse(holeX, holeY, holeRx, holeRy, 0, 0.3, Math.PI - 0.3);
+        ctx.stroke();
 
         // === SPIRAL STAIRCASE ===
         ctx.fillStyle = stoneLight;
@@ -27427,12 +28332,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       } else if (ruinVariant === 4) {
         // VARIANT 4: Properly isometric 3D sunken temple ruins
-
-        const stoneLight = "#8a8a7a";
-        const stoneMid = "#6a6a5a";
-        const stoneDark = "#4a4a3a";
-        const stoneShadow = "#3a3a2a";
-        const mossColor = "#3d5a3d";
         const vineColor = "#2d4a2d";
         const waterStainColor = "rgba(40, 80, 90, 0.25)";
 
@@ -28406,11 +29305,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         );
         ctx.fill();
       } else if (ruinVariant === 5) {
-        // VARIANT 5: Frost fortress ruins — hexagonal base, columns, wall fragments, rubble
-        const stoneMid = "#6a6a6a";
-        const stoneShadow = "#2a2a2a";
-        const iceHighlight = "#b8d4e8";
-        const frostMoss = "#4a6a5a";
+        // VARIANT 5: Fortress ruins — hexagonal base, columns, wall fragments, rubble
+        const iceHighlight = highlightColor;
+        const frostMoss = accentMoss;
 
         // === HEXAGONAL PRISM BASE ===
         const hexR = 26 * s;
@@ -29166,10 +30063,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 6 * s);
         ctx.stroke();
       } else {
-        // VARIANT 6: Grand ruined temple complex (swamp challenge levels)
-        const stoneMid = "#5a5a4a";
-        const stoneShadow = "#2a2a2a";
-        const vineColor = "#2d4a2d";
+        // VARIANT 6: Grand ruined temple complex
 
         // Crumbled foundation — ground shadow
         const groundShadow = ctx.createRadialGradient(
@@ -29870,6 +30764,198 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(wallX + 32 * s, screenPos.y - 4 * s);
         ctx.stroke();
       }
+
+      // === REGIONAL OVERLAYS (applied on top of all variants) ===
+      const ruinOx = screenPos.x;
+      const ruinOy = screenPos.y;
+      const ruinSeed = Math.abs(decorX * 73.1 + decorY * 137.3);
+
+      if (mapTheme === "swamp") {
+        // Thick moss colonies on base
+        ctx.globalAlpha = 0.5;
+        for (let i = 0; i < 6; i++) {
+          const mx = ruinOx + ((((ruinSeed + i * 47) % 40) - 20) * s);
+          const my = ruinOy + ((((ruinSeed + i * 31) % 16) - 6) * s);
+          const mr = (2.5 + ((ruinSeed + i * 19) % 3)) * s;
+          ctx.fillStyle = i % 2 === 0 ? "#2a4a20" : "#1a3a18";
+          ctx.beginPath();
+          ctx.ellipse(mx, my, mr, mr * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Hanging vine tendrils
+        ctx.globalAlpha = 0.6;
+        ctx.strokeStyle = vineColor;
+        ctx.lineWidth = 1.2 * s;
+        for (let i = 0; i < 4; i++) {
+          const vx = ruinOx + ((((ruinSeed + i * 61) % 36) - 18) * s);
+          const vy1 = ruinOy - (18 + ((ruinSeed + i * 23) % 14)) * s;
+          const vLen = (10 + ((ruinSeed + i * 37) % 12)) * s;
+          ctx.beginPath();
+          ctx.moveTo(vx, vy1);
+          ctx.bezierCurveTo(
+            vx - 3 * s, vy1 + vLen * 0.4,
+            vx + 2 * s, vy1 + vLen * 0.7,
+            vx - 1 * s, vy1 + vLen,
+          );
+          ctx.stroke();
+          ctx.fillStyle = "#1e3e16";
+          ctx.beginPath();
+          ctx.ellipse(vx - 1 * s, vy1 + vLen, 2 * s, 1.2 * s, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Water stain drips
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = "#1a3a2a";
+        for (let i = 0; i < 3; i++) {
+          const dx = ruinOx + ((((ruinSeed + i * 89) % 30) - 15) * s);
+          const dy = ruinOy - ((ruinSeed + i * 43) % 20) * s;
+          ctx.beginPath();
+          ctx.ellipse(dx, dy, 1 * s, 5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "desert") {
+        // Sand drift accumulation at the base
+        const sandDriftG = ctx.createLinearGradient(
+          ruinOx - 25 * s, ruinOy, ruinOx + 25 * s, ruinOy + 8 * s,
+        );
+        sandDriftG.addColorStop(0, "rgba(180,160,120,0)");
+        sandDriftG.addColorStop(0.3, "rgba(180,160,120,0.35)");
+        sandDriftG.addColorStop(0.7, "rgba(200,180,140,0.3)");
+        sandDriftG.addColorStop(1, "rgba(180,160,120,0)");
+        ctx.fillStyle = sandDriftG;
+        ctx.beginPath();
+        ctx.ellipse(ruinOx + 4 * s, ruinOy + 4 * s, 28 * s, 8 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Wind-blown sand streaks
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = "#c0a878";
+        ctx.lineWidth = 0.6 * s;
+        for (let i = 0; i < 5; i++) {
+          const sx = ruinOx + ((((ruinSeed + i * 53) % 40) - 20) * s);
+          const sy = ruinOy + ((((ruinSeed + i * 29) % 12) - 4) * s);
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx + (8 + ((ruinSeed + i * 17) % 6)) * s, sy + 1 * s);
+          ctx.stroke();
+        }
+        // Small sand piles against walls
+        ctx.globalAlpha = 0.4;
+        for (let i = 0; i < 4; i++) {
+          const px = ruinOx + ((((ruinSeed + i * 67) % 30) - 15) * s);
+          const py = ruinOy + ((((ruinSeed + i * 41) % 8) - 2) * s);
+          const pr = (2 + ((ruinSeed + i * 13) % 2)) * s;
+          ctx.fillStyle = "#b8a078";
+          ctx.beginPath();
+          ctx.ellipse(px, py, pr, pr * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "winter") {
+        // Snow accumulation on horizontal surfaces
+        ctx.globalAlpha = 0.7;
+        const snowCapG = ctx.createRadialGradient(
+          ruinOx, ruinOy - 12 * s, 0, ruinOx, ruinOy - 12 * s, 22 * s,
+        );
+        snowCapG.addColorStop(0, "rgba(230,238,248,0.5)");
+        snowCapG.addColorStop(0.7, "rgba(210,220,235,0.3)");
+        snowCapG.addColorStop(1, "rgba(200,210,225,0)");
+        ctx.fillStyle = snowCapG;
+        ctx.beginPath();
+        ctx.ellipse(ruinOx, ruinOy - 12 * s, 22 * s, 8 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Snow caps on ledges
+        ctx.fillStyle = "#e0e8f4";
+        for (let i = 0; i < 5; i++) {
+          const scx = ruinOx + ((((ruinSeed + i * 59) % 36) - 18) * s);
+          const scy = ruinOy - (14 + ((ruinSeed + i * 37) % 18)) * s;
+          const scw = (4 + ((ruinSeed + i * 23) % 4)) * s;
+          ctx.beginPath();
+          ctx.ellipse(scx, scy, scw, 1.5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Icicles hanging from edges
+        ctx.globalAlpha = 0.55;
+        for (let i = 0; i < 4; i++) {
+          const ix = ruinOx + ((((ruinSeed + i * 71) % 32) - 16) * s);
+          const iy = ruinOy - (10 + ((ruinSeed + i * 43) % 12)) * s;
+          const iLen = (4 + ((ruinSeed + i * 19) % 5)) * s;
+          const iceDropG = ctx.createLinearGradient(ix, iy, ix, iy + iLen);
+          iceDropG.addColorStop(0, "rgba(180,210,240,0.6)");
+          iceDropG.addColorStop(1, "rgba(160,200,240,0.1)");
+          ctx.fillStyle = iceDropG;
+          ctx.beginPath();
+          ctx.moveTo(ix - 1 * s, iy);
+          ctx.lineTo(ix, iy + iLen);
+          ctx.lineTo(ix + 1 * s, iy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Frost sparkle specks
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = "#d8e8f8";
+        for (let i = 0; i < 6; i++) {
+          const fsx = ruinOx + ((((ruinSeed + i * 83) % 40) - 20) * s);
+          const fsy = ruinOy - ((ruinSeed + i * 47) % 30) * s;
+          ctx.beginPath();
+          ctx.arc(fsx, fsy, 0.6 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      } else if (mapTheme === "volcanic") {
+        // Ash layer on surfaces
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "rgba(60,50,45,0.4)";
+        ctx.beginPath();
+        ctx.ellipse(ruinOx, ruinOy - 4 * s, 24 * s, 10 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Glowing ember spots
+        ctx.globalAlpha = 0.7;
+        for (let i = 0; i < 5; i++) {
+          const ex = ruinOx + ((((ruinSeed + i * 61) % 36) - 18) * s);
+          const ey = ruinOy + ((((ruinSeed + i * 37) % 12) - 4) * s);
+          const er = (1 + ((ruinSeed + i * 23) % 2)) * s;
+          const emberG = ctx.createRadialGradient(ex, ey, 0, ex, ey, er * 2);
+          emberG.addColorStop(0, "rgba(255,120,30,0.6)");
+          emberG.addColorStop(0.5, "rgba(200,60,10,0.3)");
+          emberG.addColorStop(1, "rgba(100,30,5,0)");
+          ctx.fillStyle = emberG;
+          ctx.beginPath();
+          ctx.arc(ex, ey, er * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Lava crack glow lines
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = "#d84a20";
+        ctx.lineWidth = 0.8 * s;
+        for (let i = 0; i < 3; i++) {
+          const lx = ruinOx + ((((ruinSeed + i * 79) % 30) - 15) * s);
+          const ly = ruinOy + ((((ruinSeed + i * 41) % 10) - 3) * s);
+          ctx.beginPath();
+          ctx.moveTo(lx, ly);
+          ctx.lineTo(lx + ((ruinSeed + i * 13) % 8) * s, ly + ((ruinSeed + i * 7) % 6) * s);
+          ctx.lineTo(
+            lx + ((ruinSeed + i * 17) % 12) * s,
+            ly - ((ruinSeed + i * 11) % 4) * s,
+          );
+          ctx.stroke();
+          ctx.globalAlpha = 0.15;
+          ctx.strokeStyle = "#ff8040";
+          ctx.lineWidth = 2.5 * s;
+          ctx.stroke();
+          ctx.lineWidth = 0.8 * s;
+          ctx.strokeStyle = "#d84a20";
+          ctx.globalAlpha = 0.4;
+        }
+        // Heat shimmer distortion hint
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = "#ff6020";
+        ctx.beginPath();
+        ctx.ellipse(ruinOx, ruinOy - 20 * s, 16 * s, 24 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
       break;
     }
     case "bones": {
@@ -30400,18 +31486,63 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "statue": {
-      const stoneLight = "#b5b0a5";
-      const stoneMid = "#928d82";
-      const stoneDark = "#706b62";
-      const stoneShadow = "#504b42";
-      const stoneDeep = "#3a3530";
-      const figureHighlight = "#c0bbb0";
-      const figureLight = "#a09a90";
-      const figureMid = "#807a70";
-      const figureDark = "#605a50";
-      const figureShadow = "#403a30";
-      const steelLight = "#d0ccc5";
-      const steelDark = "#6a6560";
+      // Regional stone & figure palettes
+      const statuePalettes: Record<string, {
+        stoneLight: string; stoneMid: string; stoneDark: string;
+        stoneShadow: string; stoneDeep: string;
+        figureHighlight: string; figureLight: string; figureMid: string;
+        figureDark: string; figureShadow: string;
+        steelLight: string; steelDark: string;
+      }> = {
+        grassland: {
+          stoneLight: "#b5b0a5", stoneMid: "#928d82", stoneDark: "#706b62",
+          stoneShadow: "#504b42", stoneDeep: "#3a3530",
+          figureHighlight: "#c0bbb0", figureLight: "#a09a90", figureMid: "#807a70",
+          figureDark: "#605a50", figureShadow: "#403a30",
+          steelLight: "#d0ccc5", steelDark: "#6a6560",
+        },
+        swamp: {
+          stoneLight: "#8a9a80", stoneMid: "#708068", stoneDark: "#566652",
+          stoneShadow: "#3e4e38", stoneDeep: "#2a3a24",
+          figureHighlight: "#96a68a", figureLight: "#7a8a6e", figureMid: "#607058",
+          figureDark: "#485842", figureShadow: "#30402a",
+          steelLight: "#a0aa98", steelDark: "#506048",
+        },
+        desert: {
+          stoneLight: "#c8b898", stoneMid: "#a89878", stoneDark: "#887860",
+          stoneShadow: "#685848", stoneDeep: "#4a3e30",
+          figureHighlight: "#d4c4a4", figureLight: "#b8a888", figureMid: "#988870",
+          figureDark: "#786858", figureShadow: "#584838",
+          steelLight: "#d8c8b0", steelDark: "#887868",
+        },
+        winter: {
+          stoneLight: "#c0c5cc", stoneMid: "#98a0aa", stoneDark: "#78808a",
+          stoneShadow: "#586068", stoneDeep: "#3a4248",
+          figureHighlight: "#d0d4da", figureLight: "#aab0b8", figureMid: "#8a9098",
+          figureDark: "#687078", figureShadow: "#485058",
+          steelLight: "#dce0e4", steelDark: "#7a8088",
+        },
+        volcanic: {
+          stoneLight: "#a08070", stoneMid: "#806050", stoneDark: "#604840",
+          stoneShadow: "#483430", stoneDeep: "#302020",
+          figureHighlight: "#b09080", figureLight: "#907060", figureMid: "#705848",
+          figureDark: "#504038", figureShadow: "#382828",
+          steelLight: "#b09888", steelDark: "#605048",
+        },
+      };
+      const sp = statuePalettes[mapTheme] ?? statuePalettes.grassland;
+      const stoneLight = sp.stoneLight;
+      const stoneMid = sp.stoneMid;
+      const stoneDark = sp.stoneDark;
+      const stoneShadow = sp.stoneShadow;
+      const stoneDeep = sp.stoneDeep;
+      const figureHighlight = sp.figureHighlight;
+      const figureLight = sp.figureLight;
+      const figureMid = sp.figureMid;
+      const figureDark = sp.figureDark;
+      const figureShadow = sp.figureShadow;
+      const steelLight = sp.steelLight;
+      const steelDark = sp.steelDark;
       const px = screenPos.x;
       const py = screenPos.y;
 
@@ -30551,16 +31682,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.ellipse(px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(
-        px + 5 * s,
-        baseY - 3 * s,
-        3 * s,
-        1.5 * s,
-        -0.2,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(px + 5 * s, baseY - 3 * s, 3 * s, 1.5 * s, -0.2, 0, Math.PI * 2);
       ctx.fill();
+      // Chiseled edge bevel on bottom plinth (top-left lit edge)
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(px - t1W, baseY - t1H);
+      ctx.lineTo(px, baseY - t1H - t1W * 0.5);
+      ctx.stroke();
+      // Bottom plinth mortar lines
+      ctx.strokeStyle = "rgba(50,45,38,0.12)";
+      ctx.lineWidth = 0.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(px - t1W + 5 * s, baseY - t1H * 0.5);
+      ctx.lineTo(px + 5 * s, baseY - t1H * 0.5 + t1W * 0.2);
+      ctx.stroke();
 
       // === CORNICE between bottom and middle ===
       const t2Y = baseY - t1H;
@@ -30580,6 +31717,46 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "#c0bbb0",
         "#a09a90",
       );
+
+      // Fluting grooves on middle column left face
+      ctx.strokeStyle = "rgba(50,45,38,0.12)";
+      ctx.lineWidth = 0.5 * s;
+      for (let fl = 0; fl < 4; fl++) {
+        const ft = (fl + 1) / 5;
+        const flx1 = px - t2W + 2 * s + ft * (t2W - 3 * s);
+        const fly1 = t2Y - 1 * s + ft * t2W * 0.42;
+        const flx2 = flx1 + 0.5 * s;
+        const fly2 = fly1 - t2H + 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(flx1, fly1);
+        ctx.lineTo(flx2, fly2);
+        ctx.stroke();
+      }
+      // Fluting grooves on right face
+      for (let fl = 0; fl < 3; fl++) {
+        const ft = (fl + 1) / 4;
+        const flx1 = px + t2W - 2 * s - ft * (t2W - 3 * s);
+        const fly1 = t2Y - 1 * s + (1 - ft) * t2W * 0.42 + ft * t2W * 0.1;
+        const flx2 = flx1 - 0.5 * s;
+        const fly2 = fly1 - t2H + 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(flx1, fly1);
+        ctx.lineTo(flx2, fly2);
+        ctx.stroke();
+      }
+
+      // Stone grain speckle on middle column
+      const pedSeed = Math.abs(decorX * 37 + decorY * 53);
+      ctx.globalAlpha = 0.08;
+      for (let sp2 = 0; sp2 < 12; sp2++) {
+        const spx = px + ((((pedSeed + sp2 * 41) % 20) - 10) * s);
+        const spy = t2Y - t2H * 0.1 - ((pedSeed + sp2 * 29) % (t2H * 0.8 / s)) * s;
+        ctx.fillStyle = sp2 % 3 === 0 ? stoneShadow : stoneLight;
+        ctx.beginPath();
+        ctx.arc(spx, spy, (0.4 + ((pedSeed + sp2 * 17) % 3) * 0.2) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
 
       // Carved inscription band (left face)
       ctx.strokeStyle = stoneShadow;
@@ -30618,18 +31795,38 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.moveTo(px + t2W - 2 * s, bandY2);
       ctx.lineTo(px, bandY2 + t2W * 0.42);
       ctx.stroke();
-
-      // Plaque (inset on left face, above inscription)
-      const plaqueY = t2Y - t2H * 0.8;
+      // Inscription band filling (subtle recessed background)
+      ctx.globalAlpha = 0.06;
       ctx.fillStyle = stoneDeep;
       ctx.beginPath();
-      ctx.moveTo(px - 7 * s, plaqueY);
-      ctx.lineTo(px, plaqueY + 3.5 * s);
-      ctx.lineTo(px + 7 * s, plaqueY);
-      ctx.lineTo(px, plaqueY - 3.5 * s);
+      ctx.moveTo(px - t2W + 2 * s, bandY1);
+      ctx.lineTo(px, bandY1 + t2W * 0.42);
+      ctx.lineTo(px, bandY2 + t2W * 0.42);
+      ctx.lineTo(px - t2W + 2 * s, bandY2);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = stoneShadow;
+      ctx.globalAlpha = 1;
+
+      // Plaque (inset on front face, above inscription)
+      const plaqueY = t2Y - t2H * 0.8;
+      // Plaque recess shadow
+      ctx.fillStyle = stoneDeep;
+      ctx.beginPath();
+      ctx.moveTo(px - 7.5 * s, plaqueY);
+      ctx.lineTo(px, plaqueY + 3.8 * s);
+      ctx.lineTo(px + 7.5 * s, plaqueY);
+      ctx.lineTo(px, plaqueY - 3.8 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Plaque surface
+      const plqG = ctx.createLinearGradient(
+        px - 6 * s, plaqueY - 3 * s,
+        px + 6 * s, plaqueY + 3 * s,
+      );
+      plqG.addColorStop(0, stoneMid);
+      plqG.addColorStop(0.5, stoneShadow);
+      plqG.addColorStop(1, stoneDeep);
+      ctx.fillStyle = plqG;
       ctx.beginPath();
       ctx.moveTo(px - 6 * s, plaqueY);
       ctx.lineTo(px, plaqueY + 3 * s);
@@ -30637,14 +31834,33 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(px, plaqueY - 3 * s);
       ctx.closePath();
       ctx.fill();
-      // Plaque highlight edge
-      ctx.strokeStyle = "rgba(200,195,185,0.3)";
-      ctx.lineWidth = 0.5 * s;
+      // Plaque inner highlight (top-left bevel)
+      ctx.strokeStyle = "rgba(200,195,185,0.25)";
+      ctx.lineWidth = 0.6 * s;
       ctx.beginPath();
       ctx.moveTo(px - 6 * s, plaqueY);
       ctx.lineTo(px, plaqueY - 3 * s);
       ctx.lineTo(px + 6 * s, plaqueY);
       ctx.stroke();
+      // Plaque inner shadow (bottom-right bevel)
+      ctx.strokeStyle = "rgba(30,28,22,0.2)";
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(px + 6 * s, plaqueY);
+      ctx.lineTo(px, plaqueY + 3 * s);
+      ctx.lineTo(px - 6 * s, plaqueY);
+      ctx.stroke();
+      // Engraved text lines on plaque
+      ctx.strokeStyle = "rgba(40,35,28,0.2)";
+      ctx.lineWidth = 0.4 * s;
+      for (let tl = 0; tl < 3; tl++) {
+        const tly = plaqueY - 1.5 * s + tl * 1.2 * s;
+        const tlw = (3 - tl * 0.5) * s;
+        ctx.beginPath();
+        ctx.moveTo(px - tlw, tly);
+        ctx.lineTo(px + tlw, tly);
+        ctx.stroke();
+      }
 
       // === CORNICE between middle and top ===
       const t3Y = t2Y - t2H;
@@ -30665,31 +31881,45 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "#b0aba0",
       );
 
-      // Moss patches on pedestal
-      ctx.fillStyle = "rgba(70,90,55,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(
-        px - t1W + 4 * s,
-        baseY - 1 * s,
-        3.5 * s,
-        1.5 * s,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = "rgba(60,80,45,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(
-        px + 6 * s,
-        t2Y + 1 * s,
-        2.5 * s,
-        1.2 * s,
-        -0.3,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      // Regional pedestal weathering
+      if (mapTheme === "swamp") {
+        ctx.fillStyle = "rgba(50,80,30,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 4 * s, 2 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(40,70,25,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(px + 6 * s, t2Y + 1 * s, 3 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(45,75,28,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(px - 3 * s, t2Y - t2H * 0.3, 2.5 * s, 1.2 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (mapTheme === "desert") {
+        ctx.fillStyle = "rgba(200,180,140,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(px - t1W + 5 * s, baseY - 0.5 * s, 4 * s, 1.8 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (mapTheme === "winter") {
+        ctx.fillStyle = "rgba(220,230,240,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(px, baseY - t1H - 0.5 * s, t1W * 0.8, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (mapTheme === "volcanic") {
+        ctx.fillStyle = "rgba(40,30,30,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = "rgba(70,90,55,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(60,80,45,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(px + 6 * s, t2Y + 1 * s, 2.5 * s, 1.2 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Subtle crack line
       ctx.strokeStyle = "rgba(50,45,38,0.2)";
@@ -32550,7 +33780,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(fx + 2 * s, rY - 16.5 * s);
         ctx.stroke();
 
-        // Lance with detail
+        // Lance with detail (all parts in same rotated transform)
         ctx.save();
         ctx.translate(fx + 4 * s, rY - 10 * s);
         ctx.rotate(-0.12);
@@ -32561,38 +33791,33 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         lnG.addColorStop(1, "#4a3a2a");
         ctx.fillStyle = lnG;
         ctx.fillRect(-1 * s, -42 * s, 2 * s, 42 * s);
-        ctx.restore();
-        // Lance tip
-        const ltG = ctx.createLinearGradient(
-          fx + 3 * s,
-          rY - 52 * s,
-          fx + 3 * s,
-          rY - 46 * s,
-        );
+        // Lance tip (aligned to shaft top in local coords)
+        const ltG = ctx.createLinearGradient(0, -49 * s, 0, -42 * s);
         ltG.addColorStop(0, steelLight);
         ltG.addColorStop(1, figureShadow);
         ctx.fillStyle = ltG;
         ctx.beginPath();
-        ctx.moveTo(fx + 3 * s, rY - 53 * s);
-        ctx.lineTo(fx + 1.5 * s, rY - 46 * s);
-        ctx.lineTo(fx + 4.5 * s, rY - 46 * s);
+        ctx.moveTo(0, -49 * s);
+        ctx.lineTo(-1.5 * s, -42 * s);
+        ctx.lineTo(1.5 * s, -42 * s);
         ctx.closePath();
         ctx.fill();
-        // Pennant
+        // Pennant (just below tip in local coords)
         ctx.fillStyle = figureDark;
         ctx.beginPath();
-        ctx.moveTo(fx + 2 * s, rY - 45 * s);
+        ctx.moveTo(-1 * s, -41 * s);
         ctx.bezierCurveTo(
-          fx - 1 * s,
-          rY - 43 * s,
-          fx - 2 * s,
-          rY - 41 * s,
-          fx - 1 * s,
-          rY - 39 * s,
+          -4 * s,
+          -39 * s,
+          -5 * s,
+          -37 * s,
+          -4 * s,
+          -35 * s,
         );
-        ctx.lineTo(fx + 2 * s, rY - 41 * s);
+        ctx.lineTo(-1 * s, -37 * s);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
 
         // Shield on rider's left
         ctx.fillStyle = figureMid;
@@ -33388,86 +34613,239 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // === SHARED FIGURE EFFECTS (all variants) ===
 
-      // Ambient occlusion at figure base (where figure meets pedestal)
+      // --- Ambient occlusion at figure base (where figure meets pedestal) ---
       const aoGrad = ctx.createRadialGradient(
-        fx,
-        figureBase + 1 * s,
-        0,
-        fx,
-        figureBase + 1 * s,
-        8 * s,
+        fx, figureBase + 1 * s, 0,
+        fx, figureBase + 1 * s, 10 * s,
       );
-      aoGrad.addColorStop(0, "rgba(50,45,38,0.3)");
-      aoGrad.addColorStop(0.5, "rgba(50,45,38,0.1)");
-      aoGrad.addColorStop(1, "rgba(50,45,38,0)");
+      aoGrad.addColorStop(0, "rgba(40,35,28,0.4)");
+      aoGrad.addColorStop(0.3, "rgba(40,35,28,0.2)");
+      aoGrad.addColorStop(0.7, "rgba(40,35,28,0.05)");
+      aoGrad.addColorStop(1, "rgba(40,35,28,0)");
       ctx.fillStyle = aoGrad;
       ctx.beginPath();
-      ctx.ellipse(fx, figureBase + 1 * s, 8 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(fx, figureBase + 1 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rim light on lit side (left edge highlight)
-      ctx.fillStyle = "rgba(220,215,205,0.15)";
-      ctx.beginPath();
-      ctx.ellipse(
-        fx - 3 * s,
-        figureBase - 22 * s,
-        1 * s,
-        8 * s,
-        -0.15,
-        0,
-        Math.PI * 2,
+      // --- Left rim light (strong lit edge) ---
+      const rimG = ctx.createLinearGradient(
+        fx - 6 * s, figureBase - 35 * s,
+        fx - 1 * s, figureBase - 20 * s,
       );
-      ctx.fill();
-
-      // Torso stone highlight
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
+      rimG.addColorStop(0, "rgba(240,235,225,0.2)");
+      rimG.addColorStop(0.5, "rgba(230,225,215,0.12)");
+      rimG.addColorStop(1, "rgba(220,215,205,0)");
+      ctx.fillStyle = rimG;
       ctx.beginPath();
-      ctx.ellipse(
-        fx + 2 * s,
-        figureBase - 26 * s,
-        1.5 * s,
-        4 * s,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(fx - 5 * s, figureBase - 5 * s);
+      ctx.quadraticCurveTo(fx - 7 * s, figureBase - 22 * s, fx - 5 * s, figureBase - 40 * s);
+      ctx.lineTo(fx - 3 * s, figureBase - 38 * s);
+      ctx.quadraticCurveTo(fx - 5 * s, figureBase - 22 * s, fx - 3 * s, figureBase - 5 * s);
+      ctx.closePath();
       ctx.fill();
 
-      // Stone texture streaks (subtle weathering on figure)
-      ctx.strokeStyle = "rgba(80,75,65,0.08)";
-      ctx.lineWidth = 0.6 * s;
-      for (let ws = 0; ws < 3; ws++) {
-        const wsx = fx - 2 * s + ws * 3 * s;
+      // --- Right shadow edge (core shadow) ---
+      const coreG = ctx.createLinearGradient(
+        fx + 1 * s, figureBase - 20 * s,
+        fx + 6 * s, figureBase - 20 * s,
+      );
+      coreG.addColorStop(0, "rgba(30,28,22,0)");
+      coreG.addColorStop(0.5, "rgba(30,28,22,0.08)");
+      coreG.addColorStop(1, "rgba(30,28,22,0.15)");
+      ctx.fillStyle = coreG;
+      ctx.beginPath();
+      ctx.moveTo(fx + 3 * s, figureBase - 5 * s);
+      ctx.quadraticCurveTo(fx + 6 * s, figureBase - 22 * s, fx + 4 * s, figureBase - 38 * s);
+      ctx.lineTo(fx + 6 * s, figureBase - 36 * s);
+      ctx.quadraticCurveTo(fx + 8 * s, figureBase - 22 * s, fx + 5 * s, figureBase - 5 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // --- Specular highlight on upper torso/shoulder ---
+      const specG = ctx.createRadialGradient(
+        fx - 1 * s, figureBase - 30 * s, 0,
+        fx - 1 * s, figureBase - 30 * s, 5 * s,
+      );
+      specG.addColorStop(0, "rgba(255,255,250,0.18)");
+      specG.addColorStop(0.4, "rgba(255,255,250,0.08)");
+      specG.addColorStop(1, "rgba(255,255,250,0)");
+      ctx.fillStyle = specG;
+      ctx.beginPath();
+      ctx.ellipse(fx - 1 * s, figureBase - 30 * s, 5 * s, 6 * s, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // --- Secondary specular on thigh/mid ---
+      ctx.fillStyle = "rgba(255,255,250,0.07)";
+      ctx.beginPath();
+      ctx.ellipse(fx + 1 * s, figureBase - 14 * s, 3 * s, 4 * s, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // --- Stone grain texture (seeded micro-dots) ---
+      const figSeed = Math.abs(decorX * 59 + decorY * 97);
+      ctx.globalAlpha = 0.06;
+      for (let sg = 0; sg < 20; sg++) {
+        const sgx = fx + ((((figSeed + sg * 37) % 16) - 8) * s);
+        const sgy = figureBase - ((figSeed + sg * 23) % 38) * s;
+        const sgr = (0.3 + ((figSeed + sg * 13) % 4) * 0.15) * s;
+        ctx.fillStyle = sg % 2 === 0 ? figureShadow : figureHighlight;
         ctx.beginPath();
-        ctx.moveTo(wsx, figureBase - 10 * s);
-        ctx.lineTo(wsx + 0.5 * s, figureBase - 25 * s);
+        ctx.arc(sgx, sgy, sgr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // --- Chisel/tool marks on body ---
+      ctx.globalAlpha = 0.06;
+      ctx.strokeStyle = stoneDeep;
+      ctx.lineWidth = 0.4 * s;
+      for (let cm = 0; cm < 6; cm++) {
+        const cmx = fx + ((((figSeed + cm * 43) % 12) - 6) * s);
+        const cmy = figureBase - (5 + ((figSeed + cm * 31) % 30)) * s;
+        const cmLen = (1.5 + ((figSeed + cm * 19) % 3)) * s;
+        const cmAng = ((figSeed + cm * 7) % 6) * 0.3 - 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cmx, cmy);
+        ctx.lineTo(cmx + Math.cos(cmAng) * cmLen, cmy + Math.sin(cmAng) * cmLen);
         ctx.stroke();
       }
+      ctx.globalAlpha = 1;
 
-      // Small moss spots on figure base
-      ctx.fillStyle = "rgba(65,85,50,0.18)";
+      // --- Weathering crack lines ---
+      ctx.strokeStyle = "rgba(50,45,38,0.12)";
+      ctx.lineWidth = 0.5 * s;
+      // Main crack from mid to base
       ctx.beginPath();
-      ctx.ellipse(
-        fx - 4 * s,
-        figureBase - 1 * s,
-        2 * s,
-        1 * s,
-        0.2,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(fx + 3 * s, figureBase - 2 * s);
+      ctx.quadraticCurveTo(
+        fx + 4.5 * s, figureBase - 12 * s,
+        fx + 3 * s, figureBase - 22 * s,
       );
-      ctx.fill();
+      ctx.stroke();
+      // Secondary crack
       ctx.beginPath();
-      ctx.ellipse(
-        fx + 3 * s,
-        figureBase - 2 * s,
-        1.5 * s,
-        0.8 * s,
-        -0.1,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(fx - 2 * s, figureBase - 8 * s);
+      ctx.quadraticCurveTo(
+        fx - 3 * s, figureBase - 14 * s,
+        fx - 1 * s, figureBase - 18 * s,
       );
-      ctx.fill();
+      ctx.stroke();
+      // Branching hairline cracks
+      ctx.strokeStyle = "rgba(50,45,38,0.07)";
+      ctx.lineWidth = 0.3 * s;
+      ctx.beginPath();
+      ctx.moveTo(fx + 4 * s, figureBase - 14 * s);
+      ctx.lineTo(fx + 6 * s, figureBase - 16 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(fx - 2.5 * s, figureBase - 13 * s);
+      ctx.lineTo(fx - 4 * s, figureBase - 12 * s);
+      ctx.stroke();
+
+      // --- Mineral deposit / water stain streaks ---
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = stoneLight;
+      for (let ms = 0; ms < 3; ms++) {
+        const msx = fx + ((((figSeed + ms * 71) % 10) - 5) * s);
+        const msy1 = figureBase - (12 + ms * 8) * s;
+        ctx.beginPath();
+        ctx.ellipse(msx, msy1, 0.8 * s, 4 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // --- Edge highlight along figure silhouette (top-left lit side) ---
+      ctx.strokeStyle = "rgba(255,255,250,0.08)";
+      ctx.lineWidth = 0.6 * s;
+      ctx.beginPath();
+      ctx.moveTo(fx - 4 * s, figureBase);
+      ctx.quadraticCurveTo(fx - 6 * s, figureBase - 18 * s, fx - 4 * s, figureBase - 32 * s);
+      ctx.quadraticCurveTo(fx - 2 * s, figureBase - 38 * s, fx, figureBase - 42 * s);
+      ctx.stroke();
+
+      // Regional weathering overlay on figure and pedestal
+      if (mapTheme === "swamp") {
+        // Heavy vine/moss overgrowth
+        ctx.fillStyle = "rgba(50,80,30,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 5 * s, figureBase - 2 * s, 3 * s, 1.5 * s, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx + 4 * s, figureBase - 3 * s, 2.5 * s, 1.2 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx - 2 * s, figureBase - 12 * s, 2 * s, 1 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Draping vines
+        ctx.strokeStyle = "rgba(40,70,25,0.4)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase - 18 * s);
+        ctx.quadraticCurveTo(fx - 7 * s, figureBase - 10 * s, fx - 5 * s, figureBase - 4 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 22 * s);
+        ctx.quadraticCurveTo(fx + 7 * s, figureBase - 14 * s, fx + 4 * s, figureBase - 6 * s);
+        ctx.stroke();
+      } else if (mapTheme === "desert") {
+        // Sand accumulation at base and in crevices
+        ctx.fillStyle = "rgba(210,190,150,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(fx, figureBase + 1 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Wind-worn patches
+        ctx.fillStyle = "rgba(180,160,120,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 3 * s, figureBase - 8 * s, 2 * s, 1 * s, 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx + 4 * s, figureBase - 5 * s, 1.5 * s, 0.8 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (mapTheme === "winter") {
+        // Snow caps on head and shoulders
+        ctx.fillStyle = "#f0f4f8";
+        ctx.beginPath();
+        ctx.ellipse(fx, figureBase - 42 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx - 5 * s, figureBase - 30 * s, 3 * s, 1.2 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx + 5 * s, figureBase - 28 * s, 2.5 * s, 1 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Snow on pedestal top
+        ctx.fillStyle = "#e8eef4";
+        ctx.beginPath();
+        ctx.ellipse(fx, baseY - t1H - 1 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (mapTheme === "volcanic") {
+        // Ash deposits and ember glow
+        ctx.fillStyle = "rgba(50,40,40,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(fx, figureBase + 1 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Ember glow at base cracks
+        ctx.fillStyle = "rgba(255,120,40,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 3 * s, figureBase - 1 * s, 1.5 * s, 0.8 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx + 4 * s, figureBase - 2 * s, 1.2 * s, 0.6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Subtle red heat glow on figure
+        ctx.fillStyle = "rgba(200,60,20,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(fx, figureBase - 20 * s, 8 * s, 15 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Grassland default - subtle moss spots
+        ctx.fillStyle = "rgba(65,85,50,0.18)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 4 * s, figureBase - 1 * s, 2 * s, 1 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(fx + 3 * s, figureBase - 2 * s, 1.5 * s, 0.8 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
     }
 
