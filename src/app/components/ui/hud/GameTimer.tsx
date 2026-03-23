@@ -39,7 +39,7 @@ export const GameTimer: React.FC<GameTimerProps> = ({
   return (
     <div className="pointer-events-none absolute left-0 right-0 flex justify-center" style={{ top: "100%" }}>
       <span
-        className="inline-block mt-1 rounded-md px-3 py-0.5 text-[11px] font-semibold tabular-nums tracking-wide text-amber-200/80"
+        className="inline-block mt-2.5 rounded-md px-3 py-0.5 text-[11px] font-semibold tabular-nums tracking-wide text-amber-200/80"
         style={{
           background: "linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.3))",
           backdropFilter: "blur(4px)",

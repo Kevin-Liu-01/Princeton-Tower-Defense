@@ -199,12 +199,14 @@ export function useBattleLoadingGate(
   const [total, setTotal] = useState(0);
   const readyCallbackRef = useRef(onReady);
   readyCallbackRef.current = onReady;
+  const sessionRef = useRef(0);
 
   const visualProgress = useSyntheticProgress(active, minDisplayMs);
 
   const UI_GRACE_MS = 900;
 
   const trigger = useCallback(() => {
+    const session = ++sessionRef.current;
     setActive(true);
     setLoaded(0);
     setTotal(0);
@@ -213,23 +215,32 @@ export function useBattleLoadingGate(
     const startTime = Date.now();
 
     preloadImagesWithProgress(urls, (l, t) => {
+      if (sessionRef.current !== session) return;
       setLoaded(l);
       setTotal(t);
     }).then(() => {
+      if (sessionRef.current !== session) return;
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, minDisplayMs - elapsed);
 
       // Phase 1 → Phase 2 transition: wait for minDisplayMs
       setTimeout(() => {
+        if (sessionRef.current !== session) return;
         readyCallbackRef.current();
 
         // Phase 2: BattleUI now renders behind overlay. Give it time to paint.
         setTimeout(() => {
+          if (sessionRef.current !== session) return;
           setActive(false);
         }, UI_GRACE_MS);
       }, remaining);
     });
   }, [getUrls, minDisplayMs]);
 
-  return { active, loaded, total, progress: visualProgress, trigger };
+  const cancel = useCallback(() => {
+    sessionRef.current++;
+    setActive(false);
+  }, []);
+
+  return { active, loaded, total, progress: visualProgress, trigger, cancel };
 }

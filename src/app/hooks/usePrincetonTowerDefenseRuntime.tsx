@@ -216,6 +216,7 @@ export function usePrincetonTowerDefenseRuntime() {
   }, [sceneTransitioning]);
 
   const startBattle = battleLoading.trigger;
+  const cancelBattle = battleLoading.cancel;
 
   // Persistent progress (saved to localStorage)
   const {
@@ -272,7 +273,10 @@ export function usePrincetonTowerDefenseRuntime() {
   } = usePawPoints(INITIAL_PAW_POINTS);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [currentWave, setCurrentWave] = useState(0);
-  const [nextWaveTimer, setNextWaveTimer] = useState(WAVE_TIMER_BASE);
+  const nextWaveTimerRef = useRef(WAVE_TIMER_BASE);
+  const setNextWaveTimer = useCallback((action: React.SetStateAction<number>) => {
+    nextWaveTimerRef.current = typeof action === 'function' ? action(nextWaveTimerRef.current) : action;
+  }, []);
   const [waveInProgress, setWaveInProgress] = useState(false);
   const [devMenuOpen, setDevMenuOpen] = useState(false);
   const gameEventLog = useGameEventLog();
@@ -795,7 +799,7 @@ export function usePrincetonTowerDefenseRuntime() {
         gameSpeed,
         currentWave,
         totalWaves,
-        nextWaveTimer,
+        nextWaveTimerRef.current,
         activeWaveSpawnPaths
       )
     ) {
@@ -808,7 +812,6 @@ export function usePrincetonTowerDefenseRuntime() {
     gameSpeed,
     currentWave,
     totalWaves,
-    nextWaveTimer,
     activeWaveSpawnPaths,
   ]);
 
@@ -976,7 +979,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // updateGame is only accessed through updateGameRef, so no useMemo/useCallback needed
   const updateGame = (deltaTime: number) => updateGameTick({
     gameSpeed, selectedMap, waveInProgress, currentWave, vaultFlash,
-    hero, lives, gameState, battleOutcome, enemies, nextWaveTimer,
+    hero, lives, gameState, battleOutcome, enemies, nextWaveTimer: nextWaveTimerRef.current,
     specialTowerHp, troops, towers, levelStartTime, levelStars,
     totalWaves, unlockedMaps, activeWaveSpawnPaths, cameraOffset, cameraZoom,
     setTimeSpent, setWaveInProgress, setHoveredWaveBubblePathKey,
@@ -1008,7 +1011,7 @@ export function usePrincetonTowerDefenseRuntime() {
           waveInProgress,
           currentWave,
           totalWaves,
-          nextWaveTimer,
+          nextWaveTimer: nextWaveTimerRef.current,
           activeWaveSpawnPaths,
           cameraOffset,
           cameraZoom,
@@ -1024,7 +1027,6 @@ export function usePrincetonTowerDefenseRuntime() {
       waveInProgress,
       currentWave,
       totalWaves,
-      nextWaveTimer,
       activeWaveSpawnPaths,
       cameraOffset,
       cameraZoom,
@@ -1355,6 +1357,7 @@ export function usePrincetonTowerDefenseRuntime() {
         context="battle"
         levelName={levelData?.name}
         theme={battleTheme}
+        onBack={cancelBattle}
       />
     );
   }

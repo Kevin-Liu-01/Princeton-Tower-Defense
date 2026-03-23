@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Shield, Swords } from "lucide-react";
+import { ChevronLeft, Shield, Swords } from "lucide-react";
 import {
   LOADING_TIPS,
   LOADING_LORE,
@@ -17,6 +17,7 @@ interface LoadingScreenProps {
   context: "worldmap" | "battle";
   levelName?: string;
   theme?: LoadingTheme;
+  onBack?: () => void;
 }
 
 const CONTEXT_TITLES: Record<string, string> = {
@@ -459,6 +460,7 @@ export function LoadingScreen({
   context,
   levelName,
   theme: themeProp,
+  onBack,
 }: LoadingScreenProps) {
   const theme = themeProp ?? DEFAULT_LOADING_THEME;
   const animatedProgress = useAnimatedProgress(progress);
@@ -551,6 +553,30 @@ export function LoadingScreen({
         </div>
 
         <EmberField theme={theme} />
+
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="absolute top-5 left-5 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 group cursor-pointer"
+            style={{
+              background: `linear-gradient(135deg, rgba(${theme.bgRgb},0.85) 0%, rgba(${theme.bgRgb},0.7) 100%)`,
+              border: `1px solid rgba(${theme.accentDarkRgb},0.3)`,
+              boxShadow: `0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
+            }}
+          >
+            <ChevronLeft
+              size={16}
+              style={{ color: `rgba(${theme.accentRgb},0.7)` }}
+              className="transition-transform duration-200 group-hover:-translate-x-0.5"
+            />
+            <span
+              className="text-[11px] font-semibold uppercase tracking-widest"
+              style={{ color: `rgba(${theme.accentRgb},0.6)` }}
+            >
+              Back
+            </span>
+          </button>
+        )}
 
         <div className="relative z-10 flex flex-col items-center gap-4 px-6 w-full max-w-md">
           <div

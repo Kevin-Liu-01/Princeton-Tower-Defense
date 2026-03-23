@@ -853,17 +853,15 @@ export function drawMechanicalTowerBase(
     zoom,
   );
 
-  // Right side steam vent (higher levels)
-  if (level >= 2) {
-    drawSteamVent(
-      ctx,
-      x + w * 0.7,
-      y - height * zoom * 0.15,
-      time + 0.5,
-      0.6 + level * 0.15,
-      zoom,
-    );
-  }
+  // Right side steam vent
+  drawSteamVent(
+    ctx,
+    x + w * 0.7,
+    y - height * zoom * 0.15,
+    time + 0.5,
+    0.6 + level * 0.15,
+    zoom,
+  );
 
   // ========== ENERGY TUBES (following isometric faces) ==========
   drawEnergyTube(
@@ -878,7 +876,7 @@ export function drawMechanicalTowerBase(
     `rgb(${_tRgba})`,
   );
 
-  if (level >= 3) {
+  if (level >= 2) {
     drawEnergyTube(
       ctx,
       x + w * 0.6,
@@ -1062,39 +1060,35 @@ export function drawMechanicalTowerBase(
   );
 
   // Gear on right side
-  if (level >= 2) {
-    drawGear(
-      ctx,
-      x + w * 0.55,
-      y - height * zoom * 0.55,
-      10 + level,
-      7,
-      8 + level,
-      -gearRotation,
-      {
-        outer: _s.s3,
-        inner: _s.s2,
-        teeth: _s.s4,
-        highlight: colors.accent,
-      },
-      zoom,
-    );
-  }
+  drawGear(
+    ctx,
+    x + w * 0.55,
+    y - height * zoom * 0.55,
+    10 + level,
+    7,
+    8 + level,
+    -gearRotation,
+    {
+      outer: _s.s3,
+      inner: _s.s2,
+      teeth: _s.s4,
+      highlight: colors.accent,
+    },
+    zoom,
+  );
 
   // ========== CONVEYOR BELT WITH AMMO ==========
-  if (level >= 2) {
-    drawConveyorBelt(
-      ctx,
-      x - w * 0.5,
-      y + 6 * zoom,
-      x - w * 0.5,
-      y - height * zoom * 1.1,
-      6,
-      time,
-      zoom,
-      "#8b4513", // Brass ammo color
-    );
-  }
+  drawConveyorBelt(
+    ctx,
+    x - w * 0.5,
+    y + 6 * zoom,
+    x - w * 0.5,
+    y - height * zoom * 1.1,
+    6,
+    time,
+    zoom,
+    "#8b4513",
+  );
 
   // ========== WARNING LIGHTS ==========
   drawWarningLight(
@@ -1107,21 +1101,19 @@ export function drawMechanicalTowerBase(
     "#ff4400",
     4,
   );
-  if (level >= 2) {
-    drawWarningLight(
-      ctx,
-      x + w * 0.85,
-      y - height * zoom + 12 * zoom,
-      3,
-      time + 0.5,
-      zoom,
-      "#ffaa00",
-      3,
-    );
-  }
+  drawWarningLight(
+    ctx,
+    x + w * 0.85,
+    y - height * zoom + 12 * zoom,
+    3,
+    time + 0.5,
+    zoom,
+    "#ffaa00",
+    3,
+  );
 
   // ========== AMMO BOXES (skip for level 4 - turret has its own) ==========
-  if (level >= 2 && level < 4) {
+  if (level < 4) {
     drawAmmoBox(
       ctx,
       x - w * 0.5,
@@ -1148,8 +1140,8 @@ export function drawMechanicalTowerBase(
     );
   }
 
-  // ========== SCAFFOLDING & SUPPORT STRUCTURE (Level 2+) ==========
-  if (level >= 2) {
+  // ========== SCAFFOLDING & SUPPORT STRUCTURE ==========
+  {
     const ws = w * 1.15;
     const ds = d * 1.15;
     const scaffBase = y + 6 * zoom;
@@ -1335,8 +1327,8 @@ export function drawMechanicalTowerBase(
     }
   }
 
-  // ========== AMMO CHAIN/BELT FEED SYSTEM (Level 2+) ==========
-  if (level >= 2) {
+  // ========== AMMO CHAIN/BELT FEED SYSTEM ==========
+  {
     // Ammo chain from side storage to turret
     const chainLinks = 8 + level * 2;
     const chainStartX = x - w * 1.0;
@@ -1497,8 +1489,8 @@ export function drawMechanicalTowerBase(
     }
   }
 
-  // ========== ARMOR PLATING (Level 2+) ==========
-  if (level >= 2) {
+  // ========== ARMOR PLATING ==========
+  {
     // Side armor plates
     ctx.fillStyle = _s.s4;
 
@@ -6268,25 +6260,12 @@ export function drawGatlingMuzzleIso(
     }
   };
 
-  // === Draw in correct depth order ===
-  if (facingCamera) {
-    drawBackFace();
-    drawSideFaces();
-    drawFrontFace();
-  } else {
-    // When behind barrels, only draw a plain opaque hex fill (no side faces,
-    // no back face details) to prevent hex geometry bleeding through barrel gaps.
-    const ffx = cx + frontOffPt.x;
-    const ffy = cy + frontOffPt.y;
-    ctx.fillStyle = "#4a4a5a";
-    ctx.beginPath();
-    ctx.moveTo(ffx + hexVerts[0].x, ffy + hexVerts[0].y);
-    for (let i = 1; i < hexSides; i++) {
-      ctx.lineTo(ffx + hexVerts[i].x, ffy + hexVerts[i].y);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
+  // === Draw in correct depth order (back-to-front painter's algorithm) ===
+  // frontOffPt/backOffPt swap based on facingCamera, so the order is always
+  // back (farthest) → sides → front (closest to camera).
+  drawBackFace();
+  drawSideFaces();
+  drawFrontFace();
 
   // === Muzzle flash (always visible regardless of camera angle) ===
   if (isAttacking) {

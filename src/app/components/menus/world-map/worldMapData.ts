@@ -367,6 +367,14 @@ export const DEV_LEVELS: LevelNode[] = [
   },
 ];
 
+/** Per-connection curve overrides. Key is "fromId->toId". */
+export const CONNECTION_OVERRIDES: Record<string, { flip?: boolean }> = {
+  "poe->carnegie": { flip: true },
+  "nassau->bog": { flip: true },
+  "whiteout_pass->frontier_outpost": { flip: true },
+  "crater->throne": { flip: true },
+};
+
 export const MAP_WIDTH = 1800;
 
 export const getWaveCount = (levelId: string): number => {

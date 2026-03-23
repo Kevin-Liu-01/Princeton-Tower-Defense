@@ -3917,12 +3917,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               towerPatch.lockOnStacks = lockOnStacks;
             }
             queueTowerPatch(tower.id, towerPatch);
+            const isLevel4 = tower.level === 4;
             const lightningVisualPressure =
               entityCountsRef.current.effects +
               entityCountsRef.current.projectiles * 0.7 +
               entityCountsRef.current.enemies * 0.35;
-            const maxVisualChainLinks =
-              lightningVisualPressure > 240
+            const maxVisualChainLinks = isLevel4
+              ? numChainTargets
+              : lightningVisualPressure > 240
                 ? 1
                 : lightningVisualPressure > 180
                   ? 2
@@ -3936,8 +3938,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             const desiredRealMs = isFocusedBeam ? 250 : 420;
             const gsCompensation = Math.max(1, gameSpeed);
             const lightningFxDuration = desiredRealMs * gsCompensation;
-            const lightningIntensityScale =
-              lightningVisualPressure > 240
+            const lightningIntensityScale = isLevel4
+              ? 1
+              : lightningVisualPressure > 240
                 ? 0.7
                 : lightningVisualPressure > 180
                   ? 0.82
@@ -3984,8 +3987,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 color: isFocusedBeam ? "yellow" : undefined,
               });
             }
-            const sparkCount =
-              lightningVisualPressure > 240
+            const sparkCount = isLevel4
+              ? 3
+              : lightningVisualPressure > 240
                 ? 0
                 : lightningVisualPressure > 180
                   ? 1

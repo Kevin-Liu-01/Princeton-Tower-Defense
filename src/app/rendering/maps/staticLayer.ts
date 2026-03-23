@@ -106,22 +106,22 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
   ChallengeBackdropPalette
 > = {
   grassland: {
-    skyTop: "#5a94b8",
-    skyMid: "#88bdd0",
-    skyBottom: "#c8e8cc",
-    haze: "rgba(140, 200, 140, 0.28)",
-    farRidge: "#4a7548",
-    midRidge: "#3d6338",
-    nearRidge: "#30522c",
-    mountainTop: "#4a7c59",
-    mountainLeft: "#3a3020",
-    mountainRight: "#50421e",
+    skyTop: "#3474b4",
+    skyMid: "#68a8c8",
+    skyBottom: "#c8ddb0",
+    haze: "rgba(170, 215, 155, 0.24)",
+    farRidge: "#7ea07c",
+    midRidge: "#567c48",
+    nearRidge: "#2e5828",
+    mountainTop: "#5a9a60",
+    mountainLeft: "#3a3820",
+    mountainRight: "#50481e",
     mountainFacetA: "#44381a",
     mountainFacetB: "#2e2410",
-    mountainShadow: "#1a0f05",
-    landHighlight: "#5a8a50",
-    skyAccent: "rgba(200,240,200,0.22)",
-    skyDecor: "rgba(74,124,89,0.6)",
+    mountainShadow: "#181008",
+    landHighlight: "#7cc060",
+    skyAccent: "rgba(255,255,248,0.32)",
+    skyDecor: "rgba(90,150,100,0.5)",
   },
   swamp: {
     skyTop: "#2a3e30",
@@ -818,13 +818,44 @@ function renderChallengeSkyDecorations(
   const skyRandom = createSeededRandom(mapSeed + 1403);
 
   if (themeKey === "grassland") {
-    // layered cumulus clouds — large fluffy shapes with varied sizes
-    for (let i = 0; i < 12; i++) {
-      const cx = width * (-0.05 + (i / 11) * 1.1) + (skyRandom() - 0.5) * 40;
-      const cy = height * (0.04 + skyRandom() * 0.12);
-      const cw = width * (0.06 + skyRandom() * 0.08);
-      const ch = height * (0.03 + skyRandom() * 0.02);
-      const puffs = 4 + Math.floor(skyRandom() * 4);
+    // warm horizon glow band
+    ctx.save();
+    const horizonGlow = ctx.createLinearGradient(0, height * 0.12, 0, height * 0.35);
+    horizonGlow.addColorStop(0, "rgba(255,245,200,0)");
+    horizonGlow.addColorStop(0.4, "rgba(255,240,190,0.06)");
+    horizonGlow.addColorStop(0.7, "rgba(255,235,170,0.04)");
+    horizonGlow.addColorStop(1, "rgba(255,230,160,0)");
+    ctx.fillStyle = horizonGlow;
+    ctx.fillRect(0, height * 0.12, width, height * 0.23);
+    ctx.restore();
+
+    // layered cumulus clouds — bright fluffy shapes with varied opacity
+    for (let i = 0; i < 14; i++) {
+      const cx = width * (-0.05 + (i / 13) * 1.1) + (skyRandom() - 0.5) * 50;
+      const cy = height * (0.03 + skyRandom() * 0.13);
+      const cw = width * (0.07 + skyRandom() * 0.09);
+      const ch = height * (0.025 + skyRandom() * 0.025);
+      const puffs = 5 + Math.floor(skyRandom() * 5);
+      const cloudAlpha = 0.7 + skyRandom() * 0.3;
+
+      // cloud shadow pass
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+      ctx.fillStyle = palette.skyDecor;
+      for (let p = 0; p < puffs; p++) {
+        const offX = (skyRandom() - 0.5) * cw * 0.8;
+        const offY = (skyRandom() - 0.5) * ch * 0.5;
+        const pr = cw * (0.2 + skyRandom() * 0.25);
+        const ph = ch * (0.4 + skyRandom() * 0.4);
+        ctx.beginPath();
+        ctx.ellipse(cx + offX + 2, cy + offY + 2, pr, ph, skyRandom() * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // cloud body pass
+      ctx.save();
+      ctx.globalAlpha = cloudAlpha;
       ctx.fillStyle = palette.skyAccent;
       for (let p = 0; p < puffs; p++) {
         const offX = (skyRandom() - 0.5) * cw * 0.8;
@@ -835,19 +866,22 @@ function renderChallengeSkyDecorations(
         ctx.ellipse(cx + offX, cy + offY, pr, ph, skyRandom() * 0.3, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
     }
 
-    // golden sunlight glow near horizon
+    // golden sunlight glow near horizon — larger and warmer
     ctx.save();
-    const sunGlowX = width * (0.75 + skyRandom() * 0.15);
-    const sunGlowY = height * 0.17;
-    const sunGlow = ctx.createRadialGradient(sunGlowX, sunGlowY, 0, sunGlowX, sunGlowY, width * 0.18);
-    sunGlow.addColorStop(0, "rgba(255,250,210,0.08)");
-    sunGlow.addColorStop(0.4, "rgba(255,240,180,0.04)");
-    sunGlow.addColorStop(1, "rgba(255,235,160,0)");
+    const sunGlowX = width * (0.72 + skyRandom() * 0.18);
+    const sunGlowY = height * 0.16;
+    const sunGlowR = width * 0.24;
+    const sunGlow = ctx.createRadialGradient(sunGlowX, sunGlowY, 0, sunGlowX, sunGlowY, sunGlowR);
+    sunGlow.addColorStop(0, "rgba(255,248,210,0.14)");
+    sunGlow.addColorStop(0.25, "rgba(255,242,185,0.09)");
+    sunGlow.addColorStop(0.5, "rgba(255,235,165,0.05)");
+    sunGlow.addColorStop(1, "rgba(255,230,150,0)");
     ctx.fillStyle = sunGlow;
     ctx.beginPath();
-    ctx.arc(sunGlowX, sunGlowY, width * 0.18, 0, Math.PI * 2);
+    ctx.arc(sunGlowX, sunGlowY, sunGlowR, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     return;
@@ -1222,13 +1256,15 @@ export function renderChallengeMountainBackdrop(
   // theme-specific silhouettes (the main visual content)
   renderThemedBackdropSilhouettes(ctx, width, height, mapSeed, themeKey, palette);
 
-  // atmospheric depth overlay
+  // atmospheric depth overlay — grassland uses lighter treatment to preserve
+  // the warm golden-hour palette; other themes keep stronger darkening
   const shadowTransparent = hexToRgba(palette.mountainShadow, 0);
+  const isGrassland = themeKey === "grassland";
   const atmosphere = ctx.createLinearGradient(0, height * 0.44, 0, height);
   atmosphere.addColorStop(0, shadowTransparent);
-  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, 0.05));
-  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, 0.08));
-  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, 0.22));
+  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, isGrassland ? 0.03 : 0.05));
+  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, isGrassland ? 0.05 : 0.08));
+  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, isGrassland ? 0.12 : 0.22));
   ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, width, height);
 }

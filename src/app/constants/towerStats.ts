@@ -143,7 +143,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   cannon: {
     name: "Nassau Cannon",
     baseStats: {
-      damage: 65,
+      damage: 32.5,
       range: 240,
       attackSpeed: 1200,
       projectileSpeed: 800,
@@ -173,7 +173,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Rapid-fire machine gun",
         effect: "8x attack speed, 0.4x damage per shot",
         stats: {
-          damage: 65 * 2.2 * 0.4,
+          damage: 32.5 * 2.2 * 0.4,
           range: 360, // 1.5x base range for level 4
           attackSpeed: 150,
           specialEffect: "Rapid-fire suppression",
@@ -184,7 +184,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Continuous fire stream",
         effect: "Deals burn damage over time to enemies",
         stats: {
-          damage: 65 * 2.2 * 0.3,
+          damage: 32.5 * 2.2 * 0.3,
           range: 300, // Shorter range but burns
           attackSpeed: 100,
           burnDamage: 15,
@@ -255,7 +255,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   lab: {
     name: "E-Quad Lab",
     baseStats: {
-      damage: 45,
+      damage: 22.5,
       range: 200,
       attackSpeed: 800,
       chainTargets: 3,
@@ -287,7 +287,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Concentrated laser attack",
         effect: "Continuous lock-on, damage increases over time",
         stats: {
-          damage: 45 * 2 * 1.3 * 0.15,
+          damage: 22.5 * 2 * 1.3 * 0.15,
           range: 320,
           attackSpeed: 100,
           chainTargets: 1,
@@ -302,7 +302,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Multi-target electricity",
         effect: "Chains to up to 8 enemies",
         stats: {
-          damage: 45 * 2 * 1.3 * 0.7,
+          damage: 22.5 * 2 * 1.3 * 0.7,
           range: 300,
           chainTargets: 8,
           chainRange: 180,
@@ -315,7 +315,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
   arch: {
     name: "Blair Arch",
     baseStats: {
-      damage: 30,
+      damage: 15,
       range: 250,
       attackSpeed: 700,
       crescendoMaxStacks: 4,
@@ -349,7 +349,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Stunning crescendo attacks",
         effect: "35% stun chance, max 8 crescendo stacks",
         stats: {
-          damage: 30 * 1.8 * 1.25,
+          damage: 15 * 1.8 * 1.25,
           range: 350,
           stunChance: 0.35,
           stunDuration: 1200,
@@ -365,7 +365,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Ultimate sonic crescendo",
         effect: "Max 12 stacks with enhanced per-stack bonus",
         stats: {
-          damage: 30 * 1.8 * 1.1,
+          damage: 15 * 1.8 * 1.1,
           range: 370,
           crescendoMaxStacks: 12,
           crescendoSpeedMult: 0.9,

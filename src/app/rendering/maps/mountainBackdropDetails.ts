@@ -1953,101 +1953,165 @@ export function renderGrasslandBackdrop(
 ): void {
   const rand = createSeededRandom(seed + 7000);
 
-  // ── L0: extra-far hills — faint silhouette at horizon
-  drawRollingHills(ctx, width, height, height * 0.20, height * 0.02, hexToRgba(pal.farRidge, 0.5), seed + 7005, 7);
+  const farTreeColor = hexToRgba(pal.farRidge, 0.85);
+  const farCanopyLight = hexToRgba(pal.landHighlight, 0.3);
+  const midTreeTrunk = hexToRgba(pal.mountainShadow, 0.5);
+  const midCanopyColor = pal.midRidge;
+  const midCanopyLight = hexToRgba(pal.landHighlight, 0.18);
+  const nearTreeTrunk = pal.mountainShadow;
+  const nearCanopyColor = pal.nearRidge;
+  const nearCanopyLight = hexToRgba(pal.landHighlight, 0.15);
+
+  // ── L0: extra-far hills — faint hazy silhouette at horizon
+  drawRollingHills(ctx, width, height, height * 0.20, height * 0.02,
+    hexToRgba(pal.farRidge, 0.45), seed + 7005, 7);
+
+  // highlight on far hill crests
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = pal.landHighlight;
+  ctx.fillRect(0, height * 0.19, width, height * 0.03);
+  ctx.restore();
 
   // ── L1: far hills + distant trees & Gothic spires
-  drawRollingHills(ctx, width, height, height * 0.24, height * 0.035, pal.farRidge, seed + 7010, 9);
+  drawRollingHills(ctx, width, height, height * 0.24, height * 0.04, pal.farRidge, seed + 7010, 9);
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 10; i++) {
     const tx = width * (-0.05 + rand() * 1.1);
-    drawDeciduousTree(ctx, tx, height * (0.22 + rand() * 0.03), 8 + rand() * 6, 10 + rand() * 8, pal.farRidge, pal.farRidge, rand);
+    const th = 8 + rand() * 7;
+    drawDeciduousTree(ctx, tx, height * (0.25 + rand() * 0.03), th, th * (0.8 + rand() * 0.4),
+      farTreeColor, farTreeColor, rand);
   }
-  drawGothicSpire(ctx, width * (0.2 + rand() * 0.15), height * (0.22 + rand() * 0.02), 4 + rand() * 2, 12 + rand() * 6, 6 + rand() * 3, pal.farRidge, rand);
-  drawGothicSpire(ctx, width * (0.6 + rand() * 0.2), height * (0.23 + rand() * 0.02), 3 + rand() * 2, 10 + rand() * 5, 5 + rand() * 3, pal.farRidge, rand);
-
-  drawBirdFlock(ctx, width * (0.3 + rand() * 0.4), height * (0.14 + rand() * 0.06), 6 + Math.floor(rand() * 5), 40 + rand() * 30, pal.farRidge, rand);
-
-  drawMistBand(ctx, width, height * 0.24, height * 0.018, pal.skyBottom, 0.05);
-
-  // ── L2: mid hills + buildings & tree groves & hedgerows
-  drawRollingHills(ctx, width, height, height * 0.32, height * 0.05, pal.midRidge, seed + 7020, 10);
-  drawRollingHills(ctx, width, height, height * 0.35, height * 0.035, pal.midRidge, seed + 7022, 8);
-
-  drawGothicSpire(ctx, width * (0.3 + rand() * 0.15), height * (0.31 + rand() * 0.02), 6 + rand() * 3, 18 + rand() * 8, 8 + rand() * 4, pal.midRidge, rand);
-  if (rand() > 0.4) {
-    drawGothicSpire(ctx, width * (0.7 + rand() * 0.15), height * (0.32 + rand() * 0.02), 5 + rand() * 2, 14 + rand() * 6, 7 + rand() * 3, pal.midRidge, rand);
-  }
-
-  for (let i = 0; i < 12; i++) {
-    const tx = width * (-0.05 + rand() * 1.1);
-    const h = 12 + rand() * 10;
-    drawDeciduousTree(ctx, tx, height * (0.30 + rand() * 0.05), h, h * (0.7 + rand() * 0.4), pal.midRidge, pal.midRidge, rand);
-  }
-  for (let i = 0; i < 3; i++) {
-    const hx = width * (rand() * 0.8);
-    drawHedgerow(ctx, hx, hx + 30 + rand() * 50, height * (0.34 + rand() * 0.02), 3 + rand() * 3, pal.midRidge, rand);
-  }
-  for (let i = 0; i < 2; i++) {
-    const sx = width * (0.1 + rand() * 0.3);
-    const sy = height * (0.34 + rand() * 0.02);
-    drawStonePath(ctx, sx, sy, sx + 40 + rand() * 60, sy + 5 + rand() * 8, 1.5 + rand(), pal.mountainShadow, rand);
-  }
-
-  if (rand() > 0.5) {
-    drawBirdFlock(ctx, width * (0.5 + rand() * 0.3), height * (0.18 + rand() * 0.06), 4 + Math.floor(rand() * 4), 30 + rand() * 25, pal.midRidge, rand);
-  }
-
-  drawMistBand(ctx, width, height * 0.36, height * 0.022, pal.skyBottom, 0.05);
-
-  // ── L3: near hills + large trees, hedgerows, wildflowers
-  drawRollingHills(ctx, width, height, height * 0.44, height * 0.06, pal.nearRidge, seed + 7030, 10);
-
-  for (let i = 0; i < 14; i++) {
-    const tx = width * (-0.08 + rand() * 1.16);
-    const h = 16 + rand() * 14;
-    drawDeciduousTree(ctx, tx, height * (0.40 + rand() * 0.05), h, h * (0.65 + rand() * 0.45), pal.nearRidge, pal.nearRidge, rand);
-  }
-  for (let i = 0; i < 4; i++) {
-    const hx = width * (-0.05 + rand() * 0.85);
-    drawHedgerow(ctx, hx, hx + 25 + rand() * 55, height * (0.43 + rand() * 0.03), 4 + rand() * 4, pal.nearRidge, rand);
-  }
-  drawMeadowFlowers(ctx, width, height * 0.42, height * 0.48, 50,
-    ["#8ab060", "#a0c870", "#c0d888", "#e8e8a0", "#d8c890"], rand,
-  );
-
-  drawMistBand(ctx, width, height * 0.46, height * 0.02, pal.skyBottom, 0.04);
-
-  // ── L4: foreground hills + flowers + sunlight streaks
-  drawRollingHills(ctx, width, height, height * 0.52, height * 0.04, pal.nearRidge, seed + 7040, 13);
-
-  drawMeadowFlowers(ctx, width, height * 0.49, height * 0.54, 35,
-    ["#7aa850", "#90c060", "#b8d880", "#d0e090"], rand,
-  );
-
-  // golden sunlight streaks
+  // canopy highlight pass on far trees
   ctx.save();
-  for (let i = 0; i < 5; i++) {
-    const rayX = width * (0.1 + rand() * 0.8);
-    const rayTopY = height * (0.15 + rand() * 0.1);
-    const rayBotY = height * (0.45 + rand() * 0.1);
-    const rayW = 8 + rand() * 15;
-    const grad = ctx.createLinearGradient(rayX, rayTopY, rayX, rayBotY);
-    grad.addColorStop(0, "rgba(255,250,200,0)");
-    grad.addColorStop(0.2, "rgba(255,245,180,0.02)");
-    grad.addColorStop(0.5, "rgba(255,240,160,0.03)");
-    grad.addColorStop(0.8, "rgba(255,245,180,0.015)");
-    grad.addColorStop(1, "rgba(255,250,200,0)");
-    ctx.fillStyle = grad;
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = farCanopyLight;
+  for (let i = 0; i < 6; i++) {
+    const tx = width * (rand() * 1.0);
+    const ty = height * (0.23 + rand() * 0.02);
     ctx.beginPath();
-    ctx.moveTo(rayX - rayW * 0.3, rayTopY);
-    ctx.lineTo(rayX + rayW * 0.3, rayTopY);
-    ctx.lineTo(rayX + rayW * 0.5, rayBotY);
-    ctx.lineTo(rayX - rayW * 0.5, rayBotY);
-    ctx.closePath();
+    ctx.ellipse(tx, ty, 8 + rand() * 12, 4 + rand() * 6, rand() * 0.3, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
+
+  drawGothicSpire(ctx, width * (0.18 + rand() * 0.15), height * (0.25 + rand() * 0.02),
+    5 + rand() * 3, 14 + rand() * 8, 7 + rand() * 4, hexToRgba(pal.farRidge, 0.9), rand);
+  drawGothicSpire(ctx, width * (0.58 + rand() * 0.22), height * (0.25 + rand() * 0.02),
+    4 + rand() * 2, 12 + rand() * 6, 6 + rand() * 3, hexToRgba(pal.farRidge, 0.9), rand);
+  if (rand() > 0.5) {
+    drawGothicSpire(ctx, width * (0.4 + rand() * 0.15), height * (0.24 + rand() * 0.02),
+      3 + rand() * 2, 10 + rand() * 5, 5 + rand() * 3, hexToRgba(pal.farRidge, 0.8), rand);
+  }
+
+  drawBirdFlock(ctx, width * (0.3 + rand() * 0.4), height * (0.14 + rand() * 0.06),
+    7 + Math.floor(rand() * 5), 45 + rand() * 35, hexToRgba(pal.farRidge, 0.6), rand);
+
+  drawMistBand(ctx, width, height * 0.26, height * 0.022, pal.skyBottom, 0.08);
+
+  // ── L2: mid hills + buildings & tree groves & hedgerows
+  drawRollingHills(ctx, width, height, height * 0.32, height * 0.055, pal.midRidge, seed + 7020, 10);
+  drawRollingHills(ctx, width, height, height * 0.35, height * 0.04, pal.midRidge, seed + 7022, 8);
+
+  // mid-layer field patches for color variation
+  ctx.save();
+  for (let i = 0; i < 6; i++) {
+    const fx = width * (rand() * 1.0);
+    const fy = height * (0.34 + rand() * 0.06);
+    const fw = 30 + rand() * 60;
+    const fh = 8 + rand() * 12;
+    ctx.globalAlpha = 0.06 + rand() * 0.04;
+    ctx.fillStyle = rand() > 0.5 ? pal.landHighlight : hexToRgba(pal.midRidge, 0.7);
+    ctx.beginPath();
+    ctx.ellipse(fx, fy, fw, fh, rand() * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  drawGothicSpire(ctx, width * (0.28 + rand() * 0.15), height * (0.34 + rand() * 0.02),
+    7 + rand() * 3, 20 + rand() * 10, 9 + rand() * 5, pal.midRidge, rand);
+  drawGothicSpire(ctx, width * (0.68 + rand() * 0.15), height * (0.34 + rand() * 0.02),
+    6 + rand() * 3, 16 + rand() * 8, 8 + rand() * 4, pal.midRidge, rand);
+  if (rand() > 0.3) {
+    drawGothicSpire(ctx, width * (0.45 + rand() * 0.15), height * (0.33 + rand() * 0.03),
+      5 + rand() * 2, 14 + rand() * 6, 7 + rand() * 3, pal.midRidge, rand);
+  }
+
+  for (let i = 0; i < 14; i++) {
+    const tx = width * (-0.05 + rand() * 1.1);
+    const h = 14 + rand() * 12;
+    drawDeciduousTree(ctx, tx, height * (0.34 + rand() * 0.05), h, h * (0.7 + rand() * 0.4),
+      midTreeTrunk, midCanopyColor, rand);
+  }
+  // canopy highlight pass on mid trees
+  ctx.save();
+  ctx.globalAlpha = 0.10;
+  ctx.fillStyle = midCanopyLight;
+  for (let i = 0; i < 8; i++) {
+    const tx = width * (rand() * 1.0);
+    const ty = height * (0.31 + rand() * 0.04);
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, 10 + rand() * 16, 5 + rand() * 8, rand() * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  for (let i = 0; i < 4; i++) {
+    const hx = width * (rand() * 0.8);
+    drawHedgerow(ctx, hx, hx + 35 + rand() * 55, height * (0.36 + rand() * 0.02),
+      4 + rand() * 3, hexToRgba(pal.midRidge, 0.85), rand);
+  }
+  for (let i = 0; i < 2; i++) {
+    const sx = width * (0.1 + rand() * 0.3);
+    const sy = height * (0.36 + rand() * 0.02);
+    drawStonePath(ctx, sx, sy, sx + 40 + rand() * 60, sy + 5 + rand() * 8,
+      1.5 + rand(), pal.mountainShadow, rand);
+  }
+
+  drawBirdFlock(ctx, width * (0.5 + rand() * 0.3), height * (0.19 + rand() * 0.06),
+    5 + Math.floor(rand() * 4), 35 + rand() * 25, hexToRgba(pal.midRidge, 0.5), rand);
+
+  drawMistBand(ctx, width, height * 0.37, height * 0.025, pal.skyBottom, 0.08);
+
+  // ── L3: near hills + large trees, hedgerows, wildflowers
+  drawRollingHills(ctx, width, height, height * 0.44, height * 0.07, pal.nearRidge, seed + 7030, 10);
+
+  for (let i = 0; i < 16; i++) {
+    const tx = width * (-0.08 + rand() * 1.16);
+    const h = 18 + rand() * 16;
+    drawDeciduousTree(ctx, tx, height * (0.44 + rand() * 0.05), h, h * (0.65 + rand() * 0.45),
+      nearTreeTrunk, nearCanopyColor, rand);
+  }
+  // canopy highlight pass on near trees
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = nearCanopyLight;
+  for (let i = 0; i < 10; i++) {
+    const tx = width * (-0.05 + rand() * 1.1);
+    const ty = height * (0.41 + rand() * 0.04);
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, 12 + rand() * 20, 6 + rand() * 10, rand() * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  for (let i = 0; i < 5; i++) {
+    const hx = width * (-0.05 + rand() * 0.85);
+    drawHedgerow(ctx, hx, hx + 25 + rand() * 60, height * (0.46 + rand() * 0.03),
+      5 + rand() * 4, hexToRgba(pal.nearRidge, 0.9), rand);
+  }
+  drawMeadowFlowers(ctx, width, height * 0.45, height * 0.50, 80,
+    ["#90c060", "#b0d870", "#d0e888", "#f0f0a8", "#e0d898", "#c8a878"], rand,
+  );
+
+  drawMistBand(ctx, width, height * 0.48, height * 0.022, pal.skyBottom, 0.06);
+
+  // ── L4: foreground hills + flowers
+  drawRollingHills(ctx, width, height, height * 0.52, height * 0.045, pal.nearRidge, seed + 7040, 13);
+
+  drawMeadowFlowers(ctx, width, height * 0.52, height * 0.57, 50,
+    ["#80b850", "#98c860", "#c0e080", "#d8e898", "#e8d890"], rand,
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════════

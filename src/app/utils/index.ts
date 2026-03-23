@@ -19,6 +19,8 @@ import {
   TROOP_SPREAD_RADIUS,
   HERO_PATH_HITBOX_SIZE,
   ROAD_EXCLUSION_BUFFER,
+  OFF_MAP_PATH_PROXIMITY,
+  OFF_MAP_HARD_MARGIN,
   TOWER_FOOTPRINTS,
   ISO_X_FACTOR,
   ISO_Y_FACTOR,
@@ -1070,6 +1072,48 @@ export function doFootprintsOverlap(
   );
 }
 
+export function isNearAnyPath(
+  worldPos: Position,
+  mapKey: string,
+  proximity: number,
+): boolean {
+  const pathSegments = getLevelUniquePathSegments(mapKey);
+  for (const segment of pathSegments) {
+    const p1 = gridToWorldPath(segment.start);
+    const p2 = gridToWorldPath(segment.end);
+    if (distanceToLineSegment(worldPos, p1, p2) < proximity) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isWithinHardBounds(
+  gridPos: GridPosition,
+  gridWidth: number,
+  gridHeight: number,
+): boolean {
+  return (
+    gridPos.x >= -OFF_MAP_HARD_MARGIN &&
+    gridPos.x < gridWidth + OFF_MAP_HARD_MARGIN &&
+    gridPos.y >= -OFF_MAP_HARD_MARGIN &&
+    gridPos.y < gridHeight + OFF_MAP_HARD_MARGIN
+  );
+}
+
+function isInsideGrid(
+  gridPos: GridPosition,
+  gridWidth: number,
+  gridHeight: number,
+): boolean {
+  return (
+    gridPos.x >= 0 &&
+    gridPos.x < gridWidth &&
+    gridPos.y >= 0 &&
+    gridPos.y < gridHeight
+  );
+}
+
 // Check if position is valid for building
 export function isValidBuildPosition(
   gridPos: GridPosition,
@@ -1083,14 +1127,17 @@ export function isValidBuildPosition(
 ): boolean {
   const type = towerType || "cannon";
 
-  // Bounds check on anchor cell
-  if (
-    gridPos.x < 0 ||
-    gridPos.x >= gridWidth ||
-    gridPos.y < 0 ||
-    gridPos.y >= gridHeight
-  ) {
+  if (!isWithinHardBounds(gridPos, gridWidth, gridHeight)) {
     return false;
+  }
+
+  const worldPos = gridToWorld(gridPos);
+
+  // Off-map cells are only buildable if they're near a path
+  if (!isInsideGrid(gridPos, gridWidth, gridHeight)) {
+    if (!isNearAnyPath(worldPos, mapKey, OFF_MAP_PATH_PROXIMITY)) {
+      return false;
+    }
   }
 
   // Blocked positions (landmarks and special towers)
@@ -1099,7 +1146,6 @@ export function isValidBuildPosition(
   }
 
   // Path collision with buffer zone
-  const worldPos = gridToWorld(gridPos);
   const pathSegments = getLevelUniquePathSegments(mapKey);
   for (const segment of pathSegments) {
     const p1 = gridToWorldPath(segment.start);

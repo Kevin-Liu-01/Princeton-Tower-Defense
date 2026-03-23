@@ -23,6 +23,9 @@ import {
   HERO_DATA,
   MAP_PATHS,
   TOWER_PLACEMENT_BUFFER,
+  DECORATION_PATH_HARD_BUFFER,
+  DECORATION_PATH_SOFT_RADIUS,
+  GROVE_PATH_MIN_DISTANCE,
   LEVEL_DATA,
   REGION_THEMES,
   ISO_Y_FACTOR,
@@ -800,7 +803,7 @@ export function renderScene(params: RenderSceneParams): void {
       minDistanceToPath(worldPos, allPathSegments);
 
     const isOnPath = (worldPos: Position): boolean =>
-      distToPath(worldPos) < TOWER_PLACEMENT_BUFFER + 15;
+      distToPath(worldPos) < DECORATION_PATH_HARD_BUFFER;
 
     // Create deterministic zones for different decoration types
     const zoneSize = 4;
@@ -966,7 +969,7 @@ export function renderScene(params: RenderSceneParams): void {
       const groveX = minX + 3 + seededRandom() * (maxX - minX - 6);
       const groveY = minY + 3 + seededRandom() * (maxY - minY - 6);
       const groveDist = distFromPath(groveX, groveY);
-      if (groveDist < TOWER_PLACEMENT_BUFFER + 40) continue;
+      if (groveDist < GROVE_PATH_MIN_DISTANCE) continue;
 
       const groveSize = 6 + Math.floor(seededRandom() * 8);
       const treeTypes = categories.trees;
@@ -1107,7 +1110,7 @@ export function renderScene(params: RenderSceneParams): void {
       const gy = minY + seededRandom() * (maxY - minY);
       const pathDist = distFromPath(gx, gy);
 
-      const pathFactor = Math.min(1, pathDist / 120);
+      const pathFactor = Math.min(1, pathDist / DECORATION_PATH_SOFT_RADIUS);
       if (seededRandom() > pathFactor) continue;
 
       if (isBeyondGrid(gx, gy) && seededRandom() > BEYOND_GRID_REDUCE) continue;

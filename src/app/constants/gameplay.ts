@@ -12,6 +12,20 @@ export const ROAD_EXCLUSION_BUFFER = 42;
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
 
+// Decoration exclusion around paths (world pixels).
+// Hard buffer: no decorations within this distance of a path.
+export const DECORATION_PATH_HARD_BUFFER = 75;
+// Soft radius: decorations are probabilistically culled below this distance.
+export const DECORATION_PATH_SOFT_RADIUS = 200;
+// Groves (dense tree clusters) must be at least this far from a path.
+export const GROVE_PATH_MIN_DISTANCE = 105;
+
+// Off-map placement: cells outside the grid are buildable if within this
+// world-pixel distance of any path segment (≈ 4 tiles). Landmarks and path
+// buffer still apply.
+export const OFF_MAP_PATH_PROXIMITY = TILE_SIZE * 4;
+export const OFF_MAP_HARD_MARGIN = 5;
+
 // Tower footprint sizes (in grid cells, centered on tower position)
 // Stations are bigger than normal towers
 export const TOWER_FOOTPRINTS: Record<

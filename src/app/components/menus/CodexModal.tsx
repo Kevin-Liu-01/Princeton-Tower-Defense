@@ -2529,10 +2529,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         if (!troop) return null;
                         const troopMaxHp = Math.max(...troopTypes.map(t => TROOP_DATA[t].hp), 1);
                         const troopMaxDmg = Math.max(...troopTypes.map(t => TROOP_DATA[t].damage), 1);
+                        const troopDps = troop.damage / (troop.attackSpeed / 1000);
                         return (
                           <div
                             key={type}
-                            className="rounded-xl overflow-hidden relative"
+                            className="rounded-xl overflow-hidden relative h-full flex flex-col"
                             style={{
                               background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                               border: `1.5px solid ${GOLD.border25}`,
@@ -2540,44 +2541,59 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             }}
                           >
                             <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                            <div className="p-3">
+                            {(() => {
+                              const troopRole = troop.isMounted ? { label: "Mounted", color: "amber", icon: <Wind size={12} /> }
+                                : troop.isRanged ? { label: "Ranged", color: "green", icon: <Crosshair size={12} /> }
+                                : troop.isStationary ? { label: "Static", color: "stone", icon: <Target size={12} /> }
+                                : { label: "Melee", color: "blue", icon: <Swords size={12} /> };
+                              const tcc = getColorClasses(troopRole.color);
+                              return (
+                                <div className={`px-3 py-1.5 border-b flex items-center justify-between ${tcc.headerBg} ${tcc.headerBorder}`}>
+                                  <div className={`flex items-center gap-1.5 ${tcc.text}`}>
+                                    {troopRole.icon}
+                                    <span className="text-[10px] font-medium uppercase tracking-wider">{troopRole.label}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {troop.canTargetFlying && (
+                                      <span className="text-[8px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-800/40 flex items-center gap-0.5">
+                                        <Plane size={8} /> Anti-Air
+                                      </span>
+                                    )}
+                                    <DPSBadge dps={troopDps} size="sm" />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            <div className="p-3 flex flex-col flex-1">
                               <div className="flex items-start gap-3 mb-2.5">
                                 <FramedCodexSprite size={80} theme={getTroopSpriteFrameTheme(type)}>
                                   <TroopSprite type={type} size={66} />
                                 </FramedCodexSprite>
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="text-sm font-bold text-amber-200 truncate">{troop.name}</h4>
-                                  <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                                    {troop.isMounted && <span className="text-[8px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 font-bold">MOUNTED</span>}
-                                    {troop.isRanged && <span className="text-[8px] px-1.5 py-0.5 bg-green-900/50 rounded text-green-300 font-bold">RANGED</span>}
-                                    {troop.isStationary && <span className="text-[8px] px-1.5 py-0.5 bg-stone-800/60 rounded text-stone-300 font-bold">STATIC</span>}
-                                    {troop.canTargetFlying && <span className="text-[8px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300">ANTI-AIR</span>}
-                                    {!troop.isMounted && !troop.isRanged && !troop.isStationary && <span className="text-[8px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 font-bold">MELEE</span>}
-                                  </div>
-                                  <p className="text-[10px] text-stone-400 mt-1 line-clamp-2">{troop.desc}</p>
+                                  <h4 className="text-base font-bold text-amber-200 truncate">{troop.name}</h4>
+                                  <p className="text-[10px] text-stone-400 mt-1 line-clamp-2 leading-relaxed">{troop.desc}</p>
                                 </div>
                               </div>
 
-                              <div className="space-y-1.5">
-                                <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
-                                <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
+                              <div className="rounded-lg bg-stone-950/40 border border-stone-700/25 p-2.5 mb-2 flex-1">
+                                <div className="space-y-1.5">
+                                  <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
+                                  <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
+                                  <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
+                                  {troop.isRanged && (
+                                    <StatBar value={troop.range || 0} max={200} color="blue" label="RNG" displayValue={`${troop.range}`} icon={<Target size={10} />} />
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="grid grid-cols-3 gap-1.5 mt-2">
-                                <div className="bg-blue-950/40 p-1.5 rounded-lg border border-blue-900/30 text-center">
-                                  <Timer size={10} className="mx-auto text-blue-400 mb-0.5" />
-                                  <div className="text-[7px] text-blue-500">Atk Speed</div>
-                                  <div className="text-blue-200 font-bold text-[10px]">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
+                              <div className="grid grid-cols-2 gap-2 mt-auto">
+                                <div className="px-2.5 py-2 bg-stone-950/40 rounded-lg border border-stone-700/25">
+                                  <div className="text-[8px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Combat</div>
+                                  <div className="text-[11px] text-stone-300 font-semibold">{troop.isStationary ? "Stationary" : troop.isMounted ? "Mobile Block" : "Path Blocker"}</div>
                                 </div>
-                                <div className="bg-green-950/40 p-1.5 rounded-lg border border-green-900/30 text-center">
-                                  <Swords size={10} className="mx-auto text-green-400 mb-0.5" />
-                                  <div className="text-[7px] text-green-500">DPS</div>
-                                  <div className="text-green-200 font-bold text-[10px]">{Math.round(troop.damage / (troop.attackSpeed / 1000))}</div>
-                                </div>
-                                <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/30 text-center">
-                                  {troop.isRanged ? <Target size={10} className="mx-auto text-purple-400 mb-0.5" /> : <Shield size={10} className="mx-auto text-purple-400 mb-0.5" />}
-                                  <div className="text-[7px] text-purple-500">{troop.isRanged ? "Range" : "Type"}</div>
-                                  <div className="text-purple-200 font-bold text-[10px]">{troop.isRanged ? troop.range : "Melee"}</div>
+                                <div className="px-2.5 py-2 bg-stone-950/40 rounded-lg border border-stone-700/25">
+                                  <div className="text-[8px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Engagement</div>
+                                  <div className="text-[11px] text-stone-300 font-semibold">{troop.isRanged ? `${troop.range} range` : "Close quarters"}</div>
                                 </div>
                               </div>
                             </div>
@@ -3204,60 +3220,69 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     const info = SPECIAL_TOWER_INFO[type];
                     const levels = Array.from(specialTowerLevels.get(type) || []);
                     return (
-                      <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
-                        <div className="flex items-start gap-3 mb-3">
-                          <FramedCodexSprite size={80} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
-                            <SpecialTowerSprite type={type} size={66} />
-                          </FramedCodexSprite>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-3">
-                              <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
-                              <span className="rounded-full border border-white/10 bg-stone-900/45 px-2 py-0.5 text-[10px] uppercase tracking-wider text-stone-300">
-                                {info.role}
-                              </span>
-                            </div>
-                            <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
-                              <span className="inline-flex items-center gap-1">
-                                {info.icon}
-                              </span>
-                              <span>
-                                {levels.length} level{levels.length !== 1 ? "s" : ""}
-                              </span>
-                            </div>
+                      <div
+                        key={type}
+                        className="rounded-xl overflow-hidden relative"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1.5px solid ${GOLD.border25}`,
+                          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                        }}
+                      >
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        <div className={`px-4 py-2 border-b flex items-center justify-between ${info.panelClass}`}>
+                          <div className={`flex items-center gap-2 ${info.color}`}>
+                            {info.icon}
+                            <span className="text-xs font-medium uppercase tracking-wider">{info.role}</span>
                           </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-900/60 text-stone-300 border border-stone-700/50 font-medium">
+                            {levels.length} {levels.length === 1 ? "map" : "maps"}
+                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Effect</div>
-                            <p className="text-xs text-stone-200 leading-relaxed">{info.effect}</p>
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-4">
+                            <FramedCodexSprite size={80} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                              <SpecialTowerSprite type={type} size={66} />
+                            </FramedCodexSprite>
+                            <div className="flex-1 min-w-0">
+                              <h3 className={`text-xl font-bold ${info.color}`}>{info.name}</h3>
+                              <p className="text-sm text-stone-400 mt-1 leading-relaxed">{info.effect}</p>
+                            </div>
                           </div>
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Numbers</div>
-                            <p className="text-xs text-stone-200 leading-relaxed">{info.numbers}</p>
-                          </div>
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Tactical Use</div>
-                            <p className="text-xs text-stone-300 leading-relaxed">{info.tip}</p>
-                          </div>
-                        </div>
 
-                        <div className="mt-3 pt-3 border-t border-white/10">
-                          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {levels.slice(0, 8).map((levelName) => (
-                              <span
-                                key={levelName}
-                                className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
-                              >
-                                {levelName}
-                              </span>
-                            ))}
-                            {levels.length > 8 && (
-                              <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
-                                +{levels.length - 8} more
-                              </span>
-                            )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
+                            <div className="rounded-lg border border-stone-700/40 bg-stone-950/40 p-3">
+                              <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                <Gauge size={10} /> Numbers
+                              </div>
+                              <p className="text-sm text-stone-200 leading-relaxed">{info.numbers}</p>
+                            </div>
+                            <div className="rounded-lg border border-stone-700/40 bg-stone-950/40 p-3">
+                              <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                <Sparkles size={10} /> Tactical Tip
+                              </div>
+                              <p className="text-sm text-stone-300 leading-relaxed">{info.tip}</p>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-stone-700/30">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {levels.slice(0, 8).map((levelName) => (
+                                <span
+                                  key={levelName}
+                                  className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
+                                >
+                                  {levelName}
+                                </span>
+                              ))}
+                              {levels.length > 8 && (
+                                <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
+                                  +{levels.length - 8} more
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -3344,61 +3369,69 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     const info = HAZARD_INFO[type];
                     const levels = Array.from(hazardLevels.get(type) || []);
                     return (
-                      <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
-                        <div className="flex items-start gap-3 mb-3">
-                          <FramedCodexSprite size={80} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
-                            <HazardSprite type={type} size={66} />
-                          </FramedCodexSprite>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-3">
-                              <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
-                              <span className="rounded-full border border-white/10 bg-stone-900/45 px-2 py-0.5 text-[10px] uppercase tracking-wider text-stone-300">
-                                Hazard
-                              </span>
-                            </div>
-                            <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
-                              <span className="inline-flex items-center gap-1">
-                                {info.icon}
-                                Env Modifier
-                              </span>
-                              <span>
-                                {levels.length} level{levels.length !== 1 ? "s" : ""}
-                              </span>
-                            </div>
+                      <div
+                        key={type}
+                        className="rounded-xl overflow-hidden relative"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1.5px solid ${GOLD.border25}`,
+                          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                        }}
+                      >
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        <div className={`px-4 py-2 border-b flex items-center justify-between ${info.panelClass}`}>
+                          <div className={`flex items-center gap-2 ${info.color}`}>
+                            {info.icon}
+                            <span className="text-xs font-medium uppercase tracking-wider">Env Hazard</span>
                           </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-900/60 text-stone-300 border border-stone-700/50 font-medium">
+                            {levels.length} {levels.length === 1 ? "map" : "maps"}
+                          </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Effect</div>
-                            <p className="text-xs text-stone-200 leading-relaxed">{info.effect}</p>
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-4">
+                            <FramedCodexSprite size={80} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                              <HazardSprite type={type} size={66} />
+                            </FramedCodexSprite>
+                            <div className="flex-1 min-w-0">
+                              <h3 className={`text-xl font-bold ${info.color}`}>{info.name}</h3>
+                              <p className="text-sm text-stone-400 mt-1 leading-relaxed">{info.effect}</p>
+                            </div>
                           </div>
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Numbers</div>
-                            <p className="text-xs text-stone-200 leading-relaxed">{info.numbers}</p>
-                          </div>
-                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
-                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Counterplay</div>
-                            <p className="text-xs text-stone-300 leading-relaxed">{info.counterplay}</p>
-                          </div>
-                        </div>
 
-                        <div className="mt-3 pt-3 border-t border-white/10">
-                          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {levels.slice(0, 8).map((levelName) => (
-                              <span
-                                key={levelName}
-                                className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
-                              >
-                                {levelName}
-                              </span>
-                            ))}
-                            {levels.length > 8 && (
-                              <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
-                                +{levels.length - 8} more
-                              </span>
-                            )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
+                            <div className="rounded-lg border border-stone-700/40 bg-stone-950/40 p-3">
+                              <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                <Gauge size={10} /> Numbers
+                              </div>
+                              <p className="text-sm text-stone-200 leading-relaxed">{info.numbers}</p>
+                            </div>
+                            <div className="rounded-lg border border-stone-700/40 bg-stone-950/40 p-3">
+                              <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                <Shield size={10} /> Counterplay
+                              </div>
+                              <p className="text-sm text-stone-300 leading-relaxed">{info.counterplay}</p>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-stone-700/30">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {levels.slice(0, 8).map((levelName) => (
+                                <span
+                                  key={levelName}
+                                  className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
+                                >
+                                  {levelName}
+                                </span>
+                              ))}
+                              {levels.length > 8 && (
+                                <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
+                                  +{levels.length - 8} more
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

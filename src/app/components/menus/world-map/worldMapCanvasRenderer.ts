@@ -14,6 +14,7 @@ import type { WorldMapDrawContext } from "./rendering/drawContext";
 import { drawDecorationGroundLayer } from "./rendering/decorationGroundLayer";
 import { drawStructureLandmarkLayer } from "./rendering/structureLandmarkLayer";
 import { drawLevelNodes } from "./rendering/levelNodes";
+import { drawPathConnections } from "./rendering/pathConnections";
 
 export const drawWorldMapCanvas = ({
   canvasRef,
@@ -221,159 +222,15 @@ export const drawWorldMapCanvas = ({
   }
 
   if (!pathCacheValid) {
-    const LOCKED_PATH_COLORS: Record<
-      string,
-      { partial: string; locked: string }
-    > = {
-      grassland: { partial: "#9a8a72", locked: "#6a5e44" },
-      swamp: { partial: "#7a9a7a", locked: "#4e6a4e" },
-      desert: { partial: "#c4a878", locked: "#9a7e52" },
-      winter: { partial: "#8aa8c4", locked: "#5a7a98" },
-      volcanic: { partial: "#b07060", locked: "#7a4838" },
-    };
-    allLevels.forEach((level) => {
-      const fromX = level.x;
-      const fromY = getLevelY(level.y);
-
-      level.connectsTo.forEach((toId) => {
-        const toLevel = getLevelById(toId);
-        if (!toLevel) return;
-        const toX = toLevel.x;
-        const toY = getLevelY(toLevel.y);
-        const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
-        const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
-
-        const connectionSeed = `${level.id}->${toId}`
-          .split("")
-          .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
-        const segmentLength = Math.hypot(toX - fromX, toY - fromY);
-        const dy = toY - fromY;
-        const dx = toX - fromX;
-        const avgY = (fromY + toY) / 2;
-
-        const baseArcLift = Math.min(48, Math.max(22, segmentLength * 0.14));
-        const liftVariance = 0.8 + seededRandom(connectionSeed + 29) * 0.7;
-        const arcLift = Math.min(64, Math.max(20, baseArcLift * liftVariance));
-
-        const baseDirection =
-          Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
-        const flipChance =
-          Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
-        const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
-        let arcDirection = shouldFlip ? -baseDirection : baseDirection;
-        if (Math.abs(dy) < 8) {
-          const edgeBias = avgY < height * 0.5 ? 1 : -1;
-          arcDirection =
-            seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
-        }
-
-        const angle = Math.atan2(dy, dx);
-        const perpX = -Math.sin(angle);
-        const perpY = Math.cos(angle);
-        const tension = 0.32 + seededRandom(connectionSeed + 71) * 0.08;
-        const jitter1 = (seededRandom(connectionSeed + 79) - 0.5) * 12;
-        const jitter2 = (seededRandom(connectionSeed + 83) - 0.5) * 12;
-
-        const cp1x =
-          fromX +
-          dx * tension +
-          perpX * arcLift * arcDirection * 0.75 +
-          jitter1;
-        const cp1y =
-          fromY + dy * tension + perpY * arcLift * arcDirection * 0.75;
-        const cp2x =
-          toX - dx * tension + perpX * arcLift * arcDirection * 0.45 + jitter2;
-        const cp2y = toY - dy * tension + perpY * arcLift * arcDirection * 0.45;
-
-        const traceCubic = (ox: number, oy: number) => {
-          ctx.beginPath();
-          ctx.moveTo(fromX + ox, fromY + oy);
-          ctx.bezierCurveTo(
-            cp1x + ox,
-            cp1y + oy,
-            cp2x + ox,
-            cp2y + oy,
-            toX + ox,
-            toY + oy,
-          );
-        };
-
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        if (isUnlocked) {
-          traceCubic(2, 3);
-          ctx.strokeStyle = "rgba(0,0,0,0.35)";
-          ctx.lineWidth = 12;
-          ctx.stroke();
-        } else {
-          traceCubic(1, 2);
-          ctx.strokeStyle = "rgba(0,0,0,0.30)";
-          ctx.lineWidth = 8;
-          ctx.stroke();
-        }
-
-        if (isUnlocked) {
-          traceCubic(0, 0);
-          ctx.strokeStyle = "#8B6914";
-          ctx.lineWidth = 10;
-          ctx.stroke();
-
-          traceCubic(0, 0);
-          ctx.strokeStyle = "#D4A828";
-          ctx.lineWidth = 7;
-          ctx.stroke();
-
-          traceCubic(0, 0);
-          ctx.strokeStyle = "#F0C840";
-          ctx.lineWidth = 3;
-          ctx.globalAlpha = 0.6;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-
-          const orbCount = isMobile ? 1 : 3;
-          for (let orb = 0; orb < orbCount; orb++) {
-            const dotPos = (time * 0.4 + orb * 0.33) % 1;
-            const t = dotPos;
-            const mt = 1 - t;
-            const ox =
-              mt * mt * mt * fromX +
-              3 * mt * mt * t * cp1x +
-              3 * mt * t * t * cp2x +
-              t * t * t * toX;
-            const oy =
-              mt * mt * mt * fromY +
-              3 * mt * mt * t * cp1y +
-              3 * mt * t * t * cp2y +
-              t * t * t * toY;
-            ctx.fillStyle = "#ffd700";
-            ctx.globalAlpha = 0.3;
-            ctx.beginPath();
-            ctx.arc(ox, oy, 6, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 0.9;
-            ctx.fillStyle = "#FFE060";
-            ctx.beginPath();
-            ctx.arc(ox, oy, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#FFFAC0";
-            ctx.beginPath();
-            ctx.arc(ox - 0.5, oy - 0.5, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-          }
-        } else {
-          const lockedColors =
-            LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
-          ctx.strokeStyle = isPartial
-            ? lockedColors.partial
-            : lockedColors.locked;
-          ctx.lineWidth = isPartial ? 6 : 4;
-          ctx.setLineDash([8, 6]);
-          traceCubic(0, 0);
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-      });
+    drawPathConnections({
+      ctx,
+      allLevels,
+      getLevelY,
+      getLevelById,
+      isLevelUnlocked,
+      height,
+      time,
+      isMobile,
     });
   } // end !pathCacheValid
 
