@@ -1,6 +1,7 @@
 import type { EnemyType } from "../../types";
 import { ENEMY_DATA, getLevelPathKeys } from "../../constants";
 import { getLevelWaves } from "../../game/setup";
+import { isSandboxLevel, ensureSandboxWaves } from "../../game/sandboxWaves";
 import type { WavePreviewEnemyEntry } from "./renderScene";
 
 export function computeWavePreviewByPath(
@@ -8,6 +9,9 @@ export function computeWavePreviewByPath(
   currentWave: number,
   activeWaveSpawnPaths: string[],
 ): Map<string, WavePreviewEnemyEntry[]> {
+  if (isSandboxLevel(selectedMap)) {
+    ensureSandboxWaves(currentWave);
+  }
   const currentLevelWaves = getLevelWaves(selectedMap);
   const nextWave = currentLevelWaves[currentWave];
   const groupedCounts = new Map<string, Map<EnemyType, number>>();

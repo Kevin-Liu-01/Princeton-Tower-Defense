@@ -339,6 +339,39 @@ export function drawTree(
     ctx.fill();
   }
 
+  // Moss/lichen patches on the shadow (left) side of the trunk
+  const mossCount = 2 + (Math.abs(tSeed * 5) % 2);
+  for (let mi = 0; mi < mossCount; mi++) {
+    const mossFrac = 0.25 + mi * 0.22;
+    const mossLeanAtY = lean * mossFrac;
+    const mossX = x - (trunkW - 1) * s + mossLeanAtY * s;
+    const mossY = y + 3 * s - mossFrac * (trunkH + 5) * s;
+    ctx.fillStyle = "rgba(80,120,55,0.35)";
+    traceOrganicEllipse(
+      ctx,
+      mossX,
+      mossY,
+      2.5 * s,
+      1.5 * s,
+      tSeed + mi * 17,
+      0.2,
+      0.4,
+    );
+    ctx.fill();
+    ctx.fillStyle = "rgba(100,145,65,0.25)";
+    traceOrganicEllipse(
+      ctx,
+      mossX + 0.3 * s,
+      mossY - 0.3 * s,
+      1.6 * s,
+      1 * s,
+      tSeed + mi * 23,
+      0.18,
+      0.3,
+    );
+    ctx.fill();
+  }
+
   // Branch stubs visible at trunk-canopy junction
   const canopyCX = x + lean * 0.5 * s;
   const baseY = -trunkH + 4;
@@ -360,6 +393,19 @@ export function drawTree(
     ctx.stroke();
   }
   ctx.lineWidth = 1;
+
+  // Ambient occlusion — canopy shadow cast onto the trunk
+  const aoGrad = ctx.createRadialGradient(
+    canopyCX, y + (baseY + 1) * s, 0,
+    canopyCX, y + (baseY + 1) * s, 12 * cW * s,
+  );
+  aoGrad.addColorStop(0, "rgba(0,20,0,0.28)");
+  aoGrad.addColorStop(0.5, "rgba(0,15,0,0.12)");
+  aoGrad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = aoGrad;
+  ctx.beginPath();
+  ctx.arc(canopyCX, y + (baseY + 1) * s, 12 * cW * s, 0, Math.PI * 2);
+  ctx.fill();
 
   // Main canopy — organic layered blobs
   const foliageLayers = [
@@ -573,6 +619,119 @@ export function drawTree(
       eAng,
     );
     ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Directional light gradient — warm top-left, cool bottom-right
+  const dirLight = ctx.createRadialGradient(
+    canopyCX - 8 * cW * s,
+    y + (baseY - 18 * cH) * s,
+    0,
+    canopyCX + 4 * cW * s,
+    y + (baseY - 4 * cH) * s,
+    28 * cW * s,
+  );
+  dirLight.addColorStop(0, "rgba(200,240,120,0.14)");
+  dirLight.addColorStop(0.35, "rgba(160,220,80,0.06)");
+  dirLight.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = dirLight;
+  traceOrganicEllipse(
+    ctx,
+    canopyCX,
+    y + (baseY - 8 * cH) * s,
+    foliageLayers[0].rx * s,
+    foliageLayers[0].ry * 1.3 * s,
+    tSeed * 0.71,
+    0.09,
+  );
+  ctx.fill();
+
+  // Cool shadow on the canopy underside
+  const coolShadow = ctx.createLinearGradient(
+    canopyCX,
+    y + (baseY + 2) * s,
+    canopyCX,
+    y + (baseY - 6 * cH) * s,
+  );
+  coolShadow.addColorStop(0, "rgba(15,40,60,0.16)");
+  coolShadow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = coolShadow;
+  traceOrganicEllipse(
+    ctx,
+    canopyCX,
+    y + (baseY - 1) * s,
+    foliageLayers[0].rx * 0.9 * s,
+    foliageLayers[0].ry * 0.5 * s,
+    tSeed * 1.23,
+    0.08,
+  );
+  ctx.fill();
+
+  // Dappled sunlight spots — distinct bright patches
+  const dappleCount = 5 + (Math.abs(tSeed * 11) % 3);
+  for (let di = 0; di < dappleCount; di++) {
+    const dAng = (di / dappleCount) * Math.PI * 2 + tSeed * 0.09;
+    const dDist = 4 + Math.sin(tSeed + di * 2.3) * 8;
+    const dx = canopyCX + Math.cos(dAng) * dDist * cW * s;
+    const dy = y + (baseY - 10 * cH + Math.sin(dAng) * 6 * cH) * s;
+    const dr = (2.2 + Math.sin(tSeed + di * 4.1) * 1.0) * s;
+    const dappleGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, dr);
+    dappleGrad.addColorStop(0, "rgba(220,255,160,0.22)");
+    dappleGrad.addColorStop(0.6, "rgba(180,230,100,0.08)");
+    dappleGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = dappleGrad;
+    ctx.beginPath();
+    ctx.arc(dx, dy, dr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Canopy rim highlight — bright edge on the sun-facing side (upper-left)
+  ctx.strokeStyle = "rgba(140,230,80,0.2)";
+  ctx.lineWidth = 1.5 * s;
+  ctx.beginPath();
+  ctx.arc(
+    canopyCX,
+    y + (baseY - 6 * cH) * s,
+    foliageLayers[1].rx * 0.88 * s,
+    Math.PI * 0.85,
+    Math.PI * 1.6,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(180,255,120,0.12)";
+  ctx.lineWidth = 2.5 * s;
+  ctx.beginPath();
+  ctx.arc(
+    canopyCX,
+    y + (baseY - 10 * cH) * s,
+    foliageLayers[2].rx * 0.82 * s,
+    Math.PI * 0.9,
+    Math.PI * 1.55,
+  );
+  ctx.stroke();
+
+  // Small grass tufts at the base for grounding
+  const grassColors = [tv.foliage[1], tv.foliage[2], tv.leafAccent];
+  const grassCount = 4 + (Math.abs(tSeed * 3) % 3);
+  for (let gi = 0; gi < grassCount; gi++) {
+    const gx = x + (-8 + gi * (16 / grassCount) + Math.sin(tSeed + gi * 3.7) * 3) * s;
+    const gy = y + (4 + Math.sin(tSeed + gi * 2.1) * 1.5) * s;
+    ctx.fillStyle = grassColors[gi % grassColors.length];
+    ctx.globalAlpha = 0.55;
+    for (let bl = 0; bl < 3; bl++) {
+      const bladeAng = -Math.PI / 2 + (bl - 1) * 0.3 + Math.sin(tSeed + gi * 4 + bl) * 0.2;
+      const bladeH = (3.5 + Math.sin(tSeed + gi * 2 + bl * 3) * 1.5) * s;
+      ctx.beginPath();
+      ctx.moveTo(gx + bl * 0.8 * s, gy);
+      ctx.quadraticCurveTo(
+        gx + bl * 0.8 * s + Math.cos(bladeAng) * bladeH * 0.5,
+        gy + Math.sin(bladeAng) * bladeH * 0.5,
+        gx + bl * 0.8 * s + Math.cos(bladeAng) * bladeH,
+        gy + Math.sin(bladeAng) * bladeH,
+      );
+      ctx.lineWidth = 0.6 * s;
+      ctx.strokeStyle = grassColors[(gi + bl) % grassColors.length];
+      ctx.stroke();
+    }
   }
   ctx.globalAlpha = 1;
 

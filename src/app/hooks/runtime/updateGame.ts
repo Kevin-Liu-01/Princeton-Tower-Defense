@@ -163,6 +163,7 @@ import {
   getVaultHpMap,
   vaultPosKey,
 } from "../../game/setup";
+import { isSandboxLevel, ensureSandboxWaves } from "../../game/sandboxWaves";
 import { updateParticlePool, enforceParticleCap } from "../../rendering";
 import { getSentinelBoltColor, SENTINEL_CRYSTAL_Y_OFFSET, SUNFORGE_GEM_Y_OFFSET } from "../../rendering/towers/sentinelTheme";
 import { getGameSettings } from "../useSettings";
@@ -351,6 +352,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   handledHexGhostSourceIdsRef.current.clear();
   const now = Date.now();
   const isPaused = gameSpeed === 0;
+  const sandboxMode = isSandboxLevel(selectedMap);
+  if (sandboxMode) {
+    ensureSandboxWaves(currentWave);
+  }
   const levelWaves = getLevelWaves(selectedMap);
 
   // Win/lose checks run before the isPaused guard so they can't be blocked
@@ -377,6 +382,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setBattleOutcome("defeat");
   }
   if (
+    !sandboxMode &&
     gameState === "playing" &&
     !battleOutcome &&
     currentWave >= levelWaves.length &&

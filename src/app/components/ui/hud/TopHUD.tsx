@@ -46,6 +46,7 @@ interface TopHUDProps {
   maxLives: number;
   currentWave: number;
   totalWaves: number;
+  isSandbox?: boolean;
 
   gameSpeed: number;
   setGameSpeed: (speed: number | ((prev: number) => number)) => void;
@@ -84,6 +85,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   maxLives,
   currentWave,
   totalWaves,
+  isSandbox = false,
 
   gameSpeed,
   setGameSpeed,
@@ -269,7 +271,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const livesPercent = maxLives > 0 ? (lives / maxLives) * 100 : 100;
   const livesTheme = useMemo(() => getLivesTheme(livesPercent, livesFlash), [livesPercent, livesFlash]);
 
-  const waveProgress = totalWaves > 0 ? ((currentWave) / totalWaves) * 100 : 0;
+  const waveProgress = isSandbox ? 0 : totalWaves > 0 ? ((currentWave) / totalWaves) * 100 : 0;
 
   const fallbackPausedRef = useRef(0);
   const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -516,11 +518,18 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           />
           <div className="relative z-10 flex items-center gap-1">
             <span className="text-sm font-black leading-none tabular-nums text-amber-200 sm:text-base">
-              {Math.min(currentWave + 1, totalWaves)}
+              {isSandbox ? currentWave + 1 : Math.min(currentWave + 1, totalWaves)}
             </span>
-            <span className="text-[9px] font-medium text-amber-500/50 sm:text-[10px]">
-              / {totalWaves}
-            </span>
+            {!isSandbox && (
+              <span className="text-[9px] font-medium text-amber-500/50 sm:text-[10px]">
+                / {totalWaves}
+              </span>
+            )}
+            {isSandbox && (
+              <span className="text-[9px] font-medium text-amber-500/50 sm:text-[10px]">
+                &#x221E;
+              </span>
+            )}
           </div>
         </div>
         <div
@@ -961,7 +970,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     }}
                   />
                   <Skull size={11} className="relative z-10 shrink-0 text-amber-400" />
-                  <span className="relative z-10 text-sm font-black tabular-nums text-amber-200">{Math.min(currentWave + 1, totalWaves)}</span>
+                  <span className="relative z-10 text-sm font-black tabular-nums text-amber-200">
+                    {isSandbox ? currentWave + 1 : Math.min(currentWave + 1, totalWaves)}
+                  </span>
+                  {isSandbox && (
+                    <span className="relative z-10 text-[8px] font-medium text-amber-500/50">&#x221E;</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-0.5 shrink-0">

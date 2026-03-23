@@ -37,6 +37,11 @@ import {
   getVaultHpMap,
 } from "../../game/setup";
 import {
+  isSandboxLevel,
+  resetSandboxWaves,
+  ensureSandboxWaves,
+} from "../../game/sandboxWaves";
+import {
   clampLaneOffset,
   pickFormationPattern,
   getFormationLaneIndex,
@@ -129,6 +134,10 @@ export interface ResetGameStateParams {
 
 export function resetGameStateImpl(params: ResetGameStateParams): void {
   const { selectedMap, refs } = params;
+
+  if (isSandboxLevel(selectedMap)) {
+    resetSandboxWaves();
+  }
 
   params.clearAllTimers();
   params.setBattleOutcome(null);
@@ -502,13 +511,17 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
     refs,
   } = params;
 
+  if (isSandboxLevel(selectedMap)) {
+    ensureSandboxWaves(currentWave);
+  }
+
   const levelWaves = getLevelWaves(selectedMap);
 
   if (waveInProgress) {
     console.log("[Wave] Blocked: wave already in progress");
     return;
   }
-  if (currentWave >= levelWaves.length) {
+  if (!isSandboxLevel(selectedMap) && currentWave >= levelWaves.length) {
     console.log("[Wave] Blocked: all waves completed");
     return;
   }
@@ -662,8 +675,12 @@ export function startWaveImpl(params: StartWaveParams): void {
 
   if (refs.tutorialBlockingRef.current) return;
 
+  if (isSandboxLevel(selectedMap)) {
+    ensureSandboxWaves(currentWave);
+  }
+
   const levelWaves = getLevelWaves(selectedMap);
-  if (waveInProgress || currentWave >= levelWaves.length) {
+  if (waveInProgress || (!isSandboxLevel(selectedMap) && currentWave >= levelWaves.length)) {
     params.startWaveInner();
     return;
   }

@@ -400,6 +400,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
               maxLives={INITIAL_LIVES}
               currentWave={currentWave}
               totalWaves={totalWaves}
+              isSandbox={LEVEL_DATA[selectedMap]?.levelKind === "sandbox"}
               gameSpeed={gameSpeed}
               setGameSpeed={(nextSpeed) => {
                 if (battleOutcome || pauseLocked) return;
