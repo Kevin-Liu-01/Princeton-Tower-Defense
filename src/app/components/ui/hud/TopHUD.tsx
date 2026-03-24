@@ -873,12 +873,14 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 </div>
                 {leftStatsContent}
               </div>
-              <div className="flex items-center gap-1.5">
-                {speedControlsContent}
-              </div>
               <div className="flex items-center gap-2 shrink-0">
                 {utilityControlsContent}
                 {gameControlsContent}
+              </div>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="flex items-center gap-1.5 pointer-events-auto">
+                {speedControlsContent}
               </div>
             </div>
           </HudSurface>
@@ -978,81 +980,47 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-0.5 shrink-0">
-                {/* Speed — compact */}
-                <div className="relative">
-                  <div
-                    className="relative flex h-8 items-center overflow-hidden rounded-lg"
+              <div className="flex flex-1 items-center justify-center min-w-0">
+                {/* Speed — minimal: rewind / label / forward */}
+                <div
+                  className="relative flex h-8 items-center overflow-hidden rounded-lg"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
+                    border: "1.5px solid rgba(90,110,40,0.3)",
+                    boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <button
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.25, 0)); exitInspectorOnSpeed(); } }}
+                    disabled={pauseLocked}
+                    className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
                     style={{
-                      background: "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
-                      border: "1.5px solid rgba(90,110,40,0.3)",
-                      boxShadow: "inset 0 2px 6px rgba(0,0,0,0.5), inset 0 0 8px rgba(0,0,0,0.2)",
+                      borderRight: "1px solid rgba(90,110,40,0.2)",
+                      background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
                     }}
                   >
-                    <button
-                      onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.25, 0)); exitInspectorOnSpeed(); } }}
-                      disabled={pauseLocked}
-                      className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"}`}
-                      style={{
-                        borderRight: "1px solid rgba(90,110,40,0.2)",
-                        background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
-                      }}
-                    >
-                      <Rewind size={10} className="text-green-400/80" />
-                    </button>
-                    <div className="relative z-10 flex items-center gap-0.5 px-0.5">
-                      {PRESET_SPEEDS.map((speed) => {
-                        const isActive = gameSpeed === speed;
-                        return (
-                          <button
-                            key={speed}
-                            onClick={() => { if (!pauseLocked) { setGameSpeed(speed); exitInspectorOnSpeed(); } }}
-                            disabled={pauseLocked}
-                            className={`relative z-10 w-[34px] rounded-md py-0.5 text-center text-[10px] font-black tabular-nums transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:scale-95"}`}
-                            style={{
-                              background: isActive
-                                ? "linear-gradient(135deg, rgba(80,110,30,0.8), rgba(55,75,20,0.6))"
-                                : "rgba(20,26,12,0.4)",
-                              border: isActive
-                                ? "1px solid rgba(130,180,50,0.55)"
-                                : "1px solid rgba(60,80,30,0.2)",
-                              color: isActive ? "#bef264" : "rgba(163,230,53,0.4)",
-                              boxShadow: isActive ? "0 0 6px rgba(130,180,50,0.2)" : "none",
-                            }}
-                          >
-                            {speed}x
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <button
-                      onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.25, 5)); exitInspectorOnSpeed(); } }}
-                      disabled={pauseLocked}
-                      className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"}`}
-                      style={{
-                        borderLeft: "1px solid rgba(90,110,40,0.2)",
-                        background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
-                      }}
-                    >
-                      <FastForward size={10} className="text-green-400/80" />
-                    </button>
-                  </div>
-                  {!isPresetSpeed && gameSpeed > 0 && (
-                    <div className="pointer-events-none absolute -right-1 -top-1.5 z-30">
-                      <span
-                        className="inline-block rounded-full px-1 py-px text-[7px] font-extrabold tabular-nums leading-tight"
-                        style={{
-                          background: "linear-gradient(135deg, rgba(55,80,20,0.97), rgba(35,55,12,0.97))",
-                          border: "1.5px solid rgba(160,220,60,0.55)",
-                          color: "#d9f99d",
-                          boxShadow: "0 1px 6px rgba(0,0,0,0.5), 0 0 6px rgba(130,180,50,0.25)",
-                        }}
-                      >
-                        {gameSpeed}x
-                      </span>
-                    </div>
-                  )}
+                    <Rewind size={10} className="text-green-400/80" />
+                  </button>
+                  <span
+                    className="relative z-10 min-w-[36px] text-center text-[11px] font-black tabular-nums px-1"
+                    style={{ color: "#bef264" }}
+                  >
+                    {gameSpeed}x
+                  </span>
+                  <button
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.25, 5)); exitInspectorOnSpeed(); } }}
+                    disabled={pauseLocked}
+                    className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
+                    style={{
+                      borderLeft: "1px solid rgba(90,110,40,0.2)",
+                      background: "linear-gradient(180deg, rgba(35,50,18,0.35), rgba(22,32,10,0.25))",
+                    }}
+                  >
+                    <FastForward size={10} className="text-green-400/80" />
+                  </button>
                 </div>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0">
                 {/* Game controls — compact */}
                 <div
                   className="relative flex h-8 items-center gap-0.5 rounded-lg px-0.5"

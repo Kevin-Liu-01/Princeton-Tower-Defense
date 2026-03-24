@@ -204,7 +204,7 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     fortress: 0,
     peak: 0,
     whiteout_pass: 0,
-    frontier_outpost: 0,
+    frist_outpost: 0,
     lava: 0,
     crater: 0,
     throne: 0,

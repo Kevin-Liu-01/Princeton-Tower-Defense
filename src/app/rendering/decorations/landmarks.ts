@@ -168,7 +168,7 @@ export function drawFrontierOutpost(
   scale: number,
   time: number,
 ): void {
-  renderLandmark(ctx, x, y, scale, "frontier_outpost", 0, time);
+  renderLandmark(ctx, x, y, scale, "frist_outpost", 0, time);
 }
 
 export function drawAshenSpiral(

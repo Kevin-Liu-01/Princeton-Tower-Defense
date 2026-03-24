@@ -465,7 +465,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     hp: 700,
     speed: 0.4,
     bounty: 80,
-    armor: 0.6,
+    armor: 0.3,
     flying: true,
     desc: "Faded spirit of an alum. Drains life from defenders.",
     color: "#94a3b8",

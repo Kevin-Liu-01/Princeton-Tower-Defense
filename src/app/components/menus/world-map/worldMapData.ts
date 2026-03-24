@@ -263,11 +263,11 @@ export const WORLD_LEVELS: LevelNode[] = [
     tags: ["Low Visibility", "Chain Freeze"],
     x: 1210,
     y: 32,
-    connectsTo: ["frontier_outpost"],
+    connectsTo: ["frist_outpost"],
   },
   {
-    id: "frontier_outpost",
-    name: "Frontier Outpost",
+    id: "frist_outpost",
+    name: "Frist Outpost",
     description:
       "Only Dinky Station can be built.\nFrontier Barracks hold the front.",
     region: "winter",
@@ -371,7 +371,7 @@ export const DEV_LEVELS: LevelNode[] = [
 export const CONNECTION_OVERRIDES: Record<string, { flip?: boolean }> = {
   "poe->carnegie": { flip: true },
   "nassau->bog": { flip: true },
-  "whiteout_pass->frontier_outpost": { flip: true },
+  "whiteout_pass->frist_outpost": { flip: true },
   "crater->throne": { flip: true },
 };
 

@@ -49,7 +49,7 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "blight_basin",
   "triad_keep",
   "sunscorch_labyrinth",
-  "frontier_outpost",
+  "frist_outpost",
   "ashen_spiral",
   "war_monument",
   "bone_altar",

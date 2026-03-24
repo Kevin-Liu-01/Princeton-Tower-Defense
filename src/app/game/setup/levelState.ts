@@ -35,7 +35,7 @@ const LANDMARK_TOWER_EXCLUSION: Partial<Record<DecorationType, number>> = {
   blight_basin: 0.5,
   triad_keep: 0.5,
   sunscorch_labyrinth: 0.5,
-  frontier_outpost: 0.5,
+  frist_outpost: 0.5,
   ashen_spiral: 0.5,
   obsidian_castle: 0.5,
   carnegie_lake: 1.0,

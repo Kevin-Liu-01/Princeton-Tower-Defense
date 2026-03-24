@@ -168,7 +168,7 @@ export const CHALLENGE_DECORATIONS: DecorationCategory[] = [
   "blight_basin",
   "triad_keep",
   "sunscorch_labyrinth",
-  "frontier_outpost",
+  "frist_outpost",
   "ashen_spiral",
 ];
 

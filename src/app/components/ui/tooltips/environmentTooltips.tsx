@@ -253,8 +253,8 @@ const LANDMARK_INFO: Record<
     desc: "A burning sandstone maze whose walls trap heat as well as armies.",
     lore: "It was designed to confuse invaders and roast them while they were busy being confused.",
   },
-  frontier_outpost: {
-    name: "Frontier Outpost",
+  frist_outpost: {
+    name: "Frist Outpost",
     icon: <Fence className="text-cyan-300" size={16} />,
     desc: "A snowbound palisade outpost built around a rough watchtower and campfire.",
     lore: "The walls creak, the fire sputters, and somehow it still holds every winter.",

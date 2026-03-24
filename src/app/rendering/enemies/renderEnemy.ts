@@ -171,6 +171,7 @@ import {
 } from "./abilityEffects";
 
 const RIGHT_FACING_ENEMY_SPRITES = new Set([
+  "catapult",
   "dire_wolf",
   "timber_wolf",
   "mammoth",

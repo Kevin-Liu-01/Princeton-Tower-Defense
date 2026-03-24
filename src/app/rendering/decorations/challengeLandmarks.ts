@@ -28,7 +28,7 @@ export const CHALLENGE_LANDMARK_TYPES = new Set<DecorationType>([
   "blight_basin",
   "triad_keep",
   "sunscorch_labyrinth",
-  "frontier_outpost",
+  "frist_outpost",
   "ashen_spiral",
 ]);
 
@@ -2685,7 +2685,7 @@ function drawSunscorchLabyrinthLandmark(
 }
 
 // ---------------------------------------------------------------------------
-// Frontier Outpost
+// Frist Outpost
 // ---------------------------------------------------------------------------
 
 function drawFrontierOutpostLandmark(
@@ -3753,7 +3753,7 @@ export function renderChallengeLandmark(
     case "sunscorch_labyrinth":
       drawSunscorchLabyrinthLandmark(params);
       return true;
-    case "frontier_outpost":
+    case "frist_outpost":
       drawFrontierOutpostLandmark(params);
       return true;
     case "ashen_spiral":

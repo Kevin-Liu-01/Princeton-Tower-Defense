@@ -187,7 +187,7 @@ export function renderDecoration(
     case "sunscorch_labyrinth":
       drawSunscorchLabyrinth(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "frontier_outpost":
+    case "frist_outpost":
       drawFrontierOutpost(ctx, screenPos.x, screenPos.y, scale, time);
       break;
     case "ashen_spiral":

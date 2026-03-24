@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface SpellInfoPortalProps {
-  anchorRef: React.RefObject<HTMLDivElement | null>;
+  anchorEl: HTMLDivElement | null;
   children: React.ReactNode;
 }
 
 export const SpellInfoPortal: React.FC<SpellInfoPortalProps> = ({
-  anchorRef,
+  anchorEl,
   children,
 }) => {
   const [position, setPosition] = useState<{ left: number; bottom: number } | null>(null);
 
-  useEffect(() => {
-    if (!anchorRef.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
+  useLayoutEffect(() => {
+    if (!anchorEl) return;
+    const rect = anchorEl.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const panelWidth = 280;
     let left = centerX - panelWidth / 2;
@@ -25,7 +25,8 @@ export const SpellInfoPortal: React.FC<SpellInfoPortalProps> = ({
       left = window.innerWidth - 8 - panelWidth;
     }
     setPosition({ left, bottom: window.innerHeight - rect.top + 10 });
-  }, [anchorRef]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!position || typeof document === "undefined") {
     return null;

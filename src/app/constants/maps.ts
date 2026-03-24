@@ -728,8 +728,8 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 39, y: 14 },
   ],
 
-  // Frontier Outpost — winding wilderness trail with double-backtracks
-  frontier_outpost: [
+  // Frist Outpost — winding wilderness trail with double-backtracks
+  frist_outpost: [
     { x: -6, y: 8 },
     { x: 2, y: 8 },
     { x: 2, y: 4 },
@@ -749,7 +749,7 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 27, y: 12 },
     { x: 39, y: 12 },
   ],
-  frontier_outpost_b: [
+  frist_outpost_b: [
     { x: -6, y: 24 },
     { x: 2, y: 24 },
     { x: 2, y: 28 },
@@ -3160,8 +3160,8 @@ export const LEVEL_DATA: Record<
     ],
     previewImage: "/images/previews/sunken_temple.png",
   },
-  frontier_outpost: {
-    name: "Frontier Outpost",
+  frist_outpost: {
+    name: "Frist Outpost",
     position: { x: 1460, y: 250 },
     description:
       "Only Dinky Station can be built.\nFrontier Barracks must hold the line.",
@@ -3174,7 +3174,7 @@ export const LEVEL_DATA: Record<
     heroSpawn: { x: 16, y: 15 },
     allowedTowers: ["station"],
     dualPath: true,
-    secondaryPath: "frontier_outpost_b",
+    secondaryPath: "frist_outpost_b",
     specialTowers: [
       { pos: { x: 7, y: 16 }, type: "barracks" },
       { pos: { x: 24, y: 11 }, type: "barracks" },
@@ -3187,7 +3187,7 @@ export const LEVEL_DATA: Record<
       { type: "ice_sheet", pos: { x: 27, y: 10 }, radius: 1.5 },
     ],
     decorations: [
-      { type: "frontier_outpost", pos: { x: 18, y: 4 }, variant: 1, size: 3 },
+      { type: "frist_outpost", pos: { x: 18, y: 4 }, variant: 1, size: 3 },
       { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
       { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
       { type: "ice_throne", pos: { x: 16, y: 28 }, variant: 0, size: 1.2 },

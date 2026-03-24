@@ -1007,7 +1007,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 </div>
                 {/* Hover tooltip panel — portal-based */}
                 {isHovered && !isTouchDevice && theme && (
-                  <SpellInfoPortal anchorRef={{ current: orbRefs.current[spell.type] ?? null }}>
+                  <SpellInfoPortal anchorEl={orbRefs.current[spell.type] ?? null}>
                     <div className="hidden [@media(hover:hover)]:block rounded-2xl overflow-hidden"
                       style={{
                         background: `linear-gradient(180deg, ${PANEL.bgLight}, ${PANEL.bgDark})`,

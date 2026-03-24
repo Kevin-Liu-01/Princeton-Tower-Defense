@@ -371,6 +371,31 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       setHoveredLevel(null);
     }
   };
+
+  const scrollMapToLevel = useCallback(
+    (levelId: string) => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) return;
+      const level = visibleWorldLevels.find((l) => l.id === levelId);
+      if (!level) return;
+
+      const ly = getLevelNodeY(level.y, mapHeight);
+      const targetX = level.x * mapScale - scrollContainer.clientWidth / 2;
+      const targetY = ly * mapScale - scrollContainer.clientHeight / 2;
+
+      scrollContainer.scrollTo({
+        left: Math.max(0, targetX),
+        top: Math.max(0, targetY),
+        behavior: "smooth",
+      });
+    },
+    [visibleWorldLevels, mapHeight, mapScale],
+  );
+
+  const handleSidebarLevelClick = (levelId: string) => {
+    handleLevelClick(levelId);
+    scrollMapToLevel(levelId);
+  };
   const handleCustomLevelPlaytest = useCallback(
     (levelId: string) => {
       if (!customLevelById.has(levelId)) return;
@@ -777,7 +802,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           levelStars={levelStars}
           unlockedMaps={unlockedMaps}
           selectedLevel={selectedLevel}
-          onSelectLevel={handleLevelClick}
+          onSelectLevel={handleSidebarLevelClick}
           isDevMode={isDevMode}
         />
 
@@ -1232,7 +1257,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     levelStars={levelStars}
                     levelStats={levelStats}
                     unlockedMaps={unlockedMaps}
-                    onSelectLevel={handleLevelClick}
+                    onSelectLevel={handleSidebarLevelClick}
                     onTogglePreview={() => setShowBattlefieldPreview(true)}
                   />
 
@@ -1440,7 +1465,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           onBattleRandom={() => onStartWithRandomLoadout?.()}
           onNavigateNext={goToNextLevel}
           onNavigatePrev={goToPreviousLevel}
-          onSelectLevel={handleLevelClick}
+          onSelectLevel={handleSidebarLevelClick}
           isDevMode={isDevMode}
         />
       )}

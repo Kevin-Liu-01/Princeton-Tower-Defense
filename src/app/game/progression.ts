@@ -21,7 +21,7 @@ const REGION_CHALLENGE_UNLOCKS: Record<RegionKey, string[]> = {
 
 const CHALLENGE_LEVEL_UNLOCKS: Record<string, string> = {
   ivy_crossroads: "cannon_crest",
-  whiteout_pass: "frontier_outpost",
+  whiteout_pass: "frist_outpost",
 };
 
 const CAMPAIGN_LEVEL_UNLOCKS: Record<string, string> = {

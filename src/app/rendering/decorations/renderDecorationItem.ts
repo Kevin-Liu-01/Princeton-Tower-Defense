@@ -64,6 +64,7 @@ import {
   renderInfernalGate,
   renderNassauHall,
 } from "./landmarkBuildings";
+import { drawRuinsRegionalOverlay } from "./ruinsRegionalOverlay";
 
 const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "pyramid",
@@ -80,7 +81,7 @@ const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "blight_basin",
   "triad_keep",
   "sunscorch_labyrinth",
-  "frontier_outpost",
+  "frist_outpost",
   "ashen_spiral",
   "war_monument",
   "bone_altar",
@@ -8496,65 +8497,239 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const obelRegionPals: Record<
         string,
         Array<{
-          left: string; right: string; front: string; top: string;
-          cap: string; capDk: string; capFr: string; capHi: string;
-          glyph: string; pedTop: string; pedLeft: string; pedRight: string;
+          left: string;
+          right: string;
+          front: string;
+          top: string;
+          cap: string;
+          capDk: string;
+          capFr: string;
+          capHi: string;
+          glyph: string;
+          pedTop: string;
+          pedLeft: string;
+          pedRight: string;
         }>
       > = {
         grassland: [
-          { left: "#8a7a58", right: "#a89870", front: "#b0a068", top: "#c8b888",
-            cap: "#d4a840", capDk: "#be9428", capFr: "#ca9e3b", capHi: "#f0d060",
-            glyph: "#5a4a38", pedTop: "#b8a878", pedLeft: "#807048", pedRight: "#988860" },
-          { left: "#58544a", right: "#706c5e", front: "#666258", top: "#8a8678",
-            cap: "#c4c0b0", capDk: "#b2aea0", capFr: "#bdb9ab", capHi: "#e4e0d4",
-            glyph: "#3a3830", pedTop: "#7a766a", pedLeft: "#4a4840", pedRight: "#605e54" },
-          { left: "#6a6248", right: "#8a8268", front: "#7a7258", top: "#a09878",
-            cap: "#c0a048", capDk: "#a88a38", capFr: "#b49840", capHi: "#dcc060",
-            glyph: "#4a4230", pedTop: "#9a9068", pedLeft: "#605838", pedRight: "#786848" },
+          {
+            left: "#8a7a58",
+            right: "#a89870",
+            front: "#b0a068",
+            top: "#c8b888",
+            cap: "#d4a840",
+            capDk: "#be9428",
+            capFr: "#ca9e3b",
+            capHi: "#f0d060",
+            glyph: "#5a4a38",
+            pedTop: "#b8a878",
+            pedLeft: "#807048",
+            pedRight: "#988860",
+          },
+          {
+            left: "#58544a",
+            right: "#706c5e",
+            front: "#666258",
+            top: "#8a8678",
+            cap: "#c4c0b0",
+            capDk: "#b2aea0",
+            capFr: "#bdb9ab",
+            capHi: "#e4e0d4",
+            glyph: "#3a3830",
+            pedTop: "#7a766a",
+            pedLeft: "#4a4840",
+            pedRight: "#605e54",
+          },
+          {
+            left: "#6a6248",
+            right: "#8a8268",
+            front: "#7a7258",
+            top: "#a09878",
+            cap: "#c0a048",
+            capDk: "#a88a38",
+            capFr: "#b49840",
+            capHi: "#dcc060",
+            glyph: "#4a4230",
+            pedTop: "#9a9068",
+            pedLeft: "#605838",
+            pedRight: "#786848",
+          },
         ],
         swamp: [
-          { left: "#3a5a38", right: "#4a6a48", front: "#3e5e3c", top: "#5a7a58",
-            cap: "#40a848", capDk: "#2a8a30", capFr: "#38983c", capHi: "#60d868",
-            glyph: "#1a3a18", pedTop: "#4a6a48", pedLeft: "#2a4a28", pedRight: "#3a5a38" },
-          { left: "#2a3a28", right: "#3a4a38", front: "#2e3e2c", top: "#4a5a48",
-            cap: "#58886a", capDk: "#3a6a4a", capFr: "#487a5a", capHi: "#78b88a",
-            glyph: "#0a2a08", pedTop: "#3a4a38", pedLeft: "#1a2a18", pedRight: "#2a3a28" },
-          { left: "#3a4a30", right: "#4a5a40", front: "#3c4c34", top: "#5a6a50",
-            cap: "#4a8a3a", capDk: "#2a6a22", capFr: "#3a7a2e", capHi: "#6ac04a",
-            glyph: "#1a2a10", pedTop: "#4a5a40", pedLeft: "#2a3a20", pedRight: "#3a4a30" },
+          {
+            left: "#3a5a38",
+            right: "#4a6a48",
+            front: "#3e5e3c",
+            top: "#5a7a58",
+            cap: "#40a848",
+            capDk: "#2a8a30",
+            capFr: "#38983c",
+            capHi: "#60d868",
+            glyph: "#1a3a18",
+            pedTop: "#4a6a48",
+            pedLeft: "#2a4a28",
+            pedRight: "#3a5a38",
+          },
+          {
+            left: "#2a3a28",
+            right: "#3a4a38",
+            front: "#2e3e2c",
+            top: "#4a5a48",
+            cap: "#58886a",
+            capDk: "#3a6a4a",
+            capFr: "#487a5a",
+            capHi: "#78b88a",
+            glyph: "#0a2a08",
+            pedTop: "#3a4a38",
+            pedLeft: "#1a2a18",
+            pedRight: "#2a3a28",
+          },
+          {
+            left: "#3a4a30",
+            right: "#4a5a40",
+            front: "#3c4c34",
+            top: "#5a6a50",
+            cap: "#4a8a3a",
+            capDk: "#2a6a22",
+            capFr: "#3a7a2e",
+            capHi: "#6ac04a",
+            glyph: "#1a2a10",
+            pedTop: "#4a5a40",
+            pedLeft: "#2a3a20",
+            pedRight: "#3a4a30",
+          },
         ],
         desert: [
-          { left: "#b09a68", right: "#c8b280", front: "#c0aa78", top: "#d8c898",
-            cap: "#e8c040", capDk: "#d0a830", capFr: "#dab438", capHi: "#f8e060",
-            glyph: "#7a6a48", pedTop: "#c8b888", pedLeft: "#9a8a58", pedRight: "#b0a068" },
-          { left: "#a08858", right: "#b8a070", front: "#b09868", top: "#c8b888",
-            cap: "#dab040", capDk: "#c09830", capFr: "#cca438", capHi: "#f0d858",
-            glyph: "#6a5a38", pedTop: "#b8a878", pedLeft: "#8a7a48", pedRight: "#a09058" },
-          { left: "#907848", right: "#a89060", front: "#9a8858", top: "#b8a878",
-            cap: "#c8a838", capDk: "#b09028", capFr: "#bc9c30", capHi: "#e0c850",
-            glyph: "#5a4a28", pedTop: "#a89868", pedLeft: "#7a6a38", pedRight: "#908048" },
+          {
+            left: "#b09a68",
+            right: "#c8b280",
+            front: "#c0aa78",
+            top: "#d8c898",
+            cap: "#e8c040",
+            capDk: "#d0a830",
+            capFr: "#dab438",
+            capHi: "#f8e060",
+            glyph: "#7a6a48",
+            pedTop: "#c8b888",
+            pedLeft: "#9a8a58",
+            pedRight: "#b0a068",
+          },
+          {
+            left: "#a08858",
+            right: "#b8a070",
+            front: "#b09868",
+            top: "#c8b888",
+            cap: "#dab040",
+            capDk: "#c09830",
+            capFr: "#cca438",
+            capHi: "#f0d858",
+            glyph: "#6a5a38",
+            pedTop: "#b8a878",
+            pedLeft: "#8a7a48",
+            pedRight: "#a09058",
+          },
+          {
+            left: "#907848",
+            right: "#a89060",
+            front: "#9a8858",
+            top: "#b8a878",
+            cap: "#c8a838",
+            capDk: "#b09028",
+            capFr: "#bc9c30",
+            capHi: "#e0c850",
+            glyph: "#5a4a28",
+            pedTop: "#a89868",
+            pedLeft: "#7a6a38",
+            pedRight: "#908048",
+          },
         ],
         winter: [
-          { left: "#6a7888", right: "#8090a0", front: "#7a8898", top: "#98a8b8",
-            cap: "#b0d0e8", capDk: "#90b0c8", capFr: "#a0c0d8", capHi: "#d0e8f8",
-            glyph: "#4a5868", pedTop: "#8898a8", pedLeft: "#5a6878", pedRight: "#6a7888" },
-          { left: "#5a6878", right: "#708090", front: "#647888", top: "#8898a8",
-            cap: "#a0c4d8", capDk: "#80a4b8", capFr: "#90b4c8", capHi: "#c0dce8",
-            glyph: "#3a4858", pedTop: "#788898", pedLeft: "#4a5868", pedRight: "#5a6878" },
-          { left: "#788898", right: "#90a0b0", front: "#8898a8", top: "#a8b8c8",
-            cap: "#c0dae8", capDk: "#a0bac8", capFr: "#b0cad8", capHi: "#e0f0f8",
-            glyph: "#5a6878", pedTop: "#98a8b8", pedLeft: "#687888", pedRight: "#788898" },
+          {
+            left: "#6a7888",
+            right: "#8090a0",
+            front: "#7a8898",
+            top: "#98a8b8",
+            cap: "#b0d0e8",
+            capDk: "#90b0c8",
+            capFr: "#a0c0d8",
+            capHi: "#d0e8f8",
+            glyph: "#4a5868",
+            pedTop: "#8898a8",
+            pedLeft: "#5a6878",
+            pedRight: "#6a7888",
+          },
+          {
+            left: "#5a6878",
+            right: "#708090",
+            front: "#647888",
+            top: "#8898a8",
+            cap: "#a0c4d8",
+            capDk: "#80a4b8",
+            capFr: "#90b4c8",
+            capHi: "#c0dce8",
+            glyph: "#3a4858",
+            pedTop: "#788898",
+            pedLeft: "#4a5868",
+            pedRight: "#5a6878",
+          },
+          {
+            left: "#788898",
+            right: "#90a0b0",
+            front: "#8898a8",
+            top: "#a8b8c8",
+            cap: "#c0dae8",
+            capDk: "#a0bac8",
+            capFr: "#b0cad8",
+            capHi: "#e0f0f8",
+            glyph: "#5a6878",
+            pedTop: "#98a8b8",
+            pedLeft: "#687888",
+            pedRight: "#788898",
+          },
         ],
         volcanic: [
-          { left: "#4a2828", right: "#5a3838", front: "#503030", top: "#684848",
-            cap: "#c84020", capDk: "#a03018", capFr: "#b4381c", capHi: "#f06030",
-            glyph: "#2a1010", pedTop: "#583838", pedLeft: "#3a2020", pedRight: "#4a2828" },
-          { left: "#3a2020", right: "#4a3030", front: "#402828", top: "#583838",
-            cap: "#d85828", capDk: "#b04018", capFr: "#c44820", capHi: "#f87838",
-            glyph: "#1a0808", pedTop: "#482828", pedLeft: "#2a1818", pedRight: "#3a2020" },
-          { left: "#2a1818", right: "#3a2828", front: "#302020", top: "#483030",
-            cap: "#a83820", capDk: "#882818", capFr: "#98301c", capHi: "#d05028",
-            glyph: "#180808", pedTop: "#382020", pedLeft: "#201010", pedRight: "#2a1818" },
+          {
+            left: "#4a2828",
+            right: "#5a3838",
+            front: "#503030",
+            top: "#684848",
+            cap: "#c84020",
+            capDk: "#a03018",
+            capFr: "#b4381c",
+            capHi: "#f06030",
+            glyph: "#2a1010",
+            pedTop: "#583838",
+            pedLeft: "#3a2020",
+            pedRight: "#4a2828",
+          },
+          {
+            left: "#3a2020",
+            right: "#4a3030",
+            front: "#402828",
+            top: "#583838",
+            cap: "#d85828",
+            capDk: "#b04018",
+            capFr: "#c44820",
+            capHi: "#f87838",
+            glyph: "#1a0808",
+            pedTop: "#482828",
+            pedLeft: "#2a1818",
+            pedRight: "#3a2020",
+          },
+          {
+            left: "#2a1818",
+            right: "#3a2828",
+            front: "#302020",
+            top: "#483030",
+            cap: "#a83820",
+            capDk: "#882818",
+            capFr: "#98301c",
+            capHi: "#d05028",
+            glyph: "#180808",
+            pedTop: "#382020",
+            pedLeft: "#201010",
+            pedRight: "#2a1818",
+          },
         ],
       };
       const obelPals = obelRegionPals[mapTheme] ?? obelRegionPals.grassland;
@@ -8714,7 +8889,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Golden sun medallion floating above cap
         const medY = cTip - 5 * s;
         const medR = 4 * s;
-        const sunGlow = ctx.createRadialGradient(ox, medY, 0, ox, medY, medR * 1.5);
+        const sunGlow = ctx.createRadialGradient(
+          ox,
+          medY,
+          0,
+          ox,
+          medY,
+          medR * 1.5,
+        );
         sunGlow.addColorStop(0, "rgba(240,210,80,0.5)");
         sunGlow.addColorStop(0.6, "rgba(220,180,40,0.2)");
         sunGlow.addColorStop(1, "rgba(200,160,30,0)");
@@ -8739,8 +8921,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         for (let r = 0; r < 8; r++) {
           const ang = (r / 8) * Math.PI * 2;
           ctx.beginPath();
-          ctx.moveTo(ox + Math.cos(ang) * medR * 1.1, medY + Math.sin(ang) * medR * 1.1);
-          ctx.lineTo(ox + Math.cos(ang) * medR * 1.7, medY + Math.sin(ang) * medR * 1.7);
+          ctx.moveTo(
+            ox + Math.cos(ang) * medR * 1.1,
+            medY + Math.sin(ang) * medR * 1.1,
+          );
+          ctx.lineTo(
+            ox + Math.cos(ang) * medR * 1.7,
+            medY + Math.sin(ang) * medR * 1.7,
+          );
           ctx.stroke();
         }
         ctx.globalAlpha = 1;
@@ -8752,9 +8940,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(ox - bw86 + 1 * s, ivyBase1);
         ctx.bezierCurveTo(
-          ox - bw86 - 1 * s, ivyBase1 - 10 * s,
-          ox - tw86 + 2 * s, ivyBase1 - 20 * s,
-          ox - tw86, ivyBase1 - 28 * s,
+          ox - bw86 - 1 * s,
+          ivyBase1 - 10 * s,
+          ox - tw86 + 2 * s,
+          ivyBase1 - 20 * s,
+          ox - tw86,
+          ivyBase1 - 28 * s,
         );
         ctx.stroke();
         ctx.globalAlpha = 1;
@@ -8769,7 +8960,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.arc(ox, eyeY, eyeR, 0, Math.PI * 2);
         ctx.stroke();
         // Inner glow
-        const eyeGlow = ctx.createRadialGradient(ox, eyeY, 0, ox, eyeY, eyeR * 0.8);
+        const eyeGlow = ctx.createRadialGradient(
+          ox,
+          eyeY,
+          0,
+          ox,
+          eyeY,
+          eyeR * 0.8,
+        );
         eyeGlow.addColorStop(0, "rgba(80,220,80,0.6)");
         eyeGlow.addColorStop(0.5, "rgba(40,160,40,0.3)");
         eyeGlow.addColorStop(1, "rgba(20,100,20,0)");
@@ -8803,7 +9001,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(ox - 6 * s, oy - 2 * s, 4 * s, 2 * s, 0.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(ox + 5 * s, oy - 1 * s, 3 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          ox + 5 * s,
+          oy - 1 * s,
+          3 * s,
+          1.5 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.globalAlpha = 1;
       } else if (mapTheme === "desert") {
@@ -8811,7 +9017,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const discY = cTip - 6 * s;
         const discR = 6 * s;
         // Outer glow
-        const discGlow = ctx.createRadialGradient(ox, discY, discR * 0.5, ox, discY, discR * 2);
+        const discGlow = ctx.createRadialGradient(
+          ox,
+          discY,
+          discR * 0.5,
+          ox,
+          discY,
+          discR * 2,
+        );
         discGlow.addColorStop(0, "rgba(240,200,60,0.3)");
         discGlow.addColorStop(0.7, "rgba(220,180,40,0.1)");
         discGlow.addColorStop(1, "rgba(200,160,20,0)");
@@ -8821,8 +9034,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
         // Solid disc
         const discFill = ctx.createRadialGradient(
-          ox - 1 * s, discY - 1 * s, 0,
-          ox, discY, discR,
+          ox - 1 * s,
+          discY - 1 * s,
+          0,
+          ox,
+          discY,
+          discR,
         );
         discFill.addColorStop(0, "#f0d860");
         discFill.addColorStop(0.7, "#d4a840");
@@ -8868,8 +9085,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const crownY = cTip;
         // Left horn
         const lhG = ctx.createLinearGradient(
-          ox - 6 * s, crownY - 12 * s,
-          ox - 2 * s, crownY,
+          ox - 6 * s,
+          crownY - 12 * s,
+          ox - 2 * s,
+          crownY,
         );
         lhG.addColorStop(0, "rgba(200,230,255,0.8)");
         lhG.addColorStop(0.5, "rgba(160,200,240,0.6)");
@@ -8884,8 +9103,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
         // Right horn
         const rhG = ctx.createLinearGradient(
-          ox + 6 * s, crownY - 12 * s,
-          ox + 2 * s, crownY,
+          ox + 6 * s,
+          crownY - 12 * s,
+          ox + 2 * s,
+          crownY,
         );
         rhG.addColorStop(0, "rgba(180,215,245,0.8)");
         rhG.addColorStop(0.5, "rgba(140,185,230,0.6)");
@@ -8948,7 +9169,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#d0e8f8";
         const frostSeed = Math.abs(decorX * 41 + decorY * 67);
         for (let fi = 0; fi < 4; fi++) {
-          const fx = ox + ((((frostSeed + fi * 29) % 16) - 8) * s);
+          const fx = ox + (((frostSeed + fi * 29) % 16) - 8) * s;
           const fy = sTop + ((frostSeed + fi * 17) % 40) * s * 0.8;
           ctx.beginPath();
           ctx.arc(fx, fy, 0.7 * s, 0, Math.PI * 2);
@@ -8962,15 +9183,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(ox - 2 * s, cTip);
         ctx.bezierCurveTo(
-          ox - 5 * s, cTip - 6 * s,
-          ox - 10 * s, cTip - 10 * s,
-          ox - 8 * s, cTip - 18 * s,
+          ox - 5 * s,
+          cTip - 6 * s,
+          ox - 10 * s,
+          cTip - 10 * s,
+          ox - 8 * s,
+          cTip - 18 * s,
         );
         ctx.lineTo(ox - 6 * s, cTip - 16 * s);
         ctx.bezierCurveTo(
-          ox - 8 * s, cTip - 10 * s,
-          ox - 3 * s, cTip - 5 * s,
-          ox, cTip,
+          ox - 8 * s,
+          cTip - 10 * s,
+          ox - 3 * s,
+          cTip - 5 * s,
+          ox,
+          cTip,
         );
         ctx.closePath();
         ctx.fill();
@@ -8978,23 +9205,33 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(ox + 2 * s, cTip);
         ctx.bezierCurveTo(
-          ox + 5 * s, cTip - 6 * s,
-          ox + 10 * s, cTip - 10 * s,
-          ox + 8 * s, cTip - 18 * s,
+          ox + 5 * s,
+          cTip - 6 * s,
+          ox + 10 * s,
+          cTip - 10 * s,
+          ox + 8 * s,
+          cTip - 18 * s,
         );
         ctx.lineTo(ox + 6 * s, cTip - 16 * s);
         ctx.bezierCurveTo(
-          ox + 8 * s, cTip - 10 * s,
-          ox + 3 * s, cTip - 5 * s,
-          ox, cTip,
+          ox + 8 * s,
+          cTip - 10 * s,
+          ox + 3 * s,
+          cTip - 5 * s,
+          ox,
+          cTip,
         );
         ctx.closePath();
         ctx.fill();
         // Horn tips glow
         ctx.globalAlpha = 0.7;
         const ltGlow = ctx.createRadialGradient(
-          ox - 8 * s, cTip - 18 * s, 0,
-          ox - 8 * s, cTip - 18 * s, 3 * s,
+          ox - 8 * s,
+          cTip - 18 * s,
+          0,
+          ox - 8 * s,
+          cTip - 18 * s,
+          3 * s,
         );
         ltGlow.addColorStop(0, "rgba(255,100,20,0.6)");
         ltGlow.addColorStop(1, "rgba(200,50,10,0)");
@@ -9003,8 +9240,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.arc(ox - 8 * s, cTip - 18 * s, 3 * s, 0, Math.PI * 2);
         ctx.fill();
         const rtGlow = ctx.createRadialGradient(
-          ox + 8 * s, cTip - 18 * s, 0,
-          ox + 8 * s, cTip - 18 * s, 3 * s,
+          ox + 8 * s,
+          cTip - 18 * s,
+          0,
+          ox + 8 * s,
+          cTip - 18 * s,
+          3 * s,
         );
         rtGlow.addColorStop(0, "rgba(255,100,20,0.6)");
         rtGlow.addColorStop(1, "rgba(200,50,10,0)");
@@ -9015,7 +9256,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.globalAlpha = 1;
         // Pulsing ember core in cap
         const embPulse = 0.4 + Math.sin(decorTime * 2.5) * 0.2;
-        const embG = ctx.createRadialGradient(ox, cTip - 2 * s, 0, ox, cTip - 2 * s, 5 * s);
+        const embG = ctx.createRadialGradient(
+          ox,
+          cTip - 2 * s,
+          0,
+          ox,
+          cTip - 2 * s,
+          5 * s,
+        );
         embG.addColorStop(0, `rgba(255,120,30,${embPulse})`);
         embG.addColorStop(0.5, `rgba(200,60,10,${embPulse * 0.5})`);
         embG.addColorStop(1, "rgba(100,30,5,0)");
@@ -18285,7 +18533,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "broken_wall": {
-      drawBrokenWallDecoration(ctx, screenPos, s, variant, decorX, decorY, mapTheme);
+      drawBrokenWallDecoration(
+        ctx,
+        screenPos,
+        s,
+        variant,
+        decorX,
+        decorY,
+        mapTheme,
+      );
       break;
     }
 
@@ -22890,11 +23146,27 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== GROUND SHADOW ==========
       if (!landmarkSkipShadow) {
-        drawDirectionalShadow(ctx, ox, oy + 2 * s, s, 40 * s, 20 * s, 55 * s, 0.5);
+        drawDirectionalShadow(
+          ctx,
+          ox,
+          oy + 2 * s,
+          s,
+          40 * s,
+          20 * s,
+          55 * s,
+          0.5,
+        );
       }
 
       // ========== CORRUPTED GROUND ==========
-      const wcGroundG = ctx.createRadialGradient(ox, oy + 6 * s, 3 * s, ox, oy + 6 * s, 58 * s);
+      const wcGroundG = ctx.createRadialGradient(
+        ox,
+        oy + 6 * s,
+        3 * s,
+        ox,
+        oy + 6 * s,
+        58 * s,
+      );
       wcGroundG.addColorStop(0, "rgba(15, 8, 25, 0.8)");
       wcGroundG.addColorStop(0.2, "rgba(10, 20, 10, 0.5)");
       wcGroundG.addColorStop(0.5, "rgba(8, 12, 8, 0.25)");
@@ -22906,13 +23178,22 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== SLUDGE POOLS ==========
       const wcSludgePools = [
-        { dx: -18, dy: 12, rx: 14, ry: 6 }, { dx: 12, dy: 16, rx: 10, ry: 5 },
-        { dx: -6, dy: 20, rx: 8, ry: 4 }, { dx: 22, dy: 8, rx: 7, ry: 3.5 },
+        { dx: -18, dy: 12, rx: 14, ry: 6 },
+        { dx: 12, dy: 16, rx: 10, ry: 5 },
+        { dx: -6, dy: 20, rx: 8, ry: 4 },
+        { dx: 22, dy: 8, rx: 7, ry: 3.5 },
       ];
       wcSludgePools.forEach((sp, i) => {
         const spx = ox + sp.dx * s;
         const spy = oy + sp.dy * s;
-        const sludgeG = ctx.createRadialGradient(spx, spy, 1 * s, spx, spy, sp.rx * s);
+        const sludgeG = ctx.createRadialGradient(
+          spx,
+          spy,
+          1 * s,
+          spx,
+          spy,
+          sp.rx * s,
+        );
         const pulse = 0.5 + Math.sin(wt * 1.5 + i * 1.3) * 0.15;
         sludgeG.addColorStop(0, `rgba(40, 120, 30, ${pulse * 0.6})`);
         sludgeG.addColorStop(0.4, `rgba(30, 80, 20, ${pulse * 0.4})`);
@@ -22925,7 +23206,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Sludge surface sheen
         ctx.fillStyle = `rgba(80, 200, 60, ${pulse * 0.15})`;
         ctx.beginPath();
-        ctx.ellipse(spx - 2 * s, spy - 1 * s, sp.rx * 0.4 * s, sp.ry * 0.3 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          spx - 2 * s,
+          spy - 1 * s,
+          sp.rx * 0.4 * s,
+          sp.ry * 0.3 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       });
 
@@ -22947,14 +23236,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       }
 
       // ========== SCATTERED WOOD DEBRIS ==========
-      const wcDebrisColor = (i: number) => i % 3 === 0 ? "#2a1c10" : i % 3 === 1 ? "#3a2818" : "#1e1408";
+      const wcDebrisColor = (i: number) =>
+        i % 3 === 0 ? "#2a1c10" : i % 3 === 1 ? "#3a2818" : "#1e1408";
       [
-        { x: -32, y: 14, l: 12, a: 0.4 }, { x: 28, y: 16, l: 9, a: -0.6 },
-        { x: -20, y: 22, l: 7, a: 1.1 }, { x: 14, y: 20, l: 10, a: -0.2 },
-        { x: 34, y: 6, l: 8, a: 0.7 }, { x: -36, y: 8, l: 6, a: -0.9 },
-        { x: 6, y: 24, l: 11, a: 0.15 }, { x: -8, y: -6, l: 8, a: -0.45 },
-        { x: -42, y: 6, l: 5, a: 0.2 }, { x: 40, y: 10, l: 7, a: -1.1 },
-        { x: -16, y: 26, l: 6, a: 0.85 }, { x: 18, y: 24, l: 8, a: -0.35 },
+        { x: -32, y: 14, l: 12, a: 0.4 },
+        { x: 28, y: 16, l: 9, a: -0.6 },
+        { x: -20, y: 22, l: 7, a: 1.1 },
+        { x: 14, y: 20, l: 10, a: -0.2 },
+        { x: 34, y: 6, l: 8, a: 0.7 },
+        { x: -36, y: 8, l: 6, a: -0.9 },
+        { x: 6, y: 24, l: 11, a: 0.15 },
+        { x: -8, y: -6, l: 8, a: -0.45 },
+        { x: -42, y: 6, l: 5, a: 0.2 },
+        { x: 40, y: 10, l: 7, a: -1.1 },
+        { x: -16, y: 26, l: 6, a: 0.85 },
+        { x: 18, y: 24, l: 8, a: -0.35 },
       ].forEach((d, i) => {
         ctx.strokeStyle = wcDebrisColor(i);
         ctx.lineWidth = (1.5 + (i % 3) * 0.5) * s;
@@ -22962,28 +23258,49 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const dx = ox + d.x * s;
         const dy = oy + d.y * s;
         ctx.moveTo(dx, dy);
-        ctx.lineTo(dx + Math.cos(d.a) * d.l * s, dy + Math.sin(d.a) * d.l * 0.5 * s);
+        ctx.lineTo(
+          dx + Math.cos(d.a) * d.l * s,
+          dy + Math.sin(d.a) * d.l * 0.5 * s,
+        );
         ctx.stroke();
         if (i % 3 === 0) {
           ctx.lineWidth = 0.8 * s;
           ctx.beginPath();
-          ctx.moveTo(dx + Math.cos(d.a) * d.l * s, dy + Math.sin(d.a) * d.l * 0.5 * s);
-          ctx.lineTo(dx + Math.cos(d.a + 0.3) * (d.l + 3) * s, dy + Math.sin(d.a + 0.3) * (d.l + 3) * 0.5 * s);
+          ctx.moveTo(
+            dx + Math.cos(d.a) * d.l * s,
+            dy + Math.sin(d.a) * d.l * 0.5 * s,
+          );
+          ctx.lineTo(
+            dx + Math.cos(d.a + 0.3) * (d.l + 3) * s,
+            dy + Math.sin(d.a + 0.3) * (d.l + 3) * 0.5 * s,
+          );
           ctx.stroke();
         }
       });
 
       // Scattered stone rubble chunks
       ctx.fillStyle = "#3a3530";
-      [{ x: -24, y: 16, r: 2.5 }, { x: 26, y: 12, r: 2 }, { x: -30, y: 4, r: 1.8 },
-       { x: 38, y: 14, r: 2.2 }, { x: -4, y: 22, r: 1.5 }, { x: 30, y: 20, r: 1.6 }].forEach((rb) => {
+      [
+        { x: -24, y: 16, r: 2.5 },
+        { x: 26, y: 12, r: 2 },
+        { x: -30, y: 4, r: 1.8 },
+        { x: 38, y: 14, r: 2.2 },
+        { x: -4, y: 22, r: 1.5 },
+        { x: 30, y: 20, r: 1.6 },
+      ].forEach((rb) => {
         ctx.fillStyle = "#3a3530";
         ctx.beginPath();
         ctx.moveTo(ox + rb.x * s - rb.r * s, oy + rb.y * s);
         ctx.lineTo(ox + rb.x * s, oy + rb.y * s - rb.r * 0.8 * s);
         ctx.lineTo(ox + rb.x * s + rb.r * s, oy + rb.y * s - rb.r * 0.3 * s);
-        ctx.lineTo(ox + rb.x * s + rb.r * 0.6 * s, oy + rb.y * s + rb.r * 0.5 * s);
-        ctx.lineTo(ox + rb.x * s - rb.r * 0.5 * s, oy + rb.y * s + rb.r * 0.4 * s);
+        ctx.lineTo(
+          ox + rb.x * s + rb.r * 0.6 * s,
+          oy + rb.y * s + rb.r * 0.5 * s,
+        );
+        ctx.lineTo(
+          ox + rb.x * s - rb.r * 0.5 * s,
+          oy + rb.y * s + rb.r * 0.4 * s,
+        );
         ctx.closePath();
         ctx.fill();
       });
@@ -23003,29 +23320,39 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.save();
         ctx.translate(px, wcBackBaseY);
         ctx.rotate(p.lean);
-        const plG = ctx.createLinearGradient(-p.w / 2 * s, 0, p.w / 2 * s, 0);
+        const plG = ctx.createLinearGradient(
+          (-p.w / 2) * s,
+          0,
+          (p.w / 2) * s,
+          0,
+        );
         plG.addColorStop(0, p.color);
         plG.addColorStop(0.5, "#4a3820");
         plG.addColorStop(1, p.color);
         ctx.fillStyle = plG;
         ctx.beginPath();
-        ctx.moveTo(-p.w / 2 * s, 0);
-        ctx.lineTo(p.w / 2 * s + 1 * s, 2 * s);
-        ctx.lineTo(p.w / 2 * s, -pH + 3 * s);
-        ctx.lineTo(p.w / 4 * s, -pH);
+        ctx.moveTo((-p.w / 2) * s, 0);
+        ctx.lineTo((p.w / 2) * s + 1 * s, 2 * s);
+        ctx.lineTo((p.w / 2) * s, -pH + 3 * s);
+        ctx.lineTo((p.w / 4) * s, -pH);
         ctx.lineTo(0, -pH + 2 * s);
-        ctx.lineTo(-p.w / 4 * s, -pH - 1 * s);
-        ctx.lineTo(-p.w / 2 * s, -pH + 4 * s);
+        ctx.lineTo((-p.w / 4) * s, -pH - 1 * s);
+        ctx.lineTo((-p.w / 2) * s, -pH + 4 * s);
         ctx.closePath();
         ctx.fill();
         // Wood grain
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.lineWidth = 0.5 * s;
         for (let g = 1; g < 3; g++) {
-          const gx = (-p.w / 2 + g * p.w / 3) * s;
+          const gx = (-p.w / 2 + (g * p.w) / 3) * s;
           ctx.beginPath();
           ctx.moveTo(gx, 0);
-          ctx.quadraticCurveTo(gx + Math.sin(g) * 2 * s, -pH * 0.5, gx - 1 * s, -pH + 4 * s);
+          ctx.quadraticCurveTo(
+            gx + Math.sin(g) * 2 * s,
+            -pH * 0.5,
+            gx - 1 * s,
+            -pH + 4 * s,
+          );
           ctx.stroke();
         }
         // Nail heads
@@ -23040,7 +23367,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         if (pi % 2 === 0) {
           ctx.fillStyle = "#0e0a06";
           ctx.beginPath();
-          ctx.ellipse(p.w * 0.15 * s, -pH * 0.4, 1.5 * s, 2.5 * s, 0.3, 0, Math.PI * 2);
+          ctx.ellipse(
+            p.w * 0.15 * s,
+            -pH * 0.4,
+            1.5 * s,
+            2.5 * s,
+            0.3,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
         ctx.restore();
@@ -23074,11 +23409,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.rotate(p.lean);
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.moveTo(-p.w / 2 * s, 0);
-        ctx.lineTo(p.w / 2 * s, 0);
-        ctx.lineTo(p.w / 2 * s + 1 * s, -p.h * s + 2 * s);
+        ctx.moveTo((-p.w / 2) * s, 0);
+        ctx.lineTo((p.w / 2) * s, 0);
+        ctx.lineTo((p.w / 2) * s + 1 * s, -p.h * s + 2 * s);
         ctx.lineTo(0, -p.h * s);
-        ctx.lineTo(-p.w / 2 * s - 0.5 * s, -p.h * s + 3 * s);
+        ctx.lineTo((-p.w / 2) * s - 0.5 * s, -p.h * s + 3 * s);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.18)";
@@ -23106,8 +23441,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "rgba(0,0,0,0.25)";
       ctx.lineWidth = 0.5 * s;
       ctx.beginPath();
-      ctx.moveTo(3 * s, 0); ctx.lineTo(3 * s, 8 * s);
-      ctx.moveTo(0, 4 * s); ctx.lineTo(6 * s, 4 * s);
+      ctx.moveTo(3 * s, 0);
+      ctx.lineTo(3 * s, 8 * s);
+      ctx.moveTo(0, 4 * s);
+      ctx.lineTo(6 * s, 4 * s);
       ctx.stroke();
       ctx.fillStyle = "#5a4a30";
       ctx.beginPath();
@@ -23130,11 +23467,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.rotate(p.lean);
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.moveTo(-p.w / 2 * s, 0);
-        ctx.lineTo(p.w / 2 * s, 0);
-        ctx.lineTo(p.w / 2 * s, -p.h * s + 3 * s);
+        ctx.moveTo((-p.w / 2) * s, 0);
+        ctx.lineTo((p.w / 2) * s, 0);
+        ctx.lineTo((p.w / 2) * s, -p.h * s + 3 * s);
         ctx.lineTo(0, -p.h * s);
-        ctx.lineTo(-p.w / 2 * s, -p.h * s + 1 * s);
+        ctx.lineTo((-p.w / 2) * s, -p.h * s + 1 * s);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = "rgba(0,0,0,0.15)";
@@ -23163,8 +23500,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "rgba(0,0,0,0.2)";
       ctx.lineWidth = 0.4 * s;
       ctx.beginPath();
-      ctx.moveTo(5 * s, -3 * s); ctx.lineTo(5 * s, 1 * s);
-      ctx.moveTo(10 * s, -3 * s); ctx.lineTo(10 * s, 2 * s);
+      ctx.moveTo(5 * s, -3 * s);
+      ctx.lineTo(5 * s, 1 * s);
+      ctx.moveTo(10 * s, -3 * s);
+      ctx.lineTo(10 * s, 2 * s);
       ctx.stroke();
       ctx.restore();
 
@@ -23185,7 +23524,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "rgba(80, 60, 30, 0.3)";
       ctx.lineWidth = 0.6 * s;
       ctx.beginPath();
-      ctx.moveTo(0, 0); ctx.lineTo(0, -22 * s);
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -22 * s);
       ctx.stroke();
       ctx.restore();
 
@@ -23214,7 +23554,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = "#0e0a06";
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
-      ctx.moveTo(-2 * s, -1 * s); ctx.lineTo(-1 * s, 4 * s); ctx.lineTo(-3 * s, 7 * s);
+      ctx.moveTo(-2 * s, -1 * s);
+      ctx.lineTo(-1 * s, 4 * s);
+      ctx.lineTo(-3 * s, 7 * s);
       ctx.stroke();
       // Sludge leaking from crack
       ctx.fillStyle = `rgba(50, 140, 30, ${wcPulse * 0.5})`;
@@ -23224,8 +23566,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.restore();
 
       // ========== SCATTERED SHINGLES ==========
-      [{ x: -28, y: 8, a: 0.8 }, { x: -22, y: 14, a: -0.3 }, { x: 20, y: 14, a: 1.2 },
-       { x: 32, y: 2, a: -0.5 }, { x: -10, y: 18, a: 0.4 }, { x: 8, y: 16, a: -0.7 }].forEach((sh) => {
+      [
+        { x: -28, y: 8, a: 0.8 },
+        { x: -22, y: 14, a: -0.3 },
+        { x: 20, y: 14, a: 1.2 },
+        { x: 32, y: 2, a: -0.5 },
+        { x: -10, y: 18, a: 0.4 },
+        { x: 8, y: 16, a: -0.7 },
+      ].forEach((sh) => {
         ctx.fillStyle = "#1e1610";
         ctx.save();
         ctx.translate(ox + sh.x * s, oy + sh.y * s);
@@ -23254,10 +23602,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const wobble = Math.sin(wt * 0.8 + i * 2) * 1 * s;
         ctx.beginPath();
         ctx.moveTo(d.x - d.w * 0.5 * s, d.y);
-        ctx.quadraticCurveTo(d.x - d.w * 0.5 * s + wobble, d.y + d.len * 0.5 * s, d.x - d.w * 0.3 * s, d.y + d.len * s);
+        ctx.quadraticCurveTo(
+          d.x - d.w * 0.5 * s + wobble,
+          d.y + d.len * 0.5 * s,
+          d.x - d.w * 0.3 * s,
+          d.y + d.len * s,
+        );
         // Drip blob at bottom
-        ctx.quadraticCurveTo(d.x, d.y + (d.len + 2) * s, d.x + d.w * 0.3 * s, d.y + d.len * s);
-        ctx.quadraticCurveTo(d.x + d.w * 0.5 * s - wobble, d.y + d.len * 0.5 * s, d.x + d.w * 0.5 * s, d.y);
+        ctx.quadraticCurveTo(
+          d.x,
+          d.y + (d.len + 2) * s,
+          d.x + d.w * 0.3 * s,
+          d.y + d.len * s,
+        );
+        ctx.quadraticCurveTo(
+          d.x + d.w * 0.5 * s - wobble,
+          d.y + d.len * 0.5 * s,
+          d.x + d.w * 0.5 * s,
+          d.y,
+        );
         ctx.closePath();
         ctx.fill();
       });
@@ -23305,10 +23668,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = r.w * s;
         ctx.beginPath();
         ctx.moveTo(ox + r.sx * s, oy + r.sy * s);
-        const sag = Math.sin((i + 1) / 6 * Math.PI) * 4 * s;
+        const sag = Math.sin(((i + 1) / 6) * Math.PI) * 4 * s;
         ctx.quadraticCurveTo(
-          ox + (r.sx + r.ex) / 2 * s,
-          oy + (r.sy + r.ey) / 2 * s + sag,
+          ox + ((r.sx + r.ex) / 2) * s,
+          oy + ((r.sy + r.ey) / 2) * s + sag,
           ox + r.ex * s,
           oy + r.ey * s,
         );
@@ -23319,8 +23682,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(ox + r.sx * s, oy + (r.sy - 1) * s);
         ctx.quadraticCurveTo(
-          ox + (r.sx + r.ex) / 2 * s,
-          oy + (r.sy + r.ey) / 2 * s + sag - 1 * s,
+          ox + ((r.sx + r.ex) / 2) * s,
+          oy + ((r.sy + r.ey) / 2) * s + sag - 1 * s,
           ox + r.ex * s,
           oy + (r.ey - 1) * s,
         );
@@ -23340,7 +23703,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(panel.w * s, panel.h * 0.3 * s);
-        ctx.quadraticCurveTo(panel.w * 0.8 * s, panel.h * 0.7 * s, panel.w * 0.6 * s, panel.h * s);
+        ctx.quadraticCurveTo(
+          panel.w * 0.8 * s,
+          panel.h * 0.7 * s,
+          panel.w * 0.6 * s,
+          panel.h * s,
+        );
         ctx.lineTo(-2 * s, panel.h * 0.8 * s);
         ctx.closePath();
         ctx.fill();
@@ -23348,7 +23716,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.strokeStyle = "rgba(60, 45, 20, 0.3)";
         ctx.lineWidth = 0.5 * s;
         for (let t = 0; t < 4; t++) {
-          const ty = (t + 1) / 5 * panel.h * s;
+          const ty = ((t + 1) / 5) * panel.h * s;
           ctx.beginPath();
           ctx.moveTo(0, ty);
           ctx.lineTo(panel.w * 0.8 * s, ty + 2 * s);
@@ -23359,25 +23727,44 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Green sludge dripping off beams
       [
-        { x: -22, y: -18, len: 8 }, { x: -10, y: -20, len: 10 },
-        { x: 4, y: -14, len: 6 }, { x: 16, y: -8, len: 5 },
+        { x: -22, y: -18, len: 8 },
+        { x: -10, y: -20, len: 10 },
+        { x: 4, y: -14, len: 6 },
+        { x: 16, y: -8, len: 5 },
       ].forEach((bd, i) => {
         const bdp = 0.4 + Math.sin(wt * 1.5 + i * 2.2) * 0.2;
         ctx.fillStyle = `rgba(50, 150, 30, ${bdp * 0.6})`;
         ctx.beginPath();
-        ctx.ellipse(ox + bd.x * s, oy + bd.y * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          ox + bd.x * s,
+          oy + bd.y * s,
+          2 * s,
+          1 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Drip strand
         ctx.strokeStyle = `rgba(50, 150, 30, ${bdp * 0.5})`;
         ctx.lineWidth = 1 * s;
         ctx.beginPath();
         ctx.moveTo(ox + bd.x * s, oy + bd.y * s);
-        ctx.lineTo(ox + bd.x * s + Math.sin(wt + i) * 1 * s, oy + (bd.y + bd.len) * s);
+        ctx.lineTo(
+          ox + bd.x * s + Math.sin(wt + i) * 1 * s,
+          oy + (bd.y + bd.len) * s,
+        );
         ctx.stroke();
         // Blob at tip
         ctx.fillStyle = `rgba(60, 180, 40, ${bdp * 0.7})`;
         ctx.beginPath();
-        ctx.arc(ox + bd.x * s + Math.sin(wt + i) * 1 * s, oy + (bd.y + bd.len) * s, 1.5 * s, 0, Math.PI * 2);
+        ctx.arc(
+          ox + bd.x * s + Math.sin(wt + i) * 1 * s,
+          oy + (bd.y + bd.len) * s,
+          1.5 * s,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       });
 
@@ -23393,7 +23780,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Interior glow
-      const wcIntG = ctx.createRadialGradient(ox, oy + 1 * s, 2 * s, ox, oy + 1 * s, 18 * s);
+      const wcIntG = ctx.createRadialGradient(
+        ox,
+        oy + 1 * s,
+        2 * s,
+        ox,
+        oy + 1 * s,
+        18 * s,
+      );
       wcIntG.addColorStop(0, `rgba(80, 255, 96, ${wcPulse * 0.12})`);
       wcIntG.addColorStop(0.5, `rgba(50, 150, 40, ${wcPulse * 0.05})`);
       wcIntG.addColorStop(1, "rgba(80, 255, 96, 0)");
@@ -23467,7 +23861,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Sludge spilling out of tipped cauldron
       const wcSpillX = wcCx + Math.cos(wcCTilt) * 14 * s;
       const wcSpillY = wcCy + Math.sin(wcCTilt) * 14 * s;
-      const wcSpillG = ctx.createRadialGradient(wcSpillX, wcSpillY, 2 * s, wcSpillX, wcSpillY + 6 * s, 22 * s);
+      const wcSpillG = ctx.createRadialGradient(
+        wcSpillX,
+        wcSpillY,
+        2 * s,
+        wcSpillX,
+        wcSpillY + 6 * s,
+        22 * s,
+      );
       const wcSpillPulse = 0.6 + Math.sin(wt * 2.5) * 0.15;
       wcSpillG.addColorStop(0, `rgba(60, 200, 50, ${wcSpillPulse * 0.65})`);
       wcSpillG.addColorStop(0.3, `rgba(40, 140, 30, ${wcSpillPulse * 0.45})`);
@@ -23476,16 +23877,39 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillStyle = wcSpillG;
       ctx.beginPath();
       ctx.moveTo(wcSpillX - 4 * s, wcSpillY - 2 * s);
-      ctx.quadraticCurveTo(wcSpillX + 8 * s, wcSpillY, wcSpillX + 16 * s, wcSpillY + 8 * s);
-      ctx.quadraticCurveTo(wcSpillX + 10 * s, wcSpillY + 14 * s, wcSpillX - 2 * s, wcSpillY + 10 * s);
-      ctx.quadraticCurveTo(wcSpillX - 8 * s, wcSpillY + 6 * s, wcSpillX - 4 * s, wcSpillY - 2 * s);
+      ctx.quadraticCurveTo(
+        wcSpillX + 8 * s,
+        wcSpillY,
+        wcSpillX + 16 * s,
+        wcSpillY + 8 * s,
+      );
+      ctx.quadraticCurveTo(
+        wcSpillX + 10 * s,
+        wcSpillY + 14 * s,
+        wcSpillX - 2 * s,
+        wcSpillY + 10 * s,
+      );
+      ctx.quadraticCurveTo(
+        wcSpillX - 8 * s,
+        wcSpillY + 6 * s,
+        wcSpillX - 4 * s,
+        wcSpillY - 2 * s,
+      );
       ctx.closePath();
       ctx.fill();
       // Glow from spill
       setShadowBlur(ctx, 15 * s, wcGlowGreen);
       ctx.fillStyle = `rgba(80, 255, 96, ${wcSpillPulse * 0.12})`;
       ctx.beginPath();
-      ctx.ellipse(wcSpillX + 6 * s, wcSpillY + 5 * s, 14 * s, 8 * s, 0.2, 0, Math.PI * 2);
+      ctx.ellipse(
+        wcSpillX + 6 * s,
+        wcSpillY + 5 * s,
+        14 * s,
+        8 * s,
+        0.2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       clearShadow(ctx);
 
@@ -23518,7 +23942,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillRect(-1.5 * s, 0, 3 * s, -16 * s);
       ctx.restore();
       // Glow from doorway opening
-      const wcDoorGlow = ctx.createRadialGradient(ox, oy + 2 * s, 1 * s, ox, oy + 2 * s, 18 * s);
+      const wcDoorGlow = ctx.createRadialGradient(
+        ox,
+        oy + 2 * s,
+        1 * s,
+        ox,
+        oy + 2 * s,
+        18 * s,
+      );
       wcDoorGlow.addColorStop(0, `rgba(80, 255, 96, ${wcPulse * 0.2})`);
       wcDoorGlow.addColorStop(0.4, `rgba(50, 180, 40, ${wcPulse * 0.08})`);
       wcDoorGlow.addColorStop(1, "rgba(80, 255, 96, 0)");
@@ -23550,7 +23981,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const hookY = hk.y + hk.len * s;
         ctx.beginPath();
         ctx.moveTo(hookX, hookY);
-        ctx.quadraticCurveTo(hookX + 3 * s, hookY + 4 * s, hookX, hookY + 6 * s);
+        ctx.quadraticCurveTo(
+          hookX + 3 * s,
+          hookY + 4 * s,
+          hookX,
+          hookY + 6 * s,
+        );
         ctx.stroke();
       });
 
@@ -23563,8 +23999,24 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
       ctx.fillStyle = "#0a0a0a";
       ctx.beginPath();
-      ctx.ellipse(wcSkX - 1 * s, wcSkY - 0.3 * s, 1 * s, 1.3 * s, 0, 0, Math.PI * 2);
-      ctx.ellipse(wcSkX + 1.3 * s, wcSkY - 0.3 * s, 1 * s, 1.3 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        wcSkX - 1 * s,
+        wcSkY - 0.3 * s,
+        1 * s,
+        1.3 * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.ellipse(
+        wcSkX + 1.3 * s,
+        wcSkY - 0.3 * s,
+        1 * s,
+        1.3 * s,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.fillStyle = `rgba(80, 255, 96, ${wcPulse * 0.6})`;
       setShadowBlur(ctx, 4 * s, wcGlowGreen);
@@ -23588,10 +24040,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.arc(4 * s, -2 * s, 2.2 * s, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(2.5 * s, -3.8 * s); ctx.lineTo(2 * s, -6.5 * s); ctx.lineTo(4 * s, -4.2 * s);
+      ctx.moveTo(2.5 * s, -3.8 * s);
+      ctx.lineTo(2 * s, -6.5 * s);
+      ctx.lineTo(4 * s, -4.2 * s);
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(5 * s, -3.8 * s); ctx.lineTo(5.5 * s, -6.5 * s); ctx.lineTo(6 * s, -3.8 * s);
+      ctx.moveTo(5 * s, -3.8 * s);
+      ctx.lineTo(5.5 * s, -6.5 * s);
+      ctx.lineTo(6 * s, -3.8 * s);
       ctx.fill();
       ctx.strokeStyle = "#0a0a0e";
       ctx.lineWidth = 1.2 * s;
@@ -23638,9 +24094,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Splintered broken top
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.moveTo(-1 * s, -12 * s); ctx.lineTo(-2 * s, -14 * s);
-      ctx.moveTo(0, -12 * s); ctx.lineTo(1 * s, -15 * s);
-      ctx.moveTo(1 * s, -12 * s); ctx.lineTo(2 * s, -13.5 * s);
+      ctx.moveTo(-1 * s, -12 * s);
+      ctx.lineTo(-2 * s, -14 * s);
+      ctx.moveTo(0, -12 * s);
+      ctx.lineTo(1 * s, -15 * s);
+      ctx.moveTo(1 * s, -12 * s);
+      ctx.lineTo(2 * s, -13.5 * s);
       ctx.stroke();
       ctx.restore();
       // Crossbar (sagging, resting on left fork, broken end)
@@ -23648,7 +24107,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineWidth = 2 * s;
       ctx.beginPath();
       ctx.moveTo(wcSpitX - 10 * s, wcSpitY - 18 * s);
-      ctx.quadraticCurveTo(wcSpitX, wcSpitY - 15 * s, wcSpitX + 6 * s, wcSpitY - 14 * s);
+      ctx.quadraticCurveTo(
+        wcSpitX,
+        wcSpitY - 15 * s,
+        wcSpitX + 6 * s,
+        wcSpitY - 14 * s,
+      );
       ctx.stroke();
       // Broken end dangling
       ctx.lineWidth = 1.5 * s;
@@ -23664,7 +24128,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const cx = wcSpitX - 4 * s + wcChainSwing * (c / 6);
         const cy = wcSpitY - 17 * s + c * 2.5 * s;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, 1 * s, 1.8 * s, c % 2 === 0 ? 0 : Math.PI / 4, 0, Math.PI * 2);
+        ctx.ellipse(
+          cx,
+          cy,
+          1 * s,
+          1.8 * s,
+          c % 2 === 0 ? 0 : Math.PI / 4,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
       // Dangling hook at end of chain
@@ -23673,7 +24145,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineWidth = 1.3 * s;
       ctx.beginPath();
       ctx.moveTo(wcHookX, wcHookY);
-      ctx.quadraticCurveTo(wcHookX + 2 * s, wcHookY + 3 * s, wcHookX - 0.5 * s, wcHookY + 5 * s);
+      ctx.quadraticCurveTo(
+        wcHookX + 2 * s,
+        wcHookY + 3 * s,
+        wcHookX - 0.5 * s,
+        wcHookY + 5 * s,
+      );
       ctx.stroke();
       // Broken chain on right side (few links then gap)
       ctx.strokeStyle = "#5a5248";
@@ -23682,15 +24159,35 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const cx = wcSpitX + 3 * s;
         const cy = wcSpitY - 16 * s + c * 2.5 * s;
         ctx.beginPath();
-        ctx.ellipse(cx, cy, 1 * s, 1.8 * s, c % 2 === 0 ? 0 : Math.PI / 4, 0, Math.PI * 2);
+        ctx.ellipse(
+          cx,
+          cy,
+          1 * s,
+          1.8 * s,
+          c % 2 === 0 ? 0 : Math.PI / 4,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
       // Fallen chain links on ground
       ctx.strokeStyle = "#4a4238";
       ctx.lineWidth = 0.8 * s;
-      [{ x: 1, y: 2 }, { x: 4, y: 3 }, { x: 6, y: 1 }].forEach((fl) => {
+      [
+        { x: 1, y: 2 },
+        { x: 4, y: 3 },
+        { x: 6, y: 1 },
+      ].forEach((fl) => {
         ctx.beginPath();
-        ctx.ellipse(wcSpitX + fl.x * s, wcSpitY + (4 + fl.y) * s, 1.2 * s, 0.8 * s, fl.x * 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          wcSpitX + fl.x * s,
+          wcSpitY + (4 + fl.y) * s,
+          1.2 * s,
+          0.8 * s,
+          fl.x * 0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       });
       // Soot marks under spit
@@ -23701,11 +24198,27 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Charred wood / ash pile
       ctx.fillStyle = "#1a1410";
       ctx.beginPath();
-      ctx.ellipse(wcSpitX, wcSpitY + 3 * s, 6 * s, 2.5 * s, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(
+        wcSpitX,
+        wcSpitY + 3 * s,
+        6 * s,
+        2.5 * s,
+        0.1,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.fillStyle = "#2a2420";
       ctx.beginPath();
-      ctx.ellipse(wcSpitX - 1 * s, wcSpitY + 2.5 * s, 4 * s, 1.8 * s, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(
+        wcSpitX - 1 * s,
+        wcSpitY + 2.5 * s,
+        4 * s,
+        1.8 * s,
+        -0.1,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Faint ember glow
       const wcEmberP = 0.3 + Math.sin(wt * 3) * 0.15;
@@ -23741,19 +24254,39 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // ========== WOOD MOSS PATCHES ==========
       ctx.fillStyle = "rgba(30, 60, 25, 0.5)";
-      [{ x: -16, y: -8, rx: 4, ry: 2 }, { x: -14, y: -20, rx: 3, ry: 1.5 },
-       { x: 16, y: -6, rx: 3.5, ry: 2 }, { x: -8, y: 0, rx: 5, ry: 2.5 },
-       { x: 12, y: -12, rx: 3, ry: 1.8 }].forEach((mp) => {
+      [
+        { x: -16, y: -8, rx: 4, ry: 2 },
+        { x: -14, y: -20, rx: 3, ry: 1.5 },
+        { x: 16, y: -6, rx: 3.5, ry: 2 },
+        { x: -8, y: 0, rx: 5, ry: 2.5 },
+        { x: 12, y: -12, rx: 3, ry: 1.8 },
+      ].forEach((mp) => {
         ctx.beginPath();
-        ctx.ellipse(ox + mp.x * s, oy + mp.y * s, mp.rx * s, mp.ry * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          ox + mp.x * s,
+          oy + mp.y * s,
+          mp.rx * s,
+          mp.ry * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       });
 
       // ========== MUSHROOMS ==========
-      const wcMush: Array<{ dx: number; dy: number; sz: number; purple?: boolean }> = [
-        { dx: 30, dy: 12, sz: 1.3 }, { dx: -34, dy: 16, sz: 1.5, purple: true },
-        { dx: -26, dy: 20, sz: 0.9 }, { dx: 22, dy: 18, sz: 1.1, purple: true },
-        { dx: -40, dy: 10, sz: 1.4 }, { dx: 36, dy: 6, sz: 0.8, purple: true },
+      const wcMush: Array<{
+        dx: number;
+        dy: number;
+        sz: number;
+        purple?: boolean;
+      }> = [
+        { dx: 30, dy: 12, sz: 1.3 },
+        { dx: -34, dy: 16, sz: 1.5, purple: true },
+        { dx: -26, dy: 20, sz: 0.9 },
+        { dx: 22, dy: 18, sz: 1.1, purple: true },
+        { dx: -40, dy: 10, sz: 1.4 },
+        { dx: 36, dy: 6, sz: 0.8, purple: true },
         { dx: -8, dy: 22, sz: 1.0 },
       ];
       wcMush.forEach((mp, i) => {
@@ -23765,32 +24298,68 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = isPurple ? "#a098b0" : "#b0a898";
         ctx.beginPath();
         ctx.moveTo(mx - 1.3 * msc * s, my);
-        ctx.quadraticCurveTo(mx - 0.7 * msc * s, my - 3 * msc * s, mx - 0.5 * msc * s, my - 5 * msc * s);
+        ctx.quadraticCurveTo(
+          mx - 0.7 * msc * s,
+          my - 3 * msc * s,
+          mx - 0.5 * msc * s,
+          my - 5 * msc * s,
+        );
         ctx.lineTo(mx + 0.5 * msc * s, my - 5 * msc * s);
-        ctx.quadraticCurveTo(mx + 0.7 * msc * s, my - 3 * msc * s, mx + 1.3 * msc * s, my);
+        ctx.quadraticCurveTo(
+          mx + 0.7 * msc * s,
+          my - 3 * msc * s,
+          mx + 1.3 * msc * s,
+          my,
+        );
         ctx.closePath();
         ctx.fill();
         let cr: number, cg: number, cb: number;
-        if (isPurple) { cr = 80 + (i % 3) * 15; cg = 25; cb = 110 + (i % 2) * 25; }
-        else { cr = 130 + (i % 2) * 30; cg = 25; cb = 25; }
+        if (isPurple) {
+          cr = 80 + (i % 3) * 15;
+          cg = 25;
+          cb = 110 + (i % 2) * 25;
+        } else {
+          cr = 130 + (i % 2) * 30;
+          cg = 25;
+          cb = 25;
+        }
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.9)`;
         ctx.beginPath();
-        ctx.ellipse(mx, my - 5.5 * msc * s, 3.5 * msc * s, 2.2 * msc * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          mx,
+          my - 5.5 * msc * s,
+          3.5 * msc * s,
+          2.2 * msc * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         const spC = isPurple ? "180, 160, 210" : "200, 180, 140";
         ctx.fillStyle = `rgba(${spC}, ${mg * 0.5})`;
-        [{ dx: -1.2, dy: -6, r: 0.6 }, { dx: 0.8, dy: -6.3, r: 0.4 }].forEach((sp) => {
+        [
+          { dx: -1.2, dy: -6, r: 0.6 },
+          { dx: 0.8, dy: -6.3, r: 0.4 },
+        ].forEach((sp) => {
           ctx.beginPath();
-          ctx.arc(mx + sp.dx * msc * s, my + sp.dy * msc * s, sp.r * msc * s, 0, Math.PI * 2);
+          ctx.arc(
+            mx + sp.dx * msc * s,
+            my + sp.dy * msc * s,
+            sp.r * msc * s,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         });
       });
 
       // ========== RUNE MARKS ==========
       const wcRuneP = 0.4 + Math.sin(wt * 1.5) * 0.25;
-      [{ x: ox - 13 * s, y: oy - 6 * s, rgb: "176, 96, 255" },
-       { x: ox + 15 * s, y: oy - 4 * s, rgb: "80, 255, 96" },
-       { x: ox - 3 * s, y: oy - 24 * s, rgb: "176, 96, 255" }].forEach((rp) => {
+      [
+        { x: ox - 13 * s, y: oy - 6 * s, rgb: "176, 96, 255" },
+        { x: ox + 15 * s, y: oy - 4 * s, rgb: "80, 255, 96" },
+        { x: ox - 3 * s, y: oy - 24 * s, rgb: "176, 96, 255" },
+      ].forEach((rp) => {
         ctx.strokeStyle = `rgba(${rp.rgb}, ${wcRuneP * 0.5})`;
         setShadowBlur(ctx, 6 * s, `rgba(${rp.rgb}, ${wcRuneP * 0.3})`);
         ctx.lineWidth = 0.8 * s;
@@ -23798,8 +24367,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.arc(rp.x, rp.y, 2 * s, 0, Math.PI * 2);
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(rp.x - 1.5 * s, rp.y); ctx.lineTo(rp.x + 1.5 * s, rp.y);
-        ctx.moveTo(rp.x, rp.y - 1.5 * s); ctx.lineTo(rp.x, rp.y + 1.5 * s);
+        ctx.moveTo(rp.x - 1.5 * s, rp.y);
+        ctx.lineTo(rp.x + 1.5 * s, rp.y);
+        ctx.moveTo(rp.x, rp.y - 1.5 * s);
+        ctx.lineTo(rp.x, rp.y + 1.5 * s);
         ctx.stroke();
         clearShadow(ctx);
       });
@@ -23814,7 +24385,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const pSz = (1 + Math.sin(pP * 2) * 0.4) * s;
         const pAlpha = 0.25 + Math.sin(pP * 3) * 0.12;
         const isGr = i % 3 !== 0;
-        ctx.fillStyle = isGr ? `rgba(80, 255, 96, ${pAlpha})` : `rgba(176, 96, 255, ${pAlpha})`;
+        ctx.fillStyle = isGr
+          ? `rgba(80, 255, 96, ${pAlpha})`
+          : `rgba(176, 96, 255, ${pAlpha})`;
         setShadowBlur(ctx, 4 * s, isGr ? wcGlowGreen : wcGlowPurple);
         ctx.beginPath();
         ctx.arc(px, py, pSz, 0, Math.PI * 2);
@@ -23846,18 +24419,32 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const wP = wt * 0.9 + i * 4.1;
         const wR = (22 + i * 9) * s;
         const wX = ox + Math.sin(wP) * wR;
-        const wY = oy - 8 * s + Math.cos(wP * 0.7) * wR * 0.3 - Math.sin(wP * 1.8) * 4 * s;
+        const wY =
+          oy -
+          8 * s +
+          Math.cos(wP * 0.7) * wR * 0.3 -
+          Math.sin(wP * 1.8) * 4 * s;
         const wSz = (1.4 + Math.sin(wP * 2.5) * 0.5) * s;
         const wA = 0.25 + Math.sin(wP * 2) * 0.12;
         const wPurple = i % 2 === 0;
-        ctx.fillStyle = wPurple ? `rgba(176, 96, 255, ${wA})` : `rgba(80, 255, 96, ${wA})`;
+        ctx.fillStyle = wPurple
+          ? `rgba(176, 96, 255, ${wA})`
+          : `rgba(80, 255, 96, ${wA})`;
         setShadowBlur(ctx, 7 * s, wPurple ? wcGlowPurple : wcGlowGreen);
         ctx.beginPath();
         ctx.arc(wX, wY, wSz, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = wPurple ? `rgba(176, 96, 255, ${wA * 0.2})` : `rgba(80, 255, 96, ${wA * 0.2})`;
+        ctx.fillStyle = wPurple
+          ? `rgba(176, 96, 255, ${wA * 0.2})`
+          : `rgba(80, 255, 96, ${wA * 0.2})`;
         ctx.beginPath();
-        ctx.arc(wX - Math.cos(wP) * 3 * s, wY + 1.5 * s, wSz * 0.5, 0, Math.PI * 2);
+        ctx.arc(
+          wX - Math.cos(wP) * 3 * s,
+          wY + 1.5 * s,
+          wSz * 0.5,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       clearShadow(ctx);
@@ -24780,38 +25367,60 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // 1. Outer wet ground ring (earthy blend into terrain)
       const pondWetG = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 18 * s,
-        screenPos.x, screenPos.y, 36 * s,
+        screenPos.x,
+        screenPos.y,
+        18 * s,
+        screenPos.x,
+        screenPos.y,
+        36 * s,
       );
       pondWetG.addColorStop(0, "transparent");
       pondWetG.addColorStop(0.5, "rgba(58,47,31,0.3)");
       pondWetG.addColorStop(1, "rgba(58,47,31,0.1)");
       ctx.fillStyle = pondWetG;
       drawOrganicWaterShape(
-        ctx, screenPos.x, screenPos.y,
-        36 * s, 36 * s * pondIso, pondSeed, 0.16,
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        36 * s,
+        36 * s * pondIso,
+        pondSeed,
+        0.16,
       );
       ctx.fill();
 
       // 2. Earthy stone embankment rim
       const pondRimG = ctx.createRadialGradient(
-        screenPos.x, screenPos.y + 2 * s, 4 * s,
-        screenPos.x, screenPos.y + 2 * s, 30 * s,
+        screenPos.x,
+        screenPos.y + 2 * s,
+        4 * s,
+        screenPos.x,
+        screenPos.y + 2 * s,
+        30 * s,
       );
       pondRimG.addColorStop(0, "#5a4a35");
       pondRimG.addColorStop(0.5, "#4a3d2a");
       pondRimG.addColorStop(1, "#3a2f1f");
       ctx.fillStyle = pondRimG;
       drawOrganicWaterShape(
-        ctx, screenPos.x, screenPos.y,
-        30 * s, 30 * s * pondIso, pondSeed + 10, 0.14,
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        30 * s,
+        30 * s * pondIso,
+        pondSeed + 10,
+        0.14,
       );
       ctx.fill();
 
       // 3. Teal water body (Carnegie Lake palette)
       const pondWaterG = ctx.createRadialGradient(
-        screenPos.x - 4 * s, screenPos.y - 2 * s, 0,
-        screenPos.x, screenPos.y + 2 * s, 26 * s,
+        screenPos.x - 4 * s,
+        screenPos.y - 2 * s,
+        0,
+        screenPos.x,
+        screenPos.y + 2 * s,
+        26 * s,
       );
       pondWaterG.addColorStop(0, "#004d6b");
       pondWaterG.addColorStop(0.2, "#006080");
@@ -24821,23 +25430,37 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       pondWaterG.addColorStop(1, "#26c6da");
       ctx.fillStyle = pondWaterG;
       drawOrganicWaterShape(
-        ctx, screenPos.x, screenPos.y,
-        26 * s, 26 * s * pondIso, pondSeed + 20, 0.12,
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        26 * s,
+        26 * s * pondIso,
+        pondSeed + 20,
+        0.12,
       );
       ctx.fill();
 
       // 4. Surface reflection layer (lighter teal offset)
       const pondSurfG = ctx.createRadialGradient(
-        screenPos.x - 6 * s, screenPos.y - 3 * s, 0,
-        screenPos.x, screenPos.y, 22 * s,
+        screenPos.x - 6 * s,
+        screenPos.y - 3 * s,
+        0,
+        screenPos.x,
+        screenPos.y,
+        22 * s,
       );
       pondSurfG.addColorStop(0, "rgba(77,208,225,0.4)");
       pondSurfG.addColorStop(0.4, "rgba(38,198,218,0.25)");
       pondSurfG.addColorStop(1, "rgba(0,172,193,0.1)");
       ctx.fillStyle = pondSurfG;
       drawOrganicWaterShape(
-        ctx, screenPos.x, screenPos.y - 2 * s,
-        22 * s, 22 * s * pondIso, pondSeed + 30, 0.1,
+        ctx,
+        screenPos.x,
+        screenPos.y - 2 * s,
+        22 * s,
+        22 * s * pondIso,
+        pondSeed + 30,
+        0.1,
       );
       ctx.fill();
 
@@ -24849,8 +25472,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = (1.3 - ripPh) * s;
         ctx.beginPath();
         ctx.ellipse(
-          screenPos.x, screenPos.y,
-          ripR, ripR * pondIso, 0, 0, Math.PI * 2,
+          screenPos.x,
+          screenPos.y,
+          ripR,
+          ripR * pondIso,
+          0,
+          0,
+          Math.PI * 2,
         );
         ctx.stroke();
       }
@@ -24871,8 +25499,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // 7. Subtle magical glow (teal center pulse)
       const pondGlowPh = Math.sin(decorTime * 1.2 + pondSeed) * 0.3 + 0.7;
       const pondGlow = ctx.createRadialGradient(
-        screenPos.x, screenPos.y + 2 * s, 0,
-        screenPos.x, screenPos.y, 18 * s,
+        screenPos.x,
+        screenPos.y + 2 * s,
+        0,
+        screenPos.x,
+        screenPos.y,
+        18 * s,
       );
       pondGlow.addColorStop(0, `rgba(100,255,220,${0.12 * pondGlowPh})`);
       pondGlow.addColorStop(0.5, `rgba(80,220,200,${0.06 * pondGlowPh})`);
@@ -24884,7 +25516,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // 8. Natural edge stones/pebbles
       for (let rock = 0; rock < 6; rock++) {
-        const rkAng = (rock / 6) * Math.PI * 2 + Math.sin(pondSeed + rock) * 0.4;
+        const rkAng =
+          (rock / 6) * Math.PI * 2 + Math.sin(pondSeed + rock) * 0.4;
         const rkDist = (24 + Math.sin(rock * 2 + pondSeed) * 3) * s;
         const rkX = screenPos.x + Math.cos(rkAng) * rkDist;
         const rkY = screenPos.y + Math.sin(rkAng) * rkDist * pondIso;
@@ -24907,7 +25540,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const blAng = -Math.PI / 2 + (bl - 1) * 0.3;
           ctx.beginPath();
           ctx.moveTo(gtX, gtY);
-          ctx.lineTo(gtX + Math.cos(blAng) * 3 * s, gtY + Math.sin(blAng) * 3 * s);
+          ctx.lineTo(
+            gtX + Math.cos(blAng) * 3 * s,
+            gtY + Math.sin(blAng) * 3 * s,
+          );
           ctx.stroke();
         }
       }
@@ -25009,7 +25645,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       if (mapTheme === "winter") {
         ctx.fillStyle = "rgba(200,220,245,0.3)";
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y + 5 * s,
+          14 * s,
+          6 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.strokeStyle = "rgba(220,235,255,0.4)";
         ctx.lineWidth = 0.5 * s;
@@ -25026,8 +25670,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "rgba(190,170,130,0.4)";
         ctx.beginPath();
         ctx.ellipse(
-          screenPos.x + 3 * s, screenPos.y + 4 * s,
-          18 * s, 6 * s, 0.15, 0, Math.PI * 2,
+          screenPos.x + 3 * s,
+          screenPos.y + 4 * s,
+          18 * s,
+          6 * s,
+          0.15,
+          0,
+          Math.PI * 2,
         );
         ctx.fill();
       }
@@ -25035,15 +25684,27 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Volcanic: bubbling lava glow in pool
       if (mapTheme === "volcanic") {
         const lavaGlow = ctx.createRadialGradient(
-          screenPos.x, screenPos.y + 5 * s, 0,
-          screenPos.x, screenPos.y + 5 * s, 14 * s,
+          screenPos.x,
+          screenPos.y + 5 * s,
+          0,
+          screenPos.x,
+          screenPos.y + 5 * s,
+          14 * s,
         );
         lavaGlow.addColorStop(0, "rgba(255,120,20,0.25)");
         lavaGlow.addColorStop(0.6, "rgba(200,60,10,0.1)");
         lavaGlow.addColorStop(1, "rgba(100,20,0,0)");
         ctx.fillStyle = lavaGlow;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y + 5 * s,
+          14 * s,
+          6 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -25115,9 +25776,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.beginPath();
           ctx.moveTo(vx, vy0);
           ctx.bezierCurveTo(
-            vx - 2 * s, vy0 + 6 * s,
-            vx + 1 * s, vy0 + 12 * s,
-            vx - 1 * s, vy0 + 18 * s,
+            vx - 2 * s,
+            vy0 + 6 * s,
+            vx + 1 * s,
+            vy0 + 12 * s,
+            vx - 1 * s,
+            vy0 + 18 * s,
           );
           ctx.stroke();
         }
@@ -30765,196 +31429,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.stroke();
       }
 
-      // === REGIONAL OVERLAYS (applied on top of all variants) ===
-      const ruinOx = screenPos.x;
-      const ruinOy = screenPos.y;
-      const ruinSeed = Math.abs(decorX * 73.1 + decorY * 137.3);
-
-      if (mapTheme === "swamp") {
-        // Thick moss colonies on base
-        ctx.globalAlpha = 0.5;
-        for (let i = 0; i < 6; i++) {
-          const mx = ruinOx + ((((ruinSeed + i * 47) % 40) - 20) * s);
-          const my = ruinOy + ((((ruinSeed + i * 31) % 16) - 6) * s);
-          const mr = (2.5 + ((ruinSeed + i * 19) % 3)) * s;
-          ctx.fillStyle = i % 2 === 0 ? "#2a4a20" : "#1a3a18";
-          ctx.beginPath();
-          ctx.ellipse(mx, my, mr, mr * 0.5, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Hanging vine tendrils
-        ctx.globalAlpha = 0.6;
-        ctx.strokeStyle = vineColor;
-        ctx.lineWidth = 1.2 * s;
-        for (let i = 0; i < 4; i++) {
-          const vx = ruinOx + ((((ruinSeed + i * 61) % 36) - 18) * s);
-          const vy1 = ruinOy - (18 + ((ruinSeed + i * 23) % 14)) * s;
-          const vLen = (10 + ((ruinSeed + i * 37) % 12)) * s;
-          ctx.beginPath();
-          ctx.moveTo(vx, vy1);
-          ctx.bezierCurveTo(
-            vx - 3 * s, vy1 + vLen * 0.4,
-            vx + 2 * s, vy1 + vLen * 0.7,
-            vx - 1 * s, vy1 + vLen,
-          );
-          ctx.stroke();
-          ctx.fillStyle = "#1e3e16";
-          ctx.beginPath();
-          ctx.ellipse(vx - 1 * s, vy1 + vLen, 2 * s, 1.2 * s, 0.3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Water stain drips
-        ctx.globalAlpha = 0.15;
-        ctx.fillStyle = "#1a3a2a";
-        for (let i = 0; i < 3; i++) {
-          const dx = ruinOx + ((((ruinSeed + i * 89) % 30) - 15) * s);
-          const dy = ruinOy - ((ruinSeed + i * 43) % 20) * s;
-          ctx.beginPath();
-          ctx.ellipse(dx, dy, 1 * s, 5 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-      } else if (mapTheme === "desert") {
-        // Sand drift accumulation at the base
-        const sandDriftG = ctx.createLinearGradient(
-          ruinOx - 25 * s, ruinOy, ruinOx + 25 * s, ruinOy + 8 * s,
-        );
-        sandDriftG.addColorStop(0, "rgba(180,160,120,0)");
-        sandDriftG.addColorStop(0.3, "rgba(180,160,120,0.35)");
-        sandDriftG.addColorStop(0.7, "rgba(200,180,140,0.3)");
-        sandDriftG.addColorStop(1, "rgba(180,160,120,0)");
-        ctx.fillStyle = sandDriftG;
-        ctx.beginPath();
-        ctx.ellipse(ruinOx + 4 * s, ruinOy + 4 * s, 28 * s, 8 * s, 0.1, 0, Math.PI * 2);
-        ctx.fill();
-        // Wind-blown sand streaks
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = "#c0a878";
-        ctx.lineWidth = 0.6 * s;
-        for (let i = 0; i < 5; i++) {
-          const sx = ruinOx + ((((ruinSeed + i * 53) % 40) - 20) * s);
-          const sy = ruinOy + ((((ruinSeed + i * 29) % 12) - 4) * s);
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(sx + (8 + ((ruinSeed + i * 17) % 6)) * s, sy + 1 * s);
-          ctx.stroke();
-        }
-        // Small sand piles against walls
-        ctx.globalAlpha = 0.4;
-        for (let i = 0; i < 4; i++) {
-          const px = ruinOx + ((((ruinSeed + i * 67) % 30) - 15) * s);
-          const py = ruinOy + ((((ruinSeed + i * 41) % 8) - 2) * s);
-          const pr = (2 + ((ruinSeed + i * 13) % 2)) * s;
-          ctx.fillStyle = "#b8a078";
-          ctx.beginPath();
-          ctx.ellipse(px, py, pr, pr * 0.4, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-      } else if (mapTheme === "winter") {
-        // Snow accumulation on horizontal surfaces
-        ctx.globalAlpha = 0.7;
-        const snowCapG = ctx.createRadialGradient(
-          ruinOx, ruinOy - 12 * s, 0, ruinOx, ruinOy - 12 * s, 22 * s,
-        );
-        snowCapG.addColorStop(0, "rgba(230,238,248,0.5)");
-        snowCapG.addColorStop(0.7, "rgba(210,220,235,0.3)");
-        snowCapG.addColorStop(1, "rgba(200,210,225,0)");
-        ctx.fillStyle = snowCapG;
-        ctx.beginPath();
-        ctx.ellipse(ruinOx, ruinOy - 12 * s, 22 * s, 8 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Snow caps on ledges
-        ctx.fillStyle = "#e0e8f4";
-        for (let i = 0; i < 5; i++) {
-          const scx = ruinOx + ((((ruinSeed + i * 59) % 36) - 18) * s);
-          const scy = ruinOy - (14 + ((ruinSeed + i * 37) % 18)) * s;
-          const scw = (4 + ((ruinSeed + i * 23) % 4)) * s;
-          ctx.beginPath();
-          ctx.ellipse(scx, scy, scw, 1.5 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Icicles hanging from edges
-        ctx.globalAlpha = 0.55;
-        for (let i = 0; i < 4; i++) {
-          const ix = ruinOx + ((((ruinSeed + i * 71) % 32) - 16) * s);
-          const iy = ruinOy - (10 + ((ruinSeed + i * 43) % 12)) * s;
-          const iLen = (4 + ((ruinSeed + i * 19) % 5)) * s;
-          const iceDropG = ctx.createLinearGradient(ix, iy, ix, iy + iLen);
-          iceDropG.addColorStop(0, "rgba(180,210,240,0.6)");
-          iceDropG.addColorStop(1, "rgba(160,200,240,0.1)");
-          ctx.fillStyle = iceDropG;
-          ctx.beginPath();
-          ctx.moveTo(ix - 1 * s, iy);
-          ctx.lineTo(ix, iy + iLen);
-          ctx.lineTo(ix + 1 * s, iy);
-          ctx.closePath();
-          ctx.fill();
-        }
-        // Frost sparkle specks
-        ctx.globalAlpha = 0.6;
-        ctx.fillStyle = "#d8e8f8";
-        for (let i = 0; i < 6; i++) {
-          const fsx = ruinOx + ((((ruinSeed + i * 83) % 40) - 20) * s);
-          const fsy = ruinOy - ((ruinSeed + i * 47) % 30) * s;
-          ctx.beginPath();
-          ctx.arc(fsx, fsy, 0.6 * s, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-      } else if (mapTheme === "volcanic") {
-        // Ash layer on surfaces
-        ctx.globalAlpha = 0.35;
-        ctx.fillStyle = "rgba(60,50,45,0.4)";
-        ctx.beginPath();
-        ctx.ellipse(ruinOx, ruinOy - 4 * s, 24 * s, 10 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Glowing ember spots
-        ctx.globalAlpha = 0.7;
-        for (let i = 0; i < 5; i++) {
-          const ex = ruinOx + ((((ruinSeed + i * 61) % 36) - 18) * s);
-          const ey = ruinOy + ((((ruinSeed + i * 37) % 12) - 4) * s);
-          const er = (1 + ((ruinSeed + i * 23) % 2)) * s;
-          const emberG = ctx.createRadialGradient(ex, ey, 0, ex, ey, er * 2);
-          emberG.addColorStop(0, "rgba(255,120,30,0.6)");
-          emberG.addColorStop(0.5, "rgba(200,60,10,0.3)");
-          emberG.addColorStop(1, "rgba(100,30,5,0)");
-          ctx.fillStyle = emberG;
-          ctx.beginPath();
-          ctx.arc(ex, ey, er * 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        // Lava crack glow lines
-        ctx.globalAlpha = 0.4;
-        ctx.strokeStyle = "#d84a20";
-        ctx.lineWidth = 0.8 * s;
-        for (let i = 0; i < 3; i++) {
-          const lx = ruinOx + ((((ruinSeed + i * 79) % 30) - 15) * s);
-          const ly = ruinOy + ((((ruinSeed + i * 41) % 10) - 3) * s);
-          ctx.beginPath();
-          ctx.moveTo(lx, ly);
-          ctx.lineTo(lx + ((ruinSeed + i * 13) % 8) * s, ly + ((ruinSeed + i * 7) % 6) * s);
-          ctx.lineTo(
-            lx + ((ruinSeed + i * 17) % 12) * s,
-            ly - ((ruinSeed + i * 11) % 4) * s,
-          );
-          ctx.stroke();
-          ctx.globalAlpha = 0.15;
-          ctx.strokeStyle = "#ff8040";
-          ctx.lineWidth = 2.5 * s;
-          ctx.stroke();
-          ctx.lineWidth = 0.8 * s;
-          ctx.strokeStyle = "#d84a20";
-          ctx.globalAlpha = 0.4;
-        }
-        // Heat shimmer distortion hint
-        ctx.globalAlpha = 0.08;
-        ctx.fillStyle = "#ff6020";
-        ctx.beginPath();
-        ctx.ellipse(ruinOx, ruinOy - 20 * s, 16 * s, 24 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      // === REGIONAL OVERLAYS (variant-specific, isometric) ===
+      drawRuinsRegionalOverlay(
+        ctx, screenPos.x, screenPos.y, s,
+        ruinVariant, mapTheme, vineColor, decorX, decorY,
+      );
 
       break;
     }
@@ -31487,47 +31966,92 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
     case "statue": {
       // Regional stone & figure palettes
-      const statuePalettes: Record<string, {
-        stoneLight: string; stoneMid: string; stoneDark: string;
-        stoneShadow: string; stoneDeep: string;
-        figureHighlight: string; figureLight: string; figureMid: string;
-        figureDark: string; figureShadow: string;
-        steelLight: string; steelDark: string;
-      }> = {
+      const statuePalettes: Record<
+        string,
+        {
+          stoneLight: string;
+          stoneMid: string;
+          stoneDark: string;
+          stoneShadow: string;
+          stoneDeep: string;
+          figureHighlight: string;
+          figureLight: string;
+          figureMid: string;
+          figureDark: string;
+          figureShadow: string;
+          steelLight: string;
+          steelDark: string;
+        }
+      > = {
         grassland: {
-          stoneLight: "#b5b0a5", stoneMid: "#928d82", stoneDark: "#706b62",
-          stoneShadow: "#504b42", stoneDeep: "#3a3530",
-          figureHighlight: "#c0bbb0", figureLight: "#a09a90", figureMid: "#807a70",
-          figureDark: "#605a50", figureShadow: "#403a30",
-          steelLight: "#d0ccc5", steelDark: "#6a6560",
+          stoneLight: "#b5b0a5",
+          stoneMid: "#928d82",
+          stoneDark: "#706b62",
+          stoneShadow: "#504b42",
+          stoneDeep: "#3a3530",
+          figureHighlight: "#c0bbb0",
+          figureLight: "#a09a90",
+          figureMid: "#807a70",
+          figureDark: "#605a50",
+          figureShadow: "#403a30",
+          steelLight: "#d0ccc5",
+          steelDark: "#6a6560",
         },
         swamp: {
-          stoneLight: "#8a9a80", stoneMid: "#708068", stoneDark: "#566652",
-          stoneShadow: "#3e4e38", stoneDeep: "#2a3a24",
-          figureHighlight: "#96a68a", figureLight: "#7a8a6e", figureMid: "#607058",
-          figureDark: "#485842", figureShadow: "#30402a",
-          steelLight: "#a0aa98", steelDark: "#506048",
+          stoneLight: "#8a9a80",
+          stoneMid: "#708068",
+          stoneDark: "#566652",
+          stoneShadow: "#3e4e38",
+          stoneDeep: "#2a3a24",
+          figureHighlight: "#96a68a",
+          figureLight: "#7a8a6e",
+          figureMid: "#607058",
+          figureDark: "#485842",
+          figureShadow: "#30402a",
+          steelLight: "#a0aa98",
+          steelDark: "#506048",
         },
         desert: {
-          stoneLight: "#c8b898", stoneMid: "#a89878", stoneDark: "#887860",
-          stoneShadow: "#685848", stoneDeep: "#4a3e30",
-          figureHighlight: "#d4c4a4", figureLight: "#b8a888", figureMid: "#988870",
-          figureDark: "#786858", figureShadow: "#584838",
-          steelLight: "#d8c8b0", steelDark: "#887868",
+          stoneLight: "#c8b898",
+          stoneMid: "#a89878",
+          stoneDark: "#887860",
+          stoneShadow: "#685848",
+          stoneDeep: "#4a3e30",
+          figureHighlight: "#d4c4a4",
+          figureLight: "#b8a888",
+          figureMid: "#988870",
+          figureDark: "#786858",
+          figureShadow: "#584838",
+          steelLight: "#d8c8b0",
+          steelDark: "#887868",
         },
         winter: {
-          stoneLight: "#c0c5cc", stoneMid: "#98a0aa", stoneDark: "#78808a",
-          stoneShadow: "#586068", stoneDeep: "#3a4248",
-          figureHighlight: "#d0d4da", figureLight: "#aab0b8", figureMid: "#8a9098",
-          figureDark: "#687078", figureShadow: "#485058",
-          steelLight: "#dce0e4", steelDark: "#7a8088",
+          stoneLight: "#c0c5cc",
+          stoneMid: "#98a0aa",
+          stoneDark: "#78808a",
+          stoneShadow: "#586068",
+          stoneDeep: "#3a4248",
+          figureHighlight: "#d0d4da",
+          figureLight: "#aab0b8",
+          figureMid: "#8a9098",
+          figureDark: "#687078",
+          figureShadow: "#485058",
+          steelLight: "#dce0e4",
+          steelDark: "#7a8088",
         },
         volcanic: {
-          stoneLight: "#a08070", stoneMid: "#806050", stoneDark: "#604840",
-          stoneShadow: "#483430", stoneDeep: "#302020",
-          figureHighlight: "#b09080", figureLight: "#907060", figureMid: "#705848",
-          figureDark: "#504038", figureShadow: "#382828",
-          steelLight: "#b09888", steelDark: "#605048",
+          stoneLight: "#a08070",
+          stoneMid: "#806050",
+          stoneDark: "#604840",
+          stoneShadow: "#483430",
+          stoneDeep: "#302020",
+          figureHighlight: "#b09080",
+          figureLight: "#907060",
+          figureMid: "#705848",
+          figureDark: "#504038",
+          figureShadow: "#382828",
+          steelLight: "#b09888",
+          steelDark: "#605048",
         },
       };
       const sp = statuePalettes[mapTheme] ?? statuePalettes.grassland;
@@ -31682,7 +32206,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.ellipse(px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(px + 5 * s, baseY - 3 * s, 3 * s, 1.5 * s, -0.2, 0, Math.PI * 2);
+      ctx.ellipse(
+        px + 5 * s,
+        baseY - 3 * s,
+        3 * s,
+        1.5 * s,
+        -0.2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       // Chiseled edge bevel on bottom plinth (top-left lit edge)
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -31749,11 +32281,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const pedSeed = Math.abs(decorX * 37 + decorY * 53);
       ctx.globalAlpha = 0.08;
       for (let sp2 = 0; sp2 < 12; sp2++) {
-        const spx = px + ((((pedSeed + sp2 * 41) % 20) - 10) * s);
-        const spy = t2Y - t2H * 0.1 - ((pedSeed + sp2 * 29) % (t2H * 0.8 / s)) * s;
+        const spx = px + (((pedSeed + sp2 * 41) % 20) - 10) * s;
+        const spy =
+          t2Y - t2H * 0.1 - ((pedSeed + sp2 * 29) % ((t2H * 0.8) / s)) * s;
         ctx.fillStyle = sp2 % 3 === 0 ? stoneShadow : stoneLight;
         ctx.beginPath();
-        ctx.arc(spx, spy, (0.4 + ((pedSeed + sp2 * 17) % 3) * 0.2) * s, 0, Math.PI * 2);
+        ctx.arc(
+          spx,
+          spy,
+          (0.4 + ((pedSeed + sp2 * 17) % 3) * 0.2) * s,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -31820,8 +32359,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
       // Plaque surface
       const plqG = ctx.createLinearGradient(
-        px - 6 * s, plaqueY - 3 * s,
-        px + 6 * s, plaqueY + 3 * s,
+        px - 6 * s,
+        plaqueY - 3 * s,
+        px + 6 * s,
+        plaqueY + 3 * s,
       );
       plqG.addColorStop(0, stoneMid);
       plqG.addColorStop(0.5, stoneShadow);
@@ -31885,39 +32426,103 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       if (mapTheme === "swamp") {
         ctx.fillStyle = "rgba(50,80,30,0.35)";
         ctx.beginPath();
-        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 4 * s, 2 * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          4 * s,
+          2 * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(40,70,25,0.3)";
         ctx.beginPath();
-        ctx.ellipse(px + 6 * s, t2Y + 1 * s, 3 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          px + 6 * s,
+          t2Y + 1 * s,
+          3 * s,
+          1.5 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(45,75,28,0.25)";
         ctx.beginPath();
-        ctx.ellipse(px - 3 * s, t2Y - t2H * 0.3, 2.5 * s, 1.2 * s, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(
+          px - 3 * s,
+          t2Y - t2H * 0.3,
+          2.5 * s,
+          1.2 * s,
+          0.1,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       } else if (mapTheme === "desert") {
         ctx.fillStyle = "rgba(200,180,140,0.2)";
         ctx.beginPath();
-        ctx.ellipse(px - t1W + 5 * s, baseY - 0.5 * s, 4 * s, 1.8 * s, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(
+          px - t1W + 5 * s,
+          baseY - 0.5 * s,
+          4 * s,
+          1.8 * s,
+          0.1,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       } else if (mapTheme === "winter") {
         ctx.fillStyle = "rgba(220,230,240,0.35)";
         ctx.beginPath();
-        ctx.ellipse(px, baseY - t1H - 0.5 * s, t1W * 0.8, 3 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          px,
+          baseY - t1H - 0.5 * s,
+          t1W * 0.8,
+          3 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       } else if (mapTheme === "volcanic") {
         ctx.fillStyle = "rgba(40,30,30,0.2)";
         ctx.beginPath();
-        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          3.5 * s,
+          1.5 * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       } else {
         ctx.fillStyle = "rgba(70,90,55,0.25)";
         ctx.beginPath();
-        ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          px - t1W + 4 * s,
+          baseY - 1 * s,
+          3.5 * s,
+          1.5 * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.fillStyle = "rgba(60,80,45,0.2)";
         ctx.beginPath();
-        ctx.ellipse(px + 6 * s, t2Y + 1 * s, 2.5 * s, 1.2 * s, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          px + 6 * s,
+          t2Y + 1 * s,
+          2.5 * s,
+          1.2 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -33806,14 +34411,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = figureDark;
         ctx.beginPath();
         ctx.moveTo(-1 * s, -41 * s);
-        ctx.bezierCurveTo(
-          -4 * s,
-          -39 * s,
-          -5 * s,
-          -37 * s,
-          -4 * s,
-          -35 * s,
-        );
+        ctx.bezierCurveTo(-4 * s, -39 * s, -5 * s, -37 * s, -4 * s, -35 * s);
         ctx.lineTo(-1 * s, -37 * s);
         ctx.closePath();
         ctx.fill();
@@ -34615,8 +35213,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // --- Ambient occlusion at figure base (where figure meets pedestal) ---
       const aoGrad = ctx.createRadialGradient(
-        fx, figureBase + 1 * s, 0,
-        fx, figureBase + 1 * s, 10 * s,
+        fx,
+        figureBase + 1 * s,
+        0,
+        fx,
+        figureBase + 1 * s,
+        10 * s,
       );
       aoGrad.addColorStop(0, "rgba(40,35,28,0.4)");
       aoGrad.addColorStop(0.3, "rgba(40,35,28,0.2)");
@@ -34629,8 +35231,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // --- Left rim light (strong lit edge) ---
       const rimG = ctx.createLinearGradient(
-        fx - 6 * s, figureBase - 35 * s,
-        fx - 1 * s, figureBase - 20 * s,
+        fx - 6 * s,
+        figureBase - 35 * s,
+        fx - 1 * s,
+        figureBase - 20 * s,
       );
       rimG.addColorStop(0, "rgba(240,235,225,0.2)");
       rimG.addColorStop(0.5, "rgba(230,225,215,0.12)");
@@ -34638,16 +35242,28 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillStyle = rimG;
       ctx.beginPath();
       ctx.moveTo(fx - 5 * s, figureBase - 5 * s);
-      ctx.quadraticCurveTo(fx - 7 * s, figureBase - 22 * s, fx - 5 * s, figureBase - 40 * s);
+      ctx.quadraticCurveTo(
+        fx - 7 * s,
+        figureBase - 22 * s,
+        fx - 5 * s,
+        figureBase - 40 * s,
+      );
       ctx.lineTo(fx - 3 * s, figureBase - 38 * s);
-      ctx.quadraticCurveTo(fx - 5 * s, figureBase - 22 * s, fx - 3 * s, figureBase - 5 * s);
+      ctx.quadraticCurveTo(
+        fx - 5 * s,
+        figureBase - 22 * s,
+        fx - 3 * s,
+        figureBase - 5 * s,
+      );
       ctx.closePath();
       ctx.fill();
 
       // --- Right shadow edge (core shadow) ---
       const coreG = ctx.createLinearGradient(
-        fx + 1 * s, figureBase - 20 * s,
-        fx + 6 * s, figureBase - 20 * s,
+        fx + 1 * s,
+        figureBase - 20 * s,
+        fx + 6 * s,
+        figureBase - 20 * s,
       );
       coreG.addColorStop(0, "rgba(30,28,22,0)");
       coreG.addColorStop(0.5, "rgba(30,28,22,0.08)");
@@ -34655,36 +35271,66 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillStyle = coreG;
       ctx.beginPath();
       ctx.moveTo(fx + 3 * s, figureBase - 5 * s);
-      ctx.quadraticCurveTo(fx + 6 * s, figureBase - 22 * s, fx + 4 * s, figureBase - 38 * s);
+      ctx.quadraticCurveTo(
+        fx + 6 * s,
+        figureBase - 22 * s,
+        fx + 4 * s,
+        figureBase - 38 * s,
+      );
       ctx.lineTo(fx + 6 * s, figureBase - 36 * s);
-      ctx.quadraticCurveTo(fx + 8 * s, figureBase - 22 * s, fx + 5 * s, figureBase - 5 * s);
+      ctx.quadraticCurveTo(
+        fx + 8 * s,
+        figureBase - 22 * s,
+        fx + 5 * s,
+        figureBase - 5 * s,
+      );
       ctx.closePath();
       ctx.fill();
 
       // --- Specular highlight on upper torso/shoulder ---
       const specG = ctx.createRadialGradient(
-        fx - 1 * s, figureBase - 30 * s, 0,
-        fx - 1 * s, figureBase - 30 * s, 5 * s,
+        fx - 1 * s,
+        figureBase - 30 * s,
+        0,
+        fx - 1 * s,
+        figureBase - 30 * s,
+        5 * s,
       );
       specG.addColorStop(0, "rgba(255,255,250,0.18)");
       specG.addColorStop(0.4, "rgba(255,255,250,0.08)");
       specG.addColorStop(1, "rgba(255,255,250,0)");
       ctx.fillStyle = specG;
       ctx.beginPath();
-      ctx.ellipse(fx - 1 * s, figureBase - 30 * s, 5 * s, 6 * s, -0.1, 0, Math.PI * 2);
+      ctx.ellipse(
+        fx - 1 * s,
+        figureBase - 30 * s,
+        5 * s,
+        6 * s,
+        -0.1,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // --- Secondary specular on thigh/mid ---
       ctx.fillStyle = "rgba(255,255,250,0.07)";
       ctx.beginPath();
-      ctx.ellipse(fx + 1 * s, figureBase - 14 * s, 3 * s, 4 * s, 0.15, 0, Math.PI * 2);
+      ctx.ellipse(
+        fx + 1 * s,
+        figureBase - 14 * s,
+        3 * s,
+        4 * s,
+        0.15,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // --- Stone grain texture (seeded micro-dots) ---
       const figSeed = Math.abs(decorX * 59 + decorY * 97);
       ctx.globalAlpha = 0.06;
       for (let sg = 0; sg < 20; sg++) {
-        const sgx = fx + ((((figSeed + sg * 37) % 16) - 8) * s);
+        const sgx = fx + (((figSeed + sg * 37) % 16) - 8) * s;
         const sgy = figureBase - ((figSeed + sg * 23) % 38) * s;
         const sgr = (0.3 + ((figSeed + sg * 13) % 4) * 0.15) * s;
         ctx.fillStyle = sg % 2 === 0 ? figureShadow : figureHighlight;
@@ -34699,13 +35345,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.strokeStyle = stoneDeep;
       ctx.lineWidth = 0.4 * s;
       for (let cm = 0; cm < 6; cm++) {
-        const cmx = fx + ((((figSeed + cm * 43) % 12) - 6) * s);
+        const cmx = fx + (((figSeed + cm * 43) % 12) - 6) * s;
         const cmy = figureBase - (5 + ((figSeed + cm * 31) % 30)) * s;
         const cmLen = (1.5 + ((figSeed + cm * 19) % 3)) * s;
         const cmAng = ((figSeed + cm * 7) % 6) * 0.3 - 0.5;
         ctx.beginPath();
         ctx.moveTo(cmx, cmy);
-        ctx.lineTo(cmx + Math.cos(cmAng) * cmLen, cmy + Math.sin(cmAng) * cmLen);
+        ctx.lineTo(
+          cmx + Math.cos(cmAng) * cmLen,
+          cmy + Math.sin(cmAng) * cmLen,
+        );
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
@@ -34717,16 +35366,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.moveTo(fx + 3 * s, figureBase - 2 * s);
       ctx.quadraticCurveTo(
-        fx + 4.5 * s, figureBase - 12 * s,
-        fx + 3 * s, figureBase - 22 * s,
+        fx + 4.5 * s,
+        figureBase - 12 * s,
+        fx + 3 * s,
+        figureBase - 22 * s,
       );
       ctx.stroke();
       // Secondary crack
       ctx.beginPath();
       ctx.moveTo(fx - 2 * s, figureBase - 8 * s);
       ctx.quadraticCurveTo(
-        fx - 3 * s, figureBase - 14 * s,
-        fx - 1 * s, figureBase - 18 * s,
+        fx - 3 * s,
+        figureBase - 14 * s,
+        fx - 1 * s,
+        figureBase - 18 * s,
       );
       ctx.stroke();
       // Branching hairline cracks
@@ -34745,7 +35398,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.globalAlpha = 0.05;
       ctx.fillStyle = stoneLight;
       for (let ms = 0; ms < 3; ms++) {
-        const msx = fx + ((((figSeed + ms * 71) % 10) - 5) * s);
+        const msx = fx + (((figSeed + ms * 71) % 10) - 5) * s;
         const msy1 = figureBase - (12 + ms * 8) * s;
         ctx.beginPath();
         ctx.ellipse(msx, msy1, 0.8 * s, 4 * s, 0.1, 0, Math.PI * 2);
@@ -34758,8 +35411,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineWidth = 0.6 * s;
       ctx.beginPath();
       ctx.moveTo(fx - 4 * s, figureBase);
-      ctx.quadraticCurveTo(fx - 6 * s, figureBase - 18 * s, fx - 4 * s, figureBase - 32 * s);
-      ctx.quadraticCurveTo(fx - 2 * s, figureBase - 38 * s, fx, figureBase - 42 * s);
+      ctx.quadraticCurveTo(
+        fx - 6 * s,
+        figureBase - 18 * s,
+        fx - 4 * s,
+        figureBase - 32 * s,
+      );
+      ctx.quadraticCurveTo(
+        fx - 2 * s,
+        figureBase - 38 * s,
+        fx,
+        figureBase - 42 * s,
+      );
       ctx.stroke();
 
       // Regional weathering overlay on figure and pedestal
@@ -34767,24 +35430,58 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Heavy vine/moss overgrowth
         ctx.fillStyle = "rgba(50,80,30,0.25)";
         ctx.beginPath();
-        ctx.ellipse(fx - 5 * s, figureBase - 2 * s, 3 * s, 1.5 * s, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 5 * s,
+          figureBase - 2 * s,
+          3 * s,
+          1.5 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx + 4 * s, figureBase - 3 * s, 2.5 * s, 1.2 * s, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx + 4 * s,
+          figureBase - 3 * s,
+          2.5 * s,
+          1.2 * s,
+          -0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx - 2 * s, figureBase - 12 * s, 2 * s, 1 * s, 0.1, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 2 * s,
+          figureBase - 12 * s,
+          2 * s,
+          1 * s,
+          0.1,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Draping vines
         ctx.strokeStyle = "rgba(40,70,25,0.4)";
         ctx.lineWidth = 1.2 * s;
         ctx.beginPath();
         ctx.moveTo(fx - 6 * s, figureBase - 18 * s);
-        ctx.quadraticCurveTo(fx - 7 * s, figureBase - 10 * s, fx - 5 * s, figureBase - 4 * s);
+        ctx.quadraticCurveTo(
+          fx - 7 * s,
+          figureBase - 10 * s,
+          fx - 5 * s,
+          figureBase - 4 * s,
+        );
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(fx + 5 * s, figureBase - 22 * s);
-        ctx.quadraticCurveTo(fx + 7 * s, figureBase - 14 * s, fx + 4 * s, figureBase - 6 * s);
+        ctx.quadraticCurveTo(
+          fx + 7 * s,
+          figureBase - 14 * s,
+          fx + 4 * s,
+          figureBase - 6 * s,
+        );
         ctx.stroke();
       } else if (mapTheme === "desert") {
         // Sand accumulation at base and in crevices
@@ -34795,10 +35492,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Wind-worn patches
         ctx.fillStyle = "rgba(180,160,120,0.2)";
         ctx.beginPath();
-        ctx.ellipse(fx - 3 * s, figureBase - 8 * s, 2 * s, 1 * s, 0.4, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 3 * s,
+          figureBase - 8 * s,
+          2 * s,
+          1 * s,
+          0.4,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx + 4 * s, figureBase - 5 * s, 1.5 * s, 0.8 * s, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx + 4 * s,
+          figureBase - 5 * s,
+          1.5 * s,
+          0.8 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       } else if (mapTheme === "winter") {
         // Snow caps on head and shoulders
@@ -34807,10 +35520,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(fx, figureBase - 42 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx - 5 * s, figureBase - 30 * s, 3 * s, 1.2 * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 5 * s,
+          figureBase - 30 * s,
+          3 * s,
+          1.2 * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx + 5 * s, figureBase - 28 * s, 2.5 * s, 1 * s, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx + 5 * s,
+          figureBase - 28 * s,
+          2.5 * s,
+          1 * s,
+          -0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Snow on pedestal top
         ctx.fillStyle = "#e8eef4";
@@ -34826,10 +35555,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Ember glow at base cracks
         ctx.fillStyle = "rgba(255,120,40,0.2)";
         ctx.beginPath();
-        ctx.ellipse(fx - 3 * s, figureBase - 1 * s, 1.5 * s, 0.8 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 3 * s,
+          figureBase - 1 * s,
+          1.5 * s,
+          0.8 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx + 4 * s, figureBase - 2 * s, 1.2 * s, 0.6 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx + 4 * s,
+          figureBase - 2 * s,
+          1.2 * s,
+          0.6 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         // Subtle red heat glow on figure
         ctx.fillStyle = "rgba(200,60,20,0.08)";
@@ -34840,10 +35585,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Grassland default - subtle moss spots
         ctx.fillStyle = "rgba(65,85,50,0.18)";
         ctx.beginPath();
-        ctx.ellipse(fx - 4 * s, figureBase - 1 * s, 2 * s, 1 * s, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx - 4 * s,
+          figureBase - 1 * s,
+          2 * s,
+          1 * s,
+          0.2,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
         ctx.beginPath();
-        ctx.ellipse(fx + 3 * s, figureBase - 2 * s, 1.5 * s, 0.8 * s, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(
+          fx + 3 * s,
+          figureBase - 2 * s,
+          1.5 * s,
+          0.8 * s,
+          -0.1,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       break;

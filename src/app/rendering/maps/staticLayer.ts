@@ -26,7 +26,14 @@ import {
   isChallengeMountainTopCell,
   isMountainTerrainKind,
 } from "./challengeTerrain";
-import { drawPathDecorations, drawIsoPathStone, buildStonePalettes } from "./pathDecorations";
+import {
+  drawPathDecorations,
+  drawBatchedPathEdgeBlend,
+  drawIsoPathStone,
+  drawDetailedIsoStone,
+  buildStonePalettes,
+  fillIsoBlob,
+} from "./pathDecorations";
 import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
 import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
@@ -419,188 +426,265 @@ function buildRoadGeometry(
   };
 }
 
-function drawRoad(
+const ROAD_HALF_WIDTH_SQ =
+  (ROAD_BASE_WIDTH * 0.55) * (ROAD_BASE_WIDTH * 0.55);
+
+function isInsideOtherRoad(
+  worldPt: Position,
+  skipIdx: number,
+  allSmooth: Position[][],
+): boolean {
+  for (let r = 0; r < allSmooth.length; r++) {
+    if (r === skipIdx) continue;
+    const other = allSmooth[r];
+    for (let j = 0; j < other.length; j += 2) {
+      const dx = worldPt.x - other[j].x;
+      const dy = worldPt.y - other[j].y;
+      if (dx * dx + dy * dy < ROAD_HALF_WIDTH_SQ) return true;
+    }
+  }
+  return false;
+}
+
+function traceRoadOutline(
   ctx: CanvasRenderingContext2D,
-  geometry: RoadGeometry,
+  screenLeft: Position[],
+  screenRight: Position[],
+  ox = 0,
+  oy = 0,
+): void {
+  ctx.moveTo(screenLeft[0].x + ox, screenLeft[0].y + oy);
+  for (let i = 1; i < screenLeft.length; i++) {
+    ctx.lineTo(screenLeft[i].x + ox, screenLeft[i].y + oy);
+  }
+  for (let i = screenRight.length - 1; i >= 0; i--) {
+    ctx.lineTo(screenRight[i].x + ox, screenRight[i].y + oy);
+  }
+  ctx.closePath();
+}
+
+function traceInsetOutline(
+  ctx: CanvasRenderingContext2D,
+  screenCenter: Position[],
+  screenLeft: Position[],
+  screenRight: Position[],
+  blend: number,
+  liftY = 0,
+): void {
+  for (let i = 0; i < screenCenter.length; i++) {
+    const lx =
+      screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * blend;
+    const ly =
+      screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * blend - liftY;
+    if (i === 0) ctx.moveTo(lx, ly);
+    else ctx.lineTo(lx, ly);
+  }
+  for (let i = screenCenter.length - 1; i >= 0; i--) {
+    const rx =
+      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * blend;
+    const ry =
+      screenCenter[i].y +
+      (screenRight[i].y - screenCenter[i].y) * blend -
+      liftY;
+    ctx.lineTo(rx, ry);
+  }
+  ctx.closePath();
+}
+
+function drawRoadsBatched(
+  ctx: CanvasRenderingContext2D,
+  roads: RoadGeometry[],
   theme: RegionTheme,
   cameraZoom: number,
   mapSeed: number,
   topLayerBlend: number,
   includePatches: boolean,
   toScreen: (pos: Position) => Position,
-  skipPathShadows = false,
 ): void {
-  const { smoothPath, screenCenter, screenLeft, screenRight } = geometry;
+  const active = roads.filter((r) => r.screenCenter.length > 0);
+  if (active.length === 0) return;
 
-  if (screenCenter.length === 0) {
-    return;
-  }
-
-  if (!skipPathShadows) {
-    const shadowOff = 4 * cameraZoom;
-    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-    ctx.beginPath();
-    ctx.moveTo(screenLeft[0].x + shadowOff, screenLeft[0].y + shadowOff);
-    for (let i = 1; i < screenLeft.length; i++) {
-      ctx.lineTo(screenLeft[i].x + shadowOff, screenLeft[i].y + shadowOff);
-    }
-    for (let i = screenRight.length - 1; i >= 0; i--) {
-      ctx.lineTo(screenRight[i].x + shadowOff, screenRight[i].y + shadowOff);
-    }
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  ctx.fillStyle = skipPathShadows ? theme.path[0] : theme.path[2];
+  // Soft outer fringe: terrain-colored rings drawn *under* the opaque road
+  // body. The opaque layers above cover the interior, leaving only the soft
+  // edge ring visible. At road intersections Road B's body covers Road A's
+  // fringe, preventing semi-transparent stacking artifacts.
+  ctx.fillStyle = hexToRgba(theme.ground[1], 0.1);
   ctx.beginPath();
-  ctx.moveTo(screenLeft[0].x, screenLeft[0].y);
-  for (let i = 1; i < screenLeft.length; i++) {
-    ctx.lineTo(screenLeft[i].x, screenLeft[i].y);
+  for (const { screenCenter, screenLeft, screenRight } of active) {
+    traceInsetOutline(ctx, screenCenter, screenLeft, screenRight, 1.16);
   }
-  for (let i = screenRight.length - 1; i >= 0; i--) {
-    ctx.lineTo(screenRight[i].x, screenRight[i].y);
-  }
-  ctx.closePath();
   ctx.fill();
+
+  ctx.fillStyle = hexToRgba(theme.ground[2], 0.07);
+  ctx.beginPath();
+  for (const { screenCenter, screenLeft, screenRight } of active) {
+    traceInsetOutline(ctx, screenCenter, screenLeft, screenRight, 1.07);
+  }
+  ctx.fill();
+
+  // Road body — dark edge stroke drawn FIRST, then opaque fills on top.
+  // At intersections, road B's fill covers road A's edge stroke where it
+  // passes through road B's body, preventing the grid artefact.
+  ctx.strokeStyle = theme.path[2];
+  ctx.lineWidth = 4 * cameraZoom;
+  ctx.beginPath();
+  for (const { screenLeft, screenRight } of active) {
+    traceRoadOutline(ctx, screenLeft, screenRight);
+  }
+  ctx.stroke();
 
   ctx.fillStyle = theme.path[0];
   ctx.beginPath();
-  for (let i = 0; i < screenCenter.length; i++) {
-    const lx = screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * 0.88;
-    const ly = screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * 0.88;
-    if (i === 0) {
-      ctx.moveTo(lx, ly);
-    } else {
-      ctx.lineTo(lx, ly);
-    }
+  for (const { screenLeft, screenRight } of active) {
+    traceRoadOutline(ctx, screenLeft, screenRight);
   }
-  for (let i = screenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.88;
-    const ry =
-      screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.88;
-    ctx.lineTo(rx, ry);
-  }
-  ctx.closePath();
   ctx.fill();
 
   const topLayerLift = 2 * cameraZoom;
   ctx.fillStyle = theme.path[1];
   ctx.beginPath();
-  for (let i = 0; i < screenCenter.length; i++) {
-    const lx =
-      screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * topLayerBlend;
-    const ly =
-      screenCenter[i].y +
-      (screenLeft[i].y - screenCenter[i].y) * topLayerBlend -
-      topLayerLift;
-    if (i === 0) {
-      ctx.moveTo(lx, ly);
-    } else {
-      ctx.lineTo(lx, ly);
-    }
+  for (const { screenCenter, screenLeft, screenRight } of active) {
+    traceInsetOutline(
+      ctx,
+      screenCenter,
+      screenLeft,
+      screenRight,
+      topLayerBlend,
+      topLayerLift,
+    );
   }
-  for (let i = screenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      screenCenter[i].x +
-      (screenRight[i].x - screenCenter[i].x) * topLayerBlend;
-    const ry =
-      screenCenter[i].y +
-      (screenRight[i].y - screenCenter[i].y) * topLayerBlend -
-      topLayerLift;
-    ctx.lineTo(rx, ry);
-  }
-  ctx.closePath();
   ctx.fill();
 
-  if (includePatches) {
-    const patchRandom = createSeededRandom(mapSeed + 200);
-    for (let i = 0; i < smoothPath.length; i += 3) {
-      if (i >= screenCenter.length) break;
-      const sp = screenCenter[i];
-      const patchSize = (3 + patchRandom() * 6) * cameraZoom;
-      const ox = sp.x + (patchRandom() - 0.5) * 35 * cameraZoom;
-      const oy = sp.y + (patchRandom() - 0.5) * 18 * cameraZoom;
-      const rotation = patchRandom() * Math.PI;
-
-      ctx.fillStyle = hexToRgba(theme.ground[2], 0.06 + patchRandom() * 0.04);
-      ctx.beginPath();
-      ctx.ellipse(
-        ox + 1.5 * cameraZoom,
-        oy + 0.9 * cameraZoom,
-        patchSize,
-        patchSize * 0.5,
-        rotation,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      ctx.fillStyle = hexToRgba(theme.ground[2], 0.1 + patchRandom() * 0.05);
-      ctx.beginPath();
-      ctx.ellipse(ox, oy, patchSize, patchSize * 0.5, rotation, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = hexToRgba(theme.path[0], 0.03 + patchRandom() * 0.02);
-      ctx.beginPath();
-      ctx.ellipse(
-        ox - patchSize * 0.25,
-        oy - patchSize * 0.12,
-        patchSize * 0.42,
-        patchSize * 0.16,
-        rotation,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
+  // Subtle center crown highlight for a convex road profile
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.beginPath();
+  for (const { screenCenter, screenLeft, screenRight } of active) {
+    traceInsetOutline(
+      ctx,
+      screenCenter,
+      screenLeft,
+      screenRight,
+      0.38,
+      topLayerLift * 0.5,
+    );
   }
+  ctx.fill();
 
-  ctx.strokeStyle = hexToRgba(theme.path[2], skipPathShadows ? 0.06 : 0.18);
-  ctx.lineWidth = 3 * cameraZoom;
-  for (let track = -1; track <= 1; track += 2) {
-    ctx.beginPath();
-    for (let i = 0; i < smoothPath.length; i++) {
-      const p = smoothPath[i];
-      const { perpX, perpY } = getSmoothedPerpendicular(smoothPath, i, 3);
-      const wobblePx = Math.sin(i * 0.5 + mapSeed) * ROAD_TRACK_WOBBLE;
-      const trackOffset = (ROAD_TRACK_OFFSET * track + wobblePx) / cameraZoom;
-      const screenP = {
-        x: p.x + perpX * trackOffset,
-        y: p.y + perpY * trackOffset * 0.75,
-      };
-      const trackScreenPoint = toScreen(screenP);
-      if (i === 0) {
-        ctx.moveTo(trackScreenPoint.x, trackScreenPoint.y);
-      } else {
-        ctx.lineTo(trackScreenPoint.x, trackScreenPoint.y);
+  const allSmooth = active.map((r) => r.smoothPath);
+
+  for (let roadIdx = 0; roadIdx < active.length; roadIdx++) {
+    const { smoothPath, screenCenter, screenLeft, screenRight } = active[roadIdx];
+
+    if (includePatches) {
+      const patchRandom = createSeededRandom(mapSeed + 200);
+      for (let i = 0; i < smoothPath.length; i += 3) {
+        if (i >= screenCenter.length) break;
+        const sp = screenCenter[i];
+        const patchSize = (3 + patchRandom() * 6) * cameraZoom;
+        const ox = sp.x + (patchRandom() - 0.5) * 35 * cameraZoom;
+        const oy = sp.y + (patchRandom() - 0.5) * 18 * cameraZoom;
+        const wobble = patchRandom() * patchSize * 0.1;
+
+        fillIsoBlob(ctx,
+          ox + 1.5 * cameraZoom, oy + 0.9 * cameraZoom,
+          patchSize, patchSize * 0.5,
+          hexToRgba(theme.ground[2], 0.06 + patchRandom() * 0.04), wobble);
+
+        fillIsoBlob(ctx, ox, oy,
+          patchSize, patchSize * 0.5,
+          hexToRgba(theme.ground[2], 0.1 + patchRandom() * 0.05), wobble);
+
+        fillIsoBlob(ctx,
+          ox - patchSize * 0.25, oy - patchSize * 0.12,
+          patchSize * 0.42, patchSize * 0.16,
+          hexToRgba(theme.path[0], 0.03 + patchRandom() * 0.02), wobble * 0.4);
       }
     }
-    ctx.stroke();
-  }
 
-  const pebbleRandom = createSeededRandom(mapSeed + 300);
-  const stonePalettes = buildStonePalettes(theme.path, 0.75);
-  for (let i = 0; i < smoothPath.length; i += 2) {
-    if (i >= screenLeft.length || pebbleRandom() > 0.5) continue;
-    const side = pebbleRandom() > 0.5 ? screenLeft : screenRight;
-    const p = side[i];
-    const hw = (2 + pebbleRandom() * 3) * cameraZoom;
-    const h = (1 + pebbleRandom() * 1.8) * cameraZoom;
-    const hd = hw * 0.5;
-    const pal = stonePalettes[Math.floor(pebbleRandom() * stonePalettes.length)];
-    const shOff = 1 * cameraZoom;
+    ctx.strokeStyle = hexToRgba(theme.path[2], 0.1);
+    ctx.lineWidth = 3 * cameraZoom;
+    const skipOverlap = allSmooth.length > 1;
+    for (let track = -1; track <= 1; track += 2) {
+      ctx.beginPath();
+      let penDown = false;
+      for (let i = 0; i < smoothPath.length; i++) {
+        const p = smoothPath[i];
+        const { perpX, perpY } = getSmoothedPerpendicular(smoothPath, i, 3);
+        const wobblePx = Math.sin(i * 0.5 + mapSeed) * ROAD_TRACK_WOBBLE;
+        const trackOffset = ROAD_TRACK_OFFSET * track + wobblePx;
+        const worldPt = {
+          x: p.x + perpX * trackOffset,
+          y: p.y + perpY * trackOffset * 0.75,
+        };
 
-    ctx.fillStyle = `rgba(0,0,0,${0.15 + pebbleRandom() * 0.08})`;
-    ctx.beginPath();
-    ctx.moveTo(p.x + shOff, p.y + shOff * 0.5 - hd);
-    ctx.lineTo(p.x + shOff + hw, p.y + shOff * 0.5);
-    ctx.lineTo(p.x + shOff, p.y + shOff * 0.5 + hd);
-    ctx.lineTo(p.x + shOff - hw, p.y + shOff * 0.5);
-    ctx.closePath();
-    ctx.fill();
+        if (skipOverlap && isInsideOtherRoad(worldPt, roadIdx, allSmooth)) {
+          penDown = false;
+          continue;
+        }
 
-    drawIsoPathStone(ctx, p.x, p.y, hw, h, pal.top, pal.left, pal.right);
+        const sp = toScreen(worldPt);
+        if (!penDown) {
+          ctx.moveTo(sp.x, sp.y);
+          penDown = true;
+        } else {
+          ctx.lineTo(sp.x, sp.y);
+        }
+      }
+      ctx.stroke();
+    }
+
+    const pebbleRandom = createSeededRandom(mapSeed + 300);
+    const stonePalettes = buildStonePalettes(theme.path, 0.75);
+    for (let i = 0; i < smoothPath.length; i += 2) {
+      if (i >= screenLeft.length || pebbleRandom() > 0.5) continue;
+      const side = pebbleRandom() > 0.5 ? screenLeft : screenRight;
+      const p = side[i];
+      const hw = (2 + pebbleRandom() * 3.5) * cameraZoom;
+      const h = (1.2 + pebbleRandom() * 2.2) * cameraZoom;
+      const hd = hw * 0.5;
+      const pal =
+        stonePalettes[Math.floor(pebbleRandom() * stonePalettes.length)];
+      const shOff = 1 * cameraZoom;
+
+      ctx.fillStyle = `rgba(0,0,0,${0.12 + pebbleRandom() * 0.06})`;
+      ctx.beginPath();
+      ctx.moveTo(p.x + shOff, p.y + shOff * 0.5 - hd);
+      ctx.lineTo(p.x + shOff + hw, p.y + shOff * 0.5);
+      ctx.lineTo(p.x + shOff, p.y + shOff * 0.5 + hd);
+      ctx.lineTo(p.x + shOff - hw, p.y + shOff * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Larger pebbles get the detailed renderer with rim + seam
+      if (hw > 3.5 * cameraZoom) {
+        drawDetailedIsoStone(
+          ctx,
+          p.x,
+          p.y,
+          hw,
+          h,
+          pal.top,
+          pal.left,
+          pal.right,
+        );
+      } else {
+        drawIsoPathStone(ctx, p.x, p.y, hw, h, pal.top, pal.left, pal.right);
+      }
+
+      // Satellite micro-pebbles near larger stones
+      if (hw > 3 * cameraZoom && pebbleRandom() > 0.4) {
+        const satCount = 1 + Math.floor(pebbleRandom() * 2);
+        for (let s = 0; s < satCount; s++) {
+          const angle = pebbleRandom() * Math.PI * 2;
+          const dist = hw * (1.1 + pebbleRandom() * 0.6);
+          const sx = p.x + Math.cos(angle) * dist;
+          const sy = p.y + Math.sin(angle) * dist * 0.5;
+          const sHw = (0.6 + pebbleRandom() * 1) * cameraZoom;
+          const sH = (0.2 + pebbleRandom() * 0.5) * cameraZoom;
+          drawIsoPathStone(ctx, sx, sy, sHw, sH, pal.top, pal.left, pal.right);
+        }
+      }
+    }
   }
 }
 
@@ -624,7 +708,6 @@ function getFogEndpoints(geometry: RoadGeometry): StaticMapFogEndpoint[] {
     { endPos: lastScreenPos, towardsPos: secondLastScreenPos },
   ];
 }
-
 
 const TERRACE_DECO_TYPES: Record<ChallengeThemeKey, string[]> = {
   grassland: ["tree", "bush", "rock", "grass", "hedge", "flowers"],
@@ -820,7 +903,12 @@ function renderChallengeSkyDecorations(
   if (themeKey === "grassland") {
     // warm horizon glow band
     ctx.save();
-    const horizonGlow = ctx.createLinearGradient(0, height * 0.12, 0, height * 0.35);
+    const horizonGlow = ctx.createLinearGradient(
+      0,
+      height * 0.12,
+      0,
+      height * 0.35,
+    );
     horizonGlow.addColorStop(0, "rgba(255,245,200,0)");
     horizonGlow.addColorStop(0.4, "rgba(255,240,190,0.06)");
     horizonGlow.addColorStop(0.7, "rgba(255,235,170,0.04)");
@@ -848,7 +936,15 @@ function renderChallengeSkyDecorations(
         const pr = cw * (0.2 + skyRandom() * 0.25);
         const ph = ch * (0.4 + skyRandom() * 0.4);
         ctx.beginPath();
-        ctx.ellipse(cx + offX + 2, cy + offY + 2, pr, ph, skyRandom() * 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          cx + offX + 2,
+          cy + offY + 2,
+          pr,
+          ph,
+          skyRandom() * 0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       ctx.restore();
@@ -863,7 +959,15 @@ function renderChallengeSkyDecorations(
         const pr = cw * (0.2 + skyRandom() * 0.25);
         const ph = ch * (0.4 + skyRandom() * 0.4);
         ctx.beginPath();
-        ctx.ellipse(cx + offX, cy + offY, pr, ph, skyRandom() * 0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          cx + offX,
+          cy + offY,
+          pr,
+          ph,
+          skyRandom() * 0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       ctx.restore();
@@ -874,7 +978,14 @@ function renderChallengeSkyDecorations(
     const sunGlowX = width * (0.72 + skyRandom() * 0.18);
     const sunGlowY = height * 0.16;
     const sunGlowR = width * 0.24;
-    const sunGlow = ctx.createRadialGradient(sunGlowX, sunGlowY, 0, sunGlowX, sunGlowY, sunGlowR);
+    const sunGlow = ctx.createRadialGradient(
+      sunGlowX,
+      sunGlowY,
+      0,
+      sunGlowX,
+      sunGlowY,
+      sunGlowR,
+    );
     sunGlow.addColorStop(0, "rgba(255,248,210,0.14)");
     sunGlow.addColorStop(0.25, "rgba(255,242,185,0.09)");
     sunGlow.addColorStop(0.5, "rgba(255,235,165,0.05)");
@@ -1166,8 +1277,10 @@ function renderChallengeSkyDecorations(
           const midAngle = ((l - 0.5) / (lobes * 2)) * Math.PI * 2;
           ctx.quadraticCurveTo(
             puffCx + Math.cos(midAngle) * spread * (0.6 + smokeRandom() * 0.2),
-            puffCy + Math.sin(midAngle) * spread * 0.55 * (0.6 + smokeRandom() * 0.2),
-            px, py,
+            puffCy +
+              Math.sin(midAngle) * spread * 0.55 * (0.6 + smokeRandom() * 0.2),
+            px,
+            py,
           );
         }
       }
@@ -1179,7 +1292,14 @@ function renderChallengeSkyDecorations(
     if (smokeRandom() > 0.4) {
       ctx.save();
       ctx.globalAlpha = 0.05;
-      const glowGrad = ctx.createRadialGradient(baseX, baseY + 10, 0, baseX, baseY + 10, 20);
+      const glowGrad = ctx.createRadialGradient(
+        baseX,
+        baseY + 10,
+        0,
+        baseX,
+        baseY + 10,
+        20,
+      );
       glowGrad.addColorStop(0, "rgba(255,100,40,1)");
       glowGrad.addColorStop(0.5, "rgba(255,70,20,0.5)");
       glowGrad.addColorStop(1, "rgba(255,40,10,0)");
@@ -1254,7 +1374,14 @@ export function renderChallengeMountainBackdrop(
   renderChallengeSkyDecorations(ctx, width, height, mapSeed, themeKey, palette);
 
   // theme-specific silhouettes (the main visual content)
-  renderThemedBackdropSilhouettes(ctx, width, height, mapSeed, themeKey, palette);
+  renderThemedBackdropSilhouettes(
+    ctx,
+    width,
+    height,
+    mapSeed,
+    themeKey,
+    palette,
+  );
 
   // atmospheric depth overlay — grassland uses lighter treatment to preserve
   // the warm golden-hour palette; other themes keep stronger darkening
@@ -1262,9 +1389,18 @@ export function renderChallengeMountainBackdrop(
   const isGrassland = themeKey === "grassland";
   const atmosphere = ctx.createLinearGradient(0, height * 0.44, 0, height);
   atmosphere.addColorStop(0, shadowTransparent);
-  atmosphere.addColorStop(0.5, hexToRgba(palette.mountainShadow, isGrassland ? 0.03 : 0.05));
-  atmosphere.addColorStop(0.7, hexToRgba(palette.mountainShadow, isGrassland ? 0.05 : 0.08));
-  atmosphere.addColorStop(1, hexToRgba(palette.mountainShadow, isGrassland ? 0.12 : 0.22));
+  atmosphere.addColorStop(
+    0.5,
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.03 : 0.05),
+  );
+  atmosphere.addColorStop(
+    0.7,
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.05 : 0.08),
+  );
+  atmosphere.addColorStop(
+    1,
+    hexToRgba(palette.mountainShadow, isGrassland ? 0.12 : 0.22),
+  );
   ctx.fillStyle = atmosphere;
   ctx.fillRect(0, 0, width, height);
 }
@@ -2004,7 +2140,8 @@ export function renderStaticMapLayer({
         const screenPos = toScreen(worldPos);
         const tintBaseAlpha = isChallengeTopLayer ? 0.01 : 0.025;
         const tintVarAlpha = isChallengeTopLayer ? 0.02 : 0.04;
-        const tileColor = tileColors[Math.floor(gridRandom() * tileColors.length)];
+        const tileColor =
+          tileColors[Math.floor(gridRandom() * tileColors.length)];
         ctx.fillStyle = hexToRgba(
           tileColor,
           tintBaseAlpha + gridRandom() * tintVarAlpha,
@@ -2036,22 +2173,23 @@ export function renderStaticMapLayer({
     if (!road) continue;
 
     roads.push(road);
-    drawRoad(
-      ctx,
-      road,
-      theme,
-      cameraZoom,
-      mapSeed,
-      0.72,
-      true,
-      toScreen,
-      isChallengeMountainLevel,
-    );
     fogEndpoints.push(...getFogEndpoints(road));
   }
 
+  drawRoadsBatched(
+    ctx,
+    roads,
+    theme,
+    cameraZoom,
+    mapSeed,
+    0.72,
+    true,
+    toScreen,
+  );
+
   const themeName = LEVEL_DATA[selectedMap]?.theme || "grassland";
   if (getPerformanceSettings().showPathDecorations) {
+    drawBatchedPathEdgeBlend(ctx, roads, theme);
     for (const road of roads) {
       drawPathDecorations({
         ctx,
@@ -2064,7 +2202,6 @@ export function renderStaticMapLayer({
         cameraZoom,
         mapSeed,
         toScreen,
-        skipPathShadows: isChallengeMountainLevel,
       });
     }
   }

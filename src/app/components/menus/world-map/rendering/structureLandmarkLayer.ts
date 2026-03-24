@@ -1820,7 +1820,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     }
   }
 
-  // === LANDMARK: Frontier Outpost palisade (near x:1332, y:28) ===
+  // === LANDMARK: Frist Outpost palisade (near x:1332, y:28) ===
   {
     const foX = 1340,
       foY = getLevelY(42);

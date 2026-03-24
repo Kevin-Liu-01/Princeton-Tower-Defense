@@ -104,7 +104,7 @@ export function WorldMapTopBar({
       showTopBottomBorders={false}
     >
       <div
-        className="relative sm:px-1 z-20 py-1 overflow-hidden"
+        className="relative sm:px-1 z-20 py-0.5 overflow-hidden"
         style={{
           background: panelGradient,
         }}

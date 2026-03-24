@@ -1,6 +1,95 @@
 import type { Position } from "../../types";
 import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
+// ─── DIVINE COMMAND ATTACK RINGS (split into back/front halves) ─────────────
+
+type RingHalf = "back" | "front";
+
+function drawDivineCommandRings(
+  ctx: CanvasRenderingContext2D,
+  half: RingHalf,
+  x: number,
+  ringCenterY: number,
+  size: number,
+  zoom: number,
+  time: number,
+  commandPose: number,
+) {
+  // back = top of ellipse (behind hero), front = bottom (in front of hero)
+  const startAngle = half === "back" ? Math.PI : 0;
+  const endAngle = half === "back" ? Math.PI * 2 : Math.PI;
+
+  for (let ring = 0; ring < 5; ring++) {
+    const ringRadius = size * (0.6 + ring * 0.2 + commandPose * 0.3);
+    const ringAlpha = commandPose * (0.6 - ring * 0.1);
+
+    ctx.strokeStyle = `rgba(255, 200, 100, ${ringAlpha})`;
+    ctx.lineWidth = 3 * zoom;
+    ctx.shadowColor = "#ffcc00";
+    ctx.shadowBlur = 8 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, ringCenterY, ringRadius, ringRadius * 0.45, 0, startAngle, endAngle);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = `rgba(255, 100, 50, ${ringAlpha * 0.8})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, ringCenterY, ringRadius * 0.92, ringRadius * 0.42, 0, startAngle, endAngle);
+    ctx.stroke();
+  }
+
+  // Spark particles and flame pillars only on the matching half
+  for (let spark = 0; spark < 16; spark++) {
+    const sparkAngle =
+      (time * 5 + (spark * Math.PI * 2) / 16) % (Math.PI * 2);
+    const inBack = sparkAngle > Math.PI;
+    if ((half === "back") !== inBack) continue;
+
+    const sparkDist = size * (0.65 + commandPose * 0.5);
+    const sparkX = x + Math.cos(sparkAngle) * sparkDist;
+    const sparkY = ringCenterY + Math.sin(sparkAngle) * sparkDist * 0.45;
+    const sparkAlpha =
+      commandPose * (0.8 + Math.sin(time * 10 + spark) * 0.2);
+
+    ctx.fillStyle =
+      spark % 3 === 0
+        ? `rgba(255, 220, 100, ${sparkAlpha})`
+        : spark % 3 === 1
+          ? `rgba(255, 150, 50, ${sparkAlpha})`
+          : `rgba(220, 38, 38, ${sparkAlpha})`;
+    ctx.shadowColor = "#ff6600";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.arc(sparkX, sparkY, size * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  for (let pillar = 0; pillar < 6; pillar++) {
+    const pillarAngle = (pillar * Math.PI) / 3 + time * 2;
+    const normalised = ((pillarAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const inBack = normalised > Math.PI;
+    if ((half === "back") !== inBack) continue;
+
+    const pillarDist = size * (0.5 + commandPose * 0.3);
+    const pillarX = x + Math.cos(pillarAngle) * pillarDist;
+    const pillarY = ringCenterY + Math.sin(pillarAngle) * pillarDist * 0.45;
+    const pillarHeight = size * 0.2 * commandPose;
+
+    ctx.fillStyle = `rgba(255, 100, 50, ${commandPose * 0.6})`;
+    ctx.shadowColor = "#ff4400";
+    ctx.shadowBlur = 8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pillarX - size * 0.02, pillarY);
+    ctx.lineTo(pillarX, pillarY - pillarHeight);
+    ctx.lineTo(pillarX + size * 0.02, pillarY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
 // ─── DRAGON SKIRT ARMOR (segmented plate tassets below the breastplate) ──────
 
 function drawDragonSkirtArmor(
@@ -695,6 +784,11 @@ export function drawCaptainHero(
     ctx.fill();
   }
   ctx.restore();
+
+  // === DIVINE COMMAND BACK HALF (behind hero) ===
+  if (isAttacking) {
+    drawDivineCommandRings(ctx, "back", x, y + size * 0.45, size, zoom, time, commandPose);
+  }
 
   // === LEGENDARY FLAME CAPE ===
   const capeWave = Math.sin(time * 3) * 0.15;
@@ -3857,82 +3951,9 @@ export function drawCaptainHero(
     ctx.shadowBlur = 0;
   }
 
-  // === DIVINE COMMAND EFFECT WHEN ATTACKING ===
+  // === DIVINE COMMAND FRONT HALF (in front of hero) ===
   if (isAttacking) {
-    // Outer divine fire rings
-    for (let ring = 0; ring < 5; ring++) {
-      const ringRadius = size * (0.6 + ring * 0.2 + commandPose * 0.3);
-      const ringAlpha = commandPose * (0.6 - ring * 0.1);
-
-      // Gold divine ring
-      ctx.strokeStyle = `rgba(255, 200, 100, ${ringAlpha})`;
-      ctx.lineWidth = 3 * zoom;
-      ctx.shadowColor = "#ffcc00";
-      ctx.shadowBlur = 8 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(x, y, ringRadius, ringRadius * 0.45, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Fire inner ring
-      ctx.strokeStyle = `rgba(255, 100, 50, ${ringAlpha * 0.8})`;
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(
-        x,
-        y,
-        ringRadius * 0.92,
-        ringRadius * 0.42,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-    }
-
-    // Divine fire burst particles
-    for (let spark = 0; spark < 16; spark++) {
-      const sparkAngle =
-        (time * 5 + (spark * Math.PI * 2) / 16) % (Math.PI * 2);
-      const sparkDist = size * (0.65 + commandPose * 0.5);
-      const sparkX = x + Math.cos(sparkAngle) * sparkDist;
-      const sparkY = y + Math.sin(sparkAngle) * sparkDist * 0.45;
-      const sparkAlpha =
-        commandPose * (0.8 + Math.sin(time * 10 + spark) * 0.2);
-
-      ctx.fillStyle =
-        spark % 3 === 0
-          ? `rgba(255, 220, 100, ${sparkAlpha})`
-          : spark % 3 === 1
-            ? `rgba(255, 150, 50, ${sparkAlpha})`
-            : `rgba(220, 38, 38, ${sparkAlpha})`;
-      ctx.shadowColor = "#ff6600";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.arc(sparkX, sparkY, size * 0.03, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    // Rising flame pillars
-    for (let pillar = 0; pillar < 6; pillar++) {
-      const pillarAngle = (pillar * Math.PI) / 3 + time * 2;
-      const pillarDist = size * (0.5 + commandPose * 0.3);
-      const pillarX = x + Math.cos(pillarAngle) * pillarDist;
-      const pillarY = y + Math.sin(pillarAngle) * pillarDist * 0.45;
-      const pillarHeight = size * 0.2 * commandPose;
-
-      ctx.fillStyle = `rgba(255, 100, 50, ${commandPose * 0.6})`;
-      ctx.shadowColor = "#ff4400";
-      ctx.shadowBlur = 8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(pillarX - size * 0.02, pillarY);
-      ctx.lineTo(pillarX, pillarY - pillarHeight);
-      ctx.lineTo(pillarX + size * 0.02, pillarY);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
+    drawDivineCommandRings(ctx, "front", x, y + size * 0.45, size, zoom, time, commandPose);
   }
 
   ctx.restore();
