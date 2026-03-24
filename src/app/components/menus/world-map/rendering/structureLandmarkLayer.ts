@@ -33,6 +33,7 @@ import {
   drawArrow,
   drawFallenShield,
   drawBattleScene,
+  drawFlyingBattleScene,
   drawFallenSoldier,
   drawKingdomCastle,
   drawEnemyLair,
@@ -369,7 +370,7 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
     drawFallenSoldier(dc, x as number, y as number, isEnemy as boolean);
   });
 
-  // Multiple battle scenes across regions
+  // Multiple battle scenes across regions (knights, soldiers, cavalry vs dark knights, skeletons, archers)
   drawBattleScene(dc, 165, 42, false, 2);
   drawBattleScene(dc, 310, 72, true, 3);
   drawBattleScene(dc, 480, 35, false, 2);
@@ -390,6 +391,18 @@ export function drawStructureLandmarkLayer(dc: WorldMapDrawContext): void {
   drawBattleScene(dc, 1290, 32, true, 2);
   drawBattleScene(dc, 1600, 55, false, 2);
   drawBattleScene(dc, 1740, 35, true, 3);
+
+  // Flying enemies (harpies and wyverns) circling above key battle areas
+  drawFlyingBattleScene(dc, 310, 72, true, 2);
+  drawFlyingBattleScene(dc, 610, 60, false, 1);
+  drawFlyingBattleScene(dc, 840, 48, true, 2);
+  drawFlyingBattleScene(dc, 1200, 55, false, 1);
+  drawFlyingBattleScene(dc, 1340, 62, true, 3);
+  drawFlyingBattleScene(dc, 1670, 68, false, 2);
+  drawFlyingBattleScene(dc, 420, 58, true, 1);
+  drawFlyingBattleScene(dc, 975, 22, false, 2);
+  drawFlyingBattleScene(dc, 1520, 20, true, 1);
+  drawFlyingBattleScene(dc, 165, 36, false, 1);
 
   // === ENHANCED KINGDOM CASTLES ===
   drawKingdomCastle(dc, 70, 50);

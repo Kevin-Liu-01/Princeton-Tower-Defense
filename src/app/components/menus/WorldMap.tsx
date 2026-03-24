@@ -195,6 +195,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const initialScrollSkippedRef = useRef(false);
   const initialScrollDoneRef = useRef(false);
 
+  // Hero map position tracking for animated movement between levels
+  const heroMapPosRef = useRef({ x: 0, y: 0 });
+  const heroTargetPosRef = useRef({ x: 0, y: 0 });
+  const heroMovingRef = useRef(false);
+  const heroFacingRightRef = useRef(true);
+  const heroInitializedRef = useRef(false);
+
   // Drag cursor style — only the cursor visual needs React state; all other
   // drag logic reads from `dragRef.current.isDragging` to avoid re-renders on
   // every mouse-move.
@@ -270,6 +277,37 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     (pct: number) => getLevelNodeY(pct, mapHeight),
     [mapHeight]
   );
+
+  // Initialize hero position at first unlocked level, then track selectedLevel changes
+  useEffect(() => {
+    if (!mapHeight) return;
+    const targetId = selectedLevel;
+    const targetLevel = targetId
+      ? visibleWorldLevels.find((l) => l.id === targetId)
+      : null;
+
+    if (targetLevel) {
+      const tx = targetLevel.x;
+      const ty = getLevelNodeY(targetLevel.y, mapHeight);
+      heroTargetPosRef.current = { x: tx, y: ty };
+
+      if (!heroInitializedRef.current) {
+        heroMapPosRef.current = { x: tx, y: ty };
+        heroInitializedRef.current = true;
+      } else {
+        const dx = tx - heroMapPosRef.current.x;
+        heroFacingRightRef.current = dx >= 0;
+        heroMovingRef.current = true;
+      }
+    } else if (!heroInitializedRef.current) {
+      // Spawn hero to the right of the "Your Kingdom" castle (x=140, y=60%)
+      const castleX = 140;
+      const castleY = getLevelNodeY(60, mapHeight);
+      heroMapPosRef.current = { x: castleX, y: castleY };
+      heroTargetPosRef.current = { x: castleX, y: castleY };
+      heroInitializedRef.current = true;
+    }
+  }, [selectedLevel, mapHeight, visibleWorldLevels, unlockedMapSet]);
 
   // Scroll to furthest unlocked level on initial load (after localStorage hydration)
   useEffect(() => {
@@ -378,6 +416,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       fogOverlayCache: fogOverlayCacheRef,
       pathCache: pathCacheRef,
       nodeCache: nodeCacheRef,
+      heroType: selectedHero,
+      heroMapPos: heroMapPosRef,
+      heroMoving: heroMovingRef,
+      heroFacingRight: heroFacingRightRef,
     });
   };
 
@@ -407,7 +449,33 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let lastPreviewTime = 0;
     const frameInterval = isMobile ? 33 : 20; // 30fps mobile, 50fps desktop
 
+    let lastTimestamp = 0;
+    const HERO_SPEED = 200; // pixels per second
+
     const animate = (timestamp: number) => {
+      const dt = lastTimestamp > 0 ? (timestamp - lastTimestamp) / 1000 : 0;
+      lastTimestamp = timestamp;
+
+      // Interpolate hero position toward target
+      if (heroMovingRef.current) {
+        const pos = heroMapPosRef.current;
+        const target = heroTargetPosRef.current;
+        const dx = target.x - pos.x;
+        const dy = target.y - pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 2) {
+          heroMapPosRef.current = { x: target.x, y: target.y };
+          heroMovingRef.current = false;
+        } else {
+          const step = Math.min(HERO_SPEED * dt, dist);
+          heroMapPosRef.current = {
+            x: pos.x + (dx / dist) * step,
+            y: pos.y + (dy / dist) * step,
+          };
+        }
+      }
+
       if (timestamp - lastDrawTime > frameInterval) {
         animTimeRef.current = timestamp / 1000;
         lastDrawTime = timestamp;

@@ -3,7 +3,7 @@ import type { LevelStars } from "../../../../types";
 import type { LevelNode } from "../worldMapData";
 import type { NodeCache } from "./types";
 
-import { drawRegionIcon, type RegionType } from "../../../../sprites/regionIconDrawing";
+import { drawRegionIcon, drawChallengeSigil, type RegionType } from "../../../../sprites/regionIconDrawing";
 
 type RegionKey = RegionType;
 
@@ -943,35 +943,14 @@ export function drawLevelNodes({
           ctx.arc(3.5 * s, -10 * s + wave * 0.5, 1.2 * s, 0, Math.PI * 2);
           ctx.fill();
         } else if (isChallenge) {
-          // Challenge marker icon: regional sigil with crossed blades
+          // Animated glow behind sigil
           const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
           ctx.fillStyle = `${challengePalette.sigilGlow}${challengeGlow})`;
           ctx.beginPath();
           ctx.arc(0, 0, 11, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = challengePalette.sigilFill;
-          ctx.beginPath();
-          ctx.moveTo(0, -11);
-          ctx.lineTo(9, 0);
-          ctx.lineTo(0, 11);
-          ctx.lineTo(-9, 0);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.strokeStyle = challengePalette.sigilStroke;
-          ctx.lineWidth = 1.1;
-          ctx.beginPath();
-          ctx.moveTo(-6.5, 6);
-          ctx.lineTo(6.5, -6);
-          ctx.moveTo(-6.5, -6);
-          ctx.lineTo(6.5, 6);
-          ctx.stroke();
-
-          ctx.fillStyle = challengePalette.badgeText;
-          ctx.beginPath();
-          ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-          ctx.fill();
+          drawChallengeSigil(ctx, level.region as RegionType);
         } else if (
           level.region === "grassland" ||
           level.region === "swamp" ||

@@ -1,4 +1,21 @@
 import { WorldMapDrawContext } from "./drawContext";
+import {
+  drawMiniKnight,
+  drawMiniSoldier,
+  drawMiniArcher,
+  drawMiniCavalry,
+  drawMiniDarkKnight,
+  drawMiniSkeletonWarrior,
+  drawMiniEnemyArcher,
+  drawMiniOrcBrute,
+  drawMiniNecromancer,
+  drawMiniGoblin,
+  drawMiniHarpy,
+  drawMiniWyvern,
+  drawFallenKnight,
+  drawFallenEnemy,
+  drawFallenSkeleton,
+} from "./worldMapBattleUnits";
 
 export const drawBridge = (
   dc: WorldMapDrawContext,
@@ -251,148 +268,64 @@ export const drawBattleScene = (
 ) => {
   const { ctx, getY, time, seededRandom } = dc;
   const y = getY(yPct);
-  const t = time * 4 + x;
+  const t = time * 1.5 + x * 0.01;
 
   // Battle dust cloud
-  ctx.fillStyle = "rgba(100, 80, 60, 0.15)";
+  ctx.fillStyle = "rgba(100, 80, 60, 0.18)";
   ctx.beginPath();
-  ctx.ellipse(x, y + 4, 25 + intensity * 8, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + 6, 28 + intensity * 10, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Determine unit mix based on seeded position
+  const seed = seededRandom(x * 100 + yPct);
+  const hasCavalry = seed > 0.6 && intensity >= 2;
+
   for (let s = 0; s < intensity; s++) {
-    const offset = s * 20 * (flip ? -1 : 1);
+    const offset = s * 22 * (flip ? -1 : 1);
     const combatSway = Math.sin(t + s * 1.5) * 3;
+    const bob1 = Math.sin(t + s * 0.7) * 1.5;
+    const bob2 = Math.sin(t + s * 0.7 + 1) * 1.5;
 
-    // Friendly soldier (orange) - more detailed
-    const sx1 = x + offset + (flip ? 10 : -10) + combatSway;
-    const bob1 = Math.sin(t * 2 + s) * 1.5;
+    const friendlyX = x + offset + (flip ? 12 : -12) + combatSway;
+    const enemyX = x + offset + (flip ? -12 : 12) + Math.sin(t + 1 + s) * 2;
+    const unitSeed = seededRandom(x + s * 37);
 
-    // Shadow
-    ctx.fillStyle = "rgba(0,0,0,0.2)";
-    ctx.beginPath();
-    ctx.ellipse(sx1, y + 6, 5, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // Friendly unit selection: knight, soldier, archer, or cavalry
+    if (hasCavalry && s === 0) {
+      drawMiniCavalry(ctx, friendlyX, y, t + s, flip, combatSway, bob1);
+    } else if (unitSeed > 0.65) {
+      drawMiniKnight(ctx, friendlyX, y, t + s, flip, combatSway, bob1);
+    } else if (unitSeed > 0.3) {
+      drawMiniSoldier(ctx, friendlyX, y, t + s, flip, combatSway, bob1);
+    } else {
+      drawMiniArcher(ctx, friendlyX, y, t + s, flip, combatSway, bob1);
+    }
 
-    // Body
-    ctx.fillStyle = "#d97706";
-    ctx.beginPath();
-    ctx.ellipse(sx1, y + bob1, 4, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Head
-    ctx.fillStyle = "#f59e0b";
-    ctx.beginPath();
-    ctx.arc(sx1, y - 9 + bob1, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Helmet
-    ctx.fillStyle = "#b45309";
-    ctx.beginPath();
-    ctx.arc(sx1, y - 11 + bob1, 4, Math.PI, 0);
-    ctx.fill();
-
-    // Face details
-    ctx.fillStyle = "#1a1a1a";
-    ctx.beginPath();
-    ctx.arc(sx1 + (flip ? -1.5 : 1.5), y - 9 + bob1, 0.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Shield
-    ctx.fillStyle = "#92400e";
-    const shieldX = sx1 + (flip ? 5 : -5);
-    ctx.beginPath();
-    ctx.ellipse(shieldX, y - 2 + bob1, 3, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#f59e0b";
-    ctx.beginPath();
-    ctx.arc(shieldX, y - 2 + bob1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Sword with swing animation
-    const swordAngle = Math.sin(t * 3 + s) * 0.8;
-    ctx.save();
-    ctx.translate(sx1 + (flip ? -4 : 4), y - 4 + bob1);
-    ctx.rotate(swordAngle * (flip ? -1 : 1));
-    ctx.fillStyle = "#c0c0c0";
-    ctx.fillRect(-1, -12, 2, 12);
-    ctx.fillStyle = "#ffd700";
-    ctx.fillRect(-1.5, -2, 3, 3);
-    ctx.restore();
-
-    // Enemy soldier (red) - more detailed
-    const sx2 = x + offset + (flip ? -10 : 10) + Math.sin(t + 1 + s) * 2;
-    const bob2 = Math.sin(t * 2 + s + 1) * 1.5;
-
-    // Shadow
-    ctx.fillStyle = "rgba(0,0,0,0.2)";
-    ctx.beginPath();
-    ctx.ellipse(sx2, y + 6, 5, 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body
-    ctx.fillStyle = "#991b1b";
-    ctx.beginPath();
-    ctx.ellipse(sx2, y + bob2, 4, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Head
-    ctx.fillStyle = "#dc2626";
-    ctx.beginPath();
-    ctx.arc(sx2, y - 9 + bob2, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Horned helmet
-    ctx.fillStyle = "#450a0a";
-    ctx.beginPath();
-    ctx.arc(sx2, y - 11 + bob2, 4, Math.PI, 0);
-    ctx.fill();
-    // Horns
-    ctx.fillStyle = "#1a0a0a";
-    ctx.beginPath();
-    ctx.moveTo(sx2 - 4, y - 13 + bob2);
-    ctx.lineTo(sx2 - 6, y - 18 + bob2);
-    ctx.lineTo(sx2 - 2, y - 13 + bob2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(sx2 + 4, y - 13 + bob2);
-    ctx.lineTo(sx2 + 6, y - 18 + bob2);
-    ctx.lineTo(sx2 + 2, y - 13 + bob2);
-    ctx.fill();
-
-    // Glowing red eyes
-    ctx.fillStyle = "#ff0000";
-    ctx.globalAlpha = 0.8 + Math.sin(t * 5) * 0.2;
-    ctx.beginPath();
-    ctx.arc(sx2 + (flip ? 1.5 : -1.5), y - 9 + bob2, 1, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Enemy weapon (axe/spear)
-    const weaponAngle = Math.sin(t * 3 + s + 1.5) * 0.6;
-    ctx.save();
-    ctx.translate(sx2 + (flip ? 4 : -4), y - 4 + bob2);
-    ctx.rotate(weaponAngle * (flip ? 1 : -1));
-    ctx.fillStyle = "#4a4a4a";
-    ctx.fillRect(-1, -14, 2, 14);
-    ctx.fillStyle = "#2a2a2a";
-    ctx.beginPath();
-    ctx.moveTo(-4, -14);
-    ctx.lineTo(0, -18);
-    ctx.lineTo(4, -14);
-    ctx.lineTo(0, -12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    // Enemy unit selection: dark knight, skeleton, archer, orc, necromancer, or goblin
+    const enemySeed = seededRandom(x + s * 53 + 7);
+    if (enemySeed > 0.82) {
+      drawMiniDarkKnight(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    } else if (enemySeed > 0.65) {
+      drawMiniOrcBrute(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    } else if (enemySeed > 0.48) {
+      drawMiniSkeletonWarrior(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    } else if (enemySeed > 0.32) {
+      drawMiniNecromancer(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    } else if (enemySeed > 0.16) {
+      drawMiniGoblin(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    } else {
+      drawMiniEnemyArcher(ctx, enemyX, y, t + s + 1, !flip, combatSway, bob2);
+    }
   }
 
   // Sparks from clashing weapons
-  const sparkIntensity = Math.sin(t * 3);
+  const sparkIntensity = Math.sin(t * 2);
   if (sparkIntensity > 0.2) {
     ctx.fillStyle = "#ffd700";
     for (let i = 0; i < 5; i++) {
-      const sparkX = x + (seededRandom(x + i + Math.floor(t)) - 0.5) * 20;
+      const sparkX = x + (seededRandom(x + i + Math.floor(t)) - 0.5) * 24;
       const sparkY =
-        y - 5 + (seededRandom(x + i + 10 + Math.floor(t)) - 0.5) * 15;
+        y - 6 + (seededRandom(x + i + 10 + Math.floor(t)) - 0.5) * 18;
       const sparkSize = 1 + seededRandom(i + x) * 1.5;
       ctx.globalAlpha = sparkIntensity * 0.8;
       ctx.beginPath();
@@ -421,6 +354,37 @@ export const drawBattleScene = (
   }
 };
 
+export const drawFlyingBattleScene = (
+  dc: WorldMapDrawContext,
+  x: number,
+  yPct: number,
+  flip: boolean,
+  count: number,
+) => {
+  const { ctx, getY, time, seededRandom } = dc;
+  const y = getY(yPct);
+  const t = time * 1.2 + x * 0.01;
+
+  for (let i = 0; i < count; i++) {
+    const orbitRadius = 20 + i * 15;
+    const orbitSpeed = 0.6 + seededRandom(x + i * 11) * 0.3;
+    const orbitOffset = seededRandom(x + i * 23) * Math.PI * 2;
+    const orbitAngle = t * orbitSpeed + orbitOffset;
+
+    const fx = x + Math.cos(orbitAngle) * orbitRadius;
+    const fyOffset = Math.sin(orbitAngle) * orbitRadius * 0.3;
+
+    const unitSeed = seededRandom(x + i * 41);
+    const facing = Math.cos(orbitAngle) > 0;
+
+    if (unitSeed > 0.45) {
+      drawMiniHarpy(ctx, fx, y - 15 + fyOffset, t + i * 2, facing);
+    } else {
+      drawMiniWyvern(ctx, fx, y - 20 + fyOffset, t + i * 2, facing);
+    }
+  }
+};
+
 export const drawFallenSoldier = (
   dc: WorldMapDrawContext,
   fx: number,
@@ -429,17 +393,18 @@ export const drawFallenSoldier = (
 ) => {
   const { ctx, getY, seededRandom } = dc;
   const fy = getY(fyPct);
-  ctx.fillStyle = isEnemy ? "rgba(139, 0, 0, 0.5)" : "rgba(180, 100, 0, 0.5)";
-  ctx.beginPath();
-  ctx.ellipse(fx, fy, 6, 3, seededRandom(fx) * Math.PI, 0, Math.PI * 2);
-  ctx.fill();
-  // Dropped weapon
-  ctx.strokeStyle = "#5a5a5a";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(fx - 4, fy + 1);
-  ctx.lineTo(fx + 8, fy - 2);
-  ctx.stroke();
+  const rotation = (seededRandom(fx) - 0.5) * 1.2;
+  const variant = seededRandom(fx * 3 + fyPct);
+
+  if (isEnemy) {
+    if (variant > 0.5) {
+      drawFallenEnemy(ctx, fx, fy, rotation);
+    } else {
+      drawFallenSkeleton(ctx, fx, fy, rotation);
+    }
+  } else {
+    drawFallenKnight(ctx, fx, fy, rotation);
+  }
 };
 
 export const drawKingdomCastle = (

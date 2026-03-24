@@ -15,6 +15,8 @@ import { drawDecorationGroundLayer } from "./rendering/decorationGroundLayer";
 import { drawStructureLandmarkLayer } from "./rendering/structureLandmarkLayer";
 import { drawLevelNodes } from "./rendering/levelNodes";
 import { drawPathConnections } from "./rendering/pathConnections";
+import { drawWorldMapHero } from "./rendering/worldMapHero";
+import { drawLevelBattlePreview } from "./rendering/levelBattlePreview";
 
 export const drawWorldMapCanvas = ({
   canvasRef,
@@ -34,6 +36,10 @@ export const drawWorldMapCanvas = ({
   fogOverlayCache,
   pathCache,
   nodeCache,
+  heroType,
+  heroMapPos,
+  heroMoving,
+  heroFacingRight,
 }: DrawWorldMapParams): void => {
   const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
@@ -304,64 +310,37 @@ export const drawWorldMapCanvas = ({
     unlockedMaps,
   });
 
-  // --- MARCHING ENEMIES near selected level ---
-  if (selectedLevel) {
+  // --- ENEMIES surrounding the hero at the selected level ---
+  const isHeroMoving = heroMoving?.current ?? false;
+  if (selectedLevel && !isHeroMoving && heroMapPos) {
     const level = getLevelById(selectedLevel);
     if (level) {
-      const lx = level.x;
-      const ly = getLevelY(level.y);
-      const marchCount = isMobile ? 3 : 5;
-
-      for (let i = 0; i < marchCount; i++) {
-        const offset = i * 18;
-        const marchPhase = time * 3 + i * 1.2;
-        const ex = lx + 50 + offset + Math.sin(marchPhase) * 3;
-        const ey = ly + 6 + Math.sin(time * 2 + i * 0.7) * 2;
-        const bobble = Math.sin(time * 6 + i * 2) * 2;
-        const bodyColors = [
-          "#4a1515",
-          "#3a1010",
-          "#5a2020",
-          "#451818",
-          "#3d1212",
-        ];
-
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(ex, ey + 10, 6, 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = bodyColors[i % 5];
-        ctx.beginPath();
-        ctx.ellipse(ex, ey + bobble, 6, 9, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#2a0808";
-        ctx.beginPath();
-        ctx.ellipse(ex, ey + bobble, 5, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = bodyColors[i % 5];
-        ctx.beginPath();
-        ctx.arc(ex, ey - 11 + bobble, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#ff3333";
-        ctx.globalAlpha = 0.7 + Math.sin(time * 4 + i) * 0.3;
-        ctx.beginPath();
-        ctx.arc(ex - 2.2, ey - 12 + bobble, 1.8, 0, Math.PI * 2);
-        ctx.arc(ex + 2.2, ey - 12 + bobble, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = "#ff6666";
-        ctx.beginPath();
-        ctx.arc(ex - 2.2, ey - 12.3 + bobble, 0.7, 0, Math.PI * 2);
-        ctx.arc(ex + 2.2, ey - 12.3 + bobble, 0.7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
+      drawLevelBattlePreview(
+        ctx,
+        heroMapPos.current.x,
+        heroMapPos.current.y,
+        level.id,
+        time,
+        isMobile,
+      );
     }
+  }
+
+  // --- HERO SPRITE on the world map (always visible) ---
+  if (heroType && heroMapPos) {
+    const attackPhase = !isHeroMoving && selectedLevel
+      ? (Math.sin(time * 2) + 1) * 0.3
+      : 0;
+    drawWorldMapHero(
+      ctx,
+      heroMapPos.current.x,
+      heroMapPos.current.y,
+      heroType,
+      time,
+      isHeroMoving,
+      heroFacingRight?.current ?? true,
+      attackPhase,
+    );
   }
 
   // Tooltip with preview image:

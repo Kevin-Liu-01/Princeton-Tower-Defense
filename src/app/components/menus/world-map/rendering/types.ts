@@ -1,5 +1,5 @@
 import type { MutableRefObject, RefObject } from "react";
-import type { LevelStars } from "../../../../types";
+import type { HeroType, LevelStars } from "../../../../types";
 import type { LevelNode } from "../worldMapData";
 
 export interface StaticBgCache {
@@ -59,4 +59,8 @@ export interface DrawWorldMapParams {
   fogOverlayCache?: MutableRefObject<FogOverlayCache>;
   pathCache?: MutableRefObject<PathCache>;
   nodeCache?: MutableRefObject<NodeCache>;
+  heroType?: HeroType | null;
+  heroMapPos?: MutableRefObject<{ x: number; y: number }>;
+  heroMoving?: MutableRefObject<boolean>;
+  heroFacingRight?: MutableRefObject<boolean>;
 }
