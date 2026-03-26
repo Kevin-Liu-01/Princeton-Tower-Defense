@@ -20,7 +20,7 @@ export function drawHarpyEnemy(
   const attackIntensity = attackPhase;
   const wingFlap =
     Math.sin(time * 10) * 0.5 + (isAttacking ? attackIntensity * 0.4 : 0);
-  const swoop = Math.sin(time * 3) * 4 * zoom;
+  const swoop = Math.sin(time * 3) * 2 * zoom;
   const breathe = Math.sin(time * 4) * size * 0.01;
   const featherRuffle = Math.sin(time * 6) * 0.1;
   const windIntensity = 0.3 + Math.sin(time * 2) * 0.15;
@@ -603,7 +603,7 @@ export function drawHarpyEnemy(
       x + Math.cos(crownAngle - 0.2) * crownLen * 0.6,
       y - size * 0.5 + swoop + Math.sin(crownAngle) * crownLen * 0.3,
       x + Math.cos(crownAngle) * crownLen,
-      y - size * 0.44 - crownLen * 0.8 + swoop,
+      y - size * 0.44 - crownLen * 0.4 + swoop,
     );
     ctx.quadraticCurveTo(
       x + Math.cos(crownAngle + 0.2) * crownLen * 0.6,
@@ -620,7 +620,7 @@ export function drawHarpyEnemy(
     const pAngle = -Math.PI * 0.5 + (p - 1.5) * 0.2;
     const pBaseX = x + (p - 1.5) * size * 0.03;
     const pBaseY = y - size * 0.47 + swoop;
-    const pHeight = size * (0.08 + (p === 1 || p === 2 ? 0.03 : 0));
+    const pHeight = size * (0.04 + (p === 1 || p === 2 ? 0.015 : 0));
     const pSway = Math.sin(time * 6 + p * 1.2) * size * 0.008;
     ctx.fillStyle = plumeColors[p];
     ctx.beginPath();
@@ -1856,7 +1856,7 @@ export function drawWyvernEnemy(
 
   // === LAYER 6: FEARSOME HEAD ===
   const headX = x + size * 0.04 + lungeLean;
-  const headY = y - size * 0.56 + breathe + hoverBob;
+  const headY = y - size * 0.42 + breathe + hoverBob;
 
   // Head base
   const headGrad = ctx.createRadialGradient(

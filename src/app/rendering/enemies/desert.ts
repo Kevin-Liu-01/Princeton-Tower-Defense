@@ -146,6 +146,7 @@ export function drawNomadEnemy(
   });
 
   // Nomad arms — scimitar guard stance
+  const nomadFore = 0.12;
   drawPathArm(ctx, x - size * 0.28, y - size * 0.15, size, time, zoom, -1, {
     color: "#8b7355",
     colorDark: "#5c4a3a",
@@ -153,9 +154,60 @@ export function drawNomadEnemy(
     shoulderAngle: -0.5 + Math.sin(time * 2) * 0.06,
     elbowAngle: 0.8 + Math.sin(time * 2.5 + 0.5) * 0.08,
     upperLen: 0.14,
-    foreLen: 0.12,
+    foreLen: nomadFore,
     width: 0.04,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const handY = nomadFore * size;
+      wCtx.translate(0, handY * 0.72);
+      const rB = size * 0.11;
+      const rimW = Math.max(1, zoom * 1.2);
+      const bronze = wCtx.createRadialGradient(0, 0, 0, 0, 0, rB);
+      bronze.addColorStop(0, "#d4a574");
+      bronze.addColorStop(0.35, "#a67c52");
+      bronze.addColorStop(0.65, "#7a5c3e");
+      bronze.addColorStop(1, "#4a3a28");
+      wCtx.fillStyle = bronze;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, rB, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = "#3d2918";
+      wCtx.lineWidth = rimW;
+      wCtx.stroke();
+      wCtx.strokeStyle = "#5c4030";
+      wCtx.lineWidth = rimW * 0.35;
+      wCtx.setLineDash([2 * zoom, 2 * zoom]);
+      wCtx.stroke();
+      wCtx.setLineDash([]);
+      const leatherGrad = wCtx.createLinearGradient(-rB, -rB, rB, rB);
+      leatherGrad.addColorStop(0, "#4a3728");
+      leatherGrad.addColorStop(0.5, "#6b5344");
+      leatherGrad.addColorStop(1, "#3d2a1c");
+      wCtx.strokeStyle = leatherGrad;
+      wCtx.lineWidth = 2.5 * zoom;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, rB * 0.92, 0, Math.PI * 2);
+      wCtx.stroke();
+      const sunR = rB * 0.38;
+      wCtx.fillStyle = "#f59e0b";
+      wCtx.beginPath();
+      wCtx.arc(0, 0, sunR, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = "#b45309";
+      wCtx.lineWidth = Math.max(0.8, zoom * 0.8);
+      wCtx.stroke();
+      for (let ray = 0; ray < 8; ray++) {
+        const ra = ray * (Math.PI / 4) - Math.PI / 8;
+        wCtx.beginPath();
+        wCtx.moveTo(Math.cos(ra) * sunR * 0.85, Math.sin(ra) * sunR * 0.85);
+        wCtx.lineTo(Math.cos(ra) * rB * 0.78, Math.sin(ra) * rB * 0.78);
+        wCtx.stroke();
+      }
+      wCtx.fillStyle = "rgba(90, 70, 50, 0.22)";
+      wCtx.beginPath();
+      wCtx.arc(-rB * 0.25, -rB * 0.2, rB * 0.35, 0, Math.PI * 2);
+      wCtx.fill();
+    },
   });
   drawPathArm(ctx, x + size * 0.28, y - size * 0.15, size, time, zoom, 1, {
     color: "#8b7355",
@@ -164,8 +216,105 @@ export function drawNomadEnemy(
     shoulderAngle: 0.7 + Math.sin(time * 2.2) * 0.08 + (isAttacking ? 0.5 : 0),
     elbowAngle: 0.3 + Math.sin(time * 2.8 + 1.5) * 0.1,
     upperLen: 0.14,
-    foreLen: 0.12,
+    foreLen: nomadFore,
     width: 0.04,
+    style: 'armored',
+    attackExtra: isAttacking ? attackPhase * 0.5 : 0,
+    onWeapon: (wCtx) => {
+      const s = size;
+      const z = zoom;
+      const handY = nomadFore * s;
+      wCtx.translate(0, handY * 0.55);
+      wCtx.rotate(-0.12 + attackSwing * 0.25);
+      const gripH = s * 0.09;
+      const gripGrad = wCtx.createLinearGradient(-s * 0.022, 0, s * 0.022, 0);
+      gripGrad.addColorStop(0, "#3d2918");
+      gripGrad.addColorStop(0.5, "#5c4030");
+      gripGrad.addColorStop(1, "#2a1a12");
+      wCtx.fillStyle = gripGrad;
+      wCtx.fillRect(-s * 0.02, 0, s * 0.04, gripH);
+      wCtx.strokeStyle = "#1a1008";
+      wCtx.lineWidth = 0.6 * z;
+      for (let wr = 0; wr < 4; wr++) {
+        const wy = gripH * (0.2 + wr * 0.22);
+        wCtx.beginPath();
+        wCtx.moveTo(-s * 0.018, wy);
+        wCtx.lineTo(s * 0.018, wy);
+        wCtx.stroke();
+      }
+      const guardW = s * 0.14;
+      const guardGrad = wCtx.createLinearGradient(-guardW, 0, guardW, 0);
+      guardGrad.addColorStop(0, "#b8860b");
+      guardGrad.addColorStop(0.3, "#fcd34d");
+      guardGrad.addColorStop(0.5, "#f59e0b");
+      guardGrad.addColorStop(0.7, "#d97706");
+      guardGrad.addColorStop(1, "#92400e");
+      wCtx.fillStyle = guardGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-guardW, gripH);
+      wCtx.quadraticCurveTo(-guardW * 0.4, gripH - s * 0.025, 0, gripH - s * 0.03);
+      wCtx.quadraticCurveTo(guardW * 0.4, gripH - s * 0.025, guardW, gripH);
+      wCtx.lineTo(guardW * 0.85, gripH + s * 0.02);
+      wCtx.lineTo(-guardW * 0.85, gripH + s * 0.02);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.strokeStyle = "#78350f";
+      wCtx.lineWidth = Math.max(0.8, z * 0.9);
+      wCtx.stroke();
+      const gemG = wCtx.createRadialGradient(0, gripH - s * 0.018, 0, 0, gripH - s * 0.018, s * 0.028);
+      gemG.addColorStop(0, "#fde68a");
+      gemG.addColorStop(0.45, "#f59e0b");
+      gemG.addColorStop(1, "#7c2d12");
+      wCtx.fillStyle = gemG;
+      wCtx.beginPath();
+      wCtx.moveTo(0, gripH - s * 0.038);
+      wCtx.lineTo(s * 0.022, gripH - s * 0.012);
+      wCtx.lineTo(0, gripH + s * 0.008);
+      wCtx.lineTo(-s * 0.022, gripH - s * 0.012);
+      wCtx.closePath();
+      wCtx.fill();
+      const tipY = -s * 0.52;
+      const bladeW = s * 0.095;
+      const damascus = wCtx.createLinearGradient(-bladeW, tipY, bladeW, gripH);
+      for (let st = 0; st <= 10; st++) {
+        const t = st / 10;
+        const wave = 0.5 + 0.5 * Math.sin(t * Math.PI * 5 + time * 2);
+        const light = 28 + wave * 40;
+        const mid = 32 + (1 - wave) * 35;
+        damascus.addColorStop(t, `rgb(${Math.round(light + 15)},${Math.round(mid)},${Math.round(light + 25)})`);
+      }
+      wCtx.fillStyle = damascus;
+      wCtx.beginPath();
+      wCtx.moveTo(0, tipY);
+      wCtx.quadraticCurveTo(bladeW * 0.95, tipY + s * 0.12, bladeW * 0.55, gripH - s * 0.02);
+      wCtx.lineTo(s * 0.025, gripH);
+      wCtx.lineTo(-s * 0.025, gripH);
+      wCtx.lineTo(-bladeW * 0.55, gripH - s * 0.02);
+      wCtx.quadraticCurveTo(-bladeW * 0.95, tipY + s * 0.12, 0, tipY);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.strokeStyle = "rgba(30, 25, 35, 0.45)";
+      wCtx.lineWidth = Math.max(0.6, z * 0.7);
+      wCtx.beginPath();
+      wCtx.moveTo(0, tipY + s * 0.04);
+      wCtx.quadraticCurveTo(bladeW * 0.35, tipY + s * 0.22, bladeW * 0.25, gripH - s * 0.06);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(0, tipY + s * 0.14);
+      wCtx.quadraticCurveTo(-bladeW * 0.3, tipY + s * 0.28, -bladeW * 0.2, gripH - s * 0.05);
+      wCtx.stroke();
+      if (isAttacking) {
+        const sandA = attackPhase * 0.55;
+        for (let tr = 0; tr < 12; tr++) {
+          const ty = tipY + (gripH - tipY) * (tr / 12) + Math.sin(time * 8 + tr) * s * 0.012;
+          const tx = Math.sin(time * 6 + tr * 1.1) * bladeW * 0.5 * (1 - tr / 14);
+          wCtx.fillStyle = `rgba(212, 165, 116, ${sandA * (1 - tr / 14)})`;
+          wCtx.beginPath();
+          wCtx.ellipse(tx, ty, s * 0.012, s * 0.006, time + tr, 0, Math.PI * 2);
+          wCtx.fill();
+        }
+      }
+    },
   });
 
   // Outer flowing robe layer with wind
@@ -1656,6 +1805,17 @@ export function drawScarabEnemy(
   const hoverFloat = Math.sin(time * 4) * size * 0.03;
   size *= 1.8; // Much larger size
 
+  const attackLungeX = isAttacking ? attackPhase * size * 0.06 : 0;
+  const mandibleSpread = isAttacking
+    ? attackPhase < 0.42
+      ? (attackPhase / 0.42) * size * 0.055
+      : (1 - (attackPhase - 0.42) / 0.58) ** 1.85 * size * 0.055
+    : 0;
+  const wingFlareExtra = isAttacking ? attackPhase * size * 0.09 : 0;
+
+  ctx.save();
+  ctx.translate(attackLungeX, 0);
+
   // Mystical aura
   const auraGrad = ctx.createRadialGradient(
     x,
@@ -1821,10 +1981,10 @@ export function drawScarabEnemy(
   // Wing cases — bezier elytra shapes with natural insect contour
   ctx.fillStyle = bodyColorDark;
   for (const wingSide of [-1, 1] as const) {
-    const wOff = wingSide * wingFlutter * size;
+    const wOff = wingSide * wingFlutter * size + wingSide * wingFlareExtra;
     const wCx = x + wingSide * size * 0.1 + wOff;
-    const wRx = size * 0.18;
-    const wRy = size * 0.24;
+    const wRx = size * 0.18 + (isAttacking ? attackPhase * size * 0.055 : 0);
+    const wRy = size * 0.24 + (isAttacking ? attackPhase * size * 0.04 : 0);
     ctx.beginPath();
     ctx.moveTo(wCx, y - wRy + hoverFloat);
     ctx.bezierCurveTo(
@@ -1855,13 +2015,13 @@ export function drawScarabEnemy(
   ctx.lineWidth = 1.5 * zoom;
   // Left wing runes
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.15 - wingFlutter * size, y - size * 0.1 + hoverFloat);
-  ctx.lineTo(x - size * 0.1 - wingFlutter * size, y + hoverFloat);
-  ctx.lineTo(x - size * 0.18 - wingFlutter * size, y + size * 0.1 + hoverFloat);
+  ctx.moveTo(x - size * 0.15 - wingFlutter * size - wingFlareExtra, y - size * 0.1 + hoverFloat);
+  ctx.lineTo(x - size * 0.1 - wingFlutter * size - wingFlareExtra, y + hoverFloat);
+  ctx.lineTo(x - size * 0.18 - wingFlutter * size - wingFlareExtra, y + size * 0.1 + hoverFloat);
   ctx.stroke();
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.12 - wingFlutter * size,
+    x - size * 0.12 - wingFlutter * size - wingFlareExtra,
     y - size * 0.05 + hoverFloat,
     size * 0.03,
     0,
@@ -1870,13 +2030,13 @@ export function drawScarabEnemy(
   ctx.stroke();
   // Right wing runes
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.15 + wingFlutter * size, y - size * 0.1 + hoverFloat);
-  ctx.lineTo(x + size * 0.1 + wingFlutter * size, y + hoverFloat);
-  ctx.lineTo(x + size * 0.18 + wingFlutter * size, y + size * 0.1 + hoverFloat);
+  ctx.moveTo(x + size * 0.15 + wingFlutter * size + wingFlareExtra, y - size * 0.1 + hoverFloat);
+  ctx.lineTo(x + size * 0.1 + wingFlutter * size + wingFlareExtra, y + hoverFloat);
+  ctx.lineTo(x + size * 0.18 + wingFlutter * size + wingFlareExtra, y + size * 0.1 + hoverFloat);
   ctx.stroke();
   ctx.beginPath();
   ctx.arc(
-    x + size * 0.12 + wingFlutter * size,
+    x + size * 0.12 + wingFlutter * size + wingFlareExtra,
     y - size * 0.05 + hoverFloat,
     size * 0.03,
     0,
@@ -1885,24 +2045,27 @@ export function drawScarabEnemy(
   ctx.stroke();
 
   // Translucent wings visible beneath
-  if (wingFlutter > 0.05) {
-    ctx.fillStyle = `rgba(200, 180, 140, ${wingFlutter * 0.4})`;
+  if (wingFlutter > 0.05 || isAttacking) {
+    const twRx = size * 0.25 + wingFlareExtra * 0.45;
+    const twRy = size * 0.3 + wingFlareExtra * 0.35;
+    const twAlpha = Math.max(wingFlutter, isAttacking ? attackPhase * 0.25 : 0) * 0.4;
+    ctx.fillStyle = `rgba(200, 180, 140, ${twAlpha})`;
     ctx.beginPath();
     ctx.ellipse(
-      x - size * 0.2,
+      x - size * 0.2 - wingFlareExtra * 0.5,
       y + hoverFloat,
-      size * 0.25,
-      size * 0.3,
-      -0.2,
+      twRx,
+      twRy,
+      -0.2 - (isAttacking ? attackPhase * 0.12 : 0),
       0,
       Math.PI * 2,
     );
     ctx.ellipse(
-      x + size * 0.2,
+      x + size * 0.2 + wingFlareExtra * 0.5,
       y + hoverFloat,
-      size * 0.25,
-      size * 0.3,
-      0.2,
+      twRx,
+      twRy,
+      0.2 + (isAttacking ? attackPhase * 0.12 : 0),
       0,
       Math.PI * 2,
     );
@@ -2054,17 +2217,17 @@ export function drawScarabEnemy(
   ctx.fill();
   clearShadow(ctx);
 
-  // Mandibles
+  // Mandibles — spread then snap shut on attack
   ctx.fillStyle = "#1a1510";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.05, y - size * 0.28 + hoverFloat);
-  ctx.lineTo(x - size * 0.08, y - size * 0.22 + hoverFloat);
-  ctx.lineTo(x - size * 0.02, y - size * 0.25 + hoverFloat);
+  ctx.moveTo(x - size * 0.05 - mandibleSpread, y - size * 0.28 + hoverFloat);
+  ctx.lineTo(x - size * 0.08 - mandibleSpread * 1.35, y - size * 0.22 + hoverFloat);
+  ctx.lineTo(x - size * 0.02 - mandibleSpread * 0.4, y - size * 0.25 + hoverFloat);
   ctx.fill();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.05, y - size * 0.28 + hoverFloat);
-  ctx.lineTo(x + size * 0.08, y - size * 0.22 + hoverFloat);
-  ctx.lineTo(x + size * 0.02, y - size * 0.25 + hoverFloat);
+  ctx.moveTo(x + size * 0.05 + mandibleSpread, y - size * 0.28 + hoverFloat);
+  ctx.lineTo(x + size * 0.08 + mandibleSpread * 1.35, y - size * 0.22 + hoverFloat);
+  ctx.lineTo(x + size * 0.02 + mandibleSpread * 0.4, y - size * 0.25 + hoverFloat);
   ctx.fill();
 
   // Iridescent shimmer highlights
@@ -2155,7 +2318,7 @@ export function drawScarabEnemy(
   });
 
   // Mandible animations (animated tendrils)
-  drawAnimatedTendril(ctx, x - size * 0.05, y - size * 0.28 + hoverFloat, -1.8, size, time, zoom, {
+  drawAnimatedTendril(ctx, x - size * 0.05 - mandibleSpread, y - size * 0.28 + hoverFloat, -1.8, size, time, zoom, {
     color: "#1a1510",
     tipColor: bodyColorDark,
     length: 0.1,
@@ -2165,7 +2328,7 @@ export function drawScarabEnemy(
     waveAmt: 0.02,
     tipRadius: 0.01,
   });
-  drawAnimatedTendril(ctx, x + size * 0.05, y - size * 0.28 + hoverFloat, -1.3, size, time, zoom, {
+  drawAnimatedTendril(ctx, x + size * 0.05 + mandibleSpread, y - size * 0.28 + hoverFloat, -1.3, size, time, zoom, {
     color: "#1a1510",
     tipColor: bodyColorDark,
     length: 0.1,
@@ -2339,5 +2502,7 @@ export function drawScarabEnemy(
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
+  ctx.restore();
+
   ctx.restore();
 }

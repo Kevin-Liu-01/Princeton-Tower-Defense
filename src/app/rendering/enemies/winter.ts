@@ -148,6 +148,54 @@ export function drawSnowGoblinEnemy(
     width: 0.045,
     handRadius: 0.025,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const handY = 0.12 * s;
+      wCtx.translate(0, handY * 0.62);
+      const mistGrad = wCtx.createRadialGradient(0, 0, 0, 0, 0, s * 0.14);
+      mistGrad.addColorStop(0, `rgba(224, 242, 254, ${0.4 + Math.sin(time * 5) * 0.12})`);
+      mistGrad.addColorStop(0.45, "rgba(147, 197, 253, 0.2)");
+      mistGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+      wCtx.fillStyle = mistGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, s * 0.14, 0, Math.PI * 2);
+      wCtx.fill();
+      const clubGrad = wCtx.createLinearGradient(-s * 0.07, s * 0.03, s * 0.09, -s * 0.38);
+      clubGrad.addColorStop(0, "#f0f9ff");
+      clubGrad.addColorStop(0.25, "#bae6fd");
+      clubGrad.addColorStop(0.55, "#60a5fa");
+      clubGrad.addColorStop(0.85, "#38bdf8");
+      clubGrad.addColorStop(1, "rgba(125, 211, 252, 0.65)");
+      wCtx.fillStyle = clubGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.04, s * 0.025);
+      wCtx.lineTo(-s * 0.055, -s * 0.1);
+      wCtx.lineTo(-s * 0.025, -s * 0.24);
+      wCtx.lineTo(s * 0.035, -s * 0.32);
+      wCtx.lineTo(s * 0.065, -s * 0.2);
+      wCtx.lineTo(s * 0.05, -s * 0.06);
+      wCtx.lineTo(s * 0.025, s * 0.02);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.fillStyle = "rgba(224, 242, 254, 0.85)";
+      for (let sp = 0; sp < 4; sp++) {
+        const spA = sp * 1.1 - 0.4;
+        wCtx.beginPath();
+        wCtx.moveTo(Math.sin(spA) * s * 0.04, -s * 0.26 + Math.cos(spA) * s * 0.02);
+        wCtx.lineTo(Math.sin(spA + 0.15) * s * 0.07, -s * 0.34);
+        wCtx.lineTo(Math.sin(spA - 0.1) * s * 0.05, -s * 0.3);
+        wCtx.closePath();
+        wCtx.fill();
+      }
+      wCtx.fillStyle = `rgba(255, 255, 255, ${0.35 + Math.sin(time * 8) * 0.2})`;
+      for (let fp = 0; fp < 6; fp++) {
+        const fpA = time * 4 + fp * 1.05;
+        const pr = s * 0.008 + (fp % 3) * s * 0.003;
+        wCtx.beginPath();
+        wCtx.arc(Math.cos(fpA) * s * 0.1, Math.sin(fpA * 1.3) * s * 0.06 - s * 0.18, pr, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+    },
   });
   drawPathArm(ctx, x + size * 0.22, y - size * 0.1 - hop, size, time, zoom, 1, {
     color: bodyColor,
@@ -161,6 +209,54 @@ export function drawSnowGoblinEnemy(
     handRadius: 0.025,
     attackExtra: isAttacking ? attackPhase : 0,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const z = zoom;
+      const handY = 0.12 * s;
+      wCtx.translate(0, handY * 0.58);
+      const woodGrad = wCtx.createRadialGradient(-s * 0.02, -s * 0.07, 0, 0, -s * 0.06, s * 0.1);
+      woodGrad.addColorStop(0, "#e8d4b8");
+      woodGrad.addColorStop(0.45, "#8b5a3c");
+      woodGrad.addColorStop(1, "#3d2918");
+      wCtx.fillStyle = woodGrad;
+      wCtx.beginPath();
+      wCtx.ellipse(0, -s * 0.07, s * 0.065, s * 0.082, 0.08, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = "rgba(30, 58, 95, 0.5)";
+      wCtx.lineWidth = 0.9 * z;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.04, -s * 0.1);
+      wCtx.lineTo(s * 0.035, -s * 0.04);
+      wCtx.stroke();
+      const rimGrad = wCtx.createLinearGradient(-s * 0.08, -s * 0.12, s * 0.08, -s * 0.02);
+      rimGrad.addColorStop(0, "#e0f2fe");
+      rimGrad.addColorStop(0.5, "#7dd3fc");
+      rimGrad.addColorStop(1, "rgba(56, 189, 248, 0.4)");
+      wCtx.strokeStyle = rimGrad;
+      wCtx.lineWidth = 2.2 * z;
+      wCtx.beginPath();
+      wCtx.ellipse(0, -s * 0.07, s * 0.078, s * 0.095, 0.08, 0, Math.PI * 2);
+      wCtx.stroke();
+      wCtx.strokeStyle = "rgba(147, 197, 253, 0.9)";
+      wCtx.lineWidth = 1 * z;
+      wCtx.beginPath();
+      wCtx.ellipse(0, -s * 0.07, s * 0.072, s * 0.088, 0.08, 0, Math.PI * 2);
+      wCtx.stroke();
+      const clawGrad = wCtx.createLinearGradient(0, s * 0.01, 0, -s * 0.12);
+      clawGrad.addColorStop(0, "#dbeafe");
+      clawGrad.addColorStop(0.5, "#93c5fd");
+      clawGrad.addColorStop(1, "rgba(191, 219, 254, 0.25)");
+      wCtx.fillStyle = clawGrad;
+      for (let c = 0; c < 3; c++) {
+        const cx = (c - 1) * s * 0.028;
+        wCtx.beginPath();
+        wCtx.moveTo(cx - s * 0.012, -s * 0.02);
+        wCtx.lineTo(cx, -s * 0.11);
+        wCtx.lineTo(cx + s * 0.012, -s * 0.02);
+        wCtx.closePath();
+        wCtx.fill();
+      }
+    },
   });
 
   // Hunched muscular body — scrappy asymmetric frame
@@ -800,6 +896,73 @@ export function drawSnowGoblinEnemy(
   ctx.restore();
 }
 
+function drawYetiIcyFistWeapon(
+  wCtx: CanvasRenderingContext2D,
+  size: number,
+  zoom: number,
+  time: number,
+  isAttacking: boolean,
+  attackPhase: number,
+): void {
+  const s = size;
+  const z = zoom;
+  const handY = 0.22 * s;
+  wCtx.translate(0, handY * 0.52);
+  const atkGlow = isAttacking ? attackPhase * 0.9 : 0;
+  if (atkGlow > 0.05) {
+    setShadowBlur(wCtx, 12 * z * atkGlow, `rgba(147, 197, 253, ${0.45 + atkGlow * 0.4})`);
+  }
+  const mistG = wCtx.createRadialGradient(0, -s * 0.02, 0, 0, -s * 0.04, s * 0.2);
+  mistG.addColorStop(0, `rgba(224, 242, 254, ${0.25 + Math.sin(time * 3) * 0.1})`);
+  mistG.addColorStop(0.6, "rgba(147, 197, 253, 0.12)");
+  mistG.addColorStop(1, "rgba(59, 130, 246, 0)");
+  wCtx.fillStyle = mistG;
+  wCtx.beginPath();
+  wCtx.ellipse(0, -s * 0.04, s * 0.16, s * 0.12, 0, 0, Math.PI * 2);
+  wCtx.fill();
+  const knGrad = wCtx.createRadialGradient(0, s * 0.02, 0, 0, -s * 0.02, s * 0.14);
+  knGrad.addColorStop(0, "#f8fafc");
+  knGrad.addColorStop(0.35, "#bae6fd");
+  knGrad.addColorStop(0.7, "#38bdf8");
+  knGrad.addColorStop(1, "#0369a1");
+  wCtx.fillStyle = knGrad;
+  wCtx.beginPath();
+  wCtx.ellipse(0, s * 0.01, s * 0.11, s * 0.09, 0, 0, Math.PI * 2);
+  wCtx.fill();
+  wCtx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  wCtx.beginPath();
+  wCtx.ellipse(-s * 0.03, -s * 0.02, s * 0.04, s * 0.03, -0.3, 0, Math.PI * 2);
+  wCtx.fill();
+  const talonSpreads = [-0.42, 0, 0.42];
+  for (let ti = 0; ti < 3; ti++) {
+    wCtx.save();
+    wCtx.rotate(talonSpreads[ti] * 0.35);
+    const tGrad = wCtx.createLinearGradient(0, s * 0.04, 0, -s * 0.22);
+    tGrad.addColorStop(0, "#f0f9ff");
+    tGrad.addColorStop(0.35, "#93c5fd");
+    tGrad.addColorStop(0.72, "rgba(125, 211, 252, 0.55)");
+    tGrad.addColorStop(1, "rgba(255, 255, 255, 0.08)");
+    wCtx.fillStyle = tGrad;
+    wCtx.beginPath();
+    wCtx.moveTo(-s * 0.028, s * 0.02);
+    wCtx.lineTo(0, -s * 0.24);
+    wCtx.lineTo(s * 0.028, s * 0.02);
+    wCtx.closePath();
+    wCtx.fill();
+    wCtx.strokeStyle = "rgba(186, 230, 253, 0.65)";
+    wCtx.lineWidth = 0.9 * z;
+    wCtx.stroke();
+    wCtx.restore();
+  }
+  if (atkGlow > 0.05) {
+    wCtx.fillStyle = `rgba(224, 242, 254, ${atkGlow * 0.55})`;
+    wCtx.beginPath();
+    wCtx.arc(0, -s * 0.06, s * 0.08 * atkGlow, 0, Math.PI * 2);
+    wCtx.fill();
+    clearShadow(wCtx);
+  }
+}
+
 export function drawYetiEnemy(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1052,6 +1215,9 @@ export function drawYetiEnemy(
     width: 0.1,
     handRadius: 0.06,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      drawYetiIcyFistWeapon(wCtx, size, zoom, time, isAttacking, attackPhase);
+    },
   });
   drawPathArm(ctx, x + size * 0.45, y - size * 0.35, size, time, zoom, 1, {
     color: bodyColor,
@@ -1065,6 +1231,9 @@ export function drawYetiEnemy(
     handRadius: 0.06,
     attackExtra: isAttacking ? attackPhase : 0,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      drawYetiIcyFistWeapon(wCtx, size, zoom, time, isAttacking, attackPhase);
+    },
   });
 
   // Titanic furry body — massive hunched muscular frame with bezier anatomy
@@ -1732,6 +1901,64 @@ export function drawIceWitchEnemy(
     width: 0.04,
     handRadius: 0.03,
     style: 'ghostly',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const z = zoom;
+      const handY = 0.16 * s;
+      wCtx.save();
+      const prevA = wCtx.globalAlpha;
+      wCtx.globalAlpha = Math.min(1, prevA / 0.45);
+      wCtx.translate(0, handY * 0.58);
+      const auraG = wCtx.createRadialGradient(0, -s * 0.04, 0, 0, -s * 0.04, s * 0.14);
+      auraG.addColorStop(0, `rgba(224, 242, 254, ${0.35 + orbPulse * 0.25})`);
+      auraG.addColorStop(0.55, "rgba(96, 165, 250, 0.2)");
+      auraG.addColorStop(1, "rgba(59, 130, 246, 0)");
+      wCtx.fillStyle = auraG;
+      wCtx.beginPath();
+      wCtx.arc(0, -s * 0.04, s * 0.14, 0, Math.PI * 2);
+      wCtx.fill();
+      const orbGrad = wCtx.createRadialGradient(-s * 0.03, -s * 0.07, 0, 0, -s * 0.05, s * 0.07);
+      orbGrad.addColorStop(0, "#f0f9ff");
+      orbGrad.addColorStop(0.45, "#7dd3fc");
+      orbGrad.addColorStop(0.8, "rgba(56, 189, 248, 0.65)");
+      orbGrad.addColorStop(1, "rgba(14, 165, 233, 0.35)");
+      wCtx.fillStyle = orbGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, -s * 0.05, s * 0.065, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = "rgba(186, 230, 253, 0.75)";
+      wCtx.lineWidth = 1 * z;
+      wCtx.stroke();
+      wCtx.strokeStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(time * 6) * 0.25})`;
+      wCtx.lineWidth = 0.6 * z;
+      for (let sf = 0; sf < 5; sf++) {
+        const sfA = time * 2.2 + sf * 1.26;
+        const sx = Math.cos(sfA) * s * 0.028;
+        const sy = -s * 0.05 + Math.sin(sfA * 0.9) * s * 0.022;
+        wCtx.beginPath();
+        wCtx.moveTo(sx, sy);
+        wCtx.lineTo(sx + Math.cos(sfA) * s * 0.018, sy + Math.sin(sfA) * s * 0.018);
+        wCtx.lineTo(sx - Math.sin(sfA) * s * 0.012, sy + Math.cos(sfA) * s * 0.012);
+        wCtx.closePath();
+        wCtx.stroke();
+      }
+      if (isAttacking) {
+        const beamA = attackPhase * 0.55;
+        const beamGrad = wCtx.createLinearGradient(0, -s * 0.1, 0, -s * 0.42);
+        beamGrad.addColorStop(0, `rgba(224, 242, 254, ${beamA})`);
+        beamGrad.addColorStop(0.4, `rgba(147, 197, 253, ${beamA * 0.5})`);
+        beamGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+        wCtx.fillStyle = beamGrad;
+        wCtx.beginPath();
+        wCtx.moveTo(-s * 0.025, -s * 0.08);
+        wCtx.lineTo(0, -s * 0.4);
+        wCtx.lineTo(s * 0.025, -s * 0.08);
+        wCtx.closePath();
+        wCtx.fill();
+      }
+      wCtx.globalAlpha = prevA;
+      wCtx.restore();
+    },
   });
   drawPathArm(ctx, x + size * 0.25, y - size * 0.22 + float, size, time, zoom, 1, {
     color: bodyColor,
@@ -1745,6 +1972,89 @@ export function drawIceWitchEnemy(
     handRadius: 0.03,
     attackExtra: isAttacking ? attackPhase * 0.5 : 0,
     style: 'ghostly',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const z = zoom;
+      const handY = 0.16 * s;
+      wCtx.save();
+      const prevA = wCtx.globalAlpha;
+      wCtx.globalAlpha = Math.min(1, prevA / 0.45);
+      wCtx.translate(0, handY * 0.55);
+      wCtx.rotate(-0.12);
+      const shaftGrad = wCtx.createLinearGradient(-s * 0.03, s * 0.04, s * 0.03, -s * 0.52);
+      shaftGrad.addColorStop(0, "rgba(224, 242, 254, 0.9)");
+      shaftGrad.addColorStop(0.35, "rgba(125, 211, 252, 0.75)");
+      shaftGrad.addColorStop(0.7, "rgba(56, 189, 248, 0.55)");
+      shaftGrad.addColorStop(1, "rgba(14, 165, 233, 0.35)");
+      wCtx.fillStyle = shaftGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.018, s * 0.02);
+      wCtx.lineTo(-s * 0.012, -s * 0.38);
+      wCtx.lineTo(s * 0.012, -s * 0.38);
+      wCtx.lineTo(s * 0.018, s * 0.02);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+      wCtx.lineWidth = 0.7 * z;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.005, s * 0.01);
+      wCtx.lineTo(-s * 0.003, -s * 0.34);
+      wCtx.stroke();
+      const headGrad = wCtx.createRadialGradient(0, -s * 0.42, 0, 0, -s * 0.36, s * 0.1);
+      headGrad.addColorStop(0, "#f0f9ff");
+      headGrad.addColorStop(0.4, "#7dd3fc");
+      headGrad.addColorStop(0.75, "rgba(56, 189, 248, 0.7)");
+      headGrad.addColorStop(1, "rgba(125, 211, 252, 0.25)");
+      wCtx.fillStyle = headGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -s * 0.52);
+      wCtx.lineTo(-s * 0.055, -s * 0.38);
+      wCtx.lineTo(-s * 0.035, -s * 0.32);
+      wCtx.lineTo(s * 0.035, -s * 0.32);
+      wCtx.lineTo(s * 0.055, -s * 0.38);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.strokeStyle = "rgba(224, 242, 254, 0.85)";
+      wCtx.lineWidth = 0.9 * z;
+      wCtx.stroke();
+      wCtx.fillStyle = `rgba(186, 230, 253, ${0.4 + runeGlow * 0.35})`;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -s * 0.48);
+      wCtx.lineTo(-s * 0.022, -s * 0.36);
+      wCtx.lineTo(0, -s * 0.34);
+      wCtx.lineTo(s * 0.022, -s * 0.36);
+      wCtx.closePath();
+      wCtx.fill();
+      for (let orb = 0; orb < 4; orb++) {
+        const oa = time * 2.5 + orb * (Math.PI / 2);
+        const ox = Math.cos(oa) * s * 0.09;
+        const oy = -s * 0.4 + Math.sin(oa) * s * 0.05;
+        wCtx.fillStyle = `rgba(224, 242, 254, ${0.25 + Math.sin(time * 4 + orb) * 0.15})`;
+        wCtx.beginPath();
+        wCtx.arc(ox, oy, s * 0.012, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+      for (let ic = 0; ic < 4; ic++) {
+        const icA = 0.5 + ic * 0.35;
+        wCtx.fillStyle = "rgba(191, 219, 254, 0.75)";
+        wCtx.beginPath();
+        wCtx.moveTo(Math.sin(icA) * s * 0.04, -s * 0.35);
+        wCtx.lineTo(Math.sin(icA) * s * 0.045 + s * 0.008, -s * 0.22 - ic * s * 0.028);
+        wCtx.lineTo(Math.sin(icA) * s * 0.032, -s * 0.34);
+        wCtx.closePath();
+        wCtx.fill();
+      }
+      if (isAttacking) {
+        setShadowBlur(wCtx, 10 * z * attackPhase, "rgba(125, 211, 252, 0.65)");
+        wCtx.fillStyle = `rgba(224, 242, 254, ${0.35 * attackPhase})`;
+        wCtx.beginPath();
+        wCtx.arc(0, -s * 0.4, s * 0.06 * attackPhase, 0, Math.PI * 2);
+        wCtx.fill();
+        clearShadow(wCtx);
+      }
+      wCtx.globalAlpha = prevA;
+      wCtx.restore();
+    },
   });
 
   // Elaborate flowing cape/robe with multiple layers

@@ -35,6 +35,7 @@ export function drawFreshmanEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.6, 0.014);
@@ -859,6 +860,7 @@ export function drawSophomoreEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.5, 0.013);
@@ -1699,6 +1701,7 @@ export function drawJuniorEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.4, 0.012);
@@ -2608,6 +2611,7 @@ export function drawSeniorEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.3, 0.015);
@@ -3510,6 +3514,7 @@ export function drawGradStudentEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.3, 0.013);
@@ -4275,6 +4280,7 @@ export function drawProfessorEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.2, 0.012);
@@ -5148,6 +5154,7 @@ export function drawDeanEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const breath = getBreathScale(time, 1.1, 0.012);

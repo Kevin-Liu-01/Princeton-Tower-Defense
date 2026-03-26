@@ -551,7 +551,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const speedControlsContent = (
     <div className="relative">
       <div
-        className="relative flex h-9 items-center overflow-hidden rounded-lg sm:h-10"
+        className="relative flex items-center rounded-lg sm:h-10 h-9"
         style={{
           background:
             "linear-gradient(135deg, rgba(18,22,10,0.95), rgba(12,14,6,0.95))",
@@ -572,7 +572,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
-            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-l-[5px] transition-all sm:w-10 ${pauseLocked
+            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-l-lg transition-all sm:w-10 ${pauseLocked
               ? "cursor-not-allowed opacity-40"
               : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
               }`}
@@ -585,7 +585,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </button>
         </HudTooltip>
 
-        <div className="relative z-10 flex items-center gap-0.5 px-1 sm:px-1.5">
+        <div className="relative z-10 flex items-center gap-0.5 px-1 sm:px-1.5 py-1">
           {PRESET_SPEEDS.map((speed) => {
             const isActive = gameSpeed === speed;
             return (
@@ -597,7 +597,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     exitInspectorOnSpeed();
                   }}
                   disabled={pauseLocked}
-                  className={`relative z-10 w-[38px] rounded-md py-1 text-center text-[11px] font-black tabular-nums transition-all sm:w-[42px] sm:text-xs ${pauseLocked
+                  className={`relative z-10 w-[38px] rounded-md py-1.5 text-center text-[11px] font-black tabular-nums transition-all sm:w-[42px] sm:text-xs ${pauseLocked
                     ? "cursor-not-allowed opacity-40"
                     : "hover:brightness-125 active:scale-95"
                     }`}
@@ -629,7 +629,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
-            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-r-[5px] transition-all sm:w-10 ${pauseLocked
+            className={`relative z-10 flex h-full w-9 items-center justify-center rounded-r-lg transition-all sm:w-10 ${pauseLocked
               ? "cursor-not-allowed opacity-40"
               : "hover:bg-green-800/40 active:bg-green-700/50 active:scale-95"
               }`}

@@ -5908,8 +5908,10 @@ export function drawPhoenixEnemy(
   const isAttacking = attackPhase > 0;
   size *= 1.5;
   const flicker = Math.sin(time * 8) * 0.15;
-  const wingFlap = Math.sin(time * 4.5) * 0.7;
+  const attackWingBoost = isAttacking ? 1 + attackPhase * 0.8 : 1;
+  const wingFlap = Math.sin(time * 4.5 * attackWingBoost) * 0.7 * attackWingBoost;
   const wingFlapAbs = Math.abs(wingFlap);
+  const diveSwoop = isAttacking ? Math.sin(attackPhase * Math.PI) * size * 0.08 : 0;
   const hover = Math.sin(time * 2.5) * size * 0.03;
   const novaBurst = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
   const breathe = 1 + Math.sin(time * 3) * 0.03;
@@ -6271,7 +6273,7 @@ export function drawPhoenixEnemy(
   ctx.beginPath();
   const bw = size * 0.14 * breathe + flicker * size * 0.015;
   const bh = size * 0.18;
-  const bodyCY = y - size * 0.03 + hover;
+  const bodyCY = y - size * 0.03 + hover + diveSwoop * 0.3;
   ctx.moveTo(x, bodyCY - bh);
   ctx.bezierCurveTo(x + bw * 0.6, bodyCY - bh, x + bw, bodyCY - bh * 0.55, x + bw * 1.05, bodyCY - bh * 0.15);
   ctx.bezierCurveTo(x + bw * 1.05, bodyCY + bh * 0.15, x + bw * 0.75, bodyCY + bh * 0.65, x, bodyCY + bh);
@@ -6348,7 +6350,7 @@ export function drawPhoenixEnemy(
   }
 
   // Head (ornate, radiant)
-  const headY = y - size * 0.27 + hover;
+  const headY = y - size * 0.27 + hover + diveSwoop * 0.5;
   const headGrad = ctx.createRadialGradient(x, headY, 0, x, headY, size * 0.075);
   headGrad.addColorStop(0, "#fffff5");
   headGrad.addColorStop(0.25, "#ffee90");
@@ -6727,6 +6729,9 @@ export function drawBasiliskEnemy(
   const slither = time * 2.5;
   const coilPhase = Math.sin(slither) * 0.15;
   const eyeFlash = isAttacking ? Math.sin(attackPhase * Math.PI * 3) * 0.5 + 0.5 : 0;
+  const strikeLunge = isAttacking ? Math.sin(attackPhase * Math.PI) * size * 0.06 : 0;
+  const tailWhip = isAttacking ? Math.sin(attackPhase * Math.PI * 2) * size * 0.08 : 0;
+  const jawSnap = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.5 : 0;
   const breathe = 1 + Math.sin(time * 2) * 0.015;
   const muscleRipple = Math.sin(time * 3.5) * 0.02;
 
@@ -6770,9 +6775,9 @@ export function drawBasiliskEnemy(
 
   // Petrification eye beams when attacking
   if (isAttacking && eyeFlash > 0.3) {
-    const beamAlpha = (eyeFlash - 0.3) * 1.4;
+    const beamAlpha = (eyeFlash - 0.3) * 1.4 * (1 + jawSnap * 0.6);
     // Wide petrification cone with gradient layers
-    setShadowBlur(ctx, 15 * zoom, `rgba(0,255,100,${beamAlpha})`);
+    setShadowBlur(ctx, (15 + jawSnap * 10) * zoom, `rgba(0,255,100,${beamAlpha})`);
     const coneGrad = ctx.createLinearGradient(x, y - size * 0.35, x + size * 0.55, y - size * 0.35);
     coneGrad.addColorStop(0, `rgba(120,255,160,${beamAlpha * 0.55})`);
     coneGrad.addColorStop(0.3, `rgba(80,220,120,${beamAlpha * 0.35})`);
@@ -6850,7 +6855,9 @@ export function drawBasiliskEnemy(
     const t2 = i / coilSegments;
     const coilAngle = t2 * TAU * 2.0 + slither;
     const coilR = size * 0.24 * (1 - t2 * 0.5);
-    const bx = x + Math.cos(coilAngle) * coilR;
+    const lungeOffset = strikeLunge * t2;
+    const tailOffset = tailWhip * (1 - t2) * (1 - t2);
+    const bx = x + Math.cos(coilAngle) * coilR + lungeOffset + tailOffset;
     const by = y + size * 0.24 - t2 * size * 0.62 + Math.sin(coilAngle) * coilR * 0.3;
     bodyPoints.push({ x: bx, y: by, r: size * 0.072 * (1 - t2 * 0.32) * breathe });
   }
@@ -7229,8 +7236,49 @@ export function drawBasiliskEnemy(
     }
   }
 
+  // Jaw snap during attack — mandible separation
+  if (isAttacking) {
+    const jawGap = jawSnap * size * 0.015;
+    const jawGrad = ctx.createLinearGradient(
+      headP.x - size * 0.05, headP.y + size * 0.01,
+      headP.x + size * 0.08, headP.y + size * 0.04 + jawGap,
+    );
+    jawGrad.addColorStop(0, "#1a0a0a");
+    jawGrad.addColorStop(0.5, "#2a1510");
+    jawGrad.addColorStop(1, "#1a0a0a");
+    ctx.fillStyle = jawGrad;
+    ctx.beginPath();
+    ctx.moveTo(headP.x - size * 0.04, headP.y + size * 0.01 + jawGap * 0.3);
+    ctx.bezierCurveTo(
+      headP.x, headP.y + size * 0.02 + jawGap,
+      headP.x + size * 0.05, headP.y + size * 0.025 + jawGap,
+      headP.x + size * 0.08, headP.y + size * 0.015 + jawGap * 0.5,
+    );
+    ctx.bezierCurveTo(
+      headP.x + size * 0.05, headP.y + size * 0.005,
+      headP.x, headP.y + size * 0.005,
+      headP.x - size * 0.04, headP.y + size * 0.01 + jawGap * 0.3,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Fang tips visible in jaw gap
+    ctx.fillStyle = "#c8c0a0";
+    for (let ft = 0; ft < 3; ft++) {
+      const ftX = headP.x - size * 0.02 + ft * size * 0.025;
+      const ftY = headP.y + size * 0.008 + jawGap * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(ftX - size * 0.004, ftY);
+      ctx.lineTo(ftX, ftY + size * 0.015 * jawSnap);
+      ctx.lineTo(ftX + size * 0.004, ftY);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
   // Forked tongue flicking (more detailed with glistening highlight)
-  const tongueFlick = Math.sin(time * 6) > 0.35 ? (Math.sin(time * 6) - 0.35) * 1.54 : 0;
+  const tongueThreshold = isAttacking ? -0.2 : 0.35;
+  const tongueFlick = Math.sin(time * 6) > tongueThreshold ? (Math.sin(time * 6) - tongueThreshold) / (1 - tongueThreshold) : 0;
   if (tongueFlick > 0) {
     const tongueBase = {
       x: headP.x + Math.cos(headDir) * size * 0.085,

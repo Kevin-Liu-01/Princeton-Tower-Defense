@@ -960,8 +960,110 @@ export function drawSkeletonKnightEnemy(
     color: steelMid, colorDark: steelDark, handColor: bodyColor,
     upperLen: 0.24, foreLen: 0.20,
     shoulderAngle: 0.35 + Math.sin(walkPhase) * 0.12 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.5 : 0),
-    elbowAngle: -0.4 + (isAttacking ? 0.6 : Math.sin(walkPhase + 1) * 0.08),
+    elbowAngle: -0.2 + (isAttacking ? 0.4 : Math.sin(walkPhase + 1) * 0.08),
     style: 'bone',
+    onWeapon: (ctx) => {
+      const foreLen = size * 0.12;
+
+      // Bone-edged broadsword — dark iron blade
+      const bladeLen = size * 0.32;
+      const blW = size * 0.032;
+      const bladeGrad = ctx.createLinearGradient(-blW, 0, blW, 0);
+      bladeGrad.addColorStop(0, "#1a1a22");
+      bladeGrad.addColorStop(0.25, "#2a2a35");
+      bladeGrad.addColorStop(0.5, "#35354a");
+      bladeGrad.addColorStop(0.75, "#2a2a35");
+      bladeGrad.addColorStop(1, "#1a1a22");
+      ctx.fillStyle = bladeGrad;
+      ctx.beginPath();
+      ctx.moveTo(-blW, foreLen);
+      ctx.lineTo(-blW * 0.85, foreLen + bladeLen * 0.85);
+      ctx.lineTo(-blW * 0.2, foreLen + bladeLen);
+      ctx.lineTo(blW * 0.2, foreLen + bladeLen);
+      ctx.lineTo(blW * 0.85, foreLen + bladeLen * 0.85);
+      ctx.lineTo(blW, foreLen);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bone-inlay edge strip
+      ctx.fillStyle = "rgba(200, 190, 170, 0.6)";
+      ctx.beginPath();
+      ctx.moveTo(blW * 0.6, foreLen + size * 0.01);
+      ctx.lineTo(blW, foreLen + size * 0.02);
+      ctx.lineTo(blW * 0.85, foreLen + bladeLen * 0.85);
+      ctx.lineTo(blW * 0.5, foreLen + bladeLen * 0.8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fuller groove
+      ctx.strokeStyle = "#15151f";
+      ctx.lineWidth = size * 0.005;
+      ctx.beginPath();
+      ctx.moveTo(0, foreLen + size * 0.025);
+      ctx.lineTo(0, foreLen + bladeLen * 0.8);
+      ctx.stroke();
+
+      // Tattered nicks along blade edges
+      for (let n = 0; n < 4; n++) {
+        const ny = foreLen + size * 0.05 + n * bladeLen * 0.2;
+        const nickSide = n % 2 === 0 ? 1 : -1;
+        ctx.fillStyle = "rgba(20, 20, 30, 0.5)";
+        ctx.beginPath();
+        ctx.arc(nickSide * blW * 0.9, ny, size * 0.005, 0, TAU);
+        ctx.fill();
+      }
+
+      // Shadow energy wisps when attacking
+      if (isAttacking) {
+        for (let w = 0; w < 3; w++) {
+          const wy = foreLen + size * 0.05 + w * bladeLen * 0.25;
+          const wPhase = Math.sin(time * 8 + w * 2);
+          ctx.globalAlpha = 0.25 + wPhase * 0.15;
+          ctx.fillStyle = "#5a3060";
+          ctx.beginPath();
+          ctx.ellipse(blW * wPhase * 0.8, wy, size * 0.02, size * 0.01, wPhase * 0.5, 0, TAU);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Crossguard with bone ends
+      const cgY = foreLen - size * 0.01;
+      ctx.fillStyle = steelDark;
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.04, cgY + size * 0.007);
+      ctx.lineTo(-size * 0.045, cgY);
+      ctx.lineTo(size * 0.045, cgY);
+      ctx.lineTo(size * 0.04, cgY + size * 0.007);
+      ctx.quadraticCurveTo(0, cgY + size * 0.013, -size * 0.04, cgY + size * 0.007);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#c8b8a0";
+      for (const bs of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(bs * size * 0.04, cgY + size * 0.003, size * 0.008, 0, TAU);
+        ctx.fill();
+      }
+
+      // Leather grip with wrap marks
+      ctx.fillStyle = "#3a2218";
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.01, foreLen - size * 0.07);
+      ctx.quadraticCurveTo(-size * 0.014, foreLen - size * 0.04, -size * 0.01, foreLen - size * 0.01);
+      ctx.lineTo(size * 0.01, foreLen - size * 0.01);
+      ctx.quadraticCurveTo(size * 0.014, foreLen - size * 0.04, size * 0.01, foreLen - size * 0.07);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#2a1808";
+      ctx.lineWidth = 0.5 * zoom;
+      for (let g = 0; g < 3; g++) {
+        const gy = foreLen - size * 0.06 + g * size * 0.02;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.011, gy);
+        ctx.lineTo(size * 0.011, gy);
+        ctx.stroke();
+      }
+    },
   });
 
   // === GREAT HELM ===
@@ -2042,9 +2144,100 @@ export function drawSkeletonKingEnemy(
   drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     upperLen: 0.22, foreLen: 0.17,
-    shoulderAngle: -0.5 + Math.sin(time * 1.5) * 0.1 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.4 : 0),
-    elbowAngle: -0.6 + Math.sin(time * 2.2) * 0.08,
+    shoulderAngle: 0.2 + Math.sin(time * 1.5) * 0.08 + (isAttacking ? Math.sin(attackPhase * Math.PI) * 0.4 : 0),
+    elbowAngle: -0.25 + Math.sin(time * 2.2) * 0.06,
     style: 'bone',
+    onWeapon: (ctx) => {
+      const foreLen = size * 0.1;
+
+      // Dark decree scroll — rolled parchment with arcane seal
+      const scrollW = size * 0.05;
+      const scrollH = size * 0.14;
+      const scrollY = foreLen * 0.4;
+
+      // Parchment body
+      const parchGrad = ctx.createLinearGradient(-scrollW, 0, scrollW, 0);
+      parchGrad.addColorStop(0, "#3a2a1a");
+      parchGrad.addColorStop(0.3, "#5a4a30");
+      parchGrad.addColorStop(0.7, "#4a3a25");
+      parchGrad.addColorStop(1, "#2a1a0a");
+      ctx.fillStyle = parchGrad;
+      ctx.beginPath();
+      ctx.moveTo(-scrollW * 0.7, scrollY);
+      ctx.lineTo(scrollW * 0.7, scrollY);
+      ctx.lineTo(scrollW * 0.7, scrollY + scrollH);
+      ctx.lineTo(-scrollW * 0.7, scrollY + scrollH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top and bottom rolls
+      const rollGrad = ctx.createLinearGradient(0, scrollY - size * 0.015, 0, scrollY + size * 0.015);
+      rollGrad.addColorStop(0, "#6a5a40");
+      rollGrad.addColorStop(0.5, "#4a3a25");
+      rollGrad.addColorStop(1, "#3a2a1a");
+      ctx.fillStyle = rollGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, scrollY, scrollW, size * 0.015, 0, 0, TAU);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(0, scrollY + scrollH, scrollW, size * 0.015, 0, 0, TAU);
+      ctx.fill();
+
+      // Gold end caps
+      ctx.fillStyle = goldMid;
+      for (const sy of [scrollY, scrollY + scrollH]) {
+        for (const sx of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(sx * scrollW * 0.85, sy, size * 0.01, 0, TAU);
+          ctx.fill();
+        }
+      }
+
+      // Dark arcane seal
+      const sealY = scrollY + scrollH * 0.45;
+      const sealPulse = 0.5 + Math.sin(time * 3) * 0.3;
+      const sealGrad = ctx.createRadialGradient(0, sealY, 0, 0, sealY, size * 0.035);
+      sealGrad.addColorStop(0, `rgba(160, 80, 220, ${sealPulse})`);
+      sealGrad.addColorStop(0.5, `rgba(100, 40, 160, ${sealPulse * 0.6})`);
+      sealGrad.addColorStop(1, "rgba(60, 20, 100, 0)");
+      ctx.fillStyle = sealGrad;
+      ctx.beginPath();
+      ctx.arc(0, sealY, size * 0.035, 0, TAU);
+      ctx.fill();
+
+      // Arcane rune lines on parchment
+      ctx.strokeStyle = `rgba(140, 80, 200, ${0.3 + sealPulse * 0.2})`;
+      ctx.lineWidth = 0.5 * zoom;
+      for (let r = 0; r < 4; r++) {
+        const ry = scrollY + size * 0.02 + r * scrollH * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(-scrollW * 0.5, ry);
+        ctx.lineTo(scrollW * 0.5, ry);
+        ctx.stroke();
+      }
+
+      // Spectral energy gathering when attacking
+      if (isAttacking) {
+        const atkGlow = Math.sin(attackPhase * Math.PI);
+        for (let e = 0; e < 5; e++) {
+          const eAngle = (e / 5) * TAU + time * 4;
+          const eR = size * 0.06 * (0.6 + atkGlow * 0.4);
+          const ex = Math.cos(eAngle) * eR;
+          const ey = sealY + Math.sin(eAngle) * eR * 0.6;
+          ctx.globalAlpha = 0.3 + atkGlow * 0.4;
+          ctx.fillStyle = "#c080ff";
+          ctx.beginPath();
+          ctx.arc(ex, ey, size * 0.006, 0, TAU);
+          ctx.fill();
+        }
+        ctx.globalAlpha = atkGlow * 0.4;
+        ctx.fillStyle = "#e0b0ff";
+        ctx.beginPath();
+        ctx.arc(0, sealY, size * 0.02 * atkGlow, 0, TAU);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    },
   });
 
   // === SKULL HEAD ===
@@ -2414,7 +2607,7 @@ export function drawZombieShamblerEnemy(
   drawPathArm(ctx, cx0 - size * 0.16, torsoY - size * 0.08 - bodyBob, size, time, zoom, -1, {
     color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
     upperLen: 0.28, foreLen: 0.24, handRadius: 0.052,
-    shoulderAngle: -0.9 + Math.sin(time * 1.5) * 0.12 + (isAttacking ? -0.3 : 0),
+    shoulderAngle: -0.2 + Math.sin(time * 1.5) * 0.12 + (isAttacking ? -0.3 : 0),
     elbowAngle: 0.3 + Math.sin(time * 2) * 0.08,
     style: 'fleshy',
   });
@@ -2423,8 +2616,8 @@ export function drawZombieShamblerEnemy(
   drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: fleshMid, colorDark: fleshDark, handColor: "#d0c8b0",
     upperLen: 0.27, foreLen: 0.22,
-    shoulderAngle: 1.1 + Math.sin(time * 2.5) * 0.05,
-    elbowAngle: 0.9 + Math.sin(time * 1.8) * 0.04,
+    shoulderAngle: 0.2 + Math.sin(time * 2.5) * 0.08,
+    elbowAngle: -0.25 + Math.sin(time * 1.8) * 0.06,
     style: 'fleshy',
   });
 
@@ -2887,8 +3080,8 @@ export function drawZombieBruteEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.18, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: "#4a4a50",
       upperLen: 0.34, foreLen: 0.29, width: 0.12, handRadius: 0.06,
-      shoulderAngle: side * -0.45 + (isAttacking ? Math.sin(time * 8 + side) * 0.5 : Math.sin(time * 2.5 + side) * 0.12),
-      elbowAngle: -0.7 + (isAttacking ? side * 0.4 : Math.sin(time * 3 + side * 2) * 0.1),
+      shoulderAngle: side * 0.3 + (isAttacking ? Math.sin(time * 8 + side) * 0.5 : Math.sin(time * 2.5 + side) * 0.12),
+      elbowAngle: side * -0.3 + (isAttacking ? side * 0.3 : Math.sin(time * 3 + side * 2) * 0.1),
       style: 'fleshy',
     });
   }
@@ -3162,8 +3355,8 @@ export function drawZombieSpitterEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       upperLen: 0.25, foreLen: 0.20,
-      shoulderAngle: side * -0.35 + Math.sin(time * 3.5 + side * 1.5) * 0.12 + side * -0.4 * attackIntensity,
-      elbowAngle: -0.5 - 0.3 * attackIntensity + Math.sin(time * 4 + side) * 0.1 * (1 - attackIntensity),
+      shoulderAngle: side * 0.25 + Math.sin(time * 3.5 + side * 1.5) * 0.12 + side * 0.4 * attackIntensity,
+      elbowAngle: side * -0.3 + side * -0.25 * attackIntensity + Math.sin(time * 4 + side) * 0.1 * (1 - attackIntensity),
       style: 'fleshy',
     });
   }
@@ -3497,8 +3690,8 @@ export function drawGhoulEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.13, torsoY - size * 0.05 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       upperLen: 0.30, foreLen: 0.27, handRadius: 0.046,
-      shoulderAngle: side * -0.7 + Math.sin(time * 6 + side * Math.PI) * 0.18 * (1 - attackIntensity) - 0.5 * attackIntensity + side * slash,
-      elbowAngle: -0.3 - 0.4 * attackIntensity + Math.sin(time * 7 + side) * 0.12 * (1 - attackIntensity) + side * slash * 0.6,
+      shoulderAngle: side * 0.4 + Math.sin(time * 6 + side * Math.PI) * 0.15 * (1 - attackIntensity) + side * 0.3 * attackIntensity + side * slash,
+      elbowAngle: side * -0.25 + side * -0.3 * attackIntensity + Math.sin(time * 7 + side) * 0.1 * (1 - attackIntensity) + side * slash * 0.6,
       style: 'fleshy',
     });
   }
@@ -3911,6 +4104,101 @@ export function drawDarkKnightEnemy(
     shoulderAngle: -0.35 + Math.sin(time * 4) * 0.06 + (isAttacking ? -0.3 : 0),
     elbowAngle: 0.5 + Math.sin(time * 3) * 0.08 + (isAttacking ? -0.25 : 0),
     style: 'armored',
+    onWeapon: (ctx) => {
+      // Dark tower shield
+      const shW = size * 0.13;
+      const shH = size * 0.24;
+
+      // Shield body — dark steel gradient
+      const shieldGrad = ctx.createLinearGradient(-shW, -shH * 0.3, shW, shH * 0.3);
+      shieldGrad.addColorStop(0, armorDark);
+      shieldGrad.addColorStop(0.3, armorMid);
+      shieldGrad.addColorStop(0.6, armorLight);
+      shieldGrad.addColorStop(1, armorDark);
+      ctx.fillStyle = shieldGrad;
+      ctx.beginPath();
+      ctx.moveTo(-shW, -shH * 0.35);
+      ctx.quadraticCurveTo(-shW * 1.05, 0, -shW * 0.6, shH * 0.45);
+      ctx.lineTo(0, shH * 0.55);
+      ctx.lineTo(shW * 0.6, shH * 0.45);
+      ctx.quadraticCurveTo(shW * 1.05, 0, shW, -shH * 0.35);
+      ctx.quadraticCurveTo(shW * 0.5, -shH * 0.42, 0, -shH * 0.4);
+      ctx.quadraticCurveTo(-shW * 0.5, -shH * 0.42, -shW, -shH * 0.35);
+      ctx.closePath();
+      ctx.fill();
+
+      // Purple trim border
+      ctx.strokeStyle = redTrim;
+      ctx.lineWidth = size * 0.008;
+      ctx.stroke();
+
+      // Inner border accent
+      ctx.strokeStyle = armorHighlight;
+      ctx.lineWidth = size * 0.004;
+      ctx.beginPath();
+      ctx.moveTo(-shW * 0.8, -shH * 0.28);
+      ctx.quadraticCurveTo(-shW * 0.85, 0, -shW * 0.45, shH * 0.38);
+      ctx.lineTo(0, shH * 0.45);
+      ctx.lineTo(shW * 0.45, shH * 0.38);
+      ctx.quadraticCurveTo(shW * 0.85, 0, shW * 0.8, -shH * 0.28);
+      ctx.quadraticCurveTo(shW * 0.4, -shH * 0.35, 0, -shH * 0.33);
+      ctx.quadraticCurveTo(-shW * 0.4, -shH * 0.35, -shW * 0.8, -shH * 0.28);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Heraldic skull emblem
+      ctx.fillStyle = redTrim;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(0, -shH * 0.08);
+      ctx.quadraticCurveTo(size * 0.03, -shH * 0.12, size * 0.035, -shH * 0.02);
+      ctx.quadraticCurveTo(size * 0.035, shH * 0.06, size * 0.015, shH * 0.1);
+      ctx.lineTo(size * 0.005, shH * 0.07);
+      ctx.lineTo(-size * 0.005, shH * 0.07);
+      ctx.lineTo(-size * 0.015, shH * 0.1);
+      ctx.quadraticCurveTo(-size * 0.035, shH * 0.06, -size * 0.035, -shH * 0.02);
+      ctx.quadraticCurveTo(-size * 0.03, -shH * 0.12, 0, -shH * 0.08);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = armorDark;
+      for (const es of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(es * size * 0.015, -shH * 0.01, size * 0.008, 0, TAU);
+        ctx.fill();
+      }
+
+      // Battle damage scratches
+      ctx.strokeStyle = "rgba(90, 90, 100, 0.4)";
+      ctx.lineWidth = 0.5 * zoom;
+      const scratchData: [number, number, number, number][] = [
+        [-shW * 0.5, -shH * 0.15, -shW * 0.2, -shH * 0.05],
+        [shW * 0.3, shH * 0.1, shW * 0.5, shH * 0.25],
+        [-shW * 0.1, shH * 0.2, shW * 0.15, shH * 0.3],
+      ];
+      for (const [sx1, sy1, sx2, sy2] of scratchData) {
+        ctx.beginPath();
+        ctx.moveTo(sx1, sy1);
+        ctx.lineTo(sx2, sy2);
+        ctx.stroke();
+      }
+
+      // Shadow wisps from edges when attacking
+      if (isAttacking) {
+        for (let w = 0; w < 4; w++) {
+          const wAngle = (w / 4) * Math.PI - Math.PI * 0.5;
+          const wx = Math.cos(wAngle) * shW * 0.9;
+          const wy = Math.sin(wAngle) * shH * 0.4;
+          const wPhase = Math.sin(time * 6 + w * 1.8);
+          ctx.globalAlpha = 0.2 + wPhase * 0.15;
+          ctx.fillStyle = "#3a1a30";
+          ctx.beginPath();
+          ctx.ellipse(wx, wy, size * 0.025, size * 0.008, wAngle, 0, TAU);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+    },
   });
 
   // === GREATSWORD ARM (right) ===
@@ -3921,7 +4209,7 @@ export function drawDarkKnightEnemy(
     upperLen: 0.24, foreLen: 0.20,
     shoulderAngle: 0.25 + swordSwing,
     elbowBend: 0.5,
-    elbowAngle: 0.35 + (isAttacking ? -0.4 : 0),
+    elbowAngle: -0.15 + (isAttacking ? -0.35 : 0),
     style: 'armored',
     onWeapon: (ctx) => {
       const foreLen = size * 0.12;
@@ -4535,6 +4823,128 @@ export function drawDeathKnightEnemy(
     shoulderAngle: -0.45 + Math.sin(time * 3) * 0.05 + (isAttacking ? -0.3 : 0),
     elbowAngle: 0.55 + Math.sin(time * 2.5 + 1) * 0.06 + (isAttacking ? -0.25 : 0),
     style: 'armored',
+    onWeapon: (ctx) => {
+      // Corrupted bone shield — fused bone fragments with dark iron rim
+      const shW = size * 0.14;
+      const shH = size * 0.26;
+
+      // Bone fragment base — irregular shield shape
+      const boneGrad = ctx.createLinearGradient(-shW, -shH * 0.3, shW, shH * 0.3);
+      boneGrad.addColorStop(0, "#5a4a3a");
+      boneGrad.addColorStop(0.3, "#8a7a60");
+      boneGrad.addColorStop(0.5, "#a09070");
+      boneGrad.addColorStop(0.7, "#8a7a60");
+      boneGrad.addColorStop(1, "#5a4a3a");
+      ctx.fillStyle = boneGrad;
+      ctx.beginPath();
+      ctx.moveTo(-shW * 0.3, -shH * 0.45);
+      ctx.quadraticCurveTo(-shW * 0.8, -shH * 0.4, -shW, -shH * 0.1);
+      ctx.quadraticCurveTo(-shW * 1.05, shH * 0.15, -shW * 0.7, shH * 0.4);
+      ctx.lineTo(0, shH * 0.5);
+      ctx.lineTo(shW * 0.7, shH * 0.4);
+      ctx.quadraticCurveTo(shW * 1.05, shH * 0.15, shW, -shH * 0.1);
+      ctx.quadraticCurveTo(shW * 0.8, -shH * 0.4, shW * 0.3, -shH * 0.45);
+      ctx.quadraticCurveTo(0, -shH * 0.5, -shW * 0.3, -shH * 0.45);
+      ctx.closePath();
+      ctx.fill();
+
+      // Dark iron rim
+      ctx.strokeStyle = armorDark;
+      ctx.lineWidth = size * 0.01;
+      ctx.stroke();
+
+      // Bone fragment seams — cracks across shield
+      ctx.strokeStyle = "rgba(60, 40, 30, 0.5)";
+      ctx.lineWidth = 0.7 * zoom;
+      const cracks: [number, number, number, number][] = [
+        [-shW * 0.6, -shH * 0.2, 0, shH * 0.1],
+        [shW * 0.1, -shH * 0.35, shW * 0.5, shH * 0.15],
+        [-shW * 0.2, shH * 0.05, shW * 0.3, shH * 0.35],
+      ];
+      for (const [cx1, cy1, cx2, cy2] of cracks) {
+        ctx.beginPath();
+        ctx.moveTo(cx1, cy1);
+        ctx.lineTo(cx2, cy2);
+        ctx.stroke();
+      }
+
+      // Corrupt energy seeping from cracks
+      const corruptPulse = 0.4 + Math.sin(time * 3.5) * 0.3;
+      ctx.globalAlpha = corruptPulse;
+      for (const [cx1, cy1, cx2, cy2] of cracks) {
+        const mx = (cx1 + cx2) * 0.5;
+        const my = (cy1 + cy2) * 0.5;
+        const crackGlow = ctx.createRadialGradient(mx, my, 0, mx, my, size * 0.03);
+        crackGlow.addColorStop(0, "rgba(180, 40, 200, 0.6)");
+        crackGlow.addColorStop(1, "rgba(100, 20, 120, 0)");
+        ctx.fillStyle = crackGlow;
+        ctx.beginPath();
+        ctx.arc(mx, my, size * 0.03, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Glowing rune in center
+      const runeGlow = 0.5 + Math.sin(time * 4) * 0.35;
+      const runeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.045);
+      runeGrad.addColorStop(0, `rgba(200, 60, 240, ${runeGlow})`);
+      runeGrad.addColorStop(0.5, `rgba(140, 30, 180, ${runeGlow * 0.5})`);
+      runeGrad.addColorStop(1, "rgba(80, 10, 100, 0)");
+      ctx.fillStyle = runeGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.045, 0, TAU);
+      ctx.fill();
+      // Rune symbol — interlocked triangles
+      ctx.strokeStyle = `rgba(230, 140, 255, ${runeGlow * 0.8})`;
+      ctx.lineWidth = size * 0.005;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.025);
+      ctx.lineTo(size * 0.015, size * 0.01);
+      ctx.lineTo(-size * 0.015, size * 0.01);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.025);
+      ctx.lineTo(-size * 0.015, -size * 0.008);
+      ctx.lineTo(size * 0.015, -size * 0.008);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Blood-red gems at cardinal points
+      const gemPositions: [number, number][] = [
+        [0, -shH * 0.3],
+        [-shW * 0.55, 0],
+        [shW * 0.55, 0],
+        [0, shH * 0.3],
+      ];
+      for (const [gx, gy] of gemPositions) {
+        const gemGrad = ctx.createRadialGradient(gx, gy, 0, gx, gy, size * 0.012);
+        gemGrad.addColorStop(0, "#ff4060");
+        gemGrad.addColorStop(0.5, "#c02040");
+        gemGrad.addColorStop(1, "#601020");
+        ctx.fillStyle = gemGrad;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - size * 0.01);
+        ctx.lineTo(gx + size * 0.008, gy);
+        ctx.lineTo(gx, gy + size * 0.01);
+        ctx.lineTo(gx - size * 0.008, gy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Intensified corrupt energy when attacking
+      if (isAttacking) {
+        const atkPulse = Math.sin(attackPhase * Math.PI);
+        setShadowBlur(ctx, size * 0.05 * atkPulse, "#a040c0");
+        ctx.globalAlpha = atkPulse * 0.4;
+        ctx.fillStyle = "#c060e0";
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.06, 0, TAU);
+        ctx.fill();
+        clearShadow(ctx);
+        ctx.globalAlpha = 1;
+      }
+    },
   });
 
   // === FLAMING SWORD ARM (right) ===
@@ -4547,7 +4957,7 @@ export function drawDeathKnightEnemy(
     upperLen: 0.25, foreLen: 0.22,
     shoulderAngle: 0.3 + fsSwing,
     elbowBend: 0.55,
-    elbowAngle: 0.35 + (isAttacking ? -0.5 : 0),
+    elbowAngle: -0.15 + (isAttacking ? -0.4 : 0),
     style: 'armored',
     onWeapon: (ctx) => {
       const foreLen = size * 0.13;

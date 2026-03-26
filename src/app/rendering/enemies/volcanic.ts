@@ -754,6 +754,50 @@ export function drawFireImpEnemy(
     width: 0.04,
     handRadius: 0.03,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const handY = 0.12 * s;
+      const atk = isAttacking ? attackPhase : 0;
+      const pulse = 0.85 + Math.sin(time * 10) * 0.15 + atk * 0.2;
+      wCtx.translate(0, handY * 0.62);
+      wCtx.rotate(-0.12);
+      const orbR = s * 0.07 * (0.92 + atk * 0.12 + Math.sin(time * 14) * 0.06);
+      const coreGrad = wCtx.createRadialGradient(0, 0, 0, 0, 0, orbR * 1.35);
+      coreGrad.addColorStop(0, `rgba(255, 255, 220, ${0.95 * pulse})`);
+      coreGrad.addColorStop(0.25, `rgba(253, 224, 71, ${0.85 * pulse})`);
+      coreGrad.addColorStop(0.55, `rgba(251, 146, 60, ${0.7 * pulse})`);
+      coreGrad.addColorStop(0.85, `rgba(234, 88, 12, ${0.45 * pulse})`);
+      coreGrad.addColorStop(1, "rgba(127, 29, 29, 0)");
+      wCtx.fillStyle = coreGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, orbR, 0, Math.PI * 2);
+      wCtx.fill();
+      const shellGrad = wCtx.createRadialGradient(-orbR * 0.25, -orbR * 0.2, orbR * 0.1, 0, 0, orbR);
+      shellGrad.addColorStop(0, `rgba(255, 200, 100, ${0.35 * pulse})`);
+      shellGrad.addColorStop(0.6, `rgba(249, 115, 22, ${0.2 * pulse})`);
+      shellGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+      wCtx.fillStyle = shellGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, orbR * 0.92, 0, Math.PI * 2);
+      wCtx.fill();
+      for (let e = 0; e < 5; e++) {
+        const eAng = time * 4 + e * ((Math.PI * 2) / 5);
+        const eRad = orbR * (1.05 + Math.sin(time * 6 + e) * 0.08);
+        const ex = Math.cos(eAng) * eRad;
+        const ey = Math.sin(eAng) * eRad * 0.75;
+        wCtx.fillStyle = `rgba(255, 237, 150, ${0.45 + atk * 0.35})`;
+        wCtx.beginPath();
+        wCtx.arc(ex, ey, s * 0.012, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+      wCtx.strokeStyle = `rgba(251, 191, 36, ${0.5 + atk * 0.35})`;
+      wCtx.lineWidth = 1.2 * zoom;
+      wCtx.setLineDash([2 * zoom, 3 * zoom]);
+      wCtx.beginPath();
+      wCtx.arc(0, 0, orbR * 0.55, time * 3, time * 3 + Math.PI * 1.25);
+      wCtx.stroke();
+      wCtx.setLineDash([]);
+    },
   });
   drawPathArm(ctx, x + size * 0.18, y - size * 0.1 - hop, size, time, zoom, 1, {
     color: bodyColor,
@@ -766,6 +810,71 @@ export function drawFireImpEnemy(
     width: 0.04,
     handRadius: 0.03,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const handY = 0.12 * s;
+      const atk = isAttacking ? attackPhase : 0;
+      wCtx.translate(0, handY * 0.58);
+      wCtx.rotate(0.08);
+      const shaftTop = -s * 0.44;
+      const shaftBot = s * 0.02;
+      const shaftGrad = wCtx.createLinearGradient(0, shaftBot, 0, shaftTop);
+      shaftGrad.addColorStop(0, "#1c1917");
+      shaftGrad.addColorStop(0.45, "#292524");
+      shaftGrad.addColorStop(0.72, "#7c2d12");
+      shaftGrad.addColorStop(0.9, "#c2410c");
+      shaftGrad.addColorStop(1, "#ea580c");
+      wCtx.fillStyle = shaftGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.014, shaftBot);
+      wCtx.lineTo(s * 0.014, shaftBot);
+      wCtx.lineTo(s * 0.01, shaftTop + s * 0.06);
+      wCtx.lineTo(-s * 0.01, shaftTop + s * 0.06);
+      wCtx.closePath();
+      wCtx.fill();
+      wCtx.strokeStyle = "#0c0a09";
+      wCtx.lineWidth = Math.max(0.6, zoom * 0.8);
+      wCtx.stroke();
+      const forkY = shaftTop + s * 0.05;
+      const prongLen = s * 0.1;
+      const spread = s * 0.034;
+      for (const px of [-spread, 0, spread]) {
+        const prongGrad = wCtx.createLinearGradient(px, forkY, px, forkY - prongLen);
+        prongGrad.addColorStop(0, "#44403c");
+        prongGrad.addColorStop(0.6, "#9a3412");
+        prongGrad.addColorStop(1, "#f97316");
+        wCtx.fillStyle = prongGrad;
+        wCtx.beginPath();
+        wCtx.moveTo(px - s * 0.008, forkY);
+        wCtx.lineTo(px, forkY - prongLen);
+        wCtx.lineTo(px + s * 0.008, forkY);
+        wCtx.closePath();
+        wCtx.fill();
+        const tipGlow = 0.65 + atk * 0.35 + Math.sin(time * 11 + px * 3) * 0.15;
+        const tipG = wCtx.createRadialGradient(px, forkY - prongLen, 0, px, forkY - prongLen, s * 0.028);
+        tipG.addColorStop(0, `rgba(255, 252, 220, ${0.9 * tipGlow})`);
+        tipG.addColorStop(0.4, `rgba(251, 146, 60, ${0.75 * tipGlow})`);
+        tipG.addColorStop(1, "rgba(220, 38, 38, 0)");
+        wCtx.fillStyle = tipG;
+        wCtx.beginPath();
+        wCtx.arc(px, forkY - prongLen, s * 0.022, 0, Math.PI * 2);
+        wCtx.fill();
+        wCtx.fillStyle = `rgba(255, 200, 80, ${0.35 * tipGlow})`;
+        wCtx.beginPath();
+        wCtx.moveTo(px - s * 0.006, forkY - prongLen);
+        wCtx.quadraticCurveTo(px - s * 0.02, forkY - prongLen - s * 0.04, px, forkY - prongLen - s * 0.07);
+        wCtx.quadraticCurveTo(px + s * 0.02, forkY - prongLen - s * 0.04, px + s * 0.006, forkY - prongLen);
+        wCtx.fill();
+      }
+      wCtx.fillStyle = "#292524";
+      wCtx.beginPath();
+      wCtx.moveTo(-spread - s * 0.008, forkY);
+      wCtx.lineTo(spread + s * 0.008, forkY);
+      wCtx.lineTo(spread + s * 0.004, forkY + s * 0.018);
+      wCtx.lineTo(-spread - s * 0.004, forkY + s * 0.018);
+      wCtx.closePath();
+      wCtx.fill();
+    },
   });
 
   // Clawed feet — digitigrade bezier demon feet
@@ -1630,6 +1739,85 @@ export function drawEmberGuardEnemy(
     width: 0.07,
     handRadius: 0.045,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const handY = 0.18 * s;
+      const atk = isAttacking ? attackPhase : 0;
+      wCtx.translate(0, handY * 0.58);
+      wCtx.rotate(0.22);
+      const sw = s * 0.24;
+      const sh = s * 0.42;
+      const fx = -sw * 0.5;
+      const fy = -sh;
+      const frameGrad = wCtx.createLinearGradient(fx, fy, fx + sw, fy + sh);
+      frameGrad.addColorStop(0, "#18181b");
+      frameGrad.addColorStop(0.5, "#3f3f46");
+      frameGrad.addColorStop(1, "#27272a");
+      wCtx.fillStyle = frameGrad;
+      wCtx.beginPath();
+      wCtx.roundRect(fx - s * 0.018, fy - s * 0.012, sw + s * 0.036, sh + s * 0.028, s * 0.02);
+      wCtx.fill();
+      const faceGrad = wCtx.createLinearGradient(fx, fy, fx + sw, fy + sh);
+      faceGrad.addColorStop(0, "#292524");
+      faceGrad.addColorStop(0.35, "#1c1917");
+      faceGrad.addColorStop(0.55, "#431407");
+      faceGrad.addColorStop(1, "#27272a");
+      wCtx.fillStyle = faceGrad;
+      wCtx.beginPath();
+      wCtx.roundRect(fx, fy, sw, sh, s * 0.012);
+      wCtx.fill();
+      wCtx.strokeStyle = `rgba(251, 146, 60, ${0.35 + flamePulse * 0.25})`;
+      wCtx.lineWidth = Math.max(1, zoom * 1.1);
+      wCtx.beginPath();
+      wCtx.moveTo(fx + sw * 0.2, fy + sh * 0.25);
+      wCtx.quadraticCurveTo(fx + sw * 0.45, fy + sh * 0.5, fx + sw * 0.35, fy + sh * 0.78);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(fx + sw * 0.75, fy + sh * 0.18);
+      wCtx.quadraticCurveTo(fx + sw * 0.55, fy + sh * 0.42, fx + sw * 0.68, fy + sh * 0.72);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(fx + sw * 0.5, fy + sh * 0.12);
+      wCtx.lineTo(fx + sw * 0.48, fy + sh * 0.88);
+      wCtx.stroke();
+      const lavaGrad = wCtx.createRadialGradient(
+        fx + sw * 0.5, fy + sh * 0.55, 0,
+        fx + sw * 0.5, fy + sh * 0.55, sw * 0.55,
+      );
+      lavaGrad.addColorStop(0, `rgba(254, 243, 199, ${0.45 + atk * 0.2})`);
+      lavaGrad.addColorStop(0.35, `rgba(251, 191, 36, ${0.35 + flamePulse * 0.15})`);
+      lavaGrad.addColorStop(0.65, `rgba(234, 88, 12, ${0.28})`);
+      lavaGrad.addColorStop(1, "rgba(69, 10, 10, 0)");
+      wCtx.fillStyle = lavaGrad;
+      wCtx.beginPath();
+      wCtx.roundRect(fx + sw * 0.06, fy + sh * 0.08, sw * 0.88, sh * 0.84, s * 0.008);
+      wCtx.fill();
+      wCtx.globalCompositeOperation = "lighter";
+      for (let em = 0; em < 5; em++) {
+        const emT = (time * 1.4 + em * 0.31) % 1;
+        const emX = fx + sw * (0.15 + em * 0.18);
+        const emY = fy - emT * s * 0.08;
+        wCtx.fillStyle = `rgba(255, 200, 100, ${(1 - emT) * (0.35 + atk * 0.25)})`;
+        wCtx.beginPath();
+        wCtx.ellipse(emX, emY, s * 0.012, s * 0.02, 0, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+      wCtx.globalCompositeOperation = "source-over";
+      for (let h = 0; h < 3; h++) {
+        const hPh = (time * 2.2 + h * 0.21) % 1;
+        const hx = fx + sw * (0.2 + h * 0.28);
+        const hy = fy + sh * 0.15 - hPh * sh * 0.5;
+        wCtx.strokeStyle = `rgba(253, 224, 71, ${(1 - hPh) * 0.12})`;
+        wCtx.lineWidth = 1 * zoom;
+        wCtx.beginPath();
+        wCtx.moveTo(hx, hy);
+        wCtx.quadraticCurveTo(hx + Math.sin(time * 5 + h) * s * 0.02, hy - sh * 0.06, hx, hy - sh * 0.1);
+        wCtx.stroke();
+      }
+      wCtx.strokeStyle = "#52525b";
+      wCtx.lineWidth = Math.max(1, zoom);
+      wCtx.strokeRect(fx, fy, sw, sh);
+    },
   });
   drawPathArm(ctx, x + size * 0.35, y - size * 0.32, size, time, zoom, 1, {
     color: bodyColor,
@@ -1643,6 +1831,90 @@ export function drawEmberGuardEnemy(
     handRadius: 0.045,
     attackExtra: isAttacking ? attackPhase * 0.3 : 0,
     style: 'armored',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const handY = 0.18 * s;
+      const atk = isAttacking ? attackPhase : 0;
+      const fireI = 0.55 + flamePulse * 0.35 + atk * 0.45;
+      wCtx.translate(0, handY * 0.55);
+      wCtx.rotate(-0.15 + swordSwing);
+      const bladeTip = -s * 0.62;
+      const bladeGuard = -s * 0.07;
+      const bladeGrad = wCtx.createLinearGradient(0, bladeGuard, 0, bladeTip);
+      bladeGrad.addColorStop(0, "#fed7aa");
+      bladeGrad.addColorStop(0.25, "#fb923c");
+      bladeGrad.addColorStop(0.55, "#ea580c");
+      bladeGrad.addColorStop(0.82, "#b91c1c");
+      bladeGrad.addColorStop(1, "#7f1d1d");
+      wCtx.fillStyle = bladeGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.045, bladeGuard);
+      wCtx.lineTo(-s * 0.012, bladeTip);
+      wCtx.lineTo(s * 0.012, bladeTip);
+      wCtx.lineTo(s * 0.045, bladeGuard);
+      wCtx.closePath();
+      wCtx.fill();
+      const edgeGrad = wCtx.createLinearGradient(s * 0.035, bladeGuard, s * 0.055, bladeTip);
+      edgeGrad.addColorStop(0, "rgba(255, 237, 180, 0.5)");
+      edgeGrad.addColorStop(0.5, `rgba(251, 113, 133, ${0.35 + atk * 0.3})`);
+      edgeGrad.addColorStop(1, "rgba(185, 28, 28, 0.15)");
+      wCtx.fillStyle = edgeGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(s * 0.02, bladeGuard);
+      wCtx.lineTo(s * 0.035, bladeTip);
+      wCtx.lineTo(s * 0.048, bladeGuard);
+      wCtx.closePath();
+      wCtx.fill();
+      const guardGrad = wCtx.createLinearGradient(-s * 0.12, 0, s * 0.12, 0);
+      guardGrad.addColorStop(0, "#27272a");
+      guardGrad.addColorStop(0.35, "#52525b");
+      guardGrad.addColorStop(0.5, "#3f3f46");
+      guardGrad.addColorStop(1, "#18181b");
+      wCtx.fillStyle = guardGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.14, bladeGuard + s * 0.02);
+      wCtx.lineTo(-s * 0.1, bladeGuard - s * 0.035);
+      wCtx.quadraticCurveTo(0, bladeGuard - s * 0.055, s * 0.1, bladeGuard - s * 0.035);
+      wCtx.lineTo(s * 0.14, bladeGuard + s * 0.02);
+      wCtx.lineTo(s * 0.08, bladeGuard + s * 0.012);
+      wCtx.lineTo(-s * 0.08, bladeGuard + s * 0.012);
+      wCtx.closePath();
+      wCtx.fill();
+      for (let g = 0; g < 3; g++) {
+        const gx = -s * 0.06 + g * s * 0.06;
+        const gemG = wCtx.createRadialGradient(gx, bladeGuard - s * 0.02, 0, gx, bladeGuard - s * 0.02, s * 0.022);
+        gemG.addColorStop(0, `rgba(255, 200, 120, ${0.9 * fireI})`);
+        gemG.addColorStop(0.5, `rgba(249, 115, 22, ${0.75})`);
+        gemG.addColorStop(1, "#7c2d12");
+        wCtx.fillStyle = gemG;
+        wCtx.beginPath();
+        wCtx.arc(gx, bladeGuard - s * 0.02, s * 0.014, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+      wCtx.fillStyle = "#1c1917";
+      wCtx.fillRect(-s * 0.022, bladeGuard + s * 0.008, s * 0.044, s * 0.09);
+      wCtx.strokeStyle = "#292524";
+      wCtx.lineWidth = Math.max(0.6, zoom * 0.7);
+      wCtx.strokeRect(-s * 0.022, bladeGuard + s * 0.008, s * 0.044, s * 0.09);
+      const pomG = wCtx.createRadialGradient(0, bladeGuard + s * 0.11, 0, 0, bladeGuard + s * 0.11, s * 0.028);
+      pomG.addColorStop(0, "#57534e");
+      pomG.addColorStop(1, "#0c0a09");
+      wCtx.fillStyle = pomG;
+      wCtx.beginPath();
+      wCtx.arc(0, bladeGuard + s * 0.115, s * 0.022, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.globalCompositeOperation = "lighter";
+      for (let p = 0; p < 8; p++) {
+        const t = (time * 2.5 + p * 0.13) % 1;
+        const py = bladeGuard - t * (bladeGuard - bladeTip);
+        const px = s * 0.038 + Math.sin(time * 9 + p) * s * 0.008;
+        wCtx.fillStyle = `rgba(255, 180, 80, ${(1 - t) * 0.35 * fireI})`;
+        wCtx.beginPath();
+        wCtx.arc(px, py, s * 0.006 + t * s * 0.004, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+      wCtx.globalCompositeOperation = "source-over";
+    },
   });
 
   // Articulated armored legs with molten joints

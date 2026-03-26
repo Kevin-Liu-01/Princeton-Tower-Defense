@@ -33,6 +33,7 @@ export function drawAthleteEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackBoost = isAttacking ? 1.35 : 1;
   const breath = getBreathScale(time, 1.8, 0.012);
@@ -448,6 +449,7 @@ export function drawTigerFanEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.7;
+  y += size * 0.08;
   const isAttacking = attackPhase > 0;
   const attackIntensity = isAttacking ? 1.4 : 1;
   const breath = getBreathScale(time, 1.4, 0.015);

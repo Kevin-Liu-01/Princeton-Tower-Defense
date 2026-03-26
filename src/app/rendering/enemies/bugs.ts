@@ -1433,7 +1433,7 @@ export function drawDragonflyEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.15;
+    x -= attackIntensity * size * 0.075;
   }
 
   // Four iridescent wings (elongated dragonfly shape with detailed venation)
@@ -1710,7 +1710,7 @@ export function drawSilkMothEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.15;
+    x -= attackIntensity * size * 0.075;
   }
   const flapAngle = Math.sin(time * 8 * (1 + attackIntensity * 2)) * (0.4 + attackIntensity * 0.3);
 
@@ -2196,8 +2196,7 @@ export function drawLocustEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.2;
-    y -= attackIntensity * size * 0.05;
+    x -= attackIntensity * size * 0.1;
   }
 
   // Wings (large, semi-transparent with rapid flutter)
@@ -2739,8 +2738,7 @@ export function drawIceBeetleEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.1;
-    y -= attackIntensity * size * 0.05;
+    x -= attackIntensity * size * 0.05;
   }
 
   // Frost aura ground effect
@@ -3215,7 +3213,7 @@ export function drawSnowMothEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.15;
+    x -= attackIntensity * size * 0.075;
   }
   const flapAngle = Math.sin(time * 9 * (1 + attackIntensity * 2)) * (0.35 + attackIntensity * 0.3);
 
@@ -3674,8 +3672,7 @@ export function drawMagmaBeetleEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.1;
-    y -= attackIntensity * size * 0.05;
+    x -= attackIntensity * size * 0.05;
   }
 
   // Molten ground glow
@@ -3952,7 +3949,7 @@ export function drawAshMothEnemy(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   if (isAttacking) {
-    x -= attackIntensity * size * 0.15;
+    x -= attackIntensity * size * 0.075;
   }
   const flapAngle = Math.sin(time * 10 * (1 + attackIntensity * 2)) * (0.4 + attackIntensity * 0.3);
 

@@ -284,8 +284,8 @@ export function drawFallenPaladinEnemy(
   drawPathArm(ctx, cx0 + size * 0.17, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: "#c8c0b0", colorDark: "#a8a090", handColor: "#a8a090",
     upperLen: 0.27, foreLen: 0.22,
-    shoulderAngle: 0.6 + Math.sin(time * 4) * 0.08 + (isAttacking ? -Math.sin(attackPhase * Math.PI) * 0.3 : 0),
-    elbowAngle: -0.5 + Math.sin(time * 3 + 1) * 0.06 + (isAttacking ? -0.2 : 0),
+    shoulderAngle: 0.35 + Math.sin(time * 4) * 0.06 + (isAttacking ? -Math.sin(attackPhase * Math.PI) * 0.3 : 0),
+    elbowAngle: -0.25 + Math.sin(time * 3 + 1) * 0.06 + (isAttacking ? -0.2 : 0),
     style: 'armored',
   });
 
@@ -995,8 +995,8 @@ export function drawLichEnemy(
   drawPathArm(ctx, cx0 - size * 0.14, torsoY - size * 0.08, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     upperLen: 0.26, foreLen: 0.22,
-    shoulderAngle: -0.8 + Math.sin(time * 3) * 0.1 + (isAttacking ? -0.4 : 0),
-    elbowAngle: -0.3 + (isAttacking ? -0.3 : Math.sin(time * 4) * 0.1),
+    shoulderAngle: -0.4 + Math.sin(time * 3) * 0.08 + (isAttacking ? -0.3 : 0),
+    elbowAngle: 0.3 + (isAttacking ? -0.2 : Math.sin(time * 4) * 0.08),
     style: 'bone',
   });
 
@@ -1501,8 +1501,8 @@ export function drawWraithEnemy(
       color: "rgba(100, 60, 160, 0.4)", colorDark: "rgba(60, 30, 100, 0.3)",
       handColor: "rgba(140, 80, 200, 0.5)", handRadius: 0.052,
       upperLen: 0.27, foreLen: 0.24,
-      shoulderAngle: side * -0.7 + Math.sin(time * 2 + side * Math.PI) * 0.15 + (isAttacking ? side * -0.3 : 0),
-      elbowAngle: -0.6 + Math.sin(time * 3 + side) * 0.15,
+      shoulderAngle: side * 0.4 + Math.sin(time * 2 + side * Math.PI) * 0.12 + (isAttacking ? side * 0.3 : 0),
+      elbowAngle: side * -0.3 + Math.sin(time * 3 + side) * 0.1,
       style: 'ghostly',
     });
   }
@@ -1779,8 +1779,8 @@ export function drawBoneMageEnemy(
   drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.08, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
     upperLen: 0.24, foreLen: 0.2,
-    shoulderAngle: -0.7 + Math.sin(time * 4) * 0.1 + (isAttacking ? -0.4 : 0),
-    elbowAngle: -0.3 + (isAttacking ? -0.3 : Math.sin(time * 5) * 0.08),
+    shoulderAngle: -0.4 + Math.sin(time * 4) * 0.08 + (isAttacking ? -0.3 : 0),
+    elbowAngle: 0.3 + (isAttacking ? -0.2 : Math.sin(time * 5) * 0.08),
     style: 'bone',
   });
 
@@ -2438,8 +2438,8 @@ export function drawRevenantEnemy(
     color: "rgba(150, 80, 40, 0.5)", colorDark: "rgba(100, 50, 25, 0.4)",
     handColor: "rgba(120, 60, 30, 0.5)",
     upperLen: 0.26, foreLen: 0.22,
-    shoulderAngle: -0.55 + Math.sin(time * 5) * 0.1 + (isAttacking ? -0.3 : 0),
-    elbowAngle: -0.4 + Math.sin(time * 4 + 1) * 0.12 + (isAttacking ? -0.25 : 0),
+    shoulderAngle: -0.3 + Math.sin(time * 5) * 0.08 + (isAttacking ? -0.25 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 4 + 1) * 0.08 + (isAttacking ? -0.2 : 0),
     style: 'armored',
   });
   ctx.globalAlpha = 1;
@@ -2922,8 +2922,8 @@ export function drawAbominationEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.2, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: bodyColor, colorDark: bodyColorDark, handColor: bodyColorDark,
       upperLen: 0.34, foreLen: 0.31, width: 0.12, handRadius: 0.06,
-      shoulderAngle: side * -0.5 + (isAttacking ? side * -0.4 : Math.sin(time * 2 + side) * 0.15),
-      elbowAngle: -0.6 + (isAttacking ? -0.3 : Math.sin(time * 2.5 + side * 2) * 0.1),
+      shoulderAngle: side * 0.35 + (isAttacking ? side * 0.35 : Math.sin(time * 2 + side) * 0.12),
+      elbowAngle: side * -0.3 + (isAttacking ? side * -0.25 : Math.sin(time * 2.5 + side * 2) * 0.08),
       style: 'fleshy',
     });
   }
@@ -4055,8 +4055,8 @@ export function drawDoomHeraldEnemy(
   drawPathArm(ctx, cx0 - size * 0.13, torsoY - size * 0.08 + floatBob, size, time, zoom, -1, {
     color: "#c8b8a0", colorDark: "#a89880", handColor: "#a89880",
     upperLen: 0.28, foreLen: 0.24,
-    shoulderAngle: -0.6 + Math.sin(time * 2) * 0.12 + (isAttacking ? -0.3 : 0),
-    elbowAngle: -0.5 + Math.sin(time * 3) * 0.1,
+    shoulderAngle: -0.35 + Math.sin(time * 2) * 0.08 + (isAttacking ? -0.25 : 0),
+    elbowAngle: 0.3 + Math.sin(time * 3) * 0.08,
     style: 'armored',
   });
 

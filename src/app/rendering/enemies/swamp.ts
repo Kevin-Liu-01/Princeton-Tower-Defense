@@ -220,6 +220,81 @@ export function drawBogCreatureEnemy(
     upperLen: 0.22, foreLen: 0.18, width: 0.08,
     handColor: "#84cc16", handRadius: 0.04,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const reachExtend = isAttacking ? Math.sin(attackPhase * Math.PI) * s * 0.06 : 0;
+
+      // Elongated tentacle appendage
+      const tentGrad = wCtx.createLinearGradient(0, 0, 0, -s * 0.32 - reachExtend);
+      tentGrad.addColorStop(0, bodyColorDark);
+      tentGrad.addColorStop(0.4, "#3a5a20");
+      tentGrad.addColorStop(0.8, "#2a4a18");
+      tentGrad.addColorStop(1, "#84cc16");
+      wCtx.strokeStyle = tentGrad;
+      wCtx.lineCap = "round";
+      wCtx.lineWidth = s * 0.05;
+      wCtx.beginPath();
+      wCtx.moveTo(0, 0);
+      const tentWave = Math.sin(time * 3.5) * s * 0.03;
+      wCtx.bezierCurveTo(
+        tentWave, -s * 0.08,
+        -tentWave * 1.5, -s * 0.18 - reachExtend * 0.3,
+        tentWave * 0.5, -s * 0.3 - reachExtend,
+      );
+      wCtx.stroke();
+      wCtx.lineCap = "butt";
+
+      // Tapered inner tentacle
+      wCtx.strokeStyle = "#4a6a28";
+      wCtx.lineWidth = s * 0.025;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -s * 0.02);
+      wCtx.bezierCurveTo(
+        tentWave * 0.7, -s * 0.1,
+        -tentWave, -s * 0.2 - reachExtend * 0.3,
+        tentWave * 0.3, -s * 0.3 - reachExtend,
+      );
+      wCtx.stroke();
+
+      // Suction cups along tentacle
+      for (let sc = 0; sc < 5; sc++) {
+        const sct = (sc + 1) / 6;
+        const scY = -sct * (s * 0.3 + reachExtend);
+        const scX = Math.sin(time * 3.5 + sc * 0.8) * s * 0.015 * sct;
+        const cupR = s * (0.014 - sc * 0.002);
+        wCtx.fillStyle = "rgba(82, 54, 25, 0.55)";
+        wCtx.beginPath();
+        wCtx.arc(scX, scY, cupR, 0, Math.PI * 2);
+        wCtx.fill();
+        wCtx.fillStyle = "rgba(50, 30, 10, 0.4)";
+        wCtx.beginPath();
+        wCtx.arc(scX, scY, cupR * 0.5, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+
+      // Toxic glow at tip
+      const tipGlow = 0.5 + Math.sin(time * 4) * 0.3 + (isAttacking ? attackPhase * 0.4 : 0);
+      const tipY = -s * 0.3 - reachExtend;
+      const tipGrad = wCtx.createRadialGradient(tentWave * 0.5, tipY, 0, tentWave * 0.5, tipY, s * 0.04);
+      tipGrad.addColorStop(0, `rgba(132, 204, 22, ${tipGlow * 0.8})`);
+      tipGrad.addColorStop(0.5, `rgba(84, 200, 22, ${tipGlow * 0.4})`);
+      tipGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
+      wCtx.fillStyle = tipGrad;
+      wCtx.beginPath();
+      wCtx.arc(tentWave * 0.5, tipY, s * 0.04, 0, Math.PI * 2);
+      wCtx.fill();
+
+      // Dripping bog water droplets
+      for (let dr = 0; dr < 3; dr++) {
+        const drPhase = (time * 1.5 + dr * 0.6) % 1;
+        const drY = -s * 0.1 - dr * s * 0.07 + drPhase * s * 0.06;
+        const drAlpha = (1 - drPhase) * 0.5;
+        wCtx.fillStyle = `rgba(132, 204, 22, ${drAlpha})`;
+        wCtx.beginPath();
+        wCtx.ellipse(s * 0.025, drY, s * 0.006, s * 0.01 + drPhase * s * 0.005, 0, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+    },
   });
   drawPathArm(ctx, x + size * 0.4, y - size * 0.2, size, time, zoom, 1, {
     color: bodyColor, colorDark: bodyColorDark,
@@ -228,6 +303,81 @@ export function drawBogCreatureEnemy(
     upperLen: 0.22, foreLen: 0.18, width: 0.08,
     handColor: "#84cc16", handRadius: 0.04,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const reachExtend = isAttacking ? Math.sin(attackPhase * Math.PI) * s * 0.06 : 0;
+
+      // Elongated tentacle appendage (mirrored)
+      const tentGrad = wCtx.createLinearGradient(0, 0, 0, -s * 0.32 - reachExtend);
+      tentGrad.addColorStop(0, bodyColorDark);
+      tentGrad.addColorStop(0.4, "#3a5a20");
+      tentGrad.addColorStop(0.8, "#2a4a18");
+      tentGrad.addColorStop(1, "#84cc16");
+      wCtx.strokeStyle = tentGrad;
+      wCtx.lineCap = "round";
+      wCtx.lineWidth = s * 0.05;
+      wCtx.beginPath();
+      wCtx.moveTo(0, 0);
+      const tentWave = Math.sin(time * 3.5 + 1.5) * s * 0.03;
+      wCtx.bezierCurveTo(
+        -tentWave, -s * 0.08,
+        tentWave * 1.5, -s * 0.18 - reachExtend * 0.3,
+        -tentWave * 0.5, -s * 0.3 - reachExtend,
+      );
+      wCtx.stroke();
+      wCtx.lineCap = "butt";
+
+      // Tapered inner tentacle
+      wCtx.strokeStyle = "#4a6a28";
+      wCtx.lineWidth = s * 0.025;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -s * 0.02);
+      wCtx.bezierCurveTo(
+        -tentWave * 0.7, -s * 0.1,
+        tentWave, -s * 0.2 - reachExtend * 0.3,
+        -tentWave * 0.3, -s * 0.3 - reachExtend,
+      );
+      wCtx.stroke();
+
+      // Poisonous barbs along tentacle
+      wCtx.fillStyle = "#5a8a22";
+      for (let barb = 0; barb < 4; barb++) {
+        const bt = (barb + 1) / 5;
+        const bY = -bt * (s * 0.28 + reachExtend);
+        const bX = Math.sin(time * 3.5 + 1.5 + barb * 0.9) * s * 0.012 * bt;
+        const barbLen = s * (0.018 - barb * 0.003);
+        const barbAngle = Math.sin(time * 2 + barb) * 0.5 + (barb % 2 === 0 ? 0.8 : -0.8);
+        wCtx.beginPath();
+        wCtx.moveTo(bX, bY);
+        wCtx.lineTo(bX + Math.cos(barbAngle) * barbLen, bY + Math.sin(barbAngle) * barbLen);
+        wCtx.lineTo(bX + Math.cos(barbAngle + 0.3) * barbLen * 0.3, bY + Math.sin(barbAngle + 0.3) * barbLen * 0.3);
+        wCtx.closePath();
+        wCtx.fill();
+      }
+
+      // Toxic glow at tip
+      const tipGlow = 0.5 + Math.sin(time * 4 + 1) * 0.3 + (isAttacking ? attackPhase * 0.4 : 0);
+      const tipY = -s * 0.3 - reachExtend;
+      const tipGrad = wCtx.createRadialGradient(-tentWave * 0.5, tipY, 0, -tentWave * 0.5, tipY, s * 0.04);
+      tipGrad.addColorStop(0, `rgba(132, 204, 22, ${tipGlow * 0.8})`);
+      tipGrad.addColorStop(0.5, `rgba(84, 200, 22, ${tipGlow * 0.4})`);
+      tipGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
+      wCtx.fillStyle = tipGrad;
+      wCtx.beginPath();
+      wCtx.arc(-tentWave * 0.5, tipY, s * 0.04, 0, Math.PI * 2);
+      wCtx.fill();
+
+      // Dripping bog water droplets
+      for (let dr = 0; dr < 3; dr++) {
+        const drPhase = (time * 1.5 + dr * 0.6 + 0.3) % 1;
+        const drY = -s * 0.1 - dr * s * 0.07 + drPhase * s * 0.06;
+        const drAlpha = (1 - drPhase) * 0.5;
+        wCtx.fillStyle = `rgba(132, 204, 22, ${drAlpha})`;
+        wCtx.beginPath();
+        wCtx.ellipse(-s * 0.025, drY, s * 0.006, s * 0.01 + drPhase * s * 0.005, 0, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+    },
   });
 
   // Sludge-dripping fleshy legs (behind body)
@@ -1618,6 +1768,89 @@ export function drawSwampTrollEnemy(
     upperLen: 0.28, foreLen: 0.22, width: 0.1,
     handColor: "#2a2a1a", handRadius: 0.06,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const smashJolt = isAttacking ? Math.sin(attackPhase * Math.PI) * s * 0.04 : 0;
+      wCtx.rotate(-0.1);
+      wCtx.translate(0, -smashJolt);
+
+      // Club shaft — thick irregular trunk
+      const shaftGrad = wCtx.createLinearGradient(-s * 0.03, s * 0.05, s * 0.03, -s * 0.35);
+      shaftGrad.addColorStop(0, "#3a2e1a");
+      shaftGrad.addColorStop(0.4, "#2d3a1a");
+      shaftGrad.addColorStop(0.8, "#1e2a12");
+      shaftGrad.addColorStop(1, "#152010");
+      wCtx.fillStyle = shaftGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.025, s * 0.05);
+      wCtx.bezierCurveTo(-s * 0.035, -s * 0.05, -s * 0.04, -s * 0.18, -s * 0.03, -s * 0.28);
+      wCtx.bezierCurveTo(-s * 0.02, -s * 0.34, s * 0.02, -s * 0.34, s * 0.03, -s * 0.28);
+      wCtx.bezierCurveTo(s * 0.04, -s * 0.18, s * 0.035, -s * 0.05, s * 0.025, s * 0.05);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Club head — bulbous gnarled mass
+      const headGrad = wCtx.createRadialGradient(0, -s * 0.32, 0, 0, -s * 0.32, s * 0.09);
+      headGrad.addColorStop(0, "#3d4a25");
+      headGrad.addColorStop(0.5, "#2d3a1a");
+      headGrad.addColorStop(1, "#1a2010");
+      wCtx.fillStyle = headGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.06, -s * 0.26);
+      wCtx.bezierCurveTo(-s * 0.09, -s * 0.3, -s * 0.08, -s * 0.38, -s * 0.04, -s * 0.4);
+      wCtx.bezierCurveTo(0, -s * 0.42, s * 0.05, -s * 0.41, s * 0.07, -s * 0.38);
+      wCtx.bezierCurveTo(s * 0.09, -s * 0.34, s * 0.08, -s * 0.28, s * 0.05, -s * 0.26);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Vine wrapping along shaft
+      wCtx.strokeStyle = "#2d5a1a";
+      wCtx.lineWidth = 1.5 * zoom;
+      for (let v = 0; v < 5; v++) {
+        const vy = -s * 0.04 - v * s * 0.055;
+        const vSide = v % 2 === 0 ? 1 : -1;
+        wCtx.beginPath();
+        wCtx.moveTo(vSide * s * 0.03, vy);
+        wCtx.quadraticCurveTo(0, vy - s * 0.015, -vSide * s * 0.035, vy - s * 0.03);
+        wCtx.stroke();
+      }
+
+      // Mushroom growths on club head
+      const mushColors = ["#7a9a45", "#5a7a30", "#8aaa55"];
+      for (let m = 0; m < 3; m++) {
+        const mAngle = -1.2 + m * 0.8;
+        const mx = Math.cos(mAngle) * s * 0.06;
+        const my = -s * 0.33 + Math.sin(mAngle) * s * 0.04;
+        wCtx.fillStyle = mushColors[m];
+        wCtx.beginPath();
+        wCtx.ellipse(mx, my, s * 0.02, s * 0.012, mAngle, 0, Math.PI * 2);
+        wCtx.fill();
+        wCtx.fillStyle = "#3a4a20";
+        wCtx.fillRect(mx - s * 0.003, my, s * 0.006, s * 0.015);
+      }
+
+      // Moss texture patches
+      wCtx.fillStyle = "rgba(60, 120, 40, 0.35)";
+      for (let mt = 0; mt < 4; mt++) {
+        const mtY = -s * 0.08 - mt * s * 0.06;
+        wCtx.beginPath();
+        wCtx.ellipse(s * 0.02 * (mt % 2 === 0 ? 1 : -1), mtY, s * 0.018, s * 0.01, mt * 0.5, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+
+      // Impact smash effect when attacking
+      if (isAttacking) {
+        const impactAlpha = Math.sin(attackPhase * Math.PI) * 0.6;
+        wCtx.strokeStyle = `rgba(100, 80, 40, ${impactAlpha})`;
+        wCtx.lineWidth = 2 * zoom;
+        for (let ring = 0; ring < 3; ring++) {
+          const ringR = s * (0.06 + attackPhase * 0.08 + ring * 0.03);
+          wCtx.beginPath();
+          wCtx.arc(0, -s * 0.38, ringR, 0, Math.PI * 2);
+          wCtx.stroke();
+        }
+      }
+    },
   });
   drawPathArm(ctx, x + size * 0.48, y - size * 0.35, size, time, zoom, 1, {
     color: bodyColor, colorDark: bodyColorDark,
@@ -1626,6 +1859,75 @@ export function drawSwampTrollEnemy(
     upperLen: 0.28, foreLen: 0.22, width: 0.1,
     handColor: "#2a2a1a", handRadius: 0.06,
     style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      const crushPulse = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
+      wCtx.rotate(0.15);
+
+      // Oversized rocky fist base
+      const fistGrad = wCtx.createRadialGradient(0, -s * 0.06, 0, 0, -s * 0.06, s * 0.1);
+      fistGrad.addColorStop(0, "#8a8a70");
+      fistGrad.addColorStop(0.4, "#6a6a55");
+      fistGrad.addColorStop(0.7, "#4a4a3a");
+      fistGrad.addColorStop(1, "#2a2a20");
+      wCtx.fillStyle = fistGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.07, s * 0.02);
+      wCtx.bezierCurveTo(-s * 0.1, -s * 0.02, -s * 0.11, -s * 0.08, -s * 0.09, -s * 0.13);
+      wCtx.bezierCurveTo(-s * 0.07, -s * 0.17, -s * 0.02, -s * 0.18, s * 0.02, -s * 0.16);
+      wCtx.bezierCurveTo(s * 0.07, -s * 0.15, s * 0.1, -s * 0.1, s * 0.09, -s * 0.04);
+      wCtx.bezierCurveTo(s * 0.08, s * 0.01, s * 0.04, s * 0.03, 0, s * 0.03);
+      wCtx.bezierCurveTo(-s * 0.04, s * 0.03, -s * 0.06, s * 0.02, -s * 0.07, s * 0.02);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Stone knuckle ridges
+      wCtx.fillStyle = "#5a5a48";
+      for (let k = 0; k < 4; k++) {
+        const kAngle = -1.8 + k * 0.5;
+        const kx = Math.cos(kAngle) * s * 0.065;
+        const ky = -s * 0.08 + Math.sin(kAngle) * s * 0.05;
+        wCtx.beginPath();
+        wCtx.arc(kx, ky, s * 0.018, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+
+      // Moss and lichen patches
+      wCtx.fillStyle = "rgba(70, 130, 50, 0.45)";
+      wCtx.beginPath();
+      wCtx.ellipse(-s * 0.04, -s * 0.05, s * 0.025, s * 0.015, -0.3, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.fillStyle = "rgba(90, 150, 60, 0.35)";
+      wCtx.beginPath();
+      wCtx.ellipse(s * 0.05, -s * 0.1, s * 0.02, s * 0.012, 0.5, 0, Math.PI * 2);
+      wCtx.fill();
+
+      // Stone crack lines
+      wCtx.strokeStyle = "rgba(30, 30, 20, 0.4)";
+      wCtx.lineWidth = 0.8 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(-s * 0.04, -s * 0.02);
+      wCtx.lineTo(-s * 0.06, -s * 0.1);
+      wCtx.lineTo(-s * 0.03, -s * 0.14);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(s * 0.03, -s * 0.04);
+      wCtx.lineTo(s * 0.06, -s * 0.09);
+      wCtx.stroke();
+
+      // Crushing gesture glow when attacking
+      if (isAttacking) {
+        const crushAlpha = crushPulse * 0.5;
+        const crushGrad = wCtx.createRadialGradient(0, -s * 0.08, 0, 0, -s * 0.08, s * 0.12);
+        crushGrad.addColorStop(0, `rgba(140, 120, 80, ${crushAlpha * 0.4})`);
+        crushGrad.addColorStop(0.6, `rgba(100, 80, 50, ${crushAlpha * 0.2})`);
+        crushGrad.addColorStop(1, "rgba(80, 60, 30, 0)");
+        wCtx.fillStyle = crushGrad;
+        wCtx.beginPath();
+        wCtx.arc(0, -s * 0.08, s * 0.12, 0, Math.PI * 2);
+        wCtx.fill();
+      }
+    },
   });
 
   // Stomping fleshy legs (behind body) — thick swollen organic legs

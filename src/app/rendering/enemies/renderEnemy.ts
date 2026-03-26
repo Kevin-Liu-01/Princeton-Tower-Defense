@@ -28,6 +28,51 @@ import { getPerformanceSettings } from "../performance";
 
 const mapThemeCache = new Map<string, MapTheme>();
 
+/**
+ * Internal `size *=` multiplier used by each enemy's draw function.
+ * Applied to healthbar positioning so bars sit above the actual visual sprite.
+ * Only entries for enemies with multiplier > 1.0 are needed.
+ */
+const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
+  // academic.ts — 1.7×
+  frosh: 1.7, sophomore: 1.7, junior: 1.7, senior: 1.7,
+  gradstudent: 1.7, professor: 1.7, dean: 1.7,
+  // special.ts
+  trustee: 1.7,
+  // ranged.ts — 1.7×
+  archer: 1.7, mage: 1.7, warlock: 1.7, crossbowman: 1.7, hexer: 1.7,
+  // forest.ts — 1.7×
+  athlete: 1.7, tiger_fan: 1.7,
+  // darkfantasy.ts — 1.75×–2.1×
+  skeleton_footman: 1.8, skeleton_knight: 1.85, skeleton_archer: 1.75,
+  skeleton_king: 2.0, zombie_shambler: 1.8, zombie_brute: 2.0,
+  zombie_spitter: 1.8, ghoul: 1.8, dark_knight: 1.9, death_knight: 2.1,
+  // darkfantasyB.ts — 1.8×–2.15×
+  fallen_paladin: 1.9, black_guard: 1.85, lich: 1.85, wraith: 1.8,
+  bone_mage: 1.8, dark_priest: 1.85, revenant: 1.9,
+  abomination: 2.15, hellhound: 1.85, doom_herald: 2.1,
+  // fantasy.ts — 1.15×–2.2×
+  dire_bear: 1.5, ancient_ent: 1.7, forest_troll: 1.4, timber_wolf: 1.3,
+  giant_eagle: 1.15, swamp_hydra: 1.6, giant_toad: 1.35, vine_serpent: 1.3,
+  marsh_troll: 1.4, phoenix: 1.5, basilisk: 1.45, djinn: 1.35,
+  manticore: 1.4, frost_troll: 1.4, dire_wolf: 1.45, wendigo: 1.4,
+  mammoth: 2.2, lava_golem: 1.5, volcanic_drake: 1.4, salamander: 1.2,
+  // desert.ts — 1.35×–1.8×
+  nomad: 1.35, scorpion: 1.5, scarab: 1.8,
+  // winter.ts — 1.25×–1.6×
+  snow_goblin: 1.6, yeti: 1.25, ice_witch: 1.35,
+  // volcanic.ts — 1.4×–1.7×
+  magma_spawn: 1.5, fire_imp: 1.7, ember_guard: 1.4,
+  // swamp.ts — 1.3×–1.5×
+  bog_creature: 1.4, will_o_wisp: 1.5, swamp_troll: 1.3,
+  // bugs.ts — 1.1×–1.8×
+  orb_weaver: 1.4, mantis: 1.3, bombardier_beetle: 1.25, mosquito: 1.2,
+  centipede: 1.4, dragonfly: 1.15, silk_moth: 1.2, ant_soldier: 1.3,
+  locust: 1.1, trapdoor_spider: 1.35, ice_beetle: 1.3, frost_tick: 1.15,
+  snow_moth: 1.2, fire_ant: 1.4, magma_beetle: 1.35, ash_moth: 1.2,
+  brood_mother: 1.8,
+};
+
 function getMapTheme(selectedMap: string): MapTheme {
   const cached = mapThemeCache.get(selectedMap);
   if (cached) return cached;
@@ -171,6 +216,7 @@ import {
 
 const RIGHT_FACING_ENEMY_SPRITES = new Set([
   "catapult",
+  "crossbowman",
   "dire_wolf",
   "timber_wolf",
   "mammoth",
@@ -1201,9 +1247,11 @@ export function renderEnemy(
     getPerformanceSettings().showHealthBars &&
     (enemy.hp < enemy.maxHp || eData.armor > 0)
   ) {
-    const barWidth = size * 1.4;
+    const drawScale = ENEMY_DRAW_SCALE[enemy.type] ?? 1.0;
+    const barHeightMul = Math.max(1.3, drawScale * 0.85 + 0.15);
+    const barWidth = size * 1.4 * Math.max(1, drawScale * 0.65);
     const barHeight = 6 * zoom;
-    const barY = drawY - size * 1.3;
+    const barY = drawY - size * barHeightMul;
     const barX = screenPos.x - barWidth / 2;
     const cornerRadius = 3 * zoom;
     const armor = eData.armor || 0;
