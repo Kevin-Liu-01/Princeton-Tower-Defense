@@ -1,5 +1,5 @@
 import type { Enemy, Position, MapTheme } from "../../types";
-import { ENEMY_DATA, ISO_Y_RATIO, LEVEL_DATA, SUMMON_CHANNEL_DURATION } from "../../constants";
+import { ENEMY_DATA, ISO_Y_RATIO, LEVEL_DATA, SUMMON_CHANNEL_DURATION, ENEMY_REGEN_DELAY_MS } from "../../constants";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -177,6 +177,7 @@ const RIGHT_FACING_ENEMY_SPRITES = new Set([
   "mammoth",
   "vine_serpent",
   "volcanic_drake",
+  "salamander",
 ]);
 
 export function renderEnemy(
@@ -314,7 +315,8 @@ export function renderEnemy(
 
   // Regeneration visual
   const hasRegenTrait = eData.traits?.includes("regenerating");
-  if (!minimalDetailFx && hasRegenTrait && !enemy.inCombat && enemy.hp < enemy.maxHp) {
+  const regenReady = !enemy.inCombat && now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS;
+  if (!minimalDetailFx && hasRegenTrait && regenReady && enemy.hp < enemy.maxHp) {
     const regenPulse = 0.3 + 0.2 * Math.sin(time * 3);
     const regenGrad = ctx.createRadialGradient(
       screenPos.x, drawY, 0,

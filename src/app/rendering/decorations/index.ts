@@ -2340,36 +2340,82 @@ function drawRuins(
   x: number,
   y: number,
   scale: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   variant?: string,
 ): void {
-  const stoneColor = "#a0a090";
+  const s = scale;
+  const seed = Math.floor(Math.abs(x * 73.1 + y * 137.3));
 
-  // Broken columns
-  for (let i = 0; i < 3; i++) {
-    const colX = x + (i - 1) * 15 * scale;
-    const colHeight = (15 + Math.random() * 15) * scale;
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 2 * s, 20 * s, 10 * s * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-    ctx.fillStyle = stoneColor;
-    ctx.fillRect(colX - 4 * scale, y - colHeight, 8 * scale, colHeight);
-
-    // Column top
-    ctx.fillStyle = darkenColor(stoneColor, 20);
+  // Isometric rubble on ground plane (drawn first, behind columns)
+  for (let i = 0; i < 6; i++) {
+    const angle = ((seed + i * 67) % 628) / 100;
+    const dist = (5 + ((seed + i * 31) % 8)) * s;
+    const rx = x + Math.cos(angle) * dist;
+    const ry = y + Math.sin(angle) * dist * ISO_Y_RATIO + 2 * s;
+    const pieceR = (1.5 + ((seed + i * 23) % 3)) * s;
+    ctx.fillStyle = i % 2 === 0 ? "#706860" : "#8a8878";
     ctx.beginPath();
-    ctx.moveTo(colX - 5 * scale, y - colHeight);
-    ctx.lineTo(colX, y - colHeight - 3 * scale);
-    ctx.lineTo(colX + 5 * scale, y - colHeight);
-    ctx.closePath();
+    ctx.ellipse(rx, ry, pieceR, pieceR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Rubble
-  ctx.fillStyle = darkenColor(stoneColor, 30);
-  for (let i = 0; i < 5; i++) {
-    const rubbleX = x + (Math.random() - 0.5) * 30 * scale;
-    const rubbleY = y + (Math.random() - 0.5) * 10 * scale;
+  // Broken isometric columns — positioned on isometric grid, sorted back-to-front
+  const colDefs = [
+    { isoA: -1, isoB: -0.5, h: 18, r: 3 },
+    { isoA: 0.3, isoB: -0.3, h: 22, r: 3.5 },
+    { isoA: 0.8, isoB: 0.5, h: 14, r: 2.5 },
+  ];
+  colDefs.sort((a, b) => (a.isoA + a.isoB) - (b.isoA + b.isoB));
+
+  const sp = 10;
+  for (const col of colDefs) {
+    const cx = x + (col.isoA - col.isoB) * sp * ISO_COS * s;
+    const cy = y + (col.isoA + col.isoB) * sp * ISO_SIN * s;
+    const r = col.r * s;
+    const ry = r * ISO_Y_RATIO;
+    const h = (col.h + ((seed + Math.floor(Math.abs(col.isoA) * 10)) % 7) - 3) * s;
+    const topY = cy - h;
+
+    // Isometric cylinder body (front half visible)
+    ctx.fillStyle = "#8a8878";
     ctx.beginPath();
-    ctx.arc(rubbleX, rubbleY, (2 + Math.random() * 3) * scale, 0, Math.PI * 2);
+    ctx.ellipse(cx, cy, r, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - r, topY);
+    ctx.ellipse(cx, topY, r, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cylinder shading gradient
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, r, ry, 0, 0, Math.PI);
+    ctx.lineTo(cx - r, topY);
+    ctx.ellipse(cx, topY, r, ry, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.clip();
+    const grad = ctx.createLinearGradient(cx - r, cy, cx + r, cy);
+    grad.addColorStop(0, "rgba(0,0,0,0.12)");
+    grad.addColorStop(0.35, "rgba(255,255,255,0.08)");
+    grad.addColorStop(0.65, "rgba(0,0,0,0)");
+    grad.addColorStop(1, "rgba(0,0,0,0.08)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(cx - r, topY - ry, r * 2, h + ry * 2 + 1);
+    ctx.restore();
+
+    // Broken top cap
+    ctx.fillStyle = "#a0a090";
+    ctx.beginPath();
+    ctx.ellipse(cx, topY, r * 0.85, ry * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Moss patch on cap
+    ctx.fillStyle = "rgba(80,100,60,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(cx - r * 0.2, topY, r * 0.4, ry * 0.3, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }

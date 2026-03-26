@@ -64,13 +64,50 @@ import {
   renderInfernalGate,
   renderNassauHall,
 } from "./landmarkBuildings";
+import {
+  renderPrincetonChapel,
+  renderFirestoneLibrary,
+  renderBlairArch,
+  renderWhigHall,
+  renderEastPyne,
+  renderProspectHouse,
+  renderClioHall,
+  renderMcCoshHall,
+  renderRobertsonHall,
+  renderHolderHall,
+  renderClevelandTower,
+  renderAlexanderHall,
+  renderFineHall,
+  renderFoulkeHall,
+  renderTigerStadium,
+} from "./princetonBuildings";
 import { drawRuinsRegionalOverlay } from "./ruinsRegionalOverlay";
+import {
+  drawCarnegieLakeBoathouse,
+  drawCarnegieLakePavilion,
+  drawCarnegieLakeClockTower,
+} from "./carnegieLakeBuildings";
 
 const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "pyramid",
   "sphinx",
   "giant_sphinx",
   "nassau_hall",
+  "princeton_chapel",
+  "firestone_library",
+  "blair_arch",
+  "whig_hall",
+  "east_pyne",
+  "prospect_house",
+  "clio_hall",
+  "mccosh_hall",
+  "robertson_hall",
+  "holder_hall",
+  "cleveland_tower",
+  "alexander_hall",
+  "fine_hall",
+  "foulke_hall",
+  "tiger_stadium",
   "glacier",
   "ice_fortress",
   "ice_throne",
@@ -204,8 +241,23 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       drawFn(ctx, screenPos.x, screenPos.y, s, pal, rockConfig, decorTime);
       break;
     }
-    case "nassau_hall": {
-      renderNassauHall({
+    case "nassau_hall":
+    case "princeton_chapel":
+    case "firestone_library":
+    case "blair_arch":
+    case "whig_hall":
+    case "east_pyne":
+    case "prospect_house":
+    case "clio_hall":
+    case "mccosh_hall":
+    case "robertson_hall":
+    case "holder_hall":
+    case "cleveland_tower":
+    case "alexander_hall":
+    case "fine_hall":
+    case "foulke_hall":
+    case "tiger_stadium": {
+      const landmarkP = {
         ctx,
         screenX: screenPos.x,
         screenY: screenPos.y,
@@ -217,7 +269,27 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
-      });
+      };
+      const princetonRenderers: Record<string, (p: typeof landmarkP) => void> =
+        {
+          nassau_hall: renderNassauHall,
+          princeton_chapel: renderPrincetonChapel,
+          firestone_library: renderFirestoneLibrary,
+          blair_arch: renderBlairArch,
+          whig_hall: renderWhigHall,
+          east_pyne: renderEastPyne,
+          prospect_house: renderProspectHouse,
+          clio_hall: renderClioHall,
+          mccosh_hall: renderMcCoshHall,
+          robertson_hall: renderRobertsonHall,
+          holder_hall: renderHolderHall,
+          cleveland_tower: renderClevelandTower,
+          alexander_hall: renderAlexanderHall,
+          fine_hall: renderFineHall,
+          foulke_hall: renderFoulkeHall,
+          tiger_stadium: renderTigerStadium,
+        };
+      princetonRenderers[type]?.(landmarkP);
       break;
     }
     case "bush": {
@@ -12014,1373 +12086,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
       }
 
-      // === BOATHOUSE (back-right) - Detailed Tudor Boathouse ===
-      const bhx = cx + 18 * s;
-      const bhy = cy - 20 * s;
-      const bhW = 10 * s,
-        bhD = bhW,
-        bhH = 13 * s;
-      const bhDI = bhD * ISO_SIN;
-      const bhDF = bhDI * 2;
+      // === BOATHOUSE (back-right) ===
+      drawCarnegieLakeBoathouse(ctx, cx, cy, s, time);
 
-      // Stone foundation — layered stone blocks with mortar
-      {
-        const fndH = 3 * s;
-        const fndLeft = { x: bhx - bhW * ISO, y: bhy + bhDI };
-        const fndFront = { x: bhx, y: bhy + bhDF };
-        const fndRight = { x: bhx + bhW * ISO, y: bhy + bhDI };
+      // === GRANDSTAND / COLUMNED PAVILION (back-left) ===
+      drawCarnegieLakePavilion(ctx, cx, cy, s, time);
 
-        // Foundation base (dark)
-        ctx.fillStyle = "#3a2a1a";
-        ctx.beginPath();
-        ctx.moveTo(fndLeft.x, fndLeft.y + fndH);
-        ctx.lineTo(fndFront.x, fndFront.y + fndH);
-        ctx.lineTo(fndRight.x, fndRight.y + fndH);
-        ctx.lineTo(fndRight.x, fndRight.y - 1 * s);
-        ctx.lineTo(fndFront.x, fndFront.y - 1 * s);
-        ctx.lineTo(fndLeft.x, fndLeft.y - 1 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Foundation top face
-        ctx.fillStyle = "#5a4a38";
-        ctx.beginPath();
-        ctx.moveTo(fndLeft.x, fndLeft.y - 1 * s);
-        ctx.lineTo(fndFront.x, fndFront.y - 1 * s);
-        ctx.lineTo(fndRight.x, fndRight.y - 1 * s);
-        ctx.lineTo(bhx, bhy + bhDF - fndH - 1 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stone block texture on left face
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
-        ctx.lineWidth = 0.4 * s;
-        for (let row = 0; row < 2; row++) {
-          const ry = fndLeft.y + row * fndH * 0.5;
-          const t = row * 0.5;
-          ctx.beginPath();
-          ctx.moveTo(fndLeft.x, ry);
-          ctx.lineTo(fndFront.x, fndFront.y - (1 - t) * fndH);
-          ctx.stroke();
-        }
-        for (let col = 0; col < 4; col++) {
-          const cf = (col + 0.5) / 4;
-          const bx = fndLeft.x + (fndFront.x - fndLeft.x) * cf;
-          const by = fndLeft.y + (fndFront.y - fndLeft.y) * cf;
-          ctx.beginPath();
-          ctx.moveTo(bx, by - 1 * s);
-          ctx.lineTo(bx, by + fndH);
-          ctx.stroke();
-        }
-
-        // Stone block texture on right face
-        for (let row = 0; row < 2; row++) {
-          const ry = fndRight.y + row * fndH * 0.5;
-          const t = row * 0.5;
-          ctx.beginPath();
-          ctx.moveTo(fndRight.x, ry);
-          ctx.lineTo(fndFront.x, fndFront.y - (1 - t) * fndH);
-          ctx.stroke();
-        }
-        for (let col = 0; col < 4; col++) {
-          const cf = (col + 0.5) / 4;
-          const bx = fndFront.x + (fndRight.x - fndFront.x) * cf;
-          const by = fndFront.y + (fndRight.y - fndFront.y) * cf;
-          ctx.beginPath();
-          ctx.moveTo(bx, by - 1 * s);
-          ctx.lineTo(bx, by + fndH);
-          ctx.stroke();
-        }
-      }
-
-      // Dock/pier extending into water — improved with 3D planks
-      {
-        const dockStartX = bhx - 2 * s,
-          dockStartY = bhy + bhDF + 2 * s;
-        const dockEndX = bhx - 10 * s,
-          dockEndY = bhy + bhDF + 14 * s;
-        const dockW = 2.5 * s;
-
-        // Dock shadow on water
-        ctx.fillStyle = "rgba(0,0,0,0.1)";
-        ctx.beginPath();
-        ctx.moveTo(dockStartX - dockW, dockStartY + 2 * s);
-        ctx.lineTo(dockEndX - dockW, dockEndY + 2 * s);
-        ctx.lineTo(dockEndX + dockW, dockEndY + 2 * s);
-        ctx.lineTo(dockStartX + dockW, dockStartY + 2 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Dock top
-        const dockTopG = ctx.createLinearGradient(
-          dockStartX,
-          dockStartY,
-          dockEndX,
-          dockEndY,
-        );
-        dockTopG.addColorStop(0, "#7a5a35");
-        dockTopG.addColorStop(0.5, "#6d5030");
-        dockTopG.addColorStop(1, "#5a4025");
-        ctx.fillStyle = dockTopG;
-        ctx.beginPath();
-        ctx.moveTo(dockStartX - dockW, dockStartY);
-        ctx.lineTo(dockEndX - dockW, dockEndY);
-        ctx.lineTo(dockEndX + dockW, dockEndY - 1.5 * s);
-        ctx.lineTo(dockStartX + dockW, dockStartY - 1.5 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Dock front edge thickness
-        ctx.fillStyle = "#5a4020";
-        ctx.beginPath();
-        ctx.moveTo(dockEndX - dockW, dockEndY);
-        ctx.lineTo(dockStartX - dockW, dockStartY);
-        ctx.lineTo(dockStartX - dockW, dockStartY + 2 * s);
-        ctx.lineTo(dockEndX - dockW, dockEndY + 2 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Plank lines
-        ctx.strokeStyle = "rgba(60,40,20,0.35)";
-        ctx.lineWidth = 0.5 * s;
-        for (let dp = 1; dp < 8; dp++) {
-          const dpf = dp / 8;
-          const dpx = dockStartX + (dockEndX - dockStartX) * dpf;
-          const dpy = dockStartY + (dockEndY - dockStartY) * dpf;
-          ctx.beginPath();
-          ctx.moveTo(dpx - dockW, dpy + 0.5 * s);
-          ctx.lineTo(dpx + dockW, dpy - 1 * s);
-          ctx.stroke();
-        }
-
-        // Dock posts with water rings
-        for (let dp = 0; dp < 3; dp++) {
-          const dpf = (dp + 0.5) / 3;
-          const dpx = dockStartX + (dockEndX - dockStartX) * dpf - dockW;
-          const dpy = dockStartY + (dockEndY - dockStartY) * dpf;
-          const postH = 7 * s;
-
-          // Water ring
-          ctx.strokeStyle = "rgba(140,200,230,0.15)";
-          ctx.lineWidth = 0.6 * s;
-          ctx.beginPath();
-          ctx.ellipse(dpx, dpy + 2 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // Post
-          ctx.fillStyle = "#4a3018";
-          ctx.fillRect(dpx - 1 * s, dpy - postH + 2 * s, 2 * s, postH);
-          // Top cap
-          ctx.fillStyle = "#3a2008";
-          ctx.beginPath();
-          ctx.arc(dpx, dpy - postH + 2 * s, 1.4 * s, 0, Math.PI * 2);
-          ctx.fill();
-          // Rope tied to end post
-          if (dp === 2) {
-            ctx.strokeStyle = "#a08060";
-            ctx.lineWidth = 0.8 * s;
-            ctx.beginPath();
-            ctx.moveTo(dpx, dpy - postH + 4 * s);
-            ctx.quadraticCurveTo(
-              dpx - 3 * s,
-              dpy - postH + 8 * s,
-              dpx - 2 * s,
-              dpy + 1 * s,
-            );
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Left wall (shadowed) — with plaster + timber frame
-      {
-        const wallTL = { x: bhx - bhW * ISO, y: bhy - bhH + bhDI };
-        const wallBL = { x: bhx - bhW * ISO, y: bhy + bhDI };
-        const wallTR = { x: bhx, y: bhy - bhH + bhDF };
-        const wallBR = { x: bhx, y: bhy + bhDF };
-
-        // Plaster fill
-        const bwlGrad = ctx.createLinearGradient(
-          wallTL.x,
-          wallTL.y,
-          wallTR.x,
-          wallTR.y,
-        );
-        bwlGrad.addColorStop(0, "#c8b898");
-        bwlGrad.addColorStop(0.5, "#d4c4a4");
-        bwlGrad.addColorStop(1, "#c0b090");
-        ctx.fillStyle = bwlGrad;
-        ctx.beginPath();
-        ctx.moveTo(wallTL.x, wallTL.y);
-        ctx.lineTo(wallTR.x, wallTR.y);
-        ctx.lineTo(wallBR.x, wallBR.y);
-        ctx.lineTo(wallBL.x, wallBL.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Dark timber frame beams (Tudor pattern)
-        ctx.strokeStyle = "#3a2008";
-        ctx.lineWidth = 1.8 * s;
-
-        // Horizontal beam at mid-height
-        const midL = {
-          x: (wallTL.x + wallBL.x) * 0.5,
-          y: (wallTL.y + wallBL.y) * 0.5,
-        };
-        const midR = {
-          x: (wallTR.x + wallBR.x) * 0.5,
-          y: (wallTR.y + wallBR.y) * 0.5,
-        };
-        ctx.beginPath();
-        ctx.moveTo(midL.x, midL.y);
-        ctx.lineTo(midR.x, midR.y);
-        ctx.stroke();
-
-        // Vertical center beam
-        const cTop = {
-          x: (wallTL.x + wallTR.x) * 0.5,
-          y: (wallTL.y + wallTR.y) * 0.5,
-        };
-        const cBot = {
-          x: (wallBL.x + wallBR.x) * 0.5,
-          y: (wallBL.y + wallBR.y) * 0.5,
-        };
-        ctx.beginPath();
-        ctx.moveTo(cTop.x, cTop.y);
-        ctx.lineTo(cBot.x, cBot.y);
-        ctx.stroke();
-
-        // Diagonal braces in upper panels
-        ctx.lineWidth = 1.2 * s;
-        ctx.beginPath();
-        ctx.moveTo(wallTL.x, wallTL.y);
-        ctx.lineTo(cBot.x, cBot.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(wallTR.x, wallTR.y);
-        ctx.lineTo(
-          cBot.x * 0.5 + wallBL.x * 0.5,
-          cBot.y * 0.5 + wallBL.y * 0.5,
-        );
-        ctx.stroke();
-
-        // Border frame
-        ctx.lineWidth = 2 * s;
-        ctx.beginPath();
-        ctx.moveTo(wallTL.x, wallTL.y);
-        ctx.lineTo(wallTR.x, wallTR.y);
-        ctx.lineTo(wallBR.x, wallBR.y);
-        ctx.lineTo(wallBL.x, wallBL.y);
-        ctx.closePath();
-        ctx.stroke();
-      }
-
-      // Right wall (lit) — with plaster + timber frame
-      {
-        const wallTL2 = { x: bhx, y: bhy - bhH + bhDF };
-        const wallBL2 = { x: bhx, y: bhy + bhDF };
-        const wallTR2 = { x: bhx + bhW * ISO, y: bhy - bhH + bhDI };
-        const wallBR2 = { x: bhx + bhW * ISO, y: bhy + bhDI };
-
-        // Plaster fill (lighter — lit side)
-        const bwrGrad = ctx.createLinearGradient(
-          wallTL2.x,
-          wallTL2.y,
-          wallTR2.x,
-          wallTR2.y,
-        );
-        bwrGrad.addColorStop(0, "#d8c8a8");
-        bwrGrad.addColorStop(0.5, "#e4d4b4");
-        bwrGrad.addColorStop(1, "#d0c0a0");
-        ctx.fillStyle = bwrGrad;
-        ctx.beginPath();
-        ctx.moveTo(wallTL2.x, wallTL2.y);
-        ctx.lineTo(wallTR2.x, wallTR2.y);
-        ctx.lineTo(wallBR2.x, wallBR2.y);
-        ctx.lineTo(wallBL2.x, wallBL2.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Dark timber frame beams
-        ctx.strokeStyle = "#3a2008";
-        ctx.lineWidth = 1.8 * s;
-
-        // Horizontal beam at mid-height
-        const midL2 = {
-          x: (wallTL2.x + wallBL2.x) * 0.5,
-          y: (wallTL2.y + wallBL2.y) * 0.5,
-        };
-        const midR2 = {
-          x: (wallTR2.x + wallBR2.x) * 0.5,
-          y: (wallTR2.y + wallBR2.y) * 0.5,
-        };
-        ctx.beginPath();
-        ctx.moveTo(midL2.x, midL2.y);
-        ctx.lineTo(midR2.x, midR2.y);
-        ctx.stroke();
-
-        // Vertical center beam
-        const cTop2 = {
-          x: (wallTL2.x + wallTR2.x) * 0.5,
-          y: (wallTL2.y + wallTR2.y) * 0.5,
-        };
-        const cBot2 = {
-          x: (wallBL2.x + wallBR2.x) * 0.5,
-          y: (wallBL2.y + wallBR2.y) * 0.5,
-        };
-        ctx.beginPath();
-        ctx.moveTo(cTop2.x, cTop2.y);
-        ctx.lineTo(cBot2.x, cBot2.y);
-        ctx.stroke();
-
-        // Diagonal braces
-        ctx.lineWidth = 1.2 * s;
-        ctx.beginPath();
-        ctx.moveTo(midL2.x, midL2.y);
-        ctx.lineTo(wallTR2.x, wallTR2.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(midR2.x, midR2.y);
-        ctx.lineTo(wallTL2.x, wallTL2.y);
-        ctx.stroke();
-
-        // Border frame
-        ctx.lineWidth = 2 * s;
-        ctx.beginPath();
-        ctx.moveTo(wallTL2.x, wallTL2.y);
-        ctx.lineTo(wallTR2.x, wallTR2.y);
-        ctx.lineTo(wallBR2.x, wallBR2.y);
-        ctx.lineTo(wallBL2.x, wallBL2.y);
-        ctx.closePath();
-        ctx.stroke();
-      }
-
-      // Gable roof — isometric triangular prism
-      {
-        const ov = 2 * s;
-        const roofHW = bhW + ov;
-        const eW = roofHW * ISO_COS;
-        const eD = roofHW * ISO_SIN;
-        const midY = bhy - bhH + bhDI;
-        const drop = 1 * s;
-        const ridgeH = 7 * s;
-
-        // Eave diamond (wall-top + overhang)
-        const eB = { x: bhx, y: midY - eD + drop };
-        const eR = { x: bhx + eW, y: midY + drop };
-        const eF = { x: bhx, y: midY + eD + drop };
-        const eL = { x: bhx - eW, y: midY + drop };
-
-        // Ridge runs full length along the "right" iso axis,
-        // above the midpoints of the B-L and R-F eave edges
-        const rL = { x: bhx - eW, y: midY - eD + drop - ridgeH };
-        const rR = { x: bhx + eW, y: midY + eD + drop - ridgeH };
-
-        // Front slope (drawn first — behind everything else)
-        const darkG = ctx.createLinearGradient(rL.x, rL.y, eF.x, eF.y);
-        darkG.addColorStop(0, "#4a3018");
-        darkG.addColorStop(1, "#3a2008");
-        ctx.fillStyle = darkG;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(eL.x, eL.y);
-        ctx.lineTo(eF.x, eF.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Back slope (covers most of front slope, upper lit face)
-        const litG = ctx.createLinearGradient(rL.x, rL.y, eB.x, eB.y);
-        litG.addColorStop(0, "#6b4a28");
-        litG.addColorStop(1, "#5a3a18");
-        ctx.fillStyle = litG;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.lineTo(eR.x, eR.y);
-        ctx.lineTo(eB.x, eB.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Left gable end (triangle, shadow — drawn on top)
-        ctx.fillStyle = "#3a2a15";
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(eB.x, eB.y);
-        ctx.lineTo(eL.x, eL.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Right gable end (triangle, lit — closest to viewer)
-        ctx.fillStyle = "#7a5a35";
-        ctx.beginPath();
-        ctx.moveTo(rR.x, rR.y);
-        ctx.lineTo(eF.x, eF.y);
-        ctx.lineTo(eR.x, eR.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Shingle rows on back slope
-        ctx.strokeStyle = "rgba(30,15,5,0.3)";
-        ctx.lineWidth = 0.5 * s;
-        for (let sh = 1; sh < 6; sh++) {
-          const t = sh / 6;
-          ctx.beginPath();
-          ctx.moveTo(rL.x + (eB.x - rL.x) * t, rL.y + (eB.y - rL.y) * t);
-          ctx.lineTo(rR.x + (eR.x - rR.x) * t, rR.y + (eR.y - rR.y) * t);
-          ctx.stroke();
-        }
-
-        // Ridge cap
-        ctx.strokeStyle = "#7a5a30";
-        ctx.lineWidth = 1.2 * s;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.stroke();
-
-        // Eave shadow
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(eL.x, eL.y + 1 * s);
-        ctx.lineTo(eF.x, eF.y + 1 * s);
-        ctx.lineTo(eR.x, eR.y + 1 * s);
-        ctx.stroke();
-      }
-
-      // Chimney with brick detail + animated smoke
-      {
-        const chX = bhx + 3 * s,
-          chY = bhy - bhH - 4 * s;
-        const chW = 2.5 * s,
-          chH = 6 * s;
-
-        // Chimney left face (dark)
-        ctx.fillStyle = "#5a4030";
-        ctx.beginPath();
-        ctx.moveTo(chX - chW * 0.5, chY);
-        ctx.lineTo(chX - chW * 0.5, chY + chH);
-        ctx.lineTo(chX, chY + chH + 1 * s);
-        ctx.lineTo(chX, chY + 1 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Chimney right face (lit)
-        ctx.fillStyle = "#7a5a40";
-        ctx.beginPath();
-        ctx.moveTo(chX + chW * 0.5, chY);
-        ctx.lineTo(chX + chW * 0.5, chY + chH);
-        ctx.lineTo(chX, chY + chH + 1 * s);
-        ctx.lineTo(chX, chY + 1 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Chimney top face
-        ctx.fillStyle = "#8a6a50";
-        ctx.beginPath();
-        ctx.moveTo(chX, chY);
-        ctx.lineTo(chX + chW * 0.5, chY + 0.5 * s);
-        ctx.lineTo(chX, chY + 1 * s);
-        ctx.lineTo(chX - chW * 0.5, chY + 0.5 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Brick mortar lines
-        ctx.strokeStyle = "rgba(0,0,0,0.15)";
-        ctx.lineWidth = 0.3 * s;
-        for (let br = 0; br < 4; br++) {
-          const bry = chY + 1.5 * s + br * 1.8 * s;
-          ctx.beginPath();
-          ctx.moveTo(chX - chW * 0.5, bry);
-          ctx.lineTo(chX + chW * 0.5, bry);
-          ctx.stroke();
-        }
-
-        // Chimney cap
-        ctx.fillStyle = "#6a5040";
-        ctx.beginPath();
-        ctx.moveTo(chX - chW * 0.6, chY - 0.5 * s);
-        ctx.lineTo(chX + chW * 0.6, chY - 0.5 * s);
-        ctx.lineTo(chX + chW * 0.6, chY + 0.3 * s);
-        ctx.lineTo(chX - chW * 0.6, chY + 0.3 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Animated smoke puffs
-        for (let sm = 0; sm < 4; sm++) {
-          const smPhase = (time * 0.8 + sm * 0.7) % 3.5;
-          const smAlpha = Math.max(0, 0.25 - smPhase * 0.08);
-          if (smAlpha > 0) {
-            const smX =
-              chX +
-              Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
-            const smY = chY - 2 * s - smPhase * 5 * s;
-            const smR = (1.5 + smPhase * 2) * s;
-            ctx.fillStyle = `rgba(180,170,160,${smAlpha})`;
-            ctx.beginPath();
-            ctx.arc(smX, smY, smR, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-
-      // Arched doorway using iso flush door system
-      {
-        const doorCx = bhx;
-        const doorBaseY = bhy + bhDF * 0.35 + 4 * s;
-        drawIsoFlushDoor(ctx, doorCx, doorBaseY - 3.5 * s, 4.5, 7, "front", s, {
-          frameColor: "#4a3828",
-          bodyDark: "#1a0a00",
-          bodyMid: "#2a1808",
-          bodyLight: "#3a2210",
-          handleColor: "#c8a860",
-          hasStep: true,
-          stepColor: "#4a3a28",
-          plankLines: 3,
-        });
-      }
-
-      // Gothic windows using iso flush window system
-      {
-        const bhWinPositions: Array<{
-          x: number;
-          y: number;
-          face: "left" | "right";
-        }> = [
-          { x: bhx + 4 * s, y: bhy - bhH + bhDF * 0.6, face: "right" },
-          { x: bhx + 6.5 * s, y: bhy - bhH + bhDF * 0.78, face: "right" },
-          { x: bhx - 3.5 * s, y: bhy - bhH + bhDF * 0.55, face: "left" },
-          { x: bhx - 5.5 * s, y: bhy - bhH + bhDF * 0.45, face: "left" },
-        ];
-        for (const w of bhWinPositions) {
-          drawIsoGothicWindow(
-            ctx,
-            w.x,
-            w.y,
-            2.5,
-            3.5,
-            w.face,
-            s,
-            "rgba(220,160,70",
-            0.4,
-            { frame: "#3a2008", void: "#1a0a00", sill: "#4a3a28" },
-          );
-        }
-      }
-
-      // === GRANDSTAND / COLUMNED PAVILION (back-left) - Neoclassical ===
-      const gx = cx - 15 * s;
-      const gy = cy - 22 * s;
-      const gW = 11 * s,
-        gD = gW,
-        gH = 15 * s;
-      const gDI = gD * ISO_SIN;
-      const gDF = gDI * 2;
-
-      // Stepped stone platform (3 steps)
-      {
-        const stepH = 1.5 * s;
-        const stepInset = 2 * s;
-        for (let st = 0; st < 3; st++) {
-          const stW = gW + (2 - st) * stepInset;
-          const stD = gD + (2 - st) * stepInset * 0.5;
-          const stY = gy + gDF + (2 - st) * stepH;
-          const stIso = ISO;
-          const stDI2 = stD * ISO_SIN;
-          const stDF2 = stDI2 * 2;
-
-          // Step front-left face
-          ctx.fillStyle = st % 2 === 0 ? "#5a4a38" : "#6a5a48";
-          ctx.beginPath();
-          ctx.moveTo(gx - stW * stIso, stY - stDI2);
-          ctx.lineTo(gx, stY);
-          ctx.lineTo(gx, stY + stepH);
-          ctx.lineTo(gx - stW * stIso, stY - stDI2 + stepH);
-          ctx.closePath();
-          ctx.fill();
-
-          // Step front-right face
-          ctx.fillStyle = st % 2 === 0 ? "#6a5a48" : "#7a6a58";
-          ctx.beginPath();
-          ctx.moveTo(gx + stW * stIso, stY - stDI2);
-          ctx.lineTo(gx, stY);
-          ctx.lineTo(gx, stY + stepH);
-          ctx.lineTo(gx + stW * stIso, stY - stDI2 + stepH);
-          ctx.closePath();
-          ctx.fill();
-
-          // Step top face
-          ctx.fillStyle = st % 2 === 0 ? "#7a6a55" : "#8a7a65";
-          ctx.beginPath();
-          ctx.moveTo(gx, stY - stDF2);
-          ctx.lineTo(gx + stW * stIso, stY - stDI2);
-          ctx.lineTo(gx, stY);
-          ctx.lineTo(gx - stW * stIso, stY - stDI2);
-          ctx.closePath();
-          ctx.fill();
-        }
-      }
-
-      // Back wall (recessed interior — dark)
-      {
-        const interiorGrad = ctx.createLinearGradient(
-          gx - gW * ISO,
-          gy,
-          gx,
-          gy,
-        );
-        interiorGrad.addColorStop(0, "#3a3028");
-        interiorGrad.addColorStop(1, "#4a4038");
-        ctx.fillStyle = interiorGrad;
-        ctx.beginPath();
-        ctx.moveTo(gx - gW * ISO, gy - gH + gDI);
-        ctx.lineTo(gx, gy - gH + gDF);
-        ctx.lineTo(gx, gy + gDF);
-        ctx.lineTo(gx - gW * ISO, gy + gDI);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stone coursing on back wall
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 0.4 * s;
-        for (let row = 1; row < 8; row++) {
-          const rf = row / 8;
-          const ry1 = gy - gH + gDI + (gy + gDI - gy + gH - gDI) * rf;
-          const ry2 = gy - gH + gDF + (gy + gDF - gy + gH - gDF) * rf;
-          ctx.beginPath();
-          ctx.moveTo(gx - gW * ISO, ry1);
-          ctx.lineTo(gx, ry2);
-          ctx.stroke();
-        }
-      }
-
-      // Right wall (lit stone with coursing)
-      {
-        const rwGrad = ctx.createLinearGradient(gx, gy, gx + gW * ISO, gy);
-        rwGrad.addColorStop(0, "#7a6a55");
-        rwGrad.addColorStop(0.4, "#8a7a65");
-        rwGrad.addColorStop(1, "#6a5a48");
-        ctx.fillStyle = rwGrad;
-        ctx.beginPath();
-        ctx.moveTo(gx + gW * ISO, gy - gH + gDI);
-        ctx.lineTo(gx, gy - gH + gDF);
-        ctx.lineTo(gx, gy + gDF);
-        ctx.lineTo(gx + gW * ISO, gy + gDI);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stone coursing on right wall
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
-        ctx.lineWidth = 0.4 * s;
-        for (let row = 1; row < 8; row++) {
-          const rf = row / 8;
-          const ry1 = gy - gH + gDI + (gy + gDI - gy + gH - gDI) * rf;
-          const ry2 = gy - gH + gDF + (gy + gDF - gy + gH - gDF) * rf;
-          ctx.beginPath();
-          ctx.moveTo(gx + gW * ISO, ry1);
-          ctx.lineTo(gx, ry2);
-          ctx.stroke();
-        }
-
-        // Vertical block joints
-        for (let col = 1; col < 5; col++) {
-          const cf = col / 5;
-          const cx1 = gx + gW * ISO * cf;
-          ctx.beginPath();
-          ctx.moveTo(cx1, gy - gH + gDI + (gDF - gDI) * cf);
-          ctx.lineTo(cx1, gy + (gDI + (gDF - gDI) * cf) * 0.96);
-          ctx.stroke();
-        }
-      }
-
-      // Classical fluted columns on right face
-      {
-        const colCount = 4;
-        for (let p = 0; p < colCount; p++) {
-          const pf = (p + 0.5) / colCount;
-          const colBaseX = gx + gW * ISO * pf;
-          const colBaseY = gy + gDI * (1 - pf * 0.78);
-          const colH2 = gH - 3.5 * s;
-          const colW = 1.4 * s;
-          const colTopX = colBaseX;
-          const colTopY = colBaseY - colH2;
-
-          // Column base (Attic base — wider plinth)
-          ctx.fillStyle = "#7a6a55";
-          ctx.beginPath();
-          ctx.ellipse(
-            colBaseX,
-            colBaseY,
-            colW + 1 * s,
-            (colW + 1 * s) * 0.4,
-            0,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.fillStyle = "#6a5a48";
-          ctx.beginPath();
-          ctx.ellipse(
-            colBaseX,
-            colBaseY - 1 * s,
-            colW + 0.5 * s,
-            (colW + 0.5 * s) * 0.4,
-            0,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-
-          // Column shaft (tapered slightly)
-          const shaftTopW = colW * 0.85;
-          ctx.fillStyle = "#8a7a65";
-          ctx.beginPath();
-          ctx.moveTo(colBaseX - colW, colBaseY - 1 * s);
-          ctx.lineTo(colTopX - shaftTopW, colTopY + 2 * s);
-          ctx.lineTo(colTopX + shaftTopW, colTopY + 2 * s);
-          ctx.lineTo(colBaseX + colW, colBaseY - 1 * s);
-          ctx.closePath();
-          ctx.fill();
-
-          // Fluting (vertical grooves) — 3 visible flutes
-          ctx.strokeStyle = "rgba(0,0,0,0.08)";
-          ctx.lineWidth = 0.4 * s;
-          for (let fl = 0; fl < 3; fl++) {
-            const flf = (fl + 1) / 4;
-            const flxB = colBaseX - colW + flf * colW * 2;
-            const flxT = colTopX - shaftTopW + flf * shaftTopW * 2;
-            ctx.beginPath();
-            ctx.moveTo(flxB, colBaseY - 1.5 * s);
-            ctx.lineTo(flxT, colTopY + 2.5 * s);
-            ctx.stroke();
-          }
-
-          // Highlight on shaft (light catching)
-          ctx.fillStyle = "rgba(255,255,255,0.06)";
-          ctx.beginPath();
-          ctx.moveTo(colBaseX + colW * 0.3, colBaseY - 1 * s);
-          ctx.lineTo(colTopX + shaftTopW * 0.3, colTopY + 2 * s);
-          ctx.lineTo(colTopX + shaftTopW * 0.8, colTopY + 2 * s);
-          ctx.lineTo(colBaseX + colW * 0.8, colBaseY - 1 * s);
-          ctx.closePath();
-          ctx.fill();
-
-          // Capital (Ionic — wider top with volute suggestion)
-          ctx.fillStyle = "#7a6a55";
-          ctx.beginPath();
-          ctx.ellipse(
-            colTopX,
-            colTopY + 2 * s,
-            colW + 0.8 * s,
-            (colW + 0.8 * s) * 0.35,
-            0,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-          ctx.fillStyle = "#9a8a72";
-          ctx.fillRect(
-            colTopX - colW - 1.2 * s,
-            colTopY,
-            (colW + 1.2 * s) * 2,
-            2 * s,
-          );
-
-          // Volute curls (simplified)
-          ctx.strokeStyle = "#6a5a48";
-          ctx.lineWidth = 0.5 * s;
-          ctx.beginPath();
-          ctx.arc(
-            colTopX - colW - 0.8 * s,
-            colTopY + 1 * s,
-            1 * s,
-            -Math.PI * 0.5,
-            Math.PI * 0.8,
-          );
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(
-            colTopX + colW + 0.8 * s,
-            colTopY + 1 * s,
-            1 * s,
-            Math.PI * 0.2,
-            Math.PI * 1.5,
-          );
-          ctx.stroke();
-        }
-      }
-
-      // Entablature (horizontal band above columns)
-      {
-        const entY = gy - gH + gDI;
-        const entY2 = gy - gH + gDF;
-        const entH2 = 2 * s;
-
-        // Architrave
-        ctx.fillStyle = "#8a7a65";
-        ctx.beginPath();
-        ctx.moveTo(gx + gW * ISO, entY - entH2);
-        ctx.lineTo(gx, entY2 - entH2);
-        ctx.lineTo(gx, entY2);
-        ctx.lineTo(gx + gW * ISO, entY);
-        ctx.closePath();
-        ctx.fill();
-
-        // Frieze (slightly recessed)
-        ctx.fillStyle = "#7a6a55";
-        ctx.beginPath();
-        ctx.moveTo(gx + gW * ISO, entY - entH2 * 2);
-        ctx.lineTo(gx, entY2 - entH2 * 2);
-        ctx.lineTo(gx, entY2 - entH2);
-        ctx.lineTo(gx + gW * ISO, entY - entH2);
-        ctx.closePath();
-        ctx.fill();
-
-        // Triglyph/metope pattern on frieze
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 0.6 * s;
-        for (let tg = 0; tg < 6; tg++) {
-          const tgf = (tg + 0.5) / 6;
-          const tgx = gx + gW * ISO * tgf;
-          const tgy =
-            entY - entH2 * 2 + (entY2 - entH2 * 2 - entY + entH2 * 2) * tgf;
-          ctx.beginPath();
-          ctx.moveTo(tgx - 0.3 * s, tgy);
-          ctx.lineTo(tgx - 0.3 * s, tgy + entH2);
-          ctx.moveTo(tgx + 0.3 * s, tgy);
-          ctx.lineTo(tgx + 0.3 * s, tgy + entH2);
-          ctx.stroke();
-        }
-
-        // Cornice (projecting top)
-        ctx.fillStyle = "#9a8a72";
-        ctx.beginPath();
-        ctx.moveTo(gx + (gW + 1) * ISO, entY - entH2 * 2 - 1.5 * s);
-        ctx.lineTo(gx - 1 * s, entY2 - entH2 * 2 - 1.5 * s);
-        ctx.lineTo(gx, entY2 - entH2 * 2);
-        ctx.lineTo(gx + gW * ISO, entY - entH2 * 2);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Gable roof — isometric triangular prism (classical low pitch)
-      {
-        const ov = 1.5 * s;
-        const roofHW = gW + ov;
-        const eW = roofHW * ISO_COS;
-        const eD = roofHW * ISO_SIN;
-        const midY = gy - gH + gDI;
-        const drop = 1 * s;
-        const ridgeH = 5 * s;
-
-        // Eave diamond
-        const eB = { x: gx, y: midY - eD + drop };
-        const eR = { x: gx + eW, y: midY + drop };
-        const eF = { x: gx, y: midY + eD + drop };
-        const eL = { x: gx - eW, y: midY + drop };
-
-        // Ridge runs full length along "right" iso axis
-        const rL = { x: gx - eW, y: midY - eD + drop - ridgeH };
-        const rR = { x: gx + eW, y: midY + eD + drop - ridgeH };
-
-        // Front slope (drawn first — behind everything else)
-        const slopeG = ctx.createLinearGradient(rL.x, rL.y, eF.x, eF.y);
-        slopeG.addColorStop(0, "#5a4a38");
-        slopeG.addColorStop(1, "#4a3a2d");
-        ctx.fillStyle = slopeG;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(eL.x, eL.y);
-        ctx.lineTo(eF.x, eF.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Back slope (covers most of front slope, upper lit face)
-        const pedG = ctx.createLinearGradient(rL.x, rL.y, eB.x, eB.y);
-        pedG.addColorStop(0, "#8a7a65");
-        pedG.addColorStop(1, "#6a5a48");
-        ctx.fillStyle = pedG;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.lineTo(eR.x, eR.y);
-        ctx.lineTo(eB.x, eB.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Left gable end (triangle, shadow — drawn on top)
-        ctx.fillStyle = "#4a3a2d";
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(eB.x, eB.y);
-        ctx.lineTo(eL.x, eL.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Right gable end (triangle, lit — closest to viewer)
-        ctx.fillStyle = "#7a6a55";
-        ctx.beginPath();
-        ctx.moveTo(rR.x, rR.y);
-        ctx.lineTo(eF.x, eF.y);
-        ctx.lineTo(eR.x, eR.y);
-        ctx.closePath();
-        ctx.fill();
-
-        // Shingle rows on back slope
-        ctx.strokeStyle = "rgba(30,15,5,0.25)";
-        ctx.lineWidth = 0.5 * s;
-        for (let sh = 1; sh < 5; sh++) {
-          const t = sh / 5;
-          ctx.beginPath();
-          ctx.moveTo(rL.x + (eB.x - rL.x) * t, rL.y + (eB.y - rL.y) * t);
-          ctx.lineTo(rR.x + (eR.x - rR.x) * t, rR.y + (eR.y - rR.y) * t);
-          ctx.stroke();
-        }
-
-        // Ridge cap
-        ctx.strokeStyle = "#7a6a55";
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(rL.x, rL.y);
-        ctx.lineTo(rR.x, rR.y);
-        ctx.stroke();
-
-        // Acroterion finial at ridge midpoint
-        const peakX = (rL.x + rR.x) / 2;
-        const peakY = (rL.y + rR.y) / 2;
-        ctx.fillStyle = "#8a7a65";
-        ctx.beginPath();
-        ctx.arc(peakX, peakY - 1 * s, 1.2 * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Gothic windows on right wall (3 tall arches)
-      {
-        for (let w = 0; w < 3; w++) {
-          const wf = (w + 1) / 4;
-          const wCx = gx + gW * ISO * wf;
-          const wCy = gy - gH * 0.35 + gDI * (1 + wf * 0.6);
-          drawIsoGothicWindow(
-            ctx,
-            wCx,
-            wCy,
-            2.5,
-            5,
-            "right",
-            s,
-            "rgba(210,160,80",
-            0.35 + Math.sin(time * 1.2 + w * 0.8) * 0.1,
-            { frame: "#5a4a38", void: "#2a1a08", sill: "#6a5a48" },
-          );
-        }
-      }
-
-      // Grand entrance using iso flush door system
-      {
-        const archCx = gx + gW * ISO * 0.3;
-        const archBaseY = gy + gDF * 0.25 + 5 * s;
-        drawIsoFlushDoor(ctx, archCx, archBaseY - 4 * s, 5, 8, "right", s, {
-          frameColor: "#5a4a38",
-          bodyDark: "#0a0500",
-          bodyMid: "#1a0a00",
-          bodyLight: "#2a1808",
-          handleColor: "#c8a860",
-          hasStep: true,
-          stepColor: "#5a4a38",
-          plankLines: 2,
-        });
-      }
-
-      // Balustrade along front edge
-      {
-        const balCount = 6;
-        for (let bl = 0; bl < balCount; bl++) {
-          const blf = (bl + 0.5) / balCount;
-          const blx = gx - gW * ISO + gW * ISO * blf;
-          const bly = gy + gDI * (1 - blf) + gDF * blf;
-
-          // Baluster
-          ctx.fillStyle = "#7a6a55";
-          ctx.fillRect(blx - 0.5 * s, bly - 4 * s, 1 * s, 4 * s);
-
-          // Baluster bulge (vase shape)
-          ctx.beginPath();
-          ctx.ellipse(blx, bly - 2.5 * s, 0.8 * s, 1 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Top rail
-        ctx.fillStyle = "#8a7a65";
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(gx - gW * ISO, gy + gDI - 4 * s);
-        ctx.lineTo(gx, gy + gDF - 4 * s);
-        ctx.lineTo(gx, gy + gDF - 3 * s);
-        ctx.lineTo(gx - gW * ISO, gy + gDI - 3 * s);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // === CLOCK TOWER (back-center) - Detailed Gothic Tower ===
-      const tx = cx;
-      const ty = cy - 28 * s;
-      const tW = 5 * s,
-        tH = 20 * s;
-      const tDI = tW * ISO_SIN;
-      const tDF = tDI * 2;
-
-      // (no separate shadow — tower sits directly on embankment)
-
-      // Tower left wall (shadowed stone)
-      {
-        const twlG = ctx.createLinearGradient(tx - tW * ISO, ty, tx, ty);
-        twlG.addColorStop(0, "#4a3a2a");
-        twlG.addColorStop(0.5, "#5a4a3a");
-        twlG.addColorStop(1, "#4a3a2a");
-        ctx.fillStyle = twlG;
-        ctx.beginPath();
-        ctx.moveTo(tx - tW * ISO, ty - tH + tDI);
-        ctx.lineTo(tx, ty - tH + tDF);
-        ctx.lineTo(tx, ty + tDF);
-        ctx.lineTo(tx - tW * ISO, ty + tDI);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stone coursing
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
-        ctx.lineWidth = 0.3 * s;
-        for (let row = 1; row < 10; row++) {
-          const rf = row / 10;
-          const ry1 = ty - tH + tDI + tH * rf;
-          const ry2 = ty - tH + tDF + tH * rf;
-          ctx.beginPath();
-          ctx.moveTo(tx - tW * ISO, ry1);
-          ctx.lineTo(tx, ry2);
-          ctx.stroke();
-        }
-      }
-
-      // Tower right wall (lit stone)
-      {
-        const twrG = ctx.createLinearGradient(tx, ty, tx + tW * ISO, ty);
-        twrG.addColorStop(0, "#6a5a48");
-        twrG.addColorStop(0.5, "#7a6a55");
-        twrG.addColorStop(1, "#6a5a48");
-        ctx.fillStyle = twrG;
-        ctx.beginPath();
-        ctx.moveTo(tx + tW * ISO, ty - tH + tDI);
-        ctx.lineTo(tx, ty - tH + tDF);
-        ctx.lineTo(tx, ty + tDF);
-        ctx.lineTo(tx + tW * ISO, ty + tDI);
-        ctx.closePath();
-        ctx.fill();
-
-        // Stone coursing
-        ctx.strokeStyle = "rgba(0,0,0,0.08)";
-        ctx.lineWidth = 0.3 * s;
-        for (let row = 1; row < 10; row++) {
-          const rf = row / 10;
-          const ry1 = ty - tH + tDI + tH * rf;
-          const ry2 = ty - tH + tDF + tH * rf;
-          ctx.beginPath();
-          ctx.moveTo(tx + tW * ISO, ry1);
-          ctx.lineTo(tx, ry2);
-          ctx.stroke();
-        }
-      }
-
-      // Corner quoins (alternating blocks at edges)
-      {
-        ctx.fillStyle = "#7a6a55";
-        for (let q = 0; q < 6; q++) {
-          const qf = q / 6;
-          const qy = ty - tH + tDF + (tH - tDF) * qf;
-          if (q % 2 === 0) {
-            // Right edge quoin
-            ctx.fillRect(
-              tx + tW * ISO - 1.5 * s,
-              qy + tDI * (1 - qf) - 0.5 * s,
-              1.5 * s,
-              2.5 * s,
-            );
-          }
-        }
-      }
-
-      // Belfry openings (arched louver windows near top)
-      {
-        const belY = ty - tH + tDI + 2 * s;
-        const belCxR = tx + tW * ISO * 0.5;
-        const belCyR = belY + tDI * 0.5 + 2 * s;
-        const belW = 2 * s,
-          belH2 = 3 * s;
-
-        // Right face belfry opening
-        ctx.fillStyle = "#1a1008";
-        ctx.beginPath();
-        ctx.arc(belCxR, belCyR, belW, Math.PI, 0);
-        ctx.lineTo(belCxR + belW, belCyR + belH2);
-        ctx.lineTo(belCxR - belW, belCyR + belH2);
-        ctx.closePath();
-        ctx.fill();
-
-        // Louver slats
-        ctx.strokeStyle = "#3a2a1a";
-        ctx.lineWidth = 0.5 * s;
-        for (let lv = 0; lv < 3; lv++) {
-          const lvy = belCyR + lv * 1 * s;
-          ctx.beginPath();
-          ctx.moveTo(belCxR - belW + 0.3 * s, lvy);
-          ctx.lineTo(belCxR + belW - 0.3 * s, lvy);
-          ctx.stroke();
-        }
-
-        // Stone archivolt
-        ctx.strokeStyle = "#6a5a48";
-        ctx.lineWidth = 0.8 * s;
-        ctx.beginPath();
-        ctx.arc(belCxR, belCyR, belW + 0.5 * s, Math.PI, 0);
-        ctx.stroke();
-      }
-
-      // Tower top parapet with crenellations
-      {
-        ctx.fillStyle = "#7A6A55";
-        ctx.beginPath();
-        ctx.moveTo(tx, ty - tH);
-        ctx.lineTo(tx + tW * ISO, ty - tH + tDI);
-        ctx.lineTo(tx, ty - tH + tDF);
-        ctx.lineTo(tx - tW * ISO, ty - tH + tDI);
-        ctx.closePath();
-        ctx.fill();
-
-        // Crenellations (merlons) on right edge
-        const merlonCount = 3;
-        for (let m = 0; m < merlonCount; m++) {
-          const mf = (m + 0.3) / merlonCount;
-          const mx = tx + tW * ISO * mf;
-          const my = ty - tH + tDI * mf;
-
-          ctx.fillStyle = "#6a5a48";
-          ctx.fillRect(mx - 0.8 * s, my - 2.5 * s, 1.6 * s, 2.5 * s);
-          ctx.fillStyle = "#7a6a55";
-          ctx.fillRect(mx - 1 * s, my - 2.8 * s, 2 * s, 0.8 * s);
-        }
-      }
-
-      // Pointed spire with copper patina and dormer
-      {
-        const spireH = 11 * s;
-        const spireTip = { x: tx, y: ty - tH - spireH };
-        const spireScale = 0.85;
-        const spireBase = tW * ISO * spireScale;
-        const spireSideY = tDI * spireScale;
-        const spireFrontY = tDF * spireScale;
-
-        // Spire dark side (left)
-        const spireDG = ctx.createLinearGradient(
-          spireTip.x,
-          spireTip.y,
-          tx - spireBase,
-          ty - tH + spireSideY,
-        );
-        spireDG.addColorStop(0, "#2a4a3a");
-        spireDG.addColorStop(0.5, "#1a3a2a");
-        spireDG.addColorStop(1, "#2a3a28");
-        ctx.fillStyle = spireDG;
-        ctx.beginPath();
-        ctx.moveTo(spireTip.x, spireTip.y);
-        ctx.lineTo(tx - spireBase, ty - tH + spireSideY);
-        ctx.lineTo(tx, ty - tH + spireFrontY);
-        ctx.closePath();
-        ctx.fill();
-
-        // Spire lit side (right)
-        const spireLG = ctx.createLinearGradient(
-          spireTip.x,
-          spireTip.y,
-          tx + spireBase,
-          ty - tH + spireSideY,
-        );
-        spireLG.addColorStop(0, "#3a5a4a");
-        spireLG.addColorStop(0.5, "#4a6a58");
-        spireLG.addColorStop(1, "#3a5a48");
-        ctx.fillStyle = spireLG;
-        ctx.beginPath();
-        ctx.moveTo(spireTip.x, spireTip.y);
-        ctx.lineTo(tx + spireBase, ty - tH + spireSideY);
-        ctx.lineTo(tx, ty - tH + spireFrontY);
-        ctx.closePath();
-        ctx.fill();
-
-        // Spire ridge seams
-        ctx.strokeStyle = "rgba(0,0,0,0.12)";
-        ctx.lineWidth = 0.4 * s;
-        const spireMidY = (spireSideY + spireFrontY) * 0.5;
-        for (let sr = 1; sr < 6; sr++) {
-          const srf = sr / 6;
-          const srx =
-            spireTip.x +
-            (tx + spireBase - spireTip.x) * srf * 0.5 +
-            (tx - spireBase - spireTip.x) * srf * 0.5;
-          const sry = spireTip.y + (ty - tH + spireMidY - spireTip.y) * srf;
-          ctx.beginPath();
-          ctx.moveTo(spireTip.x, spireTip.y);
-          ctx.lineTo(srx + srf * 3 * s, sry);
-          ctx.stroke();
-        }
-
-        // Finial (gold sphere + cross)
-        ctx.fillStyle = "#c4a040";
-        ctx.beginPath();
-        ctx.arc(spireTip.x, spireTip.y, 1.5 * s, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#d4b050";
-        ctx.beginPath();
-        ctx.arc(
-          spireTip.x + 0.3 * s,
-          spireTip.y - 0.3 * s,
-          0.7 * s,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Weathervane rod
-        ctx.strokeStyle = "#8a7050";
-        ctx.lineWidth = 0.6 * s;
-        ctx.beginPath();
-        ctx.moveTo(spireTip.x, spireTip.y - 1.5 * s);
-        ctx.lineTo(spireTip.x, spireTip.y - 5 * s);
-        ctx.stroke();
-
-        // Weathervane arrow (rotating with wind)
-        const vaneAngle = Math.sin(time * 0.3) * 0.4;
-        ctx.save();
-        ctx.translate(spireTip.x, spireTip.y - 5 * s);
-        ctx.rotate(vaneAngle);
-        ctx.fillStyle = "#8a7050";
-        ctx.beginPath();
-        ctx.moveTo(3 * s, 0);
-        ctx.lineTo(-2 * s, -0.8 * s);
-        ctx.lineTo(-1.5 * s, 0);
-        ctx.lineTo(-2 * s, 0.8 * s);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // Clock face (detailed, on right wall)
-      {
-        const clkCx = tx + tW * ISO * 0.5;
-        const clkCy = ty - tH * 0.48 + tDI * 0.5;
-        const clkR = 2.5 * s;
-
-        // Clock face plate
-        const clkG = ctx.createRadialGradient(
-          clkCx,
-          clkCy,
-          0,
-          clkCx,
-          clkCy,
-          clkR,
-        );
-        clkG.addColorStop(0, "#f0e8d8");
-        clkG.addColorStop(0.7, "#e8dcc8");
-        clkG.addColorStop(1, "#d0c4a8");
-        ctx.fillStyle = clkG;
-        ctx.beginPath();
-        ctx.arc(clkCx, clkCy, clkR, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Outer rim
-        ctx.strokeStyle = "#5a4a30";
-        ctx.lineWidth = 0.8 * s;
-        ctx.beginPath();
-        ctx.arc(clkCx, clkCy, clkR, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Inner rim
-        ctx.strokeStyle = "#8a7a58";
-        ctx.lineWidth = 0.4 * s;
-        ctx.beginPath();
-        ctx.arc(clkCx, clkCy, clkR - 1 * s, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Hour markers (12 ticks)
-        ctx.strokeStyle = "#3a2a18";
-        ctx.lineWidth = 0.5 * s;
-        for (let h = 0; h < 12; h++) {
-          const ha = (h / 12) * Math.PI * 2 - Math.PI * 0.5;
-          const isCardinal = h % 3 === 0;
-          const innerR = isCardinal ? clkR - 1.5 * s : clkR - 1 * s;
-          ctx.lineWidth = isCardinal ? 0.7 * s : 0.4 * s;
-          ctx.beginPath();
-          ctx.moveTo(
-            clkCx + Math.cos(ha) * innerR,
-            clkCy + Math.sin(ha) * innerR,
-          );
-          ctx.lineTo(
-            clkCx + Math.cos(ha) * (clkR - 0.5 * s),
-            clkCy + Math.sin(ha) * (clkR - 0.5 * s),
-          );
-          ctx.stroke();
-        }
-
-        // Hour hand
-        const clockAngle = (time * 0.1) % (Math.PI * 2);
-        ctx.strokeStyle = "#1a100a";
-        ctx.lineWidth = 0.8 * s;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(clkCx, clkCy);
-        ctx.lineTo(
-          clkCx + Math.cos(clockAngle - Math.PI * 0.5) * 2 * s,
-          clkCy + Math.sin(clockAngle - Math.PI * 0.5) * 2 * s,
-        );
-        ctx.stroke();
-
-        // Minute hand
-        ctx.lineWidth = 0.5 * s;
-        ctx.beginPath();
-        ctx.moveTo(clkCx, clkCy);
-        ctx.lineTo(
-          clkCx + Math.cos(clockAngle * 12 - Math.PI * 0.5) * 2.5 * s,
-          clkCy + Math.sin(clockAngle * 12 - Math.PI * 0.5) * 2.5 * s,
-        );
-        ctx.stroke();
-        ctx.lineCap = "butt";
-
-        // Center pin
-        ctx.fillStyle = "#3a2a18";
-        ctx.beginPath();
-        ctx.arc(clkCx, clkCy, 0.5 * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Tower gothic windows using iso flush window system
-      {
-        for (let tw = 0; tw < 3; tw++) {
-          const twY = ty - tH + tDF + 4 * s + tw * 7 * s;
-          const twCx = tx + tW * ISO * 0.45;
-          const twCy = twY + tDI * 0.45;
-          const twGlowA = tw === 1 ? 0.4 : 0.2;
-          drawIsoGothicWindow(
-            ctx,
-            twCx,
-            twCy,
-            2.8,
-            4.5,
-            "right",
-            s,
-            "rgba(200,150,70",
-            twGlowA + Math.sin(time * 1.5 + tw) * 0.04,
-            { frame: "#5a4a38", void: "#1a1008", sill: "#6a5a48" },
-          );
-        }
-      }
+      // === CLOCK TOWER (back-center) ===
+      drawCarnegieLakeClockTower(ctx, cx, cy, s, time);
 
       // === ROWBOAT bobbing ===
       const boatBob = Math.sin(time * 1.1) * 1.5 * s;
@@ -25159,175 +23872,282 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "deep_water": {
-      // Ultra-detailed isometric deep water pool
+      const cx = screenPos.x;
+      const cy = screenPos.y;
       const waterSeed = (dec.x || 0) * 11.3 + (dec.y || 0) * 23.7;
-      const isoRatioWater = ISO_Y_RATIO;
+      const iso = ISO_Y_RATIO;
+      const t = decorTime;
 
-      // 1. Outer wet ground ring (organic edges)
-      const wetGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        20 * s,
-        screenPos.x,
-        screenPos.y,
-        38 * s,
+      // 1. Outer wet ground blend (feathers into terrain)
+      const wetBlend = ctx.createRadialGradient(
+        cx,
+        cy + 2 * s,
+        22 * s,
+        cx,
+        cy + 2 * s,
+        42 * s,
       );
-      wetGrad.addColorStop(0, "transparent");
-      wetGrad.addColorStop(0.5, "rgba(20, 50, 80, 0.4)");
-      wetGrad.addColorStop(1, "rgba(30, 60, 90, 0.15)");
-      ctx.fillStyle = wetGrad;
+      wetBlend.addColorStop(0, "rgba(10,25,50,0.35)");
+      wetBlend.addColorStop(0.5, "rgba(15,30,55,0.18)");
+      wetBlend.addColorStop(1, "transparent");
+      ctx.fillStyle = wetBlend;
       drawOrganicWaterShape(
         ctx,
-        screenPos.x,
-        screenPos.y,
-        38 * s,
-        38 * s * isoRatioWater,
+        cx,
+        cy + 2 * s,
+        42 * s,
+        42 * s * iso,
         waterSeed,
-        0.18,
+        0.16,
       );
       ctx.fill();
 
-      // 2. Stone/dirt rim around water (organic)
-      ctx.fillStyle = "rgba(60, 55, 50, 0.85)";
+      // 2. Flat stone ring around water (organic)
+      const ringGrad = ctx.createRadialGradient(cx, cy, 24 * s, cx, cy, 34 * s);
+      ringGrad.addColorStop(0, "rgba(55,50,45,0.92)");
+      ringGrad.addColorStop(0.35, "rgba(65,60,54,0.88)");
+      ringGrad.addColorStop(0.65, "rgba(58,53,47,0.85)");
+      ringGrad.addColorStop(1, "rgba(48,43,38,0.8)");
+      ctx.fillStyle = ringGrad;
       drawOrganicWaterShape(
         ctx,
-        screenPos.x,
-        screenPos.y,
+        cx,
+        cy,
         32 * s,
-        32 * s * isoRatioWater,
+        32 * s * iso,
         waterSeed + 10,
         0.15,
       );
       ctx.fill();
 
-      // 3. Deep water abyss layer (organic shape)
-      const deepGradW = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y + 4 * s,
+      // Speckled stone texture on ring
+      for (let sp = 0; sp < 18; sp++) {
+        const spAng = (sp / 18) * Math.PI * 2 + Math.sin(waterSeed + sp) * 0.3;
+        const spDist = (26 + Math.sin(sp * 2.7 + waterSeed) * 3) * s;
+        const spX = cx + Math.cos(spAng) * spDist;
+        const spY = cy + Math.sin(spAng) * spDist * iso;
+        const spSize = (1 + Math.sin(waterSeed + sp * 4.3) * 0.6) * s;
+        ctx.fillStyle =
+          sp % 2 === 0 ? "rgba(80,75,68,0.35)" : "rgba(40,36,32,0.3)";
+        ctx.beginPath();
+        ctx.arc(spX, spY, spSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. Abyss layer — rich multi-stop deep water gradient
+      const abyssGrad = ctx.createRadialGradient(
+        cx,
+        cy + 3 * s,
         0,
-        screenPos.x,
-        screenPos.y,
+        cx,
+        cy,
         28 * s,
       );
-      deepGradW.addColorStop(0, "rgba(5, 15, 40, 0.98)");
-      deepGradW.addColorStop(0.4, "rgba(10, 30, 60, 0.95)");
-      deepGradW.addColorStop(0.7, "rgba(20, 50, 90, 0.9)");
-      deepGradW.addColorStop(1, "rgba(30, 70, 120, 0.85)");
-      ctx.fillStyle = deepGradW;
+      abyssGrad.addColorStop(0, "rgba(2,8,25,0.99)");
+      abyssGrad.addColorStop(0.15, "rgba(4,12,35,0.97)");
+      abyssGrad.addColorStop(0.3, "rgba(8,22,50,0.95)");
+      abyssGrad.addColorStop(0.5, "rgba(12,35,70,0.92)");
+      abyssGrad.addColorStop(0.7, "rgba(18,50,95,0.88)");
+      abyssGrad.addColorStop(0.85, "rgba(25,65,115,0.85)");
+      abyssGrad.addColorStop(1, "rgba(35,80,135,0.8)");
+      ctx.fillStyle = abyssGrad;
       drawOrganicWaterShape(
         ctx,
-        screenPos.x,
-        screenPos.y,
+        cx,
+        cy,
         28 * s,
-        28 * s * isoRatioWater,
+        28 * s * iso,
         waterSeed + 20,
         0.12,
       );
       ctx.fill();
 
-      // 4. Surface water layer with slight offset (organic)
-      const surfGradW = ctx.createRadialGradient(
-        screenPos.x - 8 * s,
-        screenPos.y - 4 * s,
+      // 4. Surface water layer with directional light offset
+      const surfGrad = ctx.createRadialGradient(
+        cx - 6 * s,
+        cy - 3 * s,
         0,
-        screenPos.x,
-        screenPos.y,
+        cx,
+        cy + 1 * s,
         26 * s,
       );
-      surfGradW.addColorStop(0, "rgba(80, 150, 200, 0.7)");
-      surfGradW.addColorStop(0.4, "rgba(50, 120, 180, 0.5)");
-      surfGradW.addColorStop(1, "rgba(30, 80, 140, 0.3)");
-      ctx.fillStyle = surfGradW;
+      surfGrad.addColorStop(0, "rgba(70,140,195,0.65)");
+      surfGrad.addColorStop(0.25, "rgba(55,120,180,0.5)");
+      surfGrad.addColorStop(0.5, "rgba(40,100,165,0.35)");
+      surfGrad.addColorStop(0.75, "rgba(28,75,140,0.2)");
+      surfGrad.addColorStop(1, "rgba(18,55,110,0.1)");
+      ctx.fillStyle = surfGrad;
       drawOrganicWaterShape(
         ctx,
-        screenPos.x,
-        screenPos.y - 2 * s,
+        cx,
+        cy - 1 * s,
         25 * s,
-        25 * s * isoRatioWater,
+        25 * s * iso,
         waterSeed + 30,
         0.1,
       );
       ctx.fill();
 
-      // 5. Animated ripples (concentric, moving outward)
-      for (let rip = 0; rip < 3; rip++) {
-        const ripPhase = (decorTime * 0.6 + rip * 0.33) % 1;
-        const ripR = (8 + ripPhase * 16) * s;
-        ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 * (1 - ripPhase)})`;
-        ctx.lineWidth = (1.5 - ripPhase) * s;
+      // 5. Underwater caustics (animated light network)
+      ctx.globalAlpha = 0.12;
+      for (let c = 0; c < 10; c++) {
+        const ct = t * 0.5 + c * 0.65;
+        const ccx = cx + Math.sin(ct + c * 1.7) * 18 * s;
+        const ccy = cy + 2 * s + Math.cos(ct * 0.4 + c) * 6 * s;
+        const ccs = (3 + Math.sin(ct * 1.1) * 2) * s;
+        const cg = ctx.createRadialGradient(ccx, ccy, 0, ccx, ccy, ccs);
+        cg.addColorStop(0, "#b0d8ff");
+        cg.addColorStop(0.4, "rgba(140,195,235,0.5)");
+        cg.addColorStop(1, "transparent");
+        ctx.fillStyle = cg;
+        ctx.beginPath();
+        ctx.ellipse(ccx, ccy, ccs * 1.5, ccs * 0.6, c * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // 6. Underwater glow pulse (deep mysterious light)
+      const glowPhase = Math.sin(t * 0.6 + waterSeed) * 0.3 + 0.7;
+      const glowGrad = ctx.createRadialGradient(
+        cx,
+        cy + 3 * s,
+        0,
+        cx,
+        cy,
+        22 * s,
+      );
+      glowGrad.addColorStop(0, `rgba(40,130,200,${0.22 * glowPhase})`);
+      glowGrad.addColorStop(0.35, `rgba(30,100,170,${0.14 * glowPhase})`);
+      glowGrad.addColorStop(0.7, `rgba(20,70,140,${0.06 * glowPhase})`);
+      glowGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 20 * s, 20 * s * iso, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Secondary color-shifting glow
+      const glowPhase2 = Math.sin(t * 0.4 + waterSeed + 2) * 0.5 + 0.5;
+      const glow2 = ctx.createRadialGradient(
+        cx + Math.sin(t * 0.3) * 4 * s,
+        cy + 2 * s,
+        0,
+        cx,
+        cy,
+        16 * s,
+      );
+      glow2.addColorStop(0, `rgba(60,180,220,${0.1 * glowPhase2})`);
+      glow2.addColorStop(0.5, `rgba(40,150,200,${0.05 * glowPhase2})`);
+      glow2.addColorStop(1, "transparent");
+      ctx.fillStyle = glow2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 14 * s, 14 * s * iso, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 7. Animated concentric ripples (offset origins, 5 rings)
+      for (let rip = 0; rip < 5; rip++) {
+        const ripPhase = ((t * 0.35 + rip * 0.7) % 3) / 3;
+        const ripAlpha = 0.3 * (1 - ripPhase);
+        const ripSize = ripPhase * 18;
+        ctx.strokeStyle = `rgba(150,200,255,${ripAlpha})`;
+        ctx.lineWidth = (1.8 - ripPhase * 1.2) * s;
         ctx.beginPath();
         ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          ripR,
-          ripR * isoRatioWater,
-          0,
+          cx - 4 * s + rip * 2.5 * s,
+          cy + 1 * s + rip * 0.5 * s,
+          (6 + ripSize) * s,
+          (6 + ripSize) * s * iso,
+          0.04,
           0,
           Math.PI * 2,
         );
         ctx.stroke();
       }
 
-      // 6. Shimmer highlights (animated)
-      ctx.fillStyle = "rgba(200, 230, 255, 0.5)";
-      for (let sh = 0; sh < 4; sh++) {
-        const shAngle = sh * 0.7 + decorTime * 0.5 + waterSeed * 0.1;
-        const shDist = (10 + Math.sin(decorTime + sh) * 5) * s;
-        const shX = screenPos.x + Math.cos(shAngle) * shDist * 0.8;
-        const shY = screenPos.y + Math.sin(shAngle) * shDist * 0.4 - 2 * s;
-        const shSize = (4 + Math.sin(decorTime * 2 + sh * 2) * 2) * s;
+      // 8. Current lines (subtle animated flow beneath surface)
+      ctx.globalAlpha = 0.08;
+      ctx.strokeStyle = "#90caf9";
+      ctx.lineWidth = 1.2 * s;
+      for (let cl = 0; cl < 5; cl++) {
+        const clY = cy - 8 * s + cl * 4 * s;
+        const clOffset = t * 12 + cl * 40 + waterSeed;
+        ctx.beginPath();
+        for (let p = 0; p <= 20; p++) {
+          const px = cx - 18 * s + (p / 20) * 36 * s;
+          const py = clY + Math.sin(p * 0.6 + clOffset * 0.04) * 2.5 * s;
+          if (p === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // 9. Sparkles on surface (twinkling light)
+      for (let sp = 0; sp < 14; sp++) {
+        const sparkT = t * 2.2 + sp * 0.6;
+        const sparkAlpha = 0.25 + Math.sin(sparkT * 3) * 0.3;
+        if (sparkAlpha > 0.3) {
+          const spAng = sp * 0.45 + Math.sin(t * 0.3) * 0.15;
+          const spDist = 4 + sp * 1.4;
+          const spx = cx + Math.cos(spAng) * spDist * s;
+          const spy = cy + 1 * s + Math.sin(spAng) * spDist * iso * s;
+          ctx.globalAlpha = sparkAlpha;
+          ctx.fillStyle =
+            sp % 3 === 0 ? "#e3f2fd" : sp % 3 === 1 ? "#bbdefb" : "#cce5ff";
+          ctx.beginPath();
+          ctx.arc(
+            spx,
+            spy,
+            (0.7 + Math.sin(sparkT) * 0.35) * s,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // 10. Shimmer highlights (broader, animated)
+      for (let sh = 0; sh < 6; sh++) {
+        const shAngle = sh * 1.05 + t * 0.4 + waterSeed * 0.1;
+        const shDist = (9 + Math.sin(t * 0.8 + sh) * 5) * s;
+        const shX = cx + Math.cos(shAngle) * shDist * 0.8;
+        const shY = cy + Math.sin(shAngle) * shDist * iso - 1.5 * s;
+        const shSize = (3.5 + Math.sin(t * 1.6 + sh * 1.8) * 1.8) * s;
+        const shAlpha = 0.25 + Math.sin(t * 1.2 + sh * 1.5) * 0.15;
+        ctx.fillStyle = `rgba(190,225,255,${shAlpha})`;
         ctx.beginPath();
         ctx.ellipse(
           shX,
           shY,
           shSize,
-          shSize * 0.4,
-          shAngle * 0.3,
+          shSize * 0.35,
+          shAngle * 0.25,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
 
-      // 7. Underwater glow from center (mysterious depth)
-      const glowPhase = Math.sin(decorTime * 0.8 + waterSeed) * 0.3 + 0.7;
-      const underwaterGlow = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y + 3 * s,
-        0,
-        screenPos.x,
-        screenPos.y,
-        20 * s,
-      );
-      underwaterGlow.addColorStop(0, `rgba(50, 150, 200, ${0.25 * glowPhase})`);
-      underwaterGlow.addColorStop(
-        0.5,
-        `rgba(30, 100, 150, ${0.15 * glowPhase})`,
-      );
-      underwaterGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = underwaterGlow;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 18 * s, 9 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 8. Bubbles rising occasionally
-      for (let bub = 0; bub < 3; bub++) {
-        const bubPhase = (decorTime * 0.8 + bub * 0.5 + waterSeed * 0.01) % 2;
-        if (bubPhase < 1.2) {
-          const bubX = screenPos.x + Math.sin(bub * 3 + waterSeed) * 12 * s;
-          const bubY = screenPos.y + 5 * s - bubPhase * 18 * s;
-          const bubSize = (2 + bub * 0.5) * s * (1 - bubPhase / 1.5);
-          ctx.fillStyle = `rgba(180, 220, 255, ${0.6 * (1 - bubPhase / 1.2)})`;
+      // 11. Bubbles rising (varied sizes, staggered timing)
+      for (let bub = 0; bub < 6; bub++) {
+        const bubCycle = (t * 0.7 + bub * 0.45 + waterSeed * 0.01) % 2.5;
+        if (bubCycle < 1.5) {
+          const bubProgress = bubCycle / 1.5;
+          const bubX = cx + Math.sin(bub * 2.7 + waterSeed) * 14 * s;
+          const bubY = cy + 6 * s - bubProgress * 20 * s;
+          const bubWobble = Math.sin(t * 3 + bub * 2) * 1.5 * s;
+          const bubSize = (1.5 + bub * 0.4) * s * (1 - bubProgress * 0.6);
+          const bubAlpha = 0.55 * (1 - bubProgress * 0.8);
+          ctx.fillStyle = `rgba(170,215,255,${bubAlpha})`;
           ctx.beginPath();
-          ctx.arc(bubX, bubY, bubSize, 0, Math.PI * 2);
+          ctx.arc(bubX + bubWobble, bubY, bubSize, 0, Math.PI * 2);
           ctx.fill();
-          // Bubble highlight
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * (1 - bubPhase / 1.2)})`;
+          ctx.fillStyle = `rgba(255,255,255,${bubAlpha * 0.7})`;
           ctx.beginPath();
           ctx.arc(
-            bubX - bubSize * 0.3,
+            bubX + bubWobble - bubSize * 0.3,
             bubY - bubSize * 0.3,
-            bubSize * 0.35,
+            bubSize * 0.3,
             0,
             Math.PI * 2,
           );
@@ -25335,28 +24155,64 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
       }
 
-      // 9. Rocks/pebbles at edge
-      ctx.fillStyle = "#4a4540";
-      for (let rock = 0; rock < 6; rock++) {
-        const rockAngle =
-          (rock / 6) * Math.PI * 2 + Math.sin(waterSeed + rock) * 0.4;
-        const rockDist = (26 + Math.sin(rock * 2 + waterSeed) * 4) * s;
-        const rockX = screenPos.x + Math.cos(rockAngle) * rockDist;
-        const rockY =
-          screenPos.y + Math.sin(rockAngle) * rockDist * isoRatioWater;
-        const rockSize = (3 + Math.sin(waterSeed + rock * 3) * 1.5) * s;
+      // 13. Rocks/pebbles at edge (with shadow and variety)
+      for (let rock = 0; rock < 8; rock++) {
+        const rkAng =
+          (rock / 8) * Math.PI * 2 + Math.sin(waterSeed + rock) * 0.35;
+        const rkDist = (28 + Math.sin(rock * 2.3 + waterSeed) * 3.5) * s;
+        const rkX = cx + Math.cos(rkAng) * rkDist;
+        const rkY = cy + Math.sin(rkAng) * rkDist * iso;
+        const rkSize = (2.5 + Math.sin(waterSeed + rock * 3.1) * 1.2) * s;
+        // Rock shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.beginPath();
         ctx.ellipse(
-          rockX,
-          rockY,
-          rockSize,
-          rockSize * 0.6,
-          rockAngle,
+          rkX + 0.5 * s,
+          rkY + 0.8 * s,
+          rkSize * 1.1,
+          rkSize * 0.5,
+          rkAng,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        // Rock body
+        ctx.fillStyle =
+          rock % 3 === 0 ? "#4a4540" : rock % 3 === 1 ? "#3d3832" : "#55504a";
+        ctx.beginPath();
+        ctx.ellipse(rkX, rkY, rkSize, rkSize * 0.55, rkAng, 0, Math.PI * 2);
+        ctx.fill();
+        // Rock highlight
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(
+          rkX - rkSize * 0.2,
+          rkY - rkSize * 0.15,
+          rkSize * 0.5,
+          rkSize * 0.25,
+          rkAng,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
+
+      // 14. Foam patches at shoreline
+      ctx.globalAlpha = 0.15 + Math.sin(t * 1.2) * 0.04;
+      ctx.fillStyle = "rgba(200,230,255,0.6)";
+      for (let fp = 0; fp < 6; fp++) {
+        const fpAng = fp * 1.05 + waterSeed * 0.05;
+        const fpDist = (25 + Math.sin(t * 0.5 + fp * 1.8) * 2) * s;
+        const fpX = cx + Math.cos(fpAng) * fpDist;
+        const fpY = cy + Math.sin(fpAng) * fpDist * iso;
+        const fpW = (4 + Math.sin(fp * 2.1 + waterSeed) * 1.5) * s;
+        const fpH = fpW * 0.3;
+        ctx.beginPath();
+        ctx.ellipse(fpX, fpY, fpW, fpH, fpAng * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
       break;
     }
 
@@ -31431,8 +30287,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // === REGIONAL OVERLAYS (variant-specific, isometric) ===
       drawRuinsRegionalOverlay(
-        ctx, screenPos.x, screenPos.y, s,
-        ruinVariant, mapTheme, vineColor, decorX, decorY,
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        s,
+        ruinVariant,
+        mapTheme,
+        vineColor,
+        decorX,
+        decorY,
       );
 
       break;

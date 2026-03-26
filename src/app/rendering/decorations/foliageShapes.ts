@@ -685,30 +685,6 @@ export function drawTree(
     ctx.fill();
   }
 
-  // Canopy rim highlight — bright edge on the sun-facing side (upper-left)
-  ctx.strokeStyle = "rgba(140,230,80,0.2)";
-  ctx.lineWidth = 1.5 * s;
-  ctx.beginPath();
-  ctx.arc(
-    canopyCX,
-    y + (baseY - 6 * cH) * s,
-    foliageLayers[1].rx * 0.88 * s,
-    Math.PI * 0.85,
-    Math.PI * 1.6,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(180,255,120,0.12)";
-  ctx.lineWidth = 2.5 * s;
-  ctx.beginPath();
-  ctx.arc(
-    canopyCX,
-    y + (baseY - 10 * cH) * s,
-    foliageLayers[2].rx * 0.82 * s,
-    Math.PI * 0.9,
-    Math.PI * 1.55,
-  );
-  ctx.stroke();
-
   // Small grass tufts at the base for grounding
   const grassColors = [tv.foliage[1], tv.foliage[2], tv.leafAccent];
   const grassCount = 4 + (Math.abs(tSeed * 3) % 3);

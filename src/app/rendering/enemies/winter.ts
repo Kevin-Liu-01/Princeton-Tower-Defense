@@ -85,28 +85,30 @@ export function drawSnowGoblinEnemy(
     ctx.stroke();
   }
 
-  // Clawed feet with ice crystals
+  // Big goblin feet — oversized bezier shapes with splayed toes
   ctx.fillStyle = bodyColorDark;
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.14 + shiver,
-    y + size * 0.28 - hop,
-    size * 0.1,
-    size * 0.06,
-    -0.15,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.14 - shiver,
-    y + size * 0.28 - hop,
-    size * 0.1,
-    size * 0.06,
-    0.15,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  for (const ftSide of [-1, 1] as const) {
+    const ftX = x + ftSide * size * 0.14 + ftSide * shiver;
+    const ftY = y + size * 0.28 - hop;
+    ctx.beginPath();
+    ctx.moveTo(ftX - ftSide * size * 0.06, ftY - size * 0.04);
+    ctx.bezierCurveTo(
+      ftX - ftSide * size * 0.1, ftY - size * 0.02,
+      ftX - ftSide * size * 0.12, ftY + size * 0.02,
+      ftX - ftSide * size * 0.08, ftY + size * 0.05,
+    );
+    ctx.bezierCurveTo(
+      ftX - ftSide * size * 0.02, ftY + size * 0.07,
+      ftX + ftSide * size * 0.06, ftY + size * 0.065,
+      ftX + ftSide * size * 0.12, ftY + size * 0.04,
+    );
+    ctx.bezierCurveTo(
+      ftX + ftSide * size * 0.14, ftY + size * 0.02,
+      ftX + ftSide * size * 0.1, ftY - size * 0.03,
+      ftX - ftSide * size * 0.06, ftY - size * 0.04,
+    );
+    ctx.fill();
+  }
 
   // Foot claws
   ctx.fillStyle = "#1e3a5f";
@@ -161,30 +163,67 @@ export function drawSnowGoblinEnemy(
     style: 'armored',
   });
 
-  // Hunched muscular body
+  // Hunched muscular body — scrappy asymmetric frame
   const bodyGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.05 - hop,
-    0,
-    x,
-    y - hop,
-    size * 0.35,
+    x, y - size * 0.05 - hop, 0,
+    x, y - hop, size * 0.38,
   );
   bodyGrad.addColorStop(0, bodyColorLight);
   bodyGrad.addColorStop(0.5, bodyColor);
   bodyGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    x + shiver,
-    y - size * 0.02 - hop,
-    size * 0.28,
-    size * 0.25,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(x - size * 0.28 + shiver, y + size * 0.18 - hop);
+  ctx.bezierCurveTo(
+    x - size * 0.34 + shiver, y + size * 0.05 - hop,
+    x - size * 0.32, y - size * 0.12 - hop,
+    x - size * 0.22, y - size * 0.2 - hop,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.12, y - size * 0.28 - hop,
+    x + size * 0.05, y - size * 0.27 - hop,
+    x + size * 0.18, y - size * 0.22 - hop,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.3, y - size * 0.15 - hop,
+    x + size * 0.32, y - size * 0.02 - hop,
+    x + size * 0.28 + shiver, y + size * 0.15 - hop,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.2, y + size * 0.22 - hop,
+    x - size * 0.15, y + size * 0.24 - hop,
+    x - size * 0.28 + shiver, y + size * 0.18 - hop,
   );
   ctx.fill();
+
+  // Patched fur cloak detail — stitched patches
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.lineWidth = 1.5 * zoom;
+  const patchData = [
+    { px: -0.15, py: -0.08, pw: 0.12, ph: 0.1 },
+    { px: 0.08, py: 0.0, pw: 0.1, ph: 0.08 },
+    { px: -0.05, py: 0.1, pw: 0.11, ph: 0.07 },
+  ];
+  for (let pi = 0; pi < patchData.length; pi++) {
+    const p = patchData[pi];
+    const pCx = x + p.px * size + shiver;
+    const pCy = y + p.py * size - hop;
+    ctx.fillStyle = `rgba(${80 + pi * 30}, ${100 + pi * 20}, ${130 + pi * 10}, 0.3)`;
+    ctx.beginPath();
+    ctx.rect(pCx, pCy, p.pw * size, p.ph * size);
+    ctx.fill();
+    ctx.stroke();
+    // Stitch marks
+    ctx.beginPath();
+    for (let st = 0; st < 3; st++) {
+      const stX = pCx + st * p.pw * size * 0.4;
+      ctx.moveTo(stX, pCy);
+      ctx.lineTo(stX + size * 0.01, pCy - size * 0.015);
+      ctx.moveTo(stX, pCy + p.ph * size);
+      ctx.lineTo(stX + size * 0.01, pCy + p.ph * size + size * 0.015);
+    }
+    ctx.stroke();
+  }
 
   // Frost patterns on body
   ctx.strokeStyle = `rgba(147, 197, 253, ${frostPulse * 0.5})`;
@@ -197,17 +236,26 @@ export function drawSnowGoblinEnemy(
   ctx.lineTo(x + size * 0.08, y + size * 0.02 - hop);
   ctx.stroke();
 
-  // Icy belly patch
+  // Icy belly patch — organic bezier shape
   ctx.fillStyle = bodyColorLight;
+  const belCx = x;
+  const belCy = y + size * 0.08 - hop;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.08 - hop,
-    size * 0.15,
-    size * 0.12,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(belCx, belCy - size * 0.1);
+  ctx.bezierCurveTo(
+    belCx + size * 0.1, belCy - size * 0.08,
+    belCx + size * 0.16, belCy - size * 0.02,
+    belCx + size * 0.14, belCy + size * 0.04,
+  );
+  ctx.bezierCurveTo(
+    belCx + size * 0.1, belCy + size * 0.12,
+    belCx - size * 0.1, belCy + size * 0.12,
+    belCx - size * 0.14, belCy + size * 0.04,
+  );
+  ctx.bezierCurveTo(
+    belCx - size * 0.16, belCy - size * 0.02,
+    belCx - size * 0.1, belCy - size * 0.08,
+    belCx, belCy - size * 0.1,
   );
   ctx.fill();
 
@@ -268,6 +316,43 @@ export function drawSnowGoblinEnemy(
   );
   ctx.fill();
 
+  // Crude icicle club in right hand
+  ctx.save();
+  const clubBaseX = x + size * 0.38 - armWave * size * 0.12;
+  const clubBaseY = y - size * 0.3 - hop;
+  const clubAngle = -0.6 + armWave * 0.3 + (isAttacking ? attackPhase * 0.8 : 0);
+  ctx.translate(clubBaseX, clubBaseY);
+  ctx.rotate(clubAngle);
+  // Club shaft — rough tapered bezier
+  ctx.fillStyle = "#4a6a8a";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.02, 0);
+  ctx.bezierCurveTo(-size * 0.025, -size * 0.08, -size * 0.03, -size * 0.2, -size * 0.035, -size * 0.3);
+  ctx.bezierCurveTo(-size * 0.02, -size * 0.35, size * 0.02, -size * 0.35, size * 0.035, -size * 0.3);
+  ctx.bezierCurveTo(size * 0.03, -size * 0.2, size * 0.025, -size * 0.08, size * 0.02, 0);
+  ctx.closePath();
+  ctx.fill();
+  // Club head — jagged ice chunk
+  ctx.fillStyle = `rgba(180, 210, 240, ${0.8 + frostPulse * 0.2})`;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.04, -size * 0.28);
+  ctx.lineTo(-size * 0.06, -size * 0.38);
+  ctx.lineTo(-size * 0.02, -size * 0.42);
+  ctx.lineTo(size * 0.02, -size * 0.4);
+  ctx.lineTo(size * 0.05, -size * 0.36);
+  ctx.lineTo(size * 0.04, -size * 0.28);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.4)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.01, -size * 0.29);
+  ctx.lineTo(-size * 0.02, -size * 0.38);
+  ctx.moveTo(size * 0.02, -size * 0.3);
+  ctx.lineTo(size * 0.03, -size * 0.36);
+  ctx.stroke();
+  ctx.restore();
+
   // Ice claws on hands
   ctx.fillStyle = `rgba(147, 197, 253, ${0.8 + frostPulse * 0.2})`;
   setShadowBlur(ctx, 4 * zoom, "#93c5fd");
@@ -317,9 +402,33 @@ export function drawSnowGoblinEnemy(
   headGrad.addColorStop(0, bodyColorLight);
   headGrad.addColorStop(0.6, bodyColor);
   headGrad.addColorStop(1, bodyColorDark);
+  // Goblin cranium — lumpy bezier skull
   ctx.fillStyle = headGrad;
+  const hcx = x + shiver;
+  const hcy = y - size * 0.38 - hop;
+  const hR = size * 0.26;
   ctx.beginPath();
-  ctx.arc(x + shiver, y - size * 0.38 - hop, size * 0.26, 0, Math.PI * 2);
+  ctx.moveTo(hcx, hcy - hR);
+  ctx.bezierCurveTo(
+    hcx + hR * 0.65, hcy - hR * 1.05,
+    hcx + hR * 1.1, hcy - hR * 0.35,
+    hcx + hR * 0.95, hcy + hR * 0.15,
+  );
+  ctx.bezierCurveTo(
+    hcx + hR * 0.85, hcy + hR * 0.6,
+    hcx + hR * 0.35, hcy + hR * 0.95,
+    hcx, hcy + hR * 0.85,
+  );
+  ctx.bezierCurveTo(
+    hcx - hR * 0.35, hcy + hR * 0.95,
+    hcx - hR * 0.85, hcy + hR * 0.6,
+    hcx - hR * 0.95, hcy + hR * 0.15,
+  );
+  ctx.bezierCurveTo(
+    hcx - hR * 1.1, hcy - hR * 0.35,
+    hcx - hR * 0.65, hcy - hR * 1.05,
+    hcx, hcy - hR,
+  );
   ctx.fill();
 
   // Spiky frost crown/hair
@@ -346,42 +455,68 @@ export function drawSnowGoblinEnemy(
     ctx.fill();
   }
 
-  // Long wicked pointed ears with frost tips
+  // Long wicked pointed ears with frost tips — bezier articulated
   ctx.fillStyle = bodyColor;
-  // Left ear
+  // Left ear — wide base tapering to sharp point
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.42 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.35,
-    y - size * 0.5 - hop,
-    x - size * 0.45,
-    y - size * 0.6 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.3, y - size * 0.46 - hop,
+    x - size * 0.4, y - size * 0.54 - hop,
+    x - size * 0.47, y - size * 0.62 - hop,
   );
-  ctx.lineTo(x - size * 0.38, y - size * 0.52 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.28,
-    y - size * 0.45 - hop,
-    x - size * 0.2,
-    y - size * 0.4 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.44, y - size * 0.58 - hop,
+    x - size * 0.38, y - size * 0.52 - hop,
+    x - size * 0.32, y - size * 0.48 - hop,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.26, y - size * 0.44 - hop,
+    x - size * 0.22, y - size * 0.42 - hop,
+    x - size * 0.2, y - size * 0.4 - hop,
   );
   ctx.fill();
+  // Left ear inner fold
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24, y - size * 0.43 - hop);
+  ctx.bezierCurveTo(
+    x - size * 0.32, y - size * 0.48 - hop,
+    x - size * 0.38, y - size * 0.54 - hop,
+    x - size * 0.42, y - size * 0.58 - hop,
+  );
+  ctx.stroke();
   // Right ear
+  ctx.fillStyle = bodyColor;
   ctx.beginPath();
   ctx.moveTo(x + size * 0.22, y - size * 0.42 - hop);
-  ctx.quadraticCurveTo(
-    x + size * 0.35,
-    y - size * 0.5 - hop,
-    x + size * 0.45,
-    y - size * 0.6 - hop,
+  ctx.bezierCurveTo(
+    x + size * 0.3, y - size * 0.46 - hop,
+    x + size * 0.4, y - size * 0.54 - hop,
+    x + size * 0.47, y - size * 0.62 - hop,
   );
-  ctx.lineTo(x + size * 0.38, y - size * 0.52 - hop);
-  ctx.quadraticCurveTo(
-    x + size * 0.28,
-    y - size * 0.45 - hop,
-    x + size * 0.2,
-    y - size * 0.4 - hop,
+  ctx.bezierCurveTo(
+    x + size * 0.44, y - size * 0.58 - hop,
+    x + size * 0.38, y - size * 0.52 - hop,
+    x + size * 0.32, y - size * 0.48 - hop,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.26, y - size * 0.44 - hop,
+    x + size * 0.22, y - size * 0.42 - hop,
+    x + size * 0.2, y - size * 0.4 - hop,
   );
   ctx.fill();
+  // Right ear inner fold
+  ctx.strokeStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.24, y - size * 0.43 - hop);
+  ctx.bezierCurveTo(
+    x + size * 0.32, y - size * 0.48 - hop,
+    x + size * 0.38, y - size * 0.54 - hop,
+    x + size * 0.42, y - size * 0.58 - hop,
+  );
+  ctx.stroke();
 
   // Frost on ear tips
   ctx.fillStyle = `rgba(147, 197, 253, ${frostPulse * 0.8})`;
@@ -524,6 +659,75 @@ export function drawSnowGoblinEnemy(
     shape: "shard",
   });
 
+  // Frost breath mist puffs
+  ctx.save();
+  for (let fb = 0; fb < 4; fb++) {
+    const fbPhase = (time * 1.2 + fb * 0.25) % 1;
+    const fbX = x + size * 0.08 + fbPhase * size * 0.2;
+    const fbY = y - size * 0.28 - hop + Math.sin(time * 5 + fb) * size * 0.02;
+    const fbAlpha = (1 - fbPhase) * frostPulse * 0.2;
+    const fbSize = size * (0.02 + fbPhase * 0.03);
+    const fbGrad = ctx.createRadialGradient(fbX, fbY, 0, fbX, fbY, fbSize);
+    fbGrad.addColorStop(0, `rgba(200, 230, 255, ${fbAlpha})`);
+    fbGrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+    ctx.fillStyle = fbGrad;
+    ctx.beginPath();
+    ctx.arc(fbX, fbY, fbSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Icy ground frost creep around feet
+  ctx.save();
+  const frostCreepAlpha = 0.15 + frostPulse * 0.1;
+  const frostCreepGrad = ctx.createRadialGradient(x, y + size * 0.3 - hop, size * 0.05, x, y + size * 0.3 - hop, size * 0.35);
+  frostCreepGrad.addColorStop(0, `rgba(200, 230, 255, ${frostCreepAlpha})`);
+  frostCreepGrad.addColorStop(0.6, `rgba(147, 197, 253, ${frostCreepAlpha * 0.5})`);
+  frostCreepGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+  ctx.fillStyle = frostCreepGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.3 - hop, size * 0.35, size * 0.15 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Ice crystal particles swirling around body
+  ctx.save();
+  for (let ic = 0; ic < 6; ic++) {
+    const icAngle = time * 2.5 + ic * Math.PI * 0.333;
+    const icDist = size * (0.2 + Math.sin(time * 1.8 + ic * 2) * 0.06);
+    const icX = x + Math.cos(icAngle) * icDist + shiver;
+    const icY = y - size * 0.15 - hop + Math.sin(icAngle * 0.8) * size * 0.15;
+    const icAlpha = 0.3 + Math.sin(time * 4 + ic * 1.5) * 0.15;
+    const icSize = size * (0.02 + Math.sin(ic * 1.3) * 0.008);
+    ctx.fillStyle = `rgba(200, 230, 255, ${icAlpha * frostPulse})`;
+    ctx.beginPath();
+    ctx.moveTo(icX, icY - icSize);
+    ctx.lineTo(icX + icSize * 0.4, icY);
+    ctx.lineTo(icX, icY + icSize * 0.6);
+    ctx.lineTo(icX - icSize * 0.4, icY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Frost breath mist puffs
+  ctx.save();
+  for (let fb = 0; fb < 4; fb++) {
+    const fbPhase = (time * 0.8 + fb * 0.25) % 1;
+    const fbX = x + Math.sin(time * 3 + fb * 1.5) * size * 0.06 + shiver;
+    const fbY = y - size * 0.28 - hop - fbPhase * size * 0.12;
+    const fbAlpha = (1 - fbPhase) * 0.2 * frostPulse;
+    const fbSize = size * (0.02 + fbPhase * 0.03);
+    const fbGrad = ctx.createRadialGradient(fbX, fbY, 0, fbX, fbY, fbSize);
+    fbGrad.addColorStop(0, `rgba(200, 230, 255, ${fbAlpha})`);
+    fbGrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+    ctx.fillStyle = fbGrad;
+    ctx.beginPath();
+    ctx.arc(fbX, fbY, fbSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
   // Attack ice shards with frost burst
   if (isAttacking) {
     const burstIntensity = Math.sin(attackPhase * Math.PI);
@@ -559,6 +763,41 @@ export function drawSnowGoblinEnemy(
     }
     clearShadow(ctx);
   }
+
+  // Swarm speed: ice dash afterimage trail (fading blue body copies)
+  ctx.save();
+  for (let ai = 0; ai < 3; ai++) {
+    const aiOffset = (ai + 1) * size * 0.1 + Math.sin(time * 6 + ai) * size * 0.015;
+    const aiScale = 1 - (ai + 1) * 0.13;
+    const aiAlpha = [0.15, 0.10, 0.06][ai];
+    ctx.globalAlpha = aiAlpha;
+    ctx.fillStyle = "#93c5fd";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + aiOffset, y - hop + ai * size * 0.01,
+      size * 0.12 * aiScale, size * 0.18 * aiScale,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Swarm speed: snow spray kicked up from feet
+  ctx.save();
+  for (let sp = 0; sp < 6; sp++) {
+    const spPhase = (time * 5 + sp * 0.5) % 1.2;
+    const spSide = sp % 2 === 0 ? -1 : 1;
+    const spX = x + spSide * size * 0.1 + spPhase * spSide * size * 0.12;
+    const spY = y + size * 0.3 - hop - spPhase * size * 0.15;
+    const spAlpha = Math.max(0, 0.22 - spPhase * 0.18);
+    const spR = size * 0.012 * (1 - spPhase * 0.5);
+    ctx.fillStyle = `rgba(200, 225, 255, ${spAlpha})`;
+    ctx.beginPath();
+    ctx.arc(spX, spY, spR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 export function drawYetiEnemy(
@@ -628,30 +867,50 @@ export function drawYetiEnemy(
   legGrad.addColorStop(1, "#1e3a5f");
   ctx.fillStyle = legGrad;
 
-  // Left leg with stride
+  // Left leg — massive bezier tree-trunk with muscular taper
   ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.25 + leftLegFwd,
-    y + size * 0.32 - leftLegLift,
-    size * 0.22,
-    size * 0.32,
-    -0.12 + leftStride * 0.08,
-    0,
-    Math.PI * 2,
+  const llx = x - size * 0.25 + leftLegFwd;
+  const lly = y + size * 0.32 - leftLegLift;
+  ctx.moveTo(llx - size * 0.14, lly - size * 0.28);
+  ctx.bezierCurveTo(
+    llx - size * 0.22, lly - size * 0.15,
+    llx - size * 0.24, lly + size * 0.08,
+    llx - size * 0.16, lly + size * 0.28,
   );
+  ctx.bezierCurveTo(
+    llx - size * 0.06, lly + size * 0.34,
+    llx + size * 0.06, lly + size * 0.34,
+    llx + size * 0.16, lly + size * 0.28,
+  );
+  ctx.bezierCurveTo(
+    llx + size * 0.24, lly + size * 0.08,
+    llx + size * 0.22, lly - size * 0.15,
+    llx + size * 0.14, lly - size * 0.28,
+  );
+  ctx.closePath();
   ctx.fill();
 
-  // Right leg with stride
+  // Right leg — massive bezier tree-trunk
   ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.25 + rightLegFwd,
-    y + size * 0.35 - rightLegLift,
-    size * 0.22,
-    size * 0.32,
-    0.12 + rightStride * 0.08,
-    0,
-    Math.PI * 2,
+  const rlx = x + size * 0.25 + rightLegFwd;
+  const rly = y + size * 0.35 - rightLegLift;
+  ctx.moveTo(rlx - size * 0.14, rly - size * 0.28);
+  ctx.bezierCurveTo(
+    rlx - size * 0.22, rly - size * 0.15,
+    rlx - size * 0.24, rly + size * 0.08,
+    rlx - size * 0.16, rly + size * 0.28,
   );
+  ctx.bezierCurveTo(
+    rlx - size * 0.06, rly + size * 0.34,
+    rlx + size * 0.06, rly + size * 0.34,
+    rlx + size * 0.16, rly + size * 0.28,
+  );
+  ctx.bezierCurveTo(
+    rlx + size * 0.24, rly + size * 0.08,
+    rlx + size * 0.22, rly - size * 0.15,
+    rlx + size * 0.14, rly - size * 0.28,
+  );
+  ctx.closePath();
   ctx.fill();
 
   // Leg fur texture
@@ -690,28 +949,33 @@ export function drawYetiEnemy(
     }
   }
 
-  // Massive clawed feet
+  // Massive clawed feet — broad bezier paw shapes
   ctx.fillStyle = "#1e3a5f";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.28 + leftLegFwd,
-    y + size * 0.55 - leftLegLift,
-    size * 0.15,
-    size * 0.08,
-    -0.1 + leftStride * 0.1,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.28 + rightLegFwd,
-    y + size * 0.55 - rightLegLift,
-    size * 0.15,
-    size * 0.08,
-    0.1 + rightStride * 0.1,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  for (const footData of [
+    { fx: x - size * 0.28 + leftLegFwd, fy: y + size * 0.55 - leftLegLift, dir: -1 },
+    { fx: x + size * 0.28 + rightLegFwd, fy: y + size * 0.55 - rightLegLift, dir: 1 },
+  ] as const) {
+    const fW = size * 0.15;
+    const fH = size * 0.08;
+    ctx.beginPath();
+    ctx.moveTo(footData.fx - fW, footData.fy);
+    ctx.bezierCurveTo(
+      footData.fx - fW * 1.1, footData.fy - fH * 0.8,
+      footData.fx - fW * 0.3, footData.fy - fH * 1.2,
+      footData.fx, footData.fy - fH * 0.9,
+    );
+    ctx.bezierCurveTo(
+      footData.fx + fW * 0.3, footData.fy - fH * 1.2,
+      footData.fx + fW * 1.1, footData.fy - fH * 0.8,
+      footData.fx + fW, footData.fy,
+    );
+    ctx.bezierCurveTo(
+      footData.fx + fW * 0.8, footData.fy + fH,
+      footData.fx - fW * 0.8, footData.fy + fH,
+      footData.fx - fW, footData.fy,
+    );
+    ctx.fill();
+  }
 
   // Foot claws
   ctx.fillStyle = "#0f172a";
@@ -803,14 +1067,10 @@ export function drawYetiEnemy(
     style: 'fleshy',
   });
 
-  // Titanic furry body with muscle definition
+  // Titanic furry body — massive hunched muscular frame with bezier anatomy
   const bodyGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.15,
-    0,
-    x,
-    y - size * 0.1,
-    size * 0.6,
+    x, y - size * 0.15, 0,
+    x, y - size * 0.1, size * 0.65,
   );
   bodyGrad.addColorStop(0, bodyColorLight);
   bodyGrad.addColorStop(0.4, bodyColor);
@@ -819,38 +1079,54 @@ export function drawYetiEnemy(
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.52, y + size * 0.12);
-  ctx.quadraticCurveTo(
-    x - size * 0.6,
-    y - size * 0.2,
-    x - size * 0.45,
-    y - size * 0.55,
+  ctx.bezierCurveTo(
+    x - size * 0.62, y - size * 0.05,
+    x - size * 0.65, y - size * 0.32,
+    x - size * 0.48, y - size * 0.52,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.25,
-    y - size * 0.72 + breathe * size,
-    x,
-    y - size * 0.7 + breathe * size,
+  ctx.bezierCurveTo(
+    x - size * 0.38, y - size * 0.65,
+    x - size * 0.2, y - size * 0.74 + breathe * size,
+    x, y - size * 0.72 + breathe * size,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.25,
-    y - size * 0.72 + breathe * size,
-    x + size * 0.45,
-    y - size * 0.55,
+  ctx.bezierCurveTo(
+    x + size * 0.2, y - size * 0.74 + breathe * size,
+    x + size * 0.38, y - size * 0.65,
+    x + size * 0.48, y - size * 0.52,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.6,
-    y - size * 0.2,
-    x + size * 0.52,
-    y + size * 0.12,
+  ctx.bezierCurveTo(
+    x + size * 0.65, y - size * 0.32,
+    x + size * 0.62, y - size * 0.05,
+    x + size * 0.52, y + size * 0.12,
   );
-  ctx.quadraticCurveTo(x + size * 0.3, y + size * 0.2, x, y + size * 0.18);
-  ctx.quadraticCurveTo(
-    x - size * 0.3,
-    y + size * 0.2,
-    x - size * 0.52,
-    y + size * 0.12,
+  ctx.bezierCurveTo(
+    x + size * 0.4, y + size * 0.2,
+    x + size * 0.2, y + size * 0.22,
+    x, y + size * 0.2,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.2, y + size * 0.22,
+    x - size * 0.4, y + size * 0.2,
+    x - size * 0.52, y + size * 0.12,
   );
   ctx.fill();
+
+  // Layered fur rendered as overlapping stroke groups
+  ctx.lineCap = "round";
+  for (let furLayer = 0; furLayer < 3; furLayer++) {
+    const layerY = y - size * 0.35 + furLayer * size * 0.18;
+    ctx.strokeStyle = furLayer === 0 ? bodyColorLight : (furLayer === 1 ? bodyColor : bodyColorDark);
+    ctx.lineWidth = (2.5 - furLayer * 0.5) * zoom;
+    for (let strand = 0; strand < 8; strand++) {
+      const strandX = x - size * 0.4 + strand * size * 0.1 + Math.sin(strand * 1.3 + furLayer) * size * 0.03;
+      const strandLen = size * (0.06 + Math.sin(strand * 0.9 + furLayer * 1.2) * 0.02);
+      const strandSway = Math.sin(time * 2 + strand * 0.8 + furLayer * 0.5) * size * 0.01;
+      ctx.beginPath();
+      ctx.moveTo(strandX, layerY);
+      ctx.lineTo(strandX + strandSway, layerY + strandLen);
+      ctx.stroke();
+    }
+  }
 
   // Chest muscle definition
   ctx.fillStyle = bodyColorLight;
@@ -998,34 +1274,57 @@ export function drawYetiEnemy(
     }
   }
 
-  // Massive head with feral features
+  // Massive flat head with feral features — wide and low
   const headGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.55,
-    0,
-    x,
-    y - size * 0.55,
-    size * 0.28,
+    x, y - size * 0.55, 0,
+    x, y - size * 0.55, size * 0.3,
   );
   headGrad.addColorStop(0, bodyColorLight);
   headGrad.addColorStop(0.5, bodyColor);
   headGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.55, size * 0.26, 0, Math.PI * 2);
+  ctx.moveTo(x - size * 0.28, y - size * 0.48);
+  ctx.bezierCurveTo(
+    x - size * 0.3, y - size * 0.55,
+    x - size * 0.25, y - size * 0.68,
+    x - size * 0.12, y - size * 0.72,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.04, y - size * 0.74,
+    x + size * 0.04, y - size * 0.74,
+    x + size * 0.12, y - size * 0.72,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.25, y - size * 0.68,
+    x + size * 0.3, y - size * 0.55,
+    x + size * 0.28, y - size * 0.48,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.2, y - size * 0.44,
+    x - size * 0.2, y - size * 0.44,
+    x - size * 0.28, y - size * 0.48,
+  );
   ctx.fill();
 
-  // Pronounced brow ridge
+  // Pronounced heavy brow ridge — thick shelf overhanging eyes
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.62,
-    size * 0.25,
-    size * 0.08,
-    0,
-    Math.PI,
-    Math.PI * 2,
+  ctx.moveTo(x - size * 0.28, y - size * 0.6);
+  ctx.bezierCurveTo(
+    x - size * 0.25, y - size * 0.67,
+    x - size * 0.1, y - size * 0.68,
+    x, y - size * 0.66,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.1, y - size * 0.68,
+    x + size * 0.25, y - size * 0.67,
+    x + size * 0.28, y - size * 0.6,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.22, y - size * 0.62,
+    x - size * 0.22, y - size * 0.62,
+    x - size * 0.28, y - size * 0.6,
   );
   ctx.fill();
 
@@ -1233,6 +1532,40 @@ export function drawYetiEnemy(
     ctx.fill();
   }
 
+  // Frost breath vapor trail from mouth
+  ctx.save();
+  for (let breath = 0; breath < 5; breath++) {
+    const breathPhase = (time * 0.7 + breath * 0.2) % 1;
+    const bx = x + size * 0.15 + breathPhase * size * 0.3;
+    const by = y - size * 0.35 + Math.sin(time * 3 + breath * 1.3) * size * 0.05;
+    const bAlpha = (1 - breathPhase) * frostPulse * 0.2;
+    const bSize = size * (0.03 + breathPhase * 0.05);
+    const bGrad = ctx.createRadialGradient(bx, by, 0, bx, by, bSize);
+    bGrad.addColorStop(0, `rgba(200, 230, 255, ${bAlpha})`);
+    bGrad.addColorStop(0.6, `rgba(147, 197, 253, ${bAlpha * 0.5})`);
+    bGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Blizzard snow vortex swirl
+  ctx.save();
+  for (let vortex = 0; vortex < 10; vortex++) {
+    const vAngle = time * 1.8 + vortex * Math.PI * 0.2;
+    const vDist = size * (0.5 + vortex * 0.03 + Math.sin(time * 2 + vortex) * 0.04);
+    const vx = x + Math.cos(vAngle) * vDist;
+    const vy = y - size * 0.1 + Math.sin(vAngle * 0.5) * size * 0.3;
+    const vAlpha = (0.25 - vortex * 0.02) * frostPulse;
+    ctx.fillStyle = `rgba(220, 240, 255, ${vAlpha})`;
+    ctx.beginPath();
+    ctx.arc(vx, vy, size * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
   // --- Floating ice crystal shards ---
   drawFrostCrystals(ctx, x, y - size * 0.15, size * 0.55, time, zoom, {
     color: "rgba(147, 197, 253, 0.45)",
@@ -1253,6 +1586,55 @@ export function drawYetiEnemy(
     orbitSpeed: 1.0,
     shape: "diamond",
   });
+
+  // Blizzard swirl vortex around yeti
+  ctx.save();
+  for (let bz = 0; bz < 12; bz++) {
+    const bzAngle = time * 2 + bz * (Math.PI * 2 / 12);
+    const bzHeight = Math.sin(time * 1.5 + bz * 0.5) * size * 0.35;
+    const bzDist = size * (0.4 + Math.sin(time * 1.8 + bz) * 0.1);
+    const bzAlpha = frostPulse * 0.15 * (0.6 + Math.sin(time * 3 + bz) * 0.4);
+    ctx.fillStyle = `rgba(200, 230, 255, ${bzAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + Math.cos(bzAngle) * bzDist,
+      y - size * 0.1 + bzHeight,
+      size * 0.03, size * 0.015, bzAngle, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Frost breath aura from mouth
+  ctx.save();
+  const breathAlpha = 0.08 + Math.sin(time * 2) * 0.04;
+  const breathGrad = ctx.createRadialGradient(
+    x + size * 0.12, y - size * 0.38, 0,
+    x + size * 0.12, y - size * 0.38, size * 0.15,
+  );
+  breathGrad.addColorStop(0, `rgba(200, 240, 255, ${breathAlpha})`);
+  breathGrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+  ctx.fillStyle = breathGrad;
+  ctx.beginPath();
+  ctx.arc(x + size * 0.12, y - size * 0.38, size * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Icicle formations at feet
+  ctx.save();
+  ctx.fillStyle = `rgba(191, 219, 254, ${0.4 + frostPulse * 0.2})`;
+  for (let ic = 0; ic < 5; ic++) {
+    const icX = x - size * 0.25 + ic * size * 0.12;
+    const icY = y + size * 0.5;
+    const icH = size * (0.06 + Math.sin(ic * 1.7) * 0.02);
+    ctx.beginPath();
+    ctx.moveTo(icX - size * 0.01, icY);
+    ctx.lineTo(icX, icY - icH);
+    ctx.lineTo(icX + size * 0.01, icY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 export function drawIceWitchEnemy(
@@ -1402,12 +1784,10 @@ export function drawIceWitchEnemy(
   );
   ctx.fill();
 
-  // Main robe layer
+  // Main robe layer — elegant bezier draping with crystalline trim
   const robeGrad = ctx.createLinearGradient(
-    x - size * 0.35,
-    y - size * 0.3 + float,
-    x + size * 0.3,
-    y + size * 0.4 + float,
+    x - size * 0.35, y - size * 0.3 + float,
+    x + size * 0.3, y + size * 0.4 + float,
   );
   robeGrad.addColorStop(0, bodyColorDark);
   robeGrad.addColorStop(0.4, bodyColor);
@@ -1416,43 +1796,51 @@ export function drawIceWitchEnemy(
   ctx.fillStyle = robeGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.38, y + size * 0.4 + float);
-  ctx.quadraticCurveTo(
-    x - size * 0.48 + capeFlow * size,
-    y + size * 0.05,
-    x - size * 0.28,
-    y - size * 0.32 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.5 + capeFlow * size, y + size * 0.18,
+    x - size * 0.46 + capeFlow * size * 0.5, y - size * 0.1,
+    x - size * 0.28, y - size * 0.32 + float,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.1,
-    y - size * 0.4 + float,
-    x,
-    y - size * 0.38 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.18, y - size * 0.38 + float,
+    x - size * 0.06, y - size * 0.4 + float,
+    x, y - size * 0.38 + float,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.1,
-    y - size * 0.4 + float,
-    x + size * 0.28,
-    y - size * 0.32 + float,
+  ctx.bezierCurveTo(
+    x + size * 0.06, y - size * 0.4 + float,
+    x + size * 0.18, y - size * 0.38 + float,
+    x + size * 0.28, y - size * 0.32 + float,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.48 - capeFlow * size,
-    y + size * 0.05,
-    x + size * 0.38,
-    y + size * 0.4 + float,
+  ctx.bezierCurveTo(
+    x + size * 0.46 - capeFlow * size * 0.5, y - size * 0.1,
+    x + size * 0.5 - capeFlow * size, y + size * 0.18,
+    x + size * 0.38, y + size * 0.4 + float,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.15,
-    y + size * 0.45 + capeFlow * size * 0.3 + float,
-    x,
-    y + size * 0.42 + float,
+  ctx.bezierCurveTo(
+    x + size * 0.25, y + size * 0.44 + capeFlow * size * 0.3 + float,
+    x + size * 0.08, y + size * 0.43 + float,
+    x, y + size * 0.42 + float,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.15,
-    y + size * 0.45 - capeFlow * size * 0.3 + float,
-    x - size * 0.38,
-    y + size * 0.4 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.08, y + size * 0.43 + float,
+    x - size * 0.25, y + size * 0.44 - capeFlow * size * 0.3 + float,
+    x - size * 0.38, y + size * 0.4 + float,
   );
   ctx.fill();
+
+  // Crystalline trim along robe edges
+  ctx.strokeStyle = `rgba(191, 219, 254, ${0.4 + runeGlow * 0.2})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let trim = 0; trim < 6; trim++) {
+    const trimX = x - size * 0.32 + trim * size * 0.12;
+    const trimY = y + size * 0.38 + Math.sin(trim * 1.2) * size * 0.02 + float;
+    const trimH = size * (0.04 + Math.sin(trim * 0.8) * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(trimX - size * 0.015, trimY);
+    ctx.lineTo(trimX, trimY + trimH);
+    ctx.lineTo(trimX + size * 0.015, trimY);
+    ctx.stroke();
+  }
 
   // Robe frost patterns
   ctx.strokeStyle = `rgba(147, 197, 253, ${runeGlow * 0.5})`;
@@ -1493,17 +1881,29 @@ export function drawIceWitchEnemy(
     ctx.fill();
   }
 
-  // Inner dress/bodice
+  // Inner dress/bodice — tapered bezier garment shape
   ctx.fillStyle = bodyColor;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.02 + float,
-    size * 0.24,
-    size * 0.38,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(x - size * 0.14, y - size * 0.35 + float);
+  ctx.bezierCurveTo(
+    x - size * 0.22, y - size * 0.2 + float,
+    x - size * 0.26, y + size * 0.05 + float,
+    x - size * 0.22, y + size * 0.25 + float,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.18, y + size * 0.36 + float,
+    x + size * 0.18, y + size * 0.36 + float,
+    x + size * 0.22, y + size * 0.25 + float,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.26, y + size * 0.05 + float,
+    x + size * 0.22, y - size * 0.2 + float,
+    x + size * 0.14, y - size * 0.35 + float,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.06, y - size * 0.4 + float,
+    x - size * 0.06, y - size * 0.4 + float,
+    x - size * 0.14, y - size * 0.35 + float,
   );
   ctx.fill();
 
@@ -1575,13 +1975,30 @@ export function drawIceWitchEnemy(
   ctx.lineTo(x + size * 0.28, y + size * 0.45 + float);
   ctx.stroke();
 
-  // Staff headpiece - crystalline formation
+  // Staff headpiece — multi-faceted crystal formation
   ctx.fillStyle = "#1e3a5f";
+  // Central crystal
   ctx.beginPath();
   ctx.moveTo(x + size * 0.18, y - size * 0.15 + float);
   ctx.lineTo(x + size * 0.12, y - size * 0.22 + float);
-  ctx.lineTo(x + size * 0.18, y - size * 0.28 + float);
+  ctx.lineTo(x + size * 0.18, y - size * 0.3 + float);
   ctx.lineTo(x + size * 0.24, y - size * 0.22 + float);
+  ctx.closePath();
+  ctx.fill();
+  // Side crystals
+  ctx.fillStyle = `rgba(96, 165, 250, ${0.5 + orbPulse * 0.2})`;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.12, y - size * 0.2 + float);
+  ctx.lineTo(x + size * 0.07, y - size * 0.25 + float);
+  ctx.lineTo(x + size * 0.1, y - size * 0.28 + float);
+  ctx.lineTo(x + size * 0.14, y - size * 0.23 + float);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.24, y - size * 0.2 + float);
+  ctx.lineTo(x + size * 0.29, y - size * 0.25 + float);
+  ctx.lineTo(x + size * 0.26, y - size * 0.28 + float);
+  ctx.lineTo(x + size * 0.22, y - size * 0.23 + float);
   ctx.closePath();
   ctx.fill();
 
@@ -1661,12 +2078,10 @@ export function drawIceWitchEnemy(
     ctx.stroke();
   }
 
-  // Elaborate hood with crown-like ice spikes
+  // Elaborate hood with crown-like ice spikes — bezier sculpted
   const hoodGrad = ctx.createLinearGradient(
-    x,
-    y - size * 0.7 + float,
-    x,
-    y - size * 0.25 + float,
+    x, y - size * 0.7 + float,
+    x, y - size * 0.25 + float,
   );
   hoodGrad.addColorStop(0, bodyColorDark);
   hoodGrad.addColorStop(0.5, bodyColor);
@@ -1674,37 +2089,51 @@ export function drawIceWitchEnemy(
   ctx.fillStyle = hoodGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.25, y - size * 0.28 + float);
-  ctx.quadraticCurveTo(
-    x - size * 0.32,
-    y - size * 0.55 + float,
-    x - size * 0.1,
-    y - size * 0.7 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.34, y - size * 0.42 + float,
+    x - size * 0.32, y - size * 0.6 + float,
+    x - size * 0.1, y - size * 0.7 + float,
   );
-  ctx.quadraticCurveTo(
-    x,
-    y - size * 0.75 + float,
-    x + size * 0.1,
-    y - size * 0.7 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.04, y - size * 0.76 + float,
+    x + size * 0.04, y - size * 0.76 + float,
+    x + size * 0.1, y - size * 0.7 + float,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.32,
-    y - size * 0.55 + float,
-    x + size * 0.25,
-    y - size * 0.28 + float,
+  ctx.bezierCurveTo(
+    x + size * 0.32, y - size * 0.6 + float,
+    x + size * 0.34, y - size * 0.42 + float,
+    x + size * 0.25, y - size * 0.28 + float,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.12,
-    y - size * 0.22 + float,
-    x,
-    y - size * 0.2 + float,
+  ctx.bezierCurveTo(
+    x + size * 0.18, y - size * 0.23 + float,
+    x + size * 0.08, y - size * 0.21 + float,
+    x, y - size * 0.2 + float,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.12,
-    y - size * 0.22 + float,
-    x - size * 0.25,
-    y - size * 0.28 + float,
+  ctx.bezierCurveTo(
+    x - size * 0.08, y - size * 0.21 + float,
+    x - size * 0.18, y - size * 0.23 + float,
+    x - size * 0.25, y - size * 0.28 + float,
   );
   ctx.fill();
+
+  // Flowing hair strands emerging from hood
+  ctx.strokeStyle = bodyColorLight;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineCap = "round";
+  for (let hair = 0; hair < 4; hair++) {
+    const hairX = x - size * 0.15 + hair * size * 0.1;
+    const hairStartY = y - size * 0.25 + float;
+    const hairLen = size * (0.15 + Math.sin(hair * 1.4) * 0.04);
+    const hairDrift = Math.sin(time * 2 + hair * 1.6) * size * 0.03 + capeFlow * size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(hairX, hairStartY);
+    ctx.bezierCurveTo(
+      hairX + hairDrift * 0.3, hairStartY + hairLen * 0.3,
+      hairX + hairDrift * 0.7, hairStartY + hairLen * 0.6,
+      hairX + hairDrift, hairStartY + hairLen,
+    );
+    ctx.stroke();
+  }
 
   // Ice crown spikes on hood
   ctx.fillStyle = `rgba(147, 197, 253, ${0.7 + orbPulse * 0.3})`;
@@ -1731,31 +2160,47 @@ export function drawIceWitchEnemy(
   );
   ctx.stroke();
 
-  // Face in deep shadow - gaunt and skeletal
+  // Face in deep shadow — gaunt bezier contour
   ctx.fillStyle = "#0a0a0f";
+  const fcx = x;
+  const fcy = y - size * 0.4 + float;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.4 + float,
-    size * 0.14,
-    size * 0.12,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(fcx, fcy - size * 0.12);
+  ctx.bezierCurveTo(
+    fcx + size * 0.1, fcy - size * 0.1,
+    fcx + size * 0.15, fcy - size * 0.03,
+    fcx + size * 0.12, fcy + size * 0.06,
+  );
+  ctx.bezierCurveTo(
+    fcx + size * 0.08, fcy + size * 0.12,
+    fcx - size * 0.08, fcy + size * 0.12,
+    fcx - size * 0.12, fcy + size * 0.06,
+  );
+  ctx.bezierCurveTo(
+    fcx - size * 0.15, fcy - size * 0.03,
+    fcx - size * 0.1, fcy - size * 0.1,
+    fcx, fcy - size * 0.12,
   );
   ctx.fill();
 
-  // Spectral face features
+  // Spectral face features — subtle inner glow
   ctx.fillStyle = `rgba(147, 197, 253, ${0.15 + runeGlow * 0.1})`;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.38 + float,
-    size * 0.08,
-    size * 0.06,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(fcx, fcy - size * 0.05);
+  ctx.bezierCurveTo(
+    fcx + size * 0.05, fcy - size * 0.04,
+    fcx + size * 0.08, fcy + size * 0.01,
+    fcx + size * 0.06, fcy + size * 0.05,
+  );
+  ctx.bezierCurveTo(
+    fcx + size * 0.03, fcy + size * 0.08,
+    fcx - size * 0.03, fcy + size * 0.08,
+    fcx - size * 0.06, fcy + size * 0.05,
+  );
+  ctx.bezierCurveTo(
+    fcx - size * 0.08, fcy + size * 0.01,
+    fcx - size * 0.05, fcy - size * 0.04,
+    fcx, fcy - size * 0.05,
   );
   ctx.fill();
 
@@ -1876,6 +2321,100 @@ export function drawIceWitchEnemy(
     shape: "shard",
   });
 
+  // Swirling snowflake particles around witch
+  ctx.save();
+  for (let sf = 0; sf < 8; sf++) {
+    const sfAngle = time * 1.2 + sf * Math.PI * 0.25;
+    const sfDist = size * (0.35 + Math.sin(time * 1.5 + sf * 2) * 0.1);
+    const sfX = x + Math.cos(sfAngle) * sfDist;
+    const sfY = y + float - size * 0.1 + Math.sin(sfAngle * 1.3) * size * 0.25;
+    const sfAlpha = 0.3 + Math.sin(time * 3 + sf * 1.5) * 0.15;
+    ctx.fillStyle = `rgba(220, 240, 255, ${sfAlpha})`;
+    ctx.beginPath();
+    for (let arm = 0; arm < 6; arm++) {
+      const armAngle = arm * Math.PI / 3 + time * 0.5;
+      ctx.moveTo(sfX, sfY);
+      ctx.lineTo(sfX + Math.cos(armAngle) * size * 0.012, sfY + Math.sin(armAngle) * size * 0.012);
+    }
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 255, 255, ${sfAlpha * 0.8})`;
+    ctx.beginPath();
+    ctx.arc(sfX, sfY, size * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Frozen mist trailing behind cape
+  ctx.save();
+  for (let fm = 0; fm < 5; fm++) {
+    const fmPhase = (time * 0.6 + fm * 0.2) % 1;
+    const fmX = x - size * 0.05 + Math.sin(time * 0.8 + fm * 1.8) * size * 0.15;
+    const fmY = y + float + size * 0.2 + fmPhase * size * 0.15;
+    const fmAlpha = (1 - fmPhase) * orbPulse * 0.12;
+    const fmSize = size * (0.04 + fmPhase * 0.04);
+    const fmGrad = ctx.createRadialGradient(fmX, fmY, 0, fmX, fmY, fmSize);
+    fmGrad.addColorStop(0, `rgba(191, 219, 254, ${fmAlpha})`);
+    fmGrad.addColorStop(1, "rgba(147, 197, 253, 0)");
+    ctx.fillStyle = fmGrad;
+    ctx.beginPath();
+    ctx.arc(fmX, fmY, fmSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Frost corona energy pulse expanding outward
+  ctx.save();
+  for (let corona = 0; corona < 3; corona++) {
+    const coronaPhase = (time * 0.5 + corona * 0.33) % 1;
+    const coronaRadius = size * (0.3 + coronaPhase * 0.35);
+    const coronaAlpha = (1 - coronaPhase) * orbPulse * 0.12;
+    ctx.strokeStyle = `rgba(147, 197, 253, ${coronaAlpha})`;
+    ctx.lineWidth = (1.5 - coronaPhase) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, y + float, coronaRadius, coronaRadius * ISO_Y_RATIO * 0.7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Crystalline light refraction sparks
+  ctx.save();
+  for (let spark = 0; spark < 5; spark++) {
+    const sparkAngle = time * 2.5 + spark * Math.PI * 0.4;
+    const sparkDist = size * (0.25 + Math.sin(time * 3 + spark * 1.8) * 0.1);
+    const sparkX = x + Math.cos(sparkAngle) * sparkDist;
+    const sparkY = y + float - size * 0.15 + Math.sin(sparkAngle * 0.7) * size * 0.2;
+    const sparkAlpha = 0.4 + Math.sin(time * 6 + spark * 2.3) * 0.3;
+    const sparkLen = size * 0.025;
+    ctx.strokeStyle = `rgba(220, 240, 255, ${sparkAlpha * orbPulse})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sparkX - sparkLen, sparkY);
+    ctx.lineTo(sparkX + sparkLen, sparkY);
+    ctx.moveTo(sparkX, sparkY - sparkLen);
+    ctx.lineTo(sparkX, sparkY + sparkLen);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Arcane frost rune circle beneath
+  ctx.save();
+  const runeAlpha = 0.1 + runeGlow * 0.15;
+  ctx.strokeStyle = `rgba(147, 197, 253, ${runeAlpha})`;
+  ctx.lineWidth = 1.5 * zoom;
+  const runeRadius = size * 0.4;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.42 + float, runeRadius, runeRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let rs = 0; rs < 8; rs++) {
+    const rsAngle = rs * Math.PI * 0.25 + time * 0.3;
+    const rsR1 = runeRadius * 0.85;
+    const rsR2 = runeRadius * 1.05;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(rsAngle) * rsR1, y + size * 0.42 + float + Math.sin(rsAngle) * rsR1 * ISO_Y_RATIO);
+    ctx.lineTo(x + Math.cos(rsAngle) * rsR2, y + size * 0.42 + float + Math.sin(rsAngle) * rsR2 * ISO_Y_RATIO);
+    ctx.stroke();
+  }
+  ctx.restore();
 
   // Spell casting effect when attacking
   if (isAttacking) {

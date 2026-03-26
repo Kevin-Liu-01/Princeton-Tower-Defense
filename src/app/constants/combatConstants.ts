@@ -7,6 +7,7 @@ export const HERO_HEAL_RATE = 0.03;
 export const TROOP_HEAL_DELAY_MS = 3000;
 export const TROOP_HEAL_RATE = 0.02;
 export const ENEMY_REGEN_RATE = 0.015;
+export const ENEMY_REGEN_DELAY_MS = 3000;
 
 // --- Combat Radii ---
 export const HERO_COMBAT_RADIUS = 100;

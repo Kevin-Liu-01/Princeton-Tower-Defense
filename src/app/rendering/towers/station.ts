@@ -15,6 +15,7 @@ import {
   drawIsoFlushSlit,
   drawIsoFlushRect,
   drawMerlon,
+  drawIsoSandbag,
 } from "./towerHelpers";
 import { renderDinkyTrains } from "./dinkyTrains";
 
@@ -485,20 +486,20 @@ export function renderStationTower(
     ctx.lineWidth = 1 * zoom;
     ctx.stroke();
 
-    // Sandbags for defense training
-    ctx.fillStyle = "#9b8b7b";
-    for (let sb = 0; sb < 3; sb++) {
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + isoW * 0.2 + sb * 4 * zoom,
-        screenPos.y + 10 * zoom - sb * 2 * zoom,
-        4 * zoom,
-        2 * zoom,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+    // Sandbags for defense training — stacked iso pile
+    {
+      const sbOX = screenPos.x + isoW * 0.2;
+      const sbOY = screenPos.y + 12 * zoom;
+      const bW = 8;
+      const bD = 5;
+      const bH = 3;
+      // Bottom row (3 bags side by side along left-face axis)
+      drawIsoSandbag(ctx, sbOX, sbOY, bW, bD, bH, zoom, 0.0);
+      drawIsoSandbag(ctx, sbOX - 4.5 * zoom, sbOY - 2.25 * zoom, bW, bD, bH, zoom, 0.6);
+      drawIsoSandbag(ctx, sbOX - 9 * zoom, sbOY - 4.5 * zoom, bW, bD, bH, zoom, 0.3);
+      // Top row (2 bags offset, stacked)
+      drawIsoSandbag(ctx, sbOX - 2 * zoom, sbOY - 1 * zoom - bH * zoom, bW, bD, bH, zoom, 0.8);
+      drawIsoSandbag(ctx, sbOX - 6.5 * zoom, sbOY - 3.25 * zoom - bH * zoom, bW, bD, bH, zoom, 0.4);
     }
 
     // Campfire with animated flames
@@ -797,15 +798,29 @@ export function renderStationTower(
 
     // === LEVEL 2 ENHANCEMENTS: Military Outpost Details ===
 
-    // Defensive sandbag wall
-    ctx.fillStyle = "#8a7a6a";
-    for (let row = 0; row < 2; row++) {
-      for (let sb = 0; sb < 4; sb++) {
-        const sbX = screenPos.x + isoW * 0.4 + sb * 5 * zoom - row * 2 * zoom;
-        const sbY = screenPos.y + 12 * zoom - row * 3 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(sbX, sbY, 4 * zoom, 2 * zoom, 0.3, 0, Math.PI * 2);
-        ctx.fill();
+    // Defensive sandbag wall — iso-aligned double-height barricade
+    {
+      const wallOX = screenPos.x + isoW * 0.35;
+      const wallOY = screenPos.y + 14 * zoom;
+      const bW = 8;
+      const bD = 5;
+      const bH = 3.2;
+      const stepX = 4.5 * zoom;
+      const stepY = 2.25 * zoom;
+      // Bottom row (4 bags running along right-face direction)
+      for (let i = 0; i < 4; i++) {
+        const shade = (i % 2 === 0) ? 0.2 : 0.7;
+        drawIsoSandbag(ctx, wallOX + i * stepX, wallOY - i * stepY, bW, bD, bH, zoom, shade);
+      }
+      // Top row (3 bags stacked on bottom, offset to interlock)
+      for (let i = 0; i < 3; i++) {
+        const shade = (i % 2 === 0) ? 0.5 : 1.0;
+        drawIsoSandbag(
+          ctx,
+          wallOX + (i + 0.5) * stepX,
+          wallOY - (i + 0.5) * stepY - bH * zoom,
+          bW, bD, bH, zoom, shade,
+        );
       }
     }
 

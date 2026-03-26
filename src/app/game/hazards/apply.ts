@@ -46,6 +46,7 @@ export function applyHazardEffect(
       ? effect.environmentalSlowSource
       : enemy.slowSource;
 
+  const tookDamage = newHp < enemy.hp;
   return {
     ...enemy,
     hp: newHp,
@@ -54,6 +55,7 @@ export function applyHazardEffect(
     slowSource,
     speed: baseSpeed * effect.environmentalSpeed,
     dead: newHp <= 0,
+    lastDamageTaken: tookDamage ? Date.now() : enemy.lastDamageTaken,
   };
 }
 

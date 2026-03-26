@@ -1516,3 +1516,134 @@ export function drawArmorSkirt(
     ctx.fill();
   }
 }
+
+// ============================================================================
+// SHARED HELM HELPERS
+// ============================================================================
+
+export function drawHelmetPlume(
+  ctx: CanvasRenderingContext2D,
+  px: number, py: number, size: number, time: number, zoom: number,
+  color: string, colorDark: string,
+) {
+  const flutter = Math.sin(time * 4) * size * 0.02;
+  const plumeGrad = ctx.createLinearGradient(px, py, px + flutter, py - size * 0.2);
+  plumeGrad.addColorStop(0, colorDark);
+  plumeGrad.addColorStop(0.4, color);
+  plumeGrad.addColorStop(1, colorDark);
+  ctx.fillStyle = plumeGrad;
+  ctx.beginPath();
+  ctx.moveTo(px - size * 0.02, py);
+  ctx.bezierCurveTo(
+    px - size * 0.04 + flutter * 0.3, py - size * 0.08,
+    px - size * 0.035 + flutter * 0.6, py - size * 0.14,
+    px + flutter, py - size * 0.2,
+  );
+  ctx.bezierCurveTo(
+    px + size * 0.035 + flutter * 0.6, py - size * 0.14,
+    px + size * 0.04 + flutter * 0.3, py - size * 0.08,
+    px + size * 0.02, py,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = colorDark;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+}
+
+export function drawArmoredHelm(
+  ctx: CanvasRenderingContext2D,
+  hx: number, hy: number, size: number, zoom: number,
+  metalLight: string, metalMid: string, metalDark: string,
+  accentColor: string,
+) {
+  const hR = size * 0.19;
+
+  const helmGrad = ctx.createRadialGradient(hx - size * 0.04, hy - size * 0.05, 0, hx, hy, hR);
+  helmGrad.addColorStop(0, metalLight);
+  helmGrad.addColorStop(0.5, metalMid);
+  helmGrad.addColorStop(1, metalDark);
+  ctx.fillStyle = helmGrad;
+  ctx.beginPath();
+  ctx.moveTo(hx, hy - hR * 1.05);
+  ctx.bezierCurveTo(hx + hR * 0.85, hy - hR * 1.0, hx + hR * 1.1, hy - hR * 0.2, hx + hR * 0.98, hy + hR * 0.25);
+  ctx.bezierCurveTo(hx + hR * 0.85, hy + hR * 0.65, hx + hR * 0.45, hy + hR * 0.95, hx, hy + hR * 0.85);
+  ctx.bezierCurveTo(hx - hR * 0.45, hy + hR * 0.95, hx - hR * 0.85, hy + hR * 0.65, hx - hR * 0.98, hy + hR * 0.25);
+  ctx.bezierCurveTo(hx - hR * 1.1, hy - hR * 0.2, hx - hR * 0.85, hy - hR * 1.0, hx, hy - hR * 1.05);
+  ctx.fill();
+
+  const ridgeGrad = ctx.createLinearGradient(hx - size * 0.01, 0, hx + size * 0.01, 0);
+  ridgeGrad.addColorStop(0, metalDark);
+  ridgeGrad.addColorStop(0.5, metalLight);
+  ridgeGrad.addColorStop(1, metalDark);
+  ctx.fillStyle = ridgeGrad;
+  ctx.beginPath();
+  ctx.moveTo(hx - size * 0.012, hy - hR * 1.0);
+  ctx.lineTo(hx + size * 0.012, hy - hR * 1.0);
+  ctx.lineTo(hx + size * 0.01, hy + hR * 0.3);
+  ctx.lineTo(hx - size * 0.01, hy + hR * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = metalDark;
+  ctx.beginPath();
+  ctx.moveTo(hx - hR * 0.9, hy - size * 0.01);
+  ctx.quadraticCurveTo(hx, hy - size * 0.035, hx + hR * 0.9, hy - size * 0.01);
+  ctx.quadraticCurveTo(hx, hy + size * 0.005, hx - hR * 0.9, hy - size * 0.01);
+  ctx.fill();
+
+  ctx.fillStyle = "#0a0a12";
+  ctx.beginPath();
+  ctx.moveTo(hx - hR * 0.55, hy + size * 0.01);
+  ctx.quadraticCurveTo(hx, hy - size * 0.005, hx + hR * 0.55, hy + size * 0.01);
+  ctx.quadraticCurveTo(hx, hy + size * 0.025, hx - hR * 0.55, hy + size * 0.01);
+  ctx.fill();
+
+  for (const eSide of [-1, 1]) {
+    const eyeGlow = ctx.createRadialGradient(
+      hx + eSide * size * 0.06, hy + size * 0.01, 0,
+      hx + eSide * size * 0.06, hy + size * 0.01, size * 0.025,
+    );
+    eyeGlow.addColorStop(0, accentColor);
+    eyeGlow.addColorStop(0.5, accentColor);
+    eyeGlow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = eyeGlow;
+    ctx.beginPath();
+    ctx.arc(hx + eSide * size * 0.06, hy + size * 0.01, size * 0.025, 0, TAU);
+    ctx.fill();
+  }
+
+  for (const side of [-1, 1]) {
+    ctx.fillStyle = metalMid;
+    ctx.beginPath();
+    ctx.moveTo(hx + side * hR * 0.75, hy + size * 0.02);
+    ctx.quadraticCurveTo(
+      hx + side * hR * 0.95, hy + size * 0.06,
+      hx + side * hR * 0.7, hy + hR * 0.85,
+    );
+    ctx.quadraticCurveTo(
+      hx + side * hR * 0.5, hy + hR * 0.6,
+      hx + side * hR * 0.35, hy + size * 0.03,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = metalDark;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.arc(hx, hy - size * 0.02, hR * 0.85, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.stroke();
+
+  ctx.fillStyle = metalLight;
+  for (let rv = 0; rv < 5; rv++) {
+    const rvAngle = Math.PI * 1.15 + rv * (Math.PI * 0.7 / 4);
+    const rvR = hR * 0.88;
+    ctx.beginPath();
+    ctx.arc(hx + Math.cos(rvAngle) * rvR, hy - size * 0.015 + Math.sin(rvAngle) * rvR, size * 0.008, 0, TAU);
+    ctx.fill();
+  }
+}

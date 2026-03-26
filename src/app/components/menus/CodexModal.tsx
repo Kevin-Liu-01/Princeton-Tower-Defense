@@ -556,24 +556,24 @@ const StatBar: React.FC<{
   const pct = Math.min(100, Math.max(3, (value / max) * 100));
   const cc = getColorClasses(color);
   return (
-    <div className="flex items-center gap-2">
-      <div className={`flex items-center gap-1 w-[60px] shrink-0 ${cc.text}`}>
+    <div className="flex items-center gap-2.5">
+      <div className={`flex items-center gap-1.5 w-[68px] shrink-0 ${cc.text}`}>
         {icon}
-        <span className="text-[10px] uppercase tracking-wide font-medium">{label}</span>
+        <span className="text-xs uppercase tracking-wide font-semibold">{label}</span>
       </div>
-      <div className="flex-1 h-[6px] rounded-full bg-stone-800/60 overflow-hidden">
+      <div className="flex-1 h-2 rounded-full bg-stone-800/60 overflow-hidden">
         <div className={`h-full rounded-full ${cc.barBg}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className={`w-10 text-right font-bold text-xs ${cc.statText}`}>{displayValue}</span>
+      <span className={`w-12 text-right font-bold text-sm ${cc.statText}`}>{displayValue}</span>
     </div>
   );
 };
 
 const DPSBadge: React.FC<{ dps: number; size?: "sm" | "md" }> = ({ dps, size = "md" }) => (
-  <div className={`flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-950/60 to-orange-950/40 border border-red-800/40 ${size === "sm" ? "px-1.5 py-0.5" : "px-2.5 py-1"}`}>
-    <Flame size={size === "sm" ? 10 : 12} className="text-orange-400" />
-    <span className={`text-stone-400 uppercase ${size === "sm" ? "text-[8px]" : "text-[10px]"}`}>DPS</span>
-    <span className={`font-bold text-orange-300 ${size === "sm" ? "text-[10px]" : "text-sm"}`}>{dps.toFixed(1)}</span>
+  <div className={`flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-red-950/60 to-orange-950/40 border border-red-800/40 ${size === "sm" ? "px-2 py-1" : "px-3 py-1.5"}`}>
+    <Flame size={size === "sm" ? 12 : 14} className="text-orange-400" />
+    <span className={`text-stone-400 uppercase font-medium ${size === "sm" ? "text-[10px]" : "text-xs"}`}>DPS</span>
+    <span className={`font-bold text-orange-300 ${size === "sm" ? "text-xs" : "text-base"}`}>{dps.toFixed(1)}</span>
   </div>
 );
 
@@ -582,13 +582,13 @@ const HPBar: React.FC<{ hp: number; maxHp: number; isBoss?: boolean }> = ({ hp, 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1">
-          <Heart size={10} className={isBoss ? "text-purple-400" : "text-red-400"} />
-          <span className={`text-[10px] font-medium ${isBoss ? "text-purple-400" : "text-red-400"}`}>HP</span>
+        <div className="flex items-center gap-1.5">
+          <Heart size={12} className={isBoss ? "text-purple-400" : "text-red-400"} />
+          <span className={`text-xs font-semibold ${isBoss ? "text-purple-400" : "text-red-400"}`}>HP</span>
         </div>
-        <span className={`text-xs font-bold ${isBoss ? "text-purple-300" : "text-red-300"}`}>{hp.toLocaleString()}</span>
+        <span className={`text-sm font-bold ${isBoss ? "text-purple-300" : "text-red-300"}`}>{hp.toLocaleString()}</span>
       </div>
-      <div className="h-[5px] rounded-full bg-stone-800/60 overflow-hidden">
+      <div className="h-2 rounded-full bg-stone-800/60 overflow-hidden">
         <div
           className={`h-full rounded-full ${isBoss ? "bg-gradient-to-r from-purple-500/80 to-rose-500/80" : "bg-gradient-to-r from-red-600/70 to-red-400/70"}`}
           style={{ width: `${pct}%` }}
@@ -1295,22 +1295,22 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         Towers decide your lane DPS curve. Open for coverage, then spike with path upgrades.
                         Treat level-4 branching like a build commit, not a cosmetic choice.
                       </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-amber-400 uppercase tracking-wider">Tower Types</div>
-                          <div className="text-lg font-bold text-amber-200">{towerTypes.length}</div>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-sm">
+                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-3 py-2.5">
+                          <div className="text-xs text-amber-400 uppercase tracking-wider font-medium">Tower Types</div>
+                          <div className="text-xl font-bold text-amber-200">{towerTypes.length}</div>
                         </div>
-                        <div className="rounded-lg border border-sky-800/35 bg-sky-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-sky-400 uppercase tracking-wider">Damage Towers</div>
-                          <div className="text-lg font-bold text-sky-200">{damageTowerCount}</div>
+                        <div className="rounded-lg border border-sky-800/35 bg-sky-950/30 px-3 py-2.5">
+                          <div className="text-xs text-sky-400 uppercase tracking-wider font-medium">Damage Towers</div>
+                          <div className="text-xl font-bold text-sky-200">{damageTowerCount}</div>
                         </div>
-                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Support / Control</div>
-                          <div className="text-lg font-bold text-purple-200">{supportTowerCount}</div>
+                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-3 py-2.5">
+                          <div className="text-xs text-purple-400 uppercase tracking-wider font-medium">Support / Control</div>
+                          <div className="text-xl font-bold text-purple-200">{supportTowerCount}</div>
                         </div>
-                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Max L4 Cost</div>
-                          <div className="text-sm font-bold text-rose-200 leading-tight">
+                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-3 py-2.5">
+                          <div className="text-xs text-rose-400 uppercase tracking-wider font-medium">Max L4 Cost</div>
+                          <div className="text-base font-bold text-rose-200 leading-tight">
                             {priciestLevel4Upgrade
                               ? `${TOWER_DATA[priciestLevel4Upgrade.type].name} ${priciestLevel4Upgrade.cost} PP`
                               : "N/A"}
@@ -1320,7 +1320,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
 
                     <div className="xl:w-[280px] rounded-xl border border-amber-700/35 bg-stone-950/45 p-3">
-                      <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-2">Lane Build Diagram</div>
+                      <div className="text-xs text-amber-400 uppercase tracking-wider font-medium mb-2">Lane Build Diagram</div>
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         {featuredTowerTypes.slice(0, 4).map((type, index) => (
                           <React.Fragment key={`tower-diagram-${type}`}>
@@ -1368,15 +1368,15 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
                           const cardRows: { value: number; max: number; color: string; label: string; displayValue: string; icon: React.ReactNode }[] = [];
                           if (stats.damage > 0)
-                            cardRows.push({ value: stats.damage, max: towerMaxDmg, color: "red", label: "DMG", displayValue: `${Math.floor(stats.damage)}`, icon: <Swords size={10} /> });
+                            cardRows.push({ value: stats.damage, max: towerMaxDmg, color: "red", label: "DMG", displayValue: `${Math.floor(stats.damage)}`, icon: <Swords size={12} /> });
                           if (stats.range > 0 && type !== "club")
-                            cardRows.push({ value: stats.range, max: towerMaxRange, color: "blue", label: "RNG", displayValue: `${Math.floor(stats.range)}`, icon: <Target size={10} /> });
+                            cardRows.push({ value: stats.range, max: towerMaxRange, color: "blue", label: "RNG", displayValue: `${Math.floor(stats.range)}`, icon: <Target size={12} /> });
                           if (stats.slowAmount != null && stats.slowAmount > 0)
-                            cardRows.push({ value: stats.slowAmount * 100, max: towerMaxSlow, color: "cyan", label: "SLOW", displayValue: `${Math.round(stats.slowAmount * 100)}%`, icon: <Snowflake size={10} /> });
+                            cardRows.push({ value: stats.slowAmount * 100, max: towerMaxSlow, color: "cyan", label: "SLOW", displayValue: `${Math.round(stats.slowAmount * 100)}%`, icon: <Snowflake size={12} /> });
                           if (stats.income != null && stats.income > 0)
-                            cardRows.push({ value: stats.income, max: towerMaxIncome, color: "amber", label: "EARN", displayValue: `+${stats.income} PP`, icon: <Banknote size={10} /> });
+                            cardRows.push({ value: stats.income, max: towerMaxIncome, color: "amber", label: "EARN", displayValue: `+${stats.income} PP`, icon: <Banknote size={12} /> });
                           if (type === "station")
-                            cardRows.push({ value: TROOP_DATA.footsoldier.hp, max: troopMaxHp, color: "purple", label: "TROOP", displayValue: `${TROOP_DATA.footsoldier.hp} HP`, icon: <Users size={10} /> });
+                            cardRows.push({ value: TROOP_DATA.footsoldier.hp, max: troopMaxHp, color: "purple", label: "TROOP", displayValue: `${TROOP_DATA.footsoldier.hp} HP`, icon: <Users size={12} /> });
 
                           return (
                             <>
@@ -1411,12 +1411,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                         className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
                                       />
                                     </div>
-                                    <p className="text-[11px] text-stone-400 line-clamp-2 mt-0.5 leading-relaxed">
+                                    <p className="text-xs text-stone-400 line-clamp-2 mt-0.5 leading-relaxed">
                                       {tower.desc}
                                     </p>
-                                    <div className="flex flex-wrap gap-0.5 mt-1.5">
+                                    <div className="flex flex-wrap gap-1 mt-1.5">
                                       {TOWER_TAGS[type].map((tag) => (
-                                        <TagBadge key={tag} tag={tag} size={9} />
+                                        <TagBadge key={tag} tag={tag} size={10} />
                                       ))}
                                     </div>
                                   </div>
@@ -1455,12 +1455,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
                                 <div className="grid grid-cols-2 gap-2 mt-auto">
                                   <div className="px-2.5 py-2 bg-red-950/30 rounded-lg border border-red-900/30 group-hover:border-red-700/50 transition-colors">
-                                    <div className="text-[8px] text-red-500/70 uppercase mb-0.5 tracking-wider font-medium">Path A</div>
-                                    <div className="text-[11px] text-red-300 font-semibold truncate">{tower.upgrades.A.name}</div>
+                                    <div className="text-[10px] text-red-500/70 uppercase mb-0.5 tracking-wider font-medium">Path A</div>
+                                    <div className="text-xs text-red-300 font-semibold truncate">{tower.upgrades.A.name}</div>
                                   </div>
                                   <div className="px-2.5 py-2 bg-blue-950/30 rounded-lg border border-blue-900/30 group-hover:border-blue-700/50 transition-colors">
-                                    <div className="text-[8px] text-blue-500/70 uppercase mb-0.5 tracking-wider font-medium">Path B</div>
-                                    <div className="text-[11px] text-blue-300 font-semibold truncate">{tower.upgrades.B.name}</div>
+                                    <div className="text-[10px] text-blue-500/70 uppercase mb-0.5 tracking-wider font-medium">Path B</div>
+                                    <div className="text-xs text-blue-300 font-semibold truncate">{tower.upgrades.B.name}</div>
                                   </div>
                                 </div>
                               </div>
@@ -1493,7 +1493,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="dmg" className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
                         <Swords size={14} className="mx-auto text-red-400 mb-1" />
-                        <div className="text-[9px] text-red-500">Damage</div>
+                        <div className="text-[11px] text-red-500">Damage</div>
                         <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
                       </div>
                     );
@@ -1503,7 +1503,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="rng" className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
                         <Target size={14} className="mx-auto text-blue-400 mb-1" />
-                        <div className="text-[9px] text-blue-500">Range</div>
+                        <div className="text-[11px] text-blue-500">Range</div>
                         <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
                       </div>
                     );
@@ -1513,7 +1513,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="spd" className="bg-green-950/50 rounded-lg p-2 text-center border border-green-800/40">
                         <Gauge size={14} className="mx-auto text-green-400 mb-1" />
-                        <div className="text-[9px] text-green-500">Speed</div>
+                        <div className="text-[11px] text-green-500">Speed</div>
                         <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
                       </div>
                     );
@@ -1529,7 +1529,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                         {isLabChain
                           ? <Zap size={14} className="mx-auto text-cyan-400 mb-1" />
                           : <Users size={14} className="mx-auto text-yellow-400 mb-1" />}
-                        <div className={isLabChain ? "text-[9px] text-cyan-500" : "text-[9px] text-yellow-500"}>
+                        <div className={isLabChain ? "text-[11px] text-cyan-500" : "text-[11px] text-yellow-500"}>
                           {isLabChain ? "Chains" : "Targets"}
                         </div>
                         <div className={isLabChain ? "text-cyan-300 font-bold" : "text-yellow-300 font-bold"}>
@@ -1543,7 +1543,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="crescendo" className="bg-emerald-950/50 rounded-lg p-2 text-center border border-emerald-800/40">
                         <Music size={14} className="mx-auto text-emerald-400 mb-1" />
-                        <div className="text-[9px] text-emerald-500">Crescendo</div>
+                        <div className="text-[11px] text-emerald-500">Crescendo</div>
                         <div className="text-emerald-300 font-bold">{stats.crescendoMaxStacks}</div>
                       </div>
                     );
@@ -1553,7 +1553,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="splash" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
                         <Radio size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">Splash</div>
+                        <div className="text-[11px] text-orange-500">Splash</div>
                         <div className="text-orange-300 font-bold">{stats.splashRadius}</div>
                       </div>
                     );
@@ -1563,7 +1563,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="slow" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
                         <Snowflake size={14} className="mx-auto text-cyan-400 mb-1" />
-                        <div className="text-[9px] text-cyan-500">Slow</div>
+                        <div className="text-[11px] text-cyan-500">Slow</div>
                         <div className="text-cyan-300 font-bold">{Math.round(stats.slowAmount * 100)}%</div>
                       </div>
                     );
@@ -1573,7 +1573,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="stun" className="bg-indigo-950/50 rounded-lg p-2 text-center border border-indigo-800/40">
                         <CircleOff size={14} className="mx-auto text-indigo-400 mb-1" />
-                        <div className="text-[9px] text-indigo-500">Freeze</div>
+                        <div className="text-[11px] text-indigo-500">Freeze</div>
                         <div className="text-indigo-300 font-bold">{Math.round(stats.stunChance * 100)}%</div>
                       </div>
                     );
@@ -1583,7 +1583,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="burn" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
                         <Flame size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">Burn</div>
+                        <div className="text-[11px] text-orange-500">Burn</div>
                         <div className="text-orange-300 font-bold">{stats.burnDamage}/s</div>
                       </div>
                     );
@@ -1594,7 +1594,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="income" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
                         <Banknote size={14} className="mx-auto text-amber-400 mb-1" />
-                        <div className="text-[9px] text-amber-500">Income</div>
+                        <div className="text-[11px] text-amber-500">Income</div>
                         <div className="text-amber-300 font-bold">+{stats.income} PP</div>
                       </div>
                     );
@@ -1604,7 +1604,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="interval" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
                         <Timer size={14} className="mx-auto text-amber-400 mb-1" />
-                        <div className="text-[9px] text-amber-500">Interval</div>
+                        <div className="text-[11px] text-amber-500">Interval</div>
                         <div className="text-amber-300 font-bold">{stats.incomeInterval / 1000}s</div>
                       </div>
                     );
@@ -1615,7 +1615,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="rangeAura" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
                         <TrendingUp size={14} className="mx-auto text-cyan-400 mb-1" />
-                        <div className="text-[9px] text-cyan-500">Range Aura</div>
+                        <div className="text-[11px] text-cyan-500">Range Aura</div>
                         <div className="text-cyan-300 font-bold">+{Math.round(upgradeStats.rangeBuff * 100)}%</div>
                       </div>
                     );
@@ -1625,7 +1625,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     features.push(
                       <div key="dmgAura" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
                         <TrendingUp size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">DMG Aura</div>
+                        <div className="text-[11px] text-orange-500">DMG Aura</div>
                         <div className="text-orange-300 font-bold">+{Math.round(upgradeStats.damageBuff * 100)}%</div>
                       </div>
                     );
@@ -1687,26 +1687,26 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     ))}
                                   </div>
                                   <div className="flex flex-wrap gap-3">
-                                    <div className="px-4 py-2.5 bg-amber-950/50 rounded-lg border border-amber-800/40">
-                                      <div className="text-[10px] text-amber-500 uppercase tracking-wider">Base Cost</div>
-                                      <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
+                                    <div className="px-5 py-3 bg-amber-950/50 rounded-lg border border-amber-800/40">
+                                      <div className="text-xs text-amber-500 uppercase tracking-wider font-medium">Base Cost</div>
+                                      <div className="text-amber-300 font-bold text-xl">{tower.cost} PP</div>
                                     </div>
                                     {baseStats.damage > 0 && (
-                                      <div className="px-4 py-2.5 bg-red-950/50 rounded-lg border border-red-800/40">
-                                        <div className="text-[10px] text-red-500 uppercase tracking-wider">Base Damage</div>
-                                        <div className="text-red-300 font-bold text-lg">{Math.floor(baseStats.damage)}</div>
+                                      <div className="px-5 py-3 bg-red-950/50 rounded-lg border border-red-800/40">
+                                        <div className="text-xs text-red-500 uppercase tracking-wider font-medium">Base Damage</div>
+                                        <div className="text-red-300 font-bold text-xl">{Math.floor(baseStats.damage)}</div>
                                       </div>
                                     )}
                                     {baseStats.range > 0 && selectedTower !== "club" && (
-                                      <div className="px-4 py-2.5 bg-blue-950/50 rounded-lg border border-blue-800/40">
-                                        <div className="text-[10px] text-blue-500 uppercase tracking-wider">Base Range</div>
-                                        <div className="text-blue-300 font-bold text-lg">{Math.floor(baseStats.range)}</div>
+                                      <div className="px-5 py-3 bg-blue-950/50 rounded-lg border border-blue-800/40">
+                                        <div className="text-xs text-blue-500 uppercase tracking-wider font-medium">Base Range</div>
+                                        <div className="text-blue-300 font-bold text-xl">{Math.floor(baseStats.range)}</div>
                                       </div>
                                     )}
                                     {baseDps > 0 && (
-                                      <div className="px-4 py-2.5 bg-gradient-to-r from-red-950/50 to-orange-950/40 rounded-lg border border-red-800/40">
-                                        <div className="text-[10px] text-orange-500 uppercase tracking-wider">Base DPS</div>
-                                        <div className="text-orange-300 font-bold text-lg">{baseDps.toFixed(1)}</div>
+                                      <div className="px-5 py-3 bg-gradient-to-r from-red-950/50 to-orange-950/40 rounded-lg border border-red-800/40">
+                                        <div className="text-xs text-orange-500 uppercase tracking-wider font-medium">Base DPS</div>
+                                        <div className="text-orange-300 font-bold text-xl">{baseDps.toFixed(1)}</div>
                                       </div>
                                     )}
                                   </div>
@@ -1718,190 +1718,220 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                       </div>
 
                       {/* Level Progression */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                          <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
-                            <ArrowUp size={18} className="text-amber-400" />
-                            Level Progression
-                          </h4>
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {[1, 2, 3, 4].map((level) => {
-                            const stats = getDynamicStats(selectedTower, level);
-                            const cost = getUpgradeCost(selectedTower, level);
-                            const isStation = selectedTower === "station";
-                            const troop = isStation ? getTroopForLevel(level) : null;
+                      {(() => {
+                        const isStation = selectedTower === "station";
+                        const cost4 = getUpgradeCost(selectedTower, 4);
 
-                            return (
-                              <div
-                                key={level}
-                                className={`rounded-xl border overflow-hidden ${level === 4
-                                  ? "bg-gradient-to-br from-purple-950/60 to-stone-950 border-purple-700/50"
-                                  : "bg-stone-900/80 border-stone-700/40"
-                                  }`}
-                              >
-                                <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
-                                      <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={36} level={level} />
-                                    </div>
-                                    <div>
-                                      <div className="flex items-center gap-1">
-                                        <div className="flex">
-                                          {[...Array(level)].map((_, i) => (
-                                            <Star key={i} size={10} className="text-yellow-400 fill-yellow-400" />
-                                          ))}
-                                        </div>
-                                        <span className={`font-bold text-sm ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
-                                          Lvl {level}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <span className="text-amber-400 text-xs flex items-center gap-1">
-                                    <Coins size={10} /> {cost} PP
-                                  </span>
+                        const renderLevelStats = (level: number) => {
+                          const stats = getDynamicStats(selectedTower, level);
+                          const troop = isStation ? getTroopForLevel(level) : null;
+
+                          return (
+                            <>
+                              {isStation && troop && (
+                                <div className="space-y-2">
+                                  <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={12} />} />
+                                  <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={12} />} />
+                                  <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={12} />} />
                                 </div>
-                                <div className="p-3">
-                                  {level === 4 ? (
-                                    <div className="space-y-2">
-                                      {(["A", "B"] as const).map((path) => {
-                                        const pathStats = getDynamicStats(selectedTower, 4, path);
-                                        const pathTroop = isStation ? getTroopForLevel(4, path) : null;
-                                        const pathDps = calculateDPS(pathStats.damage, pathStats.attackSpeed);
+                              )}
 
-                                        return (
-                                          <div
-                                            key={path}
-                                            className={`rounded-lg border overflow-hidden ${path === "A"
-                                              ? "bg-red-950/30 border-red-800/40"
-                                              : "bg-blue-950/30 border-blue-800/40"
-                                              }`}
-                                          >
-                                            <div className={`px-2 py-1.5 flex items-center justify-between ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"}`}>
-                                              <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
-                                                  <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={30} level={4} upgrade={path as "A" | "B"} />
-                                                </div>
-                                                <span className="text-[10px] font-bold">{tower.upgrades[path].name}</span>
-                                              </div>
-                                              {pathDps > 0 && <DPSBadge dps={pathDps} size="sm" />}
-                                            </div>
+                              {!isStation && selectedTower !== "club" && (
+                                <div className="space-y-2">
+                                  {stats.damage > 0 && (
+                                    <StatBar value={stats.damage} max={towerGlobalMaxDmg} color="red" label="DMG" displayValue={`${Math.floor(stats.damage)}`} icon={<Swords size={12} />} />
+                                  )}
+                                  {stats.range > 0 && (
+                                    <StatBar value={stats.range} max={towerGlobalMaxRange} color="blue" label="RNG" displayValue={`${Math.floor(stats.range)}`} icon={<Target size={12} />} />
+                                  )}
+                                  {stats.attackSpeed > 0 && (
+                                    <StatBar value={1000 / stats.attackSpeed} max={towerGlobalMaxAtkRate} color="green" label="SPD" displayValue={`${(stats.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={12} />} />
+                                  )}
+                                  {(() => {
+                                    const levelDps = calculateDPS(stats.damage, stats.attackSpeed);
+                                    return levelDps > 0 ? (
+                                      <div className="mt-2"><DPSBadge dps={levelDps} size="sm" /></div>
+                                    ) : null;
+                                  })()}
+                                </div>
+                              )}
 
-                                            <div className="p-1.5 space-y-1">
-                                              {isStation && pathTroop && (
-                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                  <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                    <div className="text-red-500 text-[7px]">HP</div>
-                                                    <div className="text-red-300 font-bold">{pathTroop.hp}</div>
-                                                  </div>
-                                                  <div className="bg-orange-950/50 rounded p-1 text-center border border-orange-900/30">
-                                                    <div className="text-orange-500 text-[7px]">DMG</div>
-                                                    <div className="text-orange-300 font-bold">{pathTroop.damage}</div>
-                                                  </div>
-                                                  <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
-                                                    <div className="text-green-500 text-[7px]">SPD</div>
-                                                    <div className="text-green-300 font-bold">{(pathTroop.attackSpeed / 1000).toFixed(1)}s</div>
-                                                  </div>
-                                                </div>
-                                              )}
+                              {selectedTower === "club" && (
+                                <div className="space-y-2">
+                                  <StatBar value={stats.income || 0} max={towerGlobalMaxIncome} color="amber" label="PP" displayValue={`+${stats.income}`} icon={<Banknote size={12} />} />
+                                  <StatBar value={1000 / (stats.incomeInterval || 8000)} max={towerGlobalMaxIncomeRate} color="amber" label="INT" displayValue={`${(stats.incomeInterval || 8000) / 1000}s`} icon={<Timer size={12} />} />
+                                </div>
+                              )}
 
-                                              {!isStation && selectedTower !== "club" && (
-                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                  {pathStats.damage > 0 && (
-                                                    <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                      <div className="text-red-500 text-[7px]">DMG</div>
-                                                      <div className="text-red-300 font-bold">{Math.floor(pathStats.damage)}</div>
-                                                    </div>
-                                                  )}
-                                                  {pathStats.range > 0 && (
-                                                    <div className="bg-blue-950/50 rounded p-1 text-center border border-blue-900/30">
-                                                      <div className="text-blue-500 text-[7px]">RNG</div>
-                                                      <div className="text-blue-300 font-bold">{Math.floor(pathStats.range)}</div>
-                                                    </div>
-                                                  )}
-                                                  {pathStats.attackSpeed > 0 && (
-                                                    <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
-                                                      <div className="text-green-500 text-[7px]">SPD</div>
-                                                      <div className="text-green-300 font-bold">{(pathStats.attackSpeed / 1000).toFixed(1)}s</div>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              )}
+                              {selectedTower === "library" && (
+                                <div className="mt-2">
+                                  <StatBar value={(stats.slowAmount || 0) * 100} max={towerGlobalMaxSlow} color="cyan" label="SLOW" displayValue={`${Math.round((stats.slowAmount || 0) * 100)}%`} icon={<Snowflake size={12} />} />
+                                </div>
+                              )}
+                            </>
+                          );
+                        };
 
-                                              {selectedTower === "club" && (
-                                                <div className="grid grid-cols-2 gap-1 text-[9px]">
-                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                    <div className="text-amber-500 text-[7px]">Income</div>
-                                                    <div className="text-amber-300 font-bold">+{pathStats.income} PP</div>
-                                                  </div>
-                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                    <div className="text-amber-500 text-[7px]">Interval</div>
-                                                    <div className="text-amber-300 font-bold">{(pathStats.incomeInterval || 8000) / 1000}s</div>
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <p className="text-xs text-stone-400 mb-3 line-clamp-2 leading-relaxed">
-                                        {tower.levelDesc[level as 1 | 2 | 3]}
-                                      </p>
+                        const renderPathStats = (path: "A" | "B") => {
+                          const pathStats = getDynamicStats(selectedTower, 4, path);
+                          const pathTroop = isStation ? getTroopForLevel(4, path) : null;
 
-                                      {isStation && troop && (
-                                        <div className="space-y-1.5">
-                                          <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
-                                          <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
-                                          <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
-                                        </div>
-                                      )}
+                          return (
+                            <>
+                              {isStation && pathTroop && (
+                                <div className="grid grid-cols-3 gap-2">
+                                  <div className="bg-red-950/50 rounded-lg px-2 py-1.5 text-center border border-red-900/30">
+                                    <div className="text-red-500 text-[10px] font-medium">HP</div>
+                                    <div className="text-red-300 font-bold text-sm">{pathTroop.hp}</div>
+                                  </div>
+                                  <div className="bg-orange-950/50 rounded-lg px-2 py-1.5 text-center border border-orange-900/30">
+                                    <div className="text-orange-500 text-[10px] font-medium">DMG</div>
+                                    <div className="text-orange-300 font-bold text-sm">{pathTroop.damage}</div>
+                                  </div>
+                                  <div className="bg-green-950/50 rounded-lg px-2 py-1.5 text-center border border-green-900/30">
+                                    <div className="text-green-500 text-[10px] font-medium">SPD</div>
+                                    <div className="text-green-300 font-bold text-sm">{(pathTroop.attackSpeed / 1000).toFixed(1)}s</div>
+                                  </div>
+                                </div>
+                              )}
 
-                                      {!isStation && selectedTower !== "club" && (
-                                        <div className="space-y-1.5">
-                                          {stats.damage > 0 && (
-                                            <StatBar value={stats.damage} max={towerGlobalMaxDmg} color="red" label="DMG" displayValue={`${Math.floor(stats.damage)}`} icon={<Swords size={10} />} />
-                                          )}
-                                          {stats.range > 0 && (
-                                            <StatBar value={stats.range} max={towerGlobalMaxRange} color="blue" label="RNG" displayValue={`${Math.floor(stats.range)}`} icon={<Target size={10} />} />
-                                          )}
-                                          {stats.attackSpeed > 0 && (
-                                            <StatBar value={1000 / stats.attackSpeed} max={towerGlobalMaxAtkRate} color="green" label="SPD" displayValue={`${(stats.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
-                                          )}
-                                          {(() => {
-                                            const levelDps = calculateDPS(stats.damage, stats.attackSpeed);
-                                            return levelDps > 0 ? (
-                                              <div className="mt-1"><DPSBadge dps={levelDps} size="sm" /></div>
-                                            ) : null;
-                                          })()}
-                                        </div>
-                                      )}
-
-                                      {selectedTower === "club" && (
-                                        <div className="space-y-1.5">
-                                          <StatBar value={stats.income || 0} max={towerGlobalMaxIncome} color="amber" label="PP" displayValue={`+${stats.income}`} icon={<Banknote size={10} />} />
-                                          <StatBar value={1000 / (stats.incomeInterval || 8000)} max={towerGlobalMaxIncomeRate} color="amber" label="INT" displayValue={`${(stats.incomeInterval || 8000) / 1000}s`} icon={<Timer size={10} />} />
-                                        </div>
-                                      )}
-
-                                      {selectedTower === "library" && (
-                                        <div className="mt-1.5">
-                                          <StatBar value={(stats.slowAmount || 0) * 100} max={towerGlobalMaxSlow} color="cyan" label="SLOW" displayValue={`${Math.round((stats.slowAmount || 0) * 100)}%`} icon={<Snowflake size={10} />} />
-                                        </div>
-                                      )}
-                                    </>
+                              {!isStation && selectedTower !== "club" && (
+                                <div className="space-y-2">
+                                  {pathStats.damage > 0 && (
+                                    <StatBar value={pathStats.damage} max={towerGlobalMaxDmg} color="red" label="DMG" displayValue={`${Math.floor(pathStats.damage)}`} icon={<Swords size={12} />} />
+                                  )}
+                                  {pathStats.range > 0 && (
+                                    <StatBar value={pathStats.range} max={towerGlobalMaxRange} color="blue" label="RNG" displayValue={`${Math.floor(pathStats.range)}`} icon={<Target size={12} />} />
+                                  )}
+                                  {pathStats.attackSpeed > 0 && (
+                                    <StatBar value={1000 / pathStats.attackSpeed} max={towerGlobalMaxAtkRate} color="green" label="SPD" displayValue={`${(pathStats.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={12} />} />
                                   )}
                                 </div>
+                              )}
+
+                              {selectedTower === "club" && (
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-amber-950/50 rounded-lg px-2 py-1.5 text-center border border-amber-900/30">
+                                    <div className="text-amber-500 text-[10px] font-medium">Income</div>
+                                    <div className="text-amber-300 font-bold text-sm">+{pathStats.income} PP</div>
+                                  </div>
+                                  <div className="bg-amber-950/50 rounded-lg px-2 py-1.5 text-center border border-amber-900/30">
+                                    <div className="text-amber-500 text-[10px] font-medium">Interval</div>
+                                    <div className="text-amber-300 font-bold text-sm">{(pathStats.incomeInterval || 8000) / 1000}s</div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        };
+
+                        return (
+                          <div>
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                              <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
+                                <ArrowUp size={18} className="text-amber-400" />
+                                Level Progression
+                              </h4>
+                              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+                            </div>
+
+                            {/* Horizontal pipeline: Lvl 1 -> Lvl 2 -> Lvl 3 -> [A / B] */}
+                            <div className="flex flex-col lg:flex-row items-stretch gap-0">
+                              {[1, 2, 3].map((level) => {
+                                const cost = getUpgradeCost(selectedTower, level);
+                                return (
+                                  <React.Fragment key={level}>
+                                    <div className="flex-1 min-w-0 rounded-xl border overflow-hidden bg-stone-900/80 border-stone-700/40">
+                                      <div className="px-3 py-2.5 flex items-center justify-between bg-stone-800/50">
+                                        <div className="flex items-center gap-2.5">
+                                          <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                            <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={44} level={level} />
+                                          </div>
+                                          <div className="flex items-center gap-1.5">
+                                            <div className="flex">
+                                              {[...Array(level)].map((_, i) => (
+                                                <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
+                                              ))}
+                                            </div>
+                                            <span className="font-bold text-sm text-amber-300">Lvl {level}</span>
+                                          </div>
+                                        </div>
+                                        <span className="text-amber-400 text-xs font-bold flex items-center gap-1">
+                                          <Coins size={12} /> {cost} PP
+                                        </span>
+                                      </div>
+                                      <div className="p-3">
+                                        <p className="text-xs text-stone-400 mb-3 line-clamp-2 leading-relaxed">
+                                          {tower.levelDesc[level as 1 | 2 | 3]}
+                                        </p>
+                                        {renderLevelStats(level)}
+                                      </div>
+                                    </div>
+
+                                    {/* Arrow between level cards */}
+                                    <div className="flex items-center justify-center shrink-0 px-1">
+                                      <ChevronRight size={20} className="text-amber-500/60 hidden lg:block" />
+                                      <ChevronRight size={20} className="text-amber-500/60 rotate-90 lg:hidden" />
+                                    </div>
+                                  </React.Fragment>
+                                );
+                              })}
+
+                              {/* Lvl 4 branch: Path A on top, Path B below */}
+                              <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+                                {(["A", "B"] as const).map((path) => {
+                                  const pathDps = calculateDPS(
+                                    getDynamicStats(selectedTower, 4, path).damage,
+                                    getDynamicStats(selectedTower, 4, path).attackSpeed,
+                                  );
+                                  return (
+                                    <div
+                                      key={path}
+                                      className={`flex-1 rounded-xl border overflow-hidden ${path === "A"
+                                        ? "bg-gradient-to-br from-red-950/40 to-stone-950 border-red-700/50"
+                                        : "bg-gradient-to-br from-blue-950/40 to-stone-950 border-blue-700/50"
+                                        }`}
+                                    >
+                                      <div className={`px-3 py-2 flex items-center justify-between ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"}`}>
+                                        <div className="flex items-center gap-2.5">
+                                          <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,0,0.3)" }}>
+                                            <TowerSprite type={selectedTower as keyof typeof TOWER_DATA} size={44} level={4} upgrade={path} />
+                                          </div>
+                                          <div>
+                                            <div className="flex items-center gap-1.5 mb-0.5">
+                                              <div className="flex">
+                                                {[...Array(4)].map((_, i) => (
+                                                  <Star key={i} size={10} className="text-yellow-400 fill-yellow-400" />
+                                                ))}
+                                              </div>
+                                              <span className={`text-xs uppercase tracking-wider font-medium ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
+                                                Path {path}
+                                              </span>
+                                            </div>
+                                            <div className={`text-sm font-bold leading-tight ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
+                                              {tower.upgrades[path].name}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1">
+                                          <span className="text-amber-400 text-xs font-bold flex items-center gap-1">
+                                            <Coins size={12} /> {cost4} PP
+                                          </span>
+                                          {pathDps > 0 && <DPSBadge dps={pathDps} size="sm" />}
+                                        </div>
+                                      </div>
+                                      <div className="p-3">
+                                        {renderPathStats(path)}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Evolution Paths */}
                       <div>
@@ -1943,7 +1973,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     />
                                   </FramedCodexSprite>
                                   <div className="flex-1">
-                                    <div className={`text-[10px] uppercase tracking-wider ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
+                                    <div className={`text-xs uppercase tracking-wider font-medium ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
                                       Path {path} • {pathLabel}
                                     </div>
                                     <h5 className={`text-xl font-bold ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
@@ -1975,41 +2005,41 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                         Troop: {troop.name}
                                       </div>
                                       <p className="text-xs text-stone-400 mb-2">{troop.desc}</p>
-                                      <div className="grid grid-cols-4 gap-2 text-[10px]">
-                                        <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                          <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="grid grid-cols-4 gap-2 text-xs">
+                                        <div className="bg-red-950/50 rounded-lg p-2 text-center border border-red-900/30">
+                                          <Heart size={14} className="mx-auto text-red-400 mb-0.5" />
                                           <div className="text-red-300 font-bold">{troop.hp}</div>
                                         </div>
-                                        <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                          <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
+                                        <div className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-900/30">
+                                          <Swords size={14} className="mx-auto text-orange-400 mb-0.5" />
                                           <div className="text-orange-300 font-bold">{troop.damage}</div>
                                         </div>
-                                        <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                          <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
+                                        <div className="bg-green-950/50 rounded-lg p-2 text-center border border-green-900/30">
+                                          <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
                                           <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
                                         </div>
                                         {troop.isRanged && (
-                                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                            <Crosshair size={12} className="mx-auto text-blue-400 mb-0.5" />
+                                          <div className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-900/30">
+                                            <Crosshair size={14} className="mx-auto text-blue-400 mb-0.5" />
                                             <div className="text-blue-300 font-bold">{troop.range}</div>
                                           </div>
                                         )}
                                       </div>
                                       {(troop.isMounted || troop.isRanged || troop.canTargetFlying) && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
                                           {troop.isMounted && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 border border-amber-700/50">
-                                              <Wind size={10} className="inline" /> Mounted
+                                            <span className="text-[10px] px-2 py-1 bg-amber-900/50 rounded-md text-amber-300 border border-amber-700/50">
+                                              <Wind size={11} className="inline" /> Mounted
                                             </span>
                                           )}
                                           {troop.isRanged && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 border border-blue-700/50">
-                                              <Crosshair size={10} className="inline" /> Ranged
+                                            <span className="text-[10px] px-2 py-1 bg-blue-900/50 rounded-md text-blue-300 border border-blue-700/50">
+                                              <Crosshair size={11} className="inline" /> Ranged
                                             </span>
                                           )}
                                           {troop.canTargetFlying && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
-                                              <Plane size={10} className="inline" /> Anti-Air
+                                            <span className="text-[10px] px-2 py-1 bg-cyan-900/50 rounded-md text-cyan-300 border border-cyan-700/50">
+                                              <Plane size={11} className="inline" /> Anti-Air
                                             </span>
                                           )}
                                         </div>
@@ -2161,11 +2191,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             />
                           </div>
 
-                          <div className="space-y-1.5 mb-3">
-                            <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={10} />} />
-                            <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={10} />} />
-                            <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={10} />} />
-                            <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={10} />} />
+                          <div className="space-y-2 mb-3">
+                            <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={12} />} />
+                            <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={12} />} />
+                            <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={12} />} />
+                            <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={12} />} />
                           </div>
 
                           {/* Ability preview */}
@@ -2358,11 +2388,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                               {hero.description}
                             </p>
                             <div className="space-y-2.5 bg-stone-900/40 rounded-xl p-4 border border-stone-700/30">
-                              <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={10} />} />
-                              <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={10} />} />
-                              <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={10} />} />
-                              <StatBar value={1000 / hero.attackSpeed} max={heroMaxAtkRate} color="green" label="ATK" displayValue={`${(hero.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
-                              <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={10} />} />
+                              <StatBar value={hero.hp} max={heroMaxHp} color="red" label="HP" displayValue={`${hero.hp}`} icon={<Heart size={12} />} />
+                              <StatBar value={hero.damage} max={heroMaxDmg} color="orange" label="DMG" displayValue={`${hero.damage}`} icon={<Swords size={12} />} />
+                              <StatBar value={hero.range} max={heroMaxRange} color="blue" label="RNG" displayValue={`${hero.range}`} icon={<Target size={12} />} />
+                              <StatBar value={1000 / hero.attackSpeed} max={heroMaxAtkRate} color="green" label="ATK" displayValue={`${(hero.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={12} />} />
+                              <StatBar value={hero.speed} max={heroMaxSpeed} color="cyan" label="SPD" displayValue={`${hero.speed}`} icon={<Wind size={12} />} />
                             </div>
                           </div>
                         </div>
@@ -2555,8 +2585,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {troop.canTargetFlying && (
-                                      <span className="text-[8px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-800/40 flex items-center gap-0.5">
-                                        <Plane size={8} /> Anti-Air
+                                      <span className="text-[10px] px-2 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-800/40 flex items-center gap-0.5">
+                                        <Plane size={10} /> Anti-Air
                                       </span>
                                     )}
                                     <DPSBadge dps={troopDps} size="sm" />
@@ -2571,29 +2601,29 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 </FramedCodexSprite>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="text-base font-bold text-amber-200 truncate">{troop.name}</h4>
-                                  <p className="text-[10px] text-stone-400 mt-1 line-clamp-2 leading-relaxed">{troop.desc}</p>
+                                  <p className="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">{troop.desc}</p>
                                 </div>
                               </div>
 
                               <div className="rounded-lg bg-stone-950/40 border border-stone-700/25 p-2.5 mb-2 flex-1">
-                                <div className="space-y-1.5">
-                                  <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={10} />} />
-                                  <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={10} />} />
-                                  <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={10} />} />
+                                <div className="space-y-2">
+                                  <StatBar value={troop.hp} max={troopMaxHp} color="red" label="HP" displayValue={`${troop.hp}`} icon={<Heart size={12} />} />
+                                  <StatBar value={troop.damage} max={troopMaxDmg} color="orange" label="DMG" displayValue={`${troop.damage}`} icon={<Swords size={12} />} />
+                                  <StatBar value={1000 / troop.attackSpeed} max={troopMaxAtkRate} color="green" label="SPD" displayValue={`${(troop.attackSpeed / 1000).toFixed(1)}s`} icon={<Gauge size={12} />} />
                                   {troop.isRanged && (
-                                    <StatBar value={troop.range || 0} max={200} color="blue" label="RNG" displayValue={`${troop.range}`} icon={<Target size={10} />} />
+                                    <StatBar value={troop.range || 0} max={200} color="blue" label="RNG" displayValue={`${troop.range}`} icon={<Target size={12} />} />
                                   )}
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-2 mt-auto">
                                 <div className="px-2.5 py-2 bg-stone-950/40 rounded-lg border border-stone-700/25">
-                                  <div className="text-[8px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Combat</div>
-                                  <div className="text-[11px] text-stone-300 font-semibold">{troop.isStationary ? "Stationary" : troop.isMounted ? "Mobile Block" : "Path Blocker"}</div>
+                                  <div className="text-[10px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Combat</div>
+                                  <div className="text-xs text-stone-300 font-semibold">{troop.isStationary ? "Stationary" : troop.isMounted ? "Mobile Block" : "Path Blocker"}</div>
                                 </div>
                                 <div className="px-2.5 py-2 bg-stone-950/40 rounded-lg border border-stone-700/25">
-                                  <div className="text-[8px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Engagement</div>
-                                  <div className="text-[11px] text-stone-300 font-semibold">{troop.isRanged ? `${troop.range} range` : "Close quarters"}</div>
+                                  <div className="text-[10px] text-stone-500 uppercase mb-0.5 tracking-wider font-medium">Engagement</div>
+                                  <div className="text-xs text-stone-300 font-semibold">{troop.isRanged ? `${troop.range} range` : "Close quarters"}</div>
                                 </div>
                               </div>
                             </div>
@@ -2784,76 +2814,76 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     <HPBar hp={enemy.hp} maxHp={maxHpInCategory} isBoss={enemy.isBoss} />
                                   </div>
 
-                                  <div className="space-y-1.5 mb-2">
-                                    <StatBar value={enemy.bounty} max={enemyMaxBounty} color="amber" label="LOOT" displayValue={`${enemy.bounty} PP`} icon={<Coins size={10} />} />
-                                    <StatBar value={enemy.speed} max={enemyMaxSpeed} color="green" label="SPD" displayValue={`${enemy.speed}`} icon={<Gauge size={10} />} />
+                                  <div className="space-y-2 mb-2">
+                                    <StatBar value={enemy.bounty} max={enemyMaxBounty} color="amber" label="LOOT" displayValue={`${enemy.bounty} PP`} icon={<Coins size={12} />} />
+                                    <StatBar value={enemy.speed} max={enemyMaxSpeed} color="green" label="SPD" displayValue={`${enemy.speed}`} icon={<Gauge size={12} />} />
                                     {enemy.armor > 0 && (
-                                      <StatBar value={enemy.armor * 100} max={enemyMaxArmor} color="stone" label="ARM" displayValue={`${Math.round(enemy.armor * 100)}%`} icon={<Shield size={10} />} />
+                                      <StatBar value={enemy.armor * 100} max={enemyMaxArmor} color="stone" label="ARM" displayValue={`${Math.round(enemy.armor * 100)}%`} icon={<Shield size={12} />} />
                                     )}
                                   </div>
 
                                   {/* Ranged Stats (if applicable) */}
                                   {enemy.isRanged && (
-                                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Range</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.range}</div>
+                                    <div className="grid grid-cols-3 gap-2 mb-2">
+                                      <div className="bg-purple-950/40 rounded-lg p-1.5 text-center border border-purple-900/30">
+                                        <div className="text-[10px] text-purple-500 font-medium">Range</div>
+                                        <div className="text-purple-300 font-bold text-xs">{enemy.range}</div>
                                       </div>
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Atk Speed</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">
+                                      <div className="bg-purple-950/40 rounded-lg p-1.5 text-center border border-purple-900/30">
+                                        <div className="text-[10px] text-purple-500 font-medium">Atk Speed</div>
+                                        <div className="text-purple-300 font-bold text-xs">
                                           {enemy.attackSpeed ? `${(enemy.attackSpeed / 1000).toFixed(1)}s` : "—"}
                                         </div>
                                       </div>
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Proj Dmg</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.projectileDamage}</div>
+                                      <div className="bg-purple-950/40 rounded-lg p-1.5 text-center border border-purple-900/30">
+                                        <div className="text-[10px] text-purple-500 font-medium">Proj Dmg</div>
+                                        <div className="text-purple-300 font-bold text-xs">{enemy.projectileDamage}</div>
                                       </div>
                                     </div>
                                   )}
 
                                   {/* AoE Stats (if applicable) */}
                                   {hasAoE && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                        <div className="text-[8px] text-orange-500">AoE Radius</div>
-                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeRadius}</div>
+                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                      <div className="bg-orange-950/40 rounded-lg p-1.5 text-center border border-orange-900/30">
+                                        <div className="text-[10px] text-orange-500 font-medium">AoE Radius</div>
+                                        <div className="text-orange-300 font-bold text-xs">{enemy.aoeRadius}</div>
                                       </div>
-                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                        <div className="text-[8px] text-orange-500">AoE Damage</div>
-                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeDamage}</div>
+                                      <div className="bg-orange-950/40 rounded-lg p-1.5 text-center border border-orange-900/30">
+                                        <div className="text-[10px] text-orange-500 font-medium">AoE Damage</div>
+                                        <div className="text-orange-300 font-bold text-xs">{enemy.aoeDamage}</div>
                                       </div>
                                     </div>
                                   )}
 
                                   {/* Flying Troop Attack Stats (if applicable) */}
                                   {enemy.targetsTroops && enemy.troopDamage && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                        <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                        <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
-                                        <div className="text-cyan-300 font-bold text-[10px]">{enemy.troopDamage}</div>
+                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                      <div className="bg-cyan-950/40 rounded-lg p-1.5 text-center border border-cyan-900/30">
+                                        <Wind size={14} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[10px] text-cyan-500 font-medium">Swoop Dmg</div>
+                                        <div className="text-cyan-300 font-bold text-xs">{enemy.troopDamage}</div>
                                       </div>
-                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                        <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                        <div className="text-[8px] text-cyan-500">Atk Speed</div>
-                                        <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
+                                      <div className="bg-cyan-950/40 rounded-lg p-1.5 text-center border border-cyan-900/30">
+                                        <Timer size={14} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[10px] text-cyan-500 font-medium">Atk Speed</div>
+                                        <div className="text-cyan-300 font-bold text-xs">{((enemy.troopAttackSpeed || DEFAULT_ENEMY_TROOP_ATTACK_SPEED) / 1000).toFixed(1)}s</div>
                                       </div>
                                     </div>
                                   )}
 
                                   {/* Melee Combat Stats (for ground enemies that engage troops) */}
                                   {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                        <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
-                                        <div className="text-[8px] text-red-500">Melee Dmg</div>
-                                        <div className="text-red-300 font-bold text-[10px]">{enemy.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
+                                    <div className="grid grid-cols-2 gap-2 mb-2">
+                                      <div className="bg-red-950/40 rounded-lg p-1.5 text-center border border-red-900/30">
+                                        <Swords size={14} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[10px] text-red-500 font-medium">Melee Dmg</div>
+                                        <div className="text-red-300 font-bold text-xs">{enemy.troopDamage ?? DEFAULT_ENEMY_TROOP_DAMAGE}</div>
                                       </div>
-                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                        <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
-                                        <div className="text-[8px] text-red-500">Atk Speed</div>
-                                        <div className="text-red-300 font-bold text-[10px]">1.0s</div>
+                                      <div className="bg-red-950/40 rounded-lg p-1.5 text-center border border-red-900/30">
+                                        <Timer size={14} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[10px] text-red-500 font-medium">Atk Speed</div>
+                                        <div className="text-red-300 font-bold text-xs">1.0s</div>
                                       </div>
                                     </div>
                                   )}
@@ -2862,12 +2892,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                   {enemy.breakthrough && (
                                     <div className="mb-2">
                                       <div className="bg-sky-950/40 rounded p-1 text-center border border-sky-900/30">
-                                        <div className="text-sky-300 font-bold text-[10px] flex items-center justify-center gap-1">
-                                          <Zap size={10} className="text-sky-400" />
+                                        <div className="text-sky-300 font-bold text-xs flex items-center justify-center gap-1">
+                                          <Zap size={12} className="text-sky-400" />
                                           Bypasses Troops
                                         </div>
                                         {enemy.troopDamage != null && (
-                                          <div className="text-[9px] text-sky-300/90 mt-0.5">
+                                          <div className="text-[11px] text-sky-300/90 mt-0.5">
                                             Hero Dmg: <span className="font-bold text-sky-200">{enemy.troopDamage}</span>
                                           </div>
                                         )}
@@ -2878,14 +2908,14 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                   {/* Dynamic Traits */}
                                   {traits.length > 0 && (
                                     <div className="mb-2">
-                                      <div className="text-[9px] text-stone-500 uppercase font-bold mb-1">Traits</div>
-                                      <div className="flex flex-wrap gap-1">
+                                      <div className="text-[10px] text-stone-500 uppercase font-bold mb-1">Traits</div>
+                                      <div className="flex flex-wrap gap-1.5">
                                         {traits.map((trait, i) => {
                                           const traitInfo = getTraitInfo(trait);
                                           return (
                                             <span
                                               key={i}
-                                              className={`text-[9px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-1 ${traitInfo.color}`}
+                                              className={`text-[10px] px-2 py-0.5 bg-stone-800/60 rounded-md border border-stone-700/50 flex items-center gap-1 ${traitInfo.color}`}
                                               title={traitInfo.desc}
                                             >
                                               {traitInfo.icon}

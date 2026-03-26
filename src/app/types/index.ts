@@ -424,6 +424,8 @@ export interface Enemy {
   // Summoning channel state
   summoning?: boolean;
   summonStartTime?: number;
+  // Regen delay — timestamp of last damage received from any source
+  lastDamageTaken?: number;
   // Death animation
   dying?: boolean;
   deathTime?: number;
@@ -903,6 +905,7 @@ export type DecorationCategory =
   | "fence"
   | "water"
   | "ruins"
+  | "debris"
   | "signpost"
   | "lake"
   | "dock"
@@ -911,6 +914,21 @@ export type DecorationCategory =
   | "bench"
   | "lamppost"
   | "nassau_hall"
+  | "princeton_chapel"
+  | "firestone_library"
+  | "blair_arch"
+  | "whig_hall"
+  | "east_pyne"
+  | "prospect_house"
+  | "clio_hall"
+  | "mccosh_hall"
+  | "robertson_hall"
+  | "holder_hall"
+  | "cleveland_tower"
+  | "alexander_hall"
+  | "fine_hall"
+  | "foulke_hall"
+  | "tiger_stadium"
   | "statue"
   | "fountain"
   | "hedge"
@@ -961,6 +979,7 @@ export type DecorationCategory =
   | "charred_tree"
   | "skull_pile"
   | "ember_rock"
+  | "crater"
   | "volcano_rim"
   | "lava_fall"
   | "obsidian_pillar"
@@ -1007,6 +1026,9 @@ export type DecorationCategory =
   | "ritual_circle"
   | "ember"
   | "barrel"
+  | "mushroom"
+  | "gravestone"
+  | "sword"
   // Challenge landmarks
   | "cannon_crest"
   | "ivy_crossroads"
@@ -1232,6 +1254,21 @@ export type DecorationType =
   | "torch"
   | "statue"
   | "nassau_hall"
+  | "princeton_chapel"
+  | "firestone_library"
+  | "blair_arch"
+  | "whig_hall"
+  | "east_pyne"
+  | "prospect_house"
+  | "clio_hall"
+  | "mccosh_hall"
+  | "robertson_hall"
+  | "holder_hall"
+  | "cleveland_tower"
+  | "alexander_hall"
+  | "fine_hall"
+  | "foulke_hall"
+  | "tiger_stadium"
   | "deep_water"
   | "pond"
   | "flowers"

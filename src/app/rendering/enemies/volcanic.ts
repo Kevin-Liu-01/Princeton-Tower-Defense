@@ -120,14 +120,10 @@ export function drawMagmaSpawnEnemy(
     tipRadius: 0.015,
   });
 
-  // Main molten body - amorphous shifting mass
+  // Main molten body — cooled rock plates with bezier organic shape
   const bodyGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.1,
-    0,
-    x,
-    y,
-    size * 0.45,
+    x, y - size * 0.1, 0,
+    x, y, size * 0.48,
   );
   bodyGrad.addColorStop(0, "#fef3c7");
   bodyGrad.addColorStop(0.2, bodyColorLight);
@@ -137,60 +133,86 @@ export function drawMagmaSpawnEnemy(
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.4, y + size * 0.22);
-  ctx.quadraticCurveTo(
-    x - size * 0.48 + surge * size,
-    y - size * 0.05 + bubble * size * 0.06,
-    x - size * 0.3,
-    y - size * 0.38,
+  ctx.bezierCurveTo(
+    x - size * 0.5 + surge * size, y + size * 0.08 + bubble * size * 0.04,
+    x - size * 0.52, y - size * 0.18,
+    x - size * 0.32, y - size * 0.38,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.15,
-    y - size * 0.52 + bubble * size * 0.04,
-    x,
-    y - size * 0.5 + bubble * size * 0.03,
+  ctx.bezierCurveTo(
+    x - size * 0.22, y - size * 0.48 + bubble * size * 0.04,
+    x - size * 0.08, y - size * 0.54 + bubble * size * 0.03,
+    x, y - size * 0.52 + bubble * size * 0.03,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.15,
-    y - size * 0.52 + bubble * size * 0.04,
-    x + size * 0.3,
-    y - size * 0.38,
+  ctx.bezierCurveTo(
+    x + size * 0.08, y - size * 0.54 + bubble * size * 0.03,
+    x + size * 0.22, y - size * 0.48 + bubble * size * 0.04,
+    x + size * 0.32, y - size * 0.38,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.48 - surge * size,
-    y - size * 0.05 - bubble * size * 0.06,
-    x + size * 0.4,
-    y + size * 0.22,
+  ctx.bezierCurveTo(
+    x + size * 0.52, y - size * 0.18,
+    x + size * 0.5 - surge * size, y + size * 0.08 - bubble * size * 0.04,
+    x + size * 0.4, y + size * 0.22,
   );
-  ctx.quadraticCurveTo(
-    x + size * 0.2,
-    y + size * 0.32 + surge * size,
-    x,
-    y + size * 0.3,
+  ctx.bezierCurveTo(
+    x + size * 0.3, y + size * 0.3 + surge * size,
+    x + size * 0.12, y + size * 0.32,
+    x, y + size * 0.3,
   );
-  ctx.quadraticCurveTo(
-    x - size * 0.2,
-    y + size * 0.32 - surge * size,
-    x - size * 0.4,
-    y + size * 0.22,
+  ctx.bezierCurveTo(
+    x - size * 0.12, y + size * 0.32,
+    x - size * 0.3, y + size * 0.3 - surge * size,
+    x - size * 0.4, y + size * 0.22,
   );
   ctx.fill();
 
-  // Cooled rock patches (darker areas)
+  // Structural crack lines between cooled rock plates
+  ctx.strokeStyle = `rgba(251, 191, 36, ${glow * 0.5})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.45);
+  ctx.bezierCurveTo(x - size * 0.1, y - size * 0.25, x + size * 0.05, y - size * 0.1, x + size * 0.15, y + size * 0.15);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y - size * 0.4);
+  ctx.bezierCurveTo(x + size * 0.12, y - size * 0.2, x - size * 0.08, y + size * 0.02, x - size * 0.2, y + size * 0.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.1);
+  ctx.bezierCurveTo(x - size * 0.15, y - size * 0.05, x + size * 0.1, y + size * 0.05, x + size * 0.35, y + size * 0.08);
+  ctx.stroke();
+
+  // Cooled rock patches — irregular bezier plate shapes
   ctx.fillStyle = "#451a03";
   for (let rock = 0; rock < 6; rock++) {
     const rockX = x + Math.sin(rock * 1.1 + time * 0.2) * size * 0.25;
     const rockY = y - size * 0.15 + Math.cos(rock * 1.4) * size * 0.2;
-    const rockSize = size * (0.06 + Math.sin(rock) * 0.02);
+    const rS = size * (0.06 + Math.sin(rock) * 0.02);
+    const rRot = rock * 0.5;
+    const cos_r = Math.cos(rRot);
+    const sin_r = Math.sin(rRot);
+    const pts = [
+      { px: -rS, py: 0 },
+      { px: -rS * 0.3, py: -rS * 0.8 },
+      { px: rS * 0.5, py: -rS * 0.5 },
+      { px: rS, py: rS * 0.2 },
+      { px: rS * 0.4, py: rS * 0.7 },
+      { px: -rS * 0.4, py: rS * 0.5 },
+    ];
     ctx.beginPath();
-    ctx.ellipse(
-      rockX,
-      rockY,
-      rockSize,
-      rockSize * 0.7,
-      rock * 0.5,
-      0,
-      Math.PI * 2,
-    );
+    const firstPt = pts[0];
+    ctx.moveTo(rockX + firstPt.px * cos_r - firstPt.py * sin_r, rockY + firstPt.px * sin_r + firstPt.py * cos_r);
+    for (let pi = 1; pi <= pts.length; pi++) {
+      const pt = pts[pi % pts.length];
+      const prevPt = pts[(pi - 1) % pts.length];
+      const cpx = (prevPt.px + pt.px) * 0.5 + Math.sin(rock + pi) * rS * 0.2;
+      const cpy = (prevPt.py + pt.py) * 0.5 + Math.cos(rock + pi) * rS * 0.2;
+      ctx.quadraticCurveTo(
+        rockX + cpx * cos_r - cpy * sin_r,
+        rockY + cpx * sin_r + cpy * cos_r,
+        rockX + pt.px * cos_r - pt.py * sin_r,
+        rockY + pt.px * sin_r + pt.py * cos_r,
+      );
+    }
     ctx.fill();
   }
 
@@ -495,6 +517,105 @@ export function drawMagmaSpawnEnemy(
     trailLen: 4,
   });
 
+  // Lava crack glow lines on body surface
+  ctx.save();
+  ctx.strokeStyle = `rgba(251, 191, 36, ${glow * 0.6})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let lc = 0; lc < 5; lc++) {
+    const lcStartX = x - size * 0.15 + lc * size * 0.08;
+    const lcStartY = y - size * 0.2 + Math.sin(lc * 2) * size * 0.1;
+    const lcEndX = lcStartX + Math.sin(time * 2 + lc) * size * 0.06;
+    const lcEndY = lcStartY + size * 0.12;
+    const lcGrad = ctx.createLinearGradient(lcStartX, lcStartY, lcEndX, lcEndY);
+    lcGrad.addColorStop(0, `rgba(255, 255, 200, ${glow * 0.5})`);
+    lcGrad.addColorStop(0.5, `rgba(251, 191, 36, ${glow * 0.4})`);
+    lcGrad.addColorStop(1, `rgba(234, 88, 12, 0)`);
+    ctx.strokeStyle = lcGrad;
+    ctx.beginPath();
+    ctx.moveTo(lcStartX, lcStartY);
+    ctx.quadraticCurveTo(lcStartX + size * 0.03, lcStartY + size * 0.06, lcEndX, lcEndY);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Heat distortion waves rising
+  ctx.save();
+  for (let hw = 0; hw < 4; hw++) {
+    const hwPhase = (time * 0.8 + hw * 0.25) % 1;
+    const hwY = y - size * 0.1 - hwPhase * size * 0.5;
+    const hwWidth = size * (0.3 - hwPhase * 0.1);
+    const hwAlpha = (1 - hwPhase) * 0.06;
+    ctx.fillStyle = `rgba(255, 200, 100, ${hwAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + Math.sin(time * 6 + hw * 2) * size * 0.04, hwY,
+      hwWidth, size * 0.02, 0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Magma drip splatter at base
+  ctx.save();
+  for (let md = 0; md < 3; md++) {
+    const mdPhase = (time * 1.3 + md * 0.33) % 1;
+    const mdX = x + (md - 1) * size * 0.18;
+    const mdY = y + size * 0.28 + mdPhase * size * 0.08;
+    const mdAlpha = (1 - mdPhase) * glow * 0.4;
+    const mdGrad = ctx.createRadialGradient(mdX, mdY, 0, mdX, mdY, size * 0.03);
+    mdGrad.addColorStop(0, `rgba(255, 255, 200, ${mdAlpha})`);
+    mdGrad.addColorStop(1, `rgba(251, 146, 60, 0)`);
+    ctx.fillStyle = mdGrad;
+    ctx.beginPath();
+    ctx.arc(mdX, mdY, size * 0.03, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Lava crack glow veins on body surface
+  ctx.save();
+  for (let crack = 0; crack < 6; crack++) {
+    const crackAngle = crack * Math.PI * 0.35 + 0.2;
+    const crackPulse = 0.3 + Math.sin(time * 3 + crack * 1.5) * 0.2;
+    const crackStartX = x + Math.cos(crackAngle) * size * 0.08;
+    const crackStartY = y - size * 0.08;
+    const crackEndX = x + Math.cos(crackAngle) * size * 0.28;
+    const crackEndY = y - size * 0.08 + Math.sin(crackAngle * 0.7) * size * 0.15;
+    const crackGrad = ctx.createLinearGradient(crackStartX, crackStartY, crackEndX, crackEndY);
+    crackGrad.addColorStop(0, `rgba(251, 191, 36, ${crackPulse * glow})`);
+    crackGrad.addColorStop(0.5, `rgba(251, 146, 60, ${crackPulse * glow * 0.7})`);
+    crackGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+    ctx.strokeStyle = crackGrad;
+    ctx.lineWidth = (1.5 + crackPulse * 1.5) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crackStartX, crackStartY);
+    ctx.quadraticCurveTo(
+      (crackStartX + crackEndX) / 2 + Math.sin(time * 4 + crack) * size * 0.04,
+      (crackStartY + crackEndY) / 2 - size * 0.02,
+      crackEndX, crackEndY,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Heat distortion shimmer waves rising
+  ctx.save();
+  for (let hw = 0; hw < 4; hw++) {
+    const hwPhase = (time * 0.8 + hw * 0.25) % 1;
+    const hwX = x + Math.sin(time * 5 + hw * 2) * size * 0.15;
+    const hwY = y - size * 0.2 - hwPhase * size * 0.4;
+    const hwAlpha = (1 - hwPhase) * glow * 0.08;
+    ctx.fillStyle = `rgba(255, 200, 100, ${hwAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      hwX, hwY,
+      size * (0.15 + Math.sin(time * 6 + hw) * 0.03), size * 0.02,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.restore();
+
   // Attack eruption: lava burst with expanding ground wave and flying magma
   if (isAttacking) {
     const eruptIntensity = Math.sin(attackPhase * Math.PI);
@@ -647,28 +768,32 @@ export function drawFireImpEnemy(
     style: 'armored',
   });
 
-  // Clawed feet with fire wisps
+  // Clawed feet — digitigrade bezier demon feet
   ctx.fillStyle = "#7c2d12";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.12 + cackleBounce,
-    y + size * 0.2 - hop,
-    size * 0.08,
-    size * 0.12,
-    -0.25,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.12 - cackleBounce,
-    y + size * 0.2 - hop,
-    size * 0.08,
-    size * 0.12,
-    0.25,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  for (const ftData of [
+    { fx: x - size * 0.12 + cackleBounce, dir: -1 },
+    { fx: x + size * 0.12 - cackleBounce, dir: 1 },
+  ] as const) {
+    const ftY = y + size * 0.2 - hop;
+    ctx.beginPath();
+    ctx.moveTo(ftData.fx, ftY - size * 0.1);
+    ctx.bezierCurveTo(
+      ftData.fx + ftData.dir * size * 0.05, ftY - size * 0.08,
+      ftData.fx + ftData.dir * size * 0.09, ftY - size * 0.02,
+      ftData.fx + ftData.dir * size * 0.08, ftY + size * 0.06,
+    );
+    ctx.bezierCurveTo(
+      ftData.fx + ftData.dir * size * 0.04, ftY + size * 0.12,
+      ftData.fx - ftData.dir * size * 0.04, ftY + size * 0.12,
+      ftData.fx - ftData.dir * size * 0.06, ftY + size * 0.06,
+    );
+    ctx.bezierCurveTo(
+      ftData.fx - ftData.dir * size * 0.08, ftY - size * 0.02,
+      ftData.fx - ftData.dir * size * 0.04, ftY - size * 0.09,
+      ftData.fx, ftY - size * 0.1,
+    );
+    ctx.fill();
+  }
 
   // Foot claws
   ctx.fillStyle = "#451a03";
@@ -684,30 +809,106 @@ export function drawFireImpEnemy(
     }
   }
 
-  // Sinuous demonic body
+  // Sinuous demonic body — tapered torso with bezier anatomy
   const bodyGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.05 - hop,
-    0,
-    x,
-    y - size * 0.05 - hop,
-    size * 0.25,
+    x, y - size * 0.05 - hop, 0,
+    x, y - size * 0.05 - hop, size * 0.28,
   );
   bodyGrad.addColorStop(0, bodyColorLight);
   bodyGrad.addColorStop(0.5, bodyColor);
   bodyGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.05 - hop,
-    size * 0.22 * bodyPulse,
-    size * 0.25 * bodyPulse,
-    0,
-    0,
-    Math.PI * 2,
+  ctx.moveTo(x, y - size * 0.28 * bodyPulse - hop);
+  ctx.bezierCurveTo(
+    x + size * 0.12 * bodyPulse, y - size * 0.26 - hop,
+    x + size * 0.22 * bodyPulse, y - size * 0.15 - hop,
+    x + size * 0.2 * bodyPulse, y - size * 0.02 - hop,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.18 * bodyPulse, y + size * 0.1 - hop,
+    x + size * 0.15, y + size * 0.18 - hop,
+    x, y + size * 0.2 * bodyPulse - hop,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.15, y + size * 0.18 - hop,
+    x - size * 0.18 * bodyPulse, y + size * 0.1 - hop,
+    x - size * 0.2 * bodyPulse, y - size * 0.02 - hop,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.22 * bodyPulse, y - size * 0.15 - hop,
+    x - size * 0.12 * bodyPulse, y - size * 0.26 - hop,
+    x, y - size * 0.28 * bodyPulse - hop,
   );
   ctx.fill();
+
+  // Bat-like wings — bezier membrane stretched between finger bones
+  const wingFlap = Math.sin(time * 6) * 0.25;
+  const wingSpread = 0.8 + (isAttacking ? 0.3 : 0);
+  for (const wingSide of [-1, 1] as const) {
+    const wingBaseX = x + wingSide * size * 0.15;
+    const wingBaseY = y - size * 0.15 - hop;
+    const wingSpan = size * 0.35 * wingSpread;
+    const wingH = size * 0.25;
+
+    // Wing membrane
+    ctx.fillStyle = `rgba(120, 40, 10, ${0.55 + flameFlicker * 0.15})`;
+    ctx.beginPath();
+    ctx.moveTo(wingBaseX, wingBaseY);
+    // Upper wing edge
+    ctx.bezierCurveTo(
+      wingBaseX + wingSide * wingSpan * 0.4, wingBaseY - wingH * 0.8 + wingFlap * size,
+      wingBaseX + wingSide * wingSpan * 0.8, wingBaseY - wingH * 0.6 + wingFlap * size * 0.5,
+      wingBaseX + wingSide * wingSpan, wingBaseY - wingH * 0.3 + wingFlap * size * 0.3,
+    );
+    // Wing tip down to lower edge
+    ctx.bezierCurveTo(
+      wingBaseX + wingSide * wingSpan * 0.95, wingBaseY + wingH * 0.1,
+      wingBaseX + wingSide * wingSpan * 0.7, wingBaseY + wingH * 0.4,
+      wingBaseX + wingSide * wingSpan * 0.4, wingBaseY + wingH * 0.3 - wingFlap * size * 0.2,
+    );
+    // Return to base
+    ctx.bezierCurveTo(
+      wingBaseX + wingSide * wingSpan * 0.2, wingBaseY + wingH * 0.25,
+      wingBaseX + wingSide * size * 0.05, wingBaseY + wingH * 0.1,
+      wingBaseX, wingBaseY,
+    );
+    ctx.fill();
+
+    // Wing bone struts
+    ctx.strokeStyle = bodyColorDark;
+    ctx.lineWidth = 1.5 * zoom;
+    for (let bone = 0; bone < 3; bone++) {
+      const boneT = (bone + 1) / 4;
+      const boneEndX = wingBaseX + wingSide * wingSpan * (0.3 + boneT * 0.65);
+      const boneEndY = wingBaseY - wingH * (0.5 - boneT * 0.4) + wingFlap * size * (1 - boneT) * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(wingBaseX, wingBaseY);
+      ctx.bezierCurveTo(
+        wingBaseX + wingSide * wingSpan * boneT * 0.4, wingBaseY - wingH * 0.2,
+        wingBaseX + wingSide * wingSpan * boneT * 0.7, boneEndY + wingH * 0.1,
+        boneEndX, boneEndY,
+      );
+      ctx.stroke();
+    }
+
+    // Membrane vein detail
+    ctx.strokeStyle = `rgba(180, 60, 15, ${0.25 + flameFlicker * 0.1})`;
+    ctx.lineWidth = 0.8 * zoom;
+    for (let vein = 0; vein < 2; vein++) {
+      const vT = (vein + 1) / 3;
+      ctx.beginPath();
+      ctx.moveTo(
+        wingBaseX + wingSide * wingSpan * vT * 0.5,
+        wingBaseY - wingH * 0.3 + wingFlap * size * 0.3,
+      );
+      ctx.lineTo(
+        wingBaseX + wingSide * wingSpan * (vT * 0.5 + 0.15),
+        wingBaseY + wingH * 0.15,
+      );
+      ctx.stroke();
+    }
+  }
 
   // Body flame patterns
   ctx.strokeStyle = `rgba(251, 191, 36, ${flameFlicker * 0.5})`;
@@ -866,76 +1067,136 @@ export function drawFireImpEnemy(
   headGrad.addColorStop(0, bodyColorLight);
   headGrad.addColorStop(0.6, bodyColor);
   headGrad.addColorStop(1, bodyColorDark);
+  // Impish head — angular bezier cranium with pointed chin
   ctx.fillStyle = headGrad;
+  const ihx = x + cackleBounce;
+  const ihy = y - size * 0.35 - hop;
+  const ihR = size * 0.18;
   ctx.beginPath();
-  ctx.arc(x + cackleBounce, y - size * 0.35 - hop, size * 0.18, 0, Math.PI * 2);
+  ctx.moveTo(ihx, ihy - ihR);
+  ctx.bezierCurveTo(
+    ihx + ihR * 0.8, ihy - ihR * 0.95,
+    ihx + ihR * 1.05, ihy - ihR * 0.2,
+    ihx + ihR * 0.85, ihy + ihR * 0.3,
+  );
+  ctx.bezierCurveTo(
+    ihx + ihR * 0.6, ihy + ihR * 0.7,
+    ihx + ihR * 0.2, ihy + ihR * 1.0,
+    ihx, ihy + ihR * 0.95,
+  );
+  ctx.bezierCurveTo(
+    ihx - ihR * 0.2, ihy + ihR * 1.0,
+    ihx - ihR * 0.6, ihy + ihR * 0.7,
+    ihx - ihR * 0.85, ihy + ihR * 0.3,
+  );
+  ctx.bezierCurveTo(
+    ihx - ihR * 1.05, ihy - ihR * 0.2,
+    ihx - ihR * 0.8, ihy - ihR * 0.95,
+    ihx, ihy - ihR,
+  );
   ctx.fill();
 
-  // Pointed ears
+  // Pointed bat-like ears with bezier
   ctx.fillStyle = bodyColor;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.38 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.25,
-    y - size * 0.42 - hop,
-    x - size * 0.28,
-    y - size * 0.5 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.2, y - size * 0.4 - hop,
+    x - size * 0.26, y - size * 0.44 - hop,
+    x - size * 0.3, y - size * 0.52 - hop,
   );
-  ctx.lineTo(x - size * 0.2, y - size * 0.42 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.17,
-    y - size * 0.4 - hop,
-    x - size * 0.14,
-    y - size * 0.36 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.27, y - size * 0.48 - hop,
+    x - size * 0.22, y - size * 0.43 - hop,
+    x - size * 0.18, y - size * 0.4 - hop,
   );
+  ctx.lineTo(x - size * 0.14, y - size * 0.36 - hop);
   ctx.fill();
+  // Ear membrane detail
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16, y - size * 0.39 - hop);
+  ctx.lineTo(x - size * 0.26, y - size * 0.48 - hop);
+  ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.15, y - size * 0.38 - hop);
-  ctx.quadraticCurveTo(
-    x + size * 0.25,
-    y - size * 0.42 - hop,
-    x + size * 0.28,
-    y - size * 0.5 - hop,
+  ctx.bezierCurveTo(
+    x + size * 0.2, y - size * 0.4 - hop,
+    x + size * 0.26, y - size * 0.44 - hop,
+    x + size * 0.3, y - size * 0.52 - hop,
   );
-  ctx.lineTo(x + size * 0.2, y - size * 0.42 - hop);
-  ctx.quadraticCurveTo(
-    x + size * 0.17,
-    y - size * 0.4 - hop,
-    x + size * 0.14,
-    y - size * 0.36 - hop,
+  ctx.bezierCurveTo(
+    x + size * 0.27, y - size * 0.48 - hop,
+    x + size * 0.22, y - size * 0.43 - hop,
+    x + size * 0.18, y - size * 0.4 - hop,
   );
+  ctx.lineTo(x + size * 0.14, y - size * 0.36 - hop);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.16, y - size * 0.39 - hop);
+  ctx.lineTo(x + size * 0.26, y - size * 0.48 - hop);
+  ctx.stroke();
+
+  // Pointed tail curving behind
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 3 * zoom;
+  ctx.lineCap = "round";
+  const tailWag = Math.sin(time * 5) * size * 0.05;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.15 - hop);
+  ctx.bezierCurveTo(
+    x + size * 0.1, y + size * 0.2 - hop,
+    x + size * 0.18 + tailWag, y + size * 0.12 - hop,
+    x + size * 0.22 + tailWag, y + size * 0.02 - hop,
+  );
+  ctx.stroke();
+  // Tail tip (arrow point)
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22 + tailWag, y + size * 0.02 - hop);
+  ctx.lineTo(x + size * 0.27 + tailWag, y - size * 0.02 - hop);
+  ctx.lineTo(x + size * 0.22 + tailWag, y - size * 0.04 - hop);
+  ctx.lineTo(x + size * 0.2 + tailWag, y + size * 0.01 - hop);
   ctx.fill();
 
-  // Wicked curved horns
+  // Wicked curved horns — bezier ridged
   ctx.fillStyle = "#451a03";
   // Left horn
   ctx.beginPath();
   ctx.moveTo(x - size * 0.1, y - size * 0.48 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.18,
-    y - size * 0.6 - hop,
-    x - size * 0.08,
-    y - size * 0.7 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.15, y - size * 0.56 - hop,
+    x - size * 0.2, y - size * 0.64 - hop,
+    x - size * 0.08, y - size * 0.72 - hop,
   );
-  ctx.lineTo(x - size * 0.05, y - size * 0.62 - hop);
-  ctx.quadraticCurveTo(
-    x - size * 0.12,
-    y - size * 0.55 - hop,
-    x - size * 0.07,
-    y - size * 0.48 - hop,
+  ctx.bezierCurveTo(
+    x - size * 0.06, y - size * 0.66 - hop,
+    x - size * 0.1, y - size * 0.56 - hop,
+    x - size * 0.07, y - size * 0.48 - hop,
   );
   ctx.fill();
+  // Horn ridge marks
+  ctx.strokeStyle = "#2a0a02";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.09, y - size * 0.52 - hop);
+  ctx.lineTo(x - size * 0.11, y - size * 0.54 - hop);
+  ctx.moveTo(x - size * 0.1, y - size * 0.58 - hop);
+  ctx.lineTo(x - size * 0.13, y - size * 0.6 - hop);
+  ctx.stroke();
   // Right horn
+  ctx.fillStyle = "#451a03";
   ctx.beginPath();
   ctx.moveTo(x + size * 0.1, y - size * 0.48 - hop);
-  ctx.quadraticCurveTo(
-    x + size * 0.18,
-    y - size * 0.6 - hop,
-    x + size * 0.08,
-    y - size * 0.7 - hop,
+  ctx.bezierCurveTo(
+    x + size * 0.15, y - size * 0.56 - hop,
+    x + size * 0.2, y - size * 0.64 - hop,
+    x + size * 0.08, y - size * 0.72 - hop,
   );
-  ctx.lineTo(x + size * 0.05, y - size * 0.62 - hop);
-  ctx.quadraticCurveTo(
+  ctx.bezierCurveTo(
+    x + size * 0.06, y - size * 0.66 - hop,
+    x + size * 0.1, y - size * 0.56 - hop,
     x + size * 0.12,
     y - size * 0.55 - hop,
     x + size * 0.07,
@@ -1169,6 +1430,103 @@ export function drawFireImpEnemy(
     ctx.arc(ex, ey, emberSize, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Heat aura pulsing halo
+  ctx.save();
+  const impHeatPulse = 0.5 + Math.sin(time * 3.5) * 0.5;
+  const impHeatGrad = ctx.createRadialGradient(
+    x, y - size * 0.15 - hop, size * 0.1,
+    x, y - size * 0.15 - hop, size * 0.35,
+  );
+  impHeatGrad.addColorStop(0, `rgba(251, 191, 36, ${impHeatPulse * 0.1})`);
+  impHeatGrad.addColorStop(0.5, `rgba(234, 88, 12, ${impHeatPulse * 0.06})`);
+  impHeatGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+  ctx.fillStyle = impHeatGrad;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.15 - hop, size * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Scorched ground trail marks
+  ctx.save();
+  for (let sc = 0; sc < 3; sc++) {
+    const scX = x + Math.sin(sc * 2.5) * size * 0.12;
+    const scY = y + size * 0.3;
+    const scAlpha = 0.2 + Math.sin(time * 2 + sc) * 0.08;
+    ctx.fillStyle = `rgba(120, 50, 10, ${scAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(scX, scY, size * 0.06, size * 0.025 * ISO_Y_RATIO, sc * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Dancing flame wisps orbiting body
+  ctx.save();
+  for (let fw = 0; fw < 4; fw++) {
+    const fwAngle = time * 3.5 + fw * Math.PI * 0.5;
+    const fwDist = size * (0.18 + Math.sin(time * 2 + fw * 1.5) * 0.04);
+    const fwX = x + Math.cos(fwAngle) * fwDist;
+    const fwY = y - size * 0.15 - hop + Math.sin(fwAngle * 0.7) * size * 0.12;
+    const fwAlpha = flameFlicker * (0.3 + Math.sin(time * 5 + fw) * 0.15);
+    const fwSize = size * (0.025 + Math.sin(time * 6 + fw * 2) * 0.01);
+    const fwGrad = ctx.createRadialGradient(fwX, fwY, 0, fwX, fwY, fwSize);
+    fwGrad.addColorStop(0, `rgba(255, 255, 200, ${fwAlpha})`);
+    fwGrad.addColorStop(0.4, `rgba(251, 191, 36, ${fwAlpha * 0.7})`);
+    fwGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+    ctx.fillStyle = fwGrad;
+    ctx.beginPath();
+    ctx.arc(fwX, fwY, fwSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Heat shimmer distortion on body
+  ctx.save();
+  ctx.globalAlpha = 0.06 + Math.sin(time * 7) * 0.03;
+  for (let hs = 0; hs < 3; hs++) {
+    const hsOffset = Math.sin(time * 9 + hs * 2.5) * size * 0.02;
+    const hsY = y - size * 0.2 - hop + hs * size * 0.1;
+    ctx.fillStyle = "rgba(255, 200, 100, 0.08)";
+    ctx.beginPath();
+    ctx.ellipse(x + hsOffset, hsY, size * 0.2, size * 0.025, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Swarm speed: flame dash afterimage trail (fading fire body copies)
+  ctx.save();
+  for (let ai = 0; ai < 3; ai++) {
+    const aiOffset = (ai + 1) * size * 0.1 + Math.sin(time * 7 + ai) * size * 0.015;
+    const aiScale = 1 - (ai + 1) * 0.14;
+    const aiAlpha = [0.15, 0.10, 0.06][ai];
+    ctx.globalAlpha = aiAlpha;
+    ctx.fillStyle = "#fb923c";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + aiOffset, y - hop + ai * size * 0.01,
+      size * 0.1 * aiScale, size * 0.16 * aiScale,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  // Swarm speed: spark spray particles trailing behind
+  ctx.save();
+  for (let sp = 0; sp < 6; sp++) {
+    const spPhase = (time * 5 + sp * 0.45) % 1.4;
+    const spX = x + size * 0.12 + spPhase * size * 0.2;
+    const spY = y - hop * 0.5 - size * 0.05 + Math.sin(time * 8 + sp * 2.3) * size * 0.06;
+    const spAlpha = Math.max(0, 0.3 - spPhase * 0.2);
+    const spR = size * 0.01 * (1 - spPhase * 0.4);
+    ctx.fillStyle = `rgba(255, 200, 80, ${spAlpha})`;
+    ctx.beginPath();
+    ctx.arc(spX, spY, spR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 export function drawEmberGuardEnemy(
@@ -1365,17 +1723,21 @@ export function drawEmberGuardEnemy(
   ctx.lineTo(-legW * 0.3, shinLen * 0.6);
   ctx.stroke();
 
-  // Left armored boot
+  // Left armored boot — bezier plated boot shape
   ctx.fillStyle = "#451a03";
   ctx.beginPath();
-  ctx.ellipse(0, shinLen + size * 0.02, size * 0.08, size * 0.045, 0, 0, Math.PI * 2);
+  ctx.moveTo(-size * 0.06, shinLen - size * 0.01);
+  ctx.bezierCurveTo(-size * 0.08, shinLen + size * 0.01, -size * 0.07, shinLen + size * 0.05, -size * 0.04, shinLen + size * 0.06);
+  ctx.bezierCurveTo(0, shinLen + size * 0.07, size * 0.05, shinLen + size * 0.06, size * 0.08, shinLen + size * 0.03);
+  ctx.bezierCurveTo(size * 0.09, shinLen, size * 0.07, shinLen - size * 0.02, size * 0.06, shinLen - size * 0.01);
+  ctx.closePath();
   ctx.fill();
 
   // Boot toe spike
   ctx.fillStyle = "#1a0a02";
   ctx.beginPath();
   ctx.moveTo(-size * 0.07, shinLen);
-  ctx.lineTo(-size * 0.11, shinLen - size * 0.04);
+  ctx.bezierCurveTo(-size * 0.09, shinLen - size * 0.02, -size * 0.12, shinLen - size * 0.04, -size * 0.11, shinLen - size * 0.04);
   ctx.lineTo(-size * 0.05, shinLen - size * 0.01);
   ctx.fill();
 
@@ -1461,10 +1823,14 @@ export function drawEmberGuardEnemy(
   ctx.lineTo(legW * 0.3, shinLen * 0.6);
   ctx.stroke();
 
-  // Right armored boot
+  // Right armored boot — bezier plated boot shape
   ctx.fillStyle = "#451a03";
   ctx.beginPath();
-  ctx.ellipse(0, shinLen + size * 0.02, size * 0.08, size * 0.045, 0, 0, Math.PI * 2);
+  ctx.moveTo(-size * 0.06, shinLen - size * 0.01);
+  ctx.bezierCurveTo(-size * 0.08, shinLen + size * 0.01, -size * 0.07, shinLen + size * 0.05, -size * 0.04, shinLen + size * 0.06);
+  ctx.bezierCurveTo(0, shinLen + size * 0.07, size * 0.05, shinLen + size * 0.06, size * 0.08, shinLen + size * 0.03);
+  ctx.bezierCurveTo(size * 0.09, shinLen, size * 0.07, shinLen - size * 0.02, size * 0.06, shinLen - size * 0.01);
+  ctx.closePath();
   ctx.fill();
 
   // Boot toe spike
@@ -1484,12 +1850,10 @@ export function drawEmberGuardEnemy(
   ctx.restore(); // right shin
   ctx.restore(); // right leg
 
-  // Massive armored torso
+  // Massive armored torso — volcanic stone bezier armor with lava veins
   const armorGrad = ctx.createLinearGradient(
-    x - size * 0.35,
-    y - size * 0.35,
-    x + size * 0.35,
-    y + size * 0.1,
+    x - size * 0.35, y - size * 0.35,
+    x + size * 0.35, y + size * 0.1,
   );
   armorGrad.addColorStop(0, bodyColorDark);
   armorGrad.addColorStop(0.3, bodyColor);
@@ -1498,27 +1862,60 @@ export function drawEmberGuardEnemy(
   ctx.fillStyle = armorGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.32, y + size * 0.1);
-  ctx.lineTo(x - size * 0.38, y - size * 0.15 + breathe * size);
-  ctx.lineTo(x - size * 0.35, y - size * 0.35);
-  ctx.lineTo(x - size * 0.2, y - size * 0.42);
-  ctx.lineTo(x, y - size * 0.45 + breathe * size);
-  ctx.lineTo(x + size * 0.2, y - size * 0.42);
-  ctx.lineTo(x + size * 0.35, y - size * 0.35);
-  ctx.lineTo(x + size * 0.38, y - size * 0.15 + breathe * size);
-  ctx.lineTo(x + size * 0.32, y + size * 0.1);
+  ctx.bezierCurveTo(
+    x - size * 0.36, y + size * 0.02,
+    x - size * 0.4, y - size * 0.08 + breathe * size,
+    x - size * 0.38, y - size * 0.15 + breathe * size,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.38, y - size * 0.25,
+    x - size * 0.36, y - size * 0.32,
+    x - size * 0.3, y - size * 0.38,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.22, y - size * 0.43,
+    x - size * 0.1, y - size * 0.46,
+    x, y - size * 0.45 + breathe * size,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.1, y - size * 0.46,
+    x + size * 0.22, y - size * 0.43,
+    x + size * 0.3, y - size * 0.38,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.36, y - size * 0.32,
+    x + size * 0.38, y - size * 0.25,
+    x + size * 0.38, y - size * 0.15 + breathe * size,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.4, y - size * 0.08 + breathe * size,
+    x + size * 0.36, y + size * 0.02,
+    x + size * 0.32, y + size * 0.1,
+  );
   ctx.closePath();
   ctx.fill();
 
-  // Chest plate segments
+  // Lava vein structural lines on chest armor
+  ctx.strokeStyle = `rgba(249, 115, 22, ${flamePulse * 0.4})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.35);
+  ctx.bezierCurveTo(x - size * 0.22, y - size * 0.2, x - size * 0.18, y - size * 0.05, x - size * 0.25, y + size * 0.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.25, y - size * 0.35);
+  ctx.bezierCurveTo(x + size * 0.22, y - size * 0.2, x + size * 0.18, y - size * 0.05, x + size * 0.25, y + size * 0.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y - size * 0.42);
+  ctx.bezierCurveTo(x - size * 0.05, y - size * 0.3, x + size * 0.05, y - size * 0.15, x + size * 0.1, y + size * 0.05);
+  ctx.stroke();
+  // Chest plate segment line
   ctx.strokeStyle = "#1a0a02";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.25, y - size * 0.35);
-  ctx.lineTo(x - size * 0.2, y - size * 0.1);
-  ctx.lineTo(x - size * 0.25, y + size * 0.05);
-  ctx.moveTo(x + size * 0.25, y - size * 0.35);
-  ctx.lineTo(x + size * 0.2, y - size * 0.1);
-  ctx.lineTo(x + size * 0.25, y + size * 0.05);
+  ctx.moveTo(x - size * 0.35, y - size * 0.22);
+  ctx.bezierCurveTo(x - size * 0.15, y - size * 0.24, x + size * 0.15, y - size * 0.24, x + size * 0.35, y - size * 0.22);
   ctx.stroke();
 
   // Horizontal armor bands
@@ -1983,4 +2380,102 @@ export function drawEmberGuardEnemy(
     ctx.arc(hx, hy, size * 0.03 * (1 - heatPhase * 0.5), 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Lava crack glow veins on armor
+  ctx.save();
+  ctx.lineWidth = 1.5 * zoom;
+  for (let lv = 0; lv < 6; lv++) {
+    const lvStartX = x - size * 0.18 + lv * size * 0.07;
+    const lvStartY = y - size * 0.25 + Math.sin(lv * 1.8) * size * 0.12;
+    const lvEndX = lvStartX + Math.sin(time * 1.5 + lv * 0.8) * size * 0.05;
+    const lvEndY = lvStartY + size * 0.1;
+    const lvGrad = ctx.createLinearGradient(lvStartX, lvStartY, lvEndX, lvEndY);
+    lvGrad.addColorStop(0, `rgba(255, 255, 200, ${flamePulse * 0.45})`);
+    lvGrad.addColorStop(0.5, `rgba(251, 191, 36, ${flamePulse * 0.35})`);
+    lvGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+    ctx.strokeStyle = lvGrad;
+    ctx.beginPath();
+    ctx.moveTo(lvStartX, lvStartY);
+    ctx.quadraticCurveTo(
+      lvStartX + size * 0.02, lvStartY + size * 0.05,
+      lvEndX, lvEndY,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Magma drip from armor joints
+  ctx.save();
+  for (let mj = 0; mj < 4; mj++) {
+    const mjPhase = (time * 1.0 + mj * 0.25) % 1;
+    const mjX = x + (mj - 1.5) * size * 0.12;
+    const mjY = y - size * 0.05 + mjPhase * size * 0.2;
+    const mjAlpha = (1 - mjPhase) * flamePulse * 0.5;
+    const mjSize = size * 0.015 * (1 - mjPhase * 0.4);
+    ctx.fillStyle = `rgba(251, 191, 36, ${mjAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(mjX, mjY, mjSize * 0.7, mjSize * 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const mjGlowGrad = ctx.createRadialGradient(mjX, mjY, 0, mjX, mjY, mjSize * 2);
+    mjGlowGrad.addColorStop(0, `rgba(251, 146, 60, ${mjAlpha * 0.4})`);
+    mjGlowGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+    ctx.fillStyle = mjGlowGrad;
+    ctx.beginPath();
+    ctx.arc(mjX, mjY, mjSize * 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Molten ground cracks beneath
+  ctx.save();
+  ctx.strokeStyle = `rgba(251, 191, 36, ${flamePulse * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let gc = 0; gc < 4; gc++) {
+    const gcAngle = gc * Math.PI * 0.5 + 0.4;
+    const gcLen = size * (0.2 + Math.sin(gc * 2) * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(gcAngle) * size * 0.2, y + size * 0.46);
+    ctx.lineTo(
+      x + Math.cos(gcAngle) * gcLen,
+      y + size * 0.46 + Math.sin(gcAngle * 0.4) * size * 0.04,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Volcanic ember cascade from weapon tip
+  ctx.save();
+  for (let ec = 0; ec < 5; ec++) {
+    const ecPhase = (time * 1.2 + ec * 0.2) % 1;
+    const ecX = x + size * 0.45 + Math.sin(ec * 2 + time * 4) * size * 0.06;
+    const ecY = y - size * 0.2 - ecPhase * size * 0.25;
+    const ecAlpha = (1 - ecPhase) * flamePulse * 0.5;
+    const ecSize = size * 0.012 * (1 - ecPhase * 0.5);
+    const ecGrad = ctx.createRadialGradient(ecX, ecY, 0, ecX, ecY, ecSize * 2);
+    ecGrad.addColorStop(0, `rgba(255, 255, 200, ${ecAlpha})`);
+    ecGrad.addColorStop(0.5, `rgba(251, 191, 36, ${ecAlpha * 0.6})`);
+    ecGrad.addColorStop(1, "rgba(234, 88, 12, 0)");
+    ctx.fillStyle = ecGrad;
+    ctx.beginPath();
+    ctx.arc(ecX, ecY, ecSize * 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Armor plate heat pulse glow
+  ctx.save();
+  const armorPulse = 0.5 + Math.sin(time * 2) * 0.3;
+  for (let ap = 0; ap < 3; ap++) {
+    const apX = x + (ap - 1) * size * 0.15;
+    const apY = y - size * 0.2 + ap * size * 0.08;
+    const apGrad = ctx.createRadialGradient(apX, apY, 0, apX, apY, size * 0.06);
+    apGrad.addColorStop(0, `rgba(251, 191, 36, ${armorPulse * flamePulse * 0.2})`);
+    apGrad.addColorStop(0.5, `rgba(249, 115, 22, ${armorPulse * flamePulse * 0.1})`);
+    apGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+    ctx.fillStyle = apGrad;
+    ctx.beginPath();
+    ctx.arc(apX, apY, size * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }

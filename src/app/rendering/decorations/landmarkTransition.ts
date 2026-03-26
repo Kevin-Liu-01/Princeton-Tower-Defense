@@ -22,6 +22,21 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "sphinx",
   "giant_sphinx",
   "nassau_hall",
+  "princeton_chapel",
+  "firestone_library",
+  "blair_arch",
+  "whig_hall",
+  "east_pyne",
+  "prospect_house",
+  "clio_hall",
+  "mccosh_hall",
+  "robertson_hall",
+  "holder_hall",
+  "cleveland_tower",
+  "alexander_hall",
+  "fine_hall",
+  "foulke_hall",
+  "tiger_stadium",
   "glacier",
   "ice_fortress",
   "obsidian_castle",
@@ -66,6 +81,8 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "dock",
   "ice_spire",
   "ice_throne",
+  "broken_wall",
+  "fence",
 ]);
 
 // Softer palette for settled/organic ground beneath structures.
@@ -228,8 +245,10 @@ function getDecorationTransitionRadii(
   zoom: number,
 ): TransitionRadii {
   const volume = getDecorationVolumeSpec(decorType);
-  const baseW = Math.min(volume.width * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
-  const baseH = Math.min(volume.length * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
+  const baseW =
+    Math.min(volume.width * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
+  const baseH =
+    Math.min(volume.length * 0.42 * decorScale, MAX_TRANSITION_BASE) * zoom;
   return {
     outerW: baseW * ISO_PRISM_W_FACTOR * 2.4,
     outerH: baseH * ISO_PRISM_D_FACTOR * 2.4,
@@ -289,16 +308,18 @@ function drawTransitionBlob(
   const regionTheme = REGION_THEMES[mapTheme];
 
   const outerEdgeColor = isChallenge
-    ? (palette as typeof CHALLENGE_GROUND_TRANSITION_PALETTES[MapTheme]).groundEdge
+    ? (palette as (typeof CHALLENGE_GROUND_TRANSITION_PALETTES)[MapTheme])
+        .groundEdge
     : regionTheme.ground[1];
   const clumpEdgeColor = isChallenge
-    ? (palette as typeof CHALLENGE_GROUND_TRANSITION_PALETTES[MapTheme]).groundFar
+    ? (palette as (typeof CHALLENGE_GROUND_TRANSITION_PALETTES)[MapTheme])
+        .groundFar
     : regionTheme.ground[2];
 
   const { outerW, outerH, midW, midH, innerW, innerH } = radii;
 
   const cx = screenPos.x;
-  const cy = screenPos.y + 8 * zoom / decorScale;
+  const cy = screenPos.y + (8 * zoom) / decorScale;
 
   const blobSeed = selectedMap.charCodeAt(0) + seedX * 59 + seedY * 113;
   const detailScale = Math.max(
@@ -610,9 +631,7 @@ export function renderDecorationTransitions(
   const time = Date.now() / 1000;
 
   for (const deco of levelData.decorations) {
-    const decoType = (deco.category || deco.type) as
-      | DecorationType
-      | undefined;
+    const decoType = (deco.category || deco.type) as DecorationType | undefined;
     if (!decoType || !GROUND_TRANSITION_TYPES.has(decoType)) continue;
 
     const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
@@ -627,7 +646,6 @@ export function renderDecorationTransitions(
       cameraOffset,
       cameraZoom,
     );
-
     const radii = getDecorationTransitionRadii(
       decoType,
       resolvedPlacement.scale,

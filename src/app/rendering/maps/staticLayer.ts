@@ -38,6 +38,7 @@ import { renderDecorationItem } from "../decorations/renderDecorationItem";
 import { getPerformanceSettings } from "../performance";
 import { renderThemedBackdropSilhouettes } from "./mountainBackdropDetails";
 import { renderTerrainTexture } from "./terrainTexture";
+import { domainWarpedNoise } from "./terrainNoise";
 import type { MapTheme } from "../../types";
 
 export interface RegionTheme {
@@ -2135,23 +2136,36 @@ export function renderStaticMapLayer({
           continue;
         }
       }
-      if (gridRandom() > 0.45) {
-        const worldPos = gridToWorld({ x, y });
-        const screenPos = toScreen(worldPos);
-        const tintBaseAlpha = isChallengeTopLayer ? 0.01 : 0.025;
-        const tintVarAlpha = isChallengeTopLayer ? 0.02 : 0.04;
-        const tileColor =
-          tileColors[Math.floor(gridRandom() * tileColors.length)];
-        ctx.fillStyle = hexToRgba(
-          tileColor,
-          tintBaseAlpha + gridRandom() * tintVarAlpha,
-        );
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x, screenPos.y);
-        ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y + tileHeight / 2);
-        ctx.lineTo(screenPos.x, screenPos.y + tileHeight);
-        ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y + tileHeight / 2);
-        ctx.closePath();
+
+      const n = domainWarpedNoise(x * 0.15, y * 0.15, mapSeed + 42, 3, 1.5);
+      const worldPos = gridToWorld({ x, y });
+      const screenPos = toScreen(worldPos);
+
+      const baseAlpha = isChallengeTopLayer ? 0.01 : 0.02;
+      const varAlpha = isChallengeTopLayer ? 0.015 : 0.035;
+      const alpha = baseAlpha + n * varAlpha;
+
+      let tileColor: string;
+      if (n > 0.62) {
+        tileColor = theme.accent;
+      } else if (n < 0.32) {
+        tileColor = theme.ground[2] ?? theme.ground[1];
+      } else {
+        tileColor =
+          tileColors[Math.floor(n * tileColors.length) % tileColors.length];
+      }
+
+      ctx.fillStyle = hexToRgba(tileColor, alpha);
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x, screenPos.y);
+      ctx.lineTo(screenPos.x + tileWidth / 2, screenPos.y + tileHeight / 2);
+      ctx.lineTo(screenPos.x, screenPos.y + tileHeight);
+      ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y + tileHeight / 2);
+      ctx.closePath();
+      ctx.fill();
+
+      if (gridRandom() > 0.93) {
+        ctx.fillStyle = hexToRgba(theme.accent, 0.03 + gridRandom() * 0.03);
         ctx.fill();
       }
     }

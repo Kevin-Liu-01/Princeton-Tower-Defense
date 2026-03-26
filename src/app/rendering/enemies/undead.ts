@@ -293,6 +293,37 @@ export function drawSpecterEnemy(
   );
   ctx.fill();
 
+  // Visible ribcage structure through translucent torso
+  ctx.strokeStyle = `rgba(200, 210, 220, ${flicker * 0.3})`;
+  ctx.lineWidth = 1.2 * zoom;
+  for (let rib = 0; rib < 4; rib++) {
+    const ribY = y - size * 0.08 + rib * size * 0.065 + phase;
+    const ribWidth = size * (0.14 - rib * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.02, ribY);
+    ctx.bezierCurveTo(
+      x - ribWidth * 0.6, ribY - size * 0.02,
+      x - ribWidth, ribY + size * 0.01,
+      x - ribWidth * 0.85, ribY + size * 0.025,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.02, ribY);
+    ctx.bezierCurveTo(
+      x + ribWidth * 0.6, ribY - size * 0.02,
+      x + ribWidth, ribY + size * 0.01,
+      x + ribWidth * 0.85, ribY + size * 0.025,
+    );
+    ctx.stroke();
+  }
+  // Sternum line
+  ctx.strokeStyle = `rgba(200, 210, 220, ${flicker * 0.25})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.12 + phase);
+  ctx.lineTo(x, y + size * 0.15 + phase);
+  ctx.stroke();
+
   // Void energy swirls
   ctx.strokeStyle = `rgba(56, 189, 248, ${pulseIntensity * 0.4})`;
   ctx.lineWidth = 1.5 * zoom;
@@ -567,16 +598,26 @@ export function drawSpecterEnemy(
   );
   ctx.stroke();
 
-  // Left hand wisps (fingers)
+  // Left hand skeletal finger bones
   ctx.lineWidth = 1.5 * zoom;
   for (let finger = 0; finger < 4; finger++) {
     const fingerAngle = -0.3 + finger * 0.2 + Math.sin(time * 3 + finger) * 0.1;
+    const baseX = x - size * 0.45 + waver * size;
+    const baseY = y + size * 0.35;
+    const midX = baseX + Math.cos(fingerAngle) * size * 0.06;
+    const midY = baseY + Math.sin(fingerAngle + Math.PI * 0.5) * size * 0.05;
+    const tipX = baseX + Math.cos(fingerAngle) * size * 0.12;
+    const tipY = baseY + Math.sin(fingerAngle + Math.PI * 0.5) * size * 0.1;
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.45 + waver * size, y + size * 0.35);
-    ctx.lineTo(
-      x - size * 0.45 + waver * size + Math.cos(fingerAngle) * size * 0.12,
-      y + size * 0.35 + Math.sin(fingerAngle + Math.PI * 0.5) * size * 0.1,
-    );
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(midX, midY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(midX, midY, size * 0.008, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(tipX, tipY);
     ctx.stroke();
   }
 
@@ -608,17 +649,27 @@ export function drawSpecterEnemy(
   );
   ctx.stroke();
 
-  // Right hand wisps
+  // Right hand skeletal finger bones
   ctx.lineWidth = 1.5 * zoom;
   for (let finger = 0; finger < 4; finger++) {
     const fingerAngle =
       Math.PI - (-0.3 + finger * 0.2 + Math.sin(time * 3 + finger) * 0.1);
+    const baseX = x + size * 0.45 - waver * size;
+    const baseY = y + size * 0.35;
+    const midX = baseX + Math.cos(fingerAngle) * size * 0.06;
+    const midY = baseY + Math.sin(fingerAngle - Math.PI * 0.5) * size * 0.05;
+    const tipX = baseX + Math.cos(fingerAngle) * size * 0.12;
+    const tipY = baseY + Math.sin(fingerAngle - Math.PI * 0.5) * size * 0.1;
     ctx.beginPath();
-    ctx.moveTo(x + size * 0.45 - waver * size, y + size * 0.35);
-    ctx.lineTo(
-      x + size * 0.45 - waver * size + Math.cos(fingerAngle) * size * 0.12,
-      y + size * 0.35 + Math.sin(fingerAngle - Math.PI * 0.5) * size * 0.1,
-    );
+    ctx.moveTo(baseX, baseY);
+    ctx.lineTo(midX, midY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(midX, midY, size * 0.008, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(tipX, tipY);
     ctx.stroke();
   }
 
@@ -765,27 +816,84 @@ export function drawSpecterEnemy(
     rotateWithOrbit: true,
   });
 
-  // === LAYER 10: HOOD / SHROUD OVERLAY ===
-  // Tattered hood edges
-  ctx.strokeStyle = `rgba(100, 116, 139, ${flicker * 0.3})`;
+  // === LAYER 10: TATTERED HOOD / CLOAK ===
+  // Filled hood shape with ragged bezier edges
+  const hoodGrad = ctx.createLinearGradient(
+    x - size * 0.3, y - size * 0.55 + phase,
+    x + size * 0.3, y + size * 0.1 + phase,
+  );
+  hoodGrad.addColorStop(0, `rgba(51, 65, 85, ${flicker * 0.6})`);
+  hoodGrad.addColorStop(0.4, `rgba(30, 41, 59, ${flicker * 0.5})`);
+  hoodGrad.addColorStop(1, `rgba(15, 23, 42, ${flicker * 0.2})`);
+  ctx.fillStyle = hoodGrad;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.58 + phase);
+  ctx.bezierCurveTo(
+    x - size * 0.12, y - size * 0.62 + phase,
+    x - size * 0.28, y - size * 0.52 + phase,
+    x - size * 0.32, y - size * 0.38 + phase,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.38, y - size * 0.2 + phase,
+    x - size * 0.42, y + size * 0.05 + phase,
+    x - size * 0.35, y + size * 0.15 + phase,
+  );
+  // Ragged left edge
+  ctx.bezierCurveTo(
+    x - size * 0.38, y + size * 0.22 + phase + Math.sin(time * 4) * size * 0.03,
+    x - size * 0.3, y + size * 0.18 + phase,
+    x - size * 0.28, y + size * 0.25 + phase + Math.sin(time * 5) * size * 0.04,
+  );
+  ctx.lineTo(x - size * 0.22, y + size * 0.2 + phase);
+  ctx.lineTo(x - size * 0.18, y + size * 0.28 + phase + Math.sin(time * 3.5) * size * 0.03);
+  ctx.lineTo(x - size * 0.1, y + size * 0.22 + phase);
+  // Bottom ragged hem
+  ctx.lineTo(x - size * 0.05, y + size * 0.3 + phase + Math.sin(time * 6) * size * 0.04);
+  ctx.lineTo(x, y + size * 0.24 + phase);
+  ctx.lineTo(x + size * 0.05, y + size * 0.3 + phase + Math.sin(time * 5.5) * size * 0.03);
+  ctx.lineTo(x + size * 0.1, y + size * 0.22 + phase);
+  ctx.lineTo(x + size * 0.18, y + size * 0.28 + phase + Math.sin(time * 4.5) * size * 0.04);
+  ctx.lineTo(x + size * 0.22, y + size * 0.2 + phase);
+  ctx.lineTo(x + size * 0.28, y + size * 0.25 + phase + Math.sin(time * 3) * size * 0.03);
+  // Right side back up
+  ctx.bezierCurveTo(
+    x + size * 0.42, y + size * 0.05 + phase,
+    x + size * 0.38, y - size * 0.2 + phase,
+    x + size * 0.32, y - size * 0.38 + phase,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.28, y - size * 0.52 + phase,
+    x + size * 0.12, y - size * 0.62 + phase,
+    x, y - size * 0.58 + phase,
+  );
+  ctx.fill();
+
+  // Hood fold lines for depth
+  ctx.strokeStyle = `rgba(15, 23, 42, ${flicker * 0.4})`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.25, y - size * 0.42 + phase);
-  ctx.quadraticCurveTo(
-    x - size * 0.35,
-    y - size * 0.25 + phase,
-    x - size * 0.32,
-    y - size * 0.1 + phase,
+  ctx.moveTo(x - size * 0.08, y - size * 0.55 + phase);
+  ctx.bezierCurveTo(
+    x - size * 0.22, y - size * 0.4 + phase,
+    x - size * 0.28, y - size * 0.15 + phase,
+    x - size * 0.25, y + size * 0.1 + phase,
   );
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.25, y - size * 0.42 + phase);
-  ctx.quadraticCurveTo(
-    x + size * 0.35,
-    y - size * 0.25 + phase,
-    x + size * 0.32,
-    y - size * 0.1 + phase,
+  ctx.moveTo(x + size * 0.08, y - size * 0.55 + phase);
+  ctx.bezierCurveTo(
+    x + size * 0.22, y - size * 0.4 + phase,
+    x + size * 0.28, y - size * 0.15 + phase,
+    x + size * 0.25, y + size * 0.1 + phase,
   );
+  ctx.stroke();
+
+  // Hood peak drape detail
+  ctx.strokeStyle = `rgba(30, 41, 59, ${flicker * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.5 + phase);
+  ctx.quadraticCurveTo(x, y - size * 0.56 + phase, x + size * 0.15, y - size * 0.5 + phase);
   ctx.stroke();
 }
 
@@ -1123,48 +1231,148 @@ export function drawBerserkerEnemy(
   bodyGrad.addColorStop(1, "#450a0a");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.38, y + size * 0.42);
-  ctx.lineTo(x - size * 0.42, y + size * 0.2);
-  ctx.quadraticCurveTo(
-    x - size * 0.48 - breathe * size,
-    y - size * 0.05,
-    x - size * 0.44 - breathe * size,
-    y - size * 0.14,
+  // Waist (narrower)
+  ctx.moveTo(x - size * 0.28, y + size * 0.42);
+  // Left oblique taper into lat
+  ctx.bezierCurveTo(
+    x - size * 0.32, y + size * 0.32,
+    x - size * 0.38, y + size * 0.22,
+    x - size * 0.42, y + size * 0.1,
   );
-  ctx.quadraticCurveTo(x, y - size * 0.48, x + size * 0.44 + breathe * size, y - size * 0.14);
-  ctx.quadraticCurveTo(
-    x + size * 0.48 + breathe * size,
-    y - size * 0.05,
-    x + size * 0.42,
-    y + size * 0.2,
+  // Left lat flare into deltoid bulge
+  ctx.bezierCurveTo(
+    x - size * 0.48 - breathe * size, y - size * 0.02,
+    x - size * 0.52 - breathe * size, y - size * 0.1,
+    x - size * 0.46 - breathe * size, y - size * 0.18,
   );
-  ctx.lineTo(x + size * 0.38, y + size * 0.42);
+  // Left deltoid cap
+  ctx.bezierCurveTo(
+    x - size * 0.42, y - size * 0.28,
+    x - size * 0.3, y - size * 0.35,
+    x - size * 0.18, y - size * 0.36,
+  );
+  // Trapezius up to neck
+  ctx.bezierCurveTo(
+    x - size * 0.1, y - size * 0.38,
+    x - size * 0.04, y - size * 0.4,
+    x, y - size * 0.42,
+  );
+  // Right trapezius
+  ctx.bezierCurveTo(
+    x + size * 0.04, y - size * 0.4,
+    x + size * 0.1, y - size * 0.38,
+    x + size * 0.18, y - size * 0.36,
+  );
+  // Right deltoid cap
+  ctx.bezierCurveTo(
+    x + size * 0.3, y - size * 0.35,
+    x + size * 0.42, y - size * 0.28,
+    x + size * 0.46 + breathe * size, y - size * 0.18,
+  );
+  // Right lat
+  ctx.bezierCurveTo(
+    x + size * 0.52 + breathe * size, y - size * 0.1,
+    x + size * 0.48 + breathe * size, y - size * 0.02,
+    x + size * 0.42, y + size * 0.1,
+  );
+  // Right oblique taper
+  ctx.bezierCurveTo(
+    x + size * 0.38, y + size * 0.22,
+    x + size * 0.32, y + size * 0.32,
+    x + size * 0.28, y + size * 0.42,
+  );
   ctx.closePath();
   ctx.fill();
 
-  // Chest muscle definition
+  // Neck muscle lines (sternocleidomastoid — jaw to shoulder)
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.35)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y - size * 0.38);
+  ctx.bezierCurveTo(
+    x - size * 0.1, y - size * 0.35,
+    x - size * 0.14, y - size * 0.3,
+    x - size * 0.2, y - size * 0.26,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, y - size * 0.38);
+  ctx.bezierCurveTo(
+    x + size * 0.1, y - size * 0.35,
+    x + size * 0.14, y - size * 0.3,
+    x + size * 0.2, y - size * 0.26,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.03, y - size * 0.4);
+  ctx.bezierCurveTo(
+    x - size * 0.08, y - size * 0.36,
+    x - size * 0.12, y - size * 0.32,
+    x - size * 0.16, y - size * 0.28,
+  );
+  ctx.stroke();
+
+  // Chest muscle definition (pectoral outlines)
   ctx.strokeStyle = `rgba(69, 10, 10, 0.4)`;
   ctx.lineWidth = 1.5 * zoom;
+  // Sternum line
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.3);
-  ctx.lineTo(x, y + size * 0.15);
+  ctx.bezierCurveTo(x, y - size * 0.15, x, y + size * 0.05, x, y + size * 0.15);
   ctx.stroke();
+  // Left pectoral
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.03, y - size * 0.2);
-  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.18, x - size * 0.3, y - size * 0.08);
+  ctx.moveTo(x - size * 0.03, y - size * 0.22);
+  ctx.bezierCurveTo(
+    x - size * 0.14, y - size * 0.24,
+    x - size * 0.28, y - size * 0.2,
+    x - size * 0.36, y - size * 0.08,
+  );
   ctx.stroke();
+  // Left pec lower sweep
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.03, y - size * 0.2);
-  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.18, x + size * 0.3, y - size * 0.08);
+  ctx.moveTo(x - size * 0.04, y - size * 0.08);
+  ctx.bezierCurveTo(
+    x - size * 0.12, y - size * 0.06,
+    x - size * 0.24, y - size * 0.1,
+    x - size * 0.34, y - size * 0.05,
+  );
   ctx.stroke();
-  // Ab ridges
+  // Right pectoral
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.03, y - size * 0.22);
+  ctx.bezierCurveTo(
+    x + size * 0.14, y - size * 0.24,
+    x + size * 0.28, y - size * 0.2,
+    x + size * 0.36, y - size * 0.08,
+  );
+  ctx.stroke();
+  // Right pec lower sweep
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.04, y - size * 0.08);
+  ctx.bezierCurveTo(
+    x + size * 0.12, y - size * 0.06,
+    x + size * 0.24, y - size * 0.1,
+    x + size * 0.34, y - size * 0.05,
+  );
+  ctx.stroke();
+  // Ab ridges (curved for realism)
   for (let ab = 0; ab < 3; ab++) {
-    const abY = y + size * 0.0 + ab * size * 0.08;
+    const abY = y + size * 0.02 + ab * size * 0.075;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.12, abY);
-    ctx.lineTo(x + size * 0.12, abY);
+    ctx.quadraticCurveTo(x, abY + size * 0.01, x + size * 0.12, abY);
     ctx.stroke();
   }
+  // Oblique lines (V-cut)
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14, y + size * 0.22);
+  ctx.bezierCurveTo(x - size * 0.18, y + size * 0.28, x - size * 0.22, y + size * 0.34, x - size * 0.24, y + size * 0.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.14, y + size * 0.22);
+  ctx.bezierCurveTo(x + size * 0.18, y + size * 0.28, x + size * 0.22, y + size * 0.34, x + size * 0.24, y + size * 0.4);
+  ctx.stroke();
 
   // === PULSING RUNE TATTOOS (with heartbeat animation) ===
   const runeAlpha = runeGlow + heartbeatSharp * 0.3;
@@ -1300,6 +1508,17 @@ export function drawBerserkerEnemy(
   ctx.beginPath();
   ctx.arc(x - size * 0.05, y + size * 0.12, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
+  // Additional diagonal scars across torso
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.45)";
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.08, y - size * 0.18);
+  ctx.bezierCurveTo(x + size * 0.05, y - size * 0.08, x - size * 0.02, y + size * 0.02, x - size * 0.08, y + size * 0.1);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.2, y + size * 0.06);
+  ctx.lineTo(x - size * 0.06, y + size * 0.18);
+  ctx.stroke();
 
   // === LAYER 6: DUAL-WIELDING ARMS WITH WEAPONS ===
 
@@ -1341,6 +1560,17 @@ export function drawBerserkerEnemy(
   ctx.moveTo(-size * 0.05, size * 0.08);
   ctx.lineTo(-size * 0.06, size * 0.25);
   ctx.stroke();
+  // Forearm tendon lines
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.04, size * 0.24);
+  ctx.bezierCurveTo(-size * 0.035, size * 0.3, -size * 0.03, size * 0.36, -size * 0.025, size * 0.41);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.04, size * 0.24);
+  ctx.bezierCurveTo(size * 0.035, size * 0.3, size * 0.03, size * 0.36, size * 0.025, size * 0.41);
+  ctx.stroke();
 
   // Arm rune band
   ctx.strokeStyle = `rgba(239, 68, 68, ${runeAlpha})`;
@@ -1352,6 +1582,39 @@ export function drawBerserkerEnemy(
   ctx.beginPath();
   ctx.moveTo(-size * 0.1, size * 0.14);
   ctx.lineTo(size * 0.1, size * 0.14);
+  ctx.stroke();
+
+  // Wrist bracer (left arm)
+  const bracerGrad = ctx.createLinearGradient(-size * 0.11, size * 0.32, size * 0.11, size * 0.32);
+  bracerGrad.addColorStop(0, "#44403c");
+  bracerGrad.addColorStop(0.3, "#57534e");
+  bracerGrad.addColorStop(0.7, "#57534e");
+  bracerGrad.addColorStop(1, "#44403c");
+  ctx.fillStyle = bracerGrad;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.09, size * 0.4);
+  ctx.lineTo(-size * 0.09, size * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  // Bracer studs
+  ctx.fillStyle = "#a8a29e";
+  for (let stud = 0; stud < 3; stud++) {
+    ctx.beginPath();
+    ctx.arc(-size * 0.06 + stud * size * 0.06, size * 0.35, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Bracer edge trim
+  ctx.strokeStyle = "#78716c";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.1, size * 0.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.09, size * 0.4);
+  ctx.lineTo(size * 0.09, size * 0.4);
   ctx.stroke();
 
   // Axe handle (wrapped leather)
@@ -1441,6 +1704,17 @@ export function drawBerserkerEnemy(
   ctx.moveTo(0, size * 0.03);
   ctx.quadraticCurveTo(-size * 0.04, size * 0.15, 0, size * 0.32);
   ctx.stroke();
+  // Forearm tendon lines
+  ctx.strokeStyle = "rgba(69, 10, 10, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.04, size * 0.24);
+  ctx.bezierCurveTo(-size * 0.035, size * 0.3, -size * 0.03, size * 0.36, -size * 0.025, size * 0.41);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.04, size * 0.24);
+  ctx.bezierCurveTo(size * 0.035, size * 0.3, size * 0.03, size * 0.36, size * 0.025, size * 0.41);
+  ctx.stroke();
 
   // Arm scar
   ctx.strokeStyle = "rgba(69, 10, 10, 0.5)";
@@ -1448,6 +1722,37 @@ export function drawBerserkerEnemy(
   ctx.beginPath();
   ctx.moveTo(-size * 0.06, size * 0.12);
   ctx.lineTo(size * 0.04, size * 0.28);
+  ctx.stroke();
+
+  // Wrist bracer (right arm)
+  const bracerGradR = ctx.createLinearGradient(-size * 0.11, size * 0.32, size * 0.11, size * 0.32);
+  bracerGradR.addColorStop(0, "#44403c");
+  bracerGradR.addColorStop(0.3, "#57534e");
+  bracerGradR.addColorStop(0.7, "#57534e");
+  bracerGradR.addColorStop(1, "#44403c");
+  ctx.fillStyle = bracerGradR;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.09, size * 0.4);
+  ctx.lineTo(-size * 0.09, size * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#a8a29e";
+  for (let stud = 0; stud < 3; stud++) {
+    ctx.beginPath();
+    ctx.arc(-size * 0.06 + stud * size * 0.06, size * 0.35, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#78716c";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, size * 0.3);
+  ctx.lineTo(size * 0.1, size * 0.3);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.09, size * 0.4);
+  ctx.lineTo(size * 0.09, size * 0.4);
   ctx.stroke();
 
   // War cleaver handle
@@ -2039,6 +2344,27 @@ export function drawGolemEnemy(
     ctx.stroke();
   }
 
+  // Ground tremor rings - seismic footstep pulses
+  for (let ring = 0; ring < 3; ring++) {
+    const ringPhase = (time * 1.2 + ring * 0.7) % 2.0;
+    const ringRadius = size * (0.3 + ringPhase * 0.35);
+    const ringAlpha = Math.max(0, (1 - ringPhase / 2.0) * 0.3);
+    if (ringAlpha > 0) {
+      ctx.strokeStyle = `rgba(251, 191, 36, ${ringAlpha})`;
+      ctx.lineWidth = (2.5 - ringPhase * 0.8) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        y + size * 0.45,
+        ringRadius,
+        ringRadius * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
 
   // Tail (behind body)
   ctx.save();
@@ -2093,15 +2419,26 @@ export function drawGolemEnemy(
   ctx.lineTo(x + size * 0.22, y + size * 0.48 - prowl * 0.15);
   ctx.lineTo(x + size * 0.15, y + size * 0.2);
   ctx.fill();
-  // Paw details
-  ctx.strokeStyle = "#44403c";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.32, y + size * 0.48 + prowl * 0.3);
-  ctx.lineTo(x - size * 0.3, y + size * 0.45 + prowl * 0.3);
-  ctx.moveTo(x - size * 0.28, y + size * 0.48 + prowl * 0.3);
-  ctx.lineTo(x - size * 0.26, y + size * 0.45 + prowl * 0.3);
-  ctx.stroke();
+  // Back paw toe details
+  for (let bp = 0; bp < 2; bp++) {
+    const bpX = bp === 0 ? x - size * 0.285 : x + size * 0.285;
+    const bpY = bp === 0 ? y + size * 0.48 + prowl * 0.3 : y + size * 0.48 - prowl * 0.15;
+    ctx.fillStyle = "#6b6560";
+    for (let toe = 0; toe < 3; toe++) {
+      const toeOff = -0.03 + toe * 0.03;
+      ctx.beginPath();
+      ctx.ellipse(bpX + toeOff * size, bpY - size * 0.01, size * 0.018, size * 0.014, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = "#44403c";
+    ctx.lineWidth = 1 * zoom;
+    for (let sep = 0; sep < 2; sep++) {
+      ctx.beginPath();
+      ctx.moveTo(bpX + (-0.015 + sep * 0.03) * size, bpY);
+      ctx.lineTo(bpX + (-0.015 + sep * 0.03) * size, bpY - size * 0.025);
+      ctx.stroke();
+    }
+  }
 
   // Massive lion body
   const bodyGrad = ctx.createRadialGradient(
@@ -2129,35 +2466,163 @@ export function drawGolemEnemy(
   );
   ctx.fill();
 
-  // Stone texture on body
+  // Stone block joints - visible seams between body segments
+  ctx.strokeStyle = "#3d3835";
+  ctx.lineWidth = 2 * zoom;
+  // Major horizontal joint (torso/haunches divide)
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.38, y + size * 0.06 + breathe);
+  ctx.bezierCurveTo(
+    x - size * 0.15, y + size * 0.1 + breathe,
+    x + size * 0.15, y + size * 0.08 + breathe,
+    x + size * 0.38, y + size * 0.06 + breathe,
+  );
+  ctx.stroke();
+  // Shoulder joint seam (left)
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.12 + breathe);
+  ctx.bezierCurveTo(
+    x - size * 0.3, y - size * 0.04 + breathe,
+    x - size * 0.28, y + size * 0.05 + breathe,
+    x - size * 0.32, y + size * 0.15 + breathe,
+  );
+  ctx.stroke();
+  // Shoulder joint seam (right)
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.35, y - size * 0.12 + breathe);
+  ctx.bezierCurveTo(
+    x + size * 0.3, y - size * 0.04 + breathe,
+    x + size * 0.28, y + size * 0.05 + breathe,
+    x + size * 0.32, y + size * 0.15 + breathe,
+  );
+  ctx.stroke();
+
+  // Stone block texture (irregular carved lines)
   ctx.strokeStyle = "#44403c";
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineWidth = 1.2 * zoom;
+  // Vertical stone grain lines
   for (let tex = 0; tex < 5; tex++) {
     const texX = x - size * 0.25 + tex * size * 0.12;
     ctx.beginPath();
     ctx.moveTo(texX, y - size * 0.1 + breathe);
-    ctx.quadraticCurveTo(
-      texX + size * 0.03,
-      y + size * 0.05 + breathe,
-      texX - size * 0.02,
-      y + size * 0.2 + breathe,
+    ctx.bezierCurveTo(
+      texX + size * 0.02, y - size * 0.02 + breathe,
+      texX - size * 0.02, y + size * 0.08 + breathe,
+      texX + size * 0.01, y + size * 0.2 + breathe,
     );
     ctx.stroke();
   }
-  // Chiseled panel seams
-  ctx.lineWidth = 1.2 * zoom;
-  for (let seam = 0; seam < 4; seam++) {
-    const seamY = y - size * 0.02 + seam * size * 0.1 + breathe;
+  // Chisel marks (short hash marks)
+  ctx.lineWidth = 1 * zoom;
+  for (let mark = 0; mark < 8; mark++) {
+    const mx = x - size * 0.3 + mark * size * 0.085;
+    const my = y + size * (0.15 + Math.sin(mark * 2.3) * 0.05) + breathe;
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.26, seamY);
-    ctx.quadraticCurveTo(
-      x,
-      seamY + size * 0.02,
-      x + size * 0.24,
-      seamY - size * 0.01,
-    );
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx + size * 0.02, my + size * 0.015);
     ctx.stroke();
   }
+
+  // Spine ridge — raised stone bumps along the back centerline
+  for (let spine = 0; spine < 5; spine++) {
+    const spineY = y - size * 0.08 + spine * size * 0.07 + breathe;
+    const bumpR = size * (0.022 - spine * 0.002);
+    ctx.fillStyle = "#6b6560";
+    ctx.beginPath();
+    ctx.ellipse(x, spineY, bumpR, bumpR * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#44403c";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.arc(x, spineY, bumpR, Math.PI * 0.2, Math.PI * 0.8);
+    ctx.stroke();
+  }
+
+  // Additional surface crack lines
+  ctx.strokeStyle = "#3d3835";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y - size * 0.15 + breathe);
+  ctx.bezierCurveTo(
+    x - size * 0.05, y - size * 0.08 + breathe,
+    x + size * 0.02, y + size * 0.02 + breathe,
+    x + size * 0.08, y + size * 0.1 + breathe,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.18, y - size * 0.05 + breathe);
+  ctx.bezierCurveTo(
+    x + size * 0.12, y + size * 0.02 + breathe,
+    x + size * 0.06, y + size * 0.08 + breathe,
+    x + size * 0.1, y + size * 0.18 + breathe,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y + size * 0.1 + breathe);
+  ctx.lineTo(x - size * 0.12, y + size * 0.16 + breathe);
+  ctx.lineTo(x - size * 0.15, y + size * 0.22 + breathe);
+  ctx.stroke();
+
+  // Stone crack glow effects - energy visible through cracks
+  const crackSegments = [
+    { sx: -0.25, sy: -0.12, pts: [[-0.12, -0.03], [0.02, 0.08], [0.18, 0.03]] },
+    { sx: 0.15, sy: -0.18, pts: [[0.22, -0.06], [0.28, 0.06], [0.2, 0.16]] },
+    { sx: -0.3, sy: 0.06, pts: [[-0.18, 0.14], [-0.05, 0.1], [0.08, 0.2]] },
+    { sx: 0.0, sy: -0.08, pts: [[-0.08, 0.03], [0.06, 0.12], [0.15, 0.07]] },
+  ];
+  for (const seg of crackSegments) {
+    const csX = x + seg.sx * size;
+    const csY = y + seg.sy * size + breathe;
+    const glowGrad = ctx.createRadialGradient(csX, csY, 0, csX, csY, size * 0.1);
+    glowGrad.addColorStop(0, `rgba(251, 146, 60, ${crackGlow * 0.25})`);
+    glowGrad.addColorStop(0.5, `rgba(217, 119, 6, ${crackGlow * 0.1})`);
+    glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.arc(csX, csY, size * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(251, 146, 60, ${crackGlow * 0.7})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(csX, csY);
+    for (const pt of seg.pts) {
+      ctx.lineTo(x + pt[0] * size, y + pt[1] * size + breathe);
+    }
+    ctx.stroke();
+  }
+
+  // Ancient rune markings on body surface
+  const runeAlpha = crackGlow * 0.5;
+  ctx.strokeStyle = `rgba(251, 191, 36, ${runeAlpha})`;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y + breathe);
+  ctx.lineTo(x - size * 0.12, y - size * 0.03 + breathe);
+  ctx.lineTo(x - size * 0.09, y + breathe);
+  ctx.lineTo(x - size * 0.12, y + size * 0.03 + breathe);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.12, y - size * 0.05 + breathe);
+  ctx.lineTo(x + size * 0.09, y + size * 0.01 + breathe);
+  ctx.lineTo(x + size * 0.15, y + size * 0.01 + breathe);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y + size * 0.12 + breathe, size * 0.025, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.025, y + size * 0.12 + breathe);
+  ctx.lineTo(x + size * 0.025, y + size * 0.12 + breathe);
+  ctx.moveTo(x, y + size * 0.095 + breathe);
+  ctx.lineTo(x, y + size * 0.145 + breathe);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y - size * 0.1 + breathe);
+  ctx.lineTo(x + size * 0.22, y - size * 0.06 + breathe);
+  ctx.lineTo(x + size * 0.2, y - size * 0.02 + breathe);
+  ctx.lineTo(x + size * 0.22, y + size * 0.02 + breathe);
+  ctx.stroke();
 
   // Glowing rune veins across body
   ctx.strokeStyle = `rgba(251, 191, 36, ${crackGlow * 0.6})`;
@@ -2205,28 +2670,36 @@ export function drawGolemEnemy(
   ctx.lineTo(x + size * 0.3, y + size * 0.48 - prowl * 0.5);
   ctx.lineTo(x + size * 0.26, y - size * 0.08);
   ctx.fill();
-  // Stone paws with claws
-  ctx.fillStyle = "#57534e";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.375,
-    y + size * 0.48 + prowl,
-    size * 0.08,
-    size * 0.035,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x + size * 0.375,
-    y + size * 0.48 - prowl * 0.5,
-    size * 0.08,
-    size * 0.035,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Stone paws with individual toes
+  for (let paw = 0; paw < 2; paw++) {
+    const pawX = paw === 0 ? x - size * 0.375 : x + size * 0.375;
+    const pawY = paw === 0 ? y + size * 0.48 + prowl : y + size * 0.48 - prowl * 0.5;
+    // Main paw pad
+    ctx.fillStyle = "#57534e";
+    ctx.beginPath();
+    ctx.ellipse(pawX, pawY, size * 0.065, size * 0.03, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Individual toe pads (4 toes)
+    ctx.fillStyle = "#6b6560";
+    for (let toe = 0; toe < 4; toe++) {
+      const toeAngle = -0.45 + toe * 0.3;
+      const toeX = pawX + Math.cos(toeAngle) * size * 0.06;
+      const toeY = pawY - size * 0.02 + Math.sin(toeAngle) * size * 0.01;
+      ctx.beginPath();
+      ctx.ellipse(toeX, toeY, size * 0.022, size * 0.018, toeAngle * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Toe separation lines
+    ctx.strokeStyle = "#44403c";
+    ctx.lineWidth = 1 * zoom;
+    for (let sep = 0; sep < 3; sep++) {
+      const sepAngle = -0.3 + sep * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(pawX + Math.cos(sepAngle) * size * 0.03, pawY - size * 0.015);
+      ctx.lineTo(pawX + Math.cos(sepAngle) * size * 0.07, pawY - size * 0.03);
+      ctx.stroke();
+    }
+  }
   // Shoulder armor ridges
   ctx.fillStyle = "#6b6560";
   ctx.beginPath();
@@ -2352,19 +2825,81 @@ export function drawGolemEnemy(
   ctx.ellipse(x, y - size * 0.48, size * 0.18, size * 0.06, 0, 0, Math.PI);
   ctx.fill();
 
-  // Stone-carved muzzle
-  ctx.fillStyle = "#78716c";
+  // Snarling stone muzzle (protruding snout with wrinkles)
+  const muzzleGrad = ctx.createRadialGradient(
+    x, y - size * 0.26, 0,
+    x, y - size * 0.26, size * 0.14,
+  );
+  muzzleGrad.addColorStop(0, "#a8a29e");
+  muzzleGrad.addColorStop(0.5, "#78716c");
+  muzzleGrad.addColorStop(1, "#57534e");
+  ctx.fillStyle = muzzleGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.28, size * 0.12, size * 0.1, 0, 0, Math.PI * 2);
+  ctx.moveTo(x - size * 0.1, y - size * 0.32);
+  ctx.bezierCurveTo(
+    x - size * 0.14, y - size * 0.28,
+    x - size * 0.13, y - size * 0.22,
+    x - size * 0.08, y - size * 0.18,
+  );
+  ctx.quadraticCurveTo(x, y - size * 0.16, x + size * 0.08, y - size * 0.18);
+  ctx.bezierCurveTo(
+    x + size * 0.13, y - size * 0.22,
+    x + size * 0.14, y - size * 0.28,
+    x + size * 0.1, y - size * 0.32,
+  );
+  ctx.closePath();
   ctx.fill();
+  // Snarl wrinkle lines on snout
+  ctx.strokeStyle = "#44403c";
+  ctx.lineWidth = 1 * zoom;
+  for (let wrinkle = 0; wrinkle < 4; wrinkle++) {
+    const wy = y - size * (0.31 - wrinkle * 0.025);
+    const wWidth = size * (0.06 + wrinkle * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(x - wWidth, wy);
+    ctx.quadraticCurveTo(x, wy + size * 0.008, x + wWidth, wy);
+    ctx.stroke();
+  }
 
-  // Nose
+  // Nose (broad, feline)
   ctx.fillStyle = "#44403c";
   ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.32);
-  ctx.lineTo(x - size * 0.04, y - size * 0.26);
-  ctx.lineTo(x + size * 0.04, y - size * 0.26);
+  ctx.moveTo(x, y - size * 0.33);
+  ctx.bezierCurveTo(
+    x - size * 0.035, y - size * 0.32,
+    x - size * 0.05, y - size * 0.28,
+    x - size * 0.03, y - size * 0.27,
+  );
+  ctx.lineTo(x, y - size * 0.285);
+  ctx.lineTo(x + size * 0.03, y - size * 0.27);
+  ctx.bezierCurveTo(
+    x + size * 0.05, y - size * 0.28,
+    x + size * 0.035, y - size * 0.32,
+    x, y - size * 0.33,
+  );
   ctx.fill();
+  // Nostrils
+  ctx.fillStyle = "#292524";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.02, y - size * 0.29, size * 0.012, size * 0.008, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.02, y - size * 0.29, size * 0.012, size * 0.008, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye blaze - intense radial gradient glow
+  for (const eyeSide of [-1, 1]) {
+    const blazeX = x + eyeSide * size * 0.09;
+    const blazeY = y - size * 0.42;
+    const blazeR = size * (0.06 + Math.sin(time * 6) * 0.015);
+    const blazeGrad = ctx.createRadialGradient(blazeX, blazeY, 0, blazeX, blazeY, blazeR);
+    blazeGrad.addColorStop(0, `rgba(255, 200, 50, ${eyeIntensity * 0.8})`);
+    blazeGrad.addColorStop(0.3, `rgba(251, 146, 60, ${eyeIntensity * 0.5})`);
+    blazeGrad.addColorStop(0.6, `rgba(217, 119, 6, ${eyeIntensity * 0.25})`);
+    blazeGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = blazeGrad;
+    ctx.beginPath();
+    ctx.arc(blazeX, blazeY, blazeR, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Ferocious glowing eyes
   ctx.fillStyle = "#1c1917";
@@ -2627,6 +3162,33 @@ export function drawGolemEnemy(
     trailLen: 2,
   });
 
+  // Floating stone debris - angular fragments orbiting
+  for (let frag = 0; frag < 6; frag++) {
+    const fragAngle = time * 0.6 + (frag * Math.PI * 2) / 6;
+    const fragDist = size * (0.5 + Math.sin(time * 1.5 + frag * 1.3) * 0.06);
+    const fragX = x + Math.cos(fragAngle) * fragDist;
+    const fragY =
+      y + Math.sin(fragAngle) * fragDist * ISO_Y_RATIO - size * 0.1;
+    const fragBob = Math.sin(time * 2 + frag * 0.8) * size * 0.03;
+    const fragSize = size * (0.03 + Math.sin(frag * 2.1) * 0.01);
+    ctx.save();
+    ctx.translate(fragX, fragY + fragBob);
+    ctx.rotate(time * 0.8 + frag * 1.1);
+    ctx.fillStyle = frag % 2 === 0 ? "#78716c" : "#a8a29e";
+    ctx.beginPath();
+    ctx.moveTo(0, -fragSize);
+    ctx.lineTo(fragSize * 0.8, -fragSize * 0.3);
+    ctx.lineTo(fragSize * 0.6, fragSize * 0.7);
+    ctx.lineTo(-fragSize * 0.5, fragSize * 0.5);
+    ctx.lineTo(-fragSize * 0.8, -fragSize * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#44403c";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Dust particles being kicked up
   for (let dust = 0; dust < 6; dust++) {
     const dustPhase = (time * 2 + dust * 0.4) % 1.5;
@@ -2827,6 +3389,38 @@ export function drawNecromancerEnemy(
     },
   );
 
+  // Skeletal finger bones extending from hand positions
+  const leftArmAngle = -1.1 + Math.sin(time * 2) * 0.1;
+  const leftElbAngle = -0.2 + Math.sin(time * 2.5 + 0.8) * 0.12;
+  const leftHandX = x - size * 0.35 + Math.cos(leftArmAngle) * size * 0.18 + Math.cos(leftArmAngle + leftElbAngle) * size * 0.16;
+  const leftHandY = y - size * 0.25 + hover + Math.sin(leftArmAngle) * size * 0.18 + Math.sin(leftArmAngle + leftElbAngle) * size * 0.16;
+  ctx.strokeStyle = "#e8e0d0";
+  ctx.lineWidth = 1 * zoom;
+  for (let f = 0; f < 3; f++) {
+    const fAngle = leftArmAngle + leftElbAngle + (f - 1) * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(leftHandX, leftHandY);
+    ctx.lineTo(
+      leftHandX + Math.cos(fAngle) * size * 0.06,
+      leftHandY + Math.sin(fAngle) * size * 0.06,
+    );
+    ctx.stroke();
+  }
+  const rightArmAngle = 0.9 + Math.sin(time * 2 + 1.5) * 0.12;
+  const rightElbAngle = 0.3 + Math.sin(time * 2.8 + 2) * 0.1;
+  const rightHandX = x + size * 0.35 + Math.cos(rightArmAngle) * size * 0.18 + Math.cos(rightArmAngle + rightElbAngle) * size * 0.16;
+  const rightHandY = y - size * 0.25 + hover + Math.sin(rightArmAngle) * size * 0.18 + Math.sin(rightArmAngle + rightElbAngle) * size * 0.16;
+  for (let f = 0; f < 3; f++) {
+    const fAngle = rightArmAngle + rightElbAngle + (f - 1) * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(rightHandX, rightHandY);
+    ctx.lineTo(
+      rightHandX + Math.cos(fAngle) * size * 0.06,
+      rightHandY + Math.sin(fAngle) * size * 0.06,
+    );
+    ctx.stroke();
+  }
+
   // Dark robes with soul threads
   const robeGrad = ctx.createLinearGradient(
     x - size * 0.42,
@@ -2866,6 +3460,52 @@ export function drawNecromancerEnemy(
     ctx.stroke();
   }
 
+  // Embroidered robe trim (ornamental border along front seam)
+  ctx.strokeStyle = `rgba(139, 92, 246, ${deathPulse * 0.6})`;
+  ctx.lineWidth = 2 * zoom;
+  // Left front trim line
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y - size * 0.35 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.07, y - size * 0.1 + hover * 0.5,
+    x - size * 0.08, y + size * 0.15,
+    x - size * 0.1, y + size * 0.45,
+  );
+  ctx.stroke();
+  // Right front trim line
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, y - size * 0.35 + hover);
+  ctx.bezierCurveTo(
+    x + size * 0.07, y - size * 0.1 + hover * 0.5,
+    x + size * 0.08, y + size * 0.15,
+    x + size * 0.1, y + size * 0.45,
+  );
+  ctx.stroke();
+  // Trim diamond/scroll pattern along front seam
+  ctx.strokeStyle = `rgba(217, 119, 6, ${deathPulse * 0.4})`;
+  ctx.lineWidth = 1 * zoom;
+  for (let pat = 0; pat < 6; pat++) {
+    const patY = y - size * 0.25 + pat * size * 0.12 + hover * 0.4;
+    ctx.beginPath();
+    ctx.moveTo(x, patY - size * 0.02);
+    ctx.lineTo(x + size * 0.025, patY);
+    ctx.lineTo(x, patY + size * 0.02);
+    ctx.lineTo(x - size * 0.025, patY);
+    ctx.closePath();
+    ctx.stroke();
+  }
+  // Hem trim (bottom of robe)
+  ctx.strokeStyle = `rgba(139, 92, 246, ${deathPulse * 0.5})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.4, y + size * 0.5);
+  ctx.bezierCurveTo(
+    x - size * 0.2, y + size * 0.48,
+    x + size * 0.2, y + size * 0.52,
+    x + size * 0.4, y + size * 0.5,
+  );
+  ctx.stroke();
+
   // Bone decorations on robe - more elaborate
   ctx.fillStyle = "#e8e0d0";
   for (let i = 0; i < 4; i++) {
@@ -2873,7 +3513,6 @@ export function drawNecromancerEnemy(
     ctx.beginPath();
     ctx.ellipse(x, boneY, size * 0.04, size * 0.018, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Small skulls between bones
     if (i < 3) {
       ctx.beginPath();
       ctx.arc(x, boneY + size * 0.07, size * 0.025, 0, Math.PI * 2);
@@ -3010,46 +3649,126 @@ export function drawNecromancerEnemy(
     ctx.stroke();
   }
 
-  // Ornate hood with soul gems
-  ctx.fillStyle = "#050414";
+  // Ornate hood with deep draping
+  const hoodGrad = ctx.createLinearGradient(
+    x - size * 0.25, y - size * 0.65 + hover,
+    x + size * 0.25, y - size * 0.25 + hover,
+  );
+  hoodGrad.addColorStop(0, "#080620");
+  hoodGrad.addColorStop(0.4, "#050414");
+  hoodGrad.addColorStop(0.8, "#0a0820");
+  hoodGrad.addColorStop(1, "#050414");
+  ctx.fillStyle = hoodGrad;
+  // Hood peak and left drape
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y - size * 0.55 + hover,
-    size * 0.24,
-    size * 0.12,
-    0,
-    Math.PI,
-    0,
+  ctx.moveTo(x, y - size * 0.68 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.12, y - size * 0.66 + hover,
+    x - size * 0.22, y - size * 0.6 + hover,
+    x - size * 0.26, y - size * 0.52 + hover,
+  );
+  // Left drape hanging down
+  ctx.bezierCurveTo(
+    x - size * 0.3, y - size * 0.4 + hover,
+    x - size * 0.28, y - size * 0.25 + hover,
+    x - size * 0.22, y - size * 0.15 + hover,
+  );
+  // Bottom across face shadow
+  ctx.lineTo(x - size * 0.16, y - size * 0.35 + hover);
+  ctx.lineTo(x + size * 0.16, y - size * 0.35 + hover);
+  ctx.lineTo(x + size * 0.22, y - size * 0.15 + hover);
+  // Right drape
+  ctx.bezierCurveTo(
+    x + size * 0.28, y - size * 0.25 + hover,
+    x + size * 0.3, y - size * 0.4 + hover,
+    x + size * 0.26, y - size * 0.52 + hover,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.22, y - size * 0.6 + hover,
+    x + size * 0.12, y - size * 0.66 + hover,
+    x, y - size * 0.68 + hover,
   );
   ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.24, y - size * 0.55 + hover);
-  ctx.quadraticCurveTo(
-    x - size * 0.3,
-    y - size * 0.32 + hover,
-    x - size * 0.22,
-    y - size * 0.15 + hover,
+  // Hood interior shadow (face in shadow)
+  const shadowGrad = ctx.createRadialGradient(
+    x, y - size * 0.45 + hover, 0,
+    x, y - size * 0.45 + hover, size * 0.18,
   );
-  ctx.lineTo(x - size * 0.18, y - size * 0.35 + hover);
-  ctx.fill();
+  shadowGrad.addColorStop(0, `rgba(5, 4, 20, ${0.9})`);
+  shadowGrad.addColorStop(0.6, `rgba(10, 8, 32, ${0.6})`);
+  shadowGrad.addColorStop(1, "rgba(10, 8, 32, 0)");
+  ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.24, y - size * 0.55 + hover);
-  ctx.quadraticCurveTo(
-    x + size * 0.3,
-    y - size * 0.32 + hover,
-    x + size * 0.22,
-    y - size * 0.15 + hover,
-  );
-  ctx.lineTo(x + size * 0.18, y - size * 0.35 + hover);
+  ctx.ellipse(x, y - size * 0.45 + hover, size * 0.16, size * 0.14, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Soul gem on hood
+  // Raised collar/cowl rim at hood base
+  ctx.strokeStyle = `rgba(49, 46, 129, ${deathPulse * 0.7})`;
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24, y - size * 0.18 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.28, y - size * 0.28 + hover,
+    x - size * 0.15, y - size * 0.35 + hover,
+    x, y - size * 0.37 + hover,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.15, y - size * 0.35 + hover,
+    x + size * 0.28, y - size * 0.28 + hover,
+    x + size * 0.24, y - size * 0.18 + hover,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(74, 222, 128, ${deathPulse * 0.2})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y - size * 0.19 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.26, y - size * 0.27 + hover,
+    x - size * 0.14, y - size * 0.33 + hover,
+    x, y - size * 0.35 + hover,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.14, y - size * 0.33 + hover,
+    x + size * 0.26, y - size * 0.27 + hover,
+    x + size * 0.22, y - size * 0.19 + hover,
+  );
+  ctx.stroke();
+
+  // Hood fold lines
+  ctx.strokeStyle = "rgba(30, 27, 75, 0.5)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, y - size * 0.64 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.18, y - size * 0.5 + hover,
+    x - size * 0.22, y - size * 0.35 + hover,
+    x - size * 0.2, y - size * 0.2 + hover,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.08, y - size * 0.64 + hover);
+  ctx.bezierCurveTo(
+    x + size * 0.18, y - size * 0.5 + hover,
+    x + size * 0.22, y - size * 0.35 + hover,
+    x + size * 0.2, y - size * 0.2 + hover,
+  );
+  ctx.stroke();
+  // Soul gem on hood peak
   ctx.fillStyle = `rgba(74, 222, 128, ${phylacteryGlow})`;
   setShadowBlur(ctx, 6 * zoom, "#4ade80");
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.62 + hover, size * 0.03, 0, Math.PI * 2);
+  ctx.arc(x, y - size * 0.66 + hover, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
   clearShadow(ctx);
+  // Gem setting (small structural frame)
+  ctx.strokeStyle = `rgba(217, 119, 6, ${phylacteryGlow * 0.6})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.7 + hover);
+  ctx.lineTo(x - size * 0.035, y - size * 0.66 + hover);
+  ctx.lineTo(x, y - size * 0.62 + hover);
+  ctx.lineTo(x + size * 0.035, y - size * 0.66 + hover);
+  ctx.closePath();
+  ctx.stroke();
 
   // --- Death shadow wisps ---
   drawShadowWisps(ctx, x, y + hover, size * 0.4, time, zoom, {
@@ -3218,6 +3937,41 @@ export function drawShadowKnightEnemy(
     ctx.stroke();
   }
 
+  // Authority ground effect - dark ripples
+  for (let ripple = 0; ripple < 4; ripple++) {
+    const ripPhase = (time * 0.8 + ripple * 0.5) % 2.0;
+    const ripRadius = size * (0.15 + ripPhase * 0.3);
+    const ripAlpha = Math.max(0, (1 - ripPhase / 2.0) * 0.25);
+    if (ripAlpha > 0) {
+      ctx.strokeStyle = `rgba(24, 24, 27, ${ripAlpha})`;
+      ctx.lineWidth = (2 - ripPhase * 0.6) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        y + size * 0.48,
+        ripRadius,
+        ripRadius * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(255, 215, 0, ${ripAlpha * 0.4})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        y + size * 0.48,
+        ripRadius * 0.95,
+        ripRadius * 0.95 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
+
   // Dark aura - more intense
   const shadowGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.85);
   shadowGrad.addColorStop(0, `rgba(24, 24, 27, ${darkPulse * 0.45})`);
@@ -3228,6 +3982,44 @@ export function drawShadowKnightEnemy(
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Dark wealth aura with gold flecks
+  const wealthGrad = ctx.createRadialGradient(
+    x,
+    y,
+    size * 0.1,
+    x,
+    y,
+    size * 0.75,
+  );
+  wealthGrad.addColorStop(0, `rgba(88, 28, 135, ${darkPulse * 0.2})`);
+  wealthGrad.addColorStop(0.4, `rgba(59, 7, 100, ${darkPulse * 0.15})`);
+  wealthGrad.addColorStop(0.7, `rgba(24, 24, 27, ${darkPulse * 0.1})`);
+  wealthGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = wealthGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y,
+    size * 0.75,
+    size * 0.75 * ISO_Y_RATIO,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  for (let fleck = 0; fleck < 10; fleck++) {
+    const flkAngle =
+      time * 0.8 + (fleck * Math.PI * 2) / 10 + Math.sin(fleck * 1.7) * 0.3;
+    const flkDist = size * (0.3 + Math.sin(time * 1.5 + fleck * 0.9) * 0.15);
+    const flkX = x + Math.cos(flkAngle) * flkDist;
+    const flkY = y + Math.sin(flkAngle) * flkDist * 0.4;
+    const flkAlpha = 0.3 + Math.sin(time * 3 + fleck * 1.2) * 0.2;
+    ctx.fillStyle = `rgba(255, 215, 0, ${flkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(flkX, flkY, size * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Void particles orbiting
   for (let particle = 0; particle < 8; particle++) {
@@ -3420,6 +4212,33 @@ export function drawShadowKnightEnemy(
     y - size * 0.28 + stance,
   );
   ctx.fill();
+  // Fur collar at cape neckline
+  const furCollarY = y - size * 0.26 + stance;
+  ctx.fillStyle = "#44403c";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.3, furCollarY);
+  for (let tuft = 0; tuft < 12; tuft++) {
+    const tX = x - size * 0.3 + tuft * size * 0.05;
+    const tY = furCollarY - size * 0.03 + Math.sin(tuft * 1.8 + time * 2) * size * 0.015;
+    ctx.quadraticCurveTo(
+      tX + size * 0.012, tY - size * 0.025,
+      tX + size * 0.025, tY,
+    );
+  }
+  ctx.lineTo(x + size * 0.3, furCollarY);
+  ctx.quadraticCurveTo(x, furCollarY + size * 0.04, x - size * 0.3, furCollarY);
+  ctx.fill();
+  // Fur texture strands
+  ctx.strokeStyle = "#57534e";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let strand = 0; strand < 8; strand++) {
+    const sX = x - size * 0.25 + strand * size * 0.07;
+    ctx.beginPath();
+    ctx.moveTo(sX, furCollarY);
+    ctx.lineTo(sX + size * 0.01, furCollarY - size * 0.03);
+    ctx.stroke();
+  }
+
   // Void tendrils on cape
   ctx.strokeStyle = `rgba(139, 92, 246, ${voidGlow * 0.4})`;
   ctx.lineWidth = 1.5 * zoom;
@@ -3500,6 +4319,26 @@ export function drawShadowKnightEnemy(
   ctx.closePath();
   ctx.fill();
 
+  // Armor plate rivets along edges
+  ctx.fillStyle = "#71717a";
+  const rivetPositions = [
+    [-0.32, -0.12], [-0.3, 0.05], [-0.28, 0.2], [-0.26, 0.34],
+    [0.32, -0.12], [0.3, 0.05], [0.28, 0.2], [0.26, 0.34],
+    [-0.12, -0.28], [0.12, -0.28],
+    [-0.2, 0.36], [0.2, 0.36],
+  ];
+  for (const [rx, ry] of rivetPositions) {
+    ctx.beginPath();
+    ctx.arc(x + rx * size, y + ry * size + stance * (ry < 0 ? 1 : 0.5), size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#a1a1aa";
+  for (const [rx, ry] of rivetPositions) {
+    ctx.beginPath();
+    ctx.arc(x + rx * size - size * 0.003, y + ry * size + stance * (ry < 0 ? 1 : 0.5) - size * 0.003, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Armor details and trim
   ctx.strokeStyle = "#0a0a0b";
   ctx.lineWidth = 2.5 * zoom;
@@ -3511,10 +4350,92 @@ export function drawShadowKnightEnemy(
   ctx.moveTo(x - size * 0.28, y - size * 0.06 + stance);
   ctx.lineTo(x + size * 0.28, y - size * 0.06 + stance);
   ctx.stroke();
+  // Gold filigree scrollwork on armor
+  ctx.strokeStyle = `rgba(255, 215, 0, ${darkPulse * 0.5})`;
+  ctx.lineWidth = 1.2 * zoom;
+  // Left breast filigree scroll
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y - size * 0.2 + stance);
+  ctx.bezierCurveTo(
+    x - size * 0.15, y - size * 0.18 + stance,
+    x - size * 0.2, y - size * 0.1 + stance,
+    x - size * 0.15, y - size * 0.05 + stance,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.1, y - size * 0.02 + stance,
+    x - size * 0.08, y + size * 0.02 + stance,
+    x - size * 0.12, y + size * 0.06 + stance,
+  );
+  ctx.stroke();
+  // Right breast filigree scroll
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, y - size * 0.2 + stance);
+  ctx.bezierCurveTo(
+    x + size * 0.15, y - size * 0.18 + stance,
+    x + size * 0.2, y - size * 0.1 + stance,
+    x + size * 0.15, y - size * 0.05 + stance,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.1, y - size * 0.02 + stance,
+    x + size * 0.08, y + size * 0.02 + stance,
+    x + size * 0.12, y + size * 0.06 + stance,
+  );
+  ctx.stroke();
+  // Gold trim along center seam
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.02, y - size * 0.32 + stance);
+  ctx.lineTo(x - size * 0.02, y + size * 0.25);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.02, y - size * 0.32 + stance);
+  ctx.lineTo(x + size * 0.02, y + size * 0.25);
+  ctx.stroke();
+  // Gold belt buckle
+  ctx.strokeStyle = `rgba(255, 215, 0, ${darkPulse * 0.7})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.26, y + size * 0.16);
+  ctx.lineTo(x + size * 0.26, y + size * 0.16);
+  ctx.stroke();
+  ctx.fillStyle = `rgba(255, 200, 50, ${darkPulse * 0.8})`;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.04, y + size * 0.13);
+  ctx.lineTo(x + size * 0.04, y + size * 0.13);
+  ctx.lineTo(x + size * 0.04, y + size * 0.19);
+  ctx.lineTo(x - size * 0.04, y + size * 0.19);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = `rgba(180, 140, 20, ${darkPulse * 0.6})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+  // Additional gold filigree curls on lower breastplate
+  ctx.strokeStyle = `rgba(255, 215, 0, ${darkPulse * 0.4})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y + size * 0.2 + stance * 0.3);
+  ctx.bezierCurveTo(
+    x - size * 0.18, y + size * 0.25, x - size * 0.12, y + size * 0.28,
+    x - size * 0.08, y + size * 0.24,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, y + size * 0.2 + stance * 0.3);
+  ctx.bezierCurveTo(
+    x + size * 0.18, y + size * 0.25, x + size * 0.12, y + size * 0.28,
+    x + size * 0.08, y + size * 0.24,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y + size * 0.26);
+  ctx.bezierCurveTo(
+    x - size * 0.03, y + size * 0.3, x + size * 0.03, y + size * 0.3,
+    x + size * 0.06, y + size * 0.26,
+  );
+  ctx.stroke();
+
   // Void runes on armor
   ctx.strokeStyle = `rgba(139, 92, 246, ${darkPulse * 0.7})`;
   ctx.lineWidth = 1.5 * zoom;
-  // Central rune
   ctx.beginPath();
   ctx.arc(x, y + size * 0.08, size * 0.05, 0, Math.PI * 2);
   ctx.stroke();
@@ -3524,6 +4445,40 @@ export function drawShadowKnightEnemy(
   ctx.moveTo(x - size * 0.04, y + size * 0.08);
   ctx.lineTo(x + size * 0.04, y + size * 0.08);
   ctx.stroke();
+
+  // Shadow tendrils extending from body
+  for (let st = 0; st < 5; st++) {
+    const stAngle =
+      -Math.PI * 0.3 +
+      st * Math.PI * 0.15 +
+      Math.sin(time * 1.5 + st) * 0.15;
+    const stLen = size * (0.2 + Math.sin(time * 2 + st * 0.8) * 0.05);
+    const stStartX = x + Math.cos(stAngle + Math.PI * 0.5) * size * 0.25;
+    const stStartY = y + size * 0.05 + stance;
+    const stEndX = stStartX + Math.cos(stAngle) * stLen;
+    const stEndY = stStartY + Math.sin(stAngle) * stLen * 0.5;
+    const stMidX =
+      (stStartX + stEndX) / 2 +
+      Math.sin(time * 3 + st * 1.3) * size * 0.06;
+    const stMidY =
+      (stStartY + stEndY) / 2 +
+      Math.cos(time * 2.5 + st) * size * 0.04;
+    const stAlpha = 0.2 + Math.sin(time * 2.5 + st * 0.6) * 0.15;
+    ctx.strokeStyle = `rgba(24, 24, 27, ${stAlpha})`;
+    ctx.lineWidth = (2.5 - st * 0.3) * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(stStartX, stStartY);
+    ctx.quadraticCurveTo(stMidX, stMidY, stEndX, stEndY);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(139, 92, 246, ${stAlpha * 0.6})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(stStartX, stStartY);
+    ctx.quadraticCurveTo(stMidX, stMidY, stEndX, stEndY);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+  }
 
   // Massive shoulder pauldrons with spikes
   ctx.fillStyle = "#3f3f46";
@@ -3605,20 +4560,38 @@ export function drawShadowKnightEnemy(
     size * 0.32,
     size * 0.14,
   );
-  // T-shaped visor slit
+  // T-shaped visor slit with curved bezier eye slot
   ctx.fillStyle = "#0a0a0b";
-  ctx.fillRect(
-    x - size * 0.14,
-    y - size * 0.47 + stance,
-    size * 0.28,
-    size * 0.04,
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14, y - size * 0.46 + stance);
+  ctx.bezierCurveTo(
+    x - size * 0.08, y - size * 0.475 + stance,
+    x + size * 0.08, y - size * 0.475 + stance,
+    x + size * 0.14, y - size * 0.46 + stance,
   );
+  ctx.bezierCurveTo(
+    x + size * 0.08, y - size * 0.44 + stance,
+    x - size * 0.08, y - size * 0.44 + stance,
+    x - size * 0.14, y - size * 0.46 + stance,
+  );
+  ctx.fill();
   ctx.fillRect(
     x - size * 0.02,
-    y - size * 0.47 + stance,
+    y - size * 0.46 + stance,
     size * 0.04,
     size * 0.1,
   );
+  // Visor slit edge highlight
+  ctx.strokeStyle = "#3f3f46";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14, y - size * 0.46 + stance);
+  ctx.bezierCurveTo(
+    x - size * 0.08, y - size * 0.48 + stance,
+    x + size * 0.08, y - size * 0.48 + stance,
+    x + size * 0.14, y - size * 0.46 + stance,
+  );
+  ctx.stroke();
   // Glowing eyes behind visor
   ctx.fillStyle = `rgba(139, 92, 246, ${darkPulse + 0.4})`;
   setShadowBlur(ctx, 10 * zoom, "#8b5cf6");
@@ -3708,6 +4681,31 @@ export function drawShadowKnightEnemy(
   ctx.lineTo(size * 0.05, -size * 0.55);
   ctx.closePath();
   ctx.fill();
+  // Soul-devouring blade glow aura
+  const bladeGlowGrad = ctx.createRadialGradient(
+    0,
+    -size * 0.34,
+    0,
+    0,
+    -size * 0.34,
+    size * 0.12,
+  );
+  bladeGlowGrad.addColorStop(0, `rgba(139, 92, 246, ${soulDrain * 0.35})`);
+  bladeGlowGrad.addColorStop(0.4, `rgba(88, 28, 135, ${soulDrain * 0.2})`);
+  bladeGlowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = bladeGlowGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, -size * 0.34, size * 0.1, size * 0.35, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (let bp = 0; bp < 4; bp++) {
+    const bpY = -size * (0.15 + bp * 0.13);
+    const bpX = Math.sin(time * 4 + bp * 1.5) * size * 0.04;
+    const bpAlpha = soulDrain * (0.4 + Math.sin(time * 5 + bp) * 0.2);
+    ctx.fillStyle = `rgba(139, 92, 246, ${bpAlpha})`;
+    ctx.beginPath();
+    ctx.arc(bpX, bpY, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
   // Void energy flowing on blade
   ctx.strokeStyle = `rgba(139, 92, 246, ${soulDrain})`;
   setShadowBlur(ctx, 8 * zoom, "#8b5cf6");
@@ -3807,6 +4805,52 @@ export function drawShadowKnightEnemy(
   ctx.fill();
   clearShadow(ctx);
   ctx.restore();
+
+  // Floating golden coins orbiting
+  for (let coin = 0; coin < 5; coin++) {
+    const coinAngle = time * 0.7 + (coin * Math.PI * 2) / 5;
+    const coinDist = size * (0.5 + Math.sin(time * 1.2 + coin * 1.1) * 0.08);
+    const coinX = x + Math.cos(coinAngle) * coinDist;
+    const coinY =
+      y + Math.sin(coinAngle) * coinDist * 0.35 - size * 0.1 + stance;
+    const coinBob = Math.sin(time * 2.5 + coin * 0.7) * size * 0.02;
+    const coinTilt = Math.cos(time * 2 + coin * 1.3);
+    const coinRX = size * 0.025;
+    const coinRY = size * 0.025 * Math.abs(coinTilt);
+    const coinAlpha = 0.7 + Math.sin(time * 4 + coin) * 0.2;
+    ctx.save();
+    ctx.translate(coinX, coinY + coinBob);
+    const coinGlowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.04);
+    coinGlowGrad.addColorStop(0, `rgba(255, 215, 0, ${coinAlpha * 0.3})`);
+    coinGlowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = coinGlowGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.04, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 200, 50, ${coinAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      0,
+      0,
+      coinRX,
+      Math.max(coinRY, size * 0.008),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.strokeStyle = `rgba(180, 140, 20, ${coinAlpha})`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    if (Math.abs(coinTilt) > 0.4) {
+      ctx.fillStyle = `rgba(150, 110, 10, ${coinAlpha * 0.7})`;
+      ctx.font = `bold ${size * 0.02}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", 0, 0);
+    }
+    ctx.restore();
+  }
 
   // --- Dark shadow wisps ---
   drawShadowWisps(ctx, x, y + stance, size * 0.4, time, zoom, {
@@ -4065,117 +5109,334 @@ export function drawCultistEnemy(
     ctx.stroke();
   }
 
-  // Tattered robes (outer layer)
+  // Tattered robes (outer layer) — bezier-draped silhouette
   const robeGrad = ctx.createLinearGradient(
     x - size * 0.3,
-    y,
+    y - size * 0.2,
     x + size * 0.3,
-    y,
+    y + size * 0.2,
   );
   robeGrad.addColorStop(0, "#2a1810");
-  robeGrad.addColorStop(0.5, bodyColor);
+  robeGrad.addColorStop(0.4, bodyColor);
+  robeGrad.addColorStop(0.6, bodyColor);
   robeGrad.addColorStop(1, "#2a1810");
   ctx.fillStyle = robeGrad;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.45);
-  ctx.lineTo(x - size * 0.35 + sway * 0.5, y + size * 0.4);
-  ctx.quadraticCurveTo(
-    x,
-    y + size * 0.5 + chant * 2,
-    x + size * 0.35 - sway * 0.5,
-    y + size * 0.4,
+  // Left shoulder drape
+  ctx.bezierCurveTo(
+    x - size * 0.08, y - size * 0.42,
+    x - size * 0.2, y - size * 0.35,
+    x - size * 0.28 + sway * 0.3, y - size * 0.18,
   );
-  ctx.closePath();
+  // Left torso flows outward
+  ctx.bezierCurveTo(
+    x - size * 0.34 + sway * 0.4, y - size * 0.02,
+    x - size * 0.38 + sway * 0.5, y + size * 0.18,
+    x - size * 0.35 + sway * 0.5, y + size * 0.36,
+  );
+  // Ragged bottom edge — jagged bezier points
+  ctx.bezierCurveTo(
+    x - size * 0.33, y + size * 0.42 + Math.sin(time * 4) * size * 0.02,
+    x - size * 0.25, y + size * 0.38,
+    x - size * 0.18, y + size * 0.44 + Math.sin(time * 5) * size * 0.03,
+  );
+  ctx.lineTo(x - size * 0.1, y + size * 0.39);
+  ctx.lineTo(x - size * 0.04, y + size * 0.47 + Math.sin(time * 3.5) * size * 0.02);
+  ctx.quadraticCurveTo(
+    x, y + size * 0.5 + chant * 2,
+    x + size * 0.04, y + size * 0.47 + Math.sin(time * 4.5) * size * 0.02,
+  );
+  ctx.lineTo(x + size * 0.1, y + size * 0.39);
+  ctx.lineTo(x + size * 0.18, y + size * 0.44 + Math.sin(time * 5.5) * size * 0.03);
+  ctx.bezierCurveTo(
+    x + size * 0.25, y + size * 0.38,
+    x + size * 0.33, y + size * 0.42 + Math.sin(time * 3) * size * 0.02,
+    x + size * 0.35 - sway * 0.5, y + size * 0.36,
+  );
+  // Right torso back up
+  ctx.bezierCurveTo(
+    x + size * 0.38 - sway * 0.5, y + size * 0.18,
+    x + size * 0.34 - sway * 0.4, y - size * 0.02,
+    x + size * 0.28 - sway * 0.3, y - size * 0.18,
+  );
+  // Right shoulder
+  ctx.bezierCurveTo(
+    x + size * 0.2, y - size * 0.35,
+    x + size * 0.08, y - size * 0.42,
+    x, y - size * 0.45,
+  );
   ctx.fill();
 
-  // Robe inner lining visible (slightly lighter)
-  ctx.fillStyle = "#3d1f14";
+  // Ritual / occult symbols on robe body (stroke patterns — pentagram, rings, runic curves)
+  const robeSymAlpha = 0.26 + Math.sin(time * 2.2) * 0.07;
+  ctx.strokeStyle = `rgba(195, 88, 48, ${robeSymAlpha})`;
+  ctx.lineWidth = Math.max(0.75, 1 * zoom);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const robeChestX = x + sway * 0.12;
+  const robeChestY = y - size * 0.06;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.05, y - size * 0.35);
-  ctx.lineTo(x - size * 0.12, y + size * 0.25);
-  ctx.lineTo(x + size * 0.04, y + size * 0.25);
-  ctx.lineTo(x + size * 0.05, y - size * 0.35);
-  ctx.closePath();
-  ctx.fill();
-
-  // Animated robe billowing effect (shoulder folds)
-  ctx.strokeStyle = "#1a0a05";
-  ctx.lineWidth = 1 * zoom;
-  for (let f = 0; f < 3; f++) {
-    const foldY = y - size * 0.2 + f * size * 0.15;
+  ctx.arc(robeChestX, robeChestY, size * 0.118, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(robeChestX, robeChestY, size * 0.082, 0, Math.PI * 2);
+  ctx.stroke();
+  const robePentR = size * 0.064;
+  for (let pi = 0; pi < 5; pi++) {
+    const pa1 = (pi / 5) * Math.PI * 2 - Math.PI / 2;
+    const pa2 = ((pi + 2) / 5) * Math.PI * 2 - Math.PI / 2;
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.25 + sway * 0.3, foldY);
-    ctx.quadraticCurveTo(
-      x - size * 0.1 + Math.sin(time * 3 + f) * size * 0.03,
-      foldY + size * 0.04,
-      x,
-      foldY,
+    ctx.moveTo(
+      robeChestX + Math.cos(pa1) * robePentR,
+      robeChestY + Math.sin(pa1) * robePentR,
+    );
+    ctx.lineTo(
+      robeChestX + Math.cos(pa2) * robePentR,
+      robeChestY + Math.sin(pa2) * robePentR,
     );
     ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24 + sway * 0.45, y + size * 0.02);
+  ctx.quadraticCurveTo(
+    x - size * 0.16 + sway * 0.35,
+    y - size * 0.02,
+    x - size * 0.12 + sway * 0.38,
+    y + size * 0.08,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.18 + sway * 0.42,
+    y + size * 0.16,
+    x - size * 0.22 + sway * 0.4,
+    y + size * 0.24,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.26 - sway * 0.42, y + size * 0.04);
+  ctx.quadraticCurveTo(
+    x + size * 0.2 - sway * 0.35,
+    y + size * 0.14,
+    x + size * 0.24 - sway * 0.38,
+    y + size * 0.24,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.28 - sway * 0.4,
+    y + size * 0.16,
+    x + size * 0.26 - sway * 0.42,
+    y + size * 0.04,
+  );
+  ctx.stroke();
+  for (let ri = -1; ri <= 1; ri++) {
     ctx.beginPath();
-    ctx.moveTo(x + size * 0.25 - sway * 0.3, foldY);
-    ctx.quadraticCurveTo(
-      x + size * 0.1 + Math.sin(time * 3 + f + 1) * size * 0.03,
-      foldY + size * 0.04,
-      x,
-      foldY,
+    ctx.arc(
+      x + ri * size * 0.11,
+      y + size * 0.2 + chant * 0.5,
+      size * 0.024,
+      0,
+      Math.PI * 2,
     );
     ctx.stroke();
   }
 
-  // Ragged hem with more tattered detail
+  // Robe inner lining V-opening with bezier depth
+  const liningGrad = ctx.createLinearGradient(x - size * 0.08, y, x + size * 0.08, y);
+  liningGrad.addColorStop(0, "#3d1f14");
+  liningGrad.addColorStop(0.5, "#4a2818");
+  liningGrad.addColorStop(1, "#3d1f14");
+  ctx.fillStyle = liningGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.04, y - size * 0.38);
+  ctx.bezierCurveTo(
+    x - size * 0.07, y - size * 0.15,
+    x - size * 0.1, y + size * 0.05,
+    x - size * 0.12, y + size * 0.28,
+  );
+  ctx.lineTo(x + size * 0.04, y + size * 0.28);
+  ctx.bezierCurveTo(
+    x + size * 0.06, y + size * 0.05,
+    x + size * 0.04, y - size * 0.15,
+    x + size * 0.05, y - size * 0.38,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Robe drape folds — bezier curves following gravity
+  ctx.strokeStyle = "#1a0a05";
+  ctx.lineWidth = 1 * zoom;
+  for (let f = 0; f < 5; f++) {
+    const foldStartY = y - size * 0.35 + f * size * 0.12;
+    const foldSway = Math.sin(time * 3 + f * 0.8) * size * 0.02;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.04, foldStartY);
+    ctx.bezierCurveTo(
+      x - size * 0.14 + foldSway, foldStartY + size * 0.03,
+      x - size * 0.22 + sway * 0.2, foldStartY + size * 0.08,
+      x - size * 0.28 + sway * 0.3, foldStartY + size * 0.12,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.04, foldStartY);
+    ctx.bezierCurveTo(
+      x + size * 0.14 - foldSway, foldStartY + size * 0.03,
+      x + size * 0.22 - sway * 0.2, foldStartY + size * 0.08,
+      x + size * 0.28 - sway * 0.3, foldStartY + size * 0.12,
+    );
+    ctx.stroke();
+  }
+
+  // Ragged hem — tattered bezier strips with secondary fraying
   ctx.strokeStyle = "#1a0a05";
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 9; i++) {
     const hx = x - size * 0.33 + i * size * 0.083;
+    const hemBase = y + size * 0.38 + Math.sin(i * 1.5) * size * 0.04;
     ctx.beginPath();
-    ctx.moveTo(hx, y + size * 0.4 + Math.sin(time * 5 + i) * 2);
-    ctx.lineTo(
-      hx + size * 0.03,
-      y + size * 0.5 + Math.sin(time * 4 + i) * 3,
+    ctx.moveTo(hx, hemBase + Math.sin(time * 5 + i) * 2);
+    ctx.quadraticCurveTo(
+      hx + size * 0.015, hemBase + size * 0.06,
+      hx + size * 0.03, hemBase + size * 0.12 + Math.sin(time * 4 + i) * 3,
     );
     ctx.stroke();
     if (i % 2 === 0) {
       ctx.beginPath();
-      ctx.moveTo(hx + size * 0.015, y + size * 0.45 + Math.sin(time * 6 + i) * 2);
-      ctx.lineTo(
-        hx + size * 0.045,
-        y + size * 0.54 + Math.sin(time * 3.5 + i) * 2,
+      ctx.moveTo(hx + size * 0.015, hemBase + size * 0.05 + Math.sin(time * 6 + i) * 2);
+      ctx.quadraticCurveTo(
+        hx + size * 0.03, hemBase + size * 0.1,
+        hx + size * 0.045, hemBase + size * 0.16 + Math.sin(time * 3.5 + i) * 2,
       );
       ctx.stroke();
     }
   }
 
-  // Hood (hunched posture - slightly forward leaning)
+  // Ritual / occult stroke patterns on robe body (pentagram, circles, angular runes)
+  ctx.save();
+  const robeSymAlpha2 =
+    0.32 + (isAttacking ? attackIntensity * 0.22 : 0) + chant * 0.08;
+  ctx.strokeStyle = `rgba(210, 95, 60, ${Math.min(robeSymAlpha2, 0.75)})`;
+  ctx.lineWidth = Math.max(0.6 * zoom, 0.5);
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  const pentCx = x - size * 0.14 + sway * 0.35;
+  const pentCy = y - size * 0.06;
+  const pentR = size * 0.065;
+  for (let i = 0; i < 5; i++) {
+    const a1 = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    const a2 = ((i + 2) / 5) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(pentCx + Math.cos(a1) * pentR, pentCy + Math.sin(a1) * pentR);
+    ctx.lineTo(pentCx + Math.cos(a2) * pentR, pentCy + Math.sin(a2) * pentR);
+    ctx.stroke();
+  }
+  ctx.beginPath();
+  ctx.arc(pentCx, pentCy, pentR * 0.28, 0, Math.PI * 2);
+  ctx.stroke();
+  const circCx = x + size * 0.16 - sway * 0.25;
+  const circCy = y + size * 0.12;
+  ctx.beginPath();
+  ctx.arc(circCx, circCy, size * 0.07, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(circCx, circCy, size * 0.045, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(circCx, circCy, size * 0.022, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(circCx, circCy - size * 0.07);
+  ctx.lineTo(circCx, circCy + size * 0.07);
+  ctx.moveTo(circCx - size * 0.07, circCy);
+  ctx.lineTo(circCx + size * 0.07, circCy);
+  ctx.stroke();
+  const runeBx = x + size * 0.02 + sway * 0.2;
+  const runeBy = y + size * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(runeBx - size * 0.04, runeBy - size * 0.05);
+  ctx.quadraticCurveTo(
+    runeBx - size * 0.01,
+    runeBy - size * 0.02,
+    runeBx + size * 0.03,
+    runeBy - size * 0.04,
+  );
+  ctx.quadraticCurveTo(
+    runeBx + size * 0.01,
+    runeBy + size * 0.01,
+    runeBx - size * 0.02,
+    runeBy + size * 0.05,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(runeBx - size * 0.05, runeBy + size * 0.02);
+  ctx.lineTo(runeBx + size * 0.05, runeBy + size * 0.02);
+  ctx.lineTo(runeBx, runeBy - size * 0.04);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.restore();
+
+  // Hood — bezier cowl with layered fabric
+  const hoodX = x + sway * 0.2;
+  const hoodY = y - size * 0.25;
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
-  ctx.arc(
-    x + sway * 0.2,
-    y - size * 0.25,
-    size * 0.25,
-    0,
-    Math.PI * 2,
+  // Cowl base — wraps around head
+  ctx.moveTo(hoodX - size * 0.24, hoodY + size * 0.12);
+  ctx.bezierCurveTo(
+    hoodX - size * 0.26, hoodY - size * 0.05,
+    hoodX - size * 0.22, hoodY - size * 0.2,
+    hoodX - size * 0.12, hoodY - size * 0.28,
+  );
+  // Peak of hood
+  ctx.bezierCurveTo(
+    hoodX - size * 0.06, hoodY - size * 0.33,
+    hoodX + size * 0.02, hoodY - size * 0.34,
+    hoodX, hoodY - size * 0.38,
+  );
+  ctx.bezierCurveTo(
+    hoodX + size * 0.02, hoodY - size * 0.34,
+    hoodX + size * 0.08, hoodY - size * 0.33,
+    hoodX + size * 0.14, hoodY - size * 0.28,
+  );
+  // Right side of cowl
+  ctx.bezierCurveTo(
+    hoodX + size * 0.24, hoodY - size * 0.2,
+    hoodX + size * 0.28, hoodY - size * 0.05,
+    hoodX + size * 0.24, hoodY + size * 0.12,
+  );
+  // Cowl drape under chin
+  ctx.bezierCurveTo(
+    hoodX + size * 0.18, hoodY + size * 0.18,
+    hoodX - size * 0.16, hoodY + size * 0.18,
+    hoodX - size * 0.24, hoodY + size * 0.12,
   );
   ctx.fill();
-  // Hood point/peak
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.15 + sway * 0.2, y - size * 0.42);
-  ctx.lineTo(x + sway * 0.2, y - size * 0.55);
-  ctx.lineTo(x + size * 0.15 + sway * 0.2, y - size * 0.42);
-  ctx.closePath();
-  ctx.fill();
 
-  // Hood opening (dark void)
+  // Hood fabric fold lines
+  ctx.strokeStyle = "#1a0a05";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(hoodX, hoodY - size * 0.36);
+  ctx.bezierCurveTo(
+    hoodX - size * 0.06, hoodY - size * 0.22,
+    hoodX - size * 0.12, hoodY - size * 0.08,
+    hoodX - size * 0.18, hoodY + size * 0.08,
+  );
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(hoodX, hoodY - size * 0.36);
+  ctx.bezierCurveTo(
+    hoodX + size * 0.06, hoodY - size * 0.22,
+    hoodX + size * 0.14, hoodY - size * 0.08,
+    hoodX + size * 0.2, hoodY + size * 0.08,
+  );
+  ctx.stroke();
+
+  // Hood opening — deep shadowed oval
   ctx.fillStyle = "#0a0503";
   ctx.beginPath();
   ctx.ellipse(
-    x + sway * 0.2,
-    y - size * 0.25,
-    size * 0.15,
-    size * 0.18,
-    0,
-    0,
-    Math.PI * 2,
+    hoodX, hoodY,
+    size * 0.14, size * 0.17,
+    0, 0, Math.PI * 2,
   );
   ctx.fill();
 
@@ -4296,6 +5557,77 @@ export function drawCultistEnemy(
     ctx.stroke();
     clearShadow(ctx);
   }
+
+  // Ritual dagger: curved blade, ornate handle, pommel gem (left hand)
+  ctx.save();
+  const dhx = x - size * 0.4;
+  const dhy = y - size * 0.05;
+  const dAngle = -0.72 + Math.sin(time * 2.1) * 0.06;
+  ctx.translate(dhx, dhy);
+  ctx.rotate(dAngle);
+  const bladeLen = size * 0.38;
+  ctx.fillStyle = "#b8bcc4";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.quadraticCurveTo(
+    bladeLen * 0.45,
+    -size * 0.05,
+    bladeLen,
+    -size * 0.035,
+  );
+  ctx.quadraticCurveTo(
+    bladeLen * 0.92,
+    size * 0.02,
+    bladeLen * 0.55,
+    size * 0.028,
+  );
+  ctx.quadraticCurveTo(bladeLen * 0.22, size * 0.018, 0, size * 0.012);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#4b5563";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(bladeLen * 0.2, -size * 0.012);
+  ctx.quadraticCurveTo(bladeLen * 0.55, -size * 0.02, bladeLen * 0.88, -size * 0.01);
+  ctx.stroke();
+  ctx.fillStyle = "#6b4c2e";
+  ctx.fillRect(-size * 0.04, -size * 0.022, size * 0.05, size * 0.044);
+  ctx.strokeStyle = "#3d2914";
+  ctx.lineWidth = 0.55 * zoom;
+  ctx.strokeRect(-size * 0.04, -size * 0.022, size * 0.05, size * 0.044);
+  ctx.strokeStyle = "#d4a574";
+  ctx.lineWidth = 0.35 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.035, -size * 0.015);
+  ctx.quadraticCurveTo(-size * 0.02, 0, -size * 0.035, size * 0.015);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.025, -size * 0.018);
+  ctx.quadraticCurveTo(-size * 0.012, 0, -size * 0.025, size * 0.018);
+  ctx.stroke();
+  ctx.fillStyle = "#2a1810";
+  ctx.fillRect(-size * 0.085, -size * 0.018, size * 0.048, size * 0.036);
+  ctx.strokeStyle = "#1a0f08";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.strokeRect(-size * 0.085, -size * 0.018, size * 0.048, size * 0.036);
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.085, -size * 0.018);
+  ctx.quadraticCurveTo(-size * 0.105, 0, -size * 0.085, size * 0.018);
+  ctx.stroke();
+  ctx.fillStyle = "#7c1d4e";
+  ctx.beginPath();
+  ctx.arc(-size * 0.11, 0, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#4a102e";
+  ctx.lineWidth = 0.45 * zoom;
+  ctx.stroke();
+  ctx.fillStyle = "#a8556a";
+  ctx.beginPath();
+  ctx.arc(-size * 0.108, -size * 0.004, size * 0.006, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
   // Right hand/sleeve
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
@@ -4314,6 +5646,102 @@ export function drawCultistEnemy(
   );
   ctx.closePath();
   ctx.fill();
+
+  // Ritual dagger in right hand (curved blade, ornate grip, pommel gem)
+  const daggerX = x + size * 0.385;
+  const daggerY =
+    y - size * 0.068 + Math.sin(time * 2.4) * size * 0.012;
+  const daggerAng =
+    0.42 +
+    Math.sin(time * 1.85) * 0.09 +
+    (isAttacking ? attackIntensity * 0.14 : 0);
+  ctx.save();
+  ctx.translate(daggerX, daggerY);
+  ctx.rotate(daggerAng);
+  const ds = size;
+  ctx.beginPath();
+  ctx.moveTo(0, -ds * 0.018);
+  ctx.bezierCurveTo(
+    ds * 0.2,
+    -ds * 0.11,
+    ds * 0.36,
+    -ds * 0.055,
+    ds * 0.41,
+    ds * 0.018,
+  );
+  ctx.bezierCurveTo(
+    ds * 0.34,
+    ds * 0.055,
+    ds * 0.1,
+    ds * 0.048,
+    0,
+    ds * 0.022,
+  );
+  ctx.quadraticCurveTo(-ds * 0.015, ds * 0.01, -ds * 0.022, -ds * 0.012);
+  ctx.closePath();
+  ctx.fillStyle = "#45424e";
+  ctx.fill();
+  ctx.strokeStyle = "#1c1a22";
+  ctx.lineWidth = Math.max(0.65, 0.85 * zoom);
+  ctx.stroke();
+  ctx.strokeStyle = "#2e2c36";
+  ctx.lineWidth = Math.max(0.45, 0.55 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(ds * 0.06, -ds * 0.015);
+  ctx.quadraticCurveTo(ds * 0.2, -ds * 0.038, ds * 0.32, ds * 0.012);
+  ctx.stroke();
+  ctx.fillStyle = "#5c3d2e";
+  ctx.beginPath();
+  ctx.moveTo(-ds * 0.024, ds * 0.018);
+  ctx.quadraticCurveTo(-ds * 0.065, ds * 0.055, -ds * 0.045, ds * 0.095);
+  ctx.lineTo(ds * 0.045, ds * 0.095);
+  ctx.quadraticCurveTo(ds * 0.068, ds * 0.055, ds * 0.022, ds * 0.018);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#2a1810";
+  ctx.lineWidth = Math.max(0.55, 0.7 * zoom);
+  ctx.stroke();
+  ctx.fillStyle = "#4a3228";
+  ctx.beginPath();
+  ctx.moveTo(-ds * 0.026, ds * 0.098);
+  ctx.quadraticCurveTo(-ds * 0.03, ds * 0.14, -ds * 0.028, ds * 0.175);
+  ctx.lineTo(ds * 0.028, ds * 0.175);
+  ctx.quadraticCurveTo(ds * 0.03, ds * 0.14, ds * 0.026, ds * 0.098);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#2a1810";
+  ctx.stroke();
+  for (let gi = 0; gi < 3; gi++) {
+    const gy = ds * 0.115 + gi * ds * 0.022;
+    ctx.strokeStyle = "#6b5344";
+    ctx.lineWidth = Math.max(0.4, 0.5 * zoom);
+    ctx.beginPath();
+    ctx.moveTo(-ds * 0.03, gy);
+    ctx.quadraticCurveTo(0, gy + ds * 0.012, ds * 0.03, gy);
+    ctx.stroke();
+  }
+  ctx.fillStyle = "#352218";
+  ctx.beginPath();
+  ctx.moveTo(-ds * 0.042, ds * 0.172);
+  ctx.quadraticCurveTo(0, ds * 0.21, ds * 0.042, ds * 0.172);
+  ctx.quadraticCurveTo(0, ds * 0.158, -ds * 0.042, ds * 0.172);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1a0f08";
+  ctx.lineWidth = Math.max(0.55, 0.65 * zoom);
+  ctx.stroke();
+  ctx.fillStyle = "#5b21b0";
+  ctx.beginPath();
+  ctx.moveTo(0, ds * 0.162);
+  ctx.lineTo(ds * 0.016, ds * 0.182);
+  ctx.lineTo(0, ds * 0.198);
+  ctx.lineTo(-ds * 0.016, ds * 0.182);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a0f6e";
+  ctx.lineWidth = Math.max(0.45, 0.55 * zoom);
+  ctx.stroke();
+  ctx.restore();
 
   // Floating forbidden book
   ctx.save();
@@ -4334,6 +5762,46 @@ export function drawCultistEnemy(
   // Extra rune details on book
   ctx.beginPath();
   ctx.arc(0, -size * 0.01, size * 0.025, 0, Math.PI * 2);
+  ctx.stroke();
+  // Tome: leather spine / binding and visible page block (fore edge)
+  ctx.strokeStyle = "#2c1810";
+  ctx.lineWidth = 1.1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.08, -size * 0.1);
+  ctx.quadraticCurveTo(-size * 0.095, 0, -size * 0.08, size * 0.1);
+  ctx.stroke();
+  ctx.fillStyle = "#3d2418";
+  ctx.fillRect(-size * 0.09, -size * 0.095, size * 0.028, size * 0.19);
+  ctx.strokeStyle = "#1a0f08";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.strokeRect(-size * 0.09, -size * 0.095, size * 0.028, size * 0.19);
+  ctx.fillStyle = "#e8dcc8";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.08, -size * 0.088);
+  ctx.quadraticCurveTo(size * 0.1, 0, size * 0.08, size * 0.088);
+  ctx.lineTo(size * 0.06, size * 0.082);
+  ctx.quadraticCurveTo(size * 0.074, 0, size * 0.06, -size * 0.082);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#b8a892";
+  ctx.lineWidth = 0.45 * zoom;
+  ctx.stroke();
+  for (let pg = 0; pg < 5; pg++) {
+    const py = -size * 0.07 + pg * size * 0.028;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.062, py);
+    ctx.quadraticCurveTo(size * 0.092, py + size * 0.01, size * 0.078, py + size * 0.018);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#5c4030";
+  ctx.lineWidth = 0.4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.06, -size * 0.1);
+  ctx.quadraticCurveTo(-size * 0.02, -size * 0.102, size * 0.06, -size * 0.1);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.06, size * 0.1);
+  ctx.quadraticCurveTo(-size * 0.02, size * 0.102, size * 0.06, size * 0.1);
   ctx.stroke();
   // Book glow
   setShadowBlur(ctx, 5 * zoom, `rgba(255, 120, 50, ${runeGlow * 0.5})`);
@@ -4687,17 +6155,136 @@ export function drawPlaguebearerEnemy(
   bodyGrad.addColorStop(0.6, bodyColor);
   bodyGrad.addColorStop(1, bodyColorDark);
   ctx.fillStyle = bodyGrad;
+  const brx = size * 0.42 * bloat;
+  const bry = size * 0.46 * bloat;
   ctx.beginPath();
-  ctx.ellipse(
-    0,
-    0,
-    size * 0.4 * bloat,
-    size * 0.45 * bloat,
-    0,
-    0,
-    Math.PI * 2,
+  // Hunched / stooped torso: rounded shoulders, forward belly, dipped upper back
+  ctx.moveTo(-brx * 0.9, -bry * 0.2);
+  ctx.bezierCurveTo(
+    -brx * 1.18,
+    -bry * 0.38,
+    -brx * 1.08,
+    -bry * 0.06,
+    -brx * 0.96,
+    bry * 0.14,
   );
+  ctx.bezierCurveTo(
+    -brx * 0.82,
+    bry * 0.58,
+    -brx * 0.32,
+    bry * 0.96,
+    0,
+    bry * 0.9,
+  );
+  ctx.bezierCurveTo(
+    brx * 0.32,
+    bry * 0.96,
+    brx * 0.82,
+    bry * 0.58,
+    brx * 0.96,
+    bry * 0.14,
+  );
+  ctx.bezierCurveTo(
+    brx * 1.08,
+    -bry * 0.06,
+    brx * 1.18,
+    -bry * 0.38,
+    brx * 0.9,
+    -bry * 0.2,
+  );
+  ctx.bezierCurveTo(
+    brx * 0.52,
+    -bry * 0.68,
+    brx * 0.18,
+    -bry * 0.58,
+    0,
+    -bry * 0.44,
+  );
+  ctx.bezierCurveTo(
+    -brx * 0.18,
+    -bry * 0.58,
+    -brx * 0.52,
+    -bry * 0.68,
+    -brx * 0.9,
+    -bry * 0.2,
+  );
+  ctx.closePath();
   ctx.fill();
+
+  // Rounded shoulder masses (read as hunched deltoids)
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.ellipse(-brx * 0.92, -bry * 0.12, brx * 0.22, bry * 0.2, -0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(brx * 0.92, -bry * 0.1, brx * 0.22, bry * 0.2, 0.35, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Visible spine curvature bumps along hunched back
+  ctx.fillStyle = bodyColorDark;
+  for (let sp = 0; sp < 5; sp++) {
+    const spX = -size * 0.02 + sp * size * 0.01;
+    const spY = -bry * 0.5 + sp * bry * 0.22;
+    const spR = size * (0.016 - sp * 0.001);
+    ctx.beginPath();
+    ctx.ellipse(spX, spY, spR, spR * 0.65, -0.2 + sp * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.02, -bry * 0.5);
+  ctx.bezierCurveTo(
+    -size * 0.01, -bry * 0.2,
+    size * 0.01, bry * 0.1,
+    size * 0.03, bry * 0.35,
+  );
+  ctx.stroke();
+
+  // Rag strips hanging from body
+  ctx.strokeStyle = "rgba(160, 170, 180, 0.4)";
+  ctx.lineWidth = 1.2 * zoom;
+  const ragPositions = [
+    [-brx * 0.7, bry * 0.4, -0.15],
+    [-brx * 0.3, bry * 0.7, 0.05],
+    [brx * 0.2, bry * 0.65, -0.08],
+    [brx * 0.6, bry * 0.45, 0.1],
+  ];
+  for (const [rx, ry, sway] of ragPositions) {
+    ctx.beginPath();
+    ctx.moveTo(rx, ry);
+    ctx.bezierCurveTo(
+      rx + Math.sin(time * 3 + rx) * size * 0.03 + sway * size,
+      ry + size * 0.06,
+      rx + Math.sin(time * 2.5 + rx) * size * 0.04 - sway * size * 0.5,
+      ry + size * 0.12,
+      rx + Math.sin(time * 3.5 + rx) * size * 0.05,
+      ry + size * 0.16,
+    );
+    ctx.stroke();
+  }
+
+  // Raised pustules on torso (local coords; follow cough / attack transform)
+  const pustulePalette = [
+    "rgba(175, 198, 55, 0.95)",
+    "rgba(155, 185, 40, 0.92)",
+    "rgba(188, 210, 65, 0.94)",
+  ];
+  for (let pu = 0; pu < 11; pu++) {
+    const puAngle = pu * 0.58 + 0.35;
+    const puDist = size * (0.14 + (pu % 4) * 0.07) * bloat;
+    const pux = Math.cos(puAngle) * puDist * 1.05;
+    const puy = Math.sin(puAngle) * puDist * 0.78 - size * 0.02;
+    const pur = size * (0.018 + (pu % 3) * 0.004);
+    ctx.fillStyle = pustulePalette[pu % pustulePalette.length];
+    ctx.beginPath();
+    ctx.arc(pux, puy, pur, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(245, 252, 200, 0.9)";
+    ctx.beginPath();
+    ctx.arc(pux - pur * 0.38, puy - pur * 0.42, pur * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Infected veins on exposed skin
   ctx.strokeStyle = "rgba(40, 100, 20, 0.55)";
@@ -4800,28 +6387,81 @@ export function drawPlaguebearerEnemy(
 
   ctx.restore();
 
-  // Boils and pustules
-  for (let b = 0; b < 8; b++) {
-    const boilAngle = b * Math.PI * 0.25 + 0.5;
-    const boilDist = size * 0.3 * bloat;
+  // Outer-ring pustules (raised bumps + small highlight dot)
+  for (let b = 0; b < 7; b++) {
+    const boilAngle = b * Math.PI * 0.28 + 0.45;
+    const boilDist = size * (0.34 + (b % 2) * 0.04) * bloat;
     const bx = x + Math.cos(boilAngle) * boilDist;
-    const by = y + Math.sin(boilAngle) * boilDist * 0.8;
-    const boilSize = size * (0.04 + Math.sin(time * 4 + b) * 0.012);
-    ctx.fillStyle = `rgba(180, 200, 50, ${0.7 + Math.sin(time * 3 + b) * 0.2})`;
+    const by = y + Math.sin(boilAngle) * boilDist * 0.76;
+    const boilR = size * (0.024 + Math.sin(time * 4 + b) * 0.005);
+    ctx.fillStyle = `rgba(170, 195, 48, ${0.88 + Math.sin(time * 3 + b) * 0.08})`;
     ctx.beginPath();
-    ctx.arc(bx, by, boilSize, 0, Math.PI * 2);
+    ctx.arc(bx, by, boilR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(255, 255, 150, 0.5)";
+    ctx.fillStyle = "rgba(248, 255, 210, 0.92)";
     ctx.beginPath();
-    ctx.arc(
-      bx - boilSize * 0.3,
-      by - boilSize * 0.3,
-      boilSize * 0.4,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(bx - boilR * 0.36, by - boilR * 0.4, boilR * 0.3, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Swinging plague censer: chain links + bulbous burner with vent slits
+  const cSwing =
+    Math.sin(time * 2.35 + (isAttacking ? attackPhase * 1.1 : 0)) *
+    (0.38 + (isAttacking ? attackPhase * 0.12 : 0));
+  const cHandX = x + size * 0.56;
+  const cHandY = y + size * 0.09;
+  const cEndX = cHandX + Math.sin(cSwing) * size * 0.14;
+  const cEndY = cHandY + size * 0.26 + Math.cos(cSwing) * size * 0.05;
+  const linkN = 7;
+  ctx.strokeStyle = "rgba(35, 45, 28, 0.85)";
+  ctx.fillStyle = "rgba(55, 62, 48, 0.9)";
+  ctx.lineWidth = Math.max(0.6 * zoom, 0.5);
+  for (let li = 0; li < linkN; li++) {
+    const t = (li + 0.5) / linkN;
+    const lax = cHandX + (cEndX - cHandX) * t;
+    const lay = cHandY + (cEndY - cHandY) * t;
+    const linkRot = cSwing * 0.85 + (li - linkN * 0.5) * 0.06;
+    ctx.save();
+    ctx.translate(lax, lay);
+    ctx.rotate(linkRot);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.016, size * 0.01, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+  const cBulbCx = cEndX;
+  const cBulbCy = cEndY + size * 0.055;
+  const cTilt = cSwing * 0.25;
+  ctx.save();
+  ctx.translate(cBulbCx, cBulbCy);
+  ctx.rotate(cTilt);
+  const cGrad = ctx.createLinearGradient(-size * 0.08, -size * 0.1, size * 0.08, size * 0.1);
+  cGrad.addColorStop(0, "rgba(48, 52, 42, 1)");
+  cGrad.addColorStop(0.45, "rgba(72, 78, 58, 1)");
+  cGrad.addColorStop(1, "rgba(38, 42, 32, 1)");
+  ctx.fillStyle = cGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.02, size * 0.075, size * 0.095, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(58, 64, 50, 1)";
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.03, size * 0.05, Math.PI, 0);
+  ctx.lineTo(size * 0.045, -size * 0.01);
+  ctx.quadraticCurveTo(0, size * 0.02, -size * 0.045, -size * 0.01);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(20, 24, 18, 0.9)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.028, -size * 0.02);
+  ctx.lineTo(-size * 0.028, size * 0.07);
+  ctx.moveTo(0, -size * 0.04);
+  ctx.lineTo(0, size * 0.08);
+  ctx.moveTo(size * 0.028, -size * 0.02);
+  ctx.lineTo(size * 0.028, size * 0.07);
+  ctx.stroke();
+  ctx.restore();
 
   // Dripping ooze
   for (let d = 0; d < 6; d++) {

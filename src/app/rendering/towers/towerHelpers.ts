@@ -2790,6 +2790,101 @@ export function drawGroundTransition(
 }
 
 // ============================================================================
+// ISOMETRIC SANDBAG — reusable 3-face bag with stitching & shading
+// ============================================================================
+
+/**
+ * Draw a single isometric sandbag at (bx, by) — the front-bottom vertex.
+ *
+ *  @param bagW  – bag width along the left-face axis (px, pre-zoom)
+ *  @param bagD  – bag depth along the right-face axis (px, pre-zoom)
+ *  @param bagH  – bag height (px, pre-zoom)
+ *  @param shade – 0-1 variation seed for per-bag colour diversity
+ */
+export function drawIsoSandbag(
+  ctx: CanvasRenderingContext2D,
+  bx: number,
+  by: number,
+  bagW: number,
+  bagD: number,
+  bagH: number,
+  zoom: number,
+  shade: number = 0,
+) {
+  const w = bagW * zoom;
+  const d = bagD * zoom;
+  const h = bagH * zoom;
+
+  const mix = 0.85 + shade * 0.15;
+  const lR = Math.floor(105 * mix);
+  const lG = Math.floor(93 * mix);
+  const lB = Math.floor(72 * mix);
+  const rR = Math.floor(120 * mix);
+  const rG = Math.floor(108 * mix);
+  const rB = Math.floor(84 * mix);
+  const tR = Math.floor(140 * mix);
+  const tG = Math.floor(128 * mix);
+  const tB = Math.floor(100 * mix);
+
+  const wDx = -w * 0.5;
+  const wDy = -w * ISO_Y_RATIO * 0.5;
+  const dDx = d * 0.5;
+  const dDy = -d * ISO_Y_RATIO * 0.5;
+
+  // Left face
+  ctx.fillStyle = `rgb(${lR},${lG},${lB})`;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(bx + wDx, by + wDy);
+  ctx.lineTo(bx + wDx, by + wDy - h);
+  ctx.lineTo(bx, by - h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right face
+  ctx.fillStyle = `rgb(${rR},${rG},${rB})`;
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(bx + dDx, by + dDy);
+  ctx.lineTo(bx + dDx, by + dDy - h);
+  ctx.lineTo(bx, by - h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face (puffy highlight)
+  ctx.fillStyle = `rgb(${tR},${tG},${tB})`;
+  ctx.beginPath();
+  ctx.moveTo(bx, by - h);
+  ctx.lineTo(bx + wDx, by + wDy - h);
+  ctx.lineTo(bx + wDx + dDx, by + wDy + dDy - h);
+  ctx.lineTo(bx + dDx, by + dDy - h);
+  ctx.closePath();
+  ctx.fill();
+
+  // Burlap stitching across top face
+  ctx.strokeStyle = "rgba(55,42,25,0.3)";
+  ctx.lineWidth = Math.max(0.5, 0.6 * zoom);
+  ctx.beginPath();
+  ctx.moveTo(bx + wDx * 0.5, by + wDy * 0.5 - h);
+  ctx.lineTo(bx + wDx * 0.5 + dDx, by + wDy * 0.5 + dDy - h);
+  ctx.stroke();
+
+  // Edge outlines for definition
+  ctx.strokeStyle = "rgba(40,30,18,0.22)";
+  ctx.lineWidth = Math.max(0.4, 0.5 * zoom);
+
+  ctx.beginPath();
+  ctx.moveTo(bx, by);
+  ctx.lineTo(bx + wDx, by + wDy);
+  ctx.lineTo(bx + wDx, by + wDy - h);
+  ctx.lineTo(bx, by - h);
+  ctx.lineTo(bx + dDx, by + dDy - h);
+  ctx.lineTo(bx + dDx, by + dDy);
+  ctx.closePath();
+  ctx.stroke();
+}
+
+// ============================================================================
 // MORTAR TOWER - Barrel-dominant artillery emplacement
 // Foundation = fortified hex-prism ammunition depot
 // ============================================================================

@@ -41,6 +41,7 @@ import {
   TROOP_HEAL_DELAY_MS,
   TROOP_HEAL_RATE,
   ENEMY_REGEN_RATE,
+  ENEMY_REGEN_DELAY_MS,
   HERO_COMBAT_RADIUS,
   DAMAGE_FLASH_MS,
   DAMAGE_FLASH_SHORT_MS,
@@ -854,6 +855,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               hp,
               damageFlash: SENTINEL_NEXUS_STATS.damageFlash,
               stunUntil: Math.max(enemy.stunUntil || 0, now + SENTINEL_NEXUS_STATS.stunDuration),
+              lastDamageTaken: now,
             };
           })
           .filter(isDefined)
@@ -1036,6 +1038,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               burnDamage: Math.max(enemy.burnDamage || 0, incoming.burnDamage),
               burnUntil: Math.max(enemy.burnUntil || 0, incoming.burnUntil),
               stunUntil: Math.max(enemy.stunUntil || 0, incoming.stunUntil),
+              lastDamageTaken: now,
             };
           })
           .filter(isDefined)
@@ -1853,7 +1856,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
               return null;
             }
-            enemy = { ...enemy, hp: newHp };
+            enemy = { ...enemy, hp: newHp, lastDamageTaken: now };
           } else if (
             enemy.burning &&
             enemy.burnUntil &&
@@ -1877,12 +1880,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           };
         }
         // Regenerating enemies heal 1.5% max HP/sec when not in combat
+        // and haven't taken damage recently (mirrors hero/troop heal delay)
         const eTraits = ENEMY_DATA[enemy.type].traits;
         if (
           eTraits?.includes("regenerating") &&
           !enemy.inCombat &&
           enemy.hp < enemy.maxHp &&
-          !enemy.hexWardBlocksHealing
+          !enemy.hexWardBlocksHealing &&
+          now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS
         ) {
           const regenAmount = (enemy.maxHp * ENEMY_REGEN_RATE * deltaTime) / 1000;
           enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
@@ -3431,6 +3436,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                 if (shouldApplyArcaneDamage) {
                   newEnemy.hp -= getEnemyDamageTaken(newEnemy, arcaneDamage);
                   newEnemy.damageFlash = 80;
+                  newEnemy.lastDamageTaken = now;
                   appliedDamage = true;
                   if (newEnemy.hp <= 0) {
                     const baseBounty = ENEMY_DATA[enemy.type].bounty;
@@ -3452,6 +3458,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                     earthquakeDamage
                   );
                   newEnemy.damageFlash = 150;
+                  newEnemy.lastDamageTaken = now;
                   newEnemy.slowIntensity = 0.8;
                   appliedDamage = true;
                   if (newEnemy.hp <= 0) {
@@ -4375,7 +4382,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (!current) continue;
         const updated = mutation.mutate(current);
         if (updated) {
-          enemyById.set(mutation.enemyId, updated);
+          enemyById.set(mutation.enemyId,
+            updated.hp < current.hp ? { ...updated, lastDamageTaken: now } : updated
+          );
         } else {
           enemyById.delete(mutation.enemyId);
         }
@@ -4453,7 +4462,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   if (hero.type === "scott") addPawPoints(1);
                   return null;
                 }
-                return { ...e, hp: newHp, damageFlash: 200 };
+                return { ...e, hp: newHp, damageFlash: 200, lastDamageTaken: now };
               }
               return e;
             });
@@ -4475,7 +4484,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   onEnemyKill(e, enemyPos);
                   return null;
                 }
-                return { ...e, hp: newHp, damageFlash: 150 };
+                return { ...e, hp: newHp, damageFlash: 150, lastDamageTaken: now };
               }
               return e;
             });
@@ -4735,7 +4744,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (!current) continue;
         const updated = mutation.mutate(current);
         if (updated) {
-          enemyById.set(mutation.enemyId, updated);
+          enemyById.set(mutation.enemyId,
+            updated.hp < current.hp ? { ...updated, lastDamageTaken: now } : updated
+          );
         } else {
           enemyById.delete(mutation.enemyId);
         }
@@ -4990,7 +5001,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               onEnemyKill(enemy, enemyPos, 12, shouldBurn ? "fire" : "default");
               continue;
             }
-            const updates: Partial<Enemy> = { hp: newHp, damageFlash: 200 };
+            const updates: Partial<Enemy> = { hp: newHp, damageFlash: 200, lastDamageTaken: nowMs };
             if (shouldBurn) {
               const emberStats = TOWER_STATS.mortar.upgrades.B.stats;
               updates.burning = true;

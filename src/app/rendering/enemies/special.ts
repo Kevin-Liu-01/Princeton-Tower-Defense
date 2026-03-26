@@ -1,13 +1,16 @@
 import { setShadowBlur, clearShadow } from "../performance";
 import { ISO_Y_RATIO } from "../../constants/isometric";
-import {
-  drawFaceCircle,
-} from "./helpers";
+import { drawFaceCircle } from "./helpers";
 import {
   drawPulsingGlowRings,
   drawShiftingSegments,
 } from "./animationHelpers";
-import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import {
+  drawPathArm,
+  drawPathLegs,
+} from "./darkFantasyHelpers";
+
+const TAU = Math.PI * 2;
 
 export function drawMascotEnemy(
   ctx: CanvasRenderingContext2D,
@@ -509,7 +512,6 @@ export function drawMascotEnemy(
     orbitSpeed: 1.8,
     shape: "diamond",
   });
-
 }
 
 export function drawDefaultEnemy(
@@ -607,7 +609,8 @@ export function drawDefaultEnemy(
   ctx.strokeStyle = `rgba(30, 27, 75, ${0.5 + corruptionWave * 0.3})`;
   ctx.lineWidth = 3 * zoom;
   for (let t = 0; t < 5; t++) {
-    const tendrilAngle = -Math.PI * 0.8 + t * Math.PI * 0.4 + Math.sin(time * 1.5) * 0.08;
+    const tendrilAngle =
+      -Math.PI * 0.8 + t * Math.PI * 0.4 + Math.sin(time * 1.5) * 0.08;
     const tendrilSway = Math.sin(time * 2.5 + t * 1.3) * 0.2;
     ctx.beginPath();
     ctx.moveTo(x + Math.cos(tendrilAngle) * size * 0.3, y + size * 0.42);
@@ -621,28 +624,46 @@ export function drawDefaultEnemy(
   }
 
   // Default arms — walking swing with character
-  drawPathArm(ctx, x - size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, -1, {
-    color: "#3730a3",
-    colorDark: "#1e1b4b",
-    handColor: "#c7d2fe",
-    shoulderAngle: -0.5 + Math.sin(time * 3) * 0.15,
-    elbowAngle: 0.4 + Math.sin(time * 3.5 + 1) * 0.12,
-    upperLen: 0.15,
-    foreLen: 0.12,
-    width: 0.05,
-    style: "fleshy",
-  });
-  drawPathArm(ctx, x + size * 0.2, y - size * 0.28 + bob * 0.3, size, time, zoom, 1, {
-    color: "#3730a3",
-    colorDark: "#1e1b4b",
-    handColor: "#c7d2fe",
-    shoulderAngle: 0.5 + Math.sin(time * 3 + Math.PI) * 0.15,
-    elbowAngle: 0.4 + Math.sin(time * 3.5 + 2.5) * 0.12,
-    upperLen: 0.15,
-    foreLen: 0.12,
-    width: 0.05,
-    style: "fleshy",
-  });
+  drawPathArm(
+    ctx,
+    x - size * 0.2,
+    y - size * 0.28 + bob * 0.3,
+    size,
+    time,
+    zoom,
+    -1,
+    {
+      color: "#3730a3",
+      colorDark: "#1e1b4b",
+      handColor: "#c7d2fe",
+      shoulderAngle: -0.5 + Math.sin(time * 3) * 0.15,
+      elbowAngle: 0.4 + Math.sin(time * 3.5 + 1) * 0.12,
+      upperLen: 0.15,
+      foreLen: 0.12,
+      width: 0.05,
+      style: "fleshy",
+    },
+  );
+  drawPathArm(
+    ctx,
+    x + size * 0.2,
+    y - size * 0.28 + bob * 0.3,
+    size,
+    time,
+    zoom,
+    1,
+    {
+      color: "#3730a3",
+      colorDark: "#1e1b4b",
+      handColor: "#c7d2fe",
+      shoulderAngle: 0.5 + Math.sin(time * 3 + Math.PI) * 0.15,
+      elbowAngle: 0.4 + Math.sin(time * 3.5 + 2.5) * 0.12,
+      upperLen: 0.15,
+      foreLen: 0.12,
+      width: 0.05,
+      style: "fleshy",
+    },
+  );
 
   // Basic walking legs (behind robe)
   drawPathLegs(ctx, x, y + size * 0.42, size, time, zoom, {
@@ -658,8 +679,10 @@ export function drawDefaultEnemy(
 
   // Shadowy robes with flowing tattered edges
   const robeGrad = ctx.createLinearGradient(
-    x - size * 0.4, y - size * 0.3,
-    x + size * 0.4, y + size * 0.3,
+    x - size * 0.4,
+    y - size * 0.3,
+    x + size * 0.4,
+    y + size * 0.3,
   );
   robeGrad.addColorStop(0, "#1e1b4b");
   robeGrad.addColorStop(0.2, "#312e81");
@@ -673,19 +696,24 @@ export function drawDefaultEnemy(
   for (let i = 0; i <= 8; i++) {
     const jagX = x - size * 0.38 + i * size * 0.095;
     const jagY =
-      y + size * 0.48 +
+      y +
+      size * 0.48 +
       Math.sin(time * 3.5 + i * 1.1) * size * 0.03 +
       (i % 2) * size * 0.04;
     ctx.lineTo(jagX, jagY);
   }
   ctx.quadraticCurveTo(
-    x + size * 0.45, y + size * 0.05,
-    x + size * 0.18, y - size * 0.32 + bob * 0.3,
+    x + size * 0.45,
+    y + size * 0.05,
+    x + size * 0.18,
+    y - size * 0.32 + bob * 0.3,
   );
   ctx.lineTo(x - size * 0.18, y - size * 0.32 + bob * 0.3);
   ctx.quadraticCurveTo(
-    x - size * 0.45, y + size * 0.05,
-    x - size * 0.38, y + size * 0.48,
+    x - size * 0.45,
+    y + size * 0.05,
+    x - size * 0.38,
+    y + size * 0.48,
   );
   ctx.closePath();
   ctx.fill();
@@ -698,9 +726,12 @@ export function drawDefaultEnemy(
     ctx.beginPath();
     ctx.moveTo(veinX, y - size * 0.2 + bob * 0.2);
     ctx.bezierCurveTo(
-      veinX + Math.sin(time * 2 + v) * size * 0.05, y + size * 0.05,
-      veinX - Math.cos(time * 2 + v) * size * 0.04, y + size * 0.2,
-      veinX + Math.sin(v) * size * 0.06, y + size * 0.4,
+      veinX + Math.sin(time * 2 + v) * size * 0.05,
+      y + size * 0.05,
+      veinX - Math.cos(time * 2 + v) * size * 0.04,
+      y + size * 0.2,
+      veinX + Math.sin(v) * size * 0.06,
+      y + size * 0.4,
     );
     ctx.stroke();
   }
@@ -709,8 +740,10 @@ export function drawDefaultEnemy(
   ctx.strokeStyle = `rgba(129, 140, 248, ${runeGlow * 0.6})`;
   ctx.lineWidth = 1.5 * zoom;
   const runePositions = [
-    { rx: -0.12, ry: 0.05 }, { rx: 0.12, ry: 0.1 },
-    { rx: -0.05, ry: 0.25 }, { rx: 0.08, ry: 0.32 },
+    { rx: -0.12, ry: 0.05 },
+    { rx: 0.12, ry: 0.1 },
+    { rx: -0.05, ry: 0.25 },
+    { rx: 0.08, ry: 0.32 },
   ];
   for (let r = 0; r < runePositions.length; r++) {
     const rp = runePositions[r];
@@ -738,8 +771,12 @@ export function drawDefaultEnemy(
 
   // Deep hood with inner shadow
   const hoodGrad = ctx.createRadialGradient(
-    x, y - size * 0.38 + bob * 0.3, size * 0.05,
-    x, y - size * 0.38 + bob * 0.3, size * 0.25,
+    x,
+    y - size * 0.38 + bob * 0.3,
+    size * 0.05,
+    x,
+    y - size * 0.38 + bob * 0.3,
+    size * 0.25,
   );
   hoodGrad.addColorStop(0, "#0f0d24");
   hoodGrad.addColorStop(0.5, "#1e1b4b");
@@ -747,39 +784,83 @@ export function drawDefaultEnemy(
   ctx.fillStyle = hoodGrad;
   ctx.beginPath();
   ctx.ellipse(
-    x, y - size * 0.35 + bob * 0.3,
-    size * 0.22, size * 0.15, 0, Math.PI, 0,
+    x,
+    y - size * 0.35 + bob * 0.3,
+    size * 0.22,
+    size * 0.15,
+    0,
+    Math.PI,
+    0,
   );
   ctx.fill();
   // Hood sides draping down
   ctx.fillStyle = "#1e1b4b";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.35 + bob * 0.3);
-  ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.12, x - size * 0.2, y + size * 0.02);
+  ctx.quadraticCurveTo(
+    x - size * 0.28,
+    y - size * 0.12,
+    x - size * 0.2,
+    y + size * 0.02,
+  );
   ctx.lineTo(x - size * 0.14, y - size * 0.1);
-  ctx.quadraticCurveTo(x - size * 0.2, y - size * 0.22, x - size * 0.16, y - size * 0.32 + bob * 0.3);
+  ctx.quadraticCurveTo(
+    x - size * 0.2,
+    y - size * 0.22,
+    x - size * 0.16,
+    y - size * 0.32 + bob * 0.3,
+  );
   ctx.fill();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.22, y - size * 0.35 + bob * 0.3);
-  ctx.quadraticCurveTo(x + size * 0.28, y - size * 0.12, x + size * 0.2, y + size * 0.02);
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y - size * 0.12,
+    x + size * 0.2,
+    y + size * 0.02,
+  );
   ctx.lineTo(x + size * 0.14, y - size * 0.1);
-  ctx.quadraticCurveTo(x + size * 0.2, y - size * 0.22, x + size * 0.16, y - size * 0.32 + bob * 0.3);
+  ctx.quadraticCurveTo(
+    x + size * 0.2,
+    y - size * 0.22,
+    x + size * 0.16,
+    y - size * 0.32 + bob * 0.3,
+  );
   ctx.fill();
 
   // Hood peak
   ctx.fillStyle = "#1e1b4b";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.48 + bob * 0.3);
-  ctx.quadraticCurveTo(x, y - size * 0.58 + bob * 0.3, x + size * 0.15, y - size * 0.48 + bob * 0.3);
-  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.38, x + size * 0.22, y - size * 0.35 + bob * 0.3);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.58 + bob * 0.3,
+    x + size * 0.15,
+    y - size * 0.48 + bob * 0.3,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.22,
+    y - size * 0.38,
+    x + size * 0.22,
+    y - size * 0.35 + bob * 0.3,
+  );
   ctx.lineTo(x - size * 0.22, y - size * 0.35 + bob * 0.3);
-  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.38, x - size * 0.15, y - size * 0.48 + bob * 0.3);
+  ctx.quadraticCurveTo(
+    x - size * 0.22,
+    y - size * 0.38,
+    x - size * 0.15,
+    y - size * 0.48 + bob * 0.3,
+  );
   ctx.fill();
 
   // Spectral face emerging from hood shadow
   const faceGrad = ctx.createRadialGradient(
-    x - size * 0.03, y - size * 0.42 + bob, size * 0.02,
-    x, y - size * 0.4 + bob, size * 0.16,
+    x - size * 0.03,
+    y - size * 0.42 + bob,
+    size * 0.02,
+    x,
+    y - size * 0.4 + bob,
+    size * 0.16,
   );
   faceGrad.addColorStop(0, "#e0e7ff");
   faceGrad.addColorStop(0.5, "#c7d2fe");
@@ -810,12 +891,22 @@ export function drawDefaultEnemy(
   ctx.fillStyle = "#0f0d24";
   ctx.beginPath();
   ctx.ellipse(
-    x - size * 0.06, y - size * 0.42 + bob,
-    size * 0.04, size * 0.035, -0.1, 0, Math.PI * 2,
+    x - size * 0.06,
+    y - size * 0.42 + bob,
+    size * 0.04,
+    size * 0.035,
+    -0.1,
+    0,
+    Math.PI * 2,
   );
   ctx.ellipse(
-    x + size * 0.06, y - size * 0.42 + bob,
-    size * 0.04, size * 0.035, 0.1, 0, Math.PI * 2,
+    x + size * 0.06,
+    y - size * 0.42 + bob,
+    size * 0.04,
+    size * 0.035,
+    0.1,
+    0,
+    Math.PI * 2,
   );
   ctx.fill();
   // Inner eye glow
@@ -837,7 +928,12 @@ export function drawDefaultEnemy(
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.04, y - size * 0.33 + bob);
-  ctx.quadraticCurveTo(x, y - size * 0.31 + bob, x + size * 0.04, y - size * 0.33 + bob);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.31 + bob,
+    x + size * 0.04,
+    y - size * 0.33 + bob,
+  );
   ctx.stroke();
 
   // Skeletal hands emerging from sleeves with void energy
@@ -850,8 +946,13 @@ export function drawDefaultEnemy(
     ctx.fillStyle = "#1e1b4b";
     ctx.beginPath();
     ctx.ellipse(
-      handX + handSway, handY - size * 0.05,
-      size * 0.08, size * 0.06, side * 0.3, 0, Math.PI * 2,
+      handX + handSway,
+      handY - size * 0.05,
+      size * 0.08,
+      size * 0.06,
+      side * 0.3,
+      0,
+      Math.PI * 2,
     );
     ctx.fill();
 
@@ -859,8 +960,13 @@ export function drawDefaultEnemy(
     ctx.fillStyle = "#c7d2fe";
     ctx.beginPath();
     ctx.ellipse(
-      handX + handSway, handY,
-      size * 0.05, size * 0.04, side * 0.2, 0, Math.PI * 2,
+      handX + handSway,
+      handY,
+      size * 0.05,
+      size * 0.04,
+      side * 0.2,
+      0,
+      Math.PI * 2,
     );
     ctx.fill();
 
@@ -868,9 +974,13 @@ export function drawDefaultEnemy(
     ctx.strokeStyle = "#a5b4fc";
     ctx.lineWidth = 2 * zoom;
     for (let f = 0; f < 3; f++) {
-      const fingerAngle = side * (0.3 + f * 0.25) + Math.sin(time * 3 + f) * 0.1;
+      const fingerAngle =
+        side * (0.3 + f * 0.25) + Math.sin(time * 3 + f) * 0.1;
       ctx.beginPath();
-      ctx.moveTo(handX + handSway + Math.cos(fingerAngle) * size * 0.04, handY + Math.sin(fingerAngle) * size * 0.03);
+      ctx.moveTo(
+        handX + handSway + Math.cos(fingerAngle) * size * 0.04,
+        handY + Math.sin(fingerAngle) * size * 0.03,
+      );
       ctx.lineTo(
         handX + handSway + Math.cos(fingerAngle) * size * 0.09,
         handY + Math.sin(fingerAngle) * size * 0.06,
@@ -884,8 +994,12 @@ export function drawDefaultEnemy(
       const orbY = y + size * 0.08 + bob * 0.4;
       const orbPulse = 0.6 + Math.sin(time * 4) * 0.4;
       const orbGrad = ctx.createRadialGradient(
-        orbX, orbY, 0,
-        orbX, orbY, size * 0.1,
+        orbX,
+        orbY,
+        0,
+        orbX,
+        orbY,
+        size * 0.1,
       );
       orbGrad.addColorStop(0, `rgba(165, 180, 252, ${orbPulse})`);
       orbGrad.addColorStop(0.4, `rgba(99, 102, 241, ${orbPulse * 0.7})`);
@@ -971,8 +1085,12 @@ export function drawDefaultEnemy(
 
     // Central energy burst
     const burstGrad = ctx.createRadialGradient(
-      x, y + size * 0.08, 0,
-      x, y + size * 0.08, size * attackIntensity * 0.5,
+      x,
+      y + size * 0.08,
+      0,
+      x,
+      y + size * 0.08,
+      size * attackIntensity * 0.5,
     );
     burstGrad.addColorStop(0, `rgba(199, 210, 254, ${attackIntensity * 0.5})`);
     burstGrad.addColorStop(0.5, `rgba(99, 102, 241, ${attackIntensity * 0.3})`);
@@ -1010,9 +1128,10 @@ export function drawTrusteeEnemy(
   zoom: number,
   attackPhase: number = 0,
 ) {
+  size *= 1.7;
   // MAMMON'S CHOSEN - Corruption incarnate with gold-blood veins and wealth magic
   const isAttacking = attackPhase > 0;
-  const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+  const attackIntensity = attackPhase;
   const float =
     Math.sin(time * 1.5) * 5 * zoom +
     (isAttacking ? attackIntensity * size * 0.15 : 0);
@@ -1136,23 +1255,93 @@ export function drawTrusteeEnemy(
     color: "#d97706",
     colorDark: "#92400e",
     handColor: "#fef3c7",
-    shoulderAngle: -1.0 + Math.sin(time * 1.5) * 0.08,
-    elbowAngle: -0.15 + Math.sin(time * 2 + 0.5) * 0.1,
+    shoulderAngle: -1.0 + Math.sin(time * 1.5) * 0.08 + (isAttacking ? -attackIntensity * 0.3 : 0),
+    elbowAngle: -0.15 + Math.sin(time * 2 + 0.5) * 0.1 + (isAttacking ? -attackIntensity * 0.2 : 0),
     upperLen: 0.2,
     foreLen: 0.18,
     width: 0.065,
     style: "armored",
+    onWeapon: (wCtx) => {
+      const coinR = size * 0.045;
+      wCtx.fillStyle = "#fbbf24";
+      wCtx.beginPath();
+      wCtx.arc(0, -coinR * 1.2, coinR, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = "#92400e";
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.stroke();
+      wCtx.fillStyle = "#78350f";
+      wCtx.font = `bold ${coinR * 1.2}px serif`;
+      wCtx.textAlign = "center";
+      wCtx.textBaseline = "middle";
+      wCtx.fillText("$", 0, -coinR * 1.2);
+    },
   });
+  const scepterForeLen = 0.18;
   drawPathArm(ctx, x + size * 0.28, armShoulderY, size, time, zoom, 1, {
     color: "#d97706",
     colorDark: "#92400e",
     handColor: "#fef3c7",
-    shoulderAngle: 1.0 + Math.sin(time * 1.5 + Math.PI) * 0.08,
-    elbowAngle: -0.15 + Math.sin(time * 2 + 2) * 0.1,
+    shoulderAngle: -(0.6 + Math.sin(time * 1.5 + Math.PI) * 0.08) + (isAttacking ? -attackIntensity * 0.35 : 0),
+    elbowAngle: -0.3 + Math.sin(time * 2 + 2) * 0.06 + (isAttacking ? -attackIntensity * 0.25 : 0),
     upperLen: 0.2,
-    foreLen: 0.18,
+    foreLen: scepterForeLen,
     width: 0.065,
     style: "armored",
+    onWeapon: (wCtx) => {
+      const handY = scepterForeLen * size;
+      wCtx.translate(0, handY * 0.6);
+
+      const sW = size * 0.035;
+      const sH = size * 0.9;
+      const staffGrad = wCtx.createLinearGradient(-sW, 0, sW, 0);
+      staffGrad.addColorStop(0, "#1c1917");
+      staffGrad.addColorStop(0.5, "#374151");
+      staffGrad.addColorStop(1, "#1c1917");
+      wCtx.fillStyle = staffGrad;
+      wCtx.fillRect(-sW, -sH * 0.5, sW * 2, sH);
+
+      wCtx.strokeStyle = "#fbbf24";
+      wCtx.lineWidth = 2 * zoom;
+      for (let i = 0; i < 10; i++) {
+        wCtx.beginPath();
+        wCtx.moveTo(-sW, -sH * 0.44 + i * sH * 0.1);
+        wCtx.lineTo(sW, -sH * 0.39 + i * sH * 0.1);
+        wCtx.stroke();
+      }
+
+      wCtx.fillStyle = "#fbbf24";
+      wCtx.fillRect(-sW * 1.3, -sH * 0.5, sW * 2.6, size * 0.04);
+      wCtx.fillRect(-sW * 1.3, sH * 0.39, sW * 2.6, size * 0.04);
+
+      wCtx.fillStyle = "#fbbf24";
+      wCtx.beginPath();
+      wCtx.moveTo(-size * 0.09, -sH * 0.5);
+      wCtx.lineTo(-size * 0.07, -sH * 0.5 - size * 0.13);
+      wCtx.lineTo(-size * 0.03, -sH * 0.5 - size * 0.07);
+      wCtx.lineTo(0, -sH * 0.5 - size * 0.17);
+      wCtx.lineTo(size * 0.03, -sH * 0.5 - size * 0.07);
+      wCtx.lineTo(size * 0.07, -sH * 0.5 - size * 0.13);
+      wCtx.lineTo(size * 0.09, -sH * 0.5);
+      wCtx.closePath();
+      wCtx.fill();
+
+      wCtx.fillStyle = "#fbbf24";
+      setShadowBlur(wCtx, 15 * zoom, "#fbbf24");
+      wCtx.beginPath();
+      wCtx.arc(0, -sH * 0.5 - size * 0.23, size * 0.08, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.fillStyle = "#fef3c7";
+      wCtx.beginPath();
+      wCtx.arc(-size * 0.025, -sH * 0.5 - size * 0.25, size * 0.03, 0, Math.PI * 2);
+      wCtx.fill();
+      wCtx.strokeStyle = `rgba(120, 53, 15, ${corruptionPulse * 0.6})`;
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.beginPath();
+      wCtx.arc(0, -sH * 0.5 - size * 0.23, size * 0.05, time * 4, time * 4 + Math.PI);
+      wCtx.stroke();
+      clearShadow(wCtx);
+    },
   });
 
   // Marching legs - behind robes
@@ -1544,6 +1733,31 @@ export function drawTrusteeEnemy(
     ctx.stroke();
   }
 
+  // Gold fur-trimmed shoulder epaulets (NOT template plate pauldrons)
+  for (const side of [-1, 1]) {
+    const epX = x + side * size * 0.24;
+    const epY = y - size * 0.36 + float;
+    // Fur trim
+    ctx.fillStyle = "#d4c4a0";
+    ctx.beginPath();
+    ctx.ellipse(epX, epY + size * 0.02, size * 0.07, size * 0.04, side * 0.3, 0, TAU);
+    ctx.fill();
+    // Gold base
+    const epGrad = ctx.createRadialGradient(epX, epY, 0, epX, epY, size * 0.06);
+    epGrad.addColorStop(0, "#fcd34d");
+    epGrad.addColorStop(0.6, "#d97706");
+    epGrad.addColorStop(1, "#92400e");
+    ctx.fillStyle = epGrad;
+    ctx.beginPath();
+    ctx.ellipse(epX, epY, size * 0.055, size * 0.035, side * 0.3, 0, TAU);
+    ctx.fill();
+    // Gem on epaulet
+    ctx.fillStyle = "#7c3aed";
+    ctx.beginPath();
+    ctx.arc(epX, epY, size * 0.015, 0, TAU);
+    ctx.fill();
+  }
+
   // Magnificent top hat with jeweled band - even more elaborate
   ctx.fillStyle = "#0f0f0f";
   // Brim with gold edge
@@ -1640,67 +1854,6 @@ export function drawTrusteeEnemy(
   ctx.fill();
   clearShadow(ctx);
 
-  // Ornate staff of wealth (scepter) - more elaborate
-  ctx.save();
-  ctx.translate(x - size * 0.5, y - size * 0.15 + float);
-  ctx.rotate(-0.22 + Math.sin(time * 2.2) * 0.06);
-  // Staff body (ebony with gold inlay)
-  const staffBodyGrad = ctx.createLinearGradient(
-    -size * 0.035,
-    0,
-    size * 0.035,
-    0,
-  );
-  staffBodyGrad.addColorStop(0, "#1c1917");
-  staffBodyGrad.addColorStop(0.5, "#374151");
-  staffBodyGrad.addColorStop(1, "#1c1917");
-  ctx.fillStyle = staffBodyGrad;
-  ctx.fillRect(-size * 0.035, -size * 0.45, size * 0.07, size * 0.9);
-  // Gold spiral inlay
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2 * zoom;
-  for (let i = 0; i < 10; i++) {
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.035, -size * 0.4 + i * size * 0.09);
-    ctx.lineTo(size * 0.035, -size * 0.35 + i * size * 0.09);
-    ctx.stroke();
-  }
-  // Gold rings
-  ctx.fillStyle = "#fbbf24";
-  ctx.fillRect(-size * 0.045, -size * 0.45, size * 0.09, size * 0.04);
-  ctx.fillRect(-size * 0.045, size * 0.35, size * 0.09, size * 0.04);
-  // Crown top with elaborate design
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.09, -size * 0.45);
-  ctx.lineTo(-size * 0.07, -size * 0.58);
-  ctx.lineTo(-size * 0.03, -size * 0.52);
-  ctx.lineTo(0, -size * 0.62);
-  ctx.lineTo(size * 0.03, -size * 0.52);
-  ctx.lineTo(size * 0.07, -size * 0.58);
-  ctx.lineTo(size * 0.09, -size * 0.45);
-  ctx.closePath();
-  ctx.fill();
-  // Legendary gem - soul-capturing
-  ctx.fillStyle = "#fbbf24";
-  setShadowBlur(ctx, 15 * zoom, "#fbbf24");
-  ctx.beginPath();
-  ctx.arc(0, -size * 0.68, size * 0.08, 0, Math.PI * 2);
-  ctx.fill();
-  // Inner glow
-  ctx.fillStyle = "#fef3c7";
-  ctx.beginPath();
-  ctx.arc(-size * 0.025, -size * 0.7, size * 0.03, 0, Math.PI * 2);
-  ctx.fill();
-  // Swirling souls inside gem
-  ctx.strokeStyle = `rgba(120, 53, 15, ${corruptionPulse * 0.6})`;
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.arc(0, -size * 0.68, size * 0.05, time * 4, time * 4 + Math.PI);
-  ctx.stroke();
-  clearShadow(ctx);
-  ctx.restore();
-
   // Budget Cuts / Fiery Decree aura (abilities: tower_weaken + burn)
   for (let flame = 0; flame < 3; flame++) {
     const flamePhase = (time * 1.5 + flame * 0.5) % 1.2;
@@ -1721,16 +1874,6 @@ export function drawTrusteeEnemy(
     maxAlpha: 0.4,
     expansion: 1.5,
     lineWidth: 2,
-  });
-
-  // Golden glow rings around scepter gem
-  drawPulsingGlowRings(ctx, x - size * 0.5, y - size * 0.83 + float, size * 0.12, time, zoom, {
-    color: "rgba(251, 191, 36, 0.6)",
-    count: 2,
-    speed: 2,
-    maxAlpha: 0.5,
-    expansion: 2,
-    lineWidth: 1.5,
   });
 
   // Floating golden crown/coin segments
