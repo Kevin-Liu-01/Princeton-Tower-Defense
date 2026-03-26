@@ -165,6 +165,8 @@ import {
   computePauseLocked,
   loadDevPerfSetting,
   saveDevPerfSetting,
+  loadPhotoModeSetting,
+  savePhotoModeSetting,
   handleDevPerfHotkey,
   enforceBattleOutcomePause,
 } from "./runtime/cameraAndKeyboard";
@@ -423,6 +425,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
     () => DEV_CONFIG_MENU_ENABLED
   );
+  const [photoModeEnabled, setPhotoModeEnabled] = useState<boolean>(false);
   const [devPerfSnapshot, setDevPerfSnapshot] = useState<DevPerfSnapshot>({
     fps: 0,
     frameMs: 16.7,
@@ -666,8 +669,10 @@ export function usePrincetonTowerDefenseRuntime() {
   const pauseLocked = computePauseLocked(cameraModeActive, inspectorActive);
 
   useEffect(() => { loadDevPerfSetting(setDevPerfEnabled); }, []);
-
   useEffect(() => { saveDevPerfSetting(devPerfEnabled); }, [devPerfEnabled]);
+
+  useEffect(() => { loadPhotoModeSetting(setPhotoModeEnabled); }, []);
+  useEffect(() => { savePhotoModeSetting(photoModeEnabled); }, [photoModeEnabled]);
 
   useEffect(() => {
     if (!DEV_CONFIG_MENU_ENABLED || gameState !== "playing") return;
@@ -734,6 +739,7 @@ export function usePrincetonTowerDefenseRuntime() {
         setHexWardDamageAmpPct,
         setHexWardBlocksHealing,
         setSpecialTowerHp,
+        photoModeEnabled,
       });
     }
   }, [
@@ -747,6 +753,7 @@ export function usePrincetonTowerDefenseRuntime() {
     clearTroops,
     clearProjectiles,
     clearEffects,
+    photoModeEnabled,
   ]);
 
   // Tutorial & encounter check when entering playing state
@@ -1308,6 +1315,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const { devConfigMenu, handleDevModeChange } = useDevMenuSetup({
     isDevMode, gameState, battleOutcome, progress,
     devPerfEnabled, setDevPerfEnabled, devPerfSnapshot,
+    photoModeEnabled, setPhotoModeEnabled,
     currentWave, totalWaves, waveInProgress,
     enemies, selectedMap,
     setProgress, addPawPoints, setLives,

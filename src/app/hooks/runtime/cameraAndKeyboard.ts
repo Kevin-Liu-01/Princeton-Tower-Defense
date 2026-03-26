@@ -7,6 +7,7 @@ import {
   BG_OVERSCAN_Y,
   DEV_CONFIG_MENU_ENABLED,
   DEV_PERF_STORAGE_KEY,
+  PHOTO_MODE_STORAGE_KEY,
 } from "./runtimeConfig";
 import { SPELL_DATA } from "../../constants";
 
@@ -309,6 +310,36 @@ export function saveDevPerfSetting(devPerfEnabled: boolean): void {
     window.localStorage.setItem(
       DEV_PERF_STORAGE_KEY,
       devPerfEnabled ? "1" : "0",
+    );
+  } catch {
+    // Ignore localStorage access errors.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Photo mode – localStorage persistence
+// ---------------------------------------------------------------------------
+
+export function loadPhotoModeSetting(
+  setPhotoModeEnabled: Dispatch<SetStateAction<boolean>>,
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const saved = window.localStorage.getItem(PHOTO_MODE_STORAGE_KEY);
+    if (saved === "1") {
+      setPhotoModeEnabled(true);
+    }
+  } catch {
+    // Ignore localStorage access errors.
+  }
+}
+
+export function savePhotoModeSetting(photoModeEnabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      PHOTO_MODE_STORAGE_KEY,
+      photoModeEnabled ? "1" : "0",
     );
   } catch {
     // Ignore localStorage access errors.

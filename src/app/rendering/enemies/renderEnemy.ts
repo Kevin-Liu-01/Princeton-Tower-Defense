@@ -1,5 +1,11 @@
 import type { Enemy, Position, MapTheme } from "../../types";
-import { ENEMY_DATA, ISO_Y_RATIO, LEVEL_DATA, SUMMON_CHANNEL_DURATION, ENEMY_REGEN_DELAY_MS } from "../../constants";
+import {
+  ENEMY_DATA,
+  ISO_Y_RATIO,
+  LEVEL_DATA,
+  SUMMON_CHANNEL_DURATION,
+  ENEMY_REGEN_DELAY_MS,
+} from "../../constants";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -7,9 +13,16 @@ import {
   lightenColor,
   darkenColor,
 } from "../../utils";
-import { renderInspectIndicator, type InspectRenderPass } from "../effects/inspectIndicator";
+import {
+  renderInspectIndicator,
+  type InspectRenderPass,
+} from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
-import { getSlowAuraColors, getEnemyFlashProfile, enemyPaletteCache } from "./types";
+import {
+  getSlowAuraColors,
+  getEnemyFlashProfile,
+  enemyPaletteCache,
+} from "./types";
 import { drawRegionOverlay } from "./regionOverlays";
 import { getPerformanceSettings } from "../performance";
 
@@ -33,11 +46,7 @@ import {
   drawProfessorEnemy,
   drawDeanEnemy,
 } from "./academic";
-import {
-  drawMascotEnemy,
-  drawDefaultEnemy,
-  drawTrusteeEnemy,
-} from "./special";
+import { drawMascotEnemy, drawDefaultEnemy, drawTrusteeEnemy } from "./special";
 import {
   drawArcherEnemy,
   drawMageEnemy,
@@ -46,10 +55,7 @@ import {
   drawCrossbowmanEnemy,
   drawHexerEnemy,
 } from "./ranged";
-import {
-  drawHarpyEnemy,
-  drawWyvernEnemy,
-} from "./flying";
+import { drawHarpyEnemy, drawWyvernEnemy } from "./flying";
 import {
   drawSpecterEnemy,
   drawBerserkerEnemy,
@@ -69,20 +75,13 @@ import {
   drawAssassinEnemy,
   drawDragonEnemy,
 } from "./elemental";
-import {
-  drawAthleteEnemy,
-  drawTigerFanEnemy,
-} from "./forest";
+import { drawAthleteEnemy, drawTigerFanEnemy } from "./forest";
 import {
   drawBogCreatureEnemy,
   drawWillOWispEnemy,
   drawSwampTrollEnemy,
 } from "./swamp";
-import {
-  drawNomadEnemy,
-  drawScorpionEnemy,
-  drawScarabEnemy,
-} from "./desert";
+import { drawNomadEnemy, drawScorpionEnemy, drawScarabEnemy } from "./desert";
 import {
   drawSnowGoblinEnemy,
   drawYetiEnemy,
@@ -248,25 +247,28 @@ export function renderEnemy(
   const lastAttackTime = Math.max(
     enemy.lastTroopAttack || 0,
     enemy.lastHeroAttack || 0,
+    enemy.lastRangedAttack || 0,
   );
   const timeSinceAttack = now - lastAttackTime;
   const attackPhase =
     timeSinceAttack < attackDuration ? 1 - timeSinceAttack / attackDuration : 0;
 
   const attackScalePulse =
-    attackPhase > 0
-      ? 1 + Math.sin(attackPhase * Math.PI) * 0.12
-      : 1;
+    attackPhase > 0 ? 1 + Math.sin(attackPhase * Math.PI) * 0.12 : 1;
 
   const hurtScalePulse =
     damageFlashIntensity > 0
-      ? 1 - Math.sin(damageFlashIntensity * Math.PI) * (minimalDetailFx ? 0.015 : 0.03)
+      ? 1 -
+        Math.sin(damageFlashIntensity * Math.PI) *
+          (minimalDetailFx ? 0.015 : 0.03)
       : 1;
 
   // These enemy sprites are drawn facing right instead of the default left,
   // so we invert the flip (same pattern as cavalry/centaur in troops renderer).
   const spriteReversed = RIGHT_FACING_ENEMY_SPRITES.has(enemy.type);
-  const effectiveFacingRight = spriteReversed ? !enemy.facingRight : enemy.facingRight;
+  const effectiveFacingRight = spriteReversed
+    ? !enemy.facingRight
+    : enemy.facingRight;
   const facingFlip = effectiveFacingRight ? -1 : 1;
   ctx.save();
   ctx.translate(screenPos.x, drawY);
@@ -297,17 +299,41 @@ export function renderEnemy(
     const hurtAlpha = damageFlashIntensity * (minimalDetailFx ? 0.16 : 0.24);
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    const hurtTint = flashProfile.innerColor.match(/\d+/g) || ["255", "210", "190"];
+    const hurtTint = flashProfile.innerColor.match(/\d+/g) || [
+      "255",
+      "210",
+      "190",
+    ];
     ctx.fillStyle = `rgba(${hurtTint[0]}, ${hurtTint[1]}, ${hurtTint[2]}, ${hurtAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.56, size * 0.38, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.56,
+      size * 0.38,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     if (!lowDetailFx) {
-      const rimTint = flashProfile.rimColor.match(/\d+/g) || ["255", "185", "150"];
+      const rimTint = flashProfile.rimColor.match(/\d+/g) || [
+        "255",
+        "185",
+        "150",
+      ];
       ctx.strokeStyle = `rgba(${rimTint[0]}, ${rimTint[1]}, ${rimTint[2]}, ${hurtAlpha * 0.8})`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.62, size * 0.42, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        drawY,
+        size * 0.62,
+        size * 0.42,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
     }
     ctx.restore();
@@ -315,12 +341,23 @@ export function renderEnemy(
 
   // Regeneration visual
   const hasRegenTrait = eData.traits?.includes("regenerating");
-  const regenReady = !enemy.inCombat && now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS;
-  if (!minimalDetailFx && hasRegenTrait && regenReady && enemy.hp < enemy.maxHp) {
+  const regenReady =
+    !enemy.inCombat &&
+    now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS;
+  if (
+    !minimalDetailFx &&
+    hasRegenTrait &&
+    regenReady &&
+    enemy.hp < enemy.maxHp
+  ) {
     const regenPulse = 0.3 + 0.2 * Math.sin(time * 3);
     const regenGrad = ctx.createRadialGradient(
-      screenPos.x, drawY, 0,
-      screenPos.x, drawY, size * 0.6,
+      screenPos.x,
+      drawY,
+      0,
+      screenPos.x,
+      drawY,
+      size * 0.6,
     );
     regenGrad.addColorStop(0, `rgba(50, 255, 100, ${regenPulse * 0.25})`);
     regenGrad.addColorStop(0.5, `rgba(30, 200, 80, ${regenPulse * 0.15})`);
@@ -338,7 +375,9 @@ export function renderEnemy(
       ctx.arc(
         screenPos.x + Math.cos(sparkAngle) * sparkDist,
         sparkY,
-        2 * zoom, 0, Math.PI * 2,
+        2 * zoom,
+        0,
+        Math.PI * 2,
       );
       ctx.fill();
     }
@@ -383,25 +422,56 @@ export function renderEnemy(
   // Frozen effect
   if (enemy.frozen) {
     // Icy ground shadow
-    const frostGrad = ctx.createRadialGradient(screenPos.x, drawY + size * 0.1, 0, screenPos.x, drawY + size * 0.1, size * 1.0);
+    const frostGrad = ctx.createRadialGradient(
+      screenPos.x,
+      drawY + size * 0.1,
+      0,
+      screenPos.x,
+      drawY + size * 0.1,
+      size * 1.0,
+    );
     frostGrad.addColorStop(0, "rgba(120, 200, 255, 0.2)");
     frostGrad.addColorStop(0.5, "rgba(80, 170, 240, 0.12)");
     frostGrad.addColorStop(1, "rgba(60, 140, 220, 0)");
     ctx.fillStyle = frostGrad;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY + size * 0.1, size * 1.0, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY + size * 0.1,
+      size * 1.0,
+      size * 0.5,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Inner frost shell
     const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
     ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.85,
+      size * 0.85 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.65,
+      size * 0.65 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Animated frost ring
@@ -412,7 +482,15 @@ export function renderEnemy(
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([5 * zoom, 3 * zoom]);
     ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      0,
+      0,
+      size * 0.78,
+      size * 0.78 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
@@ -466,7 +544,8 @@ export function renderEnemy(
       const pAngle = time * 1.5 + i * 1.26;
       const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
       const px = screenPos.x + Math.cos(pAngle) * pDist;
-      const py = drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
+      const py =
+        drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
       const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
 
       const moteGrad = ctx.createRadialGradient(px, py, 0, px, py, 3 * zoom);
@@ -482,13 +561,34 @@ export function renderEnemy(
   // Burning effect
   if (enemy.burning) {
     // Heat shimmer glow under the enemy
-    const heatGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
-    heatGrad.addColorStop(0, `rgba(255, 100, 20, ${0.2 + Math.sin(time * 6) * 0.08})`);
-    heatGrad.addColorStop(0.5, `rgba(255, 60, 0, ${0.1 + Math.sin(time * 5) * 0.05})`);
+    const heatGrad = ctx.createRadialGradient(
+      screenPos.x,
+      drawY,
+      0,
+      screenPos.x,
+      drawY,
+      size * 0.9,
+    );
+    heatGrad.addColorStop(
+      0,
+      `rgba(255, 100, 20, ${0.2 + Math.sin(time * 6) * 0.08})`,
+    );
+    heatGrad.addColorStop(
+      0.5,
+      `rgba(255, 60, 0, ${0.1 + Math.sin(time * 5) * 0.05})`,
+    );
     heatGrad.addColorStop(1, "rgba(255, 40, 0, 0)");
     ctx.fillStyle = heatGrad;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.9,
+      size * 0.9 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Fire ring at base
@@ -496,7 +596,15 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY + size * 0.05,
+      size * 0.5,
+      size * 0.5 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Main flames (5 for better coverage)
@@ -504,32 +612,64 @@ export function renderEnemy(
       const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
       const flameX = screenPos.x + flameOffset + (i - 2) * size * 0.1;
       const baseY = drawY - size * 0.1;
-      const flameHeight = (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
-      const flameWidth = (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
+      const flameHeight =
+        (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
+      const flameWidth =
+        (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
       const flicker = Math.sin(time * 12 + i * 3) * 0.12;
 
       // Outer flame (dark red)
       ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY - flameHeight);
-      ctx.quadraticCurveTo(flameX + flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 1.1,
+        baseY - flameHeight * 0.45,
+        flameX,
+        baseY - flameHeight,
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 1.1,
+        baseY - flameHeight * 0.45,
+        flameX,
+        baseY,
+      );
       ctx.fill();
 
       // Middle flame (bright orange)
       ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY - flameHeight * 0.75);
-      ctx.quadraticCurveTo(flameX + flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 0.7,
+        baseY - flameHeight * 0.4,
+        flameX,
+        baseY - flameHeight * 0.75,
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 0.7,
+        baseY - flameHeight * 0.4,
+        flameX,
+        baseY,
+      );
       ctx.fill();
 
       // Inner flame core (yellow-white)
       ctx.fillStyle = `rgba(255, ${220 + Math.floor(Math.sin(time * 10 + i) * 30)}, ${120 + Math.floor(Math.sin(time * 9 + i) * 50)}, ${0.8 + flicker})`;
       ctx.beginPath();
       ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(flameX - flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY - flameHeight * 0.5);
-      ctx.quadraticCurveTo(flameX + flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY);
+      ctx.quadraticCurveTo(
+        flameX - flameWidth * 0.35,
+        baseY - flameHeight * 0.3,
+        flameX,
+        baseY - flameHeight * 0.5,
+      );
+      ctx.quadraticCurveTo(
+        flameX + flameWidth * 0.35,
+        baseY - flameHeight * 0.3,
+        flameX,
+        baseY,
+      );
       ctx.fill();
     }
 
@@ -553,8 +693,18 @@ export function renderEnemy(
       }
 
       // Ember glow
-      const eGrad = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, emberSize * 2.5);
-      eGrad.addColorStop(0, `rgba(255, ${200 - Math.floor(emberPhase * 100)}, ${80 - Math.floor(emberPhase * 60)}, ${emberAlpha * 0.5})`);
+      const eGrad = ctx.createRadialGradient(
+        emberX,
+        emberY,
+        0,
+        emberX,
+        emberY,
+        emberSize * 2.5,
+      );
+      eGrad.addColorStop(
+        0,
+        `rgba(255, ${200 - Math.floor(emberPhase * 100)}, ${80 - Math.floor(emberPhase * 60)}, ${emberAlpha * 0.5})`,
+      );
       eGrad.addColorStop(1, "rgba(255, 100, 0, 0)");
       ctx.fillStyle = eGrad;
       ctx.beginPath();
@@ -581,13 +731,28 @@ export function renderEnemy(
     const sc = getSlowAuraColors(enemy.slowSource);
 
     // Gradient aura fill
-    const auraGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
+    const auraGrad = ctx.createRadialGradient(
+      screenPos.x,
+      drawY,
+      0,
+      screenPos.x,
+      drawY,
+      size * 0.9,
+    );
     auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
     auraGrad.addColorStop(0.6, `rgba(${sc.aura}, ${0.15 * slowIntensity})`);
     auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
     ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.9,
+      size * 0.9 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Animated outer ring
@@ -607,7 +772,15 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      innerPulse,
+      innerPulse * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Orbiting rune diamonds with glow
@@ -620,7 +793,10 @@ export function renderEnemy(
 
       // Rune glow
       const rGrad = ctx.createRadialGradient(rx, ry, 0, rx, ry, runeSize * 2);
-      rGrad.addColorStop(0, `rgba(${sc.rune}, ${0.3 * slowIntensity * runeGlow})`);
+      rGrad.addColorStop(
+        0,
+        `rgba(${sc.rune}, ${0.3 * slowIntensity * runeGlow})`,
+      );
       rGrad.addColorStop(1, `rgba(${sc.rune}, 0)`);
       ctx.fillStyle = rGrad;
       ctx.beginPath();
@@ -648,7 +824,8 @@ export function renderEnemy(
       const pDist = size * (0.35 + Math.sin(time * 1.8 + i) * 0.15);
       const px = screenPos.x + Math.cos(pAngle) * pDist;
       const py = drawY + Math.sin(pAngle) * pDist * 0.5 - size * 0.1;
-      const pAlpha = (0.7 + Math.sin(time * 4 + i * 1.5) * 0.25) * slowIntensity;
+      const pAlpha =
+        (0.7 + Math.sin(time * 4 + i * 1.5) * 0.25) * slowIntensity;
 
       // Particle glow
       const pGrad = ctx.createRadialGradient(px, py, 0, px, py, 4 * zoom);
@@ -677,13 +854,25 @@ export function renderEnemy(
     ctx.strokeStyle = `rgba(255, 240, 100, ${(1 - ringPhase) * 0.4 * stunPulse})`;
     ctx.lineWidth = (2 - ringPhase * 1.5) * zoom;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY - size * 0.5, concussionR, concussionR * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY - size * 0.5,
+      concussionR,
+      concussionR * 0.5,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Daze glow above head
     const dazeGrad = ctx.createRadialGradient(
-      screenPos.x, drawY - size * 0.65, 0,
-      screenPos.x, drawY - size * 0.65, size * 0.35,
+      screenPos.x,
+      drawY - size * 0.65,
+      0,
+      screenPos.x,
+      drawY - size * 0.65,
+      size * 0.35,
     );
     dazeGrad.addColorStop(0, `rgba(255, 255, 150, ${0.2 * stunPulse})`);
     dazeGrad.addColorStop(1, "rgba(255, 240, 80, 0)");
@@ -704,7 +893,10 @@ export function renderEnemy(
         const trailAngle = baseAngle - t * 0.12;
         const trailAlpha = (1 - t * 0.22) * 0.45;
         const tx = screenPos.x + Math.cos(trailAngle) * orbitRadius * 0.7;
-        const ty = drawY - size * 0.65 + Math.sin(trailAngle) * orbitRadius * ISO_Y_RATIO;
+        const ty =
+          drawY -
+          size * 0.65 +
+          Math.sin(trailAngle) * orbitRadius * ISO_Y_RATIO;
         ctx.fillStyle = `rgba(255, 255, 100, ${trailAlpha})`;
         ctx.beginPath();
         ctx.arc(tx, ty, (2.5 - t * 0.45) * zoom, 0, Math.PI * 2);
@@ -712,7 +904,8 @@ export function renderEnemy(
       }
 
       const sx = screenPos.x + Math.cos(baseAngle) * orbitRadius * 0.7;
-      const sy = drawY - size * 0.65 + Math.sin(baseAngle) * orbitRadius * ISO_Y_RATIO;
+      const sy =
+        drawY - size * 0.65 + Math.sin(baseAngle) * orbitRadius * ISO_Y_RATIO;
       const starSize = (4 + Math.sin(time * 8 + i * 2) * 0.8) * zoom;
 
       // Star glow
@@ -762,7 +955,10 @@ export function renderEnemy(
   // Hex Ward aura effect
   if (enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
     const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
-    const remainingRatio = Math.max(0.35, Math.min(1, (enemy.hexWardUntil - now) / 4000));
+    const remainingRatio = Math.max(
+      0.35,
+      Math.min(1, (enemy.hexWardUntil - now) / 4000),
+    );
 
     const hexGlow = ctx.createRadialGradient(
       screenPos.x,
@@ -884,14 +1080,25 @@ export function renderEnemy(
     const glowAlpha = 0.25 + Math.sin(time * 3) * 0.1;
     ctx.fillStyle = `rgba(255, 215, 0, ${glowAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      drawY,
+      size * 0.9,
+      size * 0.9 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   // Summoning channel ritual effect
   if (enemy.summoning && enemy.summonStartTime) {
     const channelElapsed = now - enemy.summonStartTime;
-    const channelProgress = Math.min(1, channelElapsed / SUMMON_CHANNEL_DURATION);
+    const channelProgress = Math.min(
+      1,
+      channelElapsed / SUMMON_CHANNEL_DURATION,
+    );
     const summonColor = eData.color || "#7722cc";
     const ritualRadius = size * (0.8 + channelProgress * 0.6);
     const ritualY = screenPos.y + 5 * zoom;
@@ -906,7 +1113,15 @@ export function renderEnemy(
     ctx.setLineDash([4 * zoom, 6 * zoom]);
     ctx.lineDashOffset = -time * 40;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, ritualY, ritualRadius, ritualRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      ritualY,
+      ritualRadius,
+      ritualRadius * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
     ctx.setLineDash([]);
 
@@ -914,9 +1129,20 @@ export function renderEnemy(
     const pulseScale = 0.5 + Math.sin(time * 6) * 0.15;
     ctx.strokeStyle = summonColor;
     ctx.lineWidth = 1.5 * zoom;
-    ctx.globalAlpha = spawnAlpha * (0.3 + channelProgress * 0.5) * (0.6 + Math.sin(time * 8) * 0.4);
+    ctx.globalAlpha =
+      spawnAlpha *
+      (0.3 + channelProgress * 0.5) *
+      (0.6 + Math.sin(time * 8) * 0.4);
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, ritualY, ritualRadius * pulseScale, ritualRadius * pulseScale * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      ritualY,
+      ritualRadius * pulseScale,
+      ritualRadius * pulseScale * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
 
     // Rune marks around the circle
@@ -928,7 +1154,13 @@ export function renderEnemy(
       const rx = screenPos.x + Math.cos(angle) * ritualRadius * 0.85;
       const ry = ritualY + Math.sin(angle) * ritualRadius * 0.85 * ISO_Y_RATIO;
       ctx.beginPath();
-      ctx.arc(rx, ry, 2.5 * zoom * (0.7 + channelProgress * 0.3), 0, Math.PI * 2);
+      ctx.arc(
+        rx,
+        ry,
+        2.5 * zoom * (0.7 + channelProgress * 0.3),
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -936,13 +1168,26 @@ export function renderEnemy(
     if (channelProgress > 0.3) {
       const columnAlpha = (channelProgress - 0.3) * 1.4;
       const columnHeight = size * 1.2 * channelProgress;
-      const colGrad = ctx.createLinearGradient(screenPos.x, drawY, screenPos.x, drawY - columnHeight);
+      const colGrad = ctx.createLinearGradient(
+        screenPos.x,
+        drawY,
+        screenPos.x,
+        drawY - columnHeight,
+      );
       colGrad.addColorStop(0, summonColor);
       colGrad.addColorStop(1, "transparent");
       ctx.globalAlpha = spawnAlpha * columnAlpha * 0.35;
       ctx.fillStyle = colGrad;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.3, columnHeight, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        drawY,
+        size * 0.3,
+        columnHeight,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -952,7 +1197,10 @@ export function renderEnemy(
   }
 
   // HP bar with armor display
-  if (getPerformanceSettings().showHealthBars && (enemy.hp < enemy.maxHp || eData.armor > 0)) {
+  if (
+    getPerformanceSettings().showHealthBars &&
+    (enemy.hp < enemy.maxHp || eData.armor > 0)
+  ) {
     const barWidth = size * 1.4;
     const barHeight = 6 * zoom;
     const barY = drawY - size * 1.3;
@@ -1201,331 +1449,1531 @@ export function drawEnemySprite(
 
   switch (type) {
     case "frosh":
-      drawFreshmanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFreshmanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "sophomore":
-      drawSophomoreEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSophomoreEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "junior":
-      drawJuniorEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawJuniorEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "senior":
-      drawSeniorEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSeniorEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "gradstudent":
-      drawGradStudentEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawGradStudentEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "professor":
-      drawProfessorEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawProfessorEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dean":
-      drawDeanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDeanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "trustee":
-      drawTrusteeEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawTrusteeEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "mascot":
-      drawMascotEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, isFlying, attackPhase);
+      drawMascotEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        isFlying,
+        attackPhase,
+      );
       break;
     case "archer":
-      drawArcherEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawArcherEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "mage":
-      drawMageEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMageEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "catapult":
-      drawCatapultEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawCatapultEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "warlock":
-      drawWarlockEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawWarlockEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "crossbowman":
-      drawCrossbowmanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawCrossbowmanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "hexer":
-      drawHexerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawHexerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "harpy":
-      drawHarpyEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawHarpyEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "wyvern":
-      drawWyvernEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawWyvernEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "specter":
-      drawSpecterEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSpecterEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "berserker":
-      drawBerserkerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBerserkerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "golem":
-      drawGolemEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawGolemEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "necromancer":
-      drawNecromancerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawNecromancerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "shadow_knight":
-      drawShadowKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawShadowKnightEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "cultist":
-      drawCultistEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawCultistEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "plaguebearer":
-      drawPlaguebearerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawPlaguebearerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "thornwalker":
-      drawThornwalkerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawThornwalkerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "sandworm":
-      drawSandwormEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSandwormEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "frostling":
-      drawFrostlingEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFrostlingEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "infernal":
-      drawInfernalEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawInfernalEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "banshee":
-      drawBansheeEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBansheeEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "juggernaut":
-      drawJuggernautEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawJuggernautEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "assassin":
-      drawAssassinEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAssassinEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dragon":
-      drawDragonEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDragonEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "athlete":
-      drawAthleteEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAthleteEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "tiger_fan":
-      drawTigerFanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawTigerFanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "bog_creature":
-      drawBogCreatureEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBogCreatureEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "will_o_wisp":
-      drawWillOWispEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawWillOWispEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "swamp_troll":
-      drawSwampTrollEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSwampTrollEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "nomad":
-      drawNomadEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawNomadEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "scorpion":
-      drawScorpionEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawScorpionEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "scarab":
-      drawScarabEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawScarabEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "snow_goblin":
-      drawSnowGoblinEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSnowGoblinEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "yeti":
-      drawYetiEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawYetiEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ice_witch":
-      drawIceWitchEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawIceWitchEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "magma_spawn":
-      drawMagmaSpawnEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMagmaSpawnEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "fire_imp":
-      drawFireImpEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFireImpEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ember_guard":
-      drawEmberGuardEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawEmberGuardEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "skeleton_footman":
-      drawSkeletonFootmanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSkeletonFootmanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "skeleton_knight":
-      drawSkeletonKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSkeletonKnightEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "skeleton_archer":
-      drawSkeletonArcherEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSkeletonArcherEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "skeleton_king":
-      drawSkeletonKingEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSkeletonKingEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "zombie_shambler":
-      drawZombieShamblerEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawZombieShamblerEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "zombie_brute":
-      drawZombieBruteEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawZombieBruteEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "zombie_spitter":
-      drawZombieSpitterEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawZombieSpitterEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ghoul":
-      drawGhoulEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawGhoulEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dark_knight":
-      drawDarkKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDarkKnightEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "death_knight":
-      drawDeathKnightEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDeathKnightEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "fallen_paladin":
-      drawFallenPaladinEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFallenPaladinEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "black_guard":
-      drawBlackGuardEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBlackGuardEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "lich":
-      drawLichEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawLichEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "wraith":
-      drawWraithEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawWraithEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "bone_mage":
-      drawBoneMageEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBoneMageEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dark_priest":
-      drawDarkPriestEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDarkPriestEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "revenant":
-      drawRevenantEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawRevenantEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "abomination":
-      drawAbominationEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAbominationEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "hellhound":
-      drawHellhoundEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawHellhoundEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "doom_herald":
-      drawDoomHeraldEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDoomHeraldEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "titan_of_nassau":
-      drawTitanOfNassauEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawTitanOfNassauEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "swamp_leviathan":
-      drawSwampLeviathanEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSwampLeviathanEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "sphinx_guardian":
-      drawSphinxGuardianEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSphinxGuardianEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "frost_colossus":
-      drawFrostColossusEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFrostColossusEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "inferno_wyrm":
-      drawInfernoWyrmEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawInfernoWyrmEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "orb_weaver":
-      drawOrbWeaverEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawOrbWeaverEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "mantis":
-      drawMantisEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMantisEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "bombardier_beetle":
-      drawBombardierBeetleEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBombardierBeetleEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "mosquito":
-      drawMosquitoEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMosquitoEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "centipede":
-      drawCentipedeEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawCentipedeEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dragonfly":
-      drawDragonflyEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDragonflyEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "silk_moth":
-      drawSilkMothEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSilkMothEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ant_soldier":
-      drawAntSoldierEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAntSoldierEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "locust":
-      drawLocustEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawLocustEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "trapdoor_spider":
-      drawTrapdoorSpiderEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawTrapdoorSpiderEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ice_beetle":
-      drawIceBeetleEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawIceBeetleEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "frost_tick":
-      drawFrostTickEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFrostTickEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "snow_moth":
-      drawSnowMothEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSnowMothEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "fire_ant":
-      drawFireAntEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFireAntEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "magma_beetle":
-      drawMagmaBeetleEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMagmaBeetleEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ash_moth":
-      drawAshMothEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAshMothEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "brood_mother":
-      drawBroodMotherEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBroodMotherEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dire_bear":
-      drawDireBearEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDireBearEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "ancient_ent":
-      drawAncientEntEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawAncientEntEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "forest_troll":
-      drawForestTrollEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawForestTrollEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "timber_wolf":
-      drawTimberWolfEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawTimberWolfEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "giant_eagle":
-      drawGiantEagleEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawGiantEagleEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "swamp_hydra":
-      drawSwampHydraEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSwampHydraEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "giant_toad":
-      drawGiantToadEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawGiantToadEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "vine_serpent":
-      drawVineSerpentEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawVineSerpentEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "marsh_troll":
-      drawMarshTrollEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMarshTrollEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "phoenix":
-      drawPhoenixEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawPhoenixEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "basilisk":
-      drawBasiliskEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawBasiliskEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "djinn":
-      drawDjinnEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDjinnEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "manticore":
-      drawManticoreEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawManticoreEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "frost_troll":
-      drawFrostTrollEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawFrostTrollEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "dire_wolf":
-      drawDireWolfEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDireWolfEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "wendigo":
-      drawWendigoEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawWendigoEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "mammoth":
-      drawMammothEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawMammothEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "lava_golem":
-      drawLavaGolemEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawLavaGolemEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "volcanic_drake":
-      drawVolcanicDrakeEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawVolcanicDrakeEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     case "salamander":
-      drawSalamanderEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawSalamanderEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
       break;
     default:
-      drawDefaultEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
+      drawDefaultEnemy(
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+      );
   }
 
   drawRegionOverlay(ctx, x, y, size, type, region, time, zoom);

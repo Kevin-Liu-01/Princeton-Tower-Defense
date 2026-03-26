@@ -78,6 +78,7 @@ export const DEV_CONFIG_MENU_ENABLED =
   typeof DEV_CONFIG_ENV_VALUE === "string" &&
   DEV_CONFIG_ENV_VALUE.trim() === "1";
 export const DEV_PERF_STORAGE_KEY = "ptd:dev-perf-overlay-enabled";
+export const PHOTO_MODE_STORAGE_KEY = "ptd:photo-mode-enabled";
 
 export function isDefined<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;

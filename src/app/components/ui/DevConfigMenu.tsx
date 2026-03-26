@@ -38,6 +38,8 @@ interface DevConfigMenuProps {
   devPerfEnabled: boolean;
   setDevPerfEnabled: (enabled: boolean) => void;
   devPerfSnapshot: DevPerfSnapshot;
+  photoModeEnabled: boolean;
+  setPhotoModeEnabled: (enabled: boolean) => void;
   currentWave: number;
   totalWaves: number;
   waveInProgress: boolean;
@@ -76,6 +78,8 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   devPerfEnabled,
   setDevPerfEnabled,
   devPerfSnapshot,
+  photoModeEnabled,
+  setPhotoModeEnabled,
   currentWave,
   totalWaves,
   waveInProgress,
@@ -243,6 +247,27 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     </div>
                   </div>
                 ) : null}
+              </section>
+
+              <section className="rounded border border-fuchsia-300/30 bg-fuchsia-950/30 p-2">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-semibold uppercase tracking-wide text-fuchsia-200">
+                    Photo Mode
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoModeEnabled(!photoModeEnabled)}
+                    className={`rounded border px-2 py-1 font-mono ${photoModeEnabled
+                        ? "border-fuchsia-400/70 bg-fuchsia-900/60 text-fuchsia-100"
+                        : "border-zinc-400/60 bg-zinc-900/60 text-zinc-200"
+                      }`}
+                  >
+                    {photoModeEnabled ? "ON" : "OFF"}
+                  </button>
+                </div>
+                <div className="text-[10px] leading-snug text-fuchsia-200/60">
+                  Places strategic towers on every level for screenshots. Re-enter a level after toggling.
+                </div>
               </section>
 
               {gameState === "playing" ? (

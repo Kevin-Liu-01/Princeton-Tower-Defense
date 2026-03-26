@@ -28,6 +28,7 @@ import {
   ENEMY_DATA,
 } from "../../constants";
 import { gridToWorldPath, generateId } from "../../utils";
+import { buildPhotoModeTowers } from "../../constants/photoModeTowers";
 import { clearDamageNumbers } from "../../rendering/ui/damageNumbers";
 import { clearParticlePool } from "../../rendering";
 import { isMountainTerrainKind } from "../../rendering/maps/challengeTerrain";
@@ -130,6 +131,7 @@ export interface ResetGameStateParams {
   setHexWardDamageAmpPct: Dispatch<SetStateAction<number>>;
   setHexWardBlocksHealing: Dispatch<SetStateAction<boolean>>;
   setSpecialTowerHp: Dispatch<SetStateAction<Record<string, number>>>;
+  photoModeEnabled?: boolean;
 }
 
 export function resetGameStateImpl(params: ResetGameStateParams): void {
@@ -156,6 +158,13 @@ export function resetGameStateImpl(params: ResetGameStateParams): void {
   const prePlaced = levelData?.prePlacedTowers?.() ?? [];
   if (prePlaced.length > 0) {
     params.setTowers(prePlaced);
+  } else if (params.photoModeEnabled) {
+    const photoTowers = buildPhotoModeTowers(selectedMap);
+    if (photoTowers.length > 0) {
+      params.setTowers(photoTowers);
+    } else {
+      params.clearTowers();
+    }
   } else {
     params.clearTowers();
   }

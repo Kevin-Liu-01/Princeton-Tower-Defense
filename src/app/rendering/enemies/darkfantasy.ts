@@ -1121,6 +1121,7 @@ export function drawSkeletonArcherEnemy(
 ) {
   size *= 1.75;
   const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
   const walkPhase = time * 5.5;
   const breath = getBreathScale(time, 1.8, 0.012);
   const sway = getIdleSway(time, 1.3, size * 0.003, size * 0.002);
@@ -1282,94 +1283,245 @@ export function drawSkeletonArcherEnemy(
   }
   drawBeltOverlay(ctx, cx0, torsoY + size * 0.08, size, size * 0.12, "#5a4535", "#3a2515", "#706050");
 
-  // === BOW ARM (left side) ===
+  // === BOW ARM (left side — toward target) ===
   const bowArmX = cx0 - size * 0.15;
   const bowArmY = torsoY - size * 0.1 - bodyBob;
-  const bowAngle = isAttacking ? -0.6 : -0.3;
+  const bowForeLen = 0.17;
 
   drawPathArm(ctx, bowArmX, bowArmY, size, time, zoom, -1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.22, foreLen: 0.17,
-    shoulderAngle: bowAngle,
-    elbowBend: 0.45,
-    elbowAngle: 0.25,
+    upperLen: 0.22, foreLen: bowForeLen,
+    shoulderAngle: (1.1 + (isAttacking ? attackIntensity * 0.15 : 0)) + Math.sin(time * 1.2) * 0.02,
+    elbowAngle: 0.4 + (isAttacking ? attackIntensity * 0.1 : 0),
     style: 'bone',
-    onWeapon: (ctx) => {
-      // Bow
-      const bowH = size * 0.28;
-      const bowCurve = size * 0.08;
+    onWeapon: (wCtx) => {
+      const handY = bowForeLen * size;
+      wCtx.translate(0, handY * 0.4);
+      wCtx.rotate(-1.2);
 
-      // Bow limbs (wood grain)
-      const bowGrad = ctx.createLinearGradient(-bowCurve, -bowH / 2, 0, bowH / 2);
-      bowGrad.addColorStop(0, "#6a4a30");
-      bowGrad.addColorStop(0.5, "#8a6a50");
-      bowGrad.addColorStop(1, "#5a3a20");
-      ctx.strokeStyle = bowGrad as unknown as string;
-      ctx.lineWidth = size * 0.022;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(0, -bowH / 2);
-      ctx.quadraticCurveTo(-bowCurve, 0, 0, bowH / 2);
-      ctx.stroke();
+      const bowH = size * 0.36;
+      const limbW = 2.8 * zoom;
 
-      // Bowstring
-      const stringTension = isAttacking ? size * 0.04 : 0;
-      ctx.strokeStyle = "#c8b898";
-      ctx.lineWidth = size * 0.007;
-      ctx.beginPath();
-      ctx.moveTo(0, -bowH / 2);
-      ctx.quadraticCurveTo(stringTension, 0, 0, bowH / 2);
-      ctx.stroke();
+      // Ghostly spectral aura on limbs
+      setShadowBlur(wCtx, 3 * zoom, "rgba(80, 200, 100, 0.15)");
 
-      // Bowstring vibration after attack
-      if (isAttacking && attackPhase > 0.5) {
-        const vib = Math.sin(time * 40) * size * 0.008 * (1 - attackPhase);
-        ctx.strokeStyle = "rgba(200, 184, 152, 0.4)";
-        ctx.lineWidth = size * 0.005;
-        ctx.beginPath();
-        ctx.moveTo(0, -bowH / 2);
-        ctx.quadraticCurveTo(vib, 0, 0, bowH / 2);
-        ctx.stroke();
+      // Upper limb — recurve S-shape
+      const upperGrad = wCtx.createLinearGradient(0, -bowH * 0.5, 0, 0);
+      upperGrad.addColorStop(0, "#4a3520");
+      upperGrad.addColorStop(0.5, "#7a5a40");
+      upperGrad.addColorStop(1, "#5a4030");
+      wCtx.strokeStyle = upperGrad;
+      wCtx.lineWidth = limbW;
+      wCtx.lineCap = "round";
+      wCtx.beginPath();
+      wCtx.moveTo(size * 0.015, -bowH * 0.5);
+      wCtx.bezierCurveTo(-size * 0.04, -bowH * 0.3, -size * 0.06, -bowH * 0.12, -size * 0.03, 0);
+      wCtx.stroke();
+
+      // Lower limb — mirror
+      const lowerGrad = wCtx.createLinearGradient(0, 0, 0, bowH * 0.5);
+      lowerGrad.addColorStop(0, "#5a4030");
+      lowerGrad.addColorStop(0.5, "#7a5a40");
+      lowerGrad.addColorStop(1, "#4a3520");
+      wCtx.strokeStyle = lowerGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(-size * 0.03, 0);
+      wCtx.bezierCurveTo(-size * 0.06, bowH * 0.12, -size * 0.04, bowH * 0.3, size * 0.015, bowH * 0.5);
+      wCtx.stroke();
+      wCtx.lineCap = "butt";
+
+      clearShadow(wCtx);
+
+      // Sinew wrapping tick marks on upper limb
+      wCtx.strokeStyle = "rgba(180, 160, 130, 0.4)";
+      wCtx.lineWidth = 0.7 * zoom;
+      for (let t = 0.2; t <= 0.8; t += 0.2) {
+        const ux = size * 0.015 * (1 - t) + (-size * 0.03) * t + (-size * 0.04 - size * 0.015) * t * (1 - t) * 2;
+        const uy = -bowH * 0.5 * (1 - t);
+        wCtx.beginPath();
+        wCtx.moveTo(ux - size * 0.008, uy - size * 0.006);
+        wCtx.lineTo(ux + size * 0.008, uy + size * 0.006);
+        wCtx.stroke();
       }
 
-      // Nocked arrow when attacking
-      if (isAttacking && attackPhase < 0.5) {
-        ctx.strokeStyle = "#8a7560";
-        ctx.lineWidth = size * 0.009;
-        ctx.beginPath();
-        ctx.moveTo(stringTension, 0);
-        ctx.lineTo(-size * 0.25, 0);
-        ctx.stroke();
-
-        // Arrowhead
-        ctx.fillStyle = "#707080";
-        ctx.beginPath();
-        ctx.moveTo(-size * 0.25, 0);
-        ctx.lineTo(-size * 0.235, -size * 0.01);
-        ctx.lineTo(-size * 0.235, size * 0.01);
-        ctx.closePath();
-        ctx.fill();
-
-        // Energy trail
-        ctx.strokeStyle = "rgba(80, 200, 100, 0.4)";
-        ctx.lineWidth = size * 0.008;
-        ctx.beginPath();
-        ctx.moveTo(-size * 0.23, 0);
-        ctx.lineTo(-size * 0.15, Math.sin(time * 20) * size * 0.01);
-        ctx.stroke();
+      // Sinew wrapping tick marks on lower limb
+      for (let t = 0.2; t <= 0.8; t += 0.2) {
+        const lx = -size * 0.03 * (1 - t) + size * 0.015 * t + (-size * 0.06 + size * 0.03) * t * (1 - t) * 2;
+        const ly = bowH * 0.5 * t;
+        wCtx.beginPath();
+        wCtx.moveTo(lx - size * 0.008, ly - size * 0.006);
+        wCtx.lineTo(lx + size * 0.008, ly + size * 0.006);
+        wCtx.stroke();
       }
 
-      ctx.lineCap = "butt";
+      // Weathered hairline cracks on upper limb
+      wCtx.strokeStyle = "rgba(60, 40, 20, 0.2)";
+      wCtx.lineWidth = 0.5 * zoom;
+      const upperCrackTs = [0.3, 0.55, 0.75];
+      for (const t of upperCrackTs) {
+        const cx2 = size * 0.015 * (1 - t) + (-size * 0.03) * t + (-size * 0.04 - size * 0.015) * t * (1 - t) * 2;
+        const cy2 = -bowH * 0.5 * (1 - t);
+        wCtx.beginPath();
+        wCtx.moveTo(cx2, cy2);
+        wCtx.lineTo(cx2 + size * 0.005, cy2 + size * 0.008);
+        wCtx.lineTo(cx2 + size * 0.002, cy2 + size * 0.012);
+        wCtx.stroke();
+      }
+
+      // Weathered hairline cracks on lower limb
+      const lowerCrackTs = [0.25, 0.5, 0.7];
+      for (const t of lowerCrackTs) {
+        const cx2 = -size * 0.03 * (1 - t) + size * 0.015 * t + (-size * 0.06 + size * 0.03) * t * (1 - t) * 2;
+        const cy2 = bowH * 0.5 * t;
+        wCtx.beginPath();
+        wCtx.moveTo(cx2, cy2);
+        wCtx.lineTo(cx2 - size * 0.004, cy2 + size * 0.009);
+        wCtx.lineTo(cx2 - size * 0.001, cy2 + size * 0.013);
+        wCtx.stroke();
+      }
+
+      // Bone/horn tips at each limb end
+      for (const dir of [-1, 1]) {
+        wCtx.fillStyle = boneDark;
+        wCtx.beginPath();
+        wCtx.arc(size * 0.015, dir * bowH * 0.5, size * 0.008, 0, TAU);
+        wCtx.fill();
+      }
+
+      // Leather grip
+      wCtx.fillStyle = "#4a3520";
+      wCtx.beginPath();
+      const gripX = -size * 0.045;
+      const gripY = -size * 0.02;
+      const gripW = size * 0.03;
+      const gripH = size * 0.04;
+      wCtx.roundRect(gripX, gripY, gripW, gripH, size * 0.004);
+      wCtx.fill();
+      // Cross-wrap leather stitching
+      wCtx.strokeStyle = "rgba(90, 70, 50, 0.6)";
+      wCtx.lineWidth = 0.5 * zoom;
+      for (let s = 0; s < 3; s++) {
+        const sy = gripY + gripH * (0.2 + s * 0.3);
+        wCtx.beginPath();
+        wCtx.moveTo(gripX + gripW * 0.15, sy - gripH * 0.08);
+        wCtx.lineTo(gripX + gripW * 0.85, sy + gripH * 0.08);
+        wCtx.stroke();
+        wCtx.beginPath();
+        wCtx.moveTo(gripX + gripW * 0.15, sy + gripH * 0.08);
+        wCtx.lineTo(gripX + gripW * 0.85, sy - gripH * 0.08);
+        wCtx.stroke();
+      }
+
+      // Bowstring with smooth attackPhase pull — thick and visible
+      const idleDraw = size * 0.04 + Math.sin(time * 1.5) * size * 0.008;
+      const stringTwang = isAttacking && attackIntensity < 0.3 ? Math.sin(time * 35) * size * 0.012 * (1 - attackIntensity * 3) : 0;
+      const stringPull = isAttacking ? attackIntensity * size * 0.16 + stringTwang : idleDraw;
+      wCtx.strokeStyle = "#e0d8b8";
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(size * 0.015, -bowH * 0.48);
+      wCtx.quadraticCurveTo(stringPull - size * 0.025, 0, size * 0.015, bowH * 0.48);
+      wCtx.stroke();
+      // Bright inner core
+      wCtx.strokeStyle = "rgba(250, 245, 220, 0.55)";
+      wCtx.lineWidth = 0.7 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(size * 0.015, -bowH * 0.46);
+      wCtx.quadraticCurveTo(stringPull - size * 0.025, 0, size * 0.015, bowH * 0.46);
+      wCtx.stroke();
+
+      // Nock point glow
+      const nockX = stringPull - size * 0.02;
+      wCtx.fillStyle = `rgba(80, 200, 100, ${0.4 + Math.sin(time * 4) * 0.2})`;
+      wCtx.beginPath();
+      wCtx.arc(nockX, 0, size * 0.005, 0, TAU);
+      wCtx.fill();
+
+      // Nocked arrow (always visible, extends from string to past bow)
+      const arrowEnd = nockX - size * 0.22;
+      wCtx.strokeStyle = "#8a7560";
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(nockX, 0);
+      wCtx.lineTo(arrowEnd, 0);
+      wCtx.stroke();
+
+      // Arrowhead
+      wCtx.fillStyle = "#808890";
+      wCtx.beginPath();
+      wCtx.moveTo(arrowEnd, 0);
+      wCtx.lineTo(arrowEnd - size * 0.02, -size * 0.008);
+      wCtx.lineTo(arrowEnd - size * 0.025, 0);
+      wCtx.lineTo(arrowEnd - size * 0.02, size * 0.008);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Fletching at nock
+      const fletchColors = ["#dc2626", "#c8c0b0", "#c8c0b0"];
+      for (let f = 0; f < 3; f++) {
+        const fOff = (f - 1) * size * 0.004;
+        wCtx.fillStyle = fletchColors[f];
+        wCtx.beginPath();
+        wCtx.moveTo(nockX, fOff);
+        wCtx.quadraticCurveTo(nockX + size * 0.01, fOff + size * 0.006, nockX + size * 0.025, fOff);
+        wCtx.quadraticCurveTo(nockX + size * 0.01, fOff - size * 0.003, nockX, fOff);
+        wCtx.fill();
+      }
+
+      // Ghost energy trail on arrowhead
+      wCtx.strokeStyle = `rgba(80, 200, 100, ${0.3 + attackIntensity * 0.4})`;
+      wCtx.lineWidth = 1.2 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(arrowEnd - size * 0.02, 0);
+      wCtx.lineTo(arrowEnd - size * 0.01, Math.sin(time * 15) * size * 0.006);
+      wCtx.stroke();
     },
   });
 
-  // === DRAW ARM (right side) ===
+  // === DRAW ARM (right side — pulling string back) ===
+  const drawForeLen = 0.17;
   drawPathArm(ctx, cx0 + size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, 1, {
     color: boneMid, colorDark: boneDark, handColor: boneDark,
-    upperLen: 0.22, foreLen: 0.17,
-    shoulderAngle: 0.5 + (isAttacking ? -0.35 : Math.sin(walkPhase) * 0.08),
-    elbowAngle: -0.7 + (isAttacking ? 0.3 : Math.sin(walkPhase + 1.2) * 0.08),
+    upperLen: 0.22, foreLen: drawForeLen,
+    shoulderAngle: (0.7 + Math.sin(time * 1.2) * 0.02) + (isAttacking ? attackIntensity * 0.35 : 0),
+    elbowAngle: (0.8 + (isAttacking ? attackIntensity * 0.25 : 0)),
     style: 'bone',
+    onWeapon: (wCtx) => {
+      const handY = drawForeLen * size;
+      wCtx.translate(0, handY * 0.4);
+      wCtx.rotate(0.3);
+
+      // Bone fingers gripping string
+      wCtx.fillStyle = boneDark;
+      wCtx.beginPath();
+      wCtx.roundRect(-size * 0.012, -size * 0.015, size * 0.024, size * 0.03, size * 0.003);
+      wCtx.fill();
+
+      // String segments from fingers (V-shape pull) — thick and visible
+      const drawPull = isAttacking ? attackIntensity * size * 0.1 : size * 0.02;
+      const sAlpha = 0.8 + (isAttacking ? attackIntensity * 0.2 : Math.sin(time * 2) * 0.1);
+      wCtx.strokeStyle = `rgba(220, 212, 180, ${sAlpha})`;
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -size * 0.008);
+      wCtx.lineTo(size * 0.02, -size * 0.12 - drawPull);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(0, size * 0.008);
+      wCtx.lineTo(size * 0.02, size * 0.12 + drawPull);
+      wCtx.stroke();
+      // Bright inner highlights
+      wCtx.strokeStyle = `rgba(250, 245, 220, ${sAlpha * 0.5})`;
+      wCtx.lineWidth = 0.7 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -size * 0.008);
+      wCtx.lineTo(size * 0.02, -size * 0.115 - drawPull);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(0, size * 0.008);
+      wCtx.lineTo(size * 0.02, size * 0.115 + drawPull);
+      wCtx.stroke();
+    },
   });
 
   // === SKULL HEAD WITH LEATHER CAP ===
@@ -2868,7 +3020,8 @@ export function drawZombieSpitterEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.8;
-  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  const sprayBurst = Math.sin(attackIntensity * Math.PI);
   const walkPhase = time * 3.5;
   const breath = getBreathScale(time, 1.5, 0.025);
   const sway = getIdleSway(time, 1, size * 0.004, size * 0.003);
@@ -2909,6 +3062,7 @@ export function drawZombieSpitterEnemy(
 
   ctx.save();
   ctx.translate(cx0, torsoY);
+  ctx.rotate(attackIntensity * 0.2);
   ctx.scale(breath, breath);
   ctx.translate(-cx0, -torsoY);
 
@@ -3008,8 +3162,8 @@ export function drawZombieSpitterEnemy(
     drawPathArm(ctx, cx0 + side * size * 0.14, torsoY - size * 0.08 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       upperLen: 0.25, foreLen: 0.20,
-      shoulderAngle: side * -0.35 + Math.sin(time * 3.5 + side * 1.5) * 0.12 + (isAttacking ? side * -0.4 : 0),
-      elbowAngle: -0.5 + (isAttacking ? -0.3 : Math.sin(time * 4 + side) * 0.1),
+      shoulderAngle: side * -0.35 + Math.sin(time * 3.5 + side * 1.5) * 0.12 + side * -0.4 * attackIntensity,
+      elbowAngle: -0.5 - 0.3 * attackIntensity + Math.sin(time * 4 + side) * 0.1 * (1 - attackIntensity),
       style: 'fleshy',
     });
   }
@@ -3063,8 +3217,14 @@ export function drawZombieSpitterEnemy(
     ctx.fill();
   }
 
-  // Massively distended jaw — unhinged, gaping wide
+  // Massively distended jaw — unhinged; opening scales with attack
   const jawGlow = 0.3 + Math.sin(time * 4) * 0.15;
+  const jawPivotY = headY + size * 0.042;
+  ctx.save();
+  ctx.translate(headX, jawPivotY);
+  ctx.scale(1, 1 + attackIntensity * 0.5);
+  ctx.translate(-headX, -jawPivotY);
+
   ctx.fillStyle = fleshDark;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.055, headY + size * 0.035);
@@ -3088,9 +3248,10 @@ export function drawZombieSpitterEnemy(
   }
 
   // Inner mouth with toxic glow
-  const jawGlowGrad = ctx.createRadialGradient(headX, headY + size * 0.08, size * 0.01, headX, headY + size * 0.08, size * 0.045);
-  jawGlowGrad.addColorStop(0, `rgba(140, 220, 70, ${jawGlow * 0.8})`);
-  jawGlowGrad.addColorStop(0.6, `rgba(100, 180, 50, ${jawGlow * 0.3})`);
+  const mouthGlowR = size * (0.045 + attackIntensity * 0.035);
+  const jawGlowGrad = ctx.createRadialGradient(headX, headY + size * 0.08, size * 0.01, headX, headY + size * 0.08, mouthGlowR);
+  jawGlowGrad.addColorStop(0, `rgba(140, 220, 70, ${jawGlow * 0.8 * (0.5 + 0.5 * attackIntensity)})`);
+  jawGlowGrad.addColorStop(0.6, `rgba(100, 180, 50, ${jawGlow * 0.3 * (0.5 + 0.5 * attackIntensity)})`);
   jawGlowGrad.addColorStop(1, "rgba(60, 120, 30, 0)");
   ctx.fillStyle = jawGlowGrad;
   ctx.beginPath();
@@ -3102,30 +3263,50 @@ export function drawZombieSpitterEnemy(
   // Bile drips from mouth
   for (let d = 0; d < 2; d++) {
     const dPhase = (time * 0.7 + d * 0.5) % 1;
-    ctx.fillStyle = `rgba(120, 200, 60, ${(1 - dPhase) * 0.5})`;
+    ctx.fillStyle = `rgba(120, 200, 60, ${(1 - dPhase) * 0.5 * (0.4 + 0.6 * attackIntensity)})`;
     ctx.beginPath();
     ctx.ellipse(headX + (d - 0.5) * size * 0.025, headY + size * 0.1 + dPhase * size * 0.06, size * 0.005 * (1 - dPhase), size * 0.01 * (1 - dPhase), 0, 0, TAU);
     ctx.fill();
   }
 
-  // Bile stream when attacking
-  if (isAttacking) {
-    ctx.strokeStyle = "rgba(120, 200, 60, 0.5)";
-    ctx.lineWidth = size * 0.015;
+  ctx.restore();
+
+  // Bile stream — width, reach, and opacity follow attackIntensity
+  if (attackIntensity > 0) {
+    const streamAlpha = 0.5 * attackIntensity;
+    ctx.strokeStyle = `rgba(120, 200, 60, ${streamAlpha})`;
+    ctx.lineWidth = size * 0.015 * (0.35 + 0.65 * attackIntensity);
     ctx.lineCap = "round";
+    const streamEndX = headX + size * (0.25 + 0.1 * attackIntensity);
+    const streamMidY = headY + size * (0.2 + 0.04 * attackIntensity);
     ctx.beginPath();
     ctx.moveTo(headX, headY + size * 0.1);
-    ctx.quadraticCurveTo(headX + size * 0.1, headY + size * 0.2, headX + size * 0.25, headY + size * 0.15);
+    ctx.quadraticCurveTo(headX + size * 0.1, streamMidY, streamEndX, headY + size * 0.15);
     ctx.stroke();
     ctx.lineCap = "butt";
 
-    // Splatter particles
+    // Splatter particles — scaled by attack phase
     for (let s = 0; s < 4; s++) {
-      const sx = headX + size * 0.2 + Math.sin(time * 10 + s) * size * 0.05;
-      const sy = headY + size * 0.15 + Math.cos(time * 8 + s) * size * 0.03;
-      ctx.fillStyle = "rgba(120, 200, 60, 0.4)";
+      const sx = headX + size * 0.2 + Math.sin(time * 10 + s) * size * 0.05 * attackIntensity;
+      const sy = headY + size * 0.15 + Math.cos(time * 8 + s) * size * 0.03 * attackIntensity;
+      const splatR = size * 0.008 * (0.45 + 0.55 * attackIntensity);
+      ctx.fillStyle = `rgba(120, 200, 60, ${0.4 * attackIntensity})`;
       ctx.beginPath();
-      ctx.arc(sx, sy, size * 0.008, 0, TAU);
+      ctx.arc(sx, sy, splatR, 0, TAU);
+      ctx.fill();
+    }
+
+    // Acid spray burst — strongest near attackPhase ≈ 0.5
+    const burstCount = 6 + Math.floor(sprayBurst * 4);
+    for (let b = 0; b < burstCount; b++) {
+      const ang = (b / burstCount) * TAU + time * 3;
+      const dist = size * (0.08 + sprayBurst * 0.14) * (0.5 + Math.sin(b * 2.1 + time * 12) * 0.25);
+      const bx = headX + Math.cos(ang) * dist + size * 0.12;
+      const by = headY + size * 0.1 + Math.sin(ang) * dist * 0.6;
+      const br = size * 0.004 * (0.8 + sprayBurst * 1.2) * attackIntensity;
+      ctx.fillStyle = `rgba(160, 240, 80, ${0.55 * sprayBurst * attackIntensity})`;
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, TAU);
       ctx.fill();
     }
   }
@@ -3148,37 +3329,37 @@ export function drawGhoulEnemy(
   attackPhase: number = 0,
 ) {
   size *= 1.8;
-  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
   const walkPhase = time * 8;
   const breath = getBreathScale(time, 3, 0.015);
   const bodyBob = Math.abs(Math.sin(walkPhase)) * size * 0.02;
-  const cx0 = x;
+  const cx0 = x + attackIntensity * size * 0.1;
 
   const fleshLight = bodyColorLight;
   const fleshMid = bodyColor;
   const fleshDark = bodyColorDark;
 
   // === SPEED BLUR TRAILS ===
-  if (isAttacking) {
+  if (attackIntensity > 0) {
     for (let t = 1; t <= 3; t++) {
-      ctx.globalAlpha = 0.1 / t;
+      ctx.globalAlpha = (0.1 / t) * attackIntensity;
       ctx.fillStyle = fleshDark;
       ctx.beginPath();
-      ctx.ellipse(cx0 - t * size * 0.06, y - size * 0.05, size * 0.12, size * 0.18, 0, 0, TAU);
+      ctx.ellipse(cx0 - t * size * 0.06, y - size * 0.05, size * 0.12 * (0.85 + 0.15 * attackIntensity), size * 0.18 * (0.85 + 0.15 * attackIntensity), 0, 0, TAU);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
   }
 
   // === SCRATCH MARKS ON GROUND WHEN ATTACKING ===
-  if (isAttacking) {
-    ctx.strokeStyle = "rgba(100, 30, 30, 0.3)";
-    ctx.lineWidth = 1 * zoom;
+  if (attackIntensity > 0) {
+    ctx.strokeStyle = `rgba(100, 30, 30, ${0.3 * attackIntensity})`;
+    ctx.lineWidth = (0.5 + 0.5 * attackIntensity) * zoom;
     for (let s = 0; s < 3; s++) {
       const sx = cx0 + size * 0.15 + s * size * 0.02;
       ctx.beginPath();
       ctx.moveTo(sx, y + size * 0.46);
-      ctx.lineTo(sx + size * 0.04, y + size * 0.52);
+      ctx.lineTo(sx + size * 0.04 * (0.7 + 0.3 * attackIntensity), y + size * 0.52);
       ctx.stroke();
     }
   }
@@ -3312,23 +3493,24 @@ export function drawGhoulEnemy(
 
   // === LONG CLAWED ARMS ===
   for (const side of [-1, 1] as (-1 | 1)[]) {
+    const slash = attackIntensity * 0.5;
     drawPathArm(ctx, cx0 + side * size * 0.13, torsoY - size * 0.05 - bodyBob, size, time, zoom, side, {
       color: fleshMid, colorDark: fleshDark, handColor: fleshDark,
       upperLen: 0.30, foreLen: 0.27, handRadius: 0.046,
-      shoulderAngle: side * -0.7 + Math.sin(time * 6 + side * Math.PI) * 0.18 + (isAttacking ? -0.5 : 0),
-      elbowAngle: -0.3 + (isAttacking ? -0.4 : Math.sin(time * 7 + side) * 0.12),
+      shoulderAngle: side * -0.7 + Math.sin(time * 6 + side * Math.PI) * 0.18 * (1 - attackIntensity) - 0.5 * attackIntensity + side * slash,
+      elbowAngle: -0.3 - 0.4 * attackIntensity + Math.sin(time * 7 + side) * 0.12 * (1 - attackIntensity) + side * slash * 0.6,
       style: 'fleshy',
     });
   }
 
   // Blood drip from claws
-  if (isAttacking) {
+  if (attackIntensity > 0) {
     for (const side of [-1, 1]) {
       const dripX = cx0 + side * size * 0.25;
       const dripPhase = (time * 0.8 + side) % 1;
-      ctx.fillStyle = `rgba(140, 20, 20, ${(1 - dripPhase) * 0.4})`;
+      ctx.fillStyle = `rgba(140, 20, 20, ${(1 - dripPhase) * 0.4 * attackIntensity})`;
       ctx.beginPath();
-      ctx.ellipse(dripX, y + size * 0.1 + dripPhase * size * 0.1, size * 0.004, size * 0.008, 0, 0, TAU);
+      ctx.ellipse(dripX, y + size * 0.1 + dripPhase * size * 0.1, size * 0.004 * attackIntensity, size * 0.008 * attackIntensity, 0, 0, TAU);
       ctx.fill();
     }
   }
@@ -3412,12 +3594,13 @@ export function drawGhoulEnemy(
     lookAmount: 0.01,
   });
 
-  // Snout-like muzzle with wide gaping maw
+  // Snout-like muzzle with wide gaping maw; snarl opens with attackIntensity
+  const snarlDrop = attackIntensity * size * 0.045;
   ctx.fillStyle = "#2a0a0a";
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.035, headY + size * 0.035);
-  ctx.quadraticCurveTo(headX - size * 0.04, headY + size * 0.055, headX - size * 0.02, headY + size * 0.065);
-  ctx.lineTo(headX + size * 0.02, headY + size * 0.065);
+  ctx.quadraticCurveTo(headX - size * 0.04, headY + size * 0.055, headX - size * 0.02, headY + size * 0.065 + snarlDrop);
+  ctx.lineTo(headX + size * 0.02, headY + size * 0.065 + snarlDrop);
   ctx.quadraticCurveTo(headX + size * 0.04, headY + size * 0.055, headX + size * 0.035, headY + size * 0.035);
   ctx.closePath();
   ctx.fill();
@@ -3436,29 +3619,32 @@ export function drawGhoulEnemy(
     ctx.fill();
   }
   // Lower fangs
+  const lowerFangY0 = headY + size * 0.062 + snarlDrop;
+  const lowerFangY1 = headY + size * 0.048 + snarlDrop * 0.35;
   for (const fx of [-0.018, -0.005, 0.008, 0.02]) {
     ctx.beginPath();
-    ctx.moveTo(headX + fx * size - size * 0.003, headY + size * 0.062);
-    ctx.lineTo(headX + fx * size, headY + size * 0.048);
-    ctx.lineTo(headX + fx * size + size * 0.003, headY + size * 0.062);
+    ctx.moveTo(headX + fx * size - size * 0.003, lowerFangY0);
+    ctx.lineTo(headX + fx * size, lowerFangY1);
+    ctx.lineTo(headX + fx * size + size * 0.003, lowerFangY0);
     ctx.closePath();
     ctx.fill();
   }
 
   // Saliva strands between jaws
-  ctx.strokeStyle = "rgba(200, 200, 160, 0.3)";
-  ctx.lineWidth = size * 0.003;
+  ctx.strokeStyle = `rgba(200, 200, 160, ${0.3 + 0.25 * attackIntensity})`;
+  ctx.lineWidth = size * 0.003 * (1 + attackIntensity * 0.5);
   for (let sl = 0; sl < 2; sl++) {
     const slx = headX + (sl - 0.5) * size * 0.02;
+    const slEndY = headY + size * 0.085 + snarlDrop + Math.sin(time * 6 + sl) * size * 0.005;
     ctx.beginPath();
     ctx.moveTo(slx, headY + size * 0.05);
-    ctx.quadraticCurveTo(slx + Math.sin(time * 6 + sl) * size * 0.005, headY + size * 0.07, slx, headY + size * 0.085 + Math.sin(time * 6 + sl) * size * 0.005);
+    ctx.quadraticCurveTo(slx + Math.sin(time * 6 + sl) * size * 0.005, headY + size * 0.07 + snarlDrop * 0.5, slx, slEndY);
     ctx.stroke();
   }
 
   // === FRENZY SPEED TRAIL ===
   for (let ft = 1; ft <= 4; ft++) {
-    const ftAlpha = 0.1 / ft;
+    const ftAlpha = (0.1 / ft) * (1 + attackIntensity * 0.9);
     const ftOffset = ft * size * 0.055;
     ctx.globalAlpha = ftAlpha;
     ctx.fillStyle = fleshDark;
@@ -3489,9 +3675,9 @@ export function drawGhoulEnemy(
   }
 
   // === CLAW SWIPE STREAKS ===
-  ctx.globalAlpha = 0.15 + Math.sin(time * 4) * 0.05;
-  ctx.strokeStyle = "rgba(160, 130, 180, 0.5)";
-  ctx.lineWidth = size * 0.005;
+  ctx.globalAlpha = (0.15 + Math.sin(time * 4) * 0.05) * (1 + attackIntensity * 0.75);
+  ctx.strokeStyle = `rgba(160, 130, 180, ${0.5 * (1 + attackIntensity * 0.6)})`;
+  ctx.lineWidth = size * 0.005 * (1 + attackIntensity * 0.4);
   ctx.lineCap = "round";
   for (let cs = 0; cs < 3; cs++) {
     const csAngle = -0.4 + cs * 0.25 + Math.sin(time * 5) * 0.1;

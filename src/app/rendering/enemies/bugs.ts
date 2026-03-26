@@ -1430,9 +1430,14 @@ export function drawDragonflyEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.15;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.15;
+  }
 
   // Four iridescent wings (elongated dragonfly shape with detailed venation)
-  const flapRate = time * 16;
+  const flapRate = time * 16 * (1 + attackIntensity * 2);
   for (let pair = 0; pair < 2; pair++) {
     const wingY = y - size * 0.05 + pair * size * 0.08;
     const flapOffset = pair * 0.5;
@@ -1555,8 +1560,8 @@ export function drawDragonflyEnemy(
   ctx.fill();
 
   // Massive compound eyes
-  ctx.fillStyle = `rgba(14, 165, 233, ${0.8 + Math.sin(time * 4) * 0.2})`;
-  setShadowBlur(ctx, 5 * zoom, "#0ea5e9");
+  ctx.fillStyle = `rgba(14, 165, 233, ${0.8 + Math.sin(time * 4) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (5 + attackIntensity * 4) * zoom, "#0ea5e9");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.06, y - size * 0.2, size * 0.055, size * 0.045, -0.2, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.06, y - size * 0.2, size * 0.055, size * 0.045, 0.2, 0, Math.PI * 2);
@@ -1602,11 +1607,29 @@ export function drawDragonflyEnemy(
     ctx.stroke();
   }
 
+  // Attack dive swoosh
+  if (isAttacking) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(14, 200, 255, ${attackIntensity * 0.6})`;
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.1, y, size * 0.3, -Math.PI * 0.35, Math.PI * 0.35);
+    ctx.stroke();
+    setShadowBlur(ctx, 8 * zoom * attackIntensity, "#0ea5e9");
+    ctx.strokeStyle = `rgba(14, 165, 233, ${attackIntensity * 0.4})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.15, y, size * 0.2, -Math.PI * 0.25, Math.PI * 0.25);
+    ctx.stroke();
+    clearShadow(ctx);
+    ctx.restore();
+  }
+
   // Enhancement: Wing iridescent membrane glow
   ctx.save();
   const dfWingGlow = ctx.createRadialGradient(x, y - size * 0.05, 0, x, y - size * 0.05, size * 0.4);
-  dfWingGlow.addColorStop(0, `rgba(14, 165, 233, ${0.12 + Math.sin(time * 6) * 0.06})`);
-  dfWingGlow.addColorStop(0.5, `rgba(80, 200, 255, ${0.06 + Math.sin(time * 6) * 0.03})`);
+  dfWingGlow.addColorStop(0, `rgba(14, 165, 233, ${0.12 + Math.sin(time * 6) * 0.06 + attackIntensity * 0.15})`);
+  dfWingGlow.addColorStop(0.5, `rgba(80, 200, 255, ${0.06 + Math.sin(time * 6) * 0.03 + attackIntensity * 0.08})`);
   dfWingGlow.addColorStop(1, "rgba(14, 165, 233, 0)");
   ctx.fillStyle = dfWingGlow;
   ctx.beginPath();
@@ -1684,7 +1707,12 @@ export function drawSilkMothEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.2;
-  const flapAngle = Math.sin(time * 8) * 0.4;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.15;
+  }
+  const flapAngle = Math.sin(time * 8 * (1 + attackIntensity * 2)) * (0.4 + attackIntensity * 0.3);
 
   // Shimmering dust particles
   for (let p = 0; p < 8; p++) {
@@ -1849,8 +1877,8 @@ export function drawSilkMothEnemy(
   }
 
   // Eyes (large, luminous)
-  ctx.fillStyle = `rgba(200, 180, 255, ${0.8 + Math.sin(time * 3) * 0.2})`;
-  setShadowBlur(ctx, 6 * zoom, "#c8b4ff");
+  ctx.fillStyle = `rgba(200, 180, 255, ${0.8 + Math.sin(time * 3) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (6 + attackIntensity * 4) * zoom, "#c8b4ff");
   ctx.beginPath();
   ctx.arc(x - size * 0.04, y - size * 0.17, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.04, y - size * 0.17, size * 0.025, 0, Math.PI * 2);
@@ -1858,11 +1886,33 @@ export function drawSilkMothEnemy(
   clearShadow(ctx);
 
   // Blinding scale release aura
-  const scaleAura = 0.1 + Math.sin(time * 2) * 0.05;
+  const scaleAura = 0.1 + Math.sin(time * 2) * 0.05 + attackIntensity * 0.15;
   ctx.fillStyle = `rgba(200, 190, 255, ${scaleAura})`;
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Attack scale burst
+  if (isAttacking) {
+    ctx.save();
+    setShadowBlur(ctx, 10 * zoom * attackIntensity, "#c8b4ff");
+    ctx.strokeStyle = `rgba(200, 190, 255, ${attackIntensity * 0.6})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.08, y, size * 0.25 + attackIntensity * size * 0.1, 0, Math.PI * 2);
+    ctx.stroke();
+    clearShadow(ctx);
+    for (let sb = 0; sb < 6; sb++) {
+      const sbA = sb * (Math.PI / 3) + time * 3;
+      const sbR = size * (0.15 + attackIntensity * 0.15);
+      const sbAlpha = attackIntensity * 0.5 * (1 - sb * 0.08);
+      ctx.fillStyle = `rgba(220, 210, 255, ${sbAlpha})`;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(sbA) * sbR, y + Math.sin(sbA) * sbR, size * 0.015, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // Enhancement: Wing membrane spectral glow
   ctx.save();
@@ -2143,13 +2193,19 @@ export function drawLocustEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.1;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.2;
+    y -= attackIntensity * size * 0.05;
+  }
 
   // Wings (large, semi-transparent with rapid flutter)
-  drawInsectWings(ctx, x, y, size, time, zoom, "163, 163, 35", 0.3, 14, 0.55);
+  drawInsectWings(ctx, x, y, size, time, zoom, "163, 163, 35", 0.3 + attackIntensity * 0.2, 14 * (1 + attackIntensity * 2), 0.55 + attackIntensity * 0.15);
 
   // Hind legs (powerful jumping legs with muscular femur)
   for (let side = -1; side <= 1; side += 2) {
-    const legBend = Math.sin(time * 4) * 0.1;
+    const legBend = Math.sin(time * 4) * 0.1 + (isAttacking ? attackIntensity * 0.2 : 0);
     const femurStartX = x + side * size * 0.06;
     const femurStartY = y + size * 0.02;
     const kneeX = x + side * size * 0.2;
@@ -2324,7 +2380,7 @@ export function drawLocustEnemy(
   ctx.fill();
 
   // Eyes
-  ctx.fillStyle = `rgba(180, 180, 40, ${0.7 + Math.sin(time * 3) * 0.3})`;
+  ctx.fillStyle = `rgba(180, 180, 40, ${0.7 + Math.sin(time * 3) * 0.3 + attackIntensity * 0.3})`;
   ctx.beginPath();
   ctx.arc(x - size * 0.05, y - size * 0.2, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.05, y - size * 0.2, size * 0.025, 0, Math.PI * 2);
@@ -2337,6 +2393,24 @@ export function drawLocustEnemy(
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.04, y - size * 0.22);
     ctx.lineTo(x + side * size * 0.1 + Math.sin(time * 6) * size * 0.01, y - size * 0.3);
+    ctx.stroke();
+  }
+
+  // Attack mandible snap + leap impact
+  if (isAttacking) {
+    const lcMandOpen = Math.sin(attackIntensity * Math.PI * 3) * size * 0.04;
+    ctx.fillStyle = bodyColorDark;
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.beginPath();
+      ctx.moveTo(x + side * size * 0.03, y - size * 0.24);
+      ctx.lineTo(x + side * (size * 0.05 + lcMandOpen), y - size * 0.28);
+      ctx.lineTo(x + side * size * 0.02, y - size * 0.26);
+      ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(180, 180, 40, ${attackIntensity * 0.5})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.1, y, size * 0.25 + attackIntensity * size * 0.1, -Math.PI * 0.4, Math.PI * 0.4);
     ctx.stroke();
   }
 
@@ -2662,12 +2736,18 @@ export function drawIceBeetleEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.3;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.1;
+    y -= attackIntensity * size * 0.05;
+  }
 
   // Frost aura ground effect
   const frostRadius = size * 0.5;
   const frostGrad = ctx.createRadialGradient(x, y + size * 0.15, 0, x, y + size * 0.15, frostRadius);
-  frostGrad.addColorStop(0, `rgba(103, 232, 249, ${0.15 + Math.sin(time * 2) * 0.05})`);
-  frostGrad.addColorStop(0.6, `rgba(103, 232, 249, ${0.08})`);
+  frostGrad.addColorStop(0, `rgba(103, 232, 249, ${0.15 + Math.sin(time * 2) * 0.05 + attackIntensity * 0.15})`);
+  frostGrad.addColorStop(0.6, `rgba(103, 232, 249, ${0.08 + attackIntensity * 0.05})`);
   frostGrad.addColorStop(1, "rgba(103, 232, 249, 0)");
   ctx.fillStyle = frostGrad;
   ctx.beginPath();
@@ -2818,8 +2898,8 @@ export function drawIceBeetleEnemy(
   }
 
   // Icy eyes
-  ctx.fillStyle = `rgba(103, 232, 249, ${0.8 + Math.sin(time * 3) * 0.2})`;
-  setShadowBlur(ctx, 6 * zoom, "#67e8f9");
+  ctx.fillStyle = `rgba(103, 232, 249, ${0.8 + Math.sin(time * 3) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (6 + attackIntensity * 4) * zoom, "#67e8f9");
   ctx.beginPath();
   ctx.arc(x - size * 0.05, y - size * 0.27, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.05, y - size * 0.27, size * 0.025, 0, Math.PI * 2);
@@ -2837,6 +2917,39 @@ export function drawIceBeetleEnemy(
     ctx.beginPath();
     ctx.arc(mx, my, size * 0.012, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Attack frost mandible snap + shockwave
+  if (isAttacking) {
+    const ibMandSpread = Math.sin(attackIntensity * Math.PI * 3) * size * 0.05;
+    ctx.fillStyle = `rgba(200, 245, 255, 0.85)`;
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.beginPath();
+      ctx.moveTo(x + side * size * 0.06, y - size * 0.3);
+      ctx.bezierCurveTo(
+        x + side * (size * 0.09 + ibMandSpread), y - size * 0.35,
+        x + side * (size * 0.1 + ibMandSpread), y - size * 0.39,
+        x + side * (size * 0.08 + ibMandSpread * 0.5), y - size * 0.4,
+      );
+      ctx.bezierCurveTo(
+        x + side * size * 0.05, y - size * 0.38,
+        x + side * size * 0.03, y - size * 0.34,
+        x + side * size * 0.04, y - size * 0.31,
+      );
+      ctx.fill();
+    }
+    if (attackIntensity > 0.5) {
+      const ibShockR = size * (0.3 + (attackIntensity - 0.5) * 0.4);
+      ctx.save();
+      setShadowBlur(ctx, 10 * zoom, "#67e8f9");
+      ctx.strokeStyle = `rgba(103, 232, 249, ${(1 - attackIntensity) * 0.8})`;
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(x, y, ibShockR, ibShockR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      clearShadow(ctx);
+      ctx.restore();
+    }
   }
 
   // Enhancement: Carapace frost shimmer traveling
@@ -3099,7 +3212,12 @@ export function drawSnowMothEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.2;
-  const flapAngle = Math.sin(time * 9) * 0.35;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.15;
+  }
+  const flapAngle = Math.sin(time * 9 * (1 + attackIntensity * 2)) * (0.35 + attackIntensity * 0.3);
 
   // Snowflake dust particles
   for (let p = 0; p < 10; p++) {
@@ -3246,8 +3364,8 @@ export function drawSnowMothEnemy(
   }
 
   // Icy eyes
-  ctx.fillStyle = `rgba(200, 240, 255, ${0.8 + Math.sin(time * 3) * 0.2})`;
-  setShadowBlur(ctx, 5 * zoom, "#c8f0ff");
+  ctx.fillStyle = `rgba(200, 240, 255, ${0.8 + Math.sin(time * 3) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (5 + attackIntensity * 4) * zoom, "#c8f0ff");
   ctx.beginPath();
   ctx.arc(x - size * 0.03, y - size * 0.15, size * 0.02, 0, Math.PI * 2);
   ctx.arc(x + size * 0.03, y - size * 0.15, size * 0.02, 0, Math.PI * 2);
@@ -3255,11 +3373,32 @@ export function drawSnowMothEnemy(
   clearShadow(ctx);
 
   // Whiteout aura
-  const auraAlpha = 0.08 + Math.sin(time * 2) * 0.04;
+  const auraAlpha = 0.08 + Math.sin(time * 2) * 0.04 + attackIntensity * 0.1;
   ctx.fillStyle = `rgba(224, 242, 254, ${auraAlpha})`;
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.55, size * 0.55 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Attack frost blast
+  if (isAttacking) {
+    ctx.save();
+    setShadowBlur(ctx, 8 * zoom * attackIntensity, "#c8f0ff");
+    ctx.strokeStyle = `rgba(200, 240, 255, ${attackIntensity * 0.6})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.08, y, size * 0.25 + attackIntensity * size * 0.1, 0, Math.PI * 2);
+    ctx.stroke();
+    clearShadow(ctx);
+    for (let fb = 0; fb < 5; fb++) {
+      const fbA = fb * (Math.PI * 2 / 5) + time * 2;
+      const fbR = size * (0.12 + attackIntensity * 0.12);
+      ctx.fillStyle = `rgba(224, 242, 254, ${attackIntensity * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(fbA) * fbR, y + Math.sin(fbA) * fbR, size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // Enhancement: Wing frost crystal glow
   ctx.save();
@@ -3532,11 +3671,17 @@ export function drawMagmaBeetleEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.35;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.1;
+    y -= attackIntensity * size * 0.05;
+  }
 
   // Molten ground glow
   const heatGrad = ctx.createRadialGradient(x, y + size * 0.15, 0, x, y + size * 0.15, size * 0.4);
-  heatGrad.addColorStop(0, `rgba(255, 80, 0, ${0.15 + Math.sin(time * 3) * 0.05})`);
-  heatGrad.addColorStop(0.5, `rgba(255, 40, 0, 0.05)`);
+  heatGrad.addColorStop(0, `rgba(255, 80, 0, ${0.15 + Math.sin(time * 3) * 0.05 + attackIntensity * 0.15})`);
+  heatGrad.addColorStop(0.5, `rgba(255, 40, 0, ${0.05 + attackIntensity * 0.05})`);
   heatGrad.addColorStop(1, "rgba(255, 0, 0, 0)");
   ctx.fillStyle = heatGrad;
   ctx.beginPath();
@@ -3675,17 +3820,18 @@ export function drawMagmaBeetleEnemy(
   ctx.fill();
 
   // Mandibles (lava-edged pincers)
+  const mbMandSpread = isAttacking ? attackIntensity * size * 0.05 : 0;
   ctx.fillStyle = "#0a0505";
   for (let side = -1; side <= 1; side += 2) {
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.05, y - size * 0.3);
     ctx.bezierCurveTo(
-      x + side * size * 0.08, y - size * 0.34,
-      x + side * size * 0.1, y - size * 0.37,
-      x + side * size * 0.09, y - size * 0.38,
+      x + side * (size * 0.08 + mbMandSpread), y - size * 0.34,
+      x + side * (size * 0.1 + mbMandSpread), y - size * 0.37,
+      x + side * (size * 0.09 + mbMandSpread), y - size * 0.38,
     );
     ctx.bezierCurveTo(
-      x + side * size * 0.06, y - size * 0.37,
+      x + side * (size * 0.06 + mbMandSpread * 0.5), y - size * 0.37,
       x + side * size * 0.03, y - size * 0.35,
       x + side * size * 0.03, y - size * 0.32,
     );
@@ -3706,8 +3852,8 @@ export function drawMagmaBeetleEnemy(
   }
 
   // Magma eyes
-  ctx.fillStyle = `rgba(255, 160, 30, ${0.8 + Math.sin(time * 4) * 0.2})`;
-  setShadowBlur(ctx, 6 * zoom, "#ffa01e");
+  ctx.fillStyle = `rgba(255, 160, 30, ${0.8 + Math.sin(time * 4) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (6 + attackIntensity * 4) * zoom, "#ffa01e");
   ctx.beginPath();
   ctx.arc(x - size * 0.06, y - size * 0.27, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.06, y - size * 0.27, size * 0.025, 0, Math.PI * 2);
@@ -3728,6 +3874,29 @@ export function drawMagmaBeetleEnemy(
       0, Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  // Attack magma shockwave
+  if (isAttacking) {
+    if (attackIntensity > 0.5) {
+      const mbShockR = size * (0.25 + (attackIntensity - 0.5) * 0.5);
+      ctx.save();
+      setShadowBlur(ctx, 12 * zoom, "#ff5000");
+      ctx.strokeStyle = `rgba(255, 100, 20, ${(1 - attackIntensity) * 0.8})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(x, y, mbShockR, mbShockR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      clearShadow(ctx);
+      ctx.restore();
+    }
+    for (let ld = 0; ld < 3; ld++) {
+      const ldPhase = (attackIntensity + ld * 0.3) % 1;
+      ctx.fillStyle = `rgba(255, 120, 20, ${(1 - ldPhase) * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(x + (ld - 1) * size * 0.03, y - size * 0.38 + ldPhase * size * 0.1, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // Enhancement: Traveling magma shimmer on carapace
@@ -3780,7 +3949,12 @@ export function drawAshMothEnemy(
   time: number, zoom: number, attackPhase: number = 0,
 ) {
   size *= 1.2;
-  const flapAngle = Math.sin(time * 10) * 0.4;
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase;
+  if (isAttacking) {
+    x -= attackIntensity * size * 0.15;
+  }
+  const flapAngle = Math.sin(time * 10 * (1 + attackIntensity * 2)) * (0.4 + attackIntensity * 0.3);
 
   // Ember trail behind
   for (let e = 0; e < 8; e++) {
@@ -3924,8 +4098,8 @@ export function drawAshMothEnemy(
   }
 
   // Fire eyes
-  ctx.fillStyle = `rgba(255, 180, 50, ${0.8 + Math.sin(time * 4) * 0.2})`;
-  setShadowBlur(ctx, 5 * zoom, "#ffb432");
+  ctx.fillStyle = `rgba(255, 180, 50, ${0.8 + Math.sin(time * 4) * 0.2 + attackIntensity * 0.2})`;
+  setShadowBlur(ctx, (5 + attackIntensity * 4) * zoom, "#ffb432");
   ctx.beginPath();
   ctx.arc(x - size * 0.03, y - size * 0.16, size * 0.018, 0, Math.PI * 2);
   ctx.arc(x + size * 0.03, y - size * 0.16, size * 0.018, 0, Math.PI * 2);
@@ -3933,11 +4107,33 @@ export function drawAshMothEnemy(
   clearShadow(ctx);
 
   // Heat shimmer around body
-  const shimmer = 0.06 + Math.sin(time * 5) * 0.03;
+  const shimmer = 0.06 + Math.sin(time * 5) * 0.03 + attackIntensity * 0.1;
   ctx.fillStyle = `rgba(255, 120, 20, ${shimmer})`;
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.35, size * 0.35 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Attack ember burst
+  if (isAttacking) {
+    ctx.save();
+    setShadowBlur(ctx, 10 * zoom * attackIntensity, "#ff6414");
+    ctx.strokeStyle = `rgba(255, 140, 30, ${attackIntensity * 0.6})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.08, y, size * 0.22 + attackIntensity * size * 0.1, 0, Math.PI * 2);
+    ctx.stroke();
+    clearShadow(ctx);
+    for (let eb = 0; eb < 6; eb++) {
+      const ebA = eb * (Math.PI / 3) + time * 4;
+      const ebR = size * (0.1 + attackIntensity * 0.15);
+      const ebAlpha = attackIntensity * 0.5;
+      ctx.fillStyle = `rgba(255, ${Math.round(160 - eb * 10)}, 30, ${ebAlpha})`;
+      ctx.beginPath();
+      ctx.arc(x + Math.cos(ebA) * ebR, y + Math.sin(ebA) * ebR, size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // Enhancement: Wing ember membrane glow
   ctx.save();

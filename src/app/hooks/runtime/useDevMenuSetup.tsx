@@ -29,6 +29,8 @@ export interface DevMenuSetupDeps {
   devPerfEnabled: boolean;
   setDevPerfEnabled: Dispatch<SetStateAction<boolean>>;
   devPerfSnapshot: DevPerfSnapshot;
+  photoModeEnabled: boolean;
+  setPhotoModeEnabled: Dispatch<SetStateAction<boolean>>;
   currentWave: number;
   totalWaves: number;
   waveInProgress: boolean;
@@ -57,6 +59,7 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
   const {
     isDevMode, gameState, battleOutcome, progress,
     devPerfEnabled, setDevPerfEnabled, devPerfSnapshot,
+    photoModeEnabled, setPhotoModeEnabled,
     currentWave, totalWaves, waveInProgress,
     enemies, selectedMap,
     setProgress, addPawPoints, setLives,
@@ -144,6 +147,8 @@ export function useDevMenuSetup(deps: DevMenuSetupDeps): DevMenuSetupResult {
       devPerfEnabled={devPerfEnabled}
       setDevPerfEnabled={setDevPerfEnabled}
       devPerfSnapshot={devPerfSnapshot}
+      photoModeEnabled={photoModeEnabled}
+      setPhotoModeEnabled={setPhotoModeEnabled}
       currentWave={currentWave}
       totalWaves={totalWaves}
       waveInProgress={waveInProgress}

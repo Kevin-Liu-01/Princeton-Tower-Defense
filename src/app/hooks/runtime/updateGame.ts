@@ -1902,6 +1902,17 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
           };
         }
+        if (enemy.taunted) {
+          const decayedSlow = Math.max(0, enemy.slowEffect - deltaTime / 5000);
+          return {
+            ...enemy,
+            slowEffect: decayedSlow,
+            slowSource: decayedSlow > 0 ? enemy.slowSource : undefined,
+            slowed: enemy.slowEffect > 0,
+            slowIntensity: enemy.slowEffect,
+            damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+          };
+        }
         const enemyPosForCombat = getEnemyPosCached(enemy);
         // Check for nearby hero combat
         const nearbyHero =
@@ -5042,7 +5053,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (prev.length === 0) return prev;
 
       const updated = prev
-        .map((eff) => ({ ...eff, progress: eff.progress + accumulatedDelta / (eff.duration || 500) }))
+        .map((eff) => {
+          const next = { ...eff, progress: eff.progress + accumulatedDelta / (eff.duration || 500) };
+          if (next.type === "fortress_shield" && hero && !hero.dead) {
+            next.pos = { ...hero.pos };
+          }
+          return next;
+        })
         .filter((e) => e.progress < 1);
 
       // Hard cap on effects

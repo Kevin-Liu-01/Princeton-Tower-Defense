@@ -463,6 +463,9 @@ export function renderScene(params: RenderSceneParams): void {
     ? (p: Position) => worldToScreen(p, canvas.width, canvas.height, dpr, cameraOffset, cacheZoomForKey)
     : toScreen;
 
+  // Settings version — bumped on every settings change so caches auto-invalidate.
+  const settingsVer = getSettingsVersion();
+
   // Cache key does NOT include camera offset — offset handled by overscan.
   // Uses cacheZoomForKey (debounced) to avoid invalidation during continuous zoom.
   const staticBaseKey = [
@@ -471,6 +474,7 @@ export function renderScene(params: RenderSceneParams): void {
     canvas.height,
     dpr,
     cacheZoomForKey.toFixed(3),
+    settingsVer,
   ].join("|");
 
   // =========================================================================
@@ -774,7 +778,6 @@ export function renderScene(params: RenderSceneParams): void {
   // PERFORMANCE FIX: Cache decorations to avoid regenerating 500+ objects every frame
   let decorations: RuntimeDecoration[];
 
-  const settingsVer = getSettingsVersion();
   const decorCacheKey = `${selectedMap}:${settingsVer}`;
   if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === decorCacheKey) {
     decorations = cachedDecorationsRef.current.decorations;
@@ -1480,6 +1483,7 @@ export function renderScene(params: RenderSceneParams): void {
     dpr,
     renderQuality,
     cacheZoomForKey.toFixed(3),
+    settingsVer,
   ].join("|");
   const drawBackgroundDecorations = (
     entries: CachedVisibleDecoration[],

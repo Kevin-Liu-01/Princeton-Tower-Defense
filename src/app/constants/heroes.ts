@@ -41,7 +41,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     attackSpeed: 800,
     speed: 2,
     ability: "Fortress Shield",
-    abilityDesc: "Invincible for 5s and taunts all nearby enemies",
+    abilityDesc: "Invincible for 10s and taunts all nearby enemies",
     color: "#6366f1",
     isRanged: false,
   },

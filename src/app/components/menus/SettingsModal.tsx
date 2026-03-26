@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import {
   X,
   Monitor,
@@ -44,12 +44,11 @@ import {
   Star,
   Gamepad2,
   Keyboard,
-  RefreshCw,
 } from "lucide-react";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import { PANEL, GOLD, OVERLAY, panelGradient, dividerGradient } from "../ui/system/theme";
 import { BaseModal } from "../ui/primitives/BaseModal";
-import { DEV_MODE_STORAGE_KEY, hasReloadRequiredChanges } from "../../constants/settings";
+import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 import type {
   GameSettings,
   QualityPreset,
@@ -182,7 +181,7 @@ interface SettingRowProps {
   icon: React.ReactNode;
   label: string;
   description?: string;
-  tag?: "restart" | "coming-soon";
+  tag?: "coming-soon";
   children: React.ReactNode;
 }
 
@@ -194,9 +193,6 @@ function SettingRow({ icon, label, description, tag, children }: SettingRowProps
         <div className="min-w-0">
           <div className="text-sm font-medium text-amber-200 flex items-center gap-2">
             {label}
-            {tag === "restart" && (
-              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-400/80 border border-amber-700/30">Restart</span>
-            )}
             {tag === "coming-soon" && (
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-400/80 border border-zinc-600/30">Soon</span>
             )}
@@ -411,14 +407,14 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Vegetation" />
-      <SettingRow icon={<Trees size={16} />} label="Decoration Density" description="Overall number of decorations placed on the map" tag="restart">
+      <SettingRow icon={<Trees size={16} />} label="Decoration Density" description="Overall number of decorations placed on the map">
         <SegmentedControl<DecorationDensity>
           value={l.decorationDensity}
           options={densityOptions}
           onChange={(v) => update({ decorationDensity: v })}
         />
       </SettingRow>
-      <SettingRow icon={<Trees size={16} />} label="Tree Clusters" description="Number and size of tree clusters" tag="restart">
+      <SettingRow icon={<Trees size={16} />} label="Tree Clusters" description="Number and size of tree clusters">
         <SegmentedControl<DecorationDensity>
           value={l.treeClusterDensity}
           options={densityOptions}
@@ -427,7 +423,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Structures & Villages" />
-      <SettingRow icon={<Mountain size={16} />} label="Village Density" description="Number of village clusters" tag="restart">
+      <SettingRow icon={<Mountain size={16} />} label="Village Density" description="Number of village clusters">
         <SegmentedControl<DecorationDensity>
           value={l.villageDensity}
           options={densityOptions}
@@ -436,7 +432,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Battlefield" />
-      <SettingRow icon={<Swords size={16} />} label="Battle Debris" description="Craters, arrows, skeletons" tag="restart">
+      <SettingRow icon={<Swords size={16} />} label="Battle Debris" description="Craters, arrows, skeletons">
         <SegmentedControl<BattleDebrisDensity>
           value={l.battleDebrisDensity}
           options={[
@@ -450,7 +446,7 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Scaling" />
-      <SettingRow icon={<Maximize size={16} />} label="Decoration Scale" description="Size range of placed decorations" tag="restart">
+      <SettingRow icon={<Maximize size={16} />} label="Decoration Scale" description="Size range of placed decorations">
         <SegmentedControl<DecorationScale>
           value={l.decorationScale}
           options={[
@@ -464,13 +460,13 @@ function LandscapingPanel({ settings, updateCategory }: CategoryPanelProps) {
       </SettingRow>
 
       <SectionDivider label="Toggles" />
-      <SettingRow icon={<Layers size={16} />} label="Path Decorations" description="Cracks, tufts, surface details on roads" tag="restart">
+      <SettingRow icon={<Layers size={16} />} label="Path Decorations" description="Cracks, tufts, surface details on roads">
         <ToggleControl value={l.showPathDecorations} onChange={(v) => update({ showPathDecorations: v })} />
       </SettingRow>
-      <SettingRow icon={<Mountain size={16} />} label="Landmarks" description="Major structures (pyramids, castles, etc.)" tag="restart">
+      <SettingRow icon={<Mountain size={16} />} label="Landmarks" description="Major structures (pyramids, castles, etc.)">
         <ToggleControl value={l.showLandmarks} onChange={(v) => update({ showLandmarks: v })} />
       </SettingRow>
-      <SettingRow icon={<Cloud size={16} />} label="Water Effects" description="Fountains, pools, water features" tag="restart">
+      <SettingRow icon={<Cloud size={16} />} label="Water Effects" description="Fountains, pools, water features">
         <ToggleControl value={l.showWaterEffects} onChange={(v) => update({ showWaterEffects: v })} />
       </SettingRow>
     </>
@@ -535,7 +531,7 @@ function CameraPanel({ settings, updateCategory }: CategoryPanelProps) {
   return (
     <>
       <SectionDivider label="Zoom" />
-      <SettingRow icon={<ZoomIn size={16} />} label="Default Zoom" description="Initial zoom level when entering a map" tag="restart">
+      <SettingRow icon={<ZoomIn size={16} />} label="Default Zoom" description="Initial zoom level when entering a map">
         <SliderControl
           value={c.defaultZoom}
           min={0.5}
@@ -853,15 +849,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [devUnlocked, setDevUnlocked] = useState(readDevModeFromStorage);
   const [devPasswordError, setDevPasswordError] = useState(false);
 
-  const settingsSnapshot = useRef(settings);
-  const needsReload = useMemo(
-    () => hasReloadRequiredChanges(settingsSnapshot.current, settings),
-    [settings],
-  );
-
-  const handleReload = useCallback(() => {
-    window.location.reload();
-  }, []);
 
   const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const PanelComponent = activeTabDef.panel;
@@ -1135,38 +1122,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Footer hint / reload prompt */}
+          {/* Footer hint */}
           <div
-            className="px-3 sm:px-6 py-2 sm:py-2.5 border-t transition-colors"
+            className="px-3 sm:px-6 py-2 sm:py-2.5 border-t"
             style={{
-              background: needsReload ? "rgba(120,80,20,0.25)" : PANEL.bgDeepSolid,
-              borderColor: needsReload ? "rgba(251,191,36,0.25)" : GOLD.innerBorder08,
+              background: PANEL.bgDeepSolid,
+              borderColor: GOLD.innerBorder08,
             }}
           >
-            {needsReload ? (
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-[11px] sm:text-xs text-amber-300/70">
-                  Some changes require a reload to take effect
-                </span>
-                <button
-                  onClick={handleReload}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all hover:brightness-110"
-                  style={{
-                    background: "linear-gradient(180deg, rgba(251,191,36,0.8), rgba(217,119,6,0.9))",
-                    color: "#1a1207",
-                    border: "1px solid rgba(251,191,36,0.5)",
-                    boxShadow: "0 0 8px rgba(251,191,36,0.2)",
-                  }}
-                >
-                  <RefreshCw size={12} />
-                  Reload Now
-                </button>
-              </div>
-            ) : (
-              <div className="text-center text-[11px] sm:text-xs" style={{ color: "rgba(253,230,138,0.3)" }}>
-                Settings tagged <span className="font-bold uppercase text-[9px] px-1 py-0.5 rounded bg-amber-900/40 text-amber-400/60 border border-amber-700/20">Restart</span> require reloading to take effect
-              </div>
-            )}
+            <div className="text-center text-[11px] sm:text-xs" style={{ color: "rgba(253,230,138,0.3)" }}>
+              All changes take effect immediately
+            </div>
           </div>
         </OrnateFrame>
       </div>

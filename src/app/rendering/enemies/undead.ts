@@ -3562,6 +3562,59 @@ export function drawNecromancerEnemy(
     ctx.fill();
   }
 
+  // Ornate hood with deep draping (drawn before face so face is visible)
+  const hoodGrad = ctx.createLinearGradient(
+    x - size * 0.25, y - size * 0.65 + hover,
+    x + size * 0.25, y - size * 0.25 + hover,
+  );
+  hoodGrad.addColorStop(0, "#080620");
+  hoodGrad.addColorStop(0.4, "#050414");
+  hoodGrad.addColorStop(0.8, "#0a0820");
+  hoodGrad.addColorStop(1, "#050414");
+  ctx.fillStyle = hoodGrad;
+  // Hood peak and left drape
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.68 + hover);
+  ctx.bezierCurveTo(
+    x - size * 0.12, y - size * 0.66 + hover,
+    x - size * 0.22, y - size * 0.6 + hover,
+    x - size * 0.26, y - size * 0.52 + hover,
+  );
+  // Left drape hanging down
+  ctx.bezierCurveTo(
+    x - size * 0.3, y - size * 0.4 + hover,
+    x - size * 0.28, y - size * 0.25 + hover,
+    x - size * 0.22, y - size * 0.15 + hover,
+  );
+  // Bottom across face shadow
+  ctx.lineTo(x - size * 0.16, y - size * 0.35 + hover);
+  ctx.lineTo(x + size * 0.16, y - size * 0.35 + hover);
+  ctx.lineTo(x + size * 0.22, y - size * 0.15 + hover);
+  // Right drape
+  ctx.bezierCurveTo(
+    x + size * 0.28, y - size * 0.25 + hover,
+    x + size * 0.3, y - size * 0.4 + hover,
+    x + size * 0.26, y - size * 0.52 + hover,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.22, y - size * 0.6 + hover,
+    x + size * 0.12, y - size * 0.66 + hover,
+    x, y - size * 0.68 + hover,
+  );
+  ctx.fill();
+  // Hood interior shadow (face in shadow)
+  const shadowGrad = ctx.createRadialGradient(
+    x, y - size * 0.45 + hover, 0,
+    x, y - size * 0.45 + hover, size * 0.18,
+  );
+  shadowGrad.addColorStop(0, `rgba(5, 4, 20, ${0.9})`);
+  shadowGrad.addColorStop(0.6, `rgba(10, 8, 32, ${0.6})`);
+  shadowGrad.addColorStop(1, "rgba(10, 8, 32, 0)");
+  ctx.fillStyle = shadowGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.45 + hover, size * 0.16, size * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   // Skeletal face - more detailed lich skull
   drawRadialAura(ctx, x, y - size * 0.45 + hover, size * 0.18, [
     { offset: 0, color: "#f5f5f4" },
@@ -3648,59 +3701,6 @@ export function drawNecromancerEnemy(
     ctx.lineTo(x - size * 0.07 + i * size * 0.028, y - size * 0.29 + hover);
     ctx.stroke();
   }
-
-  // Ornate hood with deep draping
-  const hoodGrad = ctx.createLinearGradient(
-    x - size * 0.25, y - size * 0.65 + hover,
-    x + size * 0.25, y - size * 0.25 + hover,
-  );
-  hoodGrad.addColorStop(0, "#080620");
-  hoodGrad.addColorStop(0.4, "#050414");
-  hoodGrad.addColorStop(0.8, "#0a0820");
-  hoodGrad.addColorStop(1, "#050414");
-  ctx.fillStyle = hoodGrad;
-  // Hood peak and left drape
-  ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.68 + hover);
-  ctx.bezierCurveTo(
-    x - size * 0.12, y - size * 0.66 + hover,
-    x - size * 0.22, y - size * 0.6 + hover,
-    x - size * 0.26, y - size * 0.52 + hover,
-  );
-  // Left drape hanging down
-  ctx.bezierCurveTo(
-    x - size * 0.3, y - size * 0.4 + hover,
-    x - size * 0.28, y - size * 0.25 + hover,
-    x - size * 0.22, y - size * 0.15 + hover,
-  );
-  // Bottom across face shadow
-  ctx.lineTo(x - size * 0.16, y - size * 0.35 + hover);
-  ctx.lineTo(x + size * 0.16, y - size * 0.35 + hover);
-  ctx.lineTo(x + size * 0.22, y - size * 0.15 + hover);
-  // Right drape
-  ctx.bezierCurveTo(
-    x + size * 0.28, y - size * 0.25 + hover,
-    x + size * 0.3, y - size * 0.4 + hover,
-    x + size * 0.26, y - size * 0.52 + hover,
-  );
-  ctx.bezierCurveTo(
-    x + size * 0.22, y - size * 0.6 + hover,
-    x + size * 0.12, y - size * 0.66 + hover,
-    x, y - size * 0.68 + hover,
-  );
-  ctx.fill();
-  // Hood interior shadow (face in shadow)
-  const shadowGrad = ctx.createRadialGradient(
-    x, y - size * 0.45 + hover, 0,
-    x, y - size * 0.45 + hover, size * 0.18,
-  );
-  shadowGrad.addColorStop(0, `rgba(5, 4, 20, ${0.9})`);
-  shadowGrad.addColorStop(0.6, `rgba(10, 8, 32, ${0.6})`);
-  shadowGrad.addColorStop(1, "rgba(10, 8, 32, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.45 + hover, size * 0.16, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
   // Raised collar/cowl rim at hood base
   ctx.strokeStyle = `rgba(49, 46, 129, ${deathPulse * 0.7})`;
   ctx.lineWidth = 2.5 * zoom;

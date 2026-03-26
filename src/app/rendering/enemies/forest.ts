@@ -50,12 +50,6 @@ export function drawAthleteEnemy(
   const bronzeDark = "#8b6508";
   const bronzeLight = "#daa520";
 
-  // Ground shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(cx, y + size * 0.52, size * 0.3, size * 0.3 * ISO_Y_RATIO, 0, 0, TAU);
-  ctx.fill();
-
   // Speed afterimage trail
   for (let ai = 4; ai >= 1; ai--) {
     const aiAlpha = 0.08 - ai * 0.015;
@@ -468,12 +462,6 @@ export function drawTigerFanEnemy(
   const leather = "#5a3a20";
   const leatherDark = "#3e2815";
   const bannerForeLen = 0.14;
-
-  // Ground shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(cx, y + size * 0.52, size * 0.32, size * 0.32 * ISO_Y_RATIO, 0, 0, TAU);
-  ctx.fill();
 
   // Legs — leather-wrapped barbarian
   drawPathLegs(ctx, cx, y + size * 0.12 - bodyBob, size, time, zoom, {

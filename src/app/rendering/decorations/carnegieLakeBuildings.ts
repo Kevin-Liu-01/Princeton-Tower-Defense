@@ -2,36 +2,22 @@ import { ISO_COS, ISO_SIN } from "../../constants";
 import { drawIsometricPrism } from "../helpers";
 import {
   type BuildingPalette,
-  drawBuildingSection,
   drawGabledRoof,
   drawConicalRoof,
   drawColumnPortico,
-  drawPediment,
-  drawMortarLines,
   drawTowerFoundation,
   drawIsoFaceArch,
   drawFaceShading,
   drawBaseAO,
   drawQuoins,
   drawStringCourse,
-  drawEntrance,
   drawWeatherStains,
   drawRoofShingles,
-  drawRidgeCap,
   drawChimney,
 } from "./princetonBuildingHelpers";
-import { drawIsoGothicWindow } from "../isoFlush";
+import { drawIsoGothicWindow, drawIsoFlushDoor } from "../isoFlush";
 
 const ISO_Y_RATIO = ISO_SIN / ISO_COS;
-
-function frontAngles(n: number, margin: number = 0.15): number[] {
-  const out: number[] = [];
-  if (n <= 1) return [Math.PI * 0.5];
-  for (let i = 0; i < n; i++) {
-    out.push(Math.PI * (margin + (i * (1 - 2 * margin)) / (n - 1)));
-  }
-  return out;
-}
 
 // ─── Palettes ────────────────────────────────────────────────────────────
 
@@ -115,44 +101,95 @@ export function drawCarnegieLakeBoathouse(
   const iD = Ds * ISO_SIN;
   const wt = by - Hs;
 
-  // Foundation
-  drawBaseAO(ctx, bx, by, Ws, Ds, 0.15);
-  drawBuildingSection(ctx, bx, by, bodyW, bodyD, bodyH, s, pal, {
-    rows: 2,
-    leftCols: 2,
-    rightCols: 2,
-    wu: 0.1,
-    wv: 0.2,
-    arched: true,
-  });
+  // Foundation prism
+  const fndH = 3 * s;
+  drawIsometricPrism(ctx, bx, by + fndH, (bodyW + 2) * s, (bodyD + 2) * s, fndH, pal.foundTop, pal.foundLeft, pal.foundRight);
 
-  // Tudor timber frame overlay on left face
+  // Base AO shadow
+  drawBaseAO(ctx, bx, by, Ws, Ds, 0.15);
+
+  // Main body — walls drawn manually so we can overlay timber frames + flush windows
+  // Left wall (shadowed)
+  const lwG = ctx.createLinearGradient(bx - iW, wt + iD, bx, wt + 2 * iD);
+  lwG.addColorStop(0, pal.wallLeft);
+  lwG.addColorStop(1, "#B89870");
+  ctx.fillStyle = lwG;
+  ctx.beginPath();
+  ctx.moveTo(bx - iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx, by + 2 * iD);
+  ctx.lineTo(bx - iW, by + iD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right wall (lit)
+  const rwG = ctx.createLinearGradient(bx, wt + 2 * iD, bx + iW, wt + iD);
+  rwG.addColorStop(0, pal.wallRight);
+  rwG.addColorStop(1, "#C8B490");
+  ctx.fillStyle = rwG;
+  ctx.beginPath();
+  ctx.moveTo(bx + iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx, by + 2 * iD);
+  ctx.lineTo(bx + iW, by + iD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face
+  ctx.fillStyle = pal.wallTop;
+  ctx.beginPath();
+  ctx.moveTo(bx, wt);
+  ctx.lineTo(bx + iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx - iW, wt + iD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tudor timber frame overlay on both faces
   drawTimberFrame(ctx, bx, by, Ws, Ds, Hs, "left", s);
-  // Tudor timber frame overlay on right face
   drawTimberFrame(ctx, bx, by, Ws, Ds, Hs, "right", s);
 
   // Face shading for depth
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "left", 0.12);
-  drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.08);
+  drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.06);
 
   // Weather staining
   drawWeatherStains(ctx, bx, by, Ws, Ds, Hs, s, "left");
   drawWeatherStains(ctx, bx, by, Ws, Ds, Hs, s, "right");
 
-  // Quoins at corners
-  drawQuoins(ctx, bx, by, Ws, Ds, Hs, s, pal.trim, 5);
+  // Gothic windows flush with walls
+  const bhWinPositions: Array<{ x: number; y: number; face: "left" | "right" }> = [
+    { x: bx + iW * 0.35, y: wt + iD * 0.35 + Hs * 0.35, face: "right" },
+    { x: bx + iW * 0.7, y: wt + iD * 0.7 + Hs * 0.35, face: "right" },
+    { x: bx - iW * 0.35, y: wt + iD * 1.65 + Hs * 0.35, face: "left" },
+    { x: bx - iW * 0.65, y: wt + iD * 1.35 + Hs * 0.35, face: "left" },
+  ];
+  for (const w of bhWinPositions) {
+    drawIsoGothicWindow(
+      ctx, w.x, w.y, 2.5, 3.5, w.face, s,
+      "rgba(220,160,70", 0.4,
+      { frame: "#3A2008", void: "#1A0A00", sill: "#4A3A28" },
+    );
+  }
 
-  // String course at mid-height
-  drawStringCourse(ctx, bx, by, Ws, Ds, Hs, 0.5, s, pal.trim);
-
-  // Entrance door on front face
-  drawEntrance(ctx, bx, by, Ws, Ds, Hs, s, "right", pal.door, pal.trim);
+  // Arched doorway flush with front face
+  const doorCx = bx;
+  const doorBaseY = by + 2 * iD - 3 * s;
+  drawIsoFlushDoor(ctx, doorCx, doorBaseY - 3.5 * s, 4.5, 7, "front", s, {
+    frameColor: "#4A3828",
+    bodyDark: "#1A0A00",
+    bodyMid: "#2A1808",
+    bodyLight: "#3A2210",
+    handleColor: "#C8A860",
+    hasStep: true,
+    stepColor: "#4A3A28",
+    plankLines: 3,
+  });
 
   // Gabled roof
   const roofH = 7;
   drawGabledRoof(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal);
   drawRoofShingles(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal.roofDark, 5);
-  drawRidgeCap(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal.cornice);
 
   // Chimney on the roof
   drawChimney(ctx, bx + 3 * s, by - Hs - 3 * s, s, pal.trim, pal.trimLight);
@@ -162,9 +199,7 @@ export function drawCarnegieLakeBoathouse(
     const smPhase = (time * 0.8 + sm * 0.7) % 3.5;
     const smAlpha = Math.max(0, 0.25 - smPhase * 0.08);
     if (smAlpha > 0) {
-      const smX =
-        bx + 3 * s +
-        Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
+      const smX = bx + 3 * s + Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
       const smY = by - Hs - 6 * s - smPhase * 5 * s;
       const smR = (1.5 + smPhase * 2) * s;
       ctx.fillStyle = `rgba(180,170,160,${smAlpha})`;
@@ -175,7 +210,7 @@ export function drawCarnegieLakeBoathouse(
   }
 
   // Dock/pier extending into water
-  drawDock(ctx, bx, by, Ds, s, time);
+  drawDock(ctx, bx, by, Ds, s);
 }
 
 function drawTimberFrame(
@@ -240,7 +275,6 @@ function drawDock(
   ctx: CanvasRenderingContext2D,
   bhx: number, bhy: number,
   Ds: number, s: number,
-  time: number,
 ): void {
   const iD = Ds * ISO_SIN;
   const dockStartX = bhx - 2 * s;
@@ -296,20 +330,18 @@ function drawDock(
     ctx.stroke();
   }
 
-  // Dock posts with water rings
+  // Dock posts as isometric cylinders
   for (let dp = 0; dp < 3; dp++) {
     const dpf = (dp + 0.5) / 3;
     const dpx = dockStartX + (dockEndX - dockStartX) * dpf - dockW;
     const dpy = dockStartY + (dockEndY - dockStartY) * dpf;
 
-    // Water ring
     ctx.strokeStyle = "rgba(140,200,230,0.15)";
     ctx.lineWidth = 0.6 * s;
     ctx.beginPath();
     ctx.ellipse(dpx, dpy + 2 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Post as isometric cylinder
     const postH = 7 * s;
     const postR = 1 * s;
     const postRy = postR * ISO_Y_RATIO;
@@ -323,13 +355,11 @@ function drawDock(
     ctx.closePath();
     ctx.fill();
 
-    // Top cap ellipse
     ctx.fillStyle = "#3A2008";
     ctx.beginPath();
     ctx.ellipse(dpx, postTop, postR, postRy, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Rope on end post
     if (dp === 2) {
       ctx.strokeStyle = "#A08060";
       ctx.lineWidth = 0.8 * s;
@@ -364,15 +394,14 @@ export function drawCarnegieLakePavilion(
   const iD = Ds * ISO_SIN;
   const wt = by - Hs;
 
-  // Stepped stone platform (3 steps)
+  // Stepped stone platform (3 isometric steps)
   for (let st = 0; st < 3; st++) {
     const stepW = bodyW + (2 - st) * 2;
     const stepD = bodyD + (2 - st) * 1;
     const stepH = 1.5;
     const stepY = by + (2 - st) * stepH * s;
     drawIsometricPrism(
-      ctx,
-      bx, stepY,
+      ctx, bx, stepY,
       stepW * s, stepD * s, stepH * s,
       st % 2 === 0 ? "#7A6A55" : "#8A7A65",
       st % 2 === 0 ? "#5A4A38" : "#6A5A48",
@@ -380,10 +409,9 @@ export function drawCarnegieLakePavilion(
     );
   }
 
-  // Base AO shadow
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.15);
 
-  // Back wall (recessed interior — left face acts as back wall for colonnade)
+  // Back wall (left face — recessed interior behind colonnade)
   const interiorGrad = ctx.createLinearGradient(bx - iW, wt + iD, bx, wt + 2 * iD);
   interiorGrad.addColorStop(0, "#3A3028");
   interiorGrad.addColorStop(1, "#4A4038");
@@ -397,7 +425,15 @@ export function drawCarnegieLakePavilion(
   ctx.fill();
 
   // Stone coursing on back wall
-  drawMortarLines(ctx, bx, by, Ws, Hs, 8, "rgba(0,0,0,0.12)", s);
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = 0.4 * s;
+  for (let row = 1; row < 8; row++) {
+    const rf = row / 8;
+    ctx.beginPath();
+    ctx.moveTo(bx - iW, wt + iD + Hs * rf);
+    ctx.lineTo(bx, wt + 2 * iD + Hs * rf);
+    ctx.stroke();
+  }
 
   // Right wall (lit stone)
   const rwGrad = ctx.createLinearGradient(bx, wt + 2 * iD, bx + iW, wt + iD);
@@ -413,10 +449,20 @@ export function drawCarnegieLakePavilion(
   ctx.closePath();
   ctx.fill();
 
+  // Top face
+  ctx.fillStyle = pal.wallTop;
+  ctx.beginPath();
+  ctx.moveTo(bx, wt);
+  ctx.lineTo(bx + iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx - iW, wt + iD);
+  ctx.closePath();
+  ctx.fill();
+
   // Face shading
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "right", 0.10);
 
-  // Quoins on right wall
+  // Quoins
   drawQuoins(ctx, bx, by, Ws, Ds, Hs, s, pal.trim, 6);
 
   // Stone block texture on right wall
@@ -424,19 +470,17 @@ export function drawCarnegieLakePavilion(
   ctx.lineWidth = 0.3 * s;
   for (let row = 1; row < 8; row++) {
     const rf = row / 8;
-    const ry1 = wt + iD + Hs * rf;
-    const ry2 = wt + 2 * iD + Hs * rf;
     ctx.beginPath();
-    ctx.moveTo(bx + iW, ry1);
-    ctx.lineTo(bx, ry2);
+    ctx.moveTo(bx + iW, wt + iD + Hs * rf);
+    ctx.lineTo(bx, wt + 2 * iD + Hs * rf);
     ctx.stroke();
   }
 
-  // Gothic windows on right wall using flush system
+  // Gothic windows on right wall (flush with wall)
   for (let w = 0; w < 3; w++) {
     const wf = (w + 1) / 4;
     const wCx = bx + iW * wf;
-    const wCy = wt + iD + Hs * 0.45 + iD * wf;
+    const wCy = wt + iD + iD * wf + Hs * 0.38;
     drawIsoGothicWindow(
       ctx, wCx, wCy,
       2.5, 5, "right", s,
@@ -446,46 +490,85 @@ export function drawCarnegieLakePavilion(
     );
   }
 
-  // Grand entrance door on right face
-  drawEntrance(ctx, bx, by, Ws, Ds, Hs, s, "right", pal.door, pal.trim);
+  // Grand entrance door flush with right face
+  const archCx = bx + iW * 0.3;
+  const archBaseY = wt + iD * 1.3 + Hs * 0.65;
+  drawIsoFlushDoor(ctx, archCx, archBaseY, 5, 8, "right", s, {
+    frameColor: "#5A4A38",
+    bodyDark: "#0A0500",
+    bodyMid: "#1A0A00",
+    bodyLight: "#2A1808",
+    handleColor: "#C8A860",
+    hasStep: true,
+    stepColor: "#5A4A38",
+    plankLines: 2,
+  });
 
-  // Classical columns on right face (using drawColumnPortico)
-  const porticoH = bodyH - 3;
-  const porticoSpan = bodyW * 0.9;
-  const colAnchorX = bx + iW * 0.5;
-  const colAnchorY = by + iD * 0.5;
-  drawColumnPortico(
-    ctx, colAnchorX, colAnchorY,
-    4, porticoH, porticoSpan, s,
-    "#8A7A65", "#9A8A72",
-    "right",
-  );
+  // Entablature (horizontal band above columns) — on right face only
+  const entH = 2 * s;
+  ctx.fillStyle = pal.cornice;
+  ctx.beginPath();
+  ctx.moveTo(bx + iW + 0.5 * s, wt + iD - entH);
+  ctx.lineTo(bx - 0.5 * s, wt + 2 * iD - entH);
+  ctx.lineTo(bx - 0.5 * s, wt + 2 * iD);
+  ctx.lineTo(bx + iW + 0.5 * s, wt + iD);
+  ctx.closePath();
+  ctx.fill();
 
-  // Entablature above columns
-  const entW = bodyW + 1;
-  const entD = 2;
-  const entH = 2;
-  const entY = wt + 2 * iD + 1 * s;
-  drawIsometricPrism(
-    ctx, bx + 0.5 * s, entY,
-    entW * s, entD * s, entH * s,
-    pal.cornice, pal.wallLeft, pal.wallRight,
-  );
+  // Frieze with triglyph marks
+  ctx.fillStyle = "#7A6A55";
+  ctx.beginPath();
+  ctx.moveTo(bx + iW + 0.5 * s, wt + iD - entH * 2);
+  ctx.lineTo(bx - 0.5 * s, wt + 2 * iD - entH * 2);
+  ctx.lineTo(bx - 0.5 * s, wt + 2 * iD - entH);
+  ctx.lineTo(bx + iW + 0.5 * s, wt + iD - entH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Triglyph marks
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = 0.6 * s;
+  for (let tg = 0; tg < 6; tg++) {
+    const tgf = (tg + 0.5) / 6;
+    const tgx = bx + iW * tgf + 0.5 * s * (1 - tgf);
+    const tgy1 = wt + iD + iD * tgf - entH * 2;
+    const tgy2 = tgy1 + entH;
+    ctx.beginPath();
+    ctx.moveTo(tgx - 0.3 * s, tgy1);
+    ctx.lineTo(tgx - 0.3 * s, tgy2);
+    ctx.moveTo(tgx + 0.3 * s, tgy1);
+    ctx.lineTo(tgx + 0.3 * s, tgy2);
+    ctx.stroke();
+  }
+
+  // Cornice (projecting top)
+  ctx.fillStyle = "#9A8A72";
+  ctx.beginPath();
+  ctx.moveTo(bx + (iW + 1 * s), wt + iD - entH * 2 - 1.5 * s);
+  ctx.lineTo(bx - 1 * s, wt + 2 * iD - entH * 2 - 1.5 * s);
+  ctx.lineTo(bx, wt + 2 * iD - entH * 2);
+  ctx.lineTo(bx + iW, wt + iD - entH * 2);
+  ctx.closePath();
+  ctx.fill();
 
   // Gable roof
   const roofH = 5;
   drawGabledRoof(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal);
   drawRoofShingles(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal.roofDark, 5);
-  drawRidgeCap(ctx, bx, by, bodyW, bodyD, bodyH, roofH, s, pal.cornice);
 
-  // Pediment on right gable end
-  const gableRR = {
-    x: (bx + iW + bx) / 2 + (bodyW + 1.5) * ISO_COS * s * 0.5,
-    y: wt + iD + (2 * iD - iD) / 2 - 1 * s,
-  };
-  drawPediment(ctx, gableRR.x, gableRR.y - roofH * s * 0.3, bodyD * 0.8, 3, s, "right", pal.wallRight, pal.cornice);
+  // Classical columns on left (front) face — drawn LAST so they layer in front
+  const porticoH = bodyH - 3;
+  const porticoSpan = bodyD * 0.9;
+  const colAnchorX = bx - iW * 0.5;
+  const colAnchorY = by + iD * 1.5;
+  drawColumnPortico(
+    ctx, colAnchorX, colAnchorY,
+    4, porticoH, porticoSpan, s,
+    "#8A7A65", "#9A8A72",
+    "left",
+  );
 
-  // Balustrade along front (left) edge using isometric posts
+  // Balustrade along front (left) edge — drawn after columns
   drawBalustrade(ctx, bx, by, iW, iD, s);
 }
 
@@ -499,7 +582,7 @@ function drawBalustrade(
   for (let bl = 0; bl < balCount; bl++) {
     const blf = (bl + 0.5) / balCount;
     const blx = bx - iW + iW * blf;
-    const bly = by + iD + (2 * iD - iD) * blf;
+    const bly = by + iD + iD * blf;
     const postR = 0.6 * s;
     const postRy = postR * ISO_Y_RATIO;
     const postH = 4 * s;
@@ -514,7 +597,7 @@ function drawBalustrade(
     ctx.closePath();
     ctx.fill();
 
-    // Baluster bulge (vase shape)
+    // Bulge
     const bulgeY = bly - postH * 0.6;
     ctx.fillStyle = "#8A7A65";
     ctx.beginPath();
@@ -528,7 +611,7 @@ function drawBalustrade(
     ctx.fill();
   }
 
-  // Top rail — isometric parallelogram
+  // Top rail — isometric parallelogram along left face
   ctx.fillStyle = "#8A7A65";
   ctx.beginPath();
   ctx.moveTo(bx - iW, by + iD - 4 * s);
@@ -565,16 +648,67 @@ export function drawCarnegieLakeClockTower(
   // Tower foundation
   drawTowerFoundation(ctx, bx, by, bodyW + 1, s, pal.foundTop, pal.foundLeft, pal.foundRight);
 
-  // Main tower body using drawBuildingSection
   drawBaseAO(ctx, bx, by, Ws, Ds, 0.12);
-  drawBuildingSection(ctx, bx, by, bodyW, bodyD, bodyH, s, pal, {
-    rows: 3,
-    leftCols: 1,
-    rightCols: 1,
-    wu: 0.15,
-    wv: 0.18,
-    arched: true,
-  });
+
+  // Left wall (shadowed stone)
+  const twlG = ctx.createLinearGradient(bx - iW, wt + iD, bx, wt + 2 * iD);
+  twlG.addColorStop(0, pal.wallLeft);
+  twlG.addColorStop(0.5, "#5A4A3A");
+  twlG.addColorStop(1, pal.wallLeft);
+  ctx.fillStyle = twlG;
+  ctx.beginPath();
+  ctx.moveTo(bx - iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx, by + 2 * iD);
+  ctx.lineTo(bx - iW, by + iD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Stone coursing on left
+  ctx.strokeStyle = "rgba(0,0,0,0.1)";
+  ctx.lineWidth = 0.3 * s;
+  for (let row = 1; row < 10; row++) {
+    const rf = row / 10;
+    ctx.beginPath();
+    ctx.moveTo(bx - iW, wt + iD + Hs * rf);
+    ctx.lineTo(bx, wt + 2 * iD + Hs * rf);
+    ctx.stroke();
+  }
+
+  // Right wall (lit stone)
+  const twrG = ctx.createLinearGradient(bx, wt + 2 * iD, bx + iW, wt + iD);
+  twrG.addColorStop(0, pal.wallRight);
+  twrG.addColorStop(0.5, "#7A6A55");
+  twrG.addColorStop(1, pal.wallRight);
+  ctx.fillStyle = twrG;
+  ctx.beginPath();
+  ctx.moveTo(bx + iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx, by + 2 * iD);
+  ctx.lineTo(bx + iW, by + iD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Stone coursing on right
+  ctx.strokeStyle = "rgba(0,0,0,0.08)";
+  ctx.lineWidth = 0.3 * s;
+  for (let row = 1; row < 10; row++) {
+    const rf = row / 10;
+    ctx.beginPath();
+    ctx.moveTo(bx + iW, wt + iD + Hs * rf);
+    ctx.lineTo(bx, wt + 2 * iD + Hs * rf);
+    ctx.stroke();
+  }
+
+  // Top face
+  ctx.fillStyle = pal.wallTop;
+  ctx.beginPath();
+  ctx.moveTo(bx, wt);
+  ctx.lineTo(bx + iW, wt + iD);
+  ctx.lineTo(bx, wt + 2 * iD);
+  ctx.lineTo(bx - iW, wt + iD);
+  ctx.closePath();
+  ctx.fill();
 
   // Face shading
   drawFaceShading(ctx, bx, by, Ws, Ds, Hs, "left", 0.15);
@@ -591,14 +725,29 @@ export function drawCarnegieLakeClockTower(
   drawWeatherStains(ctx, bx, by, Ws, Ds, Hs, s, "left");
   drawWeatherStains(ctx, bx, by, Ws, Ds, Hs, s, "right");
 
-  // Belfry openings near top (arched louver windows)
+  // Gothic windows flush on right wall (3 rows)
+  for (let tw = 0; tw < 3; tw++) {
+    const wf = 0.45;
+    const vf = 0.2 + tw * 0.25;
+    const wCx = bx + iW * wf;
+    const wCy = wt + iD + iD * wf + Hs * vf;
+    const glowA = tw === 1 ? 0.4 : 0.2;
+    drawIsoGothicWindow(
+      ctx, wCx, wCy,
+      2.8, 4.5, "right", s,
+      "rgba(200,150,70",
+      glowA + Math.sin(time * 1.5 + tw) * 0.04,
+      { frame: "#5A4A38", void: "#1A1008", sill: "#6A5A48" },
+    );
+  }
+
+  // Belfry openings near top
   drawBelfryOpening(ctx, bx, by, Ws, Ds, Hs, s, "right");
 
   // Clock face on right wall (properly foreshortened)
   drawClockFace(ctx, bx, by, Ws, Ds, Hs, s, time);
 
   // Parapet with crenellations
-  const crenelH = 3;
   drawIsometricPrism(
     ctx, bx, wt,
     (bodyW + 0.5) * s, (bodyD + 0.5) * s, 1.5 * s,
@@ -606,11 +755,11 @@ export function drawCarnegieLakeClockTower(
   );
   drawCrenellations(ctx, bx, wt - 1.5 * s, bodyW + 0.5, bodyD + 0.5, s, pal.trim);
 
-  // Pointed spire with copper patina
+  // Pointed spire
   const spireH = 11;
   drawConicalRoof(ctx, bx, wt - 1.5 * s, bodyW * 0.85, spireH, s, pal.roofFront, pal.roofDark);
 
-  // Finial (gold sphere + cross)
+  // Finial
   const spireTipY = wt - 1.5 * s - spireH * s;
   ctx.fillStyle = pal.accent;
   ctx.beginPath();
@@ -654,36 +803,33 @@ function drawBelfryOpening(
   const iW = Ws * ISO_COS;
   const iD = Ds * ISO_SIN;
   const wt = by - Hs;
-  const dir = face === "right" ? 1 : -1;
 
-  const belCx = bx + dir * iW * 0.5;
-  const belCy = wt + iD * (face === "right" ? 0.5 : 1.5) + 3 * s;
-  const belW = 2 * s;
-  const belH = 3 * s;
+  // Position on the face near the top
+  const faceF = 0.5;
+  const vertF = 0.08;
+  const belCx = bx + (face === "right" ? 1 : -1) * iW * faceF;
+  const belCy = wt + iD + iD * faceF + Hs * vertF;
 
-  // Dark opening
-  drawIsoFaceArch(ctx, belCx, belCy + belH, belW / s, belH / s + 2, s, face, "#1A1008", true);
+  drawIsoFaceArch(ctx, belCx, belCy + 3 * s, 2, 5, s, face, "#1A1008", true);
 
   // Louver slats
   ctx.strokeStyle = "#3A2A1A";
   ctx.lineWidth = 0.5 * s;
+  const dx = face === "left" ? ISO_COS : -ISO_COS;
+  const dy = ISO_SIN;
   for (let lv = 0; lv < 3; lv++) {
-    const dx = face === "left" ? ISO_COS : -ISO_COS;
-    const dy = ISO_SIN;
     const lvy = belCy + lv * 1 * s;
     ctx.beginPath();
-    ctx.moveTo(belCx + belW * 0.8 * dx, lvy + belW * 0.8 * dy);
-    ctx.lineTo(belCx - belW * 0.8 * dx, lvy - belW * 0.8 * dy);
+    ctx.moveTo(belCx + 1.5 * s * dx, lvy + 1.5 * s * dy);
+    ctx.lineTo(belCx - 1.5 * s * dx, lvy - 1.5 * s * dy);
     ctx.stroke();
   }
 
-  // Stone archivolt
+  // Stone archivolt frame
   ctx.strokeStyle = "#6A5A48";
   ctx.lineWidth = 0.8 * s;
-  const archCx = belCx;
-  const archCy = belCy;
   ctx.beginPath();
-  ctx.ellipse(archCx, archCy, belW * 1.1, belW * 0.5, face === "right" ? -0.46 : 0.46, Math.PI, 0);
+  ctx.ellipse(belCx, belCy, 2 * s * 0.8, 1.5 * s, face === "right" ? -0.46 : 0.46, Math.PI, 0);
   ctx.stroke();
 }
 
@@ -698,12 +844,12 @@ function drawClockFace(
   const iD = Ds * ISO_SIN;
   const wt = by - Hs;
 
-  // Clock positioned on right face, mid-height
+  // Clock on right face at ~48% height
   const clkCx = bx + iW * 0.5;
-  const clkCy = wt + iD * 0.5 + Hs * 0.52;
+  const clkCy = wt + iD * 0.5 + Hs * 0.48;
   const clkR = 2.5 * s;
 
-  // Foreshortened for right isometric face: narrower horizontally, tilted
+  // Foreshortened ellipse tilted to match right isometric face
   const fX = clkR * 0.75;
   const fY = clkR;
   const tiltAngle = -Math.atan2(ISO_SIN, ISO_COS);
@@ -712,7 +858,7 @@ function drawClockFace(
   ctx.translate(clkCx, clkCy);
   ctx.rotate(tiltAngle);
 
-  // Clock face plate
+  // Face plate
   const clkG = ctx.createRadialGradient(0, 0, 0, 0, 0, fX);
   clkG.addColorStop(0, "#F0E8D8");
   clkG.addColorStop(0.7, "#E8DCC8");
@@ -736,7 +882,7 @@ function drawClockFace(
   ctx.ellipse(0, 0, fX - 1 * s, fY - 1 * s, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Hour markers (12 ticks)
+  // Hour markers
   ctx.strokeStyle = "#3A2A18";
   for (let h = 0; h < 12; h++) {
     const ha = (h / 12) * Math.PI * 2 - Math.PI * 0.5;
@@ -796,30 +942,177 @@ function drawCrenellations(
   const merlonH = 2.5 * s;
   const merlonW = 1.6 * s;
 
-  // Merlons on right edge
   const count = 3;
+
+  // Right edge merlons
   for (let m = 0; m < count; m++) {
     const mf = (m + 0.3) / count;
     const mx = bx + iW * mf;
     const my = by + iD * mf;
-
-    drawIsometricPrism(
-      ctx, mx, my,
-      merlonW, merlonW, merlonH,
-      color, "#5A4A38", "#6A5A48",
-    );
+    drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, color, "#5A4A38", "#6A5A48");
   }
 
-  // Merlons on left edge
+  // Left edge merlons
   for (let m = 0; m < count; m++) {
     const mf = (m + 0.3) / count;
     const mx = bx - iW * mf;
     const my = by + iD * mf;
-
-    drawIsometricPrism(
-      ctx, mx, my,
-      merlonW, merlonW, merlonH,
-      color, "#4A3A28", "#5A4A38",
-    );
+    drawIsometricPrism(ctx, mx, my, merlonW, merlonW, merlonH, color, "#4A3A28", "#5A4A38");
   }
+}
+
+// ─── Rowboat ──────────────────────────────────────────────────────────────
+
+export function drawCarnegieLakeRowboat(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  time: number,
+): void {
+  const bob = Math.sin(time * 1.1) * 1.5 * s;
+  const bx = cx + 7 * s;
+  const by = cy + 4 * s + bob;
+  const tilt = Math.sin(time * 0.8) * 0.03;
+
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(tilt);
+
+  const hullLen = 6 * s;
+  const hullW = 2.2 * s;
+  const hullH = 1.8 * s;
+  const hullWy = hullW * ISO_Y_RATIO;
+
+  // Water shadow beneath hull
+  ctx.fillStyle = "rgba(0,40,60,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(0, 1.5 * s, hullLen * 1.05, hullWy * 1.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hull bottom (dark, submerged)
+  ctx.fillStyle = "#3A2210";
+  ctx.beginPath();
+  ctx.ellipse(0, 0.5 * s, hullLen, hullWy, 0, 0, Math.PI);
+  ctx.fill();
+
+  // Hull left side (shadowed)
+  const hullLG = ctx.createLinearGradient(-hullLen, 0, 0, 0);
+  hullLG.addColorStop(0, "#4A2A10");
+  hullLG.addColorStop(1, "#5A3A18");
+  ctx.fillStyle = hullLG;
+  ctx.beginPath();
+  ctx.moveTo(-hullLen, 0);
+  ctx.quadraticCurveTo(-hullLen * 0.9, -hullH, -hullLen * 0.3, -hullH);
+  ctx.lineTo(hullLen * 0.3, -hullH);
+  ctx.quadraticCurveTo(hullLen * 0.9, -hullH, hullLen, 0);
+  ctx.ellipse(0, 0, hullLen, hullWy * 0.6, 0, 0, Math.PI, true);
+  ctx.closePath();
+  ctx.fill();
+
+  // Hull right side (lit)
+  const hullRG = ctx.createLinearGradient(0, 0, hullLen, 0);
+  hullRG.addColorStop(0, "#6D4C2A");
+  hullRG.addColorStop(1, "#7A5A30");
+  ctx.fillStyle = hullRG;
+  ctx.beginPath();
+  ctx.moveTo(-hullLen, 0);
+  ctx.quadraticCurveTo(-hullLen * 0.9, -hullH, -hullLen * 0.3, -hullH);
+  ctx.lineTo(hullLen * 0.3, -hullH);
+  ctx.quadraticCurveTo(hullLen * 0.9, -hullH, hullLen, 0);
+  ctx.ellipse(0, 0, hullLen, hullWy * 0.6, 0, 0, -Math.PI, false);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gunwale (top edge of hull)
+  ctx.strokeStyle = "#8B7355";
+  ctx.lineWidth = 0.7 * s;
+  ctx.beginPath();
+  ctx.moveTo(-hullLen, 0);
+  ctx.quadraticCurveTo(-hullLen * 0.9, -hullH, -hullLen * 0.3, -hullH);
+  ctx.lineTo(hullLen * 0.3, -hullH);
+  ctx.quadraticCurveTo(hullLen * 0.9, -hullH, hullLen, 0);
+  ctx.stroke();
+
+  // Interior visible (dark)
+  ctx.fillStyle = "#3A2818";
+  ctx.beginPath();
+  ctx.ellipse(0, -0.4 * s, hullLen * 0.85, hullWy * 0.45, 0, Math.PI, 0);
+  ctx.fill();
+
+  // Plank lines inside hull
+  ctx.strokeStyle = "rgba(90,60,30,0.3)";
+  ctx.lineWidth = 0.3 * s;
+  for (let p = -2; p <= 2; p++) {
+    const px = p * hullLen * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(px, -hullH * 0.9);
+    ctx.lineTo(px, 0.3 * s);
+    ctx.stroke();
+  }
+
+  // Seat (isometric parallelogram)
+  const seatW = 2.5 * s;
+  const seatD = hullWy * 0.7;
+  ctx.fillStyle = "#7A5A30";
+  ctx.beginPath();
+  ctx.moveTo(-seatW * 0.5 * ISO_COS, -0.6 * s + seatD * 0.5);
+  ctx.lineTo(seatW * 0.5 * ISO_COS, -0.6 * s - seatD * 0.5);
+  ctx.lineTo(seatW * 0.5 * ISO_COS, -0.6 * s - seatD * 0.5 + 0.5 * s);
+  ctx.lineTo(-seatW * 0.5 * ISO_COS, -0.6 * s + seatD * 0.5 + 0.5 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Oars
+  const oarSway = Math.sin(time * 1.5) * 0.15;
+  const oarSwayY = Math.sin(time * 1.5) * 0.7 * s;
+
+  ctx.strokeStyle = "#A08060";
+  ctx.lineWidth = 0.5 * s;
+  // Left oar
+  ctx.beginPath();
+  ctx.moveTo(-1.2 * s, -0.3 * s);
+  ctx.lineTo(-6.5 * s, 3 * s + oarSwayY);
+  ctx.stroke();
+  // Right oar
+  ctx.beginPath();
+  ctx.moveTo(1.2 * s, -0.3 * s);
+  ctx.lineTo(6.5 * s, 3 * s - oarSwayY);
+  ctx.stroke();
+
+  // Oar blades (isometric ellipses)
+  ctx.fillStyle = "#A08060";
+  ctx.beginPath();
+  ctx.ellipse(-6.5 * s, 3 * s + oarSwayY, 1.4 * s, 0.6 * s, 0.5 + oarSway, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#806040";
+  ctx.lineWidth = 0.3 * s;
+  ctx.stroke();
+  ctx.fillStyle = "#A08060";
+  ctx.beginPath();
+  ctx.ellipse(6.5 * s, 3 * s - oarSwayY, 1.4 * s, 0.6 * s, -0.5 - oarSway, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#806040";
+  ctx.stroke();
+
+  // Water ripples around hull
+  ctx.strokeStyle = "rgba(140,220,240,0.12)";
+  ctx.lineWidth = 0.4 * s;
+  for (let r = 0; r < 3; r++) {
+    const rPhase = ((time * 0.5 + r * 0.4) % 2) / 2;
+    const rAlpha = 0.12 * (1 - rPhase);
+    if (rAlpha > 0.02) {
+      ctx.strokeStyle = `rgba(140,220,240,${rAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        0, 0.5 * s,
+        hullLen * (1.05 + rPhase * 0.3),
+        hullWy * (1.1 + rPhase * 0.3),
+        0, 0, Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
 }

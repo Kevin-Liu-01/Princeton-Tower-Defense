@@ -139,7 +139,7 @@ function triggerTenorHighNote(p: HeroAbilityParams): void {
 
 function triggerMatheyShield(p: HeroAbilityParams): void {
   const { hero, enemies, selectedMap, setHero, setEnemies, setEffects, addParticles } = p;
-  const tauntRadius = 300;
+  const tauntRadius = 150;
   const duration = 10000;
 
   setHero((prev) =>
