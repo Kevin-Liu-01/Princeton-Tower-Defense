@@ -2979,6 +2979,84 @@ export function drawBoneMageEnemy(
     },
   );
 
+  // === SECONDARY ARCANE ARMS (back pair) ===
+  // Lower-left spectral arm — conjuring gesture
+  drawPathArm(
+    ctx,
+    cx0 - size * 0.1,
+    torsoY - size * 0.04,
+    size,
+    time,
+    zoom,
+    -1,
+    {
+      color: boneMid,
+      colorDark: boneDark,
+      handColor: boneDark,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      shoulderAngle:
+        0.3 + Math.sin(time * 2.2 + 1.5) * 0.1 + (isAttacking ? 0.4 : 0),
+      elbowAngle:
+        0.9 + Math.sin(time * 2.8 + 0.7) * 0.06 + (isAttacking ? 0.25 : 0),
+      style: "bone",
+      onWeapon: (ctx) => {
+        const orbR = size * 0.025 + Math.sin(time * 4) * size * 0.005;
+        const orbAlpha = 0.5 + Math.sin(time * 3.2) * 0.25;
+        ctx.fillStyle = `rgba(160, 80, 240, ${orbAlpha * 0.35})`;
+        ctx.beginPath();
+        ctx.arc(0, size * 0.03, orbR * 1.8, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = `rgba(200, 140, 255, ${orbAlpha * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(0, size * 0.03, orbR, 0, TAU);
+        ctx.fill();
+      },
+    },
+  );
+
+  // Lower-right spectral arm — tome / beckoning
+  drawPathArm(
+    ctx,
+    cx0 + size * 0.1,
+    torsoY - size * 0.04,
+    size,
+    time,
+    zoom,
+    1,
+    {
+      color: boneMid,
+      colorDark: boneDark,
+      handColor: boneDark,
+      upperLen: 0.2,
+      foreLen: 0.18,
+      shoulderAngle:
+        -0.25 + Math.sin(time * 2.0 + 2.3) * 0.08 + (isAttacking ? -0.35 : 0),
+      elbowAngle:
+        -0.85 + Math.sin(time * 2.6 + 1.1) * 0.06 + (isAttacking ? 0.3 : 0),
+      style: "bone",
+      onWeapon: (ctx) => {
+        // Floating bone tome
+        const tW = size * 0.04;
+        const tH = size * 0.055;
+        ctx.fillStyle = "#2a1a3a";
+        ctx.fillRect(-tW * 0.5, size * 0.01, tW, tH);
+        ctx.strokeStyle = arcPurple;
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.strokeRect(-tW * 0.5, size * 0.01, tW, tH);
+        // Spine
+        ctx.fillStyle = "#5a3a1a";
+        ctx.fillRect(-tW * 0.5 - size * 0.004, size * 0.01, size * 0.006, tH);
+        // Rune glyph on cover
+        const glyphPulse = 0.4 + Math.sin(time * 3.5) * 0.3;
+        ctx.fillStyle = `rgba(180, 100, 255, ${glyphPulse})`;
+        ctx.font = `${size * 0.025}px serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("✧", 0, size * 0.01 + tH * 0.6);
+      },
+    },
+  );
+
   // === SKULL HEAD IN HOOD ===
   const headX = cx0;
   const headY = y - size * 0.25 - bodyBob;

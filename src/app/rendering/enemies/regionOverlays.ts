@@ -1,4 +1,5 @@
 import type { MapTheme } from "../../types";
+import { getIdleSway } from "./animationHelpers";
 
 export type EnemyCategory =
   | "academic"
@@ -88,18 +89,20 @@ export function drawRegionOverlay(
   const category = ENEMY_CATEGORY_MAP[enemyType];
   if (!category) return;
 
+  const sway = getIdleSway(time, 1.0, size * 0.003, size * 0.002);
+
   switch (region) {
     case "swamp":
-      drawSwampOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom);
+      drawSwampOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
       break;
     case "desert":
-      drawDesertOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom);
+      drawDesertOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
       break;
     case "winter":
-      drawWinterOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom);
+      drawWinterOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
       break;
     case "volcanic":
-      drawVolcanicOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom);
+      drawVolcanicOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
       break;
   }
 }
@@ -118,18 +121,21 @@ function drawSwampOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
+  sway: { dx: number; dy: number },
 ): void {
-  // Dripping moss/slime from shoulders
-  drawDrippingMoss(ctx, x, y, size, time, zoom);
+  const bx = x + sway.dx;
+  const by = y + sway.dy;
+
+  drawDrippingMoss(ctx, bx, by, size, time, zoom);
 
   if (category === "ranged" || category === "undead") {
-    drawSwampHood(ctx, x, y, size, time, zoom);
+    drawSwampHood(ctx, bx, by, size, time, zoom);
   }
   if (category === "academic" || category === "forest") {
-    drawFungalGrowths(ctx, x, y, size, time, zoom);
+    drawFungalGrowths(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
-    drawSwampWingMoss(ctx, x, y, size, time, zoom);
+    drawSwampWingMoss(ctx, bx, by, size, time, zoom);
   }
 
   drawSwampParticles(ctx, x, y, size, time, zoom);
@@ -297,19 +303,23 @@ function drawDesertOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
+  sway: { dx: number; dy: number },
 ): void {
+  const bx = x + sway.dx;
+  const by = y + sway.dy;
+
   if (category === "ranged" || category === "undead" || category === "elemental") {
-    drawDesertHeadWrap(ctx, x, y, size, time, zoom);
+    drawDesertHeadWrap(ctx, bx, by, size, time, zoom);
   }
   if (category === "academic" || category === "forest") {
-    drawDesertScarf(ctx, x, y, size, time, zoom);
+    drawDesertScarf(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
-    drawDesertFeatherBands(ctx, x, y, size, time, zoom);
+    drawDesertFeatherBands(ctx, bx, by, size, time, zoom);
   }
 
   drawDesertSandDust(ctx, x, y, size, time, zoom);
-  drawScarabAmulet(ctx, x, y, size, time, zoom);
+  drawScarabAmulet(ctx, bx, by, size, time, zoom);
 }
 
 function drawDesertHeadWrap(
@@ -479,20 +489,24 @@ function drawWinterOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
+  sway: { dx: number; dy: number },
 ): void {
+  const bx = x + sway.dx;
+  const by = y + sway.dy;
+
   if (category === "ranged" || category === "undead" || category === "elemental") {
-    drawFurLinedHood(ctx, x, y, size, time, zoom);
+    drawFurLinedHood(ctx, bx, by, size, time, zoom);
   }
   if (category === "academic" || category === "forest" || category === "special") {
-    drawFurCollar(ctx, x, y, size, time, zoom);
+    drawFurCollar(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
-    drawFrostWingTips(ctx, x, y, size, time, zoom);
+    drawFrostWingTips(ctx, bx, by, size, time, zoom);
   }
 
-  drawFrostCrystals(ctx, x, y, size, time, zoom);
-  drawBreathVapor(ctx, x, y, size, time, zoom);
-  drawSnowDusting(ctx, x, y, size, time, zoom);
+  drawFrostCrystals(ctx, bx, by, size, time, zoom);
+  drawBreathVapor(ctx, bx, by, size, time, zoom);
+  drawSnowDusting(ctx, bx, by, x, y, size, time, zoom);
 }
 
 function drawFurLinedHood(
@@ -622,26 +636,24 @@ function drawBreathVapor(
 
 function drawSnowDusting(
   ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
+  bx: number, by: number,
+  ox: number, oy: number,
+  size: number,
   time: number, zoom: number,
 ): void {
-  // Light snow dusting on shoulders and head
   ctx.fillStyle = "rgba(240, 245, 255, 0.3)";
-  // Shoulder snow
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.18, y - size * 0.22, size * 0.08, size * 0.015, -0.2, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.18, y - size * 0.22, size * 0.08, size * 0.015, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(bx - size * 0.18, by - size * 0.22, size * 0.08, size * 0.015, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(bx + size * 0.18, by - size * 0.22, size * 0.08, size * 0.015, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  // Head snow
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.55, size * 0.1, size * 0.012, 0, 0, Math.PI * 2);
+  ctx.ellipse(bx, by - size * 0.55, size * 0.1, size * 0.012, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Falling snowflakes
   for (let i = 0; i < 3; i++) {
     const sfPhase = (time * 0.3 + i * 0.35) % 1;
-    const sfx = x + Math.sin(time + i * 2.1) * size * 0.25;
-    const sfy = y - size * 0.4 + sfPhase * size * 0.8;
+    const sfx = ox + Math.sin(time + i * 2.1) * size * 0.25;
+    const sfy = oy - size * 0.4 + sfPhase * size * 0.8;
     ctx.fillStyle = `rgba(255, 255, 255, ${(1 - sfPhase) * 0.35})`;
     ctx.beginPath();
     ctx.arc(sfx, sfy, size * 0.008, 0, Math.PI * 2);
@@ -663,18 +675,22 @@ function drawVolcanicOverlay(
   palette: RegionPalette,
   time: number,
   zoom: number,
+  sway: { dx: number; dy: number },
 ): void {
+  const bx = x + sway.dx;
+  const by = y + sway.dy;
+
   if (category === "ranged" || category === "undead" || category === "elemental") {
-    drawCharredCowl(ctx, x, y, size, time, zoom);
+    drawCharredCowl(ctx, bx, by, size, time, zoom);
   }
   if (category === "academic" || category === "forest" || category === "special") {
-    drawAshCoating(ctx, x, y, size, time, zoom);
+    drawAshCoating(ctx, bx, by, size, time, zoom);
   }
   if (category === "flying") {
-    drawEmberWingTrails(ctx, x, y, size, time, zoom);
+    drawEmberWingTrails(ctx, bx, by, size, time, zoom);
   }
 
-  drawLavaCracks(ctx, x, y, size, time, zoom);
+  drawLavaCracks(ctx, bx, by, size, time, zoom);
   drawEmberParticles(ctx, x, y, size, time, zoom);
 }
 

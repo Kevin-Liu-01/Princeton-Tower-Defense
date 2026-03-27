@@ -178,8 +178,9 @@ export function drawPulsingGlowRings(
   ctx.lineWidth = lw;
   for (let i = 0; i < count; i++) {
     const phase = (time * speed + i * (1 / count)) % 1;
-    const radius = baseRadius + phase * baseRadius * expansion;
+    const radius = Math.max(0, baseRadius + phase * baseRadius * expansion);
     const alpha = (1 - phase) * maxAlpha;
+    if (radius <= 0) continue;
 
     ctx.strokeStyle = opts.color.replace(/[\d.]+\)$/, `${alpha})`);
     ctx.beginPath();

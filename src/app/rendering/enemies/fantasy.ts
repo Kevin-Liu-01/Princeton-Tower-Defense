@@ -5,6 +5,7 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawRadialAura } from "./helpers";
+import type { MapTheme } from "../../types";
 
 const TAU = Math.PI * 2;
 
@@ -692,66 +693,227 @@ export function drawDireBearEnemy(
   }
 }
 
-// 2. ANCIENT ENT — Living tree with gnarled bark, glowing heartwood, and creeping roots
+// ── Regional tree palettes for Ancient Ent ──────────────────────────────────
+interface EntPalette {
+  bark: string[];          // [dark, mid, light, crackDark]
+  sapColor: string;        // glowing vein color
+  sapGlow: string;         // glow shadow color
+  eyeColor: string;
+  eyeGlow: string;
+  leafColors: string[];
+  particleColor: string;   // falling particle tint
+  auraColor: string;       // regen / ambient aura
+  groundDetail: "moss" | "sand" | "snow" | "ash" | "lichen";
+  canopyStyle: "deciduous" | "mangrove" | "acacia" | "pine" | "charred";
+  trunkWide: number;       // multiplier for trunk width (wider = more tree-like)
+  crownY: number;          // how high the crown sits (lower number = taller crown)
+}
+
+const ENT_PALETTES: Record<string, EntPalette> = {
+  grassland: {
+    bark: ["#3a2510", "#5a3a1a", "#7a5a30", "#1e120a"],
+    sapColor: "rgba(100,255,100,VAL)", sapGlow: "rgba(74,222,128,0.3)",
+    eyeColor: "#00ff44", eyeGlow: "rgba(0,255,68,0.6)",
+    leafColors: ["#16a34a", "#22c55e", "#4ade80", "#15803d"],
+    particleColor: "60,180,40", auraColor: "74,222,128",
+    groundDetail: "moss", canopyStyle: "deciduous",
+    trunkWide: 1.0, crownY: 0.42,
+  },
+  swamp: {
+    bark: ["#1a2010", "#2a3818", "#3a4820", "#0e1408"],
+    sapColor: "rgba(140,200,60,VAL)", sapGlow: "rgba(100,180,40,0.3)",
+    eyeColor: "#aaff22", eyeGlow: "rgba(150,220,30,0.6)",
+    leafColors: ["#4a6a30", "#6a8a40", "#3a5a20", "#8aa050"],
+    particleColor: "100,160,40", auraColor: "80,140,30",
+    groundDetail: "lichen", canopyStyle: "mangrove",
+    trunkWide: 0.85, crownY: 0.38,
+  },
+  desert: {
+    bark: ["#5a4028", "#7a5a38", "#9a7a50", "#3a2a18"],
+    sapColor: "rgba(220,180,60,VAL)", sapGlow: "rgba(200,160,40,0.25)",
+    eyeColor: "#ffaa22", eyeGlow: "rgba(220,160,20,0.5)",
+    leafColors: ["#8a7a30", "#a89a40", "#6a6020", "#c0b050"],
+    particleColor: "180,150,60", auraColor: "200,170,60",
+    groundDetail: "sand", canopyStyle: "acacia",
+    trunkWide: 0.75, crownY: 0.36,
+  },
+  winter: {
+    bark: ["#3a3840", "#5a5860", "#7a7880", "#2a2830"],
+    sapColor: "rgba(100,200,255,VAL)", sapGlow: "rgba(80,180,240,0.3)",
+    eyeColor: "#66ccff", eyeGlow: "rgba(80,200,255,0.6)",
+    leafColors: ["#1a5a30", "#2a6a3a", "#1a4a28", "#3a7a4a"],
+    particleColor: "200,220,255", auraColor: "100,180,240",
+    groundDetail: "snow", canopyStyle: "pine",
+    trunkWide: 0.8, crownY: 0.50,
+  },
+  volcanic: {
+    bark: ["#1a1210", "#2a1a14", "#3a2a1a", "#0a0808"],
+    sapColor: "rgba(255,120,30,VAL)", sapGlow: "rgba(255,100,20,0.4)",
+    eyeColor: "#ff4400", eyeGlow: "rgba(255,80,0,0.7)",
+    leafColors: ["#3a2a20", "#4a3a28", "#2a1a14", "#5a4a30"],
+    particleColor: "255,120,40", auraColor: "255,100,20",
+    groundDetail: "ash", canopyStyle: "charred",
+    trunkWide: 0.9, crownY: 0.40,
+  },
+};
+
+function getEntPalette(region: MapTheme): EntPalette {
+  return ENT_PALETTES[region] || ENT_PALETTES.grassland;
+}
+
+// ── Shared leaf-shape drawing ────────────────────────────────────────────────
+function drawLeafShape(
+  ctx: CanvasRenderingContext2D,
+  lx: number, ly: number, lLen: number, lWid: number, rot: number,
+) {
+  ctx.save();
+  ctx.translate(lx, ly);
+  ctx.rotate(rot);
+  ctx.beginPath();
+  ctx.moveTo(-lLen, 0);
+  ctx.bezierCurveTo(-lLen * 0.5, -lWid * 1.2, lLen * 0.3, -lWid * 0.9, lLen, 0);
+  ctx.bezierCurveTo(lLen * 0.3, lWid * 0.9, -lLen * 0.5, lWid * 1.2, -lLen, 0);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ── Shared pine needle cluster ───────────────────────────────────────────────
+function drawPineNeedleCluster(
+  ctx: CanvasRenderingContext2D,
+  cx: number, cy: number, size: number, time: number, zoom: number,
+  colors: string[], count: number, spread: number,
+) {
+  for (let n = 0; n < count; n++) {
+    const nAngle = (n / count) * TAU + Math.sin(time * 1.5 + n) * 0.1;
+    const nLen = size * (spread + Math.sin(n * 2.7) * spread * 0.2);
+    ctx.strokeStyle = colors[n % colors.length];
+    ctx.globalAlpha = 0.7 + Math.sin(time * 2 + n) * 0.2;
+    ctx.lineWidth = (1.2 + Math.sin(n * 1.3) * 0.4) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(nAngle) * nLen, cy + Math.sin(nAngle) * nLen * 0.5);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 2. ANCIENT ENT — Regional living tree with gnarled bark, glowing heartwood, and creeping roots
 export function drawAncientEntEnemy(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, size: number,
   bodyColor: string, bodyColorDark: string, bodyColorLight: string,
   time: number, zoom: number, attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ): void {
+  const pal = getEntPalette(region);
   const isAttacking = attackPhase > 0;
   size *= 1.7;
   const sway = Math.sin(time * 1.2) * size * 0.015;
   const breathScale = 1 + Math.sin(time * 1.5) * 0.015;
   const rootBurst = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.8 : 0;
   const sapPulse = 0.5 + Math.sin(time * 2) * 0.3;
-  const seasonHue = (Math.sin(time * 0.1) + 1) * 0.5;
+  const tW = pal.trunkWide;
 
-  // Ground moss / mushroom growth around base
-  for (let gm = 0; gm < 10; gm++) {
-    const gmAngle = gm * (TAU / 10) + Math.sin(gm * 1.7) * 0.3;
-    const gmDist = size * 0.28 + Math.sin(gm * 2.3) * size * 0.05;
-    const gmx = x + Math.cos(gmAngle) * gmDist;
-    const gmy = y + size * 0.42 + Math.sin(gmAngle) * gmDist * ISO_Y_RATIO * 0.3;
-    ctx.fillStyle = `rgba(40,100,30,${0.25 + Math.sin(time + gm) * 0.08})`;
-    ctx.beginPath();
-    ctx.ellipse(gmx, gmy, size * 0.025, size * 0.012, gmAngle, 0, TAU);
-    ctx.fill();
-  }
-  // Tiny mushroom colony around base
-  for (let ms = 0; ms < 6; ms++) {
-    const msAngle = ms * (TAU / 6) + 0.5;
-    const msDist = size * 0.25 + Math.sin(ms * 3.1) * size * 0.04;
-    const msx = x + Math.cos(msAngle) * msDist;
-    const msy = y + size * 0.43 + Math.sin(msAngle) * msDist * ISO_Y_RATIO * 0.3;
-    ctx.fillStyle = "#d4a574";
-    ctx.beginPath();
-    ctx.moveTo(msx, msy);
-    ctx.lineTo(msx - size * 0.005, msy + size * 0.018);
-    ctx.lineTo(msx + size * 0.005, msy + size * 0.018);
-    ctx.fill();
-    ctx.fillStyle = ms % 2 === 0 ? "#c0392b" : "#e67e22";
-    ctx.beginPath();
-    ctx.ellipse(msx, msy, size * 0.012, size * 0.008, 0, 0, Math.PI);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
-    for (let dot = 0; dot < 2; dot++) {
+  // === GROUND DETAILS (region-specific) ===
+  if (pal.groundDetail === "moss" || pal.groundDetail === "lichen") {
+    for (let gm = 0; gm < 10; gm++) {
+      const gmAngle = gm * (TAU / 10) + Math.sin(gm * 1.7) * 0.3;
+      const gmDist = size * 0.28 + Math.sin(gm * 2.3) * size * 0.05;
+      const gmx = x + Math.cos(gmAngle) * gmDist;
+      const gmy = y + size * 0.42 + Math.sin(gmAngle) * gmDist * ISO_Y_RATIO * 0.3;
+      const mc = pal.groundDetail === "lichen" ? "60,80,40" : "40,100,30";
+      ctx.fillStyle = `rgba(${mc},${0.25 + Math.sin(time + gm) * 0.08})`;
       ctx.beginPath();
-      ctx.arc(msx + (dot - 0.5) * size * 0.006, msy - size * 0.003, size * 0.002, 0, TAU);
+      ctx.ellipse(gmx, gmy, size * 0.025, size * 0.012, gmAngle, 0, TAU);
+      ctx.fill();
+    }
+    if (pal.groundDetail === "moss") {
+      for (let ms = 0; ms < 6; ms++) {
+        const msAngle = ms * (TAU / 6) + 0.5;
+        const msDist = size * 0.25 + Math.sin(ms * 3.1) * size * 0.04;
+        const msx = x + Math.cos(msAngle) * msDist;
+        const msy = y + size * 0.43 + Math.sin(msAngle) * msDist * ISO_Y_RATIO * 0.3;
+        ctx.fillStyle = "#d4a574";
+        ctx.beginPath();
+        ctx.moveTo(msx, msy); ctx.lineTo(msx - size * 0.005, msy + size * 0.018); ctx.lineTo(msx + size * 0.005, msy + size * 0.018);
+        ctx.fill();
+        ctx.fillStyle = ms % 2 === 0 ? "#c0392b" : "#e67e22";
+        ctx.beginPath();
+        ctx.ellipse(msx, msy, size * 0.012, size * 0.008, 0, 0, Math.PI);
+        ctx.fill();
+      }
+    }
+  } else if (pal.groundDetail === "sand") {
+    for (let sd = 0; sd < 8; sd++) {
+      const sdAngle = sd * (TAU / 8) + Math.sin(sd * 2.1) * 0.4;
+      const sdDist = size * 0.22 + Math.sin(sd * 1.7) * size * 0.06;
+      const sdx = x + Math.cos(sdAngle) * sdDist;
+      const sdy = y + size * 0.44 + Math.sin(sdAngle) * sdDist * ISO_Y_RATIO * 0.3;
+      ctx.fillStyle = `rgba(180,160,110,${0.2 + Math.sin(time * 0.8 + sd) * 0.06})`;
+      ctx.beginPath();
+      ctx.ellipse(sdx, sdy, size * 0.03, size * 0.01, sdAngle * 0.5, 0, TAU);
+      ctx.fill();
+    }
+    // Scattered dry thorns
+    for (let th = 0; th < 5; th++) {
+      const thAngle = th * (TAU / 5) + 1.0;
+      const thDist = size * 0.2 + Math.sin(th * 3) * size * 0.04;
+      const thx = x + Math.cos(thAngle) * thDist;
+      const thy = y + size * 0.42 + Math.sin(thAngle) * thDist * ISO_Y_RATIO * 0.3;
+      ctx.strokeStyle = "#7a5a30";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(thx, thy);
+      ctx.lineTo(thx + Math.cos(thAngle) * size * 0.03, thy - size * 0.025);
+      ctx.stroke();
+    }
+  } else if (pal.groundDetail === "snow") {
+    for (let sn = 0; sn < 12; sn++) {
+      const snAngle = sn * (TAU / 12) + Math.sin(sn * 1.9) * 0.3;
+      const snDist = size * 0.2 + Math.sin(sn * 2.5) * size * 0.08;
+      const snx = x + Math.cos(snAngle) * snDist;
+      const sny = y + size * 0.42 + Math.sin(snAngle) * snDist * ISO_Y_RATIO * 0.3;
+      ctx.fillStyle = `rgba(220,230,250,${0.35 + Math.sin(time * 0.5 + sn) * 0.1})`;
+      ctx.beginPath();
+      ctx.ellipse(snx, sny, size * 0.035, size * 0.015, snAngle * 0.3, 0, TAU);
+      ctx.fill();
+    }
+  } else if (pal.groundDetail === "ash") {
+    for (let as2 = 0; as2 < 10; as2++) {
+      const asAngle = as2 * (TAU / 10) + Math.sin(as2 * 2.3) * 0.3;
+      const asDist = size * 0.24 + Math.sin(as2 * 1.9) * size * 0.05;
+      const asx = x + Math.cos(asAngle) * asDist;
+      const asy = y + size * 0.43 + Math.sin(asAngle) * asDist * ISO_Y_RATIO * 0.3;
+      ctx.fillStyle = `rgba(40,35,30,${0.3 + Math.sin(time * 0.6 + as2) * 0.08})`;
+      ctx.beginPath();
+      ctx.ellipse(asx, asy, size * 0.028, size * 0.012, asAngle, 0, TAU);
+      ctx.fill();
+    }
+    // Smoldering embers on ground
+    for (let em = 0; em < 4; em++) {
+      const emAngle = em * (TAU / 4) + 0.8;
+      const emDist = size * 0.18 + Math.sin(em * 2.7) * size * 0.04;
+      const emAlpha = 0.3 + Math.sin(time * 3 + em * 2) * 0.2;
+      const emx = x + Math.cos(emAngle) * emDist;
+      const emy = y + size * 0.44 + Math.sin(emAngle) * emDist * ISO_Y_RATIO * 0.3;
+      ctx.fillStyle = `rgba(255,100,20,${emAlpha})`;
+      ctx.beginPath();
+      ctx.arc(emx, emy, size * 0.008, 0, TAU);
       ctx.fill();
     }
   }
 
-  // Creeping root tendrils gripping the ground
+  // === ROOTS (all regions) ===
   ctx.lineWidth = 3 * zoom;
-  for (let r = 0; r < 10; r++) {
-    const rootAngle = -Math.PI + r * (TAU / 10);
+  const rootCount = pal.canopyStyle === "charred" ? 6 : 10;
+  for (let r = 0; r < rootCount; r++) {
+    const rootAngle = -Math.PI + r * (TAU / rootCount);
     const rootLen = size * (0.35 + rootBurst * 0.25) + Math.sin(time * 1.5 + r * 1.3) * size * 0.04;
     const rootWiggle = Math.sin(time * 2 + r * 0.7) * size * 0.03;
     const rootG = ctx.createLinearGradient(x, y + size * 0.35, x + Math.cos(rootAngle) * rootLen, y + size * 0.45);
-    rootG.addColorStop(0, bodyColorDark);
-    rootG.addColorStop(0.5, bodyColor);
-    rootG.addColorStop(1, "#3a2510");
+    rootG.addColorStop(0, pal.bark[1]);
+    rootG.addColorStop(0.5, pal.bark[0]);
+    rootG.addColorStop(1, pal.bark[3]);
     ctx.strokeStyle = rootG;
     ctx.beginPath();
     ctx.moveTo(x, y + size * 0.35);
@@ -762,33 +924,18 @@ export function drawAncientEntEnemy(
       y + size * 0.45 + Math.sin(rootAngle + time) * size * 0.02,
     );
     ctx.stroke();
+    // Root tip fingers
     const rTipX = x + Math.cos(rootAngle) * rootLen;
     const rTipY = y + size * 0.45 + Math.sin(rootAngle + time) * size * 0.02;
-    ctx.fillStyle = bodyColorDark;
-    ctx.beginPath();
-    ctx.moveTo(rTipX - size * 0.015, rTipY - size * 0.01);
-    ctx.bezierCurveTo(rTipX - size * 0.022, rTipY + size * 0.005, rTipX - size * 0.012, rTipY + size * 0.02, rTipX, rTipY + size * 0.018);
-    ctx.bezierCurveTo(rTipX + size * 0.012, rTipY + size * 0.02, rTipX + size * 0.022, rTipY + size * 0.005, rTipX + size * 0.015, rTipY - size * 0.01);
-    ctx.bezierCurveTo(rTipX + size * 0.008, rTipY - size * 0.018, rTipX - size * 0.008, rTipY - size * 0.018, rTipX - size * 0.015, rTipY - size * 0.01);
-    ctx.closePath();
-    ctx.fill();
-    for (let rg = -2; rg <= 2; rg++) {
-      const fingerAngle = rootAngle + rg * 0.3;
-      const fingerLen = size * (0.025 + Math.abs(rg) * 0.005);
-      const fEndX = rTipX + Math.cos(fingerAngle) * fingerLen;
-      const fEndY = rTipY + Math.abs(Math.sin(fingerAngle)) * fingerLen * 0.4 + size * 0.008;
-      const fCtrlX = rTipX + Math.cos(fingerAngle) * fingerLen * 0.5;
-      const fCtrlY = rTipY + size * 0.005;
-      ctx.strokeStyle = "#3a2510";
-      ctx.lineWidth = (1.4 - Math.abs(rg) * 0.15) * zoom;
+    for (let rg = -1; rg <= 1; rg++) {
+      const fingerAngle = rootAngle + rg * 0.35;
+      const fingerLen = size * 0.02;
+      ctx.strokeStyle = pal.bark[3];
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(rTipX, rTipY);
-      ctx.quadraticCurveTo(fCtrlX, fCtrlY, fEndX, fEndY);
+      ctx.lineTo(rTipX + Math.cos(fingerAngle) * fingerLen, rTipY + Math.abs(Math.sin(fingerAngle)) * fingerLen * 0.4 + size * 0.006);
       ctx.stroke();
-      ctx.fillStyle = "#2a1808";
-      ctx.beginPath();
-      ctx.arc(fEndX, fEndY, size * 0.004, 0, TAU);
-      ctx.fill();
     }
     ctx.lineWidth = 3 * zoom;
   }
@@ -799,180 +946,159 @@ export function drawAncientEntEnemy(
       const angle = p * (TAU / 10);
       const dist = rootBurst * size * 0.5;
       const pAlpha = rootBurst * 0.6;
-      ctx.fillStyle = `rgba(101,67,33,${pAlpha})`;
+      const pColor = pal.groundDetail === "ash" ? "80,40,20" : pal.groundDetail === "snow" ? "180,200,220" : "101,67,33";
+      ctx.fillStyle = `rgba(${pColor},${pAlpha})`;
       ctx.beginPath();
       ctx.ellipse(x + Math.cos(angle) * dist, y + size * 0.4 + Math.sin(angle) * dist * ISO_Y_RATIO, size * 0.025, size * 0.025 * ISO_Y_RATIO, 0, 0, TAU);
       ctx.fill();
     }
   }
 
-  // Regeneration particles rising
-  for (let rp = 0; rp < 8; rp++) {
-    const rpPhase = (time * 0.6 + rp * 0.125) % 1;
-    const rpx = x - size * 0.22 + rp * size * 0.065 + Math.sin(time + rp) * size * 0.04;
-    const rpy = y + size * 0.2 - rpPhase * size * 0.7;
-    const rpAlpha = Math.sin(rpPhase * Math.PI) * 0.45;
-    ctx.fillStyle = `rgba(74,222,128,${rpAlpha})`;
-    ctx.beginPath();
-    ctx.arc(rpx, rpy, size * 0.012, 0, TAU);
-    ctx.fill();
-  }
-
-  // Regeneration glow
-  setShadowBlur(ctx, 5 * zoom, "rgba(74,222,128,0.3)");
+  // Ambient aura
+  setShadowBlur(ctx, 5 * zoom, pal.sapGlow);
   drawRadialAura(ctx, x, y, size * 0.55, [
-    { offset: 0, color: "rgba(74,222,128,0.08)" },
-    { offset: 0.5, color: "rgba(34,197,94,0.04)" },
-    { offset: 1, color: "rgba(34,197,94,0)" },
+    { offset: 0, color: `rgba(${pal.auraColor},0.08)` },
+    { offset: 0.5, color: `rgba(${pal.auraColor},0.04)` },
+    { offset: 1, color: `rgba(${pal.auraColor},0)` },
   ]);
   clearShadow(ctx);
 
-  // Main trunk body
-  const trunkGrad = ctx.createLinearGradient(x - size * 0.22, y, x + size * 0.22, y);
-  trunkGrad.addColorStop(0, bodyColorDark);
-  trunkGrad.addColorStop(0.2, bodyColor);
-  trunkGrad.addColorStop(0.5, bodyColorLight);
-  trunkGrad.addColorStop(0.8, bodyColor);
-  trunkGrad.addColorStop(1, bodyColorDark);
+  // === TRUNK (region-specific shape) ===
+  const trunkGrad = ctx.createLinearGradient(x - size * 0.22 * tW, y, x + size * 0.22 * tW, y);
+  trunkGrad.addColorStop(0, pal.bark[0]);
+  trunkGrad.addColorStop(0.2, pal.bark[1]);
+  trunkGrad.addColorStop(0.5, pal.bark[2]);
+  trunkGrad.addColorStop(0.8, pal.bark[1]);
+  trunkGrad.addColorStop(1, pal.bark[0]);
   ctx.fillStyle = trunkGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y + size * 0.35);
-  ctx.quadraticCurveTo(x - size * 0.28 * breathScale, y + size * 0.1, x - size * 0.22, y - size * 0.15);
-  ctx.quadraticCurveTo(x - size * 0.15, y - size * 0.38, x, y - size * 0.42);
-  ctx.quadraticCurveTo(x + size * 0.15, y - size * 0.38, x + size * 0.22, y - size * 0.15);
-  ctx.quadraticCurveTo(x + size * 0.28 * breathScale, y + size * 0.1, x + size * 0.2, y + size * 0.35);
-  ctx.closePath();
-  ctx.fill();
 
-  // Deep bark crack lines (vertical)
-  ctx.lineWidth = 1.4 * zoom;
-  for (let b = 0; b < 14; b++) {
-    const bx = x - size * 0.18 + b * size * 0.028;
-    const bDepth = 0.3 + Math.sin(b * 2.1) * 0.2;
-    ctx.strokeStyle = `rgba(30,18,8,${bDepth})`;
+  if (pal.canopyStyle === "acacia") {
+    // Thinner, gnarled trunk that widens at base — baobab/acacia style
     ctx.beginPath();
-    ctx.moveTo(bx + sway * 0.3, y + size * 0.32);
-    ctx.bezierCurveTo(
-      bx + Math.sin(b * 1.2) * size * 0.012 + sway * 0.4, y + size * 0.15,
-      bx + Math.sin(b * 0.9) * size * 0.015 + sway * 0.6, y - size * 0.1,
-      bx + Math.sin(b * 0.8) * size * 0.01 + sway, y - size * 0.32,
-    );
-    ctx.stroke();
-  }
-  // Horizontal bark cracks
-  ctx.strokeStyle = "rgba(30,18,8,0.25)";
-  ctx.lineWidth = 1 * zoom;
-  for (let hc = 0; hc < 7; hc++) {
-    const hcy = y + size * 0.25 - hc * size * 0.09;
+    ctx.moveTo(x - size * 0.22 * tW, y + size * 0.35);
+    ctx.bezierCurveTo(x - size * 0.25 * tW, y + size * 0.15, x - size * 0.14 * tW, y - size * 0.05, x - size * 0.1, y - size * 0.25);
+    ctx.quadraticCurveTo(x - size * 0.06, y - size * 0.4, x, y - size * pal.crownY);
+    ctx.quadraticCurveTo(x + size * 0.06, y - size * 0.4, x + size * 0.1, y - size * 0.25);
+    ctx.bezierCurveTo(x + size * 0.14 * tW, y - size * 0.05, x + size * 0.25 * tW, y + size * 0.15, x + size * 0.22 * tW, y + size * 0.35);
+    ctx.closePath();
+    ctx.fill();
+  } else if (pal.canopyStyle === "pine") {
+    // Straight, columnar trunk — conifer style
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.19, hcy + Math.sin(hc) * size * 0.01);
-    ctx.quadraticCurveTo(x, hcy - Math.sin(hc * 1.3) * size * 0.008, x + size * 0.19, hcy - Math.sin(hc) * size * 0.01);
-    ctx.stroke();
-  }
-  // Bark plate highlights
-  ctx.fillStyle = "rgba(255,255,255,0.04)";
-  for (let bp = 0; bp < 8; bp++) {
-    const bpx = x - size * 0.14 + bp * size * 0.04;
-    const bpy = y - size * 0.1 + Math.sin(bp * 2.5) * size * 0.15;
+    ctx.moveTo(x - size * 0.14 * tW, y + size * 0.35);
+    ctx.lineTo(x - size * 0.12 * tW, y + size * 0.1);
+    ctx.quadraticCurveTo(x - size * 0.13 * tW, y - size * 0.15, x - size * 0.1, y - size * 0.35);
+    ctx.quadraticCurveTo(x - size * 0.06, y - size * pal.crownY - size * 0.05, x, y - size * pal.crownY);
+    ctx.quadraticCurveTo(x + size * 0.06, y - size * pal.crownY - size * 0.05, x + size * 0.1, y - size * 0.35);
+    ctx.quadraticCurveTo(x + size * 0.13 * tW, y - size * 0.15, x + size * 0.12 * tW, y + size * 0.1);
+    ctx.lineTo(x + size * 0.14 * tW, y + size * 0.35);
+    ctx.closePath();
+    ctx.fill();
+  } else if (pal.canopyStyle === "charred") {
+    // Twisted, broken trunk — burnt dead tree
     ctx.beginPath();
-    ctx.ellipse(bpx + sway * 0.5, bpy, size * 0.015, size * 0.03, Math.sin(bp) * 0.3, 0, TAU);
+    ctx.moveTo(x - size * 0.18 * tW, y + size * 0.35);
+    ctx.bezierCurveTo(x - size * 0.22 * tW, y + size * 0.15, x - size * 0.2 * tW + sway, y - size * 0.05, x - size * 0.15, y - size * 0.2);
+    ctx.bezierCurveTo(x - size * 0.18, y - size * 0.3, x - size * 0.08, y - size * 0.38, x + sway * 0.5, y - size * pal.crownY);
+    ctx.bezierCurveTo(x + size * 0.08, y - size * 0.38, x + size * 0.18, y - size * 0.3, x + size * 0.15, y - size * 0.2);
+    ctx.bezierCurveTo(x + size * 0.2 * tW + sway, y - size * 0.05, x + size * 0.22 * tW, y + size * 0.15, x + size * 0.18 * tW, y + size * 0.35);
+    ctx.closePath();
+    ctx.fill();
+    // Charred cracks with ember glow
+    for (let cc = 0; cc < 6; cc++) {
+      const ccx = x - size * 0.1 + cc * size * 0.04;
+      const ccAlpha = 0.3 + Math.sin(time * 2.5 + cc * 1.4) * 0.2;
+      ctx.strokeStyle = `rgba(255,80,20,${ccAlpha})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ccx + sway * 0.3, y + size * 0.25);
+      ctx.bezierCurveTo(ccx + Math.sin(cc) * size * 0.015 + sway * 0.5, y + size * 0.05, ccx + sway * 0.7, y - size * 0.15, ccx + sway, y - size * 0.3);
+      ctx.stroke();
+    }
+  } else if (pal.canopyStyle === "mangrove") {
+    // Twisted, wide base with aerial roots — mangrove/cypress
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.24 * tW, y + size * 0.35);
+    ctx.bezierCurveTo(x - size * 0.3 * tW, y + size * 0.2, x - size * 0.2 * tW, y + size * 0.08, x - size * 0.16, y - size * 0.05);
+    ctx.bezierCurveTo(x - size * 0.18, y - size * 0.2, x - size * 0.12, y - size * 0.32, x, y - size * pal.crownY);
+    ctx.bezierCurveTo(x + size * 0.12, y - size * 0.32, x + size * 0.18, y - size * 0.2, x + size * 0.16, y - size * 0.05);
+    ctx.bezierCurveTo(x + size * 0.2 * tW, y + size * 0.08, x + size * 0.3 * tW, y + size * 0.2, x + size * 0.24 * tW, y + size * 0.35);
+    ctx.closePath();
+    ctx.fill();
+    // Hanging moss/vines from trunk
+    ctx.lineWidth = 0.8 * zoom;
+    for (let hm = 0; hm < 6; hm++) {
+      const hmx = x - size * 0.1 + hm * size * 0.04;
+      const hmLen = size * (0.08 + Math.sin(hm * 2.3) * 0.03);
+      const hmAlpha = 0.3 + Math.sin(time * 1.2 + hm) * 0.1;
+      ctx.strokeStyle = `rgba(80,100,50,${hmAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(hmx + sway * 0.5, y + size * 0.05 - hm * size * 0.04);
+      ctx.quadraticCurveTo(hmx + sway * 0.3 + Math.sin(time * 1.5 + hm) * size * 0.01, y + size * 0.05 - hm * size * 0.04 + hmLen * 0.6, hmx + Math.sin(time * 0.8 + hm) * size * 0.015 + sway * 0.2, y + size * 0.05 - hm * size * 0.04 + hmLen);
+      ctx.stroke();
+    }
+  } else {
+    // Default deciduous — wide oak-style trunk
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.2 * tW, y + size * 0.35);
+    ctx.quadraticCurveTo(x - size * 0.28 * tW * breathScale, y + size * 0.1, x - size * 0.22, y - size * 0.15);
+    ctx.quadraticCurveTo(x - size * 0.15, y - size * 0.38, x, y - size * pal.crownY);
+    ctx.quadraticCurveTo(x + size * 0.15, y - size * 0.38, x + size * 0.22, y - size * 0.15);
+    ctx.quadraticCurveTo(x + size * 0.28 * tW * breathScale, y + size * 0.1, x + size * 0.2 * tW, y + size * 0.35);
+    ctx.closePath();
     ctx.fill();
   }
 
-  // Glowing sap veins pulsing through the trunk
+  // Bark crack lines (all regions)
+  ctx.lineWidth = 1.4 * zoom;
+  for (let b = 0; b < 14; b++) {
+    const bx = x - size * 0.18 * tW + b * size * 0.028 * tW;
+    const bDepth = 0.3 + Math.sin(b * 2.1) * 0.2;
+    ctx.strokeStyle = `rgba(${pal.canopyStyle === "charred" ? "10,8,6" : "30,18,8"},${bDepth})`;
+    ctx.beginPath();
+    ctx.moveTo(bx + sway * 0.3, y + size * 0.32);
+    ctx.bezierCurveTo(bx + Math.sin(b * 1.2) * size * 0.012 + sway * 0.4, y + size * 0.15, bx + Math.sin(b * 0.9) * size * 0.015 + sway * 0.6, y - size * 0.1, bx + Math.sin(b * 0.8) * size * 0.01 + sway, y - size * 0.32);
+    ctx.stroke();
+  }
+
+  // Glowing sap veins
   const sapGlow = sapPulse * 0.8;
-  setShadowBlur(ctx, 5 * zoom, `rgba(100,255,100,${sapGlow})`);
+  setShadowBlur(ctx, 5 * zoom, pal.sapGlow);
   ctx.lineWidth = 2 * zoom;
   for (let sv = 0; sv < 6; sv++) {
     const svx = x - size * 0.12 + sv * size * 0.05;
     const svy1 = y + size * 0.25 - sv * size * 0.04;
     const svy2 = y - size * 0.15 - sv * size * 0.03;
     const svAlpha = sapGlow * (0.5 + Math.sin(time * 3 + sv * 1.2) * 0.3);
-    ctx.strokeStyle = `rgba(100,255,100,${svAlpha})`;
+    ctx.strokeStyle = pal.sapColor.replace("VAL", String(svAlpha));
     ctx.beginPath();
     ctx.moveTo(svx + sway * 0.3, svy1);
-    ctx.bezierCurveTo(
-      svx + Math.sin(sv * 1.5) * size * 0.02 + sway * 0.5, (svy1 + svy2) * 0.5,
-      svx + Math.sin(sv * 0.8 + 1) * size * 0.025 + sway * 0.7, (svy1 + svy2) * 0.5 - size * 0.05,
-      svx + Math.sin(sv * 1.1) * size * 0.015 + sway, svy2,
-    );
+    ctx.bezierCurveTo(svx + Math.sin(sv * 1.5) * size * 0.02 + sway * 0.5, (svy1 + svy2) * 0.5, svx + Math.sin(sv * 0.8 + 1) * size * 0.025 + sway * 0.7, (svy1 + svy2) * 0.5 - size * 0.05, svx + Math.sin(sv * 1.1) * size * 0.015 + sway, svy2);
     ctx.stroke();
-    // Sap node glow points
-    const nodeY = (svy1 + svy2) * 0.5 + Math.sin(sv * 2) * size * 0.05;
-    ctx.fillStyle = `rgba(120,255,120,${svAlpha * 0.6})`;
-    ctx.beginPath();
-    ctx.arc(svx + sway * 0.5 + Math.sin(sv * 1.5) * size * 0.015, nodeY, size * 0.008, 0, TAU);
-    ctx.fill();
   }
   clearShadow(ctx);
 
-  // Moss patches with organic irregular shapes
-  for (let m = 0; m < 8; m++) {
-    const mx = x - size * 0.16 + m * size * 0.045 + Math.sin(m * 3.7) * size * 0.02 + sway * 0.4;
-    const my = y + size * 0.12 - m * size * 0.05;
-    const mossG = ctx.createRadialGradient(mx, my, 0, mx, my, size * 0.025);
-    mossG.addColorStop(0, `rgba(50,140,50,${0.4 + Math.sin(time * 1.5 + m) * 0.08})`);
-    mossG.addColorStop(1, "rgba(40,100,30,0.1)");
-    ctx.fillStyle = mossG;
-    const mR = size * 0.025;
-    ctx.beginPath();
-    ctx.moveTo(mx - mR, my);
-    ctx.bezierCurveTo(mx - mR * 0.8, my - mR * 0.9, mx - mR * 0.2, my - mR * 0.7 - size * 0.004, mx + mR * 0.1, my - mR * 0.6);
-    ctx.bezierCurveTo(mx + mR * 0.5, my - mR * 0.8, mx + mR * 0.9, my - mR * 0.5, mx + mR, my + mR * 0.1);
-    ctx.bezierCurveTo(mx + mR * 0.85, my + mR * 0.7, mx + mR * 0.3, my + mR * 0.8, mx - mR * 0.1, my + mR * 0.6);
-    ctx.bezierCurveTo(mx - mR * 0.6, my + mR * 0.75, mx - mR * 0.95, my + mR * 0.4, mx - mR, my);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Small mushrooms on trunk
-  for (let ms = 0; ms < 4; ms++) {
-    const msx = x + (ms - 1.5) * size * 0.08 + size * 0.12;
-    const msy = y + size * 0.08 - ms * size * 0.08;
-    ctx.fillStyle = "#d4a574";
-    ctx.beginPath();
-    ctx.moveTo(msx + sway * 0.4, msy);
-    ctx.lineTo(msx - size * 0.008 + sway * 0.4, msy + size * 0.025);
-    ctx.lineTo(msx + size * 0.008 + sway * 0.4, msy + size * 0.025);
-    ctx.fill();
-    ctx.fillStyle = ms % 2 === 0 ? "#c0392b" : "#e67e22";
-    ctx.beginPath();
-    ctx.ellipse(msx + sway * 0.4, msy, size * 0.015, size * 0.01, 0, 0, Math.PI);
-    ctx.fill();
-  }
-
-  // Branch arms with twig fingers
+  // === BRANCH ARMS ===
   for (const side of [-1, 1]) {
-    const branchAngle = side * (0.8 + Math.sin(time * 1.5 + side * 2) * 0.15);
-    const bx = x + side * size * 0.18;
+    const branchAngle = side * (0.8 + Math.sin(time * 1.5 + side * 2) * 0.15) + (isAttacking ? side * Math.sin(attackPhase * Math.PI) * 0.3 : 0);
+    const bx = x + side * size * 0.18 * tW;
     const by2 = y - size * 0.2;
     ctx.save();
     ctx.translate(bx + sway, by2);
     ctx.rotate(branchAngle);
-    // Main branch with bark gradient
     const brG = ctx.createLinearGradient(0, size * 0.02, size * 0.25, -size * 0.02);
-    brG.addColorStop(0, bodyColor);
-    brG.addColorStop(0.5, bodyColorDark);
-    brG.addColorStop(1, "#3a2510");
+    brG.addColorStop(0, pal.bark[1]);
+    brG.addColorStop(0.5, pal.bark[0]);
+    brG.addColorStop(1, pal.bark[3]);
     ctx.strokeStyle = brG;
     ctx.lineWidth = 6 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.quadraticCurveTo(size * 0.1, -size * 0.05, size * 0.25, -size * 0.02);
     ctx.stroke();
-    // Bark texture on branch
-    ctx.strokeStyle = "rgba(30,18,8,0.3)";
-    ctx.lineWidth = 0.6 * zoom;
-    for (let bt = 0; bt < 4; bt++) {
-      const btx = size * 0.05 + bt * size * 0.05;
-      ctx.beginPath();
-      ctx.moveTo(btx, -size * 0.025);
-      ctx.lineTo(btx + size * 0.01, size * 0.015);
-      ctx.stroke();
-    }
     // Sub-branches
     ctx.lineWidth = 2.5 * zoom;
-    ctx.strokeStyle = bodyColorDark;
+    ctx.strokeStyle = pal.bark[0];
     for (let sb = 0; sb < 4; sb++) {
       const sbx = size * 0.06 + sb * size * 0.055;
       ctx.beginPath();
@@ -980,137 +1106,237 @@ export function drawAncientEntEnemy(
       ctx.lineTo(sbx + size * 0.06, -size * 0.08 - sb * size * 0.015);
       ctx.stroke();
     }
-    // Twig fingers at branch tip
+    // Twig fingers
     ctx.lineWidth = 1 * zoom;
-    ctx.strokeStyle = "#4a3020";
+    ctx.strokeStyle = pal.bark[3];
     for (let tw = 0; tw < 5; tw++) {
       const twAngle = -0.6 + tw * 0.3;
       ctx.beginPath();
       ctx.moveTo(size * 0.24, -size * 0.02);
       ctx.lineTo(size * 0.24 + Math.cos(twAngle) * size * 0.06, -size * 0.02 + Math.sin(twAngle) * size * 0.06);
       ctx.stroke();
-      ctx.fillStyle = "#4a3020";
-      ctx.beginPath();
-      ctx.arc(size * 0.24 + Math.cos(twAngle) * size * 0.06, -size * 0.02 + Math.sin(twAngle) * size * 0.06, size * 0.004, 0, TAU);
-      ctx.fill();
     }
-    const greenLeaves = ["#22c55e", "#16a34a", "#4ade80"];
-    const autumnLeaves = ["#e67e22", "#c0392b", "#f1c40f"];
-    for (let lc = 0; lc < 7; lc++) {
-      const lcx = size * 0.12 + lc * size * 0.025;
-      const lcy = -size * 0.05 - lc * size * 0.015 + Math.sin(time * 3 + lc) * size * 0.01;
-      const leafSet = seasonHue > 0.6 ? autumnLeaves : greenLeaves;
-      ctx.fillStyle = leafSet[lc % 3];
-      ctx.globalAlpha = 0.7 + Math.sin(time * 2 + lc * 1.5) * 0.2;
-      const lRot = lc * 0.5;
-      const lLen = size * 0.022;
-      const lWid = size * 0.013;
-      ctx.save();
-      ctx.translate(lcx, lcy);
-      ctx.rotate(lRot);
-      ctx.beginPath();
-      ctx.moveTo(-lLen, 0);
-      ctx.bezierCurveTo(-lLen * 0.5, -lWid * 1.2, lLen * 0.3, -lWid * 0.9, lLen, 0);
-      ctx.bezierCurveTo(lLen * 0.3, lWid * 0.9, -lLen * 0.5, lWid * 1.2, -lLen, 0);
-      ctx.fill();
-      ctx.strokeStyle = leafSet[lc % 3];
-      ctx.globalAlpha *= 0.5;
-      ctx.lineWidth = 0.3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(-lLen * 0.8, 0);
-      ctx.lineTo(lLen * 0.8, 0);
-      ctx.stroke();
-      ctx.restore();
+    // Leaves on branches (not for charred)
+    if (pal.canopyStyle !== "charred") {
+      for (let lc = 0; lc < 7; lc++) {
+        const lcx = size * 0.12 + lc * size * 0.025;
+        const lcy = -size * 0.05 - lc * size * 0.015 + Math.sin(time * 3 + lc) * size * 0.01;
+        ctx.fillStyle = pal.leafColors[lc % pal.leafColors.length];
+        ctx.globalAlpha = 0.7 + Math.sin(time * 2 + lc * 1.5) * 0.2;
+        drawLeafShape(ctx, lcx, lcy, size * 0.022, size * 0.013, lc * 0.5);
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
-  // Falling leaf particles
-  for (let fl = 0; fl < 5; fl++) {
+  // === CANOPY / CROWN (region-specific) ===
+  const crownY = y - size * pal.crownY;
+
+  if (pal.canopyStyle === "deciduous") {
+    // Large rounded deciduous canopy — layered leaf clusters
+    for (let layer = 0; layer < 3; layer++) {
+      const lOff = (layer - 1) * size * 0.06;
+      const lR = size * (0.28 - layer * 0.03);
+      const lRy = lR * 0.6;
+      for (let cl = 0; cl < 18; cl++) {
+        const angle = cl * (TAU / 18) + Math.sin(time * 1.5 + cl + layer) * 0.15;
+        const dist = lR + Math.sin(time * 2 + cl * 0.8 + layer) * size * 0.02;
+        const lx2 = x + Math.cos(angle) * dist + sway + lOff * 0.3;
+        const ly = crownY - layer * size * 0.04 + Math.sin(angle) * dist * 0.3;
+        ctx.fillStyle = pal.leafColors[cl % pal.leafColors.length];
+        ctx.globalAlpha = 0.6 + Math.sin(time * 2.5 + cl + layer) * 0.25;
+        drawLeafShape(ctx, lx2, ly, size * 0.03, size * 0.02, angle);
+      }
+    }
+    ctx.globalAlpha = 1;
+  } else if (pal.canopyStyle === "mangrove") {
+    // Droopy, spreading canopy with hanging aerial roots
+    for (let cl = 0; cl < 20; cl++) {
+      const angle = cl * (TAU / 20) + Math.sin(time * 1.2 + cl) * 0.2;
+      const dist = size * 0.24 + Math.sin(time * 1.8 + cl * 0.9) * size * 0.025;
+      const lx2 = x + Math.cos(angle) * dist + sway;
+      const ly = crownY + size * 0.02 + Math.sin(angle) * dist * 0.4;
+      ctx.fillStyle = pal.leafColors[cl % pal.leafColors.length];
+      ctx.globalAlpha = 0.55 + Math.sin(time * 2 + cl) * 0.2;
+      drawLeafShape(ctx, lx2, ly, size * 0.025, size * 0.016, angle + 0.5);
+    }
+    ctx.globalAlpha = 1;
+    // Hanging moss strands from canopy
+    ctx.lineWidth = 0.7 * zoom;
+    for (let hm = 0; hm < 10; hm++) {
+      const hmAngle = hm * (TAU / 10) + 0.3;
+      const hmDist = size * 0.2;
+      const hmx = x + Math.cos(hmAngle) * hmDist + sway;
+      const hmy = crownY + Math.sin(hmAngle) * hmDist * 0.3;
+      const hmLen = size * (0.08 + Math.sin(hm * 1.7) * 0.03);
+      ctx.strokeStyle = `rgba(120,140,80,${0.25 + Math.sin(time * 1.0 + hm) * 0.08})`;
+      ctx.beginPath();
+      ctx.moveTo(hmx, hmy);
+      ctx.quadraticCurveTo(hmx + Math.sin(time + hm) * size * 0.015, hmy + hmLen * 0.6, hmx + Math.sin(time * 0.7 + hm) * size * 0.02, hmy + hmLen);
+      ctx.stroke();
+    }
+  } else if (pal.canopyStyle === "acacia") {
+    // Flat, umbrella-shaped canopy — acacia/savanna
+    const umbrellaW = size * 0.38;
+    const umbrellaH = size * 0.08;
+    for (let layer = 0; layer < 2; layer++) {
+      const layerY = crownY - layer * size * 0.03;
+      const layerW = umbrellaW - layer * size * 0.04;
+      for (let cl = 0; cl < 14; cl++) {
+        const t2 = cl / 13;
+        const lx2 = x - layerW + t2 * layerW * 2 + sway + Math.sin(time * 1.5 + cl) * size * 0.01;
+        const ly = layerY - Math.sin(t2 * Math.PI) * umbrellaH + Math.sin(time * 2 + cl) * size * 0.008;
+        ctx.fillStyle = pal.leafColors[cl % pal.leafColors.length];
+        ctx.globalAlpha = 0.55 + Math.sin(time * 2 + cl + layer) * 0.2;
+        drawLeafShape(ctx, lx2, ly, size * 0.022, size * 0.012, t2 * 2 - 1);
+      }
+    }
+    ctx.globalAlpha = 1;
+    // Seed pods hanging
+    for (let sp = 0; sp < 4; sp++) {
+      const spx = x + (sp - 1.5) * size * 0.12 + sway;
+      const spy = crownY + size * 0.03 + Math.sin(time * 2 + sp) * size * 0.005;
+      ctx.fillStyle = "#8a7040";
+      ctx.beginPath();
+      ctx.ellipse(spx, spy, size * 0.006, size * 0.015, Math.sin(time + sp) * 0.2, 0, TAU);
+      ctx.fill();
+    }
+  } else if (pal.canopyStyle === "pine") {
+    // Layered conical pine tiers — Christmas tree shape
+    const tiers = 5;
+    for (let t2 = 0; t2 < tiers; t2++) {
+      const tierY = crownY + t2 * size * 0.06;
+      const tierW = size * (0.08 + t2 * 0.05);
+      const tierDark = pal.leafColors[0];
+      const tierLight = pal.leafColors[t2 % pal.leafColors.length];
+      const tierGrad = ctx.createLinearGradient(x - tierW, tierY, x + tierW, tierY);
+      tierGrad.addColorStop(0, tierDark);
+      tierGrad.addColorStop(0.5, tierLight);
+      tierGrad.addColorStop(1, tierDark);
+      ctx.fillStyle = tierGrad;
+      ctx.beginPath();
+      ctx.moveTo(x + sway, tierY - size * 0.04);
+      ctx.lineTo(x - tierW + sway, tierY + size * 0.03);
+      ctx.lineTo(x + tierW + sway, tierY + size * 0.03);
+      ctx.closePath();
+      ctx.fill();
+      // Pine needle clusters on tier edges
+      drawPineNeedleCluster(ctx, x - tierW * 0.7 + sway, tierY + size * 0.01, size, time + t2, zoom, pal.leafColors, 5, 0.025);
+      drawPineNeedleCluster(ctx, x + tierW * 0.7 + sway, tierY + size * 0.01, size, time + t2 + 1, zoom, pal.leafColors, 5, 0.025);
+    }
+    // Snow on pine tiers
+    if (pal.groundDetail === "snow") {
+      for (let st = 0; st < tiers; st++) {
+        const stY = crownY + st * size * 0.06;
+        const stW = size * (0.06 + st * 0.04);
+        ctx.fillStyle = `rgba(230,240,255,${0.5 + Math.sin(time * 0.5 + st) * 0.1})`;
+        ctx.beginPath();
+        ctx.moveTo(x - stW * 0.8 + sway, stY + size * 0.015);
+        ctx.quadraticCurveTo(x + sway, stY - size * 0.015, x + stW * 0.8 + sway, stY + size * 0.015);
+        ctx.quadraticCurveTo(x + sway, stY + size * 0.005, x - stW * 0.8 + sway, stY + size * 0.015);
+        ctx.fill();
+      }
+      // Icicles hanging from lower tiers
+      for (let ic = 0; ic < 6; ic++) {
+        const icx = x + (ic - 2.5) * size * 0.06 + sway;
+        const icy = crownY + (tiers - 1) * size * 0.06 + size * 0.03;
+        const icLen = size * (0.02 + Math.sin(ic * 2.3) * 0.01);
+        ctx.fillStyle = `rgba(180,210,240,${0.6 + Math.sin(time * 2 + ic) * 0.15})`;
+        ctx.beginPath();
+        ctx.moveTo(icx - size * 0.004, icy);
+        ctx.lineTo(icx, icy + icLen);
+        ctx.lineTo(icx + size * 0.004, icy);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  } else if (pal.canopyStyle === "charred") {
+    // No real canopy — just broken branch stubs and embers at top
+    for (let stub = 0; stub < 6; stub++) {
+      const stubAngle = (stub / 6) * TAU + Math.sin(stub * 2.1) * 0.3;
+      const stubLen = size * (0.08 + Math.sin(stub * 1.7) * 0.03);
+      const stubX = x + Math.cos(stubAngle) * size * 0.08 + sway;
+      const stubY = crownY + Math.sin(stubAngle) * size * 0.06;
+      ctx.strokeStyle = pal.bark[0];
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(stubX, stubY);
+      ctx.lineTo(stubX + Math.cos(stubAngle) * stubLen, stubY + Math.sin(stubAngle) * stubLen * 0.4 - size * 0.02);
+      ctx.stroke();
+    }
+    // Ember particles rising from top
+    for (let ep = 0; ep < 8; ep++) {
+      const epPhase = (time * 0.8 + ep * 0.35) % 1;
+      const epx = x + Math.sin(time * 1.5 + ep * 2.3) * size * 0.12 + sway;
+      const epy = crownY - epPhase * size * 0.25;
+      const epAlpha = (1 - epPhase) * 0.6;
+      const epSize2 = size * (0.008 + Math.sin(ep * 1.7) * 0.003) * (1 - epPhase * 0.5);
+      setShadowBlur(ctx, 3 * zoom, `rgba(255,120,20,${epAlpha})`);
+      ctx.fillStyle = `rgba(255,${Math.floor(80 + ep * 20)},20,${epAlpha})`;
+      ctx.beginPath();
+      ctx.arc(epx, epy, epSize2, 0, TAU);
+      ctx.fill();
+    }
+    clearShadow(ctx);
+    // Smoke wisps
+    for (let sm = 0; sm < 4; sm++) {
+      const smPhase = (time * 0.3 + sm * 0.5) % 2;
+      const smx = x + Math.sin(time * 0.5 + sm * 3) * size * 0.1 + sway;
+      const smy = crownY - size * 0.05 - smPhase * size * 0.2;
+      const smAlpha = Math.sin(smPhase * Math.PI * 0.5) * 0.15;
+      ctx.fillStyle = `rgba(80,70,60,${smAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(smx, smy, size * 0.025 + smPhase * size * 0.015, size * 0.012 + smPhase * size * 0.008, 0, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // === FALLING PARTICLES (region-specific) ===
+  for (let fl = 0; fl < 6; fl++) {
     const flPhase = (time * 0.3 + fl * 0.4) % 2;
     const flx = x + Math.sin(time * 0.6 + fl * 1.8) * size * 0.25 + sway;
     const fly = y - size * 0.35 + flPhase * size * 0.45;
     const flAlpha = Math.sin(flPhase * Math.PI * 0.5) * 0.5;
     if (flAlpha > 0.05) {
-      const leafColor = seasonHue > 0.6 ? ["#e67e22", "#c0392b", "#f1c40f"] : ["#22c55e", "#16a34a", "#4ade80"];
-      ctx.fillStyle = leafColor[fl % 3];
-      ctx.globalAlpha = flAlpha;
-      ctx.save();
-      ctx.translate(flx, fly);
-      ctx.rotate(time * 2 + fl * 1.5);
-      const flL = size * 0.015;
-      const flW = size * 0.008;
-      ctx.beginPath();
-      ctx.moveTo(-flL, 0);
-      ctx.bezierCurveTo(-flL * 0.5, -flW * 1.2, flL * 0.3, -flW * 0.9, flL, 0);
-      ctx.bezierCurveTo(flL * 0.3, flW * 0.9, -flL * 0.5, flW * 1.2, -flL, 0);
-      ctx.fill();
-      ctx.strokeStyle = leafColor[fl % 3];
-      ctx.globalAlpha *= 0.4;
-      ctx.lineWidth = 0.2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(-flL * 0.7, 0);
-      ctx.lineTo(flL * 0.7, 0);
-      ctx.stroke();
-      ctx.restore();
+      if (pal.canopyStyle === "charred") {
+        // Ash flakes
+        ctx.fillStyle = `rgba(60,50,40,${flAlpha})`;
+        ctx.beginPath();
+        ctx.arc(flx, fly, size * 0.006, 0, TAU);
+        ctx.fill();
+      } else if (pal.canopyStyle === "pine" && pal.groundDetail === "snow") {
+        // Snowflakes
+        ctx.fillStyle = `rgba(${pal.particleColor},${flAlpha})`;
+        ctx.beginPath();
+        ctx.arc(flx, fly, size * 0.005 + Math.sin(time * 4 + fl) * size * 0.002, 0, TAU);
+        ctx.fill();
+      } else {
+        // Leaves
+        ctx.fillStyle = pal.leafColors[fl % pal.leafColors.length];
+        ctx.globalAlpha = flAlpha;
+        ctx.save();
+        ctx.translate(flx, fly);
+        ctx.rotate(time * 2 + fl * 1.5);
+        const flL = size * 0.015;
+        const flW2 = size * 0.008;
+        ctx.beginPath();
+        ctx.moveTo(-flL, 0);
+        ctx.bezierCurveTo(-flL * 0.5, -flW2 * 1.2, flL * 0.3, -flW2 * 0.9, flL, 0);
+        ctx.bezierCurveTo(flL * 0.3, flW2 * 0.9, -flL * 0.5, flW2 * 1.2, -flL, 0);
+        ctx.fill();
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
     }
   }
-  ctx.globalAlpha = 1;
 
-  // Firefly / spore particles
-  for (let sp = 0; sp < 6; sp++) {
-    const spPhase = (time * 0.4 + sp * 0.5) % 2;
-    const spx = x + Math.sin(time * 0.8 + sp * 2.1) * size * 0.3;
-    const spy = y - size * 0.1 + Math.cos(time * 0.6 + sp * 1.7) * size * 0.25;
-    const spAlpha = Math.sin(spPhase * Math.PI) * 0.4;
-    setShadowBlur(ctx, 3 * zoom, `rgba(200,255,150,${spAlpha})`);
-    ctx.fillStyle = `rgba(200,255,150,${spAlpha})`;
-    ctx.beginPath();
-    ctx.arc(spx, spy, size * 0.005, 0, TAU);
-    ctx.fill();
-  }
-  clearShadow(ctx);
-
-  // Bird perched on shoulder
-  const birdSide = Math.sin(time * 0.3) > 0 ? 1 : -1;
-  const birdX = x + birdSide * size * 0.2 + sway;
-  const birdY = y - size * 0.28 + Math.sin(time * 4) * size * 0.005;
-  ctx.fillStyle = "#4a6a8a";
-  ctx.beginPath();
-  ctx.ellipse(birdX, birdY, size * 0.012, size * 0.009, 0, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "#3a5a7a";
-  ctx.beginPath();
-  ctx.ellipse(birdX + birdSide * size * 0.008, birdY - size * 0.006, size * 0.006, size * 0.005, 0, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "#e8b830";
-  ctx.beginPath();
-  ctx.moveTo(birdX + birdSide * size * 0.014, birdY - size * 0.005);
-  ctx.lineTo(birdX + birdSide * size * 0.02, birdY - size * 0.004);
-  ctx.lineTo(birdX + birdSide * size * 0.014, birdY - size * 0.003);
-  ctx.fill();
-  ctx.fillStyle = "#111";
-  ctx.beginPath();
-  ctx.arc(birdX + birdSide * size * 0.01, birdY - size * 0.007, size * 0.002, 0, TAU);
-  ctx.fill();
-
-  // Insect ambient particles
-  for (let ins = 0; ins < 4; ins++) {
-    const insAngle = time * 5 + ins * (TAU / 4);
-    const insDist = size * 0.15 + Math.sin(time * 3 + ins) * size * 0.04;
-    const insx = x + Math.cos(insAngle) * insDist;
-    const insy = y - size * 0.15 + Math.sin(insAngle) * insDist * 0.4;
-    ctx.fillStyle = "rgba(60,50,30,0.3)";
-    ctx.beginPath();
-    ctx.arc(insx, insy, size * 0.003, 0, TAU);
-    ctx.fill();
-  }
-
+  // === FACE (all regions — eye knots and mouth) ===
   const faceY = y - size * 0.22;
   for (const side of [-1, 1]) {
     const knotX = x + side * size * 0.06 + sway;
-    ctx.fillStyle = "#0a0500";
+    // Eye socket knothole
+    ctx.fillStyle = pal.bark[3];
     ctx.beginPath();
     ctx.moveTo(knotX - size * 0.025, faceY - size * 0.01);
     ctx.bezierCurveTo(knotX - size * 0.035, faceY - size * 0.03, knotX + size * 0.01, faceY - size * 0.04, knotX + size * 0.025, faceY - size * 0.015);
@@ -1118,14 +1344,15 @@ export function drawAncientEntEnemy(
     ctx.bezierCurveTo(knotX - size * 0.02, faceY + size * 0.035, knotX - size * 0.035, faceY + size * 0.015, knotX - size * 0.025, faceY - size * 0.01);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(60,40,15,0.3)";
+    // Bark rings around knothole
+    ctx.strokeStyle = `rgba(60,40,15,0.3)`;
     ctx.lineWidth = 1 * zoom;
     for (let bkr = 0; bkr < 3; bkr++) {
-      const bkrR = size * (0.035 + bkr * 0.008);
       ctx.beginPath();
-      ctx.arc(knotX, faceY, bkrR, -0.8 + bkr * 0.15, 2.2 - bkr * 0.2);
+      ctx.arc(knotX, faceY, size * (0.035 + bkr * 0.008), -0.8 + bkr * 0.15, 2.2 - bkr * 0.2);
       ctx.stroke();
     }
+    // Inner knothole
     ctx.fillStyle = "#1a0a00";
     ctx.beginPath();
     ctx.moveTo(knotX - size * 0.02, faceY - size * 0.005);
@@ -1134,155 +1361,52 @@ export function drawAncientEntEnemy(
     ctx.bezierCurveTo(knotX - size * 0.015, faceY + size * 0.022, knotX - size * 0.025, faceY + size * 0.008, knotX - size * 0.02, faceY - size * 0.005);
     ctx.closePath();
     ctx.fill();
-    // Deep green glow
-    setShadowBlur(ctx, 6 * zoom, "#00ff44");
-    const eyeG = ctx.createRadialGradient(
-      x + side * size * 0.06 + sway, faceY, 0,
-      x + side * size * 0.06 + sway, faceY, size * 0.018,
-    );
-    eyeG.addColorStop(0, `rgba(150,255,150,${0.8 + Math.sin(time * 3) * 0.2})`);
-    eyeG.addColorStop(0.5, `rgba(0,255,68,${0.6 + Math.sin(time * 3) * 0.3})`);
-    eyeG.addColorStop(1, "rgba(0,200,50,0.1)");
+    // Glowing eye
+    setShadowBlur(ctx, 6 * zoom, pal.eyeColor);
+    const eyeG = ctx.createRadialGradient(knotX, faceY, 0, knotX, faceY, size * 0.018);
+    eyeG.addColorStop(0, `rgba(255,255,255,${0.8 + Math.sin(time * 3) * 0.2})`);
+    eyeG.addColorStop(0.3, pal.eyeGlow);
+    eyeG.addColorStop(1, pal.eyeGlow.replace("0.6", "0.1"));
     ctx.fillStyle = eyeG;
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.06 + sway, faceY, size * 0.018, 0, TAU);
+    ctx.arc(knotX, faceY, size * 0.018, 0, TAU);
     ctx.fill();
     clearShadow(ctx);
   }
+
+  // Mouth (bark crack opening)
   const mouthOpenAmt = isAttacking ? size * 0.012 : 0;
   ctx.fillStyle = "#0a0500";
-  ctx.beginPath();
   const mKx = x + sway, mKy = faceY + size * 0.08;
+  ctx.beginPath();
   ctx.moveTo(mKx - size * 0.035, mKy);
   ctx.bezierCurveTo(mKx - size * 0.03, mKy - size * 0.018 - mouthOpenAmt, mKx + size * 0.015, mKy - size * 0.02 - mouthOpenAmt, mKx + size * 0.035, mKy - size * 0.005);
   ctx.bezierCurveTo(mKx + size * 0.04, mKy + size * 0.01, mKx + size * 0.02, mKy + size * 0.02 + mouthOpenAmt, mKx, mKy + size * 0.018 + mouthOpenAmt);
   ctx.bezierCurveTo(mKx - size * 0.02, mKy + size * 0.016 + mouthOpenAmt, mKx - size * 0.04, mKy + size * 0.008, mKx - size * 0.035, mKy);
   ctx.closePath();
   ctx.fill();
-  // Amber glow inside mouth
   if (isAttacking) {
-    setShadowBlur(ctx, 3 * zoom, "rgba(100,255,100,0.4)");
-    ctx.fillStyle = `rgba(100,255,100,${attackPhase * 0.3})`;
+    setShadowBlur(ctx, 3 * zoom, pal.sapGlow);
+    ctx.fillStyle = pal.sapColor.replace("VAL", String(attackPhase * 0.3));
     ctx.beginPath();
-    ctx.ellipse(x + sway, faceY + size * 0.08, size * 0.02, size * 0.008, 0, 0, TAU);
+    ctx.ellipse(mKx, mKy, size * 0.02, size * 0.008, 0, 0, TAU);
     ctx.fill();
     clearShadow(ctx);
   }
 
-  for (let cl = 0; cl < 16; cl++) {
-    const angle = cl * (TAU / 16) + Math.sin(time * 1.5 + cl) * 0.15;
-    const dist = size * 0.2 + Math.sin(time * 2 + cl * 0.8) * size * 0.025;
-    const lx2 = x + Math.cos(angle) * dist + sway;
-    const ly = y - size * 0.42 + Math.sin(angle) * dist * 0.3;
-    const greenSet = ["#16a34a", "#22c55e", "#4ade80", "#15803d"];
-    const autumnSet = ["#d97706", "#c0392b", "#f1c40f", "#a3522b"];
-    const leafSet = seasonHue > 0.6 ? autumnSet : greenSet;
-    ctx.fillStyle = leafSet[cl % 4];
-    ctx.globalAlpha = 0.65 + Math.sin(time * 2.5 + cl) * 0.25;
-    const cLeafLen = size * 0.028;
-    const cLeafWid = size * 0.018;
-    ctx.save();
-    ctx.translate(lx2, ly);
-    ctx.rotate(angle);
+  // === AMBIENT PARTICLES ===
+  for (let sp = 0; sp < 6; sp++) {
+    const spPhase = (time * 0.4 + sp * 0.5) % 2;
+    const spx = x + Math.sin(time * 0.8 + sp * 2.1) * size * 0.3;
+    const spy = y - size * 0.1 + Math.cos(time * 0.6 + sp * 1.7) * size * 0.25;
+    const spAlpha = Math.sin(spPhase * Math.PI) * 0.4;
+    setShadowBlur(ctx, 3 * zoom, pal.sapGlow);
+    ctx.fillStyle = `rgba(${pal.particleColor},${spAlpha})`;
     ctx.beginPath();
-    ctx.moveTo(-cLeafLen, 0);
-    ctx.bezierCurveTo(-cLeafLen * 0.4, -cLeafWid * 1.3, cLeafLen * 0.4, -cLeafWid, cLeafLen, 0);
-    ctx.bezierCurveTo(cLeafLen * 0.4, cLeafWid, -cLeafLen * 0.4, cLeafWid * 1.3, -cLeafLen, 0);
-    ctx.fill();
-    ctx.strokeStyle = leafSet[cl % 4];
-    ctx.globalAlpha *= 0.4;
-    ctx.lineWidth = 0.3 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(-cLeafLen * 0.7, 0);
-    ctx.lineTo(cLeafLen * 0.7, 0);
-    ctx.stroke();
-    for (let vn = 0; vn < 2; vn++) {
-      const vnOff = (-0.3 + vn * 0.6) * cLeafLen;
-      ctx.beginPath();
-      ctx.moveTo(vnOff, 0);
-      ctx.lineTo(vnOff + cLeafLen * 0.15, -cLeafWid * 0.5);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(vnOff, 0);
-      ctx.lineTo(vnOff + cLeafLen * 0.15, cLeafWid * 0.5);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  ctx.globalAlpha = 1;
-
-  // Enhancement: Bioluminescent sap glow in bark cracks
-  for (let sap = 0; sap < 10; sap++) {
-    const sapAng = sap * (TAU / 10) + 0.3;
-    const sapDist2 = size * (0.06 + Math.sin(sap * 2.1) * 0.02);
-    const sapX = x + Math.cos(sapAng) * sapDist2 + sway;
-    const sapY2 = y - size * 0.15 + Math.sin(sapAng + time * 0.5) * size * 0.12;
-    const sapGlowInt = 0.4 + Math.sin(time * 2.5 + sap * 0.9) * 0.25;
-    const sapGlowG = ctx.createRadialGradient(sapX, sapY2, 0, sapX, sapY2, size * 0.02);
-    sapGlowG.addColorStop(0, `rgba(180,255,80,${sapGlowInt * 0.6})`);
-    sapGlowG.addColorStop(0.5, `rgba(120,220,40,${sapGlowInt * 0.25})`);
-    sapGlowG.addColorStop(1, 'rgba(80,180,20,0)');
-    ctx.fillStyle = sapGlowG;
-    ctx.beginPath();
-    ctx.arc(sapX, sapY2, size * 0.02, 0, TAU);
+    ctx.arc(spx, spy, size * 0.005, 0, TAU);
     ctx.fill();
   }
-
-  // Enhancement: Floating leaf/petal particles drifting from canopy
-  for (let dLeaf = 0; dLeaf < 6; dLeaf++) {
-    const dLeafPhase = (time * 0.4 + dLeaf * 1.2) % 3;
-    const dLeafDrift = Math.sin(time * 1.5 + dLeaf * 2) * size * 0.08;
-    const dLeafX = x + dLeafDrift + sway + (dLeaf - 2.5) * size * 0.06;
-    const dLeafY = y - size * 0.45 + dLeafPhase * size * 0.35;
-    const dLeafAlpha = (1 - dLeafPhase / 3) * 0.45;
-    const dLeafRot = time * 2 + dLeaf * 1.5;
-    if (dLeafAlpha > 0.02) {
-      ctx.save();
-      ctx.translate(dLeafX, dLeafY);
-      ctx.rotate(dLeafRot);
-      const leafRgb = seasonHue > 0.6 ? [200, 140, 40] : [60, 180, 40];
-      ctx.fillStyle = `rgba(${leafRgb[0]},${leafRgb[1]},${leafRgb[2]},${dLeafAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, size * 0.012, size * 0.006, 0, 0, TAU);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  // Enhancement: Root tendrils extending from base
-  for (let root = 0; root < 5; root++) {
-    const rootAng = root * (TAU / 5) + Math.sin(time * 0.8) * 0.15;
-    const rootLen = size * (0.12 + Math.sin(time * 1.2 + root) * 0.03) + rootBurst * size * 0.08;
-    const rootAlpha = 0.25 + Math.sin(time * 1.5 + root * 1.3) * 0.1;
-    ctx.strokeStyle = `rgba(60,40,20,${rootAlpha})`;
-    ctx.lineWidth = (2 + Math.sin(root * 1.4) * 0.8) * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x + Math.cos(rootAng) * size * 0.06, y + size * 0.35);
-    ctx.quadraticCurveTo(
-      x + Math.cos(rootAng) * rootLen * 0.6 + Math.sin(time + root) * size * 0.02,
-      y + size * 0.38 + Math.sin(rootAng) * rootLen * 0.2 * ISO_Y_RATIO,
-      x + Math.cos(rootAng) * rootLen,
-      y + size * 0.4 + Math.sin(rootAng) * rootLen * 0.3 * ISO_Y_RATIO
-    );
-    ctx.stroke();
-  }
-
-  // Enhancement: Bark shimmer highlight traveling across trunk
-  const entShimmerPos = (time * 0.6) % 1;
-  const entShimmerY = y + size * 0.2 - entShimmerPos * size * 0.5;
-  const entShimmerAlpha = Math.sin(entShimmerPos * Math.PI) * 0.15;
-  if (entShimmerAlpha > 0.01) {
-    const shimGrad = ctx.createLinearGradient(x - size * 0.06 + sway, entShimmerY, x + size * 0.06 + sway, entShimmerY);
-    shimGrad.addColorStop(0, 'rgba(255,255,200,0)');
-    shimGrad.addColorStop(0.3, `rgba(255,255,200,${entShimmerAlpha})`);
-    shimGrad.addColorStop(0.5, `rgba(255,255,220,${entShimmerAlpha * 1.5})`);
-    shimGrad.addColorStop(0.7, `rgba(255,255,200,${entShimmerAlpha})`);
-    shimGrad.addColorStop(1, 'rgba(255,255,200,0)');
-    ctx.fillStyle = shimGrad;
-    ctx.beginPath();
-    ctx.ellipse(x + sway, entShimmerY, size * 0.065, size * 0.015, 0, 0, TAU);
-    ctx.fill();
-  }
+  clearShadow(ctx);
 }
 
 // 3. FOREST TROLL — Green-skinned brute with a tree-trunk club
@@ -8719,6 +8843,20 @@ export function drawManticoreEnemy(
       ctx.arc(kneeX, kneeY, size * 0.015, 0, TAU);
       ctx.fill();
 
+      // Micro fur tufts at knee joint
+      ctx.strokeStyle = "rgba(50,25,10,0.3)";
+      ctx.lineWidth = 0.6 * zoom;
+      for (let kf = 0; kf < 3; kf++) {
+        const kfAngle = -0.8 + kf * 0.8 + side * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(kneeX + Math.cos(kfAngle) * size * 0.012, kneeY + Math.sin(kfAngle) * size * 0.008);
+        ctx.lineTo(
+          kneeX + Math.cos(kfAngle) * size * 0.025,
+          kneeY + Math.sin(kfAngle) * size * 0.018 + size * 0.005,
+        );
+        ctx.stroke();
+      }
+
       // Paw — broad feline pad shape
       const ppY = pawY + size * 0.012;
       ctx.fillStyle = bodyColorDark;
@@ -8783,6 +8921,26 @@ export function drawManticoreEnemy(
     }
   }
 
+  // Heat shimmer distortion aura
+  for (let hs = 0; hs < 4; hs++) {
+    const hsRadius = size * (0.28 + hs * 0.06);
+    const hsAlpha = 0.03 - hs * 0.006;
+    ctx.strokeStyle = `rgba(255,${160 - hs * 20},${60 - hs * 10},${hsAlpha})`;
+    ctx.lineWidth = (1.2 - hs * 0.2) * zoom;
+    ctx.beginPath();
+    const hsSegments = 32;
+    for (let seg = 0; seg <= hsSegments; seg++) {
+      const theta = (seg / hsSegments) * TAU;
+      const wobble = Math.sin(theta * 3 + time * 2.5 + hs * 1.4) * size * 0.012;
+      const hsx = x + Math.cos(theta) * (hsRadius + wobble);
+      const hsy = y - size * 0.04 - bodyBob + Math.sin(theta) * (hsRadius * 0.55 + wobble * 0.6);
+      if (seg === 0) ctx.moveTo(hsx, hsy);
+      else ctx.lineTo(hsx, hsy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
   // Muscular lion body — broad chest tapering to haunches
   const bodyGrad = ctx.createRadialGradient(x - size * 0.04, y - size * 0.03 - bodyBob, 0, x, y + size * 0.06, size * 0.32);
   bodyGrad.addColorStop(0, bodyColorLight);
@@ -8801,6 +8959,29 @@ export function drawManticoreEnemy(
   ctx.bezierCurveTo(x + size * 0.08, mbY - size * 0.2, x + size * 0.12, mbY - size * 0.19, x + size * 0.15, mbY - size * 0.18);
   ctx.closePath();
   ctx.fill();
+
+  // Per-scale crescent highlights for 3D scaly/muscular look
+  ctx.strokeStyle = `rgba(255,220,180,0.07)`;
+  ctx.lineWidth = 0.5 * zoom;
+  for (const side of [-1, 1]) {
+    const scalePositions: [number, number, number][] = [
+      [side * 0.08, -0.06, 0.3],
+      [side * 0.14, 0.0, 0.25],
+      [side * 0.10, 0.06, 0.2],
+      [side * 0.18, -0.03, 0.22],
+      [side * 0.06, 0.10, 0.18],
+    ];
+    for (const [sx, sy, sr] of scalePositions) {
+      ctx.beginPath();
+      ctx.arc(
+        x + sx * size, mbY + sy * size,
+        sr * size * 0.12,
+        -Math.PI * 0.6 + side * 0.3,
+        Math.PI * 0.4 + side * 0.3,
+      );
+      ctx.stroke();
+    }
+  }
 
   // Chest/shoulder muscle bulges with proper contour
   for (const side of [-1, 1]) {
@@ -8892,6 +9073,32 @@ export function drawManticoreEnemy(
     ctx.lineTo(
       x + Math.cos(mwAngle) * (mwDist + size * 0.08),
       y - size * 0.15 - bodyBob + Math.sin(mwAngle) * (mwDist + size * 0.08) * 0.5,
+    );
+    ctx.stroke();
+  }
+
+  // Mane sheen highlights along the top crown
+  ctx.lineWidth = 0.8 * zoom;
+  for (let sh = 0; sh < 5; sh++) {
+    const shAngle = -Math.PI * 0.6 + sh * 0.35;
+    const shDist = size * 0.13;
+    const shLen = size * 0.06;
+    const shAlpha = 0.1 + Math.sin(time * 3 + sh * 1.1) * 0.04;
+    const shX1 = x + Math.cos(shAngle) * shDist;
+    const shY1 = y - size * 0.15 - bodyBob + Math.sin(shAngle) * shDist * 0.5;
+    const shX2 = x + Math.cos(shAngle) * (shDist + shLen);
+    const shY2 = y - size * 0.15 - bodyBob + Math.sin(shAngle) * (shDist + shLen) * 0.5;
+    const sheenGrad = ctx.createLinearGradient(shX1, shY1, shX2, shY2);
+    sheenGrad.addColorStop(0, `rgba(255,240,180,0)`);
+    sheenGrad.addColorStop(0.4, `rgba(255,240,180,${shAlpha})`);
+    sheenGrad.addColorStop(1, `rgba(255,240,180,0)`);
+    ctx.strokeStyle = sheenGrad;
+    ctx.beginPath();
+    ctx.moveTo(shX1, shY1);
+    ctx.quadraticCurveTo(
+      (shX1 + shX2) * 0.5 + Math.sin(time * 2 + sh) * size * 0.008,
+      (shY1 + shY2) * 0.5 - size * 0.01,
+      shX2, shY2,
     );
     ctx.stroke();
   }
@@ -9150,7 +9357,7 @@ export function drawManticoreEnemy(
   // === Enhanced VFX: Golden amber eye glow ===
   const mcEyeA = 0.2 + Math.sin(time * 4) * 0.1 + snarl * 0.2;
   for (const mcES of [-1, 1]) {
-    const mcEyeX = x + size * 0.15;
+    const mcEyeX = x + mcES * size * 0.15;
     const mcEyeY = y - size * 0.08 - bodyBob + mcES * size * 0.02;
     const mcEyeR = size * 0.025;
     const mcEGrad = ctx.createRadialGradient(mcEyeX, mcEyeY, 0, mcEyeX, mcEyeY, mcEyeR);
@@ -12323,6 +12530,65 @@ export function drawLavaGolemEnemy(
     ctx.moveTo(x + side * size * 0.08, footY + size * 0.005);
     ctx.lineTo(x + side * size * 0.15, footY + size * 0.035);
     ctx.stroke();
+
+    // Rocky facet overlays on leg
+    const legCenterX = x + side * size * 0.12;
+    for (let rf = 0; rf < 4; rf++) {
+      const rfY = y + size * (0.15 + rf * 0.05) + legSwing * (rf / 4) - bodyBob;
+      const rfOff = (rf % 2 === 0 ? 1 : -1) * size * 0.015;
+      const rfShade = 20 + rf * 8;
+      ctx.fillStyle = `rgba(${rfShade + 20},${rfShade + 10},${rfShade},0.3)`;
+      ctx.beginPath();
+      ctx.moveTo(legCenterX + rfOff - size * 0.03, rfY);
+      ctx.lineTo(legCenterX + rfOff + size * 0.01, rfY - size * 0.018);
+      ctx.lineTo(legCenterX + rfOff + size * 0.04, rfY + size * 0.005);
+      ctx.lineTo(legCenterX + rfOff + size * 0.02, rfY + size * 0.02);
+      ctx.lineTo(legCenterX + rfOff - size * 0.02, rfY + size * 0.015);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Additional prominent lava vein cracks on legs
+    setShadowBlur(ctx, 4 * zoom, `rgba(255,80,0,${lavaPulse})`);
+    ctx.lineWidth = 1.4 * zoom;
+    for (let lv = 0; lv < 3; lv++) {
+      const lvStartY = y + size * (0.14 + lv * 0.06) - bodyBob;
+      const lvEndY = lvStartY + size * 0.05 + legSwing * 0.3;
+      const lvAlpha = lavaPulse * (0.5 + lv * 0.1);
+      ctx.strokeStyle = `rgba(255,${Math.floor(120 + lavaPulse * 50)},20,${lvAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(legCenterX + (lv - 1) * size * 0.02, lvStartY);
+      ctx.quadraticCurveTo(
+        legCenterX + (lv - 1) * size * 0.02 + side * size * 0.01,
+        (lvStartY + lvEndY) * 0.5,
+        legCenterX + (lv - 1) * size * 0.025, lvEndY
+      );
+      ctx.stroke();
+    }
+    clearShadow(ctx);
+
+    // Radial ground cracks from foot
+    const footCenterX = x + side * size * 0.12;
+    const footBaseY = footY + size * 0.04;
+    setShadowBlur(ctx, 3 * zoom, `rgba(255,100,0,${lavaPulse * 0.4})`);
+    for (let gc = 0; gc < 5; gc++) {
+      const gcAngle = (gc / 5) * Math.PI - Math.PI * 0.5;
+      const gcLen = size * (0.04 + Math.sin(time * 0.5 + gc * 1.7) * 0.01);
+      const gcEndX = footCenterX + Math.cos(gcAngle) * gcLen;
+      const gcEndY = footBaseY + Math.sin(gcAngle) * gcLen * 0.4;
+      const gcAlpha = lavaPulse * (0.2 + Math.sin(time + gc * 2) * 0.1);
+      const gcGrad = ctx.createLinearGradient(footCenterX, footBaseY, gcEndX, gcEndY);
+      gcGrad.addColorStop(0, `rgba(255,160,40,${gcAlpha})`);
+      gcGrad.addColorStop(0.6, `rgba(255,80,10,${gcAlpha * 0.5})`);
+      gcGrad.addColorStop(1, "rgba(180,40,0,0)");
+      ctx.strokeStyle = gcGrad;
+      ctx.lineWidth = (1.5 - gc * 0.15) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(footCenterX, footBaseY);
+      ctx.lineTo(gcEndX, gcEndY);
+      ctx.stroke();
+    }
+    clearShadow(ctx);
   }
 
   // Main body — massive angular obsidian torso with broad shoulders
@@ -12361,6 +12627,36 @@ export function drawLavaGolemEnemy(
       ctx.lineTo(x + plate[p][0] * size, y + plate[p][1] * size - bodyBob);
     }
     ctx.closePath();
+    ctx.stroke();
+  }
+
+  // 3D beveled highlight on each rock plate face
+  for (const plate of platePaths) {
+    let pcx = 0, pcy = 0;
+    for (const [px, py] of plate) { pcx += px; pcy += py; }
+    pcx /= plate.length;
+    pcy /= plate.length;
+    const hlGrad = ctx.createLinearGradient(
+      x + (pcx - 0.06) * size, y + (pcy - 0.06) * size - bodyBob,
+      x + (pcx + 0.04) * size, y + (pcy + 0.04) * size - bodyBob
+    );
+    hlGrad.addColorStop(0, "rgba(120,90,55,0.18)");
+    hlGrad.addColorStop(0.4, "rgba(80,55,30,0.06)");
+    hlGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = hlGrad;
+    ctx.beginPath();
+    ctx.moveTo(x + plate[0][0] * size, y + plate[0][1] * size - bodyBob);
+    for (let p = 1; p < plate.length; p++) {
+      ctx.lineTo(x + plate[p][0] * size, y + plate[p][1] * size - bodyBob);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(160,120,70,0.15)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + plate[0][0] * size, y + plate[0][1] * size - bodyBob);
+    ctx.lineTo(x + plate[1][0] * size, y + plate[1][1] * size - bodyBob);
+    ctx.lineTo(x + plate[2][0] * size, y + plate[2][1] * size - bodyBob);
     ctx.stroke();
   }
 
@@ -12451,13 +12747,21 @@ export function drawLavaGolemEnemy(
     ctx.fill();
     for (let sv = 0; sv < 5; sv++) {
       const svPhase = (time * 1.5 + sv * 0.2 + side * 0.5) % 1;
-      const svx = ventX + Math.sin(time * 3 + sv * 1.5) * size * 0.02 * svPhase;
-      const svy = ventY - svPhase * size * 0.2;
-      const svAlpha = (1 - svPhase) * 0.2;
-      ctx.fillStyle = `rgba(180,180,180,${svAlpha})`;
-      ctx.beginPath();
-      ctx.arc(svx, svy, size * (0.01 + svPhase * 0.015), 0, TAU);
-      ctx.fill();
+      const svBaseX = ventX + Math.sin(time * 3 + sv * 1.5) * size * 0.02 * svPhase;
+      const svBaseY = ventY - svPhase * size * 0.2;
+      for (let layer = 0; layer < 4; layer++) {
+        const layerScale = 1 + layer * 0.6;
+        const layerAlpha = (1 - svPhase) * (0.18 - layer * 0.04);
+        if (layerAlpha <= 0) continue;
+        const layerOff = Math.sin(time * 2 + sv * 2 + layer) * size * 0.008;
+        const grayCore = 140 + layer * 20;
+        ctx.fillStyle = `rgba(${grayCore},${grayCore},${grayCore + 10},${layerAlpha})`;
+        ctx.beginPath();
+        const eRadiusX = size * (0.01 + svPhase * 0.015) * layerScale;
+        const eRadiusY = eRadiusX * (0.6 + layer * 0.1);
+        ctx.ellipse(svBaseX + layerOff, svBaseY - layer * size * 0.008, eRadiusX, eRadiusY, 0, 0, TAU);
+        ctx.fill();
+      }
     }
   }
 
@@ -12505,6 +12809,29 @@ export function drawLavaGolemEnemy(
     ctx.quadraticCurveTo(size * 0.03, size * 0.12, 0, size * 0.22);
     ctx.stroke();
     clearShadow(ctx);
+
+    // Molten lava drips along arm
+    for (let drip = 0; drip < 3; drip++) {
+      const dripPhase = (time * 0.8 + drip * 0.33 + (side + 1) * 0.25) % 1;
+      const dripY = size * (0.04 + drip * 0.06) + dripPhase * size * 0.06;
+      const dripX = size * (0.01 - drip * 0.005) + side * size * 0.005;
+      const dripLen = size * 0.025 * (0.5 + dripPhase * 0.5);
+      const dripAlpha = (1 - dripPhase) * 0.7;
+      setShadowBlur(ctx, 3 * zoom, `rgba(255,140,0,${dripAlpha * 0.4})`);
+      const dripGrad = ctx.createLinearGradient(dripX, dripY, dripX, dripY + dripLen);
+      dripGrad.addColorStop(0, `rgba(255,240,100,${dripAlpha})`);
+      dripGrad.addColorStop(0.3, `rgba(255,180,40,${dripAlpha * 0.8})`);
+      dripGrad.addColorStop(0.7, `rgba(255,100,10,${dripAlpha * 0.5})`);
+      dripGrad.addColorStop(1, `rgba(180,40,0,${dripAlpha * 0.15})`);
+      ctx.fillStyle = dripGrad;
+      ctx.beginPath();
+      ctx.moveTo(dripX - size * 0.006, dripY);
+      ctx.quadraticCurveTo(dripX - size * 0.008, dripY + dripLen * 0.5, dripX, dripY + dripLen);
+      ctx.quadraticCurveTo(dripX + size * 0.008, dripY + dripLen * 0.5, dripX + size * 0.006, dripY);
+      ctx.closePath();
+      ctx.fill();
+      clearShadow(ctx);
+    }
 
     // Elbow joint lava glow
     ctx.fillStyle = `rgba(255,160,40,${lavaPulse * 0.3})`;
@@ -12774,21 +13101,48 @@ export function drawVolcanicDrakeEnemy(
   }
   ctx.lineCap = "butt";
 
-  // Flame orb at tail tip
+  // Multi-layer flame at tail tip
   setShadowBlur(ctx, 6 * zoom, "#ff4400");
-  const tailFlameSize = size * 0.03 + Math.sin(time * 8) * size * 0.01;
-  const tfGrad = ctx.createRadialGradient(prevTailX, prevTailY, 0, prevTailX, prevTailY, tailFlameSize);
-  tfGrad.addColorStop(0, `rgba(255,255,200,${0.8 + Math.sin(time * 9) * 0.15})`);
-  tfGrad.addColorStop(0.4, `rgba(255,150,0,0.6)`);
-  tfGrad.addColorStop(1, "rgba(255,60,0,0)");
-  ctx.fillStyle = tfGrad;
+  // Outer layer — dark red, largest
+  const tfOuter = size * 0.042 + Math.sin(time * 6.5) * size * 0.012;
+  const tfOuterWobX = Math.sin(time * 5.2) * size * 0.006;
+  const tfOuterWobY = Math.cos(time * 4.8) * size * 0.005;
+  const tfOuterGrad = ctx.createRadialGradient(prevTailX + tfOuterWobX, prevTailY + tfOuterWobY, 0, prevTailX + tfOuterWobX, prevTailY + tfOuterWobY, tfOuter);
+  tfOuterGrad.addColorStop(0, `rgba(200,40,10,${0.6 + Math.sin(time * 7) * 0.1})`);
+  tfOuterGrad.addColorStop(0.6, `rgba(180,25,0,0.3)`);
+  tfOuterGrad.addColorStop(1, "rgba(150,15,0,0)");
+  ctx.fillStyle = tfOuterGrad;
   ctx.beginPath();
-  ctx.arc(prevTailX, prevTailY, tailFlameSize, 0, TAU);
+  ctx.arc(prevTailX + tfOuterWobX, prevTailY + tfOuterWobY, tfOuter, 0, TAU);
+  ctx.fill();
+  // Middle layer — orange
+  const tfMid = size * 0.03 + Math.sin(time * 8.2) * size * 0.008;
+  const tfMidWobX = Math.sin(time * 6.5 + 1.2) * size * 0.004;
+  const tfMidWobY = Math.cos(time * 5.8 + 0.8) * size * 0.004;
+  const tfMidGrad = ctx.createRadialGradient(prevTailX + tfMidWobX, prevTailY + tfMidWobY, 0, prevTailX + tfMidWobX, prevTailY + tfMidWobY, tfMid);
+  tfMidGrad.addColorStop(0, `rgba(255,180,40,${0.75 + Math.sin(time * 9.5) * 0.12})`);
+  tfMidGrad.addColorStop(0.5, `rgba(255,120,0,0.5)`);
+  tfMidGrad.addColorStop(1, "rgba(255,70,0,0)");
+  ctx.fillStyle = tfMidGrad;
+  ctx.beginPath();
+  ctx.arc(prevTailX + tfMidWobX, prevTailY + tfMidWobY, tfMid, 0, TAU);
+  ctx.fill();
+  // Inner layer — bright yellow/white, smallest
+  const tfInner = size * 0.016 + Math.sin(time * 10.5) * size * 0.005;
+  const tfInnerWobX = Math.sin(time * 8.0 + 2.5) * size * 0.002;
+  const tfInnerWobY = Math.cos(time * 7.3 + 1.8) * size * 0.002;
+  const tfInnerGrad = ctx.createRadialGradient(prevTailX + tfInnerWobX, prevTailY + tfInnerWobY, 0, prevTailX + tfInnerWobX, prevTailY + tfInnerWobY, tfInner);
+  tfInnerGrad.addColorStop(0, `rgba(255,255,230,${0.9 + Math.sin(time * 11) * 0.1})`);
+  tfInnerGrad.addColorStop(0.5, `rgba(255,240,160,0.6)`);
+  tfInnerGrad.addColorStop(1, "rgba(255,200,80,0)");
+  ctx.fillStyle = tfInnerGrad;
+  ctx.beginPath();
+  ctx.arc(prevTailX + tfInnerWobX, prevTailY + tfInnerWobY, tfInner, 0, TAU);
   ctx.fill();
   // Flame wisps around tail tip
   for (let tw = 0; tw < 4; tw++) {
     const twAngle = time * 5 + tw * (TAU / 4);
-    const twDist = tailFlameSize * (1 + Math.sin(time * 7 + tw) * 0.4);
+    const twDist = tfOuter * (1 + Math.sin(time * 7 + tw) * 0.4);
     ctx.fillStyle = `rgba(255,${Math.floor(120 + Math.sin(time * 6 + tw) * 40)},0,${0.3 + Math.sin(time * 8 + tw * 2) * 0.15})`;
     ctx.beginPath();
     ctx.arc(prevTailX + Math.cos(twAngle) * twDist, prevTailY + Math.sin(twAngle) * twDist, size * 0.008, 0, TAU);
@@ -12831,6 +13185,43 @@ export function drawVolcanicDrakeEnemy(
     ctx.moveTo(side * size * 0.04, size * 0.01);
     ctx.quadraticCurveTo(side * size * 0.18, -size * 0.02, side * size * 0.34, -size * 0.02);
     ctx.stroke();
+
+    // Secondary branching veins for leathery membrane texture
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.strokeStyle = `rgba(180,70,20,${0.1 + internalFire * 0.05})`;
+    ctx.beginPath();
+    ctx.moveTo(side * size * 0.1, -size * 0.08);
+    ctx.bezierCurveTo(side * size * 0.14, -size * 0.15, side * size * 0.2, -size * 0.17, side * size * 0.26, -size * 0.14);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255,160,60,${0.08 + internalFire * 0.04})`;
+    ctx.beginPath();
+    ctx.moveTo(side * size * 0.08, -size * 0.02);
+    ctx.bezierCurveTo(side * size * 0.16, -size * 0.08, side * size * 0.24, -size * 0.1, side * size * 0.32, -size * 0.08);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(200,90,30,${0.09 + internalFire * 0.04})`;
+    ctx.beginPath();
+    ctx.moveTo(side * size * 0.06, size * 0.02);
+    ctx.bezierCurveTo(side * size * 0.12, -size * 0.01, side * size * 0.22, size * 0.01, side * size * 0.3, size * 0.02);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(160,60,15,${0.07 + internalFire * 0.03})`;
+    ctx.beginPath();
+    ctx.moveTo(side * size * 0.15, -size * 0.12);
+    ctx.bezierCurveTo(side * size * 0.18, -size * 0.06, side * size * 0.25, -size * 0.03, side * size * 0.33, -size * 0.05);
+    ctx.stroke();
+    // Dot highlights at vein intersections
+    const veinDots: [number, number][] = [
+      [side * size * 0.15, -size * 0.12],
+      [side * size * 0.22, -size * 0.1],
+      [side * size * 0.28, -size * 0.06],
+      [side * size * 0.18, -size * 0.02],
+      [side * size * 0.24, -size * 0.03],
+    ];
+    for (const [dx, dy] of veinDots) {
+      ctx.fillStyle = `rgba(255,200,120,${0.12 + internalFire * 0.06})`;
+      ctx.beginPath();
+      ctx.arc(dx, dy, size * 0.003, 0, TAU);
+      ctx.fill();
+    }
 
     // Wing bone structure (3 digits)
     ctx.strokeStyle = bodyColorDark;
@@ -12994,6 +13385,21 @@ export function drawVolcanicDrakeEnemy(
     }
   }
 
+  // Per-scale rim lighting pass
+  for (let row = -3; row <= 3; row++) {
+    for (let col = -4; col <= 4; col++) {
+      const scx = x + col * size * 0.035 + (row % 2) * size * 0.018;
+      const scy = y - bodyBob + row * size * 0.04;
+      const distFromCenter = Math.sqrt(Math.pow((scx - x) / (size * 0.23), 2) + Math.pow((scy - (y - bodyBob)) / (size * 0.21), 2));
+      if (distFromCenter > 0.85) continue;
+      ctx.strokeStyle = `rgba(255,200,100,${0.15 * (1 - distFromCenter * 0.6)})`;
+      ctx.lineWidth = 0.3 * zoom;
+      ctx.beginPath();
+      ctx.arc(scx, scy - size * 0.003, size * 0.011, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.stroke();
+    }
+  }
+
   // Chest glow — internal fire visible through scales
   const chestGrad = ctx.createRadialGradient(x, y + size * 0.02 - bodyBob, 0, x, y + size * 0.02 - bodyBob, size * 0.12);
   chestGrad.addColorStop(0, `rgba(255,200,80,${internalFire * 0.3})`);
@@ -13033,6 +13439,34 @@ export function drawVolcanicDrakeEnemy(
     ctx.lineTo(nsx + size * 0.006, nsy);
     ctx.closePath();
     ctx.fill();
+  }
+
+  // Spine plates along the back (between shoulders and head)
+  for (let sp = 0; sp < 6; sp++) {
+    const spFrac = sp / 6;
+    const spx = x + size * (-0.08 + spFrac * 0.22);
+    const spBaseY = y - size * (0.18 + spFrac * 0.04) - bodyBob;
+    const spBob = Math.sin(time * 3.5 + sp * 1.2) * size * 0.004;
+    const spH = size * (0.03 + sp * 0.003) + spBob;
+    const spW = size * 0.012;
+    const spGrad = ctx.createLinearGradient(spx, spBaseY, spx, spBaseY - spH);
+    spGrad.addColorStop(0, "#1a0800");
+    spGrad.addColorStop(0.5, bodyColorDark);
+    spGrad.addColorStop(0.85, "#ff8c20");
+    spGrad.addColorStop(1, "#ffb040");
+    ctx.fillStyle = spGrad;
+    ctx.beginPath();
+    ctx.moveTo(spx - spW, spBaseY);
+    ctx.lineTo(spx, spBaseY - spH);
+    ctx.lineTo(spx + spW, spBaseY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,180,80,${0.2 + Math.sin(time * 4 + sp) * 0.08})`;
+    ctx.lineWidth = 0.3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spx, spBaseY - spH);
+    ctx.lineTo(spx + spW * 0.5, spBaseY - spH * 0.3);
+    ctx.stroke();
   }
 
   // Head — angular horned dragon head with armored ridge and jaw structure
@@ -13224,22 +13658,32 @@ export function drawVolcanicDrakeEnemy(
   }
   clearShadow(ctx);
 
-  // Nostrils with smoke wisps
+  // Nostrils with layered smoke puffs
   for (const side of [-1, 1]) {
     ctx.fillStyle = "#1a0500";
     ctx.beginPath();
     ctx.arc(headX + size * 0.12, headY + side * size * 0.012, size * 0.007, 0, TAU);
     ctx.fill();
-    // Smoke wisps curling up
-    for (let sw = 0; sw < 3; sw++) {
-      const swPhase = (time * 1.8 + sw * 0.3 + side * 0.5) % 1;
-      const swx = headX + size * 0.12 + Math.sin(time * 3 + sw * 2 + side) * size * 0.015 * swPhase;
-      const swy = headY + side * size * 0.012 - swPhase * size * 0.06;
-      const swAlpha = (1 - swPhase) * 0.15;
-      ctx.fillStyle = `rgba(120,100,80,${swAlpha})`;
-      ctx.beginPath();
-      ctx.arc(swx, swy, size * (0.004 + swPhase * 0.006), 0, TAU);
-      ctx.fill();
+    // Multi-layered smoke puffs per nostril
+    for (let puff = 0; puff < 3; puff++) {
+      const puffDelay = puff * 0.35;
+      for (let layer = 0; layer < 3; layer++) {
+        const layerOffset = layer * 0.08;
+        const swPhase = (time * 1.5 + puffDelay + layerOffset + side * 0.5) % 1;
+        const drift = Math.sin(time * 2.5 + puff * 2.2 + layer * 1.1 + side) * size * 0.018 * swPhase;
+        const rise = swPhase * size * (0.05 + layer * 0.015);
+        const swx = headX + size * 0.12 + drift + Math.cos(time * 1.8 + layer) * size * 0.004;
+        const swy = headY + side * size * 0.012 - rise;
+        const layerSizes = [0.005, 0.007, 0.004];
+        const baseSize = size * (layerSizes[layer] + swPhase * 0.006);
+        const swAlpha = (1 - swPhase) * (0.14 - layer * 0.03);
+        if (swAlpha < 0.01) continue;
+        const grays = [100, 120, 85];
+        ctx.fillStyle = `rgba(${grays[layer]},${grays[layer] - 15},${grays[layer] - 30},${swAlpha})`;
+        ctx.beginPath();
+        ctx.arc(swx, swy, baseSize, 0, TAU);
+        ctx.fill();
+      }
     }
   }
 
@@ -13462,7 +13906,38 @@ export function drawSalamanderEnemy(
     const footX = kneeX + lp.side * size * 0.035 + Math.sin(legAngle) * size * 0.018;
     const footY = kneeY + size * 0.055 + Math.cos(legAngle) * size * 0.012;
 
-    // Upper leg with muscle gradient
+    // Upper leg filled volume
+    const ulDirX = kneeX - lx;
+    const ulDirY = kneeY - ly;
+    const ulDirLen = Math.sqrt(ulDirX * ulDirX + ulDirY * ulDirY) || 1;
+    const ulPerpX = -ulDirY / ulDirLen;
+    const ulPerpY = ulDirX / ulDirLen;
+    const ulVolW = 2.2 * zoom;
+    const ulVolGrad = ctx.createLinearGradient(
+      lx + ulPerpX * ulVolW, ly + ulPerpY * ulVolW,
+      lx - ulPerpX * ulVolW, ly - ulPerpY * ulVolW
+    );
+    ulVolGrad.addColorStop(0, bodyColorDark);
+    ulVolGrad.addColorStop(0.5, bodyColor);
+    ulVolGrad.addColorStop(1, bodyColorDark);
+    ctx.fillStyle = ulVolGrad;
+    ctx.beginPath();
+    ctx.moveTo(lx + ulPerpX * ulVolW * 0.5, ly + ulPerpY * ulVolW * 0.5);
+    ctx.quadraticCurveTo(
+      (lx + kneeX) * 0.5 + ulPerpX * ulVolW * 1.5,
+      (ly + kneeY) * 0.5 + ulPerpY * ulVolW * 1.5,
+      kneeX + ulPerpX * ulVolW * 0.3, kneeY + ulPerpY * ulVolW * 0.3
+    );
+    ctx.lineTo(kneeX - ulPerpX * ulVolW * 0.3, kneeY - ulPerpY * ulVolW * 0.3);
+    ctx.quadraticCurveTo(
+      (lx + kneeX) * 0.5 - ulPerpX * ulVolW * 1.5,
+      (ly + kneeY) * 0.5 - ulPerpY * ulVolW * 1.5,
+      lx - ulPerpX * ulVolW * 0.5, ly - ulPerpY * ulVolW * 0.5
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Upper leg stroke with muscle gradient
     const ulGrad = ctx.createLinearGradient(lx, ly, kneeX, kneeY);
     ulGrad.addColorStop(0, bodyColor);
     ulGrad.addColorStop(1, bodyColorDark);
@@ -13479,7 +13954,38 @@ export function drawSalamanderEnemy(
     ctx.arc(kneeX, kneeY, size * 0.008, 0, TAU);
     ctx.fill();
 
-    // Lower leg
+    // Lower leg filled volume
+    const llDirX = footX - kneeX;
+    const llDirY = footY - kneeY;
+    const llDirLen = Math.sqrt(llDirX * llDirX + llDirY * llDirY) || 1;
+    const llPerpX = -llDirY / llDirLen;
+    const llPerpY = llDirX / llDirLen;
+    const llVolW = 1.6 * zoom;
+    const llVolGrad = ctx.createLinearGradient(
+      kneeX + llPerpX * llVolW, kneeY + llPerpY * llVolW,
+      kneeX - llPerpX * llVolW, kneeY - llPerpY * llVolW
+    );
+    llVolGrad.addColorStop(0, bodyColorDark);
+    llVolGrad.addColorStop(0.5, bodyColor);
+    llVolGrad.addColorStop(1, bodyColorDark);
+    ctx.fillStyle = llVolGrad;
+    ctx.beginPath();
+    ctx.moveTo(kneeX + llPerpX * llVolW * 0.5, kneeY + llPerpY * llVolW * 0.5);
+    ctx.quadraticCurveTo(
+      (kneeX + footX) * 0.5 + llPerpX * llVolW * 1.3,
+      (kneeY + footY) * 0.5 + llPerpY * llVolW * 1.3,
+      footX + llPerpX * llVolW * 0.25, footY + llPerpY * llVolW * 0.25
+    );
+    ctx.lineTo(footX - llPerpX * llVolW * 0.25, footY - llPerpY * llVolW * 0.25);
+    ctx.quadraticCurveTo(
+      (kneeX + footX) * 0.5 - llPerpX * llVolW * 1.3,
+      (kneeY + footY) * 0.5 - llPerpY * llVolW * 1.3,
+      kneeX - llPerpX * llVolW * 0.5, kneeY - llPerpY * llVolW * 0.5
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Lower leg stroke
     const llGrad = ctx.createLinearGradient(kneeX, kneeY, footX, footY);
     llGrad.addColorStop(0, bodyColorDark);
     llGrad.addColorStop(1, bodyColor);
@@ -13504,15 +14010,33 @@ export function drawSalamanderEnemy(
       ctx.lineTo(toeEndX, toeEndY);
       ctx.stroke();
 
+      // Toe pad glow ring
+      ctx.fillStyle = `rgba(255,140,40,${0.12 + Math.sin(time * 3 + toe) * 0.04})`;
+      ctx.beginPath();
+      ctx.arc(toeEndX, toeEndY, size * 0.008, 0, TAU);
+      ctx.fill();
+
       // Toe pad
-      const padGrad = ctx.createRadialGradient(toeEndX, toeEndY, 0, toeEndX, toeEndY, size * 0.005);
-      padGrad.addColorStop(0, bodyColor);
+      const padGrad = ctx.createRadialGradient(toeEndX, toeEndY, 0, toeEndX, toeEndY, size * 0.006);
+      padGrad.addColorStop(0, bodyColorLight);
+      padGrad.addColorStop(0.5, bodyColor);
       padGrad.addColorStop(1, bodyColorDark);
       ctx.fillStyle = padGrad;
       ctx.beginPath();
-      ctx.arc(toeEndX, toeEndY, size * 0.005, 0, TAU);
+      ctx.arc(toeEndX, toeEndY, size * 0.006, 0, TAU);
       ctx.fill();
     }
+
+    // Ground scorch mark beneath foot
+    const scorchAlpha = 0.08 + Math.sin(time * 2 + lp.phase) * 0.03;
+    ctx.fillStyle = `rgba(40,20,5,${scorchAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(footX, footY + size * 0.015, size * 0.014, size * 0.006, lp.side * 0.3, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = `rgba(80,30,5,${scorchAlpha * 0.5})`;
+    ctx.beginPath();
+    ctx.ellipse(footX, footY + size * 0.018, size * 0.008, size * 0.003, lp.side * 0.2, 0, TAU);
+    ctx.fill();
   }
 
   // Elongated body — sleek lizard torso with distinct shoulder and hip bulges
@@ -13579,6 +14103,24 @@ export function drawSalamanderEnemy(
     }
   }
 
+  // Scale rim-light highlight pass
+  ctx.lineWidth = 0.3 * zoom;
+  for (let row = -2; row <= 2; row++) {
+    for (let col = -4; col <= 4; col++) {
+      const rlx = x + col * size * 0.035 + (row % 2) * size * 0.018 + dart;
+      const rly = y + size * 0.02 + row * size * 0.028;
+      const rlDist = Math.sqrt(
+        Math.pow((rlx - x - dart) / (size * 0.2), 2) +
+        Math.pow((rly - y - size * 0.02) / (size * 0.09), 2)
+      );
+      if (rlDist > 0.8) continue;
+      ctx.strokeStyle = "rgba(255,200,100,0.2)";
+      ctx.beginPath();
+      ctx.arc(rlx, rly - size * 0.002, size * 0.009, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.stroke();
+    }
+  }
+
   // Lava cracks on body with glow
   setShadowBlur(ctx, 3 * zoom, "#ff4400");
   ctx.lineWidth = 1.2 * zoom;
@@ -13604,29 +14146,36 @@ export function drawSalamanderEnemy(
     const spH = size * (0.035 + Math.sin(time * 5 + sp * 0.9) * 0.01);
     const spFlicker = 0.5 + Math.sin(time * 7 + sp * 1.3) * 0.2;
 
-    // Flame spine gradient
+    // Spine gradient: dark base to bright tip
     const spGrad = ctx.createLinearGradient(spx, y - size * 0.02, spx, y - size * 0.02 - spH);
-    spGrad.addColorStop(0, `rgba(255,80,0,${spFlicker * 0.6})`);
-    spGrad.addColorStop(0.3, `rgba(255,150,30,${spFlicker * 0.5})`);
-    spGrad.addColorStop(0.6, `rgba(255,200,80,${spFlicker * 0.35})`);
-    spGrad.addColorStop(1, `rgba(255,240,150,${spFlicker * 0.1})`);
+    spGrad.addColorStop(0, `rgba(80,20,0,${spFlicker * 0.7})`);
+    spGrad.addColorStop(0.2, `rgba(180,50,0,${spFlicker * 0.65})`);
+    spGrad.addColorStop(0.5, `rgba(255,130,20,${spFlicker * 0.55})`);
+    spGrad.addColorStop(0.8, `rgba(255,200,80,${spFlicker * 0.4})`);
+    spGrad.addColorStop(1, `rgba(255,240,150,${spFlicker * 0.25})`);
     ctx.fillStyle = spGrad;
     ctx.beginPath();
     ctx.moveTo(spx - size * 0.009, y - size * 0.02);
-    ctx.lineTo(spx - size * 0.002, y - size * 0.02 - spH);
+    ctx.quadraticCurveTo(spx - size * 0.006, y - size * 0.02 - spH * 0.5, spx - size * 0.002, y - size * 0.02 - spH);
     ctx.lineTo(spx + size * 0.002, y - size * 0.02 - spH * 0.9);
-    ctx.lineTo(spx + size * 0.009, y - size * 0.02);
+    ctx.quadraticCurveTo(spx + size * 0.006, y - size * 0.02 - spH * 0.45, spx + size * 0.009, y - size * 0.02);
+    ctx.closePath();
     ctx.fill();
 
-    // Spine wisp at tip
-    if (sp % 2 === 0) {
-      setShadowBlur(ctx, 2 * zoom, "#ff6600");
-      ctx.fillStyle = `rgba(255,200,50,${spFlicker * 0.3})`;
-      ctx.beginPath();
-      ctx.arc(spx, y - size * 0.02 - spH, size * 0.004, 0, TAU);
-      ctx.fill();
-      clearShadow(ctx);
-    }
+    // Flickering flame particle at spine tip
+    const flTipSize = size * (0.005 + Math.sin(time * 10 + sp * 2.1) * 0.003);
+    const flTipY = y - size * 0.02 - spH - flTipSize * 0.5;
+    const flTipWander = Math.sin(time * 8 + sp * 1.7) * size * 0.003;
+    setShadowBlur(ctx, 3 * zoom, "#ff8800");
+    const flTipGrad = ctx.createRadialGradient(spx + flTipWander, flTipY, 0, spx + flTipWander, flTipY, flTipSize);
+    flTipGrad.addColorStop(0, `rgba(255,255,200,${spFlicker * 0.6})`);
+    flTipGrad.addColorStop(0.4, `rgba(255,200,50,${spFlicker * 0.4})`);
+    flTipGrad.addColorStop(1, "rgba(255,120,0,0)");
+    ctx.fillStyle = flTipGrad;
+    ctx.beginPath();
+    ctx.arc(spx + flTipWander, flTipY, flTipSize, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
   }
 
   // Belly glow — hot coals visible through translucent skin
@@ -13661,14 +14210,42 @@ export function drawSalamanderEnemy(
     ctx.fill();
   }
 
-  // Belly segment lines
-  ctx.strokeStyle = `rgba(255,120,40,${bellyGlow * 0.2})`;
-  ctx.lineWidth = 0.6 * zoom;
-  for (let bs = 0; bs < 8; bs++) {
-    const bsx = x + (bs - 3.5) * size * 0.035 + dart;
+  // Scattered ember spots with pulsing glow
+  for (let em = 0; em < 12; em++) {
+    const emPhase = Math.sin(time * 3.5 + em * 1.3) * 0.5 + 0.5;
+    const emGlow = bellyGlow * (0.2 + emPhase * 0.35);
+    const emx = x + Math.sin(em * 2.7 + 0.5) * size * 0.11 + dart;
+    const emy = y + size * 0.05 + Math.cos(em * 1.9) * size * 0.025;
+    const emSize = size * (0.003 + emPhase * 0.004);
+    setShadowBlur(ctx, 2 * zoom, `rgba(255,120,0,${emGlow * 0.5})`);
+    ctx.fillStyle = `rgba(255,${Math.floor(180 + emPhase * 60)},${Math.floor(20 + emPhase * 30)},${emGlow})`;
     ctx.beginPath();
-    ctx.moveTo(bsx, y + size * 0.03);
-    ctx.lineTo(bsx, y + size * 0.1);
+    ctx.arc(emx, emy, emSize, 0, TAU);
+    ctx.fill();
+  }
+  clearShadow(ctx);
+
+  // Belly segment lines
+  ctx.lineWidth = 0.6 * zoom;
+  for (let bs = 0; bs < 10; bs++) {
+    const bsx = x + (bs - 4.5) * size * 0.028 + dart;
+    const bsGlow = bellyGlow * (0.15 + Math.sin(time * 2.5 + bs * 0.8) * 0.08);
+    ctx.strokeStyle = `rgba(255,120,40,${bsGlow})`;
+    ctx.beginPath();
+    ctx.moveTo(bsx, y + size * 0.035);
+    ctx.lineTo(bsx, y + size * 0.095);
+    ctx.stroke();
+  }
+
+  // Horizontal belly segment ridges
+  ctx.lineWidth = 0.4 * zoom;
+  for (let hr = 0; hr < 4; hr++) {
+    const hry = y + size * 0.04 + hr * size * 0.017;
+    const hrAlpha = bellyGlow * (0.1 + Math.sin(time * 2 + hr) * 0.04);
+    ctx.strokeStyle = `rgba(255,100,30,${hrAlpha})`;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.1 + dart, hry);
+    ctx.lineTo(x + size * 0.1 + dart, hry);
     ctx.stroke();
   }
 
@@ -13902,5 +14479,19 @@ export function drawSalamanderEnemy(
     ctx.beginPath();
     ctx.ellipse(x + dart, y + size * 0.17, shrR, shrR * ISO_Y_RATIO * 0.4, 0, 0, TAU);
     ctx.fill();
+  }
+
+  // === Enhanced VFX: Heat haze aura ===
+  for (let hz = 0; hz < 3; hz++) {
+    const hzWaver = Math.sin(time * 3.5 + hz * 2.1) * size * 0.008;
+    const hzWaverY = Math.cos(time * 2.8 + hz * 1.7) * size * 0.005;
+    const hzRx = size * (0.2 + hz * 0.04);
+    const hzRy = size * (0.1 + hz * 0.025);
+    const hzAlpha = 0.03 - hz * 0.008;
+    ctx.strokeStyle = `rgba(255,${180 - hz * 40},${60 - hz * 20},${hzAlpha})`;
+    ctx.lineWidth = (1.2 - hz * 0.3) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x + dart + hzWaver, y + hzWaverY, hzRx, hzRy, Math.sin(time * 1.5 + hz) * 0.08, 0, TAU);
+    ctx.stroke();
   }
 }

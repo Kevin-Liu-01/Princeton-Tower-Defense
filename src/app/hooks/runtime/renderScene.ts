@@ -113,6 +113,7 @@ import {
   computeFogCounts,
 } from "../../rendering";
 import { renderEnemyDeath } from "../../rendering/effects/deathAnimations";
+import { renderAbilityTethers } from "../../rendering/effects/tethers";
 import { getSentinelPalette } from "../../rendering/towers/sentinelTheme";
 import { drawWaveStartBubble } from "../../rendering/ui/waveStartBubble";
 import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
@@ -2991,6 +2992,17 @@ export function renderScene(params: RenderSceneParams): void {
       }
     }
   });
+
+  // Ability tethers between enemies and their debuffed troop targets
+  renderAbilityTethers(
+    ctx,
+    troops,
+    enemies,
+    (pos) => worldToScreen(pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom),
+    selectedMap,
+    cameraZoom,
+    Date.now(),
+  );
 
   // Sky-level spell effects (falling meteors, lightning bolts) render above all map objects.
   for (const eff of skyEffects) {

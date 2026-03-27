@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback } from "react";
 import type { EnemyType as EType, SpecialTowerType, HazardType, EnemyCategory, TowerType, SpellType } from "../types";
-import { ENEMY_DATA } from "../constants";
+import { ENEMY_DATA, ENEMY_CATEGORY_ACCENTS } from "../constants";
 import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import { drawSpecialBuildingSprite } from "../rendering/towers/specialBuildings";
 import { drawHazardSprite } from "../rendering/hazards";
@@ -45,15 +45,12 @@ export const TOWER_SPRITE_FRAME_THEME: Record<TowerType, SpriteFrameTheme> = {
 // ENEMY CATEGORY SPRITE FRAME THEMES
 // =============================================================================
 
-export const ENEMY_CATEGORY_SPRITE_FRAME_THEME: Record<EnemyCategory, SpriteFrameTheme> = {
-  academic: buildThemeFromAccent("#c084fc"),
-  campus: buildThemeFromAccent("#f59e0b"),
-  ranged: buildThemeFromAccent("#4ade80"),
-  flying: buildThemeFromAccent("#22d3ee"),
-  boss: buildThemeFromAccent("#f87171"),
-  nature: buildThemeFromAccent("#34d399"),
-  swarm: buildThemeFromAccent("#facc15"),
-};
+export const ENEMY_CATEGORY_SPRITE_FRAME_THEME: Record<EnemyCategory, SpriteFrameTheme> = Object.fromEntries(
+  (Object.keys(ENEMY_CATEGORY_ACCENTS) as EnemyCategory[]).map((key) => [
+    key,
+    buildThemeFromAccent(ENEMY_CATEGORY_ACCENTS[key]),
+  ]),
+) as Record<EnemyCategory, SpriteFrameTheme>;
 
 // =============================================================================
 // SPELL SPRITE FRAME THEMES

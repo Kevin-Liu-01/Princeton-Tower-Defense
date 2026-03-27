@@ -1145,20 +1145,55 @@ export function drawTrusteeEnemy(
   const darkNavy = "#0c0a20";
   const obsidian = "#0a0a14";
 
-  // === DIVINE AUTHORITY AURA ===
-  const auraGrad = ctx.createRadialGradient(x, y - size * 0.1, 0, x, y - size * 0.1, size * 0.9);
-  auraGrad.addColorStop(0, `rgba(251, 191, 36, ${goldPulse * 0.22})`);
-  auraGrad.addColorStop(0.35, `rgba(234, 179, 8, ${goldPulse * 0.1})`);
-  auraGrad.addColorStop(0.65, `rgba(88, 28, 135, ${goldPulse * 0.06})`);
+  // === HELLFIRE CORRUPTION AURA ===
+  // Outer dark corruption ring
+  const darkAura = ctx.createRadialGradient(x, y - size * 0.1, size * 0.4, x, y - size * 0.1, size * 1.0);
+  darkAura.addColorStop(0, "rgba(0,0,0,0)");
+  darkAura.addColorStop(0.5, `rgba(40,10,60,${goldPulse * 0.08})`);
+  darkAura.addColorStop(0.75, `rgba(80,20,20,${goldPulse * 0.05})`);
+  darkAura.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = darkAura;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.1, size * 1.0, size * 0.7 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.fill();
+
+  // Inner hellfire aura
+  const auraGrad = ctx.createRadialGradient(x, y - size * 0.1, 0, x, y - size * 0.1, size * 0.7);
+  auraGrad.addColorStop(0, `rgba(255, 100, 30, ${goldPulse * 0.15})`);
+  auraGrad.addColorStop(0.2, `rgba(251, 191, 36, ${goldPulse * 0.12})`);
+  auraGrad.addColorStop(0.45, `rgba(180, 40, 80, ${goldPulse * 0.08})`);
+  auraGrad.addColorStop(0.7, `rgba(80, 10, 60, ${goldPulse * 0.04})`);
   auraGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.1, size * 0.9, size * 0.65 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(x, y - size * 0.1, size * 0.7, size * 0.5 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
-  // Slow-orbiting golden sigils
-  for (let i = 0; i < 6; i++) {
-    const sAngle = time * 0.6 + i * TAU / 6;
+  // Ground hellfire cracks emanating from base
+  setShadowBlur(ctx, 4 * zoom, "#ff4020");
+  for (let c = 0; c < 8; c++) {
+    const cAngle = c * TAU / 8 + Math.sin(time * 0.5 + c) * 0.15;
+    const cLen = size * 0.3 + Math.sin(time * 1.8 + c * 1.7) * size * 0.08;
+    const cAlpha = 0.12 + Math.sin(time * 2.5 + c * 0.9) * 0.06;
+    ctx.strokeStyle = `rgba(255, 80, 20, ${cAlpha})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x, y + size * 0.1);
+    for (let s = 1; s <= 4; s++) {
+      const sf = s / 4;
+      const jx = Math.sin(time * 1.5 + c * 2.3 + s * 1.7) * size * 0.015;
+      ctx.lineTo(
+        x + Math.cos(cAngle) * cLen * sf + jx,
+        y + size * 0.1 + Math.sin(cAngle) * cLen * sf * ISO_Y_RATIO,
+      );
+    }
+    ctx.stroke();
+  }
+  clearShadow(ctx);
+
+  // Slow-orbiting demonic sigils
+  for (let i = 0; i < 8; i++) {
+    const sAngle = time * 0.5 + i * TAU / 8;
     const sR = size * 0.55 + Math.sin(time * 1.5 + i * 1.3) * size * 0.06;
     const sx = x + Math.cos(sAngle) * sR;
     const sy = y - size * 0.12 + Math.sin(sAngle) * sR * 0.3;
@@ -1166,8 +1201,10 @@ export function drawTrusteeEnemy(
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(time * 1.2 + i);
-    setShadowBlur(ctx, 4 * zoom, goldBright);
-    ctx.strokeStyle = `rgba(251, 191, 36, ${sAlpha})`;
+    setShadowBlur(ctx, 6 * zoom, i % 2 === 0 ? "#ff4020" : goldBright);
+    ctx.strokeStyle = i % 2 === 0
+      ? `rgba(255, 80, 30, ${sAlpha})`
+      : `rgba(251, 191, 36, ${sAlpha})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.02);
@@ -1265,6 +1302,130 @@ export function drawTrusteeEnemy(
       y + size * 0.22,
     );
     ctx.stroke();
+  }
+
+  // === DEVIL WINGS — massive tattered bat wings ===
+  for (const side of [-1, 1]) {
+    ctx.save();
+    const wingX = x + side * size * 0.18;
+    const wingY = y - size * 0.3 - bodyBob;
+    ctx.translate(wingX, wingY);
+
+    const wingFlap = Math.sin(time * 2.5 + (side === 1 ? 0 : Math.PI * 0.3)) * 0.12;
+    const wingSpread = isAttacking ? 1.15 : 1.0;
+    ctx.scale(side, 1);
+    ctx.rotate(wingFlap);
+
+    // Wing membrane — dark purple-black with veins
+    const memGrad = ctx.createLinearGradient(0, 0, size * 0.55 * wingSpread, -size * 0.2);
+    memGrad.addColorStop(0, "rgba(30,10,50,0.9)");
+    memGrad.addColorStop(0.3, "rgba(50,15,80,0.85)");
+    memGrad.addColorStop(0.6, "rgba(25,8,40,0.75)");
+    memGrad.addColorStop(1, "rgba(15,5,25,0.5)");
+    ctx.fillStyle = memGrad;
+
+    // 4-finger bat wing silhouette
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    // First bone
+    ctx.quadraticCurveTo(size * 0.12, -size * 0.25, size * 0.2 * wingSpread, -size * 0.42);
+    // Scallop between 1st and 2nd finger
+    ctx.quadraticCurveTo(size * 0.25 * wingSpread, -size * 0.3, size * 0.32 * wingSpread, -size * 0.38);
+    // Second finger
+    ctx.quadraticCurveTo(size * 0.36 * wingSpread, -size * 0.28, size * 0.42 * wingSpread, -size * 0.32);
+    // Scallop between 2nd and 3rd
+    ctx.quadraticCurveTo(size * 0.44 * wingSpread, -size * 0.2, size * 0.5 * wingSpread, -size * 0.22);
+    // Third finger
+    ctx.quadraticCurveTo(size * 0.52 * wingSpread, -size * 0.12, size * 0.55 * wingSpread, -size * 0.08);
+    // Trailing edge back to body
+    ctx.quadraticCurveTo(size * 0.42, size * 0.06, size * 0.2, size * 0.12);
+    ctx.quadraticCurveTo(size * 0.08, size * 0.1, 0, size * 0.05);
+    ctx.closePath();
+    ctx.fill();
+
+    // Wing bone struts
+    ctx.strokeStyle = "#2a1040";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineCap = "round";
+    const boneEnds = [
+      { cx: size * 0.12, cy: -size * 0.25, ex: size * 0.2 * wingSpread, ey: -size * 0.42 },
+      { cx: size * 0.2, cy: -size * 0.18, ex: size * 0.32 * wingSpread, ey: -size * 0.38 },
+      { cx: size * 0.25, cy: -size * 0.12, ex: size * 0.42 * wingSpread, ey: -size * 0.32 },
+      { cx: size * 0.3, cy: -size * 0.06, ex: size * 0.55 * wingSpread, ey: -size * 0.08 },
+    ];
+    for (const b of boneEnds) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(b.cx, b.cy, b.ex, b.ey);
+      ctx.stroke();
+    }
+    ctx.lineCap = "butt";
+
+    // Bone highlight
+    ctx.strokeStyle = "rgba(100,60,140,0.3)";
+    ctx.lineWidth = 1 * zoom;
+    for (const b of boneEnds) {
+      ctx.beginPath();
+      ctx.moveTo(size * 0.02, -size * 0.01);
+      ctx.quadraticCurveTo(b.cx * 0.95, b.cy * 0.95, b.ex * 0.95, b.ey * 0.95);
+      ctx.stroke();
+    }
+
+    // Vein network in membrane
+    ctx.strokeStyle = "rgba(80,30,120,0.2)";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let v = 0; v < 6; v++) {
+      const t = 0.2 + v * 0.12;
+      const vx1 = size * 0.08 + v * size * 0.06;
+      const vy1 = -size * 0.05 - v * size * 0.04;
+      const vx2 = vx1 + size * 0.08;
+      const vy2 = vy1 - size * 0.06 + Math.sin(time * 1.5 + v) * size * 0.01;
+      ctx.beginPath();
+      ctx.moveTo(vx1, vy1);
+      ctx.quadraticCurveTo(vx1 + size * 0.04, vy1 - size * 0.04, vx2, vy2);
+      ctx.stroke();
+    }
+
+    // Tattered holes in membrane (corruption damage)
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    for (let h = 0; h < 3; h++) {
+      const hx = size * 0.15 + h * size * 0.12;
+      const hy = -size * 0.12 - h * size * 0.05;
+      ctx.beginPath();
+      ctx.ellipse(hx, hy, size * 0.012 + h * size * 0.004, size * 0.008, h * 0.5, 0, TAU);
+      ctx.fill();
+    }
+
+    // Wing claw hooks at finger tips
+    ctx.fillStyle = goldDark;
+    const clawTips = [
+      { x: size * 0.2 * wingSpread, y: -size * 0.42 },
+      { x: size * 0.32 * wingSpread, y: -size * 0.38 },
+      { x: size * 0.42 * wingSpread, y: -size * 0.32 },
+    ];
+    for (const ct of clawTips) {
+      ctx.beginPath();
+      ctx.moveTo(ct.x, ct.y);
+      ctx.lineTo(ct.x + size * 0.012, ct.y - size * 0.02);
+      ctx.lineTo(ct.x + size * 0.004, ct.y + size * 0.005);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Purple-gold energy pulsing along wing edges
+    const edgeAlpha = 0.15 + Math.sin(time * 3 + (side === 1 ? 0 : 1.5)) * 0.1;
+    setShadowBlur(ctx, 4 * zoom, `rgba(180,80,255,${edgeAlpha})`);
+    ctx.strokeStyle = `rgba(200,120,255,${edgeAlpha})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.2 * wingSpread, -size * 0.42);
+    ctx.quadraticCurveTo(size * 0.25 * wingSpread, -size * 0.3, size * 0.32 * wingSpread, -size * 0.38);
+    ctx.quadraticCurveTo(size * 0.36 * wingSpread, -size * 0.28, size * 0.42 * wingSpread, -size * 0.32);
+    ctx.quadraticCurveTo(size * 0.44 * wingSpread, -size * 0.2, size * 0.5 * wingSpread, -size * 0.22);
+    ctx.stroke();
+    clearShadow(ctx);
+
+    ctx.restore();
   }
 
   // === LEGS — heavy gilded war greaves ===
@@ -1479,7 +1640,7 @@ export function drawTrusteeEnemy(
   // === ARMS ===
   const armShY = y - size * 0.36 - bodyBob;
 
-  // Left arm — gilded tower shield
+  // Left arm — massive demonic tower shield
   drawPathArm(ctx, x - size * 0.26, armShY, size, time, zoom, -1, {
     color: "#2a2048",
     colorDark: "#1a1030",
@@ -1491,70 +1652,150 @@ export function drawTrusteeEnemy(
     width: 0.065,
     style: "armored",
     onWeapon: (wCtx) => {
-      wCtx.translate(0, size * 0.04);
+      wCtx.translate(0, size * 0.02);
       wCtx.scale(-1, 1);
-      const shW = size * 0.14;
-      const shH = size * 0.22;
+      const shW = size * 0.18;
+      const shH = size * 0.28;
 
-      // Shield body
+      // Shield body — dark obsidian tower shield
       const shGrad = wCtx.createLinearGradient(-shW, -shH * 0.5, shW, shH * 0.5);
-      shGrad.addColorStop(0, "#1a1030");
-      shGrad.addColorStop(0.3, "#2a2048");
-      shGrad.addColorStop(0.5, "#3a2860");
-      shGrad.addColorStop(0.7, "#2a2048");
-      shGrad.addColorStop(1, "#1a1030");
+      shGrad.addColorStop(0, "#0a0014");
+      shGrad.addColorStop(0.2, "#1a1030");
+      shGrad.addColorStop(0.4, "#2a1848");
+      shGrad.addColorStop(0.6, "#1a1030");
+      shGrad.addColorStop(0.8, "#0a0014");
+      shGrad.addColorStop(1, "#050008");
       wCtx.fillStyle = shGrad;
       wCtx.beginPath();
       wCtx.moveTo(0, -shH);
-      wCtx.quadraticCurveTo(shW * 0.6, -shH * 0.8, shW, -shH * 0.3);
-      wCtx.quadraticCurveTo(shW * 0.9, shH * 0.3, 0, shH);
-      wCtx.quadraticCurveTo(-shW * 0.9, shH * 0.3, -shW, -shH * 0.3);
-      wCtx.quadraticCurveTo(-shW * 0.6, -shH * 0.8, 0, -shH);
+      wCtx.quadraticCurveTo(shW * 0.6, -shH * 0.85, shW, -shH * 0.3);
+      wCtx.quadraticCurveTo(shW * 0.95, shH * 0.3, 0, shH);
+      wCtx.quadraticCurveTo(-shW * 0.95, shH * 0.3, -shW, -shH * 0.3);
+      wCtx.quadraticCurveTo(-shW * 0.6, -shH * 0.85, 0, -shH);
       wCtx.closePath();
       wCtx.fill();
 
-      // Gold rim
-      wCtx.strokeStyle = goldBright;
-      wCtx.lineWidth = 1.5 * zoom;
-      wCtx.stroke();
-
-      // Shield boss
-      const bossGrad = wCtx.createRadialGradient(0, 0, 0, 0, 0, size * 0.03);
-      bossGrad.addColorStop(0, goldPale);
-      bossGrad.addColorStop(0.5, goldBright);
-      bossGrad.addColorStop(1, goldDark);
-      wCtx.fillStyle = bossGrad;
-      wCtx.beginPath();
-      wCtx.arc(0, 0, size * 0.03, 0, TAU);
-      wCtx.fill();
-
-      // Gold cross on shield
+      // Gold-and-corruption rim
       wCtx.strokeStyle = goldBright;
       wCtx.lineWidth = 2 * zoom;
-      wCtx.beginPath();
-      wCtx.moveTo(0, -shH * 0.65);
-      wCtx.lineTo(0, shH * 0.65);
-      wCtx.stroke();
-      wCtx.beginPath();
-      wCtx.moveTo(-shW * 0.65, 0);
-      wCtx.lineTo(shW * 0.65, 0);
       wCtx.stroke();
 
-      // Corner rivets
-      const rivetPositions = [
-        { x: 0, y: -shH * 0.7 }, { x: shW * 0.6, y: -shH * 0.15 },
-        { x: 0, y: shH * 0.7 }, { x: -shW * 0.6, y: -shH * 0.15 },
-      ];
-      wCtx.fillStyle = goldMid;
-      for (const rv of rivetPositions) {
+      // Inner corruption line rim
+      wCtx.strokeStyle = `rgba(180,60,255,${0.3 + corruptPulse * 0.15})`;
+      wCtx.lineWidth = 0.8 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -shH * 0.92);
+      wCtx.quadraticCurveTo(shW * 0.5, -shH * 0.78, shW * 0.9, -shH * 0.25);
+      wCtx.quadraticCurveTo(shW * 0.85, shH * 0.25, 0, shH * 0.92);
+      wCtx.quadraticCurveTo(-shW * 0.85, shH * 0.25, -shW * 0.9, -shH * 0.25);
+      wCtx.quadraticCurveTo(-shW * 0.5, -shH * 0.78, 0, -shH * 0.92);
+      wCtx.stroke();
+
+      // Demonic face on shield — large skull/demon visage
+      // Brow ridge
+      wCtx.strokeStyle = goldDark;
+      wCtx.lineWidth = 2 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(-shW * 0.5, -shH * 0.15);
+      wCtx.quadraticCurveTo(-shW * 0.3, -shH * 0.3, 0, -shH * 0.25);
+      wCtx.quadraticCurveTo(shW * 0.3, -shH * 0.3, shW * 0.5, -shH * 0.15);
+      wCtx.stroke();
+
+      // Eye sockets
+      for (const es of [-1, 1]) {
+        wCtx.fillStyle = "#050010";
         wCtx.beginPath();
-        wCtx.arc(rv.x, rv.y, size * 0.006, 0, TAU);
+        wCtx.ellipse(es * shW * 0.22, -shH * 0.12, shW * 0.12, shH * 0.07, es * 0.15, 0, TAU);
+        wCtx.fill();
+
+        // Burning eye within
+        const seAlpha = 0.5 + corruptPulse * 0.3;
+        setShadowBlur(wCtx, 6 * zoom, `rgba(255,80,30,${seAlpha})`);
+        const seGrad = wCtx.createRadialGradient(es * shW * 0.22, -shH * 0.12, 0, es * shW * 0.22, -shH * 0.12, shW * 0.08);
+        seGrad.addColorStop(0, `rgba(255,220,100,${seAlpha})`);
+        seGrad.addColorStop(0.4, `rgba(255,80,20,${seAlpha * 0.8})`);
+        seGrad.addColorStop(1, `rgba(100,10,0,0)`);
+        wCtx.fillStyle = seGrad;
+        wCtx.beginPath();
+        wCtx.ellipse(es * shW * 0.22, -shH * 0.12, shW * 0.08, shH * 0.05, 0, 0, TAU);
+        wCtx.fill();
+        clearShadow(wCtx);
+      }
+
+      // Nasal bone / nose cavity
+      wCtx.fillStyle = "#0a0014";
+      wCtx.beginPath();
+      wCtx.moveTo(0, -shH * 0.04);
+      wCtx.lineTo(shW * 0.04, shH * 0.06);
+      wCtx.lineTo(-shW * 0.04, shH * 0.06);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Fanged jaw
+      wCtx.fillStyle = "#050010";
+      wCtx.beginPath();
+      wCtx.ellipse(0, shH * 0.16, shW * 0.3, shH * 0.08, 0, 0, TAU);
+      wCtx.fill();
+      // Teeth
+      wCtx.fillStyle = goldPale;
+      for (let t = 0; t < 7; t++) {
+        const tx = -shW * 0.2 + t * shW * 0.067;
+        const tH = (t === 0 || t === 6) ? shH * 0.04 : (t === 2 || t === 4) ? shH * 0.06 : shH * 0.035;
+        wCtx.beginPath();
+        wCtx.moveTo(tx - shW * 0.015, shH * 0.1);
+        wCtx.lineTo(tx, shH * 0.1 + tH);
+        wCtx.lineTo(tx + shW * 0.015, shH * 0.1);
+        wCtx.fill();
+      }
+
+      // Corruption veins across shield face
+      wCtx.strokeStyle = `rgba(120,40,200,${0.2 + corruptPulse * 0.1})`;
+      wCtx.lineWidth = 0.6 * zoom;
+      for (let v = 0; v < 5; v++) {
+        const va = -1.5 + v * 0.75;
+        wCtx.beginPath();
+        wCtx.moveTo(Math.cos(va) * shW * 0.2, Math.sin(va) * shH * 0.15);
+        wCtx.quadraticCurveTo(
+          Math.cos(va + 0.3) * shW * 0.5,
+          Math.sin(va + 0.3) * shH * 0.4,
+          Math.cos(va + 0.6) * shW * 0.7,
+          Math.sin(va + 0.6) * shH * 0.55,
+        );
+        wCtx.stroke();
+      }
+
+      // Spikes at shield edges
+      wCtx.fillStyle = goldBright;
+      const spikePositions = [
+        { x: 0, y: -shH, a: -Math.PI / 2 },
+        { x: shW * 0.85, y: -shH * 0.1, a: 0.2 },
+        { x: -shW * 0.85, y: -shH * 0.1, a: Math.PI - 0.2 },
+        { x: 0, y: shH * 0.9, a: Math.PI / 2 },
+      ];
+      for (const sp of spikePositions) {
+        wCtx.save();
+        wCtx.translate(sp.x, sp.y);
+        wCtx.rotate(sp.a);
+        wCtx.beginPath();
+        wCtx.moveTo(0, -size * 0.006);
+        wCtx.lineTo(size * 0.025, 0);
+        wCtx.lineTo(0, size * 0.006);
+        wCtx.closePath();
+        wCtx.fill();
+        wCtx.restore();
+      }
+
+      // Gold skull-and-chain studs at cardinals
+      wCtx.fillStyle = goldMid;
+      for (const rv of spikePositions) {
+        wCtx.beginPath();
+        wCtx.arc(rv.x * 0.65, rv.y * 0.65, size * 0.008, 0, TAU);
         wCtx.fill();
       }
     },
   });
 
-  // Right arm — golden war-mace
+  // Right arm — massive hellfire war-axe
   drawPathArm(ctx, x + size * 0.26, armShY, size, time, zoom, 1, {
     color: "#2a2048",
     colorDark: "#1a1030",
@@ -1567,88 +1808,188 @@ export function drawTrusteeEnemy(
     style: "armored",
     weaponAngle: -0.5,
     onWeapon: (wCtx) => {
-      const sH = size * 0.5;
-      const sW = size * 0.016;
+      const sH = size * 0.6;
+      const sW = size * 0.018;
 
-      // War-mace shaft
-      const shaftGrad = wCtx.createLinearGradient(-sW, 0, sW, 0);
-      shaftGrad.addColorStop(0, goldDark);
-      shaftGrad.addColorStop(0.3, goldBright);
-      shaftGrad.addColorStop(0.5, goldPale);
-      shaftGrad.addColorStop(0.7, goldBright);
-      shaftGrad.addColorStop(1, goldDark);
-      wCtx.fillStyle = shaftGrad;
-      wCtx.fillRect(-sW, -sH * 0.35, sW * 2, sH * 0.9);
+      // Haft — dark iron with obsidian inlays
+      const haftGrad = wCtx.createLinearGradient(-sW, 0, sW, 0);
+      haftGrad.addColorStop(0, "#1a0a18");
+      haftGrad.addColorStop(0.3, "#3a2040");
+      haftGrad.addColorStop(0.5, "#4a2858");
+      haftGrad.addColorStop(0.7, "#3a2040");
+      haftGrad.addColorStop(1, "#1a0a18");
+      wCtx.fillStyle = haftGrad;
+      wCtx.fillRect(-sW, -sH * 0.4, sW * 2, sH);
 
-      // Grip wrap
-      wCtx.fillStyle = "#3a1808";
-      wCtx.fillRect(-sW * 1.3, -size * 0.02, sW * 2.6, size * 0.1);
-      wCtx.strokeStyle = goldBright;
+      // Leather grip wrapping
+      wCtx.fillStyle = "#2a1008";
+      wCtx.fillRect(-sW * 1.4, -size * 0.02, sW * 2.8, size * 0.12);
+      wCtx.strokeStyle = goldDark;
       wCtx.lineWidth = 0.6 * zoom;
-      for (let w = 0; w < 6; w++) {
-        const wy = -size * 0.015 + w * size * 0.018;
+      for (let w = 0; w < 8; w++) {
+        const wy = -size * 0.015 + w * size * 0.015;
         wCtx.beginPath();
-        wCtx.moveTo(-sW * 1.2, wy);
-        wCtx.lineTo(sW * 1.2, wy - size * 0.007);
+        wCtx.moveTo(-sW * 1.3, wy);
+        wCtx.lineTo(sW * 1.3, wy - size * 0.006);
         wCtx.stroke();
       }
 
-      // Gold ring nodes
-      wCtx.fillStyle = goldPale;
-      for (let r = 0; r < 3; r++) {
-        const ry = -sH * 0.1 - r * sH * 0.2;
+      // Gold ring separators along haft
+      wCtx.fillStyle = goldBright;
+      for (let r = 0; r < 4; r++) {
+        const ry = -sH * 0.08 - r * sH * 0.12;
         wCtx.beginPath();
-        wCtx.ellipse(0, ry, sW * 1.8, size * 0.006, 0, 0, TAU);
+        wCtx.ellipse(0, ry, sW * 2, size * 0.005, 0, 0, TAU);
         wCtx.fill();
       }
 
-      // Mace head — 6-flanged gold/obsidian war head
-      const mhY = -sH * 0.35;
-      const mhR = size * 0.055;
-      for (let f = 0; f < 6; f++) {
-        const fAngle = f * TAU / 6 - Math.PI / 2;
-        const fR = mhR * 1.4;
-        wCtx.fillStyle = f % 2 === 0 ? goldBright : goldMid;
+      // Rune carvings on haft
+      wCtx.strokeStyle = `rgba(180,80,255,${0.3 + corruptPulse * 0.2})`;
+      wCtx.lineWidth = 0.5 * zoom;
+      for (let r = 0; r < 3; r++) {
+        const ry = -sH * 0.15 - r * sH * 0.1;
         wCtx.beginPath();
-        wCtx.moveTo(0, mhY);
-        wCtx.lineTo(
-          Math.cos(fAngle - 0.2) * mhR * 0.5,
-          mhY + Math.sin(fAngle - 0.2) * mhR * 0.5,
-        );
-        wCtx.lineTo(
-          Math.cos(fAngle) * fR,
-          mhY + Math.sin(fAngle) * fR,
-        );
-        wCtx.lineTo(
-          Math.cos(fAngle + 0.2) * mhR * 0.5,
-          mhY + Math.sin(fAngle + 0.2) * mhR * 0.5,
-        );
+        wCtx.moveTo(-sW * 0.5, ry - size * 0.006);
+        wCtx.lineTo(sW * 0.5, ry + size * 0.003);
+        wCtx.moveTo(0, ry - size * 0.008);
+        wCtx.lineTo(0, ry + size * 0.005);
+        wCtx.stroke();
+      }
+
+      // === AXE HEAD — jagged double-bladed hellfire greataxe ===
+      const axY = -sH * 0.4;
+      const bladeW = size * 0.12;
+      const bladeH = size * 0.16;
+
+      for (const bSide of [-1, 1]) {
+        // Blade body — curved, jagged-edged
+        const blGrad = wCtx.createLinearGradient(0, axY - bladeH * 0.5, bSide * bladeW, axY);
+        blGrad.addColorStop(0, "#1a0a18");
+        blGrad.addColorStop(0.3, "#3a1848");
+        blGrad.addColorStop(0.6, "#5a2870");
+        blGrad.addColorStop(0.85, "#2a1040");
+        blGrad.addColorStop(1, "#0a0010");
+        wCtx.fillStyle = blGrad;
+        wCtx.beginPath();
+        wCtx.moveTo(0, axY - bladeH * 0.5);
+        wCtx.quadraticCurveTo(bSide * bladeW * 0.3, axY - bladeH * 0.55, bSide * bladeW * 0.7, axY - bladeH * 0.35);
+        // Jagged cutting edge
+        wCtx.lineTo(bSide * bladeW * 0.85, axY - bladeH * 0.25);
+        wCtx.lineTo(bSide * bladeW * 0.95, axY - bladeH * 0.15);
+        wCtx.lineTo(bSide * bladeW, axY);
+        wCtx.lineTo(bSide * bladeW * 0.95, axY + bladeH * 0.15);
+        wCtx.lineTo(bSide * bladeW * 0.85, axY + bladeH * 0.25);
+        wCtx.quadraticCurveTo(bSide * bladeW * 0.5, axY + bladeH * 0.4, 0, axY + bladeH * 0.5);
         wCtx.closePath();
         wCtx.fill();
+
+        // Blade edge sharpness highlight
+        wCtx.strokeStyle = `rgba(200,160,255,0.4)`;
+        wCtx.lineWidth = 0.8 * zoom;
+        wCtx.beginPath();
+        wCtx.moveTo(bSide * bladeW * 0.7, axY - bladeH * 0.35);
+        wCtx.lineTo(bSide * bladeW * 0.85, axY - bladeH * 0.25);
+        wCtx.lineTo(bSide * bladeW * 0.95, axY - bladeH * 0.15);
+        wCtx.lineTo(bSide * bladeW, axY);
+        wCtx.lineTo(bSide * bladeW * 0.95, axY + bladeH * 0.15);
+        wCtx.lineTo(bSide * bladeW * 0.85, axY + bladeH * 0.25);
+        wCtx.stroke();
+
+        // Serrated notches along the cutting edge
+        wCtx.fillStyle = "#0a0010";
+        for (let n = 0; n < 4; n++) {
+          const ny = axY - bladeH * 0.2 + n * bladeH * 0.12;
+          const nx = bSide * bladeW * (0.88 + Math.sin(n * 1.5) * 0.06);
+          wCtx.beginPath();
+          wCtx.moveTo(nx, ny - size * 0.005);
+          wCtx.lineTo(nx + bSide * size * 0.008, ny);
+          wCtx.lineTo(nx, ny + size * 0.005);
+          wCtx.closePath();
+          wCtx.fill();
+        }
+
+        // Hellfire glow from within the blade
+        const fireAlpha = 0.15 + corruptPulse * 0.15;
+        setShadowBlur(wCtx, 6 * zoom, `rgba(255,100,30,${fireAlpha})`);
+        wCtx.strokeStyle = `rgba(255,140,40,${fireAlpha})`;
+        wCtx.lineWidth = 1 * zoom;
+        wCtx.beginPath();
+        wCtx.moveTo(bSide * bladeW * 0.2, axY - bladeH * 0.3);
+        wCtx.quadraticCurveTo(bSide * bladeW * 0.5, axY, bSide * bladeW * 0.2, axY + bladeH * 0.3);
+        wCtx.stroke();
+
+        // Inner lava cracks
+        wCtx.strokeStyle = `rgba(255,80,20,${fireAlpha * 0.8})`;
+        wCtx.lineWidth = 0.5 * zoom;
+        for (let c = 0; c < 3; c++) {
+          const cy = axY - bladeH * 0.15 + c * bladeH * 0.15;
+          wCtx.beginPath();
+          wCtx.moveTo(bSide * bladeW * 0.15, cy);
+          wCtx.lineTo(bSide * bladeW * (0.4 + c * 0.08), cy + size * 0.005);
+          wCtx.stroke();
+        }
+        clearShadow(wCtx);
       }
 
-      // Mace core
-      const coreGrad = wCtx.createRadialGradient(0, mhY, 0, 0, mhY, mhR * 0.5);
-      coreGrad.addColorStop(0, goldPale);
-      coreGrad.addColorStop(0.5, goldBright);
-      coreGrad.addColorStop(1, goldMid);
-      wCtx.fillStyle = coreGrad;
+      // Central axe eye — glowing skull boss
+      const eyeGrad = wCtx.createRadialGradient(0, axY, 0, 0, axY, size * 0.03);
+      eyeGrad.addColorStop(0, goldPale);
+      eyeGrad.addColorStop(0.4, goldBright);
+      eyeGrad.addColorStop(0.7, goldDark);
+      eyeGrad.addColorStop(1, "#1a0a18");
+      wCtx.fillStyle = eyeGrad;
       wCtx.beginPath();
-      wCtx.arc(0, mhY, mhR * 0.45, 0, TAU);
+      wCtx.arc(0, axY, size * 0.03, 0, TAU);
       wCtx.fill();
 
-      // Glowing amethyst inset
-      setShadowBlur(wCtx, 8 * zoom, "#7c3aed");
-      wCtx.fillStyle = "#7c3aed";
+      // Skull face on axe boss
+      wCtx.fillStyle = "#0a0010";
+      for (const es of [-1, 1]) {
+        wCtx.beginPath();
+        wCtx.arc(es * size * 0.008, axY - size * 0.005, size * 0.005, 0, TAU);
+        wCtx.fill();
+      }
+      setShadowBlur(wCtx, 4 * zoom, "#ff4020");
+      wCtx.fillStyle = `rgba(255,60,30,${0.5 + corruptPulse * 0.3})`;
+      for (const es of [-1, 1]) {
+        wCtx.beginPath();
+        wCtx.arc(es * size * 0.008, axY - size * 0.005, size * 0.003, 0, TAU);
+        wCtx.fill();
+      }
+      clearShadow(wCtx);
+      wCtx.fillStyle = "#0a0010";
       wCtx.beginPath();
-      wCtx.arc(0, mhY, mhR * 0.2, 0, TAU);
+      wCtx.moveTo(-size * 0.004, axY + size * 0.008);
+      wCtx.lineTo(size * 0.004, axY + size * 0.008);
+      wCtx.lineTo(size * 0.002, axY + size * 0.014);
+      wCtx.lineTo(-size * 0.002, axY + size * 0.014);
       wCtx.fill();
+
+      // Hellfire dripping from axe head (animated)
+      setShadowBlur(wCtx, 5 * zoom, "#ff6020");
+      for (let d = 0; d < 4; d++) {
+        const dx = -bladeW * 0.6 + d * bladeW * 0.4;
+        const dPhase = (time * 2.5 + d * 1.3) % 1.0;
+        const dy = axY + bladeH * 0.3 + dPhase * size * 0.06;
+        const dAlpha = (1 - dPhase) * 0.6;
+        wCtx.fillStyle = `rgba(255,100,30,${dAlpha})`;
+        wCtx.beginPath();
+        wCtx.ellipse(dx, dy, size * 0.004, size * 0.008 + dPhase * size * 0.006, 0, 0, TAU);
+        wCtx.fill();
+      }
       clearShadow(wCtx);
 
-      // Bottom pommel
+      // Bottom pommel — spiked
+      wCtx.fillStyle = goldDark;
+      wCtx.beginPath();
+      wCtx.ellipse(0, sH * 0.58, sW * 2.2, sW * 1.4, 0, 0, TAU);
+      wCtx.fill();
       wCtx.fillStyle = goldBright;
       wCtx.beginPath();
-      wCtx.ellipse(0, sH * 0.53, sW * 2, sW * 1.2, 0, 0, TAU);
+      wCtx.moveTo(0, sH * 0.58);
+      wCtx.lineTo(size * 0.005, sH * 0.58 + size * 0.02);
+      wCtx.lineTo(-size * 0.005, sH * 0.58 + size * 0.02);
+      wCtx.closePath();
       wCtx.fill();
     },
   });
@@ -1730,103 +2071,150 @@ export function drawTrusteeEnemy(
   ctx.closePath();
   ctx.fill();
 
-  // Face — corrupted monstrous visage visible through helm opening
+  // Face — corrupted demonic visage visible through helm opening
   const faceGrad = ctx.createRadialGradient(headX, headY + size * 0.01, 0, headX, headY + size * 0.01, size * 0.09);
-  faceGrad.addColorStop(0, "#4a3060");
-  faceGrad.addColorStop(0.4, "#3a1848");
-  faceGrad.addColorStop(0.7, "#2a0838");
-  faceGrad.addColorStop(1, "#1a0028");
+  faceGrad.addColorStop(0, "#5a1040");
+  faceGrad.addColorStop(0.25, "#4a0838");
+  faceGrad.addColorStop(0.5, "#3a0028");
+  faceGrad.addColorStop(0.75, "#2a0020");
+  faceGrad.addColorStop(1, "#1a0018");
   ctx.fillStyle = faceGrad;
   ctx.beginPath();
   ctx.ellipse(headX, headY + size * 0.01, size * 0.09, size * 0.1, 0, 0, TAU);
   ctx.fill();
 
-  // Corruption cracks across face
-  ctx.strokeStyle = `rgba(200, 100, 255, ${0.3 + corruptPulse * 0.2})`;
-  ctx.lineWidth = 0.6 * zoom;
-  for (let c = 0; c < 5; c++) {
-    const cStartX = headX + (Math.random() * 2 - 1) * size * 0.05;
-    const cAngle = -1.2 + c * 0.6;
+  // Burning corruption cracks radiating from center — deterministic
+  for (let c = 0; c < 8; c++) {
+    const cAngle = c * TAU / 8 + Math.sin(time * 1.5 + c * 0.7) * 0.1;
+    const crackAlpha = 0.3 + corruptPulse * 0.25;
+    ctx.strokeStyle = `rgba(255, 80, 30, ${crackAlpha * 0.6})`;
+    ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(headX + Math.cos(cAngle) * size * 0.02, headY + Math.sin(cAngle) * size * 0.02);
-    for (let s = 0; s < 3; s++) {
+    ctx.moveTo(headX, headY + size * 0.01);
+    for (let s = 1; s <= 4; s++) {
+      const jitter = Math.sin(time * 2 + c * 3.7 + s * 2.1) * size * 0.005;
       ctx.lineTo(
-        headX + Math.cos(cAngle + s * 0.3) * size * (0.04 + s * 0.02),
-        headY + Math.sin(cAngle + s * 0.3) * size * (0.04 + s * 0.02),
+        headX + Math.cos(cAngle + s * 0.1) * size * (0.015 * s) + jitter,
+        headY + size * 0.01 + Math.sin(cAngle + s * 0.1) * size * (0.015 * s),
       );
     }
     ctx.stroke();
+    // Glow layer
+    setShadowBlur(ctx, 3 * zoom, "#ff4020");
+    ctx.strokeStyle = `rgba(255, 120, 40, ${crackAlpha * 0.3})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.stroke();
+    clearShadow(ctx);
   }
 
-  // Sunken burning eye sockets
+  // Sunken burning eye sockets — larger and more intense
   for (const side of [-1, 1]) {
     const eyeX = headX + side * size * 0.04;
     const eyeY = headY - size * 0.01;
 
-    // Deep socket
-    ctx.fillStyle = "#0a0014";
+    // Deep shadowed socket
+    ctx.fillStyle = "#050008";
     ctx.beginPath();
-    ctx.ellipse(eyeX, eyeY, size * 0.025, size * 0.02, side * 0.15, 0, TAU);
+    ctx.ellipse(eyeX, eyeY, size * 0.028, size * 0.022, side * 0.15, 0, TAU);
     ctx.fill();
 
-    // Burning gold-purple iris
-    setShadowBlur(ctx, 10 * zoom, goldBright);
-    const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.018);
-    eyeGrad.addColorStop(0, `rgba(255, 240, 200, ${goldPulse})`);
-    eyeGrad.addColorStop(0.3, `rgba(251, 191, 36, ${goldPulse * 0.9})`);
-    eyeGrad.addColorStop(0.7, `rgba(180, 80, 255, ${goldPulse * 0.6})`);
-    eyeGrad.addColorStop(1, `rgba(60, 0, 100, ${goldPulse * 0.3})`);
+    // Hellfire iris — intense burning
+    setShadowBlur(ctx, 14 * zoom, "#ff4020");
+    const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.02);
+    eyeGrad.addColorStop(0, `rgba(255, 255, 200, ${goldPulse})`);
+    eyeGrad.addColorStop(0.2, `rgba(255, 200, 60, ${goldPulse * 0.95})`);
+    eyeGrad.addColorStop(0.4, `rgba(255, 80, 20, ${goldPulse * 0.8})`);
+    eyeGrad.addColorStop(0.7, `rgba(180, 30, 0, ${goldPulse * 0.5})`);
+    eyeGrad.addColorStop(1, `rgba(60, 0, 0, 0)`);
     ctx.fillStyle = eyeGrad;
     ctx.beginPath();
-    ctx.arc(eyeX, eyeY, size * 0.016, 0, TAU);
+    ctx.arc(eyeX, eyeY, size * 0.02, 0, TAU);
     ctx.fill();
 
     // Vertical slit pupil
-    ctx.fillStyle = `rgba(10, 0, 20, ${goldPulse * 0.8})`;
+    ctx.fillStyle = `rgba(10, 0, 0, ${goldPulse * 0.85})`;
     ctx.beginPath();
-    ctx.ellipse(eyeX, eyeY, size * 0.003, size * 0.012, 0, 0, TAU);
+    ctx.ellipse(eyeX, eyeY, size * 0.003, size * 0.014, 0, 0, TAU);
     ctx.fill();
+
+    // Trailing fire wisps from eyes
+    const wispAlpha = 0.25 + goldPulse * 0.2;
+    for (let w = 0; w < 3; w++) {
+      const wLen = size * 0.02 + w * size * 0.012;
+      const wAngle = side * 0.4 + Math.sin(time * 4 + w * 1.5) * 0.2;
+      ctx.strokeStyle = `rgba(255, 120, 30, ${wispAlpha * (1 - w * 0.25)})`;
+      ctx.lineWidth = (1.2 - w * 0.3) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(eyeX + side * size * 0.02, eyeY);
+      ctx.quadraticCurveTo(
+        eyeX + side * (size * 0.03 + wLen * 0.5),
+        eyeY - size * 0.01 + Math.sin(time * 5 + w) * size * 0.005,
+        eyeX + side * (size * 0.025 + wLen),
+        eyeY - size * 0.015 + Math.sin(time * 3 + w * 2) * size * 0.008,
+      );
+      ctx.stroke();
+    }
     clearShadow(ctx);
   }
 
-  // Jagged fanged maw
-  ctx.fillStyle = "#0a0014";
+  // Gaping maw — wider, more menacing
+  ctx.fillStyle = "#050008";
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.055, size * 0.05, size * 0.025, 0, 0, TAU);
+  ctx.fill();
+
+  // Inner glow from maw
+  setShadowBlur(ctx, 5 * zoom, "#ff2000");
+  const mawGrad = ctx.createRadialGradient(headX, headY + size * 0.055, 0, headX, headY + size * 0.055, size * 0.035);
+  mawGrad.addColorStop(0, `rgba(255,80,20,${0.3 + corruptPulse * 0.2})`);
+  mawGrad.addColorStop(0.5, `rgba(120,20,0,${0.15 + corruptPulse * 0.1})`);
+  mawGrad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = mawGrad;
   ctx.beginPath();
   ctx.ellipse(headX, headY + size * 0.055, size * 0.04, size * 0.02, 0, 0, TAU);
   ctx.fill();
+  clearShadow(ctx);
 
-  // Upper fangs
-  ctx.fillStyle = "#d4c8a0";
-  for (let f = 0; f < 4; f++) {
-    const fx = headX - size * 0.025 + f * size * 0.017;
-    const fH = (f === 1 || f === 2) ? size * 0.025 : size * 0.015;
+  // Upper fangs — larger and more jagged
+  ctx.fillStyle = "#e8dcc0";
+  for (let f = 0; f < 6; f++) {
+    const fx = headX - size * 0.035 + f * size * 0.014;
+    const fH = (f === 1 || f === 4) ? size * 0.03 : (f === 2 || f === 3) ? size * 0.022 : size * 0.014;
     ctx.beginPath();
-    ctx.moveTo(fx - size * 0.004, headY + size * 0.04);
-    ctx.lineTo(fx, headY + size * 0.04 + fH);
-    ctx.lineTo(fx + size * 0.004, headY + size * 0.04);
+    ctx.moveTo(fx - size * 0.004, headY + size * 0.035);
+    ctx.lineTo(fx, headY + size * 0.035 + fH);
+    ctx.lineTo(fx + size * 0.004, headY + size * 0.035);
     ctx.fill();
   }
   // Lower fangs
-  for (let f = 0; f < 3; f++) {
-    const fx = headX - size * 0.018 + f * size * 0.018;
+  ctx.fillStyle = "#d4c8a0";
+  for (let f = 0; f < 5; f++) {
+    const fx = headX - size * 0.028 + f * size * 0.014;
+    const fH = (f === 1 || f === 3) ? size * 0.018 : size * 0.01;
     ctx.beginPath();
-    ctx.moveTo(fx - size * 0.003, headY + size * 0.07);
-    ctx.lineTo(fx, headY + size * 0.07 - size * 0.012);
-    ctx.lineTo(fx + size * 0.003, headY + size * 0.07);
+    ctx.moveTo(fx - size * 0.003, headY + size * 0.075);
+    ctx.lineTo(fx, headY + size * 0.075 - fH);
+    ctx.lineTo(fx + size * 0.003, headY + size * 0.075);
     ctx.fill();
   }
 
-  // Drool/corruption drip from mouth
-  setShadowBlur(ctx, 3 * zoom, "#7c3aed");
-  ctx.fillStyle = `rgba(120, 50, 200, ${0.3 + corruptPulse * 0.2})`;
-  for (let d = 0; d < 2; d++) {
-    const dx = headX + (d - 0.5) * size * 0.03;
-    const dLen = size * 0.02 + Math.sin(time * 3 + d * 2) * size * 0.008;
+  // Drool/corruption + hellfire drips from mouth
+  for (let d = 0; d < 3; d++) {
+    const dx = headX + (d - 1) * size * 0.025;
+    const dPhase = (time * 2.2 + d * 1.8) % 1.0;
+    const dLen = size * 0.015 + dPhase * size * 0.025;
+    const dAlpha = (1 - dPhase) * 0.5;
+    setShadowBlur(ctx, 3 * zoom, "#ff4020");
+    ctx.fillStyle = `rgba(255, 60, 20, ${dAlpha * 0.6})`;
     ctx.beginPath();
-    ctx.ellipse(dx, headY + size * 0.075 + dLen * 0.5, size * 0.003, dLen, 0, 0, TAU);
+    ctx.ellipse(dx, headY + size * 0.08 + dLen, size * 0.003, size * 0.006 + dPhase * size * 0.004, 0, 0, TAU);
     ctx.fill();
+    ctx.fillStyle = `rgba(120, 50, 200, ${dAlpha * 0.5})`;
+    ctx.beginPath();
+    ctx.ellipse(dx + size * 0.005, headY + size * 0.082 + dLen * 0.8, size * 0.002, size * 0.005, 0, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
   }
-  clearShadow(ctx);
 
   // === GREAT HELM — ornate golden war-crown helm ===
   const helmY = headY - size * 0.04;
@@ -1972,49 +2360,121 @@ export function drawTrusteeEnemy(
   ctx.arc(headX, mondeY, size * 0.012, 0, TAU);
   ctx.fill();
 
-  // === ATTACK EFFECTS ===
+  // === ATTACK EFFECTS — hellfire eruption ===
   if (isAttacking) {
-    const shockR = size * 0.3 + attackIntensity * size * 0.5;
-    ctx.strokeStyle = `rgba(251, 191, 36, ${attackIntensity * 0.5})`;
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.1, shockR, shockR * 0.4, 0, 0, TAU);
-    ctx.stroke();
+    // Ground shockwave — concentric rings
+    for (let ring = 0; ring < 3; ring++) {
+      const ringDelay = ring * 0.1;
+      const ringPhase = Math.min(1, attackIntensity * 1.5 - ringDelay);
+      if (ringPhase > 0) {
+        const shockR = size * 0.2 + ringPhase * size * 0.5 + ring * size * 0.12;
+        ctx.strokeStyle = `rgba(255, 80, 20, ${(1 - ringPhase * 0.6) * attackIntensity * 0.4})`;
+        ctx.lineWidth = (3 - ring) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(x, y + size * 0.1, shockR, shockR * 0.35, 0, 0, TAU);
+        ctx.stroke();
+      }
+    }
 
-    // Corruption burst from eyes
+    // Hellfire eye beams
     for (const side of [-1, 1]) {
-      setShadowBlur(ctx, 6 * zoom, "#7c3aed");
-      ctx.strokeStyle = `rgba(200, 100, 255, ${attackIntensity * 0.6})`;
-      ctx.lineWidth = 1.5 * zoom;
-      const beamLen = size * 0.15 * attackIntensity;
+      setShadowBlur(ctx, 12 * zoom, "#ff4020");
+      const beamLen = size * 0.25 * attackIntensity;
+      const beamWid = size * 0.008 * attackIntensity;
+
+      // Outer glow
+      ctx.strokeStyle = `rgba(255, 60, 20, ${attackIntensity * 0.5})`;
+      ctx.lineWidth = (beamWid + 2) * zoom;
       ctx.beginPath();
       ctx.moveTo(headX + side * size * 0.04, headY - size * 0.01);
-      ctx.lineTo(headX + side * (size * 0.04 + beamLen), headY - size * 0.01 + beamLen * 0.3);
+      ctx.quadraticCurveTo(
+        headX + side * (size * 0.04 + beamLen * 0.5),
+        headY - size * 0.01 + beamLen * 0.15 + Math.sin(time * 8) * size * 0.01,
+        headX + side * (size * 0.04 + beamLen),
+        headY - size * 0.01 + beamLen * 0.3,
+      );
+      ctx.stroke();
+
+      // Inner bright core
+      ctx.strokeStyle = `rgba(255, 220, 100, ${attackIntensity * 0.7})`;
+      ctx.lineWidth = beamWid * zoom;
       ctx.stroke();
       clearShadow(ctx);
     }
+
+    // Hellfire ground eruption particles
+    setShadowBlur(ctx, 6 * zoom, "#ff4020");
+    for (let p = 0; p < 8; p++) {
+      const pAngle = p * TAU / 8 + time * 3;
+      const pDist = size * 0.25 + attackIntensity * size * 0.3;
+      const px = x + Math.cos(pAngle) * pDist;
+      const py = y + size * 0.1 + Math.sin(pAngle) * pDist * 0.35;
+      const pRise = Math.sin(time * 5 + p * 1.3) * size * 0.04;
+      const pAlpha = attackIntensity * (0.3 + Math.sin(time * 4 + p * 2) * 0.15);
+      ctx.fillStyle = `rgba(255, 100, 20, ${pAlpha})`;
+      ctx.beginPath();
+      ctx.arc(px, py - pRise, size * 0.008, 0, TAU);
+      ctx.fill();
+    }
+    clearShadow(ctx);
+
+    // Wing flare during attack
+    ctx.fillStyle = `rgba(255, 60, 20, ${attackIntensity * 0.12})`;
+    ctx.beginPath();
+    ctx.ellipse(x, y - size * 0.2, size * 0.7, size * 0.4, 0, 0, TAU);
+    ctx.fill();
   }
 
-  // === AUTHORITY HALO ===
+  // === CORRUPTED AUTHORITY HALO — double ring, gold and hellfire ===
   drawPulsingGlowRings(ctx, headX, helmY - size * 0.06, size * 0.22, time, zoom, {
-    color: "rgba(251, 191, 36, 0.3)",
+    color: "rgba(255, 80, 20, 0.35)",
     count: 2,
-    speed: 0.7,
-    maxAlpha: 0.3,
-    expansion: 1.4,
-    lineWidth: 1.8,
+    speed: 0.8,
+    maxAlpha: 0.35,
+    expansion: 1.5,
+    lineWidth: 2.0,
+  });
+  drawPulsingGlowRings(ctx, headX, helmY - size * 0.06, size * 0.18, time, zoom, {
+    color: "rgba(251, 191, 36, 0.25)",
+    count: 2,
+    speed: 0.6,
+    maxAlpha: 0.25,
+    expansion: 1.3,
+    lineWidth: 1.5,
   });
 
-  // Floating golden motes
-  for (let m = 0; m < 6; m++) {
-    const mPhase = time * 0.8 + m * TAU / 6;
-    const mR = size * 0.4 + Math.sin(time * 1.5 + m * 1.3) * size * 0.06;
+  // Floating hellfire + corruption embers
+  for (let m = 0; m < 10; m++) {
+    const mPhase = time * 0.7 + m * TAU / 10;
+    const mR = size * 0.35 + Math.sin(time * 1.5 + m * 1.3) * size * 0.08;
     const mx = x + Math.cos(mPhase) * mR;
-    const my = y - size * 0.15 + Math.sin(mPhase) * mR * 0.3 - bodyBob;
+    const my = y - size * 0.15 + Math.sin(mPhase) * mR * 0.3 - bodyBob - Math.sin(time * 2.5 + m) * size * 0.02;
     const mAlpha = 0.25 + Math.sin(time * 3 + m * 1.7) * 0.15;
-    ctx.fillStyle = `rgba(251, 191, 36, ${mAlpha})`;
+    if (m % 3 === 0) {
+      setShadowBlur(ctx, 4 * zoom, "#ff4020");
+      ctx.fillStyle = `rgba(255, 80, 20, ${mAlpha})`;
+    } else if (m % 3 === 1) {
+      setShadowBlur(ctx, 3 * zoom, "#7c3aed");
+      ctx.fillStyle = `rgba(160, 60, 240, ${mAlpha * 0.7})`;
+    } else {
+      setShadowBlur(ctx, 3 * zoom, goldBright);
+      ctx.fillStyle = `rgba(251, 191, 36, ${mAlpha})`;
+    }
     ctx.beginPath();
-    ctx.arc(mx, my, size * 0.006, 0, TAU);
+    ctx.arc(mx, my, size * (0.004 + Math.sin(time * 4 + m * 2.3) * 0.002), 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
+  }
+
+  // Rising smoke/soul wisps from body
+  for (let s = 0; s < 4; s++) {
+    const sPhase = (time * 0.8 + s * 0.5) % 2.0;
+    const sRise = sPhase * size * 0.15;
+    const sAlpha = Math.max(0, 0.15 - sPhase * 0.075);
+    const sx = x + Math.sin(time * 1.2 + s * 2.5) * size * 0.08;
+    ctx.fillStyle = `rgba(60, 20, 80, ${sAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(sx, y - size * 0.3 - sRise - bodyBob, size * 0.015 + sPhase * size * 0.008, size * 0.008 + sPhase * size * 0.005, 0, 0, TAU);
     ctx.fill();
   }
 }

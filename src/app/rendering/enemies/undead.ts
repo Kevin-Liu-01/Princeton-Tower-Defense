@@ -18,6 +18,7 @@ import {
   drawGlowingEyes,
 } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import type { MapTheme } from "../../types";
 
 const TAU = Math.PI * 2;
 
@@ -547,7 +548,8 @@ export function drawSpecterEnemy(
     ctx.strokeStyle = `rgba(148, 163, 184, ${wailAlpha})`;
     ctx.lineWidth = 1 * zoom;
     for (let wave = 0; wave < 3; wave++) {
-      const waveSize = size * (0.1 + wailPhase * 0.3 + wave * 0.08);
+      const waveSize = Math.max(0, size * (0.1 + wailPhase * 0.3 + wave * 0.08));
+      if (waveSize <= 0) continue;
       ctx.beginPath();
       ctx.arc(
         x,
@@ -1015,7 +1017,8 @@ export function drawBerserkerEnemy(
   // Expanding blood rings
   for (let ring = 0; ring < 3; ring++) {
     const ringPhase = (time * 1.2 + ring * 0.33) % 1;
-    const ringRadius = size * (0.2 + ringPhase * 0.4) * furyScale;
+    const ringRadius = Math.max(0, size * (0.2 + ringPhase * 0.4) * furyScale);
+    if (ringRadius <= 0) continue;
     const ringAlpha = (1 - ringPhase) * 0.3;
     ctx.strokeStyle = `rgba(220, 38, 38, ${ringAlpha})`;
     ctx.lineWidth = (1.5 - ringPhase) * zoom;
@@ -6427,8 +6430,19 @@ export function drawPlaguebearerEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   const isAttacking = attackPhase > 0;
+
+  const plaguePalettes: Record<string, { toxic: string; toxicGlow: string; cloudRgb: string; puddle: string; puddleEdge: string; pustuleCore: string; pustuleRim: string; particleRgb: string; groundTint: string }> = {
+    grassland: { toxic: "#65a30d", toxicGlow: "rgba(100,200,30,VAL)", cloudRgb: "100,180,30", puddle: "#4a7a10", puddleEdge: "#2a5008", pustuleCore: "#a0d040", pustuleRim: "#80b020", particleRgb: "120,200,40", groundTint: "rgba(80,120,20,VAL)" },
+    swamp: { toxic: "#4a6a20", toxicGlow: "rgba(70,120,30,VAL)", cloudRgb: "60,90,30", puddle: "#2a4a10", puddleEdge: "#1a3008", pustuleCore: "#70a030", pustuleRim: "#508020", particleRgb: "80,120,30", groundTint: "rgba(40,60,15,VAL)" },
+    desert: { toxic: "#a08030", toxicGlow: "rgba(180,140,40,VAL)", cloudRgb: "160,130,40", puddle: "#806020", puddleEdge: "#604010", pustuleCore: "#c0a050", pustuleRim: "#a08030", particleRgb: "180,150,50", groundTint: "rgba(140,110,30,VAL)" },
+    winter: { toxic: "#4090b0", toxicGlow: "rgba(80,160,200,VAL)", cloudRgb: "80,150,190", puddle: "#305a70", puddleEdge: "#204050", pustuleCore: "#60c0e0", pustuleRim: "#4090b0", particleRgb: "100,180,220", groundTint: "rgba(60,120,160,VAL)" },
+    volcanic: { toxic: "#c04020", toxicGlow: "rgba(200,80,40,VAL)", cloudRgb: "180,70,30", puddle: "#8a3020", puddleEdge: "#5a1a10", pustuleCore: "#e06040", pustuleRim: "#c04020", particleRgb: "220,100,40", groundTint: "rgba(160,60,20,VAL)" },
+  };
+  const pal = plaguePalettes[region] || plaguePalettes.grassland;
+
   const coughCycle = Math.sin(time * 1.5) > 0.85 ? 1 : 0;
   const coughJerk = coughCycle * Math.sin(time * 20) * 0.03;
   const bloat =
@@ -6451,7 +6465,7 @@ export function drawPlaguebearerEnemy(
     const cy = y + Math.sin(cloudAngle) * cloudDist * 0.5;
     const cloudR =
       (size * 0.18 + Math.sin(time * 2 + c) * size * 0.05) * expandMult;
-    ctx.fillStyle = `rgba(101, 163, 13, ${0.08 + Math.sin(time + c) * 0.04})`;
+    ctx.fillStyle = `rgba(${pal.cloudRgb}, ${0.08 + Math.sin(time + c) * 0.04})`;
     ctx.beginPath();
     ctx.arc(cx, cy, cloudR, 0, Math.PI * 2);
     ctx.fill();
@@ -6467,7 +6481,7 @@ export function drawPlaguebearerEnemy(
     const cy = y + Math.sin(cloudAngle) * cloudDist * 0.5;
     const cloudR =
       (size * 0.12 + Math.sin(time * 3 + c) * size * 0.03) * expandMult;
-    ctx.fillStyle = `rgba(132, 204, 22, ${0.15 + Math.sin(time * 2 + c) * 0.08})`;
+    ctx.fillStyle = `rgba(${pal.cloudRgb}, ${0.15 + Math.sin(time * 2 + c) * 0.08})`;
     ctx.beginPath();
     ctx.arc(cx, cy, cloudR, 0, Math.PI * 2);
     ctx.fill();
@@ -6479,14 +6493,14 @@ export function drawPlaguebearerEnemy(
     const pDist = size * 0.5 + Math.sin(time * 2 + p) * size * 0.25;
     const px = x + Math.cos(pAngle) * pDist;
     const py = y + Math.sin(pAngle) * pDist * 0.4;
-    ctx.fillStyle = `rgba(200, 255, 50, ${0.2 + Math.sin(time * 4 + p) * 0.1})`;
+    ctx.fillStyle = `rgba(${pal.particleRgb}, ${0.2 + Math.sin(time * 4 + p) * 0.1})`;
     ctx.beginPath();
     ctx.arc(px, py, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // Wispy cloud tendrils connecting outer clouds
-  ctx.strokeStyle = `rgba(101, 163, 13, ${0.06 + Math.sin(time) * 0.03})`;
+  ctx.strokeStyle = `rgba(${pal.cloudRgb}, ${0.06 + Math.sin(time) * 0.03})`;
   ctx.lineWidth = 2 * zoom;
   for (let w = 0; w < 4; w++) {
     const wAngle1 = time * 0.5 + w * Math.PI * 0.5;
@@ -6512,9 +6526,9 @@ export function drawPlaguebearerEnemy(
     y + size * 0.45,
     size * 0.5,
   );
-  puddleGrad.addColorStop(0, "rgba(101, 163, 13, 0.45)");
-  puddleGrad.addColorStop(0.4, "rgba(80, 140, 10, 0.3)");
-  puddleGrad.addColorStop(0.7, "rgba(50, 80, 10, 0.2)");
+  puddleGrad.addColorStop(0, `rgba(${pal.cloudRgb}, 0.45)`);
+  puddleGrad.addColorStop(0.4, `rgba(${pal.cloudRgb}, 0.3)`);
+  puddleGrad.addColorStop(0.7, `rgba(${pal.cloudRgb}, 0.2)`);
   puddleGrad.addColorStop(1, "rgba(0, 0, 0, 0.15)");
   ctx.fillStyle = puddleGrad;
   ctx.beginPath();
@@ -6534,7 +6548,7 @@ export function drawPlaguebearerEnemy(
     const bubblePhase = (time * 1.5 + pb * 0.33) % 1;
     const bubbleScale = Math.sin(bubblePhase * Math.PI);
     const bx = x - size * 0.2 + pb * size * 0.2;
-    ctx.strokeStyle = `rgba(150, 200, 50, ${bubbleScale * 0.4})`;
+    ctx.strokeStyle = `rgba(${pal.particleRgb}, ${bubbleScale * 0.4})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.arc(
@@ -6831,7 +6845,7 @@ export function drawPlaguebearerEnemy(
 
   // Gown stain spots
   for (let s = 0; s < 4; s++) {
-    ctx.fillStyle = `rgba(101, 163, 13, ${0.15 + s * 0.04})`;
+    ctx.fillStyle = `rgba(${pal.cloudRgb}, ${0.15 + s * 0.04})`;
     ctx.beginPath();
     ctx.arc(
       x - size * 0.2 + s * size * 0.13,
@@ -7058,19 +7072,19 @@ export function drawPlaguebearerEnemy(
     const wDist = size * 0.25 * bloat;
     const wx = Math.cos(wAngle) * wDist;
     const wy = Math.sin(wAngle) * wDist * 0.85;
-    setShadowBlur(ctx, 5 * zoom, "rgba(101, 200, 13, 0.6)");
+    setShadowBlur(ctx, 5 * zoom, `rgba(${pal.cloudRgb}, 0.6)`);
     ctx.fillStyle = "rgba(80, 40, 30, 0.8)";
     ctx.beginPath();
     ctx.ellipse(wx, wy, size * 0.05, size * 0.03, wAngle, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = `rgba(130, 200, 30, ${0.5 + Math.sin(time * 3 + w) * 0.2})`;
+    ctx.fillStyle = `rgba(${pal.particleRgb}, ${0.5 + Math.sin(time * 3 + w) * 0.2})`;
     ctx.beginPath();
     ctx.ellipse(wx, wy, size * 0.035, size * 0.02, wAngle, 0, Math.PI * 2);
     ctx.fill();
     clearShadow(ctx);
     // Wound seepage
     const seepLen = size * 0.04 + Math.sin(time * 2 + w) * size * 0.02;
-    ctx.strokeStyle = `rgba(130, 200, 30, ${0.3 + Math.sin(time * 3 + w) * 0.15})`;
+    ctx.strokeStyle = `rgba(${pal.particleRgb}, ${0.3 + Math.sin(time * 3 + w) * 0.15})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(wx, wy + size * 0.03);
@@ -7090,7 +7104,7 @@ export function drawPlaguebearerEnemy(
   ctx.lineTo(0, size * 0.08);
   ctx.stroke();
   // Corruption drips from cross
-  ctx.strokeStyle = `rgba(101, 163, 13, ${0.4 + Math.sin(time * 4) * 0.15})`;
+  ctx.strokeStyle = `rgba(${pal.cloudRgb}, ${0.4 + Math.sin(time * 4) * 0.15})`;
   ctx.lineWidth = 1.5 * zoom;
   for (let cd = 0; cd < 3; cd++) {
     const cdx = -size * 0.05 + cd * size * 0.05;
@@ -7185,7 +7199,7 @@ export function drawPlaguebearerEnemy(
     const dripProgress = (dripPhase + d * 0.17) % 1;
     const dripY = y + size * 0.3 + dripProgress * size * 0.35;
     const dripAlpha = 1 - dripProgress;
-    ctx.fillStyle = `rgba(150, 200, 50, ${dripAlpha * 0.8})`;
+    ctx.fillStyle = `rgba(${pal.particleRgb}, ${dripAlpha * 0.8})`;
     ctx.beginPath();
     ctx.ellipse(
       dripX,
@@ -7281,7 +7295,7 @@ export function drawPlaguebearerEnemy(
     ctx.stroke();
   }
   // Mask stain
-  ctx.fillStyle = "rgba(101, 163, 13, 0.25)";
+  ctx.fillStyle = `rgba(${pal.cloudRgb}, 0.25)`;
   ctx.beginPath();
   ctx.arc(size * 0.03, size * 0.05, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
@@ -7505,7 +7519,7 @@ export function drawPlaguebearerEnemy(
 
   // --- Toxic plague bubbles ---
   drawPoisonBubbles(ctx, x, y, size * 0.4, time, zoom, {
-    color: "rgba(132, 204, 22, 0.45)",
+    color: `rgba(${pal.cloudRgb}, 0.45)`,
     count: 6,
     speed: 1.3,
     maxAlpha: 0.4,
@@ -7514,8 +7528,8 @@ export function drawPlaguebearerEnemy(
 
   // --- Floating plague cloud pieces ---
   drawShiftingSegments(ctx, x, y, size, time, zoom, {
-    color: "rgba(101, 163, 13, 0.6)",
-    colorAlt: "rgba(132, 204, 22, 0.5)",
+    color: `rgba(${pal.cloudRgb}, 0.6)`,
+    colorAlt: `rgba(${pal.particleRgb}, 0.5)`,
     count: 6,
     orbitRadius: 0.45,
     segmentSize: 0.035,
@@ -7528,8 +7542,8 @@ export function drawPlaguebearerEnemy(
 
   // --- Orbiting toxic debris ---
   drawOrbitingDebris(ctx, x, y, size, time, zoom, {
-    color: "rgba(200, 255, 50, 0.6)",
-    glowColor: "rgba(132, 204, 22, 0.3)",
+    color: `rgba(${pal.particleRgb}, 0.6)`,
+    glowColor: `rgba(${pal.cloudRgb}, 0.3)`,
     count: 5,
     speed: 1.0,
     particleSize: 0.02,
@@ -7549,7 +7563,7 @@ export function drawPlaguebearerEnemy(
         0,
         0.6 - ((time * 8 + cp * 0.35) % 1),
       );
-      ctx.fillStyle = `rgba(150, 200, 50, ${cpAlpha})`;
+      ctx.fillStyle = `rgba(${pal.particleRgb}, ${cpAlpha})`;
       ctx.beginPath();
       ctx.arc(
         x + Math.cos(cpAngle) * cpDist,
@@ -7561,7 +7575,7 @@ export function drawPlaguebearerEnemy(
       ctx.fill();
     }
     // Cough mist
-    ctx.fillStyle = `rgba(132, 204, 22, ${0.12 + Math.sin(time * 15) * 0.06})`;
+    ctx.fillStyle = `rgba(${pal.cloudRgb}, ${0.12 + Math.sin(time * 15) * 0.06})`;
     ctx.beginPath();
     ctx.ellipse(
       x + size * 0.15,
@@ -7582,7 +7596,7 @@ export function drawPlaguebearerEnemy(
       const spAngle = sp * Math.PI * 0.167 + time * 3;
       const spDist = size * 0.3 + attackPhase * size * 0.9;
       const spAlpha = (1 - attackPhase) * 0.5;
-      ctx.fillStyle = `rgba(132, 204, 22, ${spAlpha})`;
+      ctx.fillStyle = `rgba(${pal.cloudRgb}, ${spAlpha})`;
       ctx.beginPath();
       ctx.arc(
         x + Math.cos(spAngle) * spDist,
@@ -7594,14 +7608,14 @@ export function drawPlaguebearerEnemy(
       ctx.fill();
     }
     // Expanding toxic ring
-    setShadowBlur(ctx, 10 * zoom, "#84cc16");
-    ctx.strokeStyle = `rgba(132, 204, 22, ${(1 - attackPhase) * 0.6})`;
+    setShadowBlur(ctx, 10 * zoom, pal.toxic);
+    ctx.strokeStyle = `rgba(${pal.cloudRgb}, ${(1 - attackPhase) * 0.6})`;
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.arc(x, y, size * 0.3 + attackPhase * size, 0, Math.PI * 2);
     ctx.stroke();
     // Inner ring
-    ctx.strokeStyle = `rgba(200, 255, 50, ${(1 - attackPhase) * 0.3})`;
+    ctx.strokeStyle = `rgba(${pal.particleRgb}, ${(1 - attackPhase) * 0.3})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.arc(
@@ -7617,7 +7631,7 @@ export function drawPlaguebearerEnemy(
     for (let sw = 0; sw < 6; sw++) {
       const swAngle = sw * Math.PI * 0.333;
       const swLen = size * 0.15 + attackPhase * size * 0.4;
-      ctx.strokeStyle = `rgba(150, 200, 50, ${(1 - attackPhase) * 0.4})`;
+      ctx.strokeStyle = `rgba(${pal.particleRgb}, ${(1 - attackPhase) * 0.4})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(
@@ -7629,6 +7643,76 @@ export function drawPlaguebearerEnemy(
         y + Math.sin(swAngle) * (size * 0.35 + swLen),
       );
       ctx.stroke();
+    }
+  }
+
+  // Region-specific visual details
+  if (region === "swamp") {
+    ctx.strokeStyle = `rgba(${pal.cloudRgb}, 0.4)`;
+    ctx.lineWidth = 1.5 * zoom;
+    for (let st = 0; st < 4; st++) {
+      const stX = x - size * 0.15 + st * size * 0.1;
+      const stLen = size * 0.12 + Math.sin(time * 2 + st) * size * 0.04;
+      const stWobble = Math.sin(time * 3 + st * 1.5) * size * 0.02;
+      ctx.beginPath();
+      ctx.moveTo(stX, y + size * 0.35);
+      ctx.quadraticCurveTo(stX + stWobble, y + size * 0.35 + stLen * 0.5, stX + stWobble * 0.5, y + size * 0.35 + stLen);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${pal.cloudRgb}, ${0.3 + Math.sin(time * 4 + st) * 0.15})`;
+      ctx.beginPath();
+      ctx.arc(stX + stWobble * 0.5, y + size * 0.35 + stLen, size * 0.012, 0, TAU);
+      ctx.fill();
+    }
+  } else if (region === "desert") {
+    for (let dp = 0; dp < 6; dp++) {
+      const dpAngle = time * 1.5 + dp * TAU / 6;
+      const dpDist = size * 0.4 + Math.sin(time * 2 + dp) * size * 0.15;
+      const dpX = x + Math.cos(dpAngle) * dpDist;
+      const dpY = y + Math.sin(dpAngle) * dpDist * 0.5;
+      const dpAlpha = 0.3 + Math.sin(time * 3 + dp * 2) * 0.15;
+      ctx.fillStyle = `rgba(${pal.particleRgb}, ${dpAlpha})`;
+      ctx.beginPath();
+      ctx.arc(dpX, dpY, size * 0.015 + Math.sin(time + dp) * size * 0.005, 0, TAU);
+      ctx.fill();
+    }
+  } else if (region === "winter") {
+    for (let fc = 0; fc < 5; fc++) {
+      const fcAngle = fc * TAU / 5 + time * 0.2;
+      const fcDist = size * 0.28 + Math.sin(time + fc) * size * 0.04;
+      const fcX = x + Math.cos(fcAngle) * fcDist;
+      const fcY = y + Math.sin(fcAngle) * fcDist * 0.6;
+      const sparkle = 0.4 + Math.sin(time * 5 + fc * 3) * 0.3;
+      ctx.strokeStyle = `rgba(${pal.particleRgb}, ${sparkle})`;
+      ctx.lineWidth = 1 * zoom;
+      for (let arm = 0; arm < 6; arm++) {
+        const armAngle = arm * TAU / 6 + time * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(fcX, fcY);
+        ctx.lineTo(fcX + Math.cos(armAngle) * size * 0.03, fcY + Math.sin(armAngle) * size * 0.03);
+        ctx.stroke();
+      }
+    }
+  } else if (region === "volcanic") {
+    for (let em = 0; em < 8; em++) {
+      const emPhase = (time * 2 + em * 0.4) % 1;
+      const emAngle = em * TAU / 8 + Math.sin(time + em) * 0.5;
+      const emDist = size * 0.25 + emPhase * size * 0.35;
+      const emX = x + Math.cos(emAngle) * emDist;
+      const emY = y + Math.sin(emAngle) * emDist * 0.5 - emPhase * size * 0.2;
+      const emAlpha = (1 - emPhase) * 0.7;
+      ctx.fillStyle = `rgba(${pal.particleRgb}, ${emAlpha})`;
+      ctx.beginPath();
+      ctx.arc(emX, emY, size * 0.012 + (1 - emPhase) * size * 0.008, 0, TAU);
+      ctx.fill();
+    }
+    for (let ash = 0; ash < 5; ash++) {
+      const ashPhase = (time * 0.8 + ash * 0.3) % 1;
+      const ashX = x - size * 0.3 + ash * size * 0.15 + Math.sin(time + ash) * size * 0.05;
+      const ashY = y - size * 0.1 - ashPhase * size * 0.4;
+      ctx.fillStyle = `rgba(80, 60, 50, ${(1 - ashPhase) * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(ashX, ashY, size * 0.008, 0, TAU);
+      ctx.fill();
     }
   }
 }

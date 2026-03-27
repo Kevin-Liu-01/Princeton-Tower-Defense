@@ -262,8 +262,13 @@ export function getEnemyFlashProfile(
     return RADIANT_FLASH_PROFILE;
   if (category === "ranged") return ARCANE_FLASH_PROFILE;
   if (category === "flying") return STORM_FLASH_PROFILE;
-  if (category === "nature" || category === "swarm")
-    return DESERT_FLASH_PROFILE;
+  if (category === "dark_fantasy") return UNDEAD_FLASH_PROFILE;
+  if (category === "forest" || category === "swamp" || category === "insectoid")
+    return NATURE_FLASH_PROFILE;
+  if (category === "desert") return DESERT_FLASH_PROFILE;
+  if (category === "winter") return FROST_FLASH_PROFILE;
+  if (category === "volcanic") return INFERNAL_FLASH_PROFILE;
+  if (category === "region_boss") return STONE_FLASH_PROFILE;
 
   return DEFAULT_FLASH_PROFILE;
 }

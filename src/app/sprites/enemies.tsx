@@ -1,6 +1,6 @@
 "use client";
 import React, { useRef, useCallback } from "react";
-import type { EnemyType } from "../types";
+import type { EnemyType, MapTheme } from "../types";
 import { ENEMY_DATA } from "../constants";
 import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import { drawEnemySprite } from "../rendering/enemies";
@@ -130,7 +130,8 @@ export const EnemySprite: React.FC<{
   type: EnemyType;
   size?: number;
   animated?: boolean;
-}> = ({ type, size = 40, animated = false }) => {
+  region?: MapTheme;
+}> = ({ type, size = 40, animated = false, region }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const renderEnemy = useCallback(
@@ -155,10 +156,14 @@ export const EnemySprite: React.FC<{
 
       ctx.save();
       ctx.translate(cx, cy);
-      drawEnemySprite(ctx, 0, 0, gameSize * zoom, type, eData.color, 0, t, !!eData.flying, zoom, 0);
+      try {
+        drawEnemySprite(ctx, 0, 0, gameSize * zoom, type, eData.color, 0, t, !!eData.flying, zoom, 0, region);
+      } catch {
+        // Silently handle rendering errors at very small sprite sizes
+      }
       ctx.restore();
     },
-    [type, size, animated],
+    [type, size, animated, region],
   );
 
   useSpriteTicker(animated, 50, renderEnemy);

@@ -21,10 +21,11 @@ import { renderEnemyAttackEffect } from "./attackEffects";
 import {
   getSlowAuraColors,
   getEnemyFlashProfile,
-  enemyPaletteCache,
 } from "./types";
 import { drawRegionOverlay } from "./regionOverlays";
 import { getPerformanceSettings } from "../performance";
+import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
+import { getRegionalPalette, getRegionCanvasFilter } from "./regionColors";
 
 const mapThemeCache = new Map<string, MapTheme>();
 
@@ -325,6 +326,10 @@ export function renderEnemy(
   ctx.translate(-screenPos.x, -drawY);
 
   const region = getMapTheme(selectedMap);
+
+  if (hasEnemyAura(eData.category)) {
+    renderEnemyAura(ctx, eData.category!, screenPos.x, drawY, size, now, zoom);
+  }
 
   drawEnemySprite(
     ctx,
@@ -1473,26 +1478,27 @@ export function drawEnemySprite(
   attackPhase: number = 0,
   region: MapTheme = "grassland",
 ) {
-  let bodyColor = color;
+  if (size <= 0 || zoom <= 0) return;
+  let bodyColor: string;
   let bodyColorDark: string;
   let bodyColorLight: string;
   if (flash > 0) {
-    bodyColor = lightenColor(color, flash * 100);
-    bodyColorDark = darkenColor(bodyColor, 30);
-    bodyColorLight = lightenColor(bodyColor, 20);
+    const flashBase = lightenColor(color, flash * 100);
+    const palette = getRegionalPalette(flashBase, region, darkenColor, lightenColor);
+    bodyColor = palette.color;
+    bodyColorDark = palette.dark;
+    bodyColorLight = palette.light;
   } else {
-    const cachedPalette = enemyPaletteCache.get(color);
-    if (cachedPalette) {
-      bodyColorDark = cachedPalette.dark;
-      bodyColorLight = cachedPalette.light;
-    } else {
-      bodyColorDark = darkenColor(color, 30);
-      bodyColorLight = lightenColor(color, 20);
-      enemyPaletteCache.set(color, {
-        dark: bodyColorDark,
-        light: bodyColorLight,
-      });
-    }
+    const palette = getRegionalPalette(color, region, darkenColor, lightenColor);
+    bodyColor = palette.color;
+    bodyColorDark = palette.dark;
+    bodyColorLight = palette.light;
+  }
+
+  const regionFilter = getRegionCanvasFilter(region);
+  if (regionFilter !== "none") {
+    ctx.save();
+    ctx.filter = regionFilter;
   }
 
   switch (type) {
@@ -1831,6 +1837,7 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
+        region,
       );
       break;
     case "thornwalker":
@@ -1887,6 +1894,7 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
+        region,
       );
       break;
     case "banshee":
@@ -2755,6 +2763,7 @@ export function drawEnemySprite(
         time,
         zoom,
         attackPhase,
+        region,
       );
       break;
     case "forest_troll":
@@ -3022,6 +3031,10 @@ export function drawEnemySprite(
         zoom,
         attackPhase,
       );
+  }
+
+  if (regionFilter !== "none") {
+    ctx.restore();
   }
 
   drawRegionOverlay(ctx, x, y, size, type, region, time, zoom);

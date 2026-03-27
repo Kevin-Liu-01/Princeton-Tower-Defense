@@ -5,6 +5,7 @@ import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import type { MapTheme } from "../../types";
 
 
 export function drawThornwalkerEnemy(
@@ -2687,6 +2688,7 @@ export function drawInfernalEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   const isAttacking = attackPhase > 0;
   const flamePulse =
@@ -2696,10 +2698,19 @@ export function drawInfernalEnemy(
     ? Math.sin(attackPhase * Math.PI * 8) * size * 0.02
     : 0;
 
+  const infernalPalettes: Record<string, { flame: string; flameGlow: string; flameRgb: string; ember: string; emberGlow: string; crackColor: string; crackGlow: string; hornColor: string; hornTip: string; wingMembrane: string; groundScorch: string; auraRgb: string }> = {
+    grassland: { flame: "#dc2626", flameGlow: "rgba(220,40,20,VAL)", flameRgb: "220,60,20", ember: "#fb923c", emberGlow: "rgba(251,146,60,VAL)", crackColor: "#ff6020", crackGlow: "rgba(255,100,30,0.6)", hornColor: "#1a0a0a", hornTip: "#ff4400", wingMembrane: "rgba(180,30,10,VAL)", groundScorch: "rgba(60,20,10,VAL)", auraRgb: "220,40,20" },
+    swamp: { flame: "#6aaa20", flameGlow: "rgba(100,170,30,VAL)", flameRgb: "100,170,30", ember: "#8ac040", emberGlow: "rgba(138,192,64,VAL)", crackColor: "#80c030", crackGlow: "rgba(100,180,30,0.6)", hornColor: "#1a1a0a", hornTip: "#88cc22", wingMembrane: "rgba(60,100,20,VAL)", groundScorch: "rgba(30,50,10,VAL)", auraRgb: "80,140,20" },
+    desert: { flame: "#e8a020", flameGlow: "rgba(232,160,32,VAL)", flameRgb: "232,160,32", ember: "#f0c860", emberGlow: "rgba(240,200,96,VAL)", crackColor: "#ffc030", crackGlow: "rgba(255,192,48,0.6)", hornColor: "#2a1a08", hornTip: "#ffaa00", wingMembrane: "rgba(160,100,20,VAL)", groundScorch: "rgba(80,50,15,VAL)", auraRgb: "200,140,20" },
+    winter: { flame: "#3090d0", flameGlow: "rgba(48,144,208,VAL)", flameRgb: "60,140,200", ember: "#60c0f0", emberGlow: "rgba(96,192,240,VAL)", crackColor: "#40a0e0", crackGlow: "rgba(60,160,220,0.6)", hornColor: "#0a1a2a", hornTip: "#44bbff", wingMembrane: "rgba(30,80,140,VAL)", groundScorch: "rgba(20,40,60,VAL)", auraRgb: "50,130,200" },
+    volcanic: { flame: "#ff4400", flameGlow: "rgba(255,68,0,VAL)", flameRgb: "255,80,0", ember: "#ffaa00", emberGlow: "rgba(255,170,0,VAL)", crackColor: "#ff6600", crackGlow: "rgba(255,100,0,0.7)", hornColor: "#0a0404", hornTip: "#ff6600", wingMembrane: "rgba(200,50,0,VAL)", groundScorch: "rgba(80,30,5,VAL)", auraRgb: "255,60,0" },
+  };
+  const pal = infernalPalettes[region] || infernalPalettes.grassland;
+
   // Heat distortion aura
   const heatGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.9);
-  heatGrad.addColorStop(0, `rgba(220, 38, 38, ${flamePulse * 0.3})`);
-  heatGrad.addColorStop(0.5, `rgba(251, 146, 60, ${flamePulse * 0.15})`);
+  heatGrad.addColorStop(0, `rgba(${pal.auraRgb}, ${flamePulse * 0.3})`);
+  heatGrad.addColorStop(0.5, `rgba(${pal.auraRgb}, ${flamePulse * 0.15})`);
   heatGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = heatGrad;
   ctx.beginPath();
@@ -2707,7 +2718,7 @@ export function drawInfernalEnemy(
   ctx.fill();
 
   // Scorch cracks on ground
-  ctx.strokeStyle = `rgba(251, 146, 60, ${0.2 + flamePulse * 0.15})`;
+  ctx.strokeStyle = pal.groundScorch.replace("VAL", String(0.2 + flamePulse * 0.15));
   ctx.lineWidth = 1 * zoom;
   for (let sc = 0; sc < 6; sc++) {
     const scAngle = (sc * Math.PI) / 3 + 0.2;
@@ -2768,8 +2779,8 @@ export function drawInfernalEnemy(
     const tipY = y + size * 0.4 + heatWave;
     ctx.fillStyle =
       tf === 0
-        ? `rgba(220, 38, 38, ${flamePulse + 0.3})`
-        : `rgba(251, 191, 36, ${flamePulse + 0.4})`;
+        ? pal.flameGlow.replace("VAL", String(flamePulse + 0.3))
+        : pal.emberGlow.replace("VAL", String(flamePulse + 0.4));
     ctx.beginPath();
     ctx.moveTo(tipX - size * 0.015, tipY);
     ctx.quadraticCurveTo(tipX, tipY - tipFlameH, tipX + size * 0.015, tipY);
@@ -2815,7 +2826,7 @@ export function drawInfernalEnemy(
     ctx.scale(wingDir, 1);
     ctx.rotate(wingFlap);
 
-    ctx.fillStyle = `rgba(40, 20, 10, ${0.7 + flamePulse * 0.2})`;
+    ctx.fillStyle = pal.wingMembrane.replace("VAL", String(0.7 + flamePulse * 0.2));
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.quadraticCurveTo(
@@ -2848,7 +2859,7 @@ export function drawInfernalEnemy(
       const edgeY = -size * (0.05 + Math.sin(edgeT * Math.PI) * 0.15);
       const edgeFlameH =
         size * (0.06 + Math.sin(time * 8 + ef * 1.5) * 0.03);
-      ctx.fillStyle = `rgba(251, 146, 60, ${0.5 + Math.sin(time * 7 + ef) * 0.3})`;
+      ctx.fillStyle = pal.emberGlow.replace("VAL", String(0.5 + Math.sin(time * 7 + ef) * 0.3));
       ctx.beginPath();
       ctx.moveTo(edgeX - size * 0.01, edgeY);
       ctx.quadraticCurveTo(
@@ -2868,7 +2879,7 @@ export function drawInfernalEnemy(
     drawPathArm(ctx, x + side * size * 0.32 + rageShake, y - size * 0.08 + heatWave, size, time, zoom, side, {
       color: bodyColorDark,
       colorDark: "#1c1917",
-      handColor: `rgba(251, 146, 60, ${flamePulse})`,
+      handColor: pal.emberGlow.replace("VAL", String(flamePulse)),
       shoulderAngle: side * (0.6 + Math.sin(time * 4 + side * Math.PI) * 0.2 + (isAttacking ? attackPhase * 0.6 : 0)),
       elbowAngle: 0.4 + Math.sin(time * 5 + side * 1.5) * 0.2,
       upperLen: 0.2,
@@ -2883,7 +2894,7 @@ export function drawInfernalEnemy(
   drawPathLegs(ctx, x + rageShake, y + size * 0.35 + heatWave, size, time, zoom, {
     color: bodyColorDark,
     colorDark: "#1c1917",
-    footColor: `rgba(251, 146, 60, ${flamePulse * 0.5})`,
+    footColor: pal.emberGlow.replace("VAL", String(flamePulse * 0.5)),
     strideSpeed: 4,
     strideAmt: 0.25,
     legLen: 0.18,
@@ -3048,8 +3059,8 @@ export function drawInfernalEnemy(
   }
 
   // Lava/magma veins glowing across the body
-  ctx.strokeStyle = `rgba(251, 146, 60, ${flamePulse + 0.3})`;
-  setShadowBlur(ctx, 4 * zoom, "#fb923c");
+  ctx.strokeStyle = pal.emberGlow.replace("VAL", String(flamePulse + 0.3));
+  setShadowBlur(ctx, 4 * zoom, pal.crackColor);
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.1 + rageShake, y - size * 0.35 + heatWave);
@@ -3106,7 +3117,7 @@ export function drawInfernalEnemy(
   clearShadow(ctx);
 
   // Jagged cracked skin lines revealing fire underneath
-  ctx.strokeStyle = `rgba(255, 120, 30, ${flamePulse * 0.5})`;
+  ctx.strokeStyle = pal.flameGlow.replace("VAL", String(flamePulse * 0.5));
   ctx.lineWidth = 0.8 * zoom;
   for (let cs = 0; cs < 5; cs++) {
     const csAngle = cs * Math.PI * 0.4 + 0.3;
@@ -3121,8 +3132,8 @@ export function drawInfernalEnemy(
   }
 
   // Glowing cracks on body (wider)
-  ctx.strokeStyle = `rgba(251, 146, 60, ${flamePulse + 0.4})`;
-  setShadowBlur(ctx, 6 * zoom, "#fb923c");
+  ctx.strokeStyle = pal.emberGlow.replace("VAL", String(flamePulse + 0.4));
+  setShadowBlur(ctx, 6 * zoom, pal.crackColor);
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.1, y - size * 0.35);
@@ -3160,7 +3171,7 @@ export function drawInfernalEnemy(
     const flameY = y - size * 0.5 + heatWave;
     const flameWobble = Math.sin(time * 10 + f * 2.1) * size * 0.02;
 
-    ctx.fillStyle = `rgba(220, 38, 38, ${flamePulse + 0.3})`;
+    ctx.fillStyle = pal.flameGlow.replace("VAL", String(flamePulse + 0.3));
     ctx.beginPath();
     ctx.moveTo(flameX, flameY);
     ctx.quadraticCurveTo(
@@ -3177,7 +3188,7 @@ export function drawInfernalEnemy(
     );
     ctx.fill();
 
-    ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse + 0.4})`;
+    ctx.fillStyle = pal.emberGlow.replace("VAL", String(flamePulse + 0.4));
     ctx.beginPath();
     ctx.moveTo(flameX, flameY);
     ctx.quadraticCurveTo(
@@ -3299,8 +3310,8 @@ export function drawInfernalEnemy(
     }
 
     // Horn tip glow
-    ctx.fillStyle = `rgba(220, 38, 38, ${0.4 + Math.sin(time * 5 + horn) * 0.2})`;
-    setShadowBlur(ctx, 4 * zoom, "#dc2626");
+    ctx.fillStyle = pal.flameGlow.replace("VAL", String(0.4 + Math.sin(time * 5 + horn) * 0.2));
+    setShadowBlur(ctx, 4 * zoom, pal.hornTip);
     ctx.beginPath();
     ctx.arc(
       hornTipX,
@@ -3314,8 +3325,8 @@ export function drawInfernalEnemy(
   }
 
   // Glowing eyes with slit pupils
-  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse + 0.5})`;
-  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
+  ctx.fillStyle = pal.emberGlow.replace("VAL", String(flamePulse + 0.5));
+  setShadowBlur(ctx, 10 * zoom, pal.flame);
   ctx.beginPath();
   ctx.ellipse(
     x - size * 0.08 + rageShake,
@@ -3438,8 +3449,8 @@ export function drawInfernalEnemy(
       );
       ctx.stroke();
 
-      ctx.fillStyle = `rgba(251, 146, 60, ${flamePulse})`;
-      setShadowBlur(ctx, 3 * zoom, "#fb923c");
+      ctx.fillStyle = pal.emberGlow.replace("VAL", String(flamePulse));
+      setShadowBlur(ctx, 3 * zoom, pal.crackColor);
       ctx.beginPath();
       ctx.arc(
         handX + Math.cos(clawAngle) * size * 0.08 * handDir,
@@ -3461,15 +3472,15 @@ export function drawInfernalEnemy(
     const emberAlpha = (1 - emberPhase) * 0.8;
     const emberSize = size * (0.025 - emberPhase * 0.018);
 
-    ctx.fillStyle = `rgba(251, 191, 36, ${emberAlpha})`;
-    setShadowBlur(ctx, 3 * zoom, "#fbbf24");
+    ctx.fillStyle = pal.emberGlow.replace("VAL", String(emberAlpha));
+    setShadowBlur(ctx, 3 * zoom, pal.ember);
     ctx.beginPath();
     ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
     ctx.fill();
     clearShadow(ctx);
 
     if (emberPhase < 0.7) {
-      ctx.strokeStyle = `rgba(251, 146, 60, ${emberAlpha * 0.4})`;
+      ctx.strokeStyle = pal.emberGlow.replace("VAL", String(emberAlpha * 0.4));
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(emberX, emberY);
@@ -3483,7 +3494,7 @@ export function drawInfernalEnemy(
 
   // Rising ember sparks
   drawEmberSparks(ctx, x + rageShake, y + heatWave, size * 0.35, time, zoom, {
-    color: "rgba(251, 146, 60, 0.55)",
+    color: pal.emberGlow.replace("VAL", "0.55"),
     coreColor: "rgba(255, 240, 180, 0.85)",
     count: 6,
     speed: 2.0,
@@ -3492,8 +3503,8 @@ export function drawInfernalEnemy(
 
   // Floating ember segments
   drawShiftingSegments(ctx, x + rageShake, y + heatWave, size, time, zoom, {
-    color: "rgba(220, 38, 38, 0.7)",
-    colorAlt: "rgba(251, 191, 36, 0.6)",
+    color: pal.flameGlow.replace("VAL", "0.7"),
+    colorAlt: pal.emberGlow.replace("VAL", "0.6"),
     count: 7,
     orbitRadius: 0.4,
     segmentSize: 0.03,
@@ -3510,11 +3521,11 @@ export function drawInfernalEnemy(
     const engulfGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.6);
     engulfGrad.addColorStop(
       0,
-      `rgba(255, 200, 50, ${attackPhase * 0.4})`,
+      `rgba(${pal.flameRgb}, ${attackPhase * 0.4})`,
     );
     engulfGrad.addColorStop(
       0.5,
-      `rgba(220, 38, 38, ${attackPhase * 0.3})`,
+      `rgba(${pal.auraRgb}, ${attackPhase * 0.3})`,
     );
     engulfGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = engulfGrad;
@@ -3537,15 +3548,15 @@ export function drawInfernalEnemy(
     fbGrad.addColorStop(0, `rgba(255, 255, 200, ${attackPhase})`);
     fbGrad.addColorStop(
       0.3,
-      `rgba(251, 191, 36, ${attackPhase * 0.9})`,
+      `rgba(${pal.flameRgb}, ${attackPhase * 0.9})`,
     );
     fbGrad.addColorStop(
       0.7,
-      `rgba(220, 38, 38, ${attackPhase * 0.7})`,
+      `rgba(${pal.auraRgb}, ${attackPhase * 0.7})`,
     );
     fbGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = fbGrad;
-    setShadowBlur(ctx, 15 * zoom, "#fbbf24");
+    setShadowBlur(ctx, 15 * zoom, pal.ember);
     ctx.beginPath();
     ctx.arc(fireballX, fireballY, fireballSize, 0, Math.PI * 2);
     ctx.fill();
@@ -3560,11 +3571,177 @@ export function drawInfernalEnemy(
         attackPhase;
       const bx = x + Math.cos(burstAngle) * burstDist;
       const by = y + Math.sin(burstAngle) * burstDist * 0.8;
-      ctx.fillStyle = `rgba(251, 146, 60, ${attackPhase * 0.6})`;
+      ctx.fillStyle = pal.emberGlow.replace("VAL", String(attackPhase * 0.6));
       ctx.beginPath();
       ctx.moveTo(bx - size * 0.02, by);
       ctx.quadraticCurveTo(bx, by - burstH, bx + size * 0.02, by);
       ctx.fill();
+    }
+  }
+
+  // Region-specific visual details
+  if (region === "swamp") {
+    // Toxic gas wisps rising from body
+    for (let gw = 0; gw < 5; gw++) {
+      const gwPhase = (time * 0.8 + gw * 0.2) % 1;
+      const gwX = x + Math.sin(time * 1.5 + gw * 1.3) * size * 0.3;
+      const gwY = y - gwPhase * size * 1.2;
+      const gwAlpha = (1 - gwPhase) * 0.35;
+      const gwSize = size * (0.04 + gwPhase * 0.03);
+      ctx.fillStyle = `rgba(100, 170, 30, ${gwAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(gwX, gwY, gwSize, gwSize * 1.5, Math.sin(time + gw) * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Green dripping slime from lower body
+    for (let ds = 0; ds < 4; ds++) {
+      const dripX = x + (ds - 1.5) * size * 0.12 + rageShake;
+      const dripLen = size * (0.06 + Math.sin(time * 3 + ds * 1.7) * 0.03);
+      const dripY = y + size * 0.35 + heatWave;
+      ctx.strokeStyle = `rgba(80, 160, 20, ${0.5 + Math.sin(time * 2 + ds) * 0.2})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(dripX, dripY);
+      ctx.quadraticCurveTo(dripX + size * 0.01, dripY + dripLen * 0.6, dripX - size * 0.005, dripY + dripLen);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(100, 180, 30, ${0.6 + Math.sin(time * 4 + ds) * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(dripX - size * 0.005, dripY + dripLen, size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.lineCap = "butt";
+  } else if (region === "desert") {
+    // Sand particles drifting around
+    for (let sp = 0; sp < 8; sp++) {
+      const spPhase = (time * 1.2 + sp * 0.125) % 1;
+      const spAngle = sp * Math.PI * 0.25 + time * 0.5;
+      const spDist = size * (0.3 + spPhase * 0.4);
+      const spX = x + Math.cos(spAngle) * spDist;
+      const spY = y + Math.sin(spAngle) * spDist * 0.6 - spPhase * size * 0.2;
+      const spAlpha = (1 - spPhase) * 0.5;
+      ctx.fillStyle = `rgba(210, 180, 120, ${spAlpha})`;
+      ctx.beginPath();
+      ctx.arc(spX, spY, size * 0.01, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Heat mirage shimmer below
+    ctx.strokeStyle = "rgba(232, 160, 32, 0.15)";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let hm = 0; hm < 3; hm++) {
+      const hmY = y + size * (0.55 + hm * 0.04);
+      const hmWave = Math.sin(time * 3 + hm * 2) * size * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.35, hmY);
+      ctx.quadraticCurveTo(x + hmWave, hmY - size * 0.01, x + size * 0.35, hmY);
+      ctx.stroke();
+    }
+    // Golden flame wisps
+    for (let gf = 0; gf < 3; gf++) {
+      const gfPhase = (time * 2 + gf * 0.33) % 1;
+      const gfX = x + Math.sin(time * 2.5 + gf * 2) * size * 0.25 + rageShake;
+      const gfY = y - size * 0.2 - gfPhase * size * 0.5;
+      const gfH = size * (0.06 + Math.sin(time * 6 + gf) * 0.02);
+      ctx.fillStyle = `rgba(240, 200, 96, ${(1 - gfPhase) * 0.5})`;
+      ctx.beginPath();
+      ctx.moveTo(gfX - size * 0.01, gfY);
+      ctx.quadraticCurveTo(gfX, gfY - gfH, gfX + size * 0.01, gfY);
+      ctx.fill();
+    }
+  } else if (region === "winter") {
+    // Frost crystals on horns
+    for (let horn = 0; horn < 2; horn++) {
+      const hDir = horn === 0 ? -1 : 1;
+      const hbX = x + hDir * size * 0.28 + rageShake;
+      const hbY = y - size * 0.62 + heatWave;
+      for (let fc = 0; fc < 3; fc++) {
+        const fcAngle = fc * Math.PI * 0.3 + hDir * 0.5;
+        const fcLen = size * (0.03 + Math.sin(time * 2 + fc + horn) * 0.01);
+        ctx.strokeStyle = `rgba(150, 220, 255, ${0.5 + Math.sin(time * 3 + fc) * 0.2})`;
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hbX, hbY);
+        ctx.lineTo(hbX + Math.cos(fcAngle) * fcLen, hbY + Math.sin(fcAngle) * fcLen);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(200, 240, 255, 0.6)";
+        ctx.beginPath();
+        ctx.arc(hbX + Math.cos(fcAngle) * fcLen, hbY + Math.sin(fcAngle) * fcLen, size * 0.006, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    // Ice particle trails
+    for (let ip = 0; ip < 6; ip++) {
+      const ipPhase = (time * 1.0 + ip * 0.16) % 1;
+      const ipX = x + Math.sin(time * 1.8 + ip * 1.1) * size * 0.35;
+      const ipY = y + size * 0.2 - ipPhase * size * 1.0;
+      const ipAlpha = (1 - ipPhase) * 0.55;
+      ctx.fillStyle = `rgba(140, 210, 255, ${ipAlpha})`;
+      ctx.beginPath();
+      ctx.arc(ipX, ipY, size * (0.012 - ipPhase * 0.006), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Blue flame flickers at extremities
+    for (let bf = 0; bf < 4; bf++) {
+      const bfAngle = bf * Math.PI * 0.5 + time * 2;
+      const bfX = x + Math.cos(bfAngle) * size * 0.32;
+      const bfY = y + Math.sin(bfAngle) * size * 0.25 - size * 0.1;
+      const bfH = size * (0.05 + Math.sin(time * 9 + bf * 1.5) * 0.025);
+      ctx.fillStyle = `rgba(60, 140, 200, ${0.4 + Math.sin(time * 7 + bf) * 0.2})`;
+      ctx.beginPath();
+      ctx.moveTo(bfX - size * 0.008, bfY);
+      ctx.quadraticCurveTo(bfX, bfY - bfH, bfX + size * 0.008, bfY);
+      ctx.fill();
+    }
+  } else if (region === "volcanic") {
+    // Lava drips from body
+    for (let ld = 0; ld < 5; ld++) {
+      const ldX = x + (ld - 2) * size * 0.1 + rageShake;
+      const ldPhase = (time * 1.5 + ld * 0.2) % 1;
+      const ldY = y + size * 0.3 + ldPhase * size * 0.25 + heatWave;
+      const ldAlpha = (1 - ldPhase) * 0.8;
+      ctx.fillStyle = `rgba(255, 100, 0, ${ldAlpha})`;
+      setShadowBlur(ctx, 3 * zoom, "#ff6600");
+      ctx.beginPath();
+      ctx.ellipse(ldX, ldY, size * 0.008, size * 0.015 + ldPhase * size * 0.01, 0, 0, Math.PI * 2);
+      ctx.fill();
+      clearShadow(ctx);
+    }
+    // Obsidian shard floating debris
+    for (let os = 0; os < 6; os++) {
+      const osAngle = os * Math.PI * 0.33 + time * 0.6;
+      const osDist = size * (0.4 + Math.sin(time * 1.5 + os) * 0.08);
+      const osX = x + Math.cos(osAngle) * osDist;
+      const osY = y + Math.sin(osAngle) * osDist * 0.5 - size * 0.1 + Math.sin(time * 2 + os) * size * 0.03;
+      const osRot = time * 2 + os;
+      const osSize = size * 0.02;
+      ctx.save();
+      ctx.translate(osX, osY);
+      ctx.rotate(osRot);
+      ctx.fillStyle = `rgba(20, 10, 5, ${0.7 + Math.sin(time + os) * 0.15})`;
+      ctx.beginPath();
+      ctx.moveTo(-osSize, 0);
+      ctx.lineTo(0, -osSize * 1.5);
+      ctx.lineTo(osSize, 0);
+      ctx.lineTo(0, osSize * 0.8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(255, 80, 0, ${0.3 + Math.sin(time * 3 + os) * 0.15})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+      ctx.restore();
+    }
+    // Intense ember rain
+    for (let er = 0; er < 8; er++) {
+      const erPhase = (time * 2.0 + er * 0.12) % 1;
+      const erX = x + Math.sin(time * 1.5 + er * 0.9) * size * 0.5;
+      const erY = y - size * 0.6 + erPhase * size * 1.4;
+      const erAlpha = Math.sin(erPhase * Math.PI) * 0.7;
+      ctx.fillStyle = `rgba(255, 170, 0, ${erAlpha})`;
+      setShadowBlur(ctx, 2 * zoom, "#ff8800");
+      ctx.beginPath();
+      ctx.arc(erX, erY, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+      clearShadow(ctx);
     }
   }
 }
@@ -3680,7 +3857,8 @@ export function drawBansheeEnemy(
   if (wailIntensity > 0.5) {
     for (let wave = 0; wave < 5; wave++) {
       const wavePhase = (time * 3 + wave * 0.2) % 1;
-      const waveSize = size * (0.25 + wavePhase * 1.0);
+      const waveSize = Math.max(0, size * (0.25 + wavePhase * 1.0));
+      if (waveSize <= 0) continue;
       const waveAlpha = (1 - wavePhase) * 0.25 * wailIntensity;
       ctx.strokeStyle = `rgba(226, 232, 240, ${waveAlpha})`;
       ctx.lineWidth = (2.5 - wavePhase * 1.5) * zoom;
@@ -6938,7 +7116,7 @@ export function drawAssassinEnemy(
       y + Math.sin(time * 2.5 + wisp * 2) * size * 0.12 -
       wispPhase * size * 0.1;
     const wispAlpha = (1 - wispPhase) * 0.22;
-    const wispR = size * (0.02 + wispPhase * 0.03);
+    const wispR = Math.max(0.1, size * (0.02 + wispPhase * 0.03));
     const wispGrad = ctx.createRadialGradient(
       wispX, wispY, 0,
       wispX, wispY, wispR,

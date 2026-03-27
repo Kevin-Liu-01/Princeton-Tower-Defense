@@ -293,13 +293,18 @@ export type EnemyType =
 
 // Enemy categories for organization
 export type EnemyCategory =
-  | "academic" // Academic progression: writing sem, thesis, grad apps, etc.
-  | "campus" // Campus life: athletes, tiger fans, recruiters, etc.
-  | "ranged" // Ranged attackers
-  | "flying" // Flying enemies
-  | "boss" // Major boss enemies
-  | "nature" // Environmental/biome enemies
-  | "swarm"; // Fast, weak, numerous enemies
+  | "region_boss"   // End-of-region capstone mega bosses
+  | "academic"      // Academic progression: writing sem, thesis, grad apps, etc.
+  | "campus"        // Campus life: athletes, tiger fans, recruiters, etc.
+  | "ranged"        // Ranged attackers
+  | "dark_fantasy"  // Undead, skeletal, and dark fantasy enemies
+  | "forest"        // Forest biome creatures
+  | "swamp"         // Swamp biome creatures
+  | "desert"        // Desert biome creatures
+  | "winter"        // Winter/frost biome creatures
+  | "volcanic"      // Fire/lava biome creatures
+  | "flying"        // Aerial threats
+  | "insectoid";    // Bug and arachnid enemies
 
 // Enemy ability types - special effects enemies can apply
 export type EnemyAbilityType =
@@ -506,6 +511,15 @@ export interface Hero {
   poisonUntil?: number;
   stunned?: boolean;
   stunUntil?: number;
+  // Biome flavor for themed status visuals (e.g. "cocoon", "vine", "frost")
+  burnFlavor?: string;
+  slowFlavor?: string;
+  poisonFlavor?: string;
+  stunFlavor?: string;
+  burnSourceId?: string;
+  slowSourceId?: string;
+  poisonSourceId?: string;
+  stunSourceId?: string;
 }
 
 // ============================================================================
@@ -602,6 +616,15 @@ export interface Troop {
   poisonUntil?: number;
   stunned?: boolean;
   stunUntil?: number;
+  // Biome flavor for themed status visuals (e.g. "cocoon", "vine", "frost")
+  burnFlavor?: string;
+  slowFlavor?: string;
+  poisonFlavor?: string;
+  stunFlavor?: string;
+  burnSourceId?: string;
+  slowSourceId?: string;
+  poisonSourceId?: string;
+  stunSourceId?: string;
 }
 
 // ============================================================================

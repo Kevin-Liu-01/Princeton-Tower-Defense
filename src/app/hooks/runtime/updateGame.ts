@@ -1274,20 +1274,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                       updated.burning = true;
                       updated.burnDamage = tauntAbilities.burn.damage;
                       updated.burnUntil = now + tauntAbilities.burn.duration;
+                      updated.burnFlavor = tauntAbilities.flavor;
+                      updated.burnSourceId = tauntAbilities.sourceId;
                     }
                     if (tauntAbilities.slow) {
                       updated.slowed = true;
                       updated.slowIntensity = tauntAbilities.slow.intensity;
                       updated.slowUntil = now + tauntAbilities.slow.duration;
+                      updated.slowFlavor = tauntAbilities.flavor;
+                      updated.slowSourceId = tauntAbilities.sourceId;
                     }
                     if (tauntAbilities.poison) {
                       updated.poisoned = true;
                       updated.poisonDamage = tauntAbilities.poison.damage;
                       updated.poisonUntil = now + tauntAbilities.poison.duration;
+                      updated.poisonFlavor = tauntAbilities.flavor;
+                      updated.poisonSourceId = tauntAbilities.sourceId;
                     }
                     if (tauntAbilities.stun) {
                       updated.stunned = true;
                       updated.stunUntil = now + tauntAbilities.stun.duration;
+                      updated.stunFlavor = tauntAbilities.flavor;
+                      updated.stunSourceId = tauntAbilities.sourceId;
                     }
                   }
 
@@ -1409,20 +1417,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                     updated.burning = true;
                     updated.burnDamage = heroAbilities.burn.damage;
                     updated.burnUntil = now + heroAbilities.burn.duration;
+                    updated.burnFlavor = heroAbilities.flavor;
+                    updated.burnSourceId = heroAbilities.sourceId;
                   }
                   if (heroAbilities.slow) {
                     updated.slowed = true;
                     updated.slowIntensity = heroAbilities.slow.intensity;
                     updated.slowUntil = now + heroAbilities.slow.duration;
+                    updated.slowFlavor = heroAbilities.flavor;
+                    updated.slowSourceId = heroAbilities.sourceId;
                   }
                   if (heroAbilities.poison) {
                     updated.poisoned = true;
                     updated.poisonDamage = heroAbilities.poison.damage;
                     updated.poisonUntil = now + heroAbilities.poison.duration;
+                    updated.poisonFlavor = heroAbilities.flavor;
+                    updated.poisonSourceId = heroAbilities.sourceId;
                   }
                   if (heroAbilities.stun) {
                     updated.stunned = true;
                     updated.stunUntil = now + heroAbilities.stun.duration;
+                    updated.stunFlavor = heroAbilities.flavor;
+                    updated.stunSourceId = heroAbilities.sourceId;
                   }
                 }
 
@@ -1622,6 +1638,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       slow?: { intensity: number; until: number };
       poison?: { damage: number; until: number };
       stun?: { until: number };
+      flavor?: string;
+      sourceId?: string;
     }
   } = {};
   const troopCombatAbilityUpdates: { [enemyId: string]: {
@@ -1670,6 +1688,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (troopAbils.stun) {
             existing.stun = { until: now + troopAbils.stun.duration };
           }
+          existing.flavor = troopAbils.flavor;
+          existing.sourceId = troopAbils.sourceId;
           troopAbilityEffects[nearbyTroop.id] = existing;
 
           troopCombatAbilityUpdates[enemy.id] = {
@@ -1715,6 +1735,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           if (flyAbils.stun) {
             existing.stun = { until: now + flyAbils.stun.duration };
           }
+          existing.flavor = flyAbils.flavor;
+          existing.sourceId = flyAbils.sourceId;
           troopAbilityEffects[nearbyTroop.id] = existing;
 
           troopCombatAbilityUpdates[enemy.id] = {
@@ -1783,20 +1805,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               updatedTroop.burning = true;
               updatedTroop.burnDamage = effects.burn.damage;
               updatedTroop.burnUntil = effects.burn.until;
+              updatedTroop.burnFlavor = effects.flavor;
+              updatedTroop.burnSourceId = effects.sourceId;
             }
             if (effects.slow) {
               updatedTroop.slowed = true;
               updatedTroop.slowIntensity = effects.slow.intensity;
               updatedTroop.slowUntil = effects.slow.until;
+              updatedTroop.slowFlavor = effects.flavor;
+              updatedTroop.slowSourceId = effects.sourceId;
             }
             if (effects.poison) {
               updatedTroop.poisoned = true;
               updatedTroop.poisonDamage = effects.poison.damage;
               updatedTroop.poisonUntil = effects.poison.until;
+              updatedTroop.poisonFlavor = effects.flavor;
+              updatedTroop.poisonSourceId = effects.sourceId;
             }
             if (effects.stun) {
               updatedTroop.stunned = true;
               updatedTroop.stunUntil = effects.stun.until;
+              updatedTroop.stunFlavor = effects.flavor;
+              updatedTroop.stunSourceId = effects.sourceId;
             }
           }
 
@@ -2726,20 +2756,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           updated.burning = false;
           updated.burnDamage = undefined;
           updated.burnUntil = undefined;
+          updated.burnFlavor = undefined;
+          updated.burnSourceId = undefined;
         }
         if (updated.slowUntil && currentTime > updated.slowUntil) {
           updated.slowed = false;
           updated.slowIntensity = undefined;
           updated.slowUntil = undefined;
+          updated.slowFlavor = undefined;
+          updated.slowSourceId = undefined;
         }
         if (updated.poisonUntil && currentTime > updated.poisonUntil) {
           updated.poisoned = false;
           updated.poisonDamage = undefined;
           updated.poisonUntil = undefined;
+          updated.poisonFlavor = undefined;
+          updated.poisonSourceId = undefined;
         }
         if (updated.stunUntil && currentTime > updated.stunUntil) {
           updated.stunned = false;
           updated.stunUntil = undefined;
+          updated.stunFlavor = undefined;
+          updated.stunSourceId = undefined;
         }
 
         const dotTick = deltaTime / 1000;
@@ -3065,20 +3103,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         updated.burning = false;
         updated.burnDamage = undefined;
         updated.burnUntil = undefined;
+        updated.burnFlavor = undefined;
+        updated.burnSourceId = undefined;
       }
       if (updated.slowUntil && now > updated.slowUntil) {
         updated.slowed = false;
         updated.slowIntensity = undefined;
         updated.slowUntil = undefined;
+        updated.slowFlavor = undefined;
+        updated.slowSourceId = undefined;
       }
       if (updated.poisonUntil && now > updated.poisonUntil) {
         updated.poisoned = false;
         updated.poisonDamage = undefined;
         updated.poisonUntil = undefined;
+        updated.poisonFlavor = undefined;
+        updated.poisonSourceId = undefined;
       }
       if (updated.stunUntil && now > updated.stunUntil) {
         updated.stunned = false;
         updated.stunUntil = undefined;
+        updated.stunFlavor = undefined;
+        updated.stunSourceId = undefined;
       }
 
       const dotTick = deltaTime / 1000;

@@ -1,4 +1,4 @@
-import type { EnemyData, EnemyType, EnemyTrait, EnemyCategory, EnemyAbilityType } from "../types";
+import type { EnemyData, EnemyType, EnemyTrait, EnemyCategory, EnemyAbilityType, MapTheme } from "../types";
 
 // Enemy data with visual properties
 // Categories: academic, campus, ranged, flying, boss, nature, swarm
@@ -200,7 +200,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The final authority. Practically immovable.",
     color: "#eab308",
     size: 42,
-    category: "boss",
+    category: "campus",
     traits: ["armored", "boss", "tower_debuffer", "aoe_attack"],
     isBoss: true,
     aoeRadius: 90,
@@ -555,7 +555,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The stone guardian itself. Near-infinite HP.",
     color: "#57534e",
     size: 44,
-    category: "boss",
+    category: "campus",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 110,
@@ -592,7 +592,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A powerful figure backed by immense resources.",
     color: "#18181b",
     size: 32,
-    category: "boss",
+    category: "campus",
     traits: ["armored", "boss"],
     isBoss: true,
     liveCost: 3,
@@ -748,7 +748,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Lightning fast, sprints past defenders without stopping.",
     color: "#1e1b4b",
     size: 20,
-    category: "swarm",
+    category: "campus",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     liveCost: 2,
@@ -776,7 +776,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living vegetation consumed by dark magic. Thorns regenerate.",
     color: "#166534",
     size: 28,
-    category: "nature",
+    category: "forest",
     traits: ["armored", "regenerating"],
     abilities: [
       {
@@ -803,7 +803,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Burrows through the ground, consuming all academic progress.",
     color: "#a16207",
     size: 38,
-    category: "boss",
+    category: "desert",
     traits: ["armored", "boss", "aoe_attack"],
     isBoss: true,
     aoeRadius: 100,
@@ -831,7 +831,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Unstoppable academic authority. Backed by millions in funding.",
     color: "#44403c",
     size: 40,
-    category: "boss",
+    category: "campus",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 95,
@@ -910,7 +910,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A legendary donor from centuries past, returned to judge the worthy.",
     color: "#9f1239",
     size: 48,
-    category: "boss",
+    category: "flying",
     traits: ["flying", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 120,
@@ -962,7 +962,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Fast and agile, sprinting past troops without stopping.",
     color: "#f97316",
     size: 20,
-    category: "swarm",
+    category: "campus",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1008,7 +1008,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Shambling swamp horror covered in toxic muck. Slow but resilient.",
     color: "#365314",
     size: 24,
-    category: "nature",
+    category: "swamp",
     traits: ["armored"],
     abilities: [
       {
@@ -1032,7 +1032,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Malevolent spirit light that phases through defenses.",
     color: "#84cc16",
     size: 18,
-    category: "flying",
+    category: "swamp",
     traits: ["flying", "fast", "magic_resist", "breakthrough"],
     abilities: [
       {
@@ -1057,7 +1057,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Massive brute covered in parasitic growths. Regenerates slowly.",
     color: "#4d7c0f",
     size: 30,
-    category: "nature",
+    category: "swamp",
     traits: ["armored", "regenerating"],
     liveCost: 2,
     abilities: [
@@ -1084,7 +1084,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Cursed wanderer of the endless sands, bound by ancient dark pacts.",
     color: "#a16207",
     size: 22,
-    category: "swarm",
+    category: "desert",
     traits: ["fast"],
     abilities: [
       {
@@ -1108,7 +1108,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Armored desert predator with venomous stinger. Heavily protected.",
     color: "#78350f",
     size: 26,
-    category: "nature",
+    category: "desert",
     traits: ["armored"],
     abilities: [
       {
@@ -1132,7 +1132,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Cursed beetle that scurries past defenders too quickly to catch.",
     color: "#fbbf24",
     size: 16,
-    category: "swarm",
+    category: "desert",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1150,7 +1150,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Mischievous ice creature that dashes past defenders.",
     color: "#93c5fd",
     size: 20,
-    category: "swarm",
+    category: "winter",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     abilities: [
@@ -1175,7 +1175,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Primordial ice titan. Massive, furry, and terrifying.",
     color: "#e0f2fe",
     size: 32,
-    category: "nature",
+    category: "winter",
     traits: ["armored", "aoe_attack"],
     aoeRadius: 70,
     aoeDamage: 85,
@@ -1214,7 +1214,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient cryomancer wielding devastating ice magic.",
     color: "#60a5fa",
     size: 24,
-    category: "ranged",
+    category: "winter",
     traits: ["ranged", "magic_resist"],
     abilities: [
       {
@@ -1249,7 +1249,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living lava elemental. Burns anything it touches.",
     color: "#ea580c",
     size: 24,
-    category: "nature",
+    category: "volcanic",
     traits: ["armored"],
     abilities: [
       {
@@ -1273,7 +1273,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Mischievous demon that darts past defenders in a flash of flame.",
     color: "#fb923c",
     size: 18,
-    category: "swarm",
+    category: "volcanic",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     abilities: [
@@ -1297,7 +1297,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Elite infernal knight forged in volcanic fire. Heavily armored.",
     color: "#c2410c",
     size: 28,
-    category: "nature",
+    category: "volcanic",
     traits: ["armored"],
     abilities: [
       {
@@ -1333,7 +1333,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Massive spider that cocoons defenders in paralyzing silk. Spins webs that slow everything nearby.",
     color: "#4a3728",
     size: 28,
-    category: "nature",
+    category: "insectoid",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -1366,7 +1366,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Lightning-fast ambush predator with scythe-like forelegs. Strikes before you see it.",
     color: "#65a30d",
     size: 24,
-    category: "nature",
+    category: "insectoid",
     traits: ["fast"],
     abilities: [
       {
@@ -1392,7 +1392,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Heavily armored beetle that launches boiling acid sprays at defenders.",
     color: "#1e3a5f",
     size: 22,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored", "ranged"],
     abilities: [
       {
@@ -1420,7 +1420,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Bloated bloodsucker that drains life force. Heals itself with each bite.",
     color: "#6b2142",
     size: 20,
-    category: "nature",
+    category: "insectoid",
     traits: ["flying", "fast"],
     abilities: [
       {
@@ -1444,7 +1444,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Heavily armored multi-segmented predator. Each segment carries deadly venom glands.",
     color: "#7c2d12",
     size: 30,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored"],
     abilities: [
       {
@@ -1476,7 +1476,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Iridescent predator that darts through the air too fast to track.",
     color: "#0ea5e9",
     size: 18,
-    category: "swarm",
+    category: "insectoid",
     traits: ["flying", "fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1490,7 +1490,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Spectral moth whose wing dust blinds tower targeting systems.",
     color: "#c4b5fd",
     size: 22,
-    category: "nature",
+    category: "insectoid",
     traits: ["flying", "tower_debuffer"],
     abilities: [
       {
@@ -1518,7 +1518,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Elite soldier of a vast desert colony. Summons reinforcements from underground tunnels.",
     color: "#92400e",
     size: 24,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored", "summoner"],
     summonType: "scarab",
     summonCount: 2,
@@ -1543,7 +1543,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Part of an endless swarm that devours everything in its path.",
     color: "#a3a323",
     size: 16,
-    category: "swarm",
+    category: "insectoid",
     traits: ["flying", "fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1558,7 +1558,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ambush specialist that bursts from hidden burrows to seize prey. Wraps victims in silk.",
     color: "#78350f",
     size: 26,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored"],
     abilities: [
       {
@@ -1593,7 +1593,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Crystalline carapace radiates intense cold. Towers near it freeze over.",
     color: "#67e8f9",
     size: 24,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored", "tower_debuffer"],
     abilities: [
       {
@@ -1626,7 +1626,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Parasitic arachnid that latches onto towers and drains their power.",
     color: "#a5f3fc",
     size: 18,
-    category: "nature",
+    category: "insectoid",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -1650,7 +1650,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ghostly moth whose frost-laden wings create whiteout conditions.",
     color: "#e0f2fe",
     size: 20,
-    category: "nature",
+    category: "insectoid",
     traits: ["flying", "tower_debuffer"],
     abilities: [
       {
@@ -1678,7 +1678,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Matriarch of a volcanic ant colony. Endlessly spawns burning soldier ants.",
     color: "#dc2626",
     size: 30,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored", "summoner"],
     summonType: "fire_imp",
     summonCount: 2,
@@ -1705,7 +1705,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living furnace encased in obsidian armor. Its molten blood burns anything that strikes it.",
     color: "#b91c1c",
     size: 26,
-    category: "nature",
+    category: "insectoid",
     traits: ["armored"],
     abilities: [
       {
@@ -1737,7 +1737,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Born from volcanic ash, it leaves a trail of burning embers in its wake.",
     color: "#f97316",
     size: 20,
-    category: "nature",
+    category: "insectoid",
     traits: ["flying"],
     abilities: [
       {
@@ -1765,7 +1765,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient spider queen of nightmarish proportions. Spawns endless waves of spiderlings and encases defenders in unbreakable cocoons.",
     color: "#1c1917",
     size: 42,
-    category: "boss",
+    category: "insectoid",
     traits: ["armored", "boss", "summoner", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 90,
@@ -1817,7 +1817,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Colossal ursine predator with iron-hard hide. Its thunderous swipes send defenders flying.",
     color: "#5c3a1e",
     size: 32,
-    category: "nature",
+    category: "forest",
     traits: ["armored", "aoe_attack"],
     aoeRadius: 70,
     aoeDamage: 60,
@@ -1844,7 +1844,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A walking fortress of living wood. Roots erupt from the ground to entangle defenders, and it slowly regenerates from any wound.",
     color: "#2d5016",
     size: 36,
-    category: "nature",
+    category: "forest",
     traits: ["armored", "regenerating", "aoe_attack"],
     aoeRadius: 80,
     aoeDamage: 50,
@@ -1880,7 +1880,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Regenerating brute of the deep forest. Cut it down and it rises again, angrier than before.",
     color: "#4a6741",
     size: 28,
-    category: "nature",
+    category: "forest",
     traits: ["armored", "regenerating"],
     abilities: [
       {
@@ -1903,7 +1903,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Lightning-fast pack hunter. Slips past defenders before they can react.",
     color: "#6b6b6b",
     size: 20,
-    category: "swarm",
+    category: "forest",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     abilities: [
@@ -1928,7 +1928,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Majestic raptor with a wingspan that blots out the sun. Swoops down to rake defenders with steel talons.",
     color: "#c8a050",
     size: 34,
-    category: "nature",
+    category: "forest",
     traits: ["flying", "fast"],
     abilities: [
       {
@@ -1954,7 +1954,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Multi-headed serpentine horror. Each head spits venom independently, and severed heads grow back stronger.",
     color: "#2e4a2e",
     size: 34,
-    category: "nature",
+    category: "swamp",
     traits: ["armored", "regenerating", "aoe_attack"],
     aoeRadius: 90,
     aoeDamage: 55,
@@ -1981,7 +1981,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Grotesque amphibian with a tongue that strikes like a whip. Secretes hallucinogenic toxins.",
     color: "#5a7a3a",
     size: 26,
-    category: "nature",
+    category: "swamp",
     traits: [],
     abilities: [
       {
@@ -2013,7 +2013,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living tangle of thorned vines that slithers through the swamp. Constricts towers, choking their output.",
     color: "#3a6b3a",
     size: 22,
-    category: "nature",
+    category: "swamp",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -2046,7 +2046,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Bog-dwelling regenerator caked in festering mud. Its wounds seal with toxic swamp muck.",
     color: "#4a5a3a",
     size: 28,
-    category: "nature",
+    category: "swamp",
     traits: ["armored", "regenerating"],
     abilities: [
       {
@@ -2073,7 +2073,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Immortal firebird wreathed in sacred flame. Burns everything in its wake and is reborn from its own ashes.",
     color: "#ff6600",
     size: 28,
-    category: "nature",
+    category: "desert",
     traits: ["flying", "regenerating"],
     abilities: [
       {
@@ -2098,7 +2098,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient stone-scaled serpent whose gaze turns flesh to stone. Impervious to most attacks.",
     color: "#6b6b3a",
     size: 30,
-    category: "nature",
+    category: "desert",
     traits: ["armored"],
     abilities: [
       {
@@ -2134,7 +2134,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient spirit of the desert winds. Commands sandstorms that blind and disorient defenders.",
     color: "#6a3aaa",
     size: 26,
-    category: "nature",
+    category: "desert",
     traits: ["ranged", "magic_resist", "tower_debuffer"],
     abilities: [
       {
@@ -2163,7 +2163,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Lion-bodied, bat-winged beast with a scorpion tail that launches venomous barbs at range.",
     color: "#8b4513",
     size: 28,
-    category: "nature",
+    category: "desert",
     traits: ["flying", "ranged", "armored"],
     abilities: [
       {
@@ -2190,7 +2190,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ice-crusted regenerator that radiates bitter cold. Towers freeze solid in its presence.",
     color: "#5a8aaa",
     size: 30,
-    category: "nature",
+    category: "winter",
     traits: ["armored", "regenerating", "tower_debuffer"],
     abilities: [
       {
@@ -2223,7 +2223,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Enormous frost-furred predator that hunts in relentless packs. Too fast and too tough to ignore.",
     color: "#4a4a5a",
     size: 22,
-    category: "swarm",
+    category: "winter",
     traits: ["fast", "armored"],
     abilities: [
       {
@@ -2247,7 +2247,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Gaunt horror of the frozen wastes. Its shriek paralyzes defenders with primal terror.",
     color: "#3a3a4a",
     size: 26,
-    category: "nature",
+    category: "winter",
     traits: ["fast", "tower_debuffer"],
     abilities: [
       {
@@ -2283,7 +2283,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Colossal armored beast carrying a war howdah of archers. Its iron-tipped tusks and seismic charge flatten all resistance.",
     color: "#8b7355",
     size: 52,
-    category: "nature",
+    category: "winter",
     traits: ["armored", "aoe_attack", "ranged"],
     aoeRadius: 130,
     aoeDamage: 120,
@@ -2323,7 +2323,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living mountain of molten rock and obsidian. Nearly indestructible and burns everything it touches.",
     color: "#8b2500",
     size: 34,
-    category: "nature",
+    category: "volcanic",
     traits: ["armored"],
     abilities: [
       {
@@ -2357,7 +2357,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Fire-breathing drake born from volcanic vents. Rains molten fire from above.",
     color: "#cc3300",
     size: 28,
-    category: "nature",
+    category: "volcanic",
     traits: ["flying", "armored"],
     abilities: [
       {
@@ -2382,7 +2382,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Swift elemental lizard that regenerates in flame. Leaves a trail of burning footprints.",
     color: "#ff4500",
     size: 22,
-    category: "nature",
+    category: "volcanic",
     traits: ["fast", "regenerating"],
     abilities: [
       {
@@ -2409,7 +2409,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Rattling remnants of a forgotten eating club member. Fast but fragile.",
     color: "#d4c5a0",
     size: 20,
-    category: "swarm",
+    category: "dark_fantasy",
     traits: ["fast"],
   },
   skeleton_knight: {
@@ -2423,7 +2423,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient warrior bound by tradition. Rusted armor still holds strong.",
     color: "#8b8068",
     size: 26,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["armored"],
     abilities: [
       {
@@ -2449,7 +2449,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Skeletal sharpshooter perched in the arches. Never misses.",
     color: "#c4b590",
     size: 22,
-    category: "ranged",
+    category: "dark_fantasy",
     traits: ["ranged"],
     abilities: [
       {
@@ -2473,7 +2473,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The crowned sovereign of Nassau's catacombs. Commands legions of bone.",
     color: "#daa520",
     size: 38,
-    category: "boss",
+    category: "dark_fantasy",
     traits: ["armored", "boss", "summoner", "aoe_attack"],
     isBoss: true,
     aoeRadius: 100,
@@ -2515,7 +2515,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Groaning corpse with the energy of a Monday morning student. Slow but relentless.",
     color: "#5a7247",
     size: 21,
-    category: "swarm",
+    category: "dark_fantasy",
     traits: [],
     abilities: [
       {
@@ -2539,7 +2539,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Bloated undead horror wrapped in rusted chains. Absorbs punishment endlessly.",
     color: "#4a5d3a",
     size: 32,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["armored", "aoe_attack"],
     aoeRadius: 70,
     aoeDamage: 80,
@@ -2577,7 +2577,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Reanimated cafeteria horror. Spews toxic bile at defenders.",
     color: "#7cb342",
     size: 24,
-    category: "ranged",
+    category: "dark_fantasy",
     traits: ["ranged"],
     abilities: [
       {
@@ -2601,7 +2601,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Feral undead driven mad by sleep deprivation. Sprints through defenses.",
     color: "#6b5b73",
     size: 20,
-    category: "swarm",
+    category: "dark_fantasy",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     abilities: [
@@ -2630,7 +2630,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Fell warrior in obsidian plate. Each step cracks the earth.",
     color: "#2d2d3d",
     size: 30,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["armored"],
     liveCost: 2,
     abilities: [
@@ -2663,7 +2663,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Undead champion of the gate. His cursed blade devours souls.",
     color: "#1a1a2e",
     size: 36,
-    category: "boss",
+    category: "dark_fantasy",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 100,
@@ -2709,7 +2709,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Once a defender of the league, now corrupted by dark ambition.",
     color: "#4a3f6b",
     size: 32,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["armored", "magic_resist"],
     liveCost: 3,
     abilities: [
@@ -2743,7 +2743,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Elite guardian clad in midnight steel. Nearly impenetrable.",
     color: "#1c1c2e",
     size: 28,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["armored"],
     abilities: [
       {
@@ -2773,7 +2773,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "An emeritus professor who refused to retire. Now an undead archmage.",
     color: "#4fc3f7",
     size: 34,
-    category: "boss",
+    category: "dark_fantasy",
     traits: ["ranged", "boss", "summoner", "magic_resist", "tower_debuffer"],
     isBoss: true,
     liveCost: 5,
@@ -2811,7 +2811,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ethereal horror that drifts through the chapel at midnight.",
     color: "#b39ddb",
     size: 24,
-    category: "flying",
+    category: "dark_fantasy",
     traits: ["flying", "magic_resist", "armored"],
     targetsTroops: true,
     troopAttackSpeed: 1800,
@@ -2842,7 +2842,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Skeletal scholar who weaponized forbidden osteomancy.",
     color: "#ce93d8",
     size: 24,
-    category: "ranged",
+    category: "dark_fantasy",
     traits: ["ranged", "magic_resist"],
     abilities: [
       {
@@ -2867,7 +2867,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Excommunicated cleric channeling forbidden rites in the cloisters.",
     color: "#5c1a1a",
     size: 26,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -2904,7 +2904,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Vengeful spirit of a debater who lost their final argument. Relentless.",
     color: "#c62828",
     size: 28,
-    category: "campus",
+    category: "dark_fantasy",
     traits: ["fast"],
     liveCost: 2,
     abilities: [
@@ -2936,7 +2936,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Grotesque stitched monstrosity from a biology experiment gone horribly wrong.",
     color: "#4e342e",
     size: 42,
-    category: "boss",
+    category: "dark_fantasy",
     traits: ["armored", "boss", "aoe_attack", "regenerating"],
     isBoss: true,
     aoeRadius: 110,
@@ -2973,7 +2973,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Demonic beast that blazes through defenses like wildfire.",
     color: "#ff6f00",
     size: 22,
-    category: "swarm",
+    category: "dark_fantasy",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     abilities: [
@@ -3002,7 +3002,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Dark seraphim descending upon Reunions. The party ends now.",
     color: "#311b92",
     size: 40,
-    category: "boss",
+    category: "dark_fantasy",
     traits: ["flying", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 110,
@@ -3053,7 +3053,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A colossal stone tiger awakened from Nassau Hall's foundation. Ancient ivy pulses with arcane energy through its joints, and its eyes blaze with Princeton orange fire. The ground trembles with every step.",
     color: "#e65100",
     size: 52,
-    category: "boss",
+    category: "region_boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 130,
@@ -3099,7 +3099,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A writhing multi-headed serpentine horror risen from the academic swamps. Each head represents an unfinishable chapter — cut one down and another argument emerges. Toxic scholarly bile drips from every maw.",
     color: "#1b5e20",
     size: 50,
-    category: "boss",
+    category: "region_boss",
     traits: ["armored", "boss", "aoe_attack", "regenerating", "summoner"],
     isBoss: true,
     aoeRadius: 120,
@@ -3147,7 +3147,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "An ancient colossal sphinx carved from sandstone and gold. It poses unanswerable riddles that disable the minds of defenders. Its gaze alone can shatter towers. The ultimate exam you can never be ready for.",
     color: "#f9a825",
     size: 54,
-    category: "boss",
+    category: "region_boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer", "magic_resist"],
     isBoss: true,
     aoeRadius: 140,
@@ -3202,7 +3202,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "An enormous crystalline ice giant born from the brutal January cold. Blizzards rage within its translucent body and every surface it passes freezes solid. The embodiment of winter's cruelty.",
     color: "#4dd0e1",
     size: 52,
-    category: "boss",
+    category: "region_boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 130,
@@ -3257,7 +3257,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A titanic lava serpent that erupts from the volcanic depths. Molten scales drip liquid fire, its body stretches across the battlefield, and the air itself ignites in its wake. The ultimate embodiment of academic burnout.",
     color: "#d50000",
     size: 56,
-    category: "boss",
+    category: "region_boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer", "regenerating"],
     isBoss: true,
     aoeRadius: 150,
@@ -3361,30 +3361,103 @@ export interface EnemyCategoryMeta {
 }
 
 export const ENEMY_CATEGORY_META: Record<EnemyCategory, EnemyCategoryMeta> = {
+  region_boss: { name: "Region Boss", desc: "End-of-region capstone mega bosses", color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
   academic: { name: "Academic", desc: "Academic progression and milestones", color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
   campus: { name: "Campus Life", desc: "Campus events and activities", color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
   ranged: { name: "Ranged", desc: "Attack from a distance", color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
+  dark_fantasy: { name: "Dark Fantasy", desc: "Undead, skeletal, and dark fantasy enemies", color: "text-violet-400", bgColor: "bg-violet-950/50 border-violet-800/40" },
+  forest: { name: "Forest", desc: "Forest biome creatures", color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
+  swamp: { name: "Swamp", desc: "Swamp biome creatures", color: "text-lime-400", bgColor: "bg-lime-950/50 border-lime-800/40" },
+  desert: { name: "Desert", desc: "Desert biome creatures", color: "text-yellow-600", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+  winter: { name: "Winter", desc: "Winter and frost biome creatures", color: "text-sky-400", bgColor: "bg-sky-950/50 border-sky-800/40" },
+  volcanic: { name: "Volcanic", desc: "Fire and lava biome creatures", color: "text-orange-400", bgColor: "bg-orange-950/50 border-orange-800/40" },
   flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
-  boss: { name: "Bosses", desc: "Major threats with devastating power", color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
-  nature: { name: "Nature", desc: "Environmental and biome creatures", color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
-  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+  insectoid: { name: "Insectoid", desc: "Bugs and arachnids", color: "text-amber-700", bgColor: "bg-amber-950/50 border-amber-900/40" },
 };
 
-export const ENEMY_CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
+export const ENEMY_CATEGORY_ORDER: EnemyCategory[] = [
+  "academic",
+  "campus",
+  "ranged",
+  "dark_fantasy",
+  "forest",
+  "swamp",
+  "desert",
+  "winter",
+  "volcanic",
+  "flying",
+  "insectoid",
+  "region_boss",
+];
 
 export const ENEMY_CATEGORY_ACCENTS: Record<EnemyCategory, string> = {
+  region_boss: "#f87171",
   academic: "#c084fc",
   campus: "#f59e0b",
   ranged: "#4ade80",
+  dark_fantasy: "#a78bfa",
+  forest: "#34d399",
+  swamp: "#84cc16",
+  desert: "#ca8a04",
+  winter: "#38bdf8",
+  volcanic: "#fb923c",
   flying: "#22d3ee",
-  boss: "#f87171",
-  nature: "#34d399",
-  swarm: "#facc15",
+  insectoid: "#d97706",
 };
+
+const REGIONAL_VARIANT_THEMES: MapTheme[] = ["swamp", "desert", "winter", "volcanic"];
+
+const REGIONAL_VARIANT_TYPES = new Set<EnemyType>([
+  // Shared overlay enemies (academic)
+  "frosh", "sophomore", "junior", "senior", "gradstudent",
+  // Ranged
+  "archer", "mage", "crossbowman", "warlock", "hexer",
+  // Flying
+  "harpy", "wyvern",
+  // Undead / dark fantasy (also have dedicated palettes for plaguebearer)
+  "specter", "berserker", "necromancer", "shadow_knight", "cultist", "plaguebearer",
+  // Elemental (infernal has dedicated palette)
+  "banshee", "assassin", "infernal",
+  // Campus / forest
+  "athlete", "tiger_fan", "mascot",
+  // Dedicated palette enemies
+  "ancient_ent",
+]);
+
+export function hasRegionalVariants(type: EnemyType): boolean {
+  return REGIONAL_VARIANT_TYPES.has(type);
+}
+
+export function getRegionalVariantThemes(): MapTheme[] {
+  return REGIONAL_VARIANT_THEMES;
+}
+
+const THEME_LABELS: Record<MapTheme, string> = {
+  grassland: "Grassland",
+  swamp: "Swamp",
+  desert: "Desert",
+  winter: "Winter",
+  volcanic: "Volcanic",
+};
+
+export function getThemeLabel(theme: MapTheme): string {
+  return THEME_LABELS[theme];
+}
 
 export function groupEnemiesByCategory(enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> {
   const grouped: Record<EnemyCategory, EnemyType[]> = {
-    academic: [], campus: [], ranged: [], flying: [], boss: [], nature: [], swarm: [],
+    region_boss: [],
+    academic: [],
+    campus: [],
+    ranged: [],
+    dark_fantasy: [],
+    forest: [],
+    swamp: [],
+    desert: [],
+    winter: [],
+    volcanic: [],
+    flying: [],
+    insectoid: [],
   };
   for (const type of enemyTypes) {
     const enemy = ENEMY_DATA[type];
@@ -3393,3 +3466,4 @@ export function groupEnemiesByCategory(enemyTypes: EnemyType[]): Record<EnemyCat
   }
   return grouped;
 }
+

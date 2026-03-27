@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import {
   Star,
@@ -42,6 +42,10 @@ import {
   AlertTriangle,
   Footprints,
   Plane,
+  Sun,
+  Bug,
+  TreePine,
+  Compass,
 } from "lucide-react";
 import type {
   HeroType,
@@ -51,6 +55,7 @@ import type {
   EnemyCategory,
   HazardType,
   SpecialTowerType,
+  MapTheme,
 } from "../../types";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import {
@@ -84,9 +89,14 @@ import {
   ENEMY_ABILITY_META,
   ENEMY_CATEGORY_META,
   ENEMY_CATEGORY_ORDER,
+  ENEMY_CATEGORY_ACCENTS,
   groupEnemiesByCategory,
+  hasRegionalVariants,
+  getRegionalVariantThemes,
+  getThemeLabel,
   TOWER_CATEGORIES,
   TOWER_TAGS,
+  TOWER_QUICK_SUMMARY,
 } from "../../constants";
 import { TagBadge } from "../ui/primitives/TagBadge";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
@@ -183,13 +193,18 @@ const HERO_ROLE_ICONS: Record<HeroType, (size: number) => React.ReactNode> = {
 
 // Category icons (JSX, must live locally)
 const CATEGORY_ICONS: Record<EnemyCategory, React.ReactNode> = {
+  region_boss: <Crown size={16} />,
   academic: <Book size={16} />,
   campus: <Flag size={16} />,
   ranged: <Crosshair size={16} />,
+  dark_fantasy: <Skull size={16} />,
+  forest: <TreePine size={16} />,
+  swamp: <Droplets size={16} />,
+  desert: <Sun size={16} />,
+  winter: <Snowflake size={16} />,
+  volcanic: <Flame size={16} />,
   flying: <Wind size={16} />,
-  boss: <Crown size={16} />,
-  nature: <Sparkles size={16} />,
-  swarm: <Users size={16} />,
+  insectoid: <Bug size={16} />,
 };
 
 export type CodexTabId =
@@ -613,11 +628,25 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   const [selectedHeroDetail, setSelectedHeroDetail] = useState<string | null>(
     null
   );
+  const [categoryNavOpen, setCategoryNavOpen] = useState(false);
+  const [enemyRegionPreview, setEnemyRegionPreview] = useState<Record<string, MapTheme | null>>({});
   const towerTypes = Object.keys(TOWER_DATA) as (keyof typeof TOWER_DATA)[];
   const heroTypes = Object.keys(HERO_DATA) as HeroType[];
   const troopTypes = TROOP_DISPLAY_ORDER;
   const enemyTypes = Object.keys(ENEMY_DATA) as (keyof typeof ENEMY_DATA)[];
   const spellTypes = Object.keys(SPELL_DATA) as SpellType[];
+
+  const enemyScrollRef = useRef<HTMLDivElement>(null);
+  const categorySectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const setCategoryRef = useCallback((category: string, el: HTMLDivElement | null) => {
+    categorySectionRefs.current[category] = el;
+  }, []);
+  const scrollToCategory = useCallback((category: string) => {
+    const el = categorySectionRefs.current[category];
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
   const levelEntries = Object.entries(LEVEL_DATA);
   const challengeLevelCount = levelEntries.filter(
     ([, level]) => level.levelKind === "challenge"
@@ -836,9 +865,10 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   const armoredEnemyCount = enemyTypes.filter((type) =>
     ENEMY_DATA[type].traits?.includes("armored")
   ).length;
+  const regionBossCount = enemyTypes.filter((type) => ENEMY_DATA[type].category === "region_boss").length;
   const bossEnemyCount = enemyTypes.filter((type) => {
     const enemy = ENEMY_DATA[type];
-    return enemy.isBoss || enemy.traits?.includes("boss");
+    return (enemy.isBoss || enemy.traits?.includes("boss")) && enemy.category !== "region_boss";
   }).length;
   const highestLeakEnemy =
     enemyTypes.length > 0
@@ -1285,61 +1315,49 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   }}
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 text-amber-300">
-                        <Crown size={15} />
-                        <h3 className="text-lg font-bold">Tower Arsenal</h3>
-                      </div>
-                      <p className="text-sm text-stone-300 leading-relaxed">
-                        Towers decide your lane DPS curve. Open for coverage, then spike with path upgrades.
-                        Treat level-4 branching like a build commit, not a cosmetic choice.
-                      </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-sm">
-                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-3 py-2.5">
-                          <div className="text-xs text-amber-400 uppercase tracking-wider font-medium">Tower Types</div>
-                          <div className="text-xl font-bold text-amber-200">{towerTypes.length}</div>
-                        </div>
-                        <div className="rounded-lg border border-sky-800/35 bg-sky-950/30 px-3 py-2.5">
-                          <div className="text-xs text-sky-400 uppercase tracking-wider font-medium">Damage Towers</div>
-                          <div className="text-xl font-bold text-sky-200">{damageTowerCount}</div>
-                        </div>
-                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-3 py-2.5">
-                          <div className="text-xs text-purple-400 uppercase tracking-wider font-medium">Support / Control</div>
-                          <div className="text-xl font-bold text-purple-200">{supportTowerCount}</div>
-                        </div>
-                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-3 py-2.5">
-                          <div className="text-xs text-rose-400 uppercase tracking-wider font-medium">Max L4 Cost</div>
-                          <div className="text-base font-bold text-rose-200 leading-tight">
-                            {priciestLevel4Upgrade
-                              ? `${TOWER_DATA[priciestLevel4Upgrade.type].name} ${priciestLevel4Upgrade.cost} PP`
-                              : "N/A"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 text-amber-300">
+                      <Crown size={15} />
+                      <h3 className="text-lg font-bold">Quick Reference</h3>
+                      <span className="text-[10px] text-stone-500 ml-auto">Click any tower below for full details</span>
                     </div>
-
-                    <div className="xl:w-[280px] rounded-xl border border-amber-700/35 bg-stone-950/45 p-3">
-                      <div className="text-xs text-amber-400 uppercase tracking-wider font-medium mb-2">Lane Build Diagram</div>
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        {featuredTowerTypes.slice(0, 4).map((type, index) => (
-                          <React.Fragment key={`tower-diagram-${type}`}>
-                            <FramedCodexSprite size={54} theme={TOWER_SPRITE_FRAME_THEME[type]}>
-                              <TowerSprite type={type} size={44} level={2} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {towerTypes.map(type => {
+                        const tower = TOWER_DATA[type];
+                        const cat = TOWER_CATEGORIES[type];
+                        const tags = TOWER_TAGS[type];
+                        const summary = TOWER_QUICK_SUMMARY[type];
+                        const antiAir = tags.includes("anti_air");
+                        const stats = getDynamicStats(type, 1);
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 border border-stone-700/30 bg-stone-950/40"
+                          >
+                            <FramedCodexSprite size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                              <TowerSprite type={type} size={34} level={1} />
                             </FramedCodexSprite>
-                            {index < Math.min(3, featuredTowerTypes.length - 1) && (
-                              <ChevronRight size={13} className="text-amber-300/70" />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <div className="text-[11px] text-stone-400 leading-relaxed">
-                        Cost curve: {Math.round(averageTowerCost)} PP avg entry,{" "}
-                        {cheapestTower ? `${TOWER_DATA[cheapestTower.type].name}` : "N/A"} at{" "}
-                        {cheapestTower ? `${cheapestTower.cost}` : "-"} PP to{" "}
-                        {priciestTower ? `${TOWER_DATA[priciestTower.type].name}` : "N/A"} at{" "}
-                        {priciestTower ? `${priciestTower.cost}` : "-"} PP.
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-amber-200 truncate">{tower.name}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-950/50 border border-amber-800/30 text-amber-400 font-medium shrink-0">{tower.cost} PP</span>
+                              </div>
+                              <div className="text-[10px] text-stone-400 leading-snug mt-0.5">{summary}</div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[9px] px-1.5 py-0.5 rounded border border-stone-700/40 bg-stone-800/50 text-stone-300">{cat.label}</span>
+                                {antiAir && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded border border-cyan-800/40 bg-cyan-950/40 text-cyan-300 flex items-center gap-0.5">
+                                    <Plane size={8} /> Anti-Air
+                                  </span>
+                                )}
+                                {stats.damage > 0 && (
+                                  <span className="text-[9px] text-red-400/70">{Math.floor(stats.damage)} dmg</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2073,62 +2091,44 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   }}
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 text-indigo-300">
-                        <Shield size={15} />
-                        <h3 className="text-lg font-bold">Hero Roster</h3>
-                      </div>
-                      <p className="text-sm text-stone-300 leading-relaxed">
-                        Heroes are your mobile utility layer. They plug leaks, hold lanes, and convert cooldown timing
-                        into tempo advantage on top of static tower defense.
-                      </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                        <div className="rounded-lg border border-indigo-800/35 bg-indigo-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-indigo-400 uppercase tracking-wider">Hero Count</div>
-                          <div className="text-lg font-bold text-indigo-200">{heroTypes.length}</div>
-                        </div>
-                        <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-red-400 uppercase tracking-wider">Highest HP</div>
-                          <div className="text-sm font-bold text-red-200 leading-tight">
-                            {highestHpHero ? `${HERO_DATA[highestHpHero].name} ${HERO_DATA[highestHpHero].hp}` : "N/A"}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-blue-400 uppercase tracking-wider">Longest Range</div>
-                          <div className="text-sm font-bold text-blue-200 leading-tight">
-                            {longestRangeHero ? `${HERO_DATA[longestRangeHero].name} ${HERO_DATA[longestRangeHero].range}` : "N/A"}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Ability Tempo</div>
-                          <div className="text-sm font-bold text-cyan-200 leading-tight">
-                            {shortestHeroCooldown
-                              ? `${(shortestHeroCooldown.cooldown / 1000).toFixed(1)}s min / ${(averageHeroCooldown / 1000).toFixed(1)}s avg`
-                              : "N/A"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 text-indigo-300">
+                      <Shield size={15} />
+                      <h3 className="text-lg font-bold">Hero Comparison</h3>
+                      <span className="text-[10px] text-stone-500 ml-auto">Click any hero below for full details</span>
                     </div>
-
-                    <div className="xl:w-[280px] rounded-xl border border-indigo-700/35 bg-stone-950/45 p-3">
-                      <div className="text-[10px] text-indigo-400 uppercase tracking-wider mb-2">Role Diagram</div>
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        {featuredHeroTypes.map((type, index) => (
-                          <React.Fragment key={`hero-diagram-${type}`}>
-                            <FramedCodexSprite size={54} theme={getHeroSpriteFrameTheme(type)}>
-                              <HeroSprite type={type} size={44} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {heroTypes.map(type => {
+                        const hero = HERO_DATA[type];
+                        const role = HERO_ROLES[type];
+                        const cooldown = HERO_ABILITY_COOLDOWNS[type];
+                        const dps = hero.damage / (hero.attackSpeed / 1000);
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 border border-stone-700/30 bg-stone-950/40"
+                          >
+                            <FramedCodexSprite size={42} theme={getHeroSpriteFrameTheme(type)}>
+                              <HeroSprite type={type} size={34} />
                             </FramedCodexSprite>
-                            {index < featuredHeroTypes.length - 1 && (
-                              <ChevronRight size={13} className="text-indigo-300/70" />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <div className="text-[11px] text-stone-400 leading-relaxed">
-                        Ranged-capable heroes: {rangedHeroCount}/{heroTypes.length}. Average hero HP is{" "}
-                        {Math.round(averageHeroHp)}. Plan your hero around map length and lane split pressure.
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-amber-200 truncate">{hero.name}</span>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${role.color}`} style={{ background: role.bg, border: `1px solid ${role.border}` }}>{role.label}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-[9px]">
+                                <span className="text-red-400 flex items-center gap-0.5"><Heart size={8} />{hero.hp}</span>
+                                <span className="text-orange-400 flex items-center gap-0.5"><Swords size={8} />{Math.round(dps)} dps</span>
+                                <span className="text-purple-400 flex items-center gap-0.5"><Sparkles size={8} />{cooldown / 1000}s cd</span>
+                                {hero.isRanged && <span className="text-cyan-400 flex items-center gap-0.5"><Crosshair size={8} />{hero.range}</span>}
+                              </div>
+                              <div className="text-[10px] text-stone-500 mt-0.5 truncate">
+                                {hero.ability}: {hero.abilityDesc.split(".")[0].split(",")[0]}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2501,47 +2501,40 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
                   <div className="p-4">
-                    <div className="flex items-center gap-2 mb-1 text-blue-300">
+                    <div className="flex items-center gap-2 mb-2 text-blue-300">
                       <Users size={15} />
-                      <h3 className="text-lg font-bold">Troop Roster</h3>
+                      <h3 className="text-lg font-bold">Troop Guide</h3>
                     </div>
-                    <p className="text-sm text-stone-300 leading-relaxed">
-                      Troops are spawned by Station towers, summoning spells, and Hex Ward reanimation. They block enemies on the path,
-                      buying time for your towers to deal damage.
-                    </p>
-                    <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                      <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
-                        <div className="text-[10px] text-blue-400 uppercase tracking-wider">Total Types</div>
-                        <div className="text-lg font-bold text-blue-200">{troopTypes.length}</div>
-                      </div>
-                      <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
-                        <div className="text-[10px] text-red-400 uppercase tracking-wider">Toughest</div>
-                        <div className="text-sm font-bold text-red-200 leading-tight">
-                          {(() => {
-                            const t = troopTypes.reduce((best, cur) =>
-                              TROOP_DATA[cur].hp > TROOP_DATA[best].hp ? cur : best
-                            );
-                            return `${TROOP_DATA[t].name} ${TROOP_DATA[t].hp} HP`;
-                          })()}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                      {Object.entries(TROOP_CATEGORY_MAP).map(([catKey, cat]) => (
+                        <div key={catKey} className="rounded-lg border border-stone-700/30 bg-stone-950/40 p-2.5">
+                          <div className={`text-[10px] font-bold uppercase tracking-wider mb-1.5 ${cat.color}`}>{cat.label}</div>
+                          <div className="text-[10px] text-stone-500 mb-1.5">
+                            {catKey === "station" ? "Spawned by Dinky Station towers (upgrades at each level)" :
+                             catKey === "summoned" ? "Created by spells — temporary reinforcements" :
+                             "Reanimated by Hex Ward tower — spirit combatants"}
+                          </div>
+                          <div className="space-y-1">
+                            {cat.types.map(type => {
+                              const troop = TROOP_DATA[type];
+                              if (!troop) return null;
+                              const dps = troop.damage / (troop.attackSpeed / 1000);
+                              return (
+                                <div key={type} className="flex items-center gap-1.5 py-0.5">
+                                  <FramedCodexSprite size={26} theme={getTroopSpriteFrameTheme(type)}>
+                                    <TroopSprite type={type} size={20} />
+                                  </FramedCodexSprite>
+                                  <span className="text-stone-300 font-medium truncate flex-1">{troop.name}</span>
+                                  <span className="text-red-400/70 shrink-0">{troop.hp}</span>
+                                  <span className="text-stone-600">/</span>
+                                  <span className="text-orange-400/70 shrink-0">{Math.round(dps)}dps</span>
+                                  {troop.canTargetFlying && <Plane size={9} className="text-cyan-400 shrink-0" />}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                      <div className="rounded-lg border border-orange-800/35 bg-orange-950/30 px-2.5 py-2">
-                        <div className="text-[10px] text-orange-400 uppercase tracking-wider">Hardest Hitter</div>
-                        <div className="text-sm font-bold text-orange-200 leading-tight">
-                          {(() => {
-                            const t = troopTypes.reduce((best, cur) =>
-                              TROOP_DATA[cur].damage > TROOP_DATA[best].damage ? cur : best
-                            );
-                            return `${TROOP_DATA[t].name} ${TROOP_DATA[t].damage} DMG`;
-                          })()}
-                        </div>
-                      </div>
-                      <div className="rounded-lg border border-green-800/35 bg-green-950/30 px-2.5 py-2">
-                        <div className="text-[10px] text-green-400 uppercase tracking-wider">Ranged Troops</div>
-                        <div className="text-lg font-bold text-green-200">
-                          {troopTypes.filter(t => TROOP_DATA[t].isRanged).length}
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2638,9 +2631,67 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
             {activeTab === "enemies" && (() => {
               const groupedEnemies = groupEnemiesByCategory(enemyTypes);
+              const variantThemes = getRegionalVariantThemes();
 
               return (
-                <div className="space-y-6">
+                <div className="space-y-6 relative">
+                  {/* Category Jump Nav — dropdown from top-right button */}
+                  <div className="sticky top-0 z-30 flex justify-end pointer-events-none mb-0">
+                    <div className="pointer-events-auto relative">
+                      <button
+                        onClick={() => setCategoryNavOpen(prev => !prev)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all hover:brightness-125 active:scale-95"
+                        style={{
+                          background: "rgba(12,10,9,0.88)",
+                          border: "1px solid rgba(180,130,60,0.35)",
+                          color: "#d4a44a",
+                          backdropFilter: "blur(8px)",
+                        }}
+                      >
+                        <Compass size={14} />
+                        Categories
+                      </button>
+                      {categoryNavOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setCategoryNavOpen(false)} />
+                          <div
+                            className="absolute right-0 top-full mt-1 z-50 flex flex-col gap-0.5 p-2 rounded-xl shadow-2xl min-w-[180px]"
+                            style={{
+                              background: "rgba(12,10,9,0.95)",
+                              border: "1px solid rgba(180,130,60,0.3)",
+                              backdropFilter: "blur(12px)",
+                            }}
+                          >
+                            {ENEMY_CATEGORY_ORDER.map(cat => {
+                              const catEnemies = groupedEnemies[cat];
+                              if (catEnemies.length === 0) return null;
+                              const meta = ENEMY_CATEGORY_META[cat];
+                              const accent = ENEMY_CATEGORY_ACCENTS[cat];
+                              return (
+                                <button
+                                  key={cat}
+                                  onClick={() => {
+                                    scrollToCategory(cat);
+                                    setCategoryNavOpen(false);
+                                  }}
+                                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] font-semibold tracking-wide transition-all hover:brightness-125 text-left w-full"
+                                  style={{
+                                    background: `${accent}10`,
+                                    color: accent,
+                                  }}
+                                >
+                                  <span className="text-sm">{CATEGORY_ICONS[cat]}</span>
+                                  {meta.name}
+                                  <span className="ml-auto text-[9px] opacity-50">{catEnemies.length}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   <div
                     className="relative rounded-2xl overflow-hidden"
                     style={{
@@ -2650,59 +2701,52 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     }}
                   >
                     <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                    <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 text-red-300">
-                          <Skull size={15} />
-                          <h3 className="text-lg font-bold">Enemy Compendium</h3>
-                        </div>
-                        <p className="text-sm text-stone-300 leading-relaxed">
-                          Wave pressure comes from trait combinations, not raw HP alone. Track leak cost, movement type,
-                          and backline threat density before committing your build path.
-                        </p>
-                        <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                          <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
-                            <div className="text-[10px] text-red-400 uppercase tracking-wider">Enemy Types</div>
-                            <div className="text-lg font-bold text-red-200">{enemyTypes.length}</div>
-                          </div>
-                          <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
-                            <div className="text-[10px] text-purple-400 uppercase tracking-wider">Boss Units</div>
-                            <div className="text-lg font-bold text-purple-200">{bossEnemyCount}</div>
-                          </div>
-                          <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
-                            <div className="text-[10px] text-rose-400 uppercase tracking-wider">Max Leak Penalty</div>
-                            <div className="text-sm font-bold text-rose-200 leading-tight">
-                              {highestLeakEnemy
-                                ? `${ENEMY_DATA[highestLeakEnemy].name} ${ENEMY_DATA[highestLeakEnemy].liveCost ?? 1}`
-                                : "N/A"}
-                            </div>
-                          </div>
-                          <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
-                            <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Threat Mix</div>
-                            <div className="text-sm font-bold text-cyan-200 leading-tight">
-                              Fly {flyingEnemyCount} / Ranged {rangedEnemyCount}
-                            </div>
-                          </div>
-                        </div>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-2 text-red-300">
+                        <Skull size={15} />
+                        <h3 className="text-lg font-bold">Threat Overview</h3>
+                        <span className="text-[10px] text-stone-500 ml-auto">{enemyTypes.length} enemy types across {ENEMY_CATEGORY_ORDER.length} categories</span>
                       </div>
-
-                      <div className="xl:w-[300px] rounded-xl border border-red-700/35 bg-stone-950/45 p-3">
-                        <div className="text-[10px] text-red-400 uppercase tracking-wider mb-2">Pressure Diagram</div>
-                        <div className="flex items-center justify-center gap-1.5 mb-2">
-                          {featuredEnemyTypes.map((type, index) => (
-                            <React.Fragment key={`enemy-diagram-${type}`}>
-                              <FramedCodexSprite size={54} theme={getEnemySpriteFrameTheme(type)}>
-                                <EnemySprite type={type} size={44} />
-                              </FramedCodexSprite>
-                              {index < featuredEnemyTypes.length - 1 && (
-                                <ChevronRight size={13} className="text-red-300/70" />
-                              )}
-                            </React.Fragment>
-                          ))}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
+                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2 text-center">
+                          <Wind size={14} className="mx-auto text-cyan-400 mb-0.5" />
+                          <div className="text-lg font-bold text-cyan-200">{flyingEnemyCount}</div>
+                          <div className="text-[10px] text-cyan-400">Flying</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5">Need anti-air towers</div>
                         </div>
-                        <div className="text-[11px] text-stone-400 leading-relaxed">
-                          Average leak cost is {averageEnemyLeakCost.toFixed(1)} lives per enemy, so late-wave leaks
-                          are disproportionately expensive.
+                        <div className="rounded-lg border border-stone-600/35 bg-stone-900/40 px-2.5 py-2 text-center">
+                          <Shield size={14} className="mx-auto text-stone-400 mb-0.5" />
+                          <div className="text-lg font-bold text-stone-200">{armoredEnemyCount}</div>
+                          <div className="text-[10px] text-stone-400">Armored</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5">Need high damage</div>
+                        </div>
+                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2 text-center">
+                          <Crosshair size={14} className="mx-auto text-purple-400 mb-0.5" />
+                          <div className="text-lg font-bold text-purple-200">{rangedEnemyCount}</div>
+                          <div className="text-[10px] text-purple-400">Ranged</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5">Attack your troops</div>
+                        </div>
+                        <div className="rounded-lg border border-orange-800/35 bg-orange-950/30 px-2.5 py-2 text-center">
+                          <Zap size={14} className="mx-auto text-orange-400 mb-0.5" />
+                          <div className="text-lg font-bold text-orange-200">
+                            {enemyTypes.filter(t => (ENEMY_DATA[t].abilities?.length ?? 0) > 0).length}
+                          </div>
+                          <div className="text-[10px] text-orange-400">With Abilities</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5">Burn, slow, stun, etc</div>
+                        </div>
+                        <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2 text-center">
+                          <Crown size={14} className="mx-auto text-red-400 mb-0.5" />
+                          <div className="text-lg font-bold text-red-200">{bossEnemyCount + regionBossCount}</div>
+                          <div className="text-[10px] text-red-400">Bosses</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5">Multi-life, high HP</div>
+                        </div>
+                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2 text-center">
+                          <Heart size={14} className="mx-auto text-rose-400 mb-0.5" />
+                          <div className="text-lg font-bold text-rose-200">
+                            {highestLeakEnemy ? (ENEMY_DATA[highestLeakEnemy].liveCost ?? 1) : 1}
+                          </div>
+                          <div className="text-[10px] text-rose-400">Max Leak Cost</div>
+                          <div className="text-[9px] text-stone-500 mt-0.5 truncate">{highestLeakEnemy ? ENEMY_DATA[highestLeakEnemy].name : ""}</div>
                         </div>
                       </div>
                     </div>
@@ -2714,28 +2758,51 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
 
                     const catMeta = ENEMY_CATEGORY_META[category];
 
+                    const isRegionBoss = category === "region_boss";
+
                     return (
-                      <div key={category}>
+                      <div key={category} ref={(el) => setCategoryRef(category, el)}>
                         {/* Category Header */}
-                        <div className="flex items-center gap-3 mb-3 pb-3" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                          <div className={`p-2 rounded-lg ${catMeta.bgColor}`} style={{ border: `1px solid ${GOLD.border25}` }}>
-                            {CATEGORY_ICONS[category]}
+                        <div
+                          className="flex items-center gap-3 mb-3 pb-3"
+                          style={{
+                            borderBottom: isRegionBoss
+                              ? "2px solid rgba(239,68,68,0.5)"
+                              : `1px solid ${GOLD.border25}`,
+                          }}
+                        >
+                          <div
+                            className={`${isRegionBoss ? "p-3" : "p-2"} rounded-lg ${catMeta.bgColor}`}
+                            style={{
+                              border: isRegionBoss
+                                ? "1.5px solid rgba(239,68,68,0.6)"
+                                : `1px solid ${GOLD.border25}`,
+                              boxShadow: isRegionBoss
+                                ? "0 0 12px rgba(239,68,68,0.3), inset 0 0 8px rgba(239,68,68,0.15)"
+                                : undefined,
+                            }}
+                          >
+                            {isRegionBoss ? <Crown size={20} className="text-red-400" /> : CATEGORY_ICONS[category]}
                           </div>
                           <div>
-                            <h3 className={`font-bold text-lg ${catMeta.color}`}>{catMeta.name}</h3>
-                            <p className="text-xs text-amber-400/50">{catMeta.desc}</p>
+                            <h3 className={`font-bold ${isRegionBoss ? "text-xl" : "text-lg"} ${catMeta.color}`}>
+                              {catMeta.name}
+                            </h3>
+                            <p className={`text-xs ${isRegionBoss ? "text-red-400/60" : "text-amber-400/50"}`}>{catMeta.desc}</p>
                           </div>
                           <div className="ml-auto text-xs font-bold px-2.5 py-1 rounded-md" style={{
-                            background: PANEL.bgWarmMid,
-                            color: "rgb(252,211,77)",
-                            border: `1px solid ${GOLD.border25}`,
+                            background: isRegionBoss ? "rgba(127,29,29,0.5)" : PANEL.bgWarmMid,
+                            color: isRegionBoss ? "rgb(252,165,165)" : "rgb(252,211,77)",
+                            border: isRegionBoss
+                              ? "1px solid rgba(239,68,68,0.4)"
+                              : `1px solid ${GOLD.border25}`,
                           }}>
                             {categoryEnemies.length} {categoryEnemies.length === 1 ? "enemy" : "enemies"}
                           </div>
                         </div>
 
                         {/* Category Enemies Grid */}
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className={`grid gap-4 ${isRegionBoss ? "sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
                           {categoryEnemies.map((type) => {
                             const enemy = ENEMY_DATA[type];
                             const traits = enemy.traits || [];
@@ -2743,13 +2810,14 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
                             const maxHpInCategory = Math.max(...categoryEnemies.map(t => ENEMY_DATA[t].hp), 1);
 
-                            const getThreatLevel = (hp: number, isBoss?: boolean) => {
+                            const getThreatLevel = (hp: number, isBoss?: boolean, cat?: EnemyCategory) => {
+                              if (cat === "region_boss") return { level: "Region Boss", color: "red", icon: <Crown size={12} /> };
                               if (isBoss || hp >= 1000) return { level: "Boss", color: "purple", icon: <Crown size={12} /> };
                               if (hp >= 500) return { level: "Elite", color: "orange", icon: <Star size={12} /> };
                               if (hp >= 200) return { level: "Standard", color: "yellow", icon: <Skull size={12} /> };
                               return { level: "Minion", color: "green", icon: <Skull size={12} /> };
                             };
-                            const threat = getThreatLevel(enemy.hp, enemy.isBoss);
+                            const threat = getThreatLevel(enemy.hp, enemy.isBoss, category);
                             const threatCC = getColorClasses(threat.color);
 
                             const getEnemyTypeClassification = () => {
@@ -2767,12 +2835,18 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 key={type}
                                 className="rounded-xl overflow-hidden hover:border-red-700/50 transition-colors relative"
                                 style={{
-                                  background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                                  border: `1.5px solid ${GOLD.border25}`,
-                                  boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                                  background: isRegionBoss
+                                    ? "linear-gradient(135deg, rgba(127,29,29,0.25), rgba(69,10,10,0.4))"
+                                    : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                                  border: isRegionBoss
+                                    ? "2px solid rgba(239,68,68,0.45)"
+                                    : `1.5px solid ${GOLD.border25}`,
+                                  boxShadow: isRegionBoss
+                                    ? "0 0 20px rgba(239,68,68,0.15), inset 0 0 15px rgba(239,68,68,0.08)"
+                                    : `inset 0 0 10px ${GOLD.glow04}`,
                                 }}
                               >
-                                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: isRegionBoss ? "1px solid rgba(239,68,68,0.15)" : `1px solid ${GOLD.innerBorder08}` }} />
                                 <div className={`px-4 py-2 border-b flex items-center justify-between ${threatCC.headerBg} ${threatCC.headerBorder}`}>
                                   <div className={`flex items-center gap-2 ${threatCC.text}`}>
                                     {threat.icon}
@@ -2793,22 +2867,65 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                 </div>
 
                                 <div className="p-4">
-                                  <div className="flex items-start gap-4 mb-3">
-                                    <FramedCodexSprite
-                                      size={80}
-                                      theme={getEnemySpriteFrameTheme(type)}
-                                    >
-                                      <EnemySprite type={type} size={66} />
-                                    </FramedCodexSprite>
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="text-lg font-bold text-red-200 truncate">
-                                        {enemy.name}
-                                      </h3>
-                                      <p className="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">
-                                        {enemy.desc}
-                                      </p>
-                                    </div>
-                                  </div>
+                                  {(() => {
+                                    const activeRegion = enemyRegionPreview[type] ?? null;
+                                    const hasVariants = hasRegionalVariants(type);
+                                    const spriteSize = isRegionBoss ? 80 : 66;
+                                    const frameSize = isRegionBoss ? 96 : 80;
+                                    const regionThemeColors: Record<MapTheme, { bg: string; border: string; text: string; label: string }> = {
+                                      grassland: { bg: "bg-green-950/50", border: "border-green-700/40", text: "text-green-400", label: "G" },
+                                      swamp: { bg: "bg-lime-950/50", border: "border-lime-700/40", text: "text-lime-400", label: "S" },
+                                      desert: { bg: "bg-yellow-950/50", border: "border-yellow-700/40", text: "text-yellow-400", label: "D" },
+                                      winter: { bg: "bg-sky-950/50", border: "border-sky-700/40", text: "text-sky-400", label: "W" },
+                                      volcanic: { bg: "bg-orange-950/50", border: "border-orange-700/40", text: "text-orange-400", label: "V" },
+                                    };
+                                    return (
+                                      <div className="flex items-start gap-4 mb-3">
+                                        <div className="relative flex-shrink-0">
+                                          <FramedCodexSprite size={frameSize} theme={getEnemySpriteFrameTheme(type)}>
+                                            <EnemySprite type={type} size={spriteSize} region={activeRegion ?? undefined} animated={!!activeRegion} />
+                                          </FramedCodexSprite>
+                                          {hasVariants && (
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                                              {variantThemes.map(theme => {
+                                                const isActive = activeRegion === theme;
+                                                const tc = regionThemeColors[theme];
+                                                return (
+                                                  <button
+                                                    key={theme}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      setEnemyRegionPreview(prev => ({
+                                                        ...prev,
+                                                        [type]: prev[type] === theme ? null : theme,
+                                                      }));
+                                                    }}
+                                                    className={`w-4 h-4 rounded-full text-[7px] font-bold flex items-center justify-center transition-all border ${tc.bg} ${tc.text} ${isActive ? `${tc.border} ring-1 ring-white/30 scale-110` : "border-stone-700/40 opacity-60 hover:opacity-100"}`}
+                                                    title={getThemeLabel(theme)}
+                                                  >
+                                                    {tc.label}
+                                                  </button>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h3 className={`font-bold truncate ${isRegionBoss ? "text-xl text-red-300" : "text-lg text-red-200"}`}>
+                                            {enemy.name}
+                                          </h3>
+                                          {activeRegion && (
+                                            <span className={`text-[9px] font-semibold ${regionThemeColors[activeRegion].text}`}>
+                                              {getThemeLabel(activeRegion)} Variant
+                                            </span>
+                                          )}
+                                          <p className="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">
+                                            {enemy.desc}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
 
                                   <div className="mb-3">
                                     <HPBar hp={enemy.hp} maxHp={maxHpInCategory} isBoss={enemy.isBoss} />
@@ -3005,58 +3122,43 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   }}
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 text-purple-300">
-                        <Zap size={15} />
-                        <h3 className="text-lg font-bold">Spellbook Overview</h3>
-                      </div>
-                      <p className="text-sm text-stone-300 leading-relaxed">
-                        Spells are your tempo and recovery lever. Build loadouts around wave control, burst conversion,
-                        and economy acceleration instead of stacking overlapping effects.
-                      </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Spell Types</div>
-                          <div className="text-lg font-bold text-purple-200">{spellTypes.length}</div>
-                        </div>
-                        <div className="rounded-lg border border-emerald-800/35 bg-emerald-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-emerald-400 uppercase tracking-wider">Free Casts</div>
-                          <div className="text-lg font-bold text-emerald-200">{freeSpellCount}</div>
-                        </div>
-                        <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-blue-400 uppercase tracking-wider">Cooldown Avg</div>
-                          <div className="text-sm font-bold text-blue-200 leading-tight">
-                            {(averageSpellCooldown / 1000).toFixed(1)}s
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Loadout Utility</div>
-                          <div className="text-sm font-bold text-cyan-200 leading-tight">
-                            3 slots • {controlSpellCount} control spells
-                          </div>
-                        </div>
-                      </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 text-purple-300">
+                      <Zap size={15} />
+                      <h3 className="text-lg font-bold">Spell Loadout Guide</h3>
+                      <span className="text-[10px] text-stone-500 ml-auto">Equip 3 spells per mission</span>
                     </div>
-
-                    <div className="xl:w-[300px] rounded-xl border border-purple-700/35 bg-stone-950/45 p-3">
-                      <div className="text-[10px] text-purple-400 uppercase tracking-wider mb-2">Cast Flow Diagram</div>
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        {spellTypes.map((type, index) => (
-                          <React.Fragment key={`spell-diagram-${type}`}>
-                            <FramedCodexSprite size={54} theme={SPELL_SPRITE_FRAME_THEME[type]}>
-                              <SpellSprite type={type} size={44} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {spellTypes.map(type => {
+                        const spell = SPELL_DATA[type];
+                        const info = getSpellInfo(type);
+                        const scc = getColorClasses(info.color);
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 border border-stone-700/30 bg-stone-950/40"
+                          >
+                            <FramedCodexSprite size={42} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                              <SpellSprite type={type} size={34} />
                             </FramedCodexSprite>
-                            {index < spellTypes.length - 1 && (
-                              <ChevronRight size={12} className="text-purple-300/70" />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <div className="text-[11px] text-stone-400 leading-relaxed">
-                        Average spell cost: {averageSpellCost.toFixed(1)} PP. Most expensive:{" "}
-                        {priciestSpell ? `${SPELL_DATA[priciestSpell.type].name} (${priciestSpell.cost} PP)` : "N/A"}.
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-amber-200 truncate">{spell.name}</span>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium shrink-0 ${scc.chipBg} border ${scc.chipBorder} ${scc.text}`}>{info.category}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-[9px]">
+                                {spell.cost > 0 ? (
+                                  <span className="text-amber-400 flex items-center gap-0.5"><Coins size={8} />{spell.cost} PP</span>
+                                ) : (
+                                  <span className="text-emerald-400 font-bold">FREE</span>
+                                )}
+                                <span className="text-blue-400 flex items-center gap-0.5"><Timer size={8} />{spell.cooldown / 1000}s</span>
+                              </div>
+                              <div className="text-[10px] text-stone-500 mt-0.5 truncate">{spell.desc}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -3184,63 +3286,35 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   }}
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 text-amber-300">
-                        <Sparkles size={15} />
-                        <h3 className="text-lg font-bold">Special Structure Deck</h3>
-                      </div>
-                      <p className="text-sm text-stone-300 leading-relaxed">
-                        Special structures are map-authored power pieces. Their uptime and geometry create free
-                        tempo swings, so route waves around them like a permanent extra tower slot.
-                      </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-amber-400 uppercase tracking-wider">Placements</div>
-                          <div className="text-lg font-bold text-amber-200">{totalSpecialTowerInstances}</div>
-                        </div>
-                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Unique Types</div>
-                          <div className="text-lg font-bold text-cyan-200">{specialTowerTypesInUse.length}</div>
-                        </div>
-                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Most Common</div>
-                          <div className="text-sm font-bold text-purple-200 leading-tight">
-                            {mostCommonSpecialTowerType
-                              ? `${SPECIAL_TOWER_INFO[mostCommonSpecialTowerType].name} ${specialTowerInstanceCounts.get(mostCommonSpecialTowerType) ?? 0
-                              }`
-                              : "N/A"}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Avg / Special Map</div>
-                          <div className="text-sm font-bold text-rose-200 leading-tight">
-                            {levelsWithSpecialStructures > 0
-                              ? `${averageSpecialTowersPerSpecialMap.toFixed(1)} • ${levelsWithSpecialStructures} maps`
-                              : "No special maps"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 text-amber-300">
+                      <Sparkles size={15} />
+                      <h3 className="text-lg font-bold">Map Structures</h3>
+                      <span className="text-[10px] text-stone-500 ml-auto">Found on {levelsWithSpecialStructures} maps</span>
                     </div>
-
-                    <div className="xl:w-[320px] rounded-xl border border-amber-700/35 bg-stone-950/45 p-3">
-                      <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-2">Structure Flow</div>
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        {featuredSpecialTowers.map((type, index) => (
-                          <React.Fragment key={`special-diagram-${type}`}>
-                            <FramedCodexSprite size={54} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
-                              <SpecialTowerSprite type={type} size={44} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {specialTowerTypesInUse.map(type => {
+                        const info = SPECIAL_TOWER_INFO[type];
+                        const count = specialTowerInstanceCounts.get(type) ?? 0;
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 border border-stone-700/30 bg-stone-950/40"
+                          >
+                            <FramedCodexSprite size={42} theme={SPECIAL_TOWER_SPRITE_THEME[type]}>
+                              <SpecialTowerSprite type={type} size={34} />
                             </FramedCodexSprite>
-                            {index < featuredSpecialTowers.length - 1 && (
-                              <ChevronRight size={13} className="text-amber-300/70" />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <div className="text-[11px] text-stone-400 leading-relaxed">
-                        Coverage is {levelsWithSpecialStructures} maps total, with{" "}
-                        {averageSpecialTowersPerSpecialMap.toFixed(1)} structures on average where they appear.
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-xs font-bold truncate ${info.color}`}>{info.name}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-stone-800/50 border border-stone-700/40 text-stone-400 font-medium shrink-0">{info.role}</span>
+                              </div>
+                              <div className="text-[10px] text-stone-400 leading-snug mt-0.5 line-clamp-2">{info.effect}</div>
+                              <div className="text-[9px] text-stone-500 mt-0.5">{count} placement{count !== 1 ? "s" : ""} across maps</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -3333,63 +3407,35 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                   }}
                 >
                   <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 text-red-300">
-                        <AlertTriangle size={15} />
-                        <h3 className="text-lg font-bold">Hazard Control Room</h3>
-                      </div>
-                      <p className="text-sm text-stone-300 leading-relaxed">
-                        Hazards are map-level force multipliers. Push enemies through damage fields and debuff zones
-                        to turn pathing decisions into free damage and safer tower uptime.
-                      </p>
-                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
-                        <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-red-400 uppercase tracking-wider">Hazard Zones</div>
-                          <div className="text-lg font-bold text-red-200">{totalHazardZones}</div>
-                        </div>
-                        <div className="rounded-lg border border-orange-800/35 bg-orange-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-orange-400 uppercase tracking-wider">Unique Hazards</div>
-                          <div className="text-lg font-bold text-orange-200">{hazardTypesInUse.length}</div>
-                        </div>
-                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Most Common</div>
-                          <div className="text-sm font-bold text-cyan-200 leading-tight">
-                            {mostCommonHazardType
-                              ? `${HAZARD_INFO[mostCommonHazardType].name} ${hazardZoneCounts.get(mostCommonHazardType) ?? 0
-                              }`
-                              : "N/A"}
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
-                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Avg / Hazard Map</div>
-                          <div className="text-sm font-bold text-rose-200 leading-tight">
-                            {levelsWithHazards > 0
-                              ? `${averageHazardsPerHazardMap.toFixed(1)} • ${levelsWithHazards} maps`
-                              : "No hazard maps"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2 text-red-300">
+                      <AlertTriangle size={15} />
+                      <h3 className="text-lg font-bold">Environmental Hazards</h3>
+                      <span className="text-[10px] text-stone-500 ml-auto">Active on {levelsWithHazards} maps</span>
                     </div>
-
-                    <div className="xl:w-[320px] rounded-xl border border-red-700/35 bg-stone-950/45 p-3">
-                      <div className="text-[10px] text-red-400 uppercase tracking-wider mb-2">Hazard Flow</div>
-                      <div className="flex items-center justify-center gap-1.5 mb-2">
-                        {featuredHazards.map((type, index) => (
-                          <React.Fragment key={`hazard-diagram-${type}`}>
-                            <FramedCodexSprite size={54} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
-                              <HazardSprite type={type} size={44} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                      {hazardTypesInUse.map(type => {
+                        const info = HAZARD_INFO[type];
+                        const zones = hazardZoneCounts.get(type) ?? 0;
+                        return (
+                          <div
+                            key={type}
+                            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 border border-stone-700/30 bg-stone-950/40"
+                          >
+                            <FramedCodexSprite size={42} theme={HAZARD_SPRITE_THEME[type] ?? buildThemeFromAccent("#f87171")}>
+                              <HazardSprite type={type} size={34} />
                             </FramedCodexSprite>
-                            {index < featuredHazards.length - 1 && (
-                              <ChevronRight size={13} className="text-red-300/70" />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                      <div className="text-[11px] text-stone-400 leading-relaxed">
-                        Hazards appear on {levelsWithHazards} maps, averaging{" "}
-                        {averageHazardsPerHazardMap.toFixed(1)} zones where enabled.
-                      </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`text-xs font-bold truncate ${info.color}`}>{info.name}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded bg-stone-800/50 border border-stone-700/40 text-stone-400 font-medium shrink-0">{info.numbers}</span>
+                              </div>
+                              <div className="text-[10px] text-stone-400 leading-snug mt-0.5 line-clamp-2">{info.effect}</div>
+                              <div className="text-[9px] text-stone-500 mt-0.5">{zones} zone{zones !== 1 ? "s" : ""} across maps</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

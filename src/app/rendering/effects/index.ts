@@ -16,6 +16,12 @@ import { ISO_Y_RATIO } from "../../constants";
 import { drawLightningBolt, drawExplosion, type LightningColorScheme } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import { renderEnemyDeath } from "./deathAnimations";
+import {
+  getFlavoredBurnRenderer,
+  getFlavoredSlowRenderer,
+  getFlavoredPoisonRenderer,
+  getFlavoredStunRenderer,
+} from "./statusFlavors";
 
 // Re-export fog effects
 export { drawRoadEndFog, computeFogCounts, type RgbColor, type DrawRoadEndFogParams } from "./fog";
@@ -3787,35 +3793,41 @@ export function renderUnitStatusEffects(
   if (unit.burning && unit.burnUntil && unit.burnUntil > now) {
     const remaining = (unit.burnUntil - now) / 1000;
     const alpha = Math.min(1, remaining / 2);
-    const flicker = Math.sin(now / 80) * 0.15 + 0.85;
 
-    // Orange underglow beneath the unit
-    const glowGrad = ctx.createRadialGradient(
-      screenPos.x, screenPos.y, 0,
-      screenPos.x, screenPos.y, baseSize * zoom * 1.1,
-    );
-    glowGrad.addColorStop(0, `rgba(255, 140, 30, ${alpha * 0.25 * flicker})`);
-    glowGrad.addColorStop(0.5, `rgba(255, 80, 0, ${alpha * 0.12})`);
-    glowGrad.addColorStop(1, "rgba(200, 40, 0, 0)");
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
-    ctx.fill();
+    const flavorRenderer = getFlavoredBurnRenderer(unit.burnFlavor);
+    if (flavorRenderer) {
+      flavorRenderer(ctx, screenPos, zoom, alpha, now);
+    } else {
+      const flicker = Math.sin(now / 80) * 0.15 + 0.85;
 
-    // Rising flame particles with teardrop shapes
-    for (let i = 0; i < 5; i++) {
-      const seed = (now * 0.003 + i * 1.37) % 1;
-      const fireX = screenPos.x + Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.5;
-      const fireY = screenPos.y - seed * baseSize * zoom * 1.4;
-      const fireSize = (2.5 + (i % 3)) * zoom * (1 - seed * 0.6);
-      const fireAlpha = alpha * (1 - seed) * flicker;
-
-      ctx.fillStyle = `rgba(255, ${180 - Math.floor(seed * 120)}, ${60 - Math.floor(seed * 50)}, ${fireAlpha})`;
+      // Orange underglow beneath the unit
+      const glowGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, baseSize * zoom * 1.1,
+      );
+      glowGrad.addColorStop(0, `rgba(255, 140, 30, ${alpha * 0.25 * flicker})`);
+      glowGrad.addColorStop(0.5, `rgba(255, 80, 0, ${alpha * 0.12})`);
+      glowGrad.addColorStop(1, "rgba(200, 40, 0, 0)");
+      ctx.fillStyle = glowGrad;
       ctx.beginPath();
-      ctx.moveTo(fireX, fireY - fireSize * 1.5);
-      ctx.quadraticCurveTo(fireX + fireSize, fireY, fireX, fireY + fireSize * 0.5);
-      ctx.quadraticCurveTo(fireX - fireSize, fireY, fireX, fireY - fireSize * 1.5);
+      ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
       ctx.fill();
+
+      // Rising flame particles with teardrop shapes
+      for (let i = 0; i < 5; i++) {
+        const seed = (now * 0.003 + i * 1.37) % 1;
+        const fireX = screenPos.x + Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.5;
+        const fireY = screenPos.y - seed * baseSize * zoom * 1.4;
+        const fireSize = (2.5 + (i % 3)) * zoom * (1 - seed * 0.6);
+        const fireAlpha = alpha * (1 - seed) * flicker;
+
+        ctx.fillStyle = `rgba(255, ${180 - Math.floor(seed * 120)}, ${60 - Math.floor(seed * 50)}, ${fireAlpha})`;
+        ctx.beginPath();
+        ctx.moveTo(fireX, fireY - fireSize * 1.5);
+        ctx.quadraticCurveTo(fireX + fireSize, fireY, fireX, fireY + fireSize * 0.5);
+        ctx.quadraticCurveTo(fireX - fireSize, fireY, fireX, fireY - fireSize * 1.5);
+        ctx.fill();
+      }
     }
   }
 
@@ -3823,132 +3835,142 @@ export function renderUnitStatusEffects(
   if (unit.slowed && unit.slowUntil && unit.slowUntil > now) {
     const remaining = (unit.slowUntil - now) / 1000;
     const alpha = Math.min(1, remaining / 2);
-    const frostPulse = Math.sin(now / 300) * 0.2 + 0.8;
 
-    // Frost aura
-    const frostGrad = ctx.createRadialGradient(
-      screenPos.x, screenPos.y, 0,
-      screenPos.x, screenPos.y, baseSize * zoom * 1.1,
-    );
-    frostGrad.addColorStop(0, `rgba(147, 197, 253, ${alpha * 0.3 * frostPulse})`);
-    frostGrad.addColorStop(0.5, `rgba(96, 165, 250, ${alpha * 0.15})`);
-    frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
-    ctx.fillStyle = frostGrad;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
-    ctx.fill();
+    const slowFlavorRenderer = getFlavoredSlowRenderer(unit.slowFlavor);
+    if (slowFlavorRenderer) {
+      slowFlavorRenderer(ctx, screenPos, zoom, alpha, now);
+    } else {
+      const frostPulse = Math.sin(now / 300) * 0.2 + 0.8;
 
-    // Orbiting ice crystal diamonds
-    ctx.lineWidth = 1.2 * zoom;
-    for (let i = 0; i < 4; i++) {
-      const crystalAngle = (i / 4) * Math.PI * 2 + now / 800;
-      const crystalDist = baseSize * zoom * 0.75;
-      const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
-      const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO - baseSize * zoom * 0.3;
-      const cSize = 3.5 * zoom;
-
-      ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.4})`;
-      ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.7})`;
+      const frostGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, baseSize * zoom * 1.1,
+      );
+      frostGrad.addColorStop(0, `rgba(147, 197, 253, ${alpha * 0.3 * frostPulse})`);
+      frostGrad.addColorStop(0.5, `rgba(96, 165, 250, ${alpha * 0.15})`);
+      frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+      ctx.fillStyle = frostGrad;
       ctx.beginPath();
-      ctx.moveTo(cx, cy - cSize);
-      ctx.lineTo(cx + cSize * 0.7, cy);
-      ctx.lineTo(cx, cy + cSize);
-      ctx.lineTo(cx - cSize * 0.7, cy);
-      ctx.closePath();
+      ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
-    }
 
-    // Frost ring
-    ctx.strokeStyle = `rgba(180, 215, 255, ${alpha * 0.3 * frostPulse})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.setLineDash([3 * zoom, 3 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
+      ctx.lineWidth = 1.2 * zoom;
+      for (let i = 0; i < 4; i++) {
+        const crystalAngle = (i / 4) * Math.PI * 2 + now / 800;
+        const crystalDist = baseSize * zoom * 0.75;
+        const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
+        const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO - baseSize * zoom * 0.3;
+        const cSize = 3.5 * zoom;
+
+        ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.4})`;
+        ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.7})`;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cSize);
+        ctx.lineTo(cx + cSize * 0.7, cy);
+        ctx.lineTo(cx, cy + cSize);
+        ctx.lineTo(cx - cSize * 0.7, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = `rgba(180, 215, 255, ${alpha * 0.3 * frostPulse})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.setLineDash([3 * zoom, 3 * zoom]);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
 
   // Poisoned effect
   if (unit.poisoned && unit.poisonUntil && unit.poisonUntil > now) {
     const remaining = (unit.poisonUntil - now) / 1000;
     const alpha = Math.min(1, remaining / 2);
-    const poisonPulse = Math.sin(now / 250) * 0.25 + 0.75;
 
-    // Toxic aura
-    const poisonGrad = ctx.createRadialGradient(
-      screenPos.x, screenPos.y, 0,
-      screenPos.x, screenPos.y, baseSize * zoom,
-    );
-    poisonGrad.addColorStop(0, `rgba(34, 197, 94, ${alpha * 0.3 * poisonPulse})`);
-    poisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.18})`);
-    poisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
-    ctx.fillStyle = poisonGrad;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, screenPos.y, baseSize * zoom, 0, Math.PI * 2);
-    ctx.fill();
+    const poisonFlavorRenderer = getFlavoredPoisonRenderer(unit.poisonFlavor);
+    if (poisonFlavorRenderer) {
+      poisonFlavorRenderer(ctx, screenPos, zoom, alpha, now);
+    } else {
+      const poisonPulse = Math.sin(now / 250) * 0.25 + 0.75;
 
-    // Rising poison bubbles
-    for (let i = 0; i < 4; i++) {
-      const bubbleSeed = (now * 0.002 + i * 0.77) % 1;
-      const bubbleX = screenPos.x + Math.sin(now / 200 + i * 2.5) * baseSize * zoom * 0.5;
-      const bubbleY = screenPos.y - bubbleSeed * baseSize * zoom * 1.2;
-      const bubbleSize = (1.5 + (i % 2) * 0.8) * zoom * (1 - bubbleSeed * 0.5);
-      const bubbleAlpha = alpha * 0.55 * (1 - bubbleSeed);
-
-      ctx.fillStyle = `rgba(134, 239, 172, ${bubbleAlpha})`;
+      const poisonGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, baseSize * zoom,
+      );
+      poisonGrad.addColorStop(0, `rgba(34, 197, 94, ${alpha * 0.3 * poisonPulse})`);
+      poisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.18})`);
+      poisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
+      ctx.fillStyle = poisonGrad;
       ctx.beginPath();
-      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+      ctx.arc(screenPos.x, screenPos.y, baseSize * zoom, 0, Math.PI * 2);
       ctx.fill();
-    }
 
-    // Green tint ring at base
-    ctx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.35 * poisonPulse})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, baseSize * zoom * 0.7, baseSize * zoom * 0.35, 0, 0, Math.PI * 2);
-    ctx.stroke();
+      for (let i = 0; i < 4; i++) {
+        const bubbleSeed = (now * 0.002 + i * 0.77) % 1;
+        const bubbleX = screenPos.x + Math.sin(now / 200 + i * 2.5) * baseSize * zoom * 0.5;
+        const bubbleY = screenPos.y - bubbleSeed * baseSize * zoom * 1.2;
+        const bubbleSize = (1.5 + (i % 2) * 0.8) * zoom * (1 - bubbleSeed * 0.5);
+        const bubbleAlpha = alpha * 0.55 * (1 - bubbleSeed);
+
+        ctx.fillStyle = `rgba(134, 239, 172, ${bubbleAlpha})`;
+        ctx.beginPath();
+        ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.35 * poisonPulse})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, baseSize * zoom * 0.7, baseSize * zoom * 0.35, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
 
   // Stunned effect
   if (unit.stunned && unit.stunUntil && unit.stunUntil > now) {
     const remaining = (unit.stunUntil - now) / 1000;
     const alpha = Math.min(1, remaining / 2);
-    const rotation = now / 200;
 
-    // Daze spiral
-    ctx.strokeStyle = `rgba(250, 204, 21, ${alpha * 0.4})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    for (let angle = 0; angle < Math.PI * 3; angle += 0.3) {
-      const spiralRadius = (angle / (Math.PI * 3)) * baseSize * zoom * 0.6;
-      const sx = screenPos.x + Math.cos(angle + rotation) * spiralRadius;
-      const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(angle + rotation) * spiralRadius * 0.4;
-      if (angle === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
+    const stunFlavorRenderer = getFlavoredStunRenderer(unit.stunFlavor);
+    if (stunFlavorRenderer) {
+      stunFlavorRenderer(ctx, screenPos, zoom, alpha, now);
+    } else {
+      const rotation = now / 200;
 
-    // Orbiting 4-pointed stars (canvas-drawn)
-    for (let i = 0; i < 3; i++) {
-      const starAngle = (i / 3) * Math.PI * 2 + rotation;
-      const starDist = baseSize * zoom * 0.55;
-      const sx = screenPos.x + Math.cos(starAngle) * starDist;
-      const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(starAngle) * starDist * 0.3;
-      const starSize = 3.5 * zoom;
-
-      ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.9})`;
+      ctx.strokeStyle = `rgba(250, 204, 21, ${alpha * 0.4})`;
+      ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(sx, sy - starSize);
-      ctx.lineTo(sx + starSize * 0.35, sy - starSize * 0.35);
-      ctx.lineTo(sx + starSize, sy);
-      ctx.lineTo(sx + starSize * 0.35, sy + starSize * 0.35);
-      ctx.lineTo(sx, sy + starSize);
-      ctx.lineTo(sx - starSize * 0.35, sy + starSize * 0.35);
-      ctx.lineTo(sx - starSize, sy);
-      ctx.lineTo(sx - starSize * 0.35, sy - starSize * 0.35);
-      ctx.closePath();
-      ctx.fill();
+      for (let angle = 0; angle < Math.PI * 3; angle += 0.3) {
+        const spiralRadius = (angle / (Math.PI * 3)) * baseSize * zoom * 0.6;
+        const sx = screenPos.x + Math.cos(angle + rotation) * spiralRadius;
+        const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(angle + rotation) * spiralRadius * 0.4;
+        if (angle === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+
+      for (let i = 0; i < 3; i++) {
+        const starAngle = (i / 3) * Math.PI * 2 + rotation;
+        const starDist = baseSize * zoom * 0.55;
+        const sx = screenPos.x + Math.cos(starAngle) * starDist;
+        const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(starAngle) * starDist * 0.3;
+        const starSize = 3.5 * zoom;
+
+        ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.9})`;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy - starSize);
+        ctx.lineTo(sx + starSize * 0.35, sy - starSize * 0.35);
+        ctx.lineTo(sx + starSize, sy);
+        ctx.lineTo(sx + starSize * 0.35, sy + starSize * 0.35);
+        ctx.lineTo(sx, sy + starSize);
+        ctx.lineTo(sx - starSize * 0.35, sy + starSize * 0.35);
+        ctx.lineTo(sx - starSize, sy);
+        ctx.lineTo(sx - starSize * 0.35, sy - starSize * 0.35);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
   }
 

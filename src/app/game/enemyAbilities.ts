@@ -1,5 +1,20 @@
-import type { Enemy, EnemyAbilityType } from "../types";
+import type { Enemy, EnemyAbilityType, EnemyCategory } from "../types";
 import { ENEMY_DATA } from "../constants";
+
+const CATEGORY_FLAVOR: Partial<Record<EnemyCategory, string>> = {
+  insectoid: "cocoon",
+  forest: "vine",
+  swamp: "mire",
+  desert: "sand",
+  winter: "frost",
+  volcanic: "magma",
+  dark_fantasy: "necrotic",
+  region_boss: "necrotic",
+};
+
+export function getCategoryFlavor(category?: EnemyCategory): string {
+  return (category && CATEGORY_FLAVOR[category]) || "default";
+}
 
 export interface AbilityEffects {
   burn?: { damage: number; duration: number };
@@ -7,6 +22,8 @@ export interface AbilityEffects {
   poison?: { damage: number; duration: number };
   stun?: { duration: number };
   activatedTypes: EnemyAbilityType[];
+  flavor: string;
+  sourceId: string;
 }
 
 export function applyEnemyAbilities(
@@ -18,7 +35,8 @@ export function applyEnemyAbilities(
   if (!eData.abilities || eData.abilities.length === 0) return null;
 
   const cooldowns = enemy.abilityCooldowns || {};
-  const result: AbilityEffects = { activatedTypes: [] };
+  const flavor = getCategoryFlavor(eData.category);
+  const result: AbilityEffects = { activatedTypes: [], flavor, sourceId: enemy.id };
 
   for (const ability of eData.abilities) {
     if (ability.type.startsWith("tower_")) continue;
