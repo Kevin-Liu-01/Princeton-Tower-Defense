@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { parseRoute } from "../constants/routes";
 import { WORLD_LEVELS } from "../components/menus/world-map/worldMapData";
+import { LEVEL_DATA } from "../constants";
 import { SITE_URL, SITE_NAME, OG_IMAGES, REGION_OG_IMAGE } from "./constants";
 
 type OgImageKey = keyof typeof OG_IMAGES;
@@ -70,23 +71,31 @@ function getLevelMeta(levelId: string): Metadata | null {
   const region = REGION_LABEL[level.region] ?? level.region;
   const difficulty = DIFFICULTY_LABEL[level.difficulty] ?? "Normal";
   const kind = KIND_LABEL[level.kind ?? "campaign"] ?? "Campaign";
-  const ogKey: OgImageKey = REGION_OG_IMAGE[level.region] ?? "primary";
-  const ogImage = OG_IMAGES[ogKey];
   const cleanDesc = level.description.replace(/\n/g, " ");
   const tags = level.tags.join(", ");
   const canonical = `${SITE_URL}/${level.id}`;
 
-  const title = `${level.name} - ${region} ${kind} Level`;
+  const levelData = LEVEL_DATA[levelId];
+  const ogImage = levelData?.previewImage
+    ? {
+        url: `${SITE_URL}${levelData.previewImage}`,
+        width: 800,
+        height: 450,
+        alt: `${level.name} level preview — ${region} in Princeton Tower Defense`,
+      }
+    : OG_IMAGES[REGION_OG_IMAGE[level.region] ?? "primary"];
+
+  const title = `Play ${level.name} — ${region} ${kind} | ${SITE_NAME}`;
   const description =
     `Play ${level.name} in Princeton Tower Defense — a ${difficulty.toLowerCase()} ${kind.toLowerCase()} level in the ${region} region. ` +
-    `${cleanDesc} Tags: ${tags}. Build towers, summon heroes, and cast spells to survive every wave.`;
+    `${cleanDesc} Tags: ${tags}. Build towers, summon heroes, and cast spells to survive every wave. Share this link to let anyone try this level!`;
 
   return {
     title,
     description,
     alternates: { canonical },
     openGraph: {
-      title: `${level.name} | ${SITE_NAME}`,
+      title,
       description,
       url: canonical,
       siteName: SITE_NAME,
@@ -95,7 +104,7 @@ function getLevelMeta(levelId: string): Metadata | null {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${level.name} | ${SITE_NAME}`,
+      title,
       description,
       images: [ogImage],
     },

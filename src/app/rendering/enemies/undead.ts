@@ -3473,6 +3473,73 @@ export function drawNecromancerEnemy(
     style: "bone",
   });
 
+  // --- Spectral ghostly extra arms — ethereal floating limbs ---
+  for (const spectralSide of [-1, 1] as const) {
+    const sPhase = spectralSide === -1 ? 0 : Math.PI;
+    const spectralBaseX = x + spectralSide * size * 0.28;
+    const spectralBaseY = y - size * 0.15 + hover;
+    const spectralFloat = Math.sin(time * 1.8 + sPhase) * size * 0.04;
+    const spectralReach = Math.sin(time * 1.3 + sPhase * 0.7) * 0.2;
+    const shoulderA = spectralSide * (0.7 + spectralReach) + Math.sin(time * 2.2 + sPhase) * 0.15;
+    const elbowA = spectralSide * 0.4 + Math.sin(time * 2.8 + sPhase + 1) * 0.2;
+    const upperLen = size * 0.14;
+    const foreLen = size * 0.12;
+    const elbowX = spectralBaseX + Math.cos(shoulderA) * upperLen;
+    const elbowY = spectralBaseY + spectralFloat + Math.sin(shoulderA) * upperLen;
+    const handX = elbowX + Math.cos(shoulderA + elbowA) * foreLen;
+    const handY = elbowY + Math.sin(shoulderA + elbowA) * foreLen;
+
+    const spectralAlpha = 0.25 + Math.sin(time * 3 + sPhase) * 0.1;
+
+    ctx.save();
+    setShadowBlur(ctx, 12 * zoom, `rgba(147, 51, 234, ${spectralAlpha * 0.6})`);
+    ctx.strokeStyle = `rgba(147, 51, 234, ${spectralAlpha * 0.35})`;
+    ctx.lineWidth = size * 0.06;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(spectralBaseX, spectralBaseY + spectralFloat);
+    ctx.lineTo(elbowX, elbowY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(elbowX, elbowY);
+    ctx.lineTo(handX, handY);
+    ctx.stroke();
+    clearShadow(ctx);
+
+    ctx.strokeStyle = `rgba(200, 180, 255, ${spectralAlpha * 0.5})`;
+    ctx.lineWidth = size * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(spectralBaseX, spectralBaseY + spectralFloat);
+    ctx.lineTo(elbowX, elbowY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(elbowX, elbowY);
+    ctx.lineTo(handX, handY);
+    ctx.stroke();
+
+    setShadowBlur(ctx, 8 * zoom, `rgba(74, 222, 128, ${spectralAlpha * 0.5})`);
+    ctx.fillStyle = `rgba(200, 180, 255, ${spectralAlpha * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(handX, handY, size * 0.022, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
+
+    for (let fi = 0; fi < 3; fi++) {
+      const fAngle = shoulderA + elbowA + (fi - 1) * 0.35 + Math.sin(time * 3 + fi + sPhase) * 0.2;
+      ctx.strokeStyle = `rgba(180, 160, 230, ${spectralAlpha * 0.4})`;
+      ctx.lineWidth = size * 0.008;
+      ctx.beginPath();
+      ctx.moveTo(handX, handY);
+      ctx.lineTo(
+        handX + Math.cos(fAngle) * size * 0.05,
+        handY + Math.sin(fAngle) * size * 0.05,
+      );
+      ctx.stroke();
+    }
+    ctx.lineCap = "butt";
+    ctx.restore();
+  }
+
   // --- Spell-casting arms — raised commanding undead ---
   drawPathArm(
     ctx, x - size * 0.35, y - size * 0.25 + hover,
@@ -6652,6 +6719,71 @@ export function drawPlaguebearerEnemy(
       },
     },
   );
+
+  // Mutated pustule tentacle growths from body (behind gown layer)
+  ctx.save();
+  ctx.lineCap = "round";
+  const plagueTentacles = [
+    { angle: -0.85, len: 0.3, phase: 0, baseOff: -0.05 },
+    { angle: 0.7, len: 0.35, phase: 1.8, baseOff: 0.0 },
+    { angle: -0.2, len: 0.28, phase: 3.5, baseOff: 0.06 },
+    { angle: 1.3, len: 0.25, phase: 5.0, baseOff: -0.03 },
+  ];
+  for (let pti = 0; pti < plagueTentacles.length; pti++) {
+    const pt = plagueTentacles[pti];
+    const ptBaseX = x + Math.cos(pt.angle) * size * 0.22;
+    const ptBaseY = y + pt.baseOff * size;
+    const slugWave = Math.sin(time * 0.8 + pt.phase) * size * 0.04;
+    const slugWave2 = Math.sin(time * 1.2 + pt.phase * 1.3) * size * 0.06;
+    const ptLen = pt.len * size;
+    const ptTipX = ptBaseX + Math.cos(pt.angle) * ptLen + slugWave2;
+    const ptTipY = ptBaseY + size * 0.14 + Math.sin(time * 0.6 + pt.phase) * size * 0.025;
+    const ptCpX = ptBaseX + Math.cos(pt.angle) * ptLen * 0.5 + slugWave;
+    const ptCpY = ptBaseY + size * 0.07;
+
+    ctx.strokeStyle = `rgba(140, 180, 30, ${0.65 + Math.sin(time * 0.7 + pt.phase) * 0.15})`;
+    ctx.lineWidth = size * 0.025;
+    ctx.beginPath();
+    ctx.moveTo(ptBaseX, ptBaseY);
+    ctx.quadraticCurveTo(ptCpX, ptCpY, ptTipX, ptTipY);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(170, 200, 50, ${0.35 + Math.sin(time + pt.phase) * 0.1})`;
+    ctx.lineWidth = size * 0.012;
+    ctx.beginPath();
+    ctx.moveTo(ptBaseX, ptBaseY);
+    ctx.quadraticCurveTo(ptCpX + size * 0.008, ptCpY + size * 0.004, ptTipX, ptTipY);
+    ctx.stroke();
+
+    for (let pb = 0; pb < 3; pb++) {
+      const t_param = (pb + 1) / 4;
+      const pbx = ptBaseX + (ptCpX - ptBaseX) * 2 * t_param * (1 - t_param) + (ptTipX - ptBaseX) * t_param * t_param;
+      const pby = ptBaseY + (ptCpY - ptBaseY) * 2 * t_param * (1 - t_param) + (ptTipY - ptBaseY) * t_param * t_param;
+      const pustR = size * (0.014 - pb * 0.002) + Math.sin(time * 2 + pb + pt.phase) * size * 0.002;
+      const pustGrad = ctx.createRadialGradient(
+        pbx - pustR * 0.3, pby - pustR * 0.3, 0,
+        pbx, pby, pustR,
+      );
+      pustGrad.addColorStop(0, "#d4e726");
+      pustGrad.addColorStop(0.5, "#a3b318");
+      pustGrad.addColorStop(1, "#6b7f0a");
+      ctx.fillStyle = pustGrad;
+      ctx.beginPath();
+      ctx.arc(pbx, pby, pustR, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 220, 0.35)";
+      ctx.beginPath();
+      ctx.arc(pbx - pustR * 0.3, pby - pustR * 0.3, pustR * 0.3, 0, TAU);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = `rgba(160, 200, 40, ${0.35 + Math.sin(time * 1.5 + pt.phase) * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(ptTipX, ptTipY, size * 0.01, 0, TAU);
+    ctx.fill();
+  }
+  ctx.lineCap = "butt";
+  ctx.restore();
 
   // Tattered hospital gown (back layer)
   ctx.fillStyle = "rgba(200, 210, 220, 0.4)";

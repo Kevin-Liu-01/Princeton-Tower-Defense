@@ -203,8 +203,73 @@ export function drawOrbWeaverEnemy(
     ctx.stroke();
   }
 
-  // Legs (8 spider legs with crawling gait)
-  drawSpiderLegs(ctx, x, y, size, time, zoom, bodyColor, bodyColorDark, 4, 4.5);
+  // 8 spider legs with 3-segment articulation (coxa, femur, tarsus)
+  const owCrawl = time * 4.5;
+  const owAngles = [-0.65, -0.22, 0.22, 0.6];
+  const owLengths = [0.42, 0.48, 0.48, 0.40];
+  for (let side = -1; side <= 1; side += 2) {
+    for (let leg = 0; leg < 4; leg++) {
+      const gaitOff = ((leg % 2) ^ (side === 1 ? 1 : 0)) ? 0 : Math.PI;
+      const stride = Math.sin(owCrawl + gaitOff);
+      const lift = Math.max(0, stride);
+      const a = owAngles[leg];
+      const l = owLengths[leg];
+      const frontRaise = leg === 0 ? size * 0.03 : 0;
+      const backTrail = leg === 3 ? size * 0.015 : 0;
+
+      const cx0 = x + side * (size * 0.1 + leg * size * 0.05);
+      const cy0 = y + leg * size * 0.035 - frontRaise;
+      const fx = cx0 + side * size * 0.16 + side * stride * size * 0.015;
+      const fy = cy0 + a * size * 0.08 - size * 0.08 - lift * size * 0.06;
+      const tx = cx0 + side * size * l + stride * size * 0.03;
+      const ty = cy0 + a * size * 0.28 + size * 0.16 - lift * size * 0.03 + backTrail;
+
+      ctx.strokeStyle = bodyColor;
+      ctx.lineWidth = 4.5 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0);
+      ctx.lineTo(fx, fy);
+      ctx.stroke();
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 3.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      const tipDir = Math.atan2(ty - fy, tx - fx);
+      const tipLen = size * 0.04;
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx + Math.cos(tipDir + 0.3) * tipLen, ty + Math.sin(tipDir + 0.3) * tipLen);
+      ctx.stroke();
+
+      ctx.fillStyle = bodyColorDark;
+      ctx.beginPath();
+      ctx.arc(fx, fy, size * 0.022, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(fx, fy, size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 0.7 * zoom;
+      for (let h = 0; h < 2; h++) {
+        const ht = 0.3 + h * 0.35;
+        const hx = cx0 + (fx - cx0) * ht;
+        const hy = cy0 + (fy - cy0) * ht;
+        ctx.beginPath();
+        ctx.moveTo(hx, hy);
+        ctx.lineTo(hx + side * size * 0.02, hy - size * 0.025);
+        ctx.stroke();
+      }
+    }
+  }
 
   // Underbelly (visible beneath the abdomen for depth)
   ctx.fillStyle = bodyColorDark;
@@ -1200,19 +1265,79 @@ export function drawCentipedeEnemy(
 ) {
   const isAttacking = attackPhase > 0;
   size *= 1.4;
-  const segments = 10;
-  const segSpacing = size * 0.05;
+  const segments = 14;
+  const segSpacing = size * 0.035;
 
-  // Body segments with undulating wave motion
+  // Compute segment positions first
   const waveSpeed = time * 4;
   const segPositions: { x: number; y: number }[] = [];
   for (let i = 0; i < segments; i++) {
     const wave = Math.sin(waveSpeed + i * 0.6) * size * 0.04;
-    const sx = x + wave;
-    const sy = y - size * 0.25 + i * segSpacing;
-    segPositions.push({ x: sx, y: sy });
+    segPositions.push({ x: x + wave, y: y - size * 0.25 + i * segSpacing });
+  }
 
-    // Segment body (organic tergite plate shape)
+  // Draw all scuttling legs FIRST so body segments overlap the bases
+  ctx.lineCap = "round";
+  for (let i = 1; i < segments; i++) {
+    const sp = segPositions[i];
+    const segW = size * (0.1 - i * 0.003);
+    const tailScale = 1 - i * 0.03;
+    const legPhase = Math.sin(time * 8 + i * 0.4);
+    for (let side = -1; side <= 1; side += 2) {
+      const phase = side === 1 ? legPhase : -legPhase;
+      const lift = Math.max(0, phase) * size * 0.04 * tailScale;
+      const hipX = sp.x + side * segW;
+      const hipY = sp.y;
+      const kneeX = hipX + side * size * 0.07 * tailScale + phase * size * 0.015;
+      const kneeY = hipY - size * 0.035 * tailScale - lift;
+      const footX = kneeX + side * size * 0.055 * tailScale + phase * size * 0.01;
+      const footY = kneeY + size * 0.045 * tailScale + Math.abs(phase) * size * 0.008;
+
+      ctx.strokeStyle = bodyColor;
+      ctx.lineWidth = (3.5 * tailScale) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(hipX, hipY);
+      ctx.quadraticCurveTo(
+        hipX + side * size * 0.035 * tailScale,
+        hipY - size * 0.025 * tailScale - lift * 0.5,
+        kneeX, kneeY,
+      );
+      ctx.stroke();
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = (2 * tailScale) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(kneeX, kneeY);
+      ctx.quadraticCurveTo(
+        kneeX + side * size * 0.03 * tailScale,
+        kneeY + size * 0.015 * tailScale,
+        footX, footY,
+      );
+      ctx.stroke();
+
+      ctx.fillStyle = bodyColorLight;
+      ctx.beginPath();
+      ctx.arc(kneeX, kneeY, size * 0.012 * tailScale, 0, Math.PI * 2);
+      ctx.fill();
+
+      const footDir = Math.atan2(footY - kneeY, footX - kneeX);
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = (1 * tailScale) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(footX, footY);
+      ctx.lineTo(
+        footX + Math.cos(footDir + 0.4) * size * 0.015 * tailScale,
+        footY + Math.sin(footDir + 0.4) * size * 0.015 * tailScale,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // Draw body segments on top of legs
+  for (let i = 0; i < segments; i++) {
+    const sx = segPositions[i].x;
+    const sy = segPositions[i].y;
+
     const segGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 0.08);
     const tint = i % 2 === 0 ? bodyColor : bodyColorDark;
     segGrad.addColorStop(0, bodyColorLight);
@@ -1227,14 +1352,12 @@ export function drawCentipedeEnemy(
     ctx.bezierCurveTo(sx + segW * 0.9, sy + segH * 1.1, sx - segW * 0.9, sy + segH * 1.1, sx - segW, sy);
     ctx.fill();
 
-    // Armor plate ridge with pleurite edge
     ctx.strokeStyle = bodyColorDark;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(sx - segW * 0.85, sy);
     ctx.quadraticCurveTo(sx, sy - segH * 0.6, sx + segW * 0.85, sy);
     ctx.stroke();
-    // Lateral pleurite notches
     for (let ps = -1; ps <= 1; ps += 2) {
       ctx.beginPath();
       ctx.moveTo(sx + ps * segW * 0.75, sy - segH * 0.4);
@@ -1242,45 +1365,12 @@ export function drawCentipedeEnemy(
       ctx.stroke();
     }
 
-    // Sternite plate (ventral underside visible between segments)
     if (i > 0 && i < segments - 1) {
       ctx.fillStyle = `rgba(0, 0, 0, 0.08)`;
       ctx.beginPath();
       ctx.moveTo(sx - segW * 0.5, sy + segH * 0.4);
       ctx.bezierCurveTo(sx - segW * 0.3, sy + segH * 0.8, sx + segW * 0.3, sy + segH * 0.8, sx + segW * 0.5, sy + segH * 0.4);
       ctx.fill();
-    }
-
-    // Legs for each segment (except head)
-    if (i > 0) {
-      const legGait = Math.sin(waveSpeed + i * 0.6);
-      const legLift = Math.max(0, legGait) * size * 0.03;
-      for (let side = -1; side <= 1; side += 2) {
-        const lbx = sx + side * size * 0.08;
-        const lmx = lbx + side * size * 0.05;
-        const lmy = sy - size * 0.03 - legLift;
-        const lex = sx + side * size * 0.2 + legGait * side * size * 0.02;
-        const ley = sy + size * 0.06 - legLift;
-        // Coxa (thick base)
-        ctx.strokeStyle = bodyColorDark;
-        ctx.lineWidth = 2.5 * zoom;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(lbx, sy);
-        ctx.quadraticCurveTo(lbx + side * size * 0.02, sy - size * 0.015 - legLift * 0.5, lmx, lmy);
-        ctx.stroke();
-        // Tarsus (thin end)
-        ctx.lineWidth = 1.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(lmx, lmy);
-        ctx.quadraticCurveTo(lmx + side * size * 0.08, lmy + size * 0.02, lex, ley);
-        ctx.stroke();
-        // Joint
-        ctx.fillStyle = bodyColorDark;
-        ctx.beginPath();
-        ctx.arc(lmx, lmy, size * 0.01, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
   }
 
@@ -1440,7 +1530,7 @@ export function drawDragonflyEnemy(
   const flapRate = time * 16 * (1 + attackIntensity * 2);
   for (let pair = 0; pair < 2; pair++) {
     const wingY = y - size * 0.05 + pair * size * 0.08;
-    const flapOffset = pair * 0.5;
+    const flapOffset = pair * 0.2;
     for (let side = -1; side <= 1; side += 2) {
       const flap = Math.sin(flapRate + flapOffset) * 0.5;
       const wingW = size * (0.5 - pair * 0.08);
@@ -1449,11 +1539,18 @@ export function drawDragonflyEnemy(
       ctx.translate(x + side * size * 0.04, wingY);
       ctx.scale(side, 1);
       ctx.rotate(flap * 0.4);
-      const iridescence = Math.sin(time * 3 + pair) * 0.5 + 0.5;
-      const r = Math.round(14 + iridescence * 80);
-      const g = Math.round(165 + iridescence * 60);
-      const b = Math.round(233 - iridescence * 80);
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.35)`;
+      const iriPhase = time * 3 + pair * 1.5;
+      const baseR = Math.round(30 + Math.sin(iriPhase) * 40);
+      const baseG = Math.round(140 + Math.sin(iriPhase + 1.2) * 50);
+      const baseB = Math.round(220 + Math.sin(iriPhase + 2.4) * 35);
+      const tipR = Math.round(120 + Math.sin(iriPhase + 2.0) * 60);
+      const tipG = Math.round(80 + Math.sin(iriPhase + 0.8) * 50);
+      const tipB = Math.round(200 + Math.sin(iriPhase + 1.6) * 55);
+      const wingIriGrad = ctx.createLinearGradient(0, 0, wingW * 0.8, -wingH * 0.3);
+      wingIriGrad.addColorStop(0, `rgba(${baseR}, ${baseG}, ${baseB}, 0.4)`);
+      wingIriGrad.addColorStop(0.5, `rgba(${tipR}, ${tipG}, ${tipB}, 0.35)`);
+      wingIriGrad.addColorStop(1, `rgba(${baseR}, ${baseG}, ${baseB}, 0.25)`);
+      ctx.fillStyle = wingIriGrad;
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.bezierCurveTo(wingW * 0.1, -wingH * 0.8, wingW * 0.4, -wingH * 1.1, wingW * 0.7, -wingH * 0.6);
@@ -1463,7 +1560,7 @@ export function drawDragonflyEnemy(
       ctx.fill();
 
       // Pterostigma (dark cell near wing tip)
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.55)`;
+      ctx.fillStyle = `rgba(${tipR}, ${tipG}, ${tipB}, 0.55)`;
       ctx.beginPath();
       ctx.moveTo(wingW * 0.7, -wingH * 0.3);
       ctx.bezierCurveTo(wingW * 0.74, -wingH * 0.35, wingW * 0.82, -wingH * 0.25, wingW * 0.8, -wingH * 0.15);
@@ -1724,6 +1821,58 @@ export function drawSilkMothEnemy(
     ctx.beginPath();
     ctx.arc(px, py, pSize, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Hindwings (behind forewings — warmer tones, scalloped edges, eye-spots)
+  const smHindFlap = Math.sin(time * 8 * (1 + attackIntensity * 2) - 0.6) * (0.35 + attackIntensity * 0.25);
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.save();
+    ctx.translate(x, y + size * 0.02);
+    ctx.scale(side, 1);
+    ctx.rotate(smHindFlap * 0.3);
+
+    const smHwGrad = ctx.createRadialGradient(size * 0.14, size * 0.02, 0, size * 0.14, size * 0.02, size * 0.28);
+    smHwGrad.addColorStop(0, "rgba(220, 180, 230, 0.5)");
+    smHwGrad.addColorStop(0.5, "rgba(190, 150, 200, 0.35)");
+    smHwGrad.addColorStop(1, "rgba(160, 120, 170, 0.2)");
+    ctx.fillStyle = smHwGrad;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.03, 0);
+    ctx.bezierCurveTo(size * 0.12, -size * 0.15, size * 0.25, -size * 0.18, size * 0.3, -size * 0.08);
+    ctx.bezierCurveTo(size * 0.32, -size * 0.02, size * 0.3, size * 0.05, size * 0.28, size * 0.1);
+    ctx.bezierCurveTo(size * 0.25, size * 0.15, size * 0.18, size * 0.18, size * 0.12, size * 0.15);
+    ctx.bezierCurveTo(size * 0.08, size * 0.12, size * 0.04, size * 0.06, size * 0.03, 0);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(180, 150, 210, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let sc = 0; sc < 4; sc++) {
+      const sct = 0.2 + sc * 0.2;
+      const scx = size * (0.12 + sct * 0.18);
+      const scy = size * (-0.08 + sct * 0.2);
+      ctx.beginPath();
+      ctx.arc(scx, scy, size * 0.02, 0, Math.PI);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "rgba(80, 40, 120, 0.4)";
+    ctx.beginPath();
+    ctx.arc(size * 0.18, size * 0.02, size * 0.045, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(130, 90, 180, 0.45)";
+    ctx.beginPath();
+    ctx.arc(size * 0.18, size * 0.02, size * 0.032, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(200, 170, 240, 0.5)";
+    ctx.beginPath();
+    ctx.arc(size * 0.18, size * 0.02, size * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(240, 230, 255, 0.6)";
+    ctx.beginPath();
+    ctx.arc(size * 0.18, size * 0.02, size * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 
   // Large ornate wings
@@ -2507,8 +2656,85 @@ export function drawTrapdoorSpiderEnemy(
     ctx.fill();
   }
 
-  // Spider legs (thick, powerful)
-  drawSpiderLegs(ctx, x, y, size, time, zoom, bodyColor, bodyColorDark, 4, 3.5);
+  // 8 thick muscular spider legs (ambush predator build)
+  const tsCrawl = time * 3.5;
+  const tsLegAngles = [-0.55, -0.18, 0.18, 0.55];
+  const tsLegLens = [0.48, 0.46, 0.46, 0.40];
+  for (let side = -1; side <= 1; side += 2) {
+    for (let leg = 0; leg < 4; leg++) {
+      const gaitOff = ((leg % 2) ^ (side === 1 ? 1 : 0)) ? 0 : Math.PI;
+      const stride = Math.sin(tsCrawl + gaitOff);
+      const lift = Math.max(0, stride);
+      const a = tsLegAngles[leg];
+      const l = tsLegLens[leg];
+      const isFront = leg === 0;
+      const frontScale = isFront ? 1.25 : 1;
+      const crouchOff = size * 0.02;
+
+      const cx0 = x + side * (size * 0.12 + leg * size * 0.05);
+      const cy0 = y + leg * size * 0.04 + crouchOff;
+      const fx = cx0 + side * size * 0.18 * frontScale + side * stride * size * 0.02;
+      const fy = cy0 + a * size * 0.1 - size * 0.06 - lift * size * 0.07;
+      const tx = cx0 + side * size * l * frontScale + stride * size * 0.03;
+      const ty = cy0 + a * size * 0.26 + size * 0.18 - lift * size * 0.03;
+
+      ctx.strokeStyle = bodyColor;
+      ctx.lineWidth = (isFront ? 7 : 5.5) * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0);
+      ctx.lineTo(fx, fy);
+      ctx.stroke();
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = (isFront ? 5 : 4) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      const tipDir = Math.atan2(ty - fy, tx - fx);
+      const tipLen = size * 0.04;
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx + Math.cos(tipDir + 0.3) * tipLen, ty + Math.sin(tipDir + 0.3) * tipLen);
+      ctx.stroke();
+
+      ctx.fillStyle = bodyColorDark;
+      ctx.beginPath();
+      ctx.arc(fx, fy, size * (isFront ? 0.028 : 0.024), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(fx, fy, size * (isFront ? 0.015 : 0.012), 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 0.8 * zoom;
+      for (let h = 0; h < 3; h++) {
+        const ht = 0.2 + h * 0.25;
+        const hx1 = cx0 + (fx - cx0) * ht;
+        const hy1 = cy0 + (fy - cy0) * ht;
+        const pAngle1 = Math.atan2(fy - cy0, fx - cx0) + Math.PI * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(hx1, hy1);
+        ctx.lineTo(hx1 + Math.cos(pAngle1) * size * 0.022, hy1 + Math.sin(pAngle1) * size * 0.022);
+        ctx.stroke();
+      }
+      for (let h = 0; h < 3; h++) {
+        const ht = 0.2 + h * 0.25;
+        const hx2 = fx + (tx - fx) * ht;
+        const hy2 = fy + (ty - fy) * ht;
+        const pAngle2 = Math.atan2(ty - fy, tx - fx) + Math.PI * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(hx2, hy2);
+        ctx.lineTo(hx2 + Math.cos(pAngle2) * size * 0.02, hy2 + Math.sin(pAngle2) * size * 0.02);
+        ctx.stroke();
+      }
+    }
+  }
 
   // Large round abdomen (stocky, bulbous build with organic contour)
   const tsAbdGrad = ctx.createRadialGradient(x, y + size * 0.08, 0, x, y + size * 0.08, size * 0.3);
@@ -3226,6 +3452,64 @@ export function drawSnowMothEnemy(
     ctx.beginPath();
     ctx.arc(px, py, size * 0.01, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Frost hindwings (behind forewings — icy crystal patterns)
+  const snHindFlap = Math.sin(time * 9 * (1 + attackIntensity * 2) - 0.6) * (0.3 + attackIntensity * 0.25);
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.save();
+    ctx.translate(x, y + size * 0.02);
+    ctx.scale(side, 1);
+    ctx.rotate(snHindFlap * 0.3);
+
+    const snHwGrad = ctx.createRadialGradient(size * 0.12, size * 0.02, 0, size * 0.12, size * 0.02, size * 0.24);
+    snHwGrad.addColorStop(0, "rgba(230, 248, 255, 0.55)");
+    snHwGrad.addColorStop(0.5, "rgba(200, 230, 248, 0.4)");
+    snHwGrad.addColorStop(1, "rgba(170, 210, 235, 0.2)");
+    ctx.fillStyle = snHwGrad;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.03, 0);
+    ctx.bezierCurveTo(size * 0.1, -size * 0.12, size * 0.2, -size * 0.14, size * 0.25, -size * 0.06);
+    ctx.bezierCurveTo(size * 0.27, 0, size * 0.24, size * 0.06, size * 0.2, size * 0.1);
+    ctx.bezierCurveTo(size * 0.15, size * 0.13, size * 0.08, size * 0.1, size * 0.03, 0);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(200, 240, 255, 0.35)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.05, 0);
+    ctx.lineTo(size * 0.15, -size * 0.06);
+    ctx.moveTo(size * 0.1, -size * 0.03);
+    ctx.lineTo(size * 0.14, size * 0.02);
+    ctx.moveTo(size * 0.15, -size * 0.06);
+    ctx.lineTo(size * 0.22, -size * 0.04);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(220, 245, 255, 0.35)";
+    for (let ic = 0; ic < 3; ic++) {
+      const ict = 0.2 + ic * 0.25;
+      ctx.beginPath();
+      ctx.arc(size * (0.08 + ict * 0.15), size * (-0.04 + ict * 0.1), size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Pale silver frost hexagon accents
+    ctx.strokeStyle = "rgba(210, 240, 255, 0.25)";
+    ctx.lineWidth = 0.4 * zoom;
+    const fhx = size * 0.16;
+    const fhy = size * 0.01;
+    const fhr = size * 0.018;
+    ctx.beginPath();
+    for (let h = 0; h <= 6; h++) {
+      const ha = (h / 6) * Math.PI * 2;
+      const hpx = fhx + Math.cos(ha) * fhr;
+      const hpy = fhy + Math.sin(ha) * fhr;
+      if (h === 0) ctx.moveTo(hpx, hpy);
+      else ctx.lineTo(hpx, hpy);
+    }
+    ctx.stroke();
+
+    ctx.restore();
   }
 
   // Wings (white/ice blue with frost patterns)
@@ -3968,6 +4252,62 @@ export function drawAshMothEnemy(
     }
   }
 
+  // Ember hindwings (behind forewings — singed/charred edges, ember spots)
+  const amHindFlap = Math.sin(time * 10 * (1 + attackIntensity * 2) - 0.6) * (0.35 + attackIntensity * 0.25);
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.save();
+    ctx.translate(x, y + size * 0.02);
+    ctx.scale(side, 1);
+    ctx.rotate(amHindFlap * 0.3);
+
+    const amHwGrad = ctx.createRadialGradient(size * 0.12, size * 0.02, 0, size * 0.12, size * 0.02, size * 0.24);
+    amHwGrad.addColorStop(0, "rgba(255, 160, 40, 0.5)");
+    amHwGrad.addColorStop(0.4, "rgba(200, 80, 15, 0.35)");
+    amHwGrad.addColorStop(0.7, "rgba(120, 40, 10, 0.25)");
+    amHwGrad.addColorStop(1, "rgba(40, 15, 5, 0.3)");
+    ctx.fillStyle = amHwGrad;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.03, 0);
+    ctx.bezierCurveTo(size * 0.1, -size * 0.12, size * 0.2, -size * 0.14, size * 0.25, -size * 0.06);
+    ctx.bezierCurveTo(size * 0.27, 0, size * 0.24, size * 0.06, size * 0.2, size * 0.1);
+    ctx.bezierCurveTo(size * 0.15, size * 0.13, size * 0.08, size * 0.1, size * 0.03, 0);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(30, 10, 5, 0.35)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.03, 0);
+    ctx.bezierCurveTo(size * 0.1, -size * 0.12, size * 0.2, -size * 0.14, size * 0.25, -size * 0.06);
+    ctx.bezierCurveTo(size * 0.27, 0, size * 0.24, size * 0.06, size * 0.2, size * 0.1);
+    ctx.bezierCurveTo(size * 0.15, size * 0.13, size * 0.08, size * 0.1, size * 0.03, 0);
+    ctx.stroke();
+
+    const amEmberAlpha = 0.4 + Math.sin(time * 5 + side * 2) * 0.2;
+    ctx.fillStyle = `rgba(255, 180, 40, ${amEmberAlpha})`;
+    ctx.beginPath();
+    ctx.arc(size * 0.14, size * 0.01, size * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255, 120, 20, ${amEmberAlpha * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(size * 0.2, -size * 0.04, size * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (let ep = 0; ep < 3; ep++) {
+      const epPhase = (time * 3 + ep * 0.8 + side) % 1.5;
+      const epX = size * 0.22 + epPhase * size * 0.06;
+      const epY = -size * 0.04 - epPhase * size * 0.08;
+      const epAlpha = Math.max(0, 0.5 - epPhase * 0.35);
+      if (epAlpha > 0) {
+        ctx.fillStyle = `rgba(255, ${Math.round(140 - epPhase * 40)}, 20, ${epAlpha})`;
+        ctx.beginPath();
+        ctx.arc(epX, epY, size * 0.008, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
   // Fiery wings
   for (let side = -1; side <= 1; side += 2) {
     ctx.save();
@@ -4263,61 +4603,127 @@ export function drawBroodMotherEnemy(
   }
   ctx.restore();
 
-  // Massive spider legs (8 legs, thick and powerful)
-  const crawl = time * 3;
-  const legAngles = [-0.6, -0.2, 0.2, 0.6];
-  const legLengths = [0.45, 0.5, 0.5, 0.42];
+  // Massive primary spider legs (8 legs, thick and terrifying with barbed joints)
+  const bmCrawl = time * 3;
+  const bmLegAngles = [-0.6, -0.2, 0.2, 0.6];
+  const bmLegLens = [0.45, 0.5, 0.5, 0.42];
   for (let side = -1; side <= 1; side += 2) {
     for (let leg = 0; leg < 4; leg++) {
       const gaitOffset = ((leg % 2) ^ (side === 1 ? 1 : 0)) ? 0 : Math.PI;
-      const stride = Math.sin(crawl + gaitOffset);
+      const skitter = Math.sin(bmCrawl * 1.3 + leg * 0.7 + side * 0.5);
+      const stride = Math.sin(bmCrawl + gaitOffset);
       const lift = Math.max(0, stride);
-      const a = legAngles[leg];
-      const l = legLengths[leg];
+      const a = bmLegAngles[leg];
+      const l = bmLegLens[leg];
 
       const bx = x + side * (size * 0.12 + leg * size * 0.06);
       const by = y + leg * size * 0.04;
-      const mx = bx + side * size * 0.22 + side * stride * size * 0.02;
+      const mx = bx + side * size * 0.22 + side * stride * size * 0.02 + skitter * size * 0.008;
       const my = by + a * size * 0.12 - size * 0.06 - lift * size * 0.1;
       const ex = bx + side * size * l + stride * size * 0.04 * a;
       const ey = by + a * size * 0.3 + size * 0.2 - lift * size * 0.04;
 
-      // Thick hairy legs
-      const legGrad = ctx.createLinearGradient(bx, by, ex, ey);
-      legGrad.addColorStop(0, bodyColor);
-      legGrad.addColorStop(1, bodyColorDark);
-      ctx.strokeStyle = legGrad;
-      ctx.lineWidth = 6 * zoom;
+      const upperGrad = ctx.createLinearGradient(bx, by, mx, my);
+      upperGrad.addColorStop(0, bodyColor);
+      upperGrad.addColorStop(1, bodyColorDark);
+      ctx.strokeStyle = upperGrad;
+      ctx.lineWidth = 7 * zoom;
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(bx, by);
       ctx.lineTo(mx, my);
+      ctx.stroke();
+
+      const lowerGrad = ctx.createLinearGradient(mx, my, ex, ey);
+      lowerGrad.addColorStop(0, bodyColorDark);
+      lowerGrad.addColorStop(1, "#0a0505");
+      ctx.strokeStyle = lowerGrad;
+      ctx.lineWidth = 5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(mx, my);
       ctx.lineTo(ex, ey);
       ctx.stroke();
 
-      // Leg hairs
       ctx.strokeStyle = bodyColorDark;
       ctx.lineWidth = 1 * zoom;
-      for (let h = 0; h < 3; h++) {
-        const hx = bx + (mx - bx) * (0.3 + h * 0.2);
-        const hy = by + (my - by) * (0.3 + h * 0.2);
+      for (let h = 0; h < 4; h++) {
+        const ht = 0.2 + h * 0.2;
+        const hx = bx + (mx - bx) * ht;
+        const hy = by + (my - by) * ht;
         ctx.beginPath();
         ctx.moveTo(hx, hy);
         ctx.lineTo(hx + side * size * 0.03, hy - size * 0.04);
         ctx.stroke();
       }
 
-      // Joint
       ctx.fillStyle = bodyColorDark;
       ctx.beginPath();
-      ctx.arc(mx, my, size * 0.035, 0, Math.PI * 2);
+      ctx.arc(mx, my, size * 0.038, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = "#0a0505";
+      const barbDir = Math.atan2(my - by, mx - bx);
+      for (let barb = 0; barb < 3; barb++) {
+        const barbAngle = barbDir + (barb - 1) * 0.6;
+        const barbLen = size * 0.03;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx + Math.cos(barbAngle) * barbLen, my + Math.sin(barbAngle) * barbLen);
+        ctx.lineTo(mx + Math.cos(barbAngle + 0.2) * barbLen * 0.5, my + Math.sin(barbAngle + 0.2) * barbLen * 0.5);
+        ctx.fill();
+      }
 
-      // Foot claw
       ctx.fillStyle = "#0a0505";
       ctx.beginPath();
-      ctx.arc(ex, ey, size * 0.02, 0, Math.PI * 2);
+      ctx.arc(ex, ey, size * 0.022, 0, Math.PI * 2);
       ctx.fill();
+      const clawDir = Math.atan2(ey - my, ex - mx);
+      ctx.strokeStyle = "#0a0505";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex + Math.cos(clawDir + 0.4) * size * 0.025, ey + Math.sin(clawDir + 0.4) * size * 0.025);
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex + Math.cos(clawDir - 0.4) * size * 0.025, ey + Math.sin(clawDir - 0.4) * size * 0.025);
+      ctx.stroke();
+    }
+  }
+
+  // Secondary spawning legs near abdomen (4 smaller spindly legs)
+  for (let side = -1; side <= 1; side += 2) {
+    for (let sLeg = 0; sLeg < 2; sLeg++) {
+      const sPhase = Math.sin(time * 5 + sLeg * 1.2 + side * 0.8);
+      const sBx = x + side * size * 0.08;
+      const sBy = y + size * 0.2 + sLeg * size * 0.06;
+      const sMx = sBx + side * size * 0.12 + sPhase * size * 0.01;
+      const sMy = sBy + size * 0.04 - Math.abs(sPhase) * size * 0.03;
+      const sEx = sMx + side * size * 0.1 + sPhase * size * 0.015;
+      const sEy = sMy + size * 0.06;
+
+      ctx.strokeStyle = bodyColorDark;
+      ctx.lineWidth = 3 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(sBx, sBy);
+      ctx.lineTo(sMx, sMy);
+      ctx.stroke();
+
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sMx, sMy);
+      ctx.lineTo(sEx, sEy);
+      ctx.stroke();
+
+      ctx.fillStyle = bodyColorDark;
+      ctx.beginPath();
+      ctx.arc(sMx, sMy, size * 0.018, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#0a0505";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sEx, sEy);
+      ctx.lineTo(sEx + side * size * 0.015, sEy + size * 0.01);
+      ctx.stroke();
     }
   }
 

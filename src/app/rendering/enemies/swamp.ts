@@ -390,6 +390,66 @@ export function drawBogCreatureEnemy(
     style: 'fleshy',
   });
 
+  // Slimy tentacles emerging from lower body base (behind body)
+  ctx.save();
+  ctx.lineCap = "round";
+  const tentacleDefs = [
+    { angle: -0.9, len: 0.38, phase: 0, width: 0.024 },
+    { angle: -0.35, len: 0.44, phase: 1.2, width: 0.022 },
+    { angle: 0.15, len: 0.35, phase: 2.5, width: 0.026 },
+    { angle: 0.6, len: 0.42, phase: 3.8, width: 0.02 },
+    { angle: 1.1, len: 0.32, phase: 5.1, width: 0.023 },
+    { angle: -1.4, len: 0.36, phase: 6.3, width: 0.021 },
+  ];
+  for (let ti = 0; ti < tentacleDefs.length; ti++) {
+    const td = tentacleDefs[ti];
+    const baseX = x + Math.cos(td.angle) * size * 0.28;
+    const baseY = y + size * 0.08 + Math.sin(td.angle) * size * 0.06;
+    const wave1 = Math.sin(time * 2.2 + td.phase) * size * 0.06;
+    const wave2 = Math.sin(time * 3.1 + td.phase * 1.5) * size * 0.09;
+    const tentLen = td.len * size;
+    const tipX = baseX + Math.cos(td.angle) * tentLen + wave2;
+    const tipY = baseY + size * 0.18 + Math.sin(time * 1.8 + td.phase) * size * 0.04;
+    const cpX = baseX + Math.cos(td.angle) * tentLen * 0.5 + wave1;
+    const cpY = baseY + size * 0.1 + Math.sin(time * 2.5 + td.phase * 0.7) * size * 0.03;
+
+    ctx.strokeStyle = `rgba(62, 80, 30, ${0.7 + Math.sin(time + td.phase) * 0.15})`;
+    ctx.lineWidth = td.width * size;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.quadraticCurveTo(cpX, cpY, tipX, tipY);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(82, 100, 38, ${0.45 + Math.sin(time * 1.5 + td.phase) * 0.1})`;
+    ctx.lineWidth = td.width * size * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY);
+    ctx.quadraticCurveTo(cpX + size * 0.01, cpY + size * 0.005, tipX, tipY);
+    ctx.stroke();
+
+    for (let sc = 0; sc < 4; sc++) {
+      const t_param = (sc + 1) / 5;
+      const sx = baseX + (cpX - baseX) * 2 * t_param * (1 - t_param) + (tipX - baseX) * t_param * t_param;
+      const sy = baseY + (cpY - baseY) * 2 * t_param * (1 - t_param) + (tipY - baseY) * t_param * t_param;
+      const cupR = size * (0.012 - sc * 0.002);
+      ctx.fillStyle = "rgba(75, 58, 28, 0.55)";
+      ctx.beginPath();
+      ctx.arc(sx, sy, cupR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(50, 35, 15, 0.4)";
+      ctx.beginPath();
+      ctx.arc(sx, sy, cupR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = `rgba(100, 160, 30, ${0.4 + Math.sin(time * 4 + td.phase) * 0.2})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.lineCap = "butt";
+  ctx.restore();
+
   // Main body - twisted asymmetric mass (lurches forward when attacking)
   const bodyGrad = ctx.createLinearGradient(
     x - size * 0.4, y - size * 0.5,
@@ -1759,6 +1819,64 @@ export function drawSwampTrollEnemy(
       ctx.stroke();
     }
   }
+
+  // Extra brutish secondary arms — slightly lower and smaller (behind main arms)
+  drawPathArm(ctx, x - size * 0.42, y - size * 0.18, size, time, zoom, -1, {
+    color: bodyColorDark, colorDark: "#1a1a0a",
+    shoulderAngle: -0.6 + Math.sin(time * 1.4 + 0.8) * 0.1 + (isAttacking ? -rage * 1.2 : 0),
+    elbowAngle: 0.7 + Math.sin(time * 1.8 + 1.5) * 0.12,
+    upperLen: 0.2, foreLen: 0.16, width: 0.075,
+    handColor: "#1a1a0a", handRadius: 0.04,
+    style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      wCtx.rotate(-0.2);
+      const clawAngles = [-0.6, -0.2, 0.2, 0.6];
+      for (let ci = 0; ci < clawAngles.length; ci++) {
+        const ca = clawAngles[ci];
+        const clawWave = Math.sin(time * 3 + ci) * 0.15;
+        wCtx.strokeStyle = "#1a1a0a";
+        wCtx.lineWidth = s * 0.012;
+        wCtx.lineCap = "round";
+        wCtx.beginPath();
+        wCtx.moveTo(Math.cos(ca) * s * 0.02, -s * 0.01);
+        wCtx.quadraticCurveTo(
+          Math.cos(ca + clawWave) * s * 0.04, -s * 0.04,
+          Math.cos(ca + clawWave * 0.5) * s * 0.05, -s * 0.065,
+        );
+        wCtx.stroke();
+        wCtx.lineCap = "butt";
+      }
+    },
+  });
+  drawPathArm(ctx, x + size * 0.42, y - size * 0.18, size, time, zoom, 1, {
+    color: bodyColorDark, colorDark: "#1a1a0a",
+    shoulderAngle: 0.6 + Math.sin(time * 1.4 + Math.PI + 0.8) * 0.1 + (isAttacking ? rage * 1.2 : 0),
+    elbowAngle: 0.7 + Math.sin(time * 1.8 + 3) * 0.12,
+    upperLen: 0.2, foreLen: 0.16, width: 0.075,
+    handColor: "#1a1a0a", handRadius: 0.04,
+    style: 'fleshy',
+    onWeapon: (wCtx) => {
+      const s = size;
+      wCtx.rotate(0.2);
+      const clawAngles = [-0.6, -0.2, 0.2, 0.6];
+      for (let ci = 0; ci < clawAngles.length; ci++) {
+        const ca = clawAngles[ci];
+        const clawWave = Math.sin(time * 3 + ci + 1.5) * 0.15;
+        wCtx.strokeStyle = "#1a1a0a";
+        wCtx.lineWidth = s * 0.012;
+        wCtx.lineCap = "round";
+        wCtx.beginPath();
+        wCtx.moveTo(Math.cos(ca) * s * 0.02, -s * 0.01);
+        wCtx.quadraticCurveTo(
+          Math.cos(ca + clawWave) * s * 0.04, -s * 0.04,
+          Math.cos(ca + clawWave * 0.5) * s * 0.05, -s * 0.065,
+        );
+        wCtx.stroke();
+        wCtx.lineCap = "butt";
+      }
+    },
+  });
 
   // Swamp Troll arms — heavy ground-slam fists
   drawPathArm(ctx, x - size * 0.48, y - size * 0.35, size, time, zoom, -1, {

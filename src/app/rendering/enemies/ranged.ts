@@ -130,7 +130,7 @@ export function drawArcherEnemy(
     ctx.fillStyle = goldBright;
     ctx.beginPath();
     ctx.arc(tx + Math.sin(time * 2.3 + t) * size * 0.005, ty + tLen + size * 0.003, size * 0.004, 0, TAU);
-    ctx.fill();
+  ctx.fill();
   }
 
   // Heraldic embroidery — tiger silhouette on cape center
@@ -235,7 +235,7 @@ export function drawArcherEnemy(
   // Mantle gold trim
   ctx.strokeStyle = goldBright;
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(cx - size * 0.28, y - size * 0.16 - bodyBob);
   for (let t = 0; t < 6; t++) {
     const tx = cx - size * 0.28 + t * size * 0.1;
@@ -243,7 +243,7 @@ export function drawArcherEnemy(
     const ty = y - size * 0.16 + depth + Math.sin(time * 2.8 + t * 1.1) * size * 0.008 - bodyBob;
     ctx.lineTo(tx, ty);
   }
-  ctx.stroke();
+    ctx.stroke();
   // Mantle fur/ermine trim dots
   ctx.fillStyle = ivory;
   for (let d = 0; d < 8; d++) {
@@ -275,11 +275,11 @@ export function drawArcherEnemy(
   // Gold rims
   ctx.strokeStyle = goldBright;
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(-size * 0.038, -size * 0.2);
   ctx.lineTo(size * 0.038, -size * 0.2);
-  ctx.stroke();
-  ctx.beginPath();
+    ctx.stroke();
+    ctx.beginPath();
   ctx.moveTo(-size * 0.033, size * 0.12);
   ctx.quadraticCurveTo(0, size * 0.16, size * 0.033, size * 0.12);
   ctx.stroke();
@@ -414,9 +414,9 @@ export function drawArcherEnemy(
     for (const side of [-1, 1]) {
       const lx = cx + side * size * (0.02 + t * 0.04);
       const ly = y - size * (0.14 + t * 0.12) - bodyBob;
-      ctx.beginPath();
+  ctx.beginPath();
       ctx.ellipse(lx, ly, size * 0.008, size * 0.004, side * 0.5, 0, TAU);
-      ctx.fill();
+  ctx.fill();
     }
   }
   clearShadow(ctx);
@@ -426,10 +426,10 @@ export function drawArcherEnemy(
   for (let s = 0; s < 3; s++) {
     const sy = y - size * 0.28 + s * size * 0.1 - bodyBob;
     for (const side of [-1, 1]) {
-      ctx.beginPath();
+  ctx.beginPath();
       ctx.moveTo(cx + side * size * 0.1, sy);
       ctx.quadraticCurveTo(cx + side * size * 0.12, sy + size * 0.03, cx + side * size * 0.1, sy + size * 0.06);
-      ctx.stroke();
+  ctx.stroke();
     }
   }
 
@@ -473,9 +473,9 @@ export function drawArcherEnemy(
     ctx.fillRect(mx - size * 0.008, my - size * 0.01, size * 0.016, size * 0.012);
     setShadowBlur(ctx, 2 * zoom, goldBright);
     ctx.fillStyle = medalColors[m];
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(mx, my + size * 0.01, size * 0.008, 0, TAU);
-    ctx.fill();
+  ctx.fill();
     clearShadow(ctx);
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     ctx.beginPath();
@@ -571,12 +571,12 @@ export function drawArcherEnemy(
       const tabW = size * 0.022;
       const tabH = size * 0.04;
       wCtx.fillStyle = ivory;
-      wCtx.beginPath();
+        wCtx.beginPath();
       wCtx.roundRect(-tabW, -tabH * 0.3, tabW * 2, tabH, size * 0.005);
       wCtx.fill();
       wCtx.strokeStyle = gold;
       wCtx.lineWidth = 1 * zoom;
-      wCtx.stroke();
+        wCtx.stroke();
       wCtx.fillStyle = goldBright;
       for (let k = 0; k < 3; k++) {
         const ky = -tabH * 0.15 + k * tabH * 0.25;
@@ -585,9 +585,9 @@ export function drawArcherEnemy(
         wCtx.fill();
       }
       wCtx.fillStyle = gold;
-      wCtx.beginPath();
+        wCtx.beginPath();
       wCtx.roundRect(-tabW * 1.1, -tabH * 0.35, tabW * 2.2, tabH * 0.12, size * 0.002);
-      wCtx.fill();
+        wCtx.fill();
 
       // String gripped — two string segments pulled back with strong tension
       const drawPull = isAttacking ? attackIntensity * size * 0.12 : size * 0.025;
@@ -778,10 +778,10 @@ export function drawArcherEnemy(
         const syOuter = t2 * t2 * t2 * uTipY + 3 * t2 * t2 * t * uOC1y + 3 * t2 * t * t * uOC2y + t * t * t * uHandleY;
         const sw = halfTip + (halfBase - halfTip) * t;
         for (let h = -1; h <= 1; h += 2) {
-          wCtx.beginPath();
+        wCtx.beginPath();
           wCtx.moveTo(sxOuter - sw * 0.8, syOuter + h * sw * 0.6);
           wCtx.lineTo(sxOuter + sw * 0.8, syOuter - h * sw * 0.6);
-          wCtx.stroke();
+        wCtx.stroke();
         }
       }
       // Sinew wrapping on lower limb
@@ -804,7 +804,7 @@ export function drawArcherEnemy(
       wCtx.lineWidth = 1 * zoom;
       for (let g = 0; g < 2; g++) {
         const gOff = (g - 0.5) * size * 0.005;
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.moveTo(size * 0.02 + gOff, -bowH * 0.48);
         wCtx.bezierCurveTo(-size * 0.055 + gOff, -bowH * 0.36, -size * 0.095 + gOff, -bowH * 0.16, -size * 0.045 + gOff, 0);
         wCtx.stroke();
@@ -823,7 +823,7 @@ export function drawArcherEnemy(
         wCtx.quadraticCurveTo(size * 0.045, tipY + dir * size * 0.025, size * 0.065, tipY + dir * size * 0.012);
         wCtx.lineTo(size * 0.06, tipY - dir * size * 0.005);
         wCtx.quadraticCurveTo(size * 0.035, tipY - dir * size * 0.005, size * 0.02, tipY);
-        wCtx.fill();
+      wCtx.fill();
         wCtx.strokeStyle = goldDark;
         wCtx.lineWidth = 0.6 * zoom;
         wCtx.stroke();
@@ -965,7 +965,7 @@ export function drawArcherEnemy(
         wCtx.moveTo(fletchStart, fOff);
         wCtx.quadraticCurveTo(fletchStart + fletchLen * 0.5, fOff + size * 0.01, fletchStart + fletchLen, fOff);
         wCtx.quadraticCurveTo(fletchStart + fletchLen * 0.5, fOff - size * 0.004, fletchStart, fOff);
-        wCtx.fill();
+      wCtx.fill();
       }
 
       // Golden glow on arrowhead
@@ -1047,13 +1047,13 @@ export function drawArcherEnemy(
   neckGrad.addColorStop(0.5, steel);
   neckGrad.addColorStop(1, steelDark);
   ctx.fillStyle = neckGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.14, headY + size * 0.02);
   ctx.quadraticCurveTo(headX - size * 0.16, headY + size * 0.06, headX - size * 0.12, headY + size * 0.1);
   ctx.lineTo(headX + size * 0.12, headY + size * 0.1);
   ctx.quadraticCurveTo(headX + size * 0.16, headY + size * 0.06, headX + size * 0.14, headY + size * 0.02);
   ctx.closePath();
-  ctx.fill();
+    ctx.fill();
   ctx.strokeStyle = goldDark;
   ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
@@ -1164,7 +1164,7 @@ export function drawArcherEnemy(
   browGrad.addColorStop(0.8, goldBright);
   browGrad.addColorStop(1, goldDark);
   ctx.fillStyle = browGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.2, headY - size * 0.04);
   ctx.quadraticCurveTo(headX - size * 0.15, headY - size * 0.1, headX, headY - size * 0.11);
   ctx.quadraticCurveTo(headX + size * 0.15, headY - size * 0.1, headX + size * 0.2, headY - size * 0.04);
@@ -1243,7 +1243,7 @@ export function drawArcherEnemy(
       const ly = headY - size * 0.12 + Math.sin(la) * size * 0.06;
       ctx.beginPath();
       ctx.ellipse(lx, ly, size * 0.006, size * 0.003, la, 0, TAU);
-      ctx.stroke();
+    ctx.stroke();
     }
   }
 
@@ -1264,7 +1264,7 @@ export function drawArcherEnemy(
   setShadowBlur(ctx, 2 * zoom, gold);
   ctx.strokeStyle = goldBright;
   ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.21, headY + size * 0.02);
   ctx.quadraticCurveTo(headX - size * 0.14, headY + size * 0.05, headX, headY + size * 0.04);
   ctx.quadraticCurveTo(headX + size * 0.14, headY + size * 0.05, headX + size * 0.21, headY + size * 0.02);
@@ -1306,7 +1306,7 @@ export function drawArcherEnemy(
     -plumeH * 0.5,
   );
   ctx.quadraticCurveTo(size * 0.05, -plumeH * 0.15, -size * 0.02, size * 0.02);
-  ctx.fill();
+    ctx.fill();
 
   // Main plume body — rich purple gradient
   const plumeGrad = ctx.createLinearGradient(0, 0, size * 0.05, -plumeH);
@@ -1439,12 +1439,12 @@ export function drawArcherEnemy(
     ctx.lineWidth = 2 * zoom;
     for (let r = 0; r < 3; r++) {
       const ringR = size * (0.12 + r * 0.08) * (1 - attackIntensity * 0.3);
-      ctx.beginPath();
+    ctx.beginPath();
       ctx.arc(cx + size * 0.3, y - size * 0.3, ringR, 0, TAU);
-      ctx.stroke();
+    ctx.stroke();
     }
     ctx.strokeStyle = `rgba(107, 33, 168, ${attackIntensity * 0.4})`;
-    ctx.lineWidth = 1.5 * zoom;
+      ctx.lineWidth = 1.5 * zoom;
     for (let r = 0; r < 2; r++) {
       const ringR = size * (0.16 + r * 0.1) * (1 - attackIntensity * 0.2);
       ctx.beginPath();
@@ -1567,7 +1567,7 @@ export function drawMageEnemy(
     cx - capeHalfW * 0.9 + capeWindB, capeBotY,
   );
   ctx.stroke();
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(cx + size * 0.13, capeTopY);
   ctx.quadraticCurveTo(
     cx + capeHalfW + capeWindA, capeTopY + capeLen * 0.45,
@@ -1595,7 +1595,7 @@ export function drawMageEnemy(
   ctx.fillStyle = `rgba(40, 180, 140, ${alchemyPulse * 0.2})`;
   ctx.beginPath();
   ctx.arc(capeSym2X, capeSym2Y, size * 0.003, 0, TAU);
-  ctx.fill();
+    ctx.fill();
 
   const capeSym3X = cx + size * 0.1;
   const capeSym3Y = capeTopY + capeLen * 0.32;
@@ -1688,7 +1688,7 @@ export function drawMageEnemy(
     const by = y - size * 0.28 + b * size * 0.065 - bodyBob;
     const bx = cx + size * 0.005;
     ctx.fillStyle = "#b8942e";
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(bx, by, size * 0.008, 0, TAU);
     ctx.fill();
     ctx.strokeStyle = "#8a6e1e";
@@ -1747,15 +1747,15 @@ export function drawMageEnemy(
     ctx.fillStyle = "#888";
     ctx.fillRect(vx - size * 0.005, vy - size * 0.018, size * 0.01, size * 0.005);
     ctx.fillStyle = "rgba(200,210,220,0.5)";
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.ellipse(vx, vy, size * 0.009, size * 0.015, 0, 0, TAU);
     ctx.fill();
     ctx.strokeStyle = "rgba(180,200,210,0.6)";
     ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
+  ctx.stroke();
     ctx.fillStyle = vialColors[v];
     ctx.globalAlpha = 0.7 + Math.sin(time * 2.5 + v * 1.8) * 0.2;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.ellipse(vx, vy + size * 0.003 + slosh, size * 0.007, size * 0.01, 0, 0, TAU);
     ctx.fill();
     ctx.globalAlpha = 1;
@@ -1820,23 +1820,23 @@ export function drawMageEnemy(
   const mortarX = cx + size * 0.05;
   const mortarY = y - size * 0.01 - bodyBob;
   ctx.fillStyle = "#7a7a7a";
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(mortarX - size * 0.012, mortarY);
   ctx.lineTo(mortarX - size * 0.015, mortarY + size * 0.018);
   ctx.lineTo(mortarX + size * 0.015, mortarY + size * 0.018);
   ctx.lineTo(mortarX + size * 0.012, mortarY);
   ctx.closePath();
-  ctx.fill();
+    ctx.fill();
   ctx.strokeStyle = "#555";
   ctx.lineWidth = 0.5 * zoom;
   ctx.stroke();
   ctx.strokeStyle = "#9a9a9a";
   ctx.lineWidth = 1.5 * zoom;
   ctx.lineCap = "round";
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(mortarX + size * 0.008, mortarY - size * 0.005);
   ctx.lineTo(mortarX + size * 0.02, mortarY - size * 0.02);
-  ctx.stroke();
+    ctx.stroke();
   ctx.lineCap = "butt";
 
   // Leather/brass epaulettes with bubbling beakers
@@ -1921,7 +1921,7 @@ export function drawMageEnemy(
       // Biohazard/alchemy symbol embossed on cover
       wCtx.strokeStyle = "#b8942e";
       wCtx.lineWidth = 0.8 * zoom;
-      wCtx.beginPath();
+        wCtx.beginPath();
       wCtx.arc(0, 0, size * 0.02, 0, TAU);
       wCtx.stroke();
       for (let tri = 0; tri < 3; tri++) {
@@ -2102,16 +2102,16 @@ export function drawMageEnemy(
       for (let s = 0; s < 2; s++) {
         const phaseOff = s * Math.PI;
         wCtx.strokeStyle = serpentColors[s];
-        wCtx.lineWidth = 2.5 * zoom;
+      wCtx.lineWidth = 2.5 * zoom;
         wCtx.lineCap = "round";
-        wCtx.beginPath();
+      wCtx.beginPath();
         let started = false;
         for (let t = 0; t <= 1; t += 0.02) {
           const sy = size * 0.04 - t * (shaftH + size * 0.04);
           const sx = Math.sin(t * 8 + phaseOff + time * 1.5) * size * 0.025;
           if (!started) { wCtx.moveTo(sx, sy); started = true; } else { wCtx.lineTo(sx, sy); }
         }
-        wCtx.stroke();
+      wCtx.stroke();
         wCtx.lineCap = "butt";
 
         // Serpent scales highlight
@@ -2121,7 +2121,7 @@ export function drawMageEnemy(
           const scT = sc / 8;
           const scY = size * 0.04 - scT * (shaftH + size * 0.04);
           const scX = Math.sin(scT * 8 + phaseOff + time * 1.5) * size * 0.025;
-          wCtx.beginPath();
+      wCtx.beginPath();
           wCtx.arc(scX, scY, size * 0.005, 0, Math.PI);
           wCtx.stroke();
         }
@@ -2137,7 +2137,7 @@ export function drawMageEnemy(
         wCtx.moveTo(hx - headSide * size * 0.005, hy + size * 0.01);
         wCtx.quadraticCurveTo(hx + headSide * size * 0.015, hy, hx + headSide * size * 0.008, hy - size * 0.012);
         wCtx.quadraticCurveTo(hx, hy - size * 0.005, hx - headSide * size * 0.005, hy + size * 0.01);
-        wCtx.fill();
+      wCtx.fill();
         wCtx.fillStyle = "#ff3030";
         wCtx.beginPath();
         wCtx.arc(hx + headSide * size * 0.008, hy - size * 0.005, size * 0.002, 0, TAU);
@@ -2244,12 +2244,12 @@ export function drawMageEnemy(
   for (let rv = 0; rv < 4; rv++) {
     const rvY = headY + size * 0.05 + rv * size * 0.035;
     const beakWidth = size * 0.04 * (1 - rv * 0.2);
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(headX - beakWidth, rvY, size * 0.004, 0, TAU);
-    ctx.fill();
-    ctx.beginPath();
+  ctx.fill();
+  ctx.beginPath();
     ctx.arc(headX + beakWidth, rvY, size * 0.004, 0, TAU);
-    ctx.fill();
+  ctx.fill();
   }
 
   // Brass goggle lenses — eerie green glow
@@ -2259,15 +2259,15 @@ export function drawMageEnemy(
 
     // Brass frame
     ctx.strokeStyle = "#b8942e";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
     ctx.ellipse(lensX, lensY, size * 0.032, size * 0.028, 0, 0, TAU);
-    ctx.stroke();
+  ctx.stroke();
 
     // Outer brass ring
     ctx.strokeStyle = "#8a6e1e";
     ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.ellipse(lensX, lensY, size * 0.036, size * 0.032, 0, 0, TAU);
     ctx.stroke();
 
@@ -2280,14 +2280,14 @@ export function drawMageEnemy(
     ctx.fillStyle = lensGrad;
     ctx.beginPath();
     ctx.ellipse(lensX, lensY, size * 0.028, size * 0.024, 0, 0, TAU);
-    ctx.fill();
-    clearShadow(ctx);
+  ctx.fill();
+  clearShadow(ctx);
 
     // Lens glint
     ctx.fillStyle = "rgba(255,255,255,0.5)";
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(lensX - side * size * 0.008, lensY - size * 0.008, size * 0.007, 0, TAU);
-    ctx.fill();
+  ctx.fill();
 
     // Connecting strap to frame
     ctx.strokeStyle = "#5a4a2a";
@@ -2301,7 +2301,7 @@ export function drawMageEnemy(
   // Goggle bridge
   ctx.strokeStyle = "#b8942e";
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.015, headY - size * 0.02);
   ctx.quadraticCurveTo(headX, headY - size * 0.035, headX + size * 0.015, headY - size * 0.02);
   ctx.stroke();
@@ -2317,7 +2317,7 @@ export function drawMageEnemy(
   ctx.fillStyle = brimGrad;
   ctx.beginPath();
   ctx.ellipse(headX, hatBaseY, size * 0.22, size * 0.06, 0, 0, TAU);
-  ctx.fill();
+    ctx.fill();
   ctx.strokeStyle = "#2a2a2a";
   ctx.lineWidth = 1 * zoom;
   ctx.stroke();
@@ -2328,18 +2328,18 @@ export function drawMageEnemy(
   crownGrad.addColorStop(0.5, "#222");
   crownGrad.addColorStop(1, "#1a1a1a");
   ctx.fillStyle = crownGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.1, hatBaseY);
   ctx.lineTo(headX - size * 0.09, hatBaseY - size * 0.18);
   ctx.quadraticCurveTo(headX, hatBaseY - size * 0.2, headX + size * 0.09, hatBaseY - size * 0.18);
   ctx.lineTo(headX + size * 0.1, hatBaseY);
   ctx.closePath();
-  ctx.fill();
+    ctx.fill();
 
   // Hat band (brass buckle)
   ctx.strokeStyle = "#b8942e";
   ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.1, hatBaseY - size * 0.02);
   ctx.lineTo(headX + size * 0.1, hatBaseY - size * 0.02);
   ctx.stroke();
@@ -2384,10 +2384,10 @@ export function drawMageEnemy(
     const vAlpha = 1 - ((time * 20 + v * 15) % (size * 0.5)) / (size * 0.5);
     if (vAlpha > 0) {
       ctx.globalAlpha = vAlpha * alchemyPulse * 0.3;
-      ctx.beginPath();
+    ctx.beginPath();
       ctx.moveTo(vx, vy);
       ctx.quadraticCurveTo(vx + Math.sin(vPhase + 1) * size * 0.04, vy - size * 0.04, vx + Math.sin(vPhase + 2) * size * 0.03, vy - size * 0.08);
-      ctx.stroke();
+    ctx.stroke();
       ctx.globalAlpha = 1;
     }
   }
@@ -2601,7 +2601,7 @@ export function drawWarlockEnemy(
   robeGrad.addColorStop(0.65, charcoalDark);
   robeGrad.addColorStop(1, "#060610");
   ctx.fillStyle = robeGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(cx - size * 0.22, y - size * 0.34 - bodyBob);
   ctx.quadraticCurveTo(cx - size * 0.32, y + size * 0.04, cx - robeW, y + size * 0.38);
   for (let t = 0; t < 10; t++) {
@@ -2756,23 +2756,23 @@ export function drawWarlockEnemy(
   ctx.lineWidth = 0.8 * zoom;
   for (let ps = 0; ps < 6; ps++) {
     const psX = cx - size * 0.1 + ps * size * 0.04;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(psX, torsoTop + size * 0.02);
     ctx.lineTo(psX - size * 0.005, torsoBot - size * 0.01);
-    ctx.stroke();
+  ctx.stroke();
   }
 
   // Suit jacket lapel lines
   ctx.strokeStyle = charcoalDark;
   ctx.lineWidth = 1.5 * zoom;
   for (const side of [-1, 1]) {
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(cx + side * size * 0.04, torsoTop + size * 0.01);
     ctx.quadraticCurveTo(
       cx + side * size * 0.02, y - size * 0.18 - bodyBob,
       cx + side * size * 0.01, torsoBot - size * 0.02,
     );
-    ctx.stroke();
+  ctx.stroke();
   }
 
   // Deep red vest visible between lapels
@@ -2793,11 +2793,11 @@ export function drawWarlockEnemy(
   for (let b = 0; b < 4; b++) {
     const bY = torsoTop + size * 0.06 + b * size * 0.06;
     ctx.fillStyle = goldBtn;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(cx, bY, size * 0.008, 0, TAU);
     ctx.fill();
     ctx.fillStyle = goldBtnDark;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(cx + size * 0.002, bY + size * 0.002, size * 0.004, 0, TAU);
     ctx.fill();
   }
@@ -2828,14 +2828,14 @@ export function drawWarlockEnemy(
     ctx.beginPath();
     ctx.moveTo(spX + side * size * 0.07, spY);
     ctx.lineTo(spX + side * size * 0.08, spY - size * 0.025);
-    ctx.stroke();
+  ctx.stroke();
 
     setShadowBlur(ctx, 6 * zoom, accent);
     ctx.strokeStyle = `rgba(167, 139, 250, ${voidPulse * 0.7})`;
     ctx.lineWidth = 1 * zoom;
     const runeX = spX + side * size * 0.04;
     const runeY = spY - size * 0.005;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(runeX - size * 0.012, runeY);
     ctx.lineTo(runeX, runeY - size * 0.015);
     ctx.lineTo(runeX + size * 0.012, runeY);
@@ -2974,9 +2974,9 @@ export function drawWarlockEnemy(
       // Obsidian clasps
       wCtx.fillStyle = "#3a3a50";
       for (const cSide of [-1, 1]) {
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.rect(cSide * bw * 0.2 - size * 0.004, floatOff - size * 0.003, size * 0.008, size * 0.006);
-        wCtx.fill();
+      wCtx.fill();
       }
 
       // Swirling trapped souls visible in the gap
@@ -2986,9 +2986,9 @@ export function drawWarlockEnemy(
         const sR = bw * 0.25;
         const sx = Math.cos(sAngle) * sR;
         const sy = floatOff + Math.sin(sAngle) * bh * 0.06;
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.arc(sx, sy, size * 0.004, 0, TAU);
-        wCtx.fill();
+      wCtx.fill();
       }
 
       // Void energy aura rings around briefcase
@@ -3157,11 +3157,12 @@ export function drawWarlockEnemy(
   ctx.quadraticCurveTo(headX, headY + size * 0.02, headX + size * 0.08, headY - size * 0.04);
   ctx.stroke();
 
-  // Gaunt pale face
+  // Void-touched ethereal face
   const faceGrad = ctx.createRadialGradient(headX, headY, 0, headX, headY, size * 0.1);
-  faceGrad.addColorStop(0, paleSkin);
-  faceGrad.addColorStop(0.7, paleSkinDark);
-  faceGrad.addColorStop(1, "#685858");
+  faceGrad.addColorStop(0, "#b8a0d8");
+  faceGrad.addColorStop(0.4, "#8068a8");
+  faceGrad.addColorStop(0.7, "#5a3878");
+  faceGrad.addColorStop(1, "#2a1848");
   ctx.fillStyle = faceGrad;
   ctx.beginPath();
   ctx.moveTo(headX, headY - size * 0.1);
@@ -3178,62 +3179,99 @@ export function drawWarlockEnemy(
   );
   ctx.fill();
 
-  // Sunken cheek shadows
-  ctx.fillStyle = "rgba(60, 40, 50, 0.2)";
+  // Arcane veins radiating from eyes
+  ctx.lineWidth = 0.7 * zoom;
   for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.ellipse(headX + side * size * 0.05, headY + size * 0.03, size * 0.02, size * 0.035, side * 0.2, 0, TAU);
-    ctx.fill();
+    const eyeCX = headX + side * size * 0.035;
+    const eyeCY = headY - size * 0.015;
+    for (let v = 0; v < 4; v++) {
+      const vAngle = side * 0.3 + v * 0.45 - 0.6;
+      const vLen = size * (0.04 + Math.sin(time * 2.5 + v * 1.3) * 0.008);
+      const vAlpha = 0.25 + Math.sin(time * 3.0 + v * 1.7) * 0.15;
+      ctx.strokeStyle = `rgba(167, 139, 250, ${vAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(eyeCX, eyeCY);
+      const vMidX = eyeCX + Math.cos(vAngle) * vLen * 0.5;
+      const vMidY = eyeCY + Math.sin(vAngle) * vLen * 0.5;
+      const vEndX = eyeCX + Math.cos(vAngle + 0.15) * vLen;
+      const vEndY = eyeCY + Math.sin(vAngle + 0.15) * vLen;
+      ctx.quadraticCurveTo(vMidX, vMidY, vEndX, vEndY);
+      ctx.stroke();
+    }
   }
 
-  // Angular brow ridge
-  ctx.strokeStyle = paleSkinDark;
-  ctx.lineWidth = 1.5 * zoom;
+  // Void rune sigil on forehead
+  const runeAlpha = 0.3 + voidPulse * 0.4;
+  setShadowBlur(ctx, 4 * zoom, accent);
+  ctx.strokeStyle = `rgba(200, 170, 255, ${runeAlpha})`;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(headX - size * 0.07, headY - size * 0.03);
-  ctx.quadraticCurveTo(headX, headY - size * 0.05, headX + size * 0.07, headY - size * 0.03);
+  ctx.moveTo(headX, headY - size * 0.065);
+  ctx.lineTo(headX - size * 0.015, headY - size * 0.045);
+  ctx.lineTo(headX, headY - size * 0.025);
+  ctx.lineTo(headX + size * 0.015, headY - size * 0.045);
+  ctx.closePath();
   ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(headX, headY - size * 0.075);
+  ctx.lineTo(headX, headY - size * 0.02);
+  ctx.stroke();
+  clearShadow(ctx);
 
-  // Glowing purple eyes
+  // Deep void eye sockets with intense glow
   for (const side of [-1, 1]) {
-    ctx.fillStyle = "#0a0014";
+    ctx.fillStyle = "#050010";
     ctx.beginPath();
-    ctx.ellipse(headX + side * size * 0.035, headY - size * 0.015, size * 0.02, size * 0.015, 0, 0, TAU);
+    ctx.ellipse(headX + side * size * 0.035, headY - size * 0.015, size * 0.024, size * 0.018, side * 0.1, 0, TAU);
     ctx.fill();
 
-    setShadowBlur(ctx, 8 * zoom, accent);
-    const eyeFlicker = 0.7 + Math.sin(time * 6 + side * 2) * 0.25;
-    ctx.fillStyle = `rgba(167, 139, 250, ${eyeFlicker})`;
+    setShadowBlur(ctx, 10 * zoom, accent);
+    const eyeFlicker = 0.8 + Math.sin(time * 6 + side * 2) * 0.2;
+    const eyeGrad = ctx.createRadialGradient(
+      headX + side * size * 0.035, headY - size * 0.015, 0,
+      headX + side * size * 0.035, headY - size * 0.015, size * 0.016,
+    );
+    eyeGrad.addColorStop(0, `rgba(255, 240, 255, ${eyeFlicker})`);
+    eyeGrad.addColorStop(0.4, `rgba(200, 170, 255, ${eyeFlicker * 0.9})`);
+    eyeGrad.addColorStop(1, `rgba(100, 60, 200, ${eyeFlicker * 0.3})`);
+    ctx.fillStyle = eyeGrad;
     ctx.beginPath();
-    ctx.arc(headX + side * size * 0.035, headY - size * 0.015, size * 0.012, 0, TAU);
+    ctx.arc(headX + side * size * 0.035, headY - size * 0.015, size * 0.014, 0, TAU);
     ctx.fill();
-    ctx.fillStyle = `rgba(230, 210, 255, ${eyeFlicker * 0.6})`;
+
+    // Vertical slit pupil
+    ctx.fillStyle = `rgba(20, 0, 40, ${eyeFlicker * 0.7})`;
     ctx.beginPath();
-    ctx.arc(headX + side * size * 0.035, headY - size * 0.015, size * 0.005, 0, TAU);
+    ctx.ellipse(headX + side * size * 0.035, headY - size * 0.015, size * 0.003, size * 0.01, 0, 0, TAU);
     ctx.fill();
     clearShadow(ctx);
   }
 
-  // Sharp nose
-  ctx.strokeStyle = paleSkinDark;
-  ctx.lineWidth = 1 * zoom;
+  // Spectral nose ridge (no nostrils, just a faint ridge)
+  ctx.strokeStyle = `rgba(140, 110, 180, 0.4)`;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(headX, headY);
-  ctx.lineTo(headX - size * 0.008, headY + size * 0.035);
-  ctx.lineTo(headX + size * 0.008, headY + size * 0.035);
+  ctx.moveTo(headX, headY + size * 0.005);
+  ctx.lineTo(headX, headY + size * 0.03);
   ctx.stroke();
 
-  // Thin stern mouth
-  ctx.strokeStyle = "#3a2030";
+  // Glowing void mouth — thin slit emitting energy
+  setShadowBlur(ctx, 5 * zoom, accent);
+  ctx.strokeStyle = `rgba(167, 139, 250, ${0.5 + voidPulse * 0.3})`;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(headX - size * 0.025, headY + size * 0.055);
-  ctx.quadraticCurveTo(headX, headY + size * 0.05, headX + size * 0.025, headY + size * 0.055);
+  ctx.quadraticCurveTo(headX, headY + size * 0.048, headX + size * 0.025, headY + size * 0.055);
   ctx.stroke();
+  ctx.fillStyle = `rgba(120, 80, 200, ${0.15 + voidPulse * 0.15})`;
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.052, size * 0.018, size * 0.004, 0, 0, TAU);
+  ctx.fill();
+  clearShadow(ctx);
 
   // Dark Barrister's Crown — towering obsidian diadem with void crystals
-  const crownBaseY = headY - size * 0.1;
-  const crownTopY = headY - size * 0.36;
+  const crownBaseY = headY - size * 0.05;
+  const crownTopY = headY - size * 0.31;
   const crownMidY = crownBaseY + (crownTopY - crownBaseY) * 0.5;
 
   // Crown body — 5 tall spires
@@ -3244,7 +3282,7 @@ export function drawWarlockEnemy(
   crownGrad.addColorStop(0.8, obsidian);
   crownGrad.addColorStop(1, obsidianLight);
   ctx.fillStyle = crownGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(headX - size * 0.10, crownBaseY);
   ctx.lineTo(headX - size * 0.09, crownTopY + size * 0.08);
   ctx.lineTo(headX - size * 0.07, crownTopY + size * 0.02);
@@ -3257,7 +3295,7 @@ export function drawWarlockEnemy(
   ctx.lineTo(headX + size * 0.09, crownTopY + size * 0.08);
   ctx.lineTo(headX + size * 0.10, crownBaseY);
   ctx.closePath();
-  ctx.fill();
+    ctx.fill();
 
   // Crown edge highlights on each spire
   ctx.strokeStyle = obsidianLight;
@@ -3460,7 +3498,7 @@ export function drawWarlockEnemy(
       ctx.beginPath();
       ctx.moveTo(-size * 0.01, -size * 0.015 + tl * size * 0.012);
       ctx.lineTo(size * 0.01, -size * 0.015 + tl * size * 0.012);
-      ctx.stroke();
+    ctx.stroke();
     }
     ctx.fillStyle = vestRed;
     ctx.beginPath();
@@ -3496,11 +3534,11 @@ export function drawWarlockEnemy(
     const ringPhase = (time * 0.5 + r * 0.5) % 1;
     const ringR = size * (0.15 + ringPhase * 0.2);
     ctx.strokeStyle = `rgba(167, 139, 250, ${(1 - ringPhase) * 0.25})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
     ctx.ellipse(cx, y + size * 0.48, ringR, ringR * ISO_Y_RATIO, 0, 0, TAU);
-    ctx.stroke();
-  }
+      ctx.stroke();
+    }
 
   drawShadowWisps(ctx, cx, y - size * 0.1, size, time, zoom, { color: "rgba(76, 29, 149, 0.35)", count: 4 });
 
@@ -3593,14 +3631,14 @@ export function drawCrossbowmanEnemy(
   ctx.lineWidth = 1.5 * zoom;
   for (let band = 0; band < 3; band++) {
     const bandY = y - size * 0.25 + band * size * 0.1 - bodyBob;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(cx - size * 0.2, bandY);
     ctx.lineTo(cx + size * 0.2, bandY);
-    ctx.stroke();
+  ctx.stroke();
     // Rivets
     ctx.fillStyle = metalLight;
     for (let rv = 0; rv < 6; rv++) {
-      ctx.beginPath();
+  ctx.beginPath();
       ctx.arc(cx - size * 0.16 + rv * size * 0.065, bandY, size * 0.005, 0, TAU);
       ctx.fill();
     }
@@ -3642,12 +3680,12 @@ export function drawCrossbowmanEnemy(
       const sAngle = side * (0.2 + sp * 0.35) - Math.PI * 0.4;
       const spBase = cx + side * size * 0.26;
       const spBaseY = y - size * 0.32 - bodyBob;
-      ctx.fillStyle = metalDark;
-      ctx.beginPath();
+    ctx.fillStyle = metalDark;
+    ctx.beginPath();
       ctx.moveTo(spBase + Math.cos(sAngle) * size * 0.04, spBaseY + Math.sin(sAngle) * size * 0.03);
       ctx.lineTo(spBase + Math.cos(sAngle) * size * 0.1, spBaseY + Math.sin(sAngle) * size * 0.06 - size * 0.04);
       ctx.lineTo(spBase + Math.cos(sAngle) * size * 0.05, spBaseY + Math.sin(sAngle) * size * 0.04);
-      ctx.fill();
+    ctx.fill();
     }
   }
 
@@ -3688,7 +3726,7 @@ export function drawCrossbowmanEnemy(
       wCtx.strokeStyle = metalLight;
       wCtx.lineWidth = 2 * zoom;
       wCtx.lineCap = "round";
-      wCtx.beginPath();
+        wCtx.beginPath();
       wCtx.moveTo(-size * 0.015, gripH * 0.5);
       wCtx.quadraticCurveTo(-size * 0.02, gripH * 0.8, 0, gripH * 0.9);
       wCtx.quadraticCurveTo(size * 0.02, gripH * 0.8, size * 0.015, gripH * 0.5);
@@ -3736,7 +3774,7 @@ export function drawCrossbowmanEnemy(
       wCtx.fillStyle = metalLight;
       for (let r = 0; r < 3; r++) {
         const rx = -size * 0.012 + r * size * 0.012;
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.arc(rx, -gripH * 0.1, size * 0.003, 0, TAU);
         wCtx.fill();
       }
@@ -4139,9 +4177,9 @@ export function drawCrossbowmanEnemy(
         // Rivets on each band
         for (const rx of [-0.7, 0.7] as const) {
           wCtx.fillStyle = metalLight;
-          wCtx.beginPath();
+      wCtx.beginPath();
           wCtx.arc(tillerW * rx, by + size * 0.0045, size * 0.003, 0, TAU);
-          wCtx.fill();
+      wCtx.fill();
           wCtx.fillStyle = metalDark;
           wCtx.beginPath();
           wCtx.arc(tillerW * rx, by + size * 0.0045, size * 0.0015, 0, TAU);
@@ -4230,7 +4268,7 @@ export function drawCrossbowmanEnemy(
     ctx.lineWidth = 2 * zoom;
     for (let r = 0; r < 2; r++) {
       const ringR = size * (0.1 + r * 0.08) * (1 - attackIntensity * 0.3);
-      ctx.beginPath();
+    ctx.beginPath();
       ctx.arc(cx + size * 0.25, y - size * 0.35, ringR, 0, TAU);
       ctx.stroke();
     }
@@ -4280,15 +4318,15 @@ export function drawHexerEnemy(
       ctx.translate(petalX, petalY);
       ctx.rotate(petalRot);
       ctx.fillStyle = `rgba(255, 183, 197, ${petalAlpha * 0.7})`;
-      ctx.beginPath();
+  ctx.beginPath();
       ctx.ellipse(0, 0, size * 0.008, size * 0.005, 0, 0, TAU);
-      ctx.fill();
+  ctx.fill();
       ctx.restore();
     }
   }
 
   // Dramatic flowing dancer's cape — wide silk with scalloped edges and gold trim
-  ctx.save();
+    ctx.save();
   const capeTopY = y - size * 0.33 - bodyBob;
   const capeSpread = size * 0.3 + Math.sin(windPhase * 0.8) * size * 0.03;
   const capeLen = size * 0.52;
@@ -4298,7 +4336,7 @@ export function drawHexerEnemy(
   capeGrad.addColorStop(0.6, "#5a0808");
   capeGrad.addColorStop(1, "#3a0505");
   ctx.fillStyle = capeGrad;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(cx - size * 0.1, capeTopY);
   ctx.quadraticCurveTo(
     cx - capeSpread * 0.7, capeTopY + capeLen * 0.35,
@@ -4316,8 +4354,8 @@ export function drawHexerEnemy(
     cx + capeSpread * 0.7, capeTopY + capeLen * 0.35,
     cx + size * 0.1, capeTopY,
   );
-  ctx.closePath();
-  ctx.fill();
+    ctx.closePath();
+    ctx.fill();
   // Inner lining flash — gold silk revealed by wind
   const liningAlpha = 0.12 + Math.sin(windPhase * 1.5) * 0.06;
   ctx.fillStyle = `rgba(212, 160, 64, ${liningAlpha})`;
@@ -4337,13 +4375,13 @@ export function drawHexerEnemy(
   // Gold trim along cape edges
   ctx.strokeStyle = `rgba(212, 175, 55, ${0.5 + Math.sin(windPhase) * 0.15})`;
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
+    ctx.beginPath();
   ctx.moveTo(cx - size * 0.1, capeTopY);
   ctx.quadraticCurveTo(
     cx - capeSpread * 0.7, capeTopY + capeLen * 0.35,
     cx - capeSpread + Math.sin(windPhase) * size * 0.03, capeTopY + capeLen * 0.88,
   );
-  ctx.stroke();
+    ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(cx + size * 0.1, capeTopY);
   ctx.quadraticCurveTo(
@@ -4392,7 +4430,7 @@ export function drawHexerEnemy(
     hakamaGrad.addColorStop(0.4, "#6b1010");
     hakamaGrad.addColorStop(1, "#3a0808");
     ctx.fillStyle = hakamaGrad;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(cx + side * size * 0.02, y - size * 0.06 - bodyBob);
     ctx.quadraticCurveTo(
       cx + side * size * 0.16, y + size * 0.04 - bodyBob,
@@ -4404,8 +4442,8 @@ export function drawHexerEnemy(
       y + size * 0.2 + Math.sin(windPhase * 1.4 + side) * size * 0.008,
     );
     ctx.quadraticCurveTo(cx + side * size * 0.01, y + size * 0.06 - bodyBob, cx, y - size * 0.06 - bodyBob);
-    ctx.closePath();
-    ctx.fill();
+  ctx.closePath();
+  ctx.fill();
   }
 
   // Flowing razor-ribbon trails from waist — wind-animated silk with blade glints
@@ -4422,7 +4460,7 @@ export function drawHexerEnemy(
       : `rgba(212, 175, 55, ${ribbonAlpha * 0.8})`;
     ctx.lineWidth = (1.5 - rbIdx * 0.3) * zoom;
     ctx.lineCap = "round";
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(rbBaseX, rbBaseY);
     ctx.quadraticCurveTo(
       rbBaseX + rbWind * 0.6 + rbSide * size * 0.03,
@@ -4430,7 +4468,7 @@ export function drawHexerEnemy(
       rbBaseX + rbWind + rbSide * size * 0.01,
       rbBaseY + rbLen,
     );
-    ctx.stroke();
+  ctx.stroke();
     ctx.lineCap = "butt";
     if (rb % 3 === 0) {
       const bladeGlint = 0.3 + Math.sin(time * 5 + rb * 2.3) * 0.3;
@@ -4452,7 +4490,7 @@ export function drawHexerEnemy(
     ctx.fillStyle = "rgba(120, 120, 130, 0.4)";
     for (let mr = 0; mr < 3; mr++) {
       for (let mc = 0; mc < 2; mc++) {
-        ctx.beginPath();
+  ctx.beginPath();
         ctx.arc(
           mailX + mc * size * 0.012 * side,
           mailY + mr * size * 0.012,
@@ -4488,7 +4526,7 @@ export function drawHexerEnemy(
     panelGrad.addColorStop(0, "rgba(139, 26, 26, 0.7)");
     panelGrad.addColorStop(1, "rgba(90, 8, 8, 0.5)");
     ctx.fillStyle = panelGrad;
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(cx + side * size * 0.14, y - size * 0.28 - bodyBob);
     ctx.quadraticCurveTo(
       cx + side * (size * 0.2 + panelWave * 2), y - size * 0.16 - bodyBob,
@@ -4548,7 +4586,7 @@ export function drawHexerEnemy(
     ctx.beginPath();
     ctx.moveTo(opx, y - size * 0.1 - bodyBob);
     ctx.lineTo(opx, y - size * 0.04 - bodyBob);
-    ctx.stroke();
+  ctx.stroke();
   }
   // Obi knot on back (visible slightly to side)
   ctx.fillStyle = "#d4a040";
@@ -4563,7 +4601,7 @@ export function drawHexerEnemy(
     ctx.strokeStyle = "rgba(200, 180, 160, 0.5)";
     ctx.lineWidth = 0.8 * zoom;
     for (let bw = 0; bw < 3; bw++) {
-      ctx.beginPath();
+  ctx.beginPath();
       ctx.moveTo(bx - size * 0.015, by + bw * size * 0.012);
       ctx.lineTo(bx + size * 0.015, by + bw * size * 0.012 + size * 0.005);
       ctx.stroke();
@@ -4654,7 +4692,7 @@ export function drawHexerEnemy(
         const ribEndY = fanCY + Math.sin(ribAngle) * fanR;
         wCtx.strokeStyle = "#8a8a9a";
         wCtx.lineWidth = 1.2 * zoom;
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.moveTo(0, fanCY + size * 0.005);
         wCtx.lineTo(ribEndX, ribEndY);
         wCtx.stroke();
@@ -4665,7 +4703,7 @@ export function drawHexerEnemy(
           wCtx.fillStyle = `rgba(255, 255, 255, ${glint})`;
           wCtx.beginPath();
           wCtx.arc(ribEndX, ribEndY, size * 0.003, 0, TAU);
-          wCtx.fill();
+      wCtx.fill();
         }
       }
 
@@ -4677,12 +4715,12 @@ export function drawHexerEnemy(
         wCtx.fillStyle = p % 2 === 0
           ? `rgba(180, 20, 50, ${panelAlpha})`
           : `rgba(200, 35, 65, ${panelAlpha})`;
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.moveTo(0, fanCY + size * 0.005);
         wCtx.lineTo(Math.cos(a1) * fanR, fanCY + Math.sin(a1) * fanR);
         wCtx.lineTo(Math.cos(a2) * fanR, fanCY + Math.sin(a2) * fanR);
-        wCtx.closePath();
-        wCtx.fill();
+      wCtx.closePath();
+      wCtx.fill();
       }
 
       // Cherry blossom dots painted on fan surface
@@ -4771,7 +4809,7 @@ export function drawHexerEnemy(
           : `rgba(180, 20, 60, 0.65)`;
         wCtx.lineWidth = 1.2 * zoom;
         wCtx.lineCap = "round";
-        wCtx.beginPath();
+      wCtx.beginPath();
         wCtx.moveTo(srSide * size * 0.01, srBaseY);
         wCtx.quadraticCurveTo(
           srSide * size * 0.02 + srWave,
@@ -4920,7 +4958,7 @@ export function drawHexerEnemy(
   // Short swept-back hair at sides
   ctx.fillStyle = "#1a0a12";
   for (const side of [-1, 1]) {
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(headX + side * size * 0.08, headY - size * 0.04);
     ctx.quadraticCurveTo(
       headX + side * size * 0.11, headY + size * 0.02,
@@ -4976,8 +5014,8 @@ export function drawHexerEnemy(
       ctx.lineTo(headX + side * size * 0.055, headY + size * 0.015 + wm * size * 0.012);
       ctx.lineTo(headX + side * size * 0.055, headY + size * 0.01 + wm * size * 0.012);
       ctx.lineTo(headX + side * size * 0.02, headY + wm * size * 0.012);
-      ctx.closePath();
-      ctx.fill();
+  ctx.closePath();
+  ctx.fill();
     }
   }
 
@@ -5033,10 +5071,10 @@ export function drawHexerEnemy(
     ctx.strokeStyle = `rgba(212, 175, 55, ${spokeGlow})`;
     ctx.lineWidth = (1.8 - Math.abs(sp - 3) * 0.15) * zoom;
     ctx.lineCap = "round";
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(spokeBaseX, spokeBaseY);
     ctx.lineTo(spokeTipX, spokeTipY);
-    ctx.stroke();
+  ctx.stroke();
     ctx.lineCap = "butt";
     ctx.fillStyle = sp % 2 === 0
       ? `rgba(255, 64, 160, ${spokeGlow})`
@@ -5051,7 +5089,7 @@ export function drawHexerEnemy(
   for (let fl = 0; fl < 3; fl++) {
     const flY = crownBaseY - crownH * (0.2 + fl * 0.22);
     const flW = size * (0.08 - fl * 0.015);
-    ctx.beginPath();
+  ctx.beginPath();
     ctx.moveTo(headX - flW, flY);
     ctx.quadraticCurveTo(headX, flY - size * 0.015, headX + flW, flY);
     ctx.stroke();
@@ -5097,7 +5135,7 @@ export function drawHexerEnemy(
     ctx.beginPath();
     ctx.arc(jwX, jwY, size * 0.005, 0, TAU);
     ctx.fill();
-    clearShadow(ctx);
+  clearShadow(ctx);
   }
   // Wide dramatic side wings with feather tips
   for (const side of [-1, 1]) {
@@ -5135,7 +5173,7 @@ export function drawHexerEnemy(
         ftBaseX + side * size * 0.02 + ftWind, ftBaseY - size * 0.03,
         ftBaseX + side * size * 0.025 + ftWind * 1.5, ftBaseY - size * 0.05,
       );
-      ctx.stroke();
+    ctx.stroke();
       ctx.lineCap = "butt";
     }
   }
@@ -5151,7 +5189,7 @@ export function drawHexerEnemy(
     ctx.strokeStyle = `rgba(255, 100, 160, ${bladePulse * 0.45})`;
     ctx.lineWidth = 1.2 * zoom;
     ctx.lineCap = "round";
-    ctx.beginPath();
+      ctx.beginPath();
     ctx.moveTo(rtx, rty);
     ctx.quadraticCurveTo(
       rtx + rtTail, rty - rtLen * 0.5,

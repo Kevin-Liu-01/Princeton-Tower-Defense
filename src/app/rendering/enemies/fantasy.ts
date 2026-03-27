@@ -4570,6 +4570,119 @@ export function drawVineSerpentEnemy(
     segPoints.push({ x: sx, y: sy });
   }
 
+  // === PREHENSILE VINE TENTACLES (behind body) ===
+  ctx.save();
+  for (let vine = 0; vine < 6; vine++) {
+    const vineIdx = Math.floor((vine + 1) * segments / 7);
+    const vineAnchor = segPoints[Math.min(vineIdx, segments)];
+    const vineSide = vine % 2 === 0 ? 1 : -1;
+    const vineAngle = Math.atan2(
+      segPoints[Math.min(vineIdx + 1, segments)].y - segPoints[Math.max(vineIdx - 1, 0)].y,
+      segPoints[Math.min(vineIdx + 1, segments)].x - segPoints[Math.max(vineIdx - 1, 0)].x,
+    ) + vineSide * Math.PI * 0.4;
+    const vineLen = size * (0.12 + Math.sin(vine * 2.3) * 0.03 + vineExtend * 0.08);
+    const vineSegs = 8;
+
+    const vineLeftPts: { x: number; y: number }[] = [];
+    const vineRightPts: { x: number; y: number }[] = [];
+    for (let vs = 0; vs <= vineSegs; vs++) {
+      const vt = vs / vineSegs;
+      const vWave = Math.sin(time * (1.2 + vine * 0.15) + vt * 3 + vine * 0.9) * size * 0.03 * vt;
+      const vx = vineAnchor.x + Math.cos(vineAngle) * vineLen * vt + vWave;
+      const vy = vineAnchor.y + Math.sin(vineAngle) * vineLen * vt
+        + Math.sin(time * 0.8 + vine + vt * 2) * size * 0.01;
+      const vThick = size * (0.018 * (1 - vt * 0.75) + 0.003);
+      const vPerpX = -Math.sin(vineAngle);
+      const vPerpY = Math.cos(vineAngle);
+      vineLeftPts.push({ x: vx + vPerpX * vThick, y: vy + vPerpY * vThick });
+      vineRightPts.push({ x: vx - vPerpX * vThick, y: vy - vPerpY * vThick });
+    }
+
+    const vineGrad = ctx.createLinearGradient(
+      vineAnchor.x, vineAnchor.y,
+      vineAnchor.x + Math.cos(vineAngle) * vineLen,
+      vineAnchor.y + Math.sin(vineAngle) * vineLen,
+    );
+    vineGrad.addColorStop(0, "rgba(34, 120, 50, 0.8)");
+    vineGrad.addColorStop(0.5, "rgba(50, 150, 60, 0.7)");
+    vineGrad.addColorStop(0.8, "rgba(80, 180, 90, 0.5)");
+    vineGrad.addColorStop(1, "rgba(120, 210, 100, 0.3)");
+    ctx.fillStyle = vineGrad;
+    ctx.beginPath();
+    ctx.moveTo(vineLeftPts[0].x, vineLeftPts[0].y);
+    for (let vs = 1; vs <= vineSegs; vs++) ctx.lineTo(vineLeftPts[vs].x, vineLeftPts[vs].y);
+    for (let vs = vineSegs; vs >= 0; vs--) ctx.lineTo(vineRightPts[vs].x, vineRightPts[vs].y);
+    ctx.closePath();
+    ctx.fill();
+
+    for (let th = 1; th < vineSegs; th += 2) {
+      const vtt = th / vineSegs;
+      const thMidX = (vineLeftPts[th].x + vineRightPts[th].x) * 0.5;
+      const thMidY = (vineLeftPts[th].y + vineRightPts[th].y) * 0.5;
+      const thornDir = vineSide * (th % 4 < 2 ? 1 : -1);
+      const thornLen = size * 0.015 * (1 - vtt * 0.4);
+      const thornAngle = vineAngle + thornDir * Math.PI * 0.35;
+      const thornTipX = thMidX + Math.cos(thornAngle) * thornLen;
+      const thornTipY = thMidY + Math.sin(thornAngle) * thornLen;
+      ctx.fillStyle = "rgba(90, 60, 30, 0.6)";
+      ctx.beginPath();
+      ctx.moveTo(thMidX - Math.sin(vineAngle) * size * 0.004, thMidY + Math.cos(vineAngle) * size * 0.004);
+      ctx.lineTo(thornTipX, thornTipY);
+      ctx.lineTo(thMidX + Math.sin(vineAngle) * size * 0.004, thMidY - Math.cos(vineAngle) * size * 0.004);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    for (let ln = 2; ln < vineSegs; ln += 3) {
+      const lt = ln / vineSegs;
+      const leafX = (vineLeftPts[ln].x + vineRightPts[ln].x) * 0.5;
+      const leafY = (vineLeftPts[ln].y + vineRightPts[ln].y) * 0.5;
+      const leafWave = Math.sin(time * 2 + vine * 1.5 + ln) * 0.2;
+      const leafAngle = vineAngle + vineSide * 0.6 + leafWave;
+      const leafLen = size * 0.02 * (1 - lt * 0.3);
+      const leafW = size * 0.008;
+      ctx.save();
+      ctx.translate(leafX, leafY);
+      ctx.rotate(leafAngle);
+      ctx.fillStyle = `rgba(74, 180, 90, ${0.5 - lt * 0.15})`;
+      ctx.beginPath();
+      ctx.moveTo(-leafLen, 0);
+      ctx.bezierCurveTo(-leafLen * 0.4, -leafW * 1.3, leafLen * 0.4, -leafW * 1.1, leafLen, 0);
+      ctx.bezierCurveTo(leafLen * 0.4, leafW * 1.1, -leafLen * 0.4, leafW * 1.3, -leafLen, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(34, 100, 40, 0.3)";
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(-leafLen * 0.8, 0);
+      ctx.lineTo(leafLen * 0.8, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    if (vine % 2 === 0) {
+      const vineTipX = vineLeftPts[vineSegs].x;
+      const vineTipY = vineLeftPts[vineSegs].y;
+      const budPulse = 0.5 + Math.sin(time * 2.5 + vine) * 0.2;
+      setShadowBlur(ctx, 2 * zoom, `rgba(200, 255, 100, ${budPulse * 0.3})`);
+      ctx.fillStyle = `rgba(180, 230, 80, ${budPulse * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(vineTipX, vineTipY, size * 0.008, 0, TAU);
+      ctx.fill();
+      for (let petal = 0; petal < 4; petal++) {
+        const petalAngle = (petal / 4) * TAU + time * 0.5;
+        const petalX = vineTipX + Math.cos(petalAngle) * size * 0.01;
+        const petalY = vineTipY + Math.sin(petalAngle) * size * 0.006;
+        ctx.fillStyle = `rgba(255, 220, 100, ${budPulse * 0.4})`;
+        ctx.beginPath();
+        ctx.ellipse(petalX, petalY, size * 0.005, size * 0.003, petalAngle, 0, TAU);
+        ctx.fill();
+      }
+      clearShadow(ctx);
+    }
+  }
+  ctx.restore();
+
   for (let i = 0; i < segments; i++) {
     const p0 = segPoints[i];
     const p1 = segPoints[i + 1];
@@ -6096,6 +6209,95 @@ export function drawPhoenixEnemy(
       ctx.fill();
     }
     clearShadow(ctx);
+    ctx.restore();
+  }
+
+  // === INNER FIRE WING LAYER (underneath main wings) ===
+  for (const innerSide of [-1, 1]) {
+    ctx.save();
+    ctx.translate(x + innerSide * size * 0.04, y - size * 0.04 + hover);
+    const innerWingFlap = Math.sin(time * 4.5 * attackWingBoost - 0.4) * 0.7 * attackWingBoost;
+    ctx.rotate(innerSide * innerWingFlap * 0.4);
+
+    const innerScale = 0.75;
+    const innerWingGrad = ctx.createLinearGradient(
+      0, 0,
+      innerSide * size * 0.52 * innerScale, -size * 0.22 * innerScale,
+    );
+    innerWingGrad.addColorStop(0, `rgba(255,255,255,${0.7 + novaBurst * 0.2})`);
+    innerWingGrad.addColorStop(0.15, `rgba(255,255,220,${0.6 + novaBurst * 0.15})`);
+    innerWingGrad.addColorStop(0.35, `rgba(255,245,140,${0.5 + novaBurst * 0.12})`);
+    innerWingGrad.addColorStop(0.55, `rgba(255,220,60,${0.35 + novaBurst * 0.08})`);
+    innerWingGrad.addColorStop(0.8, "rgba(255,160,20,0.2)");
+    innerWingGrad.addColorStop(1, "rgba(255,100,0,0.08)");
+    ctx.fillStyle = innerWingGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.015);
+    ctx.quadraticCurveTo(
+      innerSide * size * 0.08 * innerScale, -size * 0.17 * innerScale,
+      innerSide * size * 0.28 * innerScale, -size * 0.28 * innerScale + Math.sin(time * 5 + innerSide + 0.5) * size * 0.02,
+    );
+    ctx.quadraticCurveTo(
+      innerSide * size * 0.4 * innerScale, -size * 0.22 * innerScale,
+      innerSide * size * 0.5 * innerScale, -size * 0.15 * innerScale,
+    );
+    ctx.lineTo(innerSide * size * 0.48 * innerScale, -size * 0.04 * innerScale);
+    ctx.quadraticCurveTo(
+      innerSide * size * 0.35 * innerScale, size * 0.03 * innerScale,
+      innerSide * size * 0.18 * innerScale, size * 0.05 * innerScale,
+    );
+    ctx.quadraticCurveTo(innerSide * size * 0.08 * innerScale, size * 0.035 * innerScale, 0, size * 0.03);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255,255,200,${0.4 + novaBurst * 0.2})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.015);
+    ctx.quadraticCurveTo(
+      innerSide * size * 0.1 * innerScale, -size * 0.16 * innerScale,
+      innerSide * size * 0.24 * innerScale, -size * 0.24 * innerScale,
+    );
+    ctx.stroke();
+
+    const innerFeatherCount = 8;
+    for (let inf = 0; inf < innerFeatherCount; inf++) {
+      const infFrac = inf / (innerFeatherCount - 1);
+      const infX = innerSide * (size * 0.05 + infFrac * size * 0.32) * innerScale;
+      const infY = -size * 0.05 * innerScale - infFrac * size * 0.1 * innerScale
+        + Math.sin(time * 6 + inf * 0.8 + 0.5) * size * 0.01
+        + (infFrac > 0.6 ? (infFrac - 0.6) * size * 0.12 * innerScale : 0);
+      const wispLen = size * (0.03 + Math.sin(time * 7 + inf) * 0.01);
+      const wispAlpha = 0.4 * (1 - infFrac * 0.4) * (0.7 + Math.sin(time * 8 + inf * 1.5) * 0.3);
+      ctx.fillStyle = `rgba(255,${Math.floor(255 - infFrac * 80)},${Math.floor(200 - infFrac * 180)},${wispAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(infX, infY);
+      ctx.quadraticCurveTo(
+        infX + innerSide * size * 0.01, infY + wispLen * 0.5,
+        infX + Math.sin(time * 5 + inf) * size * 0.008, infY + wispLen,
+      );
+      ctx.quadraticCurveTo(
+        infX - innerSide * size * 0.005, infY + wispLen * 0.5,
+        infX, infY,
+      );
+      ctx.fill();
+    }
+
+    for (let fp = 0; fp < 5; fp++) {
+      const fpPhase = (time * 1.8 + fp * 0.2 + (innerSide > 0 ? 0.4 : 0)) % 1;
+      const fpFrac = fp / 4;
+      const fpBaseX = innerSide * size * (0.1 + fpFrac * 0.2) * innerScale;
+      const fpBaseY = -size * 0.08 * innerScale + fpFrac * size * 0.06 * innerScale;
+      const fpX = fpBaseX + Math.sin(time * 3 + fp * 2) * size * 0.01;
+      const fpY = fpBaseY + fpPhase * size * 0.12;
+      const fpAlpha = (1 - fpPhase) * 0.45;
+      const fpSize = size * 0.005 * (1 - fpPhase * 0.6);
+      ctx.fillStyle = `rgba(255,${Math.floor(240 - fpPhase * 180)},${Math.floor(100 * (1 - fpPhase))},${fpAlpha})`;
+      ctx.beginPath();
+      ctx.arc(fpX, fpY, fpSize, 0, TAU);
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 

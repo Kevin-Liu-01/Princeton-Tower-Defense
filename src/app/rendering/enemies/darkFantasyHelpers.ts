@@ -28,6 +28,7 @@ export interface PathArmOptions {
   trimColor?: string;
   shoulderAngle?: number;
   elbowAngle?: number;
+  weaponAngle?: number;
   onWeapon?: (ctx: CanvasRenderingContext2D) => void;
 }
 
@@ -1135,6 +1136,11 @@ export function drawPathArm(
     renderGhostlyArm(ctx, w, upperLen, foreLen, hR, zoom, opts.color, opts.colorDark, hColor, elbowA, time);
 
   if (opts.onWeapon) {
+    if (opts.weaponAngle) {
+      ctx.translate(0, foreLen);
+      ctx.rotate(opts.weaponAngle);
+      ctx.translate(0, -foreLen);
+    }
     opts.onWeapon(ctx);
   }
 

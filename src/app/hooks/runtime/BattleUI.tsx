@@ -83,6 +83,7 @@ export interface BattleUIProps {
   // Game state
   selectedMap: string;
   battleOutcome: "victory" | "defeat" | null;
+  isFreeplay: boolean;
   pauseLocked: boolean;
   cameraModeActive: boolean;
 
@@ -251,6 +252,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   hoveredWaveBubblePathKey,
   selectedMap,
   battleOutcome,
+  isFreeplay,
   pauseLocked,
   cameraModeActive,
   pawPoints,
@@ -695,6 +697,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
           levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
           resetGame={resetGame}
           totalWaves={totalWaves}
+          isFreeplay={isFreeplay}
           overlay
         />
       )}
@@ -708,6 +711,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
           levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
           bestTime={currentLevelStats.bestTime}
           timesPlayed={currentLevelStats.timesPlayed || 1}
+          isFreeplay={isFreeplay}
           overlay
         />
       )}

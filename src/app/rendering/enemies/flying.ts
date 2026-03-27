@@ -1334,6 +1334,86 @@ export function drawWyvernEnemy(
 
   ctx.restore();
 
+  // === LAYER 2.5: TATTERED SECONDARY WING MEMBRANES ===
+  const secWingFlap =
+    Math.sin(time * 5 - 0.8) * 0.35 +
+    (isAttacking ? Math.sin(attackPhase * Math.PI * 3) * 0.15 : 0);
+
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.save();
+    ctx.translate(x + side * size * 0.18, y - size * 0.1 + breathe + hoverBob);
+    ctx.rotate(side * (0.5 + secWingFlap));
+
+    const secGrad = ctx.createLinearGradient(0, 0, side * size * 0.55, -size * 0.12);
+    secGrad.addColorStop(0, "rgba(4, 90, 60, 0.5)");
+    secGrad.addColorStop(0.4, "rgba(3, 70, 50, 0.4)");
+    secGrad.addColorStop(0.7, "rgba(2, 55, 38, 0.3)");
+    secGrad.addColorStop(1, "rgba(2, 40, 28, 0.2)");
+    ctx.fillStyle = secGrad;
+
+    const sx = side;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(
+      sx * size * 0.06, -size * 0.18,
+      sx * size * 0.14, -size * 0.26,
+      sx * size * 0.22, -size * 0.24,
+    );
+    ctx.lineTo(sx * size * 0.26, -size * 0.19);
+    ctx.bezierCurveTo(
+      sx * size * 0.32, -size * 0.23,
+      sx * size * 0.4, -size * 0.2,
+      sx * size * 0.46, -size * 0.15,
+    );
+    ctx.lineTo(sx * size * 0.44, -size * 0.09);
+    ctx.bezierCurveTo(
+      sx * size * 0.48, -size * 0.11,
+      sx * size * 0.52, -size * 0.06,
+      sx * size * 0.54, -size * 0.02,
+    );
+    ctx.lineTo(sx * size * 0.48, size * 0.01);
+    ctx.lineTo(sx * size * 0.42, size * 0.06);
+    ctx.lineTo(sx * size * 0.36, size * 0.02);
+    ctx.lineTo(sx * size * 0.3, size * 0.1);
+    ctx.lineTo(sx * size * 0.24, size * 0.05);
+    ctx.lineTo(sx * size * 0.18, size * 0.12);
+    ctx.lineTo(sx * size * 0.12, size * 0.06);
+    ctx.quadraticCurveTo(sx * size * 0.05, size * 0.1, 0, size * 0.08);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(3, 60, 42, 0.5)";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(sx * size * 0.22, -size * 0.08);
+    ctx.stroke();
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sx * size * 0.22, -size * 0.08);
+    ctx.lineTo(sx * size * 0.2, -size * 0.22);
+    ctx.moveTo(sx * size * 0.22, -size * 0.08);
+    ctx.lineTo(sx * size * 0.44, -size * 0.14);
+    ctx.moveTo(sx * size * 0.22, -size * 0.08);
+    ctx.lineTo(sx * size * 0.52, -size * 0.03);
+    ctx.stroke();
+
+    ctx.fillStyle = "#047857";
+    const holes: [number, number, number][] = [
+      [sx * 0.16, -0.14, 0.025],
+      [sx * 0.36, -0.07, 0.02],
+      [sx * 0.28, 0.03, 0.018],
+      [sx * 0.44, -0.01, 0.015],
+    ];
+    for (const [hx, hy, hr] of holes) {
+      ctx.beginPath();
+      ctx.arc(hx * size, hy * size, hr * size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
   // === LAYER 3: MAGNIFICENT WINGS ===
   // Left wing (detailed with membrane and bones)
   ctx.save();

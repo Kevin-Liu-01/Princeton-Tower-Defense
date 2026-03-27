@@ -1521,6 +1521,88 @@ export function drawSwampLeviathanEnemy(
     );
   }
 
+  // === MASSIVE WRITHING TENTACLES (behind body) ===
+  ctx.save();
+  for (let tent = 0; tent < 8; tent++) {
+    const tentAngle = ((tent - 3.5) / 8) * Math.PI * 0.8 + Math.PI * 0.5;
+    const tentPhase = Math.sin(time * (1.5 + tent * 0.2) + tent * 1.3);
+    const tentLen = size * (0.4 + (tent % 3) * 0.07 + Math.sin(tent * 1.7) * 0.04);
+    const tentBaseX = x + Math.cos(tentAngle) * size * 0.22;
+    const tentBaseY = y + size * 0.18 + Math.sin(tentAngle) * size * 0.08;
+    const tentCurl = tent % 3 === 0 ? 0.3 : 0;
+    const tentSegs = 12;
+
+    const tentLeftPts: { x: number; y: number }[] = [];
+    const tentRightPts: { x: number; y: number }[] = [];
+    for (let ts = 0; ts <= tentSegs; ts++) {
+      const tt = ts / tentSegs;
+      const tWave = tentPhase * size * 0.08 * tt + Math.sin(time * (2 + tent * 0.3) + tt * 4) * size * 0.04 * tt;
+      const curlAmt = tentCurl * tt * tt * Math.sin(time * 1.5 + tent) * size * 0.15;
+      const tpx = tentBaseX + Math.cos(tentAngle) * tentLen * tt + tWave + curlAmt;
+      const tpy = tentBaseY + Math.sin(tentAngle) * tentLen * tt * 0.4
+        + Math.sin(time * 1.8 + tent * 0.7 + tt * 3) * size * 0.02;
+      const thick = size * (0.04 * (1 - tt * 0.85) + 0.005);
+      const perpTX = -Math.sin(tentAngle);
+      const perpTY = Math.cos(tentAngle);
+      tentLeftPts.push({ x: tpx + perpTX * thick, y: tpy + perpTY * thick * 0.5 });
+      tentRightPts.push({ x: tpx - perpTX * thick, y: tpy - perpTY * thick * 0.5 });
+    }
+
+    const tentGrad = ctx.createLinearGradient(
+      tentBaseX, tentBaseY,
+      tentBaseX + Math.cos(tentAngle) * tentLen,
+      tentBaseY + Math.sin(tentAngle) * tentLen * 0.4,
+    );
+    tentGrad.addColorStop(0, "rgba(35, 60, 35, 0.85)");
+    tentGrad.addColorStop(0.3, "rgba(50, 80, 40, 0.75)");
+    tentGrad.addColorStop(0.6, "rgba(60, 90, 50, 0.6)");
+    tentGrad.addColorStop(1, "rgba(40, 70, 35, 0.3)");
+    ctx.fillStyle = tentGrad;
+    ctx.beginPath();
+    ctx.moveTo(tentLeftPts[0].x, tentLeftPts[0].y);
+    for (let ts = 1; ts <= tentSegs; ts++) ctx.lineTo(tentLeftPts[ts].x, tentLeftPts[ts].y);
+    for (let ts = tentSegs; ts >= 0; ts--) ctx.lineTo(tentRightPts[ts].x, tentRightPts[ts].y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(20, 40, 20, 0.4)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(tentLeftPts[0].x, tentLeftPts[0].y);
+    for (let ts = 1; ts <= tentSegs; ts++) ctx.lineTo(tentLeftPts[ts].x, tentLeftPts[ts].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(tentRightPts[0].x, tentRightPts[0].y);
+    for (let ts = 1; ts <= tentSegs; ts++) ctx.lineTo(tentRightPts[ts].x, tentRightPts[ts].y);
+    ctx.stroke();
+
+    for (let cup = 1; cup < tentSegs - 1; cup += 2) {
+      const ct = cup / tentSegs;
+      const cupX = (tentLeftPts[cup].x + tentRightPts[cup].x) * 0.5;
+      const cupY = (tentLeftPts[cup].y + tentRightPts[cup].y) * 0.5;
+      const cupR = size * 0.012 * (1 - ct * 0.7);
+      const cupAlpha = 0.4 * (1 - ct * 0.5);
+      ctx.fillStyle = `rgba(80, 50, 30, ${cupAlpha})`;
+      ctx.beginPath();
+      ctx.arc(cupX, cupY, cupR, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = `rgba(60, 35, 20, ${cupAlpha * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(cupX, cupY, cupR * 0.5, 0, TAU);
+      ctx.fill();
+    }
+
+    const slimeGrad = ctx.createRadialGradient(tentBaseX, tentBaseY, 0, tentBaseX, tentBaseY, size * 0.06);
+    slimeGrad.addColorStop(0, `rgba(74, 222, 128, ${toxicPulse * 0.25})`);
+    slimeGrad.addColorStop(0.5, `rgba(34, 120, 60, ${toxicPulse * 0.12})`);
+    slimeGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = slimeGrad;
+    ctx.beginPath();
+    ctx.arc(tentBaseX, tentBaseY, size * 0.06, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+
   // === MAIN BODY (central mass, enhanced) ===
   const mainBodyGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.42);
   mainBodyGrad.addColorStop(0, bodyColorLight);
@@ -4032,6 +4114,71 @@ export function drawInfernoWyrmEnemy(
     lineWidth: 2,
   });
   ctx.restore();
+
+  // === TATTERED FLAME-MEMBRANE WINGS ===
+  for (const wingSide of [-1, 1]) {
+    ctx.save();
+    ctx.translate(x, y - size * 0.1);
+    const wyrmWingFlap = Math.sin(time * 2.5 + wingSide * 0.3) * 0.35;
+    ctx.rotate(wingSide * wyrmWingFlap);
+
+    const wyrmWingGrad = ctx.createLinearGradient(0, 0, wingSide * size * 0.55, -size * 0.15);
+    wyrmWingGrad.addColorStop(0, `rgba(255, 120, 20, ${0.5 + lavaPulse * 0.2})`);
+    wyrmWingGrad.addColorStop(0.3, `rgba(255, 80, 10, ${0.35 + lavaPulse * 0.15})`);
+    wyrmWingGrad.addColorStop(0.6, `rgba(200, 50, 5, ${0.2 + lavaPulse * 0.1})`);
+    wyrmWingGrad.addColorStop(1, "rgba(120, 20, 0, 0.08)");
+    ctx.fillStyle = wyrmWingGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.02);
+    ctx.quadraticCurveTo(
+      wingSide * size * 0.12, -size * 0.18,
+      wingSide * size * 0.32, -size * 0.22 + Math.sin(time * 3 + wingSide) * size * 0.02,
+    );
+    ctx.lineTo(wingSide * size * 0.38, -size * 0.18);
+    ctx.lineTo(wingSide * size * 0.35, -size * 0.15);
+    ctx.lineTo(wingSide * size * 0.42, -size * 0.12);
+    ctx.lineTo(wingSide * size * 0.39, -size * 0.08);
+    ctx.lineTo(wingSide * size * 0.44, -size * 0.04);
+    ctx.lineTo(wingSide * size * 0.40, 0.0);
+    ctx.lineTo(wingSide * size * 0.36, size * 0.02);
+    ctx.quadraticCurveTo(wingSide * size * 0.2, size * 0.04, 0, size * 0.03);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 180, 50, ${lavaPulse * 0.5})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.01);
+    ctx.quadraticCurveTo(wingSide * size * 0.15, -size * 0.16, wingSide * size * 0.33, -size * 0.2);
+    ctx.stroke();
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(wingSide * size * 0.05, -size * 0.01);
+    ctx.quadraticCurveTo(wingSide * size * 0.2, -size * 0.08, wingSide * size * 0.42, -size * 0.06);
+    ctx.stroke();
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(wingSide * size * 0.02, size * 0.01);
+    ctx.quadraticCurveTo(wingSide * size * 0.15, size * 0.01, wingSide * size * 0.38, size * 0.01);
+    ctx.stroke();
+
+    for (let we = 0; we < 6; we++) {
+      const wePhase = (time * 2 + we * 0.35 + (wingSide > 0 ? 0.5 : 0)) % 1;
+      const weT = we / 5;
+      const weBaseX = wingSide * size * (0.34 + Math.sin(we * 2.3) * 0.05);
+      const weBaseY = -size * 0.2 + weT * size * 0.24;
+      const weX = weBaseX + Math.sin(time * 4 + we * 1.8) * size * 0.015;
+      const weY = weBaseY - wePhase * size * 0.08;
+      const weAlpha = (1 - wePhase) * 0.6 * lavaPulse;
+      setShadowBlur(ctx, 3 * zoom, `rgba(255,150,0,${weAlpha})`);
+      ctx.fillStyle = `rgba(255,${Math.floor(200 - wePhase * 150)},${Math.floor(50 * (1 - wePhase))},${weAlpha})`;
+      ctx.beginPath();
+      ctx.arc(weX, weY, size * 0.006 * (1 - wePhase * 0.5), 0, TAU);
+      ctx.fill();
+    }
+    clearShadow(ctx);
+    ctx.restore();
+  }
 
   // === MASSIVE SERPENTINE BODY in S-curve ===
   const bodySegments = 24;

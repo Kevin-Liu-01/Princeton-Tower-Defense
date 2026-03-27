@@ -82,6 +82,8 @@ interface WorldMapProps {
   onStartWithRandomLoadout?: () => void;
   isDevMode?: boolean;
   onDevModeChange?: (enabled: boolean) => void;
+  /** Called when a level URL is visited directly — shows a landing page before battle */
+  onFreeplayRequest?: (levelId: string, isUnlocked: boolean) => void;
 }
 
 type SelectableLevel = {
@@ -119,6 +121,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   onStartWithRandomLoadout,
   isDevMode,
   onDevModeChange,
+  onFreeplayRequest,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -346,9 +349,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const nav = getInitialNavigation();
     if (!nav) return;
 
-    if (nav.level && isLevelUnlocked(nav.level)) {
-      setSelectedLevel(nav.level);
-      setSelectedMap(nav.level);
+    if (nav.level && getWorldLevelById(nav.level) && onFreeplayRequest) {
+      onFreeplayRequest(nav.level, isLevelUnlocked(nav.level));
+      return;
     }
     if (nav.codex.open) {
       setCodexTab(nav.codex.tab);
@@ -362,7 +365,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     } else {
       resetUrl();
     }
-  }, [getInitialNavigation, setSelectedMap, isLevelUnlocked, resetUrl]);
+  }, [getInitialNavigation, setSelectedMap, isLevelUnlocked, resetUrl, onFreeplayRequest]);
 
   const handleLevelClick = (levelId: string) => {
     if (isLevelUnlocked(levelId)) {

@@ -59,6 +59,7 @@ interface VictoryScreenProps {
   resetGame: () => void;
   overlay?: boolean;
   totalWaves?: number;
+  isFreeplay?: boolean;
 }
 
 // Animated trophy with sparkles
@@ -550,6 +551,7 @@ export function VictoryScreen({
   resetGame,
   overlay = false,
   totalWaves = 10,
+  isFreeplay = false,
 }: VictoryScreenProps) {
   void _starsEarned;
   const ratings = calculateCategoryRatings(timeSpent, lives, totalWaves);
@@ -662,6 +664,16 @@ export function VictoryScreen({
               <p className="text-xs sm:text-sm text-amber-300/85 tracking-[0.3em] uppercase mt-1.5 font-semibold">
                 {levelName}
               </p>
+              {isFreeplay && (
+                <div className="mt-2 px-3 py-1 rounded-full" style={{
+                  background: "linear-gradient(135deg, rgba(120,80,200,0.2), rgba(80,50,140,0.15))",
+                  border: "1px solid rgba(140,100,220,0.35)",
+                }}>
+                  <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(180,150,240,0.8)" }}>
+                    Freeplay — Not Saved to Campaign
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* ===== Star Rating ===== */}

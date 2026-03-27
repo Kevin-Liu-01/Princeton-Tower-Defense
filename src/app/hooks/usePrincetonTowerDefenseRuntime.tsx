@@ -152,6 +152,7 @@ import { setupResizeListener } from "./runtime/canvasResize";
 import { handleBuildTouchDragMoveImpl, handleBuildTouchDragEndImpl } from "./runtime/buildDragHandlers";
 import { computePendingChallengeUnlocks } from "./runtime/challengeUnlocks";
 import { BattleUI } from "./runtime/BattleUI";
+import { FreeplayDisclaimer } from "../components/menus/FreeplayDisclaimer";
 import { LoadingScreen, LoadingOverlay, SceneTransitionOverlay } from "../components/menus/LoadingScreen";
 import { usePreloadGate, useBattleLoadingGate } from "./useImagePreloader";
 import { getWorldMapAssets, getBattleAssets, resolveLoadingTheme } from "../constants/loadingAssets";
@@ -193,6 +194,11 @@ export function usePrincetonTowerDefenseRuntime() {
   const [selectedHero, setSelectedHero] = useLocalStorage<HeroType | null>(STORAGE_KEY_SELECTED_HERO, "tiger");
   const [selectedSpells, setSelectedSpells] = useLocalStorage<SpellType[]>(STORAGE_KEY_SELECTED_SPELLS, []);
 
+  // Freeplay: true when accessing a locked level via URL (no campaign credit on victory)
+  const [isFreeplay, setIsFreeplay] = useState(false);
+  // Level landing page: shown for any direct URL level access
+  const [showFreeplayDisclaimer, setShowFreeplayDisclaimer] = useState(false);
+
   // ── Loading screens ──
   const worldMapAssetUrls = useMemo(() => getWorldMapAssets(), []);
   const worldMapPreload = usePreloadGate(worldMapAssetUrls, 2400);
@@ -219,6 +225,30 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const startBattle = battleLoading.trigger;
   const cancelBattle = battleLoading.cancel;
+
+  const freeplayDismissedRef = useRef(false);
+
+  const handleFreeplayRequest = useCallback((levelId: string, isUnlocked: boolean) => {
+    if (freeplayDismissedRef.current) {
+      freeplayDismissedRef.current = false;
+      return;
+    }
+    setSelectedMap(levelId);
+    setIsFreeplay(!isUnlocked);
+    setShowFreeplayDisclaimer(true);
+  }, []);
+
+  const freeplayStartRef = useRef<() => void>(() => {});
+
+  const handleFreeplayCancel = useCallback(() => {
+    freeplayDismissedRef.current = true;
+    setIsFreeplay(false);
+    setShowFreeplayDisclaimer(false);
+    setSelectedMap("poe");
+    if (typeof window !== "undefined" && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
+  }, []);
 
   // Persistent progress (saved to localStorage)
   const {
@@ -985,7 +1015,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // updateGame is only accessed through updateGameRef, so no useMemo/useCallback needed
   const updateGame = (deltaTime: number) => updateGameTick({
-    gameSpeed, selectedMap, waveInProgress, currentWave, vaultFlash,
+    gameSpeed, selectedMap, isFreeplay, waveInProgress, currentWave, vaultFlash,
     hero, lives, gameState, battleOutcome, enemies, nextWaveTimer: nextWaveTimerRef.current,
     specialTowerHp, troops, towers, levelStartTime, levelStars,
     totalWaves, unlockedMaps, activeWaveSpawnPaths, cameraOffset, cameraZoom,
@@ -1303,13 +1333,21 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const resetGameWithTransition = useCallback(() => {
     setSceneTransitioning(true);
+    setIsFreeplay(false);
     resetGame();
+    if (typeof window !== "undefined" && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
   }, [resetGame]);
 
   const quitLevel = useCallback(() => {
     setSceneTransitioning(true);
+    setIsFreeplay(false);
     resetGame();
     setGameState("setup");
+    if (typeof window !== "undefined" && window.location.pathname !== "/") {
+      window.history.replaceState(null, "", "/");
+    }
   }, [resetGame]);
 
   const { devConfigMenu, handleDevModeChange } = useDevMenuSetup({
@@ -1332,6 +1370,15 @@ export function usePrincetonTowerDefenseRuntime() {
     ),
     [selectedHero, selectedSpells, setSelectedHero, setSelectedSpells],
   );
+
+  freeplayStartRef.current = () => {
+    setShowFreeplayDisclaimer(false);
+    if (!selectedHero || selectedSpells.length < 3) {
+      startWithRandomLoadout();
+    } else {
+      startBattle();
+    }
+  };
 
   useEffect(() => {
     if (pendingStartWithRandomRef.current && selectedHero && selectedSpells.length === 3) {
@@ -1370,6 +1417,18 @@ export function usePrincetonTowerDefenseRuntime() {
     );
   }
 
+  // ── Phase 1b: Level landing page (accessed level via direct URL) ──
+  if (showFreeplayDisclaimer && (gameState === "menu" || gameState === "setup")) {
+    return (
+      <FreeplayDisclaimer
+        levelId={selectedMap}
+        isFreeplay={isFreeplay}
+        onStart={() => freeplayStartRef.current()}
+        onBack={handleFreeplayCancel}
+      />
+    );
+  }
+
   // World map + loading overlay (WorldMap renders behind and initializes canvas while loading)
   if (gameState === "menu" || gameState === "setup") {
     return (
@@ -1399,6 +1458,7 @@ export function usePrincetonTowerDefenseRuntime() {
           onStartWithRandomLoadout={startWithRandomLoadout}
           isDevMode={isDevMode}
           onDevModeChange={handleDevModeChange}
+          onFreeplayRequest={handleFreeplayRequest}
         />
         {devConfigMenu}
         <LoadingOverlay visible={!worldMapPreload.isReady}>
@@ -1440,6 +1500,7 @@ export function usePrincetonTowerDefenseRuntime() {
         hoveredWaveBubblePathKey={hoveredWaveBubblePathKey}
         selectedMap={selectedMap}
         battleOutcome={battleOutcome}
+        isFreeplay={isFreeplay}
         pauseLocked={pauseLocked}
         cameraModeActive={cameraModeActive}
         pawPoints={pawPoints}

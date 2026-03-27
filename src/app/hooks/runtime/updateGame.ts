@@ -178,6 +178,7 @@ export interface UpdateGameParams {
   // === State values ===
   gameSpeed: number;
   selectedMap: string;
+  isFreeplay: boolean;
   waveInProgress: boolean;
   currentWave: number;
   vaultFlash: Record<string, number>;
@@ -270,6 +271,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   const {
     gameSpeed,
     selectedMap,
+    isFreeplay,
     waveInProgress,
     currentWave,
     vaultFlash,
@@ -378,8 +380,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setNextWaveTimer(0);
     setGameSpeed(0);
 
-    updateLevelStats(selectedMap, finalTime, lives, false);
-    gameEventLogRef.current.log("defeat", `Defeat on ${selectedMap} — ${lives} lives remaining, ${finalTime}s elapsed`, { map: selectedMap, livesLeft: lives, time: finalTime });
+    if (!isFreeplay) {
+      updateLevelStats(selectedMap, finalTime, lives, false);
+    }
+    gameEventLogRef.current.log("defeat", `Defeat on ${selectedMap} — ${lives} lives remaining, ${finalTime}s elapsed`, { map: selectedMap, livesLeft: lives, time: finalTime, freeplay: isFreeplay });
     setBattleOutcome("defeat");
   }
   if (
@@ -408,40 +412,42 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     setHoveredWaveBubblePathKey(null);
     setNextWaveTimer(0);
     setGameSpeed(0);
-    gameEventLogRef.current.log("victory", `Victory on ${selectedMap}! ${lives} lives remaining`, { map: selectedMap, livesLeft: lives });
+    gameEventLogRef.current.log("victory", `Victory on ${selectedMap}! ${lives} lives remaining`, { map: selectedMap, livesLeft: lives, freeplay: isFreeplay });
     setBattleOutcome("victory");
 
-    const mapToSave = selectedMap;
-    updateLevelStars(mapToSave, stars);
-    updateLevelStats(mapToSave, finalTime, lives, true);
+    if (!isFreeplay) {
+      const mapToSave = selectedMap;
+      updateLevelStars(mapToSave, stars);
+      updateLevelStats(mapToSave, finalTime, lives, true);
 
-    const nextLevel = CAMPAIGN_LEVEL_UNLOCKS[mapToSave];
-    if (nextLevel && !unlockedMaps.includes(nextLevel)) {
-      unlockLevel(nextLevel);
-    }
+      const nextLevel = CAMPAIGN_LEVEL_UNLOCKS[mapToSave];
+      if (nextLevel && !unlockedMaps.includes(nextLevel)) {
+        unlockLevel(nextLevel);
+      }
 
-    const projectedLevelStars = {
-      ...levelStars,
-      [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
-    };
-    (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
-      RegionKey
-    >).forEach((regionKey) => {
-      if (!isRegionCleared(regionKey, projectedLevelStars)) return;
-      REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
-        if (!unlockedMaps.includes(challengeLevel)) {
-          unlockLevel(challengeLevel);
-        }
+      const projectedLevelStars = {
+        ...levelStars,
+        [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
+      };
+      (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
+        RegionKey
+      >).forEach((regionKey) => {
+        if (!isRegionCleared(regionKey, projectedLevelStars)) return;
+        REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
+          if (!unlockedMaps.includes(challengeLevel)) {
+            unlockLevel(challengeLevel);
+          }
+        });
       });
-    });
 
-    const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
-    if (
-      nextChallengeLevel &&
-      (projectedLevelStars[mapToSave] || 0) > 0 &&
-      !unlockedMaps.includes(nextChallengeLevel)
-    ) {
-      unlockLevel(nextChallengeLevel);
+      const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
+      if (
+        nextChallengeLevel &&
+        (projectedLevelStars[mapToSave] || 0) > 0 &&
+        !unlockedMaps.includes(nextChallengeLevel)
+      ) {
+        unlockLevel(nextChallengeLevel);
+      }
     }
   }
 

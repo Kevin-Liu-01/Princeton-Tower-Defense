@@ -1134,661 +1134,887 @@ export function drawTrusteeEnemy(
   const attackIntensity = attackPhase;
   const bodyBob = Math.sin(time * 2.5) * size * 0.012;
   const goldPulse = 0.7 + Math.sin(time * 4) * 0.3;
-  const wealthAura = 0.5 + Math.sin(time * 3) * 0.3;
-  const corruptionPulse = 0.6 + Math.sin(time * 5) * 0.3;
+  const corruptPulse = 0.6 + Math.sin(time * 5) * 0.3;
 
-  // Radiant wealth aura
-  const auraGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.85);
-  auraGrad.addColorStop(0, `rgba(251, 191, 36, ${goldPulse * 0.35})`);
-  auraGrad.addColorStop(0.4, `rgba(234, 179, 8, ${goldPulse * 0.2})`);
-  auraGrad.addColorStop(0.7, `rgba(146, 64, 14, ${goldPulse * 0.08})`);
-  auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  const goldBright = "#fbbf24";
+  const goldMid = "#d97706";
+  const goldDark = "#92400e";
+  const goldPale = "#fef3c7";
+  const deepPurple = "#3b0764";
+  const royalPurple = "#581c87";
+  const darkNavy = "#0c0a20";
+  const obsidian = "#0a0a14";
+
+  // === DIVINE AUTHORITY AURA ===
+  const auraGrad = ctx.createRadialGradient(x, y - size * 0.1, 0, x, y - size * 0.1, size * 0.9);
+  auraGrad.addColorStop(0, `rgba(251, 191, 36, ${goldPulse * 0.22})`);
+  auraGrad.addColorStop(0.35, `rgba(234, 179, 8, ${goldPulse * 0.1})`);
+  auraGrad.addColorStop(0.65, `rgba(88, 28, 135, ${goldPulse * 0.06})`);
+  auraGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, TAU);
+  ctx.ellipse(x, y - size * 0.1, size * 0.9, size * 0.65 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
 
-  // Golden distortion rings
-  ctx.lineWidth = 2 * zoom;
-  for (let i = 0; i < 3; i++) {
-    const ringPhase = (time * 0.5 + i * 0.4) % 2;
-    const ringSize = size * 0.35 + ringPhase * size * 0.35;
-    ctx.globalAlpha = 0.5 * (1 - ringPhase / 2);
-    ctx.strokeStyle = `rgba(234, 179, 8, ${wealthAura * 0.5})`;
+  // Slow-orbiting golden sigils
+  for (let i = 0; i < 6; i++) {
+    const sAngle = time * 0.6 + i * TAU / 6;
+    const sR = size * 0.55 + Math.sin(time * 1.5 + i * 1.3) * size * 0.06;
+    const sx = x + Math.cos(sAngle) * sR;
+    const sy = y - size * 0.12 + Math.sin(sAngle) * sR * 0.3;
+    const sAlpha = 0.15 + Math.sin(time * 2.5 + i * 1.1) * 0.1;
+    ctx.save();
+    ctx.translate(sx, sy);
+    ctx.rotate(time * 1.2 + i);
+    setShadowBlur(ctx, 4 * zoom, goldBright);
+    ctx.strokeStyle = `rgba(251, 191, 36, ${sAlpha})`;
+    ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    for (let a = 0; a < TAU; a += 0.1) {
-      const r = ringSize + Math.sin(a * 5 + time * 3) * size * 0.02;
-      const rx = x + Math.cos(a) * r;
-      const ry = y + Math.sin(a) * r * 0.55;
-      if (a === 0) ctx.moveTo(rx, ry);
-      else ctx.lineTo(rx, ry);
-    }
+    ctx.moveTo(0, -size * 0.02);
+    ctx.lineTo(size * 0.015, 0);
+    ctx.lineTo(0, size * 0.02);
+    ctx.lineTo(-size * 0.015, 0);
     ctx.closePath();
     ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  // Orbiting treasure
-  for (let i = 0; i < 8; i++) {
-    const itemAngle = time * 1.0 + i * Math.PI * 0.25;
-    const itemDist = size * 0.52 + Math.sin(time * 2.5 + i) * size * 0.08;
-    const itemX = x + Math.cos(itemAngle) * itemDist;
-    const itemY = y - size * 0.05 + Math.sin(itemAngle) * itemDist * 0.35 - bodyBob * 0.3;
-    ctx.save();
-    ctx.translate(itemX, itemY);
-    ctx.rotate(time * 2.5 + i);
-    if (i % 4 === 0) {
-      ctx.fillStyle = "#ffe066";
-      ctx.beginPath();
-      ctx.ellipse(0, 0, size * 0.045, size * 0.032, 0, 0, TAU);
-      ctx.fill();
-      ctx.strokeStyle = "#b8860b";
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.stroke();
-    } else if (i % 4 === 1) {
-      ctx.fillStyle = "#ef4444";
-      ctx.beginPath();
-      ctx.moveTo(0, -size * 0.035);
-      ctx.lineTo(size * 0.028, 0);
-      ctx.lineTo(0, size * 0.035);
-      ctx.lineTo(-size * 0.028, 0);
-      ctx.fill();
-    } else if (i % 4 === 2) {
-      ctx.fillStyle = "#10b981";
-      ctx.fillRect(-size * 0.022, -size * 0.032, size * 0.044, size * 0.064);
-    } else {
-      ctx.fillStyle = "#3b82f6";
-      ctx.beginPath();
-      ctx.moveTo(0, -size * 0.032);
-      ctx.lineTo(size * 0.024, -size * 0.008);
-      ctx.lineTo(size * 0.016, size * 0.024);
-      ctx.lineTo(-size * 0.016, size * 0.024);
-      ctx.lineTo(-size * 0.024, -size * 0.008);
-      ctx.fill();
-    }
+    clearShadow(ctx);
     ctx.restore();
   }
 
-  // ── Grand ermine-lined cape (behind everything) ──
-  const capeW1 = Math.sin(time * 1.6) * size * 0.02;
-  const capeW2 = Math.sin(time * 2.2 + 0.7) * size * 0.015;
-  const capeBot = 0.24;
-  const capeGrad = ctx.createLinearGradient(x, y - size * 0.38, x, y + size * (capeBot + 0.06));
-  capeGrad.addColorStop(0, "#1a0a2e");
-  capeGrad.addColorStop(0.15, "#2d1050");
-  capeGrad.addColorStop(0.4, "#3b0764");
-  capeGrad.addColorStop(0.6, "#581c87");
-  capeGrad.addColorStop(0.8, "#3b0764");
-  capeGrad.addColorStop(1, "#1a0a2e");
-  ctx.fillStyle = capeGrad;
+  // === GRAND ERMINE CORONATION MANTLE (behind body) ===
+  const mantleGrad = ctx.createLinearGradient(x, y - size * 0.4, x, y + size * 0.32);
+  mantleGrad.addColorStop(0, "#2d1050");
+  mantleGrad.addColorStop(0.2, deepPurple);
+  mantleGrad.addColorStop(0.5, royalPurple);
+  mantleGrad.addColorStop(0.75, deepPurple);
+  mantleGrad.addColorStop(1, "#1a0a2e");
+  ctx.fillStyle = mantleGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y - size * 0.36 - bodyBob);
+  ctx.moveTo(x - size * 0.2, y - size * 0.38 - bodyBob);
   ctx.bezierCurveTo(
-    x - size * 0.36 + capeW1, y - size * 0.05,
-    x - size * 0.38 + capeW2, y + size * 0.08,
-    x - size * 0.28, y + size * capeBot,
+    x - size * 0.42, y - size * 0.08,
+    x - size * 0.44, y + size * 0.1,
+    x - size * 0.34, y + size * 0.28,
   );
-  for (let t = 0; t < 8; t++) {
-    const tx = x - size * 0.28 + t * size * 0.07 + Math.sin(time * 2.5 + t * 0.9) * size * 0.01;
-    const depth = (t % 2 === 0) ? size * 0.03 : -size * 0.01;
-    ctx.lineTo(tx, y + size * capeBot + depth + Math.sin(time * 3 + t * 0.7) * size * 0.012);
+  for (let t = 0; t < 10; t++) {
+    const tx = x - size * 0.34 + t * size * 0.068;
+    const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
+    const dip = (t % 2 === 0) ? size * 0.025 : 0;
+    ctx.lineTo(tx, y + size * 0.30 + billow + dip);
   }
   ctx.bezierCurveTo(
-    x + size * 0.38 + capeW2 * 0.5, y + size * 0.08,
-    x + size * 0.36 + capeW1 * 0.5, y - size * 0.05,
-    x + size * 0.22, y - size * 0.36 - bodyBob,
+    x + size * 0.44, y + size * 0.1,
+    x + size * 0.42, y - size * 0.08,
+    x + size * 0.2, y - size * 0.38 - bodyBob,
   );
   ctx.closePath();
   ctx.fill();
-  // Ermine trim at cape bottom
+
+  // Ermine lining band at mantle bottom
   ctx.fillStyle = "#f5f0e8";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.28, y + size * capeBot - size * 0.01);
-  for (let t = 0; t < 8; t++) {
-    const tx = x - size * 0.28 + t * size * 0.07;
-    ctx.lineTo(tx, y + size * capeBot + size * 0.025 + ((t % 2 === 0) ? size * 0.01 : 0));
+  for (let t = 0; t < 10; t++) {
+    const tx = x - size * 0.34 + t * size * 0.068;
+    const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
+    const dip = (t % 2 === 0) ? size * 0.025 : 0;
+    if (t === 0) ctx.moveTo(tx, y + size * 0.28 + billow + dip);
+    else ctx.lineTo(tx, y + size * 0.28 + billow + dip);
   }
-  ctx.lineTo(x + size * 0.28, y + size * capeBot - size * 0.01);
+  for (let t = 9; t >= 0; t--) {
+    const tx = x - size * 0.34 + t * size * 0.068;
+    const billow = Math.sin(time * 1.8 + t * 0.8) * size * 0.015;
+    const dip = (t % 2 === 0) ? size * 0.025 : 0;
+    ctx.lineTo(tx, y + size * 0.30 + billow + dip + size * 0.025);
+  }
   ctx.closePath();
   ctx.fill();
-  // Ermine black spots
-  ctx.fillStyle = "#1c1917";
-  for (let d = 0; d < 10; d++) {
-    const dx = x - size * 0.24 + d * size * 0.055;
-    const dy = y + size * capeBot + size * 0.01;
+  // Ermine spots
+  ctx.fillStyle = "#1a0a0a";
+  for (let d = 0; d < 14; d++) {
+    const dx = x - size * 0.32 + d * size * 0.048;
+    const dy = y + size * 0.30 + Math.sin(time * 1.8 + d * 0.55) * size * 0.008;
     ctx.beginPath();
-    ctx.arc(dx, dy, size * 0.006, 0, TAU);
+    ctx.arc(dx, dy + size * 0.015, size * 0.005, 0, TAU);
     ctx.fill();
   }
-  // Gold cape border
-  ctx.strokeStyle = "#fbbf24";
+
+  // Mantle gold border trim
+  ctx.strokeStyle = goldBright;
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y - size * 0.36 - bodyBob);
-  ctx.bezierCurveTo(x - size * 0.36, y - size * 0.05, x - size * 0.38, y + size * 0.08, x - size * 0.28, y + size * capeBot);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.22, y - size * 0.36 - bodyBob);
-  ctx.bezierCurveTo(x + size * 0.36, y - size * 0.05, x + size * 0.38, y + size * 0.08, x + size * 0.28, y + size * capeBot);
-  ctx.stroke();
-  // Cape fold lines
-  ctx.strokeStyle = "rgba(90, 30, 140, 0.3)";
-  ctx.lineWidth = 0.8 * zoom;
-  for (let f = 0; f < 3; f++) {
-    const fOff = (f - 1) * size * 0.09;
-    const fWave = Math.sin(time * 2 + f * 1.4) * size * 0.01;
-    ctx.beginPath();
-    ctx.moveTo(x + fOff + fWave, y - size * 0.15 - bodyBob);
-    ctx.quadraticCurveTo(x + fOff + fWave * 1.5, y + size * 0.02, x + fOff + fWave * 0.5, y + size * 0.18);
-    ctx.stroke();
-  }
-
-  // ── Legs — tall polished dress boots ──
-  drawPathLegs(ctx, x, y + size * 0.1 - bodyBob, size, time, zoom, {
-    color: "#1c1917",
-    colorDark: "#0d0d0d",
-    footColor: "#111111",
-    strideSpeed: 2.2,
-    strideAmt: 0.24,
-    legLen: 0.30,
-    width: 0.06,
-    style: "armored",
-  });
-
-  // ── Magnificent golden robes ──
-  const robeGrad = ctx.createLinearGradient(x - size * 0.45, y, x + size * 0.45, y);
-  robeGrad.addColorStop(0, "#78350f");
-  robeGrad.addColorStop(0.12, "#92400e");
-  robeGrad.addColorStop(0.28, "#d97706");
-  robeGrad.addColorStop(0.42, "#fbbf24");
-  robeGrad.addColorStop(0.5, "#fef3c7");
-  robeGrad.addColorStop(0.58, "#fbbf24");
-  robeGrad.addColorStop(0.72, "#d97706");
-  robeGrad.addColorStop(0.88, "#92400e");
-  robeGrad.addColorStop(1, "#78350f");
-  ctx.fillStyle = robeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.24, y - size * 0.42 - bodyBob);
-  ctx.quadraticCurveTo(x - size * 0.52, y - size * 0.05, x - size * 0.42, y + size * 0.18);
-  for (let i = 0; i < 7; i++) {
-    const wX = x - size * 0.42 + i * size * 0.12;
-    const wY = y + size * 0.18 + Math.sin(time * 3.5 + i * 1.1) * size * 0.025 + (i % 2) * size * 0.015;
-    ctx.lineTo(wX, wY);
-  }
-  ctx.quadraticCurveTo(x + size * 0.52, y - size * 0.05, x + size * 0.24, y - size * 0.42 - bodyBob);
-  ctx.closePath();
-  ctx.fill();
-  // Robe gold embroidery lines
-  ctx.strokeStyle = `rgba(251, 191, 36, ${corruptionPulse * 0.5})`;
-  ctx.lineWidth = 1.2 * zoom;
-  for (let v = 0; v < 4; v++) {
-    const vX = x - size * 0.28 + v * size * 0.19;
-    ctx.beginPath();
-    ctx.moveTo(vX, y - size * 0.3 - bodyBob * 0.5);
-    ctx.bezierCurveTo(vX + Math.sin(time * 1.8 + v) * size * 0.04, y - size * 0.1, vX - Math.cos(time * 2 + v) * size * 0.03, y + size * 0.05, vX + Math.sin(v) * size * 0.05, y + size * 0.16);
-    ctx.stroke();
-  }
-  // Robe ermine hem trim
-  ctx.fillStyle = "#f5f0e8";
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.42, y + size * 0.16);
-  for (let i = 0; i < 7; i++) {
-    const wX = x - size * 0.42 + i * size * 0.12;
-    ctx.lineTo(wX, y + size * 0.18 + size * 0.025 + Math.sin(time * 3.5 + i * 1.1) * size * 0.015);
-  }
-  ctx.lineTo(x + size * 0.42, y + size * 0.16);
-  ctx.closePath();
-  ctx.fill();
-  // Ermine black spots on robe hem
-  ctx.fillStyle = "#1c1917";
-  for (let d = 0; d < 12; d++) {
-    const dx = x - size * 0.38 + d * size * 0.065;
-    ctx.beginPath();
-    ctx.arc(dx, y + size * 0.19, size * 0.005, 0, TAU);
-    ctx.fill();
-  }
-
-  // Purple velvet inner lining (V-neck visible)
-  const innerGrad = ctx.createLinearGradient(x - size * 0.12, y, x + size * 0.12, y);
-  innerGrad.addColorStop(0, "#3b0764");
-  innerGrad.addColorStop(0.5, "#581c87");
-  innerGrad.addColorStop(1, "#3b0764");
-  ctx.fillStyle = innerGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.14, y - size * 0.36 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.18 - bodyBob, x + size * 0.14, y - size * 0.36 - bodyBob);
-  ctx.lineTo(x + size * 0.1, y + size * 0.08);
-  ctx.quadraticCurveTo(x, y + size * 0.14, x - size * 0.1, y + size * 0.08);
-  ctx.fill();
-
-  // ── Grand chain of office with Princeton seal ──
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y - size * 0.34 - bodyBob);
-  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.2 - bodyBob, x - size * 0.15, y - size * 0.1 - bodyBob);
-  ctx.quadraticCurveTo(x, y + size * 0.02 - bodyBob, x + size * 0.15, y - size * 0.1 - bodyBob);
-  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.2 - bodyBob, x + size * 0.2, y - size * 0.34 - bodyBob);
-  ctx.stroke();
-  // Chain link details
-  ctx.fillStyle = "#fcd34d";
-  for (let c = 0; c < 7; c++) {
-    const ct = c / 6;
-    const cx2 = x - size * 0.18 + ct * size * 0.36;
-    const cy2 = y - size * 0.32 + Math.sin(ct * Math.PI) * size * 0.26 - bodyBob;
-    ctx.beginPath();
-    ctx.arc(cx2, cy2, size * 0.012, 0, TAU);
-    ctx.fill();
-  }
-  // Central medallion
-  const medY = y - size * 0.02 - bodyBob;
-  ctx.fillStyle = "#fbbf24";
-  setShadowBlur(ctx, 6 * zoom, "#fbbf24");
-  ctx.beginPath();
-  ctx.arc(x, medY, size * 0.055, 0, TAU);
-  ctx.fill();
-  clearShadow(ctx);
-  ctx.strokeStyle = "#92400e";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.stroke();
-  // Shield emblem on medallion
-  ctx.fillStyle = "#0f172a";
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.025, medY - size * 0.03);
-  ctx.lineTo(x + size * 0.025, medY - size * 0.03);
-  ctx.lineTo(x + size * 0.025, medY + size * 0.01);
-  ctx.quadraticCurveTo(x, medY + size * 0.035, x - size * 0.025, medY + size * 0.01);
-  ctx.closePath();
-  ctx.fill();
-  // Chevron on shield
-  ctx.strokeStyle = "#f97316";
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.015, medY - size * 0.01);
-  ctx.lineTo(x, medY + size * 0.01);
-  ctx.lineTo(x + size * 0.015, medY - size * 0.01);
-  ctx.stroke();
-
-  // ── Ornate gold collar with massive gems ──
-  const collarGrad = ctx.createLinearGradient(x - size * 0.22, y - size * 0.38, x + size * 0.22, y - size * 0.2);
-  collarGrad.addColorStop(0, "#b8860b");
-  collarGrad.addColorStop(0.3, "#fbbf24");
-  collarGrad.addColorStop(0.5, "#fef3c7");
-  collarGrad.addColorStop(0.7, "#fbbf24");
-  collarGrad.addColorStop(1, "#b8860b");
-  ctx.fillStyle = collarGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y - size * 0.38 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.26 - bodyBob, x + size * 0.22, y - size * 0.38 - bodyBob);
-  ctx.lineTo(x + size * 0.2, y - size * 0.18 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.08 - bodyBob, x - size * 0.2, y - size * 0.18 - bodyBob);
-  ctx.fill();
-  // Collar filigree
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.15, y - size * 0.30 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.22 - bodyBob, x + size * 0.15, y - size * 0.30 - bodyBob);
-  ctx.stroke();
-  // Central diamond on collar
-  ctx.fillStyle = "#e0f2fe";
-  ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.35 - bodyBob);
-  ctx.lineTo(x + size * 0.06, y - size * 0.27 - bodyBob);
-  ctx.lineTo(x, y - size * 0.17 - bodyBob);
-  ctx.lineTo(x - size * 0.06, y - size * 0.27 - bodyBob);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.015, y - size * 0.29 - bodyBob, size * 0.015, 0, TAU);
-  ctx.fill();
-  // Side rubies
-  ctx.fillStyle = "#ef4444";
   for (const side of [-1, 1]) {
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.14, y - size * 0.29 - bodyBob, size * 0.025, 0, TAU);
-    ctx.fill();
-  }
-
-  // ── Arms ──
-  const armShY = y - size * 0.35 - bodyBob;
-  // Left arm — holds a gilded ledger/book
-  drawPathArm(ctx, x - size * 0.26, armShY, size, time, zoom, -1, {
-    color: "#d97706",
-    colorDark: "#92400e",
-    handColor: "#fef3c7",
-    shoulderAngle: -0.9 + Math.sin(time * 1.5) * 0.06 + (isAttacking ? -attackIntensity * 0.3 : 0),
-    elbowAngle: -0.1 + Math.sin(time * 2 + 0.5) * 0.08 + (isAttacking ? -attackIntensity * 0.2 : 0),
-    upperLen: 0.2,
-    foreLen: 0.18,
-    width: 0.06,
-    style: "armored",
-    onWeapon: (wCtx) => {
-      // Gilded ledger book
-      const bW = size * 0.08;
-      const bH = size * 0.1;
-      wCtx.fillStyle = "#7c2d12";
-      wCtx.fillRect(-bW * 0.5, -bH, bW, bH);
-      wCtx.strokeStyle = "#fbbf24";
-      wCtx.lineWidth = 1.5 * zoom;
-      wCtx.strokeRect(-bW * 0.5, -bH, bW, bH);
-      // Gold clasp
-      wCtx.fillStyle = "#fbbf24";
-      wCtx.fillRect(-bW * 0.15, -bH * 0.6, bW * 0.3, bH * 0.2);
-      // Pages
-      wCtx.fillStyle = "#fef9e7";
-      wCtx.fillRect(-bW * 0.4, -bH * 0.95, bW * 0.05, bH * 0.9);
-      // Gold corner flourishes
-      wCtx.fillStyle = "#fbbf24";
-      for (const cy of [-bH, 0]) {
-        for (const cx2 of [-bW * 0.5, bW * 0.5]) {
-          wCtx.beginPath();
-          wCtx.arc(cx2, cy, size * 0.008, 0, TAU);
-          wCtx.fill();
-        }
-      }
-    },
-  });
-  // Right arm — holds an ornate golden scepter
-  drawPathArm(ctx, x + size * 0.26, armShY, size, time, zoom, 1, {
-    color: "#d97706",
-    colorDark: "#92400e",
-    handColor: "#fef3c7",
-    shoulderAngle: -(0.55 + Math.sin(time * 1.5 + Math.PI) * 0.06) + (isAttacking ? -attackIntensity * 0.35 : 0),
-    elbowAngle: -0.25 + Math.sin(time * 2 + 2) * 0.05 + (isAttacking ? -attackIntensity * 0.25 : 0),
-    upperLen: 0.2,
-    foreLen: 0.18,
-    width: 0.06,
-    style: "armored",
-    onWeapon: (wCtx) => {
-      // Ornate scepter shaft
-      const sW = size * 0.028;
-      const sH = size * 0.55;
-      const staffGrad = wCtx.createLinearGradient(-sW, 0, sW, 0);
-      staffGrad.addColorStop(0, "#92400e");
-      staffGrad.addColorStop(0.3, "#fbbf24");
-      staffGrad.addColorStop(0.5, "#fef3c7");
-      staffGrad.addColorStop(0.7, "#fbbf24");
-      staffGrad.addColorStop(1, "#92400e");
-      wCtx.fillStyle = staffGrad;
-      wCtx.fillRect(-sW, -sH * 0.45, sW * 2, sH);
-      // Gold rings along shaft
-      wCtx.strokeStyle = "#fcd34d";
-      wCtx.lineWidth = 1.5 * zoom;
-      for (let i = 0; i < 6; i++) {
-        const ry = -sH * 0.4 + i * sH * 0.17;
-        wCtx.beginPath();
-        wCtx.moveTo(-sW * 1.3, ry);
-        wCtx.lineTo(sW * 1.3, ry);
-        wCtx.stroke();
-      }
-      // Crown head with 5 prongs
-      wCtx.fillStyle = "#fbbf24";
-      wCtx.beginPath();
-      wCtx.moveTo(-size * 0.06, -sH * 0.45);
-      wCtx.lineTo(-size * 0.05, -sH * 0.45 - size * 0.08);
-      wCtx.lineTo(-size * 0.03, -sH * 0.45 - size * 0.04);
-      wCtx.lineTo(-size * 0.015, -sH * 0.45 - size * 0.1);
-      wCtx.lineTo(0, -sH * 0.45 - size * 0.05);
-      wCtx.lineTo(size * 0.015, -sH * 0.45 - size * 0.1);
-      wCtx.lineTo(size * 0.03, -sH * 0.45 - size * 0.04);
-      wCtx.lineTo(size * 0.05, -sH * 0.45 - size * 0.08);
-      wCtx.lineTo(size * 0.06, -sH * 0.45);
-      wCtx.closePath();
-      wCtx.fill();
-      // Jewel orb at top
-      const orbY = -sH * 0.45 - size * 0.14;
-      wCtx.fillStyle = "#fbbf24";
-      setShadowBlur(wCtx, 8 * zoom, "#fbbf24");
-      wCtx.beginPath();
-      wCtx.arc(0, orbY, size * 0.04, 0, TAU);
-      wCtx.fill();
-      clearShadow(wCtx);
-      wCtx.fillStyle = "#7c3aed";
-      wCtx.beginPath();
-      wCtx.arc(0, orbY, size * 0.025, 0, TAU);
-      wCtx.fill();
-      wCtx.fillStyle = "rgba(255, 255, 255, 0.45)";
-      wCtx.beginPath();
-      wCtx.arc(-size * 0.008, orbY - size * 0.008, size * 0.01, 0, TAU);
-      wCtx.fill();
-      // Bottom pommel
-      wCtx.fillStyle = "#fbbf24";
-      wCtx.beginPath();
-      wCtx.ellipse(0, sH * 0.52, sW * 1.5, sW, 0, 0, TAU);
-      wCtx.fill();
-    },
-  });
-
-  // ── Grand military epaulets with gold tassels ──
-  for (const side of [-1, 1]) {
-    const epX = x + side * size * 0.24;
-    const epY = y - size * 0.36 - bodyBob;
-    // Fur pad
-    ctx.fillStyle = "#f5f0e8";
-    ctx.beginPath();
-    ctx.ellipse(epX, epY + size * 0.02, size * 0.075, size * 0.04, side * 0.25, 0, TAU);
-    ctx.fill();
-    // Gold plate
-    const epGrad = ctx.createRadialGradient(epX, epY, 0, epX, epY, size * 0.065);
-    epGrad.addColorStop(0, "#fef3c7");
-    epGrad.addColorStop(0.4, "#fbbf24");
-    epGrad.addColorStop(0.8, "#d97706");
-    epGrad.addColorStop(1, "#92400e");
-    ctx.fillStyle = epGrad;
-    ctx.beginPath();
-    ctx.ellipse(epX, epY, size * 0.06, size * 0.038, side * 0.25, 0, TAU);
-    ctx.fill();
-    // Gold fringe tassels
-    ctx.strokeStyle = "#fbbf24";
-    ctx.lineWidth = 1 * zoom;
-    for (let t = 0; t < 5; t++) {
-      const tAngle = side * (0.4 + t * 0.25);
-      const tLen = size * 0.04 + Math.sin(time * 2.5 + t) * size * 0.008;
-      ctx.beginPath();
-      ctx.moveTo(epX + Math.cos(tAngle) * size * 0.055, epY + Math.sin(tAngle) * size * 0.035);
-      ctx.lineTo(epX + Math.cos(tAngle) * size * 0.055 + Math.sin(time * 2 + t) * size * 0.005, epY + Math.sin(tAngle) * size * 0.035 + tLen);
-      ctx.stroke();
-    }
-    // Center jewel
-    ctx.fillStyle = "#7c3aed";
-    ctx.beginPath();
-    ctx.arc(epX, epY, size * 0.013, 0, TAU);
-    ctx.fill();
-  }
-
-  // ── Distinguished face ──
-  drawFaceCircle(ctx, x, y - size * 0.5 - bodyBob, size * 0.24, [
-    { offset: 0, color: "#fef9e7" },
-    { offset: 0.6, color: "#fef3c7" },
-    { offset: 1, color: "#fde68a" },
-  ]);
-
-  // Wrinkles of authority
-  ctx.strokeStyle = "rgba(180, 140, 100, 0.3)";
-  ctx.lineWidth = 1.2 * zoom;
-  for (const side of [-1, 1]) {
-    ctx.beginPath();
-    ctx.arc(x + side * size * 0.12, y - size * 0.44 - bodyBob, size * 0.04, 0.3, Math.PI - 0.3);
-    ctx.stroke();
-  }
-  // Furrowed brow
-  ctx.strokeStyle = "rgba(160, 120, 80, 0.3)";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.12, y - size * 0.58 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.56 - bodyBob, x + size * 0.12, y - size * 0.58 - bodyBob);
-  ctx.stroke();
-
-  // Ornate golden monocle
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.beginPath();
-  ctx.arc(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.08, 0, TAU);
-  ctx.stroke();
-  ctx.fillStyle = `rgba(251, 191, 36, ${goldPulse * 0.25})`;
-  ctx.beginPath();
-  ctx.arc(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.07, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.beginPath();
-  ctx.arc(x + size * 0.08, y - size * 0.54 - bodyBob, size * 0.025, 0, TAU);
-  ctx.fill();
-  // Monocle chain
-  ctx.strokeStyle = "#d97706";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.18, y - size * 0.52 - bodyBob);
-  ctx.bezierCurveTo(x + size * 0.24, y - size * 0.42 - bodyBob, x + size * 0.22, y - size * 0.28 - bodyBob, x + size * 0.18, y - size * 0.18 - bodyBob);
-  ctx.stroke();
-
-  // Eyes with greed glow
-  ctx.fillStyle = "#fef9e7";
-  ctx.beginPath();
-  ctx.ellipse(x - size * 0.09, y - size * 0.52 - bodyBob, size * 0.045, size * 0.05, 0, 0, TAU);
-  ctx.ellipse(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.04, size * 0.045, 0, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "#b8860b";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.09, y - size * 0.52 - bodyBob, size * 0.024, 0, TAU);
-  ctx.arc(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.022, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = "#1c1917";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.09, y - size * 0.52 - bodyBob, size * 0.01, 0, TAU);
-  ctx.arc(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.009, 0, TAU);
-  ctx.fill();
-  ctx.fillStyle = `rgba(255, 220, 100, ${goldPulse * 0.8})`;
-  ctx.beginPath();
-  ctx.arc(x - size * 0.09, y - size * 0.52 - bodyBob, size * 0.012, 0, TAU);
-  ctx.arc(x + size * 0.1, y - size * 0.52 - bodyBob, size * 0.01, 0, TAU);
-  ctx.fill();
-
-  // Stern mouth
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.07, y - size * 0.39 - bodyBob);
-  ctx.quadraticCurveTo(x, y - size * 0.37 - bodyBob, x + size * 0.07, y - size * 0.39 - bodyBob);
-  ctx.stroke();
-
-  // ── Silver-streaked swept-back hair ──
-  const hairGrad = ctx.createLinearGradient(x - size * 0.15, y - size * 0.7, x + size * 0.15, y - size * 0.65);
-  hairGrad.addColorStop(0, "#6b7280");
-  hairGrad.addColorStop(0.3, "#9ca3af");
-  hairGrad.addColorStop(0.5, "#d1d5db");
-  hairGrad.addColorStop(0.7, "#9ca3af");
-  hairGrad.addColorStop(1, "#6b7280");
-  ctx.fillStyle = hairGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.66 - bodyBob, size * 0.19, size * 0.1, 0, 0, Math.PI);
-  ctx.fill();
-  // Individual hair strands
-  ctx.strokeStyle = "#d1d5db";
-  ctx.lineWidth = 1 * zoom;
-  for (let h = 0; h < 7; h++) {
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.14 + h * size * 0.047, y - size * 0.66 - bodyBob);
-    ctx.quadraticCurveTo(
-      x - size * 0.12 + h * size * 0.04 + Math.sin(h * 1.2) * size * 0.015,
-      y - size * 0.72 - bodyBob,
-      x - size * 0.1 + h * size * 0.035,
-      y - size * 0.76 - bodyBob,
+    ctx.moveTo(x + side * size * 0.2, y - size * 0.38 - bodyBob);
+    ctx.bezierCurveTo(
+      x + side * size * 0.42, y - size * 0.08,
+      x + side * size * 0.44, y + size * 0.1,
+      x + side * size * 0.34, y + size * 0.28,
     );
     ctx.stroke();
   }
 
-  // ── Magnificent top hat ──
-  // Brim with gold edge
-  ctx.fillStyle = "#0f0f0f";
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.72 - bodyBob, size * 0.26, size * 0.065, 0, 0, TAU);
-  ctx.fill();
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.stroke();
-  // Crown body
-  const hatGrad = ctx.createLinearGradient(x - size * 0.17, y - size * 1.05, x + size * 0.17, y - size * 1.05);
-  hatGrad.addColorStop(0, "#1c1917");
-  hatGrad.addColorStop(0.3, "#374151");
-  hatGrad.addColorStop(0.5, "#4b5563");
-  hatGrad.addColorStop(0.7, "#374151");
-  hatGrad.addColorStop(1, "#1c1917");
-  ctx.fillStyle = hatGrad;
-  ctx.fillRect(x - size * 0.17, y - size * 1.05 - bodyBob, size * 0.34, size * 0.34);
-  // Top ellipse
-  ctx.fillStyle = "#292524";
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 1.05 - bodyBob, size * 0.17, size * 0.05, 0, 0, TAU);
-  ctx.fill();
-  // Silk sheen highlight
-  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-  ctx.fillRect(x - size * 0.05, y - size * 1.02 - bodyBob, size * 0.1, size * 0.28);
-  // Jeweled gold band
-  const bandGrad = ctx.createLinearGradient(x - size * 0.18, y - size * 0.84, x + size * 0.18, y - size * 0.84);
-  bandGrad.addColorStop(0, "#92400e");
-  bandGrad.addColorStop(0.3, "#fbbf24");
-  bandGrad.addColorStop(0.5, "#fef3c7");
-  bandGrad.addColorStop(0.7, "#fbbf24");
-  bandGrad.addColorStop(1, "#92400e");
-  ctx.fillStyle = bandGrad;
-  ctx.fillRect(x - size * 0.18, y - size * 0.84 - bodyBob, size * 0.36, size * 0.065);
-  // Gold buckle on band
-  ctx.fillStyle = "#fbbf24";
-  ctx.strokeStyle = "#92400e";
-  ctx.lineWidth = 1 * zoom;
-  ctx.fillRect(x - size * 0.04, y - size * 0.845 - bodyBob, size * 0.08, size * 0.075);
-  ctx.strokeRect(x - size * 0.04, y - size * 0.845 - bodyBob, size * 0.08, size * 0.075);
-  // Gems flanking buckle
-  const gemColors = ["#dc2626", "#059669", "#2563eb"];
-  for (let g = 0; g < 3; g++) {
-    const gx = x - size * 0.12 + g * size * 0.12;
-    if (g === 1) continue;
-    ctx.fillStyle = gemColors[g];
-    setShadowBlur(ctx, 3 * zoom, gemColors[g]);
+  // Mantle inner fold highlights
+  ctx.strokeStyle = `rgba(130, 60, 200, 0.2)`;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let f = 0; f < 3; f++) {
+    const fOff = (f - 1) * size * 0.1;
     ctx.beginPath();
-    ctx.arc(gx, y - size * 0.81 - bodyBob, size * 0.022, 0, TAU);
+    ctx.moveTo(x + fOff, y - size * 0.12 - bodyBob);
+    ctx.quadraticCurveTo(
+      x + fOff + Math.sin(time * 1.5 + f) * size * 0.015,
+      y + size * 0.06,
+      x + fOff,
+      y + size * 0.22,
+    );
+    ctx.stroke();
+  }
+
+  // === LEGS — heavy gilded war greaves ===
+  drawPathLegs(ctx, x, y + size * 0.1 - bodyBob, size, time, zoom, {
+    color: "#2a2040",
+    colorDark: "#1a1030",
+    footColor: goldDark,
+    strideSpeed: 2.0,
+    strideAmt: 0.18,
+    legLen: 0.28,
+    width: 0.075,
+    style: "armored",
+  });
+
+  // === TORSO — heavy ornate plate armor ===
+  const torsoTop = y - size * 0.42 - bodyBob;
+  const torsoBot = y + size * 0.06 - bodyBob;
+
+  // Base dark plate
+  const plateGrad = ctx.createLinearGradient(x - size * 0.22, torsoTop, x + size * 0.22, torsoBot);
+  plateGrad.addColorStop(0, "#1a1030");
+  plateGrad.addColorStop(0.15, "#2a2048");
+  plateGrad.addColorStop(0.4, "#3a2860");
+  plateGrad.addColorStop(0.6, "#2a2048");
+  plateGrad.addColorStop(0.85, "#1a1030");
+  plateGrad.addColorStop(1, "#0e0820");
+  ctx.fillStyle = plateGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, torsoTop);
+  ctx.quadraticCurveTo(x - size * 0.27, y - size * 0.12 - bodyBob, x - size * 0.2, torsoBot);
+  ctx.lineTo(x + size * 0.2, torsoBot);
+  ctx.quadraticCurveTo(x + size * 0.27, y - size * 0.12 - bodyBob, x + size * 0.22, torsoTop);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gold trim edges on breastplate
+  ctx.strokeStyle = goldBright;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, torsoTop);
+  ctx.quadraticCurveTo(x - size * 0.27, y - size * 0.12 - bodyBob, x - size * 0.2, torsoBot);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, torsoTop);
+  ctx.quadraticCurveTo(x + size * 0.27, y - size * 0.12 - bodyBob, x + size * 0.2, torsoBot);
+  ctx.stroke();
+
+  // Raised center plate with Princeton shield
+  const cpGrad = ctx.createRadialGradient(x, y - size * 0.2 - bodyBob, 0, x, y - size * 0.2 - bodyBob, size * 0.15);
+  cpGrad.addColorStop(0, "#3a2860");
+  cpGrad.addColorStop(0.6, "#2a1848");
+  cpGrad.addColorStop(1, "#1a1030");
+  ctx.fillStyle = cpGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, torsoTop + size * 0.04);
+  ctx.lineTo(x + size * 0.1, torsoTop + size * 0.04);
+  ctx.lineTo(x + size * 0.08, torsoBot - size * 0.02);
+  ctx.quadraticCurveTo(x, torsoBot + size * 0.02, x - size * 0.08, torsoBot - size * 0.02);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = goldMid;
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Shield emblem on breastplate
+  const embY = y - size * 0.2 - bodyBob;
+  ctx.fillStyle = darkNavy;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.04, embY - size * 0.05);
+  ctx.lineTo(x + size * 0.04, embY - size * 0.05);
+  ctx.lineTo(x + size * 0.04, embY + size * 0.015);
+  ctx.quadraticCurveTo(x, embY + size * 0.055, x - size * 0.04, embY + size * 0.015);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = goldBright;
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Chevron on breastplate shield
+  ctx.strokeStyle = "#f97316";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.025, embY - size * 0.015);
+  ctx.lineTo(x, embY + size * 0.02);
+  ctx.lineTo(x + size * 0.025, embY - size * 0.015);
+  ctx.stroke();
+
+  // Gold filigree scrollwork on armor panels
+  ctx.strokeStyle = `rgba(251, 191, 36, ${0.25 + corruptPulse * 0.15})`;
+  ctx.lineWidth = 0.7 * zoom;
+  for (const side of [-1, 1]) {
+    for (let s = 0; s < 3; s++) {
+      const sx = x + side * size * (0.12 + s * 0.03);
+      const sy = torsoTop + size * 0.08 + s * size * 0.1;
+      ctx.beginPath();
+      ctx.arc(sx, sy, size * 0.015, side > 0 ? 0 : Math.PI, side > 0 ? Math.PI : TAU);
+      ctx.stroke();
+    }
+  }
+
+  // Rivets along breastplate edges
+  ctx.fillStyle = goldMid;
+  for (const side of [-1, 1]) {
+    for (let r = 0; r < 5; r++) {
+      const rY = torsoTop + size * 0.06 + r * size * 0.07;
+      const rX = x + side * size * 0.19;
+      ctx.beginPath();
+      ctx.arc(rX, rY, size * 0.005, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // === ARMORED SKIRT / FAULD ===
+  const skirtY = torsoBot;
+  for (let p = 0; p < 5; p++) {
+    const pX = x - size * 0.16 + p * size * 0.08;
+    const pW = size * 0.065;
+    const pH = size * 0.1 + Math.sin(time * 2 + p * 0.8) * size * 0.01;
+    const pGrad = ctx.createLinearGradient(pX, skirtY, pX, skirtY + pH);
+    pGrad.addColorStop(0, "#2a2048");
+    pGrad.addColorStop(0.5, "#1a1030");
+    pGrad.addColorStop(1, "#0e0820");
+    ctx.fillStyle = pGrad;
+    ctx.beginPath();
+    ctx.moveTo(pX - pW * 0.5, skirtY);
+    ctx.lineTo(pX + pW * 0.5, skirtY);
+    ctx.lineTo(pX + pW * 0.4, skirtY + pH);
+    ctx.quadraticCurveTo(pX, skirtY + pH + size * 0.01, pX - pW * 0.4, skirtY + pH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = goldMid;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+  }
+
+  // === ORNATE WAR BELT ===
+  const beltY = torsoBot - size * 0.015;
+  ctx.fillStyle = "#2a1808";
+  ctx.fillRect(x - size * 0.21, beltY, size * 0.42, size * 0.035);
+  ctx.strokeStyle = goldBright;
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(x - size * 0.21, beltY, size * 0.42, size * 0.035);
+
+  // Belt skull buckle
+  const buckCX = x;
+  const buckCY = beltY + size * 0.0175;
+  ctx.fillStyle = goldBright;
+  ctx.beginPath();
+  ctx.arc(buckCX, buckCY, size * 0.02, 0, TAU);
+  ctx.fill();
+  ctx.fillStyle = darkNavy;
+  ctx.beginPath();
+  ctx.arc(buckCX, buckCY - size * 0.003, size * 0.012, 0, TAU);
+  ctx.fill();
+  // Tiny skull face
+  ctx.fillStyle = goldPale;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.arc(buckCX + side * size * 0.004, buckCY - size * 0.005, size * 0.003, 0, TAU);
+    ctx.fill();
+  }
+  ctx.fillStyle = goldPale;
+  ctx.beginPath();
+  ctx.moveTo(buckCX - size * 0.003, buckCY + size * 0.003);
+  ctx.lineTo(buckCX + size * 0.003, buckCY + size * 0.003);
+  ctx.lineTo(buckCX + size * 0.002, buckCY + size * 0.006);
+  ctx.lineTo(buckCX - size * 0.002, buckCY + size * 0.006);
+  ctx.fill();
+
+  // Belt gem studs
+  for (let g = 0; g < 4; g++) {
+    for (const side of [-1, 1]) {
+      const gx = x + side * (size * 0.05 + g * size * 0.04);
+      ctx.fillStyle = g % 2 === 0 ? "#7c3aed" : "#dc2626";
+      ctx.beginPath();
+      ctx.arc(gx, buckCY, size * 0.006, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  // === GOLD GORGET (high collar armor) ===
+  const gorgetGrad = ctx.createLinearGradient(x - size * 0.24, torsoTop - size * 0.04, x + size * 0.24, torsoTop + size * 0.06);
+  gorgetGrad.addColorStop(0, goldDark);
+  gorgetGrad.addColorStop(0.2, goldMid);
+  gorgetGrad.addColorStop(0.5, goldBright);
+  gorgetGrad.addColorStop(0.8, goldMid);
+  gorgetGrad.addColorStop(1, goldDark);
+  ctx.fillStyle = gorgetGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24, torsoTop - size * 0.02);
+  ctx.quadraticCurveTo(x - size * 0.18, torsoTop - size * 0.08, x - size * 0.08, torsoTop - size * 0.06);
+  ctx.quadraticCurveTo(x, torsoTop + size * 0.02, x + size * 0.08, torsoTop - size * 0.06);
+  ctx.quadraticCurveTo(x + size * 0.18, torsoTop - size * 0.08, x + size * 0.24, torsoTop - size * 0.02);
+  ctx.lineTo(x + size * 0.22, torsoTop + size * 0.03);
+  ctx.quadraticCurveTo(x, torsoTop + size * 0.1, x - size * 0.22, torsoTop + size * 0.03);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = goldDark;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  // Gorget gem studs
+  for (const side of [-1, 1]) {
+    ctx.fillStyle = "#dc2626";
+    setShadowBlur(ctx, 3 * zoom, "#dc2626");
+    ctx.beginPath();
+    ctx.arc(x + side * size * 0.14, torsoTop - size * 0.03, size * 0.01, 0, TAU);
     ctx.fill();
     clearShadow(ctx);
   }
-  // Center gem on buckle
-  ctx.fillStyle = "#7c3aed";
-  setShadowBlur(ctx, 4 * zoom, "#7c3aed");
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.81 - bodyBob, size * 0.018, 0, TAU);
-  ctx.fill();
-  clearShadow(ctx);
 
-  // Budget Cuts / Fiery Decree aura
-  for (let flame = 0; flame < 3; flame++) {
-    const flamePhase = (time * 1.5 + flame * 0.5) % 1.2;
-    const flameX = x + Math.sin(time * 2 + flame * 2.1) * size * 0.12;
-    const flameY = y + size * 0.3 - flamePhase * size * 0.2;
-    const flameAlpha = (1 - flamePhase / 1.2) * 0.2;
-    ctx.fillStyle = `rgba(234, 179, 8, ${flameAlpha})`;
+  // === ARMS ===
+  const armShY = y - size * 0.36 - bodyBob;
+
+  // Left arm — gilded tower shield
+  drawPathArm(ctx, x - size * 0.26, armShY, size, time, zoom, -1, {
+    color: "#2a2048",
+    colorDark: "#1a1030",
+    handColor: "#5a4878",
+    shoulderAngle: -0.7 + Math.sin(time * 1.3) * 0.04 + (isAttacking ? -attackIntensity * 0.2 : 0),
+    elbowAngle: -0.2 + Math.sin(time * 1.8 + 0.5) * 0.05 + (isAttacking ? -attackIntensity * 0.15 : 0),
+    upperLen: 0.17,
+    foreLen: 0.14,
+    width: 0.065,
+    style: "armored",
+    onWeapon: (wCtx) => {
+      wCtx.translate(0, size * 0.04);
+      wCtx.scale(-1, 1);
+      const shW = size * 0.14;
+      const shH = size * 0.22;
+
+      // Shield body
+      const shGrad = wCtx.createLinearGradient(-shW, -shH * 0.5, shW, shH * 0.5);
+      shGrad.addColorStop(0, "#1a1030");
+      shGrad.addColorStop(0.3, "#2a2048");
+      shGrad.addColorStop(0.5, "#3a2860");
+      shGrad.addColorStop(0.7, "#2a2048");
+      shGrad.addColorStop(1, "#1a1030");
+      wCtx.fillStyle = shGrad;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -shH);
+      wCtx.quadraticCurveTo(shW * 0.6, -shH * 0.8, shW, -shH * 0.3);
+      wCtx.quadraticCurveTo(shW * 0.9, shH * 0.3, 0, shH);
+      wCtx.quadraticCurveTo(-shW * 0.9, shH * 0.3, -shW, -shH * 0.3);
+      wCtx.quadraticCurveTo(-shW * 0.6, -shH * 0.8, 0, -shH);
+      wCtx.closePath();
+      wCtx.fill();
+
+      // Gold rim
+      wCtx.strokeStyle = goldBright;
+      wCtx.lineWidth = 1.5 * zoom;
+      wCtx.stroke();
+
+      // Shield boss
+      const bossGrad = wCtx.createRadialGradient(0, 0, 0, 0, 0, size * 0.03);
+      bossGrad.addColorStop(0, goldPale);
+      bossGrad.addColorStop(0.5, goldBright);
+      bossGrad.addColorStop(1, goldDark);
+      wCtx.fillStyle = bossGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, size * 0.03, 0, TAU);
+      wCtx.fill();
+
+      // Gold cross on shield
+      wCtx.strokeStyle = goldBright;
+      wCtx.lineWidth = 2 * zoom;
+      wCtx.beginPath();
+      wCtx.moveTo(0, -shH * 0.65);
+      wCtx.lineTo(0, shH * 0.65);
+      wCtx.stroke();
+      wCtx.beginPath();
+      wCtx.moveTo(-shW * 0.65, 0);
+      wCtx.lineTo(shW * 0.65, 0);
+      wCtx.stroke();
+
+      // Corner rivets
+      const rivetPositions = [
+        { x: 0, y: -shH * 0.7 }, { x: shW * 0.6, y: -shH * 0.15 },
+        { x: 0, y: shH * 0.7 }, { x: -shW * 0.6, y: -shH * 0.15 },
+      ];
+      wCtx.fillStyle = goldMid;
+      for (const rv of rivetPositions) {
+        wCtx.beginPath();
+        wCtx.arc(rv.x, rv.y, size * 0.006, 0, TAU);
+        wCtx.fill();
+      }
+    },
+  });
+
+  // Right arm — golden war-mace
+  drawPathArm(ctx, x + size * 0.26, armShY, size, time, zoom, 1, {
+    color: "#2a2048",
+    colorDark: "#1a1030",
+    handColor: "#5a4878",
+    shoulderAngle: -(0.55 + Math.sin(time * 1.3 + Math.PI) * 0.04) + (isAttacking ? -attackIntensity * 0.5 : 0),
+    elbowAngle: -0.35 + Math.sin(time * 1.8 + 2) * 0.03 + (isAttacking ? -attackIntensity * 0.4 : 0),
+    upperLen: 0.17,
+    foreLen: 0.14,
+    width: 0.065,
+    style: "armored",
+    weaponAngle: -0.5,
+    onWeapon: (wCtx) => {
+      const sH = size * 0.5;
+      const sW = size * 0.016;
+
+      // War-mace shaft
+      const shaftGrad = wCtx.createLinearGradient(-sW, 0, sW, 0);
+      shaftGrad.addColorStop(0, goldDark);
+      shaftGrad.addColorStop(0.3, goldBright);
+      shaftGrad.addColorStop(0.5, goldPale);
+      shaftGrad.addColorStop(0.7, goldBright);
+      shaftGrad.addColorStop(1, goldDark);
+      wCtx.fillStyle = shaftGrad;
+      wCtx.fillRect(-sW, -sH * 0.35, sW * 2, sH * 0.9);
+
+      // Grip wrap
+      wCtx.fillStyle = "#3a1808";
+      wCtx.fillRect(-sW * 1.3, -size * 0.02, sW * 2.6, size * 0.1);
+      wCtx.strokeStyle = goldBright;
+      wCtx.lineWidth = 0.6 * zoom;
+      for (let w = 0; w < 6; w++) {
+        const wy = -size * 0.015 + w * size * 0.018;
+        wCtx.beginPath();
+        wCtx.moveTo(-sW * 1.2, wy);
+        wCtx.lineTo(sW * 1.2, wy - size * 0.007);
+        wCtx.stroke();
+      }
+
+      // Gold ring nodes
+      wCtx.fillStyle = goldPale;
+      for (let r = 0; r < 3; r++) {
+        const ry = -sH * 0.1 - r * sH * 0.2;
+        wCtx.beginPath();
+        wCtx.ellipse(0, ry, sW * 1.8, size * 0.006, 0, 0, TAU);
+        wCtx.fill();
+      }
+
+      // Mace head — 6-flanged gold/obsidian war head
+      const mhY = -sH * 0.35;
+      const mhR = size * 0.055;
+      for (let f = 0; f < 6; f++) {
+        const fAngle = f * TAU / 6 - Math.PI / 2;
+        const fR = mhR * 1.4;
+        wCtx.fillStyle = f % 2 === 0 ? goldBright : goldMid;
+        wCtx.beginPath();
+        wCtx.moveTo(0, mhY);
+        wCtx.lineTo(
+          Math.cos(fAngle - 0.2) * mhR * 0.5,
+          mhY + Math.sin(fAngle - 0.2) * mhR * 0.5,
+        );
+        wCtx.lineTo(
+          Math.cos(fAngle) * fR,
+          mhY + Math.sin(fAngle) * fR,
+        );
+        wCtx.lineTo(
+          Math.cos(fAngle + 0.2) * mhR * 0.5,
+          mhY + Math.sin(fAngle + 0.2) * mhR * 0.5,
+        );
+        wCtx.closePath();
+        wCtx.fill();
+      }
+
+      // Mace core
+      const coreGrad = wCtx.createRadialGradient(0, mhY, 0, 0, mhY, mhR * 0.5);
+      coreGrad.addColorStop(0, goldPale);
+      coreGrad.addColorStop(0.5, goldBright);
+      coreGrad.addColorStop(1, goldMid);
+      wCtx.fillStyle = coreGrad;
+      wCtx.beginPath();
+      wCtx.arc(0, mhY, mhR * 0.45, 0, TAU);
+      wCtx.fill();
+
+      // Glowing amethyst inset
+      setShadowBlur(wCtx, 8 * zoom, "#7c3aed");
+      wCtx.fillStyle = "#7c3aed";
+      wCtx.beginPath();
+      wCtx.arc(0, mhY, mhR * 0.2, 0, TAU);
+      wCtx.fill();
+      clearShadow(wCtx);
+
+      // Bottom pommel
+      wCtx.fillStyle = goldBright;
+      wCtx.beginPath();
+      wCtx.ellipse(0, sH * 0.53, sW * 2, sW * 1.2, 0, 0, TAU);
+      wCtx.fill();
+    },
+  });
+
+  // === MASSIVE LAYERED PAULDRONS ===
+  for (const side of [-1, 1]) {
+    const epX = x + side * size * 0.24;
+    const epY = y - size * 0.38 - bodyBob;
+
+    // Bottom plate
+    const p1Grad = ctx.createRadialGradient(epX, epY + size * 0.02, 0, epX, epY + size * 0.02, size * 0.09);
+    p1Grad.addColorStop(0, "#3a2860");
+    p1Grad.addColorStop(0.6, "#2a2048");
+    p1Grad.addColorStop(1, "#1a1030");
+    ctx.fillStyle = p1Grad;
     ctx.beginPath();
-    ctx.ellipse(flameX, flameY, size * 0.018, size * 0.03, 0, 0, TAU);
+    ctx.ellipse(epX + side * size * 0.01, epY + size * 0.02, size * 0.09, size * 0.05, side * 0.25, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = goldMid;
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+
+    // Top plate (overlapping)
+    const p2Grad = ctx.createRadialGradient(epX, epY - size * 0.01, 0, epX, epY - size * 0.01, size * 0.075);
+    p2Grad.addColorStop(0, goldBright);
+    p2Grad.addColorStop(0.4, goldMid);
+    p2Grad.addColorStop(1, goldDark);
+    ctx.fillStyle = p2Grad;
+    ctx.beginPath();
+    ctx.ellipse(epX, epY - size * 0.01, size * 0.075, size * 0.045, side * 0.2, 0, TAU);
+    ctx.fill();
+    ctx.strokeStyle = goldDark;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+
+    // Spike on pauldron
+    ctx.fillStyle = goldBright;
+    ctx.beginPath();
+    ctx.moveTo(epX + side * size * 0.04, epY - size * 0.02);
+    ctx.lineTo(epX + side * size * 0.08, epY - size * 0.06);
+    ctx.lineTo(epX + side * size * 0.05, epY + size * 0.005);
+    ctx.closePath();
+    ctx.fill();
+
+    // Amethyst centerpiece
+    ctx.fillStyle = "#7c3aed";
+    setShadowBlur(ctx, 4 * zoom, "#7c3aed");
+    ctx.beginPath();
+    ctx.arc(epX, epY - size * 0.01, size * 0.015, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
+
+    // Gold tassels hanging from pauldron
+    ctx.strokeStyle = goldBright;
+    ctx.lineWidth = 1 * zoom;
+    for (let t = 0; t < 4; t++) {
+      const tAngle = side * (0.5 + t * 0.25);
+      const tLen = size * 0.04 + Math.sin(time * 2.5 + t * 0.9) * size * 0.006;
+      const stX = epX + Math.cos(tAngle) * size * 0.07;
+      const stY = epY + Math.sin(tAngle) * size * 0.045;
+      ctx.beginPath();
+      ctx.moveTo(stX, stY);
+      ctx.lineTo(stX + Math.sin(time * 2 + t) * size * 0.003, stY + tLen);
+      ctx.stroke();
+    }
+  }
+
+  // === HEAD — monstrous face in ornate great helm ===
+  const headX = x;
+  const headY = y - size * 0.5 - bodyBob;
+
+  // Armored neck guard
+  ctx.fillStyle = "#2a2048";
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.08, headY + size * 0.1);
+  ctx.quadraticCurveTo(headX, headY + size * 0.14, headX + size * 0.08, headY + size * 0.1);
+  ctx.lineTo(headX + size * 0.06, headY + size * 0.06);
+  ctx.quadraticCurveTo(headX, headY + size * 0.08, headX - size * 0.06, headY + size * 0.06);
+  ctx.closePath();
+  ctx.fill();
+
+  // Face — corrupted monstrous visage visible through helm opening
+  const faceGrad = ctx.createRadialGradient(headX, headY + size * 0.01, 0, headX, headY + size * 0.01, size * 0.09);
+  faceGrad.addColorStop(0, "#4a3060");
+  faceGrad.addColorStop(0.4, "#3a1848");
+  faceGrad.addColorStop(0.7, "#2a0838");
+  faceGrad.addColorStop(1, "#1a0028");
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.01, size * 0.09, size * 0.1, 0, 0, TAU);
+  ctx.fill();
+
+  // Corruption cracks across face
+  ctx.strokeStyle = `rgba(200, 100, 255, ${0.3 + corruptPulse * 0.2})`;
+  ctx.lineWidth = 0.6 * zoom;
+  for (let c = 0; c < 5; c++) {
+    const cStartX = headX + (Math.random() * 2 - 1) * size * 0.05;
+    const cAngle = -1.2 + c * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(headX + Math.cos(cAngle) * size * 0.02, headY + Math.sin(cAngle) * size * 0.02);
+    for (let s = 0; s < 3; s++) {
+      ctx.lineTo(
+        headX + Math.cos(cAngle + s * 0.3) * size * (0.04 + s * 0.02),
+        headY + Math.sin(cAngle + s * 0.3) * size * (0.04 + s * 0.02),
+      );
+    }
+    ctx.stroke();
+  }
+
+  // Sunken burning eye sockets
+  for (const side of [-1, 1]) {
+    const eyeX = headX + side * size * 0.04;
+    const eyeY = headY - size * 0.01;
+
+    // Deep socket
+    ctx.fillStyle = "#0a0014";
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, size * 0.025, size * 0.02, side * 0.15, 0, TAU);
+    ctx.fill();
+
+    // Burning gold-purple iris
+    setShadowBlur(ctx, 10 * zoom, goldBright);
+    const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.018);
+    eyeGrad.addColorStop(0, `rgba(255, 240, 200, ${goldPulse})`);
+    eyeGrad.addColorStop(0.3, `rgba(251, 191, 36, ${goldPulse * 0.9})`);
+    eyeGrad.addColorStop(0.7, `rgba(180, 80, 255, ${goldPulse * 0.6})`);
+    eyeGrad.addColorStop(1, `rgba(60, 0, 100, ${goldPulse * 0.3})`);
+    ctx.fillStyle = eyeGrad;
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, size * 0.016, 0, TAU);
+    ctx.fill();
+
+    // Vertical slit pupil
+    ctx.fillStyle = `rgba(10, 0, 20, ${goldPulse * 0.8})`;
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, size * 0.003, size * 0.012, 0, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
+  }
+
+  // Jagged fanged maw
+  ctx.fillStyle = "#0a0014";
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.055, size * 0.04, size * 0.02, 0, 0, TAU);
+  ctx.fill();
+
+  // Upper fangs
+  ctx.fillStyle = "#d4c8a0";
+  for (let f = 0; f < 4; f++) {
+    const fx = headX - size * 0.025 + f * size * 0.017;
+    const fH = (f === 1 || f === 2) ? size * 0.025 : size * 0.015;
+    ctx.beginPath();
+    ctx.moveTo(fx - size * 0.004, headY + size * 0.04);
+    ctx.lineTo(fx, headY + size * 0.04 + fH);
+    ctx.lineTo(fx + size * 0.004, headY + size * 0.04);
+    ctx.fill();
+  }
+  // Lower fangs
+  for (let f = 0; f < 3; f++) {
+    const fx = headX - size * 0.018 + f * size * 0.018;
+    ctx.beginPath();
+    ctx.moveTo(fx - size * 0.003, headY + size * 0.07);
+    ctx.lineTo(fx, headY + size * 0.07 - size * 0.012);
+    ctx.lineTo(fx + size * 0.003, headY + size * 0.07);
     ctx.fill();
   }
 
-  // Golden glow rings around head
-  drawPulsingGlowRings(ctx, x, y - size * 0.5 - bodyBob, size * 0.28, time, zoom, {
-    color: "rgba(251, 191, 36, 0.4)",
-    count: 3,
-    speed: 1.0,
-    maxAlpha: 0.35,
+  // Drool/corruption drip from mouth
+  setShadowBlur(ctx, 3 * zoom, "#7c3aed");
+  ctx.fillStyle = `rgba(120, 50, 200, ${0.3 + corruptPulse * 0.2})`;
+  for (let d = 0; d < 2; d++) {
+    const dx = headX + (d - 0.5) * size * 0.03;
+    const dLen = size * 0.02 + Math.sin(time * 3 + d * 2) * size * 0.008;
+    ctx.beginPath();
+    ctx.ellipse(dx, headY + size * 0.075 + dLen * 0.5, size * 0.003, dLen, 0, 0, TAU);
+    ctx.fill();
+  }
+  clearShadow(ctx);
+
+  // === GREAT HELM — ornate golden war-crown helm ===
+  const helmY = headY - size * 0.04;
+
+  // Main helm shell
+  const helmGrad = ctx.createLinearGradient(headX - size * 0.14, helmY - size * 0.15, headX + size * 0.14, helmY + size * 0.08);
+  helmGrad.addColorStop(0, "#1a1030");
+  helmGrad.addColorStop(0.15, "#2a2048");
+  helmGrad.addColorStop(0.4, "#3a2860");
+  helmGrad.addColorStop(0.6, "#2a2048");
+  helmGrad.addColorStop(0.85, "#1a1030");
+  helmGrad.addColorStop(1, "#0e0820");
+  ctx.fillStyle = helmGrad;
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.14, headY + size * 0.04);
+  ctx.quadraticCurveTo(headX - size * 0.16, helmY - size * 0.06, headX - size * 0.12, helmY - size * 0.14);
+  ctx.quadraticCurveTo(headX, helmY - size * 0.2, headX + size * 0.12, helmY - size * 0.14);
+  ctx.quadraticCurveTo(headX + size * 0.16, helmY - size * 0.06, headX + size * 0.14, headY + size * 0.04);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gold trim on helm
+  ctx.strokeStyle = goldBright;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  // Visor slit (where eyes glow through)
+  ctx.fillStyle = "#050010";
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.09, headY - size * 0.01);
+  ctx.lineTo(headX + size * 0.09, headY - size * 0.01);
+  ctx.lineTo(headX + size * 0.07, headY + size * 0.015);
+  ctx.lineTo(headX - size * 0.07, headY + size * 0.015);
+  ctx.closePath();
+  ctx.fill();
+
+  // Nasal guard
+  ctx.fillStyle = goldBright;
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.012, helmY - size * 0.12);
+  ctx.lineTo(headX + size * 0.012, helmY - size * 0.12);
+  ctx.lineTo(headX + size * 0.008, headY + size * 0.04);
+  ctx.lineTo(headX - size * 0.008, headY + size * 0.04);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cheek guard ridges
+  ctx.strokeStyle = goldMid;
+  ctx.lineWidth = 1 * zoom;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(headX + side * size * 0.06, helmY - size * 0.1);
+    ctx.quadraticCurveTo(headX + side * size * 0.12, helmY - size * 0.02, headX + side * size * 0.1, headY + size * 0.04);
+    ctx.stroke();
+  }
+
+  // Ornate gold crown band integrated into helm
+  const crownBandY = helmY - size * 0.08;
+  const cbGrad = ctx.createLinearGradient(headX - size * 0.14, crownBandY, headX + size * 0.14, crownBandY);
+  cbGrad.addColorStop(0, goldDark);
+  cbGrad.addColorStop(0.2, goldBright);
+  cbGrad.addColorStop(0.5, goldPale);
+  cbGrad.addColorStop(0.8, goldBright);
+  cbGrad.addColorStop(1, goldDark);
+  ctx.fillStyle = cbGrad;
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.14, crownBandY);
+  ctx.quadraticCurveTo(headX, crownBandY + size * 0.02, headX + size * 0.14, crownBandY);
+  ctx.lineTo(headX + size * 0.13, crownBandY + size * 0.03);
+  ctx.quadraticCurveTo(headX, crownBandY + size * 0.05, headX - size * 0.13, crownBandY + size * 0.03);
+  ctx.closePath();
+  ctx.fill();
+
+  // Crown points rising from helm
+  for (let p = 0; p < 7; p++) {
+    const px = headX - size * 0.12 + p * size * 0.04;
+    const pointH = (p === 3) ? size * 0.08 : (p === 2 || p === 4) ? size * 0.06 : (p === 1 || p === 5) ? size * 0.04 : size * 0.025;
+    ctx.fillStyle = goldBright;
+    ctx.beginPath();
+    ctx.moveTo(px - size * 0.008, crownBandY);
+    ctx.lineTo(px, crownBandY - pointH);
+    ctx.lineTo(px + size * 0.008, crownBandY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Gems in crown band
+  const helmGems = ["#dc2626", "#059669", "#2563eb", "#7c3aed", "#2563eb", "#059669", "#dc2626"];
+  for (let g = 0; g < 7; g++) {
+    const gx = headX - size * 0.12 + g * size * 0.04;
+    ctx.fillStyle = helmGems[g];
+    setShadowBlur(ctx, 3 * zoom, helmGems[g]);
+    ctx.beginPath();
+    ctx.arc(gx, crownBandY + size * 0.015, size * 0.007, 0, TAU);
+    ctx.fill();
+    clearShadow(ctx);
+  }
+
+  // Swept-back horn decorations
+  for (const side of [-1, 1]) {
+    ctx.save();
+    ctx.translate(headX + side * size * 0.12, helmY - size * 0.06);
+    const hornGrad = ctx.createLinearGradient(0, 0, side * size * 0.12, -size * 0.18);
+    hornGrad.addColorStop(0, goldMid);
+    hornGrad.addColorStop(0.4, goldBright);
+    hornGrad.addColorStop(0.7, goldMid);
+    hornGrad.addColorStop(1, goldDark);
+    ctx.fillStyle = hornGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(side * size * 0.06, -size * 0.06, side * size * 0.12, -size * 0.16);
+    ctx.quadraticCurveTo(side * size * 0.13, -size * 0.18, side * size * 0.14, -size * 0.22);
+    ctx.quadraticCurveTo(side * size * 0.08, -size * 0.1, size * 0.005, size * 0.005);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = goldDark;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Monde (orb) at helm apex
+  const mondeY = crownBandY - size * 0.1;
+  setShadowBlur(ctx, 10 * zoom, goldBright);
+  const mondeGrad = ctx.createRadialGradient(headX, mondeY, 0, headX, mondeY, size * 0.025);
+  mondeGrad.addColorStop(0, goldPale);
+  mondeGrad.addColorStop(0.5, goldBright);
+  mondeGrad.addColorStop(1, goldMid);
+  ctx.fillStyle = mondeGrad;
+  ctx.beginPath();
+  ctx.arc(headX, mondeY, size * 0.025, 0, TAU);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Cross on monde
+  ctx.fillStyle = goldPale;
+  ctx.fillRect(headX - size * 0.003, mondeY - size * 0.04, size * 0.006, size * 0.03);
+  ctx.fillRect(headX - size * 0.012, mondeY - size * 0.035, size * 0.024, size * 0.006);
+
+  // Amethyst in monde
+  ctx.fillStyle = "#7c3aed";
+  ctx.beginPath();
+  ctx.arc(headX, mondeY, size * 0.012, 0, TAU);
+  ctx.fill();
+
+  // === ATTACK EFFECTS ===
+  if (isAttacking) {
+    const shockR = size * 0.3 + attackIntensity * size * 0.5;
+    ctx.strokeStyle = `rgba(251, 191, 36, ${attackIntensity * 0.5})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.1, shockR, shockR * 0.4, 0, 0, TAU);
+    ctx.stroke();
+
+    // Corruption burst from eyes
+    for (const side of [-1, 1]) {
+      setShadowBlur(ctx, 6 * zoom, "#7c3aed");
+      ctx.strokeStyle = `rgba(200, 100, 255, ${attackIntensity * 0.6})`;
+      ctx.lineWidth = 1.5 * zoom;
+      const beamLen = size * 0.15 * attackIntensity;
+      ctx.beginPath();
+      ctx.moveTo(headX + side * size * 0.04, headY - size * 0.01);
+      ctx.lineTo(headX + side * (size * 0.04 + beamLen), headY - size * 0.01 + beamLen * 0.3);
+      ctx.stroke();
+      clearShadow(ctx);
+    }
+  }
+
+  // === AUTHORITY HALO ===
+  drawPulsingGlowRings(ctx, headX, helmY - size * 0.06, size * 0.22, time, zoom, {
+    color: "rgba(251, 191, 36, 0.3)",
+    count: 2,
+    speed: 0.7,
+    maxAlpha: 0.3,
     expansion: 1.4,
     lineWidth: 1.8,
   });
 
-  // Floating golden segments
-  drawShiftingSegments(ctx, x, y - size * 0.6 - bodyBob, size, time, zoom, {
-    color: "#fbbf24",
-    colorAlt: "#f59e0b",
-    count: 5,
-    orbitRadius: 0.32,
-    segmentSize: 0.03,
-    orbitSpeed: 1.0,
-    shape: "circle",
-  });
+  // Floating golden motes
+  for (let m = 0; m < 6; m++) {
+    const mPhase = time * 0.8 + m * TAU / 6;
+    const mR = size * 0.4 + Math.sin(time * 1.5 + m * 1.3) * size * 0.06;
+    const mx = x + Math.cos(mPhase) * mR;
+    const my = y - size * 0.15 + Math.sin(mPhase) * mR * 0.3 - bodyBob;
+    const mAlpha = 0.25 + Math.sin(time * 3 + m * 1.7) * 0.15;
+    ctx.fillStyle = `rgba(251, 191, 36, ${mAlpha})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, size * 0.006, 0, TAU);
+    ctx.fill();
+  }
 }

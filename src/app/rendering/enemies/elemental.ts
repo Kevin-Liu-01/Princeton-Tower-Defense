@@ -4241,49 +4241,30 @@ export function drawBansheeEnemy(
   );
   ctx.stroke();
 
-  // Wide screaming mouth — outer lip and deep throat (structural)
+  // Teeth inside screaming mouth
   const screamCx = x;
   const screamCy = y + floatOffset - size * 0.08;
-  const lipRx = size * (0.13 + mouthOpen * 0.08);
-  const lipRy = size * (0.18 + mouthOpen * 0.1);
-  ctx.strokeStyle = `rgba(15, 23, 42, ${0.55 + mouthOpen * 0.35})`;
-  ctx.lineWidth = 1.75 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screamCx, screamCy, lipRx, lipRy, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.fillStyle = `rgba(0, 4, 12, ${0.88})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    screamCx,
-    screamCy + size * 0.025 * mouthOpen,
-    size * 0.055 * mouthOpen,
-    size * 0.11 * mouthOpen,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
   const toothCount = 6;
+  const mouthRx = size * 0.1 * mouthOpen;
+  const mouthRy = size * 0.15 * mouthOpen;
   ctx.fillStyle = `rgba(241, 245, 249, ${0.5 + mouthOpen * 0.35})`;
   for (let tooth = 0; tooth < toothCount; tooth++) {
     const tx =
       screamCx +
-      (tooth - (toothCount - 1) / 2) * size * 0.048 * Math.max(0.35, mouthOpen);
-    const tw = size * 0.016 * Math.max(0.35, mouthOpen);
+      (tooth - (toothCount - 1) / 2) * mouthRx * 0.35;
+    const tw = size * 0.012 * Math.max(0.35, mouthOpen);
     ctx.beginPath();
-    ctx.moveTo(tx - tw, screamCy - size * 0.065 * mouthOpen);
-    ctx.lineTo(tx + tw, screamCy - size * 0.065 * mouthOpen);
-    ctx.lineTo(tx + tw * 0.65, screamCy - size * 0.025 * mouthOpen);
-    ctx.lineTo(tx - tw * 0.65, screamCy - size * 0.025 * mouthOpen);
+    ctx.moveTo(tx - tw, screamCy - mouthRy * 0.55);
+    ctx.lineTo(tx + tw, screamCy - mouthRy * 0.55);
+    ctx.lineTo(tx + tw * 0.65, screamCy - mouthRy * 0.2);
+    ctx.lineTo(tx - tw * 0.65, screamCy - mouthRy * 0.2);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(tx - tw, screamCy + size * 0.075 * mouthOpen);
-    ctx.lineTo(tx + tw, screamCy + size * 0.075 * mouthOpen);
-    ctx.lineTo(tx + tw * 0.65, screamCy + size * 0.035 * mouthOpen);
-    ctx.lineTo(tx - tw * 0.65, screamCy + size * 0.035 * mouthOpen);
+    ctx.moveTo(tx - tw, screamCy + mouthRy * 0.55);
+    ctx.lineTo(tx + tw, screamCy + mouthRy * 0.55);
+    ctx.lineTo(tx + tw * 0.65, screamCy + mouthRy * 0.2);
+    ctx.lineTo(tx - tw * 0.65, screamCy + mouthRy * 0.2);
     ctx.closePath();
     ctx.fill();
   }
