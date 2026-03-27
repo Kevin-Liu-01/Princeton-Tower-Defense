@@ -1,0 +1,88 @@
+name: List Commits with Vercel Deployments
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  list-deployments:
+    name: List All Commits with Deployments
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: read
+      contents: read
+
+    steps:
+      - name: Generate commit-deployment list
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Fetch all commits from the default branch
+            const commits = await github.paginate(github.rest.repos.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+
+            // Fetch all deployments for this repo
+            const deployments = await github.paginate(github.rest.repos.listDeployments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+
+            // Fetch all deployment statuses in parallel to avoid excessive sequential API calls
+            const deploymentBySha = {};
+            await Promise.all(deployments.map(async (deployment) => {
+              const sha = deployment.sha;
+
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                per_page: 10,
+              });
+
+              const successStatus = statuses.data.find(s => s.state === 'success');
+              if (successStatus && successStatus.environment_url) {
+                if (!deploymentBySha[sha]) {
+                  deploymentBySha[sha] = [];
+                }
+                deploymentBySha[sha].push({
+                  environment: deployment.environment,
+                  url: successStatus.environment_url,
+                  createdAt: deployment.created_at,
+                });
+              }
+            }));
+
+            // Build the summary table
+            let summary = '# Commits with Vercel Deployments\n\n';
+            summary += '| Commit | Message | Author | Date | Deployment |\n';
+            summary += '|--------|---------|--------|------|------------|\n';
+
+            for (const commit of commits) {
+              const sha = commit.sha;
+              const shortSha = sha.substring(0, 7);
+              const message = commit.commit.message.split('\n')[0].replace(/\|/g, '\\|');
+              const author = (commit.commit.author?.name || 'Unknown').replace(/\|/g, '\\|');
+              const date = commit.commit.author?.date
+                ? new Date(commit.commit.author.date).toISOString().split('T')[0]
+                : 'Unknown';
+              const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
+
+              const deps = deploymentBySha[sha] || [];
+              const deploymentLinks = deps.length > 0
+                ? deps.map(d => `[${d.environment}](${d.url})`).join(', ')
+                : '—';
+
+              summary += `| [\`${shortSha}\`](${commitUrl}) | ${message} | ${author} | ${date} | ${deploymentLinks} |\n`;
+            }
+
+            await core.summary
+              .addRaw(summary)
+              .write();
+
+            console.log(`Processed ${commits.length} commits and ${deployments.length} deployments.`);
