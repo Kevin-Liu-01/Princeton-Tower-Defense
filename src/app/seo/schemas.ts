@@ -232,7 +232,7 @@ function getFAQSchema() {
           "@type": "Answer",
           text:
             "Princeton Tower Defense stands out with its Princeton University campus theme. All towers, enemies, and maps reference real " +
-            "campus landmarks and student life. It features dual-lane enemy paths, 7 heroes with active abilities, a spell system with upgrades, " +
+            "campus landmarks and student life. It features dual-lane enemy paths, 9 heroes with active abilities, a spell system with upgrades, " +
             "environmental hazards like lava geysers and quicksand, special objective structures, challenge maps with tower restrictions, " +
             "and a full custom level creator. It's built entirely with React and HTML5 Canvas with isometric rendering and no game engine.",
         },

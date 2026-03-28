@@ -1418,6 +1418,8 @@ export function getHeroColor(type: HeroType): string {
     mathey: "#6366f1",
     rocky: "#78716c",
     scott: "#14b8a6",
+    nassau: "#e67e22",
+    ivy: "#059669",
   };
   return colors[type] ?? "#888888";
 }

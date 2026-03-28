@@ -1,4 +1,5 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { MapTheme } from "../../types";
 import { setShadowBlur, clearShadow } from "../performance";
 import {
   drawPulsingGlowRings,
@@ -17,6 +18,7 @@ import {
   drawGorget,
   drawArmorSkirt,
 } from "./darkFantasyHelpers";
+import { getRegionMaterials, drawRegionBodyAccent, drawRegionWeaponAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
 
@@ -36,6 +38,7 @@ export function drawArcherEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -46,16 +49,29 @@ export function drawArcherEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const crimson = "#6b21a8";
-  const crimsonDark = "#3b0764";
-  const crimsonLight = "#a855f7";
-  const gold = "#d4a017";
-  const goldBright = "#ffd700";
-  const goldDark = "#8b6914";
-  const steel = "#b8c4d0";
-  const steelDark = "#6a7280";
-  const steelBright = "#e4eaf0";
+  let crimson = "#6b21a8";
+  let crimsonDark = "#3b0764";
+  let crimsonLight = "#a855f7";
+  let gold = "#d4a017";
+  let goldBright = "#ffd700";
+  let goldDark = "#8b6914";
+  let steel = "#b8c4d0";
+  let steelDark = "#6a7280";
+  let steelBright = "#e4eaf0";
   const ivory = "#f5f0e8";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    crimson = rm.cloth.base;
+    crimsonDark = rm.cloth.dark;
+    crimsonLight = rm.cloth.light;
+    gold = rm.metal.accent;
+    goldBright = rm.metal.bright;
+    goldDark = rm.metal.dark;
+    steel = rm.metal.base;
+    steelDark = rm.metal.dark;
+    steelBright = rm.metal.bright;
+  }
 
   // ── Grand flowing military cape (behind body) ──
   const capeWave = Math.sin(time * 1.8) * size * 0.03;
@@ -1452,6 +1468,9 @@ export function drawArcherEnemy(
       ctx.stroke();
     }
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
+  drawRegionWeaponAccent(ctx, cx + size * 0.3, y - size * 0.3, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -1470,6 +1489,7 @@ export function drawMageEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -1484,6 +1504,19 @@ export function drawMageEnemy(
   const accentDark = bodyColorDark;
   const alchemyPulse = 0.6 + Math.sin(time * 4) * 0.3;
 
+  let robeBase = "#1a4a3a";
+  let robeDark = "#0e3a2e";
+  let robeMid = "#123828";
+  let robeDarkest = "#082820";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    robeBase = rm.cloth.base;
+    robeDark = rm.cloth.dark;
+    robeMid = rm.cloth.base;
+    robeDarkest = rm.cloth.dark;
+  }
+
   // Flowing alchemist's cape (behind body)
   ctx.save();
   const capeTopY = y - size * 0.34 - bodyBob;
@@ -1495,10 +1528,10 @@ export function drawMageEnemy(
 
   // Main cape body (dark teal/emerald)
   const capeGrad = ctx.createLinearGradient(cx, capeTopY, cx + capeWindA * 0.3, capeBotY);
-  capeGrad.addColorStop(0, "#0e3a2e");
-  capeGrad.addColorStop(0.25, "#1a4a3a");
-  capeGrad.addColorStop(0.6, "#123828");
-  capeGrad.addColorStop(1, "#082820");
+  capeGrad.addColorStop(0, robeDark);
+  capeGrad.addColorStop(0.25, robeBase);
+  capeGrad.addColorStop(0.6, robeMid);
+  capeGrad.addColorStop(1, robeDarkest);
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
   ctx.moveTo(cx - size * 0.13, capeTopY);
@@ -2504,6 +2537,7 @@ export function drawCatapultEnemy(
 
   drawPulsingGlowRings(ctx, x, y - size * 0.1, size * 0.18, time, zoom, { color: "rgba(220, 38, 38, 0.4)", count: 3, speed: 2, maxAlpha: 0.4, expansion: 1.5 });
   drawShiftingSegments(ctx, x, y + size * 0.1, size, time, zoom, { color: "#78716c", colorAlt: "#a8a29e", count: 5, orbitRadius: 0.4, segmentSize: 0.04, orbitSpeed: 1.0, shape: "diamond" });
+
 }
 
 // ============================================================================
@@ -2522,6 +2556,7 @@ export function drawWarlockEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -2532,24 +2567,39 @@ export function drawWarlockEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const charcoal = "#1c1e2a";
-  const charcoalDark = "#0e0f18";
+  let charcoal = "#1c1e2a";
+  let charcoalDark = "#0e0f18";
   const navy = "#141832";
   const pinstripeGlow = `rgba(120, 100, 220, ${0.25 + Math.sin(time * 2.5) * 0.15})`;
-  const vestRed = "#6b1a1a";
-  const vestRedLight = "#8b2a2a";
-  const goldBtn = "#c9a84c";
-  const goldBtnDark = "#8a6f2e";
-  const obsidian = "#0a0a14";
-  const obsidianMid = "#1a1a2e";
-  const obsidianLight = "#2a2a44";
-  const leather = "#2a1f14";
-  const leatherDark = "#1a1208";
+  let vestRed = "#6b1a1a";
+  let vestRedLight = "#8b2a2a";
+  let goldBtn = "#c9a84c";
+  let goldBtnDark = "#8a6f2e";
+  let obsidian = "#0a0a14";
+  let obsidianMid = "#1a1a2e";
+  let obsidianLight = "#2a2a44";
+  let leather = "#2a1f14";
+  let leatherDark = "#1a1208";
   const accent = bodyColor;
   const accentDark = bodyColorDark;
   const voidPulse = 0.5 + Math.sin(time * 3.5) * 0.4;
   const paleSkin = "#c8b8a8";
   const paleSkinDark = "#988878";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    charcoal = rm.cloth.base;
+    charcoalDark = rm.cloth.dark;
+    vestRed = rm.magic.primary;
+    vestRedLight = rm.magic.secondary;
+    goldBtn = rm.metal.accent;
+    goldBtnDark = rm.metal.dark;
+    obsidian = rm.cloth.dark;
+    obsidianMid = rm.cloth.base;
+    obsidianLight = rm.cloth.light;
+    leather = rm.leather.base;
+    leatherDark = rm.leather.dark;
+  }
 
   // Void domain aura — corporate judicial
   const voidGrad = ctx.createRadialGradient(cx, y + size * 0.3, 0, cx, y + size * 0.3, size * 0.5);
@@ -3550,6 +3600,8 @@ export function drawWarlockEnemy(
     ctx.arc(cx, y - size * 0.3, burstR, 0, TAU);
     ctx.stroke();
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -3568,6 +3620,7 @@ export function drawCrossbowmanEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -3578,12 +3631,19 @@ export function drawCrossbowmanEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#a09888";
-  const metalMid = "#706860";
-  const metalDark = "#3a3430";
+  let metalLight = "#a09888";
+  let metalMid = "#706860";
+  let metalDark = "#3a3430";
   const accent = bodyColor;
   const accentDark = bodyColorDark;
   const curseGlow = 0.5 + Math.sin(time * 3) * 0.3;
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+  }
 
   // Red curse domain glow
   const curseGrad = ctx.createRadialGradient(cx, y + size * 0.3, 0, cx, y + size * 0.3, size * 0.4);
@@ -4273,6 +4333,9 @@ export function drawCrossbowmanEnemy(
       ctx.stroke();
     }
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
+  drawRegionWeaponAccent(ctx, cx + size * 0.25, y - size * 0.35, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -4291,6 +4354,7 @@ export function drawHexerEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -4305,6 +4369,19 @@ export function drawHexerEnemy(
   const accentDark = bodyColorDark;
   const bladePulse = 0.5 + Math.sin(time * 3.5) * 0.4;
   const windPhase = time * 1.8;
+
+  let capeCrimson = "#6b1010";
+  let capeCrimsonLight = "#8b1a1a";
+  let capeCrimsonDark = "#5a0808";
+  let capeCrimsonDarkest = "#3a0505";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    capeCrimson = rm.cloth.base;
+    capeCrimsonLight = rm.cloth.light;
+    capeCrimsonDark = rm.cloth.dark;
+    capeCrimsonDarkest = rm.cloth.dark;
+  }
 
   // Cherry blossom petals falling around the dancer
   for (let p = 0; p < 8; p++) {
@@ -4331,10 +4408,10 @@ export function drawHexerEnemy(
   const capeSpread = size * 0.3 + Math.sin(windPhase * 0.8) * size * 0.03;
   const capeLen = size * 0.52;
   const capeGrad = ctx.createLinearGradient(cx, capeTopY, cx, capeTopY + capeLen);
-  capeGrad.addColorStop(0, "#6b1010");
-  capeGrad.addColorStop(0.3, "#8b1a1a");
-  capeGrad.addColorStop(0.6, "#5a0808");
-  capeGrad.addColorStop(1, "#3a0505");
+  capeGrad.addColorStop(0, capeCrimson);
+  capeGrad.addColorStop(0.3, capeCrimsonLight);
+  capeGrad.addColorStop(0.6, capeCrimsonDark);
+  capeGrad.addColorStop(1, capeCrimsonDarkest);
   ctx.fillStyle = capeGrad;
     ctx.beginPath();
   ctx.moveTo(cx - size * 0.1, capeTopY);
@@ -4752,7 +4829,7 @@ export function drawHexerEnemy(
     },
   });
 
-  // Right arm — ribbon glaive (naginata)
+  // Right arm — ribbon glaive (naginata), angled outward
   const glaiveForeLen = 0.15;
   drawPathArm(ctx, cx + size * 0.18, y - size * 0.28 - bodyBob, size, time, zoom, 1, {
     color: "#8b1a1a",
@@ -4761,13 +4838,13 @@ export function drawHexerEnemy(
     upperLen: 0.15,
     foreLen: glaiveForeLen,
     width: 0.042,
-    shoulderAngle: -(0.75 + (isAttacking ? attackIntensity * 0.15 : 0)) + Math.sin(time * 1.5) * 0.03,
-    elbowAngle: -0.15 + (isAttacking ? -attackIntensity * 0.1 : 0),
+    shoulderAngle: 0.45 + (isAttacking ? attackIntensity * 0.15 : 0) + Math.sin(time * 1.5) * 0.03,
+    elbowAngle: 0.2 + (isAttacking ? attackIntensity * 0.1 : 0),
     style: "fleshy",
     onWeapon: (wCtx) => {
       const handY = glaiveForeLen * size;
       wCtx.translate(0, handY * 0.5);
-      wCtx.rotate(0.7);
+      wCtx.rotate(-0.4);
       wCtx.scale(-1, 1);
       const shaftH = size * 0.52;
 
@@ -5232,4 +5309,7 @@ export function drawHexerEnemy(
       ctx.restore();
     }
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
+  drawRegionWeaponAccent(ctx, cx, y - size * 0.35, size, region, time, zoom);
 }

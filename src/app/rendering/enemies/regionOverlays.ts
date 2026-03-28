@@ -72,6 +72,18 @@ const REGION_PALETTES: Record<string, RegionPalette> = {
   },
 };
 
+interface SwayConfig { speed: number; amtX: number; amtY: number }
+
+const CATEGORY_SWAY: Record<EnemyCategory, SwayConfig> = {
+  academic: { speed: 1.0, amtX: 0.003, amtY: 0.002 },
+  ranged:   { speed: 0.8, amtX: 0.003, amtY: 0.002 },
+  flying:   { speed: 0.9, amtX: 0.004, amtY: 0.003 },
+  undead:   { speed: 0.9, amtX: 0.004, amtY: 0.003 },
+  elemental:{ speed: 1.0, amtX: 0.004, amtY: 0.003 },
+  forest:   { speed: 0.95, amtX: 0.0035, amtY: 0.0025 },
+  special:  { speed: 0.8, amtX: 0.003, amtY: 0.002 },
+};
+
 export function drawRegionOverlay(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -89,20 +101,21 @@ export function drawRegionOverlay(
   const category = ENEMY_CATEGORY_MAP[enemyType];
   if (!category) return;
 
-  const sway = getIdleSway(time, 1.0, size * 0.003, size * 0.002);
+  const cfg = CATEGORY_SWAY[category];
+  const bodySway = getIdleSway(time, cfg.speed, size * cfg.amtX, size * cfg.amtY);
 
   switch (region) {
     case "swamp":
-      drawSwampOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
+      drawSwampOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
       break;
     case "desert":
-      drawDesertOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
+      drawDesertOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
       break;
     case "winter":
-      drawWinterOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
+      drawWinterOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
       break;
     case "volcanic":
-      drawVolcanicOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, sway);
+      drawVolcanicOverlay(ctx, x, y, size, category, enemyType, palette, time, zoom, bodySway);
       break;
   }
 }
@@ -179,29 +192,80 @@ function drawSwampHood(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  ctx.fillStyle = "rgba(38, 70, 30, 0.6)";
+  // Outer hood shell — dark mossy fabric
+  ctx.fillStyle = "rgba(30, 55, 22, 0.62)";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y - size * 0.42);
-  ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.6, x, y - size * 0.72);
-  ctx.quadraticCurveTo(x + size * 0.28, y - size * 0.6, x + size * 0.22, y - size * 0.42);
+  ctx.moveTo(x - size * 0.24, y - size * 0.42);
+  ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.58, x - size * 0.12, y - size * 0.72);
+  ctx.quadraticCurveTo(x, y - size * 0.78, x + size * 0.12, y - size * 0.72);
+  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.58, x + size * 0.24, y - size * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  // Vine tendrils hanging from hood
-  ctx.strokeStyle = "rgba(70, 120, 50, 0.5)";
-  ctx.lineWidth = 1.5 * zoom;
-  for (let v = 0; v < 3; v++) {
-    const vx = x - size * 0.12 + v * size * 0.12;
+  // Inner hood lining — lighter damp fabric
+  ctx.fillStyle = "rgba(50, 80, 40, 0.45)";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.18, y - size * 0.44);
+  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.56, x, y - size * 0.66);
+  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.56, x + size * 0.18, y - size * 0.44);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tattered bottom edge — ragged cuts
+  ctx.fillStyle = "rgba(30, 55, 22, 0.5)";
+  for (let i = 0; i < 5; i++) {
+    const tx = x - size * 0.2 + i * size * 0.1;
+    const tLen = size * (0.03 + ((i * 7 + 3) % 5) * 0.008);
     ctx.beginPath();
-    ctx.moveTo(vx, y - size * 0.48);
+    ctx.moveTo(tx - size * 0.02, y - size * 0.42);
+    ctx.lineTo(tx, y - size * 0.42 + tLen);
+    ctx.lineTo(tx + size * 0.02, y - size * 0.42);
+    ctx.fill();
+  }
+
+  // Lichen/moss patches on fabric
+  ctx.fillStyle = "rgba(90, 130, 50, 0.4)";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.1, y - size * 0.58, size * 0.035, size * 0.025, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(70, 110, 45, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.08, y - size * 0.54, size * 0.025, size * 0.02, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rope tie at chin
+  ctx.strokeStyle = "rgba(100, 80, 50, 0.55)";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12, y - size * 0.42);
+  ctx.quadraticCurveTo(x, y - size * 0.36, x + size * 0.12, y - size * 0.42);
+  ctx.stroke();
+
+  // Vine tendrils hanging from hood — animated
+  ctx.strokeStyle = "rgba(65, 115, 45, 0.5)";
+  ctx.lineWidth = 1.2 * zoom;
+  for (let v = 0; v < 4; v++) {
+    const vx = x - size * 0.15 + v * size * 0.1;
+    const drift = Math.sin(time * 2.2 + v * 1.4) * size * 0.03;
+    const vLen = size * (0.12 + Math.sin(time * 1.8 + v * 1.7) * 0.03);
+    ctx.beginPath();
+    ctx.moveTo(vx, y - size * 0.44);
     ctx.quadraticCurveTo(
-      vx + Math.sin(time * 2 + v) * size * 0.04,
-      y - size * 0.38,
-      vx + Math.sin(time * 3 + v) * size * 0.02,
-      y - size * 0.3,
+      vx + drift,
+      y - size * 0.44 + vLen * 0.5,
+      vx + drift * 0.6,
+      y - size * 0.44 + vLen,
     );
     ctx.stroke();
   }
+
+  // Fabric fold line down center
+  ctx.strokeStyle = "rgba(20, 40, 15, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.74);
+  ctx.quadraticCurveTo(x + size * 0.01, y - size * 0.58, x, y - size * 0.44);
+  ctx.stroke();
 }
 
 function drawFungalGrowths(
@@ -319,42 +383,87 @@ function drawDesertHeadWrap(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  ctx.fillStyle = "rgba(215, 185, 125, 0.58)";
+  const windSway = Math.sin(time * 2.8) * size * 0.05;
 
-  // Wrap around head top
+  // Base head wrap — layered keffiyeh
+  ctx.fillStyle = "rgba(215, 190, 135, 0.6)";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y - size * 0.5);
-  ctx.quadraticCurveTo(x, y - size * 0.72, x + size * 0.2, y - size * 0.5);
+  ctx.moveTo(x - size * 0.22, y - size * 0.48);
+  ctx.quadraticCurveTo(x - size * 0.26, y - size * 0.66, x, y - size * 0.74);
+  ctx.quadraticCurveTo(x + size * 0.26, y - size * 0.66, x + size * 0.22, y - size * 0.48);
   ctx.lineTo(x + size * 0.18, y - size * 0.42);
-  ctx.quadraticCurveTo(x, y - size * 0.62, x - size * 0.18, y - size * 0.42);
+  ctx.quadraticCurveTo(x, y - size * 0.64, x - size * 0.18, y - size * 0.42);
   ctx.closePath();
   ctx.fill();
+
+  // Second wrap layer — slightly darker fold
+  ctx.fillStyle = "rgba(195, 170, 115, 0.45)";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.16, y - size * 0.5);
+  ctx.quadraticCurveTo(x - size * 0.2, y - size * 0.6, x, y - size * 0.68);
+  ctx.quadraticCurveTo(x + size * 0.18, y - size * 0.58, x + size * 0.14, y - size * 0.48);
+  ctx.closePath();
+  ctx.fill();
+
+  // Agal (rope ring holding wrap in place)
+  ctx.strokeStyle = "rgba(80, 60, 30, 0.55)";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.6, size * 0.14, size * 0.04, 0, 0, Math.PI * 2);
+  ctx.stroke();
 
   // Trailing tail cloth blown by wind
-  const windSway = Math.sin(time * 3) * size * 0.06;
-  ctx.fillStyle = "rgba(210, 185, 130, 0.5)";
+  ctx.fillStyle = "rgba(205, 180, 120, 0.5)";
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.18, y - size * 0.48);
+  ctx.moveTo(x + size * 0.18, y - size * 0.5);
   ctx.quadraticCurveTo(
-    x + size * 0.35 + windSway, y - size * 0.3,
-    x + size * 0.3 + windSway * 1.5, y - size * 0.1,
+    x + size * 0.32 + windSway * 0.6, y - size * 0.35,
+    x + size * 0.28 + windSway, y - size * 0.15,
   );
+  ctx.lineTo(x + size * 0.24 + windSway * 0.8, y - size * 0.12);
   ctx.quadraticCurveTo(
-    x + size * 0.28 + windSway, y - size * 0.25,
-    x + size * 0.15, y - size * 0.42,
+    x + size * 0.26 + windSway * 0.4, y - size * 0.28,
+    x + size * 0.14, y - size * 0.44,
   );
   ctx.closePath();
   ctx.fill();
 
-  // Woven pattern stripes
-  ctx.strokeStyle = "rgba(160, 120, 60, 0.4)";
-  ctx.lineWidth = 1 * zoom;
+  // Tail cloth edge — lighter sun-bleached strip
+  ctx.strokeStyle = "rgba(230, 210, 160, 0.4)";
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.15, y - size * 0.55);
-  ctx.lineTo(x + size * 0.15, y - size * 0.55);
-  ctx.moveTo(x - size * 0.12, y - size * 0.52);
-  ctx.lineTo(x + size * 0.12, y - size * 0.52);
+  ctx.moveTo(x + size * 0.28 + windSway, y - size * 0.15);
+  ctx.lineTo(x + size * 0.24 + windSway * 0.8, y - size * 0.12);
   ctx.stroke();
+
+  // Woven pattern stripes
+  ctx.strokeStyle = "rgba(150, 110, 50, 0.35)";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let i = 0; i < 3; i++) {
+    const sy = y - size * (0.57 - i * 0.03);
+    const w = size * (0.13 - i * 0.015);
+    ctx.beginPath();
+    ctx.moveTo(x - w, sy);
+    ctx.lineTo(x + w, sy);
+    ctx.stroke();
+  }
+
+  // Face veil — semi-transparent drape below eyes
+  ctx.fillStyle = "rgba(200, 175, 120, 0.3)";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.14, y - size * 0.46);
+  ctx.lineTo(x + size * 0.14, y - size * 0.46);
+  ctx.lineTo(x + size * 0.12, y - size * 0.36);
+  ctx.quadraticCurveTo(x, y - size * 0.33, x - size * 0.12, y - size * 0.36);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small brass clasp at temple
+  const glint = 0.4 + Math.sin(time * 4.5) * 0.25;
+  ctx.fillStyle = `rgba(200, 160, 50, ${glint})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.17, y - size * 0.52, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawDesertScarf(
@@ -498,28 +607,80 @@ function drawFurLinedHood(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  ctx.fillStyle = "rgba(70, 90, 110, 0.55)";
+  // Outer hood — heavy winter wool
+  ctx.fillStyle = "rgba(60, 78, 100, 0.58)";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.24, y - size * 0.44);
-  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.62, x, y - size * 0.7);
-  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.62, x + size * 0.24, y - size * 0.44);
+  ctx.moveTo(x - size * 0.26, y - size * 0.42);
+  ctx.quadraticCurveTo(x - size * 0.34, y - size * 0.58, x - size * 0.14, y - size * 0.72);
+  ctx.quadraticCurveTo(x, y - size * 0.78, x + size * 0.14, y - size * 0.72);
+  ctx.quadraticCurveTo(x + size * 0.34, y - size * 0.58, x + size * 0.26, y - size * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  // Fur trim along hood edge
-  ctx.fillStyle = "rgba(220, 210, 200, 0.55)";
-  for (let i = 0; i < 10; i++) {
-    const angle = Math.PI * 0.15 + i * Math.PI * 0.07;
-    const furX = x + Math.cos(angle + Math.PI) * size * 0.27;
-    const furY = y - size * 0.44 + Math.sin(angle + Math.PI) * size * 0.22;
-    ctx.beginPath();
-    ctx.ellipse(
-      furX, furY,
-      size * 0.025, size * 0.015,
-      angle, 0, Math.PI * 2,
-    );
-    ctx.fill();
+  // Inner hood layer — warmer tone
+  ctx.fillStyle = "rgba(80, 70, 60, 0.4)";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.19, y - size * 0.44);
+  ctx.quadraticCurveTo(x - size * 0.24, y - size * 0.56, x, y - size * 0.66);
+  ctx.quadraticCurveTo(x + size * 0.24, y - size * 0.56, x + size * 0.19, y - size * 0.44);
+  ctx.closePath();
+  ctx.fill();
+
+  // Center fold crease
+  ctx.strokeStyle = "rgba(40, 55, 75, 0.35)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.75);
+  ctx.quadraticCurveTo(x - size * 0.005, y - size * 0.58, x, y - size * 0.44);
+  ctx.stroke();
+
+  // Thick fur trim lining the face opening — layered tufts
+  const furBaseAlpha = 0.55;
+  for (let layer = 0; layer < 2; layer++) {
+    const r = size * (0.27 - layer * 0.03);
+    const count = 12 - layer * 2;
+    const lightness = layer === 0 ? 210 : 235;
+    ctx.fillStyle = `rgba(${lightness}, ${lightness - 10}, ${lightness - 20}, ${furBaseAlpha - layer * 0.1})`;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.PI * 0.12 + i * (Math.PI * 0.76 / (count - 1));
+      const furX = x + Math.cos(angle + Math.PI) * r;
+      const furY = y - size * 0.44 + Math.sin(angle + Math.PI) * (r * 0.82);
+      const tuftSize = size * (0.022 + ((i * 3 + layer * 5) % 7) * 0.002);
+      ctx.beginPath();
+      ctx.ellipse(furX, furY, tuftSize, tuftSize * 0.6, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
+
+  // Clasp/toggle at throat
+  ctx.fillStyle = "rgba(140, 130, 110, 0.6)";
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.4, size * 0.015, size * 0.012, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stitching along hood seams
+  ctx.strokeStyle = "rgba(100, 90, 75, 0.3)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.setLineDash([2 * zoom, 3 * zoom]);
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.24, y - size * 0.44);
+  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.56, x - size * 0.12, y - size * 0.7);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.24, y - size * 0.44);
+  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.56, x + size * 0.12, y - size * 0.7);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Frost gathering on top edge
+  const frostAlpha = 0.3 + Math.sin(time * 2) * 0.1;
+  ctx.fillStyle = `rgba(220, 235, 255, ${frostAlpha})`;
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.06, y - size * 0.72, size * 0.04, size * 0.01, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.08, y - size * 0.7, size * 0.035, size * 0.008, 0.3, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawFurCollar(
@@ -675,33 +836,96 @@ function drawCharredCowl(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  ctx.fillStyle = "rgba(50, 25, 18, 0.55)";
+  // Outer cowl — charred heavy fabric
+  ctx.fillStyle = "rgba(45, 22, 15, 0.6)";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y - size * 0.44);
-  ctx.quadraticCurveTo(x - size * 0.26, y - size * 0.6, x, y - size * 0.68);
-  ctx.quadraticCurveTo(x + size * 0.26, y - size * 0.6, x + size * 0.22, y - size * 0.44);
+  ctx.moveTo(x - size * 0.24, y - size * 0.42);
+  ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.56, x - size * 0.12, y - size * 0.7);
+  ctx.quadraticCurveTo(x, y - size * 0.76, x + size * 0.12, y - size * 0.7);
+  ctx.quadraticCurveTo(x + size * 0.3, y - size * 0.56, x + size * 0.24, y - size * 0.42);
   ctx.closePath();
   ctx.fill();
 
-  // Glowing ember edges
-  const emberAlpha = 0.4 + Math.sin(time * 5) * 0.2;
-  ctx.strokeStyle = `rgba(255, 100, 30, ${emberAlpha})`;
-  ctx.lineWidth = 1.5 * zoom;
+  // Inner cowl layer — ashen gray
+  ctx.fillStyle = "rgba(70, 55, 48, 0.4)";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y - size * 0.44);
-  ctx.quadraticCurveTo(x - size * 0.24, y - size * 0.58, x, y - size * 0.66);
-  ctx.quadraticCurveTo(x + size * 0.24, y - size * 0.58, x + size * 0.2, y - size * 0.44);
-  ctx.stroke();
+  ctx.moveTo(x - size * 0.18, y - size * 0.44);
+  ctx.quadraticCurveTo(x - size * 0.22, y - size * 0.54, x, y - size * 0.64);
+  ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.54, x + size * 0.18, y - size * 0.44);
+  ctx.closePath();
+  ctx.fill();
 
-  // Burn holes with orange glow
-  for (let i = 0; i < 2; i++) {
-    const hx = x - size * 0.08 + i * size * 0.16;
-    const hy = y - size * 0.52;
-    ctx.fillStyle = `rgba(200, 80, 20, ${0.3 + Math.sin(time * 4 + i * 2) * 0.15})`;
+  // Scorched/cracked edges — irregular tattered bottom
+  ctx.fillStyle = "rgba(35, 18, 10, 0.5)";
+  for (let i = 0; i < 6; i++) {
+    const tx = x - size * 0.22 + i * size * 0.088;
+    const tLen = size * (0.02 + ((i * 5 + 2) % 4) * 0.007);
     ctx.beginPath();
-    ctx.ellipse(hx, hy, size * 0.02, size * 0.015, 0, 0, Math.PI * 2);
+    ctx.moveTo(tx - size * 0.015, y - size * 0.42);
+    ctx.lineTo(tx + size * 0.003, y - size * 0.42 + tLen);
+    ctx.lineTo(tx + size * 0.018, y - size * 0.42);
     ctx.fill();
   }
+
+  // Glowing ember edges — pulsing
+  const emberPulse = 0.35 + Math.sin(time * 4.5) * 0.2;
+  ctx.strokeStyle = `rgba(255, 95, 25, ${emberPulse})`;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y - size * 0.43);
+  ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.55, x - size * 0.1, y - size * 0.68);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.22, y - size * 0.43);
+  ctx.quadraticCurveTo(x + size * 0.28, y - size * 0.55, x + size * 0.1, y - size * 0.68);
+  ctx.stroke();
+
+  // Burn holes with inner glow
+  const holePositions = [
+    { hx: -0.1, hy: -0.56, rx: 0.022, ry: 0.016 },
+    { hx: 0.08, hy: -0.52, rx: 0.018, ry: 0.014 },
+    { hx: -0.02, hy: -0.6, rx: 0.015, ry: 0.012 },
+  ];
+  for (let i = 0; i < holePositions.length; i++) {
+    const hp = holePositions[i];
+    const hGlow = 0.25 + Math.sin(time * 3.5 + i * 2.1) * 0.15;
+    // Dark burnt ring
+    ctx.fillStyle = `rgba(25, 10, 5, 0.5)`;
+    ctx.beginPath();
+    ctx.ellipse(x + size * hp.hx, y + size * hp.hy, size * hp.rx, size * hp.ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner ember glow
+    ctx.fillStyle = `rgba(220, 90, 20, ${hGlow})`;
+    ctx.beginPath();
+    ctx.ellipse(x + size * hp.hx, y + size * hp.hy, size * hp.rx * 0.6, size * hp.ry * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Ash deposits on fabric
+  ctx.fillStyle = "rgba(90, 80, 75, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.05, y - size * 0.62, size * 0.04, size * 0.015, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.12, y - size * 0.5, size * 0.03, size * 0.012, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Heat shimmer lines near top
+  const shimmerAlpha = 0.15 + Math.sin(time * 6) * 0.08;
+  ctx.strokeStyle = `rgba(255, 150, 60, ${shimmerAlpha})`;
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y - size * 0.72);
+  ctx.quadraticCurveTo(x - size * 0.02, y - size * 0.76, x + size * 0.04, y - size * 0.73);
+  ctx.stroke();
+
+  // Center fold scar
+  ctx.strokeStyle = "rgba(30, 15, 8, 0.35)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.73);
+  ctx.quadraticCurveTo(x + size * 0.008, y - size * 0.58, x, y - size * 0.44);
+  ctx.stroke();
 }
 
 function drawAshCoating(

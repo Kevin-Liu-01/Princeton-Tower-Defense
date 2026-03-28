@@ -6,7 +6,7 @@
 
 A full-featured tower defense game built entirely in the browser with React, Canvas 2D, and Next.js.
 
-Defend Princeton-inspired battlefields across 5 hand-crafted biome regions with branching tower upgrades, 7 playable heroes, tactical spells, and dual-lane pressure maps that actually require you to think.
+Defend Princeton-inspired battlefields across 5 hand-crafted biome regions with branching tower upgrades, 9 playable heroes, tactical spells, and dual-lane pressure maps that actually require you to think.
 
 **[Play Now](https://princetontd.vercel.app/)** | **[Report Bug](https://github.com/Kevin-Liu-01/Princeton-Tower-Defense/issues)** | **[Portfolio](https://www.kevin-liu.tech/)**
 
@@ -219,7 +219,7 @@ Each tower has a distinct role and two final upgrade paths that change its behav
 | **Dinky Station** | Troop summons | Centaur Archers / Heavy Cavalry |
 | **Palmer Mortar** | Siege AoE | Missile Battery / Ember Foundry |
 
-### 7 Playable Heroes
+### 9 Playable Heroes
 
 | Hero | Style | Ability |
 | :--- | :--- | :--- |

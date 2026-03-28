@@ -1565,12 +1565,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             return null;
           }
 
+          const segIdx = Math.min(nextPathIndex, path.length - 2);
+          const segStart = path[segIdx];
+          const segEnd = path[segIdx + 1] || segStart;
+
           return {
             ...enemy,
             pathIndex: nextPathIndex,
             progress: Math.max(
               0,
               Math.min(0.999, segmentDistance / currentSegmentLength)
+            ),
+            facingRight: getFacingRightFromDelta(
+              segEnd.x - segStart.x,
+              segEnd.y - segStart.y,
+              enemy.facingRight,
             ),
           };
         }
@@ -1951,14 +1960,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
         const enemyPosForCombat = getEnemyPosCached(enemy);
         // Check for nearby hero combat
-        const nearbyHero =
-          hero &&
-            !hero.dead &&
-            distance(enemyPosForCombat, hero.pos) <
-            60 &&
-            !ENEMY_DATA[enemy.type].flying
-            ? hero
-            : null;
+        // Flying enemies can only melee with a flying hero (nassau)
+        const enemyIsFlying = ENEMY_DATA[enemy.type].flying;
+        const heroCanMelee = hero && !hero.dead && distance(enemyPosForCombat, hero.pos) < 60;
+        const flyingMeleeAllowed = !enemyIsFlying || (HERO_DATA[hero?.type ?? "tiger"].isFlying ?? false);
+        const nearbyHero = heroCanMelee && flyingMeleeAllowed ? hero : null;
         if (nearbyHero) {
           // Scale enemy attack interval with game speed - skip when paused
           const effectiveHeroAttackInterval2 = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
@@ -2518,10 +2524,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         ? HERO_RANGED_SIGHT_RANGE
         : HERO_SIGHT_RANGE;
 
+      const heroIsFlying = HERO_DATA[prev.type].isFlying ?? false;
+      const heroTargetPredicate = heroIsFlying
+        ? undefined
+        : (enemy: Enemy) => !ENEMY_DATA[enemy.type].flying;
+
       let closestEnemy = getClosestEnemy(
         prev.pos,
         sightRange,
-        (enemy) => !ENEMY_DATA[enemy.type].flying
+        heroTargetPredicate,
       );
       let closestDist = closestEnemy
         ? distance(prev.pos, getEnemyPosCached(closestEnemy))
@@ -2536,7 +2547,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         const alertResult = findAllyAlertTarget(
           prev.pos, troopAllies, enemies, getEnemyPosCached,
-          sightRange + ALLY_ALERT_RANGE, (e) => !ENEMY_DATA[e.type].flying,
+          sightRange + ALLY_ALERT_RANGE, heroTargetPredicate,
         );
         if (alertResult) {
           closestEnemy = alertResult.enemy;
@@ -4494,9 +4505,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const rotation = Math.atan2(dy, dx);
 
         // Determine attack type based on hero
-        const isAoEHero = hero.type === "mathey" || hero.type === "scott";
+        const isAoEHero = hero.type === "mathey" || hero.type === "scott" || hero.type === "ivy";
         const isMultiTargetHero = hero.type === "tenor";
-        const aoeDamageRadius = hero.type === "mathey" ? HERO_COMBAT_STATS.matheyAoeRadius : hero.type === "scott" ? HERO_COMBAT_STATS.scottAoeRadius : 0;
+        const isProjectileAoEHero = hero.type === "nassau";
+        const aoeDamageRadius = hero.type === "mathey" ? HERO_COMBAT_STATS.matheyAoeRadius : hero.type === "scott" ? HERO_COMBAT_STATS.scottAoeRadius : hero.type === "ivy" ? HERO_COMBAT_STATS.ivyAoeRadius : 0;
         const maxTargets = hero.type === "tenor" ? 3 : 1;
 
         // Get targets for multi-target heroes (Tenor hits up to 3)
@@ -4504,6 +4516,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           ? validEnemies.slice(0, maxTargets)
           : [target];
 
+        // Nassau fireball: damage is delayed to projectile impact (skip instant damage)
+        if (!isProjectileAoEHero) {
         // Apply damage to all targets
         setEnemies((prev) => {
           let updatedEnemies: Array<Enemy | null> = [...prev];
@@ -4555,6 +4569,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
           return updatedEnemies.filter(isDefined);
         });
+        } // end !isProjectileAoEHero
 
         // Create hero-specific attack effects
         const heroEffectType: EffectType = (() => {
@@ -4564,24 +4579,28 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             case "scott": return "scott_quill";
             case "tenor": return "sonic_blast";
             case "rocky": return "rock_impact";
+            case "nassau": return "phoenix_inferno";
+            case "ivy": return "vine_lash";
             default: return "impact_hit";
           }
         })();
 
-        // Add attack visual effect
-        setEffects((ef) => [
-          ...ef,
-          {
-            id: generateId("eff"),
-            pos: isAoEHero ? targetPos : { x: (hero.pos.x + targetPos.x) / 2, y: (hero.pos.y + targetPos.y) / 2 },
-            type: heroEffectType,
-            progress: 0,
-            size: isAoEHero ? aoeDamageRadius : 50,
-            slashAngle: rotation,
-            sourceId: hero.id,
-            attackerType: "hero",
-          },
-        ]);
+        // Add attack visual effect (skip for nassau — explosion comes from projectile impact)
+        if (!isProjectileAoEHero) {
+          setEffects((ef) => [
+            ...ef,
+            {
+              id: generateId("eff"),
+              pos: isAoEHero ? targetPos : { x: (hero.pos.x + targetPos.x) / 2, y: (hero.pos.y + targetPos.y) / 2 },
+              type: heroEffectType,
+              progress: 0,
+              size: isAoEHero ? aoeDamageRadius : 50,
+              slashAngle: rotation,
+              sourceId: hero.id,
+              attackerType: "hero",
+            },
+          ]);
+        }
 
         // For multi-target Tenor, add effects to each target
         if (isMultiTargetHero && attackTargets.length > 1) {
@@ -4622,8 +4641,50 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             : null
         );
 
-        // Create projectile for ranged heroes
-        if (heroData.isRanged || heroData.range > 80) {
+        // Nassau: slow arcing fireball that explodes on impact
+        if (isProjectileAoEHero) {
+          setProjectiles((prev) => [
+            ...prev,
+            {
+              id: generateId("proj"),
+              from: hero.pos,
+              to: targetAimPos,
+              progress: 0,
+              type: "phoenixFlame",
+              rotation,
+              arcHeight: 55,
+              speed: 0.4,
+              isAoE: true,
+              aoeRadius: HERO_COMBAT_STATS.nassauFireballAoeRadius,
+              damage: heroData.damage,
+              targetType: "enemy",
+              color: "#e67e22",
+              trailColor: "#ff6600",
+              scale: 1.4,
+            },
+          ]);
+        }
+
+        // Ivy: fast vine tentacles that snap out to strike
+        if (hero.type === "ivy") {
+          setProjectiles((prev) => [
+            ...prev,
+            {
+              id: generateId("proj"),
+              from: hero.pos,
+              to: targetAimPos,
+              progress: 0,
+              type: "vineBarb",
+              rotation,
+              speed: 2.5,
+              color: "#059669",
+              trailColor: "#34d399",
+            },
+          ]);
+        }
+
+        // Create projectile for other ranged heroes
+        if (!isProjectileAoEHero && hero.type !== "ivy" && (heroData.isRanged || heroData.range > 80)) {
           const projType = (() => {
             switch (hero.type) {
               case "tenor": return "sonicWave";
@@ -4633,11 +4694,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             }
           })();
 
-          // Hero-specific projectile colors
           const projColor = (() => {
             switch (hero.type) {
-              case "scott": return "#c9a227"; // Golden for F. Scott
-              case "tenor": return "#a855f7"; // Purple for Tenor
+              case "scott": return "#c9a227";
+              case "tenor": return "#a855f7";
               default: return undefined;
             }
           })();
@@ -4978,25 +5038,29 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           });
         }
 
-        // Mortar/tower AoE projectiles targeting enemies - collect for batch processing
+        // AoE projectiles targeting enemies (mortars, hero fireballs) - batch processing
         if (proj.targetType === "enemy" && proj.isAoE && proj.aoeRadius && proj.damage) {
+          const isPhoenixFireball = proj.type === "phoenixFlame";
+          const impactEffectType: EffectType = isPhoenixFireball
+            ? "fire_nova"
+            : proj.type === "ember" ? "ember_impact" : "mortar_impact";
           queuedImpactEffects.push({
             id: generateId("eff"),
             pos: proj.to,
-            type: proj.type === "ember" ? "ember_impact" : "mortar_impact",
+            type: impactEffectType,
             progress: 0,
             size: proj.aoeRadius,
-            duration: proj.type === "ember" ? 900 : 800,
+            duration: isPhoenixFireball ? 700 : proj.type === "ember" ? 900 : 800,
           });
           mortarAoEEvents.push({
             center: proj.to,
             radius: proj.aoeRadius,
             damage: proj.damage,
-            isBurning: proj.type === "ember",
+            isBurning: proj.type === "ember" || isPhoenixFireball,
           });
           queuedImpactParticles.push({
             pos: proj.to,
-            type: proj.type === "ember" ? "fire" : "explosion",
+            type: isPhoenixFireball ? "spark" : proj.type === "ember" ? "fire" : "explosion",
           });
         }
       }

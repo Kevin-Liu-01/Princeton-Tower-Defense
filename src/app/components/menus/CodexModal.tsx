@@ -46,6 +46,8 @@ import {
   Bug,
   TreePine,
   Compass,
+  Bird,
+  Leaf,
 } from "lucide-react";
 import type {
   HeroType,
@@ -189,6 +191,8 @@ const HERO_ROLE_ICONS: Record<HeroType, (size: number) => React.ReactNode> = {
   scott: (s) => <TrendingUp size={s} />,
   captain: (s) => <Users size={s} />,
   engineer: (s) => <CircleDot size={s} />,
+  nassau: (s) => <Bird size={s} />,
+  ivy: (s) => <Leaf size={s} />,
 };
 
 // Category icons (JSX, must live locally)
@@ -2333,6 +2337,34 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     strategy: "Place turrets strategically to cover weak points or extend your defensive line.",
                     synergies: ["Covers areas without towers", "Good for emergency defense"],
                   },
+                  nassau: {
+                    role: "Sky Guardian",
+                    roleIcon: <Bird size={16} />,
+                    roleColor: "orange",
+                    strengths: ["Can engage flying enemies", "High mobility", "AoE fireball explosions"],
+                    weaknesses: ["Slow projectile travel time", "Moderate HP pool", "Delayed damage"],
+                    abilityDetails: [
+                      "Blazing dive deals 150 fire damage in 200 range",
+                      "Sets all hit enemies ablaze with 25 DPS burn for 4s",
+                      "Hero is invulnerable during the 1.5s dive animation",
+                    ],
+                    strategy: "The only hero that can chase and fight flying enemies. Each fireball arcs through the air and explodes on impact, dealing splash damage. Best against clustered enemies.",
+                    synergies: ["Essential against flying waves", "Combos with slow towers for clustered hits"],
+                  },
+                  ivy: {
+                    role: "Nature Controller",
+                    roleIcon: <Leaf size={16} />,
+                    roleColor: "emerald",
+                    strengths: ["Large AoE root", "High survivability", "Excellent crowd control"],
+                    weaknesses: ["Low personal DPS", "Slow movement", "Melee range attacks"],
+                    abilityDetails: [
+                      "Erupts vines in 180 range, dealing 100 damage to all enemies",
+                      "Roots all affected enemies in place for 4 seconds",
+                      "Applies 70% slow effect after root ends",
+                    ],
+                    strategy: "Wade into enemy formations and use Vine Storm to root everything in place. Your towers will shred the immobilized enemies.",
+                    synergies: ["Devastating with AoE towers", "Pairs with high DPS heroes"],
+                  },
                 };
                 const info = heroInfo[selectedHeroDetail] || heroInfo.tiger;
 
@@ -2636,7 +2668,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
               return (
                 <div className="space-y-6 relative">
                   {/* Category Jump Nav — dropdown from top-right button */}
-                  <div className="sticky top-0 z-30 flex justify-end pointer-events-none mb-0">
+                  <div className="absolute top-0 right-0 z-30 pointer-events-none">
                     <div className="pointer-events-auto relative">
                       <button
                         onClick={() => setCategoryNavOpen(prev => !prev)}
@@ -2872,13 +2904,16 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                     const hasVariants = hasRegionalVariants(type);
                                     const spriteSize = isRegionBoss ? 80 : 66;
                                     const frameSize = isRegionBoss ? 96 : 80;
-                                    const regionThemeColors: Record<MapTheme, { bg: string; border: string; text: string; label: string }> = {
-                                      grassland: { bg: "bg-green-950/50", border: "border-green-700/40", text: "text-green-400", label: "G" },
-                                      swamp: { bg: "bg-lime-950/50", border: "border-lime-700/40", text: "text-lime-400", label: "S" },
-                                      desert: { bg: "bg-yellow-950/50", border: "border-yellow-700/40", text: "text-yellow-400", label: "D" },
-                                      winter: { bg: "bg-sky-950/50", border: "border-sky-700/40", text: "text-sky-400", label: "W" },
-                                      volcanic: { bg: "bg-orange-950/50", border: "border-orange-700/40", text: "text-orange-400", label: "V" },
+                                    const variantCycle: (MapTheme | null)[] = [null, ...variantThemes];
+                                    const regionVisuals: Record<MapTheme | "default", { icon: React.ReactNode; bg: string; border: string; text: string; label: string }> = {
+                                      default: { icon: <TreePine size={11} />, bg: "rgba(22,101,52,0.45)", border: "rgba(34,197,94,0.4)", text: "text-green-400", label: "Grassland" },
+                                      grassland: { icon: <TreePine size={11} />, bg: "rgba(22,101,52,0.45)", border: "rgba(34,197,94,0.4)", text: "text-green-400", label: "Grassland" },
+                                      swamp: { icon: <Droplets size={11} />, bg: "rgba(54,83,20,0.45)", border: "rgba(132,204,22,0.4)", text: "text-lime-400", label: "Swamp" },
+                                      desert: { icon: <Sun size={11} />, bg: "rgba(113,63,18,0.45)", border: "rgba(234,179,8,0.4)", text: "text-yellow-400", label: "Desert" },
+                                      winter: { icon: <Snowflake size={11} />, bg: "rgba(12,74,110,0.45)", border: "rgba(56,189,248,0.4)", text: "text-sky-400", label: "Winter" },
+                                      volcanic: { icon: <Flame size={11} />, bg: "rgba(124,45,18,0.45)", border: "rgba(249,115,22,0.4)", text: "text-orange-400", label: "Volcanic" },
                                     };
+                                    const currentVisual = regionVisuals[activeRegion ?? "default"];
                                     return (
                                       <div className="flex items-start gap-4 mb-3">
                                         <div className="relative flex-shrink-0">
@@ -2886,39 +2921,30 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                                             <EnemySprite type={type} size={spriteSize} region={activeRegion ?? undefined} animated={!!activeRegion} />
                                           </FramedCodexSprite>
                                           {hasVariants && (
-                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                                              {variantThemes.map(theme => {
-                                                const isActive = activeRegion === theme;
-                                                const tc = regionThemeColors[theme];
-                                                return (
-                                                  <button
-                                                    key={theme}
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      setEnemyRegionPreview(prev => ({
-                                                        ...prev,
-                                                        [type]: prev[type] === theme ? null : theme,
-                                                      }));
-                                                    }}
-                                                    className={`w-4 h-4 rounded-full text-[7px] font-bold flex items-center justify-center transition-all border ${tc.bg} ${tc.text} ${isActive ? `${tc.border} ring-1 ring-white/30 scale-110` : "border-stone-700/40 opacity-60 hover:opacity-100"}`}
-                                                    title={getThemeLabel(theme)}
-                                                  >
-                                                    {tc.label}
-                                                  </button>
-                                                );
-                                              })}
-                                            </div>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const curIdx = variantCycle.indexOf(activeRegion);
+                                                const nextIdx = (curIdx + 1) % variantCycle.length;
+                                                setEnemyRegionPreview(prev => ({ ...prev, [type]: variantCycle[nextIdx] }));
+                                              }}
+                                              className="absolute -bottom-1.5 -right-1.5 flex items-center justify-center w-[22px] h-[22px] rounded-md transition-all hover:scale-110 active:scale-95"
+                                              style={{
+                                                background: currentVisual.bg,
+                                                border: `1.5px solid ${currentVisual.border}`,
+                                                color: activeRegion ? "white" : "rgba(134,239,172,0.8)",
+                                                boxShadow: activeRegion ? `0 0 6px ${currentVisual.border}` : "none",
+                                              }}
+                                              title={`${currentVisual.label} — click to cycle`}
+                                            >
+                                              {currentVisual.icon}
+                                            </button>
                                           )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                           <h3 className={`font-bold truncate ${isRegionBoss ? "text-xl text-red-300" : "text-lg text-red-200"}`}>
                                             {enemy.name}
                                           </h3>
-                                          {activeRegion && (
-                                            <span className={`text-[9px] font-semibold ${regionThemeColors[activeRegion].text}`}>
-                                              {getThemeLabel(activeRegion)} Variant
-                                            </span>
-                                          )}
                                           <p className="text-xs text-stone-400 line-clamp-2 mt-1 leading-relaxed">
                                             {enemy.desc}
                                           </p>

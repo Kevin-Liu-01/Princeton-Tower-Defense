@@ -19,7 +19,6 @@ import {
 } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
-import { drawRegionOverlay } from "./regionOverlays";
 import { getPerformanceSettings } from "../performance";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
 import { getRegionalPalette } from "./regionColors";
@@ -66,12 +65,12 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   fallen_paladin: 1.9,
   black_guard: 1.85,
   lich: 1.85,
-  wraith: 1.8,
+  wraith: 2.0,
   bone_mage: 1.8,
   dark_priest: 1.85,
   revenant: 1.9,
   abomination: 2.15,
-  hellhound: 1.85,
+  hellhound: 2.5,
   doom_herald: 2.1,
   // fantasy.ts — 1.15×–2.2×
   dire_bear: 1.5,
@@ -88,12 +87,12 @@ const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   djinn: 1.35,
   manticore: 1.4,
   frost_troll: 1.4,
-  dire_wolf: 1.45,
+  dire_wolf: 2.1,
   wendigo: 1.4,
   mammoth: 2.2,
   lava_golem: 1.5,
-  volcanic_drake: 1.4,
-  salamander: 1.2,
+  volcanic_drake: 1.9,
+  salamander: 1.7,
   // desert.ts — 1.35×–1.8×
   nomad: 1.35,
   scorpion: 1.5,
@@ -1564,72 +1563,37 @@ export function drawEnemySprite(
   switch (type) {
     case "frosh":
       drawFreshmanEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "sophomore":
       drawSophomoreEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "junior":
       drawJuniorEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "senior":
       drawSeniorEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "gradstudent":
       drawGradStudentEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "professor":
@@ -1676,45 +1640,23 @@ export function drawEnemySprite(
       break;
     case "mascot":
       drawMascotEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        isFlying,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, isFlying, attackPhase, region,
       );
       break;
     case "archer":
       drawArcherEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "mage":
       drawMageEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "catapult":
@@ -1733,100 +1675,51 @@ export function drawEnemySprite(
       break;
     case "warlock":
       drawWarlockEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "crossbowman":
       drawCrossbowmanEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "hexer":
       drawHexerEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "harpy":
       drawHarpyEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "wyvern":
       drawWyvernEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "specter":
       drawSpecterEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "berserker":
       drawBerserkerEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "golem":
@@ -1845,44 +1738,23 @@ export function drawEnemySprite(
       break;
     case "necromancer":
       drawNecromancerEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "shadow_knight":
       drawShadowKnightEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "cultist":
       drawCultistEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "plaguebearer":
@@ -1959,16 +1831,9 @@ export function drawEnemySprite(
       break;
     case "banshee":
       drawBansheeEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "juggernaut":
@@ -1987,16 +1852,9 @@ export function drawEnemySprite(
       break;
     case "assassin":
       drawAssassinEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "dragon":
@@ -2015,30 +1873,16 @@ export function drawEnemySprite(
       break;
     case "athlete":
       drawAthleteEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "tiger_fan":
       drawTigerFanEnemy(
-        ctx,
-        x,
-        y,
-        size,
-        bodyColor,
-        bodyColorDark,
-        bodyColorLight,
-        time,
-        zoom,
-        attackPhase,
+        ctx, x, y, size,
+        bodyColor, bodyColorDark, bodyColorLight,
+        time, zoom, attackPhase, region,
       );
       break;
     case "bog_creature":
@@ -3093,5 +2937,4 @@ export function drawEnemySprite(
       );
   }
 
-  drawRegionOverlay(ctx, x, y, size, type, region, time, zoom);
 }

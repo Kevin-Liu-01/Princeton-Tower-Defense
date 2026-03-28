@@ -9,6 +9,8 @@ import {
   drawPathArm,
   drawPathLegs,
 } from "./darkFantasyHelpers";
+import type { MapTheme } from "../../types";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
 
@@ -24,6 +26,7 @@ export function drawMascotEnemy(
   zoom: number,
   isFlying: boolean,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // TEMPEST GRIFFIN - Elemental chaos beast with storm wings and lightning breath
   const isAttacking = attackPhase > 0;
@@ -34,6 +37,31 @@ export function drawMascotEnemy(
   const wingFlap = Math.sin(time * 12) * 0.55;
   const stormPulse = 0.6 + Math.sin(time * 6) * 0.4;
   const lightningFlash = Math.sin(time * 15) > 0.7 ? 1 : 0.3;
+
+  let costumeMain = "#0891b2";
+  let costumeDark = "#0e7490";
+  let costumeDeep = "#155e75";
+  let costumeLight = "#06b6d4";
+  let costumeBright = "#22d3ee";
+  let costumeAccent = "#67e8f9";
+  let beakBase = "#f59e0b";
+  let beakBright = "#fbbf24";
+  let beakDark = "#d97706";
+  let clawColor = "#fcd34d";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    costumeMain = rm.cloth.base;
+    costumeDark = rm.cloth.dark;
+    costumeDeep = rm.cloth.dark;
+    costumeLight = rm.cloth.light;
+    costumeBright = rm.cloth.trim;
+    costumeAccent = rm.cloth.trim;
+    beakBase = rm.metal.base;
+    beakBright = rm.metal.bright;
+    beakDark = rm.metal.dark;
+    clawColor = rm.metal.accent;
+  }
 
   // Storm cloud aura
   ctx.save();
@@ -101,10 +129,10 @@ export function drawMascotEnemy(
     ctx.translate(x - size * 0.28, y - size * 0.12 + swoop * 0.3);
     ctx.rotate(-0.45 - wingFlap);
     const wingGradL = ctx.createLinearGradient(0, 0, -size * 0.9, 0);
-    wingGradL.addColorStop(0, "#0e7490");
-    wingGradL.addColorStop(0.3, "#0891b2");
-    wingGradL.addColorStop(0.6, "#06b6d4");
-    wingGradL.addColorStop(1, "#22d3ee");
+    wingGradL.addColorStop(0, costumeDark);
+    wingGradL.addColorStop(0.3, costumeMain);
+    wingGradL.addColorStop(0.6, costumeLight);
+    wingGradL.addColorStop(1, costumeBright);
     ctx.fillStyle = wingGradL;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -119,7 +147,7 @@ export function drawMascotEnemy(
     ctx.closePath();
     ctx.fill();
     // Wing feather details with lightning
-    ctx.strokeStyle = "#67e8f9";
+    ctx.strokeStyle = costumeAccent;
     ctx.lineWidth = 2 * zoom;
     for (let f = 0; f < 6; f++) {
       ctx.beginPath();
@@ -143,10 +171,10 @@ export function drawMascotEnemy(
     ctx.translate(x + size * 0.28, y - size * 0.12 + swoop * 0.3);
     ctx.rotate(0.45 + wingFlap);
     const wingGradR = ctx.createLinearGradient(0, 0, size * 0.9, 0);
-    wingGradR.addColorStop(0, "#0e7490");
-    wingGradR.addColorStop(0.3, "#0891b2");
-    wingGradR.addColorStop(0.6, "#06b6d4");
-    wingGradR.addColorStop(1, "#22d3ee");
+    wingGradR.addColorStop(0, costumeDark);
+    wingGradR.addColorStop(0.3, costumeMain);
+    wingGradR.addColorStop(0.6, costumeLight);
+    wingGradR.addColorStop(1, costumeBright);
     ctx.fillStyle = wingGradR;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -161,7 +189,7 @@ export function drawMascotEnemy(
     ctx.closePath();
     ctx.fill();
     // Wing feather details
-    ctx.strokeStyle = "#67e8f9";
+    ctx.strokeStyle = costumeAccent;
     ctx.lineWidth = 2 * zoom;
     for (let f = 0; f < 6; f++) {
       ctx.beginPath();
@@ -178,9 +206,9 @@ export function drawMascotEnemy(
   ctx.rotate(Math.sin(time * 5) * 0.35);
   // Tail base
   const tailGrad = ctx.createLinearGradient(0, 0, size * 0.6, 0);
-  tailGrad.addColorStop(0, "#0e7490");
-  tailGrad.addColorStop(0.5, "#0891b2");
-  tailGrad.addColorStop(1, "#22d3ee");
+  tailGrad.addColorStop(0, costumeDark);
+  tailGrad.addColorStop(0.5, costumeMain);
+  tailGrad.addColorStop(1, costumeBright);
   ctx.fillStyle = tailGrad;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.04);
@@ -218,10 +246,10 @@ export function drawMascotEnemy(
     y + swoop * 0.2,
     size * 0.48,
   );
-  bodyGrad.addColorStop(0, "#155e75");
-  bodyGrad.addColorStop(0.4, "#0e7490");
-  bodyGrad.addColorStop(0.7, "#0891b2");
-  bodyGrad.addColorStop(1, "#06b6d4");
+  bodyGrad.addColorStop(0, costumeDeep);
+  bodyGrad.addColorStop(0.4, costumeDark);
+  bodyGrad.addColorStop(0.7, costumeMain);
+  bodyGrad.addColorStop(1, costumeLight);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(
@@ -272,7 +300,7 @@ export function drawMascotEnemy(
   );
   ctx.fill();
   // Feather texture - more detailed
-  ctx.strokeStyle = "#22d3ee";
+  ctx.strokeStyle = costumeBright;
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 6; i++) {
     ctx.beginPath();
@@ -296,16 +324,16 @@ export function drawMascotEnemy(
     y - size * 0.4 + swoop,
     size * 0.28,
   );
-  headGrad.addColorStop(0, "#0e7490");
-  headGrad.addColorStop(0.6, "#0891b2");
-  headGrad.addColorStop(1, "#06b6d4");
+  headGrad.addColorStop(0, costumeDark);
+  headGrad.addColorStop(0.6, costumeMain);
+  headGrad.addColorStop(1, costumeLight);
   ctx.fillStyle = headGrad;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.4 + swoop, size * 0.26, 0, Math.PI * 2);
   ctx.fill();
 
   // Crown crest feathers (optimized - no shadowBlur)
-  ctx.fillStyle = "#67e8f9";
+  ctx.fillStyle = costumeAccent;
   for (let i = 0; i < 9; i++) {
     const crestAngle = -Math.PI * 0.45 + i * Math.PI * 0.11;
     const crestLen = size * (0.18 + Math.sin(time * 6 + i * 0.8) * 0.04);
@@ -395,9 +423,9 @@ export function drawMascotEnemy(
     x + size * 0.1,
     y - size * 0.2,
   );
-  beakGrad.addColorStop(0, "#f59e0b");
-  beakGrad.addColorStop(0.5, "#fbbf24");
-  beakGrad.addColorStop(1, "#f59e0b");
+  beakGrad.addColorStop(0, beakBase);
+  beakGrad.addColorStop(0.5, beakBright);
+  beakGrad.addColorStop(1, beakBase);
   ctx.fillStyle = beakGrad;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.37 + swoop);
@@ -417,14 +445,14 @@ export function drawMascotEnemy(
   );
   ctx.fill();
   // Beak detail
-  ctx.strokeStyle = "#d97706";
+  ctx.strokeStyle = beakDark;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.37 + swoop);
   ctx.lineTo(x, y - size * 0.19 + swoop);
   ctx.stroke();
   // Beak hook
-  ctx.fillStyle = "#d97706";
+  ctx.fillStyle = beakDark;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.18 + swoop, size * 0.02, 0, Math.PI);
   ctx.fill();
@@ -435,12 +463,12 @@ export function drawMascotEnemy(
     ctx.translate(x + side * size * 0.22, y + size * 0.44 + swoop * 0.1);
     // Feathered leg
     const legGrad = ctx.createLinearGradient(0, -size * 0.18, 0, 0);
-    legGrad.addColorStop(0, "#0891b2");
-    legGrad.addColorStop(1, "#0e7490");
+    legGrad.addColorStop(0, costumeMain);
+    legGrad.addColorStop(1, costumeDark);
     ctx.fillStyle = legGrad;
     ctx.fillRect(-size * 0.045, -size * 0.18, size * 0.09, size * 0.18);
     // Leg scales
-    ctx.strokeStyle = "#06b6d4";
+    ctx.strokeStyle = costumeLight;
     ctx.lineWidth = 1 * zoom;
     for (let s = 0; s < 4; s++) {
       ctx.beginPath();
@@ -449,7 +477,7 @@ export function drawMascotEnemy(
       ctx.stroke();
     }
     // Golden talons (optimized - no shadowBlur)
-    ctx.fillStyle = "#fcd34d";
+    ctx.fillStyle = clawColor;
     for (let t = 0; t < 3; t++) {
       ctx.beginPath();
       ctx.moveTo(-size * 0.045 + t * size * 0.045, 0);
@@ -482,9 +510,9 @@ export function drawMascotEnemy(
 
   // Powerful clawed legs with stomping animation
   drawPathLegs(ctx, x, y + size * 0.38 + swoop * 0.15, size, time, zoom, {
-    color: "#0891b2",
-    colorDark: "#0e7490",
-    footColor: "#fcd34d",
+    color: costumeMain,
+    colorDark: costumeDark,
+    footColor: clawColor,
     strideSpeed: 3,
     strideAmt: 0.45,
     legLen: 0.22,
@@ -504,14 +532,16 @@ export function drawMascotEnemy(
 
   // Floating storm scale segments (diamond shape)
   drawShiftingSegments(ctx, x, y + swoop * 0.2, size, time, zoom, {
-    color: "#22d3ee",
-    colorAlt: "#06b6d4",
+    color: costumeBright,
+    colorAlt: costumeLight,
     count: 8,
     orbitRadius: 0.55,
     segmentSize: 0.04,
     orbitSpeed: 1.8,
     shape: "diamond",
   });
+
+  drawRegionBodyAccent(ctx, x, y + swoop * 0.2, size, region, time, zoom);
 }
 
 export function drawDefaultEnemy(

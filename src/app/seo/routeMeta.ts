@@ -33,9 +33,9 @@ const CODEX_TAB_META: Record<string, { title: string; description: string }> = {
       "Browse every tower in Princeton Tower Defense: Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar. Each with dual upgrade paths, stats, and strategy tips.",
   },
   heroes: {
-    title: "Hero Codex - All 7 Heroes & Abilities",
+    title: "Hero Codex - All 9 Heroes & Abilities",
     description:
-      "Meet all 7 heroes: Princeton Tiger, Mathey Knight, Acapella Tenor, Rocky Raccoon, F. Scott, General Mercer, and BSE Engineer. View abilities, stats, and roles.",
+      "Meet all 9 heroes: Princeton Tiger, Mathey Knight, Acapella Tenor, Rocky Raccoon, F. Scott, General Mercer, BSE Engineer, Nassau Phoenix, and Ivy Warden. View abilities, stats, and roles.",
   },
   enemies: {
     title: "Enemy Codex - 50+ Enemy Types & Bosses",

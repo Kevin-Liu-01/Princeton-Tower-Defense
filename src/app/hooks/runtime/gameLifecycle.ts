@@ -49,6 +49,7 @@ import {
   ENEMY_LANE_OFFSETS,
   ENEMY_SPAWN_LANE_JITTER,
 } from "../../game/spatial";
+import { getFacingRightFromDelta } from "../../game/unitMovement";
 
 // ---------------------------------------------------------------------------
 // Shared parameter interface
@@ -585,6 +586,15 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
         const pathKey =
           activeWaveSpawnPaths[spawned % spawnPathCount] ?? selectedMap;
 
+        const spawnPath = MAP_PATHS[pathKey];
+        const initialFacing =
+          spawnPath && spawnPath.length >= 2
+            ? getFacingRightFromDelta(
+                spawnPath[1].x - spawnPath[0].x,
+                spawnPath[1].y - spawnPath[0].y,
+              )
+            : false;
+
         const enemy: Enemy = {
           id: generateId("enemy"),
           type: group.type,
@@ -607,6 +617,7 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
           slowed: false,
           slowIntensity: 0,
           pathKey,
+          facingRight: initialFacing,
         };
         params.addEnemyEntity(enemy);
         spawned++;

@@ -9,6 +9,8 @@ import {
   drawEmberSparks,
 } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import type { MapTheme } from "../../types";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
 
@@ -28,6 +30,7 @@ export function drawAthleteEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -44,9 +47,16 @@ export function drawAthleteEnemy(
 
   const skinTone = "#c9a882";
   const skinDark = "#a08060";
-  const bronze = "#b8860b";
-  const bronzeDark = "#8b6508";
-  const bronzeLight = "#daa520";
+  let bronze = "#b8860b";
+  let bronzeDark = "#8b6508";
+  let bronzeLight = "#daa520";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    bronze = rm.metal.base;
+    bronzeDark = rm.metal.dark;
+    bronzeLight = rm.metal.bright;
+  }
 
   // Speed afterimage trail
   for (let ai = 4; ai >= 1; ai--) {
@@ -607,6 +617,8 @@ export function drawAthleteEnemy(
       ctx.stroke();
     }
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -625,6 +637,7 @@ export function drawTigerFanEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -640,11 +653,19 @@ export function drawTigerFanEnemy(
   const cx = x + sway.dx;
   const bodyBob = marchBob + sway.dy;
 
-  const fur = "#c4a060";
-  const furDark = "#8a6830";
-  const leather = "#5a3a20";
-  const leatherDark = "#3e2815";
+  let fur = "#c4a060";
+  let furDark = "#8a6830";
+  let leather = "#5a3a20";
+  let leatherDark = "#3e2815";
   const bannerForeLen = 0.14;
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    fur = rm.cloth.base;
+    furDark = rm.cloth.dark;
+    leather = rm.leather.base;
+    leatherDark = rm.leather.dark;
+  }
 
   // Legs — leather-wrapped barbarian
   drawPathLegs(ctx, cx, y + size * 0.12 - bodyBob, size, time, zoom, {
@@ -1327,4 +1348,6 @@ export function drawTigerFanEnemy(
     );
     ctx.fill();
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }

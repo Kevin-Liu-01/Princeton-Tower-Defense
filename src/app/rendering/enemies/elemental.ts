@@ -6,6 +6,7 @@ import { setShadowBlur, clearShadow } from "../performance";
 import { drawPulsingGlowRings, drawLeafSwirl, drawSandDust, drawFrostCrystals, drawEmberSparks, drawShadowWisps, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 import type { MapTheme } from "../../types";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 
 export function drawThornwalkerEnemy(
@@ -3757,6 +3758,7 @@ export function drawBansheeEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   const isAttacking = attackPhase > 0;
   const floatOffset = Math.sin(time * 2.5) * size * 0.1;
@@ -3769,6 +3771,13 @@ export function drawBansheeEnemy(
     0.3 +
     Math.abs(Math.sin(time * 6)) * 0.4 +
     (isAttacking ? attackPhase * 0.3 : 0);
+
+  let glowHex = "#94a3b8";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    glowHex = rm.magic.primary;
+  }
 
   // Ethereal trail (longer)
   for (let t = 0; t < 10; t++) {
@@ -4320,7 +4329,7 @@ export function drawBansheeEnemy(
 
   // Eye glow
   ctx.fillStyle = `rgba(148, 163, 184, ${wailIntensity})`;
-  setShadowBlur(ctx, 8 * zoom, "#94a3b8");
+  setShadowBlur(ctx, 8 * zoom, glowHex);
   ctx.beginPath();
   ctx.arc(
     x - size * 0.1,
@@ -4346,7 +4355,7 @@ export function drawBansheeEnemy(
     const tearStartY = y + floatOffset - size * 0.2;
 
     ctx.strokeStyle = `rgba(148, 163, 184, ${wailIntensity * 0.6})`;
-    setShadowBlur(ctx, 3 * zoom, "#94a3b8");
+    setShadowBlur(ctx, 3 * zoom, glowHex);
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(tearX, tearStartY);
@@ -4582,7 +4591,7 @@ export function drawBansheeEnemy(
     );
     mouthGlowGrad.addColorStop(1, "rgba(148, 163, 184, 0)");
     ctx.fillStyle = mouthGlowGrad;
-    setShadowBlur(ctx, 12 * zoom, "#94a3b8");
+    setShadowBlur(ctx, 12 * zoom, glowHex);
     ctx.beginPath();
     ctx.arc(
       x,
@@ -4605,6 +4614,8 @@ export function drawBansheeEnemy(
     );
     ctx.fill();
   }
+
+  drawRegionBodyAccent(ctx, x, y + floatOffset, size, region, time, zoom);
 }
 
 export function drawJuggernautEnemy(
@@ -6103,6 +6114,7 @@ export function drawAssassinEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   const isAttacking = attackPhase > 0;
   const dashPhase = Math.sin(time * 8) * 0.1;
@@ -6112,6 +6124,21 @@ export function drawAssassinEnemy(
     (isAttacking ? attackPhase * 0.4 : 0);
   const lean = Math.sin(time * 4) * 0.1;
   const blurForward = isAttacking ? attackPhase * size * 0.15 : 0;
+
+  let eyeGlowHex = "#a78bfa";
+  let bladeLight = "#71717a";
+  let bladeMid = "#52525b";
+  let bladeDark = "#3f3f46";
+  let bladeSilhouette = "#4a4a55";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    eyeGlowHex = rm.magic.primary;
+    bladeLight = rm.metal.bright;
+    bladeMid = rm.metal.base;
+    bladeDark = rm.metal.dark;
+    bladeSilhouette = rm.metal.dark;
+  }
 
   // Dark purple/poison aura
   const auraGrad = ctx.createRadialGradient(
@@ -6733,7 +6760,7 @@ export function drawAssassinEnemy(
 
   // Glowing eyes (calculating, intense)
   ctx.fillStyle = `rgba(167, 139, 250, ${shadowFlicker + 0.4})`;
-  setShadowBlur(ctx, 8 * zoom, "#a78bfa");
+  setShadowBlur(ctx, 8 * zoom, eyeGlowHex);
   ctx.beginPath();
   ctx.ellipse(
     -size * 0.05,
@@ -6862,9 +6889,9 @@ export function drawAssassinEnemy(
       0,
       size * 0.45,
     );
-    daggerGrad.addColorStop(0, "#71717a");
-    daggerGrad.addColorStop(0.5, "#52525b");
-    daggerGrad.addColorStop(1, "#3f3f46");
+    daggerGrad.addColorStop(0, bladeLight);
+    daggerGrad.addColorStop(0.5, bladeMid);
+    daggerGrad.addColorStop(1, bladeDark);
     ctx.fillStyle = daggerGrad;
     ctx.beginPath();
     ctx.moveTo(-size * 0.02, size * 0.25);
@@ -6873,7 +6900,7 @@ export function drawAssassinEnemy(
     ctx.closePath();
     ctx.fill();
     // Curved blade silhouette — hooked edge and sharp point
-    ctx.fillStyle = "#4a4a55";
+    ctx.fillStyle = bladeSilhouette;
     ctx.beginPath();
     ctx.moveTo(-size * 0.022, size * 0.252);
     ctx.quadraticCurveTo(-size * 0.045, size * 0.34, -size * 0.012, size * 0.4);
@@ -7172,6 +7199,8 @@ export function drawAssassinEnemy(
     );
     ctx.fill();
   }
+
+  drawRegionBodyAccent(ctx, x, y, size, region, time, zoom);
 }
 
 export function drawDragonEnemy(

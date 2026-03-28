@@ -51,6 +51,7 @@ import {
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { OrnateFrame } from "./primitives/OrnateFrame";
+import { panelGradient } from "./system/theme";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -781,7 +782,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
         showSideBorders={false}
       >
         {/* ── Header ── */}
-        <div className="shrink-0 z-20 border-b border-amber-700/25 bg-stone-950/95 px-4 sm:px-6 py-3">
+        <div
+          className="shrink-0 z-20 border-b border-amber-700/25 px-4 sm:px-6 py-3"
+          style={{ background: panelGradient }}
+        >
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-amber-300">
               <EnchantedAnvilIcon size={22} />

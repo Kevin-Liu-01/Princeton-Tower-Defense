@@ -32,7 +32,7 @@ export const SITE_DESCRIPTION_SHORT =
 
 export const OG_DESCRIPTION =
   "Build towers at Princeton landmarks, summon heroes like the Princeton Tiger, and defend campus across 23 levels in this free browser tower defense game. " +
-  "7 towers with dual upgrades, 7 heroes, 5 spells, custom level creator, sandbox mode, and 50+ unique enemies.";
+  "7 towers with dual upgrades, 9 heroes, 5 spells, custom level creator, sandbox mode, and 50+ unique enemies.";
 
 export const KEYWORDS = [
   // Core game terms
@@ -219,6 +219,8 @@ export const HERO_NAMES = [
   "F. Scott",
   "General Mercer",
   "BSE Engineer",
+  "Nassau Phoenix",
+  "Ivy Warden",
 ] as const;
 
 export const SPELL_NAMES = [
@@ -233,7 +235,7 @@ export const SPELL_NAMES = [
 export const GAME_STATS = {
   levels: 23,
   towers: 7,
-  heroes: 7,
+  heroes: 9,
   spells: 6,
   regions: 5,
   enemyTypes: 50,

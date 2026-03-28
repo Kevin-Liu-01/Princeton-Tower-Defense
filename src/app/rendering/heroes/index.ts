@@ -16,10 +16,14 @@ import { drawRockyHero } from "./rocky";
 import { drawFScottHero } from "./scott";
 import { drawCaptainHero } from "./captain";
 import { drawEngineerHero } from "./engineer";
+import { drawNassauHero } from "./nassau";
+import { drawIvyHero } from "./ivy";
 import { getPerformanceSettings } from "../performance";
 
 const HERO_SIZE_OVERRIDES: Record<string, number> = {
   rocky: 1.15,
+  nassau: 1.1,
+  ivy: 1.2,
 };
 
 const HERO_BAR_OFFSET: Record<string, number> = {
@@ -30,6 +34,8 @@ const HERO_BAR_OFFSET: Record<string, number> = {
   tenor: -5,
   mathey: -8,
   engineer: -2,
+  nassau: -12,
+  ivy: -15,
 };
 
 export function renderHero(
@@ -73,12 +79,15 @@ export function renderHero(
     ctx.setLineDash([]);
   }
 
-  // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  // Shadow - flying heroes cast shadow further below
+  const isFlying = HERO_DATA[hero.type].isFlying ?? false;
+  const shadowOffset = isFlying ? 12 * zoom : 1 * zoom;
+  const shadowAlpha = isFlying ? 0.25 : 0.45;
+  ctx.fillStyle = `rgba(0,0,0,${shadowAlpha})`;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
-    screenPos.y + 1 * zoom,
+    screenPos.y + shadowOffset,
     22 * zoom,
     22 * ISO_Y_RATIO * zoom,
     0,
@@ -121,8 +130,10 @@ export function renderHero(
     localTargetPos.x *= -1;
   }
 
+  // Flying heroes hover above the ground
+  const flyingOffset = isFlying ? -10 * zoom : 0;
   ctx.save();
-  ctx.translate(screenPos.x, screenPos.y - size / 2);
+  ctx.translate(screenPos.x, screenPos.y - size / 2 + flyingOffset);
   ctx.scale(facingRight ? -attackScale : attackScale, attackScale);
 
   // Draw specific hero type with attack animation
@@ -449,6 +460,32 @@ export function drawHeroSprite(
       break;
     case "engineer":
       drawEngineerHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
+      break;
+    case "nassau":
+      drawNassauHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
+      break;
+    case "ivy":
+      drawIvyHero(
         ctx,
         x,
         y,

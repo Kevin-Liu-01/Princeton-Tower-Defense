@@ -9,6 +9,8 @@ export const HERO_OPTIONS: HeroType[] = [
   "scott",
   "captain",
   "engineer",
+  "nassau",
+  "ivy",
 ];
 
 export const MENU_SPELL_OPTIONS: SpellType[] = [...SPELL_OPTIONS];

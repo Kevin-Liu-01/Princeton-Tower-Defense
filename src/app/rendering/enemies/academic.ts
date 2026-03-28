@@ -1,3 +1,4 @@
+import type { MapTheme } from "../../types";
 import { setShadowBlur, clearShadow } from "../performance";
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import {
@@ -14,6 +15,7 @@ import {
   drawPathLegs,
   drawHelmetPlume,
 } from "./darkFantasyHelpers";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
 
@@ -33,6 +35,7 @@ export function drawFreshmanEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -43,11 +46,20 @@ export function drawFreshmanEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#a8a070";
-  const metalMid = "#7a7258";
-  const metalDark = "#4a4838";
-  const corruptGreen = "#4ade80";
-  const corruptDark = "#1a3a1a";
+  let metalLight = "#a8a070";
+  let metalMid = "#7a7258";
+  let metalDark = "#4a4838";
+  let corruptGreen = "#4ade80";
+  let corruptDark = "#1a3a1a";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+    corruptGreen = rm.magic.primary;
+    corruptDark = rm.magic.dark;
+  }
 
   const pulseIntensity = 0.5 + Math.sin(time * 4) * 0.3 + attackIntensity * 0.3;
   const runeGlow = 0.6 + Math.sin(time * 5) * 0.4 + attackIntensity * 0.4;
@@ -840,6 +852,8 @@ export function drawFreshmanEnemy(
     ctx.fill();
   }
   clearShadow(ctx);
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -858,6 +872,7 @@ export function drawSophomoreEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -868,10 +883,18 @@ export function drawSophomoreEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#a8b8c8";
-  const metalMid = "#708898";
-  const metalDark = "#485868";
-  const stormBlue = "#60a5fa";
+  let metalLight = "#a8b8c8";
+  let metalMid = "#708898";
+  let metalDark = "#485868";
+  let stormBlue = "#60a5fa";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+    stormBlue = rm.magic.primary;
+  }
 
   const magicPulse = 0.6 + Math.sin(time * 4) * 0.4 + attackIntensity * 0.4;
   const stormIntensity = 0.5 + Math.sin(time * 6) * 0.3 + attackIntensity * 0.5;
@@ -1681,6 +1704,8 @@ export function drawSophomoreEnemy(
     ctx.fill();
   }
   clearShadow(ctx);
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -1699,6 +1724,7 @@ export function drawJuniorEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -1709,11 +1735,20 @@ export function drawJuniorEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#d8c8a0";
-  const metalMid = "#b0a078";
-  const metalDark = "#887858";
-  const brassAccent = "#c8a850";
-  const inkPurple = "#6b21a8";
+  let metalLight = "#d8c8a0";
+  let metalMid = "#b0a078";
+  let metalDark = "#887858";
+  let brassAccent = "#c8a850";
+  let inkPurple = "#6b21a8";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+    brassAccent = rm.metal.accent;
+    inkPurple = rm.magic.primary;
+  }
 
   const madnessPulse = 0.5 + Math.sin(time * 5) * 0.3 + attackIntensity * 0.4;
   const realityTear = 0.4 + Math.sin(time * 7) * 0.3 + attackIntensity * 0.4;
@@ -2591,6 +2626,8 @@ export function drawJuniorEnemy(
     ctx.fill();
   }
   clearShadow(ctx);
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -2609,6 +2646,7 @@ export function drawSeniorEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -2619,11 +2657,20 @@ export function drawSeniorEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#8a7898";
-  const metalMid = "#5a4868";
-  const metalDark = "#3a2848";
-  const voidPink = "#f472b6";
-  const voidDeep = "#9d174d";
+  let metalLight = "#8a7898";
+  let metalMid = "#5a4868";
+  let metalDark = "#3a2848";
+  let voidPink = "#f472b6";
+  let voidDeep = "#9d174d";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+    voidPink = rm.magic.primary;
+    voidDeep = rm.magic.dark;
+  }
 
   const powerPulse = 0.5 + Math.sin(time * 3) * 0.3 + attackIntensity * 0.4;
   const floatHeight = Math.sin(time * 1.5) * size * 0.02;
@@ -3494,6 +3541,8 @@ export function drawSeniorEnemy(
     ctx.ellipse(cx, y + size * 0.3, burstR, burstR * ISO_Y_RATIO, 0, 0, TAU);
     ctx.stroke();
   }
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -3512,6 +3561,7 @@ export function drawGradStudentEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   size *= 1.7;
   y += size * 0.08;
@@ -3522,11 +3572,20 @@ export function drawGradStudentEnemy(
   const cx = x + sway.dx;
   const bodyBob = sway.dy;
 
-  const metalLight = "#c0c8d8";
-  const metalMid = "#8898a8";
-  const metalDark = "#586878";
-  const crystalBlue = "#38bdf8";
-  const arcaneGold = "#fbbf24";
+  let metalLight = "#c0c8d8";
+  let metalMid = "#8898a8";
+  let metalDark = "#586878";
+  let crystalBlue = "#38bdf8";
+  let arcaneGold = "#fbbf24";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    metalLight = rm.metal.bright;
+    metalMid = rm.metal.base;
+    metalDark = rm.metal.dark;
+    crystalBlue = rm.magic.primary;
+    arcaneGold = rm.magic.secondary;
+  }
 
   const magicPulse = 0.5 + Math.sin(time * 3.5) * 0.3 + attackIntensity * 0.4;
   const elementCycle = time * 2;
@@ -4260,6 +4319,8 @@ export function drawGradStudentEnemy(
     ctx.fill();
   }
   clearShadow(ctx);
+
+  drawRegionBodyAccent(ctx, cx, y - bodyBob, size, region, time, zoom);
 }
 
 // ============================================================================

@@ -19,6 +19,7 @@ import {
 } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
 import type { MapTheme } from "../../types";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 const TAU = Math.PI * 2;
 
@@ -33,11 +34,29 @@ export function drawSpecterEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // SPECTER - Tormented Soul, Ethereal Horror from Beyond the Veil
   // A terrifying ghostly apparition wreathed in ectoplasmic energy
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
+
+  let ectoRgb = "56, 189, 248";
+  let ghostRgb = "148, 163, 184";
+  let ghostBrightRgb = "203, 213, 225";
+  let ghostDarkRgb = "100, 116, 139";
+  let clothRgb = "51, 65, 85";
+  let clothDarkRgb = "30, 41, 59";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    ectoRgb = rm.magic.primary.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    ghostRgb = rm.cloth.light.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    ghostBrightRgb = rm.cloth.trim.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    ghostDarkRgb = rm.cloth.dark.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    clothRgb = rm.cloth.base.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    clothDarkRgb = rm.magic.dark.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+  }
   const phase =
     Math.sin(time * 2) * 5 * zoom +
     (isAttacking ? attackIntensity * size * 0.2 : 0);
@@ -140,19 +159,19 @@ export function drawSpecterEnemy(
       py,
       particleSize * 3,
     );
-    particleGlow.addColorStop(0, `rgba(56, 189, 248, ${particleAlpha * 0.8})`);
+    particleGlow.addColorStop(0, `rgba(${ectoRgb}, ${particleAlpha * 0.8})`);
     particleGlow.addColorStop(
       0.5,
-      `rgba(56, 189, 248, ${particleAlpha * 0.3})`,
+      `rgba(${ectoRgb}, ${particleAlpha * 0.3})`,
     );
-    particleGlow.addColorStop(1, "rgba(56, 189, 248, 0)");
+    particleGlow.addColorStop(1, `rgba(${ectoRgb}, 0)`);
     ctx.fillStyle = particleGlow;
     ctx.beginPath();
     ctx.arc(px, py, particleSize * 3, 0, Math.PI * 2);
     ctx.fill();
 
     // Particle core
-    ctx.fillStyle = `rgba(186, 230, 253, ${particleAlpha})`;
+    ctx.fillStyle = `rgba(${ghostBrightRgb}, ${particleAlpha})`;
     ctx.beginPath();
     ctx.arc(px, py, particleSize, 0, Math.PI * 2);
     ctx.fill();
@@ -170,8 +189,8 @@ export function drawSpecterEnemy(
       time,
       zoom,
       {
-        color: `rgba(148, 163, 184, ${flicker * 0.5})`,
-        tipColor: `rgba(100, 116, 139, ${flicker * 0.3})`,
+        color: `rgba(${ghostRgb}, ${flicker * 0.5})`,
+        tipColor: `rgba(${ghostDarkRgb}, ${flicker * 0.3})`,
         length: 0.35,
         width: 0.025,
         segments: 10,
@@ -570,9 +589,9 @@ export function drawSpecterEnemy(
     x - size * 0.5,
     y + size * 0.35,
   );
-  armGrad.addColorStop(0, `rgba(203, 213, 225, ${flicker * 0.7})`);
-  armGrad.addColorStop(0.5, `rgba(148, 163, 184, ${flicker * 0.5})`);
-  armGrad.addColorStop(1, `rgba(100, 116, 139, ${flicker * 0.2})`);
+  armGrad.addColorStop(0, `rgba(${ghostBrightRgb}, ${flicker * 0.7})`);
+  armGrad.addColorStop(0.5, `rgba(${ghostRgb}, ${flicker * 0.5})`);
+  armGrad.addColorStop(1, `rgba(${ghostDarkRgb}, ${flicker * 0.2})`);
 
   ctx.strokeStyle = armGrad;
   ctx.lineWidth = 4 * zoom;
@@ -752,7 +771,7 @@ export function drawSpecterEnemy(
   // === LAYER 9: ATTACK EFFECT (SOUL DRAIN) ===
   if (isAttacking) {
     // Soul drain tendrils
-    ctx.strokeStyle = `rgba(56, 189, 248, ${attackIntensity * 0.6})`;
+    ctx.strokeStyle = `rgba(${ectoRgb}, ${attackIntensity * 0.6})`;
     ctx.lineWidth = 2 * zoom;
     for (let tendril = 0; tendril < 5; tendril++) {
       const tendrilAngle = (tendril * Math.PI) / 2.5 - Math.PI / 5;
@@ -799,7 +818,7 @@ export function drawSpecterEnemy(
 
   // --- Ethereal shadow wisps ---
   drawShadowWisps(ctx, x, y + phase, size * 0.35, time, zoom, {
-    color: "rgba(56, 189, 248, 0.35)",
+    color: `rgba(${ectoRgb}, 0.35)`,
     count: 4,
     speed: 1.2,
     maxAlpha: 0.3,
@@ -808,8 +827,8 @@ export function drawSpecterEnemy(
 
   // --- Shifting ethereal segments ---
   drawShiftingSegments(ctx, x, y + phase, size, time, zoom, {
-    color: `rgba(203, 213, 225, ${flicker * 0.5})`,
-    colorAlt: `rgba(148, 163, 184, ${flicker * 0.4})`,
+    color: `rgba(${ghostBrightRgb}, ${flicker * 0.5})`,
+    colorAlt: `rgba(${ghostRgb}, ${flicker * 0.4})`,
     count: 5,
     orbitRadius: 0.35,
     segmentSize: 0.03,
@@ -826,9 +845,9 @@ export function drawSpecterEnemy(
     x - size * 0.3, y - size * 0.55 + phase,
     x + size * 0.3, y + size * 0.1 + phase,
   );
-  hoodGrad.addColorStop(0, `rgba(51, 65, 85, ${flicker * 0.6})`);
-  hoodGrad.addColorStop(0.4, `rgba(30, 41, 59, ${flicker * 0.5})`);
-  hoodGrad.addColorStop(1, `rgba(15, 23, 42, ${flicker * 0.2})`);
+  hoodGrad.addColorStop(0, `rgba(${clothRgb}, ${flicker * 0.6})`);
+  hoodGrad.addColorStop(0.4, `rgba(${clothDarkRgb}, ${flicker * 0.5})`);
+  hoodGrad.addColorStop(1, `rgba(${clothDarkRgb}, ${flicker * 0.2})`);
   ctx.fillStyle = hoodGrad;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.58 + phase);
@@ -893,12 +912,14 @@ export function drawSpecterEnemy(
   ctx.stroke();
 
   // Hood peak drape detail
-  ctx.strokeStyle = `rgba(30, 41, 59, ${flicker * 0.3})`;
+  ctx.strokeStyle = `rgba(${clothDarkRgb}, ${flicker * 0.3})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.5 + phase);
   ctx.quadraticCurveTo(x, y - size * 0.56 + phase, x + size * 0.15, y - size * 0.5 + phase);
   ctx.stroke();
+
+  drawRegionBodyAccent(ctx, x, y + phase, size, region, time, zoom);
 }
 
 export function drawBerserkerEnemy(
@@ -912,10 +933,42 @@ export function drawBerserkerEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // BLOOD WARDEN - Frenzied berserker channeling demonic rage through cursed blood runes
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
+
+  let fleshBase = "#b91c1c";
+  let fleshDark = "#7f1d1d";
+  let fleshDeep = "#991b1b";
+  let fleshBlack = "#450a0a";
+  let armorMid = "#52525b";
+  let armorDark = "#3f3f46";
+  let armorBlack = "#27272a";
+  let armorBright = "#71717a";
+  let rageGlowRgb = "220, 38, 38";
+  let haftBase = "#4a3728";
+  let haftDark = "#2a1f15";
+  let leatherBase = "#44403c";
+  let leatherLight = "#57534e";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    fleshBase = rm.leather.base;
+    fleshDark = rm.leather.dark;
+    fleshDeep = rm.leather.strap;
+    fleshBlack = rm.leather.dark;
+    armorMid = rm.metal.base;
+    armorDark = rm.metal.dark;
+    armorBlack = rm.metal.dark;
+    armorBright = rm.metal.bright;
+    rageGlowRgb = rm.magic.primary.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    haftBase = rm.wood.base;
+    haftDark = rm.wood.dark;
+    leatherBase = rm.leather.base;
+    leatherLight = rm.leather.light;
+  }
   const rage =
     Math.sin(time * 14) * 4 * zoom +
     (isAttacking ? attackIntensity * size * 0.25 : 0);
@@ -1177,9 +1230,9 @@ export function drawBerserkerEnemy(
 
   // --- Animated stomping legs ---
   drawPathLegs(ctx, x, y + size * 0.25 - bodyBob, size, time, zoom, {
-    color: "#991b1b",
-    colorDark: "#7f1d1d",
-    footColor: "#450a0a",
+    color: fleshDeep,
+    colorDark: fleshDark,
+    footColor: fleshBlack,
     strideSpeed: 7,
     strideAmt: 0.4,
     legLen: 0.22,
@@ -1192,14 +1245,14 @@ export function drawBerserkerEnemy(
     ctx, x - size * 0.38, y - size * 0.12 - bodyBob,
     size, time, zoom, -1,
     {
-      color: "#b91c1c",
-      colorDark: "#7f1d1d",
+      color: fleshBase,
+      colorDark: fleshDark,
       shoulderAngle: -0.6 + Math.sin(time * 6) * 0.35 + (isAttacking ? -attackIntensity * 0.8 : 0),
       elbowAngle: 0.5 + Math.sin(time * 7 + 1) * 0.3,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.08,
-      handColor: "#991b1b",
+      handColor: fleshDeep,
       handRadius: 0.04,
       style: "fleshy",
       onWeapon: (wCtx) => {
@@ -1207,9 +1260,9 @@ export function drawBerserkerEnemy(
         const s = size;
         const z = zoom;
         const haftGrad = wCtx.createLinearGradient(0, 0, 0, -s * 0.38);
-        haftGrad.addColorStop(0, "#4a3728");
-        haftGrad.addColorStop(0.5, "#2a1f15");
-        haftGrad.addColorStop(1, "#1a1008");
+        haftGrad.addColorStop(0, haftBase);
+        haftGrad.addColorStop(0.5, haftDark);
+        haftGrad.addColorStop(1, haftDark);
         wCtx.fillStyle = haftGrad;
         wCtx.fillRect(-s * 0.015, 0, s * 0.03, -s * 0.38);
         const bladeGrad = wCtx.createLinearGradient(-s * 0.13, -s * 0.28, s * 0.13, -s * 0.28);
@@ -1239,7 +1292,7 @@ export function drawBerserkerEnemy(
         wCtx.lineTo(s * 0.01, -s * 0.37);
         wCtx.closePath();
         wCtx.fill();
-        wCtx.strokeStyle = "#7f1d1d";
+        wCtx.strokeStyle = fleshDark;
         wCtx.lineWidth = 1.2 * z;
         wCtx.beginPath();
         wCtx.moveTo(-s * 0.06, -s * 0.27);
@@ -1276,24 +1329,24 @@ export function drawBerserkerEnemy(
     ctx, x + size * 0.38, y - size * 0.12 - bodyBob,
     size, time, zoom, 1,
     {
-      color: "#b91c1c",
-      colorDark: "#7f1d1d",
+      color: fleshBase,
+      colorDark: fleshDark,
       shoulderAngle: 0.6 + Math.sin(time * 6 + Math.PI) * 0.35 + (isAttacking ? attackIntensity * 0.8 : 0),
       elbowAngle: 0.5 + Math.sin(time * 7 + 2.5) * 0.3,
       upperLen: 0.2,
       foreLen: 0.18,
       width: 0.08,
-      handColor: "#991b1b",
+      handColor: fleshDeep,
       handRadius: 0.04,
       style: "fleshy",
       onWeapon: (wCtx) => {
         const s = size;
         const z = zoom;
         const plateGrad = wCtx.createLinearGradient(-s * 0.04, 0, s * 0.04, 0);
-        plateGrad.addColorStop(0, "#3f3f46");
-        plateGrad.addColorStop(0.4, "#6b6b76");
-        plateGrad.addColorStop(0.6, "#52525b");
-        plateGrad.addColorStop(1, "#27272a");
+        plateGrad.addColorStop(0, armorDark);
+        plateGrad.addColorStop(0.4, armorBright);
+        plateGrad.addColorStop(0.6, armorMid);
+        plateGrad.addColorStop(1, armorBlack);
         wCtx.fillStyle = plateGrad;
         wCtx.beginPath();
         wCtx.moveTo(-s * 0.04, s * 0.01);
@@ -1344,12 +1397,12 @@ export function drawBerserkerEnemy(
     x + size * 0.38,
     y + size * 0.1,
   );
-  bodyGrad.addColorStop(0, "#450a0a");
-  bodyGrad.addColorStop(0.2, "#7f1d1d");
-  bodyGrad.addColorStop(0.45, "#b91c1c");
-  bodyGrad.addColorStop(0.55, "#991b1b");
-  bodyGrad.addColorStop(0.8, "#7f1d1d");
-  bodyGrad.addColorStop(1, "#450a0a");
+  bodyGrad.addColorStop(0, fleshBlack);
+  bodyGrad.addColorStop(0.2, fleshDark);
+  bodyGrad.addColorStop(0.45, fleshBase);
+  bodyGrad.addColorStop(0.55, fleshDeep);
+  bodyGrad.addColorStop(0.8, fleshDark);
+  bodyGrad.addColorStop(1, fleshBlack);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   // Waist (narrower)
@@ -1648,9 +1701,9 @@ export function drawBerserkerEnemy(
   ctx.translate(x - size * 0.42 + attackShake, y - size * 0.14 - bodyBob);
   ctx.rotate(-0.55 + armSwing);
   const armGradL = ctx.createLinearGradient(0, 0, 0, size * 0.42);
-  armGradL.addColorStop(0, "#b91c1c");
-  armGradL.addColorStop(0.5, "#991b1b");
-  armGradL.addColorStop(1, "#7f1d1d");
+  armGradL.addColorStop(0, fleshBase);
+  armGradL.addColorStop(0.5, fleshDeep);
+  armGradL.addColorStop(1, fleshDark);
   ctx.fillStyle = armGradL;
   // Upper arm (muscular taper)
   ctx.beginPath();
@@ -1661,7 +1714,7 @@ export function drawBerserkerEnemy(
   ctx.closePath();
   ctx.fill();
   // Forearm
-  ctx.fillStyle = "#991b1b";
+  ctx.fillStyle = fleshDeep;
   ctx.beginPath();
   ctx.moveTo(-size * 0.09, size * 0.22);
   ctx.lineTo(-size * 0.07, size * 0.42);
@@ -1671,7 +1724,7 @@ export function drawBerserkerEnemy(
   ctx.fill();
 
   // Arm veins (pulse with heartbeat)
-  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha})`;
+  ctx.strokeStyle = `rgba(${rageGlowRgb}, ${veinAlpha})`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, size * 0.03);
@@ -1707,10 +1760,10 @@ export function drawBerserkerEnemy(
 
   // Wrist bracer (left arm)
   const bracerGrad = ctx.createLinearGradient(-size * 0.11, size * 0.32, size * 0.11, size * 0.32);
-  bracerGrad.addColorStop(0, "#44403c");
-  bracerGrad.addColorStop(0.3, "#57534e");
-  bracerGrad.addColorStop(0.7, "#57534e");
-  bracerGrad.addColorStop(1, "#44403c");
+  bracerGrad.addColorStop(0, leatherBase);
+  bracerGrad.addColorStop(0.3, leatherLight);
+  bracerGrad.addColorStop(0.7, leatherLight);
+  bracerGrad.addColorStop(1, leatherBase);
   ctx.fillStyle = bracerGrad;
   ctx.beginPath();
   ctx.moveTo(-size * 0.1, size * 0.3);
@@ -1796,9 +1849,9 @@ export function drawBerserkerEnemy(
   ctx.translate(x + size * 0.42 + attackShake, y - size * 0.14 - bodyBob);
   ctx.rotate(0.55 - armSwing);
   const armGradR = ctx.createLinearGradient(0, 0, 0, size * 0.42);
-  armGradR.addColorStop(0, "#b91c1c");
-  armGradR.addColorStop(0.5, "#991b1b");
-  armGradR.addColorStop(1, "#7f1d1d");
+  armGradR.addColorStop(0, fleshBase);
+  armGradR.addColorStop(0.5, fleshDeep);
+  armGradR.addColorStop(1, fleshDark);
   ctx.fillStyle = armGradR;
   // Upper arm
   ctx.beginPath();
@@ -1809,7 +1862,7 @@ export function drawBerserkerEnemy(
   ctx.closePath();
   ctx.fill();
   // Forearm
-  ctx.fillStyle = "#991b1b";
+  ctx.fillStyle = fleshDeep;
   ctx.beginPath();
   ctx.moveTo(-size * 0.09, size * 0.22);
   ctx.lineTo(-size * 0.07, size * 0.42);
@@ -1819,7 +1872,7 @@ export function drawBerserkerEnemy(
   ctx.fill();
 
   // Arm veins
-  ctx.strokeStyle = `rgba(220, 38, 38, ${veinAlpha})`;
+  ctx.strokeStyle = `rgba(${rageGlowRgb}, ${veinAlpha})`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, size * 0.03);
@@ -1847,10 +1900,10 @@ export function drawBerserkerEnemy(
 
   // Wrist bracer (right arm)
   const bracerGradR = ctx.createLinearGradient(-size * 0.11, size * 0.32, size * 0.11, size * 0.32);
-  bracerGradR.addColorStop(0, "#44403c");
-  bracerGradR.addColorStop(0.3, "#57534e");
-  bracerGradR.addColorStop(0.7, "#57534e");
-  bracerGradR.addColorStop(1, "#44403c");
+  bracerGradR.addColorStop(0, leatherBase);
+  bracerGradR.addColorStop(0.3, leatherLight);
+  bracerGradR.addColorStop(0.7, leatherLight);
+  bracerGradR.addColorStop(1, leatherBase);
   ctx.fillStyle = bracerGradR;
   ctx.beginPath();
   ctx.moveTo(-size * 0.1, size * 0.3);
@@ -2396,6 +2449,8 @@ export function drawBerserkerEnemy(
       ctx.fill();
     }
   }
+
+  drawRegionBodyAccent(ctx, x, y - bodyBob, size, region, time, zoom);
 }
 
 export function drawGolemEnemy(
@@ -3372,10 +3427,36 @@ export function drawNecromancerEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // LICH SOVEREIGN - Ancient undead king commanding legions of the dead
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+
+  let robeBase = "#1e1b4b";
+  let robeDark = "#0a0820";
+  let robeLight = "#312e81";
+  let boneBase = "#e8e0d0";
+  let boneDark = "#d4ccc0";
+  let boneAccent = "#a8a29e";
+  let staffBase = "#3d2b1f";
+  let staffDark = "#2a1a0e";
+  let magicGlowRgb = "74, 222, 128";
+  let magicHex = "#4ade80";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    robeBase = rm.cloth.base;
+    robeDark = rm.cloth.dark;
+    robeLight = rm.cloth.light;
+    boneBase = rm.bone.base;
+    boneDark = rm.bone.dark;
+    boneAccent = rm.metal.base;
+    staffBase = rm.wood.base;
+    staffDark = rm.wood.dark;
+    magicGlowRgb = rm.magic.primary.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    magicHex = rm.magic.primary;
+  }
   const hover =
     Math.sin(time * 2) * 5 * zoom +
     (isAttacking ? attackIntensity * size * 0.2 : 0);
@@ -3465,9 +3546,9 @@ export function drawNecromancerEnemy(
 
   // --- Shuffling animated legs ---
   drawPathLegs(ctx, x, y + size * 0.3 + hover * 0.3, size, time, zoom, {
-    color: "#1e1b4b",
-    colorDark: "#0a0820",
-    footColor: "#312e81",
+    color: robeBase,
+    colorDark: robeDark,
+    footColor: robeLight,
     strideSpeed: 2.5,
     strideAmt: 0.15,
     legLen: 0.18,
@@ -3548,14 +3629,14 @@ export function drawNecromancerEnemy(
     ctx, x - size * 0.35, y - size * 0.25 + hover,
     size, time, zoom, -1,
     {
-      color: "#1e1b4b",
-      colorDark: "#0a0820",
+      color: robeBase,
+      colorDark: robeDark,
       shoulderAngle: -1.1 + Math.sin(time * 2) * 0.1 + (isAttacking ? -attackIntensity * 0.3 : 0),
       elbowAngle: -0.2 + Math.sin(time * 2.5 + 0.8) * 0.12,
       upperLen: 0.18,
       foreLen: 0.16,
       width: 0.05,
-      handColor: "#e8e0d0",
+      handColor: boneBase,
       handRadius: 0.03,
       style: "bone",
       onWeapon: (wCtx) => {
@@ -3599,14 +3680,14 @@ export function drawNecromancerEnemy(
     ctx, x + size * 0.35, y - size * 0.25 + hover,
     size, time, zoom, 1,
     {
-      color: "#1e1b4b",
-      colorDark: "#0a0820",
+      color: robeBase,
+      colorDark: robeDark,
       shoulderAngle: 0.9 + Math.sin(time * 2 + 1.5) * 0.12 + (isAttacking ? attackIntensity * 0.3 : 0),
       elbowAngle: 0.3 + Math.sin(time * 2.8 + 2) * 0.1,
       upperLen: 0.18,
       foreLen: 0.16,
       width: 0.05,
-      handColor: "#e8e0d0",
+      handColor: boneBase,
       handRadius: 0.03,
       style: "bone",
       onWeapon: (wCtx) => {
@@ -3614,10 +3695,10 @@ export function drawNecromancerEnemy(
         const s = size;
         const z = zoom;
         const shaftGrad = wCtx.createLinearGradient(0, 0, 0, -s * 0.4);
-        shaftGrad.addColorStop(0, "#3d2b1f");
-        shaftGrad.addColorStop(0.3, "#2a1a0e");
-        shaftGrad.addColorStop(0.7, "#1a0e06");
-        shaftGrad.addColorStop(1, "#0d0704");
+        shaftGrad.addColorStop(0, staffBase);
+        shaftGrad.addColorStop(0.3, staffDark);
+        shaftGrad.addColorStop(0.7, staffDark);
+        shaftGrad.addColorStop(1, staffDark);
         wCtx.fillStyle = shaftGrad;
         wCtx.beginPath();
         wCtx.moveTo(-s * 0.01, s * 0.02);
@@ -3626,16 +3707,16 @@ export function drawNecromancerEnemy(
         wCtx.quadraticCurveTo(s * 0.02, -s * 0.15, s * 0.01, s * 0.02);
         wCtx.closePath();
         wCtx.fill();
-        wCtx.fillStyle = "#e8e0d0";
+        wCtx.fillStyle = boneBase;
         wCtx.beginPath();
         wCtx.arc(0, -s * 0.34, s * 0.03, 0, TAU);
         wCtx.fill();
-        wCtx.fillStyle = "#d4ccc0";
+        wCtx.fillStyle = boneDark;
         wCtx.beginPath();
         wCtx.arc(0, -s * 0.34, s * 0.025, Math.PI * 0.9, Math.PI * 0.1, true);
         wCtx.closePath();
         wCtx.fill();
-        wCtx.fillStyle = "#1a0e06";
+        wCtx.fillStyle = staffDark;
         wCtx.beginPath();
         wCtx.arc(-s * 0.01, -s * 0.35, s * 0.005, 0, TAU);
         wCtx.fill();
@@ -3710,11 +3791,11 @@ export function drawNecromancerEnemy(
     x + size * 0.42,
     y,
   );
-  robeGrad.addColorStop(0, "#0a0820");
-  robeGrad.addColorStop(0.3, "#1e1b4b");
-  robeGrad.addColorStop(0.5, "#312e81");
-  robeGrad.addColorStop(0.7, "#1e1b4b");
-  robeGrad.addColorStop(1, "#0a0820");
+  robeGrad.addColorStop(0, robeDark);
+  robeGrad.addColorStop(0.3, robeBase);
+  robeGrad.addColorStop(0.5, robeLight);
+  robeGrad.addColorStop(0.7, robeBase);
+  robeGrad.addColorStop(1, robeDark);
   ctx.fillStyle = robeGrad;
   drawRobeBody(ctx, x, size * 0.18, y - size * 0.45 + hover, size * 0.42, y + size * 0.55, size * 0.45, y, {
     count: 6,
@@ -3789,7 +3870,7 @@ export function drawNecromancerEnemy(
   ctx.stroke();
 
   // Bone decorations on robe - more elaborate
-  ctx.fillStyle = "#e8e0d0";
+  ctx.fillStyle = boneBase;
   for (let i = 0; i < 4; i++) {
     const boneY = y - size * 0.15 + i * size * 0.14 + hover * 0.5;
     ctx.beginPath();
@@ -3799,7 +3880,7 @@ export function drawNecromancerEnemy(
       ctx.beginPath();
       ctx.arc(x, boneY + size * 0.07, size * 0.025, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#1e1b4b";
+      ctx.fillStyle = robeBase;
       ctx.beginPath();
       ctx.arc(
         x - size * 0.008,
@@ -3849,10 +3930,10 @@ export function drawNecromancerEnemy(
     x - size * 0.25, y - size * 0.65 + hover,
     x + size * 0.25, y - size * 0.25 + hover,
   );
-  hoodGrad.addColorStop(0, "#080620");
-  hoodGrad.addColorStop(0.4, "#050414");
-  hoodGrad.addColorStop(0.8, "#0a0820");
-  hoodGrad.addColorStop(1, "#050414");
+  hoodGrad.addColorStop(0, robeDark);
+  hoodGrad.addColorStop(0.4, robeDark);
+  hoodGrad.addColorStop(0.8, robeDark);
+  hoodGrad.addColorStop(1, robeDark);
   ctx.fillStyle = hoodGrad;
   // Hood peak and left drape
   ctx.beginPath();
@@ -3904,7 +3985,7 @@ export function drawNecromancerEnemy(
     { offset: 1, color: "#d6d3d1" },
   ]);
   // Skull cracks
-  ctx.strokeStyle = "#a8a29e";
+  ctx.strokeStyle = boneAccent;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.58 + hover);
@@ -3916,7 +3997,7 @@ export function drawNecromancerEnemy(
   ctx.stroke();
 
   // Hollow eye sockets
-  ctx.fillStyle = "#0a0820";
+  ctx.fillStyle = robeDark;
   ctx.beginPath();
   ctx.ellipse(
     x - size * 0.07,
@@ -3939,8 +4020,8 @@ export function drawNecromancerEnemy(
   ctx.fill();
 
   // Soul-fire eyes
-  ctx.fillStyle = "#4ade80";
-  setShadowBlur(ctx, 12 * zoom, "#4ade80");
+  ctx.fillStyle = magicHex;
+  setShadowBlur(ctx, 12 * zoom, magicHex);
   ctx.beginPath();
   ctx.arc(
     x - size * 0.07,
@@ -4170,6 +4251,8 @@ export function drawNecromancerEnemy(
       ctx.stroke();
     }
   }
+
+  drawRegionBodyAccent(ctx, x, y + hover, size, region, time, zoom);
 }
 export function drawShadowKnightEnemy(
   ctx: CanvasRenderingContext2D,
@@ -4182,10 +4265,38 @@ export function drawShadowKnightEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // DOOM CHAMPION - Fallen paladin corrupted by void, wielding soul-drinking blade
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+
+  let armorBlack = "#18181b";
+  let armorDark = "#27272a";
+  let armorMid = "#3f3f46";
+  let armorLight = "#52525b";
+  let armorBright = "#71717a";
+  let armorHighlight = "#a1a1aa";
+  let capeBlack = "#0a0a0b";
+  let voidMagicHex = "#8b5cf6";
+  let voidGlowRgb = "139, 92, 246";
+  let gripLeather = "#5c3a1e";
+  let gripDark = "#3d2510";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    armorBlack = rm.metal.dark;
+    armorDark = rm.metal.dark;
+    armorMid = rm.metal.base;
+    armorLight = rm.metal.base;
+    armorBright = rm.metal.bright;
+    armorHighlight = rm.metal.accent;
+    capeBlack = rm.cloth.dark;
+    voidMagicHex = rm.magic.primary;
+    voidGlowRgb = rm.magic.primary.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+    gripLeather = rm.leather.base;
+    gripDark = rm.leather.dark;
+  }
   const walkPhase = time * 2.5;
   const bodyBob = Math.abs(Math.sin(walkPhase)) * size * 0.015;
   const leftLegPhase = Math.sin(walkPhase);
@@ -4326,9 +4437,9 @@ export function drawShadowKnightEnemy(
   ctx.translate(x - size * 0.13, y + size * 0.2 + stance);
   ctx.rotate(leftThighAngle);
   const leftThighGrad = ctx.createLinearGradient(0, 0, 0, thighLen);
-  leftThighGrad.addColorStop(0, "#3f3f46");
-  leftThighGrad.addColorStop(0.5, "#27272a");
-  leftThighGrad.addColorStop(1, "#18181b");
+  leftThighGrad.addColorStop(0, armorMid);
+  leftThighGrad.addColorStop(0.5, armorDark);
+  leftThighGrad.addColorStop(1, armorBlack);
   ctx.fillStyle = leftThighGrad;
   ctx.beginPath();
   ctx.moveTo(-size * 0.06, 0);
@@ -4337,13 +4448,13 @@ export function drawShadowKnightEnemy(
   ctx.lineTo(size * 0.06, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#52525b";
+  ctx.fillStyle = armorLight;
   ctx.beginPath();
   ctx.arc(0, thighLen, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
   ctx.translate(0, thighLen);
   ctx.rotate(leftKneeBend);
-  ctx.fillStyle = "#27272a";
+  ctx.fillStyle = armorDark;
   ctx.beginPath();
   ctx.moveTo(-size * 0.05, 0);
   ctx.lineTo(-size * 0.04, shinLen);
@@ -4351,13 +4462,13 @@ export function drawShadowKnightEnemy(
   ctx.lineTo(size * 0.05, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(139, 92, 246, ${voidGlow * 0.3})`;
+  ctx.strokeStyle = `rgba(${voidGlowRgb}, ${voidGlow * 0.3})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(-size * 0.045, shinLen * 0.3);
   ctx.lineTo(size * 0.045, shinLen * 0.3);
   ctx.stroke();
-  ctx.fillStyle = "#3f3f46";
+  ctx.fillStyle = armorMid;
   ctx.beginPath();
   ctx.ellipse(
     size * 0.01,
@@ -4369,7 +4480,7 @@ export function drawShadowKnightEnemy(
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.strokeStyle = "#52525b";
+  ctx.strokeStyle = armorLight;
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
   ctx.restore();
@@ -4379,9 +4490,9 @@ export function drawShadowKnightEnemy(
   ctx.translate(x + size * 0.13, y + size * 0.2 + stance);
   ctx.rotate(rightThighAngle);
   const rightThighGrad = ctx.createLinearGradient(0, 0, 0, thighLen);
-  rightThighGrad.addColorStop(0, "#3f3f46");
-  rightThighGrad.addColorStop(0.5, "#27272a");
-  rightThighGrad.addColorStop(1, "#18181b");
+  rightThighGrad.addColorStop(0, armorMid);
+  rightThighGrad.addColorStop(0.5, armorDark);
+  rightThighGrad.addColorStop(1, armorBlack);
   ctx.fillStyle = rightThighGrad;
   ctx.beginPath();
   ctx.moveTo(-size * 0.06, 0);
@@ -4390,13 +4501,13 @@ export function drawShadowKnightEnemy(
   ctx.lineTo(size * 0.06, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#52525b";
+  ctx.fillStyle = armorLight;
   ctx.beginPath();
   ctx.arc(0, thighLen, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
   ctx.translate(0, thighLen);
   ctx.rotate(rightKneeBend);
-  ctx.fillStyle = "#27272a";
+  ctx.fillStyle = armorDark;
   ctx.beginPath();
   ctx.moveTo(-size * 0.05, 0);
   ctx.lineTo(-size * 0.04, shinLen);
@@ -4404,13 +4515,13 @@ export function drawShadowKnightEnemy(
   ctx.lineTo(size * 0.05, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(139, 92, 246, ${voidGlow * 0.3})`;
+  ctx.strokeStyle = `rgba(${voidGlowRgb}, ${voidGlow * 0.3})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(-size * 0.045, shinLen * 0.3);
   ctx.lineTo(size * 0.045, shinLen * 0.3);
   ctx.stroke();
-  ctx.fillStyle = "#3f3f46";
+  ctx.fillStyle = armorMid;
   ctx.beginPath();
   ctx.ellipse(
     -size * 0.01,
@@ -4422,7 +4533,7 @@ export function drawShadowKnightEnemy(
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.strokeStyle = "#52525b";
+  ctx.strokeStyle = armorLight;
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
   ctx.restore();
@@ -4466,9 +4577,9 @@ export function drawShadowKnightEnemy(
     x + size * 0.4,
     y,
   );
-  capeGrad.addColorStop(0, "#0a0a0b");
-  capeGrad.addColorStop(0.5, "#18181b");
-  capeGrad.addColorStop(1, "#0a0a0b");
+  capeGrad.addColorStop(0, capeBlack);
+  capeGrad.addColorStop(0.5, armorBlack);
+  capeGrad.addColorStop(1, capeBlack);
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.28, y - size * 0.28 + stance);
@@ -4544,25 +4655,25 @@ export function drawShadowKnightEnemy(
     ctx, x - size * 0.35, y - size * 0.18 + stance,
     size, time, zoom, -1,
     {
-      color: "#3f3f46",
-      colorDark: "#27272a",
+      color: armorMid,
+      colorDark: armorDark,
       shoulderAngle: -0.5 + Math.sin(time * 2) * 0.06,
       elbowAngle: 0.9 + Math.sin(time * 2.5 + 0.5) * 0.08,
       upperLen: 0.2,
       foreLen: 0.17,
       width: 0.07,
-      handColor: "#52525b",
+      handColor: armorLight,
       handRadius: 0.035,
       style: "armored",
       onWeapon: (wCtx) => {
         const s = size;
         const z = zoom;
         const shieldGrad = wCtx.createLinearGradient(-s * 0.06, -s * 0.1, s * 0.06, -s * 0.1);
-        shieldGrad.addColorStop(0, "#18181b");
-        shieldGrad.addColorStop(0.3, "#3f3f46");
-        shieldGrad.addColorStop(0.5, "#52525b");
-        shieldGrad.addColorStop(0.7, "#3f3f46");
-        shieldGrad.addColorStop(1, "#18181b");
+        shieldGrad.addColorStop(0, armorBlack);
+        shieldGrad.addColorStop(0.3, armorMid);
+        shieldGrad.addColorStop(0.5, armorLight);
+        shieldGrad.addColorStop(0.7, armorMid);
+        shieldGrad.addColorStop(1, armorBlack);
         wCtx.fillStyle = shieldGrad;
         wCtx.beginPath();
         wCtx.moveTo(0, -s * 0.18);
@@ -4611,14 +4722,14 @@ export function drawShadowKnightEnemy(
     ctx, x + size * 0.35, y - size * 0.18 + stance,
     size, time, zoom, 1,
     {
-      color: "#3f3f46",
-      colorDark: "#27272a",
+      color: armorMid,
+      colorDark: armorDark,
       shoulderAngle: 0.8 + Math.sin(time * 2.5) * 0.08 + (isAttacking ? attackPhase * 0.5 : 0),
       elbowAngle: 0.4 + Math.sin(time * 3 + 1.5) * 0.1,
       upperLen: 0.2,
       foreLen: 0.17,
       width: 0.07,
-      handColor: "#52525b",
+      handColor: armorLight,
       handRadius: 0.035,
       style: "armored",
       onWeapon: (wCtx) => {
@@ -4626,9 +4737,9 @@ export function drawShadowKnightEnemy(
         const s = size;
         const z = zoom;
         const gripGrad = wCtx.createLinearGradient(0, 0, 0, s * 0.06);
-        gripGrad.addColorStop(0, "#5c3a1e");
-        gripGrad.addColorStop(0.5, "#3d2510");
-        gripGrad.addColorStop(1, "#5c3a1e");
+        gripGrad.addColorStop(0, gripLeather);
+        gripGrad.addColorStop(0.5, gripDark);
+        gripGrad.addColorStop(1, gripLeather);
         wCtx.fillStyle = gripGrad;
         wCtx.fillRect(-s * 0.012, 0, s * 0.024, s * 0.06);
         wCtx.strokeStyle = "#7c5a3e";
@@ -4713,13 +4824,13 @@ export function drawShadowKnightEnemy(
     x + size * 0.35,
     y,
   );
-  armorGrad.addColorStop(0, "#18181b");
-  armorGrad.addColorStop(0.2, "#27272a");
-  armorGrad.addColorStop(0.35, "#3f3f46");
-  armorGrad.addColorStop(0.5, "#52525b");
-  armorGrad.addColorStop(0.65, "#3f3f46");
-  armorGrad.addColorStop(0.8, "#27272a");
-  armorGrad.addColorStop(1, "#18181b");
+  armorGrad.addColorStop(0, armorBlack);
+  armorGrad.addColorStop(0.2, armorDark);
+  armorGrad.addColorStop(0.35, armorMid);
+  armorGrad.addColorStop(0.5, armorLight);
+  armorGrad.addColorStop(0.65, armorMid);
+  armorGrad.addColorStop(0.8, armorDark);
+  armorGrad.addColorStop(1, armorBlack);
   ctx.fillStyle = armorGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.33, y + size * 0.38);
@@ -4735,7 +4846,7 @@ export function drawShadowKnightEnemy(
   ctx.fill();
 
   // Armor plate rivets along edges
-  ctx.fillStyle = "#71717a";
+  ctx.fillStyle = armorBright;
   const rivetPositions = [
     [-0.32, -0.12], [-0.3, 0.05], [-0.28, 0.2], [-0.26, 0.34],
     [0.32, -0.12], [0.3, 0.05], [0.28, 0.2], [0.26, 0.34],
@@ -4747,7 +4858,7 @@ export function drawShadowKnightEnemy(
     ctx.arc(x + rx * size, y + ry * size + stance * (ry < 0 ? 1 : 0.5), size * 0.012, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.fillStyle = "#a1a1aa";
+  ctx.fillStyle = armorHighlight;
   for (const [rx, ry] of rivetPositions) {
     ctx.beginPath();
     ctx.arc(x + rx * size - size * 0.003, y + ry * size + stance * (ry < 0 ? 1 : 0.5) - size * 0.003, size * 0.005, 0, Math.PI * 2);
@@ -4960,15 +5071,15 @@ export function drawShadowKnightEnemy(
     x + size * 0.2,
     y - size * 0.35,
   );
-  helmGrad.addColorStop(0, "#27272a");
-  helmGrad.addColorStop(0.5, "#3f3f46");
-  helmGrad.addColorStop(1, "#27272a");
+  helmGrad.addColorStop(0, armorDark);
+  helmGrad.addColorStop(0.5, armorMid);
+  helmGrad.addColorStop(1, armorDark);
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.43 + stance, size * 0.2, 0, Math.PI * 2);
   ctx.fill();
   // Helmet visor
-  ctx.fillStyle = "#18181b";
+  ctx.fillStyle = armorBlack;
   ctx.fillRect(
     x - size * 0.16,
     y - size * 0.5 + stance,
@@ -5329,6 +5440,8 @@ export function drawShadowKnightEnemy(
       ctx.fill();
     }
   }
+
+  drawRegionBodyAccent(ctx, x, y + stance, size, region, time, zoom);
 }
 
 // ============================================================================
@@ -5346,9 +5459,34 @@ export function drawCultistEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // FINALS WEEK CULTIST - Hooded figure with glowing runes and forbidden coffee
   const isAttacking = attackPhase > 0;
+
+  let robeBase = "#2a1810";
+  let robeDark = "#1a0a05";
+  let robeLining = "#3d1f14";
+  let robeLiningLight = "#4a2818";
+  let skinTone = "#c4a882";
+  let daggerMetal = "#3f3f46";
+  let daggerDark = "#18181b";
+  let daggerBright = "#27272a";
+  let ritualGlowRgb = "168, 85, 247";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    robeBase = rm.cloth.base;
+    robeDark = rm.cloth.dark;
+    robeLining = rm.cloth.light;
+    robeLiningLight = rm.cloth.trim;
+    skinTone = rm.bone.base;
+    daggerMetal = rm.metal.base;
+    daggerDark = rm.metal.dark;
+    daggerBright = rm.metal.bright;
+    ritualGlowRgb = rm.magic.primary.replace("#", "").match(/../g)!.map(h => parseInt(h, 16)).join(", ");
+  }
+
   const sway = Math.sin(time * 3) * 2 * zoom;
   const chant = Math.sin(time * 8) * 0.3;
   const runeGlow =
@@ -5456,9 +5594,9 @@ export function drawCultistEnemy(
 
   // --- Slow shuffling animated legs ---
   drawPathLegs(ctx, x, y + size * 0.25, size, time, zoom, {
-    color: "#2a1810",
-    colorDark: "#1a0a05",
-    footColor: "#3d1f14",
+    color: robeBase,
+    colorDark: robeDark,
+    footColor: robeLining,
     strideSpeed: 2,
     strideAmt: 0.12,
     legLen: 0.16,
@@ -5473,13 +5611,13 @@ export function drawCultistEnemy(
     size, time, zoom, -1,
     {
       color: bodyColorDark,
-      colorDark: "#1a0a05",
+      colorDark: robeDark,
       shoulderAngle: -0.7 + Math.sin(time * 2) * 0.12,
       elbowAngle: -0.3 + Math.sin(time * 2.5 + 1) * 0.15,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.045,
-      handColor: "#c4a882",
+      handColor: skinTone,
       handRadius: 0.03,
       style: "ghostly",
       onWeapon: (wCtx) => {
@@ -5488,9 +5626,9 @@ export function drawCultistEnemy(
         const bookW = s * 0.06;
         const bookH = s * 0.08;
         const coverGrad = wCtx.createLinearGradient(-bookW, -bookH, bookW, 0);
-        coverGrad.addColorStop(0, "#1a0a05");
-        coverGrad.addColorStop(0.5, "#2a1810");
-        coverGrad.addColorStop(1, "#1a0a05");
+        coverGrad.addColorStop(0, robeDark);
+        coverGrad.addColorStop(0.5, robeBase);
+        coverGrad.addColorStop(1, robeDark);
         wCtx.fillStyle = coverGrad;
         wCtx.fillRect(-bookW * 0.5, -bookH, bookW, bookH);
         wCtx.fillStyle = "#8b6914";
@@ -5535,13 +5673,13 @@ export function drawCultistEnemy(
     size, time, zoom, 1,
     {
       color: bodyColorDark,
-      colorDark: "#1a0a05",
+      colorDark: robeDark,
       shoulderAngle: 1.0 + Math.sin(time * 1.8 + 2) * 0.1,
       elbowAngle: 0.2 + Math.sin(time * 2.2 + 0.5) * 0.12,
       upperLen: 0.16,
       foreLen: 0.14,
       width: 0.045,
-      handColor: "#c4a882",
+      handColor: skinTone,
       handRadius: 0.03,
       style: "ghostly",
       onWeapon: (wCtx) => {
@@ -5549,12 +5687,12 @@ export function drawCultistEnemy(
         const s = size;
         const z = zoom;
         const hiltGrad = wCtx.createLinearGradient(0, 0, 0, s * 0.04);
-        hiltGrad.addColorStop(0, "#e8e0d0");
-        hiltGrad.addColorStop(0.5, "#c4a882");
-        hiltGrad.addColorStop(1, "#e8e0d0");
+        hiltGrad.addColorStop(0, skinTone);
+        hiltGrad.addColorStop(0.5, skinTone);
+        hiltGrad.addColorStop(1, skinTone);
         wCtx.fillStyle = hiltGrad;
         wCtx.fillRect(-s * 0.008, 0, s * 0.016, s * 0.04);
-        wCtx.strokeStyle = `rgba(168, 85, 247, ${0.4 + Math.sin(time * 5) * 0.2})`;
+        wCtx.strokeStyle = `rgba(${ritualGlowRgb}, ${0.4 + Math.sin(time * 5) * 0.2})`;
         wCtx.lineWidth = 0.5 * z;
         for (let r = 0; r < 2; r++) {
           wCtx.beginPath();
@@ -5562,14 +5700,14 @@ export function drawCultistEnemy(
           wCtx.lineTo(s * 0.009, s * 0.015 + r * s * 0.018);
           wCtx.stroke();
         }
-        wCtx.fillStyle = "#3f3f46";
+        wCtx.fillStyle = daggerMetal;
         wCtx.fillRect(-s * 0.02, -s * 0.005, s * 0.04, s * 0.008);
         const bladeGrad = wCtx.createLinearGradient(-s * 0.01, -s * 0.005, s * 0.01, -s * 0.005);
-        bladeGrad.addColorStop(0, "#18181b");
-        bladeGrad.addColorStop(0.3, "#3f3f46");
-        bladeGrad.addColorStop(0.5, "#27272a");
-        bladeGrad.addColorStop(0.7, "#3f3f46");
-        bladeGrad.addColorStop(1, "#18181b");
+        bladeGrad.addColorStop(0, daggerDark);
+        bladeGrad.addColorStop(0.3, daggerMetal);
+        bladeGrad.addColorStop(0.5, daggerBright);
+        bladeGrad.addColorStop(0.7, daggerMetal);
+        bladeGrad.addColorStop(1, daggerDark);
         wCtx.fillStyle = bladeGrad;
         const wavePts = 6;
         wCtx.beginPath();
@@ -5645,10 +5783,10 @@ export function drawCultistEnemy(
     x + size * 0.3,
     y + size * 0.2,
   );
-  robeGrad.addColorStop(0, "#2a1810");
+  robeGrad.addColorStop(0, robeBase);
   robeGrad.addColorStop(0.4, bodyColor);
   robeGrad.addColorStop(0.6, bodyColor);
-  robeGrad.addColorStop(1, "#2a1810");
+  robeGrad.addColorStop(1, robeBase);
   ctx.fillStyle = robeGrad;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.45);
@@ -5770,9 +5908,9 @@ export function drawCultistEnemy(
 
   // Robe inner lining V-opening with bezier depth
   const liningGrad = ctx.createLinearGradient(x - size * 0.08, y, x + size * 0.08, y);
-  liningGrad.addColorStop(0, "#3d1f14");
-  liningGrad.addColorStop(0.5, "#4a2818");
-  liningGrad.addColorStop(1, "#3d1f14");
+  liningGrad.addColorStop(0, robeLining);
+  liningGrad.addColorStop(0.5, robeLiningLight);
+  liningGrad.addColorStop(1, robeLining);
   ctx.fillStyle = liningGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.04, y - size * 0.38);
@@ -6417,6 +6555,8 @@ export function drawCultistEnemy(
     ctx.stroke();
   }
   ctx.restore();
+
+  drawRegionBodyAccent(ctx, x, y, size, region, time, zoom);
 }
 
 export function drawPlaguebearerEnemy(

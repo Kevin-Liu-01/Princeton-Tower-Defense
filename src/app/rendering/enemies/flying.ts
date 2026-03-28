@@ -1,6 +1,8 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
+import type { MapTheme } from "../../types";
 import { drawWindGusts, drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawFloatingPiece, drawAnimatedTendril } from "./animationHelpers";
 import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
 export function drawHarpyEnemy(
   ctx: CanvasRenderingContext2D,
@@ -13,6 +15,7 @@ export function drawHarpyEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // HARPY - Storm Fury, Aerial Predator of the Tempest
   // A terrifying avian huntress with iridescent plumage and deadly talons
@@ -24,6 +27,33 @@ export function drawHarpyEnemy(
   const breathe = Math.sin(time * 4) * size * 0.01;
   const featherRuffle = Math.sin(time * 6) * 0.1;
   const windIntensity = 0.3 + Math.sin(time * 2) * 0.15;
+
+  let wingBase = "#8b5cf6";
+  let wingMid = "#7c3aed";
+  let wingDark = "#6d28d9";
+  let wingDeep = "#4c1d95";
+  let wingBone = "#5b21b6";
+  let featherLight = "#a78bfa";
+  let clawBase = "#78350f";
+  let clawDark = "#451a03";
+  let clawMid = "#92400e";
+  let clawLight = "#b45309";
+  let beakColor = "#d97706";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    wingBase = rm.cloth.base;
+    wingMid = rm.cloth.dark;
+    wingDark = rm.leather.base;
+    wingDeep = rm.leather.dark;
+    wingBone = rm.bone.dark;
+    featherLight = rm.cloth.light;
+    clawBase = rm.bone.base;
+    clawDark = rm.bone.dark;
+    clawMid = rm.bone.dark;
+    clawLight = rm.bone.base;
+    beakColor = rm.bone.base;
+  }
 
   // === LAYER 1: WIND CURRENTS / AERIAL AURA ===
   // Swirling wind trails
@@ -85,10 +115,10 @@ export function drawHarpyEnemy(
 
   // Wing base gradient
   const leftWingGrad = ctx.createLinearGradient(0, 0, -size * 0.9, -size * 0.2);
-  leftWingGrad.addColorStop(0, "#8b5cf6");
-  leftWingGrad.addColorStop(0.3, "#7c3aed");
-  leftWingGrad.addColorStop(0.6, "#6d28d9");
-  leftWingGrad.addColorStop(1, "#4c1d95");
+  leftWingGrad.addColorStop(0, wingBase);
+  leftWingGrad.addColorStop(0.3, wingMid);
+  leftWingGrad.addColorStop(0.6, wingDark);
+  leftWingGrad.addColorStop(1, wingDeep);
   ctx.fillStyle = leftWingGrad;
 
   // Detailed wing shape with multiple feather sections
@@ -131,7 +161,7 @@ export function drawHarpyEnemy(
   ctx.fill();
 
   // Wing bone structure
-  ctx.strokeStyle = "#5b21b6";
+  ctx.strokeStyle = wingBone;
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -266,10 +296,10 @@ export function drawHarpyEnemy(
 
   // Wing gradient (mirrored)
   const rightWingGrad = ctx.createLinearGradient(0, 0, size * 0.9, -size * 0.2);
-  rightWingGrad.addColorStop(0, "#8b5cf6");
-  rightWingGrad.addColorStop(0.3, "#7c3aed");
-  rightWingGrad.addColorStop(0.6, "#6d28d9");
-  rightWingGrad.addColorStop(1, "#4c1d95");
+  rightWingGrad.addColorStop(0, wingBase);
+  rightWingGrad.addColorStop(0.3, wingMid);
+  rightWingGrad.addColorStop(0.6, wingDark);
+  rightWingGrad.addColorStop(1, wingDeep);
   ctx.fillStyle = rightWingGrad;
 
   ctx.beginPath();
@@ -308,7 +338,7 @@ export function drawHarpyEnemy(
   ctx.fill();
 
   // Wing bones
-  ctx.strokeStyle = "#5b21b6";
+  ctx.strokeStyle = wingBone;
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -426,8 +456,8 @@ export function drawHarpyEnemy(
 
   // === ANIMATED LEGS (talon-like dangling, fast kick) ===
   drawPathLegs(ctx, x, y + size * 0.25 + swoop, size, time, zoom, {
-    color: "#78350f",
-    colorDark: "#451a03",
+    color: clawBase,
+    colorDark: clawDark,
     footColor: "#1a1a2e",
     strideSpeed: 10,
     strideAmt: 0.45,
@@ -438,9 +468,9 @@ export function drawHarpyEnemy(
 
   // === ANIMATED CLAWS — talons reaching forward ===
   drawPathArm(ctx, x - size * 0.18, y + size * 0.05 + swoop, size, time, zoom, -1, {
-    color: "#8b5cf6",
-    colorDark: "#6d28d9",
-    handColor: "#78350f",
+    color: wingBase,
+    colorDark: wingDark,
+    handColor: clawBase,
     handRadius: 0.03,
     shoulderAngle: -0.8 + Math.sin(time * 4) * 0.15 + (isAttacking ? -attackIntensity * 0.5 : 0),
     elbowAngle: 0.3 + Math.sin(time * 5 + 0.8) * 0.15,
@@ -450,9 +480,9 @@ export function drawHarpyEnemy(
     style: "fleshy",
   });
   drawPathArm(ctx, x + size * 0.18, y + size * 0.05 + swoop, size, time, zoom, 1, {
-    color: "#8b5cf6",
-    colorDark: "#6d28d9",
-    handColor: "#78350f",
+    color: wingBase,
+    colorDark: wingDark,
+    handColor: clawBase,
     handRadius: 0.03,
     shoulderAngle: 0.8 + Math.sin(time * 4 + Math.PI) * 0.15 + (isAttacking ? attackIntensity * 0.5 : 0),
     elbowAngle: 0.3 + Math.sin(time * 5 + 2.5) * 0.15,
@@ -473,10 +503,10 @@ export function drawHarpyEnemy(
     y + size * 0.1 + swoop,
     size * 0.35,
   );
-  bodyGrad.addColorStop(0, "#a78bfa");
-  bodyGrad.addColorStop(0.4, "#8b5cf6");
-  bodyGrad.addColorStop(0.7, "#7c3aed");
-  bodyGrad.addColorStop(1, "#6d28d9");
+  bodyGrad.addColorStop(0, featherLight);
+  bodyGrad.addColorStop(0.4, wingBase);
+  bodyGrad.addColorStop(0.7, wingMid);
+  bodyGrad.addColorStop(1, wingDark);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(
@@ -546,7 +576,7 @@ export function drawHarpyEnemy(
 
   // === LAYER 6: FIERCE HEAD AND FACE ===
   // Neck feathers
-  ctx.fillStyle = "#8b5cf6";
+  ctx.fillStyle = wingBase;
   ctx.beginPath();
   ctx.ellipse(
     x,
@@ -577,7 +607,7 @@ export function drawHarpyEnemy(
   ctx.fill();
 
   // Face markings (fierce pattern)
-  ctx.strokeStyle = "#92400e";
+  ctx.strokeStyle = clawMid;
   ctx.lineWidth = 1.5 * zoom;
   // Eye stripes
   ctx.beginPath();
@@ -588,7 +618,7 @@ export function drawHarpyEnemy(
   ctx.stroke();
 
   // Crown feathers (elaborate crest)
-  const crownColors = ["#7c3aed", "#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9"];
+  const crownColors = [wingMid, wingBase, featherLight, wingMid, wingDark];
   for (let c = 0; c < 5; c++) {
     const crownAngle = -Math.PI * 0.7 + c * Math.PI * 0.1;
     const crownLen =
@@ -615,7 +645,7 @@ export function drawHarpyEnemy(
   }
 
   // Head plumage crest - 4 short upright feathers at crown
-  const plumeColors = ["#7c3aed", "#a78bfa", "#8b5cf6", "#6d28d9"];
+  const plumeColors = [wingMid, featherLight, wingBase, wingDark];
   for (let p = 0; p < 4; p++) {
     const pAngle = -Math.PI * 0.5 + (p - 1.5) * 0.2;
     const pBaseX = x + (p - 1.5) * size * 0.03;
@@ -784,7 +814,7 @@ export function drawHarpyEnemy(
     x,
     y - size * 0.2 + swoop,
   );
-  beakGrad.addColorStop(0, "#d97706");
+  beakGrad.addColorStop(0, beakColor);
   beakGrad.addColorStop(0.5, "#f59e0b");
   beakGrad.addColorStop(1, "#fbbf24");
   ctx.fillStyle = beakGrad;
@@ -806,7 +836,7 @@ export function drawHarpyEnemy(
   );
   ctx.fill();
   // Beak hook - curved raptor tip
-  ctx.fillStyle = "#92400e";
+  ctx.fillStyle = clawMid;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.25 + swoop);
   ctx.quadraticCurveTo(x - size * 0.01, y - size * 0.22 + swoop, x - size * 0.015, y - size * 0.21 + swoop);
@@ -814,20 +844,20 @@ export function drawHarpyEnemy(
   ctx.quadraticCurveTo(x + size * 0.01, y - size * 0.22 + swoop, x, y - size * 0.25 + swoop);
   ctx.fill();
   // Beak ridge line
-  ctx.strokeStyle = "#b45309";
+  ctx.strokeStyle = clawLight;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.3 + swoop);
   ctx.lineTo(x, y - size * 0.25 + swoop);
   ctx.stroke();
   // Lower beak
-  ctx.fillStyle = "#d97706";
+  ctx.fillStyle = beakColor;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.03, y - size * 0.24 + swoop);
   ctx.quadraticCurveTo(x, y - size * 0.21 + swoop, x + size * 0.03, y - size * 0.24 + swoop);
   ctx.fill();
   // Nostril
-  ctx.fillStyle = "#78350f";
+  ctx.fillStyle = clawBase;
   ctx.beginPath();
   ctx.ellipse(
     x,
@@ -858,7 +888,7 @@ export function drawHarpyEnemy(
   }
 
   // === LAYER 7: POWERFUL TALONED LEGS ===
-  ctx.strokeStyle = "#78350f";
+  ctx.strokeStyle = clawBase;
   ctx.lineWidth = 3 * zoom;
 
   // Left leg with segments
@@ -883,7 +913,7 @@ export function drawHarpyEnemy(
     const lx = leg === 0 ? leftLegX : rightLegX;
     for (let s = 0; s < 5; s++) {
       const scaleY = y + size * 0.3 + s * size * 0.04 + swoop;
-      ctx.fillStyle = s % 2 === 0 ? "#d97706" : "#b45309";
+      ctx.fillStyle = s % 2 === 0 ? beakColor : clawLight;
       ctx.beginPath();
       ctx.moveTo(lx - size * 0.018, scaleY);
       ctx.quadraticCurveTo(lx, scaleY - size * 0.015, lx + size * 0.018, scaleY);
@@ -891,7 +921,7 @@ export function drawHarpyEnemy(
       ctx.fill();
     }
     // Ankle joint knob
-    ctx.fillStyle = "#92400e";
+    ctx.fillStyle = clawMid;
     ctx.beginPath();
     ctx.arc(lx, y + size * 0.38 + swoop, size * 0.015, 0, Math.PI * 2);
     ctx.fill();
@@ -919,7 +949,7 @@ export function drawHarpyEnemy(
       let pX = talonX + Math.cos(tAngle + Math.PI * 0.5) * size * 0.025;
       let pY = talonBase;
 
-      ctx.strokeStyle = "#92400e";
+      ctx.strokeStyle = clawMid;
       ctx.lineWidth = 2.2 * zoom;
       for (let ph = 0; ph < phalanxCount; ph++) {
         const nextPX = pX + Math.cos(tAngle) * phalanxLen * (isBack ? -0.7 : 1);
@@ -929,7 +959,7 @@ export function drawHarpyEnemy(
         ctx.lineTo(nextPX, nextPY);
         ctx.stroke();
         // Knuckle joint
-        ctx.fillStyle = "#b45309";
+        ctx.fillStyle = clawLight;
         ctx.beginPath();
         ctx.arc(nextPX, nextPY, size * 0.01, 0, Math.PI * 2);
         ctx.fill();
@@ -944,7 +974,7 @@ export function drawHarpyEnemy(
       const clawLen = claw === 1 || claw === 2 ? size * 0.1 : size * 0.08;
 
       // Claw bone
-      ctx.fillStyle = "#78350f";
+      ctx.fillStyle = clawBase;
       ctx.beginPath();
       ctx.moveTo(
         talonX + Math.cos(clawAngle + Math.PI * 0.5) * size * 0.03,
@@ -1055,8 +1085,8 @@ export function drawHarpyEnemy(
 
   // === FLOATING FEATHER SHARDS (orbiting) ===
   drawShiftingSegments(ctx, x, y + swoop, size, time, zoom, {
-    color: "#a78bfa",
-    colorAlt: "#7c3aed",
+    color: featherLight,
+    colorAlt: wingMid,
     count: 5,
     orbitRadius: 0.45,
     segmentSize: 0.03,
@@ -1075,6 +1105,8 @@ export function drawHarpyEnemy(
     maxRadius: 0.55,
     trailLen: 2,
   });
+
+  drawRegionBodyAccent(ctx, x, y + swoop, size, region, time, zoom);
 }
 
 export function drawWyvernEnemy(
@@ -1088,6 +1120,7 @@ export function drawWyvernEnemy(
   time: number,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   // WYVERN - Ancient Draconic Terror with Venomous Breath
   // A colossal flying predator wreathed in toxic miasma
@@ -1112,6 +1145,31 @@ export function drawWyvernEnemy(
   const venomIntensity = isAttacking
     ? 0.6 + attackIntensity * 0.4
     : 0.3 + Math.sin(time * 3) * 0.15;
+
+  let scaleBase = "#10b981";
+  let scaleDark = "#059669";
+  let scaleDeep = "#047857";
+  let scaleDarkest = "#065f46";
+  let scaleLight = "#34d399";
+  let bellyLight = "#a7f3d0";
+  let bellyMid = "#6ee7b7";
+  let hornColor = "#0f172a";
+  let hornMid = "#1e293b";
+  let venomBright = "#4ade80";
+
+  const rm = getRegionMaterials(region);
+  if (region !== "grassland") {
+    scaleBase = rm.cloth.base;
+    scaleDark = rm.cloth.dark;
+    scaleDeep = rm.leather.base;
+    scaleDarkest = rm.leather.dark;
+    scaleLight = rm.cloth.light;
+    bellyLight = rm.cloth.trim;
+    bellyMid = rm.cloth.light;
+    hornColor = rm.bone.dark;
+    hornMid = rm.bone.dark;
+    venomBright = rm.magic.primary;
+  }
 
   // === LAYER 1: TOXIC MIASMA AURA ===
   // Outer poison cloud
@@ -1167,9 +1225,9 @@ export function drawWyvernEnemy(
       segY,
       segSize,
     );
-    segGrad.addColorStop(0, "#10b981");
-    segGrad.addColorStop(0.6, "#059669");
-    segGrad.addColorStop(1, "#047857");
+    segGrad.addColorStop(0, scaleBase);
+    segGrad.addColorStop(0.6, scaleDark);
+    segGrad.addColorStop(1, scaleDeep);
     ctx.fillStyle = segGrad;
     ctx.beginPath();
     ctx.ellipse(segX, segY, segSize, segSize * 0.7, seg * 0.08, 0, Math.PI * 2);
@@ -1185,7 +1243,7 @@ export function drawWyvernEnemy(
     }
     // Segment ridge scales
     if (seg < tailSegments - 1) {
-      ctx.fillStyle = "#065f46";
+      ctx.fillStyle = scaleDarkest;
       ctx.beginPath();
       ctx.moveTo(segX, segY - segSize * 0.6);
       ctx.lineTo(segX + size * 0.03, segY - segSize * 0.9);
@@ -1232,7 +1290,7 @@ export function drawWyvernEnemy(
 
   // Deadly tail spike cluster
   const spikeBase = (tailSegments - 1) * size * 0.12;
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   // Main spike
   ctx.beginPath();
   ctx.moveTo(spikeBase, 0);
@@ -1398,7 +1456,7 @@ export function drawWyvernEnemy(
     ctx.lineTo(sx * size * 0.52, -size * 0.03);
     ctx.stroke();
 
-    ctx.fillStyle = "#047857";
+    ctx.fillStyle = scaleDeep;
     const holes: [number, number, number][] = [
       [sx * 0.16, -0.14, 0.025],
       [sx * 0.36, -0.07, 0.02],
@@ -1427,10 +1485,10 @@ export function drawWyvernEnemy(
     -size * 0.95,
     -size * 0.2,
   );
-  leftWingGrad.addColorStop(0, "#10b981");
-  leftWingGrad.addColorStop(0.3, "#059669");
-  leftWingGrad.addColorStop(0.6, "#047857");
-  leftWingGrad.addColorStop(1, "#065f46");
+  leftWingGrad.addColorStop(0, scaleBase);
+  leftWingGrad.addColorStop(0.3, scaleDark);
+  leftWingGrad.addColorStop(0.6, scaleDeep);
+  leftWingGrad.addColorStop(1, scaleDarkest);
   ctx.fillStyle = leftWingGrad;
 
   // Main wing membrane with detailed shape
@@ -1459,7 +1517,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Wing bone structure with joint detail
-  ctx.strokeStyle = "#047857";
+  ctx.strokeStyle = scaleDeep;
   ctx.lineWidth = 3.5 * zoom;
   // Main arm bone
   ctx.beginPath();
@@ -1467,7 +1525,7 @@ export function drawWyvernEnemy(
   ctx.lineTo(-size * 0.35, -size * 0.15);
   ctx.stroke();
   // Shoulder joint knob
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
@@ -1476,7 +1534,7 @@ export function drawWyvernEnemy(
   ctx.arc(-size * 0.35, -size * 0.15, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
   // Finger bones
-  ctx.strokeStyle = "#047857";
+  ctx.strokeStyle = scaleDeep;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(-size * 0.35, -size * 0.15);
@@ -1487,7 +1545,7 @@ export function drawWyvernEnemy(
   ctx.lineTo(-size * 0.95, -size * 0.15);
   ctx.stroke();
   // Finger joint knobs
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   const fingerJoints = [
     [-0.35, -0.32], [-0.56, -0.27], [-0.65, -0.15],
   ];
@@ -1497,7 +1555,7 @@ export function drawWyvernEnemy(
     ctx.fill();
   }
   // Wing claw at joint
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   ctx.beginPath();
   ctx.moveTo(-size * 0.35, -size * 0.48);
   ctx.lineTo(-size * 0.33, -size * 0.54);
@@ -1559,7 +1617,7 @@ export function drawWyvernEnemy(
   }
 
   // Wing claw
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   ctx.beginPath();
   ctx.moveTo(-size * 0.33, -size * 0.14);
   ctx.lineTo(-size * 0.42, -size * 0.08);
@@ -1578,10 +1636,10 @@ export function drawWyvernEnemy(
     size * 0.95,
     -size * 0.2,
   );
-  rightWingGrad.addColorStop(0, "#10b981");
-  rightWingGrad.addColorStop(0.3, "#059669");
-  rightWingGrad.addColorStop(0.6, "#047857");
-  rightWingGrad.addColorStop(1, "#065f46");
+  rightWingGrad.addColorStop(0, scaleBase);
+  rightWingGrad.addColorStop(0.3, scaleDark);
+  rightWingGrad.addColorStop(0.6, scaleDeep);
+  rightWingGrad.addColorStop(1, scaleDarkest);
   ctx.fillStyle = rightWingGrad;
 
   ctx.beginPath();
@@ -1605,14 +1663,14 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Bones and veins mirrored with joint detail
-  ctx.strokeStyle = "#047857";
+  ctx.strokeStyle = scaleDeep;
   ctx.lineWidth = 3.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
   ctx.lineTo(size * 0.35, -size * 0.15);
   ctx.stroke();
   // Shoulder joint
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
@@ -1620,7 +1678,7 @@ export function drawWyvernEnemy(
   ctx.beginPath();
   ctx.arc(size * 0.35, -size * 0.15, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#047857";
+  ctx.strokeStyle = scaleDeep;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(size * 0.35, -size * 0.15);
@@ -1631,7 +1689,7 @@ export function drawWyvernEnemy(
   ctx.lineTo(size * 0.95, -size * 0.15);
   ctx.stroke();
   // Finger joint knobs (mirrored)
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   const rightFingerJoints = [
     [0.35, -0.32], [0.56, -0.27], [0.65, -0.15],
   ];
@@ -1641,7 +1699,7 @@ export function drawWyvernEnemy(
     ctx.fill();
   }
   // Wing claw
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   ctx.beginPath();
   ctx.moveTo(size * 0.35, -size * 0.48);
   ctx.lineTo(size * 0.33, -size * 0.54);
@@ -1702,7 +1760,7 @@ export function drawWyvernEnemy(
     ctx.stroke();
   }
 
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   ctx.beginPath();
   ctx.moveTo(size * 0.33, -size * 0.14);
   ctx.lineTo(size * 0.42, -size * 0.08);
@@ -1712,9 +1770,9 @@ export function drawWyvernEnemy(
 
   // === ANIMATED LEGS (powerful, tucked under, slow pump) ===
   drawPathLegs(ctx, x, y + size * 0.3 + breathe + hoverBob, size, time, zoom, {
-    color: "#059669",
-    colorDark: "#047857",
-    footColor: "#0f172a",
+    color: scaleDark,
+    colorDark: scaleDeep,
+    footColor: hornColor,
     strideSpeed: 3,
     strideAmt: 0.15,
     legLen: 0.22,
@@ -1748,10 +1806,10 @@ export function drawWyvernEnemy(
     bodyY,
     size * 0.42,
   );
-  bodyGrad.addColorStop(0, "#34d399");
-  bodyGrad.addColorStop(0.3, "#10b981");
-  bodyGrad.addColorStop(0.7, "#059669");
-  bodyGrad.addColorStop(1, "#047857");
+  bodyGrad.addColorStop(0, scaleLight);
+  bodyGrad.addColorStop(0.3, scaleBase);
+  bodyGrad.addColorStop(0.7, scaleDark);
+  bodyGrad.addColorStop(1, scaleDeep);
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(x, bodyY, size * 0.32, size * 0.36, 0, 0, Math.PI * 2);
@@ -1764,9 +1822,9 @@ export function drawWyvernEnemy(
     x,
     bodyY + size * 0.3,
   );
-  bellyGrad.addColorStop(0, "#a7f3d0");
-  bellyGrad.addColorStop(0.5, "#6ee7b7");
-  bellyGrad.addColorStop(1, "#a7f3d0");
+  bellyGrad.addColorStop(0, bellyLight);
+  bellyGrad.addColorStop(0.5, bellyMid);
+  bellyGrad.addColorStop(1, bellyLight);
   ctx.fillStyle = bellyGrad;
   ctx.beginPath();
   ctx.ellipse(
@@ -1781,7 +1839,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Detailed belly scale plates
-  ctx.strokeStyle = "#34d399";
+  ctx.strokeStyle = scaleLight;
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 6; i++) {
     const plateY = bodyY - size * 0.08 + i * size * 0.065;
@@ -1797,7 +1855,7 @@ export function drawWyvernEnemy(
     const spikeX = x - size * 0.1 + i * size * 0.05;
     const spikeY = bodyY - size * 0.32 + Math.abs(i - 2) * size * 0.03;
     const spikeSize = size * (0.06 - Math.abs(i - 2) * 0.01);
-    ctx.fillStyle = "#065f46";
+    ctx.fillStyle = scaleDarkest;
     ctx.beginPath();
     ctx.moveTo(spikeX - spikeSize * 0.4, spikeY + spikeSize * 0.3);
     ctx.lineTo(spikeX, spikeY - spikeSize);
@@ -1898,9 +1956,9 @@ export function drawWyvernEnemy(
     x + size * 0.1,
     y - size * 0.55,
   );
-  neckGrad.addColorStop(0, "#059669");
-  neckGrad.addColorStop(0.5, "#10b981");
-  neckGrad.addColorStop(1, "#059669");
+  neckGrad.addColorStop(0, scaleDark);
+  neckGrad.addColorStop(0.5, scaleBase);
+  neckGrad.addColorStop(1, scaleDark);
   ctx.fillStyle = neckGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.12, y - size * 0.18 + breathe + hoverBob);
@@ -1920,7 +1978,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Neck ridges
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   for (let i = 0; i < 4; i++) {
     const ridgeProgress = 0.2 + i * 0.2;
     const ridgeX =
@@ -1947,16 +2005,16 @@ export function drawWyvernEnemy(
     headY,
     size * 0.18,
   );
-  headGrad.addColorStop(0, "#10b981");
-  headGrad.addColorStop(0.6, "#059669");
-  headGrad.addColorStop(1, "#047857");
+  headGrad.addColorStop(0, scaleBase);
+  headGrad.addColorStop(0.6, scaleDark);
+  headGrad.addColorStop(1, scaleDeep);
   ctx.fillStyle = headGrad;
   ctx.beginPath();
   ctx.ellipse(headX, headY, size * 0.16, size * 0.13, 0.35, 0, Math.PI * 2);
   ctx.fill();
 
   // Brow ridges
-  ctx.fillStyle = "#047857";
+  ctx.fillStyle = scaleDeep;
   ctx.beginPath();
   ctx.ellipse(
     headX - size * 0.02,
@@ -1972,7 +2030,7 @@ export function drawWyvernEnemy(
   // Snout with jaw mechanics
   const snoutX = headX - size * 0.12;
   const snoutY = headY + size * 0.01 + jawOpen * size * 0.03;
-  ctx.fillStyle = "#059669";
+  ctx.fillStyle = scaleDark;
   // Upper jaw
   ctx.beginPath();
   ctx.ellipse(
@@ -1989,7 +2047,7 @@ export function drawWyvernEnemy(
   ctx.save();
   ctx.translate(snoutX + size * 0.02, snoutY + size * 0.02);
   ctx.rotate(jawOpen * 0.4);
-  ctx.fillStyle = "#047857";
+  ctx.fillStyle = scaleDeep;
   ctx.beginPath();
   ctx.ellipse(0, size * 0.02, size * 0.1, size * 0.04, 0.2, 0, Math.PI * 2);
   ctx.fill();
@@ -2018,7 +2076,7 @@ export function drawWyvernEnemy(
   }
 
   // Nostrils with smoke
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   ctx.beginPath();
   ctx.ellipse(
     snoutX - size * 0.06,
@@ -2054,7 +2112,7 @@ export function drawWyvernEnemy(
 
   // === LAYER 7: GLOWING PREDATOR EYES ===
   // Eye sockets
-  ctx.fillStyle = "#065f46";
+  ctx.fillStyle = scaleDarkest;
   ctx.beginPath();
   ctx.ellipse(
     headX - size * 0.01,
@@ -2146,7 +2204,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // === LAYER 8: CROWN OF HORNS ===
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   // Main horns
   ctx.beginPath();
   ctx.moveTo(headX + size * 0.06, headY - size * 0.1);
@@ -2182,7 +2240,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Horn ridges - growth ring segments on right horn
-  ctx.strokeStyle = "#1e293b";
+  ctx.strokeStyle = hornMid;
   ctx.lineWidth = 1.2 * zoom;
   for (let h = 0; h < 5; h++) {
     const ridgeY = headY - size * 0.14 - h * size * 0.03;
@@ -2249,7 +2307,7 @@ export function drawWyvernEnemy(
   }
 
   // Small decorative brow horns
-  ctx.fillStyle = "#1e293b";
+  ctx.fillStyle = hornMid;
   ctx.beginPath();
   ctx.moveTo(headX + size * 0.13, headY - size * 0.06);
   ctx.lineTo(headX + size * 0.18, headY - size * 0.12);
@@ -2304,7 +2362,7 @@ export function drawWyvernEnemy(
   const legY = y + size * 0.28 + breathe + hoverBob;
 
   // Left leg
-  ctx.fillStyle = "#059669";
+  ctx.fillStyle = scaleDark;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, legY - size * 0.05);
   ctx.quadraticCurveTo(
@@ -2341,7 +2399,7 @@ export function drawWyvernEnemy(
   ctx.fill();
 
   // Detailed talons
-  ctx.fillStyle = "#0f172a";
+  ctx.fillStyle = hornColor;
   for (let leg = 0; leg < 2; leg++) {
     const legX = leg === 0 ? x - size * 0.16 : x + size * 0.16;
     const talonY = legY + size * 0.3;
@@ -2524,8 +2582,8 @@ export function drawWyvernEnemy(
     time,
     zoom,
     {
-      color: "#047857",
-      tipColor: "#4ade80",
+      color: scaleDeep,
+      tipColor: venomBright,
       length: 0.35,
       waveSpeed: 3.5,
       waveAmt: 0.08,
@@ -2545,8 +2603,8 @@ export function drawWyvernEnemy(
 
   // === FLOATING SCALE SEGMENTS (diamond) ===
   drawShiftingSegments(ctx, x, y + hoverBob, size, time, zoom, {
-    color: "#10b981",
-    colorAlt: "#065f46",
+    color: scaleBase,
+    colorAlt: scaleDarkest,
     count: 6,
     orbitRadius: 0.5,
     segmentSize: 0.035,
@@ -2554,4 +2612,5 @@ export function drawWyvernEnemy(
     shape: "diamond",
   });
 
+  drawRegionBodyAccent(ctx, x, y + hoverBob, size, region, time, zoom);
 }

@@ -101,6 +101,35 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     color: "#eab308",
     isRanged: true,
   },
+  nassau: {
+    name: "Nassau Phoenix",
+    description:
+      "A mythical phoenix reborn from the flames of Nassau Hall. Soars above the battlefield raining fire, and is the only hero who can engage flying enemies in aerial combat.",
+    hp: 3500,
+    damage: 85,
+    range: 220,
+    attackSpeed: 650,
+    speed: 3.8,
+    ability: "Phoenix Inferno",
+    abilityDesc: "Blazing dive through enemies dealing massive fire damage and inflicting burn",
+    color: "#e67e22",
+    isRanged: true,
+    isFlying: true,
+  },
+  ivy: {
+    name: "Ivy Warden",
+    description:
+      "An ancient guardian spirit that embodies the ivy covering Princeton's Gothic towers. Commands living vines to entangle and crush enemies with nature's wrath.",
+    hp: 4800,
+    damage: 55,
+    range: 130,
+    attackSpeed: 700,
+    speed: 2.3,
+    ability: "Vine Storm",
+    abilityDesc: "Erupts vines in a huge area, rooting all enemies for 4s and dealing damage",
+    color: "#059669",
+    isRanged: false,
+  },
 };
 
 // Hero-specific combat stats used by the runtime
@@ -113,6 +142,15 @@ export const HERO_COMBAT_STATS = {
   captainKnightHp: 350,
   captainKnightMoveRadius: 180,
   engineerTurretHp: 400,
+  nassauDiveDamage: 150,
+  nassauDiveRadius: 200,
+  nassauBurnDps: 25,
+  nassauBurnDuration: 4000,
+  nassauFireballAoeRadius: 80,
+  ivyVineRadius: 180,
+  ivyVineDamage: 100,
+  ivyRootDuration: 4000,
+  ivyAoeRadius: 90,
 } as const;
 
 // Hero options for selection
@@ -124,6 +162,8 @@ export const HERO_OPTIONS: HeroType[] = [
   "scott",
   "captain",
   "engineer",
+  "nassau",
+  "ivy",
 ];
 
 // Hero ability cooldowns
@@ -135,6 +175,8 @@ export const HERO_ABILITY_COOLDOWNS: Record<HeroType, number> = {
   scott: 25000,
   captain: 30000,
   engineer: 35000,
+  nassau: 20000,
+  ivy: 22000,
 };
 
 export interface HeroRole {
@@ -187,6 +229,18 @@ export const HERO_ROLES: Record<HeroType, HeroRole> = {
     bg: "rgba(50,38,5,0.85)",
     border: "rgba(234,179,8,0.35)",
   },
+  nassau: {
+    label: "Sky Guardian",
+    color: "text-amber-300",
+    bg: "rgba(60,30,5,0.85)",
+    border: "rgba(230,126,34,0.35)",
+  },
+  ivy: {
+    label: "Controller",
+    color: "text-emerald-300",
+    bg: "rgba(5,45,25,0.85)",
+    border: "rgba(5,150,105,0.35)",
+  },
 };
 
 export const HERO_COLOR_NAMES: Record<HeroType, string> = {
@@ -197,6 +251,8 @@ export const HERO_COLOR_NAMES: Record<HeroType, string> = {
   scott: "yellow",
   captain: "green",
   engineer: "amber",
+  nassau: "flame",
+  ivy: "emerald",
 };
 
 export const HERO_COLORS: Record<
@@ -244,5 +300,17 @@ export const HERO_COLORS: Record<
     dark: "#505060",
     accent: "#ffa500",
     light: "#90a0b0",
+  },
+  nassau: {
+    base: "#e67e22",
+    dark: "#b35f18",
+    accent: "#ffd700",
+    light: "#f0a050",
+  },
+  ivy: {
+    base: "#059669",
+    dark: "#047252",
+    accent: "#a7f3d0",
+    light: "#34d399",
   },
 };

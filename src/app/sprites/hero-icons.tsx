@@ -10,6 +10,8 @@ import {
   Crown,
   Wrench,
   Zap,
+  Bird,
+  TreePine,
 } from "lucide-react";
 
 export const HERO_ICON_COLORS: Record<HeroType, string> = {
@@ -20,6 +22,8 @@ export const HERO_ICON_COLORS: Record<HeroType, string> = {
   scott: "text-teal-400",
   captain: "text-red-400",
   engineer: "text-yellow-400",
+  nassau: "text-amber-400",
+  ivy: "text-emerald-400",
 };
 
 const HERO_ICON_MAP: Record<HeroType, React.FC<{ size?: number; className?: string }>> = {
@@ -30,6 +34,8 @@ const HERO_ICON_MAP: Record<HeroType, React.FC<{ size?: number; className?: stri
   scott: ({ size = 16, className }) => <BookOpen size={size} className={className} />,
   captain: ({ size = 16, className }) => <Crown size={size} className={className} />,
   engineer: ({ size = 16, className }) => <Wrench size={size} className={className} />,
+  nassau: ({ size = 16, className }) => <Bird size={size} className={className} />,
+  ivy: ({ size = 16, className }) => <TreePine size={size} className={className} />,
 };
 
 export const HeroIcon: React.FC<{

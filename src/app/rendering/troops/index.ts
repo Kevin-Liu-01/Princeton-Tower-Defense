@@ -16,6 +16,7 @@ import { drawHexseerTroop } from "./hexseer";
 import { drawReinforcementTroop } from "./reinforcement";
 import { drawKnightTroop } from "./knight";
 import { drawTurretTroop } from "./turret";
+import { drawTroopRegionOverlay } from "./troopRegionThemes";
 
 export type { KnightTheme } from "./knightThemes";
 export { getKnightTheme } from "./knightThemes";
@@ -607,5 +608,9 @@ export function drawTroopSprite(
         targetPos,
         mapTheme,
       );
+  }
+
+  if (mapTheme && mapTheme !== "grassland") {
+    drawTroopRegionOverlay(ctx, x, scaledY, scaledSize, type, mapTheme, time, zoom);
   }
 }

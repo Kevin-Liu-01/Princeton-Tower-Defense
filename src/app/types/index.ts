@@ -447,7 +447,9 @@ export type HeroType =
   | "rocky"
   | "scott"
   | "captain"
-  | "engineer";
+  | "engineer"
+  | "nassau"
+  | "ivy";
 
 // Hero data definition
 export interface HeroData {
@@ -462,6 +464,7 @@ export interface HeroData {
   abilityDesc: string;
   color: string;
   isRanged?: boolean;
+  isFlying?: boolean;
 }
 
 // Status effect applied by enemies
@@ -691,7 +694,9 @@ export type ProjectileType =
   | "ember" // Burning ember glob (4B)
   | "acidSpray" // Bombardier beetle acid
   | "webBolt" // Spider silk projectile
-  | "venomSpit"; // Brood mother / fire ant ranged venom
+  | "venomSpit" // Brood mother / fire ant ranged venom
+  | "phoenixFlame" // Nassau phoenix fire projectile
+  | "vineBarb"; // Ivy warden thorn projectile
 
 // Projectile
 export interface Projectile {
@@ -786,6 +791,10 @@ export type EffectType =
   | "knight_cleave" // Mathey Knight sword swing
   | "scott_quill" // F Scott pen/quill attack
   | "sonic_blast" // Tenor multi-target blast
+  | "phoenix_dive" // Nassau phoenix dive attack
+  | "phoenix_inferno" // Nassau phoenix fire trail
+  | "vine_storm" // Ivy warden vine entangle AoE
+  | "vine_lash" // Ivy warden vine whip attack
   // Tower debuff effects
   | "tower_debuff_slow" // Tower attack speed reduced
   | "tower_debuff_weaken" // Tower damage reduced

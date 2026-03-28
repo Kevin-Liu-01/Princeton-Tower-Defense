@@ -12,6 +12,8 @@ import {
   Sparkles,
   Shield,
   Crosshair,
+  Bird,
+  Leaf,
 } from "lucide-react";
 import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS, HERO_ROLES } from "../../constants";
@@ -40,9 +42,11 @@ const HERO_ROLE_ICONS: Record<HeroType, React.ReactNode> = {
   scott: <Heart size={10} />,
   captain: <Sparkles size={10} />,
   engineer: <Target size={10} />,
+  nassau: <Bird size={10} />,
+  ivy: <Leaf size={10} />,
 };
 
-const STAT_MAX: Record<string, number> = { HP: 5600, DMG: 90, RNG: 250, SPD: 3.5 };
+const STAT_MAX: Record<string, number> = { HP: 5600, DMG: 90, RNG: 250, SPD: 3.8 };
 
 interface HallOfHeroesModalProps {
   isOpen: boolean;

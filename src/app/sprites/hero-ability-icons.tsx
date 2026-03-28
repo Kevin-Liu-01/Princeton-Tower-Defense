@@ -10,6 +10,8 @@ import {
   Crosshair,
   Zap,
   ShieldHalf,
+  Flame,
+  Leaf,
 } from "lucide-react";
 
 export const HERO_ABILITY_ICON_COLORS: Record<HeroType, string> = {
@@ -20,6 +22,8 @@ export const HERO_ABILITY_ICON_COLORS: Record<HeroType, string> = {
   scott: "text-teal-300",
   captain: "text-red-300",
   engineer: "text-yellow-300",
+  nassau: "text-amber-300",
+  ivy: "text-emerald-300",
 };
 
 const HERO_ABILITY_ICONS: Record<HeroType, React.FC<{ size?: number; className?: string }>> = {
@@ -30,6 +34,8 @@ const HERO_ABILITY_ICONS: Record<HeroType, React.FC<{ size?: number; className?:
   scott: ({ size = 14, className }) => <Sparkles size={size} className={className} />,
   captain: ({ size = 14, className }) => <Swords size={size} className={className} />,
   engineer: ({ size = 14, className }) => <Crosshair size={size} className={className} />,
+  nassau: ({ size = 14, className }) => <Flame size={size} className={className} />,
+  ivy: ({ size = 14, className }) => <Leaf size={size} className={className} />,
 };
 
 export const HeroAbilityIcon: React.FC<{

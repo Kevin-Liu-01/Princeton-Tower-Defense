@@ -11,10 +11,10 @@ interface RegionColorShift {
 
 const REGION_SHIFTS: Record<MapTheme, RegionColorShift> = {
   grassland: { tintR: 0, tintG: 0, tintB: 0, saturationMul: 1.0, brightnessDelta: 0, strength: 0 },
-  swamp: { tintR: 45, tintG: 75, tintB: 30, saturationMul: 0.7, brightnessDelta: -25, strength: 0.45 },
-  desert: { tintR: 200, tintG: 170, tintB: 100, saturationMul: 0.8, brightnessDelta: 15, strength: 0.4 },
-  winter: { tintR: 160, tintG: 195, tintB: 230, saturationMul: 0.6, brightnessDelta: 20, strength: 0.45 },
-  volcanic: { tintR: 140, tintG: 40, tintB: 20, saturationMul: 0.85, brightnessDelta: -15, strength: 0.4 },
+  swamp: { tintR: 45, tintG: 75, tintB: 30, saturationMul: 0.65, brightnessDelta: -25, strength: 0.62 },
+  desert: { tintR: 200, tintG: 170, tintB: 100, saturationMul: 0.75, brightnessDelta: 15, strength: 0.58 },
+  winter: { tintR: 160, tintG: 195, tintB: 230, saturationMul: 0.55, brightnessDelta: 20, strength: 0.62 },
+  volcanic: { tintR: 140, tintG: 40, tintB: 20, saturationMul: 0.8, brightnessDelta: -15, strength: 0.58 },
 };
 
 const REGION_CANVAS_FILTERS: Record<MapTheme, string> = {

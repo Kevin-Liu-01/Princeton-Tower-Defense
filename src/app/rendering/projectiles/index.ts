@@ -1433,6 +1433,144 @@ function renderEnergyBall(
 }
 
 // ============================================================================
+// PHOENIX FLAME - Large, slow fireball with roiling fire effects
+// ============================================================================
+function renderPhoenixFlame(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  time: number,
+  baseColor: { r: number; g: number; b: number },
+) {
+  const size = 14 * zoom;
+  const pulse = 1 + Math.sin(time * 6) * 0.12;
+
+  // Outer inferno glow
+  const outerGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.8 * pulse);
+  outerGrad.addColorStop(0, colorWithAlpha(baseColor, 0.5));
+  outerGrad.addColorStop(0.3, `rgba(255, 140, 30, 0.3)`);
+  outerGrad.addColorStop(0.6, `rgba(200, 60, 10, 0.12)`);
+  outerGrad.addColorStop(1, `rgba(150, 30, 0, 0)`);
+  ctx.fillStyle = outerGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 1.8 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Roiling flame tongues
+  for (let i = 0; i < 6; i++) {
+    const flameAngle = (i / 6) * Math.PI * 2 + time * 5;
+    const flameLen = size * (0.8 + Math.sin(time * 10 + i * 2.5) * 0.3);
+    const fx = Math.cos(flameAngle) * flameLen;
+    const fy = Math.sin(flameAngle) * flameLen * 0.7;
+    const flameAlpha = 0.4 + Math.sin(time * 8 + i * 1.3) * 0.15;
+
+    ctx.fillStyle = i % 2 === 0
+      ? `rgba(255, 200, 60, ${flameAlpha})`
+      : `rgba(255, 120, 30, ${flameAlpha})`;
+    ctx.beginPath();
+    ctx.arc(fx, fy, size * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Core fireball
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.7 * pulse);
+  coreGrad.addColorStop(0, "#fffbe0");
+  coreGrad.addColorStop(0.2, "#ffdd70");
+  coreGrad.addColorStop(0.5, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(0.8, `rgb(200, 60, 10)`);
+  coreGrad.addColorStop(1, `rgba(120, 30, 0, 0.5)`);
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.7 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // White-hot center
+  const hotGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.2);
+  hotGrad.addColorStop(0, "rgba(255, 255, 240, 0.9)");
+  hotGrad.addColorStop(0.5, "rgba(255, 240, 180, 0.5)");
+  hotGrad.addColorStop(1, "rgba(255, 200, 80, 0)");
+  ctx.fillStyle = hotGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Trailing sparks behind the fireball
+  for (let i = 0; i < 4; i++) {
+    const sparkDist = size * (0.6 + i * 0.35);
+    const sparkY = Math.sin(time * 12 + i * 3) * size * 0.2;
+    const sparkAlpha = 0.6 - i * 0.12;
+    const sparkSize = (2 - i * 0.3) * zoom;
+
+    ctx.fillStyle = `rgba(255, 180, 50, ${sparkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(sparkDist, sparkY, sparkSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ============================================================================
+// VINE BARB - Organic vine tendril that snaps toward the target
+// ============================================================================
+function renderVineBarb(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  time: number,
+  baseColor: { r: number; g: number; b: number },
+) {
+  const len = 16 * zoom;
+  const thickness = 3 * zoom;
+
+  // Main vine tendril body
+  const vineGrad = ctx.createLinearGradient(len * 0.5, 0, -len * 0.5, 0);
+  vineGrad.addColorStop(0, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.9)`);
+  vineGrad.addColorStop(0.6, `rgba(16, 185, 129, 0.7)`);
+  vineGrad.addColorStop(1, `rgba(52, 211, 153, 0.3)`);
+
+  ctx.strokeStyle = vineGrad;
+  ctx.lineWidth = thickness;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(-len * 0.5, 0);
+  ctx.bezierCurveTo(
+    -len * 0.15, Math.sin(time * 12) * 3 * zoom,
+    len * 0.15, Math.sin(time * 12 + 1.5) * -3 * zoom,
+    len * 0.5, 0,
+  );
+  ctx.stroke();
+
+  // Thorn tip
+  ctx.fillStyle = `rgba(${baseColor.r + 30}, ${baseColor.g + 50}, ${baseColor.b + 30}, 0.9)`;
+  ctx.beginPath();
+  ctx.moveTo(-len * 0.5 - 4 * zoom, 0);
+  ctx.lineTo(-len * 0.5, -2.5 * zoom);
+  ctx.lineTo(-len * 0.5, 2.5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small leaves along the tendril
+  for (let i = 0; i < 3; i++) {
+    const t = 0.2 + i * 0.3;
+    const lx = -len * 0.5 + len * t;
+    const ly = Math.sin(time * 12 + t * 3) * 2 * zoom;
+    const leafSize = 2 * zoom;
+    const side = i % 2 === 0 ? 1 : -1;
+
+    ctx.fillStyle = `rgba(74, 222, 128, ${0.5 + Math.sin(time * 6 + i) * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(lx, ly + side * thickness, leafSize, leafSize * 0.4, side * 0.5 + time * 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Leading glow
+  const tipGlow = ctx.createRadialGradient(-len * 0.5, 0, 0, -len * 0.5, 0, 5 * zoom);
+  tipGlow.addColorStop(0, `rgba(167, 243, 208, 0.5)`);
+  tipGlow.addColorStop(1, `rgba(52, 211, 153, 0)`);
+  ctx.fillStyle = tipGlow;
+  ctx.beginPath();
+  ctx.arc(-len * 0.5, 0, 5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ============================================================================
 // PREDEFINED COLORS
 // ============================================================================
 const COLORS = {
@@ -1467,9 +1605,11 @@ const COLORS = {
 
   // Hero colors
   mathey: { r: 201, g: 162, b: 39 },
-  scott: { r: 201, g: 162, b: 39 }, // Golden for F. Scott
-  tenor: { r: 168, g: 85, b: 247 }, // Purple for Tenor
+  scott: { r: 201, g: 162, b: 39 },
+  tenor: { r: 168, g: 85, b: 247 },
   rocky: { r: 120, g: 113, b: 108 },
+  nassau: { r: 230, g: 126, b: 34 },
+  ivy: { r: 5, g: 150, b: 105 },
 
   // Banshee
   banshee: { r: 200, g: 150, b: 255 },
@@ -1597,6 +1737,12 @@ export function renderProjectile(
         break;
       case "venomSpit":
         baseColor = COLORS.venom;
+        break;
+      case "phoenixFlame":
+        baseColor = COLORS.nassau;
+        break;
+      case "vineBarb":
+        baseColor = COLORS.ivy;
         break;
       default:
         baseColor = COLORS.arcane;
@@ -1777,6 +1923,14 @@ export function renderProjectile(
 
     case "venomSpit":
       renderFireball(ctx, zoom, time, baseColor);
+      break;
+
+    case "phoenixFlame":
+      renderPhoenixFlame(ctx, zoom, time, baseColor);
+      break;
+
+    case "vineBarb":
+      renderVineBarb(ctx, zoom, time, baseColor);
       break;
 
     default:

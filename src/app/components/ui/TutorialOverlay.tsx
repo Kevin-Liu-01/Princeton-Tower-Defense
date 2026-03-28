@@ -237,6 +237,8 @@ const HERO_CARDS: HeroCardInfo[] = [
   { type: "scott", role: "Support", tagline: "Boosts all tower damage +50% and range +25%.", roleColor: "bg-teal-900/60 text-teal-300 border-teal-700/40" },
   { type: "captain", role: "Summoner", tagline: "Legendary commander. Summons armored knights.", roleColor: "bg-red-900/60 text-red-300 border-red-700/40" },
   { type: "engineer", role: "Tech", tagline: "Deploys automated turrets to create crossfire.", roleColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
+  { type: "nassau", role: "Sky Guardian", tagline: "Flying phoenix. Rains fire and hunts aerial enemies.", roleColor: "bg-amber-900/60 text-amber-300 border-amber-700/40" },
+  { type: "ivy", role: "Controller", tagline: "Nature warden. Roots enemies with devastating vine storms.", roleColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40" },
 ];
 
 function HeroCatalog({ selectedHero, onHeroChange }: { selectedHero?: HeroType | null; onHeroChange?: (hero: HeroType) => void }) {
