@@ -312,6 +312,7 @@ algorithm depth ordering. Lower isoY renders first (farther from camera).
 - **Sub-pixel avoidance**: Use `worldToScreenRounded()` in hot drawing paths
 - **Culling**: Skip rendering for entities outside visible viewport + margin
 - **Offscreen canvas**: Static map layer renders to cached canvas, redrawn only on camera change
+- **DOM measurement caching**: Never call `getBoundingClientRect()` / `clientWidth` / `clientHeight` on the game canvas in hot paths (pointer move, wheel, gesture, rAF loops). Use `getCachedRect()` from `hooks/runtime/cachedCanvasRect.ts` instead — the cache is invalidated on resize. See `docs/CANVAS_OPTIMIZATION.md` §5 for full details, plumbing guide, and rules.
 
 ---
 

@@ -33,6 +33,127 @@ This doc summarizes the game’s canvas pipeline and the optimizations applied (
 - **Already in place**: `rendering/performance.ts` — Firefox detection, `setShadowBlur` / `clearShadow` (shadows disabled on Firefox), gradient caching, reduced particles, simplified gradients, fog quality multiplier.
 - **Optional**: When `renderQuality === 'low'`, you can call `setPerformanceSettings({ disableShadows: true })` (and restore when medium/high) for extra gain on low-end devices.
 
+### 5. **Cached canvas rect (DOM reflow elimination)**
+
+#### Problem
+
+`getBoundingClientRect()`, `offsetWidth`, `offsetHeight`, `clientWidth`, and `clientHeight` are **synchronous layout queries** — the browser must finish all pending style/layout work before returning the result. This is called **forced synchronous layout** (or layout thrashing) and is one of the most expensive operations in the browser. When called inside high-frequency handlers (pointer move, wheel, gesture change, rAF draw loops), it forces the browser to reflow potentially hundreds of times per second, directly contending with the render pipeline.
+
+#### Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  cachedCanvasRect.ts                      │
+│                                                           │
+│  CachedCanvasRectRef = MutableRefObject<DOMRect | null>   │
+│                                                           │
+│  getCachedRect(canvas, cacheRef)                          │
+│    └─ returns cacheRef.current if non-null (zero cost)    │
+│    └─ otherwise: getBoundingClientRect() → cache → return │
+│                                                           │
+│  invalidateCanvasRect(cacheRef)                           │
+│    └─ sets cacheRef.current = null                        │
+└─────────────────────────────────────────────────────────┘
+```
+
+The cache ref is created once in `usePrincetonTowerDefenseRuntime.tsx`:
+
+```typescript
+const cachedCanvasRectRef = useRef<DOMRect | null>(null);
+```
+
+#### Invalidation
+
+The cache is invalidated (set to `null`) whenever the canvas position or size could have changed:
+
+| Trigger | Location | Mechanism |
+|---|---|---|
+| Window resize | `canvasResize.ts → resizeCanvases()` | Calls `invalidateCanvasRect(cachedCanvasRectRef)` after resizing all canvases |
+
+The next event handler call after invalidation will perform a single fresh `getBoundingClientRect()`, re-populating the cache for all subsequent calls until the next invalidation.
+
+**Why this is safe**: The game canvas is absolutely positioned inside a fixed container (`absolute inset-0`). It does not scroll, and its position only changes on window resize. Resize events always flow through `setupResizeListener` which invalidates the cache.
+
+#### Call sites converted
+
+| File | Function | Frequency | Impact |
+|---|---|---|---|
+| `canvasEventHandlers.ts` | `handleMouseMoveImpl` | Every `pointermove` (60+ Hz) | **Highest** — fires on every mouse movement during gameplay |
+| `canvasEventHandlers.ts` | `handlePointerDownImpl` | Every `pointerdown` | Medium — once per click/touch start |
+| `canvasEventHandlers.ts` | `handleCanvasClickImpl` | Every `pointerup` | Medium — once per click/touch end |
+| `zoomAndGestures.ts` | `zoomCameraAtClientPointImpl` | Every wheel tick / zoom step | **High** — continuous during scroll-zoom |
+| `zoomAndGestures.ts` | `handleGestureChange` | Every pinch gesture change | **High** — continuous during trackpad pinch |
+| `buildDragHandlers.ts` | `handleBuildTouchDragMoveImpl` | Every `touchmove` during tower drag | **High** — continuous during build drag |
+| `buildDragHandlers.ts` | `handleBuildTouchDragEndImpl` | Once per drag end | Low |
+
+#### Plumbing
+
+The `cachedCanvasRectRef` is threaded through existing parameter interfaces — no new hook or context needed:
+
+- **`CanvasEventParams.cachedCanvasRectRef`** → used by all three pointer handlers
+- **`ZoomGestureRefs.cachedCanvasRectRef`** → used by `zoomCameraAtClientPointImpl`
+- **`handleGestureChange(…, cachedCanvasRectRef)`** → explicit param (not in a refs bag because the function is called from `attachWheelAndGestureListeners`)
+- **`attachWheelAndGestureListeners(…, cachedCanvasRectRef)`** → threads ref to gesture change handler
+- **`handleBuildTouchDragMoveImpl(…, cachedCanvasRectRef)`** → explicit param
+- **`handleBuildTouchDragEndImpl(…, cachedCanvasRectRef)`** → explicit param
+- **`resizeCanvases(…, cachedCanvasRectRef?)`** → optional, invalidates on resize
+- **`setupResizeListener(…, cachedCanvasRectRef?)`** → optional, passes through to `resizeCanvases`
+
+Wire-up lives in `usePrincetonTowerDefenseRuntime.tsx` alongside the other cache refs (`cachedStaticMapLayerRef`, etc.).
+
+#### BattlefieldPreviewCanvas — ResizeObserver approach
+
+`BattlefieldPreviewCanvas.tsx` has a self-contained rAF draw loop that was reading `canvas.clientWidth` / `canvas.clientHeight` every frame. Since this component is independent of the game canvas, it uses a different strategy:
+
+- A `ResizeObserver` watches the canvas element and writes CSS dimensions to a `cssSizeRef` ref.
+- The rAF draw loop reads from `cssSizeRef.current` instead of querying the DOM.
+- Initial dimensions are seeded from `canvas.clientWidth` / `canvas.clientHeight` (one-time DOM read at mount).
+- The observer is disconnected on unmount.
+
+This eliminates forced layout from every frame of the menu preview animation.
+
+#### How to add a new consumer
+
+If you add a new event handler or function that needs the canvas screen position:
+
+```typescript
+import { getCachedRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
+
+function myHandler(
+  canvas: HTMLCanvasElement,
+  cachedCanvasRectRef: CachedCanvasRectRef,
+  e: PointerEvent,
+): void {
+  const rect = getCachedRect(canvas, cachedCanvasRectRef);
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  // ...
+}
+```
+
+If you add a new canvas that moves or resizes independently, create a separate `useRef<DOMRect | null>(null)` for it and invalidate on its resize.
+
+#### Call sites intentionally NOT converted
+
+These use `getBoundingClientRect()` at low frequency and don't benefit from caching:
+
+| File | Context | Why left as-is |
+|---|---|---|
+| `HudTooltip.tsx` | Tooltip position calc | Runs once when tooltip becomes visible |
+| `SpellInfoPortal.tsx` | `useLayoutEffect` | Runs once on mount |
+| `TutorialOverlay.tsx` | Tutorial step highlight | Runs once per step change |
+| `NavMoreDropdown.tsx` | Dropdown position | Runs once on menu open |
+| `WorldMap.tsx` | Canvas click/hover | User-initiated, not in game loop |
+| `useCreatorCamera.ts` | Board metrics | Infrequent recalculation |
+| `canvasResize.ts` | Container rect | Resize handler — necessarily reads DOM |
+
+#### Rules
+
+1. **Never call `getBoundingClientRect()` on the game canvas in a hot path.** Use `getCachedRect()`.
+2. **Always invalidate** when the canvas could have moved (resize, fullscreen toggle, scroll — though the game canvas doesn't scroll).
+3. **One cache per canvas element.** The game canvas and `BattlefieldPreviewCanvas` have separate cache strategies.
+4. **Low-frequency call sites** (tooltips, menus, one-shot effects) should use `getBoundingClientRect()` directly — caching adds complexity for no measurable gain.
+
 ## Further optimizations (not yet done)
 
 These keep the same look but require more refactor or new architecture:

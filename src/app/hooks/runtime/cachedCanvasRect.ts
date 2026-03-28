@@ -1,12 +1,24 @@
+/**
+ * Cached canvas bounding-rect utility.
+ *
+ * getBoundingClientRect() forces synchronous layout reflow — one of the most
+ * expensive browser operations. Hot paths (pointermove, wheel, gesture, rAF
+ * draw loops) must never call it directly on the game canvas.
+ *
+ * Instead, call `getCachedRect(canvas, cacheRef)` which returns the cached
+ * DOMRect on subsequent calls (zero cost) and only falls through to the real
+ * DOM measurement when the cache is empty.
+ *
+ * Invalidate with `invalidateCanvasRect(cacheRef)` whenever the canvas could
+ * have moved or resized (currently wired into `canvasResize.ts`).
+ *
+ * See docs/CANVAS_OPTIMIZATION.md §5 for architecture, call-site inventory,
+ * plumbing guide, and rules.
+ */
 import type { MutableRefObject } from "react";
 
 export type CachedCanvasRectRef = MutableRefObject<DOMRect | null>;
 
-/**
- * Returns a cached DOMRect for the canvas, lazily calling
- * getBoundingClientRect() only when the cache is empty.
- * Invalidate on resize / scroll via `invalidateCanvasRect`.
- */
 export function getCachedRect(
   canvas: HTMLCanvasElement,
   cacheRef: CachedCanvasRectRef,
