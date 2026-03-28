@@ -1,6 +1,7 @@
 import type { MutableRefObject, RefObject } from "react";
 import type { StaticMapLayerCache, FogLayerCache, BackdropCache } from "./renderScene";
 import { BG_OVERSCAN_X, BG_OVERSCAN_Y } from "./runtimeConfig";
+import { invalidateCanvasRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
 
 export function resizeCanvases(
   canvasRef: RefObject<HTMLCanvasElement | null>,
@@ -11,6 +12,7 @@ export function resizeCanvases(
   cachedBackdropRef: MutableRefObject<BackdropCache | null>,
   cachedFogLayerRef: MutableRefObject<FogLayerCache | null>,
   getRenderDpr: () => number,
+  cachedCanvasRectRef?: CachedCanvasRectRef,
 ): void {
   const canvas = canvasRef.current;
   const bgCanvas = bgCanvasRef.current;
@@ -38,6 +40,7 @@ export function resizeCanvases(
     cachedStaticMapLayerRef.current = null;
     cachedBackdropRef.current = null;
     cachedFogLayerRef.current = null;
+    if (cachedCanvasRectRef) invalidateCanvasRect(cachedCanvasRectRef);
   }
 }
 
@@ -50,6 +53,7 @@ export function setupResizeListener(
   cachedBackdropRef: MutableRefObject<BackdropCache | null>,
   cachedFogLayerRef: MutableRefObject<FogLayerCache | null>,
   getRenderDpr: () => number,
+  cachedCanvasRectRef?: CachedCanvasRectRef,
 ): () => void {
   const handler = () =>
     resizeCanvases(
@@ -61,6 +65,7 @@ export function setupResizeListener(
       cachedBackdropRef,
       cachedFogLayerRef,
       getRenderDpr,
+      cachedCanvasRectRef,
     );
   handler();
   window.addEventListener("resize", handler);

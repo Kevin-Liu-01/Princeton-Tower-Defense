@@ -8,6 +8,7 @@ import {
   ZOOM_SETTLE_DEBOUNCE_MS,
 } from "./runtimeConfig";
 import { getGameSettings } from "../useSettings";
+import { getCachedRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -15,6 +16,7 @@ import { getGameSettings } from "../useSettings";
 
 export interface ZoomGestureRefs {
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
+  cachedCanvasRectRef: CachedCanvasRectRef;
   isZoomDebouncingRef: MutableRefObject<boolean>;
   zoomSettleTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>;
   stableZoomRef: MutableRefObject<number>;
@@ -54,7 +56,7 @@ export function zoomCameraAtClientPointImpl(
   const canvas = refs.canvasRef.current;
   if (!canvas) return;
 
-  const rect = canvas.getBoundingClientRect();
+  const rect = getCachedRect(canvas, refs.cachedCanvasRectRef);
   const x = clientX - rect.left;
   const y = clientY - rect.top;
   const { width, height, dpr } = getCanvasDimensions();
@@ -148,6 +150,7 @@ export function handleGestureChange(
   canvas: HTMLCanvasElement,
   lastGestureScaleRef: MutableRefObject<number | null>,
   zoomAtPoint: (clientX: number, clientY: number, zoomFactor: number) => void,
+  cachedCanvasRectRef: CachedCanvasRectRef,
 ): void {
   event.preventDefault();
   const gestureEvent = event as Event & {
@@ -170,7 +173,7 @@ export function handleGestureChange(
   const zoomFactor = currentScale / previousScale;
   if (Math.abs(zoomFactor - 1) < 0.0005) return;
 
-  const rect = canvas.getBoundingClientRect();
+  const rect = getCachedRect(canvas, cachedCanvasRectRef);
   const clientX =
     typeof gestureEvent.clientX === "number"
       ? gestureEvent.clientX
@@ -201,10 +204,11 @@ export function attachWheelAndGestureListeners(
   lastGestureScaleRef: MutableRefObject<number | null>,
   handleCanvasWheelNative: (e: WheelEvent) => void,
   zoomAtPoint: (clientX: number, clientY: number, zoomFactor: number) => void,
+  cachedCanvasRectRef: CachedCanvasRectRef,
 ): () => void {
   const onGestureStart = (ev: Event) => handleGestureStart(ev, lastGestureScaleRef);
   const onGestureChange = (ev: Event) =>
-    handleGestureChange(ev, canvas, lastGestureScaleRef, zoomAtPoint);
+    handleGestureChange(ev, canvas, lastGestureScaleRef, zoomAtPoint, cachedCanvasRectRef);
   const onGestureEnd = (ev: Event) => handleGestureEnd(ev, lastGestureScaleRef);
 
   canvas.addEventListener("wheel", handleCanvasWheelNative, { passive: false });

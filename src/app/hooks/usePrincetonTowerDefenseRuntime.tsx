@@ -510,6 +510,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
   // This was causing major performance issues on mobile - generating 500+ decorations per frame
+  const cachedCanvasRectRef = useRef<DOMRect | null>(null);
   const cachedDecorationsRef = useRef<{ mapKey: string; decorations: RuntimeDecoration[] } | null>(null);
   const cachedStaticMapLayerRef = useRef<StaticMapLayerCache | null>(null);
   const cachedStaticDecorationLayerRef =
@@ -601,7 +602,7 @@ export function usePrincetonTowerDefenseRuntime() {
   );
 
   const { stableZoomRef } = useZoomSetup({
-    canvasRef, isZoomDebouncingRef, zoomSettleTimerRef,
+    canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef,
     cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef,
     cachedAmbientLayerRef, lastGestureScaleRef,
     gameState, battleOutcome, selectedMap,
@@ -882,6 +883,7 @@ export function usePrincetonTowerDefenseRuntime() {
     return setupResizeListener(
       canvasRef, bgCanvasRef, backdropCanvasRef, containerRef,
       cachedStaticMapLayerRef, cachedBackdropRef, cachedFogLayerRef, getRenderDpr,
+      cachedCanvasRectRef,
     );
   }, [gameState, getRenderDpr, cameraModeActive]);
 
@@ -1153,7 +1155,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Canvas event params updated via ref each render (handlers use ref to avoid stale closures)
   const canvasEventParamsRef = useRef<CanvasEventParams>(null as unknown as CanvasEventParams);
   canvasEventParamsRef.current = {
-    canvasRef, isTouchDeviceRef, lastTouchTimeRef, executeTargetedSpellRef,
+    canvasRef, cachedCanvasRectRef, isTouchDeviceRef, lastTouchTimeRef, executeTargetedSpellRef,
     sentinelTargetsRef, missileAutoAimRef, cachedDecorationsRef, gameEventLogRef,
     cameraOffset, cameraZoom, buildingTower, draggingTower, placingTroop,
     targetingSpell, activeSentinelTargetKey, inspectorActive, gameSpeed,
@@ -1204,13 +1206,13 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const handleBuildTouchDragMove = useCallback(
     (clientX: number, clientY: number, towerType: TowerType) =>
-      handleBuildTouchDragMoveImpl(clientX, clientY, towerType, canvasRef, setDraggingTower),
+      handleBuildTouchDragMoveImpl(clientX, clientY, towerType, canvasRef, setDraggingTower, cachedCanvasRectRef),
     []
   );
 
   const handleBuildTouchDragEnd = useCallback(
     (clientX: number, clientY: number) =>
-      handleBuildTouchDragEndImpl(clientX, clientY, canvasRef, setDraggingTower),
+      handleBuildTouchDragEndImpl(clientX, clientY, canvasRef, setDraggingTower, cachedCanvasRectRef),
     []
   );
 

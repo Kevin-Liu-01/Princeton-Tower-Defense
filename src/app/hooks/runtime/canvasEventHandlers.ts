@@ -58,6 +58,7 @@ import {
   getHoveredWaveStartBubblePath,
 } from "./waveStartBubbles";
 import { getInspectorHoverResult } from "./inspectorHitTesting";
+import { getCachedRect, type CachedCanvasRectRef } from "./cachedCanvasRect";
 
 // ---------------------------------------------------------------------------
 // Shared parameter interface
@@ -66,6 +67,7 @@ import { getInspectorHoverResult } from "./inspectorHitTesting";
 export interface CanvasEventParams {
   // Refs
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  cachedCanvasRectRef: CachedCanvasRectRef;
   isTouchDeviceRef: React.MutableRefObject<boolean>;
   lastTouchTimeRef: React.MutableRefObject<number>;
   executeTargetedSpellRef: React.MutableRefObject<
@@ -204,7 +206,7 @@ export function handlePointerDownImpl(
 
   const canvas = p.canvasRef.current;
   if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
+  const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
   const clickPos = { x, y };
@@ -306,7 +308,7 @@ export function handleCanvasClickImpl(
 
   const canvas = p.canvasRef.current;
   if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
+  const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
   const clickPos = { x: clickX, y: clickY };
@@ -951,7 +953,7 @@ export function handleMouseMoveImpl(
 
   const canvas = p.canvasRef.current;
   if (!canvas) return;
-  const rect = canvas.getBoundingClientRect();
+  const rect = getCachedRect(canvas, p.cachedCanvasRectRef);
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
   p.setMousePos({ x, y });

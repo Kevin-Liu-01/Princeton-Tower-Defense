@@ -15,9 +15,11 @@ import {
   type ZoomGestureRefs,
   type ZoomGestureSetters,
 } from "./zoomAndGestures";
+import type { CachedCanvasRectRef } from "./cachedCanvasRect";
 
 export interface ZoomSetupDeps {
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
+  cachedCanvasRectRef: CachedCanvasRectRef;
   isZoomDebouncingRef: MutableRefObject<boolean>;
   zoomSettleTimerRef: MutableRefObject<ReturnType<typeof setTimeout> | null>;
   cachedStaticMapLayerRef: MutableRefObject<StaticMapLayerCache | null>;
@@ -41,7 +43,7 @@ export interface ZoomSetupReturn {
 
 export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number): ZoomSetupReturn {
   const {
-    canvasRef, isZoomDebouncingRef, zoomSettleTimerRef,
+    canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef,
     cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef,
     cachedAmbientLayerRef, lastGestureScaleRef,
     gameState, battleOutcome, selectedMap,
@@ -53,10 +55,10 @@ export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number): ZoomSetup
   cameraZoomRef.current = cameraZoom;
 
   const zoomGestureRefs = useMemo<ZoomGestureRefs>(() => ({
-    canvasRef, isZoomDebouncingRef, zoomSettleTimerRef, stableZoomRef, cameraZoomRef,
+    canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef, stableZoomRef, cameraZoomRef,
     cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef,
     lastGestureScaleRef,
-  }), [canvasRef, isZoomDebouncingRef, zoomSettleTimerRef, cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef, lastGestureScaleRef]);
+  }), [canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef, cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef, lastGestureScaleRef]);
 
   const zoomGestureSetters = useMemo<ZoomGestureSetters>(
     () => ({ setCameraZoom, setCameraOffset }),
@@ -79,7 +81,7 @@ export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number): ZoomSetup
     if (gameState !== "playing" || battleOutcome) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    return attachWheelAndGestureListeners(canvas, lastGestureScaleRef, handleCanvasWheelNative, zoomCameraAtClientPoint);
+    return attachWheelAndGestureListeners(canvas, lastGestureScaleRef, handleCanvasWheelNative, zoomCameraAtClientPoint, cachedCanvasRectRef);
   }, [gameState, battleOutcome, zoomCameraAtClientPoint, handleCanvasWheelNative, canvasRef, lastGestureScaleRef]);
 
   useEffect(() => {

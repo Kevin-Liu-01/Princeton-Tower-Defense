@@ -7,6 +7,7 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
   const [currentScene, setCurrentScene] = useState(0);
   const timeRef = useRef(0);
   const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const cssSizeRef = useRef({ w: 0, h: 0 });
   const isVisibleRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -15,6 +16,18 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { inlineSize: w, blockSize: h } = entry.contentBoxSize[0];
+      cssSizeRef.current = { w, h };
+    });
+    ro.observe(canvas);
+    cssSizeRef.current = { w: canvas.clientWidth, h: canvas.clientHeight };
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -50,10 +63,9 @@ export const BattlefieldPreviewCanvas: React.FC<{ animTime: number }> = ({ animT
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
+    const { w: width, h: height } = cssSizeRef.current;
+    if (width === 0 || height === 0) return;
 
-    // Only resize canvas when dimensions actually change
     if (lastCanvasSizeRef.current.w !== width || lastCanvasSizeRef.current.h !== height) {
       canvas.width = width * dpr;
       canvas.height = height * dpr;
