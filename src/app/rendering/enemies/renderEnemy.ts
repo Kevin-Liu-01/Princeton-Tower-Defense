@@ -18,14 +18,11 @@ import {
   type InspectRenderPass,
 } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
-import {
-  getSlowAuraColors,
-  getEnemyFlashProfile,
-} from "./types";
+import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
 import { drawRegionOverlay } from "./regionOverlays";
 import { getPerformanceSettings } from "../performance";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
-import { getRegionalPalette, getRegionCanvasFilter } from "./regionColors";
+import { getRegionalPalette } from "./regionColors";
 
 const mapThemeCache = new Map<string, MapTheme>();
 
@@ -36,41 +33,100 @@ const mapThemeCache = new Map<string, MapTheme>();
  */
 const ENEMY_DRAW_SCALE: Partial<Record<string, number>> = {
   // academic.ts — 1.7×
-  frosh: 1.7, sophomore: 1.7, junior: 1.7, senior: 1.7,
-  gradstudent: 1.7, professor: 1.7, dean: 1.7,
+  frosh: 1.7,
+  sophomore: 1.7,
+  junior: 1.7,
+  senior: 1.7,
+  gradstudent: 1.7,
+  professor: 1.7,
+  dean: 1.7,
   // special.ts
   trustee: 1.7,
   // ranged.ts — 1.7×
-  archer: 1.7, mage: 1.7, warlock: 1.7, crossbowman: 1.7, hexer: 1.7,
+  archer: 1.7,
+  mage: 1.7,
+  warlock: 1.7,
+  crossbowman: 1.7,
+  hexer: 1.7,
   // forest.ts — 1.7×
-  athlete: 1.7, tiger_fan: 1.7,
+  athlete: 1.7,
+  tiger_fan: 1.7,
   // darkfantasy.ts — 1.75×–2.1×
-  skeleton_footman: 1.8, skeleton_knight: 1.85, skeleton_archer: 1.75,
-  skeleton_king: 2.0, zombie_shambler: 1.8, zombie_brute: 2.0,
-  zombie_spitter: 1.8, ghoul: 1.8, dark_knight: 1.9, death_knight: 2.1,
+  skeleton_footman: 1.8,
+  skeleton_knight: 1.85,
+  skeleton_archer: 1.75,
+  skeleton_king: 2.0,
+  zombie_shambler: 1.8,
+  zombie_brute: 2.0,
+  zombie_spitter: 1.8,
+  ghoul: 1.8,
+  dark_knight: 1.9,
+  death_knight: 2.1,
   // darkfantasyB.ts — 1.8×–2.15×
-  fallen_paladin: 1.9, black_guard: 1.85, lich: 1.85, wraith: 1.8,
-  bone_mage: 1.8, dark_priest: 1.85, revenant: 1.9,
-  abomination: 2.15, hellhound: 1.85, doom_herald: 2.1,
+  fallen_paladin: 1.9,
+  black_guard: 1.85,
+  lich: 1.85,
+  wraith: 1.8,
+  bone_mage: 1.8,
+  dark_priest: 1.85,
+  revenant: 1.9,
+  abomination: 2.15,
+  hellhound: 1.85,
+  doom_herald: 2.1,
   // fantasy.ts — 1.15×–2.2×
-  dire_bear: 1.5, ancient_ent: 1.7, forest_troll: 1.4, timber_wolf: 1.3,
-  giant_eagle: 1.15, swamp_hydra: 1.6, giant_toad: 1.35, vine_serpent: 1.3,
-  marsh_troll: 1.4, phoenix: 1.5, basilisk: 1.45, djinn: 1.35,
-  manticore: 1.4, frost_troll: 1.4, dire_wolf: 1.45, wendigo: 1.4,
-  mammoth: 2.2, lava_golem: 1.5, volcanic_drake: 1.4, salamander: 1.2,
+  dire_bear: 1.5,
+  ancient_ent: 1.7,
+  forest_troll: 1.4,
+  timber_wolf: 1.3,
+  giant_eagle: 1.15,
+  swamp_hydra: 1.6,
+  giant_toad: 1.35,
+  vine_serpent: 1.3,
+  marsh_troll: 1.4,
+  phoenix: 1.5,
+  basilisk: 1.45,
+  djinn: 1.35,
+  manticore: 1.4,
+  frost_troll: 1.4,
+  dire_wolf: 1.45,
+  wendigo: 1.4,
+  mammoth: 2.2,
+  lava_golem: 1.5,
+  volcanic_drake: 1.4,
+  salamander: 1.2,
   // desert.ts — 1.35×–1.8×
-  nomad: 1.35, scorpion: 1.5, scarab: 1.8,
+  nomad: 1.35,
+  scorpion: 1.5,
+  scarab: 1.8,
   // winter.ts — 1.25×–1.6×
-  snow_goblin: 1.6, yeti: 1.25, ice_witch: 1.35,
+  snow_goblin: 1.6,
+  yeti: 1.25,
+  ice_witch: 1.35,
   // volcanic.ts — 1.4×–1.7×
-  magma_spawn: 1.5, fire_imp: 1.7, ember_guard: 1.4,
+  magma_spawn: 1.5,
+  fire_imp: 1.7,
+  ember_guard: 1.4,
   // swamp.ts — 1.3×–1.5×
-  bog_creature: 1.4, will_o_wisp: 1.5, swamp_troll: 1.3,
+  bog_creature: 1.4,
+  will_o_wisp: 1.5,
+  swamp_troll: 1.3,
   // bugs.ts — 1.1×–1.8×
-  orb_weaver: 1.4, mantis: 1.3, bombardier_beetle: 1.25, mosquito: 1.2,
-  centipede: 1.4, dragonfly: 1.15, silk_moth: 1.2, ant_soldier: 1.3,
-  locust: 1.1, trapdoor_spider: 1.35, ice_beetle: 1.3, frost_tick: 1.15,
-  snow_moth: 1.2, fire_ant: 1.4, magma_beetle: 1.35, ash_moth: 1.2,
+  orb_weaver: 1.4,
+  mantis: 1.3,
+  bombardier_beetle: 1.25,
+  mosquito: 1.2,
+  centipede: 1.4,
+  dragonfly: 1.15,
+  silk_moth: 1.2,
+  ant_soldier: 1.3,
+  locust: 1.1,
+  trapdoor_spider: 1.35,
+  ice_beetle: 1.3,
+  frost_tick: 1.15,
+  snow_moth: 1.2,
+  fire_ant: 1.4,
+  magma_beetle: 1.35,
+  ash_moth: 1.2,
   brood_mother: 1.8,
 };
 
@@ -1484,21 +1540,25 @@ export function drawEnemySprite(
   let bodyColorLight: string;
   if (flash > 0) {
     const flashBase = lightenColor(color, flash * 100);
-    const palette = getRegionalPalette(flashBase, region, darkenColor, lightenColor);
+    const palette = getRegionalPalette(
+      flashBase,
+      region,
+      darkenColor,
+      lightenColor,
+    );
     bodyColor = palette.color;
     bodyColorDark = palette.dark;
     bodyColorLight = palette.light;
   } else {
-    const palette = getRegionalPalette(color, region, darkenColor, lightenColor);
+    const palette = getRegionalPalette(
+      color,
+      region,
+      darkenColor,
+      lightenColor,
+    );
     bodyColor = palette.color;
     bodyColorDark = palette.dark;
     bodyColorLight = palette.light;
-  }
-
-  const regionFilter = getRegionCanvasFilter(region);
-  if (regionFilter !== "none") {
-    ctx.save();
-    ctx.filter = regionFilter;
   }
 
   switch (type) {
@@ -3031,10 +3091,6 @@ export function drawEnemySprite(
         zoom,
         attackPhase,
       );
-  }
-
-  if (regionFilter !== "none") {
-    ctx.restore();
   }
 
   drawRegionOverlay(ctx, x, y, size, type, region, time, zoom);

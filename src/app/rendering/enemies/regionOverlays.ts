@@ -179,15 +179,7 @@ function drawSwampHood(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  // Ragged vine-threaded hood draped over head
-  const hoodGrad = ctx.createLinearGradient(
-    x - size * 0.2, y - size * 0.7,
-    x + size * 0.2, y - size * 0.5,
-  );
-  hoodGrad.addColorStop(0, "rgba(30, 60, 25, 0.65)");
-  hoodGrad.addColorStop(0.5, "rgba(45, 80, 35, 0.55)");
-  hoodGrad.addColorStop(1, "rgba(30, 60, 25, 0.65)");
-  ctx.fillStyle = hoodGrad;
+  ctx.fillStyle = "rgba(38, 70, 30, 0.6)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.42);
   ctx.quadraticCurveTo(x - size * 0.28, y - size * 0.6, x, y - size * 0.72);
@@ -327,15 +319,7 @@ function drawDesertHeadWrap(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  // Flowing desert head wrap / keffiyeh
-  const wrapGrad = ctx.createLinearGradient(
-    x - size * 0.25, y - size * 0.65,
-    x + size * 0.25, y - size * 0.45,
-  );
-  wrapGrad.addColorStop(0, "rgba(200, 170, 110, 0.6)");
-  wrapGrad.addColorStop(0.5, "rgba(230, 200, 140, 0.55)");
-  wrapGrad.addColorStop(1, "rgba(200, 170, 110, 0.6)");
-  ctx.fillStyle = wrapGrad;
+  ctx.fillStyle = "rgba(215, 185, 125, 0.58)";
 
   // Wrap around head top
   ctx.beginPath();
@@ -514,15 +498,7 @@ function drawFurLinedHood(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  // Heavy fur-lined hood
-  const hoodGrad = ctx.createLinearGradient(
-    x - size * 0.25, y - size * 0.7,
-    x + size * 0.25, y - size * 0.48,
-  );
-  hoodGrad.addColorStop(0, "rgba(60, 80, 100, 0.6)");
-  hoodGrad.addColorStop(0.5, "rgba(80, 100, 120, 0.5)");
-  hoodGrad.addColorStop(1, "rgba(60, 80, 100, 0.6)");
-  ctx.fillStyle = hoodGrad;
+  ctx.fillStyle = "rgba(70, 90, 110, 0.55)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y - size * 0.44);
   ctx.quadraticCurveTo(x - size * 0.3, y - size * 0.62, x, y - size * 0.7);
@@ -699,15 +675,7 @@ function drawCharredCowl(
   x: number, y: number, size: number,
   time: number, zoom: number,
 ): void {
-  // Charred, ragged cowl with glowing ember edges
-  const cowlGrad = ctx.createLinearGradient(
-    x - size * 0.22, y - size * 0.68,
-    x + size * 0.22, y - size * 0.46,
-  );
-  cowlGrad.addColorStop(0, "rgba(40, 20, 15, 0.6)");
-  cowlGrad.addColorStop(0.5, "rgba(60, 30, 20, 0.5)");
-  cowlGrad.addColorStop(1, "rgba(40, 20, 15, 0.6)");
-  ctx.fillStyle = cowlGrad;
+  ctx.fillStyle = "rgba(50, 25, 18, 0.55)";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y - size * 0.44);
   ctx.quadraticCurveTo(x - size * 0.26, y - size * 0.6, x, y - size * 0.68);

@@ -74,11 +74,7 @@ function renderForestAura(
     ctx.stroke();
   }
 
-  // Faint green glow
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.6);
-  grad.addColorStop(0, `rgba(40, 120, 40, 0.06)`);
-  grad.addColorStop(1, "rgba(30, 80, 30, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = "rgba(40, 120, 40, 0.03)";
   ctx.beginPath();
   ctx.ellipse(x, y, s * 0.6, s * 0.6 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
@@ -101,12 +97,7 @@ function renderSwampAura(
   const s = size * zoom;
   ctx.save();
 
-  // Murky puddle
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.8);
-  grad.addColorStop(0, `rgba(60, 55, 30, 0.1)`);
-  grad.addColorStop(0.7, `rgba(50, 45, 25, 0.05)`);
-  grad.addColorStop(1, "rgba(40, 35, 20, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = "rgba(55, 50, 28, 0.05)";
   ctx.beginPath();
   ctx.ellipse(x, y, s * 0.8, s * 0.8 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
@@ -141,12 +132,8 @@ function renderDesertAura(
   const s = size * zoom;
   ctx.save();
 
-  // Heat shimmer glow
   const shimmer = Math.sin(time * 0.005) * 0.03 + 0.05;
-  const grad = ctx.createRadialGradient(x, y - s * 0.3, 0, x, y - s * 0.3, s);
-  grad.addColorStop(0, `rgba(255, 200, 100, ${shimmer})`);
-  grad.addColorStop(1, "rgba(200, 150, 60, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = `rgba(255, 200, 100, ${shimmer * 0.4})`;
   ctx.beginPath();
   ctx.arc(x, y - s * 0.3, s, 0, TAU);
   ctx.fill();
@@ -232,12 +219,7 @@ function renderVolcanicAura(
   const flicker = Math.sin(time * 0.008) * 0.04 + 0.08;
   ctx.save();
 
-  // Molten ground glow
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.7);
-  grad.addColorStop(0, `rgba(255, 80, 20, ${flicker})`);
-  grad.addColorStop(0.5, `rgba(200, 50, 10, ${flicker * 0.5})`);
-  grad.addColorStop(1, "rgba(150, 30, 0, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = `rgba(255, 80, 20, ${flicker * 0.4})`;
   ctx.beginPath();
   ctx.ellipse(x, y, s * 0.7, s * 0.7 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
@@ -286,12 +268,7 @@ function renderDarkFantasyAura(
   const s = size * zoom;
   ctx.save();
 
-  // Dark shadow pool
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.8);
-  grad.addColorStop(0, `rgba(40, 15, 60, 0.1)`);
-  grad.addColorStop(0.6, `rgba(30, 10, 45, 0.05)`);
-  grad.addColorStop(1, "rgba(20, 5, 30, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = "rgba(35, 12, 50, 0.05)";
   ctx.beginPath();
   ctx.ellipse(x, y, s * 0.8, s * 0.8 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();
@@ -327,12 +304,7 @@ function renderRegionBossAura(
   const pulse = Math.sin(time * 0.003) * 0.03 + 0.09;
   ctx.save();
 
-  // Outer menacing glow
-  const grad = ctx.createRadialGradient(x, y, 0, x, y, s * 1.4);
-  grad.addColorStop(0, `rgba(200, 30, 30, ${pulse})`);
-  grad.addColorStop(0.4, `rgba(150, 20, 50, ${pulse * 0.5})`);
-  grad.addColorStop(1, "rgba(100, 10, 30, 0)");
-  ctx.fillStyle = grad;
+  ctx.fillStyle = `rgba(200, 30, 30, ${pulse * 0.4})`;
   ctx.beginPath();
   ctx.ellipse(x, y, s * 1.4, s * 1.4 * ISO_Y_RATIO, 0, 0, TAU);
   ctx.fill();

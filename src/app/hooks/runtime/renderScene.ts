@@ -60,9 +60,16 @@ import {
   getLandmarkSpawnExclusion,
   resolveMapDecorationRuntimePlacement,
 } from "../../utils";
-import { buildPathSegments, minDistanceToPath, type PathSegment } from "../../utils/pathUtils";
+import {
+  buildPathSegments,
+  minDistanceToPath,
+  type PathSegment,
+} from "../../utils/pathUtils";
 import { createSeededRandom } from "../../utils/seededRandom";
-import { DecorationSpatialGrid, getExclusionRadius } from "../../utils/decorationSpacing";
+import {
+  DecorationSpatialGrid,
+  getExclusionRadius,
+} from "../../utils/decorationSpacing";
 import {
   getDecorationRenderLayer,
   getDecorationIsoY,
@@ -119,7 +126,10 @@ import { drawWaveStartBubble } from "../../rendering/ui/waveStartBubble";
 import type { WaveStartBubbleScreenData } from "../../rendering/ui/waveStartBubble";
 import { renderDecorationItem } from "../../rendering/decorations";
 import { getDecorationCategories } from "../../rendering/decorations/decorationCategories";
-import { renderDecorationTransitions, renderSpecialTowerTransitions } from "../../rendering/decorations/landmarkTransition";
+import {
+  renderDecorationTransitions,
+  renderSpecialTowerTransitions,
+} from "../../rendering/decorations/landmarkTransition";
 import {
   renderStaticMapLayer,
   renderChallengeMountainBackdrop,
@@ -306,7 +316,10 @@ export interface RenderSceneParams {
   cachedFogLayerRef: Ref<FogLayerCache | null>;
   cachedBackdropRef: Ref<BackdropCache | null>;
   cachedAmbientLayerRef: Ref<AmbientLayerCache | null>;
-  cachedDecorationsRef: Ref<{ mapKey: string; decorations: RuntimeDecoration[] } | null>;
+  cachedDecorationsRef: Ref<{
+    mapKey: string;
+    decorations: RuntimeDecoration[];
+  } | null>;
 
   // Other refs
   pendingDeathEffectsRef: Ref<Effect[]>;
@@ -458,10 +471,18 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom
+      cameraZoom,
     );
   const toScreenForCache = hasZoomMismatch
-    ? (p: Position) => worldToScreen(p, canvas.width, canvas.height, dpr, cameraOffset, cacheZoomForKey)
+    ? (p: Position) =>
+        worldToScreen(
+          p,
+          canvas.width,
+          canvas.height,
+          dpr,
+          cameraOffset,
+          cacheZoomForKey,
+        )
     : toScreen;
 
   // Settings version — bumped on every settings change so caches auto-invalidate.
@@ -489,7 +510,11 @@ export function renderScene(params: RenderSceneParams): void {
 
   // Backdrop canvas — rendered once per map/resize, never zoom-scaled.
   const backdropKey = [selectedMap, overscanCssW, overscanCssH, dpr].join("|");
-  if (backdropCanvas && (!cachedBackdropRef.current || cachedBackdropRef.current.key !== backdropKey)) {
+  if (
+    backdropCanvas &&
+    (!cachedBackdropRef.current ||
+      cachedBackdropRef.current.key !== backdropKey)
+  ) {
     const bdCtx = backdropCanvas.getContext("2d");
     if (bdCtx) {
       bdCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -497,7 +522,11 @@ export function renderScene(params: RenderSceneParams): void {
       bdCtx.scale(dpr, dpr);
       if (isChallengeTerrainLevel) {
         const mapThemeKeyForBackdrop = (levelData?.theme ?? "grassland") as
-          | "grassland" | "swamp" | "desert" | "winter" | "volcanic";
+          | "grassland"
+          | "swamp"
+          | "desert"
+          | "winter"
+          | "volcanic";
         renderChallengeMountainBackdrop(
           bdCtx,
           overscanCssW,
@@ -507,8 +536,12 @@ export function renderScene(params: RenderSceneParams): void {
         );
       } else {
         const gradient = bdCtx.createRadialGradient(
-          overscanCssW / 2, overscanCssH / 2, 0,
-          overscanCssW / 2, overscanCssH / 2, overscanCssW,
+          overscanCssW / 2,
+          overscanCssH / 2,
+          0,
+          overscanCssW / 2,
+          overscanCssH / 2,
+          overscanCssW,
         );
         gradient.addColorStop(0, theme.ground[0]);
         gradient.addColorStop(0.5, theme.ground[1]);
@@ -615,14 +648,20 @@ export function renderScene(params: RenderSceneParams): void {
 
   // Fog — cached separately with a slower refresh rate (uses overscan dims)
   const FOG_CACHE_REFRESH_MS = 200;
-  const fogCacheKey = [staticBaseKey, isChallengeTerrainLevel ? "c" : "n"].join("|");
+  const fogCacheKey = [staticBaseKey, isChallengeTerrainLevel ? "c" : "n"].join(
+    "|",
+  );
   const cachedFog = cachedFogLayerRef.current;
   const fogNeedsRedraw =
     !cachedFog ||
     cachedFog.key !== fogCacheKey ||
     frameNowMs - cachedFog.renderedAtMs > FOG_CACHE_REFRESH_MS;
 
-  if (fogNeedsRedraw && fogEndpoints.length > 0 && typeof document !== "undefined") {
+  if (
+    fogNeedsRedraw &&
+    fogEndpoints.length > 0 &&
+    typeof document !== "undefined"
+  ) {
     const fogOffscreen = cachedFog?.canvas ?? document.createElement("canvas");
     fogOffscreen.width = overscanCssW * dpr;
     fogOffscreen.height = overscanCssH * dpr;
@@ -634,7 +673,9 @@ export function renderScene(params: RenderSceneParams): void {
       const fogGroundRgb = hexToRgb(theme.ground[2]);
       const fogAccentRgb = hexToRgb(theme.accent);
       const fogPathRgb = hexToRgb(theme.path[2]);
-      const { fogBlobCount, fogWispCount } = computeFogCounts(isChallengeTerrainLevel);
+      const { fogBlobCount, fogWispCount } = computeFogCounts(
+        isChallengeTerrainLevel,
+      );
       const roadEndFogSize = isChallengeTerrainLevel ? 215 : 300;
       for (const endpoint of fogEndpoints) {
         drawRoadEndFog({
@@ -656,7 +697,9 @@ export function renderScene(params: RenderSceneParams): void {
         key: fogCacheKey,
         canvas: fogOffscreen,
         renderedAtMs: frameNowMs,
-        anchorOffset: cachedStaticMapLayerRef.current?.anchorOffset ?? { ...cameraOffset },
+        anchorOffset: cachedStaticMapLayerRef.current?.anchorOffset ?? {
+          ...cameraOffset,
+        },
       };
     }
   }
@@ -670,22 +713,35 @@ export function renderScene(params: RenderSceneParams): void {
       bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
       bgCtx.scale(dpr, dpr);
       if (cachedStaticMapLayerRef.current) {
-        bgCtx.drawImage(cachedStaticMapLayerRef.current.canvas, 0, 0, overscanCssW, overscanCssH);
+        bgCtx.drawImage(
+          cachedStaticMapLayerRef.current.canvas,
+          0,
+          0,
+          overscanCssW,
+          overscanCssH,
+        );
       }
       if (cachedFogLayerRef.current) {
-        bgCtx.drawImage(cachedFogLayerRef.current.canvas, 0, 0, overscanCssW, overscanCssH);
+        bgCtx.drawImage(
+          cachedFogLayerRef.current.canvas,
+          0,
+          0,
+          overscanCssW,
+          overscanCssH,
+        );
       }
     }
   }
   // Position bgCanvas via CSS transform — GPU-accelerated, runs every frame.
   // During active zoom, also apply CSS scale to compensate for zoom mismatch.
   if (bgCanvas) {
-    const bgAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
+    const bgAnchor =
+      cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
     const bgDeltaX = (bgAnchor.x - cameraOffset.x) * cameraZoom;
     const bgDeltaY = (bgAnchor.y - cameraOffset.y) * cameraZoom;
     if (hasZoomMismatch) {
-      const tx = -bgDeltaX + width / 2 - overscanCssW * zoomCompensation / 2;
-      const ty = -bgDeltaY + height / 3 - overscanCssH * zoomCompensation / 3;
+      const tx = -bgDeltaX + width / 2 - (overscanCssW * zoomCompensation) / 2;
+      const ty = -bgDeltaY + height / 3 - (overscanCssH * zoomCompensation) / 3;
       bgCanvas.style.transformOrigin = "0 0";
       bgCanvas.style.transform = `translate(${tx}px,${ty}px) scale(${zoomCompensation})`;
     } else {
@@ -710,11 +766,18 @@ export function renderScene(params: RenderSceneParams): void {
       const bdSrcY = (BG_OVERSCAN_Y / 3) * dpr;
       ctx.drawImage(
         cachedBackdropRef.current.canvas,
-        bdSrcX, bdSrcY, canvas.width, canvas.height,
-        0, 0, width, height,
+        bdSrcX,
+        bdSrcY,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        width,
+        height,
       );
     }
-    const fbAnchor = cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
+    const fbAnchor =
+      cachedStaticMapLayerRef.current?.anchorOffset ?? cameraOffset;
     const fbDeltaX = (fbAnchor.x - cameraOffset.x) * cameraZoom;
     const fbDeltaY = (fbAnchor.y - cameraOffset.y) * cameraZoom;
     if (hasZoomMismatch) {
@@ -730,15 +793,27 @@ export function renderScene(params: RenderSceneParams): void {
       if (cachedStaticMapLayerRef.current) {
         ctx.drawImage(
           cachedStaticMapLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          fbSrcX,
+          fbSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
       if (cachedFogLayerRef.current) {
         ctx.drawImage(
           cachedFogLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          fbSrcX,
+          fbSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
       ctx.restore();
@@ -748,15 +823,27 @@ export function renderScene(params: RenderSceneParams): void {
       if (cachedStaticMapLayerRef.current) {
         ctx.drawImage(
           cachedStaticMapLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          fbSrcX,
+          fbSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
       if (cachedFogLayerRef.current) {
         ctx.drawImage(
           cachedFogLayerRef.current.canvas,
-          fbSrcX, fbSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          fbSrcX,
+          fbSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
     }
@@ -780,7 +867,10 @@ export function renderScene(params: RenderSceneParams): void {
   let decorations: RuntimeDecoration[];
 
   const decorCacheKey = `${selectedMap}:${settingsVer}`;
-  if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === decorCacheKey) {
+  if (
+    cachedDecorationsRef.current &&
+    cachedDecorationsRef.current.mapKey === decorCacheKey
+  ) {
     decorations = cachedDecorationsRef.current.decorations;
   } else {
     // Generate decorations and cache them
@@ -811,8 +901,10 @@ export function renderScene(params: RenderSceneParams): void {
 
     // Create deterministic zones for different decoration types
     const zoneSize = 4;
-    const minX = -12, maxX = GRID_WIDTH + 12;
-    const minY = -12, maxY = GRID_HEIGHT + 12;
+    const minX = -12,
+      maxX = GRID_WIDTH + 12;
+    const minY = -12,
+      maxY = GRID_HEIGHT + 12;
     const zonesX = Math.ceil((maxX - minX) / zoneSize);
     const zonesY = Math.ceil((maxY - minY) / zoneSize);
 
@@ -822,10 +914,12 @@ export function renderScene(params: RenderSceneParams): void {
     const isBeyondGrid = (gx: number, gy: number): boolean =>
       gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
     const BEYOND_GRID_REDUCE = 0.3;
-    const specialTowerZones = getLevelSpecialTowers(selectedMap).map((tower) => ({
-      cx: tower.pos.x,
-      cy: tower.pos.y,
-    }));
+    const specialTowerZones = getLevelSpecialTowers(selectedMap).map(
+      (tower) => ({
+        cx: tower.pos.x,
+        cy: tower.pos.y,
+      }),
+    );
 
     // Build landmark exclusion zones from map-defined decorations.
     const landmarkZones: LandmarkZone[] = [];
@@ -840,7 +934,7 @@ export function renderScene(params: RenderSceneParams): void {
         const exclusion = getLandmarkSpawnExclusion(
           decoType,
           resolvedPlacement?.scale ?? (deco.size || 1),
-          deco.heightTag
+          deco.heightTag,
         );
         if (!exclusion) continue;
         landmarkZones.push({
@@ -868,8 +962,10 @@ export function renderScene(params: RenderSceneParams): void {
     }
 
     const landscapeSettings = getGameSettings().landscaping;
-    const decoMultiplier = DECORATION_DENSITY_MULTIPLIER[landscapeSettings.decorationDensity];
-    const scaleRange = DECORATION_SCALE_RANGE[landscapeSettings.decorationScale];
+    const decoMultiplier =
+      DECORATION_DENSITY_MULTIPLIER[landscapeSettings.decorationDensity];
+    const scaleRange =
+      DECORATION_SCALE_RANGE[landscapeSettings.decorationScale];
 
     const mainDecoCount = Math.round(300 * decoMultiplier);
     for (let i = 0; i < mainDecoCount; i++) {
@@ -881,26 +977,45 @@ export function renderScene(params: RenderSceneParams): void {
 
       const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
       const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
-      const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
-      const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
+      const offsetX =
+        (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
+      const offsetY =
+        (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
       const gridX = zoneCenterX + offsetX;
       const gridY = zoneCenterY + offsetY;
 
-      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE)
+        continue;
 
       const worldPos = gridToWorld({ x: gridX, y: gridY });
       if (isOnPath(worldPos)) continue;
 
       const isLargeCategory = category === "trees" || category === "structures";
-      if (isLargeCategory && isInLandmarkCore(gridX, gridY, landmarkZones)) continue;
-      if (!isLargeCategory && isInLandmarkFull(gridX, gridY, landmarkZones)) continue;
-      if (isLargeCategory && isInSpecialTowerZone(gridX, gridY, 1.9, specialTowerZones)) continue;
-      if (!isLargeCategory && isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)) continue;
+      if (isLargeCategory && isInLandmarkCore(gridX, gridY, landmarkZones))
+        continue;
+      if (!isLargeCategory && isInLandmarkFull(gridX, gridY, landmarkZones))
+        continue;
+      if (
+        isLargeCategory &&
+        isInSpecialTowerZone(gridX, gridY, 1.9, specialTowerZones)
+      )
+        continue;
+      if (
+        !isLargeCategory &&
+        isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)
+      )
+        continue;
 
-      const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
+      const typeIndex = Math.floor(
+        seededRandom() * seededRandom() * categoryDecors.length,
+      );
       const type = categoryDecors[typeIndex] as DecorationType;
 
-      if (!landscapeSettings.showWaterEffects && WATER_DECORATION_TYPES.has(type)) continue;
+      if (
+        !landscapeSettings.showWaterEffects &&
+        WATER_DECORATION_TYPES.has(type)
+      )
+        continue;
 
       let baseScale = scaleRange.base;
       let scaleVar = scaleRange.variance;
@@ -932,12 +1047,17 @@ export function renderScene(params: RenderSceneParams): void {
       });
     }
 
-    const treeClusterCount = TREE_CLUSTER_COUNT[landscapeSettings.treeClusterDensity];
+    const treeClusterCount =
+      TREE_CLUSTER_COUNT[landscapeSettings.treeClusterDensity];
     for (let cluster = 0; cluster < treeClusterCount; cluster++) {
       const clusterX = minX + seededRandom() * (maxX - minX);
       const clusterY = minY + seededRandom() * (maxY - minY);
 
-      if (isBeyondGrid(clusterX, clusterY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+      if (
+        isBeyondGrid(clusterX, clusterY) &&
+        seededRandom() > BEYOND_GRID_REDUCE
+      )
+        continue;
 
       const treesInCluster = 8 + Math.floor(seededRandom() * 10);
       const treeTypes = categories.trees;
@@ -947,9 +1067,12 @@ export function renderScene(params: RenderSceneParams): void {
         const worldPos = gridToWorld({ x: treeX, y: treeY });
         if (isOnPath(worldPos)) continue;
         if (isInLandmarkCore(treeX, treeY, landmarkZones)) continue;
-        if (isInSpecialTowerZone(treeX, treeY, 1.9, specialTowerZones)) continue;
+        if (isInSpecialTowerZone(treeX, treeY, 1.9, specialTowerZones))
+          continue;
 
-        const treeType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+        const treeType = treeTypes[
+          Math.floor(seededRandom() * treeTypes.length)
+        ] as DecorationType;
         const treeScale = 0.6 + seededRandom() * 0.7;
         const treeRot = seededRandom() * Math.PI * 2;
         const treeVar = Math.floor(seededRandom() * 4);
@@ -985,7 +1108,9 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
         if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
 
-        const groveType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+        const groveType = treeTypes[
+          Math.floor(seededRandom() * treeTypes.length)
+        ] as DecorationType;
         const groveScale = 0.65 + seededRandom() * 0.65;
         const groveRot = seededRandom() * Math.PI * 2;
         const groveVar = Math.floor(seededRandom() * 4);
@@ -1010,8 +1135,10 @@ export function renderScene(params: RenderSceneParams): void {
       const villageY = minY + 5 + seededRandom() * (maxY - minY - 10);
       const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
       if (isOnPath(villageCenterWorld)) continue;
-      if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25) continue;
-      if (isInSpecialTowerZone(villageX, villageY, 2.3, specialTowerZones)) continue;
+      if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25)
+        continue;
+      if (isInSpecialTowerZone(villageX, villageY, 2.3, specialTowerZones))
+        continue;
 
       const structureTypes = categories.structures;
       const scatteredTypes = categories.scattered;
@@ -1024,9 +1151,12 @@ export function renderScene(params: RenderSceneParams): void {
         const worldPos = gridToWorld({ x: structX, y: structY });
         if (isOnPath(worldPos)) continue;
         if (isInLandmarkCore(structX, structY, landmarkZones)) continue;
-        if (isInSpecialTowerZone(structX, structY, 1.9, specialTowerZones)) continue;
+        if (isInSpecialTowerZone(structX, structY, 1.9, specialTowerZones))
+          continue;
 
-        const sType = structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType;
+        const sType = structureTypes[
+          Math.floor(seededRandom() * structureTypes.length)
+        ] as DecorationType;
         const sScale = 0.7 + seededRandom() * 0.5;
         const sRot = seededRandom() * Math.PI * 0.3 - Math.PI * 0.15;
         const sVar = Math.floor(seededRandom() * 4);
@@ -1056,9 +1186,11 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInLandmarkFull(sx, sy, landmarkZones)) continue;
         if (isInSpecialTowerZone(sx, sy, 1.15, specialTowerZones)) continue;
 
-        const scType = (scatteredTypes.length > 0
-          ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
-          : structureTypes[Math.floor(seededRandom() * structureTypes.length)]) as DecorationType;
+        const scType = (
+          scatteredTypes.length > 0
+            ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
+            : structureTypes[Math.floor(seededRandom() * structureTypes.length)]
+        ) as DecorationType;
         const scScale = 0.5 + seededRandom() * 0.4;
         const scRot = seededRandom() * Math.PI * 2;
         const scVar = Math.floor(seededRandom() * 4);
@@ -1089,7 +1221,9 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
         if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
 
-        const ptType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+        const ptType = treeTypes[
+          Math.floor(seededRandom() * treeTypes.length)
+        ] as DecorationType;
         const ptScale = 0.6 + seededRandom() * 0.5;
         const ptRot = seededRandom() * Math.PI * 2;
         const ptVar = Math.floor(seededRandom() * 4);
@@ -1125,7 +1259,9 @@ export function renderScene(params: RenderSceneParams): void {
       if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) continue;
 
       const allDecorTypes = [...categories.trees, ...categories.terrain];
-      const fillType = allDecorTypes[Math.floor(seededRandom() * allDecorTypes.length)] as DecorationType;
+      const fillType = allDecorTypes[
+        Math.floor(seededRandom() * allDecorTypes.length)
+      ] as DecorationType;
       const fillScale = 0.5 + seededRandom() * 0.6;
       const fillRot = seededRandom() * Math.PI * 2;
       const fillVar = Math.floor(seededRandom() * 4);
@@ -1154,13 +1290,23 @@ export function renderScene(params: RenderSceneParams): void {
             ? ["crater", "skeleton", "sword", "arrow", "bones"]
             : currentTheme === "swamp"
               ? ["crater", "skeleton", "bones", "debris"]
-              : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
-    const battleDebrisCount = BATTLE_DEBRIS_COUNT[landscapeSettings.battleDebrisDensity];
+              : [
+                  "crater",
+                  "debris",
+                  "cart",
+                  "sword",
+                  "arrow",
+                  "skeleton",
+                  "fire",
+                ];
+    const battleDebrisCount =
+      BATTLE_DEBRIS_COUNT[landscapeSettings.battleDebrisDensity];
     for (let i = 0; i < battleDebrisCount; i++) {
       const gridX = seededRandom() * (GRID_WIDTH + 23) - 11.5;
       const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
 
-      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+      if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE)
+        continue;
       if (isInLandmarkFull(gridX, gridY, landmarkZones)) continue;
       if (isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)) continue;
 
@@ -1191,9 +1337,21 @@ export function renderScene(params: RenderSceneParams): void {
 
     const edgeSegments = [
       { startX: -3, startY: -2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
-      { startX: -3, startY: GRID_HEIGHT + 2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
+      {
+        startX: -3,
+        startY: GRID_HEIGHT + 2,
+        dx: 1,
+        dy: 0,
+        length: GRID_WIDTH + 6,
+      },
       { startX: -2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
-      { startX: GRID_WIDTH + 2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
+      {
+        startX: GRID_WIDTH + 2,
+        startY: -3,
+        dx: 0,
+        dy: 1,
+        length: GRID_HEIGHT + 6,
+      },
     ];
 
     for (const seg of edgeSegments) {
@@ -1218,10 +1376,16 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
         const isTree = seededRandom() > 0.3;
-        const edgeType = (isTree
-          ? edgeTreeTypes[Math.floor(seededRandom() * edgeTreeTypes.length)]
-          : edgeTerrainTypes[Math.floor(seededRandom() * edgeTerrainTypes.length)]) as DecorationType;
-        const edgeScale = isTree ? 0.7 + seededRandom() * 0.6 : 0.5 + seededRandom() * 0.5;
+        const edgeType = (
+          isTree
+            ? edgeTreeTypes[Math.floor(seededRandom() * edgeTreeTypes.length)]
+            : edgeTerrainTypes[
+                Math.floor(seededRandom() * edgeTerrainTypes.length)
+              ]
+        ) as DecorationType;
+        const edgeScale = isTree
+          ? 0.7 + seededRandom() * 0.6
+          : 0.5 + seededRandom() * 0.5;
         const edgeRot = seededRandom() * Math.PI * 2;
         const edgeVar = Math.floor(seededRandom() * 4);
 
@@ -1264,9 +1428,15 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
         if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
-        const epInType = (seededRandom() > 0.3
-          ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
-          : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)]) as DecorationType;
+        const epInType = (
+          seededRandom() > 0.3
+            ? endpointTreeTypes[
+                Math.floor(seededRandom() * endpointTreeTypes.length)
+              ]
+            : endpointTerrainTypes[
+                Math.floor(seededRandom() * endpointTerrainTypes.length)
+              ]
+        ) as DecorationType;
         const epInScale = 0.8 + seededRandom() * 0.7;
         const epInRot = seededRandom() * Math.PI * 2;
         const epInVar = Math.floor(seededRandom() * 4);
@@ -1296,9 +1466,15 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
         if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
-        const epMidType = (seededRandom() > 0.25
-          ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
-          : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)]) as DecorationType;
+        const epMidType = (
+          seededRandom() > 0.25
+            ? endpointTreeTypes[
+                Math.floor(seededRandom() * endpointTreeTypes.length)
+              ]
+            : endpointTerrainTypes[
+                Math.floor(seededRandom() * endpointTerrainTypes.length)
+              ]
+        ) as DecorationType;
         const epMidScale = 0.65 + seededRandom() * 0.65;
         const epMidRot = seededRandom() * Math.PI * 2;
         const epMidVar = Math.floor(seededRandom() * 4);
@@ -1329,7 +1505,9 @@ export function renderScene(params: RenderSceneParams): void {
         if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) continue;
 
         const epOutTypes = [...categories.scattered, ...endpointTerrainTypes];
-        const epOutType = epOutTypes[Math.floor(seededRandom() * epOutTypes.length)] as DecorationType;
+        const epOutType = epOutTypes[
+          Math.floor(seededRandom() * epOutTypes.length)
+        ] as DecorationType;
         const epOutScale = 0.4 + seededRandom() * 0.5;
         const epOutRot = seededRandom() * Math.PI * 2;
         const epOutVar = Math.floor(seededRandom() * 4);
@@ -1351,8 +1529,8 @@ export function renderScene(params: RenderSceneParams): void {
     // Add major landmarks from LEVEL_DATA if defined
     const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
     if (levelDecorations && landscapeSettings.showLandmarks) {
-      const specialTowerWorldPositions = getLevelSpecialTowers(selectedMap).map((tower) =>
-        gridToWorld(tower.pos)
+      const specialTowerWorldPositions = getLevelSpecialTowers(selectedMap).map(
+        (tower) => gridToWorld(tower.pos),
       );
       let manualDecorationCount = 0;
       for (const dec of levelDecorations) {
@@ -1361,10 +1539,12 @@ export function renderScene(params: RenderSceneParams): void {
 
         const worldPos = getMapDecorationWorldPos(dec);
         if (specialTowerWorldPositions.length > 0) {
-          const clearRadius =
-            Math.max(TILE_SIZE * 0.8, resolvedPlacement.scale * 18);
+          const clearRadius = Math.max(
+            TILE_SIZE * 0.8,
+            resolvedPlacement.scale * 18,
+          );
           const overlapsSpecialTower = specialTowerWorldPositions.some(
-            (specPos) => distance(worldPos, specPos) < clearRadius
+            (specPos) => distance(worldPos, specPos) < clearRadius,
           );
           if (overlapsSpecialTower) {
             continue;
@@ -1443,19 +1623,35 @@ export function renderScene(params: RenderSceneParams): void {
   const worldCorners = [
     screenToWorld(
       { x: -decorCullMarginPx, y: -decorCullMarginPx },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     ),
     screenToWorld(
       { x: width + decorCullMarginPx, y: -decorCullMarginPx },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     ),
     screenToWorld(
       { x: -decorCullMarginPx, y: height + decorCullMarginPx },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     ),
     screenToWorld(
       { x: width + decorCullMarginPx, y: height + decorCullMarginPx },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     ),
   ];
   const minVisibleWorldX = Math.min(...worldCorners.map((p) => p.x));
@@ -1536,7 +1732,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom
+        cameraZoom,
       );
     }
   };
@@ -1547,13 +1743,14 @@ export function renderScene(params: RenderSceneParams): void {
   // Merge pending death effects from the ref queue so they render immediately,
   // bypassing React state batch timing.
   const pendingDeath = pendingDeathEffectsRef.current;
-  const effectIds = new Set(effects.map(e => e.id));
+  const effectIds = new Set(effects.map((e) => e.id));
   const mergedEffects: Effect[] = [...effects];
   const now = performance.now();
   const survivingPending: Effect[] = [];
   for (const de of pendingDeath) {
     if (effectIds.has(de.id)) continue;
-    const spawnedAt = (de as Effect & { _spawnedAt?: number })._spawnedAt || now;
+    const spawnedAt =
+      (de as Effect & { _spawnedAt?: number })._spawnedAt || now;
     const elapsed = now - spawnedAt;
     de.progress = Math.min(0.99, elapsed / (de.duration || 500));
     if (de.progress < 0.99) {
@@ -1565,7 +1762,11 @@ export function renderScene(params: RenderSceneParams): void {
 
   // Ground-level spell effects (scorch marks, impact craters) render above roads/hazards
   // but below decorations, towers, and entities.
-  const groundEffectTypes = new Set(["fire_scorch", "lightning_scorch", "meteor_impact"]);
+  const groundEffectTypes = new Set([
+    "fire_scorch",
+    "lightning_scorch",
+    "meteor_impact",
+  ]);
   const skyEffectTypes = new Set(["meteor_falling", "lightning_bolt"]);
   const deathEffectType = "enemy_death";
   const groundEffects: Effect[] = [];
@@ -1578,14 +1779,30 @@ export function renderScene(params: RenderSceneParams): void {
   }
   for (const eff of groundEffects) {
     renderEffect(
-      ctx, eff, canvas.width, canvas.height, dpr,
-      enemies, towers, selectedMap, cameraOffset, cameraZoom, mergedEffects.length
+      ctx,
+      eff,
+      canvas.width,
+      canvas.height,
+      dpr,
+      enemies,
+      towers,
+      selectedMap,
+      cameraOffset,
+      cameraZoom,
+      mergedEffects.length,
     );
   }
 
   // Death animation effects render above roads/hazards but below decorations and entities.
   for (const eff of deathEffects) {
-    const deathScreenPos = worldToScreen(eff.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+    const deathScreenPos = worldToScreen(
+      eff.pos,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
     const deathZoom = cameraZoom || 1;
     ctx.save();
     renderEnemyDeath(ctx, deathScreenPos, deathZoom, eff.progress, eff);
@@ -1598,8 +1815,12 @@ export function renderScene(params: RenderSceneParams): void {
   let decorPosCorrectY = 0;
   const cachedStaticDecorationLayer = cachedStaticDecorationLayerRef.current;
   const decorAnchor = cachedStaticDecorationLayer?.anchorOffset;
-  const decorPanPxX = decorAnchor ? (decorAnchor.x - cameraOffset.x) * cameraZoom : Infinity;
-  const decorPanPxY = decorAnchor ? (decorAnchor.y - cameraOffset.y) * cameraZoom : Infinity;
+  const decorPanPxX = decorAnchor
+    ? (decorAnchor.x - cameraOffset.x) * cameraZoom
+    : Infinity;
+  const decorPanPxY = decorAnchor
+    ? (decorAnchor.y - cameraOffset.y) * cameraZoom
+    : Infinity;
   const decorExceedsLimit =
     Math.abs(decorPanPxX) > DECOR_PAN_TOLERANCE_PX ||
     Math.abs(decorPanPxY) > DECOR_PAN_TOLERANCE_PX;
@@ -1607,13 +1828,17 @@ export function renderScene(params: RenderSceneParams): void {
     cachedStaticDecorationLayer &&
     cachedStaticDecorationLayer.key === decorBaseKey &&
     !decorExceedsLimit;
-  const decorCacheZoomVal = cachedStaticDecorationLayer?.cacheZoom ?? cacheZoomForKey;
+  const decorCacheZoomVal =
+    cachedStaticDecorationLayer?.cacheZoom ?? cacheZoomForKey;
   const decorZoomRatio = cameraZoom / decorCacheZoomVal;
-  const decorHasZoomMismatch = decorCacheHit && Math.abs(decorZoomRatio - 1) > 0.001;
+  const decorHasZoomMismatch =
+    decorCacheHit && Math.abs(decorZoomRatio - 1) > 0.001;
   if (decorCacheHit) {
     if (decorHasZoomMismatch) {
-      const offsetAtCacheZoom_X = (cameraOffset.x - decorAnchor!.x) * decorCacheZoomVal;
-      const offsetAtCacheZoom_Y = (cameraOffset.y - decorAnchor!.y) * decorCacheZoomVal;
+      const offsetAtCacheZoom_X =
+        (cameraOffset.x - decorAnchor!.x) * decorCacheZoomVal;
+      const offsetAtCacheZoom_Y =
+        (cameraOffset.y - decorAnchor!.y) * decorCacheZoomVal;
       ctx.save();
       ctx.translate(width / 2, height / 3);
       ctx.scale(decorZoomRatio, decorZoomRatio);
@@ -1621,7 +1846,8 @@ export function renderScene(params: RenderSceneParams): void {
       ctx.translate(offsetAtCacheZoom_X, offsetAtCacheZoom_Y);
       drawBackgroundDecorations(
         cachedStaticDecorationLayer.backgroundDecorations,
-        0, 0,
+        0,
+        0,
         decorCacheZoomVal,
       );
       if (cachedStaticDecorationLayer.canvas) {
@@ -1629,8 +1855,14 @@ export function renderScene(params: RenderSceneParams): void {
         const dSrcY = (DECOR_OVERSCAN / 2) * dpr;
         ctx.drawImage(
           cachedStaticDecorationLayer.canvas,
-          dSrcX, dSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          dSrcX,
+          dSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
       ctx.restore();
@@ -1647,12 +1879,19 @@ export function renderScene(params: RenderSceneParams): void {
         const dSrcY = (DECOR_OVERSCAN / 2 - decorPosCorrectY) * dpr;
         ctx.drawImage(
           cachedStaticDecorationLayer.canvas,
-          dSrcX, dSrcY, canvas.width, canvas.height,
-          0, 0, width, height,
+          dSrcX,
+          dSrcY,
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          width,
+          height,
         );
       }
     }
-    animatedVisibleDecorations = cachedStaticDecorationLayer.animatedDecorations;
+    animatedVisibleDecorations =
+      cachedStaticDecorationLayer.animatedDecorations;
     depthSensitiveVisibleDecorations =
       cachedStaticDecorationLayer.depthSensitiveDecorations;
   } else {
@@ -1662,7 +1901,7 @@ export function renderScene(params: RenderSceneParams): void {
         isChallengeTerrainLevel &&
         !isWorldPosInChallengeDecorationFootprint(
           { x: dec.x, y: dec.y },
-          challengePathSegments
+          challengePathSegments,
         )
       ) {
         continue;
@@ -1699,7 +1938,7 @@ export function renderScene(params: RenderSceneParams): void {
     >((anchors, entry) => {
       const volume = getDecorationVolumeSpec(
         entry.decoration.type,
-        entry.decoration.heightTag
+        entry.decoration.heightTag,
       );
       if (volume.heightTag !== "landmark") {
         return anchors;
@@ -1710,8 +1949,8 @@ export function renderScene(params: RenderSceneParams): void {
         heightTag: volume.heightTag,
         centerX: entry.screenPos.x,
         centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
-        radiusX: (volume.width * 0.35) * screenScale,
-        radiusY: (volume.length * 0.35) * screenScale,
+        radiusX: volume.width * 0.35 * screenScale,
+        radiusY: volume.length * 0.35 * screenScale,
         isoY: entry.isoY,
         frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
       });
@@ -1720,16 +1959,33 @@ export function renderScene(params: RenderSceneParams): void {
 
     const DEPTH_LAYER_ROAD_DIST = TILE_SIZE * 7;
     const ANIMATED_DEPTH_TYPES: ReadonlySet<string> = new Set([
-      "torch", "fire", "fire_pit", "campfire", "fountain",
-      "glowing_runes", "tentacle",
+      "torch",
+      "fire",
+      "fire_pit",
+      "campfire",
+      "fountain",
+      "glowing_runes",
+      "tentacle",
     ]);
     const ANIMATED_BG_TYPES: ReadonlySet<string> = new Set([
-      "deep_water", "lava_pool", "lava_fall", "poison_pool",
-      "lake", "algae_pool", "fishing_spot", "carnegie_lake",
+      "deep_water",
+      "lava_pool",
+      "lava_fall",
+      "poison_pool",
+      "lake",
+      "algae_pool",
+      "fishing_spot",
+      "carnegie_lake",
     ]);
     const ALWAYS_DEPTH_SORTED_TYPES: ReadonlySet<string> = new Set([
-      "broken_wall", "broken_bridge", "ruins", "hut",
-      "statue", "obelisk", "hanging_cage", "fence",
+      "broken_wall",
+      "broken_bridge",
+      "ruins",
+      "hut",
+      "statue",
+      "obelisk",
+      "hanging_cage",
+      "fence",
     ]);
     const decorPathKeys =
       activeWaveSpawnPaths.length > 0
@@ -1747,16 +2003,16 @@ export function renderScene(params: RenderSceneParams): void {
       const renderLayer = getDecorationRenderLayer(entry.decoration);
       const volume = getDecorationVolumeSpec(
         entry.decoration.type,
-        entry.decoration.heightTag
+        entry.decoration.heightTag,
       );
       const occlusionState = getOcclusionState(entry, occlusionAnchors);
       const resolvedEntry =
         occlusionState.clampIsoY === undefined
           ? entry
           : {
-            ...entry,
-            isoY: Math.min(entry.isoY, occlusionState.clampIsoY),
-          };
+              ...entry,
+              isoY: Math.min(entry.isoY, occlusionState.clampIsoY),
+            };
       if (volume.backgroundShadowOnly) {
         backgroundDecorations.push({ ...resolvedEntry, shadowOnly: true });
       }
@@ -1796,7 +2052,30 @@ export function renderScene(params: RenderSceneParams): void {
       } else {
         const dec = entry.decoration;
         const vol = getDecorationVolumeSpec(dec.type, dec.heightTag);
-        entry.sprite = prerenderDecorationSprite(
+        entry.sprite =
+          prerenderDecorationSprite(
+            dec.type,
+            cacheZoomForKey * dec.scale,
+            dec.rotation,
+            dec.variant,
+            dec.x,
+            dec.y,
+            selectedMap,
+            mapTheme,
+            dpr,
+            dec.heightTag,
+            false,
+            vol.backgroundShadowOnly,
+            cacheZoomForKey,
+          ) ?? undefined;
+        spriteCachedDepthDecorations.push(entry);
+      }
+    }
+    for (const entry of backgroundDecorations) {
+      if (ANIMATED_BG_TYPES.has(entry.decoration.type)) continue;
+      const dec = entry.decoration;
+      entry.sprite =
+        prerenderDecorationSprite(
           dec.type,
           cacheZoomForKey * dec.scale,
           dec.rotation,
@@ -1807,31 +2086,10 @@ export function renderScene(params: RenderSceneParams): void {
           mapTheme,
           dpr,
           dec.heightTag,
+          !!entry.shadowOnly,
           false,
-          vol.backgroundShadowOnly,
           cacheZoomForKey,
         ) ?? undefined;
-        spriteCachedDepthDecorations.push(entry);
-      }
-    }
-    for (const entry of backgroundDecorations) {
-      if (ANIMATED_BG_TYPES.has(entry.decoration.type)) continue;
-      const dec = entry.decoration;
-      entry.sprite = prerenderDecorationSprite(
-        dec.type,
-        cacheZoomForKey * dec.scale,
-        dec.rotation,
-        dec.variant,
-        dec.x,
-        dec.y,
-        selectedMap,
-        mapTheme,
-        dpr,
-        dec.heightTag,
-        !!entry.shadowOnly,
-        false,
-        cacheZoomForKey,
-      ) ?? undefined;
     }
 
     let staticDecorationCanvas: HTMLCanvasElement | null = null;
@@ -1875,8 +2133,14 @@ export function renderScene(params: RenderSceneParams): void {
       const dSrcY = (DECOR_OVERSCAN / 2) * dpr;
       ctx.drawImage(
         staticDecorationCanvas,
-        dSrcX, dSrcY, canvas.width, canvas.height,
-        0, 0, width, height,
+        dSrcX,
+        dSrcY,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        width,
+        height,
       );
     } else {
       liveAnimatedDecorations.push(...staticDecorations);
@@ -1895,14 +2159,16 @@ export function renderScene(params: RenderSceneParams): void {
     depthSensitiveVisibleDecorations = spriteCachedDepthDecorations;
   }
 
-  const decorOffsetDx = decorHasZoomMismatch && decorAnchor
-    ? (cameraOffset.x - decorAnchor.x) * cameraZoom
-    : 0;
-  const decorOffsetDy = decorHasZoomMismatch && decorAnchor
-    ? (cameraOffset.y - decorAnchor.y) * cameraZoom
-    : 0;
-  const zoomCorrCenterX = width / 2 * (1 - decorZoomRatio);
-  const zoomCorrCenterY = height / 3 * (1 - decorZoomRatio);
+  const decorOffsetDx =
+    decorHasZoomMismatch && decorAnchor
+      ? (cameraOffset.x - decorAnchor.x) * cameraZoom
+      : 0;
+  const decorOffsetDy =
+    decorHasZoomMismatch && decorAnchor
+      ? (cameraOffset.y - decorAnchor.y) * cameraZoom
+      : 0;
+  const zoomCorrCenterX = (width / 2) * (1 - decorZoomRatio);
+  const zoomCorrCenterY = (height / 3) * (1 - decorZoomRatio);
   for (const entry of animatedVisibleDecorations) {
     let screenPos: Position;
     if (decorHasZoomMismatch) {
@@ -1911,7 +2177,10 @@ export function renderScene(params: RenderSceneParams): void {
         y: entry.screenPos.y * decorZoomRatio + zoomCorrCenterY + decorOffsetDy,
       };
     } else if (decorPosCorrectX !== 0 || decorPosCorrectY !== 0) {
-      screenPos = { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
+      screenPos = {
+        x: entry.screenPos.x + decorPosCorrectX,
+        y: entry.screenPos.y + decorPosCorrectY,
+      };
     } else {
       screenPos = entry.screenPos;
     }
@@ -1934,7 +2203,10 @@ export function renderScene(params: RenderSceneParams): void {
         y: entry.screenPos.y * decorZoomRatio + zoomCorrCenterY + decorOffsetDy,
       };
     } else if (decorPosCorrectX !== 0 || decorPosCorrectY !== 0) {
-      correctedPos = { x: entry.screenPos.x + decorPosCorrectX, y: entry.screenPos.y + decorPosCorrectY };
+      correctedPos = {
+        x: entry.screenPos.x + decorPosCorrectX,
+        y: entry.screenPos.y + decorPosCorrectY,
+      };
     } else {
       correctedPos = entry.screenPos;
     }
@@ -1959,13 +2231,19 @@ export function renderScene(params: RenderSceneParams): void {
     });
   });
   // Collect range reticle data (rendered in consolidated reticle pass, not depth-sorted with entities)
-  const pendingRangeReticles: Array<{ kind: "station" | "tower"; tower: Tower & { isHovered?: boolean } }> = [];
+  const pendingRangeReticles: Array<{
+    kind: "station" | "tower";
+    tower: Tower & { isHovered?: boolean };
+  }> = [];
   const uiSettings = getGameSettings().ui;
   if (uiSettings.showTowerRadii) {
     towers.forEach((tower) => {
       if (tower.type === "station" && tower.spawnRange) {
         const isHovered = hoveredTower === tower.id;
-        pendingRangeReticles.push({ kind: "station", tower: { ...tower, isHovered } });
+        pendingRangeReticles.push({
+          kind: "station",
+          tower: { ...tower, isHovered },
+        });
       }
     });
   }
@@ -1979,7 +2257,10 @@ export function renderScene(params: RenderSceneParams): void {
     if (hoveredTower && hoveredTower !== selectedTower) {
       const tower = towers.find((t) => t.id === hoveredTower);
       if (tower && TOWER_DATA[tower.type].range > 0) {
-        pendingRangeReticles.push({ kind: "tower", tower: { ...tower, isHovered: true } });
+        pendingRangeReticles.push({
+          kind: "tower",
+          tower: { ...tower, isHovered: true },
+        });
       }
     }
   }
@@ -2044,9 +2325,19 @@ export function renderScene(params: RenderSceneParams): void {
     });
   });
   const overlayEffectTypes = new Set(["lightning", "beam", "chain", "zap"]);
-  const directionalTowerEffects = new Set(["flame_burst", "cannon_shot", "bullet_stream", "music_notes"]);
+  const directionalTowerEffects = new Set([
+    "flame_burst",
+    "cannon_shot",
+    "bullet_stream",
+    "music_notes",
+  ]);
   mergedEffects.forEach((eff) => {
-    if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type) || eff.type === deathEffectType) return;
+    if (
+      groundEffectTypes.has(eff.type) ||
+      skyEffectTypes.has(eff.type) ||
+      eff.type === deathEffectType
+    )
+      return;
     const fromX = eff.pos.x;
     const fromY = eff.pos.y;
     const toX = eff.targetPos?.x ?? fromX;
@@ -2115,28 +2406,51 @@ export function renderScene(params: RenderSceneParams): void {
     }
 
     let chargeProgress = 0;
-    const warmupElapsed = enemiesFirstAppearedRef.current > 0
-      ? Date.now() - enemiesFirstAppearedRef.current
-      : 0;
-    const inWarmup = enemiesFirstAppearedRef.current > 0 && warmupElapsed < SPECIAL_TOWER_WARMUP_MS;
-    const warmupProgress = enemiesFirstAppearedRef.current === 0
-      ? 0
-      : Math.min(1, warmupElapsed / SPECIAL_TOWER_WARMUP_MS);
+    const warmupElapsed =
+      enemiesFirstAppearedRef.current > 0
+        ? Date.now() - enemiesFirstAppearedRef.current
+        : 0;
+    const inWarmup =
+      enemiesFirstAppearedRef.current > 0 &&
+      warmupElapsed < SPECIAL_TOWER_WARMUP_MS;
+    const warmupProgress =
+      enemiesFirstAppearedRef.current === 0
+        ? 0
+        : Math.min(1, warmupElapsed / SPECIAL_TOWER_WARMUP_MS);
     if (inWarmup) {
       chargeProgress = warmupProgress;
     } else if (spec.type === "sentinel_nexus") {
       const key = getSpecialTowerKey(spec);
       const lastStrike = lastSentinelStrikeRef.current.get(key) ?? 0;
-      chargeProgress = lastStrike === 0 ? 1 : Math.min(1, (Date.now() - lastStrike) / SENTINEL_NEXUS_STATS.strikeIntervalMs);
+      chargeProgress =
+        lastStrike === 0
+          ? 1
+          : Math.min(
+              1,
+              (Date.now() - lastStrike) / SENTINEL_NEXUS_STATS.strikeIntervalMs,
+            );
     } else if (spec.type === "sunforge_orrery") {
       const key = getSpecialTowerKey(spec);
       const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
-      chargeProgress = lastBarrage === 0 ? 1 : Math.min(1, (Date.now() - lastBarrage) / SUNFORGE_ORRERY_STATS.barrageIntervalMs);
+      chargeProgress =
+        lastBarrage === 0
+          ? 1
+          : Math.min(
+              1,
+              (Date.now() - lastBarrage) /
+                SUNFORGE_ORRERY_STATS.barrageIntervalMs,
+            );
     }
 
     renderables.push({
       type: "special-building",
-      data: { ...spec, boostedTowerCount, chargeProgress, warmupProgress, __towerIndex: index },
+      data: {
+        ...spec,
+        boostedTowerCount,
+        chargeProgress,
+        warmupProgress,
+        __towerIndex: index,
+      },
       isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
     });
   });
@@ -2147,7 +2461,7 @@ export function renderScene(params: RenderSceneParams): void {
       canvas.height,
       dpr,
       cameraOffset,
-      cameraZoom
+      cameraZoom,
     );
     const worldPos = gridToWorld(gridPos);
     renderables.push({
@@ -2166,7 +2480,7 @@ export function renderScene(params: RenderSceneParams): void {
         canvas.height,
         dpr,
         cameraOffset,
-        cameraZoom
+        cameraZoom,
       );
       const worldPos = gridToWorld(gridPos);
       const otherTowers = towers.filter((t) => t.id !== repositioningTower);
@@ -2178,7 +2492,7 @@ export function renderScene(params: RenderSceneParams): void {
         GRID_HEIGHT,
         TOWER_PLACEMENT_BUFFER,
         blockedPositions,
-        tower.type
+        tower.type,
       );
       renderables.push({
         type: "tower-preview",
@@ -2308,7 +2622,10 @@ export function renderScene(params: RenderSceneParams): void {
   // Sentinel nexus targeting overlays
   const sentinelStrikeRadiusWorld = 140;
   const sentinelSpeed = gameSpeedRef.current;
-  const sentinelVisualInterval = sentinelSpeed > 0 ? SENTINEL_NEXUS_STATS.strikeIntervalMs / sentinelSpeed : SENTINEL_NEXUS_STATS.strikeIntervalMs;
+  const sentinelVisualInterval =
+    sentinelSpeed > 0
+      ? SENTINEL_NEXUS_STATS.strikeIntervalMs / sentinelSpeed
+      : SENTINEL_NEXUS_STATS.strikeIntervalMs;
   const sentinelReticleNow = Date.now();
   const sentinelCursorPos = mousePosRef.current;
   const sentinelPal = getSentinelPalette(mapTheme);
@@ -2320,14 +2637,19 @@ export function renderScene(params: RenderSceneParams): void {
     const sourceScreenPos = toScreen(gridToWorld(spec.pos));
     const isActiveTargeting = activeSentinelTargetKey === key;
     const hasCursor = sentinelCursorPos.x > 0 && sentinelCursorPos.y > 0;
-    const targetScreenPos = isActiveTargeting && hasCursor
-      ? { x: sentinelCursorPos.x, y: sentinelCursorPos.y }
-      : toScreen(targetPos);
+    const targetScreenPos =
+      isActiveTargeting && hasCursor
+        ? { x: sentinelCursorPos.x, y: sentinelCursorPos.y }
+        : toScreen(targetPos);
 
     const lastStrike = lastSentinelStrikeRef.current.get(key) ?? 0;
-    const sentinelCooldown = lastStrike === 0
-      ? 1
-      : Math.min(1, (sentinelReticleNow - lastStrike) / sentinelVisualInterval);
+    const sentinelCooldown =
+      lastStrike === 0
+        ? 1
+        : Math.min(
+            1,
+            (sentinelReticleNow - lastStrike) / sentinelVisualInterval,
+          );
 
     renderTargetingReticle(ctx, {
       x: targetScreenPos.x,
@@ -2360,9 +2682,14 @@ export function renderScene(params: RenderSceneParams): void {
     const targetScreenPos = toScreen(aimPos);
 
     const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
-    const sunforgeCooldown = lastBarrage === 0
-      ? 1
-      : Math.min(1, (sunforgeReticleNow - lastBarrage) / SUNFORGE_ORRERY_STATS.barrageIntervalMs);
+    const sunforgeCooldown =
+      lastBarrage === 0
+        ? 1
+        : Math.min(
+            1,
+            (sunforgeReticleNow - lastBarrage) /
+              SUNFORGE_ORRERY_STATS.barrageIntervalMs,
+          );
 
     renderTargetingReticle(ctx, {
       x: targetScreenPos.x,
@@ -2389,9 +2716,25 @@ export function renderScene(params: RenderSceneParams): void {
   // 1. Tower / station range indicators
   for (const rr of pendingRangeReticles) {
     if (rr.kind === "station") {
-      renderStationRange(ctx, rr.tower, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      renderStationRange(
+        ctx,
+        rr.tower,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
     } else {
-      renderTowerRange(ctx, rr.tower, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      renderTowerRange(
+        ctx,
+        rr.tower,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
     }
   }
 
@@ -2405,7 +2748,11 @@ export function renderScene(params: RenderSceneParams): void {
         ownerType: selectedUnitMoveInfo.ownerType,
         isSelected: true,
       },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     );
   }
 
@@ -2416,7 +2763,9 @@ export function renderScene(params: RenderSceneParams): void {
 
   if (
     moveTargetPos &&
-    (selectedTroopForIndicator || heroIsSelectedForIndicator || isUnitDraggingForIndicator)
+    (selectedTroopForIndicator ||
+      heroIsSelectedForIndicator ||
+      isUnitDraggingForIndicator)
   ) {
     const draggedTroopForIndicator =
       draggingUnit?.kind === "troop"
@@ -2444,7 +2793,11 @@ export function renderScene(params: RenderSceneParams): void {
         unitPos: unitPos,
         themeColor: themeColor,
       },
-      canvas.width, canvas.height, dpr, cameraOffset, cameraZoom,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
     );
   }
 
@@ -2453,36 +2806,77 @@ export function renderScene(params: RenderSceneParams): void {
   const activeRetargetMortarId = missileMortarTargetingIdRef.current;
   const missileReticleNow = Date.now();
   for (const tower of towers) {
-    if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarAutoAim === false && tower.mortarTarget) {
+    if (
+      tower.type === "mortar" &&
+      tower.level === 4 &&
+      tower.upgrade === "A" &&
+      tower.mortarAutoAim === false &&
+      tower.mortarTarget
+    ) {
       const isBeingRetargeted = activeRetargetMortarId === tower.id;
-      const targetScreenPos = isBeingRetargeted && rMouse.x > 0 && rMouse.y > 0
-        ? { x: rMouse.x, y: rMouse.y }
-        : worldToScreen(tower.mortarTarget, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
-      const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+      const targetScreenPos =
+        isBeingRetargeted && rMouse.x > 0 && rMouse.y > 0
+          ? { x: rMouse.x, y: rMouse.y }
+          : worldToScreen(
+              tower.mortarTarget,
+              canvas.width,
+              canvas.height,
+              dpr,
+              cameraOffset,
+              cameraZoom,
+            );
+      const tStats = calculateTowerStats(
+        tower.type,
+        tower.level,
+        tower.upgrade,
+      );
       const missileSpeed = gameSpeedRef.current;
-      const cd = missileSpeed > 0
-        ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
-        : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
+      const cd =
+        missileSpeed > 0
+          ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
+          : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
       const elapsed = missileReticleNow - tower.lastAttack;
       const cooldownProgress = Math.min(1, elapsed / cd);
-      renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds, cooldownProgress);
+      renderMissileTargetReticle(
+        ctx,
+        targetScreenPos,
+        cameraZoom,
+        nowSeconds,
+        cooldownProgress,
+      );
     }
   }
 
   // 4b. Missile battery auto-aim reticle
   for (const tower of towers) {
-    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A") continue;
+    if (tower.type !== "mortar" || tower.level !== 4 || tower.upgrade !== "A")
+      continue;
     if (tower.mortarAutoAim === false) continue;
     const aimPos = missileAutoAimRef.current.get(tower.id);
     if (!aimPos) continue;
     const towerWorldPos = gridToWorld(tower.pos);
-    const sourceScreenPos = worldToScreen(towerWorldPos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
-    const targetScreenPos = worldToScreen(aimPos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+    const sourceScreenPos = worldToScreen(
+      towerWorldPos,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
+    const targetScreenPos = worldToScreen(
+      aimPos,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
     const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
     const missileSpeed = gameSpeedRef.current;
-    const cd = missileSpeed > 0
-      ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
-      : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
+    const cd =
+      missileSpeed > 0
+        ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
+        : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
     const elapsed = missileReticleNow - tower.lastAttack;
     const cooldownProgress = Math.min(1, elapsed / cd);
     renderTargetingReticle(ctx, {
@@ -2508,13 +2902,15 @@ export function renderScene(params: RenderSceneParams): void {
   const rPlacing = placingTroopRef.current;
 
   if ((rTargeting || rPlacing) && rMouse.x > 0 && rMouse.y > 0) {
-    const variant: SpellReticleVariant = rTargeting === "fireball"
-      ? "fireball"
-      : rTargeting === "lightning"
-        ? "lightning"
-        : "placement";
+    const variant: SpellReticleVariant =
+      rTargeting === "fireball"
+        ? "fireball"
+        : rTargeting === "lightning"
+          ? "lightning"
+          : "placement";
     renderSpellReticle(ctx, {
-      x: rMouse.x, y: rMouse.y,
+      x: rMouse.x,
+      y: rMouse.y,
       zoom: cameraZoom ?? 1,
       time: Date.now() * 0.003,
       variant,
@@ -2543,8 +2939,7 @@ export function renderScene(params: RenderSceneParams): void {
   towers.forEach((t) => {
     const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
     const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
-    const hasAttackSpeedBuff =
-      t.attackSpeedBoost && t.attackSpeedBoost > 1;
+    const hasAttackSpeedBuff = t.attackSpeedBoost && t.attackSpeedBoost > 1;
 
     if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed)
       return;
@@ -2553,12 +2948,36 @@ export function renderScene(params: RenderSceneParams): void {
       Number(hasDamageBuff) + Number(hasRangeBuff) + Number(hasAttackSpeedBuff);
     const buffTheme =
       activeBuffCount >= 2
-        ? { base: "255, 220, 140", accent: "255, 200, 90", glow: "#ffe08c", fill: "rgba(255, 220, 140, 0.08)", icon: "✦" }
+        ? {
+            base: "255, 220, 140",
+            accent: "255, 200, 90",
+            glow: "#ffe08c",
+            fill: "rgba(255, 220, 140, 0.08)",
+            icon: "✦",
+          }
         : hasAttackSpeedBuff
-          ? { base: "165, 180, 255", accent: "129, 140, 248", glow: "#a5b4fc", fill: "rgba(165, 180, 255, 0.08)", icon: "⌁" }
+          ? {
+              base: "165, 180, 255",
+              accent: "129, 140, 248",
+              glow: "#a5b4fc",
+              fill: "rgba(165, 180, 255, 0.08)",
+              icon: "⌁",
+            }
           : hasDamageBuff
-            ? { base: "255, 100, 100", accent: "255, 150, 50", glow: "#ff6464", fill: "rgba(255, 100, 100, 0.06)", icon: "◆" }
-            : { base: "100, 200, 255", accent: "50, 150, 255", glow: "#64c8ff", fill: "rgba(100, 200, 255, 0.06)", icon: "◎" };
+            ? {
+                base: "255, 100, 100",
+                accent: "255, 150, 50",
+                glow: "#ff6464",
+                fill: "rgba(255, 100, 100, 0.06)",
+                icon: "◆",
+              }
+            : {
+                base: "100, 200, 255",
+                accent: "50, 150, 255",
+                glow: "#64c8ff",
+                fill: "rgba(100, 200, 255, 0.06)",
+                icon: "◎",
+              };
 
     const time = nowSeconds;
     const sPos = toScreen(gridToWorld(t.pos));
@@ -2646,7 +3065,7 @@ export function renderScene(params: RenderSceneParams): void {
     // 5. Rising particles
     ctx.shadowBlur = 0;
     for (let i = 0; i < 4; i++) {
-      const riseProgress = ((time * 0.8 + i * 0.25) % 1);
+      const riseProgress = (time * 0.8 + i * 0.25) % 1;
       const riseY = -riseProgress * outerR * 1.3;
       const riseAlpha = (1 - riseProgress) * 0.6 * buffPulse;
       const riseX = Math.sin(time * 3 + i * 2) * orbitR;
@@ -2691,28 +3110,58 @@ export function renderScene(params: RenderSceneParams): void {
   if (inspectorActive) {
     enemies.forEach((enemy) => {
       renderEnemyInspectIndicator(
-        ctx, enemy, canvas.width, canvas.height, dpr, selectedMap,
+        ctx,
+        enemy,
+        canvas.width,
+        canvas.height,
+        dpr,
+        selectedMap,
         selectedInspectEnemy?.id === enemy.id,
         hoveredInspectEnemy === enemy.id,
-        cameraOffset, cameraZoom, "ground",
+        cameraOffset,
+        cameraZoom,
+        "ground",
       );
     });
     troops.forEach((troop) => {
       if (troop.dead) return;
-      const troopScreen = worldToScreen(troop.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const troopScreen = worldToScreen(
+        troop.pos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
       renderUnitInspectIndicator(
-        ctx, troopScreen, cameraZoom ?? 1, 18,
+        ctx,
+        troopScreen,
+        cameraZoom ?? 1,
+        18,
         selectedInspectTroop?.id === troop.id,
         hoveredInspectTroop === troop.id,
-        "troop", "ground",
+        "troop",
+        "ground",
       );
     });
     if (hero && !hero.dead) {
-      const heroScreen = worldToScreen(hero.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const heroScreen = worldToScreen(
+        hero.pos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
       renderUnitInspectIndicator(
-        ctx, heroScreen, cameraZoom ?? 1, 22,
-        selectedInspectHero, hoveredInspectHero,
-        "hero", "ground",
+        ctx,
+        heroScreen,
+        cameraZoom ?? 1,
+        22,
+        selectedInspectHero,
+        hoveredInspectHero,
+        "hero",
+        "ground",
       );
     }
   }
@@ -2721,15 +3170,20 @@ export function renderScene(params: RenderSceneParams): void {
   renderables.forEach((r) => {
     switch (r.type) {
       case "special-building": {
-        const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number; chargeProgress?: number; warmupProgress?: number };
+        const spec = r.data as {
+          type: string;
+          pos: Position;
+          hp?: number;
+          boostedTowerCount?: number;
+          chargeProgress?: number;
+          warmupProgress?: number;
+        };
         const sPos = toScreen(gridToWorld(spec.pos));
         const vKey = vaultPosKey(spec.pos);
-        const perVaultHp = spec.type === "vault"
-          ? (specialTowerHp[vKey] ?? null)
-          : null;
-        const perVaultFlash = spec.type === "vault"
-          ? (vaultFlash[vKey] ?? 0)
-          : 0;
+        const perVaultHp =
+          spec.type === "vault" ? (specialTowerHp[vKey] ?? null) : null;
+        const perVaultFlash =
+          spec.type === "vault" ? (vaultFlash[vKey] ?? 0) : 0;
         renderSpecialBuilding(
           ctx,
           sPos.x,
@@ -2742,11 +3196,10 @@ export function renderScene(params: RenderSceneParams): void {
           spec.boostedTowerCount || 0,
           spec.chargeProgress ?? 0,
           spec.warmupProgress ?? 1,
-          mapTheme
+          mapTheme,
         );
         break;
       }
-
 
       case "station-range":
       case "tower-range":
@@ -2765,7 +3218,8 @@ export function renderScene(params: RenderSceneParams): void {
           heightTag?: DecorationHeightTag;
           _sprite?: DecorationSprite;
         };
-        const decScreenPos = decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
+        const decScreenPos =
+          decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
         if (decData._sprite) {
           if (hasZoomMismatch) {
             ctx.save();
@@ -2792,10 +3246,8 @@ export function renderScene(params: RenderSceneParams): void {
             decorY: decData.y,
             selectedMap: decData.selectedMap,
             mapTheme,
-            skipShadow: getDecorationVolumeSpec(
-              decData.type,
-              decData.heightTag
-            ).backgroundShadowOnly,
+            skipShadow: getDecorationVolumeSpec(decData.type, decData.heightTag)
+              .backgroundShadowOnly,
             zoom: cameraZoom,
           });
           ctx.restore();
@@ -2814,11 +3266,13 @@ export function renderScene(params: RenderSceneParams): void {
           enemies,
           selectedMap,
           cameraOffset,
-          cameraZoom
+          cameraZoom,
         );
         {
           const tower = r.data as Tower;
-          const activeDebuffs = tower.debuffs?.filter(d => d.until > frameNowMs);
+          const activeDebuffs = tower.debuffs?.filter(
+            (d) => d.until > frameNowMs,
+          );
           if (activeDebuffs && activeDebuffs.length > 0) {
             const towerPos = gridToWorld(tower.pos);
             const towerScreenPos = worldToScreen(
@@ -2827,9 +3281,15 @@ export function renderScene(params: RenderSceneParams): void {
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom
+              cameraZoom,
             );
-            renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
+            renderTowerDebuffEffects(
+              ctx,
+              { ...tower, debuffs: activeDebuffs },
+              towerScreenPos,
+              cameraZoom,
+              pausedAtRef.current ?? undefined,
+            );
           }
         }
         break;
@@ -2843,48 +3303,58 @@ export function renderScene(params: RenderSceneParams): void {
           selectedMap,
           cameraOffset,
           cameraZoom,
-          enemies.length
+          enemies.length,
         );
         break;
-      case "hero":
-        {
-          const heroRenderable = r.data as Hero;
-          let heroTargetPos: Position | undefined = undefined;
-          if (heroRenderable.aggroTarget) {
-            const aggroEnemy = enemyById.get(heroRenderable.aggroTarget);
-            if (aggroEnemy) {
-              heroTargetPos = getEnemyWorldPos(aggroEnemy);
-            }
+      case "hero": {
+        const heroRenderable = r.data as Hero;
+        let heroTargetPos: Position | undefined = undefined;
+        if (heroRenderable.aggroTarget) {
+          const aggroEnemy = enemyById.get(heroRenderable.aggroTarget);
+          if (aggroEnemy) {
+            heroTargetPos = getEnemyWorldPos(aggroEnemy);
           }
-          if (!heroTargetPos && heroRenderable.targetPos) {
-            heroTargetPos = heroRenderable.targetPos;
-          }
-          renderHero(
-            ctx,
-            heroRenderable,
-            canvas.width,
-            canvas.height,
-            dpr,
-            cameraOffset,
-            cameraZoom,
-            heroTargetPos
-          );
-          {
-            const heroData = heroRenderable;
-            if (heroData.burning || heroData.slowed || heroData.poisoned || heroData.stunned) {
-              const heroScreenPos = worldToScreen(
-                heroData.pos,
-                canvas.width,
-                canvas.height,
-                dpr,
-                cameraOffset,
-                cameraZoom
-              );
-              renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
-            }
-          }
-          break;
         }
+        if (!heroTargetPos && heroRenderable.targetPos) {
+          heroTargetPos = heroRenderable.targetPos;
+        }
+        renderHero(
+          ctx,
+          heroRenderable,
+          canvas.width,
+          canvas.height,
+          dpr,
+          cameraOffset,
+          cameraZoom,
+          heroTargetPos,
+        );
+        {
+          const heroData = heroRenderable;
+          if (
+            heroData.burning ||
+            heroData.slowed ||
+            heroData.poisoned ||
+            heroData.stunned
+          ) {
+            const heroScreenPos = worldToScreen(
+              heroData.pos,
+              canvas.width,
+              canvas.height,
+              dpr,
+              cameraOffset,
+              cameraZoom,
+            );
+            renderUnitStatusEffects(
+              ctx,
+              heroData,
+              heroScreenPos,
+              cameraZoom,
+              pausedAtRef.current ?? undefined,
+            );
+          }
+        }
+        break;
+      }
       case "troop": {
         const troopRenderable = r.data as Troop;
         let targetPos: Position | undefined = undefined;
@@ -2910,20 +3380,31 @@ export function renderScene(params: RenderSceneParams): void {
           cameraOffset,
           cameraZoom,
           targetPos,
-          mapTheme
+          mapTheme,
         );
         {
           const troopData = troopRenderable;
-          if (troopData.burning || troopData.slowed || troopData.poisoned || troopData.stunned) {
+          if (
+            troopData.burning ||
+            troopData.slowed ||
+            troopData.poisoned ||
+            troopData.stunned
+          ) {
             const troopScreenPos = worldToScreen(
               troopData.pos,
               canvas.width,
               canvas.height,
               dpr,
               cameraOffset,
-              cameraZoom
+              cameraZoom,
             );
-            renderUnitStatusEffects(ctx, troopData, troopScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
+            renderUnitStatusEffects(
+              ctx,
+              troopData,
+              troopScreenPos,
+              cameraZoom,
+              pausedAtRef.current ?? undefined,
+            );
           }
         }
         break;
@@ -2937,7 +3418,7 @@ export function renderScene(params: RenderSceneParams): void {
           dpr,
           cameraOffset,
           cameraZoom,
-          projectiles.length
+          projectiles.length,
         );
         break;
       case "effect":
@@ -2952,7 +3433,7 @@ export function renderScene(params: RenderSceneParams): void {
           selectedMap,
           cameraOffset,
           cameraZoom,
-          mergedEffects.length
+          mergedEffects.length,
         );
         break;
       case "particle":
@@ -2964,7 +3445,7 @@ export function renderScene(params: RenderSceneParams): void {
           dpr,
           cameraOffset,
           cameraZoom,
-          particlesRef.current.length
+          particlesRef.current.length,
         );
         break;
       case "tower-preview": {
@@ -2986,7 +3467,7 @@ export function renderScene(params: RenderSceneParams): void {
           GRID_HEIGHT,
           cameraOffset,
           cameraZoom,
-          blockedPositions
+          blockedPositions,
         );
         break;
       }
@@ -2998,7 +3479,15 @@ export function renderScene(params: RenderSceneParams): void {
     ctx,
     troops,
     enemies,
-    (pos) => worldToScreen(pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom),
+    (pos) =>
+      worldToScreen(
+        pos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      ),
     selectedMap,
     cameraZoom,
     Date.now(),
@@ -3007,8 +3496,17 @@ export function renderScene(params: RenderSceneParams): void {
   // Sky-level spell effects (falling meteors, lightning bolts) render above all map objects.
   for (const eff of skyEffects) {
     renderEffect(
-      ctx, eff, canvas.width, canvas.height, dpr,
-      enemies, towers, selectedMap, cameraOffset, cameraZoom, mergedEffects.length
+      ctx,
+      eff,
+      canvas.width,
+      canvas.height,
+      dpr,
+      enemies,
+      towers,
+      selectedMap,
+      cameraOffset,
+      cameraZoom,
+      mergedEffects.length,
     );
   }
 
@@ -3016,28 +3514,58 @@ export function renderScene(params: RenderSceneParams): void {
   if (inspectorActive) {
     enemies.forEach((enemy) => {
       renderEnemyInspectIndicator(
-        ctx, enemy, canvas.width, canvas.height, dpr, selectedMap,
+        ctx,
+        enemy,
+        canvas.width,
+        canvas.height,
+        dpr,
+        selectedMap,
         selectedInspectEnemy?.id === enemy.id,
         hoveredInspectEnemy === enemy.id,
-        cameraOffset, cameraZoom, "overlay",
+        cameraOffset,
+        cameraZoom,
+        "overlay",
       );
     });
     troops.forEach((troop) => {
       if (troop.dead) return;
-      const troopScreen = worldToScreen(troop.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const troopScreen = worldToScreen(
+        troop.pos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
       renderUnitInspectIndicator(
-        ctx, troopScreen, cameraZoom ?? 1, 18,
+        ctx,
+        troopScreen,
+        cameraZoom ?? 1,
+        18,
         selectedInspectTroop?.id === troop.id,
         hoveredInspectTroop === troop.id,
-        "troop", "overlay",
+        "troop",
+        "overlay",
       );
     });
     if (hero && !hero.dead) {
-      const heroScreen = worldToScreen(hero.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const heroScreen = worldToScreen(
+        hero.pos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
       renderUnitInspectIndicator(
-        ctx, heroScreen, cameraZoom ?? 1, 22,
-        selectedInspectHero, hoveredInspectHero,
-        "hero", "overlay",
+        ctx,
+        heroScreen,
+        cameraZoom ?? 1,
+        22,
+        selectedInspectHero,
+        hoveredInspectHero,
+        "hero",
+        "overlay",
       );
     }
   }
@@ -3046,8 +3574,13 @@ export function renderScene(params: RenderSceneParams): void {
   const dmgNumberStyle = getGameSettings().ui.damageNumbers;
   if (dmgNumberStyle !== "off") {
     renderDamageNumbers(
-      ctx, canvas.width, canvas.height, dpr,
-      dmgNumberStyle, cameraOffset, cameraZoom,
+      ctx,
+      canvas.width,
+      canvas.height,
+      dpr,
+      dmgNumberStyle,
+      cameraOffset,
+      cameraZoom,
     );
   }
 
@@ -3057,15 +3590,15 @@ export function renderScene(params: RenderSceneParams): void {
   const waveStartBubbles = getWaveStartBubblesScreenData(
     canvas.width,
     canvas.height,
-    dpr
+    dpr,
   );
   const primedWaveBubble = waveStartConfirm
     ? waveStartBubbles.find(
-      (bubble) =>
-        bubble.pathKey === waveStartConfirm.pathKey &&
-        waveStartConfirm.mapId === selectedMap &&
-        waveStartConfirm.waveIndex === currentWave
-    )
+        (bubble) =>
+          bubble.pathKey === waveStartConfirm.pathKey &&
+          waveStartConfirm.mapId === selectedMap &&
+          waveStartConfirm.waveIndex === currentWave,
+      )
     : null;
 
   const primedPathKey = primedWaveBubble?.pathKey ?? null;
@@ -3170,7 +3703,7 @@ export function renderScene(params: RenderSceneParams): void {
     const maxY = height - panelHeight - panelMargin;
     const panelY = Math.max(
       panelMargin,
-      Math.min(maxY, screenPos.y - radius * 2.25)
+      Math.min(maxY, screenPos.y - radius * 2.25),
     );
 
     const panelPulse = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(frameNowMs * 0.008));
@@ -3182,7 +3715,7 @@ export function renderScene(params: RenderSceneParams): void {
       panelX,
       panelY,
       panelX,
-      panelY + panelHeight
+      panelY + panelHeight,
     );
     panelGradient.addColorStop(0, "rgba(36, 18, 18, 0.95)");
     panelGradient.addColorStop(1, "rgba(14, 10, 12, 0.95)");
@@ -3199,15 +3732,15 @@ export function renderScene(params: RenderSceneParams): void {
     ctx.font = '700 12px "bc-novatica-cyr", "inter", sans-serif';
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(`${pathLabel} - Wave ${currentWave + 1}`, panelX + 12, panelY + 16);
+    ctx.fillText(
+      `${pathLabel} - Wave ${currentWave + 1}`,
+      panelX + 12,
+      panelY + 16,
+    );
 
     ctx.fillStyle = "rgba(255, 170, 150, 0.92)";
     ctx.font = '600 10px "bc-novatica-cyr", "inter", sans-serif';
-    ctx.fillText(
-      "Click same bubble again to launch",
-      panelX + 12,
-      panelY + 34
-    );
+    ctx.fillText("Click same bubble again to launch", panelX + 12, panelY + 34);
 
     let rowY = panelY + 54;
     if (hasNoPathEnemies) {
