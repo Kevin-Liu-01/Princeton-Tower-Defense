@@ -22,8 +22,8 @@ import { getPerformanceSettings } from "../performance";
 
 const HERO_SIZE_OVERRIDES: Record<string, number> = {
   rocky: 1.15,
-  nassau: 1.1,
-  ivy: 1.2,
+  nassau: 1.2,
+  ivy: 1.7,
 };
 
 const HERO_BAR_OFFSET: Record<string, number> = {
@@ -34,8 +34,8 @@ const HERO_BAR_OFFSET: Record<string, number> = {
   tenor: -5,
   mathey: -8,
   engineer: -2,
-  nassau: -12,
-  ivy: -15,
+  nassau: -15,
+  ivy: -32,
 };
 
 export function renderHero(
@@ -47,6 +47,7 @@ export function renderHero(
   cameraOffset?: Position,
   cameraZoom?: number,
   targetPos?: Position,
+  mapTheme?: string,
 ) {
   const screenPos = worldToScreenRounded(
     hero.pos,
@@ -96,10 +97,29 @@ export function renderHero(
   );
   ctx.fill();
 
-  const heroScale = HERO_SIZE_OVERRIDES[hero.type] ?? 1;
+  const baseHeroScale = HERO_SIZE_OVERRIDES[hero.type] ?? 1;
+  let abilityScaleBoost = 0;
+  if (hero.type === "ivy" && hero.abilityActive && hero.abilityEnd) {
+    const now = Date.now();
+    const activationTime = hero.abilityEnd - 8000;
+    const elapsed = now - activationTime;
+    const remaining = hero.abilityEnd - now;
+    const MORPH_MS = 1200;
+    if (elapsed < MORPH_MS) {
+      abilityScaleBoost = 0.85 * Math.min(1, elapsed / MORPH_MS);
+    } else if (remaining < MORPH_MS) {
+      abilityScaleBoost = 0.85 * Math.max(0, remaining / MORPH_MS);
+    } else {
+      abilityScaleBoost = 0.85;
+    }
+  } else if (hero.type === "ivy" && hero.abilityActive) {
+    abilityScaleBoost = 0.85;
+  }
+  const heroScale = baseHeroScale + abilityScaleBoost;
   const size = 32 * zoom * heroScale;
   const attackPhase = hero.attackAnim > 0 ? hero.attackAnim / 300 : 0;
-  const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.2 : 1;
+  const atkScaleMult = hero.type === "nassau" ? 0.08 : 0.2;
+  const attackScale = attackPhase > 0 ? 1 + attackPhase * atkScaleMult : 1;
   const FLIP_ON_ATTACK_HEROES = new Set(["mathey", "captain"]);
   const baseFacing =
     hero.facingRight ??
@@ -130,33 +150,11 @@ export function renderHero(
     localTargetPos.x *= -1;
   }
 
-  // Flying heroes hover above the ground
-  const flyingOffset = isFlying ? -10 * zoom : 0;
-  ctx.save();
-  ctx.translate(screenPos.x, screenPos.y - size / 2 + flyingOffset);
-  ctx.scale(facingRight ? -attackScale : attackScale, attackScale);
+  // Healing aura ground layer - circle and ring render behind hero sprite
+  const heroHealActive = !!(hero.healFlash && hero.hp < hero.maxHp);
+  if (heroHealActive) {
+    const pulseAlpha = 0.9 + Math.sin(time * 3) * 0.1;
 
-  // Draw specific hero type with attack animation
-  drawHeroSprite(
-    ctx,
-    0,
-    0,
-    size,
-    hero.type,
-    hData.color,
-    time,
-    zoom,
-    attackPhase,
-    localTargetPos,
-  );
-
-  ctx.restore();
-
-  // HEALING AURA EFFECT - Soft, elegant healing visualization for heroes
-  if (hero.healFlash && hero.hp < hero.maxHp) {
-    const pulseAlpha = 0.9 + Math.sin(time * 3) * 0.1; // Stronger breathing effect
-
-    // Soft outer glow - larger diffuse emerald light for heroes
     const outerGlow = ctx.createRadialGradient(
       screenPos.x,
       screenPos.y,
@@ -181,7 +179,51 @@ export function renderHero(
     );
     ctx.fill();
 
-    // Inner warm core - brighter for heroes
+    const ringAlpha = 0.4 + Math.sin(time * 2.5) * 0.15;
+    ctx.strokeStyle = `rgba(134, 239, 172, ${ringAlpha * pulseAlpha})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y,
+      size * 0.8,
+      size * 0.48,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
+  // Flying heroes hover above the ground
+  const flyingOffset = isFlying ? -10 * zoom : 0;
+  ctx.save();
+  ctx.translate(screenPos.x, screenPos.y - size / 2 + flyingOffset);
+  ctx.scale(facingRight ? -attackScale : attackScale, attackScale);
+
+  // Draw specific hero type with attack animation
+  drawHeroSprite(
+    ctx,
+    0,
+    0,
+    size,
+    hero.type,
+    hData.color,
+    time,
+    zoom,
+    attackPhase,
+    localTargetPos,
+    hero.abilityActive,
+    mapTheme,
+    hero.abilityEnd,
+  );
+
+  ctx.restore();
+
+  // Healing aura overlay - glow and sparkles render on top of hero sprite
+  if (heroHealActive) {
+    const pulseAlpha = 0.9 + Math.sin(time * 3) * 0.1;
+
     const innerGlow = ctx.createRadialGradient(
       screenPos.x,
       screenPos.y - size * 0.1,
@@ -206,7 +248,6 @@ export function renderHero(
     );
     ctx.fill();
 
-    // Floating sparkle particles - more for heroes
     for (let i = 0; i < 8; i++) {
       const sparklePhase = (time * 0.65 + i * 0.125) % 1;
       const sparkleX =
@@ -215,7 +256,6 @@ export function renderHero(
       const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
       const sparkleSize = (2.2 + Math.sin(i * 1.1) * 0.7) * zoom;
 
-      // Diamond-shaped sparkle
       ctx.fillStyle = `rgba(220, 252, 231, ${sparkleAlpha})`;
       ctx.beginPath();
       ctx.moveTo(sparkleX, sparkleY - sparkleSize);
@@ -226,7 +266,6 @@ export function renderHero(
       ctx.fill();
     }
 
-    // Orbiting shimmer highlights - more for heroes
     for (let i = 0; i < 4; i++) {
       const shimmerAngle = time * 0.9 + i * ((Math.PI * 2) / 4);
       const shimmerDist = size * 0.42;
@@ -241,22 +280,6 @@ export function renderHero(
       ctx.arc(shimmerX, shimmerY, 2.0 * zoom, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    // Gentle healing ring - soft glow
-    const ringAlpha = 0.4 + Math.sin(time * 2.5) * 0.15;
-    ctx.strokeStyle = `rgba(134, 239, 172, ${ringAlpha * pulseAlpha})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y,
-      size * 0.8,
-      size * 0.48,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
   }
 
   if (!getPerformanceSettings().showHealthBars) return;
@@ -407,6 +430,9 @@ export function drawHeroSprite(
   zoom: number,
   attackPhase: number = 0,
   targetPos?: Position,
+  abilityActive?: boolean,
+  mapTheme?: string,
+  abilityEnd?: number,
 ) {
   switch (type) {
     case "tiger":
@@ -482,6 +508,8 @@ export function drawHeroSprite(
         zoom,
         attackPhase,
         targetPos,
+        abilityActive,
+        abilityEnd,
       );
       break;
     case "ivy":
@@ -495,6 +523,9 @@ export function drawHeroSprite(
         zoom,
         attackPhase,
         targetPos,
+        abilityActive,
+        mapTheme,
+        abilityEnd,
       );
       break;
     default:

@@ -1609,6 +1609,7 @@ const COLORS = {
   tenor: { r: 168, g: 85, b: 247 },
   rocky: { r: 120, g: 113, b: 108 },
   nassau: { r: 230, g: 126, b: 34 },
+  nassauBlue: { r: 59, g: 130, b: 246 },
   ivy: { r: 5, g: 150, b: 105 },
 
   // Banshee
@@ -1740,6 +1741,9 @@ export function renderProjectile(
         break;
       case "phoenixFlame":
         baseColor = COLORS.nassau;
+        break;
+      case "phoenixFlameBlue":
+        baseColor = COLORS.nassauBlue;
         break;
       case "vineBarb":
         baseColor = COLORS.ivy;
@@ -1926,6 +1930,10 @@ export function renderProjectile(
       break;
 
     case "phoenixFlame":
+      renderPhoenixFlame(ctx, zoom, time, baseColor);
+      break;
+
+    case "phoenixFlameBlue":
       renderPhoenixFlame(ctx, zoom, time, baseColor);
       break;
 

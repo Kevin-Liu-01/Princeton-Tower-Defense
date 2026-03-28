@@ -499,6 +499,8 @@ export interface Hero {
   returning?: boolean;
   shieldActive?: boolean;
   shieldEnd?: number;
+  abilityActive?: boolean;
+  abilityEnd?: number;
   healFlash?: number; // Visual effect when healed (timestamp when healed)
   lastCombatTime?: number; // Timestamp of last attack given or received (for heal delay)
   // Status effects from enemies
@@ -696,6 +698,7 @@ export type ProjectileType =
   | "webBolt" // Spider silk projectile
   | "venomSpit" // Brood mother / fire ant ranged venom
   | "phoenixFlame" // Nassau phoenix fire projectile
+  | "phoenixFlameBlue" // Nassau phoenix blue inferno projectile
   | "vineBarb"; // Ivy warden thorn projectile
 
 // Projectile

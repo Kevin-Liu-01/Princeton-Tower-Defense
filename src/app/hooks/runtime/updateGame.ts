@@ -1607,6 +1607,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
       );
     }
+    // Ability Transform Expiration (Blue Inferno, Verdant Colossus, etc.)
+    if (hero.abilityActive && now > (hero.abilityEnd || 0)) {
+      setHero((prev) => (prev ? { ...prev, abilityActive: false, abilityEnd: undefined } : null));
+    }
   }
 
   // Hero respawn timer
@@ -4489,12 +4493,20 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // Hero attacks - skip when paused or stunned
   if (!isPaused && hero && !hero.dead && !hero.stunned && hero.attackAnim === 0) {
     const heroData = HERO_DATA[hero.type];
+    const isNassauBlueInferno = hero.type === "nassau" && hero.abilityActive;
+    const isIvyColossus = hero.type === "ivy" && hero.abilityActive;
+    const heroAttackSpeed = isNassauBlueInferno
+      ? HERO_COMBAT_STATS.nassauBlueFireballSpeed
+      : isIvyColossus
+        ? HERO_COMBAT_STATS.ivyColossusAttackSpeed
+        : heroData.attackSpeed;
+    const heroRange = isIvyColossus ? HERO_COMBAT_STATS.ivyColossusAoeRadius : heroData.range;
     // Scale hero attack speed with game speed
-    const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroData.attackSpeed / gameSpeed : heroData.attackSpeed;
+    const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroAttackSpeed / gameSpeed : heroAttackSpeed;
     if (now - hero.lastAttack > effectiveHeroAttackSpeed) {
       const validEnemies = getEnemiesInRange(
         hero.pos,
-        heroData.range
+        heroRange
       );
       if (validEnemies.length > 0) {
         const target = validEnemies[0];
@@ -4641,8 +4653,9 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             : null
         );
 
-        // Nassau: slow arcing fireball that explodes on impact
+        // Nassau fireballs (normal orange or blue inferno rapid-fire)
         if (isProjectileAoEHero) {
+          const blueActive = isNassauBlueInferno;
           setProjectiles((prev) => [
             ...prev,
             {
@@ -4650,37 +4663,76 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               from: hero.pos,
               to: targetAimPos,
               progress: 0,
-              type: "phoenixFlame",
+              type: blueActive ? "phoenixFlameBlue" : "phoenixFlame",
               rotation,
-              arcHeight: 55,
-              speed: 0.4,
+              arcHeight: blueActive ? 25 : 55,
+              speed: blueActive ? 1.2 : 0.4,
               isAoE: true,
-              aoeRadius: HERO_COMBAT_STATS.nassauFireballAoeRadius,
-              damage: heroData.damage,
+              aoeRadius: blueActive
+                ? HERO_COMBAT_STATS.nassauBlueFireballAoeRadius
+                : HERO_COMBAT_STATS.nassauFireballAoeRadius,
+              damage: blueActive
+                ? HERO_COMBAT_STATS.nassauBlueFireballDamage
+                : heroData.damage,
               targetType: "enemy",
-              color: "#e67e22",
-              trailColor: "#ff6600",
-              scale: 1.4,
+              color: blueActive ? "#3b82f6" : "#e67e22",
+              trailColor: blueActive ? "#60a5fa" : "#ff6600",
+              scale: blueActive ? 1.0 : 1.4,
             },
           ]);
         }
 
-        // Ivy: fast vine tentacles that snap out to strike
+        // Ivy: vine barbs normally, massive melee AoE stomp when Colossus active
         if (hero.type === "ivy") {
-          setProjectiles((prev) => [
-            ...prev,
-            {
-              id: generateId("proj"),
-              from: hero.pos,
-              to: targetAimPos,
-              progress: 0,
-              type: "vineBarb",
-              rotation,
-              speed: 2.5,
-              color: "#059669",
-              trailColor: "#34d399",
-            },
-          ]);
+          if (isIvyColossus) {
+            const colossusDmg = HERO_COMBAT_STATS.ivyColossusDamage;
+            const colossusRadius = HERO_COMBAT_STATS.ivyColossusAoeRadius;
+            setEnemies((prev) => {
+              const updated: Array<Enemy | null> = prev.map((e) => {
+                if (!e || e.dead) return e;
+                const ePos = getEnemyPosCached(e);
+                if (distance(hero.pos, ePos) > colossusRadius) return e;
+                const actualDmg = getEnemyDamageTaken(e, colossusDmg);
+                emitDamageNumber(ePos, actualDmg, "hero");
+                const newHp = e.hp - actualDmg;
+                if (newHp <= 0) {
+                  onEnemyKill(e, ePos, 12);
+                  return null;
+                }
+                return { ...e, hp: newHp, damageFlash: 250, stunUntil: Math.max(e.stunUntil, now + 400), lastDamageTaken: now };
+              });
+              return updated.filter(isDefined);
+            });
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("colossus-smash"),
+                pos: hero.pos,
+                type: "ground_crack",
+                progress: 0,
+                size: colossusRadius,
+                color: "#059669",
+                sourceId: hero.id,
+                attackerType: "hero",
+              },
+            ]);
+            addParticles(hero.pos, "glow", 8);
+          } else {
+            setProjectiles((prev) => [
+              ...prev,
+              {
+                id: generateId("proj"),
+                from: hero.pos,
+                to: targetAimPos,
+                progress: 0,
+                type: "vineBarb",
+                rotation,
+                speed: 2.5,
+                color: "#059669",
+                trailColor: "#34d399",
+              },
+            ]);
+          }
         }
 
         // Create projectile for other ranged heroes
@@ -5040,7 +5092,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         // AoE projectiles targeting enemies (mortars, hero fireballs) - batch processing
         if (proj.targetType === "enemy" && proj.isAoE && proj.aoeRadius && proj.damage) {
-          const isPhoenixFireball = proj.type === "phoenixFlame";
+          const isPhoenixFireball = proj.type === "phoenixFlame" || proj.type === "phoenixFlameBlue";
           const impactEffectType: EffectType = isPhoenixFireball
             ? "fire_nova"
             : proj.type === "ember" ? "ember_impact" : "mortar_impact";
@@ -5051,6 +5103,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             progress: 0,
             size: proj.aoeRadius,
             duration: isPhoenixFireball ? 700 : proj.type === "ember" ? 900 : 800,
+            color: proj.type === "phoenixFlameBlue" ? "#3b82f6" : undefined,
           });
           mortarAoEEvents.push({
             center: proj.to,

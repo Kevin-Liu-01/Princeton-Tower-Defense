@@ -168,33 +168,11 @@ export function renderTroop(
     localTargetPos.x *= -1;
   }
 
-  ctx.save();
-  ctx.translate(screenPos.x, screenPos.y - size / 2);
-  ctx.scale(effectiveFacingRight ? attackScale : -attackScale, attackScale);
-
-  drawTroopSprite(
-    ctx,
-    0,
-    0,
-    size,
-    troopType,
-    tData.color,
-    time,
-    zoom,
-    attackPhase,
-    localTargetPos,
-    troop.ownerType,
-    troop.visualTier,
-    mapTheme,
-    troop.id,
-  );
-
-  ctx.restore();
-
-  const healAuraActive =
+  // Healing aura ground layer - circle renders behind troop sprite
+  const troopHealActive =
     troop.healFlash &&
     (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
-  if (healAuraActive) {
+  if (troopHealActive) {
     const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15;
 
     const outerGlow = ctx.createRadialGradient(
@@ -220,6 +198,34 @@ export function renderTroop(
       Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  ctx.save();
+  ctx.translate(screenPos.x, screenPos.y - size / 2);
+  ctx.scale(effectiveFacingRight ? attackScale : -attackScale, attackScale);
+
+  drawTroopSprite(
+    ctx,
+    0,
+    0,
+    size,
+    troopType,
+    tData.color,
+    time,
+    zoom,
+    attackPhase,
+    localTargetPos,
+    troop.ownerType,
+    troop.visualTier,
+    mapTheme,
+    troop.id,
+  );
+
+  ctx.restore();
+
+  // Healing aura overlay - glow and sparkles render on top of troop sprite
+  if (troopHealActive) {
+    const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15;
 
     const innerGlow = ctx.createRadialGradient(
       screenPos.x,

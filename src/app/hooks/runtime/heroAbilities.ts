@@ -369,117 +369,67 @@ function triggerEngineerTurret(p: HeroAbilityParams): void {
   addParticles(turretPos, "smoke", 10);
 }
 
-function triggerNassauInferno(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setHero, setEnemies, setEffects, addParticles, onEnemyKill } = p;
-  const diveRadius = HERO_COMBAT_STATS.nassauDiveRadius;
-  const diveDamage = HERO_COMBAT_STATS.nassauDiveDamage;
-  const burnDuration = HERO_COMBAT_STATS.nassauBurnDuration;
-
-  const nearbyEnemies = enemies.filter(
-    (e) => !e.dead && distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= diveRadius
-  );
-
-  setEnemies((prev) =>
-    prev
-      .map((e) => {
-        const isTarget = nearbyEnemies.find((ne) => ne.id === e.id);
-        if (isTarget) {
-          const actualDmg = getEnemyDamageTaken(e, diveDamage);
-          const newHp = e.hp - actualDmg;
-          if (newHp <= 0) {
-            onEnemyKill(e, getEnemyPosWithPath(e, selectedMap), 15, "fire");
-            return null;
-          }
-          return {
-            ...e,
-            hp: newHp,
-            burning: true,
-            burnDamage: HERO_COMBAT_STATS.nassauBurnDps,
-            burnUntil: Date.now() + burnDuration,
-            stunUntil: Date.now() + 500,
-            damageFlash: 300,
-          };
-        }
-        return e;
-      })
-      .filter(isDefined)
-  );
+function triggerNassauBlueInferno(p: HeroAbilityParams): void {
+  const { hero, setHero, setEffects, addParticles } = p;
+  const duration = HERO_COMBAT_STATS.nassauBlueInfernoDuration;
 
   setHero((prev) =>
     prev
-      ? { ...prev, shieldActive: true, shieldEnd: Date.now() + 1500 }
+      ? {
+          ...prev,
+          abilityActive: true,
+          abilityEnd: Date.now() + duration,
+          shieldActive: true,
+          shieldEnd: Date.now() + duration,
+        }
       : null
   );
 
   setEffects((ef) => [
     ...ef,
     {
-      id: generateId("phoenix-dive"),
-      pos: hero.pos,
-      type: "phoenix_dive",
-      progress: 0,
-      size: diveRadius,
-    },
-    {
-      id: generateId("phoenix-fire"),
+      id: generateId("blue-inferno"),
       pos: hero.pos,
       type: "fire_nova",
       progress: 0,
-      size: diveRadius * 0.8,
+      size: 150,
+      color: "#3b82f6",
     },
   ]);
   addParticles(hero.pos, "explosion", 30);
   addParticles(hero.pos, "spark", 25);
-  addParticles(hero.pos, "smoke", 15);
 }
 
-function triggerIvyVineStorm(p: HeroAbilityParams): void {
-  const { hero, enemies, selectedMap, setEnemies, setEffects, addParticles, onEnemyKill } = p;
-  const vineRadius = HERO_COMBAT_STATS.ivyVineRadius;
-  const vineDamage = HERO_COMBAT_STATS.ivyVineDamage;
-  const rootDuration = HERO_COMBAT_STATS.ivyRootDuration;
+function triggerIvyVerdantColossus(p: HeroAbilityParams): void {
+  const { hero, setHero, setEffects, addParticles } = p;
+  const duration = HERO_COMBAT_STATS.ivyColossusDuration;
 
-  const nearbyEnemies = enemies.filter(
-    (e) => !e.dead && distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= vineRadius
-  );
-
-  setEnemies((prev) =>
+  setHero((prev) =>
     prev
-      .map((e) => {
-        const isTarget = nearbyEnemies.find((ne) => ne.id === e.id);
-        if (isTarget) {
-          const actualDmg = getEnemyDamageTaken(e, vineDamage);
-          const newHp = e.hp - actualDmg;
-          if (newHp <= 0) {
-            onEnemyKill(e, getEnemyPosWithPath(e, selectedMap), 10);
-            return null;
-          }
-          return {
-            ...e,
-            hp: newHp,
-            stunUntil: Date.now() + rootDuration,
-            slowEffect: 0.7,
-            damageFlash: 250,
-          };
+      ? {
+          ...prev,
+          abilityActive: true,
+          abilityEnd: Date.now() + duration,
+          shieldActive: true,
+          shieldEnd: Date.now() + 2000,
         }
-        return e;
-      })
-      .filter(isDefined)
+      : null
   );
 
   setEffects((ef) => [
     ...ef,
     {
-      id: generateId("vine-storm"),
+      id: generateId("colossus-transform"),
       pos: hero.pos,
       type: "vine_storm",
       progress: 0,
-      size: vineRadius,
-      duration: rootDuration,
+      size: 200,
+      color: "#059669",
     },
   ]);
-  addParticles(hero.pos, "glow", 30);
-  addParticles(hero.pos, "heal", 20);
+  addParticles(hero.pos, "glow", 35);
+  addParticles(hero.pos, "heal", 25);
+  addParticles(hero.pos, "explosion", 15);
 }
 
 const HERO_ABILITY_DISPATCH: Record<HeroType, (p: HeroAbilityParams) => void> = {
@@ -490,8 +440,8 @@ const HERO_ABILITY_DISPATCH: Record<HeroType, (p: HeroAbilityParams) => void> = 
   scott: triggerScottInspiration,
   captain: triggerCaptainRally,
   engineer: triggerEngineerTurret,
-  nassau: triggerNassauInferno,
-  ivy: triggerIvyVineStorm,
+  nassau: triggerNassauBlueInferno,
+  ivy: triggerIvyVerdantColossus,
 };
 
 export function triggerHeroAbilityImpl(p: HeroAbilityParams): void {

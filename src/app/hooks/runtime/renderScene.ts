@@ -3327,6 +3327,7 @@ export function renderScene(params: RenderSceneParams): void {
           cameraOffset,
           cameraZoom,
           heroTargetPos,
+          mapTheme,
         );
         {
           const heroData = heroRenderable;

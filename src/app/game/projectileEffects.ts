@@ -6,6 +6,8 @@ export function getImpactEffect(projType: string): EffectType {
     case "infernalFire":
     case "dragonBreath":
     case "ember":
+    case "phoenixFlame":
+    case "phoenixFlameBlue":
       return "fire_impact";
     case "rock":
       return "rock_impact";
