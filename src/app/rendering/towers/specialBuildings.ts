@@ -186,7 +186,20 @@ function drawEldritchShrineBuilding(
   ctx.stroke();
   ctx.setLineDash([]);
 
-  const elderRunes = ["ᚠ", "ᚢ", "ᚦ", "ᚱ", "ᚺ", "ᛃ", "ᛗ", "ᛟ", "ᛉ", "ᛞ", "ᚲ", "ᛋ"];
+  const elderRunes = [
+    "ᚠ",
+    "ᚢ",
+    "ᚦ",
+    "ᚱ",
+    "ᚺ",
+    "ᛃ",
+    "ᛗ",
+    "ᛟ",
+    "ᛉ",
+    "ᛞ",
+    "ᚲ",
+    "ᛋ",
+  ];
   ctx.font = `bold ${6.5 * s2}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -214,11 +227,21 @@ function drawEldritchShrineBuilding(
 
   // ── Ground glow ──
   const groundGlow = ctx.createRadialGradient(
-    0, -baseW * tanA, 0,
-    0, -baseW * tanA, 55 * s2,
+    0,
+    -baseW * tanA,
+    0,
+    0,
+    -baseW * tanA,
+    55 * s2,
   );
-  groundGlow.addColorStop(0, `rgba(${S.jadeRgb}, ${isHealing ? 0.2 : 0.06 + pulse * 0.04})`);
-  groundGlow.addColorStop(0.6, `rgba(${S.jadeRgb}, ${isHealing ? 0.08 : 0.02})`);
+  groundGlow.addColorStop(
+    0,
+    `rgba(${S.jadeRgb}, ${isHealing ? 0.2 : 0.06 + pulse * 0.04})`,
+  );
+  groundGlow.addColorStop(
+    0.6,
+    `rgba(${S.jadeRgb}, ${isHealing ? 0.08 : 0.02})`,
+  );
   groundGlow.addColorStop(1, "transparent");
   ctx.fillStyle = groundGlow;
   ctx.beginPath();
@@ -226,7 +249,17 @@ function drawEldritchShrineBuilding(
   ctx.fill();
 
   // ── WIDE BASE PLATFORM ──
-  drawShadedIsoBox(ctx, 0, baseW, baseH, S.darkest, S.dark, S.mid, S.light, S.lightest);
+  drawShadedIsoBox(
+    ctx,
+    0,
+    baseW,
+    baseH,
+    S.darkest,
+    S.dark,
+    S.mid,
+    S.light,
+    S.lightest,
+  );
 
   // Base trim bands
   ctx.strokeStyle = S.band;
@@ -253,7 +286,8 @@ function drawEldritchShrineBuilding(
   for (let side = -1; side <= 1; side += 2) {
     for (let r = 0; r < 4; r++) {
       const rx = side * baseW * (0.18 + r * 0.22);
-      const ry = -baseW * tanA * (0.18 + r * 0.22) * Math.abs(side) - baseH * 0.5;
+      const ry =
+        -baseW * tanA * (0.18 + r * 0.22) * Math.abs(side) - baseH * 0.5;
       ctx.fillStyle = S.highlight;
       ctx.beginPath();
       ctx.arc(rx, ry, 1.1 * s2, 0, Math.PI * 2);
@@ -294,8 +328,18 @@ function drawEldritchShrineBuilding(
   }
 
   // ── MID TIER ──
-  const midY = -baseH;
-  drawShadedIsoBox(ctx, midY, midW, midH, S.darkest, S.dark, S.mid, S.light, S.lightest);
+  const midY = -baseH - 3 * s2;
+  drawShadedIsoBox(
+    ctx,
+    midY,
+    midW,
+    midH,
+    S.darkest,
+    S.dark,
+    S.mid,
+    S.light,
+    S.lightest,
+  );
 
   ctx.strokeStyle = S.rivet;
   ctx.lineWidth = 1 * s2;
@@ -339,19 +383,26 @@ function drawEldritchShrineBuilding(
     });
   }
 
-  // ── BACK PILLARS (drawn first for depth ordering) ──
-  // The 4 pillars sit on the base diamond corners. We draw back two first,
-  // then the structure, then front two on top.
-  const pillarCorners = [
-    // back-left (iso top-left corner)
-    { sx: -baseW * 0.8, sy: -baseW * tanA * 0.8 - baseH, depthOrder: 0 },
-    // back-right (iso top-right corner)
-    { sx: baseW * 0.8 - pilD, sy: -baseW * tanA * 0.8 - pilD * tanA - baseH, depthOrder: 1 },
-    // front-left (iso bottom-left corner)
-    { sx: -baseW * 0.8, sy: -baseW * tanA * 0.1 - baseH, depthOrder: 2 },
-    // front-right (iso bottom-right corner)
-    { sx: baseW * 0.8 - pilD, sy: -baseW * tanA * 0.1 - pilD * tanA - baseH, depthOrder: 3 },
+  // ── PILLARS at the center of each base diamond side ──
+  // Diamond vertices: front (0,0), left (-baseW,-baseW*tanA),
+  // back (0,-2*baseW*tanA), right (baseW,-baseW*tanA).
+  // Pillar front-vertex is offset so the prism is centered on the side midpoint.
+  const pilCenterOffX = (pilD - pilW) / 2;
+  const pilCenterOffY = ((pilW + pilD) * tanA) / 2;
+  const sideCenters = [
+    // back-left side center (left→back midpoint)
+    { tx: -baseW * 0.65, ty: -baseW * tanA * 1 - baseH },
+    // back-right side center (right→back midpoint)
+    { tx: baseW * 0.65, ty: -baseW * tanA * 1 - baseH },
+    // front-left side center (front→left midpoint)
+    { tx: -baseW * 0.5, ty: baseW * tanA * 0.05 - baseH },
+    // front-right side center (front→right midpoint)
+    { tx: baseW * 0.5, ty: baseW * tanA * 0.05 - baseH },
   ];
+  const pillarCorners = sideCenters.map((c) => ({
+    sx: c.tx - pilCenterOffX,
+    sy: c.ty + pilCenterOffY,
+  }));
 
   const drawPillarWithCrystal = (pIdx: number) => {
     const p = pillarCorners[pIdx];
@@ -360,15 +411,36 @@ function drawEldritchShrineBuilding(
     const capW = pilW * 1.4;
     const capD = pilD * 1.4;
     const capH = 3 * s2;
-    drawIsoPillar(ctx, p.sx - (capW - pilW) * 0.5, p.sy + (capW - pilW) * 0.5 * tanA, capW, capD, capH, S.dark, S.light, S.lightest, tanA);
+    drawIsoPillar(
+      ctx,
+      p.sx - (capW - pilW) * 0.5,
+      p.sy + (capW - pilW) * 0.5 * tanA,
+      capW,
+      capD,
+      capH,
+      S.dark,
+      S.light,
+      S.lightest,
+      tanA,
+    );
 
     // Pillar shaft
     const shaftBaseY = p.sy - capH + (capW - pilW) * 0.5 * tanA;
-    const leftGrad = ctx.createLinearGradient(p.sx, shaftBaseY, p.sx, shaftBaseY - pilH);
+    const leftGrad = ctx.createLinearGradient(
+      p.sx,
+      shaftBaseY,
+      p.sx,
+      shaftBaseY - pilH,
+    );
     leftGrad.addColorStop(0, S.darkest);
     leftGrad.addColorStop(0.5, S.dark);
     leftGrad.addColorStop(1, S.mid);
-    const rightGrad = ctx.createLinearGradient(p.sx, shaftBaseY, p.sx, shaftBaseY - pilH);
+    const rightGrad = ctx.createLinearGradient(
+      p.sx,
+      shaftBaseY,
+      p.sx,
+      shaftBaseY - pilH,
+    );
     rightGrad.addColorStop(0, S.mid);
     rightGrad.addColorStop(0.5, S.light);
     rightGrad.addColorStop(1, S.lightest);
@@ -398,7 +470,10 @@ function drawEldritchShrineBuilding(
     ctx.beginPath();
     ctx.moveTo(p.sx - pilW, shaftBaseY - pilW * tanA);
     ctx.lineTo(p.sx - pilW + pilD, shaftBaseY - pilW * tanA - pilD * tanA);
-    ctx.lineTo(p.sx - pilW + pilD, shaftBaseY - pilW * tanA - pilD * tanA - pilH);
+    ctx.lineTo(
+      p.sx - pilW + pilD,
+      shaftBaseY - pilW * tanA - pilD * tanA - pilH,
+    );
     ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pilH);
     ctx.closePath();
     ctx.fill();
@@ -408,7 +483,10 @@ function drawEldritchShrineBuilding(
     ctx.beginPath();
     ctx.moveTo(p.sx, shaftBaseY - pilH);
     ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pilH);
-    ctx.lineTo(p.sx - pilW + pilD, shaftBaseY - pilW * tanA - pilD * tanA - pilH);
+    ctx.lineTo(
+      p.sx - pilW + pilD,
+      shaftBaseY - pilW * tanA - pilD * tanA - pilH,
+    );
     ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA - pilH);
     ctx.closePath();
     ctx.fill();
@@ -435,7 +513,18 @@ function drawEldritchShrineBuilding(
 
     // Pillar top cap
     const topCapY = shaftBaseY - pilH;
-    drawIsoPillar(ctx, p.sx - (capW - pilW) * 0.5, topCapY + (capW - pilW) * 0.5 * tanA, capW, capD, capH, S.mid, S.highlight, S.lightest, tanA);
+    drawIsoPillar(
+      ctx,
+      p.sx - (capW - pilW) * 0.5,
+      topCapY + (capW - pilW) * 0.5 * tanA,
+      capW,
+      capD,
+      capH,
+      S.mid,
+      S.highlight,
+      S.lightest,
+      tanA,
+    );
 
     // Crystal finial
     const crystalGlow = 0.5 + Math.sin(time * 3 + pIdx * 1.5) * 0.3;
@@ -483,7 +572,17 @@ function drawEldritchShrineBuilding(
 
   // ── CENTRAL ALTAR BLOCK ──
   const altarY = midY - midH;
-  drawShadedIsoBox(ctx, altarY, altarW, altarH, S.darkest, S.dark, S.mid, S.light, S.lightest);
+  drawShadedIsoBox(
+    ctx,
+    altarY,
+    altarW,
+    altarH,
+    S.darkest,
+    S.dark,
+    S.mid,
+    S.light,
+    S.lightest,
+  );
 
   // Altar gold trim top edge
   ctx.strokeStyle = S.gold;
@@ -564,12 +663,34 @@ function drawEldritchShrineBuilding(
   // Brazier pedestal (small isometric box)
   const pedW = 7 * s2;
   const pedH = 5 * s2;
-  drawIsoPillar(ctx, brazierCX, altarTopY + 2 * s2, pedW, pedW, pedH, "#3E2723", "#5D4037", "#6D4C41", tanA);
+  drawIsoPillar(
+    ctx,
+    brazierCX,
+    altarTopY + 2 * s2,
+    pedW,
+    pedW,
+    pedH,
+    "#3E2723",
+    "#5D4037",
+    "#6D4C41",
+    tanA,
+  );
 
   // Brazier bowl — wider rim on the pedestal
   const rimW = 11 * s2;
   const rimH = 3 * s2;
-  drawIsoPillar(ctx, brazierCX, altarTopY - pedH + 2 * s2 + pedW * tanA, rimW, rimW, rimH, "#4E342E", "#6D4C41", "#795548", tanA);
+  drawIsoPillar(
+    ctx,
+    brazierCX,
+    altarTopY - pedH + 2 * s2 + pedW * tanA,
+    rimW,
+    rimW,
+    rimH,
+    "#4E342E",
+    "#6D4C41",
+    "#795548",
+    tanA,
+  );
 
   // Gold rim outline
   ctx.strokeStyle = S.gold;
@@ -601,7 +722,14 @@ function drawEldritchShrineBuilding(
   const flameSize = (isHealing ? 26 : 20) * s2 * flamePulse;
 
   // Broad aura glow
-  const auraGrad = ctx.createRadialGradient(0, flameBaseY, 0, 0, flameBaseY, flameSize * 2);
+  const auraGrad = ctx.createRadialGradient(
+    0,
+    flameBaseY,
+    0,
+    0,
+    flameBaseY,
+    flameSize * 2,
+  );
   auraGrad.addColorStop(0, `rgba(${S.jadeRgb}, ${isHealing ? 0.35 : 0.18})`);
   auraGrad.addColorStop(0.5, `rgba(${S.jadeRgb}, ${isHealing ? 0.12 : 0.06})`);
   auraGrad.addColorStop(1, "transparent");
@@ -641,7 +769,14 @@ function drawEldritchShrineBuilding(
   }
 
   // Core flame
-  const coreGrad = ctx.createRadialGradient(0, flameBaseY, 0, 0, flameBaseY, flameSize * 0.6);
+  const coreGrad = ctx.createRadialGradient(
+    0,
+    flameBaseY,
+    0,
+    0,
+    flameBaseY,
+    flameSize * 0.6,
+  );
   coreGrad.addColorStop(0, "#FFFFFF");
   coreGrad.addColorStop(0.25, "#E8F5E9");
   coreGrad.addColorStop(0.5, "#CCFF90");
@@ -668,7 +803,18 @@ function drawEldritchShrineBuilding(
     const stoneH = (8 + Math.sin(i * 2.5) * 2) * s2;
 
     // Runestone as proper isometric prism
-    drawIsoPillar(ctx, 0, 0, stoneW, stoneD, stoneH, S.darkest, S.mid, S.light, tanA);
+    drawIsoPillar(
+      ctx,
+      0,
+      0,
+      stoneW,
+      stoneD,
+      stoneH,
+      S.darkest,
+      S.mid,
+      S.light,
+      tanA,
+    );
 
     // Rune inscription glow on the front edge
     const runeGlow = isHealing ? 1 : 0.4 + Math.sin(time * 4 + i) * 0.3;
@@ -756,7 +902,12 @@ function drawEldritchShrineBuilding(
     ctx.restore();
 
     const beamAlpha = 0.35 * (1 - prog);
-    const beamGrad = ctx.createLinearGradient(0, flameBaseY, 0, flameBaseY - 110 * s2);
+    const beamGrad = ctx.createLinearGradient(
+      0,
+      flameBaseY,
+      0,
+      flameBaseY - 110 * s2,
+    );
     beamGrad.addColorStop(0, `rgba(${S.jadeBright}, ${beamAlpha})`);
     beamGrad.addColorStop(0.4, `rgba(${S.jadeRgb}, ${beamAlpha * 0.5})`);
     beamGrad.addColorStop(1, "transparent");
@@ -5190,7 +5341,14 @@ export function renderSpecialBuilding(
 
       // STATE: ACTIVE VAULT
       const geo = drawActiveVaultBuilding(
-        ctx, s2, w, h, tanAngle, roofOffset, time, isFlashing,
+        ctx,
+        s2,
+        w,
+        h,
+        tanAngle,
+        roofOffset,
+        time,
+        isFlashing,
       );
       const { bodyY, roofPeakY, parH, rcy, lWallPt, rWallPt } = geo;
 

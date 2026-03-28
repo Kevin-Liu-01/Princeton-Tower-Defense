@@ -15,7 +15,7 @@ export function drawNassauHero(
   const isAttacking = attackPhase > 0;
   const attackIntensity = attackPhase;
   const flamePulse = Math.sin(time * 4) * 0.5 + 0.5;
-  const wingFlap = Math.sin(time * 3.5) * 0.3;
+  const wingFlap = Math.sin(time * 7) * 0.55;
   const breathe = Math.sin(time * 2) * 2;
   const hover = Math.sin(time * 2.5) * s * 0.04;
   const bodyGlow = 0.6 + Math.sin(time * 3) * 0.2;
@@ -109,8 +109,8 @@ function drawWings(
   attackIntensity: number,
   layer: "back" | "front",
 ) {
-  const flapAngle = wingFlap + (isAttacking ? Math.sin(attackIntensity * Math.PI * 6) * 0.4 : 0);
-  const wingSpread = s * (0.85 + flapAngle * 0.18);
+  const flapAngle = wingFlap + (isAttacking ? Math.sin(attackIntensity * Math.PI * 6) * 0.5 : 0);
+  const wingSpread = s * (0.85 + flapAngle * 0.35);
   const side = layer === "back" ? 1 : -1;
 
   ctx.save();
@@ -118,7 +118,7 @@ function drawWings(
   const wingBaseX = x + side * s * 0.14;
   const wingBaseY = y - s * 0.06;
   const wingTipX = wingBaseX + side * wingSpread;
-  const wingTipY = wingBaseY - s * 0.4 + flapAngle * s * 0.22;
+  const wingTipY = wingBaseY - s * 0.4 + flapAngle * s * 0.38;
 
   // Wing glow underlay
   const glowGrad = ctx.createRadialGradient(
@@ -144,13 +144,13 @@ function drawWings(
   ctx.beginPath();
   ctx.moveTo(wingBaseX, wingBaseY);
   ctx.bezierCurveTo(
-    wingBaseX + side * wingSpread * 0.35, wingBaseY - s * 0.55 + flapAngle * s * 0.1,
-    wingBaseX + side * wingSpread * 0.7, wingBaseY - s * 0.5 + flapAngle * s * 0.18,
+    wingBaseX + side * wingSpread * 0.35, wingBaseY - s * 0.55 + flapAngle * s * 0.2,
+    wingBaseX + side * wingSpread * 0.7, wingBaseY - s * 0.5 + flapAngle * s * 0.3,
     wingTipX, wingTipY,
   );
   ctx.bezierCurveTo(
-    wingBaseX + side * wingSpread * 0.8, wingBaseY + s * 0.02,
-    wingBaseX + side * wingSpread * 0.5, wingBaseY + s * 0.18,
+    wingBaseX + side * wingSpread * 0.8, wingBaseY + s * 0.02 + flapAngle * s * 0.08,
+    wingBaseX + side * wingSpread * 0.5, wingBaseY + s * 0.18 + flapAngle * s * 0.05,
     wingBaseX + side * wingSpread * 0.2, wingBaseY + s * 0.22,
   );
   ctx.lineTo(wingBaseX, wingBaseY + s * 0.12);
@@ -163,8 +163,8 @@ function drawWings(
   ctx.beginPath();
   ctx.moveTo(wingBaseX, wingBaseY);
   ctx.bezierCurveTo(
-    wingBaseX + side * wingSpread * 0.3, wingBaseY - s * 0.25,
-    wingBaseX + side * wingSpread * 0.6, wingBaseY - s * 0.35 + flapAngle * s * 0.1,
+    wingBaseX + side * wingSpread * 0.3, wingBaseY - s * 0.25 + flapAngle * s * 0.12,
+    wingBaseX + side * wingSpread * 0.6, wingBaseY - s * 0.35 + flapAngle * s * 0.22,
     wingTipX, wingTipY,
   );
   ctx.stroke();
@@ -714,7 +714,7 @@ function drawNeck(
   ctx.stroke();
 }
 
-// ─── HELMET ─────────────────────────────────────────────────────────────────
+// ─── HELMET + BIRD HEAD ─────────────────────────────────────────────────────
 
 function drawHelmet(
   ctx: CanvasRenderingContext2D,
@@ -732,145 +732,223 @@ function drawHelmet(
   const headTilt = isAttacking ? Math.sin(attackIntensity * Math.PI * 3) * s * 0.015 : 0;
   const hx = x + headTilt;
 
-  // ── Helmet shell ──
-  const helmGrad = ctx.createRadialGradient(hx, headY - s * 0.02, s * 0.02, hx, headY, s * 0.14);
-  helmGrad.addColorStop(0, "#c49030");
-  helmGrad.addColorStop(0.25, "#a07020");
-  helmGrad.addColorStop(0.5, "#8a6018");
-  helmGrad.addColorStop(0.75, "#6a4510");
-  helmGrad.addColorStop(1, "#4a3008");
-  ctx.fillStyle = helmGrad;
+  // ── Head base (feathered bird head shape, taller and more avian) ──
+  const headGrad = ctx.createRadialGradient(hx, headY - s * 0.01, s * 0.03, hx, headY + s * 0.01, s * 0.15);
+  headGrad.addColorStop(0, "#ffc870");
+  headGrad.addColorStop(0.25, "#e67e22");
+  headGrad.addColorStop(0.5, "#cc5500");
+  headGrad.addColorStop(0.75, "#993d00");
+  headGrad.addColorStop(1, "#6b2800");
+  ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.ellipse(hx, headY - s * 0.02, s * 0.12, s * 0.13, 0, 0, Math.PI * 2);
+  ctx.ellipse(hx, headY, s * 0.11, s * 0.13, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Helmet outline
-  ctx.strokeStyle = "#3a2205";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(hx, headY - s * 0.02, s * 0.12, s * 0.13, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // ── Cheek guards ──
-  for (let side = -1; side <= 1; side += 2) {
-    const cgx = hx + side * s * 0.08;
-    const cgy = headY + s * 0.06;
-
-    const cgGrad = ctx.createLinearGradient(cgx, cgy - s * 0.04, cgx, cgy + s * 0.04);
-    cgGrad.addColorStop(0, "#8a6018");
-    cgGrad.addColorStop(0.5, "#6a4510");
-    cgGrad.addColorStop(1, "#4a3008");
-    ctx.fillStyle = cgGrad;
+  // Head feather texture
+  for (let row = 0; row < 5; row++) {
+    const ry = headY - s * 0.08 + row * s * 0.035;
+    const rw = s * 0.09 * Math.sin(((row + 0.5) / 5) * Math.PI);
+    ctx.strokeStyle = `rgba(160, 70, 10, ${0.15 + row * 0.02})`;
+    ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(hx + side * s * 0.1, headY + s * 0.01);
-    ctx.quadraticCurveTo(cgx + side * s * 0.04, cgy, hx + side * s * 0.06, headY + s * 0.1);
-    ctx.lineTo(hx + side * s * 0.03, headY + s * 0.08);
-    ctx.quadraticCurveTo(hx + side * s * 0.06, headY + s * 0.03, hx + side * s * 0.1, headY + s * 0.01);
-    ctx.closePath();
-    ctx.fill();
-
-    // Gold trim on cheek guard
-    ctx.strokeStyle = `rgba(200, 160, 40, 0.4)`;
-    ctx.lineWidth = 0.6 * zoom;
+    ctx.moveTo(hx - rw, ry);
+    ctx.quadraticCurveTo(hx, ry + s * 0.004, hx + rw, ry);
     ctx.stroke();
   }
 
-  // ── Nose guard / visor ──
-  const visorY = headY + s * 0.015;
-  ctx.fillStyle = "#4a3008";
+  // ── Helmet armor overlay (partial, forehead/crown area) ──
+  const helmGrad = ctx.createLinearGradient(hx - s * 0.1, headY - s * 0.14, hx + s * 0.1, headY - s * 0.02);
+  helmGrad.addColorStop(0, "#8a6018");
+  helmGrad.addColorStop(0.3, "#c49030");
+  helmGrad.addColorStop(0.6, "#a07020");
+  helmGrad.addColorStop(1, "#6a4510");
+  ctx.fillStyle = helmGrad;
   ctx.beginPath();
-  ctx.moveTo(hx - s * 0.015, visorY - s * 0.03);
-  ctx.lineTo(hx - s * 0.04, visorY + s * 0.005);
-  ctx.lineTo(hx - s * 0.015, visorY + s * 0.025);
-  ctx.lineTo(hx + s * 0.015, visorY + s * 0.025);
-  ctx.quadraticCurveTo(hx + s * 0.02, visorY, hx + s * 0.015, visorY - s * 0.03);
+  ctx.moveTo(hx - s * 0.11, headY - s * 0.04);
+  ctx.quadraticCurveTo(hx - s * 0.12, headY - s * 0.1, hx - s * 0.06, headY - s * 0.14);
+  ctx.lineTo(hx + s * 0.06, headY - s * 0.14);
+  ctx.quadraticCurveTo(hx + s * 0.12, headY - s * 0.1, hx + s * 0.11, headY - s * 0.04);
+  ctx.quadraticCurveTo(hx + s * 0.08, headY - s * 0.06, hx, headY - s * 0.04);
+  ctx.quadraticCurveTo(hx - s * 0.08, headY - s * 0.06, hx - s * 0.11, headY - s * 0.04);
   ctx.closePath();
   ctx.fill();
 
-  // ── Visor eye slit ──
-  const slitY = headY + s * 0.005;
-  ctx.fillStyle = `rgba(255, 140, 30, ${0.7 + gemPulse * 0.3})`;
-  ctx.beginPath();
-  ctx.moveTo(hx - s * 0.07, slitY);
-  ctx.quadraticCurveTo(hx, slitY - s * 0.008, hx + s * 0.015, slitY);
-  ctx.quadraticCurveTo(hx, slitY + s * 0.006, hx - s * 0.07, slitY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Eye glow behind slit
-  const eyeGlowGrad = ctx.createRadialGradient(hx - s * 0.03, slitY, 0, hx - s * 0.03, slitY, s * 0.05);
-  eyeGlowGrad.addColorStop(0, `rgba(255, 180, 50, ${0.35 + gemPulse * 0.2})`);
-  eyeGlowGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
-  ctx.fillStyle = eyeGlowGrad;
-  ctx.beginPath();
-  ctx.arc(hx - s * 0.03, slitY, s * 0.05, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ── Helmet central ridge ──
-  ctx.strokeStyle = `rgba(160, 120, 30, 0.5)`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(hx, headY - s * 0.14);
-  ctx.quadraticCurveTo(hx - s * 0.01, headY - s * 0.05, hx - s * 0.02, headY + s * 0.03);
+  // Helmet border
+  ctx.strokeStyle = "#3a2205";
+  ctx.lineWidth = 1.2 * zoom;
   ctx.stroke();
 
-  // Ridge highlight
+  // Gold trim on helmet edge
+  ctx.strokeStyle = `rgba(255, 220, 100, 0.35)`;
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(hx - s * 0.1, headY - s * 0.04);
+  ctx.quadraticCurveTo(hx, headY - s * 0.03, hx + s * 0.1, headY - s * 0.04);
+  ctx.stroke();
+
+  // Central helmet ridge
+  ctx.strokeStyle = `rgba(180, 130, 40, 0.5)`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(hx, headY - s * 0.145);
+  ctx.lineTo(hx, headY - s * 0.04);
+  ctx.stroke();
   ctx.strokeStyle = `rgba(255, 230, 120, 0.25)`;
   ctx.lineWidth = 0.7 * zoom;
   ctx.beginPath();
-  ctx.moveTo(hx + 0.5 * zoom, headY - s * 0.13);
-  ctx.quadraticCurveTo(hx - s * 0.005, headY - s * 0.05, hx - s * 0.015, headY + s * 0.02);
+  ctx.moveTo(hx + 0.5 * zoom, headY - s * 0.14);
+  ctx.lineTo(hx + 0.5 * zoom, headY - s * 0.045);
   ctx.stroke();
 
-  // ── Brow crown / ornamental band ──
-  const browY = headY - s * 0.06;
+  // ── Crown / brow band ──
+  const browY = headY - s * 0.04;
   ctx.strokeStyle = "#daa520";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(hx, browY, s * 0.11, s * 0.03, -0.05, Math.PI * 0.15, Math.PI * 0.85);
+  ctx.ellipse(hx, browY, s * 0.11, s * 0.025, 0, Math.PI * 0.08, Math.PI * 0.92);
   ctx.stroke();
 
-  // Crown gem
-  const crownGemX = hx - s * 0.04;
-  const crownGemY = browY - s * 0.005;
-  const crownGemR = s * 0.015;
-  const crownGemGrad = ctx.createRadialGradient(crownGemX, crownGemY, 0, crownGemX, crownGemY, crownGemR);
-  crownGemGrad.addColorStop(0, `rgba(255, 100, 30, ${0.9 + gemPulse * 0.1})`);
-  crownGemGrad.addColorStop(0.4, `rgba(220, 50, 10, 0.9)`);
-  crownGemGrad.addColorStop(1, `rgba(150, 20, 0, 0.7)`);
-  ctx.fillStyle = crownGemGrad;
+  // Crown center gem
+  const crownGemR = s * 0.017;
+  const cgGrad = ctx.createRadialGradient(hx, browY - s * 0.005, 0, hx, browY - s * 0.005, crownGemR);
+  cgGrad.addColorStop(0, `rgba(255, 100, 30, ${0.9 + gemPulse * 0.1})`);
+  cgGrad.addColorStop(0.4, `rgba(220, 50, 10, 0.9)`);
+  cgGrad.addColorStop(1, `rgba(150, 20, 0, 0.7)`);
+  ctx.fillStyle = cgGrad;
   ctx.beginPath();
-  ctx.arc(crownGemX, crownGemY, crownGemR, 0, Math.PI * 2);
+  ctx.arc(hx, browY - s * 0.005, crownGemR, 0, Math.PI * 2);
   ctx.fill();
-
-  // Gem glow
   ctx.fillStyle = `rgba(255, 200, 80, ${0.15 + gemPulse * 0.15})`;
   ctx.beginPath();
-  ctx.arc(crownGemX, crownGemY, crownGemR * 2, 0, Math.PI * 2);
+  ctx.arc(hx, browY - s * 0.005, crownGemR * 2.2, 0, Math.PI * 2);
   ctx.fill();
 
-  // ── Beak (visible below visor) ──
-  const beakY = headY + s * 0.035;
-  const beakGrad = ctx.createLinearGradient(hx - s * 0.05, beakY, hx - s * 0.15, beakY);
-  beakGrad.addColorStop(0, "#aa7700");
-  beakGrad.addColorStop(0.4, "#886600");
-  beakGrad.addColorStop(1, "#554400");
+  // ── EYES — large, expressive, glowing bird eyes ──
+  for (let side = -1; side <= 1; side += 2) {
+    const eyeX = hx + side * s * 0.055;
+    const eyeY = headY + s * 0.005;
 
-  ctx.fillStyle = beakGrad;
+    // Eye socket shadow
+    ctx.fillStyle = `rgba(80, 30, 0, 0.3)`;
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, s * 0.032, s * 0.026, side * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye outer glow halo
+    const eyeHalo = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, s * 0.05);
+    eyeHalo.addColorStop(0, `rgba(255, 200, 60, ${0.35 + gemPulse * 0.25})`);
+    eyeHalo.addColorStop(0.5, `rgba(255, 140, 30, ${0.15 + gemPulse * 0.1})`);
+    eyeHalo.addColorStop(1, `rgba(255, 80, 0, 0)`);
+    ctx.fillStyle = eyeHalo;
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, s * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye white / bright sclera
+    const eyeGrad = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, s * 0.025);
+    eyeGrad.addColorStop(0, "#fff8e0");
+    eyeGrad.addColorStop(0.5, "#ffe080");
+    eyeGrad.addColorStop(0.8, `rgba(255, 160, 40, ${0.8 + gemPulse * 0.2})`);
+    eyeGrad.addColorStop(1, `rgba(220, 100, 10, 0.6)`);
+    ctx.fillStyle = eyeGrad;
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, s * 0.025, s * 0.02, side * 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye iris
+    ctx.fillStyle = `rgba(200, 60, 0, ${0.9 + gemPulse * 0.1})`;
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, s * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pupil — sharp vertical slit like a raptor
+    ctx.fillStyle = "#1a0500";
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, s * 0.004, s * 0.012, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye specular highlight
+    ctx.fillStyle = `rgba(255, 255, 240, 0.7)`;
+    ctx.beginPath();
+    ctx.arc(eyeX - s * 0.006, eyeY - s * 0.006, s * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye outline
+    ctx.strokeStyle = `rgba(100, 40, 0, 0.5)`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(eyeX, eyeY, s * 0.026, s * 0.021, side * 0.15, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // ── BEAK — large, prominent, hooked raptor beak ──
+  const beakY = headY + s * 0.04;
+  const beakLen = s * 0.16;
+
+  // Upper beak — large curved hook
+  const upperGrad = ctx.createLinearGradient(hx, beakY, hx, beakY - s * 0.02);
+  upperGrad.addColorStop(0, "#cc8800");
+  upperGrad.addColorStop(0.3, "#aa7700");
+  upperGrad.addColorStop(0.7, "#886600");
+  upperGrad.addColorStop(1, "#665500");
+  ctx.fillStyle = upperGrad;
   ctx.beginPath();
-  ctx.moveTo(hx - s * 0.05, beakY - s * 0.012);
-  ctx.quadraticCurveTo(hx - s * 0.1, beakY - s * 0.005, hx - s * 0.14, beakY + s * 0.005);
-  ctx.lineTo(hx - s * 0.05, beakY + s * 0.018);
+  ctx.moveTo(hx - s * 0.06, beakY - s * 0.015);
+  ctx.quadraticCurveTo(hx - s * 0.12, beakY - s * 0.02, hx - beakLen, beakY + s * 0.005);
+  ctx.quadraticCurveTo(hx - beakLen + s * 0.01, beakY + s * 0.018, hx - beakLen + s * 0.03, beakY + s * 0.012);
+  ctx.lineTo(hx - s * 0.06, beakY + s * 0.008);
   ctx.closePath();
   ctx.fill();
 
-  // Beak highlight
-  ctx.strokeStyle = `rgba(200, 160, 50, 0.3)`;
-  ctx.lineWidth = 0.5 * zoom;
+  // Upper beak highlight ridge
+  ctx.strokeStyle = `rgba(220, 180, 80, 0.45)`;
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(hx - s * 0.055, beakY - s * 0.01);
-  ctx.lineTo(hx - s * 0.12, beakY + s * 0.002);
+  ctx.moveTo(hx - s * 0.065, beakY - s * 0.01);
+  ctx.quadraticCurveTo(hx - s * 0.11, beakY - s * 0.012, hx - beakLen + s * 0.01, beakY + s * 0.003);
   ctx.stroke();
+
+  // Lower beak
+  ctx.fillStyle = "#996600";
+  ctx.beginPath();
+  ctx.moveTo(hx - s * 0.06, beakY + s * 0.01);
+  ctx.quadraticCurveTo(hx - s * 0.1, beakY + s * 0.022, hx - beakLen + s * 0.035, beakY + s * 0.015);
+  ctx.lineTo(hx - s * 0.06, beakY + s * 0.008);
+  ctx.closePath();
+  ctx.fill();
+
+  // Beak nostril
+  ctx.fillStyle = `rgba(80, 40, 0, 0.4)`;
+  ctx.beginPath();
+  ctx.ellipse(hx - s * 0.08, beakY - s * 0.005, s * 0.006, s * 0.004, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak edge outline
+  ctx.strokeStyle = `rgba(80, 40, 0, 0.35)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(hx - s * 0.06, beakY - s * 0.015);
+  ctx.quadraticCurveTo(hx - s * 0.12, beakY - s * 0.02, hx - beakLen, beakY + s * 0.005);
+  ctx.quadraticCurveTo(hx - beakLen + s * 0.01, beakY + s * 0.018, hx - beakLen + s * 0.03, beakY + s * 0.012);
+  ctx.stroke();
+
+  // ── Cheek feather tufts ──
+  for (let side = -1; side <= 1; side += 2) {
+    const tuftX = hx + side * s * 0.09;
+    const tuftY = headY + s * 0.04;
+    for (let t = 0; t < 3; t++) {
+      const tAngle = side * (0.2 + t * 0.25) + Math.PI / 2;
+      const tLen = s * (0.04 + t * 0.008);
+      const tSway = Math.sin(time * 3 + t + side) * s * 0.005;
+      ctx.strokeStyle = `rgba(180, 90, 20, ${0.3 - t * 0.06})`;
+      ctx.lineWidth = (1.5 - t * 0.3) * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(tuftX, tuftY);
+      ctx.lineTo(tuftX + Math.cos(tAngle) * tLen + tSway, tuftY + Math.sin(tAngle) * tLen);
+      ctx.stroke();
+    }
+  }
 
   // ── Flaming crest / plume ──
   drawHelmetPlume(ctx, hx, headY, s, time, zoom, flamePulse);

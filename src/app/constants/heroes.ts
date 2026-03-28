@@ -108,7 +108,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     hp: 3500,
     damage: 85,
     range: 220,
-    attackSpeed: 650,
+    attackSpeed: 1500,
     speed: 3.8,
     ability: "Phoenix Inferno",
     abilityDesc: "Blazing dive through enemies dealing massive fire damage and inflicting burn",
