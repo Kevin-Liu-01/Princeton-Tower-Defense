@@ -161,6 +161,107 @@ export const KNIGHT_THEME_PURPLE: KnightTheme = {
   shockwave: "rgba(180, 100, 255, ",
 };
 
+// ============================================================================
+// KNIGHT GEAR VARIANTS — 3 distinct armor/helmet/weapon combos per knight
+// Variant 0: Heavy Plate — bulky layered plate, great helm, broadsword
+// Variant 1: Crusader — segmented mail+plate, crusader helm with cross visor, longsword
+// Variant 2: Royal Guard — ornate gilded plate, winged helm, bastard sword
+// ============================================================================
+
+export interface KnightGearVariant {
+  // Armor palette overrides
+  armorPeak: string;
+  armorHigh: string;
+  armorMid: string;
+  armorDark: string;
+  // Helmet style
+  helmetStyle: "greathelm" | "crusader" | "winged";
+  // Weapon style
+  weaponStyle: "broadsword" | "longsword" | "bastardsword";
+  // Extra accent
+  trimColor: string;
+  trimHighlight: string;
+}
+
+export const KNIGHT_GEAR_VARIANTS: KnightGearVariant[] = [
+  {
+    // Variant 0: Heavy Plate — dark steel, great helm, wide broadsword
+    armorPeak: "#acb2c6",
+    armorHigh: "#878ea7",
+    armorMid: "#646b81",
+    armorDark: "#41485b",
+    helmetStyle: "greathelm",
+    weaponStyle: "broadsword",
+    trimColor: "#5a5a6e",
+    trimHighlight: "#c8c8d8",
+  },
+  {
+    // Variant 1: Crusader — cool silver steel, cross visor, longsword
+    armorPeak: "#b8bcc8",
+    armorHigh: "#949aac",
+    armorMid: "#6e7488",
+    armorDark: "#484e60",
+    helmetStyle: "crusader",
+    weaponStyle: "longsword",
+    trimColor: "#606878",
+    trimHighlight: "#d0d4dc",
+  },
+  {
+    // Variant 2: Royal Guard — polished bright steel, winged helm, bastard sword
+    armorPeak: "#c0c4d0",
+    armorHigh: "#a0a6b8",
+    armorMid: "#78809a",
+    armorDark: "#505870",
+    helmetStyle: "winged",
+    weaponStyle: "bastardsword",
+    trimColor: "#6a7088",
+    trimHighlight: "#d8dce8",
+  },
+];
+
+// Captain Mercer's hero-summoned knights — gold-tinted versions of each variant
+export const MERCER_GEAR_VARIANTS: KnightGearVariant[] = [
+  {
+    armorPeak: "#f0e0a0",
+    armorHigh: "#d4b860",
+    armorMid: "#a89030",
+    armorDark: "#7a6820",
+    helmetStyle: "greathelm",
+    weaponStyle: "broadsword",
+    trimColor: "#c4a030",
+    trimHighlight: "#f8ecc0",
+  },
+  {
+    armorPeak: "#ecdca0",
+    armorHigh: "#d0b868",
+    armorMid: "#a89040",
+    armorDark: "#786428",
+    helmetStyle: "crusader",
+    weaponStyle: "longsword",
+    trimColor: "#b89838",
+    trimHighlight: "#f4e4b0",
+  },
+  {
+    armorPeak: "#f4e8b0",
+    armorHigh: "#dcc460",
+    armorMid: "#b49830",
+    armorDark: "#8a7020",
+    helmetStyle: "winged",
+    weaponStyle: "bastardsword",
+    trimColor: "#cca828",
+    trimHighlight: "#faf0c8",
+  },
+];
+
+export function getKnightGearVariant(
+  variant?: number,
+  ownerType?: TroopOwnerType,
+): KnightGearVariant {
+  const pool = ownerType === "hero_summon" ? MERCER_GEAR_VARIANTS : KNIGHT_GEAR_VARIANTS;
+  const idx = (variant ?? 0) % pool.length;
+  return pool[idx];
+}
+
 // Get knight theme based on owner type and map theme.
 // Barracks knights adapt to the biome: orange on desert, purple on volcanic.
 export function getKnightTheme(

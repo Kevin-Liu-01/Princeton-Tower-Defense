@@ -18,56 +18,56 @@ export const ENEMY_COLORS: Record<string, string> = Object.fromEntries(
  */
 const CODEX_SPRITE_ADJUSTMENTS: Partial<Record<EnemyType, { scale: number; offsetY: number }>> = {
   // academic.ts — all 1.7×
-  frosh: { scale: 0.59, offsetY: 0 },
-  sophomore: { scale: 0.59, offsetY: 0 },
-  junior: { scale: 0.59, offsetY: 0 },
-  senior: { scale: 0.59, offsetY: 0 },
-  gradstudent: { scale: 0.59, offsetY: 0 },
-  professor: { scale: 0.59, offsetY: 0 },
-  dean: { scale: 0.59, offsetY: 0 },
+  frosh: { scale: 0.59, offsetY: 0.1 },
+  sophomore: { scale: 0.59, offsetY: 0.05 },
+  junior: { scale: 0.59, offsetY: 0.1 },
+  senior: { scale: 0.59, offsetY: 0.1 },
+  gradstudent: { scale: 0.59, offsetY: 0.1 },
+  professor: { scale: 0.59, offsetY: 0.1 },
+  dean: { scale: 0.59, offsetY: 0.1 },
 
   // special.ts — trustee 1.7×
-  trustee: { scale: 0.59, offsetY: 0 },
+  trustee: { scale: 0.59, offsetY: 0.1 },
 
   // ranged.ts — 1.7× (catapult has no multiplier)
-  archer: { scale: 0.59, offsetY: 0 },
-  mage: { scale: 0.59, offsetY: 0 },
-  warlock: { scale: 0.59, offsetY: 0 },
-  crossbowman: { scale: 0.59, offsetY: 0 },
-  hexer: { scale: 0.59, offsetY: 0 },
+  archer: { scale: 0.5, offsetY: 0.15 },
+  mage: { scale: 0.67, offsetY: 0.1 },
+  warlock: { scale: 0.63, offsetY: 0.05 },
+  crossbowman: { scale: 0.79, offsetY: 0.05 },
+  hexer: { scale: 0.7, offsetY: 0.15 },
 
   // forest.ts — 1.7×
   athlete: { scale: 0.59, offsetY: 0 },
-  tiger_fan: { scale: 0.59, offsetY: 0 },
+  tiger_fan: { scale: 0.71, offsetY: 0.05 },
 
   // darkfantasy.ts — 1.75×–2.1×
-  skeleton_footman: { scale: 0.56, offsetY: 0 },
-  skeleton_knight: { scale: 0.54, offsetY: 0 },
-  skeleton_archer: { scale: 0.57, offsetY: 0 },
-  skeleton_king: { scale: 0.50, offsetY: 0 },
-  zombie_shambler: { scale: 0.56, offsetY: 0 },
-  zombie_brute: { scale: 0.50, offsetY: 0 },
-  zombie_spitter: { scale: 0.56, offsetY: 0 },
-  ghoul: { scale: 0.56, offsetY: 0 },
-  dark_knight: { scale: 0.53, offsetY: 0 },
-  death_knight: { scale: 0.48, offsetY: 0 },
+  skeleton_footman: { scale: 0.8, offsetY: -0.05 },
+  skeleton_knight: { scale: 0.74, offsetY: -0.05 },
+  skeleton_archer: { scale: 0.67, offsetY: -0.05 },
+  skeleton_king: { scale: 0.70, offsetY: -0.05 },
+  zombie_shambler: { scale: 0.86, offsetY: -0.1 },
+  zombie_brute: { scale: 0.60, offsetY: -0.05 },
+  zombie_spitter: { scale: 0.86, offsetY: -0.1 },
+  ghoul: { scale: 0.86, offsetY: -0.1 },
+  dark_knight: { scale: 0.63, offsetY: 0 },
+  death_knight: { scale: 0.58, offsetY: 0 },
 
   // darkfantasyB.ts — 1.8×–2.15×
-  fallen_paladin: { scale: 0.53, offsetY: 0 },
-  black_guard: { scale: 0.54, offsetY: 0 },
-  lich: { scale: 0.54, offsetY: 0 },
-  wraith: { scale: 0.56, offsetY: 0 },
-  bone_mage: { scale: 0.56, offsetY: 0 },
-  dark_priest: { scale: 0.54, offsetY: 0 },
-  revenant: { scale: 0.53, offsetY: 0 },
-  abomination: { scale: 0.47, offsetY: 0 },
+  fallen_paladin: { scale: 0.63, offsetY: 0 },
+  black_guard: { scale: 0.74, offsetY: 0 },
+  lich: { scale: 0.74, offsetY: 0 },
+  wraith: { scale: 0.76, offsetY: 0 },
+  bone_mage: { scale: 0.76, offsetY: 0 },
+  dark_priest: { scale: 0.74, offsetY: 0 },
+  revenant: { scale: 0.73, offsetY: 0 },
+  abomination: { scale: 0.57, offsetY: -0.05 },
   hellhound: { scale: 0.54, offsetY: 0 },
-  doom_herald: { scale: 0.48, offsetY: 0 },
+  doom_herald: { scale: 0.68, offsetY: 0 },
 
   // fantasy.ts — 1.15×–2.2×
-  dire_bear: { scale: 0.67, offsetY: 0 },
-  ancient_ent: { scale: 0.59, offsetY: 0 },
-  forest_troll: { scale: 0.71, offsetY: 0 },
+  dire_bear: { scale: 0.77, offsetY: 0 },
+  ancient_ent: { scale: 0.7, offsetY: 0 },
+  forest_troll: { scale: 0.91, offsetY: 0 },
   timber_wolf: { scale: 0.77, offsetY: 0 },
   giant_eagle: { scale: 0.87, offsetY: 0 },
   swamp_hydra: { scale: 0.63, offsetY: 0 },
@@ -81,7 +81,7 @@ const CODEX_SPRITE_ADJUSTMENTS: Partial<Record<EnemyType, { scale: number; offse
   frost_troll: { scale: 0.71, offsetY: 0 },
   dire_wolf: { scale: 0.69, offsetY: 0 },
   wendigo: { scale: 0.71, offsetY: 0 },
-  mammoth: { scale: 0.45, offsetY: 0 },
+  mammoth: { scale: 0.6, offsetY: 0 },
   lava_golem: { scale: 0.67, offsetY: 0 },
   volcanic_drake: { scale: 0.71, offsetY: 0 },
   salamander: { scale: 0.83, offsetY: 0 },
@@ -103,7 +103,7 @@ const CODEX_SPRITE_ADJUSTMENTS: Partial<Record<EnemyType, { scale: number; offse
 
   // swamp.ts — 1.3×–1.5×
   bog_creature: { scale: 0.71, offsetY: 0 },
-  will_o_wisp: { scale: 0.67, offsetY: 0 },
+  will_o_wisp: { scale: 0.37, offsetY: -0.1 },
   swamp_troll: { scale: 0.77, offsetY: 0 },
 
   // bugs.ts — 1.1×–1.8×

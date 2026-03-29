@@ -54,7 +54,6 @@ const LANDMARK_TOWER_EXCLUSION: Partial<Record<DecorationType, number>> = {
   ashen_spiral: 0.5,
   obsidian_castle: 0.5,
   carnegie_lake: 1.0,
-  ruined_temple: 0.2,
 };
 
 function getLandmarkTowerExclusionRange(

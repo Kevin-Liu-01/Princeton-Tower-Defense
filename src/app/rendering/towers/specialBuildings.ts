@@ -137,6 +137,110 @@ function drawIsoPillar(
   ctx.fill();
 }
 
+const PILLAR_RUNE_PATTERNS: [number, number][][][] = [
+  // 0 (back-left): Gebo ᚷ — gift / sacred exchange
+  [
+    [[-0.6, -0.7], [0.6, 0.7]],
+    [[-0.6, 0.7], [0.6, -0.7]],
+  ],
+  // 1 (back-right): Tiwaz ᛏ — victory arrow
+  [
+    [[0, -0.85], [0, 0.8]],
+    [[-0.55, -0.25], [0, -0.85], [0.55, -0.25]],
+  ],
+  // 2 (front-left): Sowilo ᛋ — lightning zigzag
+  [
+    [[-0.45, -0.8], [0.45, -0.15], [-0.45, 0.15], [0.45, 0.8]],
+  ],
+  // 3 (front-right): Ingwaz ᛝ — stacked diamonds
+  [
+    [[0, -0.85], [0.5, -0.35], [0, 0], [-0.5, -0.35], [0, -0.85]],
+    [[0, 0], [0.5, 0.35], [0, 0.85], [-0.5, 0.35], [0, 0]],
+  ],
+  // 4 (back-center): Othala ᛟ — heritage / ancestral power
+  [
+    [[-0.5, 0.8], [0, 0.15], [0.5, 0.8]],
+    [[0, 0.15], [0, -0.2]],
+    [[-0.5, -0.2], [0, -0.85], [0.5, -0.2], [0, -0.2], [-0.5, -0.2]],
+  ],
+  // 5 (front-center): Perthro ᛈ — fate vessel
+  [
+    [[-0.15, -0.7], [-0.15, 0.7]],
+    [[-0.15, -0.3], [0.4, -0.1], [0.4, 0.4], [-0.15, 0.25]],
+  ],
+];
+
+function drawFlushRuneOnFace(
+  ctx: CanvasRenderingContext2D,
+  faceCX: number,
+  faceCY: number,
+  faceHalfW: number,
+  faceHalfH: number,
+  slope: number,
+  zoom: number,
+  runeIdx: number,
+  glowAlpha: number,
+  jadeRgb: string,
+  jadeBright: string,
+  isHealing: boolean,
+): void {
+  const panelHW = faceHalfW * 0.72;
+  const panelHH = faceHalfH * 0.38;
+
+  const rd = 0.5 * zoom;
+  const rdx = -Math.sign(slope) * rd;
+  const rdy = -Math.abs(slope) * rd;
+
+  // Recessed void behind the panel
+  ctx.fillStyle = "rgba(8, 18, 14, 0.8)";
+  ctx.beginPath();
+  ctx.moveTo(faceCX - panelHW + rdx, faceCY - panelHH - panelHW * slope + rdy);
+  ctx.lineTo(faceCX + panelHW + rdx, faceCY - panelHH + panelHW * slope + rdy);
+  ctx.lineTo(faceCX + panelHW + rdx, faceCY + panelHH + panelHW * slope + rdy);
+  ctx.lineTo(faceCX - panelHW + rdx, faceCY + panelHH - panelHW * slope + rdy);
+  ctx.closePath();
+  ctx.fill();
+
+  // Panel surface
+  ctx.fillStyle = "rgba(16, 32, 26, 0.55)";
+  ctx.beginPath();
+  ctx.moveTo(faceCX - panelHW, faceCY - panelHH - panelHW * slope);
+  ctx.lineTo(faceCX + panelHW, faceCY - panelHH + panelHW * slope);
+  ctx.lineTo(faceCX + panelHW, faceCY + panelHH + panelHW * slope);
+  ctx.lineTo(faceCX - panelHW, faceCY + panelHH - panelHW * slope);
+  ctx.closePath();
+  ctx.fill();
+
+  // Panel border
+  ctx.strokeStyle = `rgba(${jadeRgb}, ${glowAlpha * 0.3})`;
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.stroke();
+
+  // Rune inscription strokes
+  const rune = PILLAR_RUNE_PATTERNS[runeIdx];
+  ctx.save();
+  ctx.shadowBlur = (isHealing ? 7 : 3) * zoom;
+  ctx.shadowColor = `rgba(${jadeRgb}, ${glowAlpha})`;
+  ctx.strokeStyle = `rgba(${jadeBright}, ${glowAlpha})`;
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  for (const polyline of rune) {
+    ctx.beginPath();
+    for (let i = 0; i < polyline.length; i++) {
+      const [nx, ny] = polyline[i];
+      const rx = faceCX + nx * panelHW;
+      const ry = faceCY - ny * panelHH + nx * panelHW * slope;
+      if (i === 0) ctx.moveTo(rx, ry);
+      else ctx.lineTo(rx, ry);
+    }
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 function drawEldritchShrineBuilding(
   ctx: CanvasRenderingContext2D,
   s: number,
@@ -157,7 +261,7 @@ function drawEldritchShrineBuilding(
   const altarH = 10 * s2;
   const pilW = 5 * s2;
   const pilD = 4 * s2;
-  const pilH = 44 * s2;
+  const pilHeights = [34, 30, 26, 32, 38, 18].map((h) => h * s2);
 
   ctx.translate(0, baseW * tanA);
 
@@ -398,6 +502,10 @@ function drawEldritchShrineBuilding(
     { tx: -baseW * 0.5, ty: baseW * tanA * 0.05 - baseH },
     // front-right side center (front→right midpoint)
     { tx: baseW * 0.5, ty: baseW * tanA * 0.05 - baseH },
+    // back-center (directly behind brazier)
+    { tx: 0, ty: -baseW * tanA * 1.35 - baseH },
+    // front-center (tiny pillar in front)
+    { tx: 0, ty: baseW * tanA * 0.45 - baseH },
   ];
   const pillarCorners = sideCenters.map((c) => ({
     sx: c.tx - pilCenterOffX,
@@ -406,6 +514,7 @@ function drawEldritchShrineBuilding(
 
   const drawPillarWithCrystal = (pIdx: number) => {
     const p = pillarCorners[pIdx];
+    const pH = pilHeights[pIdx];
 
     // Pillar base cap (wider isometric box)
     const capW = pilW * 1.4;
@@ -430,7 +539,7 @@ function drawEldritchShrineBuilding(
       p.sx,
       shaftBaseY,
       p.sx,
-      shaftBaseY - pilH,
+      shaftBaseY - pH,
     );
     leftGrad.addColorStop(0, S.darkest);
     leftGrad.addColorStop(0.5, S.dark);
@@ -439,7 +548,7 @@ function drawEldritchShrineBuilding(
       p.sx,
       shaftBaseY,
       p.sx,
-      shaftBaseY - pilH,
+      shaftBaseY - pH,
     );
     rightGrad.addColorStop(0, S.mid);
     rightGrad.addColorStop(0.5, S.light);
@@ -450,8 +559,8 @@ function drawEldritchShrineBuilding(
     ctx.beginPath();
     ctx.moveTo(p.sx, shaftBaseY);
     ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA);
-    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pilH);
-    ctx.lineTo(p.sx, shaftBaseY - pilH);
+    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pH);
+    ctx.lineTo(p.sx, shaftBaseY - pH);
     ctx.closePath();
     ctx.fill();
 
@@ -460,8 +569,8 @@ function drawEldritchShrineBuilding(
     ctx.beginPath();
     ctx.moveTo(p.sx, shaftBaseY);
     ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA);
-    ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA - pilH);
-    ctx.lineTo(p.sx, shaftBaseY - pilH);
+    ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA - pH);
+    ctx.lineTo(p.sx, shaftBaseY - pH);
     ctx.closePath();
     ctx.fill();
 
@@ -472,22 +581,22 @@ function drawEldritchShrineBuilding(
     ctx.lineTo(p.sx - pilW + pilD, shaftBaseY - pilW * tanA - pilD * tanA);
     ctx.lineTo(
       p.sx - pilW + pilD,
-      shaftBaseY - pilW * tanA - pilD * tanA - pilH,
+      shaftBaseY - pilW * tanA - pilD * tanA - pH,
     );
-    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pilH);
+    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pH);
     ctx.closePath();
     ctx.fill();
 
     // Top face
     ctx.fillStyle = S.highlight;
     ctx.beginPath();
-    ctx.moveTo(p.sx, shaftBaseY - pilH);
-    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pilH);
+    ctx.moveTo(p.sx, shaftBaseY - pH);
+    ctx.lineTo(p.sx - pilW, shaftBaseY - pilW * tanA - pH);
     ctx.lineTo(
       p.sx - pilW + pilD,
-      shaftBaseY - pilW * tanA - pilD * tanA - pilH,
+      shaftBaseY - pilW * tanA - pilD * tanA - pH,
     );
-    ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA - pilH);
+    ctx.lineTo(p.sx + pilD, shaftBaseY - pilD * tanA - pH);
     ctx.closePath();
     ctx.fill();
 
@@ -496,14 +605,47 @@ function drawEldritchShrineBuilding(
     ctx.lineWidth = 0.8 * s2;
     ctx.beginPath();
     ctx.moveTo(p.sx, shaftBaseY);
-    ctx.lineTo(p.sx, shaftBaseY - pilH);
+    ctx.lineTo(p.sx, shaftBaseY - pH);
     ctx.stroke();
+
+    // Flush runic inscription panels on both faces
+    const runeAlpha = isHealing ? 0.7 + pulse * 0.2 : 0.25 + pulse * 0.15;
+
+    drawFlushRuneOnFace(
+      ctx,
+      p.sx - pilW * 0.5,
+      shaftBaseY - pilW * tanA * 0.5 - pH * 0.5,
+      pilW * 0.5,
+      pH * 0.5,
+      tanA,
+      s2,
+      pIdx,
+      runeAlpha,
+      S.jadeRgb,
+      S.jadeBright,
+      isHealing,
+    );
+
+    drawFlushRuneOnFace(
+      ctx,
+      p.sx + pilD * 0.5,
+      shaftBaseY - pilD * tanA * 0.5 - pH * 0.5,
+      pilD * 0.5,
+      pH * 0.5,
+      -tanA,
+      s2,
+      pIdx,
+      runeAlpha,
+      S.jadeRgb,
+      S.jadeBright,
+      isHealing,
+    );
 
     // Gold bands
     ctx.strokeStyle = S.goldDim;
     ctx.lineWidth = 1 * s2;
     for (const frac of [0.3, 0.6]) {
-      const bandAtY = shaftBaseY - pilH * frac;
+      const bandAtY = shaftBaseY - pH * frac;
       ctx.beginPath();
       ctx.moveTo(p.sx - pilW, bandAtY - pilW * tanA);
       ctx.lineTo(p.sx, bandAtY);
@@ -512,7 +654,7 @@ function drawEldritchShrineBuilding(
     }
 
     // Pillar top cap
-    const topCapY = shaftBaseY - pilH;
+    const topCapY = shaftBaseY - pH;
     drawIsoPillar(
       ctx,
       p.sx - (capW - pilW) * 0.5,
@@ -566,7 +708,9 @@ function drawEldritchShrineBuilding(
     ctx.shadowBlur = 0;
   };
 
-  // Draw back pillars first (depth ordering)
+  // Draw back-center pillar first (furthest back)
+  drawPillarWithCrystal(4);
+  // Draw back pillars (depth ordering)
   drawPillarWithCrystal(0);
   drawPillarWithCrystal(1);
 
@@ -715,6 +859,8 @@ function drawEldritchShrineBuilding(
   // Draw front pillars on top (depth ordering)
   drawPillarWithCrystal(2);
   drawPillarWithCrystal(3);
+  // Front-center tiny pillar (closest to viewer)
+  drawPillarWithCrystal(5);
 
   // ── SACRED FLAME ──
   const flameBaseY = rimTopY - rimW * tanA - 2 * s2;

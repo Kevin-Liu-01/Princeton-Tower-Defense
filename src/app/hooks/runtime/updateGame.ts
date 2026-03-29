@@ -1118,6 +1118,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           ownerId: bOwnerId,
           ownerType: "barracks",
           type: "knight",
+          knightVariant: Math.floor(Math.random() * 3),
           pos: { ...bWorldPos },
           hp: TROOP_DATA.knight.hp,
           maxHp: TROOP_DATA.knight.hp,
@@ -4519,11 +4520,15 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     const heroData = HERO_DATA[hero.type];
     const isNassauBlueInferno = hero.type === "nassau" && hero.abilityActive;
     const isIvyColossus = hero.type === "ivy" && hero.abilityActive;
-    const heroAttackSpeed = isNassauBlueInferno
-      ? HERO_COMBAT_STATS.nassauBlueFireballSpeed
-      : isIvyColossus
-        ? HERO_COMBAT_STATS.ivyColossusAttackSpeed
-        : heroData.attackSpeed;
+    const isNassauMelee = hero.type === "nassau" && !isNassauBlueInferno &&
+      getEnemiesInRange(hero.pos, HERO_COMBAT_STATS.nassauMeleeRange).length > 0;
+    const heroAttackSpeed = isNassauMelee
+      ? HERO_COMBAT_STATS.nassauMeleeAttackSpeed
+      : isNassauBlueInferno
+        ? HERO_COMBAT_STATS.nassauBlueFireballSpeed
+        : isIvyColossus
+          ? HERO_COMBAT_STATS.ivyColossusAttackSpeed
+          : heroData.attackSpeed;
     const heroRange = isIvyColossus ? HERO_COMBAT_STATS.ivyColossusAoeRadius : heroData.range;
     // Scale hero attack speed with game speed
     const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroAttackSpeed / gameSpeed : heroAttackSpeed;
@@ -4543,7 +4548,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         // Determine attack type based on hero
         const isAoEHero = hero.type === "mathey" || hero.type === "scott" || hero.type === "ivy";
         const isMultiTargetHero = hero.type === "tenor";
-        const isProjectileAoEHero = hero.type === "nassau";
+        const isProjectileAoEHero = hero.type === "nassau" && !isNassauMelee;
         const aoeDamageRadius = hero.type === "mathey" ? HERO_COMBAT_STATS.matheyAoeRadius : hero.type === "scott" ? HERO_COMBAT_STATS.scottAoeRadius : hero.type === "ivy" ? HERO_COMBAT_STATS.ivyAoeRadius : 0;
         const maxTargets = hero.type === "tenor" ? 3 : 1;
 
@@ -4553,6 +4558,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           : [target];
 
         // Nassau fireball: damage is delayed to projectile impact (skip instant damage)
+        // Nassau melee: instant talon damage when enemies are close
+        const effectiveHeroDamage = isNassauMelee ? HERO_COMBAT_STATS.nassauMeleeDamage : heroData.damage;
         if (!isProjectileAoEHero) {
         // Apply damage to all targets
         setEnemies((prev) => {
@@ -4566,7 +4573,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             updatedEnemies = updatedEnemies.map((e) => {
               if (!e) return e;
               if (e.id === attackTarget.id) {
-                const actualDmg = getEnemyDamageTaken(e, heroData.damage);
+                const actualDmg = getEnemyDamageTaken(e, effectiveHeroDamage);
                 emitDamageNumber(attackTargetPos, actualDmg, "hero");
                 const newHp = e.hp - actualDmg;
                 if (newHp <= 0) {
@@ -4615,7 +4622,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             case "scott": return "scott_quill";
             case "tenor": return "sonic_blast";
             case "rocky": return "rock_impact";
-            case "nassau": return "phoenix_inferno";
+            case "nassau": return isNassauMelee ? "phoenix_talon" : "phoenix_inferno";
             case "ivy": return "vine_lash";
             default: return "impact_hit";
           }
@@ -4759,8 +4766,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           }
         }
 
-        // Create projectile for other ranged heroes
-        if (!isProjectileAoEHero && hero.type !== "ivy" && (heroData.isRanged || heroData.range > 80)) {
+        // Create projectile for other ranged heroes (skip nassau melee — talon strikes have no projectile)
+        if (!isProjectileAoEHero && hero.type !== "ivy" && !isNassauMelee && (heroData.isRanged || heroData.range > 80)) {
           const projType = (() => {
             switch (hero.type) {
               case "tenor": return "sonicWave";

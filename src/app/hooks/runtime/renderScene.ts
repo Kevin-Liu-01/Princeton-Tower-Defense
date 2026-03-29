@@ -1969,6 +1969,7 @@ export function renderScene(params: RenderSceneParams): void {
     ]);
     const ANIMATED_BG_TYPES: ReadonlySet<string> = new Set([
       "deep_water",
+      "pond",
       "lava_pool",
       "lava_fall",
       "poison_pool",

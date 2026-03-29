@@ -586,6 +586,7 @@ export interface Troop {
   hexGhostDecayPerSecond?: number;
   hexGhostExpireTime?: number;
   visualTier?: number;
+  knightVariant?: number; // 0 | 1 | 2 — randomized armor/helmet/weapon style
   type?: TroopType;
   pos: Position;
   targetPos?: Position;
@@ -797,6 +798,7 @@ export type EffectType =
   | "sonic_blast" // Tenor multi-target blast
   | "phoenix_dive" // Nassau phoenix dive attack
   | "phoenix_inferno" // Nassau phoenix fire trail
+  | "phoenix_talon" // Nassau phoenix melee talon strike
   | "vine_storm" // Ivy warden vine entangle AoE
   | "vine_lash" // Ivy warden vine whip attack
   // Tower debuff effects

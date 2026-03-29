@@ -28,10 +28,10 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   knight: {
     name: "Knight",
-    hp: 1000,
-    damage: 30,
-    attackSpeed: 1000,
-    desc: "Elite warrior",
+    hp: 1800,
+    damage: 52,
+    attackSpeed: 850,
+    desc: "Elite armored warrior with randomized gear",
     color: "#c0c0c0",
   },
   reinforcement: {

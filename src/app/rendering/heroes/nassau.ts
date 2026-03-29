@@ -11,10 +11,10 @@ let _simpleGrad = false;
 const BLUE_INFERNO_DURATION_MS = 6000;
 const MORPH_DURATION_MS = 1400;
 
-function easeInOutCubic(t: number): number {
+function easeInOutQuart(t: number): number {
   return t < 0.5
-    ? 4 * t * t * t
-    : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    ? 8 * t * t * t * t
+    : 1 - Math.pow(-2 * t + 2, 4) / 2;
 }
 
 function getMorphProgress(abilityEnd: number): number {
@@ -27,40 +27,69 @@ function getMorphProgress(abilityEnd: number): number {
   if (remaining < 0) return 0;
 
   if (elapsed < MORPH_DURATION_MS) {
-    return easeInOutCubic(elapsed / MORPH_DURATION_MS);
+    return easeInOutQuart(elapsed / MORPH_DURATION_MS);
   }
   if (remaining < MORPH_DURATION_MS) {
-    return easeInOutCubic(remaining / MORPH_DURATION_MS);
+    return easeInOutQuart(remaining / MORPH_DURATION_MS);
   }
   return 1.0;
+}
+
+function getMorphDirection(abilityEnd: number): "morphIn" | "morphOut" {
+  const now = Date.now();
+  const remaining = abilityEnd - now;
+  if (remaining < MORPH_DURATION_MS) return "morphOut";
+  return "morphIn";
 }
 
 function drawFireMorphTransition(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, s: number,
   time: number, zoom: number, morphT: number,
-  toBlue: boolean,
+  direction: "morphIn" | "morphOut",
 ) {
-  const coverage = morphT;
+  const toBlue = direction === "morphIn";
+  const intensity = morphT < 0.5
+    ? morphT * 2
+    : (1 - morphT) * 2;
 
-  // Fire tendrils converging from edges
-  const tendrilCount = Math.floor(8 + coverage * 16);
-  for (let i = 0; i < tendrilCount; i++) {
-    const angle = (i / tendrilCount) * Math.PI * 2 + time * 0.8;
-    const outerR = s * 0.7;
-    const innerR = s * (0.7 - coverage * 0.6);
+  // Fire vortex ring — smooth expanding/contracting
+  const vortexR = s * (0.25 + intensity * 0.35 + Math.sin(time * 3) * 0.02);
+  const ringRGB = toBlue ? "96,165,250" : "255,160,40";
+  ctx.strokeStyle = `rgba(${ringRGB},${intensity * 0.35})`;
+  ctx.lineWidth = (1 + intensity * 1.5) * zoom;
+  ctx.beginPath();
+  ctx.arc(x, y, vortexR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  if (intensity > 0.1) {
+    const innerRingR = vortexR * 0.6;
+    const innerRGB = toBlue ? "147,197,253" : "255,200,80";
+    ctx.strokeStyle = `rgba(${innerRGB},${intensity * 0.2})`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.arc(x, y, innerRingR, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Gentle converging fire wisps
+  const wispCount = Math.floor(6 + intensity * 8);
+  for (let i = 0; i < wispCount; i++) {
+    const angle = (i / wispCount) * Math.PI * 2 + time * 0.6;
+    const outerR = s * (0.55 + (1 - intensity) * 0.15);
+    const innerR = s * (0.55 - intensity * 0.45);
     const ox = x + Math.cos(angle) * outerR;
-    const oy = y + Math.sin(angle) * outerR * 0.5;
-    const ix = x + Math.cos(angle + coverage * 0.6) * innerR;
-    const iy = y + Math.sin(angle + coverage * 0.6) * innerR * 0.5;
-    const sway = Math.sin(time * 5 + i * 1.5) * s * 0.03 * coverage;
+    const oy = y + Math.sin(angle) * outerR * 0.55;
+    const ix = x + Math.cos(angle + intensity * 0.3) * innerR;
+    const iy = y + Math.sin(angle + intensity * 0.3) * innerR * 0.55;
+    const sway = Math.sin(time * 2.5 + i * 1.2) * s * 0.02 * intensity;
 
     const fromRGB = toBlue ? "255,140,30" : "59,130,246";
     const toRGB = toBlue ? "59,130,246" : "255,140,30";
-    const mixedR = `rgba(${lerpColorStr(fromRGB, toRGB, coverage)},${0.2 + coverage * 0.5})`;
+    const mixed = lerpColorStr(fromRGB, toRGB, morphT);
 
-    ctx.strokeStyle = mixedR;
-    ctx.lineWidth = (2 + coverage * 3) * zoom;
+    ctx.strokeStyle = `rgba(${mixed},${intensity * 0.4})`;
+    ctx.lineWidth = (1.5 + intensity * 2) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
     ctx.moveTo(ox, oy);
@@ -69,64 +98,50 @@ function drawFireMorphTransition(
       ix, iy,
     );
     ctx.stroke();
-
-    if (i % 2 === 0) {
-      ctx.fillStyle = `rgba(${toBlue ? "147,197,253" : "255,200,80"},${0.3 + coverage * 0.4})`;
-      ctx.beginPath();
-      ctx.arc(ix, iy, s * 0.012 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
   }
 
-  // Converging ember particles
-  const emberCount = Math.floor(coverage * 20);
+  // Soft ember particles spiraling in/out
+  const emberCount = Math.floor(intensity * 14);
   for (let i = 0; i < emberCount; i++) {
-    const phase = (time * 2.0 + i * 0.2) % 1;
-    const angle = (i / Math.max(emberCount, 1)) * Math.PI * 2 + time * 1.2;
-    const dist = s * (0.55 * (1 - coverage * 0.85) + (1 - phase) * 0.2);
+    const phase = (time * 1.2 + i * 0.15) % 1;
+    const angle = (i / Math.max(emberCount, 1)) * Math.PI * 2 + time * 0.8;
+    const dist = s * (0.45 * (1 - intensity * 0.7) + (1 - phase) * 0.15);
     const ex = x + Math.cos(angle) * dist;
-    const ey = y + Math.sin(angle) * dist * 0.5;
-    const eAlpha = coverage * Math.sin(phase * Math.PI) * 0.6;
+    const ey = y + Math.sin(angle) * dist * 0.55;
+    const eAlpha = intensity * Math.sin(phase * Math.PI) * 0.45;
 
-    const emberColor = toBlue ? "191,219,254" : "255,220,100";
-    ctx.fillStyle = `rgba(${emberColor},${eAlpha})`;
+    const emberRGB = toBlue ? "191,219,254" : "255,220,100";
+    ctx.fillStyle = `rgba(${emberRGB},${eAlpha})`;
     ctx.save();
     ctx.translate(ex, ey);
-    ctx.rotate(time * 4 + i * 1.5);
+    ctx.rotate(time * 1.5 + i * 1.2);
     ctx.beginPath();
-    ctx.ellipse(0, 0, s * 0.012 * zoom, s * 0.005 * zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, s * 0.01 * zoom, s * 0.004 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
-  // Bright flash at peak coverage
-  if (coverage > 0.8) {
-    const flashIntensity = (coverage - 0.8) / 0.2;
-    const flashAlpha = flashIntensity * 0.55;
-    const flashGrad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.55);
+  // Smooth radiant flash at crossover point
+  if (morphT > 0.35 && morphT < 0.65) {
+    const flashT = 1 - Math.abs(morphT - 0.5) / 0.15;
+    const flashAlpha = flashT * 0.4;
+    const flashGrad = ctx.createRadialGradient(x, y, 0, x, y, s * 0.5);
     if (toBlue) {
       flashGrad.addColorStop(0, `rgba(224,240,255,${flashAlpha})`);
-      flashGrad.addColorStop(0.4, `rgba(96,165,250,${flashAlpha * 0.5})`);
-      flashGrad.addColorStop(1, "rgba(59,130,246,0)");
+      flashGrad.addColorStop(0.3, `rgba(147,197,253,${flashAlpha * 0.5})`);
+      flashGrad.addColorStop(0.6, `rgba(59,130,246,${flashAlpha * 0.2})`);
+      flashGrad.addColorStop(1, "rgba(29,78,216,0)");
     } else {
       flashGrad.addColorStop(0, `rgba(255,255,220,${flashAlpha})`);
-      flashGrad.addColorStop(0.4, `rgba(255,180,60,${flashAlpha * 0.5})`);
-      flashGrad.addColorStop(1, "rgba(230,100,20,0)");
+      flashGrad.addColorStop(0.3, `rgba(255,200,80,${flashAlpha * 0.5})`);
+      flashGrad.addColorStop(0.6, `rgba(255,120,20,${flashAlpha * 0.2})`);
+      flashGrad.addColorStop(1, "rgba(200,50,10,0)");
     }
     ctx.fillStyle = flashGrad;
     ctx.beginPath();
-    ctx.arc(x, y, s * 0.55, 0, Math.PI * 2);
+    ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
     ctx.fill();
   }
-
-  // Color wash ring expanding/contracting
-  const ringR = s * (0.3 + coverage * 0.35 + Math.sin(time * 6) * 0.03);
-  const ringColor = toBlue ? "59,130,246" : "255,160,40";
-  ctx.strokeStyle = `rgba(${ringColor},${coverage * 0.4})`;
-  ctx.lineWidth = (1.5 + coverage * 2) * zoom;
-  ctx.beginPath();
-  ctx.arc(x, y, ringR, 0, Math.PI * 2);
-  ctx.stroke();
 }
 
 function lerpColorStr(fromRGB: string, toRGB: string, t: number): string {
@@ -154,14 +169,30 @@ export function drawNassauHero(
   const s = size;
   const blue = abilityActive ?? false;
 
-  // Compute morph even after abilityActive drops to catch the exit ramp
   const morphT = abilityEnd != null ? getMorphProgress(abilityEnd) : -1;
 
-  // Transitioning between forms — draw the dominant form only + fire VFX overlay
   if (morphT > 0 && morphT < 1) {
-    const showBlue = morphT >= 0.5;
-    drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, showBlue);
-    drawFireMorphTransition(ctx, x, y, s, time, zoom, morphT, !showBlue);
+    const direction = abilityEnd != null ? getMorphDirection(abilityEnd) : "morphIn" as const;
+    const toBlue = direction === "morphIn";
+
+    const fadeOutAlpha = 1 - morphT;
+    const fadeInAlpha = morphT;
+
+    if (fadeOutAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * fadeOutAlpha;
+      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, !toBlue);
+      ctx.restore();
+    }
+
+    if (fadeInAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * fadeInAlpha;
+      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, toBlue);
+      ctx.restore();
+    }
+
+    drawFireMorphTransition(ctx, x, y, s, time, zoom, morphT, direction);
     return;
   }
 
@@ -187,19 +218,20 @@ function drawNassauForm(
   const attackIntensity = blue ? Math.max(attackPhase, 0.4) : attackPhase;
   const atkPow = isAttacking ? attackIntensity : 0;
   const atkBurst = Math.sin(atkPow * Math.PI);
+  const smoothAtk = atkBurst * atkBurst;
   const blueBoost = blue ? 0.4 : 0;
   const flamePulse =
-    Math.sin(time * 4) * 0.5 + 0.5 + atkBurst * 0.3 + blueBoost;
+    Math.sin(time * 3.5) * 0.5 + 0.5 + smoothAtk * 0.25 + blueBoost;
   const wingFlap =
-    Math.sin(time * 11) * (0.7 + atkBurst * 0.35 + blueBoost * 0.3);
-  const breathe = Math.sin(time * 3) * (3 + atkBurst * 4 + blueBoost * 3);
-  const hover = Math.sin(time * 4) * s * (0.06 + atkBurst * 0.03);
-  const headBob = Math.sin(time * 4 + 0.8) * s * 0.025;
+    Math.sin(time * 5.5) * (0.7 + smoothAtk * 0.25 + blueBoost * 0.2);
+  const breathe = Math.sin(time * 2.5) * (3 + smoothAtk * 3 + blueBoost * 2.5);
+  const hover = Math.sin(time * 3) * s * (0.06 + smoothAtk * 0.02);
+  const headBob = Math.sin(time * 3 + 0.8) * s * 0.02;
   const bodyGlow =
-    0.6 + Math.sin(time * 3) * 0.2 + atkBurst * 0.3 + blueBoost * 0.3;
-  const gemPulse = Math.sin(time * 5) * 0.5 + 0.5;
+    0.6 + Math.sin(time * 2.5) * 0.2 + smoothAtk * 0.25 + blueBoost * 0.25;
+  const gemPulse = Math.sin(time * 4) * 0.5 + 0.5;
   const bodyRock = isAttacking
-    ? Math.sin(attackIntensity * Math.PI) * s * 0.012
+    ? Math.sin(attackIntensity * Math.PI) * s * 0.006
     : 0;
 
   const cy = y + hover;
@@ -211,23 +243,27 @@ function drawNassauForm(
   }
 
   if (!_simpleGrad) {
-    drawHeatDistortion(ctx, bx, cy, s, time, zoom, atkBurst, blue);
+    drawHeatDistortion(ctx, bx, cy, s, time, zoom, smoothAtk, blue);
   }
-  drawFireTrail(ctx, bx, cy, s, time, flamePulse, zoom, atkBurst, blue);
+  drawFireTrail(ctx, bx, cy, s, time, flamePulse, zoom, smoothAtk, blue);
+  drawTailPlumage(ctx, bx, cy, s, time, zoom, flamePulse, isAttacking, smoothAtk, blue);
+  // Both wings render below the body
   drawWings(ctx, bx, cy, s, time, zoom, wingFlap, isAttacking, attackIntensity, "back", blue);
-  drawTailPlumage(ctx, bx, cy, s, time, zoom, flamePulse, isAttacking, atkBurst, blue);
+  drawWings(ctx, bx, cy, s, time, zoom, wingFlap, isAttacking, attackIntensity, "front", blue);
+  if (!_simpleGrad) {
+    drawWingFireCascade(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, blue);
+  }
+  // Body and armor render on top of both wings
   drawCapeStraps(ctx, bx, cy, s, time, zoom, flamePulse, blue);
-  drawBody(ctx, bx, cy, s, breathe, time, flamePulse, zoom, bodyGlow, isAttacking, atkBurst, blue);
+  drawBody(ctx, bx, cy, s, breathe, time, flamePulse, zoom, bodyGlow, isAttacking, smoothAtk, blue);
   drawArmorPlates(ctx, bx, cy, s, time, zoom, flamePulse, gemPulse, blue);
   drawHarness(ctx, bx, cy, s, time, zoom, gemPulse, blue);
   drawBeltArmor(ctx, bx, cy, s, time, zoom, flamePulse, gemPulse, blue);
+  drawShoulderPauldrons(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, gemPulse, blue);
   drawNeck(ctx, bx, headY, s, time, zoom, flamePulse, targetPos, blue);
   drawHelmet(ctx, bx, headY, s, time, zoom, flamePulse, gemPulse, isAttacking, attackIntensity, targetPos, blue);
-  drawWings(ctx, bx, cy, s, time, zoom, wingFlap, isAttacking, attackIntensity, "front", blue);
-  drawShoulderPauldrons(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, gemPulse, blue);
   drawTalons(ctx, bx, cy, s, time, zoom, isAttacking, attackIntensity);
   if (!_simpleGrad) {
-    drawWingFireCascade(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, blue);
     drawFireAura(ctx, bx, cy, s, time, flamePulse, isAttacking, zoom, blue);
   }
   if (isAttacking) {
@@ -377,9 +413,10 @@ function drawWings(
   blue: boolean = false,
 ) {
   const atkBurst = isAttacking ? Math.sin(attackIntensity * Math.PI) : 0;
+  const smoothWingAtk = atkBurst * atkBurst;
   const flapAngle =
-    wingFlap + (isAttacking ? Math.sin(attackIntensity * Math.PI) * 0.35 : 0);
-  const wingSpread = s * (1.3 + flapAngle * 0.45 + atkBurst * 0.2);
+    wingFlap + (isAttacking ? smoothWingAtk * 0.25 : 0);
+  const wingSpread = s * (1.3 + flapAngle * 0.45 + smoothWingAtk * 0.15);
   const side = layer === "back" ? 1 : -1;
 
   ctx.save();
@@ -390,17 +427,13 @@ function drawWings(
 
   const innerRatio = 0.38;
   const elbowX = shoulderX + side * wingSpread * innerRatio;
-  // Inner segment (shoulder→elbow): MILD vertical response keeps elbow relatively stable
-  const elbowY = shoulderY - s * 0.12 + flapAngle * s * 0.06 + atkBurst * s * 0.03;
+  const elbowY = shoulderY - s * 0.12 + flapAngle * s * 0.06 + smoothWingAtk * s * 0.02;
 
   const wingTipX = elbowX + side * wingSpread * (1 - innerRatio);
-  // Outer segment (elbow→tip): EXTREME vertical response creates visible V-bend at elbow
-  // On downstroke (positive flapAngle): tip drops far below elbow → dramatic fold
-  // On upstroke (negative flapAngle): tip whips far above elbow → stretched look
-  const wingTipY = elbowY - s * 0.22 + flapAngle * s * 0.55 + atkBurst * s * 0.10;
+  const wingTipY = elbowY - s * 0.22 + flapAngle * s * 0.55 + smoothWingAtk * s * 0.06;
 
   const ripple = isAttacking
-    ? Math.sin(attackIntensity * Math.PI + time * 3) * s * 0.008
+    ? Math.sin(attackIntensity * Math.PI + time * 2) * s * 0.005
     : 0;
 
   // ─── Wing glow underlay ───
@@ -621,54 +654,54 @@ function drawWings(
   ctx.stroke();
 
   // ─── Covert feathers (inner wing: shoulder → elbow) ───
-  const covCount = 8;
+  const covCount = 9;
   for (let f = 0; f < covCount; f++) {
     const fT = (f + 0.5) / covCount;
-    const aT = fT * 0.9;
+    const aT = fT * 0.92;
     const aX = shoulderX + (elbowX - shoulderX) * aT;
     const aY =
       shoulderY + (elbowY - shoulderY) * aT - s * 0.02 + ripple * aT;
 
-    const fLen = s * (0.12 + fT * 0.10);
-    const fAng = Math.PI * 0.5 + side * (0.2 + fT * 0.2) + flapAngle * 0.12;
-    const fSw = Math.sin(time * 4 + f * 0.9) * s * 0.01 + flapAngle * s * 0.02 * fT;
+    const fLen = s * (0.13 + fT * 0.11);
+    const fAng = Math.PI * 0.5 + side * (0.2 + fT * 0.22) + flapAngle * 0.1;
+    const fSw = flapAngle * s * 0.006 * fT;
     const tX = aX + Math.cos(fAng) * fLen + fSw;
-    const tY = aY + Math.sin(fAng) * fLen + flapAngle * s * 0.015 * fT;
+    const tY = aY + Math.sin(fAng) * fLen;
 
-    const wW = s * (0.035 + (1 - fT) * 0.018);
-    const nW = wW * 0.45;
+    const wW = s * (0.04 + (1 - fT) * 0.022);
+    const nW = wW * 0.35;
     const pNx = -Math.sin(fAng);
     const pNy = Math.cos(fAng);
 
     const cG = ctx.createLinearGradient(aX, aY, tX, tY);
     if (blue) {
-      cG.addColorStop(0, `rgba(30, 64, 175, ${0.8 - fT * 0.1})`);
-      cG.addColorStop(0.5, `rgba(59, 130, 246, ${0.75 - fT * 0.08})`);
-      cG.addColorStop(
-        1,
-        `rgba(147, 197, 253, ${0.55 + atkBurst * 0.12})`,
-      );
+      cG.addColorStop(0, `rgba(30, 64, 175, ${0.82 - fT * 0.1})`);
+      cG.addColorStop(0.4, `rgba(59, 130, 246, ${0.76 - fT * 0.08})`);
+      cG.addColorStop(0.75, `rgba(96, 165, 250, ${0.65 - fT * 0.06})`);
+      cG.addColorStop(1, `rgba(147, 197, 253, ${0.5 + smoothWingAtk * 0.1})`);
     } else {
-      cG.addColorStop(0, `rgba(160, 65, 10, ${0.8 - fT * 0.1})`);
-      cG.addColorStop(0.5, `rgba(210, 110, 25, ${0.75 - fT * 0.08})`);
-      cG.addColorStop(
-        1,
-        `rgba(255, 200, 80, ${0.55 + atkBurst * 0.12})`,
-      );
+      cG.addColorStop(0, `rgba(155, 58, 8, ${0.82 - fT * 0.1})`);
+      cG.addColorStop(0.4, `rgba(205, 100, 20, ${0.76 - fT * 0.08})`);
+      cG.addColorStop(0.75, `rgba(245, 175, 55, ${0.65 - fT * 0.06})`);
+      cG.addColorStop(1, `rgba(255, 215, 95, ${0.5 + smoothWingAtk * 0.1})`);
     }
 
     ctx.fillStyle = cG;
     ctx.beginPath();
     ctx.moveTo(aX, aY);
-    ctx.quadraticCurveTo(
-      aX + (tX - aX) * 0.45 + pNx * wW * side,
-      aY + (tY - aY) * 0.45 + pNy * wW,
+    ctx.bezierCurveTo(
+      aX + (tX - aX) * 0.3 + pNx * wW * 1.05 * side,
+      aY + (tY - aY) * 0.3 + pNy * wW * 1.05,
+      aX + (tX - aX) * 0.65 + pNx * wW * 0.7 * side,
+      aY + (tY - aY) * 0.65 + pNy * wW * 0.7,
       tX,
       tY,
     );
-    ctx.quadraticCurveTo(
-      aX + (tX - aX) * 0.45 - pNx * nW * 0.4 * side,
-      aY + (tY - aY) * 0.45 - pNy * nW * 0.4,
+    ctx.bezierCurveTo(
+      aX + (tX - aX) * 0.65 - pNx * nW * 0.35 * side,
+      aY + (tY - aY) * 0.65 - pNy * nW * 0.35,
+      aX + (tX - aX) * 0.3 - pNx * nW * 0.25 * side,
+      aY + (tY - aY) * 0.3 - pNy * nW * 0.25,
       aX,
       aY,
     );
@@ -676,20 +709,24 @@ function drawWings(
     ctx.fill();
 
     ctx.strokeStyle = blue
-      ? `rgba(30, 58, 160, ${0.35 - fT * 0.06})`
-      : `rgba(120, 50, 8, ${0.35 - fT * 0.06})`;
-    ctx.lineWidth = (1.2 - fT * 0.3) * zoom;
+      ? `rgba(30, 58, 160, ${0.3 - fT * 0.05})`
+      : `rgba(120, 50, 8, ${0.3 - fT * 0.05})`;
+    ctx.lineWidth = (1.1 - fT * 0.25) * zoom;
     ctx.beginPath();
     ctx.moveTo(aX, aY);
-    ctx.lineTo(tX, tY);
+    ctx.quadraticCurveTo(
+      (aX + tX) / 2 + pNx * nW * 0.1 * side,
+      (aY + tY) / 2 + pNy * nW * 0.1,
+      tX, tY,
+    );
     ctx.stroke();
   }
 
   // ─── Primary flight feathers (outer wing: elbow → wingtip) ───
-  const primCount = 16;
+  const primCount = 14;
   for (let f = 0; f < primCount; f++) {
     const featherT = (f + 0.5) / primCount;
-    const boneT = featherT * 0.9;
+    const boneT = featherT * 0.92;
 
     const attachX = elbowX + (wingTipX - elbowX) * boneT;
     const attachY =
@@ -698,157 +735,125 @@ function drawWings(
       s * 0.01 +
       ripple * boneT * 0.5;
 
-    const featherLen = s * (0.18 + featherT * 0.22);
+    const featherLen = s * (0.20 + featherT * 0.24);
     const featherAngle =
-      Math.PI * 0.5 + side * (0.15 + featherT * 0.4) + flapAngle * 0.15 * featherT;
-    const featherSway = Math.sin(time * 4 + f * 0.7) * s * 0.012 + flapAngle * s * 0.03 * featherT;
+      Math.PI * 0.5 + side * (0.15 + featherT * 0.4) + flapAngle * 0.1 * featherT;
+    const featherSway = flapAngle * s * 0.01 * featherT;
     const tipX =
       attachX + Math.cos(featherAngle) * featherLen + featherSway;
-    const tipY = attachY + Math.sin(featherAngle) * featherLen + flapAngle * s * 0.02 * featherT;
+    const tipY = attachY + Math.sin(featherAngle) * featherLen;
 
-    const wideW = s * (0.04 + (1 - featherT) * 0.024);
-    const narrowW = wideW * 0.45;
+    const wideW = s * (0.048 + (1 - featherT) * 0.028);
+    const narrowW = wideW * 0.35;
     const perpNx = -Math.sin(featherAngle);
     const perpNy = Math.cos(featherAngle);
 
-    const q1 = 0.3;
-    const q2 = 0.65;
-    const p1x = attachX + (tipX - attachX) * q1 + featherSway * 0.2;
+    const q1 = 0.25;
+    const q2 = 0.6;
+    const p1x = attachX + (tipX - attachX) * q1 + featherSway * 0.15;
     const p1y = attachY + (tipY - attachY) * q1;
-    const p2x = attachX + (tipX - attachX) * q2 + featherSway * 0.4;
+    const p2x = attachX + (tipX - attachX) * q2 + featherSway * 0.3;
     const p2y = attachY + (tipY - attachY) * q2;
 
     const fGrad = ctx.createLinearGradient(
       attachX, attachY, tipX, tipY,
     );
     if (blue) {
-      fGrad.addColorStop(
-        0,
-        `rgba(30, 64, 175, ${0.85 - featherT * 0.1})`,
-      );
-      fGrad.addColorStop(
-        0.3,
-        `rgba(59, 130, 246, ${0.8 - featherT * 0.08})`,
-      );
-      fGrad.addColorStop(
-        0.65,
-        `rgba(147, 197, 253, ${0.7 - featherT * 0.06})`,
-      );
-      fGrad.addColorStop(
-        1,
-        `rgba(224, 240, 255, ${0.55 + atkBurst * 0.15})`,
-      );
+      fGrad.addColorStop(0, `rgba(30, 64, 175, ${0.88 - featherT * 0.1})`);
+      fGrad.addColorStop(0.25, `rgba(59, 130, 246, ${0.82 - featherT * 0.08})`);
+      fGrad.addColorStop(0.55, `rgba(96, 165, 250, ${0.72 - featherT * 0.06})`);
+      fGrad.addColorStop(0.8, `rgba(147, 197, 253, ${0.6 + smoothWingAtk * 0.1})`);
+      fGrad.addColorStop(1, `rgba(224, 240, 255, ${0.5 + smoothWingAtk * 0.15})`);
     } else {
-      fGrad.addColorStop(
-        0,
-        `rgba(160, 65, 10, ${0.85 - featherT * 0.1})`,
-      );
-      fGrad.addColorStop(
-        0.3,
-        `rgba(210, 110, 25, ${0.8 - featherT * 0.08})`,
-      );
-      fGrad.addColorStop(
-        0.65,
-        `rgba(255, 190, 70, ${0.7 - featherT * 0.06})`,
-      );
-      fGrad.addColorStop(
-        1,
-        `rgba(255, 240, 150, ${0.55 + atkBurst * 0.15})`,
-      );
+      fGrad.addColorStop(0, `rgba(155, 55, 8, ${0.88 - featherT * 0.1})`);
+      fGrad.addColorStop(0.25, `rgba(200, 95, 18, ${0.82 - featherT * 0.08})`);
+      fGrad.addColorStop(0.55, `rgba(245, 170, 50, ${0.72 - featherT * 0.06})`);
+      fGrad.addColorStop(0.8, `rgba(255, 210, 90, ${0.6 + smoothWingAtk * 0.1})`);
+      fGrad.addColorStop(1, `rgba(255, 245, 160, ${0.5 + smoothWingAtk * 0.15})`);
     }
 
+    // Wider, more defined vane shape
     ctx.fillStyle = fGrad;
     ctx.beginPath();
     ctx.moveTo(attachX, attachY);
-    ctx.quadraticCurveTo(
-      p1x + perpNx * wideW * side,
-      p1y + perpNy * wideW,
-      p2x + perpNx * wideW * 0.7 * side,
-      p2y + perpNy * wideW * 0.7,
+    ctx.bezierCurveTo(
+      p1x + perpNx * wideW * 1.1 * side,
+      p1y + perpNy * wideW * 1.1,
+      p2x + perpNx * wideW * 0.8 * side,
+      p2y + perpNy * wideW * 0.8,
+      tipX + perpNx * narrowW * 0.1 * side,
+      tipY + perpNy * narrowW * 0.1,
     );
-    ctx.quadraticCurveTo(
-      tipX + perpNx * narrowW * 0.2 * side,
-      tipY + perpNy * narrowW * 0.2,
-      tipX,
-      tipY,
-    );
-    ctx.quadraticCurveTo(
-      p2x - perpNx * narrowW * 0.5 * side,
-      p2y - perpNy * narrowW * 0.5,
+    ctx.lineTo(tipX, tipY);
+    ctx.bezierCurveTo(
+      p2x - perpNx * narrowW * 0.45 * side,
+      p2y - perpNy * narrowW * 0.45,
       p1x - perpNx * narrowW * 0.3 * side,
       p1y - perpNy * narrowW * 0.3,
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    const hlAlpha = 0.2 + atkBurst * 0.05 - featherT * 0.06;
-    ctx.fillStyle = blue
-      ? `rgba(191, 219, 254, ${hlAlpha})`
-      : `rgba(255, 230, 140, ${hlAlpha})`;
-    ctx.beginPath();
-    ctx.moveTo(
-      attachX + perpNx * narrowW * 0.2 * side,
-      attachY + perpNy * narrowW * 0.2,
-    );
-    ctx.quadraticCurveTo(
-      p1x + perpNx * wideW * 0.6 * side,
-      p1y + perpNy * wideW * 0.6,
-      p2x + perpNx * wideW * 0.3 * side,
-      p2y + perpNy * wideW * 0.3,
-    );
-    ctx.lineTo(
-      p2x + perpNx * wideW * 0.08 * side,
-      p2y + perpNy * wideW * 0.08,
-    );
-    ctx.quadraticCurveTo(
-      p1x + perpNx * wideW * 0.15 * side,
-      p1y + perpNy * wideW * 0.15,
       attachX,
       attachY,
     );
     ctx.closePath();
     ctx.fill();
 
+    // Leading edge highlight
+    const hlAlpha = 0.18 + smoothWingAtk * 0.04 - featherT * 0.05;
+    if (hlAlpha > 0.02) {
+      ctx.fillStyle = blue
+        ? `rgba(191, 219, 254, ${hlAlpha})`
+        : `rgba(255, 235, 150, ${hlAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(attachX, attachY);
+      ctx.bezierCurveTo(
+        p1x + perpNx * wideW * 0.8 * side,
+        p1y + perpNy * wideW * 0.8,
+        p2x + perpNx * wideW * 0.5 * side,
+        p2y + perpNy * wideW * 0.5,
+        tipX + perpNx * narrowW * 0.05 * side,
+        tipY + perpNy * narrowW * 0.05,
+      );
+      ctx.lineTo(
+        p2x + perpNx * wideW * 0.15 * side,
+        p2y + perpNy * wideW * 0.15,
+      );
+      ctx.quadraticCurveTo(
+        p1x + perpNx * wideW * 0.2 * side,
+        p1y + perpNy * wideW * 0.2,
+        attachX,
+        attachY,
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Rachis (central shaft)
     ctx.strokeStyle = blue
-      ? `rgba(30, 58, 160, ${0.4 - featherT * 0.08})`
-      : `rgba(120, 50, 8, ${0.4 - featherT * 0.08})`;
-    ctx.lineWidth = (1.4 - featherT * 0.35) * zoom;
+      ? `rgba(30, 58, 160, ${0.35 - featherT * 0.07})`
+      : `rgba(120, 50, 8, ${0.35 - featherT * 0.07})`;
+    ctx.lineWidth = (1.3 - featherT * 0.3) * zoom;
     ctx.beginPath();
     ctx.moveTo(attachX, attachY);
     ctx.quadraticCurveTo(
-      (attachX + tipX) / 2 +
-        perpNx * narrowW * 0.15 * side +
-        featherSway * 0.3,
-      (attachY + tipY) / 2 + perpNy * narrowW * 0.15,
+      (attachX + tipX) / 2 + perpNx * narrowW * 0.1 * side,
+      (attachY + tipY) / 2 + perpNy * narrowW * 0.1,
       tipX,
       tipY,
     );
     ctx.stroke();
 
+    // Glowing feather tip
     const tipGlowR =
-      s * (0.03 + (1 - featherT) * 0.02 + atkBurst * 0.015);
+      s * (0.028 + (1 - featherT) * 0.018 + smoothWingAtk * 0.01);
     const tipGlow = ctx.createRadialGradient(
       tipX, tipY, 0, tipX, tipY, tipGlowR,
     );
     if (blue) {
-      tipGlow.addColorStop(
-        0,
-        `rgba(224, 240, 255, ${0.55 + atkBurst * 0.15})`,
-      );
-      tipGlow.addColorStop(
-        0.4,
-        `rgba(96, 165, 250, ${0.25 + atkBurst * 0.1})`,
-      );
+      tipGlow.addColorStop(0, `rgba(224, 240, 255, ${0.5 + smoothWingAtk * 0.12})`);
+      tipGlow.addColorStop(0.4, `rgba(96, 165, 250, ${0.2 + smoothWingAtk * 0.08})`);
       tipGlow.addColorStop(1, "rgba(59, 130, 246, 0)");
     } else {
-      tipGlow.addColorStop(
-        0,
-        `rgba(255, 240, 120, ${0.55 + atkBurst * 0.15})`,
-      );
-      tipGlow.addColorStop(
-        0.4,
-        `rgba(255, 160, 40, ${0.25 + atkBurst * 0.1})`,
-      );
+      tipGlow.addColorStop(0, `rgba(255, 245, 130, ${0.5 + smoothWingAtk * 0.12})`);
+      tipGlow.addColorStop(0.4, `rgba(255, 160, 40, ${0.2 + smoothWingAtk * 0.08})`);
       tipGlow.addColorStop(1, "rgba(220, 70, 10, 0)");
     }
     ctx.fillStyle = tipGlow;
@@ -858,8 +863,7 @@ function drawWings(
   }
 
   // ─── Fire fringe along both wing sections ───
-  const fringeCount = 20 + Math.floor(atkBurst * 10);
-  const fringeSpeed = 8 + atkBurst * 3;
+  const fringeCount = 20 + Math.floor(atkBurst * 8);
   for (let fl = 0; fl < fringeCount; fl++) {
     const flameT = fl / fringeCount;
 
@@ -885,18 +889,17 @@ function drawWings(
       edgeBotY = elbowY + s * (0.10 + localT * 0.14);
     }
 
-    const flapSync = flapAngle * 0.15 * flameT;
     const flameY =
       edgeTopY +
       (edgeBotY - edgeTopY) *
-        (0.1 + Math.sin(time * fringeSpeed + fl * 1.5) * 0.12) +
-      flapSync * s;
+        (0.1 + Math.sin(time * 5.5 + fl * 1.2) * 0.1) +
+      flapAngle * 0.08 * flameT * s;
     const flameSize =
       s *
-      (0.04 + flameT * 0.02 + atkBurst * 0.03) *
-      (1 + Math.sin(time * 8 + fl * 2) * 0.25);
+      (0.04 + flameT * 0.02 + atkBurst * 0.02) *
+      (1 + Math.sin(time * 5.5 + fl * 1.8) * 0.18);
     const flameAlpha =
-      0.75 + atkBurst * 0.2 + Math.sin(time * 7 + fl) * 0.15;
+      0.7 + atkBurst * 0.15 + Math.sin(time * 5.5 + fl * 0.9) * 0.12;
 
     if (_simpleGrad) {
       ctx.fillStyle = blue
@@ -925,7 +928,7 @@ function drawWings(
   // ─── Trailing ember sparks during attack ───
   if (isAttacking) {
     for (let sp = 0; sp < 6; sp++) {
-      const spT = (time * 5 + sp * 0.17) % 1;
+      const spT = (time * 2.5 + sp * 0.17) % 1;
       const onInner = sp < 2;
       const spBaseX = onInner
         ? shoulderX + (elbowX - shoulderX) * (0.3 + sp * 0.3)
@@ -934,9 +937,9 @@ function drawWings(
         ? shoulderY + (elbowY - shoulderY) * (0.3 + sp * 0.3)
         : elbowY + (wingTipY - elbowY) * (0.2 + (sp - 2) * 0.2);
       const spX =
-        spBaseX + Math.sin(time * 8 + sp * 3) * s * 0.04;
-      const spY = spBaseY + s * (0.15 + spT * 0.4);
-      const spAlpha = (1 - spT) * 0.6 * atkBurst;
+        spBaseX + Math.sin(time * 3.5 + sp * 2.5) * s * 0.03;
+      const spY = spBaseY + s * (0.15 + spT * 0.35);
+      const spAlpha = (1 - spT) * 0.5 * smoothWingAtk;
       const spSize = (1 - spT) * s * 0.015;
 
       ctx.fillStyle = blue
@@ -2145,13 +2148,13 @@ function drawShoulderPauldrons(
     const sx = x + side * s * 0.20;
     const sy = y - s * 0.14 + flapLift;
 
-    // Guard angle tilts to follow wing: negative flapAngle → less clockwise (upward), positive → more (downward)
-    const guardTilt = side * (0.35 + flapAngle * 0.25);
+    // Guard angle tilts to follow wing: sweeps upward from the shoulder
+    const guardTilt = -side * (0.35 + flapAngle * 0.25);
 
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(guardTilt);
-    ctx.scale(1, -1);
+    ctx.scale(side, -1);
 
     const gL = s * 0.16;
     const gW = s * 0.065;
@@ -3676,10 +3679,12 @@ function drawAttackFlare(
   zoom: number,
   blue: boolean = false,
 ) {
-  const flarePhase = Math.sin(attackIntensity * Math.PI);
-  const flareRadius = s * (0.55 + (blue ? 0.15 : 0)) * flarePhase;
+  const rawPhase = Math.sin(attackIntensity * Math.PI);
+  const flarePhase = rawPhase * rawPhase;
+  const flareRadius = s * (0.5 + (blue ? 0.12 : 0)) * flarePhase;
 
-  // Bright flash
+  if (flareRadius < 0.5) return;
+
   const flareGrad = ctx.createRadialGradient(
     x,
     y - s * 0.1,
@@ -3689,14 +3694,14 @@ function drawAttackFlare(
     flareRadius,
   );
   if (blue) {
-    flareGrad.addColorStop(0, `rgba(224, 240, 255, ${0.7 * flarePhase})`);
-    flareGrad.addColorStop(0.2, `rgba(147, 197, 253, ${0.5 * flarePhase})`);
-    flareGrad.addColorStop(0.5, `rgba(59, 130, 246, ${0.3 * flarePhase})`);
+    flareGrad.addColorStop(0, `rgba(224, 240, 255, ${0.55 * flarePhase})`);
+    flareGrad.addColorStop(0.25, `rgba(147, 197, 253, ${0.35 * flarePhase})`);
+    flareGrad.addColorStop(0.55, `rgba(59, 130, 246, ${0.18 * flarePhase})`);
     flareGrad.addColorStop(1, "rgba(29, 78, 216, 0)");
   } else {
-    flareGrad.addColorStop(0, `rgba(255, 255, 230, ${0.65 * flarePhase})`);
-    flareGrad.addColorStop(0.2, `rgba(255, 220, 100, ${0.45 * flarePhase})`);
-    flareGrad.addColorStop(0.5, `rgba(255, 140, 30, ${0.25 * flarePhase})`);
+    flareGrad.addColorStop(0, `rgba(255, 255, 230, ${0.5 * flarePhase})`);
+    flareGrad.addColorStop(0.25, `rgba(255, 220, 100, ${0.3 * flarePhase})`);
+    flareGrad.addColorStop(0.55, `rgba(255, 140, 30, ${0.15 * flarePhase})`);
     flareGrad.addColorStop(1, "rgba(200, 50, 10, 0)");
   }
   ctx.fillStyle = flareGrad;
@@ -3704,22 +3709,21 @@ function drawAttackFlare(
   ctx.arc(x, y - s * 0.1, flareRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Radial burst lines
-  const burstCount = blue ? 14 : 10;
+  const burstCount = blue ? 12 : 8;
   for (let i = 0; i < burstCount; i++) {
-    const angle = (i / burstCount) * Math.PI * 2 + time * (blue ? 6 : 4);
-    const lineLen = s * (0.35 + (blue ? 0.1 : 0)) * flarePhase;
-    const lineAlpha = flarePhase * (blue ? 0.55 : 0.45);
+    const angle = (i / burstCount) * Math.PI * 2 + time * (blue ? 1.8 : 1.2);
+    const lineLen = s * (0.3 + (blue ? 0.08 : 0)) * flarePhase;
+    const lineAlpha = flarePhase * (blue ? 0.4 : 0.32);
     const innerR = s * 0.08;
 
     ctx.strokeStyle = blue
       ? i % 2 === 0
         ? `rgba(147, 197, 253, ${lineAlpha})`
-        : `rgba(96, 165, 250, ${lineAlpha * 0.7})`
+        : `rgba(96, 165, 250, ${lineAlpha * 0.6})`
       : i % 2 === 0
         ? `rgba(255, 200, 60, ${lineAlpha})`
-        : `rgba(255, 140, 40, ${lineAlpha * 0.7})`;
-    ctx.lineWidth = (i % 2 === 0 ? 2 : 1.2) * zoom;
+        : `rgba(255, 140, 40, ${lineAlpha * 0.6})`;
+    ctx.lineWidth = (i % 2 === 0 ? 1.8 : 1) * zoom;
     ctx.beginPath();
     ctx.moveTo(
       x + Math.cos(angle) * innerR,

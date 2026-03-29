@@ -310,10 +310,10 @@ export function drawEliteTroop(
 
   // Greave base with metallic gradient
   const legGradL = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
-  legGradL.addColorStop(0, "#4a4a5a");
-  legGradL.addColorStop(0.3, "#6a6a7a");
-  legGradL.addColorStop(0.7, "#7a7a8a");
-  legGradL.addColorStop(1, "#5a5a6a");
+  legGradL.addColorStop(0, "#5c4c2a");
+  legGradL.addColorStop(0.3, "#9c8848");
+  legGradL.addColorStop(0.7, "#c0a858");
+  legGradL.addColorStop(1, "#7a6838");
   ctx.fillStyle = legGradL;
   ctx.fillRect(-size * 0.06, 0, size * 0.12, size * 0.22);
 
@@ -367,10 +367,10 @@ export function drawEliteTroop(
 
   // Greave base
   const legGradR = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
-  legGradR.addColorStop(0, "#5a5a6a");
-  legGradR.addColorStop(0.3, "#7a7a8a");
-  legGradR.addColorStop(0.7, "#6a6a7a");
-  legGradR.addColorStop(1, "#4a4a5a");
+  legGradR.addColorStop(0, "#7a6838");
+  legGradR.addColorStop(0.3, "#c0a858");
+  legGradR.addColorStop(0.7, "#9c8848");
+  legGradR.addColorStop(1, "#5c4c2a");
   ctx.fillStyle = legGradR;
   ctx.fillRect(-size * 0.06, 0, size * 0.12, size * 0.22);
 
@@ -429,13 +429,13 @@ export function drawEliteTroop(
     x + size * 0.2,
     y + size * 0.3,
   );
-  plateGrad.addColorStop(0, "#5a5a6a");
-  plateGrad.addColorStop(0.15, "#7a7a8a");
+  plateGrad.addColorStop(0, "#7a6838");
+  plateGrad.addColorStop(0.15, "#c0a858");
   plateGrad.addColorStop(0.3, "#9a9aaa");
-  plateGrad.addColorStop(0.5, "#8a8a9a");
+  plateGrad.addColorStop(0.5, "#d8c068");
   plateGrad.addColorStop(0.7, "#9a9aaa");
-  plateGrad.addColorStop(0.85, "#7a7a8a");
-  plateGrad.addColorStop(1, "#5a5a6a");
+  plateGrad.addColorStop(0.85, "#c0a858");
+  plateGrad.addColorStop(1, "#7a6838");
   ctx.fillStyle = plateGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y + size * 0.32 + breathe);
@@ -451,7 +451,7 @@ export function drawEliteTroop(
   ctx.fill();
 
   // Chest plate edge highlight
-  ctx.strokeStyle = "#a0a0b0";
+  ctx.strokeStyle = "#d8c470";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y + size * 0.3 + breathe);
@@ -465,7 +465,7 @@ export function drawEliteTroop(
   ctx.stroke();
 
   // Armor segment lines (muscle cuirass detail)
-  ctx.strokeStyle = "#4a4a5a";
+  ctx.strokeStyle = "#5c4c2a";
   ctx.lineWidth = 1.2;
   // Center line
   ctx.beginPath();
@@ -637,11 +637,11 @@ export function drawEliteTroop(
   ctx.save();
   ctx.translate(eliteLShoulderX, eliteLShoulderY);
   ctx.rotate(eliteArmToShieldAngle);
-  ctx.fillStyle = "#5a5a6a";
+  ctx.fillStyle = "#7a6838";
   ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = "#c0a858";
   ctx.fillRect(size * 0.1, -size * 0.04, size * 0.1, size * 0.08);
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#9c8848";
   ctx.beginPath();
   ctx.arc(size * 0.2, 0, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
@@ -651,11 +651,11 @@ export function drawEliteTroop(
   ctx.save();
   ctx.translate(eliteHalbShoulderX, eliteHalbShoulderY);
   ctx.rotate(eliteHalbArmSwing);
-  ctx.fillStyle = "#5a5a6a";
+  ctx.fillStyle = "#7a6838";
   ctx.fillRect(-size * 0.035, -size * 0.035, size * 0.18, size * 0.07);
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = "#c0a858";
   ctx.fillRect(size * 0.1, -size * 0.04, size * 0.1, size * 0.08);
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#9c8848";
   ctx.beginPath();
   ctx.arc(eliteHalbArmLen, 0, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
@@ -668,16 +668,16 @@ export function drawEliteTroop(
 
   // Pauldron base layer
   const pauldronGradL = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.14);
-  pauldronGradL.addColorStop(0, "#8a8a9a");
-  pauldronGradL.addColorStop(0.6, "#6a6a7a");
-  pauldronGradL.addColorStop(1, "#4a4a5a");
+  pauldronGradL.addColorStop(0, "#d8c068");
+  pauldronGradL.addColorStop(0.6, "#9c8848");
+  pauldronGradL.addColorStop(1, "#5c4c2a");
   ctx.fillStyle = pauldronGradL;
   ctx.beginPath();
   ctx.ellipse(0, 0, size * 0.14, size * 0.09, -0.3, 0, Math.PI * 2);
   ctx.fill();
 
   // Pauldron ridge layers
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = "#c0a858";
   ctx.beginPath();
   ctx.ellipse(
     size * 0.025,
@@ -689,7 +689,7 @@ export function drawEliteTroop(
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#9c8848";
   ctx.beginPath();
   ctx.ellipse(
     size * 0.045,
@@ -721,7 +721,7 @@ export function drawEliteTroop(
   }
 
   // Pauldron spike
-  ctx.fillStyle = "#5a5a6a";
+  ctx.fillStyle = "#7a6838";
   ctx.beginPath();
   ctx.moveTo(-size * 0.1, -size * 0.025);
   ctx.lineTo(-size * 0.18, -size * 0.07);
@@ -735,15 +735,15 @@ export function drawEliteTroop(
   ctx.translate(x + size * 0.23, y - size * 0.04 + breathe);
 
   const pauldronGradR = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.14);
-  pauldronGradR.addColorStop(0, "#8a8a9a");
-  pauldronGradR.addColorStop(0.6, "#6a6a7a");
-  pauldronGradR.addColorStop(1, "#4a4a5a");
+  pauldronGradR.addColorStop(0, "#d8c068");
+  pauldronGradR.addColorStop(0.6, "#9c8848");
+  pauldronGradR.addColorStop(1, "#5c4c2a");
   ctx.fillStyle = pauldronGradR;
   ctx.beginPath();
   ctx.ellipse(0, 0, size * 0.14, size * 0.09, 0.3, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = "#c0a858";
   ctx.beginPath();
   ctx.ellipse(
     -size * 0.025,
@@ -755,7 +755,7 @@ export function drawEliteTroop(
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#9c8848";
   ctx.beginPath();
   ctx.ellipse(
     -size * 0.045,
@@ -784,7 +784,7 @@ export function drawEliteTroop(
     ctx.fill();
   }
 
-  ctx.fillStyle = "#5a5a6a";
+  ctx.fillStyle = "#7a6838";
   ctx.beginPath();
   ctx.moveTo(size * 0.1, -size * 0.025);
   ctx.lineTo(size * 0.18, -size * 0.07);
@@ -801,9 +801,9 @@ export function drawEliteTroop(
     x + size * 0.08,
     y - size * 0.14,
   );
-  gorgetGrad.addColorStop(0, "#4a4a5a");
-  gorgetGrad.addColorStop(0.5, "#6a6a7a");
-  gorgetGrad.addColorStop(1, "#4a4a5a");
+  gorgetGrad.addColorStop(0, "#5c4c2a");
+  gorgetGrad.addColorStop(0.5, "#9c8848");
+  gorgetGrad.addColorStop(1, "#5c4c2a");
   ctx.fillStyle = gorgetGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.08, y - size * 0.08 + breathe);
@@ -831,16 +831,16 @@ export function drawEliteTroop(
     y - size * 0.28 + breathe,
     size * 0.14,
   );
-  helmGrad.addColorStop(0, "#9a9aaa");
-  helmGrad.addColorStop(0.4, "#7a7a8a");
-  helmGrad.addColorStop(1, "#5a5a6a");
+  helmGrad.addColorStop(0, "#c8b058");
+  helmGrad.addColorStop(0.4, "#c0a858");
+  helmGrad.addColorStop(1, "#7a6838");
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.28 + breathe, size * 0.14, 0, Math.PI * 2);
   ctx.fill();
 
   // Helm ridge/crest base
-  ctx.fillStyle = "#6a6a7a";
+  ctx.fillStyle = "#9c8848";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.02, y - size * 0.42 + breathe);
   ctx.lineTo(x - size * 0.025, y - size * 0.26 + breathe);
@@ -901,7 +901,7 @@ export function drawEliteTroop(
   ctx.fill();
 
   // Extra elite helmet details.
-  ctx.fillStyle = "#7b7c8d";
+  ctx.fillStyle = "#b09848";
   ctx.beginPath();
   ctx.roundRect(
     x - size * 0.013,

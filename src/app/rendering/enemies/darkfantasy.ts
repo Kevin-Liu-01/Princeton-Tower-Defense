@@ -2083,26 +2083,25 @@ export function drawSkeletonArcherEnemy(
   );
 
   // === BOW ARM (left side — extended forward, aiming) ===
-  const bowArmX = cx0 - size * 0.15;
+  const bowArmX = cx0 - size * 0.13;
   const bowArmY = torsoY - size * 0.1 - bodyBob;
-  const bowForeLen = 0.2;
+  const bowForeLen = 0.18;
+  const bowShoulderA = 0.85 + (isAttacking ? attackIntensity * 0.08 : 0) + Math.sin(time * 1.2) * 0.012;
+  const bowElbowA = 0.18 + (isAttacking ? 0.05 : 0);
 
   drawPathArm(ctx, bowArmX, bowArmY, size, time, zoom, -1, {
     color: boneMid,
     colorDark: boneDark,
     handColor: boneDark,
-    upperLen: 0.24,
+    upperLen: 0.22,
     foreLen: bowForeLen,
-    shoulderAngle:
-      1.1 +
-      (isAttacking ? attackIntensity * 0.1 : 0) +
-      Math.sin(time * 1.2) * 0.015,
-    elbowAngle: 0.15 + (isAttacking ? 0.05 : 0),
+    shoulderAngle: bowShoulderA,
+    elbowAngle: bowElbowA,
     style: "bone",
     onWeapon: (wCtx) => {
       const handY = bowForeLen * size;
-      wCtx.translate(0, handY * 0.4);
-      wCtx.rotate(-0.2);
+      wCtx.translate(0, handY);
+      wCtx.rotate(-(bowShoulderA + bowElbowA) * 0.65);
 
       const bowH = size * 0.36;
       const limbW = 2.8 * zoom;
@@ -2334,12 +2333,13 @@ export function drawSkeletonArcherEnemy(
     },
   });
 
-  // === DRAW ARM (right side — pulled back to cheek, drawing string) ===
-  const drawForeLen = 0.16;
+  // === DRAW ARM (right side — anchor at jaw, drawing string) ===
+  const releaseSnap = isAttacking && attackIntensity > 0.7 ? (attackIntensity - 0.7) * 3.33 : 0;
+  const drawForeLen = 0.14;
   drawPathArm(
     ctx,
-    cx0 + size * 0.14,
-    torsoY - size * 0.08 - bodyBob,
+    cx0 + size * 0.12,
+    torsoY - size * 0.1 - bodyBob,
     size,
     time,
     zoom,
@@ -2348,20 +2348,31 @@ export function drawSkeletonArcherEnemy(
       color: boneMid,
       colorDark: boneDark,
       handColor: boneDark,
-      upperLen: 0.18,
+      upperLen: 0.16,
       foreLen: drawForeLen,
       shoulderAngle:
-        -0.6 +
-        Math.sin(time * 1.2) * 0.015 +
-        (isAttacking ? -attackIntensity * 0.15 : 0),
-      elbowAngle: -1.4 + (isAttacking ? -attackIntensity * 0.3 : -0.1),
+        -0.5 +
+        Math.sin(time * 1.2) * 0.012 +
+        (isAttacking
+          ? -attackIntensity * 0.15 * (1 - releaseSnap) + releaseSnap * 0.3
+          : 0),
+      elbowAngle:
+        -1.8 +
+        (isAttacking
+          ? -attackIntensity * 0.35 * (1 - releaseSnap) + releaseSnap * 1.4
+          : -0.1),
       style: "bone",
       onWeapon: (wCtx) => {
-        // Bone fingers curled in draw position (three-finger tab)
+        // Bone fingers curled in draw position — spread on release
+        const fingerSpread = releaseSnap * 0.4;
         wCtx.fillStyle = boneDark;
         for (let f = -1; f <= 1; f++) {
           wCtx.beginPath();
-          wCtx.ellipse(f * size * 0.008, size * 0.01, size * 0.006, size * 0.01, 0, 0, TAU);
+          wCtx.ellipse(
+            f * size * (0.008 + fingerSpread * 0.006),
+            size * (0.01 + fingerSpread * 0.008),
+            size * 0.006, size * 0.01, fingerSpread * f * 0.3, 0, TAU,
+          );
           wCtx.fill();
         }
         // Knuckle highlight
@@ -2369,7 +2380,10 @@ export function drawSkeletonArcherEnemy(
         wCtx.globalAlpha = 0.4;
         for (let f = -1; f <= 1; f++) {
           wCtx.beginPath();
-          wCtx.arc(f * size * 0.008, size * 0.005, size * 0.003, 0, TAU);
+          wCtx.arc(
+            f * size * (0.008 + fingerSpread * 0.006),
+            size * 0.005, size * 0.003, 0, TAU,
+          );
           wCtx.fill();
         }
         wCtx.globalAlpha = 1;

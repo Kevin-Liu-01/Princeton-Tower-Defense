@@ -219,6 +219,7 @@ export function renderTroop(
     troop.visualTier,
     mapTheme,
     troop.id,
+    troop.knightVariant,
   );
 
   ctx.restore();
@@ -291,14 +292,14 @@ export function renderTroop(
       soldier: 1.2,
       rowing: 1.1,
       hexling: 1.28,
-      armored: 1.55,
+      armored: 1.72,
       elite: 1.75,
       thesis: 1.4,
       hexseer: 1.42,
-      reinforcement: 1.55,
+      reinforcement: 1.72,
       cavalry: 2.4,
       centaur: 2.0,
-      knight: 1.65,
+      knight: 1.92,
       turret: 1.75,
     };
     const hpBarHeightMul = TROOP_HP_BAR_HEIGHT[troopType] ?? 1.0;
@@ -418,20 +419,21 @@ export function drawTroopSprite(
   visualTier?: number,
   mapTheme?: MapTheme,
   troopId?: string,
+  knightVariant?: number,
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
     footsoldier: 1.15,
     soldier: 1.25,
     rowing: 1.15,
     hexling: 1.2,
-    armored: 1.5,
+    armored: 1.65,
     elite: 1.7,
     thesis: 1.35,
     hexseer: 1.28,
-    reinforcement: 1.25,
+    reinforcement: 1.55,
     cavalry: 1.6,
     centaur: 1.6,
-    knight: 1.25,
+    knight: 1.55,
     turret: 1.7,
   };
 
@@ -585,6 +587,7 @@ export function drawTroopSprite(
         ownerType,
         targetPos,
         mapTheme,
+        knightVariant,
       );
       break;
     case "turret":

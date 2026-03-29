@@ -2265,6 +2265,74 @@ export function renderEffect(
       }
       break;
 
+    case "phoenix_talon": {
+      // Nassau phoenix melee talon strike — dual fiery claw arcs with ember sparks
+      const talonAngle = effect.slashAngle || 0;
+      const talonSize = effect.size * zoom;
+      const talonAlpha = alpha;
+      const talonProgress = Math.min(progress * 1.4, 1);
+
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(talonAngle);
+
+      // Dual talon arcs (two claws sweeping inward)
+      for (let talon = 0; talon < 2; talon++) {
+        const talonY = (talon === 0 ? -1 : 1) * 7 * zoom;
+        const talonDelay = talon * 0.06;
+        const tp = Math.max(0, (talonProgress - talonDelay) / (1 - talonDelay));
+        const talonLen = talonSize * (0.5 + tp * 0.5);
+        const talonFade = talonAlpha * (1 - tp * 0.4);
+
+        // Outer fire glow
+        setShadowBlur(ctx, 12 * zoom, "#ff6600");
+        ctx.strokeStyle = `rgba(255, 140, 0, ${talonFade * 0.6})`;
+        ctx.lineWidth = 6 * zoom * (1 - tp * 0.4);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.arc(0, talonY, talonLen, -0.35, 0.35);
+        ctx.stroke();
+
+        // Inner hot core
+        ctx.strokeStyle = `rgba(255, 230, 150, ${talonFade})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.arc(0, talonY, talonLen, -0.35, 0.35);
+        ctx.stroke();
+
+        clearShadow(ctx);
+      }
+
+      // Central fire flash at the strike point
+      const flashSize = talonSize * 0.3 * (1 - talonProgress);
+      if (flashSize > 0) {
+        const flashGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, flashSize);
+        flashGrad.addColorStop(0, `rgba(255, 255, 200, ${talonAlpha * 0.9})`);
+        flashGrad.addColorStop(0.4, `rgba(255, 160, 50, ${talonAlpha * 0.5})`);
+        flashGrad.addColorStop(1, "rgba(230, 126, 34, 0)");
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, flashSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Ember sparks flying outward
+      for (let i = 0; i < 5; i++) {
+        const sparkAngle = (i / 5) * Math.PI * 2 + talonProgress * 4;
+        const sparkDist = talonSize * (0.2 + talonProgress * 0.6);
+        const sparkAlpha = talonAlpha * (1 - talonProgress) * 0.8;
+        const sx = Math.cos(sparkAngle) * sparkDist;
+        const sy = Math.sin(sparkAngle) * sparkDist * 0.5;
+        ctx.fillStyle = `rgba(255, ${180 + i * 15}, 50, ${sparkAlpha})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2 * zoom * (1 - talonProgress * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+      break;
+    }
+
     // ========== TOWER DEBUFF EFFECTS ==========
     case "tower_debuff_slow": {
       // Blue clock/timer effect - slowed attack speed

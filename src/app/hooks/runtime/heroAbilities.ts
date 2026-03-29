@@ -292,13 +292,14 @@ function triggerCaptainRally(p: HeroAbilityParams): void {
     { x: 35, y: -20 },
     { x: 0, y: 35 },
   ];
-  const newTroops: Troop[] = knightOffsets.map((offset) => {
+  const newTroops: Troop[] = knightOffsets.map((offset, idx) => {
     const knightPos = { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y };
     return {
       id: generateId("troop"),
       ownerId: hero.id,
       ownerType: "hero_summon" as const,
       type: "knight" as TroopType,
+      knightVariant: idx % 3,
       pos: knightPos,
       hp: summonedKnightHP,
       maxHp: summonedKnightHP,

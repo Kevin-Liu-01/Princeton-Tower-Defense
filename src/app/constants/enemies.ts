@@ -1,4 +1,11 @@
-import type { EnemyData, EnemyType, EnemyTrait, EnemyCategory, EnemyAbilityType, MapTheme } from "../types";
+import type {
+  EnemyData,
+  EnemyType,
+  EnemyTrait,
+  EnemyCategory,
+  EnemyAbilityType,
+  MapTheme,
+} from "../types";
 
 // Enemy data with visual properties
 // Categories: academic, campus, ranged, flying, boss, nature, swarm
@@ -2231,7 +2238,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   dire_wolf: {
     name: "Dire Wolf",
-    hp: 200,
+    hp: 600,
     speed: 0.52,
     bounty: 12,
     armor: 0.15,
@@ -2255,7 +2262,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   wendigo: {
     name: "Wendigo",
-    hp: 380,
+    hp: 780,
     speed: 0.4,
     bounty: 25,
     armor: 0.15,
@@ -2287,7 +2294,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   mammoth: {
     name: "War Mammoth",
-    hp: 4000,
+    hp: 10000,
     speed: 0.11,
     bounty: 150,
     armor: 0.55,
@@ -3337,17 +3344,72 @@ export interface EnemyTraitMeta {
 }
 
 export const ENEMY_TRAIT_META: Record<EnemyTrait, EnemyTraitMeta> = {
-  flying: { label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles, only hit by certain towers", pillColor: "bg-cyan-900/60 text-cyan-300 border-cyan-700/40" },
-  ranged: { label: "Ranged", color: "text-green-400", desc: "Attacks from a distance", pillColor: "bg-green-900/60 text-green-300 border-green-700/40" },
-  armored: { label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage", pillColor: "bg-blue-900/60 text-blue-300 border-blue-700/40" },
-  fast: { label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies", pillColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40" },
-  boss: { label: "Boss", color: "text-red-400", desc: "Powerful elite enemy with high HP", pillColor: "bg-red-900/60 text-red-300 border-red-700/40" },
-  summoner: { label: "Summoner", color: "text-purple-400", desc: "Can summon additional enemies", pillColor: "bg-purple-900/60 text-purple-300 border-purple-700/40" },
-  regenerating: { label: "Regen", color: "text-green-400", desc: "Slowly recovers health over time", pillColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40" },
-  aoe_attack: { label: "AoE", color: "text-orange-400", desc: "Attacks hit multiple targets", pillColor: "bg-orange-900/60 text-orange-300 border-orange-700/40" },
-  magic_resist: { label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks", pillColor: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40" },
-  tower_debuffer: { label: "Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers", pillColor: "bg-rose-900/60 text-rose-300 border-rose-700/40" },
-  breakthrough: { label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping", pillColor: "bg-amber-900/60 text-amber-300 border-amber-700/40" },
+  flying: {
+    label: "Flying",
+    color: "text-cyan-400",
+    desc: "Ignores ground obstacles, only hit by certain towers",
+    pillColor: "bg-cyan-900/60 text-cyan-300 border-cyan-700/40",
+  },
+  ranged: {
+    label: "Ranged",
+    color: "text-green-400",
+    desc: "Attacks from a distance",
+    pillColor: "bg-green-900/60 text-green-300 border-green-700/40",
+  },
+  armored: {
+    label: "Armored",
+    color: "text-amber-400",
+    desc: "Reduces incoming damage",
+    pillColor: "bg-blue-900/60 text-blue-300 border-blue-700/40",
+  },
+  fast: {
+    label: "Fast",
+    color: "text-yellow-400",
+    desc: "Moves faster than normal enemies",
+    pillColor: "bg-yellow-900/60 text-yellow-300 border-yellow-700/40",
+  },
+  boss: {
+    label: "Boss",
+    color: "text-red-400",
+    desc: "Powerful elite enemy with high HP",
+    pillColor: "bg-red-900/60 text-red-300 border-red-700/40",
+  },
+  summoner: {
+    label: "Summoner",
+    color: "text-purple-400",
+    desc: "Can summon additional enemies",
+    pillColor: "bg-purple-900/60 text-purple-300 border-purple-700/40",
+  },
+  regenerating: {
+    label: "Regen",
+    color: "text-green-400",
+    desc: "Slowly recovers health over time",
+    pillColor: "bg-emerald-900/60 text-emerald-300 border-emerald-700/40",
+  },
+  aoe_attack: {
+    label: "AoE",
+    color: "text-orange-400",
+    desc: "Attacks hit multiple targets",
+    pillColor: "bg-orange-900/60 text-orange-300 border-orange-700/40",
+  },
+  magic_resist: {
+    label: "Magic Resist",
+    color: "text-blue-400",
+    desc: "Reduced damage from magic attacks",
+    pillColor: "bg-indigo-900/60 text-indigo-300 border-indigo-700/40",
+  },
+  tower_debuffer: {
+    label: "Debuffer",
+    color: "text-rose-400",
+    desc: "Can weaken or disable towers",
+    pillColor: "bg-rose-900/60 text-rose-300 border-rose-700/40",
+  },
+  breakthrough: {
+    label: "Breakthrough",
+    color: "text-sky-400",
+    desc: "Bypasses barracks troops without stopping",
+    pillColor: "bg-amber-900/60 text-amber-300 border-amber-700/40",
+  },
 };
 
 // =============================================================================
@@ -3359,16 +3421,46 @@ export interface EnemyAbilityMeta {
   bgColor: string;
 }
 
-export const ENEMY_ABILITY_META: Record<EnemyAbilityType | "default", EnemyAbilityMeta> = {
-  burn: { color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" },
-  slow: { color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" },
-  poison: { color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" },
-  stun: { color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" },
-  tower_slow: { color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" },
-  tower_weaken: { color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" },
-  tower_blind: { color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" },
-  tower_disable: { color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" },
-  default: { color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" },
+export const ENEMY_ABILITY_META: Record<
+  EnemyAbilityType | "default",
+  EnemyAbilityMeta
+> = {
+  burn: {
+    color: "text-orange-400",
+    bgColor: "bg-orange-950/60 border-orange-800/50",
+  },
+  slow: {
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-950/60 border-cyan-800/50",
+  },
+  poison: {
+    color: "text-green-400",
+    bgColor: "bg-green-950/60 border-green-800/50",
+  },
+  stun: {
+    color: "text-yellow-400",
+    bgColor: "bg-yellow-950/60 border-yellow-800/50",
+  },
+  tower_slow: {
+    color: "text-blue-400",
+    bgColor: "bg-blue-950/60 border-blue-800/50",
+  },
+  tower_weaken: {
+    color: "text-red-400",
+    bgColor: "bg-red-950/60 border-red-800/50",
+  },
+  tower_blind: {
+    color: "text-purple-400",
+    bgColor: "bg-purple-950/60 border-purple-800/50",
+  },
+  tower_disable: {
+    color: "text-rose-400",
+    bgColor: "bg-rose-950/60 border-rose-800/50",
+  },
+  default: {
+    color: "text-gray-400",
+    bgColor: "bg-gray-950/60 border-gray-800/50",
+  },
 };
 
 // =============================================================================
@@ -3383,18 +3475,78 @@ export interface EnemyCategoryMeta {
 }
 
 export const ENEMY_CATEGORY_META: Record<EnemyCategory, EnemyCategoryMeta> = {
-  region_boss: { name: "Region Boss", desc: "End-of-region capstone mega bosses", color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
-  academic: { name: "Academic", desc: "Academic progression and milestones", color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
-  campus: { name: "Campus Life", desc: "Campus events and activities", color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
-  ranged: { name: "Ranged", desc: "Attack from a distance", color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
-  dark_fantasy: { name: "Dark Fantasy", desc: "Undead, skeletal, and dark fantasy enemies", color: "text-violet-400", bgColor: "bg-violet-950/50 border-violet-800/40" },
-  forest: { name: "Forest", desc: "Forest biome creatures", color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
-  swamp: { name: "Swamp", desc: "Swamp biome creatures", color: "text-lime-400", bgColor: "bg-lime-950/50 border-lime-800/40" },
-  desert: { name: "Desert", desc: "Desert biome creatures", color: "text-yellow-600", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
-  winter: { name: "Winter", desc: "Winter and frost biome creatures", color: "text-sky-400", bgColor: "bg-sky-950/50 border-sky-800/40" },
-  volcanic: { name: "Volcanic", desc: "Fire and lava biome creatures", color: "text-orange-400", bgColor: "bg-orange-950/50 border-orange-800/40" },
-  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
-  insectoid: { name: "Insectoid", desc: "Bugs and arachnids", color: "text-amber-700", bgColor: "bg-amber-950/50 border-amber-900/40" },
+  region_boss: {
+    name: "Region Boss",
+    desc: "End-of-region capstone mega bosses",
+    color: "text-red-400",
+    bgColor: "bg-red-950/50 border-red-800/40",
+  },
+  academic: {
+    name: "Academic",
+    desc: "Academic progression and milestones",
+    color: "text-purple-400",
+    bgColor: "bg-purple-950/50 border-purple-800/40",
+  },
+  campus: {
+    name: "Campus Life",
+    desc: "Campus events and activities",
+    color: "text-amber-400",
+    bgColor: "bg-amber-950/50 border-amber-800/40",
+  },
+  ranged: {
+    name: "Ranged",
+    desc: "Attack from a distance",
+    color: "text-green-400",
+    bgColor: "bg-green-950/50 border-green-800/40",
+  },
+  dark_fantasy: {
+    name: "Dark Fantasy",
+    desc: "Undead, skeletal, and dark fantasy enemies",
+    color: "text-violet-400",
+    bgColor: "bg-violet-950/50 border-violet-800/40",
+  },
+  forest: {
+    name: "Forest",
+    desc: "Forest biome creatures",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-950/50 border-emerald-800/40",
+  },
+  swamp: {
+    name: "Swamp",
+    desc: "Swamp biome creatures",
+    color: "text-lime-400",
+    bgColor: "bg-lime-950/50 border-lime-800/40",
+  },
+  desert: {
+    name: "Desert",
+    desc: "Desert biome creatures",
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-950/50 border-yellow-800/40",
+  },
+  winter: {
+    name: "Winter",
+    desc: "Winter and frost biome creatures",
+    color: "text-sky-400",
+    bgColor: "bg-sky-950/50 border-sky-800/40",
+  },
+  volcanic: {
+    name: "Volcanic",
+    desc: "Fire and lava biome creatures",
+    color: "text-orange-400",
+    bgColor: "bg-orange-950/50 border-orange-800/40",
+  },
+  flying: {
+    name: "Flying",
+    desc: "Aerial threats that bypass ground obstacles",
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-950/50 border-cyan-800/40",
+  },
+  insectoid: {
+    name: "Insectoid",
+    desc: "Bugs and arachnids",
+    color: "text-amber-700",
+    bgColor: "bg-amber-950/50 border-amber-900/40",
+  },
 };
 
 export const ENEMY_CATEGORY_ORDER: EnemyCategory[] = [
@@ -3444,21 +3596,44 @@ export function getEnemyNativeRegion(type: EnemyType): MapTheme | null {
   return null;
 }
 
-const REGIONAL_VARIANT_THEMES: MapTheme[] = ["swamp", "desert", "winter", "volcanic"];
+const REGIONAL_VARIANT_THEMES: MapTheme[] = [
+  "swamp",
+  "desert",
+  "winter",
+  "volcanic",
+];
 
 const REGIONAL_VARIANT_TYPES = new Set<EnemyType>([
   // Shared overlay enemies (academic)
-  "frosh", "sophomore", "junior", "senior", "gradstudent",
+  "frosh",
+  "sophomore",
+  "junior",
+  "senior",
+  "gradstudent",
   // Ranged
-  "archer", "mage", "crossbowman", "warlock", "hexer",
+  "archer",
+  "mage",
+  "crossbowman",
+  "warlock",
+  "hexer",
   // Flying
-  "harpy", "wyvern",
+  "harpy",
+  "wyvern",
   // Undead / dark fantasy (also have dedicated palettes for plaguebearer)
-  "specter", "berserker", "necromancer", "shadow_knight", "cultist", "plaguebearer",
+  "specter",
+  "berserker",
+  "necromancer",
+  "shadow_knight",
+  "cultist",
+  "plaguebearer",
   // Elemental (infernal has dedicated palette)
-  "banshee", "assassin", "infernal",
+  "banshee",
+  "assassin",
+  "infernal",
   // Campus / forest
-  "athlete", "tiger_fan", "mascot",
+  "athlete",
+  "tiger_fan",
+  "mascot",
   // Dedicated palette enemies
   "ancient_ent",
 ]);
@@ -3483,7 +3658,9 @@ export function getThemeLabel(theme: MapTheme): string {
   return THEME_LABELS[theme];
 }
 
-export function groupEnemiesByCategory(enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> {
+export function groupEnemiesByCategory(
+  enemyTypes: EnemyType[],
+): Record<EnemyCategory, EnemyType[]> {
   const grouped: Record<EnemyCategory, EnemyType[]> = {
     region_boss: [],
     academic: [],
@@ -3505,4 +3682,3 @@ export function groupEnemiesByCategory(enemyTypes: EnemyType[]): Record<EnemyCat
   }
   return grouped;
 }
-
