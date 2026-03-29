@@ -34,6 +34,7 @@ import {
 } from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
 import { MobileBottomSheet } from "./MobileBottomSheet";
+import { ShareLevelButton } from "./shared/ShareLevelButton";
 import { REGION_CHALLENGE_BADGE_STYLES } from "./shared/worldMapRegions";
 
 interface LevelInfo {
@@ -369,6 +370,12 @@ export const MobileLevelSheet: React.FC<MobileLevelSheetProps> = ({
             >
               <ChevronLeft size={18} className="text-amber-400" />
             </button>
+
+            <ShareLevelButton
+              levelId={level.id}
+              levelName={level.name}
+              iconSize={16}
+            />
 
             <button
               onClick={canStart ? onBattle : onBattleRandom}

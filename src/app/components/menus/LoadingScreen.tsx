@@ -1,14 +1,37 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { ChevronLeft, Shield, Swords } from "lucide-react";
+import { ChevronLeft, MapPin, Shield, Star, Swords } from "lucide-react";
 import {
   LOADING_TIPS,
   LOADING_LORE,
   DEFAULT_LOADING_THEME,
   type LoadingTheme,
 } from "../../constants/loadingAssets";
+import { LEVEL_DATA } from "../../constants";
+import { WORLD_LEVELS } from "./world-map/worldMapData";
 import { OrnateFrame } from "../ui/primitives/OrnateFrame";
+import type { RegionType } from "../../sprites";
+
+const REGION_LABEL: Record<string, string> = {
+  grassland: "Princeton Grounds",
+  swamp: "Murky Marshes",
+  desert: "Sahara Sands",
+  winter: "Frozen Frontier",
+  volcanic: "Volcanic Depths",
+};
+
+const DIFFICULTY_LABEL: Record<number, string> = {
+  1: "Easy",
+  2: "Medium",
+  3: "Hard",
+};
+
+const DIFFICULTY_COLOR: Record<number, string> = {
+  1: "rgba(80,200,120,0.85)",
+  2: "rgba(240,180,40,0.85)",
+  3: "rgba(220,80,60,0.85)",
+};
 
 interface LoadingScreenProps {
   progress: number;
@@ -16,6 +39,7 @@ interface LoadingScreenProps {
   total: number;
   context: "worldmap" | "battle";
   levelName?: string;
+  levelId?: string;
   theme?: LoadingTheme;
   onBack?: () => void;
 }
@@ -459,13 +483,22 @@ export function LoadingScreen({
   total,
   context,
   levelName,
+  levelId,
   theme: themeProp,
   onBack,
 }: LoadingScreenProps) {
   const theme = themeProp ?? DEFAULT_LOADING_THEME;
   const animatedProgress = useAnimatedProgress(progress);
   const isComplete = progress >= 1;
-  const title = context === "battle" && levelName ? levelName : (CONTEXT_TITLES[context] ?? "LOADING");
+
+  const levelMeta = useLevelMeta(levelId);
+  const isBattle = context === "battle" && !!levelMeta;
+
+  const title = isBattle
+    ? levelMeta.name
+    : context === "battle" && levelName
+      ? levelName
+      : (CONTEXT_TITLES[context] ?? "LOADING");
   const subtitle = theme.subtitle;
   const [stageVisible, setStageVisible] = useState([
     false,
@@ -502,55 +535,10 @@ export function LoadingScreen({
       glowColor={theme.frameGlow}
     >
       <div
-        className="w-full h-full flex flex-col items-center justify-center"
+        className="w-full h-full flex flex-col items-center justify-center overflow-y-auto"
         style={{ background: theme.bg }}
       >
-        {/* Background image */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div
-            className="absolute inset-[-8%]"
-            style={{
-              width: "116%",
-              height: "116%",
-              animation: "kenBurns 28s ease-in-out infinite alternate",
-            }}
-          >
-            <Image
-              src={theme.bgImage}
-              alt=""
-              fill
-              priority
-              sizes="120vw"
-              className="object-cover"
-              style={{ opacity: 0.32, filter: "blur(1.5px) saturate(0.7)" }}
-            />
-          </div>
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(180deg, rgba(${theme.washRgb},0.25) 0%, rgba(${theme.washRgb},0.15) 40%, rgba(${theme.bgRgb},0.3) 100%)`,
-              mixBlendMode: "multiply",
-            }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `radial-gradient(ellipse 80% 70% at center 42%, transparent 0%, rgba(${theme.bgRgb},0.45) 40%, rgba(${theme.bgRgb},0.92) 75%)`,
-            }}
-          />
-          <div
-            className="absolute bottom-0 left-0 right-0 h-2/5"
-            style={{
-              background: `linear-gradient(to top, rgba(${theme.bgRgb},0.98) 0%, rgba(${theme.bgRgb},0.6) 50%, transparent 100%)`,
-            }}
-          />
-          <div
-            className="absolute top-0 left-0 right-0 h-1/5"
-            style={{
-              background: `linear-gradient(to bottom, rgba(${theme.bgRgb},0.7) 0%, transparent 100%)`,
-            }}
-          />
-        </div>
+        <BattleBackground theme={theme} />
 
         <EmberField theme={theme} />
 
@@ -578,68 +566,24 @@ export function LoadingScreen({
           </button>
         )}
 
-        <div className="relative z-10 flex flex-col items-center gap-4 px-6 w-full max-w-md">
-          <div
-            className="transition-all duration-700 ease-out"
-            style={{
-              opacity: stageVisible[0] ? 1 : 0,
-              transform: stageVisible[0] ? "translateY(0)" : "translateY(14px)",
-            }}
-          >
-            <LogoShield isComplete={isComplete} theme={theme} />
-          </div>
-
-          <div
-            className="flex flex-col items-center gap-1.5 transition-all duration-700 ease-out"
-            style={{
-              opacity: stageVisible[1] ? 1 : 0,
-              transform: stageVisible[1] ? "translateY(0)" : "translateY(14px)",
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              <TitleOrnament theme={theme} />
-              <h1
-                className="text-lg sm:text-xl font-bold tracking-[0.25em] uppercase"
-                style={{
-                  color: theme.accent,
-                  textShadow: `0 0 30px rgba(${theme.accentRgb},0.35), 0 2px 4px rgba(0,0,0,0.6)`,
-                }}
-              >
-                {title}
-              </h1>
-              <TitleOrnament flip theme={theme} />
-            </div>
-            <p
-              className="text-[11px] font-medium tracking-wider mt-0.5"
-              style={{ color: `rgba(${theme.accentRgb},0.5)` }}
-            >
-              {subtitle}
-            </p>
-            <div className="w-full flex justify-center mt-2.5 mb-1">
-              <AccentFlourish theme={theme} />
-            </div>
-          </div>
-
-          <div
-            className="w-full flex justify-center transition-all duration-700 ease-out"
-            style={{
-              opacity: stageVisible[3] ? 1 : 0,
-              transform: stageVisible[3] ? "translateY(0)" : "translateY(14px)",
-            }}
-          >
-            <TipDisplay context={context} theme={theme} />
-          </div>
-
-          <div
-            className="transition-all duration-700 ease-out mt-1"
-            style={{
-              opacity: stageVisible[4] ? 1 : 0,
-              transform: stageVisible[4] ? "translateY(0)" : "translateY(10px)",
-            }}
-          >
-            <LoreQuote theme={theme} />
-          </div>
-        </div>
+        {isBattle ? (
+          <BattleLevelContent
+            meta={levelMeta}
+            title={title}
+            isComplete={isComplete}
+            theme={theme}
+            stageVisible={stageVisible}
+          />
+        ) : (
+          <WorldMapLoadingContent
+            title={title}
+            subtitle={subtitle}
+            theme={theme}
+            context={context}
+            isComplete={isComplete}
+            stageVisible={stageVisible}
+          />
+        )}
 
         <div
           className="absolute bottom-0 left-0 right-0 z-10 transition-all duration-700 ease-out"
@@ -755,6 +699,342 @@ export function LoadingScreen({
         `}</style>
       </div>
     </OrnateFrame>
+  );
+}
+
+// ─── Level metadata hook ──────────────────────────────────────────────────────
+
+interface LevelMeta {
+  name: string;
+  region: RegionType;
+  regionLabel: string;
+  difficulty: 1 | 2 | 3;
+  difficultyLabel: string;
+  difficultyColor: string;
+  description: string;
+  tags: string[];
+  kind: string;
+  previewImage?: string;
+}
+
+function useLevelMeta(levelId?: string): LevelMeta | null {
+  if (!levelId) return null;
+  const levelData = LEVEL_DATA[levelId];
+  const worldLevel = WORLD_LEVELS.find((l) => l.id === levelId);
+  if (!levelData && !worldLevel) return null;
+
+  const name = levelData?.name ?? worldLevel?.name ?? levelId;
+  const region = (worldLevel?.region ?? levelData?.region ?? "grassland") as RegionType;
+  const difficulty = (worldLevel?.difficulty ?? levelData?.difficulty ?? 1) as 1 | 2 | 3;
+  const description = (worldLevel?.description?.replace(/\n/g, " ") ?? levelData?.description ?? "");
+  const tags = worldLevel?.tags ?? [];
+  const kind = worldLevel?.kind ?? "campaign";
+
+  return {
+    name,
+    region,
+    regionLabel: REGION_LABEL[region] ?? region,
+    difficulty,
+    difficultyLabel: DIFFICULTY_LABEL[difficulty],
+    difficultyColor: DIFFICULTY_COLOR[difficulty],
+    description,
+    tags,
+    kind,
+    previewImage: levelData?.previewImage,
+  };
+}
+
+// ─── Battle-context level content ─────────────────────────────────────────────
+
+function BattleLevelContent({
+  meta,
+  title,
+  isComplete,
+  theme,
+  stageVisible,
+}: {
+  meta: LevelMeta;
+  title: string;
+  isComplete: boolean;
+  theme: LoadingTheme;
+  stageVisible: boolean[];
+}) {
+  return (
+    <div className="relative z-10 flex flex-col items-center gap-5 px-6 w-full max-w-lg">
+      {/* Logo + Level name + subtitle */}
+      <div
+        className="flex flex-col items-center gap-2 transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[0] ? 1 : 0,
+          transform: stageVisible[0] ? "translateY(0)" : "translateY(14px)",
+        }}
+      >
+        <LogoShield isComplete={isComplete} theme={theme} />
+        <h1
+          className="text-2xl sm:text-3xl font-bold tracking-[0.2em] uppercase text-center"
+          style={{
+            color: theme.accent,
+            textShadow: `0 0 30px rgba(${theme.accentRgb},0.35), 0 2px 4px rgba(0,0,0,0.6)`,
+          }}
+        >
+          {title}
+        </h1>
+        <div className="flex items-center gap-3 mt-0.5">
+          <span
+            className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider"
+            style={{ color: `rgba(${theme.accentRgb},0.55)` }}
+          >
+            <MapPin size={12} />
+            {meta.regionLabel}
+          </span>
+          <span
+            className="w-px h-3"
+            style={{ background: `rgba(${theme.accentRgb},0.2)` }}
+          />
+          <span
+            className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider"
+            style={{ color: meta.difficultyColor }}
+          >
+            <Star size={12} />
+            {meta.difficultyLabel}
+          </span>
+          {meta.kind === "challenge" && (
+            <>
+              <span
+                className="w-px h-3"
+                style={{ background: `rgba(${theme.accentRgb},0.2)` }}
+              />
+              <span
+                className="text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: "rgba(196,64,88,0.85)" }}
+              >
+                Challenge
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Preview image */}
+      {meta.previewImage && (
+        <div
+          className="w-full max-w-sm transition-all duration-700 ease-out"
+          style={{
+            opacity: stageVisible[1] ? 1 : 0,
+            transform: stageVisible[1] ? "translateY(0) scale(1)" : "translateY(10px) scale(0.97)",
+          }}
+        >
+          <OrnateFrame
+            className="rounded-lg"
+            cornerSize={28}
+            cornerVariant="standard"
+            borderVariant="standard"
+            color={theme.frameColor}
+            glowColor={theme.frameGlow}
+          >
+            <div
+              className="aspect-video relative overflow-hidden rounded-sm"
+              style={{
+                boxShadow: `0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(${theme.accentRgb},0.08)`,
+              }}
+            >
+              <Image
+                src={meta.previewImage}
+                alt={`${meta.name} preview`}
+                fill
+                sizes="(max-width: 640px) 90vw, 400px"
+                className="object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(180deg, transparent 60%, rgba(${theme.bgRgb},0.4) 100%)`,
+                }}
+              />
+            </div>
+          </OrnateFrame>
+        </div>
+      )}
+
+      {/* Description + tags */}
+      <div
+        className="flex flex-col items-center gap-2 transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[3] ? 1 : 0,
+          transform: stageVisible[3] ? "translateY(0)" : "translateY(10px)",
+        }}
+      >
+        <p
+          className="text-center text-sm leading-relaxed max-w-xs"
+          style={{ color: `rgba(${theme.accentRgb},0.5)` }}
+        >
+          {meta.description}
+        </p>
+        {meta.tags.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-1.5 mt-1">
+            {meta.tags.map((tag) => (
+              <span
+                key={tag}
+                className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full"
+                style={{
+                  color: `rgba(${theme.accentRgb},0.5)`,
+                  background: `rgba(${theme.accentDarkRgb},0.15)`,
+                  border: `1px solid rgba(${theme.accentDarkRgb},0.2)`,
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Loading tip */}
+      <div
+        className="w-full flex justify-center transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[4] ? 1 : 0,
+          transform: stageVisible[4] ? "translateY(0)" : "translateY(10px)",
+        }}
+      >
+        <TipDisplay context="battle" theme={theme} />
+      </div>
+    </div>
+  );
+}
+
+// ─── World-map loading content (generic) ──────────────────────────────────────
+
+function WorldMapLoadingContent({
+  title,
+  subtitle,
+  theme,
+  context,
+  isComplete,
+  stageVisible,
+}: {
+  title: string;
+  subtitle: string;
+  theme: LoadingTheme;
+  context: "worldmap" | "battle";
+  isComplete: boolean;
+  stageVisible: boolean[];
+}) {
+  return (
+    <div className="relative z-10 flex flex-col items-center gap-4 px-6 w-full max-w-md">
+      <div
+        className="transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[0] ? 1 : 0,
+          transform: stageVisible[0] ? "translateY(0)" : "translateY(14px)",
+        }}
+      >
+        <LogoShield isComplete={isComplete} theme={theme} />
+      </div>
+
+      <div
+        className="flex flex-col items-center gap-1.5 transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[1] ? 1 : 0,
+          transform: stageVisible[1] ? "translateY(0)" : "translateY(14px)",
+        }}
+      >
+        <div className="flex items-center gap-2.5">
+          <TitleOrnament theme={theme} />
+          <h1
+            className="text-lg sm:text-xl font-bold tracking-[0.25em] uppercase"
+            style={{
+              color: theme.accent,
+              textShadow: `0 0 30px rgba(${theme.accentRgb},0.35), 0 2px 4px rgba(0,0,0,0.6)`,
+            }}
+          >
+            {title}
+          </h1>
+          <TitleOrnament flip theme={theme} />
+        </div>
+        <p
+          className="text-[11px] font-medium tracking-wider mt-0.5"
+          style={{ color: `rgba(${theme.accentRgb},0.5)` }}
+        >
+          {subtitle}
+        </p>
+        <div className="w-full flex justify-center mt-2.5 mb-1">
+          <AccentFlourish theme={theme} />
+        </div>
+      </div>
+
+      <div
+        className="w-full flex justify-center transition-all duration-700 ease-out"
+        style={{
+          opacity: stageVisible[3] ? 1 : 0,
+          transform: stageVisible[3] ? "translateY(0)" : "translateY(14px)",
+        }}
+      >
+        <TipDisplay context={context} theme={theme} />
+      </div>
+
+      <div
+        className="transition-all duration-700 ease-out mt-1"
+        style={{
+          opacity: stageVisible[4] ? 1 : 0,
+          transform: stageVisible[4] ? "translateY(0)" : "translateY(10px)",
+        }}
+      >
+        <LoreQuote theme={theme} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Background layer (level-aware) ──────────────────────────────────────────
+
+function BattleBackground({ theme }: { theme: LoadingTheme }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div
+        className="absolute inset-[-8%]"
+        style={{
+          width: "116%",
+          height: "116%",
+          animation: "kenBurns 28s ease-in-out infinite alternate",
+        }}
+      >
+        <Image
+          src={theme.bgImage}
+          alt=""
+          fill
+          priority
+          sizes="120vw"
+          className="object-cover"
+          style={{ opacity: 0.32, filter: "blur(1.5px) saturate(0.7)" }}
+        />
+      </div>
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(180deg, rgba(${theme.washRgb},0.25) 0%, rgba(${theme.washRgb},0.15) 40%, rgba(${theme.bgRgb},0.3) 100%)`,
+          mixBlendMode: "multiply",
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(ellipse 80% 70% at center 42%, transparent 0%, rgba(${theme.bgRgb},0.45) 40%, rgba(${theme.bgRgb},0.92) 75%)`,
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-2/5"
+        style={{
+          background: `linear-gradient(to top, rgba(${theme.bgRgb},0.98) 0%, rgba(${theme.bgRgb},0.6) 50%, transparent 100%)`,
+        }}
+      />
+      <div
+        className="absolute top-0 left-0 right-0 h-1/5"
+        style={{
+          background: `linear-gradient(to bottom, rgba(${theme.bgRgb},0.7) 0%, transparent 100%)`,
+        }}
+      />
+    </div>
   );
 }
 

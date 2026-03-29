@@ -354,6 +354,7 @@ export interface EnemyData {
   color: string;
   size: number;
   category?: EnemyCategory; // Enemy category for organization
+  nativeRegion?: MapTheme;  // Home biome — skips regional palette shift when rendering
   isRanged?: boolean;
   range?: number;
   attackSpeed?: number;

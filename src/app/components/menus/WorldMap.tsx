@@ -43,6 +43,7 @@ import { RegionIcon } from "../../sprites";
 import { MobileLoadoutBar } from "./MobileLoadoutBar";
 import { MobileCampaignBar } from "./MobileCampaignBar";
 import { getCampaignLevels } from "./shared/worldMapRegions";
+import { ShareLevelButton } from "./shared/ShareLevelButton";
 import { MobileLevelSheet } from "./MobileLevelSheet";
 import { drawWorldMapCanvas } from "./world-map/worldMapCanvasRenderer";
 import { getWorldLevelById, getLevelNodeY } from "./world-map/worldMapUtils";
@@ -843,13 +844,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               {currentLevel.name}
                             </h2>
                           </div>
-                          <button
-                            onClick={() => setSelectedLevel(null)}
-                            className="p-1.5 rounded-lg transition-all hover:scale-110 shrink-0"
-                            style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-                          >
-                            <X size={16} className="text-amber-400" />
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <ShareLevelButton
+                              levelId={currentLevel.id}
+                              levelName={currentLevel.name}
+                              iconSize={14}
+                            />
+                            <button
+                              onClick={() => setSelectedLevel(null)}
+                              className="p-1.5 rounded-lg transition-all hover:scale-110 shrink-0"
+                              style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+                            >
+                              <X size={16} className="text-amber-400" />
+                            </button>
+                          </div>
                         </div>
 
                         {/* Tags row */}

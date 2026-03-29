@@ -37,12 +37,11 @@ function getPreviewImage(levelId: string): string | undefined {
 function MapPreviewBg({ src, fadeColor }: { src: string; fadeColor: string }) {
   return (
     <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={src}
         alt=""
-        fill
-        sizes="400px"
-        className="absolute right-0 top-0 !w-[65%] !left-auto object-cover object-center opacity-30"
+        className="absolute right-0 top-0 h-full w-[65%] object-cover object-center opacity-30"
         style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }}
       />
       <div

@@ -122,15 +122,15 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     description:
       "An ancient guardian spirit that embodies the ivy covering Princeton's Gothic towers. Commands living vines to entangle and crush enemies with nature's wrath.",
     hp: 4800,
-    damage: 55,
-    range: 130,
-    attackSpeed: 700,
+    damage: 25,
+    range: 180,
+    attackSpeed: 600,
     speed: 2.3,
-    ability: "Verdant Colossus",
+    ability: "Nature's Shift",
     abilityDesc:
-      "Transforms into a massive plant mech for 8s, dealing devastating melee AoE damage",
+      "Shifts between Ivy Warden and Verdant Colossus form. Warden heals towers; Colossus crushes enemies.",
     color: "#059669",
-    isRanged: false,
+    isRanged: true,
   },
 };
 
@@ -157,10 +157,13 @@ export const HERO_COMBAT_STATS = {
   ivyVineDamage: 100,
   ivyRootDuration: 4000,
   ivyAoeRadius: 90,
-  ivyColossusDuration: 8000,
-  ivyColossusDamage: 120,
+  ivyColossusDamage: 70,
   ivyColossusAoeRadius: 160,
-  ivyColossusAttackSpeed: 800,
+  ivyColossusAttackSpeed: 900,
+  ivyColossusSpeed: 1.5,
+  ivyWardenHealRadius: 200,
+  ivyWardenHealAmount: 8,
+  ivyWardenHealInterval: 1000,
 } as const;
 
 // Hero options for selection
@@ -186,7 +189,7 @@ export const HERO_ABILITY_COOLDOWNS: Record<HeroType, number> = {
   captain: 30000,
   engineer: 35000,
   nassau: 20000,
-  ivy: 22000,
+  ivy: 8000,
 };
 
 export interface HeroRole {

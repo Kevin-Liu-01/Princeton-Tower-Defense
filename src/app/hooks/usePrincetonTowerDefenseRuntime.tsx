@@ -1412,6 +1412,7 @@ export function usePrincetonTowerDefenseRuntime() {
         loaded={battleLoading.loaded}
         total={battleLoading.total}
         context="battle"
+        levelId={selectedMap}
         levelName={levelData?.name}
         theme={battleTheme}
         onBack={cancelBattle}
@@ -1623,6 +1624,7 @@ export function usePrincetonTowerDefenseRuntime() {
           loaded={battleLoading.loaded}
           total={battleLoading.total}
           context="battle"
+          levelId={selectedMap}
           levelName={selectedLevelData?.name}
           theme={resolveLoadingTheme(selectedLevelData?.theme, selectedLevelData?.levelKind)}
         />

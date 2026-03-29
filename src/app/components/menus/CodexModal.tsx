@@ -2666,22 +2666,23 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
               const variantThemes = getRegionalVariantThemes();
 
               return (
-                <div className="space-y-6 relative">
-                  {/* Category Jump Nav — dropdown from top-right button */}
-                  <div className="absolute top-0 right-0 z-30 pointer-events-none">
+                <>
+                  {/* Sticky Category Jump Nav — floats top-right above all content */}
+                  <div className="sticky top-0 z-50 flex justify-end pointer-events-none overflow-visible" style={{ height: 0 }}>
                     <div className="pointer-events-auto relative">
                       <button
                         onClick={() => setCategoryNavOpen(prev => !prev)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all hover:brightness-125 active:scale-95"
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all hover:brightness-125 active:scale-95"
                         style={{
-                          background: "rgba(12,10,9,0.88)",
+                          background: "rgba(12,10,9,0.92)",
                           border: "1px solid rgba(180,130,60,0.35)",
                           color: "#d4a44a",
                           backdropFilter: "blur(8px)",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
                         }}
                       >
-                        <Compass size={14} />
-                        Categories
+                        <Compass size={13} />
+                        <span className="hidden sm:inline">Categories</span>
                       </button>
                       {categoryNavOpen && (
                         <>
@@ -2724,6 +2725,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     </div>
                   </div>
 
+                  <div className="space-y-6">
                   <div
                     className="relative rounded-2xl overflow-hidden"
                     style={{
@@ -3134,6 +3136,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     );
                   })}
                 </div>
+                </>
               );
             })()}
 

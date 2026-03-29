@@ -402,19 +402,31 @@ function triggerNassauBlueInferno(p: HeroAbilityParams): void {
 
 function triggerIvyVerdantColossus(p: HeroAbilityParams): void {
   const { hero, setHero, setEffects, addParticles } = p;
-  const duration = HERO_COMBAT_STATS.ivyColossusDuration;
+  const MORPH_WINDOW = 1200;
 
-  setHero((prev) =>
-    prev
-      ? {
-          ...prev,
-          abilityActive: true,
-          abilityEnd: Date.now() + duration,
-          shieldActive: true,
-          shieldEnd: Date.now() + 2000,
-        }
-      : null
-  );
+  if (hero.abilityActive) {
+    setHero((prev) =>
+      prev
+        ? {
+            ...prev,
+            abilityActive: false,
+            abilityEnd: Date.now() + MORPH_WINDOW,
+          }
+        : null,
+    );
+  } else {
+    setHero((prev) =>
+      prev
+        ? {
+            ...prev,
+            abilityActive: true,
+            abilityEnd: Date.now() + MORPH_WINDOW,
+            shieldActive: true,
+            shieldEnd: Date.now() + 2000,
+          }
+        : null,
+    );
+  }
 
   setEffects((ef) => [
     ...ef,

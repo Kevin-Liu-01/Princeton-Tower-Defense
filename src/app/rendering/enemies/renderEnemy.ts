@@ -1,10 +1,11 @@
-import type { Enemy, Position, MapTheme } from "../../types";
+import type { Enemy, EnemyType, Position, MapTheme } from "../../types";
 import {
   ENEMY_DATA,
   ISO_Y_RATIO,
   LEVEL_DATA,
   SUMMON_CHANNEL_DURATION,
   ENEMY_REGEN_DELAY_MS,
+  getEnemyNativeRegion,
 } from "../../constants";
 import {
   worldToScreen,
@@ -1534,6 +1535,8 @@ export function drawEnemySprite(
   region: MapTheme = "grassland",
 ) {
   if (size <= 0 || zoom <= 0) return;
+  const nativeRegion = getEnemyNativeRegion(type as EnemyType);
+  const paletteRegion = nativeRegion != null ? "grassland" as MapTheme : region;
   let bodyColor: string;
   let bodyColorDark: string;
   let bodyColorLight: string;
@@ -1541,7 +1544,7 @@ export function drawEnemySprite(
     const flashBase = lightenColor(color, flash * 100);
     const palette = getRegionalPalette(
       flashBase,
-      region,
+      paletteRegion,
       darkenColor,
       lightenColor,
     );
@@ -1551,7 +1554,7 @@ export function drawEnemySprite(
   } else {
     const palette = getRegionalPalette(
       color,
-      region,
+      paletteRegion,
       darkenColor,
       lightenColor,
     );

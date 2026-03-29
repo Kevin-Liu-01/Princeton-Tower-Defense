@@ -1334,6 +1334,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#4a3728",
     size: 28,
     category: "insectoid",
+    nativeRegion: "grassland",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -1367,6 +1368,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#65a30d",
     size: 24,
     category: "insectoid",
+    nativeRegion: "grassland",
     traits: ["fast"],
     abilities: [
       {
@@ -1393,6 +1395,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#1e3a5f",
     size: 22,
     category: "insectoid",
+    nativeRegion: "grassland",
     traits: ["armored", "ranged"],
     abilities: [
       {
@@ -1421,6 +1424,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#6b2142",
     size: 20,
     category: "insectoid",
+    nativeRegion: "swamp",
     traits: ["flying", "fast"],
     abilities: [
       {
@@ -1445,6 +1449,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#7c2d12",
     size: 30,
     category: "insectoid",
+    nativeRegion: "swamp",
     traits: ["armored"],
     abilities: [
       {
@@ -1477,6 +1482,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#0ea5e9",
     size: 18,
     category: "insectoid",
+    nativeRegion: "swamp",
     traits: ["flying", "fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1491,6 +1497,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#c4b5fd",
     size: 22,
     category: "insectoid",
+    nativeRegion: "swamp",
     traits: ["flying", "tower_debuffer"],
     abilities: [
       {
@@ -1519,6 +1526,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#92400e",
     size: 24,
     category: "insectoid",
+    nativeRegion: "desert",
     traits: ["armored", "summoner"],
     summonType: "scarab",
     summonCount: 2,
@@ -1544,6 +1552,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#a3a323",
     size: 16,
     category: "insectoid",
+    nativeRegion: "desert",
     traits: ["flying", "fast", "breakthrough"],
     breakthrough: true,
   },
@@ -1559,6 +1568,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#78350f",
     size: 26,
     category: "insectoid",
+    nativeRegion: "desert",
     traits: ["armored"],
     abilities: [
       {
@@ -1594,6 +1604,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#67e8f9",
     size: 24,
     category: "insectoid",
+    nativeRegion: "winter",
     traits: ["armored", "tower_debuffer"],
     abilities: [
       {
@@ -1627,6 +1638,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#a5f3fc",
     size: 18,
     category: "insectoid",
+    nativeRegion: "winter",
     traits: ["tower_debuffer"],
     abilities: [
       {
@@ -1651,6 +1663,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#e0f2fe",
     size: 20,
     category: "insectoid",
+    nativeRegion: "winter",
     traits: ["flying", "tower_debuffer"],
     abilities: [
       {
@@ -1679,6 +1692,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#dc2626",
     size: 30,
     category: "insectoid",
+    nativeRegion: "volcanic",
     traits: ["armored", "summoner"],
     summonType: "fire_imp",
     summonCount: 2,
@@ -1706,6 +1720,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#b91c1c",
     size: 26,
     category: "insectoid",
+    nativeRegion: "volcanic",
     traits: ["armored"],
     abilities: [
       {
@@ -1738,6 +1753,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#f97316",
     size: 20,
     category: "insectoid",
+    nativeRegion: "volcanic",
     traits: ["flying"],
     abilities: [
       {
@@ -1766,6 +1782,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#1c1917",
     size: 42,
     category: "insectoid",
+    nativeRegion: "grassland",
     traits: ["armored", "boss", "summoner", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 90,
@@ -3054,6 +3071,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#e65100",
     size: 52,
     category: "region_boss",
+    nativeRegion: "grassland",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 130,
@@ -3100,6 +3118,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#1b5e20",
     size: 50,
     category: "region_boss",
+    nativeRegion: "swamp",
     traits: ["armored", "boss", "aoe_attack", "regenerating", "summoner"],
     isBoss: true,
     aoeRadius: 120,
@@ -3148,6 +3167,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#f9a825",
     size: 54,
     category: "region_boss",
+    nativeRegion: "desert",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer", "magic_resist"],
     isBoss: true,
     aoeRadius: 140,
@@ -3203,6 +3223,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#4dd0e1",
     size: 52,
     category: "region_boss",
+    nativeRegion: "winter",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 130,
@@ -3258,6 +3279,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     color: "#d50000",
     size: 56,
     category: "region_boss",
+    nativeRegion: "volcanic",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer", "regenerating"],
     isBoss: true,
     aoeRadius: 150,
@@ -3404,6 +3426,23 @@ export const ENEMY_CATEGORY_ACCENTS: Record<EnemyCategory, string> = {
   flying: "#22d3ee",
   insectoid: "#d97706",
 };
+
+const CATEGORY_NATIVE_REGION: Partial<Record<EnemyCategory, MapTheme>> = {
+  forest: "grassland",
+  swamp: "swamp",
+  desert: "desert",
+  winter: "winter",
+  volcanic: "volcanic",
+};
+
+export function getEnemyNativeRegion(type: EnemyType): MapTheme | null {
+  const data = ENEMY_DATA[type];
+  if (!data) return null;
+  if (data.nativeRegion) return data.nativeRegion;
+  const cat = data.category;
+  if (cat && CATEGORY_NATIVE_REGION[cat]) return CATEGORY_NATIVE_REGION[cat]!;
+  return null;
+}
 
 const REGIONAL_VARIANT_THEMES: MapTheme[] = ["swamp", "desert", "winter", "volcanic"];
 

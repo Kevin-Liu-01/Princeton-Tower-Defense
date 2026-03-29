@@ -1607,9 +1607,31 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
       );
     }
-    // Ability Transform Expiration (Blue Inferno, Verdant Colossus, etc.)
-    if (hero.abilityActive && now > (hero.abilityEnd || 0)) {
+    // Ability Transform Expiration (Blue Inferno, etc.) — Ivy uses toggle, not timed expiry
+    if (hero.abilityActive && hero.type !== "ivy" && now > (hero.abilityEnd || 0)) {
       setHero((prev) => (prev ? { ...prev, abilityActive: false, abilityEnd: undefined } : null));
+    }
+
+    // Ivy Warden healing aura — heals nearby troops when in Warden form
+    if (
+      hero.type === "ivy" &&
+      !hero.abilityActive &&
+      Math.floor(now / HERO_COMBAT_STATS.ivyWardenHealInterval) !==
+        Math.floor((now - deltaTime) / HERO_COMBAT_STATS.ivyWardenHealInterval)
+    ) {
+      const healRadius = HERO_COMBAT_STATS.ivyWardenHealRadius;
+      const healAmt = HERO_COMBAT_STATS.ivyWardenHealAmount;
+      setTroops((prev) =>
+        prev.map((troop) => {
+          if (!troop.type || troop.hp >= troop.maxHp) return troop;
+          if (distance(hero.pos, troop.pos) > healRadius) return troop;
+          return {
+            ...troop,
+            hp: Math.min(troop.maxHp, troop.hp + healAmt),
+            healFlash: now,
+          };
+        }),
+      );
     }
   }
 
@@ -2521,8 +2543,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const heroData = HERO_DATA[prev.type];
       const slowMultiplier =
         prev.slowed && prev.slowIntensity ? 1 - prev.slowIntensity : 1;
-      const speed = heroData.speed * slowMultiplier;
-      const isRanged = heroData.isRanged || false;
+      const isIvyColossusMove = prev.type === "ivy" && prev.abilityActive;
+      const baseSpeed = isIvyColossusMove ? HERO_COMBAT_STATS.ivyColossusSpeed : heroData.speed;
+      const speed = baseSpeed * slowMultiplier;
+      const isRanged = isIvyColossusMove ? false : (heroData.isRanged || false);
       const attackRange = heroData.range;
       const sightRange = isRanged
         ? HERO_RANGED_SIGHT_RANGE

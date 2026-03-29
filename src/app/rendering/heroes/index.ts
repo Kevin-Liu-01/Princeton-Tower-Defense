@@ -99,21 +99,16 @@ export function renderHero(
 
   const baseHeroScale = HERO_SIZE_OVERRIDES[hero.type] ?? 1;
   let abilityScaleBoost = 0;
-  if (hero.type === "ivy" && hero.abilityActive && hero.abilityEnd) {
-    const now = Date.now();
-    const activationTime = hero.abilityEnd - 8000;
-    const elapsed = now - activationTime;
-    const remaining = hero.abilityEnd - now;
+  if (hero.type === "ivy") {
     const MORPH_MS = 1200;
-    if (elapsed < MORPH_MS) {
-      abilityScaleBoost = 0.85 * Math.min(1, elapsed / MORPH_MS);
-    } else if (remaining < MORPH_MS) {
-      abilityScaleBoost = 0.85 * Math.max(0, remaining / MORPH_MS);
-    } else {
-      abilityScaleBoost = 0.85;
+    const now = Date.now();
+    const remaining = hero.abilityEnd ? hero.abilityEnd - now : 0;
+    const morphT = remaining > 0 ? Math.min(1, 1.0 - remaining / MORPH_MS) : 1.0;
+    if (hero.abilityActive) {
+      abilityScaleBoost = 0.85 * morphT;
+    } else if (remaining > 0) {
+      abilityScaleBoost = 0.85 * (1.0 - morphT);
     }
-  } else if (hero.type === "ivy" && hero.abilityActive) {
-    abilityScaleBoost = 0.85;
   }
   const heroScale = baseHeroScale + abilityScaleBoost;
   const size = 32 * zoom * heroScale;
