@@ -5214,18 +5214,19 @@ function drawCrookedStaff(
 ) {
   ctx.save();
 
-  // Lean the staff further outward
-  const anchorX = x - s * 0.18;
+  // Lean the staff further outward with idle sway
+  const staffSway = Math.sin(time * 1.2 + 0.5) * 0.04 + Math.sin(time * 2.1) * 0.015;
+  const anchorX = x - s * 0.12;
   const anchorY = y + s * 0.06;
   ctx.translate(anchorX, anchorY);
-  ctx.rotate(-0.28);
+  ctx.rotate(-0.18 + staffSway);
   ctx.translate(-anchorX, -anchorY);
 
   // Build a gnarled spine with 14 segments
   const SEG_COUNT = 14;
-  const staffBotX = x - s * 0.36;
+  const staffBotX = x - s * 0.22;
   const staffBotY = y + s * 0.32;
-  const staffTopX = x - s * 0.42;
+  const staffTopX = x - s * 0.28;
   const staffTopY = y - s * 0.58;
 
   const pts: { x: number; y: number }[] = [];
