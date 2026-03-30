@@ -2,7 +2,9 @@ import type { Position } from "../../types";
 import {
   WEAPON_LIMITS,
   anchorWeaponToHand,
+  drawArmoredSkirt,
 } from "./troopHelpers";
+import { getScenePressure } from "../performance";
 
 export function drawEliteTroop(
   ctx: CanvasRenderingContext2D,
@@ -61,11 +63,12 @@ export function drawEliteTroop(
   const halberdAngle = halbAnchor.weaponAngle;
 
   // === ELITE AURA (always present, stronger during attack) ===
+  const pressure = getScenePressure();
   const auraIntensity = isAttacking ? 0.6 : 0.3;
   const auraPulse = 0.8 + Math.sin(time * 4) * 0.2;
 
-  // Multiple layered aura rings for depth
-  for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
+  const auraLayerCount = pressure.skipNonEssentialParticles ? 0 : pressure.skipDecorativeEffects ? 1 : 3;
+  for (let auraLayer = 0; auraLayer < auraLayerCount; auraLayer++) {
     const layerOffset = auraLayer * 0.15;
     const auraGrad = ctx.createRadialGradient(
       x,
@@ -78,14 +81,6 @@ export function drawEliteTroop(
     auraGrad.addColorStop(
       0,
       `rgba(255, 108, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.1)})`,
-    );
-    auraGrad.addColorStop(
-      0.4,
-      `rgba(255, 140, 40, ${auraIntensity * auraPulse * (0.25 - auraLayer * 0.06)})`,
-    );
-    auraGrad.addColorStop(
-      0.7,
-      `rgba(255, 180, 80, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.04)})`,
     );
     auraGrad.addColorStop(1, "rgba(255, 108, 0, 0)");
     ctx.fillStyle = auraGrad;
@@ -116,7 +111,7 @@ export function drawEliteTroop(
   }
 
   // Energy rings during attack
-  if (isAttacking) {
+  if (isAttacking && !pressure.skipDecorativeEffects) {
     for (let ring = 0; ring < 3; ring++) {
       const ringPhase = (attackPhase * 2.5 + ring * 0.15) % 1;
       const ringAlpha = (1 - ringPhase) * 0.6;
@@ -622,6 +617,15 @@ export function drawEliteTroop(
     size * 0.055,
     size * 0.045,
   );
+
+  // === ARMORED SKIRT (tassets) ===
+  drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
+    armorPeak: "#d8c068",
+    armorHigh: "#c0a858",
+    armorMid: "#9a8a48",
+    armorDark: "#7a6838",
+    trimColor: "#c9a227",
+  }, { plateCount: 5, widthFactor: 0.46, depthFactor: 0.15, topOffset: 0.26 });
 
   // === ARMS (connecting to shield and halberd) ===
   // Left arm → shield grip

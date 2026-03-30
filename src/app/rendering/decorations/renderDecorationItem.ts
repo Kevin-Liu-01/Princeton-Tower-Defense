@@ -8690,12 +8690,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Snow cap on pedestal
         ctx.fillStyle = "#e4ecf6";
         ctx.globalAlpha = 0.7;
-        ctx.beginPath();
-        ctx.moveTo(ox - pedIso, oy - pedH + pedD - 1 * s);
-        ctx.lineTo(ox, oy - pedH - 1 * s);
-        ctx.lineTo(ox + pedIso, oy - pedH + pedD - 1 * s);
-        ctx.lineTo(ox, oy - pedH + pedD * 2 - 1 * s);
-        ctx.closePath();
+        const obelSnowSeed = Math.abs(decorX * 41 + decorY * 67);
+        drawOrganicBlobAt(ctx, ox, oy - pedH + pedD - 1 * s, pedIso, pedD, obelSnowSeed, 0.2, 14);
         ctx.fill();
         ctx.globalAlpha = 1;
         // Icicles from shaft bands
@@ -30486,21 +30482,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         "#c5c0b5",
         "#a5a095",
       );
+      const pedSeed = Math.abs(decorX * 37 + decorY * 53);
+
       // Weathered stone patches on bottom tier
       ctx.fillStyle = "rgba(90,85,75,0.15)";
-      ctx.beginPath();
-      ctx.ellipse(px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, pedSeed + 1.1, 0.18, 14);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(
-        px + 5 * s,
-        baseY - 3 * s,
-        3 * s,
-        1.5 * s,
-        -0.2,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, px + 5 * s, baseY - 3 * s, 3 * s, 1.5 * s, pedSeed + 2.3, 0.18, 14);
       ctx.fill();
       // Chiseled edge bevel on bottom plinth (top-left lit edge)
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -30564,7 +30552,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       }
 
       // Stone grain speckle on middle column
-      const pedSeed = Math.abs(decorX * 37 + decorY * 53);
       ctx.globalAlpha = 0.08;
       for (let sp2 = 0; sp2 < 12; sp2++) {
         const spx = px + (((pedSeed + sp2 * 41) % 20) - 10) * s;
@@ -30711,104 +30698,32 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Regional pedestal weathering
       if (mapTheme === "swamp") {
         ctx.fillStyle = "rgba(50,80,30,0.35)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px - t1W + 4 * s,
-          baseY - 1 * s,
-          4 * s,
-          2 * s,
-          0.2,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 4 * s, 2 * s, pedSeed + 10.1, 0.2, 14);
         ctx.fill();
         ctx.fillStyle = "rgba(40,70,25,0.3)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px + 6 * s,
-          t2Y + 1 * s,
-          3 * s,
-          1.5 * s,
-          -0.3,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px + 6 * s, t2Y + 1 * s, 3 * s, 1.5 * s, pedSeed + 11.7, 0.2, 14);
         ctx.fill();
         ctx.fillStyle = "rgba(45,75,28,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px - 3 * s,
-          t2Y - t2H * 0.3,
-          2.5 * s,
-          1.2 * s,
-          0.1,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px - 3 * s, t2Y - t2H * 0.3, 2.5 * s, 1.2 * s, pedSeed + 12.3, 0.22, 12);
         ctx.fill();
       } else if (mapTheme === "desert") {
         ctx.fillStyle = "rgba(200,180,140,0.2)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px - t1W + 5 * s,
-          baseY - 0.5 * s,
-          4 * s,
-          1.8 * s,
-          0.1,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px - t1W + 5 * s, baseY - 0.5 * s, 4 * s, 1.8 * s, pedSeed + 13.1, 0.18, 14);
         ctx.fill();
       } else if (mapTheme === "winter") {
         ctx.fillStyle = "rgba(220,230,240,0.35)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px,
-          baseY - t1H - 0.5 * s,
-          t1W * 0.8,
-          3 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px, baseY - t1H - 0.5 * s, t1W * 0.8, 3 * s, pedSeed + 14.7, 0.2, 18);
         ctx.fill();
       } else if (mapTheme === "volcanic") {
         ctx.fillStyle = "rgba(40,30,30,0.2)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px - t1W + 4 * s,
-          baseY - 1 * s,
-          3.5 * s,
-          1.5 * s,
-          0.2,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, pedSeed + 15.3, 0.2, 14);
         ctx.fill();
       } else {
         ctx.fillStyle = "rgba(70,90,55,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px - t1W + 4 * s,
-          baseY - 1 * s,
-          3.5 * s,
-          1.5 * s,
-          0.2,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, pedSeed + 16.1, 0.2, 14);
         ctx.fill();
         ctx.fillStyle = "rgba(60,80,45,0.2)";
-        ctx.beginPath();
-        ctx.ellipse(
-          px + 6 * s,
-          t2Y + 1 * s,
-          2.5 * s,
-          1.2 * s,
-          -0.3,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, px + 6 * s, t2Y + 1 * s, 2.5 * s, 1.2 * s, pedSeed + 17.3, 0.2, 12);
         ctx.fill();
       }
 
@@ -33715,38 +33630,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       if (mapTheme === "swamp") {
         // Heavy vine/moss overgrowth
         ctx.fillStyle = "rgba(50,80,30,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 5 * s,
-          figureBase - 2 * s,
-          3 * s,
-          1.5 * s,
-          0.3,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx - 5 * s, figureBase - 2 * s, 3 * s, 1.5 * s, pedSeed + 20.1, 0.22, 14);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx + 4 * s,
-          figureBase - 3 * s,
-          2.5 * s,
-          1.2 * s,
-          -0.2,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 3 * s, 2.5 * s, 1.2 * s, pedSeed + 21.3, 0.22, 12);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 2 * s,
-          figureBase - 12 * s,
-          2 * s,
-          1 * s,
-          0.1,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx - 2 * s, figureBase - 12 * s, 2 * s, 1 * s, pedSeed + 22.7, 0.2, 12);
         ctx.fill();
         // Draping vines
         ctx.strokeStyle = "rgba(40,70,25,0.4)";
@@ -33772,125 +33660,63 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       } else if (mapTheme === "desert") {
         // Sand accumulation at base and in crevices
         ctx.fillStyle = "rgba(210,190,150,0.3)";
-        ctx.beginPath();
-        ctx.ellipse(fx, figureBase + 1 * s, 6 * s, 2 * s, 0, 0, Math.PI * 2);
+        drawOrganicBlobAt(ctx, fx, figureBase + 1 * s, 6 * s, 2 * s, pedSeed + 23.1, 0.2, 16);
         ctx.fill();
         // Wind-worn patches
         ctx.fillStyle = "rgba(180,160,120,0.2)";
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 3 * s,
-          figureBase - 8 * s,
-          2 * s,
-          1 * s,
-          0.4,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx - 3 * s, figureBase - 8 * s, 2 * s, 1 * s, pedSeed + 24.3, 0.2, 12);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx + 4 * s,
-          figureBase - 5 * s,
-          1.5 * s,
-          0.8 * s,
-          -0.3,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 5 * s, 1.5 * s, 0.8 * s, pedSeed + 25.7, 0.2, 10);
         ctx.fill();
       } else if (mapTheme === "winter") {
-        // Snow caps on head and shoulders
+        // Snow cap on head — layered for organic look
         ctx.fillStyle = "#f0f4f8";
-        ctx.beginPath();
-        ctx.ellipse(fx, figureBase - 42 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        drawOrganicBlobAt(ctx, fx, figureBase - 42 * s, 5 * s, 2 * s, pedSeed + 26.1, 0.2, 16);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 5 * s,
-          figureBase - 30 * s,
-          3 * s,
-          1.2 * s,
-          0.2,
-          0,
-          Math.PI * 2,
-        );
+        ctx.save();
+        ctx.globalAlpha = ctx.globalAlpha * 0.6;
+        ctx.fillStyle = "#f8fafc";
+        drawOrganicBlobAt(ctx, fx - 1 * s, figureBase - 42.5 * s, 3.5 * s, 1.4 * s, pedSeed + 26.5, 0.25, 12);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx + 5 * s,
-          figureBase - 28 * s,
-          2.5 * s,
-          1 * s,
-          -0.2,
-          0,
-          Math.PI * 2,
-        );
+        ctx.restore();
+        // Snow on left shoulder
+        ctx.fillStyle = "#f0f4f8";
+        drawOrganicBlobAt(ctx, fx - 5 * s, figureBase - 30 * s, 3 * s, 1.2 * s, pedSeed + 27.3, 0.22, 14);
         ctx.fill();
-        // Snow on pedestal top
+        // Snow on right shoulder
+        drawOrganicBlobAt(ctx, fx + 5 * s, figureBase - 28 * s, 2.5 * s, 1 * s, pedSeed + 28.7, 0.22, 12);
+        ctx.fill();
+        // Snow on pedestal top — large layered cap
         ctx.fillStyle = "#e8eef4";
-        ctx.beginPath();
-        ctx.ellipse(fx, baseY - t1H - 1 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        drawOrganicBlobAt(ctx, fx, baseY - t1H - 1 * s, 10 * s, 4 * s, pedSeed + 29.1, 0.18, 20);
         ctx.fill();
+        ctx.save();
+        ctx.globalAlpha = ctx.globalAlpha * 0.5;
+        ctx.fillStyle = "#f2f6fa";
+        drawOrganicBlobAt(ctx, fx + 2 * s, baseY - t1H - 1.5 * s, 6 * s, 2.5 * s, pedSeed + 29.9, 0.22, 14);
+        ctx.fill();
+        ctx.restore();
       } else if (mapTheme === "volcanic") {
         // Ash deposits and ember glow
         ctx.fillStyle = "rgba(50,40,40,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(fx, figureBase + 1 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        drawOrganicBlobAt(ctx, fx, figureBase + 1 * s, 5 * s, 2 * s, pedSeed + 30.1, 0.2, 14);
         ctx.fill();
         // Ember glow at base cracks
         ctx.fillStyle = "rgba(255,120,40,0.2)";
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 3 * s,
-          figureBase - 1 * s,
-          1.5 * s,
-          0.8 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx - 3 * s, figureBase - 1 * s, 1.5 * s, 0.8 * s, pedSeed + 31.3, 0.2, 10);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx + 4 * s,
-          figureBase - 2 * s,
-          1.2 * s,
-          0.6 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx + 4 * s, figureBase - 2 * s, 1.2 * s, 0.6 * s, pedSeed + 32.7, 0.2, 10);
         ctx.fill();
         // Subtle red heat glow on figure
         ctx.fillStyle = "rgba(200,60,20,0.08)";
-        ctx.beginPath();
-        ctx.ellipse(fx, figureBase - 20 * s, 8 * s, 15 * s, 0, 0, Math.PI * 2);
+        drawOrganicBlobAt(ctx, fx, figureBase - 20 * s, 8 * s, 15 * s, pedSeed + 33.1, 0.12, 20);
         ctx.fill();
       } else {
         // Grassland default - subtle moss spots
         ctx.fillStyle = "rgba(65,85,50,0.18)";
-        ctx.beginPath();
-        ctx.ellipse(
-          fx - 4 * s,
-          figureBase - 1 * s,
-          2 * s,
-          1 * s,
-          0.2,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx - 4 * s, figureBase - 1 * s, 2 * s, 1 * s, pedSeed + 34.1, 0.2, 12);
         ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          fx + 3 * s,
-          figureBase - 2 * s,
-          1.5 * s,
-          0.8 * s,
-          -0.1,
-          0,
-          Math.PI * 2,
-        );
+        drawOrganicBlobAt(ctx, fx + 3 * s, figureBase - 2 * s, 1.5 * s, 0.8 * s, pedSeed + 35.3, 0.2, 10);
         ctx.fill();
       }
       break;
@@ -34736,47 +34562,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.stroke();
 
       // Frost/snow caps on abutments and pillars
+      const ibSnowSeed = Math.abs(decorX * 53 + decorY * 97);
       ctx.fillStyle = "rgba(218,238,250,0.5)";
-      ctx.beginPath();
-      ctx.ellipse(aLx, aLy - 27 * s, 12 * s, 5.5 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, aLx, aLy - 27 * s, 12 * s, 5.5 * s, ibSnowSeed, 0.18, 14);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(aRx, aRy - 22 * s, 11 * s, 5 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, aRx, aRy - 22 * s, 11 * s, 5 * s, ibSnowSeed + 31, 0.2, 14);
       ctx.fill();
       ctx.fillStyle = "rgba(210,232,248,0.4)";
-      ctx.beginPath();
-      ctx.ellipse(aLx - 7 * s, aLy - 55 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, aLx - 7 * s, aLy - 55 * s, 4 * s, 2 * s, ibSnowSeed + 67, 0.22, 10);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(
-        aLx + 8 * s,
-        aLy - 49 * s,
-        3.5 * s,
-        1.8 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, aLx + 8 * s, aLy - 49 * s, 3.5 * s, 1.8 * s, ibSnowSeed + 89, 0.22, 10);
       ctx.fill();
 
       // Snow drifts around the base
       ctx.fillStyle = "rgba(208,232,246,0.3)";
-      ctx.beginPath();
-      ctx.ellipse(
-        cx - 24 * s,
-        cy + 20 * s,
-        16 * s,
-        6 * s,
-        -0.3,
-        0,
-        Math.PI * 2,
-      );
+      drawOrganicBlobAt(ctx, cx - 24 * s, cy + 20 * s, 16 * s, 6 * s, ibSnowSeed + 113, 0.18, 16);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx + 22 * s, cy + 17 * s, 14 * s, 5 * s, 0.2, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, cx + 22 * s, cy + 17 * s, 14 * s, 5 * s, ibSnowSeed + 137, 0.2, 14);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx - 5 * s, cy + 24 * s, 10 * s, 4 * s, 0.1, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, cx - 5 * s, cy + 24 * s, 10 * s, 4 * s, ibSnowSeed + 157, 0.2, 12);
       ctx.fill();
 
       // Glowing ice runes on the abutment faces

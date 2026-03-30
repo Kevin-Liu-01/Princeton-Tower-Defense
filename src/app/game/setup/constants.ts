@@ -15,6 +15,11 @@ export const MAX_TROOP_PATH_DISTANCE = 30;
 export const MAX_HERO_PATH_DISTANCE = 45;
 export const UNIT_SETTLE_DISTANCE = 15;
 
+/** Maximum along-path distance ratio: if path-walk distance > euclidean × this, enemy is unreachable */
+export const PATH_REACHABILITY_RATIO = 3.0;
+/** Minimum off-path distance to trigger path-walk check (skip for enemies already very close) */
+export const PATH_REACHABILITY_MIN_EUCLIDEAN = 60;
+
 export const DEFAULT_CAMERA_OFFSET: Position = {
   x: -40,
   y: -60,

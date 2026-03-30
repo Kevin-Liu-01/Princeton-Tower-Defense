@@ -3,7 +3,7 @@
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow } from "../performance";
 import { drawEmberSparks, drawShiftingSegments, drawOrbitingDebris, drawAnimatedTendril, drawFloatingPiece } from "./animationHelpers";
-import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import { drawPathArm, drawPathLegs, drawHipGarb } from "./darkFantasyHelpers";
 
 // =====================================================
 // VOLCANIC REGION TROOPS
@@ -2121,6 +2121,8 @@ export function drawEmberGuardEnemy(
 
   ctx.restore(); // right shin
   ctx.restore(); // right leg
+
+  drawHipGarb(ctx, x, y + size * 0.04, size, zoom, time, 'plates', bodyColorDark, '#1a0a02');
 
   // Massive armored torso — volcanic stone bezier armor with lava veins
   const armorGrad = ctx.createLinearGradient(

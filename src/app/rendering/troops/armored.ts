@@ -4,6 +4,7 @@ import {
   WEAPON_LIMITS,
   TROOP_MASTERWORK_STYLES,
   drawTroopMasterworkFinish,
+  drawArmoredSkirt,
 } from "./troopHelpers";
 
 export function drawArmoredTroop(
@@ -69,6 +70,15 @@ export function drawArmoredTroop(
 
   // === BELT ===
   drawBelt(ctx, x, y, size, breathe, shimmer, steelPulse, zoom);
+
+  // === ARMORED SKIRT (tassets) ===
+  drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
+    armorPeak: steelBright,
+    armorHigh: steelHigh,
+    armorMid: steelMid,
+    armorDark: steelDark,
+    trimColor: "#b8a870",
+  }, { plateCount: 5, widthFactor: 0.42, depthFactor: 0.14, topOffset: 0.28 });
 
   // === PAULDRONS ===
   drawPauldrons(ctx, x, y, size, breathe, shimmer, zoom, steelBright, steelHigh, steelMid, steelDark);

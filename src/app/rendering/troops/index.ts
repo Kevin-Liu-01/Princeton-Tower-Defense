@@ -2,7 +2,7 @@ import type { Troop, Position, TroopOwnerType } from "../../types";
 import type { MapTheme } from "../../constants/maps";
 import { TROOP_DATA, ISO_Y_RATIO } from "../../constants";
 import { worldToScreen, worldToScreenRounded } from "../../utils";
-import { getPerformanceSettings } from "../performance";
+import { getPerformanceSettings, getScenePressure } from "../performance";
 
 import { drawSoldierTroop } from "./soldier";
 import { drawCavalryTroop } from "./cavalry";
@@ -44,13 +44,17 @@ export function renderTroop(
   const troopType = troop.type || "footsoldier";
   const tData = TROOP_DATA[troopType];
   const time = Date.now() / 1000;
+  const pressure = getScenePressure();
+  const lowDetail = pressure.skipDecorativeEffects;
+  const minDetail = pressure.skipNonEssentialParticles;
+
   const ghostRemainingRatio =
     troop.isHexGhost && troop.hexGhostExpireTime
       ? Math.max(0, Math.min(1, (troop.hexGhostExpireTime - Date.now()) / 8000))
       : 1;
   const ghostAlpha =
     troop.isHexGhost
-      ? 0.42 + ghostRemainingRatio * 0.5 + Math.sin(time * 7.5) * 0.04
+      ? 0.42 + ghostRemainingRatio * 0.5 + (minDetail ? 0 : Math.sin(time * 7.5) * 0.04)
       : 1;
 
   ctx.save();
@@ -58,7 +62,7 @@ export function renderTroop(
     ctx.globalAlpha = Math.max(0.22, Math.min(0.95, ghostAlpha));
   }
 
-  if (troop.isHexGhost) {
+  if (troop.isHexGhost && !minDetail) {
     const ghostPulse = 0.72 + Math.sin(time * 4.5) * 0.2;
     const ghostAura = ctx.createRadialGradient(
       screenPos.x,
@@ -69,7 +73,6 @@ export function renderTroop(
       30 * zoom,
     );
     ghostAura.addColorStop(0, `rgba(244, 114, 182, ${0.22 * ghostPulse})`);
-    ghostAura.addColorStop(0.5, `rgba(168, 85, 247, ${0.18 * ghostPulse})`);
     ghostAura.addColorStop(1, "rgba(76, 29, 149, 0)");
     ctx.fillStyle = ghostAura;
     ctx.beginPath();
@@ -84,18 +87,20 @@ export function renderTroop(
     );
     ctx.fill();
 
-    for (let i = 0; i < 3; i++) {
-      const wispAngle = time * (1.2 + i * 0.35) + i * 2.1;
-      const wispX = screenPos.x + Math.cos(wispAngle) * 13 * zoom;
-      const wispY =
-        screenPos.y -
-        16 * zoom +
-        Math.sin(wispAngle * 1.4) * 8 * zoom -
-        i * 4 * zoom;
-      ctx.fillStyle = `rgba(251, 113, 133, ${0.18 + ghostRemainingRatio * 0.16})`;
-      ctx.beginPath();
-      ctx.arc(wispX, wispY, (2.2 + i * 0.8) * zoom, 0, Math.PI * 2);
-      ctx.fill();
+    if (!lowDetail) {
+      for (let i = 0; i < 3; i++) {
+        const wispAngle = time * (1.2 + i * 0.35) + i * 2.1;
+        const wispX = screenPos.x + Math.cos(wispAngle) * 13 * zoom;
+        const wispY =
+          screenPos.y -
+          16 * zoom +
+          Math.sin(wispAngle * 1.4) * 8 * zoom -
+          i * 4 * zoom;
+        ctx.fillStyle = `rgba(251, 113, 133, ${0.18 + ghostRemainingRatio * 0.16})`;
+        ctx.beginPath();
+        ctx.arc(wispX, wispY, (2.2 + i * 0.8) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
@@ -170,6 +175,7 @@ export function renderTroop(
 
   // Healing aura ground layer - circle renders behind troop sprite
   const troopHealActive =
+    !minDetail &&
     troop.healFlash &&
     (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
   if (troopHealActive) {
@@ -184,7 +190,6 @@ export function renderTroop(
       size * 1.0,
     );
     outerGlow.addColorStop(0, `rgba(134, 239, 172, ${0.5 * pulseAlpha})`);
-    outerGlow.addColorStop(0.4, `rgba(74, 222, 128, ${0.3 * pulseAlpha})`);
     outerGlow.addColorStop(1, "rgba(34, 197, 94, 0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
@@ -237,7 +242,6 @@ export function renderTroop(
       size * 0.45,
     );
     innerGlow.addColorStop(0, `rgba(187, 247, 208, ${0.65 * pulseAlpha})`);
-    innerGlow.addColorStop(0.5, `rgba(134, 239, 172, ${0.3 * pulseAlpha})`);
     innerGlow.addColorStop(1, "rgba(74, 222, 128, 0)");
     ctx.fillStyle = innerGlow;
     ctx.beginPath();
@@ -252,37 +256,40 @@ export function renderTroop(
     );
     ctx.fill();
 
-    for (let i = 0; i < 6; i++) {
-      const sparklePhase = (time * 0.7 + i * 0.17) % 1;
-      const sparkleX =
-        screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
-      const sparkleY = screenPos.y + size * 0.15 - sparklePhase * size * 0.9;
-      const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
-      const sparkleSize = (2.0 + Math.sin(i * 1.2) * 0.6) * zoom;
+    if (!lowDetail) {
+      const sparkleCount = pressure.forceSimplifiedGradients ? 3 : 6;
+      for (let i = 0; i < sparkleCount; i++) {
+        const sparklePhase = (time * 0.7 + i * 0.17) % 1;
+        const sparkleX =
+          screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
+        const sparkleY = screenPos.y + size * 0.15 - sparklePhase * size * 0.9;
+        const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
+        const sparkleSize = (2.0 + Math.sin(i * 1.2) * 0.6) * zoom;
 
-      ctx.fillStyle = `rgba(220, 252, 231, ${sparkleAlpha})`;
-      ctx.beginPath();
-      ctx.moveTo(sparkleX, sparkleY - sparkleSize);
-      ctx.lineTo(sparkleX + sparkleSize * 0.5, sparkleY);
-      ctx.lineTo(sparkleX, sparkleY + sparkleSize);
-      ctx.lineTo(sparkleX - sparkleSize * 0.5, sparkleY);
-      ctx.closePath();
-      ctx.fill();
-    }
+        ctx.fillStyle = `rgba(220, 252, 231, ${sparkleAlpha})`;
+        ctx.beginPath();
+        ctx.moveTo(sparkleX, sparkleY - sparkleSize);
+        ctx.lineTo(sparkleX + sparkleSize * 0.5, sparkleY);
+        ctx.lineTo(sparkleX, sparkleY + sparkleSize);
+        ctx.lineTo(sparkleX - sparkleSize * 0.5, sparkleY);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-    for (let i = 0; i < 3; i++) {
-      const shimmerAngle = time * 1.0 + i * ((Math.PI * 2) / 3);
-      const shimmerDist = size * 0.35;
-      const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
-      const shimmerY =
-        screenPos.y + Math.sin(shimmerAngle) * shimmerDist * ISO_Y_RATIO;
-      const shimmerAlpha =
-        (0.7 + Math.sin(time * 4 + i * 2) * 0.2) * pulseAlpha;
+      for (let i = 0; i < 3; i++) {
+        const shimmerAngle = time * 1.0 + i * ((Math.PI * 2) / 3);
+        const shimmerDist = size * 0.35;
+        const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
+        const shimmerY =
+          screenPos.y + Math.sin(shimmerAngle) * shimmerDist * ISO_Y_RATIO;
+        const shimmerAlpha =
+          (0.7 + Math.sin(time * 4 + i * 2) * 0.2) * pulseAlpha;
 
-      ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha * 0.8})`;
-      ctx.beginPath();
-      ctx.arc(shimmerX, shimmerY, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(shimmerX, shimmerY, 1.8 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
@@ -335,26 +342,25 @@ export function renderTroop(
     const hpWidth = barWidth * hpPercent;
 
     if (hpWidth > 0) {
-      const hpGradient = ctx.createLinearGradient(
-        barX,
-        barY,
-        barX,
-        barY + barHeight,
-      );
-      if (hpPercent > 0.5) {
-        hpGradient.addColorStop(0, "#86efac");
-        hpGradient.addColorStop(0.5, "#4ade80");
-        hpGradient.addColorStop(1, "#22c55e");
-      } else if (hpPercent > 0.25) {
-        hpGradient.addColorStop(0, "#fde047");
-        hpGradient.addColorStop(0.5, "#facc15");
-        hpGradient.addColorStop(1, "#eab308");
+      if (lowDetail) {
+        ctx.fillStyle = hpPercent > 0.5 ? "#4ade80" : hpPercent > 0.25 ? "#facc15" : "#f87171";
       } else {
-        hpGradient.addColorStop(0, "#fca5a5");
-        hpGradient.addColorStop(0.5, "#f87171");
-        hpGradient.addColorStop(1, "#ef4444");
+        const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+        if (hpPercent > 0.5) {
+          hpGradient.addColorStop(0, "#86efac");
+          hpGradient.addColorStop(0.5, "#4ade80");
+          hpGradient.addColorStop(1, "#22c55e");
+        } else if (hpPercent > 0.25) {
+          hpGradient.addColorStop(0, "#fde047");
+          hpGradient.addColorStop(0.5, "#facc15");
+          hpGradient.addColorStop(1, "#eab308");
+        } else {
+          hpGradient.addColorStop(0, "#fca5a5");
+          hpGradient.addColorStop(0.5, "#f87171");
+          hpGradient.addColorStop(1, "#ef4444");
+        }
+        ctx.fillStyle = hpGradient;
       }
-      ctx.fillStyle = hpGradient;
       ctx.beginPath();
       ctx.roundRect(barX, barY, hpWidth, barHeight, [
         cornerRadius - 1,
@@ -364,42 +370,35 @@ export function renderTroop(
       ]);
       ctx.fill();
 
-      const shineGrad = ctx.createLinearGradient(
-        barX,
-        barY,
-        barX,
-        barY + barHeight * 0.45,
-      );
-      shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.35)");
-      shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
-      ctx.fillStyle = shineGrad;
-      ctx.beginPath();
-      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.45, [
-        cornerRadius - 1,
-        hpPercent > 0.9 ? cornerRadius - 1 : 0,
-        0,
-        0,
-      ]);
-      ctx.fill();
+      if (!lowDetail) {
+        const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.45);
+        shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.35)");
+        shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = shineGrad;
+        ctx.beginPath();
+        ctx.roundRect(barX, barY, hpWidth, barHeight * 0.45, [
+          cornerRadius - 1,
+          hpPercent > 0.9 ? cornerRadius - 1 : 0,
+          0,
+          0,
+        ]);
+        ctx.fill();
+      }
     }
 
-    const glowColor =
-      hpPercent > 0.5
-        ? "rgba(74, 222, 128, 0.3)"
-        : hpPercent > 0.25
-          ? "rgba(250, 204, 21, 0.3)"
-          : "rgba(248, 113, 113, 0.3)";
-    ctx.strokeStyle = glowColor;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(
-      barX - 1,
-      barY - 1,
-      barWidth + 2,
-      barHeight + 2,
-      cornerRadius,
-    );
-    ctx.stroke();
+    if (!lowDetail) {
+      const glowColor =
+        hpPercent > 0.5
+          ? "rgba(74, 222, 128, 0.3)"
+          : hpPercent > 0.25
+            ? "rgba(250, 204, 21, 0.3)"
+            : "rgba(248, 113, 113, 0.3)";
+      ctx.strokeStyle = glowColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

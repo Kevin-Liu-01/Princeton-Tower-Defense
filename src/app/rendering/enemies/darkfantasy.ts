@@ -128,6 +128,7 @@ export function drawSkeletonFootmanEnemy(
     footColor: boneDark,
     footLen: 0.12,
     style: "bone",
+    garb: false,
   });
 
   // === TATTERED WAIST CLOTH ===
@@ -1897,6 +1898,7 @@ export function drawSkeletonArcherEnemy(
     footColor: "#5a4a35",
     footLen: 0.12,
     style: "bone",
+    garb: false,
   });
 
   // Leather wraps on legs

@@ -188,6 +188,106 @@ export function constrainToNearPath(
   };
 }
 
+export interface StepAlongWaypointsInput {
+  current: Position;
+  waypoints: Position[];
+  speed: number;
+  deltaTime: number;
+  stopDistance?: number;
+}
+
+export interface StepAlongWaypointsResult {
+  pos: Position;
+  reached: boolean;
+  rotation: number;
+  facingRight: boolean;
+  /** how many waypoints were consumed (for callers that store remaining) */
+  waypointsConsumed: number;
+}
+
+/**
+ * Walk toward a destination through a series of intermediate waypoints
+ * (path nodes at bends/corners). Each tick the unit advances along the
+ * polyline formed by [current, ...waypoints], consuming waypoints as it
+ * reaches them.
+ */
+export function stepAlongWaypoints({
+  current,
+  waypoints,
+  speed,
+  deltaTime,
+  stopDistance = 0,
+}: StepAlongWaypointsInput): StepAlongWaypointsResult {
+  if (waypoints.length === 0) {
+    return {
+      pos: { ...current },
+      reached: true,
+      rotation: 0,
+      facingRight: true,
+      waypointsConsumed: 0,
+    };
+  }
+
+  const maxStepDistance = Math.max(0, (speed * deltaTime) / GAME_TICK_NORMALIZER);
+  let remaining = maxStepDistance;
+  let pos = current;
+  let consumed = 0;
+  let rotation = 0;
+  let facingRight = true;
+
+  for (let i = 0; i < waypoints.length && remaining > EPSILON; i++) {
+    const target = waypoints[i];
+    const dx = target.x - pos.x;
+    const dy = target.y - pos.y;
+    const dist = Math.hypot(dx, dy);
+
+    rotation = Math.atan2(dy, dx);
+    facingRight = getFacingRightFromDelta(dx, dy);
+
+    const isLast = i === waypoints.length - 1;
+    const effectiveStop = isLast ? Math.max(0, stopDistance) : 0;
+
+    if (dist <= effectiveStop + EPSILON) {
+      consumed = i + 1;
+      if (isLast) {
+        return { pos: { ...pos }, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+      }
+      continue;
+    }
+
+    const availableDistance = Math.max(0, dist - effectiveStop);
+    const traveled = Math.min(remaining, availableDistance);
+
+    if (traveled <= EPSILON) {
+      if (isLast) {
+        return { pos: { ...pos }, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+      }
+      continue;
+    }
+
+    const safeD = Math.max(dist, EPSILON);
+    pos = {
+      x: pos.x + (dx / safeD) * traveled,
+      y: pos.y + (dy / safeD) * traveled,
+    };
+    remaining -= traveled;
+
+    const leftover = dist - traveled;
+    if (leftover <= effectiveStop + EPSILON) {
+      consumed = i + 1;
+      if (isLast) {
+        return { pos, reached: true, rotation, facingRight, waypointsConsumed: consumed };
+      }
+    }
+  }
+
+  const finalTarget = waypoints[waypoints.length - 1];
+  const finalDist = Math.hypot(finalTarget.x - pos.x, finalTarget.y - pos.y);
+  const reached = finalDist <= Math.max(0, stopDistance) + EPSILON;
+
+  return { pos, reached, rotation, facingRight, waypointsConsumed: consumed };
+}
+
 function computeRepulsionFromNeighbors(
   origin: Position,
   neighbors: PositionedUnit[],

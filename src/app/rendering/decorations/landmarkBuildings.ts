@@ -218,44 +218,6 @@ function drawMultiFlame(
   clearShadow(ctx);
 }
 
-function drawIcicleRow(
-  ctx: CanvasRenderingContext2D,
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
-  count: number,
-  maxLen: number,
-  s: number,
-  seed: number,
-): void {
-  for (let i = 0; i < count; i++) {
-    const t = (i + 0.5) / count;
-    const ix = startX + (endX - startX) * t;
-    const iy = startY + (endY - startY) * t;
-    const len = (maxLen * 0.5 + maxLen * 0.5 * Math.sin(seed + i * 2.3)) * s;
-    const w = (0.7 + Math.sin(seed + i * 1.7) * 0.25) * s;
-    const grad = ctx.createLinearGradient(ix, iy, ix, iy + len);
-    grad.addColorStop(0, "rgba(180,220,245,0.9)");
-    grad.addColorStop(0.35, "rgba(140,200,240,0.75)");
-    grad.addColorStop(0.7, "rgba(100,175,230,0.5)");
-    grad.addColorStop(1, "rgba(80,160,220,0.15)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(ix - w, iy);
-    ctx.lineTo(ix + w, iy);
-    ctx.lineTo(ix + w * 0.1, iy + len);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(220,240,255,0.35)";
-    ctx.lineWidth = 0.25 * s;
-    ctx.beginPath();
-    ctx.moveTo(ix - w * 0.3, iy + s);
-    ctx.lineTo(ix - w * 0.1, iy + len * 0.5);
-    ctx.stroke();
-  }
-}
-
 function drawMortarLines(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -281,8 +243,176 @@ function drawMortarLines(
 }
 
 // =========================================================================
-// ICE FORTRESS
+// ICE FORTRESS (Crumbled Stone Ruins)
 // =========================================================================
+
+function drawRuinsBanner(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  s: number,
+  time: number,
+  poleH: number,
+  bannerColor1: string,
+  bannerColor2: string,
+): void {
+  ctx.strokeStyle = "#5a4a3a";
+  ctx.lineWidth = 1.4 * s;
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px, py - poleH * s);
+  ctx.stroke();
+  // Pole finial
+  ctx.fillStyle = "#7a6a5a";
+  ctx.beginPath();
+  ctx.arc(px, py - poleH * s, 1.2 * s, 0, Math.PI * 2);
+  ctx.fill();
+  const bWave = Math.sin(time * 2.2) * 1.5 * s;
+  const bWave2 = Math.sin(time * 3.1 + 1) * 0.8 * s;
+  const bTop = py - poleH * s;
+  const banG = ctx.createLinearGradient(px, bTop, px + 10 * s, bTop + 8 * s);
+  banG.addColorStop(0, bannerColor1);
+  banG.addColorStop(1, bannerColor2);
+  ctx.fillStyle = banG;
+  ctx.beginPath();
+  ctx.moveTo(px, bTop);
+  ctx.lineTo(px + 9 * s + bWave, bTop + 2 * s);
+  ctx.lineTo(px + 7 * s - bWave2, bTop + 5 * s);
+  ctx.lineTo(px + 9 * s + bWave * 0.4, bTop + 8 * s);
+  ctx.lineTo(px + 5 * s + bWave2 * 0.3, bTop + 10 * s);
+  ctx.lineTo(px, bTop + 7 * s);
+  ctx.closePath();
+  ctx.fill();
+  // Tattered edge details
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
+  ctx.lineWidth = 0.4 * s;
+  ctx.beginPath();
+  ctx.moveTo(px + 9 * s + bWave, bTop + 2 * s);
+  ctx.lineTo(px + 7 * s - bWave2, bTop + 5 * s);
+  ctx.lineTo(px + 9 * s + bWave * 0.4, bTop + 8 * s);
+  ctx.lineTo(px + 5 * s + bWave2 * 0.3, bTop + 10 * s);
+  ctx.stroke();
+}
+
+function drawBrokenTower(
+  ctx: CanvasRenderingContext2D,
+  tx: number,
+  ty: number,
+  tW: number,
+  tH: number,
+  breakH: number,
+  s: number,
+  seed: number,
+  stoneTop: string,
+  stoneLit: string,
+  stoneDark: string,
+): void {
+  drawIsometricPrism(ctx, tx, ty, tW, tW, tH, stoneTop, stoneLit, stoneDark);
+  drawMortarLines(ctx, tx, ty, tW, tH, Math.floor(tH / (5 * s)), "rgba(30,25,20,0.15)", s);
+  // Crumbled top: irregular jagged stone blocks
+  const tTopY = ty - tH;
+  const iW = tW * ISO_COS;
+  const iD = tW * ISO_SIN;
+  for (let j = 0; j < 5; j++) {
+    const jt = (j + 0.3) / 5;
+    const jH = (breakH * (0.3 + 0.7 * Math.abs(Math.sin(seed + j * 2.7)))) * s;
+    const jx = tx - iW * (1 - jt * 2);
+    const jy = tTopY + iD * (1 - Math.abs(1 - jt * 2));
+    drawIsometricPrism(
+      ctx, jx, jy, 2.5 * s, 2.5 * s, jH,
+      stoneTop, stoneLit, stoneDark,
+    );
+  }
+}
+
+function drawRuinedWallSegment(
+  ctx: CanvasRenderingContext2D,
+  wx: number,
+  wy: number,
+  wW: number,
+  wH: number,
+  s: number,
+  seed: number,
+  stoneTop: string,
+  stoneLit: string,
+  stoneDark: string,
+): void {
+  drawIsometricPrism(ctx, wx, wy, wW, wW, wH, stoneTop, stoneLit, stoneDark);
+  drawMortarLines(ctx, wx, wy, wW, wH, Math.max(2, Math.floor(wH / (6 * s))), "rgba(30,25,20,0.15)", s);
+  // Weathering overlay on left face
+  const wI = wW * ISO_COS;
+  const wD = wW * ISO_SIN;
+  const weath = ctx.createLinearGradient(wx - wI, wy + wD, wx, wy + wD * 2);
+  weath.addColorStop(0, "rgba(60,80,50,0.12)");
+  weath.addColorStop(0.5, "rgba(90,100,70,0.06)");
+  weath.addColorStop(1, "rgba(40,60,30,0.1)");
+  prismFaceOverlay(ctx, wx, wy, wW, wH, "left", weath);
+  // Scattered rubble blocks at base
+  for (let rb = 0; rb < 3; rb++) {
+    const rbx = wx + (Math.sin(seed + rb * 3.1) * 8 - 4) * s;
+    const rby = wy + wD + (Math.cos(seed + rb * 2.3) * 3 + 2) * s;
+    const rbSize = (1.5 + Math.sin(seed + rb * 1.7) * 0.8) * s;
+    drawIsometricPrism(ctx, rbx, rby, rbSize, rbSize, rbSize * 0.7, stoneTop, stoneLit, stoneDark);
+  }
+}
+
+function drawStoneTexture(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  s: number,
+  seed: number,
+): void {
+  ctx.strokeStyle = "rgba(30,25,20,0.08)";
+  ctx.lineWidth = 0.3 * s;
+  for (let st = 0; st < 12; st++) {
+    const stA = (st / 12) * Math.PI * 2 + seed * 0.1;
+    const stR = radius * (0.3 + Math.sin(seed + st * 1.9) * 0.5);
+    const stR2 = radius * (0.2 + Math.cos(seed + st * 2.3) * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(
+      cx + Math.cos(stA) * stR,
+      cy + Math.sin(stA) * stR * ISO_Y_RATIO,
+    );
+    ctx.lineTo(
+      cx + Math.cos(stA + 0.4) * stR2,
+      cy + Math.sin(stA + 0.4) * stR2 * ISO_Y_RATIO,
+    );
+    ctx.stroke();
+  }
+}
+
+function drawArrowSlit(
+  ctx: CanvasRenderingContext2D,
+  ax: number,
+  ay: number,
+  s: number,
+): void {
+  ctx.fillStyle = "rgba(15,10,5,0.55)";
+  ctx.fillRect(ax - 0.6 * s, ay - 3 * s, 1.2 * s, 6 * s);
+  ctx.fillStyle = "rgba(15,10,5,0.35)";
+  ctx.fillRect(ax - 2 * s, ay - 0.5 * s, 4 * s, 1 * s);
+}
+
+function drawDefensiveEmplacement(
+  ctx: CanvasRenderingContext2D,
+  ex: number,
+  ey: number,
+  s: number,
+  stoneTop: string,
+  stoneLit: string,
+  stoneDark: string,
+): void {
+  const eW = 8 * s;
+  drawIsometricPrism(ctx, ex, ey, eW, eW, 4 * s, stoneTop, stoneLit, stoneDark);
+  // Parapet wall (half-height shield)
+  const pW = 6 * s;
+  drawIsometricPrism(ctx, ex, ey - 4 * s, pW, pW, 5 * s, stoneTop, stoneLit, stoneDark);
+  // Notch in parapet
+  ctx.fillStyle = "rgba(15,10,5,0.3)";
+  ctx.fillRect(ex - 1 * s, ey - 8 * s, 2 * s, 2.5 * s);
+}
 
 export function renderIceFortress(p: LandmarkParams): void {
   const {
@@ -309,657 +439,363 @@ export function renderIceFortress(p: LandmarkParams): void {
       18 * s,
       65 * s,
       0.35,
-      "0,50,70",
+      "30,25,20",
       z,
     );
   }
   if (shadowOnly) return;
 
-  const pulse = 0.5 + Math.sin(time * 1.6) * 0.2;
   const seed = seedX * 7.3 + seedY * 11.1;
   const ifVar = variant % 3;
-  const iceTop = "#d0e8f4";
-  const iceLit = "#7ec8e8";
-  const iceMid = "#4ba8d4";
-  const iceDark = "#1e6ea0";
-  const iceDeep = "#0d4870";
-  const snowWhite = "#f0f6fa";
 
-  // Snow mound base
-  const snowG = ctx.createRadialGradient(
-    cx - 5 * s,
-    cy + 2 * s,
-    0,
-    cx,
-    cy + 7 * s,
-    46 * s,
+  // Stone palette
+  const stoneTop = "#c8bfb0";
+  const stoneLit = "#a89880";
+  const stoneMid = "#8a7a68";
+  const stoneDark = "#6a5a48";
+  const stoneDeep = "#4a3a28";
+  const mossGreen = "#6a7a50";
+
+  // Rubble mound base
+  const baseG = ctx.createRadialGradient(
+    cx - 4 * s, cy + 3 * s, 0,
+    cx, cy + 7 * s, 46 * s,
   );
-  snowG.addColorStop(0, "#ffffff");
-  snowG.addColorStop(0.4, "#eaf2f8");
-  snowG.addColorStop(0.8, "#cde0ec");
-  snowG.addColorStop(1, "#b0cede");
-  ctx.fillStyle = snowG;
+  baseG.addColorStop(0, "#b0a898");
+  baseG.addColorStop(0.4, "#9a9080");
+  baseG.addColorStop(0.7, "#807060");
+  baseG.addColorStop(1, "#6a5a4a");
+  ctx.fillStyle = baseG;
   drawOrganicBlobAt(ctx, cx, cy + 7 * s, 46 * s, 15 * s, seed);
   ctx.fill();
 
-  // Ice crystal formations at base
-  [
-    { x: cx - 34 * s, y: cy + 5 * s, h: 7, w: 2.2 },
-    { x: cx + 32 * s, y: cy - 3 * s, h: 9, w: 2.5 },
-    { x: cx - 20 * s, y: cy + 11 * s, h: 5, w: 1.8 },
-    { x: cx + 38 * s, y: cy + 3 * s, h: 4, w: 1.5 },
-  ].forEach(({ x: crx, y: cry, h, w }) => {
-    const crGrad = ctx.createLinearGradient(crx, cry, crx, cry - h * s);
-    crGrad.addColorStop(0, "rgba(100,180,230,0.5)");
-    crGrad.addColorStop(0.5, "rgba(140,210,250,0.7)");
-    crGrad.addColorStop(1, "rgba(200,240,255,0.35)");
-    ctx.fillStyle = crGrad;
+  // Stone texture on base mound
+  drawStoneTexture(ctx, cx, cy + 7 * s, 40 * s, s, seed);
+
+  // Scattered rubble boulders around base
+  const rubblePositions = [
+    { x: cx - 34 * s, y: cy + 6 * s, sz: 3.5 },
+    { x: cx + 30 * s, y: cy - 2 * s, sz: 4.0 },
+    { x: cx - 18 * s, y: cy + 12 * s, sz: 2.5 },
+    { x: cx + 36 * s, y: cy + 4 * s, sz: 2.2 },
+    { x: cx - 38 * s, y: cy + 1 * s, sz: 2.8 },
+    { x: cx + 12 * s, y: cy + 14 * s, sz: 3.0 },
+  ];
+  for (const rb of rubblePositions) {
+    const rbS = rb.sz * s;
+    drawIsometricPrism(ctx, rb.x, rb.y, rbS, rbS, rbS * 0.6, stoneTop, stoneMid, stoneDark);
+  }
+
+  // Moss patches on rubble
+  ctx.fillStyle = "rgba(90,110,60,0.25)";
+  for (let mp = 0; mp < 5; mp++) {
+    const mx = cx + Math.sin(seed + mp * 2.7) * 30 * s;
+    const my = cy + 4 * s + Math.cos(seed + mp * 1.9) * 8 * s;
     ctx.beginPath();
-    ctx.moveTo(crx - w * s, cry);
-    ctx.lineTo(crx - w * 0.2 * s, cry - h * s);
-    ctx.lineTo(crx + w * 0.3 * s, cry - h * 0.7 * s);
-    ctx.lineTo(crx + w * s, cry);
-    ctx.closePath();
+    ctx.ellipse(mx, my, (3 + Math.sin(seed + mp) * 1.5) * s, (1.5 + Math.cos(seed + mp) * 0.5) * s, 0, 0, Math.PI * 2);
     ctx.fill();
-  });
+  }
 
   if (ifVar === 0) {
-    // Variant 0: Central wall with two flanking towers and a gate
+    // Variant 0: Crumbled gatehouse with two broken flanking towers
     const wallW = 42 * s;
-    const wallH = 26 * s;
-    drawIsometricPrism(
-      ctx,
-      cx,
-      cy + 2 * s,
-      wallW,
-      wallW,
-      wallH,
-      iceTop,
-      iceDark,
-      iceDeep,
-    );
+    const wallH = 20 * s;
+    drawRuinedWallSegment(ctx, cx, cy + 2 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
+
     const wI = wallW * ISO_COS;
     const wD = wallW * ISO_SIN;
     const wBase = cy + 2 * s;
 
-    // Ice sheen overlay on left face
-    const sheen = ctx.createLinearGradient(
-      cx - wI,
-      wBase + wD,
-      cx,
-      wBase + wD * 2,
-    );
-    sheen.addColorStop(0, "rgba(130,210,245,0.18)");
-    sheen.addColorStop(0.5, "rgba(80,180,230,0.06)");
-    sheen.addColorStop(1, "rgba(60,160,220,0.12)");
-    prismFaceOverlay(ctx, cx, wBase, wallW, wallH, "left", sheen);
-
-    // Stone block lines
-    drawMortarLines(ctx, cx, wBase, wallW, wallH, 5, "rgba(0,40,60,0.1)", s);
-
-    // Arrow slits
+    // Arrow slits in wall
     for (let face = 0; face < 2; face++) {
       for (let i = 0; i < 3; i++) {
         const t = (i + 0.5) / 3;
         const slitX = face === 0 ? cx - wI * (1 - t) : cx + wI * t;
-        const slitY =
-          face === 0
-            ? wBase + wD * (2 * t) - wallH * 0.5
-            : wBase + wD * (2 - 2 * t) - wallH * 0.5;
-        ctx.fillStyle = "rgba(0,25,45,0.5)";
-        ctx.fillRect(slitX - 0.5 * s, slitY - 2.5 * s, 1 * s, 5 * s);
+        const slitY = face === 0
+          ? wBase + wD * (2 * t) - wallH * 0.5
+          : wBase + wD * (2 - 2 * t) - wallH * 0.5;
+        drawArrowSlit(ctx, slitX, slitY, s);
       }
     }
 
-    // Crenellations on top
+    // Crumbled crenellations (some missing, some broken)
     const wallTopY = wBase - wallH;
-    for (let i = 0; i < 5; i++) {
-      const t = (i + 0.5) / 5;
-      drawIsometricPrism(
-        ctx,
-        cx - wI * (1 - t),
-        wallTopY + wD * t,
-        3.5 * s,
-        3.5 * s,
-        4 * s,
-        snowWhite,
-        iceMid,
-        iceDark,
-      );
-      drawIsometricPrism(
-        ctx,
-        cx + wI * t,
-        wallTopY + wD * (1 - t),
-        3.5 * s,
-        3.5 * s,
-        4 * s,
-        snowWhite,
-        iceMid,
-        iceDark,
-      );
+    const crenCount = 5;
+    for (let i = 0; i < crenCount; i++) {
+      const t = (i + 0.5) / crenCount;
+      const skipLeft = Math.sin(seed + i * 3.1) > 0.4;
+      const skipRight = Math.cos(seed + i * 2.3) > 0.5;
+      if (!skipLeft) {
+        const cH = (3 + Math.sin(seed + i * 1.7) * 1.5) * s;
+        drawIsometricPrism(
+          ctx,
+          cx - wI * (1 - t), wallTopY + wD * t,
+          3.5 * s, 3.5 * s, cH,
+          stoneTop, stoneMid, stoneDark,
+        );
+      }
+      if (!skipRight) {
+        const cH = (3 + Math.cos(seed + i * 2.1) * 1.5) * s;
+        drawIsometricPrism(
+          ctx,
+          cx + wI * t, wallTopY + wD * (1 - t),
+          3.5 * s, 3.5 * s, cH,
+          stoneTop, stoneMid, stoneDark,
+        );
+      }
     }
 
-    // Icicles on wall edges
-    drawIcicleRow(ctx, cx - wI, wBase + wD, cx, wBase + wD * 2, 7, 6, s, seed);
-    drawIcicleRow(
-      ctx,
-      cx,
-      wBase + wD * 2,
-      cx + wI,
-      wBase + wD,
-      6,
-      5,
-      s,
-      seed + 3,
-    );
-
-    // Left tower
+    // Left broken tower
     const tLx = cx - 26 * s;
     const tLy = cy + 3 * s;
     const tW = 11 * s;
-    const tH = 48 * s;
-    drawIsometricPrism(ctx, tLx, tLy, tW, tW, tH, iceLit, iceDeep, iceDark);
-    const tTopY = tLy - tH;
-    drawIsometricPrism(
-      ctx,
-      tLx,
-      tTopY,
-      tW + 2 * s,
-      tW + 2 * s,
-      2 * s,
-      iceTop,
-      iceMid,
-      iceDark,
-    );
-    drawIsometricPyramid(
-      ctx,
-      tLx,
-      tTopY - 2 * s,
-      tW * 0.6,
-      14 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
-    // Tower windows
-    for (let w2 = 0; w2 < 2; w2++) {
-      const wy = tLy - tH * (0.35 + w2 * 0.25) + tW * ISO_SIN * 2;
-      ctx.fillStyle = "rgba(0,30,50,0.5)";
-      ctx.beginPath();
-      ctx.arc(tLx, wy, 2.5 * s, Math.PI, 0);
-      ctx.lineTo(tLx + 2.5 * s, wy + 4 * s);
-      ctx.lineTo(tLx - 2.5 * s, wy + 4 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = `rgba(100,200,255,${0.12 + pulse * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(tLx, wy + 1 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Banner on left tower
-    const banBase = tTopY + tW * ISO_SIN - tW * ISO_SIN - 2 * s;
-    ctx.strokeStyle = "#455A64";
-    ctx.lineWidth = 1.5 * s;
+    const tH = 38 * s;
+    drawBrokenTower(ctx, tLx, tLy, tW, tH, 6, s, seed, stoneTop, stoneDark, stoneDeep);
+    // Left tower window (arched)
+    const lwy = tLy - tH * 0.45 + tW * ISO_SIN * 2;
+    ctx.fillStyle = "rgba(15,10,5,0.5)";
     ctx.beginPath();
-    ctx.moveTo(tLx, banBase);
-    ctx.lineTo(tLx, banBase - 16 * s);
-    ctx.stroke();
-    const banG = ctx.createLinearGradient(
-      tLx,
-      banBase - 16 * s,
-      tLx + 10 * s,
-      banBase - 8 * s,
-    );
-    banG.addColorStop(0, "#0D47A1");
-    banG.addColorStop(1, "#1565C0");
-    ctx.fillStyle = banG;
-    const bWave = Math.sin(time * 2.5) * 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(tLx, banBase - 16 * s);
-    ctx.lineTo(tLx + 10 * s + bWave, banBase - 14 * s);
-    ctx.lineTo(tLx + 8 * s - bWave * 0.5, banBase - 10 * s);
-    ctx.lineTo(tLx + 10 * s + bWave * 0.3, banBase - 6 * s);
-    ctx.lineTo(tLx, banBase - 8 * s);
+    ctx.arc(tLx, lwy, 2.5 * s, Math.PI, 0);
+    ctx.lineTo(tLx + 2.5 * s, lwy + 4 * s);
+    ctx.lineTo(tLx - 2.5 * s, lwy + 4 * s);
     ctx.closePath();
     ctx.fill();
-    // Snowflake emblem on banner
-    ctx.strokeStyle = "rgba(255,255,255,0.5)";
-    ctx.lineWidth = 0.6 * s;
-    const bex = tLx + 5 * s;
-    const bey = banBase - 11 * s;
-    for (let be = 0; be < 6; be++) {
-      const bea = (be / 6) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(bex, bey);
-      ctx.lineTo(bex + Math.cos(bea) * 3 * s, bey + Math.sin(bea) * 3 * s);
-      ctx.stroke();
-    }
+    // Banner on left tower
+    drawRuinsBanner(ctx, tLx, tLy - tH, s, time, 16, "#7B1F1F", "#9B3030");
 
-    // Right tower
+    // Right broken tower (shorter, more ruined)
     const tRx = cx + 26 * s;
     const tRy = cy - 3 * s;
-    drawIsometricPrism(ctx, tRx, tRy, tW, tW, tH, iceLit, iceDeep, iceDark);
-    const tRTopY = tRy - tH;
-    drawIsometricPrism(
-      ctx,
-      tRx,
-      tRTopY,
-      tW + 2 * s,
-      tW + 2 * s,
-      2 * s,
-      iceTop,
-      iceMid,
-      iceDark,
-    );
-    drawIsometricPyramid(
-      ctx,
-      tRx,
-      tRTopY - 2 * s,
-      tW * 0.6,
-      14 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
-    for (let w2 = 0; w2 < 2; w2++) {
-      const wy = tRy - tH * (0.35 + w2 * 0.25) + tW * ISO_SIN * 2;
-      ctx.fillStyle = "rgba(0,30,50,0.5)";
-      ctx.beginPath();
-      ctx.arc(tRx, wy, 2.5 * s, Math.PI, 0);
-      ctx.lineTo(tRx + 2.5 * s, wy + 4 * s);
-      ctx.lineTo(tRx - 2.5 * s, wy + 4 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = `rgba(100,200,255,${0.12 + pulse * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(tRx, wy + 1 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Gate arch
-    const gateG = ctx.createLinearGradient(cx, cy + 2 * s, cx, cy - 14 * s);
-    gateG.addColorStop(0, "rgba(0,30,50,0.7)");
-    gateG.addColorStop(1, "rgba(0,50,70,0.4)");
-    ctx.fillStyle = gateG;
+    const tRH = 32 * s;
+    drawBrokenTower(ctx, tRx, tRy, tW, tRH, 8, s, seed + 5, stoneTop, stoneDark, stoneDeep);
+    const rwy = tRy - tRH * 0.4 + tW * ISO_SIN * 2;
+    ctx.fillStyle = "rgba(15,10,5,0.5)";
     ctx.beginPath();
-    ctx.arc(cx, cy - 6 * s, 8 * s, Math.PI, 0);
-    ctx.lineTo(cx + 8 * s, cy + 2 * s);
-    ctx.lineTo(cx - 8 * s, cy + 2 * s);
+    ctx.arc(tRx, rwy, 2.5 * s, Math.PI, 0);
+    ctx.lineTo(tRx + 2.5 * s, rwy + 4 * s);
+    ctx.lineTo(tRx - 2.5 * s, rwy + 4 * s);
     ctx.closePath();
     ctx.fill();
-    // Portcullis
-    ctx.strokeStyle = "#546E7A";
-    ctx.lineWidth = 1.2 * s;
-    for (let pb = -5; pb <= 5; pb += 2.5) {
+    // Defensive emplacement near right tower
+    drawDefensiveEmplacement(ctx, tRx + 8 * s, tRy + 4 * s, s, stoneTop, stoneMid, stoneDark);
+
+    // Collapsed gate arch
+    const gateG = ctx.createLinearGradient(cx, cy + 2 * s, cx, cy - 10 * s);
+    gateG.addColorStop(0, "rgba(30,20,10,0.6)");
+    gateG.addColorStop(1, "rgba(50,40,25,0.35)");
+    ctx.fillStyle = gateG;
+    ctx.beginPath();
+    ctx.arc(cx, cy - 4 * s, 7 * s, Math.PI, 0);
+    ctx.lineTo(cx + 7 * s, cy + 2 * s);
+    ctx.lineTo(cx - 7 * s, cy + 2 * s);
+    ctx.closePath();
+    ctx.fill();
+    // Broken portcullis bars
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 1 * s;
+    for (let pb = -4; pb <= 4; pb += 2.5) {
+      const barH = cy - 10 * s + Math.abs(pb) * 0.8 * s;
       ctx.beginPath();
-      ctx.moveTo(cx + pb * s, cy - 13 * s);
+      ctx.moveTo(cx + pb * s, barH);
       ctx.lineTo(cx + pb * s, cy + 2 * s);
       ctx.stroke();
     }
-    for (let ph = 0; ph < 3; ph++) {
-      ctx.beginPath();
-      ctx.moveTo(cx - 7 * s, cy - 2 * s - ph * 4 * s);
-      ctx.lineTo(cx + 7 * s, cy - 2 * s - ph * 4 * s);
-      ctx.stroke();
-    }
+    // Broken horizontal bar
+    ctx.beginPath();
+    ctx.moveTo(cx - 5 * s, cy - 2 * s);
+    ctx.lineTo(cx + 3 * s, cy - 2 * s);
+    ctx.stroke();
   } else if (ifVar === 1) {
-    // Variant 1: L-shaped fortress with upper keep
+    // Variant 1: L-shaped ruined fortress with corner watchtower
     const wallW = 48 * s;
-    const wallH = 22 * s;
-    drawIsometricPrism(
-      ctx,
-      cx - 6 * s,
-      cy + 3 * s,
-      wallW,
-      wallW,
-      wallH,
-      iceTop,
-      iceDark,
-      iceDeep,
-    );
-    drawMortarLines(
-      ctx,
-      cx - 6 * s,
-      cy + 3 * s,
-      wallW,
-      wallH,
-      4,
-      "rgba(0,40,60,0.1)",
-      s,
-    );
+    const wallH = 18 * s;
+    drawRuinedWallSegment(ctx, cx - 6 * s, cy + 3 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
 
-    // Upper keep
+    // Upper ruined keep platform
     const keepW = 30 * s;
-    const keepH = 18 * s;
-    drawIsometricPrism(
-      ctx,
-      cx + 4 * s,
-      cy - 19 * s,
-      keepW,
-      keepW,
-      keepH,
-      iceTop,
-      iceMid,
-      iceDark,
-    );
-    drawMortarLines(
-      ctx,
-      cx + 4 * s,
-      cy - 19 * s,
-      keepW,
-      keepH,
-      3,
-      "rgba(0,40,60,0.1)",
-      s,
-    );
+    const keepH = 14 * s;
+    drawRuinedWallSegment(ctx, cx + 4 * s, cy - 15 * s, keepW, keepH, s, seed + 3, stoneTop, stoneMid, stoneDark);
 
-    // Tall corner tower
+    // Crumbled crenellations on upper keep
+    const keepTopY = cy - 15 * s - keepH;
+    const keepI = keepW * ISO_COS;
+    const keepD = keepW * ISO_SIN;
+    for (let i = 0; i < 4; i++) {
+      const t = (i + 0.5) / 4;
+      if (Math.sin(seed + i * 2.5) > -0.3) {
+        const cH = (2.5 + Math.sin(seed + i * 1.3) * 1.2) * s;
+        drawIsometricPrism(
+          ctx,
+          cx + 4 * s - keepI * (1 - t), keepTopY + keepD * t,
+          3 * s, 3 * s, cH,
+          stoneTop, stoneMid, stoneDark,
+        );
+      }
+    }
+
+    // Corner watchtower (tallest element, partially collapsed)
     const tW = 12 * s;
-    const tH = 56 * s;
+    const tH = 46 * s;
     const tX = cx + 22 * s;
     const tY = cy - 1 * s;
-    drawIsometricPrism(ctx, tX, tY, tW, tW, tH, iceLit, iceDeep, iceDark);
-    const tTopY = tY - tH;
-    drawIsometricPrism(
-      ctx,
-      tX,
-      tTopY,
-      tW + 3 * s,
-      tW + 3 * s,
-      2 * s,
-      iceTop,
-      iceMid,
-      iceDark,
-    );
-    drawIsometricPyramid(
-      ctx,
-      tX,
-      tTopY - 2 * s,
-      tW * 0.55,
-      16 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
+    drawBrokenTower(ctx, tX, tY, tW, tH, 7, s, seed + 1, stoneTop, stoneDeep, stoneDark);
 
     // Tower windows
-    for (let w2 = 0; w2 < 3; w2++) {
-      const wy = tY - tH * (0.25 + w2 * 0.2) + tW * ISO_SIN * 2;
-      ctx.fillStyle = "rgba(0,30,50,0.5)";
+    for (let w2 = 0; w2 < 2; w2++) {
+      const wy = tY - tH * (0.3 + w2 * 0.25) + tW * ISO_SIN * 2;
+      ctx.fillStyle = "rgba(15,10,5,0.5)";
       ctx.beginPath();
       ctx.arc(tX, wy, 2.5 * s, Math.PI, 0);
       ctx.lineTo(tX + 2.5 * s, wy + 4 * s);
       ctx.lineTo(tX - 2.5 * s, wy + 4 * s);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = `rgba(100,200,255,${0.12 + pulse * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(tX, wy + 1 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
     }
 
-    // Banner on tower
-    ctx.strokeStyle = "#455A64";
-    ctx.lineWidth = 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(tX, tTopY - 2 * s);
-    ctx.lineTo(tX, tTopY - 18 * s);
-    ctx.stroke();
-    const banG = ctx.createLinearGradient(
-      tX,
-      tTopY - 18 * s,
-      tX + 10 * s,
-      tTopY - 10 * s,
-    );
-    banG.addColorStop(0, "#0D47A1");
-    banG.addColorStop(1, "#1565C0");
-    ctx.fillStyle = banG;
-    const bWave = Math.sin(time * 2.5) * 1.5 * s;
-    ctx.beginPath();
-    ctx.moveTo(tX, tTopY - 18 * s);
-    ctx.lineTo(tX + 10 * s + bWave, tTopY - 16 * s);
-    ctx.lineTo(tX + 8 * s - bWave * 0.5, tTopY - 12 * s);
-    ctx.lineTo(tX + 10 * s + bWave * 0.3, tTopY - 8 * s);
-    ctx.lineTo(tX, tTopY - 10 * s);
-    ctx.closePath();
-    ctx.fill();
+    // Banner on watchtower
+    drawRuinsBanner(ctx, tX, tY - tH, s, time, 18, "#1B3A1B", "#2A5A2A");
 
     // Arrow slits on main wall
     for (let asl = 0; asl < 4; asl++) {
       const asx = cx - 24 * s + asl * 12 * s;
-      ctx.fillStyle = "rgba(0,30,50,0.5)";
-      ctx.beginPath();
-      ctx.ellipse(asx, cy - 8 * s, 1.5 * s, 4.5 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(100,200,255,${0.08 + pulse * 0.06})`;
-      ctx.beginPath();
-      ctx.arc(asx, cy - 8 * s, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
+      drawArrowSlit(ctx, asx, cy - 6 * s, s);
     }
 
-    // Icicles from upper keep edge
-    drawIcicleRow(
-      ctx,
-      cx - 10 * s,
-      cy - 19 * s,
-      cx + 14 * s,
-      cy - 19 * s,
-      6,
-      6,
-      s,
-      seed + 2,
-    );
+    // Defensive emplacement on upper keep
+    drawDefensiveEmplacement(ctx, cx - 4 * s, cy - 15 * s - keepH + 2 * s, s, stoneTop, stoneMid, stoneDark);
+
+    // Small flag on keep emplacement
+    drawRuinsBanner(ctx, cx - 4 * s, cy - 15 * s - keepH - 2 * s, s, time, 12, "#4A3080", "#6A40A0");
+
+    // Moss growth on lower wall
+    ctx.fillStyle = `rgba(80,100,50,0.2)`;
+    const wI = wallW * ISO_COS;
+    const wD = wallW * ISO_SIN;
+    ctx.beginPath();
+    ctx.ellipse(cx - 6 * s - wI * 0.5, cy + 3 * s + wD, 6 * s, 3 * s, 0.2, 0, Math.PI * 2);
+    ctx.fill();
   } else {
-    // Variant 2: Compact fortress with central keep and 2 side towers
+    // Variant 2: Compact ruin with central broken keep and flanking bastions
     const wallW = 36 * s;
-    const wallH = 24 * s;
-    drawIsometricPrism(
-      ctx,
-      cx,
-      cy + 3 * s,
-      wallW,
-      wallW,
-      wallH,
-      iceTop,
-      iceDark,
-      iceDeep,
-    );
-    drawMortarLines(
-      ctx,
-      cx,
-      cy + 3 * s,
-      wallW,
-      wallH,
-      4,
-      "rgba(0,40,60,0.1)",
-      s,
-    );
+    const wallH = 18 * s;
+    drawRuinedWallSegment(ctx, cx, cy + 3 * s, wallW, wallH, s, seed, stoneTop, stoneDark, stoneDeep);
 
-    // Left tower
-    const stW = 10 * s;
-    const stH = 44 * s;
-    const lTx = cx - 24 * s;
-    const lTy = cy + 5 * s;
-    drawIsometricPrism(ctx, lTx, lTy, stW, stW, stH, iceLit, iceDeep, iceDark);
-    drawIsometricPyramid(
-      ctx,
-      lTx,
-      lTy - stH,
-      stW * 0.55,
-      12 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
+    // Crumbled crenellations on wall
+    const wTopY = cy + 3 * s - wallH;
+    const wI = wallW * ISO_COS;
+    const wD = wallW * ISO_SIN;
+    for (let i = 0; i < 4; i++) {
+      const t = (i + 0.5) / 4;
+      if (Math.sin(seed + i * 2.9) > -0.2) {
+        const cH = (2.5 + Math.sin(seed + i * 1.5) * 1) * s;
+        drawIsometricPrism(
+          ctx,
+          cx - wI * (1 - t), wTopY + wD * t,
+          3 * s, 3 * s, cH,
+          stoneTop, stoneMid, stoneDark,
+        );
+      }
+      if (Math.cos(seed + i * 3.3) > -0.1) {
+        const cH = (2.5 + Math.cos(seed + i * 1.8) * 1) * s;
+        drawIsometricPrism(
+          ctx,
+          cx + wI * t, wTopY + wD * (1 - t),
+          3 * s, 3 * s, cH,
+          stoneTop, stoneMid, stoneDark,
+        );
+      }
+    }
 
-    // Right tower
-    const rTx = cx + 24 * s;
-    const rTy = cy - 1 * s;
-    drawIsometricPrism(ctx, rTx, rTy, stW, stW, stH, iceLit, iceDeep, iceDark);
-    drawIsometricPyramid(
-      ctx,
-      rTx,
-      rTy - stH,
-      stW * 0.55,
-      12 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
+    // Left bastion (squat, ruined)
+    const lBx = cx - 24 * s;
+    const lBy = cy + 5 * s;
+    const bW = 10 * s;
+    const bH = 28 * s;
+    drawBrokenTower(ctx, lBx, lBy, bW, bH, 5, s, seed + 2, stoneTop, stoneDeep, stoneDark);
+    // Defensive emplacement on left bastion
+    drawDefensiveEmplacement(ctx, lBx, lBy - bH + 2 * s, s, stoneTop, stoneMid, stoneDark);
 
-    // Central keep (tallest)
+    // Right bastion
+    const rBx = cx + 24 * s;
+    const rBy = cy - 1 * s;
+    drawBrokenTower(ctx, rBx, rBy, bW, bH, 6, s, seed + 4, stoneTop, stoneDeep, stoneDark);
+    drawDefensiveEmplacement(ctx, rBx, rBy - bH + 2 * s, s, stoneTop, stoneMid, stoneDark);
+
+    // Central broken keep (tallest, heavily damaged)
     const ckW = 13 * s;
-    const ckH = 58 * s;
-    drawIsometricPrism(
-      ctx,
-      cx,
-      cy - 7 * s,
-      ckW,
-      ckW,
-      ckH,
-      iceLit,
-      iceDeep,
-      iceDark,
-    );
-    const ckTopY = cy - 7 * s - ckH;
-    drawIsometricPrism(
-      ctx,
-      cx,
-      ckTopY,
-      ckW + 3 * s,
-      ckW + 3 * s,
-      2 * s,
-      iceTop,
-      iceMid,
-      iceDark,
-    );
-    drawIsometricPyramid(
-      ctx,
-      cx,
-      ckTopY - 2 * s,
-      ckW * 0.5,
-      18 * s,
-      iceLit,
-      iceDeep,
-      iceMid,
-    );
+    const ckH = 44 * s;
+    drawBrokenTower(ctx, cx, cy - 7 * s, ckW, ckH, 9, s, seed + 6, stoneLit, stoneDeep, stoneDark);
 
-    // Keep windows
-    for (let w2 = 0; w2 < 3; w2++) {
-      const wy = cy - 7 * s - ckH * (0.25 + w2 * 0.2) + ckW * ISO_SIN * 2;
-      ctx.fillStyle = "rgba(0,30,50,0.5)";
+    // Keep windows (arched, dark)
+    for (let w2 = 0; w2 < 2; w2++) {
+      const wy = cy - 7 * s - ckH * (0.3 + w2 * 0.25) + ckW * ISO_SIN * 2;
+      ctx.fillStyle = "rgba(15,10,5,0.55)";
       ctx.beginPath();
       ctx.arc(cx, wy, 2.5 * s, Math.PI, 0);
       ctx.lineTo(cx + 2.5 * s, wy + 4 * s);
       ctx.lineTo(cx - 2.5 * s, wy + 4 * s);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = `rgba(100,200,255,${0.12 + pulse * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(cx, wy + 1 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
     }
 
-    // Banner on central keep
-    ctx.strokeStyle = "#455A64";
-    ctx.lineWidth = 1.5 * s;
+    // Main banner on central keep
+    drawRuinsBanner(ctx, cx, cy - 7 * s - ckH, s, time, 18, "#7B1F1F", "#9B3030");
+
+    // Secondary flag on left bastion
+    drawRuinsBanner(ctx, lBx, lBy - bH, s, time, 12, "#1B3A5A", "#2A5080");
+
+    // Weathered stone overlay on central keep
+    const keepWeath = ctx.createLinearGradient(cx, cy - 7 * s, cx, cy - 7 * s - ckH);
+    keepWeath.addColorStop(0, "rgba(60,80,50,0.1)");
+    keepWeath.addColorStop(0.5, "rgba(90,100,70,0.05)");
+    keepWeath.addColorStop(1, "rgba(40,60,30,0.08)");
+    const ckI = ckW * ISO_COS;
+    const ckD = ckW * ISO_SIN;
+    ctx.fillStyle = keepWeath;
     ctx.beginPath();
-    ctx.moveTo(cx, ckTopY - 2 * s);
-    ctx.lineTo(cx, ckTopY - 18 * s);
-    ctx.stroke();
-    const banG2 = ctx.createLinearGradient(
-      cx,
-      ckTopY - 18 * s,
-      cx + 10 * s,
-      ckTopY - 10 * s,
-    );
-    banG2.addColorStop(0, "#0D47A1");
-    banG2.addColorStop(1, "#1565C0");
-    ctx.fillStyle = banG2;
-    ctx.beginPath();
-    ctx.moveTo(cx, ckTopY - 18 * s);
-    ctx.lineTo(cx + 10 * s, ckTopY - 16 * s);
-    ctx.lineTo(cx + 8 * s, ckTopY - 12 * s);
-    ctx.lineTo(cx + 10 * s, ckTopY - 8 * s);
-    ctx.lineTo(cx, ckTopY - 10 * s);
+    ctx.moveTo(cx - ckI, cy - 7 * s + ckD);
+    ctx.lineTo(cx, cy - 7 * s + ckD * 2);
+    ctx.lineTo(cx, cy - 7 * s - ckH + ckD * 2);
+    ctx.lineTo(cx - ckI, cy - 7 * s - ckH + ckD);
     ctx.closePath();
     ctx.fill();
-
-    // Frost aura around central keep
-    const ifAura = ctx.createRadialGradient(
-      cx,
-      cy - 40 * s,
-      0,
-      cx,
-      cy - 40 * s,
-      30 * s,
-    );
-    ifAura.addColorStop(0, `rgba(128,222,234,${0.12 + pulse * 0.06})`);
-    ifAura.addColorStop(0.6, "rgba(128,222,234,0.04)");
-    ifAura.addColorStop(1, "transparent");
-    ctx.fillStyle = ifAura;
-    ctx.beginPath();
-    ctx.arc(cx, cy - 40 * s, 30 * s, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Crenellations on wall
-    const wTopY = cy + 3 * s - wallH;
-    const wI = wallW * ISO_COS;
-    const wD = wallW * ISO_SIN;
-    for (let i = 0; i < 4; i++) {
-      const t = (i + 0.5) / 4;
-      drawIsometricPrism(
-        ctx,
-        cx - wI * (1 - t),
-        wTopY + wD * t,
-        3 * s,
-        3 * s,
-        3.5 * s,
-        snowWhite,
-        iceMid,
-        iceDark,
-      );
-      drawIsometricPrism(
-        ctx,
-        cx + wI * t,
-        wTopY + wD * (1 - t),
-        3 * s,
-        3 * s,
-        3.5 * s,
-        snowWhite,
-        iceMid,
-        iceDark,
-      );
-    }
-
-    // Icicles on wall edges
-    drawIcicleRow(
-      ctx,
-      cx - wI,
-      cy + 3 * s + wD,
-      cx,
-      cy + 3 * s + wD * 2,
-      6,
-      5,
-      s,
-      seed,
-    );
   }
 
-  // Snow on all top surfaces
-  ctx.fillStyle = "rgba(240,248,255,0.4)";
-  drawOrganicBlobAt(ctx, cx, cy - 10 * s, 16 * s, 6 * s, seed + 5, 0.12);
-  ctx.fill();
-
-  // Frost particles
-  ctx.fillStyle = "rgba(200,235,255,0.65)";
-  for (let fp = 0; fp < 10; fp++) {
-    const fAngle = (fp / 10) * Math.PI * 2 + time * 0.25;
-    const fR = (32 + Math.sin(time * 0.7 + fp * 1.1) * 10) * s;
-    const fy = cy - 28 * s + Math.cos(time * 0.4 + fp) * 10 * s;
-    const fpSize = (0.9 + Math.sin(time * 0.8 + fp) * 0.3) * s;
+  // Vines/ivy creeping up surfaces
+  ctx.strokeStyle = mossGreen;
+  ctx.lineWidth = 0.6 * s;
+  for (let v = 0; v < 6; v++) {
+    const vx = cx + Math.sin(seed + v * 2.1) * 20 * s;
+    const vy = cy + 2 * s;
     ctx.beginPath();
-    ctx.arc(cx + Math.cos(fAngle) * fR, fy, fpSize, 0, Math.PI * 2);
+    ctx.moveTo(vx, vy);
+    for (let vSeg = 1; vSeg <= 4; vSeg++) {
+      ctx.lineTo(
+        vx + Math.sin(seed + v + vSeg * 1.3) * 3 * s,
+        vy - vSeg * 4 * s,
+      );
+    }
+    ctx.stroke();
+    // Tiny leaves
+    ctx.fillStyle = "rgba(70,100,40,0.4)";
+    for (let leaf = 1; leaf <= 3; leaf++) {
+      const lx = vx + Math.sin(seed + v + leaf * 1.3) * 3 * s;
+      const ly = vy - leaf * 4 * s;
+      ctx.beginPath();
+      ctx.ellipse(lx + 1.5 * s, ly, 1.2 * s, 0.6 * s, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Dust motes drifting around ruins
+  ctx.fillStyle = "rgba(160,140,110,0.45)";
+  for (let dp = 0; dp < 8; dp++) {
+    const dAngle = (dp / 8) * Math.PI * 2 + time * 0.15;
+    const dR = (28 + Math.sin(time * 0.5 + dp * 1.3) * 12) * s;
+    const dy = cy - 20 * s + Math.cos(time * 0.3 + dp) * 12 * s;
+    const dpSize = (0.7 + Math.sin(time * 0.6 + dp) * 0.25) * s;
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(dAngle) * dR, dy, dpSize, 0, Math.PI * 2);
     ctx.fill();
   }
 }

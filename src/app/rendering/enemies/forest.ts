@@ -679,6 +679,7 @@ export function drawTigerFanEnemy(
     width: 0.09,
     footLen: 0.11,
     style: "fleshy",
+    garb: false,
   });
 
   // Fur loincloth / waist wrap (NOT armor skirt)

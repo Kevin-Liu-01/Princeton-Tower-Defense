@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { WEAPON_LIMITS, anchorWeaponToHand } from "./troopHelpers";
+import { WEAPON_LIMITS, anchorWeaponToHand, drawArmoredSkirt } from "./troopHelpers";
 
 export function drawSoldierTroop(
   ctx: CanvasRenderingContext2D,
@@ -551,6 +551,15 @@ export function drawSoldierTroop(
     size * 0.06,
     size * 0.02,
   );
+
+  // === ARMORED SKIRT (pteruges plates) ===
+  drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
+    armorPeak: "#ff6a05",
+    armorHigh: "#e86000",
+    armorMid: "#c05000",
+    armorDark: "#8a3800",
+    trimColor: "#c9a227",
+  }, { plateCount: 5, widthFactor: 0.44, depthFactor: 0.14, topOffset: 0.28 });
 
   // === SHIELD ARM + SCUTUM SHIELD ===
   const shieldX = x - size * 0.42 + (isAttacking ? attackLunge * 0.9 : 0);

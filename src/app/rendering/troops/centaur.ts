@@ -7,6 +7,7 @@ import {
   drawMuscularHorseLeg,
 } from "./troopHelpers";
 import type { HorseLegColors } from "./troopHelpers";
+import { getScenePressure } from "../performance";
 
 export function drawCentaurTroop(
   ctx: CanvasRenderingContext2D,
@@ -56,7 +57,9 @@ export function drawCentaurTroop(
   const auraPulse = 0.85 + Math.sin(time * 3) * 0.15;
 
   // Multiple layered auras for depth
-  for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
+  const cenPressure = getScenePressure();
+  const cenAuraLayers = cenPressure.skipNonEssentialParticles ? 0 : cenPressure.skipDecorativeEffects ? 1 : 3;
+  for (let auraLayer = 0; auraLayer < cenAuraLayers; auraLayer++) {
     const layerOffset = auraLayer * 0.12;
     const auraGrad = ctx.createRadialGradient(
       x + size * 0.05,
@@ -69,14 +72,6 @@ export function drawCentaurTroop(
     auraGrad.addColorStop(
       0,
       `rgba(160, 194, 96, ${auraIntensity * auraPulse * (0.5 - auraLayer * 0.12)})`,
-    );
-    auraGrad.addColorStop(
-      0.3,
-      `rgba(109, 152, 74, ${auraIntensity * auraPulse * (0.35 - auraLayer * 0.08)})`,
-    );
-    auraGrad.addColorStop(
-      0.6,
-      `rgba(84, 113, 45, ${auraIntensity * auraPulse * (0.2 - auraLayer * 0.05)})`,
     );
     auraGrad.addColorStop(1, "rgba(47, 67, 28, 0)");
     ctx.fillStyle = auraGrad;

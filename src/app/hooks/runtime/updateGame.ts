@@ -116,6 +116,7 @@ import {
   getFacingRightFromDelta,
   stepTowardTarget,
   findAllyAlertTarget,
+  isEnemyReachableAlongPath,
 } from "../../game/movement";
 import {
   getPrioritizedEnemiesInRange,
@@ -157,6 +158,8 @@ import {
   MAX_TROOP_PATH_DISTANCE,
   MAX_HERO_PATH_DISTANCE,
   UNIT_SETTLE_DISTANCE,
+  PATH_REACHABILITY_RATIO,
+  PATH_REACHABILITY_MIN_EUCLIDEAN,
   getEnemyPosWithPath,
   getFormationOffsets,
   getLevelWaves,
@@ -2538,7 +2541,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (!prev || prev.dead) return prev;
 
       if (prev.stunned && prev.stunUntil && now < prev.stunUntil) {
-        return { ...prev, moving: false, aggroTarget: undefined };
+        return { ...prev, moving: false, moveWaypoints: undefined, aggroTarget: undefined };
       }
 
       const heroData = HERO_DATA[prev.type];
@@ -2558,10 +2561,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         ? undefined
         : (enemy: Enemy) => !ENEMY_DATA[enemy.type].flying;
 
+      const heroReachablePredicate = (enemy: Enemy): boolean => {
+        if (heroTargetPredicate && !heroTargetPredicate(enemy)) return false;
+        const ePos = getEnemyPosCached(enemy);
+        const d = distance(prev.pos, ePos);
+        if (d < PATH_REACHABILITY_MIN_EUCLIDEAN) return true;
+        if (ENEMY_DATA[enemy.type].flying) return true;
+        return isEnemyReachableAlongPath(
+          prev.pos, ePos, selectedMap, d * PATH_REACHABILITY_RATIO,
+        );
+      };
+
       let closestEnemy = getClosestEnemy(
         prev.pos,
         sightRange,
-        heroTargetPredicate,
+        heroReachablePredicate,
       );
       let closestDist = closestEnemy
         ? distance(prev.pos, getEnemyPosCached(closestEnemy))
@@ -2576,7 +2590,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
         const alertResult = findAllyAlertTarget(
           prev.pos, troopAllies, enemies, getEnemyPosCached,
-          sightRange + ALLY_ALERT_RANGE, heroTargetPredicate,
+          sightRange + ALLY_ALERT_RANGE, heroReachablePredicate,
         );
         if (alertResult) {
           closestEnemy = alertResult.enemy;
@@ -2587,7 +2601,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       // Determine home position (where the hero should return to)
       const homePos = prev.homePos || prev.pos;
 
-      // If player is commanding movement, prioritize that
+      // If player is commanding movement, prioritize that (heroes take direct routes)
       if (prev.moving && prev.targetPos) {
         const step = stepTowardTarget({
           current: prev.pos,
@@ -2603,7 +2617,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             pos: prev.targetPos,
             moving: false,
             targetPos: undefined,
-            homePos: prev.targetPos, // Update home position when reaching destination
+            homePos: prev.targetPos,
             aggroTarget: undefined,
             returning: false,
             rotation: step.rotation,
@@ -2701,7 +2715,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           };
         }
       } else if (homePos) {
-        // No enemy in sight but was in combat - return home
+        // No enemy in sight - return home (heroes take direct routes)
         const step = stepTowardTarget({
           current: prev.pos,
           target: homePos,
@@ -2720,7 +2734,6 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             returning: true,
           };
         } else {
-          // At home - stop
           return {
             ...prev,
             aggroTarget: undefined,
@@ -2872,6 +2885,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         if (dist > sightRange) continue;
         enemiesInSightCount += 1;
         if (dist < closestDist) {
+          // Skip enemies that are close in Euclidean distance but unreachable
+          // along the path (e.g. across a U-bend)
+          if (
+            dist >= PATH_REACHABILITY_MIN_EUCLIDEAN &&
+            !ENEMY_DATA[enemy.type].flying &&
+            !isEnemyReachableAlongPath(
+              troop.pos, enemyPos, selectedMap,
+              dist * PATH_REACHABILITY_RATIO,
+            )
+          ) {
+            continue;
+          }
           closestDist = dist;
           closestEnemy = enemy;
         }
@@ -2898,8 +2923,19 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           sightRange + ALLY_ALERT_RANGE, flyingFilter,
         );
         if (alertResult) {
-          closestEnemy = alertResult.enemy;
-          closestDist = alertResult.dist;
+          const alertEnemyPos = getEnemyPosCached(alertResult.enemy);
+          const alertFlying = ENEMY_DATA[alertResult.enemy.type].flying;
+          if (
+            alertFlying ||
+            alertResult.dist < PATH_REACHABILITY_MIN_EUCLIDEAN ||
+            isEnemyReachableAlongPath(
+              troop.pos, alertEnemyPos, selectedMap,
+              alertResult.dist * PATH_REACHABILITY_RATIO,
+            )
+          ) {
+            closestEnemy = alertResult.enemy;
+            closestDist = alertResult.dist;
+          }
         }
       }
 
@@ -3021,7 +3057,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const troopSettled = !closestEnemy && !troop.moving && homePos
         && distance(updated.pos, homePos) < UNIT_SETTLE_DISTANCE;
 
-      if (!troopSettled && !isStationary) {
+      if (!troopSettled && !isStationary && !troop.moving) {
         const force = friendlySeparation.get(troop.id);
         if (force) {
           updated.pos = {
@@ -3031,8 +3067,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
       }
 
-      if (homePos && !isStationary) {
-        const leash = maxChaseRange + (troop.moving ? 12 : 0);
+      if (homePos && !isStationary && !troop.moving) {
+        const leash = maxChaseRange;
         updated.pos = clampPositionToRadius(updated.pos, homePos, leash);
       }
 
@@ -3063,6 +3099,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       }
 
       // Handle player-commanded movement (overrides engagement, but not for stationary)
+      // Troops take direct routes (like heroes) to avoid jerkiness from off-path stations.
       if (troop.moving && troop.targetPos && !isStationary) {
         const moveStep = stepTowardTarget({
           current: updated.pos,
@@ -3077,7 +3114,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
             pos: troop.targetPos,
             moving: false,
             targetPos: undefined,
-            userTargetPos: troop.targetPos, // Update home position
+            userTargetPos: troop.targetPos,
             rotation: moveStep.rotation,
             facingRight: getFacingRightFromDelta(
               troop.targetPos.x - updated.pos.x,

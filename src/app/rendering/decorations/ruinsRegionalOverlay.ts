@@ -1,4 +1,5 @@
 import { ISO_COS, ISO_SIN } from "../../constants";
+import { drawOrganicBlobAt } from "../helpers";
 
 // Structural anchor points for each variant, all in units of `s` relative to screenPos.
 // These describe where key surfaces (ledges, walls, columns, bases) are located.
@@ -179,7 +180,7 @@ const VARIANT_ANCHORS: VariantAnchors[] = [
 // Isometric helpers for placing overlays on surfaces
 // ============================================================================
 
-// Seed-driven snow cap with 5 distinct shape variants
+// Seed-driven snow cap with 5 distinct shape variants using layered organic blobs
 function isoSnowCap(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -191,94 +192,56 @@ function isoSnowCap(
   const iW = w * ISO_COS;
   const iD = w * ISO_SIN;
   const shape = Math.floor(seed) % 5;
+  const th = (1.5 + (seed % 7) * 0.12) * s;
+  const windOff = ((seed % 9) - 4) * s * 0.4;
+  const baseBump = 0.16 + (shape % 3) * 0.02;
+  const capCY = cy + iD * 0.45;
 
   if (shape === 0) {
-    // Lumpy uneven mound — thicker on the left, thinner right
-    const thL = (2.2 + (seed % 7) * 0.1) * s;
-    const thR = (1.0 + (seed % 5) * 0.08) * s;
-    ctx.beginPath();
-    ctx.moveTo(cx - iW, cy + iD);
-    ctx.quadraticCurveTo(cx - iW * 0.6, cy + iD - thL * 1.3, cx - iW * 0.15, cy - thL);
-    ctx.quadraticCurveTo(cx + iW * 0.1, cy - thL * 0.7, cx + iW * 0.4, cy + iD - thR * 0.9);
-    ctx.quadraticCurveTo(cx + iW * 0.7, cy + iD - thR * 0.4, cx + iW, cy + iD);
-    ctx.quadraticCurveTo(cx + iW * 0.5, cy + iD * 2, cx, cy + iD * 2);
-    ctx.quadraticCurveTo(cx - iW * 0.5, cy + iD * 2 + 0.3 * s, cx - iW, cy + iD);
-    ctx.closePath();
+    // Lumpy asymmetric — thicker on the left
+    drawOrganicBlobAt(ctx, cx + windOff - iW * 0.08, capCY - th * 0.25, iW * 0.95, (iD + th * 0.5) * 0.7, seed, baseBump + 0.04, 20);
     ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = ctx.globalAlpha * 0.6;
+    drawOrganicBlobAt(ctx, cx - iW * 0.3 + windOff, capCY - th * 0.4, iW * 0.45, iD * 0.55, seed * 3.1, baseBump + 0.06, 14);
+    ctx.fill();
+    ctx.restore();
   } else if (shape === 1) {
-    // Wind-sculpted — overhanging ledge on the right side
-    const th = (1.8 + (seed % 4) * 0.15) * s;
-    const overhang = iW * (0.15 + (seed % 6) * 0.03);
-    ctx.beginPath();
-    ctx.moveTo(cx - iW * 0.85, cy + iD * 0.9);
-    ctx.quadraticCurveTo(cx - iW * 0.2, cy + iD - th * 1.1, cx + iW * 0.1, cy - th);
-    ctx.quadraticCurveTo(cx + iW * 0.5, cy - th * 0.8, cx + iW + overhang, cy + iD * 0.6);
-    ctx.lineTo(cx + iW + overhang * 0.6, cy + iD * 0.9);
-    ctx.quadraticCurveTo(cx + iW * 0.6, cy + iD * 1.8, cx, cy + iD * 2);
-    ctx.quadraticCurveTo(cx - iW * 0.5, cy + iD * 1.9, cx - iW * 0.85, cy + iD * 0.9);
-    ctx.closePath();
+    // Wind-sculpted — offset to one side with overhang
+    const ovhOff = iW * (0.12 + (seed % 6) * 0.02);
+    drawOrganicBlobAt(ctx, cx + ovhOff, capCY - th * 0.2, iW * 1.05, (iD + th * 0.4) * 0.65, seed, baseBump, 20);
     ctx.fill();
-    // Drip edge shadow on overhang
     ctx.save();
     ctx.globalAlpha = 0.15;
     ctx.fillStyle = "#b0c0d8";
-    ctx.beginPath();
-    ctx.moveTo(cx + iW * 0.5, cy + iD * 0.5);
-    ctx.quadraticCurveTo(cx + iW + overhang * 0.8, cy + iD * 0.65, cx + iW + overhang * 0.6, cy + iD * 0.9);
-    ctx.lineTo(cx + iW * 0.6, cy + iD * 0.85);
-    ctx.closePath();
+    drawOrganicBlobAt(ctx, cx + iW * 0.6 + ovhOff, capCY + iD * 0.3, iW * 0.3, iD * 0.25, seed * 2.1, 0.22, 10);
     ctx.fill();
     ctx.restore();
   } else if (shape === 2) {
-    // Double-humped — two snow mounds side by side
-    const th = (1.6 + (seed % 5) * 0.12) * s;
-    const gap = iW * 0.1;
-    ctx.beginPath();
-    ctx.moveTo(cx - iW, cy + iD);
-    ctx.quadraticCurveTo(cx - iW * 0.5, cy + iD - th * 1.4, cx - gap, cy - th * 0.8);
-    ctx.quadraticCurveTo(cx, cy - th * 0.4, cx + gap, cy - th * 0.9);
-    ctx.quadraticCurveTo(cx + iW * 0.5, cy + iD - th * 1.3, cx + iW, cy + iD);
-    ctx.quadraticCurveTo(cx + iW * 0.5, cy + iD * 2, cx, cy + iD * 2);
-    ctx.quadraticCurveTo(cx - iW * 0.5, cy + iD * 2, cx - iW, cy + iD);
-    ctx.closePath();
+    // Double-humped — two overlapping organic mounds
+    drawOrganicBlobAt(ctx, cx - iW * 0.2 + windOff, capCY - th * 0.3, iW * 0.65, (iD + th * 0.4) * 0.6, seed, baseBump + 0.03, 16);
     ctx.fill();
-    // Highlight on front hump
+    drawOrganicBlobAt(ctx, cx + iW * 0.22 + windOff, capCY - th * 0.25, iW * 0.6, (iD + th * 0.35) * 0.55, seed * 2.3, baseBump + 0.02, 16);
+    ctx.fill();
     ctx.save();
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = ctx.globalAlpha * 0.25;
     ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.ellipse(cx + gap, cy - th * 0.6, iW * 0.25, th * 0.3, -0.2, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, cx + iW * 0.15 + windOff, capCY - th * 0.4, iW * 0.25, iD * 0.2, seed * 4.7, 0.2, 10);
     ctx.fill();
     ctx.restore();
   } else if (shape === 3) {
-    // Thin crescent — partial coverage, like wind blew snow off one side
-    const th = (1.4 + (seed % 3) * 0.2) * s;
-    const coverage = 0.6 + (seed % 8) * 0.03;
-    ctx.beginPath();
-    ctx.moveTo(cx - iW * coverage, cy + iD * coverage);
-    ctx.quadraticCurveTo(cx - iW * 0.1, cy + iD - th * 1.2, cx + iW * 0.3, cy - th);
-    ctx.quadraticCurveTo(cx + iW * 0.6, cy + iD - th * 0.5, cx + iW * coverage, cy + iD * coverage);
-    ctx.quadraticCurveTo(cx + iW * 0.3, cy + iD * 1.5, cx, cy + iD * 1.8);
-    ctx.quadraticCurveTo(cx - iW * 0.3, cy + iD * 1.5, cx - iW * coverage, cy + iD * coverage);
-    ctx.closePath();
+    // Thin crescent — partial coverage
+    const coverage = 0.65 + (seed % 8) * 0.03;
+    drawOrganicBlobAt(ctx, cx + iW * 0.1 + windOff, capCY - th * 0.15, iW * coverage, (iD + th * 0.3) * 0.5, seed, baseBump + 0.04, 16);
     ctx.fill();
   } else {
-    // Classic even mound with varied thickness
-    const th = (1.3 + (seed % 9) * 0.15) * s;
-    ctx.beginPath();
-    ctx.moveTo(cx - iW, cy + iD);
-    ctx.quadraticCurveTo(cx - iW * 0.3, cy + iD - th * 1.2, cx, cy - th);
-    ctx.quadraticCurveTo(cx + iW * 0.3, cy + iD - th * 1.3, cx + iW, cy + iD);
-    ctx.quadraticCurveTo(cx + iW * 0.5, cy + iD * 2 - th * 0.3, cx, cy + iD * 2);
-    ctx.quadraticCurveTo(cx - iW * 0.5, cy + iD * 2 - th * 0.2, cx - iW, cy + iD);
-    ctx.closePath();
+    // Classic even mound
+    drawOrganicBlobAt(ctx, cx + windOff, capCY - th * 0.25, iW * 0.9, (iD + th * 0.5) * 0.65, seed, baseBump, 18);
     ctx.fill();
-    // Subtle highlight ridge
     ctx.save();
-    ctx.globalAlpha = 0.2;
+    ctx.globalAlpha = ctx.globalAlpha * 0.2;
     ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.ellipse(cx - iW * 0.1, cy - th * 0.5, iW * 0.4, th * 0.2, 0.1, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, cx + windOff * 0.5, capCY - th * 0.4, iW * 0.4, iD * 0.22, seed * 2.3, 0.22, 10);
     ctx.fill();
     ctx.restore();
   }
@@ -302,15 +265,13 @@ function isoColumnSnow(
   ctx.save();
   ctx.fillStyle = "#e6eef8";
   ctx.globalAlpha = 0.85;
-  ctx.beginPath();
-  ctx.ellipse(cx + drift, capY, iR * 1.05, iD * 1.05, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx + drift, capY, iR * 1.05, iD * 1.05, seed, 0.18, 14);
   ctx.fill();
 
   // Thicker ridge on the windward side
   ctx.fillStyle = "#eef4fc";
   ctx.globalAlpha = 0.7;
-  ctx.beginPath();
-  ctx.ellipse(cx + drift - iR * 0.2, capY - th * 0.3, iR * 0.6, iD * 0.5, 0.15, Math.PI, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx + drift - iR * 0.2, capY - th * 0.3, iR * 0.6, iD * 0.5, seed * 1.7, 0.2, 12);
   ctx.fill();
 
   // Snow draping down the front face of the column
@@ -483,18 +444,14 @@ function isoMossOnSurface(
   s: number,
   color: string,
   alpha: number,
+  seed: number = 0,
 ): void {
   const iW = w * ISO_COS;
   const iD = w * ISO_SIN;
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - iD * 0.3);
-  ctx.lineTo(cx + iW * 0.8, cy + iD * 0.5);
-  ctx.lineTo(cx, cy + iD * 1.2);
-  ctx.lineTo(cx - iW * 0.8, cy + iD * 0.5);
-  ctx.closePath();
+  drawOrganicBlobAt(ctx, cx, cy + iD * 0.45, iW * 0.8, iD * 0.75, seed, 0.22, 14);
   ctx.fill();
   ctx.restore();
 }
@@ -506,6 +463,7 @@ function isoSandDrift(
   w: number,
   d: number,
   s: number,
+  seed: number = 0,
 ): void {
   const iW = w * ISO_COS;
   const iD = d * ISO_SIN;
@@ -515,12 +473,7 @@ function isoSandDrift(
   driftG.addColorStop(0.6, "rgba(200,180,140,0.4)");
   driftG.addColorStop(1, "rgba(180,160,120,0)");
   ctx.fillStyle = driftG;
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - iD);
-  ctx.lineTo(cx + iW, cy);
-  ctx.lineTo(cx, cy + iD);
-  ctx.lineTo(cx - iW, cy);
-  ctx.closePath();
+  drawOrganicBlobAt(ctx, cx, cy, iW, iD, seed, 0.2, 16);
   ctx.fill();
 }
 
@@ -644,6 +597,7 @@ function drawSwampOverlay(
         s,
         colors[(li + layer) % 3],
         0.35 + layer * 0.1,
+        seed + li * 47 + layer * 31,
       );
     }
   }
@@ -713,12 +667,7 @@ function drawSwampOverlay(
     ctx.save();
     ctx.globalAlpha = 0.5;
     ctx.fillStyle = dampG;
-    ctx.beginPath();
-    ctx.moveTo(bx, by - iD);
-    ctx.lineTo(bx + iW, by);
-    ctx.lineTo(bx, by + iD);
-    ctx.lineTo(bx - iW, by);
-    ctx.closePath();
+    drawOrganicBlobAt(ctx, bx, by, iW, iD, seed + bi * 67, 0.2, 16);
     ctx.fill();
     ctx.restore();
   }
@@ -733,8 +682,7 @@ function drawSwampOverlay(
       const sx = ox + (wall.x + ((seed + i * 89 + wi * 53) % Math.max(1, wall.width))) * s;
       const sy = oy + (wall.topY + ((seed + i * 43 + wi * 31) % Math.max(1, Math.abs(wall.botY - wall.topY)))) * s;
       const stainH = (3 + ((seed + i * 31) % 5)) * s;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy + stainH * 0.5, 0.8 * s, stainH, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, sx, sy + stainH * 0.5, 0.8 * s, stainH, seed + i * 89 + wi * 53, 0.2, 10);
       ctx.fill();
     }
   }
@@ -759,7 +707,7 @@ function drawDesertOverlay(
     const base = a.bases[bi];
     const bx = ox + (base.x + 4) * s;
     const by = oy + (base.y + 3) * s;
-    isoSandDrift(ctx, bx, by, base.rx * 0.9, base.ry * 0.8, s);
+    isoSandDrift(ctx, bx, by, base.rx * 0.9, base.ry * 0.8, s, seed + bi * 31);
   }
 
   // Smaller drifts against walls and columns (lee side — offset right/down in iso)
@@ -767,13 +715,13 @@ function drawDesertOverlay(
     const wall = a.walls[wi];
     const wx = ox + (wall.x + wall.width * 0.7) * s;
     const wy = oy + wall.botY * s;
-    isoSandDrift(ctx, wx, wy + 2 * s, wall.width * 0.3, 6, s);
+    isoSandDrift(ctx, wx, wy + 2 * s, wall.width * 0.3, 6, s, seed + wi * 47);
   }
   for (let ci = 0; ci < a.columns.length; ci++) {
     const col = a.columns[ci];
     const cx = ox + (col.x + col.r * 1.2) * s;
     const cy = oy + col.y * s;
-    isoSandDrift(ctx, cx, cy + 2 * s, col.r * 1.8, col.r, s);
+    isoSandDrift(ctx, cx, cy + 2 * s, col.r * 1.8, col.r, s, seed + ci * 59);
   }
 
   // Sand-eroded patches on wall faces
@@ -786,8 +734,7 @@ function drawDesertOverlay(
       const ex = ox + (wall.x + ((seed + i * 73 + wi * 41) % Math.max(1, wall.width))) * s;
       const ey = oy + (wall.topY + ((seed + i * 59) % Math.max(1, Math.abs(wall.botY - wall.topY))) * 0.6) * s;
       const ew = (2.5 + ((seed + i * 31) % 3)) * s;
-      ctx.beginPath();
-      ctx.ellipse(ex, ey, ew, ew * 0.6, ((seed + i * 19) % 30) * 0.1, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, ex, ey, ew, ew * 0.6, seed + i * 19 + wi * 37, 0.25, 10);
       ctx.fill();
     }
   }
@@ -844,8 +791,7 @@ function drawDesertOverlay(
     const py = oy + (col.y + 1) * s;
     const pr = (col.r * 0.6 + 1) * s;
     ctx.fillStyle = ci % 2 === 0 ? "#b8a078" : "#c4aa80";
-    ctx.beginPath();
-    ctx.ellipse(px, py, pr * ISO_COS, pr * ISO_SIN, 0, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, px, py, pr * ISO_COS, pr * ISO_SIN, seed + ci * 41, 0.22, 12);
     ctx.fill();
   }
   ctx.restore();
@@ -957,8 +903,7 @@ function drawWinterOverlay(
       const dh = (0.8 + (dustSeed % 3) * 0.3) * s;
       ctx.globalAlpha = 0.2 + (dustSeed % 5) * 0.04;
       ctx.fillStyle = (dustSeed % 2 === 0) ? "#dde8f4" : "#e8f0fc";
-      ctx.beginPath();
-      ctx.ellipse(dx, dy, dw * ISO_COS, dh, ((dustSeed % 10) - 5) * 0.05, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, dx, dy, dw * ISO_COS, dh, dustSeed * 1.7, 0.2, 10);
       ctx.fill();
     }
   }
@@ -1078,12 +1023,7 @@ function drawVolcanicOverlay(
     const iW = ashW * ISO_COS * s;
     const iD = ashW * ISO_SIN * s;
     ctx.fillStyle = li % 2 === 0 ? "rgba(55,48,42,0.4)" : "rgba(65,55,48,0.35)";
-    ctx.beginPath();
-    ctx.moveTo(lx, ly - iD);
-    ctx.lineTo(lx + iW, ly);
-    ctx.lineTo(lx, ly + iD);
-    ctx.lineTo(lx - iW, ly);
-    ctx.closePath();
+    drawOrganicBlobAt(ctx, lx, ly, iW, iD, seed + li * 29, 0.2, 14);
     ctx.fill();
   }
   ctx.restore();
@@ -1098,8 +1038,7 @@ function drawVolcanicOverlay(
       const ax = ox + (wall.x + ((seed + i * 71 + wi * 37) % Math.max(1, wall.width))) * s;
       const ay = oy + (wall.topY + ((seed + i * 37) % Math.max(1, Math.abs(wall.botY - wall.topY))) * 0.5) * s;
       const aH = (4 + ((seed + i * 23) % 7)) * s;
-      ctx.beginPath();
-      ctx.ellipse(ax, ay + aH * 0.5, 0.8 * s, aH, 0, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, ax, ay + aH * 0.5, 0.8 * s, aH, seed + i * 71 + wi * 37, 0.18, 10);
       ctx.fill();
     }
   }
@@ -1187,8 +1126,7 @@ function drawVolcanicOverlay(
   const hy = oy + a.extent.minY * 0.5 * s;
   const hW = (a.extent.maxX - a.extent.minX) * 0.35 * s;
   const hH = (a.extent.maxY - a.extent.minY) * 0.4 * s;
-  ctx.beginPath();
-  ctx.ellipse(hx, hy, hW * ISO_COS, hH, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, hx, hy, hW * ISO_COS, hH, seed + 91, 0.15, 16);
   ctx.fill();
   ctx.restore();
 }
@@ -1215,7 +1153,7 @@ function drawGrasslandOverlay(
     const ly = oy + ledge.y * s;
     const colors = ["#6a8a5a", "#5a7a4a", "#7a9a6a"];
     const mossW = ledge.w * 0.4;
-    isoMossOnSurface(ctx, lx, ly, mossW * s, s, colors[li % 3], 0.3);
+    isoMossOnSurface(ctx, lx, ly, mossW * s, s, colors[li % 3], 0.3, seed + li * 53);
   }
   ctx.restore();
 
@@ -1300,8 +1238,7 @@ function drawGrasslandOverlay(
     for (let i = 0; i < 2; i++) {
       const sx = ox + (wall.x + ((seed + i * 67 + wi * 41) % Math.max(1, wall.width))) * s;
       const sy = oy + (wall.topY + ((seed + i * 41) % Math.max(1, Math.abs(wall.botY - wall.topY))) * 0.4) * s;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, 2.5 * s, 5 * s, 0.2, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, sx, sy, 2.5 * s, 5 * s, seed + i * 67 + wi * 41, 0.2, 10);
       ctx.fill();
     }
   }

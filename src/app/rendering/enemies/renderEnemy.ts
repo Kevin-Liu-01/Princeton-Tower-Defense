@@ -20,7 +20,7 @@ import {
 } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
-import { getPerformanceSettings } from "../performance";
+import { getPerformanceSettings, getScenePressure } from "../performance";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
 import { getRegionalPalette } from "./regionColors";
 
@@ -338,8 +338,9 @@ export function renderEnemy(
   );
   ctx.fill();
 
-  const lowDetailFx = enemyDensityHint > 90;
-  const minimalDetailFx = enemyDensityHint > 160;
+  const pressure = getScenePressure();
+  const lowDetailFx = enemyDensityHint > 90 || pressure.skipDecorativeEffects;
+  const minimalDetailFx = enemyDensityHint > 160 || pressure.skipNonEssentialParticles;
   const flashProfile = getEnemyFlashProfile(enemy.type, eData.category);
   const damageFlashIntensity =
     enemy.damageFlash > 0
@@ -383,7 +384,7 @@ export function renderEnemy(
 
   const region = getMapTheme(selectedMap);
 
-  if (hasEnemyAura(eData.category)) {
+  if (!minimalDetailFx && hasEnemyAura(eData.category)) {
     renderEnemyAura(ctx, eData.category!, screenPos.x, drawY, size, now, zoom);
   }
 
@@ -528,301 +529,149 @@ export function renderEnemy(
 
   // Frozen effect
   if (enemy.frozen) {
-    // Icy ground shadow
-    const frostGrad = ctx.createRadialGradient(
-      screenPos.x,
-      drawY + size * 0.1,
-      0,
-      screenPos.x,
-      drawY + size * 0.1,
-      size * 1.0,
-    );
-    frostGrad.addColorStop(0, "rgba(120, 200, 255, 0.2)");
-    frostGrad.addColorStop(0.5, "rgba(80, 170, 240, 0.12)");
-    frostGrad.addColorStop(1, "rgba(60, 140, 220, 0)");
-    ctx.fillStyle = frostGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY + size * 0.1,
-      size * 1.0,
-      size * 0.5,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Inner frost shell
-    const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
-    ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      size * 0.85,
-      size * 0.85 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      size * 0.65,
-      size * 0.65 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Animated frost ring
-    ctx.save();
-    ctx.translate(screenPos.x, drawY);
-    ctx.rotate(time * 0.3);
-    ctx.strokeStyle = `rgba(100, 200, 255, ${0.85 + Math.sin(time * 3) * 0.15})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([5 * zoom, 3 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(
-      0,
-      0,
-      size * 0.78,
-      size * 0.78 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // Crystal shards
-    const crystalRotation = time * 0.5;
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + crystalRotation;
-      const dist = size * (0.5 + Math.sin(time * 1.2 + i * 0.8) * 0.08);
-      const cx = screenPos.x + Math.cos(angle) * dist;
-      const cy = drawY + Math.sin(angle) * dist * ISO_Y_RATIO;
-      const cSize = (3.5 + Math.sin(i * 1.3 + time) * 1.5) * zoom;
-      const sparkle = 0.8 + Math.sin(time * 5 + i * 2.1) * 0.2;
-
-      ctx.fillStyle = `rgba(220, 245, 255, ${sparkle})`;
+    if (minimalDetailFx) {
+      // Cheap tint-only frozen indicator
+      ctx.fillStyle = "rgba(150, 215, 255, 0.28)";
       ctx.beginPath();
-      ctx.moveTo(cx, cy - cSize * 1.5);
-      ctx.lineTo(cx + cSize * 0.5, cy - cSize * 0.3);
-      ctx.lineTo(cx + cSize * 0.5, cy + cSize * 0.4);
-      ctx.lineTo(cx, cy + cSize * 0.9);
-      ctx.lineTo(cx - cSize * 0.5, cy + cSize * 0.4);
-      ctx.lineTo(cx - cSize * 0.5, cy - cSize * 0.3);
-      ctx.closePath();
+      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
+      ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crystal highlight
-      ctx.fillStyle = `rgba(255, 255, 255, ${sparkle * 0.7})`;
+      ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
       ctx.beginPath();
-      ctx.moveTo(cx - cSize * 0.15, cy - cSize * 1.2);
-      ctx.lineTo(cx + cSize * 0.12, cy - cSize * 0.2);
-      ctx.lineTo(cx - cSize * 0.3, cy - cSize * 0.15);
-      ctx.closePath();
+      ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Crystal edge glow
-      ctx.strokeStyle = `rgba(180, 230, 255, ${sparkle * 0.5})`;
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - cSize * 1.5);
-      ctx.lineTo(cx + cSize * 0.5, cy - cSize * 0.3);
-      ctx.lineTo(cx + cSize * 0.5, cy + cSize * 0.4);
-      ctx.lineTo(cx, cy + cSize * 0.9);
-      ctx.lineTo(cx - cSize * 0.5, cy + cSize * 0.4);
-      ctx.lineTo(cx - cSize * 0.5, cy - cSize * 0.3);
-      ctx.closePath();
-      ctx.stroke();
-    }
+      if (!lowDetailFx) {
+        // Animated frost ring
+        ctx.save();
+        ctx.translate(screenPos.x, drawY);
+        ctx.rotate(time * 0.3);
+        ctx.strokeStyle = `rgba(100, 200, 255, ${0.85 + Math.sin(time * 3) * 0.15})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.setLineDash([5 * zoom, 3 * zoom]);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
 
-    // Floating ice motes
-    for (let i = 0; i < 5; i++) {
-      const pAngle = time * 1.5 + i * 1.26;
-      const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
-      const px = screenPos.x + Math.cos(pAngle) * pDist;
-      const py =
-        drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
-      const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
+        // Crystal shards (reduced from 6 to 4 under medium pressure)
+        const crystalCount = pressure.forceSimplifiedGradients ? 3 : 6;
+        const crystalRotation = time * 0.5;
+        for (let i = 0; i < crystalCount; i++) {
+          const angle = (i / crystalCount) * Math.PI * 2 + crystalRotation;
+          const dist = size * (0.5 + Math.sin(time * 1.2 + i * 0.8) * 0.08);
+          const cx = screenPos.x + Math.cos(angle) * dist;
+          const cy = drawY + Math.sin(angle) * dist * ISO_Y_RATIO;
+          const cSize = (3.5 + Math.sin(i * 1.3 + time) * 1.5) * zoom;
+          const sparkle = 0.8 + Math.sin(time * 5 + i * 2.1) * 0.2;
 
-      const moteGrad = ctx.createRadialGradient(px, py, 0, px, py, 3 * zoom);
-      moteGrad.addColorStop(0, `rgba(255, 255, 255, ${moteAlpha})`);
-      moteGrad.addColorStop(1, `rgba(200, 240, 255, 0)`);
-      ctx.fillStyle = moteGrad;
-      ctx.beginPath();
-      ctx.arc(px, py, 3 * zoom, 0, Math.PI * 2);
-      ctx.fill();
+          ctx.fillStyle = `rgba(220, 245, 255, ${sparkle})`;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - cSize * 1.5);
+          ctx.lineTo(cx + cSize * 0.5, cy - cSize * 0.3);
+          ctx.lineTo(cx + cSize * 0.5, cy + cSize * 0.4);
+          ctx.lineTo(cx, cy + cSize * 0.9);
+          ctx.lineTo(cx - cSize * 0.5, cy + cSize * 0.4);
+          ctx.lineTo(cx - cSize * 0.5, cy - cSize * 0.3);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Floating ice motes (reduced from 5 to 2 under medium pressure)
+        const moteCount = pressure.forceSimplifiedGradients ? 2 : 5;
+        for (let i = 0; i < moteCount; i++) {
+          const pAngle = time * 1.5 + i * 1.26;
+          const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
+          const px = screenPos.x + Math.cos(pAngle) * pDist;
+          const py = drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
+          const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
+          ctx.fillStyle = `rgba(220, 245, 255, ${moteAlpha})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 2.5 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
   }
 
   // Burning effect
   if (enemy.burning) {
-    // Heat shimmer glow under the enemy
-    const heatGrad = ctx.createRadialGradient(
-      screenPos.x,
-      drawY,
-      0,
-      screenPos.x,
-      drawY,
-      size * 0.9,
-    );
-    heatGrad.addColorStop(
-      0,
-      `rgba(255, 100, 20, ${0.2 + Math.sin(time * 6) * 0.08})`,
-    );
-    heatGrad.addColorStop(
-      0.5,
-      `rgba(255, 60, 0, ${0.1 + Math.sin(time * 5) * 0.05})`,
-    );
-    heatGrad.addColorStop(1, "rgba(255, 40, 0, 0)");
-    ctx.fillStyle = heatGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      size * 0.9,
-      size * 0.9 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Fire ring at base
-    const ringPulse = 0.35 + Math.sin(time * 8) * 0.15;
-    ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY + size * 0.05,
-      size * 0.5,
-      size * 0.5 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-
-    // Main flames (5 for better coverage)
-    for (let i = 0; i < 5; i++) {
-      const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
-      const flameX = screenPos.x + flameOffset + (i - 2) * size * 0.1;
-      const baseY = drawY - size * 0.1;
-      const flameHeight =
-        (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
-      const flameWidth =
-        (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
-      const flicker = Math.sin(time * 12 + i * 3) * 0.12;
-
-      // Outer flame (dark red)
-      ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
+    if (minimalDetailFx) {
+      // Cheap tint-only burn indicator
+      ctx.fillStyle = `rgba(255, 80, 10, 0.22)`;
       ctx.beginPath();
-      ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(
-        flameX - flameWidth * 1.1,
-        baseY - flameHeight * 0.45,
-        flameX,
-        baseY - flameHeight,
-      );
-      ctx.quadraticCurveTo(
-        flameX + flameWidth * 1.1,
-        baseY - flameHeight * 0.45,
-        flameX,
-        baseY,
-      );
+      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Middle flame (bright orange)
-      ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
+    } else {
+      // Fire ring at base
+      const ringPulse = 0.35 + Math.sin(time * 8) * 0.15;
+      ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
-      ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(
-        flameX - flameWidth * 0.7,
-        baseY - flameHeight * 0.4,
-        flameX,
-        baseY - flameHeight * 0.75,
-      );
-      ctx.quadraticCurveTo(
-        flameX + flameWidth * 0.7,
-        baseY - flameHeight * 0.4,
-        flameX,
-        baseY,
-      );
-      ctx.fill();
+      ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.stroke();
 
-      // Inner flame core (yellow-white)
-      ctx.fillStyle = `rgba(255, ${220 + Math.floor(Math.sin(time * 10 + i) * 30)}, ${120 + Math.floor(Math.sin(time * 9 + i) * 50)}, ${0.8 + flicker})`;
-      ctx.beginPath();
-      ctx.moveTo(flameX, baseY);
-      ctx.quadraticCurveTo(
-        flameX - flameWidth * 0.35,
-        baseY - flameHeight * 0.3,
-        flameX,
-        baseY - flameHeight * 0.5,
-      );
-      ctx.quadraticCurveTo(
-        flameX + flameWidth * 0.35,
-        baseY - flameHeight * 0.3,
-        flameX,
-        baseY,
-      );
-      ctx.fill();
-    }
+      // Flames — reduced count under pressure, fewer layers
+      const flameCount = lowDetailFx ? 3 : 5;
+      const flameLayers = lowDetailFx ? 1 : 3;
+      for (let i = 0; i < flameCount; i++) {
+        const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
+        const flameX = screenPos.x + flameOffset + (i - Math.floor(flameCount / 2)) * size * 0.1;
+        const baseY = drawY - size * 0.1;
+        const flameHeight = (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
+        const flameWidth = (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
+        const flicker = Math.sin(time * 12 + i * 3) * 0.12;
 
-    // Rising embers with trails
-    for (let i = 0; i < 6; i++) {
-      const emberPhase = (time * 2.5 + i * 0.35) % 1;
-      const drift = Math.sin(time * 3 + i * 2.2) * size * 0.35;
-      const emberX = screenPos.x + drift;
-      const emberY = drawY - size * 0.15 - emberPhase * size * 1.0;
-      const emberSize = (1.8 - emberPhase * 1.2) * zoom;
-      const emberAlpha = (1 - emberPhase) * 0.85;
+        if (flameLayers >= 3) {
+          ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
+          ctx.beginPath();
+          ctx.moveTo(flameX, baseY);
+          ctx.quadraticCurveTo(flameX - flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY - flameHeight);
+          ctx.quadraticCurveTo(flameX + flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY);
+          ctx.fill();
+        }
 
-      // Ember trail
-      if (emberPhase > 0.1) {
-        ctx.strokeStyle = `rgba(255, ${180 - Math.floor(emberPhase * 80)}, 50, ${emberAlpha * 0.4})`;
-        ctx.lineWidth = emberSize * 0.6;
+        ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
         ctx.beginPath();
-        ctx.moveTo(emberX, emberY);
-        ctx.lineTo(emberX - drift * 0.15, emberY + size * 0.12);
-        ctx.stroke();
+        ctx.moveTo(flameX, baseY);
+        ctx.quadraticCurveTo(flameX - flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY - flameHeight * 0.75);
+        ctx.quadraticCurveTo(flameX + flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY);
+        ctx.fill();
+
+        if (flameLayers >= 3) {
+          ctx.fillStyle = `rgba(255, 230, 140, ${0.8 + flicker})`;
+          ctx.beginPath();
+          ctx.moveTo(flameX, baseY);
+          ctx.quadraticCurveTo(flameX - flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY - flameHeight * 0.5);
+          ctx.quadraticCurveTo(flameX + flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY);
+          ctx.fill();
+        }
       }
 
-      // Ember glow
-      const eGrad = ctx.createRadialGradient(
-        emberX,
-        emberY,
-        0,
-        emberX,
-        emberY,
-        emberSize * 2.5,
-      );
-      eGrad.addColorStop(
-        0,
-        `rgba(255, ${200 - Math.floor(emberPhase * 100)}, ${80 - Math.floor(emberPhase * 60)}, ${emberAlpha * 0.5})`,
-      );
-      eGrad.addColorStop(1, "rgba(255, 100, 0, 0)");
-      ctx.fillStyle = eGrad;
-      ctx.beginPath();
-      ctx.arc(emberX, emberY, emberSize * 2.5, 0, Math.PI * 2);
-      ctx.fill();
+      // Embers — skip under low detail, reduce count otherwise
+      if (!lowDetailFx) {
+        const emberCount = pressure.forceSimplifiedGradients ? 3 : 6;
+        for (let i = 0; i < emberCount; i++) {
+          const emberPhase = (time * 2.5 + i * 0.35) % 1;
+          const drift = Math.sin(time * 3 + i * 2.2) * size * 0.35;
+          const emberX = screenPos.x + drift;
+          const emberY = drawY - size * 0.15 - emberPhase * size * 1.0;
+          const emberSize = (1.8 - emberPhase * 1.2) * zoom;
+          const emberAlpha = (1 - emberPhase) * 0.85;
 
-      // Ember core
-      ctx.fillStyle = `rgba(255, ${220 - Math.floor(emberPhase * 120)}, ${100 - Math.floor(emberPhase * 80)}, ${emberAlpha})`;
-      ctx.beginPath();
-      ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
-      ctx.fill();
+          ctx.fillStyle = `rgba(255, ${220 - Math.floor(emberPhase * 120)}, ${100 - Math.floor(emberPhase * 80)}, ${emberAlpha})`;
+          ctx.beginPath();
+          ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
     }
   }
 
@@ -834,95 +683,75 @@ export function renderEnemy(
     !enemy.frozen
   ) {
     const slowIntensity = Math.max(0.6, enemy.slowIntensity);
-    const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
     const sc = getSlowAuraColors(enemy.slowSource);
 
-    // Gradient aura fill
-    const auraGrad = ctx.createRadialGradient(
-      screenPos.x,
-      drawY,
-      0,
-      screenPos.x,
-      drawY,
-      size * 0.9,
-    );
-    auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
-    auraGrad.addColorStop(0.6, `rgba(${sc.aura}, ${0.15 * slowIntensity})`);
-    auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
-    ctx.fillStyle = auraGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      size * 0.9,
-      size * 0.9 * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Animated outer ring
-    ctx.save();
-    ctx.translate(screenPos.x, drawY);
-    ctx.rotate(time * 0.8);
-    ctx.strokeStyle = `rgba(${sc.ring}, ${0.85 * slowIntensity * pulseAlpha})`;
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.setLineDash([8 * zoom, 4 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // Inner pulsing ring
-    const innerPulse = size * (0.48 + Math.sin(time * 3) * 0.04);
-    ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      innerPulse,
-      innerPulse * ISO_Y_RATIO,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-
-    // Orbiting rune diamonds with glow
-    for (let i = 0; i < 6; i++) {
-      const runeAngle = time * 0.8 + (i / 6) * Math.PI * 2;
-      const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
-      const ry = drawY + Math.sin(runeAngle) * size * 0.78 * ISO_Y_RATIO;
-      const runeSize = 4.5 * zoom;
-      const runeGlow = 0.85 + Math.sin(time * 5 + i * 1.1) * 0.15;
-
-      // Rune glow
-      const rGrad = ctx.createRadialGradient(rx, ry, 0, rx, ry, runeSize * 2);
-      rGrad.addColorStop(
-        0,
-        `rgba(${sc.rune}, ${0.3 * slowIntensity * runeGlow})`,
-      );
-      rGrad.addColorStop(1, `rgba(${sc.rune}, 0)`);
-      ctx.fillStyle = rGrad;
+    if (minimalDetailFx) {
+      // Cheap tint-only slow indicator
+      ctx.fillStyle = `rgba(${sc.aura}, ${0.2 * slowIntensity})`;
       ctx.beginPath();
-      ctx.arc(rx, ry, runeSize * 2, 0, Math.PI * 2);
+      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
+
+      // Simple flat aura fill instead of radial gradient under medium pressure
+      if (pressure.forceSimplifiedGradients) {
+        ctx.fillStyle = `rgba(${sc.aura}, ${0.18 * slowIntensity})`;
+      } else {
+        const auraGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
+        auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
+        auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
+        ctx.fillStyle = auraGrad;
+      }
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rune diamond
-      ctx.fillStyle = `rgba(${sc.rune}, ${runeGlow * slowIntensity})`;
+      // Inner pulsing ring
+      const innerPulse = size * (0.48 + Math.sin(time * 3) * 0.04);
+      ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
-      ctx.moveTo(rx, ry - runeSize);
-      ctx.lineTo(rx + runeSize * 0.7, ry);
-      ctx.lineTo(rx, ry + runeSize);
-      ctx.lineTo(rx - runeSize * 0.7, ry);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = `rgba(${sc.runeOutline}, ${0.75 * slowIntensity})`;
-      ctx.lineWidth = 1 * zoom;
+      ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
+
+      if (!lowDetailFx) {
+        // Animated outer ring (expensive — rotating dashed stroke)
+        ctx.save();
+        ctx.translate(screenPos.x, drawY);
+        ctx.rotate(time * 0.8);
+        ctx.strokeStyle = `rgba(${sc.ring}, ${0.85 * slowIntensity * pulseAlpha})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.setLineDash([8 * zoom, 4 * zoom]);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // Orbiting rune diamonds — no per-rune radial gradient
+        const runeCount = pressure.forceSimplifiedGradients ? 3 : 6;
+        for (let i = 0; i < runeCount; i++) {
+          const runeAngle = time * 0.8 + (i / runeCount) * Math.PI * 2;
+          const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
+          const ry = drawY + Math.sin(runeAngle) * size * 0.78 * ISO_Y_RATIO;
+          const runeSize = 4.5 * zoom;
+          const runeGlow = 0.85 + Math.sin(time * 5 + i * 1.1) * 0.15;
+
+          ctx.fillStyle = `rgba(${sc.rune}, ${runeGlow * slowIntensity})`;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - runeSize);
+          ctx.lineTo(rx + runeSize * 0.7, ry);
+          ctx.lineTo(rx, ry + runeSize);
+          ctx.lineTo(rx - runeSize * 0.7, ry);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(${sc.runeOutline}, ${0.75 * slowIntensity})`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.stroke();
+        }
+      }
     }
 
     // Floating mist particles with trails
@@ -1060,7 +889,7 @@ export function renderEnemy(
   }
 
   // Hex Ward aura effect
-  if (enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
+  if (!minimalDetailFx && enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
     const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
     const remainingRatio = Math.max(
       0.35,
@@ -1143,7 +972,7 @@ export function renderEnemy(
   }
 
   // Gold aura effect
-  if (enemy.goldAura) {
+  if (!minimalDetailFx && enemy.goldAura) {
     for (let i = 0; i < 5; i++) {
       const coinAngle = time * 2.5 + (i * Math.PI * 2) / 5;
       const coinOrbitX = Math.cos(coinAngle) * size * 1.0;
@@ -1200,7 +1029,7 @@ export function renderEnemy(
   }
 
   // Summoning channel ritual effect
-  if (enemy.summoning && enemy.summonStartTime) {
+  if (!minimalDetailFx && enemy.summoning && enemy.summonStartTime) {
     const channelElapsed = now - enemy.summonStartTime;
     const channelProgress = Math.min(
       1,

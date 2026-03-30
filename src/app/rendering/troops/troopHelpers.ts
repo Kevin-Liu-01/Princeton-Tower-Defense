@@ -898,6 +898,117 @@ export function drawHorseTail(
   }
 }
 
+// ── Armored skirt (tassets / fauld) — overlapping plate strips ──
+
+export interface ArmoredSkirtColors {
+  armorPeak: string;
+  armorHigh: string;
+  armorMid: string;
+  armorDark: string;
+  trimColor: string;
+}
+
+export interface ArmoredSkirtConfig {
+  plateCount: number;
+  widthFactor: number;
+  depthFactor: number;
+  topOffset: number;
+}
+
+const DEFAULT_SKIRT_CONFIG: ArmoredSkirtConfig = {
+  plateCount: 5,
+  widthFactor: 0.48,
+  depthFactor: 0.16,
+  topOffset: 0.30,
+};
+
+export function drawArmoredSkirt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  zoom: number,
+  stance: number,
+  breathe: number,
+  colors: ArmoredSkirtColors,
+  config: Partial<ArmoredSkirtConfig> = {},
+) {
+  const cfg = { ...DEFAULT_SKIRT_CONFIG, ...config };
+  const skirtTop = y + size * cfg.topOffset + breathe;
+  const skirtWidth = size * cfg.widthFactor;
+  const plateWidth = skirtWidth / cfg.plateCount;
+  const skirtDepth = size * cfg.depthFactor;
+  const halfCount = (cfg.plateCount - 1) / 2;
+
+  for (let i = 0; i < cfg.plateCount; i++) {
+    const px = x - skirtWidth * 0.5 + i * plateWidth;
+    const distFromCenter = halfCount > 0 ? (i - halfCount) / halfCount : 0;
+    const splay = distFromCenter * 0.08;
+    const legMotion = stance * distFromCenter * 0.6;
+    const plateDepth = skirtDepth * (1 - Math.abs(distFromCenter) * 0.15);
+
+    ctx.save();
+    ctx.translate(px + plateWidth * 0.5, skirtTop);
+    ctx.rotate(splay + legMotion * 0.015);
+
+    const plateGrad = ctx.createLinearGradient(
+      -plateWidth * 0.5, 0,
+      plateWidth * 0.5, plateDepth,
+    );
+    if (distFromCenter < -0.2) {
+      plateGrad.addColorStop(0, colors.armorMid);
+      plateGrad.addColorStop(0.4, colors.armorHigh);
+      plateGrad.addColorStop(1, colors.armorDark);
+    } else if (distFromCenter > 0.2) {
+      plateGrad.addColorStop(0, colors.armorDark);
+      plateGrad.addColorStop(0.6, colors.armorHigh);
+      plateGrad.addColorStop(1, colors.armorMid);
+    } else {
+      plateGrad.addColorStop(0, colors.armorHigh);
+      plateGrad.addColorStop(0.5, colors.armorPeak);
+      plateGrad.addColorStop(1, colors.armorHigh);
+    }
+
+    const topHalf = plateWidth * 0.48;
+    const botHalf = plateWidth * 0.54;
+    ctx.fillStyle = plateGrad;
+    ctx.beginPath();
+    ctx.moveTo(-topHalf, 0);
+    ctx.lineTo(topHalf, 0);
+    ctx.lineTo(botHalf, plateDepth);
+    ctx.quadraticCurveTo(0, plateDepth + size * 0.02, -botHalf, plateDepth);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = colors.armorPeak;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath();
+    ctx.moveTo(-topHalf, 0.5);
+    ctx.lineTo(topHalf, 0.5);
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+
+    ctx.strokeStyle = colors.armorDark;
+    ctx.lineWidth = 1 * zoom;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(-botHalf, plateDepth);
+    ctx.quadraticCurveTo(0, plateDepth + size * 0.02, botHalf, plateDepth);
+    ctx.stroke();
+    ctx.globalAlpha = 1.0;
+
+    ctx.fillStyle = colors.trimColor;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.arc(0, size * 0.02, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    ctx.restore();
+  }
+}
+
 export function drawTroopFinishMotes(
   ctx: CanvasRenderingContext2D,
   x: number,

@@ -482,6 +482,7 @@ export interface Hero {
   type: HeroType;
   pos: Position;
   targetPos?: Position;
+  moveWaypoints?: Position[];
   hp: number;
   maxHp: number;
   moving: boolean;
@@ -590,6 +591,7 @@ export interface Troop {
   type?: TroopType;
   pos: Position;
   targetPos?: Position;
+  moveWaypoints?: Position[];
   hp: number;
   maxHp: number;
   moving: boolean;

@@ -17,7 +17,7 @@ import {
   drawFloatingPiece,
   drawGlowingEyes,
 } from "./animationHelpers";
-import { drawPathArm, drawPathLegs } from "./darkFantasyHelpers";
+import { drawPathArm, drawPathLegs, drawHipGarb } from "./darkFantasyHelpers";
 import type { MapTheme } from "../../types";
 import { getRegionMaterials, drawRegionBodyAccent } from "./regionVariants";
 
@@ -4569,6 +4569,8 @@ export function drawShadowKnightEnemy(
       ctx.fill();
     }
   }
+
+  drawHipGarb(ctx, x, y + size * 0.19, size, zoom, time, 'plates', armorMid, armorDark);
 
   // Tattered cape with void tendrils
   const capeGrad = ctx.createLinearGradient(

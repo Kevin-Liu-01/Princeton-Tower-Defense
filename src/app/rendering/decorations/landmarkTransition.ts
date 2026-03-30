@@ -43,7 +43,6 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "witch_cottage",
   "frozen_waterfall",
   "frozen_gate",
-  "cobra_statue",
   "hieroglyph_wall",
   "sarcophagus",
   "lava_fall",
@@ -55,7 +54,6 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "dark_barracks",
   "dark_spire",
   "ice_bridge",
-  "demon_statue",
   "cannon_crest",
   "ivy_crossroads",
   "blight_basin",
@@ -75,6 +73,8 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "ruined_temple",
   "sunken_pillar",
   "idol_statue",
+  "cobra_statue",
+  "demon_statue",
   "obelisk",
   "fountain",
   "ruins",
@@ -504,8 +504,7 @@ function drawRegionDetails(
       driftGrad.addColorStop(0, "#c4a45a");
       driftGrad.addColorStop(1, "rgba(164,131,58,0)");
       ctx.fillStyle = driftGrad;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, 4 * zoom, 1.8 * zoom, angle, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, sx, sy, 4 * zoom, 1.8 * zoom, blobSeed + i * 17.3, 0.2, 12);
       ctx.fill();
     }
   } else if (mapTheme === "winter") {
@@ -528,8 +527,7 @@ function drawRegionDetails(
       snowGrad.addColorStop(0.5, "rgba(195, 210, 230, 0.3)");
       snowGrad.addColorStop(1, "rgba(175, 195, 215, 0)");
       ctx.fillStyle = snowGrad;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, 4.5 * zoom, 2 * zoom, angle * 0.3, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, sx, sy, 4.5 * zoom, 2 * zoom, blobSeed + i * 13.7, 0.18, 12);
       ctx.fill();
     }
   } else if (mapTheme === "volcanic") {
@@ -584,8 +582,7 @@ function drawRegionDetails(
       pudGrad.addColorStop(0.6, "rgba(25, 45, 20, 0.2)");
       pudGrad.addColorStop(1, "rgba(15, 35, 10, 0)");
       ctx.fillStyle = pudGrad;
-      ctx.beginPath();
-      ctx.ellipse(px, py, 3 * zoom, 1.5 * zoom, angle * 0.4, 0, Math.PI * 2);
+      drawOrganicBlobAt(ctx, px, py, 3 * zoom, 1.5 * zoom, blobSeed + i * 19.1, 0.2, 12);
       ctx.fill();
     }
     // Moss tendrils

@@ -7,6 +7,7 @@ import { lightenColor } from "../../utils";
 const TAU = Math.PI * 2;
 
 export type LimbStyle = 'armored' | 'bone' | 'ghostly' | 'fleshy';
+export type GarbStyle = 'plates' | 'tattered' | 'robe' | 'leather' | 'chainmail';
 
 // ─── Public interfaces ───────────────────────────────────────────
 
@@ -45,6 +46,10 @@ export interface PathLegOptions {
   phaseOffset?: number;
   style?: LimbStyle;
   trimColor?: string;
+  /** Set false to suppress auto-garb; or specify an explicit style. */
+  garb?: GarbStyle | false;
+  garbColor?: string;
+  garbColorDark?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1149,6 +1154,228 @@ export function drawPathArm(
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// HIP GARB — covers leg connection with style-appropriate overlay
+// ═══════════════════════════════════════════════════════════════════
+
+const GARB_FROM_LIMB: Record<LimbStyle, GarbStyle> = {
+  armored: 'plates',
+  bone: 'tattered',
+  fleshy: 'leather',
+  ghostly: 'robe',
+};
+
+function renderPlateGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, zoom: number, time: number,
+  color: string, colorDark: string,
+) {
+  const count = 5;
+  const width = size * 0.22;
+  const depth = size * 0.09;
+  const pw = (width * 2) / count;
+  const sway = Math.sin(time * 2.5) * 0.02;
+
+  for (let i = 0; i < count; i++) {
+    const px = cx - width + i * pw;
+    const dist = (i - (count - 1) / 2) / ((count - 1) / 2);
+    const d = depth * (1 - Math.abs(dist) * 0.15);
+    const hw = pw * 0.48;
+    const bw = pw * 0.52;
+
+    ctx.save();
+    ctx.translate(px + pw * 0.5, topY);
+    ctx.rotate(dist * 0.07 + sway * dist);
+
+    const g = ctx.createLinearGradient(-hw, 0, hw, d);
+    if (dist < -0.2) {
+      g.addColorStop(0, colorDark);
+      g.addColorStop(0.5, color);
+      g.addColorStop(1, colorDark);
+    } else if (dist > 0.2) {
+      g.addColorStop(0, colorDark);
+      g.addColorStop(0.5, color);
+      g.addColorStop(1, colorDark);
+    } else {
+      g.addColorStop(0, color);
+      g.addColorStop(0.5, lightenColor(color, 20));
+      g.addColorStop(1, color);
+    }
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-hw, 0);
+    ctx.lineTo(hw, 0);
+    ctx.lineTo(bw, d);
+    ctx.quadraticCurveTo(0, d + size * 0.012, -bw, d);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = colorDark;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-bw, d);
+    ctx.quadraticCurveTo(0, d + size * 0.012, bw, d);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+}
+
+function renderTatteredGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, zoom: number, time: number,
+  color: string, colorDark: string,
+) {
+  const strips = 6;
+  const width = size * 0.2;
+  const sway = Math.sin(time * 2) * size * 0.01;
+
+  for (let i = 0; i < strips; i++) {
+    const t = i / (strips - 1);
+    const sx = cx - width + t * width * 2;
+    const stripLen = size * (0.06 + Math.sin(i * 2.3 + 1.7) * 0.03);
+    const wave = Math.sin(time * 3 + i * 1.1) * size * 0.008;
+
+    ctx.fillStyle = i % 2 === 0 ? color : colorDark;
+    ctx.globalAlpha = 0.7 + Math.sin(i * 1.5) * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(sx - size * 0.012, topY);
+    ctx.lineTo(sx + size * 0.012, topY);
+    ctx.lineTo(sx + size * 0.008 + wave + sway, topY + stripLen);
+    ctx.lineTo(sx - size * 0.008 + wave + sway, topY + stripLen);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = colorDark;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(sx + wave * 0.5, topY + size * 0.01);
+    ctx.lineTo(sx + wave + sway, topY + stripLen - size * 0.005);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function renderRobeGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, _zoom: number, time: number,
+  color: string, colorDark: string,
+) {
+  const wave = Math.sin(time * 2.2) * size * 0.01;
+  const wave2 = Math.sin(time * 3.1 + 0.5) * size * 0.006;
+  const hw = size * 0.18;
+  const depth = size * 0.1;
+
+  ctx.globalAlpha = 0.7;
+  const g = ctx.createLinearGradient(cx, topY, cx, topY + depth);
+  g.addColorStop(0, color);
+  g.addColorStop(0.6, colorDark);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(cx - hw, topY);
+  ctx.quadraticCurveTo(cx - hw * 0.6 + wave, topY + depth * 0.7, cx - hw * 0.8 + wave * 1.5, topY + depth);
+  ctx.quadraticCurveTo(cx + wave2, topY + depth + size * 0.015, cx + hw * 0.8 + wave * 1.2, topY + depth);
+  ctx.quadraticCurveTo(cx + hw * 0.6 + wave, topY + depth * 0.7, cx + hw, topY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function renderLeatherGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, zoom: number, time: number,
+  color: string, colorDark: string,
+) {
+  const strips = 4;
+  const width = size * 0.18;
+  const sway = Math.sin(time * 2.5) * size * 0.006;
+
+  for (let i = 0; i < strips; i++) {
+    const t = i / (strips - 1);
+    const sx = cx - width + t * width * 2;
+    const stripLen = size * 0.07;
+    const w = size * 0.02;
+
+    ctx.fillStyle = i % 2 === 0 ? color : colorDark;
+    ctx.beginPath();
+    ctx.moveTo(sx - w, topY);
+    ctx.lineTo(sx + w, topY);
+    ctx.lineTo(sx + w * 0.8 + sway, topY + stripLen);
+    ctx.quadraticCurveTo(sx + sway, topY + stripLen + size * 0.008, sx - w * 0.8 + sway, topY + stripLen);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = colorDark;
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(sx, topY + size * 0.01);
+    ctx.lineTo(sx + sway * 0.5, topY + stripLen - size * 0.008);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function renderChainmailGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, zoom: number, _time: number,
+  color: string, colorDark: string,
+) {
+  const hw = size * 0.18;
+  const depth = size * 0.06;
+
+  const g = ctx.createLinearGradient(cx - hw, topY, cx + hw, topY + depth);
+  g.addColorStop(0, colorDark);
+  g.addColorStop(0.3, color);
+  g.addColorStop(0.7, color);
+  g.addColorStop(1, colorDark);
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.roundRect(cx - hw, topY, hw * 2, depth, size * 0.01);
+  ctx.fill();
+
+  ctx.strokeStyle = lightenColor(color, 15);
+  ctx.lineWidth = 0.4 * zoom;
+  ctx.globalAlpha = 0.4;
+  for (let row = 0; row < 3; row++) {
+    const ry = topY + row * size * 0.016 + size * 0.008;
+    const off = row % 2 === 0 ? 0 : size * 0.01;
+    for (let col = 0; col < 8; col++) {
+      const rx = cx - hw + size * 0.02 + col * size * 0.04 + off;
+      if (rx > cx + hw - size * 0.01) break;
+      ctx.beginPath();
+      ctx.arc(rx, ry, size * 0.006, 0, TAU);
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+export function drawHipGarb(
+  ctx: CanvasRenderingContext2D,
+  cx: number, topY: number,
+  size: number, zoom: number, time: number,
+  style: GarbStyle,
+  color: string, colorDark: string,
+) {
+  switch (style) {
+    case 'plates': renderPlateGarb(ctx, cx, topY, size, zoom, time, color, colorDark); break;
+    case 'tattered': renderTatteredGarb(ctx, cx, topY, size, zoom, time, color, colorDark); break;
+    case 'robe': renderRobeGarb(ctx, cx, topY, size, zoom, time, color, colorDark); break;
+    case 'leather': renderLeatherGarb(ctx, cx, topY, size, zoom, time, color, colorDark); break;
+    case 'chainmail': renderChainmailGarb(ctx, cx, topY, size, zoom, time, color, colorDark); break;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // PUBLIC: drawPathLegs
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1196,6 +1423,14 @@ export function drawPathLegs(
       renderGhostlyLeg(ctx, w, halfLen, fl, zoom, opts.color, opts.colorDark, fColor, kb, ls, time);
 
     ctx.restore();
+  }
+
+  // Auto-garb: draw waist covering after legs so it overlaps hip connection
+  if (opts.garb !== false) {
+    const garbStyle = typeof opts.garb === 'string' ? opts.garb : GARB_FROM_LIMB[style];
+    const gColor = opts.garbColor ?? opts.color;
+    const gColorDark = opts.garbColorDark ?? opts.colorDark;
+    drawHipGarb(ctx, hipX, hipY - size * 0.01, size, zoom, time, garbStyle, gColor, gColorDark);
   }
 
   ctx.globalAlpha = savedAlpha;

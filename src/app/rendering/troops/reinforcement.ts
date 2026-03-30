@@ -4,7 +4,9 @@ import {
   WEAPON_LIMITS,
   TROOP_MASTERWORK_STYLES,
   drawTroopMasterworkFinish,
+  drawArmoredSkirt,
 } from "./troopHelpers";
+import { getScenePressure } from "../performance";
 import { getReinforcementVariation } from "./reinforcementThemes";
 import type { ReinforcementPalette } from "./reinforcementHelpers";
 import {
@@ -121,26 +123,25 @@ export function drawReinforcementTroop(
   const { helmet, armor } = variation;
 
   // ── Tier aura ──
-  const auraStrength = Math.min(0.88, 0.2 + tier * 0.08 + attackDrive * 0.25);
-  const auraPulse = 0.86 + Math.sin(time * 3.7) * 0.14;
-  const auraGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.08,
-    size * 0.08,
-    x,
-    y + size * 0.08,
-    size * 0.74,
-  );
-  auraGrad.addColorStop(0, `${palette.glow}${auraStrength * auraPulse})`);
-  auraGrad.addColorStop(0.5, `${palette.glow}${auraStrength * 0.35})`);
-  auraGrad.addColorStop(1, `${palette.glow}0)`);
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.1, size * 0.65, size * 0.48, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const reinfPressure = getScenePressure();
+  if (!reinfPressure.skipNonEssentialParticles) {
+    const auraStrength = Math.min(0.88, 0.2 + tier * 0.08 + attackDrive * 0.25);
+    const auraPulse = 0.86 + Math.sin(time * 3.7) * 0.14;
+    if (reinfPressure.forceSimplifiedGradients) {
+      ctx.fillStyle = `${palette.glow}${auraStrength * auraPulse * 0.3})`;
+    } else {
+      const auraGrad = ctx.createRadialGradient(x, y + size * 0.08, size * 0.08, x, y + size * 0.08, size * 0.74);
+      auraGrad.addColorStop(0, `${palette.glow}${auraStrength * auraPulse})`);
+      auraGrad.addColorStop(1, `${palette.glow}0)`);
+      ctx.fillStyle = auraGrad;
+    }
+    ctx.beginPath();
+    ctx.ellipse(x, y + size * 0.1, size * 0.65, size * 0.48, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Attack energy rings
-  if (isAttacking && tier >= 3) {
+  if (isAttacking && tier >= 3 && !reinfPressure.skipDecorativeEffects) {
     for (let ring = 0; ring < 2; ring++) {
       const ringPhase = (attackPhase * 2 + ring * 0.2) % 1;
       const ringAlpha = (1 - ringPhase) * 0.35 * attackDrive;
@@ -300,6 +301,15 @@ export function drawReinforcementTroop(
 
   // ── Belt (varies per troop) ──
   drawBelt(ctx, x, y, size, zoom, breathe, palette, armor.beltDetail);
+
+  // ── Armored skirt (tassets) ──
+  drawArmoredSkirt(ctx, x, y, size, zoom, stride, breathe, {
+    armorPeak: palette.armorLight,
+    armorHigh: palette.armorMid,
+    armorMid: palette.armorDark,
+    armorDark: palette.armorDark,
+    trimColor: palette.trim,
+  }, { plateCount: 5, widthFactor: 0.44, depthFactor: 0.14, topOffset: 0.28 });
 
   // ── Pauldrons (varies per troop, tier 2+) ──
   drawPauldrons(

@@ -194,6 +194,7 @@ export function drawFreshmanEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === TATTERED ROBE HEM ===
@@ -983,6 +984,7 @@ export function drawSophomoreEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === CHAINMAIL SKIRT ===
@@ -1888,6 +1890,7 @@ export function drawJuniorEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === PARCHMENT-STRIP WAIST WRAP ===
@@ -2851,6 +2854,7 @@ export function drawSeniorEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === VOID ROBE HEM ===
@@ -3667,6 +3671,7 @@ export function drawGradStudentEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === ALCHEMIST COAT TAILS ===
@@ -4478,6 +4483,7 @@ export function drawProfessorEnemy(
     width: 0.1,
     footLen: 0.11,
     style: "armored",
+    garb: false,
   });
 
   // === FLOWING ROBE HEM ===
@@ -5444,6 +5450,7 @@ export function drawDeanEnemy(
     width: 0.1,
     footLen: 0.12,
     style: "armored",
+    garb: false,
   });
 
   // === ORNATE CEREMONIAL ARMOR SKIRT (heraldic panels) ===

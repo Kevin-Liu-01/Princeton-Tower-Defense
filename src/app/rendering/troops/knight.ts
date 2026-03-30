@@ -1,9 +1,11 @@
 import type { Position, TroopOwnerType } from "../../types";
 import type { MapTheme } from "../../constants/maps";
 import { getKnightTheme, getKnightGearVariant } from "./knightThemes";
+import type { KnightTheme, KnightGearVariant } from "./knightThemes";
 import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
+  drawArmoredSkirt,
 } from "./troopHelpers";
 
 export function drawKnightTroop(
@@ -107,63 +109,7 @@ export function drawKnightTroop(
   ctx.translate(-x, -y);
 
   // === FLOWING BATTLE CAPE - THEMED ===
-  const capeGrad = ctx.createLinearGradient(
-    x - size * 0.3,
-    y - size * 0.2,
-    x + size * 0.1,
-    y + size * 0.5,
-  );
-  capeGrad.addColorStop(0, theme.capeLight);
-  capeGrad.addColorStop(0.5, theme.capeMid);
-  capeGrad.addColorStop(1, theme.capeDark);
-  ctx.fillStyle = capeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.15, y - size * 0.15 + breathe);
-  ctx.quadraticCurveTo(
-    x - size * 0.3 + capeWave * 4,
-    y + size * 0.2,
-    x - size * 0.25 + capeWave * 6,
-    y + size * 0.5,
-  );
-  ctx.lineTo(x + size * 0.12 + capeWave * 3, y + size * 0.45);
-  ctx.quadraticCurveTo(
-    x + size * 0.08 + capeWave * 1.5,
-    y + size * 0.12,
-    x + size * 0.14,
-    y - size * 0.12 + breathe,
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Cape inner shadow with pattern - THEMED
-  ctx.fillStyle = theme.capeInner;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.1, y - size * 0.1 + breathe);
-  ctx.quadraticCurveTo(
-    x - size * 0.18 + capeWave * 2.5,
-    y + size * 0.12,
-    x - size * 0.12 + capeWave * 4,
-    y + size * 0.38,
-  );
-  ctx.lineTo(x + capeWave * 1.5, y + size * 0.35);
-  ctx.quadraticCurveTo(
-    x,
-    y + size * 0.08,
-    x + size * 0.06,
-    y - size * 0.08 + breathe,
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Cape trim stripe (variant accent)
-  ctx.strokeStyle = gear.trimHighlight;
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.globalAlpha = 0.4;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.24 + capeWave * 5.5, y + size * 0.46);
-  ctx.lineTo(x + size * 0.1 + capeWave * 2.8, y + size * 0.41);
-  ctx.stroke();
-  ctx.globalAlpha = 1.0;
+  drawKnightCape(ctx, x, y, size, zoom, breathe, capeWave, theme, gear);
 
   // === ARMORED LEGS ===
   // Dark steel greaves - wide power stance
@@ -345,6 +291,12 @@ export function drawKnightTroop(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // === ARMORED SKIRT (tassets) ===
+  drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
+    armorPeak, armorHigh, armorMid, armorDark,
+    trimColor: gear.trimHighlight,
+  }, { plateCount: 5, widthFactor: 0.52, depthFactor: 0.18 });
 
   // === MASSIVE PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
@@ -1584,3 +1536,128 @@ function drawBastardswordBlade(
   ctx.lineTo(0, -size * 0.8 * swordScale);
   ctx.stroke();
 }
+
+// ============================================================================
+// KNIGHT CAPE — flowing behind the body
+// ============================================================================
+function drawKnightCape(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  zoom: number,
+  breathe: number,
+  capeWave: number,
+  theme: KnightTheme,
+  gear: KnightGearVariant,
+) {
+  const capeWave2 = capeWave * 0.7;
+
+  // Main cape body — drapes from shoulders, flows downward behind
+  const capeGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.18,
+    x,
+    y + size * 0.65,
+  );
+  capeGrad.addColorStop(0, theme.capeLight);
+  capeGrad.addColorStop(0.35, theme.capeMid);
+  capeGrad.addColorStop(0.75, theme.capeDark);
+  capeGrad.addColorStop(1, theme.capeDark);
+  ctx.fillStyle = capeGrad;
+  ctx.beginPath();
+  // Left shoulder attachment
+  ctx.moveTo(x - size * 0.2, y - size * 0.15 + breathe);
+  // Left edge flows down with wave
+  ctx.quadraticCurveTo(
+    x - size * 0.32 + capeWave * 3,
+    y + size * 0.15,
+    x - size * 0.28 + capeWave * 5,
+    y + size * 0.58,
+  );
+  // Bottom edge — wider and wavy
+  ctx.quadraticCurveTo(
+    x - size * 0.1 + capeWave2 * 3,
+    y + size * 0.66 + capeWave2 * 2,
+    x + capeWave2 * 2,
+    y + size * 0.62,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.12 + capeWave2 * 2,
+    y + size * 0.65 + capeWave2 * 1.5,
+    x + size * 0.28 + capeWave * 4,
+    y + size * 0.56,
+  );
+  // Right edge flows back up
+  ctx.quadraticCurveTo(
+    x + size * 0.32 + capeWave * 2.5,
+    y + size * 0.12,
+    x + size * 0.2,
+    y - size * 0.15 + breathe,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Cape inner fold shadow — adds depth
+  ctx.fillStyle = theme.capeInner;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12, y - size * 0.08 + breathe);
+  ctx.quadraticCurveTo(
+    x - size * 0.2 + capeWave * 2,
+    y + size * 0.2,
+    x - size * 0.16 + capeWave * 3.5,
+    y + size * 0.5,
+  );
+  ctx.quadraticCurveTo(
+    x + capeWave2 * 1.5,
+    y + size * 0.55,
+    x + size * 0.16 + capeWave * 3,
+    y + size * 0.48,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.2 + capeWave * 1.5,
+    y + size * 0.18,
+    x + size * 0.12,
+    y - size * 0.08 + breathe,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Cape fold highlight — central vertical fold catching light
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = theme.capeLight;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.02, y - size * 0.06 + breathe);
+  ctx.quadraticCurveTo(
+    x - size * 0.04 + capeWave * 1.5,
+    y + size * 0.25,
+    x - size * 0.02 + capeWave * 2,
+    y + size * 0.52,
+  );
+  ctx.lineTo(x + size * 0.04 + capeWave * 1.5, y + size * 0.5);
+  ctx.quadraticCurveTo(
+    x + size * 0.05 + capeWave,
+    y + size * 0.22,
+    x + size * 0.03,
+    y - size * 0.06 + breathe,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1.0;
+
+  // Bottom trim stripe
+  ctx.strokeStyle = gear.trimHighlight;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.globalAlpha = 0.35;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.27 + capeWave * 4.8, y + size * 0.56);
+  ctx.quadraticCurveTo(
+    x + capeWave2 * 2,
+    y + size * 0.64 + capeWave2 * 1.8,
+    x + size * 0.27 + capeWave * 3.8,
+    y + size * 0.54,
+  );
+  ctx.stroke();
+  ctx.globalAlpha = 1.0;
+}
+
