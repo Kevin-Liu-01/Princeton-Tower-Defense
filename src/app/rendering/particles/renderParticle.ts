@@ -1,6 +1,11 @@
 import type { Particle, Position } from "../../types";
 import { worldToScreen } from "../../utils";
-import { setShadowBlur, clearShadow, getPerformanceSettings, getScenePressure } from "../performance";
+import {
+  setShadowBlur,
+  clearShadow,
+  getPerformanceSettings,
+  getScenePressure,
+} from "../performance";
 
 // ============================================================================
 // PARTICLE RENDERER - Optimized to eliminate per-particle overhead
@@ -33,9 +38,12 @@ export function renderParticle(
   );
 
   if (
-    screenPos.x < -20 || screenPos.x > canvasWidth + 20 ||
-    screenPos.y < -20 || screenPos.y > canvasHeight + 20
-  ) return;
+    screenPos.x < -20 ||
+    screenPos.x > canvasWidth + 20 ||
+    screenPos.y < -20 ||
+    screenPos.y > canvasHeight + 20
+  )
+    return;
 
   const zoom = cameraZoom || 1;
   const lifeRatio = particle.life / particle.maxLife;
@@ -47,9 +55,10 @@ export function renderParticle(
   ctx.globalAlpha = alpha;
 
   const pressure = getScenePressure();
-  const simplified = particleDensityHint > 160
-    || getPerformanceSettings().reducedParticles
-    || pressure.skipDecorativeEffects;
+  const simplified =
+    particleDensityHint > 160 ||
+    getPerformanceSettings().reducedParticles ||
+    pressure.skipDecorativeEffects;
 
   switch (particle.type) {
     case "fire":
@@ -116,15 +125,32 @@ function renderFire(
     return;
   }
 
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 1.5);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    size * 1.5,
+  );
   grad.addColorStop(0, "rgba(255, 255, 180, 0.9)");
   grad.addColorStop(0.35, color);
   grad.addColorStop(1, "rgba(200, 40, 0, 0)");
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y - size * 1.8);
-  ctx.quadraticCurveTo(pos.x + size, pos.y - size * 0.2, pos.x, pos.y + size * 0.5);
-  ctx.quadraticCurveTo(pos.x - size, pos.y - size * 0.2, pos.x, pos.y - size * 1.8);
+  ctx.quadraticCurveTo(
+    pos.x + size,
+    pos.y - size * 0.2,
+    pos.x,
+    pos.y + size * 0.5,
+  );
+  ctx.quadraticCurveTo(
+    pos.x - size,
+    pos.y - size * 0.2,
+    pos.x,
+    pos.y - size * 1.8,
+  );
   ctx.fill();
 }
 
@@ -205,7 +231,14 @@ function renderMagic(
     return;
   }
 
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 2.2);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    size * 2.2,
+  );
   grad.addColorStop(0, color);
   grad.addColorStop(0.5, "rgba(139, 92, 246, 0.3)");
   grad.addColorStop(1, "transparent");
@@ -234,7 +267,14 @@ function renderGlow(
     return;
   }
 
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, size * 2);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    size * 2,
+  );
   grad.addColorStop(0, color);
   grad.addColorStop(1, "transparent");
   ctx.fillStyle = grad;
@@ -264,7 +304,14 @@ function renderPoison(
   }
 
   const outerSize = size * 1.8;
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, outerSize);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    outerSize,
+  );
   grad.addColorStop(0, color);
   grad.addColorStop(0.4, "rgba(68, 204, 68, 0.5)");
   grad.addColorStop(1, "rgba(34, 136, 34, 0)");
@@ -326,7 +373,14 @@ function renderHeal(
   }
 
   const outerSize = size * 2;
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, outerSize);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    outerSize,
+  );
   grad.addColorStop(0, "rgba(170, 255, 221, 0.9)");
   grad.addColorStop(0.4, color);
   grad.addColorStop(1, "rgba(68, 238, 136, 0)");
@@ -382,7 +436,14 @@ function renderSummon(
   }
 
   const outerSize = size * 2.2;
-  const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, outerSize);
+  const grad = ctx.createRadialGradient(
+    pos.x,
+    pos.y,
+    0,
+    pos.x,
+    pos.y,
+    outerSize,
+  );
   grad.addColorStop(0, color);
   grad.addColorStop(0.35, "rgba(119, 34, 204, 0.4)");
   grad.addColorStop(1, "rgba(85, 0, 170, 0)");

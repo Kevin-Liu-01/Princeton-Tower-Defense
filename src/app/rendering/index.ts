@@ -4,7 +4,11 @@ import { worldToScreen, gridToWorld } from "../utils";
 import { drawOrganicBlobAt, type LightningColorScheme } from "./helpers";
 import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 import { getScenePressure } from "./performance";
-import { renderSentinelImpact, renderSunforgeBeam, renderSunforgeImpact } from "./effects/specialTowerEffects";
+import {
+  renderSentinelImpact,
+  renderSunforgeBeam,
+  renderSunforgeImpact,
+} from "./effects/specialTowerEffects";
 import { getSentinelPalette } from "./towers/sentinelTheme";
 
 // Performance utilities - critical for Firefox
@@ -30,10 +34,17 @@ export {
   renderTowerPreview,
 } from "./towers";
 
-export { renderSpecialBuilding, drawSpecialBuildingSprite } from "./towers/specialBuildings";
+export {
+  renderSpecialBuilding,
+  drawSpecialBuildingSprite,
+} from "./towers/specialBuildings";
 
 // Enemy rendering
-export { renderEnemy, renderEnemyInspectIndicator, drawEnemySprite } from "./enemies";
+export {
+  renderEnemy,
+  renderEnemyInspectIndicator,
+  drawEnemySprite,
+} from "./enemies";
 
 // Hero rendering
 export { renderHero, drawHeroSprite } from "./heroes";
@@ -66,7 +77,7 @@ function seededNoise(seed: number): number {
 
 function tracePolyline(
   ctx: CanvasRenderingContext2D,
-  points: Array<{ x: number; y: number }>
+  points: Array<{ x: number; y: number }>,
 ): void {
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
@@ -146,40 +157,78 @@ export function renderEffect(
         const lowDetail = effectDensityHint > 80;
         const minimalDetail = effectDensityHint > 140;
 
-        const BOLT_PALETTES: Record<LightningColorScheme, {
-          outer: string; mid: string; core: string;
-          branch: string; branchCore: string;
-          impactCenter: string; impactMid: string; impactEdge: string;
-        }> = {
+        const BOLT_PALETTES: Record<
+          LightningColorScheme,
+          {
+            outer: string;
+            mid: string;
+            core: string;
+            branch: string;
+            branchCore: string;
+            impactCenter: string;
+            impactMid: string;
+            impactEdge: string;
+          }
+        > = {
           blue: {
-            outer: "30, 100, 255", mid: "0, 220, 255", core: "220, 255, 255",
-            branch: "0, 200, 255", branchCore: "200, 255, 255",
-            impactCenter: "200, 255, 255", impactMid: "0, 200, 255", impactEdge: "0, 100, 255",
+            outer: "30, 100, 255",
+            mid: "0, 220, 255",
+            core: "220, 255, 255",
+            branch: "0, 200, 255",
+            branchCore: "200, 255, 255",
+            impactCenter: "200, 255, 255",
+            impactMid: "0, 200, 255",
+            impactEdge: "0, 100, 255",
           },
           yellow: {
-            outer: "255, 170, 30", mid: "255, 230, 50", core: "255, 255, 220",
-            branch: "255, 200, 0", branchCore: "255, 255, 200",
-            impactCenter: "255, 255, 200", impactMid: "255, 200, 0", impactEdge: "255, 140, 0",
+            outer: "255, 170, 30",
+            mid: "255, 230, 50",
+            core: "255, 255, 220",
+            branch: "255, 200, 0",
+            branchCore: "255, 255, 200",
+            impactCenter: "255, 255, 200",
+            impactMid: "255, 200, 0",
+            impactEdge: "255, 140, 0",
           },
           red: {
-            outer: "255, 60, 30", mid: "255, 100, 80", core: "255, 220, 210",
-            branch: "255, 80, 40", branchCore: "255, 200, 190",
-            impactCenter: "255, 220, 210", impactMid: "255, 80, 40", impactEdge: "200, 20, 0",
+            outer: "255, 60, 30",
+            mid: "255, 100, 80",
+            core: "255, 220, 210",
+            branch: "255, 80, 40",
+            branchCore: "255, 200, 190",
+            impactCenter: "255, 220, 210",
+            impactMid: "255, 80, 40",
+            impactEdge: "200, 20, 0",
           },
           violet: {
-            outer: "70, 65, 230", mid: "110, 110, 255", core: "215, 225, 255",
-            branch: "100, 100, 255", branchCore: "200, 210, 255",
-            impactCenter: "215, 225, 255", impactMid: "100, 100, 255", impactEdge: "40, 35, 180",
+            outer: "70, 65, 230",
+            mid: "110, 110, 255",
+            core: "215, 225, 255",
+            branch: "100, 100, 255",
+            branchCore: "200, 210, 255",
+            impactCenter: "215, 225, 255",
+            impactMid: "100, 100, 255",
+            impactEdge: "40, 35, 180",
           },
           teal: {
-            outer: "20, 150, 130", mid: "80, 220, 180", core: "200, 255, 240",
-            branch: "60, 200, 160", branchCore: "180, 255, 230",
-            impactCenter: "200, 255, 240", impactMid: "60, 200, 160", impactEdge: "10, 120, 100",
+            outer: "20, 150, 130",
+            mid: "80, 220, 180",
+            core: "200, 255, 240",
+            branch: "60, 200, 160",
+            branchCore: "180, 255, 230",
+            impactCenter: "200, 255, 240",
+            impactMid: "60, 200, 160",
+            impactEdge: "10, 120, 100",
           },
           green: {
-            outer: "80, 170, 20", mid: "160, 230, 80", core: "230, 255, 200",
-            branch: "120, 200, 40", branchCore: "210, 255, 180",
-            impactCenter: "230, 255, 200", impactMid: "120, 200, 40", impactEdge: "50, 130, 10",
+            outer: "80, 170, 20",
+            mid: "160, 230, 80",
+            core: "230, 255, 200",
+            branch: "120, 200, 40",
+            branchCore: "210, 255, 180",
+            impactCenter: "230, 255, 200",
+            impactMid: "120, 200, 40",
+            impactEdge: "50, 130, 10",
           },
         };
         const boltScheme: LightningColorScheme =
@@ -256,9 +305,8 @@ export function renderEffect(
         ctx.save();
 
         // Lightning-specific alpha: full brightness on strike, then slow fade-out
-        const effectAlpha = progress < 0.3
-          ? 1
-          : Math.max(0, (1 - progress) / 0.7);
+        const effectAlpha =
+          progress < 0.3 ? 1 : Math.max(0, (1 - progress) / 0.7);
 
         const dx = targetScreen.x - sourceX;
         const dy = targetScreen.y - sourceY;
@@ -267,7 +315,7 @@ export function renderEffect(
         const perpY = dx / dist;
         const angle = Math.atan2(dy, dx);
         const timeBucket = Math.floor(
-          Date.now() / (minimalDetail ? 90 : lowDetail ? 70 : 50)
+          Date.now() / (minimalDetail ? 90 : lowDetail ? 70 : 50),
         );
         const seedBase = (hashString32(effect.id) ^ timeBucket) >>> 0;
         const noise = (seed: number) => seededNoise(seedBase + seed);
@@ -277,7 +325,8 @@ export function renderEffect(
           : lowDetail
             ? Math.max(5, Math.floor(dist / 26))
             : Math.max(6, Math.floor(dist / 22));
-        const jitter = (minimalDetail ? 14 : lowDetail ? 18 : 22) * zoom * intensity;
+        const jitter =
+          (minimalDetail ? 14 : lowDetail ? 18 : 22) * zoom * intensity;
         const mainPts: { x: number; y: number }[] = [
           { x: sourceX, y: sourceY },
         ];
@@ -301,13 +350,15 @@ export function renderEffect(
 
         // Layer 1: wide outer glow (no shadowBlur — just a wide translucent stroke)
         ctx.strokeStyle = `rgba(${bp.outer}, ${effectAlpha * 0.22 * intensity})`;
-        ctx.lineWidth = (minimalDetail ? 5 : lowDetail ? 8 : 12) * zoom * intensity;
+        ctx.lineWidth =
+          (minimalDetail ? 5 : lowDetail ? 8 : 12) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
         // Layer 2: mid glow
         ctx.strokeStyle = `rgba(${bp.mid}, ${effectAlpha * 0.55 * intensity})`;
-        ctx.lineWidth = (minimalDetail ? 2.5 : lowDetail ? 3.5 : 5) * zoom * intensity;
+        ctx.lineWidth =
+          (minimalDetail ? 2.5 : lowDetail ? 3.5 : 5) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
@@ -329,8 +380,14 @@ export function renderEffect(
               const bt = s / 2;
               const bn = (noise(31 + s * 19) - 0.5) * 7 * zoom;
               brPts.push({
-                x: branchPt.x + Math.cos(branchAngle) * branchLen * bt + Math.cos(branchAngle + Math.PI / 2) * bn,
-                y: branchPt.y + Math.sin(branchAngle) * branchLen * bt + Math.sin(branchAngle + Math.PI / 2) * bn,
+                x:
+                  branchPt.x +
+                  Math.cos(branchAngle) * branchLen * bt +
+                  Math.cos(branchAngle + Math.PI / 2) * bn,
+                y:
+                  branchPt.y +
+                  Math.sin(branchAngle) * branchLen * bt +
+                  Math.sin(branchAngle + Math.PI / 2) * bn,
               });
             }
 
@@ -358,8 +415,14 @@ export function renderEffect(
             targetScreen.y,
             impactRadius,
           );
-          impGrad.addColorStop(0, `rgba(${bp.impactCenter}, ${effectAlpha * 0.6 * intensity * impactPulse})`);
-          impGrad.addColorStop(0.4, `rgba(${bp.impactMid}, ${effectAlpha * 0.3 * intensity})`);
+          impGrad.addColorStop(
+            0,
+            `rgba(${bp.impactCenter}, ${effectAlpha * 0.6 * intensity * impactPulse})`,
+          );
+          impGrad.addColorStop(
+            0.4,
+            `rgba(${bp.impactMid}, ${effectAlpha * 0.3 * intensity})`,
+          );
           impGrad.addColorStop(1, `rgba(${bp.impactEdge}, 0)`);
           ctx.fillStyle = impGrad;
           ctx.beginPath();
@@ -375,7 +438,7 @@ export function renderEffect(
           targetScreen.y,
           (minimalDetail ? 2.2 : 3) * zoom * intensity,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
 
@@ -419,7 +482,16 @@ export function renderEffect(
 
     case "sentinel_impact": {
       const impactPal = getSentinelPalette(LEVEL_DATA[selectedMap]?.theme);
-      renderSentinelImpact(ctx, screenPos.x, screenPos.y, zoom, progress, alpha, effect.size, impactPal.hotRgb);
+      renderSentinelImpact(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        zoom,
+        progress,
+        alpha,
+        effect.size,
+        impactPal.hotRgb,
+      );
       break;
     }
 
@@ -436,16 +508,31 @@ export function renderEffect(
         const beamIntensity = Math.max(0, effect.intensity || 1);
         const beamSourceY = screenPos.y + (effect.sourceYOffset ?? 0) * zoom;
         renderSunforgeBeam(
-          ctx, screenPos.x, beamSourceY,
-          targetScreen.x, targetScreen.y,
-          zoom, progress, alpha, beamIntensity, effect.id,
+          ctx,
+          screenPos.x,
+          beamSourceY,
+          targetScreen.x,
+          targetScreen.y,
+          zoom,
+          progress,
+          alpha,
+          beamIntensity,
+          effect.id,
         );
       }
       break;
     }
 
     case "sunforge_impact": {
-      renderSunforgeImpact(ctx, screenPos.x, screenPos.y, zoom, progress, alpha, effect.size);
+      renderSunforgeImpact(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        zoom,
+        progress,
+        alpha,
+        effect.size,
+      );
       break;
     }
 
@@ -660,9 +747,7 @@ export function renderEffect(
             const trailT = Math.max(0, projT - tFrac * 0.2);
             const trailX = sourceX + dx * trailT;
             const trailY =
-              sourceY +
-              dy * trailT -
-              Math.sin(trailT * Math.PI) * arcHeight;
+              sourceY + dy * trailT - Math.sin(trailT * Math.PI) * arcHeight;
             const trailFade = (1 - tFrac) * alpha;
             const trailR = (5 - tFrac * 4) * zoom;
 
@@ -694,9 +779,7 @@ export function renderEffect(
             const streakT = Math.max(0, projT - 0.12);
             const streakX = sourceX + dx * streakT;
             const streakY =
-              sourceY +
-              dy * streakT -
-              Math.sin(streakT * Math.PI) * arcHeight;
+              sourceY + dy * streakT - Math.sin(streakT * Math.PI) * arcHeight;
             const streakGrad = ctx.createLinearGradient(
               streakX,
               streakY,
@@ -870,9 +953,18 @@ export function renderEffect(
                 bulletY,
               );
               trailGrad.addColorStop(0, `rgba(255, 120, 20, 0)`);
-              trailGrad.addColorStop(0.3, `rgba(255, 160, 40, ${fadeAlpha * 0.25})`);
-              trailGrad.addColorStop(0.7, `rgba(255, 200, 60, ${fadeAlpha * 0.5})`);
-              trailGrad.addColorStop(1, `rgba(255, 230, 100, ${fadeAlpha * 0.7})`);
+              trailGrad.addColorStop(
+                0.3,
+                `rgba(255, 160, 40, ${fadeAlpha * 0.25})`,
+              );
+              trailGrad.addColorStop(
+                0.7,
+                `rgba(255, 200, 60, ${fadeAlpha * 0.5})`,
+              );
+              trailGrad.addColorStop(
+                1,
+                `rgba(255, 230, 100, ${fadeAlpha * 0.7})`,
+              );
               ctx.strokeStyle = trailGrad;
               ctx.lineWidth = 4 * zoom;
               ctx.lineCap = "round";
@@ -889,8 +981,14 @@ export function renderEffect(
                 bulletY,
               );
               innerGrad.addColorStop(0, `rgba(255, 220, 120, 0)`);
-              innerGrad.addColorStop(0.5, `rgba(255, 240, 180, ${fadeAlpha * 0.4})`);
-              innerGrad.addColorStop(1, `rgba(255, 255, 220, ${fadeAlpha * 0.8})`);
+              innerGrad.addColorStop(
+                0.5,
+                `rgba(255, 240, 180, ${fadeAlpha * 0.4})`,
+              );
+              innerGrad.addColorStop(
+                1,
+                `rgba(255, 255, 220, ${fadeAlpha * 0.8})`,
+              );
               ctx.strokeStyle = innerGrad;
               ctx.lineWidth = 1.8 * zoom;
               ctx.beginPath();
@@ -911,8 +1009,14 @@ export function renderEffect(
                 5 * zoom,
               );
               headGrad.addColorStop(0, `rgba(255, 255, 230, ${fadeAlpha})`);
-              headGrad.addColorStop(0.35, `rgba(255, 220, 100, ${fadeAlpha * 0.9})`);
-              headGrad.addColorStop(0.7, `rgba(255, 160, 40, ${fadeAlpha * 0.5})`);
+              headGrad.addColorStop(
+                0.35,
+                `rgba(255, 220, 100, ${fadeAlpha * 0.9})`,
+              );
+              headGrad.addColorStop(
+                0.7,
+                `rgba(255, 160, 40, ${fadeAlpha * 0.5})`,
+              );
               headGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
               ctx.fillStyle = headGrad;
               ctx.beginPath();
@@ -937,8 +1041,7 @@ export function renderEffect(
               // Micro-spark near bullet (only for leading bullets)
               if (b === 0 && bulletT > 0.15) {
                 const sparkSeed = barrel * 7 + Math.floor(now / 30);
-                const sparkAngle =
-                  ((sparkSeed * 2654435761) % 628) / 100;
+                const sparkAngle = ((sparkSeed * 2654435761) % 628) / 100;
                 const sparkDist = (2 + ((sparkSeed * 1103515245) % 4)) * zoom;
                 const sparkX = bulletX + Math.cos(sparkAngle) * sparkDist;
                 const sparkY = bulletY + Math.sin(sparkAngle) * sparkDist;
@@ -962,7 +1065,10 @@ export function renderEffect(
               8 * zoom,
             );
             hazeGrad.addColorStop(0, `rgba(255, 200, 100, ${hazeAlpha})`);
-            hazeGrad.addColorStop(0.5, `rgba(255, 150, 50, ${hazeAlpha * 0.5})`);
+            hazeGrad.addColorStop(
+              0.5,
+              `rgba(255, 150, 50, ${hazeAlpha * 0.5})`,
+            );
             hazeGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
             ctx.fillStyle = hazeGrad;
             ctx.beginPath();
@@ -1038,10 +1144,7 @@ export function renderEffect(
 
           // Smoke layer (drawn behind flame)
           for (let s = 0; s < 5; s++) {
-            const smokeT = Math.min(
-              1,
-              progress * 1.1 + s * 0.06 + 0.15,
-            );
+            const smokeT = Math.min(1, progress * 1.1 + s * 0.06 + 0.15);
             if (smokeT <= 0.2 || smokeT >= 1) continue;
             const smokeFrac = (smokeT - 0.2) / 0.8;
             const sp = bezPerp(smokeT);
@@ -1113,8 +1216,7 @@ export function renderEffect(
             if (coreT <= 0 || coreT >= 0.7) continue;
 
             const cp = bezPerp(coreT);
-            const coreTurb =
-              Math.sin(now / 35 + c * 1.9) * 2.5 * zoom * coreT;
+            const coreTurb = Math.sin(now / 35 + c * 1.9) * 2.5 * zoom * coreT;
             const coreX = bezX(coreT) + cp.x * coreTurb;
             const coreY = bezY(coreT) + cp.y * coreTurb;
             const coreR = (3.5 - coreT * 3) * zoom;
@@ -1128,10 +1230,7 @@ export function renderEffect(
               coreY,
               coreR,
             );
-            coreGrad.addColorStop(
-              0,
-              `rgba(255, 255, 240, ${coreAlpha})`,
-            );
+            coreGrad.addColorStop(0, `rgba(255, 255, 240, ${coreAlpha})`);
             coreGrad.addColorStop(
               0.5,
               `rgba(255, 240, 160, ${coreAlpha * 0.7})`,
@@ -1154,8 +1253,7 @@ export function renderEffect(
             if (emberT <= 0.05 || emberT >= 0.95) continue;
 
             const ep = bezPerp(emberT);
-            const emberWobble =
-              Math.sin(emberSeed * 0.7) * 12 * zoom * emberT;
+            const emberWobble = Math.sin(emberSeed * 0.7) * 12 * zoom * emberT;
             const emberDrift = -emberT * 4 * zoom;
             const emberX = bezX(emberT) + ep.x * emberWobble;
             const emberY = bezY(emberT) + ep.y * emberWobble + emberDrift;
@@ -1178,10 +1276,7 @@ export function renderEffect(
               p0y,
               nozzleR,
             );
-            nozzleGrad.addColorStop(
-              0,
-              `rgba(255, 255, 220, ${nozzleAlpha})`,
-            );
+            nozzleGrad.addColorStop(0, `rgba(255, 255, 220, ${nozzleAlpha})`);
             nozzleGrad.addColorStop(
               0.4,
               `rgba(255, 200, 80, ${nozzleAlpha * 0.6})`,
@@ -1411,9 +1506,19 @@ export function renderEffect(
 
         const eG = 180 + Math.floor(seededNoise(mSeed + i * 5) * 75);
         const eB = 40 + Math.floor(seededNoise(mSeed + i * 7) * 60);
-        const emberGrad = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, emberSize * 1.8);
+        const emberGrad = ctx.createRadialGradient(
+          emberX,
+          emberY,
+          0,
+          emberX,
+          emberY,
+          emberSize * 1.8,
+        );
         emberGrad.addColorStop(0, `rgba(255, ${eG}, ${eB}, ${emberAlpha})`);
-        emberGrad.addColorStop(0.5, `rgba(255, ${eG - 40}, ${Math.max(0, eB - 20)}, ${emberAlpha * 0.5})`);
+        emberGrad.addColorStop(
+          0.5,
+          `rgba(255, ${eG - 40}, ${Math.max(0, eB - 20)}, ${emberAlpha * 0.5})`,
+        );
         emberGrad.addColorStop(1, `rgba(200, 60, 0, 0)`);
         ctx.fillStyle = emberGrad;
         ctx.beginPath();
@@ -1539,15 +1644,21 @@ export function renderEffect(
 
       // ========== ORBITING EMBER PARTICLES ==========
       for (let i = 0; i < 8; i++) {
-        const orbitAngle =
-          progress * 15 + i * ((Math.PI * 2) / 8) + meteorIdx;
+        const orbitAngle = progress * 15 + i * ((Math.PI * 2) / 8) + meteorIdx;
         const orbitDist =
           meteorSize * (1.2 + Math.sin(progress * 10 + i * 1.1) * 0.25);
         const emberX = meteorX + Math.cos(orbitAngle) * orbitDist;
         const emberY = meteorY + Math.sin(orbitAngle) * orbitDist * 0.65;
         const eSize = (3 + seededNoise(mSeed + i * 11) * 3) * zoom;
 
-        const emberGlow = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, eSize * 1.6);
+        const emberGlow = ctx.createRadialGradient(
+          emberX,
+          emberY,
+          0,
+          emberX,
+          emberY,
+          eSize * 1.6,
+        );
         emberGlow.addColorStop(0, `rgba(255, 255, 210, ${alpha * 0.9})`);
         emberGlow.addColorStop(0.3, `rgba(255, 200, 80, ${alpha * 0.6})`);
         emberGlow.addColorStop(0.7, `rgba(255, 130, 20, ${alpha * 0.3})`);
@@ -1661,7 +1772,14 @@ export function renderEffect(
 
       // Deep ground crater with dark scorch
       const craterAlpha = alpha * (0.8 - ip * 0.3);
-      const craterGrad = ctx.createRadialGradient(sx, sy + 4 * zoom, 0, sx, sy + 4 * zoom, sz * 0.5);
+      const craterGrad = ctx.createRadialGradient(
+        sx,
+        sy + 4 * zoom,
+        0,
+        sx,
+        sy + 4 * zoom,
+        sz * 0.5,
+      );
       craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterAlpha})`);
       craterGrad.addColorStop(0.4, `rgba(40, 20, 10, ${craterAlpha * 0.7})`);
       craterGrad.addColorStop(0.7, `rgba(60, 30, 10, ${craterAlpha * 0.4})`);
@@ -1677,19 +1795,44 @@ export function renderEffect(
 
       // Outer heat haze
       const hazeSize = sz * (0.6 + ip * 1.4);
-      const hazeGrad = ctx.createRadialGradient(sx, sy - ip * 20 * zoom, 0, sx, sy - ip * 20 * zoom, hazeSize);
+      const hazeGrad = ctx.createRadialGradient(
+        sx,
+        sy - ip * 20 * zoom,
+        0,
+        sx,
+        sy - ip * 20 * zoom,
+        hazeSize,
+      );
       hazeGrad.addColorStop(0, `rgba(255, 180, 60, ${alpha * 0.5 * (1 - ip)})`);
-      hazeGrad.addColorStop(0.3, `rgba(255, 100, 20, ${alpha * 0.35 * (1 - ip)})`);
+      hazeGrad.addColorStop(
+        0.3,
+        `rgba(255, 100, 20, ${alpha * 0.35 * (1 - ip)})`,
+      );
       hazeGrad.addColorStop(0.6, `rgba(200, 50, 0, ${alpha * 0.2 * (1 - ip)})`);
       hazeGrad.addColorStop(1, "rgba(150, 30, 0, 0)");
       ctx.fillStyle = hazeGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy - ip * 20 * zoom, hazeSize, hazeSize * 0.7, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy - ip * 20 * zoom,
+        hazeSize,
+        hazeSize * 0.7,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Inner fireball core
       const coreSize = sz * (0.4 + ip * 0.5) * (1 - ip * 0.3);
-      const coreGrad = ctx.createRadialGradient(sx, sy - ip * 12 * zoom, 0, sx, sy - ip * 12 * zoom, coreSize);
+      const coreGrad = ctx.createRadialGradient(
+        sx,
+        sy - ip * 12 * zoom,
+        0,
+        sx,
+        sy - ip * 12 * zoom,
+        coreSize,
+      );
       coreGrad.addColorStop(0, `rgba(255, 255, 240, ${alpha})`);
       coreGrad.addColorStop(0.15, `rgba(255, 240, 160, ${alpha})`);
       coreGrad.addColorStop(0.35, `rgba(255, 200, 50, ${alpha * 0.95})`);
@@ -1698,7 +1841,15 @@ export function renderEffect(
       coreGrad.addColorStop(1, "rgba(120, 20, 0, 0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy - ip * 12 * zoom, coreSize, coreSize * 0.65, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy - ip * 12 * zoom,
+        coreSize,
+        coreSize * 0.65,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Rising smoke column
@@ -1720,9 +1871,19 @@ export function renderEffect(
         const rAlpha = (1 - rp) * alpha * (0.6 - ring * 0.1);
         if (rAlpha <= 0) continue;
 
-        const rGrad = ctx.createRadialGradient(sx, sy, rRadius * 0.85, sx, sy, rRadius);
+        const rGrad = ctx.createRadialGradient(
+          sx,
+          sy,
+          rRadius * 0.85,
+          sx,
+          sy,
+          rRadius,
+        );
         rGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
-        rGrad.addColorStop(0.5, `rgba(255, ${120 - ring * 20}, ${30 - ring * 5}, ${rAlpha})`);
+        rGrad.addColorStop(
+          0.5,
+          `rgba(255, ${120 - ring * 20}, ${30 - ring * 5}, ${rAlpha})`,
+        );
         rGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
         ctx.fillStyle = rGrad;
         ctx.beginPath();
@@ -1738,7 +1899,11 @@ export function renderEffect(
         const dDist = sz * 0.4 * ip * dSpeed;
         const dGrav = ip * ip * 25 * zoom;
         const dx = sx + Math.cos(dAngle) * dDist;
-        const dy = sy + Math.sin(dAngle) * dDist * 0.5 - ip * 40 * zoom * (1 - ip) + dGrav;
+        const dy =
+          sy +
+          Math.sin(dAngle) * dDist * 0.5 -
+          ip * 40 * zoom * (1 - ip) +
+          dGrav;
         const dAlpha = alpha * (1 - ip) * 0.9;
         if (dAlpha <= 0) continue;
 
@@ -1760,7 +1925,7 @@ export function renderEffect(
 
       // Bright white flash at center (first 30% of animation)
       if (ip < 0.3) {
-        const flashA = (0.3 - ip) / 0.3 * alpha * 0.7;
+        const flashA = ((0.3 - ip) / 0.3) * alpha * 0.7;
         const flashR = sz * 0.6;
         const flashGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, flashR);
         flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashA})`);
@@ -1779,7 +1944,14 @@ export function renderEffect(
     case "lightning_bolt": {
       const sp = progress;
       const ts = effect.targetPos
-        ? worldToScreen(effect.targetPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom)
+        ? worldToScreen(
+            effect.targetPos,
+            canvasWidth,
+            canvasHeight,
+            dpr,
+            cameraOffset,
+            cameraZoom,
+          )
         : screenPos;
 
       // Dramatic sky flash with blue-white tint
@@ -1790,7 +1962,14 @@ export function renderEffect(
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         // Secondary warm flash near impact
         const warmR = 300 * zoom;
-        const warmGrad = ctx.createRadialGradient(ts.x, ts.y, 0, ts.x, ts.y, warmR);
+        const warmGrad = ctx.createRadialGradient(
+          ts.x,
+          ts.y,
+          0,
+          ts.x,
+          ts.y,
+          warmR,
+        );
         warmGrad.addColorStop(0, `rgba(220, 230, 255, ${flashA * 0.8})`);
         warmGrad.addColorStop(0.5, `rgba(150, 180, 255, ${flashA * 0.3})`);
         warmGrad.addColorStop(1, "rgba(100, 130, 255, 0)");
@@ -1809,7 +1988,9 @@ export function renderEffect(
       const segs = 28;
 
       // Build main bolt with seeded jitter for temporal coherence
-      const boltPts: { x: number; y: number }[] = [{ x: ts.x + (seededNoise(boltSeed) - 0.5) * 20 * zoom, y: skyY }];
+      const boltPts: { x: number; y: number }[] = [
+        { x: ts.x + (seededNoise(boltSeed) - 0.5) * 20 * zoom, y: skyY },
+      ];
       for (let i = 1; i <= segs; i++) {
         const t = i / segs;
         const baseY = skyY + (ts.y - skyY) * t;
@@ -1861,17 +2042,28 @@ export function renderEffect(
         const nextPt = boltPts[i + 1];
         const mainAngle = Math.atan2(nextPt.y - bp.y, nextPt.x - bp.x);
         const side = seededNoise(boltSeed + i * 19) > 0.5 ? 1 : -1;
-        const bAngle = mainAngle + side * (0.4 + seededNoise(boltSeed + i * 23) * 0.5);
+        const bAngle =
+          mainAngle + side * (0.4 + seededNoise(boltSeed + i * 23) * 0.5);
         const bLen = (15 + seededNoise(boltSeed + i * 29) * 25) * zoom;
 
         const branchSegs = 3;
         const brPts: { x: number; y: number }[] = [{ x: bp.x, y: bp.y }];
         for (let j = 1; j <= branchSegs; j++) {
           const t = j / branchSegs;
-          const jitter = (seededNoise(boltSeed + i * 41 + j * 17) - 0.5) * 8 * zoom * (1 - t);
+          const jitter =
+            (seededNoise(boltSeed + i * 41 + j * 17) - 0.5) *
+            8 *
+            zoom *
+            (1 - t);
           brPts.push({
-            x: bp.x + Math.cos(bAngle) * bLen * t + Math.cos(bAngle + Math.PI / 2) * jitter,
-            y: bp.y + Math.sin(bAngle) * bLen * t + Math.sin(bAngle + Math.PI / 2) * jitter,
+            x:
+              bp.x +
+              Math.cos(bAngle) * bLen * t +
+              Math.cos(bAngle + Math.PI / 2) * jitter,
+            y:
+              bp.y +
+              Math.sin(bAngle) * bLen * t +
+              Math.sin(bAngle + Math.PI / 2) * jitter,
           });
         }
 
@@ -1943,9 +2135,11 @@ export function renderEffect(
         // Frost vignette — icy rim creeping in from screen edges
         const vigStrength = alpha * 0.45;
         const vigGrad = ctx.createRadialGradient(
-          canvasWidth * 0.5, canvasHeight * 0.5,
+          canvasWidth * 0.5,
+          canvasHeight * 0.5,
           Math.min(canvasWidth, canvasHeight) * 0.25,
-          canvasWidth * 0.5, canvasHeight * 0.5,
+          canvasWidth * 0.5,
+          canvasHeight * 0.5,
           Math.max(canvasWidth, canvasHeight) * 0.75,
         );
         vigGrad.addColorStop(0, "rgba(160, 210, 245, 0)");
@@ -1966,34 +2160,53 @@ export function renderEffect(
           ];
           for (let ci = 0; ci < corners.length; ci++) {
             const corner = corners[ci];
-            const cornerR = Math.min(canvasWidth, canvasHeight) * (0.15 + fzEase * 0.15);
+            const cornerR =
+              Math.min(canvasWidth, canvasHeight) * (0.15 + fzEase * 0.15);
             const cGrad = ctx.createRadialGradient(
-              corner.x, corner.y, 0,
-              corner.x, corner.y, cornerR,
+              corner.x,
+              corner.y,
+              0,
+              corner.x,
+              corner.y,
+              cornerR,
             );
             cGrad.addColorStop(0, `rgba(200, 235, 255, ${edgeFrostA * 0.7})`);
             cGrad.addColorStop(0.4, `rgba(170, 215, 245, ${edgeFrostA * 0.4})`);
             cGrad.addColorStop(1, "rgba(140, 200, 240, 0)");
             ctx.fillStyle = cGrad;
             ctx.fillRect(
-              corner.x - cornerR, corner.y - cornerR,
-              cornerR * 2, cornerR * 2,
+              corner.x - cornerR,
+              corner.y - cornerR,
+              cornerR * 2,
+              cornerR * 2,
             );
 
             // Fractal ice veins from corners
             for (let v = 0; v < 4; v++) {
-              const baseAngle = Math.atan2(canvasHeight * 0.5 - corner.y, canvasWidth * 0.5 - corner.x);
-              const vAngle = baseAngle + (seededNoise(fzSeed + ci * 17 + v * 7) - 0.5) * 1.2;
-              const vLen = cornerR * (0.6 + seededNoise(fzSeed + ci * 23 + v * 13) * 0.4);
+              const baseAngle = Math.atan2(
+                canvasHeight * 0.5 - corner.y,
+                canvasWidth * 0.5 - corner.x,
+              );
+              const vAngle =
+                baseAngle + (seededNoise(fzSeed + ci * 17 + v * 7) - 0.5) * 1.2;
+              const vLen =
+                cornerR * (0.6 + seededNoise(fzSeed + ci * 23 + v * 13) * 0.4);
 
               ctx.strokeStyle = `rgba(210, 240, 255, ${edgeFrostA * 0.6})`;
               ctx.lineWidth = (1.5 - v * 0.3) * zoom;
               ctx.beginPath();
               ctx.moveTo(corner.x, corner.y);
-              const midX = corner.x + Math.cos(vAngle) * vLen * 0.5 + (seededNoise(fzSeed + ci * 31 + v * 19) - 0.5) * 20;
-              const midY = corner.y + Math.sin(vAngle) * vLen * 0.5 + (seededNoise(fzSeed + ci * 37 + v * 23) - 0.5) * 20;
+              const midX =
+                corner.x +
+                Math.cos(vAngle) * vLen * 0.5 +
+                (seededNoise(fzSeed + ci * 31 + v * 19) - 0.5) * 20;
+              const midY =
+                corner.y +
+                Math.sin(vAngle) * vLen * 0.5 +
+                (seededNoise(fzSeed + ci * 37 + v * 23) - 0.5) * 20;
               ctx.quadraticCurveTo(
-                midX, midY,
+                midX,
+                midY,
                 corner.x + Math.cos(vAngle) * vLen,
                 corner.y + Math.sin(vAngle) * vLen,
               );
@@ -2010,7 +2223,10 @@ export function renderEffect(
                 ctx.lineWidth = 0.8 * zoom;
                 ctx.beginPath();
                 ctx.moveTo(brX, brY);
-                ctx.lineTo(brX + Math.cos(brAngle) * brLen, brY + Math.sin(brAngle) * brLen);
+                ctx.lineTo(
+                  brX + Math.cos(brAngle) * brLen,
+                  brY + Math.sin(brAngle) * brLen,
+                );
                 ctx.stroke();
               }
             }
@@ -2021,8 +2237,18 @@ export function renderEffect(
             const fx = seededNoise(fzSeed + f * 53) * canvasWidth;
             const fy = seededNoise(fzSeed + f * 59) * canvasHeight * 0.15;
             const fSize = (2 + seededNoise(fzSeed + f * 61) * 3) * zoom;
-            const fleckGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, fSize * 3);
-            fleckGrad.addColorStop(0, `rgba(255, 255, 255, ${edgeFrostA * 0.5})`);
+            const fleckGrad = ctx.createRadialGradient(
+              fx,
+              fy,
+              0,
+              fx,
+              fy,
+              fSize * 3,
+            );
+            fleckGrad.addColorStop(
+              0,
+              `rgba(255, 255, 255, ${edgeFrostA * 0.5})`,
+            );
             fleckGrad.addColorStop(1, "rgba(200, 240, 255, 0)");
             ctx.fillStyle = fleckGrad;
             ctx.beginPath();
@@ -2037,21 +2263,37 @@ export function renderEffect(
       // Outer frost glow halo
       const haloR = fzR * 1.2;
       const haloGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, fzR * 0.7,
-        screenPos.x, screenPos.y, haloR,
+        screenPos.x,
+        screenPos.y,
+        fzR * 0.7,
+        screenPos.x,
+        screenPos.y,
+        haloR,
       );
       haloGrad.addColorStop(0, "rgba(120, 200, 255, 0)");
       haloGrad.addColorStop(0.5, `rgba(100, 180, 240, ${alpha * 0.1})`);
       haloGrad.addColorStop(1, "rgba(80, 160, 220, 0)");
       ctx.fillStyle = haloGrad;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, haloR, haloR * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        haloR,
+        haloR * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Frost ground fill — rich layered radial gradient
       const frostGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, fzR,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        fzR,
       );
       frostGrad.addColorStop(0, `rgba(230, 248, 255, ${alpha * 0.4})`);
       frostGrad.addColorStop(0.15, `rgba(200, 235, 255, ${alpha * 0.35})`);
@@ -2068,8 +2310,12 @@ export function renderEffect(
       if (flashA > 0.01) {
         const flashR = fzR * 0.3;
         const flashGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, flashR,
+          screenPos.x,
+          screenPos.y,
+          0,
+          screenPos.x,
+          screenPos.y,
+          flashR,
         );
         flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashA})`);
         flashGrad.addColorStop(0.3, `rgba(220, 245, 255, ${flashA * 0.7})`);
@@ -2077,7 +2323,15 @@ export function renderEffect(
         flashGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
         ctx.fillStyle = flashGrad;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, flashR, flashR * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          flashR,
+          flashR * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -2098,7 +2352,15 @@ export function renderEffect(
       ctx.lineWidth = 2 * zoom;
       const ring2R = fzR * 0.8;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, ring2R, ring2R * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        ring2R,
+        ring2R * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
 
       // Tertiary inner ring — dashed
@@ -2108,7 +2370,15 @@ export function renderEffect(
       ctx.setLineDash([6 * zoom, 4 * zoom]);
       const ring3R = fzR * 0.55;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, ring3R, ring3R * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        ring3R,
+        ring3R * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
@@ -2137,10 +2407,14 @@ export function renderEffect(
         // Sub-cracks branching off main veins
         for (let sb = 0; sb < 2; sb++) {
           const brT = 0.35 + sb * 0.35;
-          const brX = screenPos.x + Math.cos(vAngle) * vLen * brT + jitter1 * brT;
-          const brY = screenPos.y + Math.sin(vAngle) * vLen * 0.5 * brT + jitter2 * brT;
-          const brAngle = vAngle + (seededNoise(fzSeed + v * 41 + sb * 11) - 0.5) * 1.4;
-          const brLen = vLen * (0.15 + seededNoise(fzSeed + v * 43 + sb * 13) * 0.2);
+          const brX =
+            screenPos.x + Math.cos(vAngle) * vLen * brT + jitter1 * brT;
+          const brY =
+            screenPos.y + Math.sin(vAngle) * vLen * 0.5 * brT + jitter2 * brT;
+          const brAngle =
+            vAngle + (seededNoise(fzSeed + v * 41 + sb * 11) - 0.5) * 1.4;
+          const brLen =
+            vLen * (0.15 + seededNoise(fzSeed + v * 43 + sb * 13) * 0.2);
 
           ctx.strokeStyle = `rgba(190, 230, 255, ${vAlpha * 0.5})`;
           ctx.lineWidth = vWidth * 0.5;
@@ -2156,7 +2430,8 @@ export function renderEffect(
 
       // ── ICE CRYSTALS AT WAVEFRONT ──
       for (let c = 0; c < 14; c++) {
-        const cAngle = (c / 14) * Math.PI * 2 + seededNoise(fzSeed + c * 3) * 0.3;
+        const cAngle =
+          (c / 14) * Math.PI * 2 + seededNoise(fzSeed + c * 3) * 0.3;
         const cDist = fzR * (0.72 + seededNoise(fzSeed + c * 11) * 0.22);
         const cx = screenPos.x + Math.cos(cAngle) * cDist;
         const cy = screenPos.y + Math.sin(cAngle) * cDist * 0.5;
@@ -2246,11 +2521,17 @@ export function renderEffect(
             const bA2 = aAngle - Math.PI * 0.3;
             ctx.beginPath();
             ctx.moveTo(bx, by);
-            ctx.lineTo(bx + Math.cos(bA1) * brLen, by + Math.sin(bA1) * brLen * 0.5);
+            ctx.lineTo(
+              bx + Math.cos(bA1) * brLen,
+              by + Math.sin(bA1) * brLen * 0.5,
+            );
             ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(bx, by);
-            ctx.lineTo(bx + Math.cos(bA2) * brLen, by + Math.sin(bA2) * brLen * 0.5);
+            ctx.lineTo(
+              bx + Math.cos(bA2) * brLen,
+              by + Math.sin(bA2) * brLen * 0.5,
+            );
             ctx.stroke();
           }
         }
@@ -2294,9 +2575,13 @@ export function renderEffect(
         const mDist = seededNoise(fzSeed + m * 79) * fzR * 0.7;
         const mx = screenPos.x + Math.cos(mAngle) * mDist;
         const mBaseY = screenPos.y + Math.sin(mAngle) * mDist * 0.5;
-        const mRise = progress * 25 * zoom * (0.5 + seededNoise(fzSeed + m * 83) * 0.5);
+        const mRise =
+          progress * 25 * zoom * (0.5 + seededNoise(fzSeed + m * 83) * 0.5);
         const my = mBaseY - mRise;
-        const mistA = alpha * (0.2 + seededNoise(fzSeed + m * 89) * 0.2) * (1 - progress * 0.7);
+        const mistA =
+          alpha *
+          (0.2 + seededNoise(fzSeed + m * 89) * 0.2) *
+          (1 - progress * 0.7);
         const mistR = (4 + seededNoise(fzSeed + m * 97) * 6) * zoom;
 
         const mistGrad = ctx.createRadialGradient(mx, my, 0, mx, my, mistR);
@@ -2371,19 +2656,36 @@ export function renderEffect(
       baseGrad.addColorStop(0.75, `rgba(55, 25, 8, ${fa * 0.2})`);
       baseGrad.addColorStop(1, "rgba(45, 20, 6, 0)");
       ctx.fillStyle = baseGrad;
-      ctx.fillRect(sx - scorchR * 1.1, sy - scorchR * 0.6, scorchR * 2.2, scorchR * 1.2);
+      ctx.fillRect(
+        sx - scorchR * 1.1,
+        sy - scorchR * 0.6,
+        scorchR * 2.2,
+        scorchR * 1.2,
+      );
 
       // Glowing ember rim (first 55%)
       if (progress < 0.55) {
         const ep = progress / 0.55;
         const emberA = fa * (1 - ep) * 0.65;
-        const rimGrad = ctx.createRadialGradient(sx, sy, scorchR * 0.55, sx, sy, scorchR);
+        const rimGrad = ctx.createRadialGradient(
+          sx,
+          sy,
+          scorchR * 0.55,
+          sx,
+          sy,
+          scorchR,
+        );
         rimGrad.addColorStop(0, "rgba(255, 120, 20, 0)");
         rimGrad.addColorStop(0.35, `rgba(255, 90, 10, ${emberA * 0.5})`);
         rimGrad.addColorStop(0.7, `rgba(220, 50, 0, ${emberA * 0.7})`);
         rimGrad.addColorStop(1, "rgba(150, 20, 0, 0)");
         ctx.fillStyle = rimGrad;
-        ctx.fillRect(sx - scorchR * 1.1, sy - scorchR * 0.6, scorchR * 2.2, scorchR * 1.2);
+        ctx.fillRect(
+          sx - scorchR * 1.1,
+          sy - scorchR * 0.6,
+          scorchR * 2.2,
+          scorchR * 1.2,
+        );
 
         // Small glowing ember specks
         for (let e = 0; e < 8; e++) {
@@ -2414,7 +2716,7 @@ export function renderEffect(
           sx + Math.cos(cA) * cLen * 0.5 + midOff,
           sy + Math.sin(cA) * cLen * 0.25 + midOff * 0.4,
           sx + Math.cos(cA) * cLen,
-          sy + Math.sin(cA) * cLen * 0.5
+          sy + Math.sin(cA) * cLen * 0.5,
         );
         ctx.stroke();
       }
@@ -2463,7 +2765,14 @@ export function renderEffect(
 
       // Glassy surface sheen
       const sheenA = la * 0.15;
-      const sheenGrad = ctx.createRadialGradient(lx - lR * 0.2, ly - lR * 0.1, 0, lx, ly, lR * 0.6);
+      const sheenGrad = ctx.createRadialGradient(
+        lx - lR * 0.2,
+        ly - lR * 0.1,
+        0,
+        lx,
+        ly,
+        lR * 0.6,
+      );
       sheenGrad.addColorStop(0, `rgba(180, 210, 255, ${sheenA})`);
       sheenGrad.addColorStop(0.5, `rgba(120, 160, 230, ${sheenA * 0.4})`);
       sheenGrad.addColorStop(1, "rgba(80, 120, 200, 0)");
@@ -2481,7 +2790,8 @@ export function renderEffect(
         const pts: { x: number; y: number }[] = [{ x: lx, y: ly }];
         for (let s = 1; s <= segments; s++) {
           const frac = s / segments;
-          const jitter = (seededNoise(lSeed + v * 19 + s * 23) - 0.5) * 12 * zoom;
+          const jitter =
+            (seededNoise(lSeed + v * 19 + s * 23) - 0.5) * 12 * zoom;
           pts.push({
             x: lx + Math.cos(vA) * vLen * frac + jitter,
             y: ly + Math.sin(vA) * vLen * 0.5 * frac + jitter * 0.4,
@@ -2569,13 +2879,28 @@ export function renderEffect(
 
       // Ground-slam distortion — dark radial crater
       const craterAlpha = alpha * (1 - progress) * 0.4;
-      const craterGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, roarRadius * 0.6);
+      const craterGrad = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        roarRadius * 0.6,
+      );
       craterGrad.addColorStop(0, `rgba(60, 20, 0, ${craterAlpha})`);
       craterGrad.addColorStop(0.4, `rgba(40, 12, 0, ${craterAlpha * 0.6})`);
       craterGrad.addColorStop(1, "rgba(30, 10, 0, 0)");
       ctx.fillStyle = craterGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, roarRadius * 0.6, roarRadius * 0.6 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        roarRadius * 0.6,
+        roarRadius * 0.6 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Layered shockwave rings with thickness variation
@@ -2610,8 +2935,10 @@ export function renderEffect(
         const streakA = alpha * (1 - progress) * 0.5;
 
         const grad = ctx.createLinearGradient(
-          sx + Math.cos(angle) * innerR, sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
-          sx + Math.cos(angle) * outerR, sy + Math.sin(angle) * outerR * ISO_Y_RATIO
+          sx + Math.cos(angle) * innerR,
+          sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
+          sx + Math.cos(angle) * outerR,
+          sy + Math.sin(angle) * outerR * ISO_Y_RATIO,
         );
         grad.addColorStop(0, `rgba(255, 200, 80, ${streakA})`);
         grad.addColorStop(0.5, `rgba(255, 120, 20, ${streakA * 0.6})`);
@@ -2620,21 +2947,42 @@ export function renderEffect(
         ctx.strokeStyle = grad;
         ctx.lineWidth = (2.5 - progress * 1.5) * zoom;
         ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(angle) * innerR, sy + Math.sin(angle) * innerR * ISO_Y_RATIO);
-        ctx.lineTo(sx + Math.cos(angle) * outerR, sy + Math.sin(angle) * outerR * ISO_Y_RATIO);
+        ctx.moveTo(
+          sx + Math.cos(angle) * innerR,
+          sy + Math.sin(angle) * innerR * ISO_Y_RATIO,
+        );
+        ctx.lineTo(
+          sx + Math.cos(angle) * outerR,
+          sy + Math.sin(angle) * outerR * ISO_Y_RATIO,
+        );
         ctx.stroke();
       }
 
       // Fear particle sparks flying outward
       for (let p = 0; p < 20; p++) {
         const pAngle = (p / 20) * Math.PI * 2 + time * 2;
-        const pDist = roarRadius * (0.2 + progress * 0.8) * (0.6 + seededNoise(hashString32(effect.id) + p * 7) * 0.4);
+        const pDist =
+          roarRadius *
+          (0.2 + progress * 0.8) *
+          (0.6 + seededNoise(hashString32(effect.id) + p * 7) * 0.4);
         const pX = sx + Math.cos(pAngle) * pDist;
-        const pY = sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - progress * 8 * zoom;
-        const pA = alpha * (1 - progress) * (0.4 + Math.sin(time * 6 + p) * 0.3);
-        const pSize = (3 + Math.sin(time * 5 + p * 0.8) * 1.5) * zoom * (1 - progress * 0.5);
+        const pY =
+          sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - progress * 8 * zoom;
+        const pA =
+          alpha * (1 - progress) * (0.4 + Math.sin(time * 6 + p) * 0.3);
+        const pSize =
+          (3 + Math.sin(time * 5 + p * 0.8) * 1.5) *
+          zoom *
+          (1 - progress * 0.5);
 
-        const sparkGrad = ctx.createRadialGradient(pX, pY, 0, pX, pY, pSize * 2);
+        const sparkGrad = ctx.createRadialGradient(
+          pX,
+          pY,
+          0,
+          pX,
+          pY,
+          pSize * 2,
+        );
         sparkGrad.addColorStop(0, `rgba(255, 220, 120, ${pA})`);
         sparkGrad.addColorStop(0.5, `rgba(255, 140, 30, ${pA * 0.5})`);
         sparkGrad.addColorStop(1, "rgba(200, 60, 0, 0)");
@@ -2647,14 +2995,29 @@ export function renderEffect(
       // Central burst core — intense orange-white flash
       const coreA = alpha * Math.max(0, 1 - progress * 2) * 0.8;
       if (coreA > 0.01) {
-        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, roarRadius * 0.3);
+        const coreGrad = ctx.createRadialGradient(
+          sx,
+          sy,
+          0,
+          sx,
+          sy,
+          roarRadius * 0.3,
+        );
         coreGrad.addColorStop(0, `rgba(255, 255, 220, ${coreA})`);
         coreGrad.addColorStop(0.3, `rgba(255, 200, 80, ${coreA * 0.7})`);
         coreGrad.addColorStop(0.7, `rgba(255, 120, 20, ${coreA * 0.3})`);
         coreGrad.addColorStop(1, "rgba(200, 60, 0, 0)");
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, roarRadius * 0.3, roarRadius * 0.3 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx,
+          sy,
+          roarRadius * 0.3,
+          roarRadius * 0.3 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -2663,7 +3026,8 @@ export function renderEffect(
       const crackSeed = hashString32(effect.id);
       for (let c = 0; c < 8; c++) {
         const cAngle = seededNoise(crackSeed + c * 11) * Math.PI * 2;
-        const cLen = roarRadius * (0.3 + seededNoise(crackSeed + c * 17) * 0.4) * progress;
+        const cLen =
+          roarRadius * (0.3 + seededNoise(crackSeed + c * 17) * 0.4) * progress;
         ctx.strokeStyle = `rgba(80, 30, 0, ${crackA})`;
         ctx.lineWidth = (2 - progress) * zoom;
         ctx.beginPath();
@@ -2673,7 +3037,7 @@ export function renderEffect(
           sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
           sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
           sx + Math.cos(cAngle) * cLen,
-          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO,
         );
         ctx.stroke();
       }
@@ -2693,13 +3057,28 @@ export function renderEffect(
 
       // Ground resonance field — purple radial glow
       const fieldA = alpha * (1 - progress * 0.3) * 0.25;
-      const fieldGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, noteRadius * 0.7);
+      const fieldGrad = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        noteRadius * 0.7,
+      );
       fieldGrad.addColorStop(0, `rgba(160, 80, 255, ${fieldA})`);
       fieldGrad.addColorStop(0.5, `rgba(120, 50, 200, ${fieldA * 0.5})`);
       fieldGrad.addColorStop(1, "rgba(80, 20, 160, 0)");
       ctx.fillStyle = fieldGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, noteRadius * 0.7, noteRadius * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        noteRadius * 0.7,
+        noteRadius * 0.7 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Sonic wave arcs — crescent-shaped sound pulses
@@ -2734,17 +3113,30 @@ export function renderEffect(
         ctx.strokeStyle = `rgba(220, 180, 255, ${arcA})`;
         ctx.lineWidth = (2.5 - arc * 0.3) * zoom;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, arcR, arcR * ISO_Y_RATIO, 0, arcStart, arcStart + arcLen);
+        ctx.ellipse(
+          sx,
+          sy,
+          arcR,
+          arcR * ISO_Y_RATIO,
+          0,
+          arcStart,
+          arcStart + arcLen,
+        );
         ctx.stroke();
       }
 
       // Drawn musical note shapes (not text) — eighth notes
       for (let n = 0; n < 10; n++) {
         const nAngle = (n / 10) * Math.PI * 2 + progress * Math.PI * 1.2;
-        const nDist = noteRadius * (0.35 + Math.sin(time * 2.5 + n * 1.3) * 0.15);
+        const nDist =
+          noteRadius * (0.35 + Math.sin(time * 2.5 + n * 1.3) * 0.15);
         const nX = sx + Math.cos(nAngle) * nDist;
-        const nY = sy + Math.sin(nAngle) * nDist * ISO_Y_RATIO - progress * 18 * zoom;
-        const nA = alpha * (0.6 + Math.sin(time * 3 + n * 0.7) * 0.25) * (1 - progress * 0.3);
+        const nY =
+          sy + Math.sin(nAngle) * nDist * ISO_Y_RATIO - progress * 18 * zoom;
+        const nA =
+          alpha *
+          (0.6 + Math.sin(time * 3 + n * 0.7) * 0.25) *
+          (1 - progress * 0.3);
         const nSize = (5 + Math.sin(time * 4 + n) * 1.5) * zoom;
 
         // Note head (filled ellipse)
@@ -2765,15 +3157,24 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(nX + nSize * 0.55, nY - nSize * 2.2);
         ctx.quadraticCurveTo(
-          nX + nSize * 1.5, nY - nSize * 1.5,
-          nX + nSize * 0.55, nY - nSize * 1.0
+          nX + nSize * 1.5,
+          nY - nSize * 1.5,
+          nX + nSize * 0.55,
+          nY - nSize * 1.0,
         );
         ctx.strokeStyle = `rgba(220, 170, 255, ${nA * 0.8})`;
         ctx.lineWidth = 1.2 * zoom;
         ctx.stroke();
 
         // Note glow
-        const noteGlow = ctx.createRadialGradient(nX, nY, 0, nX, nY, nSize * 2.5);
+        const noteGlow = ctx.createRadialGradient(
+          nX,
+          nY,
+          0,
+          nX,
+          nY,
+          nSize * 2.5,
+        );
         noteGlow.addColorStop(0, `rgba(180, 120, 255, ${nA * 0.25})`);
         noteGlow.addColorStop(1, "rgba(140, 80, 220, 0)");
         ctx.fillStyle = noteGlow;
@@ -2787,10 +3188,13 @@ export function renderEffect(
         const hPhase = (time * 0.6 + h * 0.071) % 1;
         const hAngle = seededNoise(eSeed + h * 13) * Math.PI * 2;
         const hDist = noteRadius * (0.15 + seededNoise(eSeed + h * 19) * 0.5);
-        const hX = sx + Math.cos(hAngle) * hDist + Math.sin(time * 1.5 + h) * 4 * zoom;
-        const hY = sy + Math.sin(hAngle) * hDist * ISO_Y_RATIO - hPhase * 35 * zoom;
+        const hX =
+          sx + Math.cos(hAngle) * hDist + Math.sin(time * 1.5 + h) * 4 * zoom;
+        const hY =
+          sy + Math.sin(hAngle) * hDist * ISO_Y_RATIO - hPhase * 35 * zoom;
         const hA = alpha * (1 - hPhase) * 0.5;
-        const hSize = (1.5 + seededNoise(eSeed + h * 23) * 2) * zoom * (1 - hPhase * 0.5);
+        const hSize =
+          (1.5 + seededNoise(eSeed + h * 23) * 2) * zoom * (1 - hPhase * 0.5);
 
         // 4-pointed star sparkle
         ctx.fillStyle = `rgba(200, 255, 200, ${hA})`;
@@ -2810,14 +3214,29 @@ export function renderEffect(
       // Central sonic burst — bright core flash
       const coreA = alpha * Math.max(0, 1 - progress * 1.8) * 0.7;
       if (coreA > 0.01) {
-        const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, noteRadius * 0.25);
+        const coreGrad = ctx.createRadialGradient(
+          sx,
+          sy,
+          0,
+          sx,
+          sy,
+          noteRadius * 0.25,
+        );
         coreGrad.addColorStop(0, `rgba(255, 240, 255, ${coreA})`);
         coreGrad.addColorStop(0.3, `rgba(220, 170, 255, ${coreA * 0.7})`);
         coreGrad.addColorStop(0.7, `rgba(160, 80, 240, ${coreA * 0.3})`);
         coreGrad.addColorStop(1, "rgba(120, 40, 200, 0)");
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, noteRadius * 0.25, noteRadius * 0.25 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx,
+          sy,
+          noteRadius * 0.25,
+          noteRadius * 0.25 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -2903,24 +3322,57 @@ export function renderEffect(
       }
 
       // Inner energy field — layered blue radial gradients
-      const outerShield = ctx.createRadialGradient(sx, sy, 0, sx, sy, shieldRadius * 0.85);
+      const outerShield = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        shieldRadius * 0.85,
+      );
       outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.12})`);
-      outerShield.addColorStop(0.5, `rgba(59, 130, 246, ${alpha * 0.18 * pulsePhase})`);
+      outerShield.addColorStop(
+        0.5,
+        `rgba(59, 130, 246, ${alpha * 0.18 * pulsePhase})`,
+      );
       outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.08})`);
       outerShield.addColorStop(1, "rgba(37, 99, 235, 0)");
       ctx.fillStyle = outerShield;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, shieldRadius * 0.85, shieldRadius * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        shieldRadius * 0.85,
+        shieldRadius * 0.85 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Bright inner core
-      const coreShield = ctx.createRadialGradient(sx, sy, 0, sx, sy, shieldRadius * 0.35);
+      const coreShield = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        shieldRadius * 0.35,
+      );
       coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.45})`);
       coreShield.addColorStop(0.5, `rgba(147, 197, 253, ${alpha * 0.25})`);
       coreShield.addColorStop(1, "rgba(96, 165, 250, 0)");
       ctx.fillStyle = coreShield;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, shieldRadius * 0.35, shieldRadius * 0.35 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        shieldRadius * 0.35,
+        shieldRadius * 0.35 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Defensive rune circle — dashed rotating ring
@@ -2929,7 +3381,15 @@ export function renderEffect(
       ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.lineDashOffset = -time * 30;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, shieldRadius * 0.5, shieldRadius * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        shieldRadius * 0.5,
+        shieldRadius * 0.5 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -2963,7 +3423,12 @@ export function renderEffect(
           // Sword/cross shape
           ctx.fillStyle = `rgba(191, 219, 254, 0.7)`;
           ctx.fillRect(rx - 1 * zoom, ry - runeSize, 2 * zoom, runeSize * 2);
-          ctx.fillRect(rx - runeSize * 0.6, ry - runeSize * 0.3, runeSize * 1.2, 2 * zoom);
+          ctx.fillRect(
+            rx - runeSize * 0.6,
+            ry - runeSize * 0.3,
+            runeSize * 1.2,
+            2 * zoom,
+          );
         } else {
           // Diamond ward
           ctx.fillStyle = `rgba(96, 165, 250, 0.7)`;
@@ -2977,7 +3442,14 @@ export function renderEffect(
         }
 
         // Rune glow
-        const runeGlow = ctx.createRadialGradient(rx, ry, 0, rx, ry, runeSize * 2.5);
+        const runeGlow = ctx.createRadialGradient(
+          rx,
+          ry,
+          0,
+          rx,
+          ry,
+          runeSize * 2.5,
+        );
         runeGlow.addColorStop(0, `rgba(96, 165, 250, 0.2)`);
         runeGlow.addColorStop(1, "rgba(59, 130, 246, 0)");
         ctx.fillStyle = runeGlow;
@@ -2997,7 +3469,14 @@ export function renderEffect(
         const sparkA = alpha * (0.35 + Math.sin(time * 5 + spark) * 0.25);
         const sparkSize = (2 + Math.sin(time * 6 + spark * 0.9) * 1) * zoom;
 
-        const sGrad = ctx.createRadialGradient(sparkX, sparkY, 0, sparkX, sparkY, sparkSize * 2);
+        const sGrad = ctx.createRadialGradient(
+          sparkX,
+          sparkY,
+          0,
+          sparkX,
+          sparkY,
+          sparkSize * 2,
+        );
         sGrad.addColorStop(0, `rgba(220, 240, 255, ${sparkA})`);
         sGrad.addColorStop(0.5, `rgba(147, 197, 253, ${sparkA * 0.5})`);
         sGrad.addColorStop(1, "rgba(96, 165, 250, 0)");
@@ -3039,8 +3518,18 @@ export function renderEffect(
 
       // Shield cross emblem
       ctx.fillStyle = `rgba(220, 240, 255, 0.6)`;
-      ctx.fillRect(sx - 1.5 * zoom, sy - csSize * 0.7 - 2 * zoom, 3 * zoom, csSize * 1.3);
-      ctx.fillRect(sx - csSize * 0.5, sy - csSize * 0.15 - 2 * zoom, csSize, 3 * zoom);
+      ctx.fillRect(
+        sx - 1.5 * zoom,
+        sy - csSize * 0.7 - 2 * zoom,
+        3 * zoom,
+        csSize * 1.3,
+      );
+      ctx.fillRect(
+        sx - csSize * 0.5,
+        sy - csSize * 0.15 - 2 * zoom,
+        csSize,
+        3 * zoom,
+      );
 
       ctx.globalAlpha = 1;
       ctx.restore();
@@ -3058,7 +3547,14 @@ export function renderEffect(
 
       // Deep impact crater with layered depth
       const craterA = alpha * 0.6;
-      const craterGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, strikeRadius * 0.7);
+      const craterGrad = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        strikeRadius * 0.7,
+      );
       craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterA})`);
       craterGrad.addColorStop(0.25, `rgba(50, 25, 10, ${craterA * 0.7})`);
       craterGrad.addColorStop(0.5, `rgba(80, 50, 25, ${craterA * 0.4})`);
@@ -3066,7 +3562,15 @@ export function renderEffect(
       craterGrad.addColorStop(1, "rgba(50, 30, 15, 0)");
       ctx.fillStyle = craterGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, strikeRadius * 0.7, strikeRadius * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        strikeRadius * 0.7,
+        strikeRadius * 0.7 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Fire ring expanding outward from impact
@@ -3076,13 +3580,29 @@ export function renderEffect(
         ctx.strokeStyle = `rgba(255, 120, 20, ${fireRingA * 0.3})`;
         ctx.lineWidth = 6 * zoom;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, fireRingR, fireRingR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx,
+          sy,
+          fireRingR,
+          fireRingR * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
 
         ctx.strokeStyle = `rgba(255, 200, 80, ${fireRingA})`;
         ctx.lineWidth = 2.5 * zoom;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, fireRingR, fireRingR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx,
+          sy,
+          fireRingR,
+          fireRingR * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
 
@@ -3092,9 +3612,18 @@ export function renderEffect(
         const dAngle = seededNoise(mSeed + d * 7) * Math.PI * 2;
         const dDist = strikeRadius * (0.1 + seededNoise(mSeed + d * 13) * 0.5);
         const dX = sx + Math.cos(dAngle) * dDist;
-        const dY = sy + Math.sin(dAngle) * dDist * ISO_Y_RATIO - progress * (15 + d * 5) * zoom;
-        const dR = (8 + seededNoise(mSeed + d * 17) * 10) * zoom * (0.5 + progress * 0.5);
-        const dCloudA = dustA * (0.3 + seededNoise(mSeed + d * 19) * 0.2) * (1 - progress * 0.4);
+        const dY =
+          sy +
+          Math.sin(dAngle) * dDist * ISO_Y_RATIO -
+          progress * (15 + d * 5) * zoom;
+        const dR =
+          (8 + seededNoise(mSeed + d * 17) * 10) *
+          zoom *
+          (0.5 + progress * 0.5);
+        const dCloudA =
+          dustA *
+          (0.3 + seededNoise(mSeed + d * 19) * 0.2) *
+          (1 - progress * 0.4);
 
         const cloudGrad = ctx.createRadialGradient(dX, dY, 0, dX, dY, dR);
         cloudGrad.addColorStop(0, `rgba(140, 110, 70, ${dCloudA})`);
@@ -3112,13 +3641,26 @@ export function renderEffect(
         const rSpeed = 0.4 + seededNoise(mSeed + rock * 29) * 0.6;
         const rDist = strikeRadius * rSpeed * progress;
         const rX = sx + Math.cos(rAngle) * rDist;
-        const rArc = Math.sin(progress * Math.PI) * (20 + seededNoise(mSeed + rock * 31) * 15) * zoom;
+        const rArc =
+          Math.sin(progress * Math.PI) *
+          (20 + seededNoise(mSeed + rock * 31) * 15) *
+          zoom;
         const rY = sy + Math.sin(rAngle) * rDist * ISO_Y_RATIO - rArc;
-        const rSize = (2.5 + seededNoise(mSeed + rock * 37) * 3) * zoom * (1 - progress * 0.5);
+        const rSize =
+          (2.5 + seededNoise(mSeed + rock * 37) * 3) *
+          zoom *
+          (1 - progress * 0.5);
         const rA = alpha * (1 - progress * 0.8);
 
         // Rock body
-        const rGrad = ctx.createRadialGradient(rX - rSize * 0.3, rY - rSize * 0.3, 0, rX, rY, rSize);
+        const rGrad = ctx.createRadialGradient(
+          rX - rSize * 0.3,
+          rY - rSize * 0.3,
+          0,
+          rX,
+          rY,
+          rSize,
+        );
         rGrad.addColorStop(0, `rgba(160, 130, 90, ${rA})`);
         rGrad.addColorStop(0.5, `rgba(100, 75, 45, ${rA})`);
         rGrad.addColorStop(1, `rgba(60, 45, 25, ${rA * 0.7})`);
@@ -3129,8 +3671,10 @@ export function renderEffect(
           const vAngle = (v / rockVerts) * Math.PI * 2;
           const variance = 0.7 + seededNoise(mSeed + rock * 43 + v * 3) * 0.3;
           const vr = rSize * variance;
-          if (v === 0) ctx.moveTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
-          else ctx.lineTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
+          if (v === 0)
+            ctx.moveTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
+          else
+            ctx.lineTo(rX + Math.cos(vAngle) * vr, rY + Math.sin(vAngle) * vr);
         }
         ctx.closePath();
         ctx.fill();
@@ -3140,7 +3684,10 @@ export function renderEffect(
       const crackLineA = alpha * 0.5 * (1 - progress * 0.3);
       for (let c = 0; c < 10; c++) {
         const cAngle = seededNoise(mSeed + c * 47) * Math.PI * 2;
-        const cLen = strikeRadius * (0.4 + seededNoise(mSeed + c * 53) * 0.4) * Math.min(1, progress * 2);
+        const cLen =
+          strikeRadius *
+          (0.4 + seededNoise(mSeed + c * 53) * 0.4) *
+          Math.min(1, progress * 2);
         const midJitter = (seededNoise(mSeed + c * 59) - 0.5) * 8 * zoom;
 
         ctx.strokeStyle = `rgba(40, 25, 10, ${crackLineA})`;
@@ -3151,7 +3698,7 @@ export function renderEffect(
           sx + Math.cos(cAngle) * cLen * 0.5 + midJitter,
           sy + Math.sin(cAngle) * cLen * 0.5 * ISO_Y_RATIO + midJitter * 0.3,
           sx + Math.cos(cAngle) * cLen,
-          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO
+          sy + Math.sin(cAngle) * cLen * ISO_Y_RATIO,
         );
         ctx.stroke();
       }
@@ -3159,13 +3706,28 @@ export function renderEffect(
       // Central flash on early frames
       const flashA = alpha * Math.max(0, 1 - progress * 3);
       if (flashA > 0.01) {
-        const flashGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, strikeRadius * 0.4);
+        const flashGrad = ctx.createRadialGradient(
+          sx,
+          sy,
+          0,
+          sx,
+          sy,
+          strikeRadius * 0.4,
+        );
         flashGrad.addColorStop(0, `rgba(255, 240, 200, ${flashA})`);
         flashGrad.addColorStop(0.3, `rgba(255, 180, 80, ${flashA * 0.6})`);
         flashGrad.addColorStop(1, "rgba(200, 100, 20, 0)");
         ctx.fillStyle = flashGrad;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, strikeRadius * 0.4, strikeRadius * 0.4 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx,
+          sy,
+          strikeRadius * 0.4,
+          strikeRadius * 0.4 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -3177,7 +3739,14 @@ export function renderEffect(
       ctx.save();
 
       const targetPos = effect.targetPos || effect.pos;
-      const targetScreenPos = worldToScreen(targetPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+      const targetScreenPos = worldToScreen(
+        targetPos,
+        canvasWidth,
+        canvasHeight,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
       const startX = screenPos.x;
       const startY = screenPos.y;
       const endX = targetScreenPos.x;
@@ -3197,13 +3766,34 @@ export function renderEffect(
         const shadowX = currentX;
         const shadowY = startY + (endY - startY) * travelProgress;
         const shadowScale = 0.4 + 0.6 * (1 - Math.abs(arcY) / arcHeight);
-        const shadowGrad = ctx.createRadialGradient(shadowX, shadowY + 4 * zoom, 0, shadowX, shadowY + 4 * zoom, boulderSize * shadowScale);
-        shadowGrad.addColorStop(0, `rgba(0, 0, 0, ${0.35 * alpha * shadowScale})`);
-        shadowGrad.addColorStop(0.7, `rgba(0, 0, 0, ${0.1 * alpha * shadowScale})`);
+        const shadowGrad = ctx.createRadialGradient(
+          shadowX,
+          shadowY + 4 * zoom,
+          0,
+          shadowX,
+          shadowY + 4 * zoom,
+          boulderSize * shadowScale,
+        );
+        shadowGrad.addColorStop(
+          0,
+          `rgba(0, 0, 0, ${0.35 * alpha * shadowScale})`,
+        );
+        shadowGrad.addColorStop(
+          0.7,
+          `rgba(0, 0, 0, ${0.1 * alpha * shadowScale})`,
+        );
         shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = shadowGrad;
         ctx.beginPath();
-        ctx.ellipse(shadowX, shadowY + 4 * zoom, boulderSize * shadowScale, boulderSize * shadowScale * ISO_Y_RATIO * 0.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          shadowX,
+          shadowY + 4 * zoom,
+          boulderSize * shadowScale,
+          boulderSize * shadowScale * ISO_Y_RATIO * 0.6,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
         // Motion trail — streaked dust behind the boulder
@@ -3215,7 +3805,14 @@ export function renderEffect(
           const trailA = alpha * 0.25 * (1 - t / 6);
           const trailSize = boulderSize * (0.5 - t * 0.06);
 
-          const tGrad = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, trailSize);
+          const tGrad = ctx.createRadialGradient(
+            trailX,
+            trailY,
+            0,
+            trailX,
+            trailY,
+            trailSize,
+          );
           tGrad.addColorStop(0, `rgba(160, 130, 90, ${trailA})`);
           tGrad.addColorStop(1, "rgba(120, 95, 60, 0)");
           ctx.fillStyle = tGrad;
@@ -3230,7 +3827,14 @@ export function renderEffect(
         ctx.rotate(rotation);
 
         // Outer rock body
-        const bGrad = ctx.createRadialGradient(-boulderSize * 0.3, -boulderSize * 0.3, 0, 0, 0, boulderSize);
+        const bGrad = ctx.createRadialGradient(
+          -boulderSize * 0.3,
+          -boulderSize * 0.3,
+          0,
+          0,
+          0,
+          boulderSize,
+        );
         bGrad.addColorStop(0, "#b09070");
         bGrad.addColorStop(0.3, "#907050");
         bGrad.addColorStop(0.6, "#6a4a30");
@@ -3258,9 +3862,13 @@ export function renderEffect(
         ctx.lineWidth = 1.2 * zoom;
         for (let cr = 0; cr < 4; cr++) {
           const crStart = seededNoise(bSeed + cr * 61) * Math.PI * 2;
-          const crLen = boulderSize * (0.3 + seededNoise(bSeed + cr * 67) * 0.5);
+          const crLen =
+            boulderSize * (0.3 + seededNoise(bSeed + cr * 67) * 0.5);
           ctx.beginPath();
-          ctx.moveTo(Math.cos(crStart) * boulderSize * 0.1, Math.sin(crStart) * boulderSize * 0.1);
+          ctx.moveTo(
+            Math.cos(crStart) * boulderSize * 0.1,
+            Math.sin(crStart) * boulderSize * 0.1,
+          );
           ctx.lineTo(Math.cos(crStart) * crLen, Math.sin(crStart) * crLen);
           ctx.stroke();
         }
@@ -3268,7 +3876,15 @@ export function renderEffect(
         // Top-light highlight
         ctx.fillStyle = `rgba(200, 170, 130, 0.35)`;
         ctx.beginPath();
-        ctx.ellipse(-boulderSize * 0.2, -boulderSize * 0.25, boulderSize * 0.35, boulderSize * 0.2, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(
+          -boulderSize * 0.2,
+          -boulderSize * 0.25,
+          boulderSize * 0.35,
+          boulderSize * 0.2,
+          -0.5,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
         ctx.restore();
@@ -3276,9 +3892,19 @@ export function renderEffect(
         // Small rock fragments trailing
         for (let f = 0; f < 4; f++) {
           const fT = Math.max(0, travelProgress - 0.03 - f * 0.04);
-          const fX = startX + (endX - startX) * fT + (seededNoise(bSeed + f * 71) - 0.5) * 12 * zoom;
-          const fArc = -Math.sin(fT * Math.PI) * arcHeight * (0.8 + seededNoise(bSeed + f * 73) * 0.2);
-          const fY = startY + (endY - startY) * fT + fArc + (seededNoise(bSeed + f * 77) - 0.5) * 8 * zoom;
+          const fX =
+            startX +
+            (endX - startX) * fT +
+            (seededNoise(bSeed + f * 71) - 0.5) * 12 * zoom;
+          const fArc =
+            -Math.sin(fT * Math.PI) *
+            arcHeight *
+            (0.8 + seededNoise(bSeed + f * 73) * 0.2);
+          const fY =
+            startY +
+            (endY - startY) * fT +
+            fArc +
+            (seededNoise(bSeed + f * 77) - 0.5) * 8 * zoom;
           const fSize = (1.5 + seededNoise(bSeed + f * 79) * 2) * zoom;
           ctx.fillStyle = `rgba(130, 100, 65, ${alpha * 0.5})`;
           ctx.beginPath();
@@ -3298,20 +3924,40 @@ export function renderEffect(
         ctx.strokeStyle = `rgba(180, 140, 80, ${shockA * 0.3})`;
         ctx.lineWidth = 5 * zoom;
         ctx.beginPath();
-        ctx.ellipse(endX, endY, impactR * 1.5, impactR * 1.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          endX,
+          endY,
+          impactR * 1.5,
+          impactR * 1.5 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
         ctx.strokeStyle = `rgba(220, 180, 120, ${shockA})`;
         ctx.lineWidth = 2 * zoom;
         ctx.beginPath();
-        ctx.ellipse(endX, endY, impactR * 1.5, impactR * 1.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          endX,
+          endY,
+          impactR * 1.5,
+          impactR * 1.5 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
 
         // Dust cloud — multi-layer
         for (let dc = 0; dc < 4; dc++) {
           const dcAngle = seededNoise(bSeed + dc * 81) * Math.PI * 2;
-          const dcDist = impactR * impactP * (0.5 + seededNoise(bSeed + dc * 83) * 0.8);
+          const dcDist =
+            impactR * impactP * (0.5 + seededNoise(bSeed + dc * 83) * 0.8);
           const dcX = endX + Math.cos(dcAngle) * dcDist;
-          const dcY = endY + Math.sin(dcAngle) * dcDist * ISO_Y_RATIO - impactP * 10 * zoom;
+          const dcY =
+            endY +
+            Math.sin(dcAngle) * dcDist * ISO_Y_RATIO -
+            impactP * 10 * zoom;
           const dcR = (6 + seededNoise(bSeed + dc * 87) * 8) * zoom;
           const dcA = impactA * (1 - impactP) * 0.4;
 
@@ -3327,7 +3973,8 @@ export function renderEffect(
         // Ground cracks
         for (let c = 0; c < 8; c++) {
           const crAngle = seededNoise(bSeed + c * 89) * Math.PI * 2;
-          const crLen = impactR * (0.7 + seededNoise(bSeed + c * 91) * 0.5) * impactP;
+          const crLen =
+            impactR * (0.7 + seededNoise(bSeed + c * 91) * 0.5) * impactP;
           const crJitter = (seededNoise(bSeed + c * 93) - 0.5) * 6 * zoom;
           ctx.strokeStyle = `rgba(50, 35, 20, ${impactA * 0.5})`;
           ctx.lineWidth = (2 - impactP * 0.8) * zoom;
@@ -3335,9 +3982,11 @@ export function renderEffect(
           ctx.moveTo(endX, endY);
           ctx.quadraticCurveTo(
             endX + Math.cos(crAngle) * crLen * 0.5 + crJitter,
-            endY + Math.sin(crAngle) * crLen * 0.5 * ISO_Y_RATIO + crJitter * 0.3,
+            endY +
+              Math.sin(crAngle) * crLen * 0.5 * ISO_Y_RATIO +
+              crJitter * 0.3,
             endX + Math.cos(crAngle) * crLen,
-            endY + Math.sin(crAngle) * crLen * ISO_Y_RATIO
+            endY + Math.sin(crAngle) * crLen * ISO_Y_RATIO,
           );
           ctx.stroke();
         }
@@ -3345,11 +3994,22 @@ export function renderEffect(
         // Flying debris with arcs
         for (let d = 0; d < 8; d++) {
           const dAngle = seededNoise(bSeed + d * 97) * Math.PI * 2;
-          const dDist = impactR * 1.5 * impactP * (0.5 + seededNoise(bSeed + d * 101) * 0.5);
-          const dArc = Math.sin(impactP * Math.PI) * 15 * zoom * (0.5 + seededNoise(bSeed + d * 103) * 0.5);
+          const dDist =
+            impactR *
+            1.5 *
+            impactP *
+            (0.5 + seededNoise(bSeed + d * 101) * 0.5);
+          const dArc =
+            Math.sin(impactP * Math.PI) *
+            15 *
+            zoom *
+            (0.5 + seededNoise(bSeed + d * 103) * 0.5);
           const dX = endX + Math.cos(dAngle) * dDist;
           const dY = endY + Math.sin(dAngle) * dDist * ISO_Y_RATIO - dArc;
-          const dSize = (2 + seededNoise(bSeed + d * 107) * 2.5) * zoom * (1 - impactP * 0.5);
+          const dSize =
+            (2 + seededNoise(bSeed + d * 107) * 2.5) *
+            zoom *
+            (1 - impactP * 0.5);
 
           ctx.fillStyle = `rgba(110, 85, 50, ${impactA * 0.7})`;
           ctx.beginPath();
@@ -3357,7 +4017,8 @@ export function renderEffect(
           for (let v = 0; v < dVerts; v++) {
             const vA = (v / dVerts) * Math.PI * 2;
             const vr = dSize * (0.7 + seededNoise(bSeed + d * 111 + v) * 0.3);
-            if (v === 0) ctx.moveTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
+            if (v === 0)
+              ctx.moveTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
             else ctx.lineTo(dX + Math.cos(vA) * vr, dY + Math.sin(vA) * vr);
           }
           ctx.closePath();
@@ -3405,14 +4066,20 @@ export function renderEffect(
         ctx.beginPath();
         for (let i = 0; i < 40; i++) {
           const t = i / 40;
-          const spiralAngle = time * 1.5 + arm * Math.PI * 0.4 + t * Math.PI * 2;
+          const spiralAngle =
+            time * 1.5 + arm * Math.PI * 0.4 + t * Math.PI * 2;
           const spiralDist = auraRadius * (0.12 + t * 0.7);
           const x = sx + Math.cos(spiralAngle) * spiralDist;
           const y = sy + Math.sin(spiralAngle) * spiralDist * ISO_Y_RATIO;
           if (i === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        const spiralGrad = ctx.createLinearGradient(sx - auraRadius, sy, sx + auraRadius, sy);
+        const spiralGrad = ctx.createLinearGradient(
+          sx - auraRadius,
+          sy,
+          sx + auraRadius,
+          sy,
+        );
         spiralGrad.addColorStop(0, `rgba(255, 248, 220, ${armA})`);
         spiralGrad.addColorStop(0.5, `rgba(255, 230, 150, ${armA * 0.7})`);
         spiralGrad.addColorStop(1, `rgba(255, 248, 220, ${armA})`);
@@ -3423,7 +4090,8 @@ export function renderEffect(
       // Floating golden quill sparks with trails
       for (let spark = 0; spark < 20; spark++) {
         const sAngle = (spark / 20) * Math.PI * 2 + time * 0.7;
-        const sDist = auraRadius * (0.25 + Math.sin(time * 3 + spark * 0.8) * 0.18);
+        const sDist =
+          auraRadius * (0.25 + Math.sin(time * 3 + spark * 0.8) * 0.18);
         const sX = sx + Math.cos(sAngle) * sDist;
         const sY = sy + Math.sin(sAngle) * sDist * ISO_Y_RATIO;
         const sA = alpha * (0.45 + Math.sin(time * 4 + spark) * 0.25);
@@ -3440,22 +4108,55 @@ export function renderEffect(
       }
 
       // Central teal + gold layered glow
-      const outerGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, auraRadius * 0.5);
-      outerGlow.addColorStop(0, `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`);
+      const outerGlow = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        auraRadius * 0.5,
+      );
+      outerGlow.addColorStop(
+        0,
+        `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`,
+      );
       outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.12})`);
       outerGlow.addColorStop(1, "rgba(20, 184, 166, 0)");
       ctx.fillStyle = outerGlow;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, auraRadius * 0.5, auraRadius * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        auraRadius * 0.5,
+        auraRadius * 0.5 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
-      const coreGlow = ctx.createRadialGradient(sx, sy, 0, sx, sy, auraRadius * 0.22);
+      const coreGlow = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        auraRadius * 0.22,
+      );
       coreGlow.addColorStop(0, `rgba(255, 240, 170, ${alpha * 0.55})`);
       coreGlow.addColorStop(0.5, `rgba(255, 215, 0, ${alpha * 0.3})`);
       coreGlow.addColorStop(1, "rgba(255, 215, 0, 0)");
       ctx.fillStyle = coreGlow;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, auraRadius * 0.22, auraRadius * 0.22 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        auraRadius * 0.22,
+        auraRadius * 0.22 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Orbiting literary symbols — drawn shapes instead of emoji
@@ -3504,8 +4205,18 @@ export function renderEffect(
           ctx.beginPath();
           ctx.moveTo(symX - symSize * 0.6, symY + symSize * 0.8);
           ctx.lineTo(symX + symSize * 0.3, symY - symSize * 0.5);
-          ctx.quadraticCurveTo(symX + symSize * 0.8, symY - symSize * 0.8, symX + symSize * 0.5, symY - symSize);
-          ctx.quadraticCurveTo(symX + symSize * 0.2, symY - symSize * 0.7, symX - symSize * 0.6, symY + symSize * 0.8);
+          ctx.quadraticCurveTo(
+            symX + symSize * 0.8,
+            symY - symSize * 0.8,
+            symX + symSize * 0.5,
+            symY - symSize,
+          );
+          ctx.quadraticCurveTo(
+            symX + symSize * 0.2,
+            symY - symSize * 0.7,
+            symX - symSize * 0.6,
+            symY + symSize * 0.8,
+          );
           ctx.fill();
           ctx.stroke();
         } else {
@@ -3513,19 +4224,50 @@ export function renderEffect(
           ctx.fillStyle = `rgba(255, 240, 200, 0.5)`;
           ctx.strokeStyle = `rgba(220, 190, 120, 0.7)`;
           ctx.lineWidth = 1 * zoom;
-          ctx.fillRect(symX - symSize * 0.5, symY - symSize * 0.5, symSize, symSize * 1.2);
-          ctx.strokeRect(symX - symSize * 0.5, symY - symSize * 0.5, symSize, symSize * 1.2);
+          ctx.fillRect(
+            symX - symSize * 0.5,
+            symY - symSize * 0.5,
+            symSize,
+            symSize * 1.2,
+          );
+          ctx.strokeRect(
+            symX - symSize * 0.5,
+            symY - symSize * 0.5,
+            symSize,
+            symSize * 1.2,
+          );
           // Scroll curl top
           ctx.beginPath();
-          ctx.arc(symX - symSize * 0.5, symY - symSize * 0.5, symSize * 0.15, 0, Math.PI, true);
+          ctx.arc(
+            symX - symSize * 0.5,
+            symY - symSize * 0.5,
+            symSize * 0.15,
+            0,
+            Math.PI,
+            true,
+          );
           ctx.stroke();
           ctx.beginPath();
-          ctx.arc(symX + symSize * 0.5, symY - symSize * 0.5, symSize * 0.15, 0, Math.PI, true);
+          ctx.arc(
+            symX + symSize * 0.5,
+            symY - symSize * 0.5,
+            symSize * 0.15,
+            0,
+            Math.PI,
+            true,
+          );
           ctx.stroke();
         }
 
         // Symbol glow
-        const symGlow = ctx.createRadialGradient(symX, symY, 0, symX, symY, symSize * 2.5);
+        const symGlow = ctx.createRadialGradient(
+          symX,
+          symY,
+          0,
+          symX,
+          symY,
+          symSize * 2.5,
+        );
         symGlow.addColorStop(0, `rgba(255, 215, 0, 0.15)`);
         symGlow.addColorStop(1, "rgba(255, 200, 0, 0)");
         ctx.fillStyle = symGlow;
@@ -3540,8 +4282,10 @@ export function renderEffect(
         const pPhase = (time * 0.5 + p * 0.083) % 1;
         const pAngle = seededNoise(iSeed + p * 7) * Math.PI * 2;
         const pDist = auraRadius * (0.1 + seededNoise(iSeed + p * 11) * 0.5);
-        const pX = sx + Math.cos(pAngle) * pDist + Math.sin(time * 1.8 + p) * 5 * zoom;
-        const pY = sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - pPhase * 40 * zoom;
+        const pX =
+          sx + Math.cos(pAngle) * pDist + Math.sin(time * 1.8 + p) * 5 * zoom;
+        const pY =
+          sy + Math.sin(pAngle) * pDist * ISO_Y_RATIO - pPhase * 40 * zoom;
         const pA = alpha * (1 - pPhase) * 0.65;
         const pSize = (2 + (1 - pPhase) * 2.5) * zoom;
 
@@ -3575,13 +4319,28 @@ export function renderEffect(
 
       // Ground summoning circle — dark arcane base
       const baseA = alpha * 0.3;
-      const baseGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, summonRadius);
+      const baseGrad = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        summonRadius,
+      );
       baseGrad.addColorStop(0, `rgba(80, 50, 10, ${baseA})`);
       baseGrad.addColorStop(0.6, `rgba(60, 35, 5, ${baseA * 0.5})`);
       baseGrad.addColorStop(1, "rgba(40, 20, 0, 0)");
       ctx.fillStyle = baseGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, summonRadius, summonRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        summonRadius,
+        summonRadius * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Double summoning circle rings
@@ -3608,7 +4367,15 @@ export function renderEffect(
       ctx.setLineDash([6 * zoom, 3 * zoom]);
       ctx.lineDashOffset = -time * 40;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, summonRadius * 0.65, summonRadius * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        summonRadius * 0.65,
+        summonRadius * 0.65 * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -3622,8 +4389,14 @@ export function renderEffect(
         const a1 = (i / wardPoints) * Math.PI * 2 + wardRot;
         const a2 = ((i + 2) / wardPoints) * Math.PI * 2 + wardRot;
         ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(a1) * wardR, sy + Math.sin(a1) * wardR * ISO_Y_RATIO);
-        ctx.lineTo(sx + Math.cos(a2) * wardR, sy + Math.sin(a2) * wardR * ISO_Y_RATIO);
+        ctx.moveTo(
+          sx + Math.cos(a1) * wardR,
+          sy + Math.sin(a1) * wardR * ISO_Y_RATIO,
+        );
+        ctx.lineTo(
+          sx + Math.cos(a2) * wardR,
+          sy + Math.sin(a2) * wardR * ISO_Y_RATIO,
+        );
         ctx.stroke();
       }
 
@@ -3647,22 +4420,43 @@ export function renderEffect(
       for (let k = 0; k < knightCount; k++) {
         const pillarAngle = (k / knightCount) * Math.PI * 2 - Math.PI / 2;
         const pillarX = sx + Math.cos(pillarAngle) * summonRadius * 0.55;
-        const pillarY = sy + Math.sin(pillarAngle) * summonRadius * 0.55 * ISO_Y_RATIO;
+        const pillarY =
+          sy + Math.sin(pillarAngle) * summonRadius * 0.55 * ISO_Y_RATIO;
         const pillarH = 55 * zoom * Math.max(0, 1 - progress * 0.8);
         const pillarW = 10 * zoom;
 
         // Pillar glow halo at base
         const haloA = alpha * 0.4 * (1 - progress * 0.5);
-        const haloGrad = ctx.createRadialGradient(pillarX, pillarY, 0, pillarX, pillarY, pillarW * 2);
+        const haloGrad = ctx.createRadialGradient(
+          pillarX,
+          pillarY,
+          0,
+          pillarX,
+          pillarY,
+          pillarW * 2,
+        );
         haloGrad.addColorStop(0, `rgba(255, 200, 80, ${haloA})`);
         haloGrad.addColorStop(1, "rgba(255, 180, 50, 0)");
         ctx.fillStyle = haloGrad;
         ctx.beginPath();
-        ctx.ellipse(pillarX, pillarY, pillarW * 2, pillarW * 2 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          pillarX,
+          pillarY,
+          pillarW * 2,
+          pillarW * 2 * ISO_Y_RATIO,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
         // Energy pillar — layered gradient column
-        const pillarGrad = ctx.createLinearGradient(pillarX, pillarY, pillarX, pillarY - pillarH);
+        const pillarGrad = ctx.createLinearGradient(
+          pillarX,
+          pillarY,
+          pillarX,
+          pillarY - pillarH,
+        );
         pillarGrad.addColorStop(0, `rgba(255, 210, 100, ${alpha * 0.8})`);
         pillarGrad.addColorStop(0.3, `rgba(255, 180, 60, ${alpha * 0.5})`);
         pillarGrad.addColorStop(0.7, `rgba(255, 160, 30, ${alpha * 0.2})`);
@@ -3679,7 +4473,12 @@ export function renderEffect(
         ctx.fill();
 
         // Bright inner pillar
-        const innerGrad = ctx.createLinearGradient(pillarX, pillarY, pillarX, pillarY - pillarH);
+        const innerGrad = ctx.createLinearGradient(
+          pillarX,
+          pillarY,
+          pillarX,
+          pillarY - pillarH,
+        );
         innerGrad.addColorStop(0, `rgba(255, 240, 180, ${alpha * 0.6})`);
         innerGrad.addColorStop(0.5, `rgba(255, 220, 120, ${alpha * 0.3})`);
         innerGrad.addColorStop(1, "rgba(255, 200, 80, 0)");
@@ -3695,10 +4494,12 @@ export function renderEffect(
         // Pillar sparks rising
         for (let s = 0; s < 4; s++) {
           const sPhase = (time * 1.2 + s * 0.25 + k * 0.33) % 1;
-          const sX = pillarX + (seededNoise(kSeed + k * 7 + s * 11) - 0.5) * pillarW;
+          const sX =
+            pillarX + (seededNoise(kSeed + k * 7 + s * 11) - 0.5) * pillarW;
           const sY = pillarY - sPhase * pillarH;
           const sA = alpha * (1 - sPhase) * 0.6;
-          const sSize = (1.5 + seededNoise(kSeed + k * 13 + s * 17) * 1.5) * zoom;
+          const sSize =
+            (1.5 + seededNoise(kSeed + k * 13 + s * 17) * 1.5) * zoom;
 
           ctx.fillStyle = `rgba(255, 240, 180, ${sA})`;
           ctx.beginPath();
@@ -3717,9 +4518,19 @@ export function renderEffect(
           ctx.arc(pillarX, formY - 12 * zoom, 3 * zoom, 0, Math.PI * 2);
           ctx.fill();
           // Body
-          ctx.fillRect(pillarX - 3 * zoom, formY - 9 * zoom, 6 * zoom, 12 * zoom);
+          ctx.fillRect(
+            pillarX - 3 * zoom,
+            formY - 9 * zoom,
+            6 * zoom,
+            12 * zoom,
+          );
           // Shield arm
-          ctx.fillRect(pillarX - 6 * zoom, formY - 7 * zoom, 3 * zoom, 8 * zoom);
+          ctx.fillRect(
+            pillarX - 6 * zoom,
+            formY - 7 * zoom,
+            3 * zoom,
+            8 * zoom,
+          );
         }
       }
 
@@ -3728,7 +4539,10 @@ export function renderEffect(
         const mAngle = (m / 10) * Math.PI * 2 + time * 0.5;
         const mDist = summonRadius * (0.3 + Math.sin(time * 2 + m * 1.1) * 0.2);
         const mX = sx + Math.cos(mAngle) * mDist;
-        const mY = sy + Math.sin(mAngle) * mDist * ISO_Y_RATIO - Math.sin(time * 3 + m) * 5 * zoom;
+        const mY =
+          sy +
+          Math.sin(mAngle) * mDist * ISO_Y_RATIO -
+          Math.sin(time * 3 + m) * 5 * zoom;
         const mA = alpha * (0.3 + Math.sin(time * 4 + m * 0.7) * 0.2);
         const mSize = (1.5 + Math.sin(time * 5 + m) * 0.8) * zoom;
 
@@ -3759,7 +4573,15 @@ export function renderEffect(
       padGrad.addColorStop(1, "rgba(30, 25, 10, 0)");
       ctx.fillStyle = padGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, deployRadius, deployRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        deployRadius,
+        deployRadius * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Holographic construction grid — converging dashed rings
@@ -3790,11 +4612,16 @@ export function renderEffect(
         const bAngle = (b / beamCount) * Math.PI * 2 + time * 0.5;
         const outerR = deployRadius * (1 - progress * 0.3);
         const innerR = deployRadius * 0.1 * progress;
-        const bA = alpha * (0.4 + Math.sin(time * 3 + b * 1.1) * 0.15) * (1 - progress * 0.3);
+        const bA =
+          alpha *
+          (0.4 + Math.sin(time * 3 + b * 1.1) * 0.15) *
+          (1 - progress * 0.3);
 
         const beamGrad = ctx.createLinearGradient(
-          sx + Math.cos(bAngle) * outerR, sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
-          sx + Math.cos(bAngle) * innerR, sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO
+          sx + Math.cos(bAngle) * outerR,
+          sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
+          sx + Math.cos(bAngle) * innerR,
+          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO,
         );
         beamGrad.addColorStop(0, `rgba(255, 200, 50, 0)`);
         beamGrad.addColorStop(0.3, `rgba(255, 220, 80, ${bA * 0.5})`);
@@ -3804,8 +4631,14 @@ export function renderEffect(
         ctx.strokeStyle = beamGrad;
         ctx.lineWidth = (1.5 + Math.sin(time * 4 + b) * 0.5) * zoom;
         ctx.beginPath();
-        ctx.moveTo(sx + Math.cos(bAngle) * outerR, sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO);
-        ctx.lineTo(sx + Math.cos(bAngle) * innerR, sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO);
+        ctx.moveTo(
+          sx + Math.cos(bAngle) * outerR,
+          sy + Math.sin(bAngle) * outerR * ISO_Y_RATIO,
+        );
+        ctx.lineTo(
+          sx + Math.cos(bAngle) * innerR,
+          sy + Math.sin(bAngle) * innerR * ISO_Y_RATIO,
+        );
         ctx.stroke();
       }
 
@@ -3814,8 +4647,10 @@ export function renderEffect(
         const gAngle = (g / 6) * Math.PI * 2 + time * 1.5;
         const gDist = deployRadius * (0.5 - progress * 0.15);
         const gX = sx + Math.cos(gAngle) * gDist;
-        const gY = sy + Math.sin(gAngle) * gDist * ISO_Y_RATIO - progress * 5 * zoom;
-        const gA = alpha * (0.5 + Math.sin(time * 3 + g) * 0.2) * (1 - progress * 0.4);
+        const gY =
+          sy + Math.sin(gAngle) * gDist * ISO_Y_RATIO - progress * 5 * zoom;
+        const gA =
+          alpha * (0.5 + Math.sin(time * 3 + g) * 0.2) * (1 - progress * 0.4);
         const gSize = 3.5 * zoom;
         const gRot = time * 3 + g * 1.2;
 
@@ -3854,11 +4689,16 @@ export function renderEffect(
       for (let spark = 0; spark < 12; spark++) {
         const sAngle = seededNoise(tSeed + spark * 7) * Math.PI * 2;
         const sPhase = (time * 2 + spark * 0.2) % 1;
-        const sDist = deployRadius * (0.1 + sPhase * 0.5) * (1 - progress * 0.3);
+        const sDist =
+          deployRadius * (0.1 + sPhase * 0.5) * (1 - progress * 0.3);
         const sX = sx + Math.cos(sAngle) * sDist;
-        const sY = sy + Math.sin(sAngle) * sDist * ISO_Y_RATIO - sPhase * 15 * zoom;
+        const sY =
+          sy + Math.sin(sAngle) * sDist * ISO_Y_RATIO - sPhase * 15 * zoom;
         const sA = alpha * (1 - sPhase) * 0.6 * (1 - progress * 0.3);
-        const sSize = (1.5 + seededNoise(tSeed + spark * 11) * 2) * zoom * (1 - sPhase * 0.5);
+        const sSize =
+          (1.5 + seededNoise(tSeed + spark * 11) * 2) *
+          zoom *
+          (1 - sPhase * 0.5);
 
         // Spark glow
         const sGrad = ctx.createRadialGradient(sX, sY, 0, sX, sY, sSize * 2.5);
@@ -3874,22 +4714,45 @@ export function renderEffect(
       // Central construction core — bright build-up glow
       const coreScale = Math.min(1, progress * 2);
       const coreA = alpha * 0.5 * coreScale;
-      const coreGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, deployRadius * 0.25 * coreScale);
+      const coreGrad = ctx.createRadialGradient(
+        sx,
+        sy,
+        0,
+        sx,
+        sy,
+        deployRadius * 0.25 * coreScale,
+      );
       coreGrad.addColorStop(0, `rgba(255, 250, 220, ${coreA})`);
       coreGrad.addColorStop(0.4, `rgba(255, 220, 100, ${coreA * 0.6})`);
       coreGrad.addColorStop(1, "rgba(255, 200, 60, 0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.ellipse(sx, sy, deployRadius * 0.25 * coreScale, deployRadius * 0.25 * coreScale * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        sx,
+        sy,
+        deployRadius * 0.25 * coreScale,
+        deployRadius * 0.25 * coreScale * ISO_Y_RATIO,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Build progress ring — fills clockwise as progress advances
       if (progress > 0.1) {
-        const progressAngle = (progress - 0.1) / 0.9 * Math.PI * 2;
+        const progressAngle = ((progress - 0.1) / 0.9) * Math.PI * 2;
         ctx.strokeStyle = `rgba(100, 255, 100, ${alpha * 0.6})`;
         ctx.lineWidth = 2.5 * zoom;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, deployRadius * 0.35, deployRadius * 0.35 * ISO_Y_RATIO, 0, -Math.PI / 2, -Math.PI / 2 + progressAngle);
+        ctx.ellipse(
+          sx,
+          sy,
+          deployRadius * 0.35,
+          deployRadius * 0.35 * ISO_Y_RATIO,
+          0,
+          -Math.PI / 2,
+          -Math.PI / 2 + progressAngle,
+        );
         ctx.stroke();
       }
 
@@ -3907,11 +4770,18 @@ export function renderEffect(
         const flashP = progress / 0.3;
         const flashSize = launchSize * (1 + flashP * 0.5);
         const flashGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, flashSize,
+          screenPos.x,
+          screenPos.y,
+          0,
+          screenPos.x,
+          screenPos.y,
+          flashSize,
         );
         flashGrad.addColorStop(0, `rgba(255, 220, 100, ${(1 - flashP) * 0.9})`);
-        flashGrad.addColorStop(0.4, `rgba(255, 140, 40, ${(1 - flashP) * 0.6})`);
+        flashGrad.addColorStop(
+          0.4,
+          `rgba(255, 140, 40, ${(1 - flashP) * 0.6})`,
+        );
         flashGrad.addColorStop(1, "rgba(255, 60, 0, 0)");
         ctx.fillStyle = flashGrad;
         ctx.beginPath();
@@ -3956,12 +4826,30 @@ export function renderEffect(
 
         // Outer orange glow
         ctx.fillStyle = `rgba(255, 90, 10, ${fAlpha * 0.35})`;
-        drawOrganicBlobAt(ctx, sx, fY, fSize, fSize * 0.7, seed + 1, 0.2, blobPts);
+        drawOrganicBlobAt(
+          ctx,
+          sx,
+          fY,
+          fSize,
+          fSize * 0.7,
+          seed + 1,
+          0.2,
+          blobPts,
+        );
         ctx.fill();
 
         // Inner bright core
         ctx.fillStyle = `rgba(255, 220, 120, ${fAlpha * 0.7})`;
-        drawOrganicBlobAt(ctx, sx, fY, fSize * 0.5, fSize * 0.35, seed + 2, 0.18, blobPts);
+        drawOrganicBlobAt(
+          ctx,
+          sx,
+          fY,
+          fSize * 0.5,
+          fSize * 0.35,
+          seed + 2,
+          0.18,
+          blobPts,
+        );
         ctx.fill();
       }
 
@@ -3972,7 +4860,16 @@ export function renderEffect(
       if (rAlpha > 0.01) {
         ctx.strokeStyle = `rgba(255, 120, 30, ${rAlpha})`;
         ctx.lineWidth = Math.max(1, 3 * zoom * (1 - rp));
-        drawOrganicBlobAt(ctx, sx, sy, rRadius, rRadius * 0.5, seed + 3, 0.1, blobPts);
+        drawOrganicBlobAt(
+          ctx,
+          sx,
+          sy,
+          rRadius,
+          rRadius * 0.5,
+          seed + 3,
+          0.1,
+          blobPts,
+        );
         ctx.stroke();
       }
 
@@ -3982,11 +4879,21 @@ export function renderEffect(
         const dAngle = (d / debrisCount) * Math.PI * 2 + seed * 0.1;
         const dDist = sz * 0.3 * ip * (0.5 + (d % 3) * 0.3);
         const dx = sx + Math.cos(dAngle) * dDist;
-        const dy = sy + Math.sin(dAngle) * dDist * 0.5 - ip * (1 - ip) * 20 * zoom;
+        const dy =
+          sy + Math.sin(dAngle) * dDist * 0.5 - ip * (1 - ip) * 20 * zoom;
         const dSize = (2 + (d & 1)) * zoom * (1 - ip);
         if (dSize < 0.5) continue;
         ctx.fillStyle = `rgba(${110 + d * 12}, ${65 + d * 6}, ${32}, ${alpha * (1 - ip) * 0.65})`;
-        drawOrganicBlobAt(ctx, dx, dy, dSize, dSize * 0.8, seed + 10 + d, 0.25, 8);
+        drawOrganicBlobAt(
+          ctx,
+          dx,
+          dy,
+          dSize,
+          dSize * 0.8,
+          seed + 10 + d,
+          0.25,
+          8,
+        );
         ctx.fill();
       }
 
@@ -4001,7 +4908,16 @@ export function renderEffect(
           const smokeA = alpha * (1 - sp) * 0.25;
           if (smokeA < 0.01) continue;
           ctx.fillStyle = `rgba(75, 68, 58, ${smokeA})`;
-          drawOrganicBlobAt(ctx, smokeX, smokeY, smokeR, smokeR * 0.85, seed + 20 + s, 0.2, 10);
+          drawOrganicBlobAt(
+            ctx,
+            smokeX,
+            smokeY,
+            smokeR,
+            smokeR * 0.85,
+            seed + 20 + s,
+            0.2,
+            10,
+          );
           ctx.fill();
         }
       }
@@ -4024,7 +4940,16 @@ export function renderEffect(
       const lavaG = Math.floor(100 - puddleCool * 70);
       const lavaB = Math.floor(10 + puddleCool * 15);
       ctx.fillStyle = `rgba(${lavaR}, ${lavaG}, ${lavaB}, ${puddleAlpha * 0.5})`;
-      drawOrganicBlobAt(ctx, ex, ey, puddleR, puddleR * 0.45, eSeed, 0.15, eBlobPts);
+      drawOrganicBlobAt(
+        ctx,
+        ex,
+        ey,
+        puddleR,
+        puddleR * 0.45,
+        eSeed,
+        0.15,
+        eBlobPts,
+      );
       ctx.fill();
 
       // Inner bright core — hot magma center
@@ -4035,7 +4960,16 @@ export function renderEffect(
         drawOrganicBlobAt(ctx, ex, ey, coreR, coreR * 0.45, eSeed + 1, 0.2, 10);
         ctx.fill();
         ctx.fillStyle = `rgba(255, 255, 180, ${coreAlpha * 0.4})`;
-        drawOrganicBlobAt(ctx, ex, ey, coreR * 0.4, coreR * 0.18, eSeed + 2, 0.15, 8);
+        drawOrganicBlobAt(
+          ctx,
+          ex,
+          ey,
+          coreR * 0.4,
+          coreR * 0.18,
+          eSeed + 2,
+          0.15,
+          8,
+        );
         ctx.fill();
       }
 
@@ -4047,7 +4981,10 @@ export function renderEffect(
           const sAngle = (ls / splatCount) * Math.PI * 2 + eSeed * 0.1;
           const sDist = esz * 0.35 * splatP * (0.6 + (ls % 3) * 0.25);
           const sx = ex + Math.cos(sAngle) * sDist;
-          const sy = ey + Math.sin(sAngle) * sDist * 0.5 - splatP * (1 - splatP) * 14 * zoom;
+          const sy =
+            ey +
+            Math.sin(sAngle) * sDist * 0.5 -
+            splatP * (1 - splatP) * 14 * zoom;
           const sSize = (1.8 + (ls & 1) * 1.2) * zoom * (1 - splatP);
           if (sSize < 0.4) continue;
           const sGlow = ls % 3 === 0 ? 255 : 200;
@@ -4065,7 +5002,16 @@ export function renderEffect(
       if (heatAlpha > 0.01) {
         ctx.strokeStyle = `rgba(255, 120, 20, ${heatAlpha})`;
         ctx.lineWidth = Math.max(1, 2.5 * zoom * (1 - heatP));
-        drawOrganicBlobAt(ctx, ex, ey, heatR, heatR * 0.45, eSeed + 5, 0.1, eBlobPts);
+        drawOrganicBlobAt(
+          ctx,
+          ex,
+          ey,
+          heatR,
+          heatR * 0.45,
+          eSeed + 5,
+          0.1,
+          eBlobPts,
+        );
         ctx.stroke();
       }
 
@@ -4077,7 +5023,8 @@ export function renderEffect(
           const sparkAngle = (sp / 5) * Math.PI * 2 + eSeed * 0.3;
           const sparkDrift = Math.sin(spT * 4 + sp) * 5 * zoom;
           const sparkX = ex + Math.cos(sparkAngle) * esz * 0.15 + sparkDrift;
-          const sparkY = ey - spT * 30 * zoom + Math.sin(sparkAngle) * esz * 0.08;
+          const sparkY =
+            ey - spT * 30 * zoom + Math.sin(sparkAngle) * esz * 0.08;
           const sparkA = alpha * (1 - spT) * 0.6;
           if (sparkA < 0.01) continue;
           const sparkSize = (1.5 + sp * 0.4) * zoom * (1 - spT * 0.5);
@@ -4099,7 +5046,16 @@ export function renderEffect(
           const smokeA = alpha * (1 - smT) * 0.2;
           if (smokeA < 0.01) continue;
           ctx.fillStyle = `rgba(60, 45, 30, ${smokeA})`;
-          drawOrganicBlobAt(ctx, smokeX, smokeY, smokeR, smokeR * 0.8, eSeed + 10 + sm, 0.2, 10);
+          drawOrganicBlobAt(
+            ctx,
+            smokeX,
+            smokeY,
+            smokeR,
+            smokeR * 0.8,
+            eSeed + 10 + sm,
+            0.2,
+            10,
+          );
           ctx.fill();
         }
       }
@@ -4113,8 +5069,12 @@ export function renderEffect(
 
       // Ground fire glow
       const fireGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, emberSize,
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        emberSize,
       );
       const pulse = Math.sin(time * 4) * 0.15 + 0.5;
       fireGrad.addColorStop(0, `rgba(255, 120, 20, ${alpha * pulse})`);
@@ -4122,19 +5082,33 @@ export function renderEffect(
       fireGrad.addColorStop(1, "rgba(200, 20, 0, 0)");
       ctx.fillStyle = fireGrad;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, emberSize, emberSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        emberSize,
+        emberSize * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Individual ember sparks
       for (let e = 0; e < 6; e++) {
-        const eAngle = time * 2 + e * Math.PI / 3;
+        const eAngle = time * 2 + (e * Math.PI) / 3;
         const eR = emberSize * 0.4 * (0.5 + Math.sin(eAngle * 2) * 0.3);
         const ex = screenPos.x + Math.cos(eAngle) * eR;
         const ey = screenPos.y + Math.sin(eAngle) * eR * 0.5;
         const eAlpha = alpha * (0.4 + Math.sin(eAngle * 3) * 0.3);
         ctx.fillStyle = `rgba(255, ${150 + Math.floor(Math.sin(eAngle) * 60)}, 30, ${eAlpha})`;
         ctx.beginPath();
-        ctx.arc(ex, ey - Math.abs(Math.sin(eAngle * 1.5)) * 4 * zoom, 2 * zoom, 0, Math.PI * 2);
+        ctx.arc(
+          ex,
+          ey - Math.abs(Math.sin(eAngle * 1.5)) * 4 * zoom,
+          2 * zoom,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       break;
@@ -4211,7 +5185,12 @@ export type { RgbColor, DrawRoadEndFogParams } from "./effects/fog";
 export { renderTowerDebuffEffects, renderUnitStatusEffects } from "./effects";
 
 // Re-export unified inspect indicator
-export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig, type InspectRenderPass } from "./effects/inspectIndicator";
+export {
+  renderInspectIndicator,
+  renderUnitInspectIndicator,
+  type InspectIndicatorConfig,
+  type InspectRenderPass,
+} from "./effects/inspectIndicator";
 
 // Re-export UI rendering functions for troop movement
 export {

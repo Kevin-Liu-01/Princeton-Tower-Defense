@@ -18,10 +18,7 @@ import {
   SPELL_TROOP_RANGE,
 } from "../../constants";
 import { distance, generateId } from "../../utils";
-import {
-  acquireParticle,
-  enforceParticleCap,
-} from "../../rendering";
+import { acquireParticle, enforceParticleCap } from "../../rendering";
 import { getPerformanceSettings } from "../../rendering/performance";
 import {
   getHexWardGhostProfile,
@@ -30,7 +27,10 @@ import {
   getHexWardGhostStrengthFromTroop,
   isHexWardGhostHarvestActive,
 } from "../../game/status";
-import { findClosestRoadPoint, getFacingRightFromDelta } from "../../game/movement";
+import {
+  findClosestRoadPoint,
+  getFacingRightFromDelta,
+} from "../../game/movement";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -75,7 +75,10 @@ export function addParticlesImpl(
   pos: Position,
   type: Particle["type"],
   count: number,
-  refs: Pick<ParticleCombatRefs, "lastParticleSpawn" | "pendingParticleBurstsRef" | "entityCountsRef">,
+  refs: Pick<
+    ParticleCombatRefs,
+    "lastParticleSpawn" | "pendingParticleBurstsRef" | "entityCountsRef"
+  >,
 ): void {
   const now = Date.now();
   const posKey = `${Math.round(pos.x / 20)}_${Math.round(pos.y / 20)}_${type}`;
@@ -93,7 +96,8 @@ export function addParticlesImpl(
   }
 
   const counts = refs.entityCountsRef.current;
-  const pressure = counts.enemies + counts.projectiles * 0.8 + counts.effects * 0.6;
+  const pressure =
+    counts.enemies + counts.projectiles * 0.8 + counts.effects * 0.6;
   const pressureScale =
     pressure > 260
       ? 0.2
@@ -133,14 +137,18 @@ export function addParticlesImpl(
 // ── flushQueuedParticles impl ────────────────────────────────────────────────
 
 export function flushQueuedParticlesImpl(
-  refs: Pick<ParticleCombatRefs, "pendingParticleBurstsRef" | "entityCountsRef">,
+  refs: Pick<
+    ParticleCombatRefs,
+    "pendingParticleBurstsRef" | "entityCountsRef"
+  >,
 ): void {
   const bursts = refs.pendingParticleBurstsRef.current;
   if (bursts.length === 0) return;
   refs.pendingParticleBurstsRef.current = [];
 
   const counts = refs.entityCountsRef.current;
-  const pressure = counts.enemies + counts.projectiles * 0.8 + counts.effects * 0.6;
+  const pressure =
+    counts.enemies + counts.projectiles * 0.8 + counts.effects * 0.6;
   const budget =
     pressure > 260 ? 24 : pressure > 180 ? 36 : pressure > 120 ? 56 : 84;
   let remaining = budget;
@@ -174,7 +182,13 @@ export function flushQueuedParticlesImpl(
   }
 
   const dynamicCap =
-    pressure > 260 ? 180 : pressure > 180 ? 220 : pressure > 120 ? 260 : MAX_PARTICLES;
+    pressure > 260
+      ? 180
+      : pressure > 180
+        ? 220
+        : pressure > 120
+          ? 260
+          : MAX_PARTICLES;
   enforceParticleCap(dynamicCap);
 }
 
@@ -184,14 +198,20 @@ export function awardBountyImpl(
   baseBounty: number,
   hasGoldAura: boolean,
   sourceId: string | undefined,
-  actions: Pick<ParticleCombatActions, "setBountyIncomeEvents" | "addPawPoints" | "setPaydayPawPointsEarned">,
+  actions: Pick<
+    ParticleCombatActions,
+    "setBountyIncomeEvents" | "addPawPoints" | "setPaydayPawPointsEarned"
+  >,
 ): number {
   const goldBonus = hasGoldAura ? Math.floor(baseBounty * 0.5) : 0;
   const totalBounty = baseBounty + goldBonus;
   const eventId = `bounty-${Date.now()}-${sourceId || Math.random().toString(36).slice(2)}`;
   actions.setBountyIncomeEvents((prev) => {
     if (prev.some((e) => e.id === eventId)) return prev;
-    return [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }];
+    return [
+      ...prev,
+      { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura },
+    ];
   });
   actions.addPawPoints(totalBounty);
   if (hasGoldAura && goldBonus > 0) {
@@ -209,8 +229,14 @@ export function spawnHexWardGhostTroopImpl(
   hexWardEndTime: number | null,
   activeWaveSpawnPaths: string[],
   selectedMap: string,
-  refs: Pick<ParticleCombatRefs, "hexWardRaisesRemainingRef" | "handledHexGhostSourceIdsRef">,
-  actions: Pick<ParticleCombatActions, "addTroopEntities" | "setHexWardRaisesRemaining">,
+  refs: Pick<
+    ParticleCombatRefs,
+    "hexWardRaisesRemainingRef" | "handledHexGhostSourceIdsRef"
+  >,
+  actions: Pick<
+    ParticleCombatActions,
+    "addTroopEntities" | "setHexWardRaisesRemaining"
+  >,
   addParticles: (pos: Position, type: Particle["type"], count: number) => void,
 ): void {
   const now = Date.now();
@@ -222,7 +248,11 @@ export function spawnHexWardGhostTroopImpl(
   actions.setHexWardRaisesRemaining(refs.hexWardRaisesRemainingRef.current);
 
   const profile = getHexWardGhostProfile(strength);
-  const anchorPos = findClosestRoadPoint(deathPos, activeWaveSpawnPaths, selectedMap);
+  const anchorPos = findClosestRoadPoint(
+    deathPos,
+    activeWaveSpawnPaths,
+    selectedMap,
+  );
   const shouldMoveToAnchor = distance(deathPos, anchorPos) > 18;
   const ghostTroop: Troop = {
     id: generateId("troop"),
@@ -351,9 +381,16 @@ export function onEnemyKillImpl(
   particleCount: number,
   deathCause: DeathCause,
   selectedMap: string,
-  refs: Pick<ParticleCombatRefs, "handledEnemyIdsRef" | "pendingDeathEffectsRef" | "gameEventLogRef">,
+  refs: Pick<
+    ParticleCombatRefs,
+    "handledEnemyIdsRef" | "pendingDeathEffectsRef" | "gameEventLogRef"
+  >,
   actions: Pick<ParticleCombatActions, "addEffectEntity">,
-  awardBounty: (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => number,
+  awardBounty: (
+    baseBounty: number,
+    hasGoldAura: boolean,
+    sourceId?: string,
+  ) => number,
   raiseHexWardGhostFromEnemyDeath: (enemy: Enemy, pos: Position) => void,
   addParticles: (pos: Position, type: Particle["type"], count: number) => void,
 ): void {
@@ -390,7 +427,8 @@ export function onEnemyKillImpl(
       deathCause,
       regionGroundColors: regionColors,
     };
-    (deathEffect as Effect & { _spawnedAt: number })._spawnedAt = performance.now();
+    (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
+      performance.now();
     refs.pendingDeathEffectsRef.current.push(deathEffect);
     actions.addEffectEntity(deathEffect);
   }

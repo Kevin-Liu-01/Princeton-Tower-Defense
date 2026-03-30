@@ -1463,9 +1463,10 @@ function renderPhoenixFlame(
     const fy = Math.sin(flameAngle) * flameLen * 0.7;
     const flameAlpha = 0.4 + Math.sin(time * 8 + i * 1.3) * 0.15;
 
-    ctx.fillStyle = i % 2 === 0
-      ? `rgba(255, 200, 60, ${flameAlpha})`
-      : `rgba(255, 120, 30, ${flameAlpha})`;
+    ctx.fillStyle =
+      i % 2 === 0
+        ? `rgba(255, 200, 60, ${flameAlpha})`
+        : `rgba(255, 120, 30, ${flameAlpha})`;
     ctx.beginPath();
     ctx.arc(fx, fy, size * 0.25, 0, Math.PI * 2);
     ctx.fill();
@@ -1475,7 +1476,10 @@ function renderPhoenixFlame(
   const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.7 * pulse);
   coreGrad.addColorStop(0, "#fffbe0");
   coreGrad.addColorStop(0.2, "#ffdd70");
-  coreGrad.addColorStop(0.5, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(
+    0.5,
+    `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`,
+  );
   coreGrad.addColorStop(0.8, `rgb(200, 60, 10)`);
   coreGrad.addColorStop(1, `rgba(120, 30, 0, 0.5)`);
   ctx.fillStyle = coreGrad;
@@ -1521,7 +1525,10 @@ function renderVineBarb(
 
   // Main vine tendril body
   const vineGrad = ctx.createLinearGradient(len * 0.5, 0, -len * 0.5, 0);
-  vineGrad.addColorStop(0, `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.9)`);
+  vineGrad.addColorStop(
+    0,
+    `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, 0.9)`,
+  );
   vineGrad.addColorStop(0.6, `rgba(16, 185, 129, 0.7)`);
   vineGrad.addColorStop(1, `rgba(52, 211, 153, 0.3)`);
 
@@ -1531,9 +1538,12 @@ function renderVineBarb(
   ctx.beginPath();
   ctx.moveTo(-len * 0.5, 0);
   ctx.bezierCurveTo(
-    -len * 0.15, Math.sin(time * 12) * 3 * zoom,
-    len * 0.15, Math.sin(time * 12 + 1.5) * -3 * zoom,
-    len * 0.5, 0,
+    -len * 0.15,
+    Math.sin(time * 12) * 3 * zoom,
+    len * 0.15,
+    Math.sin(time * 12 + 1.5) * -3 * zoom,
+    len * 0.5,
+    0,
   );
   ctx.stroke();
 
@@ -1556,12 +1566,27 @@ function renderVineBarb(
 
     ctx.fillStyle = `rgba(74, 222, 128, ${0.5 + Math.sin(time * 6 + i) * 0.2})`;
     ctx.beginPath();
-    ctx.ellipse(lx, ly + side * thickness, leafSize, leafSize * 0.4, side * 0.5 + time * 2, 0, Math.PI * 2);
+    ctx.ellipse(
+      lx,
+      ly + side * thickness,
+      leafSize,
+      leafSize * 0.4,
+      side * 0.5 + time * 2,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
   // Leading glow
-  const tipGlow = ctx.createRadialGradient(-len * 0.5, 0, 0, -len * 0.5, 0, 5 * zoom);
+  const tipGlow = ctx.createRadialGradient(
+    -len * 0.5,
+    0,
+    0,
+    -len * 0.5,
+    0,
+    5 * zoom,
+  );
   tipGlow.addColorStop(0, `rgba(167, 243, 208, 0.5)`);
   tipGlow.addColorStop(1, `rgba(52, 211, 153, 0)`);
   ctx.fillStyle = tipGlow;

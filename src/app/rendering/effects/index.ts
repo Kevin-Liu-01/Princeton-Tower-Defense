@@ -15,6 +15,7 @@ import { worldToScreen } from "../../utils";
 import { ISO_Y_RATIO } from "../../constants";
 import { drawLightningBolt, drawExplosion, type LightningColorScheme } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { statusEffectAlpha } from "./constants";
 import { renderEnemyDeath } from "./deathAnimations";
 import {
   getFlavoredBurnRenderer,
@@ -3430,7 +3431,7 @@ export function renderTowerDebuffEffects(
 
   for (const debuff of activeDebuffs) {
     const remaining = (debuff.until - now) / 1000;
-    const alpha = Math.min(1, remaining / 2); // Fade out in last 2 seconds
+    const alpha = statusEffectAlpha(debuff.until - now);
 
     // Determine debuff-specific colors (all muted/dark for sad effect)
     let primaryColor: DebuffColor;
@@ -3859,41 +3860,88 @@ export function renderUnitStatusEffects(
 
   // Burning effect
   if (unit.burning && unit.burnUntil && unit.burnUntil > now) {
-    const remaining = (unit.burnUntil - now) / 1000;
-    const alpha = Math.min(1, remaining / 2);
+    const alpha = statusEffectAlpha(unit.burnUntil - now);
 
     const flavorRenderer = getFlavoredBurnRenderer(unit.burnFlavor);
     if (flavorRenderer) {
       flavorRenderer(ctx, screenPos, zoom, alpha, now);
     } else {
       const flicker = Math.sin(now / 80) * 0.15 + 0.85;
+      const radius = baseSize * zoom * 1.2;
 
-      // Orange underglow beneath the unit
+      // Outer heat haze glow
+      const hazeGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, radius * 0.4,
+        screenPos.x, screenPos.y, radius * 1.3,
+      );
+      hazeGrad.addColorStop(0, `rgba(255, 60, 0, ${alpha * 0.08 * flicker})`);
+      hazeGrad.addColorStop(1, "rgba(255, 60, 0, 0)");
+      ctx.fillStyle = hazeGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, radius * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner orange underglow
       const glowGrad = ctx.createRadialGradient(
         screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, baseSize * zoom * 1.1,
+        screenPos.x, screenPos.y, radius,
       );
-      glowGrad.addColorStop(0, `rgba(255, 140, 30, ${alpha * 0.25 * flicker})`);
-      glowGrad.addColorStop(0.5, `rgba(255, 80, 0, ${alpha * 0.12})`);
+      glowGrad.addColorStop(0, `rgba(255, 160, 40, ${alpha * 0.3 * flicker})`);
+      glowGrad.addColorStop(0.45, `rgba(255, 90, 10, ${alpha * 0.18})`);
       glowGrad.addColorStop(1, "rgba(200, 40, 0, 0)");
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
+      ctx.arc(screenPos.x, screenPos.y, radius, 0, Math.PI * 2);
       ctx.fill();
 
       // Rising flame particles with teardrop shapes
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 7; i++) {
         const seed = (now * 0.003 + i * 1.37) % 1;
-        const fireX = screenPos.x + Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.5;
-        const fireY = screenPos.y - seed * baseSize * zoom * 1.4;
-        const fireSize = (2.5 + (i % 3)) * zoom * (1 - seed * 0.6);
-        const fireAlpha = alpha * (1 - seed) * flicker;
+        const fireX = screenPos.x + Math.sin(now * 0.005 + i * 2.1) * baseSize * zoom * 0.55;
+        const fireY = screenPos.y - seed * baseSize * zoom * 1.6;
+        const fireSize = (2.8 + (i % 3)) * zoom * (1 - seed * 0.5);
+        const fireAlpha = alpha * (1 - seed * 0.7) * flicker;
 
+        // Outer dark-red flame layer
+        ctx.fillStyle = `rgba(200, ${50 - Math.floor(seed * 30)}, 10, ${fireAlpha * 0.6})`;
+        ctx.beginPath();
+        ctx.moveTo(fireX, fireY - fireSize * 1.8);
+        ctx.quadraticCurveTo(fireX + fireSize * 1.15, fireY, fireX, fireY + fireSize * 0.5);
+        ctx.quadraticCurveTo(fireX - fireSize * 1.15, fireY, fireX, fireY - fireSize * 1.8);
+        ctx.fill();
+
+        // Mid orange-yellow flame layer
         ctx.fillStyle = `rgba(255, ${180 - Math.floor(seed * 120)}, ${60 - Math.floor(seed * 50)}, ${fireAlpha})`;
         ctx.beginPath();
         ctx.moveTo(fireX, fireY - fireSize * 1.5);
         ctx.quadraticCurveTo(fireX + fireSize, fireY, fireX, fireY + fireSize * 0.5);
         ctx.quadraticCurveTo(fireX - fireSize, fireY, fireX, fireY - fireSize * 1.5);
+        ctx.fill();
+
+        // Bright inner core
+        if (i < 4) {
+          const coreAlpha = fireAlpha * 0.7;
+          ctx.fillStyle = `rgba(255, 240, 160, ${coreAlpha})`;
+          ctx.beginPath();
+          ctx.moveTo(fireX, fireY - fireSize * 0.9);
+          ctx.quadraticCurveTo(fireX + fireSize * 0.4, fireY, fireX, fireY + fireSize * 0.3);
+          ctx.quadraticCurveTo(fireX - fireSize * 0.4, fireY, fireX, fireY - fireSize * 0.9);
+          ctx.fill();
+        }
+      }
+
+      // Rising ember sparks
+      for (let i = 0; i < 4; i++) {
+        const emberSeed = (now * 0.0025 + i * 0.91) % 1;
+        const drift = Math.sin(now * 0.004 + i * 2.5) * baseSize * zoom * 0.4;
+        const emberX = screenPos.x + drift;
+        const emberY = screenPos.y - emberSeed * baseSize * zoom * 1.8;
+        const emberSize = (1.6 - emberSeed * 0.9) * zoom;
+        const emberAlpha = alpha * (1 - emberSeed * 0.6) * flicker;
+
+        ctx.fillStyle = `rgba(255, ${220 - Math.floor(emberSeed * 100)}, ${80 - Math.floor(emberSeed * 60)}, ${emberAlpha})`;
+        ctx.beginPath();
+        ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -3901,37 +3949,52 @@ export function renderUnitStatusEffects(
 
   // Slowed/Frozen effect
   if (unit.slowed && unit.slowUntil && unit.slowUntil > now) {
-    const remaining = (unit.slowUntil - now) / 1000;
-    const alpha = Math.min(1, remaining / 2);
+    const alpha = statusEffectAlpha(unit.slowUntil - now);
 
     const slowFlavorRenderer = getFlavoredSlowRenderer(unit.slowFlavor);
     if (slowFlavorRenderer) {
       slowFlavorRenderer(ctx, screenPos, zoom, alpha, now);
     } else {
       const frostPulse = Math.sin(now / 300) * 0.2 + 0.8;
+      const radius = baseSize * zoom * 1.2;
 
+      // Outer cold mist halo
+      const mistGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, radius * 0.5,
+        screenPos.x, screenPos.y, radius * 1.3,
+      );
+      mistGrad.addColorStop(0, `rgba(180, 220, 255, ${alpha * 0.1 * frostPulse})`);
+      mistGrad.addColorStop(1, "rgba(130, 180, 255, 0)");
+      ctx.fillStyle = mistGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, radius * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner frost glow
       const frostGrad = ctx.createRadialGradient(
         screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, baseSize * zoom * 1.1,
+        screenPos.x, screenPos.y, radius,
       );
-      frostGrad.addColorStop(0, `rgba(147, 197, 253, ${alpha * 0.3 * frostPulse})`);
-      frostGrad.addColorStop(0.5, `rgba(96, 165, 250, ${alpha * 0.15})`);
+      frostGrad.addColorStop(0, `rgba(170, 210, 255, ${alpha * 0.35 * frostPulse})`);
+      frostGrad.addColorStop(0.4, `rgba(120, 180, 250, ${alpha * 0.2})`);
       frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
       ctx.fillStyle = frostGrad;
       ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 1.1, 0, Math.PI * 2);
+      ctx.arc(screenPos.x, screenPos.y, radius, 0, Math.PI * 2);
       ctx.fill();
 
+      // Orbiting ice crystals (diamonds) with sparkle
       ctx.lineWidth = 1.2 * zoom;
-      for (let i = 0; i < 4; i++) {
-        const crystalAngle = (i / 4) * Math.PI * 2 + now / 800;
-        const crystalDist = baseSize * zoom * 0.75;
+      for (let i = 0; i < 5; i++) {
+        const crystalAngle = (i / 5) * Math.PI * 2 + now / 700;
+        const crystalDist = baseSize * zoom * 0.8;
         const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
         const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO - baseSize * zoom * 0.3;
-        const cSize = 3.5 * zoom;
+        const cSize = (3.5 + Math.sin(now / 200 + i * 1.5) * 0.8) * zoom;
+        const sparkle = 0.8 + Math.sin(now / 150 + i * 2.3) * 0.2;
 
-        ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.4})`;
-        ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.7})`;
+        ctx.fillStyle = `rgba(210, 235, 255, ${alpha * 0.5 * sparkle})`;
+        ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.8})`;
         ctx.beginPath();
         ctx.moveTo(cx, cy - cSize);
         ctx.lineTo(cx + cSize * 0.7, cy);
@@ -3942,20 +4005,35 @@ export function renderUnitStatusEffects(
         ctx.stroke();
       }
 
-      ctx.strokeStyle = `rgba(180, 215, 255, ${alpha * 0.3 * frostPulse})`;
+      // Animated frost ring
+      ctx.strokeStyle = `rgba(180, 215, 255, ${alpha * 0.4 * frostPulse})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.setLineDash([3 * zoom, 3 * zoom]);
       ctx.beginPath();
       ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
+
+      // Floating snowflake motes
+      for (let i = 0; i < 3; i++) {
+        const moteSeed = (now * 0.0015 + i * 1.2) % 1;
+        const moteAngle = now * 0.003 + i * 2.1;
+        const moteDist = baseSize * zoom * (0.3 + moteSeed * 0.6);
+        const mx = screenPos.x + Math.cos(moteAngle) * moteDist;
+        const my = screenPos.y - moteSeed * baseSize * zoom * 0.8;
+        const moteAlpha = alpha * (0.6 + Math.sin(now / 180 + i) * 0.3);
+
+        ctx.fillStyle = `rgba(220, 240, 255, ${moteAlpha})`;
+        ctx.beginPath();
+        ctx.arc(mx, my, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   }
 
   // Poisoned effect
   if (unit.poisoned && unit.poisonUntil && unit.poisonUntil > now) {
-    const remaining = (unit.poisonUntil - now) / 1000;
-    const alpha = Math.min(1, remaining / 2);
+    const alpha = statusEffectAlpha(unit.poisonUntil - now);
 
     const poisonFlavorRenderer = getFlavoredPoisonRenderer(unit.poisonFlavor);
     if (poisonFlavorRenderer) {
@@ -3998,8 +4076,7 @@ export function renderUnitStatusEffects(
 
   // Stunned effect
   if (unit.stunned && unit.stunUntil && unit.stunUntil > now) {
-    const remaining = (unit.stunUntil - now) / 1000;
-    const alpha = Math.min(1, remaining / 2);
+    const alpha = statusEffectAlpha(unit.stunUntil - now);
 
     const stunFlavorRenderer = getFlavoredStunRenderer(unit.stunFlavor);
     if (stunFlavorRenderer) {

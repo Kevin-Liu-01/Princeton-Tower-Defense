@@ -340,7 +340,8 @@ export function renderEnemy(
 
   const pressure = getScenePressure();
   const lowDetailFx = enemyDensityHint > 90 || pressure.skipDecorativeEffects;
-  const minimalDetailFx = enemyDensityHint > 160 || pressure.skipNonEssentialParticles;
+  const minimalDetailFx =
+    enemyDensityHint > 160 || pressure.skipNonEssentialParticles;
   const flashProfile = getEnemyFlashProfile(enemy.type, eData.category);
   const damageFlashIntensity =
     enemy.damageFlash > 0
@@ -529,149 +530,127 @@ export function renderEnemy(
 
   // Frozen effect
   if (enemy.frozen) {
-    if (minimalDetailFx) {
-      // Cheap tint-only frozen indicator
-      ctx.fillStyle = "rgba(150, 215, 255, 0.28)";
+    const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
+    ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Animated frost ring
+    ctx.save();
+    ctx.translate(screenPos.x, drawY);
+    ctx.rotate(time * 0.3);
+    ctx.strokeStyle = `rgba(100, 200, 255, ${0.85 + Math.sin(time * 3) * 0.15})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([5 * zoom, 3 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Crystal shards
+    const crystalCount = 6;
+    const crystalRotation = time * 0.5;
+    for (let i = 0; i < crystalCount; i++) {
+      const angle = (i / crystalCount) * Math.PI * 2 + crystalRotation;
+      const dist = size * (0.5 + Math.sin(time * 1.2 + i * 0.8) * 0.08);
+      const cx = screenPos.x + Math.cos(angle) * dist;
+      const cy = drawY + Math.sin(angle) * dist * ISO_Y_RATIO;
+      const cSize = (3.5 + Math.sin(i * 1.3 + time) * 1.5) * zoom;
+      const sparkle = 0.8 + Math.sin(time * 5 + i * 2.1) * 0.2;
+
+      ctx.fillStyle = `rgba(220, 245, 255, ${sparkle})`;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.moveTo(cx, cy - cSize * 1.5);
+      ctx.lineTo(cx + cSize * 0.5, cy - cSize * 0.3);
+      ctx.lineTo(cx + cSize * 0.5, cy + cSize * 0.4);
+      ctx.lineTo(cx, cy + cSize * 0.9);
+      ctx.lineTo(cx - cSize * 0.5, cy + cSize * 0.4);
+      ctx.lineTo(cx - cSize * 0.5, cy - cSize * 0.3);
+      ctx.closePath();
       ctx.fill();
-    } else {
-      const shellPulse = 0.25 + Math.sin(time * 2) * 0.08;
-      ctx.fillStyle = `rgba(180, 230, 255, ${shellPulse})`;
+    }
+
+    // Floating ice motes
+    const moteCount = 5;
+    for (let i = 0; i < moteCount; i++) {
+      const pAngle = time * 1.5 + i * 1.26;
+      const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
+      const px = screenPos.x + Math.cos(pAngle) * pDist;
+      const py = drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
+      const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
+      ctx.fillStyle = `rgba(220, 245, 255, ${moteAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.arc(px, py, 2.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
-
-      ctx.fillStyle = `rgba(150, 215, 255, ${shellPulse + 0.1})`;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.65, size * 0.65 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (!lowDetailFx) {
-        // Animated frost ring
-        ctx.save();
-        ctx.translate(screenPos.x, drawY);
-        ctx.rotate(time * 0.3);
-        ctx.strokeStyle = `rgba(100, 200, 255, ${0.85 + Math.sin(time * 3) * 0.15})`;
-        ctx.lineWidth = 2 * zoom;
-        ctx.setLineDash([5 * zoom, 3 * zoom]);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, size * 0.78, size * 0.78 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        // Crystal shards (reduced from 6 to 4 under medium pressure)
-        const crystalCount = pressure.forceSimplifiedGradients ? 3 : 6;
-        const crystalRotation = time * 0.5;
-        for (let i = 0; i < crystalCount; i++) {
-          const angle = (i / crystalCount) * Math.PI * 2 + crystalRotation;
-          const dist = size * (0.5 + Math.sin(time * 1.2 + i * 0.8) * 0.08);
-          const cx = screenPos.x + Math.cos(angle) * dist;
-          const cy = drawY + Math.sin(angle) * dist * ISO_Y_RATIO;
-          const cSize = (3.5 + Math.sin(i * 1.3 + time) * 1.5) * zoom;
-          const sparkle = 0.8 + Math.sin(time * 5 + i * 2.1) * 0.2;
-
-          ctx.fillStyle = `rgba(220, 245, 255, ${sparkle})`;
-          ctx.beginPath();
-          ctx.moveTo(cx, cy - cSize * 1.5);
-          ctx.lineTo(cx + cSize * 0.5, cy - cSize * 0.3);
-          ctx.lineTo(cx + cSize * 0.5, cy + cSize * 0.4);
-          ctx.lineTo(cx, cy + cSize * 0.9);
-          ctx.lineTo(cx - cSize * 0.5, cy + cSize * 0.4);
-          ctx.lineTo(cx - cSize * 0.5, cy - cSize * 0.3);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        // Floating ice motes (reduced from 5 to 2 under medium pressure)
-        const moteCount = pressure.forceSimplifiedGradients ? 2 : 5;
-        for (let i = 0; i < moteCount; i++) {
-          const pAngle = time * 1.5 + i * 1.26;
-          const pDist = size * (0.3 + Math.sin(time * 1.2 + i) * 0.15);
-          const px = screenPos.x + Math.cos(pAngle) * pDist;
-          const py = drawY - size * 0.3 + Math.sin(pAngle * 0.7 + time) * size * 0.2;
-          const moteAlpha = 0.5 + Math.sin(time * 4 + i * 1.7) * 0.3;
-          ctx.fillStyle = `rgba(220, 245, 255, ${moteAlpha})`;
-          ctx.beginPath();
-          ctx.arc(px, py, 2.5 * zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
     }
   }
 
   // Burning effect
   if (enemy.burning) {
-    if (minimalDetailFx) {
-      // Cheap tint-only burn indicator
-      ctx.fillStyle = `rgba(255, 80, 10, 0.22)`;
+    // Fire ring at base
+    const ringPulse = 0.35 + Math.sin(time * 8) * 0.15;
+    ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Flames — always full quality with 3 layers
+    const flameCount = 5;
+    for (let i = 0; i < flameCount; i++) {
+      const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
+      const flameX = screenPos.x + flameOffset + (i - Math.floor(flameCount / 2)) * size * 0.1;
+      const baseY = drawY - size * 0.1;
+      const flameHeight = (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
+      const flameWidth = (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
+      const flicker = Math.sin(time * 12 + i * 3) * 0.12;
+
+      // Outer dark-red layer
+      ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.moveTo(flameX, baseY);
+      ctx.quadraticCurveTo(flameX - flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY - flameHeight);
+      ctx.quadraticCurveTo(flameX + flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY);
       ctx.fill();
-    } else {
-      // Fire ring at base
-      const ringPulse = 0.35 + Math.sin(time * 8) * 0.15;
-      ctx.strokeStyle = `rgba(255, 120, 20, ${ringPulse})`;
-      ctx.lineWidth = 2 * zoom;
+
+      // Mid orange layer
+      ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY + size * 0.05, size * 0.5, size * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.moveTo(flameX, baseY);
+      ctx.quadraticCurveTo(flameX - flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY - flameHeight * 0.75);
+      ctx.quadraticCurveTo(flameX + flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY);
+      ctx.fill();
 
-      // Flames — reduced count under pressure, fewer layers
-      const flameCount = lowDetailFx ? 3 : 5;
-      const flameLayers = lowDetailFx ? 1 : 3;
-      for (let i = 0; i < flameCount; i++) {
-        const flameOffset = Math.sin(time * 6 + i * 1.4) * size * 0.15;
-        const flameX = screenPos.x + flameOffset + (i - Math.floor(flameCount / 2)) * size * 0.1;
-        const baseY = drawY - size * 0.1;
-        const flameHeight = (size * 0.6 + Math.sin(time * 7 + i * 2) * size * 0.18) * zoom;
-        const flameWidth = (size * 0.16 + Math.sin(time * 5 + i) * size * 0.04) * zoom;
-        const flicker = Math.sin(time * 12 + i * 3) * 0.12;
+      // Bright inner core
+      ctx.fillStyle = `rgba(255, 230, 140, ${0.8 + flicker})`;
+      ctx.beginPath();
+      ctx.moveTo(flameX, baseY);
+      ctx.quadraticCurveTo(flameX - flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY - flameHeight * 0.5);
+      ctx.quadraticCurveTo(flameX + flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY);
+      ctx.fill();
+    }
 
-        if (flameLayers >= 3) {
-          ctx.fillStyle = `rgba(200, 50, 10, ${0.7 + flicker})`;
-          ctx.beginPath();
-          ctx.moveTo(flameX, baseY);
-          ctx.quadraticCurveTo(flameX - flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY - flameHeight);
-          ctx.quadraticCurveTo(flameX + flameWidth * 1.1, baseY - flameHeight * 0.45, flameX, baseY);
-          ctx.fill();
-        }
+    // Rising embers
+    const emberCount = 6;
+    for (let i = 0; i < emberCount; i++) {
+      const emberPhase = (time * 2.5 + i * 0.35) % 1;
+      const drift = Math.sin(time * 3 + i * 2.2) * size * 0.35;
+      const emberX = screenPos.x + drift;
+      const emberY = drawY - size * 0.15 - emberPhase * size * 1.0;
+      const emberSize = (1.8 - emberPhase * 1.2) * zoom;
+      const emberAlpha = (1 - emberPhase) * 0.85;
 
-        ctx.fillStyle = `rgba(255, ${160 + Math.floor(Math.sin(time * 8 + i) * 40)}, 30, ${0.85 + flicker})`;
-        ctx.beginPath();
-        ctx.moveTo(flameX, baseY);
-        ctx.quadraticCurveTo(flameX - flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY - flameHeight * 0.75);
-        ctx.quadraticCurveTo(flameX + flameWidth * 0.7, baseY - flameHeight * 0.4, flameX, baseY);
-        ctx.fill();
-
-        if (flameLayers >= 3) {
-          ctx.fillStyle = `rgba(255, 230, 140, ${0.8 + flicker})`;
-          ctx.beginPath();
-          ctx.moveTo(flameX, baseY);
-          ctx.quadraticCurveTo(flameX - flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY - flameHeight * 0.5);
-          ctx.quadraticCurveTo(flameX + flameWidth * 0.35, baseY - flameHeight * 0.3, flameX, baseY);
-          ctx.fill();
-        }
-      }
-
-      // Embers — skip under low detail, reduce count otherwise
-      if (!lowDetailFx) {
-        const emberCount = pressure.forceSimplifiedGradients ? 3 : 6;
-        for (let i = 0; i < emberCount; i++) {
-          const emberPhase = (time * 2.5 + i * 0.35) % 1;
-          const drift = Math.sin(time * 3 + i * 2.2) * size * 0.35;
-          const emberX = screenPos.x + drift;
-          const emberY = drawY - size * 0.15 - emberPhase * size * 1.0;
-          const emberSize = (1.8 - emberPhase * 1.2) * zoom;
-          const emberAlpha = (1 - emberPhase) * 0.85;
-
-          ctx.fillStyle = `rgba(255, ${220 - Math.floor(emberPhase * 120)}, ${100 - Math.floor(emberPhase * 80)}, ${emberAlpha})`;
-          ctx.beginPath();
-          ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+      ctx.fillStyle = `rgba(255, ${220 - Math.floor(emberPhase * 120)}, ${100 - Math.floor(emberPhase * 80)}, ${emberAlpha})`;
+      ctx.beginPath();
+      ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -685,73 +664,59 @@ export function renderEnemy(
     const slowIntensity = Math.max(0.6, enemy.slowIntensity);
     const sc = getSlowAuraColors(enemy.slowSource);
 
-    if (minimalDetailFx) {
-      // Cheap tint-only slow indicator
-      ctx.fillStyle = `rgba(${sc.aura}, ${0.2 * slowIntensity})`;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.7, size * 0.7 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
+    const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
 
-      // Simple flat aura fill instead of radial gradient under medium pressure
-      if (pressure.forceSimplifiedGradients) {
-        ctx.fillStyle = `rgba(${sc.aura}, ${0.18 * slowIntensity})`;
-      } else {
-        const auraGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
-        auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
-        auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
-        ctx.fillStyle = auraGrad;
-      }
+    // Radial aura glow
+    const auraGrad = ctx.createRadialGradient(screenPos.x, drawY, 0, screenPos.x, drawY, size * 0.9);
+    auraGrad.addColorStop(0, `rgba(${sc.aura}, ${0.3 * slowIntensity})`);
+    auraGrad.addColorStop(1, `rgba(${sc.aura}, 0)`);
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner pulsing ring
+    const innerPulse = size * (0.48 + Math.sin(time * 3) * 0.04);
+    ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Animated outer ring (rotating dashed stroke)
+    ctx.save();
+    ctx.translate(screenPos.x, drawY);
+    ctx.rotate(time * 0.8);
+    ctx.strokeStyle = `rgba(${sc.ring}, ${0.85 * slowIntensity * pulseAlpha})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.setLineDash([8 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Orbiting rune diamonds
+    const runeCount = 6;
+    for (let i = 0; i < runeCount; i++) {
+      const runeAngle = time * 0.8 + (i / runeCount) * Math.PI * 2;
+      const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
+      const ry = drawY + Math.sin(runeAngle) * size * 0.78 * ISO_Y_RATIO;
+      const runeSize = 4.5 * zoom;
+      const runeGlow = 0.85 + Math.sin(time * 5 + i * 1.1) * 0.15;
+
+      ctx.fillStyle = `rgba(${sc.rune}, ${runeGlow * slowIntensity})`;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.moveTo(rx, ry - runeSize);
+      ctx.lineTo(rx + runeSize * 0.7, ry);
+      ctx.lineTo(rx, ry + runeSize);
+      ctx.lineTo(rx - runeSize * 0.7, ry);
+      ctx.closePath();
       ctx.fill();
 
-      // Inner pulsing ring
-      const innerPulse = size * (0.48 + Math.sin(time * 3) * 0.04);
-      ctx.strokeStyle = `rgba(${sc.inner}, ${0.9 * slowIntensity})`;
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, drawY, innerPulse, innerPulse * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${sc.runeOutline}, ${0.75 * slowIntensity})`;
+      ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-
-      if (!lowDetailFx) {
-        // Animated outer ring (expensive — rotating dashed stroke)
-        ctx.save();
-        ctx.translate(screenPos.x, drawY);
-        ctx.rotate(time * 0.8);
-        ctx.strokeStyle = `rgba(${sc.ring}, ${0.85 * slowIntensity * pulseAlpha})`;
-        ctx.lineWidth = 2.5 * zoom;
-        ctx.setLineDash([8 * zoom, 4 * zoom]);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, size * 0.8, size * 0.8 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        // Orbiting rune diamonds — no per-rune radial gradient
-        const runeCount = pressure.forceSimplifiedGradients ? 3 : 6;
-        for (let i = 0; i < runeCount; i++) {
-          const runeAngle = time * 0.8 + (i / runeCount) * Math.PI * 2;
-          const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
-          const ry = drawY + Math.sin(runeAngle) * size * 0.78 * ISO_Y_RATIO;
-          const runeSize = 4.5 * zoom;
-          const runeGlow = 0.85 + Math.sin(time * 5 + i * 1.1) * 0.15;
-
-          ctx.fillStyle = `rgba(${sc.rune}, ${runeGlow * slowIntensity})`;
-          ctx.beginPath();
-          ctx.moveTo(rx, ry - runeSize);
-          ctx.lineTo(rx + runeSize * 0.7, ry);
-          ctx.lineTo(rx, ry + runeSize);
-          ctx.lineTo(rx - runeSize * 0.7, ry);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.strokeStyle = `rgba(${sc.runeOutline}, ${0.75 * slowIntensity})`;
-          ctx.lineWidth = 1 * zoom;
-          ctx.stroke();
-        }
-      }
     }
 
     // Floating mist particles with trails
@@ -889,7 +854,12 @@ export function renderEnemy(
   }
 
   // Hex Ward aura effect
-  if (!minimalDetailFx && enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
+  if (
+    !minimalDetailFx &&
+    enemy.hexWard &&
+    enemy.hexWardUntil &&
+    enemy.hexWardUntil > now
+  ) {
     const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
     const remainingRatio = Math.max(
       0.35,
@@ -1365,7 +1335,8 @@ export function drawEnemySprite(
 ) {
   if (size <= 0 || zoom <= 0) return;
   const nativeRegion = getEnemyNativeRegion(type as EnemyType);
-  const paletteRegion = nativeRegion != null ? "grassland" as MapTheme : region;
+  const paletteRegion =
+    nativeRegion != null ? ("grassland" as MapTheme) : region;
   let bodyColor: string;
   let bodyColorDark: string;
   let bodyColorLight: string;
@@ -1395,37 +1366,77 @@ export function drawEnemySprite(
   switch (type) {
     case "frosh":
       drawFreshmanEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "sophomore":
       drawSophomoreEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "junior":
       drawJuniorEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "senior":
       drawSeniorEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "gradstudent":
       drawGradStudentEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "professor":
@@ -1472,23 +1483,48 @@ export function drawEnemySprite(
       break;
     case "mascot":
       drawMascotEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, isFlying, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        isFlying,
+        attackPhase,
+        region,
       );
       break;
     case "archer":
       drawArcherEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "mage":
       drawMageEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "catapult":
@@ -1507,51 +1543,107 @@ export function drawEnemySprite(
       break;
     case "warlock":
       drawWarlockEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "crossbowman":
       drawCrossbowmanEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "hexer":
       drawHexerEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "harpy":
       drawHarpyEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "wyvern":
       drawWyvernEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "specter":
       drawSpecterEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "berserker":
       drawBerserkerEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "golem":
@@ -1570,23 +1662,47 @@ export function drawEnemySprite(
       break;
     case "necromancer":
       drawNecromancerEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "shadow_knight":
       drawShadowKnightEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "cultist":
       drawCultistEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "plaguebearer":
@@ -1663,9 +1779,17 @@ export function drawEnemySprite(
       break;
     case "banshee":
       drawBansheeEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "juggernaut":
@@ -1684,9 +1808,17 @@ export function drawEnemySprite(
       break;
     case "assassin":
       drawAssassinEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "dragon":
@@ -1705,16 +1837,32 @@ export function drawEnemySprite(
       break;
     case "athlete":
       drawAthleteEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "tiger_fan":
       drawTigerFanEnemy(
-        ctx, x, y, size,
-        bodyColor, bodyColorDark, bodyColorLight,
-        time, zoom, attackPhase, region,
+        ctx,
+        x,
+        y,
+        size,
+        bodyColor,
+        bodyColorDark,
+        bodyColorLight,
+        time,
+        zoom,
+        attackPhase,
+        region,
       );
       break;
     case "bog_creature":
@@ -2768,5 +2916,4 @@ export function drawEnemySprite(
         attackPhase,
       );
   }
-
 }

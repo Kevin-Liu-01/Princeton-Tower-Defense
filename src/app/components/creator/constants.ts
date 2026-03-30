@@ -94,6 +94,7 @@ export const DECORATION_OPTIONS_BY_THEME: Record<MapTheme, DecorationCategory[]>
     "tree", "bush", "rock", "flowers", "statue", "bench", "fence",
     "lamppost", "fountain", "hedge", "dock", "boat", "reeds",
     "campfire", "gate", "flag", "signpost", "ruins", "water",
+    "idol_statue",
   ],
   swamp: [
     "swamp_tree", "fog_patch", "broken_bridge", "witch_cottage", "cauldron",
@@ -105,14 +106,14 @@ export const DECORATION_OPTIONS_BY_THEME: Record<MapTheme, DecorationCategory[]>
     "palm", "cactus", "dune", "skull", "pottery", "oasis_pool",
     "pyramid", "obelisk", "sphinx", "hieroglyph_wall", "treasure_chest",
     "skeleton", "torch", "temple_entrance", "sarcophagus", "cobra_statue",
-    "sand_pile",
+    "sand_pile", "idol_statue",
   ],
   winter: [
     "pine_tree", "snowman", "ice_crystal", "frozen_pond", "snow_pile",
     "icicles", "glacier", "fortress", "frozen_gate", "broken_wall",
     "frozen_soldier", "battle_crater", "ice_spire", "ice_throne",
     "ice_bridge", "frozen_waterfall", "aurora_crystal", "snow_drift",
-    "snow_lantern",
+    "snow_lantern", "idol_statue",
   ],
   volcanic: [
     "lava_pool", "obsidian_spike", "magma_vent", "charred_tree",
@@ -120,7 +121,7 @@ export const DECORATION_OPTIONS_BY_THEME: Record<MapTheme, DecorationCategory[]>
     "obsidian_pillar", "fire_crystal", "dead_adventurer", "broken_weapon",
     "obsidian_castle", "dark_throne", "dark_barracks", "dark_spire",
     "demon_statue", "lava_moat", "skull_throne", "fire_pit",
-    "battle_standard",
+    "battle_standard", "idol_statue",
   ],
 };
 

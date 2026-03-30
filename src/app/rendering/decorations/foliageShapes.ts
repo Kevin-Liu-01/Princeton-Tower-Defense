@@ -1,5 +1,6 @@
 import { drawDirectionalShadow } from "./shadowHelpers";
 import { drawOrganicBlobAt } from "../helpers";
+import { ISO_Y_RATIO } from "../../constants";
 import {
   TREE_PALETTES,
   BUSH_PALETTES,
@@ -231,328 +232,284 @@ export function drawTree(
 ): void {
   const tv = TREE_PALETTES[variant % TREE_PALETTES.length];
   const tSeed = decorX * 73 + decorY * 41;
+  const isoY = ISO_Y_RATIO;
 
   const shapeType = Math.abs(tSeed) % 3;
   const trunkH = 22 + (Math.abs(tSeed * 7) % 7);
   const trunkW = 4.5 + (Math.abs(tSeed * 13) % 3) * 0.4;
-  const lean = Math.sin(tSeed * 0.17) * 2;
-  const cW = shapeType === 2 ? 1.15 : shapeType === 1 ? 0.85 : 1.0;
-  const cH = shapeType === 1 ? 1.2 : shapeType === 2 ? 0.85 : 1.0;
+  const lean = Math.sin(tSeed * 0.17) * 1.5;
+  const cScale = shapeType === 2 ? 1.12 : shapeType === 1 ? 0.88 : 1.0;
 
+  // Isometric ground shadow
   drawDirectionalShadow(
     ctx,
     x,
     y + 5 * s,
     s,
-    18 * cW * s,
-    10 * s,
+    20 * cScale * s,
+    20 * cScale * s * isoY,
     35 * s,
     0.3,
   );
 
   const topX = x + lean * s;
 
-  // Visible roots at base (drawn first so trunk sits on top)
-  const rootSpread = 7 + (Math.abs(tSeed * 11) % 3);
+  // ── Isometric root disc at ground level ──
+  const rootRx = (7 + (Math.abs(tSeed * 11) % 3)) * s;
+  const rootRy = rootRx * isoY;
+
   ctx.fillStyle = tv.trunkDark;
-  drawOrganicBlobAt(
-    ctx,
-    x,
-    y + 3 * s,
-    rootSpread * s,
-    4 * s,
-    tSeed * 1.7,
-    0.1,
-  );
+  drawOrganicBlobAt(ctx, x, y + 3 * s, rootRx * 1.1, rootRy * 1.1, tSeed * 1.7, 0.12);
   ctx.fill();
   ctx.fillStyle = tv.trunk;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + 2 * s,
-    (rootSpread - 2) * s,
-    3 * s,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x, y + 2 * s, rootRx * 0.85, rootRy * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,0.12)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + 2.5 * s, rootRx * 0.7, rootRy * 0.65, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Trunk left face (shadow)
+  // ── Isometric cylindrical trunk ──
+  const baseRx = trunkW * s;
+  const baseRy = baseRx * isoY;
+  const topRx = (trunkW - 0.8) * s;
+  const topRy = topRx * isoY;
+  const trunkTopY = y - trunkH * s;
+
+  // Trunk body — left face (shadow side)
   ctx.fillStyle = tv.trunkDark;
   ctx.beginPath();
-  ctx.moveTo(x - trunkW * s, y + 5 * s);
-  ctx.lineTo(topX - (trunkW - 1) * s, y - trunkH * s);
-  ctx.lineTo(topX, y - (trunkH + 2) * s);
-  ctx.lineTo(x, y + 3 * s);
+  ctx.moveTo(x - baseRx, y + 2 * s);
+  ctx.lineTo(topX - topRx, trunkTopY);
+  ctx.lineTo(topX, trunkTopY - topRy);
+  ctx.lineTo(topX + topRx, trunkTopY);
+  ctx.lineTo(x, y + 2 * s + baseRy);
   ctx.closePath();
   ctx.fill();
 
-  // Trunk right face (lit) with highlight
+  // Trunk body — right face (lit side) with gradient
   const trunkGrad = ctx.createLinearGradient(
-    x,
-    y,
-    x + (trunkW + 1) * s,
-    y,
+    x - baseRx * 0.3, y, x + baseRx * 1.2, y,
   );
   trunkGrad.addColorStop(0, tv.trunk);
-  trunkGrad.addColorStop(0.6, tv.trunkHighlight);
+  trunkGrad.addColorStop(0.45, tv.trunkHighlight);
+  trunkGrad.addColorStop(0.8, tv.trunk);
   trunkGrad.addColorStop(1, tv.trunkDark);
   ctx.fillStyle = trunkGrad;
   ctx.beginPath();
-  ctx.moveTo(x + trunkW * s, y + 5 * s);
-  ctx.lineTo(topX + (trunkW - 1) * s, y - trunkH * s);
-  ctx.lineTo(topX, y - (trunkH + 2) * s);
-  ctx.lineTo(x, y + 3 * s);
+  ctx.moveTo(x + baseRx, y + 2 * s);
+  ctx.lineTo(topX + topRx, trunkTopY);
+  ctx.lineTo(topX, trunkTopY - topRy);
+  ctx.lineTo(topX - topRx, trunkTopY);
+  ctx.lineTo(x, y + 2 * s + baseRy);
   ctx.closePath();
   ctx.fill();
 
-  // Bark texture — varied knots and grain
-  const barkCount = 4 + (Math.abs(tSeed) % 3);
-  ctx.strokeStyle = tv.trunkDark;
-  ctx.lineWidth = 0.7 * s;
+  // Isometric ellipse cross-section rings for bark texture
+  const barkCount = 5 + (Math.abs(tSeed) % 3);
   for (let i = 0; i < barkCount; i++) {
     const frac = (i + 0.5) / barkCount;
-    const barkY = y + 3 * s - frac * (trunkH + 5) * s;
+    const ringY = y + 2 * s - frac * (trunkH + 2) * s;
     const leanAtY = lean * frac;
+    const ringRx = baseRx + (topRx - baseRx) * frac;
+    const ringRy = ringRx * isoY;
+    const ringCX = x + leanAtY * s;
+
+    ctx.strokeStyle = tv.trunkDark;
+    ctx.lineWidth = 0.6 * s;
+    ctx.globalAlpha = 0.4 + Math.sin(tSeed + i * 2.3) * 0.15;
     ctx.beginPath();
-    ctx.moveTo(
-      x - 3 * s + leanAtY * s,
-      barkY + Math.sin(tSeed + i) * 1.5 * s,
-    );
-    ctx.quadraticCurveTo(
-      x + leanAtY * s,
-      barkY + Math.sin(tSeed + i * 2.3) * 2 * s,
-      x + 3 * s + leanAtY * s,
-      barkY - Math.sin(tSeed + i + 1) * 1.5 * s,
-    );
+    ctx.ellipse(ringCX, ringY, ringRx, ringRy, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
-  // Bark knots
+  ctx.globalAlpha = 1;
+
+  // Bark knots on the lit side
   for (let i = 0; i < 2; i++) {
     const knotFrac = 0.3 + (Math.abs(tSeed + i * 37) % 40) / 100;
-    const knotX = x + lean * knotFrac * s + (i === 0 ? -1.5 : 1) * s;
-    const knotY = y + 3 * s - knotFrac * (trunkH + 5) * s;
+    const knotLean = lean * knotFrac;
+    const knotRx = baseRx + (topRx - baseRx) * knotFrac;
+    const knotX = x + knotLean * s + (i === 0 ? knotRx * 0.4 : -knotRx * 0.3);
+    const knotY = y + 2 * s - knotFrac * (trunkH + 2) * s;
     ctx.fillStyle = tv.trunkDark;
     ctx.beginPath();
-    ctx.ellipse(knotX, knotY, 1.2 * s, 0.8 * s, 0.5 * i, 0, Math.PI * 2);
+    ctx.ellipse(knotX, knotY, 1.2 * s, 0.7 * s * isoY, 0.5 * i, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Moss/lichen patches on the shadow (left) side of the trunk
+  // Moss/lichen on shadow (left) side
   const mossCount = 2 + (Math.abs(tSeed * 5) % 2);
   for (let mi = 0; mi < mossCount; mi++) {
     const mossFrac = 0.25 + mi * 0.22;
-    const mossLeanAtY = lean * mossFrac;
-    const mossX = x - (trunkW - 1) * s + mossLeanAtY * s;
-    const mossY = y + 3 * s - mossFrac * (trunkH + 5) * s;
+    const mossLean = lean * mossFrac;
+    const mossRx = baseRx + (topRx - baseRx) * mossFrac;
+    const mossX = x + mossLean * s - mossRx * 0.75;
+    const mossY = y + 2 * s - mossFrac * (trunkH + 2) * s;
     ctx.fillStyle = "rgba(80,120,55,0.35)";
-    traceOrganicEllipse(
-      ctx,
-      mossX,
-      mossY,
-      2.5 * s,
-      1.5 * s,
-      tSeed + mi * 17,
-      0.2,
-      0.4,
-    );
+    traceOrganicEllipse(ctx, mossX, mossY, 2.5 * s, 1.5 * s * isoY, tSeed + mi * 17, 0.2, 0.4);
     ctx.fill();
     ctx.fillStyle = "rgba(100,145,65,0.25)";
     traceOrganicEllipse(
-      ctx,
-      mossX + 0.3 * s,
-      mossY - 0.3 * s,
-      1.6 * s,
-      1 * s,
-      tSeed + mi * 23,
-      0.18,
-      0.3,
+      ctx, mossX + 0.3 * s, mossY - 0.3 * s,
+      1.6 * s, 1.0 * s * isoY, tSeed + mi * 23, 0.18, 0.3,
     );
     ctx.fill();
   }
 
-  // Branch stubs visible at trunk-canopy junction
+  // ── Isometric branch stubs ──
   const canopyCX = x + lean * 0.5 * s;
-  const baseY = -trunkH + 4;
-  ctx.strokeStyle = tv.trunkDark;
-  ctx.lineWidth = 1.8 * s;
-  const branchAngles = [
-    -0.6 + Math.sin(tSeed * 0.3) * 0.2,
-    0.5 + Math.cos(tSeed * 0.5) * 0.2,
-    -0.2 + Math.sin(tSeed * 0.7) * 0.15,
+  const baseCanopyY = -trunkH + 4;
+  ctx.lineCap = "round";
+  const branchDefs = [
+    { ang: -0.6 + Math.sin(tSeed * 0.3) * 0.2, side: -1 },
+    { ang: 0.5 + Math.cos(tSeed * 0.5) * 0.2, side: 1 },
+    { ang: -0.2 + Math.sin(tSeed * 0.7) * 0.15, side: -1 },
+    { ang: 0.3 + Math.cos(tSeed * 0.9) * 0.15, side: 1 },
   ];
-  for (let bi = 0; bi < branchAngles.length; bi++) {
-    const ba = branchAngles[bi];
+  for (let bi = 0; bi < branchDefs.length; bi++) {
+    const bd = branchDefs[bi];
     const bLen = (5 + (Math.abs(tSeed + bi * 17) % 4)) * s;
-    const bStartY = y + (baseY + 2 + bi * 2) * s;
-    const bStartX = topX + (bi % 2 === 0 ? -1 : 1) * 1.5 * s;
+    const bStartY = y + (baseCanopyY + 2 + bi * 1.8) * s;
+    const bStartX = topX + bd.side * topRx * 0.6;
+    const bEndX = bStartX + Math.cos(bd.ang) * bLen;
+    const bEndY = bStartY + Math.sin(bd.ang) * bLen * isoY;
+
+    ctx.strokeStyle = tv.trunkDark;
+    ctx.lineWidth = (2.0 - bi * 0.2) * s * 0.3;
     ctx.beginPath();
     ctx.moveTo(bStartX, bStartY);
-    ctx.lineTo(bStartX + Math.cos(ba) * bLen, bStartY + Math.sin(ba) * bLen);
+    ctx.quadraticCurveTo(
+      (bStartX + bEndX) * 0.5 + bd.side * 1.5 * s,
+      (bStartY + bEndY) * 0.5 - 1 * s,
+      bEndX, bEndY,
+    );
     ctx.stroke();
+    ctx.strokeStyle = tv.trunkHighlight;
+    ctx.lineWidth = 0.4 * s * 0.3;
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.moveTo(bStartX, bStartY - 0.5);
+    ctx.quadraticCurveTo(
+      (bStartX + bEndX) * 0.5 + bd.side * 1.5 * s,
+      (bStartY + bEndY) * 0.5 - 1 * s - 0.5,
+      bEndX, bEndY - 0.5,
+    );
+    ctx.stroke();
+    ctx.globalAlpha = 1;
   }
-  ctx.lineWidth = 1;
+  ctx.lineCap = "butt";
 
-  // Ambient occlusion — canopy shadow cast onto the trunk
+  // Ambient occlusion under canopy onto trunk
   const aoGrad = ctx.createRadialGradient(
-    canopyCX, y + (baseY + 1) * s, 0,
-    canopyCX, y + (baseY + 1) * s, 12 * cW * s,
+    canopyCX, y + (baseCanopyY + 1) * s, 0,
+    canopyCX, y + (baseCanopyY + 1) * s, 14 * cScale * s,
   );
   aoGrad.addColorStop(0, "rgba(0,20,0,0.28)");
   aoGrad.addColorStop(0.5, "rgba(0,15,0,0.12)");
   aoGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = aoGrad;
   ctx.beginPath();
-  ctx.arc(canopyCX, y + (baseY + 1) * s, 12 * cW * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Main canopy — organic layered blobs
-  const foliageLayers = [
-    {
-      oy: baseY,
-      rx: 26 * cW,
-      ry: 14 * cH,
-      color: tv.foliage[0],
-      bump: 0.12,
-    },
-    {
-      oy: baseY - 6 * cH,
-      rx: 24 * cW,
-      ry: 13 * cH,
-      color: tv.foliage[1],
-      bump: 0.1,
-    },
-    {
-      oy: baseY - 12 * cH,
-      rx: 20 * cW,
-      ry: 11 * cH,
-      color: tv.foliage[2],
-      bump: 0.09,
-    },
-    {
-      oy: baseY - 17 * cH,
-      rx: 14 * cW,
-      ry: 8 * cH,
-      color: tv.foliage[3],
-      bump: 0.08,
-    },
-  ];
-
-  // Canopy underside shadow
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
-  traceOrganicEllipse(
-    ctx,
-    canopyCX,
-    y + (baseY + 3) * s,
-    foliageLayers[0].rx * s,
-    foliageLayers[0].ry * s * 0.55,
-    tSeed * 0.7,
-    0.1,
+  ctx.ellipse(
+    canopyCX, y + (baseCanopyY + 1) * s,
+    14 * cScale * s, 14 * cScale * s * isoY, 0, 0, Math.PI * 2,
   );
   ctx.fill();
 
-  foliageLayers.forEach((layer, idx) => {
+  // ── Isometric canopy — layered organic dome with proper Y compression ──
+  const canopyRx = 24 * cScale;
+  const canopyCenter = baseCanopyY - 8;
+
+  const foliageLayers = [
+    { oy: baseCanopyY,      rxMul: 1.08, ryMul: 0.7, ci: 0, bump: 0.12 },
+    { oy: baseCanopyY - 5,  rxMul: 1.0,  ryMul: 0.75, ci: 1, bump: 0.10 },
+    { oy: baseCanopyY - 10, rxMul: 0.88, ryMul: 0.65, ci: 2, bump: 0.09 },
+    { oy: baseCanopyY - 15, rxMul: 0.6,  ryMul: 0.5,  ci: 3, bump: 0.08 },
+  ];
+
+  // Canopy underside shadow (isometric ellipse)
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  traceOrganicEllipse(
+    ctx, canopyCX, y + (baseCanopyY + 3) * s,
+    canopyRx * 1.05 * s, canopyRx * 1.05 * s * isoY * 0.6,
+    tSeed * 0.7, 0.1,
+  );
+  ctx.fill();
+
+  for (let idx = 0; idx < foliageLayers.length; idx++) {
+    const layer = foliageLayers[idx];
+    const lRx = canopyRx * layer.rxMul * s;
+    const lRy = lRx * isoY * layer.ryMul;
+    const lCY = y + layer.oy * s;
     const grad = ctx.createRadialGradient(
-      canopyCX - layer.rx * 0.3 * s,
-      y + layer.oy * s - layer.ry * 0.3 * s,
-      0,
-      canopyCX,
-      y + layer.oy * s,
-      layer.rx * s,
+      canopyCX - lRx * 0.25, lCY - lRy * 0.3, 0,
+      canopyCX, lCY, lRx,
     );
-    grad.addColorStop(0, tv.foliage[Math.min(idx + 1, 3)]);
-    grad.addColorStop(0.65, layer.color);
+    grad.addColorStop(0, tv.foliage[Math.min(layer.ci + 1, 3)]);
+    grad.addColorStop(0.65, tv.foliage[layer.ci]);
     grad.addColorStop(1, tv.foliage[0]);
     ctx.fillStyle = grad;
     traceOrganicEllipse(
-      ctx,
-      canopyCX,
-      y + layer.oy * s,
-      layer.rx * s,
-      layer.ry * s,
-      tSeed + idx * 11,
-      layer.bump,
+      ctx, canopyCX, lCY, lRx, lRy,
+      tSeed + idx * 11, layer.bump,
     );
     ctx.fill();
-  });
+  }
 
-  // Dark depth crevices between foliage zones
+  // Foliage depth crevices (isometric projected)
   ctx.fillStyle = "rgba(10,40,10,0.2)";
   for (let i = 0; i < 5; i++) {
     const crevAngle =
       (i / 5) * Math.PI * 1.6 - Math.PI * 0.3 + Math.sin(tSeed + i * 5) * 0.3;
-    const crevDist = 8 + Math.sin(tSeed + i * 3.3) * 5;
-    const cx = canopyCX + Math.cos(crevAngle) * crevDist * cW * s;
-    const cy =
-      y + (baseY - 6 * cH + Math.sin(crevAngle) * 5 * cH) * s;
-    traceOrganicEllipse(ctx, cx, cy, 4 * s, 2.5 * s, tSeed + i * 7, 0.15);
+    const crevDist = (8 + Math.sin(tSeed + i * 3.3) * 5) * cScale;
+    const cx2 = canopyCX + Math.cos(crevAngle) * crevDist * s;
+    const cy2 = y + (canopyCenter + Math.sin(crevAngle) * 5) * s;
+    traceOrganicEllipse(ctx, cx2, cy2, 4 * s, 4 * s * isoY * 0.65, tSeed + i * 7, 0.15);
     ctx.fill();
   }
 
-  // Organic foliage clusters with bumpy edges
+  // Isometric foliage clusters
   const clusterCount = 6 + (Math.abs(tSeed) % 3);
   for (let ci = 0; ci < clusterCount; ci++) {
     const cAngle = (ci / clusterCount) * Math.PI * 2 + tSeed * 0.1;
-    const cDist = 10 + Math.sin(tSeed + ci * 2.7) * 7;
-    const lcx = canopyCX + Math.cos(cAngle) * cDist * cW * s;
-    const lcy =
-      y +
-      (baseY -
-        8 * cH +
-        Math.sin(cAngle) * 6 * cH +
-        Math.cos(tSeed + ci * 1.9) * 3) *
-        s;
-    const lcr = 5 + Math.sin(tSeed + ci * 3.1) * 2;
+    const cDist = (10 + Math.sin(tSeed + ci * 2.7) * 7) * cScale;
+    const lcx = canopyCX + Math.cos(cAngle) * cDist * s;
+    const lcy = y + (canopyCenter + Math.sin(cAngle) * 6 + Math.cos(tSeed + ci * 1.9) * 3) * s;
+    const lcr = (5 + Math.sin(tSeed + ci * 3.1) * 2) * s;
     const grad = ctx.createRadialGradient(
-      lcx - lcr * 0.3 * s,
-      lcy - lcr * 0.3 * s,
-      0,
-      lcx,
-      lcy,
-      lcr * s,
+      lcx - lcr * 0.3, lcy - lcr * isoY * 0.3, 0,
+      lcx, lcy, lcr,
     );
     grad.addColorStop(0, tv.foliage[3]);
     grad.addColorStop(0.5, tv.foliage[2]);
     grad.addColorStop(1, tv.foliage[1]);
     ctx.fillStyle = grad;
-    traceOrganicEllipse(
-      ctx,
-      lcx,
-      lcy,
-      lcr * s,
-      lcr * 0.6 * s,
-      tSeed + ci * 13,
-      0.14,
-      cAngle * 0.3,
-    );
+    traceOrganicEllipse(ctx, lcx, lcy, lcr, lcr * isoY * 0.7, tSeed + ci * 13, 0.14, cAngle * 0.3);
     ctx.fill();
   }
 
-  // Small raised bumps for leaf texture across canopy
+  // Leaf texture bumps (isometric)
   for (let i = 0; i < 12; i++) {
     const bAng = (i / 12) * Math.PI * 2 + tSeed * 0.05;
-    const bDist = (6 + Math.sin(tSeed + i * 2.1) * 10) * cW;
+    const bDist = (6 + Math.sin(tSeed + i * 2.1) * 10) * cScale;
     const bx = canopyCX + Math.cos(bAng) * bDist * s;
-    const by =
-      y + (baseY - 9 * cH + Math.sin(bAng) * 6 * cH) * s;
+    const by = y + (canopyCenter + Math.sin(bAng) * 6) * s;
     const br = (2 + Math.sin(tSeed + i * 3.7) * 0.8) * s;
     ctx.fillStyle =
       i % 3 === 0 ? tv.foliage[3] : i % 3 === 1 ? tv.foliage[2] : tv.leafAccent;
     ctx.globalAlpha = 0.6;
-    traceOrganicEllipse(ctx, bx, by, br, br * 0.55, tSeed + i * 19, 0.18);
+    traceOrganicEllipse(ctx, bx, by, br, br * isoY, tSeed + i * 19, 0.18);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // Leaf-shaped texture marks (not circles)
+  // Leaf-shaped texture marks
   const markCount = 8 + (Math.abs(tSeed * 3) % 4);
   for (let di = 0; di < markCount; di++) {
     const mAng = (di / markCount) * Math.PI * 2 + tSeed * 0.13;
-    const mDist = 5 + Math.sin(tSeed + di * 1.9) * 12;
-    const mx = canopyCX + Math.cos(mAng) * mDist * cW * s;
-    const my =
-      y + (baseY - 10 * cH + Math.sin(mAng + tSeed * 0.07) * 9 * cH) * s;
+    const mDist = (5 + Math.sin(tSeed + di * 1.9) * 12) * cScale;
+    const mx = canopyCX + Math.cos(mAng) * mDist * s;
+    const my = y + (canopyCenter + Math.sin(mAng + tSeed * 0.07) * 9) * s;
     const mRot = mAng + Math.sin(tSeed + di * 2.7) * 0.5;
     ctx.fillStyle = tv.leafAccent;
     ctx.globalAlpha = 0.35 + Math.sin(tSeed + di * 3.7) * 0.15;
@@ -560,120 +517,81 @@ export function drawTree(
   }
   ctx.globalAlpha = 1;
 
-  // Light-facing highlight patches (organic, not ellipses)
-  const hlY = baseY - 14 * cH;
+  // Highlight patches on canopy (top-left light)
   ctx.fillStyle = "rgba(255,255,255,0.1)";
   traceOrganicEllipse(
-    ctx,
-    canopyCX - 4 * s,
-    y + hlY * s,
-    5 * cW * s,
-    3 * cH * s,
-    tSeed * 2.1,
-    0.15,
-    -0.3,
+    ctx, canopyCX - 4 * s, y + (canopyCenter - 4) * s,
+    5 * cScale * s, 5 * cScale * s * isoY * 0.6,
+    tSeed * 2.1, 0.15, -0.3,
   );
   ctx.fill();
   traceOrganicEllipse(
-    ctx,
-    canopyCX + 7 * s,
-    y + (hlY + 7) * s,
-    4 * cW * s,
-    2.5 * cH * s,
-    tSeed * 3.1,
-    0.12,
-    0.2,
+    ctx, canopyCX + 7 * s, y + (canopyCenter + 2) * s,
+    4 * cScale * s, 4 * cScale * s * isoY * 0.6,
+    tSeed * 3.1, 0.12, 0.2,
   );
   ctx.fill();
 
-  // Tiny scattered highlight flecks
+  // Highlight flecks
   ctx.fillStyle = "rgba(255,255,255,0.13)";
   for (let hi = 0; hi < 6; hi++) {
-    const hx =
-      canopyCX + Math.sin(tSeed + hi * 4.3) * 12 * cW * s;
-    const hy =
-      y + (baseY - 12 * cH + Math.cos(tSeed + hi * 3.1) * 7 * cH) * s;
+    const hx = canopyCX + Math.sin(tSeed + hi * 4.3) * 12 * cScale * s;
+    const hy = y + (canopyCenter - 2 + Math.cos(tSeed + hi * 3.1) * 7) * s;
     drawLeafMark(ctx, hx, hy, 0.8 * s, tSeed + hi * 1.7);
   }
 
-  // Edge leaf silhouette bumps
+  // Edge silhouette leaf bumps (isometric)
   ctx.fillStyle = tv.foliage[2];
   ctx.globalAlpha = 0.5;
   for (let ei = 0; ei < 10; ei++) {
     const eAng = (ei / 10) * Math.PI * 2 + tSeed * 0.03;
-    const topLayer = foliageLayers[1];
-    const edgeDist =
-      topLayer.rx * 0.92 + Math.sin(tSeed + ei * 4.7) * 2;
-    const ex = canopyCX + Math.cos(eAng) * edgeDist * s;
-    const ey =
-      y + (topLayer.oy + Math.sin(eAng) * topLayer.ry * 0.85) * s;
+    const edgeRx = canopyRx * 0.95 * cScale;
+    const ex = canopyCX + Math.cos(eAng) * edgeRx * s;
+    const ey = y + (canopyCenter - 3 + Math.sin(eAng) * 7) * s;
     const er = (1.8 + Math.sin(tSeed + ei * 3.3) * 0.6) * s;
-    traceOrganicEllipse(
-      ctx,
-      ex,
-      ey,
-      er * 1.3,
-      er * 0.7,
-      tSeed + ei * 23,
-      0.2,
-      eAng,
-    );
+    traceOrganicEllipse(ctx, ex, ey, er * 1.3, er * 1.3 * isoY * 0.6, tSeed + ei * 23, 0.2, eAng);
     ctx.fill();
   }
   ctx.globalAlpha = 1;
 
-  // Directional light gradient — warm top-left, cool bottom-right
+  // Warm directional light gradient from top-left
   const dirLight = ctx.createRadialGradient(
-    canopyCX - 8 * cW * s,
-    y + (baseY - 18 * cH) * s,
-    0,
-    canopyCX + 4 * cW * s,
-    y + (baseY - 4 * cH) * s,
-    28 * cW * s,
+    canopyCX - 8 * cScale * s, y + (canopyCenter - 8) * s, 0,
+    canopyCX + 4 * cScale * s, y + canopyCenter * s, 28 * cScale * s,
   );
   dirLight.addColorStop(0, "rgba(200,240,120,0.14)");
   dirLight.addColorStop(0.35, "rgba(160,220,80,0.06)");
   dirLight.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = dirLight;
   traceOrganicEllipse(
-    ctx,
-    canopyCX,
-    y + (baseY - 8 * cH) * s,
-    foliageLayers[0].rx * s,
-    foliageLayers[0].ry * 1.3 * s,
-    tSeed * 0.71,
-    0.09,
+    ctx, canopyCX, y + canopyCenter * s,
+    canopyRx * cScale * s, canopyRx * cScale * s * isoY,
+    tSeed * 0.71, 0.09,
   );
   ctx.fill();
 
-  // Cool shadow on the canopy underside
+  // Cool shadow on canopy underside
   const coolShadow = ctx.createLinearGradient(
-    canopyCX,
-    y + (baseY + 2) * s,
-    canopyCX,
-    y + (baseY - 6 * cH) * s,
+    canopyCX, y + (baseCanopyY + 2) * s,
+    canopyCX, y + (baseCanopyY - 6) * s,
   );
   coolShadow.addColorStop(0, "rgba(15,40,60,0.16)");
   coolShadow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = coolShadow;
   traceOrganicEllipse(
-    ctx,
-    canopyCX,
-    y + (baseY - 1) * s,
-    foliageLayers[0].rx * 0.9 * s,
-    foliageLayers[0].ry * 0.5 * s,
-    tSeed * 1.23,
-    0.08,
+    ctx, canopyCX, y + (baseCanopyY - 1) * s,
+    canopyRx * 0.9 * cScale * s, canopyRx * 0.9 * cScale * s * isoY * 0.5,
+    tSeed * 1.23, 0.08,
   );
   ctx.fill();
 
-  // Dappled sunlight spots — distinct bright patches
+  // Dappled sunlight spots
   const dappleCount = 5 + (Math.abs(tSeed * 11) % 3);
   for (let di = 0; di < dappleCount; di++) {
     const dAng = (di / dappleCount) * Math.PI * 2 + tSeed * 0.09;
-    const dDist = 4 + Math.sin(tSeed + di * 2.3) * 8;
-    const dx = canopyCX + Math.cos(dAng) * dDist * cW * s;
-    const dy = y + (baseY - 10 * cH + Math.sin(dAng) * 6 * cH) * s;
+    const dDist = (4 + Math.sin(tSeed + di * 2.3) * 8) * cScale;
+    const dx = canopyCX + Math.cos(dAng) * dDist * s;
+    const dy = y + (canopyCenter + Math.sin(dAng) * 6) * s;
     const dr = (2.2 + Math.sin(tSeed + di * 4.1) * 1.0) * s;
     const dappleGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, dr);
     dappleGrad.addColorStop(0, "rgba(220,255,160,0.22)");
@@ -685,23 +603,25 @@ export function drawTree(
     ctx.fill();
   }
 
-  // Small grass tufts at the base for grounding
+  // Isometric grass tufts at the base
   const grassColors = [tv.foliage[1], tv.foliage[2], tv.leafAccent];
   const grassCount = 4 + (Math.abs(tSeed * 3) % 3);
   for (let gi = 0; gi < grassCount; gi++) {
-    const gx = x + (-8 + gi * (16 / grassCount) + Math.sin(tSeed + gi * 3.7) * 3) * s;
-    const gy = y + (4 + Math.sin(tSeed + gi * 2.1) * 1.5) * s;
+    const gAng = (gi / grassCount) * Math.PI * 2 + tSeed * 0.2;
+    const gDist = rootRx * 0.8 + Math.sin(tSeed + gi * 3.7) * 2 * s;
+    const gx = x + Math.cos(gAng) * gDist;
+    const gy = y + 3 * s + Math.sin(gAng) * gDist * isoY;
     ctx.fillStyle = grassColors[gi % grassColors.length];
     ctx.globalAlpha = 0.55;
     for (let bl = 0; bl < 3; bl++) {
       const bladeAng = -Math.PI / 2 + (bl - 1) * 0.3 + Math.sin(tSeed + gi * 4 + bl) * 0.2;
       const bladeH = (3.5 + Math.sin(tSeed + gi * 2 + bl * 3) * 1.5) * s;
       ctx.beginPath();
-      ctx.moveTo(gx + bl * 0.8 * s, gy);
+      ctx.moveTo(gx + bl * 0.6 * s, gy);
       ctx.quadraticCurveTo(
-        gx + bl * 0.8 * s + Math.cos(bladeAng) * bladeH * 0.5,
+        gx + bl * 0.6 * s + Math.cos(bladeAng) * bladeH * 0.5,
         gy + Math.sin(bladeAng) * bladeH * 0.5,
-        gx + bl * 0.8 * s + Math.cos(bladeAng) * bladeH,
+        gx + bl * 0.6 * s + Math.cos(bladeAng) * bladeH,
         gy + Math.sin(bladeAng) * bladeH,
       );
       ctx.lineWidth = 0.6 * s;
@@ -711,15 +631,16 @@ export function drawTree(
   }
   ctx.globalAlpha = 1;
 
-  // Fruit / blossom accents on certain palette variants
+  // Fruit / blossom accents (palette-variant dependent)
   const palIdx = variant % TREE_PALETTES.length;
   if (palIdx === 4) {
     const colors = TREE_ACCENT_PALETTES.fruit;
     for (let ai = 0; ai < 5; ai++) {
+      const fAng = (ai / 5) * Math.PI * 2 + tSeed * 0.12;
+      const fDist = 14 * cScale;
       ctx.fillStyle = colors[ai % colors.length];
-      const ax = canopyCX + Math.sin(tSeed + ai * 3.3) * 14 * cW * s;
-      const ay =
-        y + (baseY - 4 + Math.cos(tSeed + ai * 2.1) * 10 * cH) * s;
+      const ax = canopyCX + Math.cos(fAng) * fDist * s + Math.sin(tSeed + ai * 3.3) * 3 * s;
+      const ay = y + (canopyCenter + Math.sin(fAng) * 8) * s;
       ctx.beginPath();
       ctx.arc(ax, ay, 1.3 * s, 0, Math.PI * 2);
       ctx.fill();
@@ -731,21 +652,18 @@ export function drawTree(
   } else if (palIdx === 5) {
     const colors = TREE_ACCENT_PALETTES.blossoms;
     for (let ai = 0; ai < 4; ai++) {
-      const bx = canopyCX + Math.sin(tSeed + ai * 4.1) * 12 * cW * s;
-      const by =
-        y + (baseY - 6 + Math.cos(tSeed + ai * 2.9) * 8 * cH) * s;
+      const bAng = (ai / 4) * Math.PI * 2 + tSeed * 0.15;
+      const bDist = 12 * cScale;
+      const bx = canopyCX + Math.cos(bAng) * bDist * s + Math.sin(tSeed + ai * 4.1) * 2 * s;
+      const by = y + (canopyCenter + Math.sin(bAng) * 6) * s;
       ctx.fillStyle = colors[ai % colors.length];
       for (let p = 0; p < 5; p++) {
         const pa = (p / 5) * Math.PI * 2 + tSeed * 0.01;
         ctx.beginPath();
         ctx.ellipse(
           bx + Math.cos(pa) * 1.4 * s,
-          by + Math.sin(pa) * 1 * s,
-          1 * s,
-          0.5 * s,
-          pa,
-          0,
-          Math.PI * 2,
+          by + Math.sin(pa) * 1.0 * s * isoY,
+          1 * s, 0.5 * s, pa, 0, Math.PI * 2,
         );
         ctx.fill();
       }
@@ -757,16 +675,17 @@ export function drawTree(
   } else if (palIdx === 6) {
     const colors = TREE_ACCENT_PALETTES.acorns;
     for (let ai = 0; ai < 3; ai++) {
+      const aAng = (ai / 3) * Math.PI * 2 + tSeed * 0.18;
+      const aDist = 10 * cScale;
       ctx.fillStyle = colors[ai % colors.length];
-      const ax = canopyCX + Math.sin(tSeed + ai * 2.5) * 10 * cW * s;
-      const ay =
-        y + (baseY - 2 + Math.cos(tSeed + ai * 1.8) * 8 * cH) * s;
+      const ax = canopyCX + Math.cos(aAng) * aDist * s + Math.sin(tSeed + ai * 2.5) * 2 * s;
+      const ay = y + (canopyCenter + Math.sin(aAng) * 6 + 2) * s;
       ctx.beginPath();
       ctx.ellipse(ax, ay, 0.9 * s, 1.2 * s, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = tv.trunkDark;
       ctx.beginPath();
-      ctx.ellipse(ax, ay - 1 * s, 1 * s, 0.5 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(ax, ay - 1 * s, 1 * s, 0.5 * s * isoY, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }

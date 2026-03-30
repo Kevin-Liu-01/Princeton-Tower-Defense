@@ -10,7 +10,12 @@ import { drawArmoredSkirt } from "../troops/troopHelpers";
 let _simpleGrad = false;
 
 const BLUE_INFERNO_DURATION_MS = 6000;
-const MORPH_DURATION_MS = 1400;
+const MORPH_IN_DURATION_MS = 1200;
+const MORPH_OUT_LEAD_MS = 800;
+const MORPH_OUT_DURATION_MS = 1600;
+const MORPH_OUT_TAIL_MS = MORPH_OUT_DURATION_MS - MORPH_OUT_LEAD_MS;
+
+let _cachedAbilityEnd: number | undefined;
 
 function easeInOutQuart(t: number): number {
   return t < 0.5
@@ -22,24 +27,27 @@ function getMorphProgress(abilityEnd: number): number {
   const now = Date.now();
   const abilityStart = abilityEnd - BLUE_INFERNO_DURATION_MS;
   const elapsed = now - abilityStart;
-  const remaining = abilityEnd - now;
 
   if (elapsed < 0) return 0;
-  if (remaining < 0) return 0;
 
-  if (elapsed < MORPH_DURATION_MS) {
-    return easeInOutQuart(elapsed / MORPH_DURATION_MS);
+  if (elapsed < MORPH_IN_DURATION_MS) {
+    return easeInOutQuart(elapsed / MORPH_IN_DURATION_MS);
   }
-  if (remaining < MORPH_DURATION_MS) {
-    return easeInOutQuart(remaining / MORPH_DURATION_MS);
+
+  const morphOutStart = abilityEnd - MORPH_OUT_LEAD_MS;
+  const morphOutElapsed = now - morphOutStart;
+
+  if (morphOutElapsed >= 0) {
+    if (morphOutElapsed >= MORPH_OUT_DURATION_MS) return 0;
+    return 1 - easeInOutQuart(morphOutElapsed / MORPH_OUT_DURATION_MS);
   }
+
   return 1.0;
 }
 
 function getMorphDirection(abilityEnd: number): "morphIn" | "morphOut" {
   const now = Date.now();
-  const remaining = abilityEnd - now;
-  if (remaining < MORPH_DURATION_MS) return "morphOut";
+  if (now >= abilityEnd - MORPH_OUT_LEAD_MS) return "morphOut";
   return "morphIn";
 }
 
@@ -170,26 +178,34 @@ export function drawNassauHero(
   const s = size;
   const blue = abilityActive ?? false;
 
-  const morphT = abilityEnd != null ? getMorphProgress(abilityEnd) : -1;
+  if (abilityEnd != null) {
+    _cachedAbilityEnd = abilityEnd;
+  }
+  const effectiveEnd = abilityEnd ?? _cachedAbilityEnd;
+
+  if (_cachedAbilityEnd != null && Date.now() > _cachedAbilityEnd + MORPH_OUT_TAIL_MS) {
+    _cachedAbilityEnd = undefined;
+  }
+
+  const morphT = effectiveEnd != null ? getMorphProgress(effectiveEnd) : -1;
 
   if (morphT > 0 && morphT < 1) {
-    const direction = abilityEnd != null ? getMorphDirection(abilityEnd) : "morphIn" as const;
-    const toBlue = direction === "morphIn";
+    const direction = effectiveEnd != null ? getMorphDirection(effectiveEnd) : "morphIn" as const;
 
-    const fadeOutAlpha = 1 - morphT;
-    const fadeInAlpha = morphT;
+    const blueAlpha = morphT;
+    const normalAlpha = 1 - morphT;
 
-    if (fadeOutAlpha > 0.01) {
+    if (normalAlpha > 0.01) {
       ctx.save();
-      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * fadeOutAlpha;
-      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, !toBlue);
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * normalAlpha;
+      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, false);
       ctx.restore();
     }
 
-    if (fadeInAlpha > 0.01) {
+    if (blueAlpha > 0.01) {
       ctx.save();
-      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * fadeInAlpha;
-      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, toBlue);
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * blueAlpha;
+      drawNassauForm(ctx, x, y, s, time, zoom, attackPhase, targetPos, true);
       ctx.restore();
     }
 
@@ -364,15 +380,18 @@ function drawFireTrail(
   blue: boolean = false,
 ) {
   const count = 15 + Math.floor(atkBurst * 10) + (blue ? 8 : 0);
-  const speed = 2.5 + atkBurst * 3 + (blue ? 2 : 0);
-  const spread = 0.2 + atkBurst * 0.14;
+  const speed = 2.0 + atkBurst * 2.0 + (blue ? 1.5 : 0);
+  const spread = 0.18 + atkBurst * 0.12;
   const sizeBoost = 1.1 + atkBurst * 0.7 + (blue ? 0.4 : 0);
+  const PHI = 1.618033988749895;
 
   for (let i = 0; i < count; i++) {
-    const trailPhase = (time * speed + i * (0.22 - atkBurst * 0.05)) % 1;
-    const trailY = y + s * 0.35 + trailPhase * s * (0.7 + atkBurst * 0.3);
-    const trailX =
-      x + Math.sin(time * (3.5 + atkBurst * 3) + i * 1.0) * s * spread;
+    const trailPhase = (time * speed + i * PHI * 0.15) % 1;
+    const smoothPhase = trailPhase * trailPhase * (3 - 2 * trailPhase);
+    const trailY = y + s * 0.35 + smoothPhase * s * (0.7 + atkBurst * 0.3);
+    const lateralWave = Math.sin(time * 2.0 + i * PHI * 0.9) * 0.7
+      + Math.sin(time * 1.3 + i * PHI * 0.5) * 0.3;
+    const trailX = x + lateralWave * s * spread * (0.3 + trailPhase * 0.7);
     const trailAlpha =
       (1 - trailPhase) * (0.5 + atkBurst * 0.25) * (0.7 + flamePulse * 0.3);
     const trailSize = (1 - trailPhase) * s * 0.09 * sizeBoost;
@@ -632,10 +651,18 @@ function drawWings(
 
   const innerRatio = 0.38;
   const elbowX = shoulderX + side * wingSpread * innerRatio;
-  const elbowY = shoulderY - s * 0.12 + flapAngle * s * 0.06 + smoothWingAtk * s * 0.02;
+  const elbowY = shoulderY - s * 0.12 + flapAngle * s * 0.22 + smoothWingAtk * s * 0.02;
+
+  // Outer wing flap is phase-delayed for whip-like bend up→down at the joint
+  const outerSin = Math.sin(time * 5.5 - 0.85);
+  const innerSin = Math.sin(time * 5.5);
+  const flapAmp = Math.abs(innerSin) > 0.1
+    ? Math.abs(wingFlap / innerSin)
+    : 0.7;
+  const outerFlapAngle = outerSin * flapAmp + (isAttacking ? smoothWingAtk * 0.25 : 0);
 
   const wingTipX = elbowX + side * wingSpread * (1 - innerRatio);
-  const wingTipY = elbowY - s * 0.22 + flapAngle * s * 0.55 + smoothWingAtk * s * 0.06;
+  const wingTipY = elbowY - s * 0.22 + outerFlapAngle * s * 0.65 + smoothWingAtk * s * 0.06;
 
   const ripple = isAttacking
     ? Math.sin(attackIntensity * Math.PI + time * 2) * s * 0.005
@@ -760,7 +787,7 @@ function drawWings(
   ctx.moveTo(outerStartX, outerStartTopY);
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.35,
-    elbowY - s * (0.40 - flapAngle * 0.18) + ripple * 0.5,
+    elbowY - s * (0.40 - outerFlapAngle * 0.22) + ripple * 0.5,
     outerStartX + side * outerSpan * 0.7,
     wingTipY - s * 0.04 + ripple * 0.3,
     wingTipX,
@@ -768,9 +795,9 @@ function drawWings(
   );
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.85,
-    elbowY + s * 0.20 + flapAngle * s * 0.38,
+    elbowY + s * 0.20 + outerFlapAngle * s * 0.42,
     outerStartX + side * outerSpan * 0.4,
-    outerTrailY + flapAngle * s * 0.16,
+    outerTrailY + outerFlapAngle * s * 0.20,
     outerStartX,
     outerStartBotY,
   );
@@ -958,7 +985,7 @@ function drawWings(
   drawOuterMembraneFeatherLines(
     ctx, elbowX, elbowY, wingTipX, wingTipY, radCpX, radCpY,
     outerStartX, outerStartTopY, outerStartBotY, outerTrailY, outerSpan,
-    flapAngle, ripple, s, side, zoom, blue, atkBurst,
+    outerFlapAngle, ripple, s, side, zoom, blue, atkBurst,
   );
 
   const primCount = 14;
@@ -981,7 +1008,7 @@ function drawWings(
 
     const featherLen = s * (0.26 + featherT * 0.30);
     const featherAngle = Math.atan2(rpY, rpX) + side * (0.25 + featherT * 0.45);
-    const featherSway = flapAngle * s * 0.01 * featherT;
+    const featherSway = outerFlapAngle * s * 0.01 * featherT;
     const tipX = attachX + Math.cos(featherAngle) * featherLen + featherSway;
     const tipY = attachY + Math.sin(featherAngle) * featherLen;
 
@@ -1129,8 +1156,8 @@ function drawWings(
       edgeX = u * u * elbowX + 2 * u * localT * radCpX + localT * localT * wingTipX;
       const boneY = u * u * elbowY + 2 * u * localT * radCpY + localT * localT * wingTipY;
       edgeTopY = boneY - s * 0.04 * u + ripple * u * 0.5;
-      const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
-      const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
+      const outerBotCp1Y = elbowY + s * 0.20 + outerFlapAngle * s * 0.42;
+      const outerBotCp2Y = outerTrailY + outerFlapAngle * s * 0.20;
       edgeBotY = localT * localT * localT * wingTipY + 3 * localT * localT * u * outerBotCp1Y + 3 * localT * u * u * outerBotCp2Y + u * u * u * outerStartBotY;
     }
 
@@ -1216,12 +1243,18 @@ function drawWingFireCascade(
 ) {
   const flapAngle = wingFlap;
   const wingSpread = s * (1.3 + flapAngle * flapAngle * 0.64);
+  const outerSinC = Math.sin(time * 5.5 - 0.85);
+  const innerSinC = Math.sin(time * 5.5);
+  const flapAmpC = Math.abs(innerSinC) > 0.1
+    ? Math.abs(wingFlap / innerSinC)
+    : 0.7;
+  const outerFlapC = outerSinC * flapAmpC;
 
   for (let side = -1; side <= 1; side += 2) {
     const wingBaseX = x + side * s * 0.14;
     const wingBaseY = y - s * 0.06;
     const wingTipX = wingBaseX + side * wingSpread;
-    const wingTipY = wingBaseY - s * 0.34 + flapAngle * s * 0.61;
+    const wingTipY = wingBaseY - s * 0.34 + flapAngle * s * 0.22 + outerFlapC * s * 0.65;
     const headX = x;
     const headY = y - s * 0.38;
 
@@ -1353,10 +1386,10 @@ function drawTailPlumage(
   const featherCount = 11 + Math.floor(atkBurst * 5) + (blue ? 4 : 0);
   const spreadMult = 1.15 + atkBurst * 0.7;
   const lenMult = 1.35 + atkBurst * 0.55;
-  const swaySpeed = 4.5 + atkBurst * 2.0;
-  const swayAmp = 0.12 + atkBurst * 0.06;
-  const flutterSpeed = 5.5 + atkBurst * 2.5;
-  const flutterAmp = 0.06 + atkBurst * 0.04;
+  const swayFreq = 2.8 + atkBurst * 1.2;
+  const swayAmp = 0.10 + atkBurst * 0.06;
+  const waveFreq = 1.8 + atkBurst * 0.8;
+  const waveAmp = 0.04 + atkBurst * 0.025;
   const tailIsoRatio = ISO_Y_RATIO * 1.5;
 
   const centerIdx = (featherCount - 1) / 2;
@@ -1369,9 +1402,15 @@ function drawTailPlumage(
     const absNorm = Math.abs(norm);
 
     const fanAngle = norm * 0.33 * Math.PI * spreadMult;
-    const phaseOffset = i * 0.7;
-    const sway = Math.sin(time * swaySpeed + phaseOffset) * s * swayAmp * (0.5 + absNorm * 0.5);
-    const flutter = Math.sin(time * flutterSpeed + phaseOffset + 1.2) * s * flutterAmp * (0.4 + absNorm * 0.6);
+    const wavePhase = norm * 1.5;
+    const sway = (
+      Math.sin(time * swayFreq + wavePhase) * 0.7 +
+      Math.sin(time * waveFreq + wavePhase * 0.6 + 0.4) * 0.3
+    ) * s * swayAmp * (0.4 + absNorm * 0.6);
+    const flutter = (
+      Math.sin(time * swayFreq * 0.7 + wavePhase + 1.2) * 0.6 +
+      Math.sin(time * waveFreq * 1.3 + wavePhase * 0.8) * 0.4
+    ) * s * waveAmp * (0.3 + absNorm * 0.7);
 
     const featherLen =
       s * (0.55 + (1 - absNorm) * 0.16 - absNorm * 0.04) * lenMult;
@@ -1388,7 +1427,7 @@ function drawTailPlumage(
       tailBaseY +
       rawDy * 0.35 * tailIsoRatio +
       cp1Flutter +
-      Math.sin(time * 4 + i) * s * 0.02;
+      Math.sin(time * swayFreq * 0.6 + wavePhase * 0.5) * s * 0.012;
     const cp2Sway = sway * 0.65;
     const cp2Flutter = flutter * 0.55;
     const cp2X = x + rawDx * 0.65 + cp2Sway;
@@ -1396,7 +1435,7 @@ function drawTailPlumage(
       tailBaseY +
       rawDy * 0.65 * tailIsoRatio +
       cp2Flutter +
-      Math.sin(time * 3.5 + i * 0.7) * s * 0.015;
+      Math.sin(time * waveFreq * 0.9 + wavePhase * 0.7) * s * 0.010;
 
     const dx = tipX - x;
     const dy = tipY - tailBaseY;
