@@ -6,8 +6,9 @@ import {
   drawHorseTail,
   drawMuscularHorseBody,
   drawMuscularHorseLeg,
+  drawDetailedArm,
 } from "./troopHelpers";
-import type { HorseLegColors } from "./troopHelpers";
+import type { HorseLegColors, ArmColors } from "./troopHelpers";
 import { getScenePressure } from "../performance";
 
 export function drawCavalryTroop(
@@ -363,223 +364,320 @@ export function drawCavalryTroop(
     trimColor: brassMid,
   };
   drawMuscularHorseLeg(
-    ctx, x - size * 0.25, y + size * 0.36 + gallop * 0.13,
+    ctx, x - size * 0.25, y + size * 0.30 + gallop * 0.13,
     size, zoom, time, legCycle * 1.15, 0.2, 8, cavLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x - size * 0.08, y + size * 0.37 + gallop * 0.13,
+    ctx, x - size * 0.08, y + size * 0.31 + gallop * 0.13,
     size, zoom, time, -legCycle * 0.95, 1.2, 8, cavLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x + size * 0.13, y + size * 0.37 + gallop * 0.13,
+    ctx, x + size * 0.13, y + size * 0.31 + gallop * 0.13,
     size, zoom, time, -legCycle * 1.05, 2.1, 8, cavLegColors,
   );
   drawMuscularHorseLeg(
-    ctx, x + size * 0.3, y + size * 0.36 + gallop * 0.13,
+    ctx, x + size * 0.3, y + size * 0.30 + gallop * 0.13,
     size, zoom, time, legCycle * 0.88, 3.1, 8, cavLegColors,
   );
 
   // === HORSE NECK AND HEAD ===
-  // Neck with gradient
+  const hb = headBob;
+  const gp = gallop * 0.15;
+
+  // Muscular neck — angular wedge shape
   const neckGrad = ctx.createLinearGradient(
-    x - size * 0.35,
-    y + size * 0.1,
-    x - size * 0.6,
-    y - size * 0.1,
+    x - size * 0.32, y + size * 0.12, x - size * 0.62, y - size * 0.12,
   );
   neckGrad.addColorStop(0, "#3a2a1a");
-  neckGrad.addColorStop(0.5, "#2a1a0a");
+  neckGrad.addColorStop(0.35, "#4a3620");
+  neckGrad.addColorStop(0.7, "#2a1a0a");
   neckGrad.addColorStop(1, "#1a0a00");
   ctx.fillStyle = neckGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.36, y + size * 0.08 + gallop * 0.15);
-  ctx.quadraticCurveTo(
-    x - size * 0.52,
-    y - size * 0.18 + headBob * 0.5,
-    x - size * 0.6,
-    y - size * 0.06 + headBob,
+  // Crest (top of neck) — arched, muscular
+  ctx.moveTo(x - size * 0.32, y + size * 0.04 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.38, y - size * 0.08 + hb * 0.3,
+    x - size * 0.48, y - size * 0.2 + hb * 0.5,
+    x - size * 0.58, y - size * 0.12 + hb,
   );
-  ctx.lineTo(x - size * 0.72, y - size * 0.03 + headBob);
-  ctx.lineTo(x - size * 0.58, y + size * 0.06 + headBob);
-  ctx.quadraticCurveTo(
-    x - size * 0.42,
-    y + size * 0.14 + gallop * 0.15,
-    x - size * 0.28,
-    y + size * 0.2 + gallop * 0.15,
-  );
-  ctx.fill();
-
-  // Neck armor plate (crinet)
-  ctx.fillStyle = "#616979";
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.38, y + size * 0.02 + gallop * 0.15);
-  ctx.quadraticCurveTo(
-    x - size * 0.48,
-    y - size * 0.12 + headBob * 0.5,
-    x - size * 0.54,
-    y - size * 0.08 + headBob,
-  );
-  ctx.lineTo(x - size * 0.5, y - size * 0.02 + headBob);
-  ctx.quadraticCurveTo(
-    x - size * 0.44,
-    y + size * 0.06 + gallop * 0.15,
-    x - size * 0.36,
-    y + size * 0.08 + gallop * 0.15,
+  // Poll → jaw
+  ctx.lineTo(x - size * 0.72, y - size * 0.06 + hb);
+  // Throat — angular underside
+  ctx.lineTo(x - size * 0.68, y + size * 0.04 + hb);
+  ctx.bezierCurveTo(
+    x - size * 0.58, y + size * 0.08 + hb * 0.6,
+    x - size * 0.45, y + size * 0.16 + gp,
+    x - size * 0.3, y + size * 0.2 + gp,
   );
   ctx.closePath();
   ctx.fill();
-  // Crinet gold trim
-  ctx.strokeStyle = brassMid;
-  ctx.lineWidth = 1.2;
-  ctx.stroke();
 
-  // === ORNATE CHANFRON (head armor) ===
-  // Base chanfron
-  const chanfronGrad = ctx.createLinearGradient(
-    x - size * 0.7,
-    y - size * 0.05,
-    x - size * 0.5,
-    y - size * 0.15,
-  );
-  chanfronGrad.addColorStop(0, "#485062");
-  chanfronGrad.addColorStop(0.5, "#6d788d");
-  chanfronGrad.addColorStop(1, "#515a6d");
-  ctx.fillStyle = chanfronGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.56, y - size * 0.16 + headBob);
-  ctx.lineTo(x - size * 0.72, y - size * 0.03 + headBob);
-  ctx.lineTo(x - size * 0.6, y + size * 0.05 + headBob);
-  ctx.lineTo(x - size * 0.52, y - size * 0.1 + headBob);
-  ctx.closePath();
-  ctx.fill();
-
-  // Chanfron engravings
-  ctx.strokeStyle = brassMid;
-  ctx.lineWidth = 0.8;
-  ctx.globalAlpha = 0.8;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.58, y - size * 0.1 + headBob);
-  ctx.quadraticCurveTo(
-    x - size * 0.64,
-    y - size * 0.06,
-    x - size * 0.6,
-    y - size * 0.02 + headBob,
-  );
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-
-  // Extra heavy chanfron reinforcement for warhorse durability.
-  const facePlateGrad = ctx.createLinearGradient(
-    x - size * 0.66,
-    y - size * 0.13 + headBob,
-    x - size * 0.54,
-    y + size * 0.06 + headBob,
-  );
-  facePlateGrad.addColorStop(0, "#3a404e");
-  facePlateGrad.addColorStop(0.45, "#5f7086");
-  facePlateGrad.addColorStop(1, "#394150");
-  ctx.fillStyle = facePlateGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.67, y - size * 0.13 + headBob);
-  ctx.lineTo(x - size * 0.71, y - size * 0.02 + headBob);
-  ctx.lineTo(x - size * 0.61, y + size * 0.055 + headBob);
-  ctx.lineTo(x - size * 0.54, y - size * 0.08 + headBob);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = `rgba(179, 135, 63, 0.75)`;
+  // Neck muscle definition — angular lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.16)";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.65, y - size * 0.11 + headBob);
-  ctx.lineTo(x - size * 0.68, y - size * 0.02 + headBob);
-  ctx.lineTo(x - size * 0.6, y + size * 0.04 + headBob);
+  ctx.moveTo(x - size * 0.34, y + size * 0.08 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.42, y + size * 0.02 + hb * 0.4,
+    x - size * 0.52, y - size * 0.06 + hb * 0.6,
+    x - size * 0.6, y - size * 0.04 + hb,
+  );
+  ctx.stroke();
+  // Jugular groove
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.33, y + size * 0.14 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.44, y + size * 0.1 + hb * 0.5,
+    x - size * 0.56, y + size * 0.02 + hb * 0.7,
+    x - size * 0.66, y + size * 0.0 + hb,
+  );
+  ctx.stroke();
+  // Neck highlight
+  ctx.save();
+  ctx.globalAlpha = 0.1;
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.34, y + size * 0.05 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.42, y - size * 0.06 + hb * 0.4,
+    x - size * 0.5, y - size * 0.16 + hb * 0.6,
+    x - size * 0.56, y - size * 0.1 + hb,
+  );
+  ctx.stroke();
+  ctx.restore();
+
+  // Crinet (neck armor) — angular segmented plates
+  const crinetGrad = ctx.createLinearGradient(
+    x - size * 0.36, y + size * 0.04, x - size * 0.54, y - size * 0.1,
+  );
+  crinetGrad.addColorStop(0, "#515a6d");
+  crinetGrad.addColorStop(0.4, "#6d788d");
+  crinetGrad.addColorStop(0.7, "#616979");
+  crinetGrad.addColorStop(1, "#4a5264");
+  ctx.fillStyle = crinetGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y + size * 0.0 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.4, y - size * 0.08 + hb * 0.4,
+    x - size * 0.48, y - size * 0.16 + hb * 0.6,
+    x - size * 0.54, y - size * 0.1 + hb,
+  );
+  ctx.lineTo(x - size * 0.5, y - size * 0.04 + hb);
+  ctx.bezierCurveTo(
+    x - size * 0.45, y - size * 0.08 + hb * 0.5,
+    x - size * 0.4, y + size * 0.0 + gp,
+    x - size * 0.34, y + size * 0.06 + gp,
+  );
+  ctx.closePath();
+  ctx.fill();
+  // Crinet segment lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.lineWidth = 0.7 * zoom;
+  for (const t of [0.25, 0.5, 0.75]) {
+    const sx = x - size * (0.35 + t * 0.19);
+    const sy1 = y + size * (0.0 - t * 0.1) + gp * (1 - t) + hb * t * 0.5;
+    const sy2 = sy1 + size * 0.06;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy1);
+    ctx.lineTo(sx + size * 0.01, sy2);
+    ctx.stroke();
+  }
+  // Crinet gold trim
+  ctx.strokeStyle = brassMid;
+  ctx.lineWidth = 1.4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y + size * 0.0 + gp);
+  ctx.bezierCurveTo(
+    x - size * 0.4, y - size * 0.08 + hb * 0.4,
+    x - size * 0.48, y - size * 0.16 + hb * 0.6,
+    x - size * 0.54, y - size * 0.1 + hb,
+  );
+  ctx.stroke();
+
+  // === ANGULAR HORSE HEAD ===
+  // Skull — angular wedge with prominent jaw
+  const skullGrad = ctx.createLinearGradient(
+    x - size * 0.58, y - size * 0.15 + hb,
+    x - size * 0.76, y + size * 0.06 + hb,
+  );
+  skullGrad.addColorStop(0, "#4a3620");
+  skullGrad.addColorStop(0.4, "#3a2818");
+  skullGrad.addColorStop(1, "#2a1a0c");
+  ctx.fillStyle = skullGrad;
+  ctx.beginPath();
+  // Forehead
+  ctx.moveTo(x - size * 0.56, y - size * 0.14 + hb);
+  // Bridge of nose — angular
+  ctx.lineTo(x - size * 0.72, y - size * 0.06 + hb);
+  // Muzzle tip — sharp angle
+  ctx.lineTo(x - size * 0.8, y + size * 0.01 + hb);
+  // Chin/lower lip
+  ctx.lineTo(x - size * 0.76, y + size * 0.06 + hb);
+  // Jaw angle — prominent
+  ctx.lineTo(x - size * 0.68, y + size * 0.06 + hb);
+  // Throat latch
+  ctx.lineTo(x - size * 0.62, y + size * 0.03 + hb);
+  // Cheek
+  ctx.bezierCurveTo(
+    x - size * 0.58, y + size * 0.0 + hb,
+    x - size * 0.54, y - size * 0.06 + hb,
+    x - size * 0.56, y - size * 0.14 + hb,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Cheekbone highlight
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.6, y - size * 0.04 + hb,
+    size * 0.04, size * 0.03, -0.4, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // Jaw muscle definition
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.58, y - size * 0.02 + hb);
+  ctx.bezierCurveTo(
+    x - size * 0.62, y + size * 0.02 + hb,
+    x - size * 0.66, y + size * 0.04 + hb,
+    x - size * 0.68, y + size * 0.05 + hb,
+  );
+  ctx.stroke();
+
+  // Nostrils — angular flared
+  ctx.fillStyle = "#1a0e06";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.78, y + size * 0.0 + hb);
+  ctx.bezierCurveTo(
+    x - size * 0.795, y - size * 0.01 + hb,
+    x - size * 0.79, y + size * 0.02 + hb,
+    x - size * 0.775, y + size * 0.025 + hb,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.77, y + size * 0.01 + hb,
+    x - size * 0.775, y - size * 0.005 + hb,
+    x - size * 0.78, y + size * 0.0 + hb,
+  );
+  ctx.fill();
+  // Second nostril
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.755, y + size * 0.035 + hb,
+    size * 0.012, size * 0.008, -0.3, 0, Math.PI * 2,
+  );
+  ctx.fill();
+
+  // === ORNATE CHANFRON (head armor) ===
+  const chanfronGrad = ctx.createLinearGradient(
+    x - size * 0.56, y - size * 0.16 + hb,
+    x - size * 0.74, y + size * 0.04 + hb,
+  );
+  chanfronGrad.addColorStop(0, "#515a6d");
+  chanfronGrad.addColorStop(0.3, "#6d788d");
+  chanfronGrad.addColorStop(0.6, "#5f6a7e");
+  chanfronGrad.addColorStop(1, "#485062");
+  ctx.fillStyle = chanfronGrad;
+  ctx.beginPath();
+  // Angular faceguard following skull contours
+  ctx.moveTo(x - size * 0.55, y - size * 0.15 + hb);
+  ctx.lineTo(x - size * 0.71, y - size * 0.065 + hb);
+  ctx.lineTo(x - size * 0.74, y - size * 0.01 + hb);
+  ctx.lineTo(x - size * 0.68, y + size * 0.04 + hb);
+  ctx.lineTo(x - size * 0.6, y + size * 0.02 + hb);
+  ctx.bezierCurveTo(
+    x - size * 0.56, y - size * 0.0 + hb,
+    x - size * 0.53, y - size * 0.08 + hb,
+    x - size * 0.55, y - size * 0.15 + hb,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Chanfron center ridge
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.56, y - size * 0.13 + hb);
+  ctx.lineTo(x - size * 0.72, y - size * 0.04 + hb);
+  ctx.stroke();
+
+  // Chanfron reinforcement lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.58, y - size * 0.1 + hb);
+  ctx.lineTo(x - size * 0.66, y + size * 0.02 + hb);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.54, y - size * 0.1 + hb);
+  ctx.lineTo(x - size * 0.62, y + size * 0.02 + hb);
   ctx.stroke();
 
   // Brass accent lines on chanfron
   ctx.strokeStyle = brassMid;
-  ctx.lineWidth = 2 * zoom;
+  ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.56, y - size * 0.15 + headBob);
-  ctx.lineTo(x - size * 0.68, y - size * 0.03 + headBob);
+  ctx.moveTo(x - size * 0.55, y - size * 0.15 + hb);
+  ctx.lineTo(x - size * 0.71, y - size * 0.065 + hb);
+  ctx.lineTo(x - size * 0.74, y - size * 0.01 + hb);
+  ctx.stroke();
+  ctx.lineWidth = 1.0 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.68, y + size * 0.04 + hb);
+  ctx.lineTo(x - size * 0.6, y + size * 0.02 + hb);
   ctx.stroke();
 
-  // Extended snout plate and muzzle to improve horse profile.
+  // Muzzle guard plate
   const snoutGrad = ctx.createLinearGradient(
-    x - size * 0.78,
-    y - size * 0.03 + headBob,
-    x - size * 0.62,
-    y + size * 0.08 + headBob,
+    x - size * 0.8, y - size * 0.02 + hb,
+    x - size * 0.68, y + size * 0.06 + hb,
   );
-  snoutGrad.addColorStop(0, "#4d3321");
-  snoutGrad.addColorStop(0.55, "#6a4a30");
-  snoutGrad.addColorStop(1, "#3e2618");
+  snoutGrad.addColorStop(0, "#3a404e");
+  snoutGrad.addColorStop(0.5, "#5f7086");
+  snoutGrad.addColorStop(1, "#394150");
   ctx.fillStyle = snoutGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.73, y - size * 0.045 + headBob);
-  ctx.quadraticCurveTo(
-    x - size * 0.79,
-    y + size * 0.005 + headBob,
-    x - size * 0.75,
-    y + size * 0.06 + headBob,
-  );
-  ctx.quadraticCurveTo(
-    x - size * 0.69,
-    y + size * 0.1 + headBob,
-    x - size * 0.62,
-    y + size * 0.045 + headBob,
-  );
-  ctx.lineTo(x - size * 0.66, y - size * 0.02 + headBob);
+  ctx.moveTo(x - size * 0.74, y - size * 0.02 + hb);
+  ctx.lineTo(x - size * 0.78, y + size * 0.005 + hb);
+  ctx.lineTo(x - size * 0.75, y + size * 0.04 + hb);
+  ctx.lineTo(x - size * 0.68, y + size * 0.04 + hb);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(179, 135, 63, 0.7)`;
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.72, y - size * 0.025 + headBob);
-  ctx.lineTo(x - size * 0.66, y + size * 0.024 + headBob);
+  ctx.strokeStyle = brassMid;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
-  ctx.fillStyle = "#2b1a11";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.73,
-    y + size * 0.02 + headBob,
-    size * 0.014,
-    size * 0.009,
-    0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.ellipse(
-    x - size * 0.705,
-    y + size * 0.036 + headBob,
-    size * 0.012,
-    size * 0.008,
-    -0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
 
-  // Elaborate golden crest with multiple spikes
+  // Elaborate golden crest with sharp spikes
   ctx.fillStyle = brassMid;
   ctx.shadowColor = brassLight;
   ctx.shadowBlur = 6 * zoom;
-  // Center spike
+  // Center spike — taller, sharper
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.54, y - size * 0.16 + headBob);
-  ctx.lineTo(x - size * 0.52, y - size * 0.3 + headBob);
-  ctx.lineTo(x - size * 0.5, y - size * 0.16 + headBob);
+  ctx.moveTo(x - size * 0.555, y - size * 0.16 + hb);
+  ctx.lineTo(x - size * 0.535, y - size * 0.32 + hb);
+  ctx.lineTo(x - size * 0.515, y - size * 0.16 + hb);
   ctx.closePath();
   ctx.fill();
-  // Side spikes
+  // Left spike
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.58, y - size * 0.14 + headBob);
-  ctx.lineTo(x - size * 0.6, y - size * 0.24 + headBob);
-  ctx.lineTo(x - size * 0.56, y - size * 0.14 + headBob);
+  ctx.moveTo(x - size * 0.585, y - size * 0.14 + hb);
+  ctx.lineTo(x - size * 0.61, y - size * 0.26 + hb);
+  ctx.lineTo(x - size * 0.57, y - size * 0.14 + hb);
   ctx.closePath();
   ctx.fill();
+  // Right spike
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.5, y - size * 0.14 + headBob);
-  ctx.lineTo(x - size * 0.46, y - size * 0.22 + headBob);
-  ctx.lineTo(x - size * 0.48, y - size * 0.14 + headBob);
+  ctx.moveTo(x - size * 0.515, y - size * 0.14 + hb);
+  ctx.lineTo(x - size * 0.48, y - size * 0.24 + hb);
+  ctx.lineTo(x - size * 0.5, y - size * 0.14 + hb);
   ctx.closePath();
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -589,25 +687,19 @@ export function drawCavalryTroop(
   ctx.shadowColor = royalPurpleLight;
   ctx.shadowBlur = 5 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(
-    x - size * 0.58,
-    y - size * 0.08 + headBob,
-    size * 0.022,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(x - size * 0.59, y - size * 0.08 + hb, size * 0.024, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Royal-violet eyes.
+  // Royal-violet eye — positioned on cheek area
   ctx.fillStyle = "#6f53b8";
   ctx.shadowColor = royalPurpleLight;
   ctx.shadowBlur = 8 * zoom;
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.58,
-    y - size * 0.02 + headBob,
-    size * 0.035,
+    x - size * 0.6,
+    y - size * 0.03 + hb,
+    size * 0.032,
     0,
     Math.PI * 2,
   );
@@ -616,9 +708,9 @@ export function drawCavalryTroop(
   ctx.fillStyle = "#b193ef";
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.58,
-    y - size * 0.02 + headBob,
-    size * 0.02,
+    x - size * 0.6,
+    y - size * 0.03 + hb,
+    size * 0.018,
     0,
     Math.PI * 2,
   );
@@ -627,20 +719,20 @@ export function drawCavalryTroop(
   ctx.fillStyle = `rgba(255, 255, 200, ${shimmer})`;
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.59,
-    y - size * 0.025 + headBob,
-    size * 0.008,
+    x - size * 0.61,
+    y - size * 0.035 + hb,
+    size * 0.007,
     0,
     Math.PI * 2,
   );
   ctx.fill();
-  // Iris + pupil for stronger expression
+  // Iris + pupil
   ctx.fillStyle = "rgba(211, 191, 255, 0.9)";
   ctx.beginPath();
   ctx.arc(
-    x - size * 0.58,
-    y - size * 0.02 + headBob,
-    size * 0.01,
+    x - size * 0.6,
+    y - size * 0.03 + hb,
+    size * 0.009,
     0,
     Math.PI * 2,
   );
@@ -729,7 +821,7 @@ export function drawCavalryTroop(
   // === MAJESTIC TAIL ===
   drawHorseTail(
     ctx,
-    x + size * 0.42,
+    x + size * 0.34,
     y + size * 0.12 + gallop * 0.15,
     size,
     zoom,
@@ -1024,45 +1116,22 @@ export function drawCavalryTroop(
     WEAPON_LIMITS.lance,
   );
 
-  // Right arm → lance (anchored to hand) — articulated vambrace
+  const cavArmColors: ArmColors = {
+    upper: "#5a6576",
+    upperLight: "#6a7a8e",
+    upperDark: "#4b5564",
+    vambrace: "#8693a8",
+    vambraceLight: "#9aa7be",
+    elbow: "#7a8698",
+    hand: "#6a7688",
+    trim: "rgba(179, 135, 63, 0.65)",
+  };
+
+  // Right arm → lance (anchored to hand)
   ctx.save();
   ctx.translate(cavRShoulderX, cavRShoulderY);
   ctx.rotate(cavArmSwing);
-  // Rerebrace (upper arm)
-  const rArmGrad = ctx.createLinearGradient(0, -size * 0.04, size * 0.1, size * 0.04);
-  rArmGrad.addColorStop(0, "#4b5564");
-  rArmGrad.addColorStop(0.5, "#6a7a8e");
-  rArmGrad.addColorStop(1, "#4b5564");
-  ctx.fillStyle = rArmGrad;
-  ctx.fillRect(-size * 0.035, -size * 0.038, size * 0.12, size * 0.076);
-  // Couter (elbow guard)
-  ctx.fillStyle = "#7a8698";
-  ctx.beginPath();
-  ctx.ellipse(size * 0.09, 0, size * 0.035, size * 0.042, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = `rgba(179, 135, 63, 0.6)`;
-  ctx.lineWidth = 0.7 * zoom;
-  ctx.beginPath();
-  ctx.arc(size * 0.09, 0, size * 0.03, 0.5, Math.PI * 2 - 0.5);
-  ctx.stroke();
-  // Vambrace (forearm)
-  const rVamGrad = ctx.createLinearGradient(size * 0.1, -size * 0.04, size * 0.19, size * 0.04);
-  rVamGrad.addColorStop(0, "#5a6576");
-  rVamGrad.addColorStop(0.5, "#8693a8");
-  rVamGrad.addColorStop(1, "#5a6576");
-  ctx.fillStyle = rVamGrad;
-  ctx.fillRect(size * 0.1, -size * 0.04, size * 0.09, size * 0.08);
-  ctx.strokeStyle = `rgba(179, 135, 63, 0.65)`;
-  ctx.lineWidth = 0.85 * zoom;
-  ctx.strokeRect(size * 0.1, -size * 0.04, size * 0.09, size * 0.08);
-  // Gauntlet
-  ctx.fillStyle = "#6a7688";
-  ctx.beginPath();
-  ctx.arc(cavArmLen, 0, size * 0.032, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "rgba(179, 135, 63, 0.45)";
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.stroke();
+  drawDetailedArm(ctx, size, cavArmLen, zoom, cavArmColors);
   ctx.restore();
 
   // Left arm → shield — articulated vambrace
@@ -1076,29 +1145,7 @@ export function drawCavalryTroop(
   ctx.save();
   ctx.translate(cavLShoulderX, cavLShoulderY);
   ctx.rotate(cavArmToShieldAngle);
-  const lArmGrad = ctx.createLinearGradient(0, -size * 0.04, size * 0.08, size * 0.04);
-  lArmGrad.addColorStop(0, "#4b5564");
-  lArmGrad.addColorStop(0.5, "#6a7a8e");
-  lArmGrad.addColorStop(1, "#4b5564");
-  ctx.fillStyle = lArmGrad;
-  ctx.fillRect(-size * 0.035, -size * 0.038, size * 0.11, size * 0.076);
-  ctx.fillStyle = "#7a8698";
-  ctx.beginPath();
-  ctx.ellipse(size * 0.08, 0, size * 0.032, size * 0.04, 0, 0, Math.PI * 2);
-  ctx.fill();
-  const lVamGrad = ctx.createLinearGradient(size * 0.08, -size * 0.04, size * 0.17, size * 0.04);
-  lVamGrad.addColorStop(0, "#5a6576");
-  lVamGrad.addColorStop(0.5, "#8693a8");
-  lVamGrad.addColorStop(1, "#5a6576");
-  ctx.fillStyle = lVamGrad;
-  ctx.fillRect(size * 0.08, -size * 0.04, size * 0.09, size * 0.08);
-  ctx.strokeStyle = `rgba(179, 135, 63, 0.6)`;
-  ctx.lineWidth = 0.85 * zoom;
-  ctx.strokeRect(size * 0.08, -size * 0.04, size * 0.09, size * 0.08);
-  ctx.fillStyle = "#6a7388";
-  ctx.beginPath();
-  ctx.arc(size * 0.17, 0, size * 0.03, 0, Math.PI * 2);
-  ctx.fill();
+  drawDetailedArm(ctx, size, size * 0.17, zoom, cavArmColors);
   ctx.restore();
 
   // === ROYAL TABARD (heraldic surcoat over cuirass) ===

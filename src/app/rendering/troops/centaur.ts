@@ -309,7 +309,7 @@ export function drawCentaurTroop(
   drawMuscularHorseLeg(
     ctx,
     x - size * 0.2,
-    y + size * 0.33 + gallop * 0.1,
+    y + size * 0.27 + gallop * 0.1,
     size,
     zoom,
     time,
@@ -321,7 +321,7 @@ export function drawCentaurTroop(
   drawMuscularHorseLeg(
     ctx,
     x - size * 0.05,
-    y + size * 0.34 + gallop * 0.1,
+    y + size * 0.28 + gallop * 0.1,
     size,
     zoom,
     time,
@@ -333,7 +333,7 @@ export function drawCentaurTroop(
   drawMuscularHorseLeg(
     ctx,
     x + size * 0.22,
-    y + size * 0.34 + gallop * 0.1,
+    y + size * 0.28 + gallop * 0.1,
     size,
     zoom,
     time,
@@ -345,7 +345,7 @@ export function drawCentaurTroop(
   drawMuscularHorseLeg(
     ctx,
     x + size * 0.37,
-    y + size * 0.33 + gallop * 0.1,
+    y + size * 0.27 + gallop * 0.1,
     size,
     zoom,
     time,
@@ -358,7 +358,7 @@ export function drawCentaurTroop(
   // === MAJESTIC FLOWING TAIL ===
   drawHorseTail(
     ctx,
-    x + size * 0.5,
+    x + size * 0.42,
     y + size * 0.07 + gallop * 0.12,
     size,
     zoom,
@@ -1418,20 +1418,11 @@ export function drawCentaurTroop(
   }
 
   // === POWERFUL ARMS WITH BRACERS (connecting to bow) ===
-  const armGrad = ctx.createRadialGradient(
-    0,
-    size * 0.08,
-    0,
-    0,
-    size * 0.08,
-    size * 0.12,
-  );
-  armGrad.addColorStop(0, "#e8b878");
-  armGrad.addColorStop(1, "#c89050");
 
   // Left arm → bow grip (holding the bow body)
   const centLShoulderX = x - size * 0.26;
   const centLShoulderY = y - size * 0.18 + gallop * 0.05;
+  const centArmLen = size * 0.24;
   const centArmToBowAngle = Math.atan2(
     bowY - centLShoulderY,
     bowX - centLShoulderX,
@@ -1440,43 +1431,12 @@ export function drawCentaurTroop(
   ctx.save();
   ctx.translate(centLShoulderX, centLShoulderY);
   ctx.rotate(centArmToBowAngle);
-  // Upper arm
-  ctx.fillStyle = armGrad;
-  ctx.beginPath();
-  ctx.ellipse(size * 0.08, 0, size * 0.13, size * 0.06, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm
-  ctx.fillStyle = "#e0a868";
-  ctx.beginPath();
-  ctx.ellipse(size * 0.18, 0, size * 0.11, size * 0.05, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Ornate bracer
-  ctx.fillStyle = centaurGoldDark;
-  ctx.beginPath();
-  ctx.ellipse(size * 0.17, 0, size * 0.06, size * 0.045, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = centaurGoldMid;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  // Bracer gem
-  ctx.fillStyle = centaurLeafLight;
-  ctx.shadowColor = centaurLeafLight;
-  ctx.shadowBlur = 3 * zoom * gemPulse;
-  ctx.beginPath();
-  ctx.arc(size * 0.17, 0, size * 0.015, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  // Hand gripping bow
-  ctx.fillStyle = "#d8a860";
-  ctx.beginPath();
-  ctx.arc(size * 0.24, 0, size * 0.03, 0, Math.PI * 2);
-  ctx.fill();
+  drawCentaurArm(ctx, size, centArmLen, zoom, centaurGoldDark, centaurGoldMid, centaurLeafLight, gemPulse);
   ctx.restore();
 
   // Right arm → bowstring nock point (pulled back behind the centaur)
   const centRShoulderX = x + size * 0.26;
   const centRShoulderY = y - size * 0.18 + gallop * 0.05;
-  // Nock point: behind the bow, pulled right by bowDraw
   const nockX = bowX + size * (0.15 + bowDraw * 0.18);
   const nockY = bowY;
   const centArmToNockAngle = Math.atan2(
@@ -1487,36 +1447,7 @@ export function drawCentaurTroop(
   ctx.save();
   ctx.translate(centRShoulderX, centRShoulderY);
   ctx.rotate(centArmToNockAngle);
-  // Upper arm
-  ctx.fillStyle = armGrad;
-  ctx.beginPath();
-  ctx.ellipse(size * 0.08, 0, size * 0.13, size * 0.06, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Forearm
-  ctx.fillStyle = "#e0a868";
-  ctx.beginPath();
-  ctx.ellipse(size * 0.16, 0, size * 0.11, size * 0.05, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Bracer
-  ctx.fillStyle = centaurGoldDark;
-  ctx.beginPath();
-  ctx.ellipse(size * 0.15, 0, size * 0.06, size * 0.045, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = centaurGoldMid;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = centaurLeafLight;
-  ctx.shadowColor = centaurLeafLight;
-  ctx.shadowBlur = 3 * zoom * gemPulse;
-  ctx.beginPath();
-  ctx.arc(size * 0.15, 0, size * 0.015, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  // Hand pinching the bowstring
-  ctx.fillStyle = "#d8a860";
-  ctx.beginPath();
-  ctx.arc(size * 0.22, 0, size * 0.025, 0, Math.PI * 2);
-  ctx.fill();
+  drawCentaurArm(ctx, size, size * 0.22, zoom, centaurGoldDark, centaurGoldMid, centaurLeafLight, gemPulse);
   ctx.restore();
 
   // === ORNATE HEAD ===
@@ -2572,4 +2503,114 @@ export function drawCentaurTroop(
     ctx.shadowBlur = 0;
   }
   ctx.restore();
+}
+
+function drawCentaurArm(
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  armLength: number,
+  zoom: number,
+  goldDark: string,
+  goldMid: string,
+  gemColor: string,
+  gemPulse: number,
+) {
+  const hw = size * 0.055;
+  const elbowX = armLength * 0.45;
+  const forearmStart = elbowX + size * 0.03;
+
+  // --- Bicep (muscular skin) ---
+  const bicepGrad = ctx.createLinearGradient(0, -hw, 0, hw);
+  bicepGrad.addColorStop(0, "#b07840");
+  bicepGrad.addColorStop(0.3, "#e8b878");
+  bicepGrad.addColorStop(0.6, "#daa860");
+  bicepGrad.addColorStop(1, "#a06828");
+  ctx.fillStyle = bicepGrad;
+  ctx.beginPath();
+  ctx.ellipse(elbowX * 0.5, 0, elbowX * 0.55, hw, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bicep muscle definition line
+  ctx.strokeStyle = "rgba(160, 104, 40, 0.3)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.arc(elbowX * 0.35, -hw * 0.2, hw * 0.6, -0.6, 0.6);
+  ctx.stroke();
+
+  // --- Elbow joint ---
+  const elbowGrad = ctx.createRadialGradient(
+    elbowX, 0, 0, elbowX, 0, size * 0.04,
+  );
+  elbowGrad.addColorStop(0, "#e8b878");
+  elbowGrad.addColorStop(0.6, "#c89050");
+  elbowGrad.addColorStop(1, "#a07030");
+  ctx.fillStyle = elbowGrad;
+  ctx.beginPath();
+  ctx.ellipse(elbowX, 0, size * 0.04, size * 0.035, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- Forearm (skin + bracer) ---
+  const forearmEnd = armLength - size * 0.03;
+  const forearmMidX = (forearmStart + forearmEnd) * 0.5;
+  const foreW = hw * 0.85;
+  const skinGrad = ctx.createLinearGradient(forearmStart, -foreW, forearmStart, foreW);
+  skinGrad.addColorStop(0, "#b07840");
+  skinGrad.addColorStop(0.3, "#e0a868");
+  skinGrad.addColorStop(0.7, "#d09848");
+  skinGrad.addColorStop(1, "#a06828");
+  ctx.fillStyle = skinGrad;
+  ctx.beginPath();
+  ctx.ellipse(forearmMidX, 0, (forearmEnd - forearmStart) * 0.55, foreW, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ornate bracer
+  const bracerX = forearmMidX + size * 0.01;
+  ctx.fillStyle = goldDark;
+  ctx.beginPath();
+  ctx.ellipse(bracerX, 0, size * 0.05, foreW * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = goldMid;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  // Bracer filigree lines
+  ctx.strokeStyle = goldMid;
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(bracerX, 0, size * 0.035, -1.2, 1.2);
+  ctx.stroke();
+
+  // Bracer gem
+  ctx.fillStyle = gemColor;
+  ctx.shadowColor = gemColor;
+  ctx.shadowBlur = 3 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(bracerX, 0, size * 0.014, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Gem specular pip
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.beginPath();
+  ctx.arc(bracerX - size * 0.004, -size * 0.004, size * 0.004, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- Hand / gauntlet ---
+  const handGrad = ctx.createRadialGradient(
+    armLength, 0, 0, armLength, 0, size * 0.03,
+  );
+  handGrad.addColorStop(0, "#e8b878");
+  handGrad.addColorStop(0.6, "#d0a060");
+  handGrad.addColorStop(1, "#a07030");
+  ctx.fillStyle = handGrad;
+  ctx.beginPath();
+  ctx.arc(armLength, 0, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Knuckle detail
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = 0.4 * zoom;
+  ctx.beginPath();
+  ctx.arc(armLength, 0, size * 0.02, -0.7, 0.7);
+  ctx.stroke();
 }

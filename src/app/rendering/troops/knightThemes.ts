@@ -253,6 +253,25 @@ export const MERCER_GEAR_VARIANTS: KnightGearVariant[] = [
   },
 ];
 
+export const KNIGHT_VARIANT_LABELS: readonly string[] = [
+  "Heavy Plate",
+  "Crusader",
+  "Royal Guard",
+];
+
+export interface KnightColorVariation {
+  label: string;
+  ownerType?: TroopOwnerType;
+  mapTheme?: MapTheme;
+}
+
+export const KNIGHT_COLOR_VARIATIONS: readonly KnightColorVariation[] = [
+  { label: "Station", ownerType: "station" },
+  { label: "Barracks", ownerType: "barracks" },
+  { label: "Volcanic", ownerType: "barracks", mapTheme: "volcanic" },
+  { label: "Mercer", ownerType: "hero_summon" },
+];
+
 export function getKnightGearVariant(
   variant?: number,
   ownerType?: TroopOwnerType,

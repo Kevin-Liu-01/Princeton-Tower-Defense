@@ -109,7 +109,7 @@ export const DECORATION_OPTIONS_BY_THEME: Record<MapTheme, DecorationCategory[]>
   ],
   winter: [
     "pine_tree", "snowman", "ice_crystal", "frozen_pond", "snow_pile",
-    "icicles", "glacier", "ice_fortress", "frozen_gate", "broken_wall",
+    "icicles", "glacier", "fortress", "frozen_gate", "broken_wall",
     "frozen_soldier", "battle_crater", "ice_spire", "ice_throne",
     "ice_bridge", "frozen_waterfall", "aurora_crystal", "snow_drift",
     "snow_lantern",

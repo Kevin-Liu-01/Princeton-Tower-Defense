@@ -5,6 +5,10 @@ import { HERO_DATA } from "../../../../constants/heroes";
 const HERO_MAP_SIZE = 22;
 const HERO_MAP_ZOOM = 0.7;
 
+const HERO_MAP_SCALE: Partial<Record<HeroType, number>> = {
+  ivy: 1.5,
+};
+
 export function drawWorldMapHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -59,15 +63,16 @@ export function drawWorldMapHero(
     ctx.scale(-1, 1);
   }
 
+  const scale = HERO_MAP_SCALE[heroType] ?? 1;
   drawHeroSprite(
     ctx,
     0,
     0,
-    HERO_MAP_SIZE,
+    HERO_MAP_SIZE * scale,
     heroType,
     heroData.color,
     time,
-    HERO_MAP_ZOOM,
+    HERO_MAP_ZOOM * scale,
     attackPhase,
   );
 

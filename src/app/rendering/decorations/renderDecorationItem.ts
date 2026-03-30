@@ -56,7 +56,7 @@ import {
 } from "./challengeLandmarks";
 import { getDecorationRenderer } from "./decorationRegistry";
 import {
-  renderIceFortress,
+  renderFortress,
   renderSkullThrone,
   renderWarMonument,
   renderBoneAltar,
@@ -111,7 +111,7 @@ const LANDMARK_TYPES_WITHOUT_AUTO_GROUND_SHADOW = new Set<DecorationType>([
   "foulke_hall",
   "tiger_stadium",
   "glacier",
-  "ice_fortress",
+  "fortress",
   "ice_throne",
   "obsidian_castle",
   "witch_cottage",
@@ -14330,8 +14330,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
 
-    case "ice_fortress": {
-      renderIceFortress({
+    case "fortress": {
+      renderFortress({
         ctx,
         screenX: screenPos.x,
         screenY: screenPos.y,
@@ -14343,6 +14343,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         skipShadow: landmarkSkipShadow,
         shadowOnly,
         zoom,
+        mapTheme: (mapTheme || undefined) as import("../../types").MapTheme | undefined,
       });
       break;
     }

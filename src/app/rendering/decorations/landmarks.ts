@@ -71,14 +71,14 @@ export function drawGlacier(
   renderLandmark(ctx, x, y, scale, "glacier", 0, time);
 }
 
-export function drawIceFortress(
+export function drawFortress(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   scale: number,
   time: number,
 ): void {
-  renderLandmark(ctx, x, y, scale, "ice_fortress", 0, time);
+  renderLandmark(ctx, x, y, scale, "fortress", 0, time);
 }
 
 export function drawIceThrone(

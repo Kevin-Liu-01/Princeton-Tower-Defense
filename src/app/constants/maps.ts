@@ -938,6 +938,7 @@ export const LEVEL_DATA: Record<
     heroSpawn: { x: 17, y: 18 },
     previewImage: "/images/previews/poe.png",
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 2 }, variant: 0, size: 1.1 },
       { type: "princeton_chapel", pos: { x: 26, y: 1 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 25.2, y: 1.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 26.4, y: 2.2 }, variant: 0, size: 1 },
@@ -1082,6 +1083,7 @@ export const LEVEL_DATA: Record<
     startingPawPoints: 400, // Medium difficulty - more waves
     heroSpawn: { x: 15, y: 20 },
     decorations: [
+      { type: "fortress", pos: { x: 28, y: 4 }, variant: 1, size: 1.2 },
       { type: "firestone_library", pos: { x: 2, y: 24 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 1.6, y: 24.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 2.8, y: 25.2 }, variant: 0, size: 1 },
@@ -1239,6 +1241,7 @@ export const LEVEL_DATA: Record<
       type: "beacon",
     },
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 22 }, variant: 2, size: 1.1 },
       // Nassau Hall near path center (path: x:-2 to 32, y:8 to 20)
       { type: "nassau_hall", pos: { x: 16, y: 2 }, variant: 0, size: 3 },
       { type: "blair_arch", pos: { x: 28, y: 4 }, variant: 0, size: 2 },
@@ -1383,6 +1386,7 @@ export const LEVEL_DATA: Record<
     heroSpawn: { x: 18, y: 12 },
     hazards: [{ type: "poison_fog", pos: { x: 17.5, y: 15.5 }, radius: 1.5 }],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 24 }, variant: 2, size: 1.1 },
       { type: "whig_hall", pos: { x: 26, y: 3 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 25.2, y: 3.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 26.8, y: 4.2 }, variant: 0, size: 0 },
@@ -1484,6 +1488,7 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
+      { type: "fortress", pos: { x: 26, y: 2 }, variant: 0, size: 1.1 },
       { type: "east_pyne", pos: { x: 3, y: 24 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 2.2, y: 24.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 3.8, y: 25.2 }, variant: 0, size: 0 },
@@ -1607,6 +1612,7 @@ export const LEVEL_DATA: Record<
       hp: 800,
     },
     decorations: [
+      { type: "fortress", pos: { x: 4, y: 2 }, variant: 1, size: 1.2 },
       { type: "prospect_house", pos: { x: 26, y: 28 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 25.2, y: 28.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 27.2, y: 29.2 }, variant: 0, size: 0 },
@@ -1721,6 +1727,7 @@ export const LEVEL_DATA: Record<
       type: "beacon",
     },
     decorations: [
+      { type: "fortress", pos: { x: 26, y: 22 }, variant: 0, size: 1.2 },
       { type: "clio_hall", pos: { x: 4, y: 2 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 3.2, y: 2.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 4.8, y: 3.2 }, variant: 0, size: 0 },
@@ -1850,6 +1857,7 @@ export const LEVEL_DATA: Record<
       type: "barracks",
     },
     decorations: [
+      { type: "fortress", pos: { x: 4, y: 4 }, variant: 2, size: 1.2 },
       { type: "mccosh_hall", pos: { x: 3, y: 24 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 2.2, y: 24.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 3.8, y: 25.2 }, variant: 0, size: 0 },
@@ -1983,6 +1991,7 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 24 }, variant: 0, size: 1.3 },
       { type: "robertson_hall", pos: { x: 27, y: 3 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 25.8, y: 3.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 27.8, y: 4.2 }, variant: 0, size: 0 },
@@ -2155,7 +2164,7 @@ export const LEVEL_DATA: Record<
       { type: "glacier", pos: { x: 20, y: 6 }, variant: 0, size: 2 },
       { type: "glacier", pos: { x: 4, y: 18 }, variant: 1, size: 1 },
       // Ice fortress guarding the path
-      { type: "ice_fortress", pos: { x: 26, y: 4 }, variant: 0, size: 1.5 },
+      { type: "fortress", pos: { x: 26, y: 4 }, variant: 0, size: 1.5 },
       // Frozen waterfall - dramatic centerpiece
       { type: "frozen_waterfall", pos: { x: 30, y: 8 }, variant: 0, size: 2 },
       // Aurora crystal - magical glow
@@ -2283,8 +2292,8 @@ export const LEVEL_DATA: Record<
       { type: "glacier", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
       { type: "glacier", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
       // Ice fortresses guarding the fortress
-      { type: "ice_fortress", pos: { x: 2, y: 12 }, variant: 1, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 28, y: 8 }, variant: 2, size: 1.5 },
+      { type: "fortress", pos: { x: 2, y: 12 }, variant: 1, size: 1.5 },
+      { type: "fortress", pos: { x: 28, y: 8 }, variant: 2, size: 1.5 },
       // Ruined temple in the courtyard (variant 5 = frost ruins)
       { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 5, size: 2 },
       // Guardian statues flanking the ruins
@@ -2444,8 +2453,8 @@ export const LEVEL_DATA: Record<
       { type: "glacier", pos: { x: 4, y: 22 }, variant: 0, size: 1.5 },
       { type: "glacier", pos: { x: 26, y: 22 }, variant: 2, size: 1.5 },
       // Ice fortresses at the summit approaches
-      { type: "ice_fortress", pos: { x: 2, y: 8 }, variant: 0, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 30, y: 8 }, variant: 2, size: 1.5 },
+      { type: "fortress", pos: { x: 2, y: 8 }, variant: 0, size: 1.5 },
+      { type: "fortress", pos: { x: 30, y: 8 }, variant: 2, size: 1.5 },
       // Frozen ponds - mountain lakes
       { type: "frozen_pond", pos: { x: 10, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 22, y: 14 }, variant: 1, size: 2 },
@@ -2567,6 +2576,7 @@ export const LEVEL_DATA: Record<
     startingPawPoints: 550, // Volcanic intro - lava geyser hazard
     heroSpawn: { x: 18, y: 14 },
     decorations: [
+      { type: "fortress", pos: { x: 28, y: 22 }, variant: 1, size: 1.3 },
       { type: "fine_hall", pos: { x: 2, y: 2 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 1.6, y: 2.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 2.8, y: 3.2 }, variant: 0, size: 0 },
@@ -2703,6 +2713,7 @@ export const LEVEL_DATA: Record<
       },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 26, y: 4 }, variant: 0, size: 1.2 },
       { type: "foulke_hall", pos: { x: 3, y: 24 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 2.2, y: 24.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 3.8, y: 25.2 }, variant: 0, size: 0 },
@@ -2834,6 +2845,7 @@ export const LEVEL_DATA: Record<
     },
     hazards: [{ type: "lava_geyser", pos: { x: 18, y: 14 }, radius: 2 }],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 26 }, variant: 2, size: 1.2 },
       { type: "tiger_stadium", pos: { x: 28, y: 2 }, variant: 0, size: 2 },
       { type: "ruined_temple", pos: { x: 27.2, y: 2.4 }, variant: 0, size: 1 },
       { type: "broken_wall", pos: { x: 28.8, y: 3.2 }, variant: 0, size: 0 },
@@ -2992,6 +3004,7 @@ export const LEVEL_DATA: Record<
       { type: "poison", pos: { x: 21, y: 18 }, radius: 1.2 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 4 }, variant: 1, size: 1.1 },
       { type: "ivy_crossroads", pos: { x: 15, y: 4 }, variant: 0, size: 1.7 },
       { type: "gate", pos: { x: 1, y: 15 }, variant: 0 },
       { type: "gate", pos: { x: 31, y: 15 }, variant: 1 },
@@ -3108,6 +3121,7 @@ export const LEVEL_DATA: Record<
       { type: "deep_water", pos: { x: 12, y: 8 }, radius: 1.8 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 28, y: 22 }, variant: 2, size: 1.1 },
       { type: "blight_basin", pos: { x: 13, y: 15.5 }, variant: 0, size: 3 },
       { type: "ruined_temple", pos: { x: 16, y: 4 }, variant: 6, size: 2 },
 
@@ -3210,6 +3224,7 @@ export const LEVEL_DATA: Record<
       { type: "lightning", pos: { x: 14, y: 16 }, radius: 2.4 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 22 }, variant: 1, size: 1.2 },
       {
         type: "sunscorch_labyrinth",
         pos: { x: 16, y: 4.5 },
@@ -3334,8 +3349,8 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "frost_citadel", pos: { x: 16, y: 5 }, variant: 0, size: 2 },
-      { type: "ice_fortress", pos: { x: 4, y: 8 }, variant: 1, size: 1.2 },
-      { type: "ice_fortress", pos: { x: 28, y: 8 }, variant: 0, size: 1.1 },
+      { type: "fortress", pos: { x: 4, y: 8 }, variant: 1, size: 1.2 },
+      { type: "fortress", pos: { x: 28, y: 8 }, variant: 0, size: 1.1 },
       { type: "frozen_gate", pos: { x: 1, y: 14 }, variant: 0, size: 1.3 },
       { type: "frozen_gate", pos: { x: 31, y: 14 }, variant: 1, size: 1.3 },
       { type: "ice_bridge", pos: { x: 5, y: 14 }, variant: 0, size: 1.4 },
@@ -3445,6 +3460,7 @@ export const LEVEL_DATA: Record<
       { type: "volcano", pos: { x: 12, y: 22 }, radius: 2.5 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 4, y: 6 }, variant: 0, size: 1.2 },
       { type: "ashen_spiral", pos: { x: 16, y: 2 }, variant: 0, size: 2.5 },
       { type: "dark_throne", pos: { x: 18, y: 4 }, variant: 0 },
       { type: "skull_throne", pos: { x: 14, y: 28 }, variant: 0, size: 1.5 },
@@ -3565,6 +3581,7 @@ export const LEVEL_DATA: Record<
       { type: "poison_fog", pos: { x: 25, y: 13 }, radius: 1.6 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 28, y: 24 }, variant: 0, size: 1.1 },
       { type: "cannon_crest", pos: { x: 7, y: 15 }, variant: 1, size: 2 },
       { type: "gate", pos: { x: 1, y: 16 }, variant: 0 },
       { type: "gate", pos: { x: 31, y: 16 }, variant: 1 },
@@ -3687,6 +3704,7 @@ export const LEVEL_DATA: Record<
       { type: "void", pos: { x: 31, y: 17 }, radius: 1.7 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 26 }, variant: 1, size: 1.1 },
       { type: "triad_keep", pos: { x: 16, y: 2.5 }, variant: 1, size: 2 },
       { type: "ruined_temple", pos: { x: 16, y: 26 }, variant: 6, size: 2 },
       { type: "sunken_pillar", pos: { x: 7, y: 10 }, variant: 1 },
@@ -3788,8 +3806,8 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "frist_outpost", pos: { x: 18, y: 4 }, variant: 1, size: 3 },
-      { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
-      { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
+      { type: "fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
+      { type: "fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
       { type: "ice_throne", pos: { x: 16, y: 28 }, variant: 0, size: 1.2 },
       { type: "frozen_gate", pos: { x: 1, y: 14 }, variant: 0, size: 1.2 },
       { type: "frozen_gate", pos: { x: 31, y: 14 }, variant: 1, size: 1.2 },
@@ -3917,6 +3935,7 @@ export const LEVEL_DATA: Record<
       { type: "quicksand", pos: { x: 16, y: 20 }, radius: 1.8 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 28, y: 4 }, variant: 2, size: 1.2 },
       { type: "sun_obelisk", pos: { x: 16, y: 2 }, variant: 0, size: 2 },
       { type: "war_monument", pos: { x: 26, y: 4 }, variant: 0, size: 1.8 },
       { type: "pyramid", pos: { x: 4, y: 14 }, variant: 0, size: 1.5 },
@@ -4036,6 +4055,7 @@ export const LEVEL_DATA: Record<
       { type: "fire", pos: { x: 7, y: 7 }, radius: 1.8 },
     ],
     decorations: [
+      { type: "fortress", pos: { x: 2, y: 24 }, variant: 1, size: 1.2 },
       { type: "infernal_gate", pos: { x: 16, y: 2 }, variant: 0, size: 2.2 },
       { type: "bone_altar", pos: { x: 6, y: 4 }, variant: 0, size: 1.8 },
       { type: "bone_altar", pos: { x: 26, y: 26 }, variant: 0, size: 1.5 },

@@ -164,3 +164,46 @@ export function getReinforcementVariation(
     armor: ARMOR_STYLES[armorIdx],
   };
 }
+
+interface CodexReinforcementVariant {
+  troopId: string;
+  label: string;
+}
+
+function buildCodexVariants(): CodexReinforcementVariant[] {
+  const results: CodexReinforcementVariant[] = [];
+  const seenHelmets = new Set<string>();
+
+  const tryAdd = (id: string) => {
+    const variation = getReinforcementVariation(id);
+    if (!seenHelmets.has(variation.helmet.name)) {
+      seenHelmets.add(variation.helmet.name);
+      const name = variation.helmet.name;
+      results.push({
+        troopId: id,
+        label: name.charAt(0).toUpperCase() + name.slice(1),
+      });
+    }
+  };
+
+  tryAdd("default");
+  for (let i = 0; seenHelmets.size < HELMET_STYLES.length && i < 1000; i++) {
+    tryAdd(`codex_v${i}`);
+  }
+  return results;
+}
+
+export const CODEX_REINFORCEMENT_VARIANTS: readonly CodexReinforcementVariant[] =
+  buildCodexVariants();
+
+export const REINFORCEMENT_TIER_COUNT = 7;
+
+export const REINFORCEMENT_TIER_LABELS: readonly string[] = [
+  "Tier 1",
+  "Tier 2",
+  "Tier 3",
+  "Tier 4",
+  "Tier 5",
+  "Tier 6 — Lancer",
+  "Tier 7 — Lancer",
+];

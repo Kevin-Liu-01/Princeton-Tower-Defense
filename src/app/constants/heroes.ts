@@ -128,7 +128,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     speed: 2.3,
     ability: "Nature's Shift",
     abilityDesc:
-      "Shifts between Ivy Warden and Verdant Colossus form. Warden heals towers; Colossus crushes enemies.",
+      "Shifts between Ivy Warden and Verdant Colossus form. Warden heals troops; Colossus crushes enemies.",
     color: "#059669",
     isRanged: true,
   },

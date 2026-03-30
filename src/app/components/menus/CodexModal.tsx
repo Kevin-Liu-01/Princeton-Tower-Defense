@@ -124,6 +124,8 @@ import {
   FramedSprite,
   type SpriteFrameTheme,
 } from "../../sprites/shared";
+import { KNIGHT_VARIANT_LABELS, KNIGHT_COLOR_VARIATIONS } from "../../rendering/troops/knightThemes";
+import { CODEX_REINFORCEMENT_VARIANTS, REINFORCEMENT_TIER_COUNT, REINFORCEMENT_TIER_LABELS } from "../../rendering/troops/reinforcementThemes";
 import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
 import { BaseModal } from "../ui/primitives/BaseModal";
 
@@ -532,6 +534,36 @@ const TROOP_CATEGORY_MAP: Record<string, { label: string; color: string; types: 
 
 const FramedCodexSprite = FramedSprite;
 
+const KNIGHT_CODEX_VISUALS: { bg: string; border: string }[] = [
+  { bg: "rgba(100,107,129,0.5)", border: "rgba(172,178,198,0.5)" },
+  { bg: "rgba(72,78,96,0.5)", border: "rgba(148,154,172,0.5)" },
+  { bg: "rgba(106,112,136,0.5)", border: "rgba(216,220,232,0.55)" },
+];
+
+const REINFORCEMENT_CODEX_VISUALS: { bg: string; border: string }[] = [
+  { bg: "rgba(91,58,112,0.5)", border: "rgba(156,108,232,0.5)" },
+  { bg: "rgba(72,72,120,0.5)", border: "rgba(132,152,236,0.5)" },
+  { bg: "rgba(60,80,108,0.5)", border: "rgba(104,182,236,0.5)" },
+  { bg: "rgba(46,80,80,0.5)", border: "rgba(109,224,203,0.5)" },
+  { bg: "rgba(78,68,55,0.5)", border: "rgba(200,170,100,0.5)" },
+];
+
+const KNIGHT_COLOR_BUTTON_VISUALS: { bg: string; border: string }[] = [
+  { bg: "rgba(180,120,40,0.5)", border: "rgba(234,179,8,0.5)" },
+  { bg: "rgba(40,80,160,0.5)", border: "rgba(96,165,250,0.5)" },
+  { bg: "rgba(100,40,120,0.5)", border: "rgba(168,85,247,0.5)" },
+  { bg: "rgba(160,40,40,0.5)", border: "rgba(248,113,113,0.5)" },
+];
+
+const REINFORCEMENT_TIER_VISUALS: { bg: string; border: string }[] = [
+  { bg: "rgba(90,75,110,0.5)", border: "rgba(156,108,232,0.5)" },
+  { bg: "rgba(90,94,136,0.5)", border: "rgba(132,152,236,0.5)" },
+  { bg: "rgba(78,109,147,0.5)", border: "rgba(104,182,236,0.5)" },
+  { bg: "rgba(77,111,121,0.5)", border: "rgba(109,224,203,0.5)" },
+  { bg: "rgba(112,102,72,0.5)", border: "rgba(246,212,110,0.5)" },
+  { bg: "rgba(111,94,43,0.5)", border: "rgba(255,195,88,0.5)" },
+  { bg: "rgba(138,144,164,0.5)", border: "rgba(210,220,255,0.5)" },
+];
 
 // =============================================================================
 // CODEX UI HELPERS
@@ -634,6 +666,8 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
   );
   const [categoryNavOpen, setCategoryNavOpen] = useState(false);
   const [enemyRegionPreview, setEnemyRegionPreview] = useState<Record<string, MapTheme | null>>({});
+  const [troopVariantPreview, setTroopVariantPreview] = useState<Record<string, number>>({});
+  const [troopColorPreview, setTroopColorPreview] = useState<Record<string, number>>({});
   const towerTypes = Object.keys(TOWER_DATA) as (keyof typeof TOWER_DATA)[];
   const heroTypes = Object.keys(HERO_DATA) as HeroType[];
   const troopTypes = TROOP_DISPLAY_ORDER;
@@ -2621,9 +2655,89 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                             })()}
                             <div className="p-3 flex flex-col flex-1">
                               <div className="flex items-start gap-3 mb-2.5">
-                                <FramedCodexSprite size={80} theme={getTroopSpriteFrameTheme(type)}>
-                                  <TroopSprite type={type} size={66} />
-                                </FramedCodexSprite>
+                                {(() => {
+                                  const isKnight = type === "knight";
+                                  const isReinforcement = type === "reinforcement";
+                                  const hasTroopVariants = isKnight || isReinforcement;
+                                  if (!hasTroopVariants) {
+                                    return (
+                                      <FramedCodexSprite size={80} theme={getTroopSpriteFrameTheme(type)}>
+                                        <TroopSprite type={type} size={66} />
+                                      </FramedCodexSprite>
+                                    );
+                                  }
+
+                                  const gearIdx = troopVariantPreview[type] ?? 0;
+                                  const colorIdx = troopColorPreview[type] ?? 0;
+                                  const gearCount = isKnight ? KNIGHT_VARIANT_LABELS.length : CODEX_REINFORCEMENT_VARIANTS.length;
+                                  const colorCount = isKnight ? KNIGHT_COLOR_VARIATIONS.length : REINFORCEMENT_TIER_COUNT;
+                                  const gearLabel = isKnight ? KNIGHT_VARIANT_LABELS[gearIdx] : CODEX_REINFORCEMENT_VARIANTS[gearIdx]?.label ?? "";
+                                  const colorLabel = isKnight ? KNIGHT_COLOR_VARIATIONS[colorIdx]?.label ?? "" : REINFORCEMENT_TIER_LABELS[colorIdx] ?? "";
+                                  const isNonDefault = gearIdx > 0 || colorIdx > 0;
+
+                                  const gearVisuals = isKnight ? KNIGHT_CODEX_VISUALS : REINFORCEMENT_CODEX_VISUALS;
+                                  const gearVisual = gearVisuals[gearIdx] ?? gearVisuals[0];
+                                  const colorVisuals = isKnight ? KNIGHT_COLOR_BUTTON_VISUALS : REINFORCEMENT_TIER_VISUALS;
+                                  const colorVisual = colorVisuals[colorIdx] ?? colorVisuals[0];
+
+                                  const knightGearIcons = [<Shield size={11} key="kg0" />, <Swords size={11} key="kg1" />, <Crown size={11} key="kg2" />];
+                                  const reinforcementGearIcons = [<Shield size={11} key="rg0" />, <Eye size={11} key="rg1" />, <Wind size={11} key="rg2" />, <Target size={11} key="rg3" />, <Sparkles size={11} key="rg4" />];
+                                  const gearIcon = isKnight ? knightGearIcons[gearIdx] : reinforcementGearIcons[gearIdx];
+
+                                  const knightColorIcons = [<Flag size={11} key="kc0" />, <Shield size={11} key="kc1" />, <Flame size={11} key="kc2" />, <Crown size={11} key="kc3" />];
+                                  const colorIcon = isKnight ? knightColorIcons[colorIdx] : <Zap size={11} />;
+
+                                  const knightColor = KNIGHT_COLOR_VARIATIONS[colorIdx];
+
+                                  return (
+                                    <div className="relative flex-shrink-0">
+                                      <FramedCodexSprite size={80} theme={getTroopSpriteFrameTheme(type)}>
+                                        <TroopSprite
+                                          type={type}
+                                          size={66}
+                                          animated={isNonDefault}
+                                          knightVariant={isKnight ? gearIdx : undefined}
+                                          ownerType={isKnight ? knightColor?.ownerType : undefined}
+                                          mapTheme={isKnight ? knightColor?.mapTheme : undefined}
+                                          troopId={isReinforcement ? CODEX_REINFORCEMENT_VARIANTS[gearIdx]?.troopId : undefined}
+                                          visualTier={isReinforcement ? colorIdx : undefined}
+                                        />
+                                      </FramedCodexSprite>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setTroopVariantPreview(prev => ({ ...prev, [type]: (gearIdx + 1) % gearCount }));
+                                        }}
+                                        className="absolute -bottom-1.5 -right-1.5 flex items-center justify-center w-[22px] h-[22px] rounded-md transition-all hover:scale-110 active:scale-95"
+                                        style={{
+                                          background: gearVisual.bg,
+                                          border: `1.5px solid ${gearVisual.border}`,
+                                          color: gearIdx > 0 ? "white" : "rgba(200,200,220,0.8)",
+                                          boxShadow: gearIdx > 0 ? `0 0 6px ${gearVisual.border}` : "none",
+                                        }}
+                                        title={`${gearLabel} — click to cycle ${isKnight ? "gear" : "armor"}`}
+                                      >
+                                        {gearIcon}
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setTroopColorPreview(prev => ({ ...prev, [type]: (colorIdx + 1) % colorCount }));
+                                        }}
+                                        className="absolute -bottom-1.5 -left-1.5 flex items-center justify-center w-[22px] h-[22px] rounded-md transition-all hover:scale-110 active:scale-95"
+                                        style={{
+                                          background: colorVisual.bg,
+                                          border: `1.5px solid ${colorVisual.border}`,
+                                          color: colorIdx > 0 ? "white" : "rgba(200,200,220,0.8)",
+                                          boxShadow: colorIdx > 0 ? `0 0 6px ${colorVisual.border}` : "none",
+                                        }}
+                                        title={`${colorLabel} — click to cycle ${isKnight ? "theme" : "tier"}`}
+                                      >
+                                        {colorIcon}
+                                      </button>
+                                    </div>
+                                  );
+                                })()}
                                 <div className="flex-1 min-w-0">
                                   <h4 className="text-base font-bold text-amber-200 truncate">{troop.name}</h4>
                                   <p className="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">{troop.desc}</p>

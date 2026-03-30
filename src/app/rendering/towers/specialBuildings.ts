@@ -6379,6 +6379,55 @@ export function renderSpecialBuilding(
         ctx.fillRect(drx - 1.5 * s, dry - 2 * s, 3 * s, 3.5 * s);
       }
 
+      // ── Machicolation Brackets — defensive overhang supports ──
+      {
+        const machCount = 5;
+        const machBH = 4 * s;
+        const machBD = 3 * s;
+        for (let i = 0; i < machCount; i++) {
+          const t = (i + 0.5) / machCount;
+          const mx = -w * t;
+          const my = -w * tanA * t + corniceY + 1 * s;
+          ctx.fillStyle = bp.stoneDark;
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx - machBD, my - machBD * tanA);
+          ctx.lineTo(mx - machBD, my - machBD * tanA - machBH);
+          ctx.lineTo(mx, my - machBH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx - machBD, my - machBD * tanA);
+          ctx.lineTo(mx - machBD + 2 * s, my - machBD * tanA - s);
+          ctx.lineTo(mx + 2 * s, my - s);
+          ctx.closePath();
+          ctx.fill();
+        }
+        for (let i = 0; i < machCount; i++) {
+          const t = (i + 0.5) / machCount;
+          const mx = w * t;
+          const my = -w * tanA * t + corniceY + 1 * s;
+          ctx.fillStyle = bp.stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx + machBD, my - machBD * tanA);
+          ctx.lineTo(mx + machBD, my - machBD * tanA - machBH);
+          ctx.lineTo(mx, my - machBH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx + machBD, my - machBD * tanA);
+          ctx.lineTo(mx + machBD - 2 * s, my - machBD * tanA - s);
+          ctx.lineTo(mx - 2 * s, my - s);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
       // (Battlements are drawn on the roof faces below)
 
       // Arrow Slit Windows — isometric flush with wall faces (two rows)
@@ -6416,6 +6465,136 @@ export function renderSpecialBuilding(
           s,
           {},
         );
+      }
+
+      // ── Glowing Arched Windows — warm interior light ──
+      {
+        const winDefs = [
+          { x: -w * 0.35, yOff: -w * tanA * 0.35, wall: "left" as const },
+          { x: w * 0.35, yOff: -w * tanA * 0.35, wall: "right" as const },
+        ];
+        const winW = 4.5 * s;
+        const winH = 9 * s;
+        winDefs.forEach((wd) => {
+          ctx.save();
+          ctx.translate(wd.x, wd.yOff - h * 0.52 - baseH);
+          if (wd.wall === "left") {
+            ctx.transform(1, tanA, 0, 1, 0, 0);
+          } else {
+            ctx.transform(1, -tanA, 0, 1, 0, 0);
+          }
+          const glowR = 14 * s;
+          const winGlow = ctx.createRadialGradient(
+            0,
+            -winH * 0.35,
+            0,
+            0,
+            -winH * 0.35,
+            glowR,
+          );
+          winGlow.addColorStop(0, "rgba(255, 200, 80, 0.18)");
+          winGlow.addColorStop(0.4, "rgba(255, 160, 50, 0.07)");
+          winGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = winGlow;
+          ctx.beginPath();
+          ctx.arc(0, -winH * 0.35, glowR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#0a0a12";
+          ctx.beginPath();
+          ctx.moveTo(-winW, 0);
+          ctx.lineTo(-winW, -winH * 0.55);
+          ctx.quadraticCurveTo(0, -winH * 1.15, winW, -winH * 0.55);
+          ctx.lineTo(winW, 0);
+          ctx.closePath();
+          ctx.fill();
+          const intGrad = ctx.createLinearGradient(0, -winH, 0, 0);
+          intGrad.addColorStop(0, "rgba(255, 200, 80, 0.6)");
+          intGrad.addColorStop(0.5, "rgba(255, 150, 40, 0.4)");
+          intGrad.addColorStop(1, "rgba(180, 90, 20, 0.15)");
+          ctx.fillStyle = intGrad;
+          const ins = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(-winW + ins, 0);
+          ctx.lineTo(-winW + ins, -winH * 0.5);
+          ctx.quadraticCurveTo(0, -winH * 1.05, winW - ins, -winH * 0.5);
+          ctx.lineTo(winW - ins, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = bp.stoneDark;
+          ctx.lineWidth = 1.2 * s;
+          ctx.beginPath();
+          ctx.moveTo(-winW, 0);
+          ctx.lineTo(-winW, -winH * 0.55);
+          ctx.quadraticCurveTo(0, -winH * 1.15, winW, -winH * 0.55);
+          ctx.lineTo(winW, 0);
+          ctx.stroke();
+          ctx.strokeStyle = bp.stoneMid;
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -winH * 0.75);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-winW + ins, -winH * 0.35);
+          ctx.lineTo(winW - ins, -winH * 0.35);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      // ── Stone Steps — descending from entrance ──
+      {
+        const stepCount = 3;
+        const stepW = 14 * s;
+        const stepD = 5 * s;
+        const stepH = 3 * s;
+        const stepStartY = -baseH;
+        for (let si = 0; si < stepCount; si++) {
+          const sy = stepStartY + si * (stepH + 1 * s);
+          const sw = stepW + si * 3 * s;
+          const sdOff = stepD * 0.5;
+          const sTanOff = sdOff * tanA;
+          // Left face
+          ctx.fillStyle =
+            si % 2 === 0 ? bp.foundationL[1] : bp.foundationL[2];
+          ctx.beginPath();
+          ctx.moveTo(0, sy);
+          ctx.lineTo(-sw * 0.5, sy - sw * tanA * 0.5);
+          ctx.lineTo(-sw * 0.5, sy - sw * tanA * 0.5 - stepH);
+          ctx.lineTo(0, sy - stepH);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle =
+            si % 2 === 0 ? bp.foundationR[1] : bp.foundationR[2];
+          ctx.beginPath();
+          ctx.moveTo(0, sy);
+          ctx.lineTo(sw * 0.5, sy - sw * tanA * 0.5);
+          ctx.lineTo(sw * 0.5, sy - sw * tanA * 0.5 - stepH);
+          ctx.lineTo(0, sy - stepH);
+          ctx.closePath();
+          ctx.fill();
+          // Top face
+          ctx.fillStyle = bp.foundationTop;
+          ctx.beginPath();
+          ctx.moveTo(0, sy - stepH);
+          ctx.lineTo(-sw * 0.5, sy - sw * tanA * 0.5 - stepH);
+          ctx.lineTo(
+            -sw * 0.5 + sdOff,
+            sy - sw * tanA * 0.5 - sTanOff - stepH,
+          );
+          ctx.lineTo(sdOff, sy - sTanOff - stepH);
+          ctx.closePath();
+          ctx.fill();
+          // Top face highlight
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          ctx.moveTo(-sw * 0.5, sy - sw * tanA * 0.5 - stepH);
+          ctx.lineTo(0, sy - stepH);
+          ctx.lineTo(sw * 0.5, sy - sw * tanA * 0.5 - stepH);
+          ctx.stroke();
+        }
       }
 
       // The Grand Archway Door
@@ -6569,12 +6748,13 @@ export function renderSpecialBuilding(
         ctx.fillStyle = "#4E342E";
         ctx.fillRect(-2.5 * s, 4 * s, 5 * s, 2.5 * s);
         // Warm glow on wall
-        const glow = ctx.createRadialGradient(0, -3 * s, 0, 0, -3 * s, 16 * s);
-        glow.addColorStop(0, `rgba(255, 150, 50, ${tp.flk * 0.15})`);
+        const glow = ctx.createRadialGradient(0, -3 * s, 0, 0, -3 * s, 24 * s);
+        glow.addColorStop(0, `rgba(255, 150, 50, ${tp.flk * 0.25})`);
+        glow.addColorStop(0.35, `rgba(255, 120, 30, ${tp.flk * 0.12})`);
         glow.addColorStop(1, "transparent");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(0, -3 * s, 16 * s, 0, Math.PI * 2);
+        ctx.arc(0, -3 * s, 24 * s, 0, Math.PI * 2);
         ctx.fill();
         // Flame — 3 layers
         ctx.shadowBlur = 10 * s;
@@ -7186,23 +7366,406 @@ export function renderSpecialBuilding(
       ctx.lineTo(peak.x, peak.y);
       ctx.stroke();
 
-      // Peak finial — golden spearhead
-      ctx.fillStyle = "#FFD700";
-      ctx.beginPath();
-      ctx.moveTo(peak.x, peak.y - 10 * s);
-      ctx.lineTo(peak.x - 3.5 * s, peak.y - 1 * s);
-      ctx.lineTo(peak.x + 3.5 * s, peak.y - 1 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#FFA000";
-      ctx.beginPath();
-      ctx.arc(peak.x, peak.y - 4 * s, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // Finial highlight
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.beginPath();
-      ctx.arc(peak.x - 1 * s, peak.y - 5 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
+      // ── Central Keep Tower — imposing tower rising from roof center ──
+      {
+        const kW = 11 * s;
+        const kH = 22 * s;
+        const kBaseY = peak.y + 15 * s;
+        const kTopY = kBaseY - kH;
+        const kTanOff = kW * tanA;
+
+        // Keep left wall
+        const kGradL = ctx.createLinearGradient(
+          -kW,
+          kBaseY - kTanOff,
+          0,
+          kBaseY,
+        );
+        kGradL.addColorStop(0, bp.wallL[0]);
+        kGradL.addColorStop(0.5, bp.wallL[1]);
+        kGradL.addColorStop(1, bp.wallL[3]);
+        ctx.fillStyle = kGradL;
+        ctx.beginPath();
+        ctx.moveTo(0, kBaseY);
+        ctx.lineTo(-kW, kBaseY - kTanOff);
+        ctx.lineTo(-kW, kTopY - kTanOff);
+        ctx.lineTo(0, kTopY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Keep right wall
+        const kGradR = ctx.createLinearGradient(
+          0,
+          kBaseY,
+          kW,
+          kBaseY - kTanOff,
+        );
+        kGradR.addColorStop(0, bp.wallR[0]);
+        kGradR.addColorStop(0.5, bp.wallR[1]);
+        kGradR.addColorStop(1, bp.wallR[3]);
+        ctx.fillStyle = kGradR;
+        ctx.beginPath();
+        ctx.moveTo(0, kBaseY);
+        ctx.lineTo(kW, kBaseY - kTanOff);
+        ctx.lineTo(kW, kTopY - kTanOff);
+        ctx.lineTo(0, kTopY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Keep front edge highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(0, kBaseY);
+        ctx.lineTo(0, kTopY);
+        ctx.stroke();
+
+        // Keep masonry — left wall
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, kBaseY);
+        ctx.lineTo(-kW, kBaseY - kTanOff);
+        ctx.lineTo(-kW, kTopY - kTanOff);
+        ctx.lineTo(0, kTopY);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.6 * s;
+        for (let row = 1; row < 5; row++) {
+          const ky = kBaseY - (kH / 5) * row;
+          ctx.beginPath();
+          ctx.moveTo(-kW - s, -kTanOff + ky);
+          ctx.lineTo(s, ky);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Keep masonry — right wall
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, kBaseY);
+        ctx.lineTo(kW, kBaseY - kTanOff);
+        ctx.lineTo(kW, kTopY - kTanOff);
+        ctx.lineTo(0, kTopY);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = "rgba(0,0,0,0.08)";
+        ctx.lineWidth = 0.6 * s;
+        for (let row = 1; row < 5; row++) {
+          const ky = kBaseY - (kH / 5) * row;
+          ctx.beginPath();
+          ctx.moveTo(-s, ky);
+          ctx.lineTo(kW + s, -kTanOff + ky);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Keep arrow slits
+        drawIsoFlushSlit(
+          ctx,
+          -kW * 0.5,
+          -kTanOff * 0.5 + kTopY + kH * 0.35,
+          2,
+          7,
+          "left",
+          s,
+          {
+            glowColor: isPreparing
+              ? `rgba(${bp.glowRgb}`
+              : undefined,
+            glowAlpha: 0.3,
+          },
+        );
+        drawIsoFlushSlit(
+          ctx,
+          kW * 0.5,
+          -kTanOff * 0.5 + kTopY + kH * 0.35,
+          2,
+          7,
+          "right",
+          s,
+          {
+            glowColor: isPreparing
+              ? `rgba(${bp.glowRgb}`
+              : undefined,
+            glowAlpha: 0.3,
+          },
+        );
+
+        // Keep warm glowing window (arched, on right wall)
+        ctx.save();
+        ctx.translate(kW * 0.5, -kTanOff * 0.5 + kTopY + kH * 0.6);
+        ctx.transform(1, -tanA, 0, 1, 0, 0);
+        {
+          const kwW = 3.5 * s;
+          const kwH = 6 * s;
+          const kwGlow = ctx.createRadialGradient(
+            0,
+            -kwH * 0.3,
+            0,
+            0,
+            -kwH * 0.3,
+            10 * s,
+          );
+          kwGlow.addColorStop(0, "rgba(255, 200, 80, 0.2)");
+          kwGlow.addColorStop(0.5, "rgba(255, 160, 50, 0.07)");
+          kwGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = kwGlow;
+          ctx.beginPath();
+          ctx.arc(0, -kwH * 0.3, 10 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#0a0a12";
+          ctx.beginPath();
+          ctx.moveTo(-kwW, 0);
+          ctx.lineTo(-kwW, -kwH * 0.5);
+          ctx.quadraticCurveTo(0, -kwH * 1.1, kwW, -kwH * 0.5);
+          ctx.lineTo(kwW, 0);
+          ctx.closePath();
+          ctx.fill();
+          const kwInt = ctx.createLinearGradient(0, -kwH, 0, 0);
+          kwInt.addColorStop(0, "rgba(255, 200, 80, 0.65)");
+          kwInt.addColorStop(0.6, "rgba(255, 150, 40, 0.4)");
+          kwInt.addColorStop(1, "rgba(180, 90, 20, 0.2)");
+          ctx.fillStyle = kwInt;
+          const kwIns = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(-kwW + kwIns, 0);
+          ctx.lineTo(-kwW + kwIns, -kwH * 0.45);
+          ctx.quadraticCurveTo(0, -kwH * 1.0, kwW - kwIns, -kwH * 0.45);
+          ctx.lineTo(kwW - kwIns, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = bp.stoneDark;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(-kwW, 0);
+          ctx.lineTo(-kwW, -kwH * 0.5);
+          ctx.quadraticCurveTo(0, -kwH * 1.1, kwW, -kwH * 0.5);
+          ctx.lineTo(kwW, 0);
+          ctx.stroke();
+          ctx.strokeStyle = bp.stoneMid;
+          ctx.lineWidth = 0.7 * s;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -kwH * 0.7);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Keep cornice band
+        ctx.fillStyle = bp.corniceL[0];
+        ctx.beginPath();
+        ctx.moveTo(0, kTopY);
+        ctx.lineTo(-kW - 2 * s, kTopY - (kW + 2 * s) * tanA);
+        ctx.lineTo(-kW - 2 * s, kTopY - (kW + 2 * s) * tanA - 3 * s);
+        ctx.lineTo(0, kTopY - 3 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = bp.corniceR[0];
+        ctx.beginPath();
+        ctx.moveTo(0, kTopY);
+        ctx.lineTo(kW + 2 * s, kTopY - (kW + 2 * s) * tanA);
+        ctx.lineTo(kW + 2 * s, kTopY - (kW + 2 * s) * tanA - 3 * s);
+        ctx.lineTo(0, kTopY - 3 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Keep battlements
+        const kBatH = 4 * s;
+        const kBatCount = 3;
+        for (let mi = 0; mi < kBatCount; mi++) {
+          const t = (mi + 0.5) / (kBatCount + 0.5);
+          const bx = -kW * t;
+          const by = -kTanOff * t + kTopY - 3 * s;
+          const edx = -kW;
+          const edy = -kTanOff;
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const mHW = 2.5 * s;
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallL[0] : bp.wallL[2];
+          ctx.beginPath();
+          ctx.moveTo(bx - nx, by - ny);
+          ctx.lineTo(bx + nx, by + ny);
+          ctx.lineTo(bx + nx, by + ny - kBatH);
+          ctx.lineTo(bx - nx, by - ny - kBatH);
+          ctx.closePath();
+          ctx.fill();
+        }
+        for (let mi = 0; mi < kBatCount; mi++) {
+          const t = (mi + 0.5) / (kBatCount + 0.5);
+          const bx = kW * t;
+          const by = -kTanOff * t + kTopY - 3 * s;
+          const edx = kW;
+          const edy = -kTanOff;
+          const eLen = Math.sqrt(edx * edx + edy * edy);
+          const mHW = 2.5 * s;
+          const nx = (edx / eLen) * mHW;
+          const ny = (edy / eLen) * mHW;
+          ctx.fillStyle = mi % 2 === 0 ? bp.wallR[1] : bp.wallR[3];
+          ctx.beginPath();
+          ctx.moveTo(bx - nx, by - ny);
+          ctx.lineTo(bx + nx, by + ny);
+          ctx.lineTo(bx + nx, by + ny - kBatH);
+          ctx.lineTo(bx - nx, by - ny - kBatH);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Keep top iso diamond
+        ctx.fillStyle = bp.foundationTop;
+        ctx.beginPath();
+        ctx.moveTo(0, kTopY - 3 * s + kTanOff);
+        ctx.lineTo(-kW, kTopY - 3 * s);
+        ctx.lineTo(0, kTopY - 3 * s - kTanOff);
+        ctx.lineTo(kW, kTopY - 3 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Keep conical cap
+        const kCapH = 14 * s;
+        const kCapBase = kTopY - 3 * s - kBatH;
+        const kCapOW = kW + 1 * s;
+        const kCapTanOff = kCapOW * tanA;
+        const kcF = { x: 0, y: kCapBase + kCapTanOff };
+        const kcL = { x: -kCapOW, y: kCapBase };
+        const kcR = { x: kCapOW, y: kCapBase };
+        const kcB = { x: 0, y: kCapBase - kCapTanOff };
+        const kPk = { x: 0, y: kCapBase - kCapH };
+
+        // Back faces
+        ctx.fillStyle = "#1a2433";
+        ctx.beginPath();
+        ctx.moveTo(kcL.x, kcL.y);
+        ctx.lineTo(kcB.x, kcB.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#1e2838";
+        ctx.beginPath();
+        ctx.moveTo(kcB.x, kcB.y);
+        ctx.lineTo(kcR.x, kcR.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.closePath();
+        ctx.fill();
+        // Front-left face
+        const kCapGradFL = ctx.createLinearGradient(
+          kcL.x,
+          kcL.y,
+          kPk.x,
+          kPk.y,
+        );
+        kCapGradFL.addColorStop(0, "#1B2631");
+        kCapGradFL.addColorStop(1, "#283747");
+        ctx.fillStyle = kCapGradFL;
+        ctx.beginPath();
+        ctx.moveTo(kcF.x, kcF.y);
+        ctx.lineTo(kcL.x, kcL.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.closePath();
+        ctx.fill();
+        // Front-right face
+        const kCapGradFR = ctx.createLinearGradient(
+          kcR.x,
+          kcR.y,
+          kPk.x,
+          kPk.y,
+        );
+        kCapGradFR.addColorStop(0, "#2C3E50");
+        kCapGradFR.addColorStop(1, "#3A5068");
+        ctx.fillStyle = kCapGradFR;
+        ctx.beginPath();
+        ctx.moveTo(kcR.x, kcR.y);
+        ctx.lineTo(kcF.x, kcF.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cap ridge lines
+        ctx.strokeStyle = "#4E342E";
+        ctx.lineWidth = 2 * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(kcL.x, kcL.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(kcF.x, kcF.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(kcR.x, kcR.y);
+        ctx.lineTo(kPk.x, kPk.y);
+        ctx.stroke();
+
+        // Tile lines on cap
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.6 * s;
+        for (let ti = 1; ti < 4; ti++) {
+          const tt = ti / 4;
+          ctx.beginPath();
+          ctx.moveTo(
+            kcF.x * (1 - tt) + kPk.x * tt,
+            kcF.y * (1 - tt) + kPk.y * tt,
+          );
+          ctx.lineTo(
+            kcL.x * (1 - tt) + kPk.x * tt,
+            kcL.y * (1 - tt) + kPk.y * tt,
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(
+            kcR.x * (1 - tt) + kPk.x * tt,
+            kcR.y * (1 - tt) + kPk.y * tt,
+          );
+          ctx.lineTo(
+            kcF.x * (1 - tt) + kPk.x * tt,
+            kcF.y * (1 - tt) + kPk.y * tt,
+          );
+          ctx.stroke();
+        }
+
+        // Keep peak golden finial
+        ctx.fillStyle = "#FFD700";
+        ctx.beginPath();
+        ctx.moveTo(kPk.x, kPk.y - 8 * s);
+        ctx.lineTo(kPk.x - 2.5 * s, kPk.y - 1 * s);
+        ctx.lineTo(kPk.x + 2.5 * s, kPk.y - 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#FFA000";
+        ctx.beginPath();
+        ctx.arc(kPk.x, kPk.y - 3 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.25)";
+        ctx.beginPath();
+        ctx.arc(kPk.x - 0.8 * s, kPk.y - 4 * s, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Small animated pennant at keep peak
+        const pennantWave = Math.sin(time * 3) * 1.5 * s;
+        ctx.fillStyle = "#C62828";
+        ctx.beginPath();
+        ctx.moveTo(kPk.x, kPk.y - 8 * s);
+        ctx.lineTo(kPk.x + 8 * s, kPk.y - 10 * s + pennantWave);
+        ctx.lineTo(
+          kPk.x + 8 * s,
+          kPk.y - 6 * s + Math.sin(time * 3 + 0.5) * 1.5 * s,
+        );
+        ctx.lineTo(kPk.x, kPk.y - 7 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(180, 20, 20, 0.6)";
+        ctx.beginPath();
+        ctx.moveTo(kPk.x, kPk.y - 8 * s);
+        ctx.lineTo(kPk.x + 8 * s, kPk.y - 10 * s + pennantWave);
+        ctx.lineTo(
+          kPk.x + 4 * s,
+          kPk.y - 8 * s + Math.sin(time * 3 + 0.3) * 0.8 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
 
       // ── Corner Watchtower Turrets (drawn after roof for layering) ──
       {
@@ -7779,6 +8342,22 @@ export function renderSpecialBuilding(
           );
           ctx.stroke();
         });
+      }
+
+      // ── Warm Light Pool — light spilling from doorway onto ground ──
+      {
+        ctx.save();
+        ctx.translate(0, -baseH * 0.2);
+        ctx.scale(1, 0.5);
+        const doorLight = ctx.createRadialGradient(0, 0, 0, 0, 0, 22 * s);
+        doorLight.addColorStop(0, "rgba(255, 180, 80, 0.1)");
+        doorLight.addColorStop(0.5, "rgba(255, 140, 50, 0.04)");
+        doorLight.addColorStop(1, "transparent");
+        ctx.fillStyle = doorLight;
+        ctx.beginPath();
+        ctx.arc(0, 0, 22 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
 
       // Spawn Effect — beam and particles (drawn on top)

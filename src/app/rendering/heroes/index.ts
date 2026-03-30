@@ -103,7 +103,8 @@ export function renderHero(
     const MORPH_MS = 1200;
     const now = Date.now();
     const remaining = hero.abilityEnd ? hero.abilityEnd - now : 0;
-    const morphT = remaining > 0 ? Math.min(1, 1.0 - remaining / MORPH_MS) : 1.0;
+    const morphT =
+      remaining > 0 ? Math.min(1, 1.0 - remaining / MORPH_MS) : 1.0;
     if (hero.abilityActive) {
       abilityScaleBoost = 0.85 * morphT;
     } else if (remaining > 0) {

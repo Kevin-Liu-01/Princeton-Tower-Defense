@@ -1,6 +1,7 @@
 import type { Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants/isometric";
 import { setShadowBlur, clearShadow, getPerformanceSettings, getCachedLinearGradient, getScenePressure } from "../performance";
+import { drawArmoredSkirt } from "../troops/troopHelpers";
 
 // ╔════════════════════════════════════════════════════════════════════════════╗
 // ║                  MORPH TRANSITION SYSTEM (Normal ↔ Blue Inferno)         ║
@@ -258,7 +259,11 @@ function drawNassauForm(
   drawBody(ctx, bx, cy, s, breathe, time, flamePulse, zoom, bodyGlow, isAttacking, smoothAtk, blue);
   drawArmorPlates(ctx, bx, cy, s, time, zoom, flamePulse, gemPulse, blue);
   drawHarness(ctx, bx, cy, s, time, zoom, gemPulse, blue);
-  drawBeltArmor(ctx, bx, cy, s, time, zoom, flamePulse, gemPulse, blue);
+  drawArmoredSkirt(ctx, bx, cy, s, zoom, Math.sin(time * 3) * 1.2, breathe, blue
+    ? { armorPeak: "#93c5fd", armorHigh: "#3b82f6", armorMid: "#1e40af", armorDark: "#1e3a8a", trimColor: "#bfdbfe" }
+    : { armorPeak: "#f0a040", armorHigh: "#c07020", armorMid: "#8a4a10", armorDark: "#5a2a08", trimColor: "#ffd080" },
+    { plateCount: 7, widthFactor: 0.52, depthFactor: 0.14, topOffset: 0.14 },
+  );
   drawShoulderPauldrons(ctx, bx, cy, s, time, zoom, wingFlap, flamePulse, gemPulse, blue);
   drawNeck(ctx, bx, headY, s, time, zoom, flamePulse, targetPos, blue);
   drawHelmet(ctx, bx, headY, s, time, zoom, flamePulse, gemPulse, isAttacking, attackIntensity, targetPos, blue);
@@ -397,6 +402,206 @@ function drawFireTrail(
   }
 }
 
+// ─── WING FEATHER LINE ART HELPERS ──────────────────────────────────────────
+
+function drawFeatherBarbs(
+  ctx: CanvasRenderingContext2D,
+  baseX: number, baseY: number,
+  tipX: number, tipY: number,
+  perpNx: number, perpNy: number,
+  featherLen: number, vaneWidth: number,
+  side: number, zoom: number, blue: boolean,
+  alpha: number, barbCount: number,
+) {
+  if (alpha < 0.02) return;
+  ctx.strokeStyle = blue
+    ? `rgba(30, 58, 138, ${alpha})`
+    : `rgba(100, 40, 5, ${alpha})`;
+  ctx.lineWidth = 0.5 * zoom;
+
+  const dx = tipX - baseX;
+  const dy = tipY - baseY;
+
+  for (let b = 0; b < barbCount; b++) {
+    const t = 0.15 + (b / barbCount) * 0.7;
+    const mx = baseX + dx * t;
+    const my = baseY + dy * t;
+    const barbLen = vaneWidth * (0.6 + (1 - t) * 0.3);
+
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(
+      mx + perpNx * barbLen * 0.9 * side + dx * 0.06,
+      my + perpNy * barbLen * 0.9 + dy * 0.06,
+    );
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(
+      mx - perpNx * barbLen * 0.3 * side + dx * 0.06,
+      my - perpNy * barbLen * 0.3 + dy * 0.06,
+    );
+    ctx.stroke();
+  }
+}
+
+function drawMembraneFeatherLines(
+  ctx: CanvasRenderingContext2D,
+  shoulderX: number, shoulderY: number,
+  elbowX: number, elbowY: number,
+  humCpX: number, humCpY: number,
+  innerTrailY: number, flapAngle: number,
+  ripple: number, s: number, side: number,
+  wingSpread: number, innerRatio: number,
+  zoom: number, blue: boolean, atkBurst: number,
+) {
+  const rowCount = 8;
+  ctx.lineWidth = 0.6 * zoom;
+
+  for (let row = 0; row < rowCount; row++) {
+    const rowT = (row + 1) / (rowCount + 1);
+    const alpha = 0.2 + atkBurst * 0.05 - Math.abs(rowT - 0.5) * 0.12;
+    if (alpha < 0.03) continue;
+
+    ctx.strokeStyle = blue
+      ? `rgba(30, 64, 175, ${alpha})`
+      : `rgba(120, 50, 8, ${alpha})`;
+
+    ctx.beginPath();
+    const segments = 10;
+    for (let seg = 0; seg <= segments; seg++) {
+      const spanT = seg / segments;
+      const u = 1 - spanT;
+      const boneX = u * u * shoulderX + 2 * u * spanT * humCpX + spanT * spanT * elbowX;
+      const boneY = u * u * shoulderY + 2 * u * spanT * humCpY + spanT * spanT * elbowY;
+      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+      const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
+      const trailBotY = spanT * spanT * spanT * elbowY + 3 * spanT * spanT * u * innerBotCp1Y + 3 * spanT * u * u * innerBotCp2Y + u * u * u * innerTrailY;
+      const lx = boneX;
+      const ly = boneY + (trailBotY - boneY) * rowT;
+
+      if (seg === 0) {
+        ctx.moveTo(lx, ly);
+      } else {
+        ctx.lineTo(lx, ly);
+      }
+    }
+    ctx.stroke();
+  }
+
+  // Scalloped edge hints along the inner trailing edge
+  const scallops = 6;
+  ctx.lineWidth = 0.7 * zoom;
+  for (let sc = 0; sc < scallops; sc++) {
+    const t1 = sc / scallops;
+    const t2 = (sc + 1) / scallops;
+    const tMid = (t1 + t2) / 2;
+
+    const u1 = 1 - t1;
+    const u2 = 1 - t2;
+    const uM = 1 - tMid;
+
+    const bx1 = u1 * u1 * shoulderX + 2 * u1 * t1 * humCpX + t1 * t1 * elbowX;
+    const bx2 = u2 * u2 * shoulderX + 2 * u2 * t2 * humCpX + t2 * t2 * elbowX;
+    const bxM = uM * uM * shoulderX + 2 * uM * tMid * humCpX + tMid * tMid * elbowX;
+
+    const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+    const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
+    const by1 = t1 * t1 * t1 * elbowY + 3 * t1 * t1 * u1 * innerBotCp1Y + 3 * t1 * u1 * u1 * innerBotCp2Y + u1 * u1 * u1 * innerTrailY;
+    const by2 = t2 * t2 * t2 * elbowY + 3 * t2 * t2 * u2 * innerBotCp1Y + 3 * t2 * u2 * u2 * innerBotCp2Y + u2 * u2 * u2 * innerTrailY;
+    const byM = tMid * tMid * tMid * elbowY + 3 * tMid * tMid * uM * innerBotCp1Y + 3 * tMid * uM * uM * innerBotCp2Y + uM * uM * uM * innerTrailY;
+
+    const alpha = 0.18 - sc * 0.015;
+    ctx.strokeStyle = blue
+      ? `rgba(30, 58, 138, ${alpha})`
+      : `rgba(100, 40, 5, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(bx1, by1);
+    ctx.quadraticCurveTo(bxM, byM - s * 0.025, bx2, by2);
+    ctx.stroke();
+  }
+}
+
+function drawOuterMembraneFeatherLines(
+  ctx: CanvasRenderingContext2D,
+  elbowX: number, elbowY: number,
+  wingTipX: number, wingTipY: number,
+  radCpX: number, radCpY: number,
+  outerStartX: number, outerStartTopY: number,
+  outerStartBotY: number, outerTrailY: number,
+  outerSpan: number,
+  flapAngle: number, ripple: number,
+  s: number, side: number, zoom: number,
+  blue: boolean, atkBurst: number,
+) {
+  const rowCount = 10;
+  ctx.lineWidth = 0.6 * zoom;
+
+  for (let row = 0; row < rowCount; row++) {
+    const rowT = (row + 1) / (rowCount + 1);
+    const alpha = 0.22 + atkBurst * 0.05 - Math.abs(rowT - 0.5) * 0.12;
+    if (alpha < 0.03) continue;
+
+    ctx.strokeStyle = blue
+      ? `rgba(30, 64, 175, ${alpha})`
+      : `rgba(120, 50, 8, ${alpha})`;
+
+    ctx.beginPath();
+    const segments = 12;
+    for (let seg = 0; seg <= segments; seg++) {
+      const spanT = seg / segments;
+      const u = 1 - spanT;
+      const boneX = u * u * elbowX + 2 * u * spanT * radCpX + spanT * spanT * wingTipX;
+      const boneY = u * u * elbowY + 2 * u * spanT * radCpY + spanT * spanT * wingTipY;
+      const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
+      const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
+      const trailBotY = spanT * spanT * spanT * wingTipY + 3 * spanT * spanT * u * outerBotCp1Y + 3 * spanT * u * u * outerBotCp2Y + u * u * u * outerStartBotY;
+      const lx = boneX;
+      const ly = boneY + (trailBotY - boneY) * rowT;
+
+      if (seg === 0) {
+        ctx.moveTo(lx, ly);
+      } else {
+        ctx.lineTo(lx, ly);
+      }
+    }
+    ctx.stroke();
+  }
+
+  // Scalloped edge hints along the outer trailing edge
+  const scallops = 8;
+  ctx.lineWidth = 0.7 * zoom;
+  for (let sc = 0; sc < scallops; sc++) {
+    const t1 = sc / scallops;
+    const t2 = (sc + 1) / scallops;
+    const tMid = (t1 + t2) / 2;
+
+    const u1 = 1 - t1;
+    const u2 = 1 - t2;
+    const uM = 1 - tMid;
+
+    const bx1 = u1 * u1 * elbowX + 2 * u1 * t1 * radCpX + t1 * t1 * wingTipX;
+    const bx2 = u2 * u2 * elbowX + 2 * u2 * t2 * radCpX + t2 * t2 * wingTipX;
+    const bxM = uM * uM * elbowX + 2 * uM * tMid * radCpX + tMid * tMid * wingTipX;
+
+    const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
+    const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
+    const by1 = t1 * t1 * t1 * wingTipY + 3 * t1 * t1 * u1 * outerBotCp1Y + 3 * t1 * u1 * u1 * outerBotCp2Y + u1 * u1 * u1 * outerStartBotY;
+    const by2 = t2 * t2 * t2 * wingTipY + 3 * t2 * t2 * u2 * outerBotCp1Y + 3 * t2 * u2 * u2 * outerBotCp2Y + u2 * u2 * u2 * outerStartBotY;
+    const byM = tMid * tMid * tMid * wingTipY + 3 * tMid * tMid * uM * outerBotCp1Y + 3 * tMid * uM * uM * outerBotCp2Y + uM * uM * uM * outerStartBotY;
+
+    const alpha = 0.20 - sc * 0.012;
+    ctx.strokeStyle = blue
+      ? `rgba(30, 58, 138, ${alpha})`
+      : `rgba(100, 40, 5, ${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(bx1, by1);
+    ctx.quadraticCurveTo(bxM, byM - s * 0.02, bx2, by2);
+    ctx.stroke();
+  }
+}
+
 // ─── WINGS ──────────────────────────────────────────────────────────────────
 
 function drawWings(
@@ -416,7 +621,7 @@ function drawWings(
   const smoothWingAtk = atkBurst * atkBurst;
   const flapAngle =
     wingFlap + (isAttacking ? smoothWingAtk * 0.25 : 0);
-  const wingSpread = s * (1.3 + flapAngle * 0.45 + smoothWingAtk * 0.15);
+  const wingSpread = s * (1.3 + flapAngle * flapAngle * 0.64 + smoothWingAtk * 0.15);
   const side = layer === "back" ? 1 : -1;
 
   ctx.save();
@@ -460,7 +665,7 @@ function drawWings(
   ctx.fill();
 
   // ─── Inner membrane (shoulder → elbow) ───
-  const innerTrailY = shoulderY + s * 0.28;
+  const innerTrailY = shoulderY + s * 0.38;
   const innerGrad = ctx.createLinearGradient(
     shoulderX, shoulderY, elbowX, elbowY,
   );
@@ -490,17 +695,17 @@ function drawWings(
   ctx.moveTo(shoulderX, shoulderY);
   ctx.bezierCurveTo(
     shoulderX + side * wingSpread * innerRatio * 0.35,
-    shoulderY - s * (0.42 - flapAngle * 0.10) + ripple,
+    shoulderY - s * (0.55 - flapAngle * 0.10) + ripple,
     shoulderX + side * wingSpread * innerRatio * 0.7,
-    elbowY - s * 0.14 + ripple * 0.7,
+    elbowY - s * 0.20 + ripple * 0.7,
     elbowX,
     elbowY,
   );
   ctx.bezierCurveTo(
     shoulderX + side * wingSpread * innerRatio * 0.7,
-    elbowY + s * 0.16 + flapAngle * s * 0.05,
+    elbowY + s * 0.24 + flapAngle * s * 0.10,
     shoulderX + side * wingSpread * innerRatio * 0.35,
-    innerTrailY + flapAngle * s * 0.04,
+    innerTrailY + flapAngle * s * 0.07,
     shoulderX,
     innerTrailY,
   );
@@ -509,11 +714,11 @@ function drawWings(
 
   // ─── Outer membrane (elbow → wingtip) ───
   // Overlap inward past elbow to close the seam between inner/outer sections
-  const elbowOverlap = side * wingSpread * 0.14;
+  const elbowOverlap = side * wingSpread * 0.22;
   const outerStartX = elbowX - elbowOverlap;
-  const outerStartTopY = elbowY - s * 0.03;
-  const outerTrailY = elbowY + s * 0.20;
-  const outerStartBotY = outerTrailY + s * 0.03;
+  const outerStartTopY = elbowY - s * 0.06;
+  const outerTrailY = elbowY + s * 0.30;
+  const outerStartBotY = outerTrailY + s * 0.04;
   const outerSpan = wingSpread * (1 - innerRatio) + wingSpread * 0.14;
   const outerGrad = ctx.createLinearGradient(
     elbowX, elbowY, wingTipX, wingTipY,
@@ -555,17 +760,17 @@ function drawWings(
   ctx.moveTo(outerStartX, outerStartTopY);
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.35,
-    elbowY - s * (0.30 - flapAngle * 0.18) + ripple * 0.5,
+    elbowY - s * (0.40 - flapAngle * 0.18) + ripple * 0.5,
     outerStartX + side * outerSpan * 0.7,
-    wingTipY + s * 0.02 + ripple * 0.3,
+    wingTipY - s * 0.04 + ripple * 0.3,
     wingTipX,
     wingTipY,
   );
   ctx.bezierCurveTo(
     outerStartX + side * outerSpan * 0.85,
-    elbowY + s * 0.12 + flapAngle * s * 0.10,
+    elbowY + s * 0.20 + flapAngle * s * 0.38,
     outerStartX + side * outerSpan * 0.4,
-    outerTrailY + flapAngle * s * 0.06,
+    outerTrailY + flapAngle * s * 0.16,
     outerStartX,
     outerStartBotY,
   );
@@ -637,7 +842,7 @@ function drawWings(
   ctx.moveTo(shoulderX, shoulderY + s * 0.04);
   ctx.quadraticCurveTo(
     (shoulderX + elbowX) / 2 + side * s * 0.01,
-    shoulderY + s * 0.06 + flapAngle * s * 0.03,
+    (shoulderY + elbowY) / 2 + s * 0.02 + ripple * 0.3,
     elbowX,
     elbowY + s * 0.03,
   );
@@ -647,23 +852,37 @@ function drawWings(
   ctx.moveTo(elbowX, elbowY + s * 0.03);
   ctx.quadraticCurveTo(
     (elbowX + wingTipX) / 2,
-    (elbowY + wingTipY) / 2 + s * 0.04,
-    elbowX + side * outerSpan * 0.75,
-    elbowY - s * 0.02 + flapAngle * s * 0.12,
+    (elbowY + wingTipY) / 2 + s * 0.02 + ripple * 0.15,
+    wingTipX - side * wingSpread * 0.08,
+    wingTipY + s * 0.03,
   );
   ctx.stroke();
 
   // ─── Covert feathers (inner wing: shoulder → elbow) ───
+  // Humerus bone control point (must match the drawn bone quadratic curve)
+  const humCpX = (shoulderX + elbowX) / 2;
+  const humCpY = (shoulderY + elbowY) / 2 - s * 0.06 + ripple * 0.4;
+
   const covCount = 9;
   for (let f = 0; f < covCount; f++) {
     const fT = (f + 0.5) / covCount;
-    const aT = fT * 0.92;
-    const aX = shoulderX + (elbowX - shoulderX) * aT;
-    const aY =
-      shoulderY + (elbowY - shoulderY) * aT - s * 0.02 + ripple * aT;
+    const bT = fT * 0.92;
 
-    const fLen = s * (0.13 + fT * 0.11);
-    const fAng = Math.PI * 0.5 + side * (0.2 + fT * 0.22) + flapAngle * 0.1;
+    // Evaluate attachment on the actual bone bezier (not a straight line)
+    const bU = 1 - bT;
+    const aX = bU * bU * shoulderX + 2 * bU * bT * humCpX + bT * bT * elbowX;
+    const aY = bU * bU * shoulderY + 2 * bU * bT * humCpY + bT * bT * elbowY;
+
+    // Bone tangent → perpendicular toward trailing edge
+    const htgX = 2 * bU * (humCpX - shoulderX) + 2 * bT * (elbowX - humCpX);
+    const htgY = 2 * bU * (humCpY - shoulderY) + 2 * bT * (elbowY - humCpY);
+    const htgLen = Math.sqrt(htgX * htgX + htgY * htgY) || 1;
+    let hpX = -htgY / htgLen;
+    let hpY = htgX / htgLen;
+    if (hpY < 0) { hpX = -hpX; hpY = -hpY; }
+
+    const fLen = s * (0.17 + fT * 0.14);
+    const fAng = Math.atan2(hpY, hpX) + side * (0.25 + fT * 0.28);
     const fSw = flapAngle * s * 0.006 * fT;
     const tX = aX + Math.cos(fAng) * fLen + fSw;
     const tY = aY + Math.sin(fAng) * fLen;
@@ -720,27 +939,50 @@ function drawWings(
       tX, tY,
     );
     ctx.stroke();
+
+    drawFeatherBarbs(ctx, aX, aY, tX, tY, pNx, pNy, fLen, wW, side, zoom, blue, 0.18 - fT * 0.03, 5);
   }
 
   // ─── Primary flight feathers (outer wing: elbow → wingtip) ───
+  // Radius bone control point (must match the drawn bone quadratic curve)
+  const radCpX = (elbowX + wingTipX) / 2;
+  const radCpY = (elbowY + wingTipY) / 2 - s * 0.05 + ripple * 0.2;
+
+  // ─── Feather contour lines on inner membrane ───
+  drawMembraneFeatherLines(
+    ctx, shoulderX, shoulderY, elbowX, elbowY, humCpX, humCpY,
+    innerTrailY, flapAngle, ripple, s, side, wingSpread, innerRatio, zoom, blue, atkBurst,
+  );
+
+  // ─── Feather contour lines on outer membrane ───
+  drawOuterMembraneFeatherLines(
+    ctx, elbowX, elbowY, wingTipX, wingTipY, radCpX, radCpY,
+    outerStartX, outerStartTopY, outerStartBotY, outerTrailY, outerSpan,
+    flapAngle, ripple, s, side, zoom, blue, atkBurst,
+  );
+
   const primCount = 14;
   for (let f = 0; f < primCount; f++) {
     const featherT = (f + 0.5) / primCount;
     const boneT = featherT * 0.92;
 
-    const attachX = elbowX + (wingTipX - elbowX) * boneT;
-    const attachY =
-      elbowY +
-      (wingTipY - elbowY) * boneT -
-      s * 0.01 +
-      ripple * boneT * 0.5;
+    // Evaluate attachment on the actual bone bezier (not a straight line)
+    const rU = 1 - boneT;
+    const attachX = rU * rU * elbowX + 2 * rU * boneT * radCpX + boneT * boneT * wingTipX;
+    const attachY = rU * rU * elbowY + 2 * rU * boneT * radCpY + boneT * boneT * wingTipY;
 
-    const featherLen = s * (0.20 + featherT * 0.24);
-    const featherAngle =
-      Math.PI * 0.5 + side * (0.15 + featherT * 0.4) + flapAngle * 0.1 * featherT;
+    // Bone tangent → perpendicular toward trailing edge
+    const rtgX = 2 * rU * (radCpX - elbowX) + 2 * boneT * (wingTipX - radCpX);
+    const rtgY = 2 * rU * (radCpY - elbowY) + 2 * boneT * (wingTipY - radCpY);
+    const rtgLen = Math.sqrt(rtgX * rtgX + rtgY * rtgY) || 1;
+    let rpX = -rtgY / rtgLen;
+    let rpY = rtgX / rtgLen;
+    if (rpY < 0) { rpX = -rpX; rpY = -rpY; }
+
+    const featherLen = s * (0.26 + featherT * 0.30);
+    const featherAngle = Math.atan2(rpY, rpX) + side * (0.25 + featherT * 0.45);
     const featherSway = flapAngle * s * 0.01 * featherT;
-    const tipX =
-      attachX + Math.cos(featherAngle) * featherLen + featherSway;
+    const tipX = attachX + Math.cos(featherAngle) * featherLen + featherSway;
     const tipY = attachY + Math.sin(featherAngle) * featherLen;
 
     const wideW = s * (0.048 + (1 - featherT) * 0.028);
@@ -841,6 +1083,8 @@ function drawWings(
     );
     ctx.stroke();
 
+    drawFeatherBarbs(ctx, attachX, attachY, tipX, tipY, perpNx, perpNy, featherLen, wideW, side, zoom, blue, 0.22 - featherT * 0.04, 7);
+
     // Glowing feather tip
     const tipGlowR =
       s * (0.028 + (1 - featherT) * 0.018 + smoothWingAtk * 0.01);
@@ -872,21 +1116,22 @@ function drawWings(
     let edgeBotY: number;
     if (flameT < innerRatio) {
       const localT = flameT / innerRatio;
-      edgeX = shoulderX + side * wingSpread * innerRatio * localT;
-      edgeTopY =
-        shoulderY +
-        (elbowY - shoulderY) * localT -
-        s * 0.06 * (1 - localT) +
-        ripple * localT;
-      edgeBotY = shoulderY + s * (0.14 + localT * 0.12);
+      const u = 1 - localT;
+      edgeX = u * u * shoulderX + 2 * u * localT * humCpX + localT * localT * elbowX;
+      const boneY = u * u * shoulderY + 2 * u * localT * humCpY + localT * localT * elbowY;
+      edgeTopY = boneY - s * 0.08 * u + ripple * localT;
+      const innerBotCp1Y = elbowY + s * 0.24 + flapAngle * s * 0.10;
+      const innerBotCp2Y = innerTrailY + flapAngle * s * 0.07;
+      edgeBotY = localT * localT * localT * elbowY + 3 * localT * localT * u * innerBotCp1Y + 3 * localT * u * u * innerBotCp2Y + u * u * u * innerTrailY;
     } else {
       const localT = (flameT - innerRatio) / (1 - innerRatio);
-      edgeX = elbowX + side * outerSpan * localT;
-      edgeTopY =
-        elbowY +
-        (wingTipY - elbowY) * localT +
-        ripple * (1 - localT) * 0.5;
-      edgeBotY = elbowY + s * (0.10 + localT * 0.14);
+      const u = 1 - localT;
+      edgeX = u * u * elbowX + 2 * u * localT * radCpX + localT * localT * wingTipX;
+      const boneY = u * u * elbowY + 2 * u * localT * radCpY + localT * localT * wingTipY;
+      edgeTopY = boneY - s * 0.04 * u + ripple * u * 0.5;
+      const outerBotCp1Y = elbowY + s * 0.20 + flapAngle * s * 0.38;
+      const outerBotCp2Y = outerTrailY + flapAngle * s * 0.16;
+      edgeBotY = localT * localT * localT * wingTipY + 3 * localT * localT * u * outerBotCp1Y + 3 * localT * u * u * outerBotCp2Y + u * u * u * outerStartBotY;
     }
 
     const flameY =
@@ -930,12 +1175,14 @@ function drawWings(
     for (let sp = 0; sp < 6; sp++) {
       const spT = (time * 2.5 + sp * 0.17) % 1;
       const onInner = sp < 2;
+      const spBoneT = onInner ? 0.3 + sp * 0.3 : 0.2 + (sp - 2) * 0.2;
+      const spU = 1 - spBoneT;
       const spBaseX = onInner
-        ? shoulderX + (elbowX - shoulderX) * (0.3 + sp * 0.3)
-        : elbowX + (wingTipX - elbowX) * (0.2 + (sp - 2) * 0.2);
+        ? spU * spU * shoulderX + 2 * spU * spBoneT * humCpX + spBoneT * spBoneT * elbowX
+        : spU * spU * elbowX + 2 * spU * spBoneT * radCpX + spBoneT * spBoneT * wingTipX;
       const spBaseY = onInner
-        ? shoulderY + (elbowY - shoulderY) * (0.3 + sp * 0.3)
-        : elbowY + (wingTipY - elbowY) * (0.2 + (sp - 2) * 0.2);
+        ? spU * spU * shoulderY + 2 * spU * spBoneT * humCpY + spBoneT * spBoneT * elbowY
+        : spU * spU * elbowY + 2 * spU * spBoneT * radCpY + spBoneT * spBoneT * wingTipY;
       const spX =
         spBaseX + Math.sin(time * 3.5 + sp * 2.5) * s * 0.03;
       const spY = spBaseY + s * (0.15 + spT * 0.35);
@@ -968,7 +1215,7 @@ function drawWingFireCascade(
   blue: boolean = false,
 ) {
   const flapAngle = wingFlap;
-  const wingSpread = s * (1.3 + flapAngle * 0.45);
+  const wingSpread = s * (1.3 + flapAngle * flapAngle * 0.64);
 
   for (let side = -1; side <= 1; side += 2) {
     const wingBaseX = x + side * s * 0.14;
@@ -1121,7 +1368,7 @@ function drawTailPlumage(
     const norm = centerIdx > 0 ? (i - centerIdx) / centerIdx : 0;
     const absNorm = Math.abs(norm);
 
-    const fanAngle = norm * 0.45 * Math.PI * spreadMult;
+    const fanAngle = norm * 0.33 * Math.PI * spreadMult;
     const phaseOffset = i * 0.7;
     const sway = Math.sin(time * swaySpeed + phaseOffset) * s * swayAmp * (0.5 + absNorm * 0.5);
     const flutter = Math.sin(time * flutterSpeed + phaseOffset + 1.2) * s * flutterAmp * (0.4 + absNorm * 0.6);
@@ -1780,11 +2027,19 @@ function drawArmorPlates(
     x - keelW * 0.15, keelMid - s * 0.04, s * 0.03,
     x, keelMid, keelW * 1.1,
   );
-  breastGrad.addColorStop(0, "#daa530");
-  breastGrad.addColorStop(0.2, "#c49030");
-  breastGrad.addColorStop(0.45, "#a07020");
-  breastGrad.addColorStop(0.7, "#8a6020");
-  breastGrad.addColorStop(1, "#6a4510");
+  if (blue) {
+    breastGrad.addColorStop(0, "#93c5fd");
+    breastGrad.addColorStop(0.2, "#60a5fa");
+    breastGrad.addColorStop(0.45, "#3b82f6");
+    breastGrad.addColorStop(0.7, "#2563eb");
+    breastGrad.addColorStop(1, "#1e40af");
+  } else {
+    breastGrad.addColorStop(0, "#daa530");
+    breastGrad.addColorStop(0.2, "#c49030");
+    breastGrad.addColorStop(0.45, "#a07020");
+    breastGrad.addColorStop(0.7, "#8a6020");
+    breastGrad.addColorStop(1, "#6a4510");
+  }
 
   ctx.fillStyle = breastGrad;
   ctx.beginPath();
@@ -1812,12 +2067,12 @@ function drawArmorPlates(
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#3a2208";
+  ctx.strokeStyle = blue ? "#1e3a8a" : "#3a2208";
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
   // Lit edge highlight (left = lit)
-  ctx.strokeStyle = "rgba(255, 220, 100, 0.35)";
+  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.35)" : "rgba(255, 220, 100, 0.35)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - keelW * 0.3, keelTop + s * 0.01);
@@ -1842,7 +2097,7 @@ function drawArmorPlates(
 
   // Feathered contour lines (curved, following keel shape)
   const contourAlpha = 0.2;
-  ctx.strokeStyle = `rgba(90, 58, 16, ${contourAlpha})`;
+  ctx.strokeStyle = blue ? `rgba(30, 58, 138, ${contourAlpha})` : `rgba(90, 58, 16, ${contourAlpha})`;
   ctx.lineWidth = 1 * zoom;
   for (let c = 0; c < 3; c++) {
     const cFrac = 0.3 + c * 0.2;
@@ -1854,8 +2109,8 @@ function drawArmorPlates(
     ctx.stroke();
   }
 
-  // Gold trim around neckline (top curve)
-  ctx.strokeStyle = "#daa520";
+  // Trim around neckline (top curve)
+  ctx.strokeStyle = blue ? "#60a5fa" : "#daa520";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - keelW * 0.55, keelTop + s * 0.02);
@@ -1863,13 +2118,13 @@ function drawArmorPlates(
   ctx.stroke();
 
   // Keel ridge (central vertical line)
-  ctx.strokeStyle = "#5a3a10";
+  ctx.strokeStyle = blue ? "#1e40af" : "#5a3a10";
   ctx.lineWidth = 1.3 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, keelTop + s * 0.03);
   ctx.lineTo(x, keelBot - s * 0.02);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 200, 80, 0.2)";
+  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.2)" : "rgba(255, 200, 80, 0.2)";
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - s * 0.003, keelTop + s * 0.04);
@@ -1881,7 +2136,7 @@ function drawArmorPlates(
   const medR = s * 0.06;
 
   // Medallion outer ring
-  ctx.strokeStyle = "#3a2205";
+  ctx.strokeStyle = blue ? "#1e3a8a" : "#3a2205";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.arc(x, medY, medR * 1.15, 0, Math.PI * 2);
@@ -1889,23 +2144,31 @@ function drawArmorPlates(
 
   // Medallion disc
   const medGrad = ctx.createRadialGradient(x - medR * 0.15, medY - medR * 0.15, 0, x, medY, medR);
-  medGrad.addColorStop(0, "#ffe880");
-  medGrad.addColorStop(0.25, "#daa520");
-  medGrad.addColorStop(0.6, "#b8860b");
-  medGrad.addColorStop(0.85, "#8b6914");
-  medGrad.addColorStop(1, "#6a5010");
+  if (blue) {
+    medGrad.addColorStop(0, "#bfdbfe");
+    medGrad.addColorStop(0.25, "#60a5fa");
+    medGrad.addColorStop(0.6, "#3b82f6");
+    medGrad.addColorStop(0.85, "#2563eb");
+    medGrad.addColorStop(1, "#1e40af");
+  } else {
+    medGrad.addColorStop(0, "#ffe880");
+    medGrad.addColorStop(0.25, "#daa520");
+    medGrad.addColorStop(0.6, "#b8860b");
+    medGrad.addColorStop(0.85, "#8b6914");
+    medGrad.addColorStop(1, "#6a5010");
+  }
   ctx.fillStyle = medGrad;
   ctx.beginPath();
   ctx.arc(x, medY, medR, 0, Math.PI * 2);
   ctx.fill();
 
   // Medallion inner ring
-  ctx.strokeStyle = "#5a3a10";
+  ctx.strokeStyle = blue ? "#1e40af" : "#5a3a10";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.arc(x, medY, medR, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.strokeStyle = `rgba(255, 230, 120, 0.45)`;
+  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.45)" : "rgba(255, 230, 120, 0.45)";
   ctx.lineWidth = 0.6 * zoom;
   ctx.beginPath();
   ctx.arc(x, medY, medR * 0.88, 0, Math.PI * 2);
@@ -1916,7 +2179,7 @@ function drawArmorPlates(
     const nAngle = (n / 12) * Math.PI * 2;
     const nX = x + Math.cos(nAngle) * medR * 1.05;
     const nY = medY + Math.sin(nAngle) * medR * 1.05;
-    ctx.fillStyle = "rgba(180, 140, 40, 0.3)";
+    ctx.fillStyle = blue ? "rgba(96, 165, 250, 0.3)" : "rgba(180, 140, 40, 0.3)";
     ctx.beginPath();
     ctx.arc(nX, nY, s * 0.003, 0, Math.PI * 2);
     ctx.fill();
@@ -1981,13 +2244,13 @@ function drawArmorPlates(
   ctx.fill();
 
   // Engraved wing motifs on breastplate — more ornate, multiple feather lines
+  const motifColor = blue ? [59, 130, 246] : [180, 140, 40];
   for (let side = -1; side <= 1; side += 2) {
-    // Primary wing curves
     for (let w = 0; w < 4; w++) {
       const wx = x + side * (s * 0.035 + w * s * 0.022);
       const wy = medY;
       const wLen = s * (0.04 - w * 0.004);
-      ctx.strokeStyle = `rgba(180, 140, 40, ${0.28 - w * 0.05})`;
+      ctx.strokeStyle = `rgba(${motifColor[0]}, ${motifColor[1]}, ${motifColor[2]}, ${0.28 - w * 0.05})`;
       ctx.lineWidth = (0.8 - w * 0.1) * zoom;
       ctx.beginPath();
       ctx.moveTo(wx, wy - wLen);
@@ -1995,10 +2258,9 @@ function drawArmorPlates(
       ctx.stroke();
     }
 
-    // Scroll/filigree below wings
     const scrollX = x + side * s * 0.08;
     const scrollY = medY + s * 0.035;
-    ctx.strokeStyle = `rgba(180, 140, 40, 0.2)`;
+    ctx.strokeStyle = `rgba(${motifColor[0]}, ${motifColor[1]}, ${motifColor[2]}, 0.2)`;
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(scrollX, scrollY);
@@ -2011,11 +2273,19 @@ function drawArmorPlates(
   const abdGrad = ctx.createLinearGradient(
     x - s * 0.06, abdY, x + s * 0.06, abdY + s * 0.06,
   );
-  abdGrad.addColorStop(0, "#7a5518");
-  abdGrad.addColorStop(0.3, "#a07020");
-  abdGrad.addColorStop(0.5, "#b08028");
-  abdGrad.addColorStop(0.7, "#a07020");
-  abdGrad.addColorStop(1, "#7a5518");
+  if (blue) {
+    abdGrad.addColorStop(0, "#1e40af");
+    abdGrad.addColorStop(0.3, "#2563eb");
+    abdGrad.addColorStop(0.5, "#3b82f6");
+    abdGrad.addColorStop(0.7, "#2563eb");
+    abdGrad.addColorStop(1, "#1e40af");
+  } else {
+    abdGrad.addColorStop(0, "#7a5518");
+    abdGrad.addColorStop(0.3, "#a07020");
+    abdGrad.addColorStop(0.5, "#b08028");
+    abdGrad.addColorStop(0.7, "#a07020");
+    abdGrad.addColorStop(1, "#7a5518");
+  }
   ctx.fillStyle = abdGrad;
   ctx.beginPath();
   ctx.moveTo(x - s * 0.08, abdY);
@@ -2031,10 +2301,10 @@ function drawArmorPlates(
   );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#3a2208";
+  ctx.strokeStyle = blue ? "#1e3a8a" : "#3a2208";
   ctx.lineWidth = 1 * zoom;
   ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 210, 80, 0.2)";
+  ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.2)" : "rgba(255, 210, 80, 0.2)";
   ctx.lineWidth = 0.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, abdY + s * 0.01);
@@ -2055,13 +2325,19 @@ function drawHarness(
   blue: boolean = false,
 ) {
   // X-shaped harness across chest
+  const strapBase = blue ? "#1e3a8a" : "#5a3010";
+  const strapHighlight = blue ? "rgba(59, 130, 246, 0.5)" : "rgba(120, 80, 20, 0.5)";
+  const rivetPeak = blue ? "#bfdbfe" : "#ffe080";
+  const rivetMid = blue ? "#3b82f6" : "#daa520";
+  const rivetDark = blue ? "#1e40af" : "#8a6020";
+
   for (let side = -1; side <= 1; side += 2) {
     const topX = x + side * s * 0.18;
     const topY = y - s * 0.2;
     const botX = x - side * s * 0.1;
     const botY = y + s * 0.12;
 
-    ctx.strokeStyle = "#5a3010";
+    ctx.strokeStyle = strapBase;
     ctx.lineWidth = 2.8 * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -2069,15 +2345,13 @@ function drawHarness(
     ctx.lineTo(botX, botY);
     ctx.stroke();
 
-    // Strap highlight edge
-    ctx.strokeStyle = `rgba(120, 80, 20, 0.5)`;
+    ctx.strokeStyle = strapHighlight;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(topX + side * 0.5 * zoom, topY);
     ctx.lineTo(botX + side * 0.5 * zoom, botY);
     ctx.stroke();
 
-    // Gold buckle rivets along strap
     for (let r = 0; r < 3; r++) {
       const t = 0.25 + r * 0.25;
       const rx = topX + (botX - topX) * t;
@@ -2091,9 +2365,9 @@ function drawHarness(
         ry,
         s * 0.008,
       );
-      rivetGrad.addColorStop(0, "#ffe080");
-      rivetGrad.addColorStop(0.5, "#daa520");
-      rivetGrad.addColorStop(1, "#8a6020");
+      rivetGrad.addColorStop(0, rivetPeak);
+      rivetGrad.addColorStop(0.5, rivetMid);
+      rivetGrad.addColorStop(1, rivetDark);
       ctx.fillStyle = rivetGrad;
       ctx.beginPath();
       ctx.arc(rx, ry, s * 0.007, 0, Math.PI * 2);
@@ -2105,14 +2379,14 @@ function drawHarness(
   const buckleY = y - s * 0.04;
   const buckleR = s * 0.025;
   const bGrad = ctx.createRadialGradient(x, buckleY, 0, x, buckleY, buckleR);
-  bGrad.addColorStop(0, "#ffe080");
-  bGrad.addColorStop(0.4, "#daa520");
-  bGrad.addColorStop(1, "#8a6020");
+  bGrad.addColorStop(0, rivetPeak);
+  bGrad.addColorStop(0.4, rivetMid);
+  bGrad.addColorStop(1, rivetDark);
   ctx.fillStyle = bGrad;
   ctx.beginPath();
   ctx.arc(x, buckleY, buckleR, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#5a3a10";
+  ctx.strokeStyle = strapBase;
   ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
 
@@ -2160,9 +2434,13 @@ function drawShoulderPauldrons(
     const gW = s * 0.065;
 
     // Pointed wing-guard shape (elongated teardrop angled outward)
-    ctx.fillStyle = getCachedLinearGradient(ctx, `nassau-guard-flip-${s}`, 0, gW, 0, -gW, [
-      [0, "#6a4510"], [0.2, "#a07020"], [0.5, "#c49030"], [0.8, "#8a5a18"], [1, "#5a3810"],
-    ]);
+    ctx.fillStyle = blue
+      ? getCachedLinearGradient(ctx, `nassau-guard-flip-blue-${s}`, 0, gW, 0, -gW, [
+          [0, "#1e40af"], [0.2, "#2563eb"], [0.5, "#3b82f6"], [0.8, "#2563eb"], [1, "#1e40af"],
+        ])
+      : getCachedLinearGradient(ctx, `nassau-guard-flip-${s}`, 0, gW, 0, -gW, [
+          [0, "#6a4510"], [0.2, "#a07020"], [0.5, "#c49030"], [0.8, "#8a5a18"], [1, "#5a3810"],
+        ]);
     ctx.beginPath();
     ctx.moveTo(-gL * 0.3, 0);
     ctx.bezierCurveTo(
@@ -2181,12 +2459,12 @@ function drawShoulderPauldrons(
     ctx.fill();
 
     // Edge outline
-    ctx.strokeStyle = "#3a2208";
+    ctx.strokeStyle = blue ? "#1e3a8a" : "#3a2208";
     ctx.lineWidth = 1.2 * zoom;
     ctx.stroke();
 
     // Lit edge highlight (after Y-flip, negative Y = visual top in isometric)
-    ctx.strokeStyle = "rgba(255, 220, 100, 0.35)";
+    ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.35)" : "rgba(255, 220, 100, 0.35)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(-gL * 0.2, gW * 0.3);
@@ -2215,20 +2493,22 @@ function drawShoulderPauldrons(
       const scX = -gL * 0.2 + scT * gL * 0.9;
       const scW = gW * (0.65 - scT * 0.2);
       const scH = gL * 0.08;
-      ctx.fillStyle = `rgba(100, 70, 20, ${0.25 - sc * 0.04})`;
+      ctx.fillStyle = blue
+        ? `rgba(30, 64, 175, ${0.25 - sc * 0.04})`
+        : `rgba(100, 70, 20, ${0.25 - sc * 0.04})`;
       ctx.beginPath();
       ctx.ellipse(scX, 0, scH, scW, 0, 0, Math.PI * 2);
       ctx.fill();
     }
 
     // Central ridge line
-    ctx.strokeStyle = "#4a3210";
+    ctx.strokeStyle = blue ? "#1e40af" : "#4a3210";
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(-gL * 0.25, 0);
     ctx.lineTo(gL * 0.85, 0);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(255, 200, 80, 0.25)";
+    ctx.strokeStyle = blue ? "rgba(147, 197, 253, 0.25)" : "rgba(255, 200, 80, 0.25)";
     ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(-gL * 0.2, -s * 0.004);
@@ -2264,16 +2544,22 @@ function drawShoulderPauldrons(
     ctx.arc(-gL * 0.07, -gemR * 0.3, gemR * 0.3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Bronze rivets along the guard
+    // Rivets along the guard
     for (let r = 0; r < 3; r++) {
       const rvX = gL * (0.15 + r * 0.22);
       const rvR = s * 0.007;
       const rvG = ctx.createRadialGradient(
         rvX - rvR * 0.3, -rvR * 0.3, 0, rvX, 0, rvR,
       );
-      rvG.addColorStop(0, "#e0b878");
-      rvG.addColorStop(0.5, "#c09050");
-      rvG.addColorStop(1, "#806030");
+      if (blue) {
+        rvG.addColorStop(0, "#bfdbfe");
+        rvG.addColorStop(0.5, "#60a5fa");
+        rvG.addColorStop(1, "#1e40af");
+      } else {
+        rvG.addColorStop(0, "#e0b878");
+        rvG.addColorStop(0.5, "#c09050");
+        rvG.addColorStop(1, "#806030");
+      }
       ctx.fillStyle = rvG;
       ctx.beginPath();
       ctx.arc(rvX, 0, rvR, 0, Math.PI * 2);

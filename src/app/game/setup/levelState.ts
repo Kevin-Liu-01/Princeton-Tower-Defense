@@ -39,7 +39,7 @@ const LANDMARK_TOWER_EXCLUSION: Partial<Record<DecorationType, number>> = {
   tiger_stadium: 1.4,
   giant_sphinx: 0.5,
   glacier: 0.5,
-  ice_fortress: 0.5,
+  fortress: 0.5,
   frost_citadel: 0.5,
   infernal_gate: 0.5,
   sun_obelisk: 0.5,

@@ -6,7 +6,9 @@ import {
   resolveWeaponRotation,
   WEAPON_LIMITS,
   drawArmoredSkirt,
+  drawDetailedArm,
 } from "./troopHelpers";
+import type { ArmColors } from "./troopHelpers";
 
 export function drawKnightTroop(
   ctx: CanvasRenderingContext2D,
@@ -112,185 +114,405 @@ export function drawKnightTroop(
   drawKnightCape(ctx, x, y, size, zoom, breathe, capeWave, theme, gear);
 
   // === ARMORED LEGS ===
-  // Dark steel greaves - wide power stance
+  const knightStanceSpread = size * (isAttacking ? 0.13 : 0.11);
   for (let side = -1; side <= 1; side += 2) {
+    const isLeft = side === -1;
     ctx.save();
-    ctx.translate(x + side * size * 0.13, y + size * 0.32);
-    ctx.rotate(side * (-0.12 + stance * 0.025));
+    ctx.translate(x + side * knightStanceSpread, y + size * 0.32);
+    ctx.rotate(side * (-0.10 + stance * 0.025));
 
-    // Upper leg armor
-    const legGrad = ctx.createLinearGradient(-size * 0.065, 0, size * 0.065, 0);
-    legGrad.addColorStop(0, armorDark);
-    legGrad.addColorStop(0.3, armorMid);
-    legGrad.addColorStop(0.55, armorPeak);
-    legGrad.addColorStop(1, armorDark);
-    ctx.fillStyle = legGrad;
-    ctx.fillRect(-size * 0.07, 0, size * 0.14, size * 0.22);
+    const lw = size * 0.15;
+    const hlw = lw * 0.5;
 
-    // Thigh plate overlay
+    // --- Thigh plate (cuisse) ---
+    const thighH = size * 0.10;
+    const thighGrad = ctx.createLinearGradient(-hlw, 0, hlw, 0);
+    thighGrad.addColorStop(0, armorDark);
+    thighGrad.addColorStop(0.2, armorMid);
+    thighGrad.addColorStop(0.5, armorHigh);
+    thighGrad.addColorStop(0.8, armorMid);
+    thighGrad.addColorStop(1, armorDark);
+    ctx.fillStyle = thighGrad;
+    ctx.beginPath();
+    ctx.roundRect(-hlw, 0, lw, thighH, size * 0.015);
+    ctx.fill();
+
+    // Thigh plate flared overlay
     ctx.fillStyle = armorHigh;
     ctx.beginPath();
-    ctx.moveTo(-size * 0.06, 0);
-    ctx.lineTo(-size * 0.075, size * 0.08);
-    ctx.lineTo(-size * 0.06, size * 0.14);
-    ctx.lineTo(size * 0.06, size * 0.14);
-    ctx.lineTo(size * 0.075, size * 0.08);
-    ctx.lineTo(size * 0.06, 0);
+    ctx.moveTo(-hlw + size * 0.01, 0);
+    ctx.lineTo(-hlw - size * 0.005, thighH * 0.55);
+    ctx.lineTo(-hlw + size * 0.01, thighH);
+    ctx.lineTo(hlw - size * 0.01, thighH);
+    ctx.lineTo(hlw + size * 0.005, thighH * 0.55);
+    ctx.lineTo(hlw - size * 0.01, 0);
     ctx.closePath();
     ctx.fill();
 
-    // Knee guard with spike
+    // Thigh edge highlight
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(isLeft ? -hlw : hlw, size * 0.01);
+    ctx.lineTo(isLeft ? -hlw : hlw, thighH - size * 0.01);
+    ctx.stroke();
+
+    // Thigh articulation bands
+    ctx.strokeStyle = armorDark;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(-hlw + size * 0.01, thighH * 0.45);
+    ctx.lineTo(hlw - size * 0.01, thighH * 0.45);
+    ctx.moveTo(-hlw + size * 0.01, thighH * 0.75);
+    ctx.lineTo(hlw - size * 0.01, thighH * 0.75);
+    ctx.stroke();
+
+    // Side rivet
     ctx.fillStyle = armorPeak;
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.1, size * 0.085, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.arc(isLeft ? -hlw + size * 0.015 : hlw - size * 0.015, thighH * 0.55, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
+
+    // --- Knee cop (poleyn) with spike ---
+    const kneeY = thighH + size * 0.005;
     ctx.fillStyle = armorMid;
     ctx.beginPath();
-    ctx.moveTo(0, size * 0.055);
-    ctx.lineTo(-size * 0.025, size * 0.015);
-    ctx.lineTo(size * 0.025, size * 0.015);
+    ctx.ellipse(0, kneeY, size * 0.08, size * 0.05, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Inner dome
+    const kneeCopGrad = ctx.createRadialGradient(
+      -size * 0.01, kneeY, 0, 0, kneeY, size * 0.06,
+    );
+    kneeCopGrad.addColorStop(0, armorPeak);
+    kneeCopGrad.addColorStop(0.5, armorHigh);
+    kneeCopGrad.addColorStop(1, armorDark);
+    ctx.fillStyle = kneeCopGrad;
+    ctx.beginPath();
+    ctx.ellipse(0, kneeY, size * 0.06, size * 0.038, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Spike above knee
+    ctx.fillStyle = armorMid;
+    ctx.beginPath();
+    ctx.moveTo(0, kneeY - size * 0.055);
+    ctx.lineTo(-size * 0.02, kneeY - size * 0.02);
+    ctx.lineTo(size * 0.02, kneeY - size * 0.02);
+    ctx.closePath();
+    ctx.fill();
+    // Fan guard below
+    ctx.fillStyle = armorMid;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.04, kneeY + size * 0.025);
+    ctx.lineTo(0, kneeY + size * 0.055);
+    ctx.lineTo(size * 0.04, kneeY + size * 0.025);
+    ctx.closePath();
+    ctx.fill();
+    // Center rivet
+    ctx.fillStyle = armorPeak;
+    ctx.beginPath();
+    ctx.arc(0, kneeY, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+
+    // --- Greave (shin guard) ---
+    const greaveTop = kneeY + size * 0.05;
+    const greaveH = size * 0.12;
+    const greaveGrad = ctx.createLinearGradient(-hlw, greaveTop, hlw, greaveTop);
+    greaveGrad.addColorStop(0, armorDark);
+    greaveGrad.addColorStop(0.15, armorMid);
+    greaveGrad.addColorStop(0.45, armorHigh);
+    greaveGrad.addColorStop(0.55, armorMid);
+    greaveGrad.addColorStop(0.85, armorMid);
+    greaveGrad.addColorStop(1, armorDark);
+    ctx.fillStyle = greaveGrad;
+    ctx.beginPath();
+    ctx.roundRect(-hlw, greaveTop, lw, greaveH, [0, 0, size * 0.02, size * 0.02]);
+    ctx.fill();
+
+    // Greave center ridge
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.2)`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, greaveTop + size * 0.01);
+    ctx.lineTo(0, greaveTop + greaveH - size * 0.01);
+    ctx.stroke();
+
+    // Greave articulation bands
+    ctx.strokeStyle = armorDark;
+    ctx.lineWidth = 0.8 * zoom;
+    for (const t of [0.35, 0.65]) {
+      const bandY = greaveTop + greaveH * t;
+      ctx.beginPath();
+      ctx.moveTo(-hlw + size * 0.01, bandY);
+      ctx.lineTo(hlw - size * 0.01, bandY);
+      ctx.stroke();
+    }
+
+    // Greave edge highlight
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.12)`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(isLeft ? -hlw : hlw, greaveTop + size * 0.01);
+    ctx.lineTo(isLeft ? -hlw : hlw, greaveTop + greaveH - size * 0.01);
+    ctx.stroke();
+
+    // --- Sabaton (armored boot) ---
+    const bootTop = greaveTop + greaveH;
+    const bootH = size * 0.07;
+    const sabGrad = ctx.createLinearGradient(-hlw, bootTop, hlw, bootTop);
+    sabGrad.addColorStop(0, armorDark);
+    sabGrad.addColorStop(0.4, armorMid);
+    sabGrad.addColorStop(0.6, armorMid);
+    sabGrad.addColorStop(1, armorDark);
+    ctx.fillStyle = sabGrad;
+    ctx.beginPath();
+    ctx.moveTo(-hlw, bootTop);
+    ctx.lineTo(hlw, bootTop);
+    ctx.lineTo(hlw + size * 0.01, bootTop + bootH);
+    ctx.lineTo(-hlw - size * 0.01, bootTop + bootH);
     ctx.closePath();
     ctx.fill();
 
-    // Shin guard
-    ctx.fillStyle = armorMid;
-    ctx.fillRect(-size * 0.06, size * 0.13, size * 0.12, size * 0.1);
-
-    // Armored boot
-    ctx.fillStyle = armorDark;
-    ctx.fillRect(-size * 0.08, size * 0.2, size * 0.16, size * 0.09);
+    // Boot cuff
     ctx.fillStyle = armorHigh;
-    ctx.fillRect(-size * 0.085, size * 0.27, size * 0.17, size * 0.04);
+    ctx.fillRect(-hlw - size * 0.005, bootTop, lw + size * 0.01, size * 0.018);
+
+    // Plate segments
+    ctx.strokeStyle = armorDark;
+    ctx.lineWidth = 0.7 * zoom;
+    for (const t of [0.4, 0.65]) {
+      ctx.beginPath();
+      ctx.moveTo(-hlw, bootTop + bootH * t);
+      ctx.lineTo(hlw, bootTop + bootH * t);
+      ctx.stroke();
+    }
+
+    // Toe ridge
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.12)`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, bootTop + size * 0.02);
+    ctx.lineTo(0, bootTop + bootH - size * 0.008);
+    ctx.stroke();
+
+    // Sole
+    ctx.fillStyle = armorDark;
+    ctx.fillRect(-hlw - size * 0.01, bootTop + bootH - size * 0.01, lw + size * 0.02, size * 0.01);
+
     ctx.restore();
   }
 
   // === DARK PLATE ARMOR ===
+  const by = breathe;
+
   // Back plate
   ctx.fillStyle = armorDark;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.24, y + size * 0.35 + breathe);
-  ctx.lineTo(x - size * 0.26, y - size * 0.12 + breathe * 0.5);
-  ctx.lineTo(x + size * 0.26, y - size * 0.12 + breathe * 0.5);
-  ctx.lineTo(x + size * 0.24, y + size * 0.35 + breathe);
+  ctx.moveTo(x - size * 0.24, y + size * 0.35 + by);
+  ctx.lineTo(x - size * 0.26, y - size * 0.12 + by * 0.5);
+  ctx.lineTo(x + size * 0.26, y - size * 0.12 + by * 0.5);
+  ctx.lineTo(x + size * 0.24, y + size * 0.35 + by);
   ctx.closePath();
   ctx.fill();
 
-  // Front chest plate with gradient
+  // Front chest plate — rich multi-stop gradient
   const plateGrad = ctx.createLinearGradient(
-    x - size * 0.22,
-    y - size * 0.1,
-    x + size * 0.22,
-    y + size * 0.2,
+    x - size * 0.22, y - size * 0.18 + by * 0.5,
+    x + size * 0.22, y + size * 0.34 + by,
   );
-  plateGrad.addColorStop(0, armorMid);
-  plateGrad.addColorStop(0.2, armorHigh);
-  plateGrad.addColorStop(0.5, armorPeak);
-  plateGrad.addColorStop(0.8, armorHigh);
-  plateGrad.addColorStop(1, armorMid);
+  plateGrad.addColorStop(0, armorDark);
+  plateGrad.addColorStop(0.12, armorMid);
+  plateGrad.addColorStop(0.3, armorHigh);
+  plateGrad.addColorStop(0.48, armorPeak);
+  plateGrad.addColorStop(0.6, armorHigh);
+  plateGrad.addColorStop(0.8, armorMid);
+  plateGrad.addColorStop(1, armorDark);
   ctx.fillStyle = plateGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y + size * 0.34 + breathe);
-  ctx.lineTo(x - size * 0.24, y - size * 0.14 + breathe * 0.5);
-  ctx.quadraticCurveTo(
-    x,
-    y - size * 0.24 + breathe * 0.3,
-    x + size * 0.24,
-    y - size * 0.14 + breathe * 0.5,
-  );
-  ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
+  ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
+  ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.quadraticCurveTo(x, y - size * 0.24 + by * 0.3, x + size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.closePath();
   ctx.fill();
 
-  // Armor plate seams
+  // Pectoral contour lines (musculature sculpted into plate)
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.02, y - size * 0.12 + by * 0.4);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.12, y - size * 0.02 + by * 0.6,
+      x + side * size * 0.08, y + size * 0.12 + by,
+    );
+    ctx.stroke();
+
+    // Specular highlight on each pectoral
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.08)`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.03, y - size * 0.10 + by * 0.4);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.10, y - size * 0.01 + by * 0.6,
+      x + side * size * 0.07, y + size * 0.10 + by,
+    );
+    ctx.stroke();
+  }
+
+  // Center seam (sternum line)
   ctx.strokeStyle = "#3a3a48";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.17 + breathe * 0.4);
-  ctx.lineTo(x, y + size * 0.18 + breathe);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(x, y + breathe * 0.7, size * 0.14, 0.25, Math.PI - 0.25);
+  ctx.moveTo(x, y - size * 0.17 + by * 0.4);
+  ctx.lineTo(x, y + size * 0.18 + by);
   ctx.stroke();
 
-  // Themed plate edge glow - THEMED
+  // Abdominal plate lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.arc(x, y + size * 0.04 + by * 0.7, size * 0.14, 0.25, Math.PI - 0.25);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y + size * 0.12 + by * 0.8, size * 0.12, 0.35, Math.PI - 0.35);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y + size * 0.19 + by * 0.9, size * 0.10, 0.4, Math.PI - 0.4);
+  ctx.stroke();
+
+  // Armor plate edge rivets
+  for (let side = -1; side <= 1; side += 2) {
+    for (let r = 0; r < 3; r++) {
+      const ry = y - size * 0.06 + r * size * 0.10 + by * (0.5 + r * 0.15);
+      ctx.fillStyle = armorPeak;
+      ctx.beginPath();
+      ctx.arc(x + side * size * 0.20, ry, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.beginPath();
+      ctx.arc(x + side * size * 0.20 - size * 0.003, ry - size * 0.003, size * 0.003, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Themed plate edge glow
   ctx.strokeStyle = theme.sigilGlow + "0.15)";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.22, y + size * 0.34 + breathe);
-  ctx.lineTo(x - size * 0.24, y - size * 0.14 + breathe * 0.5);
-  ctx.quadraticCurveTo(
-    x,
-    y - size * 0.24 + breathe * 0.3,
-    x + size * 0.24,
-    y - size * 0.14 + breathe * 0.5,
-  );
-  ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
+  ctx.moveTo(x - size * 0.22, y + size * 0.34 + by);
+  ctx.lineTo(x - size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.quadraticCurveTo(x, y - size * 0.24 + by * 0.3, x + size * 0.24, y - size * 0.14 + by * 0.5);
+  ctx.lineTo(x + size * 0.22, y + size * 0.34 + by);
   ctx.stroke();
 
-  // Dark sigil on chest - hexagonal emblem
+  // Dark sigil on chest — hexagonal emblem
   ctx.fillStyle = "#0e0e1a";
   ctx.beginPath();
-  ctx.moveTo(x, y - size * 0.06 + breathe);
-  ctx.lineTo(x - size * 0.065, y + size * 0.02 + breathe);
-  ctx.lineTo(x - size * 0.08, y + size * 0.1 + breathe);
-  ctx.lineTo(x, y + size * 0.18 + breathe);
-  ctx.lineTo(x + size * 0.08, y + size * 0.1 + breathe);
-  ctx.lineTo(x + size * 0.065, y + size * 0.02 + breathe);
+  ctx.moveTo(x, y - size * 0.06 + by);
+  ctx.lineTo(x - size * 0.065, y + size * 0.02 + by);
+  ctx.lineTo(x - size * 0.08, y + size * 0.1 + by);
+  ctx.lineTo(x, y + size * 0.18 + by);
+  ctx.lineTo(x + size * 0.08, y + size * 0.1 + by);
+  ctx.lineTo(x + size * 0.065, y + size * 0.02 + by);
   ctx.closePath();
   ctx.fill();
-  // Inner sigil shape - THEMED
+
+  // Sigil etched border
+  ctx.strokeStyle = `${theme.sigilGlow}0.12)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  // Inner diamond sigil
   ctx.strokeStyle = `${theme.sigilGlow}0.25)`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x, y + size * 0.01 + breathe);
-  ctx.lineTo(x - size * 0.04, y + size * 0.06 + breathe);
-  ctx.lineTo(x, y + size * 0.12 + breathe);
-  ctx.lineTo(x + size * 0.04, y + size * 0.06 + breathe);
+  ctx.moveTo(x, y + size * 0.01 + by);
+  ctx.lineTo(x - size * 0.04, y + size * 0.06 + by);
+  ctx.lineTo(x, y + size * 0.12 + by);
+  ctx.lineTo(x + size * 0.04, y + size * 0.06 + by);
   ctx.closePath();
   ctx.stroke();
-  // Glowing center - THEMED
+
+  // Sigil wing flourishes
+  ctx.strokeStyle = `${theme.sigilGlow}0.15)`;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.04, y + size * 0.06 + by);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.07, y + size * 0.04 + by,
+      x + side * size * 0.065, y + size * 0.02 + by,
+    );
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.04, y + size * 0.06 + by);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.07, y + size * 0.09 + by,
+      x + side * size * 0.065, y + size * 0.12 + by,
+    );
+    ctx.stroke();
+  }
+
+  // Glowing center gem
   const sigilGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackIntensity * 0.4;
+  ctx.shadowColor = `${theme.sigilGlow}0.6)`;
+  ctx.shadowBlur = 4 * zoom * sigilGlow;
   ctx.fillStyle = `${theme.sigilGlow}${sigilGlow})`;
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.07 + breathe, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(x, y + size * 0.065 + by, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  // Outer sigil glow ring - THEMED
-  ctx.strokeStyle = `${theme.sigilGlow}${sigilGlow * 0.4})`;
+  ctx.shadowBlur = 0;
+
+  // Gem specular pip
+  ctx.fillStyle = `rgba(255,255,255,${0.4 + sigilGlow * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.008, y + size * 0.06 + by, size * 0.008, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer sigil glow ring
+  ctx.strokeStyle = `${theme.sigilGlow}${sigilGlow * 0.35})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.07 + breathe, size * 0.045, 0, Math.PI * 2);
+  ctx.arc(x, y + size * 0.065 + by, size * 0.045, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Battle belt
+  // Battle belt — layered
+  const beltY = y + size * 0.28 + by;
   ctx.fillStyle = "#2a2a3a";
-  ctx.fillRect(
-    x - size * 0.2,
-    y + size * 0.28 + breathe,
-    size * 0.4,
-    size * 0.07,
-  );
-  // Belt skull buckle - THEMED
+  ctx.fillRect(x - size * 0.21, beltY, size * 0.42, size * 0.07);
+  // Belt upper trim
+  ctx.fillStyle = armorMid;
+  ctx.fillRect(x - size * 0.21, beltY, size * 0.42, size * 0.015);
+  // Belt lower trim
+  ctx.fillStyle = armorMid;
+  ctx.fillRect(x - size * 0.21, beltY + size * 0.055, size * 0.42, size * 0.015);
+  // Belt segment lines
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 0.7 * zoom;
+  for (let b = 1; b < 4; b++) {
+    const bx = x - size * 0.21 + b * size * 0.105;
+    ctx.beginPath();
+    ctx.moveTo(bx, beltY + size * 0.015);
+    ctx.lineTo(bx, beltY + size * 0.055);
+    ctx.stroke();
+  }
+
+  // Belt skull buckle
   ctx.fillStyle = theme.beltBuckle;
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.315 + breathe, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(x, beltY + size * 0.035, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
+  // Skull eye sockets
   ctx.fillStyle = "#1a1a2a";
   ctx.beginPath();
-  ctx.arc(
-    x - size * 0.012,
-    y + size * 0.31 + breathe,
-    size * 0.008,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.012,
-    y + size * 0.31 + breathe,
-    size * 0.008,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(x - size * 0.012, beltY + size * 0.03, size * 0.008, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.012, beltY + size * 0.03, size * 0.008, 0, Math.PI * 2);
   ctx.fill();
+  // Buckle ring
+  ctx.strokeStyle = armorPeak;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.arc(x, beltY + size * 0.035, size * 0.035, 0, Math.PI * 2);
+  ctx.stroke();
 
   // === ARMORED SKIRT (tassets) ===
   drawArmoredSkirt(ctx, x, y, size, zoom, stance, breathe, {
@@ -405,23 +627,22 @@ export function drawKnightTroop(
   }
 
   // === ARMS ===
+  const knightArmColors: ArmColors = {
+    upper: armorMid,
+    upperLight: armorHigh,
+    upperDark: armorDark,
+    vambrace: armorHigh,
+    vambraceLight: armorPeak,
+    elbow: armorMid,
+    hand: armorMid,
+    trim: gear.trimColor,
+  };
+
   // Left arm
   ctx.save();
   ctx.translate(x - size * 0.3, y + size * 0.02 + breathe * 0.5);
   ctx.rotate(-0.25 - (isAttacking ? bodyLean * 0.6 : 0));
-  const leftArmGrad = ctx.createLinearGradient(
-    -size * 0.055,
-    0,
-    size * 0.055,
-    0,
-  );
-  leftArmGrad.addColorStop(0, armorDark);
-  leftArmGrad.addColorStop(0.45, armorMid);
-  leftArmGrad.addColorStop(1, armorHigh);
-  ctx.fillStyle = leftArmGrad;
-  ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.22);
-  ctx.fillStyle = armorPeak;
-  ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
+  drawDetailedArm(ctx, size, size * 0.22, zoom, knightArmColors);
   ctx.restore();
 
   // === RIGHT ARM + SOUL-FORGED GREATSWORD ===
@@ -462,23 +683,7 @@ export function drawKnightTroop(
   ctx.save();
   ctx.translate(knightShoulderX, knightShoulderY);
   ctx.rotate(knightArmSwing);
-  const rightArmGrad = ctx.createLinearGradient(
-    -size * 0.055,
-    0,
-    size * 0.055,
-    0,
-  );
-  rightArmGrad.addColorStop(0, armorDark);
-  rightArmGrad.addColorStop(0.45, armorMid);
-  rightArmGrad.addColorStop(1, armorHigh);
-  ctx.fillStyle = rightArmGrad;
-  ctx.fillRect(-size * 0.04, -size * 0.04, size * 0.2, size * 0.08);
-  ctx.fillStyle = armorPeak;
-  ctx.fillRect(size * 0.12, -size * 0.045, size * 0.1, size * 0.09);
-  ctx.fillStyle = armorMid;
-  ctx.beginPath();
-  ctx.arc(knightArmLength, 0, size * 0.035, 0, Math.PI * 2);
-  ctx.fill();
+  drawDetailedArm(ctx, size, knightArmLength, zoom, knightArmColors);
   ctx.restore();
 
   // Sword (variant-dependent blade shape)

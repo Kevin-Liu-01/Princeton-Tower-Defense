@@ -14,7 +14,7 @@ import {
   drawSphinx,
   drawNassauHall,
   drawGlacier,
-  drawIceFortress,
+  drawFortress,
   drawIceThrone,
   drawObsidianCastle,
   drawWitchCottage,
@@ -160,8 +160,8 @@ export function renderDecoration(
     case "glacier":
       drawGlacier(ctx, screenPos.x, screenPos.y, scale, time);
       break;
-    case "ice_fortress":
-      drawIceFortress(ctx, screenPos.x, screenPos.y, scale, time);
+    case "fortress":
+      drawFortress(ctx, screenPos.x, screenPos.y, scale, time);
       break;
     case "ice_throne":
       drawIceThrone(ctx, screenPos.x, screenPos.y, scale, time);

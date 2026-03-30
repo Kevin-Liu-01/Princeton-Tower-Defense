@@ -38,7 +38,7 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "foulke_hall",
   "tiger_stadium",
   "glacier",
-  "ice_fortress",
+  "fortress",
   "obsidian_castle",
   "witch_cottage",
   "frozen_waterfall",

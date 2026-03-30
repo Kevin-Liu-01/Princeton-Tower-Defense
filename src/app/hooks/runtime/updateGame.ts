@@ -1399,11 +1399,14 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           }
         }
         // Hero Combat Check - skip attacks when paused
+        // Flying heroes (nassau) cannot block ground enemies; ground enemies walk past them
+        const heroIsFlying1 = hero ? (HERO_DATA[hero.type].isFlying ?? false) : false;
         const nearbyHero =
           hero &&
             !hero.dead &&
             distance(enemyPos, hero.pos) < 60 &&
-            !ENEMY_DATA[enemy.type].flying
+            !ENEMY_DATA[enemy.type].flying &&
+            !heroIsFlying1
             ? hero
             : null;
         if (nearbyHero) {
@@ -1991,9 +1994,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         const enemyPosForCombat = getEnemyPosCached(enemy);
         // Check for nearby hero combat
         // Flying enemies can only melee with a flying hero (nassau)
+        // Flying heroes cannot block ground enemies — only flying vs flying combat
         const enemyIsFlying = ENEMY_DATA[enemy.type].flying;
+        const heroIsFlying2 = HERO_DATA[hero?.type ?? "tiger"].isFlying ?? false;
         const heroCanMelee = hero && !hero.dead && distance(enemyPosForCombat, hero.pos) < 60;
-        const flyingMeleeAllowed = !enemyIsFlying || (HERO_DATA[hero?.type ?? "tiger"].isFlying ?? false);
+        const flyingMeleeAllowed = enemyIsFlying ? heroIsFlying2 : !heroIsFlying2;
         const nearbyHero = heroCanMelee && flyingMeleeAllowed ? hero : null;
         if (nearbyHero) {
           // Scale enemy attack interval with game speed - skip when paused

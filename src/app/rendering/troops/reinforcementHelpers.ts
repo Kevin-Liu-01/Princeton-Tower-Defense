@@ -769,42 +769,128 @@ export function drawGreaves(
   palette: ReinforcementPalette,
   greaveStyle: ReinforcementArmorStyle["greaveStyle"],
 ) {
-  const legGrad = ctx.createLinearGradient(legX - size * 0.06, 0, legX + size * 0.06, 0);
-  legGrad.addColorStop(0, palette.armorDark);
-  legGrad.addColorStop(0.45, palette.armorMid);
-  legGrad.addColorStop(1, palette.armorDark);
-  ctx.fillStyle = legGrad;
-  ctx.fillRect(legX - size * 0.06, legY, size * 0.12, size * 0.24);
+  const lw = size * 0.14;
+  const hlw = lw * 0.5;
+
+  // --- Thigh plate (cuisse) ---
+  const thighH = size * 0.10;
+  const thighGrad = ctx.createLinearGradient(legX - hlw, legY, legX + hlw, legY);
+  thighGrad.addColorStop(0, palette.armorDark);
+  thighGrad.addColorStop(0.2, palette.armorMid);
+  thighGrad.addColorStop(0.5, palette.armorLight);
+  thighGrad.addColorStop(0.8, palette.armorMid);
+  thighGrad.addColorStop(1, palette.armorDark);
+  ctx.fillStyle = thighGrad;
+  ctx.beginPath();
+  ctx.roundRect(legX - hlw, legY, lw, thighH, size * 0.012);
+  ctx.fill();
+
+  // Thigh edge highlight
+  ctx.strokeStyle = `rgba(255, 255, 255, 0.15)`;
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(legX - hlw, legY + size * 0.01);
+  ctx.lineTo(legX - hlw, legY + thighH - size * 0.01);
+  ctx.stroke();
+
+  // Thigh articulation band
+  ctx.strokeStyle = palette.armorDark;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(legX - hlw + size * 0.01, legY + thighH * 0.55);
+  ctx.lineTo(legX + hlw - size * 0.01, legY + thighH * 0.55);
+  ctx.stroke();
+
+  // --- Knee cop (poleyn) ---
+  const kneeY = legY + thighH + size * 0.005;
+  const kneeCopGrad = ctx.createRadialGradient(
+    legX, kneeY, 0, legX, kneeY, size * 0.055,
+  );
+  kneeCopGrad.addColorStop(0, palette.armorLight);
+  kneeCopGrad.addColorStop(0.5, palette.armorMid);
+  kneeCopGrad.addColorStop(1, palette.armorDark);
+  ctx.fillStyle = kneeCopGrad;
+  ctx.beginPath();
+  ctx.ellipse(legX, kneeY, size * 0.065, size * 0.042, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Knee raised center
+  ctx.fillStyle = palette.armorLight;
+  ctx.beginPath();
+  ctx.ellipse(legX, kneeY, size * 0.035, size * 0.022, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Center rivet
+  ctx.fillStyle = palette.trim;
+  ctx.beginPath();
+  ctx.arc(legX, kneeY, size * 0.008, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- Greave (shin guard) — style-dependent ---
+  const greaveTop = kneeY + size * 0.035;
+  const greaveH = size * 0.12;
+
+  const greaveGrad = ctx.createLinearGradient(legX - hlw, greaveTop, legX + hlw, greaveTop);
+  greaveGrad.addColorStop(0, palette.armorDark);
+  greaveGrad.addColorStop(0.15, palette.armorMid);
+  greaveGrad.addColorStop(0.5, palette.armorLight);
+  greaveGrad.addColorStop(0.85, palette.armorMid);
+  greaveGrad.addColorStop(1, palette.armorDark);
+  ctx.fillStyle = greaveGrad;
+  ctx.beginPath();
+  ctx.roundRect(legX - hlw, greaveTop, lw, greaveH, [0, 0, size * 0.015, size * 0.015]);
+  ctx.fill();
+
+  // Greave center ridge
+  ctx.strokeStyle = `rgba(255, 255, 255, 0.18)`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(legX, greaveTop + size * 0.01);
+  ctx.lineTo(legX, greaveTop + greaveH - size * 0.01);
+  ctx.stroke();
 
   switch (greaveStyle) {
     case "smooth": {
-      // Knee guard
-      ctx.fillStyle = palette.armorLight;
-      ctx.beginPath();
-      ctx.roundRect(legX - size * 0.065, legY + size * 0.11, size * 0.13, size * 0.06, size * 0.025);
-      ctx.fill();
+      // Two subtle articulation bands
+      ctx.strokeStyle = palette.armorDark;
+      ctx.lineWidth = 0.7 * zoom;
+      for (const t of [0.35, 0.65]) {
+        ctx.beginPath();
+        ctx.moveTo(legX - hlw + size * 0.01, greaveTop + greaveH * t);
+        ctx.lineTo(legX + hlw - size * 0.01, greaveTop + greaveH * t);
+        ctx.stroke();
+      }
       break;
     }
     case "ridged": {
-      // Horizontal ridges down the greave
       ctx.strokeStyle = palette.armorLight;
-      ctx.lineWidth = 1 * zoom;
+      ctx.lineWidth = 0.8 * zoom;
       for (let r = 0; r < 4; r++) {
-        const rY = legY + size * 0.04 + r * size * 0.05;
+        const rY = greaveTop + size * 0.015 + r * (greaveH * 0.25);
         ctx.beginPath();
-        ctx.moveTo(legX - size * 0.055, rY);
-        ctx.lineTo(legX + size * 0.055, rY);
+        ctx.moveTo(legX - hlw + size * 0.008, rY);
+        ctx.lineTo(legX + hlw - size * 0.008, rY);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = `rgba(0, 0, 0, 0.15)`;
+      ctx.lineWidth = 0.5 * zoom;
+      for (let r = 0; r < 4; r++) {
+        const rY = greaveTop + size * 0.015 + r * (greaveH * 0.25) + 1;
+        ctx.beginPath();
+        ctx.moveTo(legX - hlw + size * 0.008, rY);
+        ctx.lineTo(legX + hlw - size * 0.008, rY);
         ctx.stroke();
       }
       break;
     }
     case "plated": {
-      // Overlapping plates
-      for (let p = 0; p < 3; p++) {
-        const pY = legY + p * size * 0.065;
+      const plateCount = 3;
+      const plateH = greaveH / plateCount;
+      for (let p = 0; p < plateCount; p++) {
+        const pY = greaveTop + p * plateH;
         ctx.fillStyle = p % 2 === 0 ? palette.armorMid : palette.armorLight;
         ctx.beginPath();
-        ctx.roundRect(legX - size * 0.06, pY, size * 0.12, size * 0.075, size * 0.01);
+        ctx.roundRect(legX - hlw, pY, lw, plateH + size * 0.005, size * 0.008);
         ctx.fill();
         ctx.strokeStyle = palette.armorDark;
         ctx.lineWidth = 0.6 * zoom;
@@ -814,9 +900,41 @@ export function drawGreaves(
     }
   }
 
-  // Boot
-  ctx.fillStyle = "#2a2335";
+  // Greave edge highlight
+  ctx.strokeStyle = `rgba(255, 255, 255, 0.12)`;
+  ctx.lineWidth = 0.6 * zoom;
   ctx.beginPath();
-  ctx.roundRect(legX - size * 0.075, legY + size * 0.2, size * 0.15, size * 0.1, size * 0.025);
+  ctx.moveTo(legX - hlw, greaveTop + size * 0.01);
+  ctx.lineTo(legX - hlw, greaveTop + greaveH - size * 0.01);
+  ctx.stroke();
+
+  // --- Boot (armored) ---
+  const bootTop = greaveTop + greaveH;
+  const bootH = size * 0.07;
+
+  const bootGrad = ctx.createLinearGradient(legX - hlw, bootTop, legX + hlw, bootTop);
+  bootGrad.addColorStop(0, "#1e1828");
+  bootGrad.addColorStop(0.4, "#2a2335");
+  bootGrad.addColorStop(0.6, "#2a2335");
+  bootGrad.addColorStop(1, "#1e1828");
+  ctx.fillStyle = bootGrad;
+  ctx.beginPath();
+  ctx.roundRect(
+    legX - hlw - size * 0.005, bootTop,
+    lw + size * 0.01, bootH,
+    [0, 0, size * 0.02, size * 0.02],
+  );
   ctx.fill();
+
+  // Boot cuff
+  ctx.fillStyle = palette.armorMid;
+  ctx.fillRect(legX - hlw - size * 0.005, bootTop, lw + size * 0.01, size * 0.016);
+
+  // Boot strap
+  ctx.fillStyle = palette.trim;
+  ctx.fillRect(legX - size * 0.025, bootTop + bootH * 0.45, size * 0.05, size * 0.014);
+
+  // Sole
+  ctx.fillStyle = "#141018";
+  ctx.fillRect(legX - hlw - size * 0.005, bootTop + bootH - size * 0.01, lw + size * 0.01, size * 0.01);
 }

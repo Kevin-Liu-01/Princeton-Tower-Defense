@@ -192,15 +192,15 @@ function drawTassetSide(
       outerBotY,
     );
     if (side === -1) {
-      plateG.addColorStop(0, "#4a4a4a");
-      plateG.addColorStop(0.25, "#404040");
-      plateG.addColorStop(0.55, "#333333");
-      plateG.addColorStop(1, "#1a1a1a");
+      plateG.addColorStop(0, "#4a4e56");
+      plateG.addColorStop(0.25, "#40444c");
+      plateG.addColorStop(0.55, "#33363e");
+      plateG.addColorStop(1, "#1a1c22");
     } else {
-      plateG.addColorStop(0, "#1a1a1a");
-      plateG.addColorStop(0.45, "#333333");
-      plateG.addColorStop(0.75, "#404040");
-      plateG.addColorStop(1, "#4a4a4a");
+      plateG.addColorStop(0, "#1a1c22");
+      plateG.addColorStop(0.45, "#33363e");
+      plateG.addColorStop(0.75, "#40444c");
+      plateG.addColorStop(1, "#4a4e56");
     }
 
     ctx.fillStyle = plateG;
@@ -212,7 +212,7 @@ function drawTassetSide(
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(110, 110, 110, 0.5)";
+    ctx.strokeStyle = "rgba(105, 112, 125, 0.5)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
@@ -961,26 +961,26 @@ export function drawCaptainHero(
       ctx.closePath();
     };
 
-    // Base fill — dark steel with directional gradient
+    // Base fill — burnished dark steel with blue-steel undertones
     const armorG = ctx.createLinearGradient(x - size * 0.5, y - size * 0.35, x + size * 0.35, y + size * 0.5);
-    armorG.addColorStop(0, "#2e2e2e");
-    armorG.addColorStop(0.15, "#3c3c3c");
-    armorG.addColorStop(0.35, "#484850");
-    armorG.addColorStop(0.55, "#404048");
-    armorG.addColorStop(0.75, "#333338");
-    armorG.addColorStop(1, "#1e1e20");
+    armorG.addColorStop(0, "#2e3036");
+    armorG.addColorStop(0.15, "#3c3e46");
+    armorG.addColorStop(0.35, "#484c56");
+    armorG.addColorStop(0.55, "#404450");
+    armorG.addColorStop(0.75, "#33363e");
+    armorG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = armorG;
     drawArmorPath();
     ctx.fill();
 
-    // Specular highlight on upper-left chest
+    // Specular highlight on upper-left chest (cool steel)
     const specAG = ctx.createRadialGradient(
       x - size * 0.12, y - size * 0.2, 0,
       x - size * 0.1, y - size * 0.15, size * 0.25,
     );
-    specAG.addColorStop(0, "rgba(140, 140, 155, 0.2)");
-    specAG.addColorStop(0.5, "rgba(90, 90, 100, 0.08)");
-    specAG.addColorStop(1, "rgba(50, 50, 55, 0)");
+    specAG.addColorStop(0, "rgba(145, 150, 175, 0.22)");
+    specAG.addColorStop(0.5, "rgba(90, 95, 115, 0.09)");
+    specAG.addColorStop(1, "rgba(50, 55, 70, 0)");
     ctx.fillStyle = specAG;
     drawArmorPath();
     ctx.fill();
@@ -996,16 +996,16 @@ export function drawCaptainHero(
         const ss = size * 0.042;
 
         const sG = ctx.createRadialGradient(scaleX - ss * 0.2, scaleY - ss * 0.2, 0, scaleX, scaleY, ss);
-        sG.addColorStop(0, "rgba(80, 80, 90, 0.35)");
-        sG.addColorStop(0.6, "rgba(55, 55, 62, 0.25)");
-        sG.addColorStop(1, "rgba(35, 35, 40, 0)");
+        sG.addColorStop(0, "rgba(78, 82, 98, 0.35)");
+        sG.addColorStop(0.6, "rgba(52, 56, 68, 0.25)");
+        sG.addColorStop(1, "rgba(32, 36, 46, 0)");
         ctx.fillStyle = sG;
         ctx.beginPath();
         ctx.moveTo(scaleX, scaleY - ss * 0.35);
         ctx.quadraticCurveTo(scaleX + ss, scaleY, scaleX, scaleY + ss * 0.55);
         ctx.quadraticCurveTo(scaleX - ss, scaleY, scaleX, scaleY - ss * 0.35);
         ctx.fill();
-        ctx.strokeStyle = "rgba(70, 70, 78, 0.2)";
+        ctx.strokeStyle = "rgba(68, 72, 86, 0.2)";
         ctx.lineWidth = 0.3 * zoom;
         ctx.stroke();
       }
@@ -1240,9 +1240,9 @@ export function drawCaptainHero(
 
     // Lower rim plate (layered look)
     const rimG = ctx.createRadialGradient(pX - side * size * 0.03, pY + size * 0.04, 0, pX, pY + size * 0.04, size * 0.22);
-    rimG.addColorStop(0, "#4a4a4e");
-    rimG.addColorStop(0.5, "#353538");
-    rimG.addColorStop(1, "#1e1e20");
+    rimG.addColorStop(0, "#4a4e58");
+    rimG.addColorStop(0.5, "#35383e");
+    rimG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = rimG;
     ctx.beginPath();
     ctx.ellipse(pX, pY + size * 0.04, size * 0.23, size * 0.14, side * 0.35, 0, Math.PI * 2);
@@ -1261,11 +1261,11 @@ export function drawCaptainHero(
       pX - side * size * 0.06, pY - size * 0.05, size * 0.02,
       pX, pY, size * 0.22,
     );
-    pG.addColorStop(0, "#686870");
-    pG.addColorStop(0.2, "#555560");
-    pG.addColorStop(0.5, "#404048");
-    pG.addColorStop(0.8, "#2e2e32");
-    pG.addColorStop(1, "#1a1a1e");
+    pG.addColorStop(0, "#686e78");
+    pG.addColorStop(0.2, "#555a66");
+    pG.addColorStop(0.5, "#404550");
+    pG.addColorStop(0.8, "#2e3238");
+    pG.addColorStop(1, "#1a1c22");
     ctx.fillStyle = pG;
     ctx.beginPath();
     ctx.ellipse(pX, pY, size * 0.21, size * 0.15, side * 0.4, 0, Math.PI * 2);
@@ -2938,82 +2938,175 @@ export function drawCaptainHero(
     ctx.ellipse(helmCX, helmBot + size * 0.03, helmW * 0.9, size * 0.06, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Main helm fill — rich dark steel
+    // Main helm fill — burnished dark steel with blue-steel undertones
     const helmG = ctx.createLinearGradient(helmCX - helmW, helmTop, helmCX + helmW * 0.3, helmBot);
-    helmG.addColorStop(0, "#6a6a6a");
-    helmG.addColorStop(0.15, "#555");
-    helmG.addColorStop(0.35, "#454545");
-    helmG.addColorStop(0.6, "#363636");
-    helmG.addColorStop(0.85, "#282828");
-    helmG.addColorStop(1, "#1c1c1c");
+    helmG.addColorStop(0, "#707580");
+    helmG.addColorStop(0.08, "#5e6270");
+    helmG.addColorStop(0.2, "#4e5260");
+    helmG.addColorStop(0.4, "#3a3e4a");
+    helmG.addColorStop(0.6, "#2e3038");
+    helmG.addColorStop(0.8, "#222428");
+    helmG.addColorStop(1, "#18191d");
     ctx.fillStyle = helmG;
     drawHelmPath();
     ctx.fill();
 
-    // Specular highlight on upper-left dome
-    const specG = ctx.createRadialGradient(
-      helmCX - size * 0.1, helmTop + size * 0.08, 0,
-      helmCX - size * 0.08, helmTop + size * 0.1, size * 0.2,
+    // Warm fire reflection on top of dome (from plume above)
+    const fireReflG = ctx.createRadialGradient(
+      helmCX, helmTop + size * 0.04, 0,
+      helmCX, helmTop + size * 0.08, size * 0.25,
     );
-    specG.addColorStop(0, "rgba(170, 170, 185, 0.3)");
-    specG.addColorStop(0.4, "rgba(110, 110, 125, 0.12)");
-    specG.addColorStop(1, "rgba(60, 60, 70, 0)");
+    fireReflG.addColorStop(0, `rgba(255, 120, 40, ${0.12 + flamePulse * 0.06})`);
+    fireReflG.addColorStop(0.3, `rgba(220, 80, 20, ${0.06 + flamePulse * 0.03})`);
+    fireReflG.addColorStop(0.6, "rgba(180, 50, 10, 0.02)");
+    fireReflG.addColorStop(1, "rgba(100, 20, 5, 0)");
+    ctx.fillStyle = fireReflG;
+    drawHelmPath();
+    ctx.fill();
+
+    // Primary specular highlight — upper-left (cool steel reflection)
+    const specG = ctx.createRadialGradient(
+      helmCX - size * 0.1, helmTop + size * 0.07, 0,
+      helmCX - size * 0.08, helmTop + size * 0.1, size * 0.18,
+    );
+    specG.addColorStop(0, "rgba(190, 195, 215, 0.38)");
+    specG.addColorStop(0.25, "rgba(140, 148, 170, 0.18)");
+    specG.addColorStop(0.55, "rgba(100, 108, 130, 0.06)");
+    specG.addColorStop(1, "rgba(60, 65, 80, 0)");
     ctx.fillStyle = specG;
     drawHelmPath();
     ctx.fill();
 
-    // Dragon scale pattern on upper dome
+    // Secondary specular — rim light on right edge
+    const rimG = ctx.createLinearGradient(
+      helmCX + helmW * 0.7, helmTop,
+      helmCX + helmW * 1.15, helmBot * 0.6 + helmTop * 0.4,
+    );
+    rimG.addColorStop(0, "rgba(160, 170, 205, 0.16)");
+    rimG.addColorStop(0.35, "rgba(120, 130, 165, 0.08)");
+    rimG.addColorStop(1, "rgba(60, 65, 80, 0)");
+    ctx.fillStyle = rimG;
+    drawHelmPath();
+    ctx.fill();
+
+    // Ambient occlusion at bottom of dome
+    const aoG = ctx.createLinearGradient(helmCX, helmBot - size * 0.1, helmCX, helmBot);
+    aoG.addColorStop(0, "rgba(0, 0, 0, 0)");
+    aoG.addColorStop(0.6, "rgba(0, 0, 5, 0.08)");
+    aoG.addColorStop(1, "rgba(0, 0, 5, 0.18)");
+    ctx.fillStyle = aoG;
+    drawHelmPath();
+    ctx.fill();
+
+    // Overlapping dragon scale armor on upper dome
     ctx.save();
     drawHelmPath();
     ctx.clip();
-    for (let row = 0; row < 5; row++) {
-      const scaleRowY = helmTop + size * 0.04 + row * size * 0.055;
-      const rowWidth = helmW * (1.0 - row * 0.05);
-      const cols = 6 - row;
+    for (let row = 0; row < 7; row++) {
+      const scaleRowY = helmTop + size * 0.015 + row * size * 0.04;
+      const rowWidth = helmW * (1.08 - row * 0.03);
+      const cols = 7 - Math.floor(row * 0.5);
+      const stagger = row % 2 === 0 ? 0 : 0.5;
       for (let col = 0; col < cols; col++) {
-        const colT = cols > 1 ? col / (cols - 1) : 0.5;
-        const sx = helmCX + (colT - 0.5) * rowWidth * 1.6 + (row % 2 === 0 ? 0 : rowWidth * 0.12);
+        const colT = cols > 1 ? (col + stagger) / cols : 0.5;
+        const sx = helmCX + (colT - 0.5) * rowWidth * 1.8;
         const sy = scaleRowY;
-        const sw = size * (0.028 - row * 0.002);
-        const sh = size * (0.018 - row * 0.001);
+        const sw = size * 0.03;
+        const sh = size * 0.025;
 
-        ctx.fillStyle = "rgba(55, 55, 62, 0.35)";
+        const scaleDepth = 0.12 + row * 0.02;
+        const scaleBright = Math.max(0, 0.3 - row * 0.03);
+
+        // Scale body — overlapping U-arc shape
+        ctx.fillStyle = `rgba(${48 + row * 4}, ${50 + row * 4}, ${58 + row * 3}, ${0.35 + scaleDepth})`;
         ctx.beginPath();
-        ctx.ellipse(sx, sy, sw, sh, 0, 0, Math.PI * 2);
+        ctx.moveTo(sx - sw, sy - sh * 0.3);
+        ctx.quadraticCurveTo(sx - sw * 0.8, sy + sh * 0.8, sx, sy + sh);
+        ctx.quadraticCurveTo(sx + sw * 0.8, sy + sh * 0.8, sx + sw, sy - sh * 0.3);
+        ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = "rgba(80, 80, 90, 0.2)";
-        ctx.lineWidth = 0.3 * zoom;
+
+        // Upper highlight edge
+        ctx.strokeStyle = `rgba(${100 + row * 5}, ${108 + row * 5}, ${130 + row * 3}, ${0.22 + scaleBright})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx - sw * 0.85, sy - sh * 0.2);
+        ctx.quadraticCurveTo(sx, sy - sh * 0.5, sx + sw * 0.85, sy - sh * 0.2);
+        ctx.stroke();
+
+        // Lower shadow crease
+        ctx.strokeStyle = `rgba(15, 15, 22, ${0.18 + scaleDepth * 0.3})`;
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx - sw * 0.65, sy + sh * 0.35);
+        ctx.quadraticCurveTo(sx, sy + sh * 1.05, sx + sw * 0.65, sy + sh * 0.35);
         ctx.stroke();
       }
     }
     ctx.restore();
 
-    // Central crest ridge running from crown to brow
-    const ridgeG = ctx.createLinearGradient(helmCX - size * 0.025, helmCY, helmCX + size * 0.025, helmCY);
-    ridgeG.addColorStop(0, "#2e2e2e");
-    ridgeG.addColorStop(0.3, "#4a4a50");
-    ridgeG.addColorStop(0.5, "#5a5a64");
-    ridgeG.addColorStop(0.7, "#4a4a50");
-    ridgeG.addColorStop(1, "#2e2e2e");
+    // Central crest ridge — raised segmented spine from crown to brow
+    const ridgeG = ctx.createLinearGradient(helmCX - size * 0.03, helmCY, helmCX + size * 0.03, helmCY);
+    ridgeG.addColorStop(0, "#252530");
+    ridgeG.addColorStop(0.2, "#3e3e4a");
+    ridgeG.addColorStop(0.35, "#52525e");
+    ridgeG.addColorStop(0.5, "#5e5e6a");
+    ridgeG.addColorStop(0.65, "#52525e");
+    ridgeG.addColorStop(0.8, "#3e3e4a");
+    ridgeG.addColorStop(1, "#252530");
     ctx.fillStyle = ridgeG;
     ctx.beginPath();
-    ctx.moveTo(helmCX - size * 0.02, helmTop - size * 0.01);
+    ctx.moveTo(helmCX - size * 0.024, helmTop - size * 0.015);
     ctx.bezierCurveTo(
-      helmCX - size * 0.03, helmTop + size * 0.12,
-      helmCX - size * 0.035, helmBrowY - size * 0.06,
-      helmCX - size * 0.03, helmBrowY + size * 0.02,
+      helmCX - size * 0.034, helmTop + size * 0.12,
+      helmCX - size * 0.038, helmBrowY - size * 0.06,
+      helmCX - size * 0.034, helmBrowY + size * 0.025,
     );
-    ctx.lineTo(helmCX + size * 0.03, helmBrowY + size * 0.02);
+    ctx.lineTo(helmCX + size * 0.034, helmBrowY + size * 0.025);
     ctx.bezierCurveTo(
-      helmCX + size * 0.035, helmBrowY - size * 0.06,
-      helmCX + size * 0.03, helmTop + size * 0.12,
-      helmCX + size * 0.02, helmTop - size * 0.01,
+      helmCX + size * 0.038, helmBrowY - size * 0.06,
+      helmCX + size * 0.034, helmTop + size * 0.12,
+      helmCX + size * 0.024, helmTop - size * 0.015,
     );
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(100, 100, 112, 0.3)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = "rgba(100, 100, 115, 0.35)";
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
+
+    // Spine segmentation lines across ridge
+    for (let seg = 0; seg < 6; seg++) {
+      const segT = (seg + 1) / 7;
+      const segY = helmTop + (helmBrowY - helmTop + size * 0.02) * segT;
+      const segHalfW = size * (0.026 + segT * 0.008);
+      ctx.strokeStyle = `rgba(30, 30, 38, ${0.4 + seg * 0.04})`;
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(helmCX - segHalfW, segY);
+      ctx.lineTo(helmCX + segHalfW, segY);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(90, 92, 108, ${0.15 + seg * 0.02})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(helmCX - segHalfW, segY - size * 0.003);
+      ctx.lineTo(helmCX + segHalfW, segY - size * 0.003);
+      ctx.stroke();
+    }
+
+    // Glowing energy line down the center of the spine
+    ctx.strokeStyle = `rgba(255, 100, 30, ${0.15 + flamePulse * 0.1})`;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.shadowColor = "rgba(255, 80, 20, 0.3)";
+    ctx.shadowBlur = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(helmCX, helmTop + size * 0.01);
+    ctx.bezierCurveTo(
+      helmCX, helmTop + size * 0.1,
+      helmCX, helmBrowY - size * 0.08,
+      helmCX, helmBrowY + size * 0.01,
+    );
+    ctx.stroke();
+    ctx.shadowBlur = 0;
 
     // Brow plate (thickened band across the brow, separating dome from face)
     const browG = ctx.createLinearGradient(helmCX - helmW, helmBrowY, helmCX + helmW, helmBrowY);
@@ -3034,100 +3127,307 @@ export function drawCaptainHero(
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
 
-    // Gold crown band on the brow plate
+    // Gold crown band on the brow plate — ornate with rune engravings
     const bandG = ctx.createLinearGradient(helmCX - helmW, helmBrowY, helmCX + helmW, helmBrowY);
     bandG.addColorStop(0, "#5a4008");
-    bandG.addColorStop(0.15, "#8a6a15");
-    bandG.addColorStop(0.3, "#b08a20");
-    bandG.addColorStop(0.5, "#c9a227");
-    bandG.addColorStop(0.7, "#b08a20");
-    bandG.addColorStop(0.85, "#8a6a15");
+    bandG.addColorStop(0.1, "#7a5a10");
+    bandG.addColorStop(0.2, "#9a7a1a");
+    bandG.addColorStop(0.35, "#b89025");
+    bandG.addColorStop(0.5, "#d4a82c");
+    bandG.addColorStop(0.65, "#b89025");
+    bandG.addColorStop(0.8, "#9a7a1a");
+    bandG.addColorStop(0.9, "#7a5a10");
     bandG.addColorStop(1, "#5a4008");
     ctx.fillStyle = bandG;
     ctx.beginPath();
-    ctx.moveTo(helmCX - helmW * 0.95, helmBrowY - size * 0.012);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.025, helmCX + helmW * 0.95, helmBrowY - size * 0.012);
-    ctx.lineTo(helmCX + helmW * 0.95, helmBrowY + size * 0.012);
-    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.003, helmCX - helmW * 0.95, helmBrowY + size * 0.012);
+    ctx.moveTo(helmCX - helmW * 0.95, helmBrowY - size * 0.014);
+    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.028, helmCX + helmW * 0.95, helmBrowY - size * 0.014);
+    ctx.lineTo(helmCX + helmW * 0.95, helmBrowY + size * 0.014);
+    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.002, helmCX - helmW * 0.95, helmBrowY + size * 0.014);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = "#6a4a08";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
 
-    // Filigree dots on band
-    ctx.fillStyle = "rgba(200, 170, 60, 0.3)";
-    for (let d = 0; d < 7; d++) {
-      const dt = (d + 1) / 8;
-      const dx = helmCX + (dt - 0.5) * helmW * 1.7;
-      const dy = helmBrowY - size * 0.004;
-      ctx.beginPath();
-      ctx.arc(dx, dy, size * 0.005, 0, Math.PI * 2);
-      ctx.fill();
+    // Rune engravings on the gold band (geometric symbols)
+    ctx.strokeStyle = "rgba(90, 60, 10, 0.45)";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let r = 0; r < 5; r++) {
+      const rt = (r + 1) / 6;
+      const rx = helmCX + (rt - 0.5) * helmW * 1.6;
+      const ry = helmBrowY - size * 0.002;
+      const rs = size * 0.01;
+      if (r % 2 === 0) {
+        ctx.beginPath();
+        ctx.moveTo(rx - rs, ry - rs * 0.6);
+        ctx.lineTo(rx, ry + rs * 0.6);
+        ctx.lineTo(rx + rs, ry - rs * 0.6);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(rx, ry - rs * 0.7);
+        ctx.lineTo(rx, ry + rs * 0.7);
+        ctx.moveTo(rx - rs * 0.5, ry);
+        ctx.lineTo(rx + rs * 0.5, ry);
+        ctx.stroke();
+      }
     }
 
-    // Crown dragon peaks (3 elegant pointed peaks above the dome)
-    const crownPeaks = [
-      { off: 0, h: 0.13, w: 0.032 },
-      { off: -0.1, h: 0.09, w: 0.025 },
-      { off: 0.1, h: 0.09, w: 0.025 },
-    ];
-    for (const peak of crownPeaks) {
-      const peakX = helmCX + peak.off * size;
-      const peakBaseY = helmTop - size * 0.02;
-      const peakTipY = peakBaseY - peak.h * size;
-      const pw = peak.w * size;
+    // Band highlight shimmer
+    ctx.strokeStyle = "rgba(230, 200, 100, 0.2)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(helmCX - helmW * 0.85, helmBrowY - size * 0.01);
+    ctx.quadraticCurveTo(helmCX, helmBrowY - size * 0.022, helmCX + helmW * 0.85, helmBrowY - size * 0.01);
+    ctx.stroke();
 
-      const peakG = ctx.createLinearGradient(peakX - pw, peakBaseY, peakX + pw, peakTipY);
-      peakG.addColorStop(0, "#6a5010");
-      peakG.addColorStop(0.3, "#9a7a1a");
-      peakG.addColorStop(0.5, "#b89025");
-      peakG.addColorStop(0.7, "#c9a227");
-      peakG.addColorStop(1, "#b89025");
-      ctx.fillStyle = peakG;
+    // Dramatic curved dragon horns rising from crown
+    for (let side = -1; side <= 1; side += 2) {
+      const hornBaseX = helmCX + side * size * 0.1;
+      const hornBaseY = helmTop - size * 0.01;
+      const hornTipX = helmCX + side * size * 0.24;
+      const hornTipY = helmTop - size * 0.24;
+      const hornThick = size * 0.032;
+
+      // Horn shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
       ctx.beginPath();
-      ctx.moveTo(peakX - pw, peakBaseY);
+      ctx.moveTo(hornBaseX - side * hornThick, hornBaseY + size * 0.008);
       ctx.bezierCurveTo(
-        peakX - pw * 0.5, peakBaseY - peak.h * size * 0.6,
-        peakX - pw * 0.15, peakTipY + size * 0.01,
-        peakX, peakTipY,
+        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05, hornTipY + size * 0.07,
+        hornTipX + side * size * 0.01, hornTipY + size * 0.012,
+      );
+      ctx.lineTo(hornTipX - side * size * 0.005, hornTipY + size * 0.022);
+      ctx.bezierCurveTo(
+        hornTipX - side * size * 0.07, hornTipY + size * 0.09,
+        hornBaseX + side * size * 0.02, hornBaseY - size * 0.04,
+        hornBaseX + side * hornThick, hornBaseY + size * 0.008,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Horn body — dark bone with warm tones
+      const hornG = ctx.createLinearGradient(hornBaseX, hornBaseY, hornTipX, hornTipY);
+      hornG.addColorStop(0, "#5a4a2a");
+      hornG.addColorStop(0.15, "#7a6a3a");
+      hornG.addColorStop(0.3, "#9a8a4a");
+      hornG.addColorStop(0.5, "#b09a55");
+      hornG.addColorStop(0.7, "#a08845");
+      hornG.addColorStop(0.85, "#8a7535");
+      hornG.addColorStop(1, "#c9a830");
+      ctx.fillStyle = hornG;
+      ctx.beginPath();
+      ctx.moveTo(hornBaseX - side * hornThick, hornBaseY);
+      ctx.bezierCurveTo(
+        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05, hornTipY + size * 0.06,
+        hornTipX, hornTipY,
       );
       ctx.bezierCurveTo(
-        peakX + pw * 0.15, peakTipY + size * 0.01,
-        peakX + pw * 0.5, peakBaseY - peak.h * size * 0.6,
-        peakX + pw, peakBaseY,
+        hornTipX - side * size * 0.02, hornTipY + size * 0.018,
+        hornTipX - side * size * 0.07, hornTipY + size * 0.07,
+        hornBaseX + side * hornThick, hornBaseY,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Horn segmentation rings
+      for (let seg = 0; seg < 5; seg++) {
+        const t = 0.15 + seg * 0.16;
+        const segX = hornBaseX + (hornTipX - hornBaseX) * t;
+        const segY = hornBaseY + (hornTipY - hornBaseY) * t + size * 0.015 * Math.sin(t * Math.PI);
+        const segW = hornThick * (1.15 - t * 0.55);
+        const segAngle = Math.atan2(hornTipY - hornBaseY, (hornTipX - hornBaseX) * side) + Math.PI * 0.5;
+        ctx.strokeStyle = `rgba(55, 45, 22, ${0.5 - seg * 0.06})`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(segX - Math.cos(segAngle) * segW, segY - Math.sin(segAngle) * segW);
+        ctx.lineTo(segX + Math.cos(segAngle) * segW, segY + Math.sin(segAngle) * segW);
+        ctx.stroke();
+      }
+
+      // Horn specular highlight
+      ctx.strokeStyle = "rgba(220, 200, 140, 0.28)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(hornBaseX, hornBaseY - size * 0.006);
+      ctx.bezierCurveTo(
+        hornBaseX + side * size * 0.03, hornBaseY - size * 0.08,
+        hornTipX - side * size * 0.04, hornTipY + size * 0.05,
+        hornTipX - side * size * 0.005, hornTipY + size * 0.004,
+      );
+      ctx.stroke();
+
+      // Glowing horn tip (heat effect)
+      ctx.fillStyle = `rgba(255, 140, 40, ${0.55 * flamePulse})`;
+      ctx.shadowColor = "#ff8800";
+      ctx.shadowBlur = 6 * zoom * flamePulse;
+      ctx.beginPath();
+      ctx.arc(hornTipX, hornTipY + size * 0.005, size * 0.007, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Gold border outline
+      ctx.strokeStyle = "#8a6a15";
+      ctx.lineWidth = 0.9 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(hornBaseX - side * hornThick, hornBaseY);
+      ctx.bezierCurveTo(
+        hornBaseX + side * size * 0.04, hornBaseY - size * 0.1,
+        hornTipX - side * size * 0.05, hornTipY + size * 0.06,
+        hornTipX, hornTipY,
+      );
+      ctx.bezierCurveTo(
+        hornTipX - side * size * 0.02, hornTipY + size * 0.018,
+        hornTipX - side * size * 0.07, hornTipY + size * 0.07,
+        hornBaseX + side * hornThick, hornBaseY,
+      );
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    // Central crown spike — tallest point
+    {
+      const spikeX = helmCX;
+      const spikeBaseY = helmTop - size * 0.025;
+      const spikeTipY = helmTop - size * 0.19;
+      const spikeW = size * 0.024;
+
+      const spikeG = ctx.createLinearGradient(spikeX - spikeW, spikeBaseY, spikeX + spikeW, spikeTipY);
+      spikeG.addColorStop(0, "#7a5a10");
+      spikeG.addColorStop(0.2, "#9a7a1a");
+      spikeG.addColorStop(0.4, "#b89025");
+      spikeG.addColorStop(0.6, "#c9a227");
+      spikeG.addColorStop(0.8, "#dab030");
+      spikeG.addColorStop(1, "#e8c040");
+      ctx.fillStyle = spikeG;
+      ctx.beginPath();
+      ctx.moveTo(spikeX - spikeW, spikeBaseY);
+      ctx.bezierCurveTo(
+        spikeX - spikeW * 0.6, spikeBaseY - size * 0.1,
+        spikeX - spikeW * 0.2, spikeTipY + size * 0.02,
+        spikeX, spikeTipY,
+      );
+      ctx.bezierCurveTo(
+        spikeX + spikeW * 0.2, spikeTipY + size * 0.02,
+        spikeX + spikeW * 0.6, spikeBaseY - size * 0.1,
+        spikeX + spikeW, spikeBaseY,
       );
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#6a4a08";
-      ctx.lineWidth = 0.6 * zoom;
+      ctx.lineWidth = 0.7 * zoom;
       ctx.stroke();
 
-      if (peak.h >= 0.12) {
-        ctx.fillStyle = "#dc2626";
-        ctx.shadowColor = "#ff4444";
-        ctx.shadowBlur = 5 * zoom * gemPulse;
-        ctx.beginPath();
-        ctx.arc(peakX, peakTipY + size * 0.018, size * 0.012, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    // Side ruby gems on crown band
-    for (let side = -1; side <= 1; side += 2) {
-      const gemX = helmCX + side * size * 0.2;
-      const gemY = helmBrowY;
+      // Gem at tip of central spike
       ctx.fillStyle = "#dc2626";
       ctx.shadowColor = "#ff4444";
+      ctx.shadowBlur = 6 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.arc(spikeX, spikeTipY + size * 0.012, size * 0.01, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Dragon head emblem on forehead (centerpiece between dome and brow)
+    {
+      const embX = helmCX;
+      const embY = helmBrowY - size * 0.06;
+      const embS = size * 0.045;
+
+      // Hexagonal backing plate
+      const embBG = ctx.createRadialGradient(embX, embY, 0, embX, embY, embS * 1.3);
+      embBG.addColorStop(0, "#3a3a42");
+      embBG.addColorStop(0.5, "#2a2a32");
+      embBG.addColorStop(1, "#1a1a22");
+      ctx.fillStyle = embBG;
+      ctx.beginPath();
+      ctx.moveTo(embX, embY - embS * 1.1);
+      ctx.lineTo(embX + embS * 0.9, embY - embS * 0.2);
+      ctx.lineTo(embX + embS * 0.7, embY + embS * 0.9);
+      ctx.lineTo(embX, embY + embS * 1.15);
+      ctx.lineTo(embX - embS * 0.7, embY + embS * 0.9);
+      ctx.lineTo(embX - embS * 0.9, embY - embS * 0.2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.0 * zoom;
+      ctx.stroke();
+
+      // Dragon face — iconic V-shaped snout
+      ctx.strokeStyle = "#daa520";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(embX - embS * 0.35, embY - embS * 0.3);
+      ctx.lineTo(embX, embY + embS * 0.5);
+      ctx.lineTo(embX + embS * 0.35, embY - embS * 0.3);
+      ctx.stroke();
+      // Dragon horns on emblem
+      ctx.beginPath();
+      ctx.moveTo(embX - embS * 0.22, embY - embS * 0.22);
+      ctx.lineTo(embX - embS * 0.55, embY - embS * 0.72);
+      ctx.moveTo(embX + embS * 0.22, embY - embS * 0.22);
+      ctx.lineTo(embX + embS * 0.55, embY - embS * 0.72);
+      ctx.stroke();
+      // Dragon eyes — glowing
+      ctx.fillStyle = `rgba(255, 60, 20, ${0.65 + 0.35 * gemPulse})`;
+      ctx.shadowColor = "#ff2200";
       ctx.shadowBlur = 4 * zoom * gemPulse;
       ctx.beginPath();
-      ctx.arc(gemX, gemY, size * 0.009, 0, Math.PI * 2);
+      ctx.arc(embX - embS * 0.18, embY - embS * 0.05, size * 0.005, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(embX + embS * 0.18, embY - embS * 0.05, size * 0.005, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Central gem in emblem mouth
+      const embGemG = ctx.createRadialGradient(embX - size * 0.002, embY + embS * 0.13, 0, embX, embY + embS * 0.15, size * 0.009);
+      embGemG.addColorStop(0, "#ff4040");
+      embGemG.addColorStop(0.5, "#dc2626");
+      embGemG.addColorStop(1, "#8a1010");
+      ctx.fillStyle = embGemG;
+      ctx.shadowColor = "#ff4444";
+      ctx.shadowBlur = 5 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.arc(embX, embY + embS * 0.15, size * 0.008, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
       ctx.strokeStyle = "#daa520";
       ctx.lineWidth = 0.5 * zoom;
       ctx.stroke();
+    }
+
+    // Side ruby gems on crown band (with proper bezels and facets)
+    for (let side = -1; side <= 1; side += 2) {
+      const gemX = helmCX + side * size * 0.2;
+      const gemY = helmBrowY;
+      // Gold bezel setting
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.0 * zoom;
+      ctx.beginPath();
+      ctx.arc(gemX, gemY, size * 0.013, 0, Math.PI * 2);
+      ctx.stroke();
+      // Ruby gem with radial facets
+      const rubyG = ctx.createRadialGradient(gemX - size * 0.003, gemY - size * 0.003, 0, gemX, gemY, size * 0.011);
+      rubyG.addColorStop(0, "#ff4545");
+      rubyG.addColorStop(0.35, "#dc2626");
+      rubyG.addColorStop(0.7, "#a01818");
+      rubyG.addColorStop(1, "#7a0e0e");
+      ctx.fillStyle = rubyG;
+      ctx.shadowColor = "#ff4444";
+      ctx.shadowBlur = 6 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.arc(gemX, gemY, size * 0.011, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Specular highlight on gem
+      ctx.fillStyle = "rgba(255, 200, 200, 0.5)";
+      ctx.beginPath();
+      ctx.arc(gemX - size * 0.003, gemY - size * 0.003, size * 0.004, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // Helm border outline — black base with gold inner
@@ -3242,10 +3542,10 @@ export function drawCaptainHero(
       const tpH = size * 0.14;
 
       const tpG = ctx.createLinearGradient(tpX - side * tpW * 0.3, tpY - tpH * 0.5, tpX + side * tpW * 0.5, tpY + tpH * 0.3);
-      tpG.addColorStop(0, "#606060");
-      tpG.addColorStop(0.3, "#505050");
-      tpG.addColorStop(0.6, "#3e3e3e");
-      tpG.addColorStop(1, "#282828");
+      tpG.addColorStop(0, "#62666e");
+      tpG.addColorStop(0.3, "#50545c");
+      tpG.addColorStop(0.6, "#3c4048");
+      tpG.addColorStop(1, "#262830");
       ctx.fillStyle = tpG;
       ctx.beginPath();
       ctx.moveTo(tpX - side * size * 0.02, tpY - tpH * 0.55);
@@ -3293,11 +3593,11 @@ export function drawCaptainHero(
       const chkH = size * 0.28;
 
       const chkG = ctx.createLinearGradient(chkX - side * chkW * 0.3, chkY - chkH * 0.4, chkX + side * chkW * 0.5, chkY + chkH * 0.4);
-      chkG.addColorStop(0, "#585858");
-      chkG.addColorStop(0.25, "#4a4a4a");
-      chkG.addColorStop(0.5, "#3c3c3c");
-      chkG.addColorStop(0.75, "#323232");
-      chkG.addColorStop(1, "#222222");
+      chkG.addColorStop(0, "#5a5e68");
+      chkG.addColorStop(0.25, "#4a4e58");
+      chkG.addColorStop(0.5, "#3a3e48");
+      chkG.addColorStop(0.75, "#30343c");
+      chkG.addColorStop(1, "#20222a");
       ctx.fillStyle = chkG;
       ctx.beginPath();
       ctx.moveTo(chkX - side * size * 0.01, chkY - chkH * 0.5);
@@ -3314,13 +3614,13 @@ export function drawCaptainHero(
       ctx.closePath();
       ctx.fill();
 
-      // Specular highlight
+      // Specular highlight (cool steel)
       const chkSpec = ctx.createRadialGradient(
         chkX + side * chkW * 0.15, chkY - chkH * 0.15, 0,
         chkX + side * chkW * 0.15, chkY - chkH * 0.15, chkW * 0.5,
       );
-      chkSpec.addColorStop(0, "rgba(140, 140, 150, 0.2)");
-      chkSpec.addColorStop(1, "rgba(60, 60, 70, 0)");
+      chkSpec.addColorStop(0, "rgba(145, 150, 170, 0.22)");
+      chkSpec.addColorStop(1, "rgba(60, 65, 80, 0)");
       ctx.fillStyle = chkSpec;
       ctx.fill();
 
@@ -3346,7 +3646,7 @@ export function drawCaptainHero(
       ctx.stroke();
 
       // Raised ridge line across cheek
-      ctx.strokeStyle = "#555";
+      ctx.strokeStyle = "#50545e";
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(chkX, chkY - chkH * 0.2);
@@ -3393,9 +3693,9 @@ export function drawCaptainHero(
       const jawH = size * 0.1;
 
       const jawG = ctx.createLinearGradient(jawX, jawY - jawH * 0.5, jawX, jawY + jawH * 0.5);
-      jawG.addColorStop(0, "#484848");
-      jawG.addColorStop(0.5, "#363636");
-      jawG.addColorStop(1, "#1e1e1e");
+      jawG.addColorStop(0, "#484c54");
+      jawG.addColorStop(0.5, "#343840");
+      jawG.addColorStop(1, "#1c1e24");
       ctx.fillStyle = jawG;
       ctx.beginPath();
       ctx.moveTo(jawX - side * jawW * 0.3, jawY - jawH * 0.5);
@@ -3426,9 +3726,9 @@ export function drawCaptainHero(
       const earR = size * 0.04;
 
       const earG = ctx.createRadialGradient(earX - side * earR * 0.3, earY - earR * 0.3, 0, earX, earY, earR);
-      earG.addColorStop(0, "#5a5a5a");
-      earG.addColorStop(0.5, "#3e3e3e");
-      earG.addColorStop(1, "#222");
+      earG.addColorStop(0, "#5a5e66");
+      earG.addColorStop(0.5, "#3c4048");
+      earG.addColorStop(1, "#20222a");
       ctx.fillStyle = earG;
       ctx.beginPath();
       ctx.arc(earX, earY, earR, 0, Math.PI * 2);
@@ -3457,195 +3757,311 @@ export function drawCaptainHero(
 
   // === DRAGON VISOR ===
   {
-    const visorTopY = y - size * 0.59;
-    const visorBotY = y - size * 0.32;
-    const visorW = size * 0.22;
+    const visorCY = y - size * 0.455;
+    const visorH = size * 0.27;
+    const visorW = size * 0.26;
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
 
-    // Visor opening shape helper
+    // Aggressive V-slit visor shape — angry brow dips at center, pointed chin
     const drawVisorPath = () => {
       ctx.beginPath();
-      ctx.moveTo(x - visorW, visorTopY + size * 0.02);
-      ctx.quadraticCurveTo(x, visorTopY - size * 0.01, x + visorW, visorTopY + size * 0.02);
-      ctx.lineTo(x + visorW * 0.82, visorBotY - size * 0.02);
-      ctx.quadraticCurveTo(x, visorBotY + size * 0.02, x - visorW * 0.82, visorBotY - size * 0.02);
+      // Left wing tip (outer upper corner)
+      ctx.moveTo(x - visorW, visorCY - visorH * 0.12);
+      // Top edge: angry V — sweeps up to wings, dips at center
+      ctx.bezierCurveTo(
+        x - visorW * 0.65, visorCY - visorH * 0.52,
+        x - visorW * 0.3, visorCY - visorH * 0.38,
+        x, visorCY - visorH * 0.22,
+      );
+      ctx.bezierCurveTo(
+        x + visorW * 0.3, visorCY - visorH * 0.38,
+        x + visorW * 0.65, visorCY - visorH * 0.52,
+        x + visorW, visorCY - visorH * 0.12,
+      );
+      // Right side down
+      ctx.bezierCurveTo(
+        x + visorW * 0.92, visorCY + visorH * 0.1,
+        x + visorW * 0.55, visorCY + visorH * 0.35,
+        x + visorW * 0.25, visorCY + visorH * 0.42,
+      );
+      // Chin point
+      ctx.quadraticCurveTo(x, visorCY + visorH * 0.52, x - visorW * 0.25, visorCY + visorH * 0.42);
+      // Left side up
+      ctx.bezierCurveTo(
+        x - visorW * 0.55, visorCY + visorH * 0.35,
+        x - visorW * 0.92, visorCY + visorH * 0.1,
+        x - visorW, visorCY - visorH * 0.12,
+      );
       ctx.closePath();
     };
 
-    // Dark red void behind grille (visible through every slit/gap)
-    const visorGlow = isAttacking ? 1.0 : 0.8;
-    ctx.fillStyle = `rgba(90, 8, 4, ${visorGlow})`;
+    // Deep hellfire void behind everything
+    const visorGlow = isAttacking ? 1.0 : 0.82;
+    ctx.fillStyle = `rgba(60, 4, 2, ${visorGlow})`;
     drawVisorPath();
     ctx.fill();
-    const voidG = ctx.createRadialGradient(x, (visorTopY + visorBotY) * 0.5, 0, x, (visorTopY + visorBotY) * 0.5, size * 0.18);
-    voidG.addColorStop(0, `rgba(140, 22, 10, ${visorGlow * 0.9})`);
-    voidG.addColorStop(0.4, `rgba(100, 12, 5, ${visorGlow * 0.7})`);
-    voidG.addColorStop(1, `rgba(50, 5, 2, ${visorGlow * 0.5})`);
+    const voidG = ctx.createRadialGradient(x, visorCY, 0, x, visorCY, size * 0.2);
+    voidG.addColorStop(0, `rgba(160, 25, 8, ${visorGlow * 0.85})`);
+    voidG.addColorStop(0.35, `rgba(110, 14, 4, ${visorGlow * 0.65})`);
+    voidG.addColorStop(0.7, `rgba(60, 6, 2, ${visorGlow * 0.4})`);
+    voidG.addColorStop(1, `rgba(25, 2, 1, ${visorGlow * 0.3})`);
     ctx.fillStyle = voidG;
     drawVisorPath();
     ctx.fill();
 
-    // Glowing eyes (drawn FIRST — behind the grille)
+    // Angular glowing eyes (behind grille — diamond-shaped slits)
     for (let side = -1; side <= 1; side += 2) {
-      const eyeX = x + side * size * 0.085;
-      const eyeY = (visorTopY + visorBotY) * 0.5 - size * 0.02;
-      const eyeW = size * 0.075;
-      const eyeH = size * 0.025;
-      const eyeAngle = side * -0.1;
+      const eyeX = x + side * size * 0.09;
+      const eyeY = visorCY - size * 0.02;
+      const eyeW = size * 0.085;
+      const eyeH = size * 0.022;
+      const eyeAngle = side * -0.15;
+      const eyeFlicker = Math.sin(time * 8 + side * 1.5) * 0.08;
 
-      // Massive ambient glow halo
+      // Massive glow halo
       ctx.fillStyle = isAttacking
-        ? `rgba(255, 30, 10, ${0.8 + attackIntensity * 0.2})`
-        : "rgba(255, 25, 10, 0.7)";
+        ? `rgba(255, 35, 8, ${0.85 + attackIntensity * 0.15})`
+        : `rgba(255, 30, 8, ${0.7 + eyeFlicker})`;
       ctx.shadowColor = "#ff1100";
-      ctx.shadowBlur = isAttacking ? 30 * zoom : 20 * zoom;
+      ctx.shadowBlur = isAttacking ? 35 * zoom : 22 * zoom;
       ctx.beginPath();
-      ctx.ellipse(eyeX, eyeY, eyeW * 2, eyeH * 3.5, eyeAngle, 0, Math.PI * 2);
+      ctx.ellipse(eyeX, eyeY, eyeW * 2.2, eyeH * 4, eyeAngle, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bright eye slit
-      ctx.fillStyle = isAttacking
-        ? "#ff3c1e"
-        : "rgba(255, 45, 25, 0.97)";
+      // Outer flame trail streaming outward from eye
+      ctx.fillStyle = `rgba(255, 50, 10, ${0.4 + eyeFlicker})`;
+      ctx.shadowBlur = 14 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(eyeX + side * eyeW * 0.5, eyeY - eyeH * 0.8);
+      ctx.bezierCurveTo(
+        eyeX + side * eyeW * 1.5, eyeY - eyeH * 1.5,
+        eyeX + side * eyeW * 2.2, eyeY - eyeH * 0.6,
+        eyeX + side * eyeW * 2.8, eyeY - eyeH * 1.2,
+      );
+      ctx.bezierCurveTo(
+        eyeX + side * eyeW * 2.0, eyeY + eyeH * 0.5,
+        eyeX + side * eyeW * 1.3, eyeY + eyeH * 1.0,
+        eyeX + side * eyeW * 0.5, eyeY + eyeH * 0.8,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Angular eye slit (diamond shape, not ellipse)
+      ctx.fillStyle = isAttacking ? "#ff4020" : `rgba(255, 48, 22, ${0.95 + eyeFlicker})`;
       ctx.shadowColor = "#ff2200";
-      ctx.shadowBlur = isAttacking ? 24 * zoom : 16 * zoom;
+      ctx.shadowBlur = isAttacking ? 26 * zoom : 18 * zoom;
       ctx.beginPath();
-      ctx.ellipse(eyeX, eyeY, eyeW, eyeH, eyeAngle, 0, Math.PI * 2);
+      ctx.moveTo(eyeX - eyeW, eyeY);
+      ctx.lineTo(eyeX - eyeW * 0.15, eyeY - eyeH * 1.1);
+      ctx.lineTo(eyeX + eyeW, eyeY);
+      ctx.lineTo(eyeX - eyeW * 0.15, eyeY + eyeH * 1.1);
+      ctx.closePath();
       ctx.fill();
 
-      // Hot inner core
-      ctx.fillStyle = isAttacking ? "#ffdd99" : "#ffaa66";
-      ctx.shadowBlur = 12 * zoom;
+      // Hot inner core (shifted forward in the slit)
+      ctx.fillStyle = isAttacking ? "#ffdd88" : "#ffaa55";
+      ctx.shadowBlur = 14 * zoom;
       ctx.beginPath();
-      ctx.ellipse(eyeX + side * size * 0.008, eyeY, eyeW * 0.45, eyeH * 0.7, eyeAngle, 0, Math.PI * 2);
+      ctx.moveTo(eyeX - eyeW * 0.4, eyeY);
+      ctx.lineTo(eyeX + eyeW * 0.1, eyeY - eyeH * 0.7);
+      ctx.lineTo(eyeX + eyeW * 0.6, eyeY);
+      ctx.lineTo(eyeX + eyeW * 0.1, eyeY + eyeH * 0.7);
+      ctx.closePath();
       ctx.fill();
 
       // White-hot pupil
-      ctx.fillStyle = isAttacking ? "#ffffff" : "#fff4e8";
-      ctx.shadowColor = "#ffcc88";
-      ctx.shadowBlur = 8 * zoom;
+      ctx.fillStyle = isAttacking ? "#ffffff" : "#fff4e0";
+      ctx.shadowColor = "#ffcc77";
+      ctx.shadowBlur = 10 * zoom;
       ctx.beginPath();
-      ctx.arc(eyeX + side * size * 0.01, eyeY, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(eyeX + side * size * 0.012, eyeY, size * 0.009, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.shadowBlur = 0;
 
-    // === GRILLE (drawn ON TOP of eyes — eyes peek through gaps) ===
-
-    // Clip to visor shape so bars don't exceed the opening
+    // === GRILLE — diagonal slash marks + pointed nose guard ===
     ctx.save();
     drawVisorPath();
     ctx.clip();
 
-    // Vertical bars (fewer, thinner — wide red gaps between them)
-    const barSlots = [-2, -1, 1, 2];
-    const barSpacing = size * 0.065;
-    for (const b of barSlots) {
-      const bx = x + b * barSpacing;
-      const topY = visorTopY - size * 0.01;
-      const botY = visorBotY + size * 0.01;
-      const barW = 1.4 * zoom;
+    // Diagonal slash bars (angled outward from center — aggressive pattern)
+    for (let side = -1; side <= 1; side += 2) {
+      for (let s = 0; s < 3; s++) {
+        const slashX = x + side * (size * 0.04 + s * size * 0.06);
+        const slashTopY = visorCY - visorH * 0.5;
+        const slashBotY = visorCY + visorH * 0.5;
+        const slashLean = side * size * 0.025 * (1 + s * 0.3);
 
-      ctx.strokeStyle = "#1a1a1a";
-      ctx.lineWidth = barW + 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bx, topY);
-      ctx.lineTo(bx * 0.97 + x * 0.03, botY);
-      ctx.stroke();
+        ctx.strokeStyle = "#15161a";
+        ctx.lineWidth = 1.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(slashX - slashLean, slashTopY);
+        ctx.lineTo(slashX + slashLean, slashBotY);
+        ctx.stroke();
 
-      ctx.strokeStyle = "#4a4a50";
-      ctx.lineWidth = barW;
-      ctx.beginPath();
-      ctx.moveTo(bx, topY);
-      ctx.lineTo(bx * 0.97 + x * 0.03, botY);
-      ctx.stroke();
+        ctx.strokeStyle = "#3e4048";
+        ctx.lineWidth = 1.0 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(slashX - slashLean, slashTopY);
+        ctx.lineTo(slashX + slashLean, slashBotY);
+        ctx.stroke();
+
+        // Steel highlight on one side
+        ctx.strokeStyle = "rgba(90, 95, 110, 0.2)";
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(slashX - slashLean - 0.5, slashTopY);
+        ctx.lineTo(slashX + slashLean - 0.5, slashBotY);
+        ctx.stroke();
+      }
     }
 
-    // Horizontal cross bars (2, thin)
-    for (let hbar = 0; hbar < 2; hbar++) {
-      const hY = visorTopY + size * 0.06 + hbar * (visorBotY - visorTopY - size * 0.1);
-      const hW = visorW * 1.05;
+    // Pointed nose guard — dragon snout shape (thicker, angular)
+    {
+      const noseTopY = visorCY - visorH * 0.45;
+      const noseBotY = visorCY + visorH * 0.5;
+      const noseW = size * 0.018;
 
-      ctx.strokeStyle = "#1a1a1a";
-      ctx.lineWidth = 1.4 * zoom;
+      // Nose guard body — tapers to a point at bottom
+      const noseG = ctx.createLinearGradient(x - noseW, visorCY, x + noseW, visorCY);
+      noseG.addColorStop(0, "#1a1b20");
+      noseG.addColorStop(0.3, "#3a3c46");
+      noseG.addColorStop(0.5, "#4a4d58");
+      noseG.addColorStop(0.7, "#3a3c46");
+      noseG.addColorStop(1, "#1a1b20");
+      ctx.fillStyle = noseG;
       ctx.beginPath();
-      ctx.moveTo(x - hW, hY);
-      ctx.lineTo(x + hW, hY);
-      ctx.stroke();
-
-      ctx.strokeStyle = "#4a4a50";
+      ctx.moveTo(x - noseW, noseTopY);
+      ctx.lineTo(x + noseW, noseTopY);
+      ctx.lineTo(x + noseW * 0.5, noseBotY - size * 0.02);
+      ctx.lineTo(x, noseBotY);
+      ctx.lineTo(x - noseW * 0.5, noseBotY - size * 0.02);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#0e0f12";
       ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Raised center line on nose guard
+      ctx.strokeStyle = "rgba(80, 85, 100, 0.3)";
+      ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(x - hW, hY);
-      ctx.lineTo(x + hW, hY);
+      ctx.moveTo(x, noseTopY + size * 0.01);
+      ctx.lineTo(x, noseBotY - size * 0.01);
       ctx.stroke();
     }
-
-    // Nose guard (center bar, thinner)
-    ctx.strokeStyle = "#1a1a1a";
-    ctx.lineWidth = 2.4 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x, visorTopY - size * 0.01);
-    ctx.lineTo(x, visorBotY + size * 0.01);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#4a4a50";
-    ctx.lineWidth = 1.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x, visorTopY - size * 0.01);
-    ctx.lineTo(x, visorBotY + size * 0.01);
-    ctx.stroke();
 
     ctx.restore(); // un-clip
 
-    // Eye glow on TOP of grille (bleed-through effect)
+    // Eye glow bleed on TOP of grille (screen blend)
     ctx.save();
     drawVisorPath();
     ctx.clip();
     for (let side = -1; side <= 1; side += 2) {
-      const eyeX = x + side * size * 0.085;
-      const eyeY = (visorTopY + visorBotY) * 0.5 - size * 0.02;
-      const eyeAngle = side * -0.1;
-      // Soft glow that sits on top of bars
+      const eyeX = x + side * size * 0.09;
+      const eyeY = visorCY - size * 0.02;
+      const eyeAngle = side * -0.15;
+      const eyeFlicker = Math.sin(time * 8 + side * 1.5) * 0.06;
       ctx.globalCompositeOperation = "screen";
-      const glowG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.07);
-      glowG.addColorStop(0, isAttacking ? "rgba(255, 80, 40, 0.8)" : "rgba(255, 60, 30, 0.65)");
-      glowG.addColorStop(0.4, isAttacking ? "rgba(255, 40, 15, 0.5)" : "rgba(255, 30, 10, 0.35)");
-      glowG.addColorStop(1, "rgba(255, 20, 5, 0)");
+      const glowG = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, size * 0.09);
+      glowG.addColorStop(0, isAttacking ? `rgba(255, 90, 35, 0.85)` : `rgba(255, 70, 25, ${0.7 + eyeFlicker})`);
+      glowG.addColorStop(0.3, isAttacking ? "rgba(255, 50, 15, 0.55)" : `rgba(255, 40, 12, ${0.38 + eyeFlicker})`);
+      glowG.addColorStop(0.7, "rgba(255, 20, 5, 0.08)");
+      glowG.addColorStop(1, "rgba(255, 10, 2, 0)");
       ctx.fillStyle = glowG;
       ctx.beginPath();
-      ctx.ellipse(eyeX, eyeY, size * 0.08, size * 0.04, eyeAngle, 0, Math.PI * 2);
+      ctx.ellipse(eyeX, eyeY, size * 0.1, size * 0.045, eyeAngle, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalCompositeOperation = "source-over";
     }
     ctx.restore();
 
-    // Gold visor frame border (sits on top of everything)
-    const frameG = ctx.createLinearGradient(x - visorW, visorTopY, x + visorW, visorBotY);
+    // Prominent brow ridge overhanging the visor top
+    {
+      const browRidgeY = visorCY - visorH * 0.35;
+      const browG = ctx.createLinearGradient(x - visorW, browRidgeY, x + visorW, browRidgeY);
+      browG.addColorStop(0, "#3a3d48");
+      browG.addColorStop(0.2, "#4a4e5a");
+      browG.addColorStop(0.5, "#55596a");
+      browG.addColorStop(0.8, "#4a4e5a");
+      browG.addColorStop(1, "#3a3d48");
+      ctx.fillStyle = browG;
+      ctx.beginPath();
+      ctx.moveTo(x - visorW * 0.95, browRidgeY + size * 0.005);
+      ctx.bezierCurveTo(
+        x - visorW * 0.5, browRidgeY - size * 0.025,
+        x - visorW * 0.15, browRidgeY - size * 0.01,
+        x, browRidgeY + size * 0.008,
+      );
+      ctx.bezierCurveTo(
+        x + visorW * 0.15, browRidgeY - size * 0.01,
+        x + visorW * 0.5, browRidgeY - size * 0.025,
+        x + visorW * 0.95, browRidgeY + size * 0.005,
+      );
+      ctx.lineTo(x + visorW * 0.95, browRidgeY + size * 0.018);
+      ctx.quadraticCurveTo(x, browRidgeY + size * 0.025, x - visorW * 0.95, browRidgeY + size * 0.018);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#2a2c34";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+    }
+
+    // Gold visor frame — heavy, ornate
+    const frameG = ctx.createLinearGradient(x - visorW, visorCY - visorH * 0.5, x + visorW, visorCY + visorH * 0.5);
     frameG.addColorStop(0, "#5a4008");
-    frameG.addColorStop(0.2, "#8a6a15");
-    frameG.addColorStop(0.35, "#b08a20");
-    frameG.addColorStop(0.5, "#c9a227");
-    frameG.addColorStop(0.65, "#b08a20");
-    frameG.addColorStop(0.8, "#8a6a15");
+    frameG.addColorStop(0.15, "#8a6a15");
+    frameG.addColorStop(0.3, "#b08a20");
+    frameG.addColorStop(0.5, "#d4a82c");
+    frameG.addColorStop(0.7, "#b08a20");
+    frameG.addColorStop(0.85, "#8a6a15");
     frameG.addColorStop(1, "#5a4008");
     ctx.strokeStyle = frameG;
-    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineWidth = 2.8 * zoom;
     drawVisorPath();
     ctx.stroke();
 
-    // Dark outer border for definition
-    ctx.strokeStyle = "#4a3508";
-    ctx.lineWidth = 0.8 * zoom;
+    // Dark outer border for crisp definition
+    ctx.strokeStyle = "#1a1510";
+    ctx.lineWidth = 0.9 * zoom;
     drawVisorPath();
     ctx.stroke();
 
-    // Breath holes below visor
-    for (let hole = -2; hole <= 2; hole++) {
-      ctx.fillStyle = "#0a0a0a";
+    // Dragon fangs along lower visor edge (larger, curved, menacing)
+    const fangPositions = [-0.35, -0.18, 0, 0.18, 0.35];
+    const fangHeights = [0.022, 0.03, 0.038, 0.03, 0.022];
+    for (let f = 0; f < fangPositions.length; f++) {
+      const fangX = x + fangPositions[f] * visorW * 1.4;
+      const fangTopY = visorCY + visorH * 0.38 + Math.abs(fangPositions[f]) * visorH * 0.25;
+      const fangH = size * fangHeights[f];
+      const fangW = size * 0.01;
+      const fangCurve = fangPositions[f] * size * 0.005;
+
+      const fangG = ctx.createLinearGradient(fangX, fangTopY, fangX, fangTopY + fangH);
+      fangG.addColorStop(0, "#4a4d58");
+      fangG.addColorStop(0.3, "#3a3d46");
+      fangG.addColorStop(0.6, "#2a2c34");
+      fangG.addColorStop(1, "#e0ddd5");
+      ctx.fillStyle = fangG;
       ctx.beginPath();
-      ctx.ellipse(x + hole * size * 0.035, visorBotY + size * 0.03, size * 0.008, size * 0.005, 0, 0, Math.PI * 2);
+      ctx.moveTo(fangX - fangW, fangTopY);
+      ctx.quadraticCurveTo(fangX + fangCurve - fangW * 0.3, fangTopY + fangH * 0.7, fangX + fangCurve, fangTopY + fangH);
+      ctx.quadraticCurveTo(fangX + fangCurve + fangW * 0.3, fangTopY + fangH * 0.7, fangX + fangW, fangTopY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(80, 85, 100, 0.3)";
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+    }
+
+    // Breath slits below visor (narrow, angular)
+    for (let hole = -2; hole <= 2; hole++) {
+      const hx = x + hole * size * 0.032;
+      const hy = visorCY + visorH * 0.55 + Math.abs(hole) * size * 0.008;
+      ctx.fillStyle = "#08080a";
+      ctx.beginPath();
+      ctx.ellipse(hx, hy, size * 0.006, size * 0.003, hole * 0.15, 0, Math.PI * 2);
       ctx.fill();
     }
   }
