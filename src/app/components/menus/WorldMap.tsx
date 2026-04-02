@@ -844,7 +844,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         >
           <OrnateFrame
             className="flex-1 flex flex-col overflow-hidden rounded-2xl shadow-xl"
-            style={{ border: `1px solid ${GOLD.border25}` }}
+            style={{ border: `1.5px solid ${GOLD.border25}` }}
             cornerSize={24}
             showBorders={true}
             showSideBorders={true}

@@ -1,15 +1,17 @@
 "use client";
 import React, { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { useImagePreloader } from "../../hooks/useImagePreloader";
-import { getWorldMapAssets, getBattleAssets } from "../../constants/loadingAssets";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
 import { SectionReveal } from "./SectionReveal";
 import { HeroSection } from "./sections/HeroSection";
-import { GameplayShowcase } from "./sections/GameplayShowcase";
 import { FeatureGrid } from "./sections/FeatureGrid";
-import { HeroSpellGallery } from "./sections/HeroSpellGallery";
+import { GameplayShowcase } from "./sections/GameplayShowcase";
+import { TowerShowcase } from "./sections/TowerShowcase";
+import { HeroRoster } from "./sections/HeroRoster";
+import { EnemyBestiary } from "./sections/EnemyBestiary";
 import { BattlePreview } from "./sections/BattlePreview";
 import { BottomCTA } from "./sections/BottomCTA";
+import { LandingCreditsModal } from "./LandingCreditsModal";
 
 const T = LANDING_THEME;
 
@@ -20,17 +22,10 @@ interface LandingPageProps {
 export function LandingPage({ onPlay }: LandingPageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [exiting, setExiting] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
 
-  // Preload ALL game assets in background while user browses the landing page
-  const allAssets = useMemo(() => {
-    const set = new Set([
-      ...getWorldMapAssets(),
-      ...getBattleAssets(),
-      ...getLandingImageUrls(),
-    ]);
-    return Array.from(set);
-  }, []);
-  useImagePreloader(allAssets);
+  const landingImages = useMemo(() => getLandingImageUrls(), []);
+  useImagePreloader(landingImages);
 
   const handlePlay = useCallback(() => {
     if (exiting) return;
@@ -38,9 +33,12 @@ export function LandingPage({ onPlay }: LandingPageProps) {
     setTimeout(onPlay, 700);
   }, [exiting, onPlay]);
 
+  const handleOpenCredits = useCallback(() => setShowCredits(true), []);
+  const handleCloseCredits = useCallback(() => setShowCredits(false), []);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !exiting) handlePlay();
+      if (e.key === "Enter" && !exiting && !showCredits) handlePlay();
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -57,18 +55,26 @@ export function LandingPage({ onPlay }: LandingPageProps) {
         transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
       }}
     >
-      <HeroSection onPlay={handlePlay} exiting={exiting} />
+      <HeroSection onPlay={handlePlay} exiting={exiting} onCredits={handleOpenCredits} />
 
       <SectionReveal scrollRoot={scrollRef}>
-        <GameplayShowcase />
-      </SectionReveal>
-
-      <SectionReveal scrollRoot={scrollRef} delay={100}>
         <FeatureGrid />
       </SectionReveal>
 
+      <SectionReveal scrollRoot={scrollRef} delay={100}>
+        <GameplayShowcase />
+      </SectionReveal>
+
       <SectionReveal scrollRoot={scrollRef}>
-        <HeroSpellGallery />
+        <TowerShowcase />
+      </SectionReveal>
+
+      <SectionReveal scrollRoot={scrollRef} delay={100}>
+        <HeroRoster />
+      </SectionReveal>
+
+      <SectionReveal scrollRoot={scrollRef}>
+        <EnemyBestiary />
       </SectionReveal>
 
       <SectionReveal scrollRoot={scrollRef} delay={100}>
@@ -78,6 +84,8 @@ export function LandingPage({ onPlay }: LandingPageProps) {
       <SectionReveal scrollRoot={scrollRef}>
         <BottomCTA onPlay={handlePlay} exiting={exiting} />
       </SectionReveal>
+
+      {showCredits && <LandingCreditsModal onClose={handleCloseCredits} />}
     </div>
   );
 }

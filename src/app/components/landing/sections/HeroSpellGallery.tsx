@@ -12,24 +12,34 @@ const T = LANDING_THEME;
 
 function HeroPortrait({ hero }: { hero: CharacterDisplay }) {
   return (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0 snap-center">
-      <div
-        className="relative w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full overflow-hidden animate-landing-portrait-glow"
-        style={{
-          border: `2.5px solid ${hero.color}`,
-          "--glow-color": `${hero.color}55`,
-        } as React.CSSProperties}
-      >
-        <Image
-          src={hero.image}
-          alt={hero.name}
-          fill
-          sizes="88px"
-          className="object-cover object-top"
+    <div className="group flex flex-col items-center gap-2 flex-shrink-0 snap-center">
+      <div className="relative">
+        {/* Aura ring on hover */}
+        <div
+          className="absolute -inset-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+          style={{
+            background: `conic-gradient(from 0deg, ${hero.color}33, transparent, ${hero.color}33, transparent, ${hero.color}33)`,
+            animation: "landing-spin 6s linear infinite",
+          }}
         />
+        <div
+          className="relative w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] rounded-full overflow-hidden animate-landing-portrait-glow transition-transform duration-300 group-hover:scale-[1.08]"
+          style={{
+            border: `2.5px solid ${hero.color}`,
+            "--glow-color": `${hero.color}55`,
+          } as React.CSSProperties}
+        >
+          <Image
+            src={hero.image}
+            alt={hero.name}
+            fill
+            sizes="88px"
+            className="object-cover object-top"
+          />
+        </div>
       </div>
       <span
-        className="text-[10px] sm:text-xs font-semibold text-center whitespace-nowrap"
+        className="text-[10px] sm:text-xs font-semibold text-center whitespace-nowrap transition-all duration-300 group-hover:tracking-wider"
         style={{ color: hero.color }}
       >
         {hero.name}
@@ -40,9 +50,9 @@ function HeroPortrait({ hero }: { hero: CharacterDisplay }) {
 
 function SpellIcon({ spell }: { spell: CharacterDisplay }) {
   return (
-    <div className="flex flex-col items-center gap-2 flex-shrink-0">
+    <div className="group flex flex-col items-center gap-2 flex-shrink-0">
       <div
-        className="relative w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-lg overflow-hidden"
+        className="relative w-14 h-14 sm:w-[68px] sm:h-[68px] rounded-lg overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:rounded-xl"
         style={{
           border: `2px solid ${spell.color}44`,
           boxShadow: `0 0 16px ${spell.color}22`,
@@ -53,7 +63,12 @@ function SpellIcon({ spell }: { spell: CharacterDisplay }) {
           alt={spell.name}
           fill
           sizes="68px"
-          className="object-cover"
+          className="object-cover transition-transform duration-300 group-hover:scale-110"
+        />
+        {/* Hover glow overlay */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ boxShadow: `inset 0 0 20px ${spell.color}22` }}
         />
       </div>
       <span

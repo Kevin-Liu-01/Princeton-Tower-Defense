@@ -15,6 +15,7 @@ export function SectionReveal({
   className,
 }: SectionRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,11 +24,14 @@ export function SectionReveal({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true);
+          setMounted(true);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => setVisible(true));
+          });
           observer.disconnect();
         }
       },
-      { threshold: 0.08, root: scrollRoot.current },
+      { threshold: 0.01, root: scrollRoot.current, rootMargin: "300px 0px" },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -41,9 +45,10 @@ export function SectionReveal({
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(40px)",
         transition: `opacity 0.8s ease-out ${delay}ms, transform 0.8s ease-out ${delay}ms`,
+        minHeight: mounted ? undefined : 300,
       }}
     >
-      {children}
+      {mounted ? children : null}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ScrollText } from "lucide-react";
 import {
   LANDING_THEME,
   LANDING_TAGLINE,
@@ -173,12 +173,46 @@ function HeroEmbers() {
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
 
+function CreditsButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex items-center gap-1.5 px-4 py-1.5 rounded-lg cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-95"
+      style={{
+        background: `rgba(${T.accentDarkRgb},0.12)`,
+        border: `1px solid rgba(${T.accentDarkRgb},0.2)`,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = `rgba(${T.accentDarkRgb},0.22)`;
+        e.currentTarget.style.borderColor = `rgba(${T.accentDarkRgb},0.35)`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = `rgba(${T.accentDarkRgb},0.12)`;
+        e.currentTarget.style.borderColor = `rgba(${T.accentDarkRgb},0.2)`;
+      }}
+    >
+      <ScrollText
+        size={13}
+        style={{ color: `rgba(${T.accentRgb},0.35)` }}
+        className="group-hover:text-amber-400/60 transition-colors"
+      />
+      <span
+        className="text-[10px] sm:text-[11px] font-medium tracking-[0.15em] uppercase"
+        style={{ color: `rgba(${T.accentRgb},0.35)` }}
+      >
+        Credits
+      </span>
+    </button>
+  );
+}
+
 interface HeroSectionProps {
   onPlay: () => void;
   exiting: boolean;
+  onCredits: () => void;
 }
 
-export function HeroSection({ onPlay, exiting }: HeroSectionProps) {
+export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
   const activeSlide = useCrossfade(HERO_SLIDESHOW_IMAGES.length, CROSSFADE_INTERVAL_MS);
   const [stages, setStages] = useState<boolean[]>(new Array(6).fill(false));
 
@@ -310,7 +344,7 @@ export function HeroSection({ onPlay, exiting }: HeroSectionProps) {
 
         {/* CTA */}
         <div
-          className="mt-1 sm:mt-3"
+          className="mt-1 sm:mt-3 flex flex-col items-center gap-3"
           style={{
             opacity: stages[4] ? 1 : 0,
             transform: stages[4] ? "translateY(0) scale(1)" : "translateY(16px) scale(0.94)",
@@ -318,6 +352,7 @@ export function HeroSection({ onPlay, exiting }: HeroSectionProps) {
           }}
         >
           <LandingCTA onClick={onPlay} disabled={exiting} />
+          <CreditsButton onClick={onCredits} />
         </div>
       </div>
 
