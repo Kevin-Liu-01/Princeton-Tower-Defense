@@ -482,7 +482,8 @@ export function DefeatScreen({
       {/* Main panel */}
       <div className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
         <OrnateFrame
-          className="rounded-2xl overflow-hidden border-2 border-red-900/50 shadow-2xl"
+          className="rounded-2xl overflow-hidden shadow-2xl"
+          style={{ border: `2px solid ${DEFEAT.border35}` }}
           cornerSize={48}
           showBorders={true}
           color="#7f1d1d"

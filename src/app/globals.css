@@ -152,3 +152,122 @@ body {
 .animate-rune-fade { animation: rune-fade 4s ease-in-out infinite; }
 .animate-spell-orb { animation: spell-orb-pulse 2.5s ease-in-out infinite; }
 .animate-loadout-idle { animation: loadout-slot-idle 2s ease-in-out infinite; }
+
+/* ─── World Map Animations ─── */
+
+@keyframes wm-progress-shimmer {
+  0% { transform: translateX(-150%); }
+  100% { transform: translateX(250%); }
+}
+
+@keyframes wm-cta-glow {
+  0%, 100% { box-shadow: 0 0 16px rgba(251,191,36,0.15), inset 0 0 12px rgba(251,191,36,0.06); }
+  50% { box-shadow: 0 0 28px rgba(251,191,36,0.3), inset 0 0 18px rgba(251,191,36,0.1); }
+}
+
+@keyframes wm-battle-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255,180,40,0.25), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4); }
+  50% { box-shadow: 0 0 36px rgba(255,180,40,0.45), 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,240,160,0.4); }
+}
+
+@keyframes wm-star-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,191,36,0.2)); }
+  50% { filter: drop-shadow(0 0 10px rgba(251,191,36,0.45)); }
+}
+
+@keyframes wm-border-breathe {
+  0%, 100% { border-color: rgba(180,140,60,0.5); box-shadow: 0 0 20px rgba(180,140,60,0.06), inset 0 0 12px rgba(180,140,60,0.03); }
+  50% { border-color: rgba(180,140,60,0.65); box-shadow: 0 0 30px rgba(180,140,60,0.12), inset 0 0 18px rgba(180,140,60,0.06); }
+}
+
+@keyframes wm-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-wm-progress-shimmer { animation: wm-progress-shimmer 2.5s ease-in-out infinite; }
+.animate-wm-cta-glow { animation: wm-cta-glow 3s ease-in-out infinite; }
+.animate-wm-battle-pulse { animation: wm-battle-pulse 2s ease-in-out infinite; }
+.animate-wm-star-breathe { animation: wm-star-breathe 3s ease-in-out infinite; }
+.animate-wm-border-breathe { animation: wm-border-breathe 4s ease-in-out infinite; }
+
+/* ─── Landing Page Animations ─── */
+
+@keyframes landing-ember0 {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  6% { opacity: 1; }
+  50% { transform: translateY(-55vh) translateX(18px) scale(0.6); }
+  100% { transform: translateY(-112vh) translateX(-8px) scale(0.15); opacity: 0; }
+}
+
+@keyframes landing-ember1 {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  6% { opacity: 1; }
+  50% { transform: translateY(-55vh) translateX(-22px) scale(0.65); }
+  100% { transform: translateY(-112vh) translateX(12px) scale(0.2); opacity: 0; }
+}
+
+@keyframes landing-ember2 {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  6% { opacity: 1; }
+  50% { transform: translateY(-55vh) translateX(30px) scale(0.55); }
+  100% { transform: translateY(-112vh) translateX(5px) scale(0.1); opacity: 0; }
+}
+
+@keyframes landing-ember3 {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  6% { opacity: 1; }
+  50% { transform: translateY(-55vh) translateX(-14px) scale(0.7); }
+  100% { transform: translateY(-112vh) translateX(-22px) scale(0.15); opacity: 0; }
+}
+
+@keyframes landing-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.5; }
+}
+
+@keyframes landing-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes landing-shimmer {
+  0% { transform: translateX(-200%); }
+  50%, 100% { transform: translateX(200%); }
+}
+
+@keyframes landing-ken-burns {
+  0% { transform: scale(1) translate(0, 0); }
+  100% { transform: scale(1.08) translate(-1%, -0.5%); }
+}
+
+@keyframes landing-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes landing-scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
+@keyframes landing-portrait-glow {
+  0%, 100% { box-shadow: 0 0 12px var(--glow-color, rgba(180,140,60,0.2)); }
+  50% { box-shadow: 0 0 24px var(--glow-color, rgba(180,140,60,0.4)); }
+}
+
+.animate-landing-marquee {
+  animation: landing-marquee 45s linear infinite;
+}
+
+.animate-landing-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-landing-scroll-bounce {
+  animation: landing-scroll-bounce 2s ease-in-out infinite;
+}
+
+.animate-landing-portrait-glow {
+  animation: landing-portrait-glow 3s ease-in-out infinite;
+}

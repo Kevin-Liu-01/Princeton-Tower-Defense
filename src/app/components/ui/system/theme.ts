@@ -178,6 +178,11 @@ export const SPELL_THEME = {
   nature: { panelBg: "rgba(16,32,22,0.98)" },
 } as const;
 
+export const ORNAMENT = {
+  color: "#b48c3c",
+  glow: "#d4a84a",
+} as const;
+
 export const panelGradient = `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`;
 export const panelGradientReversed = `linear-gradient(180deg, ${PANEL.bgDark} 0%, ${PANEL.bgLight} 100%)`;
 export const dividerGradient = `linear-gradient(90deg, transparent 0%, ${DIVIDER.gold25} 15%, ${DIVIDER.gold40} 35%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 65%, ${DIVIDER.gold25} 85%, transparent 100%)`;

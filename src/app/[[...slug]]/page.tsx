@@ -40,5 +40,6 @@ export default async function Page({ params }: PageProps) {
     notFound();
   }
 
-  return <GamePage />;
+  const isHome = !slug || slug.length === 0;
+  return <GamePage showLanding={isHome} />;
 }

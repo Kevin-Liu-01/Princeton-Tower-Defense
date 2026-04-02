@@ -118,8 +118,8 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
             borderBottom: `1px solid ${accentColor}`,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {titleIcon}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+            {titleIcon && <span style={{ flexShrink: 0 }}>{titleIcon}</span>}
             <span
               style={{
                 fontSize: 12,
@@ -127,6 +127,10 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 color: "#fde68a",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
               }}
             >
               {title}

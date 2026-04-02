@@ -7,6 +7,7 @@ import {
   worldToScreenRounded,
   isValidBuildPosition,
   darkenColor,
+  isoTileDiamondHalfH,
 } from "../../utils";
 import { drawIsometricPrism, drawGroundTransition } from "./towerHelpers";
 import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
@@ -27,6 +28,7 @@ export function renderStationRange(
   const rangeBoost = tower.rangeBoost || 1;
   const range = baseRange * rangeBoost;
   const isBoosted = rangeBoost > 1;
+  const zoom = cameraZoom || 1;
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreen(
     worldPos,
@@ -36,12 +38,13 @@ export function renderStationRange(
     cameraOffset,
     cameraZoom,
   );
+  screenPos.y -= isoTileDiamondHalfH(zoom);
 
   renderRangeReticle(ctx, {
     x: screenPos.x,
     y: screenPos.y,
     range,
-    zoom: cameraZoom || 1,
+    zoom,
     state: tower.isHovered ? "hovered" : "normal",
     color: isBoosted ? RETICLE_COLORS.cyan : RETICLE_COLORS.orange,
     dashed: true,
@@ -59,6 +62,7 @@ export function renderTowerRange(
 ) {
   const tData = TOWER_DATA[tower.type];
   if (tData.range <= 0) return;
+  const zoom = cameraZoom || 1;
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreen(
     worldPos,
@@ -68,6 +72,7 @@ export function renderTowerRange(
     cameraOffset,
     cameraZoom,
   );
+  screenPos.y -= isoTileDiamondHalfH(zoom);
 
   let range = tData.range;
   if (tower.level === 2) range *= LEVEL_2_RANGE_MULT;
@@ -209,6 +214,7 @@ export function renderTowerPreview(
     cameraOffset,
     cameraZoom,
   );
+  screenPos.y -= isoTileDiamondHalfH(zoom);
 
   // Check validity including blocked positions (landmarks and special towers)
   const isValid = isValidBuildPosition(

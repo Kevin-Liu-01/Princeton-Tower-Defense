@@ -38,9 +38,9 @@ const CODEX_TAB_META: Record<string, { title: string; description: string }> = {
       "Meet all 9 heroes: Princeton Tiger, Mathey Knight, Acapella Tenor, Rocky Raccoon, F. Scott, General Mercer, BSE Engineer, Nassau Phoenix, and Ivy Warden. View abilities, stats, and roles.",
   },
   enemies: {
-    title: "Enemy Codex - 50+ Enemy Types & Bosses",
+    title: "Enemy Codex - 100+ Enemy Types & Bosses",
     description:
-      "Explore the full bestiary of 50+ enemies across 5 regions: melee, ranged, flying, shielded, boss, and swarm types. Learn their abilities and weaknesses.",
+      "Explore the full bestiary of 100+ enemies across 5 regions: melee, ranged, flying, shielded, boss, and swarm types. Learn their abilities and weaknesses.",
   },
   spells: {
     title: "Spell Codex - All Spells & Upgrade Trees",

@@ -417,6 +417,7 @@ export type OrnateVariant = "standard" | "compact";
 export interface OrnateFrameProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   cornerSize?: number;
   cornerVariant?: OrnateVariant;
   borderVariant?: OrnateVariant;
@@ -451,6 +452,7 @@ const BORDER_COMPONENTS: Record<
 export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   children,
   className = "",
+  style,
   cornerSize = 36,
   cornerVariant = "standard",
   borderVariant = "standard",
@@ -462,15 +464,15 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   borderScale = 1,
   sideBorderScale,
   topBottomBorderScale,
-  color = "#d97706",
-  glowColor = "#f59e0b",
+  color = "#b48c3c",
+  glowColor = "#d4a84a",
 }) => {
   const CornerComponent = CORNER_COMPONENTS[cornerVariant];
   const SideBorderComponent = BORDER_COMPONENTS[sideBorderVariant ?? borderVariant];
   const TopBottomBorderComponent = BORDER_COMPONENTS[topBottomBorderVariant ?? borderVariant];
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={style}>
       {children}
 
       <CornerComponent position="top-left" size={cornerSize} color={color} glowColor={glowColor} />

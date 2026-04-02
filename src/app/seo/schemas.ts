@@ -162,7 +162,7 @@ function getFAQSchema() {
           text:
             "Princeton Tower Defense is a free browser-based tower defense strategy game set at Princeton University. " +
             "Players build towers at iconic campus landmarks like Nassau Hall, Firestone Library, and Blair Arch to defend " +
-            "against waves of enemies. The game features 23 levels across 5 themed regions, " +
+            "against waves of enemies. The game features 25+ levels across 5 themed regions, " +
             "7 upgradeable towers with dual upgrade paths, 7 hero characters, 5 spells, and a custom level creator.",
         },
       },

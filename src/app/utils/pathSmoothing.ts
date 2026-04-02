@@ -2,6 +2,8 @@ type PathPoint = { x: number; y: number };
 
 const DEFAULT_CORNER_RADIUS = 1.6;
 const DEFAULT_ARC_POINTS = 5;
+const SHARP_CORNER_ARC_POINTS = 8;
+const SHARP_CORNER_DOT_THRESHOLD = 0.25;
 
 /**
  * Detects whether two normalized direction vectors form a turn (not collinear).
@@ -80,6 +82,7 @@ export function roundPathCorners(
     const ndx2 = dx2 / len2;
     const ndy2 = dy2 / len2;
 
+    const dot = ndx1 * ndx2 + ndy1 * ndy2;
     if (!isTurn(ndx1, ndy1, ndx2, ndy2)) {
       result.push({ ...curr });
       continue;
@@ -92,8 +95,13 @@ export function roundPathCorners(
     const p2x = curr.x + ndx2 * maxR;
     const p2y = curr.y + ndy2 * maxR;
 
-    for (let j = 0; j <= arcPoints; j++) {
-      result.push(quadBezier(p0x, p0y, curr.x, curr.y, p2x, p2y, j / arcPoints));
+    const effectiveArcPoints =
+      dot < SHARP_CORNER_DOT_THRESHOLD ? SHARP_CORNER_ARC_POINTS : arcPoints;
+
+    for (let j = 0; j <= effectiveArcPoints; j++) {
+      result.push(
+        quadBezier(p0x, p0y, curr.x, curr.y, p2x, p2y, j / effectiveArcPoints),
+      );
     }
   }
 

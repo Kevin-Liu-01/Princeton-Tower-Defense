@@ -614,7 +614,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Particle & combat system (refs + callbacks in sub-hook)
   const {
     addParticles, flushQueuedParticles, awardBounty, killHero, onEnemyKill,
-    raiseHexWardGhostFromTroopDeath,
+    onTroopDeath, raiseHexWardGhostFromTroopDeath,
     pendingParticleBurstsRef, pendingDeathEffectsRef,
     handledEnemyIdsRef, handledHexGhostSourceIdsRef,
     hexWardRaisesRemainingRef, handledWaveCompletionRef,
@@ -1027,7 +1027,7 @@ export function usePrincetonTowerDefenseRuntime() {
     setProjectiles, setSentinelTargets, setLives, setSpecialTowerHp,
     setVaultFlash, setLeakedBountyEvents, setEatingClubIncomeEvents,
     startWave, addParticles, clearAllTimers, updateLevelStats, updateLevelStars,
-    unlockLevel, awardBounty, killHero, onEnemyKill, addPawPoints,
+    unlockLevel, awardBounty, killHero, onEnemyKill, onTroopDeath, addPawPoints,
     addEffectEntities, addProjectileEntities, addTroopEntities,
     getSpecialTowerKey, getRandomMapTarget, raiseHexWardGhostFromTroopDeath,
     getCanvasDimensions,

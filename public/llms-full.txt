@@ -10,7 +10,7 @@ Author: Kevin Liu (https://www.kevin-liu.tech)
 
 ## What Is Princeton Tower Defense?
 
-Princeton Tower Defense is a single-player tower defense game that runs entirely in the browser. Players build towers inspired by real Princeton University campus landmarks to defend against waves of enemies. The game features 23 handcrafted levels across 5 themed regions, 7 towers with dual upgrade paths, 9 playable heroes with active abilities, 5 castable spells, 50+ unique enemy types, and a full custom level creator.
+Princeton Tower Defense is a single-player tower defense game that runs entirely in the browser. Players build towers inspired by real Princeton University campus landmarks to defend against waves of enemies. The game features 25+ handcrafted levels across 5 themed regions, 7 towers with dual upgrade paths, 9 playable heroes with active abilities, 5 castable spells, 100+ unique enemy types, and a full custom level creator.
 
 No download, installation, or account is required. The game is completely free and works on desktop and mobile browsers.
 
@@ -18,7 +18,7 @@ No download, installation, or account is required. The game is completely free a
 
 ## Regions and Levels
 
-Princeton Tower Defense has 23 levels spread across 5 themed regions. Each region introduces unique environmental hazards, visual identities, and enemy types.
+Princeton Tower Defense has 25+ levels spread across 5 themed regions. Each region introduces unique environmental hazards, visual identities, and enemy types.
 
 ### Princeton Grounds (Grassland)
 Campus-themed grassland levels including Poe Field, Carnegie Lake, and Nassau Hall. The starting region with standard terrain and introductory enemy waves.
@@ -91,7 +91,7 @@ There are 5 castable spells in Princeton Tower Defense. Spells are selected befo
 
 ## Enemy Types
 
-Princeton Tower Defense has over 50 unique enemy types organized into categories:
+Princeton Tower Defense has over 100 unique enemy types organized into categories:
 
 - **Ground melee**: Standard infantry that walk the path and attack troops
 - **Flying**: Airborne enemies that ignore ground obstacles; require specific tower coverage

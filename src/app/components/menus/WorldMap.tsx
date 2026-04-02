@@ -150,6 +150,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [isMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768,
   );
+  const [wmEntranceStage, setWmEntranceStage] = useState([false, false, false, false]);
+  useEffect(() => {
+    const delays = [80, 220, 380, 540];
+    const timers = delays.map((d, i) =>
+      setTimeout(() => setWmEntranceStage(prev => { const n = [...prev]; n[i] = true; return n; }), d),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
   const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
   const staticBgCacheRef = useRef<{
@@ -186,6 +194,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     starsKey: string;
     unlockedKey: string;
   }>({ canvas: null, w: 0, h: 0, timeBucket: -1, hoveredLevel: null, selectedLevel: null, starsKey: "", unlockedKey: "" });
+  const atmosphereCacheRef = useRef<{
+    canvas: HTMLCanvasElement | null;
+    w: number;
+    h: number;
+    timeBucket: number;
+  }>({ canvas: null, w: 0, h: 0, timeBucket: -1 });
   const dragRef = useRef({
     hasDragged: false,
     isDragging: false,
@@ -445,6 +459,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       fogOverlayCache: fogOverlayCacheRef,
       pathCache: pathCacheRef,
       nodeCache: nodeCacheRef,
+      atmosphereCache: atmosphereCacheRef,
       heroType: selectedHero,
       heroMapPos: heroMapPosRef,
       heroMoving: heroMovingRef,
@@ -476,7 +491,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let animationId: number;
     let lastDrawTime = 0;
     let lastPreviewTime = 0;
-    const frameInterval = isMobile ? 33 : 20; // 30fps mobile, 50fps desktop
+    const frameInterval = 20; // 50fps on both mobile and desktop
 
     let lastTimestamp = 0;
     const HERO_SPEED = 200; // pixels per second
@@ -777,7 +792,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     <div className="w-full h-dvh flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}`, paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {/* TOP BAR */}
-      <div className="mx-1.5 sm:mx-3 mt-1.5 sm:mt-3">
+      <div
+        className="mx-1.5 sm:mx-3 mt-1.5 sm:mt-3 transition-all duration-500 ease-out"
+        style={{
+          opacity: wmEntranceStage[0] ? 1 : 0,
+          transform: wmEntranceStage[0] ? "translateY(0)" : "translateY(-12px)",
+        }}
+      >
         <WorldMapTopBar
           totalStars={totalStars}
           maxStars={maxStars}
@@ -811,9 +832,19 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         />
 
         {/* DESKTOP: LEFT SIDEBAR */}
-        <div className="hidden sm:flex sm:h-auto sm:w-72 flex-shrink-0 flex-col overflow-hidden pl-3 py-3" style={{ background: `linear-gradient(180deg, rgba(52,36,20,0.85) 0%, rgba(32,22,12,0.88) 100%)`, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+        <div
+          className="hidden sm:flex sm:h-auto sm:w-72 flex-shrink-0 flex-col overflow-hidden pl-3 py-3 transition-all duration-600 ease-out"
+          style={{
+            background: `linear-gradient(180deg, rgba(52,36,20,0.85) 0%, rgba(32,22,12,0.88) 100%)`,
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            opacity: wmEntranceStage[1] ? 1 : 0,
+            transform: wmEntranceStage[1] ? "translateX(0)" : "translateX(-18px)",
+          }}
+        >
           <OrnateFrame
-            className="flex-1 flex flex-col overflow-hidden rounded-2xl border border-amber-600/40 shadow-xl"
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl shadow-xl"
+            style={{ border: `1px solid ${GOLD.border25}` }}
             cornerSize={24}
             showBorders={true}
             showSideBorders={true}
@@ -822,7 +853,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           >
             <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ background: `linear-gradient(180deg, rgba(52,36,20,0.92) 0%, rgba(32,22,12,0.95) 100%)`, boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}` }}>
               {selectedLevel && currentLevel ? (
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div
+                  className="flex-1 flex flex-col h-full overflow-hidden"
+                  style={{ animation: "wm-fade-in 0.35s ease-out both" }}
+                >
                   <div className="flex-1 overflow-y-auto">
                     <div className="relative overflow-hidden">
                       {/* Top gold divider line */}
@@ -832,15 +866,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
 
                         {/* Level name + close button */}
-                        <div className="flex items-start justify-between mb-1 relative z-10">
-                          <div className="flex items-center gap-2">
-                            <div className="relative">
-                              <MapPin size={20} className="text-amber-400 drop-shadow-lg" />
-                              <div className="absolute inset-0 animate-ping opacity-30">
-                                <MapPin size={20} className="text-amber-400" />
-                              </div>
+                        <div className="flex items-start justify-between gap-2 mb-1 relative z-10">
+                          <div className="flex items-start gap-2 min-w-0 flex-1">
+                            <div className="relative shrink-0 mt-1">
+                              <div className="absolute -inset-2 rounded-full bg-amber-400/15 blur-md animate-pulse" />
+                              <MapPin size={18} className="text-amber-400 drop-shadow-lg relative z-10" />
                             </div>
-                            <h2 className="text-xl font-bold text-amber-100 drop-shadow-lg tracking-wide">
+                            <h2
+                              className="text-lg font-bold drop-shadow-lg leading-tight break-words min-w-0"
+                              style={{
+                                background: "linear-gradient(180deg, #fde68a 0%, #d4a84a 60%, #92400e 100%)",
+                                WebkitBackgroundClip: "text",
+                                WebkitTextFillColor: "transparent",
+                              }}
+                            >
                               {currentLevel.name}
                             </h2>
                           </div>
@@ -1018,9 +1057,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Battlefield Preview</span>
                         <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
                       </div>
-                      <div className="relative aspect-video rounded-2xl overflow-hidden" style={{
+                      <div className="relative aspect-video rounded-2xl overflow-hidden animate-wm-border-breathe" style={{
                         background: PANEL.bgDeep,
-                        border: `2px solid ${GOLD.border30}`,
                         boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${OVERLAY.black40}`
                       }}>
                         <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
@@ -1233,11 +1271,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     <button
                       onClick={startGame}
                       disabled={!canStart}
-                      className="w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group"
+                      className={`w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group ${canStart ? "animate-wm-battle-pulse hover:scale-[1.02] active:scale-[0.98]" : ""}`}
                       style={canStart ? {
                         background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
                         border: `2px solid ${GOLD.accentBorder50}`,
-                        boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
                         color: "rgba(253, 230, 138, 0.9)",
                         textShadow: "0 1px 3px rgba(0,0,0,0.5)",
                       } : {
@@ -1307,9 +1344,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         </div>
         {/* RIGHT: Map + Loadout column */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          <div className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+          <div
+            className="relative flex-1 flex flex-col min-w-0 min-h-0 py-1 sm:py-3 px-1.5 sm:px-3 overflow-hidden transition-all duration-700 ease-out"
+            style={{
+              background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`,
+              opacity: wmEntranceStage[2] ? 1 : 0,
+              transform: wmEntranceStage[2] ? "scale(1)" : "scale(0.97)",
+            }}
+          >
             <OrnateFrame
-              className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl min-h-0"
+              className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 overflow-hidden shadow-2xl min-h-0 animate-wm-border-breathe"
               cornerSize={28}
               showBorders={true}
             >
@@ -1430,7 +1474,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </OrnateFrame>
           </div>
 
-          <div ref={bottomPanelRef}>
+          <div
+            ref={bottomPanelRef}
+            className="transition-all duration-500 ease-out"
+            style={{
+              opacity: wmEntranceStage[3] ? 1 : 0,
+              transform: wmEntranceStage[3] ? "translateY(0)" : "translateY(14px)",
+            }}
+          >
             <WorldMapDesktopLoadout
               loadoutCompact={loadoutCompact}
               setLoadoutCompact={setLoadoutCompact}

@@ -22,6 +22,7 @@ import {
   raiseHexWardGhostFromHeroDeathImpl,
   killHeroImpl,
   onEnemyKillImpl,
+  onTroopDeathImpl,
 } from "./particleAndCombatCallbacks";
 
 export interface ParticleCombatDeps {
@@ -44,6 +45,7 @@ export interface ParticleCombatReturn {
   awardBounty: (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => number;
   killHero: (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number) => Hero;
   onEnemyKill: (enemy: Enemy, pos: Position, particleCount?: number, deathCause?: DeathCause) => void;
+  onTroopDeath: (troop: Troop, pos: Position) => void;
   raiseHexWardGhostFromTroopDeath: (troop: Troop, deathPos: Position) => void;
   pendingParticleBurstsRef: MutableRefObject<ParticleBurstRequest[]>;
   pendingDeathEffectsRef: MutableRefObject<Effect[]>;
@@ -136,8 +138,24 @@ export function useParticleAndCombat(deps: ParticleCombatDeps): ParticleCombatRe
 
   const killHero = useCallback(
     (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number): Hero =>
-      killHeroImpl(fallenHero, respawnTimerMs, lastCombatTime, raiseHexWardGhostFromHeroDeath, addParticles),
-    [addParticles, raiseHexWardGhostFromHeroDeath],
+      killHeroImpl(
+        fallenHero, respawnTimerMs, lastCombatTime,
+        raiseHexWardGhostFromHeroDeath, addParticles,
+        selectedMap, { pendingDeathEffectsRef }, { addEffectEntity },
+      ),
+    [addParticles, raiseHexWardGhostFromHeroDeath, addEffectEntity, selectedMap],
+  );
+
+  const onTroopDeath = useCallback(
+    (troop: Troop, pos: Position) => {
+      onTroopDeathImpl(
+        troop, pos, selectedMap,
+        { pendingDeathEffectsRef },
+        { addEffectEntity },
+        addParticles,
+      );
+    },
+    [addParticles, addEffectEntity, selectedMap],
   );
 
   const onEnemyKill = useCallback(
@@ -158,6 +176,7 @@ export function useParticleAndCombat(deps: ParticleCombatDeps): ParticleCombatRe
     awardBounty,
     killHero,
     onEnemyKill,
+    onTroopDeath,
     raiseHexWardGhostFromTroopDeath,
     pendingParticleBurstsRef,
     pendingDeathEffectsRef,

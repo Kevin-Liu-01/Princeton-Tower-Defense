@@ -820,7 +820,7 @@ export type EffectType =
   | "status_slowed" // Slowed/frozen effect
   | "status_poisoned" // Poison dripping effect
   | "status_stunned" // Stunned/dazed effect
-  | "enemy_death"; // Enemy death dissolve/shatter
+  | "enemy_death"; // Death dissolve/shatter (enemies, troops, heroes)
 
 // What killed the enemy - determines death animation style
 export type DeathCause =

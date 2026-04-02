@@ -52,6 +52,7 @@ import {
   distance,
   isValidBuildPosition,
   hexToRgb,
+  isoTileDiamondHalfH,
   type TroopMoveInfo,
   LANDMARK_DECORATION_TYPES,
   BACKGROUND_BLOCKING_DECORATION_TYPES,
@@ -2519,6 +2520,7 @@ export function renderScene(params: RenderSceneParams): void {
     const time = nowSeconds;
     const spec = hoveredSpecialTower;
     const sPos = toScreen(gridToWorld(spec.pos));
+    sPos.y -= isoTileDiamondHalfH(cameraZoom);
     const range =
       spec.type === "beacon"
         ? 150
@@ -2636,6 +2638,7 @@ export function renderScene(params: RenderSceneParams): void {
     const targetPos = sentinelTargets[key];
     if (!targetPos) return;
     const sourceScreenPos = toScreen(gridToWorld(spec.pos));
+    sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const isActiveTargeting = activeSentinelTargetKey === key;
     const hasCursor = sentinelCursorPos.x > 0 && sentinelCursorPos.y > 0;
     const targetScreenPos =
@@ -2680,6 +2683,7 @@ export function renderScene(params: RenderSceneParams): void {
     const aimPos = sunforgeAimRef.current.get(key);
     if (!aimPos) return;
     const sourceScreenPos = toScreen(gridToWorld(spec.pos));
+    sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const targetScreenPos = toScreen(aimPos);
 
     const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
@@ -2864,6 +2868,7 @@ export function renderScene(params: RenderSceneParams): void {
       cameraOffset,
       cameraZoom,
     );
+    sourceScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
     const targetScreenPos = worldToScreen(
       aimPos,
       canvas.width,
@@ -2982,6 +2987,7 @@ export function renderScene(params: RenderSceneParams): void {
 
     const time = nowSeconds;
     const sPos = toScreen(gridToWorld(t.pos));
+    sPos.y -= isoTileDiamondHalfH(cameraZoom);
     const s = cameraZoom;
 
     const fnd = getTowerFoundationSize(t);
@@ -3180,6 +3186,7 @@ export function renderScene(params: RenderSceneParams): void {
           warmupProgress?: number;
         };
         const sPos = toScreen(gridToWorld(spec.pos));
+        sPos.y -= isoTileDiamondHalfH(cameraZoom);
         const vKey = vaultPosKey(spec.pos);
         const perVaultHp =
           spec.type === "vault" ? (specialTowerHp[vKey] ?? null) : null;
@@ -3284,6 +3291,7 @@ export function renderScene(params: RenderSceneParams): void {
               cameraOffset,
               cameraZoom,
             );
+            towerScreenPos.y -= isoTileDiamondHalfH(cameraZoom);
             renderTowerDebuffEffects(
               ctx,
               { ...tower, debuffs: activeDebuffs },

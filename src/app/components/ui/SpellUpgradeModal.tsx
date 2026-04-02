@@ -51,7 +51,7 @@ import {
 import { SpellSprite } from "../../sprites";
 import { SpellOrbIcon, EnchantedAnvilIcon } from "../../sprites/custom-icons";
 import { OrnateFrame } from "./primitives/OrnateFrame";
-import { panelGradient } from "./system/theme";
+import { panelGradient, GOLD, ORNAMENT } from "./system/theme";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -775,10 +775,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
       <style>{ANIMATIONS_CSS}</style>
 
       <OrnateFrame
-        className="relative z-10 w-full max-w-[1280px] max-h-[94dvh] overflow-hidden rounded-2xl border border-amber-400/45 flex flex-col"
+        className="relative z-10 w-full max-w-[1280px] max-h-[94dvh] overflow-hidden rounded-2xl flex flex-col"
+        style={{ border: `1px solid ${GOLD.accentBorder40}` }}
         cornerSize={46}
-        color="#d97706"
-        glowColor="#fbbf24"
         showSideBorders={false}
       >
         {/* ── Header ── */}
@@ -835,10 +834,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
         <div className="flex-1 min-h-0 grid lg:grid-cols-[minmax(0,1fr)_332px] grid-rows-[minmax(0,1fr)]">
             {/* ── Grid Panel ── */}
             <OrnateFrame
-              className="border border-amber-700/25 min-h-0 overflow-hidden"
+              className="min-h-0 overflow-hidden"
+              style={{ border: `1px solid ${GOLD.border25}` }}
               cornerSize={28}
-              color="#a16207"
-              glowColor="#fbbf24"
               cornerVariant="compact"
               borderVariant="compact"
             >
@@ -1191,7 +1189,8 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
 
             {/* ── Detail Panel ── */}
             <OrnateFrame
-              className="border border-amber-700/25 min-h-0 overflow-hidden"
+              className="min-h-0 overflow-hidden"
+              style={{ border: `1px solid ${GOLD.border25}` }}
               cornerSize={30}
               color={selectedTheme.accent}
               glowColor={selectedTheme.glow}

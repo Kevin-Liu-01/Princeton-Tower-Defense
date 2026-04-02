@@ -18,6 +18,7 @@ export function drawWorldMapHero(
   isMoving: boolean,
   facingRight: boolean,
   attackPhase: number = 0,
+  isMobile: boolean = false,
 ) {
   const heroData = HERO_DATA[heroType];
   if (!heroData) return;
@@ -33,17 +34,20 @@ export function drawWorldMapHero(
   ctx.ellipse(x, y + 8, 10 * shadowScale, 3 * shadowScale, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Selection glow ring
-  const glowPulse = 0.25 + Math.sin(time * 3) * 0.1;
-  ctx.strokeStyle = `rgba(255,200,60,${glowPulse})`;
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.ellipse(x, y + 6, 12, 4, 0, 0, Math.PI * 2);
-  ctx.stroke();
+  if (!isMobile) {
+    // Selection glow ring (skip on mobile to save per-frame gradient/stroke work)
+    const glowPulse = 0.25 + Math.sin(time * 3) * 0.1;
+    ctx.strokeStyle = `rgba(255,200,60,${glowPulse})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, 12, 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
-  // Dust trail when running
+  // Dust trail when running (fewer particles on mobile)
   if (isMoving) {
-    for (let d = 0; d < 4; d++) {
+    const dustCount = isMobile ? 2 : 4;
+    for (let d = 0; d < dustCount; d++) {
       const dustAge = (time * 6 + d * 1.5) % 3;
       if (dustAge > 2) continue;
       const dustAlpha = (1 - dustAge / 2) * 0.25;

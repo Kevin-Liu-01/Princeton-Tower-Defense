@@ -1,6 +1,6 @@
 import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO, LEVEL_DATA } from "../constants";
-import { worldToScreen, gridToWorld } from "../utils";
+import { worldToScreen, gridToWorld, isoTileDiamondHalfH } from "../utils";
 import { drawOrganicBlobAt, type LightningColorScheme } from "./helpers";
 import { renderTargetingReticle, RETICLE_COLORS } from "./ui/reticles";
 import { getScenePressure } from "./performance";
@@ -273,6 +273,7 @@ export function renderEffect(
             cameraOffset,
             cameraZoom,
           );
+          towerScreen.y -= isoTileDiamondHalfH(zoom);
 
           sourceX = towerScreen.x;
 
@@ -568,6 +569,7 @@ export function renderEffect(
             cameraOffset,
             cameraZoom,
           );
+          towerScreen.y -= isoTileDiamondHalfH(zoom);
 
           sourceX = towerScreen.x;
 
@@ -689,6 +691,7 @@ export function renderEffect(
             cameraOffset,
             cameraZoom,
           );
+          towerScreen.y -= isoTileDiamondHalfH(zoom);
 
           // Calculate turret position (must match cannon.ts formulas)
           const towerLevel = effect.towerLevel || sourceTower.level;

@@ -349,10 +349,17 @@ export function killHeroImpl(
   lastCombatTime: number | undefined,
   raiseHexWardGhostFromHeroDeath: (hero: Hero) => void,
   addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+  selectedMap?: string,
+  refs?: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
+  actions?: Pick<ParticleCombatActions, "addEffectEntity">,
 ): Hero {
   raiseHexWardGhostFromHeroDeath(fallenHero);
-  addParticles(fallenHero.pos, "explosion", 20);
-  addParticles(fallenHero.pos, "smoke", 10);
+  if (selectedMap && refs && actions) {
+    onHeroDeathImpl(fallenHero, fallenHero.pos, selectedMap, refs, actions, addParticles);
+  } else {
+    addParticles(fallenHero.pos, "explosion", 20);
+    addParticles(fallenHero.pos, "smoke", 10);
+  }
   return {
     ...fallenHero,
     hp: 0,
@@ -425,6 +432,70 @@ export function onEnemyKillImpl(
       enemySize: eData.size,
       isFlying: eData.flying,
       deathCause,
+      regionGroundColors: regionColors,
+    };
+    (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
+      performance.now();
+    refs.pendingDeathEffectsRef.current.push(deathEffect);
+    actions.addEffectEntity(deathEffect);
+  }
+}
+
+// ── onTroopDeath / onHeroDeath impl ──────────────────────────────────────────
+// Reuse the same "enemy_death" dust animation so allies crumble the same way.
+
+export function onTroopDeathImpl(
+  troop: Troop,
+  pos: Position,
+  selectedMap: string,
+  refs: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
+  actions: Pick<ParticleCombatActions, "addEffectEntity">,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+): void {
+  addParticles(pos, "explosion", 8);
+
+  if (getPerformanceSettings().deathAnimations) {
+    const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
+    const regionColors = REGION_THEMES[mapThemeKey]?.ground;
+    const deathEffect: Effect = {
+      id: generateId("fx"),
+      pos,
+      type: "enemy_death" as const,
+      progress: 0,
+      size: 16,
+      duration: DEATH_DURATIONS["default"],
+      deathCause: "default",
+      regionGroundColors: regionColors,
+    };
+    (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =
+      performance.now();
+    refs.pendingDeathEffectsRef.current.push(deathEffect);
+    actions.addEffectEntity(deathEffect);
+  }
+}
+
+export function onHeroDeathImpl(
+  hero: Hero,
+  pos: Position,
+  selectedMap: string,
+  refs: Pick<ParticleCombatRefs, "pendingDeathEffectsRef">,
+  actions: Pick<ParticleCombatActions, "addEffectEntity">,
+  addParticles: (pos: Position, type: Particle["type"], count: number) => void,
+): void {
+  addParticles(pos, "explosion", 20);
+  addParticles(pos, "smoke", 10);
+
+  if (getPerformanceSettings().deathAnimations) {
+    const mapThemeKey = LEVEL_DATA[selectedMap]?.theme || "grassland";
+    const regionColors = REGION_THEMES[mapThemeKey]?.ground;
+    const deathEffect: Effect = {
+      id: generateId("fx"),
+      pos,
+      type: "enemy_death" as const,
+      progress: 0,
+      size: 22,
+      duration: DEATH_DURATIONS["default"],
+      deathCause: "default",
       regionGroundColors: regionColors,
     };
     (deathEffect as Effect & { _spawnedAt: number })._spawnedAt =

@@ -14,7 +14,7 @@ import {
   Swords,
 } from "lucide-react";
 import PrincetonTDLogo from "../../ui/primitives/PrincetonTDLogo";
-import { AMBER_CARD, DIVIDER, GOLD, OVERLAY, PANEL, panelGradient } from "../../ui/system/theme";
+import { AMBER_CARD, DIVIDER, GOLD, OVERLAY, PANEL, panelGradient, ORNAMENT } from "../../ui/system/theme";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { NavMoreDropdown } from "../NavMoreDropdown";
 import type { CodexTabId } from "../CodexModal";
@@ -96,7 +96,8 @@ export function WorldMapTopBar({
 }: WorldMapTopBarProps) {
   return (
     <OrnateFrame
-      className="flex-shrink-0 overflow-hidden rounded-xl border-2 border-amber-700/50 shadow-xl"
+      className="flex-shrink-0 overflow-hidden rounded-xl shadow-xl"
+      style={{ border: `2px solid ${GOLD.border35}` }}
       cornerSize={22}
       borderVariant="compact"
       showBorders={true}
@@ -137,7 +138,7 @@ export function WorldMapTopBar({
             />
 
             <div
-              className="hidden sm:flex relative items-center gap-2 px-4 py-1.5 rounded-xl"
+              className="hidden sm:flex relative items-center gap-2 px-4 py-1.5 rounded-xl animate-wm-star-breathe"
               style={{
                 background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
                 border: `1.5px solid ${AMBER_CARD.border}`,
@@ -167,9 +168,9 @@ export function WorldMapTopBar({
 
               <button
                 onClick={() => onOpenCodex("towers")}
-                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
+                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 hover:bg-amber-600/15 hover:shadow-[inset_0_0_12px_rgba(180,140,60,0.12)]"
               >
-                <Book size={14} className="text-amber-400 shrink-0" />
+                <Book size={14} className="text-amber-400 shrink-0 transition-transform duration-200 group-hover:scale-110" />
                 <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Codex</span>
               </button>
 
@@ -177,7 +178,7 @@ export function WorldMapTopBar({
 
               <button
                 onClick={onOpenCreator}
-                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
+                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 hover:bg-amber-600/15 hover:shadow-[inset_0_0_12px_rgba(180,140,60,0.12)]"
               >
                 <Hammer size={14} className="text-amber-400 shrink-0" />
                 <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Creator</span>
@@ -187,7 +188,7 @@ export function WorldMapTopBar({
 
               <button
                 onClick={onOpenSettings}
-                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-150 hover:bg-amber-600/15"
+                className="relative z-10 flex items-center gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 transition-all duration-200 hover:bg-amber-600/15 hover:shadow-[inset_0_0_12px_rgba(180,140,60,0.12)]"
               >
                 <Settings size={14} className="text-amber-400 shrink-0" />
                 <span className="hidden sm:inline text-xs text-amber-200/80 font-bold tracking-wider uppercase">Settings</span>

@@ -234,6 +234,7 @@ export interface UpdateGameParams {
   awardBounty: (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => void;
   killHero: (fallenHero: Hero, respawnTimerMs: number, lastCombatTime?: number) => Hero;
   onEnemyKill: (enemy: Enemy, pos: Position, particleCount?: number, deathCause?: DeathCause) => void;
+  onTroopDeath: (troop: Troop, pos: Position) => void;
   addPawPoints: (amount: number) => void;
   addEffectEntities: (effects: Effect[]) => void;
   addProjectileEntities: (projectiles: Projectile[]) => void;
@@ -323,6 +324,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     awardBounty,
     killHero,
     onEnemyKill,
+    onTroopDeath,
     addPawPoints,
     addEffectEntities,
     addProjectileEntities,
@@ -1812,7 +1814,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     if (damage > 0 && troop.hp - damage <= 0) {
       troopsThatWillDie.add(troop.id);
       raiseHexWardGhostFromTroopDeath(troop, troop.pos);
-      addParticles(troop.pos, "explosion", 8);
+      onTroopDeath(troop, troop.pos);
       if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
         deathsToQueue.push({
           ownerId: troop.ownerId,
@@ -2788,7 +2790,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (!troop.type) return true;
       if (troop.hp > 0) return true;
       raiseHexWardGhostFromTroopDeath(troop, troop.pos);
-      addParticles(troop.pos, "explosion", 8);
+      onTroopDeath(troop, troop.pos);
       if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
         dotDeaths.push({
           ownerId: troop.ownerId,
@@ -5219,7 +5221,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               if (totalDamage <= 0) return troop;
               const newHp = troop.hp - totalDamage;
               if (newHp <= 0) {
-                addParticles(troop.pos, "explosion", 6);
+                onTroopDeath(troop, troop.pos);
                 return null;
               }
               return { ...troop, hp: newHp, lastCombatTime: nowMs };

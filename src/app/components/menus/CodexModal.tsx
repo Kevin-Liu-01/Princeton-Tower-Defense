@@ -1216,8 +1216,6 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
         <OrnateFrame
           className="relative w-full h-full overflow-hidden"
           cornerSize={48}
-          color="#d97706"
-          glowColor="#f59e0b"
           showSideBorders={false}
         >
           {/* Inner ghost border */}

@@ -77,7 +77,7 @@ export const HudTooltip: React.FC<HudTooltipProps> = ({
   return (
     <div
       ref={wrapperRef}
-      className="relative flex"
+      className="relative flex self-stretch items-center"
       onMouseEnter={show}
       onMouseLeave={hide}
       onPointerDown={hide}

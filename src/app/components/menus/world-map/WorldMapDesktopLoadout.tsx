@@ -129,7 +129,8 @@ export function WorldMapDesktopLoadout({
   return (
     <div className="hidden xl:block flex-shrink-0 px-1.5 sm:px-3 pb-1.5 sm:pb-3">
       <OrnateFrame
-        className="rounded-xl border-2 border-amber-600/50 shadow-xl overflow-hidden"
+        className="rounded-xl shadow-xl overflow-hidden"
+        style={{ border: `2px solid ${GOLD.border30}` }}
         cornerSize={20}
         borderVariant="compact"
         showBorders={true}

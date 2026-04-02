@@ -22,6 +22,13 @@ export interface FogOverlayCache {
   h: number;
 }
 
+export interface AtmosphereCache {
+  canvas: HTMLCanvasElement | null;
+  w: number;
+  h: number;
+  timeBucket: number;
+}
+
 export interface PathCache {
   canvas: HTMLCanvasElement | null;
   w: number;
@@ -59,6 +66,7 @@ export interface DrawWorldMapParams {
   fogOverlayCache?: MutableRefObject<FogOverlayCache>;
   pathCache?: MutableRefObject<PathCache>;
   nodeCache?: MutableRefObject<NodeCache>;
+  atmosphereCache?: MutableRefObject<AtmosphereCache>;
   heroType?: HeroType | null;
   heroMapPos?: MutableRefObject<{ x: number; y: number }>;
   heroMoving?: MutableRefObject<boolean>;

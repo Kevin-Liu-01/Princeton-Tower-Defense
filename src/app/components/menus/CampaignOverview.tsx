@@ -157,7 +157,15 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         {/* Title row */}
         <div className="flex items-center gap-2 mb-2.5 relative z-10">
           <Map size={18} className="text-amber-400 drop-shadow-lg" />
-          <h2 className="text-sm font-bold text-amber-100 tracking-wider uppercase">
+          <h2
+            className="text-sm font-extrabold tracking-wider uppercase"
+            style={{
+              background: "linear-gradient(180deg, #f5d060 0%, #d4a84a 40%, #a07830 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.4))",
+            }}
+          >
             Campaign
           </h2>
           {onTogglePreview && (
@@ -193,14 +201,22 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             }}
           >
             <div
-              className="h-full rounded-full transition-all duration-500"
+              className="h-full rounded-full transition-all duration-500 relative overflow-hidden"
               style={{
                 width: `${progressPct}%`,
                 background:
                   "linear-gradient(90deg, rgba(160,110,20,0.9), rgba(220,170,40,0.95), rgba(160,110,20,0.9))",
                 boxShadow: "0 0 10px rgba(220,170,40,0.35)",
               }}
-            />
+            >
+              <div
+                className="absolute inset-0 animate-wm-progress-shimmer"
+                style={{
+                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)",
+                  width: "40%",
+                }}
+              />
+            </div>
             <div
               className="absolute inset-[1px] rounded-full pointer-events-none"
               style={{ border: `1px solid ${GOLD.innerBorder08}` }}
@@ -246,6 +262,13 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             <span className="text-amber-600/70 text-[9px] uppercase tracking-wider">Lives</span>
           </span>
         </div>
+
+        {/* Ornate bottom accent */}
+        <div className="flex items-center justify-center gap-2 mt-2.5 relative z-10">
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+          <div className="w-1.5 h-1.5 rotate-45 rounded-[1px]" style={{ background: GOLD.border35 }} />
+          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════
@@ -255,11 +278,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
           <button
             onClick={() => onSelectLevel(recommended.id)}
-            className="w-full group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99]"
+            className="w-full group relative rounded-xl overflow-hidden transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99] animate-wm-cta-glow"
             style={{
               background: `linear-gradient(135deg, rgba(170,120,20,0.85), rgba(120,78,12,0.85))`,
               border: `2px solid ${GOLD.accentBorder40}`,
-              boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
             }}
           >
             {getPreviewImage(recommended.id) && (
@@ -299,7 +321,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                     </div>
                   </div>
                 </div>
-                <ChevronRight size={18} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-0.5 transition-all" />
+                <ChevronRight size={18} className="text-amber-300/60 shrink-0 group-hover:text-amber-200 group-hover:translate-x-1 transition-all duration-300" />
               </div>
             </div>
           </button>
@@ -315,7 +337,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         </div>
 
         <div className="space-y-2">
-          {regionData.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }) => {
+          {regionData.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }, idx) => {
             const meta = REGION_META[region];
             const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
             const isFullyComplete = stars === rMax && rMax > 0;
@@ -326,11 +348,14 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 onClick={() => {
                   if (targetLevel) onSelectLevel(targetLevel.id);
                 }}
-                className="w-full text-left py-1 px-0.5 rounded-xl overflow-hidden transition-all hover:brightness-110 hover:scale-[1.01] active:scale-[0.99] relative"
+                className="w-full text-left py-1 px-0.5 rounded-xl overflow-hidden transition-all hover:brightness-125 hover:scale-[1.02] active:scale-[0.99] relative"
                 style={{
                   background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
-                  border: `1.5px solid ${meta.border}`,
-                  boxShadow: `inset 0 0 12px ${meta.glow}`,
+                  border: `1.5px solid ${isFullyComplete ? "rgba(220,170,40,0.55)" : meta.border}`,
+                  boxShadow: isFullyComplete
+                    ? `inset 0 0 12px ${meta.glow}, 0 0 14px rgba(220,170,40,0.15)`
+                    : `inset 0 0 12px ${meta.glow}`,
+                  animation: `wm-fade-in 0.4s ease-out ${idx * 70}ms both`,
                 }}
               >
                 {regionPreview && (
@@ -351,7 +376,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                       <span className="text-[12px] font-bold text-amber-100 leading-tight">
                         {meta.displayName}
                       </span>
-                      <span className="flex items-center gap-1 shrink-0 ml-1.5">
+                      <span className={`flex items-center gap-1 shrink-0 ml-1.5 ${isFullyComplete ? "animate-wm-star-breathe" : ""}`}>
                         <Star
                           size={10}
                           className={
@@ -420,10 +445,10 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                 style={{ border: `1px solid ${GOLD.innerBorder08}` }}
               />
               <div className="relative px-3.5 py-2.5">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <MapPin size={14} className="text-amber-400/80" />
-                    <span className="text-[13px] font-bold text-amber-100">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin size={14} className="text-amber-400/80 shrink-0" />
+                    <span className="text-[13px] font-bold text-amber-100 truncate min-w-0">
                       {lastPlayedLevel.name}
                     </span>
                   </div>
@@ -468,8 +493,21 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         )}
 
         {/* Bottom lore */}
-        <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-          <p className="text-[9px] text-amber-200/30 leading-relaxed italic text-center">
+        <div
+          className="mt-4 pt-3 pb-1"
+          style={{
+            animation: "wm-fade-in 0.6s ease-out 0.5s both",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+            <div className="w-1 h-1 rotate-45 rounded-[1px]" style={{ background: GOLD.border25 }} />
+            <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+          </div>
+          <p
+            className="text-[9px] leading-relaxed italic text-center px-2"
+            style={{ color: "rgba(217,183,130,0.35)" }}
+          >
             &ldquo;The shadows gather at the gates. Ancient towers stand
             resolute, their arcane fires burning eternal against the
             darkness.&rdquo;

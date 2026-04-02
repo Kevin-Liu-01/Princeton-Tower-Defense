@@ -621,7 +621,8 @@ export function VictoryScreen({
       {/* Main panel */}
       <div className={`relative z-10 max-w-xl w-full mx-4 max-h-[92dvh] overflow-y-auto transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
         <OrnateFrame
-          className="rounded-2xl border-2 border-amber-800/50 shadow-2xl"
+          className="rounded-2xl shadow-2xl"
+          style={{ border: `2px solid ${GOLD.border35}` }}
           cornerSize={48}
           showBorders={true}
         >

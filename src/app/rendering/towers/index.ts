@@ -10,7 +10,7 @@ import {
   ISO_PRISM_W_FACTOR,
   ISO_PRISM_D_FACTOR,
 } from "../../constants";
-import { gridToWorld, worldToScreenRounded } from "../../utils";
+import { gridToWorld, worldToScreenRounded, isoTileDiamondHalfH } from "../../utils";
 import { getGameSettings } from "../../hooks/useSettings";
 import {
   drawTowerPassiveEffects,
@@ -165,6 +165,7 @@ export function renderTower(
     cameraZoom,
   );
   const zoom = cameraZoom || 1;
+  screenPos.y -= isoTileDiamondHalfH(zoom);
   const time = Date.now() / 1000;
   const isHovered = hoveredTower === tower.id;
   const isSelected = selectedTower === tower.id;

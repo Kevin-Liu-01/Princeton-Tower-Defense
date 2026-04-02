@@ -24,15 +24,15 @@ export const AUTHOR_SAME_AS = [
 export const SITE_DESCRIPTION =
   "Princeton Tower Defense is a free browser-based strategy game where you defend Princeton University's campus from waves of academic stress monsters. " +
   "Build 7 unique towers inspired by real campus landmarks (Nassau Cannon, Firestone Library, E-Quad Lab, Blair Arch, Eating Club, Dinky Station, and Palmer Mortar), " +
-  "each with dual upgrade paths. Summon heroes, cast spells, and battle through 23 handcrafted levels across 5 themed regions. " +
+  "each with dual upgrade paths. Summon heroes, cast spells, and battle through 25+ handcrafted levels across 5 themed regions. " +
   "Includes a custom level creator, sandbox mode, and a full codex of towers, enemies, heroes, and spells.";
 
 export const SITE_DESCRIPTION_SHORT =
-  "Free browser tower defense game set at Princeton University. Build campus-themed towers, summon heroes, cast spells, and defend Nassau Hall across 23 levels and 5 regions. No download required.";
+  "Free browser tower defense game set at Princeton University. Build campus-themed towers, summon heroes, cast spells, and defend Nassau Hall across 25+ levels and 5 regions. No download required.";
 
 export const OG_DESCRIPTION =
-  "Build towers at Princeton landmarks, summon heroes like the Princeton Tiger, and defend campus across 23 levels in this free browser tower defense game. " +
-  "7 towers with dual upgrades, 9 heroes, 5 spells, custom level creator, sandbox mode, and 50+ unique enemies.";
+  "Build towers at Princeton landmarks, summon heroes like the Princeton Tiger, and defend campus across 25+ levels in this free browser tower defense game. " +
+  "7 towers with dual upgrades, 9 heroes, 5 spells, custom level creator, sandbox mode, and 100+ unique enemies.";
 
 export const KEYWORDS = [
   // Core game terms
@@ -233,12 +233,12 @@ export const SPELL_NAMES = [
 ] as const;
 
 export const GAME_STATS = {
-  levels: 23,
+  levels: 25,
   towers: 7,
   heroes: 9,
   spells: 6,
   regions: 5,
-  enemyTypes: 50,
+  enemyTypes: 100,
   upgradePaths: 2,
 } as const;
 

@@ -564,11 +564,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           style={{ border: "1px solid rgba(90,110,40,0.08)" }}
         />
 
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed (−0.25)"}>
+        <HudTooltip label={pauseLocked ? "Speed locked" : "Decrease speed (−0.5)"}>
           <button
             onClick={() => {
               if (pauseLocked) return;
-              setGameSpeed((prev) => Math.max(prev - 0.25, 0));
+              setGameSpeed((prev) => Math.max(prev - 0.5, 0));
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
@@ -621,11 +621,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           })}
         </div>
 
-        <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed (+0.25)"}>
+        <HudTooltip label={pauseLocked ? "Speed locked" : "Increase speed (+0.5)"}>
           <button
             onClick={() => {
               if (pauseLocked) return;
-              setGameSpeed((prev) => Math.min(prev + 0.25, 5));
+              setGameSpeed((prev) => Math.min(prev + 0.5, 5));
               exitInspectorOnSpeed();
             }}
             disabled={pauseLocked}
@@ -991,7 +991,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   }}
                 >
                   <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.25, 0)); exitInspectorOnSpeed(); } }}
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.max(prev - 0.5, 0)); exitInspectorOnSpeed(); } }}
                     disabled={pauseLocked}
                     className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
                     style={{
@@ -1008,7 +1008,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     {gameSpeed}x
                   </span>
                   <button
-                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.25, 5)); exitInspectorOnSpeed(); } }}
+                    onClick={() => { if (!pauseLocked) { setGameSpeed((prev) => Math.min(prev + 0.5, 5)); exitInspectorOnSpeed(); } }}
                     disabled={pauseLocked}
                     className={`relative z-10 flex h-full w-7 items-center justify-center transition-all ${pauseLocked ? "cursor-not-allowed opacity-40" : "active:bg-green-700/50 active:scale-95"}`}
                     style={{

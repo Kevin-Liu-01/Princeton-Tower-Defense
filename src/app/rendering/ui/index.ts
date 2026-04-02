@@ -2,7 +2,7 @@
 // Renders game UI elements like health bars, resource displays, etc.
 
 import type { Position, Tower, Hero } from "../../types";
-import { worldToScreen, gridToWorld } from "../../utils";
+import { worldToScreen, gridToWorld, isoTileDiamondHalfH } from "../../utils";
 import { drawFloatingText, colorWithAlpha } from "../helpers";
 import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
 import {
@@ -144,6 +144,7 @@ export function renderTowerSelectionUI(
   cameraOffset?: Position,
   cameraZoom?: number,
 ): void {
+  const zoom = cameraZoom || 1;
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreen(
     worldPos,
@@ -153,11 +154,12 @@ export function renderTowerSelectionUI(
     cameraOffset,
     cameraZoom,
   );
+  screenPos.y -= isoTileDiamondHalfH(zoom);
 
   renderSelectionReticle(ctx, {
     x: screenPos.x,
     y: screenPos.y,
-    zoom: cameraZoom || 1,
+    zoom,
     time: Date.now() / 1000,
     color: RETICLE_COLORS.gold,
     radius: 45,

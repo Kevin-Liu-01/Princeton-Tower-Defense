@@ -26,6 +26,7 @@ import {
   ISO_Y_FACTOR,
   ISO_INV_X,
   ISO_INV_Y,
+  ISO_TILE_HEIGHT_FACTOR,
   getLevelPaths,
   getLevelUniquePathSegments,
   STATION_TROOP_RANGE,
@@ -34,6 +35,10 @@ import {
   HERO_SUMMON_RANGE,
   ENEMY_DATA,
 } from "../constants";
+import {
+  getSmoothedTangent,
+  getCornerLaneCompression,
+} from "./pathLaneUtils";
 
 // Enemy lane model: lanes are normalized to [-1, 1] and projected onto path
 // perpendiculars in world-space.
@@ -87,6 +92,16 @@ export function gridToWorldPath(pos: GridPosition): Position {
     x: pos.x * TILE_SIZE,
     y: pos.y * TILE_SIZE,
   };
+}
+
+/**
+ * Screen-space Y correction for tower placement on the isometric grid.
+ * `gridToWorld` projects the tile center, but the drawn diamond's top vertex
+ * sits slightly below the true grid intersection. Subtract from screenPos.y
+ * to nudge towers upward toward the correct meeting point.
+ */
+export function isoTileDiamondHalfH(zoom: number): number {
+  return TILE_SIZE * ISO_TILE_HEIGHT_FACTOR * 0.25 * zoom;
 }
 
 // World to screen coordinates (with isometric projection)
@@ -254,7 +269,9 @@ export function closestPointOnLine(
 }
 
 // Get enemy position along path (uses path waypoints, not tile centers)
-// Includes lane offset for spreading enemies across the road width
+// Includes lane offset for spreading enemies across the road width.
+// Uses distance-based tangent smoothing and corner compression to prevent
+// jerky motion at tight corners, especially for outer-lane enemies.
 export function getEnemyPosition(
   enemy: { pathIndex: number; progress: number; laneOffset?: number },
   mapKey: string,
@@ -268,85 +285,42 @@ export function getEnemyPosition(
   const current = gridToWorldPath(path[currentIndex]);
   const next = gridToWorldPath(path[nextIndex]);
 
-  // Base position along path
   const baseX = current.x + (next.x - current.x) * enemy.progress;
   const baseY = current.y + (next.y - current.y) * enemy.progress;
 
-  // Calculate perpendicular offset for lane spreading
   const laneOffset = Math.max(
     -ENEMY_LANE_OFFSET_LIMIT,
     Math.min(ENEMY_LANE_OFFSET_LIMIT, enemy.laneOffset || 0),
   );
-  const laneHalfSpan = ENEMY_LANE_HALF_SPAN_WORLD;
 
-  // Get direction of current path segment
+  if (Math.abs(laneOffset) < 0.0001) return { x: baseX, y: baseY };
+
   const dx = next.x - current.x;
   const dy = next.y - current.y;
   const len = Math.sqrt(dx * dx + dy * dy);
+  if (len <= 0) return { x: baseX, y: baseY };
 
-  if (len > 0 && Math.abs(laneOffset) > 0.0001) {
-    const safeNormalize = (vx: number, vy: number): Position => {
-      const mag = Math.sqrt(vx * vx + vy * vy);
-      if (mag <= 0.00001) return { x: 0, y: 0 };
-      return { x: vx / mag, y: vy / mag };
-    };
+  const tangent = getSmoothedTangent(
+    mapKey,
+    currentIndex,
+    enemy.progress,
+  );
 
-    const smoothStep = (t: number): number => {
-      const clamped = Math.max(0, Math.min(1, t));
-      return clamped * clamped * (3 - 2 * clamped);
-    };
+  const compression = getCornerLaneCompression(
+    mapKey,
+    currentIndex,
+    enemy.progress,
+  );
 
-    const laneProgress = Math.max(0, Math.min(1, enemy.progress));
-    const blendWindow = 0.24;
+  const effectiveSpan = ENEMY_LANE_HALF_SPAN_WORLD * compression;
 
-    const currentDir = safeNormalize(dx, dy);
-    let tangent = currentDir;
+  const perpX = -tangent.y;
+  const perpY = tangent.x;
 
-    if (laneProgress < blendWindow && currentIndex > 0) {
-      const prevNode = gridToWorldPath(path[currentIndex - 1]);
-      const prevDir = safeNormalize(
-        current.x - prevNode.x,
-        current.y - prevNode.y,
-      );
-      const cornerStart = safeNormalize(
-        prevDir.x + currentDir.x,
-        prevDir.y + currentDir.y,
-      );
-      const startBlend = smoothStep(laneProgress / blendWindow);
-      tangent = safeNormalize(
-        cornerStart.x * (1 - startBlend) + currentDir.x * startBlend,
-        cornerStart.y * (1 - startBlend) + currentDir.y * startBlend,
-      );
-    } else if (
-      laneProgress > 1 - blendWindow &&
-      currentIndex < path.length - 2
-    ) {
-      const afterNode = gridToWorldPath(path[currentIndex + 2]);
-      const nextDir = safeNormalize(afterNode.x - next.x, afterNode.y - next.y);
-      const cornerEnd = safeNormalize(
-        currentDir.x + nextDir.x,
-        currentDir.y + nextDir.y,
-      );
-      const endBlend = smoothStep(
-        (laneProgress - (1 - blendWindow)) / blendWindow,
-      );
-      tangent = safeNormalize(
-        currentDir.x * (1 - endBlend) + cornerEnd.x * endBlend,
-        currentDir.y * (1 - endBlend) + cornerEnd.y * endBlend,
-      );
-    }
-
-    // Perpendicular vector (rotated 90 degrees)
-    const perpX = -tangent.y;
-    const perpY = tangent.x;
-
-    return {
-      x: baseX + perpX * laneOffset * laneHalfSpan,
-      y: baseY + perpY * laneOffset * laneHalfSpan,
-    };
-  }
-
-  return { x: baseX, y: baseY };
+  return {
+    x: baseX + perpX * laneOffset * effectiveSpan,
+    y: baseY + perpY * laneOffset * effectiveSpan,
+  };
 }
 
 // Height metadata used by rendering and interactions.

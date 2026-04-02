@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Princeton Tower Defense",
     short_name: "Princeton TD",
     description:
-      "Free browser tower defense game set at Princeton University. Build campus-themed towers, summon heroes, cast spells, and defend Nassau Hall across 23 levels.",
+      "Free browser tower defense game set at Princeton University. Build campus-themed towers, summon heroes, cast spells, and defend Nassau Hall across 25+ levels.",
     start_url: "/",
     display: "standalone",
     orientation: "landscape",
