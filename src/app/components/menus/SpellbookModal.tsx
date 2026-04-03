@@ -184,7 +184,7 @@ export const SpellbookModal: React.FC<SpellbookModalProps> = ({
 
   return (
     <>
-      <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60}>
+      <BaseModal isOpen={isOpen} onClose={onClose} zClass="z-[200]" backdropBg={OVERLAY.black60} usePortal>
         <div
           className="relative w-[92vw] max-w-[880px] max-h-[88dvh] rounded-2xl overflow-hidden flex flex-col"
           style={{

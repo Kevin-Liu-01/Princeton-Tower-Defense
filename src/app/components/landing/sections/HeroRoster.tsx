@@ -6,87 +6,50 @@ import { SPELL_DATA } from "../../../constants/spells";
 import { HeroSprite } from "../../../sprites/heroes";
 import { SpellSprite } from "../../../sprites/spells";
 import { LANDING_THEME } from "../landingConstants";
-import { IsoPlatform } from "./IsoPlatform";
+
 import { SpriteDisplay } from "./SpriteDisplay";
-import { useCarousel, CarouselDots, CarouselArrow } from "../CarouselControls";
-import {
-  StatBar,
-  PanelCorners,
-  SlotCorners,
-  type StatBarData,
-} from "./LoadoutUI";
+import { useCarousel } from "../CarouselControls";
+import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
 
 const HERO_ORDER: HeroType[] = [
-  "tiger",
-  "mathey",
-  "captain",
-  "nassau",
-  "tenor",
-  "rocky",
-  "scott",
-  "engineer",
-  "ivy",
+  "tiger", "mathey", "captain", "nassau", "tenor",
+  "rocky", "scott", "engineer", "ivy",
 ];
-
-const HERO_INITIALS: Record<HeroType, string> = {
-  tiger: "T",
-  mathey: "M",
-  captain: "G",
-  nassau: "N",
-  tenor: "A",
-  rocky: "R",
-  scott: "F",
-  engineer: "B",
-  ivy: "I",
-};
 
 const SPELL_ORDER: SpellType[] = [
-  "fireball",
-  "lightning",
-  "freeze",
-  "hex_ward",
-  "payday",
-  "reinforcements",
+  "fireball", "lightning", "freeze", "hex_ward", "payday", "reinforcements",
 ];
 
-const HERO_BIG_VISUAL = 280;
+const HERO_BIG = 300;
 const HERO_BIG_SCALE = 2.5;
-const HERO_BIG_CANVAS = Math.round(HERO_BIG_VISUAL * HERO_BIG_SCALE);
+const HERO_BIG_CANVAS = Math.round(HERO_BIG * HERO_BIG_SCALE);
 
-const SPELL_VISUAL = 48;
+const PORTRAIT_SIZE = 44;
+const PORTRAIT_SCALE = 2.0;
+const PORTRAIT_CANVAS = Math.round(PORTRAIT_SIZE * PORTRAIT_SCALE);
+
+const SPELL_VIS = 56;
 const SPELL_SCALE = 2.0;
-const SPELL_CANVAS = Math.round(SPELL_VISUAL * SPELL_SCALE);
+const SPELL_CANVAS = Math.round(SPELL_VIS * SPELL_SCALE);
 
-function getHeroBars(
-  data: (typeof HERO_DATA)[HeroType],
-): StatBarData[] {
-  return [
-    {
-      label: "HP",
-      pct: Math.min(1, data.hp / 6000),
-      display: `${data.hp}`,
-    },
-    {
-      label: "ATK",
-      pct: Math.min(1, data.damage / 100),
-      display: `${data.damage}`,
-    },
-    {
-      label: "RNG",
-      pct: Math.min(1, data.range / 260),
-      display: `${data.range}`,
-    },
-    {
-      label: "SPD",
-      pct: Math.min(1, data.speed / 5),
-      display: `${data.speed.toFixed(1)}`,
-    },
-  ];
+function HeroStatBlock({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div
+      className="flex flex-col items-center px-4 py-3 rounded-lg min-w-[68px]"
+      style={{
+        background: `${color}0c`,
+        border: `1px solid ${color}18`,
+      }}
+    >
+      <span className="text-base sm:text-lg font-black tabular-nums" style={{ color }}>{value}</span>
+      <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-[0.2em] mt-0.5" style={{ color: `${color}60` }}>{label}</span>
+    </div>
+  );
 }
 
-function HeroPortrait({
+function HeroCard({
   type,
   active,
   onClick,
@@ -99,50 +62,71 @@ function HeroPortrait({
   return (
     <button
       onClick={onClick}
-      className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110"
-      style={{
-        background: active ? `${data.color}18` : "rgba(255,255,255,0.02)",
-        border: active
-          ? `1.5px solid ${data.color}55`
-          : "1px solid rgba(255,255,255,0.06)",
-        borderRadius: 6,
-      }}
+      className="relative flex flex-col items-center gap-1.5 cursor-pointer transition-all duration-300 group flex-shrink-0"
+      style={{ transform: active ? "scale(1.08) translateY(-4px)" : "scale(1)" }}
     >
+      <div
+        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center overflow-hidden"
+        style={{
+          background: active
+            ? `linear-gradient(180deg, ${data.color}30, ${data.color}12)`
+            : "rgba(255,255,255,0.03)",
+          border: active
+            ? `2px solid ${data.color}`
+            : "1.5px solid rgba(255,255,255,0.06)",
+          boxShadow: active
+            ? `0 0 24px ${data.color}40, 0 4px 12px rgba(0,0,0,0.4)`
+            : "0 2px 8px rgba(0,0,0,0.3)",
+        }}
+      >
+        {active && (
+          <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 30%, ${data.color}20, transparent 70%)` }} />
+        )}
+        <SpriteDisplay visualSize={PORTRAIT_SIZE} canvasScale={PORTRAIT_SCALE}>
+          <HeroSprite type={type} size={PORTRAIT_CANVAS} />
+        </SpriteDisplay>
+        {!active && (
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-transparent transition-colors duration-200" />
+        )}
+      </div>
       <span
-        className="text-[10px] sm:text-xs font-bold"
+        className="text-[7px] sm:text-[8px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors duration-200"
         style={{ color: active ? data.color : "rgba(255,255,255,0.2)" }}
       >
-        {HERO_INITIALS[type]}
+        {data.name.split(" ")[0]}
       </span>
       {active && (
-        <div
-          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-          style={{ background: data.color }}
-        />
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ background: data.color, boxShadow: `0 0 8px ${data.color}80` }} />
       )}
     </button>
   );
 }
 
-function SpellSlot({ type }: { type: SpellType }) {
+function SpellCard({ type }: { type: SpellType }) {
   const data = SPELL_DATA[type];
+  const spellColor = (data as Record<string, unknown>).color as string | undefined;
+  const accent = spellColor ?? T.accent;
+
   return (
-    <div
-      className="relative flex flex-col items-center gap-2 flex-shrink-0 p-3 sm:p-4 transition-all duration-300 hover:scale-[1.03]"
-      style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
-        borderRadius: 6,
-        minWidth: 76,
-      }}
-    >
-      <SlotCorners color={T.accent} />
-      <SpriteDisplay visualSize={SPELL_VISUAL} canvasScale={SPELL_SCALE}>
-        <SpellSprite type={type} size={SPELL_CANVAS} />
-      </SpriteDisplay>
+    <div className="flex flex-col items-center gap-2 group cursor-default">
+      <div
+        className="relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105"
+        style={{
+          background: `linear-gradient(160deg, ${accent}14, rgba(12,8,4,0.9))`,
+          border: `1.5px solid ${accent}25`,
+          boxShadow: `0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04)`,
+        }}
+      >
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{ boxShadow: `0 0 24px ${accent}20, inset 0 0 16px ${accent}08` }}
+        />
+        <SpriteDisplay visualSize={SPELL_VIS} canvasScale={SPELL_SCALE}>
+          <SpellSprite type={type} size={SPELL_CANVAS} />
+        </SpriteDisplay>
+      </div>
       <span
-        className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-center max-w-[80px] leading-tight"
-        style={{ color: `rgba(${T.accentRgb},0.5)` }}
+        className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-center max-w-[80px] leading-tight"
+        style={{ color: `${accent}70` }}
       >
         {data.name}
       </span>
@@ -151,230 +135,205 @@ function SpellSlot({ type }: { type: SpellType }) {
 }
 
 export function HeroRoster() {
-  const { active, next, prev, goTo } = useCarousel(HERO_ORDER.length, 4000);
-  const currentType = HERO_ORDER[active];
-  const currentData = HERO_DATA[currentType];
-  const currentRole = HERO_ROLES[currentType];
-  const heroBars = getHeroBars(currentData);
+  const { active, next, prev, goTo } = useCarousel(HERO_ORDER.length, 4500);
+  const hero = HERO_ORDER[active];
+  const data = HERO_DATA[hero];
+  const role = HERO_ROLES[hero];
 
-  const handlePortraitClick = useCallback(
-    (i: number) => goTo(i),
-    [goTo],
-  );
+  const handleSelect = useCallback((i: number) => goTo(i), [goTo]);
 
   return (
-    <section className="py-16 sm:py-24 overflow-hidden">
+    <section className="relative py-20 sm:py-28 overflow-hidden">
+      {/* Section atmospheric background — hero colored */}
       <div
-        className="h-px mx-auto w-4/5 max-w-xl"
+        className="absolute inset-0 transition-colors duration-700 pointer-events-none"
         style={{
-          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.25), transparent)`,
+          background: `radial-gradient(ellipse 80% 60% at 50% 35%, ${data.color}08, transparent 60%)`,
         }}
       />
+      <div className="absolute inset-0 landing-texture-dots pointer-events-none" />
 
-      <div className="text-center mt-10 sm:mt-16 mb-8 sm:mb-12">
-        <h3
-          className="text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase mb-1.5"
-          style={{ color: `rgba(${T.accentRgb},0.3)` }}
-        >
-          Barracks
-        </h3>
-        <h2
-          className="text-xl sm:text-3xl font-bold tracking-wider"
-          style={{
-            color: T.accent,
-            textShadow: `0 0 30px rgba(${T.accentRgb},0.2)`,
-          }}
-        >
-          Operator Select
-        </h2>
-      </div>
+      <div className="relative z-10">
+        <SectionFlourish />
 
-      <div className="relative mx-3 sm:mx-6 lg:mx-12">
-        <CarouselArrow
-          direction="left"
-          onClick={prev}
-          accent={currentData.color}
-        />
-        <CarouselArrow
-          direction="right"
-          onClick={next}
-          accent={currentData.color}
-        />
+        <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
+          <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
+            9 Unique Champions
+          </p>
+          <h2
+            className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
+            style={{
+              color: T.accent,
+              textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
+            }}
+          >
+            Choose Your Hero
+          </h2>
+        </div>
 
-        <div
-          className="relative rounded-lg"
-          style={{
-            background:
-              "linear-gradient(170deg, rgba(18,16,22,0.95), rgba(10,8,14,0.98))",
-            border: "1px solid rgba(255,255,255,0.05)",
-            borderLeft: `2px solid ${currentData.color}44`,
-          }}
-        >
-          <PanelCorners color={currentData.color} />
+        {/* Hero selector strip */}
+        <div className="flex justify-center gap-2 sm:gap-3 px-4 mb-8 sm:mb-10 flex-wrap">
+          {HERO_ORDER.map((type, i) => (
+            <HeroCard key={type} type={type} active={i === active} onClick={() => handleSelect(i)} />
+          ))}
+        </div>
 
-          <div className="flex flex-col md:flex-row">
-            {/* Left — large hero sprite fills column */}
-            <div
-              key={`hero-${currentType}`}
-              className="flex flex-col items-center justify-center p-4 sm:p-6 md:w-[45%] md:border-r md:min-h-[360px]"
-              style={{
-                animation: "landing-tower-enter 0.35s ease-out",
-                borderRightColor: "rgba(255,255,255,0.04)",
-                background: `radial-gradient(ellipse at 50% 40%, ${currentData.color}08, transparent 70%)`,
-              }}
-            >
-              <SpriteDisplay
-                visualSize={HERO_BIG_VISUAL}
-                canvasScale={HERO_BIG_SCALE}
-              >
-                <HeroSprite
-                  type={currentType}
-                  size={HERO_BIG_CANVAS}
-                  animated
-                />
-              </SpriteDisplay>
-              <div className="-mt-3">
-                <IsoPlatform
-                  width={130}
-                  depth={5}
-                  color={currentData.color}
-                />
-              </div>
-            </div>
-
-            {/* Right — details */}
-            <div
-              key={`details-${currentType}`}
-              className="flex-1 p-5 sm:p-7 flex flex-col gap-3 sm:gap-4 justify-center"
-              style={{ animation: "landing-tower-enter 0.4s ease-out" }}
-            >
-              <div>
-                <h3
-                  className="text-xl sm:text-2xl font-bold tracking-wider"
-                  style={{ color: currentData.color }}
-                >
-                  {currentData.name}
-                </h3>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span
-                    className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-sm"
-                    style={{
-                      color: `${currentData.color}cc`,
-                      background: `${currentData.color}12`,
-                      border: `1px solid ${currentData.color}25`,
-                    }}
-                  >
-                    {currentRole.label}
-                  </span>
-                  {currentData.isRanged && (
-                    <span
-                      className="text-[7px] sm:text-[8px] font-semibold uppercase tracking-wider"
-                      style={{ color: "rgba(255,255,255,0.2)" }}
-                    >
-                      Ranged
-                    </span>
-                  )}
-                  {currentData.isFlying && (
-                    <span
-                      className="text-[7px] sm:text-[8px] font-semibold uppercase tracking-wider"
-                      style={{ color: "rgba(255,255,255,0.2)" }}
-                    >
-                      Flying
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:gap-2.5">
-                {heroBars.map((bar) => (
-                  <StatBar
-                    key={bar.label}
-                    label={bar.label}
-                    pct={bar.pct}
-                    display={bar.display}
-                    color={currentData.color}
-                  />
-                ))}
-              </div>
-
+        {/* Main hero showcase */}
+        <div className="mx-3 sm:mx-6 lg:mx-12">
+          <div
+            className="relative rounded-2xl overflow-hidden"
+            style={{
+              background: `linear-gradient(170deg, ${data.color}08, rgba(12,8,4,0.97), ${data.color}04)`,
+              border: `1px solid ${data.color}20`,
+              boxShadow: `0 0 80px ${data.color}08, 0 20px 60px rgba(0,0,0,0.5)`,
+              transition: "border-color 0.5s, box-shadow 0.5s",
+            }}
+          >
+            <div className="flex flex-col lg:flex-row">
+              {/* Left — dramatic hero display */}
               <div
-                className="relative p-3 sm:p-4 rounded-md"
-                style={{
-                  background: `${currentData.color}08`,
-                  border: `1px solid ${currentData.color}18`,
-                }}
+                key={`hero-${hero}`}
+                className="relative flex items-center justify-center py-8 sm:py-12 lg:w-[45%]"
+                style={{ animation: "landing-hero-reveal 0.5s ease-out" }}
               >
-                <span
-                  className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider block"
-                  style={{ color: `${currentData.color}aa` }}
+                {/* Radial glow behind sprite */}
+                <div
+                  className="absolute top-1/2 left-1/2 w-[280px] h-[280px] -translate-x-1/2 -translate-y-1/2 animate-landing-glow-breathe pointer-events-none"
+                  style={{ background: `radial-gradient(circle, ${data.color}18, ${data.color}06 40%, transparent 70%)` }}
+                />
+
+                {/* Decorative ring */}
+                <div
+                  className="absolute top-1/2 left-1/2 w-[220px] h-[220px] rounded-full pointer-events-none"
+                  style={{
+                    border: `1px solid ${data.color}15`,
+                    animation: "landing-ring-rotate 30s linear infinite",
+                  }}
                 >
-                  {currentData.ability}
-                </span>
-                <p
-                  className="text-[10px] sm:text-xs mt-1 leading-relaxed"
-                  style={{ color: `rgba(${T.accentRgb},0.4)` }}
+                  {[0, 90, 180, 270].map((deg) => (
+                    <div
+                      key={deg}
+                      className="absolute w-2 h-2 rounded-full"
+                      style={{
+                        top: "50%", left: "50%",
+                        transform: `rotate(${deg}deg) translateY(-110px) translate(-50%, -50%)`,
+                        background: `${data.color}40`,
+                        boxShadow: `0 0 6px ${data.color}30`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <div className="relative z-10">
+                  <SpriteDisplay visualSize={HERO_BIG} canvasScale={HERO_BIG_SCALE}>
+                    <HeroSprite type={hero} size={HERO_BIG_CANVAS} animated />
+                  </SpriteDisplay>
+                </div>
+
+                {/* Nav arrows */}
+                <button onClick={prev} className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${data.color}25` }}>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={data.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button onClick={next} className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${data.color}25` }}>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke={data.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+              </div>
+
+              {/* Right — hero info */}
+              <div
+                key={`info-${hero}`}
+                className="flex-1 p-6 sm:p-8 lg:p-10 flex flex-col justify-center gap-5"
+                style={{ animation: "landing-tower-enter 0.45s ease-out" }}
+              >
+                {/* Name + role */}
+                <div>
+                  <h3
+                    className="text-3xl sm:text-4xl font-black font-cinzel tracking-wide"
+                    style={{ color: data.color, textShadow: `0 0 30px ${data.color}30` }}
+                  >
+                    {data.name}
+                  </h3>
+                  <div className="flex items-center gap-3 mt-3">
+                    <span
+                      className="text-[9px] sm:text-[11px] font-bold uppercase tracking-[0.25em] px-3 py-1.5 rounded-md"
+                      style={{
+                        color: data.color,
+                        background: `${data.color}15`,
+                        border: `1px solid ${data.color}30`,
+                      }}
+                    >
+                      {role.label}
+                    </span>
+                    {data.isRanged && (
+                      <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>Ranged</span>
+                    )}
+                    {data.isFlying && (
+                      <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>Flying</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stat blocks */}
+                <div className="flex gap-2 sm:gap-3 flex-wrap">
+                  <HeroStatBlock label="Health" value={`${data.hp}`} color={data.color} />
+                  <HeroStatBlock label="Attack" value={`${data.damage}`} color={data.color} />
+                  <HeroStatBlock label="Range" value={`${data.range}`} color={data.color} />
+                  <HeroStatBlock label="Speed" value={data.speed.toFixed(1)} color={data.color} />
+                </div>
+
+                {/* Ability callout */}
+                <div
+                  className="relative p-4 sm:p-5 rounded-xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${data.color}0e, rgba(20,16,10,0.8))`,
+                    border: `1px solid ${data.color}20`,
+                  }}
                 >
-                  {currentData.abilityDesc}
+                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${data.color}30, transparent)` }} />
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: `${data.color}50` }}>
+                    Special Ability
+                  </p>
+                  <h4 className="text-sm sm:text-base font-bold" style={{ color: `${data.color}dd` }}>
+                    {data.ability}
+                  </h4>
+                  <p className="text-[11px] sm:text-xs mt-1.5 leading-relaxed" style={{ color: `rgba(${T.accentRgb},0.4)` }}>
+                    {data.abilityDesc}
+                  </p>
+                </div>
+
+                {/* Lore */}
+                <p className="text-[10px] sm:text-[11px] italic leading-relaxed" style={{ color: `rgba(${T.accentRgb},0.2)` }}>
+                  &ldquo;{data.description}&rdquo;
                 </p>
               </div>
-
-              <p
-                className="text-[9px] sm:text-[11px] italic leading-relaxed"
-                style={{ color: `rgba(${T.accentRgb},0.25)` }}
-              >
-                {currentData.description}
-              </p>
             </div>
-          </div>
-
-          <div
-            className="h-px w-full"
-            style={{ background: "rgba(255,255,255,0.04)" }}
-          />
-
-          <div className="p-3 sm:p-4 flex items-center justify-center gap-1.5 sm:gap-2">
-            {HERO_ORDER.map((type, i) => (
-              <HeroPortrait
-                key={type}
-                type={type}
-                active={i === active}
-                onClick={() => handlePortraitClick(i)}
-              />
-            ))}
           </div>
         </div>
 
-        <CarouselDots
-          count={HERO_ORDER.length}
-          active={active}
-          onDot={goTo}
-          accent={currentData.color}
-        />
-      </div>
+        {/* Spellbook section */}
+        <div className="mt-24 sm:mt-28">
+          <SectionFlourish />
+          <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
+            <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
+              6 Arcane Abilities
+            </p>
+            <h2
+              className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
+              style={{
+                color: T.accent,
+                textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
+              }}
+            >
+              The Spellbook
+            </h2>
+          </div>
 
-      {/* Spell loadout */}
-      <div className="text-center mt-16 sm:mt-20 mb-6 sm:mb-10">
-        <h3
-          className="text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase mb-1.5"
-          style={{ color: `rgba(${T.accentRgb},0.3)` }}
-        >
-          Arsenal
-        </h3>
-        <h2
-          className="text-xl sm:text-3xl font-bold tracking-wider"
-          style={{
-            color: T.accent,
-            textShadow: `0 0 30px rgba(${T.accentRgb},0.2)`,
-          }}
-        >
-          Spell Loadout
-        </h2>
-      </div>
-
-      <div className="flex gap-2 sm:gap-4 justify-center flex-wrap px-4 sm:px-6">
-        {SPELL_ORDER.map((type) => (
-          <SpellSlot key={type} type={type} />
-        ))}
+          <div className="flex gap-4 sm:gap-6 justify-center flex-wrap px-4 sm:px-8">
+            {SPELL_ORDER.map((type) => (
+              <SpellCard key={type} type={type} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -159,14 +159,14 @@ function drawTassetSide(
   skirtTop: number,
   bandCount: number,
   bandHeight: number,
-  totalHeight: number,
+  _totalHeight: number,
   gapHalf: number,
   gemPulse: number,
-  isAttacking: boolean,
-  attackIntensity: number,
-  flamePulse: number,
+  _isAttacking: boolean,
+  _attackIntensity: number,
+  _flamePulse: number,
 ) {
-  const shear = size * -0.12;
+  const shear = size * -0.1;
 
   for (let band = 0; band < bandCount; band++) {
     const innerTopY = skirtTop + band * bandHeight;
@@ -178,204 +178,126 @@ function drawTassetSide(
     const innerGap = gapHalf + band * size * 0.008;
     const sway =
       Math.sin(time * 1.5 + band * 0.7 + side * 0.4) *
-      size *
-      0.003 *
-      (band + 1);
+      size * 0.003 * (band + 1);
 
     const innerX = x + side * innerGap + sway;
     const outerX = x + side * outerW + sway;
 
-    const plateG = ctx.createLinearGradient(
-      innerX,
-      innerTopY,
-      outerX,
-      outerBotY,
-    );
-    if (side === -1) {
-      plateG.addColorStop(0, "#4a4e56");
-      plateG.addColorStop(0.25, "#40444c");
-      plateG.addColorStop(0.55, "#33363e");
-      plateG.addColorStop(1, "#1a1c22");
-    } else {
-      plateG.addColorStop(0, "#1a1c22");
-      plateG.addColorStop(0.45, "#33363e");
-      plateG.addColorStop(0.75, "#40444c");
-      plateG.addColorStop(1, "#4a4e56");
-    }
-
-    ctx.fillStyle = plateG;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(105, 112, 125, 0.5)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
-    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.002);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(5, 5, 5, 0.65)";
-    ctx.lineWidth = 1.2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.stroke();
-
-    // Black border for contrast, then gold inner trim
-    ctx.strokeStyle = "#0a0a0a";
-    ctx.lineWidth = 1.4 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.strokeStyle = "#7a5a10";
-    ctx.lineWidth = 0.7 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
-    ctx.closePath();
-    ctx.stroke();
-
-    // Engraved diagonal filigree on each plate
-    {
-      const midIX = (innerX + outerX) * 0.5;
-      const midIY = (innerTopY + outerTopY) * 0.5;
-      ctx.save();
+    const drawPlatePath = () => {
       ctx.beginPath();
       ctx.moveTo(innerX, innerTopY);
       ctx.lineTo(outerX, outerTopY);
       ctx.lineTo(outerX + side * size * 0.004, outerBotY);
       ctx.lineTo(innerX - side * size * 0.002, innerBotY);
       ctx.closePath();
-      ctx.clip();
-      // Gold diagonal swirl
-      ctx.strokeStyle = `rgba(154, 122, 24, ${0.18 + band * 0.03})`;
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(innerX + side * size * 0.02, innerTopY + bandHeight * 0.2);
-      ctx.quadraticCurveTo(
-        midIX + side * size * 0.03, midIY + bandHeight * 0.3,
-        outerX - side * size * 0.02, outerBotY - bandHeight * 0.2,
-      );
-      ctx.stroke();
-      // Decorative notch marks
-      for (let n = 0; n < 2; n++) {
-        const nt = 0.3 + n * 0.4;
-        const nx = innerX + nt * (outerX - innerX);
-        const nyTop = innerTopY + nt * (outerTopY - innerTopY);
-        ctx.strokeStyle = `rgba(120, 90, 16, ${0.15 + n * 0.05})`;
-        ctx.lineWidth = 0.4 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(nx - size * 0.008, nyTop + bandHeight * 0.25);
-        ctx.lineTo(nx + size * 0.008, nyTop + bandHeight * 0.65);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
+    };
 
-    const rivetMidT = 0.75;
-    const rivetX = innerX + rivetMidT * (outerX - innerX);
-    const rivetY =
-      innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
-    const rg = ctx.createRadialGradient(
-      rivetX - size * 0.002,
-      rivetY - size * 0.002,
-      0,
-      rivetX,
-      rivetY,
-      size * 0.009,
-    );
-    rg.addColorStop(0, "#ffe080");
-    rg.addColorStop(0.4, "#daa520");
-    rg.addColorStop(1, "#805010");
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
+    // Blue-steel plate fill
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#4e5260");
+      plateG.addColorStop(0.2, "#474b58");
+      plateG.addColorStop(0.5, "#3e4250");
+      plateG.addColorStop(0.8, "#353840");
+      plateG.addColorStop(1, "#2a2e36");
+    } else {
+      plateG.addColorStop(0, "#2a2e36");
+      plateG.addColorStop(0.2, "#353840");
+      plateG.addColorStop(0.5, "#3e4250");
+      plateG.addColorStop(0.8, "#474b58");
+      plateG.addColorStop(1, "#4e5260");
+    }
+    ctx.fillStyle = plateG;
+    drawPlatePath();
     ctx.fill();
 
-    if (band % 2 === 0) {
-      ctx.fillStyle = "#4a4a4a";
-      const scaleCount = 2 + Math.floor(band / 2);
-      for (let sc = 0; sc < scaleCount; sc++) {
-        const t = (sc + 0.5) / scaleCount;
-        const scaleX = innerX + t * (outerX - innerX);
-        const scaleYBase =
-          innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
-        const scaleSize = size * 0.026;
+    // Steel specular highlight along top edge
+    ctx.strokeStyle = `rgba(140, 145, 165, ${0.14 + band * 0.015})`;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.003);
+    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.003);
+    ctx.stroke();
+
+    // Black outline
+    ctx.strokeStyle = "#0a0a0c";
+    ctx.lineWidth = 1.4 * zoom;
+    drawPlatePath();
+    ctx.stroke();
+
+    // Gold trim on bottom edge (angled)
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.0 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(218, 180, 50, ${0.2 + gemPulse * 0.06})`;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerBotY + size * 0.002);
+    ctx.lineTo(outerX + side * size * 0.002, outerBotY + size * 0.002);
+    ctx.stroke();
+
+    // Dark gold accent on top edge
+    ctx.strokeStyle = `rgba(154, 122, 24, ${0.25 + band * 0.03})`;
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.001);
+    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.001);
+    ctx.stroke();
+
+    // Gold rivet near outer edge
+    const rivetT = 0.75;
+    const rivetX = innerX + rivetT * (outerX - innerX);
+    const rivetY = innerTopY + rivetT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(rivetX - size * 0.002, rivetY - size * 0.002, 0, rivetX, rivetY, size * 0.008);
+    rg.addColorStop(0, "#daa520");
+    rg.addColorStop(0.5, "#b89025");
+    rg.addColorStop(1, "#5a4508");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#4a3508";
+    ctx.lineWidth = 0.3 * zoom;
+    ctx.stroke();
+
+    // Inner rivet
+    const rivetT2 = 0.3;
+    const rivetX2 = innerX + rivetT2 * (outerX - innerX);
+    const rivetY2 = innerTopY + rivetT2 * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg2 = ctx.createRadialGradient(rivetX2 - size * 0.001, rivetY2 - size * 0.001, 0, rivetX2, rivetY2, size * 0.006);
+    rg2.addColorStop(0, "#daa520");
+    rg2.addColorStop(0.5, "#a07818");
+    rg2.addColorStop(1, "#5a4508");
+    ctx.fillStyle = rg2;
+    ctx.beginPath();
+    ctx.arc(rivetX2, rivetY2, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crimson lacing between plates (except last plate)
+    if (band < bandCount - 1) {
+      const lacingCount = 2;
+      for (let lc = 0; lc < lacingCount; lc++) {
+        const lcT = (lc + 1) / (lacingCount + 1);
+        const lcX = innerX + lcT * (outerX - innerX);
+        const lcYinner = innerBotY - size * 0.004;
+        const lcYouter = innerBotY + bandHeight * 0.15;
+        ctx.strokeStyle = `rgba(140, 30, 30, ${0.45 + gemPulse * 0.1})`;
+        ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
-        ctx.moveTo(scaleX, scaleYBase - scaleSize * 0.3);
-        ctx.quadraticCurveTo(
-          scaleX + scaleSize,
-          scaleYBase,
-          scaleX,
-          scaleYBase + scaleSize * 0.6,
-        );
-        ctx.quadraticCurveTo(
-          scaleX - scaleSize,
-          scaleYBase,
-          scaleX,
-          scaleYBase - scaleSize * 0.3,
-        );
-        ctx.fill();
+        ctx.moveTo(lcX, lcYinner);
+        ctx.lineTo(lcX, lcYouter);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(200, 60, 60, ${0.2 + gemPulse * 0.06})`;
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(lcX + size * 0.002, lcYinner + size * 0.003);
+        ctx.lineTo(lcX + size * 0.002, lcYouter - size * 0.003);
+        ctx.stroke();
       }
     }
-
-    if (band % 2 === 1) {
-      const midT = 0.5;
-      const accentInnerX = innerX + side * size * 0.015;
-      const accentOuterX = outerX - side * size * 0.015;
-      const accentInnerY = innerTopY + bandHeight * midT;
-      const accentOuterY = outerTopY + bandHeight * midT;
-      ctx.strokeStyle = `rgba(220, 38, 38, ${0.25 + gemPulse * 0.15})`;
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.shadowColor = "#dc2626";
-      ctx.shadowBlur = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(accentInnerX, accentInnerY);
-      ctx.lineTo(accentOuterX, accentOuterY);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
-  }
-
-  if (isAttacking) {
-    const lastBand = bandCount - 1;
-    const outerW = size * (0.42 + lastBand * 0.035);
-    const innerGap = gapHalf + lastBand * size * 0.008;
-    const innerBotY = skirtTop + totalHeight;
-    const outerBotY = innerBotY + shear;
-    const innerX = x + side * innerGap;
-    const outerX = x + side * outerW;
-    ctx.strokeStyle = `rgba(255, 102, 48, ${0.35 * attackIntensity * flamePulse})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerBotY);
-    const segs = 5;
-    for (let f = 0; f < segs; f++) {
-      const t1 = (f + 0.5) / segs;
-      const t2 = (f + 1) / segs;
-      const mx = innerX + t1 * (outerX - innerX);
-      const my = innerBotY + t1 * (outerBotY - innerBotY);
-      const ex = innerX + t2 * (outerX - innerX);
-      const ey = innerBotY + t2 * (outerBotY - innerBotY);
-      const fWave = Math.sin(time * 7 + f * 0.9 + side * 2) * size * 0.02;
-      ctx.lineTo(mx, my + size * 0.018 + fWave);
-      ctx.lineTo(ex, ey);
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
   }
 }
 
@@ -678,6 +600,71 @@ function drawSkirtBelt(
   ctx.shadowBlur = 0;
 }
 
+function drawArmorChain(
+  ctx: CanvasRenderingContext2D,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  size: number,
+  zoom: number,
+  time: number,
+  gemPulse: number,
+  sag: number,
+  linkCount: number,
+) {
+  const midX = (x1 + x2) * 0.5;
+  const midY = (y1 + y2) * 0.5;
+  const sagAmt = sag + Math.sin(time * 2.2) * size * 0.003;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const perpX = len > 0 ? -dy / len : 0;
+  const perpY = len > 0 ? dx / len : 1;
+
+  ctx.strokeStyle = `rgba(200, 165, 50, ${0.45 + gemPulse * 0.12})`;
+  ctx.lineWidth = 1.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.quadraticCurveTo(midX + perpX * sagAmt, midY + perpY * sagAmt, x2, y2);
+  ctx.stroke();
+
+  for (let i = 0; i <= linkCount; i++) {
+    const t = i / linkCount;
+    const sagT = 4 * t * (1 - t);
+    const lx = x1 + t * dx + perpX * sagAmt * sagT;
+    const ly = y1 + t * dy + perpY * sagAmt * sagT;
+
+    const lg = ctx.createRadialGradient(lx - size * 0.002, ly - size * 0.002, 0, lx, ly, size * 0.01);
+    lg.addColorStop(0, "#ffe080");
+    lg.addColorStop(0.5, "#daa520");
+    lg.addColorStop(1, "#805010");
+    ctx.fillStyle = lg;
+    ctx.beginPath();
+    const linkW = size * 0.009;
+    const linkH = size * 0.006;
+    const angle = i % 2 === 0 ? 0.35 : -0.35;
+    ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#604008";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+
+  for (let ep = 0; ep < 2; ep++) {
+    const epX = ep === 0 ? x1 : x2;
+    const epY = ep === 0 ? y1 : y2;
+    ctx.fillStyle = "#daa520";
+    ctx.beginPath();
+    ctx.arc(epX, epY, size * 0.01, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#805010";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.stroke();
+  }
+}
+
 export function drawCaptainHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -797,7 +784,7 @@ export function drawCaptainHero(
   // Cape shadow on ground
   ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.72, size * 0.5, size * 0.06, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.72, size * 0.82, size * 0.07, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Cape inner glow layer (warm fire ambient)
@@ -807,23 +794,23 @@ export function drawCaptainHero(
   capeGlowGrad.addColorStop(1, "rgba(80, 10, 10, 0.08)");
   ctx.fillStyle = capeGlowGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.28, y - size * 0.2);
+  ctx.moveTo(x - size * 0.42, y - size * 0.2);
   ctx.bezierCurveTo(
-    x - size * 0.65 - capeWave * size, y + size * 0.2,
-    x - size * 0.6 - capeWave2 * size, y + size * 0.5,
-    x - size * 0.5, y + size * 0.72,
+    x - size * 1.0 - capeWave * size, y + size * 0.2,
+    x - size * 0.95 - capeWave2 * size, y + size * 0.5,
+    x - size * 0.8, y + size * 0.72,
   );
-  ctx.lineTo(x + size * 0.5, y + size * 0.72);
+  ctx.lineTo(x + size * 0.8, y + size * 0.72);
   ctx.bezierCurveTo(
-    x + size * 0.6 + capeWave2 * size, y + size * 0.5,
-    x + size * 0.65 + capeWave * size, y + size * 0.2,
-    x + size * 0.28, y - size * 0.2,
+    x + size * 0.95 + capeWave2 * size, y + size * 0.5,
+    x + size * 1.0 + capeWave * size, y + size * 0.2,
+    x + size * 0.42, y - size * 0.2,
   );
   ctx.closePath();
   ctx.fill();
 
   // Cape main body — rich dark crimson with cross-gradient for depth
-  const capeGrad = ctx.createLinearGradient(x - size * 0.6, y, x + size * 0.6, y);
+  const capeGrad = ctx.createLinearGradient(x - size * 0.95, y, x + size * 0.95, y);
   capeGrad.addColorStop(0, "#2a0303");
   capeGrad.addColorStop(0.12, "#4a0606");
   capeGrad.addColorStop(0.3, "#7a0e0e");
@@ -833,17 +820,17 @@ export function drawCaptainHero(
   capeGrad.addColorStop(1, "#2a0303");
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.26, y - size * 0.22);
+  ctx.moveTo(x - size * 0.40, y - size * 0.22);
   ctx.bezierCurveTo(
-    x - size * 0.6 - capeWave * size, y + size * 0.15,
-    x - size * 0.55 - capeWave2 * size, y + size * 0.48,
-    x - size * 0.45, y + size * 0.68,
+    x - size * 0.95 - capeWave * size, y + size * 0.15,
+    x - size * 0.88 - capeWave2 * size, y + size * 0.48,
+    x - size * 0.74, y + size * 0.68,
   );
-  ctx.lineTo(x + size * 0.45, y + size * 0.68);
+  ctx.lineTo(x + size * 0.74, y + size * 0.68);
   ctx.bezierCurveTo(
-    x + size * 0.55 + capeWave2 * size, y + size * 0.48,
-    x + size * 0.6 + capeWave * size, y + size * 0.15,
-    x + size * 0.26, y - size * 0.22,
+    x + size * 0.88 + capeWave2 * size, y + size * 0.48,
+    x + size * 0.95 + capeWave * size, y + size * 0.15,
+    x + size * 0.40, y - size * 0.22,
   );
   ctx.closePath();
   ctx.fill();
@@ -855,25 +842,25 @@ export function drawCaptainHero(
   capeVGrad.addColorStop(1, "rgba(0, 0, 0, 0.3)");
   ctx.fillStyle = capeVGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.26, y - size * 0.22);
+  ctx.moveTo(x - size * 0.40, y - size * 0.22);
   ctx.bezierCurveTo(
-    x - size * 0.6 - capeWave * size, y + size * 0.15,
-    x - size * 0.55 - capeWave2 * size, y + size * 0.48,
-    x - size * 0.45, y + size * 0.68,
+    x - size * 0.95 - capeWave * size, y + size * 0.15,
+    x - size * 0.88 - capeWave2 * size, y + size * 0.48,
+    x - size * 0.74, y + size * 0.68,
   );
-  ctx.lineTo(x + size * 0.45, y + size * 0.68);
+  ctx.lineTo(x + size * 0.74, y + size * 0.68);
   ctx.bezierCurveTo(
-    x + size * 0.55 + capeWave2 * size, y + size * 0.48,
-    x + size * 0.6 + capeWave * size, y + size * 0.15,
-    x + size * 0.26, y - size * 0.22,
+    x + size * 0.88 + capeWave2 * size, y + size * 0.48,
+    x + size * 0.95 + capeWave * size, y + size * 0.15,
+    x + size * 0.40, y - size * 0.22,
   );
   ctx.closePath();
   ctx.fill();
 
   // Fabric fold lines (subtle vertical drapes)
   ctx.globalAlpha = 0.12;
-  for (let fold = -2; fold <= 2; fold++) {
-    const foldX = x + fold * size * 0.12;
+  for (let fold = -3; fold <= 3; fold++) {
+    const foldX = x + fold * size * 0.16;
     const foldWave = Math.sin(time * 2.5 + fold * 1.2) * size * 0.01;
     ctx.strokeStyle = fold < 0 ? "#000" : "#aa6060";
     ctx.lineWidth = 1.0 * zoom;
@@ -882,7 +869,7 @@ export function drawCaptainHero(
     ctx.bezierCurveTo(
       foldX + foldWave, y + size * 0.15,
       foldX - foldWave, y + size * 0.4,
-      foldX + fold * size * 0.02, y + size * 0.65,
+      foldX + fold * size * 0.03, y + size * 0.65,
     );
     ctx.stroke();
   }
@@ -894,13 +881,13 @@ export function drawCaptainHero(
   ctx.shadowColor = "#ff4400";
   ctx.shadowBlur = 6 * zoom * flamePulse;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.45, y + size * 0.68);
-  for (let flame = 0; flame < 12; flame++) {
-    const flameX = x - size * 0.45 + flame * size * 0.075;
+  ctx.moveTo(x - size * 0.74, y + size * 0.68);
+  for (let flame = 0; flame < 20; flame++) {
+    const flameX = x - size * 0.74 + flame * size * 0.074;
     const flameWave = Math.sin(time * 6 + flame * 0.8) * size * 0.035;
     const flameHeight = Math.sin(time * 5 + flame * 0.5) * size * 0.018 + size * 0.02;
-    ctx.lineTo(flameX + size * 0.0375, y + size * 0.68 + flameHeight + flameWave);
-    ctx.lineTo(flameX + size * 0.075, y + size * 0.68);
+    ctx.lineTo(flameX + size * 0.037, y + size * 0.68 + flameHeight + flameWave);
+    ctx.lineTo(flameX + size * 0.074, y + size * 0.68);
   }
   ctx.stroke();
   ctx.shadowBlur = 0;
@@ -911,18 +898,18 @@ export function drawCaptainHero(
   ctx.globalAlpha = 0.5;
   ctx.beginPath();
   ctx.moveTo(x, y + size * 0.08);
-  ctx.quadraticCurveTo(x - size * 0.15, y + size * 0.2, x - size * 0.1, y + size * 0.35);
-  ctx.quadraticCurveTo(x - size * 0.2, y + size * 0.4, x - size * 0.15, y + size * 0.5);
+  ctx.quadraticCurveTo(x - size * 0.22, y + size * 0.2, x - size * 0.15, y + size * 0.35);
+  ctx.quadraticCurveTo(x - size * 0.3, y + size * 0.4, x - size * 0.22, y + size * 0.5);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x, y + size * 0.08);
-  ctx.quadraticCurveTo(x + size * 0.15, y + size * 0.2, x + size * 0.1, y + size * 0.35);
-  ctx.quadraticCurveTo(x + size * 0.2, y + size * 0.4, x + size * 0.15, y + size * 0.5);
+  ctx.quadraticCurveTo(x + size * 0.22, y + size * 0.2, x + size * 0.15, y + size * 0.35);
+  ctx.quadraticCurveTo(x + size * 0.3, y + size * 0.4, x + size * 0.22, y + size * 0.5);
   ctx.stroke();
   // Scrollwork arcs
   for (let side = -1; side <= 1; side += 2) {
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.08, y + size * 0.25, size * 0.04, 0, Math.PI * 1.2);
+    ctx.arc(x + side * size * 0.12, y + size * 0.25, size * 0.05, 0, Math.PI * 1.2);
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -931,19 +918,19 @@ export function drawCaptainHero(
   ctx.strokeStyle = "#9a7a18";
   ctx.lineWidth = 2.0 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.45, y + size * 0.66);
+  ctx.moveTo(x - size * 0.74, y + size * 0.66);
   ctx.bezierCurveTo(
-    x - size * 0.55 - capeWave2 * size, y + size * 0.46,
-    x - size * 0.6 - capeWave * size, y + size * 0.13,
-    x - size * 0.26, y - size * 0.24,
+    x - size * 0.88 - capeWave2 * size, y + size * 0.46,
+    x - size * 0.95 - capeWave * size, y + size * 0.13,
+    x - size * 0.40, y - size * 0.24,
   );
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.45, y + size * 0.66);
+  ctx.moveTo(x + size * 0.74, y + size * 0.66);
   ctx.bezierCurveTo(
-    x + size * 0.55 + capeWave2 * size, y + size * 0.46,
-    x + size * 0.6 + capeWave * size, y + size * 0.13,
-    x + size * 0.26, y - size * 0.24,
+    x + size * 0.88 + capeWave2 * size, y + size * 0.46,
+    x + size * 0.95 + capeWave * size, y + size * 0.13,
+    x + size * 0.40, y - size * 0.24,
   );
   ctx.stroke();
 
@@ -985,48 +972,121 @@ export function drawCaptainHero(
     drawArmorPath();
     ctx.fill();
 
-    // Dragonscale texture (clipped to armor, subtler with gradients)
+    // Samurai-style horizontal plate armor (do) — overlapping bands
+    const doPlates = 6;
+    const doTopY = y - size * 0.26;
+    const doBottomY = y + size * 0.50;
+    const doStep = (doBottomY - doTopY) / doPlates;
+    const doPlateH = doStep * 1.12;
+
     ctx.save();
     drawArmorPath();
     ctx.clip();
-    for (let row = 0; row < 6; row++) {
-      for (let col = -3; col <= 3; col++) {
-        const scaleX = x + col * size * 0.1 + (row % 2) * size * 0.05;
-        const scaleY = y - size * 0.18 + row * size * 0.1;
-        const ss = size * 0.042;
+    for (let pi = 0; pi < doPlates; pi++) {
+      const doBotY = doBottomY - pi * doStep;
+      const doTopPlateY = doBotY - doPlateH;
+      const doMidY = (doTopPlateY + doBotY) * 0.5;
+      const narrowT = pi / (doPlates - 1);
+      const doW = size * (0.52 - narrowT * 0.06);
 
-        const sG = ctx.createRadialGradient(scaleX - ss * 0.2, scaleY - ss * 0.2, 0, scaleX, scaleY, ss);
-        sG.addColorStop(0, "rgba(78, 82, 98, 0.35)");
-        sG.addColorStop(0.6, "rgba(52, 56, 68, 0.25)");
-        sG.addColorStop(1, "rgba(32, 36, 46, 0)");
-        ctx.fillStyle = sG;
+      const dpG = ctx.createLinearGradient(x - doW, doTopPlateY, x + doW, doBotY);
+      dpG.addColorStop(0, "#4e5260");
+      dpG.addColorStop(0.15, "#474b58");
+      dpG.addColorStop(0.4, "#3e4250");
+      dpG.addColorStop(0.7, "#353840");
+      dpG.addColorStop(1, "#2a2e36");
+      ctx.fillStyle = dpG;
+      ctx.beginPath();
+      ctx.rect(x - doW, doTopPlateY, doW * 2, doPlateH);
+      ctx.fill();
+
+      const dpSpec = ctx.createLinearGradient(x, doTopPlateY, x, doTopPlateY + doPlateH * 0.4);
+      dpSpec.addColorStop(0, `rgba(145, 150, 175, ${0.14 - pi * 0.01})`);
+      dpSpec.addColorStop(0.5, `rgba(100, 105, 125, ${0.06 - pi * 0.005})`);
+      dpSpec.addColorStop(1, "rgba(60, 65, 80, 0)");
+      ctx.fillStyle = dpSpec;
+      ctx.beginPath();
+      ctx.rect(x - doW, doTopPlateY, doW * 2, doPlateH * 0.5);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(8, 8, 12, 0.6)";
+      ctx.lineWidth = 1.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - doW, doBotY);
+      ctx.lineTo(x + doW, doBotY);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.0 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - doW + size * 0.01, doBotY - size * 0.002);
+      ctx.lineTo(x + doW - size * 0.01, doBotY - size * 0.002);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(218, 180, 50, ${0.2 + gemPulse * 0.06})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - doW + size * 0.03, doBotY + size * 0.003);
+      ctx.lineTo(x + doW - size * 0.03, doBotY + size * 0.003);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgba(154, 122, 24, ${0.25 + pi * 0.03})`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - doW + size * 0.02, doTopPlateY + size * 0.002);
+      ctx.lineTo(x + doW - size * 0.02, doTopPlateY + size * 0.002);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgba(140, 145, 165, ${0.12 + pi * 0.015})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - doW + size * 0.03, doTopPlateY + size * 0.005);
+      ctx.lineTo(x + doW - size * 0.03, doTopPlateY + size * 0.005);
+      ctx.stroke();
+
+      for (let re = -1; re <= 1; re += 2) {
+        const rvX = x + re * (doW - size * 0.04);
+        const rvY = doMidY;
+        const rvG = ctx.createRadialGradient(rvX - size * 0.002, rvY - size * 0.002, 0, rvX, rvY, size * 0.008);
+        rvG.addColorStop(0, "#daa520");
+        rvG.addColorStop(0.5, "#b89025");
+        rvG.addColorStop(1, "#5a4508");
+        ctx.fillStyle = rvG;
         ctx.beginPath();
-        ctx.moveTo(scaleX, scaleY - ss * 0.35);
-        ctx.quadraticCurveTo(scaleX + ss, scaleY, scaleX, scaleY + ss * 0.55);
-        ctx.quadraticCurveTo(scaleX - ss, scaleY, scaleX, scaleY - ss * 0.35);
+        ctx.arc(rvX, rvY, size * 0.006, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = "rgba(68, 72, 86, 0.2)";
+        ctx.strokeStyle = "#4a3508";
         ctx.lineWidth = 0.3 * zoom;
         ctx.stroke();
+      }
+
+      if (pi < 3) {
+        const scaleCols = 4 + (2 - pi);
+        for (let sc = 0; sc < scaleCols; sc++) {
+          const scT = (sc + 0.5) / scaleCols;
+          const scX = x + (scT - 0.5) * doW * 1.6;
+          ctx.fillStyle = `rgba(55, 58, 66, ${0.22 + pi * 0.03})`;
+          ctx.beginPath();
+          ctx.ellipse(scX, doMidY, size * 0.028, size * 0.015, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = `rgba(154, 122, 24, ${0.1 + pi * 0.02})`;
+          ctx.lineWidth = 0.3 * zoom;
+          ctx.stroke();
+        }
       }
     }
     ctx.restore();
 
-    // Armor plate separation lines (horizontal)
-    ctx.strokeStyle = "rgba(20, 20, 22, 0.4)";
-    ctx.lineWidth = 0.8 * zoom;
-    for (let pl = 0; pl < 3; pl++) {
-      const plY = y + size * 0.08 + pl * size * 0.12;
-      const plW = size * (0.38 - pl * 0.02);
-      ctx.beginPath();
-      ctx.moveTo(x - plW, plY);
-      ctx.quadraticCurveTo(x, plY + size * 0.01, x + plW, plY);
-      ctx.stroke();
-    }
-
+    // Gold V-border (outer)
+    ctx.strokeStyle = "#5a4508";
+    ctx.lineWidth = 5.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.39, y - size * 0.19);
+    ctx.lineTo(x, y + size * 0.19);
+    ctx.lineTo(x + size * 0.39, y - size * 0.19);
+    ctx.stroke();
     // Crimson V-accent with glow
     ctx.shadowColor = "#ff3333";
-    ctx.shadowBlur = 5 * zoom * gemPulse;
+    ctx.shadowBlur = 6 * zoom * gemPulse;
     const vAccG = ctx.createLinearGradient(x - size * 0.4, y - size * 0.2, x, y + size * 0.2);
     vAccG.addColorStop(0, "#8b1515");
     vAccG.addColorStop(0.3, "#cc2020");
@@ -1041,129 +1101,230 @@ export function drawCaptainHero(
     ctx.lineTo(x + size * 0.38, y - size * 0.18);
     ctx.stroke();
     ctx.shadowBlur = 0;
+    // Inner gold V-highlight
+    ctx.strokeStyle = `rgba(218, 168, 32, ${0.35 + gemPulse * 0.15})`;
+    ctx.lineWidth = 1.0 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.36, y - size * 0.17);
+    ctx.lineTo(x, y + size * 0.16);
+    ctx.lineTo(x + size * 0.36, y - size * 0.17);
+    ctx.stroke();
+    // Outer gold V-highlight
+    ctx.strokeStyle = `rgba(154, 122, 24, ${0.28 + gemPulse * 0.1})`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.4, y - size * 0.19);
+    ctx.lineTo(x, y + size * 0.2);
+    ctx.lineTo(x + size * 0.4, y - size * 0.19);
+    ctx.stroke();
 
-    // Gold filigree neckline
-    ctx.strokeStyle = "#9a7a18";
-    ctx.lineWidth = 1.5 * zoom;
+    // Gold filigree neckline — triple-line with shimmer
+    // Outer dark gold border
+    ctx.strokeStyle = "#6a4a08";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.36, y - size * 0.215);
+    ctx.quadraticCurveTo(x - size * 0.1, y - size * 0.275, x, y - size * 0.345);
+    ctx.quadraticCurveTo(x + size * 0.1, y - size * 0.275, x + size * 0.36, y - size * 0.215);
+    ctx.stroke();
+    // Main bright gold line
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.35, y - size * 0.22);
     ctx.quadraticCurveTo(x - size * 0.1, y - size * 0.28, x, y - size * 0.35);
     ctx.quadraticCurveTo(x + size * 0.1, y - size * 0.28, x + size * 0.35, y - size * 0.22);
     ctx.stroke();
-    // Second inner line
-    ctx.strokeStyle = "rgba(154, 122, 24, 0.4)";
-    ctx.lineWidth = 0.8 * zoom;
+    // Inner gold accent
+    ctx.strokeStyle = `rgba(218, 168, 32, ${0.45 + gemPulse * 0.1})`;
+    ctx.lineWidth = 0.9 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x - size * 0.32, y - size * 0.20);
-    ctx.quadraticCurveTo(x - size * 0.08, y - size * 0.26, x, y - size * 0.32);
-    ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.26, x + size * 0.32, y - size * 0.20);
+    ctx.moveTo(x - size * 0.33, y - size * 0.205);
+    ctx.quadraticCurveTo(x - size * 0.09, y - size * 0.265, x, y - size * 0.33);
+    ctx.quadraticCurveTo(x + size * 0.09, y - size * 0.265, x + size * 0.33, y - size * 0.205);
     ctx.stroke();
+    // Shimmer highlight
+    ctx.strokeStyle = `rgba(255, 230, 130, ${0.18 + gemPulse * 0.08})`;
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.3, y - size * 0.21);
+    ctx.quadraticCurveTo(x - size * 0.08, y - size * 0.26, x, y - size * 0.32);
+    ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.26, x + size * 0.3, y - size * 0.21);
+    ctx.stroke();
+    // Gold necklace pendants / diamond studs along neckline
+    for (let nd = 0; nd < 5; nd++) {
+      const ndt = (nd + 1) / 6;
+      const ndx = x + (ndt - 0.5) * size * 0.64;
+      const ndy = y - size * 0.22 - Math.sin(ndt * Math.PI) * size * 0.12;
+      ctx.fillStyle = `rgba(218, 165, 32, ${0.5 + gemPulse * 0.15})`;
+      ctx.beginPath();
+      ctx.moveTo(ndx, ndy - size * 0.008);
+      ctx.lineTo(ndx + size * 0.005, ndy);
+      ctx.lineTo(ndx, ndy + size * 0.008);
+      ctx.lineTo(ndx - size * 0.005, ndy);
+      ctx.closePath();
+      ctx.fill();
+    }
 
-    // Gold side edge trim
+    // Gold side edge trim — double line with bright highlight
     for (let side = -1; side <= 1; side += 2) {
-      ctx.strokeStyle = "#8a6a15";
-      ctx.lineWidth = 1.2 * zoom;
+      // Dark gold outer edge
+      ctx.strokeStyle = "#6a4a08";
+      ctx.lineWidth = 2.0 * zoom;
       ctx.beginPath();
       ctx.moveTo(x + side * size * 0.32, y - size * 0.3);
       ctx.lineTo(x + side * size * 0.48, y - size * 0.05);
       ctx.lineTo(x + side * size * 0.4, y + size * 0.52);
       ctx.stroke();
+      // Bright gold main trim
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x + side * size * 0.32, y - size * 0.3);
+      ctx.lineTo(x + side * size * 0.48, y - size * 0.05);
+      ctx.lineTo(x + side * size * 0.4, y + size * 0.52);
+      ctx.stroke();
+      // Inner gold shimmer line
+      ctx.strokeStyle = `rgba(218, 168, 32, ${0.3 + gemPulse * 0.1})`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x + side * size * 0.31, y - size * 0.29);
+      ctx.lineTo(x + side * size * 0.47, y - size * 0.04);
+      ctx.lineTo(x + side * size * 0.39, y + size * 0.5);
+      ctx.stroke();
     }
 
-    // Gold dragon wing filigree on each breast panel
+    // Samurai-style crimson lacing (odoshi) between plates + decoration
     ctx.save();
     drawArmorPath();
     ctx.clip();
-    for (let side = -1; side <= 1; side += 2) {
-      const wgX = x + side * size * 0.18;
-      const wgY = y + size * 0.08;
-      ctx.strokeStyle = `rgba(154, 122, 24, ${0.35 + gemPulse * 0.1})`;
-      ctx.lineWidth = 1.2 * zoom;
-      // Outer wing curve
-      ctx.beginPath();
-      ctx.moveTo(wgX, wgY - size * 0.12);
-      ctx.bezierCurveTo(
-        wgX + side * size * 0.12, wgY - size * 0.08,
-        wgX + side * size * 0.16, wgY + size * 0.02,
-        wgX + side * size * 0.1, wgY + size * 0.1,
-      );
-      ctx.stroke();
-      // Inner ribs
-      for (let r = 0; r < 3; r++) {
-        const t = 0.3 + r * 0.2;
-        ctx.strokeStyle = `rgba(154, 122, 24, ${0.2 + r * 0.05})`;
-        ctx.lineWidth = 0.7 * zoom;
+
+    // Vertical lacing columns connecting plates
+    for (let lc = 0; lc < 5; lc++) {
+      const lcX = x + (lc - 2) * size * 0.15;
+      for (let pi = 0; pi < doPlates - 1; pi++) {
+        const lcBotY = doBottomY - pi * doStep + size * 0.005;
+        const lcTopY = doBottomY - (pi + 1) * doStep - size * 0.005;
+        // Dark crimson cord
+        ctx.strokeStyle = `rgba(140, 30, 30, ${0.45 + gemPulse * 0.1})`;
+        ctx.lineWidth = 1.4 * zoom;
         ctx.beginPath();
-        ctx.moveTo(wgX, wgY - size * 0.12 + r * size * 0.04);
-        ctx.quadraticCurveTo(
-          wgX + side * size * (0.06 + t * 0.06), wgY - size * 0.02 + r * size * 0.03,
-          wgX + side * size * (0.04 + t * 0.04), wgY + size * 0.06,
-        );
+        ctx.moveTo(lcX, lcTopY);
+        ctx.lineTo(lcX, lcBotY);
+        ctx.stroke();
+        // Bright crimson highlight
+        ctx.strokeStyle = `rgba(200, 60, 60, ${0.22 + gemPulse * 0.08})`;
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(lcX + size * 0.002, lcTopY + size * 0.005);
+        ctx.lineTo(lcX + size * 0.002, lcBotY - size * 0.005);
+        ctx.stroke();
+        // Cross-lace knot at each junction
+        const knotY = lcBotY - size * 0.005;
+        ctx.strokeStyle = `rgba(160, 40, 40, ${0.35 + gemPulse * 0.08})`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(lcX - size * 0.008, knotY - size * 0.006);
+        ctx.lineTo(lcX + size * 0.008, knotY + size * 0.006);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(lcX + size * 0.008, knotY - size * 0.006);
+        ctx.lineTo(lcX - size * 0.008, knotY + size * 0.006);
         ctx.stroke();
       }
-      // Decorative dots along wing
-      ctx.fillStyle = `rgba(218, 165, 32, ${0.35 + gemPulse * 0.15})`;
-      for (let d = 0; d < 4; d++) {
-        const dt = 0.2 + d * 0.2;
-        const dx = wgX + side * size * (0.04 + dt * 0.08);
-        const dy = wgY - size * 0.08 + dt * size * 0.16;
+    }
+
+    // Gold filigree arcs on middle plates (indices 2-3)
+    for (let pi = 2; pi <= 3; pi++) {
+      const fgMidY = doBottomY - pi * doStep - doStep * 0.44;
+      for (let sw = 0; sw < 2; sw++) {
+        const swOff = (sw - 0.5) * size * 0.12;
+        ctx.strokeStyle = `rgba(200, 160, 40, ${0.18 + sw * 0.04 + gemPulse * 0.05})`;
+        ctx.lineWidth = 0.5 * zoom;
         ctx.beginPath();
-        ctx.arc(dx, dy, size * 0.005, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(x + swOff, fgMidY, size * 0.03 + sw * size * 0.01, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.stroke();
       }
     }
 
-    // Horizontal engraved lines across the belly
-    for (let ln = 0; ln < 4; ln++) {
-      const lnY = y + size * 0.16 + ln * size * 0.06;
-      ctx.strokeStyle = "rgba(120, 90, 16, 0.2)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(x - size * 0.25 + ln * size * 0.02, lnY);
-      ctx.quadraticCurveTo(x, lnY + size * 0.005, x + size * 0.25 - ln * size * 0.02, lnY);
-      ctx.stroke();
-    }
-
-    // Crimson accent dots flanking the V
-    for (let side = -1; side <= 1; side += 2) {
-      for (let d = 0; d < 3; d++) {
-        const dAlong = 0.3 + d * 0.25;
-        const dx = x + side * size * (0.38 - dAlong * 0.38) * 0.85;
-        const dy = y - size * 0.18 + dAlong * size * 0.36;
-        ctx.fillStyle = `rgba(220, 38, 38, ${0.3 + gemPulse * 0.2})`;
-        ctx.beginPath();
-        ctx.arc(dx + side * size * 0.04, dy, size * 0.006, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Central vertical spine line
-    ctx.strokeStyle = "rgba(154, 122, 24, 0.25)";
-    ctx.lineWidth = 0.6 * zoom;
+    // Central vertical decorative cord (gold)
+    ctx.strokeStyle = `rgba(154, 122, 24, ${0.3 + gemPulse * 0.08})`;
+    ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x, y - size * 0.28);
-    ctx.lineTo(x, y + size * 0.45);
+    ctx.moveTo(x, doTopY);
+    ctx.lineTo(x, doBottomY);
     ctx.stroke();
+    ctx.strokeStyle = `rgba(218, 168, 32, ${0.16 + gemPulse * 0.06})`;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.003, doTopY + size * 0.02);
+    ctx.lineTo(x - size * 0.003, doBottomY - size * 0.02);
+    ctx.stroke();
+
     ctx.restore();
 
-    // Armor border — black for contrast, gold inner trim
+    // Armor border — black for contrast, gold inner trim, bright gold outer
     ctx.strokeStyle = "#0e0e0e";
-    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineWidth = 3.0 * zoom;
     drawArmorPath();
     ctx.stroke();
-    ctx.strokeStyle = "#8a6a15";
-    ctx.lineWidth = 1.2 * zoom;
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.6 * zoom;
+    drawArmorPath();
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(218, 180, 50, ${0.25 + gemPulse * 0.08})`;
+    ctx.lineWidth = 0.6 * zoom;
     drawArmorPath();
     ctx.stroke();
 
-    // Central dragon emblem (more detailed)
+    // Central dragon emblem — elaborate with gold wings and prongs
     {
       const emX = x;
       const emY = y - size * 0.02;
 
+      // Outer gold mandorla (larger backing)
+      const outerEmbG = ctx.createRadialGradient(emX, emY - size * 0.02, 0, emX, emY, size * 0.12);
+      outerEmbG.addColorStop(0, "rgba(180, 140, 30, 0.35)");
+      outerEmbG.addColorStop(0.5, "rgba(140, 110, 20, 0.2)");
+      outerEmbG.addColorStop(1, "rgba(90, 70, 10, 0)");
+      ctx.fillStyle = outerEmbG;
+      ctx.beginPath();
+      ctx.moveTo(emX, emY - size * 0.13);
+      ctx.bezierCurveTo(emX - size * 0.1, emY - size * 0.08, emX - size * 0.09, emY + size * 0.06, emX - size * 0.05, emY + size * 0.12);
+      ctx.lineTo(emX, emY + size * 0.08);
+      ctx.lineTo(emX + size * 0.05, emY + size * 0.12);
+      ctx.bezierCurveTo(emX + size * 0.09, emY + size * 0.06, emX + size * 0.1, emY - size * 0.08, emX, emY - size * 0.13);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gold wing extensions from emblem
+      for (let side = -1; side <= 1; side += 2) {
+        ctx.strokeStyle = `rgba(200, 160, 40, ${0.4 + gemPulse * 0.1})`;
+        ctx.lineWidth = 1.0 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(emX + side * size * 0.04, emY - size * 0.06);
+        ctx.bezierCurveTo(
+          emX + side * size * 0.1, emY - size * 0.1,
+          emX + side * size * 0.14, emY - size * 0.06,
+          emX + side * size * 0.12, emY - size * 0.01,
+        );
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(154, 122, 24, ${0.3 + gemPulse * 0.08})`;
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(emX + side * size * 0.035, emY - size * 0.04);
+        ctx.bezierCurveTo(
+          emX + side * size * 0.08, emY - size * 0.07,
+          emX + side * size * 0.11, emY - size * 0.04,
+          emX + side * size * 0.1, emY + size * 0.01,
+        );
+        ctx.stroke();
+      }
+
       // Emblem backing plate
       const embG = ctx.createRadialGradient(emX, emY - size * 0.02, 0, emX, emY, size * 0.08);
-      embG.addColorStop(0, "#b09025");
+      embG.addColorStop(0, "#d4a82c");
+      embG.addColorStop(0.3, "#b89025");
       embG.addColorStop(0.6, "#8a6a15");
       embG.addColorStop(1, "#5a4508");
       ctx.fillStyle = embG;
@@ -1175,40 +1336,120 @@ export function drawCaptainHero(
       ctx.bezierCurveTo(emX + size * 0.07, emY + size * 0.04, emX + size * 0.08, emY - size * 0.06, emX, emY - size * 0.1);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#5a4508";
-      ctx.lineWidth = 0.6 * zoom;
+      // Double gold border
+      ctx.strokeStyle = "#6a4a08";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(218, 180, 50, ${0.35 + gemPulse * 0.1})`;
+      ctx.lineWidth = 0.5 * zoom;
       ctx.stroke();
 
-      // Center ruby gem
-      ctx.fillStyle = "#dc2626";
+      // Gold prong settings (4 prongs around gem)
+      for (let prong = 0; prong < 4; prong++) {
+        const prongAngle = (prong * Math.PI) / 2 + Math.PI / 4;
+        const prongInner = size * 0.025;
+        const prongOuter = size * 0.045;
+        const px1 = emX + Math.cos(prongAngle) * prongInner;
+        const py1 = emY + Math.sin(prongAngle) * prongInner;
+        const px2 = emX + Math.cos(prongAngle) * prongOuter;
+        const py2 = emY + Math.sin(prongAngle) * prongOuter;
+        ctx.strokeStyle = `rgba(200, 160, 40, ${0.5 + gemPulse * 0.15})`;
+        ctx.lineWidth = 1.0 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(px1, py1);
+        ctx.lineTo(px2, py2);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(218, 165, 32, ${0.55 + gemPulse * 0.15})`;
+        ctx.beginPath();
+        ctx.arc(px2, py2, size * 0.005, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Center ruby gem (larger, more vibrant)
+      const gemG2 = ctx.createRadialGradient(emX - size * 0.008, emY - size * 0.008, 0, emX, emY, size * 0.035);
+      gemG2.addColorStop(0, "#ff6666");
+      gemG2.addColorStop(0.3, "#ee3333");
+      gemG2.addColorStop(0.6, "#dc2626");
+      gemG2.addColorStop(1, "#8b1515");
+      ctx.fillStyle = gemG2;
       ctx.shadowColor = "#ff4444";
-      ctx.shadowBlur = 8 * zoom * gemPulse;
+      ctx.shadowBlur = 10 * zoom * gemPulse;
       ctx.beginPath();
-      ctx.arc(emX, emY, size * 0.03, 0, Math.PI * 2);
+      ctx.arc(emX, emY, size * 0.032, 0, Math.PI * 2);
       ctx.fill();
-      // Gem highlight
-      ctx.fillStyle = "#ff9999";
+      // Gold ring around gem
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.0 * zoom;
       ctx.shadowBlur = 0;
       ctx.beginPath();
-      ctx.arc(emX - size * 0.008, emY - size * 0.008, size * 0.012, 0, Math.PI * 2);
+      ctx.arc(emX, emY, size * 0.035, 0, Math.PI * 2);
+      ctx.stroke();
+      // Gem highlight
+      ctx.fillStyle = "rgba(255, 200, 200, 0.6)";
+      ctx.beginPath();
+      ctx.ellipse(emX - size * 0.008, emY - size * 0.008, size * 0.013, size * 0.008, -0.3, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
 
-    // Waist rivets
+    // Gold waist belt band
+    {
+      const beltY = y + size * 0.42;
+      const beltW = size * 0.4;
+      const beltH = size * 0.04;
+      const beltG = ctx.createLinearGradient(x - beltW, beltY, x + beltW, beltY);
+      beltG.addColorStop(0, "#5a4008");
+      beltG.addColorStop(0.15, "#7a5a10");
+      beltG.addColorStop(0.3, "#9a7a1a");
+      beltG.addColorStop(0.5, "#b89025");
+      beltG.addColorStop(0.7, "#9a7a1a");
+      beltG.addColorStop(0.85, "#7a5a10");
+      beltG.addColorStop(1, "#5a4008");
+      ctx.fillStyle = beltG;
+      ctx.beginPath();
+      ctx.moveTo(x - beltW, beltY - beltH * 0.5);
+      ctx.quadraticCurveTo(x, beltY - beltH * 0.65, x + beltW, beltY - beltH * 0.5);
+      ctx.lineTo(x + beltW, beltY + beltH * 0.5);
+      ctx.quadraticCurveTo(x, beltY + beltH * 0.35, x - beltW, beltY + beltH * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#5a4008";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      // Belt highlight shimmer
+      ctx.strokeStyle = `rgba(230, 200, 100, ${0.2 + gemPulse * 0.08})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - beltW * 0.9, beltY - beltH * 0.3);
+      ctx.quadraticCurveTo(x, beltY - beltH * 0.45, x + beltW * 0.9, beltY - beltH * 0.3);
+      ctx.stroke();
+      // Belt notch engravings
+      for (let bn = 0; bn < 7; bn++) {
+        const bnt = (bn + 1) / 8;
+        const bnx = x + (bnt - 0.5) * beltW * 1.8;
+        ctx.strokeStyle = "rgba(90, 60, 10, 0.4)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(bnx, beltY - beltH * 0.35);
+        ctx.lineTo(bnx, beltY + beltH * 0.35);
+        ctx.stroke();
+      }
+    }
+    // Gold-ringed waist rivets on belt
     for (let r = -2; r <= 2; r++) {
       const rx = x + r * size * 0.13;
       const ry = y + size * 0.42;
-      const rvG = ctx.createRadialGradient(rx - size * 0.002, ry - size * 0.002, 0, rx, ry, size * 0.008);
-      rvG.addColorStop(0, "#888");
-      rvG.addColorStop(0.5, "#555");
-      rvG.addColorStop(1, "#222");
+      const rvG = ctx.createRadialGradient(rx - size * 0.002, ry - size * 0.002, 0, rx, ry, size * 0.01);
+      rvG.addColorStop(0, "#daa520");
+      rvG.addColorStop(0.4, "#b89025");
+      rvG.addColorStop(0.7, "#7a5a10");
+      rvG.addColorStop(1, "#4a3508");
       ctx.fillStyle = rvG;
       ctx.beginPath();
-      ctx.arc(rx, ry, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(rx, ry, size * 0.009, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#7a5a10";
-      ctx.lineWidth = 0.4 * zoom;
+      ctx.strokeStyle = "#5a4508";
+      ctx.lineWidth = 0.5 * zoom;
       ctx.stroke();
     }
   }
@@ -1227,265 +1468,292 @@ export function drawCaptainHero(
     flamePulse,
   );
 
-  // === DRAGON PAULDRONS ===
+  // === ANGULAR DRAGON PAULDRONS (matched to Mathey placement) ===
   for (let side = -1; side <= 1; side += 2) {
-    const pX = x + side * size * 0.5;
-    const pY = y - size * 0.15;
+    const pX = x + side * size * 0.55;
+    const pY = y - size * 0.18;
+    const pW = size * 0.28;
+    const pH = size * 0.20;
 
-    // Shadow beneath pauldron
-    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    // Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
     ctx.beginPath();
-    ctx.ellipse(pX, pY + size * 0.08, size * 0.2, size * 0.06, side * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(pX + size * 0.015, pY + size * 0.04, pW * 1.05, pH * 0.7, side * 0.25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Lower rim plate (layered look)
-    const rimG = ctx.createRadialGradient(pX - side * size * 0.03, pY + size * 0.04, 0, pX, pY + size * 0.04, size * 0.22);
-    rimG.addColorStop(0, "#4a4e58");
-    rimG.addColorStop(0.5, "#35383e");
-    rimG.addColorStop(1, "#1c1e24");
-    ctx.fillStyle = rimG;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY + size * 0.04, size * 0.23, size * 0.14, side * 0.35, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#0a0a0a";
-    ctx.lineWidth = 1.6 * zoom;
-    ctx.stroke();
-    ctx.strokeStyle = "#7a5a10";
-    ctx.lineWidth = 0.7 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY + size * 0.04, size * 0.23, size * 0.14, side * 0.35, 0, Math.PI * 2);
-    ctx.stroke();
+    // Angular pauldron path — pointed outward spike with ridged top and layered bottom
+    const drawPauldronPath = () => {
+      ctx.beginPath();
+      // Top center (inner edge, near neck)
+      ctx.moveTo(pX - side * pW * 0.55, pY - pH * 0.85);
+      // Top ridge rises to a pointed peak
+      ctx.lineTo(pX - side * pW * 0.1, pY - pH * 1.1);
+      ctx.lineTo(pX + side * pW * 0.3, pY - pH * 0.9);
+      // Outer spike — pointed flange jutting outward
+      ctx.lineTo(pX + side * pW * 0.85, pY - pH * 0.5);
+      ctx.lineTo(pX + side * pW * 1.1, pY - pH * 0.05);
+      // Lower outer edge curves back under
+      ctx.quadraticCurveTo(
+        pX + side * pW * 1.0, pY + pH * 0.55,
+        pX + side * pW * 0.6, pY + pH * 0.8,
+      );
+      // Bottom edge — segmented scallop
+      ctx.quadraticCurveTo(pX + side * pW * 0.2, pY + pH * 0.95, pX, pY + pH * 0.75);
+      ctx.quadraticCurveTo(pX - side * pW * 0.2, pY + pH * 0.85, pX - side * pW * 0.5, pY + pH * 0.6);
+      // Inner edge back up
+      ctx.quadraticCurveTo(
+        pX - side * pW * 0.7, pY + pH * 0.1,
+        pX - side * pW * 0.55, pY - pH * 0.85,
+      );
+      ctx.closePath();
+    };
 
-    // Main pauldron dome
-    const pG = ctx.createRadialGradient(
-      pX - side * size * 0.06, pY - size * 0.05, size * 0.02,
-      pX, pY, size * 0.22,
+    // Blue-steel fill
+    const pG = ctx.createLinearGradient(
+      pX - side * pW * 0.5, pY - pH,
+      pX + side * pW * 1.0, pY + pH * 0.8,
     );
-    pG.addColorStop(0, "#686e78");
-    pG.addColorStop(0.2, "#555a66");
-    pG.addColorStop(0.5, "#404550");
-    pG.addColorStop(0.8, "#2e3238");
-    pG.addColorStop(1, "#1a1c22");
-    ctx.fillStyle = pG;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.21, size * 0.15, side * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Specular highlight
-    const pSpec = ctx.createRadialGradient(pX - side * size * 0.07, pY - size * 0.06, 0, pX - side * size * 0.05, pY - size * 0.04, size * 0.12);
-    pSpec.addColorStop(0, "rgba(160, 160, 175, 0.25)");
-    pSpec.addColorStop(0.5, "rgba(100, 100, 115, 0.1)");
-    pSpec.addColorStop(1, "rgba(60, 60, 70, 0)");
-    ctx.fillStyle = pSpec;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.2, size * 0.14, side * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Dragon scale texture on pauldron (clipped)
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.2, size * 0.14, side * 0.4, 0, Math.PI * 2);
-    ctx.clip();
-    for (let sr = 0; sr < 3; sr++) {
-      for (let sc = -1; sc <= 1; sc++) {
-        const sx = pX + (sc * size * 0.07 + sr * side * size * 0.02);
-        const sy = pY - size * 0.06 + sr * size * 0.06;
-        ctx.fillStyle = "rgba(60, 60, 68, 0.3)";
-        ctx.beginPath();
-        ctx.ellipse(sx, sy, size * 0.035, size * 0.022, side * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "rgba(75, 75, 82, 0.2)";
-        ctx.lineWidth = 0.3 * zoom;
-        ctx.stroke();
-      }
+    if (side === -1) {
+      pG.addColorStop(0, "#6a6e78");
+      pG.addColorStop(0.2, "#585c66");
+      pG.addColorStop(0.45, "#4e5260");
+      pG.addColorStop(0.7, "#3a3e4a");
+      pG.addColorStop(1, "#24262c");
+    } else {
+      pG.addColorStop(0, "#24262c");
+      pG.addColorStop(0.3, "#3a3e4a");
+      pG.addColorStop(0.55, "#4e5260");
+      pG.addColorStop(0.8, "#585c66");
+      pG.addColorStop(1, "#6a6e78");
     }
-    ctx.restore();
+    ctx.fillStyle = pG;
+    drawPauldronPath();
+    ctx.fill();
 
-    // Raised ridge line across pauldron
-    ctx.strokeStyle = "#555560";
+    // Specular highlight clipped inside
+    ctx.save();
+    drawPauldronPath();
+    ctx.clip();
+    const specG = ctx.createRadialGradient(
+      pX - side * pW * 0.1, pY - pH * 0.6, 0,
+      pX + side * pW * 0.2, pY, pW * 1.2,
+    );
+    specG.addColorStop(0, "rgba(180, 185, 200, 0.32)");
+    specG.addColorStop(0.2, "rgba(140, 145, 165, 0.15)");
+    specG.addColorStop(0.5, "rgba(100, 105, 120, 0.04)");
+    specG.addColorStop(1, "rgba(60, 65, 80, 0)");
+    ctx.fillStyle = specG;
+    ctx.fillRect(pX - pW * 1.2, pY - pH * 1.3, pW * 2.6, pH * 2.6);
+
+    // Raised ridge line from inner peak to outer spike
+    ctx.strokeStyle = "rgba(110, 115, 130, 0.4)";
     ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(pX - side * size * 0.15, pY + size * 0.02);
-    ctx.quadraticCurveTo(pX, pY - size * 0.08, pX + side * size * 0.18, pY - size * 0.02);
+    ctx.moveTo(pX - side * pW * 0.1, pY - pH * 1.05);
+    ctx.quadraticCurveTo(pX + side * pW * 0.5, pY - pH * 0.55, pX + side * pW * 1.08, pY - pH * 0.03);
     ctx.stroke();
-    ctx.strokeStyle = "rgba(110, 110, 120, 0.25)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = "rgba(20, 20, 28, 0.35)";
+    ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(pX - side * size * 0.15, pY + size * 0.015);
-    ctx.quadraticCurveTo(pX, pY - size * 0.085, pX + side * size * 0.18, pY - size * 0.025);
+    ctx.moveTo(pX - side * pW * 0.1, pY - pH * 0.95);
+    ctx.quadraticCurveTo(pX + side * pW * 0.5, pY - pH * 0.45, pX + side * pW * 1.06, pY + pH * 0.05);
     ctx.stroke();
 
-    // Dragon horn spike (more refined, curved)
-    {
-      const spBaseX = pX + side * size * 0.12;
-      const spBaseY = pY - size * 0.1;
-      const spTipX = pX + side * size * 0.28;
-      const spTipY = pY - size * 0.42;
-
-      // Spike shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    // Horizontal segment lines across the body (layered plate look)
+    for (let seg = 0; seg < 3; seg++) {
+      const segY = pY + pH * (-0.15 + seg * 0.3);
+      const segInner = pX - side * pW * (0.45 - seg * 0.08);
+      const segOuter = pX + side * pW * (0.85 - seg * 0.15);
+      ctx.strokeStyle = `rgba(20, 20, 28, ${0.3 + seg * 0.05})`;
+      ctx.lineWidth = 0.9 * zoom;
       ctx.beginPath();
-      ctx.moveTo(spBaseX - side * size * 0.02, spBaseY + size * 0.02);
-      ctx.quadraticCurveTo(spTipX + side * size * 0.02, spTipY + size * 0.04, spTipX + side * size * 0.01, spTipY + size * 0.02);
-      ctx.quadraticCurveTo(spBaseX + side * size * 0.03, spBaseY - size * 0.02, spBaseX - side * size * 0.02, spBaseY + size * 0.02);
-      ctx.fill();
-
-      // Spike body
-      const spG = ctx.createLinearGradient(spBaseX, spBaseY, spTipX, spTipY);
-      spG.addColorStop(0, "#3a3a40");
-      spG.addColorStop(0.3, "#4a4a52");
-      spG.addColorStop(0.6, "#3e3e44");
-      spG.addColorStop(1, "#282830");
-      ctx.fillStyle = spG;
-      ctx.beginPath();
-      ctx.moveTo(spBaseX - side * size * 0.025, spBaseY);
-      ctx.quadraticCurveTo(
-        (spBaseX + spTipX) * 0.5 + side * size * 0.03, (spBaseY + spTipY) * 0.5 - size * 0.02,
-        spTipX, spTipY,
-      );
-      ctx.quadraticCurveTo(
-        (spBaseX + spTipX) * 0.5 - side * size * 0.01, (spBaseY + spTipY) * 0.5 + size * 0.02,
-        spBaseX + side * size * 0.02, spBaseY,
-      );
-      ctx.closePath();
-      ctx.fill();
-
-      // Spike highlight
-      ctx.strokeStyle = "rgba(120, 120, 130, 0.35)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(spBaseX, spBaseY - size * 0.01);
-      ctx.quadraticCurveTo(
-        (spBaseX + spTipX) * 0.5 + side * size * 0.02, (spBaseY + spTipY) * 0.5 - size * 0.01,
-        spTipX, spTipY,
-      );
+      ctx.moveTo(segInner, segY);
+      ctx.quadraticCurveTo(pX + side * pW * 0.2, segY + pH * 0.04, segOuter, segY + pH * 0.08);
       ctx.stroke();
-
-      // Spike border (gold)
-      ctx.strokeStyle = "#6a5010";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(spBaseX - side * size * 0.025, spBaseY);
-      ctx.quadraticCurveTo(
-        (spBaseX + spTipX) * 0.5 + side * size * 0.03, (spBaseY + spTipY) * 0.5 - size * 0.02,
-        spTipX, spTipY,
-      );
-      ctx.quadraticCurveTo(
-        (spBaseX + spTipX) * 0.5 - side * size * 0.01, (spBaseY + spTipY) * 0.5 + size * 0.02,
-        spBaseX + side * size * 0.02, spBaseY,
-      );
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    // Engraved arc filigree on pauldron face
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.19, size * 0.13, side * 0.4, 0, Math.PI * 2);
-    ctx.clip();
-    for (let arc = 0; arc < 3; arc++) {
-      const arcOff = (arc - 1) * size * 0.06;
-      ctx.strokeStyle = `rgba(154, 122, 24, ${0.2 + arc * 0.05})`;
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.beginPath();
-      ctx.arc(pX + arcOff * side, pY + size * 0.08, size * 0.12 + arc * size * 0.02, -Math.PI * 0.85, -Math.PI * 0.15);
-      ctx.stroke();
-    }
-    // Cross-hatch pattern on lower half
-    for (let hx = -2; hx <= 2; hx++) {
-      const lx = pX + hx * size * 0.04;
-      ctx.strokeStyle = "rgba(100, 100, 110, 0.12)";
+      ctx.strokeStyle = `rgba(100, 105, 120, ${0.18 + seg * 0.03})`;
       ctx.lineWidth = 0.4 * zoom;
       ctx.beginPath();
-      ctx.moveTo(lx, pY);
-      ctx.lineTo(lx + side * size * 0.03, pY + size * 0.1);
+      ctx.moveTo(segInner, segY - size * 0.003);
+      ctx.quadraticCurveTo(pX + side * pW * 0.2, segY + pH * 0.035, segOuter, segY + pH * 0.075);
+      ctx.stroke();
+    }
+
+    // Gold filigree — curving arcs
+    for (let sw = 0; sw < 2; sw++) {
+      const swCx = pX + side * pW * (0.15 + sw * 0.25);
+      const swCy = pY - pH * (0.15 - sw * 0.2);
+      ctx.strokeStyle = `rgba(180, 140, 28, ${0.2 + sw * 0.06 + gemPulse * 0.05})`;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.arc(swCx, swCy, size * (0.04 + sw * 0.015), side > 0 ? 0.3 : Math.PI + 0.3, side > 0 ? Math.PI - 0.3 : Math.PI * 2 - 0.3);
       ctx.stroke();
     }
     ctx.restore();
 
-    // Gold trim ring — black base with gold
-    ctx.strokeStyle = "#0e0e0e";
-    ctx.lineWidth = 2.2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.21, size * 0.15, side * 0.4, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "#9a7a18";
-    ctx.lineWidth = 1.4 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.21, size * 0.15, side * 0.4, 0, Math.PI * 2);
+    // Black outline
+    ctx.strokeStyle = "#0a0a0c";
+    ctx.lineWidth = 2.5 * zoom;
+    drawPauldronPath();
     ctx.stroke();
 
-    // Gold outer border
-    ctx.strokeStyle = "#6a5010";
-    ctx.lineWidth = 1.0 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pX, pY, size * 0.215, size * 0.155, side * 0.4, 0, Math.PI * 2);
+    // Gold trim on all edges
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.2 * zoom;
+    drawPauldronPath();
     ctx.stroke();
 
-    // Decorative gold dots around pauldron edge
-    for (let dd = 0; dd < 8; dd++) {
-      const dotA = side * 0.4 + (dd / 8) * Math.PI * 2;
-      const dotX = pX + Math.cos(dotA) * size * 0.195;
-      const dotY = pY + Math.sin(dotA) * size * 0.14;
-      ctx.fillStyle = `rgba(218, 165, 32, ${0.35 + gemPulse * 0.1})`;
-      ctx.beginPath();
-      ctx.arc(dotX, dotY, size * 0.004, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Ruby gem with gold setting
-    {
-      const gemX = pX - side * size * 0.02;
-      const gemY = pY - size * 0.01;
-
-      // Gold setting ring
-      ctx.strokeStyle = "#8a6a15";
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.beginPath();
-      ctx.arc(gemX, gemY, size * 0.04, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Ruby
-      const gemG = ctx.createRadialGradient(gemX - size * 0.01, gemY - size * 0.01, 0, gemX, gemY, size * 0.035);
-      gemG.addColorStop(0, "#ff5555");
-      gemG.addColorStop(0.4, "#dc2626");
-      gemG.addColorStop(1, "#8b1515");
-      ctx.fillStyle = gemG;
-      ctx.shadowColor = "#ff4444";
-      ctx.shadowBlur = 6 * zoom * gemPulse;
-      ctx.beginPath();
-      ctx.arc(gemX, gemY, size * 0.033, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Gem highlight
-      ctx.fillStyle = "rgba(255, 180, 180, 0.5)";
-      ctx.shadowBlur = 0;
-      ctx.beginPath();
-      ctx.ellipse(gemX - size * 0.01, gemY - size * 0.01, size * 0.012, size * 0.008, -0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Side rivets on pauldron edge
-    for (let r = 0; r < 3; r++) {
-      const rAngle = side * 0.4 + (r - 1) * 0.5;
-      const rx = pX + Math.cos(rAngle) * size * 0.19;
-      const ry = pY - Math.sin(rAngle) * size * 0.13;
-      const rvG = ctx.createRadialGradient(rx - size * 0.002, ry - size * 0.002, 0, rx, ry, size * 0.007);
-      rvG.addColorStop(0, "#999");
-      rvG.addColorStop(0.5, "#555");
-      rvG.addColorStop(1, "#222");
+    // Gold rivets along bottom scallop and outer edge
+    const rivetPositions = [
+      [pX + side * pW * 0.85, pY - pH * 0.5],
+      [pX + side * pW * 1.05, pY + pH * 0.05],
+      [pX + side * pW * 0.7, pY + pH * 0.65],
+      [pX + side * pW * 0.15, pY + pH * 0.85],
+      [pX - side * pW * 0.35, pY + pH * 0.65],
+      [pX - side * pW * 0.55, pY - pH * 0.2],
+      [pX - side * pW * 0.3, pY - pH * 0.8],
+      [pX + side * pW * 0.15, pY - pH * 0.95],
+    ];
+    for (const [rvX, rvY] of rivetPositions) {
+      const rvG = ctx.createRadialGradient(rvX - size * 0.002, rvY - size * 0.002, 0, rvX, rvY, size * 0.007);
+      rvG.addColorStop(0, "#daa520");
+      rvG.addColorStop(0.5, "#b89025");
+      rvG.addColorStop(1, "#5a4508");
       ctx.fillStyle = rvG;
       ctx.beginPath();
-      ctx.arc(rx, ry, size * 0.007, 0, Math.PI * 2);
+      ctx.arc(rvX, rvY, size * 0.006, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#4a3508";
+      ctx.lineWidth = 0.35 * zoom;
+      ctx.stroke();
+    }
+
+    // === RUBY GEM centered on pauldron ===
+    {
+      const gemX = pX + side * pW * 0.15;
+      const gemY = pY - pH * 0.1;
+
+      for (let fl = 0; fl < 4; fl++) {
+        const flAngle = (fl * Math.PI) / 2;
+        const flStartR = size * 0.03;
+        const flEndR = size * 0.05;
+        ctx.strokeStyle = `rgba(180, 140, 28, ${0.3 + gemPulse * 0.08})`;
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(gemX + Math.cos(flAngle) * flStartR, gemY + Math.sin(flAngle) * flStartR);
+        ctx.quadraticCurveTo(
+          gemX + Math.cos(flAngle + 0.15) * flEndR * 1.1,
+          gemY + Math.sin(flAngle + 0.15) * flEndR * 1.1,
+          gemX + Math.cos(flAngle + 0.3) * flEndR,
+          gemY + Math.sin(flAngle + 0.3) * flEndR,
+        );
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#6a4a08";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.arc(gemX, gemY, size * 0.03, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.arc(gemX, gemY, size * 0.028, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const gemGr = ctx.createRadialGradient(gemX - size * 0.005, gemY - size * 0.005, 0, gemX, gemY, size * 0.025);
+      gemGr.addColorStop(0, "#ff6666");
+      gemGr.addColorStop(0.3, "#ee3333");
+      gemGr.addColorStop(0.6, "#dc2626");
+      gemGr.addColorStop(1, "#8b1515");
+      ctx.fillStyle = gemGr;
+      ctx.shadowColor = "#ff4444";
+      ctx.shadowBlur = 9 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.arc(gemX, gemY, size * 0.022, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = "rgba(255, 200, 200, 0.55)";
+      ctx.beginPath();
+      ctx.ellipse(gemX - size * 0.006, gemY - size * 0.006, size * 0.008, size * 0.006, -0.3, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
+  // === ARMOR CHAINS (draped everywhere) ===
+  {
+    // Pauldron-to-chest chains (2 per side, hanging from each shoulder dome down to the breastplate)
+    for (let side = -1; side <= 1; side += 2) {
+      const shoulderX = x + side * size * 0.56;
+      const shoulderY = y - size * 0.10;
+
+      drawArmorChain(ctx,
+        shoulderX, shoulderY,
+        x + side * size * 0.18, y + size * 0.1,
+        size, zoom, time, gemPulse, size * 0.06, 8,
+      );
+      drawArmorChain(ctx,
+        shoulderX - side * size * 0.06, shoulderY + size * 0.06,
+        x + side * size * 0.12, y + size * 0.22,
+        size, zoom, time + 0.5, gemPulse, size * 0.05, 7,
+      );
+      // Pauldron-to-upper-arm chain
+      drawArmorChain(ctx,
+        shoulderX + side * size * 0.08, shoulderY + size * 0.1,
+        x + side * size * 0.45, y + size * 0.12,
+        size, zoom, time + 1.0, gemPulse, size * 0.04, 5,
+      );
+    }
+
+    // Horizontal chest drape chains (3 tiers across breastplate)
+    for (let tier = 0; tier < 3; tier++) {
+      const tierY = y - size * 0.08 + tier * size * 0.14;
+      const spread = size * (0.28 - tier * 0.04);
+      const sagAmt = size * (0.025 + tier * 0.008);
+      drawArmorChain(ctx,
+        x - spread, tierY,
+        x + spread, tierY,
+        size, zoom, time + tier * 0.3, gemPulse, sagAmt, 6 + tier,
+      );
+    }
+
+    // V-shaped chest chain (center decorative drape)
+    drawArmorChain(ctx,
+      x - size * 0.22, y - size * 0.18,
+      x, y + size * 0.12,
+      size, zoom, time + 0.7, gemPulse, size * 0.03, 6,
+    );
+    drawArmorChain(ctx,
+      x + size * 0.22, y - size * 0.18,
+      x, y + size * 0.12,
+      size, zoom, time + 0.7, gemPulse, size * -0.03, 6,
+    );
+
+    // Waist/belt chains (looped across the skirt top)
+    drawArmorChain(ctx,
+      x - size * 0.35, y + size * 0.42,
+      x - size * 0.05, y + size * 0.44,
+      size, zoom, time + 1.2, gemPulse, size * 0.035, 6,
+    );
+    drawArmorChain(ctx,
+      x + size * 0.05, y + size * 0.44,
+      x + size * 0.35, y + size * 0.42,
+      size, zoom, time + 1.2, gemPulse, size * 0.035, 6,
+    );
+
+    // Cross-body diagonal chain (left shoulder area to right hip)
+    drawArmorChain(ctx,
+      x - size * 0.25, y - size * 0.12,
+      x + size * 0.2, y + size * 0.35,
+      size, zoom, time + 1.8, gemPulse, size * 0.04, 10,
+    );
+  }
+
   // === RIGHT ARM (holds flamesword) ===
   {
-    const rShoulderX = x + size * 0.42;
-    const rShoulderY = y - size * 0.02;
-    const swordOriginX = x + size * 0.55;
+    const rShoulderX = x + size * 0.55;
+    const rShoulderY = y - size * 0.08;
+    const swordOriginX = x + size * 0.68;
     const swordOriginY = y + size * 0.08;
     const swordGripLocalY = size * 0.15;
     const swordBaseAngleR = 0.7 + swordSwing * 1.4;
@@ -1513,10 +1781,10 @@ export function drawCaptainHero(
     ctx.translate(rShoulderX, rShoulderY);
     ctx.rotate(rArmAngle);
     const rUpG = ctx.createLinearGradient(0, -size * 0.055, 0, size * 0.055);
-    rUpG.addColorStop(0, "#606060");
-    rUpG.addColorStop(0.3, "#4a4a4a");
-    rUpG.addColorStop(0.7, "#3a3a3a");
-    rUpG.addColorStop(1, "#222222");
+    rUpG.addColorStop(0, "#62666e");
+    rUpG.addColorStop(0.3, "#4c5058");
+    rUpG.addColorStop(0.7, "#3a3e46");
+    rUpG.addColorStop(1, "#24262c");
     ctx.fillStyle = rUpG;
     ctx.beginPath();
     ctx.roundRect(
@@ -1562,7 +1830,7 @@ export function drawCaptainHero(
     ctx.stroke();
     ctx.restore();
     // Segment line
-    ctx.strokeStyle = "rgba(100, 100, 100, 0.4)";
+    ctx.strokeStyle = "rgba(100, 104, 112, 0.4)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(rUpperLen * 0.4, -size * 0.05);
@@ -1593,9 +1861,9 @@ export function drawCaptainHero(
       rElbowY,
       size * 0.06,
     );
-    elbowCopG.addColorStop(0, "#6a6a6a");
-    elbowCopG.addColorStop(0.5, "#3a3a3a");
-    elbowCopG.addColorStop(1, "#1a1a1a");
+    elbowCopG.addColorStop(0, "#6a6e76");
+    elbowCopG.addColorStop(0.5, "#3c4048");
+    elbowCopG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = elbowCopG;
     ctx.beginPath();
     ctx.arc(rElbowX, rElbowY, size * 0.06, 0, Math.PI * 2);
@@ -1639,10 +1907,10 @@ export function drawCaptainHero(
     ctx.translate(rElbowX, rElbowY);
     ctx.rotate(rForeAngle);
     const rFoG = ctx.createLinearGradient(0, -size * 0.048, 0, size * 0.048);
-    rFoG.addColorStop(0, "#555555");
-    rFoG.addColorStop(0.3, "#444444");
-    rFoG.addColorStop(0.7, "#333333");
-    rFoG.addColorStop(1, "#1a1a1a");
+    rFoG.addColorStop(0, "#585c64");
+    rFoG.addColorStop(0.3, "#464a52");
+    rFoG.addColorStop(0.7, "#353840");
+    rFoG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = rFoG;
     ctx.beginPath();
     ctx.roundRect(0, -size * 0.048, rForeLen, size * 0.096, size * 0.02);
@@ -1709,9 +1977,9 @@ export function drawCaptainHero(
       gripWY,
       size * 0.055,
     );
-    gauntG.addColorStop(0, "#555555");
-    gauntG.addColorStop(0.5, "#333333");
-    gauntG.addColorStop(1, "#1a1a1a");
+    gauntG.addColorStop(0, "#585c64");
+    gauntG.addColorStop(0.5, "#353840");
+    gauntG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = gauntG;
     ctx.beginPath();
     ctx.arc(gripWX, gripWY, size * 0.048, 0, Math.PI * 2);
@@ -1746,7 +2014,7 @@ export function drawCaptainHero(
       const ka = rForeAngle - 0.5 + k * 0.35;
       const kx = gripWX + Math.cos(ka) * size * 0.04;
       const ky = gripWY + Math.sin(ka) * size * 0.04;
-      ctx.fillStyle = "#2a2a2a";
+      ctx.fillStyle = "#2c2e34";
       ctx.beginPath();
       ctx.arc(kx, ky, size * 0.009, 0, Math.PI * 2);
       ctx.fill();
@@ -1758,10 +2026,10 @@ export function drawCaptainHero(
 
   // === LEFT ARM (holds war standard) ===
   {
-    const lShoulderX = x - size * 0.42;
-    const lShoulderY = y - size * 0.02;
-    const flagOriginX = x - size * 0.62;
-    const flagOriginY = y + size * 0.12;
+    const lShoulderX = x - size * 0.55;
+    const lShoulderY = y - size * 0.08;
+    const flagOriginX = x - size * 0.75;
+    const flagOriginY = y + size * 0.10;
     const flagRotation = -0.15;
     const flagGripLocalY = -size * 0.25;
     const gripFX = flagOriginX - Math.sin(flagRotation) * flagGripLocalY;
@@ -1779,10 +2047,10 @@ export function drawCaptainHero(
     ctx.translate(lShoulderX, lShoulderY);
     ctx.rotate(lArmAngle);
     const lUpG = ctx.createLinearGradient(0, -size * 0.055, 0, size * 0.055);
-    lUpG.addColorStop(0, "#606060");
-    lUpG.addColorStop(0.3, "#4a4a4a");
-    lUpG.addColorStop(0.7, "#3a3a3a");
-    lUpG.addColorStop(1, "#222222");
+    lUpG.addColorStop(0, "#62666e");
+    lUpG.addColorStop(0.3, "#4c5058");
+    lUpG.addColorStop(0.7, "#3a3e46");
+    lUpG.addColorStop(1, "#24262c");
     ctx.fillStyle = lUpG;
     ctx.beginPath();
     ctx.roundRect(
@@ -1827,7 +2095,7 @@ export function drawCaptainHero(
     ctx.stroke();
     ctx.restore();
     // Segment line
-    ctx.strokeStyle = "rgba(100, 100, 100, 0.4)";
+    ctx.strokeStyle = "rgba(100, 104, 112, 0.4)";
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(lUpperLen * 0.4, -size * 0.05);
@@ -1857,9 +2125,9 @@ export function drawCaptainHero(
       lElbowY,
       size * 0.06,
     );
-    lElbG.addColorStop(0, "#6a6a6a");
-    lElbG.addColorStop(0.5, "#3a3a3a");
-    lElbG.addColorStop(1, "#1a1a1a");
+    lElbG.addColorStop(0, "#6a6e76");
+    lElbG.addColorStop(0.5, "#3c4048");
+    lElbG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = lElbG;
     ctx.beginPath();
     ctx.arc(lElbowX, lElbowY, size * 0.06, 0, Math.PI * 2);
@@ -1903,10 +2171,10 @@ export function drawCaptainHero(
     ctx.translate(lElbowX, lElbowY);
     ctx.rotate(lForeAngle);
     const lFoG = ctx.createLinearGradient(0, -size * 0.048, 0, size * 0.048);
-    lFoG.addColorStop(0, "#555555");
-    lFoG.addColorStop(0.3, "#444444");
-    lFoG.addColorStop(0.7, "#333333");
-    lFoG.addColorStop(1, "#1a1a1a");
+    lFoG.addColorStop(0, "#585c64");
+    lFoG.addColorStop(0.3, "#464a52");
+    lFoG.addColorStop(0.7, "#353840");
+    lFoG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = lFoG;
     ctx.beginPath();
     ctx.roundRect(0, -size * 0.048, lForeLen, size * 0.096, size * 0.02);
@@ -1972,9 +2240,9 @@ export function drawCaptainHero(
       gripFY,
       size * 0.055,
     );
-    lGauntG.addColorStop(0, "#555555");
-    lGauntG.addColorStop(0.5, "#333333");
-    lGauntG.addColorStop(1, "#1a1a1a");
+    lGauntG.addColorStop(0, "#585c64");
+    lGauntG.addColorStop(0.5, "#353840");
+    lGauntG.addColorStop(1, "#1c1e24");
     ctx.fillStyle = lGauntG;
     ctx.beginPath();
     ctx.arc(gripFX, gripFY, size * 0.048, 0, Math.PI * 2);
@@ -2009,7 +2277,7 @@ export function drawCaptainHero(
       const ka = lForeAngle - 0.5 + k * 0.35;
       const kx = gripFX + Math.cos(ka) * size * 0.04;
       const ky = gripFY + Math.sin(ka) * size * 0.04;
-      ctx.fillStyle = "#2a2a2a";
+      ctx.fillStyle = "#2c2e34";
       ctx.beginPath();
       ctx.arc(kx, ky, size * 0.009, 0, Math.PI * 2);
       ctx.fill();
@@ -2023,7 +2291,7 @@ export function drawCaptainHero(
   const swordBaseAngle = 0.7 + swordSwing * 1.4;
   const swordAngle = resolveWeaponRotation(
     targetPos,
-    x + size * 0.55,
+    x + size * 0.68,
     y + size * 0.08,
     swordBaseAngle,
     Math.PI / 2,
@@ -2031,7 +2299,7 @@ export function drawCaptainHero(
     WEAPON_LIMITS.rightMelee,
   );
   ctx.save();
-  ctx.translate(x + size * 0.55, y + size * 0.08);
+  ctx.translate(x + size * 0.68, y + size * 0.08);
   ctx.rotate(swordAngle);
 
   // --- FLAME AURA ---
@@ -2406,7 +2674,7 @@ export function drawCaptainHero(
 
   // === LEGENDARY WAR STANDARD (Facing Left) ===
   ctx.save();
-  ctx.translate(x - size * 0.62, y + size * 0.12);
+  ctx.translate(x - size * 0.75, y + size * 0.10);
   ctx.rotate(-0.15);
 
   // --- POLE (ornate dark wood with gold fittings) ---
@@ -2899,36 +3167,33 @@ export function drawCaptainHero(
     const helmBot = helmCY + size * 0.26;
     const helmBrowY = helmCY - size * 0.08;
 
-    // Helper to draw the helm outline path (flat-topped great helm shape)
+    // Helper to draw the helm outline path (angular dragon-crown great helm)
     const drawHelmPath = () => {
       ctx.beginPath();
-      ctx.moveTo(helmCX - helmW * 0.6, helmTop);
-      // Flat crown curves slightly
-      ctx.quadraticCurveTo(helmCX, helmTop - size * 0.04, helmCX + helmW * 0.6, helmTop);
-      // Right side — angular, widens at brow then tapers to chin
-      ctx.bezierCurveTo(
-        helmCX + helmW * 1.05, helmTop + size * 0.06,
-        helmCX + helmW * 1.1, helmBrowY - size * 0.02,
-        helmCX + helmW * 1.0, helmBrowY,
-      );
-      ctx.bezierCurveTo(
-        helmCX + helmW * 1.05, helmBrowY + size * 0.08,
-        helmCX + helmW * 0.85, helmBot - size * 0.05,
-        helmCX + helmW * 0.45, helmBot,
-      );
-      // Chin point
-      ctx.quadraticCurveTo(helmCX, helmBot + size * 0.06, helmCX - helmW * 0.45, helmBot);
-      // Left side
-      ctx.bezierCurveTo(
-        helmCX - helmW * 0.85, helmBot - size * 0.05,
-        helmCX - helmW * 1.05, helmBrowY + size * 0.08,
-        helmCX - helmW * 1.0, helmBrowY,
-      );
-      ctx.bezierCurveTo(
-        helmCX - helmW * 1.1, helmBrowY - size * 0.02,
-        helmCX - helmW * 1.05, helmTop + size * 0.06,
-        helmCX - helmW * 0.6, helmTop,
-      );
+      // Crown — sharp peaked ridge instead of flat top
+      ctx.moveTo(helmCX - helmW * 0.65, helmTop + size * 0.03);
+      ctx.lineTo(helmCX - helmW * 0.25, helmTop - size * 0.02);
+      ctx.lineTo(helmCX, helmTop - size * 0.08);
+      ctx.lineTo(helmCX + helmW * 0.25, helmTop - size * 0.02);
+      ctx.lineTo(helmCX + helmW * 0.65, helmTop + size * 0.03);
+      // Right side — angular facets with pronounced cheek flange
+      ctx.lineTo(helmCX + helmW * 0.95, helmTop + size * 0.1);
+      ctx.lineTo(helmCX + helmW * 1.15, helmBrowY - size * 0.03);
+      // Cheek flange juts outward
+      ctx.lineTo(helmCX + helmW * 1.2, helmBrowY + size * 0.04);
+      ctx.lineTo(helmCX + helmW * 1.1, helmBrowY + size * 0.12);
+      // Jawline tapers sharply to chin
+      ctx.lineTo(helmCX + helmW * 0.75, helmBot - size * 0.04);
+      ctx.lineTo(helmCX + helmW * 0.35, helmBot + size * 0.01);
+      // Chin — angular V-point
+      ctx.lineTo(helmCX, helmBot + size * 0.08);
+      // Left jawline (mirror)
+      ctx.lineTo(helmCX - helmW * 0.35, helmBot + size * 0.01);
+      ctx.lineTo(helmCX - helmW * 0.75, helmBot - size * 0.04);
+      ctx.lineTo(helmCX - helmW * 1.1, helmBrowY + size * 0.12);
+      ctx.lineTo(helmCX - helmW * 1.2, helmBrowY + size * 0.04);
+      ctx.lineTo(helmCX - helmW * 1.15, helmBrowY - size * 0.03);
+      ctx.lineTo(helmCX - helmW * 0.95, helmTop + size * 0.1);
       ctx.closePath();
     };
 
@@ -3110,11 +3375,11 @@ export function drawCaptainHero(
 
     // Brow plate (thickened band across the brow, separating dome from face)
     const browG = ctx.createLinearGradient(helmCX - helmW, helmBrowY, helmCX + helmW, helmBrowY);
-    browG.addColorStop(0, "#3a3a3a");
-    browG.addColorStop(0.2, "#4e4e4e");
-    browG.addColorStop(0.5, "#585860");
-    browG.addColorStop(0.8, "#4e4e4e");
-    browG.addColorStop(1, "#3a3a3a");
+    browG.addColorStop(0, "#3a3e46");
+    browG.addColorStop(0.2, "#4e525a");
+    browG.addColorStop(0.5, "#585c64");
+    browG.addColorStop(0.8, "#4e525a");
+    browG.addColorStop(1, "#3a3e46");
     ctx.fillStyle = browG;
     ctx.beginPath();
     ctx.moveTo(helmCX - helmW * 1.0, helmBrowY - size * 0.025);

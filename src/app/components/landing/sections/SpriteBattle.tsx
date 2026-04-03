@@ -6,6 +6,7 @@ import {
   HERO_GALLERY,
   type CharacterDisplay,
 } from "../landingConstants";
+import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
 
@@ -188,14 +189,7 @@ function BattleParticles() {
 }
 
 function SectionDivider() {
-  return (
-    <div
-      className="h-px mx-auto w-4/5 max-w-xl"
-      style={{
-        background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.25), transparent)`,
-      }}
-    />
-  );
+  return <SectionFlourish />;
 }
 
 export function SpriteBattle() {

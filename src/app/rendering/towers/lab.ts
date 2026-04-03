@@ -1,6 +1,6 @@
 import type { Tower, Enemy, Position } from "../../types";
 import { ISO_PRISM_D_FACTOR } from "../../constants";
-import { drawIsometricPrism, drawIsometricRailing } from "./towerHelpers";
+import { drawIsometricPrism, drawIsoOctPrism, drawIsometricRailing } from "./towerHelpers";
 import { drawIsoFlushVent, traceIsoFlushRect } from "../isoFlush";
 import {
   renderTeslaCoil,
@@ -124,38 +124,44 @@ export function renderLabTower(
 
   // ========== STEPPED TECH FOUNDATION ==========
   // Lowest step — heavy concrete plinth
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 12 * zoom,
-    baseWidth + 16,
-    baseWidth + 16,
+    baseWidth + 36,
+    baseWidth + 36,
     3,
-    fnd1,
+    fnd1.top,
+    fnd1.left,
+    fnd1.right,
     zoom,
   );
 
   // Middle step — reinforced platform
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 9 * zoom,
-    baseWidth + 12,
-    baseWidth + 12,
+    baseWidth + 32,
+    baseWidth + 32,
     3,
-    fnd2,
+    fnd2.top,
+    fnd2.left,
+    fnd2.right,
     zoom,
   );
 
   // Upper step — main platform with hazard trim
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 6 * zoom,
-    baseWidth + 8,
-    baseWidth + 8,
+    baseWidth + 28,
+    baseWidth + 28,
     6,
-    fnd3,
+    fnd3.top,
+    fnd3.left,
+    fnd3.right,
     zoom,
   );
 

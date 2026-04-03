@@ -5,24 +5,27 @@ import {
   LANDING_STATS,
   type FeatureStat,
 } from "../landingConstants";
-import { SlotCorners } from "./LoadoutUI";
+import { SectionFlourish } from "./LoadoutUI";
+import OrnateFrame from "../../ui/primitives/OrnateFrame";
 
 const T = LANDING_THEME;
 
 function FeatureCard({ stat, index }: { stat: FeatureStat; index: number }) {
   const Icon = stat.icon;
   return (
-    <div
-      className="group relative flex flex-col items-center gap-1.5 sm:gap-2.5 p-4 sm:p-5 transition-all duration-300 hover:scale-[1.04]"
+    <OrnateFrame
+      className="group flex flex-col items-center gap-1.5 sm:gap-2.5 p-4 sm:p-5 transition-all duration-300 hover:scale-[1.04]"
+      cornerSize={14}
+      cornerVariant="compact"
+      showBorders={false}
+      color={T.accent}
+      glowColor={T.accent}
       style={{
         background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.06)",
         borderRadius: 6,
         animationDelay: `${index * 80}ms`,
       }}
     >
-      <SlotCorners color={T.accent} />
-
       <div
         className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{
@@ -47,19 +50,14 @@ function FeatureCard({ stat, index }: { stat: FeatureStat; index: number }) {
       >
         {stat.label}
       </span>
-    </div>
+    </OrnateFrame>
   );
 }
 
 export function FeatureGrid() {
   return (
     <section className="py-14 sm:py-20 px-6">
-      <div
-        className="h-px mx-auto w-4/5 max-w-xl"
-        style={{
-          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.25), transparent)`,
-        }}
-      />
+      <SectionFlourish />
 
       <div className="text-center mt-10 sm:mt-16 mb-8 sm:mb-12">
         <h3

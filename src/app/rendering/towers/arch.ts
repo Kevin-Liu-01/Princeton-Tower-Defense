@@ -6,7 +6,7 @@ import {
 } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
 import {
-  drawIsometricPrism,
+  drawIsoOctPrism,
   drawIsoCylinder,
   drawIsoGothicWindow,
   drawIsometricRailing,
@@ -143,56 +143,44 @@ export function renderArchTower(
       : Math.sin(time * 3) * 1 * zoom;
 
   // Lowest step — rough-hewn stone plinth
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 22 * zoom,
-    subBuildingWidth + 12,
-    baseDepth + 40,
+    subBuildingWidth + 32,
+    baseDepth + 60,
     3,
-    {
-      top: st.r,
-      left: st.d1,
-      right: st.d2,
-      leftBack: st.l,
-      rightBack: st.r,
-    },
+    st.r,
+    st.d1,
+    st.d2,
     zoom,
   );
 
   // Middle step — dressed stone
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 20 * zoom,
-    subBuildingWidth + 8,
-    baseDepth + 36,
+    subBuildingWidth + 28,
+    baseDepth + 56,
     4,
-    {
-      top: st.t,
-      left: st.l,
-      right: st.r,
-      leftBack: st.lb,
-      rightBack: st.t,
-    },
+    st.t,
+    st.l,
+    st.r,
     zoom,
   );
 
   // Upper step — polished foundation
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 16 * zoom,
-    subBuildingWidth,
-    baseDepth + 28,
+    subBuildingWidth + 20,
+    baseDepth + 48,
     12,
-    {
-      top: fn.t,
-      left: fn.l,
-      right: fn.r,
-      leftBack: fn.lb,
-      rightBack: fn.t,
-    },
+    fn.t,
+    fn.l,
+    fn.r,
     zoom,
   );
 
@@ -266,21 +254,17 @@ export function renderArchTower(
     const cy =
       screenPos.y + 14 * zoom + bp.sy * (baseDepth + 20) * zoom * 0.18;
 
-    // Buttress as isometric prism
-    drawIsometricPrism(
+    // Buttress as octagonal prism
+    drawIsoOctPrism(
       ctx,
       cx,
       cy + 4 * zoom,
       7,
       7,
       16,
-      {
-        top: st.seam,
-        left: st.lb,
-        right: st.t,
-        leftBack: st.rb,
-        rightBack: st.lb,
-      },
+      st.seam,
+      st.lb,
+      st.t,
       zoom,
     );
 
@@ -320,31 +304,27 @@ export function renderArchTower(
         zoom *
         (1 - timeSinceFire / 600)
       : 0;
-  const sbExpandW = subBuildingWidth - 6 + pillarSpread * 2;
-  const sbExpandD = baseDepth + 22 + pillarSpread * 2;
-  drawIsometricPrism(
+  const sbExpandW = subBuildingWidth + 8 + pillarSpread * 2;
+  const sbExpandD = baseDepth + 36 + pillarSpread * 2;
+  drawIsoOctPrism(
     ctx,
     screenPos.x + foundationShift * 0.4 + subShift,
     screenPos.y + 2 * zoom + subBounce,
     sbExpandW,
     sbExpandD,
     subBuildingHeight,
-    {
-      top: rf.a,
-      left: rf.b,
-      right: rf.c,
-      leftBack: rf.d,
-      rightBack: rf.a,
-    },
+    rf.a,
+    rf.b,
+    rf.c,
     zoom,
   );
 
   // ========== BASE RAILING (3D isometric ring) ==========
   const archBalY = screenPos.y + 4 * zoom + subBounce;
   const archBalRX =
-    (subBuildingWidth - 4 + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR;
+    (subBuildingWidth - 4 + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR * 0.85;
   const archBalRY =
-    (baseDepth + 24 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR;
+    (baseDepth + 24 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR * 0.85;
   const archBalH = 5 * zoom;
   drawIsometricRailing(
     ctx,
@@ -366,8 +346,9 @@ export function renderArchTower(
 
   // === DETAILED STONE MASONRY ON SUB-BUILDING FACES ===
   const mortarGlow = 0.12 + Math.sin(time * 1.5) * 0.06 + attackPulse * 0.15;
-  const sbHalfW = sbExpandW * zoom * ISO_PRISM_W_FACTOR;
-  const sbDepthOff = sbExpandD * zoom * ISO_PRISM_D_FACTOR;
+  const octCut = 0.85;
+  const sbHalfW = sbExpandW * zoom * ISO_PRISM_W_FACTOR * octCut;
+  const sbDepthOff = sbExpandD * zoom * ISO_PRISM_D_FACTOR * octCut;
   const sbH = subBuildingHeight * zoom;
   const sbBaseY = screenPos.y + 2 * zoom + subBounce;
   const sbBaseX = screenPos.x + foundationShift * 0.4 + subShift;
@@ -860,20 +841,16 @@ export function renderArchTower(
   }
 
   // Upper foundation platform with arcane symbols
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x + foundationShift * 0.5,
     screenPos.y - 18 * zoom,
-    baseWidth + 12 + pillarSpread * 2,
-    baseDepth + 18 + pillarSpread * 2,
+    baseWidth + 28 + pillarSpread * 2,
+    baseDepth + 36 + pillarSpread * 2,
     6,
-    {
-      top: pl.c,
-      left: pl.h,
-      right: pl.i,
-      leftBack: pl.b,
-      rightBack: pl.c,
-    },
+    pl.c,
+    pl.h,
+    pl.i,
     zoom,
   );
 
@@ -976,23 +953,19 @@ export function renderArchTower(
   const pw = pillarWidth * zoom * 0.5;
   const pd = pillarWidth * zoom * ISO_PRISM_D_FACTOR;
 
-  // Left pillar square isometric base
+  // Left pillar octagonal base
   const lbX = pillarX + pillarBounce * 0.5;
   const lbY = screenPos.y - 22 * zoom;
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     lbX,
     lbY - 3 * zoom,
-    pillarWidth * 1.35,
-    pillarWidth * 1.35,
-    2,
-    {
-      top: rf.e,
-      left: rf.f,
-      right: rf.g,
-      leftBack: rf.h,
-      rightBack: rf.e,
-    },
+    pillarWidth * 1.8,
+    pillarWidth * 1.8,
+    3,
+    rf.e,
+    rf.f,
+    rf.g,
     zoom,
   );
 
@@ -1005,21 +978,17 @@ export function renderArchTower(
   const upperShaftH = pillarHeight * zoom * 0.42;
   const leftPCX = pillarX + pillarBounce * 0.5;
 
-  // Lower shaft (square isometric prism)
-  drawIsometricPrism(
+  // Lower shaft (octagonal prism)
+  drawIsoOctPrism(
     ctx,
     leftPCX,
     shaftBaseY,
-    pillarWidth * pulseSize,
-    pillarWidth * pulseSize,
+    pillarWidth * 1.3 * pulseSize,
+    pillarWidth * 1.3 * pulseSize,
     pillarHeight * 0.52,
-    {
-      top: pl.a,
-      left: pl.b,
-      right: pl.c,
-      leftBack: pl.d,
-      rightBack: pl.a,
-    },
+    pl.a,
+    pl.b,
+    pl.c,
     zoom,
   );
 
@@ -1166,44 +1135,36 @@ export function renderArchTower(
     top: pl.d,
   });
 
-  // Right pillar square isometric base
+  // Right pillar octagonal base
   const rbX = pillarXR - pillarBounce * 0.5;
   const rbY = screenPos.y - 22 * zoom;
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     rbX,
     rbY - 3 * zoom,
-    pillarWidth * 1.35,
-    pillarWidth * 1.35,
-    2,
-    {
-      top: rf.e,
-      left: rf.f,
-      right: rf.g,
-      leftBack: rf.h,
-      rightBack: rf.e,
-    },
+    pillarWidth * 1.8,
+    pillarWidth * 1.8,
+    3,
+    rf.e,
+    rf.f,
+    rf.g,
     zoom,
   );
 
   // Right pillar shaft
   const rightPCX = pillarXR - pillarBounce * 0.5;
 
-  // Lower shaft (square isometric prism)
-  drawIsometricPrism(
+  // Lower shaft (octagonal prism)
+  drawIsoOctPrism(
     ctx,
     rightPCX,
     shaftBaseY,
-    pillarWidth * pulseSize,
-    pillarWidth * pulseSize,
+    pillarWidth * 1.3 * pulseSize,
+    pillarWidth * 1.3 * pulseSize,
     pillarHeight * 0.52,
-    {
-      top: pl.a,
-      left: pl.b,
-      right: pl.c,
-      leftBack: pl.d,
-      rightBack: pl.a,
-    },
+    pl.a,
+    pl.b,
+    pl.c,
     zoom,
   );
 
@@ -1424,48 +1385,53 @@ export function renderArchTower(
 
     // Ancient stone altar between pillars (3D isometric)
     const altarY = screenPos.y - 18 * zoom;
-    drawIsometricPrism(
+    drawIsoOctPrism(
       ctx,
       screenPos.x,
       altarY,
       14,
       10,
       5,
-      {
-        top: st.lb,
-        left: st.t,
-        right: st.l,
-        leftBack: st.rb,
-        rightBack: st.lb,
-      },
+      st.lb,
+      st.t,
+      st.l,
       zoom,
     );
 
-    // Carved relief on altar front faces
-    const altarHW = 14 * zoom * ISO_PRISM_W_FACTOR;
-    const altarHD = 10 * zoom * ISO_PRISM_D_FACTOR;
-    ctx.strokeStyle = "rgba(120, 105, 85, 0.3)";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.strokeRect(
-      screenPos.x - altarHW * 0.6,
-      altarY - 3 * zoom,
-      altarHW * 0.6,
-      3 * zoom,
-    );
-    ctx.strokeRect(
-      screenPos.x + altarHW * 0.1,
-      altarY - 3 * zoom,
-      altarHW * 0.6,
-      3 * zoom,
-    );
+    // Altar isometric dimensions
+    const altarHW = 14 * zoom * 0.5;
+    const altarHD = 10 * zoom * 0.25;
+    const altarH = 5 * zoom;
+    const altarTopY = altarY - altarH;
 
-    // Gold inlay on altar edge
+    // Carved relief on altar left face (isometric quad inset)
+    ctx.strokeStyle = "rgba(120, 105, 85, 0.35)";
+    ctx.lineWidth = 0.6 * zoom;
+    const ri = 0.15;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - altarHW * (1 - ri), altarTopY + altarH * 0.15 + altarHD * ri);
+    ctx.lineTo(screenPos.x - altarHW * ri, altarTopY + altarH * 0.15 + altarHD * (1 - ri));
+    ctx.lineTo(screenPos.x - altarHW * ri, altarY - altarH * 0.15 + altarHD * (1 - ri));
+    ctx.lineTo(screenPos.x - altarHW * (1 - ri), altarY - altarH * 0.15 + altarHD * ri);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Carved relief on altar right face (isometric quad inset)
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + altarHW * ri, altarTopY + altarH * 0.15 + altarHD * (1 - ri));
+    ctx.lineTo(screenPos.x + altarHW * (1 - ri), altarTopY + altarH * 0.15 + altarHD * ri);
+    ctx.lineTo(screenPos.x + altarHW * (1 - ri), altarY - altarH * 0.15 + altarHD * ri);
+    ctx.lineTo(screenPos.x + altarHW * ri, altarY - altarH * 0.15 + altarHD * (1 - ri));
+    ctx.closePath();
+    ctx.stroke();
+
+    // Gold inlay on altar top edge
     ctx.strokeStyle = `rgba(${gd.rgb}, 0.3)`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - altarHW, altarY - 5 * zoom);
-    ctx.lineTo(screenPos.x, altarY - 5 * zoom + altarHD);
-    ctx.lineTo(screenPos.x + altarHW, altarY - 5 * zoom);
+    ctx.moveTo(screenPos.x - altarHW, altarTopY);
+    ctx.lineTo(screenPos.x, altarTopY + altarHD);
+    ctx.lineTo(screenPos.x + altarHW, altarTopY);
     ctx.stroke();
 
     // Ancient tome on altar (3D book shape)

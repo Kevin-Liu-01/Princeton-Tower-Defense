@@ -4290,14 +4290,14 @@ function drawBody(
   const bodyW = s * (0.17 + breathe * 0.002 + atkBurst * 0.01) * 1.15;
   const bodyH = s * (0.26 + breathe * 0.003 + atkBurst * 0.015) * 1.1;
 
-  const bodyGrad = ctx.createRadialGradient(
-    x,
-    y - s * 0.03,
-    s * 0.03,
-    x,
-    y + s * 0.01,
-    bodyH,
-  );
+  // ── SHADOW DEPTH ELLIPSE ──────────────────────────────────────────
+  ctx.fillStyle = "#061208";
+  ctx.beginPath();
+  ctx.ellipse(x, y + s * 0.008, bodyW * 1.03, bodyH * 1.02, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── BASE TORSO ────────────────────────────────────────────────────
+  const bodyGrad = ctx.createRadialGradient(x, y - s * 0.03, s * 0.03, x, y + s * 0.01, bodyH);
   bodyGrad.addColorStop(0, "#2d6a48");
   bodyGrad.addColorStop(0.2, "#1e5235");
   bodyGrad.addColorStop(0.5, "#164028");
@@ -4308,131 +4308,181 @@ function drawBody(
   ctx.ellipse(x, y, bodyW, bodyH, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(10,30,18,0.2)";
-  ctx.lineWidth = 0.4 * zoom;
-  for (let i = 0; i < 8; i++) {
-    const gx = x - bodyW * 0.6 + i * bodyW * 0.17;
-    const drift = Math.sin(time * 0.8 + i * 0.9) * s * 0.002;
+  // ── BARK TEXTURE OVERLAY — curved plate boundaries ────────────────
+  const plateBounds = [
+    { sx: 0, sy: -0.2, ex: 0, ey: 0.18 },
+    { sx: -0.08, sy: -0.18, ex: -0.06, ey: 0.16 },
+    { sx: 0.08, sy: -0.18, ex: 0.06, ey: 0.16 },
+  ];
+  for (let i = 0; i < plateBounds.length; i++) {
+    const pb = plateBounds[i];
+    const drift = Math.sin(time * 0.8 + i * 1.5) * s * 0.002;
+    ctx.strokeStyle = "rgba(10,30,18,0.25)";
+    ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
-    ctx.moveTo(gx + drift, y - bodyH * 0.65);
+    ctx.moveTo(x + pb.sx * s + drift, y + pb.sy * s);
     ctx.bezierCurveTo(
-      gx + s * 0.004 + drift,
-      y - bodyH * 0.25,
-      gx - s * 0.004 + drift,
-      y + bodyH * 0.25,
-      gx + s * 0.002 + drift,
-      y + bodyH * 0.55,
+      x + pb.sx * s + s * 0.004 + drift,
+      y + (pb.sy + pb.ey) * 0.3 * s,
+      x + pb.ex * s - s * 0.004 + drift,
+      y + (pb.sy + pb.ey) * 0.7 * s,
+      x + pb.ex * s + drift,
+      y + pb.ey * s,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(60,100,70,0.12)";
+    ctx.lineWidth = 0.3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + pb.sx * s + drift + 0.5, y + pb.sy * s + 0.5);
+    ctx.bezierCurveTo(
+      x + pb.sx * s + s * 0.004 + drift + 0.5,
+      y + (pb.sy + pb.ey) * 0.3 * s + 0.5,
+      x + pb.ex * s - s * 0.004 + drift + 0.5,
+      y + (pb.sy + pb.ey) * 0.7 * s + 0.5,
+      x + pb.ex * s + drift + 0.5,
+      y + pb.ey * s + 0.5,
     );
     ctx.stroke();
   }
 
-  const armorPlates = [
-    { cx: 0, cy: -0.07, rx: 0.1, ry: 0.09, seed: 300 },
-    { cx: -0.07, cy: 0.02, rx: 0.075, ry: 0.065, seed: 302 },
-    { cx: 0.07, cy: 0.02, rx: 0.075, ry: 0.065, seed: 304 },
-    { cx: 0, cy: 0.1, rx: 0.085, ry: 0.055, seed: 306 },
-    { cx: -0.04, cy: -0.14, rx: 0.055, ry: 0.04, seed: 308 },
-    { cx: 0.04, cy: -0.14, rx: 0.055, ry: 0.04, seed: 310 },
+  // ── STRUCTURED BARK PLATE ARMOR ───────────────────────────────────
+  const barkPlates = [
+    { cx: 0, cy: -0.07, w: 0.1, h: 0.12, label: "chest" },
+    { cx: -0.08, cy: 0.0, w: 0.065, h: 0.1, label: "leftSide" },
+    { cx: 0.08, cy: 0.0, w: 0.065, h: 0.1, label: "rightSide" },
+    { cx: -0.035, cy: 0.1, w: 0.06, h: 0.065, label: "lowerLeft" },
+    { cx: 0.035, cy: 0.1, w: 0.06, h: 0.065, label: "lowerRight" },
   ];
-  for (let i = 0; i < armorPlates.length; i++) {
-    const ap = armorPlates[i];
-    const px = x + ap.cx * s;
-    const py = y + ap.cy * s;
-    const prx = ap.rx * s + Math.sin(time * 1.2 + i * 1.1) * s * 0.002;
-    const pry = ap.ry * s + Math.sin(time * 1.5 + i * 0.8) * s * 0.001;
+  for (let pi = 0; pi < barkPlates.length; pi++) {
+    const bp = barkPlates[pi];
+    const px = x + bp.cx * s;
+    const py = y + bp.cy * s;
+    const pw = bp.w * s + Math.sin(time * 1.2 + pi * 1.1) * s * 0.002;
+    const ph = bp.h * s + Math.sin(time * 1.5 + pi * 0.8) * s * 0.001;
 
-    const plateGrad = ctx.createRadialGradient(
-      px - prx * 0.3,
-      py - pry * 0.35,
-      prx * 0.05,
-      px,
-      py,
-      prx,
-    );
-    plateGrad.addColorStop(0, "#3e7050");
-    plateGrad.addColorStop(0.2, "#2e5a3e");
-    plateGrad.addColorStop(0.5, "#1e442c");
-    plateGrad.addColorStop(0.8, "#14321e");
-    plateGrad.addColorStop(1, "#102818");
-    ctx.fillStyle = plateGrad;
-    drawOrganicBlob(ctx, px, py, prx, pry, 10, 0.12, ap.seed + time * 0.1);
-    ctx.fill();
+    const SEGS = 4;
+    const segH = ph / SEGS;
+    for (let si = 0; si < SEGS; si++) {
+      const t0 = si / SEGS;
+      const t1 = (si + 1) / SEGS;
+      const topY = py - ph * 0.5 + si * segH;
+      const botY = topY + segH;
+      const topW = pw * (1 - t0 * 0.15);
+      const botW = pw * (1 - t1 * 0.15);
 
-    ctx.fillStyle = "rgba(65,110,78,0.18)";
-    drawOrganicBlob(
-      ctx,
-      px - prx * 0.12,
-      py - pry * 0.22,
-      prx * 0.5,
-      pry * 0.3,
-      8,
-      0.1,
-      ap.seed + 1,
-    );
-    ctx.fill();
+      const segG = ctx.createLinearGradient(px - topW, topY, px + topW, topY);
+      const sh = si % 2 === 0 ? 0 : 8;
+      segG.addColorStop(0, `rgb(${30 + sh},${56 + sh},${40 + sh})`);
+      segG.addColorStop(0.3, `rgb(${46 + sh},${80 + sh},${56 + sh})`);
+      segG.addColorStop(0.5, `rgb(${54 + sh},${92 + sh},${64 + sh})`);
+      segG.addColorStop(0.7, `rgb(${46 + sh},${80 + sh},${56 + sh})`);
+      segG.addColorStop(1, `rgb(${30 + sh},${56 + sh},${40 + sh})`);
+
+      ctx.fillStyle = segG;
+      ctx.beginPath();
+      ctx.moveTo(px - topW, topY);
+      ctx.lineTo(px + topW, topY);
+      ctx.lineTo(px + botW, botY);
+      ctx.lineTo(px - botW, botY);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(80,120,85,${0.2 + si * 0.05})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(px - topW * 0.95, topY + 0.5);
+      ctx.lineTo(px + topW * 0.95, topY + 0.5);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(5,15,8,0.3)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(px - topW * 0.95, topY);
+      ctx.lineTo(px + topW * 0.95, topY);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(5,15,8,0.25)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(px - pw, py - ph * 0.5);
+    ctx.lineTo(px - pw * (1 - 0.15), py + ph * 0.5);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + pw, py - ph * 0.5);
+    ctx.lineTo(px + pw * (1 - 0.15), py + ph * 0.5);
+    ctx.stroke();
 
     const crackA = 0.08 + breathe * 0.01 + atkBurst * 0.08;
     ctx.strokeStyle = `rgba(${P.glow},${crackA})`;
     ctx.lineWidth = (0.4 + atkBurst * 0.2) * zoom;
-    const crackAngle = (ap.seed * 0.1) % Math.PI;
     ctx.beginPath();
-    ctx.moveTo(px - prx * 0.4, py + Math.sin(crackAngle) * pry * 0.3);
+    ctx.moveTo(px - pw * 0.3, py - ph * 0.2);
     ctx.bezierCurveTo(
-      px - prx * 0.1,
-      py + Math.sin(crackAngle + 0.5) * pry * 0.15,
-      px + prx * 0.1,
-      py - Math.sin(crackAngle) * pry * 0.2,
-      px + prx * 0.35,
-      py + Math.sin(crackAngle + 1) * pry * 0.25,
-    );
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(5,15,8,0.2)";
-    ctx.lineWidth = 0.6 * zoom;
-    drawOrganicBlob(
-      ctx,
-      px,
-      py,
-      prx * 1.02,
-      pry * 1.02,
-      10,
-      0.12,
-      ap.seed + time * 0.1,
+      px - pw * 0.05,
+      py - ph * 0.05,
+      px + pw * 0.05,
+      py + ph * 0.1,
+      px + pw * 0.25,
+      py + ph * 0.2,
     );
     ctx.stroke();
   }
 
-  setShadowBlur(ctx, 3 * zoom, P.shadowHex);
-  const seamLines = [
-    { sx: -0.06, sy: -0.04, ex: 0.06, ey: -0.04 },
-    { sx: -0.03, sy: 0.05, ex: 0.03, ey: 0.05 },
-    { sx: -0.09, sy: -0.01, ex: -0.02, ey: 0.08 },
-    { sx: 0.09, sy: -0.01, ex: 0.02, ey: 0.08 },
-    { sx: -0.05, sy: -0.1, ex: 0.0, ey: -0.04 },
-    { sx: 0.05, sy: -0.1, ex: 0.0, ey: -0.04 },
-    { sx: -0.07, sy: 0.04, ex: -0.05, ey: 0.12 },
-    { sx: 0.07, sy: 0.04, ex: 0.05, ey: 0.12 },
+  // Knot bumps at plate intersections
+  const plateKnots = [
+    { kx: 0, ky: -0.01 },
+    { kx: -0.04, ky: 0.06 },
+    { kx: 0.04, ky: 0.06 },
   ];
-  for (let i = 0; i < seamLines.length; i++) {
-    const seam = seamLines[i];
-    const pulse = Math.sin(time * 2.8 + i * 0.8) * 0.06;
-    const veinAlpha = 0.15 + naturePulse * 0.12 + atkBurst * 0.15 + pulse;
-    ctx.strokeStyle = `rgba(${P.glow},${veinAlpha})`;
-    ctx.lineWidth =
-      (0.8 + Math.sin(time * 3 + i) * 0.2 + atkBurst * 0.3) * zoom;
+  for (let ki = 0; ki < plateKnots.length; ki++) {
+    const pk = plateKnots[ki];
+    const kx = x + pk.kx * s;
+    const ky = y + pk.ky * s;
+    const kSz = s * (0.01 + Math.sin(ki * 4.3) * 0.002);
+    const kG = ctx.createRadialGradient(kx - kSz * 0.2, ky - kSz * 0.2, kSz * 0.1, kx, ky, kSz);
+    kG.addColorStop(0, "#5a7858");
+    kG.addColorStop(0.5, "#2a4830");
+    kG.addColorStop(1, "#1a3018");
+    ctx.fillStyle = kG;
     ctx.beginPath();
-    ctx.moveTo(x + seam.sx * s, y + seam.sy * s);
+    ctx.ellipse(kx, ky, kSz, kSz * 0.65, Math.sin(ki * 3) * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(5,15,8,0.25)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.arc(kx, ky, kSz * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // ── VEIN LINES along plate edges ──────────────────────────────────
+  setShadowBlur(ctx, 3 * zoom, P.shadowHex);
+  const veinPaths = [
+    { sx: -0.09, sy: -0.04, ex: 0.09, ey: -0.04 },
+    { sx: -0.05, sy: -0.13, ex: 0.0, ey: -0.01 },
+    { sx: 0.05, sy: -0.13, ex: 0.0, ey: -0.01 },
+    { sx: -0.1, sy: -0.01, ex: -0.06, ey: 0.13 },
+    { sx: 0.1, sy: -0.01, ex: 0.06, ey: 0.13 },
+    { sx: -0.035, sy: 0.06, ex: 0.035, ey: 0.06 },
+  ];
+  for (let vi = 0; vi < veinPaths.length; vi++) {
+    const vn = veinPaths[vi];
+    const pulse = Math.sin(time * 2.8 + vi * 0.8) * 0.06;
+    const vAlpha = 0.15 + naturePulse * 0.12 + atkBurst * 0.15 + pulse;
+    ctx.strokeStyle = `rgba(${P.glow},${vAlpha})`;
+    ctx.lineWidth = (0.8 + Math.sin(time * 3 + vi) * 0.2 + atkBurst * 0.3) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + vn.sx * s, y + vn.sy * s);
     ctx.quadraticCurveTo(
-      x + (seam.sx + seam.ex) * 0.5 * s,
-      y + (seam.sy + seam.ey) * 0.5 * s + s * 0.008,
-      x + seam.ex * s,
-      y + seam.ey * s,
+      x + (vn.sx + vn.ex) * 0.5 * s,
+      y + (vn.sy + vn.ey) * 0.5 * s + s * 0.008,
+      x + vn.ex * s,
+      y + vn.ey * s,
     );
     ctx.stroke();
 
-    if (i % 2 === 0) {
-      const nodeX = x + (seam.sx + seam.ex) * 0.5 * s;
-      const nodeY = y + (seam.sy + seam.ey) * 0.5 * s + s * 0.004;
+    if (vi % 2 === 0) {
+      const nodeX = x + (vn.sx + vn.ex) * 0.5 * s;
+      const nodeY = y + (vn.sy + vn.ey) * 0.5 * s + s * 0.004;
       ctx.fillStyle = `rgba(${P.glowBright},${0.15 + pulse + atkBurst * 0.12})`;
       ctx.beginPath();
       ctx.arc(nodeX, nodeY, s * 0.004, 0, Math.PI * 2);
@@ -4441,6 +4491,7 @@ function drawBody(
   }
   clearShadow(ctx);
 
+  // ── INNER GLOW ────────────────────────────────────────────────────
   const glowR = s * (0.14 + atkBurst * 0.06);
   const glow = ctx.createRadialGradient(x, y - s * 0.04, 0, x, y, glowR);
   glow.addColorStop(0, `rgba(${P.glowBright},${0.14 + atkBurst * 0.22})`);
@@ -4451,43 +4502,30 @@ function drawBody(
   ctx.arc(x, y - s * 0.04, glowR, 0, Math.PI * 2);
   ctx.fill();
 
-  const rimAlpha =
-    0.2 + naturePulse * 0.14 + atkBurst * 0.16 + Math.sin(time * 2) * 0.04;
+  // ── RIM HIGHLIGHT following plate structure ────────────────────────
+  const rimAlpha = 0.2 + naturePulse * 0.14 + atkBurst * 0.16 + Math.sin(time * 2) * 0.04;
   ctx.strokeStyle = `rgba(110,231,183,${rimAlpha})`;
   ctx.lineWidth = (1.3 + atkBurst * 0.6 + Math.sin(time * 3) * 0.2) * zoom;
   ctx.beginPath();
   ctx.ellipse(x, y, bodyW, bodyH, 0, -0.9, Math.PI * 0.35);
   ctx.stroke();
 
+  // ── DELIBERATE MOSS ACCENTS at plate edges ────────────────────────
   const mossPts = [
-    { dx: -0.1, dy: -0.1, r: 0.015 },
-    { dx: 0.09, dy: -0.06, r: 0.013 },
-    { dx: -0.07, dy: 0.0, r: 0.014 },
-    { dx: 0.06, dy: -0.01, r: 0.012 },
-    { dx: -0.11, dy: 0.05, r: 0.013 },
-    { dx: 0.1, dy: 0.06, r: 0.012 },
-    { dx: -0.04, dy: 0.1, r: 0.011 },
-    { dx: 0.03, dy: 0.09, r: 0.014 },
-    { dx: 0.0, dy: -0.15, r: 0.011 },
-    { dx: -0.08, dy: -0.06, r: 0.01 },
+    { dx: -0.1, dy: -0.08, r: 0.013 },
+    { dx: 0.1, dy: -0.08, r: 0.012 },
+    { dx: -0.08, dy: 0.06, r: 0.011 },
+    { dx: 0.08, dy: 0.06, r: 0.011 },
+    { dx: 0.0, dy: 0.14, r: 0.01 },
   ];
-  for (let i = 0; i < mossPts.length; i++) {
-    const mp = mossPts[i];
+  for (let mi = 0; mi < mossPts.length; mi++) {
+    const mp = mossPts[mi];
     const mx = x + mp.dx * s;
     const my = y + mp.dy * s;
-    const mGrow = Math.sin(time * 1.5 + i * 1.2) * 0.15;
+    const mGrow = Math.sin(time * 1.5 + mi * 1.2) * 0.15;
     const mr = (mp.r + mGrow * 0.003) * s;
-    ctx.fillStyle = `rgba(${P.leafDark},${0.2 + Math.sin(time * 2 + i * 0.8) * 0.05 + atkBurst * 0.08})`;
-    drawOrganicBlob(
-      ctx,
-      mx,
-      my,
-      mr,
-      mr * 0.6,
-      7,
-      0.2,
-      i * 3.3 + 310 + time * 0.3,
-    );
+    ctx.fillStyle = `rgba(${P.leafDark},${0.22 + Math.sin(time * 2 + mi * 0.8) * 0.05 + atkBurst * 0.08})`;
+    drawOrganicBlob(ctx, mx, my, mr, mr * 0.6, 7, 0.2, mi * 3.3 + 310 + time * 0.3);
     ctx.fill();
   }
 }
@@ -5505,221 +5543,383 @@ function drawHead(
 ) {
   const headY = y - s * 0.33;
 
-  // Hood
-  const hoodGrad = ctx.createRadialGradient(
-    x,
-    headY + s * 0.01,
-    0,
-    x,
-    headY,
-    s * 0.16,
-  );
-  hoodGrad.addColorStop(0, "#1a4030");
-  hoodGrad.addColorStop(0.4, "#0d3320");
-  hoodGrad.addColorStop(0.8, "#082618");
-  hoodGrad.addColorStop(1, "#051a10");
-  ctx.fillStyle = hoodGrad;
+  // ── SEGMENTED BARK HELMET SHELL ──────────────────────────────────
+  const helmetCX = x;
+  const helmetCY = headY - s * 0.01;
+  const helmetRX = s * 0.135;
+  const helmetRY = s * 0.12;
+  const HELM_PLATES = 6;
+
+  ctx.fillStyle = "#0d2210";
   ctx.beginPath();
-  ctx.ellipse(x, headY, s * 0.13, s * 0.12, 0, 0, Math.PI * 2);
+  ctx.ellipse(helmetCX, helmetCY, helmetRX, helmetRY, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Hood leaf trim — small leaf shapes along the hood edge
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    const lx = x + Math.cos(a) * s * 0.125;
-    const ly = headY + Math.sin(a) * s * 0.115;
-    const leafSz = s * 0.008;
-    ctx.fillStyle = `rgba(${P.leafDark},${0.3 + naturePulse * 0.1})`;
-    ctx.save();
-    ctx.translate(lx, ly);
-    ctx.rotate(a + Math.PI * 0.5);
+  for (let i = 0; i < HELM_PLATES; i++) {
+    const a0 = (i / HELM_PLATES) * Math.PI * 2 - Math.PI * 0.5;
+    const a1 = ((i + 1) / HELM_PLATES) * Math.PI * 2 - Math.PI * 0.5;
+    const aMid = (a0 + a1) * 0.5;
+
+    const ox0 = helmetCX + Math.cos(a0) * helmetRX;
+    const oy0 = helmetCY + Math.sin(a0) * helmetRY;
+    const ox1 = helmetCX + Math.cos(a1) * helmetRX;
+    const oy1 = helmetCY + Math.sin(a1) * helmetRY;
+    const ix0 = helmetCX + Math.cos(a0) * helmetRX * 0.3;
+    const iy0 = helmetCY + Math.sin(a0) * helmetRY * 0.3;
+    const ix1 = helmetCX + Math.cos(a1) * helmetRX * 0.3;
+    const iy1 = helmetCY + Math.sin(a1) * helmetRY * 0.3;
+
+    const perpX = Math.cos(aMid);
+    const perpY = Math.sin(aMid);
+    const segG = ctx.createLinearGradient(
+      helmetCX + perpX * helmetRX,
+      helmetCY + perpY * helmetRY,
+      helmetCX - perpX * helmetRX * 0.3,
+      helmetCY - perpY * helmetRY * 0.3,
+    );
+    const sh = i % 2 === 0 ? 0 : 10;
+    segG.addColorStop(0, `rgb(${74 + sh},${96 + sh},${64 + sh})`);
+    segG.addColorStop(0.3, `rgb(${56 + sh},${80 + sh},${48 + sh})`);
+    segG.addColorStop(0.7, `rgb(${38 + sh},${64 + sh},${32 + sh})`);
+    segG.addColorStop(1, `rgb(${20 + sh},${42 + sh},${18 + sh})`);
+
+    ctx.fillStyle = segG;
     ctx.beginPath();
-    ctx.ellipse(0, 0, leafSz, leafSz * 0.4, 0, 0, Math.PI * 2);
+    ctx.moveTo(ix0, iy0);
+    ctx.lineTo(ox0, oy0);
+    ctx.quadraticCurveTo(
+      helmetCX + Math.cos(aMid) * helmetRX * 1.12,
+      helmetCY + Math.sin(aMid) * helmetRY * 1.12,
+      ox1,
+      oy1,
+    );
+    ctx.lineTo(ix1, iy1);
+    ctx.closePath();
     ctx.fill();
-    ctx.restore();
-  }
 
-  // Face
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    headY + s * 0.008,
-    0,
-    x,
-    headY,
-    s * 0.1,
-  );
-  faceGrad.addColorStop(0, "#b08868");
-  faceGrad.addColorStop(0.15, "#a08060");
-  faceGrad.addColorStop(0.3, "#8b6f47");
-  faceGrad.addColorStop(0.55, "#6b5535");
-  faceGrad.addColorStop(0.8, "#4a3a20");
-  faceGrad.addColorStop(1, "#3a2a15");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, headY + s * 0.008, s * 0.098, s * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  for (let i = 0; i < 3; i++) {
-    const ly = headY - s * 0.015 + i * s * 0.02;
-    const lw = s * (0.065 - Math.abs(i - 1) * 0.01);
-    ctx.strokeStyle = "rgba(70,50,30,0.15)";
+    ctx.strokeStyle = "rgba(5,15,8,0.4)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(ox0, oy0);
+    ctx.lineTo(ix0, iy0);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(80,110,75,0.18)";
     ctx.lineWidth = 0.4 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x - lw, ly);
-    ctx.bezierCurveTo(
-      x - lw * 0.3,
-      ly + s * 0.003,
-      x + lw * 0.3,
-      ly - s * 0.002,
-      x + lw,
-      ly,
+    ctx.moveTo(ox0 + 0.5, oy0 + 0.5);
+    ctx.lineTo(ix0 + 0.5, iy0 + 0.5);
+    ctx.stroke();
+  }
+
+  // Knot bumps on helmet — 3D radial-gradient spheres
+  const helmKnots = [Math.PI * 0.15, Math.PI * 0.85, Math.PI * 1.55];
+  for (const ka of helmKnots) {
+    const kx = helmetCX + Math.cos(ka) * helmetRX * 0.72;
+    const ky = helmetCY + Math.sin(ka) * helmetRY * 0.72;
+    const kSz = s * (0.012 + Math.sin(ka * 3.7) * 0.003);
+    const kGrad = ctx.createRadialGradient(
+      kx - kSz * 0.2,
+      ky - kSz * 0.2,
+      kSz * 0.1,
+      kx,
+      ky,
+      kSz,
+    );
+    kGrad.addColorStop(0, "#5a7858");
+    kGrad.addColorStop(0.5, "#2a4030");
+    kGrad.addColorStop(1, "#1a2818");
+    ctx.fillStyle = kGrad;
+    ctx.beginPath();
+    ctx.ellipse(kx, ky, kSz, kSz * 0.65, Math.sin(ka * 5) * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(5,15,8,0.3)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(kx, ky, kSz * 0.5, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Vine wraps spiraling around helmet
+  ctx.strokeStyle = `rgba(${P.vine},${0.4 + naturePulse * 0.12})`;
+  ctx.lineWidth = (1.0 + naturePulse * 0.2) * zoom;
+  for (let v = 0; v < 4; v++) {
+    const startA = -Math.PI * 0.4 + v * Math.PI * 0.55;
+    ctx.beginPath();
+    ctx.ellipse(
+      helmetCX,
+      helmetCY,
+      helmetRX * (0.92 + v * 0.04),
+      helmetRY * (0.92 + v * 0.04),
+      0,
+      startA,
+      startA + Math.PI * 0.35,
     );
     ctx.stroke();
   }
 
-  // Eyes — 20% larger with stronger glow
+  // Proper bezier leaf shapes along helmet edge
+  for (let i = 0; i < 8; i++) {
+    const la = (i / 8) * Math.PI * 2 + Math.sin(time * 0.8 + i) * 0.05;
+    const lx = helmetCX + Math.cos(la) * helmetRX * 1.02;
+    const ly = helmetCY + Math.sin(la) * helmetRY * 1.02;
+    const leafLen = s * (0.018 + Math.sin(i * 1.7) * 0.004);
+    const leafDir = la + Math.PI * 0.5;
+
+    ctx.fillStyle = `rgba(${P.leaf},${0.35 + naturePulse * 0.15})`;
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(leafDir);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(leafLen * 0.3, -leafLen * 0.3, leafLen * 0.7, -leafLen * 0.25, leafLen, 0);
+    ctx.bezierCurveTo(leafLen * 0.7, leafLen * 0.25, leafLen * 0.3, leafLen * 0.3, 0, 0);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${P.vineDark},0.3)`;
+    ctx.lineWidth = 0.3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(leafLen * 0.85, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── TAPERED FACE SHAPE ──────────────────────────────────────────
+  const faceW = s * 0.098;
+  const faceH = s * 0.09;
+  const faceCY = headY + s * 0.008;
+  const chinTaper = s * 0.015;
+
+  const faceGrad = ctx.createRadialGradient(
+    x,
+    faceCY - faceH * 0.1,
+    0,
+    x,
+    faceCY,
+    faceH * 1.1,
+  );
+  faceGrad.addColorStop(0, "#c09878");
+  faceGrad.addColorStop(0.15, "#b08868");
+  faceGrad.addColorStop(0.3, "#9a7755");
+  faceGrad.addColorStop(0.55, "#7a6040");
+  faceGrad.addColorStop(0.8, "#5a4428");
+  faceGrad.addColorStop(1, "#3a2a15");
+  ctx.fillStyle = faceGrad;
+  ctx.beginPath();
+  ctx.moveTo(x, faceCY - faceH);
+  ctx.bezierCurveTo(x + faceW * 0.7, faceCY - faceH, x + faceW, faceCY - faceH * 0.5, x + faceW, faceCY);
+  ctx.bezierCurveTo(x + faceW, faceCY + faceH * 0.4, x + faceW * 0.5, faceCY + faceH * 0.8, x, faceCY + faceH + chinTaper);
+  ctx.bezierCurveTo(x - faceW * 0.5, faceCY + faceH * 0.8, x - faceW, faceCY + faceH * 0.4, x - faceW, faceCY);
+  ctx.bezierCurveTo(x - faceW, faceCY - faceH * 0.5, x - faceW * 0.7, faceCY - faceH, x, faceCY - faceH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Forehead creases
+  for (let i = 0; i < 3; i++) {
+    const ly = headY - s * 0.015 + i * s * 0.02;
+    const lw = s * (0.065 - Math.abs(i - 1) * 0.01);
+    ctx.strokeStyle = "rgba(70,50,30,0.12)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - lw, ly);
+    ctx.bezierCurveTo(x - lw * 0.3, ly + s * 0.003, x + lw * 0.3, ly - s * 0.002, x + lw, ly);
+    ctx.stroke();
+  }
+
+  // ── EYES — larger with iris gradient ring ─────────────────────────
+  const eyeScale = 1.55;
   for (const side of [-1, 1]) {
     const eyeX = x + side * s * 0.042;
     const eyeY = headY - s * 0.002;
-    const eyeScale = 1.2;
 
-    const egAlpha = 0.3 + naturePulse * 0.22 + magicPulse * 0.15;
-    const eg = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, s * 0.05);
+    const egAlpha = 0.35 + naturePulse * 0.22 + magicPulse * 0.15;
+    const eg = ctx.createRadialGradient(eyeX, eyeY, 0, eyeX, eyeY, s * 0.06);
     eg.addColorStop(0, `rgba(${P.glowBright},${egAlpha})`);
     eg.addColorStop(1, `rgba(${P.glow},0)`);
     ctx.fillStyle = eg;
     ctx.beginPath();
-    ctx.arc(eyeX, eyeY, s * 0.05, 0, Math.PI * 2);
+    ctx.arc(eyeX, eyeY, s * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(240,230,215,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(eyeX - s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.02 * eyeScale, eyeX + s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(eyeX, eyeY + s * 0.016 * eyeScale, eyeX - s * 0.032 * eyeScale, eyeY);
+    ctx.fill();
+
+    const irisR = s * 0.016;
+    const irisG = ctx.createRadialGradient(eyeX, eyeY, irisR * 0.15, eyeX, eyeY, irisR);
+    irisG.addColorStop(0, P.eyePupil);
+    irisG.addColorStop(0.3, `rgb(${P.glowDark})`);
+    irisG.addColorStop(0.65, `rgb(${P.glow})`);
+    irisG.addColorStop(0.85, `rgb(${P.glowBright})`);
+    irisG.addColorStop(1, `rgba(${P.glow},0.6)`);
+    ctx.fillStyle = irisG;
+    ctx.beginPath();
+    ctx.arc(eyeX, eyeY, irisR, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = `rgba(${P.glow},${0.88 + naturePulse * 0.12})`;
     ctx.beginPath();
-    ctx.moveTo(eyeX - s * 0.028 * eyeScale, eyeY);
-    ctx.quadraticCurveTo(
-      eyeX,
-      eyeY - s * 0.016 * eyeScale,
-      eyeX + s * 0.028 * eyeScale,
-      eyeY,
-    );
-    ctx.quadraticCurveTo(
-      eyeX,
-      eyeY + s * 0.013 * eyeScale,
-      eyeX - s * 0.028 * eyeScale,
-      eyeY,
-    );
+    ctx.moveTo(eyeX - s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.02 * eyeScale, eyeX + s * 0.032 * eyeScale, eyeY);
+    ctx.quadraticCurveTo(eyeX, eyeY + s * 0.016 * eyeScale, eyeX - s * 0.032 * eyeScale, eyeY);
     ctx.fill();
 
     ctx.fillStyle = P.eyePupil;
     ctx.beginPath();
-    ctx.arc(eyeX, eyeY, s * 0.008, 0, Math.PI * 2);
+    ctx.arc(eyeX, eyeY, s * 0.01, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = `rgba(255,255,255,${0.65 + magicPulse * 0.25})`;
+    ctx.fillStyle = `rgba(255,255,255,${0.7 + magicPulse * 0.25})`;
     ctx.beginPath();
-    ctx.arc(
-      eyeX + side * s * 0.006,
-      eyeY - s * 0.005,
-      s * 0.0035,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(eyeX + side * s * 0.007, eyeY - s * 0.006, s * 0.004, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,255,255,${0.3 + magicPulse * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(eyeX - side * s * 0.004, eyeY + s * 0.004, s * 0.002, 0, Math.PI * 2);
     ctx.fill();
 
-    // Eyebrow
-    ctx.strokeStyle = "rgba(40,25,10,0.35)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = "rgba(40,25,10,0.4)";
+    ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
-    ctx.moveTo(eyeX - side * s * 0.02, eyeY - s * 0.008);
-    ctx.quadraticCurveTo(
-      eyeX - side * s * 0.03,
-      eyeY - s * 0.016,
-      eyeX - side * s * 0.035,
-      eyeY - s * 0.012,
-    );
+    ctx.moveTo(eyeX - side * s * 0.022, eyeY - s * 0.014);
+    ctx.quadraticCurveTo(eyeX, eyeY - s * 0.025, eyeX + side * s * 0.025, eyeY - s * 0.016);
     ctx.stroke();
 
-    // Nature markings / tattoos under each eye
     setShadowBlur(ctx, 2 * zoom, P.shadowHex);
     ctx.strokeStyle = `rgba(${P.glow},${0.3 + naturePulse * 0.15})`;
     ctx.lineWidth = 0.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(eyeX - side * s * 0.01, eyeY + s * 0.01);
-    ctx.quadraticCurveTo(
-      eyeX + side * s * 0.005,
-      eyeY + s * 0.022,
-      eyeX + side * s * 0.02,
-      eyeY + s * 0.018,
-    );
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(eyeX - side * s * 0.005, eyeY + s * 0.015);
-    ctx.quadraticCurveTo(
-      eyeX + side * s * 0.008,
-      eyeY + s * 0.028,
-      eyeX + side * s * 0.018,
-      eyeY + s * 0.025,
-    );
-    ctx.stroke();
+    const markDefs = [
+      { sx: -0.01, sy: 0.012, cx: 0.005, cy: 0.024, ex: 0.022, ey: 0.02 },
+      { sx: -0.005, sy: 0.017, cx: 0.008, cy: 0.03, ex: 0.02, ey: 0.028 },
+      { sx: -0.008, sy: 0.008, cx: 0.01, cy: 0.018, ex: 0.028, ey: 0.014 },
+      { sx: 0.0, sy: 0.022, cx: 0.01, cy: 0.036, ex: 0.015, ey: 0.034 },
+    ];
+    for (const m of markDefs) {
+      ctx.beginPath();
+      ctx.moveTo(eyeX + side * m.sx * s, eyeY + m.sy * s);
+      ctx.quadraticCurveTo(eyeX + side * m.cx * s, eyeY + m.cy * s, eyeX + side * m.ex * s, eyeY + m.ey * s);
+      ctx.stroke();
+    }
     clearShadow(ctx);
   }
 
-  // Forehead gem / crystal
+  // ── NOSE BRIDGE ───────────────────────────────────────────────────
+  ctx.strokeStyle = "rgba(80,55,30,0.2)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, headY - s * 0.005);
+  ctx.lineTo(x, headY + s * 0.018);
+  ctx.stroke();
+  for (const nSide of [-1, 1]) {
+    ctx.strokeStyle = "rgba(60,40,20,0.18)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.arc(x + nSide * s * 0.008, headY + s * 0.02, s * 0.004, 0, Math.PI);
+    ctx.stroke();
+  }
+
+  // ── FACETED FOREHEAD GEM ────────────────────────────────────────
   const gemX = x;
-  const gemY = headY - s * 0.035;
-  const gemR = s * 0.008;
-  const gemG = ctx.createRadialGradient(
-    gemX - gemR * 0.2,
-    gemY - gemR * 0.2,
-    0,
-    gemX,
-    gemY,
-    gemR,
-  );
-  gemG.addColorStop(0, `rgb(${P.glowWhite})`);
-  gemG.addColorStop(0.4, `rgb(${P.glowBright})`);
-  gemG.addColorStop(1, P.shadowHex);
+  const gemY = headY - s * 0.04;
+  const gemR = s * 0.014;
+
+  setShadowBlur(ctx, (6 + magicPulse * 5) * zoom, P.shadowHex);
+  const gemG = ctx.createRadialGradient(gemX, gemY, 0, gemX, gemY, gemR);
+  gemG.addColorStop(0, `rgba(${P.glowWhite},${0.95 + magicPulse * 0.05})`);
+  gemG.addColorStop(0.2, `rgb(${P.glowBright})`);
+  gemG.addColorStop(0.5, P.shadowHex);
+  gemG.addColorStop(0.8, `rgb(${P.glowDark})`);
+  gemG.addColorStop(1, "#047857");
   ctx.fillStyle = gemG;
   ctx.beginPath();
-  ctx.arc(gemX, gemY, gemR, 0, Math.PI * 2);
-  ctx.fill();
-  setShadowBlur(ctx, 3 * zoom, P.shadowHex);
-  ctx.fillStyle = `rgba(${P.glowBright},${0.2 + naturePulse * 0.12})`;
-  ctx.beginPath();
-  ctx.arc(gemX, gemY, gemR * 2.5, 0, Math.PI * 2);
+  for (let i = 0; i < 8; i++) {
+    const ga = (i / 8) * Math.PI * 2 - Math.PI / 2;
+    const cr = i % 2 === 0 ? gemR : gemR * 0.8;
+    const gx = gemX + Math.cos(ga) * cr;
+    const gy = gemY + Math.sin(ga) * cr;
+    if (i === 0) ctx.moveTo(gx, gy);
+    else ctx.lineTo(gx, gy);
+  }
+  ctx.closePath();
   ctx.fill();
   clearShadow(ctx);
 
-  // Cheek blush
+  ctx.strokeStyle = `rgba(${P.glowBright},0.35)`;
+  ctx.lineWidth = 0.4 * zoom;
+  for (let i = 0; i < 8; i++) {
+    const fa = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(gemX, gemY);
+    ctx.lineTo(gemX + Math.cos(fa) * gemR * 0.8, gemY + Math.sin(fa) * gemR * 0.8);
+    ctx.stroke();
+  }
+
+  const gemGlowA = 0.2 + Math.sin(time * 3) * 0.1 + naturePulse * 0.15;
+  ctx.fillStyle = `rgba(${P.glowBright},${gemGlowA})`;
+  ctx.beginPath();
+  ctx.arc(gemX, gemY, gemR * 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = `rgba(255,255,255,${0.55 + magicPulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(gemX - gemR * 0.2, gemY - gemR * 0.3, gemR * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── CHEEKBONE HIGHLIGHTS ──────────────────────────────────────────
   for (const side of [-1, 1]) {
-    ctx.fillStyle = "rgba(180,100,80,0.08)";
+    const chG = ctx.createRadialGradient(
+      x + side * s * 0.04,
+      headY + s * 0.01,
+      0,
+      x + side * s * 0.04,
+      headY + s * 0.01,
+      s * 0.025,
+    );
+    chG.addColorStop(0, "rgba(210,170,130,0.15)");
+    chG.addColorStop(0.5, "rgba(180,130,90,0.08)");
+    chG.addColorStop(1, "rgba(160,110,70,0)");
+    ctx.fillStyle = chG;
     ctx.beginPath();
     ctx.ellipse(
-      x + side * s * 0.035,
-      headY + s * 0.018,
-      s * 0.02,
-      s * 0.012,
-      0,
+      x + side * s * 0.04,
+      headY + s * 0.01,
+      s * 0.025,
+      s * 0.015,
+      side * 0.2,
       0,
       Math.PI * 2,
     );
     ctx.fill();
   }
 
-  // More detailed lip line
-  ctx.strokeStyle = "rgba(139,92,60,0.4)";
-  ctx.lineWidth = 0.8 * zoom;
+  // ── CUPID'S BOW LIPS ─────────────────────────────────────────────
+  const lipY = headY + s * 0.035;
+  ctx.fillStyle = "rgba(160,95,65,0.35)";
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.024, headY + s * 0.035);
-  ctx.quadraticCurveTo(x, headY + s * 0.03, x + s * 0.024, headY + s * 0.035);
-  ctx.stroke();
-  ctx.strokeStyle = "rgba(160,110,75,0.25)";
-  ctx.lineWidth = 0.4 * zoom;
+  ctx.moveTo(x - s * 0.024, lipY);
+  ctx.quadraticCurveTo(x - s * 0.012, lipY - s * 0.006, x, lipY - s * 0.003);
+  ctx.quadraticCurveTo(x + s * 0.012, lipY - s * 0.006, x + s * 0.024, lipY);
+  ctx.quadraticCurveTo(x + s * 0.015, lipY + s * 0.003, x, lipY + s * 0.002);
+  ctx.quadraticCurveTo(x - s * 0.015, lipY + s * 0.003, x - s * 0.024, lipY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "rgba(145,85,55,0.25)";
   ctx.beginPath();
-  ctx.moveTo(x - s * 0.018, headY + s * 0.038);
-  ctx.quadraticCurveTo(x, headY + s * 0.042, x + s * 0.018, headY + s * 0.038);
+  ctx.moveTo(x - s * 0.02, lipY + s * 0.002);
+  ctx.quadraticCurveTo(x, lipY + s * 0.012, x + s * 0.02, lipY + s * 0.002);
+  ctx.quadraticCurveTo(x, lipY + s * 0.005, x - s * 0.02, lipY + s * 0.002);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(100,60,35,0.3)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.024, lipY);
+  ctx.quadraticCurveTo(x, lipY - s * 0.002, x + s * 0.024, lipY);
   ctx.stroke();
 
-  // Freckles using palette leaf color
+  // Freckles
   const freckles = [
     { dx: -0.025, dy: 0.015 },
     { dx: -0.015, dy: 0.02 },

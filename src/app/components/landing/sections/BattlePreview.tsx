@@ -2,115 +2,157 @@
 import React from "react";
 import Image from "next/image";
 import { LANDING_THEME, BATTLE_PREVIEW_SLIDES } from "../landingConstants";
-import { useCarousel, CarouselDots, CarouselArrow } from "../CarouselControls";
+import { useCarousel } from "../CarouselControls";
+import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
 
-export function BattlePreview() {
-  const { active, next, prev, goTo } = useCarousel(
-    BATTLE_PREVIEW_SLIDES.length,
-    5000,
+function MapThumbnail({ src, label, index, active, onClick }: {
+  src: string; label: string; index: number; active: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="relative flex-shrink-0 cursor-pointer transition-all duration-500 group"
+      style={{
+        width: active ? 180 : 72,
+        height: active ? 112 : 72,
+        borderRadius: active ? 12 : 8,
+        overflow: "hidden",
+        border: active ? `2px solid rgba(${T.accentRgb},0.5)` : "1.5px solid rgba(255,255,255,0.06)",
+        boxShadow: active
+          ? `0 0 30px rgba(${T.accentRgb},0.15), 0 8px 24px rgba(0,0,0,0.5)`
+          : "0 2px 8px rgba(0,0,0,0.3)",
+        transform: active ? "translateY(-4px)" : "translateY(0)",
+      }}
+    >
+      <Image src={src} alt={label} fill sizes={active ? "180px" : "72px"} className="object-cover" />
+
+      {!active && (
+        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-200" />
+      )}
+
+      {active && (
+        <div className="absolute inset-0" style={{
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)",
+        }}>
+          <div className="absolute bottom-2 left-2 right-2">
+            <span className="text-[9px] sm:text-[10px] font-bold text-white/90 block truncate">{label}</span>
+          </div>
+        </div>
+      )}
+
+      {!active && (
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2">
+          <span className="text-[7px] font-bold text-white/50">{index + 1}</span>
+        </div>
+      )}
+    </button>
   );
+}
+
+export function BattlePreview() {
+  const { active, next, prev, goTo } = useCarousel(BATTLE_PREVIEW_SLIDES.length, 5000);
   const current = BATTLE_PREVIEW_SLIDES[active];
 
   return (
-    <section className="py-16 sm:py-24 overflow-hidden">
-      <div
-        className="h-px mx-auto w-4/5 max-w-xl"
-        style={{
-          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.25), transparent)`,
-        }}
-      />
+    <section className="relative py-20 sm:py-28 overflow-hidden">
+      <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none opacity-50" />
 
-      <div className="text-center mt-10 sm:mt-16 mb-8 sm:mb-12">
-        <h3
-          className="text-[10px] sm:text-xs font-bold tracking-[0.3em] uppercase mb-1.5"
-          style={{ color: `rgba(${T.accentRgb},0.3)` }}
-        >
-          Operations
-        </h3>
-        <h2
-          className="text-xl sm:text-3xl font-bold tracking-wider"
-          style={{
-            color: T.accent,
-            textShadow: `0 0 30px rgba(${T.accentRgb},0.2)`,
-          }}
-        >
-          Mission Select
-        </h2>
-      </div>
+      <div className="relative z-10">
+        <SectionFlourish />
 
-      <div className="relative mx-3 sm:mx-6 lg:mx-12">
-        <CarouselArrow direction="left" onClick={prev} />
-        <CarouselArrow direction="right" onClick={next} />
-
-        <div
-          className="relative aspect-[16/9] rounded-2xl overflow-hidden"
-          style={{
-            boxShadow: `0 0 60px rgba(${T.accentRgb},0.05), 0 16px 48px rgba(0,0,0,0.5)`,
-          }}
-        >
-          {BATTLE_PREVIEW_SLIDES.map((slide, i) => (
-            <div
-              key={slide.src}
-              className="absolute inset-0"
-              style={{
-                opacity: i === active ? 1 : 0,
-                transition: "opacity 1s ease-in-out",
-              }}
-            >
-              <Image
-                src={slide.src}
-                alt={slide.label}
-                fill
-                sizes="100vw"
-                className="object-cover"
-              />
-            </div>
-          ))}
-
-          <div
-            className="absolute inset-0 pointer-events-none"
+        <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
+          <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
+            25+ Hand-Crafted Maps
+          </p>
+          <h2
+            className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
             style={{
-              background:
-                "radial-gradient(ellipse 85% 80% at 50% 50%, transparent 40%, rgba(0,0,0,0.5) 100%)",
-            }}
-          />
-
-          <div
-            className="absolute bottom-0 inset-x-0 p-5 sm:p-8 flex items-end justify-between"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.4) 60%, transparent)",
+              color: T.accent,
+              textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
             }}
           >
-            <div>
-              <span
-                className="text-lg sm:text-xl font-bold tracking-wider block"
-                style={{ color: `rgba(${T.accentRgb},0.9)` }}
-              >
-                {current?.label}
-              </span>
-              <span
-                className="text-[10px] uppercase tracking-[0.2em] font-medium"
-                style={{ color: `rgba(${T.accentRgb},0.35)` }}
-              >
-                Map {active + 1} of {BATTLE_PREVIEW_SLIDES.length}
-              </span>
-            </div>
-          </div>
-
-          <div
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ border: `1.5px solid rgba(${T.accentDarkRgb},0.15)` }}
-          />
+            The Campaign
+          </h2>
         </div>
 
-        <CarouselDots
-          count={BATTLE_PREVIEW_SLIDES.length}
-          active={active}
-          onDot={goTo}
-        />
+        {/* Main preview image */}
+        <div className="mx-3 sm:mx-6 lg:mx-12 mb-6">
+          <div
+            className="relative aspect-[16/9] rounded-2xl overflow-hidden"
+            style={{
+              boxShadow: `0 0 80px rgba(${T.accentRgb},0.06), 0 20px 60px rgba(0,0,0,0.5)`,
+              border: `1px solid rgba(${T.accentDarkRgb},0.2)`,
+            }}
+          >
+            {BATTLE_PREVIEW_SLIDES.map((slide, i) => {
+              const isActive = i === active;
+              return (
+                <div
+                  key={slide.src}
+                  className="absolute inset-0"
+                  style={{
+                    opacity: isActive ? 1 : 0,
+                    transform: isActive ? "scale(1.02)" : "scale(1.06)",
+                    transition: "opacity 1.2s ease-in-out, transform 10s ease-out",
+                  }}
+                >
+                  <Image src={slide.src} alt={slide.label} fill sizes="100vw" className="object-cover" />
+                </div>
+              );
+            })}
+
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,0,0,0.55) 100%)",
+            }} />
+
+            {/* Bottom info */}
+            <div className="absolute bottom-0 inset-x-0 p-5 sm:p-8" style={{
+              background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.5) 50%, transparent 100%)",
+            }}>
+              <div className="flex items-end justify-between">
+                <div>
+                  <h3
+                    className="text-xl sm:text-3xl font-bold font-cinzel tracking-wide"
+                    style={{ color: T.accent, textShadow: `0 0 20px rgba(${T.accentRgb},0.4)` }}
+                  >
+                    {current?.label}
+                  </h3>
+                  <span className="text-[9px] uppercase tracking-[0.2em] font-medium mt-1 block" style={{ color: `rgba(${T.accentRgb},0.3)` }}>
+                    Battle {active + 1} of {BATTLE_PREVIEW_SLIDES.length}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Nav zones */}
+            <button onClick={prev} className="absolute left-0 top-0 bottom-0 w-1/5 cursor-pointer z-10 group">
+              <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
+            <button onClick={next} className="absolute right-0 top-0 bottom-0 w-1/5 cursor-pointer z-10 group">
+              <div className="absolute inset-0 bg-gradient-to-l from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
+
+            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+              boxShadow: "inset 0 0 60px rgba(0,0,0,0.4)",
+            }} />
+          </div>
+        </div>
+
+        {/* Map filmstrip */}
+        <div className="flex gap-2 sm:gap-3 justify-center items-end px-4 flex-wrap">
+          {BATTLE_PREVIEW_SLIDES.map((slide, i) => (
+            <MapThumbnail
+              key={slide.src}
+              src={slide.src}
+              label={slide.label}
+              index={i}
+              active={i === active}
+              onClick={() => goTo(i)}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

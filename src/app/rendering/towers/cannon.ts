@@ -16,6 +16,7 @@ import {
 } from "../helpers";
 import {
   drawIsometricPrism,
+  drawIsoOctPrism,
   drawGear,
   drawSteamVent,
   drawConveyorBelt,
@@ -676,38 +677,30 @@ export function drawMechanicalTowerBase(
   const _tAcc = tAcc ?? "#ff6600";
   const _tRgba = tRgba ?? "255, 102, 0";
   // Stepped foundation — rough-hewn plinth (bottom tier)
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     x,
     y + 14 * zoom,
-    width + 18,
-    width + 18,
+    width + 38,
+    width + 38,
     6,
-    {
-      top: _s.s1,
-      left: darkenColor(_s.s1, 8),
-      right: darkenColor(_s.s1, 16),
-      leftBack: lightenColor(_s.s1, 5),
-      rightBack: lightenColor(_s.s1, 2),
-    },
+    _s.s1,
+    darkenColor(_s.s1, 8),
+    darkenColor(_s.s1, 16),
     zoom,
   );
 
   // Foundation middle tier — dressed stone
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     x,
     y + 10 * zoom,
-    width + 12,
-    width + 12,
+    width + 32,
+    width + 32,
     6,
-    {
-      top: _s.s2,
-      left: _s.s1,
-      right: darkenColor(_s.s1, 5),
-      leftBack: lightenColor(_s.s2, 3),
-      rightBack: darkenColor(_s.s2, 5),
-    },
+    _s.s2,
+    _s.s1,
+    darkenColor(_s.s1, 5),
     zoom,
   );
 
@@ -1541,24 +1534,6 @@ export function drawMechanicalTowerBase(
 
   // ========== LEVEL 3 HEAVY ARMOR & EQUIPMENT ==========
   if (level >= 3) {
-    // Additional heavy armor plating on front
-    ctx.fillStyle = _s.s3;
-    ctx.beginPath();
-    ctx.moveTo(x - w * 0.6, y + 4 * zoom);
-    ctx.lineTo(x - w * 0.8, y - height * zoom * 0.5);
-    ctx.lineTo(x - w * 0.5, y - height * zoom * 0.55);
-    ctx.lineTo(x - w * 0.3, y + 2 * zoom);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(x + w * 0.6, y + 4 * zoom);
-    ctx.lineTo(x + w * 0.8, y - height * zoom * 0.5);
-    ctx.lineTo(x + w * 0.5, y - height * zoom * 0.55);
-    ctx.lineTo(x + w * 0.3, y + 2 * zoom);
-    ctx.closePath();
-    ctx.fill();
-
     // Secondary ammo chain (right side)
     const chain2Links = 6;
     const chain2StartX = x + w * 1.0;

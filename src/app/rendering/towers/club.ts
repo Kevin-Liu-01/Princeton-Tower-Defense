@@ -4,6 +4,7 @@ import {
 } from "../../constants";
 import {
   drawIsometricPrism,
+  drawIsoOctPrism,
   drawGear,
   drawIsometricRailing,
 } from "./towerHelpers";
@@ -145,56 +146,44 @@ export function renderClubTower(
 
   // ========== STEPPED STONE FOUNDATION ==========
   // Lowest step — wide stone plinth
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 12 * zoom,
-    baseWidth + 18,
-    baseWidth + 18,
+    baseWidth + 38,
+    baseWidth + 38,
     3,
-    {
-      top: st.mid,
-      left: st.dark,
-      right: st.vdark,
-      leftBack: st.light,
-      rightBack: st.mid,
-    },
+    st.mid,
+    st.dark,
+    st.vdark,
     zoom,
   );
 
   // Middle step
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 9 * zoom,
-    baseWidth + 13,
-    baseWidth + 13,
+    baseWidth + 33,
+    baseWidth + 33,
     3,
-    {
-      top: st.mid2,
-      left: st.dark2,
-      right: st.vdark2,
-      leftBack: st.light2,
-      rightBack: st.mid2,
-    },
+    st.mid2,
+    st.dark2,
+    st.vdark2,
     zoom,
   );
 
   // Upper step with accent bevel
-  drawIsometricPrism(
+  drawIsoOctPrism(
     ctx,
     screenPos.x,
     screenPos.y + 6 * zoom,
-    baseWidth + 8,
-    baseWidth + 8,
+    baseWidth + 28,
+    baseWidth + 28,
     6,
-    {
-      top: st.up,
-      left: st.upL,
-      right: st.upR,
-      leftBack: st.upLB,
-      rightBack: st.up,
-    },
+    st.up,
+    st.upL,
+    st.upR,
     zoom,
   );
 
@@ -1005,78 +994,86 @@ export function renderClubTower(
   const topY = screenPos.y - baseHeight * zoom;
 
   // ========== ROTATING GOLD GEARS ==========
-  const gearRotation = time * 1.2;
+  const gearSpeed = time * 0.8;
+  const mainTeeth = 12;
+  const smallTeeth = 8;
+  const mainR = 10 + tower.level * 1.5;
+  const mainIR = 6 + tower.level;
+  const smallR = 7 + tower.level;
+  const smallIR = 4 + tower.level * 0.5;
+  const gearCX = screenPos.x;
+  const gearCY = screenPos.y - h * 0.48;
+  const meshDist = (mainR + smallR - 1.5) * zoom;
+  const gearColorsMain = {
+    outer: uc("#5a4a8a", "#8b5530", "#8b7355"),
+    inner: uc("#3a2a6a", "#6b3510", "#6b5335"),
+    teeth: uc("#7a6aaa", "#a07050", "#a08060"),
+    highlight: ac.main,
+  };
+  const gearColorsSmall = {
+    outer: uc("#4a3a7a", "#7a4520", "#7a6245"),
+    inner: uc("#2a1a5a", "#5a2500", "#5a4225"),
+    teeth: uc("#6a5a9a", "#9a6040", "#9a8260"),
+    highlight: ac.dim,
+  };
 
-  // Large main gear (gold production mechanism)
+  // Central main gear
   drawGear(
     ctx,
-    screenPos.x - w * 0.5,
-    screenPos.y - h * 0.5,
-    14 + tower.level * 2,
-    9 + tower.level,
-    10 + tower.level * 2,
-    gearRotation,
-    {
-      outer: "#8b7355",
-      inner: "#6b5335",
-      teeth: "#a08060",
-      highlight: ac.main,
-    },
+    gearCX,
+    gearCY,
+    mainR,
+    mainIR,
+    mainTeeth,
+    gearSpeed,
+    gearColorsMain,
     zoom,
   );
 
-  // Smaller meshing gear
+  // Left meshing gear (counter-rotates)
+  const leftGearA = Math.PI * 0.82;
   drawGear(
     ctx,
-    screenPos.x - w * 0.2,
-    screenPos.y - h * 0.65,
-    10 + tower.level,
-    6,
-    8 + tower.level,
-    -gearRotation * 1.4,
-    {
-      outer: "#7a6245",
-      inner: "#5a4225",
-      teeth: "#9a8260",
-      highlight: ac.main,
-    },
+    gearCX + Math.cos(leftGearA) * meshDist,
+    gearCY + Math.sin(leftGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
+    smallR,
+    smallIR,
+    smallTeeth,
+    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
+    gearColorsSmall,
     zoom,
   );
 
-  // Right side gear (all levels now)
+  // Right meshing gear (counter-rotates)
+  const rightGearA = Math.PI * 0.18;
   drawGear(
     ctx,
-    screenPos.x + w * 0.45,
-    screenPos.y - h * 0.45,
-    12 + tower.level,
-    8,
-    9 + tower.level,
-    gearRotation * 0.9,
-    {
-      outer: "#7a6245",
-      inner: "#5a4225",
-      teeth: "#9a8260",
-      highlight: ac.main,
-    },
+    gearCX + Math.cos(rightGearA) * meshDist,
+    gearCY + Math.sin(rightGearA) * meshDist * ISO_PRISM_D_FACTOR * 2,
+    smallR,
+    smallIR,
+    smallTeeth,
+    -gearSpeed * (mainTeeth / smallTeeth) + Math.PI / smallTeeth,
+    gearColorsSmall,
     zoom,
   );
 
-  // Level 2+ additional gear train
+  // Level 2+: tiny idler gears on top
   if (tower.level >= 2) {
+    const idlerR = 4 + tower.level * 0.5;
+    const idlerIR = 2.5;
+    const idlerTeeth = 6;
+    const idlerDist = (mainR + idlerR - 1) * zoom;
+    const topA = -Math.PI * 0.5;
     drawGear(
       ctx,
-      screenPos.x + w * 0.65,
-      screenPos.y - h * 0.25,
-      8,
-      5,
-      6,
-      -gearRotation * 1.6,
-      {
-        outer: "#6a5235",
-        inner: "#4a3215",
-        teeth: "#8a7250",
-        highlight: ac.dim,
-      },
+      gearCX + Math.cos(topA) * idlerDist * 0.6,
+      gearCY + Math.sin(topA) * idlerDist * 0.6 * ISO_PRISM_D_FACTOR * 2,
+      idlerR,
+      idlerIR,
+      idlerTeeth,
+      -gearSpeed * (mainTeeth / idlerTeeth),
+      gearColorsSmall,
       zoom,
     );
   }

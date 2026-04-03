@@ -11,6 +11,7 @@ import { darkenColor } from "../../utils";
 import {
   drawIsometricPrism,
   drawIsoDiamond,
+  drawIsoOctPrism,
   drawIsoGothicWindow,
   drawIsoFlushSlit,
   drawIsoFlushRect,
@@ -141,6 +142,63 @@ export function renderStationTower(
   const is4B = tower.level === 4 && tower.upgrade === "B";
   const uc = <T>(a: T, b: T, def: T): T => (is4A ? a : is4B ? b : def);
 
+  const plv = <T>(l1: T, l2: T, l3: T, l4a: T, l4b: T): T => {
+    if (tower.level <= 1) return l1;
+    if (tower.level === 2) return l2;
+    if (tower.level === 3) return l3;
+    return is4A ? l4a : l4b;
+  };
+
+  const pal = {
+    stone: {
+      void: plv("#1a1208", "#10141e", "#0e0e18", "#1a1408", "#0e1020"),
+      mortar: plv("#2e2014", "#1e2430", "#1a1c28", "#2e2210", "#1a1c32"),
+      dark: plv("#42321e", "#2e3644", "#282c3a", "#42341a", "#282c44"),
+      mid: plv("#584c38", "#424852", "#3c424e", "#584e32", "#3c4256"),
+      light: plv("#6a5e48", "#525a66", "#4e545e", "#6a6044", "#4e5468"),
+      pale: plv("#806e52", "#626a76", "#5e6470", "#806c4c", "#5e6478"),
+      palest: plv("#907e62", "#727a86", "#6e747e", "#907c5c", "#6e7488"),
+    },
+    trim: {
+      dark: plv("#5a4020", "#404858", "#424852", "#a08020", "#5e7098"),
+      main: plv("#6e5830", "#525e6c", "#545c68", "#c09528", "#7888b0"),
+      accent: plv("#b87333", "#626e7e", "#646c78", "#e8c847", "#98a8c8"),
+    },
+    wood: {
+      dark: plv("#3a2a1a", "#242832", "#222632", "#3a2a1a", "#1e2838"),
+      mid: plv("#4e3a28", "#343842", "#323842", "#4e3a28", "#2e3848"),
+      light: plv("#5e4a38", "#444a54", "#424a54", "#5e4a38", "#3e4858"),
+    },
+    metal: {
+      dark: plv("#5a4a3a", "#384048", "#444a56", "#8a7020", "#546080"),
+      mid: plv("#6e5e4e", "#4e545e", "#565e6a", "#a88828", "#6878a0"),
+      light: plv("#806e5e", "#5e646e", "#686e7a", "#c0a030", "#7888b0"),
+      rivet: plv("#b87333", "#808a96", "#868e9a", "#c9a227", "#8090b8"),
+    },
+    glass: {
+      dark: plv(
+        "rgba(30,22,10,0.92)",
+        "rgba(16,24,44,0.92)",
+        "rgba(12,16,32,0.92)",
+        "rgba(30,22,10,0.92)",
+        "rgba(14,20,40,0.92)",
+      ),
+      light: plv(
+        "rgba(58,48,32,0.82)",
+        "rgba(34,44,66,0.82)",
+        "rgba(28,36,54,0.82)",
+        "rgba(52,44,32,0.82)",
+        "rgba(26,36,60,0.82)",
+      ),
+    },
+    glow: {
+      hex: plv("#ff9632", "#58c0ff", "#78c4ff", "#ffa028", "#b0a0ff"),
+      r: plv(255, 200, 180, 255, 180),
+      g: plv(180, 220, 200, 160, 160),
+      b: plv(80, 255, 255, 40, 255),
+    },
+  };
+
   ctx.save();
   // Shift the entire building up slightly
   screenPos = { x: screenPos.x, y: screenPos.y - 6 * zoom };
@@ -166,70 +224,135 @@ export function renderStationTower(
   ) =>
     drawIsoDiamond(ctx, cx, cy, w, d, h, topColor, leftColor, rightColor, zoom);
 
+  const stationOctagon = (
+    cx: number,
+    cy: number,
+    w: number,
+    d: number,
+    h: number,
+    topColor: string,
+    leftColor: string,
+    rightColor: string,
+    cut?: number,
+  ) =>
+    drawIsoOctPrism(
+      ctx,
+      cx,
+      cy,
+      w,
+      d,
+      h,
+      topColor,
+      leftColor,
+      rightColor,
+      zoom,
+      cut,
+    );
+
+  const traceOctEdge = (
+    verts: { x: number; y: number }[],
+    baseCy: number,
+    bandY: number,
+  ) => {
+    const yShift = baseCy - bandY;
+    ctx.moveTo(verts[7].x, verts[7].y - yShift);
+    ctx.lineTo(verts[6].x, verts[6].y - yShift);
+    ctx.lineTo(verts[5].x, verts[5].y - yShift);
+    ctx.lineTo(verts[4].x, verts[4].y - yShift);
+    ctx.lineTo(verts[3].x, verts[3].y - yShift);
+    ctx.lineTo(verts[2].x, verts[2].y - yShift);
+  };
+
+  const drawPrismAO = (
+    px: number,
+    py: number,
+    pw: number,
+    pd: number,
+    ph: number,
+  ) => {
+    const hw = pw * zoom * 0.5;
+    const hd = pd * zoom * 0.25;
+    const pHeight = ph * zoom;
+    // Left face: top-to-bottom gradient darkening
+    const leftGrad = ctx.createLinearGradient(
+      px - hw,
+      py - pHeight - hd,
+      px - hw,
+      py,
+    );
+    leftGrad.addColorStop(0, "rgba(0,0,0,0)");
+    leftGrad.addColorStop(0.65, "rgba(0,0,0,0.04)");
+    leftGrad.addColorStop(1, "rgba(0,0,0,0.18)");
+    ctx.fillStyle = leftGrad;
+    ctx.beginPath();
+    ctx.moveTo(px - hw, py - hd - pHeight);
+    ctx.lineTo(px, py - pHeight);
+    ctx.lineTo(px, py);
+    ctx.lineTo(px - hw, py - hd);
+    ctx.closePath();
+    ctx.fill();
+    // Right face: subtler gradient
+    const rightGrad = ctx.createLinearGradient(
+      px + hw,
+      py - pHeight - hd,
+      px + hw,
+      py,
+    );
+    rightGrad.addColorStop(0, "rgba(0,0,0,0)");
+    rightGrad.addColorStop(0.65, "rgba(0,0,0,0.03)");
+    rightGrad.addColorStop(1, "rgba(0,0,0,0.14)");
+    ctx.fillStyle = rightGrad;
+    ctx.beginPath();
+    ctx.moveTo(px, py - pHeight);
+    ctx.lineTo(px + hw, py - hd - pHeight);
+    ctx.lineTo(px + hw, py - hd);
+    ctx.lineTo(px, py);
+    ctx.closePath();
+    ctx.fill();
+    // Top edge highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(px - hw, py - hd - pHeight);
+    ctx.lineTo(px, py - pHeight);
+    ctx.lineTo(px + hw, py - hd - pHeight);
+    ctx.stroke();
+  };
+
   // ========== LEVEL-SPECIFIC THEMED BASE ==========
   if (tower.level === 1) {
     // BARRACKS BASE - Wooden military camp platform with detailed texturing
 
-    // Bottom dirt/stone foundation layer (thick, matching L2/L3 pattern)
-    stationDiamond(
+    // Bottom dirt/stone foundation layer (octagonal)
+    const l1BotCy = screenPos.y + 19 * zoom;
+    const l1BotV = stationOctagon(
       screenPos.x,
-      screenPos.y + 19 * zoom,
-      baseW + 22,
-      baseD + 34,
+      l1BotCy,
+      baseW + 47,
+      baseD + 59,
       12,
       "#4a3a2a",
       "#3a2a1a",
       "#2a1a0a",
     );
 
-    // Heavy iron bands on bottom foundation
+    // Heavy iron bands on bottom foundation (octagonal edge)
     ctx.strokeStyle = "#5a4a3a";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 22) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 34) * zoom * 0.25 + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 22) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
+    traceOctEdge(l1BotV, l1BotCy, screenPos.y + 10 * zoom);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 22) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 34) * zoom * 0.25 + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 22) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
+    traceOctEdge(l1BotV, l1BotCy, screenPos.y + 18 * zoom);
     ctx.stroke();
 
-    // Foundation corner bolts
+    // Foundation corner bolts at octagonal vertices
     ctx.fillStyle = "#6a5a4a";
-    const l1FoundCorners = [
-      {
-        x: screenPos.x - (baseW + 22) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 22) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 34) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
-      },
-    ];
+    const l1BotYShift = l1BotCy - (screenPos.y + 12 * zoom);
+    const l1FoundCorners = [2, 4, 5, 7].map((i) => ({
+      x: l1BotV[i].x,
+      y: l1BotV[i].y - l1BotYShift,
+    }));
     for (const bolt of l1FoundCorners) {
       ctx.beginPath();
       ctx.arc(bolt.x, bolt.y, 2.5 * zoom, 0, Math.PI * 2);
@@ -241,28 +364,24 @@ export function renderStationTower(
       ctx.fillStyle = "#6a5a4a";
     }
 
-    // Middle wooden plank platform (thick mid-tier)
-    stationDiamond(
+    // Middle wooden plank platform (octagonal mid-tier)
+    const l1MidCy = screenPos.y + 8 * zoom;
+    const l1MidV = stationOctagon(
       screenPos.x,
-      screenPos.y + 8 * zoom,
-      baseW + 12,
-      baseD + 22,
+      l1MidCy,
+      baseW + 37,
+      baseD + 47,
       8,
       "#6b5030",
       "#5a4020",
       "#4a3010",
     );
 
-    // Edge highlight on middle tier
+    // Edge highlight on middle tier (octagonal)
     ctx.strokeStyle = "#7a6040";
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 12) * zoom * 0.5, screenPos.y + 1 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 22) * zoom * 0.25 + 1 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 12) * zoom * 0.5, screenPos.y + 1 * zoom);
+    traceOctEdge(l1MidV, l1MidCy, screenPos.y + 1 * zoom);
     ctx.stroke();
 
     // Wooden planks texture on left face (horizontal boards)
@@ -298,22 +417,13 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Metal corner brackets on wooden platform
+    // Metal corner brackets on wooden platform (at octagonal vertices)
     ctx.fillStyle = "#7a6a5a";
-    const bracketPositions = [
-      {
-        x: screenPos.x - (baseW + 10) * zoom * 0.5,
-        y: screenPos.y + 2 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 10) * zoom * 0.5,
-        y: screenPos.y + 2 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 18) * zoom * ISO_PRISM_D_FACTOR + 2 * zoom,
-      },
-    ];
+    const l1MidBrYShift = l1MidCy - (screenPos.y + 2 * zoom);
+    const bracketPositions = [2, 5, 7].map((i) => ({
+      x: l1MidV[i].x,
+      y: l1MidV[i].y - l1MidBrYShift,
+    }));
     for (const bracket of bracketPositions) {
       ctx.beginPath();
       ctx.moveTo(bracket.x, bracket.y);
@@ -331,12 +441,13 @@ export function renderStationTower(
       ctx.fill();
     }
 
-    // Top wooden deck (thicker, matching L2/L3 tier pattern)
-    stationDiamond(
+    // Top wooden deck (octagonal)
+    const l1TopCy = screenPos.y;
+    const l1TopV = stationOctagon(
       screenPos.x,
-      screenPos.y,
-      baseW + 4,
-      baseD + 12,
+      l1TopCy,
+      baseW + 29,
+      baseD + 37,
       6,
       "#8b7355",
       "#7a6244",
@@ -362,25 +473,23 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Deck edge trim
+    // Deck edge trim (octagonal)
     ctx.strokeStyle = "#6b5030";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 2) * zoom * 0.5, screenPos.y - 4 * zoom);
-    ctx.lineTo(screenPos.x, screenPos.y + (baseD + 8) * zoom * 0.25 - 4 * zoom);
-    ctx.lineTo(screenPos.x + (baseW + 2) * zoom * 0.5, screenPos.y - 4 * zoom);
+    traceOctEdge(l1TopV, l1TopCy, screenPos.y - 4 * zoom);
     ctx.stroke();
 
-    // Corner posts
+    // Corner posts at octagonal vertices
     ctx.fillStyle = "#5a4a3a";
     ctx.fillRect(
-      screenPos.x - (baseW + 2) * zoom * 0.5 - 2 * zoom,
+      l1TopV[7].x - 2 * zoom,
       screenPos.y - 8 * zoom,
       4 * zoom,
       8 * zoom,
     );
     ctx.fillRect(
-      screenPos.x + (baseW + 2) * zoom * 0.5 - 2 * zoom,
+      l1TopV[2].x - 2 * zoom,
       screenPos.y - 8 * zoom,
       4 * zoom,
       8 * zoom,
@@ -389,22 +498,10 @@ export function renderStationTower(
     // Corner post caps
     ctx.fillStyle = "#7a6a5a";
     ctx.beginPath();
-    ctx.arc(
-      screenPos.x - (baseW + 2) * zoom * 0.5,
-      screenPos.y - 8 * zoom,
-      2.5 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(l1TopV[7].x, screenPos.y - 8 * zoom, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(
-      screenPos.x + (baseW + 2) * zoom * 0.5,
-      screenPos.y - 8 * zoom,
-      2.5 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(l1TopV[2].x, screenPos.y - 8 * zoom, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
     // Small weapon rack (left side)
@@ -541,63 +638,37 @@ export function renderStationTower(
   } else if (tower.level === 2) {
     // GARRISON BASE - Stone military platform with detailed masonry
 
-    // Foundation stone - heavy base
-    stationDiamond(
+    // Foundation stone - heavy octagonal base
+    const l2BotCy = screenPos.y + 17 * zoom;
+    const l2BotV = stationOctagon(
       screenPos.x,
-      screenPos.y + 17 * zoom,
-      baseW + 20,
-      baseD + 34,
+      l2BotCy,
+      baseW + 45,
+      baseD + 59,
       10,
       "#4a4a52",
       "#3a3a42",
       "#2a2a32",
     );
 
-    // Metal reinforcement bands on foundation
+    // Metal reinforcement bands on foundation (octagonal edge)
     ctx.strokeStyle = "#5a5a62";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 20) * zoom * 0.5,
-      screenPos.y + 12 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 34) * zoom * 0.25 + 12 * zoom,
-    );
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x,
-      screenPos.y + (baseD + 34) * zoom * 0.25 + 12 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 20) * zoom * 0.5,
-      screenPos.y + 12 * zoom,
-    );
+    traceOctEdge(l2BotV, l2BotCy, screenPos.y + 12 * zoom);
     ctx.stroke();
 
-    // Foundation corner reinforcements
+    // Foundation corner reinforcements at octagonal vertices
     ctx.fillStyle = "#6a6a72";
-    const foundCorners = [
-      {
-        x: screenPos.x - (baseW + 20) * zoom * 0.5,
-        y: screenPos.y + 9 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 20) * zoom * 0.5,
-        y: screenPos.y + 9 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 34) * zoom * ISO_PRISM_D_FACTOR + 9 * zoom,
-      },
-    ];
+    const l2BotYShift = l2BotCy - (screenPos.y + 9 * zoom);
+    const foundCorners = [2, 4, 5, 7].map((i) => ({
+      x: l2BotV[i].x,
+      y: l2BotV[i].y - l2BotYShift,
+    }));
     for (const corner of foundCorners) {
       ctx.beginPath();
       ctx.arc(corner.x, corner.y, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      // Inner bolt
       ctx.fillStyle = "#4a4a52";
       ctx.beginPath();
       ctx.arc(corner.x, corner.y, 1.5 * zoom, 0, Math.PI * 2);
@@ -605,33 +676,33 @@ export function renderStationTower(
       ctx.fillStyle = "#6a6a72";
     }
 
-    // Cobblestone layer
-    stationDiamond(
+    // Cobblestone layer (octagonal)
+    const l2MidCy = screenPos.y + 7 * zoom;
+    const l2MidV = stationOctagon(
       screenPos.x,
-      screenPos.y + 7 * zoom,
-      baseW + 12,
-      baseD + 24,
+      l2MidCy,
+      baseW + 37,
+      baseD + 49,
       7,
       "#5a5a62",
       "#4a4a52",
       "#3a3a42",
     );
 
-    // Layer edge highlight
+    // Layer edge highlight (octagonal)
     ctx.strokeStyle = "#7a7a82";
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 12) * zoom * 0.5, screenPos.y + zoom);
-    ctx.lineTo(screenPos.x, screenPos.y + (baseD + 24) * zoom * 0.25 + zoom);
-    ctx.lineTo(screenPos.x + (baseW + 12) * zoom * 0.5, screenPos.y + zoom);
+    traceOctEdge(l2MidV, l2MidCy, screenPos.y + zoom);
     ctx.stroke();
 
-    // Top stone platform
-    stationDiamond(
+    // Top stone platform (octagonal)
+    const l2TopCy = screenPos.y;
+    const l2TopV = stationOctagon(
       screenPos.x,
-      screenPos.y,
-      baseW + 4,
-      baseD + 14,
+      l2TopCy,
+      baseW + 29,
+      baseD + 39,
       5,
       "#6a6a72",
       "#5a5a62",
@@ -642,7 +713,6 @@ export function renderStationTower(
     ctx.strokeStyle = "#4a4a52";
     ctx.lineWidth = 0.6 * zoom;
     for (let i = -2; i <= 2; i++) {
-      // Diagonal lines one direction
       ctx.beginPath();
       ctx.moveTo(
         screenPos.x - (baseW + 4) * zoom * 0.5 + i * 6 * zoom,
@@ -656,7 +726,6 @@ export function renderStationTower(
           i * 3 * zoom,
       );
       ctx.stroke();
-      // Diagonal lines other direction
       ctx.beginPath();
       ctx.moveTo(
         screenPos.x + (baseW + 4) * zoom * 0.5 + i * 6 * zoom,
@@ -672,23 +741,18 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Platform edge trim with beveled look
+    // Platform edge trim with beveled look (octagonal)
     ctx.strokeStyle = "#8a8a92";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 4) * zoom * 0.5, screenPos.y - 5 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 14) * zoom * 0.25 - 5 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 4) * zoom * 0.5, screenPos.y - 5 * zoom);
+    traceOctEdge(l2TopV, l2TopCy, screenPos.y - 5 * zoom);
     ctx.stroke();
 
-    // Decorative corner pillars
+    // Decorative corner pillars at octagonal vertices
     ctx.fillStyle = "#5a5a62";
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 4) * zoom * 0.5,
+      l2TopV[7].x,
       screenPos.y - 2 * zoom,
       4,
       4,
@@ -698,7 +762,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 4) * zoom * 0.5,
+      l2TopV[2].x,
       screenPos.y - 2 * zoom,
       4,
       4,
@@ -711,7 +775,7 @@ export function renderStationTower(
     ctx.fillStyle = "#8a8a92";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 4) * zoom * 0.5,
+      l2TopV[7].x,
       screenPos.y - 10 * zoom,
       3 * zoom,
       1.5 * zoom,
@@ -722,7 +786,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 4) * zoom * 0.5,
+      l2TopV[2].x,
       screenPos.y - 10 * zoom,
       3 * zoom,
       1.5 * zoom,
@@ -986,74 +1050,36 @@ export function renderStationTower(
   } else if (tower.level === 3) {
     // FORTRESS BASE - Heavy stone fortress platform with imposing masonry
 
-    // Deep foundation - massive stone base
-    stationDiamond(
+    // Deep foundation - massive octagonal stone base
+    const l3BotCy = screenPos.y + 19 * zoom;
+    const l3BotV = stationOctagon(
       screenPos.x,
-      screenPos.y + 19 * zoom,
-      baseW + 24,
-      baseD + 38,
+      l3BotCy,
+      baseW + 49,
+      baseD + 63,
       12,
       "#3a3a42",
       "#2a2a32",
       "#1a1a22",
     );
 
-    // Heavy iron bands around foundation
+    // Heavy iron bands around foundation (octagonal)
     ctx.strokeStyle = "#4a4a52";
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 24) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 38) * zoom * 0.25 + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 24) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
+    traceOctEdge(l3BotV, l3BotCy, screenPos.y + 10 * zoom);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 24) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 38) * zoom * 0.25 + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 24) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
+    traceOctEdge(l3BotV, l3BotCy, screenPos.y + 18 * zoom);
     ctx.stroke();
 
-    // Foundation anchor bolts
+    // Foundation anchor bolts at octagonal vertices
     ctx.fillStyle = "#5a5a62";
-    const anchorPositions = [
-      {
-        x: screenPos.x - (baseW + 24) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x - (baseW + 24) * zoom * 0.25,
-        y: screenPos.y + 15 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 24) * zoom * 0.25,
-        y: screenPos.y + 15 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 24) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 38) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
-      },
-    ];
+    const l3BotYShift = l3BotCy - (screenPos.y + 12 * zoom);
+    const anchorPositions = [2, 3, 4, 5, 7].map((i) => ({
+      x: l3BotV[i].x,
+      y: l3BotV[i].y - l3BotYShift,
+    }));
     for (const anchor of anchorPositions) {
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 2.5 * zoom, 0, Math.PI * 2);
@@ -1065,36 +1091,33 @@ export function renderStationTower(
       ctx.fillStyle = "#5a5a62";
     }
 
-    // Stone wall layer
-    stationDiamond(
+    // Stone wall layer (octagonal)
+    const l3MidCy = screenPos.y + 8 * zoom;
+    const l3MidV = stationOctagon(
       screenPos.x,
-      screenPos.y + 8 * zoom,
-      baseW + 14,
-      baseD + 25,
+      l3MidCy,
+      baseW + 39,
+      baseD + 50,
       8,
       "#5a5a62",
       "#4a4a52",
       "#3a3a42",
     );
 
-    // Wall edge molding
+    // Wall edge molding (octagonal)
     ctx.strokeStyle = "#7a7a82";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 14) * zoom * 0.5, screenPos.y + 1 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 25) * zoom * 0.25 + 1 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 14) * zoom * 0.5, screenPos.y + 1 * zoom);
+    traceOctEdge(l3MidV, l3MidCy, screenPos.y + 1 * zoom);
     ctx.stroke();
 
-    // Top fortress platform
-    stationDiamond(
+    // Top fortress platform (octagonal)
+    const l3TopCy = screenPos.y;
+    const l3TopV = stationOctagon(
       screenPos.x,
-      screenPos.y,
-      baseW + 6,
-      baseD + 16,
+      l3TopCy,
+      baseW + 31,
+      baseD + 41,
       6,
       "#6a6a72",
       "#5a5a62",
@@ -1104,7 +1127,6 @@ export function renderStationTower(
     // Fortress platform paving pattern
     ctx.strokeStyle = "#4a4a52";
     ctx.lineWidth = 0.8 * zoom;
-    // Cross-hatch pattern
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
@@ -1134,32 +1156,22 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Platform decorative border
+    // Platform decorative border (octagonal)
     ctx.strokeStyle = "#8a8a92";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 6 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 16) * zoom * 0.25 - 6 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 6 * zoom);
+    traceOctEdge(l3TopV, l3TopCy, screenPos.y - 6 * zoom);
     ctx.stroke();
 
-    // Inset glow trim on platform edge
+    // Inset glow trim on platform edge (octagonal)
     const platformGlow = 0.3 + Math.sin(time * 2) * 0.15;
     ctx.strokeStyle = `rgba(255, 108, 0, ${platformGlow})`;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 5 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 16) * zoom * ISO_PRISM_D_FACTOR - 5 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 5 * zoom);
+    traceOctEdge(l3TopV, l3TopCy, screenPos.y - 5 * zoom);
     ctx.stroke();
 
-    // Mini battlements on corners - now with more detail
+    // Mini battlements on corners
     for (const side of [-1, 1]) {
       drawIsometricPrism(
         ctx,
@@ -1171,7 +1183,6 @@ export function renderStationTower(
         { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
         zoom,
       );
-      // Battlement arrow slit — isometric flush with left face
       drawIsoFlushSlit(
         ctx,
         screenPos.x + side * isoW * 0.7,
@@ -1183,10 +1194,10 @@ export function renderStationTower(
       );
     }
 
-    // Fortress corner towers (small)
+    // Fortress corner towers at octagonal vertices
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 6) * zoom * 0.5,
+      l3TopV[7].x,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -1196,7 +1207,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 6) * zoom * 0.5,
+      l3TopV[2].x,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -1208,29 +1219,17 @@ export function renderStationTower(
     // Tower caps
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 18 * zoom);
-    ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.5 - 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
-    ctx.lineTo(screenPos.x - (baseW + 6) * zoom * 0.5, screenPos.y - 12 * zoom);
-    ctx.lineTo(
-      screenPos.x - (baseW + 6) * zoom * 0.5 + 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
+    ctx.moveTo(l3TopV[7].x, screenPos.y - 18 * zoom);
+    ctx.lineTo(l3TopV[7].x - 4 * zoom, screenPos.y - 14 * zoom);
+    ctx.lineTo(l3TopV[7].x, screenPos.y - 12 * zoom);
+    ctx.lineTo(l3TopV[7].x + 4 * zoom, screenPos.y - 14 * zoom);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 18 * zoom);
-    ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.5 - 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 6) * zoom * 0.5, screenPos.y - 12 * zoom);
-    ctx.lineTo(
-      screenPos.x + (baseW + 6) * zoom * 0.5 + 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
+    ctx.moveTo(l3TopV[2].x, screenPos.y - 18 * zoom);
+    ctx.lineTo(l3TopV[2].x - 4 * zoom, screenPos.y - 14 * zoom);
+    ctx.lineTo(l3TopV[2].x, screenPos.y - 12 * zoom);
+    ctx.lineTo(l3TopV[2].x + 4 * zoom, screenPos.y - 14 * zoom);
     ctx.closePath();
     ctx.fill();
 
@@ -1605,75 +1604,37 @@ export function renderStationTower(
   } else if (tower.level === 4 && tower.upgrade === "A") {
     // CENTAUR STABLE BASE - Clay red foundation with dark clay trim and mossy vine overlay (3 tiers)
 
-    // Bottom tier - heavy dark clay red foundation (deepest, widest)
-    stationDiamond(
+    // Bottom tier - heavy dark clay red octagonal foundation
+    const l4aBotCy = screenPos.y + 19 * zoom;
+    const l4aBotV = stationOctagon(
       screenPos.x,
-      screenPos.y + 19 * zoom,
-      baseW + 26,
-      baseD + 42,
+      l4aBotCy,
+      baseW + 51,
+      baseD + 67,
       12,
       "#4a2a1a",
       "#3d1c12",
       "#30160e",
     );
 
-    // Lighter clay trim bands on bottom tier
+    // Lighter clay trim bands on bottom tier (octagonal)
     ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 26) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 42) * zoom * 0.25 + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 26) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
+    traceOctEdge(l4aBotV, l4aBotCy, screenPos.y + 10 * zoom);
     ctx.stroke();
     ctx.strokeStyle = "#6a3022";
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 26) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 42) * zoom * 0.25 + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 26) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
+    traceOctEdge(l4aBotV, l4aBotCy, screenPos.y + 18 * zoom);
     ctx.stroke();
 
-    // Clay red rivets on bottom tier
+    // Clay red rivets at octagonal vertices
     ctx.fillStyle = "#4a2a1a";
-    const l4aAnchors = [
-      {
-        x: screenPos.x - (baseW + 26) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x - (baseW + 26) * zoom * 0.25,
-        y: screenPos.y + 16 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 26) * zoom * 0.25,
-        y: screenPos.y + 16 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 26) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 42) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
-      },
-    ];
+    const l4aBotYShift = l4aBotCy - (screenPos.y + 12 * zoom);
+    const l4aAnchors = [2, 3, 4, 5, 7].map((i) => ({
+      x: l4aBotV[i].x,
+      y: l4aBotV[i].y - l4aBotYShift,
+    }));
     for (const anchor of l4aAnchors) {
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 3 * zoom, 0, Math.PI * 2);
@@ -1685,28 +1646,24 @@ export function renderStationTower(
       ctx.fillStyle = "#6a3a2a";
     }
 
-    // Middle tier - dark clay red stone
-    stationDiamond(
+    // Middle tier - octagonal dark clay red stone
+    const l4aMidCy = screenPos.y + 8 * zoom;
+    const l4aMidV = stationOctagon(
       screenPos.x,
-      screenPos.y + 8 * zoom,
-      baseW + 16,
-      baseD + 30,
+      l4aMidCy,
+      baseW + 41,
+      baseD + 55,
       9,
       "#5a3020",
       "#4a2a1a",
       "#3d1c12",
     );
 
-    // Lighter clay molding edge on middle tier
+    // Lighter clay molding edge (octagonal)
     ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 30) * zoom * 0.25 + 1 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
+    traceOctEdge(l4aMidV, l4aMidCy, screenPos.y + 1 * zoom);
     ctx.stroke();
 
     // Stone mortar lines on middle tier left face
@@ -1733,12 +1690,13 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Top tier - dark clay red platform
-    stationDiamond(
+    // Top tier - octagonal dark clay red platform
+    const l4aTopCy = screenPos.y;
+    const l4aTopV = stationOctagon(
       screenPos.x,
-      screenPos.y,
-      baseW + 8,
-      baseD + 18,
+      l4aTopCy,
+      baseW + 33,
+      baseD + 43,
       6,
       "#6a3a2a",
       "#5a3020",
@@ -1777,22 +1735,20 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Lighter clay edge trim
+    // Lighter clay edge trim (octagonal)
     ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
     ctx.shadowColor = "#6a3022";
     ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - isoW - 4 * zoom, screenPos.y - 6 * zoom);
-    ctx.lineTo(screenPos.x, screenPos.y + isoD - 2 * zoom);
-    ctx.lineTo(screenPos.x + isoW + 4 * zoom, screenPos.y - 6 * zoom);
+    traceOctEdge(l4aTopV, l4aTopCy, screenPos.y - 6 * zoom);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Corner clay posts
+    // Corner clay posts at octagonal vertices
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 8) * zoom * 0.5,
+      l4aTopV[7].x,
       screenPos.y - 2 * zoom,
       5,
       5,
@@ -1802,7 +1758,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 8) * zoom * 0.5,
+      l4aTopV[2].x,
       screenPos.y - 2 * zoom,
       5,
       5,
@@ -1815,7 +1771,7 @@ export function renderStationTower(
     ctx.fillStyle = "#8b4532";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
+      l4aTopV[7].x,
       screenPos.y - 12 * zoom,
       3.5 * zoom,
       1.8 * zoom,
@@ -1826,7 +1782,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
+      l4aTopV[2].x,
       screenPos.y - 12 * zoom,
       3.5 * zoom,
       1.8 * zoom,
@@ -1840,7 +1796,7 @@ export function renderStationTower(
     ctx.fillStyle = "#5a4020";
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
+      l4aTopV[7].x,
       screenPos.y - 15 * zoom,
       2 * zoom,
       2.5 * zoom,
@@ -1851,7 +1807,7 @@ export function renderStationTower(
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
+      l4aTopV[2].x,
       screenPos.y - 15 * zoom,
       2 * zoom,
       2.5 * zoom,
@@ -1863,22 +1819,10 @@ export function renderStationTower(
     // Lantern glow
     ctx.fillStyle = "rgba(255, 180, 80, 0.5)";
     ctx.beginPath();
-    ctx.arc(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
-      screenPos.y - 16 * zoom,
-      2.5 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(l4aTopV[7].x, screenPos.y - 16 * zoom, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
-      screenPos.y - 16 * zoom,
-      2.5 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(l4aTopV[2].x, screenPos.y - 16 * zoom, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
     // Hay storage area (left)
@@ -1956,79 +1900,40 @@ export function renderStationTower(
   } else {
     // ROYAL CASTLE BASE - Grand royal military fortress with detailed masonry
 
-    // Deep royal foundation - massive stone base
-    stationDiamond(
+    // Deep royal foundation - massive octagonal stone base
+    const l4bBotCy = screenPos.y + 19 * zoom;
+    const l4bBotV = stationOctagon(
       screenPos.x,
-      screenPos.y + 19 * zoom,
-      baseW + 26,
-      baseD + 42,
+      l4bBotCy,
+      baseW + 51,
+      baseD + 67,
       12,
       uc("#3a3a42", "#1e2d55", "#3a3a42"),
       uc("#2a2a32", "#142248", "#2a2a32"),
       uc("#1a1a22", "#0c1438", "#1a1a22"),
     );
 
-    // Heavy iron reinforcement bands
+    // Heavy iron reinforcement bands (octagonal)
     ctx.strokeStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 26) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 42) * zoom * 0.25 + 10 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 26) * zoom * 0.5,
-      screenPos.y + 10 * zoom,
-    );
+    traceOctEdge(l4bBotV, l4bBotCy, screenPos.y + 10 * zoom);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x - (baseW + 26) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 42) * zoom * 0.25 + 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 26) * zoom * 0.5,
-      screenPos.y + 18 * zoom,
-    );
+    traceOctEdge(l4bBotV, l4bBotCy, screenPos.y + 18 * zoom);
     ctx.stroke();
 
-    // Foundation anchor points with gold caps
+    // Foundation anchor points with gold caps at octagonal vertices
     ctx.fillStyle = uc("#5a5a62", "#384a72", "#5a5a62");
-    const anchorPoints = [
-      {
-        x: screenPos.x - (baseW + 26) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x - (baseW + 26) * zoom * 0.25,
-        y: screenPos.y + 16 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 26) * zoom * 0.25,
-        y: screenPos.y + 16 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 26) * zoom * 0.5,
-        y: screenPos.y + 12 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 42) * zoom * ISO_PRISM_D_FACTOR + 12 * zoom,
-      },
-    ];
+    const l4bBotYShift = l4bBotCy - (screenPos.y + 12 * zoom);
+    const anchorPoints = [2, 3, 4, 5, 7].map((i) => ({
+      x: l4bBotV[i].x,
+      y: l4bBotV[i].y - l4bBotYShift,
+    }));
     for (const anchor of anchorPoints) {
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      // Gold cap
       ctx.fillStyle = "#c9a227";
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 1.8 * zoom, 0, Math.PI * 2);
@@ -2036,36 +1941,33 @@ export function renderStationTower(
       ctx.fillStyle = uc("#5a5a62", "#384a72", "#5a5a62");
     }
 
-    // Royal stone tier
-    stationDiamond(
+    // Royal stone tier (octagonal)
+    const l4bMidCy = screenPos.y + 8 * zoom;
+    const l4bMidV = stationOctagon(
       screenPos.x,
-      screenPos.y + 8 * zoom,
-      baseW + 16,
-      baseD + 30,
+      l4bMidCy,
+      baseW + 41,
+      baseD + 55,
       9,
       uc("#5a5a62", "#384a72", "#5a5a62"),
       uc("#4a4a52", "#2a3a65", "#4a4a52"),
       uc("#3a3a42", "#1e2d55", "#3a3a42"),
     );
 
-    // Gold decorative molding on middle tier
+    // Gold decorative molding on middle tier (octagonal)
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
-    ctx.lineTo(
-      screenPos.x,
-      screenPos.y + (baseD + 30) * zoom * 0.25 + 1 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
+    traceOctEdge(l4bMidV, l4bMidCy, screenPos.y + 1 * zoom);
     ctx.stroke();
 
-    // Top royal platform
-    stationDiamond(
+    // Top royal platform (octagonal)
+    const l4bTopCy = screenPos.y;
+    const l4bTopV = stationOctagon(
       screenPos.x,
-      screenPos.y,
-      baseW + 8,
-      baseD + 18,
+      l4bTopCy,
+      baseW + 33,
+      baseD + 43,
       6,
       uc("#6a6a72", "#485a80", "#6a6a72"),
       uc("#5a5a62", "#384a72", "#5a5a62"),
@@ -2075,7 +1977,6 @@ export function renderStationTower(
     // Royal heraldic floor pattern
     ctx.strokeStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.lineWidth = 0.8 * zoom;
-    // Cross pattern
     for (let i = -3; i <= 3; i++) {
       ctx.beginPath();
       ctx.moveTo(
@@ -2105,26 +2006,22 @@ export function renderStationTower(
       ctx.stroke();
     }
 
-    // Gold edge trim with royal glow
+    // Gold edge trim with royal glow (octagonal)
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 3 * zoom;
     ctx.shadowColor = "#c9a227";
     ctx.shadowBlur = 8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - isoW - 4 * zoom, screenPos.y - 6 * zoom);
-    ctx.lineTo(screenPos.x, screenPos.y + isoD - 2 * zoom);
-    ctx.lineTo(screenPos.x + isoW + 4 * zoom, screenPos.y - 6 * zoom);
+    traceOctEdge(l4bTopV, l4bTopCy, screenPos.y - 6 * zoom);
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Orange accent glow trim (inner)
+    // Orange accent glow trim (octagonal)
     const accentGlow = 0.4 + Math.sin(time * 2) * 0.2;
     ctx.strokeStyle = `rgba(255, 108, 0, ${accentGlow})`;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - isoW - 2 * zoom, screenPos.y - 5 * zoom);
-    ctx.lineTo(screenPos.x, screenPos.y + isoD - 3 * zoom);
-    ctx.lineTo(screenPos.x + isoW + 2 * zoom, screenPos.y - 5 * zoom);
+    traceOctEdge(l4bTopV, l4bTopCy, screenPos.y - 5 * zoom);
     ctx.stroke();
 
     // Royal carpet pattern (larger, more detailed)
@@ -2136,11 +2033,9 @@ export function renderStationTower(
     ctx.lineTo(screenPos.x, screenPos.y - 10 * zoom);
     ctx.closePath();
     ctx.fill();
-    // Carpet gold border
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 1.5 * zoom;
     ctx.stroke();
-    // Inner carpet pattern
     ctx.fillStyle = "#6b0000";
     ctx.beginPath();
     ctx.moveTo(screenPos.x - 6 * zoom, screenPos.y - 4 * zoom);
@@ -2149,7 +2044,6 @@ export function renderStationTower(
     ctx.lineTo(screenPos.x, screenPos.y - 7 * zoom);
     ctx.closePath();
     ctx.fill();
-    // Royal crest on carpet (crown symbol)
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
     ctx.moveTo(screenPos.x - 3 * zoom, screenPos.y - 4 * zoom);
@@ -2162,11 +2056,11 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
-    // Decorative corner fortress pillars
+    // Decorative corner fortress pillars at octagonal vertices
     ctx.fillStyle = "#5a5a62";
     drawIsometricPrism(
       ctx,
-      screenPos.x - (baseW + 8) * zoom * 0.5,
+      l4bTopV[7].x,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -2180,7 +2074,7 @@ export function renderStationTower(
     );
     drawIsometricPrism(
       ctx,
-      screenPos.x + (baseW + 8) * zoom * 0.5,
+      l4bTopV[2].x,
       screenPos.y - 2 * zoom,
       6,
       5,
@@ -2198,7 +2092,7 @@ export function renderStationTower(
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - (baseW + 8) * zoom * 0.5,
+      l4bTopV[7].x,
       screenPos.y - 8 * zoom,
       3.5 * zoom,
       1.5 * zoom,
@@ -2209,7 +2103,7 @@ export function renderStationTower(
     ctx.stroke();
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x + (baseW + 8) * zoom * 0.5,
+      l4bTopV[2].x,
       screenPos.y - 8 * zoom,
       3.5 * zoom,
       1.5 * zoom,
@@ -2222,56 +2116,32 @@ export function renderStationTower(
     // Pillar caps with finials
     ctx.fillStyle = uc("#4a4a52", "#2a3a65", "#4a4a52");
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 18 * zoom);
-    ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5 - 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
-    ctx.lineTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 12 * zoom);
-    ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5 + 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
+    ctx.moveTo(l4bTopV[7].x, screenPos.y - 18 * zoom);
+    ctx.lineTo(l4bTopV[7].x - 4 * zoom, screenPos.y - 14 * zoom);
+    ctx.lineTo(l4bTopV[7].x, screenPos.y - 12 * zoom);
+    ctx.lineTo(l4bTopV[7].x + 4 * zoom, screenPos.y - 14 * zoom);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 18 * zoom);
-    ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5 - 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
-    ctx.lineTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 12 * zoom);
-    ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5 + 4 * zoom,
-      screenPos.y - 14 * zoom,
-    );
+    ctx.moveTo(l4bTopV[2].x, screenPos.y - 18 * zoom);
+    ctx.lineTo(l4bTopV[2].x - 4 * zoom, screenPos.y - 14 * zoom);
+    ctx.lineTo(l4bTopV[2].x, screenPos.y - 12 * zoom);
+    ctx.lineTo(l4bTopV[2].x + 4 * zoom, screenPos.y - 14 * zoom);
     ctx.closePath();
     ctx.fill();
 
     // Gold finial spikes
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseW + 8) * zoom * 0.5, screenPos.y - 22 * zoom);
-    ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
-      screenPos.y - 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x - (baseW + 8) * zoom * 0.5 + 1.5 * zoom,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(l4bTopV[7].x, screenPos.y - 22 * zoom);
+    ctx.lineTo(l4bTopV[7].x - 1.5 * zoom, screenPos.y - 18 * zoom);
+    ctx.lineTo(l4bTopV[7].x + 1.5 * zoom, screenPos.y - 18 * zoom);
     ctx.closePath();
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + (baseW + 8) * zoom * 0.5, screenPos.y - 22 * zoom);
-    ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5 - 1.5 * zoom,
-      screenPos.y - 18 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + (baseW + 8) * zoom * 0.5 + 1.5 * zoom,
-      screenPos.y - 18 * zoom,
-    );
+    ctx.moveTo(l4bTopV[2].x, screenPos.y - 22 * zoom);
+    ctx.lineTo(l4bTopV[2].x - 1.5 * zoom, screenPos.y - 18 * zoom);
+    ctx.lineTo(l4bTopV[2].x + 1.5 * zoom, screenPos.y - 18 * zoom);
     ctx.closePath();
     ctx.fill();
 
@@ -2893,6 +2763,17 @@ export function renderStationTower(
     const hw = w * zoom * 0.5;
     const hd = d * zoom * 0.25;
     const rh = h * zoom;
+    const eave = 1.5 * zoom;
+
+    // Eave overhang shadow
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    ctx.beginPath();
+    ctx.moveTo(cx - hw - eave * 0.5, cy + eave * 0.3);
+    ctx.lineTo(cx + hw + eave * 0.5, cy + eave * 0.3);
+    ctx.lineTo(cx + hw + eave * 0.5, cy + hd + eave);
+    ctx.lineTo(cx - hw - eave * 0.5, cy + hd + eave);
+    ctx.closePath();
+    ctx.fill();
 
     // Left slope
     ctx.fillStyle = leftColor;
@@ -2904,6 +2785,23 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
+    // Left slope shingle lines
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 0.6 * zoom;
+    const shingleRows = Math.max(3, Math.floor(rh / (3 * zoom)));
+    for (let s = 1; s < shingleRows; s++) {
+      const t = s / shingleRows;
+      const sy = cy - rh + t * rh;
+      const sx0 = cx - t * hw;
+      const sy0 = sy;
+      const sx1 = cx;
+      const sy1 = sy + t * hd * 0.5 - rh * (1 - t) * 0 + hd * 0.5 * t;
+      ctx.beginPath();
+      ctx.moveTo(sx0, sy0 + hd * t * 0.5);
+      ctx.lineTo(cx, cy - rh + hd * 0.5 + t * (cy - (cy - rh)));
+      ctx.stroke();
+    }
+
     // Right slope
     ctx.fillStyle = rightColor;
     ctx.beginPath();
@@ -2914,6 +2812,17 @@ export function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
+    // Right slope shingle lines
+    ctx.strokeStyle = "rgba(0,0,0,0.06)";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let s = 1; s < shingleRows; s++) {
+      const t = s / shingleRows;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - rh + hd * 0.5 + t * (cy - (cy - rh)));
+      ctx.lineTo(cx + t * hw, cy - rh + t * rh + hd * t * 0.5);
+      ctx.stroke();
+    }
+
     // Front gable
     ctx.fillStyle = frontColor;
     ctx.beginPath();
@@ -2922,6 +2831,43 @@ export function renderStationTower(
     ctx.lineTo(cx + hw, cy + hd);
     ctx.closePath();
     ctx.fill();
+
+    // Gable trim strip
+    ctx.strokeStyle = pal.trim.main;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - rh + hd * 0.5);
+    ctx.lineTo(cx - hw, cy + hd);
+    ctx.moveTo(cx, cy - rh + hd * 0.5);
+    ctx.lineTo(cx + hw, cy + hd);
+    ctx.stroke();
+
+    // Ridge cap (3D filled strip along the peak)
+    const ridgeW = 1.2 * zoom;
+    ctx.fillStyle = pal.trim.dark;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - rh - ridgeW * 0.3);
+    ctx.lineTo(cx - ridgeW, cy - rh + ridgeW * 0.2);
+    ctx.lineTo(cx - ridgeW, cy - rh + hd * 0.5 + ridgeW * 0.2);
+    ctx.lineTo(cx, cy - rh + hd * 0.5 - ridgeW * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = pal.trim.main;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - rh - ridgeW * 0.3);
+    ctx.lineTo(cx + ridgeW, cy - rh + ridgeW * 0.2);
+    ctx.lineTo(cx + ridgeW, cy - rh + hd * 0.5 + ridgeW * 0.2);
+    ctx.lineTo(cx, cy - rh + hd * 0.5 - ridgeW * 0.1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eave bottom edge highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(cx - hw, cy + hd);
+    ctx.lineTo(cx + hw, cy + hd);
+    ctx.stroke();
   };
 
   // Helper: Draw working clock face
@@ -2931,16 +2877,46 @@ export function renderStationTower(
     radius: number,
     showNumerals: boolean = false,
   ) => {
+    // Outer decorative frame ring
+    ctx.fillStyle = pal.trim.dark;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 1.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = pal.trim.accent;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 1.08, 0, Math.PI * 2);
+    ctx.fill();
+
     // Clock backing
     ctx.fillStyle = "#fffff8";
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Gold border
-    ctx.strokeStyle = "#daa520";
+    // Inner gold border
+    ctx.strokeStyle = pal.trim.main;
     ctx.lineWidth = 2 * zoom;
     ctx.stroke();
+
+    // Minute tick marks
+    ctx.strokeStyle = "#8a8a8a";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let i = 0; i < 60; i++) {
+      if (i % 5 === 0) continue;
+      const angle = (i / 60) * Math.PI * 2 - Math.PI / 2;
+      const innerR = radius * 0.9;
+      const outerR = radius * 0.95;
+      ctx.beginPath();
+      ctx.moveTo(
+        cx + Math.cos(angle) * innerR,
+        cy + Math.sin(angle) * innerR,
+      );
+      ctx.lineTo(
+        cx + Math.cos(angle) * outerR,
+        cy + Math.sin(angle) * outerR,
+      );
+      ctx.stroke();
+    }
 
     // Hour markers
     ctx.fillStyle = "#1a1a1a";
@@ -2976,6 +2952,7 @@ export function renderStationTower(
     // Animated hands
     const hourAngle = ((time * 0.03) % (Math.PI * 2)) - Math.PI / 2;
     const minAngle = ((time * 0.2) % (Math.PI * 2)) - Math.PI / 2;
+    const secAngle = ((time * 1.2) % (Math.PI * 2)) - Math.PI / 2;
 
     // Hour hand
     ctx.strokeStyle = "#1a1a1a";
@@ -2999,11 +2976,27 @@ export function renderStationTower(
     );
     ctx.stroke();
 
-    // Center cap
-    ctx.fillStyle = "#daa520";
+    // Second hand (thin, copper/red)
+    ctx.strokeStyle = pal.trim.accent;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.beginPath();
-    ctx.arc(cx, cy, radius * 0.12, 0, Math.PI * 2);
+    ctx.moveTo(cx - Math.cos(secAngle) * radius * 0.15, cy - Math.sin(secAngle) * radius * 0.15);
+    ctx.lineTo(
+      cx + Math.cos(secAngle) * radius * 0.82,
+      cy + Math.sin(secAngle) * radius * 0.82,
+    );
+    ctx.stroke();
+
+    // Center cap (larger, ornate)
+    ctx.fillStyle = pal.trim.main;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.15, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = pal.trim.accent;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineCap = "butt";
   };
 
   if (tower.level === 1) {
@@ -3258,20 +3251,32 @@ export function renderStationTower(
       { top: "#9b8365", left: "#7b6345", right: "#5b4325" },
       zoom,
     );
+    drawPrismAO(bX, bY, 32, 26, 28);
 
-    // Horizontal log/plank details on left face
+    // Horizontal log/plank details on left face (more planks, with grain)
     ctx.strokeStyle = "#4a3215";
     ctx.lineWidth = 1.2 * zoom;
-    for (let i = 0; i < 5; i++) {
-      const ly = bY - 4 * zoom - i * 5 * zoom;
+    for (let i = 0; i < 7; i++) {
+      const ly = bY - 2 * zoom - i * 3.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(bX - 14 * zoom, ly + 3.5 * zoom);
       ctx.lineTo(bX - 2 * zoom, ly + 6.5 * zoom);
       ctx.stroke();
     }
+    // Wood grain lines (subtle, between planks)
+    ctx.strokeStyle = "rgba(40,25,8,0.08)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let i = 0; i < 12; i++) {
+      const gy = bY - 1 * zoom - i * 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bX - 13 * zoom, gy + 3 * zoom);
+      ctx.lineTo(bX - 3 * zoom, gy + 5.5 * zoom);
+      ctx.stroke();
+    }
 
     // Vertical timber frame details on right face
     ctx.strokeStyle = "#4a3215";
+    ctx.lineWidth = 1.2 * zoom;
     for (let i = 0; i < 3; i++) {
       const lx = bX + 4 * zoom + i * 5 * zoom;
       ctx.beginPath();
@@ -3279,6 +3284,35 @@ export function renderStationTower(
       ctx.lineTo(lx, bY - 26 * zoom);
       ctx.stroke();
     }
+    // Diagonal cross-brace (right face)
+    ctx.strokeStyle = "#4a3215";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX + 4 * zoom, bY - 2 * zoom);
+    ctx.lineTo(bX + 14 * zoom, bY - 20 * zoom);
+    ctx.stroke();
+    // Copper wall seam rivets (right face)
+    ctx.fillStyle = "#b87333";
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.arc(bX + 4.5 * zoom + i * 5 * zoom, bY - 24 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Steampunk pipe along right wall base
+    ctx.strokeStyle = "#6b5030";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX + 3 * zoom, bY - 1 * zoom);
+    ctx.lineTo(bX + 16 * zoom, bY - 4.5 * zoom);
+    ctx.stroke();
+    ctx.fillStyle = "#8a7355";
+    ctx.beginPath();
+    ctx.arc(bX + 3 * zoom, bY - 1 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(bX + 16 * zoom, bY - 4.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
 
     // Iron-bound double door with stone arch frame (left face)
     {
@@ -4801,6 +4835,7 @@ export function renderStationTower(
       { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
       zoom,
     );
+    drawPrismAO(bX, bY, 34, 28, 32);
 
     // Stone block texture on main building - left face
     ctx.save();
@@ -4936,6 +4971,38 @@ export function renderStationTower(
       }
     }
     ctx.restore();
+
+    // Corner quoin stones (alternating blocks at left edge)
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    for (let q = 0; q < 6; q++) {
+      if (q % 2 === 0) {
+        const qy = bY - q * 5 * zoom;
+        ctx.fillRect(bX - 17 * zoom, qy - 5 * zoom, 3 * zoom, 4.5 * zoom);
+      }
+    }
+    // Corner quoin stones (right edge)
+    for (let q = 0; q < 6; q++) {
+      if (q % 2 === 1) {
+        const qy = bY - q * 5 * zoom;
+        ctx.fillRect(bX + 14.5 * zoom, qy - 5 * zoom, 2.5 * zoom, 4.5 * zoom);
+      }
+    }
+    // Iron reinforcement plates (left face)
+    ctx.fillStyle = "rgba(60,60,70,0.3)";
+    ctx.fillRect(bX - 12 * zoom, bY - 8 * zoom, 4 * zoom, 5 * zoom);
+    ctx.fillRect(bX - 8 * zoom, bY - 22 * zoom, 3.5 * zoom, 4 * zoom);
+    // Plate rivets
+    ctx.fillStyle = "#6a6a72";
+    for (const [rx, ry] of [
+      [bX - 11.5 * zoom, bY - 7.5 * zoom],
+      [bX - 8.5 * zoom, bY - 3.5 * zoom],
+      [bX - 7.5 * zoom, bY - 21.5 * zoom],
+      [bX - 5 * zoom, bY - 18.5 * zoom],
+    ] as [number, number][]) {
+      ctx.beginPath();
+      ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // === HIGH-TECH: Power conduits on walls ===
     ctx.strokeStyle = "#5a5a62";
@@ -5562,6 +5629,7 @@ export function renderStationTower(
       { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
       zoom,
     );
+    drawPrismAO(bX, bY - 1 * zoom, 32, 30, 32);
 
     // Stone block texture on main keep - left face
     ctx.save();
@@ -5697,6 +5765,55 @@ export function renderStationTower(
       }
     }
     ctx.restore();
+
+    // Iron horizontal banding on main keep walls
+    ctx.strokeStyle = "rgba(40,40,50,0.25)";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let band = 0; band < 3; band++) {
+      const bandY = bY - 5 * zoom - band * 10 * zoom;
+      // Left face band
+      ctx.beginPath();
+      ctx.moveTo(bX - 16 * zoom, bandY - 3.5 * zoom);
+      ctx.lineTo(bX, bandY);
+      ctx.stroke();
+      // Right face band
+      ctx.beginPath();
+      ctx.moveTo(bX, bandY);
+      ctx.lineTo(bX + 16 * zoom, bandY - 3.5 * zoom);
+      ctx.stroke();
+    }
+
+    // Portcullis detail above door position (front gable area)
+    ctx.fillStyle = "rgba(30,30,38,0.4)";
+    const portX = bX - 4 * zoom;
+    const portY = bY - 10 * zoom;
+    const portW = 6 * zoom;
+    const portH = 8 * zoom;
+    ctx.fillRect(portX, portY, portW, portH);
+    // Portcullis bars (vertical)
+    ctx.strokeStyle = "#3a3a42";
+    ctx.lineWidth = 0.8 * zoom;
+    for (let pb = 0; pb < 4; pb++) {
+      const pbx = portX + 1 * zoom + pb * 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(pbx, portY);
+      ctx.lineTo(pbx, portY + portH);
+      ctx.stroke();
+    }
+    // Portcullis bars (horizontal)
+    for (let pb = 0; pb < 3; pb++) {
+      const pby = portY + 2 * zoom + pb * 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(portX, pby);
+      ctx.lineTo(portX + portW, pby);
+      ctx.stroke();
+    }
+    // Pointed arch top
+    ctx.strokeStyle = "#4a4a52";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.arc(portX + portW * 0.5, portY, portW * 0.5, Math.PI, 0);
+    ctx.stroke();
 
     // Gothic arrow slit windows on main keep (isometric, flush against wall faces)
     const keepSlitGlow = 0.3 + Math.sin(time * 2) * 0.15;
@@ -6758,6 +6875,7 @@ export function renderStationTower(
       { top: "#a08060", left: "#907050", right: "#806040" },
       zoom,
     );
+    drawPrismAO(bX, bY, 30, 24, 34);
 
     // Gothic windows on main building
     const hallSlitGlow = 0.3 + Math.sin(time * 2) * 0.15;
@@ -6806,23 +6924,87 @@ export function renderStationTower(
       hallSlitGlow,
     );
 
-    // Vertical wood planks
+    // Vertical wood planks (more prominent)
     ctx.strokeStyle = "#5a4020";
-    ctx.lineWidth = 1 * zoom;
-    for (let i = 0; i < 4; i++) {
+    ctx.lineWidth = 1.2 * zoom;
+    for (let i = 0; i < 5; i++) {
       ctx.beginPath();
-      ctx.moveTo(bX - 12 * zoom + i * 4 * zoom, bY - 2 * zoom);
-      ctx.lineTo(bX - 12 * zoom + i * 4 * zoom, bY - 32 * zoom);
+      ctx.moveTo(bX - 13 * zoom + i * 3.5 * zoom, bY - 2 * zoom);
+      ctx.lineTo(bX - 13 * zoom + i * 3.5 * zoom, bY - 32 * zoom);
       ctx.stroke();
     }
 
-    // Lighter clay bands
+    // Lighter clay bands (terracotta)
     ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
     for (let i = 0; i < 3; i++) {
       ctx.beginPath();
-      ctx.moveTo(bX - 13 * zoom, bY - 8 * zoom - i * 10 * zoom);
+      ctx.moveTo(bX - 14 * zoom, bY - 8 * zoom - i * 10 * zoom);
       ctx.lineTo(bX + 2 * zoom, bY - 5 * zoom - i * 10 * zoom);
+      ctx.stroke();
+    }
+
+    // Stable door with cross-brace (left face, lower area)
+    {
+      const sdL = bX - 12 * zoom;
+      const sdR = bX - 3 * zoom;
+      const sdBot = bY - 1 * zoom;
+      const sdTop = bY - 16 * zoom;
+      const sdSlope = ISO_Y_RATIO;
+      const sdTopR = sdTop + (sdR - sdL) * sdSlope;
+      // Door fill
+      ctx.fillStyle = "#5a3a18";
+      ctx.beginPath();
+      ctx.moveTo(sdL, sdTop);
+      ctx.lineTo(sdR, sdTopR);
+      ctx.lineTo(sdR, sdBot + (sdR - sdL) * sdSlope);
+      ctx.lineTo(sdL, sdBot);
+      ctx.closePath();
+      ctx.fill();
+      // Door planks
+      ctx.strokeStyle = "rgba(30,15,5,0.2)";
+      ctx.lineWidth = 0.5 * zoom;
+      for (let p = 1; p < 4; p++) {
+        const px = sdL + p * (sdR - sdL) / 4;
+        const pyTop = sdTop + p * (sdR - sdL) / 4 * sdSlope;
+        const pyBot = sdBot + p * (sdR - sdL) / 4 * sdSlope;
+        ctx.beginPath();
+        ctx.moveTo(px, pyTop);
+        ctx.lineTo(px, pyBot);
+        ctx.stroke();
+      }
+      // X cross-brace
+      ctx.strokeStyle = "#3a2210";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sdL + 0.5 * zoom, sdTop + 0.5 * zoom);
+      ctx.lineTo(sdR - 0.5 * zoom, sdBot + (sdR - sdL) * sdSlope - 0.5 * zoom);
+      ctx.moveTo(sdL + 0.5 * zoom, sdBot - 0.5 * zoom);
+      ctx.lineTo(sdR - 0.5 * zoom, sdTopR + 0.5 * zoom);
+      ctx.stroke();
+      // Frame
+      ctx.strokeStyle = "#4a2a10";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sdL, sdTop);
+      ctx.lineTo(sdR, sdTopR);
+      ctx.lineTo(sdR, sdBot + (sdR - sdL) * sdSlope);
+      ctx.lineTo(sdL, sdBot);
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    // Hay/straw texture at base edges
+    ctx.strokeStyle = "#c4a848";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let h = 0; h < 12; h++) {
+      const hx = bX - 14 * zoom + h * 2.5 * zoom;
+      const hy = bY + 1 * zoom + h * 0.8 * zoom;
+      const hLen = 2 + Math.sin(h * 2.7) * 1.5;
+      const hAngle = -0.5 + Math.sin(h * 1.3) * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.lineTo(hx + hLen * zoom * Math.cos(hAngle), hy - hLen * zoom * Math.sin(hAngle));
       ctx.stroke();
     }
 
@@ -7977,6 +8159,7 @@ export function renderStationTower(
       { top: "#485882", left: "#384a78", right: "#283a68" },
       zoom,
     );
+    drawPrismAO(bX, bY, 34, 28, 38);
 
     const fortRows = 8;
     const fortRowH = (38 * zoom) / fortRows;
@@ -8203,6 +8386,74 @@ export function renderStationTower(
       ctx.lineTo(bX, bY + fortFD - bh + bandH);
       ctx.closePath();
       ctx.fill();
+    }
+
+    // Heraldic shield/crest on front wall (centered on gable)
+    {
+      const shX = bX;
+      const shY = bY - 22 * zoom;
+      const shW = 5 * zoom;
+      const shH = 6 * zoom;
+      // Shield shape
+      ctx.fillStyle = "#283a68";
+      ctx.beginPath();
+      ctx.moveTo(shX - shW, shY - shH);
+      ctx.lineTo(shX + shW, shY - shH);
+      ctx.lineTo(shX + shW, shY);
+      ctx.quadraticCurveTo(shX + shW, shY + shH * 0.5, shX, shY + shH);
+      ctx.quadraticCurveTo(shX - shW, shY + shH * 0.5, shX - shW, shY);
+      ctx.closePath();
+      ctx.fill();
+      // Shield border
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1 * zoom;
+      ctx.stroke();
+      // Inner cross (royal heraldry)
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(shX, shY - shH + 1 * zoom);
+      ctx.lineTo(shX, shY + shH - 1.5 * zoom);
+      ctx.moveTo(shX - shW + 1 * zoom, shY - 1 * zoom);
+      ctx.lineTo(shX + shW - 1 * zoom, shY - 1 * zoom);
+      ctx.stroke();
+      // Crown accent at top
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.moveTo(shX - 2 * zoom, shY - shH - 0.5 * zoom);
+      ctx.lineTo(shX - 1 * zoom, shY - shH - 2.5 * zoom);
+      ctx.lineTo(shX, shY - shH - 1.5 * zoom);
+      ctx.lineTo(shX + 1 * zoom, shY - shH - 2.5 * zoom);
+      ctx.lineTo(shX + 2 * zoom, shY - shH - 0.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Purple carpet edge at entrance
+    {
+      const cpX = bX - 16 * zoom;
+      const cpY = bY + 7 * zoom;
+      const cpW = 8 * zoom;
+      const cpLen = 12 * zoom;
+      ctx.fillStyle = "#5a2a80";
+      ctx.beginPath();
+      ctx.moveTo(cpX, cpY);
+      ctx.lineTo(cpX + cpW, cpY + cpW * 0.25);
+      ctx.lineTo(cpX + cpW + cpLen, cpY + cpW * 0.25 - cpLen * 0.5);
+      ctx.lineTo(cpX + cpLen, cpY - cpLen * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Gold fringe border
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+      // Center pattern line
+      ctx.strokeStyle = "#8050b0";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cpX + cpW * 0.5, cpY + cpW * 0.125);
+      ctx.lineTo(cpX + cpW * 0.5 + cpLen, cpY + cpW * 0.125 - cpLen * 0.5);
+      ctx.stroke();
     }
 
     // Decorative crossed spears emblem on wall (centered with gauge)
@@ -8877,16 +9128,33 @@ export function renderStationTower(
   const gearX = screenPos.x + 20 * zoom;
   const gearY = screenPos.y + 2 * zoom;
   const gearSize = 4 + tower.level * 0.5;
-  const gearColor =
-    tower.level >= 4
-      ? uc("#c9a227", "#8090b8", "#c9a227")
-      : tower.level >= 3
-        ? "#8a8a92"
-        : "#6a5a4a";
+  const gearColor = pal.metal.light;
   const gearTeeth = 8 + tower.level;
 
-  // Main gear
-  ctx.fillStyle = gearColor;
+  // Gear shadow behind
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.beginPath();
+  ctx.ellipse(
+    gearX + 1 * zoom,
+    gearY + 1.5 * zoom,
+    gearSize * 1.1 * zoom,
+    gearSize * 0.55 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Main gear with gradient shading
+  const gearGrad = ctx.createLinearGradient(
+    gearX,
+    gearY - gearSize * zoom,
+    gearX,
+    gearY + gearSize * zoom * 0.5,
+  );
+  gearGrad.addColorStop(0, pal.metal.light);
+  gearGrad.addColorStop(1, pal.metal.dark);
+  ctx.fillStyle = gearGrad;
   ctx.beginPath();
   for (let i = 0; i < gearTeeth; i++) {
     const angle = (i / gearTeeth) * Math.PI * 2 + time * 0.5;
@@ -8915,15 +9183,44 @@ export function renderStationTower(
   }
   ctx.closePath();
   ctx.fill();
-  // Gear center
-  ctx.fillStyle =
-    tower.level >= 4 ? uc("#b8860b", "#6878a0", "#b8860b") : "#4a4a4a";
+  // Gear rim stroke
+  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.stroke();
+  // 3D hub boss (outer ring)
+  ctx.fillStyle = pal.metal.mid;
   ctx.beginPath();
   ctx.ellipse(
     gearX,
     gearY,
-    gearSize * 0.3 * zoom,
+    gearSize * 0.35 * zoom,
+    gearSize * 0.18 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // Hub center (raised axle)
+  ctx.fillStyle = pal.metal.rivet;
+  ctx.beginPath();
+  ctx.ellipse(
+    gearX,
+    gearY - 0.3 * zoom,
     gearSize * 0.15 * zoom,
+    gearSize * 0.08 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // Hub highlight
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.beginPath();
+  ctx.ellipse(
+    gearX - 0.3 * zoom,
+    gearY - 0.5 * zoom,
+    gearSize * 0.08 * zoom,
+    gearSize * 0.04 * zoom,
     0,
     0,
     Math.PI * 2,
@@ -9218,18 +9515,8 @@ export function renderStationTower(
 
   // ---- FRONT FENCE EDGES (drawn in front of building body) ----
   {
-    const fPostColor =
-      tower.level >= 4
-        ? uc("#c9a227", "#8090b8", "#c9a227")
-        : tower.level >= 3
-          ? "#6a6a72"
-          : "#6a5230";
-    const fRailColor =
-      tower.level >= 4
-        ? uc("#a88420", "#6878a0", "#a88420")
-        : tower.level >= 3
-          ? "#5a5a62"
-          : "#5a4220";
+    const fPostColor = pal.metal.mid;
+    const fRailColor = pal.metal.dark;
     const topPlatW =
       tower.level <= 2 ? baseW + 4 : tower.level === 3 ? baseW + 6 : baseW + 8;
     const topPlatD =
@@ -9254,24 +9541,7 @@ export function renderStationTower(
     ctx.lineCap = "round";
 
     for (const [x0, y0, x1, y1] of frontFenceEdges) {
-      for (let p = 0; p <= postCount; p++) {
-        const t = p / postCount;
-        const px = x0 + (x1 - x0) * t;
-        const py = y0 + (y1 - y0) * t;
-
-        ctx.strokeStyle = fPostColor;
-        ctx.lineWidth = 1.4 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(px, py - fPostH);
-        ctx.stroke();
-
-        ctx.fillStyle = fPostColor;
-        ctx.beginPath();
-        ctx.arc(px, py - fPostH, 0.8 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
+      // Horizontal rails
       for (let r = 0; r < 2; r++) {
         const railY = fPostH * (0.35 + r * 0.45);
         ctx.strokeStyle = fRailColor;
@@ -9280,6 +9550,42 @@ export function renderStationTower(
         ctx.moveTo(x0, y0 - railY);
         ctx.lineTo(x1, y1 - railY);
         ctx.stroke();
+      }
+      // Decorative mid-rail accent
+      const midRailY = fPostH * 0.58;
+      ctx.strokeStyle = pal.trim.accent;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0 - midRailY);
+      ctx.lineTo(x1, y1 - midRailY);
+      ctx.stroke();
+
+      // Posts with pointed finials
+      for (let p = 0; p <= postCount; p++) {
+        const t = p / postCount;
+        const px = x0 + (x1 - x0) * t;
+        const py = y0 + (y1 - y0) * t;
+
+        ctx.strokeStyle = fPostColor;
+        ctx.lineWidth = 1.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px, py - fPostH);
+        ctx.stroke();
+
+        // Pointed spear finial
+        ctx.fillStyle = fPostColor;
+        ctx.beginPath();
+        ctx.moveTo(px, py - fPostH - 2 * zoom);
+        ctx.lineTo(px - 1 * zoom, py - fPostH);
+        ctx.lineTo(px + 1 * zoom, py - fPostH);
+        ctx.closePath();
+        ctx.fill();
+        // Finial highlight
+        ctx.fillStyle = pal.trim.accent;
+        ctx.beginPath();
+        ctx.arc(px, py - fPostH - 0.3 * zoom, 0.4 * zoom, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -9292,24 +9598,9 @@ export function renderStationTower(
 
   // ---- WINDOWS (3D isometric, aligned to building faces) ----
   const reflLightAngle = time * 0.3;
-  const frameColor =
-    tower.level >= 4
-      ? uc("#b89227", "#7888a8", "#b89227")
-      : tower.level >= 3
-        ? "#5a5a62"
-        : "#5a4a3a";
-  const frameDark =
-    tower.level >= 4
-      ? uc("#8a7020", "#5a6888", "#8a7020")
-      : tower.level >= 3
-        ? "#4a4a52"
-        : "#4a3a2a";
-  const sillColor =
-    tower.level >= 4
-      ? uc("#a08020", "#6878a0", "#a08020")
-      : tower.level >= 3
-        ? "#6a6a72"
-        : "#6a5a4a";
+  const frameColor = pal.trim.main;
+  const frameDark = pal.trim.dark;
+  const sillColor = pal.metal.mid;
 
   // Isometric slope for window faces: 2:1 isometric
   // Left face runs direction (-1, -ISO_Y_RATIO) toward back-left
@@ -9381,8 +9672,50 @@ export function renderStationTower(
     const blx = wx - halfW;
     const bly = wy + halfH - halfW * slopeY;
 
+    // Stone hood mold above window
+    const hoodH = 1.8 * zoom;
+    const hoodExt = 1.2 * zoom;
+    ctx.fillStyle = pal.stone.pale;
+    ctx.beginPath();
+    ctx.moveTo(tlx - hoodExt, tly - hoodH - hoodExt * slopeY);
+    ctx.lineTo(trx + hoodExt, trY - hoodH + hoodExt * slopeY);
+    ctx.lineTo(trx + hoodExt, trY + hoodExt * slopeY);
+    ctx.lineTo(tlx - hoodExt, tly - hoodExt * slopeY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = pal.stone.mid;
+    ctx.beginPath();
+    ctx.moveTo(tlx - hoodExt, tly - hoodH - hoodExt * slopeY);
+    ctx.lineTo(trx + hoodExt, trY - hoodH + hoodExt * slopeY);
+    ctx.lineTo(trx + hoodExt, trY - hoodH + hoodExt * slopeY + 0.6 * zoom);
+    ctx.lineTo(tlx - hoodExt, tly - hoodH - hoodExt * slopeY + 0.6 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Keystone at top center of hood
+    const kx = (tlx + trx) * 0.5;
+    const ky = (tly + trY) * 0.5 - hoodH;
+    ctx.fillStyle = pal.trim.accent;
+    ctx.beginPath();
+    ctx.moveTo(kx - 1.2 * zoom, ky - 0.3 * zoom);
+    ctx.lineTo(kx + 1.2 * zoom, ky - 0.3 * zoom);
+    ctx.lineTo(kx + 0.8 * zoom, ky + hoodH + 0.5 * zoom);
+    ctx.lineTo(kx - 0.8 * zoom, ky + hoodH + 0.5 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Outer bevel frame (3D depth — dark inner edge)
+    ctx.fillStyle = frameDark;
+    ctx.beginPath();
+    ctx.moveTo(tlx - 1.2 * zoom, tly - 1.2 * zoom * slopeY - 0.4 * zoom);
+    ctx.lineTo(trx + 1.2 * zoom, trY + 1.2 * zoom * slopeY - 0.4 * zoom);
+    ctx.lineTo(brx + 1.2 * zoom, bry + 1.2 * zoom * slopeY + 0.4 * zoom);
+    ctx.lineTo(blx - 1.2 * zoom, bly - 1.2 * zoom * slopeY + 0.4 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
     // Recess shadow (inset depth)
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
     ctx.beginPath();
     ctx.moveTo(tlx - 0.5 * zoom, tly - 0.5 * zoom);
     ctx.lineTo(trx + 0.5 * zoom, trY - 0.5 * zoom);
@@ -9392,22 +9725,8 @@ export function renderStationTower(
     ctx.fill();
 
     // Glass pane (dark with gradient)
-    const glassDark =
-      tower.level >= 4
-        ? uc(
-            "rgba(30, 25, 15, 0.9)",
-            "rgba(15, 22, 42, 0.9)",
-            "rgba(20, 25, 45, 0.9)",
-          )
-        : "rgba(30, 40, 55, 0.9)";
-    const glassLight =
-      tower.level >= 4
-        ? uc(
-            "rgba(50, 45, 35, 0.8)",
-            "rgba(28, 38, 62, 0.8)",
-            "rgba(40, 45, 65, 0.8)",
-          )
-        : "rgba(50, 60, 75, 0.8)";
+    const glassDark = pal.glass.dark;
+    const glassLight = pal.glass.light;
     const glassGrad = ctx.createLinearGradient(tlx, tly, brx, bry);
     glassGrad.addColorStop(0, glassDark);
     glassGrad.addColorStop(1, glassLight);
@@ -9421,14 +9740,14 @@ export function renderStationTower(
     ctx.fill();
 
     // Warm interior glow
-    const baseGlow = 0.08 + Math.sin(time * 1.5 + ri * 2.5) * 0.04;
+    const baseGlow = 0.1 + Math.sin(time * 1.5 + ri * 2.5) * 0.05;
     ctx.fillStyle = `rgba(255, 200, 120, ${baseGlow})`;
     ctx.fill();
 
     // Reflection sweep
     const reflPhase = Math.sin(reflLightAngle + ri * 1.5);
     if (reflPhase > 0) {
-      const reflAlpha = reflPhase * 0.35;
+      const reflAlpha = reflPhase * 0.38;
       ctx.fillStyle = `rgba(200, 220, 255, ${reflAlpha})`;
       ctx.beginPath();
       const rMidX = (tlx + trx) * 0.5;
@@ -9444,9 +9763,9 @@ export function renderStationTower(
       ctx.fill();
     }
 
-    // Window frame (isometric parallelogram)
+    // Window frame (thicker outer stroke with bevel)
     ctx.strokeStyle = frameColor;
-    ctx.lineWidth = 1.2 * zoom;
+    ctx.lineWidth = 1.6 * zoom;
     ctx.beginPath();
     ctx.moveTo(tlx, tly);
     ctx.lineTo(trx, trY);
@@ -9454,10 +9773,17 @@ export function renderStationTower(
     ctx.lineTo(blx, bly);
     ctx.closePath();
     ctx.stroke();
+    // Inner bevel highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(tlx + 0.5 * zoom, tly + 0.3 * zoom);
+    ctx.lineTo(trx - 0.5 * zoom, trY + 0.3 * zoom);
+    ctx.stroke();
 
     // Mullion cross (follows the parallelogram)
     ctx.strokeStyle = frameColor;
-    ctx.lineWidth = 0.7 * zoom;
+    ctx.lineWidth = 0.8 * zoom;
     const midTopX = (tlx + trx) * 0.5;
     const midTopY = (tly + trY) * 0.5;
     const midBotX = (blx + brx) * 0.5;
@@ -9473,8 +9799,8 @@ export function renderStationTower(
     ctx.lineTo(midRightX, midRightY);
     ctx.stroke();
 
-    // 3D window sill (protruding ledge)
-    const sillProj = 1.5 * zoom;
+    // 3D window sill (protruding ledge, larger)
+    const sillProj = 2 * zoom;
     ctx.fillStyle = sillColor;
     ctx.beginPath();
     ctx.moveTo(blx - sillProj * (isLeft ? 0.3 : -0.3), bly);
@@ -9514,23 +9840,36 @@ export function renderStationTower(
   const doorX = screenPos.x - 16 * zoom;
   const doorY = screenPos.y + 2 * zoom;
 
-  // Door step/stoop (small platform in front)
-  const stepColor =
-    tower.level >= 4
-      ? uc("#7a6852", "#485a80", "#7a6a5a")
-      : tower.level >= 3
-        ? "#5a5a62"
-        : "#5a4a3a";
+  // Door step/stoop (larger platform with threshold stone)
+  const stepColor = pal.stone.pale;
+  // Threshold stone top
   ctx.fillStyle = stepColor;
   ctx.beginPath();
-  ctx.moveTo(doorX - 5 * zoom, doorY + 2 * zoom);
-  ctx.lineTo(doorX, doorY + 4 * zoom);
-  ctx.lineTo(doorX + 5 * zoom, doorY + 2 * zoom);
-  ctx.lineTo(doorX, doorY);
+  ctx.moveTo(doorX - 6 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX, doorY + 5 * zoom);
+  ctx.lineTo(doorX + 6 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX, doorY - 1 * zoom);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = 0.7 * zoom;
+  // Step front face
+  ctx.fillStyle = pal.stone.mid;
+  ctx.beginPath();
+  ctx.moveTo(doorX - 6 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX, doorY + 5 * zoom);
+  ctx.lineTo(doorX, doorY + 6.5 * zoom);
+  ctx.lineTo(doorX - 6 * zoom, doorY + 3.5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = pal.stone.dark;
+  ctx.beginPath();
+  ctx.moveTo(doorX, doorY + 5 * zoom);
+  ctx.lineTo(doorX + 6 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX + 6 * zoom, doorY + 3.5 * zoom);
+  ctx.lineTo(doorX, doorY + 6.5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
+  ctx.lineWidth = 0.5 * zoom;
   ctx.stroke();
 
   // Door recess shadow (3D inset)
@@ -9556,18 +9895,8 @@ export function renderStationTower(
   ctx.fill();
 
   // Door frame (3D isometric)
-  const doorFrameColor =
-    tower.level >= 4
-      ? uc("#c9a227", "#8090b8", "#c9a227")
-      : tower.level >= 3
-        ? "#5a5a62"
-        : "#5a4020";
-  const doorFrameDark =
-    tower.level >= 4
-      ? uc("#a08020", "#6878a0", "#a08020")
-      : tower.level >= 3
-        ? "#4a4a52"
-        : "#4a3010";
+  const doorFrameColor = pal.trim.main;
+  const doorFrameDark = pal.trim.dark;
   // Left jamb
   ctx.fillStyle = doorFrameDark;
   ctx.beginPath();
@@ -9617,99 +9946,79 @@ export function renderStationTower(
   ctx.arc(doorX, doorY - 8 * zoom, 4 * zoom, Math.PI, 0);
   ctx.stroke();
 
-  // Door panels (3D raised detail with isometric depth)
-  const panelColor =
-    tower.level >= 4
-      ? uc("#3a2a1a", "#1e2838", "#3a2a1a")
-      : tower.level >= 3
-        ? "#3a3a42"
-        : "#4a3010";
-  const panelLight =
-    tower.level >= 4
-      ? uc("#4a3a2a", "#1e2d55", "#4a3a2a")
-      : tower.level >= 3
-        ? "#4a4a52"
-        : "#5a4020";
-  // Left door panel
+  // Door panels (3D raised detail with plank lines and iron hardware)
+  const panelColor = pal.wood.dark;
+  const panelLight = pal.wood.mid;
   const lpx = doorX - 2.5 * zoom;
   const lpy = doorY - 7 * zoom;
   const pw = 2 * zoom;
   const ph = 8 * zoom;
-  ctx.fillStyle = panelColor;
-  ctx.beginPath();
-  ctx.moveTo(lpx, lpy);
-  ctx.lineTo(lpx + pw, lpy);
-  ctx.lineTo(lpx + pw, lpy + ph);
-  ctx.lineTo(lpx, lpy + ph);
-  ctx.closePath();
-  ctx.fill();
-  // Panel raised inset (upper)
-  ctx.fillStyle = panelLight;
-  ctx.beginPath();
-  ctx.moveTo(lpx + 0.3 * zoom, lpy + 0.5 * zoom);
-  ctx.lineTo(lpx + pw - 0.3 * zoom, lpy + 0.5 * zoom);
-  ctx.lineTo(lpx + pw - 0.3 * zoom, lpy + ph * 0.4);
-  ctx.lineTo(lpx + 0.3 * zoom, lpy + ph * 0.4);
-  ctx.closePath();
-  ctx.fill();
-  // Panel raised inset (lower)
-  ctx.beginPath();
-  ctx.moveTo(lpx + 0.3 * zoom, lpy + ph * 0.5);
-  ctx.lineTo(lpx + pw - 0.3 * zoom, lpy + ph * 0.5);
-  ctx.lineTo(lpx + pw - 0.3 * zoom, lpy + ph - 0.5 * zoom);
-  ctx.lineTo(lpx + 0.3 * zoom, lpy + ph - 0.5 * zoom);
-  ctx.closePath();
-  ctx.fill();
 
-  // Right door panel
-  const rpx = doorX + 0.5 * zoom;
-  ctx.fillStyle = panelColor;
-  ctx.beginPath();
-  ctx.moveTo(rpx, lpy);
-  ctx.lineTo(rpx + pw, lpy);
-  ctx.lineTo(rpx + pw, lpy + ph);
-  ctx.lineTo(rpx, lpy + ph);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = panelLight;
-  ctx.beginPath();
-  ctx.moveTo(rpx + 0.3 * zoom, lpy + 0.5 * zoom);
-  ctx.lineTo(rpx + pw - 0.3 * zoom, lpy + 0.5 * zoom);
-  ctx.lineTo(rpx + pw - 0.3 * zoom, lpy + ph * 0.4);
-  ctx.lineTo(rpx + 0.3 * zoom, lpy + ph * 0.4);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(rpx + 0.3 * zoom, lpy + ph * 0.5);
-  ctx.lineTo(rpx + pw - 0.3 * zoom, lpy + ph * 0.5);
-  ctx.lineTo(rpx + pw - 0.3 * zoom, lpy + ph - 0.5 * zoom);
-  ctx.lineTo(rpx + 0.3 * zoom, lpy + ph - 0.5 * zoom);
-  ctx.closePath();
-  ctx.fill();
+  for (const px0 of [lpx, doorX + 0.5 * zoom]) {
+    // Panel base
+    ctx.fillStyle = panelColor;
+    ctx.fillRect(px0, lpy, pw, ph);
+    // Upper raised inset
+    ctx.fillStyle = panelLight;
+    ctx.fillRect(px0 + 0.3 * zoom, lpy + 0.5 * zoom, pw - 0.6 * zoom, ph * 0.35);
+    // Lower raised inset
+    ctx.fillRect(px0 + 0.3 * zoom, lpy + ph * 0.5, pw - 0.6 * zoom, ph * 0.45);
+    // Plank lines across panel
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let pl = 1; pl < 5; pl++) {
+      const ply = lpy + pl * (ph / 5);
+      ctx.beginPath();
+      ctx.moveTo(px0, ply);
+      ctx.lineTo(px0 + pw, ply);
+      ctx.stroke();
+    }
+    // Iron strap hinges (two per panel)
+    ctx.fillStyle = pal.metal.dark;
+    for (const hingeY of [lpy + ph * 0.2, lpy + ph * 0.7]) {
+      ctx.fillRect(px0 - 0.3 * zoom, hingeY - 0.4 * zoom, pw + 0.6 * zoom, 0.8 * zoom);
+      // Hinge rivets
+      ctx.fillStyle = pal.metal.rivet;
+      ctx.beginPath();
+      ctx.arc(px0 + 0.2 * zoom, hingeY, 0.4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px0 + pw - 0.2 * zoom, hingeY, 0.4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = pal.metal.dark;
+    }
+  }
 
   // Center seam line
-  ctx.strokeStyle = "rgba(0,0,0,0.3)";
-  ctx.lineWidth = 0.6 * zoom;
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 0.7 * zoom;
   ctx.beginPath();
   ctx.moveTo(doorX, doorY - 7 * zoom);
   ctx.lineTo(doorX, doorY + 1 * zoom);
   ctx.stroke();
 
-  // Door handles (3D knobs)
-  const handleColor =
-    tower.level >= 4 ? uc("#e8c847", "#a0b0d0", "#e8c847") : "#8a8a8a";
-  const handleDark =
-    tower.level >= 4 ? uc("#c9a227", "#7888a8", "#c9a227") : "#6a6a6a";
-  for (const hx of [doorX + 1.8 * zoom, doorX - 1.3 * zoom]) {
-    ctx.fillStyle = handleDark;
-    ctx.beginPath();
-    ctx.arc(hx, doorY - 3 * zoom, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = handleColor;
-    ctx.beginPath();
-    ctx.arc(hx, doorY - 3.2 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // Door ring pull handle (center)
+  const handleColor = pal.trim.accent;
+  const handleDark = pal.trim.main;
+  const ringX = doorX;
+  const ringY = doorY - 3 * zoom;
+  // Mounting plate
+  ctx.fillStyle = handleDark;
+  ctx.beginPath();
+  ctx.arc(ringX, ringY, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  // Ring
+  ctx.strokeStyle = handleColor;
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.arc(ringX, ringY + 0.8 * zoom, 1 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+  // Ring highlight
+  ctx.strokeStyle = "rgba(255,255,255,0.15)";
+  ctx.lineWidth = 0.3 * zoom;
+  ctx.beginPath();
+  ctx.arc(ringX, ringY + 0.6 * zoom, 0.8 * zoom, Math.PI * 1.2, Math.PI * 1.8);
+  ctx.stroke();
 
   // Overhead door light (3D lantern)
   const doorLightGlow = 0.5 + Math.sin(time * 2) * 0.15;
@@ -9744,20 +10053,9 @@ export function renderStationTower(
   ctx.fill();
 
   // ---- STRUCTURAL BEAMS / TRUSSES (industrial feel) ----
-  const beamColor =
-    tower.level >= 4
-      ? uc("#8a7020", "#5a6888", "#8a7020")
-      : tower.level >= 3
-        ? "#5a5a62"
-        : "#5a4a3a";
-  const beamHighlight =
-    tower.level >= 4
-      ? uc("#a08828", "#6878a0", "#a08828")
-      : tower.level >= 3
-        ? "#6a6a72"
-        : "#6a5a4a";
-  const rivetColor =
-    tower.level >= 4 ? uc("#c9a227", "#8090b8", "#c9a227") : "#8a8a8a";
+  const beamColor = pal.metal.dark;
+  const beamHighlight = pal.metal.mid;
+  const rivetColor = pal.metal.rivet;
 
   // Right wall cross brace with I-beam profile
   const braceRX = screenPos.x + 6 * zoom;
@@ -11033,62 +11331,13 @@ export function renderStationTower(
       },
     ];
 
-    const postColor =
-      tower.level === 1
-        ? "#4a3a28"
-        : tower.level === 2
-          ? "#3a3a42"
-          : tower.level === 3
-            ? "#2a2a32"
-            : uc("#3a3020", "#2a2a38", "#3a3020");
-    const postLight =
-      tower.level === 1
-        ? "#5a4a38"
-        : tower.level === 2
-          ? "#4a4a52"
-          : tower.level === 3
-            ? "#3a3a42"
-            : uc("#4a4030", "#3a3a48", "#4a4030");
-    const postAccent =
-      tower.level === 1
-        ? "#6a5a48"
-        : tower.level === 2
-          ? "#5a5a62"
-          : tower.level === 3
-            ? "#4a4a52"
-            : uc("#5a4a30", "#4a4a58", "#5a4a30");
-    const glowR =
-      tower.level === 1
-        ? 255
-        : tower.level === 2
-          ? 200
-          : tower.level === 3
-            ? 180
-            : uc(255, 180, 255);
-    const glowG =
-      tower.level === 1
-        ? 180
-        : tower.level === 2
-          ? 220
-          : tower.level === 3
-            ? 200
-            : uc(160, 160, 160);
-    const glowB =
-      tower.level === 1
-        ? 80
-        : tower.level === 2
-          ? 255
-          : tower.level === 3
-            ? 255
-            : uc(40, 255, 40);
-    const glowHex =
-      tower.level === 1
-        ? "#ff9632"
-        : tower.level === 2
-          ? "#64c8ff"
-          : tower.level === 3
-            ? "#80c8ff"
-            : uc("#ffa028", "#b0a0ff", "#ffa028");
+    const postColor = pal.stone.dark;
+    const postLight = pal.stone.mid;
+    const postAccent = pal.stone.light;
+    const glowR = pal.glow.r;
+    const glowG = pal.glow.g;
+    const glowB = pal.glow.b;
+    const glowHex = pal.glow.hex;
 
     for (let i = 0; i < lampPositions.length; i++) {
       const lamp = lampPositions[i];
@@ -11225,10 +11474,10 @@ export function renderStationTower(
       ctx.lineTo(lanternX, lanternY - 2 * zoom);
       ctx.stroke();
 
-      // 3D isometric lantern housing
-      const lw = 4.5 * zoom;
-      const lh = 6 * zoom;
-      const ld = 3 * zoom;
+      // 3D isometric lantern housing (scaled up)
+      const lw = 5.5 * zoom;
+      const lh = 7 * zoom;
+      const ld = 3.5 * zoom;
 
       // Lantern roof (pyramid cap)
       ctx.fillStyle = postAccent;
@@ -11283,7 +11532,7 @@ export function renderStationTower(
       ctx.fill();
 
       // Left glass pane glow
-      ctx.fillStyle = `rgba(${glowR}, ${glowG}, ${glowB}, ${lampGlow * 0.5})`;
+      ctx.fillStyle = `rgba(${glowR}, ${glowG}, ${glowB}, ${lampGlow * 0.55})`;
       ctx.beginPath();
       ctx.moveTo(lanternX - lw * 0.42, lanternY + lh * 0.3);
       ctx.lineTo(lanternX - lw * 0.42, lanternY - lh * 0.3);
@@ -11292,8 +11541,16 @@ export function renderStationTower(
       ctx.closePath();
       ctx.fill();
 
+      // Left glass horizontal cross-strut
+      ctx.strokeStyle = postAccent;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(lanternX - lw * 0.42, lanternY);
+      ctx.lineTo(lanternX - lw * 0.05, lanternY - ld * 0.35);
+      ctx.stroke();
+
       // Right glass pane glow (brighter)
-      ctx.fillStyle = `rgba(${Math.min(255, glowR + 20)}, ${Math.min(255, glowG + 20)}, ${Math.min(255, glowB + 20)}, ${lampGlow * 0.65})`;
+      ctx.fillStyle = `rgba(${Math.min(255, glowR + 20)}, ${Math.min(255, glowG + 20)}, ${Math.min(255, glowB + 20)}, ${lampGlow * 0.7})`;
       ctx.beginPath();
       ctx.moveTo(lanternX + lw * 0.05, lanternY + lh * 0.3 - ld * 0.35);
       ctx.lineTo(lanternX + lw * 0.05, lanternY - lh * 0.3 - ld * 0.35);
@@ -11302,12 +11559,20 @@ export function renderStationTower(
       ctx.closePath();
       ctx.fill();
 
+      // Right glass horizontal cross-strut
+      ctx.strokeStyle = postAccent;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(lanternX + lw * 0.05, lanternY - ld * 0.35);
+      ctx.lineTo(lanternX + lw * 0.42, lanternY);
+      ctx.stroke();
+
       // Inner flame/bulb glow
       ctx.fillStyle = `rgba(${glowR}, ${Math.max(0, glowG - 30)}, ${Math.max(0, glowB - 30)}, ${lampGlow})`;
       ctx.shadowColor = glowHex;
-      ctx.shadowBlur = 10 * zoom;
+      ctx.shadowBlur = 12 * zoom;
       ctx.beginPath();
-      ctx.arc(lanternX, lanternY, 2.5 * zoom, 0, Math.PI * 2);
+      ctx.arc(lanternX, lanternY, 2.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -11315,8 +11580,19 @@ export function renderStationTower(
       ctx.fillStyle = postAccent;
       ctx.beginPath();
       ctx.moveTo(lanternX - 0.5 * zoom, lanternY - lh * 0.5 - 2.5 * zoom);
-      ctx.lineTo(lanternX, lanternY - lh * 0.5 - 4 * zoom);
+      ctx.lineTo(lanternX, lanternY - lh * 0.5 - 4.5 * zoom);
       ctx.lineTo(lanternX + 0.5 * zoom, lanternY - lh * 0.5 - 2.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bottom finial (hanging ornament)
+      const bfY = lanternY + lh * 0.4 + ld * 0.3 + 1 * zoom;
+      ctx.fillStyle = postAccent;
+      ctx.beginPath();
+      ctx.moveTo(lanternX, bfY);
+      ctx.lineTo(lanternX - 0.7 * zoom, bfY + 1 * zoom);
+      ctx.lineTo(lanternX, bfY + 2.5 * zoom);
+      ctx.lineTo(lanternX + 0.7 * zoom, bfY + 1 * zoom);
       ctx.closePath();
       ctx.fill();
     }

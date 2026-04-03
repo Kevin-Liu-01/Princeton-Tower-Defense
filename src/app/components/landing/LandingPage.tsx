@@ -4,7 +4,7 @@ import { useImagePreloader } from "../../hooks/useImagePreloader";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
 import { SectionReveal } from "./SectionReveal";
 import { HeroSection } from "./sections/HeroSection";
-import { FeatureGrid } from "./sections/FeatureGrid";
+
 import { GameplayShowcase } from "./sections/GameplayShowcase";
 import { TowerShowcase } from "./sections/TowerShowcase";
 import { HeroRoster } from "./sections/HeroRoster";
@@ -56,10 +56,6 @@ export function LandingPage({ onPlay }: LandingPageProps) {
       }}
     >
       <HeroSection onPlay={handlePlay} exiting={exiting} onCredits={handleOpenCredits} />
-
-      <SectionReveal scrollRoot={scrollRef}>
-        <FeatureGrid />
-      </SectionReveal>
 
       <SectionReveal scrollRoot={scrollRef} delay={100}>
         <GameplayShowcase />

@@ -45,6 +45,7 @@ export function drawFScottHero(
     goldPulse,
     zoom,
   );
+  drawGreenLight(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom, "behind");
 
   if (isAttacking) {
@@ -70,8 +71,10 @@ export function drawFScottHero(
     penStrokeX,
     penStrokeY,
   );
+  drawCapeWraps(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawHead(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawStormCollar(ctx, x, y, size, zoom);
+  drawHelmet(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawFloatingLetters(ctx, x, y, size, time, goldPulse, zoom, "front");
   drawBook(ctx, x, y, size, time, zoom, isAttacking, writeCycle);
   drawPen(
@@ -104,35 +107,181 @@ function drawAura(
   goldPulse: number,
   zoom: number,
 ) {
-  const auraBase = isAttacking ? 0.4 : 0.22;
+  const auraBase = isAttacking ? 0.45 : 0.24;
   const auraPulse = 0.85 + Math.sin(time * 3) * 0.15;
-  for (let layer = 0; layer < 4; layer++) {
+
+  for (let layer = 0; layer < 3; layer++) {
     const off = layer * 0.08;
     const g = ctx.createRadialGradient(
       x,
       y - size * 0.1,
-      size * (0.1 + off),
+      size * (0.08 + off),
       x,
       y - size * 0.1,
       size * (0.95 + off * 0.3),
     );
-    const a = (auraBase - layer * 0.04) * auraPulse;
-    g.addColorStop(0, `rgba(130, 185, 220, ${a * 0.5})`);
-    g.addColorStop(0.3, `rgba(100, 155, 190, ${a * 0.35})`);
-    g.addColorStop(0.6, `rgba(80, 130, 170, ${a * 0.2})`);
-    g.addColorStop(1, "rgba(130, 185, 220, 0)");
+    const a = (auraBase - layer * 0.06) * auraPulse;
+    g.addColorStop(0, `rgba(218, 175, 55, ${a * 0.55})`);
+    g.addColorStop(0.3, `rgba(184, 144, 30, ${a * 0.38})`);
+    g.addColorStop(0.6, `rgba(160, 130, 35, ${a * 0.2})`);
+    g.addColorStop(1, "rgba(218, 165, 32, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.ellipse(
       x,
       y - size * 0.1,
-      size * (0.85 + off * 0.15),
-      size * (0.75 + off * 0.12),
+      size * (0.88 + off * 0.15),
+      size * (0.76 + off * 0.12),
       0,
       0,
       Math.PI * 2,
     );
     ctx.fill();
+  }
+
+  for (let layer = 0; layer < 2; layer++) {
+    const off = 0.24 + layer * 0.08;
+    const g = ctx.createRadialGradient(
+      x,
+      y - size * 0.1,
+      size * (0.5 + off),
+      x,
+      y - size * 0.1,
+      size * (1.05 + off * 0.2),
+    );
+    const a = (auraBase * 0.5 - layer * 0.04) * auraPulse;
+    g.addColorStop(0, `rgba(52, 211, 153, ${a * 0.25})`);
+    g.addColorStop(0.5, `rgba(34, 197, 94, ${a * 0.12})`);
+    g.addColorStop(1, "rgba(34, 197, 94, 0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(
+      x,
+      y - size * 0.1,
+      size * (0.92 + off * 0.12),
+      size * (0.8 + off * 0.1),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  const decoAlpha = (isAttacking ? 0.2 : 0.09) * auraPulse;
+  ctx.strokeStyle = `rgba(218, 175, 55, ${decoAlpha})`;
+  ctx.lineWidth = 1.2 * zoom;
+  for (let d = 0; d < 3; d++) {
+    const angle = time * 0.25 + (d * Math.PI) / 1.5;
+    const r = size * (0.5 + d * 0.1);
+    const rY = r * 0.72;
+    ctx.beginPath();
+    for (let v = 0; v < 4; v++) {
+      const va = angle + (v * Math.PI) / 2;
+      const vx = x + Math.cos(va) * r;
+      const vy = y - size * 0.1 + Math.sin(va) * rY;
+      if (v === 0) ctx.moveTo(vx, vy);
+      else ctx.lineTo(vx, vy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  for (let p = 0; p < 8; p++) {
+    const sparkPhase = (time * 0.8 + p * 0.75) % 2;
+    const sparkAngle = (time * 0.4 + (p * Math.PI * 2) / 8) % (Math.PI * 2);
+    const sparkDist = size * (0.4 + sparkPhase * 0.25);
+    const sparkX = x + Math.cos(sparkAngle) * sparkDist;
+    const sparkY =
+      y - size * 0.1 + Math.sin(sparkAngle) * sparkDist * 0.7 - sparkPhase * size * 0.1;
+    const sparkAlpha = (1 - sparkPhase / 2) * 0.6 * goldPulse;
+    const sparkR = size * (0.005 + Math.sin(time * 4 + p) * 0.003);
+
+    ctx.fillStyle = `rgba(255, 223, 100, ${sparkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(sparkX, sparkY, sparkR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 223, 100, ${sparkAlpha * 0.5})`;
+    ctx.lineWidth = 0.6 * zoom;
+    const crossLen = sparkR * 2.5;
+    ctx.beginPath();
+    ctx.moveTo(sparkX - crossLen, sparkY);
+    ctx.lineTo(sparkX + crossLen, sparkY);
+    ctx.moveTo(sparkX, sparkY - crossLen);
+    ctx.lineTo(sparkX, sparkY + crossLen);
+    ctx.stroke();
+  }
+}
+
+function drawGreenLight(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const glX = x;
+  const glY = y - size * 0.92;
+  const basePulse =
+    0.55 + Math.sin(time * 1.5) * 0.2 + Math.sin(time * 2.3) * 0.1;
+  const intensity = isAttacking ? 0.9 + attackIntensity * 0.1 : basePulse;
+  const glowR =
+    size *
+    (isAttacking
+      ? 0.18 + attackIntensity * 0.06
+      : 0.14 + Math.sin(time * 2) * 0.02);
+
+  const outerG = ctx.createRadialGradient(glX, glY, 0, glX, glY, glowR * 4);
+  outerG.addColorStop(0, `rgba(34, 197, 94, ${0.12 * intensity})`);
+  outerG.addColorStop(0.4, `rgba(34, 197, 94, ${0.05 * intensity})`);
+  outerG.addColorStop(1, "rgba(34, 197, 94, 0)");
+  ctx.fillStyle = outerG;
+  ctx.beginPath();
+  ctx.arc(glX, glY, glowR * 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  const midG = ctx.createRadialGradient(
+    glX,
+    glY,
+    glowR * 0.3,
+    glX,
+    glY,
+    glowR * 1.8,
+  );
+  midG.addColorStop(0, `rgba(74, 222, 128, ${0.3 * intensity})`);
+  midG.addColorStop(0.5, `rgba(34, 197, 94, ${0.15 * intensity})`);
+  midG.addColorStop(1, "rgba(34, 197, 94, 0)");
+  ctx.fillStyle = midG;
+  ctx.beginPath();
+  ctx.arc(glX, glY, glowR * 1.8, 0, Math.PI * 2);
+  ctx.fill();
+
+  const coreG = ctx.createRadialGradient(glX, glY, 0, glX, glY, glowR);
+  coreG.addColorStop(0, `rgba(255, 255, 255, ${0.85 * intensity})`);
+  coreG.addColorStop(0.15, `rgba(187, 247, 208, ${0.7 * intensity})`);
+  coreG.addColorStop(0.4, `rgba(74, 222, 128, ${0.45 * intensity})`);
+  coreG.addColorStop(0.7, `rgba(34, 197, 94, ${0.2 * intensity})`);
+  coreG.addColorStop(1, "rgba(34, 197, 94, 0)");
+  ctx.fillStyle = coreG;
+  ctx.beginPath();
+  ctx.arc(glX, glY, glowR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = `rgba(134, 239, 172, ${0.1 * intensity})`;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let r = 0; r < 6; r++) {
+    const angle = time * 0.15 + (r * Math.PI) / 3;
+    const rayLen = glowR * (1.8 + Math.sin(time * 1.5 + r) * 0.4);
+    ctx.beginPath();
+    ctx.moveTo(
+      glX + Math.cos(angle) * glowR * 0.3,
+      glY + Math.sin(angle) * glowR * 0.3,
+    );
+    ctx.lineTo(glX + Math.cos(angle) * rayLen, glY + Math.sin(angle) * rayLen);
+    ctx.stroke();
   }
 }
 
@@ -162,7 +311,7 @@ function drawFloatingLetters(
     const px = x + Math.cos(pAngle) * pDist;
     const py = y - size * 0.1 + depth * pDist * 0.4 - pRise;
     const pAlpha = (0.6 - (pRise / (size * 0.25)) * 0.4) * goldPulse * depthAlpha;
-    ctx.fillStyle = `rgba(80, 210, 210, ${pAlpha})`;
+    ctx.fillStyle = `rgba(218, 175, 55, ${pAlpha})`;
     ctx.font = `italic ${Math.round(8 * zoom * depthScale)}px Georgia`;
     ctx.textAlign = "center";
     ctx.fillText(letters[p % letters.length], px, py);
@@ -183,7 +332,7 @@ function drawAttackRings(
   for (let ring = 0; ring < 4; ring++) {
     const phase = (attackPhase * 2 + ring * 0.12) % 1;
     const alpha = (1 - phase) * 0.5 * attackIntensity;
-    ctx.strokeStyle = `rgba(80, 210, 210, ${alpha})`;
+    ctx.strokeStyle = `rgba(218, 175, 55, ${alpha})`;
     ctx.lineWidth = (3.5 - ring * 0.6) * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -199,7 +348,7 @@ function drawAttackRings(
   }
 }
 
-// ─── CAPE (3-panel, connected to epaulettes, wraps & flutters) ──────────────
+// ─── CAPE (Tenor-style: two flowing side panels + shoulder clasps) ──────────
 
 function drawCape(
   ctx: CanvasRenderingContext2D,
@@ -211,191 +360,292 @@ function drawCape(
   isAttacking: boolean,
   attackIntensity: number,
 ) {
-  const windStr = isAttacking ? 1.4 : 1.0;
-  const epY = y - size * 0.22;
+  const s = size;
+  const wave1 = Math.sin(time * 2.2) * s * 0.04;
+  const wave2 = Math.sin(time * 3.1 + 0.8) * s * 0.03;
+  const wave3 = Math.sin(time * 1.7 + 1.5) * s * 0.025;
+  const atkStr = isAttacking ? 1 + attackIntensity * 0.4 : 1;
 
-  // [topLeftX, topLeftY, topRightX, topRightY, length, flutterOffset, side]
-  const panels: [number, number, number, number, number, number, number][] = [
-    [x - size * 0.38, epY, x + size * 0.38, epY, size * 0.72, 0, 0],
-    [
-      x - size * 0.56,
-      epY + size * 0.02,
-      x - size * 0.3,
-      epY,
-      size * 0.65,
-      0.9,
-      -1,
-    ],
-    [
-      x + size * 0.3,
-      epY,
-      x + size * 0.56,
-      epY + size * 0.02,
-      size * 0.65,
-      1.8,
-      1,
-    ],
-  ];
+  for (let side = -1; side <= 1; side += 2) {
+    const flip = side;
+    const shoulderX = x + flip * s * 0.40;
+    const shoulderY = y - s * 0.24;
+    const capeBottomOuterY = y + s * 0.68;
+    const capeBottomInnerY = y + s * 0.78;
+    const capeOuterX = x + flip * s * 0.74;
+    const w1 = wave1 * flip * atkStr;
+    const w2 = wave2 * flip * atkStr;
+    const w3 = wave3 * flip * atkStr;
 
-  for (const [tlX, tlY, trX, trY, len, fOff, side] of panels) {
-    const wt = time * 2.5 + fOff;
-    const f1 = Math.sin(wt) * size * 0.04 * windStr;
-    const f2 = Math.sin(wt + 1.2) * size * 0.06 * windStr;
-    const f3 = Math.sin(wt + 2.4) * size * 0.05 * windStr;
-    const hemWave = Math.sin(wt + 0.5) * size * 0.025 * windStr;
-    const sideSpread = side * size * 0.04;
-
-    const blX = tlX + sideSpread + f3 * 0.5;
-    const blY = tlY + len;
-    const brX = trX + sideSpread + f3 * 0.5;
-    const brY = trY + len;
-    const hemMidX = (blX + brX) / 2 + f2 * 0.5;
-    const hemMidY = Math.max(blY, brY) + size * 0.02 + hemWave;
-
-    // Reusable path for fill, stroke, and glow
-    const capePath = new Path2D();
-    capePath.moveTo(tlX, tlY);
-    capePath.lineTo(trX, trY);
-    capePath.bezierCurveTo(
-      trX + f1 * 0.3 + sideSpread * 0.3,
-      trY + len * 0.35 + f2 * 0.2,
-      brX + f2 * 0.4,
-      brY - len * 0.3 + f1 * 0.3,
-      brX,
-      brY,
+    // Shadow layer
+    ctx.fillStyle = "rgba(4, 4, 12, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(shoulderX + flip * s * 0.02, shoulderY + s * 0.02);
+    ctx.bezierCurveTo(
+      capeOuterX + w1 * 1.2 + flip * s * 0.04, shoulderY + s * 0.2,
+      capeOuterX + w2 * 1.3 + flip * s * 0.06, y + s * 0.35,
+      capeOuterX + w3 + flip * s * 0.03, capeBottomOuterY + s * 0.03,
     );
-    capePath.bezierCurveTo(
-      (hemMidX + brX) / 2,
-      hemMidY,
-      (hemMidX + blX) / 2,
-      hemMidY,
-      blX,
-      blY,
+    ctx.lineTo(x + flip * s * 0.22, capeBottomInnerY + s * 0.05);
+    ctx.bezierCurveTo(
+      x + flip * s * 0.18, y + s * 0.3,
+      shoulderX - flip * s * 0.05, shoulderY + s * 0.15,
+      shoulderX + flip * s * 0.02, shoulderY + s * 0.02,
     );
-    capePath.bezierCurveTo(
-      blX + f2 * 0.4,
-      blY - len * 0.3 + f1 * 0.3,
-      tlX + f1 * 0.3 + sideSpread * 0.3,
-      tlY + len * 0.35 + f2 * 0.2,
-      tlX,
-      tlY,
-    );
-    capePath.closePath();
+    ctx.closePath();
+    ctx.fill();
 
-    const capeG = ctx.createLinearGradient(
-      (tlX + trX) / 2,
-      tlY,
-      (blX + brX) / 2,
-      blY,
+    // Main cape body — deep navy-black
+    const capeGrad = ctx.createLinearGradient(
+      shoulderX, shoulderY, capeOuterX, capeBottomOuterY,
     );
-    if (side === 0) {
-      capeG.addColorStop(0, "#2a2518");
-      capeG.addColorStop(0.3, "#353020");
-      capeG.addColorStop(0.6, "#302a1c");
-      capeG.addColorStop(1, "#252018");
-    } else {
-      capeG.addColorStop(0, "#2a2518");
-      capeG.addColorStop(0.4, "#353020");
-      capeG.addColorStop(0.7, "#354050");
-      capeG.addColorStop(1, "#405868");
-    }
+    capeGrad.addColorStop(0, "#1a2240");
+    capeGrad.addColorStop(0.2, "#1e2e48");
+    capeGrad.addColorStop(0.5, "#1c2644");
+    capeGrad.addColorStop(0.8, "#1a2840");
+    capeGrad.addColorStop(1, "#141e38");
+    ctx.fillStyle = capeGrad;
 
-    ctx.fillStyle = capeG;
-    ctx.fill(capePath);
-    ctx.strokeStyle = "rgba(20, 18, 12, 0.45)";
+    ctx.beginPath();
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.bezierCurveTo(
+      capeOuterX + w1, shoulderY + s * 0.15,
+      capeOuterX + w2 * 1.2, y + s * 0.3,
+      capeOuterX + w3, capeBottomOuterY,
+    );
+    ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
+    ctx.bezierCurveTo(
+      x + flip * s * 0.15, y + s * 0.25,
+      shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
+      shoulderX, shoulderY,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner lining — emerald green satin, visible as inner fold
+    const liningGrad = ctx.createLinearGradient(
+      shoulderX, shoulderY,
+      x + flip * s * 0.25, capeBottomInnerY,
+    );
+    liningGrad.addColorStop(0, "#165428");
+    liningGrad.addColorStop(0.3, "#22803a");
+    liningGrad.addColorStop(0.6, "#1e6e34");
+    liningGrad.addColorStop(1, "#124a22");
+    ctx.fillStyle = liningGrad;
+
+    ctx.beginPath();
+    ctx.moveTo(shoulderX - flip * s * 0.03, shoulderY + s * 0.04);
+    ctx.bezierCurveTo(
+      x + flip * s * 0.35 + w1 * 0.5, y + s * 0.05,
+      x + flip * s * 0.28 + w2 * 0.4, y + s * 0.35,
+      x + flip * s * 0.22, capeBottomInnerY - s * 0.05,
+    );
+    ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
+    ctx.bezierCurveTo(
+      x + flip * s * 0.15, y + s * 0.25,
+      shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
+      shoulderX - flip * s * 0.03, shoulderY + s * 0.04,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Fold lines
+    ctx.strokeStyle = "rgba(20, 60, 35, 0.35)";
     ctx.lineWidth = 1.2 * zoom;
-    ctx.stroke(capePath);
+    for (let fold = 0; fold < 4; fold++) {
+      const t = 0.2 + fold * 0.2;
+      const foldStartX = shoulderX + flip * s * (0.02 + fold * 0.06) + wave1 * t;
+      const foldStartY = shoulderY + s * 0.05 + fold * s * 0.03;
+      const foldEndX = x + flip * s * (0.25 + fold * 0.08) + wave3 * (1 - t);
+      const foldEndY = capeBottomInnerY - s * 0.1 + fold * s * 0.02;
+      const foldMidX = (foldStartX + foldEndX) * 0.5 + wave2 * (0.5 + fold * 0.2);
+      const foldMidY = (foldStartY + foldEndY) * 0.5;
 
-    // Fabric fold creases
-    const foldCount = side === 0 ? 4 : 2;
-    ctx.strokeStyle = "rgba(50, 45, 30, 0.25)";
-    ctx.lineWidth = 0.7 * zoom;
-    for (let fold = 0; fold < foldCount; fold++) {
-      const t = (fold + 1) / (foldCount + 1);
-      const ftX = tlX + (trX - tlX) * t;
-      const ftY = tlY + (trY - tlY) * t + size * 0.02;
-      const fbX =
-        blX +
-        (brX - blX) * t +
-        Math.sin(wt + fold * 0.8) * size * 0.012;
-      const fbY = blY + (brY - blY) * t - size * 0.02;
-      const fmX =
-        (ftX + fbX) / 2 + Math.sin(wt + fold) * size * 0.01;
-      const fmY = (ftY + fbY) / 2;
       ctx.beginPath();
-      ctx.moveTo(ftX, ftY);
-      ctx.quadraticCurveTo(fmX, fmY, fbX, fbY);
+      ctx.moveTo(foldStartX, foldStartY);
+      ctx.quadraticCurveTo(foldMidX, foldMidY, foldEndX, foldEndY);
       ctx.stroke();
     }
 
-    // Hem lining shimmer (blue inner lining visible at fluttering edges)
-    ctx.strokeStyle =
-      side === 0
-        ? "rgba(80, 100, 120, 0.15)"
-        : "rgba(100, 150, 180, 0.25)";
-    ctx.lineWidth = 1.2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(blX, blY);
-    ctx.bezierCurveTo(
-      (hemMidX + blX) / 2,
-      hemMidY,
-      (hemMidX + brX) / 2,
-      hemMidY,
-      brX,
-      brY,
-    );
-    ctx.stroke();
-
-    // Top rail (shoulder bar the cape hangs from)
-    ctx.strokeStyle = "rgba(100, 140, 170, 0.3)";
+    // Outer edge highlight with glow
+    ctx.strokeStyle = "#1a3050";
+    ctx.shadowColor = "#3070a0";
+    ctx.shadowBlur = 3 * zoom;
     ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(tlX + size * 0.01, tlY);
-    ctx.lineTo(trX - size * 0.01, trY);
+    ctx.moveTo(shoulderX, shoulderY);
+    ctx.bezierCurveTo(
+      capeOuterX + w1, shoulderY + s * 0.15,
+      capeOuterX + w2 * 1.2, y + s * 0.3,
+      capeOuterX + w3, capeBottomOuterY,
+    );
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Gold trim along the bottom hem
+    ctx.strokeStyle = "#daa520";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(capeOuterX + w3, capeBottomOuterY);
+    ctx.quadraticCurveTo(
+      x + flip * s * 0.45,
+      (capeBottomOuterY + capeBottomInnerY) * 0.5 + s * 0.04 + wave2 * 0.3,
+      x + flip * s * 0.2, capeBottomInnerY + s * 0.02,
+    );
     ctx.stroke();
 
-    // Clasp hardware on side panels connecting to epaulettes
-    if (side !== 0) {
-      const clX = side === -1 ? trX : tlX;
-      const clY = side === -1 ? trY : tlY;
-      const cg = ctx.createRadialGradient(
-        clX,
-        clY,
-        0,
-        clX,
-        clY,
-        size * 0.015,
-      );
-      cg.addColorStop(0, "#d0e8f5");
-      cg.addColorStop(0.5, "#a0c0d8");
-      cg.addColorStop(1, "#7098b0");
-      ctx.fillStyle = cg;
+    // Gold ornamental dots along hem
+    ctx.fillStyle = "#f0e0a0";
+    for (let dot = 0; dot < 5; dot++) {
+      const dt = dot / 4;
+      const dotX = capeOuterX + w3 +
+        (x + flip * s * 0.2 - capeOuterX - w3) * dt;
+      const dotY = capeBottomOuterY +
+        (capeBottomInnerY - capeBottomOuterY) * dt +
+        s * 0.01 + Math.sin(dt * Math.PI) * s * 0.03;
       ctx.beginPath();
-      ctx.arc(clX, clY, size * 0.012, 0, Math.PI * 2);
+      ctx.arc(dotX, dotY, s * 0.009, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#6088a0";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
     }
 
+    // Shoulder clasp
+    drawCapeShoulderClasp(ctx, shoulderX, shoulderY, s, flip, zoom);
+
+    // Attack glow overlay
     if (isAttacking) {
-      const ga = 0.08 * attackIntensity;
-      const ag = ctx.createLinearGradient(
-        (tlX + trX) / 2,
-        tlY,
-        (blX + brX) / 2,
-        blY,
+      const ga = 0.1 * attackIntensity;
+      ctx.fillStyle = `rgba(218, 175, 55, ${ga * 0.4})`;
+      ctx.beginPath();
+      ctx.moveTo(shoulderX, shoulderY);
+      ctx.bezierCurveTo(
+        capeOuterX + w1, shoulderY + s * 0.15,
+        capeOuterX + w2 * 1.2, y + s * 0.3,
+        capeOuterX + w3, capeBottomOuterY,
       );
-      ag.addColorStop(0, `rgba(80, 210, 210, ${ga * 0.3})`);
-      ag.addColorStop(0.5, `rgba(130, 185, 220, ${ga})`);
-      ag.addColorStop(1, `rgba(80, 210, 210, ${ga * 0.5})`);
-      ctx.fillStyle = ag;
-      ctx.fill(capePath);
+      ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
+      ctx.bezierCurveTo(
+        x + flip * s * 0.15, y + s * 0.25,
+        shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
+        shoulderX, shoulderY,
+      );
+      ctx.closePath();
+      ctx.fill();
     }
+  }
+
+  // Gold clasp chain connecting the two panels across the chest
+  const claspY = y - s * 0.24;
+  const leftX = x - s * 0.40;
+  const rightX = x + s * 0.40;
+  const sway = Math.sin(time * 2) * s * 0.008;
+
+  ctx.strokeStyle = "rgba(60, 45, 10, 0.3)";
+  ctx.lineWidth = 3.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(leftX, claspY + s * 0.01);
+  ctx.quadraticCurveTo(x, claspY + s * 0.1 + sway + s * 0.01, rightX, claspY + s * 0.01);
+  ctx.stroke();
+
+  const chainGrad = ctx.createLinearGradient(leftX, claspY, rightX, claspY);
+  chainGrad.addColorStop(0, "#8a6b20");
+  chainGrad.addColorStop(0.25, "#daa520");
+  chainGrad.addColorStop(0.5, "#f0e0a0");
+  chainGrad.addColorStop(0.75, "#daa520");
+  chainGrad.addColorStop(1, "#8a6b20");
+  ctx.strokeStyle = chainGrad;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(leftX, claspY);
+  ctx.quadraticCurveTo(x, claspY + s * 0.1 + sway, rightX, claspY);
+  ctx.stroke();
+
+  ctx.fillStyle = "#daa520";
+  const linkCount = 10;
+  for (let link = 0; link <= linkCount; link++) {
+    const t = link / linkCount;
+    const lx = leftX + (rightX - leftX) * t;
+    const ly = claspY + (s * 0.1 + sway) * Math.sin(t * Math.PI);
+    ctx.beginPath();
+    ctx.arc(lx, ly, s * 0.005, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
-// ─── SUIT JACKET ─────────────────────────────────────────────────────────────
+function drawCapeShoulderClasp(
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  s: number,
+  _side: number,
+  zoom: number,
+) {
+  ctx.fillStyle = "#daa520";
+  ctx.beginPath();
+  ctx.arc(sx, sy, s * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#705510";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.arc(sx, sy, s * 0.035, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = "#f0e0a0";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.arc(sx, sy, s * 0.022, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Center emerald gem
+  ctx.fillStyle = "#22c55e";
+  ctx.shadowColor = "#34d399";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.beginPath();
+  ctx.arc(sx, sy, s * 0.01, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Radiating points
+  ctx.fillStyle = "#f0e0a0";
+  for (let p = 0; p < 4; p++) {
+    const angle = p * Math.PI * 0.5 + Math.PI * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(
+      sx + Math.cos(angle) * s * 0.022,
+      sy + Math.sin(angle) * s * 0.022,
+    );
+    ctx.lineTo(
+      sx + Math.cos(angle - 0.3) * s * 0.035,
+      sy + Math.sin(angle - 0.3) * s * 0.035,
+    );
+    ctx.lineTo(
+      sx + Math.cos(angle) * s * 0.042,
+      sy + Math.sin(angle) * s * 0.042,
+    );
+    ctx.lineTo(
+      sx + Math.cos(angle + 0.3) * s * 0.035,
+      sy + Math.sin(angle + 0.3) * s * 0.035,
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+// drawCapeWraps is now integrated into drawCape above
+function drawCapeWraps(
+  _ctx: CanvasRenderingContext2D,
+  _x: number,
+  _y: number,
+  _size: number,
+  _time: number,
+  _zoom: number,
+  _isAttacking: boolean,
+  _attackIntensity: number,
+) {
+  // no-op: wrap panels are now part of the Tenor-style drawCape
+}
+
+// ─── OFFICER'S TUNIC + CUIRASS ──────────────────────────────────────────────
 
 function drawSuit(
   ctx: CanvasRenderingContext2D,
@@ -405,271 +655,200 @@ function drawSuit(
   breathe: number,
   zoom: number,
 ) {
-  // Trench coat body
-  const coatG = ctx.createLinearGradient(
-    x - size * 0.45,
-    y - size * 0.1,
-    x + size * 0.45,
-    y + size * 0.4,
+  const shoulderW = size * 0.48;
+  const waistW = size * 0.38;
+  const hemW = size * 0.42;
+  const neckY = y - size * 0.32;
+  const chestY = y - size * 0.06;
+  const waistY = y + size * 0.14;
+  const hemY = y + size * 0.54 + breathe;
+
+  // Officer's tunic base — stiff, squared shoulders
+  const tunicG = ctx.createLinearGradient(
+    x - shoulderW, neckY, x + shoulderW, hemY,
   );
-  coatG.addColorStop(0, "#3a3528");
-  coatG.addColorStop(0.25, "#4a4535");
-  coatG.addColorStop(0.5, "#555040");
-  coatG.addColorStop(0.75, "#4a4535");
-  coatG.addColorStop(1, "#3a3528");
-  ctx.fillStyle = coatG;
+  tunicG.addColorStop(0, "#1e2e48");
+  tunicG.addColorStop(0.25, "#142238");
+  tunicG.addColorStop(0.5, "#182840");
+  tunicG.addColorStop(0.75, "#142238");
+  tunicG.addColorStop(1, "#1e2e48");
+  ctx.fillStyle = tunicG;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.44, y + size * 0.55 + breathe);
+  ctx.moveTo(x - shoulderW, neckY + size * 0.08);
+  ctx.lineTo(x - size * 0.12, neckY - size * 0.02);
+  ctx.lineTo(x + size * 0.12, neckY - size * 0.02);
+  ctx.lineTo(x + shoulderW, neckY + size * 0.08);
   ctx.bezierCurveTo(
-    x - size * 0.46,
-    y + size * 0.35,
-    x - size * 0.44,
-    y,
-    x - size * 0.42,
-    y - size * 0.1,
-  );
-  ctx.quadraticCurveTo(x - size * 0.35, y - size * 0.28, x, y - size * 0.32);
-  ctx.quadraticCurveTo(
-    x + size * 0.35,
-    y - size * 0.28,
-    x + size * 0.42,
-    y - size * 0.1,
+    x + shoulderW, chestY,
+    x + waistW * 1.02, waistY - size * 0.04,
+    x + waistW, waistY,
   );
   ctx.bezierCurveTo(
-    x + size * 0.44,
-    y,
-    x + size * 0.46,
-    y + size * 0.35,
-    x + size * 0.44,
-    y + size * 0.55 + breathe,
+    x + waistW * 1.02, waistY + size * 0.06,
+    x + hemW, hemY - size * 0.08,
+    x + hemW, hemY,
+  );
+  ctx.lineTo(x - hemW, hemY);
+  ctx.bezierCurveTo(
+    x - hemW, hemY - size * 0.08,
+    x - waistW * 1.02, waistY + size * 0.06,
+    x - waistW, waistY,
+  );
+  ctx.bezierCurveTo(
+    x - waistW * 1.02, waistY - size * 0.04,
+    x - shoulderW, chestY,
+    x - shoulderW, neckY + size * 0.08,
   );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a2518";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 2 * zoom;
   ctx.stroke();
 
-  // GUN FLAP (right side — extra fabric panel overlapping right chest)
-  const gfG = ctx.createLinearGradient(
-    x + size * 0.04,
-    y - size * 0.22,
-    x + size * 0.28,
-    y + size * 0.08,
-  );
-  gfG.addColorStop(0, "#4e4938");
-  gfG.addColorStop(0.5, "#585342");
-  gfG.addColorStop(1, "#4a4535");
-  ctx.fillStyle = gfG;
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.06, y - size * 0.24);
-  ctx.lineTo(x + size * 0.28, y - size * 0.2);
-  ctx.lineTo(x + size * 0.26, y + size * 0.08);
-  ctx.lineTo(x + size * 0.06, y + size * 0.1);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "rgba(35, 30, 20, 0.35)";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-  // Gun flap stitch line
-  ctx.strokeStyle = "rgba(80, 75, 60, 0.3)";
-  ctx.lineWidth = 0.7 * zoom;
-  ctx.setLineDash([2 * zoom, 2 * zoom]);
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.08, y - size * 0.22);
-  ctx.lineTo(x + size * 0.08, y + size * 0.08);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  // Hussar-style horizontal braiding across chest
+  for (let row = 0; row < 5; row++) {
+    const ry = neckY + size * 0.12 + row * size * 0.055;
+    const hw = size * (0.3 - row * 0.015);
+    ctx.strokeStyle = `rgba(218, 175, 55, ${0.32 - row * 0.04})`;
+    ctx.lineWidth = 1.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - hw, ry);
+    ctx.quadraticCurveTo(x, ry + size * 0.006, x + hw, ry);
+    ctx.stroke();
+  }
 
-  // Coat hem flare detail
-  ctx.strokeStyle = "rgba(35, 30, 20, 0.4)";
+  // Center front seam
+  ctx.strokeStyle = "rgba(8, 14, 26, 0.5)";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.44, y + size * 0.54 + breathe);
-  ctx.quadraticCurveTo(
-    x,
-    y + size * 0.58 + breathe,
-    x + size * 0.44,
-    y + size * 0.54 + breathe,
-  );
+  ctx.moveTo(x, neckY);
+  ctx.lineTo(x, hemY);
   ctx.stroke();
 
-  // Coat stitching lines
-  ctx.strokeStyle = "rgba(60, 55, 40, 0.2)";
-  ctx.lineWidth = 0.7;
-  for (let i = 0; i < 6; i++) {
-    const sx = x - size * 0.3 + i * size * 0.12;
-    ctx.beginPath();
-    ctx.moveTo(sx, y - size * 0.12);
-    ctx.lineTo(sx - size * 0.01, y + size * 0.5);
-    ctx.stroke();
-  }
+  // ── CUIRASS (metallic breastplate) ──
+  const crTop = neckY + size * 0.06;
+  const crBot = waistY - size * 0.02;
+  const crHW = size * 0.28;
 
-  // LAPELS (drawn before the head — lower portion of the collar)
-  for (let side = -1; side <= 1; side += 2) {
-    const lapG = ctx.createLinearGradient(
-      x + side * size * 0.08,
-      y - size * 0.26,
-      x + side * size * 0.28,
-      y + size * 0.08,
-    );
-    lapG.addColorStop(0, "#4a4535");
-    lapG.addColorStop(0.5, "#555040");
-    lapG.addColorStop(1, "#3a3528");
-    ctx.fillStyle = lapG;
-    ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.08, y - size * 0.24);
-    ctx.lineTo(x + side * size * 0.26, y - size * 0.18);
-    ctx.lineTo(x + side * size * 0.24, y + size * 0.06);
-    ctx.lineTo(x + side * size * 0.08, y + size * 0.08);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(35, 30, 20, 0.3)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.stroke();
-  }
+  const crG = ctx.createLinearGradient(x - crHW, crTop, x + crHW, crBot);
+  crG.addColorStop(0, "#3a4a68");
+  crG.addColorStop(0.15, "#3a5070");
+  crG.addColorStop(0.35, "#4a6888");
+  crG.addColorStop(0.5, "#5078a0");
+  crG.addColorStop(0.65, "#4a6888");
+  crG.addColorStop(0.85, "#3a5070");
+  crG.addColorStop(1, "#3a4a68");
 
-  // BELT (wider, with D-rings and hanging tail)
-  ctx.fillStyle = "#3a3020";
+  ctx.fillStyle = crG;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.42, y + size * 0.16);
-  ctx.lineTo(x + size * 0.42, y + size * 0.16);
-  ctx.lineTo(x + size * 0.42, y + size * 0.22);
-  ctx.lineTo(x - size * 0.42, y + size * 0.22);
+  ctx.moveTo(x - crHW, crTop);
+  ctx.bezierCurveTo(
+    x - crHW * 1.05, (crTop + crBot) / 2,
+    x - crHW * 0.95, crBot - size * 0.04,
+    x - crHW * 0.8, crBot,
+  );
+  ctx.bezierCurveTo(
+    x - crHW * 0.3, crBot + size * 0.02,
+    x + crHW * 0.3, crBot + size * 0.02,
+    x + crHW * 0.8, crBot,
+  );
+  ctx.bezierCurveTo(
+    x + crHW * 0.95, crBot - size * 0.04,
+    x + crHW * 1.05, (crTop + crBot) / 2,
+    x + crHW, crTop,
+  );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a2015";
-  ctx.lineWidth = 0.8 * zoom;
+
+  ctx.strokeStyle = "#daa520";
+  ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
-  // Belt keeper loops
-  for (const lx of [-0.22, -0.08, 0.08, 0.22]) {
-    ctx.fillStyle = "#332a1a";
+  // Center keel ridge
+  ctx.strokeStyle = "rgba(100, 155, 210, 0.3)";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, crTop + size * 0.01);
+  ctx.lineTo(x, crBot - size * 0.01);
+  ctx.stroke();
+
+  // Art Deco etching — diamond on each side
+  const midCR = (crTop + crBot) / 2;
+  ctx.strokeStyle = "rgba(218, 175, 55, 0.25)";
+  ctx.lineWidth = 0.7 * zoom;
+  for (let side = -1; side <= 1; side += 2) {
+    const dx = x + side * crHW * 0.5;
+    const dh = size * 0.06;
+    const dw = size * 0.04;
     ctx.beginPath();
-    ctx.roundRect(
-      x + lx * size - size * 0.012,
-      y + size * 0.155,
-      size * 0.024,
-      size * 0.072,
-      size * 0.003,
-    );
-    ctx.fill();
-    ctx.strokeStyle = "#2a2015";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.moveTo(dx, midCR - dh);
+    ctx.lineTo(dx + dw, midCR);
+    ctx.lineTo(dx, midCR + dh);
+    ctx.lineTo(dx - dw, midCR);
+    ctx.closePath();
     ctx.stroke();
   }
 
-  // Belt buckle (silvery blue)
-  const buckG = ctx.createLinearGradient(
-    x - size * 0.04,
-    y + size * 0.16,
-    x + size * 0.04,
-    y + size * 0.22,
+  // Specular highlight
+  ctx.fillStyle = "rgba(180, 210, 240, 0.07)";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - crHW * 0.2, midCR - size * 0.03,
+    crHW * 0.45, size * 0.055, -0.15, 0, Math.PI * 2,
   );
-  buckG.addColorStop(0, "#8ab0c8");
-  buckG.addColorStop(0.3, "#a0c8e0");
-  buckG.addColorStop(0.5, "#c0ddf0");
-  buckG.addColorStop(0.7, "#a0c8e0");
-  buckG.addColorStop(1, "#8ab0c8");
+  ctx.fill();
+
+  // Small gold rivets along cuirass top edge
+  for (let i = 0; i < 5; i++) {
+    const t = (i + 0.5) / 5;
+    const rx = x - crHW + t * crHW * 2;
+    const ry = crTop + size * 0.005;
+    ctx.fillStyle = "#daa520";
+    ctx.beginPath();
+    ctx.arc(rx, ry, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── OFFICER'S BELT ──
+  const beltY = waistY + size * 0.22;
+  ctx.fillStyle = "#1e2e48";
+  ctx.beginPath();
+  ctx.moveTo(x - waistW, beltY - size * 0.028);
+  ctx.lineTo(x + waistW, beltY - size * 0.028);
+  ctx.lineTo(x + waistW, beltY + size * 0.028);
+  ctx.lineTo(x - waistW, beltY + size * 0.028);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#daa520";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Belt buckle — gold
+  const buckG = ctx.createRadialGradient(x, beltY, 0, x, beltY, size * 0.025);
+  buckG.addColorStop(0, "#f0e0a0");
+  buckG.addColorStop(0.5, "#daa520");
+  buckG.addColorStop(1, "#8a6b20");
   ctx.fillStyle = buckG;
   ctx.beginPath();
   ctx.roundRect(
-    x - size * 0.04,
-    y + size * 0.155,
-    size * 0.08,
-    size * 0.07,
-    size * 0.008,
+    x - size * 0.03, beltY - size * 0.02,
+    size * 0.06, size * 0.04, size * 0.005,
   );
   ctx.fill();
-  ctx.strokeStyle = "#6a90a8";
+  ctx.strokeStyle = "#705510";
   ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
-  // Buckle prong
-  ctx.strokeStyle = "#b0d0e8";
-  ctx.lineWidth = 1 * zoom;
+
+  // Hem detail
+  ctx.strokeStyle = "rgba(8, 14, 26, 0.4)";
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x, y + size * 0.165);
-  ctx.lineTo(x, y + size * 0.215);
+  ctx.moveTo(x - hemW, hemY);
+  ctx.quadraticCurveTo(x, hemY + size * 0.015 + breathe, x + hemW, hemY);
   ctx.stroke();
-
-  // Belt hanging tail (excess strap hanging down)
-  ctx.fillStyle = "#3a3020";
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.04, y + size * 0.19);
-  ctx.lineTo(x + size * 0.14, y + size * 0.2);
-  ctx.lineTo(x + size * 0.15, y + size * 0.28);
-  ctx.lineTo(x + size * 0.13, y + size * 0.29);
-  ctx.lineTo(x + size * 0.12, y + size * 0.21);
-  ctx.lineTo(x + size * 0.04, y + size * 0.2);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#2a2015";
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.stroke();
-  // Tail tip hardware
-  ctx.fillStyle = "#8ab0c8";
-  ctx.beginPath();
-  ctx.roundRect(
-    x + size * 0.125,
-    y + size * 0.275,
-    size * 0.02,
-    size * 0.018,
-    size * 0.003,
-  );
-  ctx.fill();
-
-  // D-rings (silvery blue, on left hip)
-  for (let d = 0; d < 2; d++) {
-    const dx = x - size * (0.32 + d * 0.06);
-    const dy = y + size * 0.19;
-    ctx.strokeStyle = "#90b8d0";
-    ctx.lineWidth = 1.4 * zoom;
-    ctx.beginPath();
-    ctx.arc(dx, dy, size * 0.018, -Math.PI * 0.5, Math.PI * 0.5);
-    ctx.lineTo(dx - size * 0.015, dy + size * 0.018);
-    ctx.lineTo(dx - size * 0.015, dy - size * 0.018);
-    ctx.closePath();
-    ctx.stroke();
-  }
-
-  // BUTTONS (silvery blue, double-breasted)
-  for (let row = 0; row < 3; row++) {
-    for (let col = -1; col <= 1; col += 2) {
-      const bx = x + col * size * 0.1;
-      const by2 = y - size * 0.06 + row * size * 0.1;
-      const bg = ctx.createRadialGradient(
-        bx - size * 0.003,
-        by2 - size * 0.003,
-        0,
-        bx,
-        by2,
-        size * 0.018,
-      );
-      bg.addColorStop(0, "#d0e8f5");
-      bg.addColorStop(0.5, "#a0c0d8");
-      bg.addColorStop(1, "#7098b0");
-      ctx.fillStyle = bg;
-      ctx.beginPath();
-      ctx.arc(bx, by2, size * 0.018, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#6088a0";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.stroke();
-      // Button highlight
-      ctx.fillStyle = "rgba(220, 240, 255, 0.4)";
-      ctx.beginPath();
-      ctx.arc(
-        bx - size * 0.005,
-        by2 - size * 0.005,
-        size * 0.007,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-  }
 }
 
-// ─── ARMORED SIDE TASSETS (split parallelogram skirt, captain structure) ───────
+// ─── ART DECO ARMORED COAT TAILS ────────────────────────────────────────────
 
 function drawScottSkirtArmor(
   ctx: CanvasRenderingContext2D,
@@ -682,16 +861,14 @@ function drawScottSkirtArmor(
   attackIntensity: number,
   goldPulse: number,
 ) {
-  const skirtTop = y + size * 0.22;
-  const bandCount = 4;
-  const totalHeight = size * 0.30;
-  const bandHeight = totalHeight / bandCount;
-  const gapHalf = size * 0.10;
+  const skirtTop = y + size * 0.44;
+  const totalHeight = size * 0.32;
+  const gapHalf = size * 0.06;
 
   drawScottCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, goldPulse);
 
   for (let side = -1; side <= 1; side += 2) {
-    drawScottTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, bandCount, bandHeight, totalHeight, gapHalf, goldPulse, isAttacking, attackIntensity);
+    drawScottTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, 3, totalHeight / 3, totalHeight, gapHalf, goldPulse, isAttacking, attackIntensity);
   }
 
   drawScottSkirtChain(ctx, x, size, zoom, skirtTop, gapHalf, goldPulse, time);
@@ -707,143 +884,141 @@ function drawScottTassetSide(
   zoom: number,
   side: number,
   skirtTop: number,
-  bandCount: number,
-  bandHeight: number,
+  _bandCount: number,
+  _bandHeight: number,
   totalHeight: number,
   gapHalf: number,
   goldPulse: number,
   isAttacking: boolean,
   attackIntensity: number,
 ) {
-  const shear = size * -0.10;
+  const plateCount = 4;
+  const plateOverlap = 0.22;
+  const baseAngle = size * 0.06;
+  const angleGrowth = size * 0.035;
 
-  for (let band = 0; band < bandCount; band++) {
-    const innerTopY = skirtTop + band * bandHeight;
-    const innerBotY = innerTopY + bandHeight;
-    const outerTopY = innerTopY + shear;
-    const outerBotY = innerBotY + shear;
+  for (let p = 0; p < plateCount; p++) {
+    const vertStep = (totalHeight / plateCount) * (1 - plateOverlap);
+    const innerTopY = skirtTop + p * vertStep;
+    const innerBotY = innerTopY + totalHeight / plateCount;
 
-    const outerW = size * (0.42 + band * 0.035);
-    const innerGap = gapHalf + band * size * 0.008;
-    const sway =
-      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+    const drop = baseAngle + p * angleGrowth;
+    const outerTopY = innerTopY - drop;
+    const outerBotY = innerBotY - drop;
 
-    const innerX = x + side * innerGap + sway;
-    const outerX = x + side * outerW + sway;
+    const innerW = gapHalf + p * size * 0.008;
+    const outerW = size * (0.34 + p * 0.05);
 
-    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
-    if (side === -1) {
-      plateG.addColorStop(0, "#5a7a90");
-      plateG.addColorStop(0.25, "#7098b0");
-      plateG.addColorStop(0.55, "#8ab0c8");
-      plateG.addColorStop(1, "#9cc0d8");
-    } else {
-      plateG.addColorStop(0, "#9cc0d8");
-      plateG.addColorStop(0.45, "#8ab0c8");
-      plateG.addColorStop(0.75, "#7098b0");
-      plateG.addColorStop(1, "#5a7a90");
-    }
+    const sway = Math.sin(time * 1.5 + p * 0.7 + side * 0.4) * size * 0.003 * (p + 1);
+    const ix = x + side * innerW + sway;
+    const ox = x + side * outerW + sway;
 
-    ctx.fillStyle = plateG;
+    ctx.save();
+
+    // Drop shadow beneath each plate
+    ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
     ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.moveTo(ix, innerTopY + size * 0.008);
+    ctx.lineTo(ox, outerTopY + size * 0.008);
+    ctx.lineTo(ox + side * size * 0.006, outerBotY + size * 0.008);
+    ctx.lineTo(ix - side * size * 0.003, innerBotY + size * 0.008);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = `rgba(130, 185, 220, ${0.35 + goldPulse * 0.2})`;
+    // Plate gradient — angled to follow the plate surface
+    const pg = ctx.createLinearGradient(
+      ix, (innerTopY + innerBotY) / 2,
+      ox, (outerTopY + outerBotY) / 2,
+    );
+    if (side === -1) {
+      pg.addColorStop(0, "#3a4a68");
+      pg.addColorStop(0.25, "#3a5070");
+      pg.addColorStop(0.55, "#4a6888");
+      pg.addColorStop(0.8, "#3a5070");
+      pg.addColorStop(1, "#3a4a68");
+    } else {
+      pg.addColorStop(0, "#3a4a68");
+      pg.addColorStop(0.2, "#3a5070");
+      pg.addColorStop(0.45, "#4a6888");
+      pg.addColorStop(0.75, "#3a5070");
+      pg.addColorStop(1, "#3a4a68");
+    }
+
+    ctx.fillStyle = pg;
+    ctx.beginPath();
+    ctx.moveTo(ix, innerTopY);
+    ctx.lineTo(ox, outerTopY);
+    ctx.lineTo(ox + side * size * 0.006, outerBotY);
+    ctx.lineTo(ix - side * size * 0.003, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Plate border
+    ctx.strokeStyle = "#2a3a58";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+
+    // Gold bottom edge trim
+    ctx.strokeStyle = `rgba(218, 175, 55, ${0.45 + goldPulse * 0.15})`;
+    ctx.lineWidth = 1.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(ix - side * size * 0.003, innerBotY);
+    ctx.lineTo(ox + side * size * 0.006, outerBotY);
+    ctx.stroke();
+
+    // Gold top edge accent (thinner)
+    ctx.strokeStyle = `rgba(218, 175, 55, ${0.2 + goldPulse * 0.1})`;
     ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
-    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.002);
+    ctx.moveTo(ix, innerTopY);
+    ctx.lineTo(ox, outerTopY);
     ctx.stroke();
 
-    ctx.strokeStyle = "#3a5060";
-    ctx.lineWidth = 1.2 * zoom;
+    // Specular highlight strip across upper portion
+    ctx.fillStyle = "rgba(180, 210, 240, 0.06)";
+    const hlCx = (ix + ox) / 2;
+    const hlCy = ((innerTopY + outerTopY) / 2 + (innerBotY + outerBotY) / 2) * 0.5 - size * 0.01;
+    const hlAngle = Math.atan2(outerTopY - innerTopY, ox - ix);
     ctx.beginPath();
-    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#3a5060";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
-    ctx.closePath();
-    ctx.stroke();
-
-    const rivetMidT = 0.75;
-    const rivetX = innerX + rivetMidT * (outerX - innerX);
-    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
-    const rg = ctx.createRadialGradient(
-      rivetX - size * 0.002, rivetY - size * 0.002, 0,
-      rivetX, rivetY, size * 0.009,
+    ctx.ellipse(
+      hlCx, hlCy,
+      Math.abs(ox - ix) * 0.3, (innerBotY - innerTopY) * 0.15,
+      hlAngle, 0, Math.PI * 2,
     );
-    rg.addColorStop(0, "#d0e8f5");
-    rg.addColorStop(0.4, "#a0c0d8");
-    rg.addColorStop(1, "#6898b0");
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
 
-    const etchCount = 2 + Math.floor(band / 2);
-    for (let e = 0; e < etchCount; e++) {
-      const t = (e + 0.5) / etchCount;
-      const etchX = innerX + t * (outerX - innerX);
-      const etchYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
-      ctx.strokeStyle = "rgba(58, 80, 96, 0.4)";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(etchX - size * 0.02, etchYBase);
-      ctx.lineTo(etchX + size * 0.02, etchYBase);
-      ctx.stroke();
-    }
-
-    const midT = 0.5;
-    const accentInnerX = innerX + side * size * 0.015;
-    const accentOuterX = outerX - side * size * 0.015;
-    const accentInnerY = innerTopY + bandHeight * midT;
-    const accentOuterY = outerTopY + bandHeight * midT;
-    ctx.strokeStyle = `rgba(130, 185, 220, ${0.25 + goldPulse * 0.15})`;
-    ctx.lineWidth = 1.2 * zoom;
+    // Rivet — positioned along the diagonal
+    const rvtT = 0.7;
+    const rvtX = ix + rvtT * (ox - ix);
+    const rvtTopMid = innerTopY + rvtT * (outerTopY - innerTopY);
+    const rvtBotMid = innerBotY + rvtT * (outerBotY - innerBotY);
+    const rvtY = (rvtTopMid + rvtBotMid) / 2;
+    const rg = ctx.createRadialGradient(
+      rvtX - size * 0.002, rvtY - size * 0.002, 0,
+      rvtX, rvtY, size * 0.008,
+    );
+    rg.addColorStop(0, "#f0e0a0");
+    rg.addColorStop(0.5, "#daa520");
+    rg.addColorStop(1, "#8a6b20");
+    ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.moveTo(accentInnerX, accentInnerY);
-    ctx.lineTo(accentOuterX, accentOuterY);
-    ctx.stroke();
+    ctx.arc(rvtX, rvtY, size * 0.007, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 
   if (isAttacking) {
-    const glowAlpha = 0.12 * attackIntensity;
-    const gx = x + side * size * 0.3;
-    const gy = skirtTop + totalHeight * 0.5;
-    const gg = ctx.createRadialGradient(
-      gx,
-      gy,
-      0,
-      gx,
-      gy,
-      size * 0.18,
-    );
-    gg.addColorStop(0, `rgba(80, 210, 210, ${glowAlpha})`);
-    gg.addColorStop(0.5, `rgba(130, 185, 220, ${glowAlpha * 0.6})`);
-    gg.addColorStop(1, "rgba(80, 210, 210, 0)");
+    const glowAlpha = 0.14 * attackIntensity;
+    const gx = x + side * size * 0.28;
+    const gy = skirtTop + totalHeight * 0.5 + baseAngle * 0.5;
+    const gg = ctx.createRadialGradient(gx, gy, 0, gx, gy, size * 0.2);
+    gg.addColorStop(0, `rgba(218, 175, 55, ${glowAlpha})`);
+    gg.addColorStop(0.5, `rgba(184, 144, 30, ${glowAlpha * 0.6})`);
+    gg.addColorStop(1, "rgba(218, 175, 55, 0)");
     ctx.fillStyle = gg;
     ctx.beginPath();
-    ctx.ellipse(
-      gx,
-      gy,
-      size * 0.14,
-      size * 0.17,
-      side * 0.12,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(gx, gy, size * 0.15, size * 0.2, side * 0.15, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -867,11 +1042,11 @@ function drawScottCenterBanner(
   const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
 
   const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
-  bannerGrad.addColorStop(0, "#3a3020");
-  bannerGrad.addColorStop(0.15, "#4a4030");
-  bannerGrad.addColorStop(0.4, "#5a5040");
-  bannerGrad.addColorStop(0.7, "#4a4030");
-  bannerGrad.addColorStop(1, "#3a3020");
+  bannerGrad.addColorStop(0, "#2a3a58");
+  bannerGrad.addColorStop(0.15, "#3a4a68");
+  bannerGrad.addColorStop(0.4, "#3a5070");
+  bannerGrad.addColorStop(0.7, "#3a4a68");
+  bannerGrad.addColorStop(1, "#2a3a58");
   ctx.fillStyle = bannerGrad;
   ctx.beginPath();
   ctx.moveTo(x - bannerHalfW, bannerTop);
@@ -892,14 +1067,14 @@ function drawScottCenterBanner(
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#a0c8e0";
+  ctx.strokeStyle = "#daa520";
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
   const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
-  ctx.strokeStyle = "#a0c8e0";
+  ctx.strokeStyle = "#daa520";
   ctx.lineWidth = 1.2 * zoom;
-  ctx.shadowColor = "#a0c8e0";
+  ctx.shadowColor = "#daa520";
   ctx.shadowBlur = 4 * zoom * goldPulse;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.02, emblemY + size * 0.02);
@@ -938,9 +1113,9 @@ function drawScottSkirtChain(
       lx - size * 0.002, ly - size * 0.002, 0,
       lx, ly, size * 0.012,
     );
-    linkGrad.addColorStop(0, "#a0c0d8");
-    linkGrad.addColorStop(0.5, "#80a8c0");
-    linkGrad.addColorStop(1, "#6090a8");
+    linkGrad.addColorStop(0, "#f0e0a0");
+    linkGrad.addColorStop(0.5, "#daa520");
+    linkGrad.addColorStop(1, "#8a6b20");
     ctx.fillStyle = linkGrad;
     ctx.beginPath();
     const linkW = size * 0.011;
@@ -948,14 +1123,14 @@ function drawScottSkirtChain(
     const angle = i % 2 === 0 ? 0.3 : -0.3;
     ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#3a5060";
+    ctx.strokeStyle = "#705510";
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
 
-  ctx.strokeStyle = `rgba(130, 185, 220, ${0.5 + goldPulse * 0.2})`;
+  ctx.strokeStyle = `rgba(218, 175, 55, ${0.5 + goldPulse * 0.2})`;
   ctx.lineWidth = 1.8 * zoom;
-  ctx.shadowColor = "#a0c8e0";
+  ctx.shadowColor = "#daa520";
   ctx.shadowBlur = 3 * zoom * goldPulse;
   ctx.beginPath();
   ctx.moveTo(leftAnchor, chainY);
@@ -965,13 +1140,13 @@ function drawScottSkirtChain(
 
   for (let side = -1; side <= 1; side += 2) {
     const anchorX = side === -1 ? leftAnchor : rightAnchor;
-    ctx.fillStyle = "#80a8c0";
-    ctx.shadowColor = "#a0c8e0";
+    ctx.fillStyle = "#daa520";
+    ctx.shadowColor = "#daa520";
     ctx.shadowBlur = 3 * zoom * goldPulse;
     ctx.beginPath();
     ctx.arc(anchorX, chainY, size * 0.014, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#3a5060";
+    ctx.strokeStyle = "#705510";
     ctx.lineWidth = 1 * zoom;
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -993,13 +1168,13 @@ function drawScottSkirtBelt(
   const beltGrad = ctx.createLinearGradient(
     x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
   );
-  beltGrad.addColorStop(0, "#2a2518");
-  beltGrad.addColorStop(0.2, "#4a4535");
-  beltGrad.addColorStop(0.4, "#555040");
-  beltGrad.addColorStop(0.5, "#555040");
-  beltGrad.addColorStop(0.6, "#4a4535");
-  beltGrad.addColorStop(0.8, "#4a4535");
-  beltGrad.addColorStop(1, "#2a2518");
+  beltGrad.addColorStop(0, "#2a3a58");
+  beltGrad.addColorStop(0.2, "#3a4a68");
+  beltGrad.addColorStop(0.4, "#3a5070");
+  beltGrad.addColorStop(0.5, "#3a5070");
+  beltGrad.addColorStop(0.6, "#3a4a68");
+  beltGrad.addColorStop(0.8, "#3a4a68");
+  beltGrad.addColorStop(1, "#2a3a58");
 
   ctx.fillStyle = beltGrad;
   ctx.beginPath();
@@ -1011,31 +1186,213 @@ function drawScottSkirtBelt(
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = "#2a2015";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 1.2 * zoom;
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(160, 200, 230, 0.5)";
+  ctx.strokeStyle = "rgba(218, 175, 55, 0.4)";
   ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
   ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
   ctx.stroke();
 
-  ctx.fillStyle = "#a0c8e0";
-  ctx.shadowColor = "#a0c8e0";
+  ctx.fillStyle = "#daa520";
+  ctx.shadowColor = "#daa520";
   ctx.shadowBlur = 6 * zoom * goldPulse;
   ctx.beginPath();
   ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#d0e8f5";
+  ctx.fillStyle = "#f0e0a0";
   ctx.beginPath();
   ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 }
 
-// ─── STORM COLLAR (drawn after head so it overlaps the jaw/cheeks) ──────────
+// ─── OFFICER'S HELMET (peaked cap with metallic visor + crest) ──────────────
+
+function drawHelmet(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  _time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const headY = y - size * 0.5;
+  const capTop = headY - size * 0.36;
+  const bandY = headY - size * 0.16;
+  const capHW = size * 0.28;
+
+  // Crown — dark navy fabric body
+  const crownG = ctx.createLinearGradient(x - capHW, capTop, x + capHW, bandY);
+  crownG.addColorStop(0, "#1e2e48");
+  crownG.addColorStop(0.3, "#142238");
+  crownG.addColorStop(0.5, "#182840");
+  crownG.addColorStop(0.7, "#142238");
+  crownG.addColorStop(1, "#1e2e48");
+  ctx.fillStyle = crownG;
+  ctx.beginPath();
+  ctx.moveTo(x - capHW * 0.7, bandY);
+  ctx.bezierCurveTo(
+    x - capHW * 0.85, (capTop + bandY) / 2 + size * 0.02,
+    x - capHW * 0.88, (capTop + bandY) / 2 - size * 0.02,
+    x - capHW * 0.55, capTop + size * 0.02,
+  );
+  ctx.bezierCurveTo(
+    x - capHW * 0.2, capTop - size * 0.01,
+    x + capHW * 0.2, capTop - size * 0.01,
+    x + capHW * 0.55, capTop + size * 0.02,
+  );
+  ctx.bezierCurveTo(
+    x + capHW * 0.88, (capTop + bandY) / 2 - size * 0.02,
+    x + capHW * 0.85, (capTop + bandY) / 2 + size * 0.02,
+    x + capHW * 0.7, bandY,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#1a2840";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  // Crown top disc (flat top of peaked cap)
+  ctx.fillStyle = "#101e30";
+  ctx.beginPath();
+  ctx.ellipse(x, capTop + size * 0.02, capHW * 0.52, size * 0.025, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#1a2840";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  // Gold headband
+  const bandH = size * 0.035;
+  const bandG = ctx.createLinearGradient(x - capHW, bandY, x + capHW, bandY + bandH);
+  bandG.addColorStop(0, "#8a6b20");
+  bandG.addColorStop(0.3, "#daa520");
+  bandG.addColorStop(0.5, "#f0e0a0");
+  bandG.addColorStop(0.7, "#daa520");
+  bandG.addColorStop(1, "#8a6b20");
+  ctx.fillStyle = bandG;
+  ctx.beginPath();
+  ctx.moveTo(x - capHW * 0.72, bandY);
+  ctx.lineTo(x + capHW * 0.72, bandY);
+  ctx.lineTo(x + capHW * 0.7, bandY + bandH);
+  ctx.lineTo(x - capHW * 0.7, bandY + bandH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#705510";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.stroke();
+
+  // Visor / peak (metallic)
+  const visorY = bandY + bandH * 0.5;
+  const visorG = ctx.createLinearGradient(x, visorY, x, visorY + size * 0.05);
+  visorG.addColorStop(0, "#3a5070");
+  visorG.addColorStop(0.3, "#4a6888");
+  visorG.addColorStop(0.6, "#5078a0");
+  visorG.addColorStop(1, "#3a4a68");
+  ctx.fillStyle = visorG;
+  ctx.beginPath();
+  ctx.moveTo(x - capHW * 0.74, visorY);
+  ctx.bezierCurveTo(
+    x - capHW * 0.5, visorY + size * 0.065,
+    x + capHW * 0.5, visorY + size * 0.065,
+    x + capHW * 0.74, visorY,
+  );
+  ctx.lineTo(x + capHW * 0.7, visorY - size * 0.005);
+  ctx.bezierCurveTo(
+    x + capHW * 0.45, visorY + size * 0.045,
+    x - capHW * 0.45, visorY + size * 0.045,
+    x - capHW * 0.7, visorY - size * 0.005,
+  );
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#2a3a58";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Visor gold edge
+  ctx.strokeStyle = "#daa520";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - capHW * 0.74, visorY);
+  ctx.bezierCurveTo(
+    x - capHW * 0.5, visorY + size * 0.065,
+    x + capHW * 0.5, visorY + size * 0.065,
+    x + capHW * 0.74, visorY,
+  );
+  ctx.stroke();
+
+  // Visor specular highlight
+  ctx.fillStyle = "rgba(180, 210, 240, 0.1)";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.03, visorY + size * 0.02,
+    size * 0.08, size * 0.015, -0.1, 0, Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Center crest emblem — shield with star
+  const embY = bandY + bandH * 0.5;
+  ctx.fillStyle = "#daa520";
+  ctx.shadowColor = "#daa520";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, embY - size * 0.022);
+  ctx.lineTo(x + size * 0.022, embY + size * 0.002);
+  ctx.lineTo(x + size * 0.016, embY + size * 0.025);
+  ctx.lineTo(x, embY + size * 0.032);
+  ctx.lineTo(x - size * 0.016, embY + size * 0.025);
+  ctx.lineTo(x - size * 0.022, embY + size * 0.002);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#f0e0a0";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.004, embY, size * 0.006, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Gold chinstrap
+  ctx.strokeStyle = "rgba(218, 175, 55, 0.45)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - capHW * 0.62, visorY + size * 0.01);
+  ctx.quadraticCurveTo(x, visorY + size * 0.1, x + capHW * 0.62, visorY + size * 0.01);
+  ctx.stroke();
+
+  // Chinstrap button anchors
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.fillStyle = "#daa520";
+    ctx.beginPath();
+    ctx.arc(
+      x + side * capHW * 0.62, visorY + size * 0.01,
+      size * 0.005, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  if (isAttacking) {
+    const ga = 0.12 * attackIntensity;
+    const gg = ctx.createRadialGradient(
+      x, (capTop + bandY) / 2, 0,
+      x, (capTop + bandY) / 2, capHW,
+    );
+    gg.addColorStop(0, `rgba(218, 175, 55, ${ga})`);
+    gg.addColorStop(1, "rgba(218, 175, 55, 0)");
+    ctx.fillStyle = gg;
+    ctx.beginPath();
+    ctx.ellipse(
+      x, (capTop + bandY) / 2,
+      capHW * 0.8, (bandY - capTop) * 0.6, 0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+}
+
+// ─── GORGET (armored neck guard, drawn after head) ──────────────────────────
 
 function drawStormCollar(
   ctx: CanvasRenderingContext2D,
@@ -1047,210 +1404,124 @@ function drawStormCollar(
   const headY = y - size * 0.5;
 
   for (let side = -1; side <= 1; side += 2) {
-    // Turned-up collar flap — narrow strip that hugs the jawline
-    const colG = ctx.createLinearGradient(
-      x + side * size * 0.14,
-      headY + size * 0.18,
-      x + side * size * 0.3,
-      headY - size * 0.08,
+    const gG = ctx.createLinearGradient(
+      x + side * size * 0.14, headY + size * 0.18,
+      x + side * size * 0.28, headY - size * 0.06,
     );
-    colG.addColorStop(0, "#4a4535");
-    colG.addColorStop(0.4, "#585248");
-    colG.addColorStop(0.7, "#605a48");
-    colG.addColorStop(1, "#555040");
-    ctx.fillStyle = colG;
+    gG.addColorStop(0, "#3a4a68");
+    gG.addColorStop(0.35, "#3a5070");
+    gG.addColorStop(0.65, "#4a6888");
+    gG.addColorStop(1, "#3a5070");
+    ctx.fillStyle = gG;
     ctx.beginPath();
-    // Bottom inner edge (near neck)
-    ctx.moveTo(x + side * size * 0.12, headY + size * 0.22);
-    // Up along the jaw, curving outward
+    ctx.moveTo(x + side * size * 0.12, headY + size * 0.24);
     ctx.bezierCurveTo(
-      x + side * size * 0.14,
-      headY + size * 0.1,
-      x + side * size * 0.18,
-      headY - size * 0.02,
-      x + side * size * 0.2,
-      headY - size * 0.1,
+      x + side * size * 0.14, headY + size * 0.1,
+      x + side * size * 0.18, headY,
+      x + side * size * 0.2, headY - size * 0.08,
     );
-    // Collar peak (pointed tip)
-    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
-    // Outer edge going back down
+    ctx.lineTo(x + side * size * 0.24, headY - size * 0.12);
     ctx.bezierCurveTo(
-      x + side * size * 0.28,
-      headY - size * 0.04,
-      x + side * size * 0.3,
-      headY + size * 0.08,
-      x + side * size * 0.28,
-      headY + size * 0.2,
+      x + side * size * 0.28, headY - size * 0.02,
+      x + side * size * 0.3, headY + size * 0.08,
+      x + side * size * 0.28, headY + size * 0.22,
     );
-    // Bottom outer edge
-    ctx.lineTo(x + side * size * 0.24, headY + size * 0.24);
+    ctx.lineTo(x + side * size * 0.24, headY + size * 0.26);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#2a2518";
-    ctx.lineWidth = 1.3 * zoom;
+    ctx.strokeStyle = "#2a3a58";
+    ctx.lineWidth = 1.2 * zoom;
     ctx.stroke();
 
-    // Fold crease — diagonal line where the collar turns over
-    ctx.strokeStyle = "rgba(80, 75, 55, 0.45)";
-    ctx.lineWidth = 0.9 * zoom;
+    // Gold edge trim
+    ctx.strokeStyle = "rgba(218, 175, 55, 0.4)";
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.14, headY + size * 0.18);
-    ctx.bezierCurveTo(
-      x + side * size * 0.18,
-      headY + size * 0.06,
-      x + side * size * 0.22,
-      headY - size * 0.04,
-      x + side * size * 0.23,
-      headY - size * 0.1,
-    );
+    ctx.moveTo(x + side * size * 0.2, headY - size * 0.08);
+    ctx.lineTo(x + side * size * 0.24, headY - size * 0.12);
     ctx.stroke();
 
-    // Lighter inner lining visible above the fold
-    const innerG = ctx.createLinearGradient(
-      x + side * size * 0.18,
-      headY - size * 0.12,
-      x + side * size * 0.28,
-      headY + size * 0.06,
-    );
-    innerG.addColorStop(0, "#6a6455");
-    innerG.addColorStop(0.5, "#73705e");
-    innerG.addColorStop(1, "#605a48");
-    ctx.fillStyle = innerG;
+    // Specular highlight
+    ctx.fillStyle = "rgba(180, 210, 240, 0.06)";
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.2, headY - size * 0.1);
-    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
-    ctx.bezierCurveTo(
-      x + side * size * 0.28,
-      headY - size * 0.04,
-      x + side * size * 0.3,
-      headY + size * 0.08,
-      x + side * size * 0.28,
-      headY + size * 0.2,
+    ctx.ellipse(
+      x + side * size * 0.2, headY + size * 0.06,
+      size * 0.03, size * 0.08, side * 0.15, 0, Math.PI * 2,
     );
-    ctx.lineTo(x + side * size * 0.26, headY + size * 0.18);
-    ctx.bezierCurveTo(
-      x + side * size * 0.27,
-      headY + size * 0.06,
-      x + side * size * 0.26,
-      headY - size * 0.02,
-      x + side * size * 0.23,
-      headY - size * 0.1,
-    );
-    ctx.closePath();
     ctx.fill();
 
-    // Top edge highlight
-    ctx.strokeStyle = "rgba(120, 115, 95, 0.35)";
-    ctx.lineWidth = 0.7 * zoom;
+    // Rivet at hinge point
+    ctx.fillStyle = "#daa520";
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.2, headY - size * 0.1);
-    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
-    ctx.stroke();
+    ctx.arc(
+      x + side * size * 0.22, headY - size * 0.1,
+      size * 0.006, 0, Math.PI * 2,
+    );
+    ctx.fill();
   }
 }
 
-// ─── EPAULETTES (silvery blue) ──────────────────────────────────────────────
+// ─── PAULDRONS (layered armored shoulder plates) ────────────────────────────
 
 function drawEpaulettes(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   size: number,
-  time: number,
+  _time: number,
   zoom: number,
 ) {
   for (let side = -1; side <= 1; side += 2) {
-    const epX = x + side * size * 0.4;
+    const epX = x + side * size * 0.42;
     const epY = y - size * 0.22;
 
     ctx.save();
     ctx.translate(epX, epY);
-    ctx.rotate(side * 0.15);
+    ctx.rotate(side * 0.1);
 
-    const epW = size * 0.18;
-    const epH = size * 0.08;
+    // 3 overlapping plate layers (top is outermost)
+    for (let layer = 2; layer >= 0; layer--) {
+      const lw = size * (0.16 - layer * 0.03);
+      const lh = size * (0.055 - layer * 0.008);
+      const ly = layer * size * 0.018;
 
-    // Base pad
-    const padG = ctx.createLinearGradient(-epW, -epH, epW, epH);
-    padG.addColorStop(0, "#1a2530");
-    padG.addColorStop(0.3, "#253545");
-    padG.addColorStop(0.5, "#2a3a4a");
-    padG.addColorStop(0.7, "#253545");
-    padG.addColorStop(1, "#1a2530");
-    ctx.fillStyle = padG;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, epW, epH, side * 0.1, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Silvery blue border
-    ctx.strokeStyle = "#80b8d0";
-    ctx.lineWidth = 2 * zoom;
-    ctx.stroke();
-
-    // Inner trim ring
-    ctx.strokeStyle = "#6898b0";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, epW * 0.75, epH * 0.65, side * 0.1, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Silvery blue fringe strands
-    const fringeCount = 9;
-    for (let f = 0; f < fringeCount; f++) {
-      const fAngle =
-        (side === -1 ? 0.2 : -0.2) +
-        Math.PI * 0.3 +
-        f * ((Math.PI * 0.5) / (fringeCount - 1));
-      const fx = Math.cos(fAngle) * epW;
-      const fy = Math.sin(fAngle) * epH;
-      const fLen = size * (0.06 + Math.sin(f * 1.3) * 0.015);
-      const fWave = Math.sin(time * 3 + f * 0.6) * size * 0.008;
-
-      const fringeG = ctx.createLinearGradient(fx, fy, fx + fWave, fy + fLen);
-      fringeG.addColorStop(0, "#90c0d8");
-      fringeG.addColorStop(0.4, "#b0d8e8");
-      fringeG.addColorStop(0.7, "#80b0c8");
-      fringeG.addColorStop(1, "#608898");
-      ctx.strokeStyle = fringeG;
-      ctx.lineWidth = 1.8 * zoom;
-      ctx.lineCap = "round";
+      const pg = ctx.createLinearGradient(-lw, ly - lh, lw, ly + lh);
+      pg.addColorStop(0, "#3a4a68");
+      pg.addColorStop(0.25, "#3a5070");
+      pg.addColorStop(0.5, "#4a6888");
+      pg.addColorStop(0.75, "#3a5070");
+      pg.addColorStop(1, "#3a4a68");
+      ctx.fillStyle = pg;
       ctx.beginPath();
-      ctx.moveTo(fx, fy);
-      ctx.quadraticCurveTo(
-        fx + fWave * 0.6,
-        fy + fLen * 0.5,
-        fx + fWave,
-        fy + fLen,
-      );
+      ctx.ellipse(0, ly, lw, lh, side * 0.06, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(218, 165, 32, ${0.5 - layer * 0.1})`;
+      ctx.lineWidth = (1.4 - layer * 0.2) * zoom;
       ctx.stroke();
 
-      ctx.fillStyle = "#b0d8e8";
-      ctx.beginPath();
-      ctx.arc(fx + fWave, fy + fLen, size * 0.008, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.strokeStyle = "#2a3a58";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
     }
 
-    // Center star emblem (silvery blue)
-    ctx.fillStyle = "#b0d8f0";
-    ctx.shadowColor = "#80b8d8";
-    ctx.shadowBlur = 5 * zoom;
+    // Top plate specular highlight
+    ctx.fillStyle = "rgba(180, 210, 240, 0.1)";
     ctx.beginPath();
-    for (let s = 0; s < 5; s++) {
-      const sa = (s * Math.PI * 2) / 5 - Math.PI / 2;
-      const sa2 = sa + Math.PI / 5;
-      const outerR = size * 0.035;
-      const innerR = size * 0.015;
-      if (s === 0) ctx.moveTo(Math.cos(sa) * outerR, Math.sin(sa) * outerR);
-      else ctx.lineTo(Math.cos(sa) * outerR, Math.sin(sa) * outerR);
-      ctx.lineTo(Math.cos(sa2) * innerR, Math.sin(sa2) * innerR);
-    }
-    ctx.closePath();
+    ctx.ellipse(
+      -size * 0.02, -size * 0.01,
+      size * 0.06, size * 0.02, -0.2, 0, Math.PI * 2,
+    );
     ctx.fill();
-    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = "#d8f0ff";
+    // Center rivet
+    const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.012);
+    rg.addColorStop(0, "#f0e0a0");
+    rg.addColorStop(0.5, "#daa520");
+    rg.addColorStop(1, "#8a6b20");
+    ctx.fillStyle = rg;
     ctx.beginPath();
-    ctx.arc(-size * 0.005, -size * 0.008, size * 0.008, 0, Math.PI * 2);
+    ctx.arc(0, 0, size * 0.01, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -1277,7 +1548,7 @@ function drawAiguillette(
     const loopWidth = size * (0.2 + loop * 0.05);
     const alpha = 0.7 - loop * 0.12;
 
-    ctx.strokeStyle = `rgba(130, 180, 210, ${alpha})`;
+    ctx.strokeStyle = `rgba(218, 175, 55, ${alpha})`;
     ctx.lineWidth = (2 - loop * 0.3) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -1290,13 +1561,13 @@ function drawAiguillette(
     );
     ctx.stroke();
 
-    ctx.strokeStyle = `rgba(160, 200, 230, ${alpha * 0.25})`;
+    ctx.strokeStyle = `rgba(240, 224, 160, ${alpha * 0.2})`;
     ctx.lineWidth = (3.5 - loop * 0.4) * zoom;
     ctx.stroke();
   }
 
   // Tip ferrule
-  ctx.fillStyle = "#90c0d8";
+  ctx.fillStyle = "#daa520";
   ctx.beginPath();
   ctx.arc(
     startX - size * 0.35,
@@ -1307,10 +1578,10 @@ function drawAiguillette(
   );
   ctx.fill();
 
-  // Pocket square (silvery blue, peeking from left breast pocket)
+  // Pocket square (emerald green, peeking from left breast pocket)
   const pqX = x - size * 0.2;
   const pqY = y + size * 0.02;
-  ctx.fillStyle = "#7ab0c8";
+  ctx.fillStyle = "#3da85c";
   ctx.beginPath();
   ctx.moveTo(pqX - size * 0.03, pqY);
   ctx.lineTo(pqX - size * 0.015, pqY - size * 0.06);
@@ -1319,12 +1590,12 @@ function drawAiguillette(
   ctx.lineTo(pqX + size * 0.035, pqY);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#5a8898";
+  ctx.strokeStyle = "#2d6a4f";
   ctx.lineWidth = 0.8;
   ctx.stroke();
 
   // Decorative piping along jacket hem
-  ctx.strokeStyle = "rgba(130, 180, 210, 0.35)";
+  ctx.strokeStyle = "rgba(218, 175, 55, 0.25)";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.36, y + size * 0.48);
@@ -1332,7 +1603,7 @@ function drawAiguillette(
   ctx.stroke();
 
   // Pocket watch chain across vest
-  ctx.strokeStyle = "#80b0c8";
+  ctx.strokeStyle = "#c9a84c";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.02, y + size * 0.05);
@@ -1344,14 +1615,14 @@ function drawAiguillette(
   );
   ctx.stroke();
   // Watch fob
-  ctx.fillStyle = "#90c0d8";
-  ctx.shadowColor = "#80b8d8";
+  ctx.fillStyle = "#daa520";
+  ctx.shadowColor = "#c9a84c";
   ctx.shadowBlur = 3 * zoom;
   ctx.beginPath();
   ctx.arc(x + size * 0.14, y + size * 0.08, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#c8e0f0";
+  ctx.fillStyle = "#f0e0a0";
   ctx.beginPath();
   ctx.arc(x + size * 0.136, y + size * 0.075, size * 0.005, 0, Math.PI * 2);
   ctx.fill();
@@ -1360,11 +1631,11 @@ function drawAiguillette(
   for (let pin = 0; pin < 3; pin++) {
     const px = x - size * 0.14;
     const py = y - size * 0.2 + pin * size * 0.025;
-    ctx.fillStyle = "#a0c8e0";
+    ctx.fillStyle = "#daa520";
     ctx.beginPath();
     ctx.roundRect(px, py, size * 0.04, size * 0.008, size * 0.002);
     ctx.fill();
-    ctx.strokeStyle = "#7aa0b8";
+    ctx.strokeStyle = "#8a6b20";
     ctx.lineWidth = 0.4 * zoom;
     ctx.stroke();
   }
@@ -1378,14 +1649,14 @@ function drawAiguillette(
     y - size * 0.31,
     size * 0.012,
   );
-  bg.addColorStop(0, "#d0e8f5");
-  bg.addColorStop(0.5, "#a0c0d8");
-  bg.addColorStop(1, "#7098b0");
+  bg.addColorStop(0, "#f0e0a0");
+  bg.addColorStop(0.5, "#daa520");
+  bg.addColorStop(1, "#8a6b20");
   ctx.fillStyle = bg;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.31, size * 0.012, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#6088a0";
+  ctx.strokeStyle = "#705510";
   ctx.lineWidth = 0.5 * zoom;
   ctx.stroke();
 
@@ -1393,17 +1664,17 @@ function drawAiguillette(
   const medX = x - size * 0.28;
   const medY = y - size * 0.08;
   const stripeW = size * 0.008;
-  const ribbonColors = ["#708898", "#a0c0d8", "#e0f0ff", "#a0c0d8", "#708898"];
+  const ribbonColors = ["#165428", "#3da85c", "#f0e0a0", "#3da85c", "#165428"];
   for (let ri = 0; ri < ribbonColors.length; ri++) {
     ctx.fillStyle = ribbonColors[ri];
     ctx.fillRect(medX + ri * stripeW, medY, stripeW, size * 0.025);
   }
-  ctx.strokeStyle = "#506878";
+  ctx.strokeStyle = "#705510";
   ctx.lineWidth = 0.4 * zoom;
   ctx.strokeRect(medX, medY, stripeW * ribbonColors.length, size * 0.025);
 
   // BACK VENT DETAIL (subtle V at the bottom of coat)
-  ctx.strokeStyle = "rgba(55, 50, 35, 0.5)";
+  ctx.strokeStyle = "rgba(20, 20, 40, 0.5)";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.04, y + size * 0.55);
@@ -1422,16 +1693,14 @@ function drawVest(
   zoom: number,
 ) {
   const vestGrad = ctx.createLinearGradient(
-    x - size * 0.15,
-    y - size * 0.18,
-    x + size * 0.15,
-    y + size * 0.3,
+    x - size * 0.15, y - size * 0.18,
+    x + size * 0.15, y + size * 0.3,
   );
-  vestGrad.addColorStop(0, "#5a4530");
-  vestGrad.addColorStop(0.3, "#7a6545");
-  vestGrad.addColorStop(0.5, "#8b7555");
-  vestGrad.addColorStop(0.7, "#7a6545");
-  vestGrad.addColorStop(1, "#5a4530");
+  vestGrad.addColorStop(0, "#1e2e48");
+  vestGrad.addColorStop(0.3, "#142030");
+  vestGrad.addColorStop(0.5, "#182838");
+  vestGrad.addColorStop(0.7, "#142030");
+  vestGrad.addColorStop(1, "#1e2e48");
   ctx.fillStyle = vestGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y - size * 0.2);
@@ -1441,8 +1710,8 @@ function drawVest(
   ctx.closePath();
   ctx.fill();
 
-  // Brocade pattern
-  ctx.strokeStyle = "rgba(180, 150, 100, 0.3)";
+  // Art Deco brocade pattern
+  ctx.strokeStyle = "rgba(218, 165, 32, 0.2)";
   ctx.lineWidth = 0.8;
   for (let p = 0; p < 4; p++) {
     const py = y - size * 0.1 + p * size * 0.1;
@@ -1453,7 +1722,7 @@ function drawVest(
   }
 
   // Vest border
-  ctx.strokeStyle = "#4a3520";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y - size * 0.2);
@@ -1464,31 +1733,27 @@ function drawVest(
   ctx.lineTo(x + size * 0.16, y + size * 0.3);
   ctx.stroke();
 
-  // Silvery blue buttons
+  // Gold vest buttons
   for (let i = 0; i < 4; i++) {
     const by = y - size * 0.1 + i * size * 0.095;
-    ctx.fillStyle = "#607888";
+    ctx.fillStyle = "#705510";
     ctx.beginPath();
-    ctx.arc(x + size * 0.005, by + size * 0.005, size * 0.022, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.005, by + size * 0.005, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
     const bg = ctx.createRadialGradient(
-      x - size * 0.005,
-      by - size * 0.005,
-      0,
-      x,
-      by,
-      size * 0.022,
+      x - size * 0.005, by - size * 0.005, 0,
+      x, by, size * 0.02,
     );
-    bg.addColorStop(0, "#d0e8f5");
-    bg.addColorStop(0.5, "#a0c0d8");
-    bg.addColorStop(1, "#7098b0");
+    bg.addColorStop(0, "#f0e0a0");
+    bg.addColorStop(0.5, "#daa520");
+    bg.addColorStop(1, "#8a6b20");
     ctx.fillStyle = bg;
     ctx.beginPath();
-    ctx.arc(x, by, size * 0.022, 0, Math.PI * 2);
+    ctx.arc(x, by, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(220, 240, 255, 0.4)";
+    ctx.fillStyle = "rgba(255, 240, 180, 0.4)";
     ctx.beginPath();
-    ctx.arc(x - size * 0.008, by - size * 0.008, size * 0.008, 0, Math.PI * 2);
+    ctx.arc(x - size * 0.006, by - size * 0.006, size * 0.007, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1529,14 +1794,14 @@ function drawShirtAndTie(
   ctx.fill();
 
   // Tie (silvery blue)
-  ctx.shadowColor = "#80b8d8";
+  ctx.shadowColor = "#22c55e";
   ctx.shadowBlur = isAttacking ? 10 * zoom * attackIntensity : 4 * zoom;
   const tG = ctx.createLinearGradient(x, y - size * 0.18, x, y + size * 0.22);
-  tG.addColorStop(0, "#80b8d0");
-  tG.addColorStop(0.2, "#6898b0");
-  tG.addColorStop(0.5, "#507898");
-  tG.addColorStop(0.8, "#3a6080");
-  tG.addColorStop(1, "#2a4860");
+  tG.addColorStop(0, "#5ebd73");
+  tG.addColorStop(0.2, "#3da85c");
+  tG.addColorStop(0.5, "#2d8a48");
+  tG.addColorStop(0.8, "#1e6b35");
+  tG.addColorStop(1, "#165428");
   ctx.fillStyle = tG;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.18);
@@ -1547,7 +1812,7 @@ function drawShirtAndTie(
   ctx.fill();
 
   // Tie stripes
-  ctx.strokeStyle = "rgba(30, 60, 80, 0.4)";
+  ctx.strokeStyle = "rgba(10, 50, 25, 0.4)";
   ctx.lineWidth = 1.5;
   for (let s = 0; s < 5; s++) {
     const sy = y - size * 0.1 + s * size * 0.06;
@@ -1558,7 +1823,7 @@ function drawShirtAndTie(
   }
 
   // Tie knot
-  ctx.fillStyle = "#90c0d8";
+  ctx.fillStyle = "#6fcf87";
   ctx.beginPath();
   ctx.ellipse(
     x,
@@ -1637,14 +1902,14 @@ function drawArms(
 
   ctx.restore();
 
-  // === RIGHT ARM (writing arm — elbow bends with cursive pen strokes) ===
+  // === RIGHT ARM (writing arm — reaches toward book, elbow bends with cursive strokes) ===
   const writeBend = isAttacking ? 0 : penStrokeX / (size * 0.06);
   const rightShoulder = isAttacking
     ? 0.7 + Math.sin(attackPhase * Math.PI * 1.5) * 0.12
-    : 0.72 + Math.sin(time * 2) * 0.05 + writeBend * 0.04;
+    : 0.62 + Math.sin(time * 2) * 0.05 + writeBend * 0.04;
   const rightElbow = isAttacking
     ? 0.95 + Math.sin(attackPhase * Math.PI * 1.5) * 0.35
-    : 0.85 + Math.sin(time * 2.5) * 0.18 + writeBend * 0.12;
+    : 1.05 + Math.sin(time * 2.5) * 0.12 + writeBend * 0.12;
 
   ctx.save();
   ctx.translate(x + size * 0.36, y - size * 0.1);
@@ -1701,9 +1966,9 @@ function drawUpperSleeve(
 ) {
   const len = size * 0.16;
   const sg = ctx.createLinearGradient(0, 0, dir * size * 0.06, len);
-  sg.addColorStop(0, "#4a4535");
-  sg.addColorStop(0.5, "#555040");
-  sg.addColorStop(1, "#3a3528");
+  sg.addColorStop(0, "#1e2e48");
+  sg.addColorStop(0.5, "#142238");
+  sg.addColorStop(1, "#1e2e48");
   ctx.fillStyle = sg;
   ctx.beginPath();
   ctx.moveTo(-dir * size * 0.04, 0);
@@ -1712,7 +1977,7 @@ function drawUpperSleeve(
   ctx.quadraticCurveTo(-dir * size * 0.07, len * 0.4, -dir * size * 0.04, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a2518";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 1.2;
   ctx.stroke();
 }
@@ -1722,14 +1987,14 @@ function drawElbowJoint(
   size: number,
   _zoom: number,
 ) {
-  ctx.fillStyle = "#4e4838";
+  ctx.fillStyle = "#122030";
   ctx.beginPath();
   ctx.ellipse(0, 0, size * 0.048, size * 0.032, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#2a2518";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 0.8;
   ctx.stroke();
-  ctx.strokeStyle = "rgba(70, 65, 50, 0.35)";
+  ctx.strokeStyle = "rgba(40, 40, 70, 0.35)";
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   ctx.moveTo(-size * 0.03, -size * 0.005);
@@ -1745,9 +2010,9 @@ function drawForearmSleeve(
 ) {
   const len = size * 0.16;
   const sg = ctx.createLinearGradient(0, 0, dir * size * 0.04, len);
-  sg.addColorStop(0, "#4a4535");
-  sg.addColorStop(0.5, "#555040");
-  sg.addColorStop(1, "#3a3528");
+  sg.addColorStop(0, "#1e2e48");
+  sg.addColorStop(0.5, "#142238");
+  sg.addColorStop(1, "#1e2e48");
   ctx.fillStyle = sg;
   ctx.beginPath();
   ctx.moveTo(-dir * size * 0.045, 0);
@@ -1761,11 +2026,11 @@ function drawForearmSleeve(
   );
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a2518";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  ctx.fillStyle = "#3a3020";
+  ctx.fillStyle = "#0a1220";
   ctx.beginPath();
   ctx.moveTo(-dir * size * 0.05, len - size * 0.035);
   ctx.lineTo(dir * size * 0.035, len - size * 0.035);
@@ -1773,11 +2038,11 @@ function drawForearmSleeve(
   ctx.lineTo(-dir * size * 0.05, len - size * 0.015);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a2015";
+  ctx.strokeStyle = "#1a2840";
   ctx.lineWidth = 0.6;
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(80, 70, 50, 0.35)";
+  ctx.strokeStyle = "rgba(40, 40, 70, 0.35)";
   ctx.lineWidth = 0.5;
   ctx.setLineDash([1.5, 1.5]);
   ctx.beginPath();
@@ -1798,9 +2063,9 @@ function drawForearmSleeve(
     len - size * 0.025,
     size * 0.01,
   );
-  buckleG.addColorStop(0, "#d0e8f5");
-  buckleG.addColorStop(0.5, "#a0c0d8");
-  buckleG.addColorStop(1, "#7098b0");
+  buckleG.addColorStop(0, "#f0e0a0");
+  buckleG.addColorStop(0.5, "#daa520");
+  buckleG.addColorStop(1, "#8a6b20");
   ctx.fillStyle = buckleG;
   ctx.beginPath();
   ctx.roundRect(
@@ -1811,10 +2076,10 @@ function drawForearmSleeve(
     size * 0.002,
   );
   ctx.fill();
-  ctx.strokeStyle = "#6088a0";
+  ctx.strokeStyle = "#705510";
   ctx.lineWidth = 0.4;
   ctx.stroke();
-  ctx.strokeStyle = "#b0d0e8";
+  ctx.strokeStyle = "#f0e0a0";
   ctx.lineWidth = 0.6;
   ctx.beginPath();
   ctx.moveTo(-dir * size * 0.005, len - size * 0.028);
@@ -1836,14 +2101,10 @@ function drawHead(
 ) {
   const headY = y - size * 0.5;
 
-  // Face (bezier shaped — slightly narrower chin)
+  // Face — angular, handsome 1920s gentleman
   const fg = ctx.createRadialGradient(
-    x - size * 0.04,
-    headY - size * 0.04,
-    0,
-    x,
-    headY,
-    size * 0.28,
+    x - size * 0.03, headY - size * 0.04, 0,
+    x, headY, size * 0.28,
   );
   fg.addColorStop(0, "#ffe8d0");
   fg.addColorStop(0.4, "#ffe0bd");
@@ -1853,104 +2114,86 @@ function drawHead(
   ctx.beginPath();
   ctx.moveTo(x, headY - size * 0.27);
   ctx.bezierCurveTo(
-    x + size * 0.18,
-    headY - size * 0.27,
-    x + size * 0.28,
-    headY - size * 0.14,
-    x + size * 0.27,
-    headY + size * 0.02,
+    x + size * 0.2, headY - size * 0.27,
+    x + size * 0.3, headY - size * 0.15,
+    x + size * 0.28, headY - size * 0.02,
   );
   ctx.bezierCurveTo(
-    x + size * 0.26,
-    headY + size * 0.14,
-    x + size * 0.14,
-    headY + size * 0.25,
-    x,
-    headY + size * 0.28,
+    x + size * 0.27, headY + size * 0.08,
+    x + size * 0.22, headY + size * 0.16,
+    x + size * 0.16, headY + size * 0.22,
   );
   ctx.bezierCurveTo(
-    x - size * 0.14,
-    headY + size * 0.25,
-    x - size * 0.26,
-    headY + size * 0.14,
-    x - size * 0.27,
-    headY + size * 0.02,
+    x + size * 0.1, headY + size * 0.26,
+    x + size * 0.04, headY + size * 0.29,
+    x, headY + size * 0.3,
   );
   ctx.bezierCurveTo(
-    x - size * 0.28,
-    headY - size * 0.14,
-    x - size * 0.18,
-    headY - size * 0.27,
-    x,
-    headY - size * 0.27,
+    x - size * 0.04, headY + size * 0.29,
+    x - size * 0.1, headY + size * 0.26,
+    x - size * 0.16, headY + size * 0.22,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.22, headY + size * 0.16,
+    x - size * 0.27, headY + size * 0.08,
+    x - size * 0.28, headY - size * 0.02,
+  );
+  ctx.bezierCurveTo(
+    x - size * 0.3, headY - size * 0.15,
+    x - size * 0.2, headY - size * 0.27,
+    x, headY - size * 0.27,
   );
   ctx.closePath();
   ctx.fill();
 
-  // Jawline definition
-  ctx.strokeStyle = "rgba(180, 140, 100, 0.15)";
-  ctx.lineWidth = 1.2 * zoom;
+  // Jawline definition — angular, strong
+  ctx.strokeStyle = "rgba(180, 140, 100, 0.22)";
+  ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, headY + size * 0.1);
+  ctx.moveTo(x - size * 0.24, headY + size * 0.06);
   ctx.bezierCurveTo(
-    x - size * 0.12,
-    headY + size * 0.22,
-    x + size * 0.12,
-    headY + size * 0.22,
-    x + size * 0.2,
-    headY + size * 0.1,
+    x - size * 0.18, headY + size * 0.18,
+    x - size * 0.08, headY + size * 0.27,
+    x, headY + size * 0.3,
+  );
+  ctx.bezierCurveTo(
+    x + size * 0.08, headY + size * 0.27,
+    x + size * 0.18, headY + size * 0.18,
+    x + size * 0.24, headY + size * 0.06,
   );
   ctx.stroke();
 
-  // Cheekbone shadows
-  ctx.fillStyle = "rgba(200, 160, 120, 0.18)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.15,
-    headY + size * 0.02,
-    size * 0.06,
-    size * 0.035,
-    -0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.15,
-    headY + size * 0.02,
-    size * 0.06,
-    size * 0.035,
-    0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Cheekbone highlights
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.fillStyle = "rgba(255, 230, 200, 0.1)";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + side * size * 0.14, headY + size * 0.01,
+      size * 0.07, size * 0.028,
+      side * 0.3, 0, Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.fillStyle = "rgba(200, 160, 120, 0.2)";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + side * size * 0.16, headY + size * 0.06,
+      size * 0.05, size * 0.022,
+      side * 0.2, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
 
-  // Temple shadow (adds depth near hairline)
-  ctx.fillStyle = "rgba(190, 150, 110, 0.12)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.2,
-    headY - size * 0.08,
-    size * 0.04,
-    size * 0.06,
-    -0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.2,
-    headY - size * 0.08,
-    size * 0.04,
-    size * 0.06,
-    0.2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Temple shadows
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.fillStyle = "rgba(190, 150, 110, 0.12)";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + side * size * 0.22, headY - size * 0.08,
+      size * 0.04, size * 0.06,
+      side * 0.2, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
 
   drawHair(ctx, x, headY, size, zoom);
   drawEyes(ctx, x, headY, size, time, zoom, isAttacking, attackIntensity);
@@ -2075,9 +2318,9 @@ function drawHair(
     ctx.stroke();
   }
 
-  // Hair shine highlights (pomade sheen)
-  ctx.strokeStyle = "rgba(120, 90, 60, 0.35)";
-  ctx.lineWidth = 1.8 * zoom;
+  // Hair shine highlights (rich pomade golden sheen)
+  ctx.strokeStyle = "rgba(180, 140, 60, 0.45)";
+  ctx.lineWidth = 2.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.12, headY - size * 0.28);
   ctx.bezierCurveTo(
@@ -2089,8 +2332,9 @@ function drawHair(
     headY - size * 0.26,
   );
   ctx.stroke();
-  ctx.strokeStyle = "rgba(140, 110, 70, 0.25)";
-  ctx.lineWidth = 1.2 * zoom;
+
+  ctx.strokeStyle = "rgba(200, 170, 80, 0.3)";
+  ctx.lineWidth = 1.4 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.08, headY - size * 0.25);
   ctx.bezierCurveTo(
@@ -2100,6 +2344,20 @@ function drawHair(
     headY - size * 0.28,
     x + size * 0.18,
     headY - size * 0.22,
+  );
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(220, 190, 100, 0.18)";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.05, headY - size * 0.3);
+  ctx.bezierCurveTo(
+    x + size * 0.04,
+    headY - size * 0.34,
+    x + size * 0.12,
+    headY - size * 0.31,
+    x + size * 0.17,
+    headY - size * 0.25,
   );
   ctx.stroke();
 
@@ -2195,11 +2453,11 @@ function drawEyes(
 
   // Irises
   if (isAttacking) {
-    ctx.shadowColor = "#80b8d8";
-    ctx.shadowBlur = 8 * zoom * attackIntensity;
-    ctx.fillStyle = `rgba(130, 185, 220, ${0.85 + attackIntensity * 0.15})`;
+    ctx.shadowColor = "#22c55e";
+    ctx.shadowBlur = 10 * zoom * attackIntensity;
+    ctx.fillStyle = `rgba(52, 211, 153, ${0.85 + attackIntensity * 0.15})`;
   } else {
-    ctx.fillStyle = "#4a6080";
+    ctx.fillStyle = "#2d6a4f";
   }
   ctx.beginPath();
   ctx.arc(x - size * 0.1, headY - size * 0.02, size * 0.042, 0, Math.PI * 2);
@@ -2210,7 +2468,7 @@ function drawEyes(
   ctx.shadowBlur = 0;
 
   // Iris detail ring
-  ctx.strokeStyle = isAttacking ? "#5a8898" : "#3a5070";
+  ctx.strokeStyle = isAttacking ? "#16a34a" : "#1b4332";
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.arc(x - size * 0.1, headY - size * 0.02, size * 0.035, 0, Math.PI * 2);
@@ -2235,9 +2493,9 @@ function drawEyes(
 
   // ── GLASSES ──
   const glassColor = isAttacking
-    ? "rgba(130, 185, 220, 0.15)"
-    : "rgba(180, 200, 220, 0.12)";
-  const frameColor = isAttacking ? "#6898b0" : "#3a3a3a";
+    ? "rgba(52, 211, 153, 0.18)"
+    : "rgba(180, 210, 200, 0.12)";
+  const frameColor = isAttacking ? "#22c55e" : "#3a3a3a";
   const glassR = size * 0.08;
 
   // Lens fill (subtle tint)
@@ -2599,7 +2857,7 @@ function drawBook(
     }
   } else {
     const glowPulse = 0.5 + Math.sin(time * 4) * 0.3;
-    ctx.strokeStyle = `rgba(80, 200, 220, ${0.3 * glowPulse})`;
+    ctx.strokeStyle = `rgba(218, 175, 55, ${0.3 * glowPulse})`;
     ctx.lineWidth = 1;
     for (let gl = 0; gl < 6; gl++) {
       const gly = -bH * 0.36 + gl * bH * 0.12;
@@ -2612,12 +2870,12 @@ function drawBook(
       );
       ctx.stroke();
     }
-    ctx.fillStyle = `rgba(80, 200, 220, ${0.06 * glowPulse})`;
+    ctx.fillStyle = `rgba(218, 175, 55, ${0.06 * glowPulse})`;
     ctx.fillRect(bW * 0.02, -bH * 0.46, bW * 0.45, bH * 0.92);
   }
 
-  // Silvery blue corner decorations on covers
-  ctx.strokeStyle = "#6898b0";
+  // Gold corner decorations on covers
+  ctx.strokeStyle = "#c9a84c";
   ctx.lineWidth = 0.8;
   const corners = [
     { cx: -bW * 0.47, cy: -bH * 0.47, dx: 1, dy: 1 },
@@ -2633,8 +2891,8 @@ function drawBook(
     ctx.stroke();
   }
 
-  // Silvery blue ribbon bookmark hanging out bottom
-  ctx.strokeStyle = "#80b8d0";
+  // Emerald green ribbon bookmark hanging out bottom
+  ctx.strokeStyle = "#22c55e";
   ctx.lineWidth = 1.5 * zoom;
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -2667,31 +2925,34 @@ function drawPen(
       Math.cos(attackPhase * Math.PI * 3) * 0.4
     : 0;
 
-  // Pen lifts from book and rises during attack transition
-  const penBaseX = x + size * 0.1 + (isAttacking ? 0 : penStrokeX);
+  // Pen nib touches the book's right page during writing; lifts and aims during attack
+  const penBaseX = x + size * 0.12 + (isAttacking ? 0 : penStrokeX);
   const penBaseY =
-    y + size * 0.12 + (isAttacking ? -size * 0.15 * attackRise : penStrokeY);
-  const penIdleRot = -0.8 + Math.sin(time * 2) * 0.04;
-  const penBaseRot = isAttacking
-    ? -0.3 + quillFlourish * 0.4 + attackRise * 0.6
-    : penIdleRot;
+    y - size * 0.02 + (isAttacking ? -size * 0.18 * attackRise : penStrokeY);
+  const penWriteRot = Math.PI + 0.25 + Math.sin(time * 2) * 0.04;
 
-  const penRot = resolveWeaponRotation(
-    targetPos,
-    penBaseX,
-    penBaseY,
-    penBaseRot,
-    Math.PI / 2,
-    isAttacking ? 1.2 : 0.66,
-    WEAPON_LIMITS.rightMelee,
-  );
+  let penRot: number;
+  if (isAttacking) {
+    const penAttackRot = -0.3 + quillFlourish * 0.4 + attackRise * 0.6;
+    penRot = resolveWeaponRotation(
+      targetPos,
+      penBaseX,
+      penBaseY,
+      penAttackRot,
+      Math.PI / 2,
+      1.2,
+      WEAPON_LIMITS.rightMelee,
+    );
+  } else {
+    penRot = penWriteRot;
+  }
 
   ctx.save();
   ctx.translate(penBaseX, penBaseY);
   ctx.rotate(penRot);
 
   if (isAttacking) {
-    ctx.shadowColor = "#80b8d8";
+    ctx.shadowColor = "#daa520";
     ctx.shadowBlur = 15 * zoom * attackIntensity;
   }
 
@@ -2726,13 +2987,13 @@ function drawPen(
   ctx.lineTo(-size * 0.015, size * 0.06);
   ctx.stroke();
 
-  // Silvery blue bands
+  // Gold accent bands
   const tbg = ctx.createLinearGradient(-size * 0.03, 0, size * 0.03, 0);
-  tbg.addColorStop(0, "#607898");
-  tbg.addColorStop(0.3, "#80a8c0");
-  tbg.addColorStop(0.5, "#b0d0e8");
-  tbg.addColorStop(0.7, "#80a8c0");
-  tbg.addColorStop(1, "#607898");
+  tbg.addColorStop(0, "#8a6b20");
+  tbg.addColorStop(0.3, "#c9a84c");
+  tbg.addColorStop(0.5, "#e8d48a");
+  tbg.addColorStop(0.7, "#c9a84c");
+  tbg.addColorStop(1, "#8a6b20");
   ctx.fillStyle = tbg;
   ctx.fillRect(-size * 0.028, -size * 0.16, size * 0.056, size * 0.02);
   ctx.fillRect(-size * 0.028, -size * 0.09, size * 0.056, size * 0.012);
@@ -2756,16 +3017,16 @@ function drawPen(
   ctx.closePath();
   ctx.fill();
 
-  // Silvery blue nib
+  // Gold nib
   const ng = ctx.createLinearGradient(
     -size * 0.012,
     -size * 0.24,
     size * 0.012,
     -size * 0.24,
   );
-  ng.addColorStop(0, "#607898");
-  ng.addColorStop(0.5, "#a0c8e0");
-  ng.addColorStop(1, "#607898");
+  ng.addColorStop(0, "#8a6b20");
+  ng.addColorStop(0.5, "#e8d48a");
+  ng.addColorStop(1, "#8a6b20");
   ctx.fillStyle = ng;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.24);
@@ -2792,7 +3053,7 @@ function drawPen(
       const dx = Math.sin(time * 8 + d * 2.1) * size * 0.025 * dropPhase;
       const da = (1 - dropPhase) * 0.7;
       const dropR = size * (0.006 + (1 - dropPhase) * 0.008);
-      ctx.fillStyle = `rgba(80, 180, 210, ${da * attackIntensity})`;
+      ctx.fillStyle = `rgba(218, 175, 55, ${da * attackIntensity})`;
       ctx.beginPath();
       ctx.arc(dx, dy, dropR, 0, Math.PI * 2);
       ctx.fill();
@@ -2814,10 +3075,10 @@ const FLOAT_WORDS = [
   "green",
   "light",
   "hope",
-  "glory",
+  "old sport",
   "jazz",
   "Gatsby",
-  "beauty",
+  "Daisy",
 ];
 
 function drawFloatingWords(
@@ -2847,10 +3108,10 @@ function drawFloatingWords(
       (1 - phase / 3) * (isAttacking ? 0.85 + attackIntensity * 0.15 : 0.5);
 
     if (isAttacking) {
-      ctx.shadowColor = "rgba(80, 210, 210, 0.5)";
+      ctx.shadowColor = "rgba(218, 175, 55, 0.5)";
       ctx.shadowBlur = 6 * zoom * attackIntensity;
     }
-    ctx.fillStyle = `rgba(130, 185, 220, ${alpha})`;
+    ctx.fillStyle = `rgba(218, 175, 55, ${alpha})`;
     ctx.fillText(FLOAT_WORDS[i % FLOAT_WORDS.length], wx, wy);
   }
   ctx.shadowBlur = 0;

@@ -52,19 +52,41 @@ export function CarouselDots({
 }) {
   const color = accent ?? T.accent;
   return (
-    <div className="flex gap-2 justify-center mt-5">
-      {Array.from({ length: count }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => onDot(i)}
-          className="w-2 h-2 rounded-full transition-all duration-400 cursor-pointer"
-          style={{
-            background: i === active ? color : `rgba(${T.accentRgb},0.15)`,
-            transform: i === active ? "scale(1.5)" : "scale(1)",
-            boxShadow: i === active ? `0 0 8px ${color}66` : "none",
-          }}
-        />
-      ))}
+    <div className="flex gap-2.5 justify-center mt-6">
+      {Array.from({ length: count }, (_, i) => {
+        const isActive = i === active;
+        return (
+          <button
+            key={i}
+            onClick={() => onDot(i)}
+            className="relative cursor-pointer transition-all duration-300 group"
+            style={{
+              width: isActive ? 28 : 8,
+              height: 8,
+              borderRadius: 4,
+              background: isActive ? color : `rgba(${T.accentRgb},0.12)`,
+              boxShadow: isActive ? `0 0 12px ${color}55, 0 0 4px ${color}33` : "none",
+              border: `1px solid ${isActive ? `${color}66` : `rgba(${T.accentRgb},0.08)`}`,
+            }}
+          >
+            {isActive && (
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)`,
+                  animation: "landing-shimmer 2.5s ease-in-out infinite",
+                }}
+              />
+            )}
+            {!isActive && (
+              <div
+                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+                style={{ background: `${color}25` }}
+              />
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -83,16 +105,25 @@ export function CarouselArrow({
   return (
     <button
       onClick={onClick}
-      className={`absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 ${
+      className={`absolute top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95 group ${
         direction === "left" ? "left-2 sm:left-3" : "right-2 sm:right-3"
       }`}
       style={{
-        background: "rgba(0,0,0,0.55)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backdropFilter: "blur(8px)",
+        background: "rgba(0,0,0,0.65)",
+        border: `1.5px solid ${color}30`,
+        backdropFilter: "blur(12px)",
+        boxShadow: `0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)`,
       }}
     >
-      <Icon size={18} style={{ color: `${color}cc` }} />
+      <div
+        className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+        style={{
+          boxShadow: `0 0 20px ${color}25, inset 0 0 10px ${color}08`,
+          border: `1.5px solid ${color}55`,
+          borderRadius: "9999px",
+        }}
+      />
+      <Icon size={20} className="relative z-10 transition-colors duration-200" style={{ color: `${color}bb` }} />
     </button>
   );
 }

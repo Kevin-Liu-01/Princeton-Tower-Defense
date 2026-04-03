@@ -119,6 +119,105 @@ export function drawIsometricPrism(
   ctx.stroke();
 }
 
+export function drawIsoOctPrism(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  w: number,
+  d: number,
+  h: number,
+  topColor: string,
+  leftColor: string,
+  rightColor: string,
+  zoom: number,
+  cornerCut: number = 0.15,
+): { x: number; y: number }[] {
+  const hw = w * zoom * 0.5;
+  const hd = d * zoom * 0.25;
+  const hh = h * zoom;
+  const c = cornerCut;
+
+  const back = { x: cx, y: cy - hd };
+  const right = { x: cx + hw, y: cy };
+  const front = { x: cx, y: cy + hd };
+  const left = { x: cx - hw, y: cy };
+
+  const lp = (
+    a: { x: number; y: number },
+    b: { x: number; y: number },
+    t: number,
+  ) => ({
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+  });
+
+  const p = [
+    lp(left, back, 1 - c),
+    lp(back, right, c),
+    lp(back, right, 1 - c),
+    lp(right, front, c),
+    lp(right, front, 1 - c),
+    lp(front, left, c),
+    lp(front, left, 1 - c),
+    lp(left, back, c),
+  ];
+
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.moveTo(p[0].x, p[0].y - hh);
+  for (let i = 1; i < 8; i++) ctx.lineTo(p[i].x, p[i].y - hh);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = zoom;
+  ctx.stroke();
+
+  const side = (
+    a: { x: number; y: number },
+    b: { x: number; y: number },
+    color: string,
+    strokeAlpha: number,
+  ) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y - hh);
+    ctx.lineTo(b.x, b.y - hh);
+    ctx.lineTo(b.x, b.y);
+    ctx.lineTo(a.x, a.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = `rgba(0,0,0,${strokeAlpha})`;
+    ctx.lineWidth = zoom;
+    ctx.stroke();
+  };
+
+  side(p[6], p[7], leftColor, 0.4);
+  side(p[5], p[6], leftColor, 0.35);
+  side(p[4], p[5], rightColor, 0.35);
+  side(p[3], p[4], rightColor, 0.3);
+  side(p[2], p[3], rightColor, 0.3);
+
+  ctx.fillStyle = "rgba(0,0,0,0.05)";
+  ctx.beginPath();
+  ctx.moveTo(p[4].x, p[4].y - hh);
+  ctx.lineTo(p[5].x, p[5].y - hh);
+  ctx.lineTo(p[5].x, p[5].y);
+  ctx.lineTo(p[4].x, p[4].y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.beginPath();
+  ctx.moveTo(p[6].x, p[6].y - hh);
+  ctx.lineTo(p[7].x, p[7].y - hh);
+  ctx.lineTo(p[7].x, p[7].y);
+  ctx.lineTo(p[6].x, p[6].y);
+  ctx.closePath();
+  ctx.fill();
+
+  return p;
+}
+
 export function drawIsoDiamond(
   ctx: CanvasRenderingContext2D,
   cx: number,
@@ -420,7 +519,6 @@ export type { IsoFace } from "../isoFlush";
 // ENHANCED MECHANICAL HELPER FUNCTIONS - Moving parts, gears, steam, etc.
 // ============================================================================
 
-// Draw an animated rotating gear
 export function drawGear(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -432,94 +530,148 @@ export function drawGear(
   colors: { outer: string; inner: string; teeth: string; highlight: string },
   zoom: number,
 ) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(rotation);
+  const or_ = outerRadius * zoom;
+  const ir = innerRadius * zoom;
+  const isoY = ISO_Y_RATIO;
+  const toothDepth = or_ - ir;
+  const toothWidth = 0.35;
 
-  // Draw teeth
-  ctx.fillStyle = colors.teeth;
+  const px = (a: number, r: number) => x + Math.cos(a) * r;
+  const py = (a: number, r: number) => y + Math.sin(a) * r * isoY;
+
+  ctx.save();
+
+  // Drop shadow
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x + 1.5 * zoom, y + 1.5 * zoom, or_ * 1.05, or_ * 1.05 * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer rim ring
+  ctx.fillStyle = colors.outer;
+  ctx.strokeStyle = "rgba(0,0,0,0.35)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, y, or_ * 0.98, or_ * 0.98 * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Teeth as individual trapezoids
   for (let i = 0; i < teeth; i++) {
-    const angle = (i / teeth) * Math.PI * 2;
-    const toothWidth = (Math.PI / teeth) * 0.6;
+    const centerA = rotation + (i / teeth) * Math.PI * 2;
+    const halfTooth = (toothWidth / teeth) * Math.PI;
+    const a0 = centerA - halfTooth * 0.8;
+    const a1 = centerA - halfTooth * 0.5;
+    const a2 = centerA + halfTooth * 0.5;
+    const a3 = centerA + halfTooth * 0.8;
+
+    ctx.fillStyle = colors.teeth;
     ctx.beginPath();
-    ctx.moveTo(
-      Math.cos(angle - toothWidth) * innerRadius * zoom,
-      Math.sin(angle - toothWidth) * innerRadius * zoom * 0.5,
-    );
-    ctx.lineTo(
-      Math.cos(angle - toothWidth * 0.5) * outerRadius * zoom,
-      Math.sin(angle - toothWidth * 0.5) * outerRadius * zoom * 0.5,
-    );
-    ctx.lineTo(
-      Math.cos(angle + toothWidth * 0.5) * outerRadius * zoom,
-      Math.sin(angle + toothWidth * 0.5) * outerRadius * zoom * 0.5,
-    );
-    ctx.lineTo(
-      Math.cos(angle + toothWidth) * innerRadius * zoom,
-      Math.sin(angle + toothWidth) * innerRadius * zoom * 0.5,
-    );
+    ctx.moveTo(px(a0, ir + toothDepth * 0.15), py(a0, ir + toothDepth * 0.15));
+    ctx.lineTo(px(a1, or_), py(a1, or_));
+    ctx.lineTo(px(a2, or_), py(a2, or_));
+    ctx.lineTo(px(a3, ir + toothDepth * 0.15), py(a3, ir + toothDepth * 0.15));
     ctx.closePath();
+    ctx.fill();
+
+    // Tooth bevel highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(px(a1, or_), py(a1, or_));
+    ctx.lineTo(px(a2, or_), py(a2, or_));
+    ctx.stroke();
+  }
+
+  // Main gear body disc
+  ctx.fillStyle = colors.outer;
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir, ir * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Radial gradient shading on body
+  const grad = ctx.createRadialGradient(
+    x - ir * 0.2, y - ir * isoY * 0.2,
+    ir * 0.1,
+    x, y,
+    ir,
+  );
+  grad.addColorStop(0, "rgba(255,255,255,0.12)");
+  grad.addColorStop(0.5, "rgba(0,0,0,0)");
+  grad.addColorStop(1, "rgba(0,0,0,0.15)");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir, ir * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rim groove
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir * 0.88, ir * 0.88 * isoY, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner recessed ring
+  ctx.fillStyle = colors.inner;
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir * 0.55, ir * 0.55 * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  // Lightwell cutouts (decorative holes between spokes)
+  const spokeCount = Math.min(teeth > 8 ? 6 : 4, 6);
+  for (let i = 0; i < spokeCount; i++) {
+    const a = rotation + (i / spokeCount) * Math.PI * 2;
+    const holeR = ir * 0.15;
+    const holeDist = ir * 0.72;
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.beginPath();
+    ctx.ellipse(px(a, holeDist), py(a, holeDist), holeR, holeR * isoY, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Gear body
-  ctx.fillStyle = colors.outer;
-  ctx.beginPath();
-  ctx.ellipse(
-    0,
-    0,
-    innerRadius * zoom,
-    innerRadius * zoom * ISO_Y_RATIO,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Spokes
+  ctx.lineWidth = 1.8 * zoom;
+  for (let i = 0; i < spokeCount; i++) {
+    const a = rotation + (i / spokeCount) * Math.PI * 2;
+    ctx.strokeStyle = colors.teeth;
+    ctx.beginPath();
+    ctx.moveTo(px(a, ir * 0.2), py(a, ir * 0.2));
+    ctx.lineTo(px(a, ir * 0.85), py(a, ir * 0.85));
+    ctx.stroke();
+    // Spoke highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(px(a, ir * 0.25), py(a, ir * 0.25));
+    ctx.lineTo(px(a, ir * 0.8), py(a, ir * 0.8));
+    ctx.stroke();
+    ctx.lineWidth = 1.8 * zoom;
+  }
 
-  // Inner ring
-  ctx.fillStyle = colors.inner;
-  ctx.beginPath();
-  ctx.ellipse(
-    0,
-    0,
-    innerRadius * 0.6 * zoom,
-    innerRadius * 0.6 * zoom * ISO_Y_RATIO,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Center hub
+  // Center hub (raised boss)
   ctx.fillStyle = colors.highlight;
   ctx.beginPath();
-  ctx.ellipse(
-    0,
-    0,
-    innerRadius * 0.25 * zoom,
-    innerRadius * 0.25 * zoom * ISO_Y_RATIO,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(x, y, ir * 0.2, ir * 0.2 * isoY, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  // Spokes
-  ctx.strokeStyle = colors.teeth;
-  ctx.lineWidth = 2 * zoom;
-  for (let i = 0; i < 4; i++) {
-    const angle = (i / 4) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(
-      Math.cos(angle) * innerRadius * 0.3 * zoom,
-      Math.sin(angle) * innerRadius * 0.3 * zoom * 0.5,
-    );
-    ctx.lineTo(
-      Math.cos(angle) * innerRadius * 0.85 * zoom,
-      Math.sin(angle) * innerRadius * 0.85 * zoom * 0.5,
-    );
-    ctx.stroke();
-  }
+  // Hub bevel
+  ctx.strokeStyle = "rgba(255,255,255,0.2)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x - 0.3 * zoom, y - 0.3 * zoom, ir * 0.17, ir * 0.17 * isoY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir * 0.2, ir * 0.2 * isoY, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Axle dot
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  ctx.ellipse(x, y, ir * 0.06, ir * 0.06 * isoY, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }

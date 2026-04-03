@@ -6,6 +6,7 @@ import { drawTowerSprite } from "../../../rendering/towers";
 import { drawEnemySprite } from "../../../rendering/enemies";
 import { drawHeroSprite } from "../../../rendering/heroes";
 import { LANDING_THEME } from "../landingConstants";
+import { SectionFlourish } from "./LoadoutUI";
 
 const T = LANDING_THEME;
 
@@ -284,12 +285,7 @@ export function IsoBattleDemo() {
 
   return (
     <section className="py-14 sm:py-20 px-6 overflow-hidden">
-      <div
-        className="h-px mx-auto w-4/5 max-w-xl"
-        style={{
-          background: `linear-gradient(90deg, transparent, rgba(${T.accentDarkRgb},0.25), transparent)`,
-        }}
-      />
+      <SectionFlourish />
 
       <div className="text-center mt-10 sm:mt-16 mb-8 sm:mb-12">
         <h3

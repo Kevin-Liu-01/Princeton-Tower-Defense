@@ -1389,11 +1389,16 @@ export function drawTigerHero(
     }
 
     // === MASSIVE ARMORED PAW GAUNTLETS ===
+    const idlePawRock = Math.sin(time * 1.2 + side * 1.5) * 0.08
+      + Math.sin(time * 0.7 + side * 2.3) * 0.04;
+    const idlePawShift = Math.sin(time * 0.9 + side * 0.8) * size * 0.012;
     const pawAngle = isAttacking
       ? side * (0.2 + clawSwipe * 0.3)
-      : side * (0.25 + Math.sin(time * 1.2 + side * 1.5) * 0.05);
-    const clawX = shoulderX + armOffset * 1.5 + side * size * 0.12;
-    const clawY = shoulderY + size * 0.32;
+      : side * (0.25 + idlePawRock);
+    const clawX = shoulderX + armOffset * 1.5 + side * size * 0.12
+      + (isAttacking ? 0 : idlePawShift);
+    const clawY = shoulderY + size * 0.32
+      + (isAttacking ? 0 : Math.sin(time * 1.5 + side * 1.0) * size * 0.008);
 
     ctx.save();
     ctx.translate(clawX, clawY);
@@ -1540,9 +1545,11 @@ export function drawTigerHero(
 
     // Articulated finger guards (segmented metal over each finger)
     for (let fg = 0; fg < 4; fg++) {
+      const fingerPhase = time * 1.6 + fg * 1.1 + side * 2.0;
+      const fingerFlex = isAttacking ? 0 : Math.sin(fingerPhase) * size * 0.008;
       const fgX = (fg - 1.5) * size * 0.075;
       const fgTopY = gBot - size * 0.01;
-      const fgBotY = gBot + size * 0.08;
+      const fgBotY = gBot + size * 0.08 + fingerFlex;
       const fgW = size * 0.03;
       const fgG = ctx.createLinearGradient(fgX - fgW, fgTopY, fgX + fgW, fgBotY);
       fgG.addColorStop(0, "#2a2a38");
@@ -1627,8 +1634,17 @@ export function drawTigerHero(
     for (let c = 0; c < 4; c++) {
       const cBaseX = (c - 1.5) * size * 0.08;
       const cBaseY = pawCY + pawRY * 0.7;
-      const cAngle = (c - 1.5) * 0.28 + (isAttacking ? clawSwipe * 0.3 : 0);
-      const cLen = size * (0.22 + (isAttacking ? attackIntensity * 0.15 : 0));
+
+      // Idle claw flex: each claw curls/uncurls at its own phase
+      const clawPhase = time * 1.6 + c * 1.1 + side * 2.0;
+      const idleClawFlex = Math.sin(clawPhase) * 0.12
+        + Math.sin(clawPhase * 0.6 + 0.8) * 0.06;
+      const idleClawExtend = Math.sin(time * 0.8 + c * 0.7 + side * 1.2) * 0.04;
+
+      const cAngle = (c - 1.5) * 0.28
+        + (isAttacking ? clawSwipe * 0.3 : idleClawFlex);
+      const cLen = size * (0.22
+        + (isAttacking ? attackIntensity * 0.15 : 0.02 + idleClawExtend));
       const cWidth = size * 0.035;
 
       ctx.save();
@@ -1807,17 +1823,18 @@ export function drawTigerHero(
   }
 
   const headGrad = ctx.createRadialGradient(
-    headX,
-    headY,
+    headX - size * 0.05,
+    headY - size * 0.06,
     0,
     headX,
     headY,
-    size * 0.42,
+    size * 0.44,
   );
-  headGrad.addColorStop(0, isAttacking ? "#ffbb55" : "#ffaa44");
-  headGrad.addColorStop(0.4, isAttacking ? "#ff9933" : "#ff8822");
-  headGrad.addColorStop(0.7, "#dd5500");
-  headGrad.addColorStop(1, "#aa3300");
+  headGrad.addColorStop(0, isAttacking ? "#ffcc66" : "#ffbb55");
+  headGrad.addColorStop(0.25, isAttacking ? "#ffaa44" : "#ff9933");
+  headGrad.addColorStop(0.5, isAttacking ? "#ee8822" : "#dd7711");
+  headGrad.addColorStop(0.75, "#cc5500");
+  headGrad.addColorStop(1, "#993300");
   ctx.fillStyle = headGrad;
   ctx.beginPath();
   ctx.ellipse(headX, headY, size * 0.4, size * 0.36, 0, 0, Math.PI * 2);
@@ -2131,56 +2148,95 @@ export function drawTigerHero(
   ctx.stroke();
 
   // --- Gold crest ridge (runs front-to-back along the top) ---
-  const crestG = ctx.createLinearGradient(
-    x - size * 0.02,
-    hY,
-    x + size * 0.02,
-    hY,
-  );
-  crestG.addColorStop(0, "#8a7010");
-  crestG.addColorStop(0.3, "#daa520");
-  crestG.addColorStop(0.5, "#f0d860");
-  crestG.addColorStop(0.7, "#daa520");
-  crestG.addColorStop(1, "#8a7010");
-  ctx.fillStyle = crestG;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.025, hY - size * 0.36);
-  ctx.lineTo(x - size * 0.03, hY + size * 0.22);
-  ctx.quadraticCurveTo(x, hY + size * 0.25, x + size * 0.03, hY + size * 0.22);
-  ctx.lineTo(x + size * 0.025, hY - size * 0.36);
-  ctx.quadraticCurveTo(x, hY - size * 0.39, x - size * 0.025, hY - size * 0.36);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#e8c840";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-  // Crest ridge highlight
-  ctx.strokeStyle = "rgba(255, 240, 160, 0.5)";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.015, hY - size * 0.34);
-  ctx.lineTo(x - size * 0.018, hY + size * 0.18);
-  ctx.stroke();
+  {
+    const crestHW = size * 0.032;
+    const crestTop = hY - size * 0.37;
+    const crestBot = hY + size * 0.22;
+
+    // Crest base shadow for depth
+    ctx.fillStyle = "rgba(60, 40, 5, 0.3)";
+    ctx.beginPath();
+    ctx.moveTo(x - crestHW - size * 0.008, crestTop + size * 0.01);
+    ctx.lineTo(x - crestHW - size * 0.01, crestBot + size * 0.01);
+    ctx.quadraticCurveTo(x, crestBot + size * 0.04, x + crestHW + size * 0.01, crestBot + size * 0.01);
+    ctx.lineTo(x + crestHW + size * 0.008, crestTop + size * 0.01);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main crest body with richer 3D gradient
+    const crestG = ctx.createLinearGradient(x - crestHW, hY, x + crestHW, hY);
+    crestG.addColorStop(0, "#7a6010");
+    crestG.addColorStop(0.2, "#b08a18");
+    crestG.addColorStop(0.35, "#daa520");
+    crestG.addColorStop(0.5, "#f0d860");
+    crestG.addColorStop(0.65, "#daa520");
+    crestG.addColorStop(0.8, "#b08a18");
+    crestG.addColorStop(1, "#7a6010");
+    ctx.fillStyle = crestG;
+    ctx.beginPath();
+    ctx.moveTo(x - crestHW, crestTop);
+    ctx.lineTo(x - crestHW - size * 0.005, crestBot);
+    ctx.quadraticCurveTo(x, crestBot + size * 0.03, x + crestHW + size * 0.005, crestBot);
+    ctx.lineTo(x + crestHW, crestTop);
+    ctx.quadraticCurveTo(x, crestTop - size * 0.025, x - crestHW, crestTop);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crest left highlight edge
+    ctx.strokeStyle = "rgba(255, 245, 180, 0.45)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - crestHW * 0.6, crestTop + size * 0.01);
+    ctx.lineTo(x - crestHW * 0.7, crestBot - size * 0.02);
+    ctx.stroke();
+
+    // Crest right shadow edge
+    ctx.strokeStyle = "rgba(60, 40, 5, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(x + crestHW * 0.6, crestTop + size * 0.01);
+    ctx.lineTo(x + crestHW * 0.7, crestBot - size * 0.02);
+    ctx.stroke();
+
+    // Cross-hatching on crest for texture
+    ctx.strokeStyle = "rgba(180, 140, 30, 0.25)";
+    ctx.lineWidth = 0.8 * zoom;
+    for (let ch = 0; ch < 5; ch++) {
+      const chY = crestTop + (crestBot - crestTop) * (0.15 + ch * 0.17);
+      ctx.beginPath();
+      ctx.moveTo(x - crestHW * 0.8, chY);
+      ctx.lineTo(x + crestHW * 0.8, chY);
+      ctx.stroke();
+    }
+  }
 
   // --- Gold crest bracket / plume holder (raised piece at center-front) ---
-  const bracketG = ctx.createRadialGradient(
-    x - size * 0.005,
-    hY - size * 0.3 - size * 0.005,
-    0,
-    x,
-    hY - size * 0.3,
-    size * 0.035,
-  );
-  bracketG.addColorStop(0, "#f0d860");
-  bracketG.addColorStop(0.5, "#daa520");
-  bracketG.addColorStop(1, "#8a7010");
-  ctx.fillStyle = bracketG;
-  ctx.beginPath();
-  ctx.ellipse(x, hY - size * 0.3, size * 0.035, size * 0.03, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = "#e8c840";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
+  {
+    const bracketR = size * 0.04;
+    const bracketG = ctx.createRadialGradient(
+      x - bracketR * 0.2,
+      hY - size * 0.3 - bracketR * 0.2,
+      0,
+      x,
+      hY - size * 0.3,
+      bracketR,
+    );
+    bracketG.addColorStop(0, "#f8e880");
+    bracketG.addColorStop(0.35, "#f0d860");
+    bracketG.addColorStop(0.6, "#daa520");
+    bracketG.addColorStop(1, "#8a7010");
+    ctx.fillStyle = bracketG;
+    ctx.beginPath();
+    ctx.ellipse(x, hY - size * 0.3, bracketR, bracketR * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#e8c840";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+    // Specular glint
+    ctx.fillStyle = "rgba(255, 250, 200, 0.5)";
+    ctx.beginPath();
+    ctx.arc(x - bracketR * 0.2, hY - size * 0.3 - bracketR * 0.2, bracketR * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // --- Forehead nose guard (nasal — vertical strip down center of face) ---
   const nasalG = ctx.createLinearGradient(
@@ -2211,22 +2267,40 @@ export function drawTigerHero(
   ctx.beginPath();
   ctx.rect(x - size * 0.6, hY - size * 0.65, size * 1.2, size * 0.37);
   ctx.clip();
+
+  // Warm inner glow for fur volume
+  const furGlowG = ctx.createRadialGradient(headX, headY - size * 0.12, 0, headX, headY - size * 0.08, size * 0.45);
+  furGlowG.addColorStop(0, `rgba(255, 200, 100, ${isAttacking ? 0.15 : 0.08})`);
+  furGlowG.addColorStop(1, "rgba(255, 160, 60, 0)");
+  ctx.fillStyle = furGlowG;
+  ctx.beginPath();
+  ctx.ellipse(headX, headY - size * 0.08, size * 0.42, size * 0.48, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   const headGradAbove = ctx.createRadialGradient(
-    headX,
-    headY,
+    headX - size * 0.06,
+    headY - size * 0.1,
     0,
     headX,
     headY,
     size * 0.48,
   );
-  headGradAbove.addColorStop(0, isAttacking ? "#ffbb55" : "#ffaa44");
-  headGradAbove.addColorStop(0.4, isAttacking ? "#ff9933" : "#ff8822");
-  headGradAbove.addColorStop(0.7, "#dd5500");
-  headGradAbove.addColorStop(1, "#aa3300");
+  headGradAbove.addColorStop(0, isAttacking ? "#ffcc66" : "#ffbb55");
+  headGradAbove.addColorStop(0.25, isAttacking ? "#ffaa44" : "#ff9933");
+  headGradAbove.addColorStop(0.5, isAttacking ? "#ee8822" : "#dd7711");
+  headGradAbove.addColorStop(0.75, "#cc5500");
+  headGradAbove.addColorStop(1, "#993300");
   ctx.fillStyle = headGradAbove;
   ctx.beginPath();
   ctx.ellipse(headX, headY, size * 0.4, size * 0.46, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Fur volume highlight (top-left lit)
+  ctx.fillStyle = "rgba(255, 220, 150, 0.12)";
+  ctx.beginPath();
+  ctx.ellipse(headX - size * 0.08, headY - size * 0.15, size * 0.22, size * 0.25, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
   drawTigerFurEdge(
     ctx,
     headX,
@@ -2297,157 +2371,202 @@ export function drawTigerHero(
 
   // === FIERCE POINTED EARS WITH ARMOR ===
   for (let side = -1; side <= 1; side += 2) {
-    // Ear base
-    ctx.fillStyle = "#dd6600";
+    // Ear outer shape with gradient
+    const earBaseX = x + side * size * 0.28;
+    const earBaseY = y - size * 0.72;
+    const earTipX = x + side * size * 0.42;
+    const earTipY = y - size * 1.0;
+    const earG = ctx.createLinearGradient(earBaseX, earBaseY, earTipX, earTipY);
+    earG.addColorStop(0, "#ee7711");
+    earG.addColorStop(0.5, "#dd6600");
+    earG.addColorStop(0.8, "#993300");
+    earG.addColorStop(1, "#1a0a00");
+    ctx.fillStyle = earG;
     ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.28, y - size * 0.72);
-    ctx.lineTo(x + side * size * 0.42, y - size * 1.0);
-    ctx.lineTo(x + side * size * 0.18, y - size * 0.76);
+    ctx.moveTo(earBaseX, earBaseY);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.40, y - size * 0.88,
+      earTipX, earTipY,
+    );
+    ctx.quadraticCurveTo(
+      x + side * size * 0.30, y - size * 0.90,
+      x + side * size * 0.18, y - size * 0.76,
+    );
     ctx.closePath();
     ctx.fill();
-    // Dark ear tips
-    ctx.fillStyle = "#1a0a00";
-    ctx.beginPath();
-    ctx.moveTo(x + side * size * 0.36, y - size * 0.9);
-    ctx.lineTo(x + side * size * 0.42, y - size * 1.0);
-    ctx.lineTo(x + side * size * 0.32, y - size * 0.88);
-    ctx.closePath();
-    ctx.fill();
-    // Inner ear
-    ctx.fillStyle = "#ffccaa";
+
+    // Inner ear (warm pink-peach gradient)
+    const innerG = ctx.createLinearGradient(
+      x + side * size * 0.26, y - size * 0.74,
+      x + side * size * 0.36, y - size * 0.88,
+    );
+    innerG.addColorStop(0, "#ffddcc");
+    innerG.addColorStop(0.5, "#ffccaa");
+    innerG.addColorStop(1, "#ee9977");
+    ctx.fillStyle = innerG;
     ctx.beginPath();
     ctx.moveTo(x + side * size * 0.27, y - size * 0.74);
-    ctx.lineTo(x + side * size * 0.35, y - size * 0.88);
-    ctx.lineTo(x + side * size * 0.2, y - size * 0.76);
+    ctx.quadraticCurveTo(
+      x + side * size * 0.36, y - size * 0.84,
+      x + side * size * 0.36, y - size * 0.88,
+    );
+    ctx.quadraticCurveTo(
+      x + side * size * 0.28, y - size * 0.84,
+      x + side * size * 0.20, y - size * 0.76,
+    );
     ctx.closePath();
     ctx.fill();
-    // Ear armor ring
-    ctx.fillStyle = "#c9a227";
-    ctx.beginPath();
-    ctx.arc(
-      x + side * size * 0.3,
-      y - size * 0.78,
-      size * 0.025,
-      0,
-      Math.PI * 2,
+
+    // Ear armor ring with 3D bevel
+    const earRingG = ctx.createRadialGradient(
+      x + side * size * 0.295, y - size * 0.783, 0,
+      x + side * size * 0.3, y - size * 0.78, size * 0.028,
     );
+    earRingG.addColorStop(0, "#f0d860");
+    earRingG.addColorStop(0.45, "#daa520");
+    earRingG.addColorStop(1, "#8a7010");
+    ctx.fillStyle = earRingG;
+    ctx.beginPath();
+    ctx.arc(x + side * size * 0.3, y - size * 0.78, size * 0.028, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "#e8c840";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
   }
 
   // === GOLD CROWN (sits atop the head, above the helmet) ===
   {
     const crY = y - size * 0.74;
-    const crHW = size * 0.22;
-    const crH = size * 0.18;
+    const crHW = size * 0.24;
+    const crH = size * 0.22;
     const points = 5;
+    const crBandH = size * 0.065;
 
-    // Crown base band
-    const crBaseG = ctx.createLinearGradient(x - crHW, crY, x + crHW, crY);
-    crBaseG.addColorStop(0, "#8a7010");
-    crBaseG.addColorStop(0.2, "#c9a227");
-    crBaseG.addColorStop(0.4, "#e8c840");
-    crBaseG.addColorStop(0.5, "#f0d860");
-    crBaseG.addColorStop(0.6, "#e8c840");
-    crBaseG.addColorStop(0.8, "#c9a227");
+    // Crown glow behind (warm ambient)
+    const crGlowG = ctx.createRadialGradient(x, crY - crH * 0.4, 0, x, crY - crH * 0.4, crHW * 1.6);
+    crGlowG.addColorStop(0, `rgba(255, 220, 80, ${0.12 + gemPulse * 0.06})`);
+    crGlowG.addColorStop(0.5, `rgba(220, 165, 30, ${0.06 + gemPulse * 0.03})`);
+    crGlowG.addColorStop(1, "rgba(180, 120, 20, 0)");
+    ctx.fillStyle = crGlowG;
+    ctx.beginPath();
+    ctx.ellipse(x, crY - crH * 0.3, crHW * 1.5, crH * 1.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Crown base band (thicker, beveled)
+    const crBaseG = ctx.createLinearGradient(x, crY, x, crY + crBandH);
+    crBaseG.addColorStop(0, "#f0d860");
+    crBaseG.addColorStop(0.15, "#e8c840");
+    crBaseG.addColorStop(0.4, "#daa520");
+    crBaseG.addColorStop(0.6, "#c9a227");
+    crBaseG.addColorStop(0.85, "#b08a18");
     crBaseG.addColorStop(1, "#8a7010");
     ctx.fillStyle = crBaseG;
     ctx.beginPath();
     ctx.moveTo(x - crHW, crY);
     ctx.lineTo(x + crHW, crY);
-    ctx.lineTo(x + crHW, crY + size * 0.05);
-    ctx.lineTo(x - crHW, crY + size * 0.05);
+    ctx.lineTo(x + crHW * 0.95, crY + crBandH);
+    ctx.lineTo(x - crHW * 0.95, crY + crBandH);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#f0d860";
+    ctx.strokeStyle = "rgba(255, 240, 160, 0.45)";
     ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - crHW + size * 0.01, crY + size * 0.005);
+    ctx.lineTo(x + crHW - size * 0.01, crY + size * 0.005);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(80, 55, 5, 0.5)";
+    ctx.beginPath();
+    ctx.moveTo(x - crHW * 0.95 + size * 0.01, crY + crBandH - size * 0.003);
+    ctx.lineTo(x + crHW * 0.95 - size * 0.01, crY + crBandH - size * 0.003);
     ctx.stroke();
 
-    // Crown points (tines)
-    const crPtG = ctx.createLinearGradient(x, crY - crH, x, crY);
-    crPtG.addColorStop(0, "#f8e880");
-    crPtG.addColorStop(0.3, "#e8c840");
-    crPtG.addColorStop(0.6, "#daa520");
-    crPtG.addColorStop(1, "#c9a227");
-    ctx.fillStyle = crPtG;
-    ctx.beginPath();
-    ctx.moveTo(x - crHW, crY);
+    // Crown points (tines) — elegant pointed shapes
+    const tineHeights = [0.72, 0.88, 1.15, 0.88, 0.72];
     for (let p = 0; p < points; p++) {
       const t = p / (points - 1);
       const px = x - crHW + t * crHW * 2;
-      const tipH =
-        p === Math.floor(points / 2)
-          ? crH * 1.15
-          : crH * (0.75 + Math.abs(t - 0.5) * 0.4);
-      ctx.lineTo(px, crY - tipH);
-      if (p < points - 1) {
-        const midX = px + ((crHW * 2) / (points - 1)) * 0.5;
-        ctx.lineTo(midX, crY - crH * 0.2);
-      }
-    }
-    ctx.lineTo(x + crHW, crY);
-    ctx.closePath();
-    ctx.fill();
-    // Crown outline
-    ctx.strokeStyle = "#8a7010";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.stroke();
-    // Highlight on left edges
-    ctx.strokeStyle = "rgba(255, 240, 160, 0.5)";
-    ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x - crHW, crY);
-    for (let p = 0; p < 3; p++) {
-      const t = p / (points - 1);
-      const px = x - crHW + t * crHW * 2;
-      const tipH =
-        p === Math.floor(points / 2)
-          ? crH * 1.15
-          : crH * (0.75 + Math.abs(t - 0.5) * 0.4);
-      ctx.lineTo(px, crY - tipH);
-      if (p < 2) {
-        const midX = px + ((crHW * 2) / (points - 1)) * 0.5;
-        ctx.lineTo(midX, crY - crH * 0.2);
-      }
-    }
-    ctx.stroke();
+      const tipH = crH * tineHeights[p];
 
-    // Gems on each crown point
+      const tineG = ctx.createLinearGradient(px, crY - tipH, px, crY);
+      tineG.addColorStop(0, "#f8e880");
+      tineG.addColorStop(0.2, "#f0d860");
+      tineG.addColorStop(0.45, "#e8c840");
+      tineG.addColorStop(0.7, "#daa520");
+      tineG.addColorStop(1, "#c9a227");
+      ctx.fillStyle = tineG;
+
+      const tineW = crHW * 0.22;
+      const nextPx = p < points - 1 ? x - crHW + ((p + 1) / (points - 1)) * crHW * 2 : px + tineW * 2;
+      const valleyX = (px + nextPx) * 0.5;
+
+      ctx.beginPath();
+      ctx.moveTo(px - tineW, crY);
+      ctx.quadraticCurveTo(px - tineW * 0.6, crY - tipH * 0.6, px, crY - tipH);
+      ctx.quadraticCurveTo(px + tineW * 0.6, crY - tipH * 0.6, px + tineW, crY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tine left-side highlight
+      ctx.strokeStyle = "rgba(255, 245, 180, 0.4)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(px - tineW * 0.8, crY + size * 0.005);
+      ctx.quadraticCurveTo(px - tineW * 0.45, crY - tipH * 0.55, px - size * 0.003, crY - tipH + size * 0.01);
+      ctx.stroke();
+      // Tine right-side shadow
+      ctx.strokeStyle = "rgba(100, 70, 10, 0.35)";
+      ctx.beginPath();
+      ctx.moveTo(px + tineW * 0.7, crY + size * 0.005);
+      ctx.quadraticCurveTo(px + tineW * 0.4, crY - tipH * 0.55, px + size * 0.003, crY - tipH + size * 0.01);
+      ctx.stroke();
+    }
+
+    // Gems on each crown point (fiery red with glow)
     ctx.shadowColor = "#ff2200";
-    ctx.shadowBlur = 6 * zoom * gemPulse;
+    ctx.shadowBlur = 8 * zoom * gemPulse;
     for (let p = 0; p < points; p++) {
       const t = p / (points - 1);
       const gx = x - crHW + t * crHW * 2;
-      const tipH =
-        p === Math.floor(points / 2)
-          ? crH * 1.15
-          : crH * (0.75 + Math.abs(t - 0.5) * 0.4);
-      const gy = crY - tipH + size * 0.035;
-      const gemR = p === Math.floor(points / 2) ? size * 0.022 : size * 0.016;
+      const tipH = crH * tineHeights[p];
+      const gy = crY - tipH + size * 0.04;
+      const isCenter = p === Math.floor(points / 2);
+      const gemR = isCenter ? size * 0.025 : size * 0.018;
 
       const crGemG = ctx.createRadialGradient(
-        gx - gemR * 0.3,
-        gy - gemR * 0.3,
+        gx - gemR * 0.25,
+        gy - gemR * 0.25,
         0,
         gx,
         gy,
         gemR,
       );
-      crGemG.addColorStop(0, "#ff6060");
-      crGemG.addColorStop(0.4, "#ee2020");
+      crGemG.addColorStop(0, "#ff8080");
+      crGemG.addColorStop(0.3, "#ff4040");
+      crGemG.addColorStop(0.6, "#dd1818");
       crGemG.addColorStop(1, "#880000");
       ctx.fillStyle = crGemG;
       ctx.beginPath();
       ctx.arc(gx, gy, gemR, 0, Math.PI * 2);
       ctx.fill();
+      // Gem specular highlight
+      ctx.fillStyle = `rgba(255, 200, 200, ${0.6 + gemPulse * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(gx - gemR * 0.25, gy - gemR * 0.3, gemR * 0.3, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.shadowBlur = 0;
 
-    // Crown base band rivets
-    ctx.fillStyle = "#f0d860";
+    // Crown band ornamental rivets
     for (let br = 0; br < 7; br++) {
-      const brX = x - crHW + size * 0.03 + (br * (crHW * 2 - size * 0.06)) / 6;
+      const brX = x - crHW * 0.85 + (br * (crHW * 1.7)) / 6;
+      const brY = crY + crBandH * 0.5;
+      const brG = ctx.createRadialGradient(brX - size * 0.002, brY - size * 0.002, 0, brX, brY, size * 0.009);
+      brG.addColorStop(0, "#f8e880");
+      brG.addColorStop(0.5, "#daa520");
+      brG.addColorStop(1, "#8a7010");
+      ctx.fillStyle = brG;
       ctx.beginPath();
-      ctx.arc(brX, crY + size * 0.025, size * 0.008, 0, Math.PI * 2);
+      ctx.arc(brX, brY, size * 0.009, 0, Math.PI * 2);
       ctx.fill();
     }
   }
