@@ -200,8 +200,8 @@ export function renderStationTower(
   };
 
   ctx.save();
-  // Shift the entire building up slightly
-  screenPos = { x: screenPos.x, y: screenPos.y - 6 * zoom };
+  // Shift the entire building up to center on placement position
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + tower.level * 2) * zoom };
 
   // Base dimensions - scaled by level
   const baseW = 56 + tower.level * 6;

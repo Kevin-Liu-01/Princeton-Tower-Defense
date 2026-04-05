@@ -131,6 +131,8 @@ export function renderClubTower(
   };
 
   ctx.save();
+  // Shift tower up to center on placement position
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + tower.level * 2) * zoom };
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 23 + tower.level * 7;
   const w = baseWidth * zoom * 0.5;

@@ -24,6 +24,8 @@ export function renderLabTower(
   cameraZoom?: number,
 ) {
   ctx.save();
+  // Shift tower up to center on placement position
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + tower.level * 2) * zoom };
   const baseWidth = 30 + tower.level * 4;
   const baseHeight = 23 + tower.level * 7;
   const w = baseWidth * zoom * 0.5;
@@ -123,14 +125,16 @@ export function renderLabTower(
   };
 
   // ========== STEPPED TECH FOUNDATION ==========
+  const lvl = tower.level;
+  const fndGrow = lvl * 4;
   // Lowest step — heavy concrete plinth
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 12 * zoom,
-    baseWidth + 36,
-    baseWidth + 36,
-    3,
+    screenPos.y + (14 + lvl * 2) * zoom,
+    baseWidth + 22 + fndGrow,
+    baseWidth + 22 + fndGrow,
+    3 + lvl,
     fnd1.top,
     fnd1.left,
     fnd1.right,
@@ -141,10 +145,10 @@ export function renderLabTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 9 * zoom,
-    baseWidth + 32,
-    baseWidth + 32,
-    3,
+    screenPos.y + (10 + lvl) * zoom,
+    baseWidth + 14 + fndGrow,
+    baseWidth + 14 + fndGrow,
+    3 + lvl,
     fnd2.top,
     fnd2.left,
     fnd2.right,
@@ -155,10 +159,10 @@ export function renderLabTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 6 * zoom,
-    baseWidth + 28,
-    baseWidth + 28,
-    6,
+    screenPos.y + (7 + lvl) * zoom,
+    baseWidth + 8 + fndGrow,
+    baseWidth + 8 + fndGrow,
+    4 + lvl * 2,
     fnd3.top,
     fnd3.left,
     fnd3.right,

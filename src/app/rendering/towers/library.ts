@@ -412,6 +412,8 @@ export function renderLibraryTower(
   };
 
   ctx.save();
+  // Shift tower up to center on placement position
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + tower.level * 2) * zoom };
   const sX = screenPos.x;
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 28 + tower.level * 8;
@@ -466,14 +468,16 @@ export function renderLibraryTower(
   const shakeY = 0;
 
   // ========== STEPPED STONE FOUNDATION ==========
+  const lvl = tower.level;
+  const fndGrow = lvl * 5;
   // Lowest step — wide rough-hewn stone base
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 14 * zoom,
-    baseWidth + 40,
-    baseWidth + 40,
-    4,
+    screenPos.y + (16 + lvl * 2) * zoom,
+    baseWidth + 26 + fndGrow,
+    baseWidth + 26 + fndGrow,
+    4 + lvl,
     st.mid,
     st.dark,
     st.mortar,
@@ -484,10 +488,10 @@ export function renderLibraryTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 11 * zoom,
-    baseWidth + 34,
-    baseWidth + 34,
-    4,
+    screenPos.y + (12 + lvl) * zoom,
+    baseWidth + 18 + fndGrow,
+    baseWidth + 18 + fndGrow,
+    4 + lvl,
     st.base,
     st.mid,
     st.dark,
@@ -498,10 +502,10 @@ export function renderLibraryTower(
   drawIsoOctPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 8 * zoom,
-    baseWidth + 30,
-    baseWidth + 30,
-    9,
+    screenPos.y + (8 + lvl) * zoom,
+    baseWidth + 10 + fndGrow,
+    baseWidth + 10 + fndGrow,
+    6 + lvl * 2,
     st.light,
     st.base,
     st.mid,

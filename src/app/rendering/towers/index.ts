@@ -15,6 +15,7 @@ import { getGameSettings } from "../../hooks/useSettings";
 import {
   drawTowerPassiveEffects,
   getTowerFoundationSize,
+  getTowerYShift,
   getTowerVisualMetrics,
 } from "./towerHelpers";
 import { drawStar, renderCannonTower } from "./cannon";
@@ -25,7 +26,7 @@ import { renderArchTower } from "./arch";
 import { renderClubTower } from "./club";
 import { renderStationTower } from "./station";
 
-export { getTowerFoundationSize, getTowerVisualMetrics } from "./towerHelpers";
+export { getTowerFoundationSize, getTowerYShift, getTowerVisualMetrics } from "./towerHelpers";
 export {
   renderStationRange,
   renderTowerRange,
@@ -34,13 +35,13 @@ export {
 } from "./towerRange";
 
 const TOWER_SPRITE_SCALE: Record<TowerType, number> = {
-  cannon: 0.9,
-  library: 1.05,
-  lab: 1.12,
-  arch: 1.0,
-  club: 0.75,
+  cannon: 0.84,
+  library: 0.94,
+  lab: 1,
+  arch: 0.95,
+  club: 0.7,
   station: 0.95,
-  mortar: 0.88,
+  mortar: 0.9,
 };
 
 const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
@@ -48,12 +49,13 @@ const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
 };
 
 const TOWER_SPRITE_FOOT_MULT: Partial<Record<TowerType, number>> = {
-  club: 0.65,
+  club: 0.78,
   mortar: 0.35,
-  library: 0.32,
-  lab: 0.28,
-  cannon: 0.28,
+  library: 0.4,
+  lab: 0.38,
+  cannon: 0.4,
   station: 0.23,
+  arch: 0.22,
 };
 
 export function drawTowerSprite(
@@ -173,6 +175,9 @@ export function renderTower(
 
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
 
+  const towerShift = getTowerYShift(tower) * zoom;
+  const glowShadowY = screenPos.y - towerShift + 8 * zoom;
+
   if (isSelected || isHovered) {
     const glowFnd = getTowerFoundationSize(tower);
     const glowRx = glowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.7;
@@ -187,7 +192,7 @@ export function renderTower(
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x,
-      screenPos.y + 8 * zoom,
+      glowShadowY,
       glowRx,
       glowRy,
       0,
@@ -202,7 +207,7 @@ export function renderTower(
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x,
-      screenPos.y + 8 * zoom,
+      glowShadowY,
       innerRx,
       innerRy,
       0,
@@ -224,7 +229,7 @@ export function renderTower(
       ctx.beginPath();
       ctx.ellipse(
         screenPos.x,
-        screenPos.y + 8 * zoom,
+        glowShadowY,
         ringRx,
         ringRy,
         0,
@@ -242,10 +247,10 @@ export function renderTower(
   const shadowH = shadowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.1;
   const shadowGrad = ctx.createRadialGradient(
     screenPos.x,
-    screenPos.y + 8 * zoom,
+    glowShadowY,
     0,
     screenPos.x,
-    screenPos.y + 8 * zoom,
+    glowShadowY,
     shadowW,
   );
   shadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
@@ -255,7 +260,7 @@ export function renderTower(
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
-    screenPos.y + 8 * zoom,
+    glowShadowY,
     shadowW,
     shadowH,
     0,

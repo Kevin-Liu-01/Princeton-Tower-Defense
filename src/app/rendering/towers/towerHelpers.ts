@@ -2500,34 +2500,53 @@ export const GROUND_TRANSITION_PALETTES: Record<
   },
 };
 
+export function getTowerYShift(tower: Tower): number {
+  switch (tower.type) {
+    case "cannon":
+    case "library":
+    case "lab":
+    case "club":
+      return 8 + tower.level * 2;
+    case "station":
+      return 8 + tower.level * 2;
+    case "arch":
+      return 5;
+    default:
+      return 0;
+  }
+}
+
 export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
   const level = tower.level;
   switch (tower.type) {
     case "cannon": {
       const base = 36 + level * 5;
-      return { w: base + 18, d: base + 18 };
+      const fndScale = level * 4;
+      return { w: base + 24 + fndScale, d: base + 24 + fndScale };
     }
     case "library": {
       const base = 34 + level * 5;
-      return { w: base + 20, d: base + 20 };
+      const fndGrow = level * 5;
+      return { w: base + 26 + fndGrow, d: base + 26 + fndGrow };
     }
     case "lab": {
       const base = 30 + level * 4;
-      return { w: base + 16, d: base + 16 };
+      const fndGrow = level * 4;
+      return { w: base + 22 + fndGrow, d: base + 22 + fndGrow };
     }
     case "arch": {
       const baseW = 38 + level * 5;
       const baseD = 30 + level * 4;
-      return { w: baseW + 32, d: baseD + 40 };
+      return { w: baseW + 52, d: baseD + 60 };
     }
     case "club": {
       const base = 34 + level * 5;
-      return { w: base + 18, d: base + 18 };
+      return { w: base + 38, d: base + 38 };
     }
     case "station": {
       const baseW = 56 + level * 6;
       const baseD = 44 + level * 5;
-      return { w: baseW + 22, d: baseD + 34 };
+      return { w: baseW + 47, d: baseD + 59 };
     }
     case "mortar": {
       const mBase = 38 + level * 5;
@@ -2602,9 +2621,10 @@ export function drawGroundTransition(
   const foundation = getTowerFoundationSize(tower);
   const fndW = foundation.w * zoom * ISO_PRISM_W_FACTOR;
   const fndH = foundation.d * zoom * ISO_PRISM_D_FACTOR;
+  const yShift = getTowerYShift(tower);
 
   const cx = screenPos.x;
-  const cy = screenPos.y + 10 * zoom;
+  const cy = screenPos.y - yShift * zoom + 10 * zoom;
   const outerW = fndW * 1.3;
   const outerH = fndH * 1.3;
   const midW = fndW * 1.0;

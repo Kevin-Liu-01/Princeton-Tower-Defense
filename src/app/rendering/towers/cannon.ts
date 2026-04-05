@@ -99,6 +99,8 @@ export function renderCannonTower(
 
   ctx.save();
   const level = tower.level;
+  // Shift tower up to center on placement position
+  screenPos = { x: screenPos.x, y: screenPos.y - (8 + level * 2) * zoom };
   const baseWidth = 36 + level * 5;
   const baseHeight = 24 + level * 8;
 
@@ -676,14 +678,15 @@ export function drawMechanicalTowerBase(
   const _s = sp ?? { s0: "#1a1a22", s1: "#2a2a32", s2: "#3a3a42", s3: "#4a4a52", s4: "#5a5a62", s5: "#6a6a72", s6: "#7a7a82", s7: "#8a8a92" };
   const _tAcc = tAcc ?? "#ff6600";
   const _tRgba = tRgba ?? "255, 102, 0";
+  const fndScale = level * 4;
   // Stepped foundation — rough-hewn plinth (bottom tier)
   drawIsoOctPrism(
     ctx,
     x,
-    y + 14 * zoom,
-    width + 38,
-    width + 38,
-    6,
+    y + (16 + level) * zoom,
+    width + 24 + fndScale,
+    width + 24 + fndScale,
+    4 + level,
     _s.s1,
     darkenColor(_s.s1, 8),
     darkenColor(_s.s1, 16),
@@ -694,13 +697,27 @@ export function drawMechanicalTowerBase(
   drawIsoOctPrism(
     ctx,
     x,
-    y + 10 * zoom,
-    width + 32,
-    width + 32,
-    6,
+    y + (11 + level) * zoom,
+    width + 16 + fndScale,
+    width + 16 + fndScale,
+    4 + level,
     _s.s2,
     _s.s1,
     darkenColor(_s.s1, 5),
+    zoom,
+  );
+
+  // Foundation upper tier — polished cap
+  drawIsoOctPrism(
+    ctx,
+    x,
+    y + (7 + level) * zoom,
+    width + 8 + fndScale,
+    width + 8 + fndScale,
+    3 + level,
+    _s.s3,
+    _s.s2,
+    darkenColor(_s.s2, 5),
     zoom,
   );
 
