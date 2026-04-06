@@ -2,7 +2,6 @@
 import React, { useRef, useEffect, useState, lazy, Suspense } from "react";
 import Image from "next/image";
 import { MapPin, Lock, Clapperboard } from "lucide-react";
-import { OrnateFrame } from "../ui/primitives/OrnateFrame";
 import { PANEL, GOLD, NEUTRAL, SELECTED, dividerGradient, panelGradient } from "../ui/system/theme";
 
 const BattlefieldPreviewCanvas = lazy(
@@ -87,12 +86,9 @@ export const BattlefieldPreview: React.FC<{
           </>
         )}
 
-        <OrnateFrame
+        <div
           className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
-          cornerSize={28}
-          showBorders={true}
-          color="#b45309"
-          glowColor="#f59e0b"
+
         >
           {/* Inner ghost border */}
           <div
@@ -197,7 +193,7 @@ export const BattlefieldPreview: React.FC<{
               style={{ background: dividerGradient }}
             />
           </div>
-        </OrnateFrame>
+        </div>
 
         {/* Easter egg: toggle live canvas animation */}
         <button

@@ -52,6 +52,7 @@ import { useUrlNavigation } from "../../hooks/useUrlNavigation";
 import { WorldMapTopBar } from "./world-map/WorldMapTopBar";
 import { WorldMapDesktopLoadout } from "./world-map/WorldMapDesktopLoadout";
 import { WorldMapModals } from "./world-map/WorldMapModals";
+import { WorldMapShoutOut } from "./world-map/WorldMapShoutOut";
 
 // =============================================================================
 // WORLD MAP COMPONENT
@@ -833,7 +834,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
         {/* DESKTOP: LEFT SIDEBAR */}
         <div
-          className="hidden sm:flex sm:h-auto sm:w-72 flex-shrink-0 flex-col overflow-hidden pl-3 py-3 transition-all duration-600 ease-out"
+          className="hidden sm:flex sm:h-auto sm:w-72 flex-shrink-0 flex-col overflow-hidden pl-3 pt-3 pb-3 xl:pb-0 transition-all duration-600 ease-out"
           style={{
             background: `linear-gradient(180deg, rgba(52,36,20,0.85) 0%, rgba(32,22,12,0.88) 100%)`,
             backdropFilter: "blur(12px)",
@@ -845,11 +846,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           <OrnateFrame
             className="flex-1 flex flex-col overflow-hidden rounded-2xl shadow-xl"
             style={{ border: `1.5px solid ${GOLD.border25}` }}
-            cornerSize={24}
+            cornerSize={20}
             showBorders={true}
             showSideBorders={true}
             showTopBottomBorders={true}
-            borderScale={0.4}
+            sideBorderScale={0.6}
+            topBottomBorderScale={0.75}
+
           >
             <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ background: `linear-gradient(180deg, rgba(52,36,20,0.92) 0%, rgba(32,22,12,0.95) 100%)`, boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}` }}>
               {selectedLevel && currentLevel ? (
@@ -1325,7 +1328,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       {/* Toggle back to stats - only shown over the preview overlay */}
                       <button
                         onClick={() => setShowBattlefieldPreview(false)}
-                        className="absolute top-4 right-4 z-30 flex items-center gap-1.5 p-2 rounded-lg transition-all hover:scale-105 hover:brightness-110"
+                        className="absolute top-3 right-3 z-30 flex items-center gap-1.5 p-2 rounded-lg transition-all hover:scale-105 hover:brightness-110"
                         style={{
                           background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                           border: `1px solid ${GOLD.border25}`,
@@ -1341,6 +1344,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               )}
             </div>
           </OrnateFrame>
+
+          <WorldMapShoutOut />
         </div>
         {/* RIGHT: Map + Loadout column */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
@@ -1354,8 +1359,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           >
             <OrnateFrame
               className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 overflow-hidden shadow-2xl min-h-0 animate-wm-border-breathe"
-              cornerSize={28}
+              cornerSize={20}
               showBorders={true}
+              sideBorderScale={0.6}
+              topBottomBorderScale={0.75}
             >
               <div
                 ref={containerRef}
