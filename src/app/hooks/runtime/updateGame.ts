@@ -88,6 +88,7 @@ import {
   gridToWorldPath,
   screenToWorld,
   distance,
+  distanceSq,
   generateId,
   getPathSegmentLength,
   findClosestPathPoint,
@@ -127,6 +128,7 @@ import {
   getVaultImpactPos,
   type VaultEntry,
   createEnemyPosCache,
+  buildEnemySpatialHash,
 } from "../../game/spatial";
 import {
   applyEnemyAbilities,
@@ -143,6 +145,7 @@ import {
   type RegionKey,
 } from "../../game/progression";
 import { calculateCategoryRatings } from "../../components/menus/VictoryScreen";
+import { insertionSortBy } from "../../rendering/utils/insertionSort";
 import { calculateHazardEffects, applyHazardEffect, calculateFriendlyHazardEffects, applyHazardEffectToTroop, applyHazardEffectToHero } from "../../game/hazards";
 import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
 import {
@@ -504,9 +507,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   const getEnemyPosCached = enemyPosCache.getPos;
   const getEnemyAimPosCached = enemyPosCache.getAimPos;
 
-  const enemiesByProgress = [...enemies].sort(
-    (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
-  );
+  const enemiesByProgress = enemies.slice();
+  insertionSortBy(enemiesByProgress, (e) => -(e.pathIndex + e.progress));
+
+  const enemyHash = buildEnemySpatialHash(enemies, getEnemyPosCached);
 
   const troopCellSize = 120;
   const troopBuckets = new Map<string, Troop[]>();
@@ -533,7 +537,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     range: number,
     predicate?: (e: Enemy) => boolean,
   ) =>
-    getClosestEnemyInRange(origin, range, enemies, getEnemyPosCached, predicate);
+    enemyHash.getClosest(origin, range, predicate);
   const getNearestTroop = (
     origin: Position,
     range: number,
@@ -908,18 +912,23 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       const key = getSpecialTowerKey(orrery);
       sunforgeKeys.add(key);
 
-      // Always compute best cluster target for the reticle tracking
+      // Stride-sample pivots to keep cost O(n * n/stride) instead of O(n²)
       let bestTarget: Position | null = null;
       let bestScore = -Infinity;
-      for (const pivotEnemy of enemiesByProgress) {
-        if (pivotEnemy.dead || pivotEnemy.hp <= 0) continue;
+      const aliveEnemies = enemiesByProgress.filter(e => !e.dead && e.hp > 0);
+      const pivotStride = aliveEnemies.length > 40 ? Math.ceil(aliveEnemies.length / 40) : 1;
+      const clusterScanRadiusSq = clusterScanRadius * clusterScanRadius;
+      for (let pi = 0; pi < aliveEnemies.length; pi += pivotStride) {
+        const pivotEnemy = aliveEnemies[pi];
         const pivotPos = getEnemyPosCached(pivotEnemy);
         let score = 0;
-        for (const candidate of enemies) {
-          if (candidate.dead || candidate.hp <= 0) continue;
+        for (const candidate of aliveEnemies) {
           const candidatePos = getEnemyPosCached(candidate);
-          const dist = distance(pivotPos, candidatePos);
-          if (dist > clusterScanRadius) continue;
+          const dx = pivotPos.x - candidatePos.x;
+          const dy = pivotPos.y - candidatePos.y;
+          const dSq = dx * dx + dy * dy;
+          if (dSq > clusterScanRadiusSq) continue;
+          const dist = Math.sqrt(dSq);
           const proximityWeight = 1 - dist / clusterScanRadius;
           const progressWeight = 1 + (candidate.pathIndex + candidate.progress) * 0.06;
           score += 1 + proximityWeight * 1.35 + progressWeight * 0.22;
@@ -1187,6 +1196,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
   // D. VAULT: targetable objective (per-vault HP).
   const anyVaultAlive = vaultEntries.some((v) => (specialTowerHp[v.key] ?? 0) > 0);
   if (vaultEntries.length > 0 && anyVaultAlive) {
+    const vaultEnemyUpdates = new Map<string, { inCombat: true; lastTroopAttack: number; facingRight: boolean }>();
     enemies.forEach((enemy) => {
       const enemyPos = getEnemyPosCached(enemy);
       const vaultHit = getClosestVault(enemyPos, 60);
@@ -1213,23 +1223,24 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         }
         return { ...prev, [vaultHit.key]: newVal };
       });
-      setEnemies((prev) =>
-        prev.map((entry) =>
-          entry.id === enemy.id
-            ? {
-              ...entry,
-              inCombat: true,
-              lastTroopAttack: now,
-              facingRight: getFacingRightFromDelta(
-                vaultHit.worldPos.x - enemyPos.x,
-                vaultHit.worldPos.y - enemyPos.y,
-                entry.facingRight,
-              ),
-            }
-            : entry
-        )
-      );
+      vaultEnemyUpdates.set(enemy.id, {
+        inCombat: true,
+        lastTroopAttack: now,
+        facingRight: getFacingRightFromDelta(
+          vaultHit.worldPos.x - enemyPos.x,
+          vaultHit.worldPos.y - enemyPos.y,
+          enemy.facingRight,
+        ),
+      });
     });
+    if (vaultEnemyUpdates.size > 0) {
+      setEnemies((prev) =>
+        prev.map((entry) => {
+          const update = vaultEnemyUpdates.get(entry.id);
+          return update ? { ...entry, ...update } : entry;
+        })
+      );
+    }
   }
 
   // =========================================================================
@@ -1249,6 +1260,11 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     return changed ? next : prev;
   });
 
+  const enemyPosById = new Map<string, Position>();
+  for (const enemy of enemies) {
+    enemyPosById.set(enemy.id, getEnemyPosCached(enemy));
+  }
+
   setEnemies((prev) =>
     prev
       .map((enemy) => {
@@ -1257,7 +1273,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           enemy = { ...enemy, spawnProgress: Math.min(1, enemy.spawnProgress + deltaTime / SUMMON_MINION_FADE_DURATION) };
         }
         if (enemy.frozen || now < enemy.stunUntil) return enemy;
-        const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+        const enemyPos = enemyPosById.get(enemy.id) ?? getEnemyPosWithPath(enemy, selectedMap);
 
         // 1. TAUNT LOGIC (Highest Priority)
         // If the enemy is taunted, they ignore the path and troops to hit the hero
@@ -1352,7 +1368,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
                   x: (enemy.tauntOffset?.x || 0) + moveX,
                   y: (enemy.tauntOffset?.y || 0) + moveY,
                 },
-                inCombat: false, // Not in melee range yet
+                inCombat: false,
+                facingRight: getFacingRightFromDelta(dx, dy, enemy.facingRight),
               };
             }
           }
@@ -2348,6 +2365,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       progressMetric: number;
       laneOffset: number;
       formationOffset: number;
+      bucketPos: number;
     };
 
     const layerBuckets = new Map<string, LaneEntry[]>();
@@ -2369,6 +2387,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         progressMetric: enemy.pathIndex + enemy.progress,
         laneOffset: enemy.laneOffset,
         formationOffset: ENEMY_LANE_OFFSETS[preferredLane] ?? 0,
+        bucketPos: 0,
       };
       entries[i] = entry;
       const layerKey = `${pathKey}:${isFlying ? "f" : "g"}`;
@@ -2377,9 +2396,10 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       else layerBuckets.set(layerKey, [entry]);
     }
 
-    layerBuckets.forEach((bucket) =>
-      bucket.sort((a, b) => a.progressMetric - b.progressMetric)
-    );
+    layerBuckets.forEach((bucket) => {
+      bucket.sort((a, b) => a.progressMetric - b.progressMetric);
+      for (let bi = 0; bi < bucket.length; bi++) bucket[bi].bucketPos = bi;
+    });
 
     let hasChanges = false;
     const updated = prev.map((enemy, i) => {
@@ -2397,12 +2417,33 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (!bucket || bucket.length <= 1) return enemy;
 
       let lateralPush = 0;
-      for (const other of bucket) {
-        if (other.index === i) continue;
-        const progressDist = Math.abs(
-          other.progressMetric - entry.progressMetric
-        );
-        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) continue;
+      const myProgress = entry.progressMetric;
+      const bp = entry.bucketPos;
+      for (let j = bp - 1; j >= 0; j--) {
+        const other = bucket[j];
+        const progressDist = myProgress - other.progressMetric;
+        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) break;
+
+        const lateralDiff = entry.laneOffset - other.laneOffset;
+        const absLateral = Math.abs(lateralDiff);
+        const proximityFactor =
+          1 - progressDist / ENEMY_REPULSION_PROGRESS_RADIUS;
+
+        if (absLateral < 0.05) {
+          const sign = enemy.id > prev[other.index].id ? 1 : -1;
+          lateralPush +=
+            sign * ENEMY_REPULSION_LATERAL_STRENGTH * proximityFactor;
+        } else {
+          const sign = lateralDiff > 0 ? 1 : -1;
+          lateralPush +=
+            (sign * ENEMY_REPULSION_LATERAL_STRENGTH * proximityFactor) /
+            (1 + absLateral * 4);
+        }
+      }
+      for (let j = bp + 1; j < bucket.length; j++) {
+        const other = bucket[j];
+        const progressDist = other.progressMetric - myProgress;
+        if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) break;
 
         const lateralDiff = entry.laneOffset - other.laneOffset;
         const absLateral = Math.abs(lateralDiff);
@@ -3283,13 +3324,13 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       if (!eData.abilities) continue;
 
       const enemyPos = getEnemyPosCached(enemy);
-      const distToTower = distance(enemyPos, towerWorldPos);
+      const dSqToTower = distanceSq(enemyPos, towerWorldPos);
 
       for (const ability of eData.abilities) {
         if (!ability.type.startsWith('tower_')) continue;
 
         const abilityRange = ability.radius || 80;
-        if (distToTower > abilityRange) continue;
+        if (dSqToTower > abilityRange * abilityRange) continue;
 
         // Use per-type cooldowns instead of global lastAbilityUse
         const abilityCooldown = ability.cooldown || 3000;

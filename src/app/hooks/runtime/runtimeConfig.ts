@@ -2,14 +2,14 @@ import { DEV_MODE_STORAGE_KEY } from "../../constants/settings";
 
 export type RenderQuality = "high" | "medium" | "low";
 
-export const BG_OVERSCAN_X = 600;
-export const BG_OVERSCAN_Y = 600;
-export const DECOR_OVERSCAN = 400;
+export const BG_OVERSCAN_X = 300;
+export const BG_OVERSCAN_Y = 300;
+export const DECOR_OVERSCAN = 200;
 
 export const QUALITY_DPR_CAP: Record<RenderQuality, number> = {
-  high: 4,
-  medium: 4,
-  low: 4,
+  high: 2,
+  medium: 1.75,
+  low: 1.5,
 };
 
 export const QUALITY_DECORATION_MARGIN_PX: Record<RenderQuality, number> = {
@@ -45,19 +45,19 @@ export const WATER_DECORATION_TYPES = new Set([
   "carnegie_lake",
 ]);
 
-export const QUALITY_TRANSITION_COOLDOWN_MS = 5000;
-export const QUALITY_TRANSITION_MAX_COOLDOWN_MS = 30_000;
+export const QUALITY_TRANSITION_COOLDOWN_MS = 2000;
+export const QUALITY_TRANSITION_MAX_COOLDOWN_MS = 15_000;
 
 export const QUALITY_DOWNGRADE_THRESHOLD: Record<RenderQuality, number> = {
-  high: 22,
-  medium: 30,
+  high: 18,
+  medium: 24,
   low: Infinity,
 };
 
 export const QUALITY_UPGRADE_THRESHOLD: Record<RenderQuality, number> = {
   high: -Infinity,
-  medium: 14,
-  low: 18,
+  medium: 12,
+  low: 14,
 };
 
 export const QUALITY_UPGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
@@ -71,6 +71,15 @@ export const QUALITY_DOWNGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
   medium: "low",
   low: "low",
 };
+
+let _isMobile: boolean | null = null;
+
+export function isMobileDevice(): boolean {
+  if (_isMobile !== null) return _isMobile;
+  if (typeof window === "undefined") return false;
+  _isMobile = window.matchMedia("(pointer: coarse)").matches;
+  return _isMobile;
+}
 
 const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
 

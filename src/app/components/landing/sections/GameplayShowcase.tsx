@@ -4,6 +4,7 @@ import Image from "next/image";
 import { LANDING_THEME, GAMEPLAY_SHOWCASE } from "../landingConstants";
 import { useCarousel } from "../CarouselControls";
 import { SectionFlourish } from "./LoadoutUI";
+import { MapSectionHeader, MapSectionBg, MapContentPanel } from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -22,28 +23,16 @@ export function GameplayShowcase() {
 
   return (
     <section className="relative py-12 sm:py-16">
-      <SectionFlourish />
+      <MapSectionBg gridOpacity={0.012} />
 
-      <div className="text-center mt-8 sm:mt-12 mb-6 sm:mb-8 px-6">
-        <p
-          className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3"
-          style={{ color: `rgba(${T.accentRgb},0.35)` }}
-        >
-          5 Regions to Explore
-        </p>
-        <h2
-          className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
-          style={{
-            color: T.accent,
-            textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
-          }}
-        >
-          The Five Kingdoms
-        </h2>
+      <div className="relative z-10">
+      <SectionFlourish />
+      <MapSectionHeader subtitle="5 Regions to Explore" title="The Five Kingdoms" />
       </div>
 
       {/* Cinematic carousel — full-bleed feel */}
-      <div className="relative mx-2 sm:mx-4 lg:mx-8">
+      <div className="relative mx-2 sm:mx-4 lg:mx-8 z-10">
+        <MapContentPanel accent={palette.accent}>
         <div
           className="relative aspect-[2.2/1] sm:aspect-[2.5/1] rounded-xl overflow-hidden"
           style={{
@@ -158,6 +147,7 @@ export function GameplayShowcase() {
             style={{ boxShadow: `inset 0 0 80px rgba(0,0,0,0.5), inset 0 0 2px ${palette.accent}15` }}
           />
         </div>
+        </MapContentPanel>
       </div>
     </section>
   );

@@ -76,6 +76,7 @@ import {
   DEV_CONFIG_MENU_ENABLED,
   QUALITY_DPR_CAP,
   QUALITY_TRANSITION_COOLDOWN_MS,
+  isMobileDevice,
   readDevModeUnlocked,
   type RenderQuality,
 } from "./runtime/runtimeConfig";
@@ -449,7 +450,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const [cameraOffset, setCameraOffset] = useState<Position>(DEFAULT_CAMERA_OFFSET);
   const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
   const [cameraModeActive, setCameraModeActive] = useState(false);
-  const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
+  const [renderDprCap, setRenderDprCap] = useState<number>(
+    () => isMobileDevice() ? QUALITY_DPR_CAP.high : Infinity,
+  );
   const [isDevModeUnlocked, setIsDevModeUnlocked] = useState(readDevModeUnlocked);
   const isDevMode = DEV_CONFIG_MENU_ENABLED || isDevModeUnlocked;
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
@@ -1611,6 +1614,7 @@ export function usePrincetonTowerDefenseRuntime() {
         timeSpent={timeSpent}
         currentLevelStats={currentLevelStats}
         resetGame={resetGameWithTransition}
+        progress={progress}
         handleTutorialComplete={handleTutorialComplete}
         handleTutorialSkip={handleTutorialSkip}
         selectedHero={selectedHero}

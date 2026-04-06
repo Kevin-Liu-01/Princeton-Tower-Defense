@@ -6,3 +6,4 @@ export { CameraControls } from "../CameraControls";
 export { CameraModeOverlay } from "../CameraModeOverlay";
 export { PaydayNotification } from "../PaydayNotification";
 export { HudSurface } from "./HudSurface";
+export { FullscreenButton } from "../FullscreenButton";

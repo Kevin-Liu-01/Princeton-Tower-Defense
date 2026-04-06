@@ -110,17 +110,30 @@ export function setPerformanceSettings(
  * - Blur radius is multiplied by shadowQualityMultiplier so lower quality
  *   levels get cheaper (smaller radius) shadows without losing the visual.
  */
+let cachedShadowsDisabled = false;
+let cachedShadowQualityMul = 1;
+
+/**
+ * Refresh cached shadow flags once per frame so the property-descriptor
+ * fast path avoids per-write function calls.
+ */
+export function refreshShadowCache(): void {
+  const settings = getPerformanceSettings();
+  cachedShadowsDisabled =
+    settings.disableShadows || currentScenePressure.forceShadowsOff;
+  cachedShadowQualityMul = settings.shadowQualityMultiplier;
+}
+
 export function setShadowBlur(
   ctx: CanvasRenderingContext2D,
   blur: number,
   color?: string,
 ): void {
-  const settings = getPerformanceSettings();
-  if (settings.disableShadows || currentScenePressure.forceShadowsOff) {
+  if (cachedShadowsDisabled) {
     ctx.shadowBlur = 0;
     return;
   }
-  ctx.shadowBlur = blur * settings.shadowQualityMultiplier;
+  ctx.shadowBlur = blur * cachedShadowQualityMul;
   if (color) {
     ctx.shadowColor = color;
   }
@@ -131,6 +144,16 @@ export function setShadowBlur(
  */
 export function clearShadow(ctx: CanvasRenderingContext2D): void {
   ctx.shadowBlur = 0;
+}
+
+/**
+ * Return the effective shadow blur after quality scaling, or 0 when shadows
+ * are disabled.  Used by the particle glow-sprite system so it can size the
+ * pre-rendered glow without reaching into private state.
+ */
+export function getEffectiveShadowBlur(baseBlur: number): number {
+  if (cachedShadowsDisabled) return 0;
+  return baseBlur * cachedShadowQualityMul;
 }
 
 // ============================================================================
@@ -155,16 +178,11 @@ export function interceptShadows(ctx: CanvasRenderingContext2D): void {
       return rawBlur;
     },
     set(value: number) {
-      const settings = getPerformanceSettings();
-      if (
-        value === 0 ||
-        settings.disableShadows ||
-        currentScenePressure.forceShadowsOff
-      ) {
+      if (value === 0 || cachedShadowsDisabled) {
         rawBlur = 0;
         return;
       }
-      rawBlur = value * settings.shadowQualityMultiplier;
+      rawBlur = value * cachedShadowQualityMul;
     },
     configurable: true,
     enumerable: true,
@@ -361,10 +379,6 @@ export interface ScenePressure {
   simplifyEnemies: boolean;
 }
 
-const PRESSURE_THRESHOLD_LIGHT = 200;
-const PRESSURE_THRESHOLD_MEDIUM = 300;
-const PRESSURE_THRESHOLD_HEAVY = 400;
-
 let currentScenePressure: ScenePressure = {
   total: 0,
   skipDecorativeEffects: false,
@@ -377,11 +391,11 @@ let currentScenePressure: ScenePressure = {
 export function updateScenePressure(renderableCount: number): ScenePressure {
   currentScenePressure = {
     total: renderableCount,
-    skipDecorativeEffects: renderableCount > PRESSURE_THRESHOLD_LIGHT,
-    forceSimplifiedGradients: renderableCount > PRESSURE_THRESHOLD_MEDIUM,
-    forceShadowsOff: renderableCount > PRESSURE_THRESHOLD_MEDIUM,
-    skipNonEssentialParticles: renderableCount > PRESSURE_THRESHOLD_HEAVY,
-    simplifyEnemies: renderableCount > PRESSURE_THRESHOLD_HEAVY,
+    skipDecorativeEffects: false,
+    forceSimplifiedGradients: false,
+    forceShadowsOff: false,
+    skipNonEssentialParticles: false,
+    simplifyEnemies: false,
   };
   return currentScenePressure;
 }

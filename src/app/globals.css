@@ -415,3 +415,37 @@ body {
   background-image: radial-gradient(circle at 1px 1px, rgba(180,140,60,0.04) 1px, transparent 0);
   background-size: 20px 20px;
 }
+
+/* ─── Fantasy Map Animations ─── */
+
+@keyframes map-trail-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes map-marker-breathe {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+
+@keyframes map-compass-glow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(212,168,74,0.15)); }
+  50% { filter: drop-shadow(0 0 16px rgba(212,168,74,0.3)); }
+}
+
+@keyframes map-terrain-fade {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes map-border-shimmer {
+  0% { opacity: 0.12; }
+  50% { opacity: 0.2; }
+  100% { opacity: 0.12; }
+}
+
+.animate-map-trail { animation: map-trail-flow 4s linear infinite; }
+.animate-map-marker { animation: map-marker-breathe 5s ease-in-out infinite; }
+.animate-map-compass-glow { animation: map-compass-glow 4s ease-in-out infinite; }
+.animate-map-terrain { animation: map-terrain-fade 8s ease-in-out infinite; }
+.animate-map-border-shimmer { animation: map-border-shimmer 6s ease-in-out infinite; }

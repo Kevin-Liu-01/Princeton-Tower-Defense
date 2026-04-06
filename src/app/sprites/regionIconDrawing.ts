@@ -572,126 +572,224 @@ function drawWinterIcon(ctx: CanvasRenderingContext2D): void {
 }
 
 function drawVolcanicIcon(ctx: CanvasRenderingContext2D): void {
-  // Outer fire glow
-  const glowGrad = ctx.createRadialGradient(0, 0, 3, 0, 1, 14);
-  glowGrad.addColorStop(0, "rgba(255,100,0,0.22)");
-  glowGrad.addColorStop(1, "rgba(255,50,0,0)");
-  ctx.fillStyle = glowGrad;
+  // Wide heat-haze glow — layered for depth
+  const haze1 = ctx.createRadialGradient(0, 2, 2, 0, 2, 16);
+  haze1.addColorStop(0, "rgba(255,80,0,0.28)");
+  haze1.addColorStop(0.5, "rgba(255,40,0,0.12)");
+  haze1.addColorStop(1, "rgba(200,20,0,0)");
+  ctx.fillStyle = haze1;
   ctx.beginPath();
-  ctx.arc(0, 1, 14, 0, Math.PI * 2);
+  ctx.arc(0, 2, 16, 0, Math.PI * 2);
   ctx.fill();
 
-  // Lava pool at base
-  const lavaGrad = ctx.createRadialGradient(0, 10, 0, 0, 10, 7);
-  lavaGrad.addColorStop(0, "rgba(255,130,30,0.45)");
-  lavaGrad.addColorStop(1, "rgba(200,40,0,0.05)");
+  const haze2 = ctx.createRadialGradient(0, -2, 1, 0, 0, 12);
+  haze2.addColorStop(0, "rgba(255,160,40,0.18)");
+  haze2.addColorStop(1, "rgba(255,100,0,0)");
+  ctx.fillStyle = haze2;
+  ctx.beginPath();
+  ctx.arc(0, -2, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lava pool at base — hotter gradient
+  const lavaGrad = ctx.createRadialGradient(0, 10, 0, 0, 10, 8);
+  lavaGrad.addColorStop(0, "rgba(255,180,40,0.55)");
+  lavaGrad.addColorStop(0.5, "rgba(255,100,20,0.3)");
+  lavaGrad.addColorStop(1, "rgba(180,30,0,0)");
   ctx.fillStyle = lavaGrad;
   ctx.beginPath();
-  ctx.ellipse(0, 10, 7, 2.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 10, 8, 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Main flame — organic hand-drawn shape
-  const outerGrad = ctx.createLinearGradient(0, -12, 0, 10);
-  outerGrad.addColorStop(0, "#BB1500");
-  outerGrad.addColorStop(0.4, "#DD2200");
-  outerGrad.addColorStop(1, "#991000");
+  // Outermost flame silhouette — deep crimson with ragged edges
+  const outerGrad = ctx.createLinearGradient(0, -14, 0, 11);
+  outerGrad.addColorStop(0, "#880800");
+  outerGrad.addColorStop(0.25, "#BB1500");
+  outerGrad.addColorStop(0.6, "#DD2200");
+  outerGrad.addColorStop(1, "#771000");
   ctx.fillStyle = outerGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -12);
-  ctx.quadraticCurveTo(3, -10, 5, -8);
-  ctx.quadraticCurveTo(8, -4, 8, -1);
-  ctx.quadraticCurveTo(9, 3, 7, 6);
-  ctx.quadraticCurveTo(5, 10, 0, 10.5);
-  ctx.quadraticCurveTo(-5, 10, -7, 6);
-  ctx.quadraticCurveTo(-9, 3, -8, -1);
-  ctx.quadraticCurveTo(-8, -4, -5, -8);
-  ctx.quadraticCurveTo(-3, -10, 0, -12);
+  ctx.moveTo(0, -13);
+  ctx.quadraticCurveTo(2, -11, 4, -9);
+  ctx.quadraticCurveTo(7, -6, 8.5, -2);
+  ctx.quadraticCurveTo(9.5, 2, 8, 5);
+  ctx.quadraticCurveTo(6.5, 9, 3, 10.5);
+  ctx.quadraticCurveTo(1, 11, 0, 11);
+  ctx.quadraticCurveTo(-1, 11, -3, 10.5);
+  ctx.quadraticCurveTo(-6.5, 9, -8, 5);
+  ctx.quadraticCurveTo(-9.5, 2, -8.5, -2);
+  ctx.quadraticCurveTo(-7, -6, -4, -9);
+  ctx.quadraticCurveTo(-2, -11, 0, -13);
   ctx.fill();
 
-  // Left tendril
-  ctx.fillStyle = "#EE3500";
+  // Left flame tendril — tall, curving lick
+  ctx.fillStyle = "#DD2800";
   ctx.beginPath();
-  ctx.moveTo(-3, -6);
-  ctx.quadraticCurveTo(-6, -10, -4.5, -12.5);
-  ctx.quadraticCurveTo(-2.5, -9, -1.5, -7);
+  ctx.moveTo(-3.5, -7);
+  ctx.quadraticCurveTo(-7, -11, -5.5, -14);
+  ctx.quadraticCurveTo(-4, -12, -3, -10);
+  ctx.quadraticCurveTo(-1.5, -8, -2, -7);
   ctx.closePath();
   ctx.fill();
 
-  // Right tendril
+  // Right flame tendril
+  ctx.fillStyle = "#EE3000";
   ctx.beginPath();
-  ctx.moveTo(3, -5);
-  ctx.quadraticCurveTo(5.5, -8, 5, -11);
-  ctx.quadraticCurveTo(3, -8, 2, -6);
+  ctx.moveTo(3, -6);
+  ctx.quadraticCurveTo(6, -9, 6.5, -12.5);
+  ctx.quadraticCurveTo(4.5, -10, 3.5, -8.5);
+  ctx.quadraticCurveTo(2.5, -7, 2, -6);
   ctx.closePath();
   ctx.fill();
 
-  // Middle layer — rich orange
-  const midGrad = ctx.createRadialGradient(-1, -4, 1, 0, 0, 9);
-  midGrad.addColorStop(0, "#FF7700");
-  midGrad.addColorStop(0.5, "#FF5500");
-  midGrad.addColorStop(1, "#DD3300");
+  // Small left side lick
+  ctx.fillStyle = "#CC2000";
+  ctx.beginPath();
+  ctx.moveTo(-7, -1);
+  ctx.quadraticCurveTo(-9.5, -4, -8, -7);
+  ctx.quadraticCurveTo(-7.5, -4, -6.5, -2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small right side lick
+  ctx.fillStyle = "#CC2500";
+  ctx.beginPath();
+  ctx.moveTo(7, 0);
+  ctx.quadraticCurveTo(9.5, -3, 8.5, -6);
+  ctx.quadraticCurveTo(8, -3.5, 6.5, -1);
+  ctx.closePath();
+  ctx.fill();
+
+  // Middle flame layer — fiery orange with wavy edges
+  const midGrad = ctx.createRadialGradient(-1, -5, 1, 0, 1, 10);
+  midGrad.addColorStop(0, "#FF8800");
+  midGrad.addColorStop(0.35, "#FF6600");
+  midGrad.addColorStop(0.7, "#EE4400");
+  midGrad.addColorStop(1, "#CC2800");
   ctx.fillStyle = midGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -9);
-  ctx.quadraticCurveTo(4, -5, 5.5, -1);
-  ctx.quadraticCurveTo(6.5, 3, 4.5, 6.5);
-  ctx.quadraticCurveTo(2.5, 9, 0, 9);
-  ctx.quadraticCurveTo(-2.5, 9, -4.5, 6.5);
-  ctx.quadraticCurveTo(-6.5, 3, -5.5, -1);
-  ctx.quadraticCurveTo(-4, -5, 0, -9);
+  ctx.moveTo(0, -10.5);
+  ctx.quadraticCurveTo(3, -7, 5, -3);
+  ctx.quadraticCurveTo(6.5, 1, 6, 4);
+  ctx.quadraticCurveTo(5, 8, 2.5, 9.5);
+  ctx.quadraticCurveTo(0.5, 10, 0, 10);
+  ctx.quadraticCurveTo(-0.5, 10, -2.5, 9.5);
+  ctx.quadraticCurveTo(-5, 8, -6, 4);
+  ctx.quadraticCurveTo(-6.5, 1, -5, -3);
+  ctx.quadraticCurveTo(-3, -7, 0, -10.5);
   ctx.fill();
 
-  // Inner layer — bright amber
-  const innerGrad = ctx.createRadialGradient(-0.5, -3, 0, 0, 1, 7);
-  innerGrad.addColorStop(0, "#FFC800");
-  innerGrad.addColorStop(0.5, "#FFAA00");
-  innerGrad.addColorStop(1, "#FF7700");
+  // Inner flame — bright amber/gold
+  const innerGrad = ctx.createRadialGradient(-0.5, -4, 0, 0, 1, 8);
+  innerGrad.addColorStop(0, "#FFD020");
+  innerGrad.addColorStop(0.4, "#FFBB00");
+  innerGrad.addColorStop(0.8, "#FF8800");
+  innerGrad.addColorStop(1, "#EE5500");
   ctx.fillStyle = innerGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -6);
-  ctx.quadraticCurveTo(3, -3, 3.5, 1);
-  ctx.quadraticCurveTo(4, 5, 0, 7.5);
-  ctx.quadraticCurveTo(-4, 5, -3.5, 1);
-  ctx.quadraticCurveTo(-3, -3, 0, -6);
+  ctx.moveTo(0, -7.5);
+  ctx.quadraticCurveTo(2.5, -4.5, 3.5, -1);
+  ctx.quadraticCurveTo(4.5, 3, 3, 6);
+  ctx.quadraticCurveTo(1.5, 8.5, 0, 8.5);
+  ctx.quadraticCurveTo(-1.5, 8.5, -3, 6);
+  ctx.quadraticCurveTo(-4.5, 3, -3.5, -1);
+  ctx.quadraticCurveTo(-2.5, -4.5, 0, -7.5);
   ctx.fill();
 
-  // Core — bright yellow
-  const coreGrad = ctx.createRadialGradient(0, -1, 0, 0, 2, 5);
-  coreGrad.addColorStop(0, "#FFF080");
-  coreGrad.addColorStop(0.5, "#FFE030");
-  coreGrad.addColorStop(1, "#FFCC00");
+  // Hot core — intense yellow
+  const coreGrad = ctx.createRadialGradient(0, -1, 0, 0, 2.5, 5.5);
+  coreGrad.addColorStop(0, "#FFF8A0");
+  coreGrad.addColorStop(0.3, "#FFE840");
+  coreGrad.addColorStop(0.7, "#FFCC00");
+  coreGrad.addColorStop(1, "#FFAA00");
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -3);
-  ctx.quadraticCurveTo(2, -1, 2.2, 2);
-  ctx.quadraticCurveTo(2.5, 5, 0, 6);
-  ctx.quadraticCurveTo(-2.5, 5, -2.2, 2);
-  ctx.quadraticCurveTo(-2, -1, 0, -3);
+  ctx.moveTo(0, -4);
+  ctx.quadraticCurveTo(1.8, -2, 2.2, 1);
+  ctx.quadraticCurveTo(2.8, 4, 1.5, 6);
+  ctx.quadraticCurveTo(0.5, 7, 0, 7);
+  ctx.quadraticCurveTo(-0.5, 7, -1.5, 6);
+  ctx.quadraticCurveTo(-2.8, 4, -2.2, 1);
+  ctx.quadraticCurveTo(-1.8, -2, 0, -4);
   ctx.fill();
 
-  // White-hot center teardrop
-  ctx.fillStyle = "#FFF8C0";
-  ctx.globalAlpha = 0.9;
+  // White-hot center teardrop — larger, more intense
+  const hotGrad = ctx.createLinearGradient(0, 0, 0, 6);
+  hotGrad.addColorStop(0, "#FFFDE8");
+  hotGrad.addColorStop(0.5, "#FFF8C0");
+  hotGrad.addColorStop(1, "#FFE880");
+  ctx.fillStyle = hotGrad;
+  ctx.globalAlpha = 0.92;
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.quadraticCurveTo(1, 1.5, 1, 3.5);
-  ctx.quadraticCurveTo(0.6, 5, 0, 5);
-  ctx.quadraticCurveTo(-0.6, 5, -1, 3.5);
-  ctx.quadraticCurveTo(-1, 1.5, 0, 0);
+  ctx.moveTo(0, -0.5);
+  ctx.quadraticCurveTo(1.2, 1.5, 1.2, 3.5);
+  ctx.quadraticCurveTo(0.8, 5.5, 0, 5.8);
+  ctx.quadraticCurveTo(-0.8, 5.5, -1.2, 3.5);
+  ctx.quadraticCurveTo(-1.2, 1.5, 0, -0.5);
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  // Ember particles
-  ctx.fillStyle = "#FFD800";
-  ctx.beginPath(); ctx.arc(-3.5, -10, 1.1, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#FF8800";
-  ctx.beginPath(); ctx.arc(3, -9, 0.9, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#FFCC00";
-  ctx.beginPath(); ctx.arc(0.5, -11.5, 0.7, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#FF6600";
-  ctx.beginPath(); ctx.arc(-1.5, -12, 0.55, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#FFAA00";
-  ctx.beginPath(); ctx.arc(5, -7, 0.5, 0, Math.PI * 2); ctx.fill();
+  // Bright specular highlight near top of inner flame
+  ctx.fillStyle = "rgba(255,255,240,0.5)";
+  ctx.beginPath();
+  ctx.arc(-0.8, -2.5, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flickering rim highlights on outer flame edge
+  ctx.strokeStyle = "rgba(255,200,80,0.35)";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-6, -5);
+  ctx.quadraticCurveTo(-4, -9, -1, -11);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(4, -7);
+  ctx.quadraticCurveTo(6, -5, 7, -2);
+  ctx.stroke();
+
+  // Ember particles — more, varied sizes and colors, scattered widely
+  const embers: [number, number, number, string][] = [
+    [-4, -12, 1.2, "#FFD800"],
+    [3.5, -11, 1.0, "#FF8800"],
+    [0.5, -13.5, 0.8, "#FFCC00"],
+    [-2, -14, 0.6, "#FF6600"],
+    [5.5, -8, 0.6, "#FFAA00"],
+    [-6, -9, 0.5, "#FFB830"],
+    [1.5, -15, 0.5, "#FFE060"],
+    [-4.5, -14.5, 0.45, "#FF9940"],
+    [6, -5, 0.55, "#FFD040"],
+    [-7, -5.5, 0.45, "#FF7720"],
+    [4.5, -13, 0.4, "#FFE880"],
+    [-1, -16, 0.35, "#FFCC60"],
+  ];
+  for (const [ex, ey, er, ec] of embers) {
+    const eGlow = ctx.createRadialGradient(ex, ey, 0, ex, ey, er + 1);
+    eGlow.addColorStop(0, ec);
+    eGlow.addColorStop(1, ec.slice(0, 7) + "00");
+    ctx.fillStyle = eGlow;
+    ctx.beginPath();
+    ctx.arc(ex, ey, er + 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = ec;
+    ctx.beginPath();
+    ctx.arc(ex, ey, er, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Tiny spark streaks rising from the flame
+  ctx.strokeStyle = "rgba(255,200,60,0.4)";
+  ctx.lineWidth = 0.5;
+  const sparks: [number, number, number, number][] = [
+    [-3, -11, -3.5, -13], [2, -10, 2.5, -12.5],
+    [0, -12, -0.5, -14.5], [5, -7, 5.5, -9],
+    [-5.5, -8, -6, -10.5],
+  ];
+  for (const [x1, y1, x2, y2] of sparks) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -3121,7 +3121,71 @@ export function renderLibraryTower(
   ctx.closePath();
   ctx.fill();
 
-  // Left roof face with gradient (lit side — catches upper-left light)
+  // 4 isometric roof base corners (diamond layout)
+  const roofLeft = { x: sX - spireW, y: topY };
+  const roofRight = { x: sX + spireW, y: topY };
+  const roofFront = { x: sX, y: topY + spireD };
+  const roofBack = { x: sX, y: topY - spireD };
+
+  // Back-left roof face (drawn first — behind everything, darkest)
+  const blGrad = ctx.createLinearGradient(sX - spireW, topY, sX, apexY);
+  blGrad.addColorStop(0, st.dark);
+  blGrad.addColorStop(0.5, st.mortar);
+  blGrad.addColorStop(1, st.void);
+  ctx.fillStyle = blGrad;
+  ctx.beginPath();
+  ctx.moveTo(sX, apexY);
+  ctx.lineTo(roofBack.x, roofBack.y);
+  ctx.lineTo(roofLeft.x, roofLeft.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Back-right roof face (second — behind front faces, deep shadow)
+  const brGrad = ctx.createLinearGradient(sX + spireW, topY, sX, apexY);
+  brGrad.addColorStop(0, st.mortar);
+  brGrad.addColorStop(0.5, st.void);
+  brGrad.addColorStop(1, st.void);
+  ctx.fillStyle = brGrad;
+  ctx.beginPath();
+  ctx.moveTo(sX, apexY);
+  ctx.lineTo(roofRight.x, roofRight.y);
+  ctx.lineTo(roofBack.x, roofBack.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shingle courses on back-left face
+  const numCourses = 10;
+  ctx.lineWidth = 0.5 * zoom;
+  for (let c = 1; c < numCourses; c++) {
+    const t = c / numCourses;
+    const lEdgeX = sX - spireW * (1 - t);
+    const lEdgeY = topY + (apexY - topY) * t;
+    const bEdgeY = topY - spireD * (1 - t) + (apexY - topY) * t;
+    ctx.strokeStyle = c % 2 === 0
+      ? `rgba(${stTint.b}, 0.15)`
+      : `rgba(${stTint.a}, 0.07)`;
+    ctx.beginPath();
+    ctx.moveTo(lEdgeX, lEdgeY);
+    ctx.lineTo(sX, bEdgeY);
+    ctx.stroke();
+  }
+
+  // Shingle courses on back-right face
+  for (let c = 1; c < numCourses; c++) {
+    const t = c / numCourses;
+    const rEdgeX = sX + spireW * (1 - t);
+    const rEdgeY = topY + (apexY - topY) * t;
+    const bEdgeY = topY - spireD * (1 - t) + (apexY - topY) * t;
+    ctx.strokeStyle = c % 2 === 0
+      ? "rgba(5, 3, 0, 0.15)"
+      : "rgba(10, 5, 2, 0.06)";
+    ctx.beginPath();
+    ctx.moveTo(sX, bEdgeY);
+    ctx.lineTo(rEdgeX, rEdgeY);
+    ctx.stroke();
+  }
+
+  // Front-left roof face with gradient (lit side — catches upper-left light)
   const leftRoofGrad = ctx.createLinearGradient(
     sX - spireW, topY, sX, apexY,
   );
@@ -3131,12 +3195,12 @@ export function renderLibraryTower(
   ctx.fillStyle = leftRoofGrad;
   ctx.beginPath();
   ctx.moveTo(sX, apexY);
-  ctx.lineTo(sX - spireW, topY);
-  ctx.lineTo(sX, topY + spireD);
+  ctx.lineTo(roofLeft.x, roofLeft.y);
+  ctx.lineTo(roofFront.x, roofFront.y);
   ctx.closePath();
   ctx.fill();
 
-  // Right roof face with gradient (shadow side)
+  // Front-right roof face with gradient (shadow side)
   const rightRoofGrad = ctx.createLinearGradient(
     sX + spireW, topY, sX, apexY,
   );
@@ -3146,13 +3210,12 @@ export function renderLibraryTower(
   ctx.fillStyle = rightRoofGrad;
   ctx.beginPath();
   ctx.moveTo(sX, apexY);
-  ctx.lineTo(sX, topY + spireD);
-  ctx.lineTo(sX + spireW, topY);
+  ctx.lineTo(roofFront.x, roofFront.y);
+  ctx.lineTo(roofRight.x, roofRight.y);
   ctx.closePath();
   ctx.fill();
 
-  // Slate shingle course lines on left face
-  const numCourses = 10;
+  // Slate shingle course lines on front-left face
   ctx.lineWidth = 0.5 * zoom;
   for (let c = 1; c < numCourses; c++) {
     const t = c / numCourses;
@@ -3168,7 +3231,7 @@ export function renderLibraryTower(
     ctx.stroke();
   }
 
-  // Slate shingle course lines on right face
+  // Slate shingle course lines on front-right face
   for (let c = 1; c < numCourses; c++) {
     const t = c / numCourses;
     const rEdgeX = sX + spireW * (1 - t);
@@ -3183,7 +3246,7 @@ export function renderLibraryTower(
     ctx.stroke();
   }
 
-  // Vertical shingle stagger marks (brick-bond pattern)
+  // Vertical shingle stagger marks on front-left face (brick-bond pattern)
   ctx.lineWidth = 0.3 * zoom;
   ctx.strokeStyle = `rgba(${stTint.b}, 0.12)`;
   for (let c = 0; c < numCourses - 1; c++) {
@@ -3209,31 +3272,49 @@ export function renderLibraryTower(
   // Front ridge — raised lead cap with 3D depth (two-tone filled strip)
   {
     const ridgeHW = 1.8 * zoom;
-    // Left lit side of front ridge cap
     ctx.fillStyle = st.palest;
     ctx.beginPath();
-    ctx.moveTo(sX - ridgeHW, topY + spireD);
-    ctx.lineTo(sX, topY + spireD - ridgeHW * 0.3);
+    ctx.moveTo(sX - ridgeHW, roofFront.y);
+    ctx.lineTo(sX, roofFront.y - ridgeHW * 0.3);
     ctx.lineTo(sX, apexY);
     ctx.lineTo(sX - ridgeHW * 0.3, apexY + 1 * zoom);
     ctx.closePath();
     ctx.fill();
-    // Right shadow side of front ridge cap
     ctx.fillStyle = st.mid;
     ctx.beginPath();
-    ctx.moveTo(sX, topY + spireD - ridgeHW * 0.3);
-    ctx.lineTo(sX + ridgeHW, topY + spireD);
+    ctx.moveTo(sX, roofFront.y - ridgeHW * 0.3);
+    ctx.lineTo(sX + ridgeHW, roofFront.y);
     ctx.lineTo(sX + ridgeHW * 0.3, apexY + 1 * zoom);
     ctx.lineTo(sX, apexY);
     ctx.closePath();
     ctx.fill();
-    // Gold center highlight line
     ctx.strokeStyle = `rgba(${gd.rgba}, 0.2)`;
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(sX, topY + spireD - ridgeHW * 0.3);
+    ctx.moveTo(sX, roofFront.y - ridgeHW * 0.3);
     ctx.lineTo(sX, apexY);
     ctx.stroke();
+  }
+
+  // Back ridge — raised lead cap (darker, partially visible)
+  {
+    const ridgeHW = 1.2 * zoom;
+    ctx.fillStyle = st.mid;
+    ctx.beginPath();
+    ctx.moveTo(sX - ridgeHW, roofBack.y);
+    ctx.lineTo(sX, roofBack.y + ridgeHW * 0.3);
+    ctx.lineTo(sX, apexY);
+    ctx.lineTo(sX - ridgeHW * 0.3, apexY + 1 * zoom);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = st.dark;
+    ctx.beginPath();
+    ctx.moveTo(sX, roofBack.y + ridgeHW * 0.3);
+    ctx.lineTo(sX + ridgeHW, roofBack.y);
+    ctx.lineTo(sX + ridgeHW * 0.3, apexY + 1 * zoom);
+    ctx.lineTo(sX, apexY);
+    ctx.closePath();
+    ctx.fill();
   }
 
   // Left ridge — raised lead cap
@@ -3241,16 +3322,16 @@ export function renderLibraryTower(
     const ridgeHW = 1.2 * zoom;
     ctx.fillStyle = st.palest;
     ctx.beginPath();
-    ctx.moveTo(sX - spireW, topY);
-    ctx.lineTo(sX - spireW + ridgeHW * 0.5, topY - ridgeHW * 0.4);
+    ctx.moveTo(roofLeft.x, roofLeft.y);
+    ctx.lineTo(roofLeft.x + ridgeHW * 0.5, roofLeft.y - ridgeHW * 0.4);
     ctx.lineTo(sX + ridgeHW * 0.15, apexY);
     ctx.lineTo(sX, apexY);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = st.light;
     ctx.beginPath();
-    ctx.moveTo(sX - spireW, topY);
-    ctx.lineTo(sX - spireW - ridgeHW * 0.5, topY + ridgeHW * 0.4);
+    ctx.moveTo(roofLeft.x, roofLeft.y);
+    ctx.lineTo(roofLeft.x - ridgeHW * 0.5, roofLeft.y + ridgeHW * 0.4);
     ctx.lineTo(sX - ridgeHW * 0.15, apexY);
     ctx.lineTo(sX, apexY);
     ctx.closePath();
@@ -3262,136 +3343,165 @@ export function renderLibraryTower(
     const ridgeHW = 1 * zoom;
     ctx.fillStyle = st.base;
     ctx.beginPath();
-    ctx.moveTo(sX + spireW, topY);
-    ctx.lineTo(sX + spireW - ridgeHW * 0.5, topY - ridgeHW * 0.4);
+    ctx.moveTo(roofRight.x, roofRight.y);
+    ctx.lineTo(roofRight.x - ridgeHW * 0.5, roofRight.y - ridgeHW * 0.4);
     ctx.lineTo(sX - ridgeHW * 0.15, apexY);
     ctx.lineTo(sX, apexY);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = st.dark;
     ctx.beginPath();
-    ctx.moveTo(sX + spireW, topY);
-    ctx.lineTo(sX + spireW + ridgeHW * 0.5, topY + ridgeHW * 0.4);
+    ctx.moveTo(roofRight.x, roofRight.y);
+    ctx.lineTo(roofRight.x + ridgeHW * 0.5, roofRight.y + ridgeHW * 0.4);
     ctx.lineTo(sX + ridgeHW * 0.15, apexY);
     ctx.lineTo(sX, apexY);
     ctx.closePath();
     ctx.fill();
   }
 
-  // Ridge crockets — larger, properly placed decorative stone buds
+  // Ridge crockets — symmetric decorative stone buds along all 4 ridges
   for (let rc = 0; rc < 7; rc++) {
     const t = 0.08 + rc * 0.12;
-    // Front ridge crockets (most visible)
+    const crSize = (1.0 - t * 0.3) * zoom;
+    const crOff = 1.2 * zoom;
+
+    // Front ridge: runs from roofFront to apex along x=sX
     const frY = topY + spireD * (1 - t) + (apexY - topY) * t;
-    const crSize = (1.6 - t * 0.6) * zoom;
-    // Left bud (lit)
     ctx.fillStyle = st.palest;
     ctx.beginPath();
-    ctx.arc(sX - 1.8 * zoom, frY - 0.8 * zoom, crSize, 0, Math.PI * 2);
+    ctx.arc(sX - crOff, frY - crOff * 0.3, crSize, 0, Math.PI * 2);
     ctx.fill();
-    // Right bud (shadow)
     ctx.fillStyle = st.light;
     ctx.beginPath();
-    ctx.arc(sX + 1.8 * zoom, frY + 0.3 * zoom, crSize * 0.85, 0, Math.PI * 2);
+    ctx.arc(sX + crOff, frY + crOff * 0.3, crSize, 0, Math.PI * 2);
     ctx.fill();
-    // Center tip (gold accent at every other crocket)
     if (rc % 2 === 0) {
       ctx.fillStyle = `rgba(${gd.rgba}, 0.35)`;
       ctx.beginPath();
-      ctx.arc(sX, frY - 0.3 * zoom, crSize * 0.5, 0, Math.PI * 2);
+      ctx.arc(sX, frY, crSize * 0.45, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Left ridge crockets
+    // Back ridge: runs from roofBack to apex along x=sX
+    const brY = topY - spireD * (1 - t) + (apexY - topY) * t;
+    ctx.fillStyle = st.mid;
+    ctx.beginPath();
+    ctx.arc(sX - crOff * 0.7, brY + crOff * 0.2, crSize * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = st.dark;
+    ctx.beginPath();
+    ctx.arc(sX + crOff * 0.7, brY - crOff * 0.2, crSize * 0.55, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Left ridge: runs from roofLeft to apex
     const lrX = sX - spireW * (1 - t);
     const lrY = topY + (apexY - topY) * t;
+    // Ridge direction for perpendicular offset
+    const lDirX = sX - roofLeft.x;
+    const lDirY = apexY - roofLeft.y;
+    const lLen = Math.sqrt(lDirX * lDirX + lDirY * lDirY) || 1;
+    const lPerpX = -lDirY / lLen * crOff * 0.6;
+    const lPerpY = lDirX / lLen * crOff * 0.6;
     ctx.fillStyle = st.top;
     ctx.beginPath();
-    ctx.arc(lrX + 0.5 * zoom, lrY - 1 * zoom, crSize * 0.8, 0, Math.PI * 2);
+    ctx.arc(lrX + lPerpX, lrY + lPerpY, crSize * 0.7, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = st.pale;
     ctx.beginPath();
-    ctx.arc(lrX - 0.5 * zoom, lrY + 0.5 * zoom, crSize * 0.65, 0, Math.PI * 2);
+    ctx.arc(lrX - lPerpX, lrY - lPerpY, crSize * 0.7, 0, Math.PI * 2);
     ctx.fill();
 
-    // Right ridge crockets
+    // Right ridge: runs from roofRight to apex (mirror of left)
     const rrX = sX + spireW * (1 - t);
+    const rDirX = sX - roofRight.x;
+    const rDirY = apexY - roofRight.y;
+    const rLen = Math.sqrt(rDirX * rDirX + rDirY * rDirY) || 1;
+    const rPerpX = -rDirY / rLen * crOff * 0.6;
+    const rPerpY = rDirX / rLen * crOff * 0.6;
     ctx.fillStyle = st.base;
     ctx.beginPath();
-    ctx.arc(rrX - 0.5 * zoom, lrY - 0.8 * zoom, crSize * 0.7, 0, Math.PI * 2);
+    ctx.arc(rrX + rPerpX, lrY + rPerpY, crSize * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = st.mid;
+    ctx.beginPath();
+    ctx.arc(rrX - rPerpX, lrY - rPerpY, crSize * 0.7, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Dormer window (lucarne) on left face
+  // Dormer windows (lucarnes) — symmetric on left and right faces
   {
-    const dt = 0.22;
-    const dW = 5 * zoom;
-    const dH = 8 * zoom;
+    const dt = 0.25;
+    const dW = 4.5 * zoom;
+    const dH = 7 * zoom;
+
+    // Left face dormer
     const dlx = sX - spireW * (1 - dt);
     const dly = topY + (apexY - topY) * dt;
-    const dfy = topY + spireD * (1 - dt) + (apexY - topY) * dt;
-    const dcx = dlx + (sX - dlx) * 0.45;
-    const dcy = dly + (dfy - dly) * 0.45;
+    const dlfy = topY + spireD * (1 - dt) + (apexY - topY) * dt;
+    const dlcx = dlx + (sX - dlx) * 0.45;
+    const dlcy = dly + (dlfy - dly) * 0.45;
+    // Gable roof (triangle facing outward-left)
     ctx.fillStyle = st.dark;
     ctx.beginPath();
-    ctx.moveTo(dcx - dW * 0.1, dcy - dH * 0.85);
-    ctx.lineTo(dcx - dW, dcy);
-    ctx.lineTo(dcx + dW * 0.5, dcy + dW * 0.25);
+    ctx.moveTo(dlcx - dW * 0.1, dlcy - dH * 0.8);
+    ctx.lineTo(dlcx - dW, dlcy);
+    ctx.lineTo(dlcx + dW * 0.5, dlcy + dW * 0.25);
     ctx.closePath();
     ctx.fill();
+    // Wall face
     ctx.fillStyle = st.pale;
     ctx.beginPath();
-    ctx.moveTo(dcx - dW * 0.8, dcy + 0.5 * zoom);
-    ctx.lineTo(dcx + dW * 0.35, dcy + dW * 0.2);
-    ctx.lineTo(dcx + dW * 0.35, dcy + dH * 0.35);
-    ctx.lineTo(dcx - dW * 0.8, dcy + dH * 0.35);
+    ctx.moveTo(dlcx - dW * 0.75, dlcy + 0.5 * zoom);
+    ctx.lineTo(dlcx + dW * 0.35, dlcy + dW * 0.2);
+    ctx.lineTo(dlcx + dW * 0.35, dlcy + dH * 0.3);
+    ctx.lineTo(dlcx - dW * 0.75, dlcy + dH * 0.3);
     ctx.closePath();
     ctx.fill();
-    const dormerGlow = 0.35 + Math.sin(time * 2) * 0.15;
-    ctx.fillStyle = `rgba(${glowColor}, ${dormerGlow})`;
+    // Glowing window
+    const lGlow = 0.3 + Math.sin(time * 2) * 0.15;
+    ctx.fillStyle = `rgba(${glowColor}, ${lGlow})`;
     ctx.beginPath();
-    ctx.moveTo(dcx - dW * 0.5, dcy + dH * 0.3);
-    ctx.lineTo(dcx - dW * 0.5, dcy - dH * 0.12);
-    ctx.quadraticCurveTo(dcx - dW * 0.1, dcy - dH * 0.4, dcx + dW * 0.2, dcy - dH * 0.08);
-    ctx.lineTo(dcx + dW * 0.2, dcy + dH * 0.3);
+    ctx.moveTo(dlcx - dW * 0.45, dlcy + dH * 0.25);
+    ctx.lineTo(dlcx - dW * 0.45, dlcy - dH * 0.1);
+    ctx.quadraticCurveTo(dlcx - dW * 0.05, dlcy - dH * 0.35, dlcx + dW * 0.2, dlcy - dH * 0.06);
+    ctx.lineTo(dlcx + dW * 0.2, dlcy + dH * 0.25);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = st.dark;
-    ctx.lineWidth = 0.6 * zoom;
+    ctx.lineWidth = 0.5 * zoom;
     ctx.stroke();
-  }
 
-  // Dormer window (lucarne) on right face
-  {
-    const dt = 0.28;
-    const dW = 4.5 * zoom;
-    const dH = 7 * zoom;
+    // Right face dormer (mirrored)
     const drx = sX + spireW * (1 - dt);
     const dry = topY + (apexY - topY) * dt;
-    const dfy = topY + spireD * (1 - dt) + (apexY - topY) * dt;
-    const dcx = drx + (sX - drx) * 0.45;
-    const dcy = dry + (dfy - dry) * 0.45;
+    const drfy = topY + spireD * (1 - dt) + (apexY - topY) * dt;
+    const drcx = drx + (sX - drx) * 0.45;
+    const drcy = dry + (drfy - dry) * 0.45;
+    // Gable roof (triangle facing outward-right)
     ctx.fillStyle = st.void;
     ctx.beginPath();
-    ctx.moveTo(dcx + dW * 0.1, dcy - dH * 0.8);
-    ctx.lineTo(dcx - dW * 0.5, dcy + dW * 0.25);
-    ctx.lineTo(dcx + dW, dcy);
+    ctx.moveTo(drcx + dW * 0.1, drcy - dH * 0.8);
+    ctx.lineTo(drcx + dW, drcy);
+    ctx.lineTo(drcx - dW * 0.5, drcy + dW * 0.25);
     ctx.closePath();
     ctx.fill();
+    // Wall face
     ctx.fillStyle = st.base;
     ctx.beginPath();
-    ctx.moveTo(dcx - dW * 0.35, dcy + dW * 0.2);
-    ctx.lineTo(dcx + dW * 0.8, dcy + 0.5 * zoom);
-    ctx.lineTo(dcx + dW * 0.8, dcy + dH * 0.3);
-    ctx.lineTo(dcx - dW * 0.35, dcy + dH * 0.3);
+    ctx.moveTo(drcx + dW * 0.75, drcy + 0.5 * zoom);
+    ctx.lineTo(drcx - dW * 0.35, drcy + dW * 0.2);
+    ctx.lineTo(drcx - dW * 0.35, drcy + dH * 0.3);
+    ctx.lineTo(drcx + dW * 0.75, drcy + dH * 0.3);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(${glowColor}, ${0.25 + Math.sin(time * 2.3) * 0.12})`;
+    // Glowing window
+    const rGlow = 0.3 + Math.sin(time * 2) * 0.15;
+    ctx.fillStyle = `rgba(${glowColor}, ${rGlow})`;
     ctx.beginPath();
-    ctx.moveTo(dcx + dW * 0.5, dcy + dH * 0.25);
-    ctx.lineTo(dcx + dW * 0.5, dcy - dH * 0.08);
-    ctx.quadraticCurveTo(dcx + dW * 0.1, dcy - dH * 0.35, dcx - dW * 0.15, dcy - dH * 0.05);
-    ctx.lineTo(dcx - dW * 0.15, dcy + dH * 0.25);
+    ctx.moveTo(drcx + dW * 0.45, drcy + dH * 0.25);
+    ctx.lineTo(drcx + dW * 0.45, drcy - dH * 0.1);
+    ctx.quadraticCurveTo(drcx + dW * 0.05, drcy - dH * 0.35, drcx - dW * 0.2, drcy - dH * 0.06);
+    ctx.lineTo(drcx - dW * 0.2, drcy + dH * 0.25);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = st.mortar;

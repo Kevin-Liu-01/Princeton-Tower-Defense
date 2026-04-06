@@ -20,20 +20,28 @@ export function resizeCanvases(
   if (canvas && container) {
     const dpr = getRenderDpr();
     const rect = container.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    const newW = Math.round(rect.width * dpr);
+    const newH = Math.round(rect.height * dpr);
+
+    // Skip if dimensions already match — the inline resize inside
+    // renderScene may have already handled a DPR change this frame.
+    // Setting canvas.width clears the buffer, so avoid doing it twice.
+    if (canvas.width === newW && canvas.height === newH) return;
+
+    canvas.width = newW;
+    canvas.height = newH;
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
     if (bgCanvas) {
-      bgCanvas.width = (rect.width + BG_OVERSCAN_X) * dpr;
-      bgCanvas.height = (rect.height + BG_OVERSCAN_Y) * dpr;
+      bgCanvas.width = Math.round((rect.width + BG_OVERSCAN_X) * dpr);
+      bgCanvas.height = Math.round((rect.height + BG_OVERSCAN_Y) * dpr);
       bgCanvas.style.width = `${rect.width + BG_OVERSCAN_X}px`;
       bgCanvas.style.height = `${rect.height + BG_OVERSCAN_Y}px`;
     }
     const bdCanvas = backdropCanvasRef.current;
     if (bdCanvas) {
-      bdCanvas.width = (rect.width + BG_OVERSCAN_X) * dpr;
-      bdCanvas.height = (rect.height + BG_OVERSCAN_Y) * dpr;
+      bdCanvas.width = Math.round((rect.width + BG_OVERSCAN_X) * dpr);
+      bdCanvas.height = Math.round((rect.height + BG_OVERSCAN_Y) * dpr);
       bdCanvas.style.width = `${rect.width + BG_OVERSCAN_X}px`;
       bdCanvas.style.height = `${rect.height + BG_OVERSCAN_Y}px`;
     }

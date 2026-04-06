@@ -41,11 +41,17 @@ const CAMPAIGN_LEVEL_UNLOCKS: Record<string, string> = {
   crater: "throne",
 };
 
+const FINAL_CAMPAIGN_LEVEL = "throne";
+
+const ALL_CAMPAIGN_LEVELS: string[] = Object.values(REGION_CAMPAIGN_LEVELS).flat();
+
 export {
   REGION_CAMPAIGN_LEVELS,
   REGION_CHALLENGE_UNLOCKS,
   CHALLENGE_LEVEL_UNLOCKS,
   CAMPAIGN_LEVEL_UNLOCKS,
+  FINAL_CAMPAIGN_LEVEL,
+  ALL_CAMPAIGN_LEVELS,
 };
 
 export function isRegionCleared(

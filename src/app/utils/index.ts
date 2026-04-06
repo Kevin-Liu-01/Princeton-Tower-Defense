@@ -211,6 +211,12 @@ export function distance(a: Position, b: Position): number {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+export function distanceSq(a: Position, b: Position): number {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return dx * dx + dy * dy;
+}
+
 // Distance from point to line segment
 export function distanceToLineSegment(
   point: Position,

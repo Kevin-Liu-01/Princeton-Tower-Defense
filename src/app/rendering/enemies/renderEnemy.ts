@@ -20,7 +20,7 @@ import {
 } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile } from "./types";
-import { getPerformanceSettings, getScenePressure } from "../performance";
+import { getPerformanceSettings } from "../performance";
 import { hasEnemyAura, renderEnemyAura } from "./enemyAuras";
 import { getRegionalPalette } from "./regionColors";
 
@@ -338,15 +338,9 @@ export function renderEnemy(
   );
   ctx.fill();
 
-  const pressure = getScenePressure();
-  const lowDetailFx = enemyDensityHint > 90 || pressure.skipDecorativeEffects;
-  const minimalDetailFx =
-    enemyDensityHint > 160 || pressure.skipNonEssentialParticles;
   const flashProfile = getEnemyFlashProfile(enemy.type, eData.category);
   const damageFlashIntensity =
-    enemy.damageFlash > 0
-      ? Math.min(1, enemy.damageFlash / (minimalDetailFx ? 340 : 260))
-      : 0;
+    enemy.damageFlash > 0 ? Math.min(1, enemy.damageFlash / 260) : 0;
 
   const attackDuration = 450;
   const lastAttackTime = Math.max(
@@ -363,9 +357,7 @@ export function renderEnemy(
 
   const hurtScalePulse =
     damageFlashIntensity > 0
-      ? 1 -
-        Math.sin(damageFlashIntensity * Math.PI) *
-          (minimalDetailFx ? 0.015 : 0.03)
+      ? 1 - Math.sin(damageFlashIntensity * Math.PI) * 0.03
       : 1;
 
   // These enemy sprites are drawn facing right instead of the default left,
@@ -385,7 +377,7 @@ export function renderEnemy(
 
   const region = getMapTheme(selectedMap);
 
-  if (!minimalDetailFx && hasEnemyAura(eData.category)) {
+  if (hasEnemyAura(eData.category)) {
     renderEnemyAura(ctx, eData.category!, screenPos.x, drawY, size, now, zoom);
   }
 
@@ -405,7 +397,7 @@ export function renderEnemy(
   );
 
   if (damageFlashIntensity > 0) {
-    const hurtAlpha = damageFlashIntensity * (minimalDetailFx ? 0.16 : 0.24);
+    const hurtAlpha = damageFlashIntensity * 0.24;
     ctx.save();
     ctx.globalCompositeOperation = "screen";
     const hurtTint = flashProfile.innerColor.match(/\d+/g) || [
@@ -425,7 +417,7 @@ export function renderEnemy(
       Math.PI * 2,
     );
     ctx.fill();
-    if (!lowDetailFx) {
+    {
       const rimTint = flashProfile.rimColor.match(/\d+/g) || [
         "255",
         "185",
@@ -453,12 +445,7 @@ export function renderEnemy(
   const regenReady =
     !enemy.inCombat &&
     now - (enemy.lastDamageTaken ?? 0) > ENEMY_REGEN_DELAY_MS;
-  if (
-    !minimalDetailFx &&
-    hasRegenTrait &&
-    regenReady &&
-    enemy.hp < enemy.maxHp
-  ) {
+  if (hasRegenTrait && regenReady && enemy.hp < enemy.maxHp) {
     const regenPulse = 0.3 + 0.2 * Math.sin(time * 3);
     const regenGrad = ctx.createRadialGradient(
       screenPos.x,
@@ -493,7 +480,13 @@ export function renderEnemy(
   }
 
   // Attack animation effects
-  if (!minimalDetailFx && attackPhase > 0) {
+  if (attackPhase > 0) {
+    if (spriteReversed) {
+      ctx.save();
+      ctx.translate(screenPos.x, drawY);
+      ctx.scale(-1, 1);
+      ctx.translate(-screenPos.x, -drawY);
+    }
     renderEnemyAttackEffect(
       ctx,
       enemy.type,
@@ -507,12 +500,15 @@ export function renderEnemy(
       eData.color,
       enemy.pathIndex,
     );
+    if (spriteReversed) {
+      ctx.restore();
+    }
   }
 
   ctx.restore();
 
   // Ability activation flash
-  if (!minimalDetailFx && enemy.lastAbilityType && enemy.lastAbilityUse) {
+  if (enemy.lastAbilityType && enemy.lastAbilityUse) {
     const abilityPhase = getAbilityActivationPhase(enemy.lastAbilityUse, now);
     if (abilityPhase > 0) {
       renderAbilityActivation(
@@ -854,12 +850,7 @@ export function renderEnemy(
   }
 
   // Hex Ward aura effect
-  if (
-    !minimalDetailFx &&
-    enemy.hexWard &&
-    enemy.hexWardUntil &&
-    enemy.hexWardUntil > now
-  ) {
+  if (enemy.hexWard && enemy.hexWardUntil && enemy.hexWardUntil > now) {
     const cursePulse = 0.7 + Math.sin(time * 4.5) * 0.25;
     const remainingRatio = Math.max(
       0.35,
@@ -942,7 +933,7 @@ export function renderEnemy(
   }
 
   // Gold aura effect
-  if (!minimalDetailFx && enemy.goldAura) {
+  if (enemy.goldAura) {
     for (let i = 0; i < 5; i++) {
       const coinAngle = time * 2.5 + (i * Math.PI * 2) / 5;
       const coinOrbitX = Math.cos(coinAngle) * size * 1.0;
@@ -999,7 +990,7 @@ export function renderEnemy(
   }
 
   // Summoning channel ritual effect
-  if (!minimalDetailFx && enemy.summoning && enemy.summonStartTime) {
+  if (enemy.summoning && enemy.summonStartTime) {
     const channelElapsed = now - enemy.summonStartTime;
     const channelProgress = Math.min(
       1,

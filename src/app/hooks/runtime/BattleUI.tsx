@@ -27,7 +27,7 @@ import {
   vaultPosKey,
 } from "../../game/setup";
 
-import { TopHUD, CameraControls, HeroSpellBar, CameraModeOverlay } from "../../components/ui/hud";
+import { TopHUD, CameraControls, HeroSpellBar, CameraModeOverlay, FullscreenButton } from "../../components/ui/hud";
 import { DevMenu } from "../../components/ui/DevMenu";
 import { BuildMenu, TowerUpgradePanel } from "../../components/ui/upgrades";
 import { HeroHoverTooltip } from "../../components/ui/tooltips/HeroHoverTooltip";
@@ -50,8 +50,12 @@ import {
   HeroDetailTooltip,
 } from "../../components/ui/EnemyInspector";
 import { VictoryScreen } from "../../components/menus/VictoryScreen";
+import { CampaignVictoryScreen } from "../../components/menus/CampaignVictoryScreen";
 import { DefeatScreen } from "../../components/menus/DefeatScreen";
 import { TutorialOverlay } from "../../components/ui/TutorialOverlay";
+import { computeCumulativeCampaignStats } from "../../game/campaignStats";
+import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
+import type { GameProgress } from "../useLocalStorage";
 import type { EncounterQueueItem } from "../useTutorial";
 import type { GameEventLogAPI } from "../useGameEventLog";
 
@@ -223,6 +227,7 @@ export interface BattleUIProps {
   timeSpent: number;
   currentLevelStats: { bestTime?: number; bestHearts?: number; timesPlayed?: number };
   resetGame: () => void;
+  progress: GameProgress;
 
   // Tutorial
   handleTutorialComplete: () => void;
@@ -354,6 +359,7 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   timeSpent,
   currentLevelStats,
   resetGame,
+  progress,
   handleTutorialComplete,
   handleTutorialSkip,
   selectedHero,
@@ -457,11 +463,14 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                     setSelectedInspectHero(false);
                   }}
                 />
-                <CameraControls
-                  setCameraOffset={setCameraOffset}
-                  setCameraZoom={setCameraZoom}
-                  defaultOffset={selectedLevelData?.camera?.offset}
-                />
+                <div className="flex items-start gap-1.5">
+                  <FullscreenButton />
+                  <CameraControls
+                    setCameraOffset={setCameraOffset}
+                    setCameraZoom={setCameraZoom}
+                    defaultOffset={selectedLevelData?.camera?.offset}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -688,18 +697,28 @@ export const BattleUI: React.FC<BattleUIProps> = ({
         </div>
       )}
       {!cameraModeActive && isVictory && (
-        <VictoryScreen
-          starsEarned={starsEarned}
-          lives={lives}
-          timeSpent={timeSpent}
-          bestTime={currentLevelStats.bestTime}
-          bestHearts={currentLevelStats.bestHearts}
-          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
-          resetGame={resetGame}
-          totalWaves={totalWaves}
-          isFreeplay={isFreeplay}
-          overlay
-        />
+        selectedMap === FINAL_CAMPAIGN_LEVEL && !isFreeplay ? (
+          <CampaignVictoryScreen
+            cumulativeStats={computeCumulativeCampaignStats(progress)}
+            sessionStats={gameEventLog.stats}
+            finalLevelTime={timeSpent}
+            finalLevelLives={lives}
+            resetGame={resetGame}
+          />
+        ) : (
+          <VictoryScreen
+            starsEarned={starsEarned}
+            lives={lives}
+            timeSpent={timeSpent}
+            bestTime={currentLevelStats.bestTime}
+            bestHearts={currentLevelStats.bestHearts}
+            levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+            resetGame={resetGame}
+            totalWaves={totalWaves}
+            isFreeplay={isFreeplay}
+            overlay
+          />
+        )
       )}
       {!cameraModeActive && isDefeat && (
         <DefeatScreen

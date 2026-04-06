@@ -10,6 +10,7 @@ import {
   QUALITY_TRANSITION_MAX_COOLDOWN_MS,
   QUALITY_UPGRADE_TARGET,
   QUALITY_UPGRADE_THRESHOLD,
+  isMobileDevice,
 } from "./runtimeConfig";
 import { setPerformanceSettings } from "../../rendering/performance";
 import type { EntityCounts } from "./renderScene";
@@ -58,7 +59,7 @@ export function startGameLoop(
       : 0;
     const cappedDelta = Math.min(rawDelta, 100);
     const sampleMs = Math.max(8, cappedDelta || 16.7);
-    refs.rollingFrameMsRef.current = refs.rollingFrameMsRef.current * 0.97 + sampleMs * 0.03;
+    refs.rollingFrameMsRef.current = refs.rollingFrameMsRef.current * 0.9 + sampleMs * 0.1;
 
     if (timestamp - refs.qualityLastChangedAtRef.current > refs.qualityCooldownMsRef.current) {
       const avgFrameMs = refs.rollingFrameMsRef.current;
@@ -75,7 +76,7 @@ export function startGameLoop(
         const sustainedSince = refs.qualityThresholdSustainedSinceRef.current;
         if (sustainedSince === 0) {
           refs.qualityThresholdSustainedSinceRef.current = timestamp;
-        } else if (timestamp - sustainedSince > 2000) {
+        } else if (timestamp - sustainedSince > 750) {
           refs.renderQualityRef.current = nextQuality;
           refs.qualityLastChangedAtRef.current = timestamp;
           refs.qualityThresholdSustainedSinceRef.current = 0;
@@ -85,10 +86,12 @@ export function startGameLoop(
             QUALITY_TRANSITION_MAX_COOLDOWN_MS,
           );
 
-          const nextDprCap = QUALITY_DPR_CAP[nextQuality];
-          setRenderDprCap((prev) =>
-            Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
-          );
+          if (isMobileDevice()) {
+            const nextDprCap = QUALITY_DPR_CAP[nextQuality];
+            setRenderDprCap((prev) =>
+              Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
+            );
+          }
           setPerformanceSettings({
             shadowQualityMultiplier: QUALITY_SHADOW_MULTIPLIER[nextQuality],
           });

@@ -154,8 +154,8 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = Math.max(0, effect.intensity || 1);
-        const lowDetail = effectDensityHint > 80;
-        const minimalDetail = effectDensityHint > 140;
+        const lowDetail = false;
+        const minimalDetail = false;
 
         const BOLT_PALETTES: Record<
           LightningColorScheme,

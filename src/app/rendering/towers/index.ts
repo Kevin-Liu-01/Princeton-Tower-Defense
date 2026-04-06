@@ -46,6 +46,7 @@ const TOWER_SPRITE_SCALE: Record<TowerType, number> = {
 
 const TOWER_SPRITE_ROTATION: Partial<Record<TowerType, number>> = {
   cannon: Math.PI * 0.75,
+  mortar: -Math.PI * 0.5,
 };
 
 const TOWER_SPRITE_FOOT_MULT: Partial<Record<TowerType, number>> = {

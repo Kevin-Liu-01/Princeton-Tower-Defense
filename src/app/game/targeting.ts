@@ -1,5 +1,5 @@
 import type { Position, Enemy, Troop } from "../types";
-import { distance } from "../utils";
+import { distanceSq } from "../utils";
 
 /**
  * Returns enemies within `range` of `origin`, ordered by path progress (furthest first).
@@ -13,10 +13,11 @@ export function getPrioritizedEnemiesInRange(
   limit = Number.POSITIVE_INFINITY,
   predicate?: (enemy: Enemy) => boolean
 ): Enemy[] {
+  const rangeSq = range * range;
   const targets: Enemy[] = [];
   for (const enemy of enemiesByProgress) {
     if (predicate && !predicate(enemy)) continue;
-    if (distance(origin, getEnemyPos(enemy)) <= range) {
+    if (distanceSq(origin, getEnemyPos(enemy)) <= rangeSq) {
       targets.push(enemy);
       if (targets.length >= limit) break;
     }
@@ -35,12 +36,12 @@ export function getClosestEnemyInRange(
   predicate?: (enemy: Enemy) => boolean
 ): Enemy | null {
   let closestEnemy: Enemy | null = null;
-  let closestDist = Number.POSITIVE_INFINITY;
+  let closestDistSq = range * range;
   for (const enemy of enemies) {
     if (predicate && !predicate(enemy)) continue;
-    const dist = distance(origin, getEnemyPos(enemy));
-    if (dist <= range && dist < closestDist) {
-      closestDist = dist;
+    const dSq = distanceSq(origin, getEnemyPos(enemy));
+    if (dSq <= closestDistSq) {
+      closestDistSq = dSq;
       closestEnemy = enemy;
     }
   }
@@ -65,14 +66,14 @@ export function getChainTargets(
   for (let i = 1; i < maxChainCount; i++) {
     const lastPos = getEnemyPos(chain[chain.length - 1]);
     let bestEnemy: Enemy | null = null;
-    let bestDist = chainRange;
+    let bestDistSq = chainRange * chainRange;
 
     for (const enemy of allEnemies) {
       if (chained.has(enemy.id)) continue;
       if (enemy.dead || enemy.hp <= 0) continue;
-      const dist = distance(lastPos, getEnemyPos(enemy));
-      if (dist <= bestDist) {
-        bestDist = dist;
+      const dSq = distanceSq(lastPos, getEnemyPos(enemy));
+      if (dSq <= bestDistSq) {
+        bestDistSq = dSq;
         bestEnemy = enemy;
       }
     }
@@ -107,7 +108,7 @@ export function findNearestTroopInRange(
   const baseY = Math.floor(origin.y / cellSize);
   const cellRadius = Math.ceil(range / cellSize);
   let closest: Troop | null = null;
-  let closestDist = range;
+  let closestDistSq = range * range;
 
   for (let cy = baseY - cellRadius; cy <= baseY + cellRadius; cy++) {
     for (let cx = baseX - cellRadius; cx <= baseX + cellRadius; cx++) {
@@ -115,10 +116,10 @@ export function findNearestTroopInRange(
       if (!bucket) continue;
       for (const troop of bucket) {
         if (predicate && !predicate(troop)) continue;
-        const dist = distance(origin, troop.pos);
-        if (dist <= closestDist) {
+        const dSq = distanceSq(origin, troop.pos);
+        if (dSq <= closestDistSq) {
           closest = troop;
-          closestDist = dist;
+          closestDistSq = dSq;
         }
       }
     }
@@ -146,11 +147,11 @@ export function getVaultImpactPos(
   maxDistance: number
 ): VaultImpactResult | null {
   let closest: VaultImpactResult | null = null;
-  let closestDist = maxDistance;
+  let closestDistSq = maxDistance * maxDistance;
   for (const entry of vaultEntries) {
-    const distToVault = distance(enemyPos, entry.worldPos);
-    if (distToVault <= closestDist) {
-      closestDist = distToVault;
+    const dSq = distanceSq(enemyPos, entry.worldPos);
+    if (dSq <= closestDistSq) {
+      closestDistSq = dSq;
       closest = entry;
     }
   }

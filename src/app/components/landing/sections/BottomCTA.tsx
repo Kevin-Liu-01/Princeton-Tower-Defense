@@ -3,16 +3,17 @@ import React, { useState, useEffect, useMemo } from "react";
 import { LANDING_THEME, LANDING_LORE, LANDING_STATS } from "../landingConstants";
 import { LandingCTA } from "../LandingCTA";
 import { SectionFlourish } from "./LoadoutUI";
+import { MapSectionBg, MapCartouche } from "./mapElements";
 
 const T = LANDING_THEME;
 
-const CTA_EMBERS = Array.from({ length: 16 }, (_, i) => ({
+const CTA_EMBERS = Array.from({ length: 22 }, (_, i) => ({
   id: i,
-  x: 10 + ((i * 31 + 7) % 80),
+  x: 5 + ((i * 29 + 7) % 90),
   size: 2 + (i % 4) * 1.2,
   duration: 5 + (i % 5) * 2,
-  delay: (i * 1.1) % 10,
-  opacity: 0.2 + (i % 3) * 0.1,
+  delay: (i * 0.9) % 10,
+  opacity: 0.15 + (i % 3) * 0.1,
 }));
 
 function LoreQuote() {
@@ -29,20 +30,57 @@ function LoreQuote() {
   );
 }
 
+function MapLegendStats() {
+  const stats = LANDING_STATS;
+  return (
+    <div
+      className="relative px-6 sm:px-10 py-4 sm:py-5 rounded-sm"
+      style={{
+        background: `rgba(${T.bgRgb},0.6)`,
+        border: `1px solid rgba(${T.accentRgb},0.1)`,
+      }}
+    >
+      <div
+        className="absolute inset-[3px] rounded-[1px] pointer-events-none"
+        style={{ border: `0.5px solid rgba(${T.accentRgb},0.05)` }}
+      />
+      <div className="flex gap-5 sm:gap-8 flex-wrap justify-center">
+        {stats.map(({ icon: Icon, value, label }) => (
+          <div key={label} className="flex items-center gap-2">
+            <Icon size={14} style={{ color: `rgba(${T.accentRgb},0.3)` }} />
+            <span className="text-lg sm:text-xl font-black tabular-nums" style={{ color: T.accent }}>
+              {value}
+            </span>
+            <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: `rgba(${T.accentRgb},0.25)` }}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div
+        className="absolute -top-1 left-1/2 -translate-x-1/2 text-[7px] font-bold uppercase tracking-[0.3em] px-3 py-0.5"
+        style={{
+          color: `rgba(${T.accentRgb},0.25)`,
+          background: T.bg,
+          border: `0.5px solid rgba(${T.accentRgb},0.1)`,
+        }}
+      >
+        Legend
+      </div>
+    </div>
+  );
+}
+
 interface BottomCTAProps {
   onPlay: () => void;
   exiting: boolean;
 }
 
 export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
-  const stats = useMemo(() => LANDING_STATS, []);
-
   return (
     <section className="relative py-28 sm:py-36 px-6 flex flex-col items-center overflow-hidden">
-      {/* Multi-layer atmosphere */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: `radial-gradient(ellipse 60% 50% at 50% 60%, rgba(${T.accentDarkRgb},0.15) 0%, transparent 70%)`,
-      }} />
+      <MapSectionBg tint={`rgba(${T.accentDarkRgb},0.1)`} gridOpacity={0.018} />
+
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `radial-gradient(circle at 35% 45%, rgba(${T.princetonRgb},0.04), transparent 50%), radial-gradient(circle at 65% 55%, rgba(${T.accentRgb},0.04), transparent 50%)`,
       }} />
@@ -69,41 +107,31 @@ export function BottomCTA({ onPlay, exiting }: BottomCTAProps) {
       <div className="relative z-10 flex flex-col items-center gap-10">
         <SectionFlourish />
 
-        {/* Big motivational heading */}
-        <div className="text-center">
-          <h2
-            className="text-4xl sm:text-6xl lg:text-7xl font-black font-cinzel tracking-wider uppercase"
-            style={{
-              color: T.accent,
-              textShadow: `0 0 80px rgba(${T.accentRgb},0.35), 0 0 160px rgba(${T.accentRgb},0.1), 0 4px 16px rgba(0,0,0,0.7)`,
-            }}
-          >
-            Defend the Realm
-          </h2>
-          <p
-            className="text-xs sm:text-sm mt-4 tracking-wider uppercase font-medium"
-            style={{ color: `rgba(${T.accentRgb},0.3)` }}
-          >
-            Command heroes. Build towers. Master spells.
-          </p>
-        </div>
+        {/* Epic heading in cartouche */}
+        <MapCartouche>
+          <div className="text-center px-4 sm:px-8">
+            <h2
+              className="text-4xl sm:text-6xl lg:text-7xl font-black font-cinzel tracking-wider uppercase"
+              style={{
+                color: T.accent,
+                textShadow: `0 0 80px rgba(${T.accentRgb},0.35), 0 0 160px rgba(${T.accentRgb},0.1), 0 4px 16px rgba(0,0,0,0.7)`,
+              }}
+            >
+              Defend the Realm
+            </h2>
+            <p
+              className="text-xs sm:text-sm mt-4 tracking-wider uppercase font-medium italic"
+              style={{ color: `rgba(${T.accentRgb},0.3)` }}
+            >
+              Command heroes. Build towers. Master spells.
+            </p>
+          </div>
+        </MapCartouche>
 
-        {/* Stats strip */}
-        <div className="flex gap-4 sm:gap-8 flex-wrap justify-center">
-          {stats.map(({ icon: Icon, value, label }) => (
-            <div key={label} className="flex items-center gap-2">
-              <Icon size={16} style={{ color: `rgba(${T.accentRgb},0.35)` }} />
-              <span className="text-lg sm:text-xl font-black tabular-nums" style={{ color: T.accent }}>
-                {value}
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: `rgba(${T.accentRgb},0.3)` }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
+        {/* Map legend stats */}
+        <MapLegendStats />
 
-        <div className="w-48 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.2), transparent)` }} />
+        <div className="w-48 h-px" style={{ background: `linear-gradient(90deg, transparent, rgba(${T.accentRgb},0.15), transparent)` }} />
 
         <LoreQuote />
 

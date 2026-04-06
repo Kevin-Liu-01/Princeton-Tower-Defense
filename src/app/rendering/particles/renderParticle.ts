@@ -1,11 +1,6 @@
 import type { Particle, Position } from "../../types";
 import { worldToScreen } from "../../utils";
-import {
-  setShadowBlur,
-  clearShadow,
-  getPerformanceSettings,
-  getScenePressure,
-} from "../performance";
+import { drawGlowEffect } from "./particleGlowCache";
 
 // ============================================================================
 // PARTICLE RENDERER - Optimized to eliminate per-particle overhead
@@ -54,27 +49,23 @@ export function renderParticle(
   const prevAlpha = ctx.globalAlpha;
   ctx.globalAlpha = alpha;
 
-  const pressure = getScenePressure();
-  const simplified =
-    particleDensityHint > 160 ||
-    getPerformanceSettings().reducedParticles ||
-    pressure.skipDecorativeEffects;
+  const simplified = false;
 
   switch (particle.type) {
     case "fire":
       renderFire(ctx, screenPos, size, particle.color, simplified);
       break;
     case "ice":
-      renderIce(ctx, screenPos, size, zoom);
+      renderIce(ctx, screenPos, size, zoom, simplified);
       break;
     case "spark":
-      renderSpark(ctx, screenPos, size, zoom, particle.color);
+      renderSpark(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
     case "smoke":
       renderSmoke(ctx, screenPos, size, alpha);
       break;
     case "gold":
-      renderGold(ctx, screenPos, size, zoom, particle.color);
+      renderGold(ctx, screenPos, size, zoom, particle.color, simplified);
       break;
     case "magic":
       renderMagic(ctx, screenPos, size, particle.color, simplified);
@@ -159,7 +150,15 @@ function renderIce(
   pos: Position,
   size: number,
   zoom: number,
+  simplified: boolean,
 ): void {
+  if (simplified) {
+    ctx.fillStyle = "rgba(200, 235, 255, 0.7)";
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
   ctx.fillStyle = "rgba(200, 235, 255, 0.7)";
   ctx.strokeStyle = "rgba(160, 210, 255, 0.5)";
   ctx.lineWidth = 0.8 * zoom;
@@ -179,13 +178,13 @@ function renderSpark(
   size: number,
   zoom: number,
   color: string,
+  _simplified: boolean,
 ): void {
-  setShadowBlur(ctx, 4 * zoom, color);
+  drawGlowEffect(ctx, pos.x, pos.y, color, 4 * zoom);
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
   ctx.fill();
-  clearShadow(ctx);
 }
 
 function renderSmoke(
@@ -207,13 +206,13 @@ function renderGold(
   size: number,
   zoom: number,
   color: string,
+  _simplified: boolean,
 ): void {
-  setShadowBlur(ctx, 5 * zoom, "#c9a227");
+  drawGlowEffect(ctx, pos.x, pos.y, "#c9a227", 5 * zoom);
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
   ctx.fill();
-  clearShadow(ctx);
 }
 
 function renderMagic(
@@ -362,16 +361,8 @@ function renderHeal(
   size: number,
   zoom: number,
   color: string,
-  simplified: boolean,
+  _simplified: boolean,
 ): void {
-  if (simplified) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-
   const outerSize = size * 2;
   const grad = ctx.createRadialGradient(
     pos.x,
@@ -389,7 +380,7 @@ function renderHeal(
   ctx.arc(pos.x, pos.y, outerSize, 0, Math.PI * 2);
   ctx.fill();
 
-  setShadowBlur(ctx, 3 * zoom, "#88ffaa");
+  drawGlowEffect(ctx, pos.x, pos.y, "#88ffaa", 3 * zoom);
   ctx.fillStyle = "#ccffdd";
   const arm = size * 0.35;
   const thick = size * 0.18;
@@ -397,7 +388,6 @@ function renderHeal(
   ctx.rect(pos.x - thick, pos.y - arm, thick * 2, arm * 2);
   ctx.rect(pos.x - arm, pos.y - thick, arm * 2, thick * 2);
   ctx.fill();
-  clearShadow(ctx);
 }
 
 function renderSand(
@@ -464,17 +454,9 @@ function renderStorm(
   size: number,
   zoom: number,
   color: string,
-  simplified: boolean,
+  _simplified: boolean,
 ): void {
-  if (simplified) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-
-  setShadowBlur(ctx, 6 * zoom, "#88aaff");
+  drawGlowEffect(ctx, pos.x, pos.y, "#88aaff", 6 * zoom);
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y - size * 1.4);
@@ -482,7 +464,6 @@ function renderStorm(
   ctx.lineTo(pos.x - size * 0.2, pos.y + size * 0.1);
   ctx.lineTo(pos.x + size * 0.2, pos.y + size * 1.4);
   ctx.fill();
-  clearShadow(ctx);
 }
 
 function renderDefault(

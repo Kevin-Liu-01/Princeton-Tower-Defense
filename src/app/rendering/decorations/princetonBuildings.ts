@@ -3974,33 +3974,35 @@ export function renderTigerStadium(p: LandmarkParams): void {
       cx,
       cy + 4 * s,
       s,
-      42 * s,
-      16 * s,
-      36 * s,
-      0.3,
+      50 * s,
+      20 * s,
+      50 * s,
+      0.32,
       "20,0,0",
       z,
     );
   if (shadowOnly) return;
 
-  // Pre-compute corner positions for brazier tower foundations
-  const wallWs = 24 * s;
-  const wallHs = 14 * s;
+  const wallWs = 26 * s;
+  const wallHs = 18 * s;
   const iW = wallWs * ISO_COS;
   const iD = wallWs * ISO_SIN;
   const wt = by - wallHs;
+
   const cornerOffsets = [
     { x: bx - iW, y: wt + iD },
     { x: bx + iW, y: wt + iD },
     { x: bx, y: wt },
     { x: bx, y: wt + 2 * iD },
   ];
+
+  // Tower foundations at all four corners
   for (const co of cornerOffsets) {
     drawTowerFoundation(
       ctx,
       co.x,
-      co.y + 5 * s,
-      2.5,
+      co.y + wallHs,
+      5,
       s,
       pal.foundTop,
       pal.foundLeft,
@@ -4008,42 +4010,28 @@ export function renderTigerStadium(p: LandmarkParams): void {
     );
   }
 
-  // Back and left brazier towers — drawn BEFORE wall so they layer behind
+  // Back corner towers (top + left) — drawn BEFORE wall for z-order
   const backCorners = [cornerOffsets[2], cornerOffsets[0]];
   for (const co of backCorners) {
-    drawCylindricalTower(
-      ctx,
-      co.x,
-      co.y + 5 * s,
-      2.5,
-      5,
-      s,
-      "#3A2020",
-      "#2A1010",
-      "#140808",
-    );
-    drawCircularBattlements(ctx, co.x, co.y, 2.5, s, pal.cornice, 5);
-    const fireA =
-      0.35 + Math.sin(time * 2.5 + co.x * 0.01 + co.y * 0.02) * 0.15;
-    const fireGrad = ctx.createRadialGradient(
-      co.x,
-      co.y - 2 * s,
-      0,
-      co.x,
-      co.y,
-      3.5 * s,
-    );
-    fireGrad.addColorStop(0, `rgba(255,220,60,${fireA})`);
-    fireGrad.addColorStop(0.3, `rgba(255,100,10,${fireA * 0.7})`);
-    fireGrad.addColorStop(1, "rgba(255,40,0,0)");
-    ctx.fillStyle = fireGrad;
-    ctx.beginPath();
-    ctx.ellipse(co.x, co.y - 2 * s, 3 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
+    renderStadiumTower(ctx, co.x, co.y + wallHs, s, pal, time);
   }
 
-  drawBaseAO(ctx, bx, by, wallWs, wallWs, 0.2);
-  // Outer stadium wall
+  drawBaseAO(ctx, bx, by, wallWs, wallWs, 0.22);
+
+  // Stepped foundation platform
+  drawIsometricPrism(
+    ctx,
+    bx,
+    by + 3 * s,
+    (26 + 4) * s,
+    (26 + 4) * s,
+    3 * s,
+    pal.foundTop,
+    pal.foundLeft,
+    pal.foundRight,
+  );
+
+  // Main outer wall — taller and more imposing
   drawIsometricPrism(
     ctx,
     bx,
@@ -4055,32 +4043,128 @@ export function renderTigerStadium(p: LandmarkParams): void {
     pal.wallLeft,
     pal.wallRight,
   );
-  drawStoneBlockTexture(ctx, bx, by, wallWs, wallHs, s, "left", 91);
-  drawMortarLines(ctx, bx, by, wallWs, wallHs, 3, "rgba(0,0,0,0.05)", s);
 
-  // Tiered seating bowl
-  for (let tier = 0; tier < 3; tier++) {
-    const tierW = (24 - 3 - tier * 3) * s;
-    const tierH = (3 - tier) * s;
+  // Rich wall textures
+  drawStoneBlockTexture(ctx, bx, by, wallWs, wallHs, s, "left", 91);
+  drawStoneBlockTexture(ctx, bx, by, wallWs, wallHs, s, "right", 113);
+  drawBrickTexture(
+    ctx,
+    bx,
+    by,
+    wallWs,
+    wallHs,
+    s,
+    "#4A2020",
+    "rgba(0,0,0,0.06)",
+    "left",
+  );
+  drawBrickTexture(
+    ctx,
+    bx,
+    by,
+    wallWs,
+    wallHs,
+    s,
+    "#4A2020",
+    "rgba(0,0,0,0.06)",
+    "right",
+  );
+  drawMortarLines(ctx, bx, by, wallWs, wallHs, 5, "rgba(0,0,0,0.05)", s);
+
+  // String courses — horizontal bands for visual weight
+  drawStringCourse(ctx, bx, by, wallWs, wallWs, wallHs, s, 0.35, pal.cornice);
+  drawStringCourse(ctx, bx, by, wallWs, wallWs, wallHs, s, 0.7, pal.cornice);
+
+  // Colosseum-style arched openings on both faces
+  for (let i = 0; i < 5; i++) {
+    const u = 0.04 + i * 0.18;
+    const aX_l = bx - iW * (1 - u - 0.07);
+    const aY_l = by + iD * (1 + u + 0.07);
+    drawIsoFaceArch(
+      ctx,
+      aX_l,
+      aY_l,
+      2 * s,
+      4.5 * s,
+      s,
+      "left",
+      "#0A0404",
+      false,
+    );
+  }
+  for (let i = 0; i < 4; i++) {
+    const u = 0.06 + i * 0.2;
+    const aX_r = bx + iW * (1 - u - 0.08);
+    const aY_r = by + iD * (1 + u + 0.08);
+    drawIsoFaceArch(
+      ctx,
+      aX_r,
+      aY_r,
+      2 * s,
+      4.5 * s,
+      s,
+      "right",
+      "#0A0404",
+      false,
+    );
+  }
+
+  // Parapet crown atop the wall
+  drawIsometricPrism(
+    ctx,
+    bx,
+    wt,
+    (26 + 1) * s,
+    (26 + 1) * s,
+    2 * s,
+    pal.cornice,
+    pal.trimLight,
+    pal.trim,
+  );
+
+  // Tiered seating bowl — 5 tiers for depth
+  for (let tier = 0; tier < 5; tier++) {
+    const tierW = (26 - 2 - tier * 2.8) * s;
+    const tierH = (2.5 - tier * 0.2) * s;
+    const tierTop =
+      tier === 0
+        ? "#5A3838"
+        : tier === 1
+          ? "#4A2828"
+          : tier === 2
+            ? "#3A2020"
+            : tier === 3
+              ? "#2A1414"
+              : "#1A0A0A";
+    const tierLeft =
+      tier === 0
+        ? "#4A2828"
+        : tier === 1
+          ? "#3A1818"
+          : tier === 2
+            ? "#2A1010"
+            : tier === 3
+              ? "#1A0808"
+              : "#100404";
     drawIsometricPrism(
       ctx,
       bx,
-      wt + (tier + 1) * 3 * s,
+      wt + (tier + 1) * 2.8 * s,
       tierW,
       tierW,
       tierH,
-      pal.trimLight,
-      pal.trim,
+      tierTop,
+      tierLeft,
       pal.wallRight,
     );
   }
 
-  // Dark arena floor
-  const floorW = 12 * s;
+  // Arena floor — dark obsidian with lava veins
+  const floorW = 10 * s;
   const fiW = floorW * ISO_COS;
   const fiD = floorW * ISO_SIN;
-  const floorY = wt + 12 * s;
-  ctx.fillStyle = "#100404";
+  const floorY = wt + 16 * s;
+  ctx.fillStyle = "#0C0202";
   ctx.beginPath();
   ctx.moveTo(bx, floorY);
   ctx.lineTo(bx + fiW, floorY + fiD);
@@ -4089,9 +4173,47 @@ export function renderTigerStadium(p: LandmarkParams): void {
   ctx.closePath();
   ctx.fill();
 
+  // Glowing lava veins across the arena floor
+  const veinA = 0.25 + Math.sin(time * 1.2) * 0.1;
+  ctx.strokeStyle = `rgba(255,60,0,${veinA})`;
+  ctx.lineWidth = 0.4 * s;
+  const floorCy = floorY + fiD;
+  for (let v = 0; v < 3; v++) {
+    const angle = (v / 3) * Math.PI + time * 0.15;
+    const vr = fiW * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(bx, floorCy);
+    ctx.quadraticCurveTo(
+      bx + Math.cos(angle) * vr * 0.5,
+      floorCy + Math.sin(angle) * vr * 0.25,
+      bx + Math.cos(angle) * vr,
+      floorCy + Math.sin(angle) * vr * 0.5,
+    );
+    ctx.stroke();
+  }
+
+  // Central lava glow on arena floor
+  const centralA = 0.12 + Math.sin(time * 0.9) * 0.05;
+  const centralGlow = ctx.createRadialGradient(
+    bx,
+    floorCy,
+    0,
+    bx,
+    floorCy,
+    fiW * 0.7,
+  );
+  centralGlow.addColorStop(0, `rgba(255,80,0,${centralA})`);
+  centralGlow.addColorStop(0.5, `rgba(255,40,0,${centralA * 0.4})`);
+  centralGlow.addColorStop(1, "rgba(255,20,0,0)");
+  ctx.fillStyle = centralGlow;
+  ctx.beginPath();
+  ctx.ellipse(bx, floorCy, fiW * 0.7, fiD * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Face shading and weathering
   drawFaceShading(ctx, bx, by, wallWs, wallWs, wallHs, "left", 0.2);
   drawFaceShading(ctx, bx, by, wallWs, wallWs, wallHs, "right", 0.25);
-  drawQuoins(ctx, bx, by, wallWs, wallWs, wallHs, s, pal.trimLight, 3);
+  drawQuoins(ctx, bx, by, wallWs, wallWs, wallHs, s, pal.trimLight, 5);
   drawWeatherStains(
     ctx,
     bx,
@@ -4102,7 +4224,7 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "left",
     222,
-    4,
+    5,
     "rgba(180,30,0,0.05)",
   );
   drawWeatherStains(
@@ -4115,95 +4237,261 @@ export function renderTigerStadium(p: LandmarkParams): void {
     s,
     "right",
     233,
-    3,
+    4,
     "rgba(180,30,0,0.05)",
   );
-  drawFlagPole(
+
+  // Grand entrance archway on right face — deep recessed arch with voussoir trim
+  const gateX = bx + iW * 0.45;
+  const gateY = by + iD * 1.4;
+  drawIsoFaceArch(
     ctx,
-    bx + iW * 0.3,
-    wt - 2 * s,
-    8,
+    gateX,
+    gateY + s,
+    5 * s,
+    8 * s,
     s,
-    "#4A2828",
-    "#FF4400",
-    time,
+    "right",
+    pal.trimLight,
+    false,
   );
-  drawFlagPole(
+  drawIsoFaceArch(
     ctx,
-    bx - iW * 0.3,
-    wt + iD * 0.6 - 2 * s,
-    8,
+    gateX,
+    gateY,
+    4 * s,
+    7 * s,
     s,
-    "#4A2828",
-    "#FF6600",
-    time,
+    "right",
+    "#060202",
+    true,
   );
 
-  // Arched iron gates on left and right faces (isometric-aligned)
-  for (let face = 0; face < 2; face++) {
-    const dir = face === 0 ? -1 : 1;
-    const faceName: "left" | "right" = face === 0 ? "left" : "right";
-    const aX = bx + dir * iW * 0.45;
-    const aY = by + iD * (1.0 + dir * 0.4);
-    const aHw = 3.5 * s;
-    const aH = 6 * s;
-    drawIsoFaceArch(ctx, aX, aY, aHw, aH, s, faceName, "#060202", false);
-    const fdx = faceName === "left" ? ISO_COS : -ISO_COS;
-    const fdy = ISO_SIN;
-    ctx.strokeStyle = "#302020";
-    ctx.lineWidth = 0.3 * s;
-    for (let bar = 0; bar < 4; bar++) {
-      const t = (bar + 1) / 5;
-      const barOff = (t * 2 - 1) * aHw;
-      const barX = aX + barOff * fdx;
-      const barY = aY + barOff * fdy;
-      ctx.beginPath();
-      ctx.moveTo(barX, barY);
-      ctx.lineTo(barX, barY - aH * 0.8);
-      ctx.stroke();
+  // Iron portcullis bars in the gate
+  const gateFdx = -ISO_COS;
+  const gateFdy = ISO_SIN;
+  ctx.strokeStyle = "#3A1818";
+  ctx.lineWidth = 0.5 * s;
+  for (let bar = 0; bar < 5; bar++) {
+    const t = (bar + 1) / 6;
+    const barOff = (t * 2 - 1) * 4 * s;
+    const barX = gateX + barOff * gateFdx;
+    const barY = gateY + barOff * gateFdy;
+    ctx.beginPath();
+    ctx.moveTo(barX, barY);
+    ctx.lineTo(barX, barY - 6 * s);
+    ctx.stroke();
+  }
+  // Horizontal bar across the gate
+  ctx.lineWidth = 0.4 * s;
+  const hBarY = gateY - 3 * s;
+  ctx.beginPath();
+  ctx.moveTo(gateX + 4 * s * gateFdx, hBarY + 4 * s * gateFdy);
+  ctx.lineTo(gateX - 4 * s * gateFdx, hBarY - 4 * s * gateFdy);
+  ctx.stroke();
+
+  // Secondary gate on left face
+  const gateX2 = bx - iW * 0.45;
+  const gateY2 = by + iD * 0.6;
+  drawIsoFaceArch(
+    ctx,
+    gateX2,
+    gateY2,
+    3 * s,
+    5.5 * s,
+    s,
+    "left",
+    "#060202",
+    false,
+  );
+
+  // Pennant flags along the parapet — multiple along each face
+  const flagPositions = [
+    { t: 0.2, face: "left" as const },
+    { t: 0.5, face: "left" as const },
+    { t: 0.8, face: "left" as const },
+    { t: 0.25, face: "right" as const },
+    { t: 0.6, face: "right" as const },
+  ];
+  for (const fp of flagPositions) {
+    let fx: number, fy: number;
+    if (fp.face === "left") {
+      fx = bx - iW * (1 - fp.t);
+      fy = wt + iD * (1 + fp.t) - 2 * s;
+    } else {
+      fx = bx + iW * (1 - fp.t);
+      fy = wt + iD * (1 + fp.t) - 2 * s;
     }
+    drawFlagPole(ctx, fx, fy, 7, s, "#4A2020", "#FF4400", time + fp.t * 5);
   }
 
-  // Right and front brazier towers — drawn AFTER wall so they layer in front
+  // Tiger emblem on right wall — glowing isometric diamond shape
+  const embX = bx + iW * 0.42;
+  const embY = by + iD * 1.2 - wallHs * 0.5;
+  const embA = 0.35 + Math.sin(time * 1.0) * 0.12;
+  const embS = 3.5 * s;
+
+  // Diamond emblem outline
+  ctx.strokeStyle = `rgba(255,100,0,${embA + 0.15})`;
+  ctx.lineWidth = 0.6 * s;
+  ctx.beginPath();
+  ctx.moveTo(embX, embY - embS);
+  ctx.lineTo(embX - embS * ISO_COS, embY - embS * 0.3);
+  ctx.lineTo(embX, embY + embS * 0.4);
+  ctx.lineTo(embX + embS * ISO_COS, embY - embS * 0.3);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Filled inner emblem
+  ctx.fillStyle = `rgba(255,80,0,${embA * 0.5})`;
+  ctx.fill();
+
+  // Glowing "P" inside the diamond
+  ctx.fillStyle = `rgba(255,160,40,${embA + 0.1})`;
+  ctx.font = `bold ${3.2 * s}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("P", embX, embY - embS * 0.1);
+  ctx.textBaseline = "alphabetic";
+
+  // Second emblem on left wall
+  const emb2X = bx - iW * 0.42;
+  const emb2Y = by + iD * 0.8 - wallHs * 0.5;
+  ctx.strokeStyle = `rgba(255,100,0,${embA + 0.1})`;
+  ctx.lineWidth = 0.5 * s;
+  ctx.beginPath();
+  ctx.moveTo(emb2X, emb2Y - embS * 0.8);
+  ctx.lineTo(emb2X - embS * ISO_COS * 0.8, emb2Y - embS * 0.2);
+  ctx.lineTo(emb2X, emb2Y + embS * 0.35);
+  ctx.lineTo(emb2X + embS * ISO_COS * 0.8, emb2Y - embS * 0.2);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fillStyle = `rgba(255,80,0,${embA * 0.4})`;
+  ctx.fill();
+
+  // Front corner towers (right + bottom) — drawn AFTER wall for z-order
   const frontCorners = [cornerOffsets[1], cornerOffsets[3]];
   for (const co of frontCorners) {
-    drawCylindricalTower(
-      ctx,
-      co.x,
-      co.y + 5 * s,
-      2.5,
-      5,
-      s,
-      "#3A2020",
-      "#2A1010",
-      "#140808",
-    );
-    drawCircularBattlements(ctx, co.x, co.y, 2.5, s, pal.cornice, 5);
-    const fireA =
-      0.35 + Math.sin(time * 2.5 + co.x * 0.01 + co.y * 0.02) * 0.15;
-    const fireGrad = ctx.createRadialGradient(
-      co.x,
-      co.y - 2 * s,
-      0,
-      co.x,
-      co.y,
-      3.5 * s,
-    );
-    fireGrad.addColorStop(0, `rgba(255,220,60,${fireA})`);
-    fireGrad.addColorStop(0.3, `rgba(255,100,10,${fireA * 0.7})`);
-    fireGrad.addColorStop(1, "rgba(255,40,0,0)");
-    ctx.fillStyle = fireGrad;
-    ctx.beginPath();
-    ctx.ellipse(co.x, co.y - 2 * s, 3 * s, 2 * s, 0, 0, Math.PI * 2);
-    ctx.fill();
+    renderStadiumTower(ctx, co.x, co.y + wallHs, s, pal, time);
   }
 
-  // Tiger "P" emblem on right wall face
-  const embX = bx + iW * 0.38;
-  const embY = by + iD * 1.15 - wallHs * 0.5;
-  const embA = 0.4 + Math.sin(time * 1.2) * 0.15;
-  ctx.fillStyle = `rgba(255,80,0,${embA})`;
-  ctx.font = `bold ${4 * s}px serif`;
-  ctx.textAlign = "center";
-  ctx.fillText("P", embX, embY + 1.5 * s);
+  // Lava cracks radiating from the base
+  const crackA = 0.2 + Math.sin(time * 1.5) * 0.08;
+  ctx.strokeStyle = `rgba(255,60,0,${crackA})`;
+  ctx.lineWidth = 0.5 * s;
+  for (let i = 0; i < 5; i++) {
+    const ca = (i / 5) * Math.PI * 2 + 0.3;
+    const sx = bx + Math.cos(ca) * iW * 0.85;
+    const sy = by + Math.sin(ca) * iD * 1.3 + 3 * s;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(
+      sx + 3 * s * Math.cos(ca + 0.3),
+      sy + 1.5 * s * Math.sin(ca + 0.3),
+      sx + 6 * s * Math.cos(ca),
+      sy + 0.5 * s,
+    );
+    ctx.stroke();
+  }
+
+  // Volcanic haze glow around the base
+  const hazeA = 0.06 + Math.sin(time * 0.5) * 0.02;
+  const hazeGrad = ctx.createRadialGradient(
+    bx,
+    by + iD,
+    0,
+    bx,
+    by + iD,
+    iW * 1.3,
+  );
+  hazeGrad.addColorStop(0, `rgba(255,50,0,${hazeA})`);
+  hazeGrad.addColorStop(0.6, `rgba(200,30,0,${hazeA * 0.4})`);
+  hazeGrad.addColorStop(1, "rgba(150,20,0,0)");
+  ctx.fillStyle = hazeGrad;
+  ctx.beginPath();
+  ctx.ellipse(bx, by + iD, iW * 1.3, iD * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function renderStadiumTower(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  baseY: number,
+  s: number,
+  pal: BuildingPalette,
+  time: number,
+): void {
+  const tR = 4;
+  const tH = 26;
+
+  drawCylindricalTower(
+    ctx,
+    x,
+    baseY,
+    tR,
+    tH,
+    s,
+    "#3A2020",
+    "#2A1010",
+    "#140808",
+  );
+
+  // Round windows on the tower
+  const tWinAngles = frontAngles(3);
+  for (let row = 0; row < 3; row++) {
+    const winA = 0.15 + Math.sin(time * 1.4 + row * 1.8) * 0.08;
+    drawRoundWindowOnCylinder(
+      ctx,
+      x,
+      baseY,
+      tR,
+      tH,
+      tWinAngles[row],
+      0.2 + row * 0.24,
+      1.3,
+      s,
+      "#1A0808",
+      `rgba(255,60,0,${winA})`,
+    );
+  }
+
+  drawCircularBattlements(ctx, x, baseY - tH * s, tR, s, pal.cornice, 8);
+  drawConicalRoof(
+    ctx,
+    x,
+    baseY - tH * s - 1.5 * s,
+    tR + 0.5,
+    8,
+    s,
+    "#200C0C",
+    "#0E0404",
+  );
+
+  // Brazier fire atop the tower
+  const fireA =
+    0.4 + Math.sin(time * 2.5 + x * 0.01 + baseY * 0.02) * 0.15;
+  const fireGrad = ctx.createRadialGradient(
+    x,
+    baseY - tH * s - 10 * s,
+    0,
+    x,
+    baseY - tH * s - 8 * s,
+    4 * s,
+  );
+  fireGrad.addColorStop(0, `rgba(255,220,60,${fireA})`);
+  fireGrad.addColorStop(0.35, `rgba(255,120,20,${fireA * 0.7})`);
+  fireGrad.addColorStop(0.7, `rgba(255,50,0,${fireA * 0.3})`);
+  fireGrad.addColorStop(1, "rgba(255,30,0,0)");
+  ctx.fillStyle = fireGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    baseY - tH * s - 10 * s,
+    3.5 * s,
+    2.5 * s,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
 }

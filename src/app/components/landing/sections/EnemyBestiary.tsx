@@ -6,6 +6,7 @@ import { EnemySprite } from "../../../sprites/enemies";
 import { LANDING_THEME } from "../landingConstants";
 import { SpriteDisplay } from "./SpriteDisplay";
 import { SectionFlourish } from "./LoadoutUI";
+import { MapSectionHeader, MapSectionBg } from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -16,29 +17,33 @@ interface BestiaryEntry {
 }
 
 const ROW_A: BestiaryEntry[] = [
-  { type: "skeleton_knight", threat: "minion" },
-  { type: "phoenix", region: "volcanic", threat: "boss" },
-  { type: "frost_giant", region: "winter", threat: "elite" },
+  { type: "phoenix", region: "desert", threat: "boss" },
   { type: "djinn", region: "desert", threat: "elite" },
-  { type: "dark_knight", threat: "elite" },
+  { type: "skeleton_knight", threat: "minion" },
   { type: "swamp_hydra", region: "swamp", threat: "boss" },
-  { type: "ancient_ent", threat: "elite" },
+  { type: "ancient_ent", region: "grassland", threat: "elite" },
   { type: "lich", threat: "boss" },
   { type: "death_knight", threat: "boss" },
   { type: "basilisk", region: "desert", threat: "elite" },
+  { type: "dark_knight", threat: "elite" },
+  { type: "frost_colossus", region: "winter", threat: "boss" },
+  { type: "volcanic_drake", region: "volcanic", threat: "elite" },
+  { type: "skeleton_king", threat: "boss" },
 ];
 
 const ROW_B: BestiaryEntry[] = [
-  { type: "giant_eagle", threat: "elite" },
+  { type: "giant_eagle", region: "grassland", threat: "elite" },
   { type: "marsh_troll", region: "swamp", threat: "minion" },
-  { type: "manticore", threat: "elite" },
-  { type: "frost_elemental", region: "winter", threat: "minion" },
-  { type: "fire_elemental", region: "volcanic", threat: "minion" },
+  { type: "manticore", region: "desert", threat: "elite" },
+  { type: "wendigo", region: "winter", threat: "elite" },
+  { type: "lava_golem", region: "volcanic", threat: "elite" },
   { type: "warlock", threat: "elite" },
-  { type: "skeleton_knight", threat: "minion" },
-  { type: "phoenix", region: "volcanic", threat: "boss" },
-  { type: "dark_knight", threat: "elite" },
-  { type: "frost_giant", region: "winter", threat: "elite" },
+  { type: "doom_herald", threat: "boss" },
+  { type: "brood_mother", region: "grassland", threat: "boss" },
+  { type: "mammoth", region: "winter", threat: "boss" },
+  { type: "dire_bear", region: "grassland", threat: "elite" },
+  { type: "bone_mage", threat: "minion" },
+  { type: "hellhound", threat: "elite" },
 ];
 
 const THREAT = {
@@ -141,10 +146,7 @@ function MarqueeRow({ entries, reverse, speed }: { entries: BestiaryEntry[]; rev
 export function EnemyBestiary() {
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      {/* Ominous atmosphere */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(80,15,15,0.08), transparent 60%)",
-      }} />
+      <MapSectionBg tint="rgba(80,15,15,0.06)" gridOpacity={0.01} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none opacity-50" />
 
       {/* Fog effect at edges */}
@@ -157,24 +159,12 @@ export function EnemyBestiary() {
 
       <div className="relative z-10">
         <SectionFlourish />
-
-        <div className="text-center mt-8 sm:mt-12 mb-10 sm:mb-14 px-6">
-          <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: "rgba(239,68,68,0.35)" }}>
-            100+ Creatures of Darkness
-          </p>
-          <h2
-            className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
-            style={{
-              color: T.accent,
-              textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
-            }}
-          >
-            The Bestiary
-          </h2>
-          <p className="text-[10px] sm:text-xs mt-4 max-w-lg mx-auto leading-relaxed" style={{ color: `rgba(${T.accentRgb},0.22)` }}>
-            Undead horrors, elemental titans, and dark sorcerers — every region harbors creatures that grow more deadly as you advance
-          </p>
-        </div>
+        <MapSectionHeader
+          subtitle="100+ Creatures of Darkness"
+          title="The Bestiary"
+          subtitleColor="rgba(239,68,68,0.35)"
+          description="Undead horrors, elemental titans, and dark sorcerers — every region harbors creatures that grow more deadly as you advance"
+        />
 
         {/* Marquee rows */}
         <div className="relative space-y-5 sm:space-y-6">

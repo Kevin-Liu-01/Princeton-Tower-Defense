@@ -33,7 +33,6 @@ const SLASH_ATTACK_TYPES = new Set<EnemyType>([
   "shadow_knight",
   "berserker",
   "assassin",
-  "hexer",
   "thornwalker",
   "athlete",
   "fire_imp",
@@ -58,6 +57,7 @@ const MAGIC_ATTACK_TYPES = new Set<EnemyType>([
   "ash_moth",
   "djinn",
   "phoenix",
+  "hexer",
 ]);
 
 const BITE_ATTACK_TYPES = new Set<EnemyType>([

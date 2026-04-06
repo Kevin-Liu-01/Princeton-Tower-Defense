@@ -4,6 +4,7 @@ import Image from "next/image";
 import { LANDING_THEME, BATTLE_PREVIEW_SLIDES } from "../landingConstants";
 import { useCarousel } from "../CarouselControls";
 import { SectionFlourish } from "./LoadoutUI";
+import { MapSectionHeader, MapSectionBg, MapContentPanel } from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -57,28 +58,16 @@ export function BattlePreview() {
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
+      <MapSectionBg gridOpacity={0.012} />
       <div className="absolute inset-0 landing-texture-crosshatch pointer-events-none opacity-50" />
 
       <div className="relative z-10">
         <SectionFlourish />
-
-        <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
-          <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
-            25+ Hand-Crafted Maps
-          </p>
-          <h2
-            className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
-            style={{
-              color: T.accent,
-              textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
-            }}
-          >
-            The Campaign
-          </h2>
-        </div>
+        <MapSectionHeader subtitle="25+ Hand-Crafted Maps" title="The Campaign" />
 
         {/* Main preview image */}
         <div className="mx-3 sm:mx-6 lg:mx-12 mb-6">
+          <MapContentPanel>
           <div
             className="relative aspect-[16/9] rounded-2xl overflow-hidden"
             style={{
@@ -138,6 +127,7 @@ export function BattlePreview() {
               boxShadow: "inset 0 0 60px rgba(0,0,0,0.4)",
             }} />
           </div>
+          </MapContentPanel>
         </div>
 
         {/* Map filmstrip */}

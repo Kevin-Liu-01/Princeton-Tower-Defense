@@ -10,6 +10,13 @@ import { LANDING_THEME } from "../landingConstants";
 import { SpriteDisplay } from "./SpriteDisplay";
 import { useCarousel } from "../CarouselControls";
 import { SectionFlourish } from "./LoadoutUI";
+import {
+  MapSectionHeader,
+  MapSectionBg,
+  MapContentPanel,
+  BattleBackdrop,
+  StatBlock,
+} from "./mapElements";
 
 const T = LANDING_THEME;
 
@@ -22,6 +29,18 @@ const SPELL_ORDER: SpellType[] = [
   "fireball", "lightning", "freeze", "hex_ward", "payday", "reinforcements",
 ];
 
+const HERO_BG: Record<HeroType, string> = {
+  tiger: "/images/new/gameplay_grounds.png",
+  mathey: "/images/new/gameplay_winter.png",
+  captain: "/images/new/gameplay_volcano.png",
+  nassau: "/images/new/gameplay_volcano.png",
+  tenor: "/images/new/gameplay_swamp.png",
+  rocky: "/images/new/gameplay_grounds.png",
+  scott: "/images/new/gameplay_swamp.png",
+  engineer: "/images/new/gameplay_desert.png",
+  ivy: "/images/new/gameplay_grounds.png",
+};
+
 const HERO_BIG = 300;
 const HERO_BIG_SCALE = 2.5;
 const HERO_BIG_CANVAS = Math.round(HERO_BIG * HERO_BIG_SCALE);
@@ -33,21 +52,6 @@ const PORTRAIT_CANVAS = Math.round(PORTRAIT_SIZE * PORTRAIT_SCALE);
 const SPELL_VIS = 56;
 const SPELL_SCALE = 2.0;
 const SPELL_CANVAS = Math.round(SPELL_VIS * SPELL_SCALE);
-
-function HeroStatBlock({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div
-      className="flex flex-col items-center px-4 py-3 rounded-lg min-w-[68px]"
-      style={{
-        background: `${color}0c`,
-        border: `1px solid ${color}18`,
-      }}
-    >
-      <span className="text-base sm:text-lg font-black tabular-nums" style={{ color }}>{value}</span>
-      <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-[0.2em] mt-0.5" style={{ color: `${color}60` }}>{label}</span>
-    </div>
-  );
-}
 
 function HeroCard({
   type,
@@ -144,32 +148,12 @@ export function HeroRoster() {
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden">
-      {/* Section atmospheric background — hero colored */}
-      <div
-        className="absolute inset-0 transition-colors duration-700 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse 80% 60% at 50% 35%, ${data.color}08, transparent 60%)`,
-        }}
-      />
+      <MapSectionBg tint={`${data.color}06`} gridOpacity={0.01} />
       <div className="absolute inset-0 landing-texture-dots pointer-events-none" />
 
       <div className="relative z-10">
         <SectionFlourish />
-
-        <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
-          <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
-            9 Unique Champions
-          </p>
-          <h2
-            className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
-            style={{
-              color: T.accent,
-              textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
-            }}
-          >
-            Choose Your Hero
-          </h2>
-        </div>
+        <MapSectionHeader subtitle="9 Unique Champions" title="Choose Your Hero" />
 
         {/* Hero selector strip */}
         <div className="flex justify-center gap-2 sm:gap-3 px-4 mb-8 sm:mb-10 flex-wrap">
@@ -180,6 +164,7 @@ export function HeroRoster() {
 
         {/* Main hero showcase */}
         <div className="mx-3 sm:mx-6 lg:mx-12">
+          <MapContentPanel accent={data.color}>
           <div
             className="relative rounded-2xl overflow-hidden"
             style={{
@@ -190,12 +175,14 @@ export function HeroRoster() {
             }}
           >
             <div className="flex flex-col lg:flex-row">
-              {/* Left — dramatic hero display */}
+              {/* Left — dramatic hero display with battle backdrop */}
               <div
                 key={`hero-${hero}`}
-                className="relative flex items-center justify-center py-8 sm:py-12 lg:w-[45%]"
+                className="relative flex items-center justify-center py-8 sm:py-12 lg:w-[45%] min-h-[320px]"
                 style={{ animation: "landing-hero-reveal 0.5s ease-out" }}
               >
+                <BattleBackdrop src={HERO_BG[hero]} accent={data.color} intensity={0.4} />
+
                 {/* Radial glow behind sprite */}
                 <div
                   className="absolute top-1/2 left-1/2 w-[280px] h-[280px] -translate-x-1/2 -translate-y-1/2 animate-landing-glow-breathe pointer-events-none"
@@ -224,17 +211,32 @@ export function HeroRoster() {
                   ))}
                 </div>
 
+                {/* Outer ring */}
+                <div
+                  className="absolute top-1/2 left-1/2 w-[280px] h-[280px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ border: `0.5px dashed ${data.color}10` }}
+                />
+
                 <div className="relative z-10">
                   <SpriteDisplay visualSize={HERO_BIG} canvasScale={HERO_BIG_SCALE}>
                     <HeroSprite type={hero} size={HERO_BIG_CANVAS} animated />
                   </SpriteDisplay>
                 </div>
 
+                {/* Floor reflection */}
+                <div
+                  className="absolute bottom-6 left-1/2 -translate-x-1/2 w-44 h-10 rounded-full pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse, ${data.color}12, transparent 70%)`,
+                    filter: "blur(8px)",
+                  }}
+                />
+
                 {/* Nav arrows */}
-                <button onClick={prev} className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${data.color}25` }}>
+                <button onClick={prev} className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.6)", border: `1px solid ${data.color}30`, backdropFilter: "blur(8px)" }}>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke={data.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
-                <button onClick={next} className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${data.color}25` }}>
+                <button onClick={next} className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110 z-20" style={{ background: "rgba(0,0,0,0.6)", border: `1px solid ${data.color}30`, backdropFilter: "blur(8px)" }}>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke={data.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>
@@ -274,11 +276,11 @@ export function HeroRoster() {
                 </div>
 
                 {/* Stat blocks */}
-                <div className="flex gap-2 sm:gap-3 flex-wrap">
-                  <HeroStatBlock label="Health" value={`${data.hp}`} color={data.color} />
-                  <HeroStatBlock label="Attack" value={`${data.damage}`} color={data.color} />
-                  <HeroStatBlock label="Range" value={`${data.range}`} color={data.color} />
-                  <HeroStatBlock label="Speed" value={data.speed.toFixed(1)} color={data.color} />
+                <div className="flex gap-2.5 sm:gap-3 flex-wrap">
+                  <StatBlock label="Health" value={`${data.hp}`} accent={data.color} />
+                  <StatBlock label="Attack" value={`${data.damage}`} accent={data.color} />
+                  <StatBlock label="Range" value={`${data.range}`} accent={data.color} />
+                  <StatBlock label="Speed" value={data.speed.toFixed(1)} accent={data.color} />
                 </div>
 
                 {/* Ability callout */}
@@ -289,7 +291,7 @@ export function HeroRoster() {
                     border: `1px solid ${data.color}20`,
                   }}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${data.color}30, transparent)` }} />
+                  <div className="absolute top-0 left-2 right-2 h-px" style={{ background: `linear-gradient(90deg, transparent, ${data.color}35, transparent)` }} />
                   <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-1.5" style={{ color: `${data.color}50` }}>
                     Special Ability
                   </p>
@@ -308,25 +310,13 @@ export function HeroRoster() {
               </div>
             </div>
           </div>
+          </MapContentPanel>
         </div>
 
         {/* Spellbook section */}
         <div className="mt-24 sm:mt-28">
           <SectionFlourish />
-          <div className="text-center mt-8 sm:mt-12 mb-8 sm:mb-10 px-6">
-            <p className="text-[10px] sm:text-xs font-bold tracking-[0.35em] uppercase mb-3" style={{ color: `rgba(${T.accentRgb},0.35)` }}>
-              6 Arcane Abilities
-            </p>
-            <h2
-              className="text-3xl sm:text-5xl font-bold tracking-wide font-cinzel"
-              style={{
-                color: T.accent,
-                textShadow: `0 0 60px rgba(${T.accentRgb},0.3), 0 4px 12px rgba(0,0,0,0.6)`,
-              }}
-            >
-              The Spellbook
-            </h2>
-          </div>
+          <MapSectionHeader subtitle="6 Arcane Abilities" title="The Spellbook" />
 
           <div className="flex gap-4 sm:gap-6 justify-center flex-wrap px-4 sm:px-8">
             {SPELL_ORDER.map((type) => (

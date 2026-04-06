@@ -5,6 +5,7 @@ import { ChevronDown, ScrollText } from "lucide-react";
 import {
   LANDING_THEME,
   LANDING_TAGLINE,
+  LANDING_STATS,
   HERO_SLIDESHOW_IMAGES,
   CROSSFADE_INTERVAL_MS,
   CROSSFADE_TRANSITION_MS,
@@ -14,81 +15,138 @@ import {
 } from "../landingConstants";
 import { useCrossfade } from "../hooks/useCrossfade";
 import { LandingCTA } from "../LandingCTA";
+import {
+  MapGrid,
+  MapBorder,
+  MapMountains,
+  MapWaves,
+  MapTrails,
+  MapLocations,
+  MapCartouche,
+  ParchmentOverlay,
+  CompassDirections,
+} from "./mapElements";
 
 const T = LANDING_THEME;
-const RING_R = 64;
 
-// ─── Compass ring geometry (computed once at module level) ────────────────────
+// ─── Compass ring geometry ────────────────────────────────────────────────────
 
-function ringPoint(deg: number, r: number) {
+const COMPASS_R = 80;
+
+function ringPt(deg: number, r: number) {
   const rad = (deg * Math.PI) / 180;
-  return { x: +((Math.cos(rad) * r).toFixed(2)), y: +((Math.sin(rad) * r).toFixed(2)) };
+  return { x: +(Math.cos(rad) * r).toFixed(2), y: +(Math.sin(rad) * r).toFixed(2) };
 }
 
-const CARDINAL_MARKS = [0, 90, 180, 270].map((deg) => ({ deg, ...ringPoint(deg, RING_R) }));
-const INTERCARDINAL_MARKS = [45, 135, 225, 315].map((deg) => ({ deg, ...ringPoint(deg, RING_R) }));
-const TICK_MARKS = [30, 60, 120, 150, 210, 240, 300, 330].map((deg) => {
-  const inner = ringPoint(deg, RING_R - 2);
-  const outer = ringPoint(deg, RING_R + 2);
-  return { deg, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y };
+const CARDINALS = [0, 90, 180, 270].map((d) => ({ d, ...ringPt(d, COMPASS_R) }));
+const INTERCARDINALS = [45, 135, 225, 315].map((d) => ({ d, ...ringPt(d, COMPASS_R) }));
+const TICKS = Array.from({ length: 36 }, (_, i) => i * 10)
+  .filter((d) => d % 45 !== 0)
+  .map((d) => {
+    const inner = ringPt(d, COMPASS_R - 2);
+    const outer = ringPt(d, COMPASS_R + 2);
+    return { d, x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y };
+  });
+
+const STAR_RAYS = [0, 45, 90, 135, 180, 225, 270, 315].map((d) => {
+  const major = d % 90 === 0;
+  const inner = ringPt(d, 34);
+  const outer = ringPt(d, major ? 52 : 43);
+  return { d, ...inner, x2: outer.x, y2: outer.y, major };
 });
 
-// ─── Sub-components (module-level, not nested) ───────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-function HeroLogo() {
+function MapCompassRose() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: 152, height: 152 }}>
+    <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
+      {/* Ambient glow */}
       <div
-        className="absolute inset-[-28px] rounded-full"
+        className="absolute inset-[-36px] rounded-full"
         style={{
-          background: `radial-gradient(circle, rgba(${T.accentRgb},0.14) 0%, rgba(${T.accentDarkRgb},0.05) 50%, transparent 75%)`,
+          background: `radial-gradient(circle, rgba(${T.accentRgb},0.12) 0%, rgba(${T.accentDarkRgb},0.04) 50%, transparent 75%)`,
           animation: "landing-pulse 4s ease-in-out infinite",
         }}
       />
+
+      {/* Rotating compass ring */}
       <svg
-        className="absolute"
-        viewBox="-68 -68 136 136"
-        style={{
-          width: 152,
-          height: 152,
-          animation: "landing-spin 50s linear infinite",
-          filter: `drop-shadow(0 0 8px rgba(${T.accentRgb},0.25))`,
-        }}
+        className="absolute animate-map-compass-glow"
+        viewBox="-90 -90 180 180"
+        style={{ width: 200, height: 200, animation: "landing-spin 60s linear infinite" }}
         fill="none"
       >
-        <circle cx="0" cy="0" r={RING_R} stroke={T.accentDark} strokeWidth="1" opacity="0.35" />
-        <circle cx="0" cy="0" r={RING_R - 5} stroke={T.accentDark} strokeWidth="0.5" opacity="0.18" />
-        {CARDINAL_MARKS.map((m) => (
-          <g key={m.deg} transform={`translate(${m.x},${m.y}) rotate(${m.deg})`}>
-            <path d="M0 -5 L3 0 L0 5 L-3 0 Z" fill={T.accent} opacity="0.75" />
-            <path d="M0 -3 L1.8 0 L0 3 L-1.8 0 Z" fill={T.accentBright} opacity="0.55" />
+        {/* Concentric rings */}
+        <circle r={COMPASS_R} stroke={T.accentDark} strokeWidth="1.2" opacity="0.35" />
+        <circle r={COMPASS_R - 4} stroke={T.accentDark} strokeWidth="0.4" opacity="0.15" />
+        <circle r={COMPASS_R + 4} stroke={T.accentDark} strokeWidth="0.3" opacity="0.1" />
+        <circle r={56} stroke={T.accentDark} strokeWidth="0.5" opacity="0.12" strokeDasharray="3,5" />
+
+        {/* Star rays from center */}
+        {STAR_RAYS.map((r) => (
+          <line
+            key={`ray-${r.d}`}
+            x1={r.x}
+            y1={r.y}
+            x2={r.x2}
+            y2={r.y2}
+            stroke={T.accentDark}
+            strokeWidth={r.major ? "1" : "0.5"}
+            opacity={r.major ? "0.22" : "0.12"}
+          />
+        ))}
+
+        {/* Cardinal diamond markers */}
+        {CARDINALS.map((m) => (
+          <g key={m.d} transform={`translate(${m.x},${m.y}) rotate(${m.d})`}>
+            <path d="M0,-7 L4,0 L0,7 L-4,0 Z" fill={T.accent} opacity="0.8" />
+            <path d="M0,-4.5 L2.5,0 L0,4.5 L-2.5,0 Z" fill={T.accentBright} opacity="0.5" />
           </g>
         ))}
-        {INTERCARDINAL_MARKS.map((m) => (
-          <circle key={m.deg} cx={m.x} cy={m.y} r="1.8" fill={T.accent} opacity="0.5" />
+
+        {/* Intercardinal dots */}
+        {INTERCARDINALS.map((m) => (
+          <circle key={m.d} cx={m.x} cy={m.y} r="2.5" fill={T.accent} opacity="0.4" />
         ))}
-        {TICK_MARKS.map((m) => (
+
+        {/* Fine tick marks */}
+        {TICKS.map((m) => (
           <line
-            key={m.deg}
-            x1={m.x1} y1={m.y1} x2={m.x2} y2={m.y2}
-            stroke={T.accentDark} strokeWidth="0.7" opacity="0.3"
+            key={m.d}
+            x1={m.x1}
+            y1={m.y1}
+            x2={m.x2}
+            y2={m.y2}
+            stroke={T.accentDark}
+            strokeWidth="0.5"
+            opacity="0.22"
           />
         ))}
       </svg>
+
+      {/* Non-rotating direction labels */}
+      <div className="absolute" style={{ width: 200, height: 200 }}>
+        <CompassDirections />
+      </div>
+
+      {/* Center logo medallion (stationary) */}
       <div
-        className="relative w-[104px] h-[104px] flex items-center justify-center rounded-full"
+        className="relative w-[110px] h-[110px] flex items-center justify-center rounded-full"
         style={{
-          background: `linear-gradient(150deg, rgba(${T.accentDarkRgb},0.5) 0%, rgba(${T.bgRgb},0.9) 50%, rgba(${T.bgRgb},0.96) 100%)`,
+          background: `linear-gradient(150deg, rgba(${T.accentDarkRgb},0.5) 0%, rgba(${T.bgRgb},0.92) 50%, rgba(${T.bgRgb},0.96) 100%)`,
           border: `2.5px solid rgba(${T.accentDarkRgb},0.45)`,
-          boxShadow: `0 0 50px rgba(${T.accentRgb},0.22), 0 0 100px rgba(${T.accentRgb},0.06), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 6px rgba(0,0,0,0.3)`,
+          boxShadow: `0 0 50px rgba(${T.accentRgb},0.2), 0 0 100px rgba(${T.accentRgb},0.06), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 6px rgba(0,0,0,0.3)`,
         }}
       >
-        <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{ border: `1px solid rgba(${T.accentDarkRgb},0.15)` }} />
+        <div
+          className="absolute inset-[3px] rounded-full pointer-events-none"
+          style={{ border: `1px solid rgba(${T.accentDarkRgb},0.15)` }}
+        />
         <Image
           src="/images/logos/princeton-td-logo.svg"
           alt="Princeton Tower Defense"
-          width={62}
-          height={62}
+          width={65}
+          height={65}
           priority
           style={{ filter: `drop-shadow(0 0 14px rgba(${T.accentRgb},0.5))` }}
         />
@@ -116,30 +174,39 @@ function TitleOrnament({ flip }: { flip?: boolean }) {
   );
 }
 
-function Flourish() {
+function MapFlourish() {
   return (
-    <svg viewBox="0 0 320 20" fill="none" className="w-full" style={{ maxWidth: 320, height: 20 }}>
-      <path d="M0 10 L120 10" stroke={T.accentDark} strokeWidth="1" opacity="0.5" />
-      <path d="M15 7.5 L110 7.5" stroke={T.accentDark} strokeWidth="0.4" opacity="0.22" />
-      <path d="M200 10 L320 10" stroke={T.accentDark} strokeWidth="1" opacity="0.5" />
-      <path d="M210 7.5 L305 7.5" stroke={T.accentDark} strokeWidth="0.4" opacity="0.22" />
-      <path d="M160 2 L168 10 L160 18 L152 10 Z" fill={T.accent} opacity="0.22" stroke={T.accent} strokeWidth="1" />
-      <path d="M160 4.5 L165.5 10 L160 15.5 L154.5 10 Z" fill="none" stroke={T.accentBright} strokeWidth="0.7" opacity="0.55" />
-      <circle cx="160" cy="10" r="2.8" fill={T.accent} opacity="0.85" />
-      <circle cx="160" cy="10" r="1.4" fill={T.accentDark} opacity="0.5" />
-      <path d="M135 10 L138 7.5 L141 10 L138 12.5 Z" fill={T.accent} opacity="0.5" />
-      <path d="M179 10 L182 7.5 L185 10 L182 12.5 Z" fill={T.accent} opacity="0.5" />
-      <circle cx="45" cy="10" r="1.2" fill={T.accentBright} opacity="0.4" />
-      <circle cx="80" cy="10" r="0.9" fill={T.accentBright} opacity="0.3" />
-      <circle cx="240" cy="10" r="0.9" fill={T.accentBright} opacity="0.3" />
-      <circle cx="275" cy="10" r="1.2" fill={T.accentBright} opacity="0.4" />
+    <svg viewBox="0 0 360 24" fill="none" className="w-full" style={{ maxWidth: 360, height: 24 }}>
+      {/* Left arm */}
+      <path d="M0 12 L130 12" stroke={T.accentDark} strokeWidth="1" opacity="0.5" />
+      <path d="M20 9 L120 9" stroke={T.accentDark} strokeWidth="0.4" opacity="0.2" />
+      <path d="M10 15 L115 15" stroke={T.accentDark} strokeWidth="0.3" opacity="0.12" />
+      {/* Right arm */}
+      <path d="M230 12 L360 12" stroke={T.accentDark} strokeWidth="1" opacity="0.5" />
+      <path d="M240 9 L340 9" stroke={T.accentDark} strokeWidth="0.4" opacity="0.2" />
+      <path d="M245 15 L350 15" stroke={T.accentDark} strokeWidth="0.3" opacity="0.12" />
+      {/* Center diamond cluster */}
+      <path d="M180 2 L190 12 L180 22 L170 12 Z" fill={T.accent} opacity="0.2" stroke={T.accent} strokeWidth="0.8" />
+      <path d="M180 5 L186 12 L180 19 L174 12 Z" fill="none" stroke={T.accentBright} strokeWidth="0.6" opacity="0.5" />
+      <circle cx="180" cy="12" r="3" fill={T.accent} opacity="0.85" />
+      <circle cx="180" cy="12" r="1.5" fill={T.accentDark} opacity="0.5" />
+      {/* Flanking diamonds */}
+      <path d="M148 12 L151 9 L154 12 L151 15 Z" fill={T.accent} opacity="0.45" />
+      <path d="M206 12 L209 9 L212 12 L209 15 Z" fill={T.accent} opacity="0.45" />
+      {/* Accent dots */}
+      <circle cx="55" cy="12" r="1.3" fill={T.accentBright} opacity="0.35" />
+      <circle cx="90" cy="12" r="0.9" fill={T.accentBright} opacity="0.25" />
+      <circle cx="270" cy="12" r="0.9" fill={T.accentBright} opacity="0.25" />
+      <circle cx="305" cy="12" r="1.3" fill={T.accentBright} opacity="0.35" />
     </svg>
   );
 }
 
 function EmberParticle({ ember }: { ember: EmberConfig }) {
   const color = LANDING_EMBER_COLORS[ember.variant];
-  const hexOpacity = Math.round(ember.opacity * 0.4 * 255).toString(16).padStart(2, "0");
+  const hexOp = Math.round(ember.opacity * 0.4 * 255)
+    .toString(16)
+    .padStart(2, "0");
   return (
     <div
       className="absolute rounded-full"
@@ -148,7 +215,7 @@ function EmberParticle({ ember }: { ember: EmberConfig }) {
         bottom: "-4%",
         width: `${ember.size}px`,
         height: `${ember.size}px`,
-        background: `radial-gradient(circle, rgba(${T.accentRgb},${ember.opacity}) 0%, ${color}${hexOpacity} 60%, transparent 100%)`,
+        background: `radial-gradient(circle, rgba(${T.accentRgb},${ember.opacity}) 0%, ${color}${hexOp} 60%, transparent 100%)`,
         boxShadow: `0 0 ${(ember.size * 2).toFixed(1)}px rgba(${T.accentRgb},${(ember.opacity * 0.35).toFixed(3)})`,
         animation: `landing-ember${ember.variant} ${ember.duration}s ${ember.delay}s linear infinite`,
       }}
@@ -170,8 +237,6 @@ function HeroEmbers() {
     </div>
   );
 }
-
-// ─── Main Section ─────────────────────────────────────────────────────────────
 
 function CreditsButton({ onClick }: { onClick: () => void }) {
   return (
@@ -206,6 +271,38 @@ function CreditsButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+function MapLegend() {
+  return (
+    <div
+      className="hidden md:flex gap-3 sm:gap-5 flex-wrap justify-center px-4 py-2 rounded-sm"
+      style={{
+        background: `rgba(${T.bgRgb},0.5)`,
+        border: `0.5px solid rgba(${T.accentRgb},0.08)`,
+      }}
+    >
+      {LANDING_STATS.slice(0, 4).map(({ icon: Icon, value, label }) => (
+        <div key={label} className="flex items-center gap-1.5">
+          <Icon size={12} style={{ color: `rgba(${T.accentRgb},0.3)` }} />
+          <span
+            className="text-xs font-black tabular-nums"
+            style={{ color: T.accent }}
+          >
+            {value}
+          </span>
+          <span
+            className="text-[7px] font-bold uppercase tracking-[0.12em]"
+            style={{ color: `rgba(${T.accentRgb},0.25)` }}
+          >
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Hero Section ────────────────────────────────────────────────────────
+
 interface HeroSectionProps {
   onPlay: () => void;
   exiting: boolean;
@@ -214,10 +311,10 @@ interface HeroSectionProps {
 
 export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
   const activeSlide = useCrossfade(HERO_SLIDESHOW_IMAGES.length, CROSSFADE_INTERVAL_MS);
-  const [stages, setStages] = useState<boolean[]>(new Array(6).fill(false));
+  const [stages, setStages] = useState<boolean[]>(new Array(7).fill(false));
 
   useEffect(() => {
-    const delays = [100, 300, 550, 750, 1000, 1300];
+    const delays = [100, 300, 550, 750, 1000, 1300, 1600];
     const timers = delays.map((delay, i) =>
       setTimeout(() => {
         setStages((prev) => {
@@ -232,13 +329,14 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* Crossfading biome backgrounds */}
+      {/* ── Layer 1: Crossfading biome backgrounds (sepia-aged) ── */}
       {HERO_SLIDESHOW_IMAGES.map((src, i) => (
         <div
           key={src}
           className="absolute inset-[-6%]"
           style={{
-            opacity: i === activeSlide ? 0.35 : 0,
+            opacity: i === activeSlide ? 0.28 : 0,
+            filter: "sepia(0.25) saturate(0.75) brightness(0.85)",
             transition: `opacity ${CROSSFADE_TRANSITION_MS}ms ease-in-out`,
             animation: "landing-ken-burns 25s ease-in-out infinite alternate",
           }}
@@ -254,26 +352,47 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
         </div>
       ))}
 
-      {/* Gradient overlays */}
+      {/* ── Layer 2: Parchment texture ── */}
+      <ParchmentOverlay />
+
+      {/* ── Layer 3: Gradient overlays ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `linear-gradient(180deg, rgba(${T.bgRgb},0.82) 0%, rgba(${T.bgRgb},0.2) 30%, rgba(${T.bgRgb},0.2) 70%, rgba(${T.bgRgb},1) 100%)`,
+          background: `linear-gradient(180deg, rgba(${T.bgRgb},0.85) 0%, rgba(${T.bgRgb},0.18) 30%, rgba(${T.bgRgb},0.18) 70%, rgba(${T.bgRgb},1) 100%)`,
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse 80% 60% at 50% 45%, transparent 0%, rgba(${T.bgRgb},0.55) 60%, rgba(${T.bgRgb},0.95) 100%)`,
+          background: `radial-gradient(ellipse 80% 60% at 50% 45%, transparent 0%, rgba(${T.bgRgb},0.5) 60%, rgba(${T.bgRgb},0.95) 100%)`,
         }}
       />
 
-      {/* Ember particles */}
+      {/* ── Layer 4: Cartographic grid ── */}
+      <MapGrid />
+
+      {/* ── Layer 5: Terrain silhouettes ── */}
+      <div className="animate-map-terrain">
+        <MapMountains />
+      </div>
+      <MapWaves />
+
+      {/* ── Layer 6: Adventure trails ── */}
+      <MapTrails />
+
+      {/* ── Layer 7: Ornate border frame ── */}
+      <MapBorder />
+
+      {/* ── Layer 8: Location markers ── */}
+      <MapLocations />
+
+      {/* ── Layer 9: Ember particles ── */}
       <HeroEmbers />
 
-      {/* Content */}
+      {/* ── Layer 10: Content ── */}
       <div className="relative z-10 flex flex-col items-center gap-3 sm:gap-5 px-6 w-full max-w-lg">
-        {/* Logo */}
+        {/* Compass Rose + Logo */}
         <div
           style={{
             opacity: stages[0] ? 1 : 0,
@@ -281,40 +400,43 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             transition: "all 800ms ease-out",
           }}
         >
-          <HeroLogo />
+          <MapCompassRose />
         </div>
 
-        {/* Title */}
+        {/* Title in Cartouche */}
         <div
-          className="flex flex-col items-center gap-0.5"
           style={{
             opacity: stages[1] ? 1 : 0,
             transform: stages[1] ? "translateY(0)" : "translateY(18px)",
             transition: "all 700ms ease-out",
           }}
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <TitleOrnament />
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.22em] uppercase text-center"
-              style={{
-                color: T.accent,
-                textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 0 80px rgba(${T.accentRgb},0.12), 0 2px 4px rgba(0,0,0,0.6)`,
-              }}
-            >
-              Princeton
-            </h1>
-            <TitleOrnament flip />
-          </div>
-          <h2
-            className="text-lg sm:text-2xl md:text-3xl font-bold tracking-[0.35em] uppercase"
-            style={{
-              color: `rgba(${T.accentRgb},0.65)`,
-              textShadow: `0 0 20px rgba(${T.accentRgb},0.18), 0 2px 4px rgba(0,0,0,0.5)`,
-            }}
-          >
-            Tower Defense
-          </h2>
+          <MapCartouche>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <TitleOrnament />
+                <h1
+                  className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[0.22em] uppercase text-center"
+                  style={{
+                    color: T.accent,
+                    textShadow: `0 0 40px rgba(${T.accentRgb},0.4), 0 0 80px rgba(${T.accentRgb},0.12), 0 2px 4px rgba(0,0,0,0.6)`,
+                  }}
+                >
+                  Princeton
+                </h1>
+                <TitleOrnament flip />
+              </div>
+              <h2
+                className="text-lg sm:text-2xl md:text-3xl font-bold tracking-[0.35em] uppercase"
+                style={{
+                  color: `rgba(${T.accentRgb},0.65)`,
+                  textShadow: `0 0 20px rgba(${T.accentRgb},0.18), 0 2px 4px rgba(0,0,0,0.5)`,
+                }}
+              >
+                Tower Defense
+              </h2>
+            </div>
+          </MapCartouche>
         </div>
 
         {/* Flourish */}
@@ -326,14 +448,14 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
             transition: "all 700ms ease-out",
           }}
         >
-          <Flourish />
+          <MapFlourish />
         </div>
 
         {/* Tagline */}
         <p
-          className="text-xs sm:text-sm font-medium tracking-wider text-center"
+          className="text-xs sm:text-sm font-medium tracking-wider text-center italic"
           style={{
-            color: `rgba(${T.accentRgb},0.48)`,
+            color: `rgba(${T.accentRgb},0.42)`,
             opacity: stages[3] ? 1 : 0,
             transform: stages[3] ? "translateY(0)" : "translateY(12px)",
             transition: "all 700ms ease-out",
@@ -342,12 +464,23 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
           {LANDING_TAGLINE}
         </p>
 
-        {/* CTA */}
+        {/* Map Legend stats */}
         <div
-          className="mt-1 sm:mt-3 flex flex-col items-center gap-3"
           style={{
             opacity: stages[4] ? 1 : 0,
-            transform: stages[4] ? "translateY(0) scale(1)" : "translateY(16px) scale(0.94)",
+            transform: stages[4] ? "translateY(0)" : "translateY(10px)",
+            transition: "all 600ms ease-out",
+          }}
+        >
+          <MapLegend />
+        </div>
+
+        {/* CTA */}
+        <div
+          className="mt-1 sm:mt-2 flex flex-col items-center gap-3"
+          style={{
+            opacity: stages[5] ? 1 : 0,
+            transform: stages[5] ? "translateY(0) scale(1)" : "translateY(16px) scale(0.94)",
             transition: "all 700ms ease-out",
           }}
         >
@@ -360,7 +493,7 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       <div
         className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-landing-scroll-bounce"
         style={{
-          opacity: stages[5] ? 1 : 0,
+          opacity: stages[6] ? 1 : 0,
           transition: "opacity 1s ease-out",
         }}
       >

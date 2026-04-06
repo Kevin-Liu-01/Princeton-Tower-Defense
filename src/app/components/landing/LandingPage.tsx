@@ -4,6 +4,7 @@ import { useImagePreloader } from "../../hooks/useImagePreloader";
 import { LANDING_THEME, getLandingImageUrls } from "./landingConstants";
 import { SectionReveal } from "./SectionReveal";
 import { HeroSection } from "./sections/HeroSection";
+import { MapSectionDivider } from "./sections/mapElements";
 
 import { GameplayShowcase } from "./sections/GameplayShowcase";
 import { TowerShowcase } from "./sections/TowerShowcase";
@@ -61,21 +62,31 @@ export function LandingPage({ onPlay }: LandingPageProps) {
         <GameplayShowcase />
       </SectionReveal>
 
+      <MapSectionDivider />
+
       <SectionReveal scrollRoot={scrollRef}>
         <TowerShowcase />
       </SectionReveal>
+
+      <MapSectionDivider />
 
       <SectionReveal scrollRoot={scrollRef} delay={100}>
         <HeroRoster />
       </SectionReveal>
 
+      <MapSectionDivider />
+
       <SectionReveal scrollRoot={scrollRef}>
         <EnemyBestiary />
       </SectionReveal>
 
+      <MapSectionDivider />
+
       <SectionReveal scrollRoot={scrollRef} delay={100}>
         <BattlePreview />
       </SectionReveal>
+
+      <MapSectionDivider />
 
       <SectionReveal scrollRoot={scrollRef}>
         <BottomCTA onPlay={handlePlay} exiting={exiting} />

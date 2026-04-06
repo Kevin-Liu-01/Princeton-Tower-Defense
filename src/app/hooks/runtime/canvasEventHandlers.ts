@@ -1128,6 +1128,16 @@ export function handleMouseMoveImpl(
     p.setDraggingTower({ type: p.draggingTower.type, pos: { x, y } });
   }
 
+  // Suppress all world tooltips while placing a tower
+  if (p.draggingTower || p.buildingTower) {
+    p.setHoveredTower(null);
+    p.setHoveredHero(false);
+    p.setHoveredSpecialTower(null);
+    p.setHoveredLandmark(null);
+    p.setHoveredHazardType(null);
+    return;
+  }
+
   const mouseWorldPos = screenToWorld({ x, y }, width, height, dpr, p.cameraOffset, p.cameraZoom);
 
   // ========== HOVER DETECTION ==========

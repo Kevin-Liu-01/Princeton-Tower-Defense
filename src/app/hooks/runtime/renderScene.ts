@@ -139,6 +139,7 @@ import {
 import {
   updateScenePressure,
   interceptShadows,
+  refreshShadowCache,
   getPerformanceSettings,
 } from "../../rendering/performance";
 import { getGameSettings, getSettingsVersion } from "../useSettings";
@@ -428,10 +429,46 @@ export function renderScene(params: RenderSceneParams): void {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  refreshShadowCache();
   interceptShadows(ctx);
   const perfSettings = getPerformanceSettings();
   ctx.imageSmoothingEnabled = perfSettings.antiAliasing;
   const dpr = getRenderDpr();
+
+  // Inline DPR-triggered resize: when the adaptive quality system changes
+  // DPR, canvas buffer dimensions lag behind (useEffect hasn't fired yet).
+  // Resizing here keeps buffer + coordinate math atomic in the same rAF,
+  // preventing a one-frame camera jerk from width = oldBuffer / newDpr.
+  {
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight;
+    const expectedW = Math.round(cssW * dpr);
+    const expectedH = Math.round(cssH * dpr);
+    if (canvas.width !== expectedW || canvas.height !== expectedH) {
+      canvas.width = expectedW;
+      canvas.height = expectedH;
+      const bg = bgCanvasRef.current;
+      if (bg) {
+        bg.width = Math.round((cssW + BG_OVERSCAN_X) * dpr);
+        bg.height = Math.round((cssH + BG_OVERSCAN_Y) * dpr);
+        bg.style.width = `${cssW + BG_OVERSCAN_X}px`;
+        bg.style.height = `${cssH + BG_OVERSCAN_Y}px`;
+      }
+      const bd = backdropCanvasRef.current;
+      if (bd) {
+        bd.width = Math.round((cssW + BG_OVERSCAN_X) * dpr);
+        bd.height = Math.round((cssH + BG_OVERSCAN_Y) * dpr);
+        bd.style.width = `${cssW + BG_OVERSCAN_X}px`;
+        bd.style.height = `${cssH + BG_OVERSCAN_Y}px`;
+      }
+      cachedStaticMapLayerRef.current = null;
+      cachedStaticDecorationLayerRef.current = null;
+      cachedBackdropRef.current = null;
+      cachedFogLayerRef.current = null;
+      cachedAmbientLayerRef.current = null;
+    }
+  }
+
   const width = canvas.width / dpr;
   const height = canvas.height / dpr;
   const frameNowMs = performance.now();
@@ -2512,6 +2549,7 @@ export function renderScene(params: RenderSceneParams): void {
   }
   insertionSortBy(renderables, (r) => r.isoY);
   updateScenePressure(renderables.length);
+  refreshShadowCache();
 
   // =========================================================================
   // SPECIAL BUILDING RANGE RINGS (On Hover)
@@ -3620,11 +3658,11 @@ export function renderScene(params: RenderSceneParams): void {
   const ambientIntervalMs =
     ambientPressure > 240
       ? renderQuality === "high"
-        ? 64
-        : 88
+        ? 200
+        : 300
       : renderQuality === "low"
-        ? 52
-        : 40;
+        ? 150
+        : 100;
   const ambientLayerKey = [
     selectedMap,
     canvas.width,

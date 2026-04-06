@@ -10,3 +10,4 @@ export {
   enforceParticleCap,
   type PooledParticle,
 } from "./particlePool";
+export { clearParticleGlowCache } from "./particleGlowCache";

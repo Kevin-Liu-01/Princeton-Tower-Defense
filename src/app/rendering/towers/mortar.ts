@@ -10,7 +10,7 @@ import {
   type IsoOffFn,
   type Pt,
 } from "../helpers";
-import { drawIsometricPrism } from "./towerHelpers";
+import { drawIsometricPrism, drawIsoSandbag } from "./towerHelpers";
 import { TOWER_STATS } from "../../constants/towerStats";
 
 const MORTAR_BASE_ATTACK_SPEED = TOWER_STATS.mortar.baseStats.attackSpeed;
@@ -109,6 +109,45 @@ export function renderMortarTower(
       ctx.ellipse(shX, shY - 2 * zoom, shW * 1.4, shH * 1.4, 0, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+
+  // ========== GROUND RUBBLE RING & SCORCH MARKS ==========
+  {
+    const rubbleR = (baseW + 16) * 0.5 * zoom;
+    const rubbleY = screenPos.y + 8 * zoom;
+    // Scattered debris particles around base perimeter
+    const rubbleSeed = 47;
+    ctx.fillStyle = "rgba(60,55,45,0.14)";
+    for (let ri = 0; ri < 12; ri++) {
+      const angle = (ri / 12) * Math.PI * 2 + ((rubbleSeed * ri * 7) % 100) * 0.006;
+      const dist = rubbleR * (0.85 + ((rubbleSeed * ri * 13) % 100) * 0.003);
+      const rx = screenPos.x + Math.cos(angle) * dist;
+      const ry = rubbleY + Math.sin(angle) * dist * ISO_Y_RATIO;
+      const rSize = (0.6 + ((rubbleSeed * ri * 11) % 100) * 0.01) * zoom;
+      ctx.beginPath();
+      ctx.arc(rx, ry, rSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Dirt/stain patches (larger, fainter)
+    ctx.fillStyle = "rgba(50,42,30,0.06)";
+    for (let di = 0; di < 4; di++) {
+      const da = Math.PI * 0.5 * di + 0.3;
+      const dd = rubbleR * 0.7;
+      const dx = screenPos.x + Math.cos(da) * dd;
+      const dy = rubbleY + Math.sin(da) * dd * ISO_Y_RATIO;
+      ctx.beginPath();
+      ctx.ellipse(dx, dy, 3.5 * zoom, 1.8 * zoom, da * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Firing scorch marks (darkened blast residue near base)
+    ctx.fillStyle = "rgba(20,15,10,0.08)";
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, rubbleY - 2 * zoom, rubbleR * 0.5, rubbleR * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(30,20,10,0.05)";
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x + 3 * zoom, rubbleY - 1 * zoom, rubbleR * 0.35, rubbleR * 0.15, 0.4, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // ========== HEX-PRISM FOUNDATION WALL (sandbag replacement) ==========
@@ -491,16 +530,115 @@ export function renderMortarTower(
       ctx.stroke();
     }
   }
-  const wallCapColor =
-    level >= 3 ? "#525060" : level >= 2 ? "#505868" : "#58606a";
-  drawHexCap(
-    ctx,
-    wallTop,
-    wallVerts,
-    wallCapColor,
-    "rgba(0,0,0,0.16)",
-    0.7 * zoom,
-  );
+  // Foundation wall cap — gradient-shaded isometric top with sector panels
+  {
+    const wCapR = level >= 3 ? 82 : level >= 2 ? 80 : 88;
+    const wCapG = level >= 3 ? 80 : level >= 2 ? 88 : 96;
+    const wCapB = level >= 3 ? 96 : level >= 2 ? 104 : 106;
+    // Base fill with radial gradient for dome-like depth
+    const wcGrad = ctx.createRadialGradient(
+      wallTop.x - wallR * 0.15, wallTop.y - wallR * 0.08,
+      wallR * 0.1,
+      wallTop.x, wallTop.y,
+      wallR * 0.95,
+    );
+    wcGrad.addColorStop(0, `rgb(${wCapR + 22},${wCapG + 20},${wCapB + 16})`);
+    wcGrad.addColorStop(0.45, `rgb(${wCapR},${wCapG},${wCapB})`);
+    wcGrad.addColorStop(1, `rgb(${Math.max(0, wCapR - 18)},${Math.max(0, wCapG - 16)},${Math.max(0, wCapB - 12)})`);
+    ctx.fillStyle = wcGrad;
+    ctx.beginPath();
+    ctx.moveTo(wallTop.x + wallVerts[0].x, wallTop.y + wallVerts[0].y);
+    for (let i = 1; i < hexSides; i++)
+      ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    // Edge outline
+    ctx.strokeStyle = "rgba(0,0,0,0.16)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.stroke();
+    // Sector panel lines (center to each vertex)
+    ctx.strokeStyle = `rgba(0,0,0,0.06)`;
+    ctx.lineWidth = 0.4 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x, wallTop.y);
+      ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+      ctx.stroke();
+    }
+    // Lit-edge highlights (top-left edges brighter)
+    for (let i = 0; i < hexSides; i++) {
+      const ni = (i + 1) % hexSides;
+      const n = wallNormals[i];
+      if (n < 0.2) continue;
+      ctx.strokeStyle = `rgba(200,210,220,${(n - 0.2) * 0.12})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+      ctx.lineTo(wallTop.x + wallVerts[ni].x, wallTop.y + wallVerts[ni].y);
+      ctx.stroke();
+    }
+  }
+
+  // ========== FOUNDATION BASE MOLDING (thicker band at wall bottom) ==========
+  {
+    const moldH = 1.5 * zoom;
+    const moldScale = 1.04;
+    for (const i of wallSorted) {
+      const ni = (i + 1) % hexSides;
+      const n = wallNormals[i];
+      if (n < -0.5) continue;
+      const bright = Math.max(0, Math.min(1, 0.05 + (n + 1) * 0.4));
+      const mr = Math.floor(30 + bright * 40);
+      const mg = Math.floor(32 + bright * 38);
+      const mb = Math.floor(38 + bright * 34);
+      ctx.fillStyle = `rgb(${mr},${mg},${mb})`;
+      ctx.beginPath();
+      ctx.moveTo(wallBot.x + wallVerts[i].x * moldScale, wallBot.y + wallVerts[i].y * moldScale);
+      ctx.lineTo(wallBot.x + wallVerts[ni].x * moldScale, wallBot.y + wallVerts[ni].y * moldScale);
+      ctx.lineTo(wallBot.x + wallVerts[ni].x * moldScale, wallBot.y + wallVerts[ni].y * moldScale - moldH);
+      ctx.lineTo(wallBot.x + wallVerts[i].x * moldScale, wallBot.y + wallVerts[i].y * moldScale - moldH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.06})`;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+    }
+  }
+
+  // ========== CORNER REINFORCEMENT PLATES at wall vertices ==========
+  {
+    const plateSize = 2 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      if (wallNormals[i] < -0.3 && wallNormals[(i + hexSides - 1) % hexSides] < -0.3) continue;
+      const vx = wallBot.x + wallVerts[i].x;
+      const vy = wallBot.y + wallVerts[i].y;
+      const vtx = wallTop.x + wallVerts[i].x;
+      const vty = wallTop.y + wallVerts[i].y;
+      // Bottom plate (small triangle bracket)
+      ctx.fillStyle = level >= 3 ? "rgba(160,130,40,0.3)" : level >= 2 ? "rgba(100,100,110,0.3)" : "rgba(80,75,60,0.25)";
+      ctx.beginPath();
+      ctx.moveTo(vx, vy);
+      ctx.lineTo(vx - plateSize * 0.5, vy - plateSize);
+      ctx.lineTo(vx + plateSize * 0.5, vy - plateSize);
+      ctx.closePath();
+      ctx.fill();
+      // Top plate
+      ctx.beginPath();
+      ctx.moveTo(vtx, vty);
+      ctx.lineTo(vtx - plateSize * 0.5, vty + plateSize);
+      ctx.lineTo(vtx + plateSize * 0.5, vty + plateSize);
+      ctx.closePath();
+      ctx.fill();
+      // Bolt at each plate center
+      ctx.fillStyle = level >= 3 ? "rgba(201,162,39,0.5)" : "rgba(120,120,130,0.4)";
+      ctx.beginPath();
+      ctx.arc(vx, vy - plateSize * 0.6, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(vtx, vty + plateSize * 0.6, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
   // ========== HEX-PRISM CONCRETE PLATFORM ==========
   const platR = (baseW + 4) * 0.48 * zoom;
@@ -546,14 +684,123 @@ export function renderMortarTower(
     ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
-  drawHexCap(
-    ctx,
-    platTop,
-    platVerts,
-    "#484858",
-    "rgba(0,0,0,0.14)",
-    0.6 * zoom,
-  );
+  // Platform cap — gradient-shaded isometric top with beveled edge
+  {
+    const pcGrad = ctx.createRadialGradient(
+      platTop.x - platR * 0.15, platTop.y - platR * 0.08,
+      platR * 0.1,
+      platTop.x, platTop.y,
+      platR * 0.95,
+    );
+    pcGrad.addColorStop(0, "#606070");
+    pcGrad.addColorStop(0.4, "#484858");
+    pcGrad.addColorStop(1, "#343440");
+    ctx.fillStyle = pcGrad;
+    ctx.beginPath();
+    ctx.moveTo(platTop.x + platVerts[0].x, platTop.y + platVerts[0].y);
+    for (let i = 1; i < hexSides; i++)
+      ctx.lineTo(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.14)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    // Inner bevel ring (inset highlight for raised-edge feel)
+    ctx.strokeStyle = "rgba(120,120,140,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    for (let i = 0; i <= hexSides; i++) {
+      const idx = i % hexSides;
+      const px = platTop.x + platVerts[idx].x * 0.88;
+      const py = platTop.y + platVerts[idx].y * 0.88;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // Lit-edge highlights on upper edges
+    for (let i = 0; i < hexSides; i++) {
+      const ni = (i + 1) % hexSides;
+      const n = platNormals[i];
+      if (n < 0.2) continue;
+      ctx.strokeStyle = `rgba(180,185,200,${(n - 0.2) * 0.1})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y);
+      ctx.lineTo(platTop.x + platVerts[ni].x, platTop.y + platVerts[ni].y);
+      ctx.stroke();
+    }
+  }
+
+  // ========== PLATFORM CAP MARKINGS (concentric rings + cardinal indicators) ==========
+  {
+    // Concentric operational rings (painted target markings)
+    const ringColors = ["rgba(90,90,100,0.12)", "rgba(90,90,100,0.08)", "rgba(90,90,100,0.05)"];
+    for (let ri = 0; ri < 3; ri++) {
+      const ringFrac = 0.3 + ri * 0.22;
+      ctx.strokeStyle = ringColors[ri];
+      ctx.lineWidth = (0.6 - ri * 0.1) * zoom;
+      ctx.beginPath();
+      for (let vi = 0; vi <= hexSides; vi++) {
+        const idx = vi % hexSides;
+        const px = platTop.x + platVerts[idx].x * ringFrac;
+        const py = platTop.y + platVerts[idx].y * ringFrac;
+        if (vi === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Cardinal direction indicators (small triangles at every other hex vertex)
+    const dirColor = level >= 3 ? "rgba(201,162,39,0.25)" : level >= 2 ? "rgba(130,130,145,0.2)" : "rgba(100,95,80,0.2)";
+    ctx.fillStyle = dirColor;
+    for (let ci = 0; ci < hexSides; ci += 2) {
+      const vx = platTop.x + platVerts[ci].x * 0.85;
+      const vy = platTop.y + platVerts[ci].y * 0.85;
+      const inX = platTop.x + platVerts[ci].x * 0.65;
+      const inY = platTop.y + platVerts[ci].y * 0.65;
+      const ni = (ci + 1) % hexSides;
+      const pi = (ci + hexSides - 1) % hexSides;
+      const perpX = (platVerts[ni].x - platVerts[pi].x) * 0.06;
+      const perpY = (platVerts[ni].y - platVerts[pi].y) * 0.06;
+      ctx.beginPath();
+      ctx.moveTo(vx, vy);
+      ctx.lineTo(inX + perpX, inY + perpY);
+      ctx.lineTo(inX - perpX, inY - perpY);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Center bolt marking (cross-hair on platform center)
+    ctx.strokeStyle = level >= 3 ? "rgba(201,162,39,0.15)" : "rgba(100,100,110,0.1)";
+    ctx.lineWidth = 0.5 * zoom;
+    const chLen = platR * 0.15;
+    ctx.beginPath();
+    ctx.moveTo(platTop.x - chLen, platTop.y);
+    ctx.lineTo(platTop.x + chLen, platTop.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(platTop.x, platTop.y - chLen * ISO_Y_RATIO);
+    ctx.lineTo(platTop.x, platTop.y + chLen * ISO_Y_RATIO);
+    ctx.stroke();
+
+    // Drainage grate on one face (thin parallel slits)
+    const grateIdx = 2;
+    if (platNormals[grateIdx] > -0.3) {
+      const gni = (grateIdx + 1) % hexSides;
+      const gMidX = (platVerts[grateIdx].x + platVerts[gni].x) * 0.5;
+      const gMidY = (platVerts[grateIdx].y + platVerts[gni].y) * 0.5;
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.4 * zoom;
+      for (let gs = -1; gs <= 1; gs++) {
+        const gsx = platTop.x + gMidX * 0.7 + gs * 1.2 * zoom;
+        const gsy = platTop.y + gMidY * 0.7 + gs * 0.3 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(gsx - 1 * zoom, gsy - 0.5 * zoom);
+        ctx.lineTo(gsx + 1 * zoom, gsy + 0.5 * zoom);
+        ctx.stroke();
+      }
+    }
+  }
 
   // ========== ANCHOR BOLTS at hex vertices ==========
   ctx.fillStyle = "#7a7a82";
@@ -869,16 +1116,70 @@ export function renderMortarTower(
       ctx.fill();
     }
   }
-  const depotCapColor =
-    level >= 3 ? "#524a38" : level >= 2 ? "#584e36" : "#625434";
-  drawHexCap(
-    ctx,
-    depotTop,
-    depotVerts,
-    depotCapColor,
-    "rgba(0,0,0,0.14)",
-    0.6 * zoom,
-  );
+  // Depot cap — gradient-shaded isometric top with reinforcement detail
+  {
+    const dcR = level >= 3 ? 82 : level >= 2 ? 88 : 98;
+    const dcG = level >= 3 ? 74 : level >= 2 ? 78 : 84;
+    const dcB = level >= 3 ? 56 : level >= 2 ? 54 : 52;
+    const dcGrad = ctx.createRadialGradient(
+      depotTop.x - depotR * 0.15, depotTop.y - depotR * 0.08,
+      depotR * 0.1,
+      depotTop.x, depotTop.y,
+      depotR * 0.95,
+    );
+    dcGrad.addColorStop(0, `rgb(${dcR + 24},${dcG + 22},${dcB + 18})`);
+    dcGrad.addColorStop(0.4, `rgb(${dcR},${dcG},${dcB})`);
+    dcGrad.addColorStop(1, `rgb(${Math.max(0, dcR - 20)},${Math.max(0, dcG - 18)},${Math.max(0, dcB - 14)})`);
+    ctx.fillStyle = dcGrad;
+    ctx.beginPath();
+    ctx.moveTo(depotTop.x + depotVerts[0].x, depotTop.y + depotVerts[0].y);
+    for (let i = 1; i < hexSides; i++)
+      ctx.lineTo(depotTop.x + depotVerts[i].x, depotTop.y + depotVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.14)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+    // Reinforcement cross beams (X pattern across depot top)
+    ctx.strokeStyle = `rgba(0,0,0,0.08)`;
+    ctx.lineWidth = 0.6 * zoom;
+    for (let i = 0; i < hexSides; i += 2) {
+      const opp = (i + Math.floor(hexSides / 2)) % hexSides;
+      ctx.beginPath();
+      ctx.moveTo(depotTop.x + depotVerts[i].x * 0.9, depotTop.y + depotVerts[i].y * 0.9);
+      ctx.lineTo(depotTop.x + depotVerts[opp].x * 0.9, depotTop.y + depotVerts[opp].y * 0.9);
+      ctx.stroke();
+    }
+    // Inner hatch ring
+    ctx.strokeStyle = level >= 3 ? "rgba(201,162,39,0.18)" : "rgba(100,95,80,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    for (let i = 0; i <= hexSides; i++) {
+      const idx = i % hexSides;
+      const px = depotTop.x + depotVerts[idx].x * 0.55;
+      const py = depotTop.y + depotVerts[idx].y * 0.55;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // Center hatch bolt
+    ctx.fillStyle = level >= 3 ? "rgba(201,162,39,0.3)" : "rgba(90,85,70,0.25)";
+    ctx.beginPath();
+    ctx.arc(depotTop.x, depotTop.y, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    // Lit-edge highlights
+    for (let i = 0; i < hexSides; i++) {
+      const ni = (i + 1) % hexSides;
+      const n = depotNormals[i];
+      if (n < 0.2) continue;
+      ctx.strokeStyle = `rgba(180,160,120,${(n - 0.2) * 0.1})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(depotTop.x + depotVerts[i].x, depotTop.y + depotVerts[i].y);
+      ctx.lineTo(depotTop.x + depotVerts[ni].x, depotTop.y + depotVerts[ni].y);
+      ctx.stroke();
+    }
+  }
 
   // Depot metal band at top
   drawHexBand(
@@ -1058,6 +1359,22 @@ export function renderMortarTower(
     }
   }
 
+  // ========== SANDBAG PILE on left side (behind fence) ==========
+  if (level === 1) {
+    const sbX = screenPos.x - wallR * 0.55;
+    const sbY = wallBaseY - wallH * 0.35;
+    const bW = 7;
+    const bD = 4.5;
+    const bH = 2.8;
+    const stepX = 4 * zoom;
+    const stepY = 2 * zoom;
+    drawIsoSandbag(ctx, sbX, sbY, bW, bD, bH, zoom, 0.0);
+    drawIsoSandbag(ctx, sbX + stepX, sbY - stepY, bW, bD, bH, zoom, 0.6);
+    drawIsoSandbag(ctx, sbX + stepX * 2, sbY - stepY * 2, bW, bD, bH, zoom, 0.3);
+    drawIsoSandbag(ctx, sbX + stepX * 0.5, sbY - stepY * 0.5 - bH * zoom, bW, bD, bH, zoom, 0.8);
+    drawIsoSandbag(ctx, sbX + stepX * 1.5, sbY - stepY * 1.5 - bH * zoom, bW, bD, bH, zoom, 0.4);
+  }
+
   // ========== RAILING POSTS on hex vertices ==========
   {
     const railH = 7 * zoom;
@@ -1111,81 +1428,94 @@ export function renderMortarTower(
     }
   }
 
-  // ========== AMMO CRATES ==========
+  // ========== AMMO CANISTERS (isometric cylinders) ==========
   for (let c = 0; c < Math.min(level, 3); c++) {
-    const crateAngle = Math.PI * 0.3 + c * 0.4;
-    const crateR = depotR * 0.7;
-    const crateX = screenPos.x + Math.cos(crateAngle) * crateR;
-    const crateY = depotBot.y + Math.sin(crateAngle) * crateR * ISO_Y_RATIO;
-    const cSize = 6 - c;
-    const cH = 5;
-    drawIsometricPrism(
-      ctx,
-      crateX,
-      crateY,
-      cSize,
-      cSize,
-      cH,
-      {
-        top: c === 0 ? "#5a6a3a" : "#4a5a32",
-        left: c === 0 ? "#4a5a2a" : "#3a4a22",
-        right: "#3a4a1a",
-      },
-      zoom,
-    );
+    const canAngle = Math.PI * 0.3 + c * 0.4;
+    const canDist = depotR * 0.75;
+    const canX = screenPos.x + Math.cos(canAngle) * canDist;
+    const canY = depotBot.y + Math.sin(canAngle) * canDist * ISO_Y_RATIO;
+    const canRx = (3.5 - c * 0.3) * zoom;
+    const canRy = canRx * ISO_Y_RATIO;
+    const canH = (6 - c * 0.5) * zoom;
 
-    const cW = cSize * zoom * 0.5; // half-width in screen space
-    const cD = cSize * zoom * 0.25; // half-depth in screen space
-    const cHp = cH * zoom;
-
-    // Iron corner straps (diagonal lines on front-right face)
-    ctx.strokeStyle = "rgba(60,55,40,0.5)";
-    ctx.lineWidth = 0.8 * zoom;
+    // Cylinder body with volumetric gradient
+    const canGrad = ctx.createLinearGradient(canX - canRx, 0, canX + canRx, 0);
+    canGrad.addColorStop(0, c === 0 ? "#2a3a14" : "#243410");
+    canGrad.addColorStop(0.3, c === 0 ? "#4a5a2a" : "#3e4e24");
+    canGrad.addColorStop(0.6, c === 0 ? "#3a4a20" : "#344418");
+    canGrad.addColorStop(1, c === 0 ? "#1a2a08" : "#182406");
+    ctx.fillStyle = canGrad;
     ctx.beginPath();
-    ctx.moveTo(crateX + cW, crateY - cHp * 0.15);
-    ctx.lineTo(crateX + cW, crateY - cHp * 0.85);
+    ctx.ellipse(canX, canY, canRx, canRy, 0, 0, Math.PI);
+    ctx.lineTo(canX - canRx, canY - canH);
+    ctx.ellipse(canX, canY - canH, canRx, canRy, 0, Math.PI, 0, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cylinder outline
+    ctx.strokeStyle = "rgba(0,0,0,0.18)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(canX - canRx, canY);
+    ctx.lineTo(canX - canRx, canY - canH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(canX + canRx, canY);
+    ctx.lineTo(canX + canRx, canY - canH);
     ctx.stroke();
 
-    // Horizontal iron band across front-right face
-    ctx.strokeStyle = "rgba(80,75,55,0.45)";
-    ctx.lineWidth = 1.2 * zoom;
-    const bandY = crateY - cHp * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(crateX, bandY + cD);
-    ctx.lineTo(crateX + cW, bandY);
-    ctx.stroke();
-
-    // Stencil marking (colored label)
-    const labelColor = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#ffaa00";
-    ctx.fillStyle = labelColor;
-    const labelCx = crateX + cW * 0.5;
-    const labelCy = crateY - cHp * 0.65 + cD * 0.25;
-    ctx.fillRect(
-      labelCx - 1.5 * zoom,
-      labelCy - 0.6 * zoom,
-      3 * zoom,
-      1.2 * zoom,
+    // Top cap with radial gradient highlight
+    const capGrad = ctx.createRadialGradient(
+      canX - 0.5 * zoom, canY - canH - 0.3 * zoom, 0,
+      canX, canY - canH, canRx,
     );
-
-    // Wood plank lines on front-left face
-    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    capGrad.addColorStop(0, c === 0 ? "#6a7a4a" : "#5e6e40");
+    capGrad.addColorStop(0.6, c === 0 ? "#4a5a2a" : "#3e4e24");
+    capGrad.addColorStop(1, c === 0 ? "#2a3a14" : "#243410");
+    ctx.fillStyle = capGrad;
+    ctx.beginPath();
+    ctx.ellipse(canX, canY - canH, canRx, canRy, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
     ctx.lineWidth = 0.4 * zoom;
-    for (let pl = 1; pl <= 2; pl++) {
-      const plY = crateY - cHp * (pl / 3);
+    ctx.stroke();
+
+    // Metal band rings
+    ctx.strokeStyle = c === 0 ? "#6a6a52" : "#5a5a42";
+    ctx.lineWidth = 0.7 * zoom;
+    for (const bandFrac of [0.25, 0.75]) {
+      const bY = canY - canH * bandFrac;
       ctx.beginPath();
-      ctx.moveTo(crateX - cW, plY);
-      ctx.lineTo(crateX, plY + cD);
+      ctx.ellipse(canX, bY, canRx * 1.02, canRy * 1.02, 0, 0, Math.PI);
       ctx.stroke();
     }
 
-    // Corner rivets
-    ctx.fillStyle = "rgba(100,95,75,0.6)";
-    const rivetR = 0.5 * zoom;
-    for (const ry of [0.12, 0.88]) {
-      ctx.beginPath();
-      ctx.arc(crateX + cW * 0.9, crateY - cHp * ry, rivetR, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Cylindrical highlight reflection
+    ctx.strokeStyle = "rgba(140,160,100,0.08)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(canX + canRx * 0.3, canY - 1 * zoom);
+    ctx.lineTo(canX + canRx * 0.3, canY - canH + 1 * zoom);
+    ctx.stroke();
+
+    // Stencil label stripe on body
+    const labelColor = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#ffaa00";
+    ctx.strokeStyle = labelColor;
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.2 * zoom;
+    const labelY = canY - canH * 0.55;
+    ctx.beginPath();
+    ctx.ellipse(canX, labelY, canRx * 1.01, canRy * 1.01, 0, 0, Math.PI);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Handle on cap
+    ctx.strokeStyle = "#6a6a72";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(canX - canRx * 0.3, canY - canH);
+    ctx.lineTo(canX + canRx * 0.3, canY - canH);
+    ctx.stroke();
   }
 
   // ========== PROPELLANT TANKS (level 2+, isometric cylinders) ==========
@@ -1298,30 +1628,153 @@ export function renderMortarTower(
     const rackW = 5;
     const rackD = 8;
     const rackH = 12;
-    drawIsometricPrism(
-      ctx,
-      rackX,
-      rackY,
-      rackW,
-      rackD,
-      rackH,
-      { top: "#4a3a28", left: "#3a2818", right: "#2a1808" },
-      zoom,
-    );
-
-    // Rack shelf dividers (horizontal lines on front face)
     const rW = rackW * zoom * 0.5;
     const rD = rackD * zoom * 0.25;
     const rH = rackH * zoom;
+
+    // Rack shadow on ground
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(rackX, rackY + 2 * zoom, rW * 1.4, rD * 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Support legs (two struts from rack base to ground)
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(rackX - rW * 0.7, rackY);
+    ctx.lineTo(rackX - rW * 0.9, rackY + 3 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rackX + rD * 0.5, rackY);
+    ctx.lineTo(rackX + rD * 0.7, rackY + 3 * zoom);
+    ctx.stroke();
+    // Leg feet (small pads)
+    ctx.fillStyle = "#4a3a2a";
+    ctx.beginPath();
+    ctx.ellipse(rackX - rW * 0.9, rackY + 3 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(rackX + rD * 0.7, rackY + 3 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rack body - left face with gradient for depth
+    const leftGrad = ctx.createLinearGradient(rackX - rW, rackY, rackX, rackY);
+    leftGrad.addColorStop(0, "#2a1a08");
+    leftGrad.addColorStop(0.4, "#4a3520");
+    leftGrad.addColorStop(1, "#3a2818");
+    ctx.fillStyle = leftGrad;
+    ctx.beginPath();
+    ctx.moveTo(rackX - rW, rackY);
+    ctx.lineTo(rackX, rackY + rD);
+    ctx.lineTo(rackX, rackY + rD - rH);
+    ctx.lineTo(rackX - rW, rackY - rH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+
+    // Back panel wood grain on left face
+    ctx.strokeStyle = "rgba(80,60,30,0.08)";
+    ctx.lineWidth = 0.3 * zoom;
+    for (let g = 0; g < 5; g++) {
+      const gFrac = (g + 0.5) / 5;
+      const gx0 = rackX - rW;
+      const gy0 = rackY - rH * gFrac;
+      const gx1 = rackX;
+      const gy1 = rackY + rD - rH * gFrac;
+      ctx.beginPath();
+      ctx.moveTo(gx0, gy0);
+      ctx.lineTo(gx1, gy1);
+      ctx.stroke();
+    }
+
+    // Rack body - right face with gradient
+    const rightGrad = ctx.createLinearGradient(rackX, rackY, rackX + rW, rackY);
+    rightGrad.addColorStop(0, "#3a2818");
+    rightGrad.addColorStop(0.6, "#2a1808");
+    rightGrad.addColorStop(1, "#1a0a00");
+    ctx.fillStyle = rightGrad;
+    ctx.beginPath();
+    ctx.moveTo(rackX + rW, rackY);
+    ctx.lineTo(rackX, rackY + rD);
+    ctx.lineTo(rackX, rackY + rD - rH);
+    ctx.lineTo(rackX + rW, rackY - rH);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+
+    // Rack body - top face
+    ctx.fillStyle = "#4a3a28";
+    ctx.beginPath();
+    ctx.moveTo(rackX, rackY - rH - rD);
+    ctx.lineTo(rackX - rW, rackY - rH);
+    ctx.lineTo(rackX, rackY - rH + rD);
+    ctx.lineTo(rackX + rW, rackY - rH);
+    ctx.closePath();
+    ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.15)";
     ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+
+    // Shelf dividers (thicker parallelogram shelves with bracket detail)
     for (let div = 1; div <= 3; div++) {
       const divY = rackY - rH * (div / 4);
+      const shelfH = 0.8 * zoom;
+      // Shelf body (filled parallelogram with thickness)
+      ctx.fillStyle = "#3a2a18";
       ctx.beginPath();
       ctx.moveTo(rackX - rW, divY);
       ctx.lineTo(rackX, divY + rD);
+      ctx.lineTo(rackX, divY + rD - shelfH);
+      ctx.lineTo(rackX - rW, divY - shelfH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+      // Shelf highlight (top edge)
+      ctx.strokeStyle = "rgba(120,100,60,0.12)";
+      ctx.lineWidth = 0.3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(rackX - rW, divY - shelfH);
+      ctx.lineTo(rackX, divY + rD - shelfH);
+      ctx.stroke();
+      // Metal L-bracket at each end
+      ctx.strokeStyle = "#6a6a72";
+      ctx.lineWidth = 0.7 * zoom;
+      // Left bracket
+      ctx.beginPath();
+      ctx.moveTo(rackX - rW + 0.5 * zoom, divY - shelfH - 1.5 * zoom);
+      ctx.lineTo(rackX - rW + 0.5 * zoom, divY - shelfH);
+      ctx.lineTo(rackX - rW + 2 * zoom, divY - shelfH + 0.4 * zoom);
+      ctx.stroke();
+      // Right bracket
+      ctx.beginPath();
+      ctx.moveTo(rackX - 0.5 * zoom, divY + rD - shelfH - 1.5 * zoom);
+      ctx.lineTo(rackX - 0.5 * zoom, divY + rD - shelfH);
+      ctx.lineTo(rackX - 2 * zoom, divY + rD - shelfH + 0.4 * zoom);
       ctx.stroke();
     }
+
+    // Corner iron reinforcement straps (vertical along edges)
+    ctx.strokeStyle = "rgba(80,75,55,0.35)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(rackX - rW, rackY);
+    ctx.lineTo(rackX - rW, rackY - rH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rackX, rackY + rD);
+    ctx.lineTo(rackX, rackY + rD - rH);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(rackX + rW, rackY);
+    ctx.lineTo(rackX + rW, rackY - rH);
+    ctx.stroke();
 
     // Shells (proper artillery rounds with casing, band, and nose cone)
     const shellCount = level + 1;
@@ -1737,28 +2190,7 @@ export function renderMortarTower(
 
   // ========== LEVEL-DEPENDENT BASE ACCESSORIES ==========
 
-  // L1: sandbag pile and targeting flag
-  if (level === 1) {
-    const sbX = screenPos.x + wallR * 0.5;
-    const sbY = wallBaseY - wallH * 0.5;
-    for (let sb = 0; sb < 3; sb++) {
-      ctx.fillStyle = sb === 0 ? "#8a7a60" : "#7a6a50";
-      ctx.beginPath();
-      ctx.ellipse(
-        sbX + sb * 3 * zoom,
-        sbY - sb * 2 * zoom,
-        4 * zoom,
-        2 * zoom,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.1)";
-      ctx.lineWidth = 0.4 * zoom;
-      ctx.stroke();
-    }
-  }
+  // (sandbags moved above railing to layer behind fence)
 
   // L2: warning lights on wall vertices
   if (level === 2) {

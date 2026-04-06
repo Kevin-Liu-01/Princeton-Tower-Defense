@@ -1673,8 +1673,8 @@ export function renderProjectile(
   const zoom = cameraZoom || 1;
   const t = proj.progress;
   const time = _cachedTime || Date.now() / 1000;
-  const lowDetail = projectileDensityHint > 140;
-  const minimalDetail = projectileDensityHint > 220;
+  const lowDetail = false;
+  const minimalDetail = false;
 
   // Calculate position on ground plane, then apply height as screen-Y offset
   const currentX = proj.from.x + (proj.to.x - proj.from.x) * t;

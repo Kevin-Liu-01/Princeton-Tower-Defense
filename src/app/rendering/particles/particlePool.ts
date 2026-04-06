@@ -16,6 +16,7 @@ interface PooledParticle extends Particle {
 let pool: PooledParticle[] = [];
 let activeCount = 0;
 let idCounter = 0;
+let freeHead = 0;
 
 function createBlankParticle(index: number): PooledParticle {
   return {
@@ -36,12 +37,14 @@ export function initParticlePool(): void {
   pool = [];
   activeCount = 0;
   idCounter = 0;
+  freeHead = 0;
   for (let i = 0; i < POOL_SIZE; i++) {
     pool.push(createBlankParticle(i));
   }
 }
 
-export function acquireParticle(
+function fillParticle(
+  p: PooledParticle,
   pos: Position,
   velocity: Position,
   life: number,
@@ -49,28 +52,7 @@ export function acquireParticle(
   size: number,
   color: string,
   type: ParticleType,
-): PooledParticle | null {
-  for (let i = 0; i < pool.length; i++) {
-    const p = pool[i];
-    if (!p._active) {
-      p._active = true;
-      p.id = `pp${idCounter++}`;
-      p.pos.x = pos.x;
-      p.pos.y = pos.y;
-      p.velocity.x = velocity.x;
-      p.velocity.y = velocity.y;
-      p.life = life;
-      p.maxLife = maxLife;
-      p.size = size;
-      p.color = color;
-      p.type = type;
-      activeCount++;
-      return p;
-    }
-  }
-
-  // Pool exhausted — grow by one (rare)
-  const p = createBlankParticle(pool.length);
+): void {
   p._active = true;
   p.id = `pp${idCounter++}`;
   p.pos.x = pos.x;
@@ -82,8 +64,40 @@ export function acquireParticle(
   p.size = size;
   p.color = color;
   p.type = type;
-  pool.push(p);
   activeCount++;
+}
+
+export function acquireParticle(
+  pos: Position,
+  velocity: Position,
+  life: number,
+  maxLife: number,
+  size: number,
+  color: string,
+  type: ParticleType,
+): PooledParticle | null {
+  const len = pool.length;
+  for (let i = freeHead; i < len; i++) {
+    const p = pool[i];
+    if (!p._active) {
+      fillParticle(p, pos, velocity, life, maxLife, size, color, type);
+      freeHead = i + 1;
+      return p;
+    }
+  }
+  for (let i = 0; i < freeHead; i++) {
+    const p = pool[i];
+    if (!p._active) {
+      fillParticle(p, pos, velocity, life, maxLife, size, color, type);
+      freeHead = i + 1;
+      return p;
+    }
+  }
+
+  const p = createBlankParticle(len);
+  fillParticle(p, pos, velocity, life, maxLife, size, color, type);
+  pool.push(p);
+  freeHead = len + 1;
   return p;
 }
 
@@ -113,12 +127,14 @@ export function updateParticles(accumulatedDelta: number): void {
   }
 }
 
+let activeSnapshot: PooledParticle[] = [];
+
 export function getActiveParticles(): PooledParticle[] {
-  const result: PooledParticle[] = [];
+  activeSnapshot.length = 0;
   for (let i = 0; i < pool.length; i++) {
-    if (pool[i]._active) result.push(pool[i]);
+    if (pool[i]._active) activeSnapshot.push(pool[i]);
   }
-  return result;
+  return activeSnapshot;
 }
 
 export function getActiveParticleCount(): number {

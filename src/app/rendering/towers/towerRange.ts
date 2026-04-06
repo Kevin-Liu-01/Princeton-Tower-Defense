@@ -1,17 +1,23 @@
-import type { Tower, DraggingTower, Position } from "../../types";
-import { TILE_SIZE, TOWER_DATA, LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "../../constants";
+import type { Tower, DraggingTower, Position, TowerType } from "../../types";
+import { TILE_SIZE, TOWER_DATA, TOWER_COLORS, LEVEL_2_RANGE_MULT, LEVEL_3_RANGE_MULT, LEVEL_4_RANGE_MULT } from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
   worldToScreen,
   worldToScreenRounded,
   isValidBuildPosition,
-  darkenColor,
   isoTileDiamondHalfH,
 } from "../../utils";
-import { drawIsometricPrism, drawGroundTransition } from "./towerHelpers";
+import { drawGroundTransition } from "./towerHelpers";
 import { renderRangeReticle, RETICLE_COLORS } from "../ui/reticles";
 import { getGameSettings } from "../../hooks/useSettings";
+import { renderCannonTower } from "./cannon";
+import { renderLibraryTower } from "./library";
+import { renderLabTower } from "./lab";
+import { renderArchTower } from "./arch";
+import { renderClubTower } from "./club";
+import { renderStationTower } from "./station";
+import { renderMortarTower } from "./mortar";
 
 export function renderStationRange(
   ctx: CanvasRenderingContext2D,
@@ -124,56 +130,63 @@ export function renderTowerRange(
   });
 }
 // ============================================================================
-// TOWER PREVIEW
+// TOWER PREVIEW — offscreen canvas for tinted actual-tower rendering
 // ============================================================================
-// Body colors for each tower preview, matched to actual render function colors
-export function getTowerPreviewColors(type: string): {
-  top: string;
-  left: string;
-  right: string;
-} {
-  switch (type) {
-    case "cannon":
-      return { top: "#6a6a72", left: "#4a4a52", right: "#2a2a32" };
-    case "library":
-      return { top: "#6a5a4a", left: "#5a4a3a", right: "#4a3a2a" };
-    case "lab":
-      return { top: "#4d7a9b", left: "#3a6585", right: "#2d5a7b" };
-    case "arch":
-      return { top: "#a89878", left: "#988868", right: "#887858" };
-    case "club":
-      return { top: "#3a6a4a", left: "#2a5a3a", right: "#1a4a2a" };
-    case "station":
-      return { top: "#6b5030", left: "#5a4020", right: "#4a3010" };
-    case "mortar":
-      return { top: "#5a5a62", left: "#3a3a42", right: "#2a2a32" };
-    default:
-      return { top: "#6a6a72", left: "#4a4a52", right: "#2a2a32" };
+
+let _previewCanvas: HTMLCanvasElement | null = null;
+let _previewCtx: CanvasRenderingContext2D | null = null;
+const PREVIEW_CANVAS_SIZE = 600;
+
+function getPreviewCtx(): { ctx: CanvasRenderingContext2D; canvas: HTMLCanvasElement } {
+  if (!_previewCanvas) {
+    _previewCanvas = document.createElement("canvas");
+    _previewCanvas.width = PREVIEW_CANVAS_SIZE;
+    _previewCanvas.height = PREVIEW_CANVAS_SIZE;
+    _previewCtx = _previewCanvas.getContext("2d")!;
   }
+  _previewCtx!.clearRect(0, 0, PREVIEW_CANVAS_SIZE, PREVIEW_CANVAS_SIZE);
+  return { ctx: _previewCtx!, canvas: _previewCanvas };
 }
 
-// Level-1 body dimensions for each tower preview, matched to actual render sizes
-export function getTowerPreviewDimensions(type: string): {
-  width: number;
-  height: number;
-} {
+function renderTowerOnCtx(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  type: TowerType,
+  zoom: number,
+  time: number,
+): void {
+  const tower: Tower = {
+    id: "__preview__",
+    type,
+    pos: { x: 0, y: 0 },
+    level: 1,
+    lastAttack: 0,
+    rotation: type === "cannon" ? Math.PI * 0.75 : type === "mortar" ? -Math.PI * 0.5 : 0,
+  };
+  const colors = TOWER_COLORS[type];
+
   switch (type) {
     case "cannon":
-      return { width: 41, height: 34 };
+      renderCannonTower(ctx, screenPos, tower, zoom, time, colors, [], "", 0, 0, 1);
+      break;
     case "library":
-      return { width: 39, height: 40 };
+      renderLibraryTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
     case "lab":
-      return { width: 34, height: 33 };
+      renderLabTower(ctx, screenPos, tower, zoom, time, colors, [], "", 0, 0, 1);
+      break;
     case "arch":
-      return { width: 36, height: 36 };
+      renderArchTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
     case "club":
-      return { width: 43, height: 42 };
+      renderClubTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
     case "station":
-      return { width: 40, height: 36 };
+      renderStationTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
     case "mortar":
-      return { width: 43, height: 38 };
-    default:
-      return { width: 34, height: 28 };
+      renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
   }
 }
 
@@ -260,47 +273,22 @@ export function renderTowerPreview(
   );
   ctx.stroke();
 
+  // Render the actual tower model onto an offscreen canvas, then tint it
+  const { ctx: tCtx, canvas: tCanvas } = getPreviewCtx();
+  const center = PREVIEW_CANVAS_SIZE / 2;
+  const time = Date.now() / 1000;
+
+  renderTowerOnCtx(tCtx, { x: center, y: center }, dragging.type as TowerType, zoom, time);
+
+  // Tint the entire drawn content green or red
+  tCtx.globalCompositeOperation = "source-atop";
+  tCtx.fillStyle = isValid ? "rgba(0, 220, 0, 0.3)" : "rgba(220, 0, 0, 0.3)";
+  tCtx.fillRect(0, 0, PREVIEW_CANVAS_SIZE, PREVIEW_CANVAS_SIZE);
+  tCtx.globalCompositeOperation = "source-over";
+
   ctx.save();
-  ctx.globalAlpha = 0.75;
-
-  // Per-tower colors matching their actual rendered appearance
-  const previewColors = getTowerPreviewColors(dragging.type);
-  const previewDims = getTowerPreviewDimensions(dragging.type);
-
-  const foundColors = {
-    top: isValid ? darkenColor(previewColors.top, 30) : "#993333",
-    left: isValid ? darkenColor(previewColors.left, 30) : "#882222",
-    right: isValid ? darkenColor(previewColors.right, 30) : "#772222",
-  };
-
-  drawIsometricPrism(
-    ctx,
-    screenPos.x,
-    screenPos.y + 8 * zoom,
-    previewDims.width + 8,
-    previewDims.width + 8,
-    6,
-    foundColors,
-    zoom,
-  );
-
-  const bodyColors = {
-    top: isValid ? previewColors.top : "#ff6666",
-    left: isValid ? previewColors.left : "#dd4444",
-    right: isValid ? previewColors.right : "#bb3333",
-  };
-
-  drawIsometricPrism(
-    ctx,
-    screenPos.x,
-    screenPos.y,
-    previewDims.width,
-    previewDims.width,
-    previewDims.height,
-    bodyColors,
-    zoom,
-  );
-
+  ctx.globalAlpha = 0.85;
+  ctx.drawImage(tCanvas, screenPos.x - center, screenPos.y - center);
   ctx.restore();
 
   // Range preview - show level 1 base range when placing
