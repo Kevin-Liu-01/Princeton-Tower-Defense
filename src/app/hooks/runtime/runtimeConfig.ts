@@ -72,15 +72,6 @@ export const QUALITY_DOWNGRADE_TARGET: Record<RenderQuality, RenderQuality> = {
   low: "low",
 };
 
-let _isMobile: boolean | null = null;
-
-export function isMobileDevice(): boolean {
-  if (_isMobile !== null) return _isMobile;
-  if (typeof window === "undefined") return false;
-  _isMobile = window.matchMedia("(pointer: coarse)").matches;
-  return _isMobile;
-}
-
 const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
 
 export const DEV_CONFIG_MENU_ENABLED =

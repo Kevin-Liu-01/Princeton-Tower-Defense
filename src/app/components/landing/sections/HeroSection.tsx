@@ -18,7 +18,6 @@ import { LandingCTA } from "../LandingCTA";
 import {
   MapGrid,
   MapBorder,
-  MapMountains,
   MapWaves,
   MapTrails,
   MapLocations,
@@ -373,9 +372,6 @@ export function HeroSection({ onPlay, exiting, onCredits }: HeroSectionProps) {
       <MapGrid />
 
       {/* ── Layer 5: Terrain silhouettes ── */}
-      <div className="animate-map-terrain">
-        <MapMountains />
-      </div>
       <MapWaves />
 
       {/* ── Layer 6: Adventure trails ── */}

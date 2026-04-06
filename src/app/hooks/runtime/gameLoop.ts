@@ -10,7 +10,6 @@ import {
   QUALITY_TRANSITION_MAX_COOLDOWN_MS,
   QUALITY_UPGRADE_TARGET,
   QUALITY_UPGRADE_THRESHOLD,
-  isMobileDevice,
 } from "./runtimeConfig";
 import { setPerformanceSettings } from "../../rendering/performance";
 import type { EntityCounts } from "./renderScene";
@@ -86,12 +85,10 @@ export function startGameLoop(
             QUALITY_TRANSITION_MAX_COOLDOWN_MS,
           );
 
-          if (isMobileDevice()) {
-            const nextDprCap = QUALITY_DPR_CAP[nextQuality];
-            setRenderDprCap((prev) =>
-              Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
-            );
-          }
+          const nextDprCap = QUALITY_DPR_CAP[nextQuality];
+          setRenderDprCap((prev) =>
+            Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
+          );
           setPerformanceSettings({
             shadowQualityMultiplier: QUALITY_SHADOW_MULTIPLIER[nextQuality],
           });
