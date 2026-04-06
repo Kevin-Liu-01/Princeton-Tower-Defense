@@ -1081,7 +1081,8 @@ export type DecorationCategory =
   | "bone_altar"
   | "sun_obelisk"
   | "frost_citadel"
-  | "infernal_gate";
+  | "infernal_gate"
+  | "mirage_dunes";
 
 export interface MapDecoration {
   type?: DecorationCategory;
@@ -1388,7 +1389,8 @@ export type DecorationType =
   | "bone_altar"
   | "sun_obelisk"
   | "frost_citadel"
-  | "infernal_gate";
+  | "infernal_gate"
+  | "mirage_dunes";
 
 export interface Decoration {
   type: DecorationType;

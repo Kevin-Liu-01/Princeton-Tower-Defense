@@ -32,7 +32,7 @@ export interface FeatureStat {
 }
 
 export const LANDING_STATS: FeatureStat[] = [
-  { icon: Map, value: "25+", label: "Levels" },
+  { icon: Map, value: "26", label: "Levels" },
   { icon: Shield, value: "7", label: "Towers" },
   { icon: Crown, value: "9", label: "Heroes" },
   { icon: Sparkles, value: "6", label: "Spells" },

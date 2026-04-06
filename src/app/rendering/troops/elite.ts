@@ -49,9 +49,9 @@ export function drawEliteTroop(
   const eliteHalbShoulderX = x + size * 0.12;
   const eliteHalbShoulderY = y - size * 0.02 + breathe;
   const eliteHalbArmSwing = isAttacking
-    ? -0.2 + halberdSwing * 0.4
-    : -0.1 + stance * 0.02;
-  const halberdBaseAngle = 0.15 + stance * 0.02 + halberdSwing;
+    ? 0.05 + halberdSwing * 0.4
+    : 0.35 + stance * 0.02;
+  const halberdBaseAngle = 0.4 + stance * 0.02 + halberdSwing;
   const halbAnchor = anchorWeaponToHand(
     eliteHalbShoulderX,
     eliteHalbShoulderY,

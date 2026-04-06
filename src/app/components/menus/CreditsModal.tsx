@@ -53,7 +53,7 @@ const ARCH_LAYERS: {
 
 const TECH_STATS: { label: string; value: string }[] = [
   { label: "Towers", value: "7 Types" },
-  { label: "Heroes", value: "7 Playable" },
+  { label: "Heroes", value: "9 Playable" },
   { label: "Levels", value: "26 Hand-Crafted" },
   { label: "Enemies", value: "100+ Unique" },
   { label: "Engine", value: "Canvas 2D" },

@@ -30,6 +30,7 @@ export const CHALLENGE_LANDMARK_TYPES = new Set<DecorationType>([
   "sunscorch_labyrinth",
   "frist_outpost",
   "ashen_spiral",
+  "mirage_dunes",
 ]);
 
 type CannonDirection = "left" | "center" | "right";
@@ -3731,6 +3732,179 @@ function drawAshenSpiralLandmark(params: ChallengeLandmarkRenderParams): void {
 }
 
 // ---------------------------------------------------------------------------
+// Mirage Dunes — shimmering desert mirage with heat distortion and sand vortex
+// ---------------------------------------------------------------------------
+
+function drawMirageDunesLandmark(
+  params: ChallengeLandmarkRenderParams,
+): void {
+  const {
+    ctx,
+    screenPos,
+    scale: s,
+    decorTime: t,
+    shadowOnly = false,
+    skipShadow = false,
+    zoom: z = 1,
+  } = params;
+  const cx = screenPos.x;
+  const cy = screenPos.y;
+
+  const sandTop = "#d4bc7e";
+  const sandLeft = "#a8884e";
+  const sandRight = "#c4a86a";
+  const sandDark = "#6a5430";
+  const mirageBlue = "#66aadd";
+  const mirageGold = "#ffcc44";
+  const heatShimmer = "#ffeebb";
+
+  if (!skipShadow) {
+    drawDirectionalShadow(
+      ctx, cx, cy + 4 * s, s,
+      34 * s, 14 * s, 28 * s, 0.28, "0,0,0", z,
+    );
+  }
+  if (shadowOnly) return;
+
+  // Ground sand expanse
+  const gGrad = ctx.createRadialGradient(
+    cx, cy + 2 * s, 0, cx, cy + 2 * s, 34 * s,
+  );
+  gGrad.addColorStop(0, "rgba(210,185,130,0.3)");
+  gGrad.addColorStop(0.5, "rgba(190,160,100,0.12)");
+  gGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = gGrad;
+  drawOrganicBlobAt(ctx, cx, cy + 2 * s, 34 * s, 16 * s, 21.7, 0.12, 20);
+  ctx.fill();
+
+  // Twin sand dunes
+  for (const [dx, dy, dw, dh] of [
+    [-14, 4, 12, 5],
+    [12, 6, 10, 4],
+    [-8, -4, 8, 3],
+    [6, -6, 9, 3.5],
+  ] as const) {
+    ctx.fillStyle = "rgba(200,170,110,0.3)";
+    drawOrganicBlobAt(
+      ctx, cx + dx * s, cy + dy * s,
+      dw * s, dh * s, dx * 2.3, 0.15, 12,
+    );
+    ctx.fill();
+  }
+
+  // Central platform — square footprint for correct iso angles
+  const platSize = 14 * s;
+  drawIsometricPrism(
+    ctx, cx, cy + 2 * s,
+    platSize, platSize, 3 * s,
+    sandTop, sandLeft, sandRight,
+  );
+
+  // Inner pedestal
+  const pedSize = 8 * s;
+  drawIsometricPrism(
+    ctx, cx, cy,
+    pedSize, pedSize, 5 * s,
+    sandTop, sandLeft, sandDark,
+  );
+
+  // Mirage orb — the signature visual element
+  const orbY = cy - 14 * s;
+  const orbPulse = 1 + Math.sin(t * 1.8) * 0.08;
+  const orbRadius = 6 * s * orbPulse;
+
+  // Outer glow ring
+  const orbGlow = ctx.createRadialGradient(
+    cx, orbY, orbRadius * 0.3,
+    cx, orbY, orbRadius * 2.5,
+  );
+  orbGlow.addColorStop(0, "rgba(102,170,221,0.35)");
+  orbGlow.addColorStop(0.4, "rgba(255,204,68,0.15)");
+  orbGlow.addColorStop(1, "transparent");
+  ctx.fillStyle = orbGlow;
+  ctx.beginPath();
+  ctx.arc(cx, orbY, orbRadius * 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Orb body
+  const orbBody = ctx.createRadialGradient(
+    cx - 1.5 * s, orbY - 1.5 * s, 0,
+    cx, orbY, orbRadius,
+  );
+  orbBody.addColorStop(0, heatShimmer);
+  orbBody.addColorStop(0.4, mirageBlue);
+  orbBody.addColorStop(0.85, mirageGold);
+  orbBody.addColorStop(1, "rgba(255,204,68,0.3)");
+  ctx.fillStyle = orbBody;
+  ctx.beginPath();
+  ctx.arc(cx, orbY, orbRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Orb specular highlight
+  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.beginPath();
+  ctx.arc(cx - 1.5 * s, orbY - 2 * s, orbRadius * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sand vortex particles spiraling around the orb
+  for (let i = 0; i < 12; i++) {
+    const angle = t * 1.2 + i * (Math.PI * 2 / 12);
+    const spiralR = (8 + Math.sin(t * 0.8 + i * 0.9) * 3) * s;
+    const px = cx + Math.cos(angle) * spiralR;
+    const py = orbY + Math.sin(angle) * spiralR * ISO_Y_RATIO;
+    const pAlpha = 0.4 + Math.sin(t * 2 + i * 1.3) * 0.2;
+    const pSize = (1.2 + Math.sin(t + i) * 0.4) * s;
+    ctx.fillStyle = `rgba(210,185,130,${pAlpha})`;
+    ctx.beginPath();
+    ctx.arc(px, py, pSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Heat shimmer streaks rising from the platform
+  for (let i = 0; i < 8; i++) {
+    const phase = (t * 0.4 + i * 0.13) % 1;
+    const sx = cx + Math.sin(t * 0.7 + i * 2.1) * 10 * s;
+    const sy = cy - phase * 28 * s;
+    const alpha = Math.sin(phase * Math.PI) * 0.15;
+    ctx.fillStyle = `rgba(255,238,187,${alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(sx, sy, 1.5 * s, 4 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Corner obelisk pillars
+  for (const [ox, oy] of [
+    [-8, 3], [8, 3], [-5, -4], [5, -4],
+  ] as const) {
+    const pillarX = cx + ox * s;
+    const pillarY = cy + oy * s;
+    const pillarSize = 2 * s;
+    drawIsometricPrism(
+      ctx, pillarX, pillarY,
+      pillarSize, pillarSize, 10 * s,
+      sandTop, sandDark, sandRight,
+    );
+    // Gold cap
+    drawIsometricPyramid(
+      ctx, pillarX, pillarY - 10 * s,
+      pillarSize, 3 * s,
+      mirageGold, "#b8952a", "#d4aa33",
+    );
+  }
+
+  // Floating sand motes
+  for (let m = 0; m < 6; m++) {
+    const mx = cx + Math.sin(t * 0.5 + m * 1.7) * 20 * s;
+    const my = cy + Math.cos(t * 0.4 + m * 2.3) * 10 * s - 4 * s;
+    const mAlpha = 0.2 + Math.sin(t * 1.5 + m) * 0.1;
+    ctx.fillStyle = `rgba(220,195,140,${mAlpha})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, 0.8 * s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Dispatch
 // ---------------------------------------------------------------------------
 
@@ -3758,6 +3932,9 @@ export function renderChallengeLandmark(
       return true;
     case "ashen_spiral":
       drawAshenSpiralLandmark(params);
+      return true;
+    case "mirage_dunes":
+      drawMirageDunesLandmark(params);
       return true;
     default:
       return false;

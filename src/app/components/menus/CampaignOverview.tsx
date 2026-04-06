@@ -12,15 +12,17 @@ import {
   Map,
   Crown,
   Eye,
+  Sparkles,
 } from "lucide-react";
 import type { LevelStars } from "../../types";
 import type { LevelStats } from "../../hooks/useLocalStorage";
 import { LEVEL_DATA } from "../../constants";
+import { FINAL_CAMPAIGN_LEVEL } from "../../game/progression";
 import {
   PANEL,
   GOLD,
 } from "../ui/system/theme";
-import { WORLD_LEVELS } from "./world-map/worldMapData";
+import { WORLD_LEVELS, type LevelNode } from "./world-map/worldMapData";
 import { RegionIcon } from "../../sprites";
 import {
   REGION_META,
@@ -77,6 +79,192 @@ function SectionDivider({ label }: { label: string }) {
 }
 
 
+function CampaignConqueredBanner({
+  target,
+  onSelect,
+}: {
+  target: LevelNode | null;
+  onSelect: (id: string) => void;
+}) {
+  const preview = target
+    ? getPreviewImage(target.id)
+    : getPreviewImage(FINAL_CAMPAIGN_LEVEL);
+  const Tag = target ? "button" : "div";
+  return (
+    <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
+      <Tag
+        {...(target ? { onClick: () => onSelect(target.id) } : {})}
+        className={`w-full group relative rounded-xl overflow-hidden animate-wm-conquered-glow ${target ? "transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.99]" : ""}`}
+        style={{
+          background: "linear-gradient(135deg, rgba(20,80,50,0.88), rgba(12,55,32,0.88))",
+          border: "2px solid rgba(80,220,140,0.4)",
+        }}
+      >
+        {preview && (
+          <MapPreviewBg src={preview} fadeColor="rgba(15,65,40,0.95)" />
+        )}
+        <div
+          className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+          style={{ border: "1px solid rgba(120,255,180,0.1)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent animate-wm-progress-shimmer" />
+        {target && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+        )}
+        <div className="relative px-3.5 py-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Crown size={11} className="text-emerald-300/80" />
+            <span className="text-[9px] font-bold text-emerald-300/90 uppercase tracking-[0.15em]">
+              Campaign Conquered
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="shrink-0">
+                {target ? (
+                  <RegionIcon type={target.region} size={32} framed />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(40,130,80,0.7), rgba(25,90,55,0.7))",
+                      border: "1px solid rgba(100,220,150,0.3)",
+                      boxShadow: "0 0 8px rgba(52,211,153,0.15)",
+                    }}
+                  >
+                    <Crown size={16} className="text-emerald-300" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col items-start min-w-0">
+                <div className="text-[13px] font-bold text-emerald-100 leading-tight truncate w-full">
+                  {target ? target.name : "The Throne Has Fallen"}
+                </div>
+                <div className="text-[10px] text-emerald-400/60 mt-0.5">
+                  {target
+                    ? `${REGION_META[target.region]?.displayName} \u00b7 Challenge`
+                    : "All challenges complete"}
+                </div>
+              </div>
+            </div>
+            {target && (
+              <ChevronRight size={18} className="text-emerald-300/60 shrink-0 group-hover:text-emerald-200 group-hover:translate-x-1 transition-all duration-300" />
+            )}
+          </div>
+        </div>
+      </Tag>
+    </div>
+  );
+}
+
+function RealmMasteryBanner({
+  totalStars,
+  maxStars,
+}: {
+  totalStars: number;
+  maxStars: number;
+}) {
+  const isPerfect = totalStars >= maxStars;
+  const thronePreview = getPreviewImage(FINAL_CAMPAIGN_LEVEL);
+  return (
+    <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
+      <div
+        className={`w-full relative rounded-xl overflow-hidden ${isPerfect ? "animate-wm-legendary-glow" : "animate-wm-cta-glow"}`}
+        style={{
+          background: isPerfect
+            ? "linear-gradient(135deg, rgba(70,35,120,0.88), rgba(45,20,85,0.88))"
+            : "linear-gradient(135deg, rgba(140,100,15,0.88), rgba(95,62,8,0.88))",
+          border: `2px solid ${isPerfect ? "rgba(180,140,255,0.45)" : "rgba(255,200,50,0.45)"}`,
+        }}
+      >
+        {thronePreview && (
+          <MapPreviewBg
+            src={thronePreview}
+            fadeColor={isPerfect ? "rgba(55,28,95,0.95)" : "rgba(115,80,12,0.95)"}
+          />
+        )}
+        <div
+          className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+          style={{
+            border: `1px solid ${isPerfect ? "rgba(200,160,255,0.12)" : "rgba(255,220,120,0.12)"}`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent animate-wm-progress-shimmer" />
+        <div className="relative px-3.5 py-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            {isPerfect ? (
+              <Crown size={11} className="text-purple-300/80" />
+            ) : (
+              <Trophy size={11} className="text-amber-300/80" />
+            )}
+            <span
+              className="text-[9px] font-bold uppercase tracking-[0.15em]"
+              style={{ color: isPerfect ? "rgba(200,170,240,0.9)" : "rgba(255,220,130,0.9)" }}
+            >
+              {isPerfect ? "Legendary" : "True Champion"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <div
+              className="shrink-0 rounded-lg flex flex-col items-center justify-center px-2 py-1.5"
+              style={{
+                background: isPerfect
+                  ? "linear-gradient(135deg, rgba(100,60,170,0.55), rgba(70,35,130,0.55))"
+                  : "linear-gradient(135deg, rgba(160,115,20,0.55), rgba(120,80,12,0.55))",
+                border: `1px solid ${isPerfect ? "rgba(180,140,255,0.25)" : "rgba(255,200,60,0.25)"}`,
+                boxShadow: isPerfect
+                  ? "0 0 10px rgba(168,130,255,0.12)"
+                  : "0 0 10px rgba(251,191,36,0.12)",
+              }}
+            >
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3].map((s) => (
+                  <Star
+                    key={s}
+                    size={12}
+                    className={
+                      isPerfect
+                        ? "text-purple-300 fill-purple-300"
+                        : "text-yellow-400 fill-yellow-400"
+                    }
+                    style={{
+                      filter: isPerfect
+                        ? "drop-shadow(0 0 3px rgba(168,130,255,0.5))"
+                        : "drop-shadow(0 0 3px rgba(251,191,36,0.5))",
+                    }}
+                  />
+                ))}
+              </div>
+              <span
+                className="text-[9px] font-bold tabular-nums mt-0.5"
+                style={{ color: isPerfect ? "rgba(200,170,240,0.7)" : "rgba(255,210,100,0.7)" }}
+              >
+                {totalStars}/{maxStars}
+              </span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div
+                className="text-[13px] font-bold leading-tight"
+                style={{ color: isPerfect ? "rgba(220,195,255,0.95)" : "rgba(255,235,180,0.95)" }}
+              >
+                {isPerfect ? "Every Star Claimed" : "Every Battle Won"}
+              </div>
+              <div
+                className="text-[10px] mt-0.5"
+                style={{ color: isPerfect ? "rgba(180,150,230,0.55)" : "rgba(255,210,100,0.55)" }}
+              >
+                {isPerfect
+                  ? "A legend forged eternal"
+                  : "Earn every star to become Legendary"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface CampaignOverviewProps {
   levelStars: LevelStars;
   levelStats: Record<string, LevelStats>;
@@ -120,6 +308,23 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
     : null;
 
   const progressPct = maxStars > 0 ? (totalStars / maxStars) * 100 : 0;
+
+  const isCampaignBeaten = (levelStars[FINAL_CAMPAIGN_LEVEL] || 0) > 0;
+  const isAllLevelsBeaten = campaignLevels.every(
+    (l) => (levelStars[l.id] || 0) > 0,
+  );
+
+  const nextChallenge = useMemo(() => {
+    if (!isCampaignBeaten || isAllLevelsBeaten) return null;
+    return (
+      campaignLevels.find(
+        (l) =>
+          l.kind === "challenge" &&
+          unlockedSet.has(l.id) &&
+          (levelStars[l.id] || 0) === 0,
+      ) ?? null
+    );
+  }, [campaignLevels, isCampaignBeaten, isAllLevelsBeaten, levelStars, unlockedSet]);
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-auto relative">
@@ -272,9 +477,13 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
       </div>
 
       {/* ═══════════════════════════════════════════════════
-          CONTINUE CAMPAIGN CTA
+          CONTINUE CAMPAIGN CTA / COMPLETION BANNERS
           ═══════════════════════════════════════════════════ */}
-      {recommended && (
+      {isAllLevelsBeaten ? (
+        <RealmMasteryBanner totalStars={totalStars} maxStars={maxStars} />
+      ) : isCampaignBeaten ? (
+        <CampaignConqueredBanner target={nextChallenge} onSelect={onSelectLevel} />
+      ) : recommended ? (
         <div className="flex-shrink-0 px-3.5 pt-2.5 pb-1">
           <button
             onClick={() => onSelectLevel(recommended.id)}
@@ -326,7 +535,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             </div>
           </button>
         </div>
-      )}
+      ) : null}
 
       {/* ═══════════════════════════════════════════════════
           REGIONS LIST
@@ -508,9 +717,13 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             className="text-[9px] leading-relaxed italic text-center px-2"
             style={{ color: "rgba(217,183,130,0.35)" }}
           >
-            &ldquo;The shadows gather at the gates. Ancient towers stand
-            resolute, their arcane fires burning eternal against the
-            darkness.&rdquo;
+            {isAllLevelsBeaten
+              ? totalStars >= maxStars
+                ? "\u201CIn ages hence they will speak of the one who held every star, who tamed every shadow\u2014a legend not of chance, but of mastery eternal.\u201D"
+                : "\u201CEvery battlefield conquered, every foe vanquished. The realm remembers its true champion.\u201D"
+              : isCampaignBeaten
+                ? "\u201CThe throne is claimed, yet whispers remain. Ancient challenges stir in forgotten corners of the realm.\u201D"
+                : "\u201CThe shadows gather at the gates. Ancient towers stand resolute, their arcane fires burning eternal against the darkness.\u201D"}
           </p>
         </div>
       </div>

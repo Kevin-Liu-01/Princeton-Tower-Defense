@@ -2625,12 +2625,12 @@ export function drawGroundTransition(
 
   const cx = screenPos.x;
   const cy = screenPos.y - yShift * zoom + 10 * zoom;
-  const outerW = fndW * 1.3;
-  const outerH = fndH * 1.3;
-  const midW = fndW * 1.0;
-  const midH = fndH * 1.0;
-  const innerW = fndW * 0.75;
-  const innerH = fndH * 0.75;
+  const outerW = fndW * 1.05;
+  const outerH = fndH * 1.05;
+  const midW = fndW * 0.85;
+  const midH = fndH * 0.85;
+  const innerW = fndW * 0.65;
+  const innerH = fndH * 0.65;
   // Scale element counts proportionally (reference: 60-unit foundation)
   const detailScale = Math.max(
     0.6,
@@ -2659,20 +2659,7 @@ export function drawGroundTransition(
   drawOrganicBlobAt(ctx, cx, cy, outerW, outerH, blobSeed, 0.15);
   ctx.fill();
 
-  // Edge roughness — irregular clumps breaking the organic edge
   const clumpSeed = blobSeed;
-  const numClumps = Math.floor(12 * detailScale);
-  for (let i = 0; i < numClumps; i++) {
-    const angle = (i / numClumps) * Math.PI * 2 + (clumpSeed % 7) * 0.3;
-    const dist = outerW * (0.92 + ((clumpSeed * (i + 1) * 7) % 17) / 85);
-    const clX = cx + Math.cos(angle) * dist;
-    const clY = cy + Math.sin(angle) * dist * (outerH / outerW);
-    const clR = (1.5 + ((clumpSeed * (i + 3)) % 11) / 7) * zoom;
-    ctx.fillStyle = i % 3 === 0 ? palette.outerDirt : regionTheme.ground[2];
-    ctx.beginPath();
-    ctx.ellipse(clX, clY, clR * 1.3, clR * 0.7, angle, 0, Math.PI * 2);
-    ctx.fill();
-  }
 
   // === Middle ring — exposed subsoil ===
   const midGrad = ctx.createRadialGradient(cx, cy, innerW * 0.5, cx, cy, midW);
@@ -2747,26 +2734,6 @@ export function drawGroundTransition(
 
   // === Region-specific details ===
   if (mapTheme === "grassland") {
-    // Torn grass tufts around excavation edge
-    const numTufts = Math.floor(8 * detailScale);
-    for (let i = 0; i < numTufts; i++) {
-      const angle = (i / numTufts) * Math.PI * 2 + 0.3;
-      const dist = outerW * (0.85 + ((clumpSeed * (i + 1)) % 9) / 45);
-      const gx = cx + Math.cos(angle) * dist;
-      const gy = cy + Math.sin(angle) * dist * (outerH / outerW);
-      ctx.strokeStyle = "#5a8a4a";
-      ctx.lineWidth = 0.8 * zoom;
-      for (let b = 0; b < 3; b++) {
-        const bAngle = angle + (b - 1) * 0.3;
-        ctx.beginPath();
-        ctx.moveTo(gx, gy);
-        ctx.lineTo(
-          gx + Math.cos(bAngle) * 2.5 * zoom,
-          gy - (2 + b * 0.8) * zoom,
-        );
-        ctx.stroke();
-      }
-    }
     // Exposed root fragments
     ctx.strokeStyle = "#5a4020";
     ctx.lineWidth = 0.7 * zoom;
@@ -2786,21 +2753,6 @@ export function drawGroundTransition(
       ctx.stroke();
     }
   } else if (mapTheme === "desert") {
-    // Sand drift mounds pushed aside by excavation
-    const numDrifts = Math.floor(6 * detailScale);
-    for (let i = 0; i < numDrifts; i++) {
-      const angle = (i / numDrifts) * Math.PI * 2 + 0.5;
-      const dist = outerW * (0.88 + ((clumpSeed * (i + 3)) % 7) / 35);
-      const sx = cx + Math.cos(angle) * dist;
-      const sy = cy + Math.sin(angle) * dist * (outerH / outerW);
-      const driftGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 3 * zoom);
-      driftGrad.addColorStop(0, "#c4a45a");
-      driftGrad.addColorStop(1, "rgba(164,131,58,0)");
-      ctx.fillStyle = driftGrad;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, 3.5 * zoom, 1.5 * zoom, angle, 0, Math.PI * 2);
-      ctx.fill();
-    }
     // Exposed sandstone chunks
     ctx.fillStyle = "#b8943a";
     for (let i = 0; i < 4; i++) {
@@ -2817,29 +2769,6 @@ export function drawGroundTransition(
       ctx.fill();
     }
   } else if (mapTheme === "winter") {
-    // Snow banks pushed aside at excavation edge
-    const numSnow = Math.floor(6 * detailScale);
-    for (let i = 0; i < numSnow; i++) {
-      const angle = (i / numSnow) * Math.PI * 2 + 0.2;
-      const dist = outerW * (0.9 + ((clumpSeed * (i + 2)) % 5) / 25);
-      const sx = cx + Math.cos(angle) * dist;
-      const sy = cy + Math.sin(angle) * dist * (outerH / outerW);
-      const snowGrad = ctx.createRadialGradient(
-        sx,
-        sy - 0.5 * zoom,
-        0,
-        sx,
-        sy,
-        3.5 * zoom,
-      );
-      snowGrad.addColorStop(0, "rgba(220, 235, 250, 0.7)");
-      snowGrad.addColorStop(0.6, "rgba(200, 215, 235, 0.4)");
-      snowGrad.addColorStop(1, "rgba(180, 200, 220, 0)");
-      ctx.fillStyle = snowGrad;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, 4 * zoom, 1.8 * zoom, angle * 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
     // Ice patches on exposed ground
     ctx.fillStyle = "rgba(160, 200, 240, 0.2)";
     for (let i = 0; i < 3; i++) {

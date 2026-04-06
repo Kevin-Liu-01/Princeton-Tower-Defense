@@ -15,7 +15,7 @@ import { GOLD, OVERLAY, panelGradient } from "../ui/system/theme";
 import { SITE_URL, GITHUB_URL, AUTHOR_URL } from "../../seo/constants";
 
 const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-  `@kevskgs made a fire free browser TD game with 25+ levels, 5 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`
+  `@kevskgs made a fire free browser TD game with 26 levels, 9 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`
 )}&url=${encodeURIComponent(`${SITE_URL}/`)}&hashtags=${encodeURIComponent(
   "gamedev,indiegame,towdefense,princeton"
 )}`;

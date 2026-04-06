@@ -2953,6 +2953,90 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     ],
   ],
 
+  // MIRAGE DUNES - "Phantom Skies" (ALL flying enemies vs mortar + arch only)
+  mirage_dunes: [
+    // W1: Locust scouts — fast desert flyers ease the player in
+    [
+      { type: "locust", count: 10, interval: 520 },
+      { type: "harpy", count: 5, interval: 700, delay: 2400 },
+    ],
+    // W2: Eagles + mosquitoes — mixed speed pressure
+    [
+      { type: "giant_eagle", count: 5, interval: 800 },
+      { type: "mosquito", count: 10, interval: 420, delay: 2200 },
+      { type: "locust", count: 8, interval: 460, delay: 1800 },
+    ],
+    // W3: Desert hunters — phoenix + manticores
+    [
+      { type: "phoenix", count: 2, interval: 1400 },
+      { type: "manticore", count: 3, interval: 950, delay: 2600 },
+      { type: "locust", count: 12, interval: 380, delay: 2000 },
+    ],
+    // W4: Insect swarm — overwhelming fast flyers
+    [
+      { type: "dragonfly", count: 12, interval: 340 },
+      { type: "locust", count: 14, interval: 300, delay: 1600 },
+      { type: "mosquito", count: 10, interval: 400, delay: 1400 },
+    ],
+    // W5: Debuffer storm — moths cripple your towers
+    [
+      { type: "silk_moth", count: 5, interval: 700 },
+      { type: "snow_moth", count: 4, interval: 750, delay: 2400 },
+      { type: "ash_moth", count: 5, interval: 650, delay: 2000 },
+      { type: "harpy", count: 6, interval: 550, delay: 1600 },
+    ],
+    // W6: Armored sky — tanky flyers test raw damage
+    [
+      { type: "wyvern", count: 3, interval: 1200 },
+      { type: "volcanic_drake", count: 3, interval: 1100, delay: 2800 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 },
+    ],
+    // W7: Mega swarm — sky blackens with wings
+    [
+      { type: "harpy", count: 10, interval: 400 },
+      { type: "locust", count: 16, interval: 280, delay: 1400 },
+      { type: "dragonfly", count: 10, interval: 340, delay: 1200 },
+      { type: "will_o_wisp", count: 6, interval: 520, delay: 1800 },
+    ],
+    // W8: Ranged flyers — manticores + phoenixes rain down fire
+    [
+      { type: "manticore", count: 5, interval: 850 },
+      { type: "phoenix", count: 3, interval: 1200, delay: 2600 },
+      { type: "banshee", count: 4, interval: 700, delay: 2000 },
+      { type: "giant_eagle", count: 6, interval: 600, delay: 1400 },
+    ],
+    // W9: Heavy assault — drakes and specters with moth support
+    [
+      { type: "wyvern", count: 4, interval: 1100 },
+      { type: "volcanic_drake", count: 4, interval: 1000, delay: 2400 },
+      { type: "specter", count: 5, interval: 750, delay: 2000 },
+      { type: "ash_moth", count: 6, interval: 550, delay: 1600 },
+    ],
+    // W10: Rebirth wave — phoenixes keep coming back
+    [
+      { type: "phoenix", count: 5, interval: 1000 },
+      { type: "silk_moth", count: 4, interval: 700, delay: 2200 },
+      { type: "banshee", count: 5, interval: 650, delay: 1800 },
+      { type: "manticore", count: 4, interval: 800, delay: 1600 },
+    ],
+    // W11: Dragon vanguard — boss flyers lead the charge
+    [
+      { type: "dragon", count: 1, interval: 3000 },
+      { type: "wyvern", count: 5, interval: 900, delay: 3200 },
+      { type: "harpy", count: 12, interval: 350, delay: 2000 },
+      { type: "volcanic_drake", count: 3, interval: 1000, delay: 1600 },
+    ],
+    // W12: PHANTOM SKY FINALE — dragon + full aerial armada
+    [
+      { type: "dragon", count: 1, interval: 3500 },
+      { type: "wyvern", count: 4, interval: 1000, delay: 3600 },
+      { type: "phoenix", count: 4, interval: 900, delay: 2800 },
+      { type: "manticore", count: 5, interval: 750, delay: 2000 },
+      { type: "banshee", count: 6, interval: 550, delay: 1600 },
+      { type: "locust", count: 20, interval: 220, delay: 1200 },
+    ],
+  ],
+
   // SUN OBELISK - "Pyramid Siege" (siege theme, catapults + golems + brutes)
   sun_obelisk: [
     // W1: Desert scouts
@@ -3228,6 +3312,9 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   // DEV TEST LEVELS
   // =====================
+  dev_building_showcase: [
+    [{ type: "frosh", count: 3, interval: 2000 }],
+  ],
   dev_enemy_showcase: [
     // Wave 1: Bugs (all regions + boss)
     [

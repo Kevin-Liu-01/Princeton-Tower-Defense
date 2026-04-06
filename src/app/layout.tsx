@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Free Browser Tower Defense Game - 25+ Levels, 9 Heroes, Custom Maps`,
+    default: `${SITE_NAME} | Free Browser Tower Defense Game - 26 Levels, 9 Heroes, Custom Maps`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,

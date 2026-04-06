@@ -11,10 +11,10 @@
 - Genre: Tower Defense / Strategy
 - Price: Free
 - Platform: Any modern web browser (desktop and mobile)
-- Levels: 25+ handcrafted maps across 5 themed regions
+- Levels: 26 handcrafted maps across 5 themed regions
 - Towers: 7 buildable towers, each with 2 upgrade paths (14 total)
-- Heroes: 7 playable hero characters with unique active abilities
-- Spells: 5 castable spells with upgrade trees
+- Heroes: 9 playable hero characters with unique active abilities
+- Spells: 6 castable spells with upgrade trees
 - Enemies: 100+ unique enemy types including bosses, flying, ranged, and swarm
 - Features: Custom level creator, world map progression, challenge maps, environmental hazards
 - Tech Stack: Next.js 14, React 18, TypeScript, HTML5 Canvas

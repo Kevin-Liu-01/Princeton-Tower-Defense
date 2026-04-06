@@ -14,7 +14,7 @@ export type RegionKey = keyof typeof REGION_CAMPAIGN_LEVELS;
 const REGION_CHALLENGE_UNLOCKS: Record<RegionKey, string[]> = {
   grassland: ["ivy_crossroads"],
   swamp: ["blight_basin", "triad_keep"],
-  desert: ["sunscorch_labyrinth", "sun_obelisk"],
+  desert: ["sunscorch_labyrinth", "sun_obelisk", "mirage_dunes"],
   winter: ["whiteout_pass"],
   volcanic: ["ashen_spiral", "infernal_gate"],
 };

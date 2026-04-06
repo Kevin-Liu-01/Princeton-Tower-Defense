@@ -175,7 +175,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     tags: ["High Ground", "Split Defense"],
     x: 910,
     y: 38,
-    connectsTo: ["sphinx", "sun_obelisk"],
+    connectsTo: ["sphinx", "sun_obelisk", "mirage_dunes"],
+  },
+  {
+    id: "mirage_dunes",
+    name: "Mirage Dunes",
+    description:
+      "The sky darkens with wings; every enemy flies.\nSadly, only mortars are at your disposal.",
+    region: "desert",
+    difficulty: 3,
+    kind: "challenge",
+    tags: ["All Flying", "Mortars Only"],
+    x: 820,
+    y: 33,
+    connectsTo: [],
   },
   {
     id: "sun_obelisk",
@@ -345,6 +358,7 @@ export const WORLD_LEVELS: LevelNode[] = [
 
 export const DEV_LEVEL_IDS: ReadonlySet<string> = new Set([
   "dev_enemy_showcase",
+  "dev_building_showcase",
 ]);
 
 export const ALWAYS_UNLOCKED_IDS: ReadonlySet<string> = new Set([
@@ -365,12 +379,25 @@ export const DEV_LEVELS: LevelNode[] = [
     y: 25,
     connectsTo: [],
   },
+  {
+    id: "dev_building_showcase",
+    name: "Building Showcase",
+    description:
+      "Every landmark and Princeton building.\nDev-only gallery level.",
+    region: "grassland",
+    difficulty: 1,
+    tags: ["Dev", "All Buildings"],
+    x: 60,
+    y: 40,
+    connectsTo: [],
+  },
 ];
 
 /** Per-connection curve overrides. Key is "fromId->toId". */
 export const CONNECTION_OVERRIDES: Record<string, { flip?: boolean }> = {
   "poe->carnegie": { flip: true },
   "nassau->bog": { flip: true },
+  "pyramid->mirage_dunes": { flip: true },
   "whiteout_pass->frist_outpost": { flip: true },
   "crater->throne": { flip: true },
 };

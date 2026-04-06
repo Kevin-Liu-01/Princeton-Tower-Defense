@@ -151,9 +151,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [isMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768,
   );
-  const [wmEntranceStage, setWmEntranceStage] = useState([false, false, false, false]);
+  const [wmEntranceStage, setWmEntranceStage] = useState([false, false, false, false, false]);
   useEffect(() => {
-    const delays = [80, 220, 380, 540];
+    const delays = [80, 220, 380, 540, 700];
     const timers = delays.map((d, i) =>
       setTimeout(() => setWmEntranceStage(prev => { const n = [...prev]; n[i] = true; return n; }), d),
     );
@@ -1345,7 +1345,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </div>
           </OrnateFrame>
 
-          <WorldMapShoutOut />
+          <WorldMapShoutOut visible={wmEntranceStage[4]} />
         </div>
         {/* RIGHT: Map + Loadout column */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
@@ -1397,7 +1397,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       onMouseLeave={() => setHoveredLevel(null)}
                       onClick={handleClick}
                     />
-                    {selectedLevel && (() => {
+                    {selectedLevel && !isMobile && (() => {
                       const worldLevel = visibleWorldLevels.find((l) => l.id === selectedLevel);
                       if (!worldLevel) return null;
                       const scale = mapScale;

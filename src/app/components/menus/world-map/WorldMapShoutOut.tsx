@@ -6,7 +6,7 @@ import { GOLD, panelGradient } from "../../ui/system/theme";
 import { OrnateFrame } from "../../ui/primitives/OrnateFrame";
 import { SITE_URL } from "../../../seo/constants";
 
-const SHARE_TEXT = `@kevskgs made a fire free browser TD game with 25+ levels, 5 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`;
+const SHARE_TEXT = `@kevskgs made a fire free browser TD game with 26 levels, 9 heroes, and spells ⚔️🏰🐅\n\nTry it out 👇`;
 
 const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
   SHARE_TEXT
@@ -16,9 +16,19 @@ const SHARE_URL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
 
 const BG_IMAGE = "/images/new/gameplay_grounds.png";
 
-export function WorldMapShoutOut() {
+interface WorldMapShoutOutProps {
+  visible?: boolean;
+}
+
+export function WorldMapShoutOut({ visible = true }: WorldMapShoutOutProps) {
   return (
-    <div className="hidden xl:block flex-shrink-0 pt-3 pb-3">
+    <div
+      className="hidden xl:block flex-shrink-0 pt-3 pb-3 transition-all duration-500 ease-out"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(14px)",
+      }}
+    >
       <OrnateFrame
         className="rounded-xl shadow-xl overflow-hidden"
         style={{ border: `1.5px solid ${GOLD.border25}` }}

@@ -1591,8 +1591,8 @@ export function renderSkullThrone(p: LandmarkParams): void {
   } = p;
 
   if (!skipShadow) {
-    const shRx = Math.min(34 * s, MAX_SHADOW_RX * z);
-    const shRy = Math.min(16 * s, MAX_SHADOW_RY * z);
+    const shRx = Math.min(42 * s, MAX_SHADOW_RX * z);
+    const shRy = Math.min(20 * s, MAX_SHADOW_RY * z);
     const shGrad = ctx.createRadialGradient(
       cx + 2 * s,
       cy + 8 * s,
@@ -1601,7 +1601,7 @@ export function renderSkullThrone(p: LandmarkParams): void {
       cy + 8 * s,
       shRx,
     );
-    shGrad.addColorStop(0, "rgba(60,10,10,0.4)");
+    shGrad.addColorStop(0, "rgba(60,10,10,0.45)");
     shGrad.addColorStop(0.35, "rgba(0,0,0,0.3)");
     shGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = shGrad;
@@ -1620,29 +1620,26 @@ export function renderSkullThrone(p: LandmarkParams): void {
   const bVDk = "#5a4a38";
   const redGl = "#cc2020";
 
-  // Dark crimson aura glow
   drawThroneAura(ctx, cx, cy, s, pulse);
 
-  // Base platform (two stepped tiers)
   drawThroneBase(ctx, cx, cy, s, pulse, bW, bM, bD, bSh, bVDk);
 
-  // Throne seat
+  // Wider, more prominent seat
   const seatBase = cy - 9 * s;
-  const seatW = 15 * s;
-  const seatH = 10 * s;
+  const seatW = 20 * s;
+  const seatH = 8 * s;
   drawThroneSeat(ctx, cx, seatBase, seatW, seatH, s, bM, bD, bSh, bL);
 
   const seatTop = seatBase - seatH;
   const seatI = seatW * ISO_COS;
   const seatD = seatW * ISO_SIN;
 
-  // Red velvet cushion
   drawThroneCushion(ctx, cx, seatTop, seatI, seatD, s);
 
-  // Backrest
-  const bkW = 16 * s;
-  const bkTW = 7 * s;
-  const bkH = 55 * s;
+  // Wider backrest that fans out — throne silhouette, not obelisk
+  const bkW = 22 * s;
+  const bkTW = 28 * s;
+  const bkH = 32 * s;
   const bkTop = seatTop - bkH;
   drawThroneBackrest(
     ctx,
@@ -1660,21 +1657,22 @@ export function renderSkullThrone(p: LandmarkParams): void {
     bSh,
   );
 
-  // Armrests with skull caps
+  // Large skull relief on the backrest center
+  const skullCenterY = seatTop - bkH * 0.48;
+  drawThroneSkullRelief(ctx, cx, skullCenterY, s, pulse, bW, bM, bD, redGl);
+
+  // Wing-like armrests with large skull terminals
   drawThroneArmrests(ctx, cx, seatTop, seatI, seatD, s, pulse, bL, bM, bD);
 
-  // Crown spikes and skull
+  // Horn-like crown spikes flanking outward
   const bkTD = bkTW * ISO_SIN;
   drawThroneCrown(ctx, cx, bkTop, bkTD, s, pulse, bW, bM, bD, bSh, redGl);
 
-  // Red energy spine running up the backrest
   const bkD2 = bkW * ISO_SIN;
   drawThroneEnergySpine(ctx, cx, seatTop, bkTop, bkD2, bkTD, s, pulse, redGl);
 
-  // Iron chains hanging from crown spikes
   drawThroneChains(ctx, cx, bkTop, bkTD, s, time);
 
-  // Red soul particles
   drawThroneSouls(ctx, cx, bkTop, s, time);
 }
 
@@ -1687,18 +1685,18 @@ function drawThroneAura(
 ): void {
   const auraG = ctx.createRadialGradient(
     cx,
-    cy - 12 * s,
-    2 * s,
+    cy - 16 * s,
+    3 * s,
     cx,
-    cy - 12 * s,
-    38 * s,
+    cy - 16 * s,
+    46 * s,
   );
-  auraG.addColorStop(0, `rgba(180,20,20,${0.1 + pulse * 0.06})`);
-  auraG.addColorStop(0.4, `rgba(100,10,10,${0.05 + pulse * 0.03})`);
+  auraG.addColorStop(0, `rgba(180,20,20,${0.12 + pulse * 0.08})`);
+  auraG.addColorStop(0.35, `rgba(100,10,10,${0.06 + pulse * 0.04})`);
   auraG.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = auraG;
   ctx.beginPath();
-  ctx.ellipse(cx, cy - 12 * s, 38 * s, 20 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, cy - 16 * s, 46 * s, 26 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -1714,38 +1712,56 @@ function drawThroneBase(
   bSh: string,
   bVDk: string,
 ): void {
-  // Tier 1: Wide base
-  drawIsometricPrism(ctx, cx, cy, 30 * s, 30 * s, 4 * s, bD, bSh, bVDk);
-  drawMortarLines(ctx, cx, cy, 30 * s, 4 * s, 2, "rgba(90,70,55,0.18)", s);
+  // Tier 1: Wide base — broader to support the throne
+  drawIsometricPrism(ctx, cx, cy, 36 * s, 36 * s, 3 * s, bD, bSh, bVDk);
+  drawMortarLines(ctx, cx, cy, 36 * s, 3 * s, 2, "rgba(90,70,55,0.18)", s);
 
   // Tier 2: Inset step
-  drawIsometricPrism(ctx, cx, cy - 4 * s, 24 * s, 24 * s, 5 * s, bM, bSh, bD);
+  drawIsometricPrism(
+    ctx,
+    cx,
+    cy - 3 * s,
+    28 * s,
+    28 * s,
+    4 * s,
+    bM,
+    bSh,
+    bD,
+  );
   drawMortarLines(
     ctx,
     cx,
-    cy - 4 * s,
-    24 * s,
-    5 * s,
+    cy - 3 * s,
+    28 * s,
+    4 * s,
     3,
     "rgba(80,65,50,0.15)",
     s,
   );
 
-  // Bone sheen on tier 2 left face
-  const t2Sheen = ctx.createLinearGradient(cx, cy - 4 * s, cx, cy - 9 * s);
+  const t2Sheen = ctx.createLinearGradient(cx, cy - 3 * s, cx, cy - 7 * s);
   t2Sheen.addColorStop(0, "rgba(200,185,165,0.08)");
   t2Sheen.addColorStop(1, "rgba(180,165,145,0)");
-  prismFaceOverlay(ctx, cx, cy - 4 * s, 24 * s, 5 * s, "left", t2Sheen);
+  prismFaceOverlay(ctx, cx, cy - 3 * s, 28 * s, 4 * s, "left", t2Sheen);
 
-  // Skulls scattered on the base tier ledge
+  // Dense skull pile covering the base — the throne rises from skulls
   const baseSkulls: Array<[number, number, number, number]> = [
-    [-16, 1, 2.8, 1],
-    [16, 1, 2.8, -1],
-    [-9, 5, 3.2, 1],
-    [9, 5, 3.2, -1],
-    [0, 7, 3.5, 1],
-    [-20, -2, 2.4, 1],
-    [20, -2, 2.4, -1],
+    [-18, 2, 3.0, 1],
+    [18, 2, 3.0, -1],
+    [-11, 5, 3.4, 1],
+    [11, 5, 3.4, -1],
+    [0, 7, 3.8, 1],
+    [-22, -1, 2.6, 1],
+    [22, -1, 2.6, -1],
+    [-6, 3, 2.8, -1],
+    [6, 3, 2.8, 1],
+    [-14, 7, 2.4, 1],
+    [14, 7, 2.4, -1],
+    [-25, 1, 2.2, 1],
+    [25, 1, 2.2, -1],
+    [0, 1, 2.6, -1],
+    [-8, 8, 2.0, 1],
+    [8, 8, 2.0, -1],
   ];
   for (const [dx, dy, sz, f] of baseSkulls) {
     drawIsoSkull3D(
@@ -1762,15 +1778,18 @@ function drawThroneBase(
     );
   }
 
-  // Small scattered bones between skulls
+  // Scattered bones woven between skulls
   ctx.lineCap = "round";
   const scatteredBones: Array<[number, number, number]> = [
-    [-12, 4, 0.8],
-    [12, 4, 1.2],
+    [-15, 4, 0.8],
+    [15, 4, 1.2],
     [-5, 6, 0.5],
     [5, 2, 0.9],
-    [-17, 3, 0.6],
-    [17, -1, 0.7],
+    [-20, 3, 0.6],
+    [20, -1, 0.7],
+    [-3, 8, 1.0],
+    [10, 6, 0.4],
+    [-10, 1, 1.1],
   ];
   for (const [dx, dy, ang] of scatteredBones) {
     const bx = cx + dx * s;
@@ -1884,7 +1903,7 @@ function drawThroneBackrest(
   bkTop: number,
   bkW: number,
   bkTW: number,
-  bkH: number,
+  _bkH: number,
   s: number,
   bW: string,
   bL: string,
@@ -1897,17 +1916,17 @@ function drawThroneBackrest(
   const bkTI = bkTW * ISO_COS;
   const bkTD = bkTW * ISO_SIN;
 
-  // Left face with rich gradient
+  // Left face — fans outward as it rises
   const bkLG = ctx.createLinearGradient(
     cx - bkI,
     bkBase + bkD2,
-    cx,
+    cx - bkTI,
     bkTop + bkTD,
   );
   bkLG.addColorStop(0, bSh);
-  bkLG.addColorStop(0.3, "#8a7a6a");
-  bkLG.addColorStop(0.6, "#7a6a5a");
-  bkLG.addColorStop(1, "#6a5a4a");
+  bkLG.addColorStop(0.3, "#7a6a5a");
+  bkLG.addColorStop(0.7, "#6a5a4a");
+  bkLG.addColorStop(1, "#5a4a3a");
   ctx.fillStyle = bkLG;
   ctx.beginPath();
   ctx.moveTo(cx - bkI, bkBase + bkD2);
@@ -1921,13 +1940,13 @@ function drawThroneBackrest(
   const bkRG = ctx.createLinearGradient(
     cx + bkI,
     bkBase + bkD2,
-    cx,
+    cx + bkTI,
     bkTop + bkTD,
   );
   bkRG.addColorStop(0, bD);
-  bkRG.addColorStop(0.3, "#9a8a7a");
-  bkRG.addColorStop(0.6, "#8a7a6a");
-  bkRG.addColorStop(1, "#7a6a5a");
+  bkRG.addColorStop(0.3, "#8a7a6a");
+  bkRG.addColorStop(0.7, "#7a6a5a");
+  bkRG.addColorStop(1, "#6a5a4a");
   ctx.fillStyle = bkRG;
   ctx.beginPath();
   ctx.moveTo(cx + bkI, bkBase + bkD2);
@@ -1937,30 +1956,25 @@ function drawThroneBackrest(
   ctx.closePath();
   ctx.fill();
 
-  // Front face (viewer-facing)
-  const bkFG = ctx.createLinearGradient(cx, bkBase + bkD2, cx, bkTop + bkTD);
-  bkFG.addColorStop(0, bM);
-  bkFG.addColorStop(0.5, "#b0a090");
-  bkFG.addColorStop(1, "#a09080");
-  ctx.fillStyle = bkFG;
+  // Top face of the backrest
+  ctx.fillStyle = bL;
   ctx.beginPath();
-  ctx.moveTo(cx - bkI, bkBase + bkD2);
-  ctx.lineTo(cx + bkI, bkBase + bkD2);
-  ctx.lineTo(cx + bkTI, bkTop + bkTD);
+  ctx.moveTo(cx - bkTI, bkTop + bkTD);
   ctx.lineTo(cx, bkTop);
-  ctx.lineTo(cx - bkTI, bkTop + bkTD);
+  ctx.lineTo(cx + bkTI, bkTop + bkTD);
+  ctx.lineTo(cx, bkTop + bkTD * 2);
   ctx.closePath();
   ctx.fill();
 
   // Spine ridge and edge lines
   ctx.strokeStyle = bL;
-  ctx.lineWidth = 0.6 * s;
+  ctx.lineWidth = 0.7 * s;
   ctx.beginPath();
   ctx.moveTo(cx, bkBase + bkD2 * 2);
   ctx.lineTo(cx, bkTop + bkTD * 2);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(200,185,165,0.3)";
-  ctx.lineWidth = 0.4 * s;
+  ctx.strokeStyle = "rgba(200,185,165,0.35)";
+  ctx.lineWidth = 0.5 * s;
   ctx.beginPath();
   ctx.moveTo(cx - bkI, bkBase + bkD2);
   ctx.lineTo(cx - bkTI, bkTop + bkTD);
@@ -1970,10 +1984,10 @@ function drawThroneBackrest(
   ctx.lineTo(cx + bkTI, bkTop + bkTD);
   ctx.stroke();
 
-  // Horizontal bone bands across the backrest
+  // Horizontal rib-like bone bands across the backrest
   ctx.strokeStyle = bL;
-  ctx.lineWidth = 0.5 * s;
-  for (const frac of [0.2, 0.4, 0.6, 0.8]) {
+  ctx.lineWidth = 0.6 * s;
+  for (const frac of [0.15, 0.35, 0.55, 0.75, 0.9]) {
     const bandI = bkI + (bkTI - bkI) * frac;
     const bandD = bkD2 + (bkTD - bkD2) * frac;
     const bandY = bkBase + (bkTop - bkBase) * frac;
@@ -1981,24 +1995,152 @@ function drawThroneBackrest(
     ctx.moveTo(cx - bandI, bandY + bandD);
     ctx.lineTo(cx, bandY + bandD * 2);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + bandI, bandY + bandD);
+    ctx.lineTo(cx, bandY + bandD * 2);
+    ctx.stroke();
   }
 
-  // Embedded skulls on backrest faces
+  // Embedded skulls on backrest flanks
   const embSkulls: Array<[number, number, number]> = [
-    [0.2, -0.35, 3.2],
-    [0.4, 0.25, 2.8],
-    [0.6, -0.2, 3.0],
-    [0.35, 0.45, 2.6],
-    [0.55, -0.45, 2.6],
-    [0.78, 0.1, 2.3],
+    [0.25, -0.55, 2.6],
+    [0.25, 0.55, 2.6],
+    [0.5, -0.65, 2.8],
+    [0.5, 0.65, 2.8],
+    [0.75, -0.7, 3.0],
+    [0.75, 0.7, 3.0],
+    [0.4, -0.3, 2.2],
+    [0.4, 0.3, 2.2],
+    [0.65, -0.4, 2.4],
+    [0.65, 0.4, 2.4],
   ];
   for (const [ht, xOff, sz] of embSkulls) {
     const esy = bkBase + (bkTop - bkBase) * ht;
     const eI = bkI + (bkTI - bkI) * ht;
     const eD = bkD2 + (bkTD - bkD2) * ht;
     const esx = cx + xOff * eI;
-    const esy2 = esy + eD * (1 + xOff * 0.5);
+    const esy2 = esy + eD * (1 + xOff * 0.3);
     drawIsoSkull3D(ctx, esx, esy2, sz * s, xOff < 0 ? -1 : 1, bW, bM, bD);
+  }
+}
+
+function drawThroneSkullRelief(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  s: number,
+  pulse: number,
+  bW: string,
+  bM: string,
+  bD: string,
+  redGl: string,
+): void {
+  const r = 11 * s;
+
+  // Cranium shadow
+  ctx.fillStyle = "rgba(40,20,10,0.3)";
+  ctx.beginPath();
+  ctx.ellipse(cx + 0.5 * s, cy + 0.8 * s, r * 1.08, r * 1.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cranium body
+  const cranG = ctx.createRadialGradient(
+    cx - r * 0.2,
+    cy - r * 0.2,
+    0,
+    cx,
+    cy,
+    r * 1.1,
+  );
+  cranG.addColorStop(0, bW);
+  cranG.addColorStop(0.4, bM);
+  cranG.addColorStop(0.8, bD);
+  cranG.addColorStop(1, "#6a5a4a");
+  ctx.fillStyle = cranG;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r, r * 1.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Brow ridge
+  ctx.fillStyle = bM;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + r * 0.08, r * 0.88, r * 0.32, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+
+  // Cranium suture lines
+  ctx.strokeStyle = "rgba(120,100,80,0.25)";
+  ctx.lineWidth = 0.5 * s;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.9);
+  ctx.quadraticCurveTo(cx - r * 0.3, cy - r * 0.2, cx - r * 0.6, cy + r * 0.1);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r * 0.9);
+  ctx.quadraticCurveTo(cx + r * 0.3, cy - r * 0.2, cx + r * 0.6, cy + r * 0.1);
+  ctx.stroke();
+
+  // Deep eye sockets
+  const eyeSpacing = r * 0.38;
+  const eyeY = cy + r * 0.06;
+  const eyeRx = r * 0.22;
+  const eyeRy = r * 0.28;
+  ctx.fillStyle = "#0a0404";
+  ctx.beginPath();
+  ctx.ellipse(cx - eyeSpacing, eyeY, eyeRx, eyeRy, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(cx + eyeSpacing, eyeY, eyeRx, eyeRy, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing red eyes
+  setShadowBlur(ctx, 16 * s, redGl);
+  ctx.fillStyle = `rgba(220,30,30,${0.6 + pulse * 0.35})`;
+  ctx.beginPath();
+  ctx.arc(cx - eyeSpacing, eyeY, eyeRx * 0.7, 0, Math.PI * 2);
+  ctx.arc(cx + eyeSpacing, eyeY, eyeRx * 0.7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255,120,80,${0.35 + pulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(cx - eyeSpacing, eyeY, eyeRx * 0.3, 0, Math.PI * 2);
+  ctx.arc(cx + eyeSpacing, eyeY, eyeRx * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Nasal cavity
+  ctx.fillStyle = "#1a0a04";
+  ctx.beginPath();
+  ctx.moveTo(cx, eyeY + r * 0.18);
+  ctx.lineTo(cx - r * 0.08, eyeY + r * 0.35);
+  ctx.lineTo(cx + r * 0.08, eyeY + r * 0.35);
+  ctx.closePath();
+  ctx.fill();
+
+  // Jaw / teeth
+  const jawY = eyeY + r * 0.42;
+  ctx.fillStyle = bD;
+  ctx.beginPath();
+  ctx.moveTo(cx - r * 0.45, jawY);
+  ctx.quadraticCurveTo(cx, jawY + r * 0.35, cx + r * 0.45, jawY);
+  ctx.lineTo(cx + r * 0.4, jawY - r * 0.04);
+  ctx.quadraticCurveTo(cx, jawY + r * 0.22, cx - r * 0.4, jawY - r * 0.04);
+  ctx.closePath();
+  ctx.fill();
+
+  // Individual teeth
+  ctx.fillStyle = bW;
+  const teethCount = 7;
+  const teethW = r * 0.8 / teethCount;
+  for (let i = 0; i < teethCount; i++) {
+    const tx = cx - r * 0.35 + i * teethW + teethW * 0.1;
+    const ty = jawY - r * 0.02;
+    ctx.fillRect(tx, ty, teethW * 0.7, r * 0.12);
+  }
+  ctx.strokeStyle = "rgba(100,80,60,0.3)";
+  ctx.lineWidth = 0.3 * s;
+  for (let i = 1; i < teethCount; i++) {
+    const tx = cx - r * 0.35 + i * teethW;
+    ctx.beginPath();
+    ctx.moveTo(tx, jawY - r * 0.02);
+    ctx.lineTo(tx, jawY + r * 0.1);
+    ctx.stroke();
   }
 }
 
@@ -2015,47 +2157,76 @@ function drawThroneArmrests(
   bD: string,
 ): void {
   for (const side of [-1, 1]) {
-    const ax = cx + side * seatI * 1.08;
+    const ax = cx + side * seatI * 1.15;
     const ay = seatTop + seatD + 1 * s;
 
-    // Armrest body with gradient
+    // Thicker armrest body curving outward and upward
     const armGrad = ctx.createLinearGradient(
-      cx + side * seatI * 0.8,
-      seatTop + seatD * 0.8,
+      cx + side * seatI * 0.7,
+      seatTop + seatD * 0.7,
       ax,
-      ay - 5 * s,
+      ay - 6 * s,
     );
-    armGrad.addColorStop(0, "#8a7a6a");
+    armGrad.addColorStop(0, "#7a6a5a");
+    armGrad.addColorStop(0.5, "#8a7a6a");
     armGrad.addColorStop(1, "#a09080");
     ctx.fillStyle = armGrad;
     ctx.beginPath();
-    ctx.moveTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8);
-    ctx.lineTo(ax, ay - 2 * s);
-    ctx.lineTo(ax, ay - 9 * s);
-    ctx.lineTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8 - 6 * s);
+    ctx.moveTo(cx + side * seatI * 0.7, seatTop + seatD * 0.7);
+    ctx.quadraticCurveTo(
+      cx + side * seatI * 1.05,
+      ay + 2 * s,
+      ax + side * 3 * s,
+      ay - 1 * s,
+    );
+    ctx.lineTo(ax + side * 3 * s, ay - 10 * s);
+    ctx.quadraticCurveTo(
+      cx + side * seatI * 1.0,
+      seatTop + seatD * 0.5 - 4 * s,
+      cx + side * seatI * 0.7,
+      seatTop + seatD * 0.7 - 8 * s,
+    );
     ctx.closePath();
     ctx.fill();
 
-    // Armrest edge highlight
+    // Armrest top edge highlight
     ctx.strokeStyle = bL;
-    ctx.lineWidth = 0.4 * s;
+    ctx.lineWidth = 0.5 * s;
     ctx.beginPath();
-    ctx.moveTo(cx + side * seatI * 0.8, seatTop + seatD * 0.8 - 6 * s);
-    ctx.lineTo(ax, ay - 9 * s);
+    ctx.moveTo(cx + side * seatI * 0.7, seatTop + seatD * 0.7 - 8 * s);
+    ctx.quadraticCurveTo(
+      cx + side * seatI * 1.0,
+      seatTop + seatD * 0.5 - 4 * s,
+      ax + side * 3 * s,
+      ay - 10 * s,
+    );
     ctx.stroke();
 
-    // Skull cap on armrest
+    // Bone ridge along armrest
+    ctx.strokeStyle = "rgba(200,185,165,0.25)";
+    ctx.lineWidth = 0.8 * s;
+    ctx.beginPath();
+    ctx.moveTo(cx + side * seatI * 0.75, seatTop + seatD * 0.75 - 4 * s);
+    ctx.quadraticCurveTo(
+      cx + side * seatI * 1.0,
+      ay - 3 * s,
+      ax + side * 2 * s,
+      ay - 5 * s,
+    );
+    ctx.stroke();
+
+    // Large skull terminal at armrest end
     drawIsoSkull3D(
       ctx,
-      ax,
-      ay - 6 * s,
-      2.8 * s,
+      ax + side * 2 * s,
+      ay - 5.5 * s,
+      4.0 * s,
       side,
       bL,
       bM,
       bD,
       "#cc2020",
-      0.35 + pulse * 0.3,
+      0.4 + pulse * 0.35,
     );
   }
 }
@@ -2073,68 +2244,53 @@ function drawThroneCrown(
   bSh: string,
   redGl: string,
 ): void {
-  // Bone spike crown (taller center, descending outward)
-  const spikeData: Array<[number, number, number]> = [
-    [-12, 4, 8],
-    [-6, 2, 11],
-    [0, 0, 16],
-    [6, 2, 11],
-    [12, 4, 8],
+  // Horn-like spikes flaring outward from the wide backrest top
+  const spikeData: Array<[number, number, number, number]> = [
+    [-22, 6, 10, -0.3],
+    [-14, 3, 14, -0.15],
+    [-6, 1, 17, -0.05],
+    [0, 0, 20, 0],
+    [6, 1, 17, 0.05],
+    [14, 3, 14, 0.15],
+    [22, 6, 10, 0.3],
   ];
-  for (const [xOff, yOff, h] of spikeData) {
-    drawIsometricPyramid(
-      ctx,
-      cx + xOff * s,
-      bkTop + bkTD + yOff * s,
-      h === 16 ? 2.8 * s : 2 * s,
-      h * s,
-      bW,
-      bSh,
-      bM,
-    );
+  for (const [xOff, yOff, h, lean] of spikeData) {
+    const baseX = cx + xOff * s;
+    const baseY = bkTop + bkTD + yOff * s;
+    const tipX = baseX + lean * h * s;
+    const tipY = baseY - h * s;
+    const w = h === 20 ? 3 * s : 2.2 * s;
+
+    // Spike body
+    const spkG = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
+    spkG.addColorStop(0, bSh);
+    spkG.addColorStop(0.4, bM);
+    spkG.addColorStop(0.8, bW);
+    spkG.addColorStop(1, "#f0e8d8");
+    ctx.fillStyle = spkG;
+    ctx.beginPath();
+    ctx.moveTo(baseX - w * 0.5, baseY);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(baseX + w * 0.5, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Spike edge highlight
+    ctx.strokeStyle = "rgba(200,185,165,0.3)";
+    ctx.lineWidth = 0.4 * s;
+    ctx.beginPath();
+    ctx.moveTo(baseX - w * 0.5, baseY);
+    ctx.lineTo(tipX, tipY);
+    ctx.stroke();
+
+    // Glowing tip
+    setShadowBlur(ctx, 4 * s, redGl);
+    ctx.fillStyle = `rgba(200,30,30,${0.2 + pulse * 0.15})`;
+    ctx.beginPath();
+    ctx.arc(tipX, tipY + 1 * s, 1.2 * s, 0, Math.PI * 2);
+    ctx.fill();
+    clearShadow(ctx);
   }
-
-  // Crown skull — large with glowing red eyes
-  const cSkY = bkTop + bkTD + 10 * s;
-  drawIsoSkull3D(ctx, cx, cSkY, 6 * s, 1, bW, bM, bD);
-
-  // Cranium highlight
-  ctx.fillStyle = "#ede4d6";
-  ctx.beginPath();
-  ctx.ellipse(
-    cx - 1 * s,
-    cSkY - 2.5 * s,
-    3.8 * s,
-    4.2 * s,
-    -0.08,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Deep eye sockets
-  const crEyeOff = 6 * 0.36 * s;
-  const crEyeY = cSkY + 6 * 0.04 * s;
-  ctx.fillStyle = "#1a0a04";
-  ctx.beginPath();
-  ctx.ellipse(cx - crEyeOff, crEyeY, 1.4 * s, 1.9 * s, 0, 0, Math.PI * 2);
-  ctx.ellipse(cx + crEyeOff, crEyeY, 1.4 * s, 1.9 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Glowing red eyes
-  setShadowBlur(ctx, 14 * s, redGl);
-  ctx.fillStyle = `rgba(220,30,30,${0.55 + pulse * 0.35})`;
-  ctx.beginPath();
-  ctx.arc(cx - crEyeOff, crEyeY, 1.1 * s, 0, Math.PI * 2);
-  ctx.arc(cx + crEyeOff, crEyeY, 1.1 * s, 0, Math.PI * 2);
-  ctx.fill();
-  // Bright core
-  ctx.fillStyle = `rgba(255,100,80,${0.3 + pulse * 0.25})`;
-  ctx.beginPath();
-  ctx.arc(cx - crEyeOff, crEyeY, 0.5 * s, 0, Math.PI * 2);
-  ctx.arc(cx + crEyeOff, crEyeY, 0.5 * s, 0, Math.PI * 2);
-  ctx.fill();
-  clearShadow(ctx);
 }
 
 function drawThroneEnergySpine(
@@ -2148,35 +2304,45 @@ function drawThroneEnergySpine(
   pulse: number,
   redGl: string,
 ): void {
-  setShadowBlur(ctx, 6 * s, redGl);
-  ctx.strokeStyle = `rgba(200,30,30,${0.25 + pulse * 0.2})`;
-  ctx.lineWidth = 1.2 * s;
+  setShadowBlur(ctx, 8 * s, redGl);
+
+  // Vertical energy vein up the center
+  ctx.strokeStyle = `rgba(200,30,30,${0.3 + pulse * 0.2})`;
+  ctx.lineWidth = 1.5 * s;
   ctx.beginPath();
   ctx.moveTo(cx, bkBase + bkD2 * 0.3);
-  ctx.lineTo(cx, bkTop + bkTD + 18 * s);
+  ctx.lineTo(cx, bkTop + bkTD + 10 * s);
   ctx.stroke();
 
-  // Diamond motif
+  // Branching veins spreading outward (matching wider backrest)
+  const branchY = bkTop + bkTD + 12 * s;
+  const midY = (bkBase + bkD2 * 0.3 + branchY) * 0.5;
   ctx.lineWidth = 0.8 * s;
-  ctx.beginPath();
-  ctx.moveTo(cx - 2.5 * s, bkTop + bkTD + 22 * s);
-  ctx.lineTo(cx, bkTop + bkTD + 16 * s);
-  ctx.lineTo(cx + 2.5 * s, bkTop + bkTD + 22 * s);
-  ctx.stroke();
-
-  // Additional smaller V shapes along the spine
-  const spineLen = bkBase + bkD2 * 0.3 - (bkTop + bkTD + 18 * s);
-  for (let i = 0; i < 3; i++) {
-    const t = (i + 1) / 4;
-    const vy = bkTop + bkTD + 18 * s + spineLen * t;
-    const vSize = (1.5 + i * 0.3) * s;
-    ctx.lineWidth = 0.5 * s;
+  ctx.strokeStyle = `rgba(180,25,25,${0.2 + pulse * 0.15})`;
+  for (const side of [-1, 1]) {
     ctx.beginPath();
-    ctx.moveTo(cx - vSize, vy + 2 * s);
-    ctx.lineTo(cx, vy);
-    ctx.lineTo(cx + vSize, vy + 2 * s);
+    ctx.moveTo(cx, midY);
+    ctx.quadraticCurveTo(cx + side * 6 * s, midY - 4 * s, cx + side * 10 * s, midY - 2 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, branchY + 4 * s);
+    ctx.quadraticCurveTo(
+      cx + side * 8 * s,
+      branchY,
+      cx + side * 14 * s,
+      branchY + 2 * s,
+    );
     ctx.stroke();
   }
+
+  // Diamond motif at center
+  ctx.lineWidth = 0.9 * s;
+  ctx.strokeStyle = `rgba(200,30,30,${0.25 + pulse * 0.2})`;
+  ctx.beginPath();
+  ctx.moveTo(cx - 3 * s, midY + 3 * s);
+  ctx.lineTo(cx, midY - 2 * s);
+  ctx.lineTo(cx + 3 * s, midY + 3 * s);
+  ctx.stroke();
   clearShadow(ctx);
 }
 
@@ -2189,15 +2355,14 @@ function drawThroneChains(
   time: number,
 ): void {
   ctx.lineCap = "round";
-  for (const xOff of [-9, 0, 9]) {
-    const chainTop = bkTop + bkTD + 3 * s;
-    const chainLen = 16 + Math.abs(xOff) * 0.4;
+  for (const xOff of [-18, -8, 0, 8, 18]) {
+    const chainTop = bkTop + bkTD + 4 * s;
+    const chainLen = 12 + Math.abs(xOff) * 0.3;
     const chainSway = Math.sin(time * 1.0 + xOff * 0.3) * 1.2 * s;
 
-    for (let link = 0; link < 5; link++) {
-      const ly = chainTop + link * 3.2 * s;
-      const lx = cx + xOff * s + chainSway * (link / 5);
-      // Dark outline first
+    for (let link = 0; link < 4; link++) {
+      const ly = chainTop + link * 3 * s;
+      const lx = cx + xOff * s + chainSway * (link / 4);
       ctx.strokeStyle = "#2a2a30";
       ctx.lineWidth = 1.1 * s;
       ctx.beginPath();
@@ -2211,7 +2376,6 @@ function drawThroneChains(
         Math.PI * 2,
       );
       ctx.stroke();
-      // Lighter link body
       ctx.strokeStyle = "#505058";
       ctx.lineWidth = 0.65 * s;
       ctx.beginPath();
@@ -2227,7 +2391,7 @@ function drawThroneChains(
       ctx.stroke();
     }
 
-    // Weight at chain end
+    // Small skull weight at chain end
     ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
     ctx.arc(
@@ -2251,18 +2415,17 @@ function drawThroneSouls(
   s: number,
   time: number,
 ): void {
-  for (let i = 0; i < 6; i++) {
-    const pt = (time * 0.45 + i * 0.45) % 2.5;
-    const ang = (i / 6) * Math.PI * 2 + time * 0.2;
-    const dr = 14 * s + Math.sin(pt * Math.PI) * 8 * s;
+  for (let i = 0; i < 8; i++) {
+    const pt = (time * 0.4 + i * 0.38) % 2.5;
+    const ang = (i / 8) * Math.PI * 2 + time * 0.18;
+    const dr = 20 * s + Math.sin(pt * Math.PI) * 10 * s;
     const px = cx + Math.cos(ang) * dr;
-    const py = bkTop + 10 * s - pt * 12 * s;
+    const py = bkTop + 12 * s - pt * 10 * s;
     const pa = Math.max(0, (1 - pt / 2.5) * 0.35);
     ctx.fillStyle = `rgba(200,30,30,${pa})`;
     ctx.beginPath();
     ctx.arc(px, py, (1.5 - pt * 0.4) * s, 0, Math.PI * 2);
     ctx.fill();
-    // Bright core on particle
     ctx.fillStyle = `rgba(255,100,80,${pa * 0.5})`;
     ctx.beginPath();
     ctx.arc(px, py, (0.6 - pt * 0.15) * s, 0, Math.PI * 2);

@@ -548,6 +548,7 @@ function drawLavaGeyserHazard(
     layout,
     time,
     cycle,
+    cameraZoom,
   );
   drawLavaGeyserVentRim(ctx, ventWidth, lavaIso, hazSeed, cycle, cameraZoom);
   drawLavaGeyserBackRocks(ctx, ventWidth, lavaIso, layout, cycle, cameraZoom);
@@ -639,6 +640,44 @@ function drawLavaGeyserScorchedEarth(
     );
     ctx.fill();
   }
+
+  for (let r = 0; r < 5; r++) {
+    const rockAngle =
+      (r / 5) * Math.PI * 2 + seededNoise(hazSeed + r * 37) * 0.6;
+    const rockDist = sRad * (0.65 + seededNoise(hazSeed + r * 43) * 0.4);
+    const rx = Math.cos(rockAngle) * rockDist;
+    const ry = Math.sin(rockAngle) * rockDist * lavaIso;
+    const rw = (4 + seededNoise(hazSeed + r * 51) * 5) * cameraZoom;
+    const rh = (2 + seededNoise(hazSeed + r * 57) * 3) * cameraZoom;
+    const rd = rw * lavaIso * 0.7;
+
+    ctx.fillStyle = `rgba(48, 22, 10, ${0.65 + seededNoise(hazSeed + r * 61) * 0.2})`;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - rh);
+    ctx.lineTo(rx + rw * 0.5, ry - rh + rd);
+    ctx.lineTo(rx, ry - rh + rd * 2);
+    ctx.lineTo(rx - rw * 0.5, ry - rh + rd);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(38, 17, 7, ${0.6 + seededNoise(hazSeed + r * 67) * 0.15})`;
+    ctx.beginPath();
+    ctx.moveTo(rx - rw * 0.5, ry - rh + rd);
+    ctx.lineTo(rx, ry - rh + rd * 2);
+    ctx.lineTo(rx, ry + rd * 2);
+    ctx.lineTo(rx - rw * 0.5, ry + rd);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(28, 12, 5, ${0.55 + seededNoise(hazSeed + r * 73) * 0.15})`;
+    ctx.beginPath();
+    ctx.moveTo(rx + rw * 0.5, ry - rh + rd);
+    ctx.lineTo(rx, ry - rh + rd * 2);
+    ctx.lineTo(rx, ry + rd * 2);
+    ctx.lineTo(rx + rw * 0.5, ry + rd);
+    ctx.closePath();
+    ctx.fill();
+  }
 }
 
 function drawLavaGeyserCracks(
@@ -697,49 +736,232 @@ function drawLavaGeyserFlows(
 ): void {
   const flowPulse =
     0.6 + Math.sin(time * 1.8) * 0.15 + cycle.eruptionIntensity * 0.25;
+  const bankH = 3.5 * cameraZoom;
+  const N = 10;
 
-  for (const flow of layout.lavaFlows) {
+  const sortedFlows = [...layout.lavaFlows].sort((a, b) => {
+    return (
+      Math.sin(a.angle + a.curvature * 0.25) -
+      Math.sin(b.angle + b.curvature * 0.25)
+    );
+  });
+
+  for (const flow of sortedFlows) {
     const startR = sRad * 0.32;
     const endR = sRad * flow.length;
     const angle = flow.angle;
     const midAngle = angle + flow.curvature;
-    const flowWidth = sRad * flow.width;
-    const animOffset = Math.sin(time * 1.2 + flow.angle * 3) * 2 * cameraZoom;
+    const endAngle = angle + flow.curvature * 0.5;
+    const halfW = sRad * flow.width * 2;
+    const animShift =
+      Math.sin(time * 1.2 + flow.angle * 3) * 1.5 * cameraZoom;
 
-    const sx = Math.cos(angle) * startR;
-    const sy = Math.sin(angle) * startR * lavaIso;
-    const midX = Math.cos(midAngle) * (startR + endR) * 0.5;
-    const midY =
-      Math.sin(midAngle) * (startR + endR) * 0.5 * lavaIso + animOffset;
-    const ex = Math.cos(angle + flow.curvature * 0.5) * endR;
-    const ey = Math.sin(angle + flow.curvature * 0.5) * endR * lavaIso;
+    const p0x = Math.cos(angle) * startR;
+    const p0y = Math.sin(angle) * startR * lavaIso;
+    const p1x = Math.cos(midAngle) * (startR + endR) * 0.5;
+    const p1y =
+      Math.sin(midAngle) * (startR + endR) * 0.5 * lavaIso + animShift;
+    const p2x = Math.cos(endAngle) * endR;
+    const p2y = Math.sin(endAngle) * endR * lavaIso;
 
-    // Dark channel beneath
-    ctx.strokeStyle = `rgba(35, 12, 4, 0.6)`;
-    ctx.lineWidth = (flowWidth * 2 + 3) * cameraZoom;
+    const pts: { x: number; y: number }[] = [];
+    const nrm: { x: number; y: number }[] = [];
+
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const mt = 1 - t;
+      pts.push({
+        x: mt * mt * p0x + 2 * mt * t * p1x + t * t * p2x,
+        y: mt * mt * p0y + 2 * mt * t * p1y + t * t * p2y,
+      });
+      const tx = 2 * mt * (p1x - p0x) + 2 * t * (p2x - p1x);
+      const ty = 2 * mt * (p1y - p0y) + 2 * t * (p2y - p1y);
+      const len = Math.sqrt(tx * tx + ty * ty) || 1;
+      nrm.push({ x: -ty / len, y: tx / len });
+    }
+
+    const iL: { x: number; y: number }[] = [];
+    const iR: { x: number; y: number }[] = [];
+    const oL: { x: number; y: number }[] = [];
+    const oR: { x: number; y: number }[] = [];
+
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const w = halfW * (1 - t * 0.35);
+      const ow = w * 1.45;
+      iL.push({
+        x: pts[i].x + nrm[i].x * w,
+        y: pts[i].y + nrm[i].y * w,
+      });
+      iR.push({
+        x: pts[i].x - nrm[i].x * w,
+        y: pts[i].y - nrm[i].y * w,
+      });
+      oL.push({
+        x: pts[i].x + nrm[i].x * ow,
+        y: pts[i].y + nrm[i].y * ow,
+      });
+      oR.push({
+        x: pts[i].x - nrm[i].x * ow,
+        y: pts[i].y - nrm[i].y * ow,
+      });
+    }
+
+    ctx.fillStyle = "rgba(20, 8, 3, 0.5)";
+    ctx.beginPath();
+    ctx.moveTo(oL[0].x, oL[0].y);
+    for (let i = 1; i <= N; i++) ctx.lineTo(oL[i].x, oL[i].y);
+    for (let i = N; i >= 0; i--) ctx.lineTo(oR[i].x, oR[i].y);
+    ctx.closePath();
+    ctx.fill();
+
+    for (let i = 0; i < N; i++) {
+      const avgNy = (nrm[i].y + nrm[i + 1].y) * 0.5;
+
+      if (avgNy < -0.05) {
+        const lit = 0.5 + Math.abs(avgNy) * 0.3;
+        ctx.fillStyle = `rgb(${Math.floor(58 * lit)}, ${Math.floor(30 * lit)}, ${Math.floor(16 * lit)})`;
+        ctx.beginPath();
+        ctx.moveTo(iL[i].x, iL[i].y);
+        ctx.lineTo(iL[i + 1].x, iL[i + 1].y);
+        ctx.lineTo(iL[i + 1].x, iL[i + 1].y - bankH);
+        ctx.lineTo(iL[i].x, iL[i].y - bankH);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (avgNy > 0.05) {
+        const lit = 0.4 + avgNy * 0.25;
+        ctx.fillStyle = `rgb(${Math.floor(52 * lit)}, ${Math.floor(26 * lit)}, ${Math.floor(13 * lit)})`;
+        ctx.beginPath();
+        ctx.moveTo(iR[i].x, iR[i].y);
+        ctx.lineTo(iR[i + 1].x, iR[i + 1].y);
+        ctx.lineTo(iR[i + 1].x, iR[i + 1].y - bankH);
+        ctx.lineTo(iR[i].x, iR[i].y - bankH);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    ctx.fillStyle = "rgb(60, 33, 16)";
+    ctx.beginPath();
+    ctx.moveTo(oL[0].x, oL[0].y - bankH);
+    for (let i = 1; i <= N; i++) ctx.lineTo(oL[i].x, oL[i].y - bankH);
+    for (let i = N; i >= 0; i--) ctx.lineTo(iL[i].x, iL[i].y - bankH);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = "rgb(48, 25, 12)";
+    ctx.beginPath();
+    ctx.moveTo(iR[0].x, iR[0].y - bankH);
+    for (let i = 1; i <= N; i++) ctx.lineTo(iR[i].x, iR[i].y - bankH);
+    for (let i = N; i >= 0; i--) ctx.lineTo(oR[i].x, oR[i].y - bankH);
+    ctx.closePath();
+    ctx.fill();
+
+    for (let i = 0; i < N; i++) {
+      const avgNy = (nrm[i].y + nrm[i + 1].y) * 0.5;
+
+      if (avgNy > 0.05) {
+        ctx.fillStyle = "rgb(52, 28, 14)";
+        ctx.beginPath();
+        ctx.moveTo(oL[i].x, oL[i].y);
+        ctx.lineTo(oL[i + 1].x, oL[i + 1].y);
+        ctx.lineTo(oL[i + 1].x, oL[i + 1].y - bankH);
+        ctx.lineTo(oL[i].x, oL[i].y - bankH);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (avgNy < -0.05) {
+        ctx.fillStyle = "rgb(42, 22, 10)";
+        ctx.beginPath();
+        ctx.moveTo(oR[i].x, oR[i].y);
+        ctx.lineTo(oR[i + 1].x, oR[i + 1].y);
+        ctx.lineTo(oR[i + 1].x, oR[i + 1].y - bankH);
+        ctx.lineTo(oR[i].x, oR[i].y - bankH);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    const lavaGrad = ctx.createLinearGradient(
+      pts[0].x,
+      pts[0].y,
+      pts[N].x,
+      pts[N].y,
+    );
+    lavaGrad.addColorStop(0, `rgba(255, 210, 70, ${flowPulse})`);
+    lavaGrad.addColorStop(0.3, `rgba(255, 150, 30, ${flowPulse * 0.95})`);
+    lavaGrad.addColorStop(0.65, `rgba(230, 90, 12, ${flowPulse * 0.85})`);
+    lavaGrad.addColorStop(1, `rgba(170, 45, 5, ${flowPulse * 0.55})`);
+    ctx.fillStyle = lavaGrad;
+    ctx.beginPath();
+    ctx.moveTo(iL[0].x, iL[0].y);
+    for (let i = 1; i <= N; i++) ctx.lineTo(iL[i].x, iL[i].y);
+    for (let i = N; i >= 0; i--) ctx.lineTo(iR[i].x, iR[i].y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(255, 250, 160, ${flowPulse * 0.45})`;
+    ctx.lineWidth = Math.max(1, halfW * 0.35);
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(midX, midY, ex, ey);
-    ctx.stroke();
-
-    // Bright lava stream
-    const flowGrad = ctx.createLinearGradient(sx, sy, ex, ey);
-    flowGrad.addColorStop(0, `rgba(255, 180, 40, ${flowPulse})`);
-    flowGrad.addColorStop(0.4, `rgba(255, 110, 15, ${flowPulse * 0.9})`);
-    flowGrad.addColorStop(1, `rgba(180, 50, 5, ${flowPulse * 0.5})`);
-    ctx.strokeStyle = flowGrad;
-    ctx.lineWidth = flowWidth * 2 * cameraZoom;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(midX, midY, ex, ey);
-    ctx.stroke();
-
-    // Hot centerline
-    ctx.strokeStyle = `rgba(255, 240, 140, ${flowPulse * 0.55})`;
-    ctx.lineWidth = flowWidth * 0.7 * cameraZoom;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i <= N; i++) ctx.lineTo(pts[i].x, pts[i].y);
     ctx.stroke();
     ctx.lineCap = "butt";
+
+    for (let c = 0; c < 5; c++) {
+      const speed = 0.3 + Math.abs(flow.curvature) * 0.15;
+      const crustT = ((time * speed + c * 0.19 + flow.angle * 2) % 1);
+      const ci = Math.min(Math.floor(crustT * N), N - 1);
+      const cf = crustT * N - ci;
+      const next = Math.min(ci + 1, N);
+      const cx = pts[ci].x * (1 - cf) + pts[next].x * cf;
+      const cy = pts[ci].y * (1 - cf) + pts[next].y * cf;
+      const cw =
+        (2 + seededNoise(flow.angle * 100 + c * 7) * 2) * cameraZoom;
+      ctx.fillStyle = `rgba(55, 22, 8, ${0.35 + Math.sin(time * 2.5 + c * 1.1) * 0.1})`;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, cw, cw * lavaIso, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.strokeStyle = `rgba(255, 110, 25, ${flowPulse * 0.3})`;
+    ctx.lineWidth = 1.5 * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(iL[0].x, iL[0].y);
+    for (let i = 1; i <= N; i++) ctx.lineTo(iL[i].x, iL[i].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(iR[0].x, iR[0].y);
+    for (let i = 1; i <= N; i++) ctx.lineTo(iR[i].x, iR[i].y);
+    ctx.stroke();
+
+    const epR = halfW * 1.6;
+    const epx = pts[N].x;
+    const epy = pts[N].y;
+    ctx.fillStyle = "rgba(35, 14, 5, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(
+      epx,
+      epy,
+      epR * 1.3,
+      epR * 1.3 * lavaIso,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    const epGrad = ctx.createRadialGradient(epx, epy, 0, epx, epy, epR);
+    epGrad.addColorStop(0, `rgba(255, 170, 40, ${flowPulse * 0.7})`);
+    epGrad.addColorStop(0.5, `rgba(200, 70, 10, ${flowPulse * 0.5})`);
+    epGrad.addColorStop(1, `rgba(130, 35, 5, ${flowPulse * 0.2})`);
+    ctx.fillStyle = epGrad;
+    ctx.beginPath();
+    ctx.ellipse(epx, epy, epR, epR * lavaIso, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -750,6 +972,7 @@ function drawLavaGeyserSecondaryPools(
   layout: LavaGeyserLayout,
   time: number,
   cycle: LavaGeyserCycleState,
+  cameraZoom: number,
 ): void {
   const poolGlow =
     0.7 + Math.sin(time * 1.4) * 0.1 + cycle.eruptionIntensity * 0.2;
@@ -758,32 +981,168 @@ function drawLavaGeyserSecondaryPools(
     const px = Math.cos(pool.angle) * sRad * pool.dist;
     const py = Math.sin(pool.angle) * sRad * pool.dist * lavaIso;
     const pr = sRad * pool.size;
+    const rimH = pr * 0.35;
+    const outerR = pr * 1.4;
+    const innerR = pr * 0.95;
+    const segs = 10;
 
     ctx.save();
     ctx.translate(px, py);
 
-    // Dark rim
-    ctx.fillStyle = "rgba(30, 12, 4, 0.7)";
-    drawOrganicBlob(ctx, pr * 1.3, pr * 1.3 * lavaIso, pool.angle * 100, 0.2);
+    ctx.fillStyle = "rgba(25, 10, 4, 0.5)";
+    ctx.beginPath();
+    ctx.ellipse(
+      0,
+      0,
+      outerR * 1.15,
+      outerR * 1.15 * lavaIso,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
-    // Molten pool
-    const poolGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, pr);
-    poolGrad.addColorStop(0, `rgba(255, 200, 60, ${poolGlow})`);
-    poolGrad.addColorStop(0.5, `rgba(255, 120, 20, ${poolGlow * 0.85})`);
-    poolGrad.addColorStop(1, `rgba(160, 40, 5, ${poolGlow * 0.5})`);
+    for (let pass = 0; pass < 2; pass++) {
+      const startSeg = pass === 0 ? segs / 2 : 0;
+      const endSeg = pass === 0 ? segs : segs / 2;
+
+      for (let s = startSeg; s < endSeg; s++) {
+        const a0 = (s / segs) * Math.PI * 2;
+        const a1 = ((s + 1) / segs) * Math.PI * 2;
+        const midA = (a0 + a1) / 2;
+        const isFront = Math.sin(midA) > 0;
+        const lr = -Math.cos(midA);
+        const light = 0.5 + lr * 0.3;
+
+        const ox0 = Math.cos(a0) * outerR;
+        const oy0b = Math.sin(a0) * outerR * lavaIso;
+        const oy0t = oy0b - rimH;
+        const ox1 = Math.cos(a1) * outerR;
+        const oy1b = Math.sin(a1) * outerR * lavaIso;
+        const oy1t = oy1b - rimH;
+
+        const ix0 = Math.cos(a0) * innerR;
+        const iy0t = Math.sin(a0) * innerR * lavaIso - rimH;
+        const ix1 = Math.cos(a1) * innerR;
+        const iy1t = Math.sin(a1) * innerR * lavaIso - rimH;
+
+        if (isFront) {
+          const oRc = Math.floor(42 * light + 12);
+          const oG = Math.floor(22 * light + 8);
+          const oB = Math.floor(12 * light + 4);
+          ctx.fillStyle = `rgb(${oRc}, ${oG}, ${oB})`;
+          ctx.beginPath();
+          ctx.moveTo(ox0, oy0b);
+          ctx.lineTo(ox1, oy1b);
+          ctx.lineTo(ox1, oy1t);
+          ctx.lineTo(ox0, oy0t);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        const tR = Math.floor(52 * light + 16);
+        const tG = Math.floor(28 * light + 10);
+        const tB = Math.floor(15 * light + 5);
+        ctx.fillStyle = `rgb(${tR}, ${tG}, ${tB})`;
+        ctx.beginPath();
+        ctx.moveTo(ox0, oy0t);
+        ctx.lineTo(ox1, oy1t);
+        ctx.lineTo(ix1, iy1t);
+        ctx.lineTo(ix0, iy0t);
+        ctx.closePath();
+        ctx.fill();
+
+        if (isFront && cycle.eruptionIntensity > 0.01) {
+          const glowH = rimH * 0.5;
+          ctx.fillStyle = `rgba(255, 90, 15, ${cycle.eruptionIntensity * 0.2})`;
+          ctx.beginPath();
+          ctx.moveTo(ix0, iy0t);
+          ctx.lineTo(ix1, iy1t);
+          ctx.lineTo(ix1, iy1t + glowH);
+          ctx.lineTo(ix0, iy0t + glowH);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+
+    const poolSurfaceY = -rimH * 0.4;
+    const poolGrad = ctx.createRadialGradient(
+      0,
+      poolSurfaceY,
+      0,
+      0,
+      poolSurfaceY,
+      innerR,
+    );
+    poolGrad.addColorStop(0, `rgba(255, 210, 70, ${poolGlow})`);
+    poolGrad.addColorStop(0.4, `rgba(255, 130, 25, ${poolGlow * 0.85})`);
+    poolGrad.addColorStop(0.8, `rgba(190, 55, 8, ${poolGlow * 0.6})`);
+    poolGrad.addColorStop(1, `rgba(120, 30, 5, ${poolGlow * 0.35})`);
     ctx.fillStyle = poolGrad;
-    drawOrganicBlob(ctx, pr, pr * lavaIso, pool.angle * 50, 0.15);
+    ctx.beginPath();
+    ctx.ellipse(
+      0,
+      poolSurfaceY,
+      innerR * 0.9,
+      innerR * 0.9 * lavaIso,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
-    // Bubble
+    for (let c = 0; c < 3; c++) {
+      const crustAngle = time * 0.3 + c * 2.1 + pool.angle;
+      const crustDist = innerR * 0.3 * (0.5 + c * 0.15);
+      const cx = Math.cos(crustAngle) * crustDist;
+      const cy = Math.sin(crustAngle) * crustDist * lavaIso + poolSurfaceY;
+      const crustSize = pr * 0.12 + c * pr * 0.04;
+      ctx.fillStyle = `rgba(50, 20, 8, ${0.3 + Math.sin(time + c) * 0.1})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        cx,
+        cy,
+        crustSize,
+        crustSize * lavaIso,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
     const bubblePhase = (time * 1.5 + pool.angle) % 1.8;
     if (bubblePhase < 0.4) {
-      const bSize = pr * 0.3 * Math.sin((bubblePhase / 0.4) * Math.PI);
-      ctx.fillStyle = `rgba(255, 240, 150, ${0.6 * (1 - bubblePhase / 0.4)})`;
+      const bSize = pr * 0.25 * Math.sin((bubblePhase / 0.4) * Math.PI);
+      const bAlpha = 0.6 * (1 - bubblePhase / 0.4);
+      ctx.fillStyle = `rgba(255, 245, 160, ${bAlpha})`;
       ctx.beginPath();
-      ctx.arc(pr * 0.2, -pr * 0.1, bSize, 0, Math.PI * 2);
+      ctx.arc(
+        pr * 0.15,
+        poolSurfaceY - pr * 0.05,
+        bSize,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
+    }
+
+    if (poolGlow > 0.5) {
+      const glowAlpha = (poolGlow - 0.5) * 0.3;
+      ctx.strokeStyle = `rgba(255, 90, 15, ${glowAlpha})`;
+      ctx.lineWidth = 1.2 * cameraZoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        0,
+        poolSurfaceY,
+        innerR * 0.92,
+        innerR * 0.92 * lavaIso,
+        0,
+        Math.PI * 0.15,
+        Math.PI * 0.85,
+      );
+      ctx.stroke();
     }
 
     ctx.restore();

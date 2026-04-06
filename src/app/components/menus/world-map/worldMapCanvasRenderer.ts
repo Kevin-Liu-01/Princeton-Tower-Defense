@@ -351,11 +351,12 @@ export const drawWorldMapCanvas = ({
     );
   }
 
-  // Tooltip with preview image:
+  // Tooltip with preview image (desktop only — mobile uses MobileLevelSheet):
   // - show hovered level when hovering a different node
   // - otherwise show selected level
-  const tooltipLevelId =
-    hoveredLevel && hoveredLevel !== selectedLevel
+  const tooltipLevelId = isMobile
+    ? null
+    : hoveredLevel && hoveredLevel !== selectedLevel
       ? hoveredLevel
       : selectedLevel && getWorldLevelById(selectedLevel)
         ? selectedLevel

@@ -4777,25 +4777,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
 
-        // Front face (viewer-facing)
-        const wsFG = ctx.createLinearGradient(
-          sx,
-          wsBase + bwIso,
-          sx,
-          wsTop + twIso,
-        );
-        wsFG.addColorStop(0, "#546E7A");
-        wsFG.addColorStop(0.5, "#5A7585");
-        wsFG.addColorStop(1, "#4E6575");
-        ctx.fillStyle = wsFG;
-        ctx.beginPath();
-        ctx.moveTo(sx - bw86, wsBase + bwIso);
-        ctx.lineTo(sx + bw86, wsBase + bwIso);
-        ctx.lineTo(sx + tw86, wsTop + twIso);
-        ctx.lineTo(sx - tw86, wsTop + twIso);
-        ctx.closePath();
-        ctx.fill();
-
         // Top diamond
         ctx.fillStyle = "#78909C";
         ctx.beginPath();
@@ -4806,20 +4787,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
 
-        // --- Stone course lines on front face ---
         ctx.strokeStyle = "rgba(0,0,0,0.07)";
         ctx.lineWidth = 0.5 * s;
         const wsCRows = 7;
-        for (let cr = 1; cr < wsCRows; cr++) {
-          const ct = cr / wsCRows;
-          const clx = sx - (bw86 + (tw86 - bw86) * ct);
-          const crx = sx + (bw86 + (tw86 - bw86) * ct);
-          const cly = wsBase + bwIso + (wsTop + twIso - wsBase - bwIso) * ct;
-          ctx.beginPath();
-          ctx.moveTo(clx, cly);
-          ctx.lineTo(crx, cly);
-          ctx.stroke();
-        }
 
         // Stone course lines on left face
         for (let cr = 1; cr < wsCRows; cr++) {
@@ -4902,7 +4872,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(sx - bw86, wsBase + bwIso);
         ctx.stroke();
 
-        // --- Glowing Elder Futhark runes on front face ---
+        // --- Glowing Elder Futhark runes ---
         const wsRnGlow = 0.45 + Math.sin(decorTime * 2) * 0.25;
         ctx.lineWidth = 1.3 * s;
         ctx.lineCap = "round";
@@ -8362,15 +8332,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = op.front;
-      ctx.beginPath();
-      ctx.moveTo(ox - bw86, sBase + bwIso);
-      ctx.lineTo(ox + bw86, sBase + bwIso);
-      ctx.lineTo(ox + tw86, sTop + twIso);
-      ctx.lineTo(ox - tw86, sTop + twIso);
-      ctx.closePath();
-      ctx.fill();
-
       ctx.fillStyle = op.top;
       ctx.beginPath();
       ctx.moveTo(ox, sTop);
@@ -8396,14 +8357,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox, sTop + twIso * 2);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = op.capFr;
-      ctx.beginPath();
-      ctx.moveTo(ox, cTip);
-      ctx.lineTo(ox - tw86, sTop + twIso);
-      ctx.lineTo(ox + tw86, sTop + twIso);
-      ctx.closePath();
-      ctx.fill();
-
       // Cap highlight
       ctx.fillStyle = op.capHi;
       ctx.globalAlpha = 0.4;

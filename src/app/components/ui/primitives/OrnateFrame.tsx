@@ -431,6 +431,8 @@ export interface OrnateFrameProps {
   topBottomBorderScale?: number;
   color?: string;
   glowColor?: string;
+  /** Extra classes on the decoration wrapper (corners, borders, glow). Use e.g. "hidden lg:block" to hide on mobile. */
+  decorationClassName?: string;
 }
 
 const CORNER_COMPONENTS: Record<
@@ -466,15 +468,14 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   topBottomBorderScale,
   color = "#b48c3c",
   glowColor = "#d4a84a",
+  decorationClassName,
 }) => {
   const CornerComponent = CORNER_COMPONENTS[cornerVariant];
   const SideBorderComponent = BORDER_COMPONENTS[sideBorderVariant ?? borderVariant];
   const TopBottomBorderComponent = BORDER_COMPONENTS[topBottomBorderVariant ?? borderVariant];
 
-  return (
-    <div className={`relative ${className}`} style={style}>
-      {children}
-
+  const decorations = (
+    <>
       <CornerComponent position="top-left" size={cornerSize} color={color} glowColor={glowColor} />
       <CornerComponent position="top-right" size={cornerSize} color={color} glowColor={glowColor} />
       <CornerComponent position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
@@ -503,6 +504,17 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
           boxShadow: `inset 0 0 25px ${glowColor}12, inset 0 0 50px ${color}08`,
         }}
       />
+    </>
+  );
+
+  return (
+    <div className={`relative ${className}`} style={style}>
+      {children}
+      {decorationClassName ? (
+        <div className={decorationClassName}>{decorations}</div>
+      ) : (
+        decorations
+      )}
     </div>
   );
 };

@@ -18,7 +18,7 @@ Defend Princeton-inspired battlefields across 5 hand-crafted biome regions with 
 
 ## Project Overview
 
-Princeton Tower Defense is a browser-based tower defense game set at Princeton University. Players defend against waves of enemies using towers, heroes, and spells across 25+ levels spanning 5 biome regions: Grassland, Swamp, Desert, Winter, and Volcanic.
+Princeton Tower Defense is a browser-based tower defense game set at Princeton University. Players defend against waves of enemies using towers, heroes, and spells across 26 levels spanning 5 biome regions: Grassland, Swamp, Desert, Winter, and Volcanic.
 
 Everything -- towers, enemies, terrain, effects, UI overlays -- is drawn and animated in code. There are no sprite sheets and no game engine. The entire rendering pipeline (isometric terrain, tower animations, projectile arcs, death effects, fog, god rays, ambient particles) is hand-written Canvas 2D. Static layers are cached to offscreen canvases, and quality-aware rendering adjusts detail based on runtime performance.
 
@@ -233,7 +233,7 @@ Each tower has a distinct role and two final upgrade paths that change its behav
 
 ### Spells, Hazards, and Challenge Rules
 
-- **5 castable spells** -- Fireball, Lightning, Freeze, Payday, and Reinforce, each upgradeable with earned stars.
+- **6 castable spells** -- Fireball, Lightning, Freeze, Hex Ward, Payday, and Reinforce, each upgradeable with earned stars.
 - **Map hazards** -- lava pools, quicksand, blizzard zones, and special structures (vaults, shrines, barracks, beacons) that add region-specific objectives.
 - **Challenge maps** -- tower restrictions and multi-objective scoring that force non-standard strategies.
 
