@@ -388,14 +388,20 @@ let currentScenePressure: ScenePressure = {
   simplifyEnemies: false,
 };
 
+const PRESSURE_SKIP_DECORATIVE = 120;
+const PRESSURE_SKIP_PARTICLES = 180;
+const PRESSURE_SIMPLIFY_GRADIENTS = 200;
+const PRESSURE_SHADOWS_OFF = 250;
+const PRESSURE_SIMPLIFY_ENEMIES = 300;
+
 export function updateScenePressure(renderableCount: number): ScenePressure {
   currentScenePressure = {
     total: renderableCount,
-    skipDecorativeEffects: false,
-    forceSimplifiedGradients: false,
-    forceShadowsOff: false,
-    skipNonEssentialParticles: false,
-    simplifyEnemies: false,
+    skipDecorativeEffects: renderableCount > PRESSURE_SKIP_DECORATIVE,
+    forceSimplifiedGradients: renderableCount > PRESSURE_SIMPLIFY_GRADIENTS,
+    forceShadowsOff: renderableCount > PRESSURE_SHADOWS_OFF,
+    skipNonEssentialParticles: renderableCount > PRESSURE_SKIP_PARTICLES,
+    simplifyEnemies: renderableCount > PRESSURE_SIMPLIFY_ENEMIES,
   };
   return currentScenePressure;
 }

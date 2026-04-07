@@ -41,7 +41,7 @@ export interface ZoomSetupReturn {
   zoomCameraAtClientPoint: (clientX: number, clientY: number, zoomFactor: number) => void;
 }
 
-export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number): ZoomSetupReturn {
+export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number, externalZoomRef?: MutableRefObject<number>): ZoomSetupReturn {
   const {
     canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef,
     cachedStaticMapLayerRef, cachedStaticDecorationLayerRef, cachedFogLayerRef,
@@ -51,8 +51,11 @@ export function useZoomSetup(deps: ZoomSetupDeps, cameraZoom: number): ZoomSetup
   } = deps;
 
   const stableZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
-  const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
-  cameraZoomRef.current = cameraZoom;
+  const internalZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
+  const cameraZoomRef = externalZoomRef ?? internalZoomRef;
+  if (!externalZoomRef) {
+    internalZoomRef.current = cameraZoom;
+  }
 
   const zoomGestureRefs = useMemo<ZoomGestureRefs>(() => ({
     canvasRef, cachedCanvasRectRef, isZoomDebouncingRef, zoomSettleTimerRef, stableZoomRef, cameraZoomRef,

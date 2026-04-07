@@ -148,6 +148,8 @@ import { calculateCategoryRatings } from "../../components/menus/VictoryScreen";
 import { insertionSortBy } from "../../rendering/utils/insertionSort";
 import { calculateHazardEffects, applyHazardEffect, calculateFriendlyHazardEffects, applyHazardEffectToTroop, applyHazardEffectToHero } from "../../game/hazards";
 import { emitDamageNumber } from "../../rendering/ui/damageNumbers";
+import { EnemyMutationBatch } from "../../game/enemyMutationBatch";
+import { acquireEnemy } from "../../game/entityPool";
 import {
   TROOP_RESPAWN_TIME,
   TROOP_SEPARATION_DIST,
@@ -361,6 +363,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
   handledEnemyIdsRef.current.clear();
   handledHexGhostSourceIdsRef.current.clear();
+  const enemyBatch = new EnemyMutationBatch();
   const now = Date.now();
   const isPaused = gameSpeed === 0;
   const sandboxMode = isSandboxLevel(selectedMap);
@@ -650,15 +653,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       (enemy) => getEnemyPosCached(enemy)
     );
 
-    // Single batched update for all hazard effects
     if (hazardEffects.size > 0) {
-      setEnemies((prev) =>
-        prev.map((e) => {
-          const effect = hazardEffects.get(e.id);
-          if (!effect) return e;
-          return applyHazardEffect(e, effect, ENEMY_DATA[e.type].speed);
-        })
-      );
+      for (const [id, effect] of hazardEffects) {
+        enemyBatch.transform(id, (e) =>
+          applyHazardEffect(e, effect, ENEMY_DATA[e.type].speed),
+        );
+      }
 
       // Fire particles for lava damage
       hazardEffects.forEach((effect) => {
@@ -1233,13 +1233,8 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
         ),
       });
     });
-    if (vaultEnemyUpdates.size > 0) {
-      setEnemies((prev) =>
-        prev.map((entry) => {
-          const update = vaultEnemyUpdates.get(entry.id);
-          return update ? { ...entry, ...update } : entry;
-        })
-      );
+    for (const [id, update] of vaultEnemyUpdates) {
+      enemyBatch.merge(id, update);
     }
   }
 
@@ -1616,19 +1611,18 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
 
   // Hero death check & shield maintainance
   if (hero && !hero.dead) {
+    let clearTaunts = false;
     if (hero.hp <= 0) {
       setHero((prev) =>
         prev ? killHero(prev, HERO_RESPAWN_TIME) : null
       );
-      // Clear taunts when hero dies
-      setEnemies((prev) =>
-        prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
-      );
+      clearTaunts = true;
     }
-    // Shield Expiration Logic
     if (hero.shieldActive && now > (hero.shieldEnd || 0)) {
       setHero((prev) => (prev ? { ...prev, shieldActive: false } : null));
-      // Clear taunts from all enemies (including taunt offset)
+      clearTaunts = true;
+    }
+    if (clearTaunts) {
       setEnemies((prev) =>
         prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
       );
@@ -2335,22 +2329,21 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       return e && ENEMY_DATA[e.type].flying;
     }
   );
-  if (flyingAbilityIds.length > 0) {
-    setEnemies((prev) =>
-      prev.map((enemy) => {
-        const update = troopCombatAbilityUpdates[enemy.id];
-        if (!update || !ENEMY_DATA[enemy.type].flying) return enemy;
-        return {
-          ...enemy,
-          ...(update.lastTroopAttack !== undefined && { lastTroopAttack: update.lastTroopAttack }),
-          ...(update.lastAbilityUse && {
-            lastAbilityUse: update.lastAbilityUse,
-            lastAbilityType: update.lastAbilityType,
-            abilityCooldowns: update.abilityCooldowns,
-          }),
-        };
-      })
-    );
+  for (const id of flyingAbilityIds) {
+    const update = troopCombatAbilityUpdates[id];
+    if (!update) continue;
+    enemyBatch.transform(id, (enemy) => {
+      if (!ENEMY_DATA[enemy.type].flying) return enemy;
+      return {
+        ...enemy,
+        ...(update.lastTroopAttack !== undefined && { lastTroopAttack: update.lastTroopAttack }),
+        ...(update.lastAbilityUse && {
+          lastAbilityUse: update.lastAbilityUse,
+          lastAbilityType: update.lastAbilityType,
+          abilityCooldowns: update.abilityCooldowns,
+        }),
+      };
+    });
   }
   // Soft-repulsion lane spreading: push nearby same-layer enemies apart
   // laterally instead of hard blocking. Enemies always move forward at
@@ -2517,7 +2510,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
           const minionData = ENEMY_DATA[minionType];
           const count = eData.summonCount || 1;
           for (let i = 0; i < count; i++) {
-            const minion: Enemy = {
+            const minion = acquireEnemy({
               id: generateId("minion"),
               type: minionType,
               pathIndex: Math.max(0, enemy.pathIndex - 1),
@@ -2544,7 +2537,7 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
               slowed: false,
               slowIntensity: 0,
               pathKey: enemy.pathKey,
-            };
+            });
             summoned.push(minion);
           }
           addParticles(getEnemyPosCached(enemy), "summon", 8);
@@ -3404,17 +3397,12 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
     return updated;
   }));
 
-  // Apply collected enemy ability mutations immutably
-  if (towerDebuffEnemyUpdates.size > 0) {
-    setEnemies((prev) => prev.map((enemy) => {
-      const update = towerDebuffEnemyUpdates.get(enemy.id);
-      if (!update) return enemy;
-      return {
-        ...enemy,
-        lastAbilityUse: update.lastAbilityUse,
-        lastAbilityType: update.lastAbilityType,
-        abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, update.activatedTypes, now),
-      };
+  for (const [id, update] of towerDebuffEnemyUpdates) {
+    enemyBatch.transform(id, (enemy) => ({
+      ...enemy,
+      lastAbilityUse: update.lastAbilityUse,
+      lastAbilityType: update.lastAbilityType,
+      abilityCooldowns: buildAbilityCooldowns(enemy.abilityCooldowns, update.activatedTypes, now),
     }));
   }
 
@@ -5374,4 +5362,6 @@ export function updateGameTick(params: UpdateGameParams, deltaTime: number): voi
       cooldown: Math.max(0, spell.cooldown - deltaTime),
     }))
   );
+
+  enemyBatch.flush(setEnemies);
 }

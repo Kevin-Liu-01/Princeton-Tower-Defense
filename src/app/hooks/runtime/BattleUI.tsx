@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type MutableRefObject } from "react";
 import type {
   Position,
   Tower,
@@ -136,11 +136,11 @@ export interface BattleUIProps {
   onToggleDevMenu: () => void;
   devMenuOpen: boolean;
 
-  // Camera
-  setCameraOffset: React.Dispatch<React.SetStateAction<Position>>;
-  setCameraZoom: React.Dispatch<React.SetStateAction<number>>;
-  cameraOffset: Position;
-  cameraZoom: number;
+  // Camera (refs to avoid re-renders on every pan frame)
+  setCameraOffset: (val: Position | ((prev: Position) => Position)) => void;
+  setCameraZoom: (val: number | ((prev: number) => number)) => void;
+  cameraOffsetRef: MutableRefObject<Position>;
+  cameraZoomRef: MutableRefObject<number>;
   selectedLevelData: (typeof LEVEL_DATA)[string] | undefined;
   handleCameraModeCapture: () => Promise<boolean>;
   exitCameraMode: () => void;
@@ -297,8 +297,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
   devMenuOpen,
   setCameraOffset,
   setCameraZoom,
-  cameraOffset,
-  cameraZoom,
+  cameraOffsetRef,
+  cameraZoomRef,
   selectedLevelData,
   handleCameraModeCapture,
   exitCameraMode,
@@ -501,15 +501,15 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                     width,
                     height,
                     dpr,
-                    cameraOffset,
-                    cameraZoom
+                    cameraOffsetRef.current,
+                    cameraZoomRef.current
                   );
                   return (
                     <TowerUpgradePanel
                       tower={tower}
                       screenPos={screenPos}
                       pawPoints={pawPoints}
-                      cameraZoom={cameraZoom}
+                      cameraZoom={cameraZoomRef.current}
                       upgradeTower={upgradeTower}
                       sellTower={sellTower}
                       onClose={() => setSelectedTower(null)}
@@ -585,8 +585,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   width,
                   height,
                   dpr,
-                  cameraOffset,
-                  cameraZoom
+                  cameraOffsetRef.current,
+                  cameraZoomRef.current
                 );
                 return (
                   <EnemyDetailTooltip
@@ -604,8 +604,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   width,
                   height,
                   dpr,
-                  cameraOffset,
-                  cameraZoom
+                  cameraOffsetRef.current,
+                  cameraZoomRef.current
                 );
                 return (
                   <TroopDetailTooltip
@@ -621,8 +621,8 @@ export const BattleUI: React.FC<BattleUIProps> = ({
                   width,
                   height,
                   dpr,
-                  cameraOffset,
-                  cameraZoom
+                  cameraOffsetRef.current,
+                  cameraZoomRef.current
                 );
                 return (
                   <HeroDetailTooltip

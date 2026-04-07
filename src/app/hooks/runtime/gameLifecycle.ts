@@ -14,6 +14,7 @@ import type {
   SpecialTowerType,
 } from "../../types";
 import type { PausableTimeoutEntry } from "../../game/state";
+import { acquireEnemy } from "../../game/entityPool";
 import type { EncounterQueueItem, UseTutorialReturn } from "../useTutorial";
 import type { WaveStartConfirmState } from "./waveStartBubbles";
 import type { GameEventLogAPI } from "../useGameEventLog";
@@ -595,7 +596,7 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
               )
             : false;
 
-        const enemy: Enemy = {
+        const enemy = acquireEnemy({
           id: generateId("enemy"),
           type: group.type,
           pathIndex: 0,
@@ -618,7 +619,7 @@ export function startWaveInnerImpl(params: StartWaveInnerParams): void {
           slowIntensity: 0,
           pathKey,
           facingRight: initialFacing,
-        };
+        });
         params.addEnemyEntity(enemy);
         spawned++;
       }, group.interval);

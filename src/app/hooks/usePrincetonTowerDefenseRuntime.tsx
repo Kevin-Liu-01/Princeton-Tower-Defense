@@ -445,9 +445,20 @@ export function usePrincetonTowerDefenseRuntime() {
   // Tower repositioning state (drag existing towers to move them)
   const [repositioningTower, setRepositioningTower] = useState<string | null>(null);
   const [repositionPreviewPos, setRepositionPreviewPos] = useState<Position | null>(null);
-  // Camera - start more zoomed in and centered
-  const [cameraOffset, setCameraOffset] = useState<Position>(DEFAULT_CAMERA_OFFSET);
-  const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
+  // Camera stored in refs to avoid React re-renders on every pan/zoom frame.
+  // The game loop reads these at 60fps via renderRef/updateGameRef.
+  const cameraOffsetRef = useRef<Position>(DEFAULT_CAMERA_OFFSET);
+  const cameraZoomRef = useRef(DEFAULT_CAMERA_ZOOM);
+  const cameraOffset = cameraOffsetRef.current;
+  const cameraZoom = cameraZoomRef.current;
+
+  const setCameraOffset = useCallback((val: Position | ((prev: Position) => Position)) => {
+    cameraOffsetRef.current = typeof val === "function" ? val(cameraOffsetRef.current) : val;
+  }, []);
+
+  const setCameraZoom = useCallback((val: number | ((prev: number) => number)) => {
+    cameraZoomRef.current = typeof val === "function" ? val(cameraZoomRef.current) : val;
+  }, []);
   const [cameraModeActive, setCameraModeActive] = useState(false);
   const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
   const [isDevModeUnlocked, setIsDevModeUnlocked] = useState(readDevModeUnlocked);
@@ -607,7 +618,7 @@ export function usePrincetonTowerDefenseRuntime() {
     cachedAmbientLayerRef, lastGestureScaleRef,
     gameState, battleOutcome, selectedMap,
     setCameraZoom, setCameraOffset, getCanvasDimensions,
-  }, cameraZoom);
+  }, cameraZoom, cameraZoomRef);
 
   // Timer callbacks come from useTimerSystem above
 
@@ -690,11 +701,11 @@ export function usePrincetonTowerDefenseRuntime() {
         bgCanvasRef,
         backdropCanvasRef,
         cachedStaticMapLayerRef,
-        cameraOffset,
-        cameraZoom,
+        cameraOffset: cameraOffsetRef.current,
+        cameraZoom: cameraZoomRef.current,
         getRenderDpr,
       }),
-    [cameraOffset, cameraZoom, getRenderDpr],
+    [getRenderDpr],
   );
 
   const pauseLocked = computePauseLocked(cameraModeActive, inspectorActive);
@@ -1020,7 +1031,8 @@ export function usePrincetonTowerDefenseRuntime() {
     gameSpeed, selectedMap, isFreeplay, waveInProgress, currentWave, vaultFlash,
     hero, lives, gameState, battleOutcome, enemies, nextWaveTimer: nextWaveTimerRef.current,
     specialTowerHp, troops, towers, levelStartTime, levelStars,
-    totalWaves, unlockedMaps, activeWaveSpawnPaths, cameraOffset, cameraZoom,
+    totalWaves, unlockedMaps, activeWaveSpawnPaths,
+    cameraOffset: cameraOffsetRef.current, cameraZoom: cameraZoomRef.current,
     setTimeSpent, setWaveInProgress, setHoveredWaveBubblePathKey,
     setNextWaveTimer, setGameSpeed, setBattleOutcome, setStarsEarned,
     setTowers, setEnemies, setHero, setTroops, setSpells, setEffects,
@@ -1052,8 +1064,8 @@ export function usePrincetonTowerDefenseRuntime() {
           totalWaves,
           nextWaveTimer: nextWaveTimerRef.current,
           activeWaveSpawnPaths,
-          cameraOffset,
-          cameraZoom,
+          cameraOffset: cameraOffsetRef.current,
+          cameraZoom: cameraZoomRef.current,
         },
         canvasWidth,
         canvasHeight,
@@ -1067,8 +1079,6 @@ export function usePrincetonTowerDefenseRuntime() {
       currentWave,
       totalWaves,
       activeWaveSpawnPaths,
-      cameraOffset,
-      cameraZoom,
     ]
   );
 
@@ -1077,7 +1087,7 @@ export function usePrincetonTowerDefenseRuntime() {
   updateGameRef.current = updateGame;
   renderRef.current = () => renderScene({
     canvasRef, bgCanvasRef, backdropCanvasRef,
-    cameraOffset, cameraZoom, stableZoomRef, isZoomDebouncingRef,
+    cameraOffset: cameraOffsetRef.current, cameraZoom: cameraZoomRef.current, stableZoomRef, isZoomDebouncingRef,
     renderQualityRef, renderFrameIndexRef,
     towers, enemies, hero, troops, projectiles, effects,
     selectedMap, currentWave, activeWaveSpawnPaths,
@@ -1157,7 +1167,9 @@ export function usePrincetonTowerDefenseRuntime() {
   canvasEventParamsRef.current = {
     canvasRef, cachedCanvasRectRef, isTouchDeviceRef, lastTouchTimeRef, executeTargetedSpellRef,
     sentinelTargetsRef, missileAutoAimRef, cachedDecorationsRef, gameEventLogRef,
-    cameraOffset, cameraZoom, buildingTower, draggingTower, placingTroop,
+    get cameraOffset() { return cameraOffsetRef.current; },
+    get cameraZoom() { return cameraZoomRef.current; },
+    buildingTower, draggingTower, placingTroop,
     targetingSpell, activeSentinelTargetKey, inspectorActive, gameSpeed,
     selectedTower, selectedMap, repositioningTower, repositionPreviewPos,
     missileMortarTargetingId, isPanning, panStart, panStartOffset,
@@ -1549,8 +1561,8 @@ export function usePrincetonTowerDefenseRuntime() {
         devMenuOpen={devMenuOpen}
         setCameraOffset={setCameraOffset}
         setCameraZoom={setCameraZoom}
-        cameraOffset={cameraOffset}
-        cameraZoom={cameraZoom}
+        cameraOffsetRef={cameraOffsetRef}
+        cameraZoomRef={cameraZoomRef}
         selectedLevelData={selectedLevelData}
         handleCameraModeCapture={handleCameraModeCapture}
         exitCameraMode={exitCameraMode}
