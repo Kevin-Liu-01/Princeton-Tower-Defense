@@ -1,0 +1,38 @@
+---
+description: TypeScript and React code conventions
+alwaysApply: true
+---
+
+# TypeScript & React Style
+
+## TypeScript
+
+- `type` over `interface` unless declaration merging is needed.
+- `unknown` over `any`. If `any` is unavoidable, add a `// eslint-disable-next-line` with justification.
+- Use `satisfies` to validate object shapes without widening.
+- Import types with `import type`.
+- Derive types from values with `as const`, not the other way around.
+- Discriminated unions with exhaustive `switch` for domain variants.
+- Prefer `const` over `let`; never use `var`. Use `===` over `==`.
+- Named exports over default exports (except Next.js page/layout components).
+- Template literals over string concatenation.
+- Early returns over deeply nested conditionals.
+- No ternaries for control flow — ternaries are for value selection only.
+- If a function name contains "and", split it into two functions.
+
+## React
+
+- Hooks must always be called at the top level, before any conditional logic. Same order, every render.
+- No hooks inside conditions, loops, event handlers, or after early returns. Move hooks above the conditional.
+- `useEffect`, `useMemo`, and `useCallback` dependency arrays must include every referenced value. Never suppress the exhaustive-deps warning — restructure instead.
+- Name custom hooks after what they return, not what they do internally.
+- Self-closing components: `<Foo />` not `<Foo></Foo>`.
+
+## Hard Limits
+
+| Limit | Value |
+|---|---|
+| Function length | 70 lines |
+| File length | 500 lines (excluding tests) |
+| Nesting depth | 3 levels |
+| Argument count | 5 |

@@ -1,0 +1,50 @@
+---
+description: SEO, Open Graph, and GEO conventions for Princeton Tower Defense
+globs:
+  - src/app/seo/**
+  - src/app/layout.tsx
+  - src/app/opengraph-image.tsx
+  - src/app/twitter-image.tsx
+alwaysApply: false
+---
+
+# SEO / Open Graph / GEO Conventions
+
+## Meta Tag Lengths
+
+| Tag | Max Length |
+|---|---|
+| Title tag | 60 characters |
+| OG title | 60 characters |
+| Meta description | 160 characters |
+| OG description | 160 characters |
+| Twitter title | 70 characters |
+
+Truncated titles lose keyword placement and look broken in link previews.
+
+## OG Image
+
+- Dimensions: 1200×630px (required for `summary_large_image` cards).
+- Use the canonical production URL (`SITE_URL`) for image asset references in OG image generation, not `VERCEL_URL` (which varies per deployment).
+- Keep OG image generation on edge runtime for speed.
+
+## Schema (JSON-LD)
+
+- Place in page `<head>` via server rendering, not client-side injection.
+- Use one `@graph` block with `@id` references.
+- Baseline: Person + WebSite + page-specific type + BreadcrumbList.
+- Mirror on-page entities in schema fields (`name`, `description`, `about`, `sameAs`).
+- Use absolute URLs and ISO dates.
+
+## Entity Placement (5 Required Rules)
+
+1. Primary keyword in at least 4 of 6: URL slug, title tag, meta/social title, H1, H2, body intro.
+2. Primary entity and supporting entities in title, H1, intro, core sections, and schema.
+3. Entity gap analysis: add missing relevant entities from competitors.
+4. JSON-LD schema server-rendered in `<head>`.
+5. Schema entity reinforcement: mirror on-page entities inside schema fields.
+
+## AI Bot Crawlability
+
+Allow: Googlebot, Bingbot, GPTBot, ChatGPT-User, ClaudeBot, PerplexityBot.
+Do not blanket-block AI bots if the goal is AI visibility.
