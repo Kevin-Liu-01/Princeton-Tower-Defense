@@ -242,7 +242,7 @@ export const HazardSprite: React.FC<{ type: HazardType; size?: number; animated?
       if (!ctx) return;
 
       const t = animated ? time * 0.08 : 0;
-      drawHazardSprite(ctx, size / 2, size / 2, size * 0.8, type, t);
+      drawHazardSprite(ctx, size / 2, size * 0.68, size * 0.8, type, t);
     },
     [type, size, animated],
   );

@@ -9,7 +9,6 @@ import {
   SITE_AUTHOR,
   SITE_DESCRIPTION,
   SITE_DESCRIPTION_SHORT,
-  OG_DESCRIPTION,
   KEYWORDS,
   AUTHOR_URL,
   GITHUB_URL,
@@ -26,7 +25,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Free Browser Tower Defense Game - 26 Levels, 9 Heroes, Custom Maps`,
+    default: `${SITE_NAME} | Free Browser Tower Defense Game`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -46,8 +45,8 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: `${SITE_NAME} | Free Tower Defense Game with 7 Towers, Heroes & Spells`,
-    description: OG_DESCRIPTION,
+    title: `${SITE_NAME} | Free Tower Defense Game - Play Now`,
+    description: SITE_DESCRIPTION_SHORT,
     type: "website",
     locale: "en_US",
     url: SITE_URL,
@@ -56,7 +55,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} | Free Browser Tower Defense Game - Play Now`,
+    title: `${SITE_NAME} | Free Browser Tower Defense Game`,
     description: SITE_DESCRIPTION_SHORT,
     creator: "@kevskgs",
     site: "@kevskgs",
@@ -89,7 +88,7 @@ export const metadata: Metadata = {
     "github:repo": GITHUB_URL,
     "author": SITE_AUTHOR,
     "designer": SITE_AUTHOR,
-    "twitter:domain": "princetontd.vercel.app",
+    "twitter:domain": "princeton-tower-defense.vercel.app",
   },
 };
 

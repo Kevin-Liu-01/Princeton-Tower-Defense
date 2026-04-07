@@ -1,4 +1,4 @@
-export const SITE_URL = "https://princetontd.vercel.app";
+export const SITE_URL = "https://princeton-tower-defense.vercel.app";
 export const SITE_NAME = "Princeton Tower Defense";
 export const SITE_AUTHOR = "Kevin Liu";
 export const GITHUB_URL =
@@ -28,11 +28,10 @@ export const SITE_DESCRIPTION =
   "Includes a custom level creator, sandbox mode, and a full codex of towers, enemies, heroes, and spells.";
 
 export const SITE_DESCRIPTION_SHORT =
-  "Free browser tower defense game set at Princeton University. Build campus-themed towers, summon heroes, cast spells, and defend Nassau Hall across 26 levels and 5 regions. No download required.";
+  "Free browser tower defense at Princeton. Build campus towers, summon 9 heroes, cast spells, and defend across 26 levels and 5 regions. No download.";
 
 export const OG_DESCRIPTION =
-  "Build towers at Princeton landmarks, summon heroes like the Princeton Tiger, and defend campus across 26 levels in this free browser tower defense game. " +
-  "7 towers with dual upgrades, 9 heroes, 6 spells, custom level creator, sandbox mode, and 100+ unique enemies.";
+  "Build towers at Princeton landmarks, summon heroes, and defend campus across 26 levels. 7 towers with dual upgrades, 9 heroes, 6 spells, and 100+ enemies.";
 
 export const KEYWORDS = [
   // Core game terms
@@ -140,8 +139,8 @@ export const KEYWORDS = [
   "free tower defense game",
   "best browser tower defense",
   "best free tower defense",
-  "best tower defense 2024",
   "best tower defense 2025",
+  "best tower defense 2026",
   "tower defense no download",
   "play tower defense online",
   "play tower defence online",
