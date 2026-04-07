@@ -124,7 +124,7 @@ function CreatureCard({ entry }: { entry: BestiaryEntry }) {
 function MarqueeRow({ entries, reverse, speed }: { entries: BestiaryEntry[]; reverse?: boolean; speed?: number }) {
   const doubled = [...entries, ...entries];
   return (
-    <div className="overflow-hidden w-full">
+    <div className="w-full" style={{ overflowX: "clip", overflowY: "visible" }}>
       <div
         className={reverse ? "animate-landing-marquee-reverse" : "animate-landing-marquee"}
         style={{
@@ -167,7 +167,7 @@ export function EnemyBestiary() {
         />
 
         {/* Marquee rows */}
-        <div className="relative space-y-5 sm:space-y-6">
+        <div className="relative space-y-5 sm:space-y-6 py-3">
           {/* Edge fades */}
           <div className="absolute left-0 top-0 bottom-0 w-28 sm:w-44 z-10 pointer-events-none" style={{
             background: `linear-gradient(to right, ${T.bg}, transparent)`,
